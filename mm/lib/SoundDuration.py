@@ -1,32 +1,18 @@
 # Cache info about sound files
 
-import FileCache
-from urllib import urlretrieve
-
 # Used to get full info
 def getfullinfo(filename):
+	import audiofile
+	from urllib import urlretrieve
 	filename = urlretrieve(filename)[0]
-	f = open(filename, 'rb')
-	import aifc
 	try:
-		a = aifc.openfp(f, 'r')
-	except EOFError:
-		print 'EOF on sound file', filename
-		return f, 1, 0, 1, 8000, 'eof', []
-	except aifc.Error, msg:
-		import sunau
-		f.seek(0)
-		try:
-			a = sunau.openfp(f, 'r')
-		except EOFError:
-			print 'EOF on sound file', filename
-			return f, 1, 0, 1, 8000, 'eof', []
-		except sunau.Error:
-			print 'error in sound file', filename, ':', msg
-			return f, 1, 0, 1, 8000, 'error', []
+		a = audiofile.open(filename, 'r')
+	except (audiofile.Error, IOError), msg:
+		print 'error in sound file', filename, ':', msg
+		return f, 1, 0, 1, 8000, 'error', []
 	dummy = a.readframes(0)		# sets file pointer to start of data
 	if a.getcomptype() != 'NONE':
-		print 'cannot read compressed AIFF-C files for now', filename
+		print 'cannot read compressed audio files for now', filename
 		return f, 1, 0, 1, 8000, 'error', []
 	return a.getfp(), a.getnchannels(), a.getnframes(), \
 	       a.getsampwidth(), a.getframerate(), 'AIFF', \
@@ -45,6 +31,7 @@ def getallinfo(filename):
 		raise IOError, (0, 'bad sound file')
 	return nchannels, nsampframes, sampwidth, samprate, format, markers
 
+import FileCache
 allinfo_cache = FileCache.FileCache(getallinfo)
 
 def get(filename):
