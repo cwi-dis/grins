@@ -141,7 +141,7 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'channel', 'comment']
+		namelist = ['name', 'channel', 'comment', 'loop']
 		ntype = self.node.GetType()
 		if ntype == 'bag':
 			namelist.append('bag_index')
