@@ -44,6 +44,8 @@ _icon_ids = {
 	'linksrc': mw_resources.ID_ICON_LINKSRC,
 	'linkdst': mw_resources.ID_ICON_LINKDST,
 	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
+	'transin': mw_resources.ID_ICON_TRANSIN,
+	'transout': mw_resources.ID_ICON_TRANSOUT,
 }
 
 def _get_icon(which):
