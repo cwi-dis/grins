@@ -24,7 +24,6 @@ TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
 	       ATYPE_ARGS]
 TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
 	       'with arguments']
-WholeAnchors = (ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP) # whole-node anchors types
 
 FALSE, TRUE = 0, 1
 
