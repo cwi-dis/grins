@@ -511,7 +511,11 @@ class EllipseWipeTransition(_ShapeWipeTransition):
 	
 class StarWipeTransition(_ShapeWipeTransition):
 	_FIRSTANGLE=math.pi/2
-	_NPOINTS=4
+	_SUBTYPES = {
+		'fourPoint': 4,
+		'fivePoint': 5,
+		'sixPoint': 6,
+		}
 
 	def _recomputetop(self):
 		_ShapeWipeTransition._recomputetop(self)
@@ -522,12 +526,13 @@ class StarWipeTransition(_ShapeWipeTransition):
 		iradius = int(value*self.innerradius)
 ##		print value, radius, iradius
 		points = []
-		for i in range(self._NPOINTS):
-			angle = self._FIRSTANGLE + (2*math.pi*i)/self._NPOINTS
+		npoints = self._SUBTYPES.get(self.dict.get('subtype','fourPoint'), 4)
+		for i in range(npoints):
+			angle = self._FIRSTANGLE + (2*math.pi*i)/npoints
 			x = math.cos(angle)*radius
 			y = math.sin(angle)*radius
 			points.append((self.xmid+x, self.ymid-y))
-			angle = self._FIRSTANGLE + (2*math.pi*(i+0.5))/self._NPOINTS
+			angle = self._FIRSTANGLE + (2*math.pi*(i+0.5))/npoints
 			x = math.cos(angle)*iradius
 			y = math.sin(angle)*iradius
 			points.append((self.xmid+x, self.ymid-y))
@@ -1081,6 +1086,8 @@ TRANSITIONDICT = {
 	("roundRectWipe", "horizontal") : RoundRectWipeTransition,
 	("roundRectWipe", None) : RoundRectWipeTransition,
 	("starWipe", "fourPoint") : StarWipeTransition,
+	("starWipe", "fivePoint") : StarWipeTransition,
+	("starWipe", "sixPoint") : StarWipeTransition,
 	("starWipe", None) : StarWipeTransition,
 ##	("miscShapeWipe", "heart") : MiscShapeWipe,
 ##	("miscShapeWipe", None) : MiscShapeWipe,
