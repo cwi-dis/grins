@@ -141,8 +141,12 @@ CreateEngine()
 		// get the path to pnen 
 		hRes = RegQueryValue(hKey, "", szDllName, (long *)&bufSize); 
 		RegCloseKey(hKey); 
+		if(hRes!=ERROR_SUCCESS) return false;
 	}
-
+	else {
+		// No RealPlayer registry entries
+		return false;
+	}
 	strcat(szDllName, "pnen3260.dll");
 
 #elif defined(_WIN16) 
