@@ -517,7 +517,7 @@ class Channel(ChannelWM):
 # dictionary with channels that have windows
 ChannelWinDict = {}
 
-class ChannelWindow(Channel, ChannelWindowWM):
+class ChannelWindow(ChannelWindowWM, Channel):
 	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'hicolor']
 
