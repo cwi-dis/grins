@@ -2438,6 +2438,9 @@ class ViewportContext:
 # selection modes
 [SM_NONE, SM_MOVE, SM_SIZE, SM_NET] = range(4)
 
+# select operation
+[SO_REPLACE, SO_APPEND] = range(2)
+
 Sdk = win32ui.GetWin32Sdk()
 	 
 class DrawContext:
@@ -2460,11 +2463,9 @@ class DrawContext:
 		# set current tool
 		self._curtool = self._seltool
 
-		# muliselect support
+		# DrawContext does not support multiple selections
+		# use  MultiSelectDrawContext instead 
 		self._muliselect = 0
-		self._downPt = 0, 0
-		self._lastPt = 0, 0
-		self._focusdrawn = 0
 
 	def reset(self):
 		self._moveRefPt = 0, 0
@@ -2524,27 +2525,27 @@ class DrawContext:
 			self._selected.invalidateDragHandles()
 			self._selected.moveBy((xp-xl, yp-yl))
 			self._selected.invalidateDragHandles()
-			self.__notifyListeners(self._selected)
+			self._notifyListeners(self._selected)
 	
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
 			self._selected.invalidateDragHandles()
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
 			self._selected.invalidateDragHandles()
-			self.__notifyListeners(self._selected)
+			self._notifyListeners(self._selected)
 
-	def select(self, shape):
+	def select(self, shape, mode=SO_REPLACE):
 		if self._selected:
 			self._selected.invalidateDragHandles()	
 		self._selected = shape
-		self.__notifyListeners(shape)
+		self._notifyListeners(shape)
 	
 	def showproperties(self):
 		if self._selected:
 			for obj in self._listeners:
 				obj.onProperties(self._selected)
 	
-	def __notifyListeners(self, shape):
+	def _notifyListeners(self, shape):
 		for obj in self._listeners:
 			obj.onShapeChange(shape)
 
@@ -2584,6 +2585,101 @@ class DrawContext:
 		# with zero dimensions
 		self._curtool = self._seltool
 
+
+#########################	
+# For multi-selections use MSDrawContext instead of DrawContext
+# Its interface for its clients is the same as that of DrawContext
+# It offers the same functionality plus multi selection
+
+# A client/notification listener is now required to implement
+# onMultiSelChanged(self, selections) beyond onShapeChange(self, shape)
+# selections is a list of shapes.
+# onMultiSelChanged callback will be called by MSDrawContext on
+# any selection change with the currently selected list of shapes 
+# as argument
+
+# Please note that currently a client/notification listener will
+# receive the same callbacks through onShapeChange(self, shape) 
+# In this case shape can be interpreted as the focus.
+# Resize and move should work through this 
+
+# You can set the selections by calling 
+# MSDrawContext.selectShapes(self, shapeList)
+
+class MSDrawContext(DrawContext):
+	def __init__(self):
+		DrawContext.__init__(self)
+		
+		# class supports multi-select
+		self._muliselect = 1
+
+		# list of selected shapes 
+		# base class self._selected 
+		# now becomes either the last selected shape
+		# or the shape with the focus
+		self._selections = []
+
+		self._downPt = 0, 0
+		self._lastPt = 0, 0
+		self._focusdrawn = 0
+	
+	def selectShapes(self, shapeList):
+		for shape in self._selections:
+			shape.invalidateDragHandles()
+		self._selections = shapeList[:]
+		n = len(shapeList)
+		if n:
+			self._selected = shapeList[n-1]
+		else:
+			self._selected = None
+
+	def select(self, shape, mode=SO_REPLACE):
+		# if we don't support multisel then set
+		if not self._muliselect:
+			mode=SO_REPLACE
+
+		# remove selections if shape is None
+		if not shape:
+			self._selected = None
+			if self._selections:
+				for shape in self._selections:
+					shape.invalidateDragHandles()
+				self._selections = []
+		else:
+			# set last selected shape
+			self._selected = shape 
+			# update selections
+			if mode==SO_REPLACE:
+				if self._selections:
+					for shape in self._selections:
+						shape.invalidateDragHandles()
+				self._selections = [shape,]
+			elif mode==SO_APPEND:
+				if shape not in self._selections:
+					self._selections.append(shape)
+				else:
+					self._selections.remove(shape)
+					n = len(self._selections)
+					if n:
+						self._selected = self._selections[n-1]
+					else:
+						self._selected = None
+					shape.invalidateDragHandles()
+		self.notifyForSelChange()
+
+	def notifyForSelChange(self):
+		self._notifyListeners(self._selected)
+		for obj in self._listeners:
+			obj.onMultiSelChanged(self._selections)
+	
+	def reset(self):
+		DrawContext.reset(self)
+		self._selections = []
+
+	def onNCButton(self):
+		DrawContext.onNCButton(self)
+		self._selections = []
+
 	#
 	# Multi-select support
 	# Do not implement if this support is not needed
@@ -2616,7 +2712,8 @@ class DrawContext:
 			t = y2
 			b = y1
 		return l, t, r-l, b-t
-				
+
+#########################			
 class Shape:
 	def getDragHandle(self, ix):
 		return 3, 3
@@ -2680,24 +2777,29 @@ class SelectTool(DrawTool):
 	def onLButtonDown(self, flags, point):
 		ctx = self._ctx
 		ctx._selmode = SM_NONE
-		
-		# resize
+		canResize = not ctx._muliselect or len(ctx._selections)==1
+		isAppend = ctx._muliselect and (flags & win32con.MK_CONTROL)
+				 
+		# if the click is within a drag handle enter SIZE mode and change cursor
 		shape = ctx._selected
-		if shape:
+		if shape and canResize:
 			ctx._ixDragHandle = shape.getDragHandleAt(point)
 			if ctx._ixDragHandle and shape.isResizeable():
 				ctx._selmode = SM_SIZE
 				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 		
-		# selection
+		# if the click is within a shape select it and enter MOVE mode
 		if ctx._selmode == SM_NONE:
 			shape = ctx.getMouseTarget(point)
 			if shape:
-				ctx._selmode = SM_MOVE
-				ctx.select(shape)
+				if isAppend:
+					ctx.select(shape, mode=SO_APPEND)
+				else:
+					ctx.select(shape)
+					ctx._selmode = SM_MOVE
 
-		# bgclick
-		if ctx._selmode == SM_NONE:
+		# if the click is on the background remove selection
+		if ctx._selmode == SM_NONE and not isAppend:
 			ctx.select(None)
 			ctx.update()
 			if ctx._muliselect:
@@ -2859,6 +2961,7 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
+ 
  
  
  
