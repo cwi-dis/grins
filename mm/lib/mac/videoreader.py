@@ -1,10 +1,15 @@
 # Video file reader
 import sys
 import Qt
+import QuickTime
+import Res
+import MediaDescr
 import imgformat
 import os
 sys.path.append('swdev:jack:cmif:pylib:')
 import audio.format
+import urllib
+import macfs
 
 class VideoFormat:
 	def __init__(self, name, descr, width, height, format):
@@ -28,8 +33,35 @@ class VideoFormat:
 		
 class _Reader:
 	def __init__(self, url):
-		self._did_audio = 0
-		self._did_video = 0
+		path = urllib.url2pathname(url)
+		fsspec = macfs.FSSpec(path)
+		fd = Qt.OpenMovieFile(fsspec, 0)
+		self.movie, d1, d2 = Qt.NewMovieFromFile(fd, 0, 0)
+		
+		self.audiotrack = self.movie.GetMovieIndTrackType(1,
+				QuickTime.SoundMediaType, QuickTime.movieTrackMediaType)
+		self.audiomedia = self.audiotrack.GetTrackMedia()
+		handle = Res.Resource('')
+		self.audiomedia.GetMediaSampleDescription(1, handle)
+		print len(handle.data)
+		self.audiodescr = MediaDescr.SoundDescription.decode(handle.data)
+		del handle
+		
+		self.videotrack = self.movie.GetMovieIndTrackType(1,
+				QuickTime.VideoMediaType, QuickTime.movieTrackMediaType)
+		self.videomedia = self.videotrack.GetTrackMedia()
+		handle = Res.Resource('')
+		self.videomedia.GetMediaSampleDescription(1, handle)
+		print 'video', len(handle.data)
+		self.videodescr = MediaDescr.ImageDescription.decode(handle.data)
+		del handle
+		
+	def __del__(self):
+		self.audiomedia = None
+		self.audiotrack = None
+		self.videomedia = None
+		self.videotrack = None
+		self.movie = None
 		
 	def HasAudio(self):
 		return 1
@@ -42,10 +74,12 @@ class _Reader:
 			['mono'], 'linear-signed', blocksize=2, fpb=1, bps=16)
 			
 	def GetAudioFrameRate(self):
-		return 44100
+		return int(self.audiodescr['sampleRate'])
 		
 	def GetVideoFormat(self):
-		return VideoFormat('dummy_format', 'Dummy Video Format', 320, 240, imgformat.macrgb)
+		width = self.videodescr['width']
+		height = self.videodescr['height']
+		return VideoFormat('dummy_format', 'Dummy Video Format', width, height, imgformat.macrgb)
 		
 	def GetVideoFrameRate(self):
 		return 25
@@ -63,8 +97,8 @@ class _Reader:
 		return '\020\040\060\077' * 320 * 240
 
 def reader(url):
-	print 'No video conversion yet'
-	return None
+##	print 'No video conversion yet'
+##	return None
 	try:
 		rdr = _Reader(url)
 	except IOError:
@@ -75,11 +109,9 @@ def reader(url):
 	return rdr
 
 def _test():
-	import macfs
-	import urllib
 	import img
-	import os
 	import MacOS
+	Qt.EnterMovies()
 	fss, ok = macfs.PromptGetFile('Video to convert')
 	if not ok: sys.exit(0)
 	path = fss.as_pathname()
