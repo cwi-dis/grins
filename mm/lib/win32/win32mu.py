@@ -127,6 +127,55 @@ class Rect:
 				return 0
 		return 1
 
+	# borrow cmifwnd's _prepare_image but make some adjustments
+	def adjustSize(self, size, crop = (0,0,0,0), scale = 0, center = 1):
+		xsize, ysize = size
+		x,y,r,b=self.left,self.top,self.right,self.bottom
+		width, height=r-x,b-y
+
+		# check for valid crop proportions
+		top, bottom, left, right = crop
+		if top + bottom >= 1.0 or left + right >= 1.0 or \
+		   top < 0 or bottom < 0 or left < 0 or right < 0:
+			raise error, 'bad crop size'
+
+		top = int(top * ysize + 0.5)
+		bottom = int(bottom * ysize + 0.5)
+		left = int(left * xsize + 0.5)
+		right = int(right * xsize + 0.5)
+		rcKeep=left,top,xsize-right,ysize-bottom
+
+		# compute scale taking into account the hint (0,-1)
+		if scale == 0:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+		elif scale == -1:
+			scale = max(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+		elif scale == -2:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+			if scale > 1:
+				scale = 1
+
+		# scale crop sizes
+		top = int(top * scale + .5)
+		bottom = int(bottom * scale + .5)
+		left = int(left * scale + .5)
+		right = int(right * scale + .5)
+
+		w=xsize
+		h=ysize
+		if scale != 1:
+			w = int(xsize * scale + .5)
+			h = int(ysize * scale + .5)
+
+		if center:
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
+		return left, top, x, y, w - left - right, h - top - bottom, rcKeep
+
+
 class SizeRect:
 	def __init__(self,r=(0,0,0,0)):
 		self.x=r[0];self.y=r[1];
