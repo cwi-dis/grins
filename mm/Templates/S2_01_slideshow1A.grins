@@ -7,10 +7,10 @@
     <meta name="template_snapshot" content="icons/slideshow_1A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
-      <topLayout id="Basic_GRiNS_Slideshow" width="330" height="270"  GRiNS:editBackground="192 192 0" GRiNS:showEditBackground="1">
+      <topLayout id="Basic_GRiNS_Slideshow" width="330" height="270"  GRiNS:editBackground="#c0c000" GRiNS:showEditBackground="true">
         <region id="audio" GRiNS:type="sound"/>
-        <region id="bkgd_image" width="330" height="270" GRiNS:type="image" z-index="0" GRiNS:editBackground="192 0 192" GRiNS:showEditBackground="1"/>
-        <region id="Images" fit="meet" top="7" left="7" width="320" height="240" z-index="1" GRiNS:type="image" GRiNS:editBackground="0 192 192" GRiNS:showEditBackground="1"/>
+        <region id="bkgd_image" width="330" height="270" GRiNS:type="image" z-index="0" GRiNS:editBackground="#c000c0" GRiNS:showEditBackground="true"/>
+        <region id="Images" fit="meet" top="7" left="7" width="320" height="240" z-index="1" GRiNS:type="image" GRiNS:editBackground="#00c0c0" GRiNS:showEditBackground="true"/>
       </topLayout>
     </layout>
     <transition id="fade" type="fade"/>

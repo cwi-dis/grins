@@ -8,15 +8,15 @@
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
       <topLayout id="Player-Window" width="250" height="222"
-                 GRiNS:editBackground="192 192 192" GRiNS:showEditBackground="1">
+                 GRiNS:editBackground="#c0c0c0" GRiNS:showEditBackground="true">
         <region id="audio" 
                  GRiNS:type="sound"/>
         <region id="bkgd_image" width="250" height="222" z-index="1" 
-                 GRiNS:type="image" GRiNS:editBackground="255 192 192" GRiNS:showEditBackground="1"/>
+                 GRiNS:type="image" GRiNS:editBackground="#ffc0c0" GRiNS:showEditBackground="true"/>
         <region id="Video" left="7" top="7" width="240" height="180" z-index="1"
-                 GRiNS:type="video" GRiNS:editBackground="192 255 192" GRiNS:showEditBackground="1"/>
+                 GRiNS:type="video" GRiNS:editBackground="#c0ffc0" GRiNS:showEditBackground="true"/>
         <region id="Captions" left="7" top="194" width="220" height="20" z-index="2"
-                 GRiNS:type="text" GRiNS:editBackground="192 192 255" GRiNS:showEditBackground="1"/>
+                 GRiNS:type="text" GRiNS:editBackground="#c0c0ff" GRiNS:showEditBackground="true"/>
       </topLayout>
     </layout>
     <transition id="fade" type="fade"/>
