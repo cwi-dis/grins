@@ -297,7 +297,7 @@ class TopLevel(ViewDialog, BasicDialog):
 			obj.set_button(0)
 			return
 		try:
-			top = TopLevel().init(filename)
+			top = TopLevel().init(self.main, filename)
 		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
 			fl.show_message('Open operation failed.  File:', \
 				filename, \
@@ -514,7 +514,7 @@ class TopLevel(ViewDialog, BasicDialog):
 				break
 		else:
 			try:
-				top = TopLevel().init(filename)
+				top = TopLevel().init(self.main, filename)
 			except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
 				fl.show_message('Open operation failed.  File:', \
 					  filename, \
