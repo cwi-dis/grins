@@ -11,7 +11,7 @@ elif platform == 'sunos5' or platform == 'irix5':
 	from MPEGVideoDuration import *
 elif platform == 'mac':
 	from MACVideoDuration import *
-elif platform == 'nt':
+elif platform == 'nt' or platform == 'win32':
 	from NTVideoDuration import *
 else:
 	raise ImportError('No appropriate VideoDuration for this platform')
