@@ -720,7 +720,7 @@ class ChannelUndefDlg(ResDialog):
 
 # Implementation of the channel undefined dialog
 class EnterKeyDlg(ResDialog):
-	def __init__(self,cb_ok,parent=None,user='',org=''):
+	def __init__(self,cb_ok,parent=None,user='',org='',license=''):
 		ResDialog.__init__(self,grinsRC.IDD_ENTER_KEY,parent)
 		self._cb_ok = cb_ok
 		self._bok = Button(self,win32con.IDOK)
@@ -728,7 +728,7 @@ class EnterKeyDlg(ResDialog):
 		self._tuser = Edit(self,grinsRC.IDC_NAME)
 		self._torg = Edit(self,grinsRC.IDC_ORGANIZATION)
 		self._tkey = Edit(self,grinsRC.IDC_KEY)
-		self.params = user, org
+		self.params = user, org, license
 		self.show()
 
 	def OnInitDialog(self):
@@ -736,10 +736,14 @@ class EnterKeyDlg(ResDialog):
 		self._tuser.hookcommand(self,self.OnEditChange)
 		self._torg.hookcommand(self,self.OnEditChange)
 		self._tkey.hookcommand(self,self.OnEditChange)
-		self._bok.enable(0)
-		user, org = self.params
+		user, org, license = self.params
 		self._tuser.settext(user)
 		self._torg.settext(org)
+		self._tkey.settext(license)
+		if license:
+			self._bok.enable(1)
+		else:
+			self._bok.enable(0)
 		return ResDialog.OnInitDialog(self)
 
 	def show(self):
