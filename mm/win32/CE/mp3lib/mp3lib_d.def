@@ -3,7 +3,7 @@
 LIBRARY      "mp3lib_d.dll"
 
 EXPORTS
-	Init			@1
-	Exit			@2
-	DecompressMp3		@3
-	GetHeaderInfo		@4
+	mp3_lib_init				@1
+	mp3_lib_finalize			@2
+	mp3_lib_decode_buffer		@3
+	mp3_lib_decode_header		@4
