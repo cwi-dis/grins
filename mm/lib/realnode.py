@@ -273,7 +273,8 @@ class SlideShow:
 					rp.width, rp.height = node.GetChannel().get('base_winoff',(0,0,256,256))[2:4]
 				attrdict['size'] = rp.width, rp.height
 		duration = MMAttrdefs.getattr(node, 'duration')
-		if duration != rp.duration:
+		if abs(float(duration - rp.duration)) / max(duration, rp.duration, 1) > 0.00001:
+##		if duration != rp.duration:
 			if rp is oldrp:
 				rp.duration = duration
 				changed = 1
