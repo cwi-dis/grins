@@ -677,17 +677,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
 				self.__context.attributes['project_boston'] = 1
-				try:
-					if val[-1] == '%':
-						val = string.atof(val[:-1]) / 100.0
-					else:
-						if val[-2:] == 'px':
-							val = val[:-2]
-						val = string.atoi(val)
-				except (string.atoi_error, string.atof_error):
-					self.syntax_error('invalid subregion attribute value')
-					val = 0
-				attrdict[attr] = val
+				if val == 'auto':
+					# equivalent to no attribute
+					pass
+				else:
+					try:
+						if val[-1] == '%':
+							val = string.atof(val[:-1]) / 100.0
+						else:
+							if val[-2:] == 'px':
+								val = val[:-2]
+							val = string.atoi(val)
+					except (string.atoi_error, string.atof_error):
+						self.syntax_error('invalid subregion attribute value')
+						val = 0
+					attrdict[attr] = val
 			elif attr == 'backgroundColor':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
@@ -2329,23 +2333,27 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if self.__context.attributes.get('project_boston') == 0:
 						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					self.__context.attributes['project_boston'] = 1
-				try:
-					if val[-1] == '%':
-						val = string.atof(val[:-1]) / 100.0
-						if attr in ('width','height') and val < 0:
-							self.syntax_error('region with negative %s' % attr)
-							val = 0.0
-					else:
-						if val[-2:] == 'px':
-							val = val[:-2]
-						val = string.atoi(val)
-						if attr in ('width','height') and val < 0:
-							self.syntax_error('region with negative %s' % attr)
-							val = 0
-				except (string.atoi_error, string.atof_error):
-					self.syntax_error('invalid region attribute value')
-					val = 0
-				attrdict[attr] = val
+				if val == 'auto':
+					# equivalent to no attribute
+					pass
+				else:					
+					try:
+						if val[-1] == '%':
+							val = string.atof(val[:-1]) / 100.0
+							if attr in ('width','height') and val < 0:
+								self.syntax_error('region with negative %s' % attr)
+								val = 0.0
+						else:
+							if val[-2:] == 'px':
+								val = val[:-2]
+							val = string.atoi(val)
+							if attr in ('width','height') and val < 0:
+								self.syntax_error('region with negative %s' % attr)
+								val = 0
+					except (string.atoi_error, string.atof_error):
+						self.syntax_error('invalid region attribute value')
+						val = 0
+					attrdict[attr] = val
 			elif attr == 'z-index':
 				try:
 					val = string.atoi(val)
@@ -3706,7 +3714,7 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 	MAX_REGION_SIZE = 5000
 	
 	if wR1 != None and wR2 != None:
-		# conflict regpoint attribute
+		# conflict regpoint attribute  
 		return minsize
 
 	if wM1 == None or wM2 == None:
