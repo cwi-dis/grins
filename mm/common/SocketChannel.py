@@ -9,7 +9,8 @@ from AnchorDefs import *
 
 
 class SocketChannel(Channel):
-	chan_attrs = Channel.chan_attrs + ['port']
+	chan_attrs = Channel.chan_attrs + ['port', 'nonlocal', \
+		  'mcgroup', 'mcttl']
 	
 	def init(self, name, attrdict, scheduler, ui):
 		self = Channel.init(self, name, attrdict, scheduler, ui)
@@ -22,14 +23,33 @@ class SocketChannel(Channel):
 		toplevel = self._player.toplevel
 		toplevel.select_setcallback(self.socket, self.socket_ready, ())
 		self.anchorlist = None
+		self.hostaddr = socket.gethostbyname(socket.gethostname())
+		self.nonlocalonly = 0
+		if attrdict.has_key('nonlocal'):
+			self.nonlocalonly = attrdict['nonlocal']
+		if attrdict.has_key('mcttl'):
+			ttl = attrdict['mcttl']
+		else:
+			ttl = 3
+		if attrdict.has_key('mcgroup'):
+			mcgroup = attrdict['mcgroup']
+			addgroup(self.socket, mcgroup, ttl)
 		return self
+
+	def destroy(self):
+		toplevel = self._player.toplevel
+		toplevel.select_setcallback(self.socket, None, ())
+		self.socket.close()
+		del self.socket
+		Channel.destroy(self)
 
 	def __repr__(self):
 		return '<SocketChannel instance, name=' + `self._name` + '>'
 
 	def socket_ready(self, *dummy):
-		rv = self.socket.recv(10000)
-		print 'SocketChannel: recv:', rv
+		rv, (shost, sport) = self.socket.recvfrom(10000)
+		if self.nonlocalonly and shost == self.hostaddr:
+			return
 		fields = string.split(rv)
 		cmd = fields[0]
 		if cmd == 'anchor':
@@ -50,9 +70,55 @@ class SocketChannel(Channel):
 		return 1
 
 	def do_play(self, node):
-		self.anchorlist = node.GetRawAttr('anchorlist')
+		self.anchorlist = MMAttrdefs.getattr(node, 'anchorlist')
 		modanchorlist(self.anchorlist)
+		if node.GetType() <> 'imm':
+			return
+		cmds = node.GetValues()
+		for cmd in cmds:
+			if not cmd:
+				continue
+			fields = string.split(cmd)
+			if fields[0] == 'send':
+				if len(fields) < 3:
+					print 'SocketChannel: bad cmd:', cmd
+					return
+				host = fields[1]
+				try:
+					port = eval(fields[2])
+				except:
+					print 'SocketChannel: bad port:', fields[2]
+					return
+				data = string.join(fields[3:])
+				self.socket.sendto(data, (host, port))
+			else:
+				print 'SocketChannel: bad cmd:', cmd
+				return
+				
 
 	def playstop(self):
 		self.anchorlist = None
 		Channel.playstop(self)
+#
+# Helper routines for multicast support.
+
+import regsub
+import IN
+import struct
+#
+# Convert dotted-form inet address to binary
+def dotted_to_binary(addr):
+	group_bytes = eval(regsub.gsub('\.', ',', addr))
+	group_addr = 0
+	for i in group_bytes: group_addr = (group_addr<<8) | i
+	return group_addr
+
+def addgroup(sock, mcaddr, ttl):
+	iface = socket.gethostbyname(socket.gethostname())
+	iface = dotted_to_binary(iface)
+	group = dotted_to_binary(mcaddr)
+	sock.setsockopt(IN.IPPROTO_IP, IN.IP_ADD_MEMBERSHIP, \
+		  struct.pack('ll', group, iface))
+	sock.setsockopt(IN.IPPROTO_IP, IN.IP_MULTICAST_TTL, \
+		  chr(ttl))
+
