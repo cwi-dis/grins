@@ -48,6 +48,7 @@ class GOCommand:
 		c.append('', 'Siblings', self.siblings)
 		c.append('', 'Descendants', self.descendants)
 		c.append('T', 'Toggle unused channels', (self.toggleshowcall, ()))
+		c.append('', 'Toggle thumbnails', (self.mother.thumbnailcall, ()))
 		self.menutitle = 'Base ops'
 
 	# from ChanelView

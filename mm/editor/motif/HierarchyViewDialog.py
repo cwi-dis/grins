@@ -94,7 +94,7 @@ class HierarchyViewDialog(ViewDialog):
 		if self.is_showing():
 			return
 		self.toplevel.showstate(self, 1)
-		title = 'Hierarchy View (' + self.toplevel.basename + ')'
+		title = 'Hierarchy View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, menubar=self.menu, canvassize = (w, h))
