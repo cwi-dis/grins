@@ -1145,7 +1145,8 @@ class ListCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnEdit, self._resid[4])
 		#self._wnd.HookCommand(self.OnListEdit, self._resid[0])
 
-		#self.setvalue(self._attr.getcurrent())
+		bob = self._attr.getcurrent()
+		self.setvalue(bob)
 
 		#self._attrname.attach_to_parent()
 		#if self.want_label:
@@ -1225,8 +1226,8 @@ class ListCtrl(AttrCtrl):
 
 	def setvalue(self, val):
 		# val should be a tuple of (node, EventStructs)
-		print "DEBUG: val is: ", val
-		import traceback ; traceback.print_stack()
+		#print "DEBUG: val is: ", val
+		#import traceback ; traceback.print_stack()
 		if isinstance(val, type(())):
 			self._node, self._value = val	# store for later use.
 		elif isinstance(val, type([])):

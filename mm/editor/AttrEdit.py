@@ -2034,7 +2034,7 @@ class TimelistAttrEditorField(AttrEditorField):
 	# It's a form of encapsulation, and to me it "feels" right.
 
 	def valuerepr(self, listofsyncarcs):
-		if listofsyncarcs is None: return []
+		if listofsyncarcs is None: listofsyncarcs = []
 		# converts listofsyncarcs into a list of eventstructs
 		#return ['hello', 'world']
 		return_me = []

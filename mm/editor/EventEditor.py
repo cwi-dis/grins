@@ -79,14 +79,13 @@ class EventStruct:
 				a = 'end'
 			else: # if action is None, for example.
 				a = 'begin'
-			assert isinstance(self._node, MMNode.MMNode)
-			self._syncarc = MMNode.MMSyncArc(self._node, a)
+			self._syncarc = MMNode.MMSyncArc(node, a)
 			self.set_cause('node')
 			self.set_event('activateEvent')
 			self.set_offset('0')
 		else:
 			self._syncarc = syncarc
-			self.set_vars()
+			self.__init__set_vars()
 			
 	def get_value(self):
 		# Returns the result of editing this syncarc.
@@ -116,7 +115,7 @@ class EventStruct:
 			s.marker = self._setmarker
 		return self._syncarc
 
-	def set_vars(self):
+	def __init__set_vars(self):
 		# Sets all the variables in this class.
 		x = self._syncarc
 
@@ -303,7 +302,7 @@ class EventStruct:
 			name = "Node:"
 			if self._setnode:
 				thing = self._setnode
-			elif isinstance(self._syncarc, MMNode.MMSyncArc):
+			elif isinstance(self._syncarc, MMNode.MMSyncArc) and self._syncarc.srcnode:
 				thing = self._syncarc.srcnode.GetName()
 			else:
 				thing = "SomeNode"
