@@ -1733,7 +1733,7 @@ class LayoutView2(LayoutViewDialog2):
 				self.currentSelectedRegionList.append(name)
 				# redisplay viewport
 				self.displayViewport(self.currentViewport.getName())
-			
+
 			self.select(self.getRegion(name))
 #			self.myfocus = self.context.getchannel(name)
 			self.editmgr.setglobalfocus('MMChannel',regionRef)
@@ -1766,6 +1766,13 @@ class LayoutView2(LayoutViewDialog2):
 				self.appendMediaNodeList([mediaRef])
 			if name not in self.currentNodeListShowed:
 				self.currentNodeListShowed.append(name)
+
+			# register as well the previous focus node
+			for mediaRegion, parentRegion in self.currentMediaNodeList:
+				n = mediaRegion.getName()
+				if n not in self.currentNodeListShowed:
+					self.currentNodeListShowed.append(n)
+
 			self.select(self.getMedia(name))
 			self.editmgr.setglobalfocus('MMNode',mediaRef)
 
