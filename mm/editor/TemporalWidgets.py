@@ -1,3 +1,10 @@
+__version__ = "$Id:"
+
+# Known bugs:
+# * the tree next to the channels isn't drawn correctly sometimes.
+# * It's dog slow
+# * Structure nodes overlap each other.
+
 import types
 
 import Widgets
@@ -82,6 +89,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 		self.structnodes = []	# A sorted list, by time of the structure nodes.
 
+		global_factory.timecanvas = self
 		self.node_channel_mapping = {} # A dictionary of channel names -> lists of nodes in that channel.
 		self.mainnode = self.__init_create_widgets(self.node)
 		self.channeltree = global_factory.createchanneltree(node)
@@ -278,7 +286,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			x,y,w,h = w_channel.get_box()
 			if self.node_channel_mapping.has_key(w_channel_name):
 				for i in self.node_channel_mapping[w_channel_name]:
-					i.set_y(y,y+h)
+					yr = y + CHANNELHEIGHT*i.get_channel_index()
+					i.set_y(yr,yr+CHANNELHEIGHT)
 
 		self.channeltree.recalc()
 
@@ -310,10 +319,15 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 		# Check the leaf nodes.
 		channel = self.channeltree.get_obj_at(coords)
-		channelname = channel.get_name()
-		for n in self.node_channel_mapping[channelname]:
-			if n.is_hit(coords):
-				return n
+		if channel:
+			channelname = channel.get_name()
+			try:
+				for n in self.node_channel_mapping[channelname]:
+					if n.is_hit(coords):
+						return n
+			except KeyError:
+				print "DEBUG: KeyError. Continuing anyway."
+		return None
 
 	def select_channel(self, w_channel):
 		# Note that the channel given in the parameters is a widget, not a MMChannel.
@@ -368,6 +382,11 @@ class TemporalWidgetFactory:
 		bob.set_channel(c)
 		bob.set_display(graph)
 		bob.editmgr = self.editmgr
+		try:
+			bob.nodewidgets = self.timecanvas.node_channel_mapping[c.name]
+		except Exception:
+			bob.nodewidgets = []
+			print "Warning: umm. Not sure."
 		bob.setup()
 		return bob
 
@@ -492,7 +511,7 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 					currentvline.moveto((
 						leftpos,
 						top,
-						leftpos,
+					leftpos,
 						ty+th-CHANNELHEIGHT/2))
 			elif indent > currentindent:
 				# The current line gets promoted to a parent.
@@ -519,8 +538,9 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		self.channeltree.append(bob)
 		bob.set_depth(treedepth)
 		x,y,w,h = self.cpos
-		bob.moveto((x,y,x+w,y+h))
-		self.cpos = (x,y+CHANNELHEIGHT+2,w,h)
+		cheight = bob.get_height()
+		bob.moveto((x,y,x+w,y+CHANNELHEIGHT*cheight))
+		self.cpos = (x,y+CHANNELHEIGHT*cheight+2,w,CHANNELHEIGHT)
 		# add all subchannels to the tree also.
 		for i in self.channelhelper.getsubregions(channel):
 			self.add_channel_to_bottom(i, treedepth+1)
@@ -572,7 +592,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		else:
 			print "ERROR: I have no channel"
 			self.name = 'undefined'
-		self.nodewidgets = []		# A list of all node widgets in this channel.
+#		self.nodewidgets = []		# A list of all node widgets in this channel.
 		self.w_fbox = self.graph.AddWidget(FBox(self.mother))
 		self.w_fbox.set_color((232,193,152))
 #		self.w_outerbox = self.graph.AddWidget(Box(self.mother))
@@ -615,13 +635,13 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		l,t,r,b = coords
 		Widgets.Widget.moveto(self, coords)
 #		self.w_outerbox.moveto(coords)
-		self.w_name.moveto((l+2+CHANNELTREEINDENT*self.depth, t, r, b-2))
+		self.w_name.moveto((l+2+CHANNELTREEINDENT*self.depth, t, r, t+2+self.w_name.get_height()))
 		self.w_fbox.moveto(coords)
 
 		mx, my, mw, mh = self.get_box()
-		print "DEBUG: MMChannel.moveto: children are: ", self.nodewidgets
-		for i in self.nodewidgets:
-			i.set_y(my, my+mh)
+		#print "DEBUG: MMChannel.moveto: children are: ", self.nodewidgets
+		#for i in self.nodewidgets:
+		#	i.set_y(my, my+mh)
 
 		# Move all of my nodes too.
 		# DELETE ME. The x coordinate is handled by the strcture widgets.
@@ -658,6 +678,30 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 	def get_name(self):
 		return self.name
 
+	def get_height(self):
+		# Return the number of MMWidgets high I need to be to fit them in.
+		stack = []
+		max = 0
+		for node in self.nodewidgets:
+			# Resolve the stack - time is now the start time of the node.
+			time = node.get_starttime()
+			iindex = -1
+			for i in stack:
+				if i.get_endtime() <= time:
+					iindex = stack.index(i)
+			# This is a hack because Python won't let you assign out of a list.
+			if iindex == -1:
+				iindex = len(stack)
+				stack.append(node)
+			else:
+				stack[iindex] = node
+			node.set_channel_index(iindex)
+			if max < len(stack):
+				max = len(stack)
+		if max < 1:
+			return 1
+		else:
+			return max
 
 
 class TimeWidget(MMNodeWidget, GeoDisplayWidget):
@@ -762,6 +806,11 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_fbox.set_color((230,230,230))
 	def unselect(self):
 		self.w_fbox.set_color(CNODE)
+
+	def set_channel_index(self, i):
+		self.channel_index = i;
+	def get_channel_index(self):
+		return self.channel_index
 
 # delete me.
 ##class SyncBarWidget(TimeWidget, GeoDisplayWidget):

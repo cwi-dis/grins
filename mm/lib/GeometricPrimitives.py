@@ -126,7 +126,10 @@ class Text(GeoClientWidget):
 	def align(self, bob):
 		self.textalign = bob
 
-		
+	def get_height(self):
+		print "TODO: Text.get_height()"
+		return 12;
+
 class FPolygon(GeoClientWidget):
 	pass;
 

@@ -1,8 +1,6 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-Wait for alain; make a build.
-
 Priority top-to-bottom.
 ------------------------
 Fix the RealChannel (waiting to look up Real API documentation).
@@ -17,13 +15,9 @@ Reload button on the player.
 * clipBegin and clipEnd in the Channels.
 * Add a reload button.
 
-Order the channels
-Make the channels display in a tree
 Bars should not collide
 Nodes should not overlap
 The width should be calculated from the duration.
-
-* The temporal view.
 
 * Indefinite durations in the temporal view.
 
