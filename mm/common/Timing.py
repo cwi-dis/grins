@@ -66,12 +66,11 @@ def docalctimes(root):
 	decrement(q, (0, root, HD))
 	q.run()
 	t1 = time.millitimer()
-	dummy = propup(root)
-	propdown(root, root.t1-root.t0)
+	propdown(root, root.t1)
 	t2 = time.millitimer()
 	print 'done in', (t2-t0) * 0.001, 'sec.',
 	print '(of which', getd_times*0.001, 'sec. in getduration())'
-	print '(and', (t2-t1)*0.001, 'sec. in propup and propdown)'
+	print '(and', (t2-t1)*0.001, 'sec. in propdown)'
 
 def getinitial(root):
         if initial_arms == None or root <> ia_root:
@@ -180,45 +179,24 @@ def prep2(node, root):
 	#
 	if node.GetType() in interiortypes:
 		for c in node.GetChildren(): prep2(c, root)
-
-#
-# propup - propagate timing up the tree
-def propup(node):
-	tp = node.GetType()
-	if tp == 'par':
-		d = 0
-		for c in node.GetChildren():
-			dc = propup(c)
-			if dc > d: d = dc
-		node.t1 = node.t0 + d
-	elif tp == 'seq':
-		d = 0
-		for c in node.GetChildren():
-			d = d + propup(c)
-		node.t1 = node.t0 + d
-	return node.t1 - node.t0
-
 #
 # propdown - propagate timing down the tree again
-def propdown(node, time):
+def propdown(node, stoptime):
 	tp = node.GetType()
+	if not node.t0t1_inherited:
+		stoptime = node.t1
 	if tp == 'par':
 		for c in node.GetChildren():
-			propdown(c, time)
+			propdown(c, stoptime)
 	elif tp == 'seq':
-		lastfree = None
-		used = 0
-		for c in node.GetChildren():
-			used = used + c.t1 - c.t0
-			propdown(c, c.t1-c.t0)
-			if c.t0t1_inherited:
-				lastfree = c
-		if lastfree and used < time:
-			time = time - used
-			time = time + (lastfree.t1-lastfree.t0)
-			propdown(lastfree, time)
+		children = node.GetChildren()
+		lastchild = children[-1]
+		children = children[:-1]
+		for c in children:
+			propdown(c, c.t1)
+		propdown(lastchild, stoptime)
 	elif node.t0t1_inherited:
-		node.t1 = node.t0+time
+		node.t1 = stoptime
 
 
 def adddep(xnode, xside, delay, ynode, yside):
@@ -249,6 +227,9 @@ def decrement(q, (delay, node, side)):
 			t0 = time.millitimer()
 			dt = getduration(node)
 			node.t0t1_inherited = (dt == 0)
+			# Don't mess if it has timing deps
+			if len(node.deps[TL]) > 1:
+				node.t0t1_inherited = 0
 			t1 = time.millitimer()
 			global getd_times
 			getd_times = getd_times + (t1-t0)
