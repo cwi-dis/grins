@@ -109,29 +109,38 @@ class VideoChannel(ChannelWindowAsync):
 		self.__end = self.getclipend(node, 'sec')
 		self.arm_loop = self.getloop(node)
 		self.place_movie(node, self.arm_movie)
-		self.make_ready(self.arm_movie)
+##		self.make_ready(self.arm_movie)
 		self.__ready = 1
 		return 1
 		
-	def make_ready(self, movie):
+	def make_ready(self, movie, node):
 		# First convert begin/end to movie times
 		dummy, (value, tbrate, base) = movie.GetMovieTime()
 		if self.__begin:
 			begin = self.__begin*tbrate
 		else:
 			begin = 0
+		t0 = self._scheduler.timefunc()
+		if t0 > node.start_time:
+			extra_delay = (t0-node.start_time)*tbrate
+		else:
+			extra_delay = 0
 		if self.__end:
 			end = self.__end*tbrate
 			dur = end - begin
 		else:
-			dur = movie.GetMovieDuration()
+			end = movie.GetMovieDuration()
+			dur = end - begin
+		print "DBG: movie Rate, begin, extradelay, dur, end", tbrate, begin, extra_delay, dur, end
+		print "DBG: t0, start_time", t0, node.start_time
 		# Next preroll
 		rate = movie.GetMoviePreferredRate()
 		movie.PrerollMovie(begin, rate)
 		# Now set active area
 		movie.SetMovieActiveSegment(begin, dur)
 		# And go to the beginning of it.
-		movie.GoToBeginningOfMovie()
+##		movie.GoToBeginningOfMovie()
+		movie.SetMovieTimeValue(extra_delay)
 ##		movie.MoviesTask(0)  
 	
 	def place_movie(self, node, movie):
@@ -238,6 +247,7 @@ class VideoChannel(ChannelWindowAsync):
 		self.arm_movie = None
 		self.arm_loop = -1
 
+		self.make_ready(self.play_movie, node)
 		self.event('beginEvent')
 		self.play_movie.SetMovieActive(1)
 		self.play_movie.MoviesTask(0)
@@ -348,7 +358,7 @@ class VideoChannel(ChannelWindowAsync):
 				self.__rc.stopit()
 		elif self.play_movie:
 			self.play_movie.StopMovie()
-			self.play_movie = None
+##			self.play_movie = None
 			self.fixidleproc()
 		ChannelWindowAsync.playstop(self)
 		
@@ -356,6 +366,7 @@ class VideoChannel(ChannelWindowAsync):
 		if self.window:
 			self.window.setredrawfunc(None)
 			self.window._mac_setredrawguarantee(None)
+		self.play_movie = None
 		ChannelWindowAsync.stopplay(self, node)
 
 	def fixidleproc(self):
