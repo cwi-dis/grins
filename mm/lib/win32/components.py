@@ -1138,9 +1138,10 @@ class KeyTimesSlider(window.Wnd):
 	#
 	def play(self, dur=5.0):
 		self.previewdur = dur
+		currentpos = 0.01*self.GetPos()*self.previewdur
 		import windowinterface, time
 		if self.fiber is None:
-			self.start = time.time()
+			self.start = time.time() - currentpos
 			self.fiber = windowinterface.setidleproc(self.onIdle)
 
 	def stop(self):
