@@ -23,12 +23,13 @@ unsigned char bb[8192];
 short colorbuff[4096]; 
 IMAGE *image;
 int x, y, xsize, ysize, zsize;
-short val;
 
 main(argc,argv)
 int argc;
 char **argv;
 {
+    int dev;
+    short val;
     if( argc<2 ) {
 	printf("usage: showimg infile [x y]\n");
 	exit(1);
@@ -57,12 +58,16 @@ char **argv;
     winopen("showimg");
     RGBmode();
     gconfig();
+    qdevice(ESCKEY);
+    qdevice(WINSHUT);
     drawit();
     printf("%d\n", getpid());
     fflush(stdout);
     while(1) {
-	if(qread(&val) == REDRAW) 
+	if((dev = qread(&val)) == REDRAW)
 	    drawit();
+	else if (dev == ESCKEY || dev == WINSHUT)
+	    break;
     }
 }
 
