@@ -74,7 +74,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	def OnCommand(self, params):
 		cmdid = winstruct.winmsg(params).id()
 		cmd = usercmdui.id2usercmd(cmdid)
-		print 'Cmd: id=%d usercmd=%s' % (cmdid, repr(cmd))
+##		print 'Cmd: id=%d usercmd=%s' % (cmdid, repr(cmd))
 		if cmd:
 			if cmd == usercmd.EXIT:
 				self.OnClose(params)
@@ -115,7 +115,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		msg = winstruct.winmsg(params)
 		pt = msg.pos()
 		lpt = self.DPtoLP(pt)
-		print 'OnLButtonDblClk %d %d' % lpt
+##		print 'OnLButtonDblClk %d %d' % lpt
 		#winuser.MessageBox('OnLButtonDblClk %d %d' % lpt)
 
 	# rem: we want to reuse this window
@@ -127,7 +127,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.update()
 
 	def set_toggle(self, cmdcl, onoff):
-		print 'set_toggle',  cmdcl, onoff
+##		print 'set_toggle',  cmdcl, onoff
 		if cmdcl == usercmd.PLAY and onoff == 0:
 			self.InvalidateRect()
 
