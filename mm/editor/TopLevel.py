@@ -18,7 +18,8 @@ from TopLevelDialog import TopLevelDialog
 
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
-		self.waiting = 0
+		self.waiting = 1
+		windowinterface.setcursor('watch')
 		ViewDialog.__init__(self, 'toplevel_')
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -73,6 +74,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		TopLevelDialog.__init__(self)
 		self.makeviews()
+		self.setready()
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'

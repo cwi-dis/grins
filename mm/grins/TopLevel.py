@@ -17,7 +17,8 @@ class TopLevel(TopLevelDialog):
 	def __init__(self, main, url):
 		self.__immediate = 0
 		self.__intimer = 0
-		self.waiting = 0
+		self.waiting = 1
+		windowinterface.setcursor('watch')
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
