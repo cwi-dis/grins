@@ -618,6 +618,8 @@ class FileDialog:
 		helpb.UnmanageChild()
 		if not directory:
 			directory = '.'
+		if os.stat(directory) == os.stat('/'):
+			directory = '/'
 		if not filter:
 			filter = '*'
 		self.filter = filter
