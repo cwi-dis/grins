@@ -450,9 +450,22 @@ class SMILXhtmlSmilWriter(SMIL):
 			if mtype in not_xhtml_smil_elements:
 				pass # self.showunsupported(mtype)
 
+			# append if removed
+			if hasfill:
+				attrlist.append( ('fill', fill) )	
+
 			if ':' in mtype:
 				self.writetag(mtype, attrlist)
 			else:
+				# IE hack first please!
+				if mtype == 'seq' and not hasfill:
+					children = x.GetChildren()
+					if children:
+						last = children[len(children)-1]
+						lastfill = MMAttrdefs.getattr(last, 'fill')
+						if lastfill == 'freeze':
+							attrlist.append( ('fill', 'freeze') )
+				# normal
 				self.writetag('t:'+mtype, attrlist)
 			self.push()
 			for child in x.GetChildren():
