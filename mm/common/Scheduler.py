@@ -252,7 +252,7 @@ class SchedulerContext:
 		except KeyError:
 			raise 'Scheduler: Unknown event:', SR.ev2string(ev)
 		srlist = self.sractions[actionpos]
-		if srlist == None:
+		if srlist is None:
 			raise 'Scheduler: actions already sched for ev:', ev
 		num, srlist = srlist
 		num = num - 1
@@ -290,7 +290,6 @@ class Scheduler(scheduler):
 	def play(self, node, seek_node, anchor_id, anchor_arg):
 		if node.GetType() == 'bag':
 			raise 'Cannot play bag node'
-		self.toplevel.setwaiting()
 		# XXXX This statement should move to an intermedeate level.
 		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(node)
@@ -315,7 +314,7 @@ class Scheduler(scheduler):
 		for queue in self.runqueues:
 			tokill = []
 			for ev in queue:
-				if ev[0] == sctx:
+				if ev[0] is sctx:
 					tokill.append(ev)
 			for ev in tokill:
 				queue.remove(ev)
@@ -343,7 +342,6 @@ class Scheduler(scheduler):
 ##		print 'Now', self.sctx_list
 		self.ui.showstate()
 		if self.starting_to_play:
-			self.toplevel.setready()
 			self.starting_to_play = 0
 		self.playing = 0
 		self.ui.play_done()
@@ -368,6 +366,7 @@ class Scheduler(scheduler):
 		# algorithm. For now, we're eager, on both queues.
 		#
 		if debugtimer: print 'timer_callback'
+		self.toplevel.setwaiting()
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			when, prio, action, argument = self.queue[0]
@@ -382,6 +381,10 @@ class Scheduler(scheduler):
 			self.runone(action)
 		self.updatetimer()
 		#self.ui.showtime()
+		# if we're going to be called very soon, don't bother
+		# calling setready
+		if self.delay == 0 or self.delay > 0.01:
+			self.toplevel.setready()
 	#
 	# FutureWork returns true if any of the scheduler contexts
 	# has possible future work. Each context's FutureWork has to be
@@ -398,6 +401,7 @@ class Scheduler(scheduler):
 	# we set the timeout very short, otherwise we simply stop the clock.
 	def updatetimer(self):
 		# Helper variable:
+		self.delay = 0
 		work = 0
 		for q in self.runqueues:
 			if q:
@@ -456,6 +460,7 @@ class Scheduler(scheduler):
 			if debugtimer:  'updatetimer: idle' #DBG
 			return
 		if debugtimer: print 'updatetimer: delay=', delay
+		self.delay = delay
 		self.ui.set_timer(delay)
 	#
 	# Incoming events from channels, or the start event.
@@ -546,7 +551,6 @@ class Scheduler(scheduler):
 	#
 	def do_play(self, sctx, node):
 		if self.starting_to_play:
-			self.toplevel.setready()
 			self.starting_to_play = 0
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_PLAYING)
@@ -650,11 +654,16 @@ def del_timing(node):
 #
 def unarmallnodes(node):
 	#print 'UNARM', MMAttrdefs.getattr(node, 'name')
-	if not hasattr(node, 'armedmode'):
-		# if node does not have an 'armedmode' attribute, it
-		# also does not have a GetChildren method
-		return
+## 	if not hasattr(node, 'armedmode'):
+## 		# if node does not have an 'armedmode' attribute, it
+## 		# also does not have a GetChildren method
+## 		return
 	node.set_armedmode(ARM_NONE)
-	children = node.GetChildren()
+	try:
+		children = node.GetChildren()
+	except AttributeError:
+		return
 	for child in children:
-		unarmallnodes(child)
+		if child.GetType() != 'bag':
+			unarmallnodes(child)
+
