@@ -28,6 +28,7 @@ default_settings = {
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (208, 182, 160),	# Pale pinkish, match channel view
+	'structure_rpcolor': (208, 182, 160),	# Pale pinkish, match channel view
 	'structure_slidecolor': (208, 182, 160),
 	'structure_bagcolor': (152, 174, 200), # Light blue
 	'structure_altcolor': (152, 200, 174), # Light green
