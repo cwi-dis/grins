@@ -615,7 +615,10 @@ class MotionAnimator(Animator):
 			times, splines, accumulate, additive)
 		
 		# time to paced interval convertion factor
-		self._time2length = path.getLength()/dur
+		if dur <= 0:
+			self._time2length = 0
+		else:
+			self._time2length = path.getLength()/dur
 		
 	def _paced(self, t):
 		return self._path.getPointAtLength(t*self._time2length)
@@ -1120,7 +1123,7 @@ animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
 
 # Animation syntax and semantics parser
 class AnimateElementParser:
-	def __init__(self, anim, ctx):
+	def __init__(self, anim, ctx, sctx = None):
 		self.__anim = anim			# the animate element node
 		self.__elementTag = anim.attrdict['atag']
 		self.__attrname = ''		# target attribute name
@@ -1136,6 +1139,7 @@ class AnimateElementParser:
 		self.__isadditive = 0
 		
 		self.__animateContext = ctx # animate context
+		self.__sctx = sctx	# Scheduler Context
 		self.__mmtarget = None # the MM object target of animateMotion (used for absolute coords)
 			
 		if not basicAnimation:
@@ -1269,9 +1273,9 @@ class AnimateElementParser:
 			self.__accelerate = self.__decelerate = 0
 			self.__autoReverse = 0
 
-	def __repr__(self):
-		import SMILTreeWrite
-		return SMILTreeWrite.WriteBareString(self.__anim)
+##	def __repr__(self):
+##		import SMILTreeWrite
+##		return SMILTreeWrite.WriteBareString(self.__anim)
 
 	# this is the main service method of this class
 	# returns an appropriate animator or None
@@ -1583,9 +1587,10 @@ class AnimateElementParser:
 		return self.__domval
 							
 	def getDuration(self):
-		dur = MMAttrdefs.getattr(self.__anim, 'duration')
+		dur = self.__anim.calcfullduration(self.__sctx, ignoreloop = 1, useend = 1)
 		# force first value display (fulfil: use f(0) if duration is undefined)
-		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
+		if dur is None or dur < 0:
+			dur=0
 		return dur
 	
 	def getFrom(self):
