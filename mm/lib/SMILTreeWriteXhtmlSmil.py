@@ -1075,32 +1075,60 @@ class SMILXhtmlSmilWriter(SMIL):
 			style = style + 'background-color:%s;' % bgcolor
 		return style
 
+	# getRegionStyle helper
+	def __rectintersect(self, rc1, rc2):
+		l1, t1, r1, b1 = rc1[0], rc1[1], rc1[0]+rc1[2], rc1[1]+ rc1[3]
+		l2, t2, r2, b2 = rc2[0], rc2[1], rc2[0]+rc2[2], rc2[1]+ rc2[3]
+		l = max(l1, l2)
+		r = min(r1, r2)
+		if r <= l:
+			return 0, 0, 0, 0
+		t = max(t1, t2)
+		b = min(b1, b2)
+		if b <= t:
+			return 0, 0, 0, 0
+		return l, t, r-l, b-t
+
+	# getRegionStyle helper
+	def __getregionpos(self, region):
+		if region in self.top_levels:
+			x, y = self.getViewportOffset(region)
+			w, h = region.getPxGeom()
+			return x, y, w, h
+		parent = region.GetParent()
+		X, Y, W, H = self.__getregionpos(parent)
+		x, y, w, h = region.getPxGeom()
+		if parent not in self.top_levels or len(self.top_levels) > 1:
+			return self.__rectintersect((X, Y, W, H), (X+x, Y+y, w, h))
+		return X+x, Y+y, w, h
+
+	# getRegionStyle helper
+	def __getregionzindex(self, region):
+		if region in self.top_levels:
+			return 0
+		z = self.__getregionzindex(region.GetParent())
+		return max(region.get('z', 0), z)
+
+	# note that we simulate smil layout (hierarchy) using only two levels
 	def getRegionStyle(self, region, node = None, forcetransparent = 0):
 		if region in self.top_levels:
 			return self.getViewportStyle(region, forcetransparent)
-		path = self.getRegionPath(region)
-		if not path: 
-			return None
-		ch = path[len(path)-1]
-		x, y, w, h = ch.getPxGeom()
-		dx, dy = 0, 0
-		if len(self.top_levels) > 1:
-			dx, dy = self.getViewportOffset(path[0])
+		x, y, w, h = self.__getregionpos(region)
 		if node:
 			fit = MMAttrdefs.getattr(node, 'fit')
 		else:
 			fit = 'hidden'
 		overflow = self.getoverflow(fit)
-		style = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, dx+x, dy+y, w, h)
-		transparent = ch.get('transparent', None)
-		bgcolor = ch.get('bgcolor', None)
+		style = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, x, y, w, h)
+		transparent = region.get('transparent', None)
+		bgcolor = region.get('bgcolor', None)
 		if bgcolor and transparent==0 and not forcetransparent:
 			if colors.rcolors.has_key(bgcolor):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
 			style = style + 'background-color:%s;' % bgcolor
-		z = ch.get('z', 0)
+		z = self.__getregionzindex(region)
 		if z > 0:
 			style = style + 'z-index:%d;' % z
 		return style
