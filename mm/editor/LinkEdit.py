@@ -14,7 +14,8 @@ from MMNode import interiortypes
 
 from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
 		   DIR_2WAY, TYPE_JUMP
-typestr = ['JUMP', 'CALL', 'FORK']
+##typestr = ['JUMP', 'CALL', 'FORK']
+typestr = ['Replace', 'Pause', 'New']
 dirstr = ['->', '<-', '<->']
 
 class Struct: pass
@@ -52,7 +53,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		self.linkfocus = None
 
 		LinkBrowserDialog.__init__(self, self.__maketitle(),
-			[('All', (self.menu_callback, (self.left, M_ALL))),
+			[('All internal', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
 			 ('From Timeline view selection',
@@ -60,7 +61,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			 ('From Structure view selection',
 			  (self.menu_callback, (self.left, M_BVFOCUS))),
 			 ], self.left,
-			[('All', (self.menu_callback, (self.right, M_ALL))),
+			[('All internal', (self.menu_callback, (self.right, M_ALL))),
 			  ('Dangling',
 			   (self.menu_callback, (self.right, M_DANGLING))),
 			  ('From Timeline view selection',
@@ -204,7 +205,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		str.anchors = getanchors(str.node, 0)
 
 	def fill_all(self, str):
-		str.browser_setlabel('All')
+		str.browser_setlabel('All internal')
 		str.anchors = getanchors(self.root, 1)
 
 	def fill_relation(self, str):
@@ -237,7 +238,8 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 
 	def fill_external(self, str):
 		str.browser_setlabel('External')
-		str.anchors = self.toplevel.getallexternalanchors()
+		str.anchors = self.context.getexternalanchors()
+##		str.anchors = self.toplevel.getallexternalanchors()
 
 	def fill_keep(self, str):
 		str.browser_setlabel('Kept')
@@ -507,6 +509,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			top.channelview.globalsetfocus(node)
 
 	def menu_callback(self, str, ind):
+		self.addexternalsetsensitive(0)
 		str.hidden = 0
 		if ind == M_ALL:
 			str.node = None
@@ -539,6 +542,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		elif ind == M_EXTERNAL:
 			str.node = None
 			str.fillfunc = self.fill_external
+			self.addexternalsetsensitive(1)
 #			if self.external:
 #				doc, aname = self.external[0]
 #			else:
@@ -558,6 +562,24 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			print 'Unknown menu selection'
 			return
 		self.updateform(str)
+
+	def add_external_callback(self):
+		windowinterface.InputDialog('URL',
+					    '',
+					    self.new_external_callback,
+					    cancelCallback = (self.new_external_callback, ()))
+
+	def new_external_callback(self, url = None):
+		if not url:
+			return
+		import string
+		url = string.join(string.split(url, ' '), '%20')
+		if url not in self.context.externalanchors:
+			em = self.editmgr
+			if not em.transaction(): return
+			em.addexternalanchor(url)
+			em.commit()
+			self.updateform()
 
 	def link_browser_callback(self):
 		focus = self.middlegetselected()
