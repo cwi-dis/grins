@@ -23,6 +23,7 @@ GRINSPATH = [
 
 	os.path.join(GRINSDIR, '%s\\smil20\\win32' % specificPath),
 	os.path.join(GRINSDIR, '%s\\smil20' % specificPath),
+	os.path.join(GRINSDIR, '%s\\wince' % specificPath),
 	os.path.join(GRINSDIR, '%s\\win32' % specificPath),
 	os.path.join(GRINSDIR, '%s' % specificPath),
 
