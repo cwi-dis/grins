@@ -99,9 +99,7 @@ class DLL_API Object : public PyObject
 	virtual PyObject *getattr(char *name);
 	virtual int setattr(char *name, PyObject *v);
 	virtual void cleanup();
-#ifdef MS_WIN32
-	static struct PyMethodDef Object::empty_methods[];
-#endif
+
 	static TypeObject type;	
 
 	protected:
