@@ -52,6 +52,7 @@ class TreeCtrl(window.Wnd):
 		self.RegisterDropTarget()
 
 		self.__lastDragOverItem = None
+		self.__selectedItem = None
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
@@ -298,10 +299,11 @@ class TreeCtrl(window.Wnd):
 		self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
 		
 	def __toNormalState(self):
-		self.SetItemState(self.__selectedItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-		if self.__lastDragOverItem != None:
-			self.SetItemState(self.__lastDragOverItem, 0, commctrl.TVIS_SELECTED)
-			self.__lastDragOverItem = None
+		if self.__selectedItem != None:
+			self.SetItemState(self.__selectedItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+			if self.__lastDragOverItem != None:
+				self.SetItemState(self.__lastDragOverItem, 0, commctrl.TVIS_SELECTED)
+				self.__lastDragOverItem = None
 							
 	# set a drag and drop listener 
 	def setDragdropListener(self, listener):
