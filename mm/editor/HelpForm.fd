@@ -1,0 +1,90 @@
+Magic: 12321
+
+Internal Form Definition File
+    (do not change)
+
+Number of forms: 1
+
+=============== FORM ===============
+Name: form
+Width: 530.000000
+Height: 750.000000
+Number of Objects: 5
+
+--------------------
+class: 1
+type: 1
+box: 0.000000 0.000000 530.000000 750.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 71
+type: 2
+box: 200.000000 650.000000 320.000000 90.000000
+boxtype: 2
+colors: 15 3
+alignment: 2
+style: 0
+size: 11.000000
+lcol: 0
+label: 
+name: topic
+callback: cb_topic
+argument: 0
+
+--------------------
+class: 71
+type: 1
+box: 10.000000 10.000000 510.000000 630.000000
+boxtype: 2
+colors: 15 3
+alignment: 1
+style: 0
+size: 11.000000
+lcol: 0
+label: 
+name: help
+callback: cb_help
+argument: 0
+
+--------------------
+class: 2
+type: 0
+box: 10.000000 700.000000 180.000000 40.000000
+boxtype: 0
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: Click on a topic\nto get help
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 11
+type: 0
+box: 10.000000 650.000000 180.000000 40.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: Return to previous
+name: button_return
+callback: cb_return
+argument: 0
+
+==============================
+create_the_forms
