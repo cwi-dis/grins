@@ -214,7 +214,7 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 			# not found, search from the begining
 			ret = self.__textwindow.findNext(0, text, options)
 			if ret == None:
-				windowinterface.showmessage("GRiNS has finished searching the document", mtype = 'error')
+				windowinterface.showmessage("No more occurrences.", mtype = 'error')
 			else:
 				found = 1
 		else:
@@ -275,6 +275,6 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 
 		self.__replacing = 0
 
-		windowinterface.showmessage("Replaced "+`nocc`+' occurrences')
+		windowinterface.showmessage("Replaced "+`nocc`+' occurrences.')
 		
 	

@@ -127,7 +127,7 @@ class MainDialog:
 		if mimetype in ('application/x-grins-project', 'application/smil'):
 			self.openURL_callback(url)
 		else:
-			windowinterface.showmessage('Incorrect filetype for drop/paste')
+			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
 	
 	def pastefile(self, arg, window, event, value):
 		if not self.canopennewtop():
