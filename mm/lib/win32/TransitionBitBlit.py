@@ -3,6 +3,8 @@
 # architecture.
 
 import ddraw
+import win32api, win32ui, win32con 
+Sdk=win32ui.GetWin32Sdk()
 
 class BlitterClass:
 	SHOW_UNIMPLEMENTED_TRANSITION_NAME=1
@@ -29,11 +31,43 @@ class BlitterClass:
 		l,t,r,b = ltrb
 		return r==l or b==t
 
-	def copyBits(self, src, dst, rcsrc, rcdst):
-		if not self.isempty(rcsrc) and not self.isempty(rcdst):		
-			dst.Blt(rcdst, src, rcsrc, ddraw.DDBLT_WAIT)
+	def copyBits(self, src, dst, rcsrc, rcdst, flags=0, rgn=None):
+		if not self.isempty(rcsrc) and not self.isempty(rcdst):
+			if rgn==None:
+				flags = flags | ddraw.DDBLT_WAIT 	
+				dst.Blt(rcdst, src, rcsrc, flags)
+			else:
+				dstDC = self.getDC(dst)	
+				srcDC = self.getDC(src)	
+				dstDC.SelectClipRgn(rgn)			
+				ls, ts, rs, bs = rcsrc
+				ld, td, rd, bd = rcdst
+				dstDC.BitBlt((ld,td),(rd-ld,bd-td),srcDC,(ls, ts), win32con.SRCCOPY)
+				self.releaseDC(dst,dstDC)
+				self.releaseDC(src,srcDC)
 
-		
+	def getDC(self, dds):
+		hdc = dds.GetDC()
+		return win32ui.CreateDCFromHandle(hdc)
+
+	def releaseDC(self, dds, dc):
+		hdc = dc.Detach()
+		dds.ReleaseDC(hdc)
+
+	def createRegion(self, pointlist):
+		npl = []
+		for p in pointlist:
+			x = int(p[0]+0.5)
+			y = int(p[1]+0.5)
+			npl.append((x,y))
+		rgn = win32ui.CreateRgn()
+		try:
+			rgn.CreatePolygonRgn(npl)
+		except:
+			print 'pointlist:', npl
+			return None
+		return rgn
+
 class R1R2BlitterClass(BlitterClass):
 	"""parameter is 2 rects, first copy rect2 from src2, then rect1 from src1"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
@@ -67,19 +101,44 @@ class RlistR2OverlapBlitterClass(BlitterClass):
 		for rect in rectlist:
 			self.copyBits(src1, tmp, rect, rect)
 		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
-		
-
+	
 class PolyR2OverlapBlitterClass(BlitterClass):
 	"""Like R1R2OverlapBlitterClass, but first item is a polygon (list of points)"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		pass			
+		pointlist, rect2 = parameters
+		self.copyBits(src2, tmp, rect2, rect2)
+		if pointlist:
+			rgn = self.createRegion(pointlist)
+			self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
+		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
+
+class PolylistR2OverlapBlitterClass(BlitterClass):
+	"""Like PolyR2OverlapBlitterClass, but first item is a list of polygons"""
+		
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		pointlist, rect2 = parameters
+		self.copyBits(src2, tmp, rect2, rect2)
+		if pointlist:
+			rgn = self.createRegion(pointlist[0])
+			for pl in pointlist[1:]:
+				newrgn = self.createRegion(pl)
+				rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)		
+			self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
+		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
+
 	
 class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		pass
+		value = parameters
+		white = src1.GetColorMatch(0xFFFFFF)
+		black = src1.GetColorMatch(0)
+		ck = src1.GetColorMatch(int(value*0xFFFFFF))
+		src1.SetColorKey(ddraw.DDCKEY_SRCBLT, (ck, white))
+		src2.SetColorKey(ddraw.DDCKEY_SRCBLT, (black, ck))
+		self.copyBits(src2, tmp, self.ltrb, self.ltrb, ddraw.DDBLT_KEYSRC)
+		self.copyBits(src1, tmp, self.ltrb, self.ltrb, ddraw.DDBLT_KEYSRC)
+		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 					
-class PolylistR2OverlapBlitterClass(BlitterClass):
-	pass
 
 
