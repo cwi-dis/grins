@@ -78,6 +78,23 @@ attrgrs=(
 		'z',
 		]},
 
+	{'name':'system2',
+	'title':'System properties',
+	'attrs':[
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+		'system_required',
+		'system_screen_depth',
+		'system_screen_size',
+		'system_operating_system',
+		'system_cpu',
+		'system_audiodesc',
+		'u_group',
+		'system_component',
+		]},
+
 	{'name':'system',
 	'title': 'System properties',
 	'attrs':[
