@@ -98,8 +98,8 @@ class CommandUI:
 # MainDialog commands
 #
 CommandUI(OPENFILE, grinsRC.IDM_OPEN)
+CommandUI(CLOSE, grinsRC.IDM_CLOSE)
 CommandUI(EXIT, grinsRC.IDM_EXIT)
-
 
 
 #
