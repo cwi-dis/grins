@@ -68,7 +68,7 @@ class ArcInfoForm(GenFormView):
 		self.settitle(self._title)
 		self['From'].initoptions(self._srclist,self._srcinit)
 		self['To'].initoptions(self._dstlist,self._dstinit)
-		self['Delay'].settext('%d' % self._delay)
+		self['Delay'].settext('%g' % self._delay)
 
 	# Reponse to message WM_COMMAND
 	def OnCmd(self,params):
@@ -110,7 +110,7 @@ class ArcInfoForm(GenFormView):
 	# Interface to the delay value.
 	# Set delay value
 	def delay_setvalue(self, delay):
-		self['Delay'].settext('%d' % delay)
+		self['Delay'].settext('%g' % delay)
 
 	# Get delay value
 	def delay_getvalue(self):
