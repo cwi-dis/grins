@@ -181,7 +181,8 @@ class Window:
 			     Mouse2Press, Mouse2Release, 
 			     DropFile, PasteFile, DragFile,
 			     DragNode, DropNode,
-			     WindowExit, WindowContentChanged):
+			     WindowExit, WindowContentChanged,
+			     MouseMove):
 			self._callbacks[event] = func, arg
 			if event in (DropFile, PasteFile, DragFile, DragNode, DropNode):
 				self.registerDropTarget()
@@ -205,10 +206,7 @@ class Window:
 			func, arg = self._viewport._callbacks[event]
 		else:
 			return 1
-		try:
-			func(arg, self, event, params)
-		except Continue:
-			return 0
+		func(arg, self, event, params)
 		return 1
 	
 	# Call registered callback with return value

@@ -68,6 +68,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.datadir = findfile('GRiNS-Icons')
 		
 		self.__add_commands()
+		self.__dragside = None
 		HierarchyViewDialog.__init__(self)
 
 	def __init_state(self):
@@ -422,10 +423,15 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.checkviews()
 		
 		self.refresh_scene_graph()
-		self.scene_graph.dont_draw_children = 0
-		if not self.selected_widget: # Which here is always true.
-			self.select_widget(self.scene_graph)
-		self.draw()
+		self.need_resize = 1
+		self.need_redraw = 1
+		focustype, focusobject = self.editmgr.getglobalfocus()
+		if focustype is None and focusobject is None:
+			self.editmgr.setglobalfocus('MMNode', self.root)
+		else:
+			self.globalfocuschanged(focustype, focusobject)
+		if self.need_redraw:
+			self.draw()
 
 	def refresh_scene_graph(self):
 		# Recalculates the node structure from the MMNode structure.
@@ -631,8 +637,8 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.select_node(focusobject, 1)
 		self.aftersetfocus()
-		self.need_resize = 0
-		self.need_redraw = 0
+##		self.need_resize = 0
+##		self.need_redraw = 0
 		self.draw()
 
 	#################################################
@@ -646,36 +652,66 @@ class HierarchyView(HierarchyViewDialog):
 		# Handles redraw events, for example when the canvas is resized.
 		self.draw_scene()
 
+	def mousemove(self, dummy, window, event, point):
+		if self.__dragside is not None:
+			self.window._dragging = None # XXX win32 specific, should define proper interface
+			obj, side, timemapper = self.__dragside
+		elif self.scene_graph is not None:
+			rv = self.scene_graph.get_obj_near(point)
+			if rv is None:
+				self.window.setcursor('')
+				return
+			self.window.setcursor('darrow')
+
 	def mouse(self, dummy, window, event, params):
-		self.toplevel.setwaiting()
 		x, y, dummy, modifier = params
-
-		if x >= 1 or y >= 1:
-			windowinterface.beep()
-			return
-		x = x * self.mcanvassize[0] # This is kind of dumb - it has already been converted from pixels
-		y = y * self.mcanvassize[1] #  to floats in the windowinterface.
-##		self.mousehitx = x
-##		self.mousehity = y
-		if modifier == 'add':
-			self.addclick(x, y)
-		else:
-			self.click(x,y)
-
-		self.draw()
+		px = int(x * self.mcanvassize[0] + .5) # This is kind of dumb - it has already been converted from pixels
+		py = int(y * self.mcanvassize[1] + .5) #  to floats in the windowinterface.
+		rv = self.scene_graph.get_obj_near((px, py))
+		self.__dragside = rv
+		if rv is None:
+			if x >= 1 or y >= 1:
+				# out of bounds, beep and ignore
+				windowinterface.beep()
+				return
+			if modifier == 'add':
+				self.addclick(px, py)
+			else:
+				self.click(px, py)
+		# else start dragging
 
 	def mouse0release(self, dummy, window, event, params):
-		self.toplevel.setwaiting()
 		x,y = params[0:2]
-		if x >= 1 or y >= 1:
+		px = int(x * self.mcanvassize[0] + .5)
+		py = int(y * self.mcanvassize[1] + .5)
+		if self.__dragside is not None:
+			obj, side, timemapper = self.__dragside
+			self.__dragside = None
+			t = obj.pixel2time(px, side, timemapper)
+			em = self.editmgr
+			if not em.transaction():
+				return
+			if side == 'left':
+				# delete first simple delay syncarc
+				for arc in obj.node.GetAttrDef('beginlist', []):
+					if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+						em.delsyncarc(obj.node, 'beginlist', arc)
+						break
+				newarc = MMNode.MMSyncArc(obj.node, 'begin', srcnode = 'syncbase', delay = t)
+				em.addsyncarc(obj.node, 'beginlist', newarc, 0)
+			else:
+				em.setnodeattr(obj.node, 'duration', t)
+			em.commit()
 			return
-		x = x * self.mcanvassize[0]
-		y = y * self.mcanvassize[1]
-		obj = self.scene_graph.get_clicked_obj_at((x,y))
+		if x >= 1 or y >= 1:
+			# out of bounds, ignore
+			return
+		self.toplevel.setwaiting()
+		obj = self.scene_graph.get_clicked_obj_at((px,py))
 		if obj:
 ##			import time
 ##			print "DEBUG: releasing mouse.." , time.time()
-			obj.mouse0release((x,y))
+			obj.mouse0release((px, py))
 ##			print "DEBUG: drawing...", time.time()
 			self.draw()
 ##			print "Done drawing. ", time.time()
@@ -1516,12 +1552,13 @@ class HierarchyView(HierarchyViewDialog):
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.select_widget(clicked_widget, scroll=0)
-		# The calling method will re-draw the screen.
+		self.draw()
 
 	def addclick(self, x, y):
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.also_select_widget(clicked_widget)
+		self.draw()
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):

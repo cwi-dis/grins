@@ -5,7 +5,7 @@
 __version__ = "$Id$"
 
 import Widgets
-import MMurl, MMAttrdefs, MMmimetypes, MMNode
+import MMurl, MMAttrdefs, MMmimetypes, MMNode, MMTypes
 import features
 import os, windowinterface
 import settings
@@ -18,6 +18,8 @@ CENTER = settings.get('structure_label_center')
 
 ICONSIZE = windowinterface.ICONSIZE_PXL
 ARROWCOLOR = (0,255,0)
+
+EPSILON = sizes_notime.GAPSIZE
 
 ######################################################################
 # Create new widgets
@@ -88,6 +90,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		node.set_infoicon = self.set_infoicon
 		self.node.views['struct_view'] = self
 		self.old_pos = None	# used for recalc optimisations.
+		self.dont_draw_children = 0
 
 		self.timemapper = None
 		self.timeline = None
@@ -200,7 +203,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		for node in self.node.GetPath()[:-1]:
 			if node.collapsed:
 				node.views['struct_view'].uncollapse()
-		self.mother.draw()
+		self.mother.need_redraw = 1
 
 	def adddependencies(self, timemapper):
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
@@ -266,6 +269,29 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if w > self.boxsize[0]:
 					self.boxsize = w, self.boxsize[1]
 
+	def pixel2time(self, pxl, side, timemapper):
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		# duration = t1 - t0
+		if timemapper is not None:
+			t = timemapper.pixel2time(pxl)
+			if side == 'left':
+				return t - t0 + begindelay
+			else:
+				return t - t0 # == t - t1 + duration
+		# else there is no timemapper, use pixel==second
+		l,t,r,b = self.pos_abs
+		if t1 > t0:
+			factor = float(t1 - t0) / (r - l)
+		elif t2 > t0:
+			factor = float(t2 - t0) / (r - l)
+		else:
+			factor = 1.0
+		if side == 'left':
+			begindelay = self.node.GetBeginDelay()
+			return float(pxl - l) * factor + begindelay
+		else:			# 'right'
+			return float(pxl - r) * factor + t1 - t0
+
 	def get_minpos(self):
 		# Returns the leftmost position where this node can be placed
 		pnode = self.node.GetParent()
@@ -326,9 +352,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def deselect(self):
 		self.dont_draw_children = 1 # I'm deselected.
 		self.unselect()
-
-	def ishit(self, pos):
-		return self.is_hit(pos)
 
 	def cleanup(self):
 		self.destroy()
@@ -494,6 +517,9 @@ class MMWidgetDecoration(Widgets.Widget):
 
 		Widgets.Widget.__init__(self, mother)
 		self.mmwidget = mmwidget
+	def __repr__(self):
+		return '<%s instance, node=%s, id=%X>' % (self.__class__.__name__, `self.mmwidget`, id(self))
+
 	def destroy(self):
 		self.mmwidget = None
 		Widgets.Widget.destroy(self)
@@ -606,6 +632,21 @@ class StructureObjWidget(MMNodeWidget):
 		self.collapse()
 		for i in self.children:
 			i.collapse_all()
+
+	def get_obj_near(self, (x, y), timemapper = None):
+		l,t,r,b = self.pos_abs
+		if t <= y <= b:
+			if self.timemapper is not None:
+				timemapper = self.timemapper
+			if l - EPSILON < x < l + EPSILON:
+				return self, 'left', timemapper
+			if r - EPSILON < x < r + EPSILON:
+				return self, 'right', timemapper
+			if l <= x <= r:
+				for c in self.children:
+					rv = c.get_obj_near((x, y), timemapper)
+					if rv is not None:
+						return rv
 
 	def get_obj_at(self, pos):
 		# Return the MMNode widget at position x,y
@@ -1601,6 +1642,16 @@ class MediaWidget(MMNodeWidget):
 			f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 		return f
 
+	def get_obj_near(self, (x, y), timemapper = None):
+		l,t,r,b = self.pos_abs
+		if t <= y <= b:
+			if self.timemapper is not None:
+				timemapper = self.timemapper
+			if l - EPSILON < x < l + EPSILON:
+				return self, 'left', timemapper
+			if r - EPSILON < x < r + EPSILON:
+				return self, 'right', timemapper
+
 	def get_obj_at(self, pos):
 		# Returns an MMWidget at pos. Compare get_clicked_obj_at()
 		if self.is_hit(pos):
@@ -1831,9 +1882,6 @@ class PushBackBarWidget(MMWidgetDecoration):
 	def unselect(self):
 		self.parent.unselect()
 
-	def ishit(self, pos):
-		return self.is_hit(pos)
-
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
@@ -2023,6 +2071,9 @@ class Icon(MMWidgetDecoration):
 
 		self.set_properties()
 
+	def __repr__(self):
+		return '<%s instance, icon="%s", node=%s, id=%X>' % (self.__class__.__name__, self.icon, `self.mmwidget`, id(self))
+
 	def destroy(self):
 		MMWidgetDecoration.destroy(self)
 		self.callback = None
@@ -2042,6 +2093,7 @@ class Icon(MMWidgetDecoration):
 	def select(self):
 		if self.selectable:
 			MMWidgetDecoration.select(self)
+
 	def unselect(self):
 		if self.selectable:
 			MMWidgetDecoration.unselect(self)
@@ -2246,9 +2298,6 @@ class ChannelBoxWidget(ImageBoxWidget):
 
 	def unselect(self):
 		self.parent.unselect()
-
-	def ishit(self, pos):
-		return self.is_hit(pos)
 
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()

@@ -312,35 +312,41 @@ class EditMgr:
 	#
 	# Sync arc operations
 	#
-	def addsyncarc(self, node, attr, arc):
+	def addsyncarc(self, node, attr, arc, pos = -1):
 		list = node.GetRawAttrDef(attr, [])[:]
 		if arc in list:
 			return
-		list.append(arc)
+		if pos >= 0:
+			list.insert(pos, arc)
+		else:
+			list.append(arc)
 		node.SetAttr(attr, list)
-		self.addstep('addsyncarc', node, attr, arc)
+		self.addstep('addsyncarc', node, attr, arc, pos)
 
-	def undo_addsyncarc(self, node, attr, arc):
+	def undo_addsyncarc(self, node, attr, arc, pos):
 		self.delsyncarc(node, attr, arc)
 
-	def clean_addsyncarc(self, node, attr, arc):
+	def clean_addsyncarc(self, node, attr, arc, pos):
 		pass
 
 	def delsyncarc(self, node, attr, arc):
 		list = node.GetRawAttrDef(attr, [])[:]
-		if arc not in list:
+		for i in range(len(list)):
+			if list[i] == arc:
+				break
+		else:
 			raise MMExc.AssertError, 'bad delsyncarc call'
-		list.remove(arc)
+		del list[i]
 		if list:
 			node.SetAttr(attr, list)
 		else:
 			node.DelAttr(attr)
-		self.addstep('delsyncarc', node, attr, arc)
+		self.addstep('delsyncarc', node, attr, arc, i)
 
-	def undo_delsyncarc(self, node, attr, arc):
-		self.addsyncarc(node, attr, arc)
+	def undo_delsyncarc(self, node, attr, arc, i):
+		self.addsyncarc(node, attr, arc, i)
 
-	def clean_delsyncarc(self, node, attr, arc):
+	def clean_delsyncarc(self, node, attr, arc, i):
 		pass
 
 	#
