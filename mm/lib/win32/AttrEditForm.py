@@ -24,7 +24,7 @@ Like all resources these templates can be found in cmif\win32\src\GRiNSRes\GRiNS
 import win32ui,win32con,win32api
 
 # win32 lib modules
-import win32mu,components
+import win32mu,components,sysmetrics
 
 # std mfc windows stuf
 from pywin.mfc import window,object,docview,dialog
@@ -67,6 +67,15 @@ class AttrDlgBar(DlgBar):
 	def PassFocus(self):
 		if self._focus_cb:self._focus_cb()
 
+	def resize(self,cx):
+		rc=win32mu.Rect(self.GetWindowRect())
+		wnd=self.GetDlgItem(grinsRC.IDUC_RESET)
+		rc1=win32mu.Rect(wnd.GetWindowRect())
+		x=cx-rc1.width();y=rc1.top-rc.top
+		wnd.SetWindowPos(self.GetSafeHwnd(),(x,y,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE)
+		
+
 # Dialog bar to edit string attributes
 class StringAttrDlgBar(AttrDlgBar):
 	# Class constructor. Calls base constructor and associates controlst with ids
@@ -81,6 +90,15 @@ class StringAttrDlgBar(AttrDlgBar):
 			apply(self._change_cb,(self._attrval.gettext(),))
 		elif code==win32con.EN_KILLFOCUS:
 			self.PassFocus()
+
+	def resize(self,cx):
+		AttrDlgBar.resize(self,cx)
+		wnd=self.GetDlgItem(grinsRC.IDC_EDIT2)
+		rc1=win32mu.Rect(self.GetDlgItem(grinsRC.IDUC_RESET).GetWindowRect())
+		rc2=win32mu.Rect(wnd.GetWindowRect())
+		cx=rc1.left-rc2.left-4;cy=rc2.height()
+		wnd.SetWindowPos(self.GetSafeHwnd(),(0,0,cx,cy),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 
 # Dialog bar to edit options attributes
 class OptionsAttrDlgBar(AttrDlgBar):
@@ -97,6 +115,15 @@ class OptionsAttrDlgBar(AttrDlgBar):
 			apply(self._change_cb,(self._options.getvalue(),))
 		elif code==win32con.CBN_KILLFOCUS:
 			self.PassFocus()
+
+	def resize(self,cx):
+		AttrDlgBar.resize(self,cx)
+		wnd=self.GetDlgItem(grinsRC.IDC_COMBO1)
+		rc1=win32mu.Rect(self.GetDlgItem(grinsRC.IDUC_RESET).GetWindowRect())
+		rc2=win32mu.Rect(wnd.GetWindowRect())
+		cx=rc1.left-rc2.left-4;cy=rc2.height()
+		wnd.SetWindowPos(self.GetSafeHwnd(),(0,0,cx,cy),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 			
 # Dialog bar to edit file attributes
 class FileAttrDlgBar(AttrDlgBar):
@@ -119,6 +146,24 @@ class FileAttrDlgBar(AttrDlgBar):
 		if self._browsecb:
 			apply(apply,self._browsecb)
 
+	def resize(self,cx):
+		if cx<360:return
+		AttrDlgBar.resize(self,cx)
+		wnd=self.GetDlgItem(grinsRC.IDUC_BROWSE)
+		rc=win32mu.Rect(self.GetWindowRect())
+		rc1=win32mu.Rect(self.GetDlgItem(grinsRC.IDUC_RESET).GetWindowRect())
+		rc2=win32mu.Rect(wnd.GetWindowRect())
+		x=rc1.left-rc.left-rc2.width()-4;y=rc2.top-rc.top
+		wnd.SetWindowPos(self.GetSafeHwnd(),(x,y,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE)
+
+		wnd=self.GetDlgItem(grinsRC.IDC_EDIT2)
+		rc1=win32mu.Rect(self.GetDlgItem(grinsRC.IDUC_BROWSE).GetWindowRect())
+		rc2=win32mu.Rect(wnd.GetWindowRect())
+		cx=rc1.left-rc2.left-4;cy=rc2.height()
+		wnd.SetWindowPos(self.GetSafeHwnd(),(0,0,cx,cy),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+
 
 # Dialog bar with the buttons Restore,Apply,Cancel,OK
 class StdDlgBar(window.Wnd):
@@ -138,7 +183,7 @@ class StdDlgBar(window.Wnd):
 	# Helper function to call a callback given a strin id
 	def call(self,k):
 		d=self._cbdict
-		if d and k in d.keys() and d[k]:
+		if d and d.has_key(k) and d[k]:
 			apply(apply,d[k])				
 
 	# Response to button Restore
@@ -149,6 +194,19 @@ class StdDlgBar(window.Wnd):
 	def OnOK(self,id,code):self.call('OK')
 	# Response to button Cancel
 	def OnCancel(self,id,code):self.call('Cancel')
+
+	def resize(self,cx):
+		wndApply=self.GetDlgItem(grinsRC.IDUC_APPLY)
+		wndOK=self.GetDlgItem(win32con.IDOK)
+		rc=win32mu.Rect(self.GetWindowRect())
+		rc1=win32mu.Rect(wndOK.GetWindowRect())
+		rc2=win32mu.Rect(wndApply.GetWindowRect())
+		x=cx-rc1.width() 	
+		y=rc1.top-rc.top
+		wndOK.SetWindowPos(self.GetSafeHwnd(),(x,y,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE)
+		wndApply.SetWindowPos(self.GetSafeHwnd(),(x-rc2.width()-4,y,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE)
 
 # Implementation of the AttrEditDialog needed by the core system
 # The implementation is based on the framework class CListView				
@@ -200,6 +258,11 @@ class AttrEditForm(docview.ListView):
 
 		# use tab to set focus
 		self.HookKeyStroke(self.onTabKey,9)    #tab
+		self.HookKeyStroke(self.onEnter,13)
+		self.HookKeyStroke(self.onEsc,27)
+		
+		# resize 
+		self.GetParent().HookMessage(self.onSize,win32con.WM_SIZE)
 
 	# Response to a list control selection change
 	def OnNotifyItemChanged(self,nm, nmrest):
@@ -215,8 +278,9 @@ class AttrEditForm(docview.ListView):
 
 	# Response to keyboard input
 	# set focus to dlg on Tab
-	def onTabKey(self,key):
-		self._dlgBar.SetFocus();
+	def onTabKey(self,key):self._dlgBar.SetFocus();
+	def onEnter(self,key):self.call('OK')
+	def onEsc(self,key):self.call('Cancel')
 
 	# Helper function to set the extented style of the list control
 	def SetExStyle(self,or_style):
@@ -236,6 +300,8 @@ class AttrEditForm(docview.ListView):
 	def SetStdDlgBar(self):
 		frame=self.GetParent()
 		self._stdDlgBar=StdDlgBar(frame,self._cbdict)
+		l,t,r,b=self.GetWindowRect()
+		self._stdDlgBar.resize(r-l-4)
 		frame.RecalcLayout()
 
 	
@@ -253,6 +319,7 @@ class AttrEditForm(docview.ListView):
 		self._dlgBar=EditDlgBar(frame,self.UpdateValue,self.OnReset)
 		self._attr_type=t
 		frame.RecalcLayout()
+		self.doResize()
 		# use tab to set focus
 		self._dlgBar.SetFocusCb(self.SetFocus) 
 	
@@ -326,6 +393,21 @@ class AttrEditForm(docview.ListView):
 		nState=nStateMask=commctrl.LVIS_SELECTED|commctrl.LVIS_FOCUSED
 		self.SetItem(nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam)
 
+	# Response to WM_SIZE
+	def onSize(self,params):
+		msg=win32mu.Win32Msg(params)
+		cx=msg.width()
+		if cx<360:cx=360
+		cx=cx-2*sysmetrics.cxframe
+		self._cx=cx
+		self._dlgBar.resize(cx)
+		self._stdDlgBar.resize(cx)
+
+	def doResize(self):
+		if hasattr(self,'_cx'):
+			self._dlgBar.resize(self._cx)
+			self._stdDlgBar.resize(self._cx)
+
 	# Called by the framework when this window is activated/deactivated
 	# called by mainwnd
 	def onActivate(self,f):
@@ -381,7 +463,7 @@ class AttrEditForm(docview.ListView):
 	# Helper to call a callback given its string id
 	def call(self,k):
 		d=self._cbdict
-		if d and k in d.keys() and d[k]:
+		if d and d.has_key(k) and d[k]:
 			apply(apply,d[k])				
 
 	# cmif specific interface
