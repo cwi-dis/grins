@@ -1,6 +1,9 @@
 #ifndef INC_MTPYCALL
 #define INC_MTPYCALL
 
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
 
 /*
 PyCallbackBlock:
