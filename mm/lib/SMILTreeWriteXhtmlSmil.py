@@ -776,12 +776,9 @@ class SMILXhtmlSmilWriter(SMIL):
 			# possible overrides: fit, z-index, and backgroundColor 
 			divlist = [('id', nodeid)]
 			fit = MMAttrdefs.getattr(node, 'fit')
-			if fit != 'hidden':
+			if fit != 'hidden' and node not in self.animate_nodes and not self.hasTimeChildren(node):
 				rcparent = nodeRegion.getPxGeom()
-				if node in self.animate_motion_nodes or self.hasAnimateMotionChildren(node):
-					regstyle = self.rc2style_sizerelative(subRegGeom, rcparent, fit=fit)
-				else:
-					regstyle = self.rc2style_relative(subRegGeom, rcparent, fit=fit)
+				regstyle = self.rc2style_relative(subRegGeom, rcparent, fit=fit)
 			else:
 				regstyle = self.rc2style(subRegGeom)
 			bgcolor = getbgcoloratt(self, node, 'bgcolor')
@@ -1346,11 +1343,10 @@ class SMILXhtmlSmilWriter(SMIL):
 		if region in self.top_levels:
 			return self.getViewportStyle(region, forcetransparent)
 		style = 'position:absolute;overflow:%s;' % self.getoverflow(fit)
-		if self.hasMultiWindowLayout:
+		if region in self.animate_regions or self.hasMultiWindowLayout:
 			x, y, w, h = region.getPxGeom()
 			style = style + 'left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
 		else:	
-			# IE seems to fail with 'right', 'bottom'
 			specs = self.getRegionSizeSpecs(region, ('left', 'width', 'right'))	
 			specs.update(self.getRegionSizeSpecs(region, ('top', 'height', 'bottom')))
 			for name in ('left', 'top', 'width', 'height', 'right', 'bottom'):
