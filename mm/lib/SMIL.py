@@ -47,8 +47,6 @@ limited = {
 	'topLayout': SMIL2ns[:8],
 	}
 
-import string
-
 ATTRIBUTES = {
 	'abstract': ['MediaDescription'],
 	'accelerate': ['TimeManipulations'],
@@ -839,7 +837,7 @@ class SMIL:
 			for __key, __val in attributes['ref'].items():
 				if ' ' in __key:
 					__at[__key] = __val
-					__at[GRiNSns+' '+string.split(__key,' ')[1]] = __val
+					__at[GRiNSns+' '+__key.split(' ')[1]] = __val
 				else:
 					__at[GRiNSns+' '+__key] = __val
 		else:
@@ -935,7 +933,7 @@ class SMIL:
 			for __key, __val in __Core.items() + __Test.items():
 				if ' ' in __key:
 					attributes[__el][__key] = __val
-					attributes[__el][GRiNSns+' '+string.split(__key,' ')[1]] = __val
+					attributes[__el][GRiNSns+' '+__key.split(' ')[1]] = __val
 				else:
 					attributes[__el][GRiNSns+' '+__key] = __val
 		else:
@@ -962,7 +960,7 @@ class SMIL:
 			for __key, __val in __Timing.items():
 				if ' ' in __key:
 					attributes[__el][__key] = __val
-					attributes[__el][GRiNSns+' '+string.split(__key,' ')[1]] = __val
+					attributes[__el][GRiNSns+' '+__key.split(' ')[1]] = __val
 				else:
 					attributes[__el][GRiNSns+' '+__key] = __val
 		else:
