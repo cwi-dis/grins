@@ -49,6 +49,22 @@ def _rgb2torgb8(data, reader):
 	import imageop
 	return imageop.rgb2rgb8(data, reader.width, reader.height)
 
+def _setcursor(form, cursor):
+	try:
+		toplevel._win_lock.acquire()
+		if cursor == 'watch':
+			form.DefineCursor(_watchcursor)
+		elif cursor == 'channel':
+			form.DefineCursor(_channelcursor)
+		elif cursor == 'link':
+			form.DefineCursor(_linkcursor)
+		elif cursor == '':
+			form.UndefineCursor()
+		else:
+			raise error, 'unknown cursor glyph'
+	finally:
+		toplevel._win_lock.release()
+
 import imgconvert, imgformat
 imgconvert.addconverter(imgformat.rgb, imgformat.xrgb8, _rgb2torgb8, 2)
 
@@ -299,9 +315,7 @@ class _Window:
 		self._accelerators = {}
 		self._closecallbacks = []
 		self.setcursor(self._parent_window._cursor)
-		toplevel._win_lock.acquire()
 		self._do_open_win()
-		toplevel._win_lock.release()
 		return
 
 	def close(self):
@@ -371,8 +385,10 @@ class _Window:
 			 'colormap': self._colormap,
 			 'visual': self._visual,
 			 'depth': self._depth}
+		toplevel._win_lock.acquire()
 		self._form = pwin._form.CreateManagedWidget('subwin',
 			Xm.DrawingArea, attrs)
+		toplevel._win_lock.release()
 		self._do_open_win()
 		if self._menu_title or self._menu_list:
 			self.create_menu(self._menu_title, self._menu_list)
@@ -380,6 +396,7 @@ class _Window:
 
 	def _do_open_win(self):
 		form = self._form
+		toplevel._win_lock.acquire()
 		form.SetValues({'background': self._xbgcolor,
 				'foreground': self._xfgcolor,
 				'borderWidth': 0,
@@ -394,10 +411,10 @@ class _Window:
 		self._gc = form.CreateGC({'background': self._xbgcolor,
 					  'foreground': self._xbgcolor})
 		form.RealizeWidget()
-		toplevel._win_lock.release()
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
+		toplevel._win_lock.release()
 		self.setcursor(self._cursor)
 
 	def showwindow(self):
@@ -583,20 +600,7 @@ class _Window:
 		if not self.is_closed() or not self._form:
 			for win in self._subwindows:
 				win.setcursor(cursor)
-			try:
-				toplevel._win_lock.acquire()
-				if cursor == 'watch':
-					self._form.DefineCursor(_watchcursor)
-				elif cursor == 'channel':
-					self._form.DefineCursor(_channelcursor)
-				elif cursor == 'link':
-				        self._form.DefineCursor(_linkcursor)
-				elif cursor == '':
-					self._form.UndefineCursor()
-				else:
-					raise error, 'unknown cursor glyph'
-			except:
-				toplevel._win_lock.release()
+			_setcursor(self._form, cursor)
 		self._cursor = cursor
 
 	def newdisplaylist(self, *bgcolor):
@@ -2403,6 +2407,11 @@ class Dialog:
 			shell.RealizeWidget()
 			if debug: print `self` + '.Popup()'
 			shell.Popup(0)
+		toplevel._subwindows.append(self)
+
+	def setcursor(self, cursor):
+		if not self.is_closed():
+			_setcursor(self._form, cursor)
 
 	def __del__(self):
 		self.close()
@@ -2454,6 +2463,10 @@ class Dialog:
 		self._form.dialogTitle = title
 
 	def close(self):
+		try:
+			toplevel._subwindows.remove(self)
+		except:
+			pass
 		if hasattr(self, '_shell') and self._shell:
 			self._shell.UnmanageChild()
 			self._shell.DestroyWidget()
@@ -2584,13 +2597,19 @@ class FileDialog:
 		text = dialog.FileSelectionBoxGetChild(Xmd.DIALOG_TEXT)
 		text.value = file
 		self._form.ManageChild()
+		toplevel._subwindows.append(self)
 
 	def close(self):
 		if self._form:
+			toplevel._subwindows.remove(self)
 			self._form.UnmanageChild()
 			self._form.DestroyWidget()
 			self._dialog = None
 			self._form = None
+
+	def setcursor(self, cursor):
+		if not self.is_closed():
+			_setcursor(self._form, cursor)
 
 	def is_closed(self):
 		return self._form is None
@@ -2613,10 +2632,16 @@ class FileDialog:
 		import os
 		text = self._dialog.FileSelectionBoxGetChild(
 						   Xmd.DIALOG_TEXT)
-		filename = text.TextGetString()
+		if hasattr(text, 'TextFieldGetString'):
+			filename = text.TextFieldGetString()
+		else:
+			filename = text.TextGetString()
 		text = self._dialog.FileSelectionBoxGetChild(
 						   Xmd.DIALOG_FILTER_TEXT)
-		filter = text.TextGetString()
+		if hasattr(text, 'TextFieldGetString'):
+			filter = text.TextFieldGetString()
+		else:
+			filter = text.TextGetString()
 		dir, filter = os.path.split(filter)
 		filename = os.path.join(dir, filename)
 		if not os.path.isfile(filename):
@@ -2651,10 +2676,14 @@ class InputDialog:
 		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
 		text.value = default
 		self._form.ManageChild()
+		toplevel._subwindows.append(self)
 
 	def _ok(self, w, client_data, call_data):
 		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		value = text.TextGetString()
+		if hasattr(text, 'TextFieldGetString'):
+			value = text.TextFieldGetString()
+		else:
+			value = text.TextGetString()
 		self.close()
 		if client_data:
 			client_data(value)
@@ -2662,8 +2691,13 @@ class InputDialog:
 	def _cancel(self, w, client_data, call_data):
 		self.close()
 
+	def setcursor(self, cursor):
+		if not self.is_closed():
+			_setcursor(self._form, cursor)
+
 	def close(self):
 		if self._form:
+			toplevel._subwindows.remove(self)
 			self._form.UnmanageChild()
 			self._form.DestroyWidget()
 			self._form = None
@@ -2752,6 +2786,7 @@ class AttrDialog:
 		self._form.ManageChild()
 		self._shell.RealizeWidget()
 		self._shell.Popup(0)
+		toplevel._subwindows.append(self)
 
 	def __del__(self):
 		self.close()
@@ -2762,6 +2797,7 @@ class AttrDialog:
 
 	def close(self):
 		if self._shell:
+			toplevel._subwindows.remove(self)
 			self._shell.UnmanageChild()
 			self._shell.DestroyWidget()
 			self._shell = None
@@ -2769,6 +2805,13 @@ class AttrDialog:
 			self.entries = None
 			if self._cb_close:
 				self._cb_close()
+
+	def is_closed(self):
+		return self._shell is None
+
+	def setcursor(self, cursor):
+		if not self.is_closed():
+			_setcursor(self._form, cursor)
 
 	def restore(self, *rest):
 		for w in self.entries:
@@ -3205,7 +3248,10 @@ class Selection(_Widget):
 
 	def getselection(self):
 		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		return text.TextGetString()
+		if hasattr(text, 'TextFieldGetString'):
+			return text.TextFieldGetString()
+		else:
+			return text.TextGetString()
 
 	def getselected(self):
 		pos = self._list.ListGetSelectedPos()
@@ -3374,7 +3420,7 @@ class TextInput(_Widget):
 		self._label.labelString = label
 
 	def gettext(self):
-		return self._text.TextGetString()
+		return self._text.TextFieldGetString()
 
 	def settext(self, text):
 		self._text.value = text
@@ -3666,6 +3712,7 @@ class Window(_WindowHelpers):
 					 'resizePolicy': Xmd.RESIZE_NONE})
 		self._showing = 0
 		_WindowHelpers.__init__(self)
+		toplevel._subwindows.append(self)
 
 	def __repr__(self):
 		s = '<Window instance'
@@ -3689,8 +3736,13 @@ class Window(_WindowHelpers):
 		self._shell.RealizeWidget()
 		self._fixed = 1
 
+	def setcursor(self, cursor):
+		if not self.is_closed():
+			_setcursor(self._form, cursor)
+
 	def close(self):
 		if hasattr(self, '_form'):
+			toplevel._subwindows.remove(self)
 			self.hide()
 			self._form.DestroyWidget()
 			del self._form
