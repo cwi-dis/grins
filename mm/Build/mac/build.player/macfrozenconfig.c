@@ -41,53 +41,135 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 /* -- ADDMODULE MARKER 1 -- */
+#ifndef inittime
 extern void inittime();
+#endif
+#ifndef initimgsgi
 extern void initimgsgi();
+#endif
+#ifndef initimgcolormap
 extern void initimgcolormap();
+#endif
+#ifndef initimageop
 extern void initimageop();
+#endif
+#ifndef initWin
 extern void initWin();
+#endif
+#ifndef initicglue
 extern void initicglue();
+#endif
+#ifndef initCtl
 extern void initCtl();
+#endif
+#ifndef initList
 extern void initList();
+#endif
+#ifndef initQd
 extern void initQd();
+#endif
+#ifndef initmac
 extern void initmac();
+#endif
+#ifndef initQt
 extern void initQt();
+#endif
+#ifndef initAE
 extern void initAE();
+#endif
+#ifndef initTE
 extern void initTE();
-#ifdef WITH_GIF_SUPPORT
+#endif
+#ifndef initimggif
 extern void initimggif();
 #endif
+#ifndef initstrop
 extern void initstrop();
+#endif
+#ifndef initSnd
 extern void initSnd();
+#endif
+#ifndef initimgtiff
 extern void initimgtiff();
+#endif
+#ifndef initScrap
 extern void initScrap();
+#endif
+#ifndef initMenu
 extern void initMenu();
+#endif
+#ifndef initEvt
 extern void initEvt();
+#endif
+#ifndef initFm
 extern void initFm();
+#endif
+#ifndef initwaste
 extern void initwaste();
+#endif
+#ifndef initmacfs
 extern void initmacfs();
+#endif
+#ifndef initimgformat
 extern void initimgformat();
+#endif
+#ifndef initimgop
 extern void initimgop();
+#endif
+#ifndef initDrag
 extern void initDrag();
+#endif
+#ifndef initbinascii
 extern void initbinascii();
+#endif
+#ifndef initpcre
 extern void initpcre();
+#endif
+#ifndef initregex
 extern void initregex();
+#endif
+#ifndef initarray
 extern void initarray();
+#endif
+#ifndef initimgpbm
 extern void initimgpbm();
+#endif
+#ifndef initimgjpeg
 extern void initimgjpeg();
+#endif
+#ifndef initsocket
 extern void initsocket();
+#endif
+#ifndef initmath
 extern void initmath();
+#endif
+#ifndef initimgppm
 extern void initimgppm();
-#ifdef WITH_RMA_SUPPORT
+#endif
+#ifndef initrma
 extern void initrma();
 #endif
+#ifndef initRes
 extern void initRes();
+#endif
+#ifndef initDlg
 extern void initDlg();
+#endif
+#ifndef initcStringIO
 extern void initcStringIO();
+#endif
+#ifndef initimgpgm
 extern void initimgpgm();
+#endif
+#ifndef initstruct
 extern void initstruct();
+#endif
+#ifndef initaudioop
 extern void initaudioop();
+#endif
+#ifndef initMacOS
 extern void initMacOS();
+#endif
 
 extern void PyMarshal_Init();
 extern void initimp();
@@ -108,9 +190,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"Qt", initQt},
 	{"AE", initAE},
 	{"TE", initTE},
-#ifdef WITH_GIF_SUPPORT
 	{"imggif", initimggif},
-#endif
 	{"strop", initstrop},
 	{"Snd", initSnd},
 	{"imgtiff", initimgtiff},
@@ -132,9 +212,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"socket", initsocket},
 	{"math", initmath},
 	{"imgppm", initimgppm},
-#ifdef WITH_RMA_SUPPORT
 	{"rma", initrma},
-#endif
 	{"Res", initRes},
 	{"Dlg", initDlg},
 	{"cStringIO", initcStringIO},
