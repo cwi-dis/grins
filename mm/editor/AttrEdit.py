@@ -355,6 +355,8 @@ class AttrEditor(AttrEditorDialog):
 			typedef, defaultvalue, labeltext, displayername, \
 				 helptext, inheritance = \
 				 wrapper.getdef(name)
+			if displayername[:4] == 'CMIF':
+				displayername = displayername[4:]
 			type = typedef[0]
 			if displayername == 'file':
 				C = FileAttrEditorField
