@@ -251,7 +251,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# This flag allow to know if the current views are disabled.
 		# It's use the following raison: if you fix all errors after the initial state, you can easily known that
 		# you have to turn on the views
-		self.viewsdisabled = 1
+		self.viewsdisabled = 0
 		
 		self.updateShowingViews()
 		
@@ -1353,25 +1353,30 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		context.destroy()
 
 	def updateShowingViews(self, listViewsToShow=None):
+		forceSourceView = 0
 		if self.context.disableviews:
 			self.viewsdisabled = 1
-			if self.sourceview != None and not self.sourceview.is_showing():
-				self.sourceview.show()
+			forceSourceView = 1
 		else:
-			forceSourceToShow = 0
-			if self.viewsdisabled or listViewsToShow == None:
-				self.viewdisabled = 0
+			# if no list specified or previous views was disabled, then show default views
+			if listViewsToShow == None or self.viewsdisabled:
 				self.showdefaultviews()
-				forceSourceToShow = 1
 			else:
-				for i in showing:
+				for i in listViewsToShow:
 					self.views[i].show()
 
-			# if the document is not valid (parse error),
-			# show in addition the source view
-			if not self.context.isValidDocument() or forceSourceToShow:
-				if self.sourceview != None and not self.sourceview.is_showing():
-					self.sourceview.show()		
+			if self.viewsdisabled:
+				# if the source view was showed, we have to keep it showed
+				if 8 in listViewsToShow:
+					forceSourceView = 1
+				# raz the previous views states
+				self.viewsdisabled = 0
+
+		# if the sourceview is requiered or the document is not valid (parse error),
+		# show in addition the source view
+		if forceSourceView or not self.context.isValidDocument():
+			if self.sourceview != None and not self.sourceview.is_showing():
+				self.sourceview.show()		
 					
 	def changeRoot(self, root, text=None):
 		# raz the focus
