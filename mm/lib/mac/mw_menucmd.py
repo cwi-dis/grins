@@ -240,11 +240,12 @@ class _SpecialMenu(_DynamicMenu):
 class CommandHandler:
 	def __init__(self, menubartemplate):
 		import settings
+		import features
 		self._extra_commands = extra_command_dict
 		self._extra_commands[''] = 1
 		self._extra_commands['cmif'] = settings.get('cmif')
 		self._extra_commands['debug'] = settings.get('debug')
-		self._extra_commands['full'] = not settings.get('lightweight')
+		self._extra_commands['full'] = not features.lightweight
 		self.cmd_to_menu = {}
 		self.cmd_enabled = {}
 ##		self.must_update_window_menu = 1

@@ -31,6 +31,7 @@ from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 # input validators
 import settings
+import features
 if settings.user_settings.get('use_input_validators'):
 	ENABLE_VALIDATORS = 1
 else:
@@ -1932,7 +1933,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		else:
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
-		if tag != 'viewchange' and file and not settings.get('lightweight'):
+		if tag != 'viewchange' and file and not features.lightweight:
 			url = a.wrapper.getcontext().findurl(f)
 			self.loadimg(url)
 

@@ -6,33 +6,28 @@ import os
 
 # some constants
 
-# compatibility values
-CMIF = 'cmif'
-SMIL10 = 'SMIL 1.0'
-G2 = 'g2'
-
-# settings that cannot be changed when running
-noprearm = 1				# don't prearm
+### compatibility values
+##CMIF = 'cmif'
+##SMIL10 = 'SMIL 1.0'
+##G2 = 'g2'
 
 # Defaults:
 default_settings = {
-	'lightweight': 0,		# Lightweight version
+##	'lightweight': 0,		# Lightweight version
 
 	'system_bitrate': 14400,	# Slow modem
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
-	'system_overdub_or_subtitle':'subtitle', # Subtitles preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
-	'system_audiodesc': 0,		# No audio description
 	'license': '',
-##	'license': 'A-BMKA-Q4BCY-5H-T1SP',	# XXXX Mac beta only!!!
+##	'license': 'A-EKMA-Q4BEH-5H-TLGY',	# XXXX Mac beta only!!!
 	'license_user' : '',
 	'license_organization' : '',
-	'compatibility': G2,		# Try to be compatible with...
+##	'compatibility': G2,		# Try to be compatible with...
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
@@ -63,8 +58,6 @@ default_settings = {
 	'structure_darkpar': (91,126,114),
 	'structure_seqcolor': (116,154,189),
 	'structure_darkseq': (108,128,146),
-	'structure_exclcolor': (148,117,166), # for now equal to bag colors
-	'structure_darkexcl': (131,119,137),
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
@@ -109,13 +102,11 @@ default_settings = {
 user_settings = {}
 
 # Which of these should match exactly:
-EXACT=['system_captions', 'system_language', 'system_overdub_or_captions',
-       'system_audiodesc', 'system_overdub_or_subtitle']
+EXACT=['system_captions', 'system_language', 'system_overdub_or_captions']
 ELEMENT=['system_required']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
-     'system_screen_depth', 'system_required', 'system_audiodesc',
-     'system_overdub_or_subtitle']
+     'system_screen_depth', 'system_required']
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
@@ -125,7 +116,12 @@ if os.name == 'posix':
 elif os.name == 'mac':
 	import macfs, MACFS
 	vrefnum, dirid = macfs.FindFolder(MACFS.kOnSystemDisk, 'pref', 1)
-	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS-lite-G2-1.5beta Prefs')) # XXXX
+	import features
+	if features.lightweight:
+		prefname = 'GRiNS-lite-G2-1.5beta Prefs'
+	else:
+		prefname = 'GRiNS-pro-G2-1.5beta Prefs'
+	fss = macfs.FSSpec((vrefnum, dirid, prefname))
 	PREFSFILENAME=fss.as_pathname()
 else:
 	default_settings['html_control'] = 0	# which HTML control to use
