@@ -448,9 +448,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def onShapeChange(self, shape):
 		if shape is None:
 			# update user events
-			if self._selected != None:
+			if self._oldSelected != None:
 				self._mouse_update = 1
-				self._selected.onUnselected()
+				self._oldSelected.onUnselected()
 				
 			self._selected = None
 			self._isGeomChanging = 0

@@ -94,6 +94,9 @@ class Node:
 			self._graphicCtrl.select()
 			self._selecting = 0
 
+	def onUnselected(self):
+		self._ctx.onPreviousUnselect()
+
 	def hide(self):
 		if self._graphicCtrl != None:
 			if self._parent != None:
@@ -201,9 +204,6 @@ class Region(Node):
 		if not self._selecting:
 			self._ctx.onPreviousSelectRegion(self)
 
-	def onUnselected(self):
-		pass
-		
 	def onGeomChanging(self, geom):
 		# update only the geom field on dialog box
 		self._ctx.updateRegionGeomOnDialogBox(geom)
@@ -320,9 +320,6 @@ class MediaRegion(Region):
 		if f is not None:
 			self._graphicCtrl.setImage(f, fit)
 		
-	def onUnselected(self):
-		pass
-		
 	def onGeomChanging(self, geom):
 		self._ctx.updateMediaGeomOnDialogBox(geom)
 		
@@ -403,9 +400,6 @@ class Viewport(Node):
 		if not self._selecting:
 			self._ctx.onPreviousSelectViewport(self)
 
-	def onUnselected(self):
-		pass
-		
 	def onGeomChanging(self, geom):
 		# update only the geom field on dialog box
 		self._ctx.updateViewportGeomOnDialogBox(geom[2:])
@@ -796,6 +790,9 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			viewportRef = self.currentViewport.getNodeRef()
 		self.displayViewport(viewportRef)
+
+		# update dialog box		
+		self.updateUnselectedOnDialogBox()
 
 	def isValidFocus(self):
 		if self.currentFocusType == 'MMNode':
@@ -1251,12 +1248,46 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.delchannel(viewportRef.name)
 			self.editmgr.commit('REGION_TREE')
-				
+
+	def updateUnselectedOnDialogBox(self):
+		# clear and disable not valid fields
+#		self.dialogCtrl.setSelecterCtrl('ViewportSel',-1)
+		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
+		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
+		self.dialogCtrl.enable('SendBack',0)
+		self.dialogCtrl.enable('BringFront',0)
+		self.dialogCtrl.enable('RegionZ',0)
+		
+		self.dialogCtrl.enable('RegionSel',0)
+		self.dialogCtrl.enable('MediaSel',0)
+		self.dialogCtrl.enable('RegionX',0)
+		self.dialogCtrl.enable('RegionY',0)
+		self.dialogCtrl.enable('RegionZ',0)
+		self.dialogCtrl.enable('RegionW',0)
+		self.dialogCtrl.enable('RegionH',0)
+		self.dialogCtrl.setFieldCtrl('RegionX',"")		
+		self.dialogCtrl.setFieldCtrl('RegionY',"")		
+		self.dialogCtrl.setFieldCtrl('RegionZ',"")
+		self.dialogCtrl.setFieldCtrl('RegionW',"")		
+		self.dialogCtrl.setFieldCtrl('RegionH',"")
+
+		self.dialogCtrl.enable('HideRegion',0)
+		self.dialogCtrl.enable('HideMedia',0)
+		
+		self.dialogCtrl.enable('RegionCheck', 0)
+		self.dialogCtrl.enable('MediaCheck', 0)
+		self.dialogCtrl.setCheckCtrl('ViewportCheck', 0)
+		self.dialogCtrl.setCheckCtrl('RegionCheck', 0)
+		self.dialogCtrl.setCheckCtrl('MediaCheck', 0)
+
+		# don't allow to remove or add new regions
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self.dialogCtrl.enable('NewRegion',0)
+			self.dialogCtrl.enable('DelRegion',0)
+		
 	def updateViewportOnDialogBox(self, nodeRef):
 		# update region list
 		self.currentRegionRefListSel = self.getRegionRefList(nodeRef)
-			
-		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 			
 		# get the current geom value
 		geom = nodeRef.getPxGeom()
@@ -1268,13 +1299,15 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
 
+		self.dialogCtrl.enable('RegionW',1)
+		self.dialogCtrl.enable('RegionH',1)
+		
 		# clear and disable not valid fields
 		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 		self.dialogCtrl.enable('SendBack',0)
 		self.dialogCtrl.enable('BringFront',0)
 		self.dialogCtrl.enable('RegionZ',0)
-		
 		self.dialogCtrl.enable('RegionX',0)
 		self.dialogCtrl.enable('RegionY',0)
 		self.dialogCtrl.setFieldCtrl('RegionX',"")		
@@ -1328,6 +1361,8 @@ class LayoutView2(LayoutViewDialog2):
 
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
+		self.dialogCtrl.enable('RegionW',1)
+		self.dialogCtrl.enable('RegionH',1)
 
 		geom = nodeRef.getPxGeom()
 
@@ -1448,6 +1483,9 @@ class LayoutView2(LayoutViewDialog2):
 		# get the current geom value: todo
 		geom = nodeRef.getPxGeom()
 		
+		self.dialogCtrl.enable('RegionW',1)
+		self.dialogCtrl.enable('RegionH',1)
+
 		# clear and disable not valid fields
 		self.dialogCtrl.enable('SendBack',0)
 		self.dialogCtrl.enable('BringFront',0)
@@ -1790,7 +1828,7 @@ class LayoutView2(LayoutViewDialog2):
 		nodeRef = regionNode.getNodeRef()
 		self.currentNodeRefSelected  = nodeRef
 		self.fillRegionListOnDialogBox(self.getViewportRef(nodeRef))
-		self.fillMediaListOnDialogBox()
+		self.fillMediaListOnDialogBox(nodeRef)
 		self.updateRegionOnDialogBox(nodeRef)
 		self.setglobalfocus('MMChannel',nodeRef)
 		self.lastRegionRefSelected = nodeRef
@@ -1804,6 +1842,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateMediaOnDialogBox(nodeRef)
 		self.setglobalfocus('MMNode',nodeRef)
 		self.lastMediaRefSelected = nodeRef
+
+	def onPreviousUnselect(self):
+		self.setglobalfocus(None,None)
+		self.updateFocus()
 
 	#
 	# interface implementation of 'dialog controls callback' 
