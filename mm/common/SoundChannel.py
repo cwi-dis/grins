@@ -228,7 +228,7 @@ class SoundChannel(ChannelAsync):
 		if self._playstate == PLAYING:
 			self.playdone(1, curtime)
 
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		if debug: print 'setpaused', paused
 		if self.__rc:
 			self.__rc.pauseit(paused)
