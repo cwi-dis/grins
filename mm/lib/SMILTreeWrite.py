@@ -107,7 +107,11 @@ def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, pro
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(filename)
-		fss.SetCreatorType('GRIN', 'TEXT')
+		import settings
+		if settings.get('compatibility') == settings.G2 and cleanSMIL:
+			fss.SetCreatorType('PNst', 'PNRA')
+		else:
+			fss.SetCreatorType('GRIN', 'TEXT')
 		macostools.touched(fss)
 
 import FtpWriter
