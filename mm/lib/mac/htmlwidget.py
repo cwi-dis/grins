@@ -424,6 +424,7 @@ class HTMLWidget:
 	
 	def html_init(self):
 		self.para_count = 0
+		self.delayed_tag_positions = []
 		self.html_font = [0, 0, 0, 0]
 		self.html_style = 0
 		self.html_color = self.fg_color
@@ -488,6 +489,12 @@ class HTMLWidget:
 		self.ted.WEInsert('\r'*self.para_count, None, None)
 		self.para_count = 0
 		
+	def delayed_name_send(self):
+		if not self.delayed_tag_positions: return
+		for name in self.delayed_tag_positions:
+			dummy, self.tag_positions[name] = self.ted.WEGetSelection()
+		self.delayed_tag_positions = []
+		
 	def send_line_break(self):
 		self.delayed_para_send()
 		self.ted.WEInsert('\r', None, None)
@@ -495,29 +502,34 @@ class HTMLWidget:
 	def send_hor_rule(self, *args, **kw):
 		# Ignore ruler options, for now
 		self.delayed_para_send()
+		self.delayed_name_send()
 		dummydata = Res.Resource('')
 		self.ted.WEInsertObject('rulr', dummydata, (0,0))
 		
 	def send_label_data(self, data):
 		self.delayed_para_send()
+		self.delayed_name_send()
 		self.ted.WEInsert(data, None, None)
 		
 	def send_flowing_data(self, data):
 		self.delayed_para_send()
+		self.delayed_name_send()
 		self.ted.WEInsert(data, None, None)
 		
 	def send_literal_data(self, data):
 		self.delayed_para_send()
+		self.delayed_name_send()
 		data = regsub.gsub('\n', '\r', data)
 		data = string.expandtabs(data)
 		self.ted.WEInsert(data, None, None)
 		
 	def send_image(self, data):
 		self.delayed_para_send()
+		self.delayed_name_send()
 		self.ted.WEInsertObject('GIF ', data, (0, 0))
 		
 	def send_name(self, name):
-		dummy, self.tag_positions[name] = self.ted.WEGetSelection()
+		self.delayed_tag_positions.append(name)
 		
 		
 class MyFormatter(formatter.AbstractFormatter):
@@ -558,10 +570,46 @@ class MyHTMLParser(htmllib.HTMLParser):
 	
 	def start_p(self, attrs):
 		# It seems most browsers treat </p> as <p>...
+		self.do_p(attrs)
 		for aname, avalue in attrs:
 			if aname == 'id':
 				self.formatter.my_send_name(avalue)
-		self.do_p(attrs)
+				
+	def start_h1(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h1(self, attrs)
+	
+	def start_h2(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h2(self, attrs)
+	
+	def start_h3(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h3(self, attrs)
+	
+	def start_h4(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h4(self, attrs)
+	
+	def start_h5(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h5(self, attrs)
+	
+	def start_h6(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h6(self, attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
 		url = MMurl.basejoin(self.url, src)
