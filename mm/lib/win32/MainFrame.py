@@ -378,7 +378,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# Associate this frame with the document
 	def setdocument(self,cmifdoc,adornments,commandlist):
 		self._cmifdoc=cmifdoc
-		self.settitle(cmifdoc.basename,'document')
+		import urllib
+		basename=urllib.unquote(cmifdoc.basename)
+		self.settitle(basename,'document')
 		self.set_commandlist(commandlist,'document')
 		if not IsPlayer:
 			self.setEditorDocumentToolbar()
