@@ -231,20 +231,22 @@ WinEventToMacEvent(PyObject *self, PyObject *args)
 	UINT message;
 	WPARAM wParam;
 	LPARAM lParam;
-	if (!PyArg_ParseTuple(args, "Oiiii", &obj, &hwnd, &message,&wParam,&lParam))
+	long time;
+	POINT pt;
+	if (!PyArg_ParseTuple(args, "O(iiiii(ii))", &obj, &hwnd, &message,&wParam,&lParam, &time, &pt.x, &pt.y))
 		return NULL;
 	MSG msg;
     msg.hwnd = hwnd;
     msg.message = message;
     msg.wParam = wParam;
     msg.lParam = lParam;
-    msg.time = GetMessageTime();
-	DWORD dw = GetMessagePos();
-    msg.pt.x = LOWORD(dw);
-    msg.pt.y = HIWORD(dw);
+    msg.time = time; 
+	msg.pt = pt;
 	EventRecord qtmlEvent;
 	WinEventToMacEvent(&msg, &qtmlEvent);
+	Py_BEGIN_ALLOW_THREADS
 	MCIsPlayerEvent(obj->componentInstance, &qtmlEvent);
+	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
