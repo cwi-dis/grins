@@ -1,12 +1,7 @@
 __version__ = "$Id$"
 
 # ASX parser
-
-
-# ASX validation should be complete.
-# Only trivial semantics are implemented for now.
-# The semantics implementation can follow 
-# the pattern used for SMIL docs in GRiNS.
+# ASX to SMIL converter
 
 
 # import Sjoerd's XMLParser 
@@ -320,12 +315,13 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		return playlist
 
 	# experimental dirty code
-	def __getASXEntry(self, rootinfo, index, entrynode):
+	def __getASXEntry(self, rootinfo, index, entrynode, baseurl):
 		str = """<par id="entry%d">\n<switch id="switch%d">""" % (index, index)
 		entries = entrynode.GetChildrenOfType('ref')
 		altix = 1
 		for e in entries:
 			url = MMurl.guessurl(e.GetAttr('href'))
+			url = MMurl.basejoin(baseurl, url)
 			str = str + """<video id="subject%d_alt%d" region="main" src="%s" dur="18s"/>"""\
 				% (index, altix, url)
 			altix = altix + 1
@@ -336,11 +332,13 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 
 		if bannerNode:
 			url = MMurl.guessurl(bannerNode.GetAttr('href'))
+			url = MMurl.basejoin(baseurl, url)
 			str = str + """\n<img id="banner%d" region="banner" src="%s" fill="freeze">""" \
 				% (index, url)
 			moreinfoNode = bannerNode.GetChildOfType('moreinfo')
 			if moreinfoNode:
 				url = MMurl.guessurl(moreinfoNode.GetAttr('href'))
+				url = MMurl.basejoin(baseurl, url)
 				str = str + """<anchor id="moreInfo%d" show="new" href="%s"/>"""\
 					% (index, url)
 			str = str + "</img>"
@@ -350,43 +348,66 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		author = entryinfo['author'].strip()
 		copyright = entryinfo['copyright'].strip()
 		if not author:
-			pass # use doc author
+			author = self.__author
 		if not copyright:
-			pass # use doc copyright
+			copyright = self.__copyright
 
 		# quote strings
 		title = MMurl.quote(title or '')
 		author = MMurl.quote(author or '')
 		copyright = MMurl.quote(copyright or '')
-
+		
 		str = str + """
 		<seq id="infoSequence%d" repeat="2">
-        <text id="info%d_1" region="info" src="data:,%s" type="text/plain" dur="3s"/>
-        <text id="info%d_2" region="info" src="data:,%s" type="text/plain" dur="3s"/>
-        <text id="info%d_3" region="info" src="data:,%s" type="text/plain" dur="3s"/>
-		</seq>
-		</par> """ % (index, index, title, index, author, index, copyright)
+		""" % index
+
+		if title:
+			str = str + """
+			<text id="title%d" region="info" src="data:,%s" type="text/plain" dur="3s"/>
+			""" % (index, title)
+		
+		if author:
+			str = str + """
+			<text id="author%d" region="info" src="data:,%s" type="text/plain" dur="3s"/>
+			""" % (index, author)
+
+		if copyright:
+			str = str + """
+			<text id="copyright%d" region="info" src="data:,%s" type="text/plain" dur="3s"/>
+			""" % (index, copyright)
+
+		str = str + """
+			</seq>
+		</par>
+		"""
 		return str
 
 	# experimental dirty code
-	def getASXBody(self):
+	def getASXBody(self, baseurl):
+
 		rootinfo = self.__root.GetASXInfo()
 		title = rootinfo['title'].strip()
-		title = MMurl.quote(title or '')
+		author = rootinfo['author'].strip()
+		copyright = rootinfo['copyright'].strip()
+
+		self.__title = MMurl.quote(title or '')
+		self.__author = MMurl.quote(author or '')
+		self.__copyright = MMurl.quote(copyright or '')
+
 		str = """
 			<body>
 			<par id="ASXPresentation">"""
-		if title:
+		if self.__title:
 			str = str + """
 			<text id="asxtitle" region="title" src="data:,%s" type="text/plain"/>
-			""" % title
+			""" % self.__title
 		str = str + """
 			<seq id="ASXPlaylist">"""
 			
 		# for each entry:
 		entries = self.__root.GetChildrenOfType('entry')
 		for index in range(len(entries)):
-			str = str + self.__getASXEntry(rootinfo, index+1, entries[index])
+			str = str + self.__getASXEntry(rootinfo, index+1, entries[index], baseurl)
 
 		# close body
 		str = str + "</seq></par></body>\n"
@@ -394,7 +415,8 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 
 #########################################
 
-ASX_HEAD = """<?xml version="1.0" encoding="ISO-8859-1"?>
+ASX_HEAD = """\
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="ASX Show Template"/>
@@ -415,9 +437,8 @@ ASX_HEAD = """<?xml version="1.0" encoding="ISO-8859-1"?>
 def asx2smil(filename):
 	parser = ASXParser()
 	parser.read(filename)
-	playlist = parser.getPlaylist()
 	str = ASX_HEAD
-	str = str + parser.getASXBody()
+	str = str + parser.getASXBody(filename)
 	str = str + "</smil>\n"
 	return str
 
