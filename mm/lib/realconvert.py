@@ -236,8 +236,8 @@ def converttextfile(u, dstdir, file, node):
 		if dur:
 			f.write(' duration="%g"' % dur)
 		ch = node.GetChannel()
-		color = ch.get('bgcolor', (0,0,0))
-		if color != (255,255,255):
+		color = ch.get('bgcolor')
+		if color is not None:
 			if colors.rcolors.has_key(color):
 				color = colors.rcolors[color]
 			else:
