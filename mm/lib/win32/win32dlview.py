@@ -173,6 +173,10 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			self.ResizeParentToFit()
 		self.InvalidateRect()
 			
+	def getscrollposition(self, units=UNIT_PXL):
+		assert units == UNIT_PXL
+		return self.GetScrollPosition()+self._rect[2:]
+
 	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
 		if not self._canscroll:
 			return
