@@ -1051,9 +1051,11 @@ class Window:
 		sc = self._device2logical
 		return sc*x, sc*y, sc*w, sc*h
 
-	def LPtoDP(self, pt):
+	def LPtoDP(self, pt, round=0):
 		x, y = pt
 		sc = 1.0/self._device2logical
+		if round:
+			return int(sc*x+0.5), int(sc*y+0.5)
 		return sc*x, sc*y
 
 	def LRtoDR(self, rc, round=0):
@@ -1068,6 +1070,7 @@ class Window:
 
 	def DDtoLD(self, d):
 		return d*self._device2logical
+
 	#
 	# Drag & Resize interface
 	#
