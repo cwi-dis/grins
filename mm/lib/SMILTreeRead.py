@@ -92,7 +92,7 @@ color = re.compile('(?:'
 			   ' *(?P<bp>[0-9]+) *% *)\))$')
 
 class SMILParser(SMIL, xmllib.XMLParser):
-	def __init__(self, context):
+	def __init__(self, context, printfunc = None):
 		xmllib.XMLParser.__init__(self)
 		self.cmif_prefix = None
 		self.__seen_smil = 0
@@ -121,10 +121,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__base = ''
 		self.__dict__['start_root-layout'] = self.start_0root_layout
 		self.__dict__['end_root-layout'] = self.end_0root_layout
+		self.__printfunc = printfunc
+		self.__printdata = []
+
+	def close(self):
+		xmllib.XMLParser.close(self)
+		if self.__printfunc is not None and self.__printdata:
+			self.__printfunc(string.join(self.__printdata, '\n'))
+			self.__printdata = []
 
 	def GetRoot(self):
 		if not self.__root:
-			self.error('empty document')
+			self.error('empty document', self.lineno)
 		return self.__root
 
 	def MakeRoot(self, type):
@@ -142,13 +150,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			name, counter, delay = self.__parsetime(val)
 		except error, msg:
-			self.syntax_error(msg)
+			self.syntax_error(msg, self.lineno)
 			return
 		if name is None:
 			# relative to parent/previous/start
 			parent = node.GetParent()
 			if parent is None:
-				self.syntax_error('sync arc to top-level node')
+				self.syntax_error('sync arc to top-level node', self.lineno)
 				return
 			ptype = parent.GetType()
 			if ptype == 'seq':
@@ -158,7 +166,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						break
 					xnode = n
 				else:
-					self.error('node not in parent')
+					self.error('node not in parent', self.lineno)
 				if xnode is None:
 					# first, relative to parent
 					xside = HD # rel to start of parent
@@ -174,18 +182,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# relative to other node
 			xnode = self.__nodemap.get(name)
 			if xnode is None:
-				print 'warning: ignoring sync arc from',\
-				      node.attrdict.get('name','<unnamed>'),\
-				      'to unknown node'
+				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
 				return
 			for n in node.GetParent().GetChildren():
 				if n is xnode:
 					break
 			else:
-				print 'warning: out of scope sync arc from',\
-				      node.attrdict.get('name','<unnamed>'),\
-				      'to',\
-				      xnode.attrdict.get('name','<unnamed>')
+				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
 				return
 			if counter == -1:
 				xside = TL
@@ -215,7 +218,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					try:
 						attrdict['duration'] = self.__parsecounter(val, 0)
 					except error, msg:
-						self.syntax_error(msg)
+						self.syntax_error(msg, self.lineno)
 			elif attr == 'repeat':
 				if val == 'indefinite':
 					attrdict['loop'] = 0
@@ -223,23 +226,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					try:
 						repeat = string.atoi(val)
 					except string.atoi_error:
-						self.syntax_error('bad repeat attribute')
+						self.syntax_error('bad repeat attribute', self.lineno)
 					else:
 						if repeat <= 0:
-							self.warning('bad repeat value')
+							self.warning('bad repeat value', self.lineno)
 						else:
 							attrdict['loop'] = repeat
 			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)
 				except string.atoi_error:
-					self.syntax_error('bad bitrate attribute')
+					self.syntax_error('bad bitrate attribute', self.lineno)
 				else:
 					attrdict['system_bitrate'] = bitrate
 			elif attr == 'system-screen-size':
 				res = screen_size.match(val)
 				if res is None:
-					self.syntax_error('bad screen-size attribute')
+					self.syntax_error('bad screen-size attribute', self.lineno)
 				else:
 					attrdict['system_screen_size'] = \
 						tuple(map(string.atoi,
@@ -248,7 +251,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				try:
 					depth = string.atoi(val)
 				except string.atoi_error:
-					self.syntax_error('bad screen-depth attribute')
+					self.syntax_error('bad screen-depth attribute', self.lineno)
 				else:
 					attrdict['system_screen_depth'] = depth
 			elif attr == 'system-captions':
@@ -257,14 +260,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif val == 'off':
 					attrdict['system_captions'] = 0
 				else:
-					self.syntax_error('bad system-captions attribute')
+					self.syntax_error('bad system-captions attribute', self.lineno)
 			elif attr == 'system-language':
 				attrdict['system_language'] = val
 			elif attr == 'system-overdub-or-caption':
 				if val in ('caption', 'overdub'):
 					attrdict['system_overdub_or_caption'] = val
 				else:
-					self.syntax_error('bad system-overdub-or-caption attribute')
+					self.syntax_error('bad system-overdub-or-caption attribute', self.lineno)
 			elif attr == 'system-required':
 				attrdict['system_required'] = val
 
@@ -272,13 +275,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if not self.__in_smil:
-			self.syntax_error('node not in smil')
+			self.syntax_error('node not in smil', self.lineno)
 			return
 		if self.__in_layout:
-			self.syntax_error('node in layout')
+			self.syntax_error('node in layout', self.lineno)
 			return
 		if self.__node:
 			# the warning comes later from xmllib
@@ -298,13 +301,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				nodetype = 'imm'
 		else:
 			# remove if immediate data allowed
-			self.syntax_error('no src attribute')
+			self.syntax_error('no src attribute', self.lineno)
 
 			nodetype = 'imm'
 			self.__nodedata = []
 			self.__data = []
 			if not attributes.has_key('type'):
-				self.syntax_error('no type attribute')
+				self.syntax_error('no type attribute', self.lineno)
 
 		# find out type of file
 		subtype = None
@@ -323,7 +326,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			try:
 				u = MMurl.urlopen(url)
 			except:
-				self.warning('cannot open file %s' % url)
+				self.warning('cannot open file %s' % url, self.lineno)
 				# we have no idea what type the file is
 				mtype = 'text/plain'
 			else:
@@ -333,26 +336,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mtype is None and mediatype is None:
 			# we've tried, but we just don't know what
 			# we're dealing with
-			self.syntax_error('unknown object type')
+			self.syntax_error('unknown object type', self.lineno)
 			return
 
 		if mtype is not None:
 			mtype = string.split(mtype, '/')
 			if mediatype is not None and mtype[0]!=mediatype and \
 			   (mediatype[:5]!='cmif_' or mtype!=['text','plain']):
-				self.warning("file type doesn't match element")
+				self.warning("file type doesn't match element", self.lineno)
 			if mediatype is None or mediatype[:5] != 'cmif_':
 				mediatype = mtype[0]
 				subtype = mtype[1]
 
 ## 		if attributes['encoding'] not in ('base64', 'UTF'):
-## 			self.syntax_error('bad encoding parameter')
+## 			self.syntax_error('bad encoding parameter', self.lineno)
 
 		# create the node
 		if not self.__root:
 			node = self.MakeRoot(nodetype)
 		elif not self.__container:
-			self.syntax_error('node not in container')
+			self.syntax_error('node not in container', self.lineno)
 			return
 		else:
 			node = self.__context.newnode(nodetype)
@@ -391,7 +394,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			nodedata = string.join(self.__data, '')
 			res = self.__whitespace.match(nodedata)
 			if res is not None:
-				self.syntax_error('no src attribute and no content data')
+				self.syntax_error('no src attribute and no content data', self.lineno)
 			if mediatype != 'text' and mediatype[:5] != 'cmif_':
 				# create data URL for base64 encoded data
 				url = 'data:%s/%s;base64,%s' % (mediatype, subtype, nodedata)
@@ -406,9 +409,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key('region'):
 			region = attributes['region']
 			if not self.__regions.has_key(region):
-				self.syntax_error('unknown region')
+				self.syntax_error('unknown region', self.lineno)
 		else:
-## 			self.warning('node without region attribute')
+## 			self.warning('node without region attribute', self.lineno)
 			region = '<unnamed %d>'
 			i = 0
 			while self.__regions.has_key(region % i):
@@ -480,13 +483,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if clip.match(clip_begin):
 				node.attrdict['clipbegin'] = clip_begin
 			else:
-				self.syntax_error('invalid clip-begin attribute')
+				self.syntax_error('invalid clip-begin attribute', self.lineno)
 		clip_end = attributes.get('clip-end')
 		if clip_end:
 			if clip.match(clip_end):
 				node.attrdict['clipend'] = clip_end
 			else:
-				self.syntax_error('invalid clip-end attribute')
+				self.syntax_error('invalid clip-end attribute', self.lineno)
 
 		if self.__in_a:
 			# deal with hyperlink
@@ -512,14 +515,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
-			self.syntax_error('%s not in smil' % type)
+			self.syntax_error('%s not in smil' % type, self.lineno)
 		if self.__in_layout:
-			self.syntax_error('%s in layout' % type)
+			self.syntax_error('%s in layout' % type, self.lineno)
 			return
 		if not self.__root:
 			node = self.MakeRoot(type)
 		elif not self.__container:
-			self.error('multiple elements in body')
+			self.error('multiple elements in body', self.lineno)
 			return
 		else:
 			node = self.__context.newnode(type)
@@ -549,7 +552,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			except KeyError:
 				continue
 			except error, msg:
-				self.syntax_error(msg)
+				self.syntax_error(msg, self.lineno)
 			else:
 				if width > self.__width:
 					self.__width = width
@@ -561,7 +564,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			except KeyError:
 				continue
 			except error, msg:
-				self.syntax_error(msg)
+				self.syntax_error(msg, self.lineno)
 			else:
 				if height > self.__height:
 					self.__height = height
@@ -632,7 +635,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mtype = 'shell'
 		else:
 			mtype = mediatype
-			print 'warning: unrecognized media type',mtype
+			self.warning('unrecognized media type %s' % mtype)
 		ctx = self.__context
 		name = chattr.get('title')
 		if not name or \
@@ -660,7 +663,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['drawbox'] = 0
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
-						     region)
+						     region, self.lineno)
 					self.__in_layout = LAYOUT_SMIL
 					self.start_region({'id': region})
 					self.__in_layout = LAYOUT_NONE
@@ -737,7 +740,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				string.atoi(node)
 			except string.atoi_error:
 				if not self.__nodemap.has_key(node):
-					print 'warning: unknown node id',node
+					self.warning('unknown node id %s' % node)
 					continue
 				node = self.__nodemap[node].GetUID()
 			if type(aid) is type(()):
@@ -751,7 +754,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						dst = self.__nodemap[href[1:]]
 						dst = self.__wholenodeanchor(dst)
 					else:
-						print 'warning: unknown node id',href[1:]
+						self.warning('unknown node id %s' % href[1:])
 						continue
 				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
@@ -767,10 +770,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if self.__seen_smil:
-			self.error('more than 1 smil tag')
+			self.error('more than 1 smil tag', self.lineno)
 		self.__seen_smil = 1
 		self.__in_smil = 1
 		# fill in defaults for seq
@@ -780,7 +783,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_smil(self):
 		self.__in_smil = 0
 		if not self.__root:
-			self.error('empty document')
+			self.error('empty document', self.lineno)
 		self.FixSizes()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.FixLinks()
@@ -791,10 +794,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if not self.__in_smil:
-			self.syntax_error('head not in smil')
+			self.syntax_error('head not in smil', self.lineno)
 		self.__in_head = 1
 
 	def end_head(self):
@@ -804,12 +807,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if not self.__in_smil:
-			self.syntax_error('body not in smil')
+			self.syntax_error('body not in smil', self.lineno)
 		if self.__seen_body:
-			self.error('multiple body tags')
+			self.error('multiple body tags', self.lineno)
 		self.__seen_body = 1
 		self.__in_body = 1
 
@@ -820,32 +823,32 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if not self.__in_head:
-			self.syntax_error('meta not in head')
+			self.syntax_error('meta not in head', self.lineno)
 			return
 		if self.__in_head_switch or self.__in_layout:
-			self.syntax_error('meta in layout')
+			self.syntax_error('meta in layout', self.lineno)
 			return
 		if self.__in_meta:
-			self.syntax_error('nested meta elements')
+			self.syntax_error('nested meta elements', self.lineno)
 			return
 		self.__in_meta = 1
 		if attributes.has_key('name'):
 			name = attributes['name']
 		else:
-			self.syntax_error('required attribute name missing in meta element')
+			self.syntax_error('required attribute name missing in meta element', self.lineno)
 			return
 		if attributes.has_key('content'):
 			content = attributes['content']
 		else:
-			self.syntax_error('required attribute content missing in meta element')
+			self.syntax_error('required attribute content missing in meta element', self.lineno)
 			return
 # no 'sync' in REC
 ## 		if name == 'sync':
 ## 			if content not in ('hard', 'soft'):
-## 				self.syntax_error('illegal value for sync attribute')
+## 				self.syntax_error('illegal value for sync attribute', self.lineno)
 ## 				return
 ## 			self.attributes['par']['sync'] = content
 		if name == 'title':
@@ -856,7 +859,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif name in ('pics-label', 'PICS-label'):
 			pass
 		else:
-			self.warning('unrecognized meta property')
+			self.warning('unrecognized meta property', self.lineno)
 			# we currently ignore all other meta element
 
 	def end_meta(self):
@@ -868,14 +871,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if not self.__in_head:
-			self.syntax_error('layout not in head')
+			self.syntax_error('layout not in head', self.lineno)
 		if self.__in_meta:
-			self.syntax_error('layout in meta')
+			self.syntax_error('layout in meta', self.lineno)
 		if self.__seen_layout and not self.__in_head_switch:
-			self.syntax_error('multiple layouts without switch')
+			self.syntax_error('multiple layouts without switch', self.lineno)
 		if attributes['type'] == SMIL_BASIC:
 			if self.__seen_layout == LAYOUT_SMIL:
 				# if we've seen SMIL_BASIC already,
@@ -897,10 +900,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if not self.__in_layout:
-			self.syntax_error('region not in layout')
+			self.syntax_error('region not in layout', self.lineno)
 			return
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout
@@ -914,7 +917,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			    'minheight': 0,}
 
 		if id is None:
-			self.syntax_error('region without id attribute')
+			self.syntax_error('region without id attribute', self.lineno)
 			return
 		attrdict['id'] = id
 		self.__regions[id] = attrdict
@@ -925,7 +928,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val[-1] == '%':
 					val = string.atof(val[:-1]) / 100.0
 					if val < 0 or val > 1:
-						self.syntax_error('region with impossible size')
+						self.syntax_error('region with impossible size', self.lineno)
 						if val < 0: val = 0.0
 						else: val = 1.0
 				else:
@@ -933,10 +936,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						val = val[:-2]
 					val = string.atoi(val)
 					if val < 0:
-						self.syntax_error('region with impossible size')
+						self.syntax_error('region with impossible size', self.lineno)
 						val = 0
 			except (string.atoi_error, string.atof_error):
-				self.syntax_error('invalid region attribute value')
+				self.syntax_error('invalid region attribute value', self.lineno)
 				val = 0
 			attrdict[attr] = val
 
@@ -944,17 +947,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			val = string.atoi(val)
 		except string.atoi_error:
-			self.syntax_error('invalid z-index value')
+			self.syntax_error('invalid z-index value', self.lineno)
 			val = 0
 		if val < 0:
-			self.syntax_error('region with negative z-index')
+			self.syntax_error('region with negative z-index', self.lineno)
 			val = 0
 		attrdict['z-index'] = val
 
 		val = attributes['fit']
 # fit="visible" not in REC
 		if val not in ['meet', 'slice', 'fill', 'hidden', 'scroll']:
-			self.syntax_error('illegal fit attribute')
+			self.syntax_error('illegal fit attribute', self.lineno)
 		attrdict['fit'] = val
 
 		val = self.__convert_color(attributes['background-color'])
@@ -970,7 +973,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		self.__root_layout = attributes
 		width = attributes['width']
@@ -979,10 +982,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			width = string.atoi(width)
 		except string.atoi_error:
-			self.syntax_error('root-layout width not an integer')
+			self.syntax_error('root-layout width not an integer', self.lineno)
 		else:
 			if width < 0:
-				self.syntax_error('root-layout width not a positive integer')
+				self.syntax_error('root-layout width not a positive integer', self.lineno)
 			elif width > 0:
 				self.__width = width
 		height = attributes['height']
@@ -991,10 +994,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			height = string.atoi(height)
 		except string.atoi_error:
-			self.syntax_error('root-layout height not an integer')
+			self.syntax_error('root-layout height not an integer', self.lineno)
 		else:
 			if height < 0:
-				self.syntax_error('root-layout height not a positive integer')
+				self.syntax_error('root-layout height not a positive integer', self.lineno)
 			elif height > 0:
 				self.__height = height
 
@@ -1007,7 +1010,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		# XXXX we ignore sync for now
 		self.NewContainer('par', attributes)
@@ -1016,7 +1019,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container.__endsync = attributes.get('endsync')
 ## 		if self.__container.__endsync is not None and \
 ## 		   self.__container.attrdict.has_key('duration'):
-## 			self.warning('ignoring dur attribute')
+## 			self.warning('ignoring dur attribute', self.lineno)
 ## 			del self.__container.attrdict['duration']
 
 	def end_par(self):
@@ -1033,7 +1036,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			res = idref.match(endsync)
 			if res is None:
-				self.syntax_error('bad endsync attribute')
+				self.syntax_error('bad endsync attribute', self.lineno)
 				return
 			id = res.group('id')
 			if self.__nodemap.has_key(id):
@@ -1042,13 +1045,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					node.attrdict['terminator'] = child.GetRawAttr('name')
 					return
 			# id not found among the children
-			self.warning('unknown idref in endsync attribute')
+			self.warning('unknown idref in endsync attribute', self.lineno)
 
 	def start_seq(self, attributes):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		self.NewContainer('seq', attributes)
 
@@ -1058,7 +1061,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		a = {}
 		for key, val in attributes.items():
@@ -1077,7 +1080,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		res = idref.match(bag_index)
 		if res is None:
-			self.syntax_error('bad bag-index attribute')
+			self.syntax_error('bad bag-index attribute', self.lineno)
 			return
 		id = res.group('id')
 		if self.__nodemap.has_key(id):
@@ -1086,19 +1089,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				node.attrdict['bag_index'] = child.GetRawAttr('name')
 				return
 		# id not found among the children
-		self.warning('unknown idref in bag-index attribute')
+		self.warning('unknown idref in bag-index attribute', self.lineno)
 
 	def start_switch(self, attributes):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if self.__in_head:
 			if self.__in_head_switch:
-				self.syntax_error('switch within switch in head')
+				self.syntax_error('switch within switch in head', self.lineno)
 			if self.__in_meta:
-				self.syntax_error('switch in meta')
+				self.syntax_error('switch in meta', self.lineno)
 			self.__in_head_switch = 1
 		else:
 			self.NewContainer('alt', attributes)
@@ -1191,14 +1194,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if self.__in_a:
-			self.syntax_error('nested a elements')
+			self.syntax_error('nested a elements', self.lineno)
 		if attributes.has_key('href'):
 			href = attributes['href']
 		else:
-			self.syntax_error('anchor without HREF')
+			self.syntax_error('anchor without HREF', self.lineno)
 			return
 		show = attributes['show']
 		if show == 'replace':
@@ -1208,7 +1211,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif show == 'new':
 			ltype = TYPE_FORK
 		else:
-			self.syntax_error('unknown show attribute value')
+			self.syntax_error('unknown show attribute value', self.lineno)
 			ltype = TYPE_JUMP
 		self.__in_a = href, ltype, id, self.__in_a
 
@@ -1219,15 +1222,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = attributes.get('id')
 		if id is not None:
 			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
+				self.syntax_error('non-unique id %s' % id, self.lineno)
 			self.__ids[id] = 0
 		if self.__node is None:
-			self.syntax_error('anchor not in media object')
+			self.syntax_error('anchor not in media object', self.lineno)
 			return
 		href = attributes.get('href') # None is dest only anchor
 ## 		if href is None:
 ## 			#XXXX is this a document error?
-## 			self.warning('required attribute href missing')
+## 			self.warning('required attribute href missing', self.lineno)
 		uid = self.__node.GetUID()
 		nname = self.__node.GetRawAttrDef('name', None)
 		show = attributes['show']
@@ -1238,7 +1241,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif show == 'new':
 			ltype = TYPE_FORK
 		else:
-			self.syntax_error('unknown show attribute value')
+			self.syntax_error('unknown show attribute value', self.lineno)
 			ltype = TYPE_JUMP
 		atype = ATYPE_WHOLE
 		aargs = []
@@ -1247,20 +1250,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			z = string.atoi(z)
 		except string.atoi_error:
-			self.syntax_error('invalid z-index value')
+			self.syntax_error('invalid z-index value', self.lineno)
 			z = 0
 		if z < 0:
-			self.syntax_error('anchor with negative z-index')
+			self.syntax_error('anchor with negative z-index', self.lineno)
 			z = 0
 		coords = attributes.get('coords')
 		if coords is not None:
 ## 			if attributes.has_key('shape') and attributes['shape'] != 'rect':
-## 				self.syntax_error('unrecognized shape attribute')
+## 				self.syntax_error('unrecognized shape attribute', self.lineno)
 ## 				return
 			atype = ATYPE_NORMAL
 			res = coordre.match(coords)
 			if not res:
-				self.syntax_error('syntax error in coords attribute')
+				self.syntax_error('syntax error in coords attribute', self.lineno)
 				return
 			x, y, w, h = res.group('x', 'y', 'w', 'h')
 			if x[-1] == '%':
@@ -1312,7 +1315,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__in_layout != LAYOUT_UNKNOWN:
 				res = self.__whitespace.match(data)
 				if not res:
-					self.syntax_error('non-white space content')
+					self.syntax_error('non-white space content', self.lineno)
 			return
 		self.__nodedata.append(data)
 
@@ -1320,9 +1323,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			       xmllib._opS + '$')
 	def handle_doctype(self, tag, pubid, syslit, data):
 		if tag != 'smil':
-			self.error('not a SMIL document')
+			self.error('not a SMIL document', self.lineno)
 		if pubid != SMILpubid or syslit != SMILdtd or data:
-			self.syntax_error('invalid DOCTYPE')
+			self.syntax_error('invalid DOCTYPE', self.lineno)
 
 	def handle_xml_namespace(self, prefix, ns, src):
 		if ns == CMIFns and not self.cmif_prefix:
@@ -1347,13 +1350,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# ignore other namespaces
 
 	def handle_proc(self, name, data):
-		self.warning('ignoring processing instruction %s' % name)
+		self.warning('ignoring processing instruction %s' % name, self.lineno)
 
 	# Example -- handle cdata, could be overridden
 	def handle_cdata(self, cdata):
 		if self.__node is None or self.__is_ext:
 			if self.__in_layout != LAYOUT_UNKNOWN:
-				self.warning('ignoring CDATA')
+				self.warning('ignoring CDATA', self.lineno)
 			return
 		data = string.split(string.join(self.__nodedata, ''), '\n')
 		for i in range(len(data)-1, -1, -1):
@@ -1369,27 +1372,49 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# catch all
 
 	def unknown_starttag(self, tag, attrs):
-		self.warning('ignoring unknown start tag %s' % tag)
+		self.warning('ignoring unknown start tag %s' % tag, self.lineno)
 
 	def unknown_endtag(self, tag):
-		self.warning('ignoring unknown end tag %s' % (tag or ''))
+		self.warning('ignoring unknown end tag %s' % (tag or ''), self.lineno)
 
 	def unknown_charref(self, ref):
-		self.warning('ignoring unknown char ref %s' % ref)
+		self.warning('ignoring unknown char ref %s' % ref, self.lineno)
 
 	def unknown_entityref(self, ref):
-		self.warning('ignoring unknown entity ref %s' % ref)
+		self.warning('ignoring unknown entity ref %s' % ref, self.lineno)
 
 	# non-fatal syntax errors
 
-	def syntax_error(self, msg):
-		print 'warning: syntax error on line %d: %s' % (self.lineno, msg)
+	def syntax_error(self, msg, lineno = None):
+		if lineno is None:
+			msg = 'warning: syntax error: %s' % msg
+		else:
+			msg = 'warning: syntax error on line %d: %s' % (lineno, msg)
+		if self.__printfunc is not None:
+			self.__printdata.append(msg)
+		else:
+			print msg
 
-	def warning(self, message):
-		print 'warning: %s on line %d' % (message, self.lineno)
+	def warning(self, message, lineno = None):
+		if lineno is None:
+			msg = 'warning: %s' % message
+		else:
+			msg = 'warning: %s on line %d' % (message, lineno)
+		if self.__printfunc is not None:
+			self.__printdata.append(msg)
+		else:
+			print msg
 
-	def error(self, message):
-		raise MSyntaxError, 'error, line %d: %s' % (self.lineno, message)
+	def error(self, message, lineno = None):
+		if self.__printfunc is None and self.__printdata:
+			msg = string.join(self.__printdata, '\n') + '\n'
+		else:
+			msg = ''
+		if lineno is None:
+			message = 'error: %s' % message
+		else:
+			message = 'error, line %d: %s' % (lineno, message)
+		raise MSyntaxError, msg + message
 
 	# helper methods
 
@@ -1404,10 +1429,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					offset = offset + string.atoi(h) * 3600
 				m = string.atoi(m)
 				if m >= 60:
-					self.syntax_error('minutes out of range')
+					self.syntax_error('minutes out of range', self.lineno)
 				s = string.atoi(s)
 				if s >= 60:
-					self.syntax_error('seconds out of range')
+					self.syntax_error('seconds out of range', self.lineno)
 				offset = offset + m * 60 + s
 				if f is not None:
 					offset = offset + string.atof(f + '0')
@@ -1512,7 +1537,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return colors[val]
 		res = color.match(val)
 		if res is None:
-			self.syntax_error('bad color specification')
+			self.syntax_error('bad color specification', self.lineno)
 			return
 		else:
 			hex = res.group('hex')
@@ -1546,21 +1571,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.stack:
 			ptag = self.stack[-1]
 			if tag not in self.entities.get(ptag, ()):
-				self.syntax_error('%s element not allowed inside %s' % (tag, ptag))
+				self.syntax_error('%s element not allowed inside %s' % (tag, ptag), self.lineno)
 		elif tag != 'smil':
-			self.syntax_error('outermost element must be "smil"')
+			self.syntax_error('outermost element must be "smil"', self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tag, attrs)
 
-def ReadFile(url):
+def ReadFile(url, printfunc = None):
 	if os.name == 'mac':
 		import splash
 		splash.splash('loaddoc')	# Show "loading document" splash screen
-	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode))
+	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc)
 	if os.name == 'mac':
 		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
 
-def ReadFileContext(url, context):
+def ReadFileContext(url, context, printfunc = None):
 	import posixpath
 	utype, str = MMurl.splittype(url)
 	host, path = MMurl.splithost(str)
@@ -1570,7 +1595,7 @@ def ReadFileContext(url, context):
 	if utype:
 		dir = '%s:%s' % (utype, dir)
 	context.setdirname(dir)
-	p = SMILParser(context)
+	p = SMILParser(context, printfunc)
 	u = MMurl.urlopen(url)
 	data = u.read()
 	p.feed(data)
@@ -1579,12 +1604,13 @@ def ReadFileContext(url, context):
 	root.source = data
 	return root
 
-def ReadString(string, name):
+def ReadString(string, name, printfunc = None):
 	return ReadStringContext(string, name,
-				 MMNode.MMNodeContext(MMNode.MMNode))
+				 MMNode.MMNodeContext(MMNode.MMNode),
+				 printfunc)
 
-def ReadStringContext(string, name, context):
-	p = SMILParser(context)
+def ReadStringContext(string, name, context, printfunc = None):
+	p = SMILParser(context, printfunc)
 	p.feed(string)
 	p.close()
 	root = p.GetRoot()
