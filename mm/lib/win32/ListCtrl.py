@@ -1,8 +1,6 @@
 __version__ = "$Id$"
 
 import win32ui
-Sdk = win32ui.GetWin32Sdk()
-
 import win32con
 import commctrl
 
@@ -11,7 +9,6 @@ import win32mu
 from pywinlib.mfc import window
 
 class ListCtrl(window.Wnd):
-	CF_FILE = Sdk.RegisterClipboardFormat('FileName')
 	def __init__ (self, dlg=None, ctrl=None, resId=None):
 		self.parent = dlg
 		if not ctrl:
@@ -119,10 +116,8 @@ class ListCtrl(window.Wnd):
 		nmsg = win32mu.Win32NotifyMsg( std, extra, 'list')
 		if nmsg.state & commctrl.LVIS_SELECTED:
 			self.selected = nmsg.row
-			print 'selection: row', nmsg.row, `self.GetItemText(nmsg.row,0)`
 		else:
 			self.selected = -1
-			print 'selection: None'
 
 	#
 	#  command responses
