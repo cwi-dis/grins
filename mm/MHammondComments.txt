@@ -1,0 +1,27 @@
+Comments Mark Hammond - August 14, 1998
+
+Build Procedure for 1.5.1 and later:
+* All "debug" versions of libraries must be called "module_d.pyd".  Eg, the release build of "cmifex2" is still called "cmifex2.pyd".  The debug build is called "cmifex2_d.pyd".  Note that in order to run a debug build, you must have every .pyd and .exe built as debug.
+* All references to "win32ui.lib" can now be removed from the linker command lines.  The most recent Pythonwin uses the C compilers '#pragma comment(lib, libname)' feature to avoid needing to specify the library at link time.
+* These changes make it possible to have the same "output" directory for both Release and Debug builds.  This is recommended.  In fact, you should ideally have a single "output" directory for all Python builds.
+* Only Python.h need be included in the majority of cases (eg, allobjects.h etc are no longer needed)
+* USE_DL_IMPORT and HAVE_CONFIG_C definitions should be removed from the C compiler command line.
+* Removed "textex", due to serious bugs.  Functionality rolled into cmifex.
+
+UI Recommendations:
+Need multiple windows machines, in various configurations.  Need at least 1 "low-end" PC running 95.
+* Need to check tab-order, focus and default buttons for all dialogs.
+* Use standard Windows cursors (mouse pointers)
+* Integrate with OS Internet APIs (ie, ie4?)  This means Windows manages download, caching etc.  Integrate all "location" dialogs with IE's "Favorites".  Etc.
+* Need to split the "CMIF_PATH concept - need a path for the program, and a path for the user files.  In fact, this should probably extend into general "user prefs"
+* Top level windows should all have menus and pretty icons.  The title bar should include the name of the application, plus the name of the document.  The document name should not be all caps.
+* Need to use asynch download, so they can be stopped, windows resized etc during this "busy time".
+* Time to download sound files particularly is very long.  It should be investigated how to reduce this.
+
+C Bugs
+All C modules:
+* Many cases do not do the right thing on errors (eg, they return Py_None instead of NULL).  Many of these have been fixed, but they should be all checked.
+* Timerex2 sources can not be found.  When they are, they should be rolled into timerex.
+* Most, if not all, of these extension modules should be removed, and replaced with .py files that use win32ui or win32api etc.  Whereever win32ui can not do this, we should investigate if it should, and send patches to Mark Hammond.  Bugs in this C code cost significant time while attempting to freeze, and if they where in Python, the debugging process would be much simpler.
+
+
