@@ -23,7 +23,7 @@ class MovieChannel(ChannelWindowThread):
 		filename = self.getfilename(node)
 		try:
 			import VFile
-			vfile = VFile.RandomVinFile().init(filename)
+			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, VFile.Error), msg:
 			if type(msg) == type(()):
 				msg = msg[1]
