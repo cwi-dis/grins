@@ -36,13 +36,17 @@ class AudioFormat:
 
 class AudioFormatLinear(AudioFormat):
 	def __init__(self, name, descr, channels, encoding,
-		     blocksize, fpb, bps):
+		     blocksize, fpb, bps, endian = None):
 		AudioFormat.__init__(self, name, descr, channels, encoding,
 				     blocksize, fpb)
 		self.__bps = bps
+		self.__endian = endian
 
 	def getbps(self):
 		return self.__bps
+
+	def getendian(self):
+		return self.__endian
 
 ulaw_mono = AudioFormat(
 	'ulaw_mono',
@@ -90,22 +94,42 @@ linear_8_mono_excess = AudioFormatLinear(
 	blocksize = 1,
 	fpb = 1,
 	bps = 8)
-linear_16_mono_big = AudioFormatLinear(
-	'linear_16_mono_big',
-	'linear 16 bps, big-endian, mono',
+linear_16_mono_big_signed = AudioFormatLinear(
+	'linear_16_mono_big_signed',
+	'linear 16 bps, signed, big-endian, mono',
 	[mono],
 	'linear-big',
 	blocksize = 2,
 	fpb = 1,
-	bps = 16)
-linear_16_mono_little = AudioFormatLinear(
-	'linear_16_mono_little',
-	'linear 16 bps, little-endian, mono',
+	bps = 16,
+	endian = 'big')
+linear_16_mono_little_signed = AudioFormatLinear(
+	'linear_16_mono_little_signed',
+	'linear 16 bps, signed, little-endian, mono',
 	[mono],
 	'linear-little',
 	blocksize = 2,
 	fpb = 1,
-	bps = 16)
+	bps = 16,
+	endian = 'little')
+linear_16_mono_big_excess = AudioFormatLinear(
+	'linear_16_mono_big_excess',
+	'linear 16 bps, excess-32768, big-endian, mono',
+	[mono],
+	'linear-big',
+	blocksize = 2,
+	fpb = 1,
+	bps = 16,
+	endian = 'big')
+linear_16_mono_little_excess = AudioFormatLinear(
+	'linear_16_mono_little_excess',
+	'linear 16 bps, excess-32768, little-endian, mono',
+	[mono],
+	'linear-little',
+	blocksize = 2,
+	fpb = 1,
+	bps = 16,
+	endian = 'little')
 linear_8_stereo_signed = AudioFormatLinear(
 	'linear_8_stereo_signed',
 	"linear, 8 bps, 2's complement, stereo, left channel first",
@@ -122,22 +146,47 @@ linear_8_stereo_excess = AudioFormatLinear(
 	blocksize = 2,
 	fpb = 1,
 	bps = 8)
-linear_16_stereo_big = AudioFormatLinear(
-	'linear_16_stereo_big',
-	'linear 16 bps, big-endian, stereo, left channel first',
+linear_16_stereo_big_signed = AudioFormatLinear(
+	'linear_16_stereo_big_signed',
+	'linear 16 bps, signed, big-endian, stereo, left channel first',
 	[left, right],
 	'linear-big',
 	blocksize = 4,
 	fpb = 1,
-	bps = 16)
-linear_16_stereo_little = AudioFormatLinear(
-	'linear_16_stereo_little',
-	'linear 16 bps, little-endian, stereo, left channel first',
+	bps = 16,
+	endian = 'big')
+linear_16_stereo_little_signed = AudioFormatLinear(
+	'linear_16_stereo_little_signed',
+	'linear 16 bps, signed, little-endian, stereo, left channel first',
 	[left, right],
 	'linear-little',
 	blocksize = 4,
 	fpb = 1,
-	bps = 16)
+	bps = 16,
+	endian = 'little')
+linear_16_stereo_big_excess = AudioFormatLinear(
+	'linear_16_stereo_big',
+	'linear 16 bps, excess-32768, big-endian, stereo, left channel first',
+	[left, right],
+	'linear-big',
+	blocksize = 4,
+	fpb = 1,
+	bps = 16,
+	endian = 'big')
+linear_16_stereo_little_excess = AudioFormatLinear(
+	'linear_16_stereo_little',
+	'linear 16 bps, excess-32768, little-endian, stereo, left channel first',
+	[left, right],
+	'linear-little',
+	blocksize = 4,
+	fpb = 1,
+	bps = 16,
+	endian = 'little')
+# backward compatibility
+linear_16_mono_big = linear_16_mono_big_signed
+linear_16_mono_little = linear_16_mono_little_signed
+linear_16_stereo_big = linear_16_stereo_big_signed
+linear_16_stereo_little = linear_16_stereo_little_signed
 
 import struct
 x = struct.unpack('h', '\x12\x34')[0]
@@ -148,8 +197,16 @@ else:
 del x, struct
 
 if endian == 'big':
-	linear_16_stereo = linear_16_stereo_big
 	linear_16_mono = linear_16_mono_big
+	linear_16_mono_excess = linear_16_mono_big_excess
+	linear_16_mono_signed = linear_16_mono_big_signed
+	linear_16_stereo = linear_16_stereo_big
+	linear_16_stereo_excess = linear_16_stereo_big_excess
+	linear_16_stereo_signed = linear_16_stereo_big_signed
 else:
-	linear_16_stereo = linear_16_stereo_little
 	linear_16_mono = linear_16_mono_little
+	linear_16_mono_excess = linear_16_mono_little_excess
+	linear_16_mono_signed = linear_16_mono_little_signed
+	linear_16_stereo = linear_16_stereo_little
+	linear_16_stereo_excess = linear_16_stereo_little_excess
+	linear_16_stereo_signed = linear_16_stereo_little_signed
