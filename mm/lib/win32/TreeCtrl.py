@@ -81,6 +81,9 @@ class TreeCtrl(window.Wnd):
 		key = params[2]
 		if key == win32con.VK_TAB: 
 			self.parent.SetFocus() 
+		elif key == win32con.VK_DELETE:
+			if hasattr(self.parent, 'OnDelete'):
+				self.parent.OnDelete()
 		else:
 			self._selEventSource = EVENT_SRC_KeyDown
 			return 1

@@ -137,6 +137,24 @@ class _LayoutView2(GenFormView):
 			except:
 				pass
 
+	def activate(self):
+		self._is_active=1
+		frame = self.GetParent().GetParent().GetMDIFrame()
+		frame.set_commandlist(self._commandlist,self._strid)
+		self.set_menu_state()
+		#frame.LoadAccelTable(grinsRC.IDR_LAYOUT)
+
+	def deactivate(self):
+		self._is_active=0
+		frame = self.GetParent().GetParent().GetMDIFrame()
+		frame.set_commandlist(None,self._strid)
+		#frame.LoadAccelTable(grinsRC.IDR_GRINSED)
+
+	def OnDelete(self):
+		splitter = self.GetParent()
+		mainframe = splitter.GetParent().GetMDIFrame()
+		mainframe.PostMessage(win32con.WM_COMMAND, usercmd2id(DELETE))
+
 	def OnInitialUpdate(self):
 		# we use a splitter so don't call GenFormView version
 		#GenFormView.OnInitialUpdate(self)
