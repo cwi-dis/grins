@@ -6,12 +6,14 @@ public interface SMILController {
     void stop();
     void pause();
        
-    double getDuration();
-    
     void setTime(double t);
     double getTime();
     
     void setSpeed(double v);
-    double getSpeed();    
+    double getSpeed(); 
+    
+    void addListener(SMILListener listener);
+    void removeListener(SMILListener listener);
+    
 }
 

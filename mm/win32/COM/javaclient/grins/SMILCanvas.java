@@ -4,7 +4,7 @@ package grins;
 import java.awt.*;
 import java.awt.event.*;
 
-public class PlayerCanvas extends Canvas 
+public class SMILCanvas extends Canvas 
     implements MouseListener, MouseMotionListener 
 {
 	public void paint(Graphics g) {
@@ -12,12 +12,12 @@ public class PlayerCanvas extends Canvas
 		else super.paint(g);
 	}
 	
-    void setRenderer(SMILRenderer renderer) {
+    void setRenderer(GRiNSPlayer renderer) {
         this.renderer = renderer;
         addMouseListener(this);
         addMouseMotionListener(this);
     }
-    private SMILRenderer renderer;
+    private GRiNSPlayer renderer;
     private Cursor handCursor = new Cursor(Cursor.HAND_CURSOR);
     private Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     

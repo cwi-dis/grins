@@ -2,10 +2,10 @@
 package grins;
 
 public interface SMILListener {
-    void opened();
-    void setDur(double dur);
+    public final int STOPPED = 0;
+    public final int PAUSING = 1;
+    public final int PLAYING = 2;
+    
     void setPos(double pos);
-    void closed();
-    void setWaiting();
-    void setReady();
+    void setState(int state);
 }
