@@ -3,6 +3,9 @@
 import sys
 import getopt
 
+import fastimp
+fastimp.install()
+
 def usage(msg):
 	sys.stdout = sys.stderr
 	print msg
