@@ -263,7 +263,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		filetypes = ['application/x-grins-project', 'application/smil']
 		import settings
-		if not settings.get('lightweight'):
+		if settings.get('cmif'):
 			filetypes.append('application/x-grins-cmif')
 		dftfilename = ''
 		if self.filename:
