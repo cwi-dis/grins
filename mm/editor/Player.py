@@ -18,11 +18,12 @@ import Timing
 # of a node as separate events in time; there are separate counters
 # and lists of dependencies, indexed by the symbolic constants
 # HD and TL: e.g., node.counter[HD], node.deps[HD].
+# This is also used in module Timing!
 
 HD, TL = 0, 1
 
 
-# Control Panel dimensions
+# Nominal Control Panel dimensions
 
 CPWIDTH = 300
 CPHEIGHT = 100
@@ -47,11 +48,14 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		self.queue = []
 		self.resettimer()
 		self.root = root
-		self.root.GetContext().geteditmgr().register(self)
+		self.context = self.root.GetContext()
+		self.editmgr = self.context.geteditmgr()
+		self.editmgr.register(self)
 		self.setcurrenttime_callback = None
 		self.playing = self.locked = 0
 		self.channelnames = []
 		self.channels = {}
+		self.channeltypes = {}
 		return BasicDialog.init(self, (0, 0, 'Player'))
 	#
 	# EditMgr interface (as dependent client).
@@ -67,7 +71,8 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		return 1
 	#
 	def commit(self):
-		# XXX Should check that all our channels still exist!
+		if self.showing:
+			self.checkchannels()
 		self.locked = 0
 	#
 	def rollback(self):
@@ -358,10 +363,32 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	# Channels.
 	#
 	def makechannels(self):
-		for name in self.root.context.channelnames:
-			attrdict = self.root.context.channeldict[name]
+		for name in self.context.channelnames:
+			attrdict = self.context.channeldict[name]
+			self.newchannel(name, attrdict)
 			self.channelnames.append(name)
-			self.channels[name] = self.newchannel(name, attrdict)
+	#
+	def checkchannels(self):
+		# XXX Ought to detect renamed channels...
+		# (1) Delete channels that have disappeared
+		# or whose type has changed
+		for name in self.channelnames[:]:
+			if name not in self.context.channelnames:
+				self.killchannel(name)
+			else:
+				oldtype = self.channeltypes[name]
+				newtype = \
+				    self.context.channeldict[name]['type']
+				if oldtype <> newtype:
+					self.killchannel(name)
+		# (2) Add new channels that have appeared
+		for name in self.context.channelnames:
+			if name not in self.channelnames:
+				attrdict = self.context.channeldict[name]
+				self.newchannel(name, attrdict)
+				i = self.context.channelnames.index(name)
+				self.channelnames.insert(i, name)
+				self.channels[name].show()
 	#
 	def showchannels(self):
 		for name in self.channelnames:
@@ -372,11 +399,14 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			self.channels[name].hide()
 	#
 	def destroychannels(self):
-		for name in self.channelnames:
-			self.channels[name].destroy()
-			# The channels must first hide themselves
-		self.channelnames = []
-		self.channels = {}
+		for name in self.channelnames[:]:
+			self.killchannel(name)
+	#
+	def killchannel(self, name):
+		self.channels[name].destroy()
+		self.channelnames.remove(name)
+		del self.channels[name]
+		del self.channeltypes[name]
 	#
 	def newchannel(self, (name, attrdict)):
 		if not attrdict.has_key('type'):
@@ -388,7 +418,8 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
 		ch = chclass().init(name, attrdict, self)
-		return ch
+		self.channels[name] = ch
+		self.channeltypes[name] = type
 	#
 	def resetchannels(self):
 		for cname in self.channelnames:
