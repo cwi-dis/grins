@@ -1,13 +1,16 @@
 __version__ = "$Id$"
 
-from ChannelThread import ChannelWindowThread
+from ChannelThread import ChannelWindowThread, CMIF_MODE
 import MMurl
 from MMExc import *			# exceptions
 from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
-	node_attrs = ChannelWindowThread.node_attrs + ['bucolor', 'hicolor', 'scale']
+	if CMIF_MODE:
+		node_attrs = ChannelWindowThread.node_attrs + ['bucolor', 'hicolor', 'scale']
+	else:
+		chan_attrs = ChannelWindowThread.chan_attrs + ['bucolor', 'hicolor', 'scale']
 
 	def threadstart(self):
 		import mpegchannel

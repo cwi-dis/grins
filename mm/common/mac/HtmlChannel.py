@@ -18,7 +18,11 @@ import WMEVENTS
 error = 'HtmlChannel.error'
 
 class HtmlChannel(Channel.ChannelWindow):
-	node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
+	_our_attrs = ['fgcolor', 'font']
+	if Channel.CMIF_MODE:
+		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
+	else:
+		chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
