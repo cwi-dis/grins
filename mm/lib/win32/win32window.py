@@ -853,6 +853,21 @@ class SubWindow(Window):
 			self.CreateOSWindow(self, html=1)	
 		self._oswnd.Navigate(fileOrUrl)
 
+	def HasHtmlCtrl(self):
+		if not self._oswnd: return 0
+		return self._oswnd.HasHtmlCtrl()
+	
+	def CreateHtmlCtrl(self):
+		if self._oswnd:
+			self._oswnd.CreateHtmlCtrl()
+
+	def DestroyHtmlCtrl(self):
+		if self._oswnd:
+			self._oswnd.DestroyHtmlCtrl()
+	def SetImmHtml(self, text):
+		if self._oswnd:
+			self._oswnd.SetImmHtml(text)
+					
 	# Called by the Html channel to set the callback to be called on cmif links
 	# Part of WebBrowsing support
 	def setanchorcallback(self,cb):
