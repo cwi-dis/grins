@@ -5,7 +5,6 @@ __version__ = "$Id$"
 # an ordinary text channel, but it's anchors have arguments.
 #
 from Channel import ChannelWindow, error
-from AnchorDefs import *
 import string
 from TextChannel import extract_paragraphs, extract_taglist, mapfont
 from StringStuff import calclines
