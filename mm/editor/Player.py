@@ -81,6 +81,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			pause,
 			stop,
 			]
+		self.alllist = self.pauselist
 
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
