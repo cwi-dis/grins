@@ -350,6 +350,7 @@ class _MenubarSupport(_ToolTip):
 		self.__commanddict = {}	# mapping of command class to instance
 		self.__widgetmap = {}	# mapping of command to list of widgets
 		self.__accelmap = {}	# mapping of command to list of keys
+		self.__dynamicmenu = {}
 		_ToolTip.__init__(self)
 
 	def close(self):
@@ -357,27 +358,40 @@ class _MenubarSupport(_ToolTip):
 		del self.__commanddict
 		del self.__widgetmap
 		del self.__accelmap
+		del self.__dynamicmenu
 		_ToolTip.close(self)
 
 	def set_commandlist(self, list):
-		for c in self.__commandlist:
-			for w in self.__widgetmap.get(c, []):
-				w.SetSensitive(0)
-				self._deltthandler(w)
-			for key in self.__accelmap.get(c, []):
-				del self._accelerators[key]
-		self.__commandlist = []
-		self.__commanddict = dict = {}
+		oldlist = self.__commandlist
+		olddict = self.__commanddict
+		newlist = []
+		newdict = {}
 		for cmd in list:
 			c = cmd.__class__
-			self.__commandlist.append(c)
-			dict[c] = cmd
-			for w in self.__widgetmap.get(c, []):
-				w.SetSensitive(1)
-				if cmd.help:
-					self._addtthandler(w, cmd.help)
-			for key in self.__accelmap.get(c, []):
-				self._accelerators[key] = cmd.callback
+			newlist.append(c)
+			newdict[c] = cmd
+		if newlist != oldlist:
+			# there are changes...
+			# first remove old commands
+			for c in oldlist:
+				if not newdict.has_key(c):
+					for w in self.__widgetmap.get(c, []):
+						w.SetSensitive(0)
+						self._deltthandler(w)
+				for key in self.__accelmap.get(c, []):
+					del self._accelerators[key]
+			# then add new commands
+			for cmd in list:
+				c = cmd.__class__
+				if not olddict.has_key(c):
+					for w in self.__widgetmap.get(c, []):
+						w.SetSensitive(1)
+						if cmd.help:
+							self._addtthandler(w, cmd.help)
+				for key in self.__accelmap.get(c, []):
+					self._accelerators[key] = cmd.callback
+		self.__commandlist = newlist
+		self.__commanddict = newdict
 
 	def _delete_callback(self, widget, client_data, call_data):
 		for c in self._delete_commands:
@@ -391,25 +405,34 @@ class _MenubarSupport(_ToolTip):
 		cmd = self.__commanddict.get(command)
 		if cmd is None:
 			return
+		if not cmd.dynamiccascade:
+			raise error, 'non-dynamic command in set_dynamiclist'
 		callback = cmd.callback
 		menu = []
 		for entry in list:
 			entry = (entry[0], (callback, entry[1])) + entry[2:]
 			menu.append(entry)
 		for widget in self.__widgetmap.get(command, []):
+			if self.__dynamicmenu.get(widget) == menu:
+				continue
 			submenu = widget.subMenuId
 			for w in submenu.children or []:
 				w.DestroyWidget()
 			if not list:
-				widget.SetSensitive(0)
+				if widget.sensitive:
+					widget.SetSensitive(0)
 				continue
-			widget.SetSensitive(1)
-			_create_menu(submenu, menu, toplevel._default_visual,
+			if not widget.sensitive:
+				widget.SetSensitive(1)
+			_create_menu(submenu, menu,
+				     toplevel._default_visual,
 				     toplevel._default_colormap)
+			self.__dynamicmenu[widget] = menu
 
 	def set_toggle(self, command, onoff):
 		for widget in self.__widgetmap.get(command, []):
-			widget.ToggleButtonSetState(onoff, 0)
+			if widget.set != onoff:
+				widget.ToggleButtonSetState(onoff, 0)
 		
 	def __menu_callback(self, widget, client_data, call_data):
 		callback = self.__commanddict.get(client_data)
