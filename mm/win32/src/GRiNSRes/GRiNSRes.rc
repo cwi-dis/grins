@@ -562,7 +562,7 @@ BEGIN
     GROUPBOX        "",IDC_GROUP1,6,10,287,40
     LTEXT           "Untitled",IDC_1,11,26,83,8
     EDITTEXT        IDC_2,96,24,140,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Pick &color...",IDC_3,241,24,46,12
+    PUSHBUTTON      "&Pick color...",IDC_3,241,24,46,12
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
@@ -965,7 +965,7 @@ BEGIN
     EDITTEXT        IDC_42,87,54,199,12,ES_AUTOHSCROLL
     LTEXT           "Fadeout Color",IDC_21,13,72,73,8
     EDITTEXT        IDC_22,87,70,146,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Pick &Color...",IDC_23,236,70,50,12
+    PUSHBUTTON      "&Pick Color...",IDC_23,236,70,50,12
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     GROUPBOX        "Fadeout",IDC_GROUP1,6,10,287,115
 END
@@ -1486,12 +1486,15 @@ END
 IDR_ATTR_EDIT ACCELERATORS DISCARDABLE 
 BEGIN
     "A",            ID_A,                   VIRTKEY, ALT, NOINVERT
-    "B",            ID_B,                   VIRTKEY, ALT, NOINVERT
+    "C",            ID_C,                   VIRTKEY, ALT, NOINVERT
     "D",            ID_D,                   VIRTKEY, ALT, NOINVERT
+    "E",            ID_E,                   VIRTKEY, ALT, NOINVERT
     "F",            ID_F,                   VIRTKEY, ALT, NOINVERT
     "G",            ID_G,                   VIRTKEY, ALT, NOINVERT
     "I",            ID_I,                   VIRTKEY, ALT, NOINVERT
+    "K",            ID_K,                   VIRTKEY, ALT, NOINVERT
     "L",            ID_L,                   VIRTKEY, ALT, NOINVERT
+    "M",            ID_M,                   VIRTKEY, ALT, NOINVERT
     "N",            ID_N,                   VIRTKEY, ALT, NOINVERT
     "O",            ID_O,                   VIRTKEY, ALT, NOINVERT
     "Q",            ID_Q,                   VIRTKEY, ALT, NOINVERT
