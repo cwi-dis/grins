@@ -250,8 +250,6 @@ class HtmlChannel(Channel.ChannelWindow):
 ##			  '">BACK</A> to CMIF node]<P>'
 
 
-image_cache = {}
-
 def addquery(href, list):
 	if not list: return href
 	if len(list) == 1 and list[0][0] == 'isindex':

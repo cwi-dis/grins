@@ -107,6 +107,8 @@ class MediaChannel:
 			raise error, 'Cannot render: '+url
 
 		self.__sync = node.GetSyncBehavior(), node.GetSyncTolerance(), MMAttrdefs.getattr(node, 'syncMaster')
+		if self.__sync[0] == 'locked' and self.__sync[1] < 0:
+			self.__sync = 'canSlip', self.__sync[1], self.__sync[2]
 		self.__armFileHasBeenRendered=1
 		return 1
 
@@ -142,7 +144,8 @@ class MediaChannel:
 			self.__playEnd = self.__playBuilder.GetDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
+		syncBehavior, syncTolerance, syncMaster = self.__sync
+		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter and not settings.get('noskip'):
 			if __debug__:
 				print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
@@ -317,7 +320,8 @@ class VideoStream:
 			self.__playEnd = self.__mmstream.getDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
+		syncBehavior, syncTolerance, syncMaster = self.__sync
+		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter and not settings.get('noskip'):
 			if __debug__: print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - start_time
@@ -489,7 +493,8 @@ class QtChannel:
 			self.__playEnd = self.__qtplayer.getDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
+		syncBehavior, syncTolerance, syncMaster = self.__sync
+		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter and not settings.get('noskip'):
 			if __debug__: print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - start_time
