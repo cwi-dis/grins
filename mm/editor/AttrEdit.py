@@ -1511,6 +1511,8 @@ class AttrEditor(AttrEditorDialog):
 				C = CpuAttrEditorField
 			elif displayername == 'screensize':
 				C = ScreenSizeAttrEditorField				
+			elif displayername == 'screendepth':
+				C = ScreenDepthAttrEditorField				
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1590,9 +1592,9 @@ class AttrEditor(AttrEditorDialog):
 			if not b.getvalue() and not b.getcurrent():
 				continue
 			if b.getvalue() != b.getcurrent():
-				print 'DBG changed', b
-				print 'VALUE', b.getvalue()
-				print 'CURRENT', b.getcurrent()
+				#print 'DBG changed', b
+				#print 'VALUE', b.getvalue()
+				#print 'CURRENT', b.getcurrent()
 				return 1
 		return 0
 				
@@ -1604,7 +1606,7 @@ class AttrEditor(AttrEditorDialog):
 		import settings
 		settings.set('show_all_attributes', self.show_all_attributes)
 		# settings.save()
-		print 'showall', self.show_all_attributes
+		#print 'showall', self.show_all_attributes
 		self.redisplay()
 
 	def followselection_callback(self):
@@ -1650,7 +1652,7 @@ class AttrEditor(AttrEditorDialog):
 					self.showmessage(message, mtype = 'error')
 					return 1
 				except (ValueError, MTypeError, MSyntaxError), eparam:
-					print "DEBUG: ValueError exception: ", eparam
+					#print "DEBUG: ValueError exception: ", eparam
 					typedef = self.wrapper.getdef(name)[0]
 					exp = typedef[0]
 					if exp == 'int':
@@ -2066,6 +2068,30 @@ class ScreenSizeAttrEditorField(TupleAttrEditorField):
 
 	def __error(self):
 		raise MParsingError, 'The screen height and width values have to be pixel values and both greater than 0,\n or leave the field empty if not set'
+
+class ScreenDepthAttrEditorField(IntAttrEditorField):
+	def valuerepr(self, value):
+		if value == None:
+			return ''
+		return AttrEditorField.valuerepr(self, value)
+
+	def parsevalue(self, str):
+		"""Return internal representation of string."""
+		if str == '':
+			return None
+		try:
+			value = IntAttrEditorField.parsevalue(self, str)
+		except (ValueError, MTypeError, MSyntaxError), eparam:
+			self.__error()
+		if value <= 0:
+			self.__error()
+		return value
+
+	def gethelpdata(self):
+		return 'Depth' , 'Not set', self.attrdef[4]
+
+	def __error(self):
+		raise MParsingError, 'The depth have to be greater or equal than 0,\n or leave the field empty if not set'
 		
 import EventEditor
 
