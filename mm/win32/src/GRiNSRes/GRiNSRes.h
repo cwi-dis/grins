@@ -207,6 +207,7 @@
 #define IDD_EDITATTR_ACTIVEDUR1         410
 #define IDD_EDITATTR_LAYOUT1            411
 #define IDD_EDITATTR_LAYOUT2            412
+#define IDD_EDITATTR_S1R3S6             413
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -347,23 +348,33 @@
 #define IDC_31                          1157
 #define IDC_32                          1158
 #define IDC_34                          1159
+#define IDC_SAUDIODESCL                 1159
 #define IDC_41                          1160
 #define IDC_42                          1161
 #define IDC_43                          1162
 #define IDC_51                          1163
 #define IDC_52                          1164
 #define IDC_53                          1165
+#define IDC_SCOMPONENTL                 1165
 #define IDC_61                          1166
 #define IDC_62                          1167
 #define IDC_63                          1168
+#define IDC_SCOMPONENTV                 1168
 #define IDC_71                          1169
 #define IDC_72                          1170
 #define IDC_73                          1171
+#define IDC_SOPERATINGSYSTEML           1171
 #define IDC_27                          1172
+#define IDC_SOPERATINGSYSTEMV           1172
 #define IDC_24                          1173
+#define IDC_SCPUL                       1173
 #define IDC_25                          1174
+#define IDC_SCPUV                       1174
+#define IDC_SAUDIODESCV1                1175
 #define IDC_16                          1176
+#define IDC_SCUSTOMTESTSL               1176
 #define IDC_14                          1177
+#define IDC_SCUSTOMTESTSV               1177
 #define IDC_15                          1178
 #define IDC_17                          1179
 #define IDC_SCALE1                      1180
@@ -390,6 +401,7 @@
 #define IDC_GROUP1                      1204
 #define IDC_GROUP2                      1205
 #define IDC_GROUP3                      1206
+#define IDC_GROUP6                      1207
 #define IDC_NEW                         1211
 #define IDC_RENAME                      1212
 #define IDC_DELETE                      1213
@@ -441,6 +453,7 @@
 #define IDC_LAYOUT_REGION_RADIO         1264
 #define IDC_LAYOUT_MEDIA_RADIO          1265
 #define IDC_34x                         1267
+#define IDC_SAUDIODESCV3                1268
 #define IDC_CTYPES                      1270
 #define IDC_CTYPET                      1271
 #define IDC_CTYPEI                      1272
@@ -484,6 +497,7 @@
 #define IDC_33                          1313
 #define IDC_44                          1314
 #define IDC_BUTTON_QTNEXT               1315
+#define IDC_SAUDIODESCV2                1315
 #define IDC_ADD_EXTERNAL                1316
 #define IDC_PROGRESS1                   1317
 #define IDC_BUTTON7                     1318
@@ -557,6 +571,24 @@
 #define IDC_REGPOINTL                   1393
 #define IDC_FITL                        1394
 #define IDC_ZL                          1395
+#define IDC_SBITRATEL                   1396
+#define IDC_SBITRATEV                   1397
+#define IDC_SLANGUAGEV                  1398
+#define IDC_SLANGUAGEL                  1399
+#define IDC_SCAPTIONSL                  1400
+#define IDC_SCAPTIONSV1                 1401
+#define IDC_SCAPTIONSV2                 1402
+#define IDC_SCAPTIONSV3                 1403
+#define IDC_SSCREENSIZEL                1404
+#define IDC_SSCREENSIZEV                1405
+#define IDC_SOVERDUBL                   1406
+#define IDC_SOVERDUBV1                  1407
+#define IDC_SOVERDUBV2                  1408
+#define IDC_SOVERDUBV3                  1409
+#define IDC_SSCREENDEPTHL               1410
+#define IDC_SCREENDEPTHV                1411
+#define IDC_SREQUIEREDL                 1412
+#define IDC_SREQUIEREDV                 1413
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -645,7 +677,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1396
+#define _APS_NEXT_CONTROL_VALUE         1414
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
