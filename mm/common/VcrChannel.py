@@ -139,7 +139,7 @@ class VcrChannel(Channel):
 		else:
 			print 'vcrchannel: no such anchor on node:', aid
 			return
-		if a[A_TYPE] == ATYPE_WHOLE:
+		if a[A_TYPE] == ATYPE_DEST:
 			return
 		pos = a[A_ARGS]
 		if type(pos) is not type(()) or len(pos) <> 4:

@@ -20,7 +20,7 @@ from MMNode import alltypes, leaftypes, interiortypes
 
 from AnchorDefs import *
 
-TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
+TypeValues = [ ATYPE_DEST, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
 	       ATYPE_ARGS]
 TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
 	       'with arguments']
@@ -310,7 +310,7 @@ class AnchorEditor(AnchorEditorDialog):
 		id = `maxid + 1`
 		#name = '#' + self.name + '.' + id
 		name = id
-		self.anchorlist.append((id, ATYPE_WHOLE, []))
+		self.anchorlist.append((id, ATYPE_DEST, []))
 		self.selection_append(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()

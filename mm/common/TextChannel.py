@@ -252,7 +252,7 @@ def fix_anchorlist(node, taglist):
 	i = 0
 	while i < len(anchors):
 		aid, atype, args = a = anchors[i]
-		if atype in [ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP]:
+		if atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
 			pass
 		elif aid not in names_in_anchors:
 			print 'Remove text anchor from anchorlist:', a

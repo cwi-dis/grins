@@ -7,7 +7,7 @@ import MMAttrdefs
 import AttrEdit
 from ViewDialog import ViewDialog
 import windowinterface
-from AnchorDefs import A_TYPE, A_ID, ATYPE_WHOLE, DestOnlyAnchors
+from AnchorDefs import A_TYPE, A_ID, ATYPE_DEST, DestOnlyAnchors
 
 from MMNode import interiortypes
 
@@ -174,11 +174,11 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 	def wholenodeanchor(self, node):
 		alist = MMAttrdefs.getattr(node, 'anchorlist')
 		for a in alist:
-			if a[A_TYPE] == ATYPE_WHOLE:
+			if a[A_TYPE] == ATYPE_DEST:
 				return (node.GetUID(), a[A_ID])
 		em = self.editmgr
 		if not em.transaction(): return None
-		a = ('0', ATYPE_WHOLE, [])
+		a = ('0', ATYPE_DEST, [])
 		alist.append(a)
 		em.setnodeattr(node, 'anchorlist', alist[:])
 		em.commit()
@@ -531,7 +531,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 			uid, aid = anchor
 			if '/' in uid:
 				# external anchor
-				return (aid, ATYPE_WHOLE, ())
+				return (aid, ATYPE_DEST, ())
 			node = self.context.mapuid(uid)
 			for a in MMAttrdefs.getattr(node, 'anchorlist'):
 				if a[A_ID] == aid:
