@@ -774,13 +774,14 @@ class SlideWrapper(NodeWrapper):
 		NodeWrapper.commit(self)
 
 class AnimationWrapper(NodeWrapper):
-	animateElements = ['animate', 'set', 'animateMotion', 'animateColor']
+	animateElements = ['animate', 'set', 'animateMotion', 'animateColor', 'transitionFilter']
 	def __init__(self, toplevel, node):
 		NodeWrapper.__init__(self, toplevel, node)
 
 	def attrnames(self):
-		namelist = ['atag', 'name', 'duration', 'loop', 'repeatdur',
-			    'beginlist', 'endlist',
+		namelist = ['atag', 'name', 
+				'beginlist', 'endlist',
+				'duration', 'min', 'max', 'loop', 'repeatdur',
 			    'restart', 'restartDefault', 'fill', 'fillDefault',
 			    'speed', 'accelerate', 'decelerate', 'autoReverse',
 			    ]
@@ -837,8 +838,8 @@ class AnimationWrapper(NodeWrapper):
 	def getdef(self, name):
 		if name == 'atag':
 			return (('enum', self.animateElements), '',
-				'Element type', 'atag',
-				'Animate element type', 'normal', flags.FLAG_ALL)
+				'Node type', 'atag',
+				'Animate node type', 'normal', flags.FLAG_ALL)
 		return NodeWrapper.getdef(self, name)
 
 	def setattr(self, name, value):
