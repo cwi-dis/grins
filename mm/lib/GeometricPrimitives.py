@@ -157,8 +157,9 @@ class FBox(GeoClientWidget):
 #FBox=Box # Use this for debugging.
 
 class Marker(GeoClientWidget):
-	print "TODO"
-
+	#print "TODO"
+	pass
+	
 class Text(GeoClientWidget):
 	# TODO: support different fonts and stuff.
 	def __init__(self, mother):
