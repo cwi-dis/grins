@@ -9,40 +9,52 @@ __version__ = "$Id$"
 import Channel, RealChannel
 
 class RealAudioChannel(Channel.ChannelAsync):
-	node_attrs = Channel.ChannelAsync.node_attrs + ['duration']
-
 	def __init__(self, name, attrdict, scheduler, ui):
-		self.__rc = RealChannel.RealChannel(self)
+		self.need_armdone = 0
+		self.__rc = None
+		self.__rc_error = None
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
+	def do_show(self, pchan):
+		if not Channel.ChannelAsync.do_show(self, pchan):
+			return 0
+		try:
+			self.__rc = RealChannel.RealChannel(self)
+		except RealChannel.error, msg:
+			# can't do RealMedia
+##			self.__rc = 0 # don't try again
+			if self.__rc_error is None:
+				self.__rc_error = msg
+			self.__rc = None
+		return 1
+			
 	def do_hide(self):
-		self.__rc.stopit()
+		if self.__rc is not None:
+			self.__rc.stopit()
+			self.__rc.destroy()
+			self.__rc = None
 		Channel.ChannelAsync.do_hide(self)
-		self.__rc.destroy()
-		del self.__rc
-		
+
 	def do_arm(self, node, same = 0):
-		self.__rc.prepare_player(node)
+		if self.__rc is None or not self.__rc.prepare_player(node):
+			if self.__rc_error:
+				self.errormsg(node, self.__rc_error)
+				self.__rc_error = ''
 		return 1
 
 	def do_play(self, node, curtime):
-		if not self.__rc.playit(node):
-			import windowinterface, MMAttrdefs
-			self.errormsg(node, 'No playback support for %s on this system.\n'
-						     % chtype)
-			self.playdone(0, curtime)
+		if self.__rc is not None:
+			if self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+				return
+		self.playdone(0, curtime)
 
 	# toggles between pause and run
 	def setpaused(self, paused, timestamp):
 		Channel.ChannelAsync.setpaused(self, paused, timestamp)
-		self.__rc.pauseit(paused)
+		if self.__rc is not None:
+			self.__rc.pauseit(paused)
 
-	def stopplay(self, node, curtime):
-		if node.GetType() == 'anchor':
-			self.stop_anchor(node, curtime)
-			return
-		if node and self._played_node is not node:
-##			print 'node was not the playing node '+`self,node,self._played_node`
-			return
-		self.__rc.stopit()
-		Channel.ChannelAsync.stopplay(self, node, curtime)
+	def playstop(self, curtime):
+		if self.__rc is not None:
+			self.__rc.stopit()
+		Channel.ChannelAsync.playstop(self, curtime)
