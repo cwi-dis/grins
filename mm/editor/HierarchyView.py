@@ -894,7 +894,6 @@ class Object:
 			color = 255, 0, 0 # Red -- error indicator
 		d.drawfbox(color, (l, t, r - l, b - t))
 		self.drawfocus()
-##		if node.GetChannelType() == 'image': import pdb; pdb.set_trace()
 		t1 = min(b, t + titleheight + vmargin)
 		if node.GetType() in MMNode.leaftypes and \
 		   b-t-vmargin >= 2*titleheight:
@@ -903,8 +902,8 @@ class Object:
 			self.drawchannelname(l+hmargin/2, b1,
 					     r-hmargin/2, b-vmargin/2)
 			# draw thumbnail/icon if enough space
-			if b1-t1 >= 2*titleheight and \
-			   r-l >= hmargin * 4.5:
+			if b1-t1 >= titleheight and \
+			   r-l >= hmargin * 2.5:
 				ctype = node.GetChannelType()
 				f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
 				if ctype == 'image' and self.mother.thumbnails:
