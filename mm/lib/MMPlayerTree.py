@@ -13,7 +13,10 @@ error = 'MMTree.error'
 
 Version = 'PlayerCache 2.1'		# version of player file
 
+_progressbar = None
+
 def ReadFile(filename):
+	global _progressbar
 	try:
 		stf = os.stat(filename)
 	except os.error:
@@ -26,6 +29,10 @@ def ReadFile(filename):
 		f = open(cache, 'rb')
 	except IOError:
 		raise error, 'cannot open ' + cache
+	if os.name == 'mac':
+		fsize = os.stat(cache)[6]
+		import EasyDialogs
+		_progressbar = EasyDialogs.ProgressBar("Loading %s..."%os.path.split(cache)[1], fsize)
 	header = marshal.load(f)
 	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]):
 		if header[0] != Version:
@@ -36,8 +43,11 @@ def ReadFile(filename):
 			print 'Warning: player file out of date'
 	root = load(f, context)
 	context.root = root
+	if _progressbar:
+		_progressbar.set(fsize) # Not true, but who cares...
 	root.sroffs = marshal.load(f)
 	root.fildes = f
+	_progressbar = None
 	context.addhyperlinks(root.attrdict['hyperlinks'])
 	context.addchannels(root.attrdict['channellist'])
 	del root.attrdict['hyperlinks']
@@ -184,6 +194,8 @@ def dump(node, mini, f, targets):
 
 def load(f, context):
 	type, uid, attrdict, extra = marshal.load(f)
+	if type in ('seq', 'par', 'bag') and _progressbar:
+		_progressbar.set(f.tell())
 	node = newnodeuid(context, type, uid)
 	node.attrdict = attrdict
 	if node.type in interiortypes:
