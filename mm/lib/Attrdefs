@@ -782,6 +782,8 @@
 	'Longer description of the template' raw (smil2 template cmif))
 (template_snapshot (string) '' 'Template snapshot' file
 	'URL of a snapshot image that represents the template' raw (smil2 template cmif))
+(components (string) '' 'Active Device Model' file
+	'URLs of components file' raw (smil2 template cmif))
 
 # RTIPA start
 (RTIPA_server (string) '' 'RTIPA server' default
