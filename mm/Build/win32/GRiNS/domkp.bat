@@ -85,8 +85,6 @@ rem echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
 echo -x HierarchyView >> FreezeOpts
-echo -x AttrEditForm >> FreezeOpts
-echo -x Bandwidth >> FreezeOpts
 
 rem Audio stuff not supported on this platform
 echo -x audio >> FreezeOpts
@@ -154,7 +152,6 @@ echo -x pwd >> FreezeOpts
 rem Windows specific stuff we just dont want!!
 echo -x win32ui  >> FreezeOpts
 echo -x win32dbg >> FreezeOpts
-echo -x _socket >> FreezeOpts
 
 rem exclude RMASDK
 echo -x rma >> FreezeOpts
