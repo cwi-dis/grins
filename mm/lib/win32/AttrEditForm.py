@@ -3676,6 +3676,26 @@ class SystemGroup(PreferencesGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
+class SystemGroup2(SystemGroup):
+	data=attrgrsdict['system2']
+	nodefault = 0
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S6
+
+	def createctrls(self,wnd):
+		cd = SystemGroup.createctrls(self,wnd)
+		a = self.getattr('system_operating_system')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SOPERATINGSYSTEML,grinsRC.IDC_SOPERATINGSYSTEMV))
+		a = self.getattr('system_cpu')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCPUL,grinsRC.IDC_SCPUV))
+		a = self.getattr('system_component')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCOMPONENTL,grinsRC.IDC_SCOMPONENTV))
+		a = self.getattr('system_audiodesc')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1, grinsRC.IDC_SAUDIODESCV2, grinsRC.IDC_SAUDIODESCV3))
+		a = self.getattr('u_group')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCUSTOMTESTSL,grinsRC.IDC_SCUSTOMTESTSV))
+		return cd
+
 class NameGroup(AttrGroup):
 	data=attrgrsdict['name']
 	def __init__(self):
@@ -4224,6 +4244,7 @@ groupsui={
 	'transition':TransitionGroup,
 	'snapsystem':SnapSystemGroup,
 	'system':SystemGroup,
+	'system2':SystemGroup2,
 	'preferences':PreferencesGroup,
 	'name':NameGroup,
 	'.cname':CNameGroup,
