@@ -323,6 +323,8 @@ class DrawObj:
 	def moveTo(self,position,view=None):
 		if position.iseq(self._position):
 			return
+		if not drawTk._brect.isRectIn(position):
+			return
 		if not view:
 			self.invalidate()
 			self._position.setToRect(position)
@@ -426,7 +428,9 @@ class DrawRect(DrawObj):
 		pen=Sdk.CreatePen(win32con.PS_SOLID,0,win32mu.RGB((255,0,0)))
 		oldpen=dc.SelectObjectFromHandle(pen)
 		#dc.Rectangle(self._position.tuple())
-		#dc.FillSolidRect(self._position.tuple(),win32mu.RGB((0,255,0)))
+		if not drawTk.InLayoutMode():
+			clr=(0xC0, 0xC0, 0xC0)
+			dc.FillSolidRect(self._position.tuple(),win32mu.RGB(clr))
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
 		# write dimensions
 		#s='(%d,%d,%d,%d)' % self._position.tuple() #pixels
@@ -460,6 +464,7 @@ class DrawRect(DrawObj):
 		return float(x)/100.0,float(y)/100.0,float(w)/100.0,float(h)/100.0
 
 # Context class for draw toolkit
+import sysmetrics
 
 class DrawTk:
 	# supported tools
@@ -495,6 +500,10 @@ class DrawTk:
 		self._hsmallfont=0
 		self._limit_rect=1 # for cmif app
 		self._capture=None
+		w,h=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+		self._brect=Rect((0,0,w,h))
+		self._crect=Rect((0,0,w,h))
+		self._layoutmode=1
 
 	def __del__(self):
 		if self._hsmallfont:
@@ -569,9 +578,20 @@ class DrawTk:
 		h=int(self._yscale*rc.height()+0.5)
 		r=l+w;b=t+h
 		return Rect((l,t,r,b))
-
+	def	SetBRect(self,rc):
+		self._brect=Rect(rc)
+	def	SetCRect(self,rc):
+		self._crect=Rect(rc)
+	def SetLayoutMode(self,v):
+		self._layoutmode=v
+	def InLayoutMode(self):
+		return self._layoutmode
 	def	RestoreState(self):
 		del self._has_scale
+		w,h=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+		self._brect=Rect((0,0,w,h))
+		self._crect=Rect((0,0,w,h))
+		self._layoutmode=1
 
 # Global Context 
 drawTk=	DrawTk()
@@ -802,15 +822,21 @@ class DrawLayer:
 		#dcc.FillSolidRect(rect.tuple(),win32mu.RGB((228,255,228)))
 		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
 
+		# show draw area
+		if not drawTk.InLayoutMode():
+			l,t,w,h=self._canvas
+			dcc.FillSolidRect((l,t,l+w,t+h),win32mu.RGB((0,0,0)))
+			dcc.FillSolidRect(drawTk._crect.tuple(),win32mu.RGB((200,200,0)))
+			dcc.FillSolidRect(drawTk._brect.tuple(),win32mu.RGB((255,255,255)))
+			win32mu.FrameRect(dcc,drawTk._crect.tuple(),(0,0,0))
+			win32mu.FrameRect(dcc,drawTk._brect.tuple(),(0,0,0))
+
 		# draw objects on dcc
 		if self._active_displist:
 			self._active_displist._render(dcc,rect.tuple())
 		self.DrawObjectsOn(dcc)
 
-		# show draw area
-		#l,t,w,h=self._canvas
-		#win32mu.FrameRect(dcc,(l,t,l+w,t+h),(255,0,0))
-
+		
 		# copy bitmap
 		dc.SetViewportOrg((0, 0))
 		dc.SetWindowOrg((0,0))
