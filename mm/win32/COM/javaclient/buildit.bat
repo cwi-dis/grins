@@ -1,2 +1,2 @@
 javac *.java
-javah GRiNSViewport
+javah GRiNSPlayer
