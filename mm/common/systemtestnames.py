@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Convert externally visible representations of
 # system test attribute values to internal ones
 # and vice versa
