@@ -110,6 +110,8 @@ class ImageWindow(ChannelWindow):
 			self.node = self.ninfo.node # ChannelWindow needs it
 			ChannelWindow.mouse(self, (dev, val))
 			return
+		if (dev, val) <> (DEVICE.LEFTMOUSE, 1):
+			return
 		if not self.ninfo.node:
 			gl.ringbell()
 			return
