@@ -343,9 +343,9 @@ class SMIL:
 		'prefetch': {'clip-begin':None,
 			     'clip-end':None,
 			     'src':None,
-			     'mediaSize':None,
-			     'mediaTime':None,
-			     'bandwidth':None,
+			     'mediaSize':'100%',
+			     'mediaTime':'100%',
+			     'bandwidth':'100%',
 			     },
 		}
 
