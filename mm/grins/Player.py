@@ -105,7 +105,7 @@ class Player(PlayerCore):
 
 	def load_geometry(self):
 		name = 'player_'
-		h, v = MMAttrdefs.getattr(self.root, name + 'winpos')
+		h, v = self.root.GetRawAttrDef(name + 'winpos', (None, None))
 		width, height = MMAttrdefs.getattr(self.root, name + 'winsize')
 		self.last_geometry = h, v, width, height
 
