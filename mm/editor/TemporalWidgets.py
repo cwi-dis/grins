@@ -58,14 +58,15 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 	def __init__(self, node, mother):
 		MMNodeWidget.__init__(self, node, mother)
-		self._factory = TemporalWidgetFactory()
-		self._factory.set_root(mother)
-		self.channelWidgets = {} # All channel widgets, which node widgets belong to.
+		self.root_mm_node = node
+		self._factory = global_factory
+		self._factory.set_mother(mother)
+#		self.channelWidgets = {} # All channel widgets, which node widgets belong to.
 
 		self.channelHeight = CHANNELHEIGHT # getting hacky. Oh well.
 
 		self.maxtime = self.node.GetTimes()[1]
-		self.__init_create_channels(self.node.context.channels)
+#		self.__init_create_channels(self.node.context.channels)
 
 #		self.lbar = self._factory.createbar(self.node)
 #		self.lbar.time = -1
@@ -80,7 +81,9 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 		self.structnodes = []	# A sorted list, by time of the structure nodes.
 
+		self.node_channel_mapping = {} # A dictionary of channel names -> lists of nodes in that channel.
 		self.mainnode = self.__init_create_widgets(self.node)
+		self.channeltree = global_factory.createchanneltree(node)
 		self.editmgr = node.context.editmgr
 
 		self.pointer_object_of_interest = None # Which object looks appealing to the selection.
@@ -95,8 +98,10 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		# A destructor.
 		#for i in self.syncbars:
 		#	i.destroy()
-		for i in self.channelWidgets.values():
-			i.destroy()
+		#TODO
+		#for i in self.channelWidgets.values():
+		#	i.destroy()
+		print "Warning: this destroy method not implemented yet."
 		self.mainnode.destroy()
 
 	def set_maxtime(self, time):
@@ -105,15 +110,16 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 	def __init_create_channels(self, channels):
 		# Create a channel widget for each MMChannel
-		for c in channels:
-			if c['type'] == 'layout':
-				bob = self._factory.createchannel(c)
-				if bob:
-					self.channelWidgets[bob.name] = (bob)
-					bob.set_canvas(self)
-		bob = self._factory.createchannel(None)
-		self.channelWidgets['undefined'] = bob
-		bob.set_canvas(self)
+		print "TODO: __init_create_channels"
+		#for c in channels:
+		#	if c['type'] == 'layout':
+		#		bob = self._factory.createchannel(c)
+		#		if bob:
+		#			self.channelWidgets[bob.name] = (bob)
+		#			bob.set_canvas(self)
+		#bob = self._factory.createchannel(None)
+		#self.channelWidgets['undefined'] = bob
+		#bob.set_canvas(self)
 
 # delete me:
 ##	def __init_create_widgets(self, node, leftbar, rightbar):
@@ -174,7 +180,11 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 				# i is a leafnode
 				bob = self._factory.createnode(i)
 				n = bob.get_channel()
-				self.channelWidgets[n].append(bob)
+				print "DEBUG: n is: ", n
+				if self.node_channel_mapping.has_key(n):
+					self.node_channel_mapping[n].append(bob)
+				else:
+					self.node_channel_mapping[n] = [bob]
 			else:
 				# i is a struct node.
 				bob = self.__init_create_widgets(i)
@@ -238,10 +248,36 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		r = 2 + CHANNELWIDTH
 
 		# Move all of the channels into position.
-		for i in self.channelWidgets.values():
-			i.moveto((l,t,r,t+self.channelHeight))
-			t = t + self.channelHeight + 2
-			
+		# delete me:
+		#for i in self.channelWidgets.values():
+		#	i.moveto((l,t,r,t+self.channelHeight))
+		#	t = t + self.channelHeight + 2
+
+		# Move all of the channels into position, retaining their original order.
+#		channelhelper = MMNode.MMChannelTree(self.root_mm_node)
+#		for i in channelhelper.getviewports():
+#			# Move the Viewport.
+			# (todo)
+
+		# Move all the nodes to their y location (from their channel location.
+##		for every channel.. working here.
+
+##		for viewport in self.channeltree.channeltree:
+##			vpname = viewport.get_name()
+##			for each_node in self.node_channel_mapping[vpname]:
+##				each_node.
+
+		self.channeltree.moveto((2,2,CHANNELWIDTH+2, CHANNELHEIGHT+2))
+
+		iter = self.channeltree.get_LRiter()
+		while iter.next():
+			w_channel = iter.get()
+			w_channel_name = w_channel.get_name()
+			x,y,w,h = w_channel.get_box()
+			if self.node_channel_mapping.has_key(w_channel_name):
+				for i in self.node_channel_mapping[w_channel_name]:
+					i.set_y(y,y+h)
+
 		# delete me: 
 		# Move all of my breaks (each syncbar only needs to know it's x position)
 		#for i in self.syncbars:
@@ -269,7 +305,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		#			n = c.get_node_at(coords)
 		#			self.select_node(n)
 		print "You clicked!"
-	# TODO: what about CTRL-clicks for multiple selection?
+	#TODO: what about CTRL-clicks for multiple selection?
 
 #	def select_syncbar(self, bar):
 #		self.root.unselect_nodes()
@@ -312,16 +348,25 @@ class TemporalWidgetFactory:
 	# A singleton factory which creates widgets based on node types.
 	def createnode(self, m):
 		assert isinstance(m, MMNode.MMNode)
-		bob = MMWidget(m, self.root)
-		bob.set_display(self.root.get_geodl())
+		bob = MMWidget(m, self.mother)
+		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
 
 	def createchannel(self, c):
 		assert isinstance(c, MMNode.MMChannel) or c is None
-		bob = ChannelWidget(self.root)
-		graph = self.root.get_geodl()
+		bob = ChannelWidget(self.mother)
+		graph = self.mother.get_geodl()
 		bob.set_channel(c)
+		bob.set_display(graph)
+		bob.setup()
+		return bob
+
+	def createchanneltree(self, node):
+		bob = ChannelTree(self.mother)
+		bob.cpos = (0,2,CHANNELWIDTH,CHANNELHEIGHT)
+		bob.set_rootmmnode(node)
+		graph = self.mother.get_geodl()
 		bob.set_display(graph)
 		bob.setup()
 		return bob
@@ -329,56 +374,126 @@ class TemporalWidgetFactory:
 # delete me.
 #	def createbar(self, n):
 #		assert isinstance(n, MMNode.MMNode)
-#		bob = SyncBarWidget(n, self.root)
-#		bob.set_display(self.root.get_geodl())
+#		bob = SyncBarWidget(n, self.mother)
+#		bob.set_display(self.mother.get_geodl())
 #		bob.setup()
 #		return bob
 
 	def createseq(self, node):
 		assert isinstance(node, MMNode.MMNode)
-		bob = SeqMMWidget(node, self.root)
-		bob.set_display(self.root.get_geodl())
+		bob = SeqMMWidget(node, self.mother)
+		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
 
 	def createpar(self, node):
 		assert isinstance(node, MMNode.MMNode)
-		bob = ParMMWidget(node, self.root)
-		bob.set_display(self.root.get_geodl())
+		bob = ParMMWidget(node, self.mother)
+		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
 
 	def createexcl(self, node):
 		assert isinstance(node, MMNode.MMNode)
-		bob = ExclMMWidget(node, self.root)
-		bob.set_display(self.root.get_geodl())
+		bob = ExclMMWidget(node, self.mother)
+		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
 
 	def createswitch(self, node):
 		assert isinstance(node, MMNode.MMNode)
-		bob = SwitchMMWidget(node, self.root)
-		bob.set_display(self.root.get_geodl())
+		bob = SwitchMMWidget(node, self.mother)
+		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
 
 	def createprio(self, node):
 		assert isinstance(node, MMNode.MMNode)
-		bob = PrioMMWidget(node, self.root)
-		bob.set_display(self.root.get_geodl())
+		bob = PrioMMWidget(node, self.mother)
+		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
 
-	def set_root(self, root):
-		self.root = root
+	def set_mother(self, mother):
+		self.mother = mother
 
 	def setup(self):
 		return
+
+global_factory = TemporalWidgetFactory()
 
 
 ######################################################################
 # The widgets.
 ######################################################################
+
+class ChannelTree(Widgets.Widget, GeoDisplayWidget):
+	# This is an interactive tree of channels, regions and viewports. Dang.
+	# The y coordinates of the channels need to be available to the TimeWidgets.
+	# Does this widget have geometric primitives?
+
+	def setup(self):
+		self.channeltree = []	# A list of channel widgets.
+
+		self.channelhelper = MMNode.MMChannelTree(self.node)	# self.node must be the root node.
+		self.viewports = self.channelhelper.getviewports()
+		for i in self.viewports: # Adds all the channels to this tree.
+			self.add_channel_to_bottom(i, 0) # recursively add the viewport and it's children.
+
+	def set_rootmmnode(self, node):
+		self.node = node
+
+	def get_viewports(self):
+		return self.viewports
+
+	def get_LRiter(self):
+		return LRChannelTreeIter(self.channeltree)
+
+	def recalc(self):
+		# Move all of the Viewports and channels to their correct positions.
+		print "DEBUG: warning - ChannelTree.recalc was called. This is not needed."
+		# for each viewport, recursively add it's channels.
+
+	def add_channel_to_bottom(self, channel, treedepth):
+		# treedepth is the depth into the channel tree, thus it is proportional to the x coordinate.
+		bob = global_factory.createchannel(channel)
+		self.channeltree.append(bob)
+		bob.set_depth(treedepth)
+		x,y,w,h = self.cpos
+		bob.moveto((x,y,x+w,y+h))
+		self.cpos = (x,y+CHANNELHEIGHT+2,w,h)
+		# add all subchannels to the tree also.
+		for i in self.channelhelper.getsubregions(channel):
+			self.add_channel_to_bottom(i, treedepth+1)
+
+
+class LRChannelTreeIter:
+	# Left -> Right Iterater for the ChannelTree class.
+	# This breaks encapsulation a bit, but that doesn't matter.
+	def __init__(self, channeltree):
+		self.channeltree = channeltree
+		self.reset()
+	def reset(self):
+		self.pos = -1		# You must call iter.next() at least once before using.
+	def next(self):
+		self.pos = self.pos + 1
+		if self.pos < len(self.channeltree):
+			return 1
+		else:
+			return 0
+	def prev(self):
+		if self.pos > 0:
+			self.pos = self.pos - 1
+			return 1
+		else:
+			return 0
+	def get(self):
+		try:
+			return self.channeltree[self.pos]
+		except IndexError:
+			print "Index Error,  position is: ", self.pos
+			assert 0
+			# If the channel doesn't exist, that means that no nodes have that channel.
 
 class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 	# A widget representing a certain channel.
@@ -388,6 +503,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		if self.channel:
 			self.name = self.channel.name
 		else:
+			print "ERROR: I have no channel"
 			self.name = 'undefined'
 		self.nodewidgets = []		# A list of all node widgets in this channel.
 		self.w_fbox = self.graph.AddWidget(FBox(self.mother))
@@ -403,6 +519,9 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		self.graph.DelWidget(self.w_outerbox)
 		self.graph.DelWidget(self.w_name)
 		self.graph.DelWidget(self.w_fbox)
+
+	def set_depth(self, d):
+		self.depth = d
 
 	def set_channel(self, c):
 		self.channel = c
@@ -456,11 +575,16 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		for n in self.nodewidgets:
 			if n.is_hit(coords):
 				return n
-		bob.root = self.root
+		bob.root = self.mother
 
 	def get_draggable(self, coords):
 		print "TODO: dragging channels around."
 		return []
+
+	def get_name(self):
+		print "DEBUG: channel widget returning name: ", self.name
+		return self.name
+
 
 
 class TimeWidget(MMNodeWidget, GeoDisplayWidget):
