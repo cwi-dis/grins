@@ -76,7 +76,7 @@ fi
 
 PYTHONPATH=$PYTHONPATH:$pythonlib
 PYTHONPATH=$PYTHONPATH:$pythonlib/test
-PYTHONPATH=$PYTHONPATH:$pythonlib/$ARCH
+PYTHONPATH=$PYTHONPATH:$pythonlib/plat-$ARCH
 PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/X11/Lib
 PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/img/Lib
 PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/midi/Lib
