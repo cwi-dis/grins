@@ -1158,12 +1158,16 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg', 'editBackground', 'showEditBackground']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z', 'bgimg', 'editBackground', 'showEditBackground']
 	node_attrs = Channel.node_attrs + ['drawbox']
 	if CMIF_MODE:
 		node_attrs.append('bgcolor')
-	else:
+		node_attrs.append('transparent')
 		chan_attrs.append('bgcolor')
+		chan_attrs.append('transparent')
+	else:
+		node_attrs.append('cssbgcolor')
+		chan_attrs.append('cssbgcolor')
 	if 1: # XXX Should depend on SMIL-Boston. Can I test for that here??
 		node_attrs.append('transIn')
 		node_attrs.append('transOut')

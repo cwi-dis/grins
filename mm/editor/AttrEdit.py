@@ -352,6 +352,11 @@ class NodeWrapper(Wrapper):
 			return self.node.GetValues()
 		if name == '.anchorlist':
 			return self.__findanchors()
+		if name == 'cssbgcolor':
+			transparent = self.node.GetRawAttrDef('transparent', None)
+			bgcolor = self.node.GetRawAttrDef('bgcolor',None)
+			return cmifToCssBgColor(transparent, bgcolor)
+			
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
@@ -368,6 +373,10 @@ class NodeWrapper(Wrapper):
 			return self.node.GetValues() or None
 		if name == '.anchorlist':
 			return self.__findanchors() or None
+		if name == 'cssbgcolor':
+			transparent = self.node.GetRawAttrDef('transparent', None)
+			bgcolor = self.node.GetRawAttrDef('bgcolor',None)
+			return cmifToCssBgColor(transparent, bgcolor)
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
@@ -405,6 +414,11 @@ class NodeWrapper(Wrapper):
 		if name == '.anchorlist':
 			self.__setanchors(value)
 			return
+		if name == 'cssbgcolor':
+			transparent, bgcolor = cssToCmifBgColor(value)
+			self.editmgr.setnodeattr(self.node, 'transparent', transparent)
+			self.editmgr.setnodeattr(self.node, 'bgcolor', bgcolor)
+			return
 			
 		self.editmgr.setnodeattr(self.node, name, value)
 
@@ -420,6 +434,8 @@ class NodeWrapper(Wrapper):
 			return
 		if name == '.anchorlist':
 			self.__setanchors({})
+			return
+		if name == 'cssbgcolor':
 			return
 		self.editmgr.setnodeattr(self.node, name, None)
 
@@ -522,14 +538,14 @@ class NodeWrapper(Wrapper):
 				namelist.append('clipend')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
-			if not snap and \
-			   self.context.attributes.get('project_boston', 0):
-				namelist.append('left')
-				namelist.append('width')
-				namelist.append('right')
-				namelist.append('top')
-				namelist.append('height')
-				namelist.append('bottom')
+			if self.context.attributes.get('project_boston', 0):
+				if not snap:
+					namelist.append('left')
+					namelist.append('width')
+					namelist.append('right')
+					namelist.append('top')
+					namelist.append('height')
+					namelist.append('bottom')
 				
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
@@ -580,6 +596,11 @@ class NodeWrapper(Wrapper):
 		if not lightweight and ntype in leaftypes \
 		   and sys.platform in ('win32', 'mac'): # XXX until implemented on other platforms
 			retlist.append('.anchorlist')
+			
+		if not cmifmode():
+			# cssbgcolor is used instead
+			if 'bgcolor' in retlist: retlist.remove('bgcolor')
+			if 'transparent' in retlist: retlist.remove('transparent')
 		return retlist
 
 	def getdef(self, name):
@@ -791,10 +812,6 @@ class ChannelWrapper(Wrapper):
 
 	def getdefault(self, name): # Return the default or None
 		if name == '.cname': return ''
-		if name == 'cssbgcolor':
-			transparent = 1
-			bgcolor = None
-			return cmifToCssBgColor(transparent, bgcolor)
 		if name == 'bgcolor' and self.channel.has_key('base_window'):
 			# special case code for background color
 			ch = self.channel
@@ -880,10 +897,8 @@ class ChannelWrapper(Wrapper):
 ##			if 'scale' in rv: rv.remove('scale')
 		if ctype == 'layout' and not cmifmode():
 			rv.remove('type')
-			if base is not None:
-				rv.append('cssbgcolor')
-				if 'bgcolor' in rv: rv.remove('bgcolor')
-				if 'transparent' in rv: rv.remove('transparent')
+			if 'bgcolor' in rv: rv.remove('bgcolor')
+			if 'transparent' in rv: rv.remove('transparent')
 		return rv
 	#
 	# Override three methods from Wrapper to fake channel name attribute
