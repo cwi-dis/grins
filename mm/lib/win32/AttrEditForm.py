@@ -3884,6 +3884,9 @@ class Preferences2Group(PreferencesGroup):
 		a = self.getattr('system_audiodesc')
 		resids = (grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1,grinsRC.IDC_SAUDIODESCV2)
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
+		a = self.getattr('showhidden')
+		resids = (grinsRC.IDC_SHOWHIDDENL,grinsRC.IDC_SHOWHIDDENV1,grinsRC.IDC_SHOWHIDDENV2)
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
 		return cd
 
 class SystemGroup(PreferencesGroup):
