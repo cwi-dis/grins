@@ -35,8 +35,8 @@ from flags import *
 MENUBAR=(
 	('&File', (
 		(FLAG_ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
-		(FLAG_ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
-		(FLAG_ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
+		(FLAG_ALL, ENTRY, 'Open &URL...\tCtrl+L', 'O', OPEN),
+		(FLAG_ALL, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
 		(FLAG_ALL, ENTRY, '&Close Document', None, CLOSE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Preferences...', None, PREFERENCES),
@@ -48,6 +48,8 @@ MENUBAR=(
 			(FLAG_DBG, ENTRY, '&Abort', None, CRASH),
 			(FLAG_DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
+		(FLAG_DBG, SEP,),
+		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'E&xit', None, EXIT))),
 
@@ -69,8 +71,8 @@ MENUBAR=(
 
 	('&Help', (
 		(FLAG_ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
-		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
-		(FLAG_ALL, SEP,),
+##		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
+##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
