@@ -214,8 +214,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def onIdle(self):
 		if self.window and not self.window.is_closed():
-			self.window.update(self.__update_box)
-
+			self.window.updateNow(self.__update_box)
+				
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
 			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
