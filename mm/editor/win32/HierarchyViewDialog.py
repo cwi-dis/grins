@@ -18,6 +18,17 @@ import windowinterface
 from usercmd import *
 import MenuTemplate
 
+typemap = {
+	DRAG_PAR: 'par',
+	DRAG_SEQ: 'seq',
+	DRAG_SWITCH: 'switch',
+	DRAG_EXCL: 'excl',
+	DRAG_PRIO: 'prio',
+	DRAG_MEDIA: 'ext',
+	DRAG_ANIMATE: 'animate',
+	DRAG_BRUSH: 'brush',
+	}
+
 class HierarchyViewDialog(ViewDialog):
 	adornments = {}
 	interior_popupmenu = MenuTemplate.POPUP_HVIEW_STRUCTURE
@@ -120,14 +131,12 @@ class HierarchyViewDialog(ViewDialog):
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]		
 		obj = self.whichhit(x, y)
-		from StructureWidgets import MMWidgetDecoration
-		if isinstance(obj, MMWidgetDecoration):
-			obj = obj.mmwidget
 		# On the grey area we fail
 		if not obj:
 			rv = windowinterface.DROPEFFECT_NONE
 			self.draw()
 			return
+		obj = obj.get_mmwidget()
 		node = obj.get_node()
 		# If the node accepts only certain mimetypes
 		# we check for that too.
@@ -174,6 +183,36 @@ class HierarchyViewDialog(ViewDialog):
 			return 'NodeUID', srcnode
 		return None, None
 
+	def __dragparams(self, dstx, dsty, ucmd, args):
+		srcnode = None
+		srctype = None
+		if ucmd == DRAG_NODE:
+			srcx, srcy = args
+			srcx = srcx * self.mcanvassize[0]
+			srcy = srcy * self.mcanvassize[1]
+			srcwidget = self.whichhit(srcx, srcy)
+			if srcwidget is not None:
+				srcnode = srcwidget.get_node()
+				srctype = srcnode.GetType()
+		elif ucmd == DRAG_NODEUID:
+			contextid, nodeuid = args
+			if contextid != id(self.root.context):
+				print "Cannot drag/drop between documents"
+				windowinterface.beep()
+				return None
+			srcnode = self.root.context.mapuid(nodeuid)
+			srctype = srcnode.GetType()
+		else:
+			srctype = typemap.get(ucmd)
+		dstwidget = self.whichhit(dstx, dsty)
+		if dstwidget is not None:
+			dstwidget = dstwidget.get_mmwidget()
+			dstnode = dstwidget.get_node()
+			dsttype = dstnode.GetType()
+		else:
+			dstnode = dsttype = None
+		return srcnode, srctype, dstwidget, dstnode, dsttype
+
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
 		dstx, dsty, cmd, ucmd, args = params
@@ -181,47 +220,34 @@ class HierarchyViewDialog(ViewDialog):
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
 			self.draw()
 			return windowinterface.DROPEFFECT_NONE
-		srcnode = None
-		if ucmd == DRAG_NODE:
-			srcx, srcy = args
-			srcx = srcx * self.mcanvassize[0]
-			srcy = srcy * self.mcanvassize[1]
-			srcwidget = self.whichhit(srcx, srcy)
-			if srcwidget:
-				srcnode = srcwidget.get_node()
-		elif ucmd == DRAG_NODEUID:
-			contextid, nodeuid = args
-			if contextid != id(self.root.context):
-				print "Cannot drag/drop between documents"
-				return windowinterface.DROPEFFECT_NONE
-			srcnode = self.root.context.mapuid(nodeuid)
 		dstx = dstx * self.mcanvassize[0]
 		dsty = dsty * self.mcanvassize[1]
-		dstwidget = self.whichhit(dstx, dsty)
-		from StructureWidgets import MMWidgetDecoration
-		if isinstance(dstwidget, MMWidgetDecoration):
-			dstwidget = dstwidget.mmwidget
+		res = self.__dragparams(dstx, dsty, ucmd, args)
+		if res is None:
+			return windowinterface.DROPEFFECT_NONE
+		srcnode, srctype, dstwidget, dstnode, dsttype = res
 		rv = windowinterface.DROPEFFECT_NONE
-		if dstwidget:
-			dstnode = dstwidget.get_node()
-			if srcnode is not None and srcnode.GetType() in ('anchor', 'animpar'):
-				# anchor and animpar can only be dropped on media nodes
-				if dstnode.GetType() in MMNode.mediatypes:
-					if cmd=='move':
-						if not srcnode.IsAncestorOf(dstnode):
-							self.droppable_widget = dstwidget
-							rv = windowinterface.DROPEFFECT_MOVE
-					else:
-						self.droppable_widget = dstwidget
-						rv = windowinterface.DROPEFFECT_COPY
-			elif dstnode.GetType() in MMNode.interiortypes:
-				if cmd=='move':
-					if srcnode is not None and not srcnode.IsAncestorOf(dstnode):
-						self.droppable_widget = dstwidget
-						rv = windowinterface.DROPEFFECT_MOVE
+		if dstnode:
+			if cmd == 'move':
+				if srcnode is not None and srcnode.IsAncestorOf(dstnode):
+					# not allowed to move to a descendant
+					xrv = windowinterface.DROPEFFECT_NONE
 				else:
-					self.droppable_widget = dstwidget
-					rv = windowinterface.DROPEFFECT_COPY
+					xrv = windowinterface.DROPEFFECT_MOVE
+			else:
+				xrv = windowinterface.DROPEFFECT_COPY
+			if srctype in ('anchor', 'animpar'):
+				# anchor and animpar can only be dropped on media nodes
+				if dsttype in MMNode.mediatypes:
+					rv = xrv
+			elif srctype == 'prio':
+				# priorityClass can only be dropped on excl nodes
+				if dsttype == 'excl':
+					rv = xrv
+			elif dsttype in MMNode.interiortypes:
+				rv = xrv
+			if rv != windowinterface.DROPEFFECT_NONE:
+				self.droppable_widget = dstwidget
 		self.draw()
 		return rv
 
@@ -236,29 +262,22 @@ class HierarchyViewDialog(ViewDialog):
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
 			self.draw()
 			return windowinterface.DROPEFFECT_NONE
-		if ucmd == DRAG_NODE:
-			srcx, srcy = args
-			srcx = srcx * self.mcanvassize[0]
-			srcy = srcy * self.mcanvassize[1]
-			srcnode = None
-			srcpos = srcx, srcy
-		elif ucmd == DRAG_NODEUID:
-			contextid, nodeuid = args
-			if contextid != id(self.root.context):
-				print "Cannot drag/drop between documents"
-				windowinterface.beep()
-				return 0
-			srcnode = self.root.context.mapuid(nodeuid)
-			srcpos = None
-		else:
-			objSrc = None
 		dstx = dstx * self.mcanvassize[0]
 		dsty = dsty * self.mcanvassize[1]
+		res = self.__dragparams(dstx, dsty, ucmd, args)
+		if res is None:
+			return windowinterface.DROPEFFECT_NONE
+		srcnode, srctype, dstwidget, dstnode, dsttype = res
+		# filter out disallowed drops
+		if srctype in ('anchor', 'animpar') and dsttype not in MMNode.mediatypes:
+			return windowinterface.DROPEFFECT_NONE
+		if srctype == 'prio' and dsttype != 'excl':
+			return windowinterface.DROPEFFECT_NONE
 		if ucmd in (DRAG_PAR, DRAG_SEQ, DRAG_SWITCH, DRAG_EXCL,
 				DRAG_PRIO, DRAG_MEDIA, DRAG_ANIMATE, DRAG_BRUSH):
 			return self.dropnewstructnode(ucmd, (dstx, dsty))
 		elif ucmd in (DRAG_NODE, DRAG_NODEUID):
-			rv = self.dropexistingnode(cmd, (dstx, dsty), srcnode, srcpos)
+			rv = self.dropexistingnode(cmd, (dstx, dsty), srcnode)
 			if rv == 'copy':
 				return windowinterface.DROPEFFECT_COPY
 			elif rv == 'move':
