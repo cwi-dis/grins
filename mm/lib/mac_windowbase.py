@@ -24,7 +24,7 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 #
 _window_left_offset=2
 _window_right_offset=2
-_window_top_offset=20
+_window_top_offset=2
 _window_bottom_offset=2
 
 #
@@ -35,6 +35,11 @@ FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 
 EVENTMASK=0xffff
+
+_X=0
+_Y=1
+_WIDTH=2
+_HEIGHT=3
 
 _size_cache = {}
 
@@ -94,6 +99,7 @@ class _Event:
 				if not ourwin:
 					MacOS.HandleEvent(event)
 				else:
+					Qd.SetPort(wid)
 					wid.BeginUpdate()
 					ourwin._redraw()
 					wid.EndUpdate()
@@ -186,8 +192,8 @@ class _Toplevel(_Event):
 		self._closecallbacks = []
 		self._subwindows = []
 		self._wid_to_window = {}
-		self._bgcolor = 255, 255, 255 # white
-		self._fgcolor =   0,   0,   0 # black
+		self._bgcolor = 0xffff, 0xffff, 0xffff # white
+		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
 
 	def close(self):
@@ -253,6 +259,8 @@ class _Toplevel(_Event):
 		pass
 
 class _Window:
+	"""Base window, also base class for subwindows (eventually)"""
+	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			transparent = 0):
 		parent._subwindows.append(self)
@@ -262,12 +270,14 @@ class _Window:
 		self._displists = []
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
+		self._transparent = transparent
 		# conversion factors to convert from mm to relative size
 		# (this uses the fact that _hfactor == _vfactor == 1.0
 		# in toplevel)
 		self._hfactor = parent._hfactor / w
 		self._vfactor = parent._vfactor / h
 		self._rect = 0, 0, w, h
+		self._clip = None
 
 	def close(self):
 		if self._parent is None:
@@ -288,19 +298,23 @@ class _Window:
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		print 'SUB WINDOW', x, y, w, h
-		return _Window(self, None, x, y, w, h, 0, pixmap, transparent)
+		rv = _Window(self, None, x, y, w, h, 0, pixmap, transparent)
+		self._clip = None
+		return rv
 
 	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		print 'SUB CM WINDOW', x, y, w, h
-		return _Window(self, None, x, y, w, h, 1, pixmap, transparent)
+		rv = _Window(self, None, x, y, w, h, 1, pixmap, transparent)
+		self._clip = None
+		return rv
 
 	def fgcolor(self, color):
 		r, g, b = color
-		self._fgcolor = r, g, b
+		self._fgcolor = r*0x101, g*0x101, b*0x101
 
 	def bgcolor(self, color):
 		r, g, b = color
-		self._bgcolor = r, g, b
+		self._bgcolor = r*0x101, g*0x101, b*0x101
 
 	def setcursor(self, cursor):
 		raise 'window.setcursor called'
@@ -310,6 +324,7 @@ class _Window:
 	def newdisplaylist(self, *bgcolor):
 		if bgcolor != ():
 			bgcolor = bgcolor[0]
+			bgcolor = bgcolor[0]*0x101, bgcolor[1]*0x101, bgcolor[2]*0x101
 		else:
 			bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
@@ -320,9 +335,15 @@ class _Window:
 		pass
 
 	def pop(self):
+		if self._parent:
+			self._parent._clip = None
+		self._clip = None
 		pass
 
 	def push(self):
+		if self._parent:
+			self._parent._clip = None
+		self._clip = None
 		pass
 
 	def setredrawfunc(self, func):
@@ -358,9 +379,59 @@ class _Window:
 		height = reader.height
 		_size_cache[file] = width, height
 		return width, height
+	def _convert_coordinates(self, coordinates):
+		# convert relative sizes to pixel sizes relative to
+		# upper-left corner of the window
+		x, y = coordinates[:2]
+##		if not (0 <= x <= 1 and 0 <= y <= 1):
+##			raise error, 'coordinates out of bounds'
+		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
+		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
+		if len(coordinates) == 2:
+			return px, py
+		w, h = coordinates[2:]
+##		if not (0 <= w <= 1 and 0 <= h <= 1 and
+##			0 <= x + w <= 1 and 0 <= y + h <= 1):
+##			raise error, 'coordinates out of bounds'
+		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
+		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
+		return px, py, pw, ph
+
+	def _qdrect(self):
+		"""return our xywh-style rect in quickdraw ltrb style"""
+		return self._rect[0], self._rect[1], self._rect[0]+self._rect[2], \
+			self._rect[1]+self._rect[3]
+			
+	def _mkclip(self):
+		if not self._parent:
+			return
+		# create region for whole window
+		if self._clip:
+			Qd.DisposeRgn(self._clip)
+		self._clip = Qd.NewRgn()
+		Qd.RectRgn(self._clip, self._qdrect())
+		# subtract all subwindows
+		for w in self._subwindows:
+			if not w._transparent:
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, w._qdrect())
+				Qd.DiffRgn(self._clip, r, self._clip)
+				Qd.DisposeRgn(r)
+			w._mkclip()
 		
 	def _redraw(self):
-		print 'REDRAW'
+		if not self._clip:
+			self._mkclip()
+		saveclip = Qd.NewRgn()
+		Qd.GetClip(saveclip)
+		Qd.SetClip(self._clip)
+		Qd.RGBBackColor(self._bgcolor)
+		Qd.RGBForeColor(self._fgcolor)
+		Qd.EraseRect(self._rect)
+		Qd.SetClip(saveclip)
+		Qd.DisposeRgn(saveclip)
+		print 'REDRAW', self._bgcolor
+		
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
@@ -384,7 +455,7 @@ class _DisplayList:
 		pass
 
 	def fgcolor(self, color):
-		r, g, b = color
+		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
 
 	def newbutton(self, coordinates):
 		return _Button(self, coordinates)
@@ -393,7 +464,7 @@ class _DisplayList:
 		return 0.0, 0.0, 1.0, 1.0
 
 	def drawline(self, color, points):
-		r, g, b = color
+		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
 		for x, y in points:
 			pass
 
@@ -401,7 +472,7 @@ class _DisplayList:
 		x, y, w, h = coordinates
 
 	def drawfbox(self, color, coordinates):
-		r, g, b = color
+		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
 		x, y, w, h = coordinates
 
 	def usefont(self, fontobj):
@@ -455,7 +526,7 @@ class _Button:
 		pass
 
 	def hicolor(self, color):
-		r, g, b = color
+		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
 
 	def highlight(self):
 		pass
