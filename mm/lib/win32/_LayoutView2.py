@@ -1357,6 +1357,10 @@ class RectShape(win32window.Window, Shape, UserEventMng):
 		return 0
 		
 	def getMouseTarget(self, point):
+		for w in self._polyList:
+			target = w.getMouseTarget(point)
+			if target:
+				return target
 		for w in self._subwindows:
 			target = w.getMouseTarget(point)
 			if target:
