@@ -2011,6 +2011,7 @@ class _SubWindow(_CommonWindow):
 			return
 		parent = self._parent
 		if parent._subwindows[0] is self:
+			parent.pop(poptop)
 			return
 		parent._subwindows.remove(self)
 		
