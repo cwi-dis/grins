@@ -453,9 +453,11 @@ def getcmifattr(writer, node, attr, default = None):
 		val = str(val)
 	return val
 
-def getrawcmifattr(writer, node, attr):
+def getrawcmifattr(writer, node, attr, default = None):
 	val = node.GetRawAttrDef(attr, None)
 	if val is not None:
+		if default is not None and val == default:
+			return None
 		val = str(val)
 	return val
 
@@ -921,7 +923,7 @@ smil_attrs=[
 	("max", getmax),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("fill", lambda writer, node: getcmifattr(writer, node, 'fill', 'default')),
-	("fillDefault", lambda writer, node: getcmifattr(writer, node, 'fillDefault', 'inherit')),
+	("fillDefault", lambda writer, node: getrawcmifattr(writer, node, 'fillDefault', 'inherit')),
 	("erase", lambda writer, node:getcmifattr(writer, node, 'erase', 'whenDone')),
 	("syncBehavior", lambda writer, node: getcmifattr(writer, node, 'syncBehavior', 'default')),
 	("syncBehaviorDefault", lambda writer, node: getcmifattr(writer, node, 'syncBehaviorDefault', 'inherit')),
