@@ -95,10 +95,10 @@ class reader:
 		colormaple = string.join(colormaple, '')
 		colormapbe = string.join(colormapbe, '')
 		f.write('\t\timport imgcolormap\n')
-		f.write('\tif _bigendian:\n')
-		f.write('\t\tself.colormap = imgcolormap.new(')
+		f.write('\t\tif _bigendian:\n')
+		f.write('\t\t\tself.colormap = imgcolormap.new(')
 		writedata(f.write, colormapbe)
-		f.write(')\n\telse:\t\tself.colormap = imgcolormap.new(')
+		f.write(')\n\t\telse:\n\t\t\tself.colormap = imgcolormap.new(')
 		writedata(f.write, colormaple)
 		f.write(')\n')
 	if hasattr(rdr, 'transparent'):
