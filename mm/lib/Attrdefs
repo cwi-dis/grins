@@ -146,6 +146,9 @@
 (type (name) null 'Channel type' channeltype
 	'Channel type (channel dictionary only)' raw)
 
+(video (bool) 0 'Video output' default
+	'Do image smoothing for video output' channel)
+
 (visible (bool) 1 'Channel visibility' hidden
 	'Determines visibility of channel' raw)
 

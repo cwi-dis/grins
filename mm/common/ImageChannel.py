@@ -149,6 +149,7 @@ class ImageWindow(ChannelWindow):
 		# (Import imgfile here so if it doesn't exist we can
 		# still play documents that don't contain images...)
 		import imgfile
+		import imageop
 		filename = rgbcache.get(filename_arg)
 		self.arm_ninfo.node = node
 		self.arm_ninfo.setcolors()
@@ -173,6 +174,7 @@ class ImageWindow(ChannelWindow):
 			winwidth, winheight = 0, 0
 		self.arm_ninfo.effscale = MMAttrdefs.getattr(node, 'scale')
 		scalefilter = MMAttrdefs.getattr(node, 'scalefilter')
+		video = MMAttrdefs.getattr(node, 'video')
 		if self.arm_ninfo.effscale <= 0.0:
 			if not self.is_showing():
 				self.arm_ninfo.effscale = 1.0
@@ -201,6 +203,10 @@ class ImageWindow(ChannelWindow):
 				self.arm_ninfo.effscale = 1.0
 				self.arm_ninfo.xsize, self.arm_ninfo.ysize = \
 					  width, height
+			if video:
+				self.arm_ninfo.parray = imageop.tovideo( \
+					  self.arm_ninfo.parray, 4, \
+					  width, height)
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename_arg, ':', msg
 			self.arm_ninfo.error = 'Cannot read file ' + \
@@ -316,7 +322,7 @@ class ImageChannel(Channel):
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['base_window', 'base_winoff']
-	node_attrs = ['file', 'duration', 'scale', 'scalefilter', \
+	node_attrs = ['file', 'duration', 'scale', 'scalefilter', 'video', \
 		 'bgcolor', 'hicolor']
 ##		 'bgcolor', 'fgcolor', 'hicolor']
 	#
