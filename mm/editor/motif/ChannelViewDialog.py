@@ -12,7 +12,7 @@ class ChannelViewDialog(ViewDialog):
 			'N': NEXT_MINIDOC,
 			'P': PREV_MINIDOC,
 			'T': TOGGLE_UNUSED,
-			'i': INFO,
+##			'i': INFO,
 			'a': ATTRIBUTES,
 			'd': DELETE,
 			'm': MOVE_CHANNEL,
@@ -40,7 +40,7 @@ class ChannelViewDialog(ViewDialog):
 				(SMIL, 'Copy Channel', COPY_CHANNEL),
 				(CMIF, 'Toggle Channel State', TOGGLE_ONOFF),
 				(SMIL, None),
-				(SMIL, 'Info...', INFO),
+##				(SMIL, 'Info...', INFO),
 				(SMIL, 'Properties...', ATTRIBUTES),
 				(SMIL, 'Edit Content...', CONTENT),
 				]),
@@ -173,7 +173,7 @@ class NodeBoxCommand:
 		(SMIL, 'Finish Hyperlink to Selection', FINISH_LINK),
 		(SMIL, 'Create Sync Arc from Selection...', FINISH_ARC),
 		(SMIL, None),
-		(SMIL, 'Info...', INFO),
+##		(SMIL, 'Info...', INFO),
 		(SMIL, 'Properties...', ATTRIBUTES),
 		(SMIL, 'Anchors...', ANCHORS),
 		(SMIL, 'Edit Content...', CONTENT),
@@ -184,8 +184,8 @@ class NodeBoxCommand:
 
 class ArcBoxCommand:
 	POPUP_SYNCARC = (
-		(SMIL, 'Info...', INFO),
-		(SMIL, None),
+##		(SMIL, 'Info...', INFO),
+##		(SMIL, None),
 		(SMIL, 'Delete', DELETE),
 		)
 
