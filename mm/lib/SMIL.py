@@ -413,7 +413,7 @@ class SMIL:
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
-	__assoc_link = ['anchor', 'area'] + __animate_elements
+	__assoc_link = ['anchor', 'area'] # + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
 	for __el in attributes.keys():
