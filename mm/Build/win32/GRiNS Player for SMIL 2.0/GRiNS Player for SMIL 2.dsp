@@ -517,6 +517,10 @@ SOURCE=.\M_MainFrame.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_MainFrameSpecific.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_MediaChannel.c
 # End Source File
 # Begin Source File

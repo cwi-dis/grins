@@ -342,13 +342,13 @@ class Main(MainDialog):
 		except:
 			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
 			return
+		data = data.strip()
 		if not data:
 			windowinterface.showmessage('You are running the latest version of the software.')
 			return
 		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to know more?')
 		if cancel:
 			return
-		data = data.strip()
 		url = self._add_license_id(self, data)
 		windowinterface.htmlwindow(url)
 
