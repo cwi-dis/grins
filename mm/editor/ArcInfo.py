@@ -99,7 +99,6 @@ class ArcInfo(Dialog):
 		import SoundChannel
 		try:
 			duration = SoundDuration.get(filename)
-			filename = SoundChannel.aiffcache.get(filename)
 			markers = SoundDuration.getmarkers(filename)
 		except IOError, msg:
 			pass
