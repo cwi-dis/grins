@@ -727,35 +727,41 @@ class SMILXhtmlSmilWriter(SMIL):
 		name = self.name2transition[quotedname]
 		td = transitions.get(name)
 		if not td:
-			trtype = 'barWipe'
+			trtype = None
 			subtype = None
-			dur = 1
-			direction = None
+			dur = 1.0
+			direction = 'forward'
+			startProgress = 0.0
+			endProgress = 1.0
 		else:
-			trtype = td.get('trtype')
+			trtype = td.get('trtype', 'barWipe')
 			subtype = td.get('subtype')
-			dur = td.get('dur')
-			direction = td.get('direction')
-		if not dur: dur = 1
-		elif dur<=0: dur = 0.1
+			dur = td.get('dur', 1.0)
+			direction = td.get('direction', 'forward')
+			startProgress = td.get('startProgress', 0.0)
+			endProgress = td.get('endProgress', 1.0)
+		trtype, subtype = IETransition(trtype, subtype)
+		if dur<=0: dur = 0.1
 		trattrlist = []
 		trattrlist.append( ('type', trtype) )
 		if subtype is not None:
 			trattrlist.append( ('subtype',subtype) )
 		trattrlist.append( ('targetElement',nodeid) )
-		trattrlist.append( ('dur','%.1f' % dur) )
+		trattrlist.append( ('dur','%s' % fmtfloat(dur)) )
 		if transIn:
 			trattrlist.append( ('begin', regionid + '.begin') )
 			trattrlist.append( ('mode', 'in') )
 		elif transOut:
-			trattrlist.append( ('begin', regionid + '.end-%.1f' % dur) )
+			trattrlist.append( ('begin', regionid + '.end-%s' % fmtfloat(dur)) )
 			trattrlist.append( ('mode', 'out') )
+		sv1 = fmtfloat(startProgress)
+		sv2 = fmtfloat(endProgress)
 		if direction == 'reverse':
-			trattrlist.append( ('from','1') )
-			trattrlist.append( ('to','0') )
+			trattrlist.append( ('from', sv2) )
+			trattrlist.append( ('to', sv1) )
 		else:
-			trattrlist.append( ('from','0') )
-			trattrlist.append( ('to','1') )
+			trattrlist.append( ('from', sv1) )
+			trattrlist.append( ('to', sv2) )
 		self.writetag('t:transitionFilter', trattrlist)
 
 	def writeChildren(self, node):
@@ -1438,5 +1444,101 @@ def replacePrevShortcut(value, node):
 		id = 'm' + prev.GetUID()
 	return id + value[4:]
 	
+#
+#  IE inline transitions 
+#  implemented types, subtypes
+#  simulations for non implemented types, subtypes
+#
+TRANSITIONDICT = {
+	##################################
+	# Edge Wipes - wipes occur along an edge
+	('barWipe', None) : ('barWipe', 'leftToRight'),
+	('barWipe', 'leftToRight') : ('barWipe', 'leftToRight'),
+	('barWipe', 'topToBottom') : ('barWipe', 'topToBottom'),
+
+	('barnDoorWipe', None) : ('barnDoorWipe', 'horizontal'),
+	('barnDoorWipe', 'horizontal') : ('barnDoorWipe', 'horizontal'),
+	('barnDoorWipe', 'vertical') : ('barnDoorWipe', 'vertical'),
+
+	# Edge Wipes simulations
+	('boxWipe', None) : ('barWipe', 'leftToRight'),
+	('fourBoxWipe', None) : ('barWipe', 'leftToRight'),
+	('diagonalWipe', None) : ('barWipe', 'leftToRight'),
+	('bowTieWipe', None) : ('barWipe', 'leftToRight'),
+	('miscDiagonalWipe', None) : ('barWipe', 'leftToRight'),
+	('veeWipe', None) : ('barWipe', 'leftToRight'),
+	('barnVeeWipe', None) : ('barWipe', 'leftToRight'),
+	('zigZagWipe', None) : ('barWipe', 'leftToRight'),
+	('barnZigZagWipe', None) : ('barWipe', 'leftToRight'),
+
+	##################################
+	# Iris Wipes - shapes expand from the center of the media	
+	('irisWipe', None) : ('irisWipe', 'rectangle'),
+	('irisWipe', 'rectangle') : ('irisWipe', 'rectangle'),
+	('irisWipe', 'diamond') : ('irisWipe', 'diamond'),
+
+	('starWipe', None) : ('starWipe', 'fivePoint'),
+	('starWipe', 'fivePoint') : ('starWipe', 'fivePoint'),
+
+	('ellipseWipe', None) : ('ellipseWipe', 'circle'),
+	('ellipseWipe', 'circle') : ('ellipseWipe', 'circle'),
+
+	# Iris Wipes simulations	
+	('triangleWipe', None) : ('starWipe', 'fivePoint'),
+	('arrowHeadWipe', None) : ('irisWipe', 'diamond'),
+	('pentagonWipe', None) : ('starWipe', 'fivePoint'),
+	('hexagonWipe', None) : ('starWipe', 'fivePoint'),
+	('eyeWipe', None) : ('ellipseWipe', 'circle'),
+	('roundRectWipe', None) : ('ellipseWipe', 'circle'),
+	('miscShapeWipe', None) : ('irisWipe', 'rectangle'),
+
+	##################################
+	# Clock Wipes - rotate around a center point
+	('clockWipe', None) : ('clockWipe', 'clockwiseTwelve'),
+	('clockWipe', 'clockwiseTwelve') : ('clockWipe', 'clockwiseTwelve'),
+
+	('fanWipe', None) : ('fanWipe', 'centerTop'),
+	('fanWipe', 'centerTop') : ('fanWipe', 'centerTop'),
+
+	# Clock Wipes simulations
+	('pinWheelWipe', None) : ('fanWipe', 'centerTop'),
+	('singleSweepWipe', None) : ('fanWipe', 'centerTop'),
+	('doubleFanWipe', None) : ('fanWipe', 'centerTop'),
+	('saloonDoorWipe', None) : ('fanWipe', 'centerTop'),
+	('windshieldWipe', None) : ('fanWipe', 'centerTop'),
 	
+	##################################
+	# Matrix Wipes - media is revealed in squares following a pattern
+	('snakeWipe', None) : ('snakeWipe', 'topLeftHorizontal'),
+	('snakeWipe', 'topLeftHorizontal') : ('snakeWipe', 'topLeftHorizontal'),
+
+	('spiralWipe', None) : ('spiralWipe', 'topLeftClockwise'),
+	('spiralWipe', 'topLeftClockwise') : ('spiralWipe', 'topLeftClockwise'),
+
+	# Matrix Wipes simulations
+	('parallelSnakesWipe', None) : ('snakeWipe', 'topLeftHorizontal'),
+	('boxSnakesWipe', None) : ('snakeWipe', 'topLeftHorizontal'),
+	('waterfallWipe', None) : ('snakeWipe', 'topLeftHorizontal'),
+
+	##################################
+	# Non-SMPTE Wipes
+	('pushWipe', None) : ('pushWipe', 'fromLeft'),
+	('pushWipe', 'fromLeft') : ('pushWipe', 'fromLeft'),
+
+	('slideWipe', None) : ('slideWipe', 'fromLeft'),
+	('slideWipe', 'fromLeft') : ('slideWipe', 'fromLeft'),
+
+	('fade', None) : ('fade', 'crossfade'),
+	('fade', 'crossfade') : ('fade', 'crossfade'),
+	} # end TRANSITIONDICT
+
+NullTransition  = 'fade', 'crossfade'
+
+def IETransition(trtype, subtype):
+	# Return the class that implements this transition. 
+	if TRANSITIONDICT.has_key((trtype, subtype)):
+		return TRANSITIONDICT[(trtype, subtype)]
+	if TRANSITIONDICT.has_key((trtype, None)):
+		return TRANSITIONDICT[(trtype, None)]
+	return NullTransition
 
