@@ -88,12 +88,13 @@ class sizes_time:
 	MINSIZE = 48 
 	MAXSIZE = 128
 	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < windowinterface.ICONSIZE_PXL:
-		TITLESIZE = windowinterface.ICONSIZE_PXL
+	if TITLESIZE < 2*windowinterface.ICONSIZE_PXL:
+		TITLESIZE = 2*windowinterface.ICONSIZE_PXL
 	CHNAMESIZE = int(f_channel.fontheightPXL()*1.2) #0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
+	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 	GAPSIZE = 0 #2						# size of gap between nodes
 	HEDGSIZE = 0 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
@@ -105,12 +106,13 @@ class sizes_notime:
 	MINSIZE = 48 
 	MAXSIZE = 128
 	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < windowinterface.ICONSIZE_PXL:
-		TITLESIZE = windowinterface.ICONSIZE_PXL
+	if TITLESIZE < 2*windowinterface.ICONSIZE_PXL:
+		TITLESIZE = 2*windowinterface.ICONSIZE_PXL
 	CHNAMESIZE = 0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
+	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 	GAPSIZE = 2 #2						# size of gap between nodes
 	HEDGSIZE = 3 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
@@ -953,6 +955,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.versize = float(self.sizes.MINSIZE + self.sizes.LABSIZE) / rh
 		self.arrwidth = float(self.sizes.ARRSIZE) / rw
 		self.arrheight = float(self.sizes.ARRSIZE) / rh
+		self.errwidth = float(self.sizes.ERRSIZE) / rw
+		self.errheight = float(self.sizes.ERRSIZE) / rh
 		list = []
 		if self.timescale:
 			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
@@ -1256,7 +1260,7 @@ class HierarchyView(HierarchyViewDialog):
 ##			if ntype in MMNode.interiortypes or \
 ##			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
 ##				namewidth = namewidth + self.sizes.ARRSIZE
-			namewidth = namewidth + self.sizes.ARRSIZE # Always
+			namewidth = namewidth + self.sizes.ARRSIZE + self.sizes.ERRSIZE # Always
 			minwidth = max(min(self.sizes.MAXSIZE, namewidth), minwidth) + self.sizes.HOREXTRASIZE
 		else:
 			minwidth = minwidth + self.sizes.HOREXTRASIZE
@@ -1495,45 +1499,25 @@ class Object:
 		    or \
 		   (node.GetType() == 'ext' and
 		    node.GetChannelType() == 'RealPix'):
+			left_pos = title_left
 			title_left = title_left + awidth
 			# Check whether it fits
 			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
-				node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
+				node.abox = left_pos, t+vmargin, title_left, t+vmargin+aheight
 				# We assume here that the icon has room around the edges
 				# Also, don't set self.iconbox (yet: erroricons on structnodes TBD)
-				iconbox = l+hmargin, t+vmargin, awidth, aheight
+				iconbox = left_pos, t+vmargin, awidth, aheight
 				if hasattr(node, 'expanded'):
-## 					# expanded node, point down
-## 					expcolor = EXPCOLOR
-## 					d.drawfpolygon(expcolor,
-## 						[(l+hmargin, t+vmargin),
-## 						 (l+hmargin+awidth,t+vmargin),
-## 						 (l+hmargin+awidth/2,t+vmargin+aheight)])
-## 					d.drawline(ECBORDERCOLOR, [
-## 						(l+hmargin, t+vmargin),
-## 						(l+hmargin+awidth/2,t+vmargin+aheight),
-## 						(l+hmargin+awidth,t+vmargin),
-## 						])
 					d.drawicon(iconbox, 'open')
 				else:
-## 					# collapsed node, point right
-## 					d.drawfpolygon(COLCOLOR,
-## 						[(l+hmargin,t+vmargin),
-## 						 (l+hmargin,t+vmargin+aheight),
-## 						 (l+hmargin+awidth,t+vmargin+aheight/2)])
-## 					d.drawline(ECBORDERCOLOR, [
-## 						(l+hmargin,t+vmargin),
-## 						(l+hmargin+awidth,t+vmargin+aheight/2),
-## 						(l+hmargin,t+vmargin+aheight),
-## 						])
 					d.drawicon(iconbox, 'closed')
 			else:
 				node.abox = (0, 0, -1, -1)
-		else:
-			# Room for the bandwidth icon
-			title_left = title_left + awidth
-			self.iconbox = l+hmargin, t+vmargin, awidth, aheight
-			d.drawicon(self.iconbox, node.infoicon)
+		# And leave room for the bandwidth and/or error icon
+		left_pos = title_left
+		title_left = title_left + awidth
+		self.iconbox = left_pos, t+vmargin, awidth, aheight
+		d.drawicon(self.iconbox, node.infoicon)
 		# draw the name
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(title_left, t+vmargin/2, r-hmargin/2, t1, self.name)
