@@ -632,6 +632,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.commandMediaList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
+				CREATEANCHOR(callback = (self.onNewAnchor, ())),
 				]
 		else:
 			self.commandMediaList = []
@@ -851,7 +852,7 @@ class LayoutView2(LayoutViewDialog2):
 			for node in self.currentSelectedNodeList:
 				nodeType = self.getNodeType(node)
 				if (nodeType == TYPE_REGION and node.isDefault()) or \
-					nodeType in (TYPE_ANIMATE, TYPE_ANCHOR):
+					nodeType == TYPE_ANIMATE:
 					active = 0
 					break
 			if active:
@@ -1847,10 +1848,14 @@ class LayoutView2(LayoutViewDialog2):
 		if len(nodeListToDel) > 0:
 			if self.canDel(nodeListToDel):
 				for nodeRef in nodeListToDel:
+					nodeType = self.getNodeType(nodeRef)
 					parent = self.getParentNodeRef(nodeRef)
 					if parent != None:
 						newFocus = [parent]
-					self.editmgr.delchannel(nodeRef)
+					if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+						self.editmgr.delchannel(nodeRef)
+					elif nodeType == TYPE_ANCHOR:
+						self.editmgr.delnode(nodeRef)						
 					self.editmgr.clearRefs(nodeRef)
 		self.setglobalfocus(newFocus)
 		self.editmgr.commit()
@@ -1869,6 +1874,14 @@ class LayoutView2(LayoutViewDialog2):
 		self.flushChangement()
 		
 		self.newViewport()
+
+	def onNewAnchor(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
+		if len(self.currentSelectedNodeList) == 1:
+			self.newAnchor(self.currentSelectedNodeList[0])
 
 	# make a list of node that are not relationship
 	def makeListWithoutRelationShip(self, nodeList):
@@ -2064,6 +2077,15 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
+	def newAnchor(self, parentRef):
+		# create the anchor
+		if self.editmgr.transaction():
+			anchor = self.context.newnode('anchor')
+			self.editmgr.addnode(parentRef, -1, anchor)
+			self.setglobalfocus([anchor])
+			self.updateFocus()		
+			self.editmgr.commit()
+			
 	# check if moving a source node into a target node is valid
 	def isValidMove(self, sourceNodeRef, targetNodeRef):
 		if sourceNodeRef == None or targetNodeRef == None:
@@ -2261,6 +2283,8 @@ class LayoutView2(LayoutViewDialog2):
 			elif nodeType == TYPE_MEDIA:
 				if error < 3:
 					error = 3
+			elif nodeType == TYPE_ANCHOR:
+				pass
 			else:
 				error = 5
 
