@@ -125,8 +125,6 @@ class HierarchyView(HierarchyViewDialog):
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
 
-			THUMBNAIL(callback = (self.thumbnailcall, ())),
-
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 
@@ -153,7 +151,10 @@ class HierarchyView(HierarchyViewDialog):
 		if not features.lightweight:
 			self.interiorcommands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
 			self.interiorcommands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
+		if features.H_PLAYABLE in features.feature_set:
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
+		if features.H_THUMBNAILS in features.feature_set:
+			self.commands.append(THUMBNAIL(callback = (self.thumbnailcall, ())))
 
 		self.timelinezoomcommands = [
 			ZOOMIN(callback = (self.timelinezoom, ('in',))),
@@ -389,7 +390,7 @@ class HierarchyView(HierarchyViewDialog):
 		if fntype == 'ext':
 			if fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
 				commands = commands + self.rpconvertcommands
-		if fntype == 'seq':
+		if fntype == 'seq' and features.CONVERT2REALPIX in features.feature_set:
 			for c in fnode.GetChildren():
 				ctype = c.GetType()
 				if (ctype != 'ext' or c.GetChannelType() != 'image') and \
@@ -2047,8 +2048,10 @@ class HierarchyView(HierarchyViewDialog):
 			which = 'cfocus'
 			node = self.root
 		elif which == 'bwstrip':
-			which = 'bwstrip'
+			# toggle bandwidth strip, not timeline
 			node = self.root
+			if node.showtime == which:
+				which = 'cfocus'
 		elif which == 'focus':
 			node = self.get_selected_node()
 		else:

@@ -266,11 +266,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL_callback,))),
 					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
 					]
-			if features.EXPORT_XMT in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
-					EXPORT_XMT(callback = (self.bandwidth_callback, ('xmt', self.export_XMT_callback,))),
-					UPLOAD_XMT(callback = (self.bandwidth_callback, ('xmt', self.upload_XMT_callback,))),
-					]
+##			if features.EXPORT_XMT in features.feature_set:
+##				self.publishcommandlist = self.publishcommandlist + [
+##					EXPORT_XMT(callback = (self.bandwidth_callback, ('xmt', self.export_XMT_callback,))),
+##					UPLOAD_XMT(callback = (self.bandwidth_callback, ('xmt', self.upload_XMT_callback,))),
+##					]
 		else:
 			self.savecommandlist = self.publishcommandlist = self.publishg2commandlist = []
 		import Help
