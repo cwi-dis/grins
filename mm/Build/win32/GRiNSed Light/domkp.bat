@@ -41,6 +41,7 @@ rem Set up the PYTHONPATH for the freeze - this points to all the cmif directori
 rem we need to perform the freeze.
 set PYTHONPATH=%GRINS_HOME%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\g2lite
 IF NOT %INCLUDE_MMEXTENSIONS%==yes GOTO restpath
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\mmextensions\real\win32
 :restpath
