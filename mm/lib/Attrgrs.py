@@ -610,7 +610,7 @@ attrgrs=(
 		]},
 
 	{'name':'Layout1',
-	'title':'Layout',
+	'title':'Subregion',
 	'attrs':[
 		'cssbgcolor',
 		'regPoint','regAlign',
@@ -619,7 +619,7 @@ attrgrs=(
 		]},
 
 	{'name':'Layout2Real',
-	'title':'Layout',
+	'title':'Subregion',
 	'attrs':[
 		'cssbgcolor',
 		'fit','z',
@@ -629,7 +629,7 @@ attrgrs=(
 		]},
 
 	{'name':'Layout2',
-	'title':'Layout',
+	'title':'Subregion',
 	'attrs':[
 		'cssbgcolor',
 		'fit','z',
@@ -645,7 +645,7 @@ attrgrs=(
 		]},
 
 	{'name':'Layout3',
-	'title':'Layout',
+	'title':'Subregion',
 	'attrs':[
 		'cssbgcolor',
 		'width', 'height',
