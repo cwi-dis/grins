@@ -51,7 +51,7 @@ appview={
 	1:{'cmd':HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,'hosted':0},
 	2:{'cmd':CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,'hosted':0},
 	3:{'cmd':LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'hosted':0},
-	4:{'cmd':LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'hosted':1},
+	4:{'cmd':LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'hosted':0},
 	5:{'cmd':USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'hosted':0},
 	6:{'cmd':SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
 	7:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
@@ -148,9 +148,8 @@ class ChildFrame(window.MDIChildWnd):
 	def freezeSize(self):
 		self._sizeFreeze=1
 		l,t,r,b=self.GetWindowRect()
-		self._rc_freeze=(0,0,r-l,b-t)
+		self._rc_freeze=(0,0,r-l-1,b-t-1)
 		self.ModifyStyle(win32con.WS_MAXIMIZEBOX|win32con.WS_THICKFRAME,0,0)
-
 
 # This class implements a View Server. Any client can request
 # a view by identifing the view by its string id
