@@ -626,7 +626,8 @@ class Channel:
 				return
 			raise error, 'not playing'
 		self._qid = None
-		if self._played_node.happenings.has_key(('event','beginEvent')):
+		if not self.syncplay and \
+		   self._played_node.happenings.has_key(('event','beginEvent')):
 			# can only end when we've actually started
 			self.event('endEvent')
 		# If this node has a pausing anchor, don't call the
@@ -706,7 +707,8 @@ class Channel:
 
 	def do_play(self, node):
 		# Actually play the node.
-		self.event('beginEvent')
+		if not self.syncplay:
+			self.event('beginEvent')
 		pass
 
 	#
@@ -1580,7 +1582,7 @@ class ChannelWindow(Channel):
 	def resize(self, arg, window, event, value):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
-##		self._player.toplevel.setwaiting()
+		self._player.toplevel.setwaiting()
 		self.replaynode()
 ##		if not self._player.playing and \
 ##		   self._attrdict.get('base_window','undefined') == 'undefined' and \
