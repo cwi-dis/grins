@@ -53,6 +53,7 @@ class Window:
 		self._transition = None
 		self._passive = None
 		self._drawsurf = None
+		self._outtrans = 0
 
 		# scaling support
 		self._device2logical = 1
@@ -1688,9 +1689,9 @@ class Region(Window):
 
 		# first paint self on the complement of self._subwindows region
 		rgn2 = self.getChildrenRgnComplement(self._topwindow)
-		dst = self.getwindowpos(rel)
+		dst = self.getwindowpos(self._topwindow)
 		try:
-			self._paintOnDDS(dds, dst, rgn2)
+			self._paintOnDDS(self._drawsurf, dst, rgn2)
 		except ddraw.error, arg:
 			print arg			
 		rgn2.DeleteObject()
@@ -1698,7 +1699,7 @@ class Region(Window):
 		# use GDI to paint transition surface 
 		# (gdi supports clipping but surface bliting not)
 		src = self._drawsurf
-		dst = self._topwindow._backBuffer
+		dst = self._topwindow.getDrawBuffer()
 
 		dstDC = self.__getDC(dst)	
 		srcDC = self.__getDC(src)	
@@ -2613,4 +2614,5 @@ class _ResizeableDisplayList(_DisplayList):
 
 
 
+ 
  
