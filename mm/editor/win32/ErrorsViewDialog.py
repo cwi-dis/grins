@@ -28,6 +28,10 @@ class ErrorsViewDialog:
 		if self.__window != None:
 			self.__window.setListener(self)
 
+	def pop(self):
+		if self.__window != None:
+			self.__window.pop()
+
 	def is_showing(self):
 		if self.__window is None:
 			return 0
