@@ -6,6 +6,7 @@ import string
 import StringStuff
 import MMAttrdefs
 import os
+import re
 
 class TextChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
@@ -194,30 +195,24 @@ def extract_paragraphs(text):
 # of each anchor and its name.  Start and end positions are given as
 # paragraph_number, character_offset.
 
+pat = re.compile('<a +name=([a-z0-9_]+)>|'
+		 '<a +href="cmif:([a-z0-9_]+)">|</a>',
+		 re.I)
 def extract_taglist(parlist):
-	import regex
 	# (1) Extract the raw tags, removing them from the text
-	pat = regex.compile('<a +name=\([a-z0-9_]+\)>\|'
-			    '<a +href="cmif:\([a-z0-9_]+\)">\|</a>',
-			    regex.casefold)
 	rawtaglist = []
 	for i in range(len(parlist)):
 		par = parlist[i]
 		j = 0
-		while pat.search(par, j) >= 0:
-			regs = pat.regs
-			a, b = regs[0]
+		res = pat.search(par, j)
+		while res is not None:
+			a, b = res.span(0)
 			tag = par[a:b]
 			par = par[:a] + par[b:]
 			j = a
-			if tag[:2] != '</':
-				a, b = regs[1]
-				if a == b:
-					a, b = regs[2]
-				name = tag[a-j:b-j]
-			else:
-				name = None
+			name = res.group(1) or res.group(2) # None if endtag
 			rawtaglist.append((i, j, name))
+			res = pat.search(par, j)
 		parlist[i] = par
 	# (2) Parse the raw taglist, picking up the valid patterns
 	# (a begin tag immediately followed by an end tag)
