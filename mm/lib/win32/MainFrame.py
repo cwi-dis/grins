@@ -1403,15 +1403,17 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self.add_common_interface(view,viewno)
 		if not x or x<0: x=0
 		if not y or y<0: y=0
-		if not w or not h:rc=None
-		else:
-			x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
-			dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
-			dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
-			rc=(x,y,x+w+dw,y+h+dh)
+		if not w or w<0: w = sysmetrics.scr_width_pxl/2
+		if not h or h<0: h = sysmetrics.scr_height_pxl/2
+
+		x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
+		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+		dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
+		rcFrame=(x,y,x+w+dw,y+h+dh)
 		f=ChildFrame(view)
-		f.Create(title,rc,self,0)
-		view.init(rc,title,units,adornments,canvassize,commandlist,bgcolor)
+		f.Create(title,rcFrame,self,0)
+
+		view.init((0,0,w,h),title,units,adornments,canvassize,commandlist,bgcolor)
 		self.MDIActivate(f)
 		return view
 
