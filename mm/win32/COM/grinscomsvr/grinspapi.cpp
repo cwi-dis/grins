@@ -45,8 +45,6 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	GRiNSPlayerComModule *pModule;
-	IClassFactory *pIFactory;
-	DWORD dwRegID;
 } ComModuleObject;
 
 staticforward PyTypeObject ComModuleType;
@@ -57,8 +55,6 @@ newComModuleObject()
 	ComModuleObject *self = PyObject_NEW(ComModuleObject, &ComModuleType);
 	if (self == NULL) return NULL;
 	self->pModule = new GRiNSPlayerComModule(GetCurrentThreadId());
-	self->pIFactory = NULL;
-	self->dwRegID = 0;
 	return self;
 }
 
@@ -79,14 +75,9 @@ ComModule_RegisterClassObjects(ComModuleObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	
-	HRESULT hr = GetGRiNSPlayerAutoClassObject(&self->pIFactory, self->pModule);
+	HRESULT hr = self->pModule->registerClassObjects();
 	if (FAILED(hr)){
-		seterror("RegisterClassObjects::GetGRiNSPlayerAutoClassObject", hr);
-		return NULL;
-	}
-	hr = CoRegisterGRiNSPlayerAutoClassObject(self->pIFactory, &self->dwRegID);
-	if (FAILED(hr)){
-		seterror("RegisterClassObjects::CoRegisterGRiNSPlayerAutoClassObject", hr);
+		seterror("RegisterClassObjects", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -133,11 +124,27 @@ ComModule_SetListener(ComModuleObject *self, PyObject *args)
 	return Py_None;
 }
 
+
+static char ComModule_AdviceSetSize__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceSetSize(ComModuleObject *self, PyObject *args)
+{
+	int id, w, h;
+	if(!PyArg_ParseTuple(args, "iii", &id, &w, &h))
+		return NULL;
+	self->pModule->adviceSetSize(id, w, h);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef ComModule_methods[] = {
 	{"RegisterClassObjects", (PyCFunction)ComModule_RegisterClassObjects, METH_VARARGS, ComModule_RegisterClassObjects__doc__},
 	{"Lock", (PyCFunction)ComModule_Lock, METH_VARARGS, ComModule_Lock__doc__},
 	{"Unlock", (PyCFunction)ComModule_Unlock, METH_VARARGS, ComModule_Unlock__doc__},
 	{"SetListener", (PyCFunction)ComModule_SetListener, METH_VARARGS, ComModule_SetListener__doc__},
+	{"AdviceSetSize", (PyCFunction)ComModule_AdviceSetSize, METH_VARARGS, ComModule_AdviceSetSize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -145,16 +152,6 @@ static void
 ComModule_dealloc(ComModuleObject *self)
 {
 	/* XXXX Add your own cleanup code here */
-	if(self->dwRegID)
-		{
-		CoRevokeClassObject(self->dwRegID);
-		self->dwRegID = 0;
-		}
-	if(self->pIFactory)
-		{
-		self->pIFactory->Release();
-		self->pIFactory = NULL;
-		}
 	if(self->pModule) delete self->pModule;
 	PyMem_DEL(self);
 }
@@ -201,6 +198,17 @@ static PyTypeObject ComModuleType = {
 
 
 ///////////////////////////////////
+
+static char CreateComModule__doc__[] =
+""
+;
+static PyObject*
+CreateComModule(PyObject *self, PyObject *args) 
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	return (PyObject*) newComModuleObject();	
+	}
 
 static char RegisterServer__doc__[] =
 ""
@@ -287,6 +295,7 @@ OleUninitialize(PyObject *self, PyObject *args)
 	}
 
 static struct PyMethodDef grinspapi_methods[] = {
+	{"CreateComModule", (PyCFunction)CreateComModule, METH_VARARGS, CreateComModule__doc__},
 	{"RegisterServer", (PyCFunction)RegisterServer, METH_VARARGS, RegisterServer__doc__},
 	{"UnregisterServer", (PyCFunction)UnregisterServer, METH_VARARGS, UnregisterServer__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
@@ -314,9 +323,6 @@ void initgrinspapi()
 	// add 'error'
 	errorObject = PyString_FromString("grinspapi.error");
 	PyDict_SetItemString(d, "error", errorObject);
-
-	ComModuleObject *comModuleObject = newComModuleObject();
-	PyDict_SetItemString(d, "commodule", (PyObject*)comModuleObject);
 	
 	/* Check for errors */
 	if (PyErr_Occurred())
