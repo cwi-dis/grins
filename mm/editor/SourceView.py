@@ -76,7 +76,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		pass
 
 	def commit(self, type=None):
-		self.root = self.toplevel.root
+		# update root
+		self.setRoot(self.toplevel.root)
 		self.read_text()
 
 	#
@@ -113,17 +114,16 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			text = self.get_text()
 			if hide:
 				self.hide()
-			self.toplevel.change_source(text)
-			# update root
-			self.setRoot(self.toplevel.root)
-			
-			parseErrors = self.context.getParseErrors()
+
+			root = self.toplevel.change_source(text)
+			context = root.GetContext()
+			parseErrors = context.getParseErrors()
 			if parseErrors != None:
 				# XXX note: the choices may be different for 'fatal error'
 				ret = windowinterface.GetYesNoCancel('The source document contains some errors\nDo you wish to leave the editor to fix automaticly the errors', self.toplevel.window)
 				if ret == 0: # yes
 					# accept the errors automaticly fixed by GRiNS
-					self.toplevel.forgetParseErrors()
+					context.setParseErrors(None)
 				elif ret == 1: # no
 					# default treatement: accept errors and don't allow to edit another view
 					pass

@@ -87,12 +87,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# to fix automaticly the errors. Note: this test is a bit different as the test in the source view:
 	# if any error, there is no rollback
 	def __checkInitialErrors(self):
-		parseErrors = self.root.GetContext().getParseErrors()
+		context = self.root.GetContext()
+		parseErrors = context.getParseErrors()
 		if parseErrors != None:
 			ret = windowinterface.GetYesNoCancel('The source document contains some errors\nDo you wish to leave the editor to fix automaticly the errors', self.window)
 			if ret == 0: # yes
 				# accept the errors automaticly fixed by GRiNS
-				self.forgetParseErrors()
+				context.setParseErrors(None)
 			elif ret == 1: # no
 				# default treatement: accept errors and don't allow to edit another view
 				pass
@@ -101,27 +102,24 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	# detect the errors/fatal errors
 	# if it's a fatal error, then load an empty document to keep GRiNS in a stable state
-	def __checkParseErrors(self):
-		parseErrors = self.root.GetContext().getParseErrors()
+	def __checkParseErrors(self, root):
+		parseErrors = root.GetContext().getParseErrors()
 		if parseErrors != None:
 			if parseErrors.getType() == 'fatal':
 				# XXX for now, if there is any fatal error, we load an empty document. In this case, we
 				# even be able to edit the source view. 
 				import SMILTreeRead
-				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
+				root = SMILTreeRead.ReadString(EMPTY, self.filename)
 				# check that the 'EMPTY' document don't generate as well a fatal error
 				# note: it shouldn't happen
-				iParseErrors = self.root.GetContext().getParseErrors()
+				iParseErrors = root.GetContext().getParseErrors()
 				if iParseErrors != None and iParseErrors.getType() == 'fatal':
 					# re-raise
 					raise MSyntaxError
 
 				# if we reload the empty document we have to re-set the previous error
-				self.root.GetContext().setParseErrors(parseErrors)
-
-	# forget the parse errors, and accept the document fixed automaticly by the editor
-	def forgetParseErrors(self):
-		self.context.setParseErrors(None)
+				root.GetContext().setParseErrors(parseErrors)
+		return root
 		
 	def set_commandlist(self):
 		self.commandlist = [
@@ -383,26 +381,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def checkviews(self):
 		pass
 
-	def reload_views(self):
-		showing = []
-		for i in range(len(self.views)):
-			if self.views[i] is not None and \
-				self.views[i].is_showing():
-				showing.append(i)
-
-		self.destroyviews()
-		self.makeviews()
-		for i in showing:
-			self.views[i].show()
-		self.changed = 1
-
-		# if the document is not valid (parse error),
-		# show the source view
-		# XXX may change
-		if not self.context.isValidDocument():
-			if self.sourceview != None and not self.sourceview.is_showing():
-				self.sourceview.show()
-
 #	def open_node_in_tview(self, node):
 #		# This causes the temporal view to open the particular node as the root.
 #		if self.temporalview:
@@ -485,11 +463,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		else:
 ##			view.show()
 
-	def change_source(self, text):
+	def change_source(self, text):		
+		# update edit manager to delete the current root
 		self.editmgr.deldocument(self.root)
-		self.do_read_it_from_string(text)		
-		self.editmgr.adddocument(self.root)
 
+		# read the source and update edit manager
+		import SMILTreeRead
+		progress = windowinterface.ProgressDialog("Reloading")
+		progress.set("Reloading SMIL document from source view...")
+		root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
+		root = self.__checkParseErrors(root)
+		self.editmgr.adddocument(root)
+
+		# return the new root
+		return root
+		
 	def hide_view_callback(self, viewno):
 		view = self.views[viewno]
 		if view is not None and view.is_showing():
@@ -891,7 +879,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		save_new = self.new_file
 		self.new_file = 1
 		self.do_read_it(tmp)	# Reads the file and creates the MMNode heirarchy.
-		self.__checkParseErrors()
+		self.root = self.__checkParseErrors(self.root)
 		self.setRoot(self.root)
 		self.new_file = save_new
 		try:
@@ -1187,7 +1175,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
 		else:
 			self.do_read_it(self.filename)
-		self.__checkParseErrors()
+		self.root = self.__checkParseErrors(self.root)
 		self.setRoot(self.root)
 		if self.new_file:
 			self.context.baseurl = ''
@@ -1269,16 +1257,46 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.context.toplevel = self
 		self.editmgr.setRoot(root)
 
-	def changeRoot(self, root):
+	def destroyRoot(self, root):
+		# get context before it will destroy
+		context = root.GetContext()
+		
+		# destroy the 'body' part
+		root.Destroy()
+		# destroy the layout part
+		viewportList = context.getviewports()
+		for viewport in viewportList:
+			viewport.Destroy()
+		# finish some context cleanup
+		context.destroy()
+			
+	def changeRoot(self, root, text=None):
 		# raz the focus
 		self.editmgr.setglobalfocus(None, None)
 
+		# destroy the views
+		showing = []
+		for i in range(len(self.views)):
+			if self.views[i] is not None and \
+				self.views[i].is_showing():
+				showing.append(i)
+		self.destroyviews()
+		
 		# update the document root			
 		self.setRoot(root)			
-			
-		# reload the views
-		self.reload_views()
 
+		# restore the views			
+		self.makeviews()
+		for i in showing:
+			self.views[i].show()
+
+		# if the document is not valid (parse error),
+		# show the source view
+		# XXX may change
+		if not self.context.isValidDocument():
+			if self.sourceview != None and not self.sourceview.is_showing():
+				self.sourceview.show()
+		
 		# re-build the command list. If the document contains some parse errors,
 		# we some command are disactivate. In addition, the available views may not
 		# be the sames
@@ -1292,7 +1310,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		progress = windowinterface.ProgressDialog("Reloading")
 		progress.set("Reloading SMIL document from source view...")
 		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
-		self.__checkParseErrors()
+		self.root = self.__checkParseErrors(self.root)
 		self.setRoot(self.root)
 		
 	def printfunc(self, msg):
