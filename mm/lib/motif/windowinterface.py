@@ -1147,7 +1147,7 @@ class _Window(_AdornmentSupport):
 			cursor = 'watch'
 		elif cursor == _READY_CURSOR:
 			cursor = self._cursor
-		else:
+		elif cursor != 'hand':
 			self._cursor = cursor
 		if cursor == '' and self._curpos is not None and \
 		   apply(self._buttonregion.PointInRegion, self._curpos):
@@ -1800,8 +1800,7 @@ class _Window(_AdornmentSupport):
 		else:
 			cursor = self._cursor
 		if self._curcursor != cursor:
-			_setcursor(form, cursor)
-			self._curcursor = cursor
+			self.setcursor(cursor)
 
 	# supporting methods for create_box
 	def _rb_finish(self):
