@@ -2752,7 +2752,7 @@ class MMNode(MMTreeElement):
 		# XXX should endlist be filtered here?
 		if fill == 'inherit' or fill == 'auto' or \
 		   (fill == 'transition' and self.type in interiortypes):
-			if not self.attrdict.has_key('duration') and \
+			if self.GetDuration() is None and \
 			   not self.FilterArcList(self.GetEndList()) and \
 			   not self.attrdict.has_key('repeatdur') and \
 			   not self.attrdict.has_key('loop'):
@@ -2813,6 +2813,13 @@ class MMNode(MMTreeElement):
 		if hasattr(self, 'fakeparent') and self.parent is not None:
 			return []
 		return self.attrdict.get('beginlist', [])
+
+	def GetDuration(self):
+		if hasattr(self, 'fakeparent') and self.parent is not None:
+			default = -1
+		else:
+			default = None
+		return self.GetAttrDef('duration', default)
 
 	def GetEndList(self):
 		return self.attrdict.get('endlist', [])
@@ -3813,7 +3820,7 @@ class MMNode(MMTreeElement):
 			return None
 		min = None
 		maybecached = 1
-		duration = self.GetAttrDef('duration', None)
+		duration = self.GetDuration()
 		if duration == -2:	# dur="media"
 			if self.type in interiortypes:
 				duration = None	# shouldn't happen
@@ -4181,7 +4188,7 @@ class MMNode(MMTreeElement):
 			defbegin = 0.0
 
 		if self.type in interiortypes:
-			duration = self.GetAttrDef('duration', None)
+			duration = self.GetDuration()
 		else:
 			duration = Duration.get(self, ignoreloop=1)
 		if duration is not None and self_body is not self:
@@ -4267,7 +4274,7 @@ class MMNode(MMTreeElement):
 				refnode = arc.refnode()
 				refnode.add_arc(arc, curtime, sctx)
 			cdur = child.calcfullduration(sctx, ignoremin = 1)
-			if cdur is not None and (child.fullduration is not None or child.attrdict.has_key('duration') or child.type in playabletypes):
+			if cdur is not None and (child.fullduration is not None or child.GetDuration() is not None or child.type in playabletypes):
 				if cdur < 0:
 					delay = None
 				else:
@@ -4608,7 +4615,7 @@ class MMNode(MMTreeElement):
 			pnode = self.GetSchedParent()
 			if pnode is not None and pnode.type == 'excl':
 				maybecached = 0
-			duration = self.attrdict.get('duration')
+			duration = self.GetDuration()
 			if duration == -2: # dur="media"
 				if self.type in interiortypes:
 					duration = None	# shouldn't happen
