@@ -154,17 +154,14 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	if hdr.subtype == 'jpeg':
 		# special-case code for JPEG images so that we don't loose info
 		rdr = imgjpeg.reader(f)
-		if rdr.X_density == rdr.Y_density == 72 and rdr.density_unit == 1:
-			wt.copy(rdr)
-			if os.name == 'mac':
-				import macfs
-				import macostools
-				fss = macfs.FSSpec(fullpath)
-				fss.SetCreatorType('ogle', 'JPEG')
-				macostools.touched(fss)
-			return file
-		import windowinterface
-		windowinterface.showmessage("Warning: re-encoding JPEG image: only 72x72 dpi supported by G2")
+		wt.copy(rdr)
+		if os.name == 'mac':
+			import macfs
+			import macostools
+			fss = macfs.FSSpec(fullpath)
+			fss.SetCreatorType('ogle', 'JPEG')
+			macostools.touched(fss)
+		return file
 	if sys.platform == 'win32':
 		import __main__
 		import imgformat
