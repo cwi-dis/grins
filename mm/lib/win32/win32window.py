@@ -2687,6 +2687,15 @@ class MSDrawContext(DrawContext):
 		for obj in self._listeners:
 			obj.onMultiSelChanged(self._selections)
 	
+	def moveSelectionTo(self, point):
+		xp, yp = point
+		xl, yl = self._moveRefPt
+		for shape in self._selections:
+			shape.invalidateDragHandles()
+			shape.moveBy((xp-xl, yp-yl))
+			shape.invalidateDragHandles()
+			self._notifyListeners(shape)
+
 	def reset(self):
 		DrawContext.reset(self)
 		self._selections = []
@@ -2809,9 +2818,13 @@ class SelectTool(DrawTool):
 			if shape:
 				if isAppend:
 					ctx.select(shape, mode=SO_APPEND)
-				else:
-					ctx.select(shape)
 					ctx._selmode = SM_MOVE
+				else:
+					if ctx._muliselect and shape in ctx._selections:
+						ctx._selmode = SM_MOVE
+					else:
+						ctx.select(shape)
+						ctx._selmode = SM_MOVE
 
 		# if the click is on the background remove selection
 		if ctx._selmode == SM_NONE and not isAppend:
@@ -2825,6 +2838,7 @@ class SelectTool(DrawTool):
 	
 	def onLButtonUp(self, flags, point):
 		ctx = self._ctx
+
 		if ctx.hasCapture():
 			if ctx._selmode == SM_NET:
 				if ctx._focusdrawn:
@@ -2857,9 +2871,9 @@ class SelectTool(DrawTool):
 			ctx._focusdrawn = 1
 			DrawTool.onMouseMove(self, flags, point)
 			return
-					
+		
 		# move selected
-		if shape:
+		if shape or (ctx._muliselect and ctx._selections):		
 			if ctx._selmode == SM_MOVE:
 				ctx.moveSelectionTo(point)
 			elif ctx._ixDragHandle:
