@@ -8,6 +8,11 @@ class FancyURLopener(_OriginalFancyURLopener):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
 
+	def http_error_default(self, url, fp, errcode, errmsg, headers):
+		void = fp.read()
+		fp.close()
+		raise IOError, (errcode, 'http error: ' + errmsg, headers)
+
 	def prompt_user_passwd(self, host, realm):
 		import windowinterface
 		try:
