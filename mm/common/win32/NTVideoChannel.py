@@ -224,10 +224,13 @@ class VideoChannel(ChannelWindow):
 			self._playEnd = int(clip_end)*1000
 		else:
 			self._playEnd=self._playBuilder.GetDuration()
+
 		if self.window and self.window.IsWindow():
+			self.AdjustVideoSize(node)
 			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
 			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 			self.window.HookMessage(self.redraw,WM_REDRAW)
+
 		self._playBuilder.Run()
 		self._playBuilder.SetVisible(1)
 		self.register_for_timeslices()
@@ -271,6 +274,29 @@ class VideoChannel(ChannelWindow):
 		self.played_display = self.armed_display
 		self.armed_display = None
 	
+	# Set video size from scale and center attributes
+	def AdjustVideoSize(self,node):
+		left,top,width,height=self._playBuilder.GetWindowPosition()
+		left,top,right,bottom = self.window.GetClientRect()
+		x,y,w,h=left,top,right-left,bottom-top
+
+		scale = MMAttrdefs.getattr(node, 'scale')
+		center = MMAttrdefs.getattr(node, 'center')
+
+		if scale > 0:
+			width = min(width * scale, w)
+			height = min(height * scale, h)
+			if center:
+				x = x + (w - width) / 2
+				y = y + (h - height) / 2
+		else:
+			# fit in window
+			width = w
+			height = h
+
+		rcVideo=(x, y, width,height)
+		self._playBuilder.SetWindowPosition(rcVideo)
+
 	# Make a copy of frame and keep it until stopplay is called
 	def __freeze(self):
 		return # bmp not used
