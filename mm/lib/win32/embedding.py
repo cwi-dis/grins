@@ -314,8 +314,8 @@ class EmbeddedWnd(win32window.DDWndLayer):
 
 	def settitle(self,title):
 		if not title: return
-		import urllib
-		title=urllib.unquote(title)
+		import MMurl
+		title=MMurl.unquote(title)
 		self._title=title
 
 	#
