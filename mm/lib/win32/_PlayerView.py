@@ -16,6 +16,9 @@ import win32mu
 from win32dlview import DisplayListView
 import win32window
 
+# ddraw.error
+import ddraw
+
 class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def __init__(self,doc,bgcolor=None):
 		DisplayListView.__init__(self,doc)
@@ -100,7 +103,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			self._resize_tree()
 		self._canclose=1
 
-	def OnDraw(self,dc):
+	def OnDraw(self, dc):
 		if self.in_create_box_mode() and self.get_box_modal_wnd()==self:
 			self.notifyListener('OnDraw',dc)
 			return
@@ -111,11 +114,9 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def onMouseEvent(self, point, ev):
 		cont, stop = 0, 1	
-		
 		if not self._usesLightSubWindows:
 			if DisplayListView.onMouseEvent(self, point, ev):
 				return stop
-
 		action =  self._viewport.onMouseEvent(point, ev)
 
 		# kick immediate responses
@@ -148,7 +149,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		win32mu.DrawRectangle(dc, self.GetClientRect(), self._bgcolor or (255, 255, 255))
 		return 1
 		
-	def update(self):
+	def update(self, rc=None):
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
 		if self._frontBuffer.IsLost():
@@ -163,13 +164,16 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 				# system should be out of memory
 				self.InvalidateRect(self.GetClientRect())
 				return
-		self.paint()
-		rcBack = self._wnd.GetClientRect()
-		rcFront = self._wnd.ClientToScreen(rcBack)
+		self.paint(rc)
+		if rc is None:
+			rcBack = self.GetClientRect()
+		else:
+			rcBack = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]
+		rcFront = self.ClientToScreen(rcBack)
 		try:
 			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
-		except:
-			pass
+		except ddraw.error, arg:
+			print arg
 
 	def getDrawBuffer(self):
 		return self._backBuffer
@@ -180,19 +184,21 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def getwindowpos(self, rel=None):
 		return self._rect
 
-	def paint(self):
-		# hack to avoid displaying random bits 
-		# when the window has been resized
-		# (site effect of current implementation)
-		rc = self.GetClientRect()
+	def paint(self, rc=None):
+		if rc is None:
+			rcPaint = self.GetClientRect()
+		else:
+			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
 		if self._convbgcolor == None:
 			self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
 		try:
-			self._backBuffer.BltFill(rc, self._convbgcolor)
-		except:
+			self._backBuffer.BltFill(rcPaint, self._convbgcolor)
+		except ddraw.error, arg:
+			print arg
 			return
+
 		if self._viewport:	
-			self._viewport.paint()
+			self._viewport.paint(rc)
 			
 ##################################
 			

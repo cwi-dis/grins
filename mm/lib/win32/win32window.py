@@ -812,8 +812,8 @@ class Window:
 		self._transparent = transparent
 
 	# redraw this window and its childs
-	def update(self):
-		self._topwindow.update()
+	def update(self, rc=None):
+		self._topwindow.update(rc)
 
 	#
 	# Animations interface
@@ -1469,24 +1469,31 @@ class Region(Window):
 			print arg			
 
 	# normal painting
-	def _paint_0(self):
+	def _paint_0(self, rc=None):
 		# first paint self
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
+		if rc:
+			prgn = win32ui.CreateRgn()
+			prgn.CreateRectRgn(self.ltrb(rc))
+			rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
+			prgn.DeleteObject()
+						
 		buf = self._topwindow.getDrawBuffer()
 		if buf.IsLost() and not buf.Restore():
 			return
 		try:
 			self._paintOnDDS(buf, dst, rgn)
 		except ddraw.error, arg:
-			print arg			
+			print arg
+			
 		rgn.DeleteObject()
 
 		# then paint children bottom up
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint()
+			w.paint(rc)
 
 	# transition, multiElement==false
 	# trans engine: calls self._paintOnDDS(self._drawsurf)
@@ -1588,7 +1595,7 @@ class Region(Window):
 		# and scale to current rect
 		self.bltDDS(dds)
 		
-	def paint(self):
+	def paint(self, rc=None):
 		if not self._isvisible:
 			return
 
@@ -1611,7 +1618,7 @@ class Region(Window):
 			self._paint_4()
 			return
 
-		self._paint_0()
+		self._paint_0(rc)
 		
 	def createDDS(self, w=0, h=0):
 		if w==0 or h==0:
@@ -1756,7 +1763,6 @@ class Region(Window):
 			prev = prev._parent
 		return count
 
-
 #############################
 
 class Viewport(Region):
@@ -1771,12 +1777,6 @@ class Viewport(Region):
 		self._height = height
 		
 		self._ctx = context
-		self.__drawBuffer = dds = context.CreateSurface(self._width, self._height)
-		if bgcolor:
-			if self._convbgcolor == None:
-				r, g, b = bgcolor
-				self._convbgcolor = dds.GetColorMatch((r,g,b))
-			dds.BltFill((0, 0, width, height), self._convbgcolor)
 			
 	def __repr__(self):
 		return '<Viewport instance at %x>' % id(self)
@@ -1817,7 +1817,6 @@ class Viewport(Region):
 			dl.close()
 		del self._topwindow
 
-
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
 	
@@ -1837,7 +1836,7 @@ class Viewport(Region):
 		return rgn
 
 	def getDrawBuffer(self):
-		return self.__drawBuffer
+		return self._ctx.getDrawBuffer()
 
 	def getDirectDraw(self):
 		return self._ctx.getDirectDraw()
@@ -1848,17 +1847,20 @@ class Viewport(Region):
 	# 
 	# Painting section
 	# 
-	def update(self):
-		self._ctx.update()
+	def update(self, rc=None):
+		self._ctx.update(rc)
 
-	def paint(self):
-		if self.__drawBuffer.IsLost():
-			if not self.__drawBuffer.Restore():
-				return
+	def paint(self, rc=None):
+		drawBuffer = self._ctx.getDrawBuffer()
+
+		if rc is None:
+			rcPaint = self._rectb
+		else:
+			rcPaint = self.rectAnd(rc, self._rectb)
 
 		# first paint self
 		try:
-			self._paintOnDDS(self.__drawBuffer, self._rect)
+			self._paintOnDDS(drawBuffer, rcPaint)
 		except ddraw.error, arg:
 			print arg
 			return
@@ -1867,14 +1869,8 @@ class Viewport(Region):
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint()
-		
-		ltrb = self.ltrb(self._rect)
+			w.paint(rc)
 
-		try:
-			self._ctx.getDrawBuffer().Blt(ltrb, self.__drawBuffer, ltrb, ddraw.DDBLT_WAIT)
-		except ddraw.error, arg:
-			print arg
 	# 
 	# Mouse section
 	# 
