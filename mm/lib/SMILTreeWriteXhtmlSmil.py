@@ -348,7 +348,7 @@ class SMILXhtmlSmilWriter(SMIL):
 					style = self.getRegionStyle(reg)
 					name = self.ch2name[reg]
 					self.ids_written[name] = 1
-					self.regions_alias[name] = [name,]
+					self.regions_alias[reg] = [name,]
 					self.writetag('div', [('id', name), ('style', style),])
 					self.push()
 					self.writeRegionBackground(reg)
@@ -626,8 +626,8 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
-		currRegion = node.GetChannel().GetLayoutChannel()
-		path = self.getRegionPath(currRegion)
+		nodeRegion = node.GetChannel().GetLayoutChannel()
+		path = self.getRegionPath(nodeRegion)
 		if not path:
 			print 'error: failed to get region path for', regionName
 			pushed, inpar, pardur, regionid, subregionid
@@ -637,6 +637,20 @@ class SMILXhtmlSmilWriter(SMIL):
 		# outmost div attr list
 		divlist = []
 
+		# find/compose/set region id
+		name = self.ch2name[nodeRegion]
+		alias = self.regions_alias.get(nodeRegion)
+		if alias is None:
+			regionid = name
+			self.regions_alias[nodeRegion] = [regionid,]
+		else:
+			counter = len(alias)+1
+			regionid = name + '_%d' % counter
+			self.regions_alias[nodeRegion].append(regionid)
+		self.ids_written[regionid] = 1
+		divlist.append(('id', regionid))
+
+		# outermost region
 		currViewport, currMediaRegion = path[0], path[1]
 		prevViewport, prevMediaRegion = None, None
 		if self.currLayout:
@@ -646,19 +660,6 @@ class SMILXhtmlSmilWriter(SMIL):
 		if self.hasMultiWindowLayout:
 			currMediaRegion = currViewport
 			prevMediaRegion = prevViewport
-
-		# find/compose/set region id
-		name = self.ch2name[currMediaRegion]
-		alias = self.regions_alias.get(name)
-		if alias is None:
-			regionid = name
-			self.regions_alias[name] = [regionid,]
-		else:
-			counter = len(alias)+1
-			regionid = name + '_%d' % counter
-			self.regions_alias[name].append(regionid)
-		self.ids_written[regionid] = 1
-		divlist.append(('id', regionid))
 
 		# apply region style
 		forceTransparent = (prevMediaRegion == currMediaRegion or mtype == 'audio')
@@ -1055,7 +1056,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		# find/compose/set region id
 		name = self.ch2name[region]
 		self.ids_written[name] = 1
-		self.regions_alias[name] = [name,]
+		self.regions_alias[region] = [name,]
 		divlist.append(('id', name))
 
 		# apply region style and fill attribute
@@ -1123,9 +1124,9 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.writetag('t:'+tag, attrlist)
 		else:
 			# region animation
-			if not self.ids_written.has_key(targetElement):
+			if not not self.regions_alias.get(target):
 				self.writeEmptyRegion(target)
-			for name in self.regions_alias[targetElement]:
+			for name in self.regions_alias[target]:
 				self.replaceAttrVal(attrlist, 'targetElement', name)				
 				self.writetag('t:'+tag, attrlist)
 	
