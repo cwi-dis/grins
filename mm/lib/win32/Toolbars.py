@@ -39,6 +39,22 @@ class ToolbarMixin:
 			self.setEditorFrameToolbar()
 			self.LoadAccelTable(grinsRC.IDR_GRINSED)
 
+	def DestroyToolbars(self):
+		if self._wndToolBar:
+			self._wndToolBar.DestroyWindow()
+			del self._wndToolBar
+
+	def ShowToolbars(self, flag):
+		# Show/hide all toolbars. Jack thinks this isn't needed
+		# anymore.
+		if flag:
+			#self.SetMenu(self._mainmenu)
+			self._wndToolBar.ShowWindow(win32con.SW_SHOW)
+			self.ShowControlBar(self._wndToolBar,1,0)
+			self._wndToolBar.RedrawWindow()
+		else:
+			self._wndToolBar.ShowWindow(win32con.SW_HIDE)
+
 	def OnCreate(self, createStruct):
 		id = usercmdui.class2ui[wndusercmd.TOOLBAR_GENERAL].id
 		self.HookCommand(self.OnShowToolbarGeneral, id)
