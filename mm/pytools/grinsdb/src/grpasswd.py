@@ -33,10 +33,14 @@ def main():
 	else:
 		record = dbase.open(idlist[0], 'w')
 		if record.has_key('password'):
+			if record['password'] == passwd:
+				print 'Already set for user %s'%user
+				dbase.save(record)
+				return
 			print 'Warning: changing password!'
 			print 'User: %s'%user
 			print 'Old Password: %s'%record['password']
-		addpasswd(obj, passwd)
+		addpasswd(record, passwd)
 		dbase.save(record)
 		if record.has_key('password'):
 			print 'User: %s'%user
