@@ -284,7 +284,16 @@ def getsrc(writer, node):
 ##			mime = 'image/vnd.rn-realpix'
 		else:
 			mime = ''
-		data = '\n'.join(node.GetValues())
+		# This funny way of handling empty lines is for
+		# the benefit of RealONE, and it doesn't harm
+		# GRiNS.
+		data = ''
+		for line in node.GetValues():
+			if not line:
+				data = data + '\n'
+			else:
+				data = data + line + '\r\n'
+##		'\r\n'.join(node.GetValues())
 ##		if data and data[-1] != '\n':
 ##			# end with newline if not empty
 ##			data = data + '\n'

@@ -1603,7 +1603,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if res is not None and res.group('base64') is None:
 				mtype = res.group('type') or 'text/plain'
 				if mtype == 'text/plain':
-					data = MMurl.unquote(res.group('data')).split('\n')
+					data = MMurl.unquote(res.group('data'))
+					# Convert any line ending to \n
+					data = '\n'.join(data.split('\r\n'))
+					data = '\n'.join(data.split('\r'))
+					data = data.split('\n')
 					nodetype = 'imm'
 					del attributes['src']
 		elif tagname != 'brush':
