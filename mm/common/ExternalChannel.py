@@ -17,10 +17,10 @@ else:
 	ProgramAttrname = 'unixprog'
 
 class ExternalChannel(Channel):
-	
+
 	node_attrs = Channel.node_attrs + ['macprog', 'unixprog', 'winprog',
 					   'wanturl']
-	
+
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.pid = None
 		Channel.__init__(self, name, attrdict, scheduler, ui)
@@ -47,7 +47,7 @@ class ExternalChannel(Channel):
 		startprog(progname, argument, wanturl)
 
 if os.name == 'posix':
-	
+
 	def startprog(prog, arg, argisurl):
 		arglist = string.split(prog)
 		arglist.append(arg)
@@ -63,9 +63,9 @@ if os.name == 'posix':
 				import sys
 				print 'exec: %s: %s' % (arglist[0], msg[1])
 				sys.exit(1)
-			
+
 elif os.name == 'mac':
-	
+
 	import MacOS
 	import macfs
 	import aetools
@@ -73,7 +73,7 @@ elif os.name == 'mac':
 
 	class ExtApp(aetools.TalkTo, Required_Suite.Required_Suite):
 		pass
-		
+
 	def startprog(prog, file, argisurl):
 		if argisurl:
 			print 'ExternalChannel: URL passing not implemented yet'
@@ -89,8 +89,8 @@ elif os.name == 'mac':
 			prog.open(fss)
 		except (aetools.Error, MacOS.Error), arg:
 			print 'ExternalChannel: Cannot open file', file, arg
-			
+
 elif os.name == 'win':
-	
+
 	def startprog(prog, file, argisurl):
 		print 'Not yet implemented'
