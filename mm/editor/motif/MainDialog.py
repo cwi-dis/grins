@@ -17,6 +17,8 @@ self.close_callback is also called.
 
 """
 
+__version__ = "$Id$"
+
 class MainDialog:
 	def __init__(self, title):
 		"""Create the Main dialog.
