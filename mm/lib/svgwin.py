@@ -63,20 +63,20 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		stroke = self.getStyleAttr('stroke')
 		strokeWidth = self.getStyleAttr('stroke-width')
 		if stroke is not None and stroke!='none':
-			self.tk.pen = wingdi.ExtCreatePen(strokeWidth.getValue(), stroke.getValue())
+			self.tk.pen = wingdi.ExtCreatePen(strokeWidth, stroke)
 			wingdi.SelectObject(self.hdc, self.tk.pen)
 
 		# establish tk brush
 		fill = self.getStyleAttr('fill')
 		if fill is not None and fill != 'none':
-			self.tk.brush = wingdi.CreateSolidBrush(fill.getValue())
+			self.tk.brush = wingdi.CreateSolidBrush(fill)
 			wingdi.SelectObject(self.hdc, self.tk.brush)
 
 		# establish tk font
 		fontFamily = self.getStyleAttr('font-family')
 		fontSize = self.getStyleAttr('font-size')
 		if fontFamily is not None:
-			self.tk.font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize.getValue(),  'outprecision':win32con.OUT_OUTLINE_PRECIS, })
+			self.tk.font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize,  'outprecision':win32con.OUT_OUTLINE_PRECIS, })
 			wingdi.SelectObject(self.hdc, self.tk.font)
 
 		# establish tk transform
@@ -111,6 +111,8 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 	def tkClipBox(self, clipbox):
 		if clipbox is not None:
+			tmprev = svgtypes.TM(wingdi.GetWorldTransform(self.hdc))
+			wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
 			x, y, w, h = clipbox
 			ltrb = x, y, x+w, y+h
 			tm = svgtypes.TM(wingdi.GetWorldTransform(self.hdc))
@@ -119,24 +121,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			rgn = wingdi.CreateRectRgn(ltrb)
 			wingdi.SelectClipRgn(self.hdc, rgn)
 			wingdi.DeleteObject(rgn)
-			wingdi.SetWorldTransform(self.hdc, tm.getElements())
-
-	#
-	#
-	#
-	def getStyleObjVal(self, obj):
-		if obj is None:
-			return None
-		if type(obj) == type(''):
-			if obj == 'none':
-				return None
-			else:
-				return obj
-		else:
-			if isinstance(obj, svgtypes.Animateable):
-				return obj.getPresentValue()
-			else:
-				return obj.getValue()
+			wingdi.SetWorldTransform(self.hdc, tmprev.getElements())
 
 	#
 	#  platform line art interface
@@ -163,7 +148,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		if fill is not None and fill != 'none':
 			contextFill = self.getStyleAttr('fill')
 			if contextFill != fill:
-				brush = wingdi.CreateSolidBrush(fill.getValue())
+				brush = wingdi.CreateSolidBrush(fill)
 				brush = wingdi.SelectObject(self.hdc, brush)
 			try:
 				if stroke and stroke != 'none':
@@ -193,7 +178,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
-				pen = wingdi.ExtCreatePen(strokeWidth.getValue(), stroke.getValue())
+				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
 				pen = wingdi.SelectObject(self.hdc, pen)
 			try:
 				wingdi.StrokePath(self.hdc)
@@ -262,18 +247,16 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextFontFamily = self.getStyleAttr('font-family')
 			contextFontSize = self.getStyleAttr('font-size')
 			if contextFontFamily != fontFamily or contextFontSize != fontSize:
-				dsize = fontSize.getDeviceValue(self.ctm, 'h')				
+				fontSizeObj = self.getStyleAttrObj('font-size', style)
+				dsize = fontSizeObj.getDeviceValue(self.ctm, 'h')				
 				font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':dsize, 'outprecision':win32con.OUT_OUTLINE_PRECIS})
 				wingdi.SelectObject(self.hdc, font)
 
 		fill = self.getStyleAttr('fill', style)
 		stroke = self.getStyleAttr('stroke', style)
 
-		fillval = self.getStyleObjVal(fill)
-		strokeval = self.getStyleObjVal(stroke)
-
 		# whats the default?
-		if fillval is None and strokeval is None:
+		if fill is None and strok is None:
 			# text will be invisible
 			# make it visible as black
 			fill = 0, 0, 0
@@ -281,14 +264,14 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			wingdi.TextOut(self.hdc, pos, text)
 			wingdi.SetTextColor(self.hdc, oldcolor)
 
-		elif fillval is not None:
-			oldcolor = wingdi.SetTextColor(self.hdc, fillval)
+		elif fill is not None:
+			oldcolor = wingdi.SetTextColor(self.hdc, fill)
 			wingdi.TextOut(self.hdc, pos, text)
 			wingdi.SetTextColor(self.hdc, oldcolor)
 
 		pen = None
 		strokeWidth = self.getStyleAttr('stroke-width', style)
-		if strokeval:
+		if stroke:
 			# create path
 			wingdi.BeginPath(self.hdc)
 			wingdi.TextOut(self.hdc, pos, text)
@@ -298,7 +281,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
-				pen = wingdi.ExtCreatePen(strokeWidth.getValue(), strokeval)
+				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
 				pen = wingdi.SelectObject(self.hdc, pen)
 			wingdi.StrokePath(self.hdc)
 			if pen:

@@ -55,11 +55,32 @@ class SVGGraphics:
 		if style:
 			val = style.get(prop)
 			if val is not None:
+				return self.toVal(val)
+		return self.toVal(self.cstyle.get(prop))
+
+	def getStyleAttrObj(self, prop, style=None):
+		if style:
+			val = style.get(prop)
+			if val is not None:
 				return val
-		return self.cstyle.get(prop)	
+		return self.cstyle.get(prop)
 
 	def getStyle(self):
 		return self.cstyle
+
+	def toVal(self, obj):
+		if obj is None:
+			return None
+		if type(obj) == type(''):
+			if obj == 'none':
+				return None
+			else:
+				return obj
+		else:
+			if isinstance(obj, svgtypes.Animateable):
+				return obj.getPresentValue()
+			else:
+				return obj.getValue()
 
 	#
 	#  clone for save/restore
