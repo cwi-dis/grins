@@ -887,6 +887,7 @@ class ControlsDict:
 ##############################
 class KeyTimesSlider(window.Wnd):
 	# how near key times can be
+	# XXX we should use the same variable as the variable defined from LayoutView2
 	DELTA = 0.01
 	
 	# depends on resource template slider
@@ -1080,8 +1081,7 @@ class KeyTimesSlider(window.Wnd):
 			self._parent.ReleaseCapture()
 			if self._listener and not self._startDragging:
 				if self._shiftPressed:						
-					tp = self.pointToTime(point)
-					self._listener.onInsertKey(tp, self._copyIndex)
+					self._listener.onInsertKey(self._copyKeyTime, self._copyIndex)
 				else:
 					self._listener.onKeyTimeChanged(self._selected, self._keyTimes[self._selected])
 			self._copyKeyTime = None
@@ -1092,11 +1092,16 @@ class KeyTimesSlider(window.Wnd):
 		self._selected = index
 		self.updateKeyTimes()
 
-	def __isValidDrag(self, draggedKeyNum, draggedTime):
-		if draggedTime < (self._keyTimes[draggedKeyNum] + self.DELTA) or \
-			draggedTime > (self._keyTimes[draggedKeyNum] - self.DELTA):
-				return 1
-		return 0
+	def __isValidDrag(self, draggedTime, draggedKey):
+		if draggedTime <= 0 or draggedTime >= 1:
+			return
+		for keyTime in self._keyTimes:
+			if not self._shiftPressed and keyTime == draggedKey:
+				continue
+			if draggedTime < (keyTime + self.DELTA) and \
+				draggedTime > (keyTime - self.DELTA):
+					return 0
+		return 1
 			
 	def onDrag(self, point, flags):
 		if self._dragging:
@@ -1104,31 +1109,33 @@ class KeyTimesSlider(window.Wnd):
 			x2, y2 = point
 			range = float(self.getDeviceRange())
 			v = self._dragfrom + (x2-x1)/range
-			if v < 0 or v > 1:
+			# exclude all invalid positions
+			if not self.__isValidDrag(v, self._selected):
 				return
+			
 			if not self._startDragging:
-				n = self._selected
-				if not self._startDragging or self.__isValidDrag(n, v):
+				if not self._startDragging: 
 					if self._shiftPressed:
 						self._copyKeyTime = v
 						self._listener.onKeyTimeChanging(v)
 						self.updateKeyTimes()
 					else:
+						n = self._selected
 						# for now don't allow to jump on another one key
-						if self._selected > 0 and v > self._keyTimes[self._selected-1] and \
-							((self._selected == len(self._keyTimes)-1) or v < self._keyTimes[self._selected+1]):
-							self._keyTimes[self._selected] = v
+						if n > 0 and v > self._keyTimes[n-1] and \
+							((n == len(self._keyTimes)-1) or v < self._keyTimes[n+1]):
+							self._keyTimes[n] = v
 							self._listener.onKeyTimeChanging(v)
 							self.updateKeyTimes()
 			else:
-				if self.__isValidDrag(self._selected, v):
-					if self._shiftPressed:
-						self._copyIndex = self._selected
-						self._copyKeyTime = v
-					else:
+				if self._shiftPressed:
+					self._copyIndex = self._selected
+					self._copyKeyTime = v
+				else:
+					if self.__isValidDrag(v, self._selected):
 						self._keyTimes[self._selected] = v
-					self.updateKeyTimes()						
-					self._startDragging = 0
+				self.updateKeyTimes()						
+				self._startDragging = 0
 			
 	def onActivate(self, point, flags):
 		if not self.insideKeyTimes(point):
@@ -1138,12 +1145,14 @@ class KeyTimesSlider(window.Wnd):
 		if index >= 0:
 			if self._listener:
 				self._listener.onRemoveKey(index)
-#			if self.isRemovable(index):
-#				self.removeKeyTimeAtIndex(index)	
 		else:	
-#			self.insertKeyTimeAtDevicePoint(point)
 			if self._listener:
 				tp = self.pointToTime(point)
+				# insert only if the new key is far enough from any other keys
+				for keyTime in self._keyTimes:
+					if tp < (keyTime + self.DELTA) and \
+						tp > (keyTime - self.DELTA):
+							return
 				self._listener.onInsertKey(tp)
 
 	def getKeyTimes(self):
