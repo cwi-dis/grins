@@ -13,7 +13,12 @@ def getduration(filename):
 	except (mv.error, IOError), msg:
 		print 'error in video file', filename, ':', msg
 		return 1.0
-	duration = float(f.GetEstMovieDuration(1000)) / 1000
+	if hasattr(f, 'GetEstMovieDuration'):
+		# faster but not omnipresent
+		duration = float(f.GetEstMovieDuration(1000)) / 1000
+	else:
+		# slower (and more accurate)
+		duration = float(f.GetMovieDuration(1000)) / 1000
 	f.Close()
 	if duration == 0: duration = 1.0
 	return duration
