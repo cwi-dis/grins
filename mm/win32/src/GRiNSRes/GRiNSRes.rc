@@ -2334,8 +2334,8 @@ IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
 IDI_PLAYING             ICON    DISCARDABLE     "res\\playing.ico"
 IDI_WAITSTOP            ICON    DISCARDABLE     "res\\waitstop.ico"
 IDI_IDLE                ICON    DISCARDABLE     "res\\idle.ico"
-IDI_ZOOMIN              ICON    DISCARDABLE     "res\\ico00011.ico"
-IDI_ZOOMOUT             ICON    DISCARDABLE     "res\\icon_zoo.ico"
+IDI_ZOOMIN              ICON    DISCARDABLE     "res\\zoomin.ico"
+IDI_ZOOMOUT             ICON    DISCARDABLE     "res\\zoomout.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
