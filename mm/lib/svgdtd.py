@@ -11,6 +11,8 @@ SVGns = "http://www.w3.org/2000/svg"
 NSSVGprefix = 'svg'
 xmlnsSVG = 'xmlns:%s' % NSSVGprefix
 
+smil2extensions = 1
+
 class SVG:
 	# collections of attributes
 	attrset = {}
@@ -199,6 +201,12 @@ class SVG:
 	temp.update(attrset['%presentAttrsTextContentElements'])
 	attrset['%textAttrs'] = temp
 	del temp
+
+	if smil2extensions:
+		attrset['%timeManipulations'] = {'speed':None,
+		    'accelerate':None,
+		    'decelerate':None,
+		    'autoReverse':None,}
 
 	##############
 	# attributes
@@ -701,14 +709,6 @@ class SVG:
 	entities['font-face-src'] = ['font-face-uri', 'font-face-name', ]
 	entities['font-face-uri'] = ['font-face-format', ]
 	
-	del __dtm
-	del __animations
-	del __core
-	del __lineArt
-	del __controlsCore
-	del __fe
-	del __feanim
-	del __svg
 
 	dataEntities = ['title', 'desc', 'text', ]
 	cdataEntities = ['style', ]
@@ -725,7 +725,20 @@ class SVG:
 	del __el
 
 	##############
+	if smil2extensions:
+		for name in __animations:
+			attributes[name].update(attrset['%timeManipulations'])
+
+	##############
 	# cleanup
+	del __dtm
+	del __animations
+	del __core
+	del __lineArt
+	del __controlsCore
+	del __fe
+	del __feanim
+	del __svg
 	presentationAttrs = attrset['%presentAttrsAllEx'].copy()
 	del attrset
 
