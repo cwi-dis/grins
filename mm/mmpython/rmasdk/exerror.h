@@ -25,6 +25,11 @@
 struct IUnknown;
 struct IRMAErrorMessages;
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
+
 
 /****************************************************************************
  *
@@ -35,9 +40,11 @@ class ExampleErrorSink : public IRMAErrorSink
 {
     public:
     /****** Public Class Methods ******************************************/
-     ExampleErrorSink();
+     ExampleErrorSink(IUnknown* /*IN*/pUnknown);
     ~ExampleErrorSink();
-
+	IRMAErrorMessages *m_pIRMAErrorMessages;
+	void SetPyErrorSink(PyObject *obj);
+	PyObject *m_pyErrorSink;
 
    /************************************************************************
     *  IRMAErrorSink Interface Methods                      ref:  rmaerror.h
@@ -62,6 +69,7 @@ class ExampleErrorSink : public IRMAErrorSink
 
     protected:
     void   ConvertErrorToString (const ULONG32 ulRMACode, char* pszBuffer);
+	const char* ConvertErrorTypeToString(int type);
 
     /****** Protected Class Variables *************************************/
     INT32			m_lRefCount;
