@@ -292,7 +292,36 @@ static PyObject *ig_area_get(PyObject *self, PyObject *args)
 	}
 	return v;
 }
-	
+
+static PyObject *ig_image_export_ddb(PyObject *self, PyObject *args)
+{
+	long img;
+	if (!PyArg_ParseTuple(args, "l", &img))
+		return NULL;
+	HBITMAP hBitmap;
+	HPALETTE hPalette;
+	if (IG_image_export_DDB((HIGEAR) img, &hBitmap, &hPalette)) {
+		PyErr_SetString(PyExc_ValueError, "bad image handle");
+		return NULL;
+	}
+	return Py_BuildValue("ii",hBitmap,hPalette);
+}
+
+static PyObject *ig_image_create_ddb(PyObject *self, PyObject *args)
+{
+	long img;
+	int nWidth, nHeight;
+	if (!PyArg_ParseTuple(args, "l(ii)", &img,&nWidth,&nHeight))
+		return NULL;
+	HBITMAP hBitmap;
+	HPALETTE hPalette;
+	if (IG_image_create_DDB((HIGEAR) img, nWidth, nHeight, &hBitmap, &hPalette)) {
+		PyErr_SetString(PyExc_ValueError, "bad image handle");
+		return NULL;
+	}
+	return Py_BuildValue("ii",hBitmap,hPalette);
+}
+
 
 BEGIN_PYMETHODDEF(ig)
 	{ "load_file", ig_load_file, 1},
@@ -312,6 +341,8 @@ BEGIN_PYMETHODDEF(ig)
 	{ "palette_entry_get",ig_palette_entry_get,1},
 	{"error_check",ig_error_check,1},
 	{"error_get",ig_error_get,1},
+	{"image_export_ddb",ig_image_export_ddb,1},
+	{"image_create_ddb",ig_image_create_ddb,1},
 END_PYMETHODDEF()
 
 
