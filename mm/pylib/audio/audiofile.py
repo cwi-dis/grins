@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import audiowhat, string
 from audio import Error
 
