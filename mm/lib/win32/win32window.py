@@ -665,18 +665,7 @@ class SubWindow(Window):
 	# draw everything bottom up for now
 	# we don't use clipping yet
 	def paintOn(self, dc, offsetOrg=1):
-		# first paint opaque subwindows
-		trsubwindows = []
-		for w in self._subwindows:
-			if 0 and (w._transparent == 0 or \
-			   (w._transparent == -1 and
-			    w._active_displist)):
-				w.paintOn(dc)
-				dc.ExcludeClipRect(w.getwindowrect())
-			else:
-				trsubwindows.append(w)
-
-		# then paint self
+		# first paint self
 		x, y, w, h = self.getwindowpos()
 		if offsetOrg:
 			x0, y0 = dc.SetWindowOrg((-x,-y))
@@ -687,9 +676,10 @@ class SubWindow(Window):
 		if offsetOrg:
 			dc.SetWindowOrg((x0,y0))
 
-		# then paint transparent children
-		trsubwindows.reverse()
-		for w in trsubwindows:
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
 			w.paintOn(dc)
 
 		if self._showing:
@@ -705,6 +695,69 @@ class SubWindow(Window):
 		x, y, w, h = self.getwindowpos()
 		rc = (x, y, x+w, y+h)
 		win32mu.FrameRect(dc,rc,self._showing)
+
+	def CreateOSWindow(self, html=0):
+		if self._oswnd:
+			return self._oswnd
+		from pywin.mfc import window
+		Afx=win32ui.GetAfx()
+		Sdk=win32ui.GetWin32Sdk()
+
+		x, y, w, h = self.getwindowpos()
+		if html: obj = win32ui.CreateHtmlWnd()
+		else: obj = win32ui.CreateWnd()
+		wnd = window.Wnd(obj)
+		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
+		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+		icon=0
+		clstyle=win32con.CS_DBLCLKS
+		style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS
+		exstyle = 0
+		title = '' 
+		if self._transparent in (-1,1):
+			exstyle=win32con.WS_EX_TRANSPARENT
+		strclass=Afx.RegisterWndClass(clstyle,cursor,brush,icon)
+		wnd.CreateWindowEx(exstyle,strclass,title,style,
+			(x,y,x+w,y+h),self._topwindow,0)
+		
+		# put ddwnd below childwnd
+		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE|win32con.SWP_ASYNCWINDOWPOS		
+		self._topwindow.SetWindowPos(wnd.GetSafeHwnd(), (0,0,0,0), flags)
+		
+		wnd.ShowWindow(win32con.SW_SHOW)
+
+		if html:
+			import settings
+			wnd.UseHtmlCtrl(not settings.get('html_control'))
+			wnd.HookMessage(self.onUserUrl,win32con.WM_USER)
+		
+		self._oswnd = wnd
+		return wnd
+
+	
+	def DestroyOSWindow(self):
+		if self._oswnd:
+			self._oswnd.DestroyWindow()
+			self._oswnd = None
+			self.update()
+
+	def RetrieveUrl(self,fileOrUrl):
+		if not self._oswnd:
+			self.CreateOSWindow(self, html=1)	
+		self._oswnd.Navigate(fileOrUrl)
+
+	# Called by the Html channel to set the callback to be called on cmif links
+	# Part of WebBrowsing support
+	def setanchorcallback(self,cb):
+		self._anchorcallback=cb
+
+	# Called by the HtmlWnd when a cmif anchor has fired. It is a callback but implemented
+	# using the std windows message mechanism
+	# Part of WebBrowsing support
+	def onUserUrl(self,params):
+		url=self.GetForeignUrl()
+		if hasattr(self,'_anchorcallback') and self._anchorcallback:
+			self._anchorcallback(url)
 
 	def GetSafeHwnd(self):
 		if self._oswnd: wnd = self._oswnd
@@ -893,7 +946,8 @@ class SubWindow(Window):
 	def begintransition(self, inout, runit, dict):
 		if not self._passive:
 			self._passive = self.createDDS()
-		self._active = self.createDDS()
+		if not self._active:
+			self._active = self.createDDS()
 		self._transition = win32transitions.TransitionEngine(self, inout, runit, dict)
 		if runit:
 			self._transition.begintransition()
@@ -917,11 +971,14 @@ class SubWindow(Window):
 		# source for next transition.
 		if how:
 			self._passive = self.createDDS()
+			self._active  = self.createDDS()
 		else:
 			self._passive = None
+			self._active = None
 
 	def close(self):
 		Window.close(self)
+		self.DestroyOSWindow()
 
 	def createDDS(self):
 		x, y, w, h = self._rect
@@ -947,22 +1004,16 @@ class SubWindow(Window):
 		self._topwindow.ReleaseDDDC(dc)
 
 	def paint(self):
+		if self._oswnd:
+			self._oswnd.RedrawWindow()
+			return
+
 		# avoid painting while frozen
 		if self._transition and self._active:
 			self.copySurface(self._active)
 			return
 
-		# first paint opaque subwindows
-		trsubwindows = []
-		for w in self._subwindows:
-			if 0 and (w._transparent == 0 or \
-			   (w._transparent == -1 and
-			    w._active_displist)):
-				w.paint()
-			else:
-				trsubwindows.append(w)
-
-		# then paint self
+		# first paint self
 		dc = self.GetDDDC()
 		if not dc: return
 		x, y, w, h = self.getwindowpos()
@@ -976,9 +1027,10 @@ class SubWindow(Window):
 		dc.SetWindowOrg((x0,y0))
 		self.ReleaseDDDC(dc)
 
-		# then paint transparent children
-		trsubwindows.reverse()
-		for w in trsubwindows:
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
 			w.paint()
 
 
