@@ -427,7 +427,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.widgetList = {}
 
 		self.currentKeyTimeIndex = None
-		self.keyTimeIndexChanged = 1
+		self.timeValueChanged = 1
+		self.currentTimeValue = None
 		
 	def fixtitle(self):
 		pass			# for now...
@@ -776,13 +777,13 @@ class LayoutView2(LayoutViewDialog2):
 			self.settoggle(ENABLE_ANIMATION, 0)
 
 		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
-			self.setKeyTimeIndex(None)
+			self.setKeyTimeIndex(None, None)
 		elif (self.previousFocus is None or len(self.previousFocus) != 1 or (not self.currentFocus[0] is self.previousFocus[0])):
-			self.setKeyTimeIndex(0)
+			self.setKeyTimeIndex(0, selectedNode)
 				
-		if self.keyTimeIndexChanged:
+		if self.timeValueChanged:
 			self.previousWidget.updateRegionTree()
-			self.keyTimeIndexChanged = 0
+			self.timeValueChanged = 0
 								
 		# update widgets
 		for id, widget in self.widgetList.items():
@@ -881,24 +882,57 @@ class LayoutView2(LayoutViewDialog2):
 			return region
 		return None
 
-	def setKeyTimeIndex(self, keyTimeIndex):
+	def setKeyTimeIndex(self, keyTimeIndex, nodeRef):
 		if self.currentKeyTimeIndex != keyTimeIndex:
-			self.keyTimeIndexChanged = 1
+			self.timeValueChanged = 1
 		self.currentKeyTimeIndex = keyTimeIndex
-		
+		if not nodeRef is None and not keyTimeIndex is None:
+			animationData = nodeRef.getAnimationData()
+			timeList = animationData.getTimes()
+			self.currentTimeValue = timeList[keyTimeIndex]
+		else:
+			self.currentTimeValue = None
+
 	def getKeyTimeIndex(self):
 		return self.currentKeyTimeIndex
-
-	def getPxGeomWithContextAnimation(self, nodeRef):
-		keyTimeIndex = None
+	
+	def setCurrentTimeValue(self, currentTimeValue, nodeRef):
 		animationData = nodeRef.getAnimationData()
-		if animationData != None:
-			data = animationData.getData()
-			if data != None:
-				keyTimeIndex = self.getKeyTimeIndex()
+		timeList = animationData.getTimes()
+		if self.currentTimeValue != currentTimeValue:
+			self.timeValueChanged = 1
+		self.currentTimeValue = currentTimeValue
+		keyTimeIndex = self.getKeyForThisTime(timeList, currentTimeValue)
+		if self.currentKeyTimeIndex != keyTimeIndex:
+			self.timeValueChanged = 1
+		self.currentKeyTimeIndex = keyTimeIndex
+
+	def getCurrentTimeValue(self):
+		return self.currentTimeValue
+
+	def getKeyForThisTime(self, timeList, time):
+		index = 0
+		for timeRef in timeList:
+			if timeRef == time:
+				return index
+			index = index+1
+		return None
+	
+	def getPxGeomWithContextAnimation(self, nodeRef):
+#		keyTimeIndex = None
+		animationData = nodeRef.getAnimationData()
+#		if animationData != None:
+#			data = animationData.getData()
+#			timeList = animationData.getTimes()
+#			if data != None:
+#				keyTimeIndex = self.getKeyTimeIndex()
+
+		time = self.currentTimeValue
 		
-		if keyTimeIndex is not None and keyTimeIndex < len(data):
-			wingeom, color = data[keyTimeIndex]
+		if not time is None and not animationData is None:
+			animationData.createAnimators()
+			wingeom = animationData.getRectAt(time)
+#			wingeom, color = data[keyTimeIndex]
 		else:
 			wingeom = nodeRef.getPxGeom()
 			
@@ -1529,11 +1563,11 @@ class LayoutView2(LayoutViewDialog2):
 				item2 = geom, (0, 0, 0)
 				# enable animation: just initialize the first and the last value with the current value
 				animationData.setTimesData([0.0, 1.0], [item1, item2])
-				self.setKeyTimeIndex(0)
+				self.setKeyTimeIndex(0, selectedNode)
 			else:
 				# disable animation: just remove all datas
 				animationData.setTimesData([], [])
-				self.setKeyTimeIndex(None)
+				self.setKeyTimeIndex(None, selectedNode)
 			self.applyAnimationData(selectedNode)
 			self.updateFocus(1)
 
@@ -2285,13 +2319,16 @@ class KeyTimeSliderWidget(LightWidget):
 			keyTimeList.append(keyTime)
 		self.sliderCtrl.setKeyTimes(keyTimeList)
 		timeIndex = self._context.getKeyTimeIndex()
-		if timeIndex >= 0:
-			self.__selecting = 1
+		timeValue = self._context.getCurrentTimeValue()
+		self.__selecting = 1
+		self.sliderCtrl.selectKeyTime(timeIndex)
+		if not timeIndex is None and timeIndex >= 0:
 			list = self.sliderCtrl.getKeyTimes()
 			self.sliderCtrl.setCursorPos(list[timeIndex])
-			self.sliderCtrl.selectKeyTime(timeIndex)
-			self.__selecting = 0
-
+		elif not timeValue is None:
+			self.sliderCtrl.selectKeyTime(timeValue)			
+		self.__selecting = 0
+	
 		self.isEnabled = 1
 		self.sliderCtrl.enable(1)
 
@@ -2318,7 +2355,7 @@ class KeyTimeSliderWidget(LightWidget):
 				self.sliderCtrl.insertKeyTime(tp)
 				list = self.sliderCtrl.getKeyTimes()
 				self.sliderCtrl.setCursorPos(list[index])
-				self._context.setKeyTimeIndex(index)
+				self._context.setKeyTimeIndex(index, nodeRef)
 				self.sliderCtrl.selectKeyTime(index)
 				self._context.applyAnimationData(nodeRef)
 
@@ -2334,7 +2371,7 @@ class KeyTimeSliderWidget(LightWidget):
 					del data[index]
 					del timeList[index]
 					self.sliderCtrl.removeKeyTimeAtIndex(index)
-					self._context.setKeyTimeIndex(index-1)
+					self._context.setKeyTimeIndex(index-1, nodeRef)
 					list = self.sliderCtrl.getKeyTimes()
 					self.sliderCtrl.setCursorPos(list[index-1])
 					self.sliderCtrl.selectKeyTime(index-1)
@@ -2343,13 +2380,16 @@ class KeyTimeSliderWidget(LightWidget):
 	def onSelected(self, index):
 		if self.isEnabled and not self.__selecting:
 			nodeType, nodeRef = self._selected
-			self._context.setKeyTimeIndex(index)
+			self._context.setKeyTimeIndex(index, nodeRef)
 			list = self.sliderCtrl.getKeyTimes()
 			self.sliderCtrl.setCursorPos(list[index])
 			self._context.updateFocus(1)
 
 	def onCursorPosChanged(self, pos):
-		self._context.updateFocus(1)
+		if self.isEnabled:
+			nodeType, nodeRef = self._selected
+			self._context.setCurrentTimeValue(pos, nodeRef)
+			self._context.updateFocus(1)
 
 	def onKeyTimeChanged(self, index, time):
 		if self.isEnabled:
