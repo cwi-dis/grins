@@ -1332,7 +1332,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			specs[w] = '100%'
 		elif len(specs) == 1:
 			if specs.has_key(l):
-				specs[r] = '0'
+				specs[r] = '0%'
 			elif specs.has_key(r):
 				specs[l] = '0'
 			else:
@@ -1349,10 +1349,15 @@ class SMILXhtmlSmilWriter(SMIL):
 		else:	
 			specs = self.getRegionSizeSpecs(region, ('left', 'width', 'right'))	
 			specs.update(self.getRegionSizeSpecs(region, ('top', 'height', 'bottom')))
-			for name in ('left', 'top', 'width', 'height', 'right', 'bottom'):
-				value = specs.get(name)
-				if value is not None:
-					style = style + name + ':' + value + ';'
+			if specs.get('right') or specs.get('bottom'):
+				# IE seems to have problems with 'right', 'bottom'
+				x, y, w, h = region.getPxGeom()
+				style = style + 'left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
+			else:
+				for name in ('left', 'top', 'width', 'height', 'right', 'bottom'):
+					value = specs.get(name)
+					if value is not None:
+						style = style + name + ':' + value + ';'
 		transparent = region.get('transparent', None)
 		bgcolor = region.get('bgcolor', None)
 		if bgcolor and transparent==0 and not forcetransparent:
