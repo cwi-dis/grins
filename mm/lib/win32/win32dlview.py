@@ -630,10 +630,9 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 
 	# Set the cursor given its string id		
 	def setcursor(self, strid):
-		if 0 and self._curcursor == strid: 
+		if self._curcursor == strid: 
 			return
 		self._curcursor = strid
-		#if strid=='arrow': assert 0,''
 		cursor = win32window.getcursorhandle(strid)
 		Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 	
