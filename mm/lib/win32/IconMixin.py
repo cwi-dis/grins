@@ -34,6 +34,9 @@ ICONNAME_TO_RESID={
 	'region': grinsRC.IDI_REGION,
 
 	'properties': grinsRC.IDI_PROPERTIES,
+
+	'linksrc': grinsRC.IDI_ICON_LINKSRC,
+	'unknown': grinsRC.IDI_UNKNOWN,
 }
 
 # This mixin is for the control, it creates the image lists
