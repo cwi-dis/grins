@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import win32ui
 import win32con
 import commctrl
+import DropTarget
 
 import win32mu
 
@@ -26,6 +27,21 @@ class ListCtrl(window.Wnd):
 		# drag support
 		self._down = 0
 		self._dragging = 0
+
+		self.RegisterDropTarget()
+
+	def OnDragEnter(self, dataobj, kbdstate, x, y): 
+		print 'OnDragEnter', self, dataobj, kbdstate, x, y
+		return DropTarget.DRAGEFFECT_LINK
+	def OnDragLeave(self): 
+		print 'OnDragLeave', self
+		return DropTarget.DRAGEFFECT_NONE
+	def OnDragOver(self, dataobj, kbdstate, x, y): 
+		print 'OnDragOver', self, dataobj, kbdstate, x, y
+		return DropTarget.DRAGEFFECT_LINK
+	def OnDrop(self, dataobj, effect, x, y): 
+		print 'OnDrop', self, dataobj, effect, x, y
+		return DropTarget.DRAGEFFECT_NONE
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD\
