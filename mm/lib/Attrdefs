@@ -392,8 +392,8 @@
 	'Play node only if player supports these features' raw (g2 qt smil10 smil2 cmif))
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' screensize
 	'Play node only if screen bigger than this (width height)' raw (g2 qt smil10 smil2 cmif))
-(system_screen_depth (int) 0 'System screen depth' default
-	'Play node only if screen has more bits-per-pixel than this' raw (g2 qt smil10 smil2 cmif))
+(system_screen_depth (int) 0 'System screen depth' screendepth
+	'Play node only if screen has at least bits-per-pixel than this' raw (g2 qt smil10 smil2 cmif))
 (system_operating_system (enum aix beos bsdi dgux freebsd hpux irix linux macos ncr nec netbsd nextstep nto openbsd openvms os2 osf palmos qnx sinix rhapsody sco solaris sonly sunos unixware win16 win32 win9x winnt wince unknown) unknown 'System operating system' opsys
 	'Play node only if running on the specified operating system' raw (smil2))
 (system_cpu (enum alpha arm arm32 'hppa1.1' m68k mips ppc rs6000 vax x86 unknown) unknown 'System CPU' cpu
