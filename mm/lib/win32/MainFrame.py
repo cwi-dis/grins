@@ -48,7 +48,6 @@ from appcon import *
 from sysmetrics import *
 import grinsRC
 
-
 import win32mu
 import usercmd,wndusercmd,usercmdui
 from components import *
@@ -227,7 +226,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# hook tab sel change
 		#TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
 		#self.HookNotify(self.OnNotifyTcnSelChange,TCN_SELCHANGE)
-
 		return 0
 
 	def onInitMenu(self,params):
@@ -809,7 +807,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
-		self._wndToolBar.AllocateButtons(4)
+		self._wndToolBar.SetButtons(4)
 
 		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
@@ -828,7 +826,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self):
-		self._wndToolBar.AllocateButtons(15)
+		self._wndToolBar.SetButtons(15)
 
 		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
@@ -876,7 +874,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Set the player toolbar
 	def setPlayerToolbar(self):
-		self._wndToolBar.AllocateButtons(9)
+		self._wndToolBar.SetButtons(9)
 
 		id=usercmdui.class2ui[usercmd.OPEN].id
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON, 1)
