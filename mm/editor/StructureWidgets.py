@@ -1028,8 +1028,8 @@ class StructureObjWidget(MMNodeWidget):
 			self._setpreviewandsubicons()
 		if self.node.GetAttrDef('dropicon', None):
 			self.dropbox = DropIconWidget(self, mother)
-		elif self.node.children and self.node.GetAttrDef('empty_nonempty', 0):
-			self.dropbox = EmptyWidget(self, mother)
+		elif self.node.children and (self.node.GetAttrDef('non_empty_icon', None) or self.node.GetAttrDef('non_empty_text', None)):
+			self.dropbox = NonEmptyWidget(self, mother)
 
 	def destroy(self):
 		if self.children:
@@ -3220,10 +3220,10 @@ class DropBoxWidget(ImageBoxWidget):
 		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
 		return f
 
-class EmptyWidget(ImageBoxWidget):
+class NonEmptyWidget(ImageBoxWidget):
 	def recalc_minsize(self):
 		node = self.mmwidget.node
-		icon = node.GetAttrDef('empty_icon', None)
+		icon = node.GetAttrDef('non_empty_icon', None)
 		imxsize = imysize = 0
 		if icon and not MMAttrdefs.getattr(node, 'thumbnail_scale'):
 			import Sizes
@@ -3235,7 +3235,7 @@ class EmptyWidget(ImageBoxWidget):
 				pass
 		self.__image_size = imxsize, imysize
 
-		text = node.GetAttrDef('empty_text', None)
+		text = node.GetAttrDef('non_empty_text', None)
 		if text:
 			txxsize, txysize = f_title.strsizePXL(text)
 		else:
@@ -3253,15 +3253,15 @@ class EmptyWidget(ImageBoxWidget):
 
 		l,t,r,b = self.pos_abs
 		node = self.mmwidget.node
-		icon = node.GetAttrDef('empty_icon', None)
+		icon = node.GetAttrDef('non_empty_icon', None)
 		if icon is not None:
 			icon = node.context.findurl(icon)
 			try:
 				icon = MMurl.urlretrieve(icon)[0]
 			except:
 				icon = None
-		text = node.GetAttrDef('empty_text', self.name)
-		color = node.GetAttrDef('empty_color', None)
+		text = node.GetAttrDef('non_empty_text', self.name)
+		color = node.GetAttrDef('non_empty_color', None)
 		if color is not None:
 			displist.drawfbox(color, (l,t,r-l,b-t))
 		if icon or text:

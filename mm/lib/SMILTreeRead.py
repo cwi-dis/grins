@@ -1367,6 +1367,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error(msg)
 			elif attr == 'emptyShow':
 				attrdict['empty_nonempty'] = val == 'true'
+			elif attr == 'nonEmptyIcon':
+				attrdict['non_empty_icon'] = MMurl.basejoin(self.__base, val)
+			elif attr == 'nonEmptyText':
+				attrdict['non_empty_text'] = val
+			elif attr == 'nonEmptyColor':
+				val = self.__convert_color(val)
+				if val is not None:
+					attrdict['non_empty_color'] = val
 			elif attr == 'dropIcon':
 				attrdict['dropicon'] = MMurl.basejoin(self.__base, val)
 			elif attr not in smil_node_attrs:
