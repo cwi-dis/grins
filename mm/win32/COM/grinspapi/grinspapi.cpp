@@ -9,6 +9,51 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
+/*
+	Note:
+	
+	This module is to be used by both the server (GRiNS Player) and a client.
+	The server and the client use different parts of this module.
+	A client is any application using GRiNS Player as a SMIL20 player engine
+	(the same way GRiNS itself uses RealPlayer).
+
+    GRiNS Player becomes a smil20 COM server once it does the following:
+
+		1. Register GRiNS Player as a COM server: 
+				import grinspapi
+				grinspapi.RegisterServer()
+		   To undo the process call:
+				grinspapi.UnregisterServer()
+				
+		2. GRiNS player at some point of its startup sequence calls
+				grinspapi.RegisterClassObjects()
+		   and at some point of its exit sequence
+				grinspapi.UnregisterClassObjects()
+
+	A client of GRiNS written in python should do the following:
+		import grinspapi
+		grinsPlayer = grinspapi.CreatePlayer()
+		grinsPlayer.Open(fileOrUrl)
+		grinsPlayer.SetWindow(wnd)  // wnd is the os window handle of a window created by the client
+		grinsPlayer.Play()
+		# ...
+		grinsPlayer.Stop()
+	the client is also responsible for passing in to GRiNS Player Engine (GPE)
+	any events (for example mouse events) through OnEvent method of the IGRiNSPlayer 
+	Note that a client that uses GPE hasn't to be written in python.
+
+ 	A client of GRiNS written in C++ does not need this module and should do the following:
+			IGRiNSPlayer *pI=NULL;
+			HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayer,NULL,dwClsContext,IID_IGRiNSPlayer,(void**)&pI);
+			if(SUCCEEDED(hr){
+				pI->Open(fileOrUrl);
+				pI->SetWindow(wnd)
+				pI->Play()
+				// ...
+				pI->Stop()
+			}
+*/
+
 // for server
 #include "stdlib/stdcom.h"
 #include "stdlib/Registrar.h"
