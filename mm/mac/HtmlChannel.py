@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Macintosh HTML channel.
 #
