@@ -1643,6 +1643,8 @@ class ChannelWindow(Channel):
 
 			# space are geometry			
 			self.idCssMedia = self.cssResolver.newMedia()
+			mwidth, mheight = node.GetDefaultMediaSize(None, None)
+			self.cssResolver.setIntrinsicSize(self.idCssMedia, mwidth, mheight)
 			self.cssResolver.setAlignAttr(self.idCssMedia, 'regPoint', node.GetAttrDef('regPoint',None))
 			self.cssResolver.setAlignAttr(self.idCssMedia, 'regAlign', node.GetAttrDef('regAlign',None))
 			self.cssResolver.setAlignAttr(self.idCssMedia, 'scale', node.GetAttrDef('scale',None))
