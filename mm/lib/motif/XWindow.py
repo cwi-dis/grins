@@ -613,17 +613,6 @@ class _Window(_AdornmentSupport):
 					self._menuaccel.append(key)
 		self._menu = menu
 		
-	def setpopupmenu(self, menutemplate):
-		# Menutemplate is a MenuTemplate-style menu template.
-		# It should be turned into an menu and put
-		# into self._popupmenu.
-		self._destroy_popupmenu()
-		pass
-		
-	def _destroy_popupmenu(self):
-		# Free resources held by self._popupmenu and set it to None
-		self._popupmenu = None
-
 	def create_box(self, msg, callback, box = None):
 		import Xcursorfont
 		if toplevel._in_create_box:
