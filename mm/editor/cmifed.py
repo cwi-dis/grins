@@ -38,8 +38,13 @@ class Main(MainDialog):
 		import license
 		self.tmpopts = opts
 		self.tmpfiles = files
+		if features.lightweight:
+			whichversion = 'light'
+		else:
+			whichversion = 'pro'
+		# The old version uses 'editor'
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
-					   features.license_features_needed)
+					   (whichversion,))
 
 	def do_init(self, license):
 		opts, files = self.tmpopts, self.tmpfiles
@@ -392,8 +397,8 @@ class Main(MainDialog):
 ##		except license.Error, arg:
 ##			print "No license:", arg
 ##			return 0
-##		if self._license.is_evaluation_license():
-##			return -1
+		if self._license.is_evaluation_license():
+			return -1
 		return 1
 
 def main():
