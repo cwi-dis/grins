@@ -434,14 +434,14 @@ class TextChannel(Channel):
 			return None
 		
 	def showanchors(self, node):
+		self.autoanchor = None
+		self.haspauseanchor = 0
 		try:
 			alist = node.GetRawAttr('anchorlist')
 		except NoSuchAttrError:
 			self.window.setanchors([])
 			return
 		al2 = []
-		self.autoanchor = None
-		self.haspauseanchor = 0
 		for a in alist:
 			if a[A_TYPE] == ATYPE_AUTO:
 				self.autoanchor = a
