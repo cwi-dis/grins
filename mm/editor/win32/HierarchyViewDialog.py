@@ -1,94 +1,25 @@
+__version__ = "$Id$"
+
 # HierarchyView dialog - Version for standard windowinterface
 # XXXX Note: the separation isn't correct: there are still things in HierarchyView
 # that really belong here...
+
+""" @win32doc|HierarchyViewDialog
+This class represents the interface between the HierarchyView platform independent
+class and its implementation class _HierarchyView in lib/win32/_HierarchyView.py which 
+implements the actual view.
+
+"""
 
 from ViewDialog import ViewDialog
 import WMEVENTS
 from usercmd import *
 
 class HierarchyViewDialog(ViewDialog):
-	adornments = {
-		'shortcuts': {'d': DELETE,
-			      'x': CUT,
-			      'c': COPY,
-			      'p': PLAYNODE,
-			      'G': PLAYFROM,
-			      'i': INFO,
-			      'a': ATTRIBUTES,
-			      'e': CONTENT,
-			      't': ANCHORS,
-			      'L': FINISH_LINK,
-			      'f': PUSHFOCUS,
-			      'z': ZOOMOUT,
-			      '.': ZOOMHERE,
-			      'Z': ZOOMIN,
-			      },
-		'menubar': [
-			('Close', [
-				('Close', CLOSE_WINDOW),
-				]),
-			('Edit', [
-				('New node', [
-					('Before focus', NEW_BEFORE),
-					('After focus', NEW_AFTER),
-					('Under focus', NEW_UNDER),
-					('Above focus', [
-						('Sequential', NEW_SEQ),
-						('Parallel', NEW_PAR),
-						('Choice', NEW_CHOICE),
-						('Alternate', NEW_ALT),
-						]),
-					]),
-				('Delete focus', DELETE),
-				None,
-				('Cut focus', CUT),
-				('Copy focus', COPY),
-				('Paste', [
-					('Before focus', PASTE_BEFORE),
-					('After focus', PASTE_AFTER),
-					('Under focus', PASTE_UNDER),
-					])
-				]),
-			('Node', [
-				('Play node', PLAYNODE),
-				('Play from node', PLAYFROM),
-				None,
-				('Node info...', INFO),
-				('Node attr...', ATTRIBUTES),
-				('Edit contents...', CONTENT),
-				('Edit anchors...', ANCHORS),
-				None,
-				('Finish hyperlink...', FINISH_LINK)
-				]),
-			('Focus', [
-				('Synchronize', PUSHFOCUS),
-				None,
-				('Zoom out', ZOOMOUT),
-				('Zoom here', ZOOMHERE),
-				('Zoom in', ZOOMIN)
-				]),
-			('View', [
-				('Double height of canvas', CANVAS_HEIGHT),
-				('Double width of canvas', CANVAS_WIDTH),
-				('Reset canvas size', CANVAS_RESET),
-				(('Show thumbnails', 'Hide thumbnails'),
-				 THUMBNAIL, 't'),
-				]),
-			('Help', [
-				('Help...', HELP),
-				]),
-			],
-		'toolbar': None, # no images yet...
-		'close': [ CLOSE_WINDOW, ],
-		}
+	adornments = {}
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
-
-	# transf from HierarchyView
-	def helpcall(self):
-		import Help
-		Help.givehelp(self.window,'Hierarchy_view')
 
 	def show(self):
 		if self.is_showing():
@@ -124,3 +55,7 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
+
+	def helpcall(self):
+		import Help
+		Help.givehelp('Hierarchy')

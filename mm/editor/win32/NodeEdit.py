@@ -5,6 +5,13 @@ import os
 
 channeleditors = {}
 
+""" @win32doc|NodeEdit
+It is a utility module that enables node context editing
+with editors that the user specifies in cmif_editors.ini
+It is mostly platform independent. Only the form of the cmd to issue and 
+the actual os call differs.
+"""
+
 # XXXX This is incorrect: it looks in the current directory, not the document dir
 def _inventname(ch):		# Invent file name from channel name
 	import os

@@ -1,8 +1,28 @@
+__version__ = "$Id$"
+
 #
 # Command/menu mapping for the win32 GRiNS Editor
 #
 # (adapted from mac original)
 #
+
+""" @win32doc|MenuTemplate
+Contains the specification for player menu in the
+following Grammar:
+# entry: <simple_entry> | <sep_entry> | <dyn_cascade_entry> | <CASCADE_ENTRY>
+# simple_entry: (ENTRY | TOGGLE, LABEL, SHORTCUT, ID)
+# sep_enty: (SEP,)
+# dyn_cascade_entry: (DYNAMICCASCADE, LABEL, ID)
+# cascade_entry: (CASCADE,LABEL,menu_spec_list)
+# menubar_entry: (LABEL,menu_spec_list)
+# menu_spec_list: list of entry
+# menubar_spec_list: list of menubar_entry
+# menu_exec_list: (MENU,menu_spec_list)
+where ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE are type constants.
+LABEL and and SHORTCUT are strings
+ID is either an integer or an object that can be maped to an integer 
+"""
+
 
 from usercmd import *
 

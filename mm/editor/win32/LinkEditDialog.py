@@ -1,6 +1,6 @@
 """Dialog for the LinkEditor.
 
-The LinkEditDialog is a window that dsiplays three lists from which
+The LinkEditDialog is a window that displays three lists from which
 the user can select an item.  It is best if the lists are shown side
 by side, in which case the left and right lists display lists of
 anchors, and the middle list a list of links between the anchors.  The
@@ -35,9 +35,12 @@ All other callbacks are called without arguments.
 """
 __version__ = "$Id$"
 
-# kk_Note:
-# Specifications for LinkEditDialog
-# Real code in LinkForm
+""" @win32doc|LinkEditDialog
+This class represents the interface between the LinkEdit platform independent
+class and its implementation class LinkForm in lib/win32/LinkForm.py which 
+implements the actual dialog.
+
+"""
 	
 
 class LinkEditDialog:

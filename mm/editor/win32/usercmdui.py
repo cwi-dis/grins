@@ -1,7 +1,20 @@
+__version__ = "$Id$"
 
 #
 # Commands, editor version, ui
 #
+
+""" @win32doc|usercmdui
+Associates identifiers to commands.
+For commands that have toolbar icons the identifiers
+are predefined. For the rest are assigned identifiers
+continously starting from the first avalaible value.
+This value is taken from grinsRC and is automatically
+updated by the resource editor.
+This module creates and exports a
+map from cmd classes to CommandUI instances that 
+contain the identifier and the cascade commands ranges.
+"""
 
 from usercmd import *
 

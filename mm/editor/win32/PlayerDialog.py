@@ -21,33 +21,7 @@ from usercmd import *
 STOPPED, PAUSING, PLAYING = range(3)
 
 class PlayerDialog:
-	adornments = {
-		'shortcuts': {
-			'p': PLAY,
-			'P': PAUSE,
-			's': STOP,
-			},
-		'menubar': [
-			('Close', [
-				('Close', CLOSE_WINDOW),
-				]),
-			('Play', [
-				('Play', PLAY, 't'),
-				('Pause', PAUSE, 't'),
-				('Stop', STOP, 't'),
-				]),
-			('Channels', CHANNELS),
-			('Options', [
-				('Keep Channel View in sync', SYNCCV, 't'),
-				('Dump scheduler data', SCHEDDUMP),
-				]),
-			],
-		'close': [ CLOSE_WINDOW, ],
-		}
-	adornments2 = {
-		'close': [ CLOSE_WINDOW, ],
-		}
-
+	adornments = {}
 	def __init__(self, coords, title):
 		"""Create the Player dialog.
 

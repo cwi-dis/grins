@@ -18,33 +18,19 @@ self.close_callback is also called.
 """
 
 """@win32doc|MainDialog
-There is only one instance of the MainDialog per application.
+There is only one instance of the MainDialog class per application.
 The MainDialog constructor creates an MDIFraneWnd with a toolbar
 and menu. The application level commands New, Open and Exit
 are enabled. When there are documents open there is a one to one
 correspondance between an MDIFrameWnd and a document. The MDIFrameWnd
-created will be reused by the first document that will be opened.
+created is reused by the first document that will be opened.
 """
 __version__ = "$Id$"
 
 from usercmd import *
 
 class MainDialog:
-	adornments = {
-		'toolbar' : [
-			('New', NEW_DOCUMENT),
-			('Open...', OPEN),
-			('Exit', EXIT),
-			],
-		'close': [ EXIT, ],
-		}
-	if __debug__:
-		adornments['toolbar'][2:2] = [
-			('Trace', TRACE, 't'),
-			('Debug', DEBUG),
-			('Crash', CRASH),
-			]
-
+	adornments = {}
 	def __init__(self, title):
 		"""Create the Main dialog.
 

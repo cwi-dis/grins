@@ -17,6 +17,19 @@ self.close_callback is also called.
 
 """
 
+"""@win32doc|MainDialog
+There is only one instance of the MainDialog class per application.
+The MainDialog constructor creates an MDIFraneWnd with a toolbar
+and menu. The application level commands Open and Exit
+are enabled. When there are documents open there is a one to one
+correspondance between an MDIFrameWnd and a document. The MDIFrameWnd
+created is reused by the first document that will be opened.
+The only case that the 1:1 corespondance between an MDIFrameWnd
+and a document is not valid is when the application has no
+open documents 
+"""
+
+
 __version__ = "$Id$"
 
 from usercmd import *

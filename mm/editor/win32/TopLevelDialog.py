@@ -12,23 +12,7 @@ can display its various views and its source
 """
 
 class TopLevelDialog:
-	adornments = {
-		'toolbar': [
-			('Play', PLAY),
-			('Player', PLAYERVIEW, 't'),
-			('Hierarchy view', HIERARCHYVIEW, 't'),
-			('Channel view', CHANNELVIEW, 't'),
-			('Hyperlinks', LINKVIEW, 't'),
-			('Source...', SOURCE),
-			('Save', SAVE),
-			('Save as...', SAVE_AS),
-			('Restore', RESTORE),
-			('Close', CLOSE),
-			('Help', HELP),
-			],
-		'toolbarvertical': 1,
-		'close': [ CLOSE, ],
-		}
+	adornments = {}
 
 	def __init__(self):
 		pass
