@@ -367,6 +367,11 @@ class FileTabPage(SingleTabPage):
 		"""Update controls to self.__value"""
 		value = self.fieldlist[0]._getvalueforpage()
 		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
+		
+class XXFileTabPage(FileTabPage):
+	# Special case used in multiattr searching, so the URL comes
+	# near the top of the list of attributes
+	attrs_on_page = ['file']
 
 class ColorTabPage(SingleDefaultTabPage):
 	attrs_on_page=None
@@ -551,6 +556,21 @@ class TimingTabPage(MultiStringTabPage):
 	attrs_on_page = _attr_to_item.keys()
 	_items_on_page = _attr_to_item.values()
 
+class ClipTabPage(MultiStringTabPage):
+	TAB_LABEL='Clip'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CLIP
+	ITEM_GROUP=1
+	ITEM_BEGIN=3
+	ITEM_END=5
+	N_ITEMS=5
+	_attr_to_item = {
+		'clipbegin': ITEM_BEGIN,
+		'clipend': ITEM_END,
+	}
+	attrs_on_page = _attr_to_item.keys()
+	_items_on_page = _attr_to_item.values()
+
 class TargetAudienceTabPage(MultiTabPage):
 	TAB_LABEL='Target audience'
 	
@@ -667,6 +687,136 @@ class GeneralTabPage(MultiTabPage):
 		value = self._typepopup.getselectvalue()
 		self.fieldlist[2]._savevaluefrompage(value)
 
+class SystemPropertiesTabPage(MultiTabPage):
+	TAB_LABEL='System properties'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_SYSTEM_PROPERTIES
+	ITEM_GROUP=1
+	ITEM_BITRATE=3
+	ITEM_CAPTION_GROUP=5
+	ITEM_CAPTION_NOTSET=6
+	ITEM_CAPTION_OFF=7
+	ITEM_CAPTION_ON=8
+	ILIST_CAPTION=(ITEM_CAPTION_NOTSET, ITEM_CAPTION_OFF, ITEM_CAPTION_ON)
+	ITEM_LANGUAGE=10
+	ITEM_OVERDUB_CAPTION_GROUP=12
+	ITEM_OVERDUB_CAPTION_NOTSET=13
+	ITEM_OVERDUB_CAPTION_OVERDUB=14
+	ITEM_OVERDUB_CAPTION_CAPTION=15
+	ILIST_OVERDUB_CAPTION=(ITEM_OVERDUB_CAPTION_NOTSET, 
+			ITEM_OVERDUB_CAPTION_OVERDUB, ITEM_OVERDUB_CAPTION_CAPTION)
+	ITEM_REQUIRED=17
+	ITEM_SCREENDEPTH=19
+	ITEM_SCREENSIZE=21
+	N_ITEMS=21
+
+	attrs_on_page = [
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+		'system_required',
+		'system_screen_depth',
+		'system_screen_size',
+	]
+	
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		self._bitratepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_BITRATE, [], None)
+		self._languagepopup = windowinterface.SelectWidget(self.attreditor._dialog,
+				self.item0+self.ITEM_LANGUAGE, [], None)
+		return rv
+
+	def close(self):
+		self._bitratepopup.delete()
+		self._languagepopup.delete()
+		TabPage.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_BITRATE:
+			return 1
+		elif item-self.item0 in self.ILIST_CAPTION:
+			self.do_radio(item-self.item0, self.ILIST_CAPTION)
+			return 1
+		elif item == self.item0+self.ITEM_LANGUAGE:
+			return 1
+		elif item-self.item0 in self.ILIST_OVERDUB_CAPTION:
+			self.do_radio(item-self.item0, self.ILIST_OVERDUB_CAPTION)
+			return 1
+		elif item == self.item0+self.ITEM_REQUIRED:
+			return 1
+		elif item == self.item0+self.ITEM_SCREENDEPTH:
+			return 1
+		elif item == self.item0+self.ITEM_SCREENSIZE:
+			return 1
+		return 0
+
+	def do_radio(self, item, allitems):
+		for i in allitems:
+			self.attreditor._setbutton(self.item0+i, (i==item))
+			
+	def initradio(self, allitems, list, value):
+		for i in range(len(allitems)):
+			on = (value == list[i])
+			self.attreditor._setbutton(self.item0+allitems[i], on)
+			
+	def getradio(self, allitems, list):
+		for i in range(len(allitems)):
+			if self.attreditor._getbutton(self.item0+allitems[i]):
+				return list[i]
+		return None
+					
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		list = self.fieldlist[0].getoptions()
+		self._bitratepopup.setitems(list, value)
+		
+		value = self.fieldlist[1]._getvalueforpage()
+		list = self.fieldlist[1].getoptions()
+		self.initradio(self.ILIST_CAPTION, list, value)
+		
+		value = self.fieldlist[2]._getvalueforpage()
+		list = self.fieldlist[2].getoptions()
+		self._languagepopup.setitems(list, value)
+		
+		value = self.fieldlist[3]._getvalueforpage()
+		list = self.fieldlist[3].getoptions()
+		self.initradio(self.ILIST_OVERDUB_CAPTION, list, value)
+
+		value = self.fieldlist[4]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_REQUIRED, value)
+
+		value = self.fieldlist[5]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_SCREENDEPTH, value)
+
+		value = self.fieldlist[6]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_SCREENSIZE, value)
+
+	def save(self):
+		value = self._bitratepopup.getselectvalue()
+		self.fieldlist[0]._savevaluefrompage(value)
+	
+		list = self.fieldlist[1].getoptions()
+		value = self.getradio(self.ILIST_CAPTION, list)
+		self.fieldlist[1]._savevaluefrompage(value)
+		
+		value = self._languagepopup.getselectvalue()
+		self.fieldlist[2]._savevaluefrompage(value)
+	
+		list = self.fieldlist[3].getoptions()
+		value = self.getradio(self.ILIST_OVERDUB_CAPTION, list)
+		self.fieldlist[3]._savevaluefrompage(value)
+		
+		value = self.attreditor._getlabel(self.item0+self.ITEM_REQUIRED)
+		self.fieldlist[4]._savevaluefrompage(value)
+		
+		value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENDEPTH)
+		self.fieldlist[5]._savevaluefrompage(value)
+		
+		value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENSIZE)
+		self.fieldlist[6]._savevaluefrompage(value)
+
 #
 # List of classes handling pages with multiple attributes. The order is
 # important: we loop over these classes in order, and if all attributes
@@ -679,10 +829,13 @@ class GeneralTabPage(MultiTabPage):
 MULTI_ATTR_CLASSES = [ 
 	GeneralTabPage,
 	TimingTabPage,
+	XXFileTabPage,
 	InfoTabPage,
 	ChannelTabPage,
 	CaptionChannelTabPage,
+	SystemPropertiesTabPage,
 	TargetAudienceTabPage,
+	ClipTabPage,
 ]
 #
 # List of classes handling a generic page for a single attribute.
