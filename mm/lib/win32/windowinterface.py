@@ -41,6 +41,7 @@ setwaiting=toplevel.setwaiting
 
 register=toplevel.register
 unregister=toplevel.unregister
+register_event=toplevel.register_event
 
 genericwnd=toplevel.genericwnd
 textwindow=toplevel.textwindow
