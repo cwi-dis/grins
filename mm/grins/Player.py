@@ -171,9 +171,15 @@ class Player(PlayerCore, PlayerDialog):
 		self.root.ResetPlayability()
 
 	def channel_callback(self, name):
-		self.toplevel.setwaiting()
-		isvis = self.channels[name].may_show()
-		self.cc_enable_ch(name, (not isvis))
+		import settings
+		if settings.get('cmif'):
+			# In CMIF mode hide only this single channel
+			self.toplevel.setwaiting()
+			isvis = self.channels[name].may_show()
+			self.cc_enable_ch(name, (not isvis))
+		else:
+			# In SMIL mode simply close the player
+			self.hide()
 
 	def cc_stop(self):
 		self.stop()
