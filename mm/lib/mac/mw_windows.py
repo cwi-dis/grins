@@ -26,6 +26,11 @@ import mw_menucmd
 import mw_widgets
 
 #
+# Scrollbar constants
+#
+SCROLLBARSIZE=16		# Full size, overlapping 1 pixel with window border
+
+#
 # Cache for image sizes
 #
 _size_cache = {}
@@ -637,6 +642,9 @@ def calc_extra_size(adornments, canvassize):
 		resid, height = MenuTemplate.TOOLBAR
 		extrah = extrah + height
 	# XXXX Add scrollbar size if applicable
+	if canvassize:
+		extraw = extraw + SCROLLBARSIZE - 1
+		extrah = extrah + SCROLLBARSIZE - 1
 	return extraw, extrah
 		
 class _ScrollMixin:
@@ -647,14 +655,29 @@ class _ScrollMixin:
 		self._canvaspos = (0, 0)
 		self._barx = None
 		self._bary = None
+##		self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
+		if canvassize:
+			# Get measurements
+			innerw, innerh, horleft, horbot, vertright, verttop = \
+				self._getscrollbarposition(width, height)
+			# Create vertical scrollbar
+			rect = innerw, verttop, vertright, innerh
+			self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+			self._bary.HiliteControl(255)
+			# Create horizontal scrollbar
+			rect = horleft, innerh, innerw, horbot
+			self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+			self._barx.HiliteControl(255)
+			# And set useable canvas size
+			width, height = innerw, innerh
 		return width, height
 		
 	def close(self):
 		pass
 		
-	def _adjustwh(self, width, height):
-		"""Add scrollbarsizes to w/h"""
-		return width, height
+	def _getscrollbarposition(self, width, height):
+		l, t, r, b = 0, 0, width, height
+		return r - (SCROLLBARSIZE-1), b - (SCROLLBARSIZE-1), l-1, b+1, r+1, t-1
 		
 	def _resizescrollbars(self, width, height):
 		"""Move/resize scrollbars and return inner width/height""" 
@@ -845,7 +868,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			      float(w)/_x_pixel_per_mm,
 			      float(h)/_y_pixel_per_mm)
 		elif units == UNIT_PXL:
-			w, h = self._adjustwh(w, h)
 			rv = x, y-_screen_top_offset, w, h
 		elif units == UNIT_SCREEN:
 			l, t, r, b = Qd.qd.screenBits.bounds
