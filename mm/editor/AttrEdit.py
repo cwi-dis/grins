@@ -141,7 +141,7 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'layout', 'channel', 'comment', 'loop']
+		namelist = ['name', 'layout', 'channel', 'comment', 'u_group', 'loop']
 		ntype = self.node.GetType()
 		if ntype == 'bag':
 			namelist.append('bag_index')
@@ -334,6 +334,8 @@ class AttrEditor(AttrEditorDialog):
 				C = TermnodenameAttrEditorField
 			elif displayername == 'transparency':
 				C = TransparencyAttrEditorField
+			elif displayername == 'usergroup':
+				C = UsergroupAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -718,6 +720,12 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 			ch = ctx.channeldict[name]
 ##			if ch.attrdict['type'] == 'layout':
 			list.append(name)
+		list.sort()
+		return ['Default', 'undefined'] + list
+
+class UsergroupAttrEditorField(PopupAttrEditorFieldWithUndefined):
+	def getoptions(self):
+		list = self.wrapper.context.usergroups.keys()
 		list.sort()
 		return ['Default', 'undefined'] + list
 
