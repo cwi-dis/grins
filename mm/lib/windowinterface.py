@@ -1,13 +1,31 @@
 # Names that start with `_' are for internal use only.
 
+# There's a hack in this file in order to be able to work with the
+# FORMS library.  The hack is that we import fl_or_gl and use the
+# function mayblock() from that file.  If using gl, the funtion will
+# always return 1, but when using fl, the function will sometimes
+# return 1 and sometimes 0.  Other parts of CMIFed/CMIFplay call the
+# functions windowinterface.startmonitormode() and
+# windowinterface.endmonitormode().  These functions are also defined
+# in fl_or_gl.  The CMIFplay versions are dummies, but the CMIFed
+# versions do some work.
+
 import gl, GL, DEVICE
-from fl_or_gl import fl_or_gl
+##_dev_map = {}
+##for key in DEVICE.__dict__.keys():
+##	val = DEVICE.__dict__[key]
+##	if not _dev_map.has_key(val):
+##		_dev_map[val] = key
+##	else:
+##		_dev_map[val] = _dev_map[val] + ' ' + key
 import fm
 import string
 from EVENTS import *
 from debug import debug
 
 error = 'windowinterface.error'
+
+from fl_or_gl import *
 
 # Cursors
 _ARROW = 0				# predefined
@@ -56,7 +74,7 @@ class _Toplevel:
 		return self
 
 	def close(self):
-		if debug: print `self`+'.close()'
+		if debug: print 'Toplevel.close()'
 		import posix
 		global _image_cache
 		for win in self._subwindows[:]:
@@ -69,13 +87,13 @@ class _Toplevel:
 		_image_cache = {}
 
 	def setcursor(self, cursor):
-		if debug: print `self`+'.setcursor('+`cursor`+')'
+		if debug: print 'Toplevel.setcursor('+`cursor`+')'
 		for win in self._subwindows:
 			win._setcursor(cursor)
 		self._cursor = cursor
 
 	def newwindow(self, x, y, w, h, title):
-		if debug: print `self`+'.newwindow'+`x, y, w, h, title`
+		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
 		window = _Window().init(self, x, y, w, h, title)
 		_event._qdevice()
 		window._parent_window = self
@@ -84,7 +102,7 @@ class _Toplevel:
 		return window
 
 	def getsize(self):
-		if debug: print `self`+'.getsize()'
+		if debug: print 'Toplevel.getsize()'
 		return _mscreenwidth, _mscreenheight
 
 	def usewindowlock(self, lock):
@@ -101,7 +119,7 @@ class _Event:
 		return self
 
 	def _qdevice(self):
-		if debug: print `self`+'.qdevice()'
+		if debug: print 'Event.qdevice()'
 ##		if _toplevel._win_lock:
 ##			_toplevel._win_lock.acquire()
 		fl_or_gl.qdevice(DEVICE.REDRAW)
@@ -119,12 +137,20 @@ class _Event:
 ##			_toplevel._win_lock.release()
 
 	def _readevent(self):
-		if debug: print `self`+'._readevent()'
-		dev, val = gl.qread()
+		if debug: print 'Event._readevent()'
+		if not mayblock():
+			raise error, 'won\'t block in _readevent()'
+		dev, val = fl_or_gl.qread()
 		return self._dispatch(dev, val)
 
 	def _dispatch(self, dev, val):
-		if debug: print `self`+'._dispatch'+`dev,val`
+##		print 'dispatch',
+##		if _dev_map.has_key(dev):
+##			print _dev_map[dev],
+##		else:
+##			print `dev`,
+##		print `val`
+		if debug: print 'Event._dispatch'+`dev,val`
 		if dev == DEVICE.REDRAW:
 			self._savemouse = None
 			if _window_list.has_key(val):
@@ -178,6 +204,8 @@ class _Event:
 				_toplevel._win_lock.release()
 			x = float(x - x0) / self._curwin._width
 			y = 1.0 - float(y - y0) / self._curwin._height
+			if x < 0 or x > 1 or y < 0 or y > 1:
+				print 'mouse click outside of window'
 			buttons = []
 			adl = self._curwin._active_display_list
 			if adl:
@@ -209,14 +237,17 @@ class _Event:
 		return self._curwin, dev, val
 
 	def _getevent(self, block):
-		if debug > 1: print `self`+'._getevent('+`block`+')'
-		qtest = gl.qtest()
+		if debug > 1: print 'Event._getevent('+`block`+')'
+		if mayblock():
+			qtest = fl_or_gl.qtest()
+		else:
+			qtest = 0
 		while 1:
 			while qtest:
 				event = self._readevent()
 				if event:
 					self._queue.append(event)
-				qtest = gl.qtest()
+				qtest = fl_or_gl.qtest()
 			for winkey in _window_list.keys():
 				win = _window_list[winkey]
 				if win._must_redraw:
@@ -225,10 +256,12 @@ class _Event:
 				return 1
 			if not block:
 				return 0
+			if not mayblock():
+				raise error, 'won\'t block in _getevent()'
 			qtest = 1	# block on next round
 
 	def _doevent(self, dev, val):
-		if debug: print `self`+'._doevent'+`dev,val`
+		if debug: print 'Event._doevent'+`dev,val`
 		event = self._dispatch(dev, val)
 		for winkey in _window_list.keys():
 			win = _window_list[winkey]
@@ -238,22 +271,23 @@ class _Event:
 			self._queue.append(event)
 		
 	def enterevent(self, win, event, arg):
-		if debug: print `self`+'.enterevent'+`win,event,arg`
+		if debug: print 'Event.enterevent'+`win,event,arg`
 		self._queue.append((win, event, arg))
 
 	def readevent(self):
-		if debug: print `self`+'.readevent()'
+		if debug: print 'Event.readevent()'
 		dummy = self._getevent(1)
 		event = self._queue[0]
 		del self._queue[0]
+		if debug > 1: print 'Event.readevent returns',`event`
 		return event
 
 	def testevent(self):
-		if debug > 1: print `self`+'.testevent()'
+		if debug > 1: print 'Event.testevent()'
 		return self._getevent(0)
 
 	def pollevent(self):
-		if debug > 1: print `self`+'.pollevent()'
+		if debug > 1: print 'Event.pollevent()'
 		# Return the first event in the queue if there is one.
 		if self.testevent():
 			return self.readevent()
@@ -261,7 +295,7 @@ class _Event:
 			return None
 
 	def peekevent(self):
-		if debug > 1: print `self`+'.peekevent()'
+		if debug > 1: print 'Event.peekevent()'
 		# Return the first event in the queue if there is one,
 		# but don't remove it.
 		if self.testevent():
@@ -270,7 +304,7 @@ class _Event:
 			return None
 
 	def waitevent(self):
-		if debug: print `self`+'.waitevent()'
+		if debug: print 'Event.waitevent()'
 		# Wait for an event to occur, but don't return it.
 		dummy = self._getevent(1)
 
@@ -761,16 +795,16 @@ class _Window:
 		self._parent_window = parent
 		return self._init2()
 
-	def __repr__(self):
-		s = '<_Window instance, window-id=' + `self._window_id`
-		if self._parent_window == None:
-			s = s + ' (no parent)'
-		else:
-			s = s + ', parent=' + `self._parent_window`
-		if self.is_closed():
-			s = s + ' (closed)'
-		s = s + '>'
-		return s
+##	def __repr__(self):
+##		s = '<_Window instance, window-id=' + `self._window_id`
+##		if self._parent_window == None:
+##			s = s + ' (no parent)'
+##		else:
+##			s = s + ', parent=' + `self._parent_window`
+##		if self.is_closed():
+##			s = s + ' (closed)'
+##		s = s + '>'
+##		return s
 
 	def _init2(self):
 		if debug: print `self`+'.init2()'
@@ -953,6 +987,8 @@ class _Window:
 		return x, y, w, h
 
 	def movebox(self, (x, y, w, h), constrainx, constrainy):
+		if constrainx and constrainy:
+			raise error, 'can\'t constrain both X and Y directions'
 		gl.winset(self._window_id)
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
 		if gl.getplanes() < 12:
@@ -1154,6 +1190,29 @@ class _Window:
 				return retval[:-1]
 			_image_cache[cachekey] = retval[:-2] + (filename,)
 		return retval[:-1]
+
+	def _image_size(self, file):
+		f = open(file, 'r')
+		header = f.read(16)
+		if header[:2] == '\001\332':
+			f.close()
+			xsize, ysize, zsize = imgfile.getsizes(file)
+			return xsize, ysize
+		elif header[:4] == '\377\330\377\340':
+			import cl, CL
+			f.seek(0)
+			scheme = cl.QueryScheme(header)
+			decomp = cl.OpenDecompressor(scheme)
+			header = f.read(cl.QueryMaxHeaderSize(scheme))
+			f.seek(0)
+			headersize = decomp.ReadHeader(header)
+			xsize = decomp.GetParam(CL.IMAGE_WIDTH)
+			ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
+			decomp.CloseDecompressor()
+			f.close()
+			return xsize, ysize
+		else:
+			raise error, 'cannot determine size of image'
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
 		import imgfile

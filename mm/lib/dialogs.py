@@ -204,6 +204,7 @@ class Dialog:
 		return None
 
 	def eventloop(self):
+		windowinterface.startmonitormode()
 		self.events = []
 		while 1:
 			window, event, value = windowinterface.readevent()
@@ -213,6 +214,7 @@ class Dialog:
 					windowinterface.enterevent(window, \
 						  event, value)
 				self.events = []
+				windowinterface.endmonitormode()
 				return retval
 
 	def close(self):
