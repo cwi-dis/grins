@@ -187,7 +187,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if f: self.showwindow()
 		else: self.dontshowwindow()
 		w=self.GetWindow(win32con.GW_CHILD)
-		while w:
+		while w!=None:
+			if not hasattr(w,'showwindow'):break
 			if f: w.showwindow()
 			else: w.dontshowwindow()
 			w=w.GetWindow(win32con.GW_HWNDNEXT)	
@@ -499,6 +500,13 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			if self._cbld.has_key(id) :
 				callback = self._cbld[id]
 				apply(callback[0], callback[1])
+		elif self._topwindow==self:
+			menu=self._parent.get_submenu('&Tools')
+			if not menu:return
+			pt=(xpos,ypos)
+			pt=self.ClientToScreen(pt);
+			menu.TrackPopupMenu(pt,win32con.TPM_RIGHTBUTTON|win32con.TPM_LEFTBUTTON,
+				self._parent)
 
 	# Response to left button double click
 	def onLButtonDblClk(self, params):
@@ -536,7 +544,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
 		else:
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-		self.SetWndCursor(cursor)
+		if self._window_type==MPEG:Sdk.SetCursor(cursor)
+		else: self.SetWndCursor(cursor)
 
 	# Apply window cursor
 	def SetWndCursor(self,cursor):
