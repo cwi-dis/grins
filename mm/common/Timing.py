@@ -236,8 +236,6 @@ def prep2(node, root):
 		except NoSuchUIDError:
 			# Skip sync arc from non-existing node
 			continue
-		if xside not in (HD, TL):
-			xside = HD	# XYZZY
 		# skip out-of-minidocument sync arcs
 		if xnode.FindMiniDocument() is node.FindMiniDocument():
 			adddep(xnode, xside, delay, node, yside)
@@ -278,8 +276,8 @@ def propdown(node, stoptime, dftstarttime=0):
 
 def adddep(xnode, xside, delay, ynode, yside):
 	ynode.counter[yside] = ynode.counter[yside] + 1
-	if delay >= 0 and xside in (HD, TL):
-		xnode.deps[xside].append(delay, ynode, yside)
+	if delay >= 0:
+		xnode.deps[xside].append((delay, ynode, yside))
 
 
 def decrement(q, delay, node, side):
