@@ -673,7 +673,9 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			self._enable_content_dragging = 1
 			self._dxmax = max(0,dw)
 			self._dymax = max(0,dh)
-
+		else:
+			self._enable_content_dragging = 0
+			
 	# Called by the core system to create a child window to the subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
