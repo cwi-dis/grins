@@ -113,7 +113,7 @@ class PlayerCore(Selecter):
 			return None
 		if not ch.is_showing():
 			ch.set_visible(1)
-			self.makemenu()
+			self.setchannel(ch.name, 1)
 		return ch
 	#	
 	def defanchor(self, node, anchor, cb):
@@ -194,10 +194,10 @@ class PlayerCore(Selecter):
 		##	self.toplevel.channelview.channels_changed()
 	#
 	def getchannelbyname(self, name):
-	        if self.channels.has_key(name):
-		    return self.channels[name]
+		if self.channels.has_key(name):
+			return self.channels[name]
 		else:
-		    return None
+			return None
 	#
 	def getchannelbynode(self, node):
 		cname = MMAttrdefs.getattr(node, 'channel')
