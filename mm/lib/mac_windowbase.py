@@ -44,6 +44,10 @@ class FullPopupMenu:
 		self._themenu = toplevel._addpopup()
 		self._fill_menu(self._themenu, list, accelerators)
 		
+	def delete(self):
+		self._themenu.delete()
+		self._themenu = None
+		
 	def _fill_menu(self, menu, list, accelerators):
 		for item in list:
 			if item is None:
