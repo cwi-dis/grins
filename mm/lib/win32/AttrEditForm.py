@@ -4398,7 +4398,65 @@ class Layout1Group(Layout2Group):
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
 		a = self.getattr('regAlign')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
-						   
+
+		return cd
+
+class Layout3Group(AttrGroup):
+	def __init__(self):
+		self.data=attrgrsdict['Layout3']
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LAYOUT3
+	
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		a = self.getattr('width')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU))
+		a = self.getattr('height')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_HEIGHTL, grinsRC.IDC_HEIGHTV, grinsRC.IDC_HEIGHTU))
+
+		a = self.getattr('close')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_CLOSEL, grinsRC.IDC_CLOSEV1, grinsRC.IDC_CLOSEV2))
+		a = self.getattr('open')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_OPENL, grinsRC.IDC_OPENV1, grinsRC.IDC_OPENV2))
+
+		a = self.getattr('traceImage')
+		cd[a] = FileCtrl(wnd,a,(grinsRC.IDC_TRACEIMAGEL,grinsRC.IDC_TRACEIMAGEV,grinsRC.IDC_TRACEIMAGEB))
+						   						   
+		return cd
+
+class RegionNameGroup(AttrGroup):
+	data=attrgrsdict['regionname']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+		
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_REGIONNAME
+	
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('.cname')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REGIONIDL,grinsRC.IDC_REGIONIDV))
+		a = self.getattr('regionName')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REGIONNAMEL,grinsRC.IDC_REGIONNAMEV))
+		return cd
+
+class ViewportNameGroup(AttrGroup):
+	data=attrgrsdict['viewportname']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+		
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_VIEWPORTNAME
+	
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('.cname')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_TOPLAYOUTIDL,grinsRC.IDC_TOPLAYOUTIDV))
 		return cd
 
 #
@@ -4437,6 +4495,9 @@ groupsui={
 	'CssBackgroundColor':CssBackgroundColorGroup,
 	'Layout1':Layout1Group,
 	'Layout2':Layout2Group,
+	'Layout3':Layout3Group,
+	'regionname':RegionNameGroup,
+	'viewportname':ViewportNameGroup,
 	'subregion':SubregionGroup,
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
