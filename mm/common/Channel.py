@@ -1438,6 +1438,37 @@ class ChannelAsync(Channel):
 			self.do_play(node)
 		self.armdone()
 
+class ChannelWindowAsync(ChannelWindow):
+	def play(self, node):
+		if debug:
+			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
+		self.play_0(node)
+		if self._is_shown and self.window:
+			try:
+				winoff = self.winoff
+				winoff = MMAttrdefs.getattr(node, 'base_winoff')
+			except (AttributeError, KeyError):
+				pass
+			else:
+				if winoff != self.winoff:
+					self.hide()
+					self.show()
+			self.check_popup()
+			if self.armed_display.is_closed():
+				# assume that we are going to get a
+				# resize event
+				pass
+			else:
+				self.armed_display.render()
+			if self.played_display:
+				self.played_display.close()
+			self.played_display = self.armed_display
+			self.armed_display = None
+			self.do_play(node)
+			self.armdone()
+		else:
+			self.play_1()
+		
 def dummy_callback(arg):
 	pass
 
