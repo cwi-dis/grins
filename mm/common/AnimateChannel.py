@@ -36,6 +36,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__duration = None
 		self.__animating = None
+		self.__curloop = 0
 
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
@@ -56,6 +57,13 @@ class AnimateChannel(Channel.ChannelAsync):
 			self.playdone(0)
 			return
 		
+		# take into account accumulation effect
+		# self.__curloop  is the zero based loop counter
+		self.__curloop = 0
+		value = node.GetAttrDef('loop', None)
+		if value:
+			self.__curloop = value - node.curloopcount - 1
+
 		self.__animating = node
 
 		# get duration in secs (float)
@@ -73,7 +81,7 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def stopplay(self, node):
 		self.__stopAnimate()
-		self.__removeAnimate()	
+		self.__removeAnimate()
 		Channel.ChannelAsync.stopplay(self, node)
 
 	#
@@ -124,12 +132,18 @@ class AnimateChannel(Channel.ChannelAsync):
 			print 'Warning: None start_time for node',self.__animating
 			self.__start = 0
 		self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
+		
+		# take into account accumulation effect
+		for i in range(self.__curloop):
+			self.__animator.setToEnd()
+
 		self.__animate()
 		self.__register_for_timeslices()
 
 	def __stopAnimate(self):
 		if self.__animating:
 			self.__unregister_for_timeslices()
+			self.__animator.setToEnd()
 			self.__animating = None
 
 	def __removeAnimate(self):
@@ -157,7 +171,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			if self.__lastvalue != val:
 				self.__effAnimator.update(self.__getTargetChannel())
 				self.__lastvalue = val
-		
+			
 	def __onAnimateDur(self):
 		if not self.__animating:
 			return
