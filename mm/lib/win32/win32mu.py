@@ -266,6 +266,16 @@ def DrawRectanglePath(dc,rc):
 	dc.LineTo((rc[0],rc[3]))
 	dc.LineTo((rc[0],rc[1]))
 
+
+def RectanglePath(dc, rc, rop=win32con.R2_NOTXORPEN, pens=win32con.BS_SOLID, penw=0, penc=win32api.RGB(0,0,0)):
+	oldrop=dc.SetROP2(rop)
+	pen=Sdk.CreatePen(pens,penw,penc)
+	oldpen=dc.SelectObjectFromHandle(pen)
+	DrawRectanglePath(dc,rc)
+	dc.SelectObjectFromHandle(oldpen)
+	Sdk.DeleteObject(pen)
+	dc.SetROP2(oldrop);
+ 
 def FrameRect(dc,rc,rgb):
 	br=Sdk.CreateBrush(win32con.BS_SOLID,RGB(rgb),0)	
 	dc.FrameRectFromHandle(rc,br)
