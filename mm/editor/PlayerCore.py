@@ -152,7 +152,7 @@ class PlayerCore(Selecter, PlayerCommon):
 	def checkRenderer(self):
 		# if the document has been edited, we have to check (and rebuild) the renderer channels
 		if self.mustCheckRenderer:
-			self.checkRendererChannels()
+			self.checkRendererAndIChannels()
 			self.mustCheckRenderer = 0
 			self.setlayout(self.curlayout, self.curchannel)
 		
@@ -267,7 +267,6 @@ class PlayerCore(Selecter, PlayerCommon):
 	#
 	def checkchannels(self, excludeRenderer = 0):
 		self.checkRegions()
-		self.__checkichannels()
 		if self.showing:
 			# (3) reset all variable _want_shown to zero
 			for name in self.channelnames:
@@ -331,9 +330,8 @@ class PlayerCore(Selecter, PlayerCommon):
 				self.channelnames.append(name)
 		# make renderer channels
 		self.makeRendererChannels()
-		
 		# make internal channels
-		self.__makeichannels()
+		self.makeInternalChannels()
 		
 		self.makemenu()
 								
@@ -342,19 +340,19 @@ class PlayerCore(Selecter, PlayerCommon):
 			ch = self.channels[name]
 			if ch.may_show():
 				ch.show()
-		self.__showichannels()
+		self.showichannels()
 		self.makemenu()
 	#
 	def hidechannels(self):
 		for name in self.channelnames:
 			self.channels[name].hide()
-		self.__hideichannels()
+		self.hideichannels()
 		self.makemenu()
 	#
 	def destroychannels(self):
 		for name in self.channelnames[:]:
 			self.killchannel(name)
-		self.__destroyichannels()
+		self.destroyichannels()
 		self.makemenu()
 	#
 	def killchannel(self, name):
@@ -384,46 +382,29 @@ class PlayerCore(Selecter, PlayerCommon):
 	# Internal channels support.
 	# 
 
-	def __makeichannels(self):
-		for name in self.context._ichannelnames:
-			if not self.__ichannels.has_key(name):
-				attrdict = self.context._ichanneldict[name]
-				self.__newichannel(name, attrdict)
-
-	def __showichannels(self):
+	def showichannels(self):
 		for ch in self.__ichannels.values():
 			if ch.may_show():
 				ch.show()
 
 	#
-	def __hideichannels(self):
+	def hideichannels(self):
 		for ch in self.__ichannels.values():
 			ch.hide()
 
-	def __killchannel(self, name):
+	def killichannel(self, name):
 		if self.__ichannels.has_key(name):
 			self.__ichannels[name].destroy()
 			del self.__ichannels[name]
 
 	#
-	def __destroyichannels(self):
+	def destroyichannels(self):
 		for (name, ch) in self.__ichannels.items():
 			ch.destroy()
 			del self.__ichannels[name]
 
 	#
-	def __checkichannels(self):
-		for name in self.__ichannels.keys():
-			if name not in self.context._ichannelnames:
-				self.__killchannel(name)
-
-		for name in self.context._ichannelnames:
-			if not self.__ichannels.has_key(name):
-				attrdict = self.context._ichanneldict[name]
-				self.__newichannel(name, attrdict)
-
-	#
-	def __newichannel(self, name, attrdict):
+	def newichannel(self, name, attrdict):
 		if not attrdict.has_key('type'):
 			raise TypeError, \
 				'channel ' +`name`+ ' has no type attribute'
