@@ -127,6 +127,7 @@ CVideoRenderer::CVideoRenderer(TCHAR *pName,
     m_VideoSize.cy = 0;
 	m_ixframe=0;
 	m_pVideoImage=NULL;
+	m_lastTimestamp=0;
 #ifdef LOG_ACTIVITY
 	logFile=fopen("log.txt","w");
 #endif
@@ -206,10 +207,7 @@ CBasePin *CVideoRenderer::GetPin(int n)
 STDMETHODIMP CVideoRenderer::NonDelegatingQueryInterface(REFIID riid,void **ppv)
 {
     CheckPointer(ppv,E_POINTER);
-    if (riid == IID_IFileSinkFilter) {
-        return GetInterface((IFileSinkFilter *) this, ppv);
-		}
-	else if(riid == IID_IRealConverter)
+	if(riid == IID_IRealConverter)
         return GetInterface((IRealConverter *) this, ppv);	
     return CBaseVideoRenderer::NonDelegatingQueryInterface(riid,ppv);
 
@@ -284,7 +282,7 @@ HRESULT CVideoRenderer::DoRenderSample(IMediaSample *pMediaSample)
 	if(logFile)
 		{
 		char sz[256];
-		sprintf(sz,"frame %d size=%d\n",m_ixframe,pMediaSample->GetActualDataLength());
+		sprintf(sz,"frame %d size=%d time=%d\n",m_ixframe,pMediaSample->GetActualDataLength(),m_lastTimestamp);
 		Log(sz);
 		}
 	EncodeSample(pMediaSample);
@@ -314,8 +312,12 @@ void CVideoRenderer::EncodeSample(IMediaSample *pMediaSample)
 
 	CRefTime rt(pVideoInfo->AvgTimePerFrame);
 	m_lastTimestamp=m_ixframe*rt.Millisecs();
+	CRefTime tStart,tStop;
+	if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
+		m_lastTimestamp=tStart.Millisecs();
+
 	bool isSync=(pMediaSample->IsSyncPoint()==S_OK);
-	if(RProducer::HasEngine() && SUCCEEDED(hr))
+	if(RProducer::HasEngine())
 		RProducer::EncodeSample(pImage,pMediaSample->GetActualDataLength(),m_lastTimestamp,isSync,false);
 	m_ixframe++;
 
