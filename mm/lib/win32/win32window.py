@@ -61,6 +61,10 @@ class Window:
 		# scaling support
 		self._device2logical = 1
 
+		# animation support
+		self._mediadisplayrect = None
+		self._fit = 1
+
 	def create(self, parent, coordinates, units, z=0, transparent=0, bgcolor=None):
 		self.__setparent(parent)
 		self.__setcoordinates(coordinates, units)
@@ -94,7 +98,15 @@ class Window:
 			self._redrawfunc = func
 		else:
 			raise error, 'invalid function'
+	
+	# mediacoords in UNIT_PXL
+	def setmediadisplayrect(self, rc):
+		self._mediadisplayrect = rc
 
+	# fit: 'hidden':1, 'meet':0, 'slice':-1, 'scroll':-2, 'fill':-3
+	def setmediafit(self, fit):
+		self._fit = fit
+		
 	#
 	# WMEVENTS section
 	#
@@ -546,6 +558,53 @@ class Window:
 	def _image_handle(self, file):
 		return  -1
 
+	# mediasize: natural size of media
+	# mediadisplayrect: computed layout rect according to smil rules 
+	#					including regPoint/Align and fit (here is assumed correct)
+	# fit: 'hidden':1, 'meet':0, 'slice':-1, 'scroll':-2, 'fill':-3
+	# returns: source rect for blit operation
+	def _getmediacliprect(self, mediasize, mediadisplayrect, fit=1):
+		wm, hm = mediasize
+		x, y, w, h = mediadisplayrect
+
+		if fit == 1: # hidden
+			return 0, 0, min(w, wm), min(h, hm)
+
+		elif fit == 0: # meet
+			return 0, 0, wm, hm
+
+		elif fit == -1: # slice
+			# we assume that mediadisplayrect is also correct here
+			# i.e. is greater or equal to region rc
+			return 0, 0, wm, hm
+
+		elif fit == -2: # scroll
+			return 0, 0, min(w, wm), min(h, hm)
+
+		elif fit == -3: # fill
+			return 0, 0, wm, hm
+
+	# return blit dst and src rects given that dst is clipped
+	# we want to blit src -> dst but dst is clipped
+	# so find part of source mapped to the clipped destination and return it
+	def _getsrcclip(self, dst, src, dstclip):
+		ld, td, rd, bd = dst
+		ls, ts, rs, bs = src
+		ldc, tdc, rdc, bdc = dstclip
+		
+		# find part of source mapped to the clipped destination
+		# apply linear transformation from destination -> source
+		# x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
+		# rem: primes represent source coordinates
+		a = (rs-ls)/float(rd-ld);b=(ls*rd-rs*ld)/float(rd-ld)
+		lsc = int(a*ldc + b + 0.5)
+		rsc = int(a*rdc + b + 0.5)
+		a = (bs-ts)/float(bd-td);b=(ts*bd-bs*td)/float(bd-td)
+		tsc = int(a*tdc + b + 0.5)
+		bsc = int(a*bdc + b + 0.5)
+		
+		return lsc, tsc, rsc, bsc
+
 	# Prepare an image for display (load,crop,scale, etc)
 	# Arguments:
 	# 1. crop is a tuple of proportions (see computations)
@@ -575,8 +634,8 @@ class Window:
 		if coordinates is None:
 			x, y, width, height = self._canvas
 		else:
-			x, y, width, height = self._convert_coordinates(coordinates,self._canvas, units=units)
-		
+			x, y, width, height = self._convert_coordinates(coordinates, self._canvas, units=units)
+
 		# compute scale taking into account the hint (0,-1,-2)
 		if scale == 0:
 			xscale = yscale = min(float(width)/(xsize - left - right),
@@ -1291,13 +1350,6 @@ class Region(Window):
 		# implementation specific
 		self._oswnd = None
 		self._video = None
-
-		# resizing
-		self._resizing = 0
-		self._mediacoords = None
-		self._scale = None
-		self._domrect = self._rect
-		self._scalesurf = None
 						
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
@@ -1324,7 +1376,6 @@ class Region(Window):
 		del self._video 
 		del self._drawsurf
 		del self._fromsurf
-		del self._scalesurf
 
 	#
 	# OS windows simulation support
@@ -1562,6 +1613,13 @@ class Region(Window):
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
+	def rectOr(self, rc1, rc2):
+		# until we make calcs
+		rc,ans= win32ui.GetWin32Sdk().UnionRect(self.ltrb(rc1),self.ltrb(rc2))
+		if ans:
+			return self.xywh(rc)
+		return (0, 0, 0, 0)
+
 	
 	# paint on surface dds only what this window is responsible for
 	# i.e. self._active_displist and/or bgcolor
@@ -1591,36 +1649,33 @@ class Region(Window):
 			if self._video:
 				# get video info
 				vdds, vrcDst, vrcSrc = self._video
-				if self._mediacoords:
-					vrcDst = self._mediacoords
+				if self._mediadisplayrect:
+					vrcDst = self._mediadisplayrect
+
+				# src rect taking into account fit
+				vrcSrc = self._getmediacliprect(vrcSrc[2:], vrcDst, fit=self._fit)
+				
+				# split rects
+				ls, ts, rs, bs = self.ltrb(vrcSrc)
 				xd, yd, wd, hd = vrcDst
 				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
-				ls, ts, rs, bs = self.ltrb(vrcSrc)
 
 				# clip destination
 				ldc, tdc, rdc, bdc = self.ltrb(self.rectAnd((xc, yc, wc, hc), 
 					(ld, td, rd-ld, bd-td)))
-			
-				# find part of source mapped to the clipped destination
-				# apply linear afine transformation from destination -> source
-				# x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
-				# rem: primes represent source coordinates
-				a = (rs-ls)/float(rd-ld);b=(ls*rd-rs*ld)/float(rd-ld)
-				lsc = int(a*ldc + b + 0.5)
-				rsc = int(a*rdc + b + 0.5)
-				a = (bs-ts)/float(bd-td);b=(ts*bd-bs*td)/float(bd-td)
-				tsc = int(a*tdc + b + 0.5)
-				bsc = int(a*bdc + b + 0.5)
-			
+				
+				# find src clip ltrb given the destination clip
+				lsc, tsc, rsc, bsc =  self._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
+
 				# we are ready, blit it
 				if not vdds.IsLost():
-					dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc,tsc,rsc,bsc), ddraw.DDBLT_WAIT)
+					dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc, tsc, rsc, bsc), ddraw.DDBLT_WAIT)
 				else:
 					vdds.Restore()
 
 			if self._active_displist._issimple:
 				try:
-					self._active_displist._ddsrender(dds, dst, rgn, clear=0, mediacoords = self._mediacoords)
+					self._active_displist._ddsrender(dds, dst, rgn, clear=0, mediadisplayrect = self._mediadisplayrect, fit=self._fit)
 				except:
 					pass
 			else:
@@ -1727,7 +1782,7 @@ class Region(Window):
 			win32api.Sleep(50)
 			bf.Restore()
 		rc = x, y, w, h = self.getwindowpos()
-		self._topwindow.paint(rc, exclwnd=exclwnd)
+		self._topwindow.paint(rc=rc, exclwnd=exclwnd)
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
@@ -1894,10 +1949,6 @@ class Region(Window):
 					self._paint_1(rc, exclwnd)
 			return
 
-		if self._resizing and self._scalesurf:
-			self.bltDDS(self._scalesurf)
-			return
-
 		self._paint_0(rc, exclwnd)
 		
 	def createDDS(self, w=0, h=0):
@@ -1928,27 +1979,9 @@ class Region(Window):
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 
-		wdom, hdom = self._domrect[2:]
+		self._mediadisplayrect = mediacoords
 
-
-		# fit: 'hidden':1, 'meet':0, 'slice':-1, 'scroll':-2, 'fill':-3
-
-		# sense a size change/restore
-		if not self._resizing:
-			if w!=wdom or h!=hdom:
-				if scale == -3:
-					self._scalesurf = self.getBackDDS()
-				self._resizing = 1
-				self._scale = scale
-				self._domrect = self._rect
-		elif w==hdom and h==hdom:	
-			self._resizing = 0
-			del self._scalesurf
-			self._scalesurf = None
-
-		self._mediacoords = mediacoords
-
-		if self._mediacoords and self._fromsurf and self._transition:
+		if self._mediadisplayrect and self._fromsurf and self._transition:
 			tr = self._transition
 			self._transition = None
 			self._fromsurf = self.getBackDDS()
@@ -1960,7 +1993,11 @@ class Region(Window):
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
 		
-		self._topwindow.update()
+		# find update rc
+		rc1 = x1, y1, w1, h1
+		rc2 = self.getwindowpos()
+		rc = self.rectOr(rc1, rc2)
+		self._topwindow.update(rc=rc)
 
 		# update the pos of any os subwindows
 		self.updateoswndpos()
@@ -2741,4 +2778,5 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
+ 
  
