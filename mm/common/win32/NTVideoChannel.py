@@ -13,6 +13,7 @@ import RealChannel
 
 # node attributes
 import MMAttrdefs
+from AnchorDefs import *
 
 # channel types and message
 import windowinterface
@@ -129,7 +130,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [0,0,1,1]))
+		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)
@@ -140,14 +141,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbgcolor(node))
 		hicolor = self.gethicolor(node)
 		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[Channel.A_TYPE]
-			if atype not in Channel.SourceAnchors or atype == Channel.ATYPE_AUTO:
+			atype = a[A_TYPE]
+			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
 				continue
 			b = self.armed_display.newbutton((0,0,1,1))
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
-			self.setanchor(a[Channel.A_ID], a[Channel.A_TYPE], b)
+			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
 		if node.__type != 'real':
 			self.armed_display.drawvideo(self.__mc.update)
 
