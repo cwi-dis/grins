@@ -41,7 +41,7 @@ class GraphBuilder:
 	def Release(self):
 		pass
 
-	def RenderFile(self,url):
+	def RenderFile(self, url, exporter=None):
 		try:
 			self._builder.RenderFile(url)
 		except dshow.error, arg:
@@ -210,8 +210,7 @@ class MMStream:
 		self._rect = None
 		self._parsed = 0
 
-	def open(self, url):
-		print 'open', url
+	def open(self, url, exporter=None):
 		mmstream = 	self._mmstream
 		try:
 			self._mmstream.OpenFile(url)
