@@ -46,6 +46,20 @@ _icon_ids = {
 	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
 	'transin': mw_resources.ID_ICON_TRANSIN,
 	'transout': mw_resources.ID_ICON_TRANSOUT,
+	'beginevent' : mw_resources.ID_ICON_EVENTIN,
+	'endevent' : mw_resources.ID_ICON_EVENTOUT,
+	'causeevent' : mw_resources.ID_ICON_CAUSEEVENT,
+	'repeat' : mw_resources.ID_ICON_REPEAT,
+	'playing': mw_resources.ID_ICON_PLAYING,	# 
+	'waitstop': mw_resources.ID_ICON_WAITSTOP, # 
+	'idle': mw_resources.ID_ICON_IDLE,	# 
+##	'activateevent' : mw_resources.ID_ICON_ACTIVATEVENT,
+##	'animation' : mw_resources.ID_ICON_ANIMATION,
+##	'duration' : mw_resources.ID_ICON_DURATION,
+##	'focusin' : mw_resources.ID_ICON_FOCUSIN,
+##	'happyface' : mw_resources.ID_ICON_HAPPYFACE,
+##	'spaceman': mw_resources.ID_ICON_SPACEMAN,
+##	'wallclock': mw_resources.ID_ICON_WALLCLOCK,
 }
 
 def _get_icon(which):

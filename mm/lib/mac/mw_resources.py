@@ -108,3 +108,17 @@ ID_ICON_LINKDST=620				# Destination of hyperlinks
 ID_ICON_LINKSRCDST=622			# Both source and destination
 ID_ICON_TRANSIN=623				# in-transition
 ID_ICON_TRANSOUT=624			# out-transition
+ID_ICON_EVENTIN=626				# Node begin is an event arc
+ID_ICON_EVENTOUT=626			# Node end is an event arc
+ID_ICON_CAUSEEVENT=628			# Node is source of an event arc
+ID_ICON_REPEAT=629				# Node repeats
+ID_ICON_PLAYING=630				# Node is playing
+ID_ICON_WAITSTOP=631			# Node is in fill=freeze
+ID_ICON_IDLE=632				# Node is idle
+ID_ICON_ACTIVATEVENT=None
+ID_ICON_ANIMATION=None
+ID_ICON_DURATION=None
+ID_ICON_FOCUSIN=None
+ID_ICON_HAPPYFACE=None
+ID_ICON_SPACEMAN=None
+ID_ICON_WALLCLOCK=None
