@@ -6,7 +6,7 @@ __version__ = "$Id$"
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-import windowinterface, WMEVENTS, StringStuff
+import windowinterface, WMEVENTS
 import MMAttrdefs
 import MMNode
 from HierarchyViewDialog import HierarchyViewDialog
@@ -647,7 +647,7 @@ class HierarchyView(HierarchyViewDialog):
 # and if possible makes boxes for the children.
 # The algorithm is as follows:
 # Each of the children of node are allocated a minimum space (minwidth
-# x titleheight).  How much of the extra space each child gets depends 
+# x titleheight).  How much of the extra space each child gets depends
 # on how many children it has.  The "unit" extra space is the total
 # extra space divided by the total number of children and
 # grandchildren.  Each child is allocated n extra units where n is
@@ -796,7 +796,7 @@ class Object:
 		else:
 			b1 = min(b, t + titleheight + vmargin)
 		d.fgcolor(TEXTCOLOR)
-		StringStuff.centerstring(d, l, t, r, b1, self.name)
+		d.centerstring(l, t, r, b1, self.name)
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
@@ -832,7 +832,7 @@ class Object:
 		d = self.mother.new_displist
 		d.fgcolor(CTEXTCOLOR)
 		dummy = d.usefont(f_channel)
-		StringStuff.centerstring(d, l, t, r, b, C + ': ' + cname)
+		d.centerstring(l, t, r, b, C + ': ' + cname)
 		dummy = d.usefont(f_title)
 
 	def drawfocus(self):
