@@ -25,8 +25,8 @@ helpwindow = None # Help window instance, once opened
 
 def givehelp(topic):
 	global helpwindow, helpdir
-	if helpwindow == None:
-		if helpdir == None:
+	if helpwindow is None:
+		if helpdir is None:
 			import cmif
 			helpdir = cmif.findfile('help')
 		helpwindow = 'CMIF_help'
