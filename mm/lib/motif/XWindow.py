@@ -814,20 +814,15 @@ class _Window(_AdornmentSupport):
 			self._rb_reg = r
 		d.render()
 		self._rb_curdisp = d
-		for win in toplevel._subwindows:
-			if win is self._topwindow:
-				continue
-			if hasattr(win, '_shell'):
-				win._shell.SetSensitive(0)
-			elif hasattr(win, '_main'):
-				win._main.SetSensitive(0)
 		self._rb_dialog = showmessage(
 			msg, mtype = 'message', grab = 0,
 			callback = (self._rb_done, ()),
 			cancelCallback = (self._rb_cancel, ()))
+		self._rb_dialog._main.AddGrab(1, 0)
 		self._rb_callback = callback
 		self._rb_units = units
 		form = self._form
+		form.AddGrab(0, 0)
 		form.RemoveEventHandler(X.PointerMotionMask, FALSE,
 					self._motion_handler, None)
 		form.AddEventHandler(X.ButtonPressMask, FALSE,
@@ -1411,13 +1406,6 @@ class _Window(_AdornmentSupport):
 			self._rb_dl.render()
 		self._rb_display.close()
 		self._rb_curdisp.close()
-		for win in toplevel._subwindows:
-			if win is self._topwindow:
-				continue
-			if hasattr(win, '_shell'):
-				win._shell.SetSensitive(1)
-			elif hasattr(win, '_main'):
-				win._main.SetSensitive(1)
 		toplevel.setcursor('')
 		del self._rb_callback
 		del self._rb_dialog
