@@ -49,6 +49,12 @@
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for text/images in window' channel)
 
+(bgimg (string) '' 'Background image' file
+	'Background image for window' channel)
+
+(textalign (string) 'center' 'Alignment' default
+	'Alignment of text in window' channel)
+
 (border (int) 1 'Channel border' default
 	'Determines whether channel window has a border (1=yes)' raw)
 
