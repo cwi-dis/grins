@@ -55,7 +55,6 @@ class MyPopupMenu(MyMenuMixin, PopupMenu):
 		self._submenus[sub.id] = sub
 		
 	def dispatch(self, id, item, window, event):
-		print 'Submenu Command', id, item #DBG
 		if id == self.id:
 			MyMenuMixin.dispatch(self, id, item, window, event)
 		else:
@@ -360,7 +359,7 @@ class CommandHandler:
 		
 	def normal_callback(self, cmd):
 		callback = self.find_command(cmd, mustfind=1)
-		if cmd:
+		if callback:
 			func, arglist = callback
 			apply(func, arglist)
 		else: # debug
