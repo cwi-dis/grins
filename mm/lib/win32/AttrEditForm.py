@@ -1212,10 +1212,10 @@ class ImageRenderer(Renderer):
 			self._ig=win32ig.load(f)
 		except:
 			self._ig=-1
-		if self._ig<0:
-			print 'failed to load',f
-		else:
+		if self._ig >= 0:
 			self._imgsize=win32ig.size(self._ig)
+##		else:
+##			print 'failed to load',f
 		self.update()
 
 	def render(self,dc):

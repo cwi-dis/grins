@@ -11,19 +11,6 @@ __version__ = "$Id$"
 # unless we specify a different match condition ('part', 'first' default is: 'all')
 
 attrgrs=(
-	{'name':'infogroup',
-	'title': 'Info',
-	'match': 'first',
-	'attrs':[
-		'title',
-		'abstract',
-		'alt',
-		'longdesc',
-		'author',
-		'copyright',
-		'comment'
-		]},
-
 	{'name':'subregion',
 	'title':'Destination region',
 	'attrs':[
@@ -71,6 +58,20 @@ attrgrs=(
 	'attrs':[
 		'.cname',
 		'type',
+		'title',
+		]},
+
+	{'name':'infogroup',
+	'title': 'Info',
+	'match': 'first',
+	'attrs':[
+		'title',
+		'abstract',
+		'alt',
+		'longdesc',
+		'author',
+		'copyright',
+		'comment'
 		]},
 
 	{'name':'duration_and_loop',
