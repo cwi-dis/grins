@@ -377,8 +377,7 @@ class AttrEditor(AttrEditorDialog):
 			str = b.getvalue()
 			if str != b.getcurrent():
 				try:
-					value = self.wrapper.parsevalue(
-						name, str)
+					value = b.parsevalue(str)
 				except:
 					windowinterface.showmessage(
 						'%s: parsing value failed' % \
@@ -468,7 +467,7 @@ class AttrEditorField(AttrEditorDialogField):
 
 	def parsevalue(self, str):
 		"""Return internal representation of string."""
-		if value == '':
+		if str == '':
 			return None
 		return self.wrapper.parsevalue(self.__name, str)
 
