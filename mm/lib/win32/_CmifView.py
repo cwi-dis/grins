@@ -116,7 +116,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		cs=win32mu.CreateStruct(csd)
 		# if WS_CLIPCHILDREN is set we must
 		# redraw the background of transparent children 
-		#cs.style=cs.style|win32con.WS_CLIPCHILDREN
+		if self._usesLightSubWindows:
+			cs.style=cs.style | win32con.WS_CLIPCHILDREN
 		return cs.to_csd()
 
 	# The response of the view for the WM_SIZE (Resize) message						
