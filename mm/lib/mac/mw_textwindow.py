@@ -132,7 +132,7 @@ class textwindow(_common_window):
 		else:
 			self.close()
 		
-	def settext(self, data):
+	def settext(self, data, colors=[]):
 		self.show()
 		self.data = data
 		self.widget.insert_plaintext(data)
