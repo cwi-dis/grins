@@ -3,6 +3,42 @@
 *** to the "FIXED" section at the end of this file!             ***
 *******************************************************************
 
+------------------------------ BUGS -------------------------------
+
+all: preparing a node pops its window (should be done on real play only)
+
+Player: playing multiple nodes in parallel on the same channel causes
+crashes or generally weird behaviour
+
+Player: crash if playing node with undefined channel
+
+all: When a FORM is iconified, things hang.
+
+all: When a view FORM is closed using 4DWm's close menu item, it takes
+a while before events get handled again.
+
+Timing: sometimes calctimes for partial tree is affects lay-out in
+channel view.  [unreproducible at the moment -- fixed?]
+
+Timing: (opt)calctimes isn't a very meaningful name.
+
+edit mgr: doesn't fix channel dictionary  [not confirmed]
+
+------------------------------ JAMMER MAAR HELAAS -----------------
+
+block view: resize behavior is weird (menu bar height changes)
+
+------------------------------ PERFORMANCE ------------------------
+
+Timing: takes ages -- why?  [sped up ~30% by caching getduration in
+sound & movie channel]
+
+movie channel: loading colormap takes ages
+
+------------------------------ PROJECT MANAGEMENT -----------------
+
+general: perhaps use CVS for project management
+
 -------------------------- LYNDA'S NOTES --------------------------
 
 *    Menus in hierarchy and time chart window are different:
@@ -16,11 +52,6 @@
      (I had wanted to put a frequently occurring channel next tot he two
      which are always there.)
 
-*    I hadn't noticed that there was a visual difference between leaf nodes
-     and non-leaf nodes in the Hierarchy view.  Leaf nodes have their names
-     in the middle.  Non-leaf nodes have their names at the top, and have a
-     small box top left.
-
 *    It would be nice to see, in the Hierarchy window, which nodes have their
      time explicitly defined.  However, there are perhaps more things which
      could be shown in the window, and a list of priorities could usfully be
@@ -28,7 +59,7 @@
      
 *    Some of the information in "Node Attribute" and "Node Information" is
      the same, but the format is different.  This is because the desired
-     methods of editing the attributes haven't been implmented.
+     methods of editing the attributes haven't been implemented.
 
 *    It would be nice if the user could change the automatically specified
      width of the parallel nodes in the Hierarchy window.
@@ -37,59 +68,6 @@
 
 *    I was unable to use the input text box for Immediate text without
      further (human) help. The interface is very strange.
-
-*    I wanted to be able to change the node type
-                                  *** of many similar nodes ***
-                                                 later.  This is because I
-     want to draw some pictures, but until then I want a temporary text
-     window.  This is possible by creating a style and making the channel
-     part of the style information.
-
------------------------------- BUGS -------------------------------
-
-Player: crash if playing node with undefined channel
-
-?: turning borders off for a channel might affect the wrong window
-
-all: When a FORM is iconified, things hang.
-
-all: When a view FORM is closed using 4DWm's close menu item, it takes
-a while before events get handled again.
-
-Timing: sometimes calctimes for partial tree is affects lay-out in
-channel view.
-
-Timing: (opt)calctimes isn't a very meaningful name.
-
-edit mgr: doesn't fix channel dictionary
-
-block view: open/close must be done different; opening something that
-had a red button before zooming should open all of it, not keep it
-closed...
-
-block view: resize behavior is weird
-
-player: crash when putting two events on same channel simultaneously
-(can't seem to reproduce this now?)
-
------------------------------- JAMMER MAAR HELAAS -----------------
-
-general: sometimes, after a while the entire CMIF editor hangs...
-
------------------------------- PERFORMANCE ------------------------
-
-Timing: takes ages -- why?
-
-movie channel: takes so much priority that sound doesn't play and
-buttons don't react
-
-movie channel: loading colormap takes ages
-
-form loader: parsing .fd files takes ages
-
------------------------------- PROJECT MANAGEMENT -----------------
-
-general: need to use CVS for project management
 
 ------------------------------ FEATURES ---------------------------
 
@@ -255,3 +233,29 @@ MovieChannel: center the image.
      on the screen, and only half are ever used at any one time, and the
      presentation has no cohesion.
      *** solution: channel windows pop up when a new node is displayed ***
+
+*    I wanted to be able to change the node type
+                                  *** of many similar nodes ***
+                                                 later.  This is because I
+     want to draw some pictures, but until then I want a temporary text
+     window.  This is possible by creating a style and making the channel
+     part of the style information.
+
+*    I hadn't noticed that there was a visual difference between leaf nodes
+     and non-leaf nodes in the Hierarchy view.  Leaf nodes have their names
+     in the middle.  Non-leaf nodes have their names at the top, and have a
+     small box top left.
+
+?: turning borders off for a channel might affect the wrong window
+
+block view: open/close must be done different; opening something that
+had a red button before zooming should open all of it, not keep it
+closed... [fixed long ago]
+
+general: sometimes, after a while the entire CMIF editor hangs...
+[not reproduced for a long time]
+
+movie channel: takes so much priority that sound doesn't play and
+buttons don't react
+
+form loader: parsing .fd files takes ages [mostly fixed by caching]
