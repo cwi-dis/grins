@@ -272,7 +272,7 @@ class SchedulerContext:
 		return []
 		
 class Scheduler(scheduler):
-	def init(self, ui):
+	def __init__(self, ui):
 		self.queue = []
 		self.ui = ui
 		self.toplevel = self.ui.toplevel
@@ -289,7 +289,6 @@ class Scheduler(scheduler):
 		# 'inherit' method from parent:
 		self.anchorfired = self.ui.anchorfired
 		self.channels_in_use = []
-		return self
 
 	#
 	# Playing algorithm.

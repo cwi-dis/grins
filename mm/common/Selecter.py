@@ -14,7 +14,7 @@ import SR
 
 class Selecter:
 	def init(self):
-		self.scheduler = Scheduler().init(self)
+		self.scheduler = Scheduler(self)
 		self.runslots = []
 		self.bags_needing_done_ev = []
 		return self
