@@ -92,6 +92,7 @@ struct mpeg {
 	struct mpeg_data m_play; /* mpeg being played */
 	struct mpeg_data m_arm; /* movie being armed */
 	int m_pipefd[2];	/* pipe for synchronization with player */
+	type_sema m_dispsema;
 #ifdef USE_GL
 	int m_wid;		/* window ID */
 #endif
@@ -178,6 +179,10 @@ mpeg_init(self)
 		return 0;
 	}
 	bzero((char *)self->mm_private, sizeof(struct mpeg));
+	if ((PRIV->m_dispsema = allocate_sema(0)) == NULL) {
+		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create semaphore");
+		goto error_return_no_close;
+	}
 	if (pipe(PRIV->m_pipefd) < 0) {
 		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create pipe");
 		goto error_return_no_close;
@@ -267,6 +272,8 @@ mpeg_init(self)
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
  error_return_no_close:
+	if (PRIV->m_dispsema)
+		free_sema(PRIV->m_dispsema);
 	free(self->mm_private);
 	self->mm_private = NULL;
 	return 0;
@@ -279,6 +286,7 @@ mpeg_dealloc(self)
 	denter(mpeg_dealloc);
 	if (self->mm_private == NULL)
 		return;
+	free_sema(PRIV->m_dispsema);
 	mpeg_free_old(&PRIV->m_play, 0);
 	mpeg_free_old(&PRIV->m_arm, 0);
 	(void) close(PRIV->m_pipefd[0]);
@@ -503,6 +511,8 @@ mpeg_play(self)
 	while (read(PRIV->m_pipefd[0], &c, 1) == 1)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
+	while (down_sema(PRIV->m_dispsema, NOWAIT_SEMA) > 0)
+		;
 
 	switch (windowsystem) {
 #ifdef USE_GL
@@ -590,20 +600,8 @@ mpeg_player(self)
 		}
 		gettimeofday(&tm0, NULL);
 		dprintf(("mpeg_player(%lx): writing image\n", (long) self));
-		switch (windowsystem) {
-#ifdef USE_GL
-		case WIN_GL:
-			acquire_lock(gl_lock, WAIT_LOCK);
-			mpeg_display_frame(self);
-			release_lock(gl_lock);
-			break;
-#endif
-#ifdef USE_XM
-		case WIN_X:
-			my_qenter(self->mm_ev, 3);
-			break;
-#endif
-		}
+		my_qenter(self->mm_ev, 3);
+		(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 		clUpdateTail(PRIV->m_play.m_frameHdl, 1);
 		dprintf(("mpeg_player: read/decode next\n"));
 
@@ -718,6 +716,15 @@ mpeg_display_frame(self)
     }
 }
 
+static void
+mpeg_display(self)
+	mmobject *self;
+{
+	denter(mpeg_display);
+	mpeg_display_frame(self);
+	up_sema(PRIV->m_dispsema);
+}
+
 int
 mpeg_fill_inbuffer(bufhdl, fd)
     CL_BufferHdl bufhdl;
@@ -773,6 +780,8 @@ mpeg_playstop(self)
 	denter(mpeg_playstop);
 	if (write(PRIV->m_pipefd[1], "s", 1) < 0)
 		perror("write");
+	/* in case they're waiting */
+	up_sema(PRIV->m_dispsema);
 	return 1;
 }
 
@@ -853,7 +862,7 @@ static struct mmfuncs mpeg_channel_funcs = {
 	mpeg_setrate,
 	mpeg_init,
 	mpeg_dealloc,
-	mpeg_display_frame,
+	mpeg_display,
 };
 
 static channelobject *mpeg_chan_obj;
