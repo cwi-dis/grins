@@ -60,13 +60,23 @@ class TreeCtrl(window.Wnd):
 		self.parent.HookNotify(self.OnExpanded,commctrl.TVN_ITEMEXPANDED)
 		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
-		
-#	def createAsDlgItem(self, dlg, id):
-#		wnd = dlg.GetDlgItem(id)
-#		rc = wnd.GetWindowRect()
-#		wnd.DestroyWindow()
-#		rc = dlg.ScreenToClient(rc)
-#		self.create(dlg, rc, id)
+		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
+
+	# simulate dialog tab
+	def onKeyDown(self, params):
+		key = params[2]
+		if key == win32con.VK_TAB: 
+			self.parent.SetFocus() 
+		else:
+			return 1
+					
+	# create a dlg control replacing a placeholder
+	def createAsDlgItem(self, dlg, id):
+		wnd = dlg.GetDlgItem(id)
+		rc = wnd.GetWindowRect()
+		wnd.DestroyWindow()
+		rc = dlg.ScreenToClient(rc)
+		self.create(dlg, rc, id)
 
 	def __clearMultiSelect(self, hititem):
 		for item in self._selections:
@@ -308,7 +318,7 @@ class TreeCtrl(window.Wnd):
 	def __updateSelectedItems(self):
 		rc = self.GetWindowRect()
 		rc = self.parent.ScreenToClient(rc)
-		self.parent.InvalidateRect( rc )
+		self.parent.InvalidateRect(rc)
 
 	# update the listener				
 	def OnMultiSelChanged(self):
