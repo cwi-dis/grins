@@ -974,7 +974,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if res:
 				node.attrdict['clipbegin'] = clip_begin
 				if res.group('clock') and \
-				   not self.__context.attributes.get('project_boston')::
+				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-begin attribute; should be "npt=<time>"')
 			else:
 				self.syntax_error('invalid clip-begin attribute')
@@ -992,7 +992,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if res:
 				node.attrdict['clipend'] = clip_end
 				if res.group('clock') and \
-				   not self.__context.attributes.get('project_boston')::
+				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-end attribute; should be "npt=<time>"')
 			else:
 				self.syntax_error('invalid clip-end attribute')
