@@ -1,0 +1,28 @@
+Anchors
+
+Anchors are stored in the "anchorlist" attribute on the node.  The
+value of the attribute is a list of anchors.  Each anchor has the form
+	(AnchorID, AnchorType, AnchorArgs, AnchorTimes)
+AnchorID is a string, giving the name of the anchor.  The name is
+	unique within the node (i.e., not globally unique).
+AnchorType is one of the set ATYPE_* (AnchorDefs.py).
+AnchorArgs is usually either an empty list or a list with 4 values.
+	In the latter case, the values represent the coordinates of
+	the anchor (x,y,w,h), in pixels if integers, relative if floats.
+AnchorTimes is a tuple of two numbers, the start time and end time of
+	the sensitivity of the anchor in seconds.  If the end time is
+	0, the anchor is sensitive for the duration of the node.
+
+In most of the code, anchors are referred to as a tuple
+	(NodeID, AnchorID)
+
+Hyperlinks
+
+Hyperlinks are stored in context.hyperlinks.  This is an instance of
+Hlinks.Hlinks.  This instance has a attribute links which contains the 
+actual list of hyperlinks.  Each link here has the form
+	(Anchor1, Anchor2, Dir, Type)
+Anchor1 and Anchor2 are anchors, either in the above form, or a string 
+which gives the URL of the external document to be linked to.
+Dir is one of the set DIR_* (Hlinks.py).
+Type is one of the set TYPE_* (Hlinks.py).
