@@ -844,9 +844,8 @@ def writeRT(file, rp, node):
 	ctx = node.GetContext()
 	f = open(file, 'w')
 	f.write('<window width="%d" height="%d"' % (int(width), int(height)))
-	dur = MMAttrdefs.getattr(node, 'duration')
-	if dur:
-		f.write(' duration="%g"' % dur)
+	dur = rp.duration or _calcdur(rp.tags)
+	f.write(' duration="%g"' % dur)
 	ch = node.GetChannel(attrname='captionchannel')
 	color = ch.get('bgcolor', (0,0,0))
 	if color != (255,255,255):
