@@ -270,6 +270,13 @@ IDR_PLAY                ICON    DISCARDABLE     "res\\pause.ico"
 IDR_STOP                ICON    DISCARDABLE     "res\\stop.ico"
 IDR_PAUSE               ICON    DISCARDABLE     "res\\play.ico"
 IDR_PYTHON              ICON    DISCARDABLE     "RES\\python.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_HAND                CURSOR  DISCARDABLE     "RES\\hand2.cur"
 #endif    // Greek resources
 /////////////////////////////////////////////////////////////////////////////
 
