@@ -3,5 +3,6 @@
 
 bool InitializePythonInterface(HWND hWnd);
 void FinalizePythonInterface();
+void *PyInterfaceImport(const TCHAR *psztmodule);
 
 #endif
