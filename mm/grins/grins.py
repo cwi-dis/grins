@@ -226,11 +226,11 @@ def main():
 			pdb.post_mortem(exc_traceback)
 	finally:
 		import windowinterface
-		windowinterface.close()
-		if os.name in ('nt', 'win'):
-			import win32ui
-			h1 = win32ui.GetMainFrame()
-			h1.DestroyWindow()
+#		windowinterface.close()
+#		if os.name in ('nt', 'win'):
+#			import win32ui
+#			h1 = win32ui.GetMainFrame()
+#			h1.DestroyWindow()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported
