@@ -434,6 +434,9 @@ class Dialog:
 	def setbutton(self, button, onoff = 1):
 		pass
 
+class MainDialog(Dialog):
+	pass
+
 def multchoice(prompt, list, defindex):
 	return defindex
 
