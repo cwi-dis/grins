@@ -306,6 +306,11 @@ class HierarchyView(ViewDialog, GLDialog):
 				  'Can\'t insert before/after the root','','')
 				node.Destroy()
 				return 0
+		elif where == 0:
+		    if self.focusnode.GetType() not in MMNode.interiortypes:
+			fl.show_message('Focus is a leaf node!', '', '')
+			node.Destroy()
+			return 0
 		em = self.editmgr
 		if not em.transaction():
 			node.Destroy()
