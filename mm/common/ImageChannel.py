@@ -178,6 +178,8 @@ class ImageChannel(ChannelWindow):
 	def canupdateattr(self, node, name):
 		if name == 'file': 
 			return 1
+		elif name=='region.position':
+			return 1
 		elif name in ('region.left','region.top','region.width','region.height'):
 			return 1
 		return 0
