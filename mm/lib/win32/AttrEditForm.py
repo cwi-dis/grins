@@ -5291,8 +5291,6 @@ class MiscAnchorGroup(AttrGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC3,grinsRC.IDC_EDIT2))
 		a = self.getattr('tabindex')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC4,grinsRC.IDC_EDIT3))
-		a = self.getattr('actuate')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC5, grinsRC.IDC_COMBO2))
 		a = self.getattr('external')
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_CHECK1,))
 		a = self.getattr('sourceLevel')
@@ -5325,6 +5323,8 @@ class GeneralAnchorGroup(AttrGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC4,grinsRC.IDC_EDIT3))
 		a = self.getattr('sendTo')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC5,grinsRC.IDC_COMBO4))
+		a = self.getattr('actuate')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC6, grinsRC.IDC_COMBO5))
 		return cd
 
 class NonEmptyGroup(AttrGroup):

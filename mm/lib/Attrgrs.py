@@ -740,6 +740,7 @@ attrgrs=(
 		  'destinationPlaystate',
 		  'sendTo',
 		  'accesskey',
+		  'actuate',
 		  ],
 	 },
 
@@ -749,7 +750,6 @@ attrgrs=(
 		  'ashape',
 		  'fragment',
 		  'tabindex',
-		  'actuate',
 		  'external',
 		  'sourceLevel',
 		  'destinationLevel',
