@@ -27,13 +27,13 @@ class Player(PlayerCore, PlayerDialog):
 		PlayerCore.__init__(self, toplevel)
 		PlayerDialog.__init__(self, self.get_geometry(),
 				      'Player (' + toplevel.basename + ')')
+		self.showing = 0
+		self.waiting = 0
 		self.channelnames = []
 		self.channels = {}
 		self.channeltypes = {}
 		self.sync_cv = 0
 		self.toplevel = toplevel
-		self.showing = 0
-		self.waiting = 0
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
 		self.commandlist = [
@@ -95,6 +95,7 @@ class Player(PlayerCore, PlayerDialog):
 			if afterfunc is not None:
 				apply(afterfunc[0], afterfunc[1])
 			return
+		PlayerDialog.preshow(self)
 		self.aftershow = afterfunc
 		self.makechannels()
 		self.fullreset()

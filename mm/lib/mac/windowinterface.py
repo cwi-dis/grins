@@ -76,7 +76,7 @@ class _Toplevel(mac_windowbase._Toplevel):
 	
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, units=UNIT_MM, adornments=None, canvassize=None,
-				commandlist=None):
+				commandlist=[]):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, title, adornments, canvassize, commandlist)
 		self._register_wid(wid, rv)
@@ -84,7 +84,7 @@ class _Toplevel(mac_windowbase._Toplevel):
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, units=UNIT_MM, adornments=None, canvassize=None,
-				commandlist=None):
+				commandlist=[]):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, title, adornments, canvassize, commandlist)
 		self._register_wid(wid, rv)
@@ -925,6 +925,9 @@ class MACDialog:
 			self._dialog.SetDialogCancelItem(cancel)
 
 	def _do_defaulthit(self):
+		if self._default:
+			tp, h, rect = self._dialog.GetDialogItem(self._default)
+			h.as_Control.HiliteControl(Controls.inButton)
 		self.do_itemhit(self._default, None)
 		
 	def _showitemlist(self, itemlist):
@@ -1435,13 +1438,13 @@ class InputDialog(DialogWindow):
 				apply(apply, self._cancel)
 			self.close()
 		elif item == ITEM_INPUT_OK:
-			self._do_defaulthit()
+			self.done()
 		elif item == ITEM_INPUT_TEXT:
 			pass
 		else:
 			print 'Unknown item', self, item, event
 			
-	def _do_defaulthit(self):
+	def done(self):
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
 		rv = Dlg.GetDialogItemText(h)
 		self._cb(rv)

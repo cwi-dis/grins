@@ -45,7 +45,12 @@ class PlayerDialog:
 		self.__state = STOPPED
 		self.__channels = []
 		self.__options = []
-
+		
+	def preshow(self):
+		# Note: on the mac we have to create our (non-)window before we open any
+		# of the channels. This is so that the channels are parented to us.
+		PlayerDialog.show(self)
+		
 	def close(self):
 		"""Close the dialog and free resources."""
 		if self.__window is not None:

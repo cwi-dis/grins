@@ -594,6 +594,9 @@ class _Toplevel(_Event):
 			apply(func, args)
 		for win in self._subwindows[:]:
 			win.close()
+		self._command_handler.uninstall_cmd(CMDSET_GLOBAL, self._globalgroup)
+		self._globalgroup.close()
+		del self._globalgroup
 		for group in self._windowgroups[:]:
 			group.close()
 		if self._command_handler:
@@ -609,6 +612,7 @@ class _Toplevel(_Event):
 		self._windowgroups.append(rv)
 		if globalgroup:
 			level = CMDSET_GLOBAL
+			self._globalgroup = rv
 		else:
 			level = CMDSET_GROUP
 		self._install_group_commands(rv, level)
@@ -669,7 +673,8 @@ class _Toplevel(_Event):
 			if invisible:
 				invisible.pop()
 			else:
-				print 'Oops... Group is empty without invisible window...'
+				if __debug__:
+					raise 'Oops... Group is empty without invisible window...'
 			
 		
 	# Menu/command handling
@@ -697,7 +702,7 @@ class _Toplevel(_Event):
 		
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, units=UNIT_MM, adornments=None, canvassize=None,
-				commandlist=None):
+				commandlist=[]):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, title, adornments, canvassize, commandlist)
 		self._register_wid(wid, rv)
@@ -705,8 +710,8 @@ class _Toplevel(_Event):
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, units=UNIT_MM, adornments=None, canvassize=None,
-				commandlist=None):
-		wid, w, h = self._openwindow(x, y, w, h, title, units, menubar=[])
+				commandlist=[]):
+		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, title, adornments, canvassize, commandlist)
 		self._register_wid(wid, rv)
 		return rv
@@ -881,8 +886,15 @@ class _WindowGroup:
 		toplevel._close_windowgroup(self)
 		del self._dict
 		
+	def pop(self):
+		# NOTE: This method should only be called for groups, not windows
+		toplevel._install_group_commands(self)
+		
 	def create_menu(self, menu, title):
 		pass
+		
+	def set_dynamiclist(self, cmd, list):
+		pass  # XXXX Not implemented yet.
 		
 	def set_toggle(self, cmd, onoff):
 		self._cmds_toggled[cmd] = onoff
