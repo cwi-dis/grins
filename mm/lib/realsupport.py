@@ -737,7 +737,7 @@ def _calcdur(tags):
 	return endtime
 
 def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, silent = 0):
-	from SMILTreeWrite import nameencode
+	from nameencode import nameencode
 	import MMAttrdefs
 
 	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
