@@ -939,8 +939,8 @@ class PreferenceWrapper(Wrapper):
 		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
 		}
 	__specprefs = {
-		'system_overdub_or_caption': 'Audible or visible "captions"',
-		'system_overdub_or_subtitle': 'Overdub or subtitles',
+		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
+##		'system_overdub_or_subtitle': 'Overdub or subtitles',
 		}
 
 	def __init__(self, callback):
@@ -996,10 +996,10 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
 				self.__specprefs[name], 'raw', flags.FLAG_ALL)
-		elif name == 'system_overdub_or_subtitle':
-			return (('bool', None), self.getdefault(name),
-				defs[2] or name, 'subtitleoverdub',
-				self.__specprefs[name], 'raw', flags.FLAG_ALL)
+##		elif name == 'system_overdub_or_subtitle':
+##			return (('bool', None), self.getdefault(name),
+##				defs[2] or name, 'subtitleoverdub',
+##				self.__specprefs[name], 'raw', flags.FLAG_ALL)
 
 	def stillvalid(self):
 		return 1
@@ -1158,10 +1158,10 @@ class AttrEditor(AttrEditorDialog):
 				C = CaptionOverdubAttrEditorField
 			elif displayername == 'captionoverdub3':
 				C = CaptionOverdubAttrEditorFieldWithDefault
-			elif displayername == 'subtitleoverdub':
-				C = SubtitleOverdubAttrEditorField
-			elif displayername == 'subtitleoverdub3':
-				C = SubtitleOverdubAttrEditorFieldWithDefault
+##			elif displayername == 'subtitleoverdub':
+##				C = SubtitleOverdubAttrEditorField
+##			elif displayername == 'subtitleoverdub3':
+##				C = SubtitleOverdubAttrEditorFieldWithDefault
 			elif displayername == 'language':
 				C = LanguageAttrEditorField
 			elif displayername == 'language3':
@@ -1833,32 +1833,32 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 	def getoptions(self):
 		return [self.default] + self.__values
 
-class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['subtitle', 'overdub']
-	nodefault = 1
+##class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
+##	__values = ['subtitle', 'overdub']
+##	nodefault = 1
 
-	def getoptions(self):
-		return self.__values
+##	def getoptions(self):
+##		return self.__values
 
-class SubtitleOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
-	__values = ['subtitle', 'overdub']
-	default = 'Not set'
-	nodefault = 0
+##class SubtitleOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
+##	__values = ['subtitle', 'overdub']
+##	default = 'Not set'
+##	nodefault = 0
 
-	def parsevalue(self, str):
-		if str == self.default:
-			return None
-		return str
+##	def parsevalue(self, str):
+##		if str == self.default:
+##			return None
+##		return str
 
-	def valuerepr(self, value):
-		if value is None:
-			if self.nodefault:
-				return self.getdefault()
-			return self.default
-		return value
+##	def valuerepr(self, value):
+##		if value is None:
+##			if self.nodefault:
+##				return self.getdefault()
+##			return self.default
+##		return value
 
-	def getoptions(self):
-		return [self.default] + self.__values
+##	def getoptions(self):
+##		return [self.default] + self.__values
 
 class LanguageAttrEditorField(PopupAttrEditorField):
 	from languages import *
