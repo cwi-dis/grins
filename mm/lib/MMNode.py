@@ -693,6 +693,7 @@ class MMSyncArc:
 				assert event is not None or marker is not None
 		self.dstnode = dstnode
 		self.isstart = action == 'begin'
+		self.ismin = action == 'min'
 		self.srcnode = srcnode	# None if parent; "prev" if previous; else MMNode instance
 		self.event = event
 		self.marker = marker
@@ -700,6 +701,7 @@ class MMSyncArc:
 		self.delay = delay
 		self.qid = None
 		self.timestamp = None
+		if debug: print 'MMSyncArc.__init__', `self`
 
 	def __repr__(self):
 		if self.wallclock is not None:
@@ -953,6 +955,9 @@ class MMNode:
 		self.reset()
 		self.fullduration = None
 		self.pausestack = []	# used only by excl nodes
+		# stuff to do with the min attribute
+		self.has_min = 0
+		self.delayed_arcs = []
 
 	#
 	# Return string representation of self
@@ -1016,19 +1021,6 @@ class MMNode:
 			for c in self.GetSchedChildren():
 				c.freeze_play()
 			self.playing = MMStates.FROZEN
-
-	def terminate_play(self):
-		if debug: print 'terminate_play',`self`
-		if self.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-			getchannelfunc = self.context.getchannelbynode
-			if self.type in leaftypes and getchannelfunc:
-				chan = getchannelfunc(self)
-				if chan:
-					if debug: print 'stopplay',`self`
-					chan.stopplay(self)
-			for c in self.GetSchedChildren():
-				c.terminate_play()
-			self.playing = MMStates.PLAYED
 
 	def add_arc(self, arc, body = None):
 		if body is None:
@@ -2380,6 +2372,19 @@ class MMNode:
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
 				self_body.arcs.append((child, arc))
+				child.add_arc(arc)
+			min = child.GetAttrDef('min', 0)
+			if min > 0:
+				arc = MMSyncArc(child, 'min', srcnode=child, event='begin', delay=min)
+				child.has_min = 1
+				child.durarcs.append(arc)
+				child.add_arc(arc)
+			else:
+				child.has_min = 0
+			max = child.GetAttrDef('max', None)
+			if max is not None:
+				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=max)
+				child.durarcs.append(arc)
 				child.add_arc(arc)
 			if self.type == 'seq':
 				srcnode = child

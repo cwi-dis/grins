@@ -326,6 +326,8 @@ class SchedulerContext:
 			for a in list:
 				if a.qid is None:
 					continue
+				if a.ismin:
+					continue
 				if a.timestamp > timestamp + arc.delay:
 					if debugevents: print 'sched_arcs: cancel',`a`
 					self.parent.cancel(a.qid)
@@ -381,9 +383,22 @@ class SchedulerContext:
 		node = arc.dstnode
 		arc.qid = None
 		if debugevents: print 'trigger', `arc`, timestamp
-		if not arc.isstart:
-			if debugevents: print 'scheduled_children-1',`node`
+		if arc.ismin:
+			node.has_min = 0
 			node.scheduled_children = node.scheduled_children - 1
+			while node.delayed_arcs:
+				arc = node.delayed_arcs[0]
+				del node.delayed_arcs[0]
+				self.trigger(arc)
+			return
+		if not arc.isstart:
+			if node.has_min:
+				# must delay this arc
+				node.delayed_arcs.append(arc)
+				return
+			if debugevents: print 'scheduled_children-1',`node`
+			if node.scheduled_children > 0:
+				node.scheduled_children = node.scheduled_children - 1
 			if node.playing not in (MMStates.PLAYING, MMStates.PAUSED):
 				# ignore end event if not playing
 				if debugevents: print 'node not playing'
@@ -980,10 +995,31 @@ class Scheduler(scheduler):
 	#
 	# Execute a TERMINATE SR.
 	#
+	def terminate_play(self, node):
+		if debugevents: print 'terminate_play',`node`
+		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+			for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
+				if arc.qid is not None:
+					if debugevents: print 'cancel',`arc`
+					self.cancel(arc.qid)
+					arc.qid = None
+					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
+			arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - len(node.delayed_arcs)
+			node.delayed_arcs = []
+			getchannelfunc = node.context.getchannelbynode
+			if node.type in leaftypes and getchannelfunc:
+				chan = getchannelfunc(node)
+				if chan:
+					if debugevents: print 'stopplay',`node`
+					chan.stopplay(node)
+			for c in node.GetSchedChildren():
+				self.terminate_play(c)
+			node.playing = MMStates.PLAYED
+
 	def do_terminate(self, sctx, node, timestamp):
 		if debugevents: print 'terminate',node,timestamp
 ##		if debugevents: self.dump()
-		node.terminate_play()
+		self.terminate_play(node)
 		ev = (SR.SCHED_STOPPING, node)
 		if sctx.srdict.has_key(ev):
 			for q in self.runqueues[PRIO_INTERN]:
@@ -1000,60 +1036,6 @@ class Scheduler(scheduler):
 				srlist = srdict[e][1]
 				if ev in srlist:
 					srlist.remove(ev)
-##		return
-##		if node.GetType() in interiortypes:
-##			node.stoplooping()
-##			# Remove prearms for all our descendents
-##			if not settings.noprearm:
-##				sctx.cancelprearms(node)
-##			# turn action into event
-##			self.event(sctx, (SR.TERMINATE, node), timestamp)
-##		else:
-##			# terminate node
-##			for ev in sctx.srdict.keys():
-##				if ev[1] == node:
-##					srdict = sctx.srdict[ev]
-##					del sctx.srdict[ev]
-##					numsrlist = srdict[ev]
-##					del srdict[ev]
-##					num = numsrlist[0]
-##					num = num - 1
-##					if num == 0:
-##						if ev[0] == SR.SCHED_DONE:
-##							sctx.queuesrlist(numsrlist[1], timestamp)
-##						numsrlist[:] = []
-##					else:
-##						numsrlist[0] = num
-##			for ev, srdict in sctx.srdict.items():
-##				action = srdict[ev]
-##				if not action:
-##					continue
-##				actions = action[1]
-##				for i in range(len(actions)-1,-1,-1):
-##					if actions[i][1] == node:
-##						del actions[i]
-##			chan = self.ui.getchannelbynode(node)
-####			prearmlist = sctx.prearmlists[chan]
-####			for i in range(len(prearmlist)-1,-1,-1):
-####				if prearmlist[i][1] == node:
-####					del prearmlist[i]
-##			node.set_armedmode(ARM_DONE)
-##			chan.terminate(node)
-##			if node.playing == MMStates.PLAYING:
-##				node.stopplay()
-####				node.event(self.timefunc(), 'end')
-##			do_arm = 0
-##			for queue in self.runqueues:
-##				for i in range(len(queue)-1,-1,-1):
-##					if queue[i][1][1] == node:
-##						if not settings.noprearm and \
-##						   queue[i][1][0] == SR.PLAY_ARM:
-##							do_arm = 1
-##						del queue[i]
-####			if not do_arm:
-####				do_arm = sctx.search_unexpected_prearm(node)
-##			if do_arm:
-##				sctx.arm_ready(chan)
 
 	def do_pause(self, sctx, pnode, node, action, timestamp):
 		if debugevents: print 'pause',node,timestamp

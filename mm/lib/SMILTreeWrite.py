@@ -985,6 +985,7 @@ prio_attrs = [
 cmif_node_attrs_ignore = {
 	'arm_duration':0, 'styledict':0, 'name':0, 'bag_index':0,
 	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
+	'min':0, 'max':0,
 	'system_bitrate':0, 'system_captions':0, 'system_language':0,
 	'system_overdub_or_caption':0, 'system_overdub_or_subtitle':0,
 	'system_required':0, 'system_audiodesc':0, 'system_operating_system':0,
