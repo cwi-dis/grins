@@ -278,6 +278,7 @@ no)	;;
 *)
 	macexcl='-x mac_window -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x audiodevmac'
 	ntexcl='-x ntpath -x nturl2path -x dospath -x NTVideoChannel -x NTVideoDuration -x audiodevwin'
+	allexcl='-x pdb -x trace'
 	case $ARCH in
 	irix*)	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
 		extpath=":$CHAMELEON/python/Extensions/midi/build.$ARCH"
@@ -301,6 +302,7 @@ no)	;;
 		-e $CHAMELEON/python/Extensions/X11/build.$ARCH \
 		-e $CHAMELEON/python/Extensions/img/build.$ARCH \
 		$extend \
+		$allexcl \
 		$exclude \
 		$macexcl \
 		$ntexcl \
