@@ -1,6 +1,3 @@
-import settings
-settings.default_settings['lightweight'] = 1
-
 import grins_app_core
 resdll = None
 
