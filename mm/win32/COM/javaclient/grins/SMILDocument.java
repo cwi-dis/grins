@@ -6,7 +6,7 @@ import java.awt.Dimension;
 
 /**
 *  The interface for managing SMIL documents.
-*  SMILDocument are produced by GRiNSToolkit
+*  SMILDocuments are produced by a GRiNSToolkit
 *  using the factory method createDocument(String filenameOrURLString)
 *  After using a SMILDocument you should <em>always</em> call close() 
 *  to dispose used resources. 
@@ -48,19 +48,27 @@ public interface SMILDocument {
     
     /**
     *   Get the duration of this document in seconds.
-    *   A zero duration means indefinite
-    *   A negative duration means unresolved
+    *   The returned value maybe zero or negative with the following meaning:
+    *   A zero return value means that the duration is unresolved
+    *   A negative return value means that the duration is indefinite
     */
    double getDuration();
+    
     
     /**
     *  Return the number of frames per second for this document.
     *  The number returned is the rate of the [first] video component if there is one, 
     *  or else of the [first] audio component if there's no video.  
-    *  If there's neither one an ad hoc 20 frames per second is returned.
+    *  If there's neither one an ad hoc value is returned.
     */
     int getFrameRate();
    
+   
+    /**
+    *  Return the number of frames per second of the desinated media element.
+    */
+    int getMediaFrameRate(String fileOrUrlStr) throws GRiNSException;
+    
     /**
     *  After using a SMILDocument you should <em>always</em> call this method 
     *  to dispose resources allocated for this document. 

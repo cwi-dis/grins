@@ -65,6 +65,14 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetFrameRate
 
 /*
  * Class:     grins_GRiNSPlayer
+ * Method:    ngetMediaFrameRate
+ * Signature: (ILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetMediaFrameRate
+  (JNIEnv *, jobject, jint, jstring);
+
+/*
+ * Class:     grins_GRiNSPlayer
  * Method:    ngetSpeed
  * Signature: (I)D
  */
