@@ -366,7 +366,7 @@ class Scheduler(scheduler):
 		self.sctx_list.append(newsctx)
 		if not newsctx.start_minidoc():
 			self.suspend_sctx(newsctx)
-			self.toplevel.set_ready()
+			self.toplevel.setready()
 			return 0
 		self.purge_sctx_queues(old_sctx)
 		if self.sync_cv:
