@@ -5,7 +5,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Tue Feb 01 17:43:28 2000
+/* at Fri Apr 28 09:15:54 2000
  */
 /* Compiler settings for .\wmdmlog.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext

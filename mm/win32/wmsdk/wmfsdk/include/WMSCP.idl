@@ -1,3 +1,21 @@
+//============================================================================
+//
+//  Microsoft Windows Media Technology
+//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//  File:        wmscp.idl
+//
+//  Description: 
+//
+//============================================================================
+
+cpp_quote( "//=========================================================================" )
+cpp_quote( "//" )
+cpp_quote( "// Microsoft Windows Media Technologies" )
+cpp_quote( "// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved." )
+cpp_quote( "//" )
+cpp_quote( "//=========================================================================" )
+
 cpp_quote("// SCP Data Flags")
 cpp_quote("#define WMDM_SCP_EXAMINE_EXTENSION                 0x00000001L")
 cpp_quote("#define WMDM_SCP_EXAMINE_DATA                      0x00000002L")
@@ -8,6 +26,7 @@ cpp_quote("#define WMDM_SCP_RIGHTS_DATA                       0x00000040L")
 
 cpp_quote("// SCP Transfer Flags")
 cpp_quote("#define WMDM_SCP_TRANSFER_OBJECTDATA               0x00000020L")
+cpp_quote("#define WMDM_SCP_NO_MORE_CHANGES                   0x00000040L")
 
 interface ISCPSecureExchange;
 interface ISCPSecureQuery;
