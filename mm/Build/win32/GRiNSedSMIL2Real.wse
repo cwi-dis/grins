@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_real_win_2.0-130.exe
+  EXE Filename=..\..\bin\win32\grins_real_win_2.0-131.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -67,7 +67,6 @@ item: If/While Statement
 end
 item: Set Variable
   Variable=FIND_DIRECTORY
-  Value=""
 end
 item: End Block
 end
@@ -77,7 +76,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=..\products\smil2real\lllicense.txt
+  Source=c:\documents and settings\sjoerd\my documents\src\cmif\build\products\smil2real\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
