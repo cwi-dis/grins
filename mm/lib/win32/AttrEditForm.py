@@ -4149,11 +4149,6 @@ class Layout2Group(AttrGroup):
 		a = self.getattr('bottom')
 		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_BOTTOML, grinsRC.IDC_BOTTOMV, grinsRC.IDC_BOTTOMU))
 
-		a = self.getattr('regPoint')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
-		a = self.getattr('regAlign')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
-
 		a = self.getattr('fit')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
 		a = self.getattr('z')
