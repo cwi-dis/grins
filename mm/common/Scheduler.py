@@ -775,6 +775,13 @@ class SchedulerContext:
 						return
 				# start interior node not yet playing or
 				# start any leaf node
+				pnode = node.GetSchedParent()
+				if pnode is not None and pnode.GetType() == 'seq' and path:
+					if path is None:
+						path = [node]
+					else:
+						path.insert(0, node)
+					node = pnode
 				self.trigger(None, node, path, start)
 				self.sched_arcs(node, 'begin', timestamp = start)
 				return

@@ -5,7 +5,7 @@ __version__ = "$Id$"
 #
 
 import MMAttrdefs
-from Scheduler import Scheduler
+import Scheduler
 from AnchorDefs import *
 from MMTypes import *
 from MMExc import *			# exceptions
@@ -16,7 +16,7 @@ import SR
 
 class Selecter:
 	def __init__(self):
-		self.scheduler = Scheduler(self)
+		self.scheduler = Scheduler.Scheduler(self)
 
 	#
 	# State transitions.
@@ -89,20 +89,7 @@ class Selecter:
 
 	def gotonode(self, seek_node, dest_aid, arg):
 		# First check whether this is an indirect anchor
-		list = self.followcompanchors(seek_node, dest_aid)
-		if list is not None:
-			rv = 0
-			for node_id, aid in list:
-				try:
-					node = self.context.mapuid(node_id)
-				except NoSuchUIDError:
-					windowinterface.showmessage('Dangling: \n'+\
-						  `(node_id, aid)`)
-					continue
-				if self.gotonode(node, aid, arg):
-					rv = 1
-			return rv
-		# It is not a composite anchor. Continue
+		if Scheduler.debugevents: print 'gotonode',seek_node,dest_aid,arg
 		self.scheduler.setpaused(1)
 		timestamp = self.scheduler.timefunc()
 		sctx = self.scheduler.sctx_list[0]
@@ -133,7 +120,12 @@ class Selecter:
 				else:
 					x.start_time = gototime
 		self.scheduler.settime(gototime)
-		x = seek_node
+		if seek_node.GetType() == 'switch':
+			x = seek_node.ChosenSwitchChild()
+			if not x:
+				x = seek_node.GetSchedParent()
+		else:
+			x = seek_node
 		path = []
 		while x is not None:
 			path.append(x)
@@ -143,13 +135,6 @@ class Selecter:
 		self.scheduler.setpaused(0)
 		return 0
 
-	def followcompanchors(self, node, aid):
-		if not aid:
-			return None
-		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			if a.aid == aid and a.atype == ATYPE_COMP:
-				return arg
-		return None
 	#
 	# sctx_empty is called from the scheduler when a context has become
 	# empty.
