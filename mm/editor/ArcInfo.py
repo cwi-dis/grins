@@ -151,7 +151,6 @@ class ArcInfo(ArcInfoDialog):
 		sside = min(self.src_getpos(), 1)
 		if sside != self.sside:
 			changed = 1
-		self.sside = sside
 		dside = min(self.dst_getpos(), 1)
 		if dside != self.dside:
 			changed = 1
