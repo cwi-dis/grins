@@ -691,13 +691,13 @@ class ButtonRow:
 		if self.isdefault and not self.changed:
 			self.reset.hide_object()
 		else:
-			self.reset.freeze_object()
+			self.form.freeze_form()
 			if self.changed:
 				self.reset.boxtype = UP_BOX
 			else:
 				self.reset.boxtype = FRAME_BOX
 			self.reset.show_object()
-			self.reset.unfreeze_object()
+			self.form.unfreeze_form()
 	#
 	def valuerepr(self, value):
 		return self.wrapper.valuerepr(self.name, value)
