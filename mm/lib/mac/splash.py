@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Carbon import Dlg
 
 firsttime = 1
