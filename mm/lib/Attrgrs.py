@@ -11,6 +11,19 @@ __version__ = "$Id$"
 # unless we specify a different match condition ('part', 'first' default is: 'all')
 
 attrgrs=(
+	{'name':'general',
+	'title': 'General',
+	'attrs':[
+		'name',
+##		'.type',
+		'title',
+		'alt',
+		'author',
+		'copyright',
+		'.begin1',
+		'duration',
+		]},
+
 	{'name':'subregion',
 	'title':'Destination rendering',
 	'attrs':[
@@ -39,6 +52,16 @@ attrgrs=(
 		'subregionwh',
 		'displayfull',
 		]},
+
+##	{'name':'subregion3',
+##	'title':'Destination rendering',
+##	'attrs':[
+##		'left',
+##		'width',
+##		'top',
+##		'height',
+##		'scale',
+##		]},
 
 	{'name':'base_winoff_and_units',
 	'title':'Position and size',
@@ -74,6 +97,20 @@ attrgrs=(
 		'system_captions',
 		'system_language',
 		'system_overdub_or_caption',
+		]},
+
+	{'name':'snapsystem',
+	'title': 'System',
+	'attrs':[
+		'system_bitrate',
+		'system_language',
+		]},
+
+	{'name':'transition',
+	'title': 'Transition',
+	'attrs':[
+		'transIn',
+		'transOut',
 		]},
 
 	{'name':'.cname',
@@ -206,14 +243,6 @@ attrgrs=(
 		]},
 
 	{'name':'imgregion',
-	'title':'Source area',
-	'attrs':[
-		'imgcropxy',
-		'imgcropwh',
-		'fullimage',
-		]},
-
-	{'name':'imgregion1',
 	'title':'Source area',
 	'attrs':[
 		'imgcropxy',

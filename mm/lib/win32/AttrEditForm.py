@@ -2921,18 +2921,19 @@ class LayoutGroupWithUnits(LayoutGroup):
 		cd[a]=StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
-class Imgregion1Group(AttrGroup):
-	data=attrgrsdict['imgregion1']
+class ImgregionGroup(AttrGroup):
+	data=attrgrsdict['imgregion']
 	_attrnames = {'xy':'imgcropxy',
 		      'wh':'imgcropwh',
 		      'full':'fullimage',
 		      }
+	__convert = None		# default
 
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_LS1O2a
+		return grinsRC.IDD_EDITATTR_LS1O2
 
 	def createctrls(self,wnd):
 		cd={}
@@ -2950,8 +2951,6 @@ class Imgregion1Group(AttrGroup):
 			cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_61,))
 			self.__convert = cd[a]
 			self.__cd = cd
-		else:
-			self.__convert = None
 		return cd
 
 	def oninitdialog(self,wnd):
@@ -2974,15 +2973,6 @@ class Imgregion1Group(AttrGroup):
 
 	def islayoutattr(self,attr):
 		return attr.getname() in (self._attrnames['xy'], self._attrnames['wh'])
-
-class ImgregionGroup(Imgregion1Group):
-	data=attrgrsdict['imgregion']
-	_attrnames = {'xy':'imgcropxy',
-		      'wh':'imgcropwh',
-		      'full':'fullimage',}
-
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_LS1O2
 
 class Subregion2Group(ImgregionGroup):
 	data=attrgrsdict['subregion2']
@@ -3021,6 +3011,29 @@ class SubregionGroup(Subregion1Group):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O3
 
+class Subregion3Group(ImgregionGroup):
+	data=attrgrsdict['subregion3']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_SUBREGION
+
+	def createctrls(self,wnd):
+		cd={}
+		a=self.getattr('left')
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a=self.getattr('top')
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_13))
+		a=self.getattr('width')
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14))
+		a=self.getattr('height')
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_15))
+		a=self.getattr('scale')
+		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_22,))
+		return cd
+
+	def getpageclass(self):
+		return PosSizeLayoutPage
+
 class AnchorlistGroup(AttrGroup):
 	data=attrgrsdict['anchorlist']
 
@@ -3040,51 +3053,81 @@ class AnchorlistGroup(AttrGroup):
 		self.anchorlistctrl = cd[a] = AnchorlistCtrl(wnd, a, ())
 		return cd
 
-class SystemGroup(AttrGroup):
-	data=attrgrsdict['system']
+class TransitionGroup(AttrGroup):
+	data=attrgrsdict['transition']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1R3S5
+		return grinsRC.IDD_EDITATTR_TRANSITION
 
 	def createctrls(self,wnd):
 		cd = {}
-		a = self.getattr('system_bitrate')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
-		a = self.getattr('system_captions')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))
-		a = self.getattr('system_language')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
-		a = self.getattr('system_overdub_or_caption')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44))
-		a = self.getattr('system_required')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
-		a = self.getattr('system_screen_depth')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
-		a = self.getattr('system_screen_size')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+		a = self.getattr('transIn')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		a = self.getattr('transOut')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
 		return cd
 
 	def getpageclass(self):
 		return AttrPage
 
-class PreferencesGroup(SystemGroup):
+class SnapSystemGroup(AttrGroup):
+	data=attrgrsdict['snapsystem']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_O2
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('system_bitrate')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		a = self.getattr('system_language')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
+		return cd
+
+	def getpageclass(self):
+		return AttrPage
+
+class PreferencesGroup(SnapSystemGroup):
 	data=attrgrsdict['preferences']
+	nodefault = 1
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1R3S4
 
 	def createctrls(self,wnd):
-		cd = {}
-		a = self.getattr('system_bitrate')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		cd = SnapSystemGroup.createctrls(self,wnd)
 		a = self.getattr('system_captions')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
-		a = self.getattr('system_language')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
+		if self.nodefault:
+			resids = (grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33)
+		else:
+			resids = (grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33,grinsRC.IDC_34x)
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
 		a = self.getattr('system_overdub_or_caption')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		if self.nodefault:
+			resids = (grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43)
+		else:
+			resids = (grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44)
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
+		return cd
+
+class SystemGroup(PreferencesGroup):
+	data=attrgrsdict['system']
+	nodefault = 0
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S5
+
+	def createctrls(self,wnd):
+		cd = PreferencesGroup.createctrls(self,wnd)
+		a = self.getattr('system_required')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('system_screen_depth')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		a = self.getattr('system_screen_size')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
 class NameGroup(AttrGroup):
@@ -3117,6 +3160,32 @@ class INameGroup(NameGroup):
 	data=attrgrsdict['intname']
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O2
+
+class GeneralGroup(AttrGroup):
+	data=attrgrsdict['general']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_GENERAL
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('name')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+##		a = self.getattr('.type')
+##		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('title')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		a = self.getattr('alt')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+		a = self.getattr('author')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('copyright')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		a = self.getattr('.begin1')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+		a = self.getattr('duration')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_81,grinsRC.IDC_82))
+		return cd
 
 class FileGroup(AttrGroup):
 	data=attrgrsdict['file']
@@ -3449,14 +3518,15 @@ class MachineGroup(StringGroupNoTitle):
 # what we have implemented, anything else goes as singleton
 groupsui={
 	'infogroup':InfoGroup,
+	'general':GeneralGroup,
 
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
 	'subregion':SubregionGroup,
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
-	'imgregion1':Imgregion1Group,
 	'subregion2':Subregion2Group,
+	'subregion3':Subregion3Group,
 	'anchorlist':AnchorlistGroup,
 
 	'convert1':Convert1Group,
@@ -3465,6 +3535,8 @@ groupsui={
 	'convert4':Convert4Group,
 	'convert5':Convert5Group,
 
+	'transition':TransitionGroup,
+	'snapsystem':SnapSystemGroup,
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
 	'name':NameGroup,

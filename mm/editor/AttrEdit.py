@@ -318,6 +318,11 @@ class NodeWrapper(Wrapper):
 			return self.__findlink() or ''
 		if name == '.type':
 			return self.node.GetType()
+		if name == '.begin1':
+			beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
+			if not beginlist:
+				return 0
+			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues()
 		if name == '.anchorlist':
@@ -329,6 +334,11 @@ class NodeWrapper(Wrapper):
 			return self.__findlink()
 		if name == '.type':
 			return self.node.GetType()
+		if name == '.begin1':
+			beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
+			if not beginlist:
+				return None
+			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues() or None
 		if name == '.anchorlist':
@@ -340,6 +350,8 @@ class NodeWrapper(Wrapper):
 			return None
 		if name == '.type':
 			return None
+		if name == '.begin1':
+			return 0
 		if name == '.values':
 			return None
 		if name == '.anchorlist':
@@ -355,6 +367,11 @@ class NodeWrapper(Wrapper):
 				self.editmgr.setnodevalues(self.node, [])
 			self.editmgr.setnodetype(self.node, value)
 			return
+		if name == '.begin1':
+			arc = MMNode.MMSyncArc(self.node, 'begin', srcnode='syncbase',delay=value)
+			beginlist = [arc]
+			self.editmgr.setnodeattr(self.node, 'beginlist', beginlist)
+			return
 		if name == '.values':
 			# ignore value if not immediate node
 			if self.node.GetType() == 'imm':
@@ -366,6 +383,9 @@ class NodeWrapper(Wrapper):
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
+		if name == '.begin1':
+			self.editmgr.setnodeattr(self.node, 'beginlist', None)
+			return
 		if name == '.hyperlink':
 			self.__findlink('')
 			return
@@ -390,6 +410,7 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		import settings
+		snap = hasattr(features, 'grins_snap') and features.grins_snap
 		lightweight = features.lightweight
 		ntype = self.node.GetType()
 		if ntype == 'prio':
@@ -402,43 +423,61 @@ class NodeWrapper(Wrapper):
 		# aren't set
 		namelist = [
 			'name', ('channel',), ('file',), # From nodeinfo window
-			('.type'),
+			('.type',),
 			('terminator',),
-			'begin', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
+			('begin',), ('.begin1',), 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
+			('top',), ('height',), ('bottom'),
+			('left',), ('width',), ('right'),
 			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
-			'title', 'abstract', ('alt',), ('longdesc',), ('readIndex',), 'author',
+			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
 			'copyright', 'comment',
 			'layout', 'u_group',
 			('fgcolor',),
 			('mimetype',),	# XXXX Or should this be with file?
-			'system_audiodesc', 'system_bitrate',
-			'system_captions', 'system_cpu',
-			'system_language', 'system_operating_system',
-			'system_overdub_or_caption', 'system_required',
-			'system_screen_size', 'system_screen_depth',
+			('system_audiodesc',), 'system_bitrate',
+			('system_captions',), ('system_cpu',),
+			'system_language', ('system_operating_system',),
+			('system_overdub_or_caption',), ('system_required',),
+			('system_screen_size',), ('system_screen_depth',),
 			]
 		ctype = self.node.GetChannelType()
 		if ntype in leaftypes or features.compatibility == features.CMIF:
 			namelist.append('channel')
-		if not hasattr(features, 'grins_snap') or not features.grins_snap:
+		if not snap:
 			namelist.append('.type')
-		if ntype in leaftypes or \
-		   self.context.attributes.get('project_boston', 0):
+			namelist.append('abstract')
+			namelist.append('system_captions')
+			namelist.append('system_overdub_or_caption')
+			namelist.append('system_required')
+			namelist.append('system_screen_size')
+			namelist.append('system_screen_depth')
+			if self.context.attributes.get('project_boston', 0):
+				namelist.append('system_audiodesc')
+				namelist.append('system_cpu')
+				namelist.append('restart')
+				namelist.append('restartDefault')
+				namelist.append('fillDefault')
+				namelist.append('syncBehavior')
+				namelist.append('syncBehaviorDefault')
+				namelist.append('min')
+				namelist.append('max')
+				namelist.append('readIndex')
+				if ntype in leaftypes:
+					namelist.append('erase')
+		else:
+			# Snap!
+			if ntype != 'alt':
+				namelist.append('.begin1')
+		if not snap and (ntype in leaftypes or
+				self.context.attributes.get('project_boston', 0)):
 			namelist.append('fill')
 		if self.context.attributes.get('project_boston', 0):
-			namelist.append('restart')
-			namelist.append('restartDefault')
-			namelist.append('fillDefault')
-			namelist.append('syncBehavior')
-			namelist.append('syncBehaviorDefault')
-			namelist.append('min')
-			namelist.append('max')
-			namelist.append('readIndex')
-			if ntype in leaftypes:
-				namelist.append('erase')
+			namelist.append('alt')
+			if not snap:
+				namelist.append('longdesc')
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
@@ -450,9 +489,17 @@ class NodeWrapper(Wrapper):
 			namelist.remove('loop')
 		if ntype in leaftypes:
 			namelist.append('alt')
-			namelist.append('longdesc')
+			if not snap:
+				namelist.append('longdesc')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
+			if self.context.attributes.get('project_boston', 0):
+				namelist.append('left')
+				namelist.append('width')
+				namelist.append('right')
+				namelist.append('top')
+				namelist.append('height')
+				namelist.append('bottom')
 				
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
@@ -515,6 +562,10 @@ class NodeWrapper(Wrapper):
 			return (('enum', alltypes), '',
 				'Node type', 'nodetype',
 				'Node type', 'raw', flags.FLAG_ALL)
+		if name == '.begin1':
+			return (('float', None), 0.0,
+				'Begin delay', 'default',
+				'Start delay of node', 'normal', flags.FLAG_SNAP)
 		if name == '.values':
 			return (('string', None), '',
 				'Content', 'text',
