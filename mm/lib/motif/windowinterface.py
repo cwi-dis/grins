@@ -663,8 +663,8 @@ class FileDialog:
 					 'topWidget': label,
 					 'width': 400})
 		else:
-			dialog = toplevel._main.CreateFileSelectionDialog(
-							  'fileSelect', attrs)
+			dialog = parent.CreateFileSelectionDialog('fileSelect',
+								  attrs)
 			self._main = dialog
 		self._dialog = dialog
 		dialog.AddCallback('okCallback', self._ok_callback, existing)
