@@ -1264,9 +1264,6 @@ class MMChannelTree:
 			chan = self.__ctx.channeldict.get(chan)
 		return chan.GetPath()
 
-	# WORKING HERE (mjvdg) working here
-	# This is currently failing when I load the bridge demo with the temporal view.
-
 	def getsubregions(self, chan, all=0):
 		# Returns a list of all the sub-regions of a certain channel (which could be a region).
 		if type(chan) is type(''):
@@ -1305,6 +1302,9 @@ class MMAnchor:
 
 	def copy(self):
 		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
+
+import re
+_repeat_regexp = re.compile("repeat\\((-?[0-9\\.]*)\\)")
 
 # The Sync Arc class
 # Sjoerd: if you have free time, could you describe (better than I can) what this is at some stage
@@ -1485,6 +1485,24 @@ class MMSyncArc:
 			else:
 				return 'end'
 		return self.event
+
+	def get_repeat(self):
+		# Parse my own event string and return the repeats.
+		# I'm not very good with regular expressions, so excuse the roughness here:
+		e = self.getevent()
+		print "DEBUG: event is: ", e
+		repeatnum = _repeat_regexp.findall(e)
+		if isinstance(repeatnum, type([])) and len(repeatnum) > 0:
+			try:
+				return float(repeatnum[0])
+			except ValueError:
+				return None
+		else:
+			return None
+
+	def set_repeat(self, value):
+		if __debug__: assert isinstance(value, type(1.0))
+		self.event = "repeat(" + `value` + ")"
 
 	def isresolved(self, sctx):
 		if self.timestamp is not None:

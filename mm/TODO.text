@@ -6,6 +6,7 @@ TODO for Michael :-)
 	- repeat doesn't work yet.
 * NEW button doesn't work.	
 * Get rid of all the debug messages.
+* Repeats, markers.
 
 * Editing events directly from the Structure view.
 * Events seem to be a bit wrong in the structure view! Test them.
