@@ -25,8 +25,6 @@ class SoundChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
 		self.__rc = None
-		self.need_armdone = 0
-		self.__playing = None
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -35,23 +33,16 @@ class SoundChannel(Channel.ChannelAsync):
 	def do_show(self, pchan):
 		if not Channel.ChannelAsync.do_show(self, pchan):
 			return 0
-		self.__mc = MediaChannel.MediaChannel(self)
 		return 1
 
 	def do_hide(self):
-		self.__playing = None
-		self.__mc.unregister_for_timeslices()
-		self.__mc.release_res()
-		self.__mc = None
-		if self.__rc:
-			self.__rc.stopit()
-			self.__rc.destroy()
-			self.__rc = None
+		self.__stopplayer()
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
 		self.__ready = 0
 		node.__type = ''
+		self.__maxsoundlevel = 1.0
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -60,7 +51,7 @@ class SoundChannel(Channel.ChannelAsync):
 			self.errormsg(node, 'No URL set on node')
 			return 1
 		import MMmimetypes, string
-		mtype = MMmimetypes.guess_type(url)[0]
+		mtype = MMmimetypes.guess_type(url)[0]			
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
@@ -74,6 +65,16 @@ class SoundChannel(Channel.ChannelAsync):
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
+			if self.needsSoundLevelCaps(node):
+				self.__maxsoundlevel = self.getMaxSoundLevel(node)
+				if mtype and string.find(mtype, 'x-wav')>=0:
+					if not self.__mc:
+						self.__mc = MediaChannel.DSPlayer(self)
+					lc = self._attrdict.GetLayoutChannel()
+					soundlevel = lc.get('soundLevel', 1.0)
+					self.__mc.setsoundlevel(soundlevel, self.__maxsoundlevel)
+			if not self.__mc:
+				self.__mc = MediaChannel.MediaChannel(self)
 			try:
 				self.__mc.prepare_player(node)
 				self.__ready = 1
@@ -82,16 +83,16 @@ class SoundChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_play(self, node):
-		self.__playing = node
 		self.__type = node.__type
+		start_time = node.get_start_time()
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
 		if node.__type == 'real':
 			if not self.__rc:
-				self.playdone(0)
-			elif not self.__rc.playit(node):
+				self.playdone(0, start_time)
+			elif not self.__rc.playit(node, start_time=start_time):
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
 				if not name:
@@ -99,23 +100,24 @@ class SoundChannel(Channel.ChannelAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0)
-		elif not self.__mc.playit(node):
+				self.playdone(0, start_time)
+		elif not self.__mc.playit(node, start_time=start_time):
 			self.errormsg(node,'Can not play')
-			self.playdone(0)
+			self.playdone(0, start_time)
 
 	def playstop(self):
 		self.__stopplayer()
 		self.playdone(1)		
 				
 	def __stopplayer(self):
-		if self.__playing:
-			if self.__type == 'real':
-				if self.__rc:
-					self.__rc.stopit()
-			else:
-				self.__mc.stopit()
-		self.__playing = None
+		if self.__mc:
+			self.__mc.stopit()
+			self.__mc.destroy()
+			self.__mc = None
+		if self.__rc:
+			self.__rc.stopit()
+			self.__rc.destroy()
+			self.__rc = None
 
 	def endoftime(self):
 		self.__stopplayer()
@@ -129,31 +131,26 @@ class SoundChannel(Channel.ChannelAsync):
 			self.__mc.pauseit(paused)
 		Channel.ChannelAsync.setpaused(self, paused)
 
-	def play(self, node):
-		self.play_0(node)
-		self.need_armdone = 1
-		if not self._is_shown or not node.ShouldPlay() \
-		   or self.syncplay:
-			self.need_armdone = 0 # play_1 does it, so we shouldn't
-			self.play_1()
-			return
-		if self._is_shown:
-			self.do_play(node)
-		if node.__type != 'real' and self.need_armdone:
-			self.need_armdone = 0
-			self.armdone()
-
-	def playdone(self, outside_induced):
-		if self.need_armdone:
-			self.need_armdone = 0
-			self.armdone()
-		Channel.ChannelAsync.playdone(self, outside_induced)
-		if not outside_induced:
-			self.__playing = None
 
 	def stopplay(self, node):
-		if self.__mc is not None:
-			self.__mc.stopit()
-		if self.__rc:
-			self.__rc.stopit()
+		self.__stopplayer()
 		Channel.ChannelAsync.stopplay(self, node)
+
+	def needsSoundLevelCaps(self, node):
+		d = node.GetContext()._soundlevelinfo
+		maxval = d.get('max', 1.0)
+		minval = d.get('min', 1.0)
+		hasanim = d.get('anim', 0)
+		return maxval!=1.0 or minval!=1.0 or hasanim
+
+	def getMaxSoundLevel(self, node):
+		return node.GetContext()._soundlevelinfo.get('max', 1)
+
+	def updatesoundlevel(self, val):
+		if self.__mc:
+			self.__mc.updatesoundlevel(val, self.__maxsoundlevel)
+		if self.__rc:
+			pass
+
+
+		

@@ -18,10 +18,15 @@ from AnchorDefs import *
 # channel types and message
 import windowinterface
 
-debug=0
+debug = 0
 
+import rma
+
+# ddraw.error
+import ddraw
+	
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['fit']
 	node_attrs = Channel.ChannelWindow.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -36,30 +41,77 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__mc = None
 		self.__rc = None
 		self.__type = None
+		self.__subtype = None
 		self.need_armdone = 0
 		self.__playing = None
+		self.__rcMediaWnd = None
+		self.__windowless_real_rendering = 1
+		self.__windowless_wm_rendering = 1
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<VideoChannel instance, name=' + `self._name` + '>'
 
+	tmpfiles = []
+	__callback_added = 0
+
+	def getfileurl(self, node):
+		# This method has all sorts of magic to write a
+		# RealPix file "just in time".  If the node has
+		# changed there is a tmpfile attribute.  Since the
+		# node has changed internally, we must write a copy
+		# and we'll use the tmpfile attribute for a file name.
+		# If the node has no URL, there is no existing file
+		# that we can use, so we invent a name and write the
+		# file.
+		url = Channel.ChannelWindowAsync.getfileurl(self, node)
+		if not url or url[:5] == 'data:':
+			if hasattr(node, 'rptmpfile') and node.rptmpfile[1] == url:
+				url = node.rptmpfile[0]
+			else:
+				import tempfile, realsupport, MMurl
+				f = MMurl.urlopen(url)
+				head = f.read(4)
+				if head != '<imf':
+					f.close()
+					# delete rptmpfile attr if it exists
+					node.rptmpfile = None
+					del node.rptmpfile
+					return url
+				rp = realsupport.RPParser(url)
+				rp.feed(head)
+				rp.feed(f.read())
+				f.close()
+				rp.close()
+				f = tempfile.mktemp('.rp')
+				nurl = MMurl.pathname2url(f)
+				node.rptmpfile = nurl, url
+				realsupport.writeRP(f, rp, node, baseurl = url)
+				if not self.__callback_added:
+					import windowinterface
+					windowinterface.addclosecallback(
+						_deltmpfiles, ())
+					VideoChannel.__callback_added = 1
+				self.tmpfiles.append(f)
+		return url
+
 	def do_show(self, pchan):
 		if not Channel.ChannelWindowAsync.do_show(self, pchan):
 			return 0
-		self.__mc = MediaChannel.MediaChannel(self)
-		self.__mc.showit(self.window)
 		return 1
 
 	def do_hide(self):
 		self.__playing = None
-		self.__mc.unregister_for_timeslices()
-		self.__mc.release_res()
-		self.__mc.paint()
-		self.__mc = None
+		if self.__mc:
+			self.__mc.stopit()
+			self.__mc.destroy()
+			self.__mc = None
 		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
+		if self.window:
+			self.window.DestroyOSWindow()
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
@@ -68,6 +120,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__ready = 1
 			return 1
 		node.__type = ''
+		node.__subtype = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -77,9 +130,17 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		import MMmimetypes, string
 		mtype = MMmimetypes.guess_type(url)[0]
-		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
+		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0 or string.find(mtype, 'image') >= 0):
 			node.__type = 'real'
-		self.prepare_armed_display(node)
+			if string.find(mtype, 'flash') >= 0:
+				node.__subtype = 'flash'
+		else:
+			node.__type = 'wm'
+			if string.find(mtype, 'x-ms-asf')>=0:
+				node.__subtype = 'asf'
+				if not self._exporter:
+					self.__windowless_wm_rendering = 0
+
 		if node.__type == 'real':
 			if self.__rc is None:
 				try:
@@ -92,24 +153,69 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
-			try:
-				self.__mc.prepare_player(node)
-				self.__ready = 1
-			except MediaChannel.error, msg:
-				self.errormsg(node, msg)
+			if self.__mc is None:
+				if not self.__windowless_wm_rendering:
+					self.__mc = MediaChannel.MediaChannel(self)
+					try:
+						self.__mc.prepare_player(node, self.window)
+						self.__ready = 1
+					except MediaChannel.error, msg:
+						self.errormsg(node, msg)
+				else:	
+					self.__mc = MediaChannel.VideoStream(self)
+					try:
+						self.__mc.prepare_player(node, self.window)
+						self.__ready = 1
+					except MediaChannel.error, msg:
+						self.errormsg(node, msg)
+
+#						self.__windowless_wm_rendering = 0
+#						self.__mc = MediaChannel.MediaChannel(self)
+#						try:
+#							self.__mc.prepare_player(node, self.window)
+#							self.__ready = 1
+#						except MediaChannel.error, msg:
+#							self.errormsg(node, msg)
+		self.prepare_armed_display(node)
 		return 1
 
 	def do_play(self, node):
 		self.__playing = node
 		self.__type = node.__type
+		self.__subtype = node.__subtype
+		start_time = node.get_start_time()
+
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
 		if node.__type == 'real':
+			bpp = self.window._topwindow.getRGBBitCount()
+			if bpp not in (8, 16, 24, 32) and self.__windowless_real_rendering:
+				self.__windowless_real_rendering = 0
+			if self.__subtype=='flash':
+				self.__windowless_real_rendering = 0
+			
+			if not self.__windowless_real_rendering:
+				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
-				self.playdone(0)
-			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+				self.playdone(0, start_time)
+				return
+			try:
+				if self.__windowless_real_rendering:
+					res =self.__rc.playit(node,windowless=1,start_time=start_time)
+				else:
+					res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), start_time = start_time)
+			except RealChannel.error, msg:
+				import windowinterface, MMAttrdefs
+				name = MMAttrdefs.getattr(node, 'name')
+				if not name:
+					name = '<unnamed node>'
+## Don't call this.  The ErrorOccurred callback is called which produces the error message.
+##				windowinterface.showmessage('Error while starting to play node %s on channel %s:\n%s' % (name, self._name, msg), mtype = 'warning')
+				self.playdone(0, start_time)
+				return
+			if not res:
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
 				if not name:
@@ -117,10 +223,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0)
-		elif not self.__mc.playit(node, self.window):
-			self.errormsg(node,'Can not play')
-			self.playdone(0)
+				self.playdone(0, start_time)
+		else:
+			if not self.__mc:
+				self.playdone(0, start_time)
+			else:
+				if not self.__windowless_wm_rendering:
+					self.window.CreateOSWindow(rect=self.getMediaWndRect())
+				if not self.__mc.playit(node, self.window, start_time):
+					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
+					self.playdone(0, start_time)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -131,7 +243,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__rc.pauseit(paused)
 
 	def playstop(self):
-		self.__stopplayer()
+		# freeze video
+		self.__freezeplayer()
 		self.playdone(1)		
 				
 	def __stopplayer(self):
@@ -139,9 +252,19 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.stopit()
+					if self.__windowless_real_rendering:
+						self.cleanVideoRenderer()
 			else:
 				self.__mc.stopit()
 		self.__playing = None
+
+	def __freezeplayer(self):
+		if self.__playing:
+			if self.__type == 'real':
+				if self.__rc:
+					self.__rc.freezeit()
+			else:
+				self.__mc.freezeit()
 
 	def endoftime(self):
 		self.__stopplayer()
@@ -150,28 +273,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
+		cb((anchor[0], anchor[1], [A_SHAPETYPE_RECT,0.0,0.0,1.0,1.0], anchor[3]))
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[A_TYPE]
-			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
-				continue
-			anchor = node.GetUID(), a[A_ID]
-			if not self._player.context.hyperlinks.findsrclinks(anchor):
-				continue
-			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
-			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+		self.armed_display.fgcolor(self.getbgcolor(node))
+		armbox = self.prepare_anchors(node, self.window, self.getmediageom(node))
+		self.setArmBox(armbox)
+		self.armed_display.setMediaBox(armbox)
 
 	def _getoswindow(self):
 		return self.window.GetSafeHwnd()
@@ -179,13 +288,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def _getoswinpos(self):
 		x, y, w, h = self.window._rect
 		return (x, y), (w, h)
-
+		
 	def play(self, node):
 		self.need_armdone = 1
 		self.play_0(node)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 			self.check_popup()
+			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
@@ -204,17 +314,141 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.need_armdone = 0 # play_1 calls armdone()
 			self.play_1()
 
-	def playdone(self, outside_induced):
+	def playdone(self, outside_induced, end_time = None):
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
-		Channel.ChannelWindowAsync.playdone(self, outside_induced)
+		Channel.ChannelWindowAsync.playdone(self, outside_induced, end_time)
 		if not outside_induced:
 			self.__playing = None
 
 	def stopplay(self, node):
-		if self.__mc is not None:
-			self.__mc.stopit()
-		if self.__rc:
-			self.__rc.stopit()
+		if node and self._played_node is not node:
+##			print 'node was not the playing node '+`self,node,self._played_node`
+			return
+		self.__stopplayer()
 		Channel.ChannelWindowAsync.stopplay(self, node)
+
+	# Define the anchor area for visible medias
+	def prepare_anchors(self, node, window, coordinates):
+		if not window: return
+	
+		# GetClientRect by def returns always: 0, 0, w, h
+		w_left,w_top,w_width,w_height = window.GetClientRect()
+
+		left,top,width,height = window._convert_coordinates(coordinates)
+		if width==0 or height==0:
+			print 'warning: zero size media rect' 
+			width, height = w_width, w_height
+		self.__rcMediaWnd = left, top, width, height
+		
+		# preset for animation
+		window.setmediadisplayrect(self.__rcMediaWnd)
+		window.setmediafit(MMAttrdefs.getattr(node, 'fit'))
+
+		return (left/float(w_width), top/float(w_height), width/float(w_width), height/float(w_height))
+
+	def getMediaWndRect(self):
+		return self.__rcMediaWnd
+
+	
+	#############################
+	def getRealVideoRenderer(self):
+		self.initVideoRenderer()
+		return self
+
+	# 
+	# Implement interface of real video renderer
+	# 
+	videofmts = { rma.RMA_RGB: 'RGB', # windows RGB
+		rma.RMA_RLE8: 'RLE8',
+		rma.RMA_RLE4: 'RLE4',
+		rma.RMA_BITFIELDS: 'BITFIELDS',
+		rma.RMA_I420: 'I420', # planar YCrCb
+		rma.RMA_YV12: 'YV12', # planar YVU420
+		rma.RMA_YUY2: 'YUY2', # packed YUV422
+		rma.RMA_UYVY: 'UYVY', # packed YUV422
+		rma.RMA_YVU9: 'YVU9', # Intel YVU9
+
+		rma.RMA_YUV420: 'YUV420',
+		rma.RMA_RGB555: 'RGB555',
+		rma.RMA_RGB565: 'RGB565',
+		}
+
+	def toStringFmt(self, fmt):
+		if VideoChannel.videofmts.has_key(fmt):
+			return VideoChannel.videofmts[fmt]
+		else:
+			return 'FOURCC(%d)' % fmt
+
+	def initVideoRenderer(self):
+		self.__rmdds = None
+		self.__rmrender = None
+		self.__blttimerid = 0
+		
+	def cleanVideoRenderer(self):
+		if self.window:
+			self.window.removevideo()
+		self.__rmdds = None
+		self.__rmrender = None
+
+	def OnFormatBitFields(self, rmask, gmask, bmask):
+		self.__bitFieldsMask = rmask. gmask, bmask
+
+	def OnFormatChange(self, w, h, bpp, fmt):
+		if not self.window: return
+		viewport = self.window._topwindow
+		screenBPP = viewport.getRGBBitCount()
+		
+		bltCode = ''
+		if fmt==rma.RMA_RGB:
+			bltCode = 'Blt_RGB%d_On_RGB%d' % (bpp, screenBPP)
+		elif fmt==rma.RMA_YUV420:
+			bltCode = 'Blt_YUV420_On_RGB%d' % screenBPP
+		
+		if debug:
+			print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
+		
+		if not bltCode:
+			self.cleanVideoRenderer()
+			return
+			
+		try:
+			dymmy = getattr(viewport.getDrawBuffer(), bltCode)
+		except AttributeError:
+			self.cleanVideoRenderer()
+		else:
+			self.__rmdds = viewport.CreateSurface(w, h)
+			self.__rmrender = getattr(self.__rmdds, bltCode), w, h
+			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
+			
+	def Blt(self, data):
+		if self.__rmdds and self.__rmrender:
+			blt, w, h = self.__rmrender
+			try:
+				blt(data, w, h)
+			except ddraw.error, arg:
+				print arg
+				return
+			if not self.__blttimerid:
+				self.__blttimerid = windowinterface.settimer(0.01,(self.bltUpdate,()))
+
+	def bltUpdate(self):
+		self.__blttimerid = 0
+		if self.window:
+			self.window.update(self.window.getwindowpos())
+
+	def EndBlt(self):
+		# do not remove video yet 
+		# it may be frozen
+		self.__rmdds = None
+		self.__rmrender = None
+
+def _deltmpfiles():
+	import os
+	for f in VideoChannel.tmpfiles:
+		try:
+			os.unlink(f)
+		except:
+			pass
+	VideoChannel.tmpfiles = []

@@ -48,14 +48,16 @@ import sys, string
 
 import windowinterface
 import win32ui,win32con
-	
+
+import parsehtml
+
 error = 'HtmlChannel.error'
 	
 class HtmlChannel(Channel.ChannelWindow):
 	if Channel.CMIF_MODE:
-		node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
+		node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor']
 	else:
-		chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor', 'font']
+		chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']
 	_window_type = windowinterface.HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -97,16 +99,37 @@ class HtmlChannel(Channel.ChannelWindow):
 		if node.type != 'ext':
 			self.armed_str = self.getstring(node)
 		else:
-			self.armed_str=''		
+			self.armed_str = None
+		anchors = []
+		for a in node.GetRawAttrDef('anchorlist', []):
+			atype = a.atype
+			if atype in SourceAnchors and \
+			   atype not in WholeAnchors:
+				anchors.append(a.aid)
+		if anchors:
+			if self.armed_str is None:
+				self.armed_str = self.getstring(node)
+			parser = parsehtml.Parser(anchors)
+			parser.feed(self.armed_str)
+			self.armed_str = parser.close()
 		self.armed_url=self.getfileurl(node)
 		# XXXX Should we check that the URL is non-empty?
 		self.__armed=0
-		if not self.window.HasHtmlCtrl():
-			import settings
-			self.__which_control = settings.get('html_control')
-			self.window.CreateHtmlCtrl()
-			self.window.ShowWindow(win32con.SW_HIDE)
-			self.__arm(node)
+		if self.window:
+			self.window.CreateOSWindow(html=1)
+			if not self.window.HasHtmlCtrl():
+				import settings
+				self.__which_control = settings.get('html_control')
+				# IE:0 or WEBSTER:1
+				if not self.__which_control:
+					self.__which_control = 0
+				try:
+					self.window.CreateHtmlCtrl(which = self.__which_control)
+				except:
+					msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed"
+					windowinterface.showmessage(msg)
+				else:
+					self.__arm(node)
 		return 1
 
 	def do_play(self, node):
@@ -119,12 +142,11 @@ class HtmlChannel(Channel.ChannelWindow):
 
 		# set colors
 		bg = self.played_display._bgcolor
-		self.window.SetBackColor(windowinterface.RGB(bg))
+		#self.window.SetBackColor(windowinterface.RGB(bg))
 
 		if not self.__armed:self.__arm(node)
 		if not self.window.HasHtmlCtrl():
 			print 'Warning: Failed to create Html control'
-		self.window.ShowWindow(win32con.SW_SHOW)
 
 
 	def stopplay(self, node):
@@ -137,7 +159,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 
 	def __arm(self,node):
-		if node.type == 'imm':
+		if self.armed_str is not None:
 			self.window.SetImmHtml(self.armed_str)
 		else:
 			import settings
@@ -208,16 +230,12 @@ class HtmlChannel(Channel.ChannelWindow):
 		if tp == None:
 			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
 			return
-		if tp == ATYPE_PAUSE:
-			f = self.pause_triggered
-		else:
-			f = self.anchor_triggered
-		f(self.play_node, [(aname, tp)], list)
+		self.onclick(self.play_node, [(aname, tp)], list)
 
 	def findanchortype(self, name):
 		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a[A_ID] == name:
-				return a[A_TYPE]
+			if a.aid == name:
+				return a.atype
 		return None
 
 	def fixanchorlist(self, node):
@@ -229,15 +247,16 @@ class HtmlChannel(Channel.ChannelWindow):
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x:x[A_ID], nodeanchorlist)
+		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
 		newanchorlist = []
 		for a in anchorlist:
 			if a not in oldanchorlist:
 				newanchorlist.append(a)
 		if not newanchorlist:
 			return
+		from MMNode import MMAnchor
 		for a in newanchorlist:
-			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0)))
+			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 

@@ -6,10 +6,9 @@ This module encapsulates a sufficient part
 of the DirectShow infrastructure to
 implement win32 audio and video media channels.
 
-Any media type supported by Windows Media Player
-is also supported by this module:
-(.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa, 
-.mpe,.mid,.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
+Any media type supported by Windows Media Player is also supported by
+this module: (.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa,.mpe,.mid,
+.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
 
 Note that DirectShow builds a graph of filters
 appropriate to parse-render each media type from those filters
@@ -28,10 +27,12 @@ import MMurl, urllib
 import windowinterface
 
 # DirectShow support
-from win32dxm import GraphBuilder
+import win32dxm
 
 # we need const WM_USER
 import win32con
+
+import settings
 
 # private graph notification message
 WM_GRPAPHNOTIFY=win32con.WM_USER+101
@@ -55,9 +56,8 @@ class MediaChannel:
 		self.__playFileHasBeenRendered=0
 		
 		# main thread monitoring fiber id
-		self.__fiber_id=0
+		self.__fiber_id=None
 		self.__playdone=1
-		self.__paused=1
 
 		# notification mechanism for not window channels
 		self.__notifyWindow = None
@@ -65,7 +65,6 @@ class MediaChannel:
 		
 	def release_player(self):
 		if self.__playBuilder:
-			self.__playBuilder.Stop()
 			self.__playBuilder=None
 		if self.__notifyWindow and self.__notifyWindow.IsWindow():
 			self.__notifyWindow.DestroyWindow()
@@ -73,9 +72,8 @@ class MediaChannel:
 
 	def release_armed_player(self):
 		if self.__armBuilder:
-			self.__armBuilder.Stop()
 			self.__armBuilder=None
-	
+
 	def release_res(self):
 		self.release_armed_player()
 		self.release_player()
@@ -87,10 +85,10 @@ class MediaChannel:
 	# For local files we don't have to do anything. 
 	# Do not use  MMurl.urlretrieve since as it
 	# is now implemented blocks the application.
-	def prepare_player(self, node = None):	
+	def prepare_player(self, node = None, window=None):	
 		self.release_armed_player()
 		try:
-			self.__armBuilder = GraphBuilder()
+			self.__armBuilder = win32dxm.GraphBuilder()
 		except:
 			self.__armBuilder=None
 
@@ -101,17 +99,21 @@ class MediaChannel:
 		if not url:
 			raise error, 'No URL on node'
 		
-		url = MMurl.canonURL(url)
-		url=urllib.unquote(url)
-		if not self.__armBuilder.RenderFile(url):
+		if MMurl.urlretrieved(url):
+			url = MMurl.urlretrieve(url)[0]
+		else:
+			url = MMurl.canonURL(url)
+			url = urllib.unquote(url)
+
+		if not self.__armBuilder.RenderFile(url, self.__channel._exporter):
 			self.__armFileHasBeenRendered=0
 			raise error, 'Failed to render '+url
-
+		
 		self.__armFileHasBeenRendered=1
 		return 1
 
 
-	def playit(self, node, window = None):
+	def playit(self, node, window = None, start_time = 0):
 		if not self.__armBuilder:
 			return 0
 
@@ -122,22 +124,39 @@ class MediaChannel:
 			self.__playFileHasBeenRendered=0
 			return 0
 		self.__playFileHasBeenRendered=1
-		self.play_loop = self.__channel.getloop(node)
+		self.__start_time = start_time
 
 		# get duration in secs (float)
-		duration = MMAttrdefs.getattr(node, 'duration')
+		duration = node.GetAttrDef('duration', None)
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
-		self.__playBuilder.SetPosition(clip_begin)
 		self.__playBegin = clip_begin
+
+		if duration is not None and duration >= 0:
+			if not clip_end:
+				clip_end = self.__playBegin + duration
+			else:
+				clip_end = min(clip_end, self.__playBegin + duration)
 		if clip_end:
 			self.__playBuilder.SetStopTime(clip_end)
 			self.__playEnd = clip_end
 		else:
-			self.__playEnd=self.__playBuilder.GetDuration()
+			self.__playEnd = self.__playBuilder.GetDuration()
+
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
+			if __debug__:
+				print 'skipping',start_time,t0,t0-start_time
+			mediadur = self.__playEnd - self.__playBegin
+			late = t0 - start_time
+			if late > mediadur:
+				self.__channel.playdone(0, start_time + mediadur)
+				return 1
+			clip_begin = clip_begin + late
+		self.__playBuilder.SetPosition(clip_begin)
 
 		if window:
-			self.adjustMediaWnd(node,window,self.__playBuilder)
+			self.adjustMediaWnd(node,window, self.__playBuilder)
 			self.__playBuilder.SetWindow(window,WM_GRPAPHNOTIFY)
 			window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)			
 		elif not self.__notifyWindow:
@@ -146,76 +165,55 @@ class MediaChannel:
 			self.__notifyWindow.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 			self.__playBuilder.SetNotifyWindow(self.__notifyWindow,WM_GRPAPHNOTIFY)
 		self.__playdone=0
-		self.__paused=0
 		self.__playBuilder.Run()
-		self.register_for_timeslices()
-		if duration > 0:
-			self.__qid = self.__channel._scheduler.enter(duration, 0, self.__channel.endoftime, ())
-		elif self.play_loop == 0:
-			self.__channel.playdone(0)
+		self.__register_for_timeslices()
 		return 1
 
-					
 	def pauseit(self, paused):
 		if self.__playBuilder:
 			if paused:
 				self.__playBuilder.Pause()
+				self.__unregister_for_timeslices()
 			else:
 				self.__playBuilder.Run()
-		self.__paused=paused
+				self.__register_for_timeslices()
 
 	def stopit(self):
-		self.release_player()
+		if self.__playBuilder:
+			self.__playBuilder.Stop()
+			self.__unregister_for_timeslices()
+		
+	def freezeit(self):
+		if self.__playBuilder:
+			self.__playBuilder.Pause()
+			self.__unregister_for_timeslices()
 		
 	def showit(self,window):
 		if self.__playBuilder: 
 			self.__playBuilder.SetVisible(1)
 
-	def paint(self):
-		if hasattr(self.__channel,'window') and self.__channel.window and self.__playFileHasBeenRendered:
-			self.__channel.window.UpdateWindow()
+	def destroy(self):
+		self.__unregister_for_timeslices()
+		self.release_player()
 
-	# Set Window Media window size from scale and center attributes
+	def setsoundlevel(self, lev, maxlev=1):
+		# set sound level but do not apply
+		print 'setsoundlevel', lev, maxlevel
+
+	def updatesoundlevel(self, lev, maxlev):
+		# apply sound level
+		print 'updatesoundlevel', lev, maxlevel
+
+	# Set Window Media window size from fit and center, and coordinates attributes
 	def adjustMediaWnd(self,node,window,builder):
 		if not window: return
-		left,top,width,height=builder.GetWindowPosition()
-		left,top,right,bottom = window.GetClientRect()
-		x,y,w,h=left,top,right-left,bottom-top
+		builder.SetWindowPosition(self.__channel.getMediaWndRect())
 
-		# node attributes
-		import MMAttrdefs
-		scale = MMAttrdefs.getattr(node, 'scale')
-		center = MMAttrdefs.getattr(node, 'center')
-
-		if scale > 0:
-			width = int(width * scale)
-			height = int(height * scale)
-			if width>w or height>h:
-				wscale=float(w)/width
-				hscale=float(h)/height
-				scale=min(wscale,hscale)
-				width = min(int(width * scale), w)
-				height = min(int(height * scale), h)
-				center=1	
-			if center:
-				x = x + (w - width) / 2
-				y = y + (h - height) / 2
-		else:
-			# fit in window
-			wscale=float(w)/width
-			hscale=float(h)/height
-			scale=min(wscale,hscale)
-			width = min(int(width * scale), w)
-			height = min(int(height * scale), h)
-			x = x + (w - width) / 2
-			y = y + (h - height) / 2
-
-		rcMediaWnd=(x, y, width,height)
-		builder.SetWindowPosition(rcMediaWnd)
-
-	def update(self,dc=None):
-		if self.__playBuilder and self.__playFileHasBeenRendered and (self.__playdone or self.__paused):
-			self.__channel.window.RedrawWindow()
+	def paint(self):
+		if not hasattr(self.__channel,'window'): return
+		window = self.__channel.window
+		if window and self.__playFileHasBeenRendered:
+			window.paint()
 	
 	# capture end of media
 	def OnGraphNotify(self,params):
@@ -226,46 +224,288 @@ class MediaChannel:
 	def OnMediaEnd(self):
 		if not self.__playBuilder:
 			return		
-		if self.play_loop:
-			self.play_loop = self.play_loop - 1
-			if self.play_loop: # more loops ?
-				self.__playBuilder.SetPosition(self.__playBegin)
-				self.__playBuilder.Run()
-				return
-			# no more loops
-			self.__playdone=1
-			self.__channel.playdone(0)
-			return
-		# self.play_loop is 0 so repeat
-		self.__playBuilder.SetPosition(0)
-		self.__playBuilder.Run()
-
+		self.__playdone=1
+		self.__channel.playdone(0, self.__start_time + self.__playEnd - self.__playBegin)
 		
-	############################################################## 
-	# ui delays management:
-	# What the following methods implement is a safe
-	# way to dedect media end (by polling). 
-	# The notification mechanism through OnGraphNotify should 
-	# be enough but it is not since when the app enters a modal loop 
-	# (which happens for example when we manipulate menus etc)
-	# the notification for some unknown reason does not reach the window.
-	# Needed until we have a simpler safe way to dedect media end.
-	# A static way is not sufficient since we don't know the delays.
-	def on_idle_callback(self):
+	def onIdle(self):
 		if self.__playBuilder and not self.__playdone:
 			t_sec=self.__playBuilder.GetPosition()
 			if t_sec>=self.__playEnd:self.OnMediaEnd()
 			self.paint()
+	
+	def __register_for_timeslices(self):
+		if self.__fiber_id is None:
+			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
 
-	def is_callable(self):
-		return self.__playBuilder
-	def register_for_timeslices(self):
-		if self.__fiber_id: return
-		import windowinterface
-		self.__fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
-	def unregister_for_timeslices(self):
-		if not self.__fiber_id: return
-		import windowinterface
-		windowinterface.unregister(self.__fiber_id)
-		self.__fiber_id=0
+	def __unregister_for_timeslices(self):
+		if self.__fiber_id is not None:
+			windowinterface.cancelidleproc(self.__fiber_id)
+			self.__fiber_id = None
+
+
+###################################
+
+class VideoStream:
+	def __init__(self, channel):
+		self.__channel = channel
+		self.__mmstream = None
+		self.__window = None
+		self.__playBegin=0
+		self.__playEnd=0
+		self.__playdone=1
+		self.__fiber_id=None
+		self.__rcMediaWnd = None
+		self.__qid = self.__dqid = None
+
+	def destroy(self):
+		if self.__window:
+			self.__window.removevideo()
+		del self.__mmstream
+		self.__mmstream = None
+
+	def prepare_player(self, node, window):
+		if not window:
+			raise error, 'not a window'
+		ddobj = window._topwindow.getDirectDraw()
+		self.__mmstream = win32dxm.MMStream(ddobj)
+
+		url=self.__channel.getfileurl(node)
+		if not url:
+			raise error, 'No URL on node'
+		
+		if MMurl.urlretrieved(url):
+			url = MMurl.urlretrieve(url)[0]
+		else:
+			url = MMurl.canonURL(url)
+			url = urllib.unquote(url)
+
+		if not self.__mmstream.open(url, self.__channel._exporter):
+			raise error, 'Failed to render %s'% url
+
+		return 1
+
+	def playit(self, node, window, start_time = 0):
+		if not window: return 0
+		if not self.__mmstream: return 0
+
+		self.__pausedelay = 0
+		self.__pausetime = 0
+		self.__start_time = start_time
+		duration = node.GetAttrDef('duration', None)
+		clip_begin = self.__channel.getclipbegin(node,'sec')
+		clip_end = self.__channel.getclipend(node,'sec')
+		self.__playBegin = clip_begin
+
+		if duration is not None and duration >= 0:
+			if not clip_end:
+				clip_end = clip_begin + duration
+			else:
+				clip_end = min(clip_end, clip_begin + duration)
+		if clip_end:
+			self.__playEnd = clip_end
+		else:
+			self.__playEnd = self.__mmstream.getDuration()
+
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
+			if __debug__: print 'skipping',start_time,t0,t0-start_time
+			mediadur = self.__playEnd - self.__playBegin
+			late = t0 - start_time
+			if late > mediadur:
+				self.__channel.playdone(0, start_time + mediadur)
+				return 1
+			clip_begin = clip_begin + late
+		self.__mmstream.seek(clip_begin)
+		
+		self.__playdone=0
+
+		window.setvideo(self.__mmstream._dds, self.__channel.getMediaWndRect(), self.__mmstream._rect)
+		self.__window = window
+		self.__mmstream.run()
+		self.__mmstream.update()
+		self.__window.update()
+		self.__register_for_timeslices()
+
+		return 1
+
+	def stopit(self):
+		if self.__dqid:
+			try:
+				self.__channel._scheduler.cancel(self.__dqid)
+			except:
+				pass
+			self.__dqid = None
+		if self.__qid:
+			try:
+				self.__channel._scheduler.cancel(self.__qid)
+			except:
+				pass
+			self.__qid = None
+		if self.__mmstream:
+			self.__mmstream.stop()
+			self.__unregister_for_timeslices()
+
+	def pauseit(self, paused):
+		if self.__mmstream:
+			t0 = self.__channel._scheduler.timefunc()
+			if paused:
+				if self.__dqid:
+					try:
+						self.__channel._scheduler.cancel(self.__dqid)
+					except:
+						pass
+					self.__dqid = None
+				if self.__qid:
+					try:
+						self.__channel._scheduler.cancel(self.__qid)
+					except:
+						pass
+					self.__qid = None
+				self.__mmstream.stop()
+				self.__unregister_for_timeslices()
+				self.__pausetime = t0
+			else:
+				self.__pausedelay = self.__pausedelay + t0 - self.__pausetime
+				self.__mmstream.run()
+				self.__register_for_timeslices()
+
+	def freezeit(self):
+		if self.__mmstream:
+			self.__mmstream.stop()
+			self.__unregister_for_timeslices()
+
+	def onMediaEnd(self):
+		if not self.__mmstream:
+			return		
+		self.__playdone=1
+		self.__channel.playdone(0, self.__start_time + self.__playEnd - self.__playBegin)
+
+	def onIdle(self):
+		if self.__mmstream and not self.__playdone:
+			running = self.__mmstream.update()
+			t_sec = self.__mmstream.getTime()
+			if self.__window:
+				self.__window.update(self.__window.getwindowpos())
+			if not running or t_sec >= self.__playEnd:
+				self.onMediaEnd()
+	
+	def __register_for_timeslices(self):
+		if self.__fiber_id is None:
+			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
+
+	def __unregister_for_timeslices(self):
+		if self.__fiber_id is not None:
+			windowinterface.cancelidleproc(self.__fiber_id)
+			self.__fiber_id = None
+
+
+##################################################
+import dsound
+import MMurl
+import math
+
+class DirectSound:
+	def __init__(self):
+		import win32ui
+		hwnd = win32ui.GetMainFrame().GetSafeHwnd()
+		self._dsound = dsound.CreateDirectSound()
+		self._dsound.SetCooperativeLevel(hwnd, dsound.DSSCL_NORMAL)
+		dsbdesc = dsound.CreateDSBufferDesc()
+		dsbdesc.SetFlags(dsound.DSBCAPS_PRIMARYBUFFER)
+		self._primarysb = self._dsound.CreateSoundBuffer(dsbdesc)
+		
+		# increase and restore volume on exit?
+		# ...
+
+	def __del__(self):
+		del self._primarysb
+		del self._dsound
+	
+	def createBufferFromFile(self, filename):
+		dsbdesc = dsound.CreateDSBufferDesc()
+		dsbdesc.SetFlags(dsound.DSBCAPS_CTRLDEFAULT)
+		sb = None
+		try:
+			sb = self._dsound.CreateSoundBufferFromFile(dsbdesc, filename)
+		except dsound.error, arg:
+			print arg
+			sb = None
+		return sb
+
+		
+class DSPlayer:
+	directSound = None
+	dsrefcount = 0
+	def __init__(self, channel):
+		self.__channel = channel
+		self._sound = None
+		if self.directSound is None:
+			DSPlayer.directSound	= DirectSound()			
+		DSPlayer.dsrefcount = DSPlayer.dsrefcount + 1
+			
+	def prepare_player(self, node):
+		f = self.__channel.getfileurl(node)
+		if not f:
+			self.__channel.errormsg(node, 'No URL set on node')
+			raise error, 'No URL set on node'
+			return 0
+		try:
+			f = MMurl.urlretrieve(f)[0]
+		except IOError, arg:
+			if type(arg) is type(self):
+				arg = arg.strerror
+			raise error, 'Cannot resolve URL "%s": %s' % (f, arg)
+			return 0
+		self._sound = DSPlayer.directSound.createBufferFromFile(f)
+		return 1
+
+	def playit(self, node, start_time=0):
+		#print 'playit', node, start_time
+		if self._sound:
+			a = self.getAttenuation(self._soundLevel, self._soundLevelMax)
+			self._sound.SetVolume(a)
+			self._sound.SetCurrentPosition(0)
+			self._sound.Play()
+			return 1 # OK
+		return 0 # FAILED
+
+	def stopit(self):
+		if self._sound:
+			self._sound.Stop()
+		#print 'stopit'
+
+	def destroy(self):
+		del self._sound
+		self._sound = None
+		DSPlayer.dsrefcount = DSPlayer.dsrefcount - 1
+		if DSPlayer.dsrefcount == 0:
+			DSPlayer.directSound = None	
+		#print 'destroy'
+	
+	def pauseit(self, paused):
+		if self._sound:
+			if paused:
+				self._sound.Stop()
+			else:
+				self._sound.Play()
+
+	def setsoundlevel(self, lev, maxlev):
+		self._soundLevel = lev
+		self._soundLevelMax = maxlev
+		# do not apply
+
+	def updatesoundlevel(self, lev, maxlev):
+		a = self.getAttenuation(lev, maxlev)
+		if self._sound:
+			self._sound.SetVolume(a)
+
+	def getAttenuation(self, soundLevel, soundLevelMax):
+		soundLevelMax = max(soundLevel, soundLevelMax)
+		if soundLevel <= 0.0:
+			return dsound.DSBVOLUME_MIN
+		ratio = soundLevelMax/float(soundLevel)
+		return int(-1000.0*math.log10(ratio)/math.log10(2))
+
+
+
 

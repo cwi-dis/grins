@@ -6,7 +6,7 @@ ChannelMime = {
 		'image/gif',
 ##		'image/ief',
 		'image/jpeg',
-##		'image/png',
+		'image/png',
 		'image/tiff',
 		'image/bmp', ## ++
 		'image/x-cmu-raster',
@@ -18,6 +18,7 @@ ChannelMime = {
 ##		'image/x-xbitmap',
 ##		'image/x-xpixmap',
 ##		'image/x-xwindowdump',
+		'image/svg-xml',
 		],
 	'sound': [
 		'application/vnd.rn-realmedia', # but only if it's audio only
@@ -26,6 +27,8 @@ ChannelMime = {
 		'audio/x-aiff',
 		'audio/x-wav',
 		'audio/mpeg', ## ++
+		'audio/x-mp3',		# obsolete (?) MIME type for MP3
+		'audio/x-ms-wma',## ++
 		],
 	'video': [
 		'application/vnd.rn-realmedia', # but only if it contains video
@@ -34,7 +37,8 @@ ChannelMime = {
 		'video/mpeg',
 		'video/quicktime',
 		'video/vnd.rn-realvideo',
-		'video/x-msvideo',
+		'video/x-msvideo', ## ++
+		'video/x-ms-wmv', ## ++
 ##		'video/x-sgi-movie',
 		],
 	'html': ['text/html',],

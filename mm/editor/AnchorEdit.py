@@ -6,7 +6,7 @@ __version__ = "$Id$"
 import windowinterface
 import MMExc
 import MMAttrdefs
-from MMNode import alltypes, leaftypes, interiortypes
+from MMNode import alltypes, leaftypes, interiortypes, MMAnchor
 import settings
 
 
@@ -79,10 +79,10 @@ class AnchorEditor(AnchorEditorDialog):
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
-	def commit(self):
+	def commit(self, type):
 		if not self.stillvalid():
 			self.close()
 		else:
@@ -112,7 +112,7 @@ class AnchorEditor(AnchorEditorDialog):
 			# Communicate new anchors to Link editor:
 			for a in anchorlist:
 				if not a in self.anchorlist:
-					aid = (self.uid, a[A_ID])
+					aid = (self.uid, a.aid)
 					self.toplevel.links.set_interesting(
 						  aid)
 			self.anchorlist = anchorlist[:]
@@ -130,10 +130,10 @@ class AnchorEditor(AnchorEditorDialog):
 		# check uniqueness of anchor names
 		names = {}
 		for anchor in self.anchorlist:
-			if names.has_key(anchor[A_ID]):
+			if names.has_key(anchor.aid):
 				windowinterface.showmessage('Anchor names not unique')
 				return 0
-			names[anchor[A_ID]] = 0
+			names[anchor.aid] = 0
 		if not em.transaction(): return 0
 		n = self.node
 		old_alist = MMAttrdefs.getattr(self.node, 'anchorlist')
@@ -143,8 +143,8 @@ class AnchorEditor(AnchorEditorDialog):
 		if old_alist is None:
 			old_alist = []
 		else:
-			old_alist = map(lambda a: a[A_ID], old_alist)
-		new_alist = map(lambda a: a[A_ID], new_alist)
+			old_alist = map(lambda a: a.aid, old_alist)
+		new_alist = map(lambda a: a.aid, new_alist)
 		for aid in new_alist or []:
 			if aid not in old_alist:
 				# new anchor
@@ -167,11 +167,7 @@ class AnchorEditor(AnchorEditorDialog):
 	# Fill form from local data.  Clear the form beforehand.
 	#
 	def makelist(self):
-		names = []
-		for i in self.anchorlist:
-			id = i[A_ID]
-			names.append(id)
-		return names
+		return map(lambda a: a.aid, self.anchorlist)
 
 	def updateform(self):
 		names = self.makelist()
@@ -194,8 +190,8 @@ class AnchorEditor(AnchorEditorDialog):
 			print 'AnchorEdit: show_type without focus!'
 			return
 		a = self.anchorlist[self.focus]
-		loc = a[A_ARGS]
-		type = a[A_TYPE]
+		loc = a.aargs
+		type = a.atype
 		editable = self.editable or type in WholeAnchors
 		self.edit_setsensitive(editable)
 		self.delete_setsensitive(editable)
@@ -229,7 +225,7 @@ class AnchorEditor(AnchorEditorDialog):
 		self.composite_hide()
 		if self.focus is not None:
 			self.edit_setsensitive(self.editable)
-			self.selection_seteditable(self.editable or self.anchorlist[self.focus][A_TYPE] in WholeAnchors)
+			self.selection_seteditable(self.editable or self.anchorlist[self.focus].atype in WholeAnchors)
 		else:
 			self.edit_setsensitive(0)
 			self.selection_seteditable(0)
@@ -241,11 +237,15 @@ class AnchorEditor(AnchorEditorDialog):
 		self.toplevel.setwaiting()
 		old = new = self.anchorlist[self.focus]
 		if type is None:
-			type = new[A_TYPE]
+			type = new.atype
 		if type in WholeAnchors:
-			new = (new[0], type, [], (0,0))
+			new = new.copy()
+			new.atype = type
+			new.aargs = [A_SHAPETYPE_ALLREGION]
+			new.atimes = (0,0)
 		else:
-			new = (new[0], type, new[2], new[3])
+			new = new.copy()
+			new.atype = type
 			if self.editable:
 				self.toplevel.player.defanchor(
 					self.node, new, self._anchor_cb)
@@ -304,7 +304,8 @@ class AnchorEditor(AnchorEditorDialog):
 	def add_callback(self):
 		self.changed = 1
 		maxid = 0
-		for id, atype, args, times in self.anchorlist:
+		for a in self.anchorlist:
+			id = a.aid
 			try:
 				id = eval('0+'+id)
 			except:
@@ -314,7 +315,7 @@ class AnchorEditor(AnchorEditorDialog):
 		id = `maxid + 1`
 		#name = '#' + self.name + '.' + id
 		name = id
-		self.anchorlist.append((id, ATYPE_WHOLE, [], (0,0)))
+		self.anchorlist.append(MMAnchor(id, ATYPE_WHOLE, [A_SHAPETYPE_ALLREGION], (0,0), None))
 		self.selection_append(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
@@ -325,9 +326,10 @@ class AnchorEditor(AnchorEditorDialog):
 			return
 		anchor = self.anchorlist[self.focus]
 		id = self.selection_gettext()
-		anchor = id, anchor[1], anchor[2], anchor[3]
-		if self.anchorlist[self.focus] == anchor:
+		if anchor.aid == id:
 			return
+		anchor = anchor.copy()
+		anchor.aid = id
 		self.changed = 1
 		self.anchorlist[self.focus] = anchor
 		self.selection_replaceitem(self.focus, id)
@@ -342,7 +344,6 @@ class AnchorEditor(AnchorEditorDialog):
 		if self.focus is None:
 			print 'AnchorEdit: no focus in delete!'
 			return
-		id, atype, arg, times = self.anchorlist[self.focus]
 		self.changed = 1
 		del self.anchorlist[self.focus]
 		self.selection_deleteitem(self.focus)
@@ -377,11 +378,11 @@ class AnchorEditor(AnchorEditorDialog):
 			return
 		rootanchors = MMAttrdefs.getattr(self.root, 'anchorlist')
 		for a in rootanchors:
-			if a[A_ID] == name:
+			if a.aid == name:
 				windowinterface.showmessage('Already exists')
 				return
-		aid = self.anchorlist[self.focus][A_ID]
-		a = name, ATYPE_COMP, [(self.uid, aid)], (0,0)
+		aid = self.anchorlist[self.focus].aid
+		a = MMAnchor(name, ATYPE_COMP, [(self.uid, aid)], (0,0), None)
 		rootanchors.append(a)
 		em = self.editmgr
 		if not em.transaction(): return 0
