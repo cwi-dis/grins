@@ -205,11 +205,15 @@ class ArcInfo(ArcInfoDialog):
 	def pushsrcfocus_callback(self):
 		top = self.cview.toplevel
 		top.setwaiting()
-		top.channelview.globalsetfocus(self.snode)
-		top.hierarchyview.globalsetfocus(self.snode)
+		if top.channelview is not None:
+			top.channelview.globalsetfocus(self.snode)
+		if top.hierarchyview is not None:
+			top.hierarchyview.globalsetfocus(self.snode)
 
 	def pushdstfocus_callback(self):
 		top = self.cview.toplevel
 		top.setwaiting()
-		top.channelview.globalsetfocus(self.dnode)
-		top.hierarchyview.globalsetfocus(self.dnode)
+		if top.channelview is not None:
+			top.channelview.globalsetfocus(self.dnode)
+		if top.hierarchyview is not None:
+			top.hierarchyview.globalsetfocus(self.dnode)
