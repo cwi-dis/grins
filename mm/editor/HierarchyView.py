@@ -1011,12 +1011,15 @@ class HierarchyView(HierarchyViewDialog):
 			nodeindex = dstobj.get_nearest_node_index(dst) # works for seqs and verticals!! :-)
 			self.focusnode = destnode
 			if nodeindex is not -1:
-				if self.focusnode is not self.root and self.focusnode.GetParent().GetChildren().index(self.focusnode) is nodeindex:
-					print "DEBUG: just dropped node on itself.";
-					# TODO: working here -mjvdg.
-					return;
+				assert nodeindex < len(destnode.children)
 				self.focusnode = destnode.children[nodeindex] # I hope that works!
-							
+				if self.focusnode is srcnode: # The same node.
+					return;
+			else:
+				if destnode.children[-1] is srcnode:
+					# The same node.
+					return
+
 		em = self.editmgr
 		if not em.transaction():
 			return
@@ -1029,6 +1032,7 @@ class HierarchyView(HierarchyViewDialog):
 			newsrcnode = newsrcnode.CopyIntoContext(self.root.context)
 
 		em.commit()
+
 		if nodeindex == -1:
 			dummy = self.insertnode(new_srcnode, 0)
 		else:
