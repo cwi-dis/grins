@@ -77,7 +77,8 @@ def _get_icon(which):
 # convert relative coordinates to pixels for the actual drawing
 # The cmds are translated to pixels and inserted in a list
 
-class DisplayList:
+
+class _DisplayList:
 	def __init__(self, window, bgcolor):
 		self.starttime = 0
 		r, g, b = bgcolor
@@ -105,17 +106,20 @@ class DisplayList:
 		self._clonestart = 0
 		self._clonebboxes = []
 		self._clonergn=None
-
-		# temp
-		self._cmddict = {}
+		
+		# associate cmd names to list indices
+		self.__cmddict = {}
+		self.__butdict = {}
 
 	# Clones this display list
 	def clone(self):
 		w = self._window
-		new = DisplayList(w, self._bgcolor)
+		new = _DisplayList(w, self._bgcolor)
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
+		new.__cmddict = self.__cmddict
+		new.__butdict = self.__butdict
 		if self._win32rgn:
 			new._win32rgn=win32ui.CreateRgn()
 			new._win32rgn.CopyRgn(self._win32rgn)
@@ -393,6 +397,61 @@ class DisplayList:
 		self._list.append(('fg', color))
 		self._fgcolor = color
 
+	######################################
+	# Animation experimental methods
+	#
+
+	# Update cmd with name from diff display list
+	# we can get also update region from diff dl
+	def update(self, name, diffdl):
+		newcmd = diffdl.getcmd(name)
+		if newcmd and self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+
+	# Update cmd with name
+	def updatecmd(self, name, newcmd):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+
+	# Update button with name
+	def updatebutton(self, name, coords):
+		if self.__buttondict.has_key(name):
+			ix = self.__butdict[name]
+			self._buttons[ix].setcoordinates(coords)
+	
+	def getcmd(self, name):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			return self._list[ix]
+		return None
+
+	def knowcmd(self, name):
+		self.__cmddict[name] = len(self._list)-1
+				
+	def knowbutton(self, name):
+		self.__butdict[name] = len(self._buttons)-1
+
+	# Update background color
+	def updatebgcolor(self, color):
+		self._bgcolor = color
+		entry = self._list[0]
+		cmd = ('clear',self._window.GetClientRect())
+		if entry[0]!='clear':
+			self._list.insert(0, cmd)
+			d = self.__cmddict.copy()
+			# after render insertion, thus exception and so update known commands
+			for name, value in d.items():
+				self.__cmddict[name]= value + 1
+		else:
+			self._list[0]=cmd
+
+	#
+	# End of animation experimental methods
+	##########################################
+
+
 	# Define a new button
 	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
@@ -402,53 +461,19 @@ class DisplayList:
 
 	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1, coordinates = None,
-				    clip = None, id = 0):
+				    center = 1, coordinates = None, clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, scale, center, coordinates, clip)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height,rcKeep))
-		if id:
-			self._cmddict[id] = {'index':len(self._list)-1,
-				'file': file, 'crop': crop, 'scale': scale,
-				'center':center,'coordinates':coordinates,'clip':clip,
-				'image':image,'mask' :mask,'rcKeep':rcKeep,
-				'src_x':src_x,'src_y':src_y,
-				'dest_x':dest_x, 'dest_y':dest_y, 'width':width, 'height':height,
-				'x':dest_x, 'y':dest_y, 'w':width, 'h':height,}
 		self._optimize((2,))
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = self._canvas
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
-	def update_image(self, id, value, cmd):
-		if not self._cmddict.has_key(id):
-			return
-		if cmd == 'file':
-			d = self._cmddict[id]
-			image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       self._window._prepare_image(value, d['crop'], d['scale'], d['center'], d['coordinates'], d['clip'])
-			self._list[d['index']] = ('image', mask, image, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
-			self._window.InvalidateRect()
-		elif cmd in ('left', 'top', 'width', 'height'):
-			d = self._cmddict[id]
-			l,t,w,h = d['x'], d['y'], d['w'], d['h']
-			ln, tn, wn, hn = l,t,w,h
-			if cmd == 'left': ln = value
-			elif cmd == 'top': tn = value
-			elif cmd == 'width': wn = value
-			elif cmd == 'height': hn = value
-			self._list[d['index']] = ('image', d['mask'], d['image'], d['src_x'], d['src_y'], ln, tn, wn, hn, d['rcKeep'])
-			rgn=win32ui.CreateRgn()
-			rgn.CreateRectRgn((l,t,l+w,t+h))
-			rgn2 = win32ui.CreateRgn()
-			rgn2.CreateRectRgn((ln,tn,ln+wn,tn+hn))
-			rgn.CombineRgn(rgn, rgn2, win32con.RGN_AND)
-			self._window.InvalidateRgn(rgn)
-			d['x']=ln;d['y']=tn;d['w']=wn; d['h']=hn
 	# Resize image buttons
 	def _resize_image_buttons(self):
 		type = self._list[1]
@@ -661,7 +686,7 @@ class DisplayList:
 		
 	def get3dbordersize(self):
 		# This is the same "1" as in 3dbox bordersize
-		return self._inverse_coordinates((0,0,SIZE_3DBORDER, SIZE_3DBORDER))[2:4]
+		return self._pxl2rel((0,0,SIZE_3DBORDER, SIZE_3DBORDER))[2:4]
 		
 	# Returns font attributes
 	def usefont(self, fontobj):
@@ -685,12 +710,12 @@ class DisplayList:
 	# Returns font's  baseline
 	def baseline(self):
 		baseline = self._font.baselinePXL()
-		return self._inverse_coordinates((0,0,0,baseline))[3]
+		return self._pxl2rel((0,0,0,baseline))[3]
 
 	# Returns font's  height
 	def fontheight(self):
 		fontheight = self._font.fontheightPXL()
-		return self._inverse_coordinates((0,0,0,fontheight))[3]
+		return self._pxl2rel((0,0,0,fontheight))[3]
 
 	# Returns font's  pointsize
 	def pointsize(self):
@@ -699,7 +724,7 @@ class DisplayList:
 	# Returns string's  size
 	def strsize(self, str):
 		width, height = self._font.strsizePXL(str)
-		return self._inverse_coordinates((0,0,width,height))[2:4]
+		return self._pxl2rel((0,0,width,height))[2:4]
 
 	# Set the current position
 	def setpos(self, x, y):
@@ -819,8 +844,8 @@ class DisplayList:
 					ref_rect = self._canvas, units = units)
 
 	# convert (owner wnd) pixel coordinates to relative coordinates
-	def _inverse_coordinates(self,coordinates):
-		return self._window._inverse_coordinates(coordinates,
+	def _pxl2rel(self,coordinates):
+		return self._window._pxl2rel(coordinates,
 					ref_rect = self._canvas)
 
 	# Conver color (does nothing for win32)
