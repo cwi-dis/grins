@@ -2501,6 +2501,17 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // remains consistent on all systems.
 IDI_ICON_TRANSOUT       ICON    DISCARDABLE     "res\\intransition.ico"
 IDI_ICON_TRANSIN        ICON    DISCARDABLE     "res\\outtransition.ico"
+IDI_EVENTIN             ICON    DISCARDABLE     "res\\eventin.ico"
+IDI_EVENTOUT            ICON    DISCARDABLE     "res\\eventout.ico"
+IDI_CAUSEEVENT          ICON    DISCARDABLE     "res\\causeeve.ico"
+IDI_HAPPYFACE           ICON    DISCARDABLE     "res\\happyfac.ico"
+IDI_SPACEMAN            ICON    DISCARDABLE     "res\\spaceman.ico"
+IDI_WALLCLOCK           ICON    DISCARDABLE     "res\\wallcloc.ico"
+IDI_REPEAT              ICON    DISCARDABLE     "res\\repeat.ico"
+IDI_FOCUSIN             ICON    DISCARDABLE     "res\\focusin.ico"
+IDI_ACTIVATEEVENT       ICON    DISCARDABLE     "res\\ico00010.ico"
+IDI_DURATION            ICON    DISCARDABLE     "res\\duration.ico"
+IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 

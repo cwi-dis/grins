@@ -16,11 +16,40 @@ import usercmd
 from pywinlib.mfc import window,object,docview
 import windowinterface
 import afxres,commctrl
+import GenFormView
 
-class _SourceView(docview.RichEditView):
+class _SourceView(GenFormView.GenFormView):
+	def __init__(self, doc, bgcolor = None):
+		self._textEditor = _SourceViewTextEditor(doc, bgcolor)
+		self.set_readonly = self._textEditor.set_readonly
+		self.OnInitialUpdate = self._textEditor.OnInitialUpdate
+		self.gettext = self._textEditor.gettext
+		self.select_chars = self._textEditor.select_chars
+		self.is_changed = self._textEditor.is_changed
+		self.set_mother = self._textEditor.set_mother
+		self.is_closed = self._textEditor.is_closed
+		self._obj_ = None
+
+	def create(self, parent):
+		print "_SourceView.create called."
+		GenFormView.GenFormView.create(parent)
+		self._textEditor.CreateWindow(self)
+
+	def createWindow(self, parent):
+		print "_SourceView.createWindow called."
+
+	# Called by the framework to close this window.
+	def OnClose(self):
+		if self.mother:
+			self.mother.close_callback()
+
+	def settext(self, text):
+		self._textEditor.settext(text)
+
+
+class _SourceViewTextEditor(docview.RichEditView):
 	# Class contructor. Calls the base RichEditView constructor
 	def __init__(self,doc,bgcolor=None):
-		self._mdiframe = None
 		docview.RichEditView.__init__(self,doc)
 		self._text=''
 		self._close_cmd_list=[]
@@ -45,31 +74,6 @@ class _SourceView(docview.RichEditView):
 		edit.SetWindowText(self._text)
 		if self.readonly:
 			edit.SetReadOnly(1)
-		self._mdiframe=(self.GetParent()).GetMDIFrame()
-
-	# Called by the framework to close this window.
-	def OnClose(self):
-		if self.mother:
-			self.mother.close_callback()
-		else:
-			print "ERROR: You need to call _SourceView.setmother(self)"
-		#if self._closecmdid>0:
-		#	self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
-		#else:
-		#	self.GetParent().DestroyWindow()
-
-
-
-##		self.mother.close_source_callback(text)
-
-##	def destroy_
-##		saveme = windowinterface.GetOKCancel("Do you want to keep your changes?", self.GetParent())
-##		if saveme==0:		# Which means the user clicked "yes"
-##			edit = self.__editctrl
-##			text = edit.GetWindowText()
-##			if self.mother:
-	
-##		else:
 
 	# Called when the view is activated 
 	def activate(self):
@@ -87,8 +91,7 @@ class _SourceView(docview.RichEditView):
 		self.__editctrl.SetWordWrap(0) # helps if you are psycic.
 		self._text=self.convert2ws(text)
 		# if already visible, update text in window
-		if self._mdiframe is not None:
-			self.__editctrl.SetWindowText(self._text)
+		self.__editctrl.SetWindowText(self._text)
 		self.__editctrl.SetModify(0) # No, this document has not been modified yet.
 
 	def gettext(self):

@@ -1091,7 +1091,7 @@ class DDWndLayer:
 		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
 
-	def	createBackDDLayer(self, w=0, h=0, hwnd=0):
+	def createBackDDLayer(self, w=0, h=0, hwnd=0):
 		if hwnd==0: hwnd = self._wnd.GetSafeHwnd()
 		self._ddraw = ddraw.CreateDirectDraw()
 		self._ddraw.SetCooperativeLevel(hwnd, ddraw.DDSCL_NORMAL)
@@ -1129,7 +1129,7 @@ class DDWndLayer:
 		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
 
-	def	createPrimaryDDLayer(self, hwnd):
+	def createPrimaryDDLayer(self, hwnd):
 		# create front buffer (shared with GDI)
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_CAPS)

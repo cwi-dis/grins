@@ -75,7 +75,7 @@ class _Toplevel:
 			raise error, 'can only initialize once'
 		self._initialized = 1	
 		self._closecallbacks = []
-		self._subwindows = []
+		self._subwindows = []	# A list of child windows, each are of type
 		self._bgcolor = 255, 255, 255 # white
 		self._fgcolor =   0,   0,   0 # black
 		self._running = 0
@@ -203,7 +203,7 @@ class _Toplevel:
 		return self.getActiveDocFrame() # return the active
 
 	def get_most_recent_docframe(self):
-		return self._most_recent_docframe
+		return self._most_recent_docframe # of type MainFrame.MDIFrameWnd
 
 	# register events for all main frames (top level wnds)
 	def register_event(self,ev,cb,arg):

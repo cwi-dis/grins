@@ -1,11 +1,16 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
+Currently: trying to work out how to put two buttons on to the source view. I may have to re-check out the _SourceView.py.
+
 * Add two buttons "revert" and "close" to the source view.
 * Error management (go to the source view if there is an error)
 * Retain comments in the source view.
 * Multiple selection in the structure view.
-* The source view - 
+* Structure view - add event management icons.
+* 
+
+
 
 Priority top-to-bottom.
 ------------------------
@@ -22,8 +27,6 @@ Priority top-to-bottom.
 --> Source editor view.
 	- Handle import errors well.
 	- Selections - go to a specific line.
-	- Sjoerd is diong the cahr positions of the nodes.
-	- Global selection management.
 	- Remove the menu entry that I added (edit in source view)
 	- Edit regions in the source view.
 
