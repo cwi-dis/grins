@@ -243,7 +243,7 @@ class AnimationData:
 			self._data.append((rect, color))
 		
 	# create animate nodes from self data
-	def applyData(self, editmgr, replace=0, defaultDuration=2):
+	def applyData(self, editmgr, replace=0, defaultDuration=None):
 		em = editmgr
 #		if not em.transaction():
 #			return 0
@@ -401,7 +401,8 @@ class AnimationData:
 		node.attrdict['values'] = values
 		if dur is not None:
 			node.attrdict['duration'] = dur
-		node.attrdict['fill'] = 'freeze'
+		from MMNode import MMSyncArc
+		node.attrdict['endlist'] = [MMSyncArc(node, 'end', srcnode=self._target.getAnimationsParent(), event='end', delay=0)]
 	
 	def _clampKeyTime(self, keyTime):
 		if keyTime<0.0:
