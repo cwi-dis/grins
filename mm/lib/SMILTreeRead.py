@@ -1008,6 +1008,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['keyTimes'] = val
 			elif attr == 'attributeName':
 				attrdict['attributeName'] = val
+				if val == 'soundLevel':
+					self.__context.updateSoundLevelInfo('anim', 1)
 			elif attr == 'attributeType':
 				if val in ('CSS', 'XML', 'auto'):
 					attrdict['attributeType'] = val
@@ -2483,8 +2485,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('invalid soundLevel attribute value')
 					val = 1.0
 				attrdict[attr] = val
-				self.__context._maxsoundlevel = max(self.__context._maxsoundlevel, val)
-				self.__context._minsoundlevel = min(self.__context._minsoundlevel, val)
+				self.__context.updateSoundLevelInfo('minmax', val)
 			elif attr == 'type':
 				# map channel type to something we can deal with
 				# this should loop at most twice (RealPix->RealVideo->video)
