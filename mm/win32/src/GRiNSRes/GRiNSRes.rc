@@ -655,8 +655,8 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_1,5,10,287,35
-    CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    38,26,67,10
+    CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_GROUP | WS_TABSTOP,38,26,67,10
     CONTROL         "Radio2",IDC_3,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     116,26,67,10
     CONTROL         "Default",IDC_4,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
@@ -670,7 +670,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_1,5,10,287,98
     CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,38,26,114,10
+                    WS_GROUP | WS_TABSTOP,38,26,114,10
     CONTROL         "Radio2",IDC_3,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     38,46,114,10
     CONTROL         "Radio1",IDC_4,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
@@ -847,25 +847,25 @@ BEGIN
                     WS_TABSTOP
     LTEXT           "Captions:",IDC_31,12,35,96,8
     CONTROL         "Default",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,35,40,10
+                    WS_GROUP | WS_TABSTOP,116,35,40,10
     CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,172,
                     35,40,10
     CONTROL         "off",IDC_34x,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     228,35,40,10
     GROUPBOX        "",IDC_GROUP2,109,29,174,17
     COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+                    WS_GROUP | WS_TABSTOP
     LTEXT           "Language:",IDC_21,12,51,96,8
     LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
     CONTROL         "Default",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,67,40,10
+                    WS_GROUP | WS_TABSTOP,116,67,40,10
     CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,172,67,38,10
     CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     228,67,42,10
     GROUPBOX        "",IDC_GROUP3,109,61,174,17
     LTEXT           "Required:",IDC_51,12,83,96,8
-    EDITTEXT        IDC_52,109,81,174,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_52,109,81,174,12,ES_AUTOHSCROLL | WS_GROUP
     LTEXT           "Screen depth:",IDC_61,12,99,96,8
     EDITTEXT        IDC_62,109,97,174,12,ES_AUTOHSCROLL
     LTEXT           "Screen size:",IDC_71,12,115,96,8
@@ -883,16 +883,16 @@ BEGIN
                     WS_TABSTOP
     LTEXT           "Captions:",IDC_31,12,35,96,8
     CONTROL         "on",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,35,24,10
+                    WS_GROUP | WS_TABSTOP,116,35,24,10
     CONTROL         "off",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
                     35,24,10
     GROUPBOX        "",IDC_GROUP2,109,29,174,17
     LTEXT           "Language:",IDC_21,12,51,96,8
     COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+                    WS_GROUP | WS_TABSTOP
     LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
     CONTROL         "subtitle",IDC_42,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,116,67,38,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,116,67,38,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     196,67,42,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
@@ -934,8 +934,8 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_1,5,10,287,35
-    CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    38,26,100,10
+    CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_GROUP | WS_TABSTOP,38,26,100,10
     CONTROL         "Radio2",IDC_3,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     160,26,100,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
@@ -946,12 +946,13 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_11,5,10,287,35,WS_GROUP
-    CONTROL         "Radio1",IDC_12,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    33,25,100,10
+    CONTROL         "Radio1",IDC_12,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_GROUP | WS_TABSTOP,33,25,100,10
     CONTROL         "Radio2",IDC_13,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     151,25,100,10
     GROUPBOX        "",IDC_21,5,49,287,52,WS_GROUP
-    CONTROL         "Radio1",IDC_22,"Button",BS_AUTORADIOBUTTON,33,65,100,10
+    CONTROL         "Radio1",IDC_22,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,33,65,100,10
     CONTROL         "Radio2",IDC_23,"Button",BS_AUTORADIOBUTTON,33,82,100,10
     CONTROL         "Radio3",IDC_24,"Button",BS_AUTORADIOBUTTON,151,65,100,
                     10
@@ -1035,10 +1036,10 @@ BEGIN
                     WS_TABSTOP
     EDITTEXT        IDC_22,51,70,81,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_12,51,86,81,12,ES_AUTOHSCROLL
-    CONTROL         "off",IDC_32,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
-                    152,55,24,10
+    CONTROL         "off",IDC_32,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,152,55,24,10
     CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON,189,55,24,10
-    EDITTEXT        IDC_42,192,70,93,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_42,192,70,93,12,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_52,192,86,93,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_62,192,102,61,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Pick...",IDC_63,255,102,30,12
@@ -1459,14 +1460,14 @@ IDD_EDITATTR_QTMEDIAPREF DIALOG DISCARDABLE  0, 0, 276, 180
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Not set",IDC_IMMINSTMEDIA1,"Button",BS_AUTORADIOBUTTON,
-                    114,18,37,8
+    CONTROL         "Not set",IDC_IMMINSTMEDIA1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,114,18,37,8
     CONTROL         "off",IDC_IMMINSTMEDIA2,"Button",BS_AUTORADIOBUTTON,167,
                     18,26,8
     CONTROL         "on",IDC_IMMINSTMEDIA3,"Button",BS_AUTORADIOBUTTON,215,
                     18,24,8
     COMBOBOX        IDC_BITRATENECESSARY,58,37,103,109,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
     CONTROL         "Attach time base",IDC_ATTACHTIMEBASE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,187,38,66,10
     EDITTEXT        IDC_QTCHAPTER,58,57,197,13,ES_AUTOHSCROLL
@@ -1778,13 +1779,13 @@ IDD_EDITATTR_COLORSEL DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,15,
-                    28,54,8
+    CONTROL         "transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,15,28,54,8
     CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,89,28,
                     44,8
     CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,145,27,9,
                     12
-    EDITTEXT        IDC_COLORS,158,27,72,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COLORS,158,27,72,12,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,234,27,46,12
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     GROUPBOX        "",IDC_LABEL,7,11,288,38
@@ -1933,14 +1934,14 @@ END
 
 IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,8,234,52,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "New",IDC_NEWBUTTON,245,8,46,14
     PUSHBUTTON      "Delete",IDC_DELETEBUTTON,245,30,46,14
     CONTROL         "Delay",IDC_RDELAY,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,13,87,34,10
+                    WS_GROUP | WS_TABSTOP,13,87,34,10
     CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,13,97,33,10
     CONTROL         "Top layout",IDC_RLAYOUT,"Button",BS_AUTORADIOBUTTON,13,
                     107,49,10
@@ -1995,11 +1996,11 @@ BEGIN
                     WS_TABSTOP
     COMBOBOX        IDC_FILLDEFV,209,73,73,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "When done",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON,41,
-                    92,53,10
+    CONTROL         "When done",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,41,92,53,10
     CONTROL         "Never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON,102,92,
                     35,10
-    EDITTEXT        IDC_CLIPBV,61,107,73,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CLIPBV,61,107,73,14,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_CLIPEV,209,107,73,14,ES_AUTOHSCROLL
     LTEXT           "Duration:",IDC_DURL,12,21,34,8
     LTEXT           "Min:",IDC_MINL,122,21,16,8
@@ -2023,13 +2024,13 @@ BEGIN
     COMBOBOX        IDC_FITV,21,10,136,103,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     EDITTEXT        IDC_ZV,235,10,32,13,ES_AUTOHSCROLL
-    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,12,
-                    49,54,8
+    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,12,49,54,8
     CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,60,
                     44,8
     CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,71,9,
                     12
-    EDITTEXT        IDC_COLORS,24,70,52,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COLORS,24,70,52,12,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,70,46,12
     COMBOBOX        IDC_REGALIGNV,182,47,69,103,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
@@ -2052,27 +2053,27 @@ IDD_EDITATTR_LAYOUT2 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,12,
-                    20,54,8
+    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,12,20,54,8
     CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,31,
                     44,8
     CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,42,9,
                     12
-    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,41,46,12
     CONTROL         "Always",IDC_SHOWBACKGROUNDV1,"Button",
-                    BS_AUTORADIOBUTTON,157,25,54,8
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,157,25,54,8
     CONTROL         "When active",IDC_SHOWBACKGROUNDV2,"Button",
                     BS_AUTORADIOBUTTON,157,45,57,8
-    EDITTEXT        IDC_ZV,43,79,32,13,ES_AUTOHSCROLL
+    LTEXT           "Z-index:",IDC_ZL,14,82,26,8
+    EDITTEXT        IDC_ZV,43,79,32,13,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "Sound level:",IDC_SOUNDLEVELL,149,81,40,8
+    EDITTEXT        IDC_SOUNDLEVELV,193,78,32,13,ES_AUTOHSCROLL
+    LTEXT           "Fit:",IDC_FITL,14,109,10,8
     COMBOBOX        IDC_FITV,36,107,129,103,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    EDITTEXT        IDC_SOUNDLEVELV,193,78,32,13,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,289,18,SS_SUNKEN
     GROUPBOX        "Background color",IDC_LABEL,6,8,127,57
-    LTEXT           "Fit:",IDC_FITL,14,109,10,8
-    LTEXT           "Z-index:",IDC_ZL,14,82,26,8
-    LTEXT           "Sound level:",IDC_SOUNDLEVELL,149,81,40,8
     GROUPBOX        "Show background",IDC_SHOWBACKGROUNDL,142,8,140,57
 END
 
@@ -2085,18 +2086,18 @@ BEGIN
     COMBOBOX        IDC_22,181,9,108,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Not set",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,45,29,36,10
+                    WS_GROUP | WS_TABSTOP,45,29,36,10
     CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,83,
                     29,22,10
     CONTROL         "off",IDC_34x,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     115,29,22,10
     CONTROL         "Not Set",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,195,29,37,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,195,29,37,10
     CONTROL         "on",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,233,29,22,10
     CONTROL         "off",IDC_SAUDIODESCV3,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,265,29,22,10
-    EDITTEXT        IDC_HEIGHTV,77,47,36,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_HEIGHTV,77,47,36,12,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_WIDTHV,161,47,36,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_62,244,47,36,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_52,51,64,238,12,ES_AUTOHSCROLL
@@ -2106,12 +2107,13 @@ BEGIN
     COMBOBOX        IDC_SCPUV,197,95,92,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Not set",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,46,114,35,10
+                    WS_GROUP | WS_TABSTOP,46,114,35,10
     CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,84,114,36,10
     CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     120,114,39,10
-    EDITTEXT        IDC_SCUSTOMTESTSV,193,112,96,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SCUSTOMTESTSV,193,112,96,12,ES_AUTOHSCROLL | 
+                    WS_GROUP
     GROUPBOX        "Test properties",IDC_GROUP1,6,0,287,129
     LTEXT           "Bitrate:",IDC_11,10,11,26,8
     GROUPBOX        "",IDC_GROUP3,42,22,98,19
@@ -2148,7 +2150,7 @@ BEGIN
     EDITTEXT        IDC_READINDEXV,222,83,64,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EVENTSENSITIVITYV,222,99,64,12,ES_AUTOHSCROLL
     CONTROL         "whenDone",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,192,115,49,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,192,115,49,10
     CONTROL         "never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,251,115,31,10
     GROUPBOX        "",IDC_GROUP1,5,4,287,24
@@ -2177,7 +2179,7 @@ BEGIN
     EDITTEXT        IDC_READINDEXV,220,82,64,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EVENTSENSITIVITYV,220,98,64,12,ES_AUTOHSCROLL
     CONTROL         "whenDone",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,190,114,49,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,190,114,49,10
     CONTROL         "never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,249,114,31,10
     GROUPBOX        "",IDC_GROUP1,5,3,287,24
@@ -2206,7 +2208,7 @@ BEGIN
     EDITTEXT        IDC_READINDEXV,222,51,64,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EVENTSENSITIVITYV,222,74,64,12,ES_AUTOHSCROLL
     CONTROL         "whenDone",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,192,99,49,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,192,99,49,10
     CONTROL         "never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,251,99,31,10
     GROUPBOX        "",IDC_GROUP1,5,4,287,25
@@ -2270,23 +2272,23 @@ IDD_EDITATTR_LAYOUT3 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,12,
-                    20,54,8
+    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,12,20,54,8
     CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,31,
                     44,8
     CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,42,9,
                     12
-    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,41,46,12
-    CONTROL         "On start",IDC_OPENV1,"Button",BS_AUTORADIOBUTTON,160,18,
-                    54,8
+    CONTROL         "On start",IDC_OPENV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,160,18,54,8
     CONTROL         "When active",IDC_OPENV2,"Button",BS_AUTORADIOBUTTON,221,
                     18,57,8
-    CONTROL         "On request",IDC_CLOSEV1,"Button",BS_AUTORADIOBUTTON,160,
-                    48,54,8
+    CONTROL         "On request",IDC_CLOSEV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,160,48,54,8
     CONTROL         "When not active",IDC_CLOSEV2,"Button",
                     BS_AUTORADIOBUTTON,221,48,72,8
-    EDITTEXT        IDC_WIDTHV,39,79,36,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_WIDTHV,39,79,36,13,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_HEIGHTV,113,79,36,13,ES_AUTOHSCROLL
     EDITTEXT        IDC_TRACEIMAGEV,13,110,232,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Browse...",IDC_TRACEIMAGEB,249,110,41,12
@@ -2421,7 +2423,7 @@ BEGIN
     EDITTEXT        IDC_READINDEXV,222,23,64,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EVENTSENSITIVITYV,222,46,64,12,ES_AUTOHSCROLL
     CONTROL         "When done",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,192,71,49,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,192,71,49,10
     CONTROL         "Never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,249,71,31,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
@@ -2443,30 +2445,30 @@ BEGIN
                     WS_TABSTOP
     LTEXT           "Captions:",IDC_31,12,33,96,8
     CONTROL         "on",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,33,24,10
+                    WS_GROUP | WS_TABSTOP,116,33,24,10
     CONTROL         "off",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
                     33,24,10
     GROUPBOX        "",IDC_GROUP2,109,27,174,17
     LTEXT           "Language:",IDC_21,12,49,96,8
     COMBOBOX        IDC_22,109,47,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+                    WS_GROUP | WS_TABSTOP
     LTEXT           "Overdub or Subtitle:",IDC_41,12,65,96,8
     CONTROL         "subtitle",IDC_42,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,116,65,38,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,116,65,38,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     196,65,42,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     GROUPBOX        "",IDC_GROUP3,109,59,174,17
     LTEXT           "Audio description:",IDC_SAUDIODESCL,12,81,74,8
     CONTROL         "on",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,116,81,24,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,116,81,24,10
     CONTROL         "off",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,196,81,24,10
     GROUPBOX        "",IDC_GROUP6,109,75,174,17
     GROUPBOX        "Custom tests",IDC_GROUP7,6,100,287,27
     LTEXT           "Show hidden:",IDC_SHOWHIDDENL,12,113,74,8
     CONTROL         "on",IDC_SHOWHIDDENV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,115,113,24,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,115,113,24,10
     CONTROL         "off",IDC_SHOWHIDDENV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,195,113,24,10
     GROUPBOX        "",IDC_GROUP9,109,107,174,17
@@ -2530,8 +2532,8 @@ BEGIN
     LTEXT           "Animate type:",IDC_ATAGL,12,21,44,8
     COMBOBOX        IDC_ATAGV,85,18,96,94,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "CSS",IDC_ATYPEV1,"Button",BS_AUTORADIOBUTTON,86,84,30,
-                    10
+    CONTROL         "CSS",IDC_ATYPEV1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,86,84,30,10
     CONTROL         "XML",IDC_ATYPEV2,"Button",BS_AUTORADIOBUTTON,137,86,31,
                     10
     CONTROL         "auto",IDC_ATYPEV3,"Button",BS_AUTORADIOBUTTON,189,86,30,
@@ -2550,12 +2552,12 @@ BEGIN
     EDITTEXT        IDC_22,86,44,199,12,ES_AUTOHSCROLL
     LTEXT           "Transition mode:",IDC_31,12,66,73,8
     CONTROL         "in",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,107,65,21,10
+                    WS_GROUP | WS_TABSTOP,107,65,21,10
     CONTROL         "out",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,238,
                     65,26,10
     GROUPBOX        "",IDC_STATIC,86,59,199,17
     LTEXT           "Effect color:",IDC_41,12,88,73,8
-    EDITTEXT        IDC_42,86,86,148,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_42,86,86,148,12,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "Pick color...",IDC_43,239,86,46,12
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
@@ -2639,19 +2641,19 @@ IDD_EDITATTR_LAYOUT2REAL DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,12,
-                    20,54,8
+    CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,12,20,54,8
     CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,31,
                     44,8
     CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,42,9,
                     12
-    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,41,46,12
     CONTROL         "Always",IDC_SHOWBACKGROUNDV1,"Button",
-                    BS_AUTORADIOBUTTON,157,25,54,8
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,157,25,54,8
     CONTROL         "When active",IDC_SHOWBACKGROUNDV2,"Button",
                     BS_AUTORADIOBUTTON,157,45,57,8
-    EDITTEXT        IDC_ZV,43,79,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ZV,43,79,32,13,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_SOUNDLEVELV,143,79,32,13,ES_AUTOHSCROLL
     EDITTEXT        IDC_OV,243,79,32,13,ES_AUTOHSCROLL
     COMBOBOX        IDC_FITV,36,107,129,103,CBS_DROPDOWNLIST | WS_VSCROLL | 
@@ -2748,18 +2750,18 @@ BEGIN
     COMBOBOX        IDC_22,181,9,108,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Not set",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,45,29,36,10
+                    WS_GROUP | WS_TABSTOP,45,29,36,10
     CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,83,
                     29,22,10
     CONTROL         "off",IDC_34x,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     115,29,22,10
     CONTROL         "Not Set",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,195,29,37,10
+                    BS_NOTIFY | WS_GROUP | WS_TABSTOP,195,29,37,10
     CONTROL         "on",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,233,29,22,10
     CONTROL         "off",IDC_SAUDIODESCV3,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,265,29,22,10
-    EDITTEXT        IDC_HEIGHTV,77,47,36,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_HEIGHTV,77,47,36,12,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_WIDTHV,161,47,36,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_62,244,47,36,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_52,51,64,238,12,ES_AUTOHSCROLL
@@ -2769,7 +2771,7 @@ BEGIN
     COMBOBOX        IDC_SCPUV,197,95,92,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Not set",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,46,114,35,10
+                    WS_GROUP | WS_TABSTOP,46,114,35,10
     CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
                     BS_NOTIFY,84,114,36,10
     CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
@@ -2866,8 +2868,8 @@ BEGIN
                     WS_TABSTOP
     COMBOBOX        IDC_FILLDEFV,209,73,73,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "When done",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON,41,
-                    92,53,10
+    CONTROL         "When done",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,41,92,53,10
     CONTROL         "Never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON,102,92,
                     35,10
     LTEXT           "Duration:",IDC_DURL,12,21,34,8
@@ -2888,13 +2890,13 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Higher:",IDC_HIGHERL,13,26,24,8,WS_TABSTOP
-    CONTROL         "Stop",IDC_HIGHERV1,"Button",BS_AUTORADIOBUTTON,67,25,31,
-                    10
+    CONTROL         "Stop",IDC_HIGHERV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,67,25,31,10
     CONTROL         "Pause",IDC_HIGHERV2,"Button",BS_AUTORADIOBUTTON,119,25,
                     36,10
     LTEXT           "Peers:",IDC_PEERSL,13,50,21,8,WS_TABSTOP
-    CONTROL         "Stop",IDC_PEERSV1,"Button",BS_AUTORADIOBUTTON,67,49,31,
-                    10
+    CONTROL         "Stop",IDC_PEERSV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,67,49,31,10
     CONTROL         "Pause",IDC_PEERSV2,"Button",BS_AUTORADIOBUTTON,119,49,
                     36,10
     CONTROL         "Defer",IDC_PEERSV3,"Button",BS_AUTORADIOBUTTON,176,49,
@@ -2902,13 +2904,13 @@ BEGIN
     CONTROL         "Never",IDC_PEERSV4,"Button",BS_AUTORADIOBUTTON,230,49,
                     35,10
     LTEXT           "Lower:",IDC_LOWERL,13,74,22,8,WS_TABSTOP
-    CONTROL         "Defer",IDC_LOWERV1,"Button",BS_AUTORADIOBUTTON,67,73,33,
-                    10
+    CONTROL         "Defer",IDC_LOWERV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,67,73,33,10
     CONTROL         "Never",IDC_LOWERV2,"Button",BS_AUTORADIOBUTTON,119,73,
                     35,10
     LTEXT           "Pause display:",IDC_PAUSEL,13,98,46,8,WS_TABSTOP
-    CONTROL         "Disable",IDC_PAUSEV1,"Button",BS_AUTORADIOBUTTON,67,97,
-                    39,10
+    CONTROL         "Disable",IDC_PAUSEV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,67,97,39,10
     CONTROL         "Hide",IDC_PAUSEV2,"Button",BS_AUTORADIOBUTTON,119,97,31,
                     10
     CONTROL         "Show",IDC_PAUSEV3,"Button",BS_AUTORADIOBUTTON,176,97,34,
@@ -3000,8 +3002,8 @@ BEGIN
     LTEXT           "Animate type:",IDC_ATAGL,12,21,44,8
     COMBOBOX        IDC_ATAGV,85,18,96,94,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "parent",IDC_ORIGINV1,"Button",BS_AUTORADIOBUTTON,86,84,
-                    36,10
+    CONTROL         "parent",IDC_ORIGINV1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,86,84,36,10
     CONTROL         "element",IDC_ORIGINV2,"Button",BS_AUTORADIOBUTTON,137,
                     86,41,10
 END
@@ -3021,8 +3023,8 @@ BEGIN
     LTEXT           "Animate type:",IDC_ATAGL,12,21,44,8
     COMBOBOX        IDC_ATAGV,85,18,96,94,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "CSS",IDC_ATYPEV1,"Button",BS_AUTORADIOBUTTON,86,96,30,
-                    10
+    CONTROL         "CSS",IDC_ATYPEV1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,86,96,30,10
     CONTROL         "XML",IDC_ATYPEV2,"Button",BS_AUTORADIOBUTTON,137,96,31,
                     10
     CONTROL         "auto",IDC_ATYPEV3,"Button",BS_AUTORADIOBUTTON,189,96,30,
