@@ -879,6 +879,12 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def settransitionvalue(self, value):
 		pass
 		
+	def freeze_content(self, how):
+		# how is 'transition', 'hold' or None. Freeze the bits in the window
+		# (unless how=None, which unfreezes them) and use for updates and as passive
+		# source for next transition.
+		pass
+		
 #=========================================================
 #	geometry and coordinates convert section
 	

@@ -1388,6 +1388,12 @@ class _Window(_AdornmentSupport, _RubberBand):
 		
 	def settransitionvalue(self, value):
 		pass
+	
+	def freeze_content(self, how):
+		# how is 'transition', 'hold' or None. Freeze the bits in the window
+		# (unless how=None, which unfreezes them) and use for updates and as passive
+		# source for next transition.
+		pass
 
 class _SubWindow(_Window):
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):

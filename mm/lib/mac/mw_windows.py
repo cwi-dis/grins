@@ -202,6 +202,7 @@ class _CommonWindow:
 		self._extra_gworld = None
 		self._extra_bitmap = None
 		self._transition = None
+		self._frozen = None
 		self._subwindows = []
 		self._displists = []
 		self._bgcolor = parent._bgcolor
@@ -866,6 +867,7 @@ class _CommonWindow:
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
 		if self._redrawfunc:
+##			print 'DBG: redraw through redrawfunc', self, self._drawing_wid, self._onscreen_wid
 			self._redrawfunc()
 		else:
 			self._do_redraw()
@@ -888,9 +890,23 @@ class _CommonWindow:
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
+##			print 'DBG: redraw from displaylist', self, self._drawing_wid, self._onscreen_wid
 			self._active_displist._render()
+		elif self._frozen:
+##			print 'DBG: redraw from frozen', self, self._drawing_wid, self._onscreen_wid
+			self._mac_setwin(0)
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0, 0, 0))
+			dst = self._mac_getoswindowpixmap(0)
+			src = self._mac_getoswindowpixmap(2)
+			rect = self.qdrect()
+			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
+			self._mac_setwin() # Don't think this is needed...
 		elif self._transparent == 0 or self._istoplevel:
+##			print 'DBG: redraw erase', self, self._drawing_wid, self._onscreen_wid
 			Qd.EraseRect(self.qdrect())
+##		else:
+##			print 'DBG: redraw none at all', self, self._drawing_wid, self._onscreen_wid
 			
 	def _mac_setwin(self, which=None):
 		"""Start drawing (by upper layer) in this window"""
@@ -1252,19 +1268,22 @@ class _CommonWindow:
 
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
-		print 'Transition', dict['trtype']
+##		print 'Transition', dict['trtype']
 		if self._transition:
 			print 'Multiple Transitions!'
 			return
 		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(1)
 		# XXXX should probably skip this if the window is transparent and empty
-		if 0:
+		if self._frozen == 'transition':
+			# We are frozen, so we have already saved the contents
+			self._frozen = None
+		else:
 			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		
 	def endtransition(self):
+##		print 'EndTransition', self._transition
 		if not self._transition:
-			print 'No transition!'
 			return
 		self._transition.endtransition()
 		self._transition = None
@@ -1283,6 +1302,22 @@ class _CommonWindow:
 	def settransitionvalue(self, value):
 		if self._transition:
 			self._transition.settransitionvalue(value)
+			
+	def freeze_content(self, how):
+		"""Freeze the contents of the window, depending on how:
+		how='transition' until the next transition,
+		how='hold' forever,
+		how=None clears a previous how='hold'. This basically means the next
+		close() of a display list does not do an erase."""
+##		print 'DBG: freeze', how
+		self._frozen = how
+		if self._frozen:
+			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
+		else:
+			self._extra_gworld = None
+			self._extra_wid = None
+			self._extra_bitmap = None
+			self._mac_invalwin()
 		
 	def _create_offscreen_wid(self, copybits=1):
 		cur_depth = 16 # 0
@@ -1295,13 +1330,16 @@ class _CommonWindow:
 		Qdoffs.LockPixels(pixmap)
 		bitmap = Qd.RawBitMap(pixmap.data)
 		# XXXX Set font
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
 		if copybits:
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0,0,0))			
 			portBits = self._onscreen_wid.GetWindowPort().portBits
 			Qd.CopyBits(portBits, bitmap, cur_rect, cur_rect, QuickDraw.srcCopy, None)
 		else:
+			Qd.RGBBackColor(self._bgcolor)
 			Qd.EraseRect(cur_rect)
+		Qd.RGBBackColor(self._bgcolor)
+		Qd.RGBForeColor(self._fgcolor)
 		Qdoffs.SetGWorld(cur_port, cur_dev)
 		return gworld, grafptr, bitmap
 		

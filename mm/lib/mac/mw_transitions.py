@@ -109,7 +109,7 @@ def TransitionFactory(trtype, subtype):
 
 class TransitionEngine:
 	def __init__(self, window, inout, runit, dict):
-		print 'transition', self, window, time.time(), dict
+##		print 'transition', self, window, time.time(), dict
 		dur = dict.get('dur', 1)
 		self.window = window
 		self.starttime = time.time()	# Correct?
@@ -128,7 +128,7 @@ class TransitionEngine:
 		
 	def endtransition(self):
 		"""Called by upper layer (window) to tear down the transition"""
-		print 'endtransition', self, time.time()
+##		print 'endtransition', self, time.time()
 		mw_globals.toplevel.cancelidleproc(self._idleproc)
 		self.window = None
 		self.transitiontype = None
