@@ -373,7 +373,8 @@ class SelectionDialog:
 class InputDialog:
 	_cursor = ''
 	def __init__(self, prompt, default, cb, cancelCallback = None,
-		     parent = None):
+		     parent = None, passwd = 0):
+		# XXXX passwd parameter to be implemented
 		import time
 		attrs = {'textString': default or '',
 			 'selectionLabelString': prompt or '',

@@ -847,10 +847,15 @@ def showquestion(text, parent = None):
 # A general one line modal input dialog implementation
 # use DoModal
 class InputDialog(DialogBase):
-	def __init__(self, prompt, defValue, okCallback=None,cancelCallback=None, parent=None):
+	def __init__(self, prompt, defValue, okCallback=None,cancelCallback=None,
+				parent=None, passwd=0):
 		self.title=prompt
 		dll=None
-		DialogBase.__init__(self, win32ui.IDD_SIMPLE_INPUT,parent,dll)
+		if passwd:
+			id = grinsRC.IDD_PASSWD_DIALOG
+		else:
+			id = win32ui.IDD_SIMPLE_INPUT
+		DialogBase.__init__(self, id, parent, dll)
 		self._parent=parent
 		self.AddDDX(win32ui.IDC_EDIT1,'result')
 		self.AddDDX(win32ui.IDC_PROMPT1, 'prompt')
