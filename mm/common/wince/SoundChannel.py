@@ -87,7 +87,10 @@ class AudioPlayer:
 		self._rest = ''
 		self.decoder = None
 
-		u = MMurl.urlopen(srcurl)
+		try:
+			u = MMurl.urlopen(srcurl)
+		except IOError:
+			raise error, 'Cannot open file.'
 		if u.headers.maintype != 'audio':
 			u.close()
 			raise error, 'Not an audio file.'
@@ -130,6 +133,11 @@ class AudioPlayer:
 	def read_basic_audio(self, u, atype):
 		try:
 			rdr = audio.reader(u, [audio.format.linear_16_mono], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
+# to figure out the number of channels of the source file:
+##			r = rdr
+##			while hasattr(r, '_rdr'):
+##				r = r._rdr
+##			ochans = r.getformat().getnchannels()
 			fmt = rdr.getformat()
 			bytesperframe = fmt.getblocksize() / fmt.getfpb()
 			nchan = fmt.getnchannels()
@@ -192,6 +200,8 @@ class AudioPlayer:
 		# read first chunk to read header
 		data = u.read(decode_buf_size)
 		wfx = decoder.GetWaveFormat(data)
+# to figure out the number of channels of the source file:
+##		ochans = wfx[0]
 		can_play = winmm.WaveOutQuery(wfx)
 		if not can_play:
 			# resample with proposed frequency
