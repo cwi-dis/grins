@@ -609,6 +609,9 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def delchannel(self, channel):
+		if not channel is None and channel.isDefault():
+			# can't delete the default region
+			return			
 		parent = channel.GetParent()
 		i = -1
 		if parent:
@@ -659,6 +662,11 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def setchannelattr(self, name, attrname, value):
+		defaultRegion = self.context.getDefaultRegion()
+		if defaultRegion is not None and defaultRegion.name == name:
+			# can't edit the default region
+			return
+		
 		self.attrs_changed = 1
 		c = self.context.getchannel(name)
 		if c is None:

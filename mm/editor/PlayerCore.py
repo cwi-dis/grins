@@ -65,8 +65,14 @@ class PlayerCore(Selecter, PlayerCommon):
 				return
 
 		self.mustCheckRenderer = 1
+		# the default region may have changed
+		self.context.updateDefaultRegion()
+
+		# update regions if showed
+		# XXX note: the renderer are not updated yet (for optimization purpose)
+		# so don't update the renderer channel here, otherwise it crashes
+		self.checkchannels(1)
 		
-		self.checkchannels()
 		if self.showing:
 			# Check if any of the playroots has vanished
 			if self.playroot.GetRoot() is not self.root:
@@ -113,6 +119,7 @@ class PlayerCore(Selecter, PlayerCommon):
 	def playfrom(self, node):
 		self.savecurlayout = self.curlayout
 		self.savecurchannel = self.curchannel
+		self.checkRenderer()
 		self.setlayout()
 		self.playfromanchor(node, None)
 	#
@@ -135,12 +142,16 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.showstate()
 
 	def play(self):
+		self.checkRenderer()
+		self.setlayout()		
+		Selecter.play(self)
+
+	def checkRenderer(self):
 		# if the document has been edited, we have to check (and rebuild) the renderer channels
 		if self.mustCheckRenderer:
 			self.checkRendererChannels()
 			self.mustCheckRenderer = 0
 			self.setlayout(self.curlayout, self.curchannel)
-		Selecter.play(self)
 		
 	#
 	def anchorinit(self, node):
@@ -257,7 +268,7 @@ class PlayerCore(Selecter, PlayerCommon):
 				self.channelnames.insert(i, name)			
 			
 	#
-	def checkchannels(self):
+	def checkchannels(self, excludeRenderer = 0):
 		self.checkRegions()
 		self.__checkichannels()
 		if self.showing:
@@ -265,10 +276,13 @@ class PlayerCore(Selecter, PlayerCommon):
 			for name in self.channelnames:
 				self.channels[name]._want_shown = 0
 			# (4) Update visibility of all channels
+			import MMTypes
 			for name in self.channelnames:
-				self.channels[name].check_visible()
+				ch = self.channels[name]
+				if not excludeRenderer or ch._attrdict['type'] == 'layout':
+					ch.check_visible()
 			# (5) Update layout and menu
-			self.setlayout(self.curlayout, self.curchannel)
+			self.setlayout(self.curlayout, self.curchannel, excludeRenderer=excludeRenderer)
 		return
 
 	#

@@ -46,6 +46,9 @@ def getwrapperclass(selvaluelist):
 			not hasattr(selvalue, 'slideshow'):
 			return None
 	elif className in ('Region','Viewport'):
+		if selvalue.isDefault():
+			# don't allow to show/edit default region properties
+			return None
 		wrapperclass = ChannelWrapper
 		
 	return wrapperclass
@@ -2674,7 +2677,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			
 		for ch in ctx.channels:
 			if ch.get('type') == 'layout':
-				if ch.get('base_window') != None:
+				if ch.get('base_window') != None and not ch.isDefault():
 					regionList.append(ch.name)
 
 		if hasattr(self, 'newchannels'):
@@ -2874,7 +2877,7 @@ class RegionDefaultAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			
 		for ch in ctx.channels:
 			if ch.get('type') == 'layout':
-				if ch.get('base_window') != None:
+				if ch.get('base_window') != None and not ch.isDefault():
 					regionList.append(ch.name)
 					
 		return regionList

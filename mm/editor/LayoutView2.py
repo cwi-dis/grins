@@ -43,37 +43,12 @@ class TreeHelper:
 		self.__mmnodeTreeRef = mmnodeTreeRef
 		self.__nodeList = {}
 		self.__rootList = {}
-		self.__initDefaultRegion()
 
 	def destroy(self):
 		self.__channelTreeRef = None
 		self.__mmnodeTreeRef = None
 		self.__nodeList = None
 		self.__rootList = None
-
-	#
-	# Experimental code to manage a default region
-	#
-	
-	def __initDefaultRegion(self):
-		self.__defaultRegion = None
-		self.__defaultViewport = None
-
-	def __getDefaultViewport(self):
-		viewportRefList = self.__channelTreeRef.getviewports()
-		self.__defaultViewport = viewportRefList[0]
-		return self.__defaultViewport
-	
-	def __getDefaultRegion(self):
-		if self.__defaultRegion == None:
-			defaultViewport = self.__getDefaultViewport()
-			self.__defaultRegion = FakeMMChannel('Unreferenced medias')
-			self.__defaultRegion.setParent(defaultViewport)
-		return self.__defaultRegion
-
-	def _checkDefaultViewport(self):
-		if self.__defaultRegion != None:
-			self.__checkRegionNodeList(self.__defaultViewport, self.__defaultRegion, 1)
 
 	#
 	# End experimental code to manage a default region
@@ -94,16 +69,11 @@ class TreeHelper:
 	# check the media node references and update the internal structure
 	def __checkMediaNodeList(self, nodeRef):
 		if debug2: print 'treeHelper.__checkMediaNodeList : start ',nodeRef
+		ctx = self._context.context
 		if self._isValidMMNode(nodeRef):
-			region = nodeRef.GetChannel()
-			if region == None:
-				pass
-				# the region doesn't exist, return the default region
-#				parentRef = self.__getDefaultRegion()
-			else:
-				parentRef = region
-
-			if region != None:				
+			parentRef = self.getRegion(nodeRef)
+			
+			if not parentRef is None:			
 				tParentNode =  self.__nodeList.get(parentRef)
 				if tParentNode == None:
 					tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
@@ -124,8 +94,13 @@ class TreeHelper:
 		self.__checkMediaNodeList(self.__mmnodeTreeRef)
 
 	# check the region/viewport node references and update the internal structure
-	def __checkRegionNodeList(self, parentRef, nodeRef, isFakePart = 0):
+	def __checkRegionNodeList(self, parentRef, nodeRef):
 		if debug2: print 'treeHelper.__checkRegionNodeList : start ',nodeRef
+
+		# if no default region to show, exclude it	
+		if not self.hasDefaultRegion and nodeRef.isDefault():
+			return
+			
 		tNode =  self.__nodeList.get(nodeRef)
 		if parentRef != None:
 			# case for regions
@@ -138,7 +113,10 @@ class TreeHelper:
 				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
 				tParentNode.addChild(tNode)
 			elif not tParentNode.hasChild(tNode):
-				if debug2: print 'treeHelper.__checkMediaNodeList : the parent has changed children=',tNode.children
+				if debug2:
+					print 'treeHelper.__checkMediaNodeList : the parent has changed children:'
+					for child in tNode.children.keys():
+						print '* ',child.nodeRef
 				oldNode = tNode
 				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
 				tNode.children = oldNode.children
@@ -155,9 +133,8 @@ class TreeHelper:
 			tNode.checkMainUpdate()							
 			tNode.isUsed = 1
 		
-		if not isFakePart:
-			for subreg in self.__channelTreeRef.getsubregions(nodeRef):
-				self.__checkRegionNodeList(nodeRef, subreg)
+		for subreg in self.__channelTreeRef.getsubregions(nodeRef):
+			self.__checkRegionNodeList(nodeRef, subreg)
 						
 		if debug2: print 'treeHelper.__checkRegionNodeList : end ',nodeRef
 
@@ -257,10 +234,10 @@ class TreeHelper:
 	# in the right order for each basic operation
 	def onTreeMutation(self):
 		if debug: print 'treeHelper.onTreeMutation start'
-		self.__initDefaultRegion()
+		self.hasDefaultRegion = 0
+		self._context.context.updateDefaultRegion()
 		self._checkMediaNodeList()
 		self._checkRegionNodeList()
-#		self._checkDefaultViewport()
 		self._detectMutation()
 		if debug: print 'treeHelper.onTreeMutation end'
 
@@ -311,6 +288,39 @@ class TreeHelper:
 		if node != None:
 			return node.type
 
+	# return the region related to a media.
+	# Notes: 
+	# - that region may be differente that the defined region in the document
+	# because of the default region
+	# - don't move that method into mmnode, the behavior is specific to the layout view to edit purpose
+	# the player has for instance another behavior
+	def getRegion(self, mediaRef):
+		region = mediaRef.GetDefinedChannel()
+		if region is None:
+			# A association may be defined in the clipboard. In that case,
+			# we don't show the media in the default region
+			found = 0
+			clipList = self._context.editmgr.getclip()
+			for clipNode in clipList:
+				if clipNode.getClassName() == 'RegionAssociation':
+					if clipNode.getMediaNode() is mediaRef:
+						found = 1
+						break
+			if found:
+				# the node is in the clipboard. 
+				return None
+			else:
+				# No region defined, return the default region
+				self.hasDefaultRegion = 1
+				return self._context.context.getDefaultRegion()
+		else:
+			# the region may be moved from the document to the clipboard. In that case,
+			# we don't show the media in the default region
+			if not region.isInDocument():
+				return None
+
+			return region
+				
 	def delNode(self, nodeRef):
 		if debug: print 'treeHelper.delNode ',nodeRef
 		node = self.__nodeList.get(nodeRef)
@@ -452,48 +462,28 @@ class LayoutView2(LayoutViewDialog2):
 	def mkviewportcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandViewportList = [
-				ATTRIBUTES(callback = (self.onEditProperties, ())),
-				NEW_REGION(callback = (self.onNewRegion, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
-				DELETE(callback = (self.onDelNode, ())),
-				COPY(callback = (self.onCopy, ())),
-				CUT(callback = (self.onCut, ())),
-				ATTRIBUTES_LAYOUT(callback = (self.onLayoutProperties, ())),
 				]
 		else:
 			self.commandViewportList = [
-				ATTRIBUTES(callback = (self.onSelectBgColor, ())),
 				]
 		self.__appendCommonCommands(self.commandViewportList)
 
 	def mkregioncommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandRegionList = [
-				ATTRIBUTES(callback = (self.onEditProperties, ())),
-				NEW_REGION(callback = (self.onNewRegion, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
-				DELETE(callback = (self.onDelNode, ())),
-				COPY(callback = (self.onCopy, ())),
-				CUT(callback = (self.onCut, ())),
-				ATTRIBUTES_LAYOUT(callback = (self.onLayoutProperties, ())),
 				]
 		else:
 			self.commandRegionList = [
-				ATTRIBUTES(callback = (self.onSelectBgColor, ())),
 				]
 		self.__appendCommonCommands(self.commandRegionList)
 
 	def mkmediacommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMediaList = [
-				ATTRIBUTES(callback = (self.onEditProperties, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
-				ATTRIBUTES_ANCHORS(callback = (self.onAnchors, ())),
-				ATTRIBUTES_LAYOUT(callback = (self.onLayoutProperties, ())),
 				]
-			if COPY_PASTE_MEDIAS:
-				self.commandMediaList.append(COPY(callback = (self.onCopy, ())))
-				self.commandMediaList.append(CUT(callback = (self.onCut, ())))
 		else:
 			self.commandMediaList = []
 		self.commandMediaList.append(CONTENT(callback = (self.onContent, ())))
@@ -513,9 +503,6 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSItemList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
-				COPY(callback = (self.onCopy, ())),
-				CUT(callback = (self.onCut, ())),
-				DELETE(callback = (self.onDelNode, ())),
 				]
 		else:
 			self.commandMultiSItemList = []		
@@ -525,9 +512,6 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSiblingSItemList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
-				COPY(callback = (self.onCopy, ())),
-				CUT(callback = (self.onCut, ())),
-				DELETE(callback = (self.onDelNode, ())),
 				]
 		else:
 			self.commandMultiSiblingSItemList = []
@@ -746,6 +730,10 @@ class LayoutView2(LayoutViewDialog2):
 				selectedNode = self.currentSelectedNodeList[0]
 				selectedType = self.getNodeType(selectedNode)
 				if selectedType in (TYPE_VIEWPORT, TYPE_REGION) and className == 'Region':
+					if selectedNode.isDefault():
+						# no valid paste
+						activePaste = 0
+						break					
 					activePaste = 1
 				elif className == 'RegionAssociation' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
 					activePaste = 1
@@ -757,6 +745,25 @@ class LayoutView2(LayoutViewDialog2):
 		if activePaste:
 			commandlist.append(PASTE(callback = (self.onPaste, ())))
 
+		# some other commands to update
+		if len(self.currentSelectedNodeList) == 1:
+			selectedNode = self.currentSelectedNodeList[0]
+			if not self.getNodeType(selectedNode) == TYPE_REGION or not selectedNode.isDefault():
+				commandlist.append(ATTRIBUTES(callback = (self.onEditProperties, ())))
+				commandlist.append(NEW_REGION(callback = (self.onNewRegion, ())))
+
+		if len(self.currentSelectedNodeList) >= 1:
+			active = 1
+			for node in self.currentSelectedNodeList:
+				if self.getNodeType(node) == TYPE_REGION and node.isDefault():
+					active = 0
+					break
+			if active:
+				# no default region in the selected list
+				commandlist.append(COPY(callback = (self.onCopy, ())))
+				commandlist.append(CUT(callback = (self.onCut, ())))
+				commandlist.append(DELETE(callback = (self.onDelNode, ())))
+				
 		self.setcommandlist(commandlist)
 		
 	def updateFocus(self, keepShowedNodes=0):
@@ -851,7 +858,8 @@ class LayoutView2(LayoutViewDialog2):
 	def getViewportRef(self, nodeRef, nodeType = None):
 		className = nodeRef.getClassName()
 		if className == 'MMNode':
-			region = nodeRef.GetChannel()
+			# return the associated region
+			region = self.getParentNodeRef(nodeRef)
 		else:
 			region = nodeRef
 
@@ -866,11 +874,7 @@ class LayoutView2(LayoutViewDialog2):
 		if nodeType == None:
 			nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_MEDIA:
-			channel = nodeRef.GetChannel()
-			if channel != None:
-				region = channel.GetLayoutChannel()
-				return region
-			return None
+			return self.treeHelper.getRegion(nodeRef)
 		else:
 			region = self.__channelTreeRef.getparent(nodeRef)
 			return region
@@ -896,6 +900,8 @@ class LayoutView2(LayoutViewDialog2):
 			name = nodeRef.GetAttrDef('regionName',None)
 			if name == None:
 				name = nodeRef.name
+			if nodeRef.isDefault():
+				name = '# '+name
 		elif nodeType == TYPE_VIEWPORT:
 			name = nodeRef.name
 		else:
@@ -1582,6 +1588,10 @@ class LayoutView2(LayoutViewDialog2):
 					node = MMNode.MMRegionAssociation(nodeRef)
 					clipList.append(node)
 			elif nodeType in (TYPE_REGION, TYPE_VIEWPORT):
+				if nodeRef.isDefault():
+					msg = "you can't copy or cut the default region"
+					windowinterface.showmessage(msg, mtype = 'error')
+					return []
 				if isACopy:
 					clipList.append(nodeRef.DeepCopy())
 				elif len(currentViewportList) == 1 and nodeRef is currentViewportList[0]:
@@ -1644,6 +1654,10 @@ class LayoutView2(LayoutViewDialog2):
 		if len(self.currentSelectedNodeList) > 0:		
 			selectedNode = self.currentSelectedNodeList[0]
 			selectedNodeType = self.getNodeType(selectedNode)
+
+		if selectedNode.isDefault():
+			# can't insert a node into the default region
+			return
 		
 		if not self.editmgr.transaction():
 			return
@@ -1672,6 +1686,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.editmgr.commit()
 
 	def newRegion(self, parentRef):
+		if parentRef.isDefault():
+			# can't insert a node into the default region
+			return
+		
 		# choice a default name which doesn't exist		
 		channeldict = self.context.channeldict
 		baseName = 'region'
@@ -1755,6 +1773,13 @@ class LayoutView2(LayoutViewDialog2):
 
 		if sourceNodeType == TYPE_MEDIA and targetNodeType != TYPE_REGION:
 			return 0
+
+		if targetNodeType == TYPE_REGION and targetNodeRef.isDefault():
+			# you can't move anything into the default region
+			return 0
+		if sourceNodeType == TYPE_REGION and sourceNodeRef.isDefault():
+			# you can't move the default region
+			return 0
 		
 		return 1
 
@@ -1807,21 +1832,26 @@ class LayoutView2(LayoutViewDialog2):
 			if nodeType == TYPE_VIEWPORT:
 				viewportToDel.append(nodeRef)
 				if len(currentViewportList) == len(viewportToDel):
-					error = 3
+					error = 4
 					break
 			if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+				if nodeRef.isDefault():
+					if error < 2:
+						error = 2
 				if self.doesContainMedias(nodeRef):
 					if error < 1:
 						error = 1
 			elif nodeType == TYPE_MEDIA:
-				if error < 2:
-					error = 2
+				if error < 3:
+					error = 3
 
-		if error == 3:
+		if error == 4:
 			# show in priority that error
 			windowinterface.showmessage("you can't delete the last viewport", mtype = 'error')
-		elif error == 2:
+		elif error == 3:
 			windowinterface.showmessage("You can't remove any media from the Layout view.\n Use Cut/Paste or Drag/Drop to move a media.", mtype = 'error')
+		elif error == 2:
+			windowinterface.showmessage("You can't remove the default region", mtype = 'error')
 		elif error == 1:
 			ret = windowinterface.GetOKCancel("At least one item that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
 			if ret == 0:
@@ -1926,12 +1956,12 @@ class ZFieldWidget(LightWidget):
 			self.__unselect()
 			return
 		nodeRef = nodeRefList[0]
-		
 		nodeType = self._context.getNodeType(nodeRef)
-		if nodeRef.getClassName() == 'FakeMMChannel' or (nodeType == TYPE_MEDIA and not nodeRef.GetChannel()):
+
+		if nodeType == TYPE_REGION and nodeRef.isDefault():
 			self.__unselect()
 			return
-		
+				
 		if nodeType == TYPE_VIEWPORT:
 			self.dialogCtrl.enable('RegionZ',0)
 			self.dialogCtrl.setFieldCtrl('RegionZ',"")
@@ -2000,13 +2030,12 @@ class GeomFieldWidget(LightWidget):
 			self.__unselect()
 			return
 		nodeRef = nodeRefList[0]
-		
 		nodeType = self._context.getNodeType(nodeRef)
-		
-		if nodeRef.getClassName() == 'FakeMMChannel' or (nodeType == TYPE_MEDIA and not nodeRef.GetChannel()):
+
+		if nodeType == TYPE_REGION and nodeRef.isDefault():
 			self.__unselect()
 			return
-		
+				
 		if nodeType == TYPE_VIEWPORT:
 			self.__updateViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
@@ -2468,8 +2497,6 @@ class PreviousWidget(Widget):
 
 		for nodeRef in nodeRefList:			
 			nodeType = self._context.getNodeType(nodeRef)
-			if nodeRef.getClassName() == 'FakeMMChannel' or (nodeType == TYPE_MEDIA and not nodeRef.GetChannel()):
-				continue
 			if nodeType == TYPE_VIEWPORT:
 				viewport = nodeRef
 			elif nodeType == TYPE_REGION:
@@ -2570,6 +2597,9 @@ class PreviousWidget(Widget):
 					
 	# ensure that the region is in showing state
 	def __showRegion(self, regionRef):
+		if regionRef.isDefault():
+			return
+		
 		type = regionRef.GetAttrDef('chsubtype', None)
 		if type != None:
 			# if the region is typed, we show only the region if visible

@@ -136,6 +136,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.checkviews()
 		PlayerDialog.show(self)
 		self.showing = 1
+		self.checkRenderer()		
 		self.before_chan_show()
 		if self.curlayout is None:
 			self.showchannels()
@@ -169,7 +170,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.last_geometry = geometry
 			return self.last_geometry
 
-	def setlayout(self, layout = None, channel = None, selectchannelcb = None):
+	def setlayout(self, layout = None, channel = None, selectchannelcb = None, excludeRenderer = 0):
 		self.curlayout = layout
 		self.curchannel = channel
 		if selectchannelcb is not None:
@@ -188,11 +189,16 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				self.curlayout = layout = None
 		if layout is None:
 			channels = context.channels
-		channeldict = {}
+			channeldict = {}
+		
+		# add the new regions/viewports/rendererchannels
+		import MMTypes
 		for ch in channels:
 			# exclude regions/viewport which are not a part of the document
-			if not ch.isInDocument():
+			if ch.GetType() == 'layout' and not ch.isInDocument() or \
+				ch.GetType() != 'layout' and excludeRenderer:
 				continue
+			
 			chname = ch.name
 			channeldict[chname] = 0
 			if not self.channels.has_key(chname):
@@ -201,8 +207,10 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				self.channelnames.append(chname)
 		for chname in self.channelnames:
 			ch = self.channels[chname]
+			# if regions/viewport is still there
 			if channeldict.has_key(chname):
 				del channeldict[chname]
+				
 				if layout is None:
 					ch.check_visible()
 					ch.unhighlight()
@@ -236,7 +244,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def play(self):
 		self.savecurlayout = self.curlayout
 		self.savecurchannel = self.curchannel
-		self.setlayout()
 		PlayerCore.play(self)
 
 	def stopped(self):
