@@ -2220,12 +2220,32 @@ WMInputMediaProps_GetGroupName(WMInputMediaPropsObject *self, PyObject *args)
 	return PyObjectFromWideChar(wszName,cchName);
 }
 
+static char WMInputMediaProps_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+WMInputMediaProps_QueryIUnknown(WMInputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	UnknownObject *obj = newUnknownObject();	
+	hr = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMInputMediaProps_QueryIUnknown", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef WMInputMediaProps_methods[] = {
 	{"GetType", (PyCFunction)WMInputMediaProps_GetType, METH_VARARGS, WMInputMediaProps_GetType__doc__},
 	{"GetMediaType", (PyCFunction)WMInputMediaProps_GetMediaType, METH_VARARGS, WMInputMediaProps_GetMediaType__doc__},
 	{"SetMediaType", (PyCFunction)WMInputMediaProps_SetMediaType, METH_VARARGS, WMInputMediaProps_SetMediaType__doc__},
 	{"GetConnectionName", (PyCFunction)WMInputMediaProps_GetConnectionName, METH_VARARGS, WMInputMediaProps_GetConnectionName__doc__},
 	{"GetGroupName", (PyCFunction)WMInputMediaProps_GetGroupName, METH_VARARGS, WMInputMediaProps_GetGroupName__doc__},
+	{"QueryIUnknown", (PyCFunction)WMInputMediaProps_QueryIUnknown, METH_VARARGS, WMInputMediaProps_QueryIUnknown__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
