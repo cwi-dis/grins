@@ -1,4 +1,5 @@
 import re, string
+import sys                              # need for CanonXMLParser
 
 class Error(Exception):
     """Error class; raised when a syntax error is encountered.
@@ -100,7 +101,6 @@ _Name = '['+_Letter+'_:]['+_NameChar+']*' # XML Name
 _QStr = "(?:'[^']*'|\"[^\"]*\")"        # quoted XML string
 _Char = u'\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD' # legal characters
 
-
 comment = re.compile('<!--(?P<comment>(?:[^-]|-[^-])*)-->')
 space = re.compile(_S)
 interesting = re.compile('[&<]')
@@ -115,7 +115,7 @@ attrfind = re.compile(_attrre)
 starttag = re.compile('<(?P<tagname>'+_Name+')(?P<attrs>(?:'+_attrre+')*)'+_opS+'(?P<slash>/?)>')
 endtag = re.compile('</(?P<tagname>'+_Name+')'+_opS+'>')
 
-illegal = re.compile(r'(?:\]\]>|'+'[^'+_Char+'])')
+illegal = re.compile(r'\]\]>')
 illegal1 = re.compile('[^'+_Char+']')
 
 cdata = re.compile('<!\\[CDATA\\[(?P<cdata>(?:[^]]|\\](?!\\]>)|\\]\\](?!>))*)\\]\\]>')
@@ -254,9 +254,20 @@ class XMLParser:
                 self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
         return data
         
+    def __normalize_linefeed(self, data):
+        # normalize line endings: firsr \r\n -> \n, then \r -> \n
+        return u'\n'.join(u'\n'.join(data.split(u'\r\n')).split(u'\r'))
+
+    def __normalize_space(self, data):
+        data = ' '.join(data.split('\t'))
+        data = ' '.join(data.split('\n'))
+        data = ' '.join(data.split('\r'))
+        return data
+
     def parse(self, data):
         """Parse the data as an XML document."""
         data = self.__parse_textdecl(data)
+        data = self.__normalize_linefeed(data)
 	# (Comment | PI | S)*
 	i = self.__parse_misc(data, 0)
 	# doctypedecl?
@@ -372,19 +383,21 @@ class XMLParser:
                 res = illegal.search(data, i, j)
                 if res is not None:
                     self.__error("illegal data content in element `%s'" % ptagname, data, i, fatal = 0)
-                res = space.match(data, i, j)
-                isspace = res is not None and res.span(0) == (i,j)
-                if content is not None and content != '#PCDATA' and type(content) is not type([]):
-                    if isspace:
-                        # don't pass white space to empty element
-                        pass
-                    else:
+                skip = 0
+                complain = 0
+                if content is not None:
+                    res = space.match(data, i, j)
+                    isspace = res is not None and res.span(0) == (i,j)
+                    if content == 'EMPTY':
+                        if not isspace:
+                            complain = 1
+                        skip = 1
+                    elif not isspace and  type(content) is type([]) and content and type(content[0]) is type({}):
+                        complain = 1
+                    if complain:
                         self.__error("no character data allowed in element `%s'" % ptagname, data, i, fatal = 0)
-                elif content is None:
-                    # always pass all data if no DTD
-                    isspace = 0
 		matched = 1
-                if not isspace:
+                if not skip:
                     self.handle_data(data[i:j])
 		i = j
 	    res = starttag.match(data, i)
@@ -423,7 +436,7 @@ class XMLParser:
 			self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
 		    i = res.end(0)
                 self.finish_endtag(nstag)
-                continue
+                matched = 1
 	    res = endtag.match(data, i)
 	    if res is not None:
                 if type(content) is type([]) and content and type(content[0]) is type({}):
@@ -439,7 +452,7 @@ class XMLParser:
                     self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
 		self.handle_comment(data[c0:c1])
 		i = res.end(0)
-                continue
+                matched = 1
 	    res = ref.match(data, i)
 	    if res is not None:
 		name = res.group('name')
@@ -468,7 +481,7 @@ class XMLParser:
 			return
 		    self.handle_data(str)
 		i = res.end(0)
-                continue
+                matched = 1
 	    res = pidecl.match(data, i)
 	    if res is not None:
 		matched = 1
@@ -504,7 +517,6 @@ class XMLParser:
                 self.__error("attribute `%s' in element `%s' does not have correct value" % (attrname, tagname), data, attrstart, fatal = 0)
         if attype == 'CDATA':
             return value                # always OK and don't change value
-        value = string.join(string.split(value)) # normalize value first
         if type(attype) is type([]):    # enumeration
             if value not in attype:
                 self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, fatal = 0)
@@ -569,15 +581,19 @@ class XMLParser:
                 # string to parse: complain and ignore rest of string
 		self.__error('bad attributes', data, i, fatal = 0)
 		return
+	    name = res.group('attrname')
+            if reqattrs.has_key(name):
+                del reqattrs[name]      # seen this #REQUIRED attribute
+            if attributes is not None and attributes.has_key(name):
+                attype = attributes[name][0]
+            else:
+                attype = None
             start, end = res.span('attrvalue')
-            value = self.__parse_attrval(data, (start+1, end-1))
+            value = self.__parse_attrval(data, attype, span = (start+1, end-1))
 	    if value is None:
                 # bad attribute value: ignore, but continue parsing
                 i = res.end(0)
 		continue
-	    name = res.group('attrname')
-            if reqattrs.has_key(name):
-                del reqattrs[name]      # seen this #REQUIRED attribute
             attrstart = res.start('attrname')
             if attributes is not None:
                 if attributes.has_key(name):
@@ -662,7 +678,7 @@ class XMLParser:
             attrdict[attr] = value
 	return tagname, attrdict, namespaces
 
-    def __parse_attrval(self, data, span = None):
+    def __parse_attrval(self, data, attype, span = None):
         # parse an attribute value, replacing entity and character
         # references with their values
         if span is None:
@@ -677,13 +693,19 @@ class XMLParser:
 	while i < dataend:
 	    res = interesting.search(data, i, dataend)
 	    if res is None:
-		newval.append(data[i:dataend])
+                str = data[i:dataend]
+                if attype is None or attype == 'CDATA':
+                    str = self.__normalize_space(str)
+		newval.append(str)
 		break
             j = res.start(0)
             if data[j] == '<':
                 self.__error("no `<' allowed in attribute value", data, j, fatal = 0)
             if j > i:
-                newval.append(data[i:j])
+                str = data[i:j]
+                if attype is None or attype == 'CDATA':
+                    str = self.__normalize_space(str)
+		newval.append(str)
 	    res = ref.match(data, j, dataend)
 	    if res is None:
 		self.__error('illegal attribute value', data, j, fatal = 0)
@@ -693,11 +715,11 @@ class XMLParser:
 	    i = res.end(0)
 	    name = res.group('name')
 	    if name:
-                # entity referenvce (e.g. "&lt;")
+                # entity reference (e.g. "&lt;")
 		if self.entitydefs.has_key(name):
 		    val = self.entitydefs[name]
                     del self.entitydefs[name]
-		    nval = self.__parse_attrval(val)
+		    nval = self.__parse_attrval(val, attype)
                     self.entitydefs[name] = val
 		    if nval is None:
 			return
@@ -711,7 +733,10 @@ class XMLParser:
 		    newval.append('&#%s;' % res.group('char'))
                     continue
 		newval.append(val)
-	return string.join(newval, '')
+        str = string.join(newval, '')
+        if attype is not None and attype != 'CDATA':
+            str = string.join(string.split(str))
+	return str
 
     def __parse_charref(self, name, data, i):
         # parse a character reference (e.g. "%#38;")
@@ -760,6 +785,7 @@ class XMLParser:
                             val = self.read_external(syslit)
                             encoding = self.__encoding
                             val = self.__parse_textdecl(val)
+                            val = self.__normalize_linefeed(val)
                         else:
                             val = ''
                     self.parse_dtd(val, internal)
@@ -805,14 +831,21 @@ class XMLParser:
                 ares = attdef.match(atdef)
                 while ares is not None:
                     atname, attype, atvalue, atstring = ares.group('atname', 'attype', 'atvalue', 'atstring')
-                    if atstring:
-                        atstring = atstring[1:-1] # remove quotes
-                        atstring = self.__parse_attrval(atstring)
                     if attype[0] == '(':
                         attype = map(string.strip, string.split(attype[1:-1], '|'))
+                    if atstring:
+                        atstring = atstring[1:-1] # remove quotes
+                        atstring = self.__parse_attrval(atstring, attype)
+                        if attype != 'CDATA':
+                            atstring = string.join(string.split(atstring))
+                        else:
+                            atstring = string.join(string.split(atstring, '\t'), ' ')
+                    if type(attype) is type([]):
                         if atstring is not None and atstring not in attype:
                             self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i)
-                    self.elems[elname][1][atname] = attype, atvalue, atstring
+                    if not self.elems[elname][1].has_key(atname):
+                        # first definition counts
+                        self.elems[elname][1][atname] = attype, atvalue, atstring
                     ares = attdef.match(atdef, ares.end(0))
                 i = res.end(0)
             res = entity.match(data, i)
@@ -831,6 +864,7 @@ class XMLParser:
                         pass
                     elif pvalue[0] in ('"',"'"):
                         pvalue = pvalue[1:-1]
+                        pvalue = self.__normalize_space(pvalue)
                         cres = entref.search(pvalue)
                         while cres is not None:
                             chr, nm = cres.group('char', 'pname')
@@ -862,6 +896,7 @@ class XMLParser:
                         pass
                     elif value[0] in ('"',"'"):
                         value = value[1:-1]
+                        value = self.__normalize_space(value)
                         cres = entref.search(value)
                         while cres is not None:
                             chr, nm = cres.group('char', 'pname')
@@ -1030,6 +1065,7 @@ class XMLParser:
             external = self.read_external(syslit)
             encoding = self.__encoding
             external = self.__parse_textdecl(external)
+            external = self.__normalize_linefeed(external)
             self.parse_dtd(external, 0)
             self.__encoding = encoding
             self.baseurl = baseurl
@@ -1188,6 +1224,54 @@ class TestXMLParser(XMLParser):
         self.flush()
         print '&%s;' % name
 
+class CanonXMLParser(XMLParser):
+
+    def read_external(self, name):
+        try:
+            import urllib
+            if type(name) is type(u'a'):
+                name = name.encode('latin-1')
+            u = urllib.urlopen(name)
+            data = u.read()
+            u.close()
+        except 'x':
+            return ''
+        return data
+
+    def handle_data(self, data):
+        sys.stdout.write(self.encode(data))
+
+    def handle_cdata(self, data):
+        sys.stdout.write(self.encode(data))
+
+    def handle_proc(self, name, data):
+        sys.stdout.write('<?%s %s?>' % (name.encode('utf-8'), data.strip().encode('utf-8')))
+
+    def unknown_starttag(self, tag, attrs):
+        sys.stdout.write('<%s' % tag.encode('utf-8'))
+        attrlist = attrs.items()
+        attrlist.sort()
+        for name, value in attrlist:
+            sys.stdout.write(' %s="%s"' % (name.encode('utf-8'), self.encode(value)))
+        sys.stdout.write('>')
+
+    def unknown_endtag(self, tag):
+        sys.stdout.write('</%s>' % tag.encode('utf-8'))
+
+    def unknown_entityref(self, name):
+        print '&%s;' % name.encode('utf-8')
+
+    def encode(self, data):
+        for c, tr in [('&', '&amp;'),
+                      ('>', '&gt;'),
+                      ('<', '&lt;'),
+                      ('"', '&quot;'),
+                      ('\t', '&#9;'),
+                      ('\n', '&#10;'),
+                      ('\r', '&#13;')]:
+            data = tr.join(data.split(c))
+        return data.encode('utf-8')
+
 def test(args = None):
     import sys, getopt
     from time import time
@@ -1195,13 +1279,15 @@ def test(args = None):
     if not args:
         args = sys.argv[1:]
 
-    opts, args = getopt.getopt(args, 'stnv')
+    opts, args = getopt.getopt(args, 'cstnv')
     klass = TestXMLParser
     do_time = 0
     namespace = 1
     verbose = 0
     for o, a in opts:
-        if o == '-s':
+        if o == '-c':
+            klass = CanonXMLParser
+        elif o == '-s':
             klass = XMLParser
         elif o == '-t':
             do_time = 1
@@ -1249,6 +1335,8 @@ def test(args = None):
                     print `info.text[i:j]`
                 else:
                     print ' '*(info.offset-i)+'^'
+        if klass is CanonXMLParser:
+            sys.stdout.write('\n')
         t1 = time()
         if do_time:
             print 'total time: %g' % (t1-t0)
