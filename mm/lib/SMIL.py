@@ -47,20 +47,21 @@ class SMIL:
 	__basicTiming = {'begin':None,
 			 'dur':None,
 			 'end':None,}
-	__Timing = {'repeat':None,
+	__Timing = {'fill':None,
+		    'fillDefault':None,
+		    'max':None,
+		    'min':None,
+		    'repeat':None,
 		    'repeatCount':None,
 		    'repeatDur':None,
-		    'syncBehavior':None,
-		    'syncTolerance':None,
-		    'syncMaster':None,
-		    'syncBehaviorDefault':None,
-		    'syncToleranceDefault':None,
-		    'restartDefault':None,
-		    'fill':None,
-		    'fillDefault':None,
 		    'restart':None,
-		    'min':None,
-		    'max':None,}
+		    'restartDefault':None,
+		    'syncBehavior':None,
+		    'syncBehaviorDefault':None,
+		    'syncMaster':None,
+		    'syncTolerance':None,
+		    'syncToleranceDefault':None,
+		    }
 	__Timing.update(__basicTiming)
 
 	# all allowed entities with all their attributes

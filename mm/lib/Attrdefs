@@ -126,7 +126,7 @@
 (fill (enum default remove freeze transition hold) default 'Fill' fill
 	'Whether data should be retained on screen after playing (default depends on type of node)' normal (smil2 cmif))
 
-(fillDefault (enum default remove freeze transition hold) default 'Fill Default' fill
+(fillDefault (enum default remove freeze transition hold) default 'Fill default' fill
 	'Default value for the fill property on the children of this node (default depends on type of node)' inherited (smil2 cmif))
 
 (font (string) 'Times-Roman' 'Font' font
@@ -266,8 +266,11 @@
 (repeatdur (float) 0 'Repeat duration' default
 	'Time the node should repeat' raw (smil2))
 
-(restart (enum always whenNotActive never) always 'Restart node' restart
+(restart (enum default always whenNotActive never) default 'Restart node' restart
 	'When can the node be restarted' raw (cmif smil2))
+
+(restartDefault (enum default always whenNotActive never) default 'Restart default' restart
+	'Default value for the restart property on the children of this node' raw (cmif smil2))
 
 (scale (float) 1.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (all))

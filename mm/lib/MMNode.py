@@ -1136,6 +1136,14 @@ class MMNode:
 			return None
 		return syncBehavior
 
+	def GetRestart(self):
+		restart = self.attrdict.get('restart')
+		if restart is None or restart == 'default':
+			restart = self.GetInherAttrDef('restartDefault', None)
+		if restart is None or restart == 'default':
+			return 'always'
+		return restart
+
 	def GetType(self):
 		return self.type
 

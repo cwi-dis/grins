@@ -405,7 +405,7 @@ class NodeWrapper(Wrapper):
 			'.type',
 			('terminator',),
 			'begin', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
-			'restart',
+			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
 			('fill',), ('fillDefault',),
 			('syncBehavior',), ('syncBehaviorDefault',),
@@ -427,6 +427,8 @@ class NodeWrapper(Wrapper):
 		   self.context.attributes.get('project_boston', 0):
 			namelist.append('fill')
 		if self.context.attributes.get('project_boston', 0):
+			namelist.append('restart')
+			namelist.append('restartDefault')
 			namelist.append('fillDefault')
 			namelist.append('syncBehavior')
 			namelist.append('syncBehaviorDefault')
