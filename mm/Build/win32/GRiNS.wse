@@ -22,8 +22,8 @@ item: Global
   EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-play-101alpha.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=sjoerd
-  Upload Directory=/ufs/sjoerd/tmp
+  Upload Name=jack
+  Upload Directory=/ufs/jack/tmp
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.0.1alpha
