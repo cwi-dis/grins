@@ -1,10 +1,11 @@
 *.c
+Editor.aps
 FreezeOpts
-GRiNS_SV1.exe
-GRiNS_SV1.exp
-GRiNS_SV1.lib
-GRiNS_SV1.ncb
-GRiNS_SV1.opt
+GRiNS_SNP.exe
+GRiNS_SNP.exp
+GRiNS_SNP.lib
+GRiNS_SNP.ncb
+GRiNS_SNP.opt
 log.txt
 Makefile
 Release
