@@ -172,22 +172,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			synctolist.append((xnode.GetUID(), xside, delay, yside))
 		else:
 			# relative to other node
+			xnode = self.__nodemap.get(name)
+			if xnode is None:
+				print 'warning: ignoring sync arc from',\
+				      node.attrdict.get('name','<unnamed>'),\
+				      'to unknown node'
+				return
 			for n in node.GetParent().GetChildren():
-				nm = n.attrdict.get('name')
-				if nm is not None and nm == name:
-					xnode = n
+				if n is xnode:
 					break
 			else:
 				print 'warning: out of scope sync arc from',\
 				      node.attrdict.get('name','<unnamed>'),\
-				      'to',name
+				      'to',\
+				      xnode.attrdict.get('name','<unnamed>')
 				return
-## 				if self.__nodemap.has_key(name):
-## 					xnode = self.__nodemap[name]
-## 				else:
-## 					print 'warning: ignoring unknown node',\
-## 					      name,'in syncarc'
-## 					return
 			if counter == -1:
 				xside = TL
 				counter = 0
