@@ -2549,6 +2549,12 @@ class _ResizeableDisplayList(_DisplayList):
 			str = entry[1]
 			dc.SetBkMode(win32con.TRANSPARENT)
 			dc.DrawText(str, ltrb, win32con.DT_SINGLELINE | win32con.DT_CENTER | win32con.DT_VCENTER)
+		elif cmd == 'box':
+			rc = x, y, w, h = wnd.LRtoDR(entry[1])
+			# XXXX should we subtract 1 from right and bottom edges
+			if not self._overlap(region, rc):
+				return
+			win32mu.DrawRectangle(dc,rc,self._curfg)			
 		else:
 			_DisplayList._do_render(self, entry, dc, region)
 
