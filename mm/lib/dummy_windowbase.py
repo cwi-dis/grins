@@ -181,11 +181,11 @@ class _Window:
 		return _Window(self, x, y, w, h, '', 1, pixmap, transparent)
 
 	def showwindow(self):
-		"""Highlight the window"""
+		# Highlight the window
 		pass
 
 	def dontshowwindow(self):
-		"""Don't highlight the window"""
+		# Don't highlight the window
 		pass
 
 	def fgcolor(self, color):

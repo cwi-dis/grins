@@ -3,7 +3,7 @@ __version__ = "$Id$"
 import string
 
 def nameencode(value):
-	"""Quote a value"""
+	# Quote a value
 
 	if '&' in value:
 		value = string.join(string.split(value,'&'),'&amp;')

@@ -112,8 +112,8 @@ class FancyURLopener(_OriginalFancyURLopener):
 	#
 	# override retrieve for prefetch implementation
 	def retrieve(self, url, filename=None, reporthook=None):
-		"""retrieve(url) returns (filename, None) for a local object
-		or (tempfilename, headers) for a remote object."""
+		# retrieve(url) returns (filename, None) for a local object
+		# or (tempfilename, headers) for a remote object.
 		url = unwrap(url)
 		import urlparse
 		scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
