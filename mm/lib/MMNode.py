@@ -1510,7 +1510,7 @@ class MMChannel(MMTreeElement):
 		return self.attrdict.has_key(key)
 
 	def keys(self):
-		keys = sebnaself.attrdict.keys()
+		keys = self.attrdict.keys()
 		if self.GetParent() is not None:
 			keys.append('base_window')
 			keys.append('base_winoff')
