@@ -1,5 +1,13 @@
 #ifndef INC_VID2RM
 
+DEFINE_GUID(IID_IRealConverter,
+0xe8d61c44, 0xd313, 0x472a, 0x84, 0x68, 0x2b, 0x1e, 0xd5, 0xb0, 0x5c, 0xab);
+struct IRealConverter : public IUnknown
+	{
+	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
+	};
+
+
 class CVideoRenderer;
 
 class CVideoInputPin : public CRendererInputPin
@@ -24,13 +32,12 @@ public:
 
 }; // CVideoInputPin
 
-#ifndef INC_RCONVERT
-#include "rconvert.h"
-#endif
+
+DEFINE_GUID(CLSID_Vid2rm,
+0xe8d61c43, 0xd313, 0x472a, 0x84, 0x68, 0x2b, 0x1e, 0xd5, 0xb0, 0x5c, 0xab);
 
 class CVideoRenderer : 
 	public CBaseVideoRenderer, 
-	public IFileSinkFilter,
 	public IRealConverter
 {
 public:
@@ -40,11 +47,15 @@ public:
     CVideoRenderer(TCHAR *pName,LPUNKNOWN pUnk,HRESULT *phr);
     ~CVideoRenderer();
 
-	void SlowRender(IMediaSample *pMediaSample);
+	void EncodeSample(IMediaSample *pMediaSample);
+
 	HRESULT CopyImage(IMediaSample *pMediaSample,
                                      VIDEOINFOHEADER *pVideoInfo,
                                      LONG *pBufferSize,
                                      BYTE **ppVideoImage,
+                                     RECT *pSourceRect);
+	HRESULT GetImageHeader(BITMAPINFOHEADER *pbih,
+                                     VIDEOINFOHEADER *pVideoInfo,
                                      RECT *pSourceRect);
 
     DECLARE_IUNKNOWN
@@ -53,12 +64,7 @@ public:
 	// Implements IRealConverter
 	STDMETHODIMP SetInterface(IUnknown *p,LPCOLESTR hint);
 
-    // Implements the IFileSinkFilter interface
-    STDMETHODIMP SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt);
-    STDMETHODIMP GetCurFile(LPOLESTR * ppszFileName,AM_MEDIA_TYPE *pmt);
-
     CBasePin *GetPin(int n);
-
 
     // Override these from the filter and renderer classes
     void PrepareRender();
@@ -81,9 +87,9 @@ public:
     CImageDisplay m_Display;            // Manages the video display type
     CMediaType m_mtIn;                  // Source connection media type
     SIZE m_VideoSize;                   // Size of the current video stream
-    LPOLESTR m_pFileName;           // The filename where we Vid2rm to
-	int m_ixframe;
 	BYTE *m_pVideoImage;
+	int m_ixframe;
+	DWORD m_lastTimestamp;
 }; 
 
 #endif
