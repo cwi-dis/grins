@@ -88,11 +88,15 @@ HINSTANCE LoadLibrary(const char* dllname)
 	strcpy((char*)&strLibName[1], dllname);
 	strLibName[0] = strlen(dllname);
 	theErr = FSMakeFSSpec (0, 0, strLibName, &fileSpec);
+	if( theErr ) fprintf(stderr, "FSMakeFSSpec: error %d\n", theErr);
 	theErr = ResolveAliasFile (&fileSpec, true, &tmpBool, &tmpBool);
+	if( theErr ) fprintf(stderr, "ResolveAliasFile: error %d\n", theErr);
 	theErr = GetDiskFragment (&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, kLoadCFrag, &connID, &mainAddr, errMsg);
 	if (theErr)
 	{
-	    theErr = GetSharedLibrary (fileSpec.name, kPowerPCCFragArch, kLoadCFrag, &connID, &mainAddr, errMsg);
+	    OSErr theErr2;
+	    theErr2 = GetSharedLibrary (fileSpec.name, kPowerPCCFragArch, kLoadCFrag, &connID, &mainAddr, errMsg);
+	    if( theErr2 ) fprintf(stderr, "GetDiskFragment: error %d, GetSharedLibrary: error %d\n", theErr, theErr2);
 	}
 
 	return (HINSTANCE)connID;
