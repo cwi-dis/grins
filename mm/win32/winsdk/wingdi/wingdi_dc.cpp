@@ -882,7 +882,6 @@ PyDC_PolyDraw(PyDC *self, PyObject *args)
 }
 #endif
 
-#ifndef _WIN32_WCE
 static PyObject*
 PyDC_TextOut(PyDC *self, PyObject *args)
 {
@@ -892,14 +891,53 @@ PyDC_TextOut(PyDC *self, PyObject *args)
 		return NULL;
 	int cbstr = PyString_GET_SIZE(pystr);
 	char *pstr = PyString_AS_STRING(pystr);
+#ifndef _WIN32_WCE
 	BOOL res = TextOut(self->m_hDC, x, y, TextPtr(pstr), cbstr);
+#else
+	UINT fuOptions = ETO_OPAQUE;
+	RECT *prc = NULL;
+	int *pDx = NULL;
+	BOOL res = ExtTextOut(self->m_hDC, x, y, fuOptions, prc, TextPtr(pstr), cbstr, pDx);
+#endif
 	if(!res){
 		seterror("TextOut", GetLastError());
 		return NULL;
 		}
 	return none();
 }
-#endif
+
+static PyObject*
+PyDC_ExtTextOut(PyDC *self, PyObject *args)
+{
+	int x, y;
+	PyObject *pystr;
+	UINT fuOptions = ETO_OPAQUE;
+	PyObject *rcobj = NULL;
+	int *pDx = NULL;
+	if (!PyArg_ParseTuple(args, "(ii)O|iO", &x, &y, &pystr, &fuOptions, &rcobj))
+		return NULL;
+	int cbstr = PyString_GET_SIZE(pystr);
+	char *pstr = PyString_AS_STRING(pystr);
+	RECT rc;
+	RECT *prc = NULL;
+	if(rcobj != NULL)
+		{
+		if(!PyArg_ParseTuple(rcobj, "iiii", &rc.left,  &rc.top,  &rc.right,&rc.bottom)) 
+			{
+			PyErr_Clear();
+			seterror("ExtTextOut", "Argument not a rectangle");
+			return NULL;
+			}
+		prc = &rc;
+		}
+	BOOL res = ExtTextOut(self->m_hDC, x, y, fuOptions, prc, TextPtr(pstr), cbstr, pDx);
+	if(!res){
+		seterror("TextOut", GetLastError());
+		return NULL;
+		}
+	return none();
+}
+
 
 static PyObject*
 PyDC_DrawText(PyDC *self, PyObject *args)
@@ -1130,11 +1168,13 @@ PyMethodDef PyDC::methods[] = {
 	{"PolyBezier", (PyCFunction)PyDC_PolyBezier, METH_VARARGS, ""},
 	{"PolyBezierTo", (PyCFunction)PyDC_PolyBezierTo, METH_VARARGS, ""},
 	{"PolyDraw", (PyCFunction)PyDC_PolyDraw, METH_VARARGS, ""},
-	{"TextOut", (PyCFunction)PyDC_TextOut, METH_VARARGS, ""},
 
 	{"PaintRgn", (PyCFunction)PyDC_PaintRgn, METH_VARARGS, ""},
 	{"PathToRegion", (PyCFunction)PyDC_PathToRegion, METH_VARARGS, ""},
 #endif
+	{"TextOut", (PyCFunction)PyDC_TextOut, METH_VARARGS, ""},
+	{"ExtTextOut", (PyCFunction)PyDC_ExtTextOut, METH_VARARGS, ""},
+
 	{"SaveDC", (PyCFunction)PyDC_SaveDC, METH_VARARGS, ""},
 	{"RestoreDC", (PyCFunction)PyDC_RestoreDC, METH_VARARGS, ""},
 	{"SetROP2", (PyCFunction)PyDC_SetROP2, METH_VARARGS, ""},
