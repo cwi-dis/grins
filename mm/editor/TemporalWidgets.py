@@ -187,10 +187,10 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		# nwidth is the needed width for this.
 		nwidth = self.mainnode.get_width(self.timescale)
 		# Make it a reasonable value.
-		while nwidth > 2000:
-			nwidth = nwidth / 2
-		while nwidth < 100:
-			nwidth = nwidth * 2
+		#while nwidth > 2000:
+		#	nwidth = nwidth / 2
+		#while nwidth < 100:
+		#	nwidth = nwidth * 2
 
 		# Predict the number of bars needed:
 		numbars = self.mainnode.guess_num_bars()
@@ -790,6 +790,7 @@ class SeqMMWidget(MultiMMWidget):
 		mytimes = self.node.GetTimes()
 		x,y,w,h = self.get_box()
 		endx = x + w # - BARWIDTH + BARWIDTH
+		bars_so_far = 0
 
 		# Add the start and end bars.
 		# TODO: Make this better.
@@ -806,19 +807,14 @@ class SeqMMWidget(MultiMMWidget):
 		prevy = (t+b)/2
 		if mytimes[2]>mytimes[0]:
 			endtime = mytimes[2]
-			#if self.needed_bars >= 2:
-			#	total_size_of_bars = (self.needed_bars-2)*BARWIDTH
-			#else:
-			#	total_size_of_bars = 0
-			#print "DEBUG: total size of bars: ", total_size_of_bars
-			#print "DEBUG: self.needed_bars: ", self.needed_bars
 			ppt = self.timecanvas.pixels_per_time
 			for i in range(0, len(self.subwidgets)):
 				ctime = self.subwidgets[i].GetTimes()
-				cl = (ctime[0]-mytimes[0])*ppt + x
+				cl = (ctime[0]-mytimes[0])*ppt + x + bars_so_far
 				cendtime = ctime[2]
-				nodewidth = (cendtime-mytimes[0])*ppt + self.subwidgets[i].needed_bars*BARWIDTH
-				cr = nodewidth + x
+				this_bars = self.subwidgets[i].needed_bars * BARWIDTH
+				nodewidth = (cendtime-mytimes[0])*ppt + this_bars
+				cr = nodewidth + x + bars_so_far
 				self.subwidgets[i].set_x(cl, cr)
 				self.subwidgets[i].recalc()
 				y1, y2 = self.subwidgets[i].get_y_end()
@@ -826,6 +822,7 @@ class SeqMMWidget(MultiMMWidget):
 				# WORKING HERE - Things don't look quite right yet.
 				prevx = cr
 				prevy = (y1+y2)/2
+				bars_so_far = bars_so_far + this_bars
 		else:
 			print "Error: undrawable node: ", self.node
 

@@ -52,7 +52,8 @@ class GeoWidget(Widget):
 
 		# << This is a hack: 
 		bob = len(self.change_objects)
-		if self.displist and bob != 0 and bob < 100:
+		if not self.dirty and self.displist and bob != 0 and bob < 100:
+			print "DEBUG: geom using hack."
 			self.displist, displist = self.displist.clone(), self.displist
 			for i in self.change_objects:
 				i.displist = self.displist
@@ -63,6 +64,7 @@ class GeoWidget(Widget):
 			return
 		# >> end of hack.
 
+		print "DEBUG: geom completely redrawing."
 		x,y = self.canvassize
 		self.mother.window.setcanvassize((windowinterface.UNIT_PXL, x,y))
 		# Fixing the color of the background will break things. Sorry, but I'm lazy (-anonymous developer :-).
@@ -89,12 +91,16 @@ class GeoWidget(Widget):
 	def getgeometry(self):
 		return self.mother.window.getgeometry()
 
+	def redraw_all(self):
+		self.dirty = 1
 
 class GeoClientWidget(Widget):
 	# Common routines for all widgets.
 	def moveto(self, coords):
 		Widget.moveto(self, coords)
 		self.parent.notify_moveto(coords)
+	def need_redraw(self):
+		self.parent.change_objects.append(self)
 
 class Image(GeoClientWidget):
 	def redraw(self):
@@ -162,9 +168,6 @@ class Text(GeoClientWidget):
 	def get_height(self):
 		print "TODO: Text.get_height()"
 		return 12;
-
-	def need_redraw(self):
-		self.parent.change_objects.append(self)
 
 class FPolygon(GeoClientWidget):
 	pass;
