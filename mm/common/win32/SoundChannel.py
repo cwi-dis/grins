@@ -25,6 +25,7 @@ class SoundChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
 		self.__rc = None
+		self.__qc = None
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -50,9 +51,9 @@ class SoundChannel(Channel.ChannelAsync):
 		if not url:
 			self.errormsg(node, 'No URL set on node')
 			return 1
-		import MMmimetypes, string
-		mtype = MMmimetypes.guess_type(url)[0]			
-		if mtype and string.find(mtype, 'real') >= 0:
+		import MMmimetypes
+		mtype = MMmimetypes.guess_type(url)[0]	
+		if mtype and mtype.find('real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
 				try:
@@ -64,10 +65,19 @@ class SoundChannel(Channel.ChannelAsync):
 			if self.__rc:
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
+		elif mtype and (mtype.find('x-aiff')>=0 or mtype.find('quicktime')) and MediaChannel.HasQtSupport():
+			node.__type = 'qt'
+			self.__qc = MediaChannel.QtChannel(self)
+			try:
+				self.__qc.prepare_player(node)
+			except MediaChannel.error, msg:
+				self.errormsg(node, msg)
+			else:
+				self.__ready = 1
 		else:
 			if self.needsSoundLevelCaps(node):
 				self.__maxsoundlevel = self.getMaxSoundLevel(node)
-				if mtype and string.find(mtype, 'x-wav')>=0:
+				if mtype and mtype.find('x-wav')>=0:
 					if not self.__mc:
 						self.__mc = MediaChannel.DSPlayer(self)
 					lc = self._attrdict.GetLayoutChannel()
@@ -77,9 +87,10 @@ class SoundChannel(Channel.ChannelAsync):
 				self.__mc = MediaChannel.MediaChannel(self)
 			try:
 				self.__mc.prepare_player(node)
-				self.__ready = 1
 			except MediaChannel.error, msg:
 				self.errormsg(node, msg)
+			else:
+				self.__ready = 1
 		return 1
 
 	def do_play(self, node, curtime):
@@ -89,7 +100,7 @@ class SoundChannel(Channel.ChannelAsync):
 			# arming failed, so don't even try playing
 			self.playdone(0, curtime)
 			return
-		if node.__type == 'real':
+		if self.__type == 'real':
 			if not self.__rc:
 				self.playdone(0, curtime)
 			elif not self.__rc.playit(node, start_time=start_time):
@@ -100,6 +111,10 @@ class SoundChannel(Channel.ChannelAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
+				self.playdone(0, curtime)
+		elif self.__type == 'qt' and MediaChannel.HasQtSupport():
+			if not self.__qc.playit(node, curtime, start_time=start_time):
+				self.errormsg(node,'Can not play')
 				self.playdone(0, curtime)
 		elif not self.__mc.playit(node, curtime, start_time=start_time):
 			self.errormsg(node,'Can not play')
@@ -114,10 +129,14 @@ class SoundChannel(Channel.ChannelAsync):
 			self.__mc.stopit()
 			self.__mc.destroy()
 			self.__mc = None
-		if self.__rc:
+		elif self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
+		elif self.__qc:
+			self.__qc.stopit()
+			self.__qc.destroy()
+			self.__qc = None
 
 	def endoftime(self):
 		self.__stopplayer()
@@ -127,8 +146,10 @@ class SoundChannel(Channel.ChannelAsync):
 	def setpaused(self, paused):
 		if self.__rc:
 			self.__rc.pauseit(paused)
-		if self.__mc is not None:
+		elif self.__mc is not None:
 			self.__mc.pauseit(paused)
+		elif self.__qc is not None:
+			self.__qc.pauseit(paused)
 		Channel.ChannelAsync.setpaused(self, paused)
 
 
@@ -152,8 +173,9 @@ class SoundChannel(Channel.ChannelAsync):
 	def updatesoundlevel(self, val):
 		if self.__mc:
 			self.__mc.updatesoundlevel(val, self.__maxsoundlevel)
-		if self.__rc:
+		elif self.__rc:
 			pass
-
+		elif self.__qc:
+			pass
 
 		
