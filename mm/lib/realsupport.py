@@ -4,7 +4,8 @@ class RTParser(xmllib.XMLParser):
 	topelement = 'window'
 	attributes = {
 		'window': {'type':'generic',
-			   'duration':'60',
+			   'duration':None,
+			   'endtime': None, # obsolete name for duration
 			   'width':None,
 			   'height':None,
 			   'bgcolor':None,
@@ -36,6 +37,7 @@ class RTParser(xmllib.XMLParser):
 		'u': {},
 		'font': {'charset':'us-ascii',
 			 'color':None,
+			 'bgcolor':None, # obsolete name for color
 			 'face':'Times New Roman',
 			 'size':'+0',},
 		'a': {'href':None,
@@ -69,10 +71,11 @@ class RTParser(xmllib.XMLParser):
 		'ul': __all,
 		}
 
-	def __init__(self):
+	def __init__(self, file = None):
 		self.elements = {
 			'window': (self.start_window, None),
 			}
+		self.__file = file or '<unknown file>'
 		xmllib.XMLParser.__init__(self, accept_unquoted_attributes = 1,
 					  accept_utf8 = 1, map_case = 1)
 
@@ -114,6 +117,9 @@ class RTParser(xmllib.XMLParser):
 		self.duration = duration
 		self.width = width
 		self.height = height
+
+	def syntax_error(self, msg):
+		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
@@ -227,10 +233,11 @@ class RPParser(xmllib.XMLParser):
 		'viewchange': __empty,
 		}
 
-	def __init__(self):
+	def __init__(self, file = None):
 		self.elements = {
 			'head': (self.start_head, None),
 			}
+		self.__file = file or '<unknown file>'
 		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
 
 	def start_head(self, attributes):
@@ -267,6 +274,9 @@ class RPParser(xmllib.XMLParser):
 		self.duration = duration
 		self.width = width
 		self.height = height
+
+	def syntax_error(self, msg):
+		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
