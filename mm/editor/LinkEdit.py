@@ -51,7 +51,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		self.right.hidden = 0
 		self.linkfocus = None
 		self.interesting = []
-		self.editor = None
 
 		LinkBrowserDialog.__init__(self, self.__maketitle(), 
 			[('All', (self.menu_callback, (self.left, M_ALL))),
@@ -125,7 +124,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	def hide(self):
 		if self.is_showing():
-			self.editorhide()
 			self.toplevel.showstate(self, 0)
 			self.editmgr.unregister(self)
 			LinkBrowserDialog.hide(self)
@@ -135,7 +133,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		self.hide()
 
 	def destroy(self):
-		self.editorhide()
 		LinkBrowserDialog.close(self)
 		del self.left.browser_setlabel
 		del self.left.browser_show
@@ -396,13 +393,11 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	# This function reloads the link browser or makes it invisible
 	def reloadlinks(self):
-		self.editorhide()
 		slf = self.left.focus
 		srf = self.right.focus
 		if slf is None or (srf is None and not self.right.hidden):
 			# At least one unfocussed anchorlist. No browser
 			self.middlehide()
-			self.editorhide()
 			self.linkfocus = None
 			return
 		lfocus = self.left.anchors[slf]
@@ -428,7 +423,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 				self.linkfocus = self.links.index(fvalue)
 			except ValueError:
 				pass
-		if self.links and self.linkfocus is None and not self.editor:
+		if self.links and self.linkfocus is None:
 			self.linkfocus = 0
 		if self.linkfocus is None:
 			self.editsetsensitive(0)
@@ -650,31 +645,20 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 	def kill(self):
 		self.hide()
 		
-	def editorhide(self):
-		if self.editor:
-			editor = self.editor
-			self.editor = None
-			editor.close()
-			
 	def editorshow(self, editlink, isnew):
-		self.editorhide()
-		self.editor = LinkEditEditor(self, "Hyperlink properties", editlink, isnew)
-		
+		editor = LinkEditEditor(self, "Hyperlink properties", editlink, isnew)
+		editlink = editor.run()
+		if editlink:
+			self.editsave(editlink)
+
 	def editsave(self, editlink):
 		em = self.editmgr
 		if not em.transaction(): return
-		if self.editor:
-			self.editor.changed = 0
 		if self.linkfocus is not None:
 			l = self.links[self.linkfocus]
 			em.dellink(l)
 		em.addlink(editlink)
 		em.commit()
-			
-	def editdone(self):
-		self.updateform()
-		self.editorhide()
-
 
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
@@ -684,19 +668,13 @@ class LinkEditEditor(LinkEditorDialog):
 		self.editlink = editlink
 		self.changed = isnew
 		self.oksetsensitive(self.changed)
+
+	def run(self):
+		self.show()
+		return self.editlink
 		
 	def close(self):
-		if self.changed:
-			# XXXX This may well be wrong in case of
-			# a close because of a change in another
-			# part of cmifed (recursive transaction)
-			rv = windowinterface.multchoice("This will close the currently open hyperlink\neditor. Do you want to save?",
-				["save", "discard"], 0)
-			if rv == 0:
-				self.parent.editsave(self.editlink)
-		LinkEditorDialog.close(self)
-		self.parent = None
-		self.editlink = None
+		pass
 
 	def linkdir_callback(self):
 		linkdir = self.linkdirgetchoice()
@@ -719,14 +697,10 @@ class LinkEditEditor(LinkEditorDialog):
 			self.oksetsensitive(self.changed)
 
 	def ok_callback(self):
-		self.parent.editsave(self.editlink)
-		if self.parent:
-			self.parent.editdone()
+		pass
 
 	def cancel_callback(self):
-		self.changed = 0
-		self.parent.editdone()
-
+		self.editlink = None
 #
 # General functions
 #
