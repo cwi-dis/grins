@@ -86,15 +86,6 @@ class TopLevelDialog:
 		b1 = 'Save'
 		b2 = "Don't save"
 		b3 = 'Cancel'
-		print 'Loading Library.............'
-		#PydPath = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\1.4.0\\PythonPath\\PyDLLs")
-		PydPath = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\PyDLLs")
-		cmifexPath = PydPath + "\\cmifex.pyd"
-
-		try:
-			dll=win32ui.LoadLibrary(cmifexPath)
-		except win32ui:
-			print "Could not Locate CmifEx.Pyd"
 
 		reply = cmifex2.MesBox(prompt,"Warning !"," qc")
 
