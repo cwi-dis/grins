@@ -68,6 +68,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# when stopped, we can play and pause
 			play,
 			pause,
+			stop,
 			]
 		self.playlist = self.commandlist + [
 			# when playing, we can pause and stop
