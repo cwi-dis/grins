@@ -278,6 +278,10 @@ SOURCE=.\M_bdb.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_bisect.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_bitrates.c
 # End Source File
 # Begin Source File
@@ -627,6 +631,10 @@ SOURCE=.\M_Owner.c
 # Begin Source File
 
 SOURCE=.\M_parsehtml.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_parseskin.c
 # End Source File
 # Begin Source File
 
