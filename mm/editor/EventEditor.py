@@ -271,10 +271,13 @@ class EventStruct:
 	def get_node(self):
 		if self._setnode is not None:
 			return self._setnode
-		return self._syncarc.srcnode
+		return self._syncarc.refnode()
 
 	def set_node(self, newnode):
-		if self.get_node() == newnode:
+		oldnode = self._setnode
+		if oldnode is None:
+			oldnode = self._syncarc.srcnode
+		if oldnode == newnode:
 			return
 		if newnode is None:
 			self._setnode = None
