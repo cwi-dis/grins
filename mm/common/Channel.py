@@ -33,7 +33,7 @@ class Channel:
 	#
 	# The following methods can be called by higher levels.
 	#
-	chan_attrs = ['visible']
+	chan_attrs = ['visible', 'base_window']
 	node_attrs = ['file']
 	_visible = FALSE
 
@@ -126,14 +126,52 @@ class Channel:
 			self.hide()
 
 	def show(self):
-		# Indicate that the channel must enter the SHOWN
-		# state.
 		if debug:
 			print 'Channel.show('+`self`+')'
+		# Indicate that the channel must enter the SHOWN state.
 		self._want_shown = 1
 		if self._is_shown:
+			# already shown, so do nothing
 			return
-		if not self.do_show():
+		# Deal with being a subchannel.
+		for chan in channels:
+			# Remove us from all subchannel lists.
+			try:
+				chan._subchannels.remove(self)
+			except ValueError:
+				pass
+		# First, check that there is a base_window attribute
+		# and that it isn't "undefined".
+		try:
+			pname = self._attrdict['base_window']
+		except KeyError:
+			pname = 'undefined'
+		if pname == self._name:
+			pname = 'undefined'
+		pchan = None
+		if pname != 'undefined':
+			# Next, check that the base window channel exists.
+			try:
+				pchan = self._player.ChannelWinDict[pname]
+			except KeyError:
+				pchan = None
+				windowinterface.showmessage(
+					'Base window '+`pname`+' for '+
+					`self._name`+' not found',
+					mtype = 'error')
+			if pchan and self in pchan._subchannels:
+				windowinterface.showmessage(
+					'Channel '+`self._name`+' is part of'+
+					' a base-window loop',
+					mtype = 'error')
+				pchan = None
+		if pchan:
+			# Finally, check that the base window is being shown.
+			pchan._subchannels.append(self)
+			if not pchan._is_shown:
+				# parent channel not shown, so cannot show self
+				return
+		if not self.do_show(pchan):
 			return
 		self._is_shown = 1
 		# Since the calls to arm() and play() lied to the
@@ -214,14 +252,10 @@ class Channel:
 			chan._want_shown = want_shown
 		self.do_hide()
 		for chan in channels:
-##			if isin(self, chan._subchannels):
-			if self in chan._subchannels:
+			try:
 				chan._subchannels.remove(self)
-			# XXX--is this faster?
-##			try:
-##				chan._subchannels.remove(self)
-##			except ValueError:
-##				pass
+			except ValueError:
+				pass
 		self._subchannels = subchannels
 		if self._armstate == ARMING:
 			self.arm_1()
@@ -263,7 +297,7 @@ class Channel:
 		# Indicate whether the channel is being shown.
 		return self._want_shown
 
-	def do_show(self):
+	def do_show(self, pchan):
 		# Actually do the work to show the channel.  Return 1
 		# if successful, 0 otherwise.
 		# This method is only called when the channel is
@@ -699,7 +733,7 @@ class Channel:
 ##ChannelWinDict = {}
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff', 'transparent']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
@@ -895,7 +929,7 @@ class ChannelWindow(Channel):
 		else:
 			self._player.editmgr.rollback()
 
-	def do_show(self):
+	def do_show(self, pchan):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
 		try:
@@ -903,63 +937,7 @@ class ChannelWindow(Channel):
 		except AttributeError:
 			pass
 		# create a window for this channel
-		for chan in channels:
-##			if isin(self, chan._subchannels):
-			if self in chan._subchannels:
-				chan._subchannels.remove(self)
-			# XXX--is this faster?
-##			try:
-##				chan._subchannels.remove(self)
-##			except ValueError:
-##				pass
 		pgeom = None
-		pchan = None
-		#
-		# First, check that there is a base_window attribute and
-		# that it isn't "undefined".
-		#
-		if self._attrdict.has_key('base_window'):
-			pname = self._attrdict['base_window']
-		else:
-			pname = 'undefined'
-		if pname == self._name:
-		        pname = 'undefined'
-		if pname <> 'undefined':
-			#
-			# Next, check that the base window channel exists.
-			#
-			if self._player.ChannelWinDict.has_key(pname):
-				pchan = self._player.ChannelWinDict[pname]
-## 				if not pchan.is_layout_channel:
-## 				    print 'Warning: Base channel is not a layout channel:', pname
-			else:
-				pchan = None
-				windowinterface.showmessage(
-					'Base window '+`pname`+' for '+
-					`self._name`+' not found',
-					mtype = 'error')
-				
-##			if isin(self, pchan._subchannels):
-			if pchan and self in pchan._subchannels:
-				windowinterface.showmessage(
-					'Channel '+`self._name`+' is part of'+
-					' a base-window loop',
-					mtype = 'error')
-				pchan = None
-		if pchan:
-			pchan._subchannels.append(self)
-			#
-			# Next, check that it is visible already
-			#
-			if not pchan._is_shown:
-				return 0
-			if not pchan.window:
-				windowinterface.showmessage(
-					'parent window for ' + `self._name`+
-					' not shown (channel order problem?)',
-					mtype = 'warning')
-				pchan._subchannels.remove(self)
-				pchan = None
 		if pchan:
 			#
 			# Find the base window offsets, or ask for them.
@@ -1155,7 +1133,7 @@ class _ChannelThread:
 		#	return xxxchannel.init()
 		raise error, 'threadstart method should be overridden'
 
-	def do_show(self):
+	def do_show(self, pchan):
 		if debug:
 			print 'ChannelThread.do_show('+`self`+')'
 		attrdict = {}
@@ -1298,9 +1276,9 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		ChannelWindow.destroy(self)
 		_ChannelThread.destroy(self)
 
-	def do_show(self):
-		if ChannelWindow.do_show(self):
-			if _ChannelThread.do_show(self):
+	def do_show(self, pchan):
+		if ChannelWindow.do_show(self, pchan):
+			if _ChannelThread.do_show(self, pchan):
 				return 1
 			ChannelWindow.do_hide(self)
 		return 0

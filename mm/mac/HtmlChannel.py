@@ -22,11 +22,11 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.want_default_colormap = 1
 		self.htmlw = None
 
-	def do_show(self):
+	def do_show(self, pchan):
 		#
 		# Step 1 - Show the base window. 
 		#
-		if not Channel.ChannelWindow.do_show(self):
+		if not Channel.ChannelWindow.do_show(self, pchan):
 			return 0
 
 		if self.window:
