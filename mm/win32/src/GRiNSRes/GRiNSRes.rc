@@ -68,6 +68,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Bitmap
+//
+
+IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Dialog
 //
 
@@ -454,6 +461,36 @@ BEGIN
     PUSHBUTTON      "Pick color...",IDUC_BROWSE,193,4,46,14
 END
 
+IDD_LICENSE DIALOGEX 0, 0, 331, 234
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "License"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Try",IDOK,7,191,50,14
+    PUSHBUTTON      "Quit",IDCANCEL,7,212,50,14
+    LTEXT           "Static",IDC_MESSAGE,7,174,199,8
+    PUSHBUTTON      "Buy...",IDUC_BUY,106,191,50,14
+    PUSHBUTTON      "Get evaluation license...",IDUC_EVALLICENSE,161,191,107,
+                    14
+    PUSHBUTTON      "Enter key...",IDUC_ENTERKEY,274,191,50,14
+    LTEXT           "Or see http://www.oratrix.com/GRiNS for details",
+                    IDC_STATIC,107,215,154,8,0,0,HIDC_STATIC
+    CONTROL         "",IDC_SPLASH,"Button",BS_OWNERDRAW | BS_FLAT | 
+                    WS_DISABLED,7,7,317,160
+END
+
+IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 200, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Channel is undefined"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_CHANNEL_NAME,87,10,105,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,7,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,142,40,50,14
+    PUSHBUTTON      "Leave undefined",IDC_LEAVE_UNDEF,62,40,75,14
+    LTEXT           "Create channel named:",-1,8,12,75,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -620,6 +657,22 @@ BEGIN
         RIGHTMARGIN, 277
         TOPMARGIN, 4
         BOTTOMMARGIN, 18
+    END
+
+    IDD_LICENSE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 324
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 227
+    END
+
+    IDD_CHANNEL_UNDEF, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 193
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -797,13 +850,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Bitmap
-//
-
-IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog Info
 //
 
@@ -849,61 +895,6 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Dutch (Netherlands) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
-#ifdef _WIN32
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_LICENSE DIALOGEX 0, 0, 331, 234
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "License"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "Try",IDOK,7,191,50,14
-    PUSHBUTTON      "Quit",IDCANCEL,7,212,50,14
-    LTEXT           "Static",IDC_MESSAGE,7,174,199,8
-    PUSHBUTTON      "Buy...",IDUC_BUY,106,191,50,14
-    PUSHBUTTON      "Get evaluation license...",IDUC_EVALLICENSE,161,191,107,
-                    14
-    PUSHBUTTON      "Enter key...",IDUC_ENTERKEY,274,191,50,14
-    LTEXT           "Or see http://www.oratrix.com/GRiNS for details",
-                    IDC_STATIC,107,215,154,8,0,0,HIDC_STATIC
-    CONTROL         "",IDC_SPLASH,"Button",BS_OWNERDRAW | BS_FLAT | 
-                    WS_DISABLED,7,7,317,160
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_LICENSE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 324
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 227
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-#endif    // Dutch (Netherlands) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // Greek resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ELL)
@@ -914,6 +905,14 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Cursor
+//
+
+IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
+IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Icon
 //
 
@@ -921,14 +920,6 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 // remains consistent on all systems.
 IDI_GRINS_ED            ICON    DISCARDABLE     "res\\grins_ed.ico"
 IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
-IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
