@@ -92,7 +92,7 @@ class SMILParser(xmllib.XMLParser):
 			# relative to other node
 			for n in node.GetParent().GetChildren():
 				if n.attrdict.has_key('name') and \
-				   n.attrdict['name'] == val:
+				   n.attrdict['name'] == name:
 					xnode = n
 					break
 			else:
