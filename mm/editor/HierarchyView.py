@@ -19,6 +19,7 @@ import settings
 DISPLAY_VERTICAL = settings.get('vertical_structure')
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
 root_expanded = settings.get('root_expanded')
+structure_name_size = settings.get('structure_name_size')
 
 
 # Color assignments (RGB)
@@ -57,6 +58,7 @@ f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 
 MINSIZE = settings.get('thumbnail_size')		# minimum size for a node
+MAXSIZE = 2 * MINSIZE
 TITLESIZE = f_title.fontheight()*1.2
 CHNAMESIZE = f_channel.fontheight()*1.2
 LABSIZE = TITLESIZE+CHNAMESIZE	# height of labels
@@ -670,11 +672,15 @@ class HierarchyView(HierarchyViewDialog):
 		for child in children:
 			if not hasattr(child, 'expanded') or \
 			   not child.GetChildren():
-				size = size + MINSIZE
 				if not horizontal:
-					size = size + LABSIZE
+					size = size + MINSIZE + LABSIZE
+				elif structure_name_size:
+					name = MMAttrdefs.getattr(child, 'name')
+					namewidth = (name and f_title.strsize(name)[0]) or 0
+					minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
+					size = size + minwidth + HOREXTRASIZE
 				else:
-					size = size + HOREXTRASIZE
+					size = size + MINSIZE + HOREXTRASIZE
 			else:
 				size = size + child.expanded[not horizontal]
 		# size is minimum size required for children in mm
@@ -694,6 +700,11 @@ class HierarchyView(HierarchyViewDialog):
 				size = MINSIZE
 				if not horizontal:
 					size = size + LABSIZE
+				elif structure_name_size:
+					name = MMAttrdefs.getattr(child, 'name')
+					namewidth = (name and f_title.strsize(name)[0]) or 0
+					minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
+					size = minwidth + HOREXTRASIZE
 				else:
 					size = size + HOREXTRASIZE
 			else:
@@ -886,7 +897,13 @@ def sizeboxes(node):
 	if not hasattr(node, 'expanded') or not children:
 ##		if node.__class__ is SlideMMNode:
 ##			return 2*MINSIZE, MINSIZE + LABSIZE
-		return MINSIZE + HOREXTRASIZE, MINSIZE + LABSIZE
+		if structure_name_size:
+			name = MMAttrdefs.getattr(node, 'name')
+			namewidth = (name and f_title.strsize(name)[0]) or 0
+			minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
+		else:
+			minwidth = MINSIZE
+		return minwidth + HOREXTRASIZE, MINSIZE + LABSIZE
 	nchildren = len(children)
 	width = height = 0
 	horizontal = (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL
