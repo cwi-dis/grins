@@ -5,6 +5,7 @@ import os
 import sys
 import string
 import macfs
+import addpack
 
 # For now:
 CMIFDIR="Moes:Development:Jack:cmif"
@@ -16,6 +17,10 @@ CMIFPATH = [
 	CMIFDIR+":lib"
 ]
 sys.path[0:0] = CMIFPATH
+
+addpack.addpack('Tools')
+addpack.addpack('bgen')
+addpack.addpack('snd')
 
 os.environ["CMIF"] = CMIFDIR
 os.environ["CMIF_USE_DUMMY"] = "1"
