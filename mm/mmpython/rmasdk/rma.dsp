@@ -182,10 +182,6 @@ SOURCE=.\StdApp.h
 SOURCE=.\StdRma.h
 # End Source File
 # End Group
-# Begin Group "Resource Files"
-
-# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-# End Group
 # Begin Group "Rma Template Files"
 
 # PROP Default_Filter ""
@@ -243,33 +239,7 @@ SOURCE=.\exerror.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\exnwsite.cpp
-
-!IF  "$(CFG)" == "rma - Win32 Release"
-
-# SUBTRACT CPP /YX /Yc /Yu
-
-!ELSEIF  "$(CFG)" == "rma - Win32 Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\exsitsup.cpp
-
-!IF  "$(CFG)" == "rma - Win32 Release"
-
-# SUBTRACT CPP /YX /Yc /Yu
-
-!ELSEIF  "$(CFG)" == "rma - Win32 Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\exvsurf.cpp
 
 !IF  "$(CFG)" == "rma - Win32 Release"
 
@@ -328,15 +298,7 @@ SOURCE=.\exerror.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\exnwsite.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\exsitsup.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\exvsurf.h
 # End Source File
 # Begin Source File
 
@@ -531,6 +493,10 @@ SOURCE=.\include\rmavsurf.h
 SOURCE=.\include\rmawin.h
 # End Source File
 # End Group
+# Begin Group "Resource Files"
+
+# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# End Group
 # Begin Source File
 
 SOURCE=.\ReadMe.txt
@@ -542,6 +508,10 @@ SOURCE=.\testdata\rmacom.py
 # Begin Source File
 
 SOURCE=.\testdata\rmatest.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\testdata\rmawin.py
 # End Source File
 # End Target
 # End Project
