@@ -4,7 +4,7 @@
 from usercmd import *
 
 # Types of menu entries
-[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
+[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE, SPECIAL] = range(6)
 
 #
 # Commands that we know are not implemented on the mac:
@@ -39,8 +39,11 @@ MENUBAR=(
 	(CASCADE, 'Play', (
 		(TOGGLE, 'Play', 'P', PLAY),
 		(TOGGLE, 'Stop', 'H', STOP),
-		(TOGGLE, 'Pause', 'B', PAUSE),
-		(SEP,),
+		(TOGGLE, 'Pause', 'B', PAUSE))),
+		
+	(CASCADE, 'Views', (
+		(SPECIAL, 'Open documents', 'documents'),
+		(SPECIAL, 'Open windows', 'windows'),
 		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))))
 		
 			
