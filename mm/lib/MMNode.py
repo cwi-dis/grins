@@ -42,6 +42,8 @@ class MMNodeContext:
 		##_stat('setdirname')
 		if not self.dirname:
 			self.dirname = urllib.pathname2url(dirname)
+			if not self.dirname:
+				self.dirname = '.'
 			if self.dirname[-1] <> '/':
 				self.dirname = self.dirname + '/'
 	#
