@@ -3,7 +3,7 @@
   <head>
     <meta name="title" content="Adaptive Quality Video presentation with background image"/>
     <meta name="template_name" content="Adaptive Video Presentation"/>
-    <meta name="template_description" content="Hig/low-res Video or images with background image"/>
+    <meta name="template_description" content="High/low-res Video or images with background image"/>
     <meta name="template_snapshot" content="icons/adapt_1_1A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
