@@ -84,6 +84,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "GRiNS Hutchinson"="..\..\Build\win32\Hutchinson\Hutchinson.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "GRiNS Player SMIL2"="..\..\Build\win32\GRiNS Player for SMIL 2.0\GRiNS Player for SMIL 2.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -108,7 +120,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNSRes"=.\GRiNSRes\GRiNSRes.dsp - Package Owner=<4>
+Project: "GRiNSRes"=".\GRiNSRes\GRiNSRes.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -126,7 +138,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNSedSMIL2Real"=..\..\Build\win32\GRiNSedSMIL2Real\GRiNSedSMIL2Real.dsp - Package Owner=<4>
+Project: "GRiNSedSMIL2Real"="..\..\Build\win32\GRiNSedSMIL2Real\GRiNSedSMIL2Real.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -138,7 +150,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "PyWinTypes"=..\..\..\python\Extensions\win32\PyWinTypes.dsp - Package Owner=<4>
+Project: "PyWinTypes"="..\..\..\python\Extensions\win32\PyWinTypes.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -153,7 +165,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Qt"=..\QT\frommacpython\Qt.dsp - Package Owner=<4>
+Project: "Qt"="..\QT\frommacpython\Qt.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -165,7 +177,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "_socket"=..\..\..\python\PCbuild\_socket.dsp - Package Owner=<4>
+Project: "_socket"="..\..\..\python\PCbuild\_socket.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -180,7 +192,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cmif"=..\..\cmif.dsp - Package Owner=<4>
+Project: "cmif"="..\..\cmif.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -192,7 +204,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ddraw"=..\DXMedia\ddraw\ddraw.dsp - Package Owner=<4>
+Project: "ddraw"="..\DXMedia\ddraw\ddraw.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -204,7 +216,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "dshow"=..\..\mmpython\wmsdk\dshow.dsp - Package Owner=<4>
+Project: "dshow"="..\..\mmpython\wmsdk\dshow.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -216,7 +228,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "dsound"=..\DXMedia\dsound\dsound.dsp - Package Owner=<4>
+Project: "dsound"="..\DXMedia\dsound\dsound.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -228,7 +240,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "gear32sd"=..\ACCUSOFT\src\gear32sd.dsp - Package Owner=<4>
+Project: "gear32sd"="..\ACCUSOFT\src\gear32sd.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -240,22 +252,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "grinsp"=..\COM\javaclient\csrc\grinsp\grinsp.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name grinsproxy
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "grinspapi"=..\COM\grinscomsvr\grinspapi.dsp - Package Owner=<4>
+Project: "grinsp"="..\COM\javaclient\csrc\grinsp\grinsp.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -270,7 +267,22 @@ Package=<4>
 
 ###############################################################################
 
-Project: "grinsproxy"=..\COM\grinscomsvr\idl\grinsproxy.dsp - Package Owner=<4>
+Project: "grinspapi"="..\COM\grinscomsvr\grinspapi.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "grinsproxy"="..\COM\grinscomsvr\idl\grinsproxy.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -282,7 +294,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgcolormap"=..\..\..\python\Extensions\img\win32\imgcolormap.dsp - Package Owner=<4>
+Project: "imgcolormap"="..\..\..\python\Extensions\img\win32\imgcolormap.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -294,7 +306,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgformat"=..\..\..\python\Extensions\img\win32\imgformat.dsp - Package Owner=<4>
+Project: "imgformat"="..\..\..\python\Extensions\img\win32\imgformat.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -306,7 +318,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgjpeg"=..\..\..\python\Extensions\img\win32\imgjpeg.dsp - Package Owner=<4>
+Project: "imgjpeg"="..\..\..\python\Extensions\img\win32\imgjpeg.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -321,7 +333,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgop"=..\..\..\python\Extensions\img\win32\imgop.dsp - Package Owner=<4>
+Project: "imgop"="..\..\..\python\Extensions\img\win32\imgop.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -345,7 +357,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "producer"=..\..\mmpython\producer\producer.dsp - Package Owner=<4>
+Project: "producer"="..\..\mmpython\producer\producer.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -357,7 +369,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python"=..\..\..\python\PCbuild\python.dsp - Package Owner=<4>
+Project: "python"="..\..\..\python\PCbuild\python.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -369,7 +381,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python16"=..\..\..\python\PCbuild\python16.dsp - Package Owner=<4>
+Project: "python16"="..\..\..\python\PCbuild\python16.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -381,7 +393,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "pythonwin"=..\..\..\python\Extensions\Pythonwin\pythonwin.dsp - Package Owner=<4>
+Project: "pythonwin"="..\..\..\python\Extensions\Pythonwin\pythonwin.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -396,7 +408,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "rma"=..\..\mmpython\rmasdk\rma.dsp - Package Owner=<4>
+Project: "rma"="..\..\mmpython\rmasdk\rma.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -408,7 +420,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "vaudpipe"=..\DXMedia\src\audpipe\audpipe.dsp - Package Owner=<4>
+Project: "vaudpipe"="..\DXMedia\src\audpipe\audpipe.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -420,7 +432,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "vidpipe"=..\DXMedia\src\vidpipe\vidpipe.dsp - Package Owner=<4>
+Project: "vidpipe"="..\DXMedia\src\vidpipe\vidpipe.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -432,7 +444,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "win32api"=..\..\..\python\Extensions\win32\win32api.dsp - Package Owner=<4>
+Project: "win32api"="..\..\..\python\Extensions\win32\win32api.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -447,7 +459,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "win32trace"=..\..\..\python\Extensions\win32\win32trace.dsp - Package Owner=<4>
+Project: "win32trace"="..\..\..\python\Extensions\win32\win32trace.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -459,7 +471,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "win32ui"=..\..\..\python\Extensions\Pythonwin\win32ui.dsp - Package Owner=<4>
+Project: "win32ui"="..\..\..\python\Extensions\Pythonwin\win32ui.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -477,7 +489,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "wingdi"=..\winsdk\wingdi\wingdi.dsp - Package Owner=<4>
+Project: "wingdi"="..\winsdk\wingdi\wingdi.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -489,7 +501,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "wmfapi"=..\wmsdk\wmfsdk\src\wmfapi.dsp - Package Owner=<4>
+Project: "wmfapi"="..\wmsdk\wmfsdk\src\wmfapi.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
