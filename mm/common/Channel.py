@@ -226,7 +226,7 @@ class Channel:
 
 		# force equal 1 is used only in internal. By default the channel is shown
 		# only when showBackground attribute equal to always
-		if not force:
+		if self._visible and not force:
 			if self._get_parent_channel() != None:
 				# for now, we have to create a media channel only when it's active
 				# it's important for sub-region positioning as long as that
