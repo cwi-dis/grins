@@ -300,6 +300,10 @@ class XMLParser:
 	    raise RuntimeError, 'unexpected call to parse_starttag'
 	k = i+1+k
 	tag = string.lower(rawdata[i+1:k])
+	if hasattr(self, tag + '_attributes'):
+		attrlist = getattr(self, tag + '_attributes')
+	else:
+		attrlist = None
 	self.lasttag = tag
 	while k < j:
 	    l = attrfind.match(rawdata, k)
@@ -314,6 +318,10 @@ class XMLParser:
 	    else:
 		self.syntax_error(self.lineno, 'attribute value not quoted')
 	    attrname = string.lower(attrname)
+	    if attrlist is not None and attrname not in attrlist:
+		self.syntax_error(self.lineno,
+				  'unknown attribute %s of element %s' %
+				  (attrname, tag))
 	    if attrdict.has_key(attrname):
 		self.syntax_error(self.lineno, 'attribute specified twice')
 	    attrdict[attrname] = self.translate_references(attrvalue)
