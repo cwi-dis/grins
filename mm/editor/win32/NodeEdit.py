@@ -89,7 +89,7 @@ def _do_edit_win32(cmd, filename):
 		win32api.WinExec(cmd)
 	except:
 		windowinterface.showmessage(
-			'application %s not found'%app,
+			'Application not found: %s'%app,
 			mtype = 'warning')
 
 def _do_edit(cmd, filename):
@@ -126,7 +126,7 @@ def showeditor(node, url=None):
 			return
 		if node.GetType() <> 'ext':
 			windowinterface.showmessage(
-				'Only extern nodes can be edited',
+				'Only extern nodes can be edited.',
 				mtype = 'error')
 			return
 		import MMAttrdefs
