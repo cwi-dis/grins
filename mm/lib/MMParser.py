@@ -2,7 +2,7 @@
 
 
 from MMExc import *		# Exceptions
-from MMNode import alltypes, leaftypes, interiortypes
+from MMTypes import *
 
 
 from tokenize import tokenprog
