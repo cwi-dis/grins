@@ -104,7 +104,7 @@ def do_times(node):
 
 def _do_times_work(node):
 	pt = pseudotime().init(0.0)
-	q = sched.scheduler().init(pt.timefunc, pt.delayfunc)
+	q = sched.scheduler(pt.timefunc, pt.delayfunc)
 	node.counter[HD] = 1
 	decrement(q, 0, node, HD)
 	q.run()
