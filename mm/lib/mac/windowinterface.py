@@ -33,7 +33,7 @@ toplevel._initcommands()
 from mw_globals import error, Continue
 from mw_globals import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 from mw_globals import ReadMask, WriteMask
-from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH, FIT_WINDOW
+from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
 from mw_globals import SINGLE, HTM, TEXT, MPEG
 from mw_globals import TRUE, FALSE
 #
