@@ -1,5 +1,0 @@
-- Better computation of pathnames: curent stuff only works for current 
-directory.
-- Maybe put converted media items alongside originals?
-- Otherwise, check for multiple usage of same media item.
-- Create shell script for conversion

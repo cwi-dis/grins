@@ -10,6 +10,7 @@ import urlparse
 import urllib
 import os
 import posixpath
+import getopt
 
 
 #
@@ -101,6 +102,14 @@ class G2CommonTransformer(MyTransformer):
 			node.attributes['width'] = '100%'
 		if not node.attributes.has_key('height'):
 			node.attributes['height'] = '100%'
+		return [node]
+
+	def do_ANY(self, node):
+		# Grmpf, SMIL uses non-identifier tags.
+		if node.tagName == 'root-layout':
+			# G2 uses black default background, GRiNS white.
+			if not node.attributes.has_key('background-color'):
+				node.attributes['background-color'] = '#ffffff'
 		return [node]
 
 	def other_g2_conversions(self, node):
@@ -252,8 +261,9 @@ class DataConverter:
 			print 'UNKNOWN: immedeate data of type', type
 			print
 			return None
-		new = newfilename('immdata', self.DEFAULT_MEDIA_TYPES[type])
-		fp = createurlfile(new)
+		new = cache.newfilename('immdata', None,
+					self.DEFAULT_MEDIA_TYPES[type])
+		fp = cache.createurlfile(new)
 		fp.write(urllib.urlopen(url).read())
 		fp.close()
 		return new
@@ -264,8 +274,15 @@ class DataConverter:
 			return None
 
 class G2UserConverter(DataConverter):
+	DESCR="user (human-readable instructions on stdout)"
+	
 	def userconvert(self, url, filebase, ext):
-		new = newfilename(filebase, ext)
+		new = cache.exists(url)
+		if new:
+			print "   DONE:", url
+			print
+			return new
+		new = cache.newfilename(url, filebase, ext)
 		print "CONVERT:", url
 		print "     TO ", new
 		print
@@ -299,24 +316,30 @@ class G2UserConverter(DataConverter):
 	}
 
 class G2BatchConverter(DataConverter):
-	def __init__(self, fp):
+	def __init__(self, fp, output):
 		self.fp = fp
+		self.out_comment("")
+		self.out_comment("Media conversions for %s"%output)
+		self.out_comment("")
 		
 	def filenames(self, url, filebase, ext):
-		new = newfilename(filebase, ext)
+		new = cache.exists(url)
+		if new:
+			self.out_comment("Used earlier: %s"%new)
+			return None, None, new
+		new = cache.newfilename(url, filebase, ext)
 		old_pathname = self.url2pathname(url)
 		if not old_pathname or not os.path.exists(old_pathname):
-			print "CONVERT:", url
-			print "     TO ", new
-			print
-			return None, None, new
+			self.out_comment("Not found: %s"% url)
+			self.out_comment("You should do the conversion to %s"
+					 % new)
 		new_pathname = self.url2pathname(new)
 		if os.path.exists(new_pathname):
 			oldtime = os.stat(old_pathname)[8]
 			newtime = os.stat(new_pathname)[8]
 			if newtime > oldtime:
-				print "UPTODATE:", new
-				print
+				self.out_comment("Appears up-to-date: %s"
+						 % new)
 				return None, None, new
 		return old_pathname, new_pathname, new
 
@@ -330,32 +353,27 @@ class G2BatchConverter(DataConverter):
 		return urllib.url2pathname(path)
 	
 	def usercheck(self, url):
-		print "  CHECK:", url
-		print
+		self.out_comment("Appears G2-compatible: %s"%url)
 		return 1
-
-class G2UnixBatchConverter(G2BatchConverter):
 
 	def convert_image(self, url, filebase, ext):
 		old, new, newurl = self.filenames(url, filebase, ext)
 		if old and new:
-			self.fp.write('cjpeg -restart 1B "%s" > "%s"\n' %
-				        (old, new))
+			self.out_image(old, new)
 		return newurl
 
 	def convert_av(self, url, filebase, ext):
 		old, new, newurl = self.filenames(url, filebase, ext)
 		if old and new:
-			self.fp.write('rmenc -I "%s" -O "%s"\n' %
-				        (old, new))
+			self.out_av(old, new)
 		return newurl
 
 	def convert_text(self, url, filebase, ext):
-		new = newfilename(filebase, ext)
-		print "CONVERT:", url
-		print "     TO ", new
-		print
-		return new
+		old, new, newurl = self.filenames(url, filebase, ext)
+		if old and new:
+			self.out_comment("Manually convert %s"%old)
+			self.out_comment("to %s"%new)
+		return newurl
 		
 	CONVERTERS={
 		'.au': (convert_av, ('.ra',)),
@@ -379,50 +397,229 @@ class G2UnixBatchConverter(G2BatchConverter):
 		'video': '.rv',
 	}
 
-USED={}
-def newfilename(filebase, ext):
-	filename = 'g2cdata/%s%s'%(filebase, ext)
-	if USED.has_key(filename):
-		num = 1
-		while 1:
-			filename = 'g2cdata/%s%03d%s'%(filebase, num, ext)
-			if not USED.has_key(filename):
-				path = urllib.url2pathname(filename)
-				dir, dummy = os.path.split(path)
-				if not os.path.exists(dir):
-					break
-				if not os.path.exists(path):
-					break
-			num = num + 1
-	USED[filename] = 1
-	return filename
+class G2UnixBatchConverter(G2BatchConverter):
+	DESCR="posix (Unix shell script)"
 
-def createurlfile(url):
-	filename = urllib.url2pathname(url)
-	dirname = os.path.split(filename)[0]
-	if dirname and not os.path.exists(dirname):
-		os.makedirs(dirname)
-	return open(filename, 'w')
-	converter = G2UnixBatchConverter(open('@g2conf.sh', 'w'))
+	def out_comment(self, comment):
+		self.fp.write("# %s\n"%comment)
 
+	def out_image(self, old, new):
+		self.fp.write('echo %s:\n'%old)
+		self.fp.write('cjpeg -restart 1B %s > %s\n' % (old, new))
+
+	def out_av(self, old, new):
+		self.fp.write('echo %s:\n'%old)
+		self.fp.write('rmenc -I %s -O %s\n' % (old, new))
+
+class G2WindowsBatchConverter(G2BatchConverter):
+	DESCR="nt (Windows NT/95/98 .BAT file)"
+
+	def out_comment(self, comment):
+		self.fp.write("rem %s\n"%comment)
+
+	def out_image(self, old, new):
+		self.fp.write('cjpeg -restart 1B "%s" > "%s"\n' % (old, new))
+
+	def out_av(self, old, new):
+		self.fp.write('rmenc -I "%s" -O "%s"\n' % (old, new))
+
+class G2MacBatchConverter(G2BatchConverter):
+	DESCR="mac (Macintosh AppleScript file)"
+
+	def out_comment(self, comment):
+		if comment:
+			self.fp.write("(* %s *)"%comment)
+		self.fp.write('\n')
+
+	def out_image(self, old, new):
+		self.fp.write('tell application "JPEGView"\n')
+		self.fp.write('    open "%s"  \302\n'%old)
+		self.fp.write('    save as JFIF in "%s"\n'%new)
+		self.fp.write('    quit\n')
+		self.fp.write('end tell\n')
+
+	def out_av(self, old, new):
+		self.fp.write('tell application "RVBatch"\n')
+		self.fp.write('    with timeout of 99999 seconds\n')
+		self.fp.write('        encode file audio true\302\n')
+		self.fp.write('            "%s"  \302\n'%old)
+		self.fp.write('            output as "%s"\n'%new)
+		self.fp.write('    end timeout\n')
+		self.fp.write('    quit\n')
+		self.fp.write('end tell\n')
+
+ALL_BATCH_CONVERTERS={
+	'posix': G2UnixBatchConverter,
+	'nt': G2WindowsBatchConverter,
+	'mac': G2MacBatchConverter,
+	'user': G2UserConverter,
+}
+
+BatchConverter = G2UserConverter
+try:
+	BatchConverter = ALL_BATCH_CONVERTERS[os.name]
+except KeyError:
+	pass
+
+class FileCache:
+	def __init__(self):
+		self.old_to_new = {}
+		self.used = {}
+
+	def exists(self, oldurl):
+		if self.old_to_new.has_key(oldurl):
+			return self.old_to_new[oldurl]
+		return None
+		
+	def newfilename(self, old, filebase, ext):
+		newurl = 'g2cdata/%s%s'%(filebase, ext)
+		if self.used.has_key(newurl):
+			num = 1
+			while 1:
+				# XXXX This is not correct for all cases:
+				# it may create duplicates on a second run.
+				newurl = 'g2cdata/%s%03d%s'%(filebase, num, ext)
+				if not self.used.has_key(newurl):
+					path = urllib.url2pathname(newurl)
+					dir, dummy = os.path.split(path)
+					if not os.path.exists(dir):
+						break
+					if not os.path.exists(path):
+						break
+				num = num + 1
+		self.used[newurl] = 1
+		if old:
+			self.old_to_new[old] = newurl
+		return newurl
+
+	def createurlfile(self, url):
+		filename = urllib.url2pathname(url)
+		dirname = os.path.split(filename)[0]
+		if dirname and not os.path.exists(dirname):
+			os.makedirs(dirname)
+		return open(filename, 'w')
+
+cache = FileCache()
 
 def main():
-	if len(sys.argv) != 3:
-		print "Usage %s input output"%sys.argv[0]
-		sys.exit(1)
-	data = open(sys.argv[1]).read()
+	inputs, output, commands, ramprefix, switched = getargs(sys.argv)
+	if commands:
+		cfp = open(commands, 'w')
+		if os.name == 'mac':
+			import MacOS
+			MacOS.SetCreatorAndType(commands, 'ToyS', 'TEXT')
+	else:
+		cfp = None
+	for iname in inputs:
+		if output:
+			oname = output
+		else:
+			dirname, filename = os.path.split(iname)
+			filename = 'g2_' + filename
+			oname = os.path.join(dirname, filename)
+		process(iname, oname, cfp, ramprefix, switched)
+
+def process(input, output, script, ramprefix, switched):
+	print '%s:'%input
+	data = open(input).read()
 
 	parser = DcBuilder()
 	parser.feed(data)
 
-	converter = G2UnixBatchConverter(open('@g2conf.sh', 'w'))
-	transformer = G2OnlyTransformer(converter)
+	if script:
+		converter = BatchConverter(script, output)
+	else:
+		converter = G2UserConverter()
+	if switched:
+		transformer = G2SwitchedTransformer(converter)
+	else:
+		transformer = G2OnlyTransformer(converter)
 
 	document = transformer.transform(parser.document)
 
-	outfile = open(sys.argv[2], 'w')
+	outfile = open(output, 'w')
 	writer = XmlWriter(outfile)
 	writer.write(document)
+	if ramprefix:
+		basename, dummy = os.path.splitext(output)
+		ramname = basename + '.ram'
+		if ramprefix[-1] != '/':
+			ramprefix = ramprefix + '/'
+		url = urllib.basejoin(ramprefix, output)
+		fp = open(ramname, 'w')
+		fp.write(url+'\n')
+		fp.close()
 
+def getargs(argv):
+	global BatchConverter
+	inputs = []
+	output = None
+	commands = None
+	ramprefix = None
+	switched = 0
+	try:
+		optlist, inputs = getopt.getopt(argv[1:], '?o:c:b:r:s',
+			 ['help', 'output=', 'commands=',
+			  'batchtype=', 'ramprefix=', 'switch'])
+	except getopt.error, arg:
+		print "Error:", arg
+		usage(argv[0])
+		sys.exit(1)
+	for option, value in optlist:
+		if option in ('-?', '--help'):
+			usage(argv[0])
+			sys.exit(0)
+		if option in ('-o', '--output'):
+			output = value
+		elif option in ('-c', '--commands'):
+			commands = value
+		elif option in ('-r', '--ramprefix'):
+			ramprefix = value
+		elif option in ('-s', '--switch'):
+			switched = 1
+		elif option in ('-b', '--batchtype'):
+			if ALL_BATCH_CONVERTERS.has_key(value):
+				BatchConverter = ALL_BATCH_CONVERTERS[value]
+			else:
+				print "Unknown batchfile type"
+				usage(argv[0])
+				sys.exit(1)
+	if output and len(inputs) > 1:
+		print "Output file cannot be set for multiple input files"
+		usage(argv[0])
+		sys.exit(1)
+	if not inputs:
+		print "No input files specified"
+		usage(argv[0])
+		sys.exit(1)
+	for inp in inputs:
+		if os.path.split(inp)[0]:
+			print "Sorry, can only convert in current directory"
+			usage(argv[0])
+			sys.exit(1)
+	return inputs, output, commands, ramprefix, switched
+
+def usage(prog):
+	print "Usage: %s [options] input ..."%prog
+	print "  --output file   Send output here. Default: input file name"
+	print "   (or -o file)   with g2_ prepended."
+	print "  --commands file Create script with media conversion commands"
+	print "   (or -c file)   Default: explain conversions required on"
+	print "                  stdout. Note that the script may need some"
+	print "                  editing."
+	print "  --switch        Create an output file that is G2-playable as"
+	print "   (or -s)        well as GRiNS-playable. Default is G2-only."
+	print "                  Note that this may not work for older G2"
+	print "                  players (November 1998)."
+	print " --batchtype type Type of batchfile to create with -c. Default:"
+	print "   (or -b type)   %s"%BatchConverter.DESCR
+	print "                  Supported values: ", string.join(
+		ALL_BATCH_CONVERTERS.keys())
+	print " --ramprefix url  Generate a .ram file pointing to the new"
+	print "   (or -r url)    document. The url is how we should refer to"
+	print "                  the current directory (i.e. this is prepended"
+	print "                  to the filename of the converted document"
+	
+			
 if __name__ == '__main__':
 	main()
