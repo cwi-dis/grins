@@ -575,6 +575,19 @@ class _Window:
 				region.SubtractRegion(r)
 			w._mkclip()
 
+	def _image_size(self, file):
+		try:
+			xsize, ysize = toplevel._image_size_cache[file]
+		except KeyError:
+			try:
+				reader = img.reader(format, file)
+			except img.error, arg:
+				raise error, arg
+			xsize = reader.width
+			ysize = reader.height
+			toplevel._image_size_cache[file] = xsize, ysize
+		return xsize, ysize
+
 	def _prepare_image(self, file, crop, scale):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
