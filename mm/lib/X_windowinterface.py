@@ -1648,7 +1648,7 @@ class _MultChoice:
 		list.SetValues({'selectionPolicy': Xmd.SINGLE_SELECT,
 			  'visibleItemCount': len(msg_list)})
 		for i in range(len(msg_list)):
-			answer = list[i]
+			answer = msg_list[i]
 			if type(answer) == type(()):
 				answer = answer[0]
 			Xm.ListAddItem(list, answer, i+1)
