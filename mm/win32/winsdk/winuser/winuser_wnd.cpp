@@ -212,7 +212,7 @@ PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 #else
 	HWND hWnd = ::CreateWindowEx(dwExStyle, TextPtr(pstrWndClass), TextPtr(szWindowName),
 			dwStyle, pt.x,pt.y, size.cx,
-			size.cx, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
+			size.cy, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
 			GetAppHinstance(), lpCreateParam);
 #endif
 	std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(hWnd);
