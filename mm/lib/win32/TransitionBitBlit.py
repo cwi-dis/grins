@@ -41,24 +41,39 @@ class BlitterClass:
 					print arg
 			else:
 				try:
-					dstDC = self.getDC(dst)	
-					srcDC = self.getDC(src)	
-					dstDC.SelectClipRgn(rgn)			
-					ls, ts, rs, bs = rcsrc
-					ld, td, rd, bd = rcdst
-					dstDC.BitBlt((ld,td),(rd-ld,bd-td),srcDC,(ls, ts), win32con.SRCCOPY)
-					self.releaseDC(dst,dstDC)
-					self.releaseDC(src,srcDC)
+					dstDC = self.getDC(dst)
 				except ddraw.error, arg:
 					print arg
+					return
+				
+				try:
+					srcDC = self.getDC(src)
+				except ddraw.error, arg:
+					self.releaseDC(dst,dstDC)
+					print arg
+					return
+				
+				if dstDC and srcDC:
+					try:
+						dstDC.SelectClipRgn(rgn)			
+						ls, ts, rs, bs = rcsrc
+						ld, td, rd, bd = rcdst
+						dstDC.BitBlt((ld,td),(rd-ld,bd-td),srcDC,(ls, ts), win32con.SRCCOPY)
+					except ddraw.error, arg:
+						print arg
+
+				self.releaseDC(dst,dstDC)
+				self.releaseDC(src,srcDC)
 
 	def getDC(self, dds):
 		hdc = dds.GetDC()
+		if not hdc: return None
 		return win32ui.CreateDCFromHandle(hdc)
 
 	def releaseDC(self, dds, dc):
-		hdc = dc.Detach()
-		dds.ReleaseDC(hdc)
+		if dc:
+			hdc = dc.Detach()
+			dds.ReleaseDC(hdc)
 
 	def createRegion(self, pointlist):
 		npl = []
