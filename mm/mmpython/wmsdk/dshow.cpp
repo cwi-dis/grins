@@ -484,6 +484,53 @@ GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 }
 
 
+//////////
+// Convert some std file references to the windows media form
+// 1. file:///D|/<filepath>
+// 2. file:/D|/<filepath>
+// 3. file:////<filepath>
+static void ConvToWindowsMediaUrl(char *pszUrl)
+	{
+	int l = strlen(pszUrl);
+	if(strstr(pszUrl,"file:///")==pszUrl && l>10 && pszUrl[9]=='|')
+		{
+		pszUrl[0]=pszUrl[8];
+		pszUrl[1]=':';
+		char *ps = pszUrl+10;
+		char *pd = pszUrl+2;
+		while(*ps){
+			if(*ps=='/'){*pd++='\\';ps++;}
+			else {*pd++ = *ps++;}
+			}
+		*pd='\0';
+		}
+	else if(strstr(pszUrl,"file:/")==pszUrl && l>8 && pszUrl[7]=='|')
+		{
+		pszUrl[0]=pszUrl[6];
+		pszUrl[1]=':';
+		char *ps = pszUrl+8;
+		char *pd = pszUrl+2;
+		while(*ps){
+			if(*ps=='/'){*pd++='\\';ps++;}
+			else {*pd++ = *ps++;}
+			}
+		*pd='\0';
+		}
+	else if(strstr(pszUrl,"file:////")==pszUrl && l>9 && strstr(pszUrl,"|")==NULL) // UNC
+		{
+		pszUrl[0]='\\';pszUrl[1]='\\';pszUrl[2]='\\';pszUrl[3]='\\';
+		char *ps = pszUrl+9;
+		char *pd = pszUrl+4;
+		while(*ps){
+			if(*ps=='/'){*pd++='\\';ps++;}
+			else {*pd++ = *ps++;}
+			}
+		*pd='\0';
+		}
+	//else no change
+	}
+
+//////////
 static char GraphBuilder_RenderFile__doc__[] =
 ""
 ;
@@ -495,9 +542,11 @@ GraphBuilder_RenderFile(GraphBuilderObject *self, PyObject *args)
 	char *psz;
 	if (!PyArg_ParseTuple(args, "s", &psz))
 		return NULL;
-
+	char buf[MAX_PATH];
+	strcpy(buf,psz);
+	ConvToWindowsMediaUrl(buf);
 	WCHAR wsz[MAX_PATH];
-	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	MultiByteToWideChar(CP_ACP,0,buf,-1,wsz,MAX_PATH);
 	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->RenderFile(wsz,NULL);
 	Py_END_ALLOW_THREADS
