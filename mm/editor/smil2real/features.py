@@ -24,6 +24,7 @@ feature_set = [
 	UNSUPPORTED_ERROR,
 	]
 
+auto_evaluate_cookie = 'Ajax'
 version = 'Real'
 compatibility = Boston
 compatibility_short = 'SMIL2Real'
