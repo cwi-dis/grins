@@ -61,10 +61,24 @@ class LayoutChannel(ChannelWindow):
 	def do_arm(self, node, same=0):
 		print 'LayoutChannel: cannot play nodes on a layout channel'
 		return 1
-
+	
+	def getMMChannel(self):
+		# todo: to optimize
+		return self._player.context.channeldict.get(self._name)
+	
 	def create_window(self, pchan, pgeom, units = None):
-##		menu = []
-		bgcolor = self._attrdict.get('bgcolor')
+		mmchan = self.getMMChannel()
+		
+		transparent = mmchan.GetInherAttrDef('transparent', 0)
+		if transparent:
+			bgcolor = None				
+		else:
+			bgcolor = mmchan.GetInherAttrDef('bgcolor', (0,0,0))
+			
+		self._curvals['transparent'] = (transparent, 0)
+		self._curvals['bgcolor'] = (bgcolor, (0,0,0))
+		
+#		bgcolor = self._attrdict.get('bgcolor')
 		if pchan:
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(('', 'raise', (self.popup, ())))
@@ -77,10 +91,6 @@ class LayoutChannel(ChannelWindow):
 ##					     (self.highlight, ())))
 ##				menu.append(('', 'unhighlight',
 ##					     (self.unhighlight, ())))
-			transparent = self._attrdict.get('transparent', 0)
-			# print 'layout channel transparent : ',self,':',transparent
-			# print 'layout channel bgcolor : ',self,':',bgcolor
-			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
 			self._curvals['z'] = (z, 0)
 			if self.want_default_colormap:
@@ -140,7 +150,6 @@ class LayoutChannel(ChannelWindow):
 ##					     (self.focuscall, ())))
  		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
-		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
 		self._curvals['fgcolor'] = self._attrdict.get('fgcolor'), None
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
