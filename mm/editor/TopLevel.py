@@ -867,6 +867,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Publish interrupted.')
 			return 0
 ##		print 'done saving.'
+		if sys.platform == 'mac':
+			import macostools
+			macostools.touched(filename)
 		if not exporting:
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
