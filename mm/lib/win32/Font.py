@@ -14,6 +14,8 @@ Sdk=win32ui.GetWin32Sdk()
 
 from sysmetrics import *
 
+_POINTSIZEOFFSET=+1
+
 _fontmap = {
 	'Arial': 'Arial',
 	'Courier':'Courier',
@@ -96,7 +98,7 @@ class _Font:
 	def __init__(self, fontname, pointsize):
 		if type(pointsize)==type(''):
 			pointsize=string.atoi(pointsize)
-		pointsize=int(pointsize)
+		pointsize=int(pointsize+_POINTSIZEOFFSET)	# correction because of tiny fonts on Windows
 		pointsize=(pointsize*dpi_y+36)/72 # screen correction
 		self._fd={'name':fontname,'height':-pointsize,'weight':540}
 		global user_charset
