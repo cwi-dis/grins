@@ -128,7 +128,8 @@ class TopLevel(ViewDialog):
 			opentops.remove(self)
 
 	def set_timer(self, delay):
-		windowinterface.canceltimer(self._last_timer_id)
+		if self._last_timer_id is not None:
+			windowinterface.canceltimer(self._last_timer_id)
 		if delay:
 			self._last_timer_id = windowinterface.settimer(delay,
 				  self.player.timer_callback)
@@ -162,7 +163,6 @@ class TopLevel(ViewDialog):
 			v.hide()
 
 	def destroyviews(self):
-##		self.hideviews()
 		for v in self.views:
 			v.destroy()
 
@@ -174,7 +174,6 @@ class TopLevel(ViewDialog):
 	#
 	def play_callback(self):
 		self.setwaiting()
-##		self.buttons.setbutton(1, 1)
 		self.player.show()
 		self.player.playsubtree(self.root)
 		self.setready()
@@ -237,7 +236,6 @@ class TopLevel(ViewDialog):
 		self.dirname, self.basename = os.path.split(self.filename)
 		if self.basename[-5:] == '.cmif':
 			self.basename = self.basename[:-5]
-##		self.settitle(self.basename)
 		self.window.settitle(self.basename)
 		for v in self.views:
 			v.fixtitle()
@@ -281,8 +279,10 @@ class TopLevel(ViewDialog):
 			l1 = 'Are you sure you want to re-read the file?\n'
 			l2 = '(This will destroy the changes you have made)\n'
 			l3 = 'Click Yes to restore, No to keep your changes'
-			w = windowinterface.Dialog('Destroy?', l1+l2+l3,
-				1, 0, [('Yes', (self.do_restore, ())), 'No'])
+			windowinterface.showmessage(
+				l1+l2+l3, type = 'question',
+				callback = (self.do_restore, ()),
+				title = 'Destroy?')
 			return
 		self.do_restore()
 
