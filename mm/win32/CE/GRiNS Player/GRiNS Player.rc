@@ -128,20 +128,6 @@ BEGIN
                     WS_HSCROLL
 END
 
-IDD_PROFILE DIALOGEX 0, 0, 137, 119
-STYLE WS_POPUP | WS_CAPTION
-EXSTYLE 0x80000000L
-CAPTION "Language Profile Selection"
-FONT 8, "System"
-BEGIN
-    LTEXT           "Select SMIL Language Profile:",IDC_STATIC,13,14,96,8
-    PUSHBUTTON      "SMIL 2.0 Basic Language",IDC_BASIC,12,28,114,14
-    PUSHBUTTON      "3GPP PSS4",IDC_PSS4,12,60,114,14
-    PUSHBUTTON      "3GPP PSS5",IDC_PSS5,12,76,114,14
-    PUSHBUTTON      "SMIL 2.0 Language",IDC_LANGUAGE,12,92,114,14
-    PUSHBUTTON      "Multimedia Messaging Service",IDC_MMS,12,44,114,14
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -177,14 +163,6 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 88
-    END
-
-    IDD_PROFILE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 130
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 112
     END
 END
 #endif    // APSTUDIO_INVOKED
