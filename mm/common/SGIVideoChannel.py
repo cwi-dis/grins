@@ -3,7 +3,6 @@ __version__ = "$Id$"
 import Channel
 import MMAttrdefs
 from MMExc import *			# exceptions
-from AnchorDefs import *
 import windowinterface
 import MMurl
 import mv

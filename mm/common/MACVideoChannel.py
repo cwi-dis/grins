@@ -1,10 +1,9 @@
 __version__ = "$Id$"
-from Channel import ChannelWindowAsync, SourceAnchors, PLAYING
+from Channel import ChannelWindowAsync
 import windowinterface
 import time
 import MMurl
 import MMAttrdefs
-from AnchorDefs import *
 import WMEVENTS
 import os
 from Carbon import Qt
