@@ -94,7 +94,7 @@ class TopLevel(ViewDialog):
 		max = 0
 
 		ls = ['Play', 'Player', 'Hierarchy view', 'Channel view', 'Hyperlinks', 
-			 None,  'Save', 'Save as...', 'Restore', 'Close']
+			 None,  'Save', 'Save as...', 'Restore', 'Close', None,  'Help']
 
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'TextEdit'):
@@ -111,8 +111,8 @@ class TopLevel(ViewDialog):
 
 		butw = max + 60
 		self._w = self._w + butw
-		#self._h = self._h + (len(ls)-1)*25
-		self._h = self._h + len(ls)*25 - 8
+		self._h = self._h + (len(ls)-1)*25
+
 		
 		buttons = [('Play', (self.play_callback, ())),
 			 # The numbers below correspond with the
@@ -128,9 +128,8 @@ class TopLevel(ViewDialog):
 			 ('Save as...', (self.saveas_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Close', (self.close_callback, ())),
-			 #None,
-			 #('Help', (self.help_callback, ()))
-			 ]	
+			 None,
+			 ('Help', (self.help_callback, ()))]	
 		
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'TextEdit'):

@@ -35,9 +35,6 @@ def givehelp(window, topic):
 	#	print 'Initializing help server... be patient...'
 	#helplib.init(helpwindow)
 	#helplib.show('file:' + helpdir + '/' + topic + '.html')
-	pass
-
-"""
 	import win32api, win32con, string
 	global helpdir
 	if helpdir is None:
@@ -47,7 +44,6 @@ def givehelp(window, topic):
 	if not 'Cmifed.hlp' in strs:
 		helpdir = helpdir + "\\Cmifed.hlp"
 	win32api.WinHelp(window.GetSafeHwnd(),helpdir,win32con.HELP_KEY,topic)
-"""
 
 
 def showhelpwindow(window):

@@ -427,6 +427,10 @@ SOURCE=.\grins1\X_window.py
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\lib\motif\Win32_window.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\motif\WIN32_windowbase.py
 # End Source File
 # Begin Source File

@@ -12,7 +12,6 @@
 import os
 import sys
 import string
-import addpack
 import win32api, win32con
 from win32con import *
 
@@ -29,10 +28,13 @@ import win32ui
 #h1.ShowWindow(win32con.SW_HIDE)
 
 #CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\CmifPath")
-CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
+try:
+	CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
+except win32api.error:
+	CMIFDIR = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], ".." ))
 
 # TEMP TEST FOLDER
-CMIFDIR = 'C:\\GRiNS'
+print "CMIFDIR = ", CMIFDIR
 
 CMIFPATH = [
 	CMIFDIR+"\\pylib\\audio",
@@ -43,7 +45,8 @@ CMIFPATH = [
 	CMIFDIR+"\\common",
 	CMIFDIR+"\\common\\motif",
 	CMIFDIR+"\\lib",
-	CMIFDIR+"\\lib\\motif"
+	CMIFDIR+"\\lib\\motif",
+	CMIFDIR+"\\PyDLLs",
 ]
 CMIF_USE_WIN32="ON"
 #CHANNELDEBUG="ON"

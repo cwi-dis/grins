@@ -1,19 +1,13 @@
 import WIN32_windowbase
-from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors
+from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors, cmifexPath
 
 import win32con, win32api, win32ui, cmifex, cmifex2
-import CloseDialogRC, dialog, WMEVENTS
+import CloseDialogRC, WMEVENTS
+from pywin.mfc import dialog
+
+dll = win32api.GetModuleHandle(cmifexPath)
 
 WM_MAINLOOP = 200
-
-#PydPath = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\1.4.0\\PythonPath\\PyDLLs")
-PydPath = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\PyDLLs")
-cmifexPath = PydPath + "\\cmifex.pyd"
-
-try:
-	dll=win32ui.LoadLibrary(cmifexPath)
-except win32ui:
-	print "Could not Locate CmifEx.Pyd"	
 
 from types import *
 import math
