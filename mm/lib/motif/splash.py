@@ -162,8 +162,12 @@ class _Splash:
 		self.__initialized = 1
 		Xt.ToolkitInitialize()
 		Xt.SetFallbackResources(resources)
-		self.dpy = dpy = Xt.OpenDisplay(None, None, 'GRiNS',
-						[], sys.argv)
+		try:
+			self.dpy = dpy = Xt.OpenDisplay(None, None, 'GRiNS',
+							[], sys.argv)
+		except:
+			print 'Cannot open display'
+			sys.exit(1)
 ## 		dpy.Synchronize(1)
 		try:
 			import glX, glXconst
