@@ -124,11 +124,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if not self.window.HasHtmlCtrl():
 			print 'Warning: Failed to create Html control'
 		self.window.ShowWindow(win32con.SW_SHOW)
-		self.window.setredrawfunc(self.redraw)
 
-	def redraw(self):
-		#self.window.UpdateWindow()
-		self.window.Refresh()
 
 	def stopplay(self, node):
 #		if self.window:
