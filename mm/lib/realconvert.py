@@ -320,7 +320,13 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	# do encoding
 	mc = b.QueryIMediaControl()
 	mc.Run()
-	b.WaitForCompletion()
+
+	# b.WaitForCompletion() # wait infinite			
+	while b.WaitForCompletion(50)==0:   # wait for 50 msec, returns 0 on timeout	
+		# update progress indicator
+		pass
+
 	mc.Stop()
 	del b
+
 	return file
