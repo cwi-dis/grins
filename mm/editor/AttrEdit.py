@@ -449,8 +449,9 @@ class ChannelWrapper(Wrapper):
 
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
-			'ftp_host', 'ftp_user', 'ftp_dir',
-			'template_html_page', 'smil_url']
+			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
+			'project_html_page', 'project_smil_url']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)

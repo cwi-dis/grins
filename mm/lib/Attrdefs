@@ -122,15 +122,6 @@
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel cmif)
 
-(ftp_host (string) '' 'FTP Host' default
-	'FTP hostname to use for document upload' raw light)
-
-(ftp_user (string) '' 'FTP User' default
-	'FTP username to use for document upload' raw light)
-
-(ftp_dir (string) '' 'FTP Directory' default
-	'Directory on FTP server where uploaded documents will be stored' raw light)
-
 (gtype (string) 'line' 'Graphtype' default
 	'Type of graph: bar, line, hline' channel cmif)
 
@@ -203,6 +194,30 @@
 (popup (bool) 1 'Popup on play' default
 	'Determines whether channel pops up upon playing a node' raw cmif)
 
+(project_ftp_host (string) '' 'Webserver' default
+	'FTP hostname to use for webpage upload' raw light)
+
+(project_ftp_host_media (string) '' 'Mediaserver' default
+	'FTP hostname to use for media file upload (default: same as webserver)' raw light)
+
+(project_ftp_user (string) '' 'Webserver User' default
+	'FTP username to use for webpage upload' raw light)
+
+(project_ftp_user_media (string) '' 'Mediaserver User' default
+	'FTP username to use for media file upload' raw light)
+
+(project_ftp_dir (string) '' 'Webserver Directory' default
+	'Directory on FTP server webpage will be stored' raw light)
+
+(project_ftp_dir_media (string) '' 'Mediaserver Directory' default
+	'Directory on FTP server where media files will be stored' raw light)
+
+(project_html_page (string) '' 'HTML template' default
+	'Template used to generate web page for this presentation' raw light)
+
+(project_smil_url (string) '' 'Mediaserver URL' default
+	'URL of SMIL document on the media server' raw light)
+
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel cmif)
 
@@ -211,9 +226,6 @@
 
 (scalefilter (name) '' 'Scaling filter' default
 	'Name of filter used after image scaling' channel cmif)
-
-(smil_url (string) '' 'SMIL file URL' default
-	'URL of SMIL document on the streaming server' raw light)
 
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw cmif)
@@ -232,9 +244,6 @@
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw light)
-
-(template_html_page (string) '' 'HTML template' default
-	'Template used to generate web page for this presentation' raw light)
 
 (terminator (name) 'LAST' 'Endsync child' termnodename
 	'Name of child that terminates parallel node' normal light)
