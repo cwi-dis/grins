@@ -108,8 +108,8 @@ class SVGChannel(Channel.ChannelWindow):
 			self.registerEvents(self.window, 0)
 		Channel.ChannelWindow.stopplay(self, node, curtime)
 	
-	def setpaused(self, paused):
-		Channel.ChannelWindow.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.ChannelWindow.setpaused(self, paused, timestamp)
 		if self.svgplayer:
 			if paused:
 				self.svgplayer.pause()
