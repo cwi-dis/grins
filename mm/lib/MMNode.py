@@ -12,7 +12,7 @@ import MMurl
 import settings
 import features
 from HDTL import HD, TL
-import string
+import string, os
 import MMStates
 import Bandwidth
 
@@ -1792,6 +1792,10 @@ class MMNode:
 		self.attrdict[name] = value
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
+		# Special case if it is the filename - set the name of this function.
+		if name == 'file' and value not in [None, '']  and MMAttrdefs.getattr(self, 'name') in [None, '']:
+			shortname = os.path.splitext(os.path.basename(value))[0]
+			self.SetAttr('name', shortname)
 
 	def DelAttr(self, name):
 		if not self.attrdict.has_key(name):
