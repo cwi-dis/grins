@@ -13,34 +13,8 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "utils.h"
 
-struct PyWaveOut
-	{
-	PyObject_HEAD
-	HWAVEOUT m_hWaveOut;
-
-	static PyTypeObject type;
-	static PyMethodDef methods[];
-
-	static PyWaveOut *createInstance(HWAVEOUT hWaveOut = NULL)
-		{
-		PyWaveOut *instance = PyObject_NEW(PyWaveOut, &type);
-		if (instance == NULL) return NULL;
-		instance->m_hWaveOut = hWaveOut;
-		return instance;
-		}
-
-	static void dealloc(PyWaveOut *p) 
-		{ 
-		if(p->m_hWaveOut != NULL) 
-			waveOutClose(p->m_hWaveOut);
-		PyMem_DEL(p);
-		}
-
-	static PyObject *getattr(PyWaveOut *instance, char *name)
-		{ 
-		return Py_FindMethod(methods, (PyObject*)instance, name);
-		}
-	};
+#include "winmm_waveout_impl.h"
+#include "winmm_wavehdr_impl.h"
 
 PyObject* Winmm_WaveOutQuery(PyObject *self, PyObject *args)
 {
@@ -143,11 +117,10 @@ static PyObject* PyWaveOut_Reset(PyWaveOut *self, PyObject *args)
 
 static PyObject* PyWaveOut_Write(PyWaveOut *self, PyObject *args)
 {
-	PyObject *obj;
-	if (!PyArg_ParseTuple(args,"O",&obj))
+	PyWaveHdr *obj;
+	if (!PyArg_ParseTuple(args,"O!", &PyWaveHdr::type, &obj))
 		return NULL;
-	WAVEHDR *pWaveHdr = (WAVEHDR *)GetObjHandle(obj);
-	MMRESULT mmres = waveOutWrite(self->m_hWaveOut, pWaveHdr, sizeof(WAVEHDR));
+	MMRESULT mmres = waveOutWrite(self->m_hWaveOut, obj->m_pWaveHdr, sizeof(WAVEHDR));
  	if(mmres != MMSYSERR_NOERROR)
 		{
 		seterror("waveOutWrite", mmres);
