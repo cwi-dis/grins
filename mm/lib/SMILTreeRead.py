@@ -919,7 +919,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				if val in ('CSS', 'XML', 'auto'):
-					attrdict['calcMode'] = val
+					attrdict['attributeType'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'calcMode':
