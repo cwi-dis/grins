@@ -53,6 +53,7 @@ class AttrCtrl:
 		self._resid=resid
 		self._initctrl=None
 		self._validator=None
+		self._listeners=[]
 
 	def sethelp(self):
 		if not self._initctrl: return
@@ -97,10 +98,21 @@ class AttrCtrl:
 	def settooltips(self,tooltipctrl):
 		pass
 
+	def addlistener(self,obj):
+		if hasattr(obj,'onevent'):
+			self._listeners.append(obj)
+
+	def notifylisteners(self,event):
+		for obj in self._listeners:
+			obj.onevent(self._attr, event)
+
 # temp stuff not safe
 def atoft(str):
 	# convert string into tuple of floats
-	return tuple(map(string.atof, string.split(str)))
+	try:
+		return tuple(map(string.atof, string.split(str)))
+	except ValueError:
+		return ()
 
 def fttoa(t,n,prec):
 	if not t or len(t) != n:
@@ -676,6 +688,7 @@ class TupleCtrl(AttrCtrl):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
 		elif code==win32con.EN_CHANGE:
+			self.notifylisteners('change')
 			self.enableApply()
 
 	def settooltips(self,tooltipctrl):
@@ -835,7 +848,9 @@ class AttrPage(dialog.PropertyPage):
 		self._initdialog=self
 		dialog.PropertyPage.OnInitDialog(self)
 		self._attrinfo.attach_to_parent()
-		for ctrl in self._cd.values():ctrl.OnInitCtrl()
+		for ctrl in self._cd.values():
+			ctrl.OnInitCtrl()
+			ctrl.addlistener(self)
 		if self._group:
 			self._group.oninitdialog(self)
 		if self._tooltipctrl:
@@ -870,6 +885,10 @@ class AttrPage(dialog.PropertyPage):
 		if self._tooltipctrl:
 			for ctrl in self._cd.values():
 				ctrl.settooltips(self._tooltipctrl)
+
+	# interface of listeners
+	def onevent(self,attr,event):
+		pass
 
 	# override for not group attributes
 	def createctrls(self):
@@ -1146,7 +1165,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._layoutctrl=None
 		self._isintscale=1
 		self._boxoff = 0, 0
-		self._layoutctrl=None
+		self._inupdate = 0
 			
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
@@ -1284,9 +1303,12 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	######################
 	# subclass overrides
 
-	def getcurrentbox(self):
+	def getcurrentbox(self,saved=1):
 		lc=self.getctrl('base_winoff')
-		val=lc.getcurrent()
+		if saved:
+			val=lc.getcurrent()
+		else:
+			val = lc.getvalue()
 		box=self.val2box(val)
 		lbox=self._scale.layoutbox(box,self._units)
 		return lbox
@@ -1313,6 +1335,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	# the user can press reset to cancel changes
 	def update(self,*box):
 		if self._initdialog:
+			self._inupdate=1
 			lc=self.getctrl('base_winoff')
 			if not box:
 				lc.setvalue('')
@@ -1323,6 +1346,12 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 				else: prec=2
 				a=fttoa(box,4,prec)
 				lc.setvalue(a)
+			self._inupdate=0
+
+	def onevent(self,attr,event):
+		if self._inupdate: return
+		if attr.getname()=='base_winoff':
+			self.create_box(self.getcurrentbox(0))
 
 
 class PosSizeLayoutPage(LayoutPage):
@@ -1334,18 +1363,25 @@ class PosSizeLayoutPage(LayoutPage):
 		if ch and ch.has_key('base_window'):
 			self._boxoff = ch.get('base_winoff', (0,0,0,0))[:2]
 
-	def getcurrentbox(self):
+	def getcurrentbox(self,saved=1):
 		attrnames = self._group._attrnames
 		self._xy=self.getctrl(attrnames['xy'])
 		self._wh=self.getctrl(attrnames['wh'])
-		sxy=self._xy.getcurrent()
-		if not sxy:sxy='0 0'
-		swh=self._wh.getcurrent()
-		if not swh:swh='0 0'
+		if saved:
+			sxy=self._xy.getcurrent()
+			if not sxy:sxy='0 0'
+			swh=self._wh.getcurrent()
+			if not swh:swh='0 0'
+		else:
+			sxy=self._xy.getvalue()
+			if not sxy:sxy='0 0'
+			swh=self._wh.getvalue()
+			if not swh:swh='0 0'	
 		val = sxy + ' ' + swh
 		box=atoft(val)
-		box = box[0]+self._boxoff[0], box[1]+self._boxoff[1], box[2], box[3]
-		box=self._scale.layoutbox(box,self._units)
+		if len(box)==4:
+			box = box[0]+self._boxoff[0], box[1]+self._boxoff[1], box[2], box[3]
+			box=self._scale.layoutbox(box,self._units)
 		return box
 
 	def setvalue2layout(self,val):
@@ -1364,6 +1400,7 @@ class PosSizeLayoutPage(LayoutPage):
 	# the user can press reset to cancel changes
 	def update(self,*box):
 		if self._initdialog:
+			self._inupdate=1
 			lc=self.getctrl('base_winoff')
 			if not box:
 				self._xy.setvalue('')
@@ -1382,6 +1419,14 @@ class PosSizeLayoutPage(LayoutPage):
 				grp = self._group
 				a = grp.getattr(grp._attrnames['full'])
 				a.setvalue('off')
+			self._inupdate=0
+
+	def onevent(self,attr,event):
+		if self._inupdate: return
+		if attr.getname()=='subregionxy' or attr.getname()=='subregionwh':
+			self.create_box(self.getcurrentbox(0))
+		elif attr.getname()=='imgcropxy' or attr.getname()=='imgcropwh':
+			self.create_box(self.getcurrentbox(0))
 
 class SubImgLayoutPage(PosSizeLayoutPage):
 	def __init__(self, form):
