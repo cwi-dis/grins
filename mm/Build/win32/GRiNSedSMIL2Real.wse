@@ -1465,6 +1465,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Destination=%MAINDIR%\Templates\embedded_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\realONE_logo_68x56.gif
+  Destination=%MAINDIR%\Templates\realONE_logo_68x56.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\icons\DropRight.gif
   Destination=%MAINDIR%\Templates\icons\DropRight.gif
   Flags=0000000010000010

@@ -3,7 +3,7 @@
   <head>
     <meta name="title" content="Slideshow with Dual Audio"/>
     <meta name="template_name" content="Slideshow with Background Music and Voice Overs"/>
-    <meta name="template_description" content="A slideshow with background msuic, voice-overs and a background image."/>
+    <meta name="template_description" content="A slideshow with background music, voice-overs and a background image."/>
     <meta name="template_snapshot" content="icons/slideshow_2A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>

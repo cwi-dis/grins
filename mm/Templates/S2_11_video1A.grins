@@ -15,7 +15,7 @@
                  GRiNS:type="image" GRiNS:editBackground="255 192 192" GRiNS:showEditBackground="1"/>
         <region id="Video" left="7" top="7" width="240" height="180" z-index="1"
                  GRiNS:type="video" GRiNS:editBackground="192 255 192" GRiNS:showEditBackground="1"/>
-        <region id="Captions" left="7" top="248" width="220" height="20" z-index="2"
+        <region id="Captions" left="7" top="194" width="220" height="20" z-index="2"
                  GRiNS:type="text" GRiNS:editBackground="192 192 255" GRiNS:showEditBackground="1"/>
       </topLayout>
     </layout>
