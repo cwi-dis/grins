@@ -47,6 +47,11 @@ class MMNodeWidget(Interactive.Interactive):
 ##		import Help
 ##		Help.givehelp('Hierarchy_view')
 
+    def select(self):
+        Interactive.Interactive.select(self);
+        print "Selected: ", self;
+        print "Coords: ", self.get_pos_abs();
+
     def expandcall(self):
         # 'Expand' the view of this node.
         assert 0;
@@ -201,7 +206,6 @@ class StructureObjWidget(MMNodeWidget):
         # This is a base class for other classes.. this code only gets
         # called once the aggregating node has been called.
         # Draw only the children.
-        print "DEBUG: draw: length of children: ", len(self.children);
         for i in self.children:
             i.draw(displist);
 
@@ -219,8 +223,6 @@ class SeqWidget(StructureObjWidget):
     def get_minsize(self):
         # Return the minimum size that I can be.
         min_width = 0.0; min_height = 0.0;
-
-        print "DEBUG: get_minsize: length of children is: ", len(self.children), self;
 
         for i in self.children:
             w, h = i.get_minsize();
@@ -242,7 +244,6 @@ class SeqWidget(StructureObjWidget):
     def get_minsize_abs(self):
         # Everything here calculated in pixels.
         mw=0; mh=0;
-        print "DEBUG: get_minsize_abs: length of children is: ", len(self.children)
         for i in self.children:
             assert isinstance(i, MMNodeWidget);
             w,h = i.get_minsize_abs();
@@ -250,6 +251,7 @@ class SeqWidget(StructureObjWidget):
             mw = mw + w;
         mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE;
         mh = mh + 2*sizes_notime.VEDGSIZE;
+        print "Seq returning minimum size abs: ", mw, mh;
         return mw, mh;
         
     def recalc(self):
@@ -275,7 +277,7 @@ class SeqWidget(StructureObjWidget):
         for medianode in self.children:    # for each MMNode:
             w,h = medianode.get_minsize();
             if h > (b-t):               # If the node needs to be bigger than the available space...
-                print "Error: Node is too big!";
+                print "Error: Node is too tall!";
 #                assert 0;               # This shouldn't happen because the minimum size of this node
                                         # has already been determined to be bigger than this in minsize()
             # Take a portion of the free available width, fairly.
@@ -284,17 +286,17 @@ class SeqWidget(StructureObjWidget):
             else:
                 thisnode_free_width = (float(w) / min_width) * free_width;
             # Give the node the free width.
-            r = l + w + thisnode_free_width + self.get_relx(sizes_notime.HEDGSIZE);
+            r = l + w + thisnode_free_width
             
 #            print "DEBUG: Repositioning node to ", l, t, r, b;
             if r > 1.0:
-#                print "ERROR!!! Node extends too far right.. clipping..";
+                print "ERROR!!! Node extends too far right.. clipping..";
                 r = 1.0;
             if b > 1.0:
-#                print "ERROR!! Node extends too far down.. clipping..";
+                print "ERROR!! Node extends too far down.. clipping..";
                 b = 1.0;
             if l > 1.0:
-#                print "ERROR!! Node starts too far across.. clipping..";
+                print "ERROR!! Node starts too far across.. clipping..";
                 l = 1.0;
                 r = 1.0;
 
@@ -346,7 +348,7 @@ class ParWidget(StructureObjWidget):
             if w > mw: mw=w;
             mh=mh+h;
         mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE;
-        mw = mw + 2*sizes_notime.VEDGSIZE;
+        mw = mw + 2*sizes_notime.HEDGSIZE;
         return mw, mh;
 
     def recalc(self):
@@ -360,7 +362,7 @@ class ParWidget(StructureObjWidget):
         min_width, min_height = self.get_minsize();
         free_height = (t-b) - min_height;
         if free_height < 0.0 or free_height > 1.0:
-#            print "Warning! free_width is less than 0.0!"
+            print "Warning! free_height is wrong.";
             free_height = 0.0;
 
         l = float(l) + self.get_relx(sizes_notime.HEDGSIZE);
@@ -377,22 +379,22 @@ class ParWidget(StructureObjWidget):
                                         # has already been determined to be bigger than this in minsize()
             # Take a portion of the free available width, fairly.
             if free_height == 0.0:
-#                print "Parview.recalc: Warning! Node has no free height.";
+                print "Parview.recalc: Warning! Node has no free height.";
                 thisnode_free_height = 0.0;
             else:
                 thisnode_free_height = (float(h)/min_height) * free_height;
             # Give the node the free width.
-            b = t + h + self.get_rely(sizes_notime.GAPSIZE) + thisnode_free_height ;
+            b = t + h + thisnode_free_height ;
             # r = l + w; # Wrap the node to it's minimum size.
 
             if r > 1.0:
-#                print "ERROR!!! Node extends too far right.. clipping..";
+                print "ERROR!!! Node extends too far right.. clipping..";
                 r = 1.0;
             if b > 1.0:
-#                print "ERROR!! Node extends too far down.. clipping..";
+                print "ERROR!! Node extends too far down.. clipping..";
                 b = 1.0;
             if l > 1.0:
-#                print "ERROR!! Node starts too far across.. clipping..";
+                print "ERROR!! Node starts too far across.. clipping..";
                 l = 1.0;
                 r = 1.0;
                 
