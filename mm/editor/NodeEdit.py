@@ -90,7 +90,7 @@ def InitEditors():
 	# XXX Should add the directory where the .cmif file resides...
 	# XXX (toplevel.dirname)
 	import cmif, os
-	dirs = [os.curdir, os.environ['HOME'], cmif.findfile('editor')]
+	dirs = [os.curdir, os.environ['HOME'], cmif.findfile('')]
 	for dirname in dirs:
 		filename = os.path.join(dirname, '.cmif_editors')
 		try:
