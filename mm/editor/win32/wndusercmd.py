@@ -32,6 +32,8 @@ class GRINS_WEB(_CommandBase):
 	help = 'GRiNS on the Web'
 class GRINS_QSG(_CommandBase):
 	help = 'GRiNS QuickStart Guide'
+class GRINS_TUTORIAL(_CommandBase):
+	help = 'GRiNS Tutorial'
 
 class TB_PLAY(_CommandBase):
 	help = 'Play document'
