@@ -259,6 +259,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
 		if heavy or ctx.compatchannels(chtype='video'):
 			rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
+		if heavy or ctx.compatchannels(chtype='brush'):
+			rv.append(NEW_UNDER_BRUSH(callback = (self.createundercall, ('brush',))))
 		if heavy or ctx.compatchannels(chtype='text'):
 			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
 		if heavy or ctx.compatchannels(chtype='html'):
@@ -281,6 +283,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))))
 		if heavy or ctx.compatchannels(chtype='video'):
 			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
+		if heavy or ctx.compatchannels(chtype='brush'):
+			rv.append(NEW_BEFORE_BRUSH(callback = (self.createbeforecall, ('brush',))))
 		if heavy or ctx.compatchannels(chtype='text'):
 			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
 		if heavy or ctx.compatchannels(chtype='html'):
@@ -293,6 +297,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))))
 		if heavy or ctx.compatchannels(chtype='video'):
 			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
+		if heavy or ctx.compatchannels(chtype='brush'):
+			rv.append(NEW_AFTER_BRUSH(callback = (self.createaftercall, ('brush',))))
 		if heavy or ctx.compatchannels(chtype='text'):
 			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
 		if heavy or ctx.compatchannels(chtype='html'):
