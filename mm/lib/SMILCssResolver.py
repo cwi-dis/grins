@@ -277,6 +277,11 @@ class RegionNode(Node):
 		if self.pxheight <= 0: self.pxheight = 1
 		self._onGeomChanged()
 
+	def updateTree(self):
+		self.update()
+		for child in self.children:
+			child.updateTree()
+
 	def setRawAttrs(self, attrList):
 		for name, value in attrList:
 			if name == 'left':
@@ -802,6 +807,10 @@ class RootNode(RegionNode):
 		self._onGeomChanged()
 		for child in self.children:
 			child.update()
+
+	def updateTree(self):
+		for child in self.children:
+			child.updateTree()
 			
 	def _onGeomChanged(self):
 		self.context._onPxValuesChanged(self, self._getPxGeom())
@@ -855,6 +864,9 @@ class MediaNode(Node):
 		if self.pxwidth <= 0: self.pxwidth = 1
 		if self.pxheight <= 0: self.pxheight = 1
 		self._onGeomChanged()
+
+	def updateTree(self):
+		self.update()
 
 	# return the tuple x,y alignment in pourcent value
 	# alignOveride is an optional overide id
@@ -1203,4 +1215,5 @@ class MediaNode(Node):
 
 	def _getPxGeom(self):
 		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
- 
+
+
