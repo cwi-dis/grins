@@ -1,10 +1,23 @@
 #include "Python.h"
 
-#include "app_pyinterface.h"
+#include <windows.h>
 
+#include "app_pyinterface.h"
 
 #include "app_wnd.h"
 #include "ttl.h"
+
+class AppPyInterface
+	{
+	public:
+	static bool initialize(HWND hWnd);
+	static void finalize();
+
+	private:
+	static PyObject* get_application();
+	static bool set_mainwnd(PyObject *appobj, PyObject *pwnd);
+	static PyObject *s_pyapp;
+	};
 
 PyObject* AppPyInterface::s_pyapp;
 
@@ -95,10 +108,7 @@ bool InitializePythonInterface(HWND hWnd)
 	PyInterface::addto_sys_path_dir(dir);
 	AppPyInterface::initialize(hWnd);
 
-	//TCHAR stratup[] = TEXT("\\Windows\\cmif\\bin\\wince\\iGRiNSPlayer_SMIL2_CE.py");
-	//PyInterface::run_file(stratup);
-
-	PyInterface::run_command(TEXT("import iGRiNSPlayer_SMIL2_CE"));
+	PyInterface::run_command(TEXT("import startup\nstartup.main()"));
 
 	return true;
 	}
