@@ -754,7 +754,10 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			self._active_displist._render(dc,region)
 		self.ReleaseDC(dc)
 		
-	# Called by the core to set canvas size
+	def scrollvisible(self, coordinates, units = UNIT_MM):
+		pass
+
+	# Called by the core to get canvas size
 	def getcanvassize(self, units = UNIT_MM):
 		x,y,w,h=self._canvas
 		toplevel=__main__.toplevel
@@ -767,6 +770,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		elif units == UNIT_PXL:
 			return w, h
 
+	# Called by the core to set canvas size
 	def setcanvassize(self, how):
 		x,y,w,h=self._canvas
 		if type(how) is type(()):
