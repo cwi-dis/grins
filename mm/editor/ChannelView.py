@@ -3,6 +3,9 @@
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
+# XXX Bugs:
+# - sometimes (after part play, commit?) nodes get the wrong start time
+
 # XXX To do:
 # - remember 'locked' over commit
 # - remember sync arc focus over commit
@@ -10,7 +13,8 @@
 # - what about group nodes?  (I'd say draw a box to display them?)
 # - store focus and locked node as attributes
 # - improve color scheme
-# - draw 3D-look boxes
+# - draw 3D-look border for focused boxes
+# - accept middle button as shortcut for lock/unlock?
 
 
 from math import sin, cos, atan2, pi
@@ -567,7 +571,7 @@ class GO:
 			keymap[char] = proc
 			if text:
 				menutext = menutext + '|' + char + ' ' + text
-			menuprocs.append(proc)
+				menuprocs.append(proc)
 		menu = gl.newpup()
 		gl.addtopup(menu, menutext, 0)
 		return menu, menuprocs, keymap

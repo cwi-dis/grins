@@ -5,9 +5,6 @@
 
 ------------------------------ BUGS -------------------------------
 
-player: when reaching a bag node through a hyperjump, should call
-choosebagitem().
-
 block view: sometimes the outermost box size is calculated wrong and
 part of the window remains unused.  Usually after heavy inserting /
 deleting of nodes and/or zooming in/out?
@@ -27,8 +24,8 @@ FORMS: When one FORM is iconified, all events are queued but not acted
 upon hang.  Is this a standard FORMS bug or do I do something wrong
 with handling GL events?  (Not reproducible in very simple prog.)
 
-Timing: sometimes calctimes for partial tree is affects lay-out in
-channel view.  (May be a channel view bug?)
+channel view or Timing: sometimes calctimes for partial tree is
+affects lay-out in channel view.  (May be a channel view bug?)
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
@@ -103,8 +100,6 @@ channel view: want to cut and paste channels
 channel view: need to warn if a channel with nodes is deleted
 
 player: "keep" attribute (default 1) [what's this?]
-
-block & channel view: want to show other view's focus
 
 block & channel view: use channel colors instead of default (gray)
 
@@ -302,6 +297,10 @@ a while before events get handled again.
 [this went away without action.]
 
 channel view: "delete channel" is mapped to "channel attrs"
-[can't reproduce this?  seems to happen spuriously...]
 
 Timing: (opt)calctimes isn't a very meaningful name.
+
+player: when reaching a bag node through a hyperjump, should call
+choosebagitem()
+
+block & channel view: want to show other view's focus
