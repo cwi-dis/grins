@@ -1536,15 +1536,14 @@ DirectDrawSurface_Blt_RGB24_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 	return Py_None;	
 	}
 
-inline BYTE getC(BYTE *p, int row, int col, int w){return *(p + (row/2)*(w/2) + (col/2));}
-inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
-	float yf = 1.164f*(Y - 16.0f);
-	float rf = yf + 1.596f*(Cr - 128.0f);
-	float gf = yf - 0.813f*(Cr - 128.0f) - 0.391f*(Cb - 128.0f);
-	float bf = 	yf + 2.018f*(Cb - 128.0f);
-	r = BYTE( (rf<0.0f)?0.0f:(rf>255.0f?255.0f:rf) );
-	g = BYTE( (gf<0.0f)?0.0f:(gf>255.0f?255.0f:gf) );
-	b = BYTE( (bf<0.0f)?0.0f:(bf>255.0f?255.0f:bf) );
+__inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
+	int yf = 1164*(Y - 16);
+	int rf = yf + 1596*(Cr - 128);
+	int gf = yf - 813*(Cr - 128) - 391*(Cb - 128);
+	int bf = yf + 2018*(Cb - 128);
+	r = BYTE( (rf<0)?0:(rf>255000?255000:rf)/1000 );
+	g = BYTE( (gf<0)?0:(gf>255000?255000:gf)/1000 );
+	b = BYTE( (bf<0)?0:(bf>255000?255000:bf)/1000 );
 }
 
 static char DirectDrawSurface_Blt_YUV420_On_RGB32__doc__[] =
@@ -1575,17 +1574,21 @@ DirectDrawSurface_Blt_YUV420_On_RGB32(DirectDrawSurfaceObject *self, PyObject *a
 	for(DWORD row=0;row<h;row++)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		BYTE *pCbRow = pCb + (row/2)*(w/2);
+		BYTE *pCrRow = pCr + (row/2)*(w/2);				
+		for (DWORD col=0;col<w;col+=2)
 			{
-			BYTE Yp = *pYp++;
-			int Cb = getC(pCb,row,col,w);
-			int Cr = getC(pCr,row,col,w);
-
+			BYTE Cb = *pCbRow++;
+			BYTE Cr = *pCrRow++;
 			BYTE r,g,b;
+			
+			BYTE Yp = *pYp++;			
 			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
-				
-			*(DWORD*)surfpixel = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
-			surfpixel++;
+			*((DWORD*)surfpixel++) = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
+			
+			Yp = *pYp++;			
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			*((DWORD*)surfpixel++) = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			}
 		}
 	Py_END_ALLOW_THREADS
@@ -1622,15 +1625,21 @@ DirectDrawSurface_Blt_YUV420_On_RGB24(DirectDrawSurfaceObject *self, PyObject *a
 	for(DWORD row=0;row<h;row++)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		BYTE *pCbRow = pCb + (row/2)*(w/2);
+		BYTE *pCrRow = pCr + (row/2)*(w/2);		
+		for (DWORD col=0;col<w;col+=2)
 			{
-			BYTE Yp = *pYp++;
-			BYTE Cb = getC(pCb,row,col,w);
-			BYTE Cr = getC(pCr,row,col,w);
-			
+			BYTE Cb = *pCbRow++;
+			BYTE Cr = *pCrRow++;
 			BYTE r,g,b;
-			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
 			
+			BYTE Yp = *pYp++;			
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			*((DWORD*)surfpixel) = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
+			surfpixel++;
+			
+			Yp = *pYp++;			
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
 			*((DWORD*)surfpixel) = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			surfpixel++;
 			}
@@ -1660,30 +1669,33 @@ DirectDrawSurface_Blt_YUV420_On_RGB16(DirectDrawSurfaceObject *self, PyObject *a
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Blt_YUV420_On_RGB16", hr);
 		return NULL;
-	}			
-	int rs=256/(int)pow(2,numREDbits);
-	int gs=256/(int)pow(2,numGREENbits);
-	int bs=256/(int)pow(2,numBLUEbits);
+	}	
+	
+	int rs = 8-numREDbits;
+	int gs = 8-numGREENbits;
+	int bs = 8-numBLUEbits;
 	BYTE *pYp = pImageBits;
 	BYTE *pCb = pImageBits + w*h;
 	BYTE *pCr = pCb + w*h/4;
 	Py_BEGIN_ALLOW_THREADS	
 	for(DWORD row=0;row<h;row++)
 		{
-		WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		WORD *surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		BYTE *pCbRow = pCb + (row/2)*(w/2);
+		BYTE *pCrRow = pCr + (row/2)*(w/2);
+		for (DWORD col=0;col<w;col+=2)
 			{
-			BYTE Yp = *pYp++;
-			BYTE Cb = getC(pCb,row,col,w);
-			BYTE Cr = getC(pCr,row,col,w);
-			
+			BYTE Cb = *pCbRow++;
+			BYTE Cr = *pCrRow++;
 			BYTE r,g,b;
-			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
 			
-			*surfpixel = WORD((WORD(r/float(rs)) <<loREDbit)  | 
-				(WORD(g/float(gs)) <<loGREENbit) | 
-				(WORD(b/float(bs)) <<loBLUEbit));
-			surfpixel++;
+			BYTE Yp = *pYp++;
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			*surfpixel++ = ((r >> rs) << loREDbit) | ((g>>gs) << loGREENbit) | ((b>>bs) << loBLUEbit);
+
+			Yp = *pYp++;
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			*surfpixel++ = ((r >> rs) << loREDbit) | ((g>>gs) << loGREENbit) | ((b>>bs) << loBLUEbit);
 			}
 		}
 	Py_END_ALLOW_THREADS		
@@ -1720,17 +1732,21 @@ DirectDrawSurface_Blt_YUV420_On_RGB8(DirectDrawSurfaceObject *self, PyObject *ar
 	for(DWORD row=0;row<h;row++)
 		{
 		BYTE* surfpixel= ((BYTE*)desc.lpSurface+row*desc.lPitch);
+		BYTE *pCbRow = pCb + (row/2)*(w/2);
+		BYTE *pCrRow = pCr + (row/2)*(w/2);		
 		for (DWORD col=0;col<w;col++)
 			{
-			BYTE Yp = *pYp++;
-			BYTE Cb = getC(pCb,row,col,w);
-			BYTE Cr = getC(pCr,row,col,w);
-			
+			BYTE Cb = *pCbRow++;
+			BYTE Cr = *pCrRow++;
 			BYTE r,g,b;
+			
+			BYTE Yp = *pYp++;
 			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			*surfpixel++ = FindColour(r,g,b);
 
-			*surfpixel = FindColour(r,g,b);
-			surfpixel++;
+			Yp = *pYp++;
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			*surfpixel++ = FindColour(r,g,b);
 			}
 		}
 	Py_END_ALLOW_THREADS	
