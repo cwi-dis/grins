@@ -456,6 +456,7 @@ class NodeWrapper(Wrapper):
 		import settings
 		snap = hasattr(features, 'grins_snap') and features.grins_snap
 		lightweight = features.lightweight
+		boston = self.context.attributes.get('project_boston', 0)
 		ntype = self.node.GetType()
 		if ntype == 'prio':
 			# special case for prio nodes
@@ -498,7 +499,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('system_required')
 			namelist.append('system_screen_size')
 			namelist.append('system_screen_depth')
-			if self.context.attributes.get('project_boston', 0):
+			if boston:
 				namelist.append('system_audiodesc')
 				namelist.append('system_cpu')
 				namelist.append('restart')
@@ -515,16 +516,15 @@ class NodeWrapper(Wrapper):
 			# Snap!
 			if ntype != 'alt':
 				namelist.append('.begin1')
-		if not snap and (ntype in leaftypes or
-				self.context.attributes.get('project_boston', 0)):
+		if not snap and (ntype in leaftypes or boston):
 			namelist.append('fill')
-		if self.context.attributes.get('project_boston', 0):
+		if boston:
 			namelist.append('alt')
 			if not snap:
 				namelist.append('longdesc')
 		if ntype == 'bag':
 			namelist.append('bag_index')
-		if ntype in partypes + ['excl']:
+		if ntype in ('par', 'excl') or (ntype in leaftypes and boston):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
@@ -540,7 +540,7 @@ class NodeWrapper(Wrapper):
 				namelist.append('clipend')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
-			if self.context.attributes.get('project_boston', 0):
+			if boston:
 				if not snap:
 					namelist.append('left')
 					namelist.append('width')
@@ -1680,27 +1680,23 @@ class AttrEditorField(AttrEditorDialogField):
 class IntAttrEditorField(AttrEditorField):
 	type = 'int'
 
-	def valuerepr(self, value):
-		if value == 0 and self.getname() == 'loop':
-			return 'indefinite'
-		return AttrEditorField.valuerepr(self, value)
-
-	def parsevalue(self, str):
-		if str == 'indefinite' and self.getname() == 'loop':
-			return 0
-		return AttrEditorField.parsevalue(self, str)
-
 class FloatAttrEditorField(AttrEditorField):
 	type = 'float'
 
 	def valuerepr(self, value):
 		if value == -1 and self.getname() in ('duration', 'repeatdur'):
 			return 'indefinite'
+		if value == 0 and self.getname() == 'loop':
+			return 'indefinite'
 		return AttrEditorField.valuerepr(self, value)
 
 	def parsevalue(self, str):
-		if str == 'indefinite' and self.getname() in ('duration', 'repeatdur'):
-			return -1.0
+		if str == 'indefinite':
+			attrname = self.getname()
+			if attrname in ('duration', 'repeatdur'):
+				return -1.0
+			if attrname == 'loop':
+				return 0.0
 		return AttrEditorField.parsevalue(self, str)
 
 class StringAttrEditorField(AttrEditorField):
