@@ -442,7 +442,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.url, tag = MMurl.splittag(href)
 		try:
 			fn, hdrs = MMurl.urlretrieve(self.url, data)
-			self.url = MMurl._urlopener.openedurl
+			if hdrs.has_key('Content-Location'):
+				self.url = hdrs['Content-Location']
 			if hdrs.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
 			else:
