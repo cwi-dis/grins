@@ -9,6 +9,7 @@ import string
 # std win32 modules
 import win32ui,win32con,win32api
 Sdk=win32ui.GetWin32Sdk()
+Afx=win32ui.GetAfx()
 
 # win32 lib modules
 import win32mu,components,sysmetrics
@@ -307,36 +308,62 @@ class FileCtrl(AttrCtrl):
 		elif code==win32con.EN_CHANGE:
 			if hasattr(self._wnd,'onAttrChange'):
 				self._wnd.onAttrChange()
-				self.enableApply()
+			self.enableApply()
 
-# a file ctrl with icon buttons play and stop
+# a file ctrl with icon buttons play, pause and stop
 # indented for continous media preview
 class FileMediaCtrl(FileCtrl):
 	def __init__(self,wnd,attr,resid):
 		FileCtrl.__init__(self,wnd,attr,resid)
 		self._iconplay=win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
+		self._iconpause=win32ui.GetApp().LoadIcon(grinsRC.IDI_PAUSE)
 		self._iconstop=win32ui.GetApp().LoadIcon(grinsRC.IDI_STOP)
 		self._bplay=components.Button(wnd,resid[3])
-		self._bstop=components.Button(wnd,resid[4])
+		self._bpause=components.Button(wnd,resid[4])
+		self._bstop=components.Button(wnd,resid[5])
 
 	def OnInitCtrl(self):
 		FileCtrl.OnInitCtrl(self)
 		self._bplay.attach_to_parent()
+		self._bpause.attach_to_parent()
 		self._bstop.attach_to_parent()
 		self._bplay.seticon(self._iconplay)
+		self._bpause.seticon(self._iconpause)
 		self._bstop.seticon(self._iconstop)
 		self._wnd.HookCommand(self.OnPlay,self._resid[3])
-		self._wnd.HookCommand(self.OnStop,self._resid[4])
+		self._wnd.HookCommand(self.OnPause,self._resid[4])
+		self._wnd.HookCommand(self.OnStop,self._resid[5])
+		self.setstate('stop')
 
 	def OnPlay(self,id,code):
 		if hasattr(self._wnd,'OnPlay'):
+			self.setstate('play')
 			self._wnd.OnPlay()
+
+	def OnPause(self,id,code):
+		if hasattr(self._wnd,'OnPause'):
+			self.setstate('pause')
+			self._wnd.OnPause()
 
 	def OnStop(self,id,code):
 		if hasattr(self._wnd,'OnStop'):
+			self.setstate('stop')
 			self._wnd.OnStop()
 	
-
+	def setstate(self,state):
+		if state=='stop': # stoped
+			self._bplay.enable(1)
+			self._bpause.enable(0)
+			self._bstop.enable(0)
+		elif state=='play': # playing
+			self._bplay.enable(0)
+			self._bpause.enable(1)
+			self._bstop.enable(1)
+		elif state=='pause': # pausing
+			self._bplay.enable(1)
+			self._bpause.enable(0)
+			self._bstop.enable(1)
+			
 	
 ##################################
 class ColorCtrl(AttrCtrl):
@@ -1116,15 +1143,6 @@ class Renderer:
 		self._baseURL=baseURL
 		self._bgcolor=(0,0,0)
 
-	def isstatic(self):
-		return 0
-
-	def needswindow(self):
-		return 1
-
-	def needsoswindow(self):
-		return 0
-
 	def urlqual(self,rurl):
 		if not rurl:
 			return rurl
@@ -1183,7 +1201,22 @@ class Renderer:
 	def stop(self):
 		pass
 
+	# has finished playing?
+	def ismediaend(self):
+		return 0
+
+	# has duration?
+	def isstatic(self):
+		return 0
+
+	# nees surface to draw?
+	def needswindow(self):
+		return 1
 	
+	# needs its os window?
+	def needsoswindow(self):
+		return 0
+
 ###############################
 from win32ig import win32ig
 
@@ -1232,6 +1265,101 @@ class ImageRenderer(Renderer):
 		dc.FrameRectFromHandle((dest_x, dest_y, dest_x + width, dest_y+height),br)
 		Sdk.DeleteObject(br)
 		self._adjrc=(dest_x, dest_y,dest_x + width, dest_y + height)
+
+#################################
+class HtmlRenderer(Renderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._htmlwnd=None
+			
+	def __del__(self):
+		self.release()
+	
+	def release(self):
+		if self._htmlwnd:
+			self._htmlwnd.DestroyHtmlCtrl()
+			self._htmlwnd.DestroyWindow()
+			self._htmlwnd=None
+
+	def isstatic(self):
+		return 1
+
+	def load(self,rurl):
+		if not rurl:
+			self.release()
+			self.update()
+			return
+		url=self.urlqual(rurl)
+		self.createHtmlWnd()
+		if self._htmlwnd:	
+			self._htmlwnd.Navigate(url)
+
+	def createHtmlWnd(self):
+		if self._htmlwnd: return
+		self._htmlwnd=window.Wnd(win32ui.CreateHtmlWnd())
+		self._brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB((255,255,255)),0)
+		self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+		self._icon=0
+		self._clstyle=0
+		self._style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE
+		self._exstyle = 0 
+		self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+		self._htmlwnd.CreateWindow(self._strclass,'untitled',self._style,
+			self._rc,self._wnd,0)
+		import settings
+		self._htmlwnd.UseHtmlCtrl(not settings.get('html_control'))
+		self._htmlwnd.CreateHtmlCtrl()
+		self._htmlwnd.SetWindowPos(0,self._rc,
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+
+
+#################################
+class TextRenderer(Renderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._textwnd=None
+			
+	def __del__(self):
+		self.release()
+	
+	def release(self):
+		if self._textwnd:
+			self._textwnd.DestroyWindow()
+			self._textwnd=None
+
+	def isstatic(self):
+		return 1
+
+	def load(self,rurl):
+		if not rurl:
+			self.release()
+			self.update()
+			return
+		url=self.urlqual(rurl)
+		f=self.urlretrieve(url)
+		if not f or not self.isfile(f):
+			self.release()
+			self.update()
+			return
+		self.createTextWnd()
+		if self._textwnd:
+			fp = open(f, 'r')
+			text = fp.read()
+			fp.close()	
+			self._textwnd.SetWindowText(text)
+			self._textwnd.SendMessage(win32con.EM_SETREADONLY,1,0)
+
+	def createTextWnd(self):
+		if self._textwnd: return
+		self._style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | win32con.WS_TABSTOP 
+		self._exstyle = win32con.WS_EX_CONTROLPARENT| win32con.WS_EX_CLIENTEDGE
+		self._strclass='EDIT'
+		l,t,r,b=self._rc
+		hwnd=Sdk.CreateWindowEx(self._exstyle,self._strclass,'',self._style,
+			(l,t,r-l,b-t),self._wnd.GetSafeHwnd(),0)
+		self._textwnd=window.Wnd(win32ui.CreateWindowFromHandle(hwnd))
+		self._textwnd.SetWindowPos(0,self._rc,
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 
 
 #################################
@@ -1285,18 +1413,21 @@ class MediaRenderer(Renderer):
 
 	def play(self):
 		if not self._builder: return
-		d=self._builder.GetDuration()
-		t=self._builder.GetPosition()
-		if t>=d:
-			self._builder.SetPosition(0)
 		self._builder.Run()
 
 	def pause(self):
 		if not self._builder: return
 		self._builder.Pause()
+
 	def stop(self):
 		if not self._builder: return
+		self._builder.SetPosition(0)
 		self._builder.Stop()
+
+	def ismediaend(self):
+		d=self._builder.GetDuration()
+		t=self._builder.GetPosition()
+		return t>=d
 
 
 class VideoRenderer(MediaRenderer):
@@ -1323,7 +1454,8 @@ class RealRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		Renderer.__init__(self,wnd,rc,baseURL)
 		self._rmaplayer=None
-	
+		self._isstoped=0
+
 	# postpone real loading so that the user pay a delay
 	# the first time he wants a real preview and only then
 	def do_init(self):
@@ -1344,6 +1476,7 @@ class RealRenderer(Renderer):
 	def release(self):
 		if self._rmaplayer:
 			self.stop()
+			del self._rmaplayer
 			self._rmaplayer = None
 
 	def isstatic(self):
@@ -1361,14 +1494,18 @@ class RealRenderer(Renderer):
 		import MMurl
 		url = MMurl.unquote(url)
 		self._rmaplayer.OpenURL(url)
-		self._wnd.ShowWindow(win32con.SW_SHOW)
+		self._isstoped=0
+		self._rmaplayer.SetStatusListener(self)
+
 			
 	def play(self):
 		if self._rmaplayer:
+			self._isstoped=0
 			self._rmaplayer.Begin()
 			
 	def pause(self):
 		if self._rmaplayer:
+			self._isstoped=0
 			self._rmaplayer.Pause()
 
 	def stop(self):
@@ -1376,7 +1513,13 @@ class RealRenderer(Renderer):
 			# stop requires to recreate player
 			# in order to be confined
 			self._rmaplayer.Pause()
-			#self._rmaplayer.Seek(0)
+			self._rmaplayer.Seek(0)
+
+	def OnStop(self):
+		self._isstoped=1
+
+	def ismediaend(self):
+		return self._isstoped
 
 class RealWndRenderer(RealRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
@@ -1414,22 +1557,29 @@ class RealWndCtrl(components.WndCtrl):
 #################################
 
 class PreviewPage(AttrPage):
-	def __init__(self,form,mrenderer='image',aname='file'):
+	def __init__(self,form,renderersig='null',aname='file'):
 		AttrPage.__init__(self,form)
 		self._prevrc=(20,20,100,100)
 		self._aname=aname
 		self._armed=0
 		self._playing=0
-		if mrenderer=='video':
+		self._tid=0
+		if renderersig=='video':
 			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
-		elif mrenderer=='audio':
+		elif renderersig=='audio':
 			self._renderer=AudioRenderer(self,self._prevrc,self._form._baseURL)
-		elif mrenderer=='realwnd':
+		elif renderersig=='realwnd':
 			self._renderer=RealWndRenderer(self,self._prevrc,self._form._baseURL)
-		elif mrenderer=='realaudio':
+		elif renderersig=='realaudio':
 			self._renderer=RealAudioRenderer(self,self._prevrc,self._form._baseURL)
-		else:
+		elif renderersig=='html':
+			self._renderer=HtmlRenderer(self,self._prevrc,self._form._baseURL)
+		elif renderersig=='text':
+			self._renderer=TextRenderer(self,self._prevrc,self._form._baseURL)
+		elif renderersig=='image':
 			self._renderer=ImageRenderer(self,self._prevrc,self._form._baseURL)
+		else:
+			self._renderer=Renderer(self,self._prevrc,self._form._baseURL)
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
@@ -1453,16 +1603,17 @@ class PreviewPage(AttrPage):
 		self._renderer._rc=(l2-l1,t2-t1,r2-l1,b2-t1)
 
 	def OnDestroy(self,params):
+		self.OnStop()
 		del self._renderer
 
 	def OnSetActive(self):
-		if self._playing:
-			self._renderer.play()
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self):
-		if self._playing:
-			self._renderer.pause()
+		if not self._renderer.isstatic() and self._playing:
+			self.OnPause()
+			c=self.getctrl(self._aname)
+			c.setstate('pause')
 		return self._obj_.OnKillActive()
 
 	def drawOn(self,dc):
@@ -1491,11 +1642,40 @@ class PreviewPage(AttrPage):
 			self._armed=1
 		self._renderer.play()
 		self._playing=1
+		self.settimer()
 
 	def OnStop(self):
 		if self._playing:
+			self.canceltimer()
 			self._renderer.stop()
 			self._playing=0
+
+	def OnPause(self):
+		if self._playing:
+			self.canceltimer()
+			self._renderer.pause()
+			self._playing=0
+
+	def canceltimer(self):
+		if self._tid:
+			import __main__
+			__main__.toplevel.canceltimer(self._tid)
+			self._tid=0
+
+	def settimer(self):
+		self.canceltimer()
+		import __main__
+		self._tid=__main__.toplevel.settimer(1,(self.checkmediaend,()))
+
+	def checkmediaend(self):
+		self._tid=0
+		if not self._renderer.isstatic():
+			if self._renderer.ismediaend():
+				self.OnStop()
+				c=self.getctrl(self._aname)
+				c.setstate('stop')
+			else:
+				self.settimer()
 
 class ImagePreviewPage(PreviewPage):
 	def __init__(self,form):
@@ -1518,19 +1698,27 @@ class ImagePreviewPage(PreviewPage):
 
 class VideoPreviewPage(PreviewPage):
 	def __init__(self,form):
-		PreviewPage.__init__(self,form,'video')	
+		PreviewPage.__init__(self, form,'video')	
 
 class AudioPreviewPage(PreviewPage):
 	def __init__(self,form):
-		PreviewPage.__init__(self,form,'audio')	
+		PreviewPage.__init__(self, form,'audio')	
 
 class RealAudioPreviewPage(PreviewPage):
 	def __init__(self,form):
-		PreviewPage.__init__(self,form,'realaudio')	
+		PreviewPage.__init__(self, form,'realaudio')	
 
 class RealWndPreviewPage(PreviewPage):
 	def __init__(self,form):
-		PreviewPage.__init__(self,form,'realwnd')	
+		PreviewPage.__init__(self, form,'realwnd')
+			
+class HtmlPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self, form,'html')	
+
+class TextPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self, form,'text')	
 
 ############################
 
@@ -1871,15 +2059,22 @@ class FileGroup(AttrGroup):
 			if string.find(subtype,'realaudio')>=0:
 				mtype='realaudio'
 			self._preview=1
-		elif mtype=='text' and string.find(subtype,'realtext')>=0:
-			self._preview=1
-			mtype='realwnd'
+		elif mtype=='text':
+			if subtype=='html':
+				mtype='html'
+				self._preview=1
+			elif subtype=='plain':
+				mtype='text'
+				self._preview=1
+			elif string.find(subtype,'realtext')>=0:
+				mtype='realwnd'
+				self._preview=1	
 		self._mtypesig=mtype
 		return self._preview
 
 	def getpageresid(self):
 		if self.canpreview():
-			if self._mtypesig=='image': 
+			if self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text': 
 				# static media
 				return getattr(grinsRC, 'IDD_EDITATTR_PF1')
 			else: 
@@ -1893,6 +2088,8 @@ class FileGroup(AttrGroup):
 			return AttrPage
 		if self._mtypesig=='image':
 			return ImagePreviewPage
+		elif self._mtypesig=='html':
+			return HtmlPreviewPage
 		elif self._mtypesig=='video':
 			return VideoPreviewPage
 		elif self._mtypesig=='audio':
@@ -1901,8 +2098,10 @@ class FileGroup(AttrGroup):
 			return RealWndPreviewPage
 		elif self._mtypesig=='realaudio':
 			return RealAudioPreviewPage
+		elif self._mtypesig=='text':
+			return TextPreviewPage
 		else:
-			return AttrPage
+			return PreviewPage
 
 	def createctrls(self,wnd):
 		cd={}
@@ -1910,14 +2109,14 @@ class FileGroup(AttrGroup):
 		if not self.canpreview():
 			cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
 
-		elif self._mtypesig=='image':
+		elif self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text':
 			# static media
 			cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
 
 		else:
 			# continous media
 			cd[a]=FileMediaCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,
-				grinsRC.IDC_4,grinsRC.IDC_5))
+				grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6))
 		return	cd
 
 
