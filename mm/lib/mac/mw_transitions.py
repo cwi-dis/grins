@@ -43,10 +43,11 @@ class TransitionEngine:
 		
 		self.__idleid = mw_globals.toplevel.setidleproc(self._idleproc)
 		
-	def join(self, window, ismaster):
+	def join(self, window, ismaster, cb):
 		"""Join this (sub or super) window to an existing transition"""
 		if ismaster:
 			self.windows.insert(0, window)
+			self.__callback = cb
 		else:
 			self.windows.append(window)
 		self.move_resize()
