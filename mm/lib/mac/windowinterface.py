@@ -300,7 +300,7 @@ class _Window(_CommonWindowMixin, mac_windowbase._Window):
 ##		mac_windowbase._Window._input_callback(self, form, client_data,
 ##						     call_data)
 
-	def _resize_callback(self, form, client_data, call_data):
+	def _resize_callback(self, width, height):
 		self.arrowcache = {}
 		w = _in_create_box
 		if w:
@@ -311,8 +311,7 @@ class _Window(_CommonWindowMixin, mac_windowbase._Window):
 			except _rb_done:
 				pass
 			w._next_create_box[0:0] = next_create_box
-		mac_windowbase._Window._resize_callback(self, form, client_data,
-						      call_data)
+		mac_windowbase._Window._resize_callback(self, width, height)
 		if w:
 			w._rb_end()
 			raise _rb_done

@@ -122,13 +122,15 @@ _watch = Qd.GetCursor(4).data
 _hand = None
 _channel = None
 _link = None
+_resize = None
 CURSORS={}
 
 def _init_cursors():
-	global _hand, _channel, _link, CURSORS
+	global _hand, _channel, _link, _resize, CURSORS
 	_hand = Qd.GetCursor(512).data
 	_channel = Qd.GetCursor(513).data
 	_link = Qd.GetCursor(514).data
+	_resize = Qd.GetCursor(515).data
 	
 	# These funny names are the X names for the cursors, used by the
 	# rest of the code
@@ -277,7 +279,6 @@ class _Event:
 				import splash
 				splash.splash()
 				self.removed_splash = 1
-			self._fixcursor() # Should return a region
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
 		
 			if gotone:
@@ -289,6 +290,7 @@ class _Event:
 				if self.needmenubarrecalc and self._command_handler:
 					self._command_handler.update_menus()
 					self.needmenubarrecalc = 0
+				self._fixcursor(event) # Should return a region
 			return 0		
 				
 	def _handle_event(self, event):
@@ -368,12 +370,17 @@ class _Event:
 			MacOS.HandleEvent(event)
 			return
 		if partcode == Windows.inGrow:
-			if modifiers & Events.controlKey:
-				# Shift-click allows growing
-				#wid.DrawGrowIcon()
+			# Since we don't draw the grow region usually there may
+			# be content there. The user can click the content by using
+			# the <option> key.
+			if not (modifiers & Events.optionKey):
+				window = self._find_wid(wid)
+				if not window:
+					MacOS.HandleEvent(event)
+					return
 				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
-				neww, newh = (rv>>16) & 0xffff, rv & 0xffff
-				pass # XXXX find window, call resize, possibly send update?
+				newh, neww = (rv>>16) & 0xffff, rv & 0xffff
+				window._resize_callback(neww, newh)
 			else:
 				partcode = Windows.inContent
 		if partcode == Windows.inContent:
@@ -782,10 +789,16 @@ class _Toplevel(_Event):
 		else:
 			self._cursor_is_default = 1
 			self._cur_cursor = None
-			self._fixcursor()
+##			self._fixcursor()
 			
-	def _fixcursor(self):
+	def _fixcursor(self, event):
 		"""Select watch or hand cursor"""
+		if event:
+			what, message, when, where, modifiers = event
+			option_pressed = modifiers&Events.optionKey
+		else:
+			# XXXX Needed?
+			raise 'kaboo kaboo'
 		if not self._cursor_is_default:
 			return
 		wtd_cursor = _arrow
@@ -793,8 +806,13 @@ class _Toplevel(_Event):
 		if self._wid_to_window.has_key(wid):
 			win = self._wid_to_window[wid]
 			Qd.SetPort(wid)
-			where = Evt.GetMouse()
-			if win._mouse_over_button(where):
+			lwhere = Qd.GlobalToLocal(where)
+			# Change the cursor when we're over the resize area, unless
+			# option is pressed
+			partcode, mwid = Win.FindWindow(where)
+			if not option_pressed and wid == mwid and partcode == Windows.inGrow:
+				wtd_cursor = _resize
+			elif win._mouse_over_button(lwhere):
 				wtd_cursor = _hand
 		if wtd_cursor != self._cur_cursor: 
 			Qd.SetCursor(wtd_cursor)
@@ -1262,6 +1280,15 @@ class _CommonWindow:
 			func(arg, self, KeyboardInput, char)
 			return 1
 		
+	def _do_resize2(self):
+		for w in self._subwindows:
+			w._do_resize2()
+		try:
+			func, arg = self._eventhandlers[ResizeWindow]
+		except KeyError:
+			pass
+		else:
+			func(arg, self, ResizeWindow, None)
 		
 	def _redraw(self, rgn=None):
 		"""Set clipping and color, redraw, redraw children"""
@@ -1414,6 +1441,23 @@ class _Window(_CommonWindow, _WindowGroup):
 		_CommonWindow._activate(self, onoff)
 ##		_WindowGroup._activate(self, onoff)
 
+	def _resize_callback(self, width, height):
+		x, y = self._rect[:2]
+		self._rect = x, y, width, height
+		# convert pixels to mm
+		parent = self._parent
+		self._hfactor = parent._hfactor / (float(width) / _x_pixel_per_mm)
+		self._vfactor = parent._vfactor / (float(height) / _y_pixel_per_mm)
+		for d in self._displists[:]:
+			d.close()
+		self._wid.SizeWindow(width, height, 1)
+		self._clipchanged()
+		for w in self._subwindows:
+			w._do_resize1()
+		# call resize callbacks
+		self._do_resize2()
+
+
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
@@ -1515,6 +1559,27 @@ class _SubWindow(_CommonWindow):
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
+
+	def _do_resize1(self):
+		# calculate new size of subwindow after resize
+		# close all display lists
+		parent = self._parent
+		##x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
+		x, y, w, h = parent._convert_coordinates(self._sizes)
+		self._rect = x, y, w, h
+		w, h = self._sizes[2:]
+		if w == 0:
+			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
+		if h == 0:
+			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
+		self._hfactor = parent._hfactor / w
+		self._vfactor = parent._vfactor / h
+		# We don't have to clear _clip, our parent did that.
+		self._active_displist = None
+		for d in self._displists[:]:
+			d.close()
+		for w in self._subwindows:
+			w._do_resize1()
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
