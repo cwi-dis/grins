@@ -45,17 +45,8 @@ class ListCtrl(window.Wnd):
 	def OnDrop(self, dataobj, effect, x, y): 
 		print 'OnDrop', self, dataobj, effect, x, y
 
-		filename = dataobj.GetGlobalData(DropTarget.CF_FILE)
-		if filename: print 'filename', filename
-
-		nodeinfo = dataobj.GetGlobalData(DropTarget.CF_NODE)
-		if nodeinfo: print 'nodeinfo', nodeinfo
-
-		regioninfo = dataobj.GetGlobalData(DropTarget.CF_REGION)
-		if regioninfo: print 'regioninfo', regioninfo
-
-		mediainfo = dataobj.GetGlobalData(DropTarget.CF_MEDIA)
-		if mediainfo: print 'mediainfo', mediainfo
+		format_name, data = DropTarget.GetData(dataobj)
+		print format_name, data
 
 		return DropTarget.DROPEFFECT_NONE
 
