@@ -135,6 +135,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		#
 		self._viewCreationListeners = []
 
+		self._defaultwinpos = (0, 0)
+
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
 		strclass=self.registerwndclass()
@@ -1153,10 +1155,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# -mjvdg.
 		view=viewclass(self.getdoc(), bgcolor)
 		self.add_common_interface(view,strid)
-		if not x or x<0: x=0
-		if not y or y<0: y=0
-		if not w or w<0: w = sysmetrics.scr_width_pxl/2
-		if not h or h<0: h = sysmetrics.scr_height_pxl/2
 
 		rcFrame = self._makeframecoords((x,y,w,h),units)
 		f=ChildFrame(view)	# This is where most child MDI windows get made.
@@ -1212,6 +1210,16 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		if xywh is None:
 			return None
 		x, y, w, h = xywh
+		if x <= 0 or y <= 0:
+			x, y = self._defaultwinpos
+			if y > 50:
+				self._defaultwinpos = (0, y)
+			else:
+				self._defaultwinpos = (x+10, y+10)
+		if w<=0 or h<= 0:
+			w = sysmetrics.scr_width_pxl/2
+			h = sysmetrics.scr_height_pxl/2
+
 		x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
 		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
 		dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
