@@ -64,6 +64,9 @@ class ImageLib:
 		if img<0: return 10,10,8
 		return self.lib.image_dimensions_get(img)
 
+	def gettransp(self, img):
+		return self._transpdict.get(img)
+
 	def read(self, img, crop = None):
 		if crop is None:
 			data = self.lib.area_get(img)
