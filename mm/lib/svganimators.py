@@ -242,7 +242,6 @@ class Animator:
 		vl = self._values
 		dur = self._dur
 		el = self._splines
-		n = len(vl)
 		if t==dur: 
 			return vl[len(vl)-1]
 		elif t==0:
