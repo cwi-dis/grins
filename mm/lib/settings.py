@@ -156,6 +156,7 @@ default_settings = {
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
+	'baselicense': '',
 
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,

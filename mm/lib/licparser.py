@@ -20,6 +20,11 @@ FEATURES={
 	# was registered when generated.
 	"preregistered": 0x2000,
 
+	# Bits that signify this is an upgrade license
+	"upgradefromsmil2real": 0x4000,
+	"upgradefromsmil1editor": 0x8000,
+	"UPGRADEBITS": 0xc000,
+
 	# platform bits. The names are sys.platform values.
 	# Multiple names mapping to 1 bit is ok.
 	"win32": 0x08,
@@ -59,6 +64,16 @@ class License:
 			lic = settings.get('license')
 		self.__available_features, self.__licensee, self.__moredays = \
 					   _parselicense(lic)
+		for f in self.__available_features:
+			if f[:7] == 'upgrade':
+				is_upgrade = 1
+				break
+		else:
+			is_upgrade = 0
+		if is_upgrade:
+			msg = self.getbaselicense()
+			if msg:
+				raise Error, msg
 		if not user:
 			user = settings.get('license_user')
 			if user[-18:] == ' (evaluation copy)':
@@ -135,6 +150,44 @@ class License:
 
 	def is_evaluation_license(self):
 		return type(self.__moredays) == type(0)
+
+	def getbaselicense(self):
+		basefeaturewanted = []
+		baseproductnames = []
+		for f in self.__available_features:
+			if f == "upgradefromsmil2real":
+				basefeaturewanted.append("smil2real")
+				baseproductnames.append("GRiNS/RealOne")
+			if f == "upgradefromsmil1":
+				basefeaturewanted.append("editor")
+				basefeaturewanted.append("light")
+				basefeaturewanted.append("pro")
+				baseproductnames.append("any GRiNS 1 authoring product")
+		baseproductnames = string.join(baseproductnames, " or ")
+		self._baselicense = settings.get('baselicense')
+		if not self._baselicense:
+			import windowinterface
+			windowinterface.InputDialog("Old license key:", "", self.cb_oldkey)
+		if not self._baselicense:
+			return "Need existing license for %s" % baseproductnames
+		try:
+			old_features, old_licensee, old_moredays = _parselicense(self._baselicense)
+		except Error:
+			settings.set('baselicense', '')
+			return "Invalid old license, please check again"
+		if old_moredays:
+			return "Cannot upgrade evaluation license"
+		for f in basefeaturewanted:
+			if f in old_features:
+				break
+		else:
+			return "Only upgrades licenses for %s" % baseproductnames
+		settings.set('baselicense', self._baselicense)
+		return None
+
+	def cb_oldkey(self, value):
+		value = string.strip(value)
+		self._baselicense = value
 
 _CODEBOOK="ABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
 _DECODEBOOK={}
