@@ -88,7 +88,7 @@ class VideoChannel(ChannelWindowAsync):
 			if type(arg) == type(()):
 				arg = arg[-1]
 			self.errormsg(node, 'Cannot open %s: %s'%(fn, arg))
-		self.window._macsetwin()
+		self.window._mac_setwin()
 		
 		try:
 			movieResRef = Qt.OpenMovieFile(fn, 1)
@@ -139,7 +139,7 @@ class VideoChannel(ChannelWindowAsync):
 	def place_movie(self, node, movie):
 		# XXXX This always scales or positions, but it should look at the scale
 		# attribute
-		self.window._macsetwin()
+		self.window._mac_setwin()
 		screenBox = self.window.qdrect()
 		l, t, r, b = movie.GetMovieBox()
 		if node:
@@ -356,7 +356,7 @@ class VideoChannel(ChannelWindowAsync):
 		self.fixidleproc()
 
 	def _getoswindow(self):
-		return self.window._wid
+		return self.window._mac_getoswindow()
 
 	def _getoswinpos(self):
 		x0, y0, x1, y1 = self.window.qdrect()
