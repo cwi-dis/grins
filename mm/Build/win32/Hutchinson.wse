@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_MS2_win_2.0-140.exe
+  EXE Filename=..\..\bin\win32\grins_MS2_win_2.0-141.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -57,7 +57,7 @@ end
 item: Search for File
   Variable=FIND_DIRECTORY
   Pathname List=GRiNS_MS2.exe
-  Description=Checking for previously installed components...
+  Description=Checking for previously installed components.  This may take several minutes...
   Flags=00000001
 end
 item: If/While Statement
@@ -2313,8 +2313,8 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=..\products\smil-20\TDG.pdf
-  Destination=%MAINDIR%\TDG.pdf
+  Source=..\products\smil-20\TDG.html
+  Destination=%MAINDIR%\TDG.html
   Flags=0000000010000010
 end
 item: Install File
