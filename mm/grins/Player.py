@@ -239,7 +239,7 @@ class Player(PlayerCore, PlayerDialog):
 				x = x.GetSchedParent()
 			path.reverse()
 			sctx.gototime(path[0], gototime, timestamp, path)
-			self.scheduler.setpaused(0)
+			self.scheduler.setpaused(0, gototime)
 			self.userstarttime = 0
 
 	def makemenu(self):
