@@ -898,6 +898,12 @@ def getregionattr(node, attr):
 		else:
 			return 0, attr, 'int'
 
+	elif attr == 'soundLevel':
+		if d.has_key('soundLevel'):
+			return d['soundLevel'], attr, 'float'
+		else:
+			return 0, attr, 'float'
+
 	return None, attr, ''
 
 def getareaattr(node, attr):
@@ -926,6 +932,7 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'bottom':(lambda node:getregionattr(node,'bottom')),
 	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
 	'z-index':(lambda node:getregionattr(node,'z')),
+	'soundLevel':(lambda node:getregionattr(node,'soundLevel')),
 
 	'coords':(lambda node:getareaattr(node,'coords')),
 	'src': (lambda node:getrenamed(node,'file')),
@@ -1269,14 +1276,19 @@ class AnimateElementParser:
 			else:
 				return AnimateElementParser.NONE_BY
 
-			
+	def safeatof(self, s):
+		if s[-1]=='%':
+			return 0.01*string.atof(s[:-1])
+		else:
+			return string.atof(s)
+				
 	# return list of interpolation values
 	def __getNumInterpolationValues(self):	
 		# if 'values' are given ignore 'from/to/by'
 		values =  self.getValues()
 		if values:
 			try:
-				return tuple(map(string.atof, string.split(values,';')))
+				return tuple(map(self.safeatof, string.split(values,';')))
 			except ValueError:
 				return ()
 							
@@ -1286,15 +1298,15 @@ class AnimateElementParser:
 		if not v1:
 			v1 = 0
 		if type(v1) == type(''): 
-			v1 = string.atof(v1)
+			v1 = self.safeatof(v1)
 
 		# we must have a 'to' value (expl or through 'by')
 		v2 = self.getTo()
 		dv = self.getBy()
 		if v2:
-			v2 = string.atof(v2)
+			v2 = self.safeatof(v2)
 		elif dv:
-			dv = string.atof(dv)
+			dv = self.safeatof(dv)
 			v2 = v1 + dv
 		else:
 			return ()
@@ -1308,7 +1320,7 @@ class AnimateElementParser:
 		vl = self.__split(v)
 		if len(vl)==2:
 			x, y = vl
-			return string.atof(x), string.atof(y)
+			return self.safeatof(x), self.safeatof(y)
 		else:
 			return None
 
@@ -1612,7 +1624,8 @@ class AnimateElementParser:
 					parent.__dict__[vnodename] = newnode
 				anim.targetnode = newnode
 	
-	def __splitf(self, arg, f=string.atof):
+	def __splitf(self, arg, f=None):
+		if not f: f = self.safeatof
 		if type(arg)==type(''):
 			arg = self.__split(arg)
 		try:
