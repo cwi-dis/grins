@@ -18,13 +18,13 @@ from _LayoutView import _LayoutView
 from _UsergroupView import _UsergroupView
 from _UsergroupView import _UsergroupView
 from _LinkView import _LinkView
-from _CmifView import _CmifView
+from _CmifView import _CmifView,_CmifStructView
 from _SourceView import _SourceView
 
 # views served
 _PlayerView=_CmifView
-_HierarchyView=_CmifView
-_ChannelView=_CmifView
+_HierarchyView=_CmifStructView
+_ChannelView=_CmifStructView
 _LinkView=_LinkView
 _LayoutView=_LayoutView
 _SourceView=_SourceView
