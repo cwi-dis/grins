@@ -10,6 +10,7 @@ a URL is selected, the callback self.open_callback is called with the
 selected location (always passed in the form of a URL).
 
 """
+import features
 
 class MainDialog:
 	def __init__(self, title):
@@ -76,8 +77,7 @@ class MainDialog:
 				import os
 				dir, file = os.path.split(MMurl.url2pathname(MMurl.splithost(rest)[1]))
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', dir, filetypes, file,
 					   self.__filecvt, None, 1,

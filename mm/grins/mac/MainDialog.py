@@ -21,6 +21,7 @@ import os
 import macfs
 import MMurl
 import windowinterface
+import features
 
 class MainDialog:
 	def __init__(self, title):
@@ -59,8 +60,7 @@ class MainDialog:
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('', '', filetypes, '',
 					   self.__openfile_done, None, 1)
