@@ -56,10 +56,12 @@ class Main(MainDialog):
 ##			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
-##		import settings
+		import settings
 ##		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
 ##			settings.factory_defaults()
 		MainDialog.__init__(self, 'GRiNS')
+		if settings.get('skin'):
+			self.openURL_callback('data:application/smil,<smil/>')
 ##		self._update_recent(None)
 
 	def openURL_callback(self, url):
