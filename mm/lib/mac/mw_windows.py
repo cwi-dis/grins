@@ -196,7 +196,7 @@ class _CommonWindow:
 		if bgcolor is None:
 			self._bgcolor = parent._bgcolor
 		else:
-			self._bgcolor = bgcolor
+			self._bgcolor = self._convert_color(bgcolor)
 		self._fgcolor = parent._fgcolor
 		self._clip = None
 		self._clipincludingchildren = None
@@ -2173,7 +2173,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		self._resizable = resizable
 		self._drop_enabled = 0
 		_OffscreenMixin.__init__(self)
-		_CommonWindow.__init__(self, parent, wid, bgcolor)
+		_CommonWindow.__init__(self, parent, wid, 0, bgcolor)
 		
 		self._transparent = 0
 		
