@@ -17,6 +17,8 @@ def ReadFile(filename):
 	return ReadFileContext(filename, _newctx())
 
 def ReadFileContext(filename, context):
+	import os
+	context.setdirname(os.path.dirname(filename))
 	root = MMCache.loadcache(filename, context)
 	if root:
 		_fixcontext(root)
