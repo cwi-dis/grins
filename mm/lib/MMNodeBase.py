@@ -113,6 +113,7 @@ class MMChannel:
 		try:
 			return self.attrdict[key]
 		except KeyError:
+			import sys
 			msg, tb = sys.exc_info()[1:3]
 			# special case for background color
 			if key == 'bgcolor' and self.attrdict.has_key('base_window'):
