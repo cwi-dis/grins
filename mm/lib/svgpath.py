@@ -2,6 +2,7 @@ __version__ = '$Id$'
 
 import string
 import math
+from fmtfloat import fmtfloat, round, trunc
 
 class PathSeg:
 	SVG_PATHSEG_UNKNOWN                      = 0
@@ -64,73 +65,55 @@ class PathSeg:
 		elif letter == 'z' or letter == 'Z': self._type = PathSeg.SVG_PATHSEG_CLOSEPATH
 		else: self._type = index
 
-	def ff(self, val):
-		if val < 0:
-			val = -val
-			sign = '-'
-		else:
-			sign = ''
-		str = '%f' % val
-		if '.' in str:
-			while str[-1] == '0':
-				str = str[:-1]
-			if str[-1] == '.':
-				str = str[:-1]
-		while len(str) > 1 and str[0] == '0' and str[1] in '0123456789':
-			str = str[1:]
-		if not str:
-			str = '0'
-		return sign + str
-
 	def __repr__(self):
 		t = self._type
 		if t == PathSeg.SVG_PATHSEG_CLOSEPATH: return 'z'
-		elif t == PathSeg.SVG_PATHSEG_MOVETO_ABS: return 'M %s %s' % (self.ff(self._x), self.ff(self._y))
-		elif t == PathSeg.SVG_PATHSEG_MOVETO_REL: return 'm %s %s' % (self.ff(self._x), self.ff(self._y))
-		elif t == PathSeg.SVG_PATHSEG_LINETO_ABS: return 'L %s %s' % (self.ff(self._x), self.ff(self._y))
-		elif t == PathSeg.SVG_PATHSEG_LINETO_REL: return 'l %s %s' % (self.ff(self._x), self.ff(self._y))
+		elif t == PathSeg.SVG_PATHSEG_MOVETO_ABS: return 'M %s %s' % (fmtfloat(self._x), fmtfloat(self._y))
+		elif t == PathSeg.SVG_PATHSEG_MOVETO_REL: return 'm %s %s' % (fmtfloat(self._x), fmtfloat(self._y))
+		elif t == PathSeg.SVG_PATHSEG_LINETO_ABS: return 'L %s %s' % (fmtfloat(self._x), fmtfloat(self._y))
+		elif t == PathSeg.SVG_PATHSEG_LINETO_REL: return 'l %s %s' % (fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS: 
-			return 'C %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1),self.ff(self._x2), self.ff(self._y2), self.ff(self._x), self.ff(self._y))
+			return 'C %s %s %s %s %s %s' % (fmtfloat(self._x1), fmtfloat(self._y1),fmtfloat(self._x2), fmtfloat(self._y2), fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL: 
-			return 'c %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1), self.ff(self._x2), self.ff(self._y2), self.ff(self._x), self.ff(self._y))
+			return 'c %s %s %s %s %s %s' % (fmtfloat(self._x1), fmtfloat(self._y1), fmtfloat(self._x2), fmtfloat(self._y2), fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS: 
-			return 'Q %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1), self.ff(self._x), self.ff(self._y))
+			return 'Q %s %s %s %s %s %s' % (fmtfloat(self._x1), fmtfloat(self._y1), fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL: 
-			return 'q %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1), self.ff(self._x), self.ff(self._y))
+			return 'q %s %s %s %s %s %s' % (fmtfloat(self._x1), fmtfloat(self._y1), fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_ARC_ABS:
 			sweep = self._sweepFlag
 			largeArc = self._largeArcFlag
-			return 'A %s %s %s %d %d %s %s' % (self.ff(self._r1), self.ff(self._r2), self.ff(self._angle), largeArc, sweep, self.ff(self._x), self.ff(self._y))
+			return 'A %s %s %s %d %d %s %s' % (fmtfloat(self._r1), fmtfloat(self._r2), fmtfloat(self._angle), largeArc, sweep, fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_ARC_REL:
 			sweep = self._sweepFlag
 			largeArc = self._largeArcFlag
-			return 'a %s %s %s %d %d %s %s' % (self.ff(self._r1), self.ff(self._r2), self.ff(self._angle), largeArc, sweep, self.ff(self._x), self.ff(self._y))
-		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS: return 'H %s' % self.ff(self._x)
-		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL: return 'h %s' % self.ff(self._x)
-		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS: return 'V %s' % self.ff(self._y)
-		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL: return 'v %s' % self.ff(self._y)
+			return 'a %s %s %s %d %d %s %s' % (fmtfloat(self._r1), fmtfloat(self._r2), fmtfloat(self._angle), largeArc, sweep, fmtfloat(self._x), fmtfloat(self._y))
+		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS: return 'H %s' % fmtfloat(self._x)
+		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL: return 'h %s' % fmtfloat(self._x)
+		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS: return 'V %s' % fmtfloat(self._y)
+		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL: return 'v %s' % fmtfloat(self._y)
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_ABS: 
-			return 'S %s %s %s %s' % (self.ff(self._x2), self.ff(self._y2), self.ff(self._x), self.ff(self._y))
+			return 'S %s %s %s %s' % (fmtfloat(self._x2), fmtfloat(self._y2), fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_REL: 
-			return 's %s %s %s %s' % ( self.ff(self._x2),  self.ff(self._y2),  self.ff(self._x),  self.ff(self._y))
+			return 's %s %s %s %s' % ( fmtfloat(self._x2),  fmtfloat(self._y2),  fmtfloat(self._x),  fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS: 
-			return 'T %s %s' % (self.ff(self._x), self.ff(self._y))
+			return 'T %s %s' % (fmtfloat(self._x), fmtfloat(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL: 
-			return 't %s %s' % (self.ff(self._x), self.ff(self._y))
+			return 't %s %s' % (fmtfloat(self._x), fmtfloat(self._y))
 		else:
 			return ''
 
 	def topxl(self):
 		seg = PathSeg()
 		seg._type = self._type
-		seg._x = int(self._x+0.5)
-		seg._y = int(self._y+0.5)
-		seg._x1 = int(self._x1+0.5)
-		seg._y1 = int(self._y1+0.5)
-		seg._x2 = int(self._x2+0.5)
-		seg._y2 = int(self._y2+0.5)
-		seg._r1 = int(self._r1+0.5)
-		seg._r2 = int(self._r2+0.5)
+		seg._x = round(self._x)
+		seg._y = round(self._y)
+		seg._x1 = round(self._x1)
+		seg._y1 = round(self._y1)
+		seg._x2 = round(self._x2)
+		seg._y2 = round(self._y2)
+		seg._r1 = round(self._r1)
+		seg._r2 = round(self._r2)
 		seg._angle = self._angle
 		seg._largeArcFlag  = self._largeArcFlag
 		seg._sweepFlag  = self._sweepFlag
@@ -605,7 +588,7 @@ class SVGPath:
 					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_ARC_ABS:
-					angle = ((int(seg._angle)/360)/180.0)*math.pi
+					angle = ((trunc(seg._angle)/360)/180.0)*math.pi
 					arcFlag = seg._largeArcFlag
 					sweepFlag = seg._sweepFlag
 					r1, r2 = seg._r1, seg._r2
@@ -620,7 +603,7 @@ class SVGPath:
 					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_ARC_REL:
-					angle = ((int(seg._angle)/360)/180.0)*math.pi
+					angle = ((trunc(seg._angle)/360)/180.0)*math.pi
 					arcFlag = seg._largeArcFlag
 					sweepFlag = seg._sweepFlag
 					r1, r2 = seg._r1, seg._r2

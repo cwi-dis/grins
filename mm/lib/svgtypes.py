@@ -128,23 +128,7 @@ def actof(nsign, intg, decg):
 	else:
 		return -string.atof('%s.%s' % (intg, decg))
 
-def ff(val):
-	if val < 0:
-		val = -val
-		sign = '-'
-	else:
-		sign = ''
-	str = '%f' % val
-	if '.' in str:
-		while str[-1] == '0':
-			str = str[:-1]
-		if str[-1] == '.':
-			str = str[:-1]
-	while len(str) > 1 and str[0] == '0' and str[1] in '0123456789':
-		str = str[1:]
-	if not str:
-		str = '0'
-	return sign + str
+from fmtfloat import fmtfloat
 
 def deg2rad(deg):
 	return (deg/180.0)*math.pi
@@ -166,10 +150,15 @@ class Animateable:
 	def hasAnimator(self, a):
 		return a in self.animators
 
-	def getPresentValue(self, below = None):
+	def getPresentValue(self, below = None, parent = None):
 		if not self.animators:
+			if parent is not None:
+				return self.getValue(parent = parent)
 			return self.getValue()
-		cv = self.getValue()
+		if parent is not None:
+			cv = self.getValue(parent = parent)
+		else:
+			cv = self.getValue()
 		for a in self.animators:
 			if below and id(a) == id(below):
 				break
@@ -321,13 +310,11 @@ class SVGNumberList(SVGAttr):
 			sl = splitlist(str)
 			self._value = []
 			for s in sl:
-				self._value.append(string.atoi(s))
+				self._value.append(string.atof(s))
 
 	def __repr__(self):
-		s = ''
-		for num in self._value:
-			s = s + '%s ' % ff(num)
-		return s[:-1]
+		# string.join(map(fmtfloat, self._values), ' ')
+		return ' '.join(map(fmtfloat, self._values))
 
 	def getValue(self):
 		if self._value is not None:
@@ -349,7 +336,7 @@ class SVGPercent(SVGAttr):
 				self._value = actof(None, i, d)
 
 	def __repr__(self):
-		return '%s' % ff(self._value) + '%'
+		return fmtfloat(self._value, suffix = '%')
 
 	def getValue(self):
 		if self._value is not None:
@@ -386,18 +373,22 @@ class SVGLength(SVGAttr):
 	def __repr__(self):
 		if self._value is None:
 			return ''
-		elif self._value is 'none':
+		elif self._value == 'none':
 			return 'none'
 		elif self._units is None:
-			return '%s' % ff(self._value)
+			return fmtfloat(self._value)
 		else:	
-			return '%s%s' % (ff(self._value), self._units)
+			return fmtfloat(self._value, suffix = self._units)
 
-	def getValue(self, units='px'):
+	def getValue(self, units='px', parent = None):
 		if self._value is not None:
 			if self._units=='%':
-				pass # find parent size
-			f1 = self.unitstopx.get(self._units or 'px')
+				if parent is not None:
+					f1 = parent / 100.0
+				else:
+					f1 = 0 # XXX find parent size
+			else:
+				f1 = self.unitstopx.get(self._units or 'px')
 			pixels = f1*self._value
 			if units == 'px':
 				return int(pixels)
@@ -499,7 +490,7 @@ class SVGAngle(SVGAttr):
 	def __repr__(self):
 		if self._value is None:
 			return ''
-		return '%s%s' % (ff(self._value), self._units)
+		return fmtfloat(self._value, suffix = self._units)
 	
 	def getValue(self, units='rad'):
 		if self._value is not None:
@@ -525,7 +516,7 @@ class SVGAnimRotate(SVGAngle):
 	def __repr__(self):
 		if self._value in ('auto', 'auto-reverse'):
 			return self._value
-		return '%s%s' % (ff(self._value), self._units)
+		return fmtfloat(self._value, suffix = self._units)
 
 	def getValue(self, units='rad'):
 		if self._value in ('auto', 'auto-reverse'):
@@ -644,7 +635,7 @@ class SVGFrequency(SVGAttr):
 					self._units = units
 
 	def __repr__(self):
-		return '%s%s' % (ff(self._value), self._units)
+		return fmtfloat(self._value, suffix = self._units)
 	
 	def getValue(self, units='Hz'):
 		if self._value is not None:
@@ -691,7 +682,7 @@ class SVGTime:
 		elif type(self._value) == type(''):
 			return self._value
 		else:
-			return '%s%s' % (ff(self._value), self._units)
+			return fmtfloat(self._value, suffix = self._units)
 
 	def getValue(self, units='s'):
 		if self._value is not None:
@@ -874,7 +865,7 @@ class SVGStyle:
 			else:
 				return 'rgb(%d, %d, %d)' % val
 		elif prop == 'stroke-width' or prop == 'font-size':
-			return '%s' % ff(val)
+			return fmtfloat(val)
 		return val
 
 	def getValue(self):
@@ -1114,7 +1105,7 @@ class TM:
 		return 'matrix', self.elements
 			
 	def __repr__(self):
-		return '[' + '%s %s %s %s %s %s' % tuple(map(ff, self.elements)) + ']'
+		return '[' + ' '.join(map(fmtfloat, self.elements)) + ']'
 	
 	# svg transforms
 	def matrix(self, et):

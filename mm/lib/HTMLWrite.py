@@ -17,6 +17,7 @@ from cmif import findfile
 import windowinterface
 import compatibility
 import features
+from fmtfloat import round
 
 
 def nameencode(value):
@@ -365,10 +366,10 @@ class HTMLWriter:
 		if units == 0:
 			# convert mm to pixels
 			# (assuming 100 dpi)
-			x = int(x / 25.4 * 100.0 + .5)
-			y = int(y / 25.4 * 100.0 + .5)
-			w = int(w / 25.4 * 100.0 + .5)
-			h = int(h / 25.4 * 100.0 + .5)
+			x = round(x / 25.4 * 100.0)
+			y = round(y / 25.4 * 100.0)
+			w = round(w / 25.4 * 100.0)
+			h = round(h / 25.4 * 100.0)
 		if units == 1:
 			x = x * basewidth + .5
 			y = y * baseheight + .5
@@ -385,8 +386,8 @@ class HTMLWriter:
 		if units == 0:
 			# convert mm to pixels
 			# (assuming 100 dpi)
-			w = int(w / 25.4 * 100.0 + .5)
-			h = int(h / 25.4 * 100.0 + .5)
+			w = round(w / 25.4 * 100.0)
+			h = round(h / 25.4 * 100.0)
 		if units == 1:
 			raise Error, "Cannot use relative coordinates for toplevel window"
 		# else: units are already in pixels

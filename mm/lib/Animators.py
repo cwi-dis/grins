@@ -8,6 +8,7 @@ import string
 import math
 import svgpath
 import re
+from fmtfloat import round
 
 # units, messages
 import windowinterface
@@ -429,11 +430,6 @@ class Animator:
 			s = s + step
 
 ###########################
-# values convertions methods
-def _round(val):
-	return int(val+0.5)
-
-###########################
 # 'set' element animator
 class SetAnimator(Animator):
 	def __init__(self, attr, domval, value, dur):
@@ -556,7 +552,7 @@ class IntTupleAnimator(FloatTupleAnimator):
 		n = len(v)
 		l = []
 		for i in range(n):
-			l.append(_round(v[i]))
+			l.append(round(v[i]))
 		return tuple(l)
 
 class EffIntTupleAnimator(IntTupleAnimator):
@@ -640,7 +636,7 @@ class MotionAnimator(Animator):
 
 	def convert(self, v):
 		x, y = v.real, v.imag
-		return _round(x), _round(y)
+		return round(x), round(y)
 	
 	def getDOMValue(self):
 		x, y = self._path.getPointAtLength(0)
@@ -667,7 +663,7 @@ class EffMotionAnimator(Animator):
 
 	def convert(self, v):
 		x, y = v.real, v.imag
-		return _round(x), _round(y)
+		return round(x), round(y)
 
 	def distValues(self, v1, v2):
 		x1, y1 = v1.real, v1.imag
@@ -685,7 +681,7 @@ class DiscreteMotionAnimator(Animator):
 
 	def convert(self, v):
 		x, y = v.real, v.imag
-		return _round(x), _round(y)
+		return round(x), round(y)
 
 	def distValues(self, v1, v2):
 		x1, y1 = v1.real, v1.imag
@@ -699,7 +695,7 @@ class SetMotionAnimator(Animator):
 
 	def convert(self, v):
 		x, y = v.real, v.imag
-		return _round(x), _round(y)
+		return round(x), round(y)
 
 ###########################
 # An EffectiveAnimator is responsible to combine properly
@@ -1315,7 +1311,7 @@ class AnimateElementParser:
 				if self.__attrtype == 'int':
 					v = string.atoi(self.getTo())
 					anim = Animator(attr, domval, (v,), dur, mode, times, splines, accumulate, additive)
-					anim.setRetunedValuesConverter(_round)
+					anim.setRetunedValuesConverter(round)
 				elif self.__attrtype == 'float':
 					v = string.atof(self.getTo())
 					anim = Animator(attr, domval, (v,), dur, mode, times, splines, accumulate, additive)
@@ -1332,7 +1328,7 @@ class AnimateElementParser:
 				if self.__attrtype == 'int':
 					v = string.atoi(self.getTo())
 					anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
-					anim.setRetunedValuesConverter(_round)
+					anim.setRetunedValuesConverter(round)
 				elif self.__attrtype == 'float':
 					v = string.atof(self.getTo())
 					anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
@@ -1360,7 +1356,7 @@ class AnimateElementParser:
 				values = self.__getNumInterpolationValues()
 				if mode == 'discrete': values = values[1:]
 				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
-				anim.setRetunedValuesConverter(_round)
+				anim.setRetunedValuesConverter(round)
 			elif self.__attrtype == 'float':
 				values = self.__getNumInterpolationValues()
 				if mode == 'discrete': values = values[1:]
@@ -1427,7 +1423,7 @@ class AnimateElementParser:
 				return None
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 				accumulate, additive)
-			anim.setRetunedValuesConverter(_round)
+			anim.setRetunedValuesConverter(round)
 
 		elif self.__attrtype == 'float':
 			values = self.__getNumInterpolationValues()
@@ -1484,7 +1480,7 @@ class AnimateElementParser:
 		if self.__attrtype == 'int':
 			value = string.atoi(value)
 			anim = SetAnimator(attr, domval, value, dur)
-			anim.setRetunedValuesConverter(_round)
+			anim.setRetunedValuesConverter(round)
 
 		elif self.__attrtype == 'float':
 			value = string.atof(value)
