@@ -580,7 +580,7 @@ class Channel:
 		self._qid = None
 
 	def onclick(self, *unused):
-		self.event('click')
+		self.event('activateEvent')
 
 	def event(self, event):
 		timestamp = self._scheduler.timefunc()
@@ -1604,7 +1604,7 @@ class ChannelWindow(Channel):
 		self.armed_display = self.window.newdisplaylist(bgcolor)
 
 		for arc in node.sched_children:
-			if arc.event == 'click':
+			if arc.event == 'activateEvent':
 				self.armed_display.fgcolor(bgcolor)
 				# Warning: This line select all the region
 				b = self.armed_display.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
@@ -1684,7 +1684,7 @@ class ChannelWindow(Channel):
 			self.setanchor(a[A_ID], atype, b, a[A_TIMES])
 
 	def add_arc(self, node, arc):
-		if node is self._played_node and arc.event == 'click':
+		if node is self._played_node and arc.event == 'activateEvent':
 			d = self.played_display.clone()
 			d.fgcolor(self.getbgcolor(node))
 			b = d.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
