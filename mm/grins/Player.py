@@ -35,9 +35,12 @@ class Player(PlayerCore, PlayerDialog):
 		self.userstarttime = 0
 		self.commandlist = [
 			CHANNELS(callback = self.channel_callback),
-			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
+		if __debug__:
+			self.commandlist.append(
+				SCHEDDUMP(callback = (self.scheduler.dump, ())))
+
 		play = PLAY(callback = (self.play_callback, ()))
 		pause = PAUSE(callback = (self.pause_callback, ()))
 		stop = STOP(callback = (self.stop_callback, ()))
