@@ -647,3 +647,7 @@
 	'How much bandwidth should use when doing the prefetch' raw (smil2))
 
 
+# region
+
+(showBackground (string) 'always' 'Show background' default
+	'show when node is active the background color or always' raw (smil2))
