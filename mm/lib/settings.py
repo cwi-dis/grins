@@ -16,12 +16,63 @@ _in_transaction = 0
 # some constants
 
 # enable or disable language extensions
-profileExtensions = {
+MODULES = {
+	# SMIL 2.0 Modules
+	'AccessKeyTiming': 1,
+	'AudioLayout': 1,
+	'BasicAnimation': 1,
+	'BasicContentControl': 1,
+	'BasicInlineTiming': 1,
+	'BasicLayout': 1,
+	'BasicLinking': 1,
+	'BasicMedia': 1,
+	'BasicTimeContainers': 1,
+	'BasicTransitions': 1,
+	'BrushMedia': 1,
+##	'CoordinatedTransitions': 1,
+	'CustomTestAttributes': 1,
+	'EventTiming': 1,
+	'ExclTimeContainers': 1,
+	'FillDefault': 1,
+	'HierarchicalLayout': 1,
 	'InlineTransitions': 1,
+	'LinkingAttributes': 1,
+	'MediaAccessibility': 1,
+	'MediaClipMarkers': 0,
+	'MediaClipping': 1,
+	'MediaDescription': 1,
+	'MediaMarkerTiming': 0,
+	'MediaParam': 1,
+	'Metainformation': 1,
+	'MinMaxTiming': 1,
+	'MultiArcTiming': 1,
+	'MultiWindowLayout': 1,
+	'ObjectLinking': 1,
+	'PrefetchControl': 1,
+##	'PrevTiming': 1,
+	'RepeatTiming': 1,
+	'RestartDefault': 1,
+	'RestartTiming': 1,
+	'SkipContentControl': 1,
 	'SplineAnimation': 1,
+	'Structure': 1,
+	'SyncbaseTiming': 1,
+	'SyncBehavior': 1,
+	'SyncBehaviorDefault': 1,
 	'SyncMaster': 0,
 	'TimeContainerAttributes': 0,
 	'TimeManipulations': 1,
+	'TransitionModifiers': 1,
+	'WallclockTiming': 1,
+
+	# SMIL 2.0 Psuedo Modules
+	'NestedTimeContainers': 1,
+	'DeprecatedFeatures': 1,
+
+	# SMIL 2.0 Module Collections
+	'Language': 1,
+	'HostLanguage': 1,
+	'IntegrationSet': 1,
 }
 
 # settings that cannot be changed when running

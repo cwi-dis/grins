@@ -161,7 +161,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		}
 
 	def __init__(self, context, printfunc = None, new_file = 0, check_compatibility = 0, progressCallback=None):
-		self.elements = {
+		self._elements = {
 			'smil': (self.start_smil, self.end_smil),
 			'head': (self.start_head, self.end_head),
 			'meta': (self.start_meta, self.end_meta),
@@ -286,7 +286,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				data.append('. . .')
 			self.__printfunc('\n'.join(data))
 			self.__printdata = []
-		self.elements = {}
+		self._elements = {}
 
 	def GetRoot(self):
 		if not self.__root:
@@ -799,7 +799,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val in ('discrete', 'linear', 'paced'):
 					attrdict['calcMode'] = val
 				elif val == 'spline':
-					if not settings.profileExtensions.get('SplineAnimation'):
+					if not settings.MODULES.get('SplineAnimation'):
 						self.warning('non-standard value for attribute calcMode', self.lineno)
 					attrdict['calcMode'] = val
 				else:
@@ -1447,7 +1447,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# mediatype, subtype -- mtype split into parts
 		# tagname -- the tag name in the SMIL file (None for "ref")
 		# nodetype -- the CMIF node type (imm/ext/...)
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('node not in smil')
@@ -1706,10 +1705,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __newTopRegion(self):
 		attrs = {}
 
-		for key, val in self.attributes['root-layout'].items():
-			if val is not None:
-				attrs[key] = val
-				
 		self.__tops[None] = {'attrs':attrs}
 		self.__toplayouts.append(None)
 
@@ -1806,9 +1801,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# create a region for this node
 			self.__in_layout = self.__seen_layout
 			ch = {}
-			for key, val in self.attributes['region'].items():
-				if val is not None:
-					ch[key] = val
 			ch['id'] = region
 			ch['left'] = '%dpx' % self.__defleft
 			ch['top'] = '%dpx' % self.__deftop
@@ -1944,7 +1936,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container = self.__container.GetParent()
 
 	def NewAnimateNode(self, tagname, attributes):
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 
 		if not self.__in_smil:
@@ -2616,8 +2607,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# and 'attr not in settings.ALL' and line'
 			if attr not in ('minwidth', 'minheight', 'units',
 					'skip-content','elementindex') and \
-				attr not in settings.ALL and \
-			   not self.attributes['region'].has_key(attr):
+			   attr not in settings.ALL and \
+			   not self._attributes['region'].has_key(attr):
 				try:
 					ch[attr] = parseattrval(attr, val, self.__context)
 				except:
@@ -2739,63 +2730,108 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# methods for start and end tags
 
-	def __fix_attributes(self, attributes):
+	def __fix_attributes(self, ns, tagname, attributes):
 		# fix up attributes by removing namespace qualifiers.
 		# this also tests for the attributes that are
 		# specified in multiple namespaces.
+		if ns:
+			if ns in (GRiNSns, QTns, RP9ns):
+				pass
+			elif ns in SMIL2ns:
+				ns = ''
+			else:
+				mod = ''
+				for sns in SMIL2ns:
+					if ns[:len(sns)] == sns:
+						mod = ns[len(sns):]
+						ns = ''
+						break
+		if ns:
+			tag = ns + ' ' + tagname
+		else:
+			tag = tagname
 		for key, val in attributes.items():
 			# re-encode attribute value using document encoding
 			try:
 				uval = unicode(val, self.__encoding)
 			except UnicodeError:
 				self.syntax_error("bad encoding for attribute value")
+				del attributes[key]
 				continue
 			except LookupError:
 				self.syntax_error("unknown encoding")
+				del attributes[key]
 				continue
 			try:
 				val = uval.encode('iso-8859-1')
 			except UnicodeError:
 				self.syntax_error("character not in Latin1 character range")
+				del attributes[key]
 				continue
-			attributes[key] = val
 
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				key = key[len(GRiNSns)+1:]
-				if attributes.has_key(key):
-					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
-					continue
-				attributes[key] = val
-			if key[:len(QTns)+1] == QTns + ' ':
-				del attributes[key]
-				key = key[len(QTns)+1:]
-				if attributes.has_key(key):
-					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
-					continue
-				attributes[key] = val
-			if key[:len(RP9ns)+1] == RP9ns + ' ':
-				del attributes[key]
-				key = key[len(RP9ns)+1:]
-				if attributes.has_key(key):
-					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
-					continue
-				attributes[key] = val
-			for ns in SMIL2ns:
-				if key[:len(ns)+1] == ns + ' ':
+			nsattr = key.split(' ')
+			mod = ''
+			if len(nsattr) == 2:
+				ans, attr = nsattr
+				if ans in (GRiNSns, QTns, RP9ns):
+					pass
+				elif ans in SMIL2ns:
+					ans = ''
+				else:
+					mod = ''
+					for sns in SMIL2ns:
+						if ans[:len(sns)] == sns:
+							mod = ans[len(sns):]
+							ans = ''
+							break
+			else:
+				ans = ''
+				attr = key
+			if self._attributes.has_key(tagname):
+				adict = self._attributes[tagname]
+			else:
+				adict = self._attributes.get(tag, {})
+			if ans:
+				if not adict.has_key(ans + ' ' + attr):
+					self.syntax_error("unknown attribute `%s' in namespace `%s' on element `%s'" % (attr, ans, tagname))
 					del attributes[key]
-					key = key[len(ns)+1:]
-					if attributes.has_key(key):
-						self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
-						continue
-					attributes[key] = val
-				elif ns[-1:] == '/' and key[:len(ns)] == ns:
+					continue
+			else:
+				if not adict.has_key(attr) and (not ns or not adict.has_key(ns+' '+attr)):
+					self.syntax_error("unknown attribute `%s' on element `%s'" % (attr, tagname))
 					del attributes[key]
-					key = key.split(' ',1)[1]
-					if attributes.has_key(key):
-						self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
+					continue
+			if mod:
+				mods = ATTRIBUTES.get(attr)
+				if type(mods) is type({}):
+					tags = mods.get(mod, [])
+					if tags is not None and tagname not in tags:
+						self.syntax_error("attribute `%s' on element `%s' not in module `%s'" % (attr, tagname, mod))
+						del attributes[key]
 						continue
-					attributes[key] = val
+				else:
+					if mod not in mods:
+						self.syntax_error("attribute `%s' on element `%s' not in module `%s'" % (attr, tagname, mod))
+						del attributes[key]
+						continue
+
+			mods = ATTRIBUTES.get(attr)
+			if not ans and mods:
+				for mod in mods:
+					if MODULES.get(mod):
+						break
+				else:
+					# silently ignore attribute in unsupported module
+					print 'silently ignore attribute',tagname,key
+					del attributes[key]
+					continue
+
+			if attr != key and attributes.has_key(attr):
+				self.syntax_error("duplicate attribute `%s' in different namespaces" % attr)
+				del attributes[key]
+				continue
+			del attributes[key]
+			attributes[attr] = val
 
 	def __checkid(self, attributes, defaultPrefixId='id', checkid = 1):
 		# Check the ID of an element.  This checks that the ID
@@ -2837,8 +2873,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif ns in SMIL2ns:
 			self.__context.attributes['project_boston'] = 1
 		for attr in attributes.keys():
-			if attr != 'id' and \
-			   self.attributes['body'].get(attr) != attributes[attr]:
+			if attr != 'id':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('body attribute %s not compatible with SMIL 1.0' % attr)
 					if not features.editor:
@@ -2846,7 +2881,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						self.__context.attributes['project_boston'] = 1
 				break
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__seen_smil:
 			self.error('more than 1 smil tag', self.lineno)
@@ -2868,9 +2902,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not self.__tops.has_key(None) and \
 		   not self.__context.attributes.get('project_boston'):
 			attrs = {}
-			for key, val in self.attributes['root-layout'].items():
-				if val is not None:
-					attrs[key] = val
 			self.__tops[None] = {'attrs':attrs}
 			self.__toplayouts.append(None)
 			if not self.__childregions.has_key(None):
@@ -2896,7 +2927,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_head(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start head', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('head not in smil')
@@ -2915,7 +2945,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__has_layout = self.__seen_layout > 0
 		if not self.__seen_layout:
 			self.__seen_layout = LAYOUT_SMIL
-		self.__fix_attributes(attributes)
 		if not self.__in_smil:
 			self.syntax_error('body not in smil')
 		if self.__seen_body:
@@ -2948,7 +2977,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_meta(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start meta', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_head:
 			self.syntax_error('meta not in head')
@@ -3028,7 +3056,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('metadata element not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		self.setliteral()
 		self.__in_metadata = 1
@@ -3054,7 +3081,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if __debug__:
 			if parsedebug: print 'start layout', attributes
 		self.__regpoints = {}
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_head:
 			self.syntax_error('layout not in head')
@@ -3111,7 +3137,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes, checkid = checkid)
 		# experimental code for switch layout
 		self.__elementindex = self.__elementindex+1
@@ -3340,7 +3365,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		self.__fix_attributes(attributes)
 		self.__rootLayoutId = id = self.__checkid(attributes)
 		self.__root_layout = attributes
 		width = attributes.get('width')
@@ -3403,7 +3427,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes,'viewport')
 		if id is None:
 			id = self.__mkid('viewport')
@@ -3502,7 +3525,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
-		self.__fix_attributes(attributes)
 
 		# default values
 		attrdict = {'regAlign': 'topLeft'}
@@ -3563,7 +3585,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 
 	def end_custom_attributes(self):
@@ -3578,7 +3599,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_custom_test(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start custom_test', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
 		u_state = None
@@ -3598,7 +3618,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_transition(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start transition', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		dict = {}
 		if not attributes.has_key('type'):
@@ -3666,7 +3685,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_layouts(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start layouts', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 
 	def end_layouts(self):
@@ -3677,7 +3695,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_Glayout(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start Glayout', attributes
-		self.__fix_attributes(attributes)
 		id = attributes.get('id')
 		if id is None:
 			self.syntax_error('GRiNS layout without id attribute')
@@ -3702,7 +3719,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_viewinfo(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start viewinfo', attributes
-		self.__fix_attributes(attributes)
 		viewname = attributes.get('view')
 		t = attributes.get('top')
 		l = attributes.get('left')
@@ -3731,7 +3747,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_parexcl(self, ntype, attributes):
 		if __debug__:
 			if parsedebug: print 'start parexcl', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# XXXX we ignore sync for now
 		self.NewContainer(ntype, attributes)
@@ -3810,7 +3825,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_seq(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start seq', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		self.NewContainer('seq', attributes)
 
@@ -3822,7 +3836,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_assets(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start assets', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# Note that the "assets" nodetype is not known by the
 		# rest of GRiNS. The assets nodes will be extracted and
@@ -3861,7 +3874,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_prio(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start prio', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('priorityClass not in smil')
@@ -3902,7 +3914,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_switch(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start switch', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# experimental code for switch layout
 		self.__switchstack.append(attributes)
@@ -4027,7 +4038,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_a(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start a', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__in_a:
 			self.syntax_error('nested a elements')
@@ -4157,7 +4167,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_anchor(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start anchor', attributes
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
@@ -4400,7 +4409,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
-		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		vtype = attributes.get('valuetype', 'data')
 		if vtype not in ('data', 'ref', 'object'):
@@ -4496,10 +4504,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if len(tag) == 2:
 				node.attrdict['namespace'] = tag[0]
 			self.__container = node
-
-	def unknown_endtag(self, tag):
-		if self.__container is not None and self.__container.GetType() == 'foreign':
-			self.__container = self.__container.GetParent()
 
 	def unknown_charref(self, ref):
 		self.warning('ignoring unknown char ref %s' % ref, self.lineno)
@@ -4632,19 +4636,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if len(nstag) == 2 and \
 		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
 			ns, tagname = nstag
-			d = {}
-			for key, val in attrdict.items():
-				nstag = key.split(' ')
-				if len(nstag) == 2 and \
-				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
-					key = nstag[1]
-				if not d.has_key(key) or d[key] == self.attributes.get(tagname, {}).get(key):
-					d[key] = val
-			attrdict = d
 		else:
 			ns = ''
 		if limited.has_key(tagname) and ns not in limited[tagname]:
 			self.syntax_error("element `%s' not allowed in namespace `%s'" % (tagname, ns))
+		attributes = self._attributes.get(tagname, {})
 		if len(self.stack) > 1:
 			ptag = self.stack[-2][2]
 			nstag = ptag.split(' ')
@@ -4675,11 +4671,36 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 		elif ns and ns not in SMIL2ns and ns[-8:] != 'Language':
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
-		if method is None and self.elements.has_key(tagname):
-			method = self.elements[tagname][0]
-			if ns:
-				self.elements[ns + ' ' + tagname] = self.elements[tagname]
+		self.__fix_attributes(ns, tagname, attrdict)
+		if method is None and self._elements.has_key(tagname):
+			method = self._elements[tagname][0]
+##			if ns:
+##				self._elements[ns + ' ' + tagname] = self._elements[tagname]
+		if method is not None:
+			for module in ELEMENTS.get(tagname, []):
+				if MODULES.get(module):
+					break
+		else:
+			method = None
+		if method is not None:
+			for attr in attrdict.keys():
+				ATTRIBUTES.get(attr)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
+
+	def unknown_endtag(self, tagname):
+		nstag = tagname.split(' ')
+		if len(nstag) == 2 and \
+		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
+			ns, tagname = nstag
+		else:
+			ns = ''
+		if self._elements.has_key(tagname):
+			method = self._elements[tagname][1]
+			if method is not None:
+				self.handle_endtag(tagname, method)
+				return
+		if self.__container is not None and self.__container.GetType() == 'foreign':
+			self.__container = self.__container.GetParent()
 
 	# update progress bar if needed
 	def __updateProgressHandler(self):
@@ -4736,7 +4757,7 @@ class SMILMetaCollector(xmllib.XMLParser):
 				if len(nstag) == 2 and \
 				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 					key = nstag[1]
-				if not d.has_key(key) or d[key] == self.attributes.get(tagname, {}).get(key):
+				if not d.has_key(key):
 					d[key] = val
 			attrdict = d
 		else:

@@ -2215,7 +2215,7 @@ class SMILWriter(SMIL):
 		if not self.ids_used[name] and self.hyperlinks.finddstlinks(x):
 			self.ids_used[name] = 1
 
-		attributes = self.attributes.get(xtype, {})
+		attributes = self._attributes.get(xtype, {})
 		if type == 'prio':
 			attrs = prio_attrs
 		elif type == 'foreign':
@@ -2247,23 +2247,16 @@ class SMILWriter(SMIL):
 			# name is the attribute name as recorded in SMIL file
 			if value is None:
 				continue
-			gname1 = '%s %s' % (GRiNSns, name)
-			gname2 = '%s %s' % (QTns, name)
-			if attributes.has_key(gname1):
+			gname = '%s %s' % (GRiNSns, name)
+			if attributes.has_key(gname):
 				name = '%s:%s' % (NSGRiNSprefix, name)
-				gname = gname1
-			elif attributes.has_key(gname2):
-				name = '%s:%s' % (NSQTprefix, name)
-				gname = gname2
 			else:
 				gname = name
 
 			# only write attributes that have a value and are
 			# legal for the type of node
 			# other attributes are caught below
-			if ((attributes.has_key(gname) and
-				       value != attributes[gname]) or
-				      name[:6] == 'xmlns:'):
+			if (attributes.has_key(gname) or name[:6] == 'xmlns:'):
 				attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		if not interior and root:
@@ -2535,14 +2528,16 @@ class SMILWriter(SMIL):
 			return
 		attrlist = []
 		tag = node.GetAttrDict().get('atag')
-		attributes = self.attributes.get(tag, {})
+		attributes = self._attributes.get(tag, {})
 		for name, func, keyToCheck in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
 					value = node.GetRawAttrDef('trtype', None)
-				else:
+				elif keyToCheck is None or x.attrdict.has_key(keyToCheck):
 					value = func(self, node)
-				if value and value != attributes[name]:
+				else:
+					value = None
+				if value is not None:
 					if self.rpExt and not self.grinsExt and tag == 'animateMotion' and name in ('from','to','by','values'):
 						# remove parentheses for RealONE
 						value = ''.join(value.split('('))
@@ -2552,11 +2547,11 @@ class SMILWriter(SMIL):
 
 	def writeprefetchnode(self, node):
 		attrlist = []
-		attributes = self.attributes.get('prefetch', {})
+		attributes = self._attributes.get('prefetch', {})
 		for name, func, keyToCheck in smil_attrs:
-			if attributes.has_key(name):
+			if attributes.has_key(name) and (keyToCheck is None or x.attrdict.has_key(keyToCheck)):
 				value = func(self, node)
-				if value and value != attributes[name]:
+				if value is not None:
 					attrlist.append((name, value))
 		self.writetag('prefetch', attrlist, node)
 

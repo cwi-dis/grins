@@ -224,7 +224,6 @@ class SMIL:
 	# some abbreviations
 	__layouts = GRiNSns + ' ' + 'layouts'
 	__layout = GRiNSns + ' ' + 'layout'
-	__null = GRiNSns + ' ' 'null'
 	__assets = GRiNSns + ' ' 'assets'
 	__viewinfo = GRiNSns + ' ' 'viewinfo'
 
@@ -275,7 +274,7 @@ class SMIL:
 	__Timing.update(__basicTiming)
 
 	# all allowed entities with all their attributes
-	attributes = {
+	_attributes = {
 		'smil': {QTns+' ' 'time-slider':None,
 			 QTns+' ' 'next':None,
 			 QTns+' ' 'autoplay':None,
@@ -718,6 +717,15 @@ class SMIL:
 			      'skip-content':None,
 			      'customTest':None,
 			      },
+		'transitionFilter':{'type':None,
+				    'subtype':None,
+				    'mode':None,
+				    'fadeColor':None,
+				    'horzRepeat':None,
+				    'vertRepeat':None,
+				    'borderWidth':None,
+				    'borderColor':None,
+				    },
 		'prefetch': {'bandwidth':None,
 			     'clip-begin':None,
 			     'clip-end':None,
@@ -734,31 +742,20 @@ class SMIL:
 			     },
 		}
 
-	attributes['viewport'] = attributes['topLayout'].copy()
-	attributes['anchor'] = attributes['area'].copy()
+	_attributes['viewport'] = _attributes['topLayout'].copy()
+	_attributes['anchor'] = _attributes['area'].copy()
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', 'brush',
-			  'prefetch',
-			  __null]
+			  'prefetch']
 
 	__at = None
 	for __el in __media_object:
-		if attributes.has_key(__el):
-			continue
-		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
-			attributes[__el] = __at = {}
-			for __key, __val in attributes['ref'].items():
-				if ' ' in __key:
-					__at[__key] = __val
-					__at[GRiNSns+' '+__key.split(' ')[1]] = __val
-				else:
-					__at[GRiNSns+' '+__key] = __val
-		else:
-			attributes[__el] = attributes['ref']
+		if not _attributes.has_key(__el):
+			_attributes[__el] = _attributes['ref']
 
 	__animate_elements = ['animate', 'animateMotion',
-			      'animateColor', 'set']
+			      'animateColor', 'set', 'transitionFilter']
 	__animate_attrs_core = {'attributeName':None,
 				'attributeType':None,
 				'customTest':None,
@@ -774,6 +771,8 @@ class SMIL:
 				 'calcMode':None,
 				 'from':None,
 				 'values':None,
+				 'keySplines':None,
+				 'keyTimes':None,
 				 }
 	__timeManipulations = {'speed':None,
 		    'accelerate':None,
@@ -781,92 +780,52 @@ class SMIL:
 		    'autoReverse':None,
 		    }
 
-	__transitionFilter_transition = {'type':None,
-					 'subtype':None,
-					 'mode':None,
-					 'fadeColor':None,
-				}
-	__transitionModifiers = {'horzRepeat':None,
-				 'vertRepeat':None,
-				 'borderWidth':None,
-				 'borderColor':None,
-				 }
+	_attributes['animateMotion'] = __animate_attrs_core.copy()
+	_attributes['animateMotion'].update(__animate_attrs_extra)
+	_attributes['animateMotion']['calcMode'] = None
+	_attributes['animateMotion']['path'] = None
+	_attributes['animateMotion']['origin'] = None
+	del _attributes['animateMotion']['attributeName']
+	del _attributes['animateMotion']['attributeType']
 
-	from settings import profileExtensions
-	
-	if profileExtensions.get('SplineAnimation'):
-		__animate_attrs_extra['keySplines'] = None
-		__animate_attrs_extra['keyTimes'] = None
+	_attributes['animate'] = __animate_attrs_core.copy()
+	_attributes['animate'].update(__animate_attrs_extra)
 
-	attributes['animateMotion'] = __animate_attrs_core.copy()
-	attributes['animateMotion'].update(__animate_attrs_extra)
-	attributes['animateMotion']['calcMode'] = None
-	if profileExtensions.get('SplineAnimation'):
-		attributes['animateMotion']['path'] = None
-	attributes['animateMotion']['origin'] = None
-	del attributes['animateMotion']['attributeName']
-	del attributes['animateMotion']['attributeType']
+	_attributes['animateColor'] = __animate_attrs_core.copy()
+	_attributes['animateColor'].update(__animate_attrs_extra)
 
-	attributes['animate'] = __animate_attrs_core.copy()
-	attributes['animate'].update(__animate_attrs_extra)
+	_attributes['set'] = __animate_attrs_core.copy()
 
-	attributes['animateColor'] = __animate_attrs_core.copy()
-	attributes['animateColor'].update(__animate_attrs_extra)
-
-	attributes['set'] = __animate_attrs_core.copy()
-
-	if profileExtensions.get('InlineTransitions'):
-		__animate_elements.append('transitionFilter')
-		attributes['transitionFilter'] = __animate_attrs_core.copy()
-		attributes['transitionFilter'].update(__animate_attrs_extra)
-		attributes['transitionFilter'].update(__transitionFilter_transition)
-		attributes['transitionFilter'].update(__transitionModifiers)
-		del attributes['transitionFilter']['attributeName']
-		del attributes['transitionFilter']['attributeType']
+	_attributes['transitionFilter'].update(__animate_attrs_core)
+	_attributes['transitionFilter'].update(__animate_attrs_extra)
+	del _attributes['transitionFilter']['attributeName']
+	del _attributes['transitionFilter']['attributeType']
 
 	del __animate_attrs_core, __animate_attrs_extra
 
-	if profileExtensions.get('TimeManipulations'):
-		# add TimeManipulations to certain elements
-		for __el in __animate_elements:
-			attributes[__el].update(__timeManipulations)
+	# add TimeManipulations to certain elements
+	for __el in __animate_elements:
+		_attributes[__el].update(__timeManipulations)
 
 	# Abbreviations for collections of elements
-	__Schedule = ['par', 'seq', 'excl']
-	__MediaContent = ['text', 'img', 'audio', 'video', 'ref', 'animation', 'textstream', 'brush', 'param']
-	__ContentControl = ['switch', 'prefetch']
-	__LinkAnchor = ['a', 'area', 'anchor']
-	__Animation = ['animate', 'set', 'animateMotion', 'animateColor']
-	if profileExtensions.get('InlineTransitions'):__Animation.append('transitionFilter')
-
 	__schedule = ['par', 'seq', 'excl'] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements + [__assets]
 	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
-	for __el in attributes.keys():
-		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
-			for __key, __val in __Core.items() + __Test.items():
-				if ' ' in __key:
-					attributes[__el][__key] = __val
-					attributes[__el][GRiNSns+' '+__key.split(' ')[1]] = __val
-				else:
-					attributes[__el][GRiNSns+' '+__key] = __val
-		else:
-			attributes[__el].update(__Core)
-			if __el not in ('head', 'meta', 'metadata',
-					'body', 'customTest'):
-				attributes[__el].update(__Test)
-		attributes[__el].update(__I18n)
+	for __el in _attributes.keys():
+		_attributes[__el].update(__Core)
+		if __el not in ('head', 'meta', 'metadata',
+				'body', 'customTest'):
+			_attributes[__el].update(__Test)
+		_attributes[__el].update(__I18n)
 
 	# add basicTiming to certain elements
 	for __el in ('a', 'animate', 'set',
 		     'animateMotion', 'animateColor',
-		     'area', 'anchor',
+		     'area', 'anchor', 'transitionFilter',
 		     ):
-		attributes[__el].update(__basicTiming)
-	if profileExtensions.get('InlineTransitions'):
-		attributes['transitionFilter'].update(__basicTiming)
+		_attributes[__el].update(__basicTiming)
 
 	# add Timing to certain other elements
 	for __el in ('text', 'img', 'audio', 'animation', 'video', 'ref',
@@ -875,46 +834,12 @@ class SMIL:
 		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
 			for __key, __val in __Timing.items():
 				if ' ' in __key:
-					attributes[__el][__key] = __val
-					attributes[__el][GRiNSns+' '+__key.split(' ')[1]] = __val
+					_attributes[__el][__key] = __val
+					_attributes[__el][GRiNSns+' '+__key.split(' ')[1]] = __val
 				else:
-					attributes[__el][GRiNSns+' '+__key] = __val
+					_attributes[__el][GRiNSns+' '+__key] = __val
 		else:
-			attributes[__el].update(__Timing)
-
-	# fix up SMIL 2.0 namespace
-	for __el, __atd in attributes.items():
-		if ' ' in __el or ':' in __el:
-			# element already has a namespace, so don't add more
-			continue
-
-		__atd = __atd.copy()
-
-		for __ns in SMIL2ns:
-			attributes[__ns+' '+__el] = __atd
-
-		for __at, __vl in __atd.items():
-			if ' ' in __at or ':' in __at:
-				# attribute already has a namespace, so don't add more
-				continue
-
-			for __ns in SMIL2ns:
-				__atd[__ns+' '+__at] = __vl
-
-			if ATTRIBUTES.has_key(__at):
-				for __sns in SMIL2ns:
-					if __sns[-1:] != '/':
-						continue
-					if type(ATTRIBUTES[__at]) is type({}):
-						for __ns, __ell in ATTRIBUTES[__at].items():
-							if __ell is None or __el in __ell:
-								__atd[__sns + __ns+' '+__at] = __vl
-					else:
-						for __ns in ATTRIBUTES[__at]:
-							__atd[__sns + __ns+' '+__at] = __vl
-			else:
-				# make sure all attributes are represented in ATTRIBUTES
-				ATTRIBUTES[__at] = []
+			_attributes[__el].update(__Timing)
 
 	# all entities with their allowed content
 	# no allowed content is default, so we don't specify empty ones here
@@ -942,9 +867,15 @@ class SMIL:
 		'animation': __media_content,
 		'textstream': __media_content,
 		'brush': __media_content,
-		__null: __media_content,
 		'a': __schedule + ['switch'],
 		__assets: __container_content,
+
+## when used, this should be moved outside of this dict
+##	__Schedule = ['par', 'seq', 'excl']
+##	__MediaContent = ['text', 'img', 'audio', 'video', 'ref', 'animation', 'textstream', 'brush', 'param']
+##	__ContentControl = ['switch', 'prefetch']
+##	__LinkAnchor = ['a', 'area', 'anchor']
+##	__Animation = ['animate', 'set', 'animateMotion', 'animateColor', 'transitionFilter']
 
 ##		'switch': __Schedule + __MediaContent + __ContentControl + __LinkAnchor + __Animation + ['priorityClass','layout'],
 ##		'customAttributes': ['customTest'],
@@ -975,79 +906,20 @@ class SMIL:
 	# cleanup
 	__el = __atd = __at = __vl = __key = __val = __ns = __sns = None
 	del __el, __atd, __at, __vl, __key, __val, __ns, __sns
-	del __null
 	del __media_object, __schedule, __container_content,
 	del __media_content
 	del __layouts, __layout
 	del __animate_elements
 	del __I18n, __basicTiming, __Timing, __Core, __Test
 
-_modules = {
-	# SMIL 2.0 Modules
-	'AccessKeyTiming': 1,
-	'AudioLayout': 1,
-	'BasicAnimation': 1,
-	'BasicContentControl': 1,
-	'BasicInlineTiming': 1,
-	'BasicLayout': 1,
-	'BasicLinking': 1,
-	'BasicMedia': 1,
-	'BasicTimeContainers': 1,
-	'BasicTransistions': 1,
-	'BrushMedia': 1,
-##	'CoordinatedTransitions': 1,
-	'CustomTestAttributes': 1,
-	'EventTiming': 1,
-	'ExclTimeContainers': 1,
-	'FillDefault': 1,
-	'HierarchicalLayout': 1,
-	'InlineTransitions': 1,
-	'LinkingAttributes': 1,
-	'MediaAccessibility': 1,
-	'MediaClipMarkers': 0,
-	'MediaClipping': 1,
-	'MediaDescriptions': 1,
-	'MediaMarkerTiming': 0,
-	'MediaParam': 1,
-	'Metainformation': 1,
-	'MinMaxTiming': 1,
-	'MultiArcTiming': 1,
-	'MultiWindowLayout': 1,
-	'ObjectLinking': 1,
-	'PrefetchControl': 1,
-##	'PrevTiming': 1,
-	'RepeatTiming': 1,
-	'RestartDefault': 1,
-	'RestartTiming': 1,
-	'SkipContentControl': 1,
-	'SplineAnimation': 1,
-	'Structure': 1,
-	'SyncbaseTiming': 1,
-	'SyncBehavior': 1,
-	'SyncBehaviorDefault': 1,
-	'SyncMaster': 0,
-	'TimeContainerAttributes': 0,
-	'TimeManipulations': 1,
-	'TransitionModifiers': 1,
-	'WallclockTiming': 1,
-
-	# SMIL 2.0 Psuedo Modules
-	'NestedTimeContainers': 1,
-	'DeprecatedFeatures': 1,
-
-	# SMIL 2.0 Module Collections
-	'Language': 1,
-	'HostLanguage': 1,
-	'IntegrationSet': 1,
-}
-
 extensions = {
 	# SMIL 1.0
 	'http://www.w3.org/TR/REC-smil/': 1,
 }
 
-for _k, _v in _modules.items():
+from settings import MODULES
+for _k, _v in MODULES.items():
 	for _ns in SMIL2ns:
 		if _ns[-1] == '/':
 			extensions[_ns + _k] = _v
-del _k, _v, _ns, _modules
+del _k, _v, _ns
