@@ -20,7 +20,9 @@ interface IGraphBuilder:
 
 	def GetDuration(self):return 0
 	def SetPosition(self,pos):pass
-	def GetPosition(self,pos):return 0
+	def GetPosition(self):return 0
+	def SetStopTime(self,pos):pass
+	def GetStopTime(self):return 0
 
 	def SetNotifyWindow(self,w):pass
 
@@ -73,7 +75,8 @@ class SoundChannel(Channel):
 
 		# active builder from self._builders
 		self._playBuilder=None
-		self._playDuration=0
+		self._playBegin=0
+		self._playEnd=0
 
 		# notification mechanism
 		self._notifyWindow = None
@@ -163,8 +166,15 @@ class SoundChannel(Channel):
 		if not self._playBuilder:
 			self.playdone(0)
 			return
-		self._playBuilder.SetPosition(0)
-		self._playDuration=self._playBuilder.GetDuration()
+		clip_begin = self.getclipbegin(node,'sec')
+		clip_end = self.getclipend(node,'sec')
+		self._playBuilder.SetPosition(int(clip_begin*1000))
+		self._playBegin = int(clip_begin*1000)
+		if clip_end:
+			self._playBuilder.SetStopTime(int(clip_end*1000))
+			self._playEnd = int(clip_end)*1000
+		else:
+			self._playEnd=self._playBuilder.GetDuration()
 		if not self._notifyWindow:
 			self._notifyWindow = genericwnd()
 			self._notifyWindow.create()
@@ -207,7 +217,7 @@ class SoundChannel(Channel):
 	def OnGraphNotify(self,params):
 		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
-			if t_msec>=self._playDuration:self.OnMediaEnd()
+			if t_msec>=self._playEnd:self.OnMediaEnd()
 
 	def OnMediaEnd(self):
 		if debug: print 'SoundChannel: OnMediaEnd',`self`
@@ -216,7 +226,7 @@ class SoundChannel(Channel):
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
 			if self.play_loop: # more loops
-				self._playBuilder.SetPosition(0)
+				self._playBuilder.SetPosition(self._playBegin)
 				self._playBuilder.Run()
 				return
 			# no more loops
@@ -235,7 +245,7 @@ class SoundChannel(Channel):
 	def on_idle_callback(self):
 		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
-			if t_msec>=self._playDuration:self.OnMediaEnd()
+			if t_msec>=self._playEnd:self.OnMediaEnd()
 
 	def is_callable(self):
 		return self._playBuilder
