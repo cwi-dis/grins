@@ -427,6 +427,10 @@ SOURCE=.\RES\brush.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\closedeye.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\danglinganchor.ico
 # End Source File
 # Begin Source File
@@ -448,6 +452,14 @@ SOURCE=.\RES\linkout.ico
 # Begin Source File
 
 SOURCE=.\RES\Node.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\openedeye.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\openedeyekey.ico
 # End Source File
 # Begin Source File
 
