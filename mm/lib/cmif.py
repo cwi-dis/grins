@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # A function to find a file in the "cmif search path".
 # This search path is defined as follows:
 # - if $CMIFPATH is set, use its colon-separated entries
