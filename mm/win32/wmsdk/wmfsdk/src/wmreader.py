@@ -43,6 +43,7 @@ def printWMInfo(reader):
 	nstreams = reader.GetOutputCount()
 	print 'media has',nstreams,"output stream(s)"
 	wmheader = reader.QueryIWMHeaderInfo()
+	wmprofile = reader.QueryIWMProfile()
 	for i in range(nstreams):
 		print 'stream',i,'info:'
 		props = reader.GetOutputProps(i)
@@ -53,8 +54,12 @@ def printWMInfo(reader):
 		elif major == wmfapi.WMMEDIATYPE_Video:
 			print 'WMMEDIATYPE_Video'
 		elif major == wmfapi.WMMEDIATYPE_Script:
-			print 'WMMEDIATYPE_Script'				
-		nattrs  = wmheader.GetAttributeCount(i)
+			print 'WMMEDIATYPE_Script'
+		try:				
+			nattrs  = wmheader.GetAttributeCount(i)
+		except wmfapi.error, arg:
+			print arg
+			nattrs = 0
 		for j in range(nattrs):
 			attr = wmheader.GetAttributeByIndex(j,i)
 			print wmfapi.wmt_attr_datatype_str[attr[0]],attr[1:]
@@ -71,6 +76,7 @@ readercbobj = wmfapi.CreatePyReaderCallback(agent)
 #readercbobj = wmfapi.CreatePyReaderCallbackAdvanced(agent)
 
 reader.Open(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\test.wma',readercbobj)
+#reader.Open(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\msvideo.asf',readercbobj)
 readercbobj.WaitOpen()
 
 # print some info for windows media file
