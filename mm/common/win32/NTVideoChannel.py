@@ -326,8 +326,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def OnFormatChange(self, w, h, bpp, fmt):
 		if not self.window: return
+		viewport = self.window._topwindow
+		screenBPP = viewport.getRGBBitCount()
 		
-		screenBPP = self.window._topwindow.getRGBBitCount()	
+		bltCode = ''
 		if fmt==rma.RMA_RGB:
 			bltCode = 'Blt_RGB%d_On_RGB%d' % (bpp, screenBPP)
 		elif fmt==rma.RMA_YUV420:
@@ -336,14 +338,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if debug:
 			print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
 		
+		if not bltCode:
+			self.cleanVideoRenderer()
+			return
+			
 		try:
-			dymmy = getattr(self.window._topwindow.getDrawBuffer(), bltCode)
+			dymmy = getattr(viewport.getDrawBuffer(), bltCode)
 		except AttributeError:
-			self.__rmdds = None
-			self.__rmrender = None
-			self.window.removevideo()
+			self.cleanVideoRenderer()
 		else:
-			self.__rmdds = self.window._topwindow.CreateSurface(w, h)
+			self.__rmdds = viewport.CreateSurface(w, h)
 			self.__rmrender = getattr(self.__rmdds, bltCode), w, h
 			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
 			
