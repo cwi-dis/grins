@@ -623,37 +623,45 @@ class MMRegPoint:
 
 		return MMAttrdefs.getdefattr(self, 'regAlign')
 
-	# return the point in pixel
+	# return the point in pixel float
 	def getx(self, boxwidth):
 		if self.attrdict.has_key('left'):
 			x = self.attrdict['left']
 			if type(x) is type(1.0):
-				x = int(x*boxwidth)
+				retVal = x*boxwidth
+			else:
+				retVal = x
 		elif self.attrdict.has_key('right'):
 			right = self.attrdict['right']
 			if type(right) is type(1.0):
-				right = int(right*boxwidth)
-			x = boxwidth-right
+				right = right*boxwidth
+			else:
+				right = float(right)
+			retVal = boxwidth-right
 		else:
-			x = 0
+			retVal = 0.0
 
-		return x
+		return retVal
 
-	# return the point in pixel
+	# return the point in pixel float
 	def gety(self, boxheight):
 		if self.attrdict.has_key('top'):
 			y = self.attrdict['top']
 			if type(y) is type(1.0):
-				y = int(y*boxheight)
+				retVal = y*boxheight
+			else:
+				retVal = y
 		elif self.attrdict.has_key('bottom'):
 			bottom = self.attrdict['bottom']
 			if type(bottom) is type(1.0):
-				bottom = int(bottom*boxheight)
-			y = boxheight-bottom
+				bottom = bottom*boxheight
+			else:
+				bottom = float(bottom)
+			retVal = boxheight-bottom
 		else:
-			y = 0
+			retVal = 0.0
 
-		return y
+		return retVal
 
 	# return the tuple x,y alignment in pourcent value
 	# alignOveride is an optional overide id
