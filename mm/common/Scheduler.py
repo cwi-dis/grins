@@ -247,7 +247,7 @@ class Scheduler(scheduler):
 		if x < 0:
 			print 'Player: Node counter below zero on ', \
 				  MMAttrdefs.getattr(node, 'name'), \
-				  MMAttrdefs.getattr(node, 'channel')
+				  node.GetChannelName()
 			print self.queue
 			raise CheckError, 'counter below zero!?!?'
 		if self.seeking and side == HD:
@@ -296,7 +296,7 @@ class Scheduler(scheduler):
 				pass
 			    if must_arm:
 				print 'Player: Node not pre-armed on', \
-				    MMAttrdefs.getattr(node, 'channel'), node.uid
+				    node.GetChannelName(), node.uid
 				if self.measure_armtimes:
 					dummy = self.enter(0.0, -1, \
 						chan.arm_and_measure, (node,))
@@ -374,7 +374,7 @@ class Scheduler(scheduler):
 			return node.channel
 		except AttributeError:
 			pass
-		cname = MMAttrdefs.getattr(node, 'channel')
+		cname = node.GetChannelName()
 		if self.channels.has_key(cname):
 			node.channel = self.channels[cname]
 		else:

@@ -263,12 +263,8 @@ def decrement(q, delay, node, side):
 		global getd_times
 		getd_times = getd_times + (t1-t0)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
-		cname = None
-		try:
-			cname = MMAttrdefs.getattr(node, 'channel')
-		except NoSuchAttrError:
-			cname = None
-		if cname <> None:
+		if node.GetChannel():
+			cname = node.GetChannelName()
 			if node.GetRawAttrDef('arm_duration', -1) >= 0:
 				if last_node.has_key(cname):
 					ln = last_node[cname]
