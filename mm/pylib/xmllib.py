@@ -92,6 +92,7 @@ class XMLParser:
 
     # Interface -- initialize and reset this instance
     def __init__(self, **kw):
+        self.__fixed = 0
         if kw.has_key('accept_unquoted_attributes'):
             self.__accept_unquoted_attributes = kw['accept_unquoted_attributes']
         if kw.has_key('accept_missing_endtag_name'):
@@ -101,6 +102,30 @@ class XMLParser:
         if kw.has_key('accept_utf8'):
             self.__accept_utf8 = kw['accept_utf8']
         self.reset()
+
+    def __fixelements(self):
+        self.__fixed = 1
+        self.elements = {}
+        self.__fixdict(self.__dict__)
+        self.__fixclass(self.__class__)
+
+    def __fixclass(self, kl):
+        self.__fixdict(kl.__dict__)
+        for k in kl.__bases__:
+            self.__fixclass(k)
+
+    def __fixdict(self, dict):
+        for key in dict.keys():
+            if key[:6] == 'start_':
+                tag = key[6:]
+                start, end = self.elements.get(tag, (None, None))
+                if start is None:
+                    self.elements[tag] = getattr(self, key), end
+            elif key[:4] == 'end_':
+                tag = key[4:]
+                start, end = self.elements.get(tag, (None, None))
+                if end is None:
+                    self.elements[tag] = start, getattr(self, key)
 
     # Interface -- reset this instance.  Loses all unprocessed data
     def reset(self):
@@ -114,6 +139,10 @@ class XMLParser:
         self.__seen_starttag = 0
         self.__use_namespaces = 0
         self.__namespaces = {'xml':None}   # xml is implicitly declared
+        # backward compatipibility hack: if elements not overridden,
+        # fill it in ourselves
+        if self.elements is XMLParser.elements:
+            self.__fixelements()
 
     # For derived classes only -- enter literal mode (CDATA) till EOF
     def setnomoretags(self):
@@ -134,6 +163,10 @@ class XMLParser:
     # Interface -- handle the remaining data
     def close(self):
         self.goahead(1)
+        if self.__fixed:
+            self.__fixed = 0
+            # remove self.elements so that we don't leak
+            del self.elements
 
     # Interface -- translate references
     def translate_references(self, data, all = 1):
@@ -166,7 +199,7 @@ class XMLParser:
                     data = pre + self.entitydefs[str] + post
                     i = res.start(0)    # rescan substituted text
                 else:
-                    self.syntax_error('reference to unknown entity')
+                    self.syntax_error("reference to unknown entity `&%s;'" % str)
                     # can't do it, so keep the entity ref in
                     data = pre + '&' + str + ';' + post
                     i = res.start(0) + len(str) + 2
@@ -318,7 +351,6 @@ class XMLParser:
                         n = len(rawdata)
                         i = res.start(0)
                     else:
-                        self.syntax_error('reference to unknown entity')
                         self.unknown_entityref(name)
                     self.lineno = self.lineno + string.count(res.group(0), '\n')
                     continue
@@ -740,7 +772,8 @@ class XMLParser:
     def unknown_starttag(self, tag, attrs): pass
     def unknown_endtag(self, tag): pass
     def unknown_charref(self, ref): pass
-    def unknown_entityref(self, ref): pass
+    def unknown_entityref(self, name):
+        self.syntax_error("reference to unknown entity `&%s;'" % name)
 
 
 class TestXMLParser(XMLParser):
@@ -756,10 +789,6 @@ class TestXMLParser(XMLParser):
     def handle_doctype(self, tag, pubid, syslit, data):
         self.flush()
         print 'DOCTYPE:',tag, `data`
-
-    def handle_entity(self, name, strval, pubid, syslit, ndata):
-        self.flush()
-        print 'ENTITY:',`data`
 
     def handle_data(self, data):
         self.testdata = self.testdata + data
