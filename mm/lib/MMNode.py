@@ -253,15 +253,15 @@ class MMNode():
 		summnames = self.summaries.keys()
 		if summnames:
 			summnames.sort()
-			print 'Summaries for:',
+			print 'Has summaries for attrs:',
 			for name in summnames:
 				print name,
 			print
-		if self.values:
+		if self.type = 'imm' or self.values:
 			print 'Values:',
 			for value in self.values: print value,
 			print
-		if self.children:
+		if self.type in ('seq', 'par') or self.children:
 			print 'Children:',
 			for child in self.children: print child.GetType(),
 			print
@@ -306,6 +306,11 @@ class MMNode():
 		if self.children <> [] or self.values <> []:
 			raise CheckError, 'SetType() on non-empty node'
 		self.type = type
+	#
+	def SetValues(self, values):
+		if self.type <> 'imm':
+			raise CheckError, 'SetValues() bad node type'
+		self.values = values
 	#
 	def SetAttr(self, (name, value)):
 		_stat('SetAttr')
