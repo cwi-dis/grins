@@ -348,7 +348,7 @@ class AttrEditor(AttrEditorDialog):
 
 	def restore_callback(self):
 		for b in self.__list:
-			b.setvalue('')
+			b.setvalue(b.valuerepr(None))
 
 	def close(self):
 		AttrEditorDialog.close(self)
@@ -587,6 +587,26 @@ class PopupAttrEditorField(AttrEditorField):
 			return 'Default'
 		return value
 
+class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
+	# This class differs from the one above in that when a value
+	# does not occur in the list of options, valuerepr will return
+	# 'undefined'.
+
+	def getoptions(self):
+		# derived class overrides this to defince the choices
+		return ['Default', 'undefined']
+
+	def valuerepr(self, value):
+		if value is None:
+			return 'Default'
+		options = self.getoptions()
+		if value not in options:
+			return 'undefined'
+		return value
+
+	def reset_callback(self):
+		self.recalcoptions()
+
 class BoolAttrEditorField(PopupAttrEditorField):
 	__offon = ['off', 'on']
 
@@ -622,7 +642,7 @@ class UnitsAttrEditorField(PopupAttrEditorField):
 			return 'Default'
 		return self.__units[self.__unitsmap.index(value)]
 
-class ChannelnameAttrEditorField(PopupAttrEditorField):
+class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
 	def getoptions(self):
 		list = []
@@ -648,7 +668,7 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 		list.sort()
 		return ['Default', 'undefined'] + list
 
-class ChildnodenameAttrEditorField(PopupAttrEditorField):
+class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the node's children
 	def getoptions(self):
 		list = []

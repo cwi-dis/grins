@@ -213,6 +213,22 @@ class AttrEditorDialogField:
 		else:
 			self.__widget.settext(value)
 
+	def recalcoptions(self):
+		"""Recalculate the list of options and set the value."""
+		if self.__type[:6] == 'option':
+			val = self.getcurrent()
+			list = self.getoptions()
+			if self.__type == 'option-button':
+				self.__widget.setlabel(val)
+				self.__label = val
+			else:
+				if list != self.__list:
+					self.__widget.setoptions(
+						list, list.index(val))
+				else:
+					self.__widget.setvalue(val)
+			self.__list = list
+
 	# Methods to be overridden by the sub class.
 	def gettype(self):
 		"""Return the type of the attribute as a string.
