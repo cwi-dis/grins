@@ -645,11 +645,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
 					pass
-		# We added fill="freeze" for G2 player.  Now remove it.
-		if attrdict.has_key('fill') and \
-		   attrdict['fill'] == 'freeze' and \
-		   not attrdict.has_key('duration'):
-			del attrdict['fill']			
+##		# We added fill="freeze" for G2 player.  Now remove it.
+##		if attrdict.has_key('fill') and \
+##		   attrdict['fill'] == 'freeze' and \
+##		   not attrdict.has_key('duration'):
+##			del attrdict['fill']			
 
 	def addQTAttr(self, key, val, node):
 		attrdict = node.attrdict
