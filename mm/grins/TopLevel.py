@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import os, sys, posixpath
 import windowinterface
 import MMAttrdefs, MMurl
+from urlparse import urlparse, urlunparse
 from MMExc import *
 import Timing
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
@@ -21,10 +22,10 @@ class TopLevel(TopLevelDialog):
 		self.select_dict = {}
 		self._last_timer_id = None
 		self.main = main
-		utype, url = MMurl.splittype(url)
-		host, url = MMurl.splithost(url)
-		dir, base = posixpath.split(url)
-		if not utype and not host:
+		utype, host, path, params, query, fragment = urlparse(url)
+		dir, base = posixpath.split(path)
+		if (not utype or utype == 'file') and \
+		   (not host or host == 'localhost'):
 			# local file
 			self.dirname = dir
 		else:
@@ -38,10 +39,7 @@ class TopLevel(TopLevelDialog):
 			self.basename = base[:-5]
 		else:
 			self.basename = base
-		if host:
-			url = '//%s%s' % (host, url)
-		if utype:
-			url = '%s:%s' % (utype, url)
+		url = urlunparse((utype, host, path, params, query, fragment))
 		self.filename = url
 		self.source = None
 		self.read_it()
