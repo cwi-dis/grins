@@ -13,50 +13,11 @@ class LayoutChannel(ChannelWindow):
 		self._wingeomInPixel = None
 		self.__activeVisibleChannelDict = {}
 
-		if settings.activeFullSmilCss:
-			parentChannel = self._get_parent_channel()
-			if parentChannel == None:
-				self.idCssNode = self.cssResolver.newRootNode()
-			else:
-				self.idCssNode = self.cssResolver.newRegion()
-
-	# for now
-	# get the parent window geometry in pixel
-	# need for sub-region, registration point,...
-	# WARNING: if the size of channel is dynamicly modify (for example from animation),
-	# we have to invalidate the current value in self._wingeomInPixel
-	def _getWingeomInPixel(self):
 		parentChannel = self._get_parent_channel()
-
 		if parentChannel == None:
-			# top window 
-			size = self._attrdict.get('winsize', (50, 50))
-			w,h = size
-			return 0,0,w,h
-
-		units = self._attrdict['units']
-		if units == windowinterface.UNIT_PXL:
-			# The size in smil source is specified in pixel, we don't need to 
-			# convert it and return directly it
-			return self._attrdict['base_winoff']
-		if self._wingeomInPixel != None:
-			# The size is expressed in pourcent in smil source document, but
-			# the size in pixel is already pre-calculate.
-			return self._wingeomInPixel
-
-		# The size is expressed in pourcent in smil source document, we don't determinate 
-		# yet its size in pixel. For this, we need to know the parent size in pixel
-		
-		parentChannel = self._get_parent_channel()
-		parentGeomInPixel = parentChannel._getWingeomInPixel()
-		
-		x,y,w,h = self._attrdict['base_winoff']
-		px,py,pw,ph = parentGeomInPixel
-		
-		# we save the current size in pixel for the next request
-		self._wingeomInPixel = x*pw, y*ph, w*pw, h*ph
-		
-		return self._wingeomInPixel
+			self.idCssNode = self.cssResolver.newRootNode()
+		else:
+			self.idCssNode = self.cssResolver.newRegion()
 
 	def do_arm(self, node, same=0):
 		print 'LayoutChannel: cannot play nodes on a layout channel'
@@ -120,10 +81,9 @@ class LayoutChannel(ChannelWindow):
 						   windowinterface.UNIT_MM)
 #			width, height = self._attrdict.get('winsize', (50, 50))
 			
-			if settings.activeFullSmilCss:
-				self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
-				width, height = self.cssResolver.getPxGeom(self._attrdict._cssId)
-				units = windowinterface.UNIT_PXL
+			self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
+			width, height = self.cssResolver.getPxGeom(self._attrdict._cssId)
+			units = windowinterface.UNIT_PXL
 				
 			self._curvals['winsize'] = ((width, height), (50,50))
 			x, y = self._attrdict.get('winpos', (None, None))
@@ -170,52 +130,22 @@ class LayoutChannel(ChannelWindow):
 	
 		if pchan:
 			# parent is not None, so it's not the main window
-			if settings.activeFullSmilCss:
-				# copy all possitioning attributes from document source.
-				# because, the animation module haven't to modify the document source
-				self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
-				self.cssResolver.link(self.idCssNode, pchan.idCssNode)
-				self._wingeom = pgeom = self.cssResolver.getPxGeom(self.idCssNode)
-			else:
-				if self._attrdict.has_key('base_winoff'):
-					self._wingeom = pgeom = self._attrdict['base_winoff']
-				elif self._player.playing:
-					windowinterface.showmessage(
-						'No geometry for subchannel %s known' % self._name,
-						mtype = 'error', grab = 1)
-					pchan._subchannels.remove(self)
-					pchan = None
-				else:
-##				pchan.window.create_box(
-##					'Draw a subwindow for %s in %s' %
-##						(self._name, pchan._name),
-##					self._box_callback,
-##					units = units)
-##				return None
-					#
-					# Window without position/size. Set to whole parent, and remember
-					# in the attributes. (Note: technically wrong, changing the attrdict
-					# without using the edit mgr).
-					# Or should I skip the curvals stuff below, to do this correctly?
-					#
-					self._wingeom = pgeom = (0.0, 0.0, 1.0, 1.0)
-					units = windowinterface.UNIT_SCREEN
-					self._attrdict['base_winoff'] = pgeom
-					self._attrdict['units'] = units
+			
+			# copy all possitioning attributes from document source.
+			# because, the animation module haven't to modify the document source
+			self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
+			self.cssResolver.link(self.idCssNode, pchan.idCssNode)
+			self._wingeom = pgeom = self.cssResolver.getPxGeom(self.idCssNode)
 			self._curvals['base_winoff'] = pgeom, None
 		
-		if settings.activeFullSmilCss:
-			units = windowinterface.UNIT_PXL
-		else:
-			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN)
+		units = windowinterface.UNIT_PXL
 		self.create_window(pchan, self._wingeom, units)
 		
 		return 1
 
 	def do_hide(self):
 		ChannelWindow.do_hide(self)
-		if settings.activeFullSmilCss:
-			self.cssResolver.unlink(self.idCssNode)			
+		self.cssResolver.unlink(self.idCssNode)			
 				
 	def play(self, node):
 		print "can't play LayoutChannel"
@@ -252,20 +182,11 @@ class LayoutChannel(ChannelWindow):
 
 	def getOverlapChannelList(self, channelToCheck, nodeToCheck):
 		overLapList = []
-		if settings.activeFullSmilCss:
-			xR, yR, wR, hR = channelToCheck.cssResolver.getPxAbsGeom(channelToCheck.idCssNode)
-		else:
-			print 'getOverlapChannelList not implemented when not settings.activeFullSmilCss'
-			return []	# XXX
+		xR, yR, wR, hR = channelToCheck.cssResolver.getPxAbsGeom(channelToCheck.idCssNode)
 			
 		for channel,node in self.__activeVisibleChannelDict.items():
 			# determinate absolute pixel positioning relative to the viewport
-			if settings.activeFullSmilCss:
-				x, y, w, h = channel.cssResolver.getPxAbsGeom(channel.idCssNode)
-			else:
-				# not optimized code
-				print 'not implemented '
-				continue # XXX
+			x, y, w, h = channel.cssResolver.getPxAbsGeom(channel.idCssNode)
 
 			# to do: optimized
 			if x < xR+wR and xR < x+w and y < yR+hR and yR < y+h:

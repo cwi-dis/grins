@@ -1159,8 +1159,7 @@ class ChannelWindow(Channel):
 		if not hasattr(self._player, 'ChannelWinDict'):
 			self._player.ChannelWinDict = {}
 		self._player.ChannelWinDict[self._name] = self
-		if settings.activeFullSmilCss:
-			self.cssResolver = self._player.cssResolver
+		self.cssResolver = self._player.cssResolver
 		self.window = None
 		self.armed_display = self.played_display = None
 		self.update_display = None
@@ -1477,7 +1476,7 @@ class ChannelWindow(Channel):
 		self._curvals['base_winoff'] = self._wingeom, None
 
 		# the window size is determinate from arm method. self._wingeom is all the time 
-		# expressed in pixel value. See getwingeom method.
+		# expressed in pixel value.
 		units = windowinterface.UNIT_PXL
 		self.create_window(pchan, self._wingeom, units)
 
@@ -1514,33 +1513,27 @@ class ChannelWindow(Channel):
 		# get the local z-index value from the node
 		self.__z = node.GetAttrDef('z', -1)
 		
-		if settings.activeFullSmilCss:
-			pchan = self._get_parent_channel()
-			pchan.childToActiveState()
+		pchan = self._get_parent_channel()
+		pchan.childToActiveState()
 
-			# region geometry			
-			self.idCssNode = self.cssResolver.newRegion()
-			self.idCssMedia = self.cssResolver.newMedia(node.GetDefaultMediaSize)
-			pchan = self._get_parent_channel()
+		# region geometry			
+		self.idCssNode = self.cssResolver.newRegion()
+		self.idCssMedia = self.cssResolver.newMedia(node.GetDefaultMediaSize)
+		pchan = self._get_parent_channel()
 
-			# copy all possitioning attributes from document source.
-			# because, the animation module haven't to modify the document source
-			self.cssResolver.copyRawAttrs(node.getSubRegCssId(), self.idCssNode)
-			self.cssResolver.copyRawAttrs(node.getMediaCssId(), self.idCssMedia)
+		# copy all possitioning attributes from document source.
+		# because, the animation module haven't to modify the document source
+		self.cssResolver.copyRawAttrs(node.getSubRegCssId(), self.idCssNode)
+		self.cssResolver.copyRawAttrs(node.getMediaCssId(), self.idCssMedia)
 			
-			self.cssResolver.link(self.idCssNode, pchan.idCssNode)
-			self._wingeom = self.cssResolver.getPxGeom(self.idCssNode)
-			self.cssResolver.link(self.idCssMedia, self.idCssNode)
-			self._mediageom = self.cssResolver.getPxGeom(self.idCssMedia)
+		self.cssResolver.link(self.idCssNode, pchan.idCssNode)
+		self._wingeom = self.cssResolver.getPxGeom(self.idCssNode)
+		self.cssResolver.link(self.idCssMedia, self.idCssNode)
+		self._mediageom = self.cssResolver.getPxGeom(self.idCssMedia)
 			
-			# force show of channel.
-			self.show(1)			
-		else:
-			# force show of channel.
-			self.show(1)
-
-			pchan = self._get_parent_channel()
-			pchan.childToActiveState()
+		# force show of channel.
+		self.show(1)			
+			
 		self.getViewportChannel().addActiveVisibleChannel(self, node)
 
 
@@ -1549,9 +1542,8 @@ class ChannelWindow(Channel):
 
 		# force hide the channel.
 		self.hide(1)
-		if settings.activeFullSmilCss:
-			self.cssResolver.unlink(self.idCssMedia)
-			self.cssResolver.unlink(self.idCssNode)
+		self.cssResolver.unlink(self.idCssMedia)
+		self.cssResolver.unlink(self.idCssNode)
 
 		self.__transparent = 1
 		self.__bgcolor = None
@@ -1604,14 +1596,6 @@ class ChannelWindow(Channel):
 ##				self.editmgr.commit()
 
 	def arm_0(self, node):
-		# experimental subregion and regpoint code
-		# determinate the channel size before to show the window
-		# For now, it allows to avoid a dynamic resize window (updatecoordinates)
-		if not settings.activeFullSmilCss:
-			wingeom = self.getwingeom(node)
-			self._wingeom = wingeom
-		# experimental subregion and regpoint code
-
 		self.updateToActiveState(node)
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
@@ -1720,184 +1704,11 @@ class ChannelWindow(Channel):
 	# get the space display area of media according to registration points
 	# return pourcent values relative to the subregion or region
 	def getmediageom(self, node):
-		if settings.activeFullSmilCss:
-			subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
-			area_left, area_top, area_width, area_height = self._mediageom
-			return float(area_left)/subreg_width, float(area_top)/subreg_height, \
-					 float(area_width)/subreg_width, float(area_height)/subreg_height
-		
-		subreg_height = node.__subreg_height
-		subreg_width = node.__subreg_width
-		subreg_top = node.__subreg_top
-		subreg_left = node.__subreg_left
-
-		# determinate media size
-		media_width, media_height = node.GetDefaultMediaSize(subreg_width, subreg_height)
-		
-		# this test allow to avoid a crash. media_width or media_height shouln't be equal to zero
-		# this method have to call only for media with intrinsic size
-		if media_width == 0 or media_height == 0:
-			media_width == 100
-			media_height = 100
-			
-		# print 'media width =',media_width
-		# print 'media height =',media_height
-
-		# get fit attribute
-		scale = MMAttrdefs.getattr(node,'scale')
-		# print 'scale =',scale
-
-		# get regpoint
-		regpoint = node.GetRegPoint()
-		# print 'regpoint =',regpoint
-		regpoint_x = regpoint.getx(subreg_width)
-		regpoint_y = regpoint.gety(subreg_height)
-
-		# get regalign
-		regalign = node.GetRegAlign(regpoint)
-		# print 'regalign =',regalign
-
-		# start of positioning algorithm
-		#
-
-		# at first, calculation of geom for fill attribute
-
-		# according to the scale (fit), compute the values
-		if scale == 1:  #hidden
-			area_height = media_height
-			area_width = media_width
-
-		elif scale == 0: # meet
-			if regalign in ('topLeft', 'topMid', 'topRight'):
-				area_height = subreg_height-regpoint_y
-			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
-				area_width = subreg_width-regpoint_x
-			if regalign in ('topMid', 'center', 'bottomMid'):
-				area_width = subreg_width-regpoint_x
-				if regpoint_x < area_width:
-					area_width = regpoint_x
-				area_width = area_width*2
-			if regalign in ('topRight', 'midRight', 'bottomRight'):
-				area_width = regpoint_x
-			if regalign in ('midLeft', 'midRight', 'center'):
-				area_height = subreg_height-regpoint_y
-				if regpoint_y < area_height:
-					area_height = regpoint_y
-				area_height = area_height*2
-			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
-				area_height = regpoint_y
-
-			media_ratio = float(media_width)/float(media_height)
-			# print 'ratio=',media_ratio
-			if area_height*media_ratio > area_width:
-				area_height = area_width/media_ratio
-			else:
-				area_width = area_height*media_ratio
-
-		elif scale == -1: # slice
-			if regalign in ('topLeft', 'topMid', 'topRight'):
-				area_height = subreg_height-regpoint_y
-			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
-				area_width = subreg_width-regpoint_x
-			if regalign in ('topMid', 'center', 'bottomMid'):
-				area_width = subreg_width-regpoint_x
-				if regpoint_x > area_width:
-					area_width = regpoint_x
-				area_width = area_width*2
-			if regalign in ('topRight', 'midRight', 'bottomRight'):
-				area_width = regpoint_x
-			if regalign in ('midLeft', 'midRight', 'center'):
-				area_height = subreg_height-regpoint_y
-				if regpoint_y > area_height:
-					area_height = regpoint_y
-				area_height = area_height*2
-			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
-				area_height = regpoint_y
-				
-			media_ratio = float(media_width)/float(media_height)
-			# print 'ratio=',media_ratio
-			if area_height*media_ratio < area_width:
-				area_height = area_width/media_ratio
-			else:
-				area_width = area_height*media_ratio
-
-		elif scale == -3: # fill
-			if regalign in ('topLeft', 'topMid', 'topRight'):
-				area_height = subreg_height-regpoint_y
-			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
-				area_width = subreg_width-regpoint_x
-			if regalign in ('topMid', 'center', 'bottomMid'):
-				area_width = subreg_width-regpoint_x
-				area_width = area_width*2
-			if regalign in ('topRight', 'midRight', 'bottomRight'):
-				area_width = regpoint_x
-			if regalign in ('midLeft', 'midRight', 'center'):
-				area_height = subreg_height-regpoint_y
-				area_height = area_height*2
-			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
-				area_height = regpoint_y
-
-		if regalign in ('topLeft', 'topMid', 'topRight'):
-			area_top = regpoint_y
-		if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
-			area_left = regpoint_x
-		if regalign in ('topMid', 'center', 'bottomMid'):
-			area_left = regpoint_x-(area_width/2)
-		if regalign in ('topRight', 'midRight', 'bottomRight'):
-			area_left = regpoint_x-area_width
-		if regalign in ('midLeft', 'midRight', 'center'):
-			area_top = regpoint_y-(area_height/2)
-		if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
-			area_top = regpoint_y-area_height
-
-		#
-		# end of positioning algorithm
-
-		# print 'area geom = ',area_left, area_top, area_width, area_height
-
+		subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
+		area_left, area_top, area_width, area_height = self._mediageom
 		return float(area_left)/subreg_width, float(area_top)/subreg_height, \
-					 float(area_width)/subreg_width, float(area_height)/subreg_height
-
-	# get the sub channel geom according to registration sub-regions
-	# return in pixel value
-	def getwingeom(self, node):
-		subreg_left = node.GetAttrDef('left', 0)
-		subreg_right = node.GetAttrDef('right', 0)
-		subreg_top = node.GetAttrDef('top', 0)
-		subreg_bottom = node.GetAttrDef('bottom', 0)
-
-		reg_left, reg_top, reg_width, reg_height =  self._get_parent_channel()._getWingeomInPixel()
-
-		# translate in pixel
-		if type(subreg_left) == type(0.0):
-			subreg_left = int(reg_width*subreg_left)
-		if type(subreg_top) == type(0.0):
-			subreg_top = int(reg_height*subreg_top)
-		if type(subreg_right) == type(0.0):
-			subreg_right = int(reg_width*subreg_right)
-		if type(subreg_bottom) == type(0.0):
-			subreg_bottom = int(reg_height*subreg_bottom)
-
-		# determinate subregion height and width
-		subreg_height = reg_height-subreg_top-subreg_bottom
-		subreg_width = reg_width-subreg_left-subreg_right
-		# print 'sub region height =',subreg_height
-		# print 'sub region width = ',subreg_width
-
-		# allow only no null or negative value
-		if subreg_height <= 0:
-			subreg_height = 1
-		if subreg_width <= 0:
-			subreg_width = 1
-
-		node.__subreg_height = subreg_height
-		node.__subreg_width = subreg_width
-		node.__subreg_top = subreg_top
-		node.__subreg_left = subreg_left
-
-		# print subreg_left, subreg_top, subreg_width, subreg_height
-		return subreg_left, subreg_top, subreg_width, subreg_height
-
+				 float(area_width)/subreg_width, float(area_height)/subreg_height
+		
 	def play(self, node):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
