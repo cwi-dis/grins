@@ -405,6 +405,10 @@ SOURCE=.\M_Duration.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_EditableObjects.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_exceptions.c
 # End Source File
 # Begin Source File
