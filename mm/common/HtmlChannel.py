@@ -160,7 +160,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.armed_url = ''
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
-			filename = self.getfilename(node)
+			filename = self.getfileurl(node)
 			self.armed_url = filename
 			try:
 				fp = urllib.urlopen(filename)

@@ -11,6 +11,7 @@ import os
 import windowinterface
 import sys
 import select
+import urllib
 
 sys.path.append('/ufs/jack/src/python/Extensions/midi/build.irix5')
 sys.path.append('/ufs/jack/src/python/Extensions/midi/Lib')
@@ -58,7 +59,8 @@ class MidiChannel(Channel):
 		    return 1
 		if same and self.arm_data:
 		    return 1
-		fn = self.getfilename(node)
+		fn = self.getfileurl(node)
+		fn = urllib.url2pathname(fn)
 		#
 		# Read the midifile, mixing all tracks
 		#

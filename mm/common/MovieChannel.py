@@ -1,4 +1,5 @@
 from Channel import ChannelWindowThread
+import urllib
 
 class MovieChannel(ChannelWindowThread):
 	def __repr__(self):
@@ -13,7 +14,8 @@ class MovieChannel(ChannelWindowThread):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		import MMAttrdefs, GLLock, VFile
-		filename = self.getfilename(node)
+		filename = self.getfileurl(node)
+		filename = urllib.url2pathname(filename)
 		try:
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:

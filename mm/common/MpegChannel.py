@@ -1,4 +1,5 @@
 from Channel import ChannelWindowThread
+import urllib
 
 class MpegChannel(ChannelWindowThread):
 	def __repr__(self):
@@ -12,7 +13,8 @@ class MpegChannel(ChannelWindowThread):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		filename = self.getfilename(node)
+		filename = self.getfileurl(node)
+		filename = urllib.url2pathname(filename)
 		try:
 			fp = open(filename, 'rb')
 		except IOError, msg:
