@@ -5,11 +5,15 @@ set PYTHONHOME=D:\ufs\mm\python
 
 set FREEZE_WHAT=grins
 set EXCLUDE_WHAT=editor
-rem set PRODUCT=
+set PRODUCT=smil20
+set EMBEDDED=no
 
 rem END_CUSTOMIZATION
 
 set main_script=%GRINS_HOME%\fGRiNS.py
+IF NOT %EMBEDDED%==yes GOTO gotmainscript
+set main_script=%GRINS_HOME%\feGRiNS.py
+:gotmainscript
 
 set PYTHON_EXE=%PYTHONHOME%\PCbuild\python.exe
 
@@ -42,7 +46,7 @@ rem And the standard Python extensions.
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\img\Lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
-set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
+REM set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
 
 rem Path for old standard python libraries
