@@ -36,7 +36,7 @@ import WMEVENTS
 def ITEMrange(fr, to): return range(fr, to+1)
 
 # Dialog info
-ID_DIALOG_ANCHOR=518
+from mw_resources import ID_DIALOG_ANCHOR
 ITEM_BROWSER=1
 
 ITEM_NEW=2
@@ -69,7 +69,8 @@ ITEM_RESTORE=20
 ITEM_APPLY=21
 ITEM_OK=22
 
-ITEMLIST_ALL=ITEMrange(ITEM_BROWSER, ITEM_COMPDATA)
+ITEM_BALLOONHELP=23
+ITEMLIST_ALL=ITEMrange(ITEM_BROWSER, ITEM_BALLOONHELP)
 
 class AnchorEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, typelabels, list, initial):
