@@ -225,13 +225,14 @@ from pywinlib.mfc import docview
 import grinsRC, components
 from GenView import GenView
 					
-class _SourceView(GenView, docview.EditView):
+class _SourceView(GenView, docview.RichEditView):
 	def __init__(self, doc, bgcolor=None):
 		self.__showing = 0
-
+		self.__setting = 0
+		
 		# base init
 		GenView.__init__(self, bgcolor)
-		docview.EditView.__init__(self, doc)
+		docview.RichEditView.__init__(self, doc)
 
 		# view decor
 		self._dlgBar = win32ui.CreateDialogBar()
@@ -245,6 +246,7 @@ class _SourceView(GenView, docview.EditView):
 		self.__closecallback = None
 		self.__map0 = []
 		self.__map1 = []
+		self.__listener = None
 
 	def OnCreate(self, cs):
 		# create dialog bar and attach controls (though attachement effects are not used for buttons)
@@ -256,17 +258,22 @@ class _SourceView(GenView, docview.EditView):
 		self.__ok.attach_to_parent()
 		self.__apply.attach_to_parent()
 		self.__revert.attach_to_parent()
+		# disable the default wrap behavior
+		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
+		self.WrapChanged()
 
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
 		# redirect all command messages to self.OnCmd
 		self.GetParent().HookMessage(self.OnCmd, win32con.WM_COMMAND)
+		# allow to detect when the selection change
+		self.GetParent().HookNotify(self.onSelChanged, win32con.EN_SELCHANGE)	
+
 
 		# we are now showing of course
 		self.__showing = 1
 
 		# set text and readonly flag
-		self.SetWindowText(self.__text)
 		self.SetReadOnly(self.__readonly)
 		
 		# enable/dissable dialog bar components according to MFC convention 
@@ -277,7 +284,7 @@ class _SourceView(GenView, docview.EditView):
 	def OnCmd(self, params):
 		if not self.is_showing():
 			return
-		editCtrl = self.GetEditCtrl()
+		editCtrl = self.GetRichEditCtrl()
 		if not editCtrl: 
 			return
 
@@ -290,8 +297,9 @@ class _SourceView(GenView, docview.EditView):
 		# response/dispatch cmd
 		if hctrl == editCtrl.GetSafeHwnd():
 			if code == win32con.EN_CHANGE:
-				self.enableDlgBarComponent(self.__apply, 1)
-				self.enableDlgBarComponent(self.__revert, 1)
+				if self.GetModify() and not self.__setting:
+					self.enableDlgBarComponent(self.__apply, 1)
+					self.enableDlgBarComponent(self.__revert, 1)
 		elif id == self.__ok._id:
 			self.__ok_callback()
 		elif id == self.__apply._id:
@@ -311,9 +319,9 @@ class _SourceView(GenView, docview.EditView):
 
 	def __revert_callback(self):
 		self.SetWindowText(self.__text)
-		self.SetModifiedFlag(1)
 		self.enableDlgBarComponent(self.__apply, 0)
 		self.enableDlgBarComponent(self.__revert, 0)
+		self.SetModify(0)
 
 	def setclosecmd(self, cmdid):
 		self._closecmdid = cmdid
@@ -326,45 +334,9 @@ class _SourceView(GenView, docview.EditView):
 	def set_closecallback(self, callback):
 		self.__closecallback = callback
 
-	# Set the text to be shown
-	def settext(self, text):
-		self.__text = self.__convert2ws(text)
-		# if already visible, update text in window
-		if self.__showing:
-			self.SetWindowText(self.__text)
-			
 	def gettext(self):
 		return self.GetWindowText()
 
-	def select_chars(self, startchar, endchar, scroll = 1, pop = 0):
-		# the text between startchar and endchar will be selected.
-		for p0, p1 in self.__map0:
-			if p0 <= startchar:
-				startchar = p1 + (startchar - p0)
-				break
-		for p0, p1 in self.__map0:
-			if p0 <= endchar:
-				endchar = p1 + (endchar - p0)
-				break
-		startline = len(self.__map1) - 1
-		for p0, p1 in self.__map1:
-			startline = startline - 1
-			if p0 <= startchar:
-				startchar = p1 + (startchar - p0)
-				break
-		endline = len(self.__map1) - 1
-		for p0, p1 in self.__map1:
-			endline = endline - 1
-			if p0 <= endchar:
-				endchar = p1 + (endchar - p0)
-				break
-		self.SetSel(startchar, endchar, not scroll)
-		if pop: self.pop()
-
-	def is_changed(self):
-		# Return true or false depending on whether the source view has been changed.
-		return self.IsModified()
-	
 	def set_mother(self, mother):
 		self.__mother = mother
 
@@ -416,7 +388,82 @@ class _SourceView(GenView, docview.EditView):
 		if hasattr(self,'_obj_') and self._obj_:
 			self.GetParent().DestroyWindow()
 		self._cbdict = None
- 
 
+	# handler called by the system when the selection change
+	def onSelChanged(self, std, extra):
+		if self.__listener != None:
+			self.__listener.onSelChanged()
 
- 
+	# Called by the framework to close this window.
+	# XXX Spacial case for the source view. is it correct ???
+	# see as well code in TopLevelWindow (when you close directly the main window)
+	def OnClose(self):
+		if self.__closecallback is not None:
+			apply(apply, self.__closecallback)
+		elif self.__mother is not None:
+			self.__mother.close_callback()
+		else:
+			print "ERROR: You need to call _SourceView.setmother(self)"
+
+	#
+	# module interface
+	#
+	
+	def setListener(self, listener):
+		self.__listener = listener
+
+	def removeListener(self):
+		self.__listener = None
+
+	# Set the text to be shown
+	def settext(self, text):
+		self.__text = self.__convert2ws(text)
+		# if already visible, update text in window
+		if self.__showing:
+			# during the setting, the EN_CHANGE event is ignore
+			self.__setting = 1
+			self.SetWindowText(self.__text)
+			self.SetModify(0)
+			self.__setting = 0
+			
+	# select a part of the text
+	def select_chars(self, startchar, endchar, scroll = 1, pop = 0):
+		# the text between startchar and endchar will be selected.
+		for p0, p1 in self.__map0:
+			if p0 <= startchar:
+				startchar = p1 + (startchar - p0)
+				break
+		for p0, p1 in self.__map0:
+			if p0 <= endchar:
+				endchar = p1 + (endchar - p0)
+				break
+		startline = len(self.__map1) - 1
+		for p0, p1 in self.__map1:
+			startline = startline - 1
+			if p0 <= startchar:
+				startchar = p1 + (startchar - p0)
+				break
+		endline = len(self.__map1) - 1
+		for p0, p1 in self.__map1:
+			endline = endline - 1
+			if p0 <= endchar:
+				endchar = p1 + (endchar - p0)
+				break
+		self.SetSel((startchar, endchar))
+		if pop: self.pop()
+
+	def isChanged(self):
+		# Return true if the text has been changed.
+		return self.GetModify()
+					
+	# return true is there is any selection
+	def isSelected(self):
+		begin, end = self.GetSel()
+		return end-begin > 0
+
+	# return true if the system clipboard is empty
+	# XXX not implemented yet
+	def isClipboardEmpty(self):
+		# for now
+		return 0
+	
