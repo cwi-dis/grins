@@ -1095,7 +1095,7 @@ cmif_chan_attrs_ignore = {
 	# end new
 	'showBackground':0,	
 	'soundLevel':0,
-	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'subtype':0,
+	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'chsubtype':0,
 	}
 
 if settings.activeFullSmilCss:
@@ -1909,8 +1909,8 @@ class SMILWriter(SMIL):
 				if regAlign != None and regAlign != 'topLeft':
 					attrlist.append(('regAlign',regAlign))
 				
-		# for layout channel the subtype attribute is translated to grins:type attribute
-		subtype = ch.get('subtype')
+		# for layout channel the chsubtype attribute is translated to grins:type attribute
+		subtype = ch.get('chsubtype')
 		if subtype != None:
 			attrlist.append(('%s:type' % NSGRiNSprefix, subtype))
 

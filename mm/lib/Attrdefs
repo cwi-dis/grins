@@ -637,6 +637,9 @@
 	) fade 'Transition type' default
 	'The type of transition to perform' raw (smil2))
 	
+(chsubtype (string) '' 'Region type' default
+	'Type of region' raw (cmif smil2))
+
 (subtype (name) '' 'Transition subtype' default
 	'Further refinement of transition to perform' raw (smil2))
 	
@@ -695,5 +698,5 @@
 
 # region
 
-(showBackground (string) 'always' 'Show background' default
+(showBackground (enum always whenActive) always 'Show background' default
 	'show when node is active the background color or always' raw (smil2))
