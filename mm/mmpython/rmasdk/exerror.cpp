@@ -80,7 +80,7 @@ ExampleErrorSink::ErrorOccurred(const UINT8	unSeverity,
 				const char*	pMoreInfoURL
 				)
 {
-    char RMADefine[256]="Unknown";
+    char RMADefine[256]="\0";
 	IRMABuffer* pIRMABuffer=NULL;
 	if(m_pIRMAErrorMessages)
 		{
@@ -122,6 +122,9 @@ ExampleErrorSink::ErrorOccurred(const UINT8	unSeverity,
 			);
 #else
 	msg[0] = '\0';
+	if ( *RMADefine )
+		strcpy(msg, RMADefine);
+	else
 	if ( pUserString && *pUserString )
 		strcpy(msg, pUserString);
 	else
