@@ -2323,7 +2323,8 @@ class TextRenderer(Renderer):
 
 
 #################################
-DirectShowSdk=win32ui.GetDS()
+# DirectShow support
+from win32dxm import GraphBuilder
 
 class MediaRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
@@ -2348,7 +2349,8 @@ class MediaRenderer(Renderer):
 	def load(self,rurl):
 		self.release()
 		try:
-			self._builder = DirectShowSdk.CreateGraphBuilder()
+			import MediaChannel
+			self._builder = MediaChannel.GraphBuilder()
 		except:
 			self._builder=None
 
