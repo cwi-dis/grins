@@ -948,9 +948,12 @@ class HierarchyView(HierarchyViewDialog):
 		# Called when a file is dragged-and-dropped onto this HeirachyView
 		x, y, filename = params
 		# Convert to pixels.
-		if x < 1.0 and y < 1.0:
-			x = x * self.mcanvassize[0]
-			y = y * self.mcanvassize[1]
+		if not (0 <= x < 1 and 0 <= y < 1):
+			windowinterface.beep()
+			return
+		
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 
 		if maybenode is not None:
 			# but how did dropfile() get a node?? Nevertheless..
@@ -1013,10 +1016,12 @@ class HierarchyView(HierarchyViewDialog):
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
 		# Convert to absolute coordinates
-		if x < 1.0 and y < 1.0:
+		if not (0 <= x < 1 and 0 <= y < 1):
+			obj = None
+		else:
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
-		obj = self.whichhit(x, y)
+			obj = self.whichhit(x, y)
 
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
