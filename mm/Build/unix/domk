@@ -268,6 +268,7 @@ fi &&
 cd ../Extensions/X11/build.$ARCH &&
 if [ ! -f Setup ]
 then
+	xlibs=
 	if [ -d /usr/dt ]
 	then
 		MOTIF=yes
@@ -284,26 +285,29 @@ then
 	fi &&
 	if [ -f /usr/include/dmedia/moviefile.h ]
 	then
-		echo 'mv mvmodule.o -lmovieplay -lmoviefile -ldmedia' >> Setup
+		xlibs="$xlibs -lmovieplay -lmoviefile -ldmedia"
+		echo 'mv mvmodule.o' >> Setup
 	else
 		:
 	fi &&
 	echo >> Setup "\
 CHAMELEON=../../../..
 LIBHTMLW=\$(CHAMELEON)/lib/$ARCH/libhtmlw
-HTML HTMLmodule.o htmlevent.o -I\$(LIBHTMLW) ${MOTIF:+-I\$(MOTIF)/include} ${OPENWIN:+-I\$(OPENWIN)/include} \$(LIBHTMLW)/libhtmlw.a" &&
+HTML HTMLmodule.o htmlevent.o -I\$(LIBHTMLW) ${MOTIF:+-I\$(MOTIF)/include} ${OPENWIN:+-I\$(OPENWIN)/include}" &&
+	xlibs="$xlibs \$(LIBHTMLW)/libhtmlw.a" &&
 	if [ -f /usr/include/GL/glx.h ]
 	then
-		echo 'glX glXmodule.o -lGLw -lGL' >> Setup
+		xlibs="$xlibs -lGLw -lGL"
+		echo 'glX glXmodule.o' >> Setup
 	else
 		:
 	fi &&
 	echo >> Setup "\
-Mrm Mrmmodule.o mrmhierarchyobject.o ${MOTIF:+-I\$(MOTIF)/include -L\$(MOTIF)/lib -R\$(MOTIF)/lib} ${OPENWIN:+-I\$(OPENWIN)/include} -lMrm
-Xm Xmmodule.o Xmsupport.o xmevent.o ${MOTIF:+-I\$(MOTIF)/include -L\$(MOTIF)/lib -R\$(MOTIF)/lib} ${OPENWIN:+-I\$(OPENWIN)/include} -lXm -lXmu -lXext
+Mrm Mrmmodule.o mrmhierarchyobject.o ${MOTIF:+-I\$(MOTIF)/include -L\$(MOTIF)/lib -R\$(MOTIF)/lib} ${OPENWIN:+-I\$(OPENWIN)/include}
+Xm Xmmodule.o Xmsupport.o xmevent.o ${MOTIF:+-I\$(MOTIF)/include -L\$(MOTIF)/lib -R\$(MOTIF)/lib} ${OPENWIN:+-I\$(OPENWIN)/include}
 Xrm Xrmmodule.o ${OPENWIN:+-I\$(OPENWIN)/include}
 Xlib Xlibmodule.o regionobject.o ${OPENWIN:+-I\$(OPENWIN)/include}
-Xt Xtmodule.o XColor.o Xttypes.o Fontobject.o GCobject.o Pixmapobject.o wclassobject.o widgetobject.o display.o translations.o event.o -lXext -lXmu -lXt -lX11 -DUSE_EDITRES ${OPENWIN:+-I\$(OPENWIN)/include}"
+Xt Xtmodule.o XColor.o Xttypes.o Fontobject.o GCobject.o Pixmapobject.o wclassobject.o widgetobject.o display.o translations.o event.o -DUSE_EDITRES ${OPENWIN:+-I\$(OPENWIN)/include} $xlibs -lMrm -lXm -lXext -lXmu -lXt -lX11"
 else
 	:
 fi &&
@@ -352,16 +356,16 @@ ZLIBINC=\$(CHAMELEON)/lib/$ARCH/zlib
 PNGLIBS=\$(PNGLIB)/libpng.a
 ZLIBS=\$(ZLIBDIR)/libz.a
 imgformat imgformatmodule.o \$(SYSFLAGS)
-imgppm imgppmmodule.o -I\$(PBMINC) \$(SYSFLAGS) \$(PBMLIBS)
-imgpgm imgpgmmodule.o -I\$(PBMINC) \$(SYSFLAGS) \$(PBMLIBS)
-imgpbm imgpbmmodule.o -I\$(PBMINC) \$(SYSFLAGS) \$(PBMLIBS)
-imgtiff imgtiffmodule.o tif_stdio.o -I\$(TIFFINC) \$(SYSFLAGS) \$(TIFFLIBS)
+imgppm imgppmmodule.o -I\$(PBMINC) \$(SYSFLAGS)
+imgpgm imgpgmmodule.o -I\$(PBMINC) \$(SYSFLAGS)
+imgpbm imgpbmmodule.o -I\$(PBMINC) \$(SYSFLAGS)
+imgtiff imgtiffmodule.o tif_stdio.o -I\$(TIFFINC) \$(SYSFLAGS)
 imgcolormap imgcolormapmodule.o dither.o genmap.o mppm3.o \$(SYSFLAGS)
 imggif imggifmodule.o \$(SYSFLAGS)
 imgsgi imgsgimodule.o \$(SYSFLAGS)
 imgop imgopmodule.o \$(SYSFLAGS)
-${nocl:+imgjpeg imgjpegmodule.o -I\$(JPEGINC) -I\$(JPEGLIB) \$(SYSFLAGS) \$(JPEGLIBS)}
-imgpng imgpngmodule.o -I\$(PNGINC) -I\$(ZLIBINC) \$(SYSFLAGS) \$(PNGLIBS) \$(ZLIBS)
+${nocl:+imgjpeg imgjpegmodule.o -I\$(JPEGINC) -I\$(JPEGLIB) \$(SYSFLAGS)}
+imgpng imgpngmodule.o -I\$(PNGINC) -I\$(ZLIBINC) \$(SYSFLAGS) \$(PBMLIBS) \$(TIFFLIBS) ${nocl:+\$(JPEGLIBS)} \$(PNGLIBS) \$(ZLIBS)
 EOF
 else
 	:
