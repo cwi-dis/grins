@@ -830,7 +830,9 @@ class _Button:
 		# otherwise : crash
 		if shape == A_SHAPETYPE_RECT:
 			if self._color != dispobj._bgcolor:
-				self._dispobj.drawboxanchor(coordinates)
+				self._dispobj.drawboxanchor((coordinates[0], \
+				coordinates[1],coordinates[2]-coordinates[0], \
+				coordinates[3]-coordinates[1]))
 
 	# Destroy button
 	def close(self):
