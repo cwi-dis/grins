@@ -495,7 +495,7 @@ class BandwidthComputeDialog(ResDialog):
 		self._help = Button(self, win32con.IDHELP)
 		self.mustwait = 0
 		if not grab:
-			self.CreateWindow()
+			self.CreateWindow(parent)
 			self.ShowWindow(win32con.SW_SHOW)
 			self.UpdateWindow()
 		self._grab=grab
@@ -610,7 +610,7 @@ class _ProgressDialog(ResDialog):
 		self._curcur = None
 		self._curmax = None
 		self._cancel_pressed = 0
-		self.CreateWindow()
+		self.CreateWindow(parent)
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
 	
@@ -768,7 +768,7 @@ class ModelessMessageBox(ResDialog):
 	def __init__(self,text,title,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_MESSAGE_BOX,parent)
 		self._text= Static(self,grinsRC.IDC_STATIC1)
-		self.CreateWindow()
+		self.CreateWindow(parent)
 		self._text.attach_to_parent()
 		self.SetWindowText(title)
 		self._text.settext(text)
@@ -913,7 +913,7 @@ class CreateBoxDlg(ResDialog):
 	def __init__(self,text,callback,cancelCallback,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_CREATE_BOX1,parent)
 		self._text= Static(self,grinsRC.IDC_STATIC1)
-		self.CreateWindow()
+		self.CreateWindow(parent)
 		self._text.attach_to_parent()
 		self._text.settext(text)
 		self._callback=callback
@@ -984,7 +984,7 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	   parent = None,defaultindex=None):
 	dlg=SimpleSelectDlg(list,title,prompt,parent,defaultindex)
 	if grab==1:dlg.DoModal()
-	else:dlg.CreateWindow()
+	else:dlg.CreateWindow(parent)
 	return dlg
 
 
