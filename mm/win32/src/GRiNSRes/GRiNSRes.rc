@@ -1045,33 +1045,33 @@ IDD_EDITATTR_LS1O3 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
+    LTEXT           "Fill whole region:",IDC_21,174,7,60,8
     CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,238,6,24,10
     CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,263,
                     6,24,10
+    GROUPBOX        "Destination rendering",IDC_11,173,35,121,35
+    LTEXT           "Keep aspect ratio:",IDC_41,174,21,60,8
+    CONTROL         "off",IDC_42,"Button",BS_AUTORADIOBUTTON,238,20,24,10
+    CONTROL         "on",IDC_43,"Button",BS_AUTORADIOBUTTON,263,20,24,10
+    GROUPBOX        "Destination rendering anchor",IDC_31,173,72,121,27
+    LTEXT           "x",IDC_GROUP1,179,43,8,8
+    LTEXT           "y",IDC_GROUP1,207,42,8,8
+    LTEXT           "w",IDC_GROUP1,235,43,8,8
+    LTEXT           "h",IDC_GROUP1,263,43,8,8
     EDITTEXT        IDC_12,178,51,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_13,206,51,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_14,234,51,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_15,262,51,27,14,ES_AUTOHSCROLL
     COMBOBOX        IDC_32,179,82,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    GROUPBOX        "Destination rendering",IDC_11,173,35,121,35
-    LTEXT           "x",IDC_GROUP1,179,43,8,8
-    LTEXT           "y",IDC_GROUP1,207,42,8,8
-    LTEXT           "w",IDC_GROUP1,235,43,8,8
-    LTEXT           "h",IDC_GROUP1,263,43,8,8
-    GROUPBOX        "Destination rendering anchor",IDC_31,173,72,121,27
-    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
-    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
-                    WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "Fill whole region:",IDC_21,174,7,60,8
-    LTEXT           "Keep aspect ratio:",IDC_41,174,21,60,8
-    CONTROL         "off",IDC_42,"Button",BS_AUTORADIOBUTTON,238,20,24,10
-    CONTROL         "on",IDC_43,"Button",BS_AUTORADIOBUTTON,263,20,24,10
+    GROUPBOX        "Image quality",IDC_51,173,102,121,27
     COMBOBOX        IDC_52,179,112,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    GROUPBOX        "Image quality",IDC_51,173,102,121,27
+    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
 END
 
 IDD_EDITATTR_TF1 DIALOG DISCARDABLE  0, 0, 300, 164
