@@ -1,22 +1,61 @@
 __version__ = "$Id$"
 
-import MMNodeBase
 import MMAttrdefs
 from MMTypes import *
 from MMExc import *
 from SR import *
 from AnchorDefs import *
 import Duration
+from Hlinks import Hlinks
+import MMurl
+import settings
 
-class MMNodeContext(MMNodeBase.MMNodeContext):
+class MMNodeContext:
 	def __init__(self, nodeclass):
-		MMNodeBase.MMNodeContext.__init__(self, nodeclass)
+		self.nodeclass = nodeclass
+		self.uidmap = {}
+		self.channelnames = []
+		self.channels = []
+		self.channeldict = {}
+		self.hyperlinks = Hlinks()
+		self.dirname = None
 		self.nextuid = 1
 		self.editmgr = None
 		self.armedmode = None
 
+	def __repr__(self):
+		return '<MMNodeContext instance, channelnames=' \
+			+ `self.channelnames` + '>'
+
+	def setdirname(self, dirname):
+		if not self.dirname:
+			self.dirname = dirname
+			if not self.dirname:
+				self.dirname = '.'
+			if self.dirname[-1] <> '/':
+				self.dirname = self.dirname + '/'
+
+	def findurl(self, filename):
+		"Locate a file given by url-style filename."
+## 		import os
+## 		if os.name == 'posix':
+## 			# XXXX May also work for msdos, etc. (not for mac)
+## 			filename = os.path.expandvars(filename)
+## 			filename = os.path.expanduser(filename)
+		urltype, urlpath = MMurl.splittype(filename)
+		if urltype or filename[:1] == '/':
+			return filename
+		if self.dirname:
+			filename = MMurl.basejoin(self.dirname, filename)
+		return filename
+
 	def newnode(self, type):
 		return self.newnodeuid(type, self.newuid())
+
+	def newnodeuid(self, type, uid):
+		node = self.nodeclass(type, self, uid)
+		self.knownode(uid, node)
+		return node
 
 	def newuid(self):
 		while 1:
@@ -25,12 +64,39 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 			if not self.uidmap.has_key(uid):
 				return uid
 
+	def mapuid(self, uid):
+		if not self.uidmap.has_key(uid):
+			raise NoSuchUIDError, 'in mapuid()'
+		return self.uidmap[uid]
+
+	def knownode(self, uid, node):
+		if self.uidmap.has_key(uid):
+			raise DuplicateUIDError, 'in knownode()'
+		self.uidmap[uid] = node
+
 	def forgetnode(self, uid):
 		del self.uidmap[uid]
 
 	#
 	# Channel administration
 	#
+	def addchannels(self, list):
+		import MMNode
+		for name, dict in list:
+			c = MMNode.MMChannel(self, name)
+## 			for key, val in dict.items():
+## 				c[key] = val
+			c.attrdict = dict # we know the internals...
+			self.channeldict[name] = c
+			self.channelnames.append(name)
+			self.channels.append(c)
+
+	def getchannel(self, name):
+		try:
+			return self.channeldict[name]
+		except KeyError:
+			return None
+
 	def addchannel(self, name, i, type):
 		if name in self.channelnames:
 			raise CheckError, 'addchannel: existing name'
@@ -107,6 +173,9 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 	#
 	# Hyperlink administration
 	#
+	def addhyperlinks(self, list):
+		self.hyperlinks.addlinks(list)
+
 	def addhyperlink(self, link):
 		self.hyperlinks.addlink(link)
 
@@ -148,7 +217,15 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 	def geteditmgr(self):
 		return self.editmgr
 
-class MMChannel(MMNodeBase.MMChannel):
+class MMChannel:
+	def __init__(self, context, name):
+		self.context = context
+		self.name = name
+		self.attrdict = {}
+
+	def __repr__(self):
+		return '<MMChannel instance, name=' + `self.name` + '>'
+
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
 
@@ -161,10 +238,68 @@ class MMChannel(MMNodeBase.MMChannel):
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
 
+	#
+	# Emulate the dictionary interface
+	#
+	def __getitem__(self, key):
+		if self.attrdict.has_key(key):
+			return self.attrdict[key]
+		else:
+			# special case for background color
+			if key == 'bgcolor' and self.attrdict.has_key('base_window'):
+				pname = self.attrdict['base_window']
+				pchan = self.context.channeldict[pname]
+				return pchan['bgcolor']
+			raise KeyError, key
+
+	def __setitem__(self, key, value):
+		self.attrdict[key] = value
+
 	def __delitem__(self, key):
 		del self.attrdict[key]
 
-MMSyncArc = MMNodeBase.MMSyncArc
+	def has_key(self, key):
+		return self.attrdict.has_key(key)
+
+	def keys(self):
+		return self.attrdict.keys()
+
+	def get(self, key, default = None):
+		if self.attrdict.has_key(key):
+			return self.attrdict[key]
+		if key == 'bgcolor' and self.attrdict.has_key('base_window'):
+			pname = self.attrdict['base_window']
+			pchan = self.context.channeldict.get(pname)
+			if pchan:
+				return pchan.get('bgcolor', default)
+		return default
+
+# The Sync Arc class
+#
+# XXX This isn't used yet
+#
+class MMSyncArc:
+
+	def __init__(self, context):
+		self.context = context
+		self.src = None
+		self.dst = None
+		self.delay = 0.0
+
+	def __repr__(self):
+		return '<MMSyncArc instance, from ' + \
+			  `self.src` + ' to ' + `self.dst` + \
+			  ', delay ' + `self.delay` + '>'
+
+	def setsrc(self, srcnode, srcend):
+		self.src = (srcnode, srcend)
+
+	def setdst(self, dstnode, dstend):
+		self.dst = (dstnode, dstend)
+
+	def setdelay(self, delay):
+		self.delay = delay
+
 
 class MMNode_body:
 	"""Helper for looping nodes"""
@@ -183,9 +318,15 @@ class MMNode_body:
 	def stoplooping(self):
 		pass
 
-class MMNode(MMNodeBase.MMNode):
+class MMNode:
 	def __init__(self, type, context, uid):
-		MMNodeBase.MMNode.__init__(self, type, context, uid)
+		# ASSERT type in alltypes
+		self.type = type
+		self.context = context
+		self.uid = uid
+		self.attrdict = {}
+		self.values = []
+		self.playable = 1
 		self.parent = None
 		self.children = []
 ##		self.summaries = {}
@@ -194,6 +335,18 @@ class MMNode(MMNodeBase.MMNode):
 ##		self.isinfiniteloopnode = 0
 		self.looping_body_self = None
 		self.curloopcount = 0
+
+	#
+	# Return string representation of self
+	#
+	def __repr__(self):
+		try:
+			import MMAttrdefs
+			name = MMAttrdefs.getattr(self, 'name')
+		except:
+			name = ''
+		return '<MMNode instance, type=%s, uid=%s, name=%s>' % \
+		       (`self.type`, `self.uid`, `name`)
 
 	#
 	# Private methods to build a tree
@@ -210,6 +363,21 @@ class MMNode(MMNodeBase.MMNode):
 	def _setattr(self, name, value):
 		# ASSERT not self.attrdict.has_key(name)
 		self.attrdict[name] = value
+
+	#
+	# Public methods for read-only access
+	#
+	def GetType(self):
+		return self.type
+
+	def GetContext(self):
+		return self.context
+
+	def GetUID(self):
+		return self.uid
+
+	def MapUID(self, uid):
+		return self.context.mapuid(uid)
 
 	def GetParent(self):
 		return self.parent
@@ -252,27 +420,58 @@ class MMNode(MMNodeBase.MMNode):
 	def GetChild(self, i):
 		return self.children[i]
 
+	def GetValues(self):
+		return self.values
+
+	def GetValue(self, i):
+		return self.values[i]
+
+	def GetAttrDict(self):
+		return self.attrdict
+
+	def GetRawAttr(self, name):
+		if self.attrdict.has_key(name):
+			return self.attrdict[name]
+		raise NoSuchAttrError, 'in GetRawAttr()'
+
+	def GetRawAttrDef(self, name, default):
+		return self.attrdict.get(name, default)
+
+	def GetAttr(self, name):
+		if self.attrdict.has_key(name):
+			return self.attrdict[name]
+		raise NoSuchAttrError, 'in GetAttr'
+
+	def GetAttrDef(self, name, default):
+		return self.attrdict.get(name, default)
+
 	def GetInherAttr(self, name):
 		x = self
 		while x is not None:
-			if x.attrdict:
-				try:
-					return x.GetAttr(name)
-				except NoSuchAttrError:
-					pass
+			if x.attrdict and x.attrdict.has_key(name):
+				return x.attrdict[name]
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherAttr()'
 
 	def GetDefInherAttr(self, name):
 		x = self.parent
 		while x is not None:
-			if x.attrdict:
-				try:
-					return x.GetAttr(name)
-				except NoSuchAttrError:
-					pass
+			if x.attrdict and x.attrdict.has_key(name):
+				return x.attrdict[name]
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
+
+	def GetInherAttrDef(self, name, default):
+## 		try:
+## 			return self.GetInherAttr(name)
+## 		except NoSuchAttrError:
+## 			return default
+		x = self
+		while x is not None:
+			if x.attrdict and x.attrdict.has_key(name):
+				return x.attrdict[name]
+			x = x.parent
+		return default
 
 ## 	def GetSummary(self, name):
 ## 		if not self.summaries.has_key(name):
@@ -300,6 +499,27 @@ class MMNode(MMNodeBase.MMNode):
 			print 'Children:',
 			for child in self.children: print child.GetType(),
 			print
+
+	#
+	# Channel management
+	#
+	def GetChannel(self):
+		cname = self.GetInherAttrDef('channel', None)
+		if not cname:		# cname == '' or cname == None
+			return None
+		return self.context.channeldict.get(cname)
+
+	def GetChannelName(self):
+		c = self.GetChannel()
+		if c: return c.name
+		else: return 'undefined'
+
+	def GetChannelType(self):
+		c = self.GetChannel()
+		if c and c.has_key('type'):
+			return c['type']
+		else:
+			return ''
 
 	def SetChannel(self, c):
 		if c is None:
@@ -1165,7 +1385,7 @@ class MMNode(MMNodeBase.MMNode):
 
 
 	def GenAllSR(self, seeknode, getchannelfunc=None):
-		MMNodeBase.MMNode.getchannelfunc = getchannelfunc
+		MMNode.getchannelfunc = getchannelfunc
 		self.SetPlayability(getchannelfunc=getchannelfunc)
 		if not seeknode:
 			seeknode = self
@@ -1341,6 +1561,38 @@ class MMNode(MMNodeBase.MMNode):
 	#
 	def set_armedmode(self, mode):
 		self.armedmode = mode
+
+	#
+	# Playability depending on system/environment parameters
+	#
+	def SetPlayability(self, playable=1, getchannelfunc=None):
+		if playable:
+			playable = self._compute_playable()
+		if playable and self.type in leaftypes and getchannelfunc:
+			# For media nodes check that the channel likes
+			# the node
+			chan = getchannelfunc(self)
+			if not chan or not chan.getaltvalue(self):
+				playable = 0
+		self.playable = playable
+## 		for child in self.children:
+## 			child.SetPlayability(playable, getchannelfunc)
+
+	def IsPlayable(self):
+		if not hasattr(self, 'playable'):
+			self.SetPlayability(self.parent.IsPlayable(),
+					    self.getchannelfunc)
+		return self.playable
+
+	def _compute_playable(self):
+		all = settings.getsettings()
+		for setting in all:
+			if self.attrdict.has_key(setting):
+				ok = settings.match(setting,
+						    self.attrdict[setting])
+				if not ok:
+					return 0
+		return 1
 
 # Make a "deep copy" of an arbitrary value
 #
