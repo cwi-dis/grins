@@ -11,18 +11,13 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
 class TopLevel:
-	def __init__(self, main, filename):
+	def __init__(self, main, url):
 		self.waiting = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
 		self.main = main
-		# convert filename to URL
-		utype, url = MMurl.splittype(filename)
-		if not utype or utype not in ('http', 'file', 'ftp', 'rtsp'):
-			# assume filename using local convention
-			url = MMurl.pathname2url(filename)
-			utype, url = MMurl.splittype(url)
+		utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
 		dir, base = posixpath.split(url)
 		if not utype and not host:

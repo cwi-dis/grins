@@ -27,8 +27,8 @@ from MainDialog import MainDialog
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
+		import MMurl, TopLevel, windowinterface
 		self._tracing = 0
-		import TopLevel, windowinterface
 		self.nocontrol = 0	# For player compatability
 		self._closing = 0
 		self._mm_callbacks = {}
@@ -47,7 +47,7 @@ class Main(MainDialog):
 		MainDialog.__init__(self, 'GRiNS')
 		# first open all files
 		for file in files:
-			self.open_callback(file)
+			self.open_callback(MMurl.guessurl(file))
 		# then play them
 		for top in self.tops:
 			top.player.playsubtree(top.root)
