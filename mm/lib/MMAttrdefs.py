@@ -39,7 +39,6 @@ __version__ = "$Id$"
 #		attribute definition.  If this fails your tree is broken!
 
 
-from MMStat import _stat
 from MMExc import *
 import MMParser
 import sys
@@ -64,11 +63,11 @@ def readattrdefs(fp, filename):
 			attrname = parser.getnamevalue(None)
 			typedef = parser.gettypevalue(None)
 			xtypedef= typedef
-			if typedef[0] in ('tuple', 'list', \
+			if typedef[0] in ('tuple', 'list',
 					  'dict', 'namedict', 'attrdict'):
 				xtypedef = 'enclosed', typedef
-			defaultvalue = parser.getgenericvalue( \
-				usetypedef(xtypedef, \
+			defaultvalue = parser.getgenericvalue(
+				usetypedef(xtypedef,
 					   MMParser.MMParser.basicparsers))
 			labeltext = parser.getstringvalue(None)
 			displayername = parser.getnamevalue(None)
@@ -76,7 +75,7 @@ def readattrdefs(fp, filename):
 			if parser.peektoken() == ')':
 				inheritance = 'normal'
 			else:
-				inheritance = parser.getenumvalue( \
+				inheritance = parser.getenumvalue(
 				    ['raw', 'normal', 'inherited', 'channel'])
 			parser.close()
 			if dict.has_key(attrname):
@@ -91,7 +90,7 @@ def readattrdefs(fp, filename):
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
-		parser.reporterror(filename, \
+		parser.reporterror(filename,
 				'Syntax error: ' + msg, sys.stderr)
 		raise MSyntaxError, msg
 	except MTypeError, msg:
@@ -122,7 +121,6 @@ def readattrdefs(fp, filename):
 # Map a typedef to a (func, arg) pair.
 #
 def usetypedef(typedef, mapping):
-	##_stat('MMAttrdefs.usetypedef')
 	type, rest = typedef
 	func = mapping[type]
 	arg = None
@@ -140,7 +138,6 @@ def usetypedef(typedef, mapping):
 # Use the type definitions from the attrdefs table.
 #
 def useattrdefs(mapping):
-	##_stat('MMAttrdefs.useattrdefs')
 	dict = {}
 	for attrname in attrdefs.keys():
 		dict[attrname] = usetypedef(attrdefs[attrname][0], mapping)
@@ -149,16 +146,11 @@ def useattrdefs(mapping):
 
 # Functional interface to the attrdefs table.
 #
+_default = (('any', None), None, '', 'default', '',  'normal')
 def getdef(attrname):
-	##_stat('MMAttrdefs.getdef')
-	try:
-		return attrdefs[attrname]
-	except KeyError:
-		# Undefined attribute -- fake something reasonable
-		return (('any', None), None, '', 'default', '',  'normal')
+	return attrdefs.get(attrname, _default)
 #
 def getnames():
-	##_stat('MMAttrdefs.getnames')
 	names = attrdefs.keys()
 	names.sort()
 	return names
@@ -192,20 +184,17 @@ def showstats(a):
 # Get an attribute of a node according to the rules.
 #
 def getattr(node, attrname):
-	##_stat('MMAttrdefs.getattr')
 	if attrstats is not None:
 		if attrstats.has_key(attrname):
 			attrstats[attrname] = attrstats[attrname] + 1
 		else:
 			attrstats[attrname] = 1
 	# Check the cache
-	try:
-		rv = node.attrcache[attrname]
-		##_stat('cache hit: ' + attrname)
-		return rv
-	except (AttributeError, KeyError):
-		##_stat('cache miss: ' + attrname)
-		pass
+	if hasattr(node, 'attrcache'):
+		if node.attrcache.has_key(attrname):
+			return node.attrcache[attrname]
+	else:
+		node.attrcache = {}
 	#
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
@@ -229,10 +218,7 @@ def getattr(node, attrname):
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
 	# Update the cache
-	try:
-		node.attrcache[attrname] = attrvalue
-	except AttributeError:
-		node.attrcache = {attrname: attrvalue}
+	node.attrcache[attrname] = attrvalue
 	#
 	return attrvalue
 
@@ -248,7 +234,6 @@ def flushcache(node):
 # Get the default value for a node's attribute, *ignoring* its own value
 #
 def getdefattr(node, attrname):
-	##_stat('MMAttrdefs.getdefattr')
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
@@ -278,13 +263,11 @@ def getdefattr(node, attrname):
 				' for attr ' + `attrname`
 
 def valuerepr(name, value):
-	##_stat('MMAttrdefs.valuerepr')
 	import MMWrite
 	return MMWrite.valuerepr(value, getdef(name)[0])
 
 
 def parsevalue(name, string, context):
-	##_stat('MMAttrdefs.parsevalue')
 	import MMParser
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
@@ -327,3 +310,5 @@ def initattrdefs():
 # Call the initialization
 #
 attrdefs = initattrdefs()
+
+exists = attrdefs.has_key
