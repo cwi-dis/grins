@@ -50,8 +50,6 @@ class PlayerDialogBase:
 		self.__title = title
 		self.__coords = coords
 		self.__state = -1
-		self.__ugroups = []
-		self.__ugroupdict = {}
 		self.__channels = []
 		self.__channeldict = {}
 		self.menu_created = None
@@ -89,8 +87,6 @@ class PlayerDialogBase:
 			commandlist = self.stoplist)
 		if self.__channels:
 			self.setchannels()
-		if self.__ugroups:
-			self.setusergroups()
 
 	def hide(self):
 		"""Hide the control panel."""
@@ -109,33 +105,6 @@ class PlayerDialogBase:
 		self.__title = title
 		if self._window is not None:
 			self._window.settitle(title)
-
-	def setusergroups(self, ugroups = None):
-		if ugroups is None:
-			ugroups = self.__ugroups
-		else:
-			self.__ugroups = ugroups
-		menu = []
-		self.__ugroupdict = {}
-		for i in range(len(ugroups)):
-			name, title, onoff = ugroups[i]
-			self.__ugroupdict[name] = i
-			menu.append((title, (name,), 't', onoff))
-		if self.menu_created is not None:
-			w = self.menu_created.window
-		else:
-			w = self._window
-		if w is not None:
-			w.set_dynamiclist(USERGROUPS, menu)
-
-	def setusergroup(self, ugroup, onoff):
-		i = self.__ugroupdict.get(ugroup)
-		if i is None:
-			raise RuntimeError, 'unknown user group'
-		if self.__ugroups[i][2] == onoff:
-			return
-		self.__ugroups[i] = self.__ugroups[i][:2] + (onoff,)
-		self.setusergroups()
 
 	def setchannels(self, channels = None):
 		"""Set the list of channels.
@@ -210,7 +179,6 @@ class PlayerDialogBase:
 			if state == PAUSING:
 				w.set_commandlist(self.pauselist)
 			self.setchannels()
-			self.setusergroups()
 			if state != ostate:
 				w.set_toggle(PLAY, state != STOPPED)
 				w.set_toggle(PAUSE, state == PAUSING)
