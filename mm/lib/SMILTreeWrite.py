@@ -442,17 +442,15 @@ def getbgcoloratt(writer, node, attr):
 			return None
 		
 		bgcolor = node.GetRawAttr('bgcolor',None)
-		if bgcolor is None:
-			# no bg color defined on this node, it's a inherit value
-			bgcolor= 'inherit'
-		elif colors.rcolors.has_key(bgcolor or (0,0,0)):
+		if colors.rcolors.has_key(bgcolor or (0,0,0)):
 			bgcolor = colors.rcolors[bgcolor or (0,0,0)]
 		else:
 			bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
 		
 		return bgcolor 
 	except:
-		return None
+		# no attritute defined. It's a inherit value
+		return 'inherit'
 
 def getcmifattr(writer, node, attr, default = None):
 	val = MMAttrdefs.getattr(node, attr)
