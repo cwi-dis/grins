@@ -103,12 +103,10 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
-		if features.H_MODIFY_STRUCTURE in features.feature_set: # Allow structure node changes.
-			print "DEBUG: Adding structure modifying commands."
-			# mjvdg 12-oct-2000. I have a bad feeling that this is the _wrong_ thing to do.
-			self.pasteinteriorcommands = [
+		self.pasteinteriorcommands = [
 				PASTE_UNDER(callback = (self.pasteundercall, ())),
 				]
+
 		self.pastenotatrootcommands = [
 				PASTE_BEFORE(callback = (self.pastebeforecall, ())),
 				PASTE_AFTER(callback = (self.pasteaftercall, ())),
@@ -139,14 +137,14 @@ class HierarchyView(HierarchyViewDialog):
 			self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 
 			
-		else:			# TODO: clean this up. This should be later.
-			self.interiorcommands = []
-			self.pasteinteriorcommands = []
-			self.pastenotatrootcommands = []
-			self.notatrootcommands = [
-				DELETE(callback = (self.deletecall, ())),
-				CUT(callback = (self.cutcall, ())),
-				]
+##		else:			# TODO: clean this up. This should be later.
+##			self.interiorcommands = []
+##			self.pasteinteriorcommands = []
+##			self.pastenotatrootcommands = []
+##			self.notatrootcommands = [
+##				DELETE(callback = (self.deletecall, ())),
+##				CUT(callback = (self.cutcall, ())),
+##				]
 
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
@@ -164,10 +162,10 @@ class HierarchyView(HierarchyViewDialog):
 				ANCHORS(callback = (self.anchorcall, ())),
 				]
 
-		if features.H_MODIFY_STRUCTURE in features.feature_set:
-			print "DEBUG: Adding structure modifying commands."
-			self.slidecommands = self._getmediacommands(self.toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
-			self.rpcommands = self._getmediaundercommands(self.toplevel.root.context, slide = 1)
+		self.slidecommands = self._getmediacommands(self.toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
+
+		self.rpcommands = self._getmediaundercommands(self.toplevel.root.context, slide = 1)
+
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
@@ -187,7 +185,7 @@ class HierarchyView(HierarchyViewDialog):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
 
 	def _getmediaundercommands(self, ctx, slide = 0):
-		import settings
+		#import settings
 		heavy = not features.lightweight
 		rv = [
 			NEW_UNDER(callback = (self.createundercall, ())),
@@ -195,7 +193,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not slide:
 			rv.append(NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))))
 			rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
-			rv.append(NEW_UNDER_CHOICE(callback = (self.createunderintcall, ('bag',))))
+			#rv.append(NEW_UNDER_CHOICE(callback = (self.createunderintcall, ('bag',))))
 			rv.append(NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))))
 			if ctx.attributes.get('project_boston', 0):
 				rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
@@ -215,6 +213,7 @@ class HierarchyView(HierarchyViewDialog):
 			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
 		return rv
+
 
 	def _getmediacommands(self, ctx, slide = 0):
 		# Enable commands to edit the media
@@ -282,51 +281,52 @@ class HierarchyView(HierarchyViewDialog):
 		rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
 		return rv
 
-	def aftersetfocus(self):
-		import Clipboard
-		commands = self.commands
+	def __compute_commands(self, commands):
+		# Compute the commands for the current selected object.
+		# TODO: Make context menu setting within the StructureViews menu instead.
 		fnode = self.focusnode
 		fntype = fnode.GetType()	
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
-		if fnode.__class__ is SlideMMNode:
-			popupmenu = self.slide_popupmenu
-		elif fntype in MMNode.interiortypes or is_realpix:
-			popupmenu = self.interior_popupmenu
-			# if node has children, or if we don't know that the
-			# node has children (collapsed RealPix node), enable
-			# the TOCHILD command
-			if fnode.children or (is_realpix and not hasattr(fnode, 'expanded')):
-				commands = commands + self.navigatecommands[1:2]
-		else:
-			popupmenu = self.leaf_popupmenu
+
+		# Add realpix commands
 		if is_realpix:
 			commands = commands + self.rpcommands
+
+		# Add Slideshow nodes
 		if fnode.__class__ is SlideMMNode:
 			commands = commands + self.slidecommands
-		else:
+		else:			# else add really important commands...
 			commands = commands + self.noslidecommands
-			if self.toplevel.links.has_interesting():
+			if self.toplevel.links.has_interesting(): # ??!! -mjvdg
 				commands = commands + self.finishlinkcommands
 			if fntype in MMNode.interiortypes or \
 			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
-				commands = commands + self.interiorcommands
+				print "DEBUG: Adding interior commands."
+				print "DEBUG: interior commands are: ", self.interiorcommands;
+				commands = commands + self.interiorcommands # Add interior structure modifying commands.
 			if fntype not in MMNode.interiortypes and \
 			   fnode.GetChannelType() != 'sound' and \
 			   not self.toplevel.links.islinksrc(fnode):
 				commands = commands + self.createanchorcommands
+
 		if fnode is not self.root:
 			# can't do certain things to the root
 			if fnode.__class__ is not SlideMMNode:
 				commands = commands + self.notatrootcommands + self.mediacommands
 			commands = commands + self.navigatecommands[0:1]
 			pchildren = fnode.GetParent().GetChildren()
+
 			findex = pchildren.index(fnode)
 			if findex > 0:
 				commands = commands + self.navigatecommands[3:4]
 			if findex < len(pchildren) - 1:
 				commands = commands + self.navigatecommands[2:3]
+
 		if fntype in MMNode.leaftypes and fnode.GetChannelType() != 'animate':
 			commands = commands + self.animatecommands[2:3]
+
+		# Enable "paste" commands depending on what is in the clipboard.
+		import Clipboard
 		t, n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			# can only paste if there's something to paste
@@ -343,8 +343,34 @@ class HierarchyView(HierarchyViewDialog):
 				if fnode is not self.root and fntype != 'slide':
 					# can't paste before/after root node
 					commands = commands + self.pastenotatrootcommands
+		# commands is not mutable here.
+		return commands;
 
+	
+	def aftersetfocus(self):
+		# Called after the focus has been set to a specific node.
+
+		commands = self.commands # Use a copy.. the original is a template.
+		fnode = self.focusnode;
+		fntype = self.focusnode.GetType();
+		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
+		
+		# Choose the pop-up menu.
+		if fnode.__class__ is SlideMMNode: # for a realmedia slideshow node.
+			popupmenu = self.slide_popupmenu
+		elif fntype in MMNode.interiortypes or is_realpix: # for all internal nodes.
+			popupmenu = self.interior_popupmenu
+			# if node has children, or if we don't know that the
+			# node has children (collapsed RealPix node), enable
+			# the TOCHILD command
+			if fnode.children or (is_realpix and not hasattr(fnode, 'expanded')):
+				commands = commands + self.navigatecommands[1:2]
+		else:
+			popupmenu = self.leaf_popupmenu	# for all leaf nodes.
+
+		commands = self.__compute_commands(commands); # Adds to the commands for the current focus node.		
 		self.setcommands(commands)
+		
 		self.setpopup(popupmenu)
 		self.setstate()
 
