@@ -6,7 +6,7 @@ import MMAttrdefs
 import posix
 import gl
 
-import image
+import imgfile
 
 from Channel import Channel
 from ChannelWindow import ChannelWindow
@@ -46,20 +46,22 @@ class ImageWindow(ChannelWindow):
 		else:
 			self.bgcolor = 255, 255, 255
 	#
-	def setimage(self, (filename, node)):
+	def armimage(self, (filename, node)):
 		self.parray = None
 		try:
-			self.xsize, self.ysize = image.imgsize(filename)
-		except (IOError, posix.error):
-			print 'Cannot get size of image file', `filename`
+			self.xsize, self.ysize, dummy = imgfile.getsizes(filename)
+		except imgfile.error, msg:
+			print 'Cannot get size of image file', filename, \
+				  ':', msg
 			return
 		self.node = node
 		self.scale = MMAttrdefs.getattr(node, 'scale')
 		self.bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
-		tempfile = image.cachefile(filename)
-		f = open(tempfile, 'r')
-		f.seek(8192)
-		self.parray = f.read()
+		try:
+			self.parray = imgfile.read(filename)
+		except imgfile.error, msg:
+			print 'Cannot read image file', filename, ':', msg
+	def showimage(self):
 		if self.wid:
 			gl.winset(self.wid)
 			self.render()
@@ -84,16 +86,21 @@ class ImageChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos']
-	node_attrs = ['file', 'duration', 'bgcolor', 'scale']
+	chan_attrs = ['winsize', 'winpos', 'visible', 'border']
+	node_attrs = ['file', 'duration', 'bgcolor', 'scale', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
 		self.window = ImageWindow().init(name, attrdict)
+		self.armed_node = 0
 		return self
 	#
 	def show(self):
-		self.window.show()
+		if self.may_show():
+			self.window.show()
+			if self.no_border():
+				gl.noborder()
+				gl.winconstraints()
 	#
 	def hide(self):
 		self.window.hide()
@@ -117,7 +124,14 @@ class ImageChannel(Channel):
 			return Channel.getduration(self, node)
 	#
 	def play(self, (node, callback, arg)):
-		self.showimage(node)
+		if not self.is_showing():
+			callback(arg)
+			return
+	        if node <> self.armed_node:
+		    print 'ImageChannel: node not armed'
+		    self.arm(node)
+		self.armed_node = None
+		self.window.showimage()
 		wait = MMAttrdefs.getattr(node, 'wait_for_close')
 		if wait:
 			self.player.freeze() # Should have another interface
@@ -130,8 +144,11 @@ class ImageChannel(Channel):
 	def reset(self):
 		self.window.clear()
 	#
-	def showimage(self, node):
-		self.window.setimage(self.getfilename(node), node)
+	def arm(self, node):
+		if not self.is_showing():
+			return
+		self.window.armimage(self.getfilename(node), node)
+		self.armed_node = node
 	#
 	def getfilename(self, node):
 		return MMAttrdefs.getattr(node, 'file')

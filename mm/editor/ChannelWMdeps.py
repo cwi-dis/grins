@@ -4,6 +4,7 @@
 
 from MMExc import *
 import MMAttrdefs
+import time
 
 class Channel:
 	#
@@ -40,10 +41,40 @@ class Channel:
 		return self
 	#
 	def show(self):
-		self.showing = 1
+		if self.may_show():
+			self.showing = 1
 	#
 	def hide(self):
 		self.showing = 0
+
+	def flip_visible(self):
+		if self.attrdict.has_key('visible'):
+			visible = self.attrdict['visible']
+		else:
+			visible = 1
+		visible = (not visible)
+		self.attrdict['visible'] = visible
+		if visible:
+			self.show()
+		else:
+			self.hide()
+			
+	def check_visible(self):
+		if self.may_show():
+			self.show()
+		else:
+			self.hide()
+
+	def may_show(self):
+		if not self.attrdict.has_key('visible'):
+			return 1
+		else:
+			return self.attrdict['visible']
+
+	def no_border(self):
+		if self.attrdict.has_key('border'):
+			return not self.attrdict['border']
+		return 0
 	#
 	def is_showing(self):
 		return self.showing
@@ -59,6 +90,34 @@ class Channel:
 	#
 	def getduration(self, node):
 		return MMAttrdefs.getattr(node, 'duration')
+
+	#
+	# This function may be called before playing a node. It can make
+	# preparations for playing the node.
+	#
+	def arm(self, node):
+		pass
+
+	#
+	# This method calls the (probably overridden) arm method and times it.
+	#
+	def arm_and_measure(self, node):
+		now = time.millitimer()
+		try:
+			oldduration = node.GetRawAttr('arm_duration')
+		except NoSuchAttrError:
+			oldduration = -1
+		self.arm(node)
+		duration = (time.millitimer() - now)/1000.0
+		if oldduration < 0 or \
+			  abs(oldduration-duration) > 0.1*oldduration + 0.1:
+			# Only update if more than 10% difference
+			node.SetAttr('arm_duration', duration)
+			self.player.timing_changed = 1
+			print 'Arm-time now', duration, ', was', oldduration
+	def arm_only(self, node):
+		node.prearm_event = None
+		self.arm(node)
 	#
 	# Start playing a node.
 	#

@@ -21,25 +21,59 @@ import string
 import AL
 import aiff
 
+MAXQSIZE = 100*1024		# Max audio-queue size=100K
 
 from MMExc import *
 import MMAttrdefs
 
 from Channel import Channel
 
+class csfile():
+	def open(self, fname, mode):
+		self.cached = ''
+		self.f = open(fname, mode)
+		return self
+
+	def seek(self, arg):
+		self.cached = ''
+		return self.f.seek(arg)
+
+	def read(self, n):
+		if n <= len(self.cached):
+			rv = self.cached[:n]
+			self.cached = self.cached[n:]
+			self.f.seek(n, 1)
+			return rv
+		if self.cached:
+			rv1 = self.cached
+			self.cached = ''
+			self.f.seek(len(rv1),1)
+			return rv1 + self.read(n-len(rv1))
+		self.cached = ''
+		return self.f.read(n)
+
+	def readahead(self, n):
+		self.cached = self.f.read(n)
+		self.f.seek(-len(self.cached), 1)
+
+	def close(self):
+		self.f.close()
+			
 
 class SoundChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = []
-	node_attrs = ['file']
+	chan_attrs = ['visible']
+	node_attrs = ['file', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
-		self.info = self.prep = None
+		self.info = self.port = None
 		self.rate = 0.0
+		self.armed_node = None
+		self.armed_info = None
 		return self
 	#
 	def getduration(self, node):
@@ -51,72 +85,107 @@ class SoundChannel(Channel):
 			print 'cannot get duration for sound file ' + filename
 			return MMAttrdefs.getattr(node, 'duration')
 	#
-	def play(self, (node, callback, arg)):
+	def arm(self, node):
+		if not self.is_showing():
+			return
 		filename = self.getfilename(node)
 		try:
-			self.info = getinfo(filename)
-			self.prep = prepare(self.info)
+			self.armed_info = getinfo(filename)
+			prepare(self.armed_info)	# Do a bit of readahead
 		except IOError:
-			self.info = self.prep = None
+			self.armed_info = None
 			print 'cannot open sound file ' + filename
+			return
+		self.armed_node = node
+		
+	def play(self, (node, callback, arg)):
+		if not self.is_showing():
 			callback(arg)
 			return
+		if self.armed_node <> node:
+			print 'SoundChannel: not the armed node'
+			self.arm(node)
+			
+		if not self.armed_info:		# If the arm failed...
+			callback(arg)
+			return
+
+		self.old_info = self.info
+		self.info = self.armed_info
+		
+		self.armed_node = None
+		self.armed_info = None
+		
 		self.framestodo = self.info[2] # nsampframes
-		self.qid = \
-		    self.player.enter(0.0, 1, self._poll, (callback, arg))
+		if self.port == None or self.old_info[1] <> self.info[1] \
+			  or self.old_info[3] <> self.info[3] \
+			  or self.old_info[4] <> self.info[4]:
+			self.port, self.config = openport(self.info)
+	        dummy = self.player.enter(0.001, 0, self._poll, (callback, arg))
+		dummy = self.player.enter(0.001, 1, self.player.opt_prearm, node)
 	#
+	def readsamples(self, f, nsamples, width, chunk):
+		data = f.read(nsamples*width)
+		if len(data) < nsamples*width:
+			print 'short read from sound file, got', len(data), \
+				  'wanted',nsamples*width
+		if self.rate > 1.0:
+			ndata = ''
+			while len(data):
+				ndata = ndata + data[:int(chunk)*width]
+				data = data[int(chunk*self.rate)*width:]
+			data = ndata
+		return data		
+			
 	def _poll(self, cb_arg):
+		self.cb_arg = cb_arg
 		self.qid = None
 		f, nchannels, nsampframes, sampwidth, samprate, format = \
 			self.info
-		port, offset, blocksize = self.prep
 		framewidth = nchannels * sampwidth
 		sampspersec = nchannels * samprate
-		#fillable = port.getfillable()
-		FRAC = 0.1 # Fraction of a second to read at once
-		while self.framestodo > 0 and \
-				port.getfillable() >= FRAC*sampspersec:
-			# Read another FRAC sec of sound and send it
-			framestofill = \
-			    min(int(FRAC*sampspersec), self.framestodo)
-			nbytes = framestofill * framewidth
-			data = f.read(nbytes)
-			if len(data) < nbytes:
-				print 'short read from sound file'
-			if data == '':
-				self.framestodo = 0
-			else:
-				self.framestodo = self.framestodo - \
-					len(data) / framewidth
-				# XXX hope it's a whole multiple...
-			if self.rate > 1.0:
-				# Use only part of the data when
-				# playing at high speed.
-				todo = int(len(data)/self.rate)
-				# Round down to whole number of frames!
-				todo = (todo / framewidth) * framewidth
-				data = data[:todo]
-			if self.showing:
-				port.writesamps(data)
-			else:
-				port.writesamps('\0'*len(data))
-		if self.framestodo + port.getfilled() > 0:
-			self.qid = \
-				self.player.enter(0.1, 0, self._poll, cb_arg)
+		framestofill = min(self.port.getfillable(), self.framestodo)
+		data = self.readsamples(f, framestofill, framewidth, sampspersec/30)
+		if self.showing:
+			self.port.writesamps(data)
+		else:
+			self.port.writesamps('\0'*len(data))
+		self.framestodo = self.framestodo - framestofill
+		duration = self.port.getfilled()/float(sampspersec)
+		duration = duration - 0.5
+		duration = max(duration, 0.2)
+		if self.framestodo + self.port.getfilled() > 0:
+			self.qid = self.player.enter(duration, 0, \
+				  self._poll, cb_arg)
 		else:
 			self.stop()
 			callback, arg = cb_arg
 			callback(arg)
+
+	def unfill(self):
+		import al
+		f, nchannels, nsampframes, sampwidth, samprate, format = \
+			self.info
+		port = self.port
+		filled = int(port.getfilled() * self.rate)
+		port.closeport()
+		self.port = al.openport('SoundChannel', 'w', self.config)
+		f.seek(-filled*nchannels*sampwidth, 1)
+		
 	#
 	def setrate(self, rate):
+		if self.qid:
+			self.unfill()		
 		self.rate = rate
+		if self.qid:
+			self.player.cancel(self.qid)
+			self.qid = self.player.enter(0, 0, self._poll, self.cb_arg)
 	#
 	def stop(self):
-		if self.prep <> None:
-			port, offset, blocksize = self.prep
-			port.closeport()
+		if self.port <> None and self.armed_info == None:
+			self.port.closeport()
 			restore()
-			self.info = self.prep = None
+			self.info = self.port = None
 		if self.qid <> None:
 			self.player.cancel(self.qid)
 			self.qid = None
@@ -139,7 +208,7 @@ def getduration(filename):
 
 
 def getinfo(filename):
-	f = open(filename, 'r')
+	f = csfile().open(filename, 'r')
 	magic = f.read(4)
 	# Look for AIFF header as produced by recordaiff
 	if magic == 'FORM':
@@ -174,9 +243,7 @@ def getinfo(filename):
 	#
 	return f, nchannels, nsampframes, sampwidth, samprate, format
 
-
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
-	import al
 	if format == 'FORM':
 		type, size = aiff.read_chunk_header(f)
 		if type <> 'SSND':
@@ -184,16 +251,21 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 		offset, blocksize = aiff.read_ssnd_chunk(f)
 	else:
 		offset, blocksize = 0, 0
+	# For unknown reasons you get a queue that is bigger than you ask
+	# for. For that reason, we read a little more ahead
+	f.readahead(MAXQSIZE*sampwidth*nchannels)
+
+def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
+	import al
 	# Set sampling rate (can't be done at the port level)
 	# First get the new old sampling rate for restore()
 	al.getparams(AL.DEFAULT_DEVICE, sound_params)
 	pv = [AL.OUTPUT_RATE, int(samprate)]
 	al.setparams(AL.DEFAULT_DEVICE, pv)
-	# Compute queue size such that it can contain QSECS seconds of sound.
-	# Making it larger reduces the risk of running out of data,
-	# but increases the response time for pause commands.
-	QSECS = 0.3
-	queuesize = int(samprate * nchannels * QSECS)
+	# Compute queue size such that it can contain QSECS seconds of sound,
+	# but it shouldn't be bigger than 100K
+	QSECS = 10.0
+	queuesize = int(min(samprate * nchannels * QSECS, MAXQSIZE))
 	# Create a config object
 	config = al.newconfig()
 	config.setchannels(nchannels)
@@ -201,9 +273,11 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 	config.setqueuesize(queuesize)
 	# Create a port object
 	port = al.openport('SoundChannel', 'w', config)
+	# XXXX Comment by Guido, unintellegible by Jack (and not true in the
+	# XXXX source code):
 	# The file is positioned at the start of the sample,
 	# but the first 'offset' bytes must be skipped.
-	return port, offset, blocksize
+	return port, config
 
 
 # Save sound channel parameters for restore()
