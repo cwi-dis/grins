@@ -20,6 +20,7 @@ class TemporalView(TemporalViewDialog):
 		# Of course, I'll write it _later_.
 		self.selected_channels = []
 		self.selected_nodes = []
+		self.just_selected = 0	# prevents the callback from the editmanager from doing too much work.
 		
 		self.time = 0		# Currently selected "time" - in seconds.
 		self.zoomfactorx = 0	# Scale everything to this! Done in the Widgets for this
@@ -39,6 +40,13 @@ class TemporalView(TemporalViewDialog):
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 			]
+		self.navigatecommands = [
+			TOPARENT(callback = (self.toparent, ())),
+			TOCHILD(callback = (self.tochild, (0,))),
+			NEXTSIBLING(callback = (self.tosibling, (1,))),
+			PREVSIBLING(callback = (self.tosibling, (-1,))),
+			]
+
 
 	def show(self):
 		if self.is_showing():
@@ -62,6 +70,15 @@ class TemporalView(TemporalViewDialog):
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
 		self.showing = 0
+
+	def toparent(self):
+		print "Not implemented: TemporalView.toparent()"
+
+	def tochild(self):
+		print "Not implemented: TemporalView.tochild()"
+
+	def tosibling(self):
+		print "Not implemented: TemporalView.tosibling()"
 
 	def cleanup(self):
 		pass
@@ -99,6 +116,25 @@ class TemporalView(TemporalViewDialog):
 		else:
 			self.last_geometry = (0,0,0,0) # guessing the data type
 			
+
+	def update_popupmenu(self):
+		commands = self.commands
+		popupmenu = [self.no_popupmenu]	# there needs to be a default.
+		print "DEBUG: selected nodes: ", self.selected_nodes, len(self.selected_nodes)
+		if len(self.selected_nodes) != 1:
+			print "Warning: Multiple selection pop-ups not thought about yet."
+		else:
+			n = self.selected_nodes[0].node
+			if n.GetType() in MMNode.interiortypes:
+				popupmenu = self.interior_popupmenu
+				if n.children:
+					commands = commands + self.navigatecommands[1:2]
+			else:
+				popupmenu = self.leaf_popupmenu
+		self.setcommands(commands)
+		self.setpopup(popupmenu)
+
+
 ######################################################################
 		# Selection management.
 
@@ -110,9 +146,13 @@ class TemporalView(TemporalViewDialog):
 			i.unselect()
 
 	def select_node(self, node):
+		# Called back from the scene
+		self.just_selected = 1
 		self.selected_nodes.append(node)
+		self.update_popupmenu()
 
 	def unselect_nodes(self):
+		# Called back from the scene
 		for i in self.selected_nodes:
 			i.unselect()
 
@@ -132,6 +172,9 @@ class TemporalView(TemporalViewDialog):
 		self.destroy()
 
 	def globalfocuschanged(self, focustype, focusobject):
+		if self.just_selected:
+			self.just_selected = 0
+			return
 		if self.recurse_lock:
 			return
 		self.recurse_lock = 1

@@ -1,4 +1,4 @@
-_version__ = "$Id$"
+__version__ = "$Id$"
 
 # New hierarchy view implementation.
 

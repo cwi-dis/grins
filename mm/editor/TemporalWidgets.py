@@ -397,7 +397,7 @@ class TemporalWidgetFactory:
 			bob.nodewidgets = self.timecanvas.node_channel_mapping[c.name]
 		except Exception:
 			bob.nodewidgets = []
-			print "Warning: umm. Not sure."
+			print "Warning: Programmer IQ below comprehension threshold."
 		bob.setup()
 		return bob
 
@@ -765,6 +765,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.graph.DelWidget(self.w_outerbox)
 		self.graph.DelWidget(self.w_text)
 		self.graph.DelWidget(self.w_fbox)
+		self.graph.DelWidget(self.w_filltimebox)
 
 	def moveto(self, coords):
 		l,t,r,b = coords
@@ -783,6 +784,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 			f = (end_time-start_time) / (endfill_time - start_time)
 		except ZeroDivisionError:
 			f = 0
+		print "DEBUG: Let me introduce myself: ", self
 		print "DEBUG: Times are: ", self.node.GetTimes()
 		print "DEBUG: f is: ", f
 		# and
@@ -810,13 +812,17 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 			return 'undefined'
 		return self.node.GetChannel().GetLayoutChannel().name
 
-#	def select(self):
-#		Widgets.Widget.select(self)
-#		self.w_outerbox.set_color((255,255,255))
+	def select(self):
+		Widgets.Widget.select(self)
+		self.w_outerbox.set_color((255,255,255))
+	def unselect(self):
+		Widgets.Widget.unselect(self)
+		self.w_outerbox.set_color((0,0,0))
 
+#	def select(self):
+#		self.w_fbox.set_color((230,230,230))
 #	def unselect(self):
-#		Widgets.Widget.unselect(self)
-#		self.w_outerbox.set_color((0,0,0))
+#		self.w_fbox.set_color(CNODE)
 
 	def get_draggable(self, coords):
 		# return a box.
@@ -839,15 +845,10 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		pass
 
 	def is_hit(self, coords):
-		return self.w_fbox.is_hit(coords)
+		return self.w_fbox.is_hit(coords) or self.w_filltimebox.is_hit(coords)
 
 	def get_node_at(self, foobar):
 		return 0
-
-	def select(self):
-		self.w_fbox.set_color((230,230,230))
-	def unselect(self):
-		self.w_fbox.set_color(CNODE)
 
 	def set_channel_index(self, i):
 		self.channel_index = i;
@@ -966,27 +967,27 @@ class SeqMMWidget(MultiMMWidget):
 				ctime = self.subwidgets[i].GetTimes()
 				#print "DEBUG widget's times: ", ctime, self.subwidgets[i].node
 				cl = (ctime[0]-mytimes[0])*ppt + x
-				if ctime[1] > ctime[0]:
+				#if ctime[1] > ctime[0]:
 					#print "DEBUG  (using endtime=t1)"
-					cendtime = ctime[1]
-				elif ctime[2] > ctime[0]:
+				#	cendtime = ctime[1]
+				#elif ctime[2] > ctime[0]:
 					#print "DEBUG  (using endtime=t2)"
-					cendtime = ctime[2]
-				else:
-					cendtime = ctime[0]
+				cendtime = ctime[2]
+				#else:
+				#	cendtime = ctime[0]
 					#print "DEBUG  (using endtime=t0 :-( )"
 				cr = (cendtime-mytimes[0])*ppt + x
 				self.subwidgets[i].set_x(cl, cr)
 				self.subwidgets[i].recalc()
 				y1, y2 = self.subwidgets[i].get_y_end()
 				self.w_lines[i].moveto((prevx, prevy, cl, (y1+y2)/2))
-				x = x + BARWIDTH
+				#x = x + BARWIDTH
 				prevx = cr
 				prevy = (y1+y2)/2
 		else:
 			print "Error: undrawable node: ", self.node
 
-		self.w_endline.moveto((prevx, prevy, endx , (t+b)/2))
+		self.w_endline.moveto((prevx, prevy, endx , (t+b)/2-BARWIDTH))
 
 	def get_y_start(self):
 		if self.y_start_cached is not None:
@@ -1067,13 +1068,13 @@ class BarMMWidget(MultiMMWidget):
 		w = w - 2*BARWIDTH	# remember the size of the bars!
 		x = x + BARWIDTH
 		
-		if mytimes[1] > mytimes[0] or mytimes[2] > mytimes[0]:
-			if mytimes[1] > mytimes[0]:
-				endtime = mytimes[1]
-			elif mytimes[2] > mytimes[0]:
-				endtime = mytimes[2]
-			else:
-				assert 0 # this code should never be reached.
+		if mytimes[2] > mytimes[0]:
+			#if mytimes[1] > mytimes[0]:
+			#	endtime = mytimes[1]
+			#elif mytimes[2] > mytimes[0]:
+			endtime = mytimes[2]
+			#else:
+			#	assert 0 # this code should never be reached.
 			ppt = w/(endtime-mytimes[0])	# pixels per time
 			for i in self.subwidgets:
 				ctime = i.GetTimes()

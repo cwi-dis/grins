@@ -4,12 +4,18 @@ from ViewDialog import ViewDialog
 import WMEVENTS, windowinterface
 import MMAttrdefs
 from usercmd import *
+from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE, POPUP_HVIEW_NONE
 
 class TemporalViewDialog(ViewDialog):
 	adornments = {}
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'tview_')
+
+		# Sjoerd won't mind if I borrow these.
+		self.no_popupmenu = POPUP_HVIEW_NONE
+		self.interior_popupmenu = POPUP_HVIEW_STRUCTURE	
+		self.leaf_popupmenu = POPUP_HVIEW_LEAF
 
 	def show(self):
 		if self.is_showing() and self.window:
@@ -47,6 +53,10 @@ class TemporalViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.DragNode, self.ev_dragnode, None)
 		self.window.register(WMEVENTS.DropNode, self.ev_dropnode, None)
 
-	def setcommands(self, commandlist, title):
+	def setcommands(self, commandlist):
 		print 'DEBUG: setcommands',commandlist
 		self.window.set_commandlist(commandlist)
+
+	def setpopup(self, template):
+		print "DEBUG: Setting popup menu: ", template
+		self.window.setpopupmenu(template)
