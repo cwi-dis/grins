@@ -248,7 +248,6 @@ class Window:
 
 	def onMouseEvent(self,point, ev, params=None):
 		# Called from, for example, self.OnLButtonDown which is called from a view's mouse event.
-		cont, stop = 0, 1
 		rv = self.__recurse(point)
 		if type(rv) is type(()):
 			wnd, (x, y, buttons) = rv
