@@ -429,19 +429,22 @@ class SMIL:
 		    'autoReverse': 'false',
 		    }
 
-	__transitionFilter_extra = {'type':None,
+	__transitionFilter_transition = {'type':None,
 			      'subtype':None,
 				  'mode':'in',
 			      'fadeColor':None,
-			}
+				}
+	__transitionModifiers = {'horzRepeat':'1',
+			      'vertRepeat':'1',
+			      'borderWidth':'0',
+			      'borderColor':None,
+				  }
 
 	from settings import profileExtensions
 	
 	if profileExtensions.get('SplineAnimation'):
 		__animate_attrs_extra['keySplines'] = None
 		__animate_attrs_extra['keyTimes'] = None
-	if profileExtensions.get('InlineTransitions'):
-		__animate_elements.append('transitionFilter')
 
 	attributes['animateMotion'] = __animate_attrs_core.copy()
 	attributes['animateMotion'].update(__animate_attrs_extra)
@@ -459,9 +462,11 @@ class SMIL:
 	attributes['set'] = __animate_attrs_core.copy()
 
 	if profileExtensions.get('InlineTransitions'):
+		__animate_elements.append('transitionFilter')
 		attributes['transitionFilter'] = __animate_attrs_core.copy()
 		attributes['transitionFilter'].update(__animate_attrs_extra)
-		attributes['transitionFilter'].update(__transitionFilter_extra)
+		attributes['transitionFilter'].update(__transitionFilter_transition)
+		attributes['transitionFilter'].update(__transitionModifiers)
 		del attributes['transitionFilter']['attributeName']
 		del attributes['transitionFilter']['attributeType']
 
