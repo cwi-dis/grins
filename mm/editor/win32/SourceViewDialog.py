@@ -13,6 +13,7 @@ class SourceViewDialog:
 		self._replaceText = None
 		self._findOptions = (0,0)
 		self.__selChanged = 1
+		self.__replacing = 0
 		
 	def __setCommonCommandList(self):
 		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ())),
@@ -126,7 +127,9 @@ class SourceViewDialog:
 	def onSelChanged(self):
 		self.__updateCommandList()
 		self.__selChanged = 1
-
+		if not self.__replacing and self._findReplaceDlg != None:
+			self._findReplaceDlg.enableReplace(0)
+					
 	# this call back is called when the content of the clipboard change (or may have changed)
 	def onClipboardChanged(self):
 		self.__updateCommandList()
@@ -220,6 +223,7 @@ class SourceViewDialog:
 			self.onFindNext()
 			return
 		
+		self.__replacing = 1
 		# save the text and options for the next time
 		self._findText = text
 
@@ -230,10 +234,14 @@ class SourceViewDialog:
 			# seek on the next occurrence found			
 			self.onFindNext()
 
+		self.__replacing = 0
+
 	def doReplaceAll(self, text, options, replaceText):
 		if not self.__textwindow:
 			return
 
+		self.__replacing = 1
+		
 		# save the text and options for the next time
 		self._findText = text
 		self._findOptions = options
@@ -248,6 +256,8 @@ class SourceViewDialog:
 			begin = self.getCurrentCharIndex()
 			nocc = nocc + 1
 			pos = self.__textwindow.findNext(begin, self._findText, self._findOptions)
+
+		self.__replacing = 0
 
 		windowinterface.showmessage("Replaced "+`nocc`+' occurrences')
 		
