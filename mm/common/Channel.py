@@ -747,10 +747,14 @@ class _ChannelThread(_ChannelThreadWM):
 		if not self.is_showing() or self.syncplay:
 			self.play_1()
 			return
+		thread_play_called = 0
 		if self.threads.armed:
 			self.threads.play()
+			thread_play_called = 1
 		self.do_play(node)
 		self.armdone()
+		if not thread_play_called:
+			self.playdone(0)
 
 	def playstop(self):
 		if debug:
@@ -889,9 +893,14 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			self.played.display.close()
 		self.played_display = self.armed_display
 		self.armed_display = None
+		thread_play_called = 0
 		if self.threads.armed:
 			self.threads.play()
+			thread_play_called = 1
+		self.do_play(node)
 		self.armdone()
+		if not thread_play_called:
+			self.playdone(0)
 
 def dummy_callback(arg):
 	pass
