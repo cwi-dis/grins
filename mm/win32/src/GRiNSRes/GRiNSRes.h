@@ -252,6 +252,7 @@
 #define IDD_EDITATTR_ITRANSITION        450
 #define IDD_EDITATTR_ANIMATEGENERAL     451
 #define IDD_EDITATTR_ANIMATEGENERALM    452
+#define IDI_UNKNOWN                     453
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -784,7 +785,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        453
+#define _APS_NEXT_RESOURCE_VALUE        454
 #define _APS_NEXT_COMMAND_VALUE         32900
 #define _APS_NEXT_CONTROL_VALUE         1452
 #define _APS_NEXT_SYMED_VALUE           104

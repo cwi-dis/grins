@@ -1945,7 +1945,7 @@ END
 
 IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,8,234,52,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
@@ -3192,6 +3192,7 @@ IDI_VIEWPORT            ICON    DISCARDABLE     "res\\viewport.ico"
 IDI_REGION              ICON    DISCARDABLE     "res\\region.ico"
 IDI_BRUSH               ICON    DISCARDABLE     "res\\brush.ico"
 IDI_ANIMATE             ICON    DISCARDABLE     "res\\animate.ico"
+IDI_UNKNOWN             ICON    DISCARDABLE     "res\\unknown.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
