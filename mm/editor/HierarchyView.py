@@ -69,7 +69,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.datadir = findfile('GRiNS-Icons')
 		
 		self.__add_commands()
-		HierarchyViewDialog.__init__(self)		
+		HierarchyViewDialog.__init__(self)
 
 	def __init_state(self):
 		# Sets the state of this view - i.e. selected nodes etc.
@@ -431,6 +431,8 @@ class HierarchyView(HierarchyViewDialog):
 		
 		self.refresh_scene_graph()
 		self.scene_graph.dont_draw_children = 0
+		if not self.selected_widget: # Which here is always true.
+			self.select_widget(self.scene_graph)
 		self.draw()
 
 	def refresh_scene_graph(self):
