@@ -42,6 +42,13 @@ else:
 	def pathname2url(pathname):
 		return pathname
 
+_url2pathname = url2pathname
+def url2pathname(url):
+	return _url2pathname(unquote(url))
+_pathname2url = pathname2url
+def pathname2url(p):
+	return quote(_pathname2url(p))
+
 # This really consists of two pieces:
 # (1) a class which handles opening of all sorts of URLs
 #     (plus assorted utilities etc.)
@@ -59,14 +66,11 @@ def urlopen(url, data=None):
 		return _urlopener.open(url)
 	else:
 		return _urlopener.open(url, data)
-def urlretrieve(url, filename=None):
+def urlretrieve(url, filename=None, reporthook=None):
 	global _urlopener
 	if not _urlopener:
 		_urlopener = FancyURLopener()
-	if filename:
-		return _urlopener.retrieve(url, filename)
-	else:
-		return _urlopener.retrieve(url)
+        return _urlopener.retrieve(url, filename, reporthook)
 def urlcleanup():
 	if _urlopener:
 		_urlopener.cleanup()
@@ -104,6 +108,7 @@ class URLopener:
 		# Undocumented feature: you can use a different
 		# ftp cache by assigning to the .ftpcache member;
 		# in case you want logically independent URL openers
+		# XXX This is not threadsafe.  Bah.
 
 	def __del__(self):
 		self.close()
@@ -170,7 +175,7 @@ class URLopener:
 	# External interface
 	# retrieve(url) returns (filename, None) for a local object
 	# or (tempfilename, headers) for a remote object
-	def retrieve(self, url, filename=None):
+	def retrieve(self, url, filename=None, reporthook=None):
 		url = unwrap(url)
 		if self.tempcache and self.tempcache.has_key(url):
 			return self.tempcache[url]
@@ -199,10 +204,21 @@ class URLopener:
 			self.tempcache[url] = result
 		tfp = open(filename, 'wb')
 		bs = 1024*8
+		size = -1
+		blocknum = 1
+		if reporthook:
+			if headers.has_key("content-length"):
+                            size = int(headers["Content-Length"])
+			reporthook(0, bs, size)
 		block = fp.read(bs)
+		if reporthook:
+			reporthook(1, bs, size)
 		while block:
 			tfp.write(block)
 			block = fp.read(bs)
+			blocknum = blocknum + 1
+			if reporthook:
+				reporthook(blocknum, bs, size)
 		fp.close()
 		tfp.close()
 		del fp
@@ -219,6 +235,7 @@ class URLopener:
 			host, selector = splithost(url)
 			if host:
 				user_passwd, host = splituser(host)
+				host = unquote(host)
 			realhost = host
 		else:
 			host, selector = url
@@ -236,7 +253,7 @@ class URLopener:
 					selector = "%s://%s%s" % (urltype,
 								  realhost,
 								  rest)
-			print "proxy via http:", host, selector
+			#print "proxy via http:", host, selector
 		if not host: raise IOError, ('http error', 'no host given')
 		if user_passwd:
 			import base64
@@ -289,6 +306,7 @@ class URLopener:
 		import gopherlib
 		host, selector = splithost(url)
 		if not host: raise IOError, ('gopher error', 'no host given')
+		host = unquote(host)
 		type, selector = splitgophertype(selector)
 		selector, query = splitquery(selector)
 		selector = unquote(selector)
@@ -320,7 +338,6 @@ class URLopener:
 		host, port = splitport(host)
 		if not port and socket.gethostbyname(host) in (
 			  localhost(), thishost()):
-			file = unquote(file)
 			return addinfourl(
 				open(url2pathname(file), 'rb'),
 				headers, 'file:'+file)
@@ -334,6 +351,9 @@ class URLopener:
 		user, host = splituser(host)
 		if user: user, passwd = splitpasswd(user)
 		else: passwd = None
+		host = unquote(host)
+		user = unquote(user or '')
+		passwd = unquote(passwd or '')
 		host = socket.gethostbyname(host)
 		if not port:
 			import ftplib
@@ -341,10 +361,12 @@ class URLopener:
 		else:
 			port = int(port)
 		path, attrs = splitattr(path)
+		path = unquote(path)
 		dirs = string.splitfields(path, '/')
 		dirs, file = dirs[:-1], dirs[-1]
 		if dirs and not dirs[0]: dirs = dirs[1:]
 		key = (user, host, port, string.joinfields(dirs, '/'))
+		# XXX thread unsafe!
 		if len(self.ftpcache) > MAXFTPCACHE:
 			# Prune the cache, rather arbitrarily
 			for k in self.ftpcache.keys():
@@ -364,9 +386,14 @@ class URLopener:
 				if string.lower(attr) == 'type' and \
 				   value in ('a', 'A', 'i', 'I', 'd', 'D'):
 					type = string.upper(value)
-			return addinfourl(
-				self.ftpcache[key].retrfile(file, type),
-				noheaders(), "ftp:" + url)
+                        (fp, retrlen) = self.ftpcache[key].retrfile(file, type)
+                        if retrlen >= 0:
+                            import mimetools, StringIO
+                            headers = mimetools.Message(StringIO.StringIO(
+                                'Content-Length: %d\n' % retrlen))
+                        else:
+                            headers = noheaders()
+                        return addinfourl(fp, headers, "ftp:" + url)
 		except ftperrors(), msg:
 			raise IOError, ('ftp error', msg), sys.exc_info()[2]
 
@@ -533,13 +560,11 @@ def noheaders():
 # Class used by open_ftp() for cache of open FTP connections
 class ftpwrapper:
 	def __init__(self, user, passwd, host, port, dirs):
-		self.user = unquote(user or '')
-		self.passwd = unquote(passwd or '')
+		self.user = user
+		self.passwd = passwd
 		self.host = host
 		self.port = port
-		self.dirs = []
-		for dir in dirs:
-			self.dirs.append(unquote(dir))
+		self.dirs = dirs
 		self.init()
 	def init(self):
 		import ftplib
@@ -572,7 +597,7 @@ class ftpwrapper:
 			# Try to retrieve as a file
 			try:
 				cmd = 'RETR ' + file
-				conn = self.ftp.transfercmd(cmd)
+				conn = self.ftp.ntransfercmd(cmd)
 			except ftplib.error_perm, reason:
 				if reason[:3] != '550':
 					raise IOError, ('ftp error', reason), \
@@ -583,9 +608,10 @@ class ftpwrapper:
 			# Try a directory listing
 			if file: cmd = 'LIST ' + file
 			else: cmd = 'LIST'
-			conn = self.ftp.transfercmd(cmd)
+			conn = self.ftp.ntransfercmd(cmd)
 		self.busy = 1
-		return addclosehook(conn.makefile('rb'), self.endtransfer)
+                # Pass back both a suitably decorated object and a retrieval length
+		return (addclosehook(conn[0].makefile('rb'), self.endtransfer), conn[1])
 	def endtransfer(self):
 		if not self.busy:
 			return
@@ -910,8 +936,13 @@ def urlencode(dict):
 # Proxy handling
 if os.name == 'mac':
 	def getproxies():
-		"""By convention the mac uses Internet Config to store proxies.
-		An HTTP proxy, for instance, is stored under the HttpProxy key."""
+		"""Return a dictionary of scheme -> proxy server URL mappings.
+
+		By convention the mac uses Internet Config to store
+		proxies.  An HTTP proxy, for instance, is stored under
+		the HttpProxy key.
+
+		"""
 		try:
 			import ic
 		except ImportError:
@@ -922,14 +953,6 @@ if os.name == 'mac':
 		except ic.error:
 			return {}
 		proxies = {}
-##		# Gopher:
-##		if config.has_key('UseGopherProxy') and config['UseGopherProxy']:
-##			try:
-##				value = config['GopherProxy']
-##			except ic.error:
-##				pass
-##			else:
-##				proxies['http'] = 'http://%s' % value
 		# HTTP:
 		if config.has_key('UseHTTPProxy') and config['UseHTTPProxy']:
 			try:
@@ -939,11 +962,12 @@ if os.name == 'mac':
 			else:
 				proxies['http'] = 'http://%s' % value
 		# FTP: XXXX To be done.
+		# Gopher: XXXX To be done.
 		return proxies
 				
 else:
 	def getproxies():
-		"""Return a dictionary of protocol scheme -> proxy server URL mappings.
+		"""Return a dictionary of scheme -> proxy server URL mappings.
 	
 		Scan the environment for variables named <scheme>_proxy;
 		this seems to be the standard convention.  If you need a
@@ -977,6 +1001,10 @@ def test1():
 	print round(t1 - t0, 3), 'sec'
 
 
+def reporthook(blocknum, blocksize, totalsize):
+    # Report during remote transfers
+    print "Block number: %d, Block size: %d, Total size: %d" % (blocknum, blocksize, totalsize)
+
 # Test program
 def test(args=[]):
 	if not args:
@@ -985,13 +1013,13 @@ def test(args=[]):
 			'file:/etc/passwd',
 			'file://localhost/etc/passwd',
 			'ftp://ftp.python.org/etc/passwd',
-			'gopher://gopher.micro.umn.edu/1/',
+## 			'gopher://gopher.micro.umn.edu/1/',
 			'http://www.python.org/index.html',
 			]
 	try:
 		for url in args:
 			print '-'*10, url, '-'*10
-			fn, h = urlretrieve(url)
+			fn, h = urlretrieve(url, None, reporthook)
 			print fn, h
 			if h:
 				print '======'
