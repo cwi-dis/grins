@@ -1954,7 +1954,7 @@ class ChannelWindow(Channel):
 		out_trans = self.gettransition(node, 'transOut')
 		if out_trans <> None:
 			outtransdur = out_trans['dur']
-			outtranstime = node.start_time+self.armed_duration-outtransdur
+			outtranstime = node.start_time+node.calcfullduration()-outtransdur
 			self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
 					  self.schedule_out_trans, (out_trans, outtranstime))
 		if in_trans <> None and self.window:
