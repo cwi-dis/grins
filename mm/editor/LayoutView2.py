@@ -11,7 +11,9 @@ import features
 import windowinterface
 
 ALL_LAYOUTS = '(All Channels)'
-	
+
+debug = 0
+
 ###########################
 # helper class to build tree from list
 
@@ -91,15 +93,19 @@ class Node:
 			child.applyOnAllNode(fnc, params)
 
 	def select(self):
+		if debug: print 'Node.select : ',self.getName()
 		if self.isShowed():
+			if debug: print 'Node.select: graphic select'
 			self._selecting = 1
 			self._graphicCtrl.select()
 			self._selecting = 0
 
 	def onUnselected(self):
+		if debug: print 'Node.Unselected : ',self.getName()
 		self._ctx.onPreviousUnselect()
 
 	def hide(self):
+		if debug: print 'Node.hide: ',self.getName()
 		if self._graphicCtrl != None:
 			if self._parent != None:
 				if self._parent._graphicCtrl != None:
@@ -119,6 +125,8 @@ class Node:
 			self._graphicCtrl.setAttrdict(self._curattrdict)
 
 	def updateAllAttrdict(self):
+		if not self.isShowed():
+			return
 		self.updateAttrdict()
 		for child in self._children:
 			child.updateAllAttrdict()
@@ -133,6 +141,7 @@ class Node:
 		return 0		
 
 	def toShowedState(self):
+		if debug: print 'Node.toShowState',self.getName()
 		node = self
 		nodeToShow = []
 		while node != None:
@@ -142,9 +151,13 @@ class Node:
 			node = node._parent
 		nodeToShow.reverse()
 		for node in nodeToShow:
-			node.show()
+			if node.getNodeType() != TYPE_VIEWPORT:
+				if debug: print 'Node.toShowState show parent',node.getName()
+				node.show()
+		if debug: print 'Node.toShowState end'
 
 	def toHiddenState(self):
+		if debug: print 'Node.toHiddenState',self.getName()
 		if not self._wantToShow:
 			return
 		self._wantToShow = 0
@@ -179,6 +192,7 @@ class Region(Node):
 		self._curattrdict['z'] = self._nodeRef.GetAttrDef('z', 0)
 	
 	def show(self):
+		if debug: print 'Region.show : ',self.getName()
 		if self._wantToShow and self._parent._graphicCtrl != None:
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 			self._graphicCtrl.showName(self.getShowName())		
@@ -222,6 +236,7 @@ class Region(Node):
 
 	def onSelected(self):
 		if not self._selecting:
+			if debug: print 'Region.onSelected : ',self.getName()
 			self._ctx.onPreviousSelectRegion(self)
 
 	def onGeomChanging(self, geom):
@@ -298,9 +313,11 @@ class MediaRegion(Region):
 
 	def onSelected(self):
 		if not self._selecting:
+			if debug: print 'Media.onSelected : ',self.getName()
 			self._ctx.onPreviousSelectMedia(self)
 
 	def show(self):
+		if debug: print 'Media.show : ',self.getName()
 		if self._parent._graphicCtrl == None:
 			return
 
@@ -372,10 +389,12 @@ class Viewport(Node):
 		self._curattrdict['wingeom'] = (self.currentX,self.currentY,w,h)
 
 	def show(self):
+		if debug: print 'Viewport.show : ',self.getName()
 		self._graphicCtrl = self._ctx.previousCtrl.newViewport(self._curattrdict, self._name)
 		self._graphicCtrl.addListener(self)
 		
 	def showAllNodes(self):
+		if debug: print 'Viewport.showAllNodes : ',self.getName()
 		self.show()
 		for child in self._children:
 			child.showAllNodes()
@@ -401,6 +420,9 @@ class Viewport(Node):
 	#
 
 	def updateAllAttrdict(self):
+		if not self.isShowed():
+			return
+		if debug: print 'LayoutView.updateAllAttrdict:',self.getName()
 		Node.updateAllAttrdict(self)
 		
 		# for now refresh all
@@ -409,6 +431,7 @@ class Viewport(Node):
 		
 	def onSelected(self):
 		if not self._selecting:
+			if debug: print 'Viewport.onSelected : ',self.getName()
 			self._ctx.onPreviousSelectViewport(self)
 
 	def onGeomChanging(self, geom):
@@ -782,19 +805,24 @@ class LayoutView2(LayoutViewDialog2):
 		self.displayViewport(saveCurrentViewport.getNodeRef())
 		self.updateFocus()
 
-	def updateFocus(self):		
+	def updateFocus(self):
+		if debug: print 'LayoutView.updateFocus:',self.currentFocusType,' focusobject=',self.currentFocus		
 		# check is the focus is still valid
 		# XXX this call should be exist. Normaly all view which are responsibled of delete a node
 		# should change the global focus as well if it points on the deleted node
 		if not self.isValidFocus():
+			if debug: print 'LayoutView.updateFocus: no valid focus'
 			self.unselect()
 			return
 		
 		if self.currentFocusType == 'MMNode':
+			if debug: print 'LayoutView.updateFocus: focus on MMNode'
 			self.focusOnMMNode(self.currentFocus)
 		elif self.currentFocusType == 'MMChannel':
+			if debug: print 'LayoutView.updateFocus: focus on MMChannel'
 			self.focusOnMMChannel(self.currentFocus)
 		else:
+			if debug: print 'LayoutView.updateFocus: unknow focus type'
 			self.unselect()
 
 	def unselect(self):
@@ -821,6 +849,7 @@ class LayoutView2(LayoutViewDialog2):
 			return 1
 		
 	def globalfocuschanged(self, focustype, focusobject):
+		if debug: print 'LayoutView.globalfocuschanged focustype=',focustype,' focusobject=',focusobject
 		self.currentFocus = focusobject
 		self.currentFocusType = focustype
 		if self.myfocus is not None and focusobject is self.myfocus:
@@ -834,6 +863,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateFocus()
 		
 	def setglobalfocus(self, focustype, focusobject):
+		if debug: print 'LayoutView.globalfocuschanged focustype=',focustype,' focusobject=',focusobject
 		self.myfocus = focusobject
 		self.editmgr.setglobalfocus(focustype, focusobject)
 		
@@ -847,11 +877,14 @@ class LayoutView2(LayoutViewDialog2):
 		self.destroy()
 	
 	def updateRegionTree(self):
+		if debug: print 'LayoutView.updateRegionTree begin'
 		# We assume here that no region has been added or supressed
 		viewportRefList = self.getViewportRefList()
 		for viewportRef in viewportRefList:
 			viewportNode = self.getViewportNode(viewportRef)
+			if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
 			viewportNode.updateAllAttrdict()
+		if debug: print 'LayoutView.updateRegionTree end'
 			
 	def removeAllMediaNodeList(self):
 		if len(self.currentMediaNodeListShowed) > 0:
@@ -929,6 +962,7 @@ class LayoutView2(LayoutViewDialog2):
 						
 	# general method to select a node
 	def select(self, nodeRef):
+		if debug: print 'LayoutView.select: node ref =',nodeRef
 		nodeType = self.getNodeType(nodeRef)
 
 		if nodeType != None:
@@ -937,10 +971,12 @@ class LayoutView2(LayoutViewDialog2):
 			# display the right viewport
 			viewportRef = self.getViewportRef(nodeRef)
 			if self.currentViewport == None or viewportRef != self.currentViewport.getNodeRef():
+				if debug: print 'LayoutView.select: change viewport =',viewportRef
 				self.displayViewport(viewportRef)
 
 			# select the node in layout area
 			node = self.getNode(nodeRef)
+			if debug: print 'LayoutView.select: node =',node
 			node.toShowedState()
 			node.select()
 
@@ -1086,6 +1122,7 @@ class LayoutView2(LayoutViewDialog2):
 			return retList
 					
 	def displayViewport(self, viewportRef):
+		if debug: print 'LayoutView.displayViewport: change viewport =',viewportRef
 		if self.currentViewport != None:
 			self.currentViewport.hide()
 		self.currentViewport = self.getViewportNode(viewportRef)
