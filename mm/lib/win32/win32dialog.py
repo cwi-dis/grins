@@ -810,14 +810,10 @@ class TemplateDialog(ResDialog):
 
 	def OnOK(self):
 		which = self._select.getcursel()
+		self.close()
 		if 0 <= which <= len(self._descriptions):
 			rv = self._descriptions[which]
-##			if self._html_templates[0].getcheck():
-##				rv = rv + ('external_player.html',)
-##			else:
-##				rv = rv + ('embedded_player.html',)
 			self._cb(rv)
-		self.close()
 
 	def OnCancel(self):
 		self.close()
@@ -1144,10 +1140,10 @@ class ChannelUndefDlg(ResDialog):
 		self.EndDialog(win32con.IDCANCEL)
 
 	def OnOK(self):
-		if self._cb_ok:
-			text=self._chantext.gettext()
-			apply(self._cb_ok,(text,))
+		text=self._chantext.gettext()
 		self.close()
+		if self._cb_ok:
+			apply(self._cb_ok,(text,))
 
 	def OnCancel(self):
 		self.close()
@@ -1198,12 +1194,12 @@ class EnterKeyDlg(ResDialog):
 		self._bok.enable(not not ok)
 
 	def OnOK(self):
-		if self._cb_ok:
-			user=self._tuser.gettext()
-			org=self._torg.gettext()
-			key=self._tkey.gettext()
-			apply(self._cb_ok,(key, user, org))
+		user=self._tuser.gettext()
+		org=self._torg.gettext()
+		key=self._tkey.gettext()
 		self.close()
+		if self._cb_ok:
+			apply(self._cb_ok,(key, user, org))
 
 	def OnCancel(self):
 		self.close()
