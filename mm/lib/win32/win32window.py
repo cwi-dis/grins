@@ -2632,6 +2632,8 @@ class MSDrawContext(DrawContext):
 			self._selected = shapeList[n-1]
 		else:
 			self._selected = None
+		for shape in self._selections:
+			shape.invalidateDragHandles()
 
 	def select(self, shape, mode=SO_REPLACE):
 		# if we don't support multisel then set
@@ -2664,7 +2666,8 @@ class MSDrawContext(DrawContext):
 						self._selected = self._selections[n-1]
 					else:
 						self._selected = None
-					shape.invalidateDragHandles()
+			# update shape drag handles was either added or removed
+			shape.invalidateDragHandles()
 		self.notifyForSelChange()
 
 	def notifyForSelChange(self):
