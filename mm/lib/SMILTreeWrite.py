@@ -199,6 +199,9 @@ def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 		sign = '+'
 	else:
 		sign = ''
+	if prec >= 0:
+		# round value
+		val = val + 0.5 * 10.0 ** -prec
 	str = '%g' % val
 	if 'e' in str:
 		str, x = string.split(str, 'e')
@@ -221,17 +224,18 @@ def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 			str = str[:-1]
 		if str[-1] == '.':
 			str = str[:-1]
-	if prec >= 0:
-		if '.' in str:
-			str1, str2 = string.split(str, '.')
-		else:
-			str1 = str
-			str2 = ''
+	if prec >= 0 and '.' in str:
+		str1, str2 = string.split(str, '.')
 		if prec == 0:
 			str = str1
 		else:
 			str2 = str2 + '0'*prec
 			str = str1 + '.' + str2[:prec]
+			# still remove trailing zeros
+			while str[-1] == '0':
+				str = str[:-1]
+			if str[-1] == '.':
+				str = str[:-1]
 	while len(str) > 1 and str[0] == '0' and str[1] in '0123456789':
 		str = str[1:]
 	if not str:
@@ -2154,22 +2158,15 @@ class SMILWriter(SMIL):
 				shapeType = args[0]
 				if shapeType == A_SHAPETYPE_RECT or shapeType == A_SHAPETYPE_POLY or \
 						shapeType == A_SHAPETYPE_CIRCLE:
-					coords = ''
-					l = len(args)-1
-					n = 0
+					coords = []
 					for c in args[1:]:
-						# pixel coordinates
 						if type(c) == type(0):
-							coords = coords+'%d' % c
-						# relative coordinates
+							# pixel coordinates
+							coords.append('%d' % c)
 						else:
-							if int(c*10000) != int(c*100)*100:
-								coords = coords+fmtfloat(c*100, '%', 0, 2)
-							else:
-								coords = coords+'%d%%'%int(c*100)
-						n = n + 1
-						if n < l:
-							coords = coords+','
+							# relative coordinates
+							coords.append(fmtfloat(c*100, '%', prec = 2))
+					coords = string.join(coords, ',')
 					ok = 1
 				elif shapeType == A_SHAPETYPE_ALLREGION:
 					ok = 1
