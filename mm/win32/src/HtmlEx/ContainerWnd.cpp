@@ -202,8 +202,7 @@ void CContainerWnd::OnBeforeNavigate(LPCTSTR URL, long Flags, LPCTSTR TargetFram
 	char cmif[256]="";
 	char path[256]="";
 	char storestr[256]="";
-	char path1[256];
-	UINT count, index;
+	UINT index;
 
 	CString url((LPCTSTR) URL);
 
