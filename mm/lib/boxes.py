@@ -70,8 +70,8 @@ class Boxes:
 			msg = message
 		self._looping = 0
 		self.dialog = windowinterface.Dialog(None, msg, 0, 0,
-				[('', 'Done', (self.done_callback, ())),
-				 ('', 'Cancel', (self.cancel_callback, ()))])
+				[('Done', (self.done_callback, ())),
+				 ('Cancel', (self.cancel_callback, ()))])
 
 	def __del__(self):
 		self.close()
