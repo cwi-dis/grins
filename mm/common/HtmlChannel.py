@@ -8,6 +8,7 @@ from AnchorDefs import *
 import string
 import HTML
 import MMAttrdefs
+from MMExc import *
 import sys
 import windowinterface
 import urllib
@@ -24,6 +25,22 @@ if windowinterface.Version <> 'X':
 
 error = 'HtmlChannel.error'
 
+HtmlWidgets = {}
+
+def actionhook(widget, client_data, action, event, plist):
+## 	print widget, widget.Class()
+	if widget.Class() is not Xm.DrawingArea or \
+	   widget.Parent().Class() is not HTML.html:
+		return
+	try:
+		ch = HtmlWidgets[widget.Parent()]
+	except KeyError:
+		return
+	ch.actionhook(client_data, action, event, plist)
+
+import Xt, Xm
+Xt.AddActionHook(actionhook, None)
+
 class HtmlChannel(Channel.ChannelWindow):
 	node_attrs = Channel.ChannelWindow.node_attrs + ['bucolor', 'hicolor',
 							 'fgcolor', 'font']
@@ -32,6 +49,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.want_default_colormap = 1
 		self.htmlw = None
+		self.play_node = None
 		self.widget_name = normalize(name)
 		self.backlist = []
 
@@ -75,6 +93,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		#
 		self.htmlw = wd._form.CreateManagedWidget(
 			self.widget_name, HTML.html, wh)
+		HtmlWidgets[self.htmlw] = self
 		#
 		# Set callbacks.
 		#
@@ -83,7 +102,32 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.AddCallback('destroyCallback', self.cbdestroy, None)
 		self.htmlw.AddCallback('linkCallback', self.cblink, None)
 
+	def actionhook(self, cbarg, action, event, plist):
+		if not self.play_node:
+			return
+		if not self.played_anchor:
+			return
+		if action == 'select-start':
+			self.x = event.x
+			self.y = event.y
+			self.time = event.time
+			return
+		if action == 'extend-end':
+			if not self.time:
+				return
+			if event.time - self.time >= 500:
+				self.time = None
+				return
+			a = self.played_anchor
+			self._playcontext.anchorfired(self.play_node,
+						      [(a[A_ID], a[A_TYPE])],
+						      None)
+		if action == 'extend-adjust':
+			self.time = None
+			return
+
 	def cbdestroy(self, widget, userdata, calldata):
+		del HtmlWidgets[widget]
 		widget.FreeImageInfo()
 		if widget is self.htmlw:
 			self.htmlw = None
@@ -150,6 +194,20 @@ class HtmlChannel(Channel.ChannelWindow):
 				self.armed_str = '<H1>Cannot Open</H1>\n'+arg+'\n<P>\n'
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
+		self.armed_anchor = None
+		try:
+			alist = node.GetRawAttr('anchorlist')
+		except NoSuchAttrError:
+			alist = []
+		for i in range(len(alist)-1,-1,-1):
+			a = alist[i]
+			atype = a[A_TYPE]
+			if atype == ATYPE_WHOLE:
+				if self.armed_anchor:
+					print 'multiple whole-node anchors on node'
+				self.armed_anchor = a
+			elif atype in DestOnlyAnchors or atype == ATYPE_AUTO:
+				continue
 		return 1
 
 	_boldfonts = [('boldFont', 9.0),
@@ -165,6 +223,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
 		self.played_str = self.armed_str
+		self.played_anchor = self.armed_anchor
 		self.backlist = []
 		attrs = {}
 		fontspec = getfont(node)
@@ -208,7 +267,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			db.PutStringResource(
 				'*%s*foreground' % self.widget_name,
 				'#%02x%02x%02x' % self.getfgcolor(node))
-		htmlw.SetText(self.armed_str, '', '')
+		htmlw.SetText(self.played_str, '', '')
 		htmlw.MapWidget()
 		htmlw.UpdateDisplay()
 		self.fixanchorlist(node)
@@ -219,6 +278,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self.htmlw:
 			self.htmlw.UnmapWidget()
 			self.htmlw.SetText('', '', '')
+			self.play_node = None
+			self.played_str = ''
 
 	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
@@ -230,6 +291,8 @@ class HtmlChannel(Channel.ChannelWindow):
 	def cbanchor(self, widget, userdata, calldata):
 		if widget is not self.htmlw:
 			raise 'kaboo kaboo'
+		if self.played_anchor:
+			return
 		href = calldata.href
 		if href[:5] <> 'cmif:':
 			self.www_jump(href, 'GET', None, None)
@@ -251,6 +314,8 @@ class HtmlChannel(Channel.ChannelWindow):
 	def cbform(self, widget, userdata, calldata):
 		if widget is not self.htmlw:
 			raise 'kaboo kaboo'
+		if self.played_anchor:
+			return
 		href = calldata.href
 		list = map(None,
 			   calldata.attribute_names, calldata.attribute_values)
