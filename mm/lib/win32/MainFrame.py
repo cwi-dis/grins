@@ -310,7 +310,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 
 		# in the free area
 		x,y=self._DPtoLP((x,y))
-		x,y = self._inverse_coordinates((x, y),self._canvas)
+		x,y = self._pxl2rel((x, y),self._canvas)
 		return self.onEventEx(DragFile,(x, y, filename))
 
 	# drag and drop files support for MainFrame

@@ -1035,7 +1035,7 @@ class SubWindow(Window):
 				win32mu.FrameRect(dc,self._rect,self._showing)
 			#win32mu.FrameRect(dc,self._rect,(255, 0, 0)) # debug
 		elif self._transparent == 0:
-			dc.FillSolidRect(self.ltrb(dst),RGB(self._bgcolor))
+			dc.FillSolidRect(self.ltrb(dst),win32mu.RGB(self._bgcolor))
 
 		dc.SetWindowOrg((x0,y0))
 		dc.Detach()
