@@ -2618,6 +2618,53 @@ class ImageRenderer(Renderer):
 		Sdk.DeleteObject(br)
 		self._adjrc=(dest_x, dest_y,dest_x + width, dest_y + height)
 
+###############################
+import svgdom
+
+class SvgRenderer(Renderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._svgdoc = None
+		self._adjrc = None
+			
+	def __del__(self):
+		del self._svgdoc
+	
+	def isstatic(self):
+		return 1
+
+	def load(self, rurl):
+		self._svgdoc = None
+		if rurl:
+			url = self.urlqual(rurl)
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(url)[0]
+			if mtype is not None: 
+				mtype, subtype = string.split(mtype, '/')
+				if mtype == 'image' and subtype == 'svg-xml':
+					self._svgdoc = svgdom.GetSvgDocument(url)
+		self.update()
+
+	def render(self, dc):
+		if self._svgdoc is None: return
+		src_x, src_y, dest_x, dest_y, width, height,rcKeep = self.adjustSize(self._svgdoc.getSize())
+		self.renderSvgOn(self._svgdoc, dc.GetSafeHdc(), (dest_x, dest_y, width, height))
+		self._adjrc = dest_x, dest_y,dest_x + width, dest_y + height
+
+	def renderSvgOn(self, svgdoc, hdc, dstrect):
+		if svgdoc is None or not hdc: return
+		import svgrender, svgwin
+		svggraphics = svgwin.SVGWinGraphics()
+		sw, sh = svgdoc.getSize()
+		if sw and sh:
+			dx, dy, dw, dh = dstrect
+			sx, sy = dw/float(sw), dh/float(sh)
+			svggraphics.applyTfList([('translate',[dx, dy]), ('scale',[sx, sy]),])
+		svggraphics.tkStartup(hdc)
+		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
+		renderer.render()
+		svggraphics.tkShutdown()
+
 #################################
 class HtmlRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
@@ -2966,6 +3013,8 @@ class PreviewPage(AttrPage):
 			self._renderer=TextRenderer(self,self._prevrc,self._form._baseURL)
 		elif renderersig=='image':
 			self._renderer=ImageRenderer(self,self._prevrc,self._form._baseURL)
+		elif renderersig=='svg':
+			self._renderer=SvgRenderer(self,self._prevrc,self._form._baseURL)
 		else:
 			self._renderer=Renderer(self,self._prevrc,self._form._baseURL)
 
@@ -3118,6 +3167,10 @@ class ImagePreviewPage(PreviewPage):
 		r=r-string.atoi(st[2])
 		b=b-string.atoi(st[3])
 		self._renderer.drawcroprect(dc,(l,t,r,b))
+
+class SvgPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self, form,'svg')	
 
 class VideoPreviewPage(PreviewPage):
 	def __init__(self,form):
@@ -3809,7 +3862,9 @@ class FileGroup(AttrGroup):
 		mtype, subtype = string.split(mtype, '/')
 		# create media type sig for renderer
 		if mtype=='image':
-			if string.find(subtype,'realpix')>=0:
+			if subtype == 'svg-xml':
+				mtype='svg'
+			elif string.find(subtype,'realpix')>=0:
 				mtype='realwnd'
 			self._preview=1
 		elif mtype=='video':
@@ -3842,7 +3897,7 @@ class FileGroup(AttrGroup):
 
 	def getpageresid(self):
 		if self.canpreview():
-			if self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text': 
+			if self._mtypesig ('image', 'svg', 'html', 'text'): 
 				# static media
 				return grinsRC.IDD_EDITATTR_PF1
 			else: 
@@ -3856,6 +3911,8 @@ class FileGroup(AttrGroup):
 			return AttrPage
 		if self._mtypesig=='image':
 			return ImagePreviewPage
+		elif self._mtypesig=='svg':
+			return SvgPreviewPage
 		elif self._mtypesig=='html':
 			return HtmlPreviewPage
 		elif self._mtypesig=='video':
