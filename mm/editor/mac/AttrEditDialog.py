@@ -1313,10 +1313,10 @@ class AreaTabPage(MultiDictTabPage):
 			value = field._getvalueforpage()
 			self.attreditor._setbutton(self.item0+item, value=='on')
 		x, y, w, h = self._getxywh()
-		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
-		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
-		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
-		self.attreditor._setlabel(self.item0+self.ITEM_H, `h`)
+		self.attreditor._setlabel(self.item0+self.ITEM_X, x)
+		self.attreditor._setlabel(self.item0+self.ITEM_Y, y)
+		self.attreditor._setlabel(self.item0+self.ITEM_W, w)
+		self.attreditor._setlabel(self.item0+self.ITEM_H, h)
 		
 	def _getxywh(self):
 		x, y = self._getpoint(self._xyfield)
@@ -1326,9 +1326,9 @@ class AreaTabPage(MultiDictTabPage):
 	def _getpoint(self, fieldname):
 		str = self._attr_to_field[fieldname]._getvalueforpage()
 		if not str:
-			return 0, 0
+			return '0', '0'
 		[f1, f2] = string.split(str)
-		return string.atoi(f1), string.atoi(f2)
+		return f1, f2
 
 	def save(self):
 		for name, item in self._attr_to_checkbox.items():
@@ -1435,9 +1435,9 @@ class ChannelAreaTabPage(AreaTabPage):
 	def _getxywh(self):
 		str = self._attr_to_field[self._xywhfield]._getvalueforpage()
 		if not str:
-			return 0, 0, 0, 0
+			return '0', '0', '0', '0'
 		[f1, f2, f3, f4] = string.split(str)
-		return string.atoi(f1), string.atoi(f2), string.atoi(f3), string.atoi(f4)
+		return f1, f2, f3, f4
 		
 	def save(self):
 		value = self._unitspopup.getselectvalue()
@@ -1445,7 +1445,7 @@ class ChannelAreaTabPage(AreaTabPage):
 		for name, item in self._attr_to_string.items():
 			value = self.attreditor._getlabel(self.item0+item)
 			self._attr_to_field[name]._savevaluefrompage(value)
-		AreaTabPage.update(self)
+		AreaTabPage.save(self)
 
 	def _savexywh(self, x, y, w, h):
 		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
