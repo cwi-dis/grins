@@ -808,6 +808,43 @@ BEGIN
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, NOINVERT
 END
 
+IDR_STRUCT_EDIT ACCELERATORS DISCARDABLE 
+BEGIN
+    "1",            IDUC_PLAYER,            VIRTKEY, ALT, NOINVERT
+    "2",            IDUC_HVIEW,             VIRTKEY, ALT, NOINVERT
+    "3",            IDUC_CVIEW,             VIRTKEY, ALT, NOINVERT
+    "4",            IDUC_HLINKS,            VIRTKEY, ALT, NOINVERT
+    "5",            IDUC_LAYOUT,            VIRTKEY, ALT, NOINVERT
+    "6",            IDUC_UGROUPS,           VIRTKEY, ALT, NOINVERT
+    "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
+    "A",            IDUC_ATTRIBUTES,        VIRTKEY, NOINVERT
+    "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
+    "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
+    "I",            IDUC_INFO,              VIRTKEY, NOINVERT
+    "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
+    "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
+    "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
+    "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
+    "S",            IDUC_SAVE,              VIRTKEY, CONTROL, NOINVERT
+    "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
+    "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
+    "V",            IDUC_PASTEFILE,         VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_DELETE,      IDUC_DELETE,            VIRTKEY, NOINVERT
+    VK_DELETE,      IDUC_DELETE,            VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
+    VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
+    VK_F7,          IDUC_CVIEW,             VIRTKEY, NOINVERT
+    VK_F8,          IDUC_LAYOUT,            VIRTKEY, NOINVERT
+    VK_RETURN,      IDUC_PLAYNODE,          VIRTKEY, NOINVERT
+    VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, NOINVERT
+    VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
+    "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
+    "X",            IDUC_CLOSE_WINDOW,      VIRTKEY, NOINVERT
+    "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
+    "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
