@@ -36,6 +36,7 @@ class LicenseDialog:
 					 rdr.width * depth)
 		img = w.CreateDrawingArea('splash', {'width': rdr.width,
 						     'height': rdr.height})
+		self.__gc = None
 		img.AddCallback('exposeCallback', self.__expose,
 				(xim, rdr.width, rdr.height))
 		img.ManageChild()
@@ -44,7 +45,9 @@ class LicenseDialog:
 		self.__window = w
 
 	def __expose(self, widget, (xim, width, height), call_data):
-		widget.CreateGC({}).PutImage(xim, 0, 0, 0, 0, width, height)
+		if self.__gc is None:
+			self.__gc = widget.CreateGC({})
+		self.__gc.PutImage(xim, 0, 0, 0, 0, width, height)
 
 	def show(self):
 		self.__window.ManageChild()
@@ -59,8 +62,16 @@ class LicenseDialog:
 		del self.__msg
 			
 	def setdialoginfo(self):
-		self.__try.SetSensitive(self.can_try)
-		self.__eval.SetSensitive(self.can_eval)
+		if self.can_try:
+			self.__try.ManageChild()
+		else:
+			self.__try.UnmanageChild()
+		if self.can_eval:
+			self.__eval.ManageChild()
+		else:
+			self.__eval.UnmanageChild()
+##		self.__try.SetSensitive(self.can_try)
+##		self.__eval.SetSensitive(self.can_eval)
 		width, height = self.__imgsize
 		if self.__msg is not None:
 			self.__msg.DestroyWidget
@@ -80,6 +91,7 @@ class LicenseDialog:
 			attrs['fontList'] = splash.splashfont
 		self.__msg = self.__img.CreateManagedWidget('message',
 							    Xm.Label, attrs)
+		self.__window.defaultButton = self.__try
 
 	def __callback(self, w, callback, call_data):
 		apply(apply, callback)
