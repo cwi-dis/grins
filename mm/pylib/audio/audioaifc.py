@@ -152,7 +152,7 @@ class Chunk:
 		if self.size_read >= self.chunksize:
 			return ''
 		if length > self.chunksize - self.size_read:
- 			length = self.chunksize - self.size_read
+			length = self.chunksize - self.size_read
 		data = self.file.read(length)
 		self.size_read = self.size_read + len(data)
 		return data
@@ -202,7 +202,7 @@ class reader:
 					print 'Warning: FORM chunk size too large'
 					formlength = 0
 					break
-				 # different error, raise exception
+				# different error, raise exception
 				raise EOFError, msg
 			chunkname = chunk.chunkname
 			if chunkname == 'COMM':
