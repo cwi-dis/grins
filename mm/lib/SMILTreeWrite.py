@@ -517,6 +517,13 @@ def getproportion(writer, node, attr, defstr='0'):
 	else:
 		return fmtfloat(prop)
 
+def getpercentage(writer, node, attr, default=100):
+	prop = MMAttrdefs.getattr(node, attr)
+	if not prop or prop==default:
+		return None
+	else:
+		return fmtfloat(prop, suffix = '%')
+
 def getfill(writer, node, attr):
 	fill = getcmifattr(writer, node, attr)
 	if fill != 'default':
@@ -967,6 +974,10 @@ smil_attrs=[
 	("transIn", lambda writer, node:gettransition(writer, node, "transIn")),
 	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
 
+	("mediaSize", lambda writer, node:getpercentage(writer, node, "mediaSize")),
+	("mediaTime", lambda writer, node:getpercentage(writer, node, "mediaTime")),
+	("bandwidth", lambda writer, node:getpercentage(writer, node, "bandwidth")),
+
 ]
 prio_attrs = [
 	("id", getid),
@@ -1043,6 +1054,7 @@ smil_mediatype={
 	'unknown': 'ref',
 	'animate': 'animate',
 	'brush': 'brush',
+	'prefetch': 'prefetch',
 }
 
 def mediatype(chtype, error=0):
@@ -1822,6 +1834,9 @@ class SMILWriter(SMIL):
 		if type=='imm' and x.GetChannelType()=='animate':
 			self.writeanimatenode(x, root)
 			return
+		elif x.GetChannelType()=='prefetch':
+			self.writeprefetchnode(x, root)
+			return
 
 		if type == 'bag':
 			print '** Choice node', \
@@ -2019,6 +2034,18 @@ class SMILWriter(SMIL):
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
 		self.writetag(tag, attrlist)
+
+	def writeprefetchnode(self, node, root):
+		attrlist = []
+		attributes = self.attributes.get('prefetch', {})
+		for name, func in smil_attrs:
+			if attributes.has_key(name):
+				value = func(self, node)
+				if value and value != attributes[name]:
+					attrlist.append((name, value))
+		self.writetag('prefetch', attrlist)
+
+
 
 	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []

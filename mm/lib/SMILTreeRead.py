@@ -485,6 +485,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['restart'] = val
 				else:
 					self.syntax_error('bad restart attribute')
+			elif attr in ('mediaSize', 'mediaTime', 'bandwidth'):
+				try:
+					if val[-1]!='%':
+						raise error, 'bad %s attribute' % attr
+					attrdict[attr] = string.atof(val[:-1])
+				except string.atof_error:
+					self.syntax_error('bad %s attribute' % attr)
+				except error, msg:
+					self.syntax_error(msg)
 			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)
