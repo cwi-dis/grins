@@ -196,9 +196,13 @@ class MediaChannel:
 		self.__unregister_for_timeslices()
 		self.release_player()
 
-	def setsoundlevel(self, lev):
-		print 'setsoundlevel', lev
-		pass
+	def setsoundlevel(self, lev, maxlev=1):
+		# set sound level but do not apply
+		print 'setsoundlevel', lev, maxlevel
+
+	def updatesoundlevel(self, lev, maxlev):
+		# apply sound level
+		print 'updatesoundlevel', lev, maxlevel
 
 	# Set Window Media window size from scale and center, and coordinates attributes
 	def adjustMediaWnd(self,node,window,builder):
@@ -482,6 +486,12 @@ class DSPlayer:
 	def setsoundlevel(self, lev, maxlev):
 		self._soundLevel = lev
 		self._soundLevelMax = maxlev
+		# do not apply
+
+	def updatesoundlevel(self, lev, maxlev):
+		a = self.getAttenuation(lev, maxlev)
+		if self._sound:
+			self._sound.SetVolume(a)
 
 	def getAttenuation(self, soundLevel, soundLevelMax):
 		soundLevelMax = max(soundLevel, soundLevelMax)
