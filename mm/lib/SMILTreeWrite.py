@@ -1059,6 +1059,14 @@ cmif_chan_attrs_ignore = {
 	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'subtype':0,
 	}
 
+if settings.activeFullSmilCss:
+	cmif_chan_attrs_ignore['left'] = 0
+	cmif_chan_attrs_ignore['top'] = 0
+	cmif_chan_attrs_ignore['width'] = 0
+	cmif_chan_attrs_ignore['height'] = 0
+	cmif_chan_attrs_ignore['right'] = 0
+	cmif_chan_attrs_ignore['bottom'] = 0
+	
 qt_node_attrs = {
 	'immediateinstantiationmedia':0,'bitratenecessary':0,'systemmimetypesupported':0,
 	'attachtimebase':0,'qtchapter':0,'qtcompositemode':0,
@@ -1688,32 +1696,43 @@ class SMILWriter(SMIL):
 			attrlist.append(('title', ch.name))
 		# if toplevel window, define a region elt, but
 		# don't define coordinates (i.e., use defaults)
-		if ch.has_key('base_window') and \
-		   ch.has_key('base_winoff'):
-			x, y, w, h = ch['base_winoff']
-			units = ch.get('units', 2)
-			if units == 0:		# UNIT_MM
-				# convert mm to pixels (assuming 100 dpi)
-				x = int(x / 25.4 * 100 + .5)
-				y = int(y / 25.4 * 100 + .5)
-				w = int(w / 25.4 * 100 + .5)
-				h = int(h / 25.4 * 100 + .5)
-			elif units == 1:	# UNIT_SCREEN
-				if x+w >= 1.0: w = 0
-				if y+h >= 1.0: h = 0
-			elif units == 2:	# UNIT_PXL
-				x = int(x)
-				y = int(y)
-				w = int(w)
-				h = int(h)
-			for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
-				if not value:
-					continue
-				if type(value) is type(0.0):
-					value = '%d%%' % int(value*100)
-				else:
-					value = '%d' % value
-				attrlist.append((name, value))
+		if not settings.activeFullSmilCss:
+			if ch.has_key('base_window') and \
+				ch.has_key('base_winoff'):
+				x, y, w, h = ch['base_winoff']
+				units = ch.get('units', 2)
+				if units == 0:		# UNIT_MM
+					# convert mm to pixels (assuming 100 dpi)
+					x = int(x / 25.4 * 100 + .5)
+					y = int(y / 25.4 * 100 + .5)
+					w = int(w / 25.4 * 100 + .5)
+					h = int(h / 25.4 * 100 + .5)
+				elif units == 1:	# UNIT_SCREEN
+					if x+w >= 1.0: w = 0
+					if y+h >= 1.0: h = 0
+				elif units == 2:	# UNIT_PXL
+					x = int(x)
+					y = int(y)
+					w = int(w)
+					h = int(h)
+				for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
+					if not value:
+						continue
+					if type(value) is type(0.0):
+						value = '%d%%' % int(value*100)
+					else:
+						value = '%d' % value
+					attrlist.append((name, value))
+		else:
+			for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
+				value = ch.get(name)
+				# write only no auto values
+				if value != None:
+					if type(value) is type(0.0):
+						value = '%d%%' % int(value*100)
+					else:
+						value = '%d' % value
+					attrlist.append((name, value))
 		if ChannelMap.isvisiblechannel(ch['type']):
 			z = ch.get('z', 0)
 			if z > 0:
