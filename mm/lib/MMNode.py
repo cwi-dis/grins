@@ -684,8 +684,10 @@ class MMChannel:
 			self.attrdict['transparent'] = 1
 			self.attrdict['center'] = 0
 			self.attrdict['drawbox'] = 0
-			self.attrdict['z'] = -1
-		
+			self.attrdict['z'] = 0
+			self.attrdict['showEditBackground'] = 1
+			self.attrdict['editBackground'] = 100,100,100
+			
 	def newCssId(self, isRoot = 0):
 		if not isRoot:
 			self._cssId = self.context.cssResolver.newRegion()
@@ -823,6 +825,12 @@ class MMChannel:
 				if self.attrdict.get('type') == 'layout':
 					if self.attrdict.has_key('base_window'):
 						del self['base_window']
+						wantNewEditBg = 0
+					else:
+						# if it's the first parent which is set, we assume it's the new region
+						# the default edit background is determinated according to its parent
+						wantNewEditBg = 1
+						
 					# Base_window is set. So, it's not a viewport
 					# reset css node with the right type
 					self.newCssId(0)
@@ -832,12 +840,38 @@ class MMChannel:
 						print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
 					else:
 						self.context.cssResolver.link(self._cssId, pchan._cssId)
+
+					# experimental algorithm to define a default edit bg color
+					if wantNewEditBg:
+						parentBg = pchan.attrdict.get('editBackground')
+						if parentBg == None:
+							parentBg = 20, 20, 20
+						parentR, parentG, parentB = parentBg
+						# make the new color a little lighter
+						if parentR < 230:
+							r = parentR+20
+						else:
+							r = 20
+						if parentG < 230:
+							g = parentG+20
+						else:
+							g = 20
+						if parentB < 230:
+							b = parentB+20
+						else:
+							b = 20
+						self.attrdict['editBackground'] = r,g,b
+						
 		elif key == 'base_winoff':
 			if settings.activeFullSmilCss:
 				# keep the compatibility with old version
 				self.setPxGeom(value)
 				return
-
+		elif key == 'winsize':
+			w,h = value
+			self.setCssAttr('width', w)
+			self.setCssAttr('height', h)
+			
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
