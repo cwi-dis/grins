@@ -178,11 +178,11 @@ class LinkEditLight:
 	def findanchor(self, anchor):
 		if anchor is not None:
 			if type(anchor) is not type(()):
-				return (anchor, ATYPE_DEST, ())
+				return (anchor, ATYPE_DEST, [], (0,0))
 			uid, aid = anchor
 			if '/' in uid:
 				# external anchor
-				return (aid, ATYPE_DEST, ())
+				return (aid, ATYPE_DEST, [], (0,0))
 			node = self.context.mapuid(uid)
 			for a in MMAttrdefs.getattr(node, 'anchorlist'):
 				if a[A_ID] == aid:
