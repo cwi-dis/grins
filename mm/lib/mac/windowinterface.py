@@ -88,5 +88,12 @@ showquestion = mw_dialogs.showquestion
 beep = mw_toplevel.beep
 
 textwindow = mw_textwindow.textwindow
-htmlwindow = mw_textwindow.htmlwindow
-
+# htmlwindow = mw_textwindow.htmlwindow
+def htmlwindow(url):
+	try:
+		import ic
+		ic_instance = ic.IC()
+		ic_instance.launchurl(url)
+	except:
+		showmessage('Cannot start webbrowser.\nInternet configuration error?')
+	return None
