@@ -104,7 +104,7 @@ MENUBAR=(
 		(ALL, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
 		(CMIF, ENTRY, 'Toggle Channel State', None, TOGGLE_ONOFF),
 		(ALL, SEP, ),
-		(ALL, ENTRY, 'Info...', 'I', INFO),
+##		(ALL, ENTRY, 'Info...', 'I', INFO),
 		(ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(ALL, ENTRY, 'Edit Content', 'E', CONTENT),
 ##		(ALL, SEP, ),
@@ -200,7 +200,7 @@ POPUP_HVIEW_LEAF = (
 		(ENTRY, 'Create Simple Anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink', None, FINISH_LINK),
 		(SEP,),
-		(ENTRY, 'Info...', 'I', INFO),
+##		(ENTRY, 'Info...', 'I', INFO),
 		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit Content', 'E', CONTENT),
@@ -244,7 +244,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(ENTRY, 'Create Simple Anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish Hyperlink', None, FINISH_LINK),
 		(SEP,),
-		(ENTRY, 'Info...', 'I', INFO),
+##		(ENTRY, 'Info...', 'I', INFO),
 		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(ENTRY, 'Anchors...', 'T', ANCHORS),
 )
@@ -271,15 +271,15 @@ POPUP_CVIEW_NODE = (
 		(ENTRY, 'Finish Hyperlink to Selection', 'H', FINISH_LINK),
 		(ENTRY, 'Create Sync Arc from Selection...', None, FINISH_ARC),
 		(SEP,),
-		(ENTRY, 'Info...', 'I', INFO),
+##		(ENTRY, 'Info...', 'I', INFO),
 		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit Content', 'E', CONTENT),
 )
 
 POPUP_CVIEW_SYNCARC = (
-		(ENTRY, 'Info...', 'I', INFO),
-		(SEP,),
+##		(ENTRY, 'Info...', 'I', INFO),
+##		(SEP,),
 		(ENTRY, 'Delete', None, DELETE),
 )
 

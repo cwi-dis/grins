@@ -160,7 +160,6 @@ class HierarchyView(HierarchyViewDialog):
 			CONTENT(callback = (self.editcall, ())),
 
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
-			PLAYABLE(callback = (self.playablecall, ())),
 
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
@@ -170,6 +169,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
+			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 		self.interiorcommands = self._getmediaundercommands(toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
 			]
@@ -198,7 +198,7 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		if not lightweight:
 			self.noslidecommands = self.noslidecommands + [
-				INFO(callback = (self.infocall, ())),
+##				INFO(callback = (self.infocall, ())),
 				ANCHORS(callback = (self.anchorcall, ())),
 				]
 		self.slidecommands = self._getmediacommands(toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
@@ -751,9 +751,9 @@ class HierarchyView(HierarchyViewDialog):
 		expandnode(newnode)
 		self.aftersetfocus()
 		em.commit()
-		if not settings.get('lightweight'):
-			import NodeInfo
-			NodeInfo.shownodeinfo(self.toplevel, newnode)
+##		if not settings.get('lightweight'):
+##			import NodeInfo
+##			NodeInfo.shownodeinfo(self.toplevel, newnode)
 
 	def paste(self, where):
 		import Clipboard
@@ -1732,16 +1732,6 @@ class Object:
 		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
-
-	def changefile(self,file):
-		self.mother.toplevel.setwaiting()
-		try:
-			import NodeInfoHelper
-			h=NodeInfoHelper.NodeInfoHelper(self.mother.toplevel, self.node,0)
-			h.browserfile_callback(file)
-			h.ok_callback()
-		except:
-			pass
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()

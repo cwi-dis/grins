@@ -1826,7 +1826,7 @@ class NodeBox(GO, NodeBoxCommand):
 			FINISH_ARC(callback = (self.newsyncarccall, ())),
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
-			INFO(callback = (self.infocall, ())),
+##			INFO(callback = (self.infocall, ())),
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
 			ANCHORS(callback = (self.anchorcall, ())),
@@ -2160,7 +2160,7 @@ class ArcBox(GO, ArcBoxCommand):
 			return
 		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
-			INFO(callback = (self.infocall, ())),
+##			INFO(callback = (self.infocall, ())),
 			DELETE(callback = (self.delcall, ())),
 			]
 
