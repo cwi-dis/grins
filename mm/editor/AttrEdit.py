@@ -42,13 +42,13 @@ def hasattreditor(node):
 # The administration is kept in channel.attreditor,
 # which is created here if necessary.
 
-def showchannelattreditor(channel):
+def showchannelattreditor(channel, new = 0):
 	try:
 		attreditor = channel.attreditor
 	except AttributeError:
 		channel.attreditor = attreditor = \
 				     AttrEditor(ChannelWrapper(channel))
-	attreditor.open()
+	attreditor.open(new)
 
 def hidechannelattreditor(channel):
 	try:
@@ -161,6 +161,13 @@ class NodeWrapper(Wrapper):
 
 	def delattr(self, name):
 		self.editmgr.setnodeattr(self.node, name, None)
+
+	def delete(self):
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return # Not possible at this time
+		editmgr.delnode(self.node)
+		editmgr.commit()
 	#
 	# Return a list of attribute names that make sense for this node,
 	# in an order that makes sense to the user.
@@ -243,6 +250,13 @@ class ChannelWrapper(Wrapper):
 		else:
 			self.editmgr.setchannelattr( \
 				  self.channel.name, name, None)
+
+	def delete(self):
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return # Not possible at this time
+		editmgr.delchannel(self.channel.name)
+		editmgr.commit()
 	#
 	# Return a list of attribute names that make sense for this channel,
 	# in an order that makes sense to the user.
@@ -356,10 +370,12 @@ class ChannelWrapper(Wrapper):
 
 class AttrEditor:
 	def __init__(self, wrapper):
+		self.new = 0
 		self.wrapper = wrapper
 		self.dialog = None
 
-	def open(self):
+	def open(self, new = 0):
+		self.new = new
 		self.show()
 
 	def show(self):
@@ -453,8 +469,11 @@ class AttrEditor:
 			self.wrapper.unregister(self)
 		self.dialog = None
 		self.list = []
+		if self.new:
+			self.wrapper.delete()
 
 	def apply(self, remove = 0):
+		self.new = 0
 		# first collect all changes
 		dict = {}
 		for b in self.list:
