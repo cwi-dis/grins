@@ -1037,14 +1037,15 @@ class CssPosCtrl(AttrCtrl):
 		self._ctrlValue = components.Edit(wnd,resid[1])
 		self._ctrlUnit = components.ComboBox(wnd,resid[2])
 		self.currentValue = self._attr.getcurrent()
-
+		self._currentUnit = 'auto'
+		
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._ctrlValue.attach_to_parent()
 		self._ctrlUnit.attach_to_parent()
 
 		self._ctrlUnit.resetcontent()
-		self._ctrlUnit.setoptions(['auto', 'pixel','percent'])
+		self._ctrlUnit.setoptions(['auto', 'pixel', 'percent'])
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnCombo,self._resid[2])
@@ -1062,26 +1063,31 @@ class CssPosCtrl(AttrCtrl):
 	def setvalue(self, val):
 		if not self._initctrl: return
 		if val =='':
-			# auto value
-			self._ctrlUnit.setcursel(0)
+			self.__setUnit('auto')
 		elif '%' not in val:
-			# pixel value
-			self._ctrlUnit.setcursel(1)
+			self.__setUnit('pixel')
 		else:
 			val = val[:-1]
-			# percent value
-			self._ctrlUnit.setcursel(2)
+			self.__setUnit('percent')
 			
 		self._ctrlValue.settext(val)
 
+	def __setUnit(self, unit):
+		self._currentUnit = unit
+		if unit == 'auto':
+			self._ctrlUnit.setcursel(0)
+		elif unit == 'percent':
+			self._ctrlUnit.setcursel(2)
+		else:
+			self._ctrlUnit.setcursel(1)
+		
 	# get value from the field. return a string representation of the value
 	def getvalue(self):
 		if self._initctrl:
 			val = self._ctrlValue.gettext()
 			unit = self._ctrlUnit.getvalue()
-			if val != '' and (unit == 'percent' or val[-1] == '%'):
-				if val[-1] != '%':
-					val = val+'%'
+			if val != '' and unit == 'percent':
+				val = val+'%'
 			return string.join(string.split(val, '\r\n'), '\n')
 				
 		return self._attr.getcurrent()
@@ -1089,26 +1095,24 @@ class CssPosCtrl(AttrCtrl):
 	def OnCombo(self,id,code):
 		self.sethelp()
 		if code==win32con.CBN_SELCHANGE:
-			self.enableApply()
+			pSize = self._attr.getParentSize()
 			unit = self._ctrlUnit.getvalue()
+			if self._currentUnit == unit:
+				return
+			self.enableApply()
 			if unit == 'auto':
 				self._ctrlValue.settext('')
+				self._currentUnit = 'auto'
 			elif unit == 'pixel':
-				val = self._ctrlValue.gettext()
-				try:
-					# convert to integer
-					val = int(float(val))
-				except:
-					val = 0
+				val = self._attr.getCurrentPxValue()
 				self._ctrlValue.settext(`val`)
+				self._currentUnit = 'pixel'
 			elif unit == 'percent':
-				val = self._ctrlValue.gettext()
-				try:
-					# convert to float
-					val = float(val)
-				except:
-					val = 0
-				self._ctrlValue.settext(`val`)
+				val = self._attr.getCurrentPxValue()
+				# convert to float
+				val = (float(val)/pSize)*100
+				self._ctrlValue.settext(fmtfloat(val, prec = 2))
+				self._currentUnit = 'percent'
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
@@ -1118,13 +1122,18 @@ class CssPosCtrl(AttrCtrl):
 			unit = self._ctrlUnit.getvalue()
 			if val == '':
 				# force auto value
-				self._ctrlUnit.setcursel(0)			
+				self.__setUnit('auto')		
 			elif unit == 'auto' and val != '':
 				# force to pixel value
-				self._ctrlUnit.setcursel(1)
+				self.__setUnit('pixel')		
 			elif unit == 'pixel' and val[-1] == '%':
+				val = val[:-1]
+				self._ctrlValue.settext(val)
 				# force to percent value
-				self._ctrlUnit.setcursel(2)
+				self.__setUnit('percent')
+			elif val[-1] == '%':
+				val = val[:-1]
+				self._ctrlValue.settext(val)					
 			self.enableApply()
 	
 ##################################
