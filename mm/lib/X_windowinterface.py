@@ -486,24 +486,24 @@ class _Window:
 			if f != file:
 				import os
 				os.unlink(f)
-		if not _cache_full and retval[-1]:
-			import tempfile
-			filename = tempfile.mktemp()
-			try:
-				import rgbimg
-				rgbimg.longstoimage(retval[10],
-					  retval[6], retval[7], 3,
-					  filename)
-			except:		# any error...
-				print 'Warning: caching image failed'
-				import posix
-				try:
-					posix.unlink(filename)
-				except posix.error:
-					pass
-				_cache_full = 1
-				return retval[:-1]
-			_image_cache[cachekey] = retval[:-2] + (filename,)
+##		if not _cache_full and retval[-1]:
+##			import tempfile
+##			filename = tempfile.mktemp()
+##			try:
+##				import rgbimg
+##				rgbimg.longstoimage(retval[10],
+##					  retval[6], retval[7], 3,
+##					  filename)
+##			except:		# any error...
+##				print 'Warning: caching image failed'
+##				import posix
+##				try:
+##					posix.unlink(filename)
+##				except posix.error:
+##					pass
+##				_cache_full = 1
+##				return retval[:-1]
+##			_image_cache[cachekey] = retval[:-2] + (filename,)
 		return retval[:-1]
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
@@ -546,7 +546,6 @@ class _Window:
 		headersize = decomp.ReadHeader(header)
 		xsize = decomp.GetParam(CL.IMAGE_WIDTH)
 		ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
-		_image_size_cache[file] = (xsize, ysize)
 		original_format = CL.RGB332
 		zsize = 1
 		params = [CL.ORIGINAL_FORMAT, original_format,
@@ -568,6 +567,7 @@ class _Window:
 			image, xsize, ysize, zsize = self._prepare_JPEG_image_from_filep_with_jpeg(filep)
 		else:
 			return None
+		_image_size_cache[file] = (xsize, ysize)
 
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
