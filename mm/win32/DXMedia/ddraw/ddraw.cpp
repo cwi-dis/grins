@@ -1555,17 +1555,18 @@ static int cb391[256];
 static int cb2018[256];
 
 static void buildYUV420Tables(){
-	int f1164 = (1164*1024+500)/1000;
-	int f1596 = (1596*1024+500)/1000;
-	int f813 = (813*1024+500)/1000;
-	int f391 = (391*1024+500)/1000;
-	int f2018 = (2018*1024+500)/1000;
+	double sf = 1024.0;
+	double f1164 = 1.164*sf;
+	double f1596 = 1.596*sf;
+	double f813 =  0.813*sf;
+	double f391 =  0.391*sf;
+	double f2018 = 2.018*sf;
 	for(int i=0;i<256;i++){
-		y1164[i] = f1164*(i - 16); 
-		cr1596[i] = f1596*(i - 128);
-		cr813[i] = f813*(i - 128);
-		cb391[i] = f391*(i - 128);
-		cb2018[i] = f2018*(i - 128);
+		y1164[i] = int(f1164*(i - 16)+0.5); 
+		cr1596[i] =int(f1596*(i - 128+0.5));
+		cr813[i] = int(f813*(i - 128)+0.5);
+		cb391[i] = int(f391*(i - 128)+0.5);
+		cb2018[i] = int(f2018*(i - 128)+0.5);
 	}
 }
 
@@ -1575,9 +1576,9 @@ __inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
 	rf += cr1596[Cr];
 	gf -= cr813[Cr] + cb391[Cb];
 	bf += cb2018[Cb];
-	r = BYTE( ((rf<=0)?0:(rf>=262144?262144:rf)) >> 10 );
-	g = BYTE( ((gf<=0)?0:(gf>=262144?262144:gf)) >> 10 );
-	b = BYTE( ((bf<=0)?0:(bf>=262144?262144:bf)) >> 10 );
+	r = BYTE( ((rf<=0)?0:(rf>=261120?261120:rf)) >> 10 );
+	g = BYTE( ((gf<=0)?0:(gf>=261120?261120:gf)) >> 10 );
+	b = BYTE( ((bf<=0)?0:(bf>=261120?261120:bf)) >> 10 );
 }
 
 static char DirectDrawSurface_Blt_YUV420_On_RGB32__doc__[] =
