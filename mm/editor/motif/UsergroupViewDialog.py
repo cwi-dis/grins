@@ -74,31 +74,35 @@ class UsergroupViewDialog:
 		self.__window = None
 
 class UsergroupEditDialog:
-	def __init__(self, ugroup, title, ustate, override):
+	__overrideindex = {'hidden':0,'visible':1}
+	def __init__(self, ugroup, title, ustate, override, uid):
 		"""Create the UsergroupEdit dialog.
 
 		Create the dialog window (non-modal, so does not grab
 		the cursor) and pop it up.
 		"""
-		w = windowinterface.Window('Edit user group', resizable = 1)
+		w = windowinterface.Window('Edit custom test', resizable = 1)
 		self.__window = w
-		self.__ugroup = w.TextInput('User group name', ugroup, None,
+		self.__ugroup = w.TextInput('Custom test name', ugroup, None,
 					    None, top = None, left = None,
 					    right = None)
-		self.__title = w.TextInput('User group title', title, None,
+		self.__title = w.TextInput('Custom test title', title, None,
 					   None, top = self.__ugroup,
 					   left = None, right = None)
-		self.__state = w.OptionMenu('Initial state',
-					    ['NOT RENDERED', 'RENDERED'],
+		self.__state = w.OptionMenu('Default state',
+					    ['false', 'true'],
 					    ustate == 'RENDERED', None,
 					    top = self.__title, left = None,
 					    right = None)
 		self.__override = w.OptionMenu('User override',
-					       ['not allowed', 'allowed'],
-					       override == 'allowed', None,
+					       ['hidden', 'visible'],
+					       self.__overrideindex[override], None,
 					       top = self.__state,
 					       left = None, right = None)
-		sep = w.Separator(top = self.__override, left = None,
+		self.__uid = w.TextInput('Custom test UID', uid, None, None,
+					 top = self.__override,
+					 left = None, right = None)
+		sep = w.Separator(top = self.__uid, left = None,
 				  right = None)
 		self.__buttons = w.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
@@ -120,23 +124,32 @@ class UsergroupEditDialog:
 		self.__window.close()
 		self.__window = None
 
-	def setstate(self, ugroup, title, ustate, override):
+	def setstate(self, ugroup, title, ustate, override, uid):
 		"""Set the values in the dialog.
 
 		Arguments (no defaults):
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed' or 'not allowed'
+		override -- string 'visible' or 'hidden'
 		"""
 		self.__ugroup.settext(ugroup)
 		self.__title.settext(title)
 		self.__state.setpos(ustate == 'RENDERED')
-		self.__override.setpos(override == 'allowed')
+		self.__override.setpos(self.__overrideindex[override])
+		self.__uid.settext(uid)
 
 	def getstate(self):
 		"""Return the current values in the dialog."""
+		opos = self.__override.getpos()
+		for k, v in self.__overrideindex.items():
+			if v == opos:
+				override = k
+				break
+		else:
+			override = 'hidden'
 		return self.__ugroup.gettext(), \
 		       self.__title.gettext(), \
 		       self.__state.getvalue(), \
-		       self.__override.getvalue()
+		       override, \
+		       self.__uid.gettext()
