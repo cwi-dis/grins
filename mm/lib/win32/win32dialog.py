@@ -1432,3 +1432,49 @@ class WallclockDialog(ResDialog):
 		self.w_tzsg.enable(0)	# combo box
 		self.w_tzhr.enable(0)
 		self.w_tzmn.enable(0)
+
+class FindDialog(ResDialog):
+	resource=grinsRC.IDD_FIND
+	def __init__(self, findNextCallback, text = None, options = None, parent=None):
+		ResDialog.__init__(self, self.resource, parent)
+		self._findNextCallback = findNextCallback
+		self._options = options
+		self._text = text
+		self._parent = parent
+
+		# The widgets.
+		self._findNextBtn = Button(self, grinsRC.IDC_FINDNEXT)
+		self._findWhat = Edit(self, grinsRC.IDC_FINDWHAT)
+		self._matchWhole = CheckButton(self, grinsRC.IDC_MATCHWHOLE)
+		self._matchCase = CheckButton(self, grinsRC.IDC_MATCHCASE)
+
+	def OnInitDialog(self):
+		# attach to the parent
+		self._findNextBtn.attach_to_parent()
+		self._findWhat.attach_to_parent()
+		self._matchWhole.attach_to_parent()
+		self._matchCase.attach_to_parent()
+
+		# init control values		
+		if self._options != None:
+			mw, mc = self._options
+			self._matchWhole.setcheck(mw)
+			self._matchCase.setcheck(mc)
+
+		if self._text != None:
+			self._findWhat.settext(self._text)
+
+		# hook commands
+		self._findNextBtn.hookcommand(self, self._onFindNext)
+			
+	def _onFindNext(self, id, value):
+		if self._findNextCallback != None:
+			options = (self._matchWhole.getcheck(),
+					   self._matchCase.getcheck())
+			text = self._findWhat.gettext()
+			self._findNextCallback(text, options)
+		
+	def show(self):
+		self.CreateWindow(self._parent)
+		self.ShowWindow(win32con.SW_SHOW)
+
