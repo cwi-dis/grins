@@ -185,46 +185,6 @@ SOURCE=".\GRiNS Player.cpp"
 !IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_GRINS=\
-	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
-	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
-	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\import.h"\
-	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
-	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
-	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
-	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
-	"..\..\..\..\PYTHON_CE\Include\object.h"\
-	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
-	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
-	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
-	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
-	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
-	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
-	"..\..\..\..\PYTHON_CE\Include\Python.h"\
-	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
-	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
-	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
-	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
-	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
-	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
-	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
-	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\freeze\frozen.c"\
 	".\GRiNS Player.h"\
 	".\pfc\app_pyinterface.h"\
 	".\pfc\app_wndproc.h"\
@@ -232,6 +192,9 @@ DEP_CPP_GRINS=\
 	".\StdAfx.h"\
 	{$(INCLUDE)}"Aygshell.h"\
 	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\frozen.c"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Debug"
@@ -276,7 +239,6 @@ DEP_CPP_GRINS=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\freeze\frozen.c"\
 	".\GRiNS Player.h"\
 	".\pfc\app_pyinterface.h"\
 	".\pfc\app_wndproc.h"\
@@ -284,6 +246,7 @@ DEP_CPP_GRINS=\
 	".\StdAfx.h"\
 	
 NODEP_CPP_GRINS=\
+	".\freeze\frozen.c"\
 	".\ipapi.h"\
 	".\ygshell.h"\
 	
@@ -330,14 +293,16 @@ DEP_CPP_GRINS=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\freeze\frozen.c"\
 	".\GRiNS Player.h"\
 	".\pfc\app_pyinterface.h"\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\freeze\frozen.c"\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
@@ -382,14 +347,16 @@ DEP_CPP_GRINS=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\freeze\frozen.c"\
 	".\GRiNS Player.h"\
 	".\pfc\app_pyinterface.h"\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\freeze\frozen.c"\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1049,8 +1016,10 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_APP_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
@@ -1098,8 +1067,10 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_APP_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1848,21 +1819,6 @@ SOURCE=.\freeze\M_BrushChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_calendar.c
-
-!IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_Channel.c
 
 !IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
@@ -2508,36 +2464,6 @@ SOURCE=.\freeze\M_LayoutChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_license.c
-
-!IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_licparser.c
-
-!IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_linecache.c
 
 !IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
@@ -3109,6 +3035,21 @@ SOURCE=.\freeze\M_PreferencesDialog.c
 # Begin Source File
 
 SOURCE=.\freeze\M_PrefetchChannel.c
+
+!IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\freeze\M_QuickRead.c
 
 !IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
 
@@ -3889,21 +3830,6 @@ SOURCE=.\freeze\M_TopLevelDialog.c
 # Begin Source File
 
 SOURCE=.\freeze\M_trace.c
-
-!IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_traceback.c
 
 !IF  "$(CFG)" == "Frozen GRiNS Player - Win32 (WCE ARM) Release"
 
