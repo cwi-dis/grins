@@ -177,8 +177,11 @@ class SMILHtmlTimeWriter(SMIL):
 
 	def writeAsHtmlTime(self):
 		write = self.fp.write
+		ctx = self.root.GetContext()
 		import version
 		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD W3 HTML//EN\">\n')
+		if ctx.comment:
+			write('<!--%s-->\n' % ctx.comment)
 		#self.writetag('html', [('xmlns:t','urn:schemas-microsoft-com:time')])
 		self.writetag('html')
 		self.push()
@@ -214,7 +217,7 @@ class SMILHtmlTimeWriter(SMIL):
 		# Internet explorer style conventions for HTML+TIME support part 2
 		#write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
 
-		if self.root.GetContext().transitions:
+		if ctx.transitions:
 			write(transScript)
 
 		self.pop() # head
