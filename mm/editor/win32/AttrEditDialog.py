@@ -70,7 +70,8 @@ class AttrEditorDialog:
 			'Followselection': (self.followselection_callback, ()),
 			'SetCustomColors': self.setcustomcolors_callback,
 			}
-		w._color_list = self.wrapper.context.color_list
+		if hasattr(self.wrapper, 'context') and hasattr(self.wrapper.context, 'color_list'):
+			w._color_list = self.wrapper.context.color_list
 		w._initattr = initattr
 		# Not sure that this is the right way to pass this info
 		# to AttrEditForm...
