@@ -51,13 +51,14 @@ def rpconvert(node):
 
 	# convert the ext node to a par node
 	em.setnodeattr(node, 'file', None)
-	em.setnodetype(node, 'par')
+	em.setnodetype(node, 'seq')
 	em.setnodeattr(node, 'channel', None)
 	em.setnodeattr(node, 'bgcolor', None)
 	em.setnodeattr(node, 'transparent', None)
 	if node.GetAttrDef('fill', 'default') == 'default' and node.GetInherAttrDef('fillDefault', 'inherit') == 'inherit':
 		# make default fill behavior explicit
 		em.setnodeattr(node, 'fill', node.GetFill())
+	em.setnodeattr(node, 'fillDefault', 'hold')
 	ndur = node.GetAttrDef('duration', None)
 	if ndur is None:
 		ndur = rp.duration
@@ -112,10 +113,10 @@ def rpconvert(node):
 	# this had better be in pixels
 	rw, rh = region.getPxGeom()[2:]
 	i = 0				# used to create unique channel name
-	start = 0			# start time of last transition
+##	start = 0			# start time of last transition
 	for tagdict in tags:
 		transition = tagdict['tag']
-		start = start + tagdict.get('start', 0)
+		start = tagdict.get('start', 0)
 		if transition in ('viewchange', 'animate'):
 			print "ignoring transition we can't convert"
 			continue
