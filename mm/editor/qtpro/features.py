@@ -7,3 +7,4 @@ from compatibility import *
 #
 compatibility = QT
 lightweight = 0
+editor = 1
