@@ -161,9 +161,12 @@ def newfile(srcurl, dstdir):
 		i = i + 1
 	return file
 
-def copyfile(srcurl, dstdir):
+def copyfile(srcurl, dstdir, node = None):
 	file = newfile(srcurl, dstdir)
 	u = MMurl.urlopen(srcurl)
+	if u.headers.maintype == 'audio':
+		from realconvert import convertaudiofile
+		return convertaudiofile(u, dstdir, file, node)
 	binary = u.headers.maintype != 'text'
 	f = open(os.path.join(dstdir, file), 'wb'[:binary+1])
 	while 1:
@@ -251,7 +254,7 @@ def getsrc(writer, node):
 ##			pdb.set_trace() #DBG
 		return val
 	else:
-		file = copyfile(url, writer.copydir)
+		file = copyfile(url, writer.copydir, node)
 		writer.copycache[url] = file
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
 ##		if ':' in val: #DBG

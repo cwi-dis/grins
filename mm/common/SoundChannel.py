@@ -16,8 +16,9 @@ debug = os.environ.has_key('CHANNELDEBUG')
 SECONDS_TO_BUFFER=4
 
 class SoundChannel(ChannelAsync):
-	node_attrs = ChannelAsync.node_attrs + ['duration',
-						'clipbegin', 'clipend']
+	node_attrs = ChannelAsync.node_attrs + [
+		'duration', 'clipbegin', 'clipend',
+		'project_audiotype', 'project_targets']
 
 	# shared between all instances
 	__playing = 0			# # of active channels

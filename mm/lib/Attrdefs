@@ -194,6 +194,13 @@
 (popup (bool) 1 'Popup on play' default
 	'Determines whether channel pops up upon playing a node' raw cmif)
 
+(project_audiotype (int) 0 'Audio type' default
+	'Audio type (determines quality of audio when converting to RealAudio)'
+	raw light)
+
+(project_targets (int) 3 'Target audience' default
+	'Set of target bandwidths' raw light)
+
 (project_ftp_host (string) '' 'Webserver' default
 	'FTP hostname to use for webpage upload' raw light)
 
