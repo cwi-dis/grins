@@ -283,6 +283,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
+		attrs = self.context.attributes
+		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
+			if settings.get('lightweight'):
+				attrs['project_html_page'] = 'external_player.html'
+			# In the full version we continue, and the user gets a warning later (in HTMLWrite)
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
@@ -368,9 +373,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			missing = missing + '\n- Mediaserver SMILfile URL'
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
-			if not attr: attr = 'project_html_page'
-			missing = missing + '\n- HTML template'
-
+			if settings.get('lightweight'):
+				attrs['project_html_page'] = 'external_player.html'
+			else:
+				if not attr: attr = 'project_html_page'
+				missing = missing + '\n- HTML Template'
 		if missing:
 			if windowinterface.showquestion('Please set these parameters then try again:'+missing):
 				self.prop_callback(attr)
