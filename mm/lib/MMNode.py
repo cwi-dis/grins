@@ -804,7 +804,7 @@ class MMSyncArc:
 			else:
 				return 0
 		if self.__isresolvedcalled:
-			print 'MMSyncArc.isresolved called recursively'
+			if debug: print 'MMSyncArc.isresolved called recursively'
 			return 0
 		self.__isresolvedcalled = 1
 		refnode = self.refnode()
