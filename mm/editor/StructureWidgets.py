@@ -33,7 +33,7 @@ def create_MMNode_widget(node, mother):
 		pnode = node.GetParent()
 		if pnode is None and ntype == 'seq':
 			# Don't show toplevel root (actually the <body> in SMIL)
- 			return UnseenVerticalWidget(node, mother)
+			return UnseenVerticalWidget(node, mother)
 		gpnode = pnode.GetParent() # grand parent node
 		if pnode is not None and gpnode is None and ntype == 'par':
 			# Don't show second-level par either
@@ -471,10 +471,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		top.setwaiting()
 		top.player.playfrom(self.node)
 
-##	def attrcall(self):
-##		self.mother.toplevel.setwaiting()
-##		import AttrEdit
-##		AttrEdit.showattreditor(self.mother.toplevel, self.node)
+	def attrcall(self):
+		self.mother.toplevel.setwaiting()
+		import AttrEdit
+		AttrEdit.showattreditor(self.mother.toplevel, self.node)
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
