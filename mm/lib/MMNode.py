@@ -369,7 +369,7 @@ class MMChannel:
 			# special case for background color
 			if key == 'bgcolor' and \
 			   self.attrdict.has_key('base_window') and \
-			   not self.attrdict.get('transparent', 0):
+			   self.attrdict.get('transparent', 0) <= 0:
 				pname = self.attrdict['base_window']
 				pchan = self.context.channeldict[pname]
 				return pchan['bgcolor']
@@ -395,7 +395,7 @@ class MMChannel:
 			return self.attrdict[key]
 		if key == 'bgcolor' and \
 		   self.attrdict.has_key('base_window') and \
-		   not self.attrdict.get('transparent', 0):
+		   self.attrdict.get('transparent', 0) <= 0:
 			pname = self.attrdict['base_window']
 			pchan = self.context.channeldict.get(pname)
 			if pchan:
