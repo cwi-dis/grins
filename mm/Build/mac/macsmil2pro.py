@@ -127,6 +127,7 @@ else:
 # macfreeze: exclude linuxaudiodev
 # macfreeze: exclude NodeInfo
 # macfreeze: exclude AnchorEdit
+# macfreeze: exclude rourl2path
 
 #
 # And here's the code for non-standalone version of the editor:
