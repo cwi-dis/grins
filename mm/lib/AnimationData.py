@@ -9,14 +9,12 @@ from fmtfloat import fmtfloat
 import colors
 
 # AnimationData pattern:
-# <ref ...>
+# <ref ...>  <--- AnimationData third argument (animparent)
 #   <animateMotion values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 #   <animate attributeName="width" values="w1;w2;w3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 #   <animate attributeName="height" values="h1;h2;h3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 #   <animateColor attributeName="backgroundColor" values="rgb1;rgb2;rgb3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 # </ref>
-
-# XXX: the implementation is currently limited to media nodes animations 
 
 # abstraction of animation target 
 # represents MMNode and MMRegion targets 
