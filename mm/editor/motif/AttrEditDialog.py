@@ -9,11 +9,10 @@ sub-classes of the AttrEditorDialogField.  A list of these instances
 is passed to the constructor of the AttrEditorDialog class.
 
 Each of the attribute editor fields has a label with the name of the
-attribute, an interface to edit the value (the interface depends on
-the type of the value), and a `Reset' button.  There are two callbacks
-associated with an attribute editor field, one to get help, and one
-that is called when the `Reset' button is pressed.  There are also
-some methods to get and set the current value of the attribute.
+attribute and an interface to edit the value (the interface depends on
+the type of the value).  There is a callback associated with an
+attribute editor field to get help.  There are also some methods to
+get and set the current value of the attribute.
 
 The base class of the AttrEditorDialogField class must provide some
 methods also.
@@ -43,7 +42,6 @@ class AttrEditorDialog:
 		self.__window = w
 		buttons = w.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
 			 ('OK', (self.ok_callback, ())),
 			 ],
@@ -62,13 +60,8 @@ class AttrEditorDialog:
 					   left = None, top = helpb,
 					   right = 0.3, bottom = bottom,
 					   tooltip = (a.gethelptext, ()))
-			rstb = form.Button('Reset',
-					   (a.reset_callback, ()),
-					   right = None, top = rstb,
-					   bottom = bottom,
-					   tooltip = 'Reset to current value')
 			wdg = a._createwidget(self, form,
-					      left = helpb, right = rstb,
+					      left = helpb, right = None,
 					      top = wdg, bottom = bottom)
 		w.show()
 
@@ -104,9 +97,6 @@ class AttrEditorDialog:
 	# the user of this class (i.e., the class that inherits from
 	# this class).
 	def cancel_callback(self):
-		pass
-
-	def restore_callback(self):
 		pass
 
 	def apply_callback(self):
@@ -255,10 +245,6 @@ class AttrEditorDialogField:
 	def getcurrent(self):
 		"""Return the current value of the attribute as a string."""
 		return 'current value'
-
-	def reset_callback(self):
-		"""Callback called when the `Reset' button is pressed."""
-		pass
 
 	def help_callback(self):
 		"""Callback called when help is requested."""
