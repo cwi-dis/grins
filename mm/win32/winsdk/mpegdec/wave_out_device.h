@@ -35,14 +35,17 @@ class wave_out_device
 		if(m_hDoneEvent!=NULL) CloseHandle(m_hDoneEvent);
 		}
 	
-	bool open(int rate)
+	bool open(int nSamplesPerSec, int nChannels)
 		{
+		int wBitsPerSample = 16; 
+		int nBlockAlign = nChannels*wBitsPerSample/8; 
+		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
 		WAVEFORMATEX wf = {WAVE_FORMAT_PCM, 
-			WORD(1), 
-			DWORD(rate), 
-			DWORD(rate*2),
-			WORD(2),
-			WORD(16),
+			WORD(nChannels), 
+			DWORD(nSamplesPerSec), 
+			DWORD(nAvgBytesPerSec),
+			WORD(nBlockAlign),
+			WORD(wBitsPerSample),
 			WORD(0) 
 			};
 		MMRESULT mmres = waveOutOpen(&m_hWaveOut, WAVE_MAPPER, &wf, (DWORD)wave_out_device::callback, (DWORD)this, CALLBACK_FUNCTION);

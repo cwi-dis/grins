@@ -28,15 +28,20 @@ int main(int argc, char *argv[])
 		delete is;
 		return 1;
 		}
+	printf("duration = %f\n", player.get_duration());
+
+	player.decode_audio_stream();
+
 	surface<color_repr_t> *psurf = new surface<color_repr_t>(player.get_width(), player.get_height());
 	player.prepare_playback(psurf);
 	printf("%d %d %f\n", player.get_width(), player.get_height(), player.get_frame_rate());
 	
 	player.resume_playback();
-	while(!player.finished_playback())
+	int i = 0;
+	while(!player.finished_playback() && ++i<2)
 		{
 		printf(".");
-		Sleep(2000);
+		Sleep(5000);
 		}
 	printf("\n");
 	player.close();

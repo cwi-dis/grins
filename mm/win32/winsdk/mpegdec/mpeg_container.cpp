@@ -37,7 +37,7 @@ mpeg_container::~mpeg_container()
 	close();
 	}
 
-bool mpeg_container::open(const TCHAR *path)
+bool mpeg_container::open(const TCHAR *path, bool create_streams)
 	{
 	// Initialize the file structure
 	m_pmpeg2 = new mpeg2_t;
@@ -124,12 +124,12 @@ bool mpeg_container::open(const TCHAR *path)
 
 	//  ====== Get title information =====================
 	
-	if(m_pmpeg2->is_transport_stream || m_pmpeg2->is_program_stream)
+	if((m_pmpeg2->is_transport_stream || m_pmpeg2->is_program_stream) && create_streams)
 		{
 		//printf("Create audio and video tracks\n");
-		/*
 		// Create video tracks
 		// Video must be created before audio because audio uses the video timecode to get its length
+		/*
 		for(int i = 0; i < MPEG2_MAX_STREAMS; i++)
 			{
 			if(m_pmpeg2->demuxer->vstream_table[i])
@@ -152,14 +152,14 @@ bool mpeg_container::open(const TCHAR *path)
 				}
 			}
 		}
-	else if(m_pmpeg2->is_video_stream)
+	else if(m_pmpeg2->is_video_stream && create_streams)
 		{
 		//printf("Create video track\n");
 		// Create video tracks
 		//m_pmpeg2->vtrack[0] = mpeg2_new_vtrack(m_pmpeg2, -1, m_pmpeg2->demuxer);
 		//if(m_pmpeg2->vtrack[0]) m_pmpeg2->total_vstreams++;
 		}
-	else if(m_pmpeg2->is_audio_stream)
+	else if(m_pmpeg2->is_audio_stream && create_streams)
 		{
 		//printf("Create audio track\n");
 		// Create audio tracks
@@ -197,6 +197,11 @@ bool mpeg_container::read_toc()
 	return true;
 	}
 
+double mpeg_container::get_duration()
+	{
+	return m_pmpeg2->demuxer->time; 
+	}
+
 long mpeg_container::read_audio(short *output, long samples, int stream, int channel)
 	{
 	if(!m_pmpeg2->has_audio) return 0;
@@ -221,7 +226,7 @@ void mpeg_container::read_audio(std::basic_string<char>& audio_data, int stream,
 		{
 		long n = read_audio(output, samples, stream, channel);
 		if(n == 0) break;
-		audio_data.append((char*)output, (char*)(output + n));
+		audio_data.append((char*)output, 2*n);
 		}
 	delete[] output;
 	}
