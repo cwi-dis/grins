@@ -50,9 +50,10 @@ class ArcInfo(Dialog):
 		hint = ''
 		self = Dialog.init(self, width, height, title, hint)
 		flp.merge_full_form(self, self.form, form_template)
-		self.one_sec.set_button(0)
-		self.ten_sec.set_button(1)
-		self.hundred_sec.set_button(0)
+		self.range_choice.clear_choice()
+		self.range_choice.addto_choice('0-1 sec')
+		self.range_choice.addto_choice('0-10 sec')
+		self.range_choice.addto_choice('0-100 sec')
 		return self
 
 	def __repr__(self):
@@ -68,6 +69,7 @@ class ArcInfo(Dialog):
 		if self.is_showing():
 			self.pop()
 		else:
+			self.setchoices()
 			self.show()
 			self.context.editmgr.register(self)
 			self.getvalues()
@@ -75,6 +77,38 @@ class ArcInfo(Dialog):
 	def close(self):
 		self.context.editmgr.unregister(self)
 		self.hide()
+
+	def setchoices(self):
+		self.src_markers = self.setchoice(self.src_choice, self.snode)
+		self.dst_markers = self.setchoice(self.dst_choice, self.dnode)
+
+	def setchoice(self, choice, node):
+		choice.clear_choice()
+		choice.addto_choice('*Begin*')
+		choice.addto_choice('*End*')
+		if node.GetChannelType() <> 'sound':
+			return []
+		# XXX Need to do this more general (i.e. also for video)
+		import SoundDuration
+		import SoundChannel # XXX hack! for aiffcache only
+		duration = 0.0
+		markers = []
+		filename = MMAttrdefs.getattr(node, 'file')
+		filename = node.context.findfile(filename)
+		# XXX hack!
+		import SoundChannel
+		try:
+			duration = SoundDuration.get(filename)
+			filename = SoundChannel.aiffcache.get(filename)
+			markers = SoundDuration.getmarkers(filename)
+		except IOError, msg:
+			pass
+		choice.clear_choice()
+		choice.addto_choice('*Begin* (0.0)')
+		for id, pos, name in markers:
+			choice.addto_choice('  %s (%.2g)' % (name, pos))
+		choice.addto_choice('*End* (%.2g)' % duration)
+		return markers
 
 	# Override event handler
 
@@ -121,54 +155,42 @@ class ArcInfo(Dialog):
 		self.setvalues()
 		self.close()
 
-	def one_sec_callback(self, *args):
-		delay = min(1.0, self.delay_slider.get_slider_value())
+	def range_callback(self, *args):
+		i = self.range_choice.get_choice()
+		range = float(pow(10, i-1))
+		delay = min(range, self.delay_slider.get_slider_value())
 		self.delay_slider.set_slider_value(delay)
-		self.delay_slider.set_slider_bounds(0.0, 1.0)
-		self.delay_slider.set_slider_precision(2)
+		self.delay_slider.set_slider_bounds(0.0, range)
+		self.delay_slider.set_slider_precision(3-i)
 
-	def ten_sec_callback(self, *args):
-		delay = min(10.0, self.delay_slider.get_slider_value())
-		self.delay_slider.set_slider_value(delay)
-		self.delay_slider.set_slider_bounds(0.0, 10.0)
-		self.delay_slider.set_slider_precision(1)
+	# callbacks for source, destination and delay slider
 
-	def hundred_sec_callback(self, *args):
-		delay = min(100.0, self.delay_slider.get_slider_value())
-		self.delay_slider.set_slider_value(delay)
-		self.delay_slider.set_slider_bounds(0.0, 100.0)
-		self.delay_slider.set_slider_precision(0)
-
-	# Dummy callback for from/to beginning/end buttons and delay slider
-
-	def dummy_callback(self, *args):
+	def src_callback(self, *args):
 		pass
 
-	# Get/set values
+	def dst_callback(self, *args):
+		pass
+
+	def slider_callback(self, *args):
+		pass
+
+	# Get/set values (get: from object to form; set: from form to object)
 
 	def getvalues(self):
 		if self.delay > 10.0:
-			self.hundred_sec.set_button(1)
-			self.ten_sec.set_button(0)
-			self.one_sec.set_button(0)
-		elif self.delay > 1.0 and self.one_sec.get_button():
-			self.hundred_sec.set_button(0)
-			self.ten_sec.set_button(1)
-			self.one_sec.set_button(0)
-		if self.hundred_sec.get_button():
-			self.delay_slider.set_slider_bounds(0.0, 100.0)
-			self.delay_slider.set_slider_precision(0)
-		elif self.ten_sec.get_button():
-			self.delay_slider.set_slider_bounds(0.0, 10.0)
-			self.delay_slider.set_slider_precision(1)
+			self.range_choice.set_choice(3)
+		elif self.delay > 1.0:
+			self.range_choice.set_choice(2)
 		else:
-			self.delay_slider.set_slider_bounds(0.0, 1.0)
-			self.delay_slider.set_slider_precision(2)
+			self.range_choice.set_choice(1)
+		self.range_callback()
 		self.delay_slider.set_slider_value(self.delay)
-		self.from_beginning.set_button(not self.sside)
-		self.from_end.set_button(self.sside)
-		self.to_beginning.set_button(not self.dside)
-		self.to_end.set_button(self.dside)
+		if self.sside: i = len(self.src_markers) + 2
+		else: i = 1
+		self.src_choice.set_choice(i)
+		if self.dside: i = len(self.dst_markers) + 2
+		else: i = 1
+		self.dst_choice.set_choice(i)
 
 	def setvalues(self):
 		editmgr = self.context.editmgr
@@ -180,8 +202,9 @@ class ArcInfo(Dialog):
 		p = 100.0 / self.delay_slider.get_slider_bounds()[1]
 		self.delay = int(d*p + 0.5) / p
 		self.delay_slider.set_slider_value(self.delay)
-		self.sside = self.from_end.get_button()
-		self.dside = self.to_end.get_button()
+		# XXX For now, clip sides to [0, 1]
+		self.sside = min(self.src_choice.get_choice() - 1, 1)
+		self.dside = min(self.dst_choice.get_choice() - 1, 1)
 		editmgr.addsyncarc(self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
 		editmgr.commit()
