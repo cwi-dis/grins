@@ -670,10 +670,10 @@ class EffectiveAnimator:
 		elif self.__tag == 'area':
 			self.__updatearea(displayValue)
 			return
-		elif self.__attr in ('top','left','width','height'):
+		elif self.__attr in ('top','left','width','height','right','bottom','position'):
 			self.__updatesubregion(displayValue)
 			return
-			
+	
 		# normal proccessing
 		self.__node.SetPresentationAttr(self.__attr, displayValue)
 
@@ -845,7 +845,6 @@ class EffectiveAnimator:
 				newcoordinates = x, y, w, value
 			if chan.window:
 				chan.window.updatecoordinates(newcoordinates, units, scale)
-		
 		mmchan.SetPresentationAttr(attr, value)
 		if debug:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
@@ -915,7 +914,7 @@ def getregionattr(node, attr):
 		if d.has_key('base_winoff'):
 			r = d['base_winoff']
 			if attr == 'position':
-				v = r[0], r[1]
+				return complex(r[0], r[1]), attr, 'position'
 			elif attr == 'size':
 				v = r[2], r[3]
 			elif attr == 'left':
@@ -976,6 +975,7 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'height':(lambda node:getregionattr(node,'height')),
 	'right':(lambda node:getregionattr(node,'right')),
 	'bottom':(lambda node:getregionattr(node,'bottom')),
+	'position':(lambda node:getregionattr(node,'position')),
 	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
 	'z-index':(lambda node:getregionattr(node,'z')),
 	'soundLevel':(lambda node:getregionattr(node,'soundLevel')),
@@ -1114,7 +1114,7 @@ class AnimateElementParser:
 			self.__setTimeManipulators(anim)
 			return anim
 
-		if self.__elementTag=='animateMotion':
+		if self.__elementTag=='animateMotion' or self.__attrtype=='position':
 			strpath = MMAttrdefs.getattr(self.__anim, 'path')
 			path = svgpath.Path()
 			if strpath:
