@@ -20,12 +20,27 @@ class CLOSE_WINDOW(_CommandBase):
 	help = 'Close this window'
 class HELP(_CommandBase):
 	help = 'Display help'
+#
+# Commands for a global edit menu (mac only?)
+#
+class UNDO(_CommandBase):
+	pass
+class CUT(_CommandBase):
+	pass
+class COPY(_CommandBase):
+	pass
+class PASTE(_CommandBase):
+	pass
+class DELETE(_CommandBase):
+	pass
 
 #
 # MainDialog commands
 #
 class OPEN(_CommandBase):
 	help = 'Open existing document'
+class OPEN_LOCAL_FILE(_CommandBase): # XXXX Temporary, Mac only
+	help = 'Open existing local document'
 class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
@@ -36,6 +51,8 @@ class EXIT(_CommandBase):
 	help = 'Exit GRiNS'
 class CLOSE(_CommandBase):
 	help = 'Close current document'
+class CONSOLE(_CommandBase):
+	help = "DEBUG: Show debug/log output window"
 
 #
 # Player view commands
@@ -56,3 +73,7 @@ class CRASH(_CommandBase):
 	help = 'DEBUG: Force a crash'
 class SCHEDDUMP(_CommandBase):
 	help = 'DEBUG: Dump scheduler data'
+
+class CONSOLE(_CommandBase):
+	help = "DEBUG: Show debug/log output window"
+
