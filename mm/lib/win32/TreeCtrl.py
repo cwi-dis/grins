@@ -15,6 +15,7 @@ class TreeCtrl(window.Wnd):
 	def __init__ (self):
 		window.Wnd.__init__(self, win32ui.CreateTreeCtrl())
 		self._selections = []
+		self._multiSelListeners = []
 
 	def create(self, parent, rc, id):
 		style = win32con.WS_VISIBLE | commctrl.TVS_HASBUTTONS |\
@@ -47,14 +48,14 @@ class TreeCtrl(window.Wnd):
 
 		if not (flags & win32con.MK_CONTROL):
 			# remove multi-select mode
+			nsel = len(self._selections)
 			for item in self._selections:
 				self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
 			self._selections = []
 			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-			self.appendSelection(hititem)
-			
+			if nsel: self.OnMultiSelChanged()
+
 			# do a normal selection/deselection
-			if debug: self.scheduleDump()
 			return 1
 		
 		# enter multi-select mode
@@ -66,6 +67,7 @@ class TreeCtrl(window.Wnd):
 				selstate = self.GetItemState(selitem, commctrl.TVIS_SELECTED)
 		except: 
 			selitem = None
+		nsel = len(self._selections)
 
 		# select/deselect normally hit item the same way base would do
 		hitstate = self.GetItemState(hititem, commctrl.TVIS_SELECTED)
@@ -86,8 +88,12 @@ class TreeCtrl(window.Wnd):
 		if not self._selections:
 			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 			self.appendSelection(hititem)
-				
-		if debug: self.scheduleDump()
+		
+		# motify listeners
+		if nsel != len(self._selections):
+			self.OnMultiSelChanged()
+
+		# absorb event		
 		return 0
 
 
@@ -99,8 +105,24 @@ class TreeCtrl(window.Wnd):
 			print 'OnSelChanged'
 			self.scheduleDump()
 
+	def OnMultiSelChanged(self):
+		for listener in self._multiSelListeners:
+			listener.OnMultiSelChanged()
+		if debug:
+			print 'OnMultiSelChanged'
+			self.scheduleDump()
+
+	def addMultiSelListener(self, listener):
+		if hasattr(listener, 'OnMultiSelChanged') and\
+			listener not in self._multiSelListeners:
+			self._multiSelListeners.append(listener)
+
+	def removeMultiSelListener(self, listener):
+		if listener in self._multiSelListeners:
+			self._multiSelListeners.remove(listener)
+		
 	def OnDump(self, params):
-		print self.GetSelectedItems()
+		print self.getSelectedItems()
 
 	def scheduleDump(self):
 		self.PostMessage(win32con.WM_USER+1)
@@ -116,7 +138,7 @@ class TreeCtrl(window.Wnd):
 		if item in self._selections:
 			self._selections.remove(item)
 
-	def GetSelectedItems(self):
+	def getSelectedItems(self):
 		if len(self._selections)>0:
 			return self._selections
 		try: selected = self.GetSelectedItem()
