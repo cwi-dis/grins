@@ -62,6 +62,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.played_str = ()
 		self.__errors=[]
 		self.__armed=0
+		self.__which_control = None
 		# release any resources on exit
 		windowinterface.addclosecallback(self.release_res,())
 		
@@ -80,6 +81,13 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.DestroyHtmlCtrl()
 			self.window.setredrawfunc(None)
 		Channel.ChannelWindow.destroy(self)
+	
+	def mustreshow(self):
+		"""Return true if control setting changed"""
+		import settings
+		if self.__which_control == settings.get('html_control'):
+			return 0
+		return 1
 
 	def release_res(self):
 		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
@@ -93,6 +101,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.armed_url=self.getfileurl(node)
 		self.__armed=0
 		if not self.window.HasHtmlCtrl():
+			import settings
+			self.__which_control = settings.get('html_control')
 			self.window.CreateHtmlCtrl()
 			self.window.ShowWindow(win32con.SW_HIDE)
 			self.__arm(node)
