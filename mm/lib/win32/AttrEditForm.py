@@ -913,19 +913,18 @@ class TupleCtrl(AttrCtrl):
 		if self._initctrl:
 			t=self.atoi_tuple(val)
 			st=self.dtuple2stuple(t,self._nedit)
+			default = string.split(self._attr.getdefault())
 			for i in range(self._nedit):
-				self._attrval[i].settext(st[i])
+				self._attrval[i].settext(st[i] or default[i])
 
 	def getvalue(self):
 		if not self._initctrl:
 			return self._attr.getcurrent()
+		default = string.split(self._attr.getdefault())
 		st=[]
 		for i in range(self._nedit):
-			st.append(self._attrval[i].gettext())
-		s=st[0]
-		for i in range(1,self._nedit):
-			s = s + ' ' + st[i]
-		return s
+			st.append(self._attrval[i].gettext() or default[i])
+		return string.join(st)
 
 	def OnReset(self,id,code):
 		if self._attr:
@@ -939,7 +938,8 @@ class IntTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
 			st = string.split(val)
-			# XXX could check that len(st) == self._nedit
+			if len(st) != self._nedit:
+				st = string.split(self._attr.getdefault())
 			for i in range(self._nedit):
 				# this checks that the strings are all ints
 				s = '%d' % string.atoi(st[i])
@@ -950,8 +950,7 @@ class FloatTupleCtrl(TupleCtrl):
 		if self._initctrl:
 			st = string.split(val)
 			if len(st) != self._nedit:
-				st = ('',) * self._nedit
-			# XXX could check that len(st) == self._nedit
+				st = string.split(self._attr.getdefault())
 			for i in range(self._nedit):
 				# this checks that the strings are all floats
 				# and also normalizes them
