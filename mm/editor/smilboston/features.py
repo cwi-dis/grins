@@ -23,6 +23,7 @@ feature_set = [
 	CREATE_TEMPLATES,
 	ADVANCED_PROPERTIES,
 	PREFERENCES,
+	ALIGNTOOL,
 	]
 
 version = 'pro'
