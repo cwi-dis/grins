@@ -46,12 +46,7 @@ class TreeCtrl(window.Wnd):
 		if resId != None:		
 			self._setEvents()
 		
-		self._regionpopup = None
-		self._subregionpopup = None
-
-		# test
-		self.setpopup(MenuTemplate.POPUP_REGIONTREE_REGION, 'region')
-		self.setpopup(MenuTemplate.POPUP_REGIONTREE_SUBREGION, 'subregion')
+		self._popup = None
 		
 		# register as a drop target
 		self.RegisterDropTarget()
@@ -326,32 +321,29 @@ class TreeCtrl(window.Wnd):
 	#
 	#
 	#
-	def OnRButtonDown(self, params):
-		if len(self._selections) != 1: 
-			return
 
-		item = self._selections[0]
-		itemtype = self.getItemType(item)
+	def setpopup(self, popup):
+		self._popup = popup
 		
+	def OnRButtonDown(self, params):
+		# simulate a left click to select
+		self.OnLButtonDown(params)
+		self.OnLButtonUp(params)
+				
 		msg = Win32Msg(params)
 		point = msg.pos()
 		flags = msg._wParam
 		point = self.ClientToScreen(point)
 		flags = win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON | win32con.TPM_LEFTBUTTON
 
-		popup = None
-		if itemtype == 'region' and self._regionpopup:
-			popup = self._regionpopup
-		elif itemtype == 'subregion' and self._subregionpopup:
-			popup = self._subregionpopup
-		if popup:
-			popup.TrackPopupMenu(point, flags, self.GetParent())
+		if self._popup:
+			# xxx to improve
+			self._popup.TrackPopupMenu(point, flags, self.getLayoutView().GetParent().GetParent().GetMDIFrame())
 
 	def OnDestroy(self, params):
-		if self._regionpopup:
-			self._regionpopup.DestroyMenu()
-		if self._subregionpopup:
-			self._subregionpopup.DestroyMenu()
+		if self._popup:
+			self._popup.DestroyMenu()
+			self._popup = None
 
 	def OnExpanded(self, std, extra):
 		self._selEventSource = EVENT_SRC_Expanded
@@ -584,35 +576,9 @@ class TreeCtrl(window.Wnd):
 	#
 	#  popup menu
 	#
-
-	# which in ('topLayout', 'region', 'subregion')
- 	def setpopup(self, menutemplate, which):
-		import win32menu, usercmdui
-		popup = win32menu.Menu('popup')
-		popup.create_popup_from_menubar_spec_list(menutemplate, usercmdui.usercmd2id)
-		if which == 'region':
-			if self._regionpopup:
-				self._regionpopup.DestroyMenu()
-			self._regionpopup = popup
-		elif which == 'subregion':
-			if self._subregionpopup:
-				self._subregionpopup.DestroyMenu()
-			self._subregionpopup = popup
-		else:
-			popup.DestroyMenu()
 	
 	# return what GRiNS thinks as the Layout view for command delegation
 	def getLayoutView(self):
 		return self.parent
-
-	# return item type in ('topLayout', 'region', 'subregion')
-	def getItemType(self, item):
-		# XXX: not correct, just a test
-		try:
-			dummy = self.GetChildItem(item)
-		except:
-			return 'subregion'
-		else:
-			return 'region'
 
  
