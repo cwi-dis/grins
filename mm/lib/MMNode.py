@@ -931,7 +931,7 @@ class MMNode:
 		self.reset()
 		for c in self.children:
 			c.resetall(sched)
-		for arc in MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist'):
+		for arc in MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist') + self.durarcs:
 			refnode = self.__find_refnode(arc)
 			if arc in refnode.sched_children:
 				refnode.sched_children.remove(arc)
