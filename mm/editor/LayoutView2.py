@@ -806,7 +806,7 @@ class LayoutView2(LayoutViewDialog2):
 				targetList.append(nodeRef)
 			elif nodeRef.getClassName() == 'MMNode' and nodeRef.type in ('animpar', 'animate'):
 				parentRef = self.treeHelper.getParent(nodeRef, TYPE_ANIMATE)
-				if parentRef is not None and parentRef.getAnimateNode() is nodeRef:
+				if parentRef is not None and self.getNodeType(parentRef) == TYPE_MEDIA and parentRef.getAnimateNode() is nodeRef:
 					targetList.append(parentRef)
 			
 		self.currentSelectedNodeList = targetList
