@@ -13,45 +13,73 @@ import re
 import os, sys
 from SMIL import *
 import settings
-import features
 
 error = 'SMILTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
-LAYOUT_UNKNOWN = -1
+LAYOUT_EXTENDED = 2
+LAYOUT_UNKNOWN = -1			# must be < 0
 
 layout_name = ' SMIL '			# name of layout channel
 
-coordre = re.compile(r'^(?P<x0>\d+%?),(?P<y0>\d+%?),'
-		     r'(?P<x1>\d+%?),(?P<y1>\d+%?)$')
-idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
-clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
-		       r'(?:(?P<hours>\d{2}):)?'
-		       r'(?P<minutes>\d{2}):'
-		       r'(?P<seconds>\d{2})'
-		       r'(?P<fraction>\.\d+)?'
-		       r')|(?P<use_timecount>' # timecount[.fraction]unit
-		       r'(?P<timecount>\d+)'
-		       r'(?P<units>\.\d+)?'
-		       r'(?P<scale>h|min|s|ms)?)'
-		       r')$')
-id = re.compile(r'id\((?P<name>' + xmllib._Name + r')\)' # id(name)
-		r'\((?P<event>[^)]+)\)'			# (event)
-## 		r'(?:\+(?P<delay>.*))?'			# +delay (optional)
-		r'$')
-clock = re.compile(r'(?P<name>local|remote):'
-		   r'(?P<hours>\d+):'
-		   r'(?P<minutes>\d{2}):'
-		   r'(?P<seconds>\d{2})'
-		   r'(?P<fraction>\.\d+)?'
-		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
-screen_size = re.compile(r'(?P<x>\d+)X(?P<y>\d+)$')
-clip = re.compile('^(?:'
-		   '(?:(?P<npt>npt)=(?P<nptclip>[^-]*))|'
-		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>[^-]*))'
-		   ')$')
-smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
+_opS = xmllib._opS
+
+coordre = re.compile(_opS + r'(?P<x0>\d+%?)' + _opS + r',' +
+		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
+		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
+		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
+idref = re.compile(r'id\(' + _opS + r'(?P<id>' + xmllib._Name + r')' + _opS + r'\)')
+clock_val = (_opS +
+	     r'(?:(?P<use_clock>'	# full/partial clock value
+	     r'(?:(?P<hours>\d+):)?'		# hours: (optional)
+	     r'(?P<minutes>[0-5][0-9]):'	# minutes:
+	     r'(?P<seconds>[0-5][0-9])'      	# seconds
+	     r'(?P<fraction>\.\d+)?'		# .fraction (optional)
+	     r')|(?P<use_timecount>' # timecount value
+	     r'(?P<timecount>\d+)'		# timecount
+	     r'(?P<units>\.\d+)?'		# .fraction (optional)
+	     r'(?P<metric>h|min|s|ms)?)'	# metric (optional)
+	     r')' + _opS)
+syncbase = re.compile('id' + _opS + r'\(' + _opS + '(?P<name>' + xmllib._Name + ')' + _opS + r'\)' + # id(name)
+		      _opS +
+		      r'\(' + _opS + r'(?P<event>[^)]*[^) \t\r\n])' + _opS + r'\)' + # (event)
+		      '$')
+offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
+syncbase2 = re.compile(	# ((id-ref/prev ".")? event-ref/begin/end)? (offset)?
+	_opS +
+	r'(?P<event>' + xmllib._Name + r')' +			# ID-ref
+	_opS +
+	r'(?P<offset>(?:[-+])' + clock_val + r')?$'		# offset
+	)
+mediamarker = re.compile(		# id-ref ".marker(" name ")"
+	_opS +
+	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
+	r'marker\(' + _opS + r'(?P<markername>' + xmllib._Name + r')' + _opS + r'\)' + _opS + r'$'	# "marker(...)"
+	)
+wallclock = re.compile(			# "wallclock(" wallclock-value ")"
+	r'wallclock\((?P<wallclock>[^()]+)\)$'
+	)
+wallclockval = re.compile(
+	r'(?:(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T)?'	# date (optional)
+	r'(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2}(?:\.\d+)?))?'	# time (required)
+	r'(?:(?P<Z>Z)|(?P<tzsign>[-+])(?P<tzhour>\d{2}):(?P<tzmin>\d{2}))?$'	# timezone (optional)
+	)
+##clock = re.compile(r'(?P<name>local|remote):'
+##		   r'(?P<hours>\d+):'
+##		   r'(?P<minutes>\d{2}):'
+##		   r'(?P<seconds>\d{2})'
+##		   r'(?P<fraction>\.\d+)?'
+##		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
+screen_size = re.compile(_opS + r'(?P<x>\d+)' + _opS + r'[xX]' +
+			 _opS + r'(?P<y>\d+)' + _opS + r'$')
+clip = re.compile(_opS + r'(?:'
+		  # npt=...
+		   '(?:(?P<npt>npt)' + _opS + r'=' + _opS + r'(?P<nptclip>[^-]*))|'
+		  # smpte/smpte-25/smpte-30-drop=...
+		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)' + _opS + r'=' + _opS + r'(?P<smpteclip>[^-]*))'
+		   ')' + _opS + r'$')
+smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?' + _opS + r'$')
 namedecode = re.compile(r'(?P<name>.*)-\d+$')
 _token = '[^][\001-\040()<>@,;:\\"/?=\177-\377]+' # \000 also not valid
 dataurl = re.compile('data:(?P<type>'+_token+'/'+_token+')?'
@@ -64,12 +92,13 @@ from colors import colors
 color = re.compile('(?:'
 		   '#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
 			    '[0-9a-fA-F]{6})|'		# #ff0000
-		   'rgb\((?: *(?P<ri>[0-9]+) *,'	# rgb(255, 0, 0)
-			   ' *(?P<gi>[0-9]+) *,'
-			   ' *(?P<bi>[0-9]+) *|'
-			   ' *(?P<rp>[0-9]+) *% *,'	# rgb(100%, 0%, 0%)
-			   ' *(?P<gp>[0-9]+) *% *,'
-			   ' *(?P<bp>[0-9]+) *% *)\))$')
+		   'rgb' + _opS + r'\(' +		# rgb(R,G,B)
+			   _opS + '(?:(?P<ri>[0-9]+)' + _opS + ',' + # rgb(255,0,0)
+			   _opS + '(?P<gi>[0-9]+)' + _opS + ',' +
+			   _opS + '(?P<bi>[0-9]+)|' +
+			   _opS + '(?P<rp>[0-9]+)' + _opS + '%' + _opS + ',' + # rgb(100%,0%,0%)
+			   _opS + '(?P<gp>[0-9]+)' + _opS + '%' + _opS + ',' +
+			   _opS + '(?P<bp>[0-9]+)' + _opS + '%)' + _opS + r'\))$')
 
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 'choice-index',
@@ -85,16 +114,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'head': (self.start_head, self.end_head),
 			'meta': (self.start_meta, self.end_meta),
 			'layout': (self.start_layout, self.end_layout),
-			GRiNSns+' '+'user-attributes': (self.start_user_attributes, self.end_user_attributes),
-			GRiNSns+' '+'u-group': (self.start_u_group, self.end_u_group),
+			'userAttributes': (self.start_user_attributes, self.end_user_attributes),
+			'uGroup': (self.start_u_group, self.end_u_group),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
+			'top-layout': (self.start_top_layout, self.end_top_layout),
 			GRiNSns+' '+'layouts': (self.start_layouts, self.end_layouts),
 			GRiNSns+' '+'layout': (self.start_Glayout, self.end_Glayout),
 			'body': (self.start_body, self.end_body),
 			'par': (self.start_par, self.end_par),
 			'seq': (self.start_seq, self.end_seq),
 			'switch': (self.start_switch, self.end_switch),
+			'excl': (self.start_excl, self.end_excl),
 			GRiNSns+' '+'choice': (self.start_choice, self.end_choice),
 			GRiNSns+' '+'bag': (self.start_choice, self.end_choice),
 			'ref': (self.start_ref, self.end_ref),
@@ -109,6 +140,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			GRiNSns+' '+'cmif': (self.start_cmif, self.end_cmif),
 			'a': (self.start_a, self.end_a),
 			'anchor': (self.start_anchor, self.end_anchor),
+			'area': (self.start_area, self.end_area),
 			}
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
@@ -123,19 +155,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__context = context
 		self.__root = None
 		self.__root_layout = None
+		self.__top_layout = None
+		self.__tops = {}
+		self.__topchans = []
 		self.__container = None
 		self.__node = None	# the media object we're in
 		self.__regions = {}	# mapping from region id to chan. attrs
 		self.__region2channel = {} # mapping from region to channels
+		self.__region = None	# keep track of nested regions
+		self.__regionlist = []
+		self.__childregions = {}
+		self.__topregion = {}
 		self.__ids = {}		# collect all id's here
-		self.__width = self.__height = 0
-		self.__root_width = self.__root_height = 0 # w,h in root-layout
-		self.__layout = None
 		self.__nodemap = {}
 		self.__idmap = {}
 		self.__anchormap = {}
 		self.__links = []
-		self.__title = None
 		self.__base = ''
 		self.__printfunc = printfunc
 		self.__printdata = []
@@ -169,47 +204,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return self.__root
 
 	def SyncArc(self, node, attr, val):
-		synctolist = node.attrdict.get('synctolist', [])
+		boston = None
+		beginlist = node.attrdict.get('beginlist', [])
+		endlist = node.attrdict.get('endlist', [])
 		if attr == 'begin':
-			yside = HD
+			list = beginlist
 		else:
-			yside = TL
-		try:
-			name, counter, delay = self.__parsetime(val)
-		except error, msg:
-			self.syntax_error(msg)
-			return
-		if name is None:
-			# relative to parent/previous/start
-			if yside == HD:
-				node.attrdict['begin'] = delay
-				return
-			parent = node.GetParent()
-			if parent is None:
-				self.syntax_error('sync arc to top-level node')
-				return
-			ptype = parent.GetType()
-			if ptype == 'seq':
-				xnode = None
-				for n in parent.GetChildren():
-					if n is node:
-						break
-					xnode = n
-				else:
-					self.error('node not in parent', self.lineno)
-				if xnode is None:
-					# first, relative to parent
-					xside = HD # rel to start of parent
-					xnode = parent
-				else:
-					# not first, relative to previous
-					xside = TL # rel to end of previous
-			else:
-				xside = HD # rel to start of parent
-				xnode = parent
-			synctolist.append((xnode.GetUID(), xside, delay, yside))
-		else:
-			# relative to other node
+			list = endlist
+		val = string.strip(val)
+		res = syncbase.match(val)
+		if res is not None:
+			# SMIL 1.0 begin value
+			name = res.group('name')
+			delay = self.__parsecounter(res.group('event'), 1)
 			xnode = self.__nodemap.get(name)
 			if xnode is None:
 				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
@@ -219,20 +226,114 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					break
 			else:
 				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
-				return
-			if counter == -1:
-				xside = TL
-				counter = 0
+##				return
+			if delay == 'begin' or delay == 'end':
+				event = delay
+				delay = 0.0
 			else:
-				xside = HD
-			synctolist.append((xnode.GetUID(), xside, delay + counter, yside))
-		node.attrdict['synctolist'] = synctolist
+				event = 'begin'
+			list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=delay))
+		elif val == 'indefinite':
+			boston = 'indefinite'
+			list.append(MMNode.MMSyncArc(node, attr))
+		else:
+			vals = string.split(val, ';')
+			if len(vals) > 1:
+				boston = 'multiple %s values' % attr
+			for val in vals:
+				val = string.strip(val)
+				try:
+					offset = self.__parsecounter(val, withsign = 1)
+				except error:
+					pass
+				else:
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=None, delay=offset))
+##					node.attrdict['begin'] = offset
+					continue
+				res = syncbase2.match(val)
+				if res is not None:
+					if not boston:
+						boston = '%s-value' % attr
+					name = res.group('event')
+					if name[:5] == 'prev.':
+						event = name[5:]
+						name = 'prev'
+					elif name[-6:] == '.begin':
+						name = name[:-6]
+						event = 'begin'
+					elif name[-4:] == '.end':
+						name = name[:-4]
+						event = 'end'
+					elif '.' not in name:
+						event = name
+						name = None
+					else:
+						name = string.split(name, '.')
+						if len(name) != 2:
+							self.syntax_error("can't resolve name")
+							continue
+						name, event = name
+					offsetstr = res.group('offset')
+					if offsetstr:
+						offset = self.__parsecounter(offsetstr, withsign = 1)
+					else:
+						offset = 0
+					if name == 'prev':
+						xnode = 'prev'
+					else:
+						xnode = self.__nodemap.get(name)
+						if xnode is None:
+							self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+							continue
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=offset))
+					continue
+				res = mediamarker.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'marker'
+					name = res.group('id')
+					xnode = self.__nodemap.get(name)
+					if xnode is None:
+						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+						continue
+					marker = res.group('markername')
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=0.0))
+					continue
+				res = wallclock.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'wallclock time'
+					wc = string.strip(res.group('wallclock'))
+					res = wallclockval.match(wc)
+					if res is None:
+						self.syntax_error('bad wallclock value')
+						continue
+					yr,mt,dy,hr,mn,tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('year','month','day','hour','min','tzhour','tzmin'))
+					sc, tzsg = res.group('sec', 'tzsign')
+					if sc is not None:
+						sc = string.atof(sc)
+					if res.group('Z') is not None:
+						tzhr = tzmn = 0
+						tzsg = '+'
+					print 'wallclock',yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn
+##					list.append(MMNode.MMSyncArc(node, attr, wallclock = XXX))
+					continue
+				self.syntax_error('unrecognized %s value' % attr)
+		if boston:
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s not compatible with SMIL 1.0' % boston)
+			self.__context.attributes['project_boston'] = 1
+		if beginlist:
+			node.attrdict['beginlist'] = beginlist
+		if endlist:
+			node.attrdict['endlist'] = endlist
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
 		node.__anchorlist = []
 		attrdict = node.attrdict
 		for attr, val in attributes.items():
+			val = string.strip(val)
 			if attr == 'id':
 				self.__nodemap[val] = node
 				self.__idmap[val] = node.GetUID()
@@ -245,29 +346,51 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val != '#':
 					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
-				node.__syncarcs.append((attr, val))
+				node.__syncarcs.append((attr, val, self.lineno))
 			elif attr == 'dur':
 				if val == 'indefinite':
 					attrdict['duration'] = -1
 				else:
 					try:
-						attrdict['duration'] = self.__parsecounter(val, 0)
+						attrdict['duration'] = self.__parsecounter(val)
 					except error, msg:
 						self.syntax_error(msg)
-			elif attr == 'repeat':
+			elif attr == 'repeat' or attr == 'repeatCount':
+				ignore = attr == 'repeat' and attrdict.has_key('loop')
 				if val == 'indefinite':
-					attrdict['loop'] = 0
+					if not ignore:
+						attrdict['loop'] = 0
 				else:
 					try:
+						# XXX fractional values are actually allowed
 						repeat = string.atoi(val)
 					except string.atoi_error:
 						self.syntax_error('bad repeat attribute')
 					else:
 						if repeat <= 0:
 							self.warning('bad repeat value', self.lineno)
-						elif repeat != 1:
+						elif not ignore:
 							attrdict['loop'] = repeat
+			elif attr == 'restart':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('always', 'whenNotActive', 'never'):
+					attrdict['restart'] = val
+				else:
+					self.syntax_error('bad restart attribute')
 			elif attr == 'system-bitrate':
+				try:
+					bitrate = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad bitrate attribute')
+				else:
+					if not attrdict.has_key('system_bitrate'):
+						attrdict['system_bitrate'] = bitrate
+			elif attr == 'systemBitrate':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				try:
 					bitrate = string.atoi(val)
 				except string.atoi_error:
@@ -279,10 +402,29 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is None:
 					self.syntax_error('bad screen-size attribute')
 				else:
-					attrdict['system_screen_size'] = \
-						tuple(map(string.atoi,
-							  res.group('x','y')))
+					if not attrdict.has_key('system_screen_size'):
+						attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+			elif attr == 'systemScreenSize':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				res = screen_size.match(val)
+				if res is None:
+					self.syntax_error('bad screen-size attribute')
+				else:
+					attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
 			elif attr == 'system-screen-depth':
+				try:
+					depth = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad screen-depth attribute')
+				else:
+					if not attrdict.has_key('system_screen_depth'):
+						attrdict['system_screen_depth'] = depth
+			elif attr == 'systemScreenDepth':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				try:
 					depth = string.atoi(val)
 				except string.atoi_error:
@@ -291,25 +433,94 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['system_screen_depth'] = depth
 			elif attr == 'system-captions':
 				if val == 'on':
+					if not attrdict.has_key('system_captions'):
+						attrdict['system_captions'] = 1
+				elif val == 'off':
+					if not attrdict.has_key('system_captions'):
+						attrdict['system_captions'] = 0
+				else:
+					self.syntax_error('bad system-captions attribute')
+			elif attr == 'systemCaptions':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val == 'on':
 					attrdict['system_captions'] = 1
 				elif val == 'off':
 					attrdict['system_captions'] = 0
 				else:
 					self.syntax_error('bad system-captions attribute')
+##			elif attr == 'system-audiodesc':
+##				if val == 'on':
+##					if not attrdict.has_key('system_audiodesc'):
+##						attrdict['system_audiodesc'] = 1
+##				elif val == 'off':
+##					if not attrdict.has_key('system_audiodesc'):
+##						attrdict['system_audiodesc'] = 0
+##				else:
+##					self.syntax_error('bad system-audiodesc attribute')
+			elif attr == 'systemAudioDesc':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val == 'on':
+					attrdict['system_audiodesc'] = 1
+				elif val == 'off':
+					attrdict['system_audiodesc'] = 0
+				else:
+					self.syntax_error('bad system-audiodesc attribute')
 			elif attr == 'system-language':
+				if not attrdict.has_key('system_language'):
+					attrdict['system_language'] = val
+			elif attr == 'systemLanguage':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				attrdict['system_language'] = val
 			elif attr == 'system-overdub-or-caption':
+				if val in ('caption', 'overdub'):
+					if not attrdict.has_key('system_overdub_or_caption'):
+						attrdict['system_overdub_or_caption'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-caption attribute')
+			elif attr == 'systemOverdubOrCaption':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				if val in ('caption', 'overdub'):
 					attrdict['system_overdub_or_caption'] = val
 				else:
 					self.syntax_error('bad system-overdub-or-caption attribute')
+			elif attr == 'system-overdub-or-subtitle':
+				if val in ('subtitle', 'overdub'):
+					if not attrdict.has_key('system_overdub_or_subtitle'):
+						attrdict['system_overdub_or_subtitle'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-subtitle attribute')
+			elif attr == 'systemOverdubOrSubtitle':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('subtitle', 'overdub'):
+					attrdict['system_overdub_or_subtitle'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-subtitle attribute')
 			elif attr == 'system-required':
+				if not attrdict.has_key('system_required'):
+					attrdict['system_required'] = val
+			elif attr == 'systemRequired':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				attrdict['system_required'] = val
-			elif attr == 'u-group':
+			elif attr == 'uGroup':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				if self.__u_groups.has_key(val):
 					attrdict['u_group'] = val
 				else:
-					self.syntax_error("unknown u-group `%s'" % val)
+					self.syntax_error("unknown uGroup `%s'" % val)
 			elif attr == 'layout':
 				if self.__layouts.has_key(val):
 					attrdict['layout'] = val
@@ -318,7 +529,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'title':
 				attrdict['title'] = val
 			elif attr == 'fill':
-				if val in ('freeze', 'remove'):
+				if node.type in interiortypes or \
+				   val in ('hold', 'transition'):
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+				if val in ('freeze', 'remove', 'hold', 'transition'):
 					attrdict['fill'] = val
 				else:
 					self.syntax_error("bad fill attribute")
@@ -328,6 +544,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
 					pass
+		# We added fill="freeze" for G2 player.  Now remove it.
 		if attrdict.has_key('fill') and \
 		   attrdict['fill'] == 'freeze' and \
 		   not attrdict.has_key('duration'):
@@ -339,18 +556,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# mediatype, subtype -- mtype split into parts
 		# tagname -- the tag name in the SMIL file (None for "ref")
 		# nodetype -- the CMIF node type (imm/ext/...)
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('node not in smil')
 			return
@@ -367,7 +574,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__is_ext = 1
 		if not url:
 			url = None
-		if url is not None:
+		if url == '#':
+			url = None	# no source, but don't complain
+		elif url is not None:
 			url, tag = MMurl.splittag(url)
 			url = MMurl.basejoin(self.__base, url)
 			url = self.__context.findurl(url)
@@ -395,9 +604,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mtype = mimetype
 # not allowed to look at extension...
 		if mtype is None and url is not None and settings.get('checkext'):
- 			import MMmimetypes
+ 			import mimetypes
  			# guess the type from the file extension
- 			mtype = MMmimetypes.guess_type(url)[0]
+ 			mtype = mimetypes.guess_type(url)[0]
 		if url is not None and mtype is None and \
 		   (tagname is None or tagname == 'text'):
 			# last resort: get file and see what type it is
@@ -543,28 +752,45 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
-			self.__regions[region] = ch = \
-					{'minwidth': 0, 'minheight': 0,
-					 'left': 0, 'top': 0,
-					 'width': 0, 'height': 0,
-					 'z-index': 0, 'fit': 'hidden',
-					 'background-color': 'transparent'}
+			# create a region for this node
+			self.__in_layout = self.__seen_layout
+			ch = {}
+			for key, val in self.attributes['region'].items():
+				if val is not None:
+					ch[key] = val
+			ch['id'] = region
+			self.start_region(ch, checkid = 0)
+			self.end_region()
+			self.__in_layout = LAYOUT_NONE
+			ch = self.__regions[region]
 		width = height = 0
-		if self.__width > 0 and self.__height > 0:
+		l = ch.get('left')
+		w = ch.get('width')
+		r = ch.get('right')
+		t = ch.get('top')
+		h = ch.get('height')
+		b = ch.get('bottom')
+		if l is not None and w is not None and r is not None:
+			del ch['right']
+			r = None
+		if t is not None and h is not None and b is not None:
+			del ch['bottom']
+			b = None
+		top = self.__topregion.get(node.__region)
+		if self.__tops[top]['width'] > 0 and \
+		   self.__tops[top]['height'] > 0:
 			# we don't have to calculate minimum sizes
+			pass
+		elif (type(l) is type(0)) + (type(w) is type(0)) + (type(r) is type(0)) >= 2 and \
+		     (type(t) is type(0)) + (type(h) is type(0)) + (type(b) is type(0)) >= 2:
+			# size and position is given in pixels
 			pass
 		elif mtype in ('image', 'movie', 'video', 'mpeg',
 			       'RealPix', 'RealText', 'RealVideo'):
-			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
 			# media objects to figure out the size to use.
-			if w > 0 and h > 0 and \
-			   type(w) == type(h) == type(0) and \
-			   (x == y == 0 or type(x) == type(y) == type(0)):
-				# size and position is given in pixels
-				pass
-			elif node.attrdict.has_key('file'):
+			if node.attrdict.has_key('file'):
 				url = self.__context.findurl(node.attrdict['file'])
 				try:
 					import Sizes
@@ -672,64 +898,223 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		root.setgensr()
 
 	def FixSizes(self):
-		# calculate minimum required size of top-level window
-		if self.__width > 0 and self.__height > 0:
-			# there was a root-layout tag which specified the size
-			return
-		for attrdict in self.__regions.values():
-			try:
-				width = _minsize(attrdict['left'],
-						 attrdict['width'],
-						 attrdict['minwidth'])
-			except KeyError:
-				continue
-			except error, msg:
-				self.syntax_error(msg)
-			else:
-				if width > self.__width:
-					self.__width = width
+		for t in self.__tops.keys():
+			self.__calcsize1(t)
+			w = self.__tops[t]['width']
+			h = self.__tops[t]['height']
+			for r in self.__childregions[t]:
+				self.__calcsize2(t, r, w, h)
 
-			try:
-				height = _minsize(attrdict['top'],
-						  attrdict['height'],
-						  attrdict['minheight'])
-			except KeyError:
+	def __calcsize1(self, region):
+		minwidth = minheight = 0
+		for r in self.__childregions[region]:
+			w, h = self.__calcsize1(r)
+			if w > minwidth:
+				minwidth = w
+			if h > minheight:
+				minheight = h
+		if self.__tops.has_key(region):
+			if self.__tops[region]['width'] == 0:
+				self.__tops[region]['width'] = minwidth
+			if self.__tops[region]['height'] == 0:
+				self.__tops[region]['height'] = minheight
+			minwidth = self.__tops[region]['width']
+			minheight = self.__tops[region]['height']
+		else:
+			attrdict = self.__regions[region]
+			if attrdict.get('minwidth', 0) < minwidth:
+				attrdict['minwidth'] = minwidth
+			if attrdict.get('minheight', 0) < minheight:
+				attrdict['minheight'] = minheight
+			minwidth = _minsize(attrdict.get('left'),
+					    attrdict.get('width'),
+					    attrdict.get('right'),
+					    attrdict.get('minwidth', 0))
+			minheight = _minsize(attrdict.get('top'),
+					     attrdict.get('height'),
+					     attrdict.get('bottom'),
+					     attrdict.get('minheight', 0))
+		return minwidth, minheight
+
+	def __calcsize2(self, top, region, width, height):
+		from windowinterface import UNIT_PXL, UNIT_SCREEN
+		attrdict = self.__regions[region]
+		l = attrdict.get('left')
+		w = attrdict.get('width')
+		r = attrdict.get('right')
+		t = attrdict.get('top')
+		h = attrdict.get('height')
+		b = attrdict.get('bottom')
+		# if size of root-layout specified, convert to pixels
+		if self.__tops[top]['declwidth']:
+			if type(l) is type(0.0):
+				l = int(l * width + .5)
+				attrdict['left'] = l
+			if type(w) is type(0.0):
+				w = int(w * width + .5)
+				attrdict['width'] = w
+			if type(r) is type(0.0):
+				r = int(r * width + .5)
+				attrdict['right'] = r
+		if self.__tops[top]['declheight']:
+			if type(t) is type(0.0):
+				t = int(t * height + .5)
+				attrdict['top'] = t
+			if type(h) is type(0.0):
+				h = int(h * height + .5)
+				attrdict['height'] = h
+			if type(b) is type(0.0):
+				b = int(b * height + .5)
+				attrdict['bottom'] = b
+		#
+		thetype = None # type of 1st elem != 0
+		for val in l, w, r, t, h, b:
+			if val == 0 or val is None:
 				continue
-			except error, msg:
-				self.syntax_error(msg)
+			if thetype is None:
+				thetype = type(val)
+				continue
+			elif type(val) is thetype:
+				continue
+			# we only get here if there are multiple
+			# values != 0 of different types
+			# not all the same units, convert everything
+			# to relative sizes
+			if type(l) is type(0):
+				l = float(l) / width
+			if type(w) is type(0):
+				w = float(w) / width
+			if type(r) is type(0):
+				r = float(r) / width
+			if type(t) is type(0):
+				t = float(t) / height
+			if type(h) is type(0):
+				h = float(h) / height
+			if type(b) is type(0):
+				b = float(b) / height
+			attrdict['units'] = units = UNIT_SCREEN
+			break
+		else:
+			# all the same type or 0/None
+			if thetype is type(0.0):
+				units = UNIT_SCREEN
 			else:
-				if height > self.__height:
-					self.__height = height
+				units = UNIT_PXL
+			attrdict['units'] = units
+		# change things around so that l,w and t,h are defined
+		# if fewer than two of l,w,r and t,h,b are defined, fill
+		# in defaults: l==t==0, w and h rest of available space
+		if l is None:
+			if w is None:
+				if r is None:
+					l = 0
+					if units == UNIT_PXL:
+						w = width
+					else:
+						w = 1.0
+				else:
+					l = 0
+					w = r
+					r = None
+			else:
+				if r is None:
+					l = 0
+				else:
+					l = r - w
+					r = None
+		else:
+			if w is None:
+				if r is None:
+					if units == UNIT_PXL:
+						w = width - l
+					else:
+						w = 1.0 - l
+				else:
+					w = r - l
+					r = None
+			else:
+				if r is not None:
+					r = None
+		if t is None:
+			if h is None:
+				if b is None:
+					t = 0
+					if units == UNIT_PXL:
+						h = height
+					else:
+						h = 1.0
+				else:
+					t = 0
+					h = b
+					b = None
+			else:
+				if b is None:
+					t = 0
+				else:
+					t = b - h
+					b = None
+		else:
+			if h is None:
+				if b is None:
+					if units == UNIT_PXL:
+						h = height - t
+					else:
+						h = 1.0 - t
+				else:
+					h = b - t
+					b = None
+			else:
+				if b is not None:
+					b = None
+		attrdict['left'] = l
+		attrdict['width'] = w
+		if attrdict.has_key('right'):
+			del attrdict['right']
+		attrdict['top'] = t
+		attrdict['height'] = h
+		if attrdict.has_key('bottom'):
+			del attrdict['bottom']
+
+		if type(w) is type(0.0):
+			w = int(w * width + .5)
+		if type(h) is type(0.0):
+			h = int(h * height + .5)
+		
+		for r in self.__childregions[region]:
+			self.__calcsize2(top, r, w, h)
 
 	def FixSyncArcs(self, node):
-		for attr, val in node.__syncarcs:
+		save_lineno = self.lineno
+		for attr, val, lineno in node.__syncarcs:
+			self.lineno = lineno
 			self.SyncArc(node, attr, val)
+		self.lineno = save_lineno
 		del node.__syncarcs
 
-	def CreateLayout(self):
+	def CreateLayout(self, attrs, isroot = 1):
 		from windowinterface import UNIT_PXL
 		bg = None
-		attrs = self.__root_layout
 		name = None
 		if attrs is not None:
-			bg = attrs['background-color']
+			bg = attrs.get('backgroundColor')
+			if bg is None:
+				bg = attrs['background-color']
 			bg = self.__convert_color(bg)
-			if not self.__title:
-				self.__title = attrs.get('title')
-			if not self.__title:
-				self.__title = attrs.get('id')
 			name = attrs.get('id')
-		if not self.__title:
-			self.__title = layout_name
+		top = name
 		if not name:
-			name = self.__title
-		self.__base_win = name
+			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
 		layout = MMNode.MMChannel(ctx, name)
+		if not self.__region2channel.has_key(top):
+			self.__region2channel[top] = []
+		self.__region2channel[top].append(layout)
+		self.__topchans.append(layout)
 		ctx.channeldict[name] = layout
 		ctx.channelnames.insert(0, name)
 		ctx.channels.insert(0, layout)
-		self.__layout = layout
+		if isroot:
+			self.__base_win = name
 		layout['type'] = 'layout'
 		if bg is not None and \
 		   bg != 'transparent' and \
@@ -737,26 +1122,42 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			layout['bgcolor'] = bg
 		else:
 			layout['bgcolor'] = 0,0,0
-		if self.__width == 0:
-			self.__width = 640
-		if self.__height == 0:
-			self.__height = 480
-		layout['winsize'] = \
-			self.__width, self.__height
+		if isroot:
+			top = None
+		else:
+			top = name
+		if self.__tops[top]['width'] == 0:
+			self.__tops[top]['width'] = 640
+		if self.__tops[top]['height'] == 0:
+			self.__tops[top]['height'] = 480
+		layout['winsize'] = self.__tops[top]['width'], self.__tops[top]['height']
 		layout['units'] = UNIT_PXL
 
 	def FixBaseWindow(self):
-		if self.__layout is None:
+		if not self.__topchans:
 			return
 		for ch in self.__context.channels:
-			if ch is self.__layout:
+			if ch in self.__topchans:
 				continue
-			ch['base_window'] = self.__base_win
+			if ch.has_key('base_window'):
+				basewin = ch['base_window']
+				basechans = self.__region2channel.get(basewin)
+				if len(basechans) == 0:
+					raise error, 'no base channels?'
+				elif len(basechans) == 1:
+					ch['base_window'] = basechans[0].name
+				else:
+					raise error, 'not implemented yet'
+			else:
+				ch['base_window'] = self.__base_win
 
 	def __fillchannel(self, ch, attrdict, mtype):
-		from windowinterface import UNIT_PXL, UNIT_SCREEN
 		attrdict = attrdict.copy() # we're going to change this...
-		if attrdict.has_key('type'): del attrdict['type']
+		if attrdict.has_key('type'):
+			del attrdict['type']
+		if attrdict.has_key('base_window'):
+			ch['base_window'] = attrdict['base_window']
+			del attrdict['base_window']
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix',
 			     'RealText', 'RealVideo'):
@@ -768,9 +1169,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if title != ch.name:
 					ch['title'] = title
 				del attrdict['title']
-			bg = attrdict['background-color']
-			del attrdict['background-color']
-			if features.compatibility == features.G2:
+			bg = attrdict['backgroundColor']
+			del attrdict['backgroundColor']
+			if settings.get('compatibility') == settings.G2:
 				ch['transparent'] = -1
 				if bg != 'transparent':
 					ch['bgcolor'] = bg
@@ -790,6 +1191,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			y = attrdict['top']; del attrdict['top']
 			w = attrdict['width']; del attrdict['width']
 			h = attrdict['height']; del attrdict['height']
+			ch['units'] = attrdict['units']; del attrdict['units']
 			fit = attrdict['fit']; del attrdict['fit']
 			if fit == 'hidden':
 				ch['scale'] = 1
@@ -800,86 +1202,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['center'] = 0
 			# other fit options not implemented
 
-			# check types of x,y,w,h: if all the
-			# same, set units appropriately, else
-			# convert all to relative (float).  if
-			# there was a root-layout, and it
-			# contained sizes, convert relative
-			# sizes to absolute sizes first.
-			if type(x) is type(0.0) and self.__root_width:
-				x = int(x * self.__root_width + .5)
-			if type(w) is type(0.0) and self.__root_width:
-				w = int(w * self.__root_width + .5)
-			if type(y) is type(0.0) and self.__root_height:
-				y = int(y * self.__root_height + .5)
-			if type(h) is type(0.0) and self.__root_height:
-				h = int(h * self.__root_height + .5)
-			thetype = None # type of 1st elem != 0
-			broken = 0
-			for val in x, y, w, h:
-				if val == 0:
-					continue
-				if thetype is None:
-					thetype = type(val)
-					continue
-				elif type(val) is thetype:
-					continue
-				broken = 1
-				break
-			else:
-				# all the same type or 0
-				if thetype is type(0):
-					units = UNIT_PXL
-				else:
-					units = UNIT_SCREEN
-				ch['units'] = units
-				if w == 0 and self.__width != 0:
-					if units == UNIT_PXL:
-						w = self.__width - x
-					else:
-						w = 1.0 - x
-				if h == 0 and self.__height != 0:
-					if units == UNIT_PXL:
-						h = self.__height - y
-					else:
-						h = 1.0 - y
-			if broken:
-				# we only get here if there
-				# are multiple values != 0 of
-				# different types
-				# not all the same units, convert
-				# everything to relative sizes
-				if type(x) is type(0):
-					x = float(x) / self.__width
-				if type(w) is type(0):
-					if w == 0:
-						try:
-							width = node.__size[0]
-						except AttributeError:
-							# rest of window
-							w = 1.0 - x
-						else:
-							w = float(width) / self.__width
-					else:
-						w = float(w) / self.__width
-				if type(y) is type(0):
-					y = float(y) / self.__height
-				if type(h) is type(0):
-					if h == 0:
-						try:
-							height = node.__size[1]
-						except AttributeError:
-							# rest of window
-							h = 1.0 - y
-						else:
-							h = float(height) / self.__height
-					else:
-						h = float(h) / self.__height
-				ch['units'] = UNIT_SCREEN
 			ch['base_winoff'] = x, y, w, h
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
-			if attr not in ('minwidth', 'minheight',
+			if attr not in ('minwidth', 'minheight', 'units',
 					'skip-content') and \
 			   not self.attributes['region'].has_key(attr):
 				ch[attr] = parseattrval(attr, val, self.__context)
@@ -887,9 +1213,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def MakeChannels(self):
 		from ChannelMap import channelmap
 		ctx = self.__context
-		if self.__layout is None:
-			self.CreateLayout()
-		for region, attrdict in self.__regions.items():
+		for top in self.__tops.keys():
+			self.CreateLayout(self.__tops[top]['attrs'], top is None)
+		for region in self.__regionlist:
+			attrdict = self.__regions[region]
 			chtype = attrdict.get('type')
 			if chtype is None or not channelmap.has_key(chtype):
 				continue
@@ -975,8 +1302,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region, self.lineno)
-					self.__in_layout = LAYOUT_SMIL
+					self.__in_layout = self.__seen_layout
 					self.start_region({'id': region})
+					self.end_region()
 					self.__in_layout = LAYOUT_NONE
 				# we're going to change this locally...
 				attrdict = self.__regions[region]
@@ -1045,15 +1373,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				alist.append(a[2:])
 			node.attrdict['anchorlist'] = alist
 		del node.__anchorlist
-		
-	# methods for start and end tags
 
-	# smil contains everything
-	def start_smil(self, attributes):
+	def __fix_attributes(self, attributes):
 		for key, val in attributes.items():
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
 				attributes[key[len(GRiNSns)+1:]] = val
+
+	def __checkid(self, attributes):
 		id = attributes.get('id')
 		if id is not None:
 			res = xmllib.tagfind.match(id)
@@ -1062,12 +1389,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
+		return id
+
+	def __mkid(self, tag):
+		# create an ID for an element that doesn't have one
+		# note that we create an ID that is not legal XML, so
+		# we shouldn't have to worry about clashes
+		id = tag
+		i = 0
+		nn = '%s %d' % (id, i)
+		while self.__ids.has_key(nn):
+			i = i + 1
+			nn = '%s %d' % (id, i)
+		self.__ids[nn] = 0
+		return nn
+
+	# methods for start and end tags
+
+	# smil contains everything
+	def start_smil(self, attributes):
+		for attr in attributes.keys():
+			if attr != 'id' and \
+			   self.attributes['body'].get(attr) != attributes[attr]:
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('body attribute %s not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				break
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if self.__seen_smil:
 			self.error('more than 1 smil tag', self.lineno)
 		self.__seen_smil = 1
 		self.__in_smil = 1
-		# fill in defaults for seq
-		attributes['repeat'] = '1'
 		self.NewContainer('seq', attributes)
 
 	def end_smil(self):
@@ -1075,6 +1428,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
+		if not self.__tops.has_key(None) and \
+		   not self.__context.attributes.get('project_boston'):
+			attrs = {}
+			for key, val in self.attributes['root-layout'].items():
+				if val is not None:
+					attrs[key] = val
+			self.__tops[None] = {'width':0,
+					     'height':0,
+					     'declwidth':0,
+					     'declheight':0,
+					     'attrs':attrs}
+			if not self.__childregions.has_key(None):
+				self.__childregions[None] = []
 		self.FixRoot()
 		self.FixSizes()
 		self.MakeChannels()
@@ -1091,63 +1457,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# head/body sections
 
 	def start_head(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('head not in smil')
 		self.__in_head = 1
 
 	def end_head(self):
 		self.__in_head = 0
-		if self.__root_layout is not None:
-			self.CreateLayout()
 
 	def start_body(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		if not self.__seen_layout:
+			self.__seen_layout = LAYOUT_SMIL
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('body not in smil')
 		if self.__seen_body:
 			self.error('multiple body tags', self.lineno)
 		self.__seen_body = 1
 		self.__in_body = 1
+		self.start_seq(attributes)
 
 	def end_body(self):
+		self.end_seq()
 		self.__in_body = 0
 
 	def start_meta(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if not self.__in_head:
 			self.syntax_error('meta not in head')
 			return
@@ -1169,12 +1507,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('required attribute content missing in meta element')
 			return
 		if name == 'title':
-			# make sure __title cannot be a SMIL region id
 			self.__context.settitle(content)
-##			if content[:1] == content[-1:] == ' ':
-##				self.__title = content
-##			else:
-##				self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__context.setbaseurl(content)
 ##			self.__base = content
@@ -1197,18 +1530,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# layout section
 
 	def start_layout(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if not self.__in_head:
 			self.syntax_error('layout not in head')
 		if self.__in_meta:
@@ -1216,65 +1539,90 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__seen_layout and not self.__in_head_switch:
 			self.syntax_error('multiple layouts without switch')
 		if attributes['type'] == SMIL_BASIC:
-			if self.__seen_layout == LAYOUT_SMIL:
-				# if we've seen SMIL_BASIC already,
-				# ignore this one
+			if self.__seen_layout > 0:
+				# if we've seen SMIL_BASIC/SMIL_EXTENDED
+				# already, ignore this one
 				self.__in_layout = LAYOUT_UNKNOWN
 			else:
 				self.__in_layout = LAYOUT_SMIL
 			self.__seen_layout = LAYOUT_SMIL
+		elif attributes['type'] == SMIL_EXTENDED:
+			if self.__in_head_switch and \
+			   self.__context.attributes.get('project_boston') == 0:
+				# ignre text/smil-extended-layout if we're
+				# specifically using SMIL 1.0 and we're
+				# inside a switch (if we're not in a switch
+				# we'll complain below)
+				self.__in_layout = LAYOUT_UNKNOWN
+				if not self.__seen_layout:
+					self.__seen_layout = LAYOUT_UNKNOWN
+				self.setliteral()
+				return
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('layout type %s not compatible with SMIL 1.0' % SMIL_EXTENDED)
+			self.__context.attributes['project_boston'] = 1
+			if self.__seen_layout > 0:
+				# if we've seen SMIL_BASIC/SMIL_EXTENDED
+				# already, ignore this one
+				self.__in_layout = LAYOUT_UNKNOWN
+			else:
+				self.__in_layout = LAYOUT_EXTENDED
+			self.__seen_layout = LAYOUT_EXTENDED
 		else:
 			self.__in_layout = LAYOUT_UNKNOWN
-			if self.__seen_layout != LAYOUT_SMIL:
+			if not self.__seen_layout:
 				self.__seen_layout = LAYOUT_UNKNOWN
 			self.setliteral()
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	def start_region(self, attributes):
+	def start_region(self, attributes, checkid = 1):
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
-		if self.__in_layout != LAYOUT_SMIL:
-			# ignore outside of smil-basic-layout
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-
+		from windowinterface import UNIT_PXL
 		id = None
-		attrdict = {'left': 0,
-			    'top': 0,
-			    'z-index': 0,
-			    'width': 0,
-			    'height': 0,
+		attrdict = {'z-index': 0,
 			    'minwidth': 0,
 			    'minheight': 0,}
 
 		for attr, val in attributes.items():
 			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
 				attr = attr[len(GRiNSns)+1:]
+			val = string.strip(val)
 			if attr == 'id':
 				attrdict[attr] = id = val
-				res = xmllib.tagfind.match(id)
-				if res is None or res.end(0) != len(id):
-					self.syntax_error("illegal ID value `%s'" % id)
+				if checkid:
+					res = xmllib.tagfind.match(id)
+					if res is None or res.end(0) != len(id):
+						self.syntax_error("illegal ID value `%s'" % id)
 				if self.__ids.has_key(id):
 					self.syntax_error('non-unique id %s' % id)
 				self.__ids[id] = 0
 				self.__regions[id] = attrdict
-			elif attr in ('left', 'top', 'width', 'height'):
+			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
+				# XXX are bottom and right allowed in SMIL-Boston basic layout?
+				if attr in ('bottom', 'right'):
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
 				try:
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
-						if val < 0 or val > 1:
-							self.syntax_error('region with impossible size')
-							if val < 0: val = 0.0
-							else: val = 1.0
+						if attr in ('width','height') and val < 0:
+							self.syntax_error('region with negative %s' % attr)
+							val = 0.0
 					else:
 						if val[-2:] == 'px':
 							val = val[:-2]
 						val = string.atoi(val)
-						if val < 0:
-							self.syntax_error('region with impossible size')
+						if attr in ('width','height') and val < 0:
+							self.syntax_error('region with negative %s' % attr)
 							val = 0
 				except (string.atoi_error, string.atof_error):
 					self.syntax_error('invalid region attribute value')
@@ -1295,10 +1643,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					       'hidden', 'scroll'):
 					self.syntax_error('illegal fit attribute')
 				attrdict['fit'] = val
-			elif attr == 'background-color':
+			elif attr == 'backgroundColor':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
 				val = self.__convert_color(val)
 				if val is not None:
-					attrdict['background-color'] = val
+					attrdict['backgroundColor'] = val
+			elif attr == 'background-color':
+				# backgroundColor overrides background-color
+				if not attrdict.has_key('backgroundColor'):
+					val = self.__convert_color(val)
+					if val is not None:
+						attrdict['backgroundColor'] = val
 			elif attr == 'type':
 				if val == 'RealAudio':
 					val = 'sound'
@@ -1308,26 +1665,60 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				# catch all
 				attrdict[attr] = val
+		if attrdict.has_key('left') and attrdict.has_key('right') and attrdict.has_key('width'):
+			del attrdict['right']
+		if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
+			del attrdict['bottom']
 
 		if id is None:
 			self.syntax_error('region without id attribute')
+			return
+
+		if self.__region is not None:
+			if self.__top_layout is None:
+				self.syntax_error('no nested regions allowed in root-layout windows')
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('nested regions not compatible with SMIL 1.0')
+			self.__context.attributes['project_boston'] = 1
+			pregion = self.__region[0]
+			attrdict['base_window'] = pregion
+			self.__childregions[pregion].append(id)
+		elif self.__top_layout is not None:
+			attrdict['base_window'] = self.__top_layout
+			self.__childregions[self.__top_layout].append(id)
+		else:
+			if not self.__tops.has_key(None):
+				attrs = {}
+				for key, val in self.attributes['root-layout'].items():
+					if val is not None:
+						attrs[key] = val
+				self.__tops[None] = {'width':0,
+						     'height':0,
+						     'declwidth':0,
+						     'declheight':0,
+						     'attrs':attrs}
+				self.__childregions[None] = []
+			self.__childregions[None].append(id)
+
+		self.__region = id, self.__region
+		self.__regionlist.append(id)
+		self.__childregions[id] = []
+		self.__topregion[id] = self.__top_layout # None if not in top-layout
 
 	def end_region(self):
-		pass
+		if self.__region is None:
+			# </region> without <region>
+			# error message will be taken care of by XMLparser.
+			return
+		self.__region = self.__region[1]
 
 	def start_root_layout(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
+			return
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		self.__root_layout = attributes
 		width = attributes['width']
 		if width[-2:] == 'px':
@@ -1336,11 +1727,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			width = string.atoi(width)
 		except string.atoi_error:
 			self.syntax_error('root-layout width not an integer')
+			width = 0
 		else:
 			if width < 0:
 				self.syntax_error('root-layout width not a positive integer')
-			elif width > 0:
-				self.__root_width = self.__width = width
+				width = 0
 		height = attributes['height']
 		if height[-2:] == 'px':
 			height = height[:-2]
@@ -1348,75 +1739,102 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			height = string.atoi(height)
 		except string.atoi_error:
 			self.syntax_error('root-layout height not an integer')
+			height = 0
 		else:
 			if height < 0:
 				self.syntax_error('root-layout height not a positive integer')
-			elif height > 0:
-				self.__root_height = self.__height = height
+				height = 0
+		self.__tops[None] = {'width':width,
+				     'height':height,
+				     'declwidth':width,
+				     'declheight':height,
+				     'attrs':attributes}
+		if not self.__childregions.has_key(None):
+			self.__childregions[None] = []
 
 	def end_root_layout(self):
 		pass
 
+	def start_top_layout(self, attributes):
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
+			return
+		if self.__in_layout != LAYOUT_EXTENDED:
+			self.syntax_error('top-layout not allowed in layout type %s' % SMIL_BASIC)
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('top-layout not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+		if id is None:
+			id = self.__mkid('top-layout')
+			attributes['id'] = id
+		self.__top_layout = id
+		self.__childregions[id] = []
+		width = attributes['width']
+		if width[-2:] == 'px':
+			width = width[:-2]
+		try:
+			width = string.atoi(width)
+		except string.atoi_error:
+			self.syntax_error('root-layout width not an integer')
+			width = 0
+		else:
+			if width < 0:
+				self.syntax_error('root-layout width not a positive integer')
+				width = 0
+		height = attributes['height']
+		if height[-2:] == 'px':
+			height = height[:-2]
+		try:
+			height = string.atoi(height)
+		except string.atoi_error:
+			self.syntax_error('root-layout height not an integer')
+			height = 0
+		else:
+			if height < 0:
+				self.syntax_error('root-layout height not a positive integer')
+				height = 0
+		self.__tops[id] = {'width':width,
+				   'height':height,
+				   'declwidth':width,
+				   'declheight':height,
+				   'attrs':attributes}
+
+	def end_top_layout(self):
+		self.__top_layout = None
+
 	def start_user_attributes(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('userAttributes not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 
 	def end_user_attributes(self):
 		self.__context.addusergroups(self.__u_groups.items())
 
 	def start_u_group(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
-		u_state = attributes['u-state']
-		override = attributes['override']
+		u_state = attributes['uState']
+		override = attributes.get('override', 'allowed')
 		self.__u_groups[id] = title, u_state == 'RENDERED', override == 'allowed'
 
 	def end_u_group(self):
 		pass
 
 	def start_layouts(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 
 	def end_layouts(self):
 		pass
 
 	def start_Glayout(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
+		self.__fix_attributes(attributes)
 		id = attributes.get('id')
 		if id is None:
 			self.syntax_error('GRiNS layout without id attribute')
@@ -1438,32 +1856,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		
 	# container nodes
 
-	def start_par(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+	def start_parexcl(self, ntype, attributes):
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		# XXXX we ignore sync for now
-		self.NewContainer('par', attributes)
+		self.NewContainer(ntype, attributes)
 		if not self.__container:
 			return
 		self.__container.__endsync = attributes.get('endsync')
+		self.__container.__lineno = self.lineno
 ## 		if self.__container.__endsync is not None and \
 ## 		   self.__container.attrdict.has_key('duration'):
 ## 			self.warning('ignoring dur attribute', self.lineno)
 ## 			del self.__container.attrdict['duration']
 
-	def end_par(self):
+	def end_parexcl(self, ntype):
 		node = self.__container
-		self.EndContainer('par')
+		self.EndContainer(ntype)
 		endsync = node.__endsync
 		del node.__endsync
 		if endsync is None:
@@ -1472,6 +1881,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.attrdict['terminator'] = 'FIRST'
 		elif endsync == 'last':
 			node.attrdict['terminator'] = 'LAST'
+		elif endsync == 'all':
+			node.attrdict['terminator'] = 'ALL'
 		else:
 			res = idref.match(endsync)
 			if res is None:
@@ -1484,39 +1895,32 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					node.attrdict['terminator'] = child.GetRawAttr('name')
 					return
 			# id not found among the children
-			self.warning('unknown idref in endsync attribute', self.lineno)
+			self.warning('unknown idref in endsync attribute', node.__lineno)
+		del node.__lineno
+
+	def start_par(self, attributes):
+		self.start_parexcl('par', attributes)
+
+	def end_par(self):
+		self.end_parexcl('par')
 
 	def start_seq(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		self.NewContainer('seq', attributes)
 
 	def end_seq(self):
 		self.EndContainer('seq')
 
+	def start_excl(self, attributes):
+		self.start_parexcl('excl', attributes)
+
+	def end_excl(self):
+		self.end_parexcl('excl')
+
 	def start_choice(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		self.NewContainer('bag', attributes)
 		self.__container.__choice_index = attributes.get('choice-index')
 		if self.__container.__choice_index is None:
@@ -1543,18 +1947,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.warning('unknown idref in choice-index attribute', self.lineno)
 
 	def start_switch(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if self.__in_head:
 			if self.__in_head_switch:
 				self.syntax_error('switch within switch in head')
@@ -1634,18 +2028,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# linking
 
 	def start_a(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if self.__in_a:
 			self.syntax_error('nested a elements')
 		href = attributes.get('href')
@@ -1674,18 +2058,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_a = self.__in_a[3]
 
 	def start_anchor(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
-				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
 			return
@@ -1753,14 +2127,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		begin = attributes.get('begin')
 		if begin is not None:
 			try:
-				begin = self.__parsecounter(begin, 0)
+				begin = self.__parsecounter(begin)
 			except error, msg:
 				self.syntax_error(msg)
 				begin = None
 		end = attributes.get('end')
 		if end is not None:
 			try:
-				end = self.__parsecounter(end, 0)
+				end = self.__parsecounter(end)
 			except error, msg:
 				self.syntax_error(msg)
 				end = None
@@ -1795,9 +2169,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_anchor(self):
 		pass
 
+	def start_area(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('area not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.start_anchor(attributes)
+
+	def end_area(self):
+		self.end_anchor()
+
 	# other callbacks
 
-	__whitespace = re.compile(xmllib._opS + '$')
+	__whitespace = re.compile(_opS + '$')
 	def handle_data(self, data):
 		if self.__node is None or self.__is_ext:
 			if self.__in_layout != LAYOUT_UNKNOWN:
@@ -1808,12 +2191,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__nodedata.append(data)
 
 	__doctype = re.compile('SYSTEM' + xmllib._S + '(?P<dtd>[^ \t\r\n]+)' +
-			       xmllib._opS + '$')
+			       _opS + '$')
 	def handle_doctype(self, tag, pubid, syslit, data):
 		if tag != 'smil':
 			self.error('not a SMIL document', self.lineno)
-		if pubid != SMILpubid or syslit != SMILdtd or data:
+		if data:
 			self.syntax_error('invalid DOCTYPE')
+			return
+		if pubid == SMILpubid and syslit == SMILdtd:
+			# SMIL version 1.0
+			self.__context.attributes['project_boston'] = 0
+		elif pubid == SMILBostonPubid and syslit == SMILBostonDtd:
+			# SMIL Boston
+			self.__context.attributes['project_boston'] = 1
 
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name, self.lineno)
@@ -1902,9 +2292,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 	# helper methods
 
-	def __parsecounter(self, value, maybe_relative):
-		res = clock_val.match(value)
+	def __parsecounter(self, value, maybe_relative = 0, withsign = 0):
+		res = offsetvalue.match(value)
 		if res:
+			sign = res.group('sign')
+			if sign and not withsign:
+				self.syntax_error('no sign allowed')
+				sign = None
+			if sign:
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('sign not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 			if res.group('use_clock'):
 				h, m, s, f = res.group('hours', 'minutes',
 						       'seconds', 'fraction')
@@ -1921,7 +2319,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if f is not None:
 					offset = offset + string.atof(f + '0')
 			elif res.group('use_timecount'):
-				tc, f, sc = res.group('timecount', 'units', 'scale')
+				tc, f, sc = res.group('timecount', 'units', 'metric')
 				offset = string.atoi(tc)
 				if f is not None:
 					offset = offset + string.atof(f)
@@ -1934,38 +2332,40 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# else already in seconds
 			else:
 				raise error, 'internal error'
+			if sign and sign == '-':
+				offset = -offset
 			return offset
 		if maybe_relative:
 			if value in ('begin', 'end'):
 				return value
 		raise error, 'bogus presentation counter'
 
-	def __parsetime(self, xpointer):
-		offset = 0
-		res = id.match(xpointer)
-		if res is not None:
-			name, event = res.group('name', 'event')
-			delay = None
-		else:
-			res = clock.match(xpointer)
-			if res is not None:
-				# XXXX absolute time not implemented
-				return None, 0, 0
-			else:
-				name, event, delay = None, None, xpointer
-		if event is not None:
-			counter = self.__parsecounter(event, 1)
-			if counter == 'begin':
-				counter = 0
-			elif counter == 'end':
-				counter = -1	# special event
-		else:
-			counter = 0
-		if delay is not None:
-			delay = self.__parsecounter(delay, 0)
-		else:
-			delay = 0
-		return name, counter, delay
+##	def __parsetime(self, xpointer):
+##		offset = 0
+##		res = syncbase.match(xpointer)
+##		if res is not None:
+##			name, event = res.group('name', 'event')
+##			delay = None
+##		else:
+####			res = clock.match(xpointer)
+####			if res is not None:
+####				# XXXX absolute time not implemented
+####				return None, 0, 0
+####			else:
+##			name, event, delay = None, None, xpointer
+##		if event is not None:
+##			counter = self.__parsecounter(event, 1)
+##			if counter == 'begin':
+##				counter = 0
+##			elif counter == 'end':
+##				counter = -1	# special event
+##		else:
+##			counter = 0
+##		if delay is not None:
+##			delay = self.__parsecounter(delay)
+##		else:
+##			delay = 0
+##		return name, counter, delay
 
 	def __parseclip(self, val):
 		res = clip.match(val)
@@ -1974,7 +2374,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if res.group('npt'):
 			val = res.group('nptclip')
 			if val:
-				val = float(self.__parsecounter(val, 0))
+				val = float(self.__parsecounter(val))
 			else:
 				start = None
 		else:
@@ -2128,12 +2528,19 @@ def ReadStringContext(string, name, context, printfunc = None):
 	root.source = string
 	return root
 
-def _minsize(start, extent, minsize):
-	# Determine minimum size for top-level window given that it
-	# has to contain a subwindow with the given start and extent
+def _minsize(start, extent, end, minsize):
+	# Determine minimum size for parent window given that it
+	# has to contain a subwindow with the given start/extent/end
 	# values.  Start and extent can be integers or floats.  The
 	# type determines whether they are interpreted as pixel values
 	# or as fractions of the top-level window.
+	# end is only used if extent is None.
+	if start == 0:
+		# make sure this is a pixel value
+		start = 0
+##	if extent is None and (type(start) is type(end) or start == 0):
+##		extent = end - start
+##		end = None
 	if type(start) is type(0):
 		# start is pixel value
 		if type(extent) is type(0.0):
@@ -2146,12 +2553,21 @@ def _minsize(start, extent, minsize):
 			if minsize > 0 and extent > 0:
 				size = max(size, int(minsize/extent + 0.5))
 			return size
-		else:
+		elif type(extent) is type(0):
 			# extent is pixel value
 			if extent == 0:
 				extent = minsize
 			return start + extent
-	else:
+		elif type(end) is type(0.0):
+			# no extent, end is fraction
+			return int((start + minsize) / end + 0.5)
+		elif type(end) is type(0):
+			# no extent, end is pixel value
+			return end
+		else:
+			# no extent and no end
+			return start + minsize
+	elif type(start) is type(0.0):
 		# start is fraction
 		if start == 1:
 			raise error, 'region with impossible size'
@@ -2160,11 +2576,42 @@ def _minsize(start, extent, minsize):
 			if extent == 0:
 				extent = minsize
 			return int(extent / (1 - start) + 0.5)
-		else:
+		elif type(extent) is type(0.0):
 			# extent is fraction
 			if minsize > 0 and extent > 0:
 				return int(minsize / extent + 0.5)
 			return 0
+		elif type(end) is type(0):
+			# no extent, end is pixel value
+			return end
+		elif type(end) is type(0.0):
+			# no extent, end is fraction
+			if minsize > 0 and end > start:
+				return int(minsize / (end - start) + 0.5)
+			return 0
+		else:
+			# no extent and no end
+			return int(minsize / (1 - start) + 0.5)
+	elif type(end) is type(0):
+		# no start, end is pixel value
+		return end
+	elif type(end) is type(0.0):
+		# no start, end is fraction
+		if end <= 0:
+			return 0
+		if type(extent) is type(0):
+			# extent is pixel value
+			if extent == 0:
+				extent = minsize
+			return int(extent / end + 0.5)
+		elif type(extent) is type(0.0):
+			# extent is fraction
+			return int(minsize / end + 0.5)
+	elif type(extent) is type(0):
+		return extent
+	elif type(extent) is type(0.0) and extent > 0:
+		return int(minsize / extent + 0.5)
+	return minsize
 
 def _uniqname(namelist, defname):
 	if defname is not None and defname not in namelist:
