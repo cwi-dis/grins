@@ -351,6 +351,7 @@ class SMILHtmlTimeWriter(SMIL):
 				self.ids_written[name] = 1
 				pushed = pushed + 1
 
+		transitions = self.root.GetContext().transitions
 		if transIn or transOut:
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
@@ -376,12 +377,28 @@ class SMILHtmlTimeWriter(SMIL):
 				pushed = pushed + 1
 			
 			if transIn:
-				transInName = 'Iris'
-				style = style + transIris(dur=1, style='circle', motion='out')
+				td = transitions[transIn]
+				trtype = td.get('trtype')
+				transInDur = td.get('dur')
+				if not transInDur: transInDur = 1
+				if trtype=='fade':
+					transInName = 'Fade'
+					style = style + transFade(dur=transInDur)
+				else:
+					transInName = 'Iris'	
+					style = style + transIris(dur=transInDur, style='circle', motion='out')
 
 			if transOut:
-				transOutName = 'Fade'
-				style = style + transFade(dur=1)
+				td = transitions[transOut]
+				trtype = td.get('trtype')
+				transOutDur = td.get('dur')
+				if not transOutDur: transOutDur = 1
+				if trtype=='fade':
+					transOutName = 'Fade'
+					style = style + transFade(dur=transOutDur)
+				else:
+					transOutName = 'Iris'	
+					style = style + transIris(dur=transOutDur, style='circle', motion='out')
 				
 			if transIn or transOut:
 				style = style + ';'
@@ -412,10 +429,10 @@ class SMILHtmlTimeWriter(SMIL):
 			pushed = pushed - 1
 			if transIn:
 				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
-				self.writetag('t:ref', [ ('begin','%s.begin' % nodeid), ('dur', '1'), ('onbegin', trans), ])
+				self.writetag('t:ref', [ ('begin','%s.begin' % nodeid), ('dur', '%d' % transInDur), ('onbegin', trans), ])
 			if transOut:	
 				trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
-				self.writetag('t:ref', [ ('begin','%s.end-1' % nodeid), ('dur', '1'), ('onbegin', trans), ])
+				self.writetag('t:ref', [ ('begin','%s.end-%d' % (nodeid,transOutDur)), ('dur', '%d' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
 		
@@ -913,6 +930,8 @@ def transRandomDissolve(dur=1):
 
 def filterAlpha(opacity=100, finishOpacity=0, style=3):
 	return "progid:DXImageTransform.Microsoft.Alpha(Opacity=%d, FinishOpacity=%d, Style=%d) " % (opacity, finishOpacity, style)
+
+
 
 #
 #########################
