@@ -11,6 +11,8 @@ import usercmd, usercmdui
 
 from pywinlib.mfc import window
 
+IDW_TOOLBAR_PLAYER_PANEL = 0xe805
+
 DEFAULT_PLAYER_ATTRIBUTES = [ ('option','Bitrate'),
 	('option', 'Language'),
 	('boolean', 'boolean attribute 1'),
@@ -61,10 +63,9 @@ class PlayerDlgBar(window.Wnd):
 	def createWindow(self, parent, attributes = DEFAULT_PLAYER_ATTRIBUTES):
 		self._parent = parent
 		self.createResourceItems(attributes)
-		AFX_IDW_DIALOGBAR = 0xE805
 		CBRS_GRIPPER = 0x00400000
 		self.CreateWindowIndirect(parent, self.makeTemplate(), 
-			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, AFX_IDW_DIALOGBAR)
+			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, IDW_TOOLBAR_PLAYER_PANEL)
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		parent.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		l, t, r, b = parent.GetWindowRect()
@@ -93,7 +94,7 @@ class PlayerDlgBar(window.Wnd):
 		template = []
 		cs = win32con.WS_CHILD | win32con.WS_VISIBLE
 		x = 8
-		y = 4
+		y = 6
 		cmdid = usercmdui.usercmd2id
 
 		# row 1
