@@ -1846,14 +1846,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if id is not None and not self.__idmap.has_key(id):
 				self.__idmap[id] = node.GetUID()
 			# create the anchor node
-			node = self.__context.newnode('anchor')
-			self.__container._addchild(node)
-			node.__syncarcs = []
+			anchor = self.__context.newnode('anchor')
+			node._addchild(anchor)
+			anchor.__syncarcs = []
 			if access is not None:
-				node.attrdict['accesskey'] = access
+				anchor.attrdict['accesskey'] = access
 			if actuate is not None:
-				node.attrdict['actuate'] = actuate
-			self.__links.append((node, href, ltype, stype, dtype))
+				anchor.attrdict['actuate'] = actuate
+			self.__links.append((anchor, href, ltype, stype, dtype))
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
