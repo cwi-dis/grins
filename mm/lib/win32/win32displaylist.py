@@ -181,7 +181,7 @@ class _DisplayList:
 		elif cmd == 'image':
 			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
 			win32ig.render(dc.GetSafeHdc(),self._bgcolor,
-				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep, aspect="none")
+				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep, aspect="none" )
 		elif cmd == 'video':
 			func=entry[1]
 			apply(func,(dc,))
