@@ -272,7 +272,7 @@ DirectDraw_CreateSurface(DirectDrawObject *self, PyObject *args)
 		ddsd.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
 		ddsd.dwWidth = cx;
 		ddsd.dwHeight = cy;
-		ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+		ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
 		}
 	else
 		{
@@ -321,7 +321,7 @@ static char DirectDraw_CreatePalette__doc__[] =
 static PyObject *
 DirectDraw_CreatePalette(DirectDrawObject *self, PyObject *args)
 {
-	DWORD dwFlags = DDPCAPS_8BIT | DDPCAPS_INITIALIZE;
+	DWORD dwFlags = DDPCAPS_8BIT | DDPCAPS_ALLOW256;
 	if (!PyArg_ParseTuple(args, "|i", &dwFlags))
 		return NULL;	
 	HRESULT hr;
@@ -675,6 +675,8 @@ static WORD HighBitPos(DWORD dword)
 
 static WORD numREDbits=8, numGREENbits=8, numBLUEbits=8;
 static WORD loREDbit=16, loGREENbit=8, loBLUEbit=0;
+static PALETTEENTRY paletteEntry[256];
+static BYTE blendTable[256][256];
 
 static char DirectDrawSurface_GetPixelFormat__doc__[] =
 ""
@@ -704,7 +706,13 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 	loBLUEbit  = LowBitPos( format.dwBBitMask );
 	WORD hiBLUEbit  = HighBitPos( format.dwBBitMask );
 	numBLUEbits=(WORD)(hiBLUEbit-loBLUEbit+1);
-	
+
+	if(format.dwRGBBitCount==8)
+		{
+		HDC hdc = GetDC(NULL);
+		GetSystemPaletteEntries(hdc, 0, 256, paletteEntry);
+		ReleaseDC(NULL, hdc);
+		}
 	return Py_BuildValue("iii",numREDbits, numGREENbits, numBLUEbits);
 	}
 
@@ -712,26 +720,106 @@ inline DWORD blend(double prop, DWORD c1, DWORD c2)
 	{
 	return (DWORD)floor(double(c1) + prop*(double(c2)-c1) + 0.5);
 	}
+
+int FindColour(int r, int g, int b)
+	{
+	LPPALETTEENTRY palette = paletteEntry;
+	int   best = 0;
+	int   best_error = INT_MAX;
+	for(int i=0;i<256;i++)
+		{
+		int er,eg,eb;
+		er = r - (int)palette[i].peRed; er *= er;
+		eg = g - (int)palette[i].peGreen; eg *= eg;
+		eb = b - (int)palette[i].peBlue; eb *= eb;
+		int error = er + eg + eb;
+		if ( error < best_error )
+			{
+			best_error = error;
+			best = i;
+			}
+		}
+	return best;
+	}
+
+void CreateBlendTable(float prop)
+	{
+	for(int i=0;i<256;i++)
+		{
+		BYTE r1 = paletteEntry[i].peRed;
+		BYTE g1 = paletteEntry[i].peGreen;
+		BYTE b1 = paletteEntry[i].peBlue;
+		for(int j=0;j<256;j++)
+			{
+			BYTE r2 = paletteEntry[j].peRed;
+			BYTE g2 = paletteEntry[j].peGreen;
+			BYTE b2 = paletteEntry[j].peBlue;
+
+			int r = (int)blend(prop, r1, r2);
+			int g = (int)blend(prop, g1, g2);
+			int b = (int)blend(prop, b1, b2);
+	
+			blendTable[i][j] = FindColour(r,g,b);
+			}
+		}
+	}
 HRESULT ScanSurface8(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
-	DDSURFACEDESC desc;
+	DDSURFACEDESC desc, desc1, desc2;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.dwSize=sizeof(desc);
+	ZeroMemory(&desc1, sizeof(desc1));
+	desc1.dwSize=sizeof(desc1);
+	ZeroMemory(&desc2, sizeof(desc2));
+	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if (hr!=DD_OK) return hr;
+	if(hr!=DD_OK) return hr;
+	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	bool usingtable = false;
+	if(w*h>65536)
+		{
+		CreateBlendTable(prop);
+		usingtable = true;
+		}
 	for(int row=h-1;row>=0;row--)
 		{
 		BYTE* surfpixel=(BYTE*)desc.lpSurface+row*desc.lPitch;		
+		BYTE* surfpixel1=(BYTE*)desc1.lpSurface+row*desc1.lPitch;		
+		BYTE* surfpixel2=(BYTE*)desc2.lpSurface+row*desc2.lPitch;		
 		for(DWORD col=0;col<w;col++)
 			{
-			// apply transform on pixel: *surfpixel
+			if(usingtable)
+				*surfpixel = blendTable[*surfpixel1][*surfpixel2];
+			else
+				{
+				BYTE r1 = paletteEntry[*surfpixel1].peRed;
+				BYTE g1 = paletteEntry[*surfpixel1].peGreen;
+				BYTE b1 = paletteEntry[*surfpixel1].peBlue;
+
+				BYTE r2 = paletteEntry[*surfpixel2].peRed;
+				BYTE g2 = paletteEntry[*surfpixel2].peGreen;
+				BYTE b2 = paletteEntry[*surfpixel2].peBlue;
+
+				int r = (int)blend(prop, r1, r2);
+				int g = (int)blend(prop, g1, g2);
+				int b = (int)blend(prop, b1, b2);
+			
+				*surfpixel = FindColour(r,g,b);
+				}
 			surfpixel++;
+			surfpixel1++;
+			surfpixel2++;
 			}
 		}
 	surf->Unlock(0);
+	from->Unlock(0);
+	to->Unlock(0);
 	return hr;
 	}
 
