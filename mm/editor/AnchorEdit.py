@@ -273,6 +273,7 @@ class AnchorEditor(AnchorEditorDialog):
 			self.anchorlist[self.focus] = new
 			self.changed = 1
 		self.show_type()
+		self.pop()
 
 	def close(self):
 		self.editmgr.unregister(self)
