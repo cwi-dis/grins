@@ -209,7 +209,32 @@ class surface
 			}
 		}
 
+	void blend(surface<T>& from, surface<T>& to, double prop)
+		{
+		prop = prop<0.0?0.0:(prop>1.0?1.0:prop);
+		int weight = int(prop*256.0+0.5);
+		for (int y=m_height-1;y>=0;y--)
+			{
+			pointer ptr = get_row(y);
+			surface<T>::pointer pfrom = from.get_row(y);
+			surface<T>::pointer pto = to.get_row(y);
+			for(size_t x=0;x<m_width;x++)
+				{
+				le::trible& tfrom = pfrom[x];
+				le::trible& tto = pto[x];
+				ptr[x] = le::trible(
+					blend(weight, tfrom.red(), tto.red()),
+					blend(weight, tfrom.green(), tto.green()),
+					blend(weight, tfrom.blue(), tto.blue()));
+				}
+			}
+		}
+
 	private:
+	uchar_t blend(int w, uchar_t c1, uchar_t c2)
+		{
+		return (uchar_t)(c1==c2)?c1:(c1 + w*(c2-c1)/256);
+		}
 
 	void throw_range_error()
 		{

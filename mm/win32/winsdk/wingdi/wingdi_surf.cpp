@@ -172,6 +172,12 @@ PyObject* Wingdi_BitBltDIBSurface(PyObject *self, PyObject *args)
 	rd = rd<0?0:(rd>dwidth?dwidth:rd);
 	bd = bd<0?0:(bd>dheight?dheight:bd);
 
+	if(rd-ld != rs-ls || bd-td != bs-ts)
+		{
+		seterror("BitBltDIBSurface", "Rectangles not of equal size");
+		return NULL;
+		}
+
 	HDC hdc = GetDC(NULL);
 
 	HDC hdst = CreateCompatibleDC(hdc);
@@ -182,6 +188,7 @@ PyObject* Wingdi_BitBltDIBSurface(PyObject *self, PyObject *args)
 	HDC hsrc = CreateCompatibleDC(hdst);
 	HBITMAP hsrcold = (HBITMAP)SelectObject(hsrc, srcobj->m_hBmp);
 
+	//StretchBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, rs-ls, bs-ts, SRCCOPY);
 	BitBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, SRCCOPY);
 
 	SelectObject(hdst, hsrcold);
@@ -204,12 +211,7 @@ PyObject* Wingdi_BltBlendDIBSurface(PyObject *self, PyObject *args)
 		&value))
 		return NULL;
 	
-	// do BltBlend manipulating pixels
-	// see ddraw.pyd for one way to do it
-	// expected to be very slow
-
-	// postpone implementation till we find a better way
-	// for example manipulate a palette instead of pixels
+	dstobj->m_psurf->blend(*srcobj1->m_psurf, *srcobj2->m_psurf, value);
 
 	return none();
 	}
