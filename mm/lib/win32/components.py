@@ -882,8 +882,16 @@ class ControlsDict:
 
 ##############################
 class KeyTimesSlider(window.Wnd):
-	TICKS_OFFSET = 12
+	# how near key times can be
 	DELTA = 0.05
+	
+	# depends on resource template slider
+	TICKS_OFFSET = 12
+
+	# marker triangle
+	MARKER_WIDTH = 6
+	MARKER_HEIGHT = 8
+
 	def __init__(self, dlg, id):
 		self._parent = dlg
 		hwnd = Sdk.GetDlgItem(dlg.GetSafeHwnd(),id)
@@ -912,7 +920,7 @@ class KeyTimesSlider(window.Wnd):
 	def updateKeyTimes(self):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
-		rc = l, b, r, b+8
+		rc = l, b, r, b+self.MARKER_HEIGHT
 		self._parent.InvalidateRect(rc)
 
 	def getDeviceRange(self):
@@ -924,10 +932,11 @@ class KeyTimesSlider(window.Wnd):
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
 		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
+		dw = self.MARKER_WIDTH/2
 		index = 0
 		for p in self._keyTimes:
 			x = int(p*w + 0.5)
-			pts = [(x0+x-3, b+8), (x0+x, b), (x0+x+3, b+8)]
+			pts = [(x0+x-dw, b+self.MARKER_HEIGHT), (x0+x, b), (x0+x+dw, b+self.MARKER_HEIGHT)]
 			if index == self._selected: color = self._selectedMarkerColor
 			else: color = self._markerColor
 			win32mu.FillPolygon(dc, pts, color)
@@ -949,14 +958,14 @@ class KeyTimesSlider(window.Wnd):
 	def getKeyTime(self, point):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
-		rc = l + 100, b - 8, l + 104, b+8
 		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
 		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
+		dw = self.MARKER_WIDTH/2
 		index = 0
 		point = win32mu.Point(point)
 		for p in self._keyTimes:
 			x = int(p*w + 0.5)
-			rect = win32mu.Rect((x0+x-3, b, x0+x+3, b+8))
+			rect = win32mu.Rect((x0+x-dw, b, x0+x+dw, b+self.MARKER_HEIGHT))
 			if rect.isPtInRect(point):
 				return index, rect.tuple()
 			index = index + 1
@@ -972,11 +981,14 @@ class KeyTimesSlider(window.Wnd):
 			if self._selected == index and self.isDraggable():
 				self._dragging = point
 				self._dragfrom = self._keyTimes[index]
+				self._parent.SetCapture()
 			self._selected = index
 			self.updateKeyTimes()
 
 	def onDeselect(self, point, flags):
-		self._dragging = None
+		if self._dragging:
+			self._dragging = None
+			self._parent.ReleaseCapture()
 
 	def onDrag(self, point, flags):
 		if self._dragging:
