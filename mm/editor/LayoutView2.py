@@ -472,6 +472,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.root = toplevel.root
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
+		self.__channelTreeRef = None
 		LayoutViewDialog2.__init__(self)
 
 		# current state
@@ -524,6 +525,8 @@ class LayoutView2(LayoutViewDialog2):
 			LayoutViewDialog2.show(self)
 			return
 		LayoutViewDialog2.show(self)
+		import MMNode
+		self.__channelTreeRef = self.context.getchanneltree()
 		self.treeMutation()
 #		self.buildRegionTree(self.context)
 		self.initDialogBox()		
@@ -544,6 +547,7 @@ class LayoutView2(LayoutViewDialog2):
 	def hide(self):
 		if not self.is_showing():
 			return
+		self.__channelTreeRef = None
 		self.editmgr.unregister(self)
 		LayoutViewDialog2.hide(self)
 
@@ -559,9 +563,8 @@ class LayoutView2(LayoutViewDialog2):
 	# recursive method to build an ordered region list (any child is store after its parent)
 	# the pure sound region are excluded
 	def __buildOrderedRegionList(self, orderedRegionList, parentId):
-		subregList = self.__channelTreeRef.getsubregions(parentId)
-		for subreg in subregList:
-			if subreg.get('subtype') != 'sound':
+		for subreg in self.__channelTreeRef.getsubregions(parentId):
+			if subreg.get('chsubtype') != 'sound':
 				orderedRegionList.append(subreg)
 			self.__buildOrderedRegionList(orderedRegionList, subreg.name)
 
@@ -625,9 +628,7 @@ class LayoutView2(LayoutViewDialog2):
 	# update the region tree
 	def treeMutation(self):
 		# make an ordered list of ref layout channel
-		import MMNode
-		channelTreeRef = self.__channelTreeRef = MMNode.MMChannelTree(self)
-		viewportList = channelTreeRef.getviewports()
+		viewportList = self.__channelTreeRef.getviewports()
 		viewportNameListRef = []
 		for viewport in viewportList:
 			viewportNameListRef.append(viewport.name)
@@ -651,7 +652,7 @@ class LayoutView2(LayoutViewDialog2):
 				
 		for region in orderedRegionList:
 			regionNode = self.getRegion(region.name)
-			parent = channelTreeRef.getparent(region.name)
+			parent = self.__channelTreeRef.getparent(region.name)
 			if regionNode == None:
 				regionToAppendList.append((region, parent))
 
@@ -881,7 +882,7 @@ class LayoutView2(LayoutViewDialog2):
 		id2parentid = {}
 		for chan in mmctx.channels:
 			if chan.get('type')=='layout':
-				if chan.get('subtype') != 'sound':
+				if chan.get('chsubtype') != 'sound':
 					if chan.has_key('base_window'):
 						# region
 						id2parentid[chan.name] = chan['base_window']
@@ -1851,10 +1852,7 @@ class LayoutView2(LayoutViewDialog2):
 	# checking if the region/viewport node contains any sub-region or media
 	def isEmpty(self, node):
 		# checking if has sub-region
-		import MMNode
-		channelTreeRef = MMNode.MMChannelTree(self)
-		subregList = channelTreeRef.getsubregions(node.getName())
-		if len(subregList) > 0:
+		if self.__channelTreeRef.getsubregions(node.getName()):
 			return 0
 
 		# checking if has a associated media

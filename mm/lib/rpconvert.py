@@ -68,6 +68,7 @@ def rpconvert(node):
 	else:
 		ndur = min(ndur, rp.duration)
 	em.setnodeattr(node, 'duration', ndur)
+	em.setchannelattr(regionname, 'chsubtype', None)
 
 	# First deal with fadein transitions that specify an
 	# associated fadeout.  We just create an explicit fadeout for

@@ -49,12 +49,15 @@ class MMNodeContext:
 		self.comment = ''
 		self.metadata = ''
 		self.root = None
+		self.__channeltree = None
 		if settings.activeFullSmilCss:
 			from SMILCssResolver import SMILCssResolver
 			self.cssResolver = SMILCssResolver(self)
 
 	def destroy(self):
 		# Well, I can cheat..
+		if self.__channeltree:
+			self.__channeltree.close()
 		self.__init__(None)
 		self.cssResolver = None
 
@@ -262,8 +265,10 @@ class MMNodeContext:
 	def addchannel(self, name, i, type):
 		if name in self.channelnames:
 			raise CheckError, 'addchannel: existing name'
-		if not 0 <= i <= len(self.channelnames):
+		if not -1 <= i <= len(self.channelnames):
 			raise CheckError, 'addchannel: invalid position'
+		if i == -1:
+			i = len(self.channels)
 		c = MMChannel(self, name, type)
 		c._fillChannel()
 		self.channeldict[name] = c
@@ -353,6 +358,11 @@ class MMNodeContext:
 			self._ichanneldict[name] = c
 			self._ichannelnames.append(name)
 			self._ichannels.append(c)
+
+	def getchanneltree(self):
+		if not self.__channeltree:
+			self.__channeltree = MMChannelTree(self)
+		return self.__channeltree
 
 	#
 	# registration points administration
@@ -617,11 +627,11 @@ class MMRegPoint:
 	def getx(self, boxwidth):
 		if self.attrdict.has_key('left'):
 			x = self.attrdict['left']
-			if type(x) == type(1.0):
+			if type(x) is type(1.0):
 				x = int(x*boxwidth+0.5)
 		elif self.attrdict.has_key('right'):
 			right = self.attrdict['right']
-			if type(right) == type(1.0):
+			if type(right) is type(1.0):
 				right = int(right*boxwidth+0.5)
 			x = boxwidth-right
 		else:
@@ -633,11 +643,11 @@ class MMRegPoint:
 	def gety(self, boxheight):
 		if self.attrdict.has_key('top'):
 			y = self.attrdict['top']
-			if type(y) == type(1.0):
+			if type(y) is type(1.0):
 				y = int(y*boxheight+0.5)
 		elif self.attrdict.has_key('bottom'):
 			bottom = self.attrdict['bottom']
-			if type(bottom) == type(1.0):
+			if type(bottom) is type(1.0):
 				bottom = int(bottom*boxheight+0.5)
 			y = boxheight-bottom
 		else:
@@ -649,14 +659,14 @@ class MMRegPoint:
 	# alignOveride is an optional overide id
 	def getxyAlign(self, alignOveride=None):
 		alignId = None
-		if alignOveride == None:
+		if alignOveride is None:
 			alignId = self.getregalign()
 		else:
 			alignId = alignOveride
 
 		from RegpointDefs import alignDef
 		xy = alignDef.get(alignId)
-		if xy == None:
+		if xy is None:
 			# impossible value, avoid a crash if bug
 			xy = (0.0, 0,0)
 		return xy
@@ -735,14 +745,14 @@ class MMChannel:
 
 	def getCssAttr(self, name, defaultValue=None):
 		value = self.context.cssResolver.getAttr(self._cssId, name)
-		if value == None:
+		if value is None:
 			return defaultValue
 
 	def getCssRawAttr(self, name, defaultValue=None):
-		if id == None:
+		if id is None:
 			return defaultValue
 		value = self.context.cssResolver.getRawAttr(self._cssId, name)
-		if value == None:
+		if value is None:
 			return defaultValue
 		return value
 
@@ -841,7 +851,7 @@ class MMChannel:
 					self.newCssId(0)
 					
 					pchan = self.context.channeldict.get(value)
-					if pchan == None:
+					if pchan is None:
 						print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
 					else:
 						self.context.cssResolver.link(self._cssId, pchan._cssId)
@@ -849,7 +859,7 @@ class MMChannel:
 					# experimental algorithm to define a default edit bg color
 					if wantNewEditBg:
 						parentBg = pchan.attrdict.get('editBackground')
-						if parentBg == None:
+						if parentBg is None:
 							parentBg = 20, 20, 20
 						parentR, parentG, parentB = parentBg
 						# make the new color a little lighter
@@ -956,33 +966,46 @@ class MMChannel:
 # query methods arguments can be MMChannel objects or their names
 # for nodes queries use node.GetChannel()
 class MMChannelTree:
-	def __init__(self, node):
+	def __init__(self, ctx):
+		self.__ctx = ctx
+		self.commit(None)
+		if ctx.editmgr:
+			ctx.editmgr.register(self)
+
+	def close(self):
+		if self.__ctx and self.__ctx.editmgr:
+			self.__ctx.editmgr.unregister(self)
+		self.top_levels = None
+		self.subchans = None
+		self.__ctx = None
+
+	# editmanager stuff
+	def transaction(self, type):
+		return 1
+
+	def rollback(self):
+		pass
+
+	def commit(self, type):
 		self.top_levels = []
 		self.subchans = {}	# This is a tree of all channels
 					# of type channel_name:String->[subchannels:MMChannel]
-		self.__calc1(node)
-		self.__calc2(node)
-		self.__node = node
+		self.__pchans = {}
+		self.__calc1()
+		self.__calc2()
 
-	# warning: this method allow to clean the private varible '__parent': optimization
-	# it doesn't work if you add a new MMChannel instance in document, then
-	# delete MMChannelTree. If you want to make working this method, you have to keep
-	# a separate channel name list, or protect this method against crashes, ...
-	# So, don't activate this method without the requiered modifications
-#	def __del__(self):
-#		context = self.__node.GetContext()
-#		channels = context.channels
-#		for ch in channels:
-#			del ch.__parent
+	def kill(self):
+		self.__ctx = None	# don't unregister after being killed
+		self.top_levels = None
+		self.subchans = None
 
 	def getchannel(self, chan):
-		if type(chan) != type(''):
+		if type(chan) is not type(''):
 			return chan
-		context = self.__node.GetContext()
-		return context.channeldict.get(chan)
+		return self.__ctx.channeldict.get(chan)
 
 	def getsubchannels(self, chan):
-		if type(chan) != type(''):
+		if type(chan) is not type(''):
 			chan = chan.name
 		if self.subchans.has_key(chan):
 			return self.subchans[chan]
@@ -990,19 +1013,17 @@ class MMChannelTree:
 			return []
 
 	def getparent(self, chan):
-		if type(chan) != type(''):
-			return chan.__parent
-		context = self.__node.GetContext()
-		chan = context.channeldict.get(chan)
-		if chan: return chan.__parent
-		return None
+		if type(chan) is type(''):
+			chan = self.__ctx.channeldict.get(chan)
+		return self.__pchans.get(chan)
 
 	def getpath(self, chan):
 		path = []
 		chan = self.getchannel(chan)
 		while chan:
-			path.insert(0, chan)
-			chan = chan.__parent
+			path.append(chan)
+			chan = self.__pchans.get(chan)
+		path.reverse()
 		return path
 
 	# WORKING HERE (mjvdg) working here
@@ -1010,7 +1031,7 @@ class MMChannelTree:
 
 	def getsubregions(self, chan):
 		# Returns a list of all the sub-regions of a certain channel (which could be a region).
-		if type(chan) != type(''):
+		if type(chan) is not type(''):
 			chan = chan.name
 		return_me = []
 		if self.subchans.has_key(chan):
@@ -1026,18 +1047,18 @@ class MMChannelTree:
 		return self.top_levels
 
 	def getviewport(self, chan):
-		# Returns the viewport associated to the channel
+		# Returns the viewport associated with the channel
 		iChan = chan
 		pChan = self.getparent(chan)
-		while pChan != None:
+		while pChan is not None:
 			iChan = pChan
 			pChan = self.getparent(pChan)
 		return iChan
 
-	def __calc1(self, node):
+	def __calc1(self):
+		import ChannelMap
 		# Find the base windows, aka viewports.
-		context = node.GetContext()
-		channels = context.channels
+		channels = self.__ctx.channels
 		for ch in channels:
 			# If the channel has a base window that I don't know about, add it (? -mjvdg)
 			if ch.has_key('base_window'):
@@ -1046,35 +1067,30 @@ class MMChannelTree:
 					self.subchans[pch] = []	# I, er, add it as an empty list (?!).
 				self.subchans[pch].append(ch)
 			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'shell', 'python',
-					      'null', 'vcr', 'socket', 'cmif',
-					      'midi', 'external'):
+			   ChannelMap.isvisiblechannel(ch['type']):
 				# top-level channel with window
 				self.top_levels.append(ch)
 				if not self.subchans.has_key(ch.name):
 					self.subchans[ch.name] = []
 
-	def __calc2(self, node):
-		context = node.GetContext()
-		channels = context.channels
+	def __calc2(self):
+		import ChannelMap
+		channels = self.__ctx.channels
 		if self.top_levels:
 			top0 = self.top_levels[0].name # top0 is the main base window.
 		else:
 			top0 = None
 		for ch in channels:
 			if not ch.has_key('base_window') and \
-			   ch['type'] in ('sound', 'shell', 'python',
-					  'null', 'vcr', 'socket', 'cmif',
-					  'midi', 'external') and top0:
+			   not ChannelMap.isvisiblechannel(ch['type']) and \
+			   top0:
 				self.subchans[top0].append(ch)
 				
 		# enable bottom up search
-		for ch in channels:
-			ch.__parent = None # A private variable in another class.
-		for parentName, childs in self.subchans.items():
-			parchan = node.GetContext().getchannel(parentName)
-			for ch in childs:
-				ch.__parent = parchan
+		for parentName, children in self.subchans.items():
+			parchan = self.__ctx.getchannel(parentName)
+			for ch in children:
+				self.__pchans[ch] = parchan
 
 
 # representation of anchors
@@ -1665,17 +1681,17 @@ class MMNode:
 	def __linkCssId(self):
 		cssResolver = self.context.cssResolver
 
-		if self._subRegCssId == None or self._mediaCssId == None:
+		if self._subRegCssId is None or self._mediaCssId is None:
 			print 'Error: MMNode, linkCssId: subregcssid or mediacssid equal None'
 			return
 
 		# for sub region
 		channel = self.GetChannel()
-		if channel == None:
+		if channel is None:
 			print 'Error: MMNode, linkCssId: no channel'
 			return
 		region = channel.GetLayoutChannel()
-		if region == None:
+		if region is None:
 			print 'Error: MMNode, linkCssId: no layout channel'
 			return
 		cssResolver.link(self._subRegCssId, region._cssId)
@@ -1684,7 +1700,7 @@ class MMNode:
 		cssResolver.link(self._mediaCssId, self._subRegCssId)
 
 	def __unlinkCssId(self):
-		if self._subRegCssId == None or self._mediaCssId == None:
+		if self._subRegCssId is None or self._mediaCssId is None:
 			return
 
 		cssResolver = self.context.cssResolver
@@ -1713,32 +1729,32 @@ class MMNode:
 
 	def getCssRawAttr(self, name, defaultValue = None):
 		if name in ['regPoint', 'regAlign', 'scale']:
-			if self._mediaCssId == None:
+			if self._mediaCssId is None:
 				return defaultValue
 			value = self.context.cssResolver.getRawAttr(self._mediaCssId, name)
 		else:
-			if self._subRegCssId == None:
+			if self._subRegCssId is None:
 				return defaultValue
 			value = self.context.cssResolver.getRawAttr(self._subRegCssId, name)
-		if value == None:
+		if value is None:
 			return defaultValue
 		return value
 
 	def getCssAttr(self, name, defaultValue = None):
 		if name in ['regPoint', 'regAlign', 'scale']:
-			if self._mediaCssId == None:
+			if self._mediaCssId is None:
 				return defaultValue
 
 			self.__linkCssId()
 			value = self.context.cssResolver.getAttr(self._mediaCssId, name)
 			self.__unlinkCssId()
 		else:
-			if self._subRegCssId == None:
+			if self._subRegCssId is None:
 				return defaultValue
 			self.__linkCssId()
 			value = self.context.cssResolver.getAttr(self._subRegCssId, name)
 			self.__unlinkCssId()
-		if value == None:
+		if value is None:
 			return defaultValue
 		return value
 
@@ -1753,7 +1769,7 @@ class MMNode:
 	# it should be use only in some rare cases
 	# if we need to use often this method, we should optimize it
 	def getPxGeomMedia(self):
-		if self._subRegCssId == None or self._mediaCssId == None:
+		if self._subRegCssId is None or self._mediaCssId is None:
 			print 'no geometry on media:',self
 			return ((0,0,100,100), (0,0,100,100))
 
@@ -1768,7 +1784,7 @@ class MMNode:
 		return subRegGeom, mediaGeom
 
 	def getPxGeom(self):
-		if self._subRegCssId == None:
+		if self._subRegCssId is None:
 			return None
 		self.__linkCssId()
 		cssResolver = self.context.cssResolver
@@ -1781,7 +1797,7 @@ class MMNode:
 	# it should be use only in some rare cases (HTML+TIME export), ...
 	# if we need to use often this method, we should optimize it
 	def getPxAbsGeomMedia(self):
-		if self._subRegCssId == None or self._mediaCssId == None:
+		if self._subRegCssId is None or self._mediaCssId is None:
 			print 'no geometry on media:',self
 			return ((0,0,100,100), (0,0,100,100))
 
@@ -2339,14 +2355,14 @@ class MMNode:
 		regAlign = self.attrdict.get('regAlign')
 
 		# if not found looking for in channel
-		if regAlign == None:
+		if regAlign is None:
 			ch = self.GetChannel()
 			lch = ch.GetLayoutChannel()
-			if lch != None:
+			if lch is not None:
 				regAlign = lch.get('regAlign', None)
 
 		# at last, if not found get regAlign defined in regPoint element
-		if regAlign == None:
+		if regAlign is None:
 			regAlign = regpoint.getregalign()
 
 		return regAlign
@@ -2714,7 +2730,7 @@ class MMNode:
 		# Don't search out of the local seq of this node.
 		# return None if there is no previous node.
 
-		if self.GetParent()==None:
+		if self.GetParent() is None:
 			return None
 		selfsiblings = self.GetParent().GetChildren()
 		selfindex = selfsiblings.index(self)
@@ -2729,7 +2745,7 @@ class MMNode:
 		# Don't search out of the local seq of this node.
 		# Return None if this is the last node.
 
-		if self.GetParent() == None:
+		if self.GetParent() is None:
 			return None;
 		selfsiblings = self.GetParent().GetChildren();
 		selfindex = selfsiblings.index(self);
@@ -3050,7 +3066,7 @@ class MMNode:
 		srlist.append(([(SCHED_STOP, self)], sched_stop))
 
 		# XXX: ignoring animate elements timing for now,
-		# just kick animate childs in a parallel envelope
+		# just kick animate children in a parallel envelope
 		for child in self.GetSchedChildren():
 			if MMAttrdefs.getattr(child, 'type')!='animate':
 				continue

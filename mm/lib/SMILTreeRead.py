@@ -2028,15 +2028,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		layout = MMNode.MMChannel(ctx, name, 'layout')
+		ctx.addchannel(name, 0, 'layout')
+		layout = ctx.channeldict[name]
 
 		if not self.__region2channel.has_key(top):
 			self.__region2channel[top] = []
 		self.__region2channel[top].append(layout)
 		self.__topchans.append(layout)
-		ctx.channeldict[name] = layout
-		ctx.channelnames.insert(0, name)
-		ctx.channels.insert(0, layout)
 		if isroot:
 			self.__base_win = name
 		if bg is not None and \
@@ -2328,17 +2326,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						i = i + 1
 					name = name % i
 				chtype = 'layout'
-				ch = MMNode.MMChannel(ctx, name, chtype)
-				ctx.channeldict[name] = ch
-				ctx.channelnames.append(name)
-				ctx.channels.append(ch)
+				ctx.addchannel(name, -1, chtype)
+				ch = ctx.channeldict[name]
 
 				# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
 				# by default a layout channel may contain different types of sub-channels.
 				chsubtype = attrdict.get('type')
 			
 				ch['type'] = chtype
-				ch['subtype'] = chsubtype
+				ch['chsubtype'] = chsubtype
 				self.__fillchannel(ch, attrdict, chtype)
 		else:
 			# create first the MMChannel instances
@@ -2357,11 +2353,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					while ctx.channeldict.has_key(name % i):
 						i = i + 1
 					name = name % i
-				chtype = 'layout'
-				ch = MMNode.MMChannel(ctx, name, chtype)
-				ctx.channeldict[name] = ch
-				ctx.channelnames.append(name)
-				ctx.channels.append(ch)
+				ctx.addchannel(name, -1, 'layout')
+				ch = ctx.channeldict[name]
 				list.append((region, ch))
 					
 			# Then fill the instances with the right attributes
@@ -2373,9 +2366,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict = self.__regions[region]
 				chsubtype = attrdict.get('type')
 			
-				chtype = 'layout'
-				ch['type'] = chtype
-				ch['subtype'] = chsubtype
+				ch['type'] = chtype = 'layout'
+				ch['chsubtype'] = chsubtype
 				self.__fillchannel(ch, attrdict, chtype)
 				
 
@@ -2443,16 +2435,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ch = ctx.channeldict.get(name)
 		# there is no channel of the right name and type, then we create a new channel
 		if ch is None:
-			ch = MMNode.MMChannel(ctx, name, mtype)
-			# old 03-07-2000
-			# actualy the region can be 'unnamed' only after a error (if the region doesn't exist)
-			# if region != '<unnamed>':
-			#	if not self.__region2channel.has_key(region):
-			#		self.__region2channel[region] = []
-			#	self.__region2channel[region].append(ch)
-			ctx.channeldict[name] = ch
-			ctx.channelnames.append(name)
-			ctx.channels.append(ch)
+			ctx.addchannel(name, -1, mtype)
+			ch = ctx.channeldict[name]
 		############################### WARNING ##################################
 		################# to move the test : doesn't work clearly ################
 		##########################################################################
@@ -4595,6 +4579,10 @@ class SMILMetaCollector(xmllib.XMLParser):
 					self.elements[ns+' '+key] = val
 		self.__file = file or '<unknown file>'
 		xmllib.XMLParser.__init__(self)
+
+	def close(self):
+		xmllib.XMLParser.close(self)
+		self.elements = None
 
 	def start_meta(self, attributes):
 		name = attributes.get('name')

@@ -407,7 +407,7 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 	def setup(self):
 		self.channeltree = []	# A list of channel widgets.
 		self.widgets = []	# The lines that the tree is made of.
-		self.channelhelper = MMNode.MMChannelTree(self.node)	# self.node must be the root node.
+		self.channelhelper = self.node.GetContext().getchanneltree()
 		self.viewports = self.channelhelper.getviewports()
 		for i in self.viewports: # Adds all the channels to this tree.
 			self.add_channel_to_bottom(i, 0) # recursively add the viewport and it's children.
@@ -424,6 +424,7 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		self.viewports = None
 		for i in self.channeltree:
 			i.destroy()
+		self.channelhelper = None
 
 	def get_viewports(self):
 		return self.viewports
