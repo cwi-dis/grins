@@ -14,6 +14,9 @@
 // other interfaces related to the DirectShow Infrastructure. The indirectly exposed interface
 // is sufficient to control a media stream (sound and video)
 
+#define  OATRUE (-1)
+#define  OAFALSE (0)
+ 
 
 // Create an instance of a GraphBuilder (a wrapper object to the COM interface IGraphBuilder)
 // Arguments: No
@@ -282,6 +285,8 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
         pivw->put_WindowStyle(WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
 		CRect rc;pWnd->GetClientRect(&rc);
 		pivw->SetWindowPosition(rc.left, rc.top, rc.right, rc.bottom);
+		pivw->put_AutoShow(OATRUE);
+		pivw->SetWindowForeground(OATRUE);
 		pivw->Release();
 		GUI_END_SAVE;
 		}
