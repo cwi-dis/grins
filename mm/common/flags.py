@@ -49,7 +49,9 @@ def curflags():
 		import settings
 		import features
 		flags = 0
-		if features.compatibility == features.G2:
+		if hasattr(features, 'grins_snap') and features.grins_snap:
+			flags = flags | FLAG_SNAP
+		elif features.compatibility == features.G2:
 			if features.lightweight:
 				flags = flags | FLAG_G2_LIGHT
 			else:

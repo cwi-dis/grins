@@ -4,7 +4,7 @@ set GRINS_HOME=..\..\..
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
-set PRODUCT=smilboston
+set PRODUCT=snap
 
 set INCLUDE_MMEXTENSIONS=no
 
