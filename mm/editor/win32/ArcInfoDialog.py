@@ -63,11 +63,10 @@ class ArcInfoDialog:
 		view=self.cview.window
 		formid=adornments['form_id']
 		fs=view.getformserver()
-		w=fs.newformobj(formid)
-		w.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
+		self._window=fs.newformobj(formid)
+		self._window.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
 		frame=view.getframe()
-		w.create(frame)
-		self._window=w
+		self._window.create(frame)
 
 	#
 	# interface methods
