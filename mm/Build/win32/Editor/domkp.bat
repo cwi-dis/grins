@@ -78,15 +78,21 @@ echo -x MPEGVideoChannel >> FreezeOpts
 echo -x SGIVideoChannel >> FreezeOpts
 echo -x ShellChannel >> FreezeOpts
 echo -x VcrChannel >> FreezeOpts
+echo -x CmifChannel >> FreezeOpts
+echo -x SocketChannel >> FreezeOpts
+echo -x GraphChannel >> FreezeOpts
+echo -x LabelChannel >> FreezeOpts
+echo -x MidiChannel >> FreezeOpts
+echo -x PythonChannel >> FreezeOpts
+echo -x WordChannel >> FreezeOpts
+echo -x HtmlChannel >> FreezeOpts
+echo -x PseudoHtmlChannel >> FreezeOpts
 
 rem Duration stuff
 echo -x SGIVideoDuration >> FreezeOpts
 echo -x MACVideoDuration >> FreezeOpts
 echo -x MovieDuration >> FreezeOpts
-rem ****************************
-rem Do not exclude lib/MPEGVideoDuration
-rem It is  imported by NTVideoDuration
-rem echo -x MPEGVideoDuration >> FreezeOpts
+echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
 rem Audio stuff not supported on this platform
@@ -170,7 +176,7 @@ echo -x dshow >> FreezeOpts
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
-%PYTHON_EXE% -c "import MMAttrdefs" >> log.txt
+%PYTHON_EXE% -O -c "import MMAttrdefs" >> log.txt
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 

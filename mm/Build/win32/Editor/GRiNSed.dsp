@@ -51,18 +51,18 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
+# ADD BSC32 /nologo /o"./GRiNS_G2P.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 python15.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 python15.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_G2P.exe"
 # Begin Custom Build
 OutDir=.\.
-InputPath=.\GRiNSed.exe
+InputPath=.\GRiNS_G2P.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNSed.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNSed.exe 
-	copy $(OutDir)\GRiNSed.exe ..\..\..\bin\win32 
+"..\..\..\bin\win32\GRiNS_G2P.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_G2P.exe 
+	copy $(OutDir)\GRiNS_G2P.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -87,18 +87,18 @@ SOURCE="$(InputPath)"
 # ADD RSC /l 0x408 /d "_DEBUG" /d "_AFXDLL"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
+# ADD BSC32 /nologo /o"Debug/GRiNS_G2P.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 python15_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 python15_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_G2P.exe" /pdbtype:sept
 # Begin Custom Build
 OutDir=.\Debug
-InputPath=.\Debug\GRiNSed.exe
+InputPath=.\Debug\GRiNS_G2P.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNSed_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNSed_d.exe 
-	copy $(OutDir)\GRiNSed.exe ..\..\..\bin\win32\GRiNSed_d.exe 
+"..\..\..\bin\win32\GRiNS_G2P_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_G2P_d.exe 
+	copy $(OutDir)\GRiNS_G2P.exe ..\..\..\bin\win32\GRiNS_G2P_d.exe 
 	
 # End Custom Build
 
@@ -301,10 +301,6 @@ SOURCE=.\M_cmif.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_CmifChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_cmifed.c
 # End Source File
 # Begin Source File
@@ -417,10 +413,6 @@ SOURCE=.\M_gopherlib.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_GraphChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_grins_app_core.c
 # End Source File
 # Begin Source File
@@ -450,10 +442,6 @@ SOURCE=.\M_HierarchyViewDialog.c
 # Begin Source File
 
 SOURCE=.\M_Hlinks.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_HtmlChannel.c
 # End Source File
 # Begin Source File
 
@@ -498,10 +486,6 @@ SOURCE=.\M_InputValidator.c
 # Begin Source File
 
 SOURCE=.\M_keyword.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_LabelChannel.c
 # End Source File
 # Begin Source File
 
@@ -573,10 +557,6 @@ SOURCE=.\M_MenuTemplate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MidiChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_mimetools.c
 # End Source File
 # Begin Source File
@@ -618,10 +598,6 @@ SOURCE=.\M_MMurl.c
 # Begin Source File
 
 SOURCE=.\M_MMWrite.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_MPEGVideoDuration.c
 # End Source File
 # Begin Source File
 
@@ -678,14 +654,6 @@ SOURCE=.\M_posixpath.c
 # Begin Source File
 
 SOURCE=.\M_pprint.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_PseudoHtmlChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_PythonChannel.c
 # End Source File
 # Begin Source File
 
@@ -941,10 +909,6 @@ SOURCE=.\M_socket.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SocketChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_SoundChannel.c
 # End Source File
 # Begin Source File
@@ -1122,10 +1086,6 @@ SOURCE=.\M_WMEVENTS.c
 # Begin Source File
 
 SOURCE=.\M_wndusercmd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_WordChannel.c
 # End Source File
 # Begin Source File
 
