@@ -2596,7 +2596,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__check_compatibility:
 				import DefCompatibilityCheck, windowinterface, version
 				if not DefCompatibilityCheck.isCompatibleVersion(content):
-					if windowinterface.GetOKCancel('This document was created by '+content+'\n'+'GRiNS '+version.version+' may be able to read the document, but some features may be lost\n\nDo you wish to continue?',parent=None):
+					if windowinterface.GetOKCancel('This document was created by "'+content+'"\n\n'+'GRiNS '+version.version+' may be able to read the document, but some features may be lost\n\nDo you wish to continue?',parent=None):
 						raise UserCancel
 		elif name == 'project_boston':
 			content = content == 'on'

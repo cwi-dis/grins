@@ -288,8 +288,12 @@ def getsrc(writer, node):
 		if writer.copydir:
 			# Exporting without a URL is an error
 			from windowinterface import showmessage
-			node.set_infoicon('error', 'The URL field is empty')
-			showmessage('No URL set for node %s\nThe document may not be playable.' % (node.GetRawAttrDef('name', '<unnamed>')))
+			node.set_infoicon('error', 'No media URL given.')
+			nmsg = ''
+			name = node.GetRawAttrDef('name', '')
+			if name:
+				nmsg = 'Media item %s: '
+			showmessage(nmsg + 'No URL set, the document may not be playable.')
 		else:
 			# If not exporting we insert a placeholder
 			val = '#'
@@ -2373,7 +2377,7 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
-			msg = "Warning: cannot convert to RealAudio:\n%s\n\nUsing source material unconverted."%srcurl
+			msg = "Cannot convert to RealAudio: %s\n\nUsing source material unconverted."%srcurl
 			if node:
 				node.set_infoicon('error', msg)
 			import windowinterface
@@ -2393,7 +2397,7 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
-			msg = "Warning: cannot convert to RealVideo:\n%s\n\nUsing source material unconverted."%srcurl
+			msg = "Cannot convert to RealVideo: %s\n\nUsing source material unconverted."%srcurl
 			if node:
 				node.set_infoicon('error', msg)
 			import windowinterface
@@ -2415,7 +2419,7 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
-			msg = "Warning: cannot convert to Real JPEG:\n%s\n\nUsing source material unconverted."%srcurl
+			msg = "Cannot convert to Real JPEG: %s\n\nUsing source material unconverted."%srcurl
 			if node:
 				node.set_infoicon('error', msg)
 			import windowinterface

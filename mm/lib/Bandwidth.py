@@ -36,7 +36,7 @@ def getstreamdata(node, target=0):
 		# Nodes that are not external consume no bandwidth
 		return 0, 0, 0, 0
 	if ntype == 'slide':
-		raise Error, 'Cannot compute bandwidth for slide'
+		raise Error, 'Cannot compute bandwidth for slide.'
 	
 	context = node.GetContext()
 	ctype = node.GetChannelType()
@@ -69,7 +69,7 @@ def getstreamdata(node, target=0):
 		try:
 			u = MMurl.urlopen(url)
 		except IOError:
-			raise Error, 'Media item does not exist'
+			raise Error, 'Cannot open: %s'%url
 		maintype = u.headers.getmaintype()
 		subtype = u.headers.getsubtype()
 		urlcache[url]['mimetype'] = maintype, subtype
@@ -134,7 +134,7 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 	try:
 		filename, hdrs = MMurl.urlretrieve(url)
 	except IOError:
-		raise Error, 'Media item does not exist'
+		raise Error, 'Cannot open: %s'%url
 	tmp = None
 	if target and hdrs.maintype == 'image' and hdrs.subtype != 'svg-xml' and convert:
 		import tempfile
@@ -146,7 +146,7 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 		except:
 			# XXXX Too many different errors can occur in convertimagefile:
 			# I/O errors, image file errors, etc.
-			raise Error, 'Conversion to RealMedia failed'
+			raise Error, 'Cannot convert to RealMedia.'
 		if cfile: file = cfile
 		filename = tmp = os.path.join(dir, file)
 	try:
@@ -154,7 +154,7 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 		statb = os.stat(filename)
 	except os.error:
 ##		print "DBG: Bandwidth.get: nonexisting", filename
-		raise Error, 'Media item does not exist'
+		raise Error, 'Tempfile does not exist: %s'%filename
 	if tmp:
 		try:
 			os.unlink(tmp)

@@ -231,7 +231,7 @@ class TopLevel(TopLevelDialog):
 		self.context = self.root.GetContext()
 
 	def printfunc(self, msg):
-		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
+		windowinterface.showmessage('%s\n\n(while reading %s)' % (msg, self.filename))
 
 	def reload_callback(self):
 		self.setwaiting()
@@ -244,10 +244,10 @@ class TopLevel(TopLevelDialog):
 		try:
 			top = TopLevel(self.main, self.url)
 		except IOError:
-			windowinterface.showmessage('error opening document %s' % self.url)
+			windowinterface.showmessage('Cannot open: %s' % self.url)
 			return
 		except MSyntaxError:
-			windowinterface.showmessage('parsing document %s failed' % self.url)
+			windowinterface.showmessage('Parse error in document: %s' % self.url)
 			return
 
 		# show the main frame
@@ -332,10 +332,7 @@ class TopLevel(TopLevelDialog):
 						msg = msg.strerror
 					else:
 						msg = msg.args[0]
-				windowinterface.showmessage(
-					'Open operation failed.\n'+
-					'File: '+url+'\n'+
-					'Error: '+`msg`)
+				windowinterface.showmessage('Cannot open: '+url+'\n\n'+`msg`)
 				return 0
 
 		if grinsTarget:

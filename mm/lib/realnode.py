@@ -171,7 +171,7 @@ class SlideShow:
 		return new
 
 	def printfunc(self, msg):
-		windowinterface.showmessage('While reading %s:\n\n' % self.url + msg)
+		windowinterface.showmessage('%s\n\n(while reading %s)' % (msg, self.url))
 
 	def transaction(self, type):
 		return 1
@@ -384,7 +384,7 @@ class SlideShow:
 				utype, host, path, params, query, fragment = urlparse.urlparse(url)
 				if (utype and utype != 'file') or \
 				   (host and host != 'localhost'):
-					windowinterface.showmessage('cannot edit remote RealPix files')
+					windowinterface.showmessage('Cannot edit remote RealPix files.')
 					return
 				import tempfile
 				pre = tempfile.gettempprefix()
@@ -405,7 +405,7 @@ class SlideShow:
 			MMAttrdefs.flushcache(node)
 
 	def printfunc(self, msg):
-		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
+		windowinterface.showmessage('%s\n\n(while reading %s)' % (msg, self.filename))
 
 	def kill(self):
 		pass
