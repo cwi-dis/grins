@@ -22,7 +22,8 @@ def GetSize(url, maintype = None, subtype = None):
 		width = info.get('width', 0)
 		height = info.get('height', 0)
 	elif maintype == 'image':
-		u.close()
+		if u is not None:
+			u.close()
 		del u
 		try:
 			file = MMurl.urlretrieve(url)[0]
@@ -30,7 +31,8 @@ def GetSize(url, maintype = None, subtype = None):
 			return 0, 0
 		width, height = GetImageSize(file)
 	elif maintype == 'video':
-		u.close()
+		if u is not None:
+			u.close()
 		del u
 		try:
 			file = MMurl.urlretrieve(url)[0]
