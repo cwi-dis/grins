@@ -93,6 +93,11 @@ _guess_type = guess_type
 def guess_type(url):
 	import urlparse
 	scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+	if not scheme or scheme == 'file':
+		import string
+		i = string.find(url, '?')
+		if i > 0:
+			url = url[:i]
 	url = urlparse.urlunparse((scheme, netloc, url, '', '', ''))
 	return _guess_type(url)
 
