@@ -6,7 +6,7 @@ from MMExc import *			# exceptions
 from AnchorDefs import *
 import string
 import MMAttrdefs
-from win32modules import timerex2, mpegex
+from win32modules import timerex, mpegex
 
 debug = 1
 
@@ -266,7 +266,7 @@ class VideoChannel(ChannelWindow):
 		if self.play_duration > 0:
 			self._time_remain = self.play_duration
 			self._start_time = time.time()
-			self.timerID = timerex2.SetTimer(self._movieWindow , self.play_duration)
+			self.timerID = timerex.SetTimer(self._movieWindow , self.play_duration)
 		self.do_play(node)
 		self.need_armdone = 1
 		if  res <> 1:
@@ -277,7 +277,7 @@ class VideoChannel(ChannelWindow):
 
 	def playdone(self, dummy):
 		if self.timerID >0:
-			timerex2.KillTimer(self._movieWindow , self.timerID)
+			timerex.KillTimer(self._movieWindow , self.timerID)
 			self.timerID = 0
 		if self.need_armdone:
 			self._armstate = ARMED
@@ -293,7 +293,7 @@ class VideoChannel(ChannelWindow):
 					if self.play_duration > 0:
 						self._time_remain = self.play_duration
 						self._start_time = time.time()
-						self.timerID = timerex2.SetTimer(self._movieWindow , self.play_duration)
+						self.timerID = timerex.SetTimer(self._movieWindow , self.play_duration)
 					return
 				res = mpegex.stop(self._play_movieIndex)
 				ChannelWindow.playdone(self, dummy)
@@ -323,7 +323,7 @@ class VideoChannel(ChannelWindow):
 	def _mmcallback(self, params):
 		print 'MCI NOTIFY MESSAGE, parmas:', params
 		if self.timerID >0:
-			timerex2.KillTimer(self._movieWindow , self.timerID)
+			timerex.KillTimer(self._movieWindow , self.timerID)
 			self.timerID = 0
 		self.callback(0, 0, 0, MM_PLAYDONE)
 		#else:
@@ -332,7 +332,7 @@ class VideoChannel(ChannelWindow):
 
 	def stopplay(self, node):
 		if self.timerID>0:
-			timerex2.KillTimer(self._movieWindow , self.timerID)
+			timerex.KillTimer(self._movieWindow , self.timerID)
 			self.timerID = 0
 		self._played_movieIndex = self._play_movieIndex
 		self._play_movieIndex = -1
@@ -352,7 +352,7 @@ class VideoChannel(ChannelWindow):
 
 	def setpaused(self, paused):
 		if self.timerID>0:
-			timerex2.KillTimer(self._movieWindow , self.timerID)
+			timerex.KillTimer(self._movieWindow , self.timerID)
 			self.timerID = 0
 		ChannelWindow.setpaused(self, paused)
 		if self._paused:
@@ -366,7 +366,7 @@ class VideoChannel(ChannelWindow):
 			if self._playstate == PLAYING:
 				if self._time_remain > 0:
 						self._start_time = time.time()
-						self.timerID = timerex2.SetTimer(self._movieWindow , self._time_remain)
+						self.timerID = timerex.SetTimer(self._movieWindow , self._time_remain)
 				res = mpegex.play(self._play_movieIndex, self.play_duration-self._time_remain)
 		return
 
