@@ -13,9 +13,6 @@ class CmifChannel(Channel):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.stopped = 0
 	
-	def __repr__(self):
-		return '<CmifChannel instance, name=' + `self._name` + '>'
-
 	def do_play(self, node):
 		if node.GetType() <> 'imm':
 			print 'CmifChannel: imm nodes only'

@@ -21,9 +21,6 @@ class GraphChannel(ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
-	def __repr__(self):
-		return '<GraphChannel instance, name=' + `self._name` + '>'
-
 	def do_arm(self, node, same=0):
 	        if same and self.armed_display:
 		    return 1
