@@ -8,6 +8,7 @@ from WMEVENTS import *
 import winuser, wingdi, wincon
 import winstruct
 import gdi_displist
+import base_transitions
 
 #
 import base_window
@@ -74,6 +75,51 @@ class Region(base_window.Window):
 		# common box
 		return winstruct.rectAnd(ltrb1, ltrb2)
 
+	def createCompatibleDC(self):
+		wnd = self._ctx
+		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		wnd.ReleaseDC(dc.Detach())
+
+	def _paintOnSurf(self, surf):
+		wnd = self._topwindow.getContext()
+		wnd_dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		dc = wnd_dc.CreateCompatibleDC()
+		oldsurf = dc.SelectObject(surf)
+
+		xywy_dst = ltrb = self._topwindow.LRtoDR(self._rect, round = 1)
+		if self._active_displist:
+			self._active_displist._render(dc, ltrb, xywy_dst, start=1)
+		
+		if self._active_displist:
+			entry = self._active_displist._list[0]
+			bgcolor = None
+			if entry[0] == 'clear' and entry[1]:
+				bgcolor = entry[1]
+			elif not self._transparent:
+				bgcolor = self._bgcolor
+			if bgcolor:
+				brush = wingdi.CreateSolidBrush(bgcolor)
+				old_brush = dc.SelectObject(brush)
+				dc.Rectangle(ltrb)
+				dc.SelectObject(old_brush)
+				wingdi.DeleteObject(brush)
+			self._active_displist._render(dc, ltrb, xywy_dst, start=1)
+			if self._showing:
+				brush =  wingdi.CreateSolidBrush((255, 0, 0))
+				dc.FrameRect(ltrb, brush)
+				wingdi.DeleteObject(brush)
+
+		elif self._transparent == 0 and self._bgcolor:
+			brush = wingdi.CreateSolidBrush(self._bgcolor)
+			old_brush = dc.SelectObject(brush)
+			dc.Rectangle(ltrb)
+			dc.SelectObject(old_brush)
+			wingdi.DeleteObject(brush)
+
+		dc.SelectObject(oldsurf)
+		dc.DeleteDC()
+		wnd.ReleaseDC(wnd_dc.Detach())
+		
 	def _paintOnDC(self, dc):
 		ltrb = self.getClipDR(dc)
 		if ltrb is None:
@@ -91,7 +137,7 @@ class Region(base_window.Window):
 				dc.Rectangle(ltrb)
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
-			self._active_displist._render(dc, ltrb, start=1)
+			self._active_displist._render(dc, ltrb, self.getDR(), start=1)
 			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
 				dc.FrameRect(ltrb, brush)
@@ -105,17 +151,128 @@ class Region(base_window.Window):
 			wingdi.DeleteObject(brush)
 
 	# normal painting
-	def _paint_0(self, dc):
+	def _paint_0(self, dc, exclwnd = None):
 		self._paintOnDC(dc)
 
 		# then paint children bottom up
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint(dc)
+			w.paint(dc, exclwnd)
 
-	def paint(self, dc):
-		self._paint_0(dc)
+	# transition, multiElement==false
+	# trans engine: calls self.paintOn(dc)
+	# i.e. trans engine is responsible to paint only this region
+	def _paint_1(self, dc, exclwnd = None):
+		# first paint self transition surface
+		self._topwindow.blitSurfaceOn(dc, self._drawsurf, self.getwindowpos())
+		
+		# then paint children bottom up normally
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paint(rc, exclwnd)
+
+	# transition, multiElement==true, childrenClip==false
+	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
+	# i.e. trans engine responsible to paint correctly everything below 
+	def _paint_2(self, dc, exclwnd = None):
+		pass
+
+	# transition, multiElement==true, childrenClip==true
+	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
+	# i.e. trans engine is responsible to paint correctly everything below
+	def _paint_3(self, dc, exclwnd = None):
+		pass
+		
+	def paint(self, dc, exclwnd = None):
+		if not self._isvisible or exclwnd == self:
+			return
+
+		if self._transition and self._transition._isrunning():
+			if self._transition._ismaster(self):
+				if self._multiElement:
+					if self._childrenClip:
+						self._paint_3(dc, exclwnd)
+					else:
+						self._paint_2(dc, exclwnd)
+				else:
+					self._paint_1(dc, exclwnd)
+			return
+
+		self._paint_0(dc, exclwnd)
+
+
+	#
+	# Transitions helpers
+	#		
+	# get a copy of the screen area of this window
+	def cloneBackSurf(self, exclwnd = None, dopaint = 1):
+		return self._topwindow.cloneSurface(self, exclwnd, dopaint)
+
+	def updateBackSurf(self, surf, exclwnd = None):
+		return self._topwindow.updateSurface(surf, self, exclwnd)
+
+	# used by multiElement transition
+	# paint on surface dds relative to ancestor rel			
+	def paintOnSurf(self, surf, rel = None, exclwnd = None):
+		pass
+
+	#
+	# Transitions interface implementation
+	#		
+	def begintransition(self, outtrans, runit, dict, cb):
+		if self._transition:
+			print 'Multiple Transitions!'
+			if cb:
+				apply(apply, cb)
+			return
+		if runit:
+			self._multiElement = dict.get('coordinated')
+			self._childrenClip = dict.get('clipBoundary', 'children') == 'children'
+			self._transition = base_transitions.TransitionEngine(self, outtrans, runit, dict, cb)
+			# uncomment the next line to freeze things
+			# at the moment begintransition is called
+			self._transition.begintransition()
+		else:
+			self._multiElement = 0
+			self._childrenClip = 0
+			self._transition = None # base_transitions.InlineTransitionEngine(self, outtrans, runit, dict, cb)
+			self._transition.begintransition()
+
+	def endtransition(self):
+		if self._transition:
+			#print 'endtransition', self
+			self._transition.endtransition()
+			self._transition = None
+
+	def jointransition(self, window, cb):
+		# Join the transition already created on "window".
+		if not window._transition:
+			print 'Joining without a transition', self, window, window._transition
+			return
+		if self._transition:
+			print 'Multiple Transitions!'
+			return
+		ismaster = self._windowlevel() < window._windowlevel()
+		self._transition = window._transition
+		self._transition.join(self, ismaster, cb)
+		
+	def settransitionvalue(self, value):
+		if self._transition:
+			#print 'settransitionvalue', value
+			self._transition.settransitionvalue(value)
+		else:
+			print 'settransitionvalue without a transition'
+
+	def _windowlevel(self):
+		# Returns 0 for toplevel windows, 1 for children of toplevel windows, etc
+		prev = self
+		count = 0
+		while not prev==prev._topwindow:
+			count = count + 1
+			prev = prev._parent
+		return count
 
 #############################
 
@@ -207,7 +364,7 @@ class Viewport(Region):
 			rc = self._viewport.getwindowpos()
 		self._ctx.update(rc)
 
-	def paint(self, dc):
+	def paint(self, dc, exlwnd = None):
 		ltrb = dc.GetClipBox()
 		old_brush = dc.SelectObject(self._bgbrush)
 		dc.Rectangle(ltrb)
@@ -216,7 +373,7 @@ class Viewport(Region):
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint(dc)
+			w.paint(dc, exlwnd)
 
 	def paintSurfAt(self, dc, surf, pos):
 		dcc = dc.CreateCompatibleDC()
@@ -225,6 +382,82 @@ class Viewport(Region):
 		dcc.SelectObject(bmp)
 		dcc.DeleteDC()
 	
+	def cloneSurface(self, region, exclwnd = None, dopaint = 1):
+		# what rect to clone
+		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos())
+
+		wnd = self._ctx
+		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		
+		dcBack = dc.CreateCompatibleDC()
+		oldBack = dcBack.SelectObject(self._backBuffer)
+
+		if dopaint:
+			rgn = wingdi.CreateRectRgn(rcd)
+			dcBack.SelectClipRgn(rgn)
+			rgn.DeleteObject()
+			self.paint(dcBack, exlwnd = exclwnd)
+
+		dcReg = dcBack.CreateCompatibleDC()
+		regSurf = wingdi.CreateDIBSurface(dc, wd, hd)
+		oldReg = dcReg.SelectObject(regSurf)
+
+		# copy back to reg
+		dcReg.BitBlt((0, 0), (wd, hd), dcBack, (xd, yd), wincon.SRCCOPY)
+
+		# cleanup
+		dcReg.SelectObject(oldReg)
+		dcReg.DeleteDC()
+		dcBack.SelectObject(oldBack)
+		dcBack.DeleteDC()
+		wnd.ReleaseDC(dc.Detach())
+		
+		# return region clone
+		return regSurf
+
+	def updateSurface(self, surf, region, exclwnd = None):
+		# what rect to update
+		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos())
+
+		wnd = self._ctx
+		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		
+		dcBack = dc.CreateCompatibleDC()
+		oldBack = dcBack.SelectObject(self._backBuffer)
+
+		rgn = wingdi.CreateRectRgn(rcd)
+		dcBack.SelectClipRgn(rgn)
+		rgn.DeleteObject()
+		self.paint(dcBack, exlwnd = exclwnd)
+
+		dcReg = dcBack.CreateCompatibleDC()
+		oldReg = dcReg.SelectObject(surf)
+
+		# copy back to reg
+		dcReg.BitBlt((0, 0), (wd, hd), dcBack, (xd, yd), wincon.SRCCOPY)
+
+		# cleanup
+		dcReg.SelectObject(oldReg)
+		dcReg.DeleteDC()
+		dcBack.SelectObject(oldBack)
+		dcBack.DeleteDC()
+		wnd.ReleaseDC(dc.Detach())
+
+	def blitSurfaceOn(self, dc, surf, rc):
+		# what rect to blit
+		rc_dst = xd, yd, wd, hd = self.LRtoDR(rc)
+
+		dcc = dc.CreateCompatibleDC()
+		oldsurf = dcc.SelectObject(surf)
+
+		# copy back to reg
+		dc.BitBlt((xd, yd), (wd, hd), dcc, (0, 0), wincon.SRCCOPY)
+		#dc.StretchBlt(rc_dst, dcc, (0, 0, wd, hd), wincon.SRCCOPY)
+
+		# cleanup
+		dcc.SelectObject(oldsurf)
+		dcc.DeleteDC()
+
 	# 
 	# Mouse section
 	# 
