@@ -42,6 +42,7 @@ class _Window(X_windowbase._Window):
 		X_windowbase._Window.__init__(self, parent, x, y, w, h, title,
 					      defcmap, pixmap, units)
 		self.arrowcache = {}
+		self._next_create_box = []
 
 	def close(self):
 		self.arrowcache = {}
@@ -57,6 +58,12 @@ class _Window(X_windowbase._Window):
 	def create_box(self, msg, callback, box = None):
 		import Xcursorfont
 		global _in_create_box
+		if _in_create_box:
+			_in_create_box._next_create_box.append((self, msg, callback, box))
+			return
+		if self.is_closed():
+			apply(callback, ())
+			return
 		_in_create_box = self
 		self.pop()
 		if msg:
@@ -132,12 +139,6 @@ class _Window(X_windowbase._Window):
 			self._rb_start_x, self._rb_start_y, self._rb_width, \
 					  self._rb_height = self._rect
 
-		# wait until box has been drawn or canceled
-		try:
-			Xt.MainLoop()
-		except _rb_done:
-			pass
-
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)
@@ -178,28 +179,31 @@ class _Window(X_windowbase._Window):
 
 	def _resize_callback(self, form, client_data, call_data):
 		self.arrowcache = {}
-		raised = 0
-		if _in_create_box:
-			try:
-				_in_create_box._rb_cancel()
-			except _rb_done:
-				raised = 1
+		w = _in_create_box
+		if w:
+			raised = 1
+			next_create_box = w._next_create_box
+			w._next_create_box = []
+			w._rb_cancel()
+			w._next_create_box[0:0] = next_create_box
 		X_windowbase._Window._resize_callback(self, form, client_data,
 						      call_data)
-		if raised:
-			raise _rb_done
+		if w:
+			w._rb_end()
 
 	def _delete_callback(self, form, client_data, call_data):
-		raised = 0
-		if _in_create_box:
-			try:
-				_in_create_box._rb_cancel()
-			except _rb_done:
-				raised = 1
+		self.arrowcache = {}
+		w = _in_create_box
+		if w:
+			raised = 1
+			next_create_box = w._next_create_box
+			w._next_create_box = []
+			w._rb_cancel()
+			w._next_create_box[0:0] = next_create_box
 		X_windowbase._Window._delete_callback(self, form, client_data,
 						      call_data)
-		if raised:
-			raise _rb_done
+		if w:
+			w._rb_end()
 
 	# supporting methods for create_box
 	def _rb_finish(self):
@@ -258,13 +262,20 @@ class _Window(X_windowbase._Window):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, self._rb_cvbox())
-		raise _rb_done
+		self._rb_end()
 
 	def _rb_cancel(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, ())
-		raise _rb_done
+		self._rb_end()
+
+	def _rb_end(self):
+		# execute pending create_box calls
+		next_create_box = self._next_create_box
+		self._next_create_box = []
+		for win, msg, cb, box in next_create_box:
+			win.create_box(msg, cb, box)
 
 	def _rb_draw(self):
 		x = self._rb_start_x
@@ -379,7 +390,12 @@ class _Window(X_windowbase._Window):
 		del self._rb_cy
 
 class _SubWindow(X_windowbase._BareSubWindow, _Window):
-	pass
+	def __init__(self, parent, coordinates, defcmap, pixmap, transparent):
+		X_windowbase._BareSubWindow.__init__(self, parent, coordinates,
+						     defcmap, pixmap,
+						     transparent)
+		self.arrowcache = {}
+		self._next_create_box = []
 
 class _DisplayList(X_windowbase._DisplayList):
 	def _do_render(self, entry, region):
