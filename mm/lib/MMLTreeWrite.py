@@ -392,7 +392,7 @@ class MMLWriter:
 				else:
 					ok = 1
 			if ok:
-				if x, y, w, h != (0,0,100,100):
+				if (x, y, w, h) != (0,0,100,100):
 					items.append('shape="rect"')
 					items.append('coords="%d%%,%d%% %d%%,%d%%"'%
 						     (x,y,w,h))

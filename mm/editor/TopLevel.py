@@ -322,8 +322,8 @@ class TopLevel(ViewDialog):
 			print 'parsing', self.filename, '...'
 			t0 = time.time()
 			if self.filename[-4:] == '.mml':
-				import MMLTreeRead
-				self.root = MMLTreeRead.ReadFile(self.filename)
+				import MMLTree
+				self.root = MMLTree.ReadFile(self.filename)
 			else:
 				self.root = MMTree.ReadFile(self.filename)
 			t1 = time.time()
