@@ -110,6 +110,7 @@
 #define IDI_DURATION                    311
 #define IDI_ANIMATION                   312
 #define IDR_TB_PLAYER                   313
+#define IDR_TB_ALIGNMENT                319
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -504,6 +505,14 @@
 #define DUC_CANVAS_ZOOM_IN              32863
 #define UC_CANVAS_ZOOM_OUT              32864
 #define IDUC_REDO                       32865
+#define IDUC_ALIGN_LEFT                 32869
+#define IDUC_ALIGN_CENTER               32870
+#define IDUC_ALIGN_RIGHT                32871
+#define IDUC_ALIGN_TOP                  32872
+#define IDUC_ALIGN_MIDDLE               32873
+#define IDUC_ALIGN_BOTTOM               32874
+#define IDUC_DISTRIBUTE_HORIZONTALLY    32875
+#define IDUC_DISTRIBUTE_VERTICALLY      32876
 #define IDC_GROUP1                      65535
 #define ID_GROUP1                       65535
 
@@ -511,8 +520,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        315
-#define _APS_NEXT_COMMAND_VALUE         32869
+#define _APS_NEXT_RESOURCE_VALUE        321
+#define _APS_NEXT_COMMAND_VALUE         32877
 #define _APS_NEXT_CONTROL_VALUE         1288
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

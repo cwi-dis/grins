@@ -228,6 +228,7 @@ MENUBAR=(
 		(FLAG_ALL, CASCADE, 'T&oolbars', (
 			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
 			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
+			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
 			)),
 		)
 	 ),

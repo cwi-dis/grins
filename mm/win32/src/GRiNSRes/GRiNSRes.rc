@@ -131,6 +131,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
 IDR_TB_PLAYER           BITMAP  DISCARDABLE     "res\\tb_player.bmp"
+IDR_TB_ALIGNMENT        BITMAP  DISCARDABLE     "res\\tb_alignment.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2392,9 +2393,6 @@ BEGIN
     BUTTON      IDUC_CLOSE_WINDOW
     BUTTON      IDUC_CANVAS_ZOOM_IN
     BUTTON      IDUC_CANVAS_ZOOM_OUT
-    BUTTON      IDUC_PLAY
-    BUTTON      IDUC_PAUSE
-    BUTTON      IDUC_STOP
 END
 
 IDR_TB_PLAYER TOOLBAR DISCARDABLE  16, 15
@@ -2402,6 +2400,19 @@ BEGIN
     BUTTON      IDUC_PLAY
     BUTTON      IDUC_PAUSE
     BUTTON      IDUC_STOP
+END
+
+IDR_TB_ALIGNMENT TOOLBAR DISCARDABLE  16, 16
+BEGIN
+    BUTTON      IDUC_ALIGN_LEFT
+    BUTTON      IDUC_ALIGN_CENTER
+    SEPARATOR
+    BUTTON      IDUC_ALIGN_RIGHT
+    BUTTON      IDUC_ALIGN_TOP
+    BUTTON      IDUC_ALIGN_MIDDLE
+    BUTTON      IDUC_ALIGN_BOTTOM
+    BUTTON      IDUC_DISTRIBUTE_HORIZONTALLY
+    BUTTON      IDUC_DISTRIBUTE_VERTICALLY
 END
 
 
@@ -2462,6 +2473,16 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     UC_CANVAS_ZOOM_OUT      "Zoom out\nZoom out"
+    IDUC_ALIGN_LEFT         "Align left edges\nAlign left edges"
+    IDUC_ALIGN_CENTER       "Align vertical centers\nAlign vertical centers"
+    IDUC_ALIGN_RIGHT        "Align right edges\nAlign right edges"
+    IDUC_ALIGN_TOP          "Align tops\nAlign Tops"
+    IDUC_ALIGN_MIDDLE       "Align horizontal centers\nAlign horizontal centers"
+    IDUC_ALIGN_BOTTOM       "Align bottoms\nAlign bottoms"
+    IDUC_DISTRIBUTE_HORIZONTALLY 
+                            "Distribute horizontal space\nDistribute horizontal space"
+    IDUC_DISTRIBUTE_VERTICALLY 
+                            "Distribute vertical space\nDistribute vertical space"
 END
 
 #endif    // English (U.S.) resources

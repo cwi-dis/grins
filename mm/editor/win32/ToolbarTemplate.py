@@ -8,6 +8,15 @@
 # (into the toolbar resource bitmap) for buttons or a width for
 # separators.
 # Type is one of the strings 'button', 'separator', or 'pulldown'.
+#
+# Quick instructions on adding a toolbar:
+# - Make sure all commands have their IDUC_ equivalent in usercmdui.
+# - Create the toolbar and the buttons in the VC++ resource editor,
+#   name the bmp file res/tb_xxx.bmp, name the resource IDR_TB_XXX.
+# - Add the TOOLBAR_XXX command to wndusercmd and MenuTemplate
+# - Add the toolbar template here
+# - Add the template to TOOLBARS (at the bottom of this file).
+#
 
 import grinsRC
 import usercmd
@@ -63,7 +72,7 @@ FRAME_TEMPLATE = (
 		)
 	)
 )
-XXPLAYER_TEMPLATE = (
+PLAYER_TEMPLATE = (
 	('Player Controls', wndusercmd.TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
 		Button(usercmd.PLAY, 0),
 		Button(usercmd.PAUSE, 1),
@@ -72,7 +81,26 @@ XXPLAYER_TEMPLATE = (
 	)
 )
 
+ALIGN_TEMPLATE = (
+	('Region alignment', wndusercmd.TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_ALIGNMENT, (
+		Button(usercmd.ALIGN_LEFT, 0),
+		Button(usercmd.ALIGN_CENTER, 1),
+		Button(usercmd.ALIGN_RIGHT, 2),
+		Separator(6),
+		Button(usercmd.ALIGN_TOP, 3),
+		Button(usercmd.ALIGN_MIDDLE, 4),
+		Button(usercmd.ALIGN_BOTTOM, 5),
+		Separator(6),
+		Button(usercmd.DISTRIBUTE_HORIZONTALLY, 6),
+		Button(usercmd.DISTRIBUTE_VERTICALLY, 7),
+		)
+	)
+)
+
 TOOLBARS=[
 	GENERAL_TEMPLATE,
-	XXPLAYER_TEMPLATE
+	PLAYER_TEMPLATE,
+	ALIGN_TEMPLATE
 ]
+
+TOOLBARS.reverse()  # For now...
