@@ -232,4 +232,4 @@ class VcrChannel(Channel):
 		else:
 			stop = None
 		return start, stop
-		
+
