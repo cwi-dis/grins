@@ -1461,7 +1461,6 @@ class AttrEditor(AttrEditorDialog):
 			if b != None:
 				list.append(b)
 		self.attrlist = list
-		print 'attrlist=', self.attrlist
 		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattrinst)
 
 	def _findattr(self, attr):
@@ -1990,7 +1989,6 @@ class TimelistAttrEditorField(AttrEditorField):
 	type = 'timelist'
 
 	def valuerepr(self, listofsyncarcs):
-		print "DEBUG: listofsyncarcs is: ", listofsyncarcs
 		if listofsyncarcs is None: return []
 		# converts listofsyncarcs into a list of eventstructs
 		#return ['hello', 'world']

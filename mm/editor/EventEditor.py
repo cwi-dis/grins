@@ -1,7 +1,7 @@
 # This module is a collection of useful functions for working with events.
 
 import EventEditorDialog, grinsRC, components
-import MMNode
+import MMNode, windowinterface
 
 # An event struct is a temporary representation of an event; it is intended to be used
  # with the dialog and is only passed between functions as a copy or representation of
@@ -129,16 +129,17 @@ class EventEditor(EventEditorDialog.EventEditorDialog):
 #		self._cause = "region"
 #		self._event = "click"
 
-	def done(self):
-		# callback for when the user has finished.
-		# TODO: put all the instance variables back into the syncarc and return it (?)
-		print "Done."
-		return 1		# return 0 if you do not want to close the dialog.
+##	def done(self):
+##		# callback for when the user has finished.
+##		# TODO: put all the instance variables back into the syncarc and return it (?)
+##		print "Done."
+##		return 1		# return 0 if you do not want to close the dialog.
 
 
 class EventStruct:
 	# This encapsulates an event.
 	def __init__(self, syncarc):
+		# if syncarc is None, make a new one. 
 		self._syncarc = syncarc
 		self.cause = None
 		self.event = None
@@ -146,14 +147,49 @@ class EventStruct:
 		self.thing = None
 		self._setcause = None	# These variables (_setx) override the defaults and will be committed.
 		self._setevent = None
-		self._setdur = None
-		
-		self.set_vars()
+		self._setoffset = None
+		#self._setthing = None
+		self._setnode = None
+		self._setregion = None
+		self._setkey = None
+		self._setwallclock = None
+		if self._syncarc:
+			self.set_vars()
+		else:
+			self.set_cause('node')
+			self.set_event('activateEvent')
+			self.set_offset('0')
 
 	def get_value(self):
 		# Returns the result of editing this syncarc.
-		if self._setcause or self._setevent or self._setdur:
-			print "ERROR: Code not written yet - actual changes to events."
+		if not self._syncarc:
+			print "ERROR: this code is not complete. I can't find a node to make a syncarc on."
+			assert 0
+			# TODO: here, make a new syncarc.
+		s = self._syncarc
+		if self._setcause:
+			c = self._setcause
+			if c == 'indefinite':
+				s.delay = None
+			elif c == 'marker':
+				print "TODO: marker code not written."
+			elif c == 'prev':
+				s.srcnode = 'prev'
+			else:
+				print "ERROR: unknown event cause."
+		if self._setevent:
+			s.event = self._setevent
+		if self._setoffset:
+			s.delay = int(self._setoffset)
+		c = self.get_cause()
+		if c == 'node' and self._setnode:
+			print "TODO: don't know how to set node."
+		elif c == 'region' and self._setregion:
+			print "TODO: don't know how to set region."
+		elif c == 'accessKey' and self._setkey:
+			s.accesskey = self._setkey
+		#elif c == '
+		#
 		return self._syncarc
 
 	def set_vars(self):
@@ -192,10 +228,40 @@ class EventStruct:
 		if self.cause == 'node' or self.cause == 'region':
 			self.event = x.event
 
-		print "DEBUG: I got: ", self.cause, self.event
-
 	def as_string(self):
-		return repr(self._syncarc)
+		c = self.get_cause()
+		r = ""			# returnable value.
+		s = self._syncarc
+		if c == 'indefinite':
+			return c
+		elif c == 'marker':
+			return "TODO: marker"	# TODO!!
+		elif c == 'wallclock':
+			return "TODO: wallclock"
+		# Now for the offset things
+		elif c == 'node':
+			if s:
+				r = s.srcnode.GetName() + "." + self.get_event()
+			else:
+				r = 'unknown'
+		elif c == 'region':
+			r = "TODO: Region name"# + "." + self.get_event() # TODO.
+		elif c == 'prev':
+			if self._setevent:
+				r = 'prev' + self._setevent
+			elif s:
+				r = 'prev' + "." + s.event
+			else:
+				r = 'prev'
+		elif c == 'accessKey':
+			r = 'accessKey' # TODO!!
+		d = self.get_offset()
+		if d == "0" or d is None:
+			return r
+		elif not d.startswith('-'):
+			d = "+"+d
+		return r+d
+		
 	def get_cause(self):
 		if self._setcause:
 			return self._setcause
@@ -227,7 +293,75 @@ class EventStruct:
 		else:
 			return None
 	def get_thing_string(self):
-		# returns a tuple of (string, Bool isnumber, Bool readonly)
+		# returns a tuple of (name string, value string, Bool isnumber, Bool readonly)
 		# isnumber is if the string is a number.
 		# readonly is if this should be editable in the dialog/
-		return ("Test string", 0, 0)
+		c = self.get_cause()
+		readonly = 0
+		number = 0
+		name = ""
+		thing = ""
+		if c == 'node':
+			readonly = 1
+			name = "Node:"
+			if self._setnode:
+				thing = self._setnode
+			elif self._syncarc:
+				thing = self._syncarc.srcnode.GetName()
+			else:
+				thing = "Unknown"
+		elif c == 'region':
+			print "TODO: display a region properly."
+			name = "Region:"
+			readonly = 1
+			thing = "TODO"
+			#return ("Region:", repr(self._syncarc.channel), 0, 0)
+		elif c == 'accessKey':
+			name = "Key:"
+			if self._setkey:
+				thing = self._setkey
+			elif self._syncarc:
+				thing = self._syncarc.accesskey
+			else:
+				thing = ""
+			#return ("Key:", self._syncarc.accesskey, 0, 0)
+		elif c == 'wallclock':
+			name = "Wallclock:"
+			if self._setthing:
+				thing = self._setthing
+			elif self._syncarc:
+				thing = self._syncarc.wallclock
+			else:
+				thing = ""
+			#return ("Clock time:", self._syncarc.wallclock, 0, 0)
+		else:
+			readonly = 1
+			thing = ""
+			name = ""
+		return (name, thing, number, readonly)
+	def set_thing_string(self, newthing):
+		# TODO: do some sanity checking here.
+		c = self.get_cause()
+		if c == 'node':
+			self._setnode = newthing
+		elif c == 'region':
+			self._setregion = newthing
+		elif c == 'wallclock':
+			self._setwallclock = newthing
+		elif c == 'accessKey':
+			self._setkey = newthing
+		else:
+			print "DEBUG: Unknown cause: ", c
+	def get_offset(self):
+		if self._setoffset:
+			return self._setoffset
+		if self.get_cause() in ['node', 'prev', 'accessKey']: # TODO: check these.
+			return `self._syncarc.delay`
+		else:
+			return None
+	def set_offset(self, newoffset):
+		if newoffset.isdigit():
+			self._setoffset = newoffset
+			return 1
+		else:
+			return 0

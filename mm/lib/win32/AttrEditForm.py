@@ -1110,7 +1110,6 @@ class ListCtrl(AttrCtrl):
 	
 	# Made by mjvdg; cut and paste from the tuple class above.
 	def __init__(self, wnd, attr, resid):
-		print 'ListCtrl.__init__'
 		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
 		#'attr': <TimelistAttrEditorField instance, name=beginlist>, 
 		#'resid': Tuple of ints (4)/resource ids - list, 'add', 'delete', 'edit' (3 buttons)
@@ -1128,7 +1127,6 @@ class ListCtrl(AttrCtrl):
 		
 
 	def OnInitCtrl(self):
-		print "DEBUG: ListCtrl.OnInitCtrl called."
 		# TODO: self._attrval needs to be a list of syncarcs.
 		self._attrval=['hello', 'world']
 		self._initctrl=self
@@ -1163,49 +1161,55 @@ class ListCtrl(AttrCtrl):
 
 	def OnAdd(self, id, code):
 		# Callback from the "add" button
-		print "DEBUG: Add pressed!!!!"
-		self._list.addstring(0, "Adding not yet implemented.")
+		n = EventEditor.EventStruct(None)
+		edit = EventEditor.EventEditor(parent=self._wnd._form)
+		edit.set_eventstruct(n)
+		if edit.show():
+			self._value.append(n)
+		self.resetlist()
 		#s = EventEditor.newevent()
 
 	def OnDelete(self, id, code):
 		# callback for the "delete" button
-		print "DEBUG: Delete pressed!!!!"
 		a = self._list.getselected()
-		if a >= 0 and a < self._list.getcount():
-			self._list.deletestring(a)
-			print "TODO: also delete the event!"
+		if a >= 0 and a < len(self._value):
+			#self._list.deletestring(a)
+			del self._value[a]
+			self.resetlist()
 			# delete only from the list; this will later be converted to a lack of syncarc.
 		else:
-			print"Error: weirdly selected list memeber: ", a
+			print "DEBUG: weirdly selected list memeber: ", a
 
 	def OnEdit(self, id, code):
 		# callback for the "edit" button.
-		print "DEBUG: Edit pressed!!!"
-		#print self._list.getlist()
-		print "TODO: edit element ", self._list.getselected(), " of the list."
 		selected = self._list.getselected()
-		edit = EventEditor.EventEditor(parent=self._wnd._form)
-		edit.set_eventstruct(self._value[selected])
-		edit.show()
-		self._value[selected] = edit.get_eventstruct()
-		self.setvalue(self._value)
+		if selected > 0 and selected < len(self._value):
+			edit = EventEditor.EventEditor(parent=self._wnd._form)
+			edit.set_eventstruct(self._value[selected])
+			edit.show()
+			self._value[selected] = edit.get_eventstruct()
+			self.setvalue(self._value)
+		else:
+			print "DEBUG: Weirdly selected event."
 
 	#def OnListEdit(self, id, code):
 	#	print "OnListEdit: ", self._list.getselected(), self._list.getcursel()
 
 	def enable(self, enable):
-		print "DEBUG: ListCTrl.enable() called."
+		pass
 		#for c in self._attrval:
 		#	c.enable(enable)
 
 	def setvalue(self, val):
 		# val is a list of syncarcs.
-		print "DEBUG: ListCtrl.setvalue() called. Value is: ", val
 		assert isinstance(val, type([]))
-		self._list.resetcontent()
 		self._value = val	# store for later use.
-		for i in range(0, len(val)):
-			self._list.insertstring(i, val[i].as_string())
+		self.resetlist()
+
+	def resetlist(self):
+		self._list.resetcontent()
+		for i in range(0, len(self._value)):
+			self._list.insertstring(i, self._value[i].as_string())
 
 		# I don't have strings; I have event objects.
 		#for i in val:
@@ -1238,7 +1242,6 @@ class ListCtrl(AttrCtrl):
 	#		self.enableApply()
 
 	def settooltips(self,tooltipctrl):
-		print "DEBUG: ListCtrl.settooltips called."
 		help = self.gethelp()
 		for i in [0,1,2,3]:
 			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i]), help, None, 0)
