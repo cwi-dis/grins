@@ -25,7 +25,11 @@
  *
  *  Constructor
  */
-ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
+ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
+#ifdef _UNIX
+					 void *dpy,
+#endif
+					 int x, int y, int w, int h)
     : m_lRefCount(0)
     , m_pSiteManager(NULL)
     , m_pCCF(NULL)
@@ -44,6 +48,18 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
 		m_pUnkPlayer->AddRef();
 		}
     memset(&m_PNxWindow,0,sizeof(PNxWindow));
+    m_PNxWindow.window = hwnd;
+#ifdef _UNIX
+    m_PNxWindow.display = dpy;
+#endif
+    m_PNxWindow.x = x;
+    m_PNxWindow.y = y;
+    m_PNxWindow.width = w;
+    m_PNxWindow.height = h;
+    m_PNxWindow.clipRect.left = x;
+    m_PNxWindow.clipRect.top = y;
+    m_PNxWindow.clipRect.right = x + w;
+    m_PNxWindow.clipRect.bottom = y + h;
 }
 
 
