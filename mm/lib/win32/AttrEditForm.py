@@ -2345,16 +2345,21 @@ class TabShortcut:
 		grinsRC.ID_V:'&Video type',
 		}
 
-	def __init__(self,wnd):
+	def __init__(self,wnd,data=None):
 		self._wnd=wnd	
+		if not data:
+			self._data=TabShortcut.data
+		else:
+			self._data=data
 		self._prsht=wnd._prsht
 		self._pages = wnd._pages
+
 		tabctrl=self._prsht.GetTabCtrl()
 		n = tabctrl.GetItemCount()
 		self._tabnames={}
 		for i in range(n):
 			self._tabnames[tabctrl.GetItemText(i)]=i
-		self._data=TabShortcutEnabler.data
+		
 		self._tabctrl=tabctrl
 		self.hookcommands()
 
