@@ -49,7 +49,8 @@ class _common_window:
 		wid = self.window._mac_getoswindow()
 		self.widget = htmlwidget.HTMLWidget(wid, rect, self.TITLE, self.window)
 		
-	def redraw(self):
+	def redraw(self, rgn=None):
+		# Region ignored, for now.
 		if self.widget:
 			self.widget.do_update()
 		
