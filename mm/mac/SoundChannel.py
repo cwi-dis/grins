@@ -4,8 +4,9 @@ import time
 import audiodev
 import aifc
 import urllib
+import os
 
-debug = 1 # os.environ.has_key('CHANNELDEBUG')
+debug = os.environ.has_key('CHANNELDEBUG')
 
 class SoundChannel(Channel):
 	def __repr__(self):
