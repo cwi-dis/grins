@@ -2291,7 +2291,7 @@ class SMILWriter(SMIL):
 				val = v[attr]
 				if attr == 'left' and v.has_key('top'):
 					val = val, v['top']
-					posValues.append('%d %d' % val)
+					posValues.append('(%d %d)' % val)
 				elif attr == 'width':
 					widthValues.append('%d' % val)
 				elif attr == 'height':
