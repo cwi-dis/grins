@@ -274,6 +274,9 @@ def getrawcmifattr(writer, node, attr):
 def getmimetype(writer, node):
 	if node.GetType() not in leaftypes:
 		return
+	if writer.copydir:
+		# MIME type may be changed by copying, so better not to return any
+		return
 	val = node.GetRawAttrDef('mimetype', None)
 	if val is not None:
 		return val
@@ -1269,6 +1272,24 @@ class SMILWriter(SMIL):
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 			file = convertaudiofile(u, dstdir, file, node)
 			self.files_generated[file] = 'b'
+			return file
+		if u.headers.maintype == 'image':
+			from realconvert import convertimagefile
+			# XXXX This is a hack. convertimagefile may change the filename (and
+			# will, currently, to '.ra').
+			if self.progress:
+				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
+			file = convertimagefile(u, srcurl, dstdir, file, node)
+			self.files_generated[file] = 'b'
+			return file
+		if u.headers.maintype == 'text':
+			from realconvert import converttextfile
+			# XXXX This is a hack. convertaudiofile may change the filename (and
+			# will, currently, to '.rt').
+			if self.progress:
+				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
+			file = converttextfile(u, dstdir, file, node)
+			self.files_generated[file] = ''
 			return file
 		if u.headers.maintype == 'text':
 			binary = ''

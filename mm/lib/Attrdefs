@@ -198,9 +198,6 @@
 	'Audio type (determines quality of audio when converting to RealAudio)'
 	raw light)
 
-(project_targets (int) 3 'Target audience' default
-	'Set of target bandwidths' raw light)
-
 (project_ftp_host (string) '' 'Webserver' default
 	'FTP hostname to use for webpage upload' raw light)
 
@@ -222,8 +219,14 @@
 (project_html_page (string) '' 'HTML template' default
 	'Template used to generate web page for this presentation' raw light)
 
+(project_quality (int) 0 'Image quality' default
+	'Quality of image conversion to JPEG (scale 1 - 100)' raw light)
+
 (project_smil_url (string) '' 'Mediaserver URL' default
 	'URL of SMIL document on the media server' raw light)
+
+(project_targets (int) 3 'Target audience' default
+	'Set of target bandwidths' raw light)
 
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel cmif)

@@ -104,3 +104,59 @@ def convertaudiofile(u, dstdir, file, node, isaudio = 1):
 	engine.DoneEncoding()
 
 	return file
+
+
+def convertimagefile(u, srcurl, dstdir, file, node):
+	import MMAttrdefs, urllib
+	from win32ig import win32ig
+	# ignore suggested extension and make our own
+	file = os.path.splitext(file)[0] + '.jpg'
+	fullpath = os.path.join(dstdir, file)
+	import imgformat, imgjpeg, imgconvert
+	u.close()
+	import __main__
+	f = urllib.urlretrieve(srcurl)[0]
+	img = __main__.toplevel._image_cache.get(f)
+	if img is None:
+		img = win32ig.load(f)
+	width, height, depth = win32ig.size(img)
+	data = win32ig.read(img)
+	wt = imgjpeg.writer(fullpath)
+	imgconvert.setquality(0)
+	wt = imgconvert.stackwriter(imgformat.bmprgbbe_noalign, wt)
+	wt.width = width
+	wt.height = height
+	wt.restart_interval = 1
+	quality = MMAttrdefs.getattr(node, 'project_quality')
+	if quality:
+		wt.quality = quality
+	wt.write(data)
+	return file
+
+def converttextfile(u, dstdir, file, node):
+	import MMAttrdefs
+	from colors import colors
+	# ignore suggested extension and make our own
+	file = os.path.splitext(file)[0] + '.rt'
+	fullpath = os.path.join(dstdir, file)
+	data = u.read()
+	f = open(fullpath, 'w')
+	f.write('<window')
+	dur = MMAttrdefs.getattr(node, 'duration')
+	if dur:
+		f.write(' duration="%g"' % dur)
+	ch = node.GetChannel()
+	color = ch.get('bgcolor', (0,0,0))
+	if color != (255,255,255):
+		for name, val in colors.items():
+			if color == val:
+				color = name
+				break
+		else:
+			color = '#%02x%02x%02x' % color
+		f.write(' bgcolor="%s"' % color)
+	f.write('>\n')
+	f.write(data)
+	f.write('</window>\n')
+	f.close()
+	return file
