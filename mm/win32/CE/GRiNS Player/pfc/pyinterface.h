@@ -19,7 +19,7 @@ class PyInterface
 	{
 	public:
 	static void setPythonHome(const TCHAR *python_home);
-	static const TCHAR* getPythonHome();
+	static std::basic_string<TCHAR> getPythonHome();
 
 	static bool initialize(const TCHAR *progname);
 	static bool initialize(const TCHAR *progname, const TCHAR *cmdline);

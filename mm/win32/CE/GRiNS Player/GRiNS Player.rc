@@ -84,6 +84,7 @@ BEGIN
     BEGIN
         MENUITEM "Exit",                        IDM_EXIT
         MENUITEM "Open",                        IDM_OPEN
+        MENUITEM "Close",                       IDM_CLOSE
     END
     POPUP "Play"
     BEGIN

@@ -5,6 +5,7 @@
 #include "pyinterface.h"
 
 #include "charconv.h"
+#include "strutil.h"
 
 PyThreadState* PyInterface::s_tstate = NULL;
 char PyInterface::s_python_home[MAX_PATH] = "";
@@ -14,29 +15,30 @@ PyInterpreterState* PyCallbackBlock::s_interpreterState = NULL;
 
 void PyInterface::setPythonHome(const TCHAR *python_home)
 	{
-	strcpy(s_python_home, toMB(python_home));
+	strcpy(s_python_home, TextPtr(python_home).c_str());
 	Py_SetPythonHome(s_python_home);
 	}
 
-const TCHAR* PyInterface::getPythonHome()
+std::basic_string<TCHAR> PyInterface::getPythonHome()
 	{
-	char *python_home = Py_GetPythonHome();
-	if(python_home == NULL)
-		return NULL;
-	return toTEXT(python_home);
+	const char *pc = Py_GetPythonHome();
+	std::basic_string<TCHAR> python_home(pc!=NULL?TextPtr(pc):TEXT(""));
+	return python_home;
 	}
 
 bool PyInterface::initialize(const TCHAR *progname)
 	{
-	char* bprogname = const_cast<char*>(toMB(progname));
-	return initialize(1, &bprogname);
+	TextPtr tprogname(progname);
+	char *p = tprogname.str();
+	return initialize(1, &p);
 	}
 
 bool PyInterface::initialize(const TCHAR *progname, const TCHAR *cmdline)
 	{
 	// xxx: parse cmdline
-	char* bprogname = const_cast<char*>(toMB(progname));
-	return initialize(1, &bprogname);
+	TextPtr tprogname(progname);
+	char *p = tprogname.str();
+	return initialize(1, &p);
 	}
 
 bool PyInterface::initialize(int argc, char **argv)
@@ -45,7 +47,7 @@ bool PyInterface::initialize(int argc, char **argv)
 		return true;
 	
 #ifndef _WIN32_WCE
-	if(getPythonHome() == NULL)
+	if(getPythonHome().empty())
 		return false;
 #endif
 
@@ -105,9 +107,9 @@ void PyInterface::finalize()
 std::basic_string<TCHAR> PyInterface::get_copyright()
 	{
 	std::basic_string<TCHAR> tstr(TEXT("Python "));
-	tstr += toTEXT(Py_GetVersion());
+	tstr += TextPtr(Py_GetVersion());
 	tstr += TEXT("\r\n");
-	tstr += toTEXT(Py_GetCopyright());
+	tstr += TextPtr(Py_GetCopyright());
 	tstr += TEXT("\r\n");
 	return tstr;
 	}
@@ -122,7 +124,7 @@ bool PyInterface::get_sys_path(std::list< std::basic_string<TCHAR> >& path)
 	for(int i=0; i!=n; i++)
 		{
 		char *entry = PyString_AsString(PyList_GetItem(p, i));
-		path.push_back(toTEXT(entry));
+		path.push_back((TCHAR*)TextPtr(entry));
 		}
 	return true;
 	}
@@ -140,7 +142,7 @@ bool PyInterface::addto_sys_path_dir(const TCHAR *dir)
 
 	if(std::find(existing.begin(),existing.end(), dir) == existing.end())
 		{
-		PyObject *obj = PyString_FromString(const_cast<char*>(toMB(dir)));
+		PyObject *obj = PyString_FromString(TextPtr(dir).str());
 		PyList_Insert(p, 0, obj);
 		Py_DECREF(obj);
 		}
@@ -162,8 +164,8 @@ bool PyInterface::addto_sys_path(const std::list< std::basic_string<TCHAR> >& pa
 		{
 		if(std::find(existing.begin(),existing.end(), *it) == existing.end())
 			{
-			char *pstr = const_cast<char*>(toMB((*it).c_str()));
-			PyObject *obj = PyString_FromString(pstr);
+			TextPtr tstr((*it).c_str());
+			PyObject *obj = PyString_FromString(tstr.str());
 			PyList_Insert(p, 0, obj);
 			Py_DECREF(obj);
 			}
@@ -183,7 +185,7 @@ bool PyInterface::addto_sys_path(const TCHAR *pszpath)
 PyObject* PyInterface::import(const TCHAR *psztmodule)
 	{
 	AcquireThread at(PyInterface::getPyThreadState());
-	return PyImport_ImportModule(toMB(psztmodule));
+	return PyImport_ImportModule(TextPtr(psztmodule).str());
 	}
 
 bool PyInterface::run_command(const TCHAR *command)
@@ -197,8 +199,8 @@ bool PyInterface::run_command(const TCHAR *command)
 		return false;
 		}
 	PyObject *d = PyModule_GetDict(m);
-	const char *mb_command = toMB(command);
-	PyObject *v = PyRun_String(const_cast<char*>(mb_command), Py_file_input, d, d);
+	TextPtr tcmd(command);
+	PyObject *v = PyRun_String(tcmd.str(), Py_file_input, d, d);
 	if(v == NULL)
 		{
 		PyErr_Show();

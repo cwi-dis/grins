@@ -8,7 +8,9 @@
 #include "resource.h"
 
 #include "pyinterface.h"
+
 #include "charconv.h"
+#include "strutil.h"
 
 // PyStdOut extends PyWnd
 #include "app_wnd.h"
