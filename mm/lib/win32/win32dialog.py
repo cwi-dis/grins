@@ -380,7 +380,7 @@ class OpenAppDialog(ResDialog):
 
 	def OnCancel(self):
 		self.close()
-
+		
 # Implementation of the select template dialog
 class TemplateDialog(ResDialog):
 	def __init__(self,names, descriptions, cb,parent=None):
