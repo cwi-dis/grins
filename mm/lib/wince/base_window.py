@@ -399,10 +399,8 @@ class Window:
 		l1, t1, r1, b1 = self.ltrb(rc1)	
 		l2, t2, r2, b2 = self.ltrb(rc2)
 		l, r = max(l1, l2), min(r1, r2)
-		if l >= r: return None
 		t, b = max(t1, t2), min(b1, b2)
-		if t >= b: return None
-		return l, t, r-l, b-t
+		return l, t, max(r-l, 0), max(b-t, 0)
 
 	def rectOr(self, rc1, rc2):
 		l1, t1, r1, b1 = self.ltrb(rc1)	
