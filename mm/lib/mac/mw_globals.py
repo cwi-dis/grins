@@ -12,7 +12,6 @@ UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 # Constants passed when the canvas is resized
 #
 RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
-FIT_WINDOW=RESET_CANVAS	  # For Windows only
 
 #
 # General error
