@@ -50,6 +50,12 @@ class _StructView(DisplayListView):
 		frame.HookCommand(self.OnPasteFile,id)
 		frame.HookCommandUpdate(self.OnUpdateEditPaste,id)
 
+		import components
+		tooltip = components.Tooltip(parent = self, id = 0)
+		tooltip.createWindow()
+		tooltip.addToolText( (0,0,600,400), 'Hierarchy View' )
+		self._tooltip = tooltip
+
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
 		rect=win32mu.Rect(dc.GetClipBox())
@@ -120,6 +126,8 @@ class _StructView(DisplayListView):
 				self._dragging = None
 
 	def onMouseMove(self, params):
+		if self._tooltip:
+			self._tooltip.onMouseMove(params)
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		self.onEvent(MouseMove, point)
