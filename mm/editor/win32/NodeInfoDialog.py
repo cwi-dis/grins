@@ -48,7 +48,6 @@ button, whatever) at which time a callback is called.
 __version__ = "$Id$"
 
 import windowinterface, win32api, win32con
-from win32modules import cmifex2
 
 DEFAULT_EDIT_WIDTH = 120
 
@@ -181,7 +180,7 @@ class NodeInfoDialog:
 			label = item[0]
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			hbw = hbw + length + 15
 		max = hbw
 		self._h = self._h + 30
@@ -193,10 +192,10 @@ class NodeInfoDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>lb2w:
 				lb2w = length
-		lb2w = lb2w + cmifex2.GetStringLength(self.__window._hWnd,'Channel: ')+30
+		lb2w = lb2w + windowinterface.GetStringLength(self.__window._wnd,'Channel: ')+30
 
 
 		ls = types
@@ -206,17 +205,17 @@ class NodeInfoDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>lb1w:
 				lb1w = length
-		lb1w = lb1w + cmifex2.GetStringLength(self.__window._hWnd,'Type: ')+30
+		lb1w = lb1w + windowinterface.GetStringLength(self.__window._wnd,'Type: ')+30
 
 		if (name==None or name==''):
 			name = ' '
-		#print '---------window----------', self.__window._hWnd, 'name: ', name
+		#print '---------window----------', self.__window._wnd, 'name: ', name
 
 
-		eb1w = cmifex2.GetStringLength(self.__window._hWnd,name) + cmifex2.GetStringLength(self.__window._hWnd,'Name: ') + 10
+		eb1w = windowinterface.GetStringLength(self.__window._wnd,name) + windowinterface.GetStringLength(self.__window._wnd,'Name: ') + 10
 
 		if (eb1w < DEFAULT_EDIT_WIDTH):
 			eb1w = DEFAULT_EDIT_WIDTH
@@ -236,7 +235,7 @@ class NodeInfoDialog:
 			label = item[0]
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			midw = midw + length + 15
 
 		if max<midw:
@@ -314,14 +313,14 @@ class NodeInfoDialog:
 			w._not_shown.append(self.__int_group)
 			w._not_shown.append(self.__imm_group)
 
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+		windowinterface.ResizeWindow(w._wnd, self._w, self._h)
+		self.__window._wnd.HookKeyStroke(self.helpcall,104)
 		w.show()
 
 
 	def helpcall(self, params=None):
 		import Help
-		Help.givehelp(self.__window._hWnd, 'Node Info Dialog')
+		Help.givehelp(self.__window._wnd, 'Node Info Dialog')
 
 
 	def close(self):

@@ -38,7 +38,6 @@ __version__ = "$Id"
 
 import win32api, win32con
 import windowinterface
-from win32modules import cmifex2
 
 class LinkEditDialog:
 	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
@@ -124,7 +123,7 @@ class LinkEditDialog:
 		#	top = menu, bottom = self.__right_buttons,
 		#	left = None, right = None)
 
-		winw = 230 #cmifex2.GetStringLength(w._hWnd,'Anchor editor...')+20
+		winw = 230 #windowinterface.GetStringLength(w._wnd,'Anchor editor...')+20
 
 		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
 		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
@@ -144,7 +143,7 @@ class LinkEditDialog:
 			label = item[0]
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			hbw = hbw + length + 15
 
 		ls = dirstr
@@ -154,10 +153,10 @@ class LinkEditDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(w._hWnd,label)
+			length = windowinterface.GetStringLength(w._wnd,label)
 			if length>lbw:
 				lbw = length
-		lbw = lbw + cmifex2.GetStringLength(w._hWnd,'Link direction: ')+30
+		lbw = lbw + windowinterface.GetStringLength(w._wnd,'Link direction: ')+30
 
 		ls = typestr
 
@@ -166,10 +165,10 @@ class LinkEditDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(w._hWnd,label)
+			length = windowinterface.GetStringLength(w._wnd,label)
 			if length>lbw2:
 				lbw2 = length
-		lbw2 = lbw2 + cmifex2.GetStringLength(w._hWnd,'type: ')+30
+		lbw2 = lbw2 + windowinterface.GetStringLength(w._wnd,'type: ')+30
 
 		if max<hbw+lbw+lbw2+10:
 			max = hbw+lbw+lbw2+10
@@ -201,7 +200,6 @@ class LinkEditDialog:
 
 		self._win1 = win1 = w.SubWindow(top = 5, left = 5, right = winw, bottom = 310)
 
-		print "menu1-->", menu1
 		self._men1 = menu = win1.PulldownMenu([('Set anchorlist', menu1)],
 					 top = None, left = None, right = None, bottom = None)
 
@@ -218,7 +216,7 @@ class LinkEditDialog:
 		#	top = menu, bottom = self.__left_buttons,
 			top = 30, left = 0, right = winw, bottom = 170)
 
-		cmifex2.SetFont(self.__left_browser._list,"Arial",8)
+		windowinterface.SetFont(self.__left_browser._list,"Arial",8)
 
 		self._win2 = win2 = w.SubWindow(top = 5, left = winw+5, right = winw-130, bottom = 310)
 
@@ -234,13 +232,12 @@ class LinkEditDialog:
 			(self.link_browser_callback, ()),
 			top = 30, left = 0, right = winw-130, bottom = 170)
 
-		cmifex2.SetFont(self.__middle_browser._list,"Arial",8)
+		windowinterface.SetFont(self.__middle_browser._list,"Arial",8)
 
 		w._not_shown.append(self.__middle_browser)
 		w._not_shown.append(self.__middle_buttons)
 
 		self._win3 = win3 = w.SubWindow(top = 5, left = 2*winw+5-130, right = winw, bottom = 310)
-		print "menu2-->", menu2
 		self._men2 = menu = win3.PulldownMenu([('Set anchorlist', menu2)],
 					 top = None, left = None, right = None)
 
@@ -255,18 +252,18 @@ class LinkEditDialog:
 			(self.anchor_browser_callback, (cbarg2,)),
 			top = 30, left = 0, right = winw, bottom = 170)
 
-		cmifex2.SetFont(self.__right_browser._list,"Arial",8)
+		windowinterface.SetFont(self.__right_browser._list,"Arial",8)
 
 
 		self._helpwin = helpwin = w.SubWindow(bottom = 30, left = 5,
-				right = cmifex2.GetStringLength(w._hWnd,'Help')+20, top = 350)
+				right = windowinterface.GetStringLength(w._wnd,'Help')+20, top = 350)
 
 		self.__helpbutton = helpwin.ButtonRow(
 			[('Help', (self.helpcall, ()))],
-			vertical = 1, top = 0, left = 0, right = cmifex2.GetStringLength(w._hWnd,'Help')+20, bottom = 30)
+			vertical = 1, top = 0, left = 0, right = windowinterface.GetStringLength(w._wnd,'Help')+20, bottom = 30)
 
 		w.fix()
-		cmifex2.ResizeWindow(w._hWnd,self._w,self._h)
+		windowinterface.ResizeWindow(w._wnd,self._w,self._h)
 
 		dummymenu.hide()
 
@@ -303,19 +300,19 @@ class LinkEditDialog:
 		self.linktypesetchoice = self.__link_type.setpos
 		self.linktypegetchoice = self.__link_type.getpos
 
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+		self.__window._wnd.HookKeyStroke(self.helpcall,104)
 		return self.__window
 
 
 	def helpcall(self, params=None):
 		import Help
-		Help.givehelp(self.__window._hWnd, 'Hyperlinks')
+		Help.givehelp(self.__window._wnd, 'Hyperlinks')
 
 
 	def _call(self, button):
 		#print "CALLBACK CALLED"
 		if button == 0:
-			id = cmifex2.FloatMenu(self._win1._hWnd,self._men1._menu,0,0)
+			id = windowinterface.FloatMenu(self._win1._wnd,self._men1._menu,0,0)
 			print id
 			if self._men1._callback_dict.has_key(id):
 				try:
@@ -325,7 +322,7 @@ class LinkEditDialog:
 				else:
 					apply(f, a)
 		else:
-			id = cmifex2.FloatMenu(self._win3._hWnd,self._men2._menu,0,0)
+			id = windowinterface.FloatMenu(self._win3._wnd,self._men2._menu,0,0)
 			print id
 			if self._men2._callback_dict.has_key(id):
 				try:

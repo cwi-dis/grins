@@ -22,7 +22,6 @@ For these buttons there are callbacks.
 __version__ = "$Id$"
 
 import windowinterface, win32api, win32con
-from win32modules import cmifex2
 
 class ArcInfoDialog:
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
@@ -98,10 +97,10 @@ class ArcInfoDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>lb1w:
 				lb1w = length
-		lb1w = lb1w + cmifex2.GetStringLength(self.__window._hWnd,'From: ')+30
+		lb1w = lb1w + windowinterface.GetStringLength(self.__window._wnd,'From: ')+30
 
 
 		ls = dstlist
@@ -110,10 +109,10 @@ class ArcInfoDialog:
 		for item in ls:
 			label = item
 			if label:
-				length = cmifex2.GetStringLength(self.__window._hWnd,label)
+				length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>lb2w:
 				lb2w = length
-		lb2w = lb2w + cmifex2.GetStringLength(self.__window._hWnd,'To: ')+30
+		lb2w = lb2w + windowinterface.GetStringLength(self.__window._wnd,'To: ')+30
 
 		max = lb1w + lb2w + 15
 
@@ -129,7 +128,7 @@ class ArcInfoDialog:
 			label = item[0]
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			hbw = hbw + length + 15
 
 		if max<hbw:
@@ -142,7 +141,7 @@ class ArcInfoDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>lb3w:
 				lb3w = length
 		lb3w = lb3w + 30
@@ -181,8 +180,8 @@ class ArcInfoDialog:
 			 ('OK', (self.ok_callback, ())),
 			 ('Help', (self.helpcall, ()))],
 			left = 5, top = 90, right = hbw, bottom = 30, vertical = 0)
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+		windowinterface.ResizeWindow(w._wnd, self._w, self._h)
+		self.__window._wnd.HookKeyStroke(self.helpcall,104)
 		self.__window.show()
 
 	def __range_callback(self):
@@ -199,7 +198,7 @@ class ArcInfoDialog:
 
 	def helpcall(self, params=None):
 		import Help
-		Help.givehelp(self.__window._hWnd, 'Arc Info Dialog')
+		Help.givehelp(self.__window._wnd, 'Arc Info Dialog')
 
 	def close(self):
 		"""Close the dialog and free resources."""

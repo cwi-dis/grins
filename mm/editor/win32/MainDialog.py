@@ -30,10 +30,6 @@ class MainDialog:
 		"""
 
 		import windowinterface
-
-		#self.__window = w = windowinterface.Window(
-		#	title, resizable = 0,
-		#	deleteCallback = (self.close_callback, ()))
 		buttons = [('New', (self.new_callback, ())),
 			 ('Open Location...', (self.__openURL_callback, ())),
 			 ('Open File...', (self.__openfile_callback, ())),
@@ -44,17 +40,6 @@ class MainDialog:
 
 		self._window = w = windowinterface.MainDialog(
 			buttons, title, grab = 0, del_Callback = (self.close_callback, ()))
-		#print ""
-		#buttons = w. ButtonRow(
-		#	[('New', (self.new_callback, ())),
-		#	 ('Open Location...', (self.__openURL_callback, ())),
-		#	 ('Open File...', (self.__openfile_callback, ())),
-		#	 ('Trace', (self.trace_callback, ()), 't'),
-		#	 ('Debug', (self.debug_callback, ())),
-		#	 ('Exit', (self.close_callback, ())),
-		#	 ],
-		#	vertical = 1, tight = 1, left = 0, top = 0, right = 100, bottom = 600)
-		#w.show()
 
 	def __openURL_callback(self):
 		import windowinterface
@@ -83,7 +68,7 @@ class MainDialog:
 		self.open_callback(MMurl.pathname2url(filename))
 
 	def setbutton(self, button, value):
-		for item in self._window._buttons._buttons:
+		for item in self._window._buttons:
 			if item.GetWindowText() == button:
 				a = self._window._buttons._buttons.index(item)
 				self._window._buttons.setbutton(a, value)

@@ -97,7 +97,7 @@ def _showmenu(menu, filename, type=None):	# Show (modal) editor choice dialog
 	w = windowinterface.Dialog(list, title = 'Choose',
 				   prompt = 'Choose an editor:', grab = 1,
 				   vertical = 0)
-	w._hWnd.HookKeyStroke(helpcall,104)
+	w._wnd.HookKeyStroke(helpcall,104)
 
 # Added lines
 
@@ -180,8 +180,6 @@ def _del_cll(cmd, type):
 
 
 def del_cll(type):
-	#import cmif, os, Htmlex, string
-	#id, cmd, ext = Htmlex.FDlg("Choose an Application...", " ", "All Files|*.*||")
 	ls = []
 	if channeleditors.has_key(type):
 		ls = channeleditors[type].keys()
@@ -198,9 +196,10 @@ def del_cll(type):
 
 
 def brs_cll(filename, type):
-	import os, Htmlex, string
-	id, cmd, ext = Htmlex.FDlg("Choose an Application...", " ", "All Files|*.*||")
-	print "cmd--->", cmd
+	return # for now
+	import os, string
+	#Htmlex=win32ui.GetHtmlex()
+	#id, cmd, ext = Htmlex.FDlg("Choose an Application...", " ", "All Files|*.*||")
 	lis = string.splitfields(cmd, '\\')
 	lis2 = string.splitfields(lis[len(lis)-1], '.')
 	print lis2

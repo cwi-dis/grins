@@ -2,7 +2,6 @@ __version__ = "$Id$"
 
 import windowinterface, Help
 import win32api, win32con
-from win32modules import cmifex2
 
 class TopLevelDialog:
 	def show(self):
@@ -43,7 +42,7 @@ class TopLevelDialog:
 		for item in buttons:
 			if type(item) is type(()):
 				label = item[0]
-				length = cmifex2.GetStringLength(w._hWnd, label)
+				length = windowinterface.GetStringLength(w._wnd, label)
 				if length>max:
 					max = length
 
@@ -58,16 +57,13 @@ class TopLevelDialog:
 			top = 0, bottom = height-constant, left = 0, right = butw,
 			vertical = 1)
 
-		cmifex2.ResizeWindow(w._hWnd, width, height)
-		self.window._hWnd.HookKeyStroke(self.help_callback,104)
+		windowinterface.ResizeWindow(w._wnd, width, height)
+		self.window._wnd.HookKeyStroke(self.help_callback,104)
 		self.window.show()
 
 	def hide(self):
 		if self.window is None:
 			return
-## 		CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
-## 		dir = CMIFDIR+"\\Help\\Cmifed.hlp"
-## 		win32api.WinHelp(self.window._hWnd.GetSafeHwnd(),dir,win32con.HELP_QUIT,0)
 		self.window.close()
 		self.window = None
 
@@ -88,10 +84,10 @@ class TopLevelDialog:
 		b2 = "Don't save"
 		b3 = 'Cancel'
 
-		reply = cmifex2.MesBox(prompt,"Warning !"," qc")
+		reply = windowinterface.MesBox(prompt,"Warning !"," qc")
 
 		if reply == win32con.IDCANCEL:
-			cmifex2.SetFlag(1)
+			windowinterface.SetFlag(1)
 			return 2
 
 		if reply == win32con.IDNO:
