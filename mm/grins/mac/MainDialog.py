@@ -61,9 +61,9 @@ class MainDialog:
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
 		if features.compatibility == Boston:
-			filetypes = ['application/smil', 'application/x-grins-project']
+			filetypes = ['/SMIL presentation', 'application/smil', 'application/x-grins-project']
 		else:
-			filetypes = ['application/x-grins-project', 'application/smil']
+			filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
 		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('', '', filetypes, '',
