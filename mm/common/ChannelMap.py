@@ -32,6 +32,7 @@ def _freeze_dummy_func():
 	import VcrChannel
 	import VideoChannel
 	import WordChannel
+	import AnimateChannel
 
 class ChannelMap:
 	channelmap = {
@@ -58,7 +59,7 @@ class ChannelMap:
 		'RealPix':	'RealPixChannel',
 		'RealText':	'RealTextChannel',
 ##		'RealVideo':	'RealVideoChannel',
-		'animate': 'AnimateChannel',
+		'animate':  'AnimateChannel',
 		}
 
 	if platform == 'mac':
@@ -100,6 +101,20 @@ class ChannelMap:
 
 channelmap = ChannelMap()
 
+
+class InternalChannelMap(ChannelMap):
+	channelmap = {
+		'null': 	'NullChannel',
+		'animate':  'AnimateChannel',
+		}
+	has_key = channelmap.has_key
+	keys = channelmap.keys
+	def __init__(self):
+		ChannelMap.__init__(self)
+
+internalchannelmap = InternalChannelMap()
+
+	
 channeltypes = ['null', 'text', 'image']
 commonchanneltypes = ['text', 'image', 'sound', 'video', 'layout']
 otherchanneltypes = []
