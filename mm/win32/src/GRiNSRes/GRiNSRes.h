@@ -10,6 +10,7 @@
 #define IDI_GRINS_ED                    198
 #define IDD_DIALOG_OPENLOCATION         199
 #define IDR_GRINSED                     200
+#define IDR_TB_EDITOR                   200
 #define IDD_LAYOUT                      201
 #define IDD_NEW_CHANNEL                 202
 #define IDD_LAYOUT_NAME                 203
@@ -110,11 +111,13 @@
 #define IDI_DURATION                    313
 #define IDI_ANIMATION                   314
 #define IDR_TB_PLAYER                   315
+#define IDR_TB_COMMON                   315
 #define IDI_PLAYING                     316
 #define IDI_WAITSTOP                    317
 #define IDD_SOURCEEDIT                  318
 #define IDI_IDLE                        319
 #define IDR_TB_ALIGNMENT                320
+#define IDR_TB_UNUSED                   320
 #define IDD_EDITATTR_LIST               321
 #define IDB_SPLASHSMILBOSTON            321
 #define IDD_EVENT                       322
