@@ -212,18 +212,38 @@ class HtmlChannel(ChannelWindow):
 				  `(sys.exc_type, sys.exc_value)`+ \
 				  '<P>\n'
 		self.htmlw.text = newtext
-		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
-			  '">BACK</A> to CMIF node]<P>'
+##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
+##			  '">BACK</A> to CMIF node]<P>'
 
 def addquery(href, list):
 	if not list: return href
 	if len(list) == 1 and list[0][0] == 'isindex':
-		query = list[0][1]
+		query = encodestring(list[0][1])
 	else:
+		list = map(encodequery, list)
 		list = map(lambda x:x[0]+'='+x[1], list)
 		query = string.joinfields(list, '&')
 	href = href + '?' + query
 	return href
+
+def encodequery(query):
+	name, value = query
+	name = encodestring(name)
+	value = encodestring(value)
+	return (name, value)
+
+def encodestring(s):
+	r = ''
+	for c in s:
+		r = r + encoding[c]
+	return r
+
+encoding = {}
+for i in range(256):
+	encoding[chr(i)] = '%%%02X' % i
+for c in string.letters + string.digits + ',.-_':
+	encoding[c] = c
+encoding[' '] = '+'
 
 #
 # Get the data-behind-the-URL
