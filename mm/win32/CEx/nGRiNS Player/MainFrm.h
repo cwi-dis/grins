@@ -12,6 +12,9 @@ class CMainWindow : public CFrameWnd
 
 	private:
 	CCeCommandBar m_wndCommandBar;
+	
+	CBitmap m_splash;
+	CSize m_splash_size;
 
 	bool m_is_open;
 	
@@ -22,6 +25,8 @@ class CMainWindow : public CFrameWnd
 	LPTSTR m_ToolTipsTable[NUM_TOOL_TIPS]; 
 	LPTSTR MakeString(LPCTSTR psz);
 	bool DoOpenFileDialog(CString& fileName);
+
+	void PaintSplash(CDC& dc);
 
 	// Overrides
 	// ClassWizard generated virtual function overrides

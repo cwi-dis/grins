@@ -7,8 +7,10 @@
 
 CMainWindow::CMainWindow()
 :	m_is_open(false),
-	m_play_state(STOPPED)
+	m_play_state(STOPPED),
+	m_splash_size(96, 64)
 	{
+	m_splash.LoadBitmap(IDB_SPLASH);
 	}
 
 BOOL CMainWindow::CreateMainWnd()
@@ -130,6 +132,7 @@ void CMainWindow::OnCmdOpen()
 			{
 			m_is_open = true;
 			m_play_state = STOPPED;
+			InvalidateRect(NULL);
 			}
 		}
 	}
@@ -143,6 +146,7 @@ void CMainWindow::OnCmdClose()
 	{
 	m_is_open = false;
 	m_play_state = STOPPED;
+	InvalidateRect(NULL);
 	}
 
 void CMainWindow::OnUpdateCmdClose(CCmdUI* pCmdUI) 
@@ -186,15 +190,21 @@ void CMainWindow::OnUpdateCmdStop(CCmdUI* pCmdUI)
 void CMainWindow::OnPaint() 
 	{
 	CPaintDC dc(this);
-	CRect rect;
-	GetClientRect(&rect);
-	rect.bottom -= MENU_BAR_HEIGHT;
-	CString str(TEXT("Oratrix GRiNS Player"));
-	dc.DrawText(str, &rect, DT_CENTER | DT_VCENTER);
+	if(!m_is_open)
+		{
+		PaintSplash(dc);
+		CRect rect;
+		GetClientRect(&rect);
+		rect.bottom -= MENU_BAR_HEIGHT;
+		rect.bottom /= 2;
+		CString str(TEXT("Oratrix GRiNS Player"));
+		dc.DrawText(str, &rect, DT_CENTER | DT_VCENTER);
+		}
 	}
 
 void CMainWindow::OnClose() 
 	{
+	m_splash.DeleteObject();
 	CFrameWnd::OnClose();
 	}
 
@@ -221,4 +231,23 @@ bool CMainWindow::DoOpenFileDialog(CString& fileName)
 	return false;
 	}
 
+void CMainWindow::PaintSplash(CDC& dc)
+	{
+	CSize& s = m_splash_size; 
+	CRect rc;
+	GetClientRect(&rc);
+	int x = (rc.Width() - s.cx)/2;
+	int y = (rc.Height() - s.cy - MENU_BAR_HEIGHT)/2;
+	CDC dcc;
+	if(!dcc.CreateCompatibleDC(&dc))
+		{
+		AfxMessageBox(TEXT("CreateCompatibleDC() failed"));
+		return;
+		}
+	CBitmap *oldbmp = dcc.SelectObject(&m_splash);
+	if(!dc.BitBlt(x, y, s.cx, s.cy, &dcc, 0, 0, SRCCOPY))
+		AfxMessageBox(TEXT("BitBlt() failed"));
+	dcc.SelectObject(oldbmp);
+	dcc.DeleteDC();
+	}
 
