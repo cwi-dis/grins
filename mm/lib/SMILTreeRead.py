@@ -300,7 +300,9 @@ class SMILParser(xmllib.XMLParser):
 ## 			import mimetypes
 ## 			# guess the type from the file extension
 ## 			mtype = mimetypes.guess_type(url)[0]
-		if mtype is None and mediatype is None and is_ext:
+		if is_ext and mtype is None and \
+		   (mediatype is None or
+		    (mediatype is 'text' and subtype is None)):
 			# last resort: get file and see what type it is
 			try:
 				u = MMurl.urlopen(url)
@@ -379,7 +381,7 @@ class SMILParser(xmllib.XMLParser):
 			if not self.__regions.has_key(region):
 				self.syntax_error('unknown region')
 		else:
-			self.warning('node without region attribute')
+## 			self.warning('node without region attribute')
 			region = '<unnamed %d>'
 			i = 0
 			while self.__regions.has_key(region % i):
@@ -408,24 +410,12 @@ class SMILParser(xmllib.XMLParser):
 			elif node.attrdict.has_key('file'):
 				url = self.__context.findurl(node.attrdict['file'])
 				try:
+					import Sizes
+					file = MMurl.urlretrieve(url)[0]
 					if mediatype == 'image':
-						import img
-						file = MMurl.urlretrieve(url)[0]
-						rdr = img.reader(None, file)
-						width = rdr.width
-						height = rdr.height
-						del rdr
+						width, height = Sizes.GetImageSize(file)
 					else:
-						import mv
-						# can't use urlopen + OpenFD:
-						# mv.error: Illegal seek.
-						file = MMurl.urlretrieve(url)[0]
-						movie = mv.OpenFile(file,
-								    mv.MV_MPEG1_PRESCAN_OFF)
-						track = movie.FindTrackByMedium(mv.DM_IMAGE)
-						width = track.GetImageWidth()
-						height = track.GetImageHeight()
-						del movie, track
+						width, height = Sizes.GetVideoSize(file)
 				except:
 					# want to make them at least visible...
 					if ch['width'] == 0:
@@ -670,10 +660,10 @@ class SMILParser(xmllib.XMLParser):
 				w = attrdict['width']
 				h = attrdict['height']
 				fit = attrdict['fit']
-				if fit == 'meet':
-					ch['scale'] = 0
-				elif fit == 'hidden':
+				if fit == 'hidden':
 					ch['scale'] = 1
+				elif fit == 'meet':
+					ch['scale'] = 0
 				elif fit == 'slice':
 					ch['scale'] = -1
 				elif fit == 'visible':
@@ -1150,12 +1140,10 @@ class SMILParser(xmllib.XMLParser):
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
 			return
-		if attributes.has_key('href'):
-			href = attributes['href']
-		else:
-			#XXXX is this a document error?
+		href = attributes.get('href') # None is dest only anchor
+## 		if href is None:
+## 			#XXXX is this a document error?
 ## 			self.warning('required attribute href missing')
-			href = None	# destination-only anchor
 		uid = self.__node.GetUID()
 		nname = self.__node.GetRawAttrDef('name', None)
 		aname = attributes.get('id')
@@ -1270,11 +1258,6 @@ class SMILParser(xmllib.XMLParser):
 		self.__data.append(string.join(data, '\n'))
 		self.__nodedata = []
 		self.__data.append(cdata)
-
-## 	# Example -- handle special instructions, could be overridden
-## 	def handle_special(self, data):
-## 		name = string.split(data)[0]
-## 		self.warning('ignoring <!%s> tag' % name)
 
 	# catch all
 
