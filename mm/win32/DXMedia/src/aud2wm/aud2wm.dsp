@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 msvcrtd.lib ..\..\..\wmsdk\wmfsdk\lib\wmstub.lib ..\..\..\wmsdk\wmfsdk\lib\wmvcore.lib ..\..\lib\strmbased.lib ..\..\lib\quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm_d.ax" /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 msvcrtd.lib ..\..\..\wmsdk\wmfsdk\lib\wmstub.lib ..\..\..\wmsdk\wmfsdk\lib\wmvcore.lib ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm_d.ax" /debug:mapped,full /subsystem:windows,4.0
 
 !ENDIF 
 
