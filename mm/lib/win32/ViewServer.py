@@ -22,7 +22,7 @@ from _CmifView import _CmifView,_CmifStructView
 from _SourceView import _SourceView
 
 # views served
-_PlayerView=_CmifView
+_PlayerView= _CmifView
 _HierarchyView=_CmifStructView
 _ChannelView=_CmifStructView
 _LinkView=_LinkView
@@ -62,7 +62,7 @@ appview={
 # according to the MDIFrameWnd pattern
 
 class ChildFrame(window.MDIChildWnd):
-	def __init__(self,view=None,freezesize=0):
+	def __init__(self,view,freezesize=0):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._view=view
 		self._freezesize=freezesize
@@ -146,15 +146,25 @@ class ChildFrame(window.MDIChildWnd):
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
 
+	# Called by the framework before destroying the window
+	# Used to keep instance counting for player
+	def OnDestroy(self, msg):
+		if self._view._strid=='pview_':
+			self.GetMDIFrame()._player=None
+
 
 # This class implements a View Server. Any client can request
 # a view by identifing the view by its string id
 class ViewServer:
 	def __init__(self,context):
 		self._context=context
-	
+		self._player=None
+
 	# Create and initialize a new view object 
+	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = appcon.UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
+		if strid=='pview_' and self._player:
+			return self._player
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
 		view=viewclass(self.getdoc())
@@ -171,6 +181,7 @@ class ViewServer:
 		self._context.MDIActivate(f)
 		if appcon.IsPlayer:
 			self._context.setcoords((x, y, w, h),units)
+		if strid=='pview_':self._player=view
 		return view
 
 	# Create a new view object 
