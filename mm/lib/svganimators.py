@@ -66,11 +66,15 @@ class Animator:
 		self._time = None
 		self._dur = None
 
+	def getTimeManipulatedDur(self, dur):
+		if self._autoReverse: dur = 0.5*dur
+		return dur*self._speed
+
 	def prepareInterval(self, dur):
-		self._dur = dur
 		if dur == 'indefinite':
 			return
 		assert dur>0, 'invalid element interval'
+		self._dur = self.getTimeManipulatedDur(dur)
 
 		mode = self._calcMode
 		values, times = self._values, self._times
@@ -124,14 +128,6 @@ class Animator:
 				self._efftimes = []
 				for p in times:
 					self._efftimes.append(p*dur)	
-
-
-	def getTimeManipulatedDur(self):
-		dur = self._dur
-		if self._autoReverse:
-			dur = 2*dur
-		dur = dur/self._speed
-		return dur
 
 	# return the current local time in [0, dur] 
 	# after time manipulations
@@ -460,8 +456,8 @@ class FloatTupleAnimator(Animator):
 
 	def prepareInterval(self, dur):
 		Animator.prepareInterval(self, dur)
-		if dur != 'indefinite':
-			self._time2length = self._path.getLength()/dur
+		if self._dur != 'indefinite':
+			self._time2length = self._path.getLength()/self._dur
 
 	def reset(self):
 		Animator.reset(self)
@@ -519,10 +515,10 @@ class MotionAnimator(Animator):
 
 	def prepareInterval(self, dur):
 		Animator.prepareInterval(self, dur)
-		if dur == 'indefinite':
+		if self._dur == 'indefinite':
 			self._time2length = 1
 		else:
-			self._time2length = self._totlen/dur
+			self._time2length = self._totlen/self._dur
 
 	def reset(self):
 		Animator.reset(self)
