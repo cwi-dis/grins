@@ -684,6 +684,7 @@ class HierarchyView(HierarchyViewDialog):
 					chname = chlist[i]
 				else:
 					chname = chlist[0]
+				chtype = None
 			elif lightweight and \
 			     (url is not None or chtype is not None):
 				self.opt_render()
@@ -691,6 +692,8 @@ class HierarchyView(HierarchyViewDialog):
 					'There are no channels for this mediatype in the presentation',
 					mtype = 'error', parent = self.window)
 				return
+		else:
+			chtype = None
 		self.toplevel.setwaiting()
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
@@ -732,7 +735,7 @@ class HierarchyView(HierarchyViewDialog):
 		if self.insertnode(node, where, index):
 			if not lightweight:
 				import AttrEdit
-				AttrEdit.showattreditor(self.toplevel, node)
+				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)
 
 	def insertparent(self, type):
 		node = self.focusnode
