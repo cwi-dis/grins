@@ -452,7 +452,7 @@ class _DisplayList:
 		self._fgcolor = color
 
 
-	def newbutton(self, coordinates):
+	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates)

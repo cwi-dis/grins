@@ -146,7 +146,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			atype = a[A_TYPE]
 			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
 				continue
-			b = self.armed_display.newbutton((0,0,1,1))
+			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)

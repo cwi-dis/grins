@@ -76,7 +76,7 @@ class ImageChannel(ChannelWindow):
 			y = y * self._arm_imbox[3] + self._arm_imbox[1]
 			w = w * self._arm_imbox[2]
 			h = h * self._arm_imbox[3]
-			b = self.armed_display.newbutton((x, y, w, h))
+			b = self.armed_display.newbutton((x, y, w, h), times = a[A_TIMES])
 			b.hiwidth(3)
 			b.hicolor(hicolor)
 			self.setanchor(a[A_ID], atype, b, a[A_TIMES])

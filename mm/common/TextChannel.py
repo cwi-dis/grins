@@ -118,7 +118,7 @@ class TextChannel(ChannelWindow):
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
 		for (name, box, type, times) in buttons:
-			button = self.armed_display.newbutton(box)
+			button = self.armed_display.newbutton(box, times = times)
 			if drawbox:
 				button.hicolor(hicolor)
 				button.hiwidth(3)

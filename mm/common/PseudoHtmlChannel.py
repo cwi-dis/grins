@@ -98,7 +98,7 @@ class HtmlChannel(ChannelWindow):
 ##			print 'buttons:',`buttons`
 		self.armed_display.fgcolor(self.gethicolor(node))
 		for (name, box, type, times) in buttons:
-			button = self.armed_display.newbutton(box)
+			button = self.armed_display.newbutton(box, times = times)
 			button.hiwidth(3)
 ##			button.hicolor(self.getfgcolor(node))
 			self.setanchor(name, type, button, times)
