@@ -376,7 +376,7 @@ class AttrEditor:
 			[('Cancel', (self.hide, ())),
 			 ('Restore', (self.restore, ())),
 			 ('Apply', (self.apply, ())),
-			 ('Ok', (self.ok, ()))],
+			 ('Ok', (self.apply, (1,)))],
 			left = None, right = None, bottom = None, vertical = 0)
 		sep = self.dialog.Separator(left = None, right = None,
 					    bottom = buttons)
@@ -454,7 +454,7 @@ class AttrEditor:
 		self.dialog = None
 		self.list = []
 
-	def apply(self):
+	def apply(self, remove = 0):
 		# first collect all changes
 		dict = {}
 		for b in self.list:
@@ -464,17 +464,21 @@ class AttrEditor:
 				windowinterface.showmessage(
 					'%s: parsing value failed' %
 						b.name)
-				return 0
+				return
 			cur = b.getcurrent()
 			if value != cur:
 				dict[b.name] = (value, b)
 		if not dict:
 			# nothing to change
-			return 1
+			if remove:
+				self.hide()
+			return
 		if not self.wrapper.transaction():
 			# can't do a transaction
-			return 0
+			return
 		# this may take a while...
+		if remove:
+			self.hide()
 		windowinterface.setcursor('watch')
 		for name, (value, b) in dict.items():
 			self.wrapper.delattr(name)
@@ -482,12 +486,7 @@ class AttrEditor:
 				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
 		windowinterface.setcursor('')
-		return 1
 
-	def ok(self):
-		if self.apply():
-			self.hide()
-		
 	def is_showing(self):
 		return self.dialog is not None
 
