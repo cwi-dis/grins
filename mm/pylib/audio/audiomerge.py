@@ -51,11 +51,12 @@ class merge:
 		stretches = []
 		counts = []
 		width = self.__format.getbps() / 8
-		for (rdr, cb) in self.__readers[:]:
-			data = rdr.readframes(nframes)
+		for i in range(len(self.__readers)):
+			rdr, cb = self.__readers[i]
+			data, nf = rdr.readframes(nframes)
 			if not data:
 				# got to the end of this one
-				self.__readers.remove((rdr, cb))
+				self.__readers[i] = rdr, None
 				if cb:
 					apply(cb[0], cb[1])
 				continue
@@ -80,7 +81,8 @@ class merge:
 			newcounts.append(1)
 			stretches = newstretches
 			counts = newcounts
-		return string.joinfields(stretches, '')
+		data = string.joinfields(stretches, '')
+		return data, len(data) / (width * self.__format.getnchannels())
 
 	def getformat(self):
 		return self.__format
