@@ -516,7 +516,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			win32con.WM_LBUTTONDBLCLK:self.onLButtonDblClk,
 			win32con.WM_LBUTTONDOWN:self.onLButtonDown,
 			win32con.WM_LBUTTONUP:self.onLButtonUp,
-			win32con.WM_MOUSEMOVE:self.onMouseMove,}
+			win32con.WM_MOUSEMOVE:self.onMouseMove,
+			win32con.WM_SIZE:self.onSize,}
 		self._enable_response(self._msg_cbs)
 		self.show()
 
@@ -824,4 +825,18 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 				if f: break
 		if not f:self.setcursor('arrow')
 			
-	
+
+	# RM support
+	def OnCreate(self,params):
+		self._rect=self.GetClientRect()
+		self._can_change_size=0
+
+	def onSize(self,params):
+		if self._can_change_size: return
+		msg=win32mu.Win32Msg(params)
+		l,t,r,b=self._rect
+		self.SetWindowPos(self.GetSafeHwnd(),(0,0,r,b),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+
+	def AllowResize(self,f):
+		self._can_change_size=f
