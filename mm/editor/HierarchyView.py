@@ -520,23 +520,28 @@ class HierarchyView(HierarchyViewDialog):
 			self.last_geometry = self.window.getgeometry()
 
 	def init_display(self):
-		if self.new_displist:
-			print 'init_display: new_displist already exists'
-			self.new_displist.close()
-		self.new_displist = self.displist.clone()
+		#if self.new_displist:
+		#	print 'init_display: new_displist already exists'
+		#	self.new_displist.close()
+		#self.new_displist = self.displist.clone()
+		self.draw()
 		
 	def opt_init_display(self):
 		# Only open a new displaylist if none exists at the moment
-		if self.new_displist:
-			return None
-		self.init_display()
-		return self.new_displist
+		# eh? -mjvdg
+		#self.draw()
+		#if self.new_displist:
+		#	return None
+		#self.init_display()
+		#return self.new_displist
+		self.draw()
 
 	def render(self):
-		self.new_displist.render()
-		self.displist.close()
-		self.displist = self.new_displist
-		self.new_displist = None
+		self.draw()
+		#self.new_displist.render()
+		#self.displist.close()
+		#self.displist = self.new_displist
+		#self.new_displist = None
 
 	def opt_render(self):
 		if self.new_displist:
@@ -559,16 +564,16 @@ class HierarchyView(HierarchyViewDialog):
 
 	def globalfocuschanged(self, focustype, focusobject):
 		# for now, catch only MMNode focus
-		if focustype != 'MMNode':
-			return
-			
-		# Callback from the editmanager to set the focus to a specific node.
-		#print "DEBUG: HierarchyView received globalsetfocus with ", focustype, focusobject
-		if focusobject and focusobject is not self.focusnode:
-			self.select_node(focusobject);
-			self.aftersetfocus();
-			self.draw();
-
+		if focustype == 'MMNode':
+			print "DEBUG: globalfocuschanged: ", focustype, focusobject
+			# Callback from the editmanager to set the focus to a specific node.
+			#print "DEBUG: HierarchyView received globalsetfocus with ", focustype, focusobject
+			if isinstance(focusobject, MMNode.MMNode) and focusobject is not self.focusnode:
+				self.select_node(focusobject);
+				self.aftersetfocus();
+				self.draw();
+		else:
+			print "DEBUG: globalfocuschanged called but not used: ", focustype, focusobject
 
 	#################################################
 	# Event handlers                                #
@@ -665,12 +670,13 @@ class HierarchyView(HierarchyViewDialog):
 			i = obj.get_nearest_node_index((x,y))
 			self.create(0, url, i)
 		else:
+			print "DEBUG: some channel info: ", obj.node.GetChannelName(), ctx.compatchannels(url), url
 			# check that URL compatible with node's channel
 			if t != 'slide' and features.lightweight and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
-				self.render()
-				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
-				return
+					self.render()
+					windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
+					return
 			if t == 'slide':
 				ftype = MMmimetypes.guess_type(url)[0] or ''
 				if ftype[:5] != 'image' or \

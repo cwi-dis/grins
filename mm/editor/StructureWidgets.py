@@ -121,7 +121,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			else:
 				return ''
 
-		
+	def get_nearest_node_index(a):
+		# This is only for seqs and verticals.
+		return -1
 	#
 	# Menu handling functions, aka callbacks.
 	#
