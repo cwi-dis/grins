@@ -1038,6 +1038,10 @@ class CssPosCtrl(AttrCtrl):
 		self._ctrlUnit = components.ComboBox(wnd,resid[2])
 		self.currentValue = self._attr.getcurrent()
 		self._currentUnit = 'auto'
+		self.__fieldModified = 0
+		self.__isValueSetting = 0
+		self.__lastValue = None
+		self.__initPercentValue = None
 		
 	def OnInitCtrl(self):
 		self._initctrl=self
@@ -1062,6 +1066,7 @@ class CssPosCtrl(AttrCtrl):
 	# put value into the field. val is the representation of the value
 	def setvalue(self, val):
 		if not self._initctrl: return
+		self.__initPercentValue = None
 		if val =='':
 			self.__setUnit('auto')
 		elif '%' not in val:
@@ -1069,8 +1074,9 @@ class CssPosCtrl(AttrCtrl):
 		else:
 			val = val[:-1]
 			self.__setUnit('percent')
-			
-		self._ctrlValue.settext(val)
+			self.__initPercentValue = val
+		self.__setValue(val)
+		self.__fieldModified = 0
 
 	def __setUnit(self, unit):
 		self._currentUnit = unit
@@ -1080,6 +1086,11 @@ class CssPosCtrl(AttrCtrl):
 			self._ctrlUnit.setcursel(2)
 		else:
 			self._ctrlUnit.setcursel(1)
+
+	def __setValue(self, value):
+		self.__isValueSetting = 1
+		self._ctrlValue.settext(value)
+		self.__isValueSetting = 0
 		
 	# get value from the field. return a string representation of the value
 	def getvalue(self):
@@ -1101,40 +1112,63 @@ class CssPosCtrl(AttrCtrl):
 				return
 			self.enableApply()
 			if unit == 'auto':
-				self._ctrlValue.settext('')
+				self.__setValue('')
 				self._currentUnit = 'auto'
 			elif unit == 'pixel':
-				val = self._attr.getCurrentPxValue()
-				self._ctrlValue.settext(`val`)
+				if not self.__fieldModified or (self.__lastValue is None and self._currentUnit == 'auto'):
+					val = self._attr.getCurrentPxValue()
+					value = `val`
+					self.__setValue(value)
+					self.__lastValue = value
+				elif self._currentUnit == 'auto':
+					self.__setValue(self.__lastValue)					
 				self._currentUnit = 'pixel'
 			elif unit == 'percent':
-				val = self._attr.getCurrentPxValue()
-				# convert to float
-				val = (float(val)/pSize)*100
-				self._ctrlValue.settext(fmtfloat(val, prec = 2))
+				if not self.__fieldModified or (self.__lastValue is None and self._currentUnit == 'auto'):
+					if self.__initPercentValue is not None:
+						# keep the initial percent value. Otherwise, the conversion from pixel may be slitly different.
+						value = self.__initPercentValue
+					else:
+						val = self._attr.getCurrentPxValue()
+						# convert to float
+						val = (float(val)/pSize)*100
+						value = fmtfloat(val, prec = 2)
+					self.__setValue(value)
+					self.__lastValue = value
+				elif self._currentUnit == 'auto':
+					self.__setValue(self.__lastValue)					
 				self._currentUnit = 'percent'
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
 		elif code==win32con.EN_CHANGE:
+			if self.__isValueSetting:
+				return
 			val = self._ctrlValue.gettext()
 			unit = self._ctrlUnit.getvalue()
 			if val == '':
 				# force auto value
 				self.__setUnit('auto')		
+				self.__lastValue = None
 			elif unit == 'auto' and val != '':
 				# force to pixel value
 				self.__setUnit('pixel')		
+				self.__lastValue = val
 			elif unit == 'pixel' and val[-1] == '%':
 				val = val[:-1]
-				self._ctrlValue.settext(val)
+				self.__setValue(val)
+				self.__lastValue = val
 				# force to percent value
 				self.__setUnit('percent')
 			elif val[-1] == '%':
 				val = val[:-1]
-				self._ctrlValue.settext(val)					
+				self.__setValue(val)					
+				self.__lastValue = val
+			else:
+				self.__lastValue = val				
 			self.enableApply()
+			self.__fieldModified = 1
 	
 ##################################
 class StringCtrl(AttrCtrl):
