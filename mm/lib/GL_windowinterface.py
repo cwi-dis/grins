@@ -106,6 +106,7 @@ except ImportError:
 _ARROW = 0				# predefined
 _WATCH = 1
 _CHANNEL = 2
+_LINK = 3
 
 # Colors
 _DEF_BGCOLOR = 255,255,255		# white
@@ -142,12 +143,20 @@ _channel = [0x0000, 0x0000, 0x0000, 0x0180,
 	    0x8181, 0x6006, 0x1818, 0x0660,
 	    0x0180, 0x0000, 0x0000, 0x0000
 	 ]
+_link = [0x0000, 0x7f80, 0x8040, 0x7e20,
+	 0x1010, 0x0e10, 0x1010, 0x0e28,
+	 0x1044, 0x0c82, 0x0304, 0x0248,
+	 0x0110, 0x00a0, 0x0040, 0x0000
+	 ]
 _watch.reverse()			# Turn it upside-down
 gl.defcursor(_WATCH, _watch*8)
 gl.curorigin(_WATCH, 8, 8)
 _channel.reverse()			# Turn it upside-down
 gl.defcursor(_CHANNEL, _channel*8)
 gl.curorigin(_CHANNEL, 8, 8)
+_link.reverse()
+gl.defcursor(_LINK, _link*8)
+gl.curorigin(_LINK, 0, 14)
 
 class _DummyLock:
 	def acquire(self):
@@ -200,7 +209,6 @@ class _Toplevel:
 		pass
 
 	def getsize(self):
-		if debug: print 'Toplevel.getsize()'
 		return _mscreenwidth, _mscreenheight
 
 	def usewindowlock(self, lock):
@@ -244,14 +252,14 @@ class _Boxes:
 		fa2 = []
 		while win:
 			try:
-				fa = getregister(win, Mouse0Press)
+				fa = win.getregister(Mouse0Press)
 			except error:
 				fa = None
 			else:
 				win.unregister(Mouse0Press)
 			fa1.append(fa)
 			try:
-				fa = getregister(win, Mouse0Release)
+				fa = win.getregister(Mouse0Release)
 			except error:
 				fa = None
 			else:
@@ -687,15 +695,6 @@ class _Event:
 			# get here only when there are no pending events
 			return 0
 
-	def peekevent(self):
-		if debug > 1: print 'Event.peekevent()'
-		# Return the first event in the queue if there is one,
-		# but don't remove it.
-		if self.testevent():
-			return self._queue[0]
-		else:
-			return None
-
 	def readevent_timeout(self, timeout):
 		if debug: print 'Event.readevent_timeout()'
 		if self._getevent(timeout):
@@ -705,14 +704,9 @@ class _Event:
 		else:
 			return None
 		
-	def waitevent_timeout(self, timeout):
-		if debug: print 'Event.waitevent_timeout()'
-		dummy = self._getevent(timeout)
-
-	def waitevent(self):
+	def waitevent(self, timeout = None):
 		if debug: print 'Event.waitevent()'
-		# Wait for an event to occur, but don't return it.
-		self.waitevent_timeout(None)
+		dummy = self._getevent(timeout)
 
 	def readevent(self):
 		while 1:
@@ -723,25 +717,11 @@ class _Event:
 				t0 = time.time()
 			else:
 				t = None
-			self.waitevent_timeout(t)
+			self.waitevent(timeout = t)
 			if self._timers:
 				t1 = time.time()
 				dt = t1 - t0
 				self._timers[0] = (t - dt, arg, tid)
-
-	def pollevent(self):
-		if debug > 1: print 'Event.pollevent()'
-		# Return the first event in the queue if there is one.
-##		if self._queue:
-##			event = self._queue[0]
-##			del self._queue[0]
-##			return event
-##		else:
-##			return None
-		if self.testevent():
-			return self.readevent()
-		else:
-			return None
 
 	def setfd(self, fd):
 		if type(fd) <> type(1):
@@ -753,10 +733,6 @@ class _Event:
 		if fd in self._fdlist:
 			self._fdlist.remove(fd)
 
-	def getfd(self):
-		raise error, 'don\'t use getfd()'
-		return gl.qgetfd()
-			
 	def register(self, win, event, func, arg):
 		key = (win, event)
 		if func:
@@ -788,11 +764,6 @@ class _Event:
 
 	def setcallback(self, event, func, arg):
 		self.register(None, event, func, arg)
-
-	def clean_callbacks(self):
-		for (win, event) in self._windows.keys():
-			if win and win.is_closed():
-				self.register(win, event, None, None)
 
 	def select_setcallback(self, fd, cb, arg):
 		if type(fd) <> type(1):
@@ -1715,7 +1686,7 @@ class _Window:
 		else:
 			self._toplevel = self
 
-	def newwindow(self, *coordinates):
+	def newwindow(self, *coordinates, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
 		if len(coordinates) == 1 and type(coordinates) == type(()):
 			coordinates = coordinates[0]
@@ -1949,7 +1920,7 @@ class _Window:
 					gl.color(GL.RED)
 					gl.recti(x0, y0, x1, y1)
 					toplevel._win_lock.release()
-			w, e, v = readevent()
+			w, e, v = event.readevent()
 			if e == Mouse0Release:
 				break
 		toplevel._win_lock.acquire()
@@ -2033,7 +2004,7 @@ class _Window:
 					gl.recti(x0, y0, x1, y1)
 					omx, omy = mx, my
 					toplevel._win_lock.release()
-			w, e, v = readevent()
+			w, e, v = event.readevent()
 			if e == Mouse0Release:
 				break
 		toplevel._win_lock.acquire()
@@ -2122,7 +2093,7 @@ class _Window:
 			displist.close()
 		for win in self._subwindows:
 			win._resize()
-		enterevent(self, ResizeWindow, None)
+		event.enterevent(self, ResizeWindow, None)
 
 	def _redraw(self):
 		if not hasattr(self, '_closecallbacks'):
@@ -2182,6 +2153,8 @@ class _Window:
 					gl.setcursor(_WATCH, 0, 0)
 				elif cursor == 'channel':
 				        gl.setcursor(_CHANNEL, 0, 0)
+				elif cursor == 'link':
+					gl.setcursor(_LINK, 0, 0)
 				elif cursor == '':# default is arrow cursor
 					gl.setcursor(_ARROW, 0, 0)
 				else:
@@ -2291,6 +2264,9 @@ class _Window:
 
 	def unregister(self, ev):
 		event.unregister(self, ev)
+
+	def getregister(self, ev):
+		return event.getregister(self, ev)
 
 	def destroy_menu(self):
 		for menu in self._menuids:
@@ -2433,39 +2409,6 @@ def setcursor(cursor):
 def getsize():
 	return toplevel.getsize()
 
-def readevent():
-	return event.readevent()
-
-def readevent_timeout(timeout):
-	return event.readevent_timeout(timeout)
-
-def pollevent():
-	return event.pollevent()
-
-def waitevent():
-	event.waitevent()
-
-def waitevent_timeout(timeout):
-	event.waitevent_timeout(timeout)
-
-def peekevent():
-	return event.peekevent()
-
-def testevent():
-	return event.testevent()
-
-def enterevent(win, ev, arg):
-	event.enterevent(win, ev, arg)
-
-def setfd(fd):
-	event.setfd(fd)
-
-def rmfd(fd):
-	event.rmfd(fd)
-
-def getfd():
-	return event.getfd()
-
 def findfont(fontname, pointsize):
 	return _Font(fontname, pointsize)
 
@@ -2481,29 +2424,11 @@ def getmouse():
 def settimer(sec, arg):
 	return event.settimer(sec, arg)
 
-def setcallback(ev, func, arg):
-	event.setcallback(ev, func, arg)
-
-def register(win, ev, func, arg):
-	event.register(win, ev, func, arg)
-
-def unregister(win, ev):
-	event.unregister(win, ev)
-
-def getregister(win, ev):
-	event.getregister(win, ev)
-
-def clean_callbacks():
-	event.clean_callbacks()
+def settimerfunc(func, arg):
+	event.setcallback(TimerEvent, func, arg)
 
 def select_setcallback(fd, cb, arg):
 	event.select_setcallback(fd, cb, arg)
-
-def startmodal(window):
-	event.startmodal(window)
-
-def endmodal():
-	event.endmodal()
 
 def mainloop():
 	event.mainloop()
@@ -2853,9 +2778,14 @@ class Dialog:
 	def close(self):
 		self.window.close()
 
-def showmessage(text):
-	d = Dialog(None, text, 1, 0, [('\r', 'Done', None)])
+def showmessage(text, type = 'message', grab = 1, callback = None,
+		cancelCallback = None, **options):
+	list = [('\r', 'Done', callback)]
+	if cancelCallback or type == 'question':
+		list.append('', 'Cancel', cancelCallback)
+	d = Dialog(None, text, grab, 0, list)
 	d._loop()
+	return d
 
 class _Question(Dialog):
 	def __init__(self, text):
