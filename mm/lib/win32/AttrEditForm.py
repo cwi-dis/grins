@@ -1248,7 +1248,7 @@ from fmtfloat import fmtfloat
 
 class EventCtrl(AttrCtrl):
 	# This is an editor for the 'begin' and 'end'tabs.
-	_radiobuttons = {
+	__radiobuttons = {
 		grinsRC.IDC_RDELAY: 'delay',
 		grinsRC.IDC_RNODE: 'node',
 		grinsRC.IDC_RLAYOUT: 'region',
@@ -1256,6 +1256,20 @@ class EventCtrl(AttrCtrl):
 		grinsRC.IDC_RACCESSKEY: 'accesskey',
 		grinsRC.IDC_RWALLCLOCK: 'wallclock',
 		}
+
+	__tooltips = [
+		(grinsRC.IDC_EVENTLIST, 'Lists the begin or end conditions for this node.'),
+		(grinsRC.IDC_NEWBUTTON, 'Add a new condition for this node to begin or end'), # begin or end.. hmm.
+		(grinsRC.IDC_DELETEBUTTON, 'Remove a condition for this node to begin or end'),
+		(grinsRC.IDC_EVENTTYPE, 'Sets the type of this event'),
+		(grinsRC.IDC_EDITOFFSET, 'Sets the delay on this node'),
+		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
+		(grinsRC.IDC_RNODE, 'This event fires relative to the start or end of another node'),
+		(grinsRC.IDC_RLAYOUT, 'This event fires to something which happens with a region'),
+		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will either never start or never end'),
+		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard.'),
+		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day.'),
+		]
 
 	def __init__(self, wnd, attr, resid):
 		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
@@ -1292,20 +1306,6 @@ class EventCtrl(AttrCtrl):
 		
 		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
 					# now that also feels like a hack. Oh well.
-	__tooltips = [
-		(grinsRC.IDC_EVENTLIST, 'Lists the begin or end conditions for this node.'),
-		(grinsRC.IDC_NEWBUTTON, 'Add a new condition for this node to begin or end'), # begin or end.. hmm.
-		(grinsRC.IDC_DELETEBUTTON, 'Remove a condition for this node to begin or end'),
-		(grinsRC.IDC_EVENTTYPE, 'Sets the type of this event'),
-		(grinsRC.IDC_EDITOFFSET, 'Sets the delay on this node'),
-		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
-		(grinsRC.IDC_RNODE, 'This event fires relative to the start or end of another node'),
-		(grinsRC.IDC_RLAYOUT, 'This event fires to something which happens with a region'),
-		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will either never start or never end'),
-		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard.'),
-		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day.'),
-		]
-
 	def OnInitCtrl(self):
 		self._initctrl=self
 
@@ -1340,7 +1340,7 @@ class EventCtrl(AttrCtrl):
 		self.update()
 
 	def __init_radiobuttons(self):
-		for k,v in self._radiobuttons.items():
+		for k,v in self.__radiobuttons.items():
 			new = components.RadioButton(self._wnd, k)
 			self._radiobuttonwidgets[v] = new
 			new.attach_to_parent()
@@ -1576,7 +1576,7 @@ class EventCtrl(AttrCtrl):
 		self.update()
 	def _radiobuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:
-			newcause = self._radiobuttons[id]
+			newcause = self.__radiobuttons[id]
 			self._eventstruct.set_cause(newcause)
 			self.enableApply()
 			self.update()
