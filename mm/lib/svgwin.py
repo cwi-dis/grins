@@ -51,10 +51,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		pass
 
 	def delRegion(self, rgn):
-		wingdi.DeleteObject(rgn)
+		rgn.DeleteObject()
 
 	def inside(self, rgn, pt):
-		return wingdi.PtInRegion(rgn, pt)
+		return rgn.PtInRegion(pt)
 
 	# new graphics context
 	# self state reflects this new context
@@ -126,7 +126,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			wingdi.SetWorldTransform(self.hdc, [1, 0, 0, 1, 0, 0])
 			rgn = wingdi.CreateRectRgn(ltrb)
 			wingdi.SelectClipRgn(self.hdc, rgn)
-			wingdi.DeleteObject(rgn)
+			rgn.DeleteObject()
 			wingdi.SetWorldTransform(self.hdc, tmprev.getElements())
 
 	#
@@ -199,9 +199,9 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	
 	def getDeviceRegion(self):
 		dcid = wingdi.SaveDC(self.hdc)
-		hrgn = wingdi.PathToRegion(self.hdc)
+		rgn = wingdi.PathToRegion(self.hdc)
 		wingdi.RestoreDC(self.hdc, dcid)			
-		return hrgn
+		return rgn
 						
 	def drawRect(self, pos, size, rxy, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
@@ -213,10 +213,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		else:
 			wingdi.RoundRect(self.hdc, ltrb, rxy)
 		wingdi.EndPath(self.hdc)
-		if a: hrgn = self.getDeviceRegion()
-		else: hrgn = None
+		if a: rgn = self.getDeviceRegion()
+		else: rgn = None
 		self.endDraw(style, tflist)
-		return hrgn
+		return rgn
 
 	def drawCircle(self, center, r, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
@@ -224,10 +224,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		ltrb = center[0]-r, center[1]-r, center[0]+r, center[1]+r
 		wingdi.Ellipse(self.hdc, ltrb)
 		wingdi.EndPath(self.hdc)
-		if a: hrgn = self.getDeviceRegion()
-		else: hrgn = None
+		if a: rgn = self.getDeviceRegion()
+		else: rgn = None
 		self.endDraw(style, tflist)
-		return hrgn
+		return rgn
 
 	def drawEllipse(self, center, rxy, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
@@ -235,10 +235,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		ltrb = center[0]-rxy[0], center[1]-rxy[1], center[0]+rxy[0], center[1]+rxy[1]
 		wingdi.Ellipse(self.hdc, ltrb)
 		wingdi.EndPath(self.hdc)
-		if a: hrgn = self.getDeviceRegion()
-		else: hrgn = None
+		if a: rgn = self.getDeviceRegion()
+		else: rgn = None
 		self.endDraw(style, tflist)
-		return hrgn
+		return rgn
 
 	def drawLine(self, pt1, pt2, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
@@ -260,10 +260,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		wingdi.BeginPath(self.hdc)
 		wingdi.Polygon(self.hdc, points)
 		wingdi.EndPath(self.hdc)
-		if a: hrgn = self.getDeviceRegion()
-		else: hrgn = None
+		if a: rgn = self.getDeviceRegion()
+		else: rgn = None
 		self.endDraw(style, tflist)
-		return hrgn
+		return rgn
 
 	def drawText(self, text, pos, style, tflist, a = 0):
 		if tflist:
