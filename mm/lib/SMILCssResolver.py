@@ -1009,7 +1009,7 @@ class MediaNode(Node):
 
 		# if no intrinsic size, the size area is the entire region		
 		if self.intrinsicHeight == None or self.intrinsicWidth == None:
-			return self.container.pxleft, self.container.pxwidth, self.container.pxtop, self.container.pxheight
+			return 0, 0, self.container.pxwidth, self.container.pxheight
 		
 		# get fit attribute
 		scale = self.getScale()
@@ -1178,5 +1178,3 @@ class MediaNode(Node):
 
 	def _getPxGeom(self):
 		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
-		
- 
