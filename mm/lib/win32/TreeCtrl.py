@@ -358,14 +358,16 @@ class TreeCtrl(window.Wnd):
 			self.__lastDragOverItem = None
 			
 		flags, item = self.HitTest(pt)
-		if flags & commctrl.TVHT_ONITEM:
-			if self._dragdropListener:
-				flavor, data = DropTarget.DecodeDragData(dataobj)
-				if flavor and data:
-					ret = self._dragdropListener.OnDragOver(item, flavor, data)
-					if ret != appcon.DROPEFFECT_NONE:
+		if self._dragdropListener:
+			flavor, data = DropTarget.DecodeDragData(dataobj)
+			if flavor and data:
+				ret = self._dragdropListener.OnDragOver(item, flavor, data)
+				if ret != appcon.DROPEFFECT_NONE:
+					if item:
 						self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 						self.__lastDragOverItem = item
+					else:
+						self.__lastDragOverItem = None
 							
 		return ret							
 
@@ -384,11 +386,10 @@ class TreeCtrl(window.Wnd):
 		pt = win32api.GetCursorPos()
 		pt = self.ScreenToClient(pt)
 		flags, item = self.HitTest(pt)
-		if flags & commctrl.TVHT_ONITEM:
-			if self._dragdropListener:
-				flavor, data = DropTarget.DecodeDragData(dataobj)
-				if flavor and data:
-					return self._dragdropListener.OnDrop(item, flavor, data)
+		if self._dragdropListener:
+			flavor, data = DropTarget.DecodeDragData(dataobj)
+			if flavor and data:
+				return self._dragdropListener.OnDrop(item, flavor, data)
 		return 0
 
 	def OnDragLeave(self):
