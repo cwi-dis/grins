@@ -134,6 +134,21 @@ class HierarchyViewDialog(ViewDialog):
 		(LIGHT, 'Edit Content...', CONTENT),
 		)
 
+	slide_popupmenu = (
+		(LIGHT, 'New Node Before', NEW_BEFORE),
+		(LIGHT, 'New Node After', NEW_AFTER),
+		(LIGHT, None),
+		(LIGHT, 'Cut', CUT),
+		(LIGHT, 'Copy', COPY),
+		(LIGHT, 'Delete', DELETE),
+		(LIGHT, None),
+		(LIGHT, 'Paste Before', PASTE_BEFORE),
+		(LIGHT, 'Paste After', PASTE_AFTER),
+		(LIGHT, None),
+		(LIGHT, 'Properties...', ATTRIBUTES),
+		(LIGHT, 'Edit Content...', CONTENT),
+		)
+
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
 
