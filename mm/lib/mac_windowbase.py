@@ -1,7 +1,7 @@
 import Win
 import Qd
 import Fm
-import time
+#import time
 import Evt
 import Events
 import Windows
@@ -48,6 +48,7 @@ ReadMask, WriteMask = 1, 2
 
 EVENTMASK=0xffff
 MINIMAL_TIMEOUT=1	# How long we yield at the very least
+TICKS_PER_SECOND=60.0	# Standard mac thing
 
 _X=0
 _Y=1
@@ -86,13 +87,13 @@ class _Event:
 		self._timers = []
 		self._timer_id = 0
 		self._timerfunc = None
-		self._time = time.time()
+		self._time = Evt.TickCount()/TICKS_PER_SECOND
 		self._idles = []
 
 	def mainloop(self):
 		while 1:
 			while self._timers:
-				t = time.time()
+				t = Evt.TickCount()/TICKS_PER_SECOND
 				sec, cb, tid = self._timers[0]
 				sec = sec - (t - self._time)
 				self._time = t
@@ -108,7 +109,7 @@ class _Event:
 			if self._idles:
 				timeout = MINIMAL_TIMEOUT
 			elif self._timers:
-				timeout = self._timers[0][0]
+				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
 			else:
 				timeout = 100000
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
@@ -188,7 +189,7 @@ class _Event:
 
 	# timer interface
 	def settimer(self, sec, cb):
-		t0 = time.time()
+		t0 = Evt.TickCount()/TICKS_PER_SECOND
 		if self._timers:
 			t, a, i = self._timers[0]
 			t = t - (t0 - self._time) # can become negative
@@ -207,14 +208,16 @@ class _Event:
 		return self._timer_id
 
 	def canceltimer(self, id):
+		if id == None: return
 		for i in range(len(self._timers)):
 			t, cb, tid = self._timers[i]
-			if tid == t:
+			if tid == id:
 				del self._timers[i]
 				if i < len(self._timers):
 					tt, cb, tid = self._timers[i]
 					self._timers[i] = (tt + t, cb, tid)
 				return
+		raise 'unknown timer', id
 				
 	def setidleproc(self, cb):
 		"""Adds an idle-loop callback"""
