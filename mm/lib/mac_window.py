@@ -88,7 +88,7 @@ class _Toplevel(mac_windowbase._Toplevel):
 			return 1
 		return 0		
 		
-class _CommonWindow(mac_windowbase._CommonWindow):
+class _CommonWindowMixin:
 	# Again, only overriding to get the class of the objects (window, displaylist) correct.
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE):
@@ -110,8 +110,11 @@ class _CommonWindow(mac_windowbase._CommonWindow):
 		else:
 			bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
+		
+class _CommonWindow(_CommonWindowMixin, mac_windowbase._CommonWindow):
+	pass
 
-class _Window(_CommonWindow, mac_windowbase._Window):
+class _Window(_CommonWindowMixin, mac_windowbase._Window):
 
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0,
 		     units = UNIT_MM):
@@ -466,7 +469,7 @@ class _Window(_CommonWindow, mac_windowbase._Window):
 		del self._rb_cx
 		del self._rb_cy
 
-class _SubWindow(_CommonWindow, mac_windowbase._SubWindow):
+class _SubWindow(_CommonWindowMixin, mac_windowbase._SubWindow):
 	def __init__(self, parent, wid, coordinates, defcmap, pixmap, transparent, z):
 		mac_windowbase._SubWindow.__init__(self, parent, wid, coordinates,
 						     defcmap, pixmap, transparent, z)
@@ -641,8 +644,8 @@ class _DisplayList(mac_windowbase._DisplayList):
 			new._cloneof = self
 			new._clonestart = len(self._list)
 			new._clonedata = self._fgcolor, self._font
-		for key, val in self._optimdict.items():
-			new._optimdict[key] = val
+##		for key, val in self._optimdict.items():
+##			new._optimdict[key] = val
 		return new
 
 	def drawfpolygon(self, color, points):
@@ -925,7 +928,6 @@ class SelectionDialog(_DialogWindow):
 			where = Qd.GlobalToLocal(where)
 			item, isdouble = self._listwidget.click(where, modifiers)
 			if item is None:
-				MacOS.SysBeep()
 				return
 			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
 			Dlg.SetDialogItemText(h, self._itemlist[item])
