@@ -229,6 +229,9 @@
 (project_bandwidth_fraction (float) -1.0 'Bandwidth fraction' default
 	'Fraction of total bandwidth allocated to this sequence' raw (cmif))
 
+(project_readonly (bool) 0 'This structure is readonly' default
+	'This node is read-only' raw (cmif))
+
 (project_convert (bool) 1 'Convert data' default
 	'Convert data to RealMedia format' raw (g2_pro))
 
