@@ -131,3 +131,28 @@ def guessurl(filename):
 		return pathname2url(filename)
 	# possibly a relative URL
 	return filename
+
+_pathname2url = pathname2url
+def pathname2url(path):
+	url = _pathname2url(path)
+	type, rest = splittype(url)
+	if not type and rest[:1] == '/':
+		if rest[:3] == '///':
+			url = 'file:' + url
+		else:
+			url = 'file://' + url
+	return url
+
+def canonURL(url):
+	type, rest = splittype(url)
+	if not type or type == 'file':
+		# if no type it's a file URL
+		if rest[:1] != '/':
+			# make absolute pathname
+			import os
+			url = canonURL(basejoin(pathname2url(os.getcwd())+'/',rest))
+		elif rest[:3] == '///':
+			url = 'file:' + rest
+		else:
+			url = 'file://' + rest
+	return url
