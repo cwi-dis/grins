@@ -208,6 +208,7 @@
 #define IDD_EDITATTR_LAYOUT1            411
 #define IDD_EDITATTR_LAYOUT2            412
 #define IDD_EDITATTR_S1R3S6             413
+#define IDD_EDITATTR_SYNCHRONIZATION    414
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
