@@ -2609,6 +2609,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def __makeLayoutChannels(self):
 		ctx = self.__context
+
+		if len(self.__toplayouts) > 1 and features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set:
+			self.unsupportedfeature_error("multi top layouts are not supported in this version")
+		
 		for top in self.__toplayouts:
 			self.CreateLayout(self.__tops[top]['attrs'], top is None)
 		del self.__toplayouts
@@ -4519,15 +4523,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			msg = ''
 		if lineno is None:
-			message = 'unrecoverable error: %s' % message
+			message = 'Unrecoverable error: %s' % message
 		else:
-			message = 'unrecoverable error, line %d: %s' % (lineno, message)
+			message = 'Unrecoverable error, line %d: %s' % (lineno, message)
 		line = lineno
 		if line != None:
 			line = lineno-1
-		self.__errorList.append((msg+message, line))
+		self.__errorList.insert(0,(msg+message, line))
 		raise MSyntaxError, msg + message
 
+	def unsupportedfeature_error(self, message, lineno=None):
+		self.error(message+'. You can use the pro version', lineno)
+		
 	def fatalerror(self):
 		type, value, traceback = sys.exc_info()
 		if self.__printfunc is not None:
