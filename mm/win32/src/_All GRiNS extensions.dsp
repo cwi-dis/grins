@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="_All GRiNS extensions" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 5.00
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) External Target" 0x0106
@@ -13,18 +13,16 @@ CFG=_All GRiNS extensions - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "_All GRiNS extensions.mak"\
- CFG="_All GRiNS extensions - Win32 Debug"
+!MESSAGE NMAKE /f "_All GRiNS extensions.mak" CFG="_All GRiNS extensions - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "_All GRiNS extensions - Win32 Release" (based on\
- "Win32 (x86) External Target")
-!MESSAGE "_All GRiNS extensions - Win32 Debug" (based on\
- "Win32 (x86) External Target")
+!MESSAGE "_All GRiNS extensions - Win32 Release" (based on "Win32 (x86) External Target")
+!MESSAGE "_All GRiNS extensions - Win32 Debug" (based on "Win32 (x86) External Target")
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 
