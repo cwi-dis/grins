@@ -6,6 +6,8 @@ from debug import debug
 import MMAttrdefs
 error = 'Channel.error'
 
+from ChannelWMdeps import ChannelWM, ChannelWindowWM, _ChannelThreadWM
+
 channel_device = 0x4001
 
 # arm states
@@ -17,10 +19,13 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
-class Channel:
+class Channel(ChannelWM):
 	#
 	# The following methods can be called by higher levels.
 	#
+	chan_attrs = []
+	node_attrs = ['file']
+
 	def init(self, name, attrdict, scheduler, ui):
 		# Create and initialize a Channel object instance.
 		# The arguments are the name of the channel, an
@@ -503,7 +508,10 @@ class Channel:
 # dictionary with channels that have windows
 ChannelWinDict = {}
 
-class ChannelWindow(Channel):
+class ChannelWindow(Channel, ChannelWindowWM):
+	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff']
+	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'hicolor']
+
 	def init(self, name, attrdict, scheduler, ui):
 		self = Channel.init(self, name, attrdict, scheduler, ui)
 		ChannelWinDict[self._name] = self
@@ -607,7 +615,7 @@ class ChannelWindow(Channel):
 			self.played_display.close()
 			self.played_display = None
 
-class _ChannelThread:
+class _ChannelThread(_ChannelThreadWM):
 	def init(self):
 		self.threads = None
 		return self
@@ -633,8 +641,7 @@ class _ChannelThread:
 			print 'Warning: cannot import mm, so channel ' + \
 				  `self._name` + ' remains hidden'
 			return 0
-		self._player.toplevel.events.setcallback(self._deviceno, \
-			  self.callback, None)
+		self.do_show_wmdep()
 		return 1
 
 	def do_hide(self):
@@ -643,13 +650,12 @@ class _ChannelThread:
 		if self.threads:
 			self.threads.close()
 			self.threads = None
-		self._player.toplevel.events.setcallback(self._deviceno, \
-			  None, None)
+		self.do_hide_wmdep()
 
 	def play(self, node):
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
-		dummy = self._player.toplevel.events.testevent()
+		self.play_wmdep()
 		self.play_0(node)
 		if not self.is_showing() or self.syncplay:
 			self.play_1()
