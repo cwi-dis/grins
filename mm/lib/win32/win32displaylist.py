@@ -60,6 +60,7 @@ class _DisplayList:
 		self.starttime = 0
 		self._window = window			
 		window._displists.append(self)
+		self._canvas = window._canvas
 		self._buttons = []
 		self._curfg = window._fgcolor
 		self._fgcolor = window._fgcolor
@@ -167,7 +168,7 @@ class _DisplayList:
 		cmd = entry[0]
 		w = self._window
 		if cmd == 'clear' and entry[1]:
-			dc.FillSolidRect(w._canvas,RGB(entry[1]))
+			dc.FillSolidRect(self._canvas,RGB(entry[1]))
 		elif cmd == 'fg':
 			self._curfg = entry[1]
 		elif cmd == 'image':
@@ -364,7 +365,7 @@ class _DisplayList:
 				   dest_x, dest_y, width, height,rcKeep))
 		self._optimize((2,))
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
-		x, y, w, h = self._window._canvas
+		x, y, w, h = self._canvas
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
@@ -640,7 +641,7 @@ class _DisplayList:
 			x0, y0 = self._convert_coordinates((x, y))
 			list.append(('text', self._convert_color(self._fgcolor),f, x0, y0, str))
 			self._optimize((1,))
-			width=w._canvas[2]-w._canvas[0]
+			width=self._canvas[2]-self._canvas[0]
 			if width==0:width=1 
 			twidth,theight=f.TextSize(str)
 			self._curpos = x + float(twidth) / width, y
@@ -731,12 +732,12 @@ class _DisplayList:
 	# convert relative coordinates to (owner wnd) pixel coordinates
 	def _convert_coordinates(self, coordinates, units = UNIT_SCREEN):
 		return self._window._convert_coordinates(coordinates,
-					ref_rect = self._window._canvas, units = units)
+					ref_rect = self._canvas, units = units)
 
 	# convert (owner wnd) pixel coordinates to relative coordinates
 	def _pxl2rel(self,coordinates):
 		return self._window._pxl2rel(coordinates,
-					ref_rect = self._window._canvas)
+					ref_rect = self._canvas)
 
 	# Conver color (does nothing for win32)
 	def _convert_color(self, color):
