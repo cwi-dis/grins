@@ -218,8 +218,6 @@ class Scheduler(scheduler):
 	            node.setarmedmode(ARM_PLAYING)
 		    dummy = self.enter(0.0, 0, ch.play, \
 			      (node, self.decrement, (0, node, TL)))
-		    if self.setcurrenttime_callback:
-			    self.setcurrenttime_callback(node.t0)
 		self.seeking = 0
 		self.seek_node = None
 		self.seek_nodelist = []
@@ -307,8 +305,6 @@ class Scheduler(scheduler):
 						chan.arm_only, (node,))
 			    dummy = self.enter(0.0, 0, chan.play, \
 				(node, self.decrement, (0, node, TL)))
-			    if self.setcurrenttime_callback:
-				self.setcurrenttime_callback(node.t0)
 			else:
 			    dummy = self.enter(0.0, 0, \
 				self.decrement, (0, node, TL))
@@ -331,8 +327,6 @@ class Scheduler(scheduler):
 			self.decrement(d, n, s)
 		if node == self.playroot and side == TL:
 			# The whole mini-document is finished -- stop playing.
-			if self.setcurrenttime_callback:
-				self.setcurrenttime_callback(node.t1)
 			if self.play_all_bags:
 				# Hack: we don't now how recursive we are, so
 				# we remember self.frozen and fix it up later.

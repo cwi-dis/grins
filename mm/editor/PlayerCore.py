@@ -71,8 +71,6 @@ class PlayerCore(Scheduler):
 	def reset(self):
 		self.resettimer()
 		self.softresetchannels()
-		if self.setcurrenttime_callback:
-			self.setcurrenttime_callback(0.0)
 	#
 	# State transitions.
 	#

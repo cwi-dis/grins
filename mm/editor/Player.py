@@ -29,7 +29,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self = PlayerCore.init(self, toplevel)
 		self.queue = []
 		self.resettimer()
-		self.setcurrenttime_callback = None
 		self.playing = self.locked = 0
 		self.channelnames = []
 		self.measure_armtimes = 0
@@ -82,9 +81,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		for name in self.channelnames:
 			self.channels[name].save_geometry()
 	#
-	def set_setcurrenttime_callback(self, setcurrenttime):
-		self.setcurrenttime_callback = setcurrenttime
-	#
 	def make_form(self):
 		ftemplate = flp.parse_form('PlayerForm', 'form')
 		flp.create_full_form(self, ftemplate)
@@ -106,20 +102,9 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		i = self.cmenubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
-			#if self.channels[name].is_showing():
-			#	self.channels[name].hide()
-			#else:
-			#	self.channels[name].show()
 			self.channels[name].flip_visible()
 			self.toplevel.channelview.channels_changed()
 			self.makemenu()
-	#
-	#def calctiming_callback(self, (obj, arg)):
-	#	if obj.get_button() or 1:
-	#		del_timing(self.root)
-	#		Timing.changedtimes(self.root)
-	#		self.measure_armtimes = 1
-	#		obj.set_button(1)
 	#
 	def omenu_callback(self, obj, arg):
 		i = self.omenubutton.get_menu()
