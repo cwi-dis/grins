@@ -33,23 +33,28 @@ def ITEMrange(fr, to): return range(fr, to+1)
 ID_DIALOG_NODEATTR=523
 
 ITEM_SELECT=1
-ITEM_INFO=2
-ITEM_RESET=3
+ITEM_INFO_L1=2
+ITEM_INFO_L2=3
+ITEM_INFO_L3=4
+ITEM_INFO_ATTRNAME=5
+ITEM_INFO_DEFAULT=6
+ITEM_INFO_HELP=7
+ITEM_RESET=8
 
-ITEM_CANCEL=4
-ITEM_RESTORE=5
-ITEM_APPLY=6
-ITEM_OK=7
+ITEM_CANCEL=9
+ITEM_RESTORE=10
+ITEM_APPLY=11
+ITEM_OK=12
 
 LAST_COMMON_ITEM=7
 ITEMLIST_COMMON=ITEMrange(ITEM_SELECT, ITEM_OK)
 
 # Variant items
-ITEM_STRING=8
+ITEM_STRING=13
 
-ITEM_FILE_BROWSE=9
+ITEM_FILE_BROWSE=14
 
-ITEM_OPTION=10
+ITEM_OPTION=15
 
 ITEMLIST_NOTCOMMON=ITEMrange(ITEM_STRING, ITEM_OPTION)
 ITEMLIST_STRING=[ITEM_STRING]
@@ -252,27 +257,23 @@ class AttrEditorDialogField:
 		t = self.__type
 		if t == 'option':
 			self.__value = self.__parent._option.getselect()
-		self.__value =  self.__parent._getlabel(ITEM_STRING)
-		print '_save', t, self.__value
+		else:
+			self.__value =  self.__parent._getlabel(ITEM_STRING)
 		
 	def _show(self):
 		t = self.gettype()
 		value = self.__value
-		print '_show', t, value
-		explanation = self.gethelptext()
+		attrname, default, help = self.gethelpdata()
 		if t == 'file':
 			toshow=ITEMLIST_FILE
 			tohide=ITEMLISTNOT_FILE
-			# XXXX
 		elif t == 'option':
 			list = self.getoptions()
 			toshow=ITEMLIST_OPTION
 			tohide=ITEMLISTNOT_OPTION
-			# XXXX
 		else:
 			toshow=ITEMLIST_STRING
 			tohide=ITEMLISTNOT_STRING
-			# XXXX
 		self.__parent._hideitemlist(tohide)
 		if t == 'option':
 			list = self.getoptions()
@@ -283,7 +284,9 @@ class AttrEditorDialogField:
 			self.__parent._option.setitems(list, value)
 		else:
 			self.__parent._setlabel(ITEM_STRING, value)
-		self.__parent._setlabel(ITEM_INFO, explanation)
+		self.__parent._setlabel(ITEM_INFO_ATTRNAME, attrname)
+		self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
+		self.__parent._setlabel(ITEM_INFO_HELP, help)
 		self.__parent._showitemlist(toshow)
 		
 	def close(self):
@@ -316,7 +319,6 @@ class AttrEditorDialogField:
 		"""
 		if self.__parent._is_current(self):
 			self._save()
-		print 'getvalue', self.__value
 		return self.__value
 
 	def setvalue(self, value):
@@ -325,11 +327,9 @@ class AttrEditorDialogField:
 		Arguments (no defaults):
 		value -- string giving the new value
 		"""
-		print 'setvalue', value
 		self.__value = value
 		if not self.__parent._is_current(self):
 			return
-		print 'and show it'
 		t = self.__type
 		if t == 'option':
 			if not value:
