@@ -173,7 +173,7 @@ def getvalidchanneltypes(context):
 		return commonchanneltypes + otherchanneltypes
 	rv = SMILchanneltypes
 	import features
-	if features.compatibility == features.SMIL10:
+	if features.compatibility in (features.SMIL10, features.Boston):
 		rv = rv + SMILextendedchanneltypes
 	if context.attributes.get('project_boston'):
 		rv = rv + SMILBostonChanneltypes
