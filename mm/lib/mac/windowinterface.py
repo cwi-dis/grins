@@ -86,6 +86,7 @@ GetYesNoCancel = mw_dialogs.GetYesNoCancel
 GetOKCancel = mw_dialogs.GetOKCancel
 showmessage = mw_dialogs.showmessage
 showquestion = mw_dialogs.showquestion
+TraceDialog = mw_dialogs.TraceDialog
 
 beep = mw_toplevel.beep
 _qtavailable = mw_toplevel._qtavailable

@@ -349,13 +349,14 @@ class ProgressDialog:
 				self.cancelcallback()
 		
 class _SelectionDialog(DialogWindow):
+	DIALOG_ID = ID_SELECT_DIALOG
 	def __init__(self, listprompt, itemlist, default=None, hascancel=1):
 		# First create dialogwindow and set static items
 		if hascancel:
-			DialogWindow.__init__(self, ID_SELECT_DIALOG, 
+			DialogWindow.__init__(self, self.DIALOG_ID, 
 					default=ITEM_SELECT_OK, cancel=ITEM_SELECT_CANCEL)
 		else:
-			DialogWindow.__init__(self, ID_SELECT_DIALOG, default=ITEM_SELECT_OK)
+			DialogWindow.__init__(self, self.DIALOG_ID, default=ITEM_SELECT_OK)
 		if not hascancel:
 			self._wid.HideDialogItem(ITEM_SELECT_CANCEL)
 		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_LISTPROMPT)
@@ -401,6 +402,26 @@ class _SelectionDialog(DialogWindow):
 			self.OkCallback(item)
 			self.close()
 		return 1
+		
+class TraceDialog(_SelectionDialog):
+	DIALOG_ID = ID_TRACE_DIALOG
+	def __init__(self):
+		_SelectionDialog.__init__(self, "Stack", [], None, 0)
+		self._wid.HideDialogItem(ITEM_SELECT_OK)
+		self.itemcount = 0
+		
+	def setitem(self, item, value, clear=0):
+		oldport = Qd.GetPort()
+		if item >= self.itemcount:
+			self._listwidget.insert(-1, ['[untraced]']*(item-self.itemcount+1))
+			self.itemcount = item+1
+		self._listwidget.replace(item, value)
+		if clear:
+			for i in range(item+1, self.itemcount):
+				self._listwidget.replace(i, '')
+		self._listwidget.select(item, autoscroll=1)
+		self._wid.DrawDialog()
+		Qd.SetPort(oldport)
 		
 class _CallbackSelectionDialog(_SelectionDialog):
 	def __init__(self, list, title, prompt):
