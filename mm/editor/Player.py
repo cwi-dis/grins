@@ -63,6 +63,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.channels = {}
 		self.channeltypes = {}
 		self.timing_changed = 0
+		self.ff = 0
+		self.seeking = 0
+		self.seek_node = None
 		return BasicDialog.init(self, 0, 0, 'Player')
 	#
 	# EditMgr interface (as dependent client).
@@ -162,6 +165,10 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.frozen = 0
 		self.frozen_value = 0
 		self.latecount = 0.0
+	#
+	def skiptimer(self, amount):
+		self.origin = self.origin + amount
+	#
 	def freeze(self):
 	        if not self.frozen:
 		    self.frozen_value = self.timefunc()
@@ -193,7 +200,13 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			when = self.queue[0][0]
 		else:
 			when = now + 1.0
-		delay = min(when - now, 1.0 - now%1.0)
+		delay = when - now
+		if (self.ff or self.seeking) and delay > 0:
+			self.skiptimer(delay)
+			self.timerobject.set_timer(0.001)
+			print 'Updatetimer: skipped ', delay
+			return
+		delay = min(delay, 1.0 - now%1.0)
 		if delay <= 0:
 			delay = 0.001 # Immediate, but nonzero
 		if self.rate == 0.0:
@@ -206,6 +219,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			rtime = self.rtpool.shortest()
 			if delay == 0.0 or rtime < delay:
 				delay = 0.001
+		print 'Next timer: ', delay
 		self.timerobject.set_timer(delay)
 	#
 	# User interface.
@@ -255,6 +269,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		Timing.calctimes(self.playroot)
 		obj.set_button(0)
 	#
+	def ff_callback(self, (obj, arg)):
+		print self.queue # DBG
+		if not self.playing:
+			obj.set_button(not obj.get_button())
+			return
+		self.ff = obj.get_button()
+		self.updatetimer()
+	#
 	def dummy_callback(self, dummy):
 		pass
 	#
@@ -276,6 +298,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				break
 			del self.queue[0]
 			void = action(argument)
+		if not self.queue and self.rate > 0.0:
+			print 'Huh? Nothing in the queue?'
 		if not self.queue or self.rate == 0.0:
 			delay = 10000.0		# Infinite
 			now = self.timefunc()
@@ -289,6 +313,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# State transitions.
 	#
 	def play(self):
+		self.ff = 0
+		self.seeking = 0
 		if not self.playing:
 			if not self.start_playing(1.0):
 				return
@@ -307,6 +333,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.play()
 	#
 	def pause(self):
+		self.ff = 0
+		self.seeking = 0
 		if self.playing:
 			if self.rate == 0.0:	# Paused, continue
 				self.setrate(self.oldrate)
@@ -318,6 +346,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.showstate()
 	#
 	def stop(self):
+		self.ff = 0
+		self.seeking = 0
 		print 'self.stop, playing=', self.playing
 		if self.playing:
 			self.stop_playing()
@@ -330,6 +360,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		return not self.locked
 	#
 	def showstate(self):
+		self.ffbutton.set_button(self.ff)
 		if not self.playing:
 			self.playbutton.set_button(0)
 			self.pausebutton.set_button(0)
@@ -459,6 +490,18 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def start_playing(self, rate):
 		if not self.maystart():
 			return 0
+		arm_events = self.resume_1_playing(rate)
+		for pn in arm_events:
+			d = pn.GetRawAttr('arm_duration')
+			c = self.getchannel(pn)
+			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
+				  c.arm_only, pn)
+		self.resume_2_playing()
+		return 1
+	#
+	def resume_1_playing(self,rate):
+		for cname in self.channelnames:
+			self.channels[cname].playerseek_lastnode = None
 		MMAttrdefs.startstats()
 		self.playing = 1
 		self.reset()
@@ -468,22 +511,16 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.showstate() # Give the anxious user a clue...
 		Timing.optcalctimes(self.playroot)
 		arm_events = Timing.getinitial(self.playroot)
-		for pn in arm_events:
-			d = pn.GetRawAttr('arm_duration')
-			c = self.getchannel(pn)
-			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
-				  c.arm_only, pn)
+		return arm_events
+	def resume_2_playing(self):
 		Timing.prepare(self.playroot)
 		d = int(self.playroot.t1 - self.playroot.t0)
 		label = `d/60` + ':' + `d/10%6` + `d % 10`
 		self.duration_ind.label = label
 		self.playroot.counter[HD] = 1
 		self.decrement(0, self.playroot, HD)
-		return 1
 	#
-	def stop_playing(self):
-		print 'Stop playing'
-		self.playing = 0
+	def suspend_playing(self):
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
 		print 'Flush rtpool'
@@ -493,6 +530,10 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		print 'unarm chview'
 		chv = self.toplevel.channelview
 		chv.unarm_all()
+	def stop_playing(self):
+		print 'Stop playing'
+		self.playing = 0
+		self.suspend_playing()
 		if self.timing_changed:
 			Timing.calctimes(self.playroot)
 			Timing.optcalctimes(self.playroot)
@@ -500,7 +541,26 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		a = MMAttrdefs.stopstats()
 		MMAttrdefs.showstats(a)
 	#
+	def seek_done(self):
+		skipchannel = self.getchannel(self.seek_node)
+		for cname in self.channelnames:
+		    ch = self.channels[cname]
+		    if ch == skipchannel: continue
+		    node = ch.playerseek_lastnode
+		    if node:
+			dummy = self.enter(0.0, -1, \
+				  ch.arm_and_measure, node)
+			self.setarmedmode(node, 3)
+			dummy = self.enter(0.0, 0, ch.play, \
+				  (node, self.decrement, (0, node, TL)))
+			if self.setcurrenttime_callback:
+				self.setcurrenttime_callback(node.t0)
+		self.seeking = 0
+		self.seek_node = None
+	def dummy(arg):
+		pass
 	def decrement(self, (delay, node, side)):
+		print 'DEC', delay, node, side, ' of ', node.counter[side]
 	        self.freeze()
 		if self.abcontrol:
 			a, b = self.abcontrol
@@ -510,6 +570,13 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if delay > 0 and doit: # Sync arc contains delay
 			id = self.enter(delay, 0, self.decrement, \
 						(0, node, side))
+			self.unfreeze()
+			return
+		if side == TL and node.counter[side] == 0:
+			# To be fixed soon...
+			print 'Skip spurious decrement of tail on ', \
+				  MMAttrdefs.getattr(node, 'name')
+			self.unfreeze()
 			return
 		x = node.counter[side] - 1
 		node.counter[side] = x
@@ -517,7 +584,16 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		        self.unfreeze()
 			return # Wait for other sync arcs
 		if x < 0:
+			print 'Node counter below zero on ', \
+				  MMAttrdefs.getattr(node, 'name'), \
+				  MMAttrdefs.getattr(node, 'channel')
+			print self.queue
 			raise CheckError, 'counter below zero!?!?'
+		if self.seeking and side == HD:
+			# We're searching for a node after a hyperjump
+			# See if this is the correct node.
+			if node == self.seek_node:
+			        self.seek_done()
 		if node.GetType() not in interiortypes:
 		    if side == HD:
 			if doit:
@@ -525,7 +601,15 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    if chan == None:
 				print 'Play node w/o channel'
 				doit = 0
-			if doit:
+			if doit and self.seeking:
+			    chan.playerseek_lastnode = node
+			    d = chan.getduration(node)
+			    print 'Skip node duration=', d
+			    dummy = self.enter(d, 0, self.decrement, (0, node, TL))
+			elif doit:
+			    if self.ff:
+				self.ff = 0
+				self.ffbutton.set_button(0)
 			    #
 			    # Begin tricky code section. First we have to find
 			    # out wether the event has already been armed or
@@ -536,6 +620,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    # we do the arm before the play.
 			    #
 			    must_arm = 1
+			    print 'Node ', MMAttrdefs.getattr(node, 'name')
 			    try:
 				    if node.prearm_event == None:
 					    must_arm = 0
@@ -604,6 +689,39 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def setarmedmode(self, node, mode):
 		chv = self.toplevel.channelview
 		chv.setarmedmode(node, mode)
+
+	#
+	# Callback for anchor activations
+	#
+	def anchorfired(self, node, anchorlist):
+		for i in anchorlist:
+			print 'Anchor fired: ', i
+		destlist = []
+		for i in anchorlist:
+			aid = (node.GetUID(), i[0])
+			print 'Anchorid: ', aid
+			rv = self.context.hyperlinks.findsrclink(aid)
+			destlist = destlist + rv
+		print 'Destinations:', destlist
+		if not destlist:
+			fl.show_message('No hyperlink sourced at this anchor')
+			return
+		if len(destlist) <> 1:
+			print 'Sorry, not supported yet'
+			return
+		dest = destlist[0][1]
+		if destlist[0][0] <> 0:
+			print 'Sorry, will do JUMP anyway'
+		try:
+			self.seek_node = self.context.mapuid(dest[0])
+			self.suspend_playing()
+			self.seeking = 1
+			self.playroot = self.root
+			dummy = self.resume_1_playing(1.0)
+			self.resume_2_playing()
+		except NoSuchUIDError:
+			fl.show_message('Dangling hyperlink selected')
+			return
 
 #
 # del_timing removes all arm_duration attributes (so they will be recalculated)
