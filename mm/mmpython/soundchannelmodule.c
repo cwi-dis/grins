@@ -494,8 +494,9 @@ sound_player(self)
 }
 
 static int
-sound_resized(self)
+sound_resized(self, x, y, w, h)
 	mmobject *self;
+	int x, y, w, h;
 {
 	denter(sound_resized);
 	return 1;
