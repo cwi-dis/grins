@@ -1805,18 +1805,26 @@ class MMNode_body:
 	helpertype = "looping"
 
 	def __init__(self, parent):
-		self.fullduration = None
-		self.scheduled_children = 0
 		self.parent = parent
-		self.sched_children = []
-		self.starting_children = 0
-		self.arcs = []
-		self.durarcs = []
-		self.time_list = []
-		self.has_min = 0
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
+		self.srdict = {}
+		self.events = {}	# events others are interested in
+		self.sched_children = [] # arcs that depend on us
+		self.scheduled_children = 0
+		self.starting_children = 0
+		self.arcs = []
+		self.durarcs = []
+		self.deparcs = {'begin': [], 'end': []}	# arcs that depend on the event
+		self.depends = {'begin': [], 'end': []}	# arcs on which the event depends
+		self.time_list = []
+		self.fullduration = None
+		# stuff to do with the min attribute
+		self.has_min = 0
+##		self.delayed_arcs = []
+		self.delayed_end = 0
+		self.delayed_play_done = 0
 		if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
