@@ -180,7 +180,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.cbcmifanchor(href, list)
 
 	def cbcmifanchor(self, href, list):
-		print 'DBG cbcmifanchor:', href
 		# Workaround for something that turns "cmif:xx" anchors
 		# into "cmif:///xx" anchors
 		if href[:8] == "cmif:///":
