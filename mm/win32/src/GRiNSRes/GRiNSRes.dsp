@@ -447,6 +447,10 @@ SOURCE=.\RES\icon_con.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\icon_med.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Image.ico
 # End Source File
 # Begin Source File

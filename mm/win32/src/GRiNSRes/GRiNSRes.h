@@ -267,7 +267,9 @@
 #define IDD_EDITATTR_LAYOUT2REAL        465
 #define IDI_ICON_CONTEXT                465
 #define IDD_EDITATTR_REALEXTENSION      466
+#define IDI_ICON_MEDIACLOSED            466
 #define IDD_EDITATTR_S7F                467
+#define IDI_ICON_MEDIAOPEN              467
 #define IDD_EDITATTR_SERVER             468
 #define IDD_EDITATTR_S1R3S8             469
 #define IDD_EDITATTR_REALEXTENSION2     470
