@@ -902,13 +902,20 @@ class MACDialog:
 			
 	def _setlabel(self, item, text):
 		"""Set the text of a static text or edit text"""
+		if '\n' in text:
+			text = string.split(text, '\n')
+			text = string.join(text, '\r')
 		tp, h, rect = self._dialog.GetDialogItem(item)
 		Dlg.SetDialogItemText(h, text)
 
 	def _getlabel(self, item):
 		"""Return the text of a static text or edit text"""
 		tp, h, rect = self._dialog.GetDialogItem(item)
-		return Dlg.GetDialogItemText(h)
+		text = Dlg.GetDialogItemText(h)
+		if '\r' in text:
+			text = string.split(text, '\r')
+			text = string.join(text, '\n')
+		return text
 
 	def close(self):
 		"""Close the dialog and free resources."""
