@@ -88,6 +88,7 @@ class XMLParser:
     __accept_unquoted_attributes = 0
     __accept_missing_endtag_name = 0
     __map_case = 0
+    __accept_utf8 = 0
 
     # Interface -- initialize and reset this instance
     def __init__(self, **kw):
@@ -97,6 +98,8 @@ class XMLParser:
             self.__accept_missing_endtag_name = kw['accept_missing_endtag_name']
         if kw.has_key('map_case'):
             self.__map_case = kw['map_case']
+        if kw.has_key('accept_utf8'):
+            self.__accept_utf8 = kw['accept_utf8']
         self.reset()
 
     # Interface -- reset this instance.  Loses all unprocessed data
@@ -199,7 +202,7 @@ class XMLParser:
                 self.__at_start = 0
                 if not self.stack and space.match(data) is None:
                     self.syntax_error('data not in content')
-                if illegal.search(data):
+                if not self.__accept_utf8 and illegal.search(data):
                     self.syntax_error('illegal character in content')
                 self.handle_data(data)
                 self.lineno = self.lineno + string.count(data, '\n')
@@ -343,7 +346,7 @@ class XMLParser:
         if end and i < n:
             data = rawdata[i]
             self.syntax_error("bogus `%s'" % data)
-            if illegal.search(data):
+            if not self.__accept_utf8 and illegal.search(data):
                 self.syntax_error('illegal character in content')
             self.handle_data(data)
             self.lineno = self.lineno + string.count(data, '\n')
@@ -370,7 +373,8 @@ class XMLParser:
             self.syntax_error("`--' inside comment")
         if rawdata[res.start(0)-1] == '-':
             self.syntax_error('comment cannot end in three dashes')
-        if illegal.search(rawdata, i+4, res.start(0)):
+        if not self.__accept_utf8 and \
+           illegal.search(rawdata, i+4, res.start(0)):
             self.syntax_error('illegal character in comment')
         self.handle_comment(rawdata[i+4: res.start(0)])
         return res.end(0)
@@ -431,7 +435,8 @@ class XMLParser:
         res = cdataclose.search(rawdata, i+9)
         if res is None:
             return -1
-        if illegal.search(rawdata, i+9, res.start(0)):
+        if not self.__accept_utf8 and \
+           illegal.search(rawdata, i+9, res.start(0)):
             self.syntax_error('illegal character in CDATA')
         if not self.stack:
             self.syntax_error('CDATA not in content')
@@ -446,7 +451,7 @@ class XMLParser:
         if end is None:
             return -1
         j = end.start(0)
-        if illegal.search(rawdata, i+2, j):
+        if not self.__accept_utf8 and illegal.search(rawdata, i+2, j):
             self.syntax_error('illegal character in processing instruction')
         res = tagfind.match(rawdata, i+2)
         if res is None:
@@ -479,7 +484,7 @@ class XMLParser:
                 self.syntax_error('xml:namespace prefix not unique')
             self.__namespaces[prefix] = attrdict['ns']
         else:
-            if string.find(string.lower(name), 'xml') >= 0:
+            if string.lower(name) == 'xml':
                 self.syntax_error('illegal processing instruction target name')
             self.handle_proc(name, rawdata[k:j])
         return end.end(0)
