@@ -1136,7 +1136,7 @@ class MMChannelTree:
 			pChan = self.getparent(pChan)
 		return iChan
 
-	# create a new SMILCssResolver
+	# create a new linked SMILCssResolver
 	# it uses the context instance since it absorbed css attrs
 	def newCssResolver(self):
 		blackhole = self.__ctx.cssResolver
@@ -1170,6 +1170,11 @@ class MMChannelTree:
 				csssubreg.copyRawAttrs(blackhole.getCssObj(node))
 				csssubreg.media = resolver.newMedia(node.GetDefaultMediaSize, node)
 				csssubreg.media.copyRawAttrs(blackhole.getCssObj(node).media)
+				mmchan = self.GetChannel()
+				if mmchan:
+					reg = mmchan.GetLayoutChannel()
+					csssubreg.link(resolver.getCssObj(reg))
+					csssubreg.media.link(csssubreg)
 
 	def __calc1(self):
 		import ChannelMap
