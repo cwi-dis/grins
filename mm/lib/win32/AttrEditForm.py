@@ -1404,6 +1404,18 @@ class StringNolabelCtrl(StringCtrl):
 class ColorNolabelCtrl(ColorCtrl):
 	want_label = 0
 
+class EmptyAttrPage(AttrPage):
+	def __init__(self, form):
+		AttrPage.__init__(self, form)
+		self._title = 'No properties'
+		self._attr = None
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_EMPTY
+
+	def createctrls(self):
+		return {}
+
 ###############################	
 class SingleAttrPage(AttrPage):
 	# These map attribute names to (dialog-resource-id, constructor-function, control-ids)
@@ -3929,6 +3941,14 @@ class AttrEditForm(GenFormView):
 			if p:
 				initindex = self._pages.index(p)
 		self._initattr = None
+
+		# Create a dummy page if there is nothing there
+		if not self._pages:
+			page = EmptyAttrPage(self)
+			self._pages.append(page)
+			page.do_init()
+			prsht.AddPage(page)
+			page.settabix(0)
 
 		self.CreateWindow(parent)
 		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
