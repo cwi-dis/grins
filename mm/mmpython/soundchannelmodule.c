@@ -46,6 +46,7 @@ struct sound {
 	int s_port;		/* file descriptor of audio device */
 #endif
 	double s_playrate;	/* speed with which to play samples */
+	double s_queuesize;	/* queue size in seconds */
 	struct sound_data s_play;
 	struct sound_data s_arm;
 	int s_pipefd[2];
@@ -69,12 +70,33 @@ sound_init(self)
 	mmobject *self;
 {
 	long buf[2];
+	PyObject *v;
 
 	denter(sound_init);
 	self->mm_private = malloc(sizeof(struct sound));
 	if (self->mm_private == NULL) {
 		(void) PyErr_NoMemory();
 		return 0;
+	}
+	PRIV->s_queuesize = 0;
+	v = PyDict_GetItemString(self->mm_attrdict, "queuesize");
+	if (v) {
+		if (PyInt_Check(v))
+			PRIV->s_queuesize = (double) PyInt_AsLong(v);
+		else if (PyFloat_Check(v))
+			PRIV->s_queuesize = PyFloat_AsDouble(v);
+		else {
+			ERROR(sound_init, PyExc_TypeError, "bad type for queusize");
+			free(self->mm_private);
+			self->mm_private = NULL;
+			return 0;
+		}
+		if (PRIV->s_queuesize < 0) {
+			ERROR(sound_init, PyExc_RuntimeError, "queusize can't be negative");
+			free(self->mm_private);
+			self->mm_private = NULL;
+			return 0;
+		}
 	}
 	PRIV->s_play.sampbuf = NULL;
 	PRIV->s_arm.sampbuf = NULL;
@@ -166,6 +188,9 @@ static void
 sound_armer(self)
 	mmobject *self;
 {
+#ifdef __sgi
+	int maxbufsize = PRIV->s_arm.nchannels == 1 ? 262139 : 131069;
+#endif
 	denter(sound_armer);
 
 	if (PRIV->s_arm.sampbuf) {
@@ -173,6 +198,12 @@ sound_armer(self)
 		PRIV->s_arm.sampbuf = NULL;
 	}
 	PRIV->s_arm.bufsize = PRIV->s_arm.framerate * PRIV->s_arm.nchannels;
+	if (PRIV->s_queuesize > 0)
+		PRIV->s_arm.bufsize *= PRIV->s_queuesize;
+#ifdef __sgi
+	if (PRIV->s_arm.bufsize > maxbufsize)
+		PRIV->s_arm.bufsize = maxbufsize;
+#endif
 	if (PRIV->s_arm.bufsize > PRIV->s_arm.nsamples)
 		PRIV->s_arm.bufsize = PRIV->s_arm.nsamples;
 	PRIV->s_arm.sampbuf = malloc(PRIV->s_arm.bufsize*PRIV->s_arm.sampwidth);
@@ -244,6 +275,7 @@ sound_player(self)
 #endif
 #ifdef sun
 	Audio_hdr hdr;
+	Audio_info audio_info;
 #endif
 	int nsamps = PRIV->s_play.nsamples;
 	int n;
@@ -288,6 +320,7 @@ sound_player(self)
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.sampwidth);
 	ALsetchannels(config, PRIV->s_play.nchannels);
+	ALsetqueuesize(config, PRIV->s_play.bufsize);
 	
 	PRIV->s_port = ALopenport("sound channel", "w", config);
 	portfd = ALgetfd(PRIV->s_port);
@@ -310,6 +343,9 @@ sound_player(self)
 	hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
 	audio_set_play_config(PRIV->s_port, &hdr);
 	audio_set_eof(PRIV->s_port, 0);
+	audio_getinfo(PRIV->s_port, &audio_info);
+	audio_info.play.buffer_size = PRIV->s_play.bufsize;
+	audio_setinfo(PRIV->s_port, &audio_info);
 #endif
 	PRIV->s_flag |= PORT_OPEN;
 	up_sema(PRIV->s_sema);

@@ -64,6 +64,10 @@
 (channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node/subtree' inherited)
 
+(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
+    'Crop image.  Values are fractions to crop from top, bottom, left, right.'
+	channel)
+
 (cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
 	 'Window position for Time chart view' raw)
 
@@ -131,16 +135,6 @@
 (nonlocal (bool) 0 'Remote only' default
 	'Ignore incoming messages from local machine' raw)
 
-(scale (float) 0.0 'Scale factor' default
-	'Image magnification (0.0 means fit in window)' channel)
-
-(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
-    'Crop image.  Values are fractions to crop from top, bottom, left, right.'
-	channel)
-
-(scalefilter (name) '' 'Scaling filter' default
-	'Name of filter used after image scaling' channel)
-
 (player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
 	 'Window position for player control panel' raw)
 
@@ -152,6 +146,15 @@
 
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
+
+(queuesize (float) 0 'Queue size' default
+	'Audio playback queue size' channel)
+
+(scale (float) 0.0 'Scale factor' default
+	'Image magnification (0.0 means fit in window)' channel)
+
+(scalefilter (name) '' 'Scaling filter' default
+	'Name of filter used after image scaling' channel)
 
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw)
