@@ -10,8 +10,8 @@ from ViewDialog import ViewDialog
 import windowinterface
 
 class StyleSheet(ViewDialog):
-	def init(self, toplevel):
-		self = ViewDialog.init(self, 'style_')
+	def __init__(self, toplevel):
+		ViewDialog.__init__(self, 'style_')
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
 		self.context = self.root.GetContext()
@@ -31,7 +31,6 @@ class StyleSheet(ViewDialog):
 			left = None, right = None, top = separator,
 			vertical = 0)
 		self.showing = 0
-		return self
 
 	def setwaiting(self):
 		pass
