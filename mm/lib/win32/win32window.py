@@ -3006,25 +3006,29 @@ class _ResizeableDisplayList(_DisplayList):
 		elif cmd == 'image':
 			imgid = entry[1]
 			fit = entry[2]
+			lm, tm, wm, hm = wnd.LRtoDR(entry[3])
+			rm, bm = lm + wm, tm + hm
 			wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
 			wi, hi = wnd.LPtoDP((wi, hi))
 			if fit=='fill':
-				gear32sd.device_rect_set(imgid, ltrb)
+				gear32sd.device_rect_set(imgid, (lm, tm, rm, bm))
 			elif fit=='meet':
-				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, ltrb, gear32sd.IG_ASPECT_DEFAULT)
-				gear32sd.device_rect_set(imgid,(x,y,x+rp-lp,y+bp-tp))
+				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (lm, tm, rm, bm), gear32sd.IG_ASPECT_DEFAULT)
+				gear32sd.device_rect_set(imgid,(lm,tm,lm+rp-lp,tm+bp-tp))
 			elif fit=='hidden':
-				gear32sd.device_rect_set(imgid,(x,y,x+wi,y+hi))
+				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
 			elif fit=='slice':
-				wr = w/float(wi)
-				hr = h/float(hi)
+				wr = wm/float(wi)
+				hr = hm/float(hi)
 				if wr>hr: r = wr
 				else: r = hr
 				wp, hp = int(wi*r+0.5), int(hi*r+0.5)
-				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (x,y,x+wp,y+hp), gear32sd.IG_ASPECT_DEFAULT)
-				gear32sd.device_rect_set(imgid,(x,y,x+rp-lp,y+bp-tp))
+				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (lm,tm,lm+wp,tm+hp), gear32sd.IG_ASPECT_DEFAULT)
+				gear32sd.device_rect_set(imgid,(lm,tm,lm+rp-lp,tm+bp-tp))
 			elif fit=='scroll':
-				gear32sd.device_rect_set(imgid,(x,y,x+wi,y+hi))
+				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
+			else:
+				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
 			gear32sd.display_desktop_pattern_set(imgid,0)
 			gear32sd.display_image(imgid,dc.GetSafeHdc())
 		elif cmd == 'label':
@@ -3035,7 +3039,7 @@ class _ResizeableDisplayList(_DisplayList):
 			_DisplayList._do_render(self, entry, dc, region)
 
 	scale2fit = {1:'hidden',0:'meet',-1:'slice',-2:'meed_hidden',-3:'fill', -4:'scroll'}
-	def newimage(self, filename, fit='hidden'):
+	def newimage(self, filename, fit='hidden', mediadisplayrect = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 
@@ -3049,7 +3053,9 @@ class _ResizeableDisplayList(_DisplayList):
 		except:
 			print 'failed to load', filename
 			return
-		self._list.append(('image', imgid, fit))
+		if mediadisplayrect is None:
+			mediadisplayrect = self._window._rect
+		self._list.append(('image', imgid, fit, mediadisplayrect))
 
 	def newlabel(self, str):
 		if self._rendered:
