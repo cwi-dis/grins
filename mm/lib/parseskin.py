@@ -56,9 +56,10 @@ error = 'parseskin.error'
 #	"SMIL MMS Profile"
 #
 # In addition to the above commands, you can also have lines to set
-# system attributes.  These lines are single Python assignments and
-# start with "system_".  E.g.
+# preference settings.  Any setting that can be set in the grprefs
+# file can be set here with the same syntax.  E.g.
 #	system_bitrate = 33600
+#	centerskin = 0
 #
 # Example skin definition file:
 #	image Classic.gif
@@ -83,6 +84,8 @@ pss4 = re.compile(r'\bpss4\b', re.IGNORECASE)
 pss5 = re.compile(r'\bpss5\b', re.IGNORECASE)
 basic = re.compile(r'\bbasic\b', re.IGNORECASE)
 
+settingre = re.compile(r'(?P<key>[a-zA-Z][a-zA-Z0-9_]*)\s*=')
+
 def parsegskin(file):
 	dict = {}
 	lineno = 0
@@ -104,7 +107,9 @@ def parsegskin(file):
 		if not line:
 			continue
 
-		if line[:7] == 'system_':
+		res = settingre.match(line)
+		if res is not None and \
+		   settings.default_settings.has_key(res.group('key')):
 			exec(line, prefs)
 			continue
 
@@ -268,7 +273,10 @@ def parsegskin(file):
 	if dict.has_key('image') and not dict.has_key('display'):
 		raise error, 'display region missing from skin description file'
 	settings.switch_profile(profile + modules)
-	for key, val in prefs.items():
-		if key[:1] != '_':
-			settings.set(key, val)
+	if prefs:
+		settings.transaction()
+		for key, val in prefs.items():
+			if key[:1] != '_':
+				settings.set(key, val)
+		settings.commit()
 	return dict
