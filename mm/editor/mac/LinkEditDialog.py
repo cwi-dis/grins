@@ -468,7 +468,10 @@ class LinkEditorDialog(windowinterface.MACDialog):
 				ITEMLIST_EDITOR_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 		self.linkdirsetchoice(dir)
 		self.linktypesetchoice(type)
-		self.show()
+		
+	def show(self):
+		windowinterface.MACDialog.show(self)
+		self.rungrabbed()
 				
 	def _close_window(self, *dummies):
 		self.delete_callback()
