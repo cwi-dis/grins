@@ -18,7 +18,7 @@ import CheckInsideArea
 from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT, ICONSIZE_PXL
-from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER
+from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER, UNIT_PXL
 import mw_globals
 import mw_fonts
 import mw_resources
@@ -979,22 +979,39 @@ class _Button:
 		
 	def _do_highlight(self):
 		pass
+		
+	def _convert_point(self, point):
+		return self._dispobj._window._convert_coordinates(point)
 
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
 		# XXXX Only rectangulars for now
-		if self._shape != A_SHAPETYPE_RECT:
-			return None
-#		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
 		if not self._insidetemporal():
 			return None
-		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
-		x1, y1 = x0+w, y0+h
-		x0, y0 = Qd.LocalToGlobal((x0, y0))
-		x1, y1 = Qd.LocalToGlobal((x1, y1))
-		box = x0, y0, x1, y1
 		rgn = Qd.NewRgn()
-		Qd.RectRgn(rgn, box)
+		if self._shape == A_SHAPETYPE_RECT:
+			x0, y0 = self._convert_point(self._coordinates[0:2])
+			x1, y1 = self._convert_point(self._coordinates[2:4])
+			box = x0, y0, x1, y1
+			Qd.RectRgn(rgn, box)
+		elif self._shape == A_SHAPETYPE_POLY:
+			Qd.OpenRgn()
+			xl, yl = self._convert_point(self._coordinates[-2:])
+			Qd.MoveTo(xl, yl)
+			for i in range(0, len(self._coordinates), 2):
+				x, y = self._convert_point(self._coordinates[i:i+2])
+				Qd.LineTo(x, y)
+			Qd.CloseRgn(rgn)
+		elif self._shape == A_SHAPETYPE_CIRCLE:
+			print 'Circle not supported yet'
+		elif self._shape == A_SHAPETYPE_ELIPSE:
+			# Note: rx/ry are width/height, not points
+			x, y, rx, ry = self._dispobj._window._convert_coordinates(self._coordinates)
+			Qd.OpenRgn()
+			Qd.FrameOval((x-rx, y-ry, x+rx, y+ry))
+			Qd.CloseRgn(rgn)
+		else:
+			print 'Invalid shape type', self._shape
 		return rgn
 
 	def _inside(self, x, y):

@@ -1204,6 +1204,9 @@ class _Toplevel(_Event):
 			otherrgn = frontwin._get_button_region()
 			rgn = Qd.NewRgn()
 			Qd.CopyRgn(otherrgn, rgn)
+			Qd.SetPort(frontwin._onscreen_wid)
+			xglob, yglob = Qd.LocalToGlobal((0, 0))
+			Qd.OffsetRgn(rgn, xglob, yglob)
 		elif which == 'nobuttons':
 			otherrgn1 = self._mkmouseregion('inside', frontwin)
 			otherrgn2 = self._mkmouseregion('buttons', frontwin)
