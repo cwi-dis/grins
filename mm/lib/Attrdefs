@@ -28,10 +28,10 @@
 # blank lines and comments may be inserted freely.
 
 (accesskey (string) '' 'Access key' default
-	'Key to actuate anchor' raw (smil2 cmif))
+	'Keyboard shortcut to actuate anchor' raw (smil2 cmif))
 
 (actuate (enum onRequest onLoad) onRequest 'Anchor type' default
-	'How the anchor gets actuated' raw (smil2 cmif))
+	'Does the anchor fire automatically?' raw (smil2 cmif))
 
 (fragment (string) '' 'Fragment name' default
 	'Fragment identifier' raw (template smil2 cmif))
@@ -40,29 +40,29 @@
 	'Shape of anchor' raw (template smil2 cmif))
 
 (acoords (list (enclosed (float))) () 'Coordinates' acoords
-	'Anchor coordinates' raw (template smil2 cmif))
+	'Anchor coordinates, meaning depends on shape' raw (template smil2 cmif))
 
 (show (enum new pause replace) replace 'Show' default
-	'How to show current presentation after hyperjump' raw (smil2))
+	'Does the new presentation replace the old one?' raw (smil2))
 
 (sourcePlaystate (enum play pause stop) play 'Source play state' default
-	'What happens to current presentation after hyperjump' raw (smil2))
+	'What happens to old presentation' raw (smil2))
 
 (destinationPlaystate (enum play pause) play 'Destination play state' default
-	'What happens to new presentation after hyperjump' raw (smil2))
+	'What happens to new presentation' raw (smil2))
 
 (external (bool) 0 'External link' default
-	'Use external application to open destination of hyperlink' raw (template smil2))
+	'Use external application to open destination' raw (template smil2))
 
 (target (string) '' 'Target window' default
 	'Target window for hyperjump' raw (template smil2))
 
 (sourceLevel (float) 1 'Source level' percent
-	'Specifies the relative volume in percent of the source presentation after hyperjump'
+	'Relative volume in percent of the source presentation'
 	raw (template smil2))
 
 (destinationLevel (float) 1 'Destination level' percent
-	'Specifies the relative volume in percent of the destination presentation after hyperjump'
+	'Relative volume in percent of the destination presentation'
 	raw (template smil2))
 
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))

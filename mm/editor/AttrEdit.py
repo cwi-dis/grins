@@ -996,8 +996,8 @@ class PreferenceWrapper(Wrapper):
 		return 1
 
 	def maketitle(self):
-		return 'GRiNS previewer properties'
-#		return 'GRiNS Preferences'
+#		return 'GRiNS previewer properties'
+		return 'GRiNS Preferences'
 
 	def getattr(self, name):	# Return the attribute or a default
 		import settings

@@ -114,7 +114,7 @@ attrgrs=(
 		]},
 
 	{'name':'preferences2',
-	'title': 'GRiNS previewer properties',
+	'title': 'Previewer settings',
 	'attrs':[
 		'system_bitrate',
 		'system_captions',
