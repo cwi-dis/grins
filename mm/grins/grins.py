@@ -113,8 +113,14 @@ class Main(MainDialog):
 			doclist.append( (base, (url,)))
 		self.set_recent_list(doclist)
 
-	def close_callback(self):
-		raise SystemExit, 0
+	def close_callback(self, exitcallback=None):
+		for top in self.tops[:]:
+			top.destroy()
+		if exitcallback:
+			rtn, arg = exitcallback
+			apply(rtn, arg)
+		else:
+			raise SystemExit, 0
 
 	def crash_callback(self):
 		raise 'Crash requested by user'
