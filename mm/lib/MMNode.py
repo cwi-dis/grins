@@ -4868,12 +4868,13 @@ class MMNode(MMTreeElement):
 				# RTIPA start
 				#
 				if hasattr(features, 'RTIPA') and features.RTIPA and setting == 'system_bitrate':
-					url = self.GetFile()
-					scheme, url = MMurl.splittype(url)
-					if scheme and scheme != 'file':
-						host, url = MMurl.splithost(url)
-					else:
-						host = None
+					host = self.attrdict.get('RTIPA_server')
+					if not host:
+						url = self.GetFile()
+						if url:
+							scheme, url = MMurl.splittype(url)
+							if scheme and scheme != 'file':
+								host, url = MMurl.splithost(url)
 					ok = settings.match_bitrate_RTIPA(self.attrdict['system_bitrate'], host)
 				else:
 					#

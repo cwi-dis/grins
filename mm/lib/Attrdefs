@@ -740,3 +740,8 @@
 	'Show hidden custom tests' raw (smil2))
 (enable_template (bool) 0 'Template builder' default
 	'Enable features specific to building template documents' raw (smil2))
+
+# RTIPA start
+(RTIPA_server (string) '' 'RTIPA server' default
+	'Server name to be used for bitrate testing (RTIPA demo)' raw (smil2 advanced))
+# RTIPA end

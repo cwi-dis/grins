@@ -107,6 +107,9 @@ class EditableMMNode(MMNode.MMNode):
 			'system_overdub_or_caption', 'system_required',
 			'system_screen_size', 'system_screen_depth',
 			'system_component',
+			# RTIPA start
+			'RTIPA_server',
+			# RTIPA end
 			]
 		if features.USER_GROUPS in features.feature_set:
 			namelist.append('u_group')
