@@ -31,6 +31,8 @@ class TopLevel(ViewDialog):
 			self.basename = self.basename[:-5]
 		elif self.basename[-4:] == '.smi':
 			self.basename = self.basename[:-4]
+		elif self.basename[-5:] == '.smil':
+			self.basename = self.basename[:-5]
 		self.read_it()
 		self.makeviews()
 		self.window = None
@@ -222,6 +224,8 @@ class TopLevel(ViewDialog):
 		import MMPlayerTree
 		if self.filename[-4:] == '.smi':
 			filename = self.filename[:-4] + '.cmif'
+		elif self.filename[-5:] == '.smil':
+			filename = self.filename[:-5] + '.cmif'
 		else:
 			filename = self.filename
 		MMPlayerTree.WriteFile(self.root, filename)
@@ -297,7 +301,7 @@ class TopLevel(ViewDialog):
 			pass
 		print 'saving to', filename, '...'
 		try:
-			if filename[-4:] == '.smi':
+			if filename[-4:] == '.smi' or filename[-5:] == '.smil':
 				import SMILTree
 				SMILTree.WriteFile(self.root, filename)
 			else:
@@ -359,7 +363,8 @@ class TopLevel(ViewDialog):
 		else:
 			print 'parsing', self.filename, '...'
 			t0 = time.time()
-			if self.filename[-4:] == '.smi':
+			if self.filename[-4:] == '.smi' or \
+			   self.filename[-5:] == '.smil':
 				import SMILTree
 				self.root = SMILTree.ReadFile(self.filename)
 			else:
