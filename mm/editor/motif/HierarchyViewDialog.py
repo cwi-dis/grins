@@ -155,7 +155,7 @@ class HierarchyViewDialog(ViewDialog):
 	# transf from HierarchyView
 	def helpcall(self):
 		import Help
-		Help.givehelp(self.window._hWnd,'Hierarchy_view')
+		Help.givehelp('Hierarchy')
 
 	def show(self):
 		if self.is_showing():
