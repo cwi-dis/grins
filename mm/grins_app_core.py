@@ -32,6 +32,8 @@ def SafeCallbackCaller(fn, args):
 			rc = int(rc[0])
 		except (ValueError, TypeError):
 			rc = 0
+		import windowinterface 
+		windowinterface.close()
 		# use afx to free com/ole libs
 		(win32ui.GetAfx()).PostQuitMessage(rc)
 	except:
@@ -85,12 +87,10 @@ class GrinsApp(app.CApp):
 
 	def ExitInstance(self):
 		rc = app.CApp.ExitInstance(self)
-		if self.frame:
+		if self.frame and hasattr(self.frame,'DestroyWindow'):
 			self.frame.DestroyWindow()
-			self.frame = None
+		self.frame = None
 		self.SetMainFrame(None)
-		import windowinterface
-		windowinterface.close()
 		return 0
 
 	def BootGrins(self):
