@@ -19,7 +19,7 @@ def _prstats():
 	print '### Statistics ###'
 	list = []
 	for key in _stats.keys():
-		list.append(_stats[key], key)
+		list.append((_stats[key], key))
 	list.sort()
 	list.reverse()
 	for count, key in list:
