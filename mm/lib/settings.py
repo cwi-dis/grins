@@ -92,6 +92,13 @@ default_settings = {
 	'structure_focusright': (40, 40, 40),
 	'structure_focusbottom': (40, 40, 40),
 	'structure_dropcolor': (0, 0, 0),
+	
+	'structure_bandwidthfree': (150, 150, 150),
+	'structure_bandwidthok': (50, 50, 50),
+	'structure_bandwidthnotok': (100, 0, 0),
+	'structure_bandwidthokfocus': (0, 200, 0),
+	'structure_bandwidthnotokfocus': (200, 0, 0),
+	
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
 	'openviews' : [('structure', (-1, -1, -1, -1))],	# Default views to open

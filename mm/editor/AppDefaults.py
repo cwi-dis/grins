@@ -47,6 +47,13 @@ EXCLCOLOR_NOPLAY = settings.get('structure_darkexcl')
 PRIOCOLOR_NOPLAY = settings.get('structure_darkprio')
 FOREIGNCOLOR_NOPLAY = settings.get('structure_darkforeign')
 
+# Bandwidth colors
+BANDWIDTH_FREE_COLOR = settings.get('structure_bandwidthfree')
+BANDWIDTH_OK_COLOR = settings.get('structure_bandwidthok')
+BANDWIDTH_NOTOK_COLOR = settings.get('structure_bandwidthnotok')
+BANDWIDTH_OKFOCUS_COLOR = settings.get('structure_bandwidthokfocus')
+BANDWIDTH_NOTOKFOCUS_COLOR = settings.get('structure_bandwidthnotokfocus')
+
 # Focus color assignments (from light to dark gray)
 
 FOCUSLEFT = settings.get('structure_focusleft')
