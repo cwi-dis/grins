@@ -177,6 +177,10 @@ class NodeWrapper(Wrapper):
 		del self.root
 		Wrapper.close(self)
 
+	def commit(self):
+		self.root.ResetPlayability()
+		Wrapper.commit(self)
+
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
 
@@ -375,7 +379,7 @@ class NodeWrapper(Wrapper):
 			('clipbegin',), ('clipend',),	# More time stuff
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
-			'layout', 'u_group',
+			'layout', ('u_group',),
 			('mimetype',),	# XXXX Or should this be with file?
 			'system_bitrate', 'system_captions',
 			'system_language', 'system_overdub_or_caption',
@@ -669,9 +673,9 @@ class ChannelWrapper(Wrapper):
 
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
-		      'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
-		      'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-		      'project_smil_url', 'project_boston']
+			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
+			'project_smil_url']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -704,8 +708,6 @@ class DocumentWrapper(Wrapper):
 		return None		# unrecognized
 
 	def getdefault(self, name):
-		if name == 'project_boston':
-			return 0
 		return ''
 
 	def setattr(self, name, value):
@@ -908,20 +910,17 @@ class AttrEditor(AttrEditorDialog):
 		allnamelist = wrapper.attrnames()
 		namelist = []
 		lightweight = settings.get('lightweight')
-		smil2 = 0
-		if hasattr(wrapper, 'context'):
-			smil2 = wrapper.context.attributes.get('project_boston', 0)
 		if not lightweight:
 			cmif = settings.get('cmif')
 		else:
 			cmif = 0
 		for name in allnamelist:
 			flags = wrapper.getdef(name)[6]
-			if cmif or \
-			   (smil2 and (flags == 'smil2' or flags == 'smil' or flags == 'light')) or \
-			   (not lightweight and (flags == 'smil' or flags == 'light')) or \
-			   (lightweight and flags == 'light'):
-				namelist.append(name)
+			if flags != 'light':
+				if lightweight or \
+				   (not cmif and flags == 'cmif'):
+					continue
+			namelist.append(name)
 		self.__namelist = namelist
 		initattrinst = None
 		for i in range(len(namelist)):
@@ -1907,6 +1906,9 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		ch = self.wrapper.context.getchannel(self.getvalue())
 		if ch is not None:
 			showchannelattreditor(self.wrapper.toplevel, ch)
+			
+	def channelexists(self, name):
+		return self.wrapper.context.getchannel(name) is not None
 
 	def newchannelname(self):
 		base = 'NEW'
@@ -1961,6 +1963,9 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				return self.getdefault()
 			return self.__nocaptions
 		return value
+
+	def channelexists(self, name):
+		return self.wrapper.context.getchannel(name) is not None
 
 	def channelprops(self):
 		ch = self.wrapper.context.getchannel(self.getvalue())
