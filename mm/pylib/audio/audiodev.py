@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 Error = 'audiodev.Error'
 
 import sys
