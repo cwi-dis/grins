@@ -357,7 +357,7 @@ class DrawObj:
 	# Returns true if the point is within the object
 	def hitTest(self,point,view,is_selected):
 		"""
-		Note: if isselected, hit-codes start at one for the top-left
+		Note: if is selected, hit-codes start at one for the top-left
 		and increment clockwise, 0 means no hit.
 		If not selected, 0 = no hit, 1 = hit (anywhere)
 		point is in logical coordinates
@@ -461,7 +461,7 @@ class DrawRect(DrawObj):
 				s='(%d,%d,%d,%d)' % self._position.tuple_ps()
 			else:
 				scaledpos=tk.ToScaledCoord(self._position)
-				s='(%d,%d,%d,%d)' % scaledpos.tuple_ps()
+				s='(%.0f,%.0f,%.0f,%.0f)' % scaledpos.tuple_ps()
 		elif self._client_units == UNIT_SCREEN and tk._rel_coord_ref:
 			s='(%.2f,%.2f,%.2f,%.2f)' % tk._rel_coord_ref.inverse_coordinates(self._position.tuple_ps(),units=self._client_units)
 		else:
@@ -588,19 +588,30 @@ class DrawTk:
 	def	SetScale(self,xs,ys):
 		self._xscale=xs
 		self._yscale=ys
+		self._wscale=xs
+		self._hscale=ys
 		self._has_scale=1
+
 	def IsScaled(self):
 		if self.InLayoutMode():
 			return 0
-		return hasattr(self,'_has_scale') and self._has_scale
+		return self._has_scale
+
+	def AdjustScale(self,lbox,box):
+		self._xscale=float(lbox[0])/box[0]
+		self._yscale=float(lbox[1])/box[1]
+		self._wscale=float(lbox[2])/box[2]
+		self._hscale=float(lbox[3])/box[3]
 
 	def ToScaledCoord(self,rc):
 		l=int(rc.left/float(self._xscale)+0.5)
 		t=int(rc.top/float(self._yscale)+0.5)
-		w=int(rc.width()/float(self._xscale)+0.5)
-		h=int(rc.height()/float(self._yscale)+0.5)
-		r=l+w;b=t+h
-		return Rect((l,t,r,b))
+		w=int(rc.width()/float(self._wscale)+0.5)
+		h=int(rc.height()/float(self._hscale)+0.5)
+		if self._rel_coord_ref.IsDrawObjDirty():
+			self._xscale=self._wscale
+			self._yscale=self._hscale
+		return Rect((l,t,l+w,t+h))
 
 	def	SetBRect(self,rc):
 		self._brect=Rect(rc)
@@ -833,7 +844,7 @@ class DrawLayer:
 	def DrawObjLayer(self,dc):
 		# only paint the rect that needs repainting
 		rect=self.CanvasToClientRect(Rect(dc.GetClipBox()))
-
+		
 		# draw to offscreen bitmap for fast looking repaints
 		#dcc=win32ui.CreateDC()
 		dcc=dc.CreateCompatibleDC()
