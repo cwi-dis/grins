@@ -394,7 +394,12 @@ class EditMgr(Clipboard.Clipboard):
 		node.addOwner(OWNER_DOCUMENT)
 		
 		node.AddToTree(parent, i)
-		self.next_focus = [node]
+
+		if node.type != 'animpar':
+			self.next_focus = [node]
+		else:
+			# XXX for now the focus has to be put on its target node
+			self.next_focus = [node.GetParent()]
 
 	def undo_addnode(self, node):
 		self.delnode(node)
