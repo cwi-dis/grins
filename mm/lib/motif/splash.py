@@ -37,6 +37,8 @@ resources = [
 ## '*XmList.background: #999999',
 '*XmMenuShell*XmToggleButton.selectColor: #000000',
 '*XmMenuShell*background: #e0e0e0',
+'*help_label.foreground: #000000',
+'*help_label.background: #eedd82',
 ## '*XmPushButton.background: #999999',
 '*XmScale*foreground: #000000',
 '*XmScale.XmScrollBar.foreground: #999999',

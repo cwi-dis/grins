@@ -53,18 +53,20 @@ class AttrEditorDialog:
 				   bottom = sep)
 		height = 1.0 / len(attriblist)
 		helpb = rstb = wdg = None # "upstairs neighbors"
-		self.__buttons = []
 		for i in range(len(attriblist)):
 			a = attriblist[i]
+			a.__tid = None
+			a.__help_popup = None
 			bottom = (i + 1) *  height
-			helpb = form.Button(a.getlabel(),
-					    (a.help_callback, ()),
-					    left = None, top = helpb,
-					    right = 0.5, bottom = bottom)
+			helpb = form.Label(a.getlabel(),
+					   left = None, top = helpb,
+					   right = 0.5, bottom = bottom,
+					   tooltip = (a.gethelptext, ()))
 			rstb = form.Button('Reset',
 					   (a.reset_callback, ()),
 					   right = None, top = rstb,
-					   bottom = bottom)
+					   bottom = bottom,
+					   tooltip = 'Reset to current value')
 			wdg = a._createwidget(self, form,
 					      left = helpb, right = rstb,
 					      top = wdg, bottom = bottom)
@@ -73,10 +75,6 @@ class AttrEditorDialog:
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
-		for b in self.__buttons:
-			del b.__button
-			del b.__label
-		del self.__buttons
 		del self.__window
 
 	def pop(self):
@@ -130,7 +128,8 @@ class AttrEditorDialogField:
 				w = form.Button(val,
 						(self.__option_callback, ()),
 						left = left, right = right,
-						bottom = bottom, top = top)
+						bottom = bottom, top = top,
+						tooltip = 'Select an entry from the list of possibilities')
 				self.__label = val
 			else:
 				self.__type = 'option-menu'
@@ -144,7 +143,8 @@ class AttrEditorDialogField:
 			brwsr = w.Button('Browser...',
 					 (self.browser_callback, ()),
 					 top = None, bottom = None,
-					 right = None)
+					 right = None,
+					 tooltip = 'Start file browser')
 			txt = w.TextInput(None, self.getcurrent(), None, None,
 					  top = None, bottom = None,
 					  left = None, right = brwsr)
