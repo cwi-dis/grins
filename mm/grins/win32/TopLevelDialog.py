@@ -1,5 +1,13 @@
 __version__ = "$Id$"
 
+""" @win32doc|TopLevelDialog
+There is one to one corespondance between a TopLevelDialog
+instance and a document, and a TopLevelDialog
+instance with an MDIFrameWnd. The document level commands
+are enabled. This class has acces to the document and
+can display its source view
+"""
+
 import windowinterface, WMEVENTS
 from usercmd import *
 
