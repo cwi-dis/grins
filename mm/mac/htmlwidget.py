@@ -77,9 +77,12 @@ class HTMLWidget:
 		self.an_color = an
 		
 	def setfonts(self, normal, tt, defsize):
-		self.font_normal = normal
-		self.font_tt = tt
-		self.font_size = defsize
+		if normal != None:
+			self.font_normal = normal
+		if tt != None:
+			self.font_tt = tt
+		if defsize != None:
+			self.font_size = defsize
 		
 	def createscrollbars(self, reset=0):
 		#
@@ -330,6 +333,7 @@ class HTMLWidget:
 	
 	def new_font(self, font):
 		self.delayed_para_send()
+		print 'FONT', font # DBG
 		if font == None:
 			font = (0, 0, 0, 0)
 		font = map(lambda x:x, font)
