@@ -131,11 +131,18 @@ class AnchorEditor(AnchorEditorDialog):
 		if not em: # DEBUG
 			self.changed = 0
 			return 1
+		# check uniqueness of anchor names
+		names = {}
+		for anchor in self.anchorlist:
+			if names.has_key(anchor[0]):
+				windowinterface.showmessage('Anchor names not unique')
+				return 0
+			names[anchor[0]] = 0
 		if not em.transaction(): return 0
-		self.changed = 0
 		n = self.node
 		old_alist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		new_alist = self.anchorlist[:]
+		self.changed = 0
 		em.setnodeattr(n, 'anchorlist', new_alist or None)
 		if old_alist is None:
 			old_alist = []
@@ -315,12 +322,15 @@ class AnchorEditor(AnchorEditorDialog):
 		self.show_focus()
 
 	def id_callback(self):
-		if self.focus is None:
+		if self.focus is None or \
+		   self.focus != self.selection_getselection():
 			return
-		self.changed = 1
 		anchor = self.anchorlist[self.focus]
 		id = self.selection_gettext()
 		anchor = (id, anchor[1], anchor[2])
+		if self.anchorlist[self.focus] == anchor:
+			return
+		self.changed = 1
 		self.anchorlist[self.focus] = anchor
 		self.selection_replaceitem(self.focus, id)
 		self.show_focus()
