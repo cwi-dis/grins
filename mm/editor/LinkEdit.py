@@ -28,16 +28,15 @@ M_NONE = 7
 M_EXTERNAL = 8
 M_KEEP = 9
 
+from LinkEditLight import LinkEditLight
 from LinkEditDialog import LinkBrowserDialog, LinkEditorDialog
 
-class LinkEdit(ViewDialog, LinkBrowserDialog):
+class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 	def __init__(self, toplevel):
+		LinkEditLight.__init__(self, toplevel)
 		ViewDialog.__init__(self, 'links_')
 		self.last_geometry = None
-		self.toplevel = toplevel
-		self.root = self.toplevel.root
-		self.context = self.root.GetContext()
-		self.editmgr = self.context.geteditmgr()
+		self.root = toplevel.root
 		title = self.__maketitle()
 		self.left = Struct()
 		self.right = Struct()
@@ -50,7 +49,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		self.left.hidden = 0
 		self.right.hidden = 0
 		self.linkfocus = None
-		self.interesting = []
 
 		LinkBrowserDialog.__init__(self, self.__maketitle(),
 			[('All', (self.menu_callback, (self.left, M_ALL))),
@@ -136,6 +134,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	def destroy(self):
 		LinkBrowserDialog.close(self)
+		LinkEditLight.destroy(self)
 		del self.left.browser_setlabel
 		del self.left.browser_show
 		del self.left.browser_hide
@@ -163,42 +162,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	def get_geometry(self):
 		pass
-
-	# Method to return a whole-node anchor for a node, or optionally
-	# create one.
-	def wholenodeanchor(self, node, type=ATYPE_WHOLE):
-		alist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		for a in alist:
-			if type == a[A_TYPE]:
-				if type == ATYPE_DEST:
-					return (node.GetUID(), a[A_ID])
-				else:
-					windowinterface.showmessage("Such an anchor already exists on this node")
-					return None
-		em = self.editmgr
-		if not em.transaction(): return None
-		a = ('0', type, [])
-		alist.append(a)
-		em.setnodeattr(node, 'anchorlist', alist[:])
-		em.commit()
-		rv = (node.GetUID(), '0')
-		self.interesting.append(rv)
-		return rv
-
-	# Make sure all anchors in 'interesting' actually exist
-	def fixinteresting(self):
-		dlist = []
-		for nid, aid in self.interesting:
-			node = self.context.mapuid(nid)
-			alist = MMAttrdefs.getattr(node, 'anchorlist')
-			for a in alist:
-				if a[A_ID] == aid:
-					break
-			else:
-				dlist.append(nid,aid)
-		for a in dlist:
-			print 'lost anchor:', a
-			self.interesting.remove(a)
 
 	# The fill functions. These are set in the left and right structures
 	# and used to fill the browsers.
@@ -256,37 +219,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		for a in oldanchors:
 			if a in allanchors:
 				str.anchors.append(a)
-
-	def finish_link(self, node):
-		self.fixinteresting()
-		if not self.interesting:
-			windowinterface.showmessage('No reasonable sources for link')
-			return
-		if len(self.interesting) == 1:
-			srcanchor = self.interesting[0]
-		else:
-			anchors = ['Cancel']
-			for a in self.interesting:
-				anchors.append(self.makename(a))
-			i = windowinterface.multchoice('Choose source anchor',
-				  anchors, 0)
-			if i == 0:
-				return
-			srcanchor = self.interesting[i-1]
-		dstanchor = self.wholenodeanchor(node, type=ATYPE_DEST)
-		if not dstanchor:
-			return
-		em = self.editmgr
-		if not em.transaction(): return
-		self.interesting.remove(srcanchor)
-		if dstanchor in self.interesting:
-			self.interesting.remove(dstanchor)
-		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP
-		em.addlink(link)
-		em.commit()
-
-	def set_interesting(self, anchor):
-		self.interesting.append(anchor)
 
 	def makename(self, anchor):
 		if type(anchor) is not type(()):
