@@ -87,8 +87,10 @@ def WriteFile(root, filename):
 		clist.append(cname, root.context.channeldict[cname]._getdict())
 	root.attrdict['channellist'] = clist
 	marshal.dump(header, f)
-	targets = map(lambda x: ((x[2] == 1 and x[0]) or x[1])[0],
-		      root.context.hyperlinks.links)
+	targets = {}
+	for link in root.context.hyperlinks.links:
+		targets[((link[2] == 1 and link[0]) or link[1])[0]] = 0
+	targets = targets.keys()
 	list = []
 	dellist = []
 	dump(root, root, targets, list, dellist)
@@ -188,7 +190,7 @@ def dump(node, mini, targets, list, dellist):
 	newattrs.append('mini')
 	if node is mini or node.uid in targets or node.GetType() == 'bag':
 		sractions, srevents = mini.GenAllSR(node)
-		prearmlists = gen_prearms(mini)
+		prearmlists = gen_prearms(node, mini)
 		# convert MMNode instances to UIDs
 		for i in range(len(sractions)):
 			nevents, actions = sractions[i]
@@ -275,7 +277,7 @@ def load(list, context, f):
 		pass
 	return node
 
-def gen_prearms(node):
+def gen_prearms(node, mini):
 	#
 	# Create channel lists
 	#
@@ -286,7 +288,7 @@ def gen_prearms(node):
 			for a, n in val:
 				list.append((a, n.uid))
 		return prearmlists
-	channelnames, err = node.GetAllChannels()
+	channelnames, err = mini.GetAllChannels()
 	if err:
 		enode, echan = err
 		ename = MMAttrdefs.getattr(enode, 'name')
@@ -302,10 +304,10 @@ def gen_prearms(node):
 	for ch in channelnames:
 		prearmlists[ch] = []
 		prearmlists_uid[ch] = []
-	GenAllPrearms(node, prearmlists, prearmlists_uid)
-	node.EndPruneTree()
+	GenAllPrearms(mini, prearmlists, prearmlists_uid)
+	mini.EndPruneTree()
 	node.prearmlists = prearmlists_uid
-	Timing.needtimes(node)
+	Timing.needtimes(mini)
 	return prearmlists
 
 def GenAllPrearms(node, prearmlists, prearmlists_uid):
