@@ -15,6 +15,7 @@ from usercmd import *
 import MMmimetypes
 import features
 import compatibility
+import settings
 
 # Mapping view numbers to view names and the reverse
 VIEWNUM2NAME=[
@@ -86,6 +87,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# we create only one edit manager by toplevel window.		
 		self.editmgr = EditMgr(self)
 		self.editmgr.register(self)
+		settings.register(self)
 
 		# read the document		
 		self.read_it()
@@ -355,6 +357,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.hideviews()
 		self.editmgr.clearclip()
 		self.editmgr.unregister(self)
+		settings.unregister(self)
 		self.editmgr.destroy()
 		self.destroyviews()
 		self.hide()
@@ -602,26 +605,56 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if view is not None and view.is_showing():
 			view.hide()
 
+	def getsettingsdict(self):
+		# Returns the initializer dictionary used
+		# to create the toolbar pulldown menus for
+		# preview playback preferences
+		import settings, bitrates, languages
+		bitrate = settings.get('system_bitrate')
+		rates = []
+		initbitrate = bitrates.bitrates[0][1]
+		for val, str in bitrates.bitrates:
+			rates.append(str)
+			if val <= bitrate:
+				initbitrate = str
+		language = settings.get('system_language')
+		langs = []
+		initlang = 'English'	# we know this occurs
+		for val, str in languages.languages:
+			langs.append(str)
+			if language == val:
+				initlang = str
+
+		return {
+				'Bitrate': (rates, self.bitratecb, initbitrate),
+				'Language': (langs, self.languagecb, initlang),
+		}
+
+	def update_toolbarpulldowns(self):
+		self.setsettingsdict(self.getsettingsdict())
+
 	def bitratecb(self, bitrate):
 		import bitrates, settings
-		if not self.editmgr.transaction():
-			return 0	# indicate failure
+##		if not self.editmgr.transaction():
+##			return 0	# indicate failure
 		for val, str in bitrates.bitrates:
 			if bitrate == str:
-				settings.set('system_bitrate', val)
+				if settings.get('system_bitrate') != val:
+					settings.set('system_bitrate', val)
 				break
-		self.editmgr.commit()
+##		self.editmgr.commit()
 		return 1		# indicate success
 
 	def languagecb(self, language):
 		import languages, settings
-		if not self.editmgr.transaction():
-			return 0	# indicate failure
+##		if not self.editmgr.transaction():
+##			return 0	# indicate failure
 		for val, str in languages.languages:
 			if language == str:
-				settings.set('system_language', val)
+				if settings.get('system_language') != val:
+					settings.set('system_language', val)
 				break
-		self.editmgr.commit()
+##		self.editmgr.commit()
 		return 1		# indicate success
 
 	def save_callback(self):
@@ -1633,7 +1666,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def commit(self, type):
 		# Fix the timing -- views may depend on this.
-		self.changed = 1
+		if type != 'preference':
+			self.changed = 1
 ##		if self.source:
 ##			# reshow source
 ##			license = self.main.wanttosave()
@@ -1644,6 +1678,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##			import SMILTreeWrite
 ##			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
 		self.update_undocommandlist()
+		self.update_toolbarpulldowns()
 
 	def rollback(self):
 		# Nothing has happened.
