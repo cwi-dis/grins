@@ -10,13 +10,10 @@ when you want the duration of a media file (audio and video).
 import FileCache
 import MMurl
 
-def getduration(filename):
+def getduration(url):
+	url = MMurl.canonURL(url)
 	import windowinterface
-	try:
-		filename = MMurl.urlretrieve(filename)[0]
-	except(IOError):
-		return 1.0
-	return windowinterface.GetMediaDuration(filename)
+	return windowinterface.GetMediaDuration(url)
 
 duration_cache = FileCache.FileCache(getduration)
 get = duration_cache.get
