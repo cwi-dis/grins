@@ -107,7 +107,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.addtocommand('a', attreditfunc, 'attribute editor')
 		self.addtocommand('d', deleteNode, 'delete node')
 		self.addtocommand('h', helpfunc, 'help message')
-		self.addtocommand('i', infofunc, 'open node info window')
+		self.addtocommand('o', infofunc, 'open node info window')
 		self.addtocommand('p', playfunc, 'play node')
 		self.addtocommand('r', rotatefunc, 'rotate node')
 		self.addtocommand('u', unzoomfunc, 'unzoom node')
