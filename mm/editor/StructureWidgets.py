@@ -8,36 +8,36 @@ import os, windowinterface
 import settings
 from AppDefaults import *
 
-def create_MMNode_widget(node, root):
-	assert root != None
+def create_MMNode_widget(node, mother):
+	assert mother != None
 	ntype = node.GetType()
-	if root.usetimestripview:
+	if mother.usetimestripview:
 		# We handle toplevel, second-level and third-level nodes differently
 		# in snap
 		if node.parent == None and ntype == 'seq':
 			# Don't show toplevel root (actually the <body> in SMIL)
-			return UnseenVerticalWidget(node, root)
+			return UnseenVerticalWidget(node, mother)
 		if node.parent and node.parent.parent == None and ntype == 'par':
 			# Don't show second-level par either
-			return UnseenVerticalWidget(node, root)
+			return UnseenVerticalWidget(node, mother)
 		if node.parent and node.parent.parent and node.parent.parent.parent == None and ntype == 'seq':
 			# And show secondlevel seq as a timestrip
-			return TimeStripSeqWidget(node, root)
+			return TimeStripSeqWidget(node, mother)
 	if ntype == 'seq':
-		return SeqWidget(node, root)
+		return SeqWidget(node, mother)
 	elif ntype == 'par':
-		return ParWidget(node, root)
+		return ParWidget(node, mother)
 	elif ntype == 'alt':				# The switch
-		return SwitchWidget(node, root)
+		return SwitchWidget(node, mother)
 	elif ntype == 'ext':
-		return MediaWidget(node, root)
+		return MediaWidget(node, mother)
 	# TODO: test for a realmedia MMslide node.
 	elif ntype == 'imm':
-		return MediaWidget(node, root)
+		return MediaWidget(node, mother)
 	elif ntype == 'excl':
-		return ExclWidget(node, root)
+		return ExclWidget(node, mother)
 	elif ntype == 'prio':
-		return PrioWidget(node, root)
+		return PrioWidget(node, mother)
 	else:
 		raise "Unknown node type", ntype
 		return None
@@ -46,26 +46,26 @@ def create_MMNode_widget(node, root):
 
 class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
 	# View of every MMNode within the Hierarchy view
-	def __init__(self, node, root):
-		Widgets.Widget.__init__(self, root)
+	def __init__(self, node, mother):
+		Widgets.Widget.__init__(self, mother)
 		self.node = node			   # : MMNode
 		assert isinstance(node, MMNode.MMNode)
 		self.name = MMAttrdefs.getattr(self.node, 'name')
 		self.node.set_infoicon = self.set_infoicon
-		assert self.root is not None
+		assert self.mother is not None
 
 	def __repr__(self):
 		return "MMNodeWidget, name = " + self.name
 
 	def collapse_levels(self, level):
 		# Place holder for a recursive function.
-		return;
+		return
 
 	def uncollapse_all(self):
 		# Placeholder for a recursive function.
-		return;					  
+		return					  
 	def collapse_all(self):		  # Is this doable using a higher-order function?
-		return;
+		return
 
 	def destroy(self):
 		# Prevent cyclic dependancies.
@@ -80,16 +80,16 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		tend = t1
 		if t0 != tend:
 			w, h = self.get_minsize_abs()
-			self.root.timemapper.adddependency(t0, tend, w)
+			self.mother.timemapper.adddependency(t0, tend, w)
 		
 	def addcollisions(self, mastert0, mastertend):
 		edge = sizes_notime.HEDGSIZE
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
-		if self.root.timescale and download+begindelay:
+		if self.mother.timescale and download+begindelay:
 			# Slightly special case. We register a collision on t0, and then continue
 			# computing with t0 minus the delays
-			self.root.timemapper.addcollision(t0, edge)
+			self.mother.timemapper.addcollision(t0, edge)
 			t0 = t0 - (download+begindelay)
 		ledge = redge = edge
 		if t0 == tend:
@@ -99,12 +99,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			elif t0 == mastertend:
 				redge = redge + w
 			else:
-				self.root.timemapper.addcollision(t0, w+2*edge)
+				self.mother.timemapper.addcollision(t0, w+2*edge)
 		if t0 != mastert0:
-			self.root.timemapper.addcollision(t0, ledge)
+			self.mother.timemapper.addcollision(t0, ledge)
 			ledge = 0
 		if tend != mastertend:
-			self.root.timemapper.addcollision(tend, redge)
+			self.mother.timemapper.addcollision(tend, redge)
 			redge = 0
 		return ledge, redge
 		
@@ -113,12 +113,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	#
 	def select(self):
 		Widgets.Widget.select(self)
-		self.root.dirty = 1
+		self.mother.dirty = 1
 ##		print 'DBG: selected node t0=%f, t1=%f, t2=%f, download=%f, delay=%f'%self.node.GetTimes('bandwidth')
 		
 	def deselect(self):
 		self.unselect()
-		self.root.dirty = 1
+		self.mother.dirty = 1
 
 	def ishit(self, pos):
 		return self.is_hit(pos)
@@ -133,8 +133,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		# XXX This is fiendishly expensive.
-##		self.root.dirty = 1 # The root needs redrawing
-##		self.root.draw_scene()
+##		self.mother.dirty = 1 # The root needs redrawing
+##		self.mother.draw_scene()
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -163,7 +163,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.uncollapse()
 			else:
 				self.collapse()
-			self.root.dirty = 1
+			self.mother.dirty = 1
 
 	def expandallcall(self, expand):
 		# Expand the view of this node and all kids.
@@ -173,123 +173,123 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.uncollapse_all()
 			else:
 				self.collapse_all()
-			self.root.dirty = 1
+			self.mother.dirty = 1
 
 	def playcall(self):
-		top = self.root.toplevel
+		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playsubtree(self.node)
 
 	def playfromcall(self):
-		top = self.root.toplevel
+		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playfrom(self.node)
 
 	def attrcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import AttrEdit
-		AttrEdit.showattreditor(self.root.toplevel, self.node)
+		AttrEdit.showattreditor(self.mother.toplevel, self.node)
 
 	def editcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
 	def _editcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit._showeditor(self.node)
 	def _opencall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit._showviewer(self.node)
 
 	def anchorcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import AnchorEdit
-		AnchorEdit.showanchoreditor(self.root.toplevel, self.node)
+		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
 
 	def createanchorcall(self):
-		self.root.toplevel.links.wholenodeanchor(self.node)
+		self.mother.toplevel.links.wholenodeanchor(self.node)
 
 	def hyperlinkcall(self):
-		self.root.toplevel.links.finish_link(self.node)
+		self.mother.toplevel.links.finish_link(self.node)
 
 	def focuscall(self):
-		top = self.root.toplevel
+		top = self.mother.toplevel
 		top.setwaiting()
 		if top.channelview is not None:
 			top.channelview.globalsetfocus(self.node)
 
 	def deletecall(self):
-		self.root.deletefocus(0)
+		self.mother.deletefocus(0)
 
 	def cutcall(self):
-		self.root.deletefocus(1)
+		self.mother.deletefocus(1)
 
 	def copycall(self):
-		root = self.root
-		root.toplevel.setwaiting()
-		root.copyfocus()
+		mother = self.mother
+		mother.toplevel.setwaiting()
+		mother.copyfocus()
 
 	def createbeforecall(self, chtype=None):
-		self.root.create(-1, chtype=chtype)
+		self.mother.create(-1, chtype=chtype)
 
 	def createbeforeintcall(self, ntype):
-		self.root.create(-1, ntype=ntype)
+		self.mother.create(-1, ntype=ntype)
 
 	def createaftercall(self, chtype=None):
-		self.root.create(1, chtype=chtype)
+		self.mother.create(1, chtype=chtype)
 
 	def createafterintcall(self, ntype):
-		self.root.create(1, ntype=ntype)
+		self.mother.create(1, ntype=ntype)
 
 	def createundercall(self, chtype=None):
-		self.root.create(0, chtype=chtype)
+		self.mother.create(0, chtype=chtype)
 
 	def createunderintcall(self, ntype):
-		self.root.create(0, ntype=ntype)
+		self.mother.create(0, ntype=ntype)
 
 	def createseqcall(self):
-		self.root.insertparent('seq')
+		self.mother.insertparent('seq')
 
 	def createparcall(self):
-		self.root.insertparent('par')
+		self.mother.insertparent('par')
 
 	def createbagcall(self):
-		self.root.insertparent('bag')
+		self.mother.insertparent('bag')
 
 	def createaltcall(self):
-		self.root.insertparent('alt')
+		self.mother.insertparent('alt')
 
 	def pastebeforecall(self):
-		self.root.paste(-1)
+		self.mother.paste(-1)
 
 	def pasteaftercall(self):
-		self.root.paste(1)
+		self.mother.paste(1)
 
 	def pasteundercall(self):
-		self.root.paste(0)
+		self.mother.paste(0)
 
 
 class StructureObjWidget(MMNodeWidget):
 	# A view of a seq, par, excl or any internal structure node.
 	HAS_COLLAPSE_BUTTON = 1
-	def __init__(self, node, root):
-		MMNodeWidget.__init__(self, node, root)
+	def __init__(self, node, mother):
+		MMNodeWidget.__init__(self, node, mother)
 		assert self is not None
 		# Create more nodes under me if there are any.
 		self.children = []
-		if self.HAS_COLLAPSE_BUTTON and not self.root.usetimestripview:
+		if self.HAS_COLLAPSE_BUTTON and not self.mother.usetimestripview:
 			if self.node.collapsed:
 				icon = 'closed'
 			else:
 				icon = 'open'
-			self.collapsebutton = Icon(icon, self, self.node, self.root)
+			self.collapsebutton = Icon(icon, self, self.node, self.mother)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
 		else:
 			self.collapsebutton = None 
 		for i in self.node.children:
-			bob = create_MMNode_widget(i, root)
+			bob = create_MMNode_widget(i, mother)
 			if bob == None:
 				print "TODO: you haven't written all the code yet, have you Mike?"
 			else:
@@ -308,21 +308,21 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapse()
 		for i in self.children:
 			i.collapse_levels(levels-1)
-		self.root.dirty = 1
+		self.mother.dirty = 1
 
 	def collapse(self):
-		self.node.collapsed = 1;
+		self.node.collapsed = 1
 		if self.collapsebutton:
 			self.collapsebutton.icon = 'closed'
-		self.root.dirty = 1
-		self.root.need_resize = 1
+		self.mother.dirty = 1
+		self.mother.need_resize = 1
 
 	def uncollapse(self):
-		self.node.collapsed = 0;
+		self.node.collapsed = 0
 		if self.collapsebutton:
 			self.collapsebutton.icon = 'open'
-		self.root.dirty = 1
-		self.root.need_resize = 1
+		self.mother.dirty = 1
+		self.mother.need_resize = 1
 
 	def toggle_collapsed(self):
 		if self.iscollapsed():
@@ -376,11 +376,11 @@ class StructureObjWidget(MMNodeWidget):
 				i.draw(displist)
 
 		# Draw the title.
-		displist.fgcolor(CTEXTCOLOR);
+		displist.fgcolor(CTEXTCOLOR)
 		displist.usefont(f_title)
-		l,t,r,b = self.pos_abs;
-		b = t + sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE;
-		l = l + self.get_relx(16);	# move it past the icon.
+		l,t,r,b = self.pos_abs
+		b = t + sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
+		l = l + self.get_relx(16)	# move it past the icon.
 		displist.centerstring(l,t,r,b, self.name)
 		if self.collapsebutton:
 			self.collapsebutton.draw(displist)
@@ -398,19 +398,19 @@ class StructureObjWidget(MMNodeWidget):
 class SeqWidget(StructureObjWidget):
 	# Any sequence node.
 	HAS_CHANNEL_BOX = 0
-	def __init__(self, node, root):
-		StructureObjWidget.__init__(self, node, root)
+	def __init__(self, node, mother):
+		StructureObjWidget.__init__(self, node, mother)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
-		if root.usetimestripview and has_drop_box:
-			self.dropbox = DropBoxWidget(node, root)
+		if mother.usetimestripview and has_drop_box:
+			self.dropbox = DropBoxWidget(node, mother)
 		else:
 			self.dropbox = None
 		if self.HAS_CHANNEL_BOX:
-			self.channelbox = ChannelBoxWidget(self, node, root)
+			self.channelbox = ChannelBoxWidget(self, node, mother)
 		else:
 			self.channelbox = None
-		if root.timescale and not node.parent:
-			self.timeline = TimelineWidget(node, root)
+		if mother.timescale and not node.parent:
+			self.timeline = TimelineWidget(node, mother)
 		else:
 			self.timeline = None
 
@@ -426,10 +426,10 @@ class SeqWidget(StructureObjWidget):
 		# print "DEBUG: seq drawing ", self.get_box()
 		if self.selected: 
 			display_list.drawfbox(self.highlight(SEQCOLOR), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box());
+			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
 			display_list.drawfbox(SEQCOLOR, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
+			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 
 		if self.channelbox and not self.iscollapsed():
 			self.channelbox.draw(display_list)
@@ -446,9 +446,9 @@ class SeqWidget(StructureObjWidget):
 			b = b - self.get_rely(sizes_notime.VEDGSIZE)
 			step = self.get_relx(8)
 			if r > l:
-				while (i < r): #{
-					display_list.drawline(TEXTCOLOR, [(i, t),(i, b)]);
-					i = i + step;
+				while i < r:
+					display_list.drawline(TEXTCOLOR, [(i, t),(i, b)])
+					i = i + step
 
 
 		StructureObjWidget.draw(self, display_list)
@@ -463,8 +463,8 @@ class SeqWidget(StructureObjWidget):
 		if self.iscollapsed():
 			return -1
 
-		assert self.is_hit(pos);
-		x,y = pos;
+		assert self.is_hit(pos)
+		x,y = pos
 		# Working from left to right:
 		for i in range(len(self.children)):
 			l,t,w,h = self.children[i].get_box()
@@ -493,7 +493,8 @@ class SeqWidget(StructureObjWidget):
 				min_width = min_width  + xgap + self.dropbox.get_minsize_abs()[0]
 			return min_width, min_height
 		
-		mw=0; mh=0
+		mw=0
+		mh=0
 		if self.channelbox and not ignoreboxes:
 			mw, mh = self.channelbox.get_minsize_abs()
 			mw = mw + sizes_notime.GAPSIZE
@@ -543,7 +544,7 @@ class SeqWidget(StructureObjWidget):
 		
 		t = t + self.get_rely(sizes_notime.TITLESIZE)
 		min_height = min_height - self.get_rely(sizes_notime.TITLESIZE)
-		if self.root.timescale:
+		if self.mother.timescale:
 			free_width = 0
 		elif free_width < 0:
 
@@ -569,19 +570,19 @@ class SeqWidget(StructureObjWidget):
 			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 			tend = t1
 			# First compute pushback bar position
-			if self.root.timescale:
-				lmin = self.root.timemapper.time2pixel(t0)
+			if self.mother.timescale:
+				lmin = self.mother.timemapper.time2pixel(t0)
 				if l < lmin:
 					l = lmin
 			r = l + w + thisnode_free_width
-			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(tend)
+			if self.mother.timescale:
+				rmin = self.mother.timemapper.time2pixel(tend)
 				# tend may be t2, the fill-time, so for fill=hold it may extend past
 				# the begin of the next child. We have to truncate in that
 				# case.
 				if chindex < len(self.children)-1:
 					nextch = self.children[chindex+1]
-					rminmax = self.root.timemapper.time2pixel(nextch.node.GetTimes('bandwidth')[0])
+					rminmax = self.mother.timemapper.time2pixel(nextch.node.GetTimes('bandwidth')[0])
 					if rmin > rminmax:
 						rmin = rminmax
 				if r < rmin:
@@ -611,7 +612,7 @@ class SeqWidget(StructureObjWidget):
 		tend = t1
 		if t0 != tend:
 			w, h = self.get_minsize_abs(ignoreboxes=1)
-			self.root.timemapper.adddependency(t0, tend, w)
+			self.mother.timemapper.adddependency(t0, tend, w)
 		for ch in self.children:
 			ch.adddependencies()
 		
@@ -644,12 +645,12 @@ class SeqWidget(StructureObjWidget):
 			maxneededpixel1 = 0
 		for time, pixel in time_to_collision.items():
 			if pixel:
-				self.root.timemapper.addcollision(time, pixel)
+				self.mother.timemapper.addcollision(time, pixel)
 		if t0 != mastert0:
-			self.root.timemapper.addcollision(t0, maxneededpixel0)
+			self.mother.timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if tend != mastertend:
-			self.root.timemapper.addcollision(tend, maxneededpixel1)
+			self.mother.timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -718,12 +719,12 @@ class TimelineWidget(MMNodeWidget):
 		
 	def moveto(self, coords):
 		MMNodeWidget.moveto(self, coords)
-		self.time_segments = self.root.timemapper.gettimesegments()
+		self.time_segments = self.mother.timemapper.gettimesegments()
 		starttime, dummy, oldright = self.time_segments[0]
 		stoptime, dummy, dummy = self.time_segments[-1]
 		self.ticks = []
 		for i in range(int(starttime), int(stoptime)+1):
-			tick_x = self.root.timemapper.interptime2pixel(i)
+			tick_x = self.mother.timemapper.interptime2pixel(i)
 			self.ticks.append((i, tick_x))
 		
 
@@ -752,14 +753,14 @@ class DropBoxWidget(ImageBoxWidget):
 		return "DropBoxWidget"
 
 	def _get_image_filename(self):
-		f = os.path.join(self.root.datadir, 'dropbox.tiff')
+		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
 		return f
 
 
 class ChannelBoxWidget(ImageBoxWidget):
 	# This is the box at the start of a Sequence which represents which channel it 'owns'
-	def __init__(self, parent, node, root):
-		Widgets.Widget.__init__(self, root) 
+	def __init__(self, parent, node, mother):
+		Widgets.Widget.__init__(self, mother) 
 		self.node = node
 		self.parent = parent
 
@@ -800,9 +801,9 @@ class ChannelBoxWidget(ImageBoxWidget):
 		channel_type = MMAttrdefs.getattr(self.node, 'project_default_type')
 		if not channel_type:
 			channel_type = 'null'
-		f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
+		f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 		if not os.path.exists(f):
-			f = os.path.join(self.root.datadir, 'null.tiff')
+			f = os.path.join(self.mother.datadir, 'null.tiff')
 		return f
 
 	def select(self):
@@ -815,24 +816,24 @@ class ChannelBoxWidget(ImageBoxWidget):
 		return self.is_hit(pos)
 
 	def attrcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		chname = MMAttrdefs.getattr(self.node, 'project_default_region')
 		if not chname:
 			self.parent.attrcall()
-		channel = self.root.toplevel.context.getchannel(chname)
+		channel = self.mother.toplevel.context.getchannel(chname)
 		if not channel:
 			self.parent.attrcall()
 		import AttrEdit
-		AttrEdit.showchannelattreditor(self.root.toplevel, channel)
+		AttrEdit.showchannelattreditor(self.mother.toplevel, channel)
 
 class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
 	HAS_COLLAPSE_BUTTON = 0
 
-	def __init__(self, node, root):
-		StructureObjWidget.__init__(self, node, root)
-		if root.timescale:
-			self.timeline = TimelineWidget(node, root)
+	def __init__(self, node, mother):
+		StructureObjWidget.__init__(self, node, mother)
+		if mother.timescale:
+			self.timeline = TimelineWidget(node, mother)
 		else:
 			self.timeline = None
 			
@@ -865,7 +866,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		if self.iscollapsed():
 			return -1
 		
-		assert self.is_hit(pos);
+		assert self.is_hit(pos)
 		x,y = pos
 		# Working from left to right:
 		for i in range(len(self.children)):
@@ -912,16 +913,16 @@ class UnseenVerticalWidget(StructureObjWidget):
 			this_r = r
 			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 			tend = t1
-			if self.root.timescale:
-				lmin = self.root.timemapper.time2pixel(t0)
+			if self.mother.timescale:
+				lmin = self.mother.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(tend)
+			if self.mother.timescale:
+				rmin = self.mother.timemapper.time2pixel(tend)
 				if this_r < rmin:
 					this_r = rmin
 				else:
-					rmax = self.root.timemapper.time2pixel(tend, align='right')
+					rmax = self.mother.timemapper.time2pixel(tend, align='right')
 					if this_r > rmax:
 						this_r = rmax
 			medianode.moveto((this_l,t,this_r,b))
@@ -933,8 +934,6 @@ class UnseenVerticalWidget(StructureObjWidget):
 
 	def draw(self, display_list):
 		# We want to draw this even if pushback bars are disabled.
-		#if self.root.pushbackbars and not self.iscollapsed():
-		# print "UnseenVerticalWidget: Size is ", self.get_box()
 		for i in self.children:
 			if isinstance(i, MediaWidget):
 				i.pushbackbar.draw(display_list)
@@ -961,10 +960,11 @@ class VerticalWidget(StructureObjWidget):
 		return self.get_minsize_abs()
 
 	def get_minsize_abs(self):
-		mw=0; mh=0
+		mw=0
+		mh=0
 		
 		if len(self.children) == 0 or self.iscollapsed():
-			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
+			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 			return boxsize, boxsize
 
 		for i in self.children:
@@ -983,14 +983,14 @@ class VerticalWidget(StructureObjWidget):
 		if self.iscollapsed():
 			return -1
 		
-		assert self.is_hit(pos);
-		x,y = pos;
+		assert self.is_hit(pos)
+		x,y = pos
 		# Working from left to right:
 		for i in range(len(self.children)):
-			l,t,w,h = self.children[i].get_box();
+			l,t,w,h = self.children[i].get_box()
 			if y <= t+(h/2.0):
-				return i;
-		return -1;
+				return i
+		return -1
 
 	def recalc(self):
 		# Untested.
@@ -1001,10 +1001,10 @@ class VerticalWidget(StructureObjWidget):
 		
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self)
-			return;
+			return
 		
 		l, t, r, b = self.pos_abs
-		# Add the titlesize;
+		# Add the titlesize
 		t = t + sizes_notime.TITLESIZE
 		min_width, min_height = self.get_minsize()
 		min_height = min_height - sizes_notime.TITLESIZE
@@ -1013,7 +1013,7 @@ class VerticalWidget(StructureObjWidget):
 		free_height = (b-t) - min_height
 		
 		if free_height < 0: #or free_height > 1.0:
-#		   print "Warning! free_height is wrong: ", free_height, self;
+#		   print "Warning! free_height is wrong: ", free_height, self
 			free_height = 0
 		
 		l_par = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
@@ -1037,27 +1037,27 @@ class VerticalWidget(StructureObjWidget):
 			this_r = r
 			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 			tend = t1
-			if self.root.timescale:
-				lmin = self.root.timemapper.time2pixel(t0)
+			if self.mother.timescale:
+				lmin = self.mother.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(tend)
+			if self.mother.timescale:
+				rmin = self.mother.timemapper.time2pixel(tend)
 				if this_r < rmin:
 					this_r = rmin
 				else:
-					rmax = self.root.timemapper.time2pixel(tend, align='right')
+					rmax = self.mother.timemapper.time2pixel(tend, align='right')
 					if this_r > rmax:
 						this_r = rmax
 			
 			medianode.moveto((this_l,t,this_r,b))
 			medianode.recalc()
 			t = b + self.get_rely(sizes_notime.GAPSIZE)
-		StructureObjWidget.recalc(self);
+		StructureObjWidget.recalc(self)
 
 	def draw(self, display_list):
 		# print "Draw: Verticle widget ", self.get_box()
-		StructureObjWidget.draw(self, display_list);
+		StructureObjWidget.draw(self, display_list)
 		
 		# Draw those stupid horizontal lines.
 		if self.iscollapsed():
@@ -1085,10 +1085,10 @@ class VerticalWidget(StructureObjWidget):
 		maxneededpixel0 = maxneededpixel0 + sizes_notime.HEDGSIZE
 		maxneededpixel1 = maxneededpixel1 + sizes_notime.HEDGSIZE
 		if t0 != mastert0:
-			self.root.timemapper.addcollision(t0, maxneededpixel0)
+			self.mother.timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if tend != mastertend:
-			self.root.timemapper.addcollision(tend, maxneededpixel1)
+			self.mother.timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1097,10 +1097,10 @@ class ParWidget(VerticalWidget):
 	def draw(self, display_list):
 		if self.selected:
 			display_list.drawfbox(self.highlight(PARCOLOR), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box());
+			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
 			display_list.drawfbox(PARCOLOR, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
+			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
 
@@ -1109,10 +1109,10 @@ class ExclWidget(VerticalWidget):
 	def draw(self, display_list):
 		if self.selected:
 			display_list.drawfbox(self.highlight(EXCLCOLOR), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box());
+			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
 			display_list.drawfbox(EXCLCOLOR, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
+			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
 
@@ -1121,10 +1121,10 @@ class PrioWidget(VerticalWidget):
 	def draw(self, display_list):
 		if self.selected:
 			display_list.drawfbox(self.highlight(PRIOCOLOR), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box());
+			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
 			display_list.drawfbox(PRIOCOLOR, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
+			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
 
@@ -1133,11 +1133,11 @@ class SwitchWidget(VerticalWidget):
 	def draw(self, display_list):
 		if self.selected:
 			display_list.drawfbox(self.highlight(ALTCOLOR), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box());
+			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
-			display_list.drawfbox(ALTCOLOR, self.get_box());
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
-		VerticalWidget.draw(self, display_list);
+			display_list.drawfbox(ALTCOLOR, self.get_box())
+			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+		VerticalWidget.draw(self, display_list)
 
 
 ##############################################################################
@@ -1155,19 +1155,19 @@ class MediaWidget(MMNodeWidget):
 	# TODO: This class can be broken down into various different node types (img, video)
 	# if the drawing code is different enough to warrent this.
 	
-	def __init__(self, node, root):
-		MMNodeWidget.__init__(self, node, root)
-		self.transition_in = TransitionWidget(self, root, 'in')
-		self.transition_out = TransitionWidget(self, root, 'out')
+	def __init__(self, node, mother):
+		MMNodeWidget.__init__(self, node, mother)
+		self.transition_in = TransitionWidget(self, mother, 'in')
+		self.transition_out = TransitionWidget(self, mother, 'out')
 
-		if root.timescale:
-			self.pushbackbar = PushBackBarWidget(self, root)
+		if mother.timescale:
+			self.pushbackbar = PushBackBarWidget(self, mother)
 		else:
 			self.pushbackbar = None
 		self.downloadtime = 0.0		# not used??
 		self.downloadtime_lag = 0.0	# Distance to push this node to the right - relative coords. Not pixels.
 		self.downloadtime_lag_errorfraction = 1.0
-		self.infoicon = Icon(None, self, self.node, self.root)
+		self.infoicon = Icon(None, self, self.node, self.mother)
 		self.infoicon.set_callback(self.show_mesg)
 		self.node.views['struct_view'] = self
 
@@ -1188,7 +1188,7 @@ class MediaWidget(MMNodeWidget):
 
 	def show_mesg(self):
 		if self.node.errormessage:
-			windowinterface.showmessage(self.node.errormessage, parent=self.root.window)
+			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
@@ -1201,12 +1201,12 @@ class MediaWidget(MMNodeWidget):
 				self.downloadtime_lag_errorfraction = 0
 			else:
 				self.downloadtime_lag_errorfraction = download / (download + begindelay)
-			pbb_left = self.root.timemapper.time2pixel(t0-(download+begindelay), align='right')
+			pbb_left = self.mother.timemapper.time2pixel(t0-(download+begindelay), align='right')
 			self.pushbackbar.moveto((pbb_left, t, l, t+12))
 
 		t = t + self.get_rely(sizes_notime.TITLESIZE)
-		pix16x = self.get_relx(16);
-		pix16y = self.get_rely(16);
+		pix16x = self.get_relx(16)
+		pix16y = self.get_rely(16)
 		self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
 		self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
 
@@ -1231,7 +1231,7 @@ class MediaWidget(MMNodeWidget):
 		y = y + sizes_notime.TITLESIZE
 		h = h - sizes_notime.TITLESIZE
 		
-		willplay = self.root.showplayability or self.node.WillPlay()
+		willplay = self.mother.showplayability or self.node.WillPlay()
 		ntype = self.node.GetType()
 
 		if willplay:
@@ -1279,7 +1279,7 @@ class MediaWidget(MMNodeWidget):
 		self.infoicon.draw(displist)
 
 		# Draw the silly transitions.
-		if self.root.transboxes:
+		if self.mother.transboxes:
 			self.transition_in.draw(displist)
 			self.transition_out.draw(displist)
 		
@@ -1296,14 +1296,14 @@ class MediaWidget(MMNodeWidget):
 			return None
 		
 		channel_type = self.node.GetChannelType()
-		if url and self.root.thumbnails and channel_type == 'image':
+		if url and self.mother.thumbnails and channel_type == 'image':
 			url = self.node.context.findurl(url)
 			try:
 				f = MMurl.urlretrieve(url)[0]
 			except IOError, arg:
 				self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
 		else:
-			f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
+			f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 		return f
 
 	def get_obj_at(self, pos):
@@ -1324,8 +1324,8 @@ class MediaWidget(MMNodeWidget):
 
 class TransitionWidget(MMNodeWidget):
 	# This is a box at the bottom of a node that represents the in or out transition.
-	def __init__(self, parent, root, inorout):
-		MMNodeWidget.__init__(self, parent.node, root)
+	def __init__(self, parent, mother, inorout):
+		MMNodeWidget.__init__(self, parent.node, mother)
 		self.in_or_out = inorout
 		self.parent = parent
 
@@ -1333,7 +1333,7 @@ class TransitionWidget(MMNodeWidget):
 		# XXXX Note: this code assumes the select() is done on mousedown, and
 		# that we can still post a menu at this time.
 		self.parent.select()
-		self.root.dirty = 1
+		self.mother.dirty = 1
 
 	def unselect(self):
 		self.parent.unselect()
@@ -1345,12 +1345,12 @@ class TransitionWidget(MMNodeWidget):
 			displist.drawicon(self.get_box(), 'transout')
 
 	def attrcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		if self.in_or_out == 'in':
-			AttrEdit.showattreditor(self.root.toplevel, self.node, 'transIn')
+			AttrEdit.showattreditor(self.mother.toplevel, self.node, 'transIn')
 		else:
-			AttrEdit.showattreditor(self.root.toplevel, self.node, 'transOut')
+			AttrEdit.showattreditor(self.mother.toplevel, self.node, 'transOut')
 
 	def posttransitionmenu(self):
 		transitionnames = self.node.context.transitions.keys()
@@ -1376,7 +1376,7 @@ class TransitionWidget(MMNodeWidget):
 			return
 		if new == 'No transition':
 			new = ''
-		editmgr = self.root.editmgr
+		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
 		editmgr.setnodeattr(self.node, which, new)
@@ -1385,8 +1385,8 @@ class TransitionWidget(MMNodeWidget):
 
 class PushBackBarWidget(Widgets.Widget):
 	# This is a push-back bar between nodes.
-	def __init__(self, parent, root):
-		Widgets.Widget.__init__(self, root)
+	def __init__(self, parent, mother):
+		Widgets.Widget.__init__(self, mother)
 		self.node = parent.node
 		self.parent = parent
 
@@ -1417,17 +1417,17 @@ class PushBackBarWidget(Widgets.Widget):
 		return self.is_hit(pos)
 
 	def attrcall(self):
-		self.root.toplevel.setwaiting()
+		self.mother.toplevel.setwaiting()
 		import AttrEdit
-		AttrEdit.showattreditor(self.root.toplevel, self.node, '.begin1')
+		AttrEdit.showattreditor(self.mother.toplevel, self.node, '.begin1')
 
 
 class Icon(MMNodeWidget):
 	# Display an icon which can be clicked on. This can be used for
 	# any icon on screen.
 	# This inherits from MMNodeWidget because of the get_obj_at() mechanism and click handling.
-	def __init__(self, icon, parent, node, root):
-		MMNodeWidget.__init__(self, node, root)
+	def __init__(self, icon, parent, node, mother):
+		MMNodeWidget.__init__(self, node, mother)
 		self.parent = parent
 		self.icon = icon
 
@@ -1462,12 +1462,12 @@ class TimelineWidget(MMNodeWidget):
 		
 	def moveto(self, coords):
 		MMNodeWidget.moveto(self, coords)
-		self.time_segments = self.root.timemapper.gettimesegments()
+		self.time_segments = self.mother.timemapper.gettimesegments()
 		starttime, dummy, oldright = self.time_segments[0]
 		stoptime, dummy, dummy = self.time_segments[-1]
-		self.ticks = [(starttime, self.root.timemapper.time2pixel(starttime, align='right'))]
+		self.ticks = [(starttime, self.mother.timemapper.time2pixel(starttime, align='right'))]
 		for time in range(int(starttime+1), int(stoptime)+1):
-			tick_x = self.root.timemapper.interptime2pixel(time)
+			tick_x = self.mother.timemapper.interptime2pixel(time)
 			self.ticks.append((time, tick_x))
 		
 

@@ -75,7 +75,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
 		self.translist = []	# dynamic transition menu
-		self.show_links = 1;	# Show HTML links??? I think.. -mjvdg.
+		self.show_links = 1	# Show HTML links??? I think.. -mjvdg.
 		self.sizes = sizes_notime
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
@@ -344,7 +344,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.translist.append((trans, (which, trans)))
 
 		commands = self.commands # Use a copy.. the original is a template.
-		fntype = self.focusnode.GetType();
+		fntype = self.focusnode.GetType()
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		
 		# Choose the pop-up menu.
@@ -361,7 +361,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			popupmenu = self.leaf_popupmenu	# for all leaf nodes.
 
-		commands = self.__compute_commands(commands); # Adds to the commands for the current focus node.		
+		commands = self.__compute_commands(commands) # Adds to the commands for the current focus node.		
 		self.setcommands(commands)
 		
 		self.setpopup(popupmenu)
@@ -391,7 +391,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Callbacks for the Widget classes.
 	def get_window_size_abs(self):
-		return self.mcanvassize;
+		return self.mcanvassize
 
 	def show(self):
 		if self.is_showing():
@@ -478,8 +478,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	def destroy(self):
 		if self.scene_graph is not None:
-			self.scene_graph.destroy();
-		self.scene_graph = None;
+			self.scene_graph.destroy()
+		self.scene_graph = None
 		self.hide()
 
 	def get_geometry(self):
@@ -517,11 +517,11 @@ class HierarchyView(HierarchyViewDialog):
 		# for now, catch only MMNode focus
 		if focustype == 'MMNode':
 			if isinstance(focusobject, MMNode.MMNode) and focusobject is not self.focusnode:
-				self.select_node(focusobject);
-				self.aftersetfocus();
+				self.select_node(focusobject)
+				self.aftersetfocus()
 				self.need_resize = 1
 				self.dirty = 1
-				self.draw();
+				self.draw()
 ##		else:
 ##			print "DEBUG: globalfocuschanged called but not used: ", focustype, focusobject
 
@@ -580,12 +580,12 @@ class HierarchyView(HierarchyViewDialog):
 			obj = maybenode.views['struct_view']
 			self.select_widget(obj)
 		else:
-			obj = self.scene_graph.get_obj_at((x,y));
+			obj = self.scene_graph.get_obj_at((x,y))
 			#obj = self.whichhit(x, y)
 			if not obj:
 				windowinterface.beep()
 				return
-			self.select_widget(obj);
+			self.select_widget(obj)
 			#self.setfocusobj(obj) # give the focus to the object which was dropped on.
 			
 		if event == WMEVENTS.DropFile:
@@ -1031,7 +1031,7 @@ class HierarchyView(HierarchyViewDialog):
 		dstobj = self.whichhit(xd, yd)
 
 		if srcobj is dstobj:
-			return;
+			return
 
 		# We need to keep the nodes, because the objects get purged during each commit.
 		srcnode = srcobj.node
@@ -1041,7 +1041,7 @@ class HierarchyView(HierarchyViewDialog):
 		# the node will be removed from it's position and appended to one of it's children.
 		# and then, garbage collected.
 		if srcnode.IsAncestorOf(destnode):
-			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window);
+			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window)
 			return
 					  
 		if not srcnode or srcnode is self.root:
@@ -1055,7 +1055,7 @@ class HierarchyView(HierarchyViewDialog):
 				assert nodeindex < len(destnode.children)
 				self.focusnode = destnode.children[nodeindex] # I hope that works!
 				if self.focusnode is srcnode: # The same node.
-					return;
+					return
 			else:
 				if len(destnode.children)>0 and destnode.children[-1] is srcnode:
 					# The same node.
@@ -1145,20 +1145,20 @@ class HierarchyView(HierarchyViewDialog):
 			widget.select()
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
-		self.editmgr.setglobalfocus("MMNode", widget.node); 
+		self.editmgr.setglobalfocus("MMNode", widget.node) 
 
 	def select_node(self, node):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
-		self.setfocusnode(node);
+		self.setfocusnode(node)
 		
 	def setfocusnode(self, node):
 		# Try not to call this function
 		if not node:
-			self.select_widget(None);
+			self.select_widget(None)
 		else:
-			widget = node.views['struct_view'];
-			self.select_widget(widget);
-		self.editmgr.setglobalfocus("MMNode", node);
+			widget = node.views['struct_view']
+			self.select_widget(widget)
+		self.editmgr.setglobalfocus("MMNode", node)
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
