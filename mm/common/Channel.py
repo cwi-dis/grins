@@ -925,8 +925,9 @@ class ChannelWindow(Channel):
 		windowinterface.setcursor('watch')
 		if hasattr(self, 'threads'):
 			# hack for MovieChannel
-			window._gc.SetRegion(window._clip)
-			window._gc.foreground = window._convert_color(window._bgcolor)
+			if hasattr(window, '_gc'):
+				window._gc.SetRegion(window._clip)
+				window._gc.foreground = window._convert_color(window._bgcolor)
 			apply(self.threads.resized, window._rect)
 			windowinterface.setcursor('')
 			return
