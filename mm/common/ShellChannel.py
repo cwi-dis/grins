@@ -21,7 +21,8 @@ class ShellChannel(Channel):
 			prog = '/bin/sh'
 			argv = ['sh', '-c', cmd]
 		else:
-			prog = self.getfilename(node)
+			prog = self.getfileurl(node)
+			prog = urllib.url2pathname(prog)
 			argv = [prog]
 		self.pid = startprog(prog, argv)
 

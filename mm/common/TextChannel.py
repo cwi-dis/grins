@@ -114,7 +114,7 @@ class TextChannel(ChannelWindow):
 		if node.type == 'imm':
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
-			filename = self.getfilename(node)
+			filename = self.getfileurl(node)
 			try:
 				fp = urlopen(filename)
 			except IOError, msg:

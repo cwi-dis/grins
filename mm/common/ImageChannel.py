@@ -20,7 +20,7 @@ class ImageChannel(ChannelWindow):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		f = self.getfilename(node)
+		f = self.getfileurl(node)
 		try:
 			f = urlretrieve(f)[0]
 		except IOError:
@@ -90,7 +90,7 @@ class ImageChannel(ChannelWindow):
 		if box == []:
 			self.window.create_box(msg, self._box_cb)
 		else:
-			f = self.getfilename(node)
+			f = self.getfileurl(node)
 			try:
 				f = urlretrieve(f)[0]
 			except IOError:
@@ -136,7 +136,7 @@ class ImageChannel(ChannelWindow):
 		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
 			# special case: full image
 			return args
-		xsize, ysize = self.window._image_size(file)
+		xsize, ysize = self.window.image_size(file)
 		x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
 		y0 = ysize - y0
 		y1 = ysize - y1

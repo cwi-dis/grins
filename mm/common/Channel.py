@@ -614,8 +614,8 @@ class Channel:
 		# anchor.
 		self._armed_anchors.append((name, type, button))
 
-	def getfilename(self, node):
-		return node.context.findfile(MMAttrdefs.getattr(node, 'file'))
+	def getfileurl(self, node):
+		return node.context.findurl(MMAttrdefs.getattr(node, 'file'))
 
 	def getduration(self, node):
 		import Duration
