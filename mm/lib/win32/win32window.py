@@ -80,7 +80,7 @@ class Window:
 			self._bgcolor = parent._bgcolor
 
 	def __repr__(self):
-		return '<Window instance at %x>' % id(self)
+		return '<%s instance at %x>' % (self.__class__.__name__, id(self))
 
 	def fgcolor(self, color):
 		r, g, b = color
