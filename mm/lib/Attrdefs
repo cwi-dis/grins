@@ -121,6 +121,8 @@
 (file (string) '' 'URL' file
 	'URL for the data of this node' normal light)
 
+# valid values: freeze, remove, hold, transition
+# default depends on other attributes
 (fill (string) '' 'Fill' fill
 	'Whether data should be retained on screen after playing' normal cmif)
 
