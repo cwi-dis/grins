@@ -3,7 +3,7 @@
 static PyObject *MovieCtlObj_MCIsPlayerEventWin(MovieControllerObject *_self, PyObject *_args)
 {
 	EventRecord e;
-	if (!PyArg_ParseTuple(_args, "O&", ToEventRecord, &e))
+	if (!PyArg_ParseTuple(_args, "O&", PyMac_GetEventRecord, &e))
 		return NULL;
 	ComponentResult _rv;
 	Py_BEGIN_ALLOW_THREADS
@@ -27,7 +27,6 @@ static PyObject *MovieCtlObj_MCDrawWin(MovieControllerObject *_self, PyObject *_
 	                     _rv);
 	return _res;
 }
-
 
 #define APPEND_WIN_MovieCtlObj_methods \
 	{"MCIsPlayerEventWin", (PyCFunction)MovieCtlObj_MCIsPlayerEventWin, 1,\
