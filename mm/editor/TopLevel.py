@@ -53,7 +53,9 @@ class TopLevel(ViewDialog, BasicDialog):
 		altfilename = os.path.join(self.dirname, filename)
 		if os.path.exists(altfilename):
 			return altfilename
-		return filename # Let the caller find out it doesn't exist
+		# As a last resort, search along the $CMIFPATH
+		import cmif
+		return cmif.findfile(filename)
 	#
 	# Extend inherited show/hide/destroy interface.
 	#
