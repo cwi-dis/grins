@@ -149,6 +149,11 @@ SOURCE=.\res\stop.ico
 # End Group
 # End Target
 # End Project
+# Section HtmlEx : {B7FC3597-8CE7-11CF-9754-00AA00C00908}
+# 	2:5:Class:CDocOutput
+# 	2:10:HeaderFile:docoutput.h
+# 	2:8:ImplFile:docoutput.cpp
+# End Section
 # Section HtmlEx : {B7FC355E-8CE7-11CF-9754-00AA00C00908}
 # 	0:8:Font.cpp:C:\RESEARCH\users\sol\projects\HtmlEx\Font.cpp
 # 	0:6:HTML.h:C:\RESEARCH\users\sol\projects\HtmlEx\HTML.h
@@ -169,46 +174,41 @@ SOURCE=.\res\stop.ico
 # 	2:21:DefaultSinkHeaderFile:html.h
 # 	2:16:DefaultSinkClass:CHTML
 # End Section
-# Section HtmlEx : {B7FC3597-8CE7-11CF-9754-00AA00C00908}
-# 	2:5:Class:CDocOutput
-# 	2:10:HeaderFile:docoutput.h
-# 	2:8:ImplFile:docoutput.cpp
-# End Section
 # Section HtmlEx : {B7FC3592-8CE7-11CF-9754-00AA00C00908}
 # 	2:5:Class:CDocHeaders
 # 	2:10:HeaderFile:docheaders.h
 # 	2:8:ImplFile:docheaders.cpp
-# End Section
-# Section OLE Controls
-# 	{B7FC355E-8CE7-11CF-9754-00AA00C00908}
 # End Section
 # Section HtmlEx : {B7FC3551-8CE7-11CF-9754-00AA00C00908}
 # 	2:5:Class:CHTMLForm
 # 	2:10:HeaderFile:htmlform.h
 # 	2:8:ImplFile:htmlform.cpp
 # End Section
-# Section HtmlEx : {B7FC3595-8CE7-11CF-9754-00AA00C00908}
-# 	2:5:Class:CDocInput
-# 	2:10:HeaderFile:docinput.h
-# 	2:8:ImplFile:docinput.cpp
+# Section HtmlEx : {B7FC3555-8CE7-11CF-9754-00AA00C00908}
+# 	2:5:Class:CHTMLForms
+# 	2:10:HeaderFile:htmlforms.h
+# 	2:8:ImplFile:htmlforms.cpp
+# End Section
+# Section HtmlEx : {BEF6E003-A874-101A-8BBA-00AA00300CAB}
+# 	2:5:Class:COleFont
+# 	2:10:HeaderFile:font.h
+# 	2:8:ImplFile:font.cpp
 # End Section
 # Section HtmlEx : {B7FC355C-8CE7-11CF-9754-00AA00C00908}
 # 	2:5:Class:CHTML
 # 	2:10:HeaderFile:html.h
 # 	2:8:ImplFile:html.cpp
 # End Section
-# Section HtmlEx : {B7FC3555-8CE7-11CF-9754-00AA00C00908}
-# 	2:5:Class:CHTMLForms
-# 	2:10:HeaderFile:htmlforms.h
-# 	2:8:ImplFile:htmlforms.cpp
+# Section HtmlEx : {B7FC3595-8CE7-11CF-9754-00AA00C00908}
+# 	2:5:Class:CDocInput
+# 	2:10:HeaderFile:docinput.h
+# 	2:8:ImplFile:docinput.cpp
+# End Section
+# Section OLE Controls
+# 	{B7FC355E-8CE7-11CF-9754-00AA00C00908}
 # End Section
 # Section HtmlEx : {B7FC3590-8CE7-11CF-9754-00AA00C00908}
 # 	2:5:Class:CDocHeader
 # 	2:10:HeaderFile:docheader.h
 # 	2:8:ImplFile:docheader.cpp
-# End Section
-# Section HtmlEx : {BEF6E003-A874-101A-8BBA-00AA00300CAB}
-# 	2:5:Class:COleFont
-# 	2:10:HeaderFile:font.h
-# 	2:8:ImplFile:font.cpp
 # End Section
