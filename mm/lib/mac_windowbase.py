@@ -152,17 +152,23 @@ class _Event:
 			sys.exc_traceback = None
 			sys.last_traceback = None
 			
+			if not self._eventloop(timeout):
+				for rtn in self._idles:
+					rtn()
+								
+	def _eventloop(self, timeout):
 			if not self.removed_splash:
 				import MacOS
 				MacOS.splash()
 				self.removed_splash = 1
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
-			
+		
 			if gotone:
-				self._handle_event(event)
-			else:
-				for rtn in self._idles:
-					rtn()
+				while gotone:
+					self._handle_event(event)
+					gotone, event = Evt.WaitNextEvent(EVENTMASK, 0)
+				return 1
+			return 0		
 				
 	def _handle_event(self, event):
 		"""Handle a single MacOS event"""
@@ -319,6 +325,11 @@ class _Event:
 		"""Remove an idle-loop callback"""
 		self._idles.remove(cb)
 
+	def lopristarting(self):
+		"""Called when the scheduler starts with low-priority activities, may be
+		used to do some redraws, etc"""
+		self._eventloop(0)
+		
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
 		raise error, 'No select_setcallback for the mac'
