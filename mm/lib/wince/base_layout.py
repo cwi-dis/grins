@@ -343,7 +343,7 @@ class Region(base_window.Window):
 				# we are ready, blit it
 				dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc, tsc, rsc, bsc))
 
-			if self._active_displist._issimple:
+			if 1:
 				try:
 					self._active_displist._ddsrender(dds, dst, rgn, clear=0, mediadisplayrect = self._mediadisplayrect, fit=self._fit)
 				except:
