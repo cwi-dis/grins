@@ -9,6 +9,8 @@ import usercmd, usercmdui
 from WMEVENTS import *
 
 import string
+
+from licparser import *
 	
 WM_USER_OPEN = win32con.WM_USER+1
 WM_USER_CLOSE = win32con.WM_USER+2
@@ -36,6 +38,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		self._docmap = {}
 		self._slidermap = {}
 		self._focuswnd = None
+		self._haslicense = 0
 		from __main__ import commodule
 		commodule.SetPyListener(self)
 
@@ -56,7 +59,24 @@ class ListenerWnd(GenWnd.GenWnd):
 		if self.__timerid:
 			self.KillTimer(self.__timerid)
 
+	def GetPermission(self, licensestr):
+		import features
+		if hasattr(features, 'license_features_needed') and features.license_features_needed:
+			import license
+			user = ''
+			organization = 'WGBH Educational Foundation'
+			self.license = License(features.license_features_needed, licensestr, user, organization)
+			if not self.license.msg:
+				self._haslicense = 1
+				return 1
+			return 0
+		else:
+			self._haslicense = 1
+			return 1
+
 	def OnOpen(self, params):
+		if not self._haslicense:
+			return
 		# lParam (params[3]) is a pointer to a c-string
 		filename = Sdk.GetWMString(params[3])
 		event = 'OnOpen'
