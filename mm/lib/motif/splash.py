@@ -123,9 +123,9 @@ class _Splash:
 		if version is not None:
 			attrs = {'labelString': version,
 				 'alignment': Xmd.ALIGNMENT_CENTER,
-				 'x': 5,
+				 'x': 10,
 				 'y': 260,
-				 'width': width-10,
+				 'width': width-20,
 				 'background': 0xffffff,
 				 'foreground': 0x061440}
 			try:
