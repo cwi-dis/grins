@@ -1,7 +1,7 @@
 GRiNS Player 2.0b1 Readme
 =========================
 
-GRiNS Player 2.0b1 is a SMiL 2.0 player for the Unix, Macintosh and
+GRiNS Player 2.0b1 is a SMiL 2.0 player for the Macintosh and
 Windows platforms.
 
 Disclaimer
@@ -28,30 +28,19 @@ multiple audio channels so you may experience problems.
 General Information
 -------------------
 
-xxx Realplayer 8.0?? Fix this section.
-
 Please see the Oratrix website, http://www.oratrix.com for more
 information on the GRiNS editor and player. 
 
-While GRiNS for SMIL is not targeted specifically at RealNetworks G2
-player (GRiNS for G2 has extra features to author and convert
-G2-specific media types) the preview player in GRiNS for SMIL does
-support playback of G2-media.
+This player will playback RealMedia items in your SMIL 2.0 presentation
+if you have also installer RealPlayer on your system.
 
 In order to enable this feature you need RealPlayer G2 or later,
 either in the Basic or Plus version. See the RealNetworks website
-www.real.com for details.  RealPlayer 7 is preferred on your editing
-machine, as RealPlayer G2 has some problems with playing captions in
-the preview play.
-
-In order to be able to run GRiNS you need a license key. You have been
-provided with such a key when you bought your copy of GRiNS or
-downloaded your evaluation version. You have to enter this key when
-you first start GRiNS.
+www.real.com for details.
 
 
 For more information see:
     http://www.oratrix.com/
 or send e-mail to
-    grins-support@oratrix.com (technical support)
+    grins-smil2.0-support@oratrix.com (technical support)
     info@oratrix.com (non-technical questions)
