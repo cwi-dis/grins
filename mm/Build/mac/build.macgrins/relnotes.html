@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>GRiNS Player for Macintosh Release Notes</title>
+  </head>
+
+  <body>
+    <h1>GR<i>i</i>NS Player for Macintosh Release Notes</h1>
+    <p>
+      These are the release notes for the GR<i>i</i>NS player for
+      Macintosh, Release 0.2, patchlevel 0. More
+      information on GR<i>i</i>NS can be obtained at <A
+	HREF="http://www.cwi.nl/GRiNS">http://www.cwi.nl/GRiNS</A>, or 
+      by email to <A
+	HREF="mailto:grins-request@cwi.nl">grins-request@cwi.nl</A>. 
+    </p>
+
+    <p>
+      What (sparse) documentation on GR<i>i</i>NS is available at this 
+      time can also be found on the homepage.
+    </p>
+
+    <h3>Prerequisites</h3>
+    <p>
+      You need a PPC or 68K macintosh with a minimum of 16Mb of RAM
+      and System 7.1. For decent multimedia performance, however, you will
+      probably need at least a 100Mhz PPC with 32Mb of RAM. You may
+      want to play with the application size through the "File info"
+      window in the Finder. 
+    </p>
+    <p>
+      You need
+      MacTCP or Open Transport to access documents over the net
+      (included in MacOS since System 7.5).
+    </p>
+    <p>
+      GR<i>i</i>NS uses QuickTime and Sound Manager for multimedia
+      playback. You need QuickTime 2.5 or later. QuickTime 3 includes
+      MPEG support, for QuickTime 2.5 you have to get a separate MPEG
+      extension. QuickTime and the extension can be obtained from <A
+	HREF="http://quicktime.apple.com">quicktime.apple.com</A>.
+    </p>
+
+    <h3>Installation instructions</h3>
+    <p>
+      There are none, really: unpacking the StuffIt archive is all you
+      need to do. You may want to tell your text editor to save
+      documents with creator GRIN, type TEXT, to open them
+      automatically with the player when you double-click them.
+    </p>
+
+    <h3>Customization</h3>
+    <p>
+      One aspect of GR<i>i</i>NS can be customized: the handling of
+      the test attributes such as bitrates and language (see section
+      4.4 of the <a
+	href="http://www.w3.org/TR/1998/REC-smil-19980615/">SMIL
+	specification</a>). See the <A
+	HREF="http://www.cwi.nl/GRiNS/examples.html">examples
+	section</A> on the homepage for details.
+    </p>
+
+    <h3>Feedback</h3>
+    <p>
+      Bug reports and other technical feedback should be sent to <A
+      HREF="mailto:grins-support@cwi.nl">grins-support@cwi.nl</A>,
+      please check the <A
+      HREF="http://www.cwi.nl/GRiNS/feedback.html">feedback
+      section</A> on the homepage for details.
+    </p>
+
+    <p>
+      Non-technical feedback should be sent to <A
+	HREF="mailto:grins-request@cwi.nl">grins-request@cwi.nl</A>.
+    </p>
+
+    <h3>The SMIL language</h3>
+    <p>
+      The GR<i>i</i>NS player supports the complete
+      <a href="http://www.w3.org/TR/1998/REC-smil-19980615/">SMIL 1.0</a>
+      definition except where noted <a href="#unsup">below</a>.  A
+      conforming SMIL document can be correctly parsed, but a few
+      features are not implemented.
+    </p>
+
+    <h3>Platform dependencies in media handling</h3>
+    <p>
+      There are some differences between the various platforms.  See
+      the <a
+	href="http://www.cwi.nl/GRiNS/relnotes/supported.html">chart
+	of supported media types</a> on the GR<i>i</i>NS website
+      for the supported media types on the various supported
+      platforms.
+    </p>
+
+    <h3>Access methods</h3>
+    <p>
+      The GR<i>i</i>NS player supports the following access methods
+      (URL schemes).
+    </p>
+    <ul>
+      <li>file</li>
+      <li>http</li>
+      <li>ftp</li>
+      <li>data</li>
+      <li>gopher</li>
+    </ul>
+
+    <h3><a name="unsup">Unsupported SMIL features</a></h3>
+    <p>
+      There are only a few SMIL features that are not supported
+      by the GR<i>i</i>NS player.  Documents that make use of these
+      features are parsed correctly, but the features are ignored.
+    </p>
+
+    <ul>
+      <li>
+	<code>begin</code> and <code>end</code> attributes in the
+	<code>anchor</code> element.
+      </li>
+      <li>
+	<code>fit="fill"</code> and <code>fit="scroll"</code>
+	attribute values in <code>region</code> element.
+      </li>
+      <li>
+	<code>name="pics-label"</code> attribute value in
+	<code>meta</code> element.
+      </li>
+      <li>
+	<code>alt</code> attribute in media object elements.
+      </li>
+      <li>
+	<code>fill</code> attribute.
+      </li>
+    </ul>
+
+    <h3>Platform-specific issues</h3>
+    <p>
+      There are also a number of features that are not supported on
+      all platforms, or not supported identically. The following
+      problems are known for the player on the Macintosh:
+    </p>
+
+    <ul>
+      <li>
+	Clip-begin, clip-end and looping are not supported on video items.
+      </li>
+      <li>
+	Double-clicking a document while the player is already running 
+	does not work. Open the file from the player File menu in
+	stead.
+      </li>
+      <li>
+	HTML support is very weak, only a few of the major tags are
+	supported, and not even fully.
+      </li>
+    </ul>
+
+    <p>
+      As more issues are reported they are added to the <A
+	HREF="http://www.cwi.nl/GRiNS/relnotes.html">release notes</A> 
+      section on the home page.
+    </p>
+
+    <hr>
+    <address><a href="http://www.cwi.nl/GRiNS/">the GRiNS support staff</a></address>
+<!-- Created: Thu Jul 23 16:58:52 MET DST 1998 -->
+<!-- hhmts start -->
+Last modified: Fri Jul 24 17:12:56 MET DST 1998
+<!-- hhmts end -->
+  </body>
+</html>
