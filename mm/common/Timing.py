@@ -58,7 +58,7 @@ def needtimes(node):
 
 def do_times(node):
 	t0 = time.time()
-	print 'do_times...'
+## 	print 'do_times...'
 	
 	# These globals are used only while in do_times();
 	# they are changed by decrememt()
@@ -91,9 +91,9 @@ def do_times(node):
 
 	node.initial_arms = initial_arms
 
-	print 'done in', round(t2-t0, 3), 'sec.'
-	print '(of which', round(getd_times, 3), 'sec. in getduration()',
-	print 'and', round(t2-t1, 3), 'sec. in propdown)'
+## 	print 'done in', round(t2-t0, 3), 'sec.'
+## 	print '(of which', round(getd_times, 3), 'sec. in getduration()',
+## 	print 'and', round(t2-t1, 3), 'sec. in propdown)'
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -115,14 +115,14 @@ def getinitial(node):
 # with meanings that can be deduced from the code below. :-) :-) :-)
 #
 def prepare(node):
-	print '\tprepare...'
+## 	print '\tprepare...'
 	t0 = time.time()
 	prep1(node)
 	t1 = time.time()
 	prep2(node, node)
 	t2 = time.time()
-	print '\tdone in', round(t1-t0, 3), '+', round(t2-t1, 3),
-	print '=', round(t2-t0, 3), 'sec'
+## 	print '\tdone in', round(t1-t0, 3), '+', round(t2-t1, 3),
+## 	print '=', round(t2-t0, 3), 'sec'
 	if node.counter[HD] <> 0:
 		raise CheckError, 'head of node has dependencies!?!'
 
