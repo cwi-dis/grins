@@ -1528,12 +1528,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
 			# deal with hyperlink
-			href, atype, ltype, stype, dtype, id = self.__in_a[:-1]
+			href, atype, ltype, stype, dtype, id, access = self.__in_a[:-1]
 			if id is not None and not self.__idmap.has_key(id):
 				self.__idmap[id] = node.GetUID()
 			anchorlist = node.__anchorlist
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
-			anchorlist.append((0, len(anchorlist), id, atype, [], (0, 0)))
+			anchorlist.append((0, len(anchorlist), id, atype, [], (0, 0), access))
 			self.__links.append((node.GetUID(), id, href, ltype, stype, dtype))
 
 	def NewContainer(self, type, attributes):
@@ -3757,12 +3757,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
 
-		ltype, stype, dtype = self.__link_attrs(attributes)
+		ltype, stype, dtype, access = self.__link_attrs(attributes)
 
 		# determinate atype according to actuate attribute
-		atype = self.__link_atype(attributes,ATYPE_WHOLE);
+		atype = self.__link_atype(attributes,ATYPE_WHOLE)
 
-		self.__in_a = href, atype, ltype, stype, dtype, id, self.__in_a
+		self.__in_a = href, atype, ltype, stype, dtype, id, access, self.__in_a
 
 	def end_a(self):
 		if self.__in_a is None:
@@ -3859,7 +3859,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('unknown destinationPlaystate attribute value')
 			dtype = A_DEST_PLAY
 
-		return ltype, stype, dtype
+		accesskey = attributes.get('accesskey')
+		if accesskey is not None:
+			if len(accesskey) != 1:
+				self.syntax_error('accesskey should be single character')
+				accesskey = None
+
+		return ltype, stype, dtype, accesskey
 
 	def __link_atype(self, attributes, defaultValue):
 		# default value
@@ -3908,7 +3914,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		nname = self.__node.GetRawAttrDef('name', None)
 
 		# show, sourcePlaystate and destinationPlaystate parsing
-		ltype, stype, dtype = self.__link_attrs(attributes)
+		ltype, stype, dtype, access = self.__link_attrs(attributes)
 		
 		# default atype value
 		atype = ATYPE_WHOLE
@@ -4033,7 +4039,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if id is not None:
 			self.__anchormap[id] = self.__node, aid
 			self.__idmap[id] = uid, aid
-		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0)))
+		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0), access))
 		if href is not None:
 			self.__links.append((uid, (aid, atype, aargs),
 					     href, ltype, stype, dtype))
@@ -4335,7 +4341,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if a[3] == ATYPE_DEST:
 				break
 		else:
-			a = 0, len(anchorlist), '0', ATYPE_DEST, [], (0, 0)
+			a = 0, len(anchorlist), '0', ATYPE_DEST, [], (0, 0), None
 			anchorlist.append(a)
 		return node.GetUID(), a[2]
 

@@ -1563,7 +1563,7 @@ class SMILWriter(SMIL):
 		"""Calculate unique names for anchors"""
 		uid = node.GetUID()
 		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		for id, type, args, times in alist:
+		for id, type, args, times, access in alist:
 			aid = (uid, id)
 			self.anchortype[aid] = type
 			if type in SourceAnchors:
@@ -1999,8 +1999,8 @@ class SMILWriter(SMIL):
 		if not self.ids_used[name]:
 			alist = x.GetAttrDef('anchorlist', [])
 			hlinks = x.GetContext().hyperlinks
-			for id, atype, args, times in alist:
-				if hlinks.finddstlinks((uid, id)):
+			for a in alist:
+				if hlinks.finddstlinks((uid, a[A_ID])):
 					self.ids_used[name] = 1
 					break
 
@@ -2147,15 +2147,15 @@ class SMILWriter(SMIL):
 
 		self.writetag(mtype, attrlist)
 		hassrc = 0		# 1 if has source anchors
-		for id, type, args, times in alist:
-			if type in SourceAnchors:
+		for a in alist:
+			if a[A_TYPE] in SourceAnchors:
 				hassrc = 1
 				break
 		if hassrc:
 			self.push()
-			for id, type, args, times in alist:
+			for id, type, args, times, access in alist:
 				if type in SourceAnchors:
-					self.writelink(x, id, type, args, times)
+					self.writelink(x, id, type, args, times, access)
 			self.pop()
 		for i in range(pushed):
 			self.pop()
@@ -2183,7 +2183,7 @@ class SMILWriter(SMIL):
 
 
 
-	def linkattrs(self, a2, ltype, stype, dtype):
+	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
 		attrs = []
 		# deprecated
 #		if ltype == Hlinks.TYPE_CALL:
@@ -2230,9 +2230,13 @@ class SMILWriter(SMIL):
 		else:
 			href = a2
 		attrs.append(('href', href))
+
+		if accesskey is not None:
+			attrs.append(('accesskey', accesskey))
+
 		return attrs
 
-	def writelink(self, x, id, atype, args, times):
+	def writelink(self, x, id, atype, args, times, access):
 		attrlist = []
 		aid = (x.GetUID(), id)
 		attrlist.append(('id', self.aid2name[aid]))
@@ -2244,7 +2248,7 @@ class SMILWriter(SMIL):
 				      x.GetRawAttrDef('name', '<unnamed>'), \
 				      x.GetUID()
 			a1, a2, dir, ltype, stype, dtype = links[0]
-			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype)
+			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype, access)
 		if atype == ATYPE_NORMAL:
 			ok = 0
 			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?
