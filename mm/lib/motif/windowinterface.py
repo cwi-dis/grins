@@ -163,8 +163,30 @@ def GetVideoSize(file):
 	import MPEGVideoSize
 	return MPEGVideoSize.getsize(file)
 
+# complicated mess to prevent calls to RemoveWorkProc while inside the workproc
+# we assume no nested calls to workprocs
+_in_idle = None
+_cancel_idle = None
+_idleprocdict = {}
+def _idleproc(f):
+	global _in_idle, _cancel_idle
+	_in_idle = f
+	try:
+		exit = f()
+	finally:
+		_in_idle = None
+		if exit or (_cancel_idle is not None and _cancel_idle is f):
+			_cancel_idle = None
+			return 1
+
 def setidleproc(f):
-	return Xt.AddWorkProc(f, 0)
+	id = Xt.AddWorkProc(_idleproc, f)
+	_idleprocdict[id] = f
+	return id
 
 def cancelidleproc(id):
-	Xt.RemoveWorkProc(id)
+	global _in_idle, _cancel_idle
+	if _in_idle is not None and _idleprocdict[id] is _in_idle:
+		_cancel_idle = _in_idle
+	else:
+		Xt.RemoveWorkProc(id)
