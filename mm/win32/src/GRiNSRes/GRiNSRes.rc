@@ -728,11 +728,6 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    GROUPBOX        "Use whole image",IDC_21,174,11,121,27
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,181,22,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,220,
-                    22,24,10
     GROUPBOX        "Source area",IDC_11,173,41,121,44
     LTEXT           "x",IDC_GROUP1,179,49,8,8
     EDITTEXT        IDC_12,178,58,27,14,ES_AUTOHSCROLL
@@ -746,6 +741,8 @@ BEGIN
     COMBOBOX        IDC_32,179,102,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    CONTROL         "Use whole image",IDC_21,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,175,18,70,10
 END
 
 IDD_EDITATTR_S6 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -846,7 +843,7 @@ IDD_EDITATTR_C6 DIALOG DISCARDABLE  0, 0, 300, 172
 STYLE DS_ABSALIGN | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",IDC_1,5,10,287,98
+    GROUPBOX        "Target audience",IDC_1,5,10,287,98
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     CONTROL         "Check1",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,36,26,104,10
@@ -1058,15 +1055,7 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "Fill whole region:",IDC_21,174,7,60,8
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,238,6,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,263,
-                    6,24,10
     GROUPBOX        "Destination rendering",IDC_11,173,35,121,35
-    LTEXT           "Keep aspect ratio:",IDC_41,174,21,60,8
-    CONTROL         "off",IDC_42,"Button",BS_AUTORADIOBUTTON,238,20,24,10
-    CONTROL         "on",IDC_43,"Button",BS_AUTORADIOBUTTON,263,20,24,10
     GROUPBOX        "Destination rendering anchor",IDC_31,173,72,121,27
     LTEXT           "x",IDC_GROUP1,179,43,8,8
     LTEXT           "y",IDC_GROUP1,207,42,8,8
@@ -1078,10 +1067,16 @@ BEGIN
     EDITTEXT        IDC_15,262,51,27,14,ES_AUTOHSCROLL
     COMBOBOX        IDC_32,179,82,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    GROUPBOX        "Image quality",IDC_51,173,102,121,27
-    COMBOBOX        IDC_52,179,112,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_52,221,114,68,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    LTEXT           "Image quality:",IDC_GROUP1,174,116,44,8
+    CONTROL         "Convert image",IDC_61,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,174,102,61,10
+    CONTROL         "Fill whole region",IDC_21,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,174,6,66,10
+    CONTROL         "Keep aspect ratio",IDC_41,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,174,22,71,10
 END
 
 IDD_EDITATTR_TF1 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1145,27 +1140,23 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "Fill whole region:",IDC_21,174,7,60,8
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,238,6,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,263,
-                    6,24,10
-    GROUPBOX        "Destination rendering",IDC_11,173,35,121,35
-    LTEXT           "Keep aspect ratio:",IDC_41,174,21,60,8
-    CONTROL         "off",IDC_42,"Button",BS_AUTORADIOBUTTON,238,20,24,10
-    CONTROL         "on",IDC_43,"Button",BS_AUTORADIOBUTTON,263,20,24,10
-    LTEXT           "x",IDC_GROUP1,179,43,8,8
-    EDITTEXT        IDC_12,178,51,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,207,42,8,8
-    EDITTEXT        IDC_13,206,51,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,235,43,8,8
-    EDITTEXT        IDC_14,234,51,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,263,43,8,8
-    EDITTEXT        IDC_15,262,51,27,14,ES_AUTOHSCROLL
-    GROUPBOX        "Image quality",IDC_51,173,79,121,29
-    COMBOBOX        IDC_52,179,89,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+    GROUPBOX        "Destination rendering",IDC_11,173,54,121,35
+    LTEXT           "x",IDC_GROUP1,179,62,8,8
+    EDITTEXT        IDC_12,178,70,27,14,ES_AUTOHSCROLL
+    LTEXT           "y",IDC_GROUP1,207,61,8,8
+    EDITTEXT        IDC_13,206,70,27,14,ES_AUTOHSCROLL
+    LTEXT           "w",IDC_GROUP1,235,62,8,8
+    EDITTEXT        IDC_14,234,70,27,14,ES_AUTOHSCROLL
+    LTEXT           "h",IDC_GROUP1,263,62,8,8
+    EDITTEXT        IDC_15,262,70,27,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    CONTROL         "Fill whole region",IDC_21,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,174,15,66,10
+    CONTROL         "Keep aspect ratio",IDC_41,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,174,34,71,10
+    COMBOBOX        IDC_52,221,108,68,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Image quality:",IDC_GROUP1,174,110,44,8
 END
 
 IDD_EDITATTR_LS1O2a DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1175,11 +1166,6 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    GROUPBOX        "Use whole image",IDC_21,174,11,121,27
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,181,22,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,220,
-                    22,24,10
     GROUPBOX        "Source area",IDC_11,173,41,121,44
     LTEXT           "x",IDC_GROUP1,179,49,8,8
     EDITTEXT        IDC_12,178,58,27,14,ES_AUTOHSCROLL
@@ -1190,16 +1176,14 @@ BEGIN
     LTEXT           "h",IDC_GROUP1,263,49,8,8
     EDITTEXT        IDC_15,262,58,27,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    CONTROL         "Use whole image",IDC_21,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,173,20,70,10
 END
 
 IDD_EDITATTR_LS1O3b DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,238,17,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,263,
-                    17,24,10
     EDITTEXT        IDC_12,178,51,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_13,206,51,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_14,234,51,27,14,ES_AUTOHSCROLL
@@ -1207,13 +1191,14 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "Fill whole region:",IDC_21,174,18,60,8
     GROUPBOX        "Destination rendering",IDC_11,173,35,121,35
     LTEXT           "x",IDC_GROUP1,179,43,8,8
     LTEXT           "y",IDC_GROUP1,207,42,8,8
     LTEXT           "w",IDC_GROUP1,235,43,8,8
     LTEXT           "h",IDC_GROUP1,263,43,8,8
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    CONTROL         "Fill whole region",IDC_21,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,173,18,66,10
 END
 
 IDD_EDITATTR_T4 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1384,6 +1369,16 @@ BEGIN
     EDITTEXT        IDC_EDIT1,53,7,126,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,59,34,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,129,34,50,14
+END
+
+IDD_EDITATTR_CK1 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,35
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "Check1",IDC_1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,
+                    24,169,10
 END
 
 
@@ -1665,6 +1660,11 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 48
+    END
+
+    IDD_EDITATTR_CK1, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
     END
 END
 #endif    // APSTUDIO_INVOKED
