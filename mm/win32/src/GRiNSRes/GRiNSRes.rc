@@ -37,7 +37,6 @@ IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2
 IDB_SPLASHSMIL          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-10\\splash8bit.bmp"
 IDB_SPLASHQTPRO         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\qt\\pro\\splash8bit.bmp"
 IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\player\\splash8bit.bmp"
-IDB_SPLASHSNAP          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\snap\\win32\\splash8bit.bmp"
 IDB_VIEWPORT            BITMAP  DISCARDABLE     "RES\\viewport.bmp"
 IDB_REGION              BITMAP  DISCARDABLE     "RES\\region.bmp"
 IDB_IMAGE               BITMAP  DISCARDABLE     "RES\\image.bmp"
