@@ -42,7 +42,12 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.ignore_pauses = 0
 		self.play_all_bags = 0
 		self.sync_cv = 0
-		return BasicDialog.init(self, 0, 0, 'Player')
+		self.toplevel = toplevel
+		title = 'Player (' + toplevel.basename + ')'
+		return BasicDialog.init(self, 0, 0, title)
+	#
+	def fixtitle(self):
+		self.settitle('Player (' + self.toplevel.basename + ')')
 	#
 	def __repr__(self):
 		return '<Player instance, root=' + `self.root` + '>'

@@ -24,6 +24,9 @@ import Timing
 BHEIGHT = 30				# Button height
 HELPDIR = None
 
+# List of currently open toplevel windows
+opentops = []
+
 def sethelpdir(helpdir):
 	global HELPDIR
 	HELPDIR = helpdir
@@ -36,12 +39,15 @@ class TopLevel(ViewDialog, BasicDialog):
 		self = ViewDialog.init(self, 'toplevel_')
 		self.filename = filename
 		self.dirname, self.basename = os.path.split(self.filename)
+		if self.basename[-5:] == '.cmif':
+			self.basename = self.basename[:-5]
 		MMAttrdefs.toplevel = self # For hack in MMAttrdefs.getattr()
 		self.read_it()
 		width, height = \
 			MMAttrdefs.getattr(self.root, 'toplevel_winsize')
-		self = BasicDialog.init(self, width, height, 'CMIF')
+		self = BasicDialog.init(self, width, height, self.basename)
 		self.makeviews()	# References the form just made
+		opentops.append(self)
 		return self
 	#
 	def __repr__(self):
@@ -83,6 +89,8 @@ class TopLevel(ViewDialog, BasicDialog):
 		for v in self.views: v.toplevel = None
 		self.views = []
 		BasicDialog.destroy(self)
+		if self in opentops:
+			opentops.remove(self)
 	#
 	# Main interface.
 	#
@@ -115,7 +123,7 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def make_form(self):
 		width, height = self.width, self.height
-		bheight = height/11
+		bheight = int(height/12.5)
 		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
 		# The topmost button is a shortcut to start playing.
@@ -161,7 +169,12 @@ class TopLevel(ViewDialog, BasicDialog):
 		# The bottom three buttons are document-related commands.
 		# They remain pressed while the command is executing.
 		#
-		y = 3*bheight
+		y = 5*bheight
+		#
+		y = y - h
+		self.openbutton = \
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Open...')
+		self.openbutton.set_call_back(self.open_callback, None)
 		#
 		y = y - h
 		self.savebutton = \
@@ -169,14 +182,19 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.savebutton.set_call_back(self.save_callback, None)
 		#
 		y = y - h
+		self.saveasbutton = \
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Save as...')
+		self.saveasbutton.set_call_back(self.saveas_callback, None)
+		#
+		y = y - h
 		self.restorebutton = \
 			form.add_button(INOUT_BUTTON,x,y,w,h, 'Restore')
 		self.restorebutton.set_call_back(self.restore_callback, None)
 		#
 		y = y - h
-		self.quitbutton = \
-			form.add_button(INOUT_BUTTON,x,y,w,h, 'Quit')
-		self.quitbutton.set_call_back(self.quit_callback, None)
+		self.closebutton = \
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Close')
+		self.closebutton.set_call_back(self.close_callback, None)
 		#
 	#
 	# View manipulation.
@@ -247,8 +265,58 @@ class TopLevel(ViewDialog, BasicDialog):
 		else:
 			view.hide()
 	#
+	def open_callback(self, (obj, arg)):
+		if not obj.pushed: return
+		prompt = 'Open CMIF file:'
+		dir = self.dirname
+		if dir == '': dir = '.'
+		file = self.basename + '.cmif'
+		pat = '*.cmif'
+		filename = fl.show_file_selector(prompt, dir, pat, file)
+		if not filename:
+			obj.set_button(0)
+			return
+		try:
+			top = TopLevel().init(filename)
+		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
+			fl.show_message('Open operation failed.  File:', \
+				filename, \
+				'Error: ' + `msg`)
+			obj.set_button(0)
+			return
+		top.show()
+		obj.set_button(0)
+	#
 	def save_callback(self, (obj, arg)):
 		if not obj.pushed: return
+		ok = self.save_to_file(self.filename)
+		obj.set_button(0)
+	#
+	def saveas_callback(self, (obj, arg)):
+		if not obj.pushed: return
+		prompt = 'Save CMIF file:'
+		dir = self.dirname
+		if dir == '': dir = '.'
+		file = self.basename + '.cmif'
+		pat = '*.cmif'
+		filename = fl.show_file_selector(prompt, dir, pat, file)
+		if not filename:
+			obj.set_button(0)
+			return
+		if self.save_to_file(filename):
+			self.filename = filename
+			self.fixtitle()
+		obj.set_button(0)
+	#
+	def fixtitle(self):
+		self.dirname, self.basename = os.path.split(self.filename)
+		if self.basename[-5:] == '.cmif':
+			self.basename = self.basename[:-5]
+		self.settitle(self.basename)
+		for v in self.views:
+			v.fixtitle()
+	#
+	def save_to_file(self, filename):
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
@@ -269,14 +337,20 @@ class TopLevel(ViewDialog, BasicDialog):
 			self.help.save_geometry()
 		# Make a back-up of the original file...
 		try:
-			os.rename(self.filename, self.filename + '~')
+			os.rename(filename, filename + '~')
 		except os.error:
 			pass
-		print 'saving to', self.filename, '...'
-		MMTree.WriteFile(self.root, self.filename)
+		print 'saving to', filename, '...'
+		try:
+			MMTree.WriteFile(self.root, filename)
+		except IOError, msg:
+			fl.message('Save operation failed.  File:', \
+				   filename, \
+				   'Error: ' + `msg`)
+			return 0
 		print 'done saving.'
 		self.changed = 0
-		obj.set_button(0)
+		return 1
 	#
 	def restore_callback(self, (obj, arg)):
 		if not obj.pushed:
@@ -330,16 +404,21 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
 	#
-	def quit_callback(self, (obj, arg)):
-		ok = self.quit_ok()
-		obj.set_button(0)
+	def close_callback(self, (obj, arg)):
+		if not obj.pushed:
+			return
+		ok = self.close_ok()
 		if ok:
-			raise SystemExit, 0
-
-	def quit_ok(self):
+			self.destroy()
+			if len(opentops) == 0:
+				raise SystemExit, 0
+		else:
+			obj.set_button(0)
+	#
+	def close_ok(self):
 		if self.changed:
 			l1 = 'You haven\'t saved your changes yet;'
-			l2 = 'do you want to save them before quitting?'
+			l2 = 'do you want to save them before closing?'
 			l3 = ''
 			b1 = 'Save'
 			b2 = 'Don\'t save'
@@ -354,4 +433,4 @@ class TopLevel(ViewDialog, BasicDialog):
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
 	def winshut(self):
-		self.quit_callback(self.quitbutton, 0)
+		self.close_callback(self.closebutton, 0)

@@ -133,8 +133,9 @@ class ChannelView(ViewDialog, GLDialog):
 		self.editmgr = self.context.editmgr
 		self.focus = None
 		self.future_focus = None
+		title = 'Time Chart (' + self.toplevel.basename + ')'
 		self = ViewDialog.init(self, 'cview_')
-		return GLDialog.init(self, 'Time chart')
+		return GLDialog.init(self, title)
 
 	def __repr__(self):
 		return '<ChannelView instance, root=' + `self.root` + '>'
@@ -301,7 +302,7 @@ class ChannelView(ViewDialog, GLDialog):
 	def recalc(self, focus):
 		self.objects = []
 		self.focus = self.lockednode = None
-		self.baseobject = GO().init(self, 'Time chart')
+		self.baseobject = GO().init(self, '(base)')
 		self.baseobject.select()
 		self.objects.append(self.baseobject)
 		self.initchannels(focus)
@@ -394,8 +395,8 @@ class ChannelView(ViewDialog, GLDialog):
 		self.draw()
 
 	def fixtitle(self):
-		title = 'Time chart'
-		if self.viewroot <> self.root:
+		title = 'Time Chart (' + self.toplevel.basename + ')'
+		if None <> self.viewroot <> self.root:
 			name = MMAttrdefs.getattr(self.viewroot, 'name')
 			title = title + ': ' + name
 		self.settitle(title)

@@ -18,24 +18,26 @@ class HelpWindow(ViewDialog, BasicDialog):
 	self.topics = None
 	self.return_stack = []
 	return self
+    def fixtitle(self):
+        pass
     def __repr__(self):
 	return '<HelpWindow instance, dirname=' + `self.dirname` + '>'
     def inittopics(self):
 	if self.topics <> None: return
 	self.topics = []
 	try:
-		files = os.listdir(self.dirname)
+	    files = os.listdir(self.dirname)
 	except os.error:
-		files = []
+	    files = []
 	for topic in files:
-		if topic[:1] not in ('.', '#') and topic[-1:] <> '~':
-			self.topics.append(topic)
+	    if topic[:1] not in ('.', '#') and topic[-1:] <> '~':
+		self.topics.append(topic)
 	self.topics.sort()
 	for line in self.topics:
 	    self.topic.add_browser_line(line)
 	self.curtopic = ''
 	if not self.topics:
-		print 'Sorry, no help topics found'
+	    print 'Sorry, no help topics found'
     def show(self):
 	self.inittopics()
     	BasicDialog.show(self)
@@ -137,3 +139,9 @@ def parsetopic(s):
 	return string.strip(topic), string.strip(subtopic)
     except string.index_error:
 	return '',''
+
+
+# This is mostly Jack's code, so...
+# Local variables:
+# py-indent-offset: 4
+# end:

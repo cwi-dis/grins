@@ -39,7 +39,8 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.editmgr = self.context.geteditmgr()
 		form = flp.parse_form('LinkEditForm', 'form')
 		width, height = form[0].Width, form[0].Height
-		self = BasicDialog.init(self, (width, height, 'Link editor'))
+		title = 'Hyperlinks (' + toplevel.basename + ')'
+		self = BasicDialog.init(self, (width, height, title))
 		self.left = Struct()
 		self.right = Struct()
 		self.left.fillfunc = self.fill_none
@@ -56,6 +57,9 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.left.node_menu.set_menu(LEFT_MENU)
 		self.right.node_menu.set_menu(RIGHT_MENU)
 		return self
+	#
+	def fixtitle(self):
+		self.settitle('Hyperlinks (' + self.toplevel.basename + ')')
 	#
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
