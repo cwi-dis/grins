@@ -164,9 +164,9 @@ class Selecter:
 	def killslot(self, slot):
 ##		print 'killslot:', slot
 		node, sctx, bag, parent = slot
+		self.runslots.remove(slot)
 		if sctx:
 			sctx.stop()
-		self.runslots.remove(slot)
 ##		print 'RUNSLOTS after kill:', self.runslots
 		tokill = []
 		for slot in self.runslots:

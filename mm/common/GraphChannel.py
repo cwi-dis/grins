@@ -24,7 +24,9 @@ class GraphChannel(ChannelWindow):
 	def __repr__(self):
 		return '<GraphChannel instance, name=' + `self._name` + '>'
 
-	def do_arm(self, node):
+	def do_arm(self, node, same=0):
+	        if same and self.armed_display:
+		    return 1
 		str = self.getstring(node)
 		toks = self.tokenizestring(str)
 		self.parsetokens(toks)

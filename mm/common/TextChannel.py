@@ -19,7 +19,9 @@ class TextChannel(ChannelWindow):
 		fix_anchorlist(node, taglist)
 		return 1
 		
-	def do_arm(self, node):
+	def do_arm(self, node, same=0):
+	        if same and self.armed_display:
+		    return 1
 		str = self.getstring(node)
 		parlist = extract_paragraphs(str)
 		if MMAttrdefs.getattr(node, 'noanchors'):

@@ -14,7 +14,9 @@ class ImageChannel(ChannelWindow):
 	def __repr__(self):
 		return '<ImageChannel instance, name=' + `self._name` + '>'
 
-	def do_arm(self, node):
+	def do_arm(self, node, same=0):
+	        if same and self.armed_display:
+		        return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1

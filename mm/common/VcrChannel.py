@@ -88,7 +88,7 @@ class VcrChannel(Channel):
 			start = (0,0,5,0)    # Pretty arbitrary
 		return start, stop
 
-	def do_arm(self, node):	# Override default method
+	def do_arm(self, node, same=0):	# Override default method
 		if self.vcrstate <> V_NONE:
 			raise 'do_arm with vcrstate<>V_NONE'
 		while 1:
