@@ -1472,7 +1472,7 @@ def do_expand(node, expand, nlevels=None):
 	if nlevels != None:
 		nlevels = nlevels - 1
 	ntype = node.GetType()
-	if ntype not in MMNode.interiortypes and \
+	if ntype not in MMNode.interiortypes and not node.GetChildren() and\
 	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 		return 0
 	changed = 0
