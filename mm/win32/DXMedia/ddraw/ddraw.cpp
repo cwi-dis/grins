@@ -8,6 +8,9 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
+#define INITGUID
+#include <objbase.h>
+
 #include <windows.h>
 #include <wtypes.h>
 #include <assert.h>
@@ -18,6 +21,12 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #pragma comment (lib,"winmm.lib")
 #pragma comment (lib,"ddraw.lib")
+
+#ifdef USE_DDRAWEX
+// += extensions
+#include <ddrawex.h>
+#endif
+
 
 static PyObject *ErrorObject;
 
@@ -1546,6 +1555,49 @@ CreateDirectDraw(PyObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+#ifdef USE_DDRAWEX
+static char CreateDirectDraw2__doc__[] =
+""
+;
+static PyObject *
+CreateDirectDraw2(PyObject *self, PyObject *args)
+{
+	HWND hWnd;
+	if (!PyArg_ParseTuple(args, "i",&hWnd))
+		return NULL;	
+	
+	IDirectDrawFactory *lpDDF=NULL;
+    HRESULT hr = CoCreateInstance(CLSID_DirectDrawFactory,
+                              NULL,CLSCTX_INPROC_SERVER,
+                              IID_IDirectDrawFactory,
+                              (void **)&lpDDF);
+	if (FAILED(hr)){
+		seterror("CoCreateInstance DirectDrawFactory", hr);
+		return NULL;
+	}
+
+	IDirectDraw  *lpDD1=NULL;
+	hr = lpDDF->CreateDirectDraw(NULL,hWnd,DDSCL_NORMAL ,0,NULL,&lpDD1);
+	lpDDF->Release();
+	if (FAILED(hr)){
+		seterror("CreateDirectDraw", hr);
+		return NULL;
+	}
+
+	DirectDrawObject *obj = newDirectDrawObject();
+	if (obj == NULL) return NULL;
+	hr=lpDD1->QueryInterface(IID_IDirectDraw2,(void**)&obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("CreateDirectDraw2", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+#endif //USE_DDRAWEX
+
+
+
 //
 static char CreateDDSURFACEDESC__doc__[] =
 "DDSURFACEDESC structure"
@@ -1575,6 +1627,18 @@ CreateDDBLTFX(PyObject *self, PyObject *args)
 	if (obj == NULL)
 		return NULL;
 	return (PyObject*)obj;
+}
+
+static char CreateSurfaceObject__doc__[] =
+""
+;
+static PyObject *
+CreateSurfaceObject(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	DirectDrawSurfaceObject *obj = newDirectDrawSurfaceObject();	
+	return (PyObject*) obj;
 }
 
 // std com stuff for independance
@@ -1607,8 +1671,12 @@ CoUninitialize(PyObject *self, PyObject *args)
 
 static struct PyMethodDef ddraw_methods[] = {
 	{"CreateDirectDraw", (PyCFunction)CreateDirectDraw, METH_VARARGS, CreateDirectDraw__doc__},
+#ifdef USE_DDRAWEX
+	{"CreateDirectDraw2", (PyCFunction)CreateDirectDraw2, METH_VARARGS, CreateDirectDraw2__doc__},
+#endif
 	{"CreateDDSURFACEDESC", (PyCFunction)CreateDDSURFACEDESC, METH_VARARGS, CreateDDSURFACEDESC__doc__},
 	{"CreateDDBLTFX", (PyCFunction)CreateDDBLTFX, METH_VARARGS, CreateDDBLTFX__doc__},
+	{"CreateSurfaceObject", (PyCFunction)CreateSurfaceObject, METH_VARARGS, CreateSurfaceObject__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
