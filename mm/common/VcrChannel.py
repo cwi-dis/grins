@@ -21,6 +21,13 @@ class VcrChannel(Channel):
 		self.seekinfo = None
 		return self
 
+	def destroy(self):
+		self.vcr.setcallback(None, None)
+		toplevel = self._player.toplevel
+		toplevel.select_setcallback(self.vcr, None, ())
+		del self.vcr
+		Channel.destroy(self)
+
 	def __repr__(self):
 		return '<VcrChannel instance, name=' + `self._name` + '>'
 
