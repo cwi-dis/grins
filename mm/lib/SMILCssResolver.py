@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 def convertToPx(value, containersize):
 	if type(value) == type(0):
 		return value
@@ -106,6 +108,12 @@ class SMILCssResolver:
 	def _onRawValuesChanged(self, node, attrname, value):
 		if node.rawValuesListener != None:
 			self.rawAttributesChangedList.append((node.rawValuesListener, attrname, value))
+
+	def clone(self):
+		# XXX: to be implemented
+		# for the animation mosule we need 
+		# a clone so that we don't change DOM
+		return self
 
 # ###############################################################################
 # Region hierarchy
