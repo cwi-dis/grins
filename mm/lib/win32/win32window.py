@@ -1690,8 +1690,9 @@ class Region(Window):
 		# first paint self on the complement of self._subwindows region
 		rgn2 = self.getChildrenRgnComplement(self._topwindow)
 		dst = self.getwindowpos(self._topwindow)
+		buf = self._topwindow.getDrawBuffer()
 		try:
-			self._paintOnDDS(self._drawsurf, dst, rgn2)
+			self._paintOnDDS(buf, dst, rgn2)
 		except ddraw.error, arg:
 			print arg			
 		rgn2.DeleteObject()
