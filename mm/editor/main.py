@@ -95,8 +95,10 @@ def main():
 	#
 	try:
 		try:
-			import select, gl, fl
+			import select, gl, fl, mm, posix
 			glfd = gl.qgetfd()
+			qenterpipe_r, qenterpipe_w = posix.pipe()
+			mm.setsyncfd(qenterpipe_w)
 			while 1:
 ##				while 1:
 ##					result = windowinterface.pollevent()
@@ -109,7 +111,10 @@ def main():
 				result = fl.check_forms()
 				if locked:
 					GLLock.gl_lock.release()
-				ifdlist, ofdlist, efdlist = select.select([glfd], [], [], 0.1)
+				ifdlist, ofdlist, efdlist = select.select(\
+					  [glfd, qenterpipe_r], [], [], 0.1)
+				if qenterpipe_r in ifdlist:
+					dummy = posix.read(qenterpipe_r, 10000)
 ##			fl.do_forms()
 			# This point isn't reached
 			raise RuntimeError, 'unexpected do_forms return'

@@ -51,7 +51,17 @@ static object *MmError;		/* exception mm.error */
 					err_setstr(MmError, "object already closed"); \
 					return NULL; \
 				}
+int qenter_sync_fd = -1;
 
+static void
+my_qenter(ev, val)
+    long ev, val;
+{
+    qenter(ev, val);
+    if ( qenter_sync_fd >= 0 )
+      write(qenter_sync_fd, " ", 1);
+}
+      
 static void
 mm_armer(arg)
 	void *arg;
@@ -68,7 +78,7 @@ mm_armer(arg)
 			/* we must tell them that we finished arming, */
 			/* even if we didn't do a thing */
 			if ((self->mm_flags & (ARMING|SYNCARM)) == ARMING)
-				qenter(self->mm_ev, ARMDONE);
+				my_qenter(self->mm_ev, ARMDONE);
 			break;
 		}
 		up_sema(self->mm_flagsema);
@@ -85,7 +95,7 @@ mm_armer(arg)
 		} else {
 			dprintf(("mm_armer(%lx): qenter(self->mm_ev, ARMDONE);\n",
 				 (long) self));
-			qenter(self->mm_ev, ARMDONE);
+			my_qenter(self->mm_ev, ARMDONE);
 		}
 #if 0
 		if (self->mm_flags & EXIT)
@@ -115,7 +125,7 @@ mm_player(arg)
 			/* we must tell them that we finished playing, */
 			/* even if we didn't do a thing */
 			if (self->mm_flags & PLAYING)
-				qenter(self->mm_ev, PLAYDONE);
+				my_qenter(self->mm_ev, PLAYDONE);
 			break;
 		}
 		up_sema(self->mm_flagsema);
@@ -126,7 +136,7 @@ mm_player(arg)
 		self->mm_flags &= ~(PLAYING|STOPPLAY);
 		dprintf(("mm_player(%lx): qenter(self->mm_ev, PLAYDONE);\n",
 			 (long) self));
-		qenter(self->mm_ev, PLAYDONE);
+		my_qenter(self->mm_ev, PLAYDONE);
 #if 0
 		if (self->mm_flags & EXIT)
 			break;
@@ -557,8 +567,28 @@ mm_init(self, args)
 	return mmp;
 }
 
+/*
+** set_syncfd set a file descriptor on which a byte is written every time
+** qenter() is called. This enables us to use select() in the mainline
+** thread and still be awoken even when we ourselves do a qenter() (which
+** does not wake the select, unlike external events).
+*/
+static object *
+mm_setsyncfd(self, args)
+    object *self, *args;
+{
+    int fd;
+    
+    if ( !getargs(args, "i", &fd))
+      return NULL;
+    qenter_sync_fd = fd;
+    INCREF(None);
+    return None;
+}
+
 static struct methodlist mm_methods[] = {
 	{"init",		mm_init},
+	{"setsyncfd",		mm_setsyncfd},
 	{NULL,		NULL}		/* sentinel */
 };
 
