@@ -118,8 +118,8 @@ class TopLevel(ViewDialog, BasicDialog):
 	# Make the menu form (called from BasicDialog.init).
 	#
 	def make_form(self):
-		width, height = self.width, self.height
-		bheight = int(height/12.5)
+		width, height = glwindow.mm2pixels(self.width, self.height)
+		bheight = height/12.5
 		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
 		# The topmost button is a shortcut to start playing.
@@ -161,7 +161,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		# The bottom three buttons are document-related commands.
 		# They remain pressed while the command is executing.
 		#
-		y = int(6.3*bheight)
+		y = 6.25*bheight
 		#
 		y = y - h
 		self.openbutton = \
