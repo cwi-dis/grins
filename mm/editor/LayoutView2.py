@@ -1190,8 +1190,8 @@ class LayoutView2(LayoutViewDialog2):
 						else:
 							# interpolate values at this time
 							left, top, width, height = self.animationWrapper.getRectAt(tp)
-							bgcolor = self.animationWrapper.getColorAt(tp)
-							newvals = {'left':left, 'top':top, 'width':width, 'height':height, 'bgcolor':bgcolor}
+#							bgcolor = self.animationWrapper.getColorAt(tp)
+							newvals = {'left':left, 'top':top, 'width':width, 'height':height}
 						animvals.insert(index, (tp, newvals))
 						self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
 		else:			
