@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Map ISO 8859-7 to Macintosh greek.
 import string
 

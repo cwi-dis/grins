@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Carbon import Qd
 from Carbon import Dlg
 from Carbon import Ctl
