@@ -61,6 +61,8 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.MouseMove, self.mousemove, None)
 		self.window.register(WMEVENTS.DragEnd, self.dragend, None)
 
+		self.window.register(WMEVENTS.QueryNode, self.querynode, None)
+
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
 		# parameter to dialogs
@@ -134,6 +136,16 @@ class HierarchyViewDialog(ViewDialog):
 		url = MMurl.pathname2url(filename)
 		params = (x, y, url)
 		self.dropfile(maybenode, window, event, params)
+
+	def querynode(self, dummy, window, event, params):
+		srcx, srcy = params
+		srcx = srcx * self.mcanvassize[0]
+		srcy = srcy * self.mcanvassize[1]
+		srcwidget = self.whichhit(srcx, srcy)
+		if srcwidget:
+			srcnode = srcwidget.node
+			return srcnode
+		return None
 
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
