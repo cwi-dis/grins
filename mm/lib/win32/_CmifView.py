@@ -749,6 +749,8 @@ class _OSSubWindow(cmifwnd._CmifWnd,window.Wnd):
 	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0, units=None):
 		cmifwnd._CmifWnd.__init__(self)
 		self._do_init(parent)
+		
+		self._usesLightSubWindows = 0
 
 		self._window_type = type_channel
 		self._topwindow = parent._topwindow
@@ -829,19 +831,19 @@ class _OSSubWindow(cmifwnd._CmifWnd,window.Wnd):
 			
 	# Called by the core system to create a child window to the subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		win = _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
+		win = _OSSubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
 		win.AllowResize(1)
 		return win
 
 	# Called by the core system to create a child window to the subwindow
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)
+		win = _OSSubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)
 		win.AllowResize(1)
 		return win
 	
 	# Report string for this class
 	def __repr__(self):
-		return '<_SubWindow instance at %x>' % id(self)
+		return '<_OSSubWindow instance at %x>' % id(self)
 
 	# Sets the title of the subwindow (internal use)
 	def settitle(self, title):
