@@ -218,7 +218,7 @@
 	'Do image smoothing for video output' channel)
 
 (visible (bool) 1 'Channel visibility' default
-	'Determines visibility of channel' channel)
+	'Determines visibility of channel' raw)
 
 (wanturl (bool) 0 'Pass URL' default
 	'Pass URL to program (otherwise pass filename)' channel)
