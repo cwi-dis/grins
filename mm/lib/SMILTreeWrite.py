@@ -1508,7 +1508,7 @@ class SMILWriter(SMIL):
 		if not transitions:
 			return
 		defaults = {
-			'dur':'1s',
+			'dur':'1',
 			'startPercent':'0',
 			'endPercent':'100',
 			'color':'black',
@@ -1521,6 +1521,8 @@ class SMILWriter(SMIL):
 			attrlist = []
 			attrlist.append(('id', self.transition2name[key]))
 			for akey, aval in val.items():
+				if akey != 'subtype':
+					aval = MMAttrdefs.valuerepr(akey, aval)
 				if defaults.has_key(akey) and defaults[akey] == aval:
 					continue
 				attrlist.append((akey, aval))

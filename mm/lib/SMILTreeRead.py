@@ -2199,14 +2199,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_transition(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
-		if attributes.has_key('id'):
-			del attributes['id']
-## This is unneeded?
-##		new = {}
-##		for k, v in attributes.items():
-##			new[k] = v
-##		attributes = new
-		self.__transitions[id] = attributes
+		dict = {}
+		for name, value in attributes.items():
+			if name == 'id':
+				continue
+			elif name == 'dur':
+				value = self.__parsecounter(value)
+			elif name == 'color':
+				# XXXX Need support for blend
+				value = self.__convert_color(value)
+			else:
+				value = parseattrval(name, value, self.__context)
+		self.__transitions[id] = dict
 
 	def end_transition(self):
 		pass

@@ -384,7 +384,7 @@
 	'Keep aspect ratio of image' inherited (g2))
 
 (color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
-       'Color for transition effect, see RealPix documentation' normal (g2))
+       'Color for transition effect' normal (smil2 g2))
 
 (direction (enum left right up down) left 'Wipe Direction' direction
 	'Direction of wipe' normal (g2))
@@ -552,3 +552,40 @@
 
 (autoReverse (enum true false) false 'Auto reverse' default
 	'Play forwards then backwards' normal (all))
+
+# Transitions
+(trtype (enum fade slideWipe pushWipe matrixWipe radialWipe irisWipe edgeWipe) fade 
+		'Transition type' default
+	'The type of transition to perform' raw (smil2))
+	
+(subtype (string) '' 'Transition subtype' default
+	'Further refinement of transition to perform' raw (smil2))
+	
+(dur (float) 1.0 'Duration' default
+	'Duration of the transition' raw (smil2))
+
+(startPercent (int) 0 'Start value' default
+	'Percentage at which the transition starts XXXX better wording?' raw (smil2))
+	
+(endPercent (int) 100 'End value' default
+	'Percentage at which the transition ends XXXX better wording?' raw (smil2))
+	
+(direction (enum forward reverse) forward 'Transition direction' default
+	'Spatial direction of the transition effect, if applicable' raw (smil2))
+	
+(horzRepeat (int) 0 'Horizontal repeat' default
+	'How often the transition pattern is repeated horizontally, if applicable' raw (smil2))
+
+(vertRepeat (int) 0 'Vertical repeat' default
+	'How often the transition pattern is repeated vertically, if applicable' raw (smil2))
+
+(borderWidth (int) 0 'Border width' default
+	'Width of the border, applicable to wipe only' raw (smil2))
+	
+# color shared with RealPix (but ours really needs blend too as a value)
+
+(multiElement (bool) 0 'Multi-element transition' default
+	'Whether this is a coordinated transition across multiple elements' raw (smil2))
+	
+(childrenClip (bool) 0 'Clip to children' default
+	'When true the transition is only applied to the subregions' raw (smil2))
