@@ -659,22 +659,47 @@ class _Window:
 		return self._parent._convert_color(color,
 			self._colormap is not self._parent._colormap)
 
-	def _convert_coordinates(self, coordinates):
+	def _convert_coordinates(self, coordinates, crop = 0):
 		# convert relative sizes to pixel sizes relative to
 		# upper-left corner of the window
+		# if crop is set, constrain the coordinates to the
+		# area of the window
 		x, y = coordinates[:2]
+		if len(coordinates) > 2:
+			w, h = coordinates[2:]
+		else:
+			w, h = 0, 0
+		rx, ry, rw, rh = self._rect
 ##		if not (0 <= x <= 1 and 0 <= y <= 1):
 ##			raise error, 'coordinates out of bounds'
-		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
-		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
+		px = int((rw - 1) * x + 0.5) + rx
+		py = int((rh - 1) * y + 0.5) + ry
+		pw = ph = 0
+		if crop:
+			if px < 0:
+				px, pw = 0, px
+			if px >= rx + rw:
+				px, pw = rx + rw - 1, px - rx - rw + 1
+			if py < 0:
+				py, ph = 0, py
+			if py >= ry + rh:
+				py, ph = ry + rh - 1, py - ry - rh + 1
 		if len(coordinates) == 2:
 			return px, py
-		w, h = coordinates[2:]
 ##		if not (0 <= w <= 1 and 0 <= h <= 1 and
 ##			0 <= x + w <= 1 and 0 <= y + h <= 1):
 ##			raise error, 'coordinates out of bounds'
-		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
-		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
+		pw = int((rw - 1) * w + 0.5) + pw
+		ph = int((rh - 1) * h + 0.5) + ph
+		if crop:
+			if pw <= 0:
+				pw = 1
+			if px + pw > rx + rw:
+				pw = rx + rw - px
+			if ph <= 0:
+				ph = 1
+			if py + ph > ry + rh:
+				ph = ry + rh - py
 		return px, py, pw, ph
 
 	def _mkclip(self):
@@ -993,9 +1018,7 @@ class _Window:
 
 class _BareSubWindow:
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent):
-		x, y, w, h = parent._convert_coordinates(coordinates)
-		if w == 0: w = 1
-		if h == 0: h = 1
+		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1)
 		self._rect = x, y, w, h
 		self._sizes = coordinates
 		x, y, w, h = coordinates
@@ -1137,9 +1160,7 @@ class _BareSubWindow:
 		else:
 			self._pixmap = parent._pixmap
 		self._gc = parent._gc
-		x, y, w, h = parent._convert_coordinates(self._sizes)
-		if w == 0: w = 1
-		if h == 0: h = 1
+		x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
 		self._rect = x, y, w, h
 		w, h = self._sizes[2:]
 		if w == 0:
