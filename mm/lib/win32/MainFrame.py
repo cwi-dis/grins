@@ -55,7 +55,14 @@ from components import *
 
 import win32menu, MenuTemplate
 import __main__
- 
+
+import settings
+if settings.user_settings.get('use_nodoc_menubar'):
+	USE_NODOC_MENUBAR = 1
+else:
+	USE_NODOC_MENUBAR = 0
+
+
 ###########################################################
 # import window core stuff
 from pywin.mfc import window,object,docview,dialog
@@ -173,9 +180,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# menu from MenuTemplate
 		# hold instance for dynamic menus
 		self._mainmenu=win32menu.Menu()
-		self._mainmenu.create_from_menubar_spec_list(MenuTemplate.MENUBAR,self.get_cmdclass_id)
+		if USE_NODOC_MENUBAR and hasattr(MenuTemplate,'NODOC_MENUBAR'):
+			template=MenuTemplate.NODOC_MENUBAR
+		else:
+			template=MenuTemplate.MENUBAR
+		self._mainmenu.create_from_menubar_spec_list(template,self.get_cmdclass_id)
 		cs.hMenu=self._mainmenu.GetHandle()
-		
 		return cs.to_csd()
 
 	# return commnds class id
@@ -448,10 +458,27 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.set_commandlist(commandlist,'document')
 		if not IsPlayer:
 			self.setEditorDocumentToolbar()
+			self.setEditorDocumentMenu(1)
 			#self._wndDlgBar=GRiNSDlgBar(self)
-			self.RecalcLayout()			
+			self.RecalcLayout()	
 		self.ActivateFrame()
 
+	def setEditorDocumentMenu(self,flag):
+		if USE_NODOC_MENUBAR:
+			temp=self._mainmenu
+			self._mainmenu=win32menu.Menu()
+			if not flag and hasattr(MenuTemplate,'NODOC_MENUBAR'):
+				template=MenuTemplate.NODOC_MENUBAR
+			else:
+				template=MenuTemplate.MENUBAR
+			self._mainmenu.create_from_menubar_spec_list(template,self.get_cmdclass_id)
+			self.SetMenu(self._mainmenu)
+			self.DrawMenuBar()
+			if self._dynamiclists.has_key(usercmd.OPEN_RECENT):
+				list = self._dynamiclists[usercmd.OPEN_RECENT]
+				self.set_dynamiclist(usercmd.OPEN_RECENT, list)
+			temp.DestroyMenu()		
+		
 	# Returns the grins document
 	def getgrinsdoc(self):
 		return self._cmifdoc
@@ -535,6 +562,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.settitle(None,'document')
 		if not IsPlayer and len(__main__.toplevel._subwindows)==1:
 			self.setEditorFrameToolbar()
+			self.setEditorDocumentMenu(0)
+
 		if hasattr(self,'_wndDlgBar'):
 			self._wndDlgBar.DestroyWindow()
 			self.RecalcLayout()
