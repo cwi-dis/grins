@@ -1252,7 +1252,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		lc=self.getctrl('base_winoff')
 		val=lc.getcurrent()
 		lbox,box=self.val2layoutbox(val)
-		self._layoutctrl.drawTk.AdjustScale(lbox,box)
+		if box and lbox:
+			self._layoutctrl.drawTk.AdjustScale(lbox,box)
 		return lbox	
 
 	def setvalue2layout(self,val):
