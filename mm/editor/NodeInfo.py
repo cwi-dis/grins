@@ -61,6 +61,9 @@ class NodeInfo(Dialog):
 	#
 	return self
 
+    def __repr__(self):
+	return '<NodeInfo instance, node=' + `self.node` + '>'
+
     def transaction(self):
 	self.fixfocus()
 	return 1

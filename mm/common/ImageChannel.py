@@ -31,6 +31,9 @@ class ImageWindow(ChannelWindow):
 		self.player = channel.player
 		return self
 	#
+	def __repr__(self):
+		return '<ImageWindow instance, name=' + `self.name` + '>'
+	#
 	def show(self):
 		if self.is_showing():
 			self.pop()
@@ -283,6 +286,9 @@ class ImageChannel(Channel):
 		self.window = ImageWindow().init(name, attrdict, self)
 		self.armed_node = 0
 		return self
+	#
+	def __repr__(self):
+		return '<ImageChannel instance, name=' + `self.name` + '>'
 	#
 	def show(self):
 		if self.may_show():

@@ -41,6 +41,9 @@ class MovieWindow(ChannelWindow):
 		self.clear()
 		return self
 	#
+	def __repr__(self):
+		return '<MovieWindow instance, name=' + `self.name` + '>'
+	#
 	def show(self):
 		if self.wid <> 0:
 			self.setwin()
@@ -163,6 +166,9 @@ class MovieChannel(Channel):
 		self.window = MovieWindow().init(name, attrdict, self)
 		self.armed_node = None
 		return self
+	#
+	def __repr__(self):
+		return '<MovieChannel instance, name=' + `self.name` + '>'
 	#
 	def show(self):
 		if self.may_show():

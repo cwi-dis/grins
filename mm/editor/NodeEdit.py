@@ -70,6 +70,8 @@ class _convert_dialog:
 	self.input_filename.set_input(_inventname(chname))
 	self.input_filename.set_input_return(1)
 	return self
+    def __repr__(self):
+	return '<_convert_dialog instance, node=' + `self.node` + '>'
     def work(self):
 	fl.deactivate_all_forms()
 	self.form.show_form(PLACE_MOUSE,FALSE,'')

@@ -63,6 +63,9 @@ class TextWindow(ChannelWindow):
 		self.setcolors()
 		return self
 	#
+	def __repr__(self):
+		return '<TextWindow instance, name=' + `self.name` + '>'
+	#
 	def setcolors(self):
 		if self.attrdict.has_key('bgcolor'):
 			self.bgcolor = self.attrdict['bgcolor']
@@ -329,6 +332,9 @@ class TextChannel(Channel):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = TextWindow().init(name, attrdict, self)
 		return self
+	#
+	def __repr__(self):
+		return '<TextChannel instance, name=' + `self.name` + '>'
 	#
 	def show(self):
 		if self.may_show():

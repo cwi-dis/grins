@@ -66,6 +66,9 @@ class AnchorEditor(Dialog):
 		#
 		return self
 
+	def __repr__(self):
+		return '<AnchorEditor instance, node=' + `self.node` + '>'
+
 	def transaction(self):
 		return 1
 

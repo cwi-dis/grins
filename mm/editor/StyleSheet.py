@@ -24,6 +24,9 @@ class StyleSheet(ViewDialog, BasicDialog):
 		width, height = MMAttrdefs.getattr(self.root, 'style_winsize')
 		return BasicDialog.init(self, width, height, 'Style sheet')
 	#
+	def __repr__(self):
+		return '<StyleSheet instance, root=' + `self.root` + '>'
+	#
 	def transaction(self):
 		return 1
 	#

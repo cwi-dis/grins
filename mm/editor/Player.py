@@ -55,6 +55,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.seek_nodelist = []
 		return BasicDialog.init(self, 0, 0, 'Player')
 	#
+	def __repr__(self):
+		return '<Player instance, root=' + `self.root` + '>'
+	#
 	# EditMgr interface (as dependent client).
 	#
 	def transaction(self):
@@ -87,6 +90,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 
 	def kill(self):
 		self.destroy()
+		BasicDialog.destroy(self)
 	#
 	# Extend BasicDialog show/hide/destroy methods.
 	#
@@ -108,6 +112,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		BasicDialog.hide(self)
 		self.toplevel.checkviews()
 		self.destroychannels()
+	#
+	def destroy(self):
+		self.rtpool = None
 	#
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)

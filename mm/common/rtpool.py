@@ -9,6 +9,9 @@ class rtpool:
 		self.pool = []
 		return self
 
+	def __repr__(self):
+		return '<rtpool instance, pool=' + `self.pool` + '>'
+
 	def flush(self):
 		self.pool = []
 

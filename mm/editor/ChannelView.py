@@ -135,6 +135,9 @@ class ChannelView(ViewDialog, GLDialog):
 		self = ViewDialog.init(self, 'cview_')
 		return GLDialog.init(self, 'Time chart')
 
+	def __repr__(self):
+		return '<ChannelView instance, root=' + `self.root` + '>'
+
 	# Special interface for the Player to show armed state of nodes
 
 	def setarmedmode(self, node, mode):
@@ -550,6 +553,9 @@ class GO:
 		self.ok = 0
 		return self
 
+	def __repr__(self):
+		return '<GO instance, name=' + `self.name` + '>'
+
 	def getnode(self):
 		return None
 
@@ -715,6 +721,9 @@ class GO:
 
 class ChannelBox(GO):
 
+	def __repr__(self):
+		return '<ChannelBox instance, name=' + `self.name` + '>'
+
 	def reshape(self):
 		nchannels = len(self.mother.context.channelnames)
 		i = self.mother.context.channelnames.index(self.name)
@@ -869,6 +878,9 @@ class ChannelBox(GO):
 
 
 class NodeBox(GO):
+
+	def __repr__(self):
+		return '<NodeBox instance, name=' + `self.name` + '>'
 
 	def init(self, mother, node, cname):
 		self.node = node
@@ -1113,6 +1125,9 @@ class NodeBox(GO):
 
 
 class ArcBox(GO):
+
+	def __repr__(self):
+		return '<ArcBox instance, name=' + `self.name` + '>'
 
 	def init(self, mother, snode, sside, delay, dnode, dside):
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
