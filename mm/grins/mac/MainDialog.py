@@ -20,6 +20,7 @@ import usercmd
 import os
 import macfs
 import MMurl
+import windowinterface
 
 class MainDialog:
 	def __init__(self, title):
@@ -122,4 +123,13 @@ class MainDialog:
 			self.openURL_callback(url)
 		
 	def _ae_quit(self, *args, **kwargs):
-		self.close_callback()
+		#
+		# Obfuscated code ahead. We call do_close to check that the user wants to close
+		# but in stead of actually doing the exit here, which would result in the
+		# AE reply not being sent, we schedule the exit for a short while later.
+		#
+		exitcallback = (windowinterface.settimer, (0.1, (self._quitnow, ())))
+		self.close_callback(exitcallback)
+		
+	def _quitnow(self):
+		raise SystemExit, 0
