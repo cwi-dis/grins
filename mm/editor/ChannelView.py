@@ -424,15 +424,19 @@ class ChannelView(ChannelViewDialog):
 
 	# Return list of currently visible channels
 
+	def allchannels(self):
+		channels = []
+		for c in self.context.channels:
+			if c['type'] == 'layout':
+				channels.append(c)
+		return channels
+
 	def visiblechannels(self):
 ##		layout = {}
 ##		for ch in self.context.layouts.get(self.curlayout, self.context.channels):
 ##			layout[ch.name] = 0
 		if self.showall:
-			channels = []
-			for c in self.context.channels:
-				if c['type'] == 'layout':
-					channels.append(c)
+			channels = self.allchannels()
 		else:
 			channels = self.usedchannels
 ##		ret = []
@@ -510,8 +514,9 @@ class ChannelView(ChannelViewDialog):
 		for o in self.objects:
 			if o.__class__ is not NodeBox:
 				continue
-			ch = o.node.attrdict.get('channel')
+			ch = o.node.GetChannel()
 			if ch is None: continue
+			ch = ch.GetLayoutChannel().name
 			if not channels.has_key(ch): channels[ch] = []
 			channels[ch].append(o)
 		for list in channels.values():
@@ -1185,10 +1190,11 @@ class GO(GOCommand):
 	def drawfocus(self):
 		# Draw the part that changes when the focus changes
 		visible = len(self.mother.visiblechannels())
-		total = len(self.mother.context.channels)
+		total = len(self.mother.allchannels())
 		if visible == total: return
 		str = '%d more' % (total-visible)
 		d = self.mother.new_displist
+		d.usefont(f_title)
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(0, self.mother.timescaleborder,
 			       self.mother.channelright, 1.0, str)
