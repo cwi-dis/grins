@@ -342,7 +342,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if not newanchorlist:
 			return
 		for a in newanchorlist:
-			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0)))
+			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0), None))
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
