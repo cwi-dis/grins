@@ -12,12 +12,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python15
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name PyWinTypes
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name win32api
     End Project Dependency
     Begin Project Dependency
@@ -61,6 +55,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name gear32sd
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python16
     End Project Dependency
 }}}
 
@@ -128,9 +125,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name python15
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -155,6 +149,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -168,7 +165,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python15
+    Project_Dep_Name python16
     End Project Dependency
 }}}
 
@@ -261,7 +258,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python15"=..\..\..\python\PCbuild\python15.dsp - Package Owner=<4>
+Project: "python16"=..\..\..\python\PCbuild\python16.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -297,10 +294,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python15
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name PyWinTypes
+    Project_Dep_Name python16
     End Project Dependency
 }}}
 
@@ -339,10 +333,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name PyWinTypes
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name python15
+    Project_Dep_Name python16
     End Project Dependency
 }}}
 
@@ -357,10 +348,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name PyWinTypes
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name python15
+    Project_Dep_Name python16
     End Project Dependency
 }}}
 
@@ -375,16 +363,16 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name PyWinTypes
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name win32api
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name python15
+    Project_Dep_Name win32trace
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name win32trace
+    Project_Dep_Name python16
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
     End Project Dependency
 }}}
 
