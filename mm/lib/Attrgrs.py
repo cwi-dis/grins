@@ -55,7 +55,7 @@ attrgrs=(
 		]},
 
 	{'name':'.cname',
-	'title':'Channel name',
+	'title':'General',
 	'attrs':[
 		'.cname',
 		'type',
@@ -63,7 +63,7 @@ attrgrs=(
 		]},
 
 	{'name':'name',
-	'title':'Node name',
+	'title':'General',
 	'attrs':[
 		'name',
 		'channel',
@@ -71,7 +71,7 @@ attrgrs=(
 		]},
 
 	{'name':'intname',
-	'title':'Node name',
+	'title':'General',
 	'attrs':[
 		'name',
 		'.type',
