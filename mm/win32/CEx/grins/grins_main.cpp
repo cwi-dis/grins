@@ -13,11 +13,13 @@ Main::Main(const TCHAR *cmdline)
 
 Main::~Main()
 	{
-	close();
+	if(m_toplevel != NULL)
+		close();
 	}
 
 bool Main::open_file(const TCHAR *pfilename)
 	{
+	if(m_toplevel != NULL) close();
 	m_toplevel = new TopLevel(this, pfilename);
 	return true;
 	}
