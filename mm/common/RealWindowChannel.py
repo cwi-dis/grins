@@ -11,10 +11,8 @@ import Channel, RealChannel
 
 class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
-		try:
-			self.__rc = RealChannel.RealChannel(self)
-		except:
-			self.__rc = None
+		self.__rc = None
+		self.__override_url = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_arm(self, node, same = 0):
@@ -35,7 +33,16 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			self.armed_display.fgcolor((255, 0, 0))		# red
 			box = self.armed_display.writestr(msg)
 		return 1
-
+		
+	def do_show(self, pchan):
+		if not Channel.ChannelWindowAsync.do_show(self, pchan):
+			return 0
+		try:
+			self.__rc = RealChannel.RealChannel(self)
+		except 'xxx':
+			self.__rc = None
+		return 1
+			
 	def do_hide(self):
 		if self.__rc is not None:
 			self.__rc.stopit()
@@ -44,8 +51,12 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.do_hide(self)
 		
 	def do_play(self, node):
+		url = None
+		if self.__override_url:
+			url = self.__override_url
+			self.__override_url = None
 		if self.__rc is None or \
-		   not self.__rc.playit(node, self._getoswindow(), self._getoswinpos() ):
+		   not self.__rc.playit(node, self._getoswindow(), self._getoswinpos() , url=url):
 			self.playdone(0)
 
 	# toggles between pause and run
@@ -74,3 +85,19 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			x0, y0, x1, y1 = self.window.qdrect()
 			return ((x0, y0), (x1-x0, y1-y0))
 		return None
+
+	def parallel_arm(self, node, url=None):
+		"""Used by RealPix channel to play RealText captions in parallel"""
+		self.arm(node)
+		
+	def parallel_play(self, node, url=None):
+		# XXXX Is this safe, i.e. can we call playdone?
+		self.__override_url = url
+		self.play(node)
+			
+	def parallel_stopplay(self, node):
+		self.stopplay(node)
+
+	def parallel_stoparm(self):
+		self.stoparm()
+
