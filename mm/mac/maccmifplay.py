@@ -21,7 +21,6 @@ except ImportError:
 	STANDALONE=0
 else:
 	STANDALONE=1
-	print 'Standalone, path=', sys.path
 
 if not STANDALONE:
 	# For now:
