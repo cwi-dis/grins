@@ -1255,9 +1255,9 @@ class _ChannelThread:
 		elif value == 3:	# KLUDGE for X movies
 			try:
 				self.window._gc.SetRegion(self.window._clip)
+				self.threads.do_display()
 			except AttributeError:
 				pass
-			self.threads.do_display()
 		else:
 			raise error, 'unrecognized event '+`value`
 
