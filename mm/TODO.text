@@ -18,6 +18,18 @@ Priority top-to-bottom.
 --> Source editor view.
 	- 
 
+Results:
+* Structure view - add small icon capability, arrows and events.
+* Multiple selection in the structure view.
+* Source view editing
+
+The source view
+* Do focus changes.
+* Error management (go to the source view if there is an error)
+* Retain comments.
+
+--
+
 * Reload button on the player.
 * Create templates for Snap! (slideshow)
 * Show whether a node is empty or not (in the Hierarchy View?).
