@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # A class to handle standard geometry loading and saving for views etc.
 # This works both with BasicDialog or GLDialog as base class.
 # Specify this as the first base class, before the *Dialog base class.
