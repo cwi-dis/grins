@@ -32,7 +32,11 @@ public:
 protected:
 	EngineObject();
 	~EngineObject();
+#if !defined(_ABIO32) || _ABIO32 == 0
 	virtual string repr();
+#else
+	virtual char *repr();
+#endif
 };
 
 IRMAClientEngine *EngineObject::pEngine = NULL;
@@ -208,12 +212,23 @@ EngineObject_CreateInstance(PyObject *self, PyObject *args)
 	return EngineObject::CreateInstance(self, args);
 }
 
+#if !defined(_ABIO32) || _ABIO32 == 0
 string
+#else
+char *
+#endif
 EngineObject::repr()
 {
 	char buf[256];
+#if !defined(_ABIO32) || _ABIO32 == 0
 	sprintf (buf, " instance 0x%X", this);
 	return RMAObject::repr() + buf;
+#else
+	char *rep = RMAObject::repr();
+	sprintf (buf, "%s instance 0x%X", rep, this);
+	free(rep);
+	return strdup(buf);
+#endif
 }
 
 PyObject *
