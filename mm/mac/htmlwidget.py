@@ -455,11 +455,11 @@ class MyHTMLParser(htmllib.HTMLParser):
 ##		print 'FILENAME', fname
 		try:
 			image = img.reader(imgformat.macrgb16, fname)
+			data = image.read()
 		except img.error:
 			print 'Html: failed to get image', fname
 			self.formatter.add_flowing_data(alt)
 			return
-		data = image.read()
 		handle = _gifkeeper.new(fname, image.width, image.height, data)
 		self.formatter.my_add_image(handle)
 
