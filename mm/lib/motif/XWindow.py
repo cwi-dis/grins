@@ -1559,6 +1559,12 @@ class _SubWindow(_Window):
 			# nothing to do
 			return
 
+		px, py, pw, ph = parent._rect
+		if x + w > px + pw:
+			w = px + pw - x
+		if y + h > py + ph:
+			h = py + ph - y
+
 		r = Xlib.CreateRegion()
 		r.UnionRegion(self._region)
 
