@@ -451,7 +451,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'title':
 				attrdict['title'] = val
 			elif attr == 'fill':
-				if val in ('freeze', 'remove'):
+				if val in ('hold', 'transition'):
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.__context.attributes['project_boston'] = 1
+				if val in ('freeze', 'remove', 'hold', 'transition'):
 					attrdict['fill'] = val
 				else:
 					self.syntax_error("bad fill attribute")
@@ -461,6 +465,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
 					pass
+		# We added fill="freeze" for G2 player.  Now remove it.
 		if attrdict.has_key('fill') and \
 		   attrdict['fill'] == 'freeze' and \
 		   not attrdict.has_key('duration'):
