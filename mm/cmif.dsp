@@ -875,6 +875,10 @@ SOURCE=.\lib\win32\GenWnd.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\ListCtrl.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\MainFrame.py
 # End Source File
 # Begin Source File
