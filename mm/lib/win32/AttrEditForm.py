@@ -1480,8 +1480,9 @@ class PosSizeLayoutPage(LayoutPage):
 			self._boxoff = ch.get('base_winoff', (0,0,0,0))[:2]
 
 	def getcurrentbox(self):
-		self._xy=self.getctrl('subregionxy')
-		self._wh=self.getctrl('subregionwh')
+		attrnames = self._group._attrnames
+		self._xy=self.getctrl(attrnames['xy'])
+		self._wh=self.getctrl(attrnames['wh'])
 		sxy=self._xy.getcurrent()
 		if not sxy:sxy='0 0'
 		swh=self._wh.getcurrent()
@@ -1983,21 +1984,26 @@ class LayoutGroupWithUnits(LayoutGroup):
 
 class SubregionGroup(AttrGroup):
 	data=attrgrsdict['subregion']
+	_attrnames = {'xy':'subregionxy',
+		      'wh':'subregionwh',
+		      'full':'displayfull',
+		      'anchor':'subregionanchor'}
+
 	def __init__(self):
-		AttrGroup.__init__(self,SubregionGroup.data)
+		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O2
 
 	def createctrls(self,wnd):
 		cd={}
-		a=self.getattr('subregionxy')
+		a=self.getattr(self._attrnames['xy'])
 		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
-		a=self.getattr('subregionwh')
+		a=self.getattr(self._attrnames['wh'])
 		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
-		a=self.getattr('displayfull')
-		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))		
-		a=self.getattr('subregionanchor')
+		a=self.getattr(self._attrnames['full'])
+		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))		
+		a=self.getattr(self._attrnames['anchor'])
 		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))		
 		return cd
 
@@ -2010,7 +2016,14 @@ class SubregionGroup(AttrGroup):
 		return PosSizeLayoutPage
 
 	def islayoutattr(self,attr):
-		return (attr.getname()=='subregionxy') or (attr.getname()=='subregionwh')
+		return (attr.getname()==self._attrnames['xy']) or (attr.getname()==self._attrnames['wh'])
+
+class ImgregionGroup(SubregionGroup):
+	data=attrgrsdict['imgregion']
+	_attrnames = {'xy':'imgcropxy',
+		      'wh':'imgcropwh',
+		      'full':'fullimage',
+		      'anchor':'imgcropanchor'}
 
 class SystemGroup(AttrGroup):
 	data=attrgrsdict['system']
@@ -2123,6 +2136,7 @@ groupsui={
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
 	'subregion':SubregionGroup,
+	'imgregion':ImgregionGroup,
 
 	'system':SystemGroup,
 	'name':NameGroup,
