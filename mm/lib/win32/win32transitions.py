@@ -12,6 +12,8 @@ class TransitionEngine:
 		self.dict = dict
 		
 		self.duration = dict.get('dur', 1)
+		self._multiElement = dict.get('multiElement')
+		self._childrenClip = dict.get('childrenClip')
 
 		trtype = dict['trtype']
 		subtype = dict.get('subtype')
@@ -44,6 +46,9 @@ class TransitionEngine:
 		x, y, w, h = self.windows[0]._rect
 		self.transitiontype.move_resize((0, 0, w, h))
 
+	def ismaster(self, wnd):
+		return self.windows[0]==wnd
+
 	def begintransition(self):
 		# transition window
 		# or parent window in multiElement transitions
@@ -52,13 +57,6 @@ class TransitionEngine:
 		# resize to this window
 		x, y, w, h = wnd._rect
 		self.transitiontype.move_resize((0, 0, w, h))
-
-		# we should now take into account
-		# multiElement and childrenClip attributes
-		# if multiElement: 
-		#	if not childrenClip: do transition within wnd rect overriting children
-		#	else: do transition within childs union region
-
 
 		# create surfaces
 		self._passive = wnd._passive
@@ -84,13 +82,19 @@ class TransitionEngine:
 
 		parameters = self.transitiontype.computeparameters(value)
 		wnd = self.windows[0]
-		wnd.paintOnDDS(self._active, wnd)
+		
+		if self._multiElement:
+			wnd.paintOnDDS(self._active, wnd)
+		else:
+			wnd._paintOnDDS(self._active, wnd._rect)
+
 		if self.outtrans:
 			vfrom = self._active
 			vto = wnd._passive
 		else:
 			vfrom = wnd._passive
 			vto = self._active
+
 		tmp  = self._tmp
 		dst  = wnd._drawsurf
 		dstrgn = None
@@ -101,7 +105,7 @@ class TransitionEngine:
 		t_sec = time.time() - self.__start
 		if t_sec>=self.__end:
 			self.settransitionvalue(self.endprogress)
-			self.endtransition()
+			self.__unregister_for_timeslices()
 		else:
 			self.settransitionvalue(t_sec/self.__transperiod)
 	

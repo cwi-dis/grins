@@ -1014,6 +1014,21 @@ class SubWindow(Window):
 		prgn.DeleteObject()
 		return rgn
 
+	# get reg of this relative to arg excluding children
+	def getChildrenClipRgn(self, rel=None):
+		x, y, w, h = self.getwindowpos(rel);
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		L = self._subwindows[:]
+		L.reverse()
+		for w in self._subwindows:
+			x, y, w, h = w.getwindowpos(rel);
+			newrgn = win32ui.CreateRgn()
+			newrgn.CreateRectRgn((x,y,x+w,y+h))
+			rgn.CombineRgn(rgn,newrgn,win32con.RGN_DIFF)
+			newrgn.DeleteObject()
+		return rgn
+
 	def clipRect(self, rc, rgn):
 		newrgn = win32ui.CreateRgn()
 		newrgn.CreateRectRgn(self.ltrb(rc))
@@ -1029,7 +1044,7 @@ class SubWindow(Window):
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
-	def __paintOnDDS(self, dds, dst, rgn=None):
+	def _paintOnDDS(self, dds, dst, rgn=None):
 		x, y, w, h = dst
 		if w==0 or h==0:
 			return
@@ -1102,7 +1117,7 @@ class SubWindow(Window):
 		# first paint self
 		rgn = self.getClipRgn(rel)
 		dst = self.getwindowpos(rel)
-		self.__paintOnDDS(dds, dst, rgn)
+		self._paintOnDDS(dds, dst, rgn)
 		rgn.DeleteObject()
 		
 		# then paint children bottom up
@@ -1111,6 +1126,7 @@ class SubWindow(Window):
 		for w in L:
 			w.paintOnDDS(dds, rel)
 
+	# get a copy of the screen area of this window
 	def getBackDDS(self):
 		bf = self._topwindow._backBuffer
 		x, y, w, h = self.getwindowpos()
@@ -1136,8 +1152,69 @@ class SubWindow(Window):
 			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
 		dds.BltFill((0, 0, w, h), self._convbgcolor)
 
-	# painting while resizing for fit=='meet'
-	def resizeFitMeet(self):
+	# normal painting
+	def _paint_0(self):
+		# first paint self
+		dst = self.getwindowpos(self._topwindow)
+		rgn = self.getClipRgn(self._topwindow)
+		self._paintOnDDS(self._topwindow._backBuffer, dst, rgn)
+		rgn.DeleteObject()
+
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paint()
+
+	# transition, multiElement==false
+	# tr_eng: calls self._paintOnDDS(self._drawsurf)
+	def _paint_1(self):
+		# first paint self
+		self.bltDDS(self._drawsurf)
+			
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paint()
+
+	# transition, multiElement==true, childrenClip==false
+	# tr_eng: calls self.paintOnDDS(self._drawsurf, self)
+	def _paint_2(self):
+		# transition covers everything
+		self.bltDDS(self._drawsurf)
+
+	
+	def __getDC(self, dds):
+		hdc = dds.GetDC()
+		return win32ui.CreateDCFromHandle(hdc)
+
+	def __releaseDC(self, dds, dc):
+		hdc = dc.Detach()
+		dds.ReleaseDC(hdc)
+
+	# transition, multiElement==true, childrenClip==true
+	def _paint_3(self):
+		rgn = self.getChildrenClipRgn(self._topwindow)
+
+		src = self._drawsurf
+		dst = self._topwindow._backBuffer
+
+		dstDC = self.__getDC(dst)	
+		srcDC = self.__getDC(src)	
+		dstDC.SelectClipRgn(rgn)			
+		x, y, w, h = self.getwindowpos()
+		dstDC.BitBlt((x, y),(w, h),srcDC,(0, 0), win32con.SRCCOPY)
+		self.__releaseDC(dst,dstDC)
+		self.__releaseDC(src,srcDC)
+
+	
+	# paint while frozen
+	def _paint_4(self):
+		self.bltDDS(self._passive)
+
+	# painting while resizing for fit=='meet' (scale==0)
+	def _paint_5(self):
 		# lie for a moment 
 		# we 'll restore truth before anybody notice it
 		temp = self._rect
@@ -1147,7 +1224,7 @@ class SubWindow(Window):
 		dst = self._orgrect
 		dds = self.createDDS(dst[2],dst[3])
 		self.clearSurface(dds)
-		self.__paintOnDDS(dds, dst)
+		self._paintOnDDS(dds, dst)
 
 		# then paint children bottom up relative to us
 		L = self._subwindows[:]
@@ -1160,34 +1237,31 @@ class SubWindow(Window):
 
 		# and scale to current rect
 		self.bltDDS(dds)
-	
+		
 	def paint(self):
 		if not self._isvisible:
 			return
 
 		if self._resizing and self._scale==0:
-			self.resizeFitMeet()
+			self._paint_5()
 			return
 
-		# avoid painting while frozen
-		if self._drawsurf:
-			self.bltDDS(self._drawsurf)
+		if self._transition and self._transition.ismaster(self):
+			if self._multiElement:
+				if self._childrenClip:
+					self._paint_3()
+				else:
+					self._paint_2()
+			else:
+				self._paint_1()
 			return
-		elif self._frozen and self._passive:
-			self.bltDDS(self._passive)
-			return
-			
-		# first paint self
-		dst = self.getwindowpos(self._topwindow)
-		rgn = self.getClipRgn(self._topwindow._backBuffer)
-		self.__paintOnDDS(self._topwindow._backBuffer, dst, rgn)
-		rgn.DeleteObject()
 
-		# then paint children bottom up
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			w.paint()
+		if self._frozen:
+			self._paint_4()
+			return
+		
+		self._paint_0()	
+
 
 	def createDDS(self, w=0, h=0, erase=0):
 		if w==0 or h==0:
@@ -1236,8 +1310,7 @@ class SubWindow(Window):
 				self._orgrect = self._rect
 		elif w==w0 and h==h0:	
 			self._resizing = 0
-			
-				
+							
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
@@ -1268,7 +1341,6 @@ class SubWindow(Window):
 			self._active_displist.updatebgcolor(color)
 		self.update()
 
-
 	#
 	# Transitions interface
 	#		
@@ -1276,6 +1348,8 @@ class SubWindow(Window):
 		#print 'begintransition', self, outtrans, runit, dict
 		if not self.__prepare_transition():
 			return
+		self._multiElement = dict.get('multiElement')
+		self._childrenClip = dict.get('childrenClip')
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
 		self._transition.begintransition()
 
@@ -1311,6 +1385,7 @@ class SubWindow(Window):
 		# close() of a display list does not do an erase.
 		#print 'freeze_content', how, self
 		if how:
+			self._topwindow.update()
 			self._passive = self.getBackDDS()
 			self._frozen = how
 		elif self._frozen:
