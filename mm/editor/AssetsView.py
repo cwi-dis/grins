@@ -236,7 +236,10 @@ class AssetsView(AssetsViewDialog):
 				name = MMAttrdefs.getattr(n, 'name')
 				rv.append((None, ntype, name, ntype))
 			return rv
-		return [(None, tp, tp, '')]
+		name = ''
+		if tp in ('viewport', 'region'):
+			name = data.name
+		return [(None, tp, name, tp)]
 
 	# Callbacks from the UI
 	def setview_callback(self, which):
