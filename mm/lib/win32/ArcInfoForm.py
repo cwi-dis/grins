@@ -79,6 +79,9 @@ class ArcInfoForm(GenFormView):
 		if self._idcbdict.has_key(id):
 			apply(apply,self._idcbdict[id])
 	
+	def OnClose(self):
+		apply(apply,self._idcbdict[win32con.IDCANCEL])
+
 	# Called by the core to set the title of this view
 	def settitle(self,title):
 		self._title=title
