@@ -274,6 +274,7 @@ class SchedulerContext:
 
 	def trigger(self, arc):
 		node = arc.dstnode
+		arc.qid = None
 		node.parent.scheduled_children = node.parent.scheduled_children - 1
 		if debugevents: print 'trigger', `node`
 		if not arc.isstart:
@@ -298,7 +299,7 @@ class SchedulerContext:
 			# node is playing, must terminate it first
 			if debugevents: print 'terminating node'
 			self.parent.do_terminate(self, node)
-		elif pnode.type == 'excl':
+		elif pnode.type == 'excl' or pnode.type == 'seq':
 			# parent is excl, must terminate running child first
 			# XXX must implement pause
 			# XXX musr implement priority class
@@ -665,7 +666,7 @@ class Scheduler(scheduler):
 			    ((arc.dstnode in node.children and event == 'begin') or
 			     (arc.dstnode not in node.children and event == 'end'))):
 				arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
-				self.enter(arc.delay, 0, sctx.trigger, (arc,))
+				arc.qid = self.enter(arc.delay, 0, sctx.trigger, (arc,))
 
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
