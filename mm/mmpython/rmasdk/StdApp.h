@@ -6,3 +6,6 @@
 #include "exsitsup.h"
 #include "exaumgr.h"
 #include "excontxt.h"
+
+#include "exvsurf.h"
+#include "exnwsite.h"

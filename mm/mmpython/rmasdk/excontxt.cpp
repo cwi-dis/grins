@@ -60,7 +60,7 @@ void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown, void *hwnd,
 #ifdef _UNIX
 				void *dpy,
 #endif
-				int x, int y, int w, int h)
+				int x, int y, int w, int h, int wl)
 {
     m_pErrorSink	= new ExampleErrorSink(pUnknown);
     m_pClientSink	= new ExampleClientAdviceSink(pUnknown);
@@ -69,7 +69,7 @@ void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown, void *hwnd,
 #ifdef _UNIX
 						  dpy,
 #endif
-						  x, y, w, h);
+						  x, y, w, h, wl);
 
     if (m_pClientSink)m_pClientSink->AddRef(); 
     if (m_pErrorSink)m_pErrorSink->AddRef();

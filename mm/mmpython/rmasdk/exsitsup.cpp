@@ -12,6 +12,7 @@
 
 #include "pncom.h"
 #include "pntypes.h"
+#include "fivemlist.h"
 #include "pnwintyp.h"
 #include "rmawin.h"
 #include "rmapckts.h"
@@ -19,6 +20,11 @@
 #include "fivemmap.h"
 #include "exsitsup.h"
 
+
+#include "rmasite2.h"
+#include "rmavsurf.h"
+#include "exvsurf.h"
+#include "exnwsite.h"
 
 /****************************************************************************
  *  ExampleSiteSupplier::ExampleSiteSupplier                  ref:  exsitup.h
@@ -29,13 +35,16 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 #ifdef _UNIX
 					 void *dpy,
 #endif
-					 int x, int y, int w, int h)
+					 int x, int y, int w, int h, int wl)
     : m_lRefCount(0)
     , m_pSiteManager(NULL)
     , m_pCCF(NULL)
     , m_pUnkPlayer(pUnkPlayer)
     , pPythonWindow(NULL)
     , m_WindowWasCreated(0)
+	, m_pWindowlessSite(NULL)
+	, m_windowless(wl)
+	, m_pPyVideoRenderer(NULL)
 {
     if (m_pUnkPlayer)
 		{
@@ -48,6 +57,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 		m_pUnkPlayer->AddRef();
 		}
     memset(&m_PNxWindow,0,sizeof(PNxWindow));
+	if(!m_windowless) {
 	if (hwnd != 0 &&
 #ifdef _UNIX
 		dpy != 0 &&
@@ -65,6 +75,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 	    m_PNxWindow.clipRect.top = y;
 	    m_PNxWindow.clipRect.right = x + w;
 	    m_PNxWindow.clipRect.bottom = y + h;
+		}
 	}
 }
 
@@ -80,7 +91,9 @@ ExampleSiteSupplier::~ExampleSiteSupplier()
     PN_RELEASE(m_pCCF);
     PN_RELEASE(m_pUnkPlayer);
     Py_XDECREF(pPythonWindow);
+	Py_XDECREF(m_pPyVideoRenderer);
     pPythonWindow = NULL;
+	m_pPyVideoRenderer = NULL;
 	}
 
 
@@ -111,16 +124,32 @@ ExampleSiteSupplier::SitesNeeded
     UINT32		style		= 0;
     IRMASite*		pSite		= NULL;
 
-    // Just let the RMA client core create a windowed site for us.
-    hres = m_pCCF->CreateInstance(CLSID_IRMASiteWindowed,(void**)&pSiteWindowed);
-    if (PNR_OK != hres)goto exit;
+	if(m_windowless) {
+		m_pWindowlessSite = new ExampleWindowlessSite(m_pUnkPlayer);
+		if (!m_pWindowlessSite)goto exit;
+		m_pWindowlessSite->AddRef();
+		hres = m_pWindowlessSite->QueryInterface(IID_IRMASite,(void**)&pSite);
+		if (PNR_OK != hres)goto exit;
+		hres = m_pWindowlessSite->QueryInterface(IID_IRMAValues,(void**)&pSiteProps);
+		if (PNR_OK != hres)goto exit;
+		m_pWindowlessSite->SetPyVideoRenderer(m_pPyVideoRenderer);
+		Py_XDECREF(m_pPyVideoRenderer);
+		m_pPyVideoRenderer = NULL;
+		}
+	else { // m_windowless
+	
+		// Just let the RMA client core create a windowed site for us.
+		hres = m_pCCF->CreateInstance(CLSID_IRMASiteWindowed,(void**)&pSiteWindowed);
+		if (PNR_OK != hres)goto exit;
 
-    hres = pSiteWindowed->QueryInterface(IID_IRMASite,(void**)&pSite);
-    if (PNR_OK != hres)goto exit;
+		hres = pSiteWindowed->QueryInterface(IID_IRMASite,(void**)&pSite);
+		if (PNR_OK != hres)goto exit;
 
-    hres = pSiteWindowed->QueryInterface(IID_IRMAValues,(void**)&pSiteProps);
-    if (PNR_OK != hres)goto exit;
-
+		hres = pSiteWindowed->QueryInterface(IID_IRMAValues,(void**)&pSiteProps);
+		if (PNR_OK != hres)goto exit;
+	
+		} // m_windowless
+	
     /*
      * We need to figure out what type of site we are supposed to
      * to create. We need to "switch" between site user and site
@@ -143,22 +172,26 @@ ExampleSiteSupplier::SitesNeeded
 			}
 		}
 
+	if(!m_windowless) {
+	
 #ifdef _WINDOWS
-	if(m_PNxWindow.window)
-		style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN;
-	else
-		style = WS_SYSMENU | WS_OVERLAPPED | WS_VISIBLE | WS_CLIPCHILDREN;
+		if(m_PNxWindow.window)
+			style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN;
+		else
+			style = WS_SYSMENU | WS_OVERLAPPED | WS_VISIBLE | WS_CLIPCHILDREN;
 #endif
 
-	if(!m_PNxWindow.window) {
-		hres = pSiteWindowed->Create(m_PNxWindow.window,style);
-		m_WindowWasCreated = 1;
-	} else {
-		hres=pSiteWindowed->AttachWindow(&m_PNxWindow);
-	}
+		if(!m_PNxWindow.window) {
+			hres = pSiteWindowed->Create(m_PNxWindow.window,style);
+			m_WindowWasCreated = 1;
+		} else {
+			hres=pSiteWindowed->AttachWindow(&m_PNxWindow);
+		}
 
-    if (PNR_OK != hres)goto exit;
+    if (PNR_OK != hres) goto exit;
 
+	}  // m_windowless
+	
     /*
      * We need to wait until we have set all the properties before
      * we add the site.
@@ -172,7 +205,10 @@ ExampleSiteSupplier::SitesNeeded
 exit:
 
     PN_RELEASE(pSiteProps);
-    PN_RELEASE(pSiteWindowed);
+	
+	if(!m_windowless)
+		PN_RELEASE(pSiteWindowed);
+	
     PN_RELEASE(pSite);
 
     return hres;
@@ -195,20 +231,26 @@ ExampleSiteSupplier::SitesNotNeeded(UINT32 uRequestID)
     pSite = (IRMASite*)pVoid;
     m_pSiteManager->RemoveSite(pSite);
 
-	pSite->QueryInterface(IID_IRMASiteWindowed,(void**)&pSiteWindowed);
-	if(m_WindowWasCreated) {
-		pSiteWindowed->Destroy();
-	} else {
-		pSiteWindowed->DetachWindow();
+	if(m_windowless){
+		PN_RELEASE(m_pWindowlessSite);
+	}		
+	else { // m_windowless	
+		pSite->QueryInterface(IID_IRMASiteWindowed,(void**)&pSiteWindowed);
+		if(m_WindowWasCreated) {
+			pSiteWindowed->Destroy();
+		} else {
+			pSiteWindowed->DetachWindow();
 #ifdef _WINDOWS
-		::InvalidateRect((HWND)m_PNxWindow.window,NULL,TRUE);
+			::InvalidateRect((HWND)m_PNxWindow.window,NULL,TRUE);
 #endif
-		Py_XDECREF(pPythonWindow);
-		pPythonWindow = NULL;
-		memset(&m_PNxWindow,0,sizeof(PNxWindow));
-	}
+			Py_XDECREF(pPythonWindow);
+			pPythonWindow = NULL;
+			memset(&m_PNxWindow,0,sizeof(PNxWindow));
+		}
 	pSiteWindowed->Release();
-
+	
+	} // m_windowless
+	
 	// ref count = 1; deleted from this object's view!
     pSite->Release();
 
