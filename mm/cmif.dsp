@@ -403,6 +403,10 @@ SOURCE=.\editor\win32\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\ToolbarTemplate.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\TopLevelDialog.py
 # End Source File
 # Begin Source File
@@ -876,6 +880,10 @@ SOURCE=.\lib\win32\splash.py
 # Begin Source File
 
 SOURCE=.\lib\win32\sysmetrics.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\Toolbars.py
 # End Source File
 # Begin Source File
 
@@ -1396,6 +1404,10 @@ SOURCE=.\grins\win32\PlayerDialog.py
 # Begin Source File
 
 SOURCE=.\grins\win32\PreferencesDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\win32\ToolbarTemplate.py
 # End Source File
 # Begin Source File
 
