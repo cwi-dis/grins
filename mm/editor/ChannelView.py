@@ -1821,6 +1821,10 @@ class NodeBox(GO, NodeBoxCommand):
 		haboxsize = w / 2
 		vaboxsize = h / 3
 
+		# give box a minimal size
+		if l + haboxsize > r:
+			r = l + haboxsize
+
 		if self.node.WillPlay():
 			nodecolor = NODECOLOR
 			altnodecolor = ALTNODECOLOR
