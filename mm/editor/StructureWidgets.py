@@ -289,6 +289,18 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def pasteundercall(self):
 		self.mother.paste(0)
 
+class MMWidgetDecoration(Widgets.Widget):
+	# This is a base class for anything that an MMNodeWidget has on it, but which isn't
+	# actually the MMWidget.
+	def __init__(self, mmwidget, mother):
+		assert isinstance(mmwidget, MMNodeWidget)
+		
+		self.mmwidget = mmwidget
+		Widgets.Widget.__init__(self, mother)
+	def destroy(self):
+		self.mmwidget = None
+	def get_mmwidget(self):
+		return self.mmwidget
 
 class StructureObjWidget(MMNodeWidget):
 	# A view of a seq, par, excl or any internal structure node.
@@ -316,7 +328,7 @@ class StructureObjWidget(MMNodeWidget):
 		self.node.views['struct_view'] = self 
 		if mother.timescale == 'global' and not node.parent:
 			# If we are showing timescale globally we do it on the root
-			self.timeline = TimelineWidget(node, mother)
+			self.timeline = TimelineWidget(self, mother)
 		else:
 			self.timeline = None
 
@@ -761,7 +773,7 @@ class TimeStripSeqWidget(SeqWidget):
 ##		return "TimeStripSeqWidget"
 
 
-class ImageBoxWidget(MMNodeWidget):
+class ImageBoxWidget(MMWidgetDecoration):
 	# Common baseclass for dropbox and channelbox
 	# This is only for images shown as part of the sequence views; This
 	# is not used for any image on screen.
@@ -1426,10 +1438,10 @@ class MediaWidget(MMNodeWidget):
 			return None
 
 
-class TransitionWidget(MMNodeWidget):
+class TransitionWidget(MMWidgetDecoration):
 	# This is a box at the bottom of a node that represents the in or out transition.
 	def __init__(self, parent, mother, inorout):
-		MMNodeWidget.__init__(self, parent.node, mother)
+		MMWidgetDecoration.__init__(self, parent, mother)
 		self.in_or_out = inorout
 		self.parent = parent
 
@@ -1487,10 +1499,10 @@ class TransitionWidget(MMNodeWidget):
 		editmgr.commit()
 
 
-class PushBackBarWidget(Widgets.Widget):
+class PushBackBarWidget(MMWidgetDecoration):
 	# This is a push-back bar between nodes.
 	def __init__(self, parent, mother):
-		Widgets.Widget.__init__(self, mother)
+		MMWidgetDecoration.__init__(self, parent, mother)
 		self.node = parent.node
 		self.parent = parent
 
@@ -1526,22 +1538,28 @@ class PushBackBarWidget(Widgets.Widget):
 		AttrEdit.showattreditor(self.mother.toplevel, self.node, '.begin1')
 
 
-class Icon(MMNodeWidget):
+class Icon(MMWidgetDecoration):
 	# Display an icon which can be clicked on. This can be used for
 	# any icon on screen.
 	# This inherits from MMNodeWidget because of the get_obj_at() mechanism and click handling.
 	def __init__(self, icon, parent, node, mother):
-		MMNodeWidget.__init__(self, node, mother)
+		MMWidgetDecoration.__init__(self, parent, mother)
+		self.node = node
 		self.parent = parent
 		self.icon = icon
 
 	def set_callback(self, callback, args=()):
+		print "DEBUG: callback set."
 		self.callback = callback, args
 
-	def mouse0release(self):
-		if self.callback and self.icon and self.selected:
+	def mouse0release(self, coords):
+		print "DEBUG: doing the callback."
+		print "DEBUG: ", self.callback, self.icon
+		if self.callback and self.icon:
 			# Freaky code that Sjoerd showed me: -mjvdg
 			apply(apply, self.callback)
+		else:
+			print "DEBUG: no callback."
 
 	def moveto(self, pos):
 		x,y = pos
@@ -1553,7 +1571,7 @@ class Icon(MMNodeWidget):
 		if self.icon is not None:
 			displist.drawicon(self.get_box(), self.icon)
 
-class TimelineWidget(MMNodeWidget):
+class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
 ##	def __repr__(self):
 ##		return "TimelineWidget"
@@ -1563,7 +1581,7 @@ class TimelineWidget(MMNodeWidget):
 		
 	def moveto(self, coords):
 		MMNodeWidget.moveto(self, coords)
-		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		t0, t1, t2, download, begindelay = self.get_mmwidget().node.GetTimes('bandwidth')
 		self.time_segments = self.mother.timemapper.gettimesegments(range=(t0, t2))
 		starttime, dummy, oldright = self.time_segments[0]
 		stoptime, dummy, dummy = self.time_segments[-1]

@@ -184,10 +184,10 @@ class Widget:
 	def right_click(self):
 		print "TODO: Widget.right_click()"
 
-	def mouse0press(self):
+	def mouse0press(self, coords):
 		pass
 
-	def mouse0release(self):
+	def mouse0release(self, coords):
 		pass
 
 	def moveto(self, newpos):
