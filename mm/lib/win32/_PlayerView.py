@@ -58,6 +58,13 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		DisplayListView.OnInitialUpdate(self)
 		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
 		self.HookMessage(self.onCreateBoxCancel,WM_USER_CREATE_BOX_CANCEL)
+		self.HookMessage(self.onChar, win32con.WM_KEYDOWN)
+
+	def onChar(self, params):
+		import win32ui
+		from WMEVENTS import KeyboardInput
+		c = win32ui.TranslateVirtualKey(params[2])
+		self.onEvent(KeyboardInput, c)
 
 	# Do not close and recreate topwindow, due to flushing screen
 	# and loose of focus. 
