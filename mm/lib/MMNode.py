@@ -18,6 +18,7 @@ import MMStates
 import Bandwidth
 import Duration
 import re
+import parseutil
 
 debuggensr = 0
 debug = 0
@@ -2001,9 +2002,8 @@ class _TimingInfo:
 	def GetTimes(self):
 		return self.t0, self.t1, self.t2, self.downloadlag
 
-# these two used by parseclockval() and GetClip() below
+# used by GetClip() below
 clipre = None
-clock_val = None
 
 nonascii = None
 
@@ -2573,11 +2573,11 @@ class MMNode(MMTreeElement):
 			raise ValueError('invalid %s attribute' % attr)
 		if res.group('npt'):
 			val = res.group('nptclip')
-			val = float(parseclockval(val, attr))
+			val = float(parseutil.parsecounter(val, attr))
 		elif res.group('clock'):
 ##			raise ValueError('invalid %s attribute; should be "npt=<time>"' % attr)
 			val = res.group('clock')
-			val = float(parseclockval(val, attr))
+			val = float(parseutil.parsecounter(val, attr))
 		elif res.group('marker'):
 			val = float(self.GetMarkerVal(res.group('markerclip')))
 		else:
@@ -4889,61 +4889,11 @@ def parsemarkerfile(url):
 		start = dur = 0
 		title = ''
 		if len(vals) > 1:
-			start = parseclockval(vals[1], url)
+			start = parseutil.parsecounter(vals[1], url)
 ##			if len(vals) > 2:
-##				dur = parseclockval(vals[2])
+##				dur = parseutil.parsecounter(vals[2])
 ##				if len(vals) > 3:
 ##					title = vals[3]
 		markers[id] = (start, dur, title)
 	u.close()
 	return markers
-
-# XXX copy of part of __parsecounter in SMILTreeRead.py
-def parseclockval(val, attr):
-	global clock_val
-	if clock_val is None:
-		clock_val = re.compile(
-			r'(?:(?P<use_clock>'	# full/partial clock value
-			r'(?:(?P<hours>\d+):)?'		# hours: (optional)
-			r'(?P<minutes>[0-5][0-9]):'	# minutes:
-			r'(?P<seconds>[0-5][0-9])'      	# seconds
-			r'(?P<fraction>\.\d+)?'		# .fraction (optional)
-			r')|(?P<use_timecount>' # timecount value
-			r'(?P<timecount>\d+)'		# timecount
-			r'(?P<units>\.\d+)?'		# .fraction (optional)
-			r'(?P<metric>h|min|s|ms)?)'	# metric (optional)
-			r')')
-	res = clock_val.match(val)
-	if res is None:
-		raise ValueError('not a clock value in %s' % attr)
-	if res.group('use_clock'):
-		h, m, s, f = res.group('hours', 'minutes',
-				       'seconds', 'fraction')
-		offset = 0
-		if h is not None:
-			offset = offset + string.atoi(h) * 3600
-		m = string.atoi(m)
-		if m >= 60:
-			raise ValueError('minutes out of range')
-		s = string.atoi(s)
-		if s >= 60:
-			raise ValueError('seconds out of range')
-		offset = offset + m * 60 + s
-		if f is not None:
-			offset = offset + string.atof(f + '0')
-	elif res.group('use_timecount'):
-		tc, f, sc = res.group('timecount', 'units', 'metric')
-		offset = string.atoi(tc)
-		if f is not None:
-			offset = offset + string.atof(f)
-		if sc == 'h':
-			offset = offset * 3600
-		elif sc == 'min':
-			offset = offset * 60
-		elif sc == 'ms':
-			offset = offset / 1000.0
-		# else already in seconds
-	else:
-		raise ValueError('internal error')
-	return offset
-
