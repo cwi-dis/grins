@@ -92,6 +92,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		self.makechannels()
 		self.fullreset()
 		BasicDialog.show(self)
+		self.toplevel.checkviews()
 		self.showchannels()
 		self.showstate()
 	#
@@ -100,6 +101,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		self.stop()
 		self.fullreset()
 		BasicDialog.hide(self)
+		self.toplevel.checkviews()
 		self.destroychannels()
 	#
 	def save_geometry(self):
