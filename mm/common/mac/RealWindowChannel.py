@@ -31,7 +31,7 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 		return 1
 
 	def do_play(self, node):
-		if not self.playit(node, self.window.GetSafeHwnd()):
+		if not self.playit(node, self._getoswindow()):
 			self.playdone(0)
 
 	# toggles between pause and run
@@ -42,3 +42,13 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 	def stopplay(self, node):
 		self.stopit()
 		Channel.ChannelWindowAsync.stopplay(self, node)
+
+	def _getoswindow(self):
+		if hasattr(self.window, "GetSafeHwnd"):
+			# Windows
+			return self.window.GetSafeHwnd()
+		elif hasattr(self.window, "_wid"):
+			# Macintosh
+			return self.window._wid
+		else:
+			return None
