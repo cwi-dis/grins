@@ -34,14 +34,13 @@ ITEM_TO_COMMAND={
 }
 
 class LayoutViewDialog(windowinterface.MACDialog):
-	item_to_command = ITEM_TO_COMMAND
 	
 	def __init__(self):
 ##		w = windowinterface.Window('LayoutDialog', resizable = 1,
 ##					   deleteCallback = [CLOSE_WINDOW])
 ##		self.__window = w
 		windowinterface.MACDialog.__init__(self, 'Layout', ID_DIALOG_LAYOUT,
-				ITEMLIST_ALL)
+				ITEMLIST_ALL, cmdbuttons=ITEM_TO_COMMAND)
 ##		w1 = w.SubWindow(left = None, top = None, bottom = None, right = 0.33)
 ##		w2 = w.SubWindow(left = w1, top = None, bottom = None, right = 0.67)
 ##		w3 = w.SubWindow(left = w2, top = None, bottom = None, right = None)
@@ -83,7 +82,6 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		del self.__otherlist
 			
 	def do_itemhit(self, item, event):
-		print 'itemhit', item, event
 		if item == ITEM_LAYOUT_LIST:
 			self._listclick(event, self.__layoutlist, self.__layoutcb, ())
 		elif item == ITEM_CHANNEL_LIST:
@@ -91,8 +89,8 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		elif item == ITEM_OCHANNEL_LIST:
 			self._listclick(event, self.__otherlist, self.__othercb, ())
 		else:
-			if not windowinterface.MACDialog.do_itemhit(self, item, event):
-				print 'LayoutViewDialog: unexpected item/event:', item, event
+			print 'LayoutViewDialog: unexpected item/event:', item, event
+		return 1
 
 	def _listclick(self, event, list, cbfunc, cbarg):
 		(what, message, when, where, modifiers) = event
@@ -100,7 +98,6 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		where = Qd.GlobalToLocal(where)
 		old_select = list.getselect()
 		item, is_double = list.click(where, modifiers)
-		print 'click', old_select, '->', item, is_double
 		if old_select != item:
 			apply(cbfunc, cbarg)
 
@@ -126,7 +123,7 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		if cur is not None:
 			self.__otherlist.select(channels.index(cur))
 		else:
-			self.__channellist.select(None)
+			self.__otherlist.select(None)
 
 	def __layoutcb(self):
 		sel = self.__layoutlist.getselect()
@@ -159,7 +156,6 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		pass
 
 	def setcommandlist(self, commandlist):
-		print 'CMDS', commandlist
 		self._window.set_commandlist(commandlist)
 
 	def asklayoutname(self, default):
