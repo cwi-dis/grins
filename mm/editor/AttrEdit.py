@@ -635,9 +635,10 @@ class AnimationWrapper(NodeWrapper):
 			root = self.node.GetRoot()
 			targnode = root.GetChildByName(value)
 			self.node.targetnode = targnode
+		elif name == 'speed' or name =='autoReverse':
+			self.node.fullduration = None # recalculate it
 		NodeWrapper.setattr(self, name, value)
-
-
+		
 class PrefetchWrapper(NodeWrapper):
 	def __init__(self, toplevel, node):
 		NodeWrapper.__init__(self, toplevel, node)
