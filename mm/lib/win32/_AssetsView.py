@@ -28,6 +28,9 @@ ICONNAME_TO_RESID={
 	'excl': grinsRC.IDI_ICON_EXCLOPEN,
 	'switch': grinsRC.IDI_ICON_SWITCHOPEN,
 	'prio': grinsRC.IDI_ICON_PRIOOPEN,
+	'properties': grinsRC.IDI_PROPERTIES,
+	'viewport': grinsRC.IDI_VIEWPORT,
+	'region': grinsRC.IDI_REGION,
 }
 
 class _AssetsView(GenView.GenView, docview.ListView):
