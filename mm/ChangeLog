@@ -1,0 +1,9 @@
+2000-02-01    <sjoerd.mullender@oratrix.nl>
+
+	* editor\AttrEdit.py (DocumentWrapper.attrnames): Remove
+	project_html_page attribute from list of editable document
+	preferences in Lite version.
+
+	* Created a branch for patches to the GRiNS 1.5 release.  The
+	branch is called GRiNS_G2_15-patches.
+
