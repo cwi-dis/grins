@@ -401,6 +401,7 @@ SetMiterLimit(PyObject *self, PyObject *args)
 		}
 	return Py_BuildValue("f", eOldLimit);
 }
+
 ////////////////////////////////////////
 // Path
 
