@@ -110,18 +110,18 @@ class MainDialog:
 					   self.__skin_done, None, 1,
 					   parent = windowinterface.getmainwnd())
 
-	def components_callback(self):
-		import windowinterface
-		windowinterface.FileDialog('Open components file', '.', ['text/plain'], '',
-					   self.__components_done, None, 1,
-					   parent = windowinterface.getmainwnd())
-
-	def __components_done(self, filename):
-		if filename:
-			import settings
-			url = self.__path2url(filename)
-			settings.set('components', url)
-			settings.save()
+##	def components_callback(self):
+##		import windowinterface
+##		windowinterface.FileDialog('Open components file', '.', ['text/plain'], '',
+##					   self.__components_done, None, 1,
+##					   parent = windowinterface.getmainwnd())
+##
+##	def __components_done(self, filename):
+##		if filename:
+##			import settings
+##			url = self.__path2url(filename)
+##			settings.set('components', url)
+##			settings.save()
 
 	def openfile_callback(self):
 		# Callback for OPENFILE menu command
