@@ -348,6 +348,23 @@ class AnimateElementParser:
 		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
 		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
 
+		# speed="1" is a no-op, and speed="-1" means play backwards
+		# We have to get the absolute speed. This is relative to parent 
+		self.__speed = MMAttrdefs.getattr(self.__anim, 'speed')
+		if self.__speed==0.0: # not allowed
+			self.__speed=1.0
+
+		self.__accelerate = MMAttrdefs.getattr(self.__anim, 'accelerate')
+		self.__decelerate = MMAttrdefs.getattr(self.__anim, 'decelerate')
+		dt =  self.__accelerate + self.__decelerate
+		if(dt>1.0)
+			# *the timing module draft says accelerate is clamped to 1 and decelerate=1-accelerate
+			self.__accelerate = self.__accelerate/dt
+			self.__decelerate = self.__decelerate/dt
+
+		self.__autoReverse = MMAttrdefs.getattr(self.__anim, 'autoReverse')
+
+
 	def getAnimator(self):
 
 		# 1. Read animation attributes
