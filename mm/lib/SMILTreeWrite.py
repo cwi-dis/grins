@@ -30,7 +30,9 @@ NSRP9prefix = 'rn'
 NSQTprefix = 'qt'
 
 # This string is written at the start of a SMIL file.
-SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
+##encoding = ' encoding="ISO-8859-1"'
+encoding = ''				# Latin-1 (ISO-8859-1) coincides with lower part of Unicode
+SMILdecl = '<?xml version="1.0"%s?>\n' % encoding
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
 doctype2 = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILBostonPubid,' '*22,SMILBostonDtd)
 xmlnsGRiNS = 'xmlns:%s' % NSGRiNSprefix
