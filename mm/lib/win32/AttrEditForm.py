@@ -832,13 +832,17 @@ class ElementSelCtrl(AttrCtrl):
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		self._attrval.enable(0)
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
 
 	def setvalue(self, val):
 		if self._initctrl:
+			self._attrval.enable(1)
 			self._attrval.settext(val)
+			self._attrval.enable(0)
+
 	def getvalue(self):
 		if self._initctrl:
 			return self._attrval.gettext()
@@ -851,7 +855,7 @@ class ElementSelCtrl(AttrCtrl):
 		dlg = win32dialog.SelectElementDlg(parent, mmnode, selected)
 		if dlg.show():
 			if selected != dlg.gettext():
-				self._attrval.settext(dlg.gettext())
+				self.setvalue(dlg.gettext())
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
