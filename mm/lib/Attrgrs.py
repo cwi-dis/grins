@@ -18,6 +18,7 @@ attrgrs=(
 		'subregionwh',
 		'displayfull',
 		'subregionanchor',
+		'aspect',
 		]},
 
 	{'name':'base_winoff_and_units',
