@@ -5,14 +5,14 @@ import MMAttrdefs
 import string
 
 class Animator:
-	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None):
+	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None, transf=None):
 		self._attr = attr
 		self._domval = domval
 		self._dur = dur
+		self._mode = mode
 		self._values = values
 		self._times = times
 		self._splines = splines
-		self._mode = mode
 
 		# assertions
 		if len(values)==0: raise AssertionError
@@ -30,7 +30,7 @@ class Animator:
 		else: self._inrepol = self._linear
 
 		# return value transformation (for example int())
-		self._transf = None
+		self._transf = transf
 
 		# construct boundaries of time intervals
 		self._efftimes = []
@@ -105,8 +105,6 @@ class Animator:
 		dur = self._dur
 		el = self._splines
 		n = len(vl)
-		if n<2 or len(el)!=n-1:
-			raise IndexError('values and splines missmatch')
 		if t==dur: 
 			return vl[len(vl)-1]
 		elif t==0:
@@ -129,9 +127,9 @@ class Animator:
 				return b*e[1] + c*e[3] + d
 			s = s + step
 
-	# return values transformations
-	def _round(self, val):
-		return int(val+0.5)
+# return values transformations
+def _round(val):
+	return int(val+0.5)
 
 
 class ConstAnimator(Animator):
@@ -180,12 +178,16 @@ class AnimateElementParser:
 		self.__grinsext = 0
 
 		self.__hasValidTarget = self.__checkTarget()
+		if self.__hasValidTarget:
+			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
 
 		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
 		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
 		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
 
 	def getAnimator(self):
+		
+		# 1. return None on syntax or logic error
 		if not self.__hasValidTarget:
 			print 'invalid target syntax error'
 			return None
@@ -195,6 +197,7 @@ class AnimateElementParser:
 			print 'values syntax error'
 			return None
 
+		# 2. Read animation attributes
 		attr = self.__attrname
 		domval = self.__domval
 		dur = self.getDuration()
@@ -202,22 +205,36 @@ class AnimateElementParser:
 		times = self.__getInterpolationKeyTimes() 
 		splines = self.__getInterpolationKeySplines()
 
-		# src attribute animation
-		if self.__attrname=='file':
-			values = self.__getAlphaInterpolationValues()
-			mode = 'discrete' # override calc mode
-			return Animator(attr, domval, values, dur, mode, times, splines)
 		
+		# 3. Return expicitly any special animators
 		## Begin temp grins extensions
 		# position animation
 		if self.__grinsext:
 			values = self.__getNumInterpolationValues()
-			anim = Animator(attr, domval, values, dur, mode, times, splines)
-			anim._transf = anim._round # pixels
-			return anim
+			return Animator(attr, domval, values, dur, mode, times, splines, _round)
 		## End temp grins extensions
 
-		return ConstAnimator(attr, domval, domval, dur)
+		
+		# 4. Return an animator based on the attr type
+		print 'Guessing animator for',self.__attrname, self.__attrtype
+		anim = None
+		if self.__attrtype == 'int':
+			values = self.__getNumInterpolationValues()
+			anim = Animator(attr, domval, values, dur, mode, times, splines, _round)
+		elif self.__attrtype == 'float':
+			values = self.__getNumInterpolationValues()
+			anim = Animator(attr, domval, values, dur, mode, times, splines)
+		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
+			mode = 'discrete' # override calc mode
+			values = self.__getAlphaInterpolationValues()
+			anim = Animator(attr, domval, values, dur, mode, times, splines)
+		
+		# 5. Return a default if anything else failed
+		if not anim:
+			print 'Dont know how to animate attribute.',self.__attrname,self.__attrtype
+			anim = ConstAnimator(attr, domval, domval, dur)
+
+		return anim
 
 	def getAttrName(self):
 		return self.__attrname
@@ -372,11 +389,11 @@ class AnimateElementParser:
 
 	# return keySplines or an empty list on failure
 	def __getInterpolationKeySplines(self):
+		keySplines = self.getKeySplines()
+		if not keySplines: return ()
 		if self.__calcMode != 'spline':
 			print 'splines while not in spline calc mode'
 			return []
-		keySplines = self.getKeySplines()
-		if not keySplines: return ()
 		sl = string.split(values,';')
 		
 		# len of keySplines must be equal to num of intervals (=len(keyTimes)-1)
