@@ -316,12 +316,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("unknown layout `%s'" % val)
 			elif attr == 'title':
 				attrdict['title'] = val
+			elif attr == 'fill':
+				if val in ('freeze', 'remove'):
+					attrdict['fill'] = val
+				else:
+					self.syntax_error("bad fill attribute")
 			elif attr not in smil_node_attrs:
 				# catch all
 				try:
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
 					pass
+		if attrdict.has_key('fill') and \
+		   attrdict['fill'] == 'freeze' and \
+		   not attrdict.has_key('duration'):
+			del attrdict['fill']
 
 	def NewNode(self, tagname, attributes):
 		# mimetype -- the MIME type of the node as specified in attr
