@@ -7,10 +7,11 @@ from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
+	attrs = ['bucolor', 'hicolor', 'scale', 'project_videotype', 'project_targets']
 	if CMIF_MODE:
-		node_attrs = ChannelWindowThread.node_attrs + ['bucolor', 'hicolor', 'scale']
+		node_attrs = ChannelWindowThread.node_attrs + attrs
 	else:
-		chan_attrs = ChannelWindowThread.chan_attrs + ['bucolor', 'hicolor', 'scale']
+		chan_attrs = ChannelWindowThread.chan_attrs + attrs
 
 	def threadstart(self):
 		import mpegchannel
