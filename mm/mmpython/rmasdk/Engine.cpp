@@ -47,7 +47,6 @@ EngineObject::EngineObject()
 
 EngineObject::~EngineObject()
 	{
-	CloseContext();
 	CloseEngine();
 	}
 
@@ -236,32 +235,4 @@ void CloseEngine()
 	 EngineObject::inst=NULL;
 	}
 
-
-static ExampleClientContext* pContext;
-
-static bool CreateContext()
-	{
-    if(!(pContext = new ExampleClientContext()))
-		{
-		theErr = PNR_UNEXPECTED;
-		CloseContext();
-		return false;
-		}
-	pContext->AddRef();	
-	return true;
-	}
-void CloseContext()
-	{
-    if (pContext)
-		{
-		pContext->Release();
-		pContext = NULL;
-		}
-	}
-
-ExampleClientContext* GetContext()
-	{
-	if(!pContext)CreateContext();
-	return pContext;
-	}
 
