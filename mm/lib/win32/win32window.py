@@ -2051,23 +2051,12 @@ class Region(Window):
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates, units=units)
 		
-		if coordinates==self._rectb and not mediacoords:
-			return
-		
-		x, y, w, h = coordinates
-
-		# old pos
-		x0, y0, w0, h0 = self._rectb
+		# keep old pos
 		x1, y1, w1, h1 = self.getwindowpos()
 
+		x, y, w, h = coordinates
 		self.setmediadisplayrect(mediacoords)
 
-		if self._mediadisplayrect and self._fromsurf and self._transition:
-			tr = self._transition
-			self._transition = None
-			self._fromsurf = self.getBackDDS()
-			self._transition = tr
-											
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
