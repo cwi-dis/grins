@@ -25,7 +25,7 @@ class Window:
 		self._parent = None
 		self._bgcolor = (0, 0, 0)
 		self._fgcolor = (255, 255, 255)
-		self._cursor = ''
+		self._cursor = 'arrow'
 		self._topwindow = None
 		self._convert_color = None
 
@@ -237,14 +237,14 @@ class Window:
 
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
-					self.setcurcursor('hand')
+					self.setcursor('hand')
 					return stop
 			
 		# at this point, we don't find a "valid button"
 		if self._transparent==0:
 			# if window is not transparent, we have to stop to look for whichever the
 			# display list
-			self.setcurcursor('arrow')
+			self.setcursor(self._cursor)
 			return stop
 		else:
 			if self._active_displist:
@@ -254,7 +254,7 @@ class Window:
 				# case for image).
 				if self._active_displist._insideMedia(x,y):
 					# event inside the media, we have to stop
-					self.setcurcursor('arrow')
+					self.setcursor(self._cursor)
 					return stop
 				else:
 					# outside the media, and transparent window. So check the next window
@@ -334,10 +334,10 @@ class Window:
 		self._isvisible = 0
 		self.update()
 
-	def setcursor(self, cursor):
-		self._cursor = cursor
+	def setdefaultcursor(self, strid):
+		self._cursor = strid
 
-	def setcurcursor(self, strid):
+	def setcursor(self, strid):
 		self._topwindow.setcursor(strid)
 	
 	def iscursor(self, strid):
@@ -1667,6 +1667,7 @@ class Region(Window):
 					vrcDst = self._mediadisplayrect
 
 				# src rect taking into account fit
+				ws, hs = vrcSrc[2:]
 				vrcSrc = self._getmediacliprect(vrcSrc[2:], vrcDst, fit=self._fit)
 				
 				# split rects
@@ -1680,6 +1681,12 @@ class Region(Window):
 				
 				# find src clip ltrb given the destination clip
 				lsc, tsc, rsc, bsc =  self._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
+
+				if fit == -4:
+					if ws>w: 
+						wnd.setdefaultcursor('draghand')
+					if hs>h: 
+						wnd.setdefaultcursor('draghand')
 
 				# we are ready, blit it
 				if not vdds.IsLost():
@@ -2236,9 +2243,9 @@ class Viewport(Region):
 			x, y = self._pxl2rel(point,self._canvas)
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
-					self.setcurcursor('hand')
+					self.setcursor('hand')
 					return
-		self.setcurcursor('arrow')
+		self.setcursor(self._cursor)
 
 
 ##########################
