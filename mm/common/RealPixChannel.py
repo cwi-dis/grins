@@ -8,5 +8,6 @@ class RealPixChannel(RealWindowChannel):
 
 	def getfileurl(self, node):
 		if hasattr(node, 'tmpfile'):
+			import MMurl
 			return MMurl.pathname2url(node.tmpfile)
 		return RealWindowChannel.getfileurl(self, node)
