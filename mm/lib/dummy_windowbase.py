@@ -149,7 +149,7 @@ class _Toplevel:
 				self._ofddict[fd] = func, args
 
 class _Window:
-	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0, 
+	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
 			transparent = 0):
 		parent._subwindows.append(self)
 		self._parent = parent
@@ -182,11 +182,11 @@ class _Window:
 
 	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
 		return _Window(self, x, y, w, h, '', 1, pixmap, transparent)
-		
+
 	def showwindow(self):
 		"""Highlight the window"""
 		pass
-		
+
 	def dontshowwindow(self):
 		"""Don't highlight the window"""
 		pass
@@ -278,7 +278,7 @@ class _DisplayList:
 
 	def render(self):
 		pass
-		
+
 	def fgcolor(self, color):
 		r, g, b = color
 
