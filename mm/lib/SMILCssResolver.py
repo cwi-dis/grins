@@ -282,9 +282,6 @@ class Node:
 		self.__dump()
 
 class RegionNode(Node):
-	def __init__(self, context, mmobj=None):
-		Node.__init__(self, context, mmobj)
-
 	def update(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
 		if self.pxwidth <= 0: self.pxwidth = 1
@@ -631,7 +628,7 @@ class RegionNode(Node):
 					self.height = value
 					self._onChangeRawValue('height',self.height)
 				if type(self.height) != type(None) and type(self.bottom) != type(None):
-					if type(top) == type(None):
+					if type(self.top) == type(None):
 						if type(self.bottom) is type(0.0):
 							self.bottom = float(self.bottom-offset)/self.container.pxheight
 							self._onChangeRawValue('bottom',self.bottom)
@@ -701,7 +698,8 @@ class RegionNode(Node):
 			if type(extent) is type(0.0):
 				# extent is fraction
 				if extent == 0 or (extent == 1 and start > 0):
-					raise error, 'region with impossible size'
+					print 'region with impossible size'
+					return minsize
 				if extent == 1:
 					return minsize
 				size = int(start / (1 - extent) + 0.5)
@@ -792,9 +790,6 @@ class RegionNode(Node):
 
 			
 class RootNode(RegionNode):
-	def __init__(self, context, mmobj=None):
-		Node.__init__(self, context, mmobj)
-
 	def copyRawAttrs(self, srcNode):
 		self.pxwidth = srcNode.pxwidth
 		self.pxheight = srcNode.pxheight
@@ -931,7 +926,6 @@ class MediaNode(Node):
 		if self.intrinsicHeight == None or self.intrinsicWidth == None:
 			return 100,100
 		
-		regPoint = self.getRegPoint()		
 		regPointObject = self.getMMRegPoint()
 		regAlign = self._getRegAlign(regPointObject)
 		
@@ -973,7 +967,7 @@ class MediaNode(Node):
 
 		if wM1 is None or wM2 is None:
 			# bad parameters
-			raise minsize
+			return minsize
 
 		# first constraint
 		newsize = minsize
@@ -1090,8 +1084,6 @@ class MediaNode(Node):
 		# get regpoint
 		# for now, regpoint come from directly MMContext.
 		# It's not a problem as long as regpoint element is not animable
-		regPoint = self.getRegPoint()
-
 		regPointObject = self.getMMRegPoint()
 
 		regpoint_x = regPointObject.getx(self.container.pxwidth)
