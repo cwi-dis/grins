@@ -83,7 +83,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 		try:
 			imbox = self.armed_display.display_image_from_file(
-					self.__video_surf, fit = fit, coordinates=self.getmediageom(node), center = 0)
+					self.__video_surf, fit = fit, coordinates=self.getmediageom(node), units = windowinterface.UNIT_PXL, center = 0)
 		except windowinterface.error, msg:
 			self.errormsg(node, 'Cannot display: %s\n\n%s.' %(f, msg))
 			return 1

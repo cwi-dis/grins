@@ -35,7 +35,7 @@ class ImageChannel(ChannelWindow):
 		
 		try:
 			imbox = self.armed_display.display_image_from_file(
-					f, fit = fit, coordinates=self.getmediageom(node), center = 0)
+					f, fit = fit, coordinates=self.getmediageom(node), units = windowinterface.UNIT_PXL, center = 0)
 			self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
@@ -156,7 +156,7 @@ class ImageChannel(ChannelWindow):
 		fit = MMAttrdefs.getattr(node, 'fit', animated)
 		try:
 			self._update_imbox = self.update_display.display_image_from_file(f, fit = fit, 
-			coordinates=self.getmediageom(node))
+				coordinates=self.getmediageom(node), units = windowinterface.UNIT_PXL)
 			self.update_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
