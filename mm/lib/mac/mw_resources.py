@@ -54,3 +54,12 @@ ITEM_TEMPLATE_IMAGE=6
 # radio title is 7
 ITEM_TEMPLATE_PLAYER=8
 ITEM_TEMPLATE_PLUGIN=9
+
+# Icon IDs
+ID_ICON_TRIANGLE_RIGHT=612		# Mac-style right-pointing reveal triangle
+ID_ICON_TRIANGLE_DOWN=613		# Mac-style down-pointing reveal triangle
+ID_ICON_BANDWIDTH_OK=614		# green pipeline
+ID_ICON_BANDWIDTH_ERROR=615		# red bulging pipeline
+##ID_ICON_TRIANGLE_RIGHT=616	# Windows-style boxed +
+##ID_ICON_TRIANGLE_DOWN=617		# Windows-style boxed -
+ID_ICON_ERROR=618				# Warning trafficsign
