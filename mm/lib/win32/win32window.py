@@ -2638,6 +2638,10 @@ def getcursorhandle(strid):
 	return cursor
 
 def getValidRect(left, top, right, bottom):
+	left = int(left)
+	top = int(top)
+	right = int(right)
+	bottom = int(bottom)
 	if right <= left:
 		right=left+1
 	if bottom <= top:
