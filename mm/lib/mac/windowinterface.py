@@ -83,6 +83,7 @@ InputURLDialog = mw_dialogs.InputURLDialog
 NewChannelDialog = mw_dialogs.NewChannelDialog
 TemplateDialog = mw_dialogs.TemplateDialog
 ProgressDialog = mw_dialogs.ProgressDialog
+BandwidthComputeDialog = mw_dialogs.BandwidthComputeDialog
 Dialog = mw_dialogs.Dialog
 multchoice = mw_dialogs.multchoice
 showmessage = mw_dialogs.showmessage
