@@ -36,6 +36,8 @@ PARCOLOR = fix(150, 150, 150)		# Gray
 SEQCOLOR = fix(150, 150, 150)		# Gray
 TEXTCOLOR = fix(0, 0, 0)		# Black
 CTEXTCOLOR = fix(50, 50, 50)		# Very dark gray
+EXPCOLOR = fix(255, 0, 0)		# Red
+COLCOLOR = fix(0, 255, 0)		# Green
 
 
 # Focus color assignments (from light to dark gray)
@@ -52,6 +54,16 @@ FOCUSBORDER = fix(0, 0, 0)		# Thin line around it
 ANCESTORBOX = 0
 INNERBOX = 1
 LEAFBOX = 2
+
+
+# Fonts used below
+f_title = windowinterface.findfont('Helvetica', 10)
+f_channel = windowinterface.findfont('Helvetica', 8)
+
+MINSIZE = 10.0				# minimum size for a node
+LABSIZE = f_title.fontheight() * 1.5	# height of label
+GAPSIZE = 1.0				# size of gap between nodes
+EDGSIZE = 0.5				# size of edges
 
 
 class HierarchyView(HierarchyViewDialog):
@@ -79,21 +91,10 @@ class HierarchyView(HierarchyViewDialog):
 
 			PUSHFOCUS(callback = (self.focuscall, ())),
 
-			CANVAS_HEIGHT(callback = (self.canvascall,
-					(windowinterface.DOUBLE_HEIGHT,))),
-			CANVAS_WIDTH(callback = (self.canvascall,
-					(windowinterface.DOUBLE_WIDTH,))),
-			CANVAS_RESET(callback = (self.canvascall,
-					(windowinterface.RESET_CANVAS,))),
-
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
-			]
-		self.zoomincommands = [
-			ZOOMIN(callback = (self.zoomincall, ())),
-			ZOOMHERE(callback = (self.zoomherecall, ())),
-			]
-		self.zoomoutcommand = [
-			ZOOMOUT(callback = (self.zoomoutcall, ())),
+
+			EXPANDALL(callback = (self.expandallcall, (1,))),
+			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			]
 		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
@@ -111,6 +112,7 @@ class HierarchyView(HierarchyViewDialog):
 			NEW_ALT(callback = (self.createaltcall, ())),
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
+			EXPAND(callback = (self.expandcall, ())),
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -122,7 +124,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
-		self.viewroot = self.root
 		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
@@ -144,12 +145,6 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusnode is not self.root:
 			# can't do certain things to the root
 			commands = commands + self.notatrootcommands
-		if self.viewroot is not self.focusnode:
-			# can only zoom in if focus is different from viewroot
-			commands = commands + self.zoomincommands
-		if self.viewroot is not self.root:
-			# can only zoom out if we're not already viewing root
-			commands = commands + self.zoomoutcommand
 		t, n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			# can only paste if there's something to paste
@@ -170,9 +165,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
-		self.fixviewroot()
 		self.recalc()
-		self.draw()
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -230,7 +223,9 @@ class HierarchyView(HierarchyViewDialog):
 	def redraw(self, *rest):
 		# RESIZE event.
 		self.toplevel.setwaiting()
-		self.recalc()
+		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		self.displist = None
+		self.recalcboxes()
 		self.draw()
 
 	def mouse(self, dummy, window, event, params):
@@ -263,9 +258,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.destroynode = None
 		self.cleanup()
 		if self.is_showing():
-			self.fixviewroot()
 			self.recalc()
-			self.draw()
 
 	def kill(self):
 		self.destroy()
@@ -428,50 +421,9 @@ class HierarchyView(HierarchyViewDialog):
 		em.commit()
 		return 1
 
-	def zoomout(self):
-		if self.viewroot is self.root:
-			windowinterface.beep()
-			return
-		self.viewroot = self.viewroot.GetParent()
-		self.recalc()
-		self.draw()
-
-	def zoomin(self):
-		if self.viewroot is self.focusnode or not self.focusnode:
-			windowinterface.beep()
-			return
-		path = self.focusnode.GetPath()
-		try:
-			i = path.index(self.viewroot)
-		except ValueError:
-			# the focus is on one of the stacked (folded) nodes
-			self.viewroot = self.focusnode
-		else:
-			self.viewroot = path[i+1]
-		self.recalc()
-		self.draw()
-
-	def zoomhere(self):
-		if self.viewroot is self.focusnode or not self.focusnode:
-			return
-		self.viewroot = self.focusnode
-		self.recalc()
-		self.draw()
-
 	#################################################
 	# Internal subroutines                          #
 	#################################################
-
-	# Make sure the view root and focus make sense (after a tree update)
-	def fixviewroot(self):
-		if self.viewroot.GetRoot() is not self.root:
-			self.viewroot = self.root
-		if self.focusnode and \
-		   not self.root.IsAncestorOf(self.focusnode):
-			self.focusnode = None
-		if self.focusnode is None:
-			self.focusnode = self.viewroot
-		self.aftersetfocus()
 
 	# Clear the list of objects
 	def cleanup(self):
@@ -528,12 +480,13 @@ class HierarchyView(HierarchyViewDialog):
 		if not obj:
 			windowinterface.beep()
 			return
+		if obj.node is not self.root and hasattr(obj.node, 'abox'):
+			l, t, r, b = obj.node.abox
+			if l <= x <= r and t <= y <= b:
+				self.focusnode = obj.node
+				obj.expandcall()
+				return
 		if obj.node is self.focusnode:
-##			# Double click -- zoom in or out
-##			if self.viewroot is not self.focusnode:
-##				self.viewroot = self.focusnode
-##				self.recalc()
-##				self.draw()
 			return
 		self.init_display()
 		self.setfocusobj(obj)
@@ -567,7 +520,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusobj = None
 		self.aftersetfocus()
 
-	# Select the given node as focus, possibly zooming around
+	# Select the given node as focus
 	def setfocusnode(self, node):
 		if not node:
 			self.setfocusobj(None)
@@ -576,71 +529,102 @@ class HierarchyView(HierarchyViewDialog):
 		if obj:
 			self.setfocusobj(obj)
 			return
-		# Need to zoom around
-		# XXX should zoom out less in some cases
-		path = node.GetPath()
-		for vr in path:
-			self.viewroot = vr
-			self.focusnode = node
-			self.aftersetfocus()
-			self.recalc()
-			if self.focusnode is node:
-				break
-		self.draw()
+		# Need to expand some nodes
+		self.focusnode = node
+		while node is not None:
+			node.expanded = 1
+			node = node.GetParent()
+		self.recalc()
 
 	# Recalculate the set of objects
-	def recalc(self):
-		self.cleanup()
-		if self.focusnode:
-			focuspath = self.focusnode.GetPath()
+	def makeboxes(self, list, node, box):
+		t = node.GetType()
+		if t in MMNode.leaftypes or \
+		   not hasattr(node, 'expanded') or \
+		   not node.GetChildren():
+			list.append((node, LEAFBOX, box))
+			return
+		list.append((node, INNERBOX, box))
+		left, top, right, bottom = box
+		top = top + self.titleheight
+		left = left + self.horedge
+		bottom = bottom - self.veredge
+		right = right - self.horedge
+		children = node.GetChildren()
+		size = 0
+		horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
+		for child in children:
+			cht = child.GetType()
+			if cht in MMNode.leaftypes or not hasattr(child, 'expanded'):
+				size = size + MINSIZE
+				if not horizontal:
+					size = size + LABSIZE
+			else:
+				size = size + child.expanded[not horizontal]
+		# size is minimum size required for children in mm
+		if horizontal:
+			gapsize = self.horgap
+			totsize = right - left
 		else:
-			focuspath = []
+			gapsize = self.vergap
+			totsize = bottom - top
+		# totsize is total available size for all children with inter-child gap
+		factor = (totsize - (len(children) - 1) * gapsize) / size
+		for child in children:
+			cht = child.GetType()
+			if cht in MMNode.leaftypes or not hasattr(child, 'expanded'):
+				size = MINSIZE
+				if not horizontal:
+					size = size + LABSIZE
+			else:
+				size = child.expanded[not horizontal]
+			if horizontal:
+				right = left + size * factor
+			else:
+				bottom = top + size * factor
+			self.makeboxes(list, child, (left, top, right, bottom))
+			if horizontal:
+				left = right + gapsize
+			else:
+				top = bottom + gapsize
+
+	def recalcboxes(self):
 		self.focusobj = None
-		list = self.makegeometries()
+		rw, rh = self.window.getcanvassize(windowinterface.UNIT_MM)
+		self.canvassize = rw, rh
+		self.titleheight = float(LABSIZE) / rh
+		self.horedge = float(EDGSIZE) / rw
+		self.veredge = float(EDGSIZE) / rh
+		self.horgap = float(GAPSIZE) / rw
+		self.vergap = float(GAPSIZE) / rh
+		list = []
+		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:
 			obj = Object(self, item)
 			self.objects.append(obj)
-			if item[0] in focuspath:
-				# This relies on the fact that nodes
-				# are listed in pre-order!
+			if item[0] is self.focusnode:
 				self.focusobj = obj
-		if self.focusobj:
-			self.focusnode = self.focusobj.node
+		if self.focusobj is not None:
 			self.focusobj.selected = 1
 		else:
 			self.focusnode = None
 		self.aftersetfocus()
 
-	# Make a list of geometries for boxes
-	def makegeometries(self):
-		if self.new_displist:
-			self.new_displist.close()
-		displist = self.window.newdisplaylist(BGCOLOR)
-		self.new_displist = displist
-		bl, titleheight, ps = displist.usefont(f_title)
-		amargin = displist.strsize('x')[0] * 2
-		titleheight = titleheight * 1.5
-		list = []
-		left, top = 0, 0
-		right, bottom = 1, 1
-		path = self.viewroot.GetPath() # Ancestors of viewroot
-		if bottom-top < len(path) * titleheight:
-			# Truncate path, move viewroot up
-			n = max(0, int((bottom-top)/titleheight) - 1)
-			self.viewroot = path[n]
-			path = path[:n+1]
-		for node in path[:-1]:
-			newtop = top + titleheight
-			box = left + amargin, top, right - amargin, newtop
-			list.append(node, ANCESTORBOX, box)
-			top = newtop
-		minwidth = displist.strsize('x')[0] * 4
-		titleheight = displist.fontheight() * 1.5
-		hmargin = minwidth / 6
-		vmargin = titleheight / 5
-		makeboxes(list, self.viewroot, left, top, right, bottom,
-			  minwidth, titleheight, hmargin, vmargin)
-		return list
+	def recalc(self):
+		from windowinterface import UNIT_MM
+		window = self.window
+		self.cleanup()
+		self.root.expanded = 1	# root always expanded
+		width, height = sizeboxes(self.root)
+		cwidth, cheight = window.getcanvassize(UNIT_MM)
+		mwidth = mheight = 0 # until we have a way to get the min. size
+		if (cwidth <= width <= cwidth * 1.1 or width < cwidth <= mwidth) and \
+		   (cheight <= height <= cheight * 1.1 or height < cheight <= mheight):
+			# size change not big enough, just redraw
+			self.redraw()
+		else:
+			# this call causes a ResizeWindow event
+			window.setcanvassize((UNIT_MM, width, height))
 
 	# Draw the window, assuming the object shapes are all right
 	def draw(self):
@@ -659,8 +643,11 @@ class HierarchyView(HierarchyViewDialog):
 ##  	def helpcall(self):
 ## 		if self.focusobj: self.focusobj.helpcall()
 
-	def canvascall(self, code):
-		self.window.setcanvassize(code)
+	def expandcall(self):
+		if self.focusobj: self.focusobj.expandcall()
+
+	def expandallcall(self, expand):
+		if self.focusobj: self.focusobj.expandallcall(expand)
 
 	def thumbnailcall(self):
 		self.thumbnails = not self.thumbnails
@@ -703,15 +690,6 @@ class HierarchyView(HierarchyViewDialog):
 	def focuscall(self):
 		if self.focusobj: self.focusobj.focuscall()
 
-	def zoomoutcall(self):
-		if self.focusobj: self.focusobj.zoomoutcall()
-
-	def zoomincall(self):
-		if self.focusobj: self.focusobj.zoomincall()
-
-	def zoomherecall(self):
-		if self.focusobj: self.focusobj.zoomherecall()
-
 	def deletecall(self):
 		if self.focusobj: self.focusobj.deletecall()
 
@@ -753,85 +731,58 @@ class HierarchyView(HierarchyViewDialog):
 
 
 # Recursive procedure to calculate geometry of boxes.
-# This makes a box for the give node with the given dimensions,
-# and if possible makes boxes for the children.
-# The algorithm is as follows:
-# Each of the children of node are allocated a minimum space (minwidth
-# x titleheight).  How much of the extra space each child gets depends
-# on how many children it has.  The "unit" extra space is the total
-# extra space divided by the total number of children and
-# grandchildren.  Each child is allocated n extra units where n is
-# equal to the number of grandchildren plus one.
-def makeboxes(list, node, left, top, right, bottom,
-	      minwidth, titleheight, hmargin, vmargin):
-	box = left, top, right, bottom
+def sizeboxes(node):
 	t = node.GetType()
+	if t in MMNode.leaftypes or not hasattr(node, 'expanded'):
+		return MINSIZE, MINSIZE + LABSIZE
 	children = node.GetChildren()
 	nchildren = len(children)
-	if t in MMNode.leaftypes or \
-	   nchildren == 0 or \
-	   right-left < minwidth + 2*hmargin or \
-	   bottom-top < 2*titleheight + 2*vmargin:
-		# no children, or expanded children won't fit
-		list.append(node, LEAFBOX, box)
-		return
-
-	# Calculate space available for children
-	top = top + titleheight + vmargin
-	left = left + hmargin
-	right = right - hmargin
-	bottom = bottom - vmargin
-
-	# calculate number of grandchildren
-	ngrands = 0
-	for c in children:
-		ngrands = ngrands + len(c.GetChildren())
-
-	# the two branches here are basically identical--the
-	# horizontal and vertical directions have been exchanged
-	if (t in ('par', 'alt')) == DISPLAY_VERTICAL:
-		# children laid out horizontally
-		# needed is the minimum space needed to draw all children
-		needed = nchildren * (minwidth + hmargin) - hmargin
-		# rest is the space left over to divide over the children
-		rest = right - left - needed
-		if rest < 0:
-			# expanded children don't fit
-			list.append(node, LEAFBOX, box)
-			return
-		# "draw" our box
-		list.append(node, INNERBOX, box)
-		# extra is the "unit" extra space
-		extra = rest / (ngrands + nchildren)
-		for c in children:
-			# cright is the right edge of the child
-			cright = left+minwidth+(1+len(c.GetChildren()))*extra
-			makeboxes(list, c, left, top, cright, bottom,
-				  minwidth, titleheight, hmargin, vmargin)
-			# left is the left edge of the next child
-			left = cright + hmargin
+	width = height = 0
+	horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
+	if children:
+		for child in children:
+			w, h = sizeboxes(child)
+			if horizontal:
+				# children laid out horizontally
+				if h > height:
+					height = h
+				width = width + w + GAPSIZE
+			else:
+				# children laid out vertically
+				if w > width:
+					width = w
+				height = height + h + GAPSIZE
+		if horizontal:
+			width = width - GAPSIZE
+		else:
+			height = height - GAPSIZE
+		width = width + 2 * EDGSIZE
+		height = height + 2 * EDGSIZE
 	else:
-		# children laid out vertically
-		# for other comments, see the other branch
-		needed = nchildren * (titleheight + vmargin) - vmargin
-		rest = bottom - top - needed
-		if rest < 0:
-			list.append(node, LEAFBOX, box)
-			return
-		extra = rest / (ngrands + nchildren)
-		list.append(node, INNERBOX, box)
-		for c in children:
-			cbottom = top+titleheight+(1+len(c.GetChildren()))*extra
-			makeboxes(list, c, left, top, right, cbottom,
-				  minwidth, titleheight, hmargin, vmargin)
-			top = cbottom + vmargin
+		# minimum size if no children
+		width = height = MINSIZE
+	height = height + LABSIZE
+	node.expanded = (width, height)
+	return width, height
 
+def do_expand(node, expand):
+	t = node.GetType()
+	if t in MMNode.leaftypes:
+		return 0
+	changed = 0
+	if expand:
+		if not hasattr(node, 'expanded'):
+			node.expanded = 1
+			changed = 1
+	elif hasattr(node, 'expanded'):
+		del node.expanded
+		changed = 1
+	for child in node.GetChildren():
+		if do_expand(child, expand):
+			changed = 1
+	return changed			# any changes in this subtree
 
 # XXX The following should be merged with ChannelView's GO class :-(
-
-# Fonts used below
-f_title = windowinterface.findfont('Helvetica', 10)
-f_channel = windowinterface.findfont('Helvetica', 8)
 
 # (Graphical) object class
 class Object:
@@ -871,7 +822,8 @@ class Object:
 	def draw(self):
 		d = self.mother.new_displist
 		dummy = d.usefont(f_title)
-		titleheight = d.fontheight() * 1.5
+		rw, rh = self.mother.canvassize
+		titleheight = self.mother.titleheight
 		hmargin = d.strsize('x')[0] / 1.5
 		vmargin = titleheight / 5
 		l, t, r, b = self.box
@@ -899,26 +851,45 @@ class Object:
 			self.drawchannelname(l+hmargin/2, b1,
 					     r-hmargin/2, b-vmargin/2)
 			# draw thumbnail/icon if enough space
-			if b1-t1 >= titleheight and \
-			   r-l >= hmargin * 2.5:
-				ctype = node.GetChannelType()
-				f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
-				if ctype == 'image' and self.mother.thumbnails:
-					try:
-						import MMurl
-						f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
-					except IOError:
-						# f not reassigned!
-						pass
-				if f is not None:
-					ih = min(b1-t1, 2*titleheight)
-					try:
-						box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
-					except windowinterface.error:
-						pass
-					else:
-						d.fgcolor(TEXTCOLOR)
-						d.drawbox(box)
+##			if b1-t1 >= titleheight and \
+##			   r-l >= hmargin * 2.5:
+			ctype = node.GetChannelType()
+			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
+			if ctype == 'image' and self.mother.thumbnails:
+				try:
+					import MMurl
+					f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
+				except IOError:
+					# f not reassigned!
+					pass
+			if f is not None:
+				ih = min(b1-t1, 2*titleheight)
+				try:
+					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+				except windowinterface.error:
+					pass
+				else:
+					d.fgcolor(TEXTCOLOR)
+					d.drawbox(box)
+		# draw a little triangle to indicate expanded/collapsed state
+		if node.GetType() in MMNode.interiortypes:
+			awidth = LABSIZE/rw - 2*hmargin
+			aheight = titleheight - 2*vmargin
+			node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
+			if hasattr(node, 'expanded'):
+				# expanded node, point down
+				d.drawfpolygon(EXPCOLOR,
+					[(l+hmargin, t+vmargin),
+					 (l+hmargin+awidth,t+vmargin),
+					 (l+hmargin+awidth/2,t+vmargin+aheight)])
+			else:
+				# collapsed node, point right
+				d.drawfpolygon(COLCOLOR,
+					[(l+hmargin,t+vmargin),
+					 (l+hmargin,t+vmargin+aheight),
+					 (l+hmargin+awidth,t+vmargin+aheight/2)])
+
+		# draw the name
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(l+hmargin/2, t+vmargin/2, r-hmargin/2, t1, self.name)
 		# If this is a node with suppressed detail,
@@ -968,6 +939,21 @@ class Object:
 ## 	def helpcall(self):
 ## 		import Help
 ## 		Help.givehelp('Hierarchy_view')
+
+	def expandcall(self):
+		self.mother.toplevel.setwaiting()
+		if hasattr(self.node, 'expanded'):
+			del self.node.expanded
+		else:
+			self.node.expanded = 1
+		self.mother.recalc()
+
+	def expandallcall(self, expand):
+		self.mother.toplevel.setwaiting()
+		if do_expand(self.node, expand):
+			# there were changes
+			# make sure root isn't collapsed
+			self.mother.recalc()
 
 	def playcall(self):
 		top = self.mother.toplevel
@@ -1027,21 +1013,6 @@ class Object:
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.channelview.globalsetfocus(self.node)
-
-	def zoomoutcall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.zoomout()
-
-	def zoomincall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.zoomin()
-
-	def zoomherecall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.zoomhere()
 
 	def deletecall(self):
 		self.mother.deletefocus(0)

@@ -126,12 +126,12 @@ class NEW_CHOICE(_CommandBase):
 	help = 'Create new choice node above selected node'
 class NEW_ALT(_CommandBase):
 	help = 'Create new alt node above selected node'
-class ZOOMIN(_CommandBase):
-	help = 'Zoom in one level'
-class ZOOMOUT(_CommandBase):
-	help = 'Zoom out one level'
-class ZOOMHERE(_CommandBase):
-	help = 'Zoom in to selected node'
+class EXPAND(_CommandBase):
+	help = 'Expand or collapse selected node'
+class EXPANDALL(_CommandBase):
+	help = 'Expand selected node and all nodes below'
+class COLLAPSEALL(_CommandBase):
+	help = 'Collapse selected node and all nodes below'
 
 #
 # Command to hierarchy/channel view
