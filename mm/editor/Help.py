@@ -129,16 +129,3 @@ def parsetopic(s):
 	return string.strip(topic), string.strip(subtopic)
     except string.index_error:
 	return '',''
-
-def main():
-    Help = HelpWindow().init('.', None)
-    if len(sys.argv) > 1:
-	Help.givehelp(sys.argv[1])
-    else:
-	Help.show()
-    try:
-	while 1:
-	    Help.run()
-    except Exit:
-	    pass
-

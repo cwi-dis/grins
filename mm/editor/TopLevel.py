@@ -307,7 +307,7 @@ class TopLevel(ViewDialog, BasicDialog):
 			if reply == 1:
 				self.save_callback(obj, arg)
 		self.destroy()
-		raise MMExc.ExitException, 0
+		raise SystemExit, 0
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
