@@ -115,7 +115,15 @@ static PyObject* PyStdOut_write(PyStdOut *self, PyObject *args)
 	if(!PyArg_ParseTuple(args, "s", &psz))
 		return NULL;
 	std::string str = fixendl(psz);
-	PyStdOut::append(self->m_hWnd, toTEXT(str.c_str()));
+#ifdef UNICODE
+	int n = str.length()+1;
+	WCHAR *ptext = new WCHAR[n];
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), n, ptext, n);
+	PyStdOut::append(self->m_hWnd, ptext);
+	delete[] ptext;
+#else
+	PyStdOut::append(self->m_hWnd, str.c_str());
+#endif
 	ShowWindow(self->m_hWnd, SW_SHOW);
 	SetFocus(GetParent(self->m_hWnd));
 	return none();
