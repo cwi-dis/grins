@@ -1181,10 +1181,19 @@ class SubWindow(Window):
 		for w in L:
 			w.paint()
 
-	def createDDS(self, w=0, h=0):
+	def createDDS(self, w=0, h=0, erase=0):
 		if w==0 or h==0:
 			x, y, w, h = self._rect
 		dds = self._topwindow.CreateSurface(w,h)
+		if erase:
+			if self._transparent == 0:
+				r, g, b = self._bgcolor
+				convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			else:
+				r, g, b = self._topwindow._bgcolor
+				convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			dds.BltFill((0, 0, w, h), convbgcolor)
+
 		return dds
 
 	def setvideo(self, dds, rcDst, rcSrc):
@@ -1258,8 +1267,7 @@ class SubWindow(Window):
 	def begintransition(self, outtrans, runit, dict):
 		# print 'begintransition', self, outtrans, runit, dict
 		if not self._passive:
-			self._passive = self.createDDS()
-			self.paintOnDDS(self._passive, self)
+			self._passive = self.createDDS(erase=1)
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
 		self._transition.begintransition()
 
