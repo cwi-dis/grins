@@ -187,11 +187,12 @@ static PyObject* PyWnd_ReleaseDC(PyWnd *self, PyObject *args)
 
 static PyObject* PyWnd_BeginPaint(PyWnd *self, PyObject *args)
 {
-	PAINTSTRUCT ps;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	ASSERT_ISWINDOW(self->m_hWnd)
-	HDC hdc  = ::BeginPaint(self->m_hWnd, &ps);
+	
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(self->m_hWnd, &ps);
 	PyObject *obRet = Py_BuildValue("(ii(iiii)iis#)",
 		ps.hdc,
 		ps.fErase,
@@ -221,7 +222,7 @@ static PyObject* PyWnd_EndPaint(PyWnd *self, PyObject *args)
 		return NULL;
 		}
 	memcpy(ps.rgbReserved, PyString_AsString(obString), sizeof(ps.rgbReserved));
-	::EndPaint(self->m_hWnd, &ps);
+	EndPaint(self->m_hWnd, &ps);
 	return none();
 }
 
