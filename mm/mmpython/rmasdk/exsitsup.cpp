@@ -7,6 +7,9 @@
 /****************************************************************************
  * Includes
  */
+#include "Std.h"
+#include "PyCppApi.h"
+
 #include "pncom.h"
 #include "pntypes.h"
 #include "pnwintyp.h"
@@ -175,8 +178,8 @@ ExampleSiteSupplier::SitesNotNeeded(UINT32 uRequestID)
 #ifdef _WINDOWS
 		::InvalidateRect((HWND)m_PNxWindow.window,NULL,TRUE);
 #endif
-		Py_XDECREF(pPythonWin);
-		pPythonWin = NULL;
+		Py_XDECREF(pPythonWindow);
+		pPythonWindow = NULL;
 		memset(&m_PNxWindow,0,sizeof(PNxWindow));
 	}
 	pSiteWindowed->Release();
