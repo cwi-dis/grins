@@ -44,6 +44,7 @@ PRODUCT_TO_FEATURE = {
 	"smil2lite": ["smil2lite"],
 	"smil2real": ["smil2real"],
 	"G2R": ["smil2real"],
+	"G2E": ["smil2pro"],
 	"smil2pro": ["smil2pro"],
 
 	"ALLPRODUCTS": ["ALLPRODUCTS"],
