@@ -740,16 +740,21 @@ class InputDialog(DialogBase):
 
 	def OnInitDialog(self):
 		self.SetWindowText(self.title)
+		self.CenterWindow()
 		return DialogBase.OnInitDialog(self)
+
+	# close the dialog before calling back
 	def OnOK(self):
 		self._obj_.UpdateData(1) # do DDX
+		res=self._obj_.OnOK()
 		if self._ok_callback:
 			self._ok_callback(self.data['result'])
-		return self._obj_.OnOK()
+		return res
 	def OnCancel(self):
+		res=self._obj_.OnCancel()
 		if self._cancel_callback:
 			apply(apply,self._cancel_callback)
-		return self._obj_.OnCancel()
+		return res
 
 #
 # A general one line modeless input dialog implementation
