@@ -92,14 +92,17 @@ class Main(MainDialog):
 			PREFERENCES(callback=(self.preferences_callback, ())),
 			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			]
-		if not self._license.is_evaluation_license():
+		import settings
+		if self._license.have('preregistered'):
+			settings.set('registered', 'preregistered')
+		if not self._license.is_evaluation_license() and \
+				settings.get('registered') != 'preregistered':
 			self.commandlist.append(
 				REGISTER(callback=(self.register_callback, ())))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
 				HELP(callback = (self.help_callback, ())))
-		import settings
 		if __debug__:
 			if settings.get('debug'):
 				self.commandlist = self.commandlist + [
