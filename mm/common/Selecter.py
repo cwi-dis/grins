@@ -210,6 +210,10 @@ class Selecter:
 		if type <> 0:
 			dialogs.showmessage('Sorry, will JUMP anyway')
 		dest_uid, dest_aid = anchor2
+		if '/' in dest_uid:
+			if dest_uid[-2:] == '/1':
+				dest_uid = dest_uid[:-2]
+			return self.toplevel.jumptoexternal(dest_uid, dest_aid)
 		try:
 			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:
@@ -222,16 +226,18 @@ class Selecter:
 		# First check whether this is an indirect anchor
 		list = self.followcompanchors(seek_node, dest_aid)
 		if list <> None:
+			rv = 0
 			for node_id, aid in list:
 				try:
 					node = self.context.mapuid(node_id)
 				except NoSuchUIDError:
 					self.toplevel.setready()
-					dialogs.showmessage(\
-						  'Dangling composite anchor')
-					return 0
-				self.gotonode(node, aid)
-			return
+					dialogs.showmessage('Dangling: \n'+\
+						  `(node_id, aid)`)
+					continue
+				if self.gotonode(node, aid):
+					rv = 1
+			return rv
 		# It is not a composite anchor. Continue
 		while seek_node.GetType() == 'bag':
 			dest_aid = None
