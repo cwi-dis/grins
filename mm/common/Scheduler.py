@@ -171,6 +171,8 @@ class SchedulerContext:
 		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self)-arc.delay
+		elif timestamp is None:	# Retrieve the timestamp if it was not supplied.
+			timestamp = self.parent.timefunc()
 		if arc.ismin:
 			list = []
 		elif arc.isstart:
