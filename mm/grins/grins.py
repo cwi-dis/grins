@@ -25,13 +25,16 @@ def usage(msg):
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
 
-class Main:
+from MainDialog import MainDialog
+
+class Main(MainDialog):
 	def __init__(self, opts, files):
+		self._tracing = 0
 		import TopLevel, windowinterface
-		from MMExc import MSyntaxError
 		self.nocontrol = 0	# For player compatability
 		self._closing = 0
 		self._mm_callbacks = {}
+		self.tops = []
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
@@ -43,34 +46,47 @@ class Main:
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
-		tops = []
-		for fn in files:
-			try:
-				top = TopLevel.TopLevel(self, fn)
-			except IOError, msg:
-				print 'reading file %s failed: %s' % (fn, msg[1])
-				continue
-			except MSyntaxError, msg:
-				print 'parsing file %s failed: %s' % (fn, msg)
-				continue
+		MainDialog.__init__(self, 'GRiNS')
+		# first open all files
+		for file in files:
+			self.open_callback(file)
+		# then play them
+		for top in self.tops:
+			top.player.playsubtree(top.root)
+
+	def open_callback(self, url):
+		from MMExc import MSyntaxError
+		import TopLevel
+		try:
+			top = TopLevel.TopLevel(self, url)
+		except IOError:
+			import windowinterface
+			windowinterface.showmessage('error opening URL %s' % url)
+		except MSyntaxError:
+			import windowinterface
+			windowinterface.showmessage('parsing URL %s failed' % url)
+		else:
 			top.setwaiting()
 			top.show()
 			top.player.show()
-			tops.append(top)
-		if not tops:
-			# no toplevels made, so exit
-			# error message has already been printed
-			sys.exit(2)
-		self.tops = tops
-		j_arg = None
-		for o, a in opts:
-			if o == '-j':
-				j_arg = a
-		for top in tops:
-			if j_arg:
-				top.player.playfromanchor(top.root, j_arg)
-			else:
-				top.player.playsubtree(top.root)
+			self.tops.append(top)
+			top.setready()
+
+	def close_callback(self):
+		raise SystemExit, 0
+
+	def debug_callback(self):
+		import pdb
+		pdb.set_trace()
+
+	def trace_callback(self):
+		import trace
+		if self._tracing:
+			trace.unset_trace()
+			self._tracing = 0
+		else:
+			self._tracing = 1
+			trace.set_trace()
 
 	def closetop(self, top):
 		if self._closing:

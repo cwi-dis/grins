@@ -21,7 +21,7 @@ FOCUSRIGHT = 40, 40, 40
 FOCUSBOTTOM = 91, 91, 91
 
 ##titles = ['Channels', 'Options', 'Run slots']
-titles = ['Channels', 'Options']
+titles = ['Channels', 'Close']
 
 # The Player class normally has only a single instance.
 #
@@ -53,6 +53,7 @@ class Player(PlayerCore):
 		self.do_makemenu = 0
 		self.last_geometry = None
 		self.window = None
+		self.source = None
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
 
@@ -117,7 +118,11 @@ class Player(PlayerCore):
 		d = window.newdisplaylist()
 		dummy = d.usefont(font)
 		mw, mh = 0, 0
-		for t in titles:
+		self.titles = titles[:]
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'TextEdit'):
+			self.titles.insert(1, 'Source...')
+		for t in self.titles:
 			w, h = d.strsize(t)
 			if w > mw: mw = w
 			if h > mh: mh = h
@@ -125,11 +130,29 @@ class Player(PlayerCore):
 		self.width = 1.0 - mw	# useful width
 		d.close()
 		self.subwin = []
-		n = len(titles)
+		n = len(self.titles)
 		for i in range(n):
 			self.subwin.append(window.newcmwindow(
 				(1.0 - mw, i / float(n), mw, 1.0 / float(n))))
+		self.subwin[-1].register(WMEVENTS.Mouse0Release, self.hide, None)
+		if len(self.titles) == 3:
+			self.subwin[1].register(WMEVENTS.Mouse0Release, self.source_callback, None)
 		self.redraw()
+
+	def source_callback(self, *rest):
+		if self.source is not None and not self.source.is_closed():
+			self.source.show()
+			return
+		w = windowinterface.Window('Source', resizable = 1,
+					   deleteCallback = 'hide')
+		b = w.ButtonRow([('Close', (w.hide, ()))],
+				top = None, left = None, right = None,
+				vertical = 0)
+		t = w.TextEdit(self.root.source, None, editable = 0,
+			       top = b, left = None, right = None,
+			       bottom = None, rows = 30, columns = 80)
+		w.show()
+		self.source = w
 
 	def drawplaybutton(self, active, d):
 		if active:
@@ -171,10 +194,13 @@ class Player(PlayerCore):
 	def redraw(self, *rest):
 		import StringStuff
 		font = windowinterface.findfont('Helvetica', 10)
-		for i in range(len(titles)):
+		for i in range(len(self.titles)):
 			w = self.subwin[i]
-			t = titles[i]
+			t = self.titles[i]
 			d = w.newdisplaylist()
+			if i > 0:
+				cl, ct, cr, cb = FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM
+				d.draw3dbox(cl, ct, cr, cb, (0.0, 0.0, 1.0, 1.0))
 			dummy = d.usefont(font)
 			StringStuff.centerstring(d, 0, 0, 1, 1, t)
 			d.render()
