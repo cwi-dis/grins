@@ -18,7 +18,7 @@ class Boxes:
 		else:
 			self.box = box
 		self.window = window
-		display = window._active_display_list
+		self.old_display = window._active_display_list
 		window.pop()
 		window._close_subwins()
 		win = window
@@ -49,8 +49,8 @@ class Boxes:
 					None)
 		else:
 			window.register(EVENTS.Mouse0Press, self.press, None)
-		if display and not dispay.is_closed():
-			d = display.clone()
+		if self.old_display and not self.old_display.is_closed():
+			d = self.old_display.clone()
 		else:
 			d = window.newdisplaylist()
 		for win in window._subwindows:
@@ -62,10 +62,12 @@ class Boxes:
 		if box:
 			d.drawbox(box)
 		d.render()
+		self.cur_display = d
 		if msg:
 			msg = msg + '\n\n' + message
 		else:
 			msg = message
+		self._looping = 0
 		self.dialog = windowinterface.Dialog(msg, 0,
 				[('', 'Done', (self.done_callback, ())),
 				 ('', 'Cancel', (self.cancel_callback, ()))])
@@ -74,6 +76,11 @@ class Boxes:
 		self.close()
 
 	def close(self):
+		self.window._open_subwins()
+		if self.old_display and not self.old_display.is_closed():
+			self.old_display.render()
+		self.display.close()
+		self.cur_display.close()
 		self.dialog.close()
 
 	def first_press(self, dummy, win, ev, val):
@@ -93,6 +100,7 @@ class Boxes:
 		else:
 			constrainy = 0
 		self.display.render()
+		
 		if constrainx and constrainy:
 			self.box = win.movebox(b, 0, 0)
 		else:
@@ -117,12 +125,15 @@ class Boxes:
 		d.fgcolor(255, 0, 0)
 		d.drawbox(self.box)
 		d.render()
+		self.cur_display.close()
+		self.cur_display = d
 
 	def loop(self):
 		windowinterface.startmonitormode()
 		self.window.setcursor('')
 		try:
 			try:
+				self._looping = 1
 				while 1:
 					dummy = windowinterface.readevent()
 			except _finished, val:
@@ -134,12 +145,14 @@ class Boxes:
 			windowinterface.endmonitormode()
 
 	def done_callback(self):
-		self.dialog.close()
-		raise _finished, 1
+		self.close()
+		if self._looping:
+			raise _finished, 1
 
 	def cancel_callback(self):
-		self.dialog.close()
-		raise _finished, 0
+		self.close()
+		if self._looping:
+			raise _finished, 0
 
 def create_box(window, msg, *box):
 	return Boxes(window, msg, box).loop()
