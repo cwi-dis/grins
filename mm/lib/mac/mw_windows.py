@@ -1302,6 +1302,14 @@ class _CommonWindow:
 			self._passive_gworld, self._passive_wid, self._passive_bitmap = self._create_offscreen_wid(1)
 		print 'transition creating active source', self
 		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(0)
+		#
+		# Tell upper layers, if they are interested (VideoChannels and such may have to
+		# tell their underlying libraries)
+		#
+		if self._eventhandlers.has_key(OSWindowChanged):
+			func, arg = self._eventhandlers[OSWindowChanged]
+			func(arg, self, OSWindowChanged, (0, 0, 0))
+
 		# XXXX should probably skip this if the window is transparent and empty
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		if self._transition.need_tmp_wid():
@@ -1319,10 +1327,14 @@ class _CommonWindow:
 		self._tmp_wid = None
 		self._tmp_gworld = None
 		self._tmp_bitmap = None
-		# XXXX Should we copy the bits? I guess not, the invalwin takes care of it...
+		old_drawing_wid = self._drawing_wid
 		self._drawing_wid = self._onscreen_wid
 		self._drawing_gworld = None
 		self._mac_invalwin()
+		# Tell upper layers, if they are interested
+		if old_drawing_wid != self._drawing_wid and self._eventhandlers.has_key(OSWindowChanged):
+			func, arg = self._eventhandlers[OSWindowChanged]
+			func(arg, self, OSWindowChanged, (0, 0, 0))
 		
 	def changed(self):
 		"""Called if upper layers have modified _drawing_wid"""
