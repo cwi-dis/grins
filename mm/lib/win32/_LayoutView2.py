@@ -1132,7 +1132,7 @@ class Region(win32window.Window, UserEventMng):
 				selectChanged = 1
 				break
 		if selectChanged:
-			self._ctx.selectShapes(self._ctx._selectedList)
+			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
 
 		# remove the link with the parent
 		for ind in range(len(self._subwindows)):
