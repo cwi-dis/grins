@@ -1289,7 +1289,7 @@ class SMILWriter(SMIL):
 			fp.write('<!--%s-->\n' % ctx.comment)
 		attrlist = []
 		if self.smilboston:
-			attrlist.append(('xmlns', SMIL2))
+			attrlist.append(('xmlns', SMIL2Language))
 		if self.uses_grins_namespace:
 			attrlist.append((xmlnsGRiNS, GRiNSns))
 		if self.uses_qt_namespace:
