@@ -1,14 +1,14 @@
 __version__ = "$Id$"
 
 #
-# WIN32 Video channel.
+# WIN32 Video 
 #
 
 """ @win32doc|NTVideoChannel
 The NTVideoChannel extends ChannelWindowAsync
 
 Nothing beyond the standard interface is required
-from the window by this channel.
+from the window by this 
 
 In this module ue use an object called GraphBuilder
 that supports the interface:
@@ -34,7 +34,7 @@ For more on the DirectShow architecture see MS documentation.
 """
 
 # the core
-import Channel
+from Channel import *
 
 # node attributes
 import MMAttrdefs
@@ -59,14 +59,14 @@ WM_REDRAW=win32con.WM_USER+102
 
 debug=0
 
-class VideoChannel(Channel.ChannelWindowAsync):
-	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
+class VideoChannel(ChannelWindowAsync):
+	node_attrs = ChannelWindowAsync.node_attrs + \
 		     ['bucolor', 'hicolor', 'scale', 'center',
 		      'clipbegin', 'clipend']
 	_window_type = MPEG
 
 	def __init__(self, name, attrdict, scheduler, ui):
-		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
+		ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 		
 		# DirectShow Graph builder
 		self._playBuilder=None
@@ -91,7 +91,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return '<VideoChannel instance, name=' + `self._name` + '>'
 
 	def do_show(self, pchan):
-		if not Channel.ChannelWindowAsync.do_show(self, pchan):
+		if not ChannelWindowAsync.do_show(self, pchan):
 			return 0
 		if self._playBuilder:
 			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
@@ -101,12 +101,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def do_hide(self):
 		self.release_res()
-		Channel.ChannelWindowAsync.do_hide(self)
+		ChannelWindowAsync.do_hide(self)
 
 	def destroy(self):
 		self.unregister_for_timeslices()
 		self.release_res()
-		Channel.ChannelWindowAsync.destroy(self)
+		ChannelWindowAsync.destroy(self)
 
 	def release_res(self):
 		if self._playBuilder:
@@ -117,7 +117,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self._playBuilder=None
 		
 	def do_arm(self, node, same=0):
-		if debug:print 'VideoChannel.do_arm('+`self`+','+`node`+'same'+')'
+		if debug:print 'Videodo_arm('+`self`+','+`node`+'same'+')'
 		if same and self.armed_display:
 			return 1
 		if node.type != 'ext':
@@ -131,7 +131,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return 1
 
 	def do_play(self, node):
-		if debug:print 'VideoChannel.do_play('+`self`+','+`node`+')'
+		if debug:print 'Videodo_play('+`self`+','+`node`+')'
 		if not self._playBuilder:
 			return
 
@@ -239,10 +239,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__qid = None
 		self.release_res()
 		if self._bmp:self._bmp=None
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		ChannelWindowAsync.stopplay(self, node)
 
 	def playstop(self):
-		Channel.ChannelWindowAsync.playstop(self)
+		ChannelWindowAsync.playstop(self)
 		if self.window:
 			self.window.RedrawWindow()
 
