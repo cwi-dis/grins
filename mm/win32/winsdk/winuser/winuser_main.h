@@ -11,6 +11,8 @@ PyObject* Winuser_MessageBox(PyObject *self, PyObject *args);
 PyObject* Winuser_GetSystemMetrics(PyObject *self, PyObject *args);
 PyObject* Winuser_GetSysColor(PyObject *self, PyObject *args);
 PyObject* Winuser_GetDC(PyObject *self, PyObject *args);
+PyObject* Winuser_LoadStandardCursor(PyObject *self, PyObject *args);
+PyObject* Winuser_LoadCursor(PyObject *self, PyObject *args);
 
 
 #endif

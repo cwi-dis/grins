@@ -23,5 +23,14 @@ static WNDCLASSEX& GetWndClass() \
 	return wc; \
 }
 
+inline HWND GetHandleFromPyWnd(PyObject *self)
+	{
+	struct PyWnd
+		{
+		PyObject_HEAD
+		HWND m_hWnd;
+		};
+	return ((PyWnd*)self)->m_hWnd;
+	}
 
 #endif

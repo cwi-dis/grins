@@ -15,6 +15,7 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "winuser_main.h"
 #include "winuser_wnd.h"
 #include "winuser_menu.h"
+#include "winuser_ofn.h"
 
 PyObject *ErrorObject;
 
@@ -28,6 +29,8 @@ static struct PyMethodDef winuser_methods[] = {
 	{"GetSystemMetrics", (PyCFunction)Winuser_GetSystemMetrics, METH_VARARGS, ""},
 	{"GetSysColor", (PyCFunction)Winuser_GetSysColor, METH_VARARGS, ""},
 	{"GetDC", (PyCFunction)Winuser_GetDC, METH_VARARGS, ""},
+	{"LoadStandardCursor", (PyCFunction)Winuser_LoadStandardCursor, METH_VARARGS, ""},
+	{"LoadCursor", (PyCFunction)Winuser_LoadCursor, METH_VARARGS, ""},
 
 	{"RegisterClassEx", (PyCFunction)Winuser_RegisterClassEx, METH_VARARGS, ""},
 
@@ -38,6 +41,8 @@ static struct PyMethodDef winuser_methods[] = {
 	{"CreateMenu", (PyCFunction)Winuser_CreateMenu, METH_VARARGS, ""},
 	{"CreatePopupMenu", (PyCFunction)Winuser_CreatePopupMenu, METH_VARARGS, ""},
 	{"CreateMenuFromHandle", (PyCFunction)Winuser_CreateMenuFromHandle, METH_VARARGS, ""},
+
+	{"CreateFileDialog", (PyCFunction)Winuser_CreateFileDialog, METH_VARARGS, ""},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 	};

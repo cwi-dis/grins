@@ -79,9 +79,9 @@ static PyObject* PyMenu_InsertMenu(PyMenu *self, PyObject *args)
 {
 	UINT uPosition; 
 	UINT uFlags; 
-	UINT uIDNewItem; 
-	char *pNewItem;
-	if (!PyArg_ParseTuple(args, "iiis", &uPosition, &uFlags, &uIDNewItem, &pNewItem))
+	UINT uIDNewItem = 0; 
+	char *pNewItem = NULL;
+	if (!PyArg_ParseTuple(args, "ii|iz", &uPosition, &uFlags, &uIDNewItem, &pNewItem))
 		return NULL;
 	BOOL res = InsertMenu(self->m_hMenu, uPosition, uFlags, uIDNewItem, pNewItem);
 	if(!res){
@@ -94,9 +94,9 @@ static PyObject* PyMenu_InsertMenu(PyMenu *self, PyObject *args)
 static PyObject* PyMenu_AppendMenu(PyMenu *self, PyObject *args)
 {
 	UINT uFlags; 
-	UINT uIDNewItem; 
-	char *pNewItem;
-	if (!PyArg_ParseTuple(args, "iis", &uFlags, &uIDNewItem, &pNewItem))
+	UINT uIDNewItem = 0; 
+	char *pNewItem = NULL;
+	if (!PyArg_ParseTuple(args, "i|iz", &uFlags, &uIDNewItem, &pNewItem))
 		return NULL;
 	BOOL res = AppendMenu(self->m_hMenu, uFlags, uIDNewItem, pNewItem);
 	if(!res){
