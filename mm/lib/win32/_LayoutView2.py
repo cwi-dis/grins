@@ -434,18 +434,19 @@ class _LayoutView2(GenFormView):
 	# Zoom in/out
 	#
 	def addZoomButtons(self):
-		self._iconzoomin = win32ui.GetApp().LoadIcon(grinsRC.IDI_ZOOMIN)
-		self._iconzoomout = win32ui.GetApp().LoadIcon(grinsRC.IDI_ZOOMOUT)
-		self._bzoomin = components.Button(self, grinsRC.IDC_ZOOMIN)
-		self._bzoomout = components.Button(self, grinsRC.IDC_ZOOMOUT)
-		self._bzoomin.attach_to_parent()
-		self._bzoomout.attach_to_parent()
-		self._bzoomin.seticon(self._iconzoomin)
-		self._bzoomout.seticon(self._iconzoomout)
-		self._bzoomin.show()
-		self._bzoomout.show()
-		self._bzoomin.hookcommand(self, self.OnZoomIn)
-		self._bzoomout.hookcommand(self, self.OnZoomOut)
+##		self._iconzoomin = win32ui.GetApp().LoadIcon(grinsRC.IDI_ZOOMIN)
+##		self._iconzoomout = win32ui.GetApp().LoadIcon(grinsRC.IDI_ZOOMOUT)
+##		self._bzoomin = components.Button(self, grinsRC.IDC_ZOOMIN)
+##		self._bzoomout = components.Button(self, grinsRC.IDC_ZOOMOUT)
+##		self._bzoomin.attach_to_parent()
+##		self._bzoomout.attach_to_parent()
+##		self._bzoomin.seticon(self._iconzoomin)
+##		self._bzoomout.seticon(self._iconzoomout)
+##		self._bzoomin.show()
+##		self._bzoomout.show()
+##		self._bzoomin.hookcommand(self, self.OnZoomIn)
+##		self._bzoomout.hookcommand(self, self.OnZoomOut)
+		pass
 
 	def OnZoomIn(self, id, params):
 		self.zoomIn()
