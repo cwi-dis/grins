@@ -12,10 +12,8 @@ def _freeze_dummy_func():
 	import ImageChannel
 	import LayoutChannel
 	import NullChannel
-	import PseudoHtmlChannel
 	import SoundChannel
 	import TextChannel
-	import VideoChannel
 	import AnimateChannel
 	import BrushChannel
 	import PrefetchChannel

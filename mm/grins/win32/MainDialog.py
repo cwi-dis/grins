@@ -190,15 +190,16 @@ class MainDialog:
 ##				filename = file
 		return MMurl.pathname2url(filename)
 
-	def console_callback(self):
-		import win32ui,win32con
-		cwnd=win32ui.GetAfx().GetMainWnd()
-		if cwnd.IsWindowVisible():
-			cwnd.ShowWindow(win32con.SW_HIDE)
-		else:
-			cwnd.ShowWindow(win32con.SW_RESTORE)
-			cwnd.ShowWindow(win32con.SW_SHOW)
-			cwnd.BringWindowToTop()
+	if __debug__:
+		def console_callback(self):
+			import win32ui,win32con
+			cwnd=win32ui.GetAfx().GetMainWnd()
+			if cwnd.IsWindowVisible():
+				cwnd.ShowWindow(win32con.SW_HIDE)
+			else:
+				cwnd.ShowWindow(win32con.SW_RESTORE)
+				cwnd.ShowWindow(win32con.SW_SHOW)
+				cwnd.BringWindowToTop()
 
 	def help_contents_callback(self, params=None):
 		import Help
