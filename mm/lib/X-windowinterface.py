@@ -17,19 +17,27 @@ _screenheight = 1024
 _dpi_x = 111
 _dpi_y = 111
 
-try:
-	import imgfile
-	try:
-		dummy = imgfile.ttob(1)
-		del dummy
-	except AttributeError:
-		pass
-except ImportError:
-	pass
-
 _image_cache = {}			# cache of prepared images
 _cache_full = 0				# 1 if we shouldn't cache more images
 _image_size_cache = {}
+
+have_cl = have_jpeg = 0
+try:
+	import cl, CL
+	have_cl = 1
+except ImportError:
+	try:
+		import jpeg
+		have_jpeg = 1
+	except ImportError:
+		pass
+
+try:
+	import rgbimg
+	dummy = rgbimg.ttob(1)
+	del dummy
+except ImportError:
+	pass
 
 class _Toplevel:
 	def __init__(self):
@@ -435,8 +443,8 @@ class _Window:
 			retval = _image_cache[cachekey]
 			filename = retval[-1]
 			try:
-				import imgfile
-				image = imgfile.read(filename)
+				import rgbimg
+				image = rgbimg.longimagedata(filename)
 				return retval[:-1] + (image,)
 			except:		# any error...
 				del _image_cache[cachekey]
@@ -477,9 +485,10 @@ class _Window:
 			import tempfile
 			filename = tempfile.mktemp()
 			try:
-				import imgfile
-				imgfile.write(filename, retval[10],
-					  retval[6], retval[7], retval[8])
+				import rgbimg
+				rgbimg.longstoimage(retval[10],
+					  retval[6], retval[7], 3,
+					  filename)
 			except:		# any error...
 				print 'Warning: caching image failed'
 				import posix
@@ -493,8 +502,8 @@ class _Window:
 		return retval[:-1]
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
-		import imgfile
-		xsize, ysize, zsize = imgfile.getsizes(file)
+		import rgbimg, imageop
+		xsize, ysize = rgbimg.sizeofimage(file)
 		_image_size_cache[file] = (xsize, ysize)
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
@@ -503,37 +512,26 @@ class _Window:
 		width, height = self._width, self._height
 		scale = min(float(width)/(xsize - left - right),
 			    float(height)/(ysize - top - bottom))
-		if scale == 1:
-			image = imgfile.read(file)
-			width, height = xsize, ysize
-		else:
+		image = rgbimg.longimagedata(file)
+		width, height = xsize, ysize
+		image = imageop.rgb2rgb8(image, xsize, ysize)
+		if scale != 1:
 			width = int(xsize * scale)
 			height = int(ysize * scale)
-			image = imgfile.readscaled(file, width, height, 'box')
+			image = imageop.scale(image, 1, xsize, ysize,
+				  width, height)
 			top = int(top * scale)
 			bottom = int(bottom * scale)
 			left = int(left * scale)
 			right = int(right * scale)
 			scale = 1.0
-		if zsize == 3:
-			import imageop
-			image = imageop.rgb2rgb8(image, width, height)
-			zsize = 1
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
-		if xsize * ysize < width * height:
-			do_cache = 0
-		else:
-			do_cache = 1
 		return x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, zsize, scale, \
-			  image, do_cache
+			  left, bottom, width, height, 1, scale, \
+			  image, 0
 
-	def _prepare_JPEG_image_from_filep(self, file, filep, top, bottom, left, right):
-		try:
-			import cl, CL
-		except ImportError:
-			return None
+	def _prepare_JPEG_image_from_filep_with_cl(self, filep):
 		header = filep.read(16)
 		filep.seek(0)
 		scheme = cl.QueryScheme(header)
@@ -553,6 +551,18 @@ class _Window:
 		decomp.SetParams(params)
 		image = decomp.Decompress(1, filep.read())
 		decomp.CloseDecompressor()
+		return image, xsize, ysize, zsize
+
+	def _prepare_JPEG_image_from_filep_with_jpeg(self, filep):
+		return jpeg.decompress(filep.read())
+
+	def _prepare_JPEG_image_from_filep(self, file, filep, top, bottom, left, right):
+		if have_cl:
+			image, xsize, ysize, zsize = self._prepare_JPEG_image_from_filep_with_cl(filep)
+		elif have_jpeg:
+			image, xsize, ysize, zsize = self._prepare_JPEG_image_from_filep_with_jpeg(filep)
+		else:
+			return None
 
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
