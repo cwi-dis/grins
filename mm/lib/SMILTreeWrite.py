@@ -268,7 +268,7 @@ def getsrc(writer, node):
 	if chtype == 'brush':
 		return None
 	elif ntype == 'ext':
-		val = MMAttrdefs.getattr(node, 'file')
+		val = node.GetAttrDef('file', None)
 	elif ntype == 'imm':
 		if chtype == 'html':
 			mime = 'text/html'
@@ -319,7 +319,7 @@ def getsrc(writer, node):
 			# Exporting without a URL is an error
 			from windowinterface import showmessage
 			node.set_infoicon('error', 'The URL field is empty')
-			showmessage('No URL set for node %s\nThe document may not be playable.' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
+			showmessage('No URL set for node %s\nThe document may not be playable.' % (node.GetRawAttrDef('name', '<unnamed>')))
 		else:
 			# If not exporting we insert a placeholder
 			val = '#'
@@ -373,7 +373,7 @@ def getsrc(writer, node):
 		rp.tags = ntags
 		file = writer.newfile(url)
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-		ofile = MMAttrdefs.getattr(node, 'file')
+		ofile = node.GetRawAttrDef('file', None)
 		node.SetAttr('file', val)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
 		if ofile:
@@ -399,7 +399,9 @@ def getsrc(writer, node):
 def getcolor(writer, node):
 	if node.GetChannelType() != 'brush':
 		return None
-	fgcolor = MMAttrdefs.getattr(node, 'fgcolor')
+	fgcolor = node.GetRawAttrDef('fgcolor', None)
+	if fgcolor is None:
+		return
 	if colors.rcolors.has_key(fgcolor):
 		fgcolor = colors.rcolors[fgcolor]
 	else:
@@ -411,11 +413,7 @@ def getsubregionatt(writer, node, attr):
 
 	val = node.getCssRawAttr(attr)
 	if val is not None:
-#		units = MMAttrdefs.getattr(node, 'units')
-#		if units is None:
-#			units = UNIT_PXL
-			
-		# save only if subregion positioning is different as region
+		# save only if subregion positioning is different than region
 		if val == 0:
 			return None
 
@@ -463,15 +461,7 @@ def getbgcoloratt(writer, node, attr):
 		return 'inherit'
 
 def getcmifattr(writer, node, attr, default = None):
-	val = MMAttrdefs.getattr(node, attr)
-	if val is not None:
-		if default is not None and val == default:
-			return None
-		val = str(val)
-	return val
-
-def getrawcmifattr(writer, node, attr, default = None):
-	val = node.GetRawAttrDef(attr, None)
+	val = node.GetRawAttrDef(attr, default)
 	if val is not None:
 		if default is not None and val == default:
 			return None
@@ -489,9 +479,8 @@ def getmimetype(writer, node):
 def getdescr(writer, node, attr):
 	if node.GetType() not in leaftypes:
 		return
-	val = MMAttrdefs.getattr(node, attr)
-	if val:
-		return val
+	val = node.GetRawAttrDef(attr, None)
+	return val or None
 
 def getregionname(writer, node):
 	ch = node.GetChannel()
@@ -509,10 +498,10 @@ def getdefaultregion(writer, node):
 	return writer.ch2name[ch]
 
 def getduration(writer, node, attr = 'duration'):
-	duration = MMAttrdefs.getattr(node, attr)
-	if not duration:		# 0 or None
+	duration = node.GetRawAttrDef(attr, None)
+	if duration is None:		# no duration
 		return None
-	if duration == -1:		# infinite duration...
+	elif duration == -1:		# infinite duration...
 		return 'indefinite'
 	elif duration == -2:
 		return 'media'
@@ -520,40 +509,40 @@ def getduration(writer, node, attr = 'duration'):
 		return fmtfloat(duration, 's')
 
 def getmin(writer, node):
-	min = MMAttrdefs.getattr(node, 'min')
+	min = node.GetRawAttrDef('min', None)
 	if min == -2:
 		return 'media'
-	if not min:
+	elif not min:
 		return None		# 0 or None
 	return fmtfloat(min, 's')
 
 def getmax(writer, node):
 	max = node.GetRawAttrDef('max', None)
-	if max == -1:
+	if max is None:
+		return None
+	elif max == -1:
 		return 'indefinite'
 	elif max == -2:
 		return 'media'
-	if max is None:
-		return None
 	return fmtfloat(max, 's')
 
 def getspeed(writer, node, attr = 'speed'):
-	speed = MMAttrdefs.getattr(node, attr)
-	if not speed:
-		return '1'
+	speed = node.GetRawAttrDef(attr, None)
+	if speed is None:
+		return None
 	else:
 		return fmtfloat(speed)
 
-def getproportion(writer, node, attr, defstr='0'):
-	prop = MMAttrdefs.getattr(node, attr)
-	if not prop:
-		return defstr
+def getproportion(writer, node, attr):
+	prop = node.GetRawAttrDef(attr, None)
+	if prop is None:
+		return None
 	else:
 		return fmtfloat(prop)
 
-def getpercentage(writer, node, attr, default=100):
-	prop = MMAttrdefs.getattr(node, attr)
-	if not prop or prop==default:
+def getpercentage(writer, node, attr):
+	prop = node.GetRawAttrDef(attr, None)
+	if prop is None:
 		return None
 	else:
 		return fmtfloat(prop * 100, suffix = '%')
@@ -629,128 +618,6 @@ def getsyncarc(writer, node, isend):
 	if not list:
 		return
 	return string.join(list, ';')
-##	allarcs = node.GetRawAttrDef('synctolist', [])
-##	arc = None
-##	for srcuid, srcside, delay, dstside in allarcs:
-##		if dstside == isend:
-##			if arc:
-##				print '** Multiple syncarcs to', \
-##				      node.GetRawAttrDef('name', '<unnamed>'),\
-##				      node.GetUID()
-##			else:
-##				arc = srcuid, srcside, delay, dstside
-##	if not isend:
-##		delay = node.GetRawAttrDef('begin', None)
-##		if delay:
-##			if arc:
-##				print '** Multiple syncarcs to', \
-##				      node.GetRawAttrDef('name', '<unnamed>'),\
-##				      node.GetUID()
-##			elif delay < 0:
-##				print '** Negative start delay to', \
-##				      node.GetRawAttrDef('name', '<unnamed>'),\
-##				      node.GetUID()
-##			else:
-##				return fmtfloat(delay, 's')
-##	if not arc:
-##		return
-##	if not writer.uid2name.has_key(srcuid):
-##		print '** Syncarc with unknown source to', \
-##		      node.GetRawAttrDef('name', '<unnamed>'),\
-##		      node.GetUID()
-##		return
-##	srcuid, srcside, delay, dstside = arc
-##	if delay < 0:
-##		print '** Negative delay for', \
-##		      node.GetRawAttrDef('name', '<unnamed>'),\
-##		      node.GetUID()
-##		return
-##	parent = node.GetParent()
-##	ptype = parent.GetType()
-##	siblings = parent.GetChildren()
-##	index = siblings.index(node)
-##	if srcside == 0 and \
-##	   (srcuid == parent.GetUID() and
-##	    (ptype == 'par' or (ptype == 'seq' and index == 0) or ptype == 'excl')) or \
-##	   (srcside and ptype == 'seq' and index > 0 and
-##	    srcuid == siblings[index-1].GetUID()):
-##		# sync arc from parent/previous node
-##		rv = fmtfloat(delay, 's')
-##	elif srcside == 1:
-##		srcname = writer.uid2name[srcuid]
-##		rv = 'id(%s)'%srcname
-##		if srcside:
-##			rv = rv+'(end)'
-##			if delay:
-##				print '** Delay required with end syncarc',\
-##				      node.GetRawAttrDef('name', '<unnamed>'),\
-##				      node.GetUID()
-####			rv = rv+fmtfloat(delay, withsign=1)
-##		else:
-##			rv = rv+'(%s)' % fmtfloat(delay, 's')
-##		for s in siblings:
-##			if srcuid == s.GetUID():
-##				# in scope
-##				break
-##		else:
-##			# out of scope
-##			rv = fixsyncarc(writer, node, srcuid, srcside,
-##					delay, dstside, rv)
-##	else:
-##		print '** Unimplemented SMIL-Boston sync arc', \
-##		      node.GetRawAttrDef('name', '<unnamed>'),\
-##		      node.GetUID()
-##		return
-##	return rv
-
-##def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
-##	if writer.smilboston:
-##		return rv
-##	if dstside != 0 or srcside != 0:
-##		print '** Out of scope syncarc to',\
-##		      node.GetRawAttrDef('name', '<unnamed>'),\
-##		      node.GetUID()
-##		return rv
-##	srcnode = node.GetContext().mapuid(srcuid)
-##	a = node.CommonAncestor(srcnode)
-##	x = srcnode
-##	while x is not a:
-##		p = x.GetParent()
-##		t = p.GetType()
-##		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
-##			print '** Out of scope syncarc to',\
-##			      node.GetRawAttrDef('name', '<unnamed>'),\
-##			      node.GetUID()
-##			return rv
-##		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
-##			if yside == 0 and xdelay != 0:
-##				# too complicated
-##				print '** Out of scope syncarc to',\
-##				      node.GetRawAttrDef('name', '<unnamed>'),\
-##				      node.GetUID()
-##				return rv
-##		x = p
-##	x = node
-##	while x is not a:
-##		p = x.GetParent()
-##		t = p.GetType()
-##		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
-##			print '** Out of scope syncarc to',\
-##			      node.GetRawAttrDef('name', '<unnamed>'),\
-##			      node.GetUID()
-##			return rv
-##		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
-##			if yside == 0 and xdelay != 0 and x is not node:
-##				# too complicated
-##				print '** Out of scope syncarc to',\
-##				      node.GetRawAttrDef('name', '<unnamed>'),\
-##				      node.GetUID()
-##				return rv
-##		x = p
-##	print '*  Fixing out of scope syncarc to',\
-##	      node.GetRawAttrDef('name', '<unnamed>'),\
-##	      node.GetUID()
-##	return fmtfloat(delay, 's')
 
 def getterm(writer, node):
 	if node.type in ('seq', 'prio', 'switch'):
@@ -813,7 +680,7 @@ def getugroup(writer, node):
 	if not node.GetContext().usergroups:
 		return
 	names = []
-	for u_group in MMAttrdefs.getattr(node, 'u_group'):
+	for u_group in node.GetRawAttrDef('u_group', []):
 		try:
 			names.append(writer.ugr2name[u_group])
 		except KeyError:
@@ -825,7 +692,7 @@ def getugroup(writer, node):
 def getlayout(writer, node):
 	if not node.GetContext().layouts:
 		return
-	layout = MMAttrdefs.getattr(node, 'layout')
+	layout = node.GetRawAttrDef('layout', 'undefined')
 	if layout == 'undefined':
 		return
 	try:
@@ -837,7 +704,7 @@ def getlayout(writer, node):
 def gettransition(writer, node, which):
 	if not node.GetContext().transitions:
 		return
-	transition = MMAttrdefs.getattr(node, which)
+	transition = node.GetRawAttrDef(which, None)
 	if not transition:
 		return
 	list = []
@@ -851,51 +718,47 @@ def gettransition(writer, node, which):
 		
 	
 def getautoreverse(writer, node):
-	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
-	if autoReverse:
+	if node.GetRawAttrDef('autoReverse', None):
 		return 'true'
 	return None
 
 def getattributetype(writer, node):
-	atype = MMAttrdefs.getattr(node, 'attributeType')
+	atype = node.GetRawAttrDef('attributeType', 'XML')
 	if atype == 'XML':
 		return None
 	return atype
 
-def getstringattr(writer, node, attr):
-	return MMAttrdefs.getattr(node, attr)
-
 def getaccumulate(writer, node):
-	accumulate = MMAttrdefs.getattr(node, 'accumulate')
+	accumulate = node.GetRawAttrDef('accumulate', 'none')
 	if accumulate == 'none':
 		return None
 	return accumulate
 
 def getadditive(writer, node):
-	additive = MMAttrdefs.getattr(node, 'additive')
+	additive = node.GetRawAttrDef('additive', 'replace')
 	if additive == 'replace':
 		return None
 	return additive
 
 def getcalcmode(writer, node):
-	mode = MMAttrdefs.getattr(node, 'calcMode')
-	tag = MMAttrdefs.getattr(node, 'atag')
+	mode = node.GetRawAttrDef('calcMode', 'linear')
+	tag = node.GetRawAttrDef('atag', 'animate')
 	if tag!='animateMotion' and mode == 'linear':
 		return None
 	elif tag=='animateMotion' and mode == 'paced':
 		return None
 	return mode
 
-def getattributename(writer, node):
-	attr = MMAttrdefs.getattr(node, 'attributeName')
-	return attr
-
 def getpath(writer, node):
-	attr = MMAttrdefs.getattr(node, 'path')
+	attr = node.GetRawAttrDef('path', None)
+	if attr is None:
+		return
 	# strange but IE manages only spaces
 	# grins both spaces and commas
 	# so use spaces at least for now
 	attr = string.join(string.split(attr,','),' ')
+	# collapse multiple spaces to one
+	attr = string.join(string.split(attr))
 	return attr
 
 def getcollapsed(writer, node):
@@ -903,7 +766,7 @@ def getcollapsed(writer, node):
 		return 'true'
 
 def getinlinetrmode(writer, node):
-	mode = MMAttrdefs.getattr(node, 'mode')
+	mode = node.GetRawAttrDef('mode', 'in')
 	if mode == 'in':
 		return None
 	return mode
@@ -917,8 +780,8 @@ smil_attrs=[
 	("title", lambda writer, node:getcmifattr(writer, node, "title")),
 	("region", getregionname),
 	("project_default_region", getdefaultregion),
-	("project_default_type", lambda writer, node:getrawcmifattr(writer, node, 'project_default_type')),
-	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction', -1)),
+	("project_default_type", lambda writer, node:getcmifattr(writer, node, 'project_default_type')),
+	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction')),
 	("type", getmimetype),
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
@@ -932,7 +795,7 @@ smil_attrs=[
 	("max", getmax),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("fill", lambda writer, node: getcmifattr(writer, node, 'fill', 'default')),
-	("fillDefault", lambda writer, node: getrawcmifattr(writer, node, 'fillDefault', 'inherit')),
+	("fillDefault", lambda writer, node: getcmifattr(writer, node, 'fillDefault', 'inherit')),
 	("erase", lambda writer, node:getcmifattr(writer, node, 'erase', 'whenDone')),
 	("syncBehavior", lambda writer, node: getcmifattr(writer, node, 'syncBehavior', 'default')),
 	("syncBehaviorDefault", lambda writer, node: getcmifattr(writer, node, 'syncBehaviorDefault', 'inherit')),
@@ -947,30 +810,30 @@ smil_attrs=[
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
 	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
-	("targetElement", lambda writer, node:getstringattr(writer, node, "targetElement")),
-	("attributeName", getattributename),
+	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
+	("attributeName", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
 	("attributeType", getattributetype),
 	("speed", lambda writer, node:getspeed(writer, node, "speed")),
 	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
 	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate")),
 	("autoReverse", getautoreverse),
-	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
+	("system-bitrate", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None),
 	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
-	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
-	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getrawcmifattr(writer, node, "system_overdub_or_caption"))) or None),
-	("system-required", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("system-language", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_language")) or None),
+	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getcmifattr(writer, node, "system_overdub_or_caption"))) or None),
+	("system-required", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_required")) or None),
 	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None),
-	("system-screen-depth", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
+	("system-screen-depth", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None),
 	("systemAudioDesc", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None),
-	("systemBitrate", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
+	("systemBitrate", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None),
 	("systemCaptions", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
-	("systemCPU", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_cpu")) or None),
-	("systemLanguage", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
-	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_operating_system")) or None),
-	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
+	("systemCPU", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None),
+	("systemLanguage", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_language")) or None),
+	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None),
+	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_overdub_or_caption")) or None),
 	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None),
 	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
-	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
+	("systemScreenDepth", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None),
 	("customTest", getugroup),
 	("layout", getlayout),
 	("color", getcolor),		# only for brush element
@@ -983,30 +846,30 @@ smil_attrs=[
 	("height", lambda writer, node:getsubregionatt(writer, node, 'height')),
 	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
 	# registration points
-	("regPoint", lambda writer, node:getrawcmifattr(writer, node, "regPoint", 'topLeft')),
-	("regAlign", lambda writer, node:getrawcmifattr(writer, node, "regAlign", 'topLeft')),
+	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft')),
+	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft')),
 	
 	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	
-	("z-index", lambda writer, node:getrawcmifattr(writer, node, "z")),	
-	("from", lambda writer, node:getstringattr(writer, node, "from")),
-	("to", lambda writer, node:getstringattr(writer, node, "to")),
-	("by", lambda writer, node:getstringattr(writer, node, "by")),
-	("values", lambda writer, node:getstringattr(writer, node, "values")),
+	("z-index", lambda writer, node:getcmifattr(writer, node, "z")),	
+	("from", lambda writer, node: node.GetRawAttrDef("from", None)),
+	("to", lambda writer, node: node.GetRawAttrDef("to", None)),
+	("by", lambda writer, node: node.GetRawAttrDef("by", None)),
+	("values", lambda writer, node: node.GetRawAttrDef("values", None)),
 	("path", getpath),
-	("origin", lambda writer, node:getstringattr(writer, node, "origin")),
+	("origin", lambda writer, node: node.GetRawAttrDef("origin", None)),
 	("accumulate", getaccumulate),
 	("additive", getadditive),
 	("calcMode", getcalcmode),
-	("keyTimes", lambda writer, node:getstringattr(writer, node, "keyTimes")),
-	("keySplines", lambda writer, node:getstringattr(writer, node, "keySplines")),
+	("keyTimes", lambda writer, node: node.GetRawAttrDef("keyTimes", None)),
+	("keySplines", lambda writer, node: node.GetRawAttrDef("keySplines", None)),
 	("transIn", lambda writer, node:gettransition(writer, node, "transIn")),
 	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
 	("mode", getinlinetrmode),
-	("subtype", lambda writer, node:getstringattr(writer, node, "subtype")),
+	("subtype", lambda writer, node: node.GetRawAttrDef("subtype", None)),
 
-	("mediaSize", lambda writer, node:getstringattr(writer, node, "mediaSize")),
-	("mediaTime", lambda writer, node:getstringattr(writer, node, "mediaTime")),
-	("bandwidth", lambda writer, node:getstringattr(writer, node, "bandwidth")),
+	("mediaSize", lambda writer, node: node.GetRawAttrDef("mediaSize", None)),
+	("mediaTime", lambda writer, node: node.GetRawAttrDef("mediaTime", None)),
+	("bandwidth", lambda writer, node: node.GetRawAttrDef("bandwidth", None)),
 
 	("collapsed", getcollapsed),
 ]
@@ -1572,8 +1435,7 @@ class SMILWriter(SMIL):
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
 		uid = node.GetUID()
-		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		for a in alist:
+		for a in node.GetRawAttrDef('anchorlist', []):
 			aid = (uid, a.aid)
 			self.anchortype[aid] = a.atype
 			if a.atype in SourceAnchors:
@@ -1987,7 +1849,7 @@ class SMILWriter(SMIL):
 			elif type == 'seq' and root and self.smilboston:
 				xtype = mtype = 'body'
 			elif type == 'foreign':
-				tag = MMAttrdefs.getattr(x, 'tag')
+				tag = x.GetRawAttrDef('tag', None)
 				if ' ' in tag:
 					ns, tag = string.split(tag, ' ', 1)
 					xtype = mtype = 'foreign:%s' % tag
@@ -2060,20 +1922,6 @@ class SMILWriter(SMIL):
 				      name[:6] == 'xmlns:'):
 				attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
-##		is_brush = x.GetChannelType() == 'brush'
-##		for key, val in x.GetAttrDict().items():
-##			if type == 'prio' and cmif_node_prio_attrs_ignore.has_key(key):
-##				continue
-##			if key[-7:] == '_winpos' or key[-8:] == '_winsize':
-##				continue
-##			if type == 'prio' or \
-##			   (not qt_node_attrs.has_key(key) and
-##			    not cmif_node_attrs_ignore.has_key(key) and
-##			    (not is_brush or key != 'fgcolor') and
-##			    (not is_realpix or
-##			     not cmif_node_realpix_attrs_ignore.has_key(key))):
-##				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),
-##						 MMAttrdefs.valuerepr(key, val)))
 		if not interior and root:
 			self.writetag('body')
 			self.push()
@@ -2170,7 +2018,7 @@ class SMILWriter(SMIL):
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
-		alist = MMAttrdefs.getattr(x, 'anchorlist')
+		alist = x.GetRawAttrDef('anchorlist', [])
 
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
@@ -2197,7 +2045,7 @@ class SMILWriter(SMIL):
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
-					value = getstringattr(self, node, "trtype")
+					value = node.GetRawAttrDef('trtype', None)
 				else:
 					value = func(self, node)
 				if value and value != attributes[name]:
@@ -2360,7 +2208,7 @@ class SMILWriter(SMIL):
 			if type(node) == type({}):
 				convert = node.get('project_convert', 1)
 			else:
-				convert = MMAttrdefs.getattr(node, 'project_convert')
+				convert = node.GetRawAttrDef('project_convert', 1)
 		else:
 			convert = 1
 
