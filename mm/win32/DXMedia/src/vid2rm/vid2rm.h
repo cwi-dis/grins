@@ -17,7 +17,7 @@ public:
                 LPUNKNOWN pUnk,
                 CCritSec *pLock,
                 HRESULT *phr);
-
+	~CVid2rmFilter();
     // Pin enumeration
     CBasePin * GetPin(int n);
     int GetPinCount();
@@ -26,6 +26,8 @@ public:
     STDMETHODIMP Run(REFERENCE_TIME tStart);
     STDMETHODIMP Pause();
     STDMETHODIMP Stop();
+
+
 };
 
 
@@ -54,6 +56,7 @@ public:
 
     // Check if the pin can support this specific proposed type and format
     HRESULT CheckMediaType(const CMediaType *);
+	HRESULT SetMediaType(const CMediaType *pmt);
 
     // Break connection
     HRESULT BreakConnect();
@@ -62,6 +65,7 @@ public:
     STDMETHODIMP NewSegment(REFERENCE_TIME tStart,
                             REFERENCE_TIME tStop,
                             double dRate);
+	CMediaType m_mtIn;
 };
 
 
