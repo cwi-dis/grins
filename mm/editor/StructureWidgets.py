@@ -1501,7 +1501,6 @@ class PushBackBarWidget(MMWidgetDecoration):
 class Icon(MMWidgetDecoration):
 	# Display an icon which can be clicked on. This can be used for
 	# any icon on screen.
-	# This inherits from MMNodeWidget because of the get_obj_at() mechanism and click handling.
 	def __init__(self, icon, parent, node, mother):
 		MMWidgetDecoration.__init__(self, parent, mother)
 		self.node = node
@@ -1596,6 +1595,9 @@ class TimelineWidget(MMWidgetDecoration):
 				cur_tick_bot = tick_bot
 			display_list.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])			
 
+##############################################################################
+			# Crap at the end of the file.
+
 class BrushWidget(MMNodeWidget):
 	def __init__(self):
 		print "TODO: BrushWidget"
@@ -1609,6 +1611,7 @@ class BrushWidget(MMNodeWidget):
 #	HAS_CHANNEL_BOX = 1
 ##	def __repr__(self):
 ##		return "TimeStripSeqWidget"
+
 
 
 class ImageBoxWidget(MMWidgetDecoration):
