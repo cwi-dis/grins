@@ -1,6 +1,5 @@
 // CMIF_ADD
 //
-// kk@epsilon.com.gr
 //
 //
 // Note that this source file contains embedded documentation.
@@ -689,4 +688,78 @@ ui_mdi_child_window_get_mdi_frame(PyObject *self, PyObject *args)
 
 //#define DEF_NEW_PY_METHODS_PyCMDIChildWnd\
 //	{"GetMDIFrame",ui_mdi_child_window_get_mdi_frame,1},
+
+
+// @pymethod <o PyMiniFrameWnd>|win32ui|CreateMiniFrame|Creates a MiniFrame window.
+PyObject *
+ui_create_miniframe(PyObject *self, PyObject *args)
+{
+	CHECK_NO_ARGS2(args,CreateFrame);
+	GUI_BGN_SAVE;
+	CMiniFrameWnd* pFrame = new CMiniFrameWnd;
+	GUI_END_SAVE;
+	return ui_assoc_object::make(PyCFrameWnd::type, pFrame)->GetGoodRet();
+	// @rdesc The window object (not the OS window) created.  An exception is raised if an error occurs.
+}
+
+
+// @pymethod tuple|PyCMiniFrameWnd|CreateWindow|Creates the actual window for the PyCWnd object.
+PyObject *
+ui_mini_frame_window_create_window(PyObject *self, PyObject *args)
+{
+	CPythonMiniFrame *pWnd = 
+		(CPythonMiniFrame *)PyCWnd::GetPythonGenericWnd(self, &PyCFrameWnd::type);
+
+	if (!pWnd)
+		return NULL;
+	PythonCreateContext cc;
+	RECT rect = CMDIChildWnd::rectDefault;
+	PyObject *obRect = Py_None;
+	PyObject *obParent = Py_None;
+	UINT id=0;
+	char *szClass, *szTitle;
+	DWORD style = WS_CHILD | WS_VISIBLE | WS_OVERLAPPEDWINDOW;
+	if (!PyArg_ParseTuple(args, "zs|lOOO:CreateWindow",
+		&szClass, // @pyparm string|wndClass||The window class name, or None
+		&szTitle, // @pyparm string|title||The window title
+		&style, // @pyparm int|style|WS_CHILD \| WS_VISIBLE \| WS_OVERLAPPEDWINDOW|The window style
+		&obRect, // @pyparm int, int, int, int|rect|None|The default rectangle
+		&obParent, // @pyparm parent|<o PyCWnd>|None|The parent window
+		&id))// 
+		return NULL;
+
+	if (obRect != Py_None) {
+		if (!PyArg_ParseTuple(obRect, "iiii", &rect.left,  &rect.top,  &rect.right,  &rect.bottom)) {
+			PyErr_Clear();
+			RETURN_TYPE_ERR("Rect must be None or a tuple of (iiii)");
+		}
+	}
+	CMDIFrameWnd *pParent = NULL;
+	if (obParent != Py_None) {
+		pParent = GetMDIFrame( obParent );
+		if (pParent==NULL)
+			RETURN_TYPE_ERR("The parent window is not a valid PyMiniFrameWnd");
+	}
+
+	GUI_BGN_SAVE;
+	BOOL ok = pWnd->Create(szClass, szTitle, style, rect, pParent, id);
+	GUI_END_SAVE;
+	if (!ok)
+		RETURN_ERR("CMiniFrameWnd::Create");
+	RETURN_NONE;
+}
+
+
+// @object PyCMiniFrameWnd|A windows mini frame window.  Encapsulates an MFC <c CMiniFrameWnd> class
+static struct PyMethodDef PyCMiniFrameWnd_methods[] = {
+	{"CreateWindow", ui_mini_frame_window_create_window, 1}, // @pymeth CreateWindow|Creates the actual window for the PyCWnd object.
+	{NULL,			NULL}
+};
+
+ui_type_CObject PyCMiniFrameWnd::type("PyCMiniFrameWnd", 
+									 &PyCFrameWnd::type, 
+									 RUNTIME_CLASS(CMiniFrameWnd), 
+									 sizeof(PyCMiniFrameWnd), 
+									 PyCMiniFrameWnd_methods, 
+									 GET_PY_CTOR(PyCMiniFrameWnd));
 
