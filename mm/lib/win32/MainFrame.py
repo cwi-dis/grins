@@ -188,7 +188,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			template=MenuTemplate.NODOC_MENUBAR
 		else:
 			template=MenuTemplate.MENUBAR
-		self._mainmenu.create_from_menubar_spec_list(template,self.get_cmdclass_id)
+		self._mainmenu.create_from_menubar_spec_list(template,  usercmdui.usercmd2id)
 		cs.hMenu=self._mainmenu.GetHandle()
 		return cs.to_csd()
 
@@ -226,7 +226,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 
 		client=self.GetMDIClient()
-		client.HookMessage(self.OnMdiRefreshMenu,win32con.WM_MDIREFRESHMENU)
+		client.HookMessage(self.OnMdiRefreshMenu, win32con.WM_MDIREFRESHMENU)
 		self._active_child=None
 		# hook tab sel change
 		#TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
@@ -335,7 +335,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		except win32ui.error:
 			f=None
 
-		
 		id = usercmdui.usercmd2id(wndusercmd.CLOSE_ACTIVE_WINDOW)
 		if not f:
 			self._active_child=None
@@ -376,22 +375,22 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	def OnWndUserCmd(self,id,code):
 		client=self.GetMDIClient()
 		if id==afxres.ID_WINDOW_TILE_HORZ:
-			client.SendMessage(win32con.WM_MDITILE,win32con.MDITILE_HORIZONTAL)			
+			client.SendMessage(win32con.WM_MDITILE, win32con.MDITILE_HORIZONTAL)			
 		elif id==afxres.ID_WINDOW_TILE_VERT:
-			client.SendMessage(win32con.WM_MDITILE,win32con.MDITILE_VERTICAL)			
+			client.SendMessage(win32con.WM_MDITILE, win32con.MDITILE_VERTICAL)			
 		elif id==afxres.ID_WINDOW_CASCADE:
 			client.SendMessage(win32con.WM_MDICASCADE)			
 	
 	# Response to command to close the active window
 	def OnCloseActiveWindow(self,id,code):
-		t=self.MDIGetActive()
+		t = self.MDIGetActive()
 		if not t: return
-		f,ismax=t
+		f, ismax=t
 		if self._active_child and\
-			hasattr(self._active_child._view,'_commandlist') and\
+			hasattr(self._active_child._view, '_commandlist') and\
 			self._active_child._view._commandlist:
-			id = usercmdui.usercmd2id(CLOSE_WINDOW)
-			self.PostMessage(win32con.WM_COMMAND,id)
+			id = usercmdui.usercmd2id(usercmd.CLOSE_WINDOW)
+			self.PostMessage(win32con.WM_COMMAND, id)
 		else:
 			f.PostMessage(win32con.WM_CLOSE)
 	
@@ -437,7 +436,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	
 
 	# Associate this frame with the document
-	def setdocument(self,cmifdoc,adornments,commandlist, peerdocid=0):
+	def setdocument(self, cmifdoc, adornments, commandlist, peerdocid=0):
 		self._peerdocid = peerdocid
 		self._cmifdoc = cmifdoc
 		import urllib
@@ -465,7 +464,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				self.__slider.timefunction = player.scheduler.timefunc
 				self.__slider.canusetimefunction = player.isplaying
 
-	def setEditorDocumentMenu(self,flag):
+	def setEditorDocumentMenu(self, flag):
 		if USE_NODOC_MENUBAR:
 			temp=self._mainmenu
 			self._mainmenu=win32menu.Menu()
@@ -473,7 +472,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				template=MenuTemplate.NODOC_MENUBAR
 			else:
 				template=MenuTemplate.MENUBAR
-			self._mainmenu.create_from_menubar_spec_list(template,self.get_cmdclass_id)
+			self._mainmenu.create_from_menubar_spec_list(template, usercmdui.usercmd2id)
 			self.SetMenu(self._mainmenu)
 			self.DrawMenuBar()
 			if self._dynamiclists.has_key(usercmd.OPEN_RECENT):
@@ -490,7 +489,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1, bgcolor = None):
-		if adornments.has_key('view'):strid=adornments['view']
+		if adornments.has_key('view'): strid = adornments['view']
 		else:  raise "undefined view request"
 		if strid=='pview_':
 			exporting = adornments.get('exporting')
@@ -543,7 +542,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return self._doc
 
 	# Create a text viewer
-	def textwindow(self,text, readonly = 0, close_callback = None):
+	def textwindow(self, text, readonly = 0, close_callback = None):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		sv.set_readonly(readonly)
@@ -555,10 +554,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Creates a new ChildFrame 
 	def newChildFrame(self,view,decor=None):
-		return ChildFrame(view,decor)
+		return ChildFrame(view, decor)
+
 	# Called by the framework when the actvation changes
 	def Activate(self,view):
 		self.MDIActivate(view)
+
 	# Returns the prefered client dimensions
 	def getPrefRect(self):
 		rc= win32mu.Rect(self.GetClientRect())
@@ -595,7 +596,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._mainmenu.clear_cascade_menus(exceptions)
 
 		# 2. then the document
-		__main__.toplevel.cleardocmap(self._cmifdoc)
+		__main__.toplevel.cleardoccache(self._cmifdoc)
 		self._cmifdoc=None
 		self.set_commandlist(None,'document')
 		self.settitle(None,'document')
@@ -617,8 +618,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			__main__.toplevel._image_size_cache = {}
 			__main__.toplevel._image_cache = {}
 
-			
-
 	# Response to resizing		
 	def onSize(self,params):
 		self.RecalcLayout()
@@ -633,25 +632,25 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Response to mouse move
 	def onMove(self,params):
 		rc=self.GetWindowRect()
-		MDIFrameWnd.wndpos=win32mu.Point((rc[0],rc[1]))
+		MDIFrameWnd.wndpos = win32mu.Point((rc[0],rc[1]))
 
 	# Resize window
-	def setcoords(self,coords,units=UNIT_MM):
+	def setcoords(self,coords, units=UNIT_MM):
 		x, y, w, h = coords
-		x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
-		rc=(x,y,x+w,y+h)
+		x,y,w,h = sysmetrics.to_pixels(x,y,w,h,units)
+		rc = x, y, x+w, y+h
 		#l,t,r,b=self.CalcWindowRect(rc,0)
 		#w=r-l+2*cxframe+4
 		#h=b-t+3*cycaption+16+4
 		self.RecalcLayout()
-		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE |win32con.SWP_NOMOVE
-		self.SetWindowPos(0,(0,0,w,h),flags)
+		flags = win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE | win32con.SWP_NOMOVE
+		self.SetWindowPos(0, (0,0,w,h), flags)
 		
 
 	# Maximize window
 	def maximize(self,child):
 		client=self.GetMDIClient()
-		client.SendMessage(win32con.WM_MDIMAXIMIZE,child.GetSafeHwnd())
+		client.SendMessage(win32con.WM_MDIMAXIMIZE, child.GetSafeHwnd())
 
 
 	###############################################
@@ -667,8 +666,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._menu = None
 
 	# appent an entry to popup menu
-	def append_menu_entry(self,entry=None):
-		if not self._menu:return
+	def append_menu_entry(self, entry=None):
+		if not self._menu: 
+			return
 		if not entry:
 			self._menu.AppendMenu(win32con.MF_SEPARATOR)
 		else:
@@ -684,13 +684,17 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# into self._popupmenu.
 		self._destroy_popupmenu()
 		self._popupmenu = win32menu.Menu('popup')
-		self._popupmenu.create_popup_from_menubar_spec_list(menutemplate,self.get_cmdclass_id)
+		self._popupmenu.create_popup_from_menubar_spec_list(menutemplate, usercmdui.usercmd2id)
 		
 	def _destroy_popupmenu(self):
 		# Free resources held by self._popupmenu and set it to None
-		if self._popupmenu:self._popupmenu.DestroyMenu()
+		if self._popupmenu:
+			self._popupmenu.DestroyMenu()
 		self._popupmenu = None		
 
+	# Returns a submenu from its string id (e.g 'File','Edit',etc)
+	def get_submenu(self,strid):
+		return self._mainmenu._submenus_dict.get(strid)
 
 	#
 	# win32window.Window overrides
@@ -728,34 +732,13 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			xsize, ysize = toplevel._image_size_cache[file]
 		except KeyError:
 			img = win32ig.load(file)
-			xsize,ysize,depth=win32ig.size(img)
-			toplevel._image_size_cache[file] = xsize, ysize
-			toplevel._image_cache[file] = img
-		self.imgAddDocRef(file)
+			xsize, ysize, depth = win32ig.size(img)
+			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
 		return xsize, ysize
 
 	def _image_handle(self, file):
 		return __main__.toplevel._image_cache[file]
 
-	# XXX: to be removed
-	def imgAddDocRef(self,file):
-		toplevel=__main__.toplevel
-		doc=self.getgrinsdoc()
-		if doc==None: doc="__Unknown"
-		if toplevel._image_docmap.has_key(doc):
-			if file not in toplevel._image_docmap[doc]:
-				toplevel._image_docmap[doc].append(file)
-		else:
-			toplevel._image_docmap[doc]=[file,]
-
-
-	# return commnds class id
-	def get_cmdclass_id(self,cmdcl):
-		return usercmdui.usercmd2id(cmdcl)
-
-	# Returns a submenu from its string id (e.g 'File','Edit',etc)
-	def get_submenu(self,strid):
-		return self._mainmenu._submenus_dict.get(strid)
 
 	###############################################
 	# BEGIN CMD LIST SECTION
@@ -776,7 +759,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self.setplayerstate(self.__playerstate)
 
 	# Dissable context commands
-	def dissable_context(self,context):
+	def dissable_context(self, context):
 		# assert there is an entry for this context
 		if not self._activecmds.has_key(context):
 			self._activecmds[context]={}
@@ -813,25 +796,22 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Set item menu and toolbar relative to player in a specific state
 	def setplayerstate(self, state):
 		import Player
-
 		self.__playerstate = state
 		id_play = usercmdui.usercmd2id(usercmd.PLAY)
 		id_pause = usercmdui.usercmd2id(usercmd.PAUSE)
 		id_stop = usercmdui.usercmd2id(usercmd.STOP)
-			
 		if state == Player.PLAYING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
-		if state == Player.PAUSING:
+		elif state == Player.PAUSING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
-		if state == Player.STOPPED:
+		elif state == Player.STOPPED:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
-
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
@@ -875,10 +855,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				return
 		self.PostMessage(WM_KICKIDLE)
 
-	# Get the command class id
-	def GetUserCmdId(self, cmdcl):
-		return usercmdui.usercmd2id(cmdcl)
-
 	# Get the user command class instance
 	def GetUserCmd(self, cmdcl):
 		id = usercmdui.usercmd2id(cmdcl)
@@ -889,7 +865,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				cmd = contextcmds[id]
 				break
 		return cmd
-
 
 #  	def set_grins_snap_features(self):
 # 		# Assert features.version == 'grins snap!'
@@ -1065,7 +1040,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Release)
 
-
 	def isplayer(self,f):
 		if not hasattr(f,'_view'): return 0
 		return f._view._strid=='pview_'
@@ -1096,6 +1070,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			pass #self.SetMenu(None)				
 		if player:self.MDIActivate(player)
 
+
+	###########################################################
+	# General MDI childs navigation utilities
 
 	# Return the number of childs
 	def countMDIChildWnds(self):
@@ -1135,8 +1112,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			# Title window associated with an iconized child window.
 			# Recurse over the window manager's list of windows.
 			return self.GetNextMDIChildWnd(currentChild)	
-
-
 
 	###########################################################
 	# Views management
@@ -1295,10 +1270,6 @@ class ChildFrame(window.MDIChildWnd):
 	# Returns the parent MDIFrameWnd
 	def getMDIFrame(self):
 		return self.GetMDIFrame()
-
-	# Returns the cmd class id
-	def GetUserCmdId(self, cmdcl):
-		return usercmdui.usercmd2id(cmdcl)
 
 	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):

@@ -447,9 +447,18 @@ class _Toplevel:
 
 
 	################################
-	
 	#utility functions
-	def cleardocmap(self,doc):
+	
+	def cacheimage(self, doc, file, img, size):
+		self._image_size_cache[file] = size
+		self._image_cache[file] = img
+		if self._image_docmap.has_key(doc):
+			if file not in self._image_docmap[doc]:
+				self._image_docmap[doc].append(file)
+		else:
+			self._image_docmap[doc]=[file,]
+
+	def cleardoccache(self, doc):
 		if not self._image_docmap.has_key(doc): return
 		imglist=self._image_docmap[doc]
 		otherimglist=[]
@@ -467,8 +476,8 @@ class _Toplevel:
 
 			
 	# Returns the size of an image	
-	def GetImageSize(self,file):
-		f=self.getActiveDocFrame()
+	def GetImageSize(self, file):
+		f = self.getActiveDocFrame()
 		return f._image_size(file)
 	
 	# Returns the length of a string in pixels	
@@ -640,4 +649,4 @@ class htmlwindow:
 	def goto_url(self,url):
 		shell_execute(url,'open')	
 	def close(self):pass
-	def is_closed(self):return 1
+	def is_closed(self):return 1 

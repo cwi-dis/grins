@@ -198,7 +198,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 # UNCOMMENT NEXT LINES WHEN LinkEdit class is fixed
 # so that it works the same way as the other views
 #		if self._closecmdid>0:
-#			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
+#			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND, self._closecmdid)
 #		else:
 		self.call('close')
 ##		self.GetParent().DestroyWindow()
@@ -206,12 +206,6 @@ class _LinkView(docview.FormView,components.ControlsDict):
 	# Returns true if the OS window exists
 	def is_oswindow(self):
 		return (hasattr(self,'GetSafeHwnd') and self.GetSafeHwnd())
-
-	# Return the user cmd from the command class
-	def GetUserCmdId(self,cmdcl):
-		if hasattr(self,'GetParent'):
-			return self.GetParent().GetUserCmdId(cmdcl)
-		return -1
 
 	# Adjust dimensions to fit resource template
 	def fittemplate(self):
@@ -226,7 +220,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 	
 	# Internal function to implement a close window mechanism
 	def close_window_callback(self):
-		self._mdiframe.SendMessage(win32con.WM_COMMAND,self.GetUserCmdId(usercmd.LINKVIEW))
+		self._mdiframe.SendMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.LINKVIEW))
 
 	# Helper function that given the string id of the control calls the callback
 	def call(self,strcmd):
