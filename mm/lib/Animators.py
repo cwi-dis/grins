@@ -323,7 +323,7 @@ class Animator:
 		return t
 
 	# t in [0,dur]
-	# to presereve duration max speed m should be:
+	# to preserve duration max speed m should be:
 	# d = accTriangle + constRectangle + decTriangle = a*d*m/2 + (d-b*d-a*d)*m + b*d*m/2
 	# therefore max speed m = 1 / (1 - a/2 - b/2)
 	def _applyAccelerateDecelerate(self, t):
@@ -561,9 +561,20 @@ class EffectiveAnimator:
 		self.__chan = None
 		self.__currvalue = None
 
+		# set some flags for grins dom exceptions
+		self.__isgrinsnode = 1
+		tag = MMAttrdefs.getattr(targnode, 'tag')
+		if tag in ('region', 'transition'):
+			self.__isgrinsnode = 0
+					
+		self.__haschannel  = 1
+		if tag in ('transition'):
+			self.__haschannel = 0
+
 		# we neeed a temporary instance of the
 		# last animator removed from self.__animators
 		self.__lastanimator = None
+
 
 	def getDOMValue(self):
 		return self.__domval
@@ -576,6 +587,12 @@ class EffectiveAnimator:
 
 	def getTargetNode(self):
 		return self.__node
+
+	def isGRiNSNode(self):
+		return self.__isgrinsnode
+
+	def hasChannel(self):
+		return self.__haschannel
 
 	def onAnimateBegin(self, targChan, animator):
 		for a in self.__animators:
@@ -621,7 +638,10 @@ class EffectiveAnimator:
 			displayValue = a.convert(displayValue)
 			displayValue = a.clamp(displayValue)
 
-		# update display value if we have a channel
+		# update presentation value
+		self.__node.SetPresentationAttr(self.__attr, displayValue)
+
+		# notify/update display value if we have a channel
 		if self.__chan and self.__chan.canupdateattr(self.__node, self.__attr):
 			self.__chan.updateattr(self.__node, self.__attr, displayValue)
 			if debug:
@@ -710,6 +730,9 @@ def getregionattr(node, attr):
 		return d['z'], attr, 'int'
 	return None, attr, ''
 
+def gettransitionattr(node, attr):
+	return None, attr, ''
+
 def getrenamed(node, attr):
 	return MMAttrdefs.getattr(nodr, attr), attr, MMAttrdefs.getattrtype(attr) 
 
@@ -740,28 +763,21 @@ class AnimateElementParser:
 		self.__grinsext = 0			# is it a grins extension?
 
 		# locate target node
-		# create a virtual one for elements not represented internally by nodes
+		# for some elements not represented by nodes (region, transition)
+		# create a virtual node 
 		if not hasattr(anim,'targetnode') or not anim.targetnode:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
 				root = anim.GetRoot()
 				anim.targetnode = root.GetChildByName(te)
 				if not anim.targetnode:
-					ctx = anim.GetContext()
-					targchan = ctx.getchannel(te)
-					if targchan:
-						from MMNode import MMNode
-						newnode = MMNode('imm',ctx,ctx.newuid())
-						newnode.attrdict = targchan.attrdict.copy()
-						newnode.attrdict['channel'] = te
-						anim.targetnode = newnode
+					self.__checkNotNodeElementsTargets(te)
 			else:
-				anim.targetnode = anim.GetParent()
-			
+				anim.targetnode = anim.GetParent()	
 				
 		if not anim.targetnode:
 			# the target node does not exist within grins
-			# maybe it is a region or a similarly managed element
+			# maybe it is an element not represented as a node
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			print 'Failed to locate target element', te
 			print '\t',self
@@ -1291,6 +1307,8 @@ class AnimateElementParser:
 
 	# temp
 	def __checkExtensions(self):
+		if not self.__target.GetChannel():
+			return
 		d = self.__target.GetChannel().attrdict
 		if not self.__domval and d.has_key('base_winoff'):
 			# check for temp grins extensions
@@ -1307,6 +1325,27 @@ class AnimateElementParser:
 		if self.__attrname:
 			self.__grinsattrname = self.__attrname
 			self.__attrtype = 'int'
+
+	def __checkNotNodeElementsTargets(self, te):
+		from MMNode import MMNode
+		anim = self.__anim
+		ctx = anim.GetContext()
+		if ctx.channeldict.has_key(te):
+			# region
+			targchan = ctx.getchannel(te)
+			newnode = MMNode('imm',ctx,ctx.newuid())
+			newnode.attrdict = targchan.attrdict.copy()
+			newnode.attrdict['channel'] = te
+			newnode.attrdict['tag'] = 'region'
+			anim.targetnode = newnode
+		elif ctx.transitions.has_key(te):
+			# transition
+			tr = ctx.transitions[te]
+			newnode = MMNode('imm',ctx,ctx.newuid())
+			newnode.attrdict = tr.copy()
+			newnode.attrdict['channel'] = te
+			newnode.attrdict['tag'] = 'transition'
+			anim.targetnode = newnode
 
 	sep = re.compile('[ \t\r\n,]')
 	def __split(self, str):
@@ -1325,5 +1364,7 @@ class AnimateElementParser:
 		l.append(str[end:])
 		return l
 
+
+		
 
 
