@@ -53,16 +53,20 @@ def haschannelattreditor(channel):
 		return 0
 	return 1
 
-# This routine checks whether we are in CMIF or SMIL mode, and
+# These routine checks whether we are in CMIF or SMIL mode, and
 # whether the given attribute should be shown in the editor.
+def cmifmode():
+	import settings
+	if settings.get('cmif'):
+		return 1
+	return 0
+
 def mustshowdisplayer(displayer):
 	if displayer[:4] != 'CMIF':
 		return 1
 	displayer = displayer[4:]
 	import settings
-	if settings.get('cmif'):
-		return 1
-	return 0
+	return settings.get('cmif')
 
 # The "Wrapper" classes encapsulate the differences between attribute
 # editors for nodes and channels.  If you want editors for other
@@ -274,11 +278,14 @@ class ChannelWrapper(Wrapper):
 			cclass = channelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.chan_attrs
-			for name in cclass.node_attrs:
-				if name in namelist: continue
-				defn = MMAttrdefs.getdef(name)
-				if defn[5] == 'channel':
-					namelist.append(name)
+			# And, for CMIF, add attributes that nodes inherit
+			# from channel
+			if cmifmode():
+				for name in cclass.node_attrs:
+					if name in namelist: continue
+					defn = MMAttrdefs.getdef(name)
+					if defn[5] == 'channel':
+						namelist.append(name)
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.channel.keys():
@@ -286,7 +293,21 @@ class ChannelWrapper(Wrapper):
 				    MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
-		return namelist + extras
+		rv = namelist + extras
+		# Remove some attributes if we are a base window, or if
+		# we're in SMIL mode.
+		base = None
+		if self.channel.has_key('base_window'):
+			base = self.channel['base_window']
+		if not base:
+			if 'z' in rv: rv.remove('z')
+			if 'base_winoff' in rv: rv.remove('base_winoff')
+			if 'units' in rv: rv.remove('units')
+			if 'transparent' in rv: rv.remove('transparent')
+## 		if not cmifmode():
+## 			if 'file' in rv: rv.remove('file')
+## 			if 'scale' in rv: rv.remove('scale')
+		return rv
 	#
 	# Override three methods from Wrapper to fake channel name attribute
 	#
@@ -295,7 +316,7 @@ class ChannelWrapper(Wrapper):
 			# Channelname -- special case
 			return (('name', ''), 'none', \
 				'Channel name', 'default', \
-				'Channel name (not a real attribute)', 'raw')
+				'Channel name', 'raw')
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
