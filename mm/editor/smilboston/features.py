@@ -7,19 +7,16 @@ from FeatureSet import *
 import sys
 
 feature_set = [
-	EXPORT_CMIF, EXPORT_SMIL2, EXPORT_REAL,
+	EXPORT_SMIL2, EXPORT_REAL,
 ##	EXPORT_QT, EXPORT_WMP,
 	EXPORT_HTML_TIME, # EXPORT_XMT,
-	       PLAYER_VIEW, STRUCTURE_VIEW, TIMELINE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW,
+	       PLAYER_VIEW, STRUCTURE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW,
 	       SOURCE_VIEW, ASSETS_VIEW,
 	       USER_GROUPS, TRANSITION_VIEW, ERRORS_VIEW,
 	       UNIFIED_FOCUS,
 	       H_MODIFY_STRUCTURE, CUSTOM_REGIONS,
 	CREATE_TEMPLATES,
 				];
-#
-if sys.platform == 'win32':
-	feature_set.append(TEMPORAL_VIEW)
 
 version = 'pro'                         # I'm not sure here.. mjvdg
 compatibility = Boston
