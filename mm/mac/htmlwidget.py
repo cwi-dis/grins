@@ -42,9 +42,12 @@ class HTMLWidget:
 		init_waste()
 		self.last_mouse_was_down = 0
 		self.url = ''
+		self.current_data_loaded = None
+		self.tag_positions = {}
 		self.bary = None
 		self.anchor_offsets = []
 		self.anchor_hrefs = []
+		self.must_clear = 0
 		self.bg_color = (0xffff, 0xffff, 0xffff)
 		self.fg_color = (0, 0, 0)
 		self.an_color = (0xffff, 0, 0)
@@ -96,6 +99,7 @@ class HTMLWidget:
 		l, t, r, b = self.rect
 		if reset:
 			self.ted.WECalText()
+			self.ted.WESelView()
 		vr = self.ted.WEGetViewRect()
 		dr = self.ted.WEGetDestRect()
 		need_bary = ((dr[3]-dr[1]) >= (vr[3]-vr[1]))
@@ -108,10 +112,7 @@ class HTMLWidget:
 			vr = self.ted.WEGetViewRect()
 			dr = self.ted.WEGetDestRect()
 			rect = r-(SCROLLBARWIDTH-1), t-1, r+1, b+1
-			if reset:
-				vy = 0
-			else:
-				vy = self.getybarvalue()
+			vy = self.getybarvalue()
 			self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
 			if not self.activated: self.bary.HiliteControl(255)
 			self.updatedocview()
@@ -121,7 +122,6 @@ class HTMLWidget:
 			self.ted.WESetViewRect(vr)
 			self.ted.WESetDestRect(dr)
 			self.ted.WECalText()
-			self.bary = None
 			self.ted.WEScroll(vr[0]-dr[0], vr[1]-dr[1]) # Test....
 		
 	def getybarvalue(self):
@@ -148,6 +148,7 @@ class HTMLWidget:
 		
 	def scrollbar_callback(self, which, where):
 		if which != self.bary:
+			print 'funny control', which, 'not', self.bary
 			return 0
 		#
 		# Get current position
@@ -206,6 +207,8 @@ class HTMLWidget:
 		self.activated = 0
 		
 	def do_update(self):
+		if self.must_clear:
+			self.clear_html()
 		visregion = self.wid.GetWindowPort().visRgn
 		myregion = Qd.NewRgn()
 		Qd.RectRgn(myregion, self.rect) # or is it self.ted.WEGetViewRect() ?
@@ -265,21 +268,34 @@ class HTMLWidget:
 					return
 
 	def do_char(self, ch, event):
-		pass # Do nothing.				
+		pass # Do nothing.
 		
-	def insert_html(self, data, url):
+	def clear_html(self):
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
-		
+		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
+		self.ted.WESetSelection(0, 0x3fffffff)
+		self.ted.WEDelete()
+		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
+		Win.InvalRect(self.rect)
+		self.createscrollbars(reset=1)
+		self.anchor_offsets = []
+		self.current_data_loaded = None
+		self.must_clear = 0
+				
+	def insert_html(self, data, url, tag=None):		
 		if data == '':
-			self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
-			self.ted.WESetSelection(0, 0x3fffffff)
-			self.ted.WEDelete()
-			self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
+			self.must_clear = 1
 			Win.InvalRect(self.rect)
-			self.createscrollbars(reset=1)
-			self.anchor_offsets = []
 			return
+
+		self.must_clear = 0
+		Qd.SetPort(self.wid)
+		Qd.RGBBackColor(self.bg_color)
+		if data == self.current_data_loaded:
+			self.position_html(tag)
+			return
+		self.current_data_loaded = data
 		f = MyFormatter(self)
 		
 		# Remember where we are, and don't update
@@ -289,6 +305,7 @@ class HTMLWidget:
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
 
 		self.html_init()
+		self.tag_positions = {}
 		p = MyHTMLParser(f)
 		p.url = url  # Tell it the URL, for relative images
 		p.feed(data)
@@ -296,15 +313,34 @@ class HTMLWidget:
 		self.anchor_hrefs = p.anchorlist[:]
 
 		# Restore updating, recalc, set focus
-		self.ted.WESetSelection(0, 0)
+		if tag and self.tag_positions.has_key(tag):
+			pos = self.tag_positions[tag]
+##			print 'DBG: start', tag, pos
+		else:
+			if tag:
+				print 'Warning: no tag named', tag
+			pos = 0
+		self.ted.WESetSelection(pos, pos)
+##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 		Win.InvalRect(self.rect)
 
 		self.createscrollbars(reset=1)
-		if self.name == 'HelpHeader':
-			vr = self.ted.WEGetViewRect()
-			dr = self.ted.WEGetDestRect()
 		
+	def position_html(self, tag=None):
+		Qd.SetPort(self.wid)
+		# Restore updating, recalc, set focus
+		if tag and self.tag_positions.has_key(tag):
+			pos = self.tag_positions[tag]
+##			print 'DBG: goto', tag, pos
+		else:
+			if tag:
+				print 'Warning: no tag named', tag
+			pos = 0
+		self.ted.WESetSelection(pos, pos)
+		self.ted.WESelView()
+		self.updatescrollbars()
+				
 	def mysetstyle(self, which, how):
 		self.ted.WESelView()
 		self.ted.WESetStyle(which, how)
@@ -362,11 +398,11 @@ class HTMLWidget:
 		
 	def new_margin(self, margin, level):
 		self.delayed_para_send()
-		self.ted.WEInsert('[Margin %s %s]'%(margin, level), None, None)
+		##self.ted.WEInsert('[Margin %s %s]'%(margin, level), None, None)
 		
 	def new_spacing(self, spacing):
 		self.delayed_para_send()
-		self.ted.WEInsert('[spacing %s]'%spacing, None, None)
+		##self.ted.WEInsert('[spacing %s]'%spacing, None, None)
 			
 	def new_styles(self, styles):
 		self.delayed_para_send()
@@ -418,6 +454,10 @@ class HTMLWidget:
 		self.delayed_para_send()
 		self.ted.WEInsertObject('GIF ', data, (0, 0))
 		
+	def send_name(self, name):
+		dummy, self.tag_positions[name] = self.ted.WEGetSelection()
+		
+		
 class MyFormatter(formatter.AbstractFormatter):
 
 	def __init__(self, writer):
@@ -426,6 +466,9 @@ class MyFormatter(formatter.AbstractFormatter):
 		
 	def my_add_image(self, image):
 		self.writer.send_image(image)
+		
+	def my_send_name(self, name):
+		self.writer.send_name(name)
 			
 class MyHTMLParser(htmllib.HTMLParser):
 	
@@ -434,6 +477,8 @@ class MyHTMLParser(htmllib.HTMLParser):
 		if self.anchor:
 			self.anchorlist.append(href)
 			self.formatter.push_style('anchor')
+		if name:
+			self.formatter.my_send_name(name)
 
 	def anchor_end(self):
 		if self.anchor:
@@ -446,6 +491,9 @@ class MyHTMLParser(htmllib.HTMLParser):
 	
 	def start_p(self, attrs):
 		# It seems most browsers treat </p> as <p>...
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
 		self.do_p(attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
