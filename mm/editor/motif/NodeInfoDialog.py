@@ -99,8 +99,8 @@ class NodeInfoDialog:
 		butt = w.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
-			 ('Node attr...', (self.attributes_callback, ())),
-			 ('Channel attr...', (self.chattrs_callback, ())),
+			 ('Node properties...', (self.attributes_callback, ())),
+			 ('Channel properties...', (self.chattrs_callback, ())),
 			 ('Anchors...', (self.anchors_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
 			 ('OK', (self.ok_callback, ()))],
