@@ -66,6 +66,7 @@ _icon_ids = {
 	'exclopen': grinsRC.IDI_ICON_EXCLOPEN,
 	'exclclosed': grinsRC.IDI_ICON_EXCLCLOSED,
 	'properties': grinsRC.IDI_PROPERTIES,
+	'unknown': grinsRC.IDI_UNKNOWN,
 }
 
 def _get_icon(which):
