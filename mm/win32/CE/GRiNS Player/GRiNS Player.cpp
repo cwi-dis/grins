@@ -206,8 +206,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
 				    return 0;
 				case IDOK:
-					SendMessage(hWnd, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), (LPARAM)hWnd);
-					SendMessage (hWnd, WM_CLOSE, 0, 0);
+					//SendMessage(hWnd, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), (LPARAM)hWnd);
+					//SendMessage (hWnd, WM_CLOSE, 0, 0);
+					PyWnd_WndProc(hWnd, WM_CLOSE, 0, 0);
 					return 0;
 				default:
 					return PyWnd_WndProc(hWnd, message, wParam, lParam);
@@ -226,6 +227,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_KILLFOCUS:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 
+		case WM_SIZE:
+			if(wParam == SIZE_MINIMIZED) // do we get this from SmartMinimize under PPC 2002?
+				{
+				PyWnd_WndProc(hWnd, WM_CLOSE, 0, 0);
+				return 0;
+				}
+			return PyWnd_WndProc(hWnd, message, wParam, lParam);
 		case WM_DESTROY:
 			if(hwndCB != NULL)
 				CommandBar_Destroy(hwndCB);
@@ -270,7 +278,7 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 			// Create a Done button and size it.  
 			shidi.dwMask = SHIDIM_FLAGS;
-			 shidi.dwFlags = SHIDIF_DONEBUTTON | SHIDIF_SIPDOWN | SHIDIF_SIZEDLGFULLSCREEN;
+			shidi.dwFlags = SHIDIF_DONEBUTTON | SHIDIF_SIPDOWN | SHIDIF_SIZEDLGFULLSCREEN;
 			shidi.hDlg = hDlg;
 			SHInitDialog(&shidi);
 			return TRUE; 
