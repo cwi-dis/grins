@@ -525,7 +525,7 @@ class SchedulerContext:
 			for c in pnode.GetSchedChildren():
 				# don't have to terminate it again
 				if c is not node and c.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-					self.do_terminate(c, timestamp)
+					self.do_terminate(c, timestamp, cancelarcs = arc is None)
 					# there can be only one active child
 					break
 		# we must start the node, but how?
@@ -618,7 +618,7 @@ class SchedulerContext:
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 
-	def do_terminate(self, node, timestamp):
+	def do_terminate(self, node, timestamp, cancelarcs = 0):
 		if debugevents: print 'do_terminate',node,timestamp
 ##		if debugevents: self.parent.dump()
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
@@ -667,6 +667,8 @@ class SchedulerContext:
 				srlist = srdict[e][1]
 				if ev in srlist:
 					srlist.remove(ev)
+		if not cancelarcs:
+			return
 		for qid in self.parent.queue[:]:
 			time, priority, action, argument = qid
 			if action != self.trigger:
