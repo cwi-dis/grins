@@ -120,7 +120,7 @@ class EditMgr:
 	#
 	def commit(self, type=None):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
-		import MMAttrdefs, Timing
+		import MMAttrdefs
 		MMAttrdefs.flushcache(self.root)
 		self.context.changedtimes()
 		self.root.clear_infoicon()
