@@ -1112,13 +1112,17 @@ class StructureObjWidget(MMNodeWidget):
 					this_l = lmin
 				this_r = tm.time2pixel(tend) + neededpixel1
 				if t0 == tend:
-					this_r = min(this_r + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), this_l + this_w)
+					this_r = min(this_l + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), this_l + this_w)
 				max_r = min(this_r, my_r)
 			else:
 				this_r = this_l + this_w + freewidth_per_child
 				if not self.HORIZONTAL or chindex == len(self.children)-1:
 					# The last child is extended the whole way to the end
-					this_r = my_r
+					this_r = max_r = my_r
+				else:
+					max_r = my_r
+					for i in range(chindex+1, len(self.children)):
+						max_r = max_r - self.children[i].get_minsize()[0] - GAPSIZE
 			if this_r > max_r:
 				this_r = max_r
 			if this_l > this_r:
