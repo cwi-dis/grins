@@ -24,7 +24,7 @@ TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
 	       ATYPE_ARGS]
 TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
 	       'with arguments']
-WholeAnchors = (ATYPE_WHOLE, ATYPE_AUTO, ) # whole-node anchors types
+WholeAnchors = (ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP) # whole-node anchors types
 
 FALSE, TRUE = 0, 1
 
@@ -155,8 +155,6 @@ class AnchorEditor(AnchorEditorDialog):
 		names = []
 		for i in self.anchorlist:
 			id = i[A_ID]
-## 			if type(id) is not type(''): id = `id`
-			#name = '#' + self.name + '.' + id
 			names.append(id)
 		return names
 
@@ -189,8 +187,22 @@ class AnchorEditor(AnchorEditorDialog):
 		self.selection_setselection(self.focus)
 		self.selection_seteditable(editable)
 		self.export_setsensitive(1)
+		self.type_choice_show()
 		for i in range(len(TypeValues)):
-			if TypeValues[i] in WholeAnchors:
+			if type == TypeValues[i]:
+				self.type_choice_setchoice(i)
+		if type == ATYPE_COMP:
+			self.composite_show()
+			self.edit_setsensitive(0)
+			self.composite_setlabel('Composite: ' + `loc`)
+			for i in range(len(TypeValues)):
+				self.type_choice_setsensitive(
+					i, TypeValues[i] == ATYPE_COMP)
+			return
+		for i in range(len(TypeValues)):
+			if TypeValues[i] == ATYPE_COMP:
+				self.type_choice_setsensitive(i, 0)
+			elif TypeValues[i] in WholeAnchors:
 				self.type_choice_setsensitive(i, self.editable or type in WholeAnchors)
 			else:
 				# can choose this type if node is
@@ -199,19 +211,7 @@ class AnchorEditor(AnchorEditorDialog):
 				# anchor must already exist in the
 				# data).
 				self.type_choice_setsensitive(i, self.editable or type not in WholeAnchors)
-		self.type_choice_show()
-		if type == ATYPE_COMP:
-			self.composite_show()
-			self.type_choice_hide()
-			self.edit_setsensitive(0)
-			self.selection_seteditable(0)
-			self.composite_setlabel('Composite: ' + `loc`)
-			return
-		self.type_choice_show()
 		self.composite_hide()
-		for i in range(len(TypeValues)):
-			if type == TypeValues[i]:
-				self.type_choice_setchoice(i)
 		if self.focus is not None:
 			self.edit_setsensitive(self.editable)
 			self.selection_seteditable(self.editable or self.anchorlist[self.focus][A_TYPE] in WholeAnchors)
