@@ -690,11 +690,11 @@ class XMLParser:
                     found = i
             if found == -1:
                 self.syntax_error('unopened end tag')
-                method = self.elements.get(tag, (None, None))[1]
-                if method is not None:
-                    self.handle_endtag(tag, method)
-                else:
-                    self.unknown_endtag(tag)
+##                method = self.elements.get(tag, (None, None))[1]
+##                if method is not None:
+##                    self.handle_endtag(tag, method)
+##                else:
+##                    self.unknown_endtag(tag)
                 return
         while len(self.stack) > found:
             if found < len(self.stack) - 1:
