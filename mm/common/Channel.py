@@ -978,6 +978,7 @@ class ChannelWindow(Channel):
 		self.armed_display = self.played_display = None
 		self.want_default_colormap = 0
 		self._bgimg = None
+		self.__callback = None
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
