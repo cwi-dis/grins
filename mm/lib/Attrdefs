@@ -352,11 +352,11 @@
 # The items are (srcnode, event or marker, delay).
 # things causing the node to start
 (beginlist (list (enclosed (any))) ()
-	'Begin events list' hidden
+	'Begin events list' timelist
 	'List of events starting this node' raw (smil2 snap))
 # things causing the node to end
 (endlist (list (enclosed (any))) ()
-	'End events list' hidden
+	'End events list' timelist
 	'List of events ending this node' raw (smil2 snap))
 
 (terminator (name) 'LAST' 'Endsync child' termnodename
