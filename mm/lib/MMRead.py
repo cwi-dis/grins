@@ -94,16 +94,4 @@ def _readparser(p, filename):
 	except NoSuchAttrError:
 		pass
 	#
-	# Make sure that all channel names used in the document are
-	# defined in the channel list.
-	#
-	usedchannelnames = root.GetSummary('channel')
-	for cname in usedchannelnames:
-		msg = ''
-		if cname not in root.context.channelnames:
-			msg = 'undefined channel name used: ' + `cname` + '\n'
-			sys.stderr.write(msg)
-		if msg:
-			raise TypeError, msg
-	#
 	return root
