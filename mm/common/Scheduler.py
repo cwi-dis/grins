@@ -801,7 +801,7 @@ class Scheduler(scheduler):
 					self.sched_arcs(sctx, arg, 'end', timestamp=timestamp+arg.fullduration)
 			elif action == SR.SCHED_STOP:
 				if debugevents: print 'cleanup',`arg`
-				arg.cleanup_sched()
+				arg.cleanup_sched(self)
 			sctx.event((action, arg), timestamp)
 
 	def remove_terminate(self, sctx, node):
