@@ -491,17 +491,21 @@ class FileDialog:
 		if existing: 
 			flags=win32con.OFN_HIDEREADONLY|win32con.OFN_FILEMUSTEXIST
 		else:
-			flags=win32con.OFN_OVERWRITEPROMPT
+			flags=win32con.OFN_HIDEREADONLY|win32con.OFN_OVERWRITEPROMPT
 		if not parent:
 			import __main__
 			parent=__main__.toplevel._subwindows[0]
 
 		if not filter or filter=='*':
 			filter = 'All files (*.*)|*.*||'
+			dftext = None
 		else:
-			filter = 'smil files (*.smi;*.smil)|*.smi;*.smil|cmif files (*.cmif)|*.cmif|All files *.*|*.*||'
-			
-		self._dlg =dlg= win32ui.CreateFileDialog(existing,None,file,flags,filter,parent)
+			if existing:
+				filter = 'smil files (*.smil;*.smi)|*.smil;*.smi|cmif files (*.cmif)|*.cmif|All files *.*|*.*||'
+			else:
+				filter = 'smil or cmif file (*.smil;*.smi;*.cmif)|*.smil;*.smi;*.cmif|All files *.*|*.*||'
+			dftext = '.smil'
+		self._dlg =dlg= win32ui.CreateFileDialog(existing,dftext,file,flags,filter,parent)
 		dlg.SetOFNTitle(prompt)
 
 		# get/set current directory since the core assumes remains the same
