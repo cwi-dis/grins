@@ -46,10 +46,12 @@ for tag, dict in taglist:
 			comment = ''
 		else:
 			comment = '#'
-		fp.write("%s\tAttribute %s:\n"%(comment,attr))
 		if oldattrs.has_key(tag) and oldattrs[tag].has_key(attr):
 			val = oldattrs[tag][attr]
 		else:
 			val = 'to be supplied'
+		if comment == '#' and val == 'to be supplied':
+			continue
+		fp.write("%s\tAttribute %s:\n"%(comment,attr))
 		fp.write("%s\t\t%s\n" % (comment, val))
 fp.close()
