@@ -1,0 +1,10 @@
+GRiNS clean installations reports:
+
+1. NT4 GRiNS installation
+
+2. Win98 GRiNS installation
+
+3. Win95 GRiNS installation
+
+4. Win2k (NT5) GRiNS installation
+
