@@ -76,6 +76,7 @@
 #define IDI_PLAY                        272
 #define IDI_STOP                        273
 #define IDI_PAUSE                       274
+#define IDR_ATTR_EDIT                   275
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -321,6 +322,22 @@
 #define IDUC_TOCHILD                    32837
 #define ID_ACCEL32838                   32838
 #define IDUC_EXPAND                     32839
+#define ID_U                            32840
+#define ID_G                            32841
+#define ID_T                            32842
+#define ID_I                            32843
+#define ID_L                            32844
+#define ID_S                            32845
+#define ID_O                            32846
+#define ID_B                            32847
+#define ID_F                            32848
+#define ID_Z                            32849
+#define ID_N                            32850
+#define ID_A                            32851
+#define ID_Q                            32852
+#define ID_D                            32853
+#define ID_R                            32854
+#define ID_V                            32855
 #define IDC_GROUP1                      65535
 #define ID_GROUP1                       65535
 
@@ -328,8 +345,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        275
-#define _APS_NEXT_COMMAND_VALUE         32840
+#define _APS_NEXT_RESOURCE_VALUE        276
+#define _APS_NEXT_COMMAND_VALUE         32856
 #define _APS_NEXT_CONTROL_VALUE         1203
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
