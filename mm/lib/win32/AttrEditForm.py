@@ -2765,6 +2765,12 @@ class MediaserverGroup(StringGroup):
 class DurationGroup(StringGroup):
 	data=attrgrsdict['timing1']
 
+class ClipGroup(StringGroup):
+	data=attrgrsdict['clip']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S2a
+	def oninitdialog(self,wnd):pass
+
 class Duration2Group(AttrGroup):
 	data=attrgrsdict['timing2']
 
@@ -3263,6 +3269,7 @@ groupsui={
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
 	'wipe':WipeGroup,
+	'clip':ClipGroup,
 	}
 ###########################
 # already bound: &P, &B, &X, &Y, &W, &H
