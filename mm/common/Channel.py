@@ -715,9 +715,9 @@ class Channel:
 		node = self._played_node
 		list = []
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			if a[A_TYPE] == ATYPE_AUTO:
+			if a.atype == ATYPE_AUTO:
 ##				print 'found auto anchor'
-				list.append((a[A_ID], a[A_TYPE]))
+				list.append((a.aid, a.atype))
 		if not list:
 			return 0
 		didfire = self.anchor_triggered(node, list, None)
@@ -1777,13 +1777,13 @@ class ChannelWindow(Channel):
 				self.setanchor(None, None, b, None)
 
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			coordinates = a[A_ARGS]
-			atype = a[A_TYPE]
+			coordinates = a.aargs
+			atype = a.atype
 			sensitive = 1
 			if atype not in SourceAnchors or \
 			   atype in (ATYPE_AUTO, ):
 				sensitive = 0
-			anchor = node.GetUID(), a[A_ID]
+			anchor = node.GetUID(), a.aid
 			if not self._player.context.hyperlinks.findsrclinks(anchor):
 				sensitive = 0
 
@@ -1792,11 +1792,11 @@ class ChannelWindow(Channel):
 			# convert coordinates from relative image to relative window size
 			windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
 
-			b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES], sensitive = sensitive)
+			b = self.armed_display.newbutton(windowCoordinates, times = a.atimes, sensitive = sensitive)
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], atype, b, a[A_TIMES])
+			self.setanchor(a.aid, atype, b, a.atimes)
 
 		for arc in node.sched_children:
 			if arc.event == ACTIVATEEVENT and \
@@ -1814,11 +1814,11 @@ class ChannelWindow(Channel):
 		d.fgcolor(self.getbgcolor(node))
 		if arc.srcanchor is not None:
 			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a[A_ID] != arc.srcanchor:
+				if a.aid != arc.srcanchor:
 					continue
-				relativeCoordinates = self.convertShapeToRelImage(node, a[A_ARGS])
+				relativeCoordinates = self.convertShapeToRelImage(node, a.aargs)
 				windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
-				b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES])
+				b = self.armed_display.newbutton(windowCoordinates, times = a.atimes)
 				break
 			else:
 				# no matching anchor found

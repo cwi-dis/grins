@@ -187,10 +187,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			
 #		hicolor = self.gethicolor(node)
 #		for a in node.GetRawAttrDef('anchorlist', []):
-#			atype = a[A_TYPE]
+#			atype = a.atype
 #			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
 #				continue
-#			args = a[A_ARGS]
+#			args = a.aargs
 #			if len(args) == 0:
 #				args = [0,0,1,1]
 #			elif len(args) == 4:
@@ -204,11 +204,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 #			y = y * imbox[3] + imbox[1]
 #			w = w * imbox[2]
 #			h = h * imbox[3]
-#			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
+#			b = self.armed_display.newbutton((x,y,w,h), times = a.atimes)
 #			b.hiwidth(3)
 #			if drawbox:
 #				b.hicolor(hicolor)
-#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+#			self.setanchor(a.aid, a.atype, b, a.atimes)
 		return 1
 
 	def do_play(self, node):
