@@ -42,13 +42,10 @@ class ImageChannel(ChannelWindow):
 		center = MMAttrdefs.getattr(node, 'center')
 		
 		try:
-			import sys 
-			if sys.platform == 'win32': # temp  for testing animations
-				self._arm_imbox = self.armed_display.display_image_from_file(
-					f, scale = scale, crop = crop, center = center, id = id(node))
-			else:
-				self._arm_imbox = self.armed_display.display_image_from_file(
+			self._arm_imbox = self.armed_display.display_image_from_file(
 					f, scale = scale, crop = crop, center = center)
+			if hasattr(self.armed_display, 'knowcmd'):
+				self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
 				msg = msg.strerror
@@ -174,29 +171,56 @@ class ImageChannel(ChannelWindow):
 		       float(args[2]) / float(xsize), \
 		       float(args[3]) / float(ysize)
 
-
-	def canupdateattr(self, node, name):
-		if name == 'file': 
-			return 1
-		elif name=='region.position':
-			return 1
-		elif name in ('region.left','region.top','region.width','region.height'):
-			return 1
-		return 0
-
 	def do_updateattr(self, node, name, value):
-		if name.find('region.')==0:
-			if self.played_display:
-				self.played_display.update_image(id(node), value, name[7:])	
-		elif name == 'file':
-			baseurl = self.getfileurl(node)
-			url = MMurl.basejoin(baseurl, value)
-			try:
-				f = urlretrieve(url)[0]
-			except IOError, arg:
-				if type(arg) is type(self):
-					arg = arg.strerror
-				self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
-				return
-			if self.played_display:
-				self.played_display.update_image(id(node), f, 'file')
+		self.do_update(node, animated=1)
+		if not hasattr(self.update_display,'updatecmd'):
+			return
+		if name == 'file':
+			cmd = self.update_display.getcmd('image')
+			if cmd and self.played_display:
+				self.played_display.updatecmd('image',cmd)
+				self.played_display.render()
+
+	# this method is a variation of do_arm method
+	# most part of the do_arm can be reproduced by setting: animated=0
+	# as such can be factored out if it survives the evolution
+	def do_update(self, node, animated=1):
+		if not self.window: return
+		if self.update_display:
+			self.update_display.close()
+		bgcolor = self.getbgcolor(node, animated)
+		self.update_display = self.window.newdisplaylist(bgcolor)
+
+		f = self.getfileurl(node, animated)
+		if not f: return
+
+		if not f:
+			self.errormsg(node, 'No URL set on node')
+			return 1
+		try:
+			f = urlretrieve(f)[0]
+		except IOError, arg:
+			if type(arg) is type(self):
+				arg = arg.strerror
+			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+			return 1
+		scale = MMAttrdefs.getattr(node, 'scale', animated)
+		crop = MMAttrdefs.getattr(node, 'crop', animated)
+		center = MMAttrdefs.getattr(node, 'center', animated)
+		try:
+			self._update_imbox = self.update_display.display_image_from_file(f, scale = scale, crop = crop, center = center)
+			if hasattr(self.update_display, 'knowcmd'):
+				self.update_display.knowcmd('image')
+		except (windowinterface.error, IOError), msg:
+			if type(msg) is type(self):
+				msg = msg.strerror
+			elif type(msg) is type(()):
+				msg = msg[1]
+			self.errormsg(node, f + ':\n' + msg)
+			return 1
+		if MMAttrdefs.getattr(node, 'drawbox', animated):
+			self.update_display.fgcolor(self.getbucolor(node, animated))
+		else:
+			self.update_display.fgcolor(self.getbgcolor(node, animated))
+		hicolor = self.gethicolor(node, animated)
+
