@@ -16,6 +16,7 @@ mediadur = 'media'
 
 infinity = 'infinity'
 minusinfinity = '-infinity'
+epsilon = 0.0001
 
 class Time:
 	def __init__(self, t):
@@ -735,6 +736,8 @@ class TimeElement(TimeNode, Timer):
 			return self.getSimpleTime()
 		if self.isFrozen() and insttime == 0.0:
 			return self._dur
+		if insttime == self._dur:
+			return self._dur - epsilon
 		return insttime
 
 	def getParentTime(self):
