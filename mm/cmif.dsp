@@ -692,6 +692,10 @@ SOURCE=.\editor\ErrorsView.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\EventEditor.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\features.py
 # End Source File
 # Begin Source File
