@@ -7,17 +7,22 @@ class TransitionClass:
 	def __init__(self, engine, ltrb, dict):
 		self.ltrb = ltrb
 		self.dict = dict
+##		self.initial_update = 1
 		
 	def _computeparameters(self, value, oldparameters):
 		pass
 		
-	def _updatebitmap(self, parameters, src1, src2, dst):
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
+##		self.initial_update = 0
 		pass
+		
+	def _needtmpbitmap(self):
+		return 0
 		
 class NullTransition(TransitionClass):
 	UNIMPLEMENTED=0
 	
-	def _updatebitmap(self, parameters, src1, src2, dst):
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
 		Qd.CopyBits(src1, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
 		if self.UNIMPLEMENTED:
 			x0, y0, x1, y1 = self.ltrb
@@ -35,13 +40,12 @@ class EdgeWipeTransition(TransitionClass):
 		xcur = x0+xpixels
 		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1), )
 		
-	def _updatebitmap(self, parameters, src1, src2, dst):
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
 		rect1, rect2 = parameters
-		if src2:
-			Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, None)
+		Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, None)
 		Qd.CopyBits(src1, dst, rect1, rect1, QuickDraw.srcCopy, None)
 			
-class IrisWipeTransition(EdgeWipeTransition):
+class IrisWipeTransition(TransitionClass):
 	def _computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
 		xmid = int((x0+x1+0.5)/2)
@@ -51,6 +55,16 @@ class IrisWipeTransition(EdgeWipeTransition):
 		xc1 = int((xmid+value*(x1-xmid))+0.5)
 		yc1 = int((ymid+value*(y1-ymid))+0.5)
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
+
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
+		rect1, rect2 = parameters
+		Qd.CopyBits(src2, tmp, rect2, rect2, QuickDraw.srcCopy, None)
+		Qd.CopyBits(src1, tmp, rect1, rect1, QuickDraw.srcCopy, None)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
+			
+	def _needtmpbitmap(self):
+		return 1
+		
 		
 class RadialWipeTransition(NullTransition):
 	UNIMPLEMENTED=1
@@ -67,10 +81,9 @@ class PushWipeTransition(TransitionClass):
 		return ((x1-xpixels, y0, x1, y1), (x0, y0, x0+xpixels, y1),
 				(x0, y0, x1-xpixels, y1), (x0+xpixels, y0, x1, y1) )
 
-	def _updatebitmap(self, parameters, src1, src2, dst):
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
 		srcrect1, dstrect1, srcrect2, dstrect2 = parameters
-		if src2:
-			Qd.CopyBits(src2, dst, srcrect2, dstrect2, QuickDraw.srcCopy, None)
+		Qd.CopyBits(src2, dst, srcrect2, dstrect2, QuickDraw.srcCopy, None)
 		Qd.CopyBits(src1, dst, srcrect1, dstrect1, QuickDraw.srcCopy, None)
 			
 class SlideWipeTransition(TransitionClass):
@@ -81,14 +94,23 @@ class SlideWipeTransition(TransitionClass):
 		xpixels = int(value*(x1-x0)+0.5)
 		return ((x1-xpixels, y0, x1, y1), (x0, y0, x0+xpixels, y1), (x0+xpixels, y0, x1, y1), )
 
-	def _updatebitmap(self, parameters, src1, src2, dst):
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
 		srcrect1, dstrect1, rect2 = parameters
-		if src2:
-			Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, None)
+		Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, None)
 		Qd.CopyBits(src1, dst, srcrect1, dstrect1, QuickDraw.srcCopy, None)
 		
-class FadeTransition(NullTransition):
-	UNIMPLEMENTED=1
+class FadeTransition(TransitionClass):
+	def _computeparameters(self, value, oldparameters):
+		return int(value*0xffff), int(value*0xffff), int(value*0xffff)
+		
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
+		Qd.OpColor(parameters)
+		Qd.CopyBits(src2, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
+		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.blend, None)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
+		
+	def _needtmpbitmap(self):
+		return 1
 	
 TRANSITIONDICT = {
 	"edgeWipe" : EdgeWipeTransition,
@@ -133,6 +155,9 @@ class TransitionEngine:
 		self.window = None
 		self.transitiontype = None
 		
+	def need_tmp_wid(self):
+		return self.transitiontype._needtmpbitmap()
+		
 	def _idleproc(self):
 		"""Called in the event loop to optionally do a recompute"""
 		self.changed(0)
@@ -170,9 +195,10 @@ class TransitionEngine:
 		dst = self.window._mac_getoswindowpixmap(0)
 		src_active = self.window._mac_getoswindowpixmap(1)
 		src_passive = self.window._mac_getoswindowpixmap(2)
+		tmp = self.window._mac_getoswindowpixmap(3)
 		self.window._mac_setwin(0)
 		print 'TRANS', src_active, src_passive, dst, self.window
 		print 'TRANSARGS', self.currentparameters
 		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 		Qd.RGBForeColor((0, 0, 0))
-		self.transitiontype._updatebitmap(self.currentparameters, src_active, src_passive, dst)
+		self.transitiontype._updatebitmap(self.currentparameters, src_active, src_passive, tmp, dst)
