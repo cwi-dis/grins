@@ -890,49 +890,33 @@ class HierarchyView(HierarchyViewDialog):
 	def _gettimeconstraints(self, obj, side):
 		# Return minimum and maximum (in seconds) where "side" of "obj"
 		# can be dragged in constrained mode.
-		# NOTE: the times are relative to "obj"!
 		node = obj.get_node()
-		nt0, nt1, nt2, dummy1, dummy2 = node.GetTimes('virtual')
-		pnode = node.GetParent()
-		pt0, pt1, pt2, dummy1, dummy2 = pnode.GetTimes('virtual')
-		mintime = pt0
-		maxtime = pt2
-		if side == 'right':
-			if nt0 > mintime:
-				mintime = nt0
-			# Disallow negative durations altogether
-			if mintime < 0:
-				mintime = 0
+		nt0, nt1, nt2, dummy1, begindelay = node.GetTimes('virtual')
 		if side == 'left':
-			if max(nt1, nt2) < maxtime:
-				maxtime = max(nt1, nt2)
+			# Calculating constraints for begin time:
+			# times are relative to node's syncbase.
+			# A node can't begin before its syncbase, and
+			# must begin before it ends.
+			return 0, nt2 - nt0 + begindelay
+		# Calculating constraints for end time: times are
+		# relatvie to node begin.
+		pnode = node.GetParent()
 		if pnode.GetType() == 'seq':
-			# Disallow negative begin for seq children
-			if side == 'left':
-				if mintime < 0:
-					mintime = 0
 			siblings = pnode.GetChildren()
 			idx = siblings.index(node)
-			if idx > 0:
-				pred = siblings[idx-1]
-				predt0, predt1, predt2, dummy1, dummy2 = pred.GetTimes('virtual')
-				if predt1 > mintime:
-					mintime = predt1
 			if idx < len(siblings)-1:
+				# not the last child of a sequence:
+				# end time must be no earlier than
+				# node begin and no later than begin
+				# of successor
 				succ = siblings[idx+1]
 				succt0, succt1, succt2, dummy1, dummy2 = succ.GetTimes('virtual')
-				if succt0 < maxtime:
-					maxtime = succt0
-		else:
-			# In other containers we have to offset for our own begin
-			# delay, for a reason I don't fully understand
-			if side == 'left':
-				mydelay = self._getnodebegintime(node)
-				mintime = mintime + mydelay
-				maxtime = maxtime + mydelay
-		mintime = mintime - nt0
-		maxtime = maxtime - nt0
-		return mintime, maxtime
+				return 0, succt0 - nt0
+		# last child of a sequence, or child of another type
+		# of node: end time must be no earlier than node begin
+		# and no later than end of parent
+		pt0, pt1, pt2, dummy1, dummy2 = pnode.GetTimes('virtual')
+		return 0, pt2 - nt0
 
 	def _setnewtime(self, obj, side, t, is_constrained):
 		em = self.editmgr
@@ -950,7 +934,7 @@ class HierarchyView(HierarchyViewDialog):
 			else:
 				em.setnodeattr(obj.node, 'duration', t)
 		else:
-			old_t0 = self._getnodebegintime(obj.node)
+			old_t0 = obj.node.GetBeginDelay()
 			old_dur = MMAttrdefs.getattr(obj.node, 'duration')
 			delta_t0 = delta_dur = delta_next = 0
 			if side == 'left':
@@ -997,13 +981,6 @@ class HierarchyView(HierarchyViewDialog):
 				em.addsyncarc(next, 'beginlist', newarc, 0)
 
 		em.commit()
-
-	def _getnodebegintime(self, node):
-		# Get begin time of object relative to its syncbase
-		for arc in node.GetAttrDef('beginlist', []):
-			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-				return arc.delay
-		return 0
 
 	######################################################################
 	#
