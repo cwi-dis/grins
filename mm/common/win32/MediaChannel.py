@@ -308,18 +308,15 @@ class MediaChannel:
 	# the notification for some unknown reason does not reach the window.
 	# Needed until we have a simpler safe way to dedect media end.
 	# A static way is not sufficient since we don't know the delays.
-	def on_idle_callback(self):
+	def onIdle(self):
 		if self.__playBuilder and not self.__playdone:
 			t_sec=self.__playBuilder.GetPosition()
 			if t_sec>=self.__playEnd:self.OnMediaEnd()
 			self.paint()
-
-	def is_callable(self):
-		return self.__playBuilder
 	def register_for_timeslices(self):
 		if self.__fiber_id: return
 		import windowinterface
-		self.__fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+		self.__fiber_id=windowinterface.register( (self.onIdle,()) )
 	def unregister_for_timeslices(self):
 		if not self.__fiber_id: return
 		import windowinterface
@@ -435,7 +432,7 @@ class VideoStream:
 		# self.play_loop is 0 so repeat
 		self.__mmstream.seek(self.__playBegin)
 
-	def on_idle_callback(self):
+	def onIdle(self):
 		if self.__mmstream and not self.__playdone:
 			running = self.__mmstream.update()
 			if self.__window:
@@ -446,7 +443,7 @@ class VideoStream:
 	
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			self.__fiber_id=windowinterface.register( (self.on_idle_callback,()) )
+			self.__fiber_id=windowinterface.register( (self.onIdle,()) )
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id:
