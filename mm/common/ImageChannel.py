@@ -165,6 +165,7 @@ class ImageWindow(ChannelWindow):
 					    float(winheight)/self.ysize)
 		self.mousescale = self.effscale
 		try:
+			print 'Reading image from', filename, '...'
 			if self.effscale == int(self.effscale):
 				self.parray = imgfile.read(filename)
 			else:
@@ -174,6 +175,7 @@ class ImageWindow(ChannelWindow):
 					                         width, height)
 				self.effscale = 1.0
 				self.xsize, self.ysize = width, height
+			print 'Done'
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename_arg, ':', msg
 			self.error = 'Cannot read file ' + `filename_arg`
@@ -376,6 +378,12 @@ class ImageChannel(Channel):
 	#
 	def getfilename(self, node):
 		return MMAttrdefs.getattr(node, 'file')
+	#
+	def setwaiting(self):
+		self.window.setwaiting()
+	#
+	def setready(self):
+		self.window.setready()
 	#
 
 
