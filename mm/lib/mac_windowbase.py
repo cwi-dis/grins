@@ -465,12 +465,12 @@ class _CommonWindow:
 
 	def _clipchanged(self):
 		"""Called when the clipping region is possibly changed"""
-		if not self._parent or not self._wid or not self._clip:
+		if not self._parent or not self._wid:
 			return
-##		print '_clipchanged', self
-		Qd.DisposeRgn(self._clip)
+		if self._clip:
+			Qd.DisposeRgn(self._clip)
 		self._clip = None
-		# XXXX Needed?
+		# And inform our children...
 		for ch in self._subwindows:
 			ch._clipchanged()
 			
@@ -794,11 +794,10 @@ class _Window(_CommonWindow):
 	def _mkclip(self):
 		if not self._wid or not self._parent:
 			return
-##		print '_mkclip', self
-		# create region for whole window
 		if self._clip:
-##			print '*** Already had one!'
-			Qd.DisposeRgn(self._clip)
+			raise 'Clip already valid!'
+		# create region for whole window
+
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self.qdrect())
 		# subtract all subwindows
@@ -808,7 +807,7 @@ class _Window(_CommonWindow):
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
-			w._mkclip()
+##			w._mkclip()
 
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
@@ -871,11 +870,10 @@ class _SubWindow(_CommonWindow):
 	def _mkclip(self):
 		if not self._parent:
 			return
-##		print '_mkclip', self
-		# create region for our subwindow
 		if self._clip:
-##			print '*** Already had one!'
-			Qd.DisposeRgn(self._clip)
+			raise 'Clipregion already valid!'
+			
+		# create region for our subwindow
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self.qdrect())
 		# subtract all our subsubwindows
@@ -885,7 +883,7 @@ class _SubWindow(_CommonWindow):
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
-			w._mkclip() # XXXX Needed??
+##			w._mkclip() # XXXX Needed??
 		# subtract our higher-stacked siblings
 		for w in self._parent._subwindows:
 			if w == self:
@@ -1207,6 +1205,7 @@ class findfont:
 		old_fontinfo = None
 		if self._checkfont(wid):
 			old_fontinfo = savefontinfo(wid)
+		self._setfont(wid)
 		for str in strlist:
 			width = Qd.TextWidth(str, 0, len(str))
 			if width > maxwidth:
