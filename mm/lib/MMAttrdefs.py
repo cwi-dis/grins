@@ -309,6 +309,9 @@ def initattrdefs():
 
 # Call the initialization
 #
+if __name__ == '__main__':
+	import cmif, os
+	cmif.DEFAULTDIR=os.pardir
 attrdefs = initattrdefs()
 
 exists = attrdefs.has_key
