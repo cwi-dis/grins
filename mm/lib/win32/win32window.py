@@ -1050,6 +1050,9 @@ class Window:
 
 	def LDtoDD(self, d):
 		return d/self._device2logical
+
+	def DDtoLD(self, d):
+		return d*self._device2logical
 	#
 	# Drag & Resize interface
 	#
@@ -1151,7 +1154,7 @@ class Window:
 		
 	def invalidateDragHandles(self):
 		x, y, w, h  = self.getwindowpos()
-		delta = 7
+		delta = self.DDtoLD(7)
 		x = x-delta
 		y = y-delta
 		w = w+2*delta
