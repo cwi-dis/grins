@@ -40,6 +40,35 @@
 	href="stroll.hqx">BinHexed</a>).
     </p>
 
+    <p>
+      Of each of the examples we have made three versions:
+    </p>
+
+    <ul>
+      <li>
+	A black and white version, with small images, for quick
+	download over the net.
+      </li>
+      <li>
+	A color version, with nice color images, for local viewing or
+	for use when you have a high-quality internet connection.
+      </li>
+      <li>
+	A switched version, which uses the nifty SMIL
+	<code>switch</code> and <code>system-bitrate</code> features
+	to dynamically switch between big color and small black and
+	white images: it uses color images if you have a connection
+	better than 64Kbps. See the document on <a
+	  href="http://www.cwi.nl/GRiNS/settings.html">customizing
+	  system attribute settins</a> for details.
+
+	<br>
+	<b>Note:</b> in the current GR<i>i</i>NS player some
+	synchronisation problems exist within <code>switch</code>,
+	these will be addressed shortly.
+      </li>
+    </ul>
+
     <h3>Step one - a simple slideshow</h3>
 
     <p>
@@ -49,6 +78,24 @@
 	href="stroll1.smil">stroll1.smil</a>. You can examine the <a
 	href="stroll1.smil.txt">SMIL source code</a> too.
     </p>
+
+    <table border align="center">
+      <tr>
+	<th>Black and white</th>
+	<th>Color</th>
+	<th>Dynamic</th>
+      </tr>
+      <tr>
+	<td><a href="stroll1.smil">play stroll1.smil</a></td>
+	<td><a href="stroll1c.smil">play stroll1c.smil</a></td>
+	<td><a href="stroll1sw.smil">play stroll1sw.smil</a></td>
+      </tr>
+      <tr align="center">
+	<td><a href="stroll1.smil.txt">view it</a></td>
+	<td><a href="stroll1c.smil.txt">view it</a></td>
+	<td><a href="stroll1sw.smil.txt">view it</a></td>
+      </tr>
+    </table>
 
     <p>
       The top bit, the <code>xml</code> and <code>doctype</code> bits, 
@@ -66,6 +113,16 @@
       URL in the text item. This is a standard way to give the actual
       data in a place where a URL is expected, but SMIL seems to be
       the first to actually make good use of this.
+    </p>
+
+    <p>
+      The third version, which switches between big and small images,
+      basically has the bodies of the other two combined, with a
+      <code>&lt;switch&gt;</code> around them and a
+      <code>system-bitrate</code> attribute on the first item. You can 
+      add more of these items, for instance if you have three levels
+      of throughput requirements (video for LAN usage, color for fast
+      modems, black and white for slow modems).
     </p>
 
     <p>
@@ -100,10 +157,23 @@
       a good idea.
     </p>
 
-    <p>
-      View the result by playing <a
-	href="stroll2.smil">stroll2.smil</a>, and have a look at the
-      <a href="stroll2.smil.txt">source</a>.
+    <table border align="center">
+      <tr>
+	<th>Black and white</th>
+	<th>Color</th>
+	<th>Dynamic</th>
+      </tr>
+      <tr>
+	<td><a href="stroll2.smil">play stroll2.smil</a></td>
+	<td><a href="stroll2c.smil">play stroll2c.smil</a></td>
+	<td><a href="stroll2sw.smil">play stroll2sw.smil</a></td>
+      </tr>
+      <tr align="center">
+	<td><a href="stroll2.smil.txt">view it</a></td>
+	<td><a href="stroll2c.smil.txt">view it</a></td>
+	<td><a href="stroll2sw.smil.txt">view it</a></td>
+      </tr>
+    </table>
 
     <h3>Step three - add a title</h3>
 
@@ -122,12 +192,23 @@
       to the slideshow.
     </p>
 
-    <p>
-      You can view the result by playing <a
-	href="stroll3.smil">stroll3.smil</a>. And again, look at the
-      <a href="stroll3.smil.txt">source code</a> to see how it is
-      done.
-    </p>
+    <table border align="center">
+      <tr>
+	<th>Black and white</th>
+	<th>Color</th>
+	<th>Dynamic</th>
+      </tr>
+      <tr>
+	<td><a href="stroll3.smil">play stroll3.smil</a></td>
+	<td><a href="stroll3c.smil">play stroll3c.smil</a></td>
+	<td><a href="stroll3sw.smil">play stroll3sw.smil</a></td>
+      </tr>
+      <tr align="center">
+	<td><a href="stroll3.smil.txt">view it</a></td>
+	<td><a href="stroll3c.smil.txt">view it</a></td>
+	<td><a href="stroll3sw.smil.txt">view it</a></td>
+      </tr>
+    </table>
 
     <h3>Step four - Add audio</h3>
 
@@ -140,11 +221,23 @@
       also contains the audio fragment.
     </p>
 
-    <p>
-      The result is called, you guessed it, <code>stroll4.smil</code>,
-      so have a look at the <a href="stroll4.smil.txt">source</a>, and
-      try to <a href="stroll4.smil">play</a> it.
-    </p>
+    <table border align="center">
+      <tr>
+	<th>Black and white</th>
+	<th>Color</th>
+	<th>Dynamic</th>
+      </tr>
+      <tr>
+	<td><a href="stroll4.smil">play stroll4.smil</a></td>
+	<td><a href="stroll4c.smil">play stroll4c.smil</a></td>
+	<td><a href="stroll4sw.smil">play stroll4sw.smil</a></td>
+      </tr>
+      <tr align="center">
+	<td><a href="stroll4.smil.txt">view it</a></td>
+	<td><a href="stroll4c.smil.txt">view it</a></td>
+	<td><a href="stroll4sw.smil.txt">view it</a></td>
+      </tr>
+    </table>
 
     <h3>Step five - synchronisation</h3>
 
@@ -156,10 +249,23 @@
       up in sync with the audio.
     </p>
 
-    <p>
-      Play <a href="stroll5.smil">stroll5.smil</a> and view the <a
-	href="stroll5.smil.txt">source</a>.
-    </p>
+    <table border align="center">
+      <tr>
+	<th>Black and white</th>
+	<th>Color</th>
+	<th>Dynamic</th>
+      </tr>
+      <tr>
+	<td><a href="stroll5.smil">play stroll5.smil</a></td>
+	<td><a href="stroll5c.smil">play stroll5c.smil</a></td>
+	<td><a href="stroll5sw.smil">play stroll5sw.smil</a></td>
+      </tr>
+      <tr align="center">
+	<td><a href="stroll5.smil.txt">view it</a></td>
+	<td><a href="stroll5c.smil.txt">view it</a></td>
+	<td><a href="stroll5sw.smil.txt">view it</a></td>
+      </tr>
+    </table>
 
     <h3>Step six - hyperlinks</h3>
 
@@ -172,11 +278,23 @@
       are shown the map again.
     </p>
 
-    <p>
-      The source to <code>stroll6.smil</code> is <a
-	href="stroll6.smil.txt">here</a>, the presentation is <a
-	href="stroll6.smil">here</a>.
-    </p>
+    <table border align="center">
+      <tr>
+	<th>Black and white</th>
+	<th>Color</th>
+	<th>Dynamic</th>
+      </tr>
+      <tr>
+	<td><a href="stroll6.smil">play stroll6.smil</a></td>
+	<td><a href="stroll6c.smil">play stroll6c.smil</a></td>
+	<td><a href="stroll6sw.smil">play stroll6sw.smil</a></td>
+      </tr>
+      <tr align="center">
+	<td><a href="stroll6.smil.txt">view it</a></td>
+	<td><a href="stroll6c.smil.txt">view it</a></td>
+	<td><a href="stroll6sw.smil.txt">view it</a></td>
+      </tr>
+    </table>
  
 
 <CENTER>
