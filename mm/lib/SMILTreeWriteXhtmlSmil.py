@@ -545,60 +545,67 @@ class SMILXhtmlSmilWriter(SMIL):
 
 	def writeMediaNodeRegion(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
+		
 		path = self.getRegionPath(regionName)
-		if path:
-			lch = path[len(path)-1]
-			name = self.ch2name[lch]
-			if self.ids_written.get(name):
-				self.ids_written[name] = self.ids_written[name] + 1
-				regionid = name + '%d' % self.ids_written[name]
-			else:
-				self.ids_written[name] = 1
-				regionid = name
-			divlist = []
-			divlist.append(('id', regionid))
-			divlist.append(('class', 'time'))
-			regstyle = self.getRegionStyle(regionName, node)
-			if regstyle is not None:
-				divlist.append(('style', regstyle))
-			if fill:
-				divlist.append(('fill', fill))
-				
-			# transfer timing to div
-			timespecount = 0 				
-			if 1: 
-				divlist.append( ('timeContainer', 'par'))
-				inpar = 1
-				i = 0
-				while i < len(attrlist):
-					attr, val = attrlist[i]
-					if attr in ('begin', 'dur', 'end'):
-						timespecount = timespecount + 1
-						divlist.append((attr, val))
-						del attrlist[i]
-						if attr == 'dur':
-							pardur = val
-					else:
-						i = i + 1
-
-			# duration hint for IE scheduler				
-			if timespecount <= 1:
-				if pardur is None:
-					# hack for IE
-					# will not start next element in a seq unless there is a dur attr
-					try:
-						t0, t1, t2, downloadlag, begindelay = node.GetTimes()
-						val = t1 - t0
-						pardur = fmtfloat(val, prec = 2)
-						divlist.append(('dur', pardur))
-					except: 
-						pardur = '2' # XXX: needs to be done. Will work only with an apropriate fill
-						divlist.append(('dur', pardur))
-
-			self.writetag('div', divlist)
-			self.push()
-			pushed = 1
+		if not path:
 			return pushed, inpar, pardur, regionid
+
+		# region (div) attr list
+		divlist = []
+
+		# find/compose/set region id
+		lch = path[len(path)-1]
+		name = self.ch2name[lch]
+		if self.ids_written.get(name):
+			self.ids_written[name] = self.ids_written[name] + 1
+			regionid = name + '%d' % self.ids_written[name]
+		else:
+			self.ids_written[name] = 1
+			regionid = name
+		divlist.append(('id', regionid))
+
+		# apply region style and fill attribute
+		regstyle = self.getRegionStyle(regionName, node)
+		if regstyle is not None:
+			divlist.append(('style', regstyle))
+		if fill:
+			divlist.append(('fill', fill))
+		divlist.append(('class', 'time'))
+				
+		# transfer timing from media to div
+		# the composite is the item for xhtml+smil
+		timing_spec = 0 				
+		i = 0
+		while i < len(attrlist):
+			attr, val = attrlist[i]
+			if attr in ('begin', 'dur', 'end'):
+				timing_spec = timing_spec + 1
+				divlist.append((attr, val))
+				del attrlist[i]
+				if attr == 'dur':
+					pardur = val
+			else:
+				i = i + 1
+
+		# Duration hint for IE scheduler when dur attr has 
+		# not been given and not both begin and end.
+		# Possibly temporary until we find a way to make it needless			
+		if pardur is None and timing_spec < 2:
+			val = self.getDurHint(node)
+			if val > 0:
+				pardur = fmtfloat(val, prec = 2)
+				divlist.append(('dur', pardur))
+				timing_spec = timing_spec + 1
+		
+		# when div has timing extent it to a time container
+		if timing_spec > 0:
+			divlist.append( ('timeContainer', 'par'))
+			inpar = 1
+			
+		# finally write div
+		self.writetag('div', divlist)
+		self.push()
+		pushed = 1
 		return pushed, inpar, pardur, regionid
 
 
@@ -718,6 +725,16 @@ class SMILXhtmlSmilWriter(SMIL):
 		parent = node.GetParent()
 		if parent.GetType() == 'seq':
 			return parent.GetParent()
+
+	# XXX: needs to be implemented correctly
+	# or find a way to make needless
+	def getDurHint(self, node):
+		try:
+			t0, t1, t2, downloadlag, begindelay = node.GetTimes()
+			val = t1 - t0
+		except: 
+			val = 2.0
+		return val
 
 	def writeAnchors(self, x, name):
 		hassrc = 0
