@@ -2453,7 +2453,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		override = attributes.get('override', 'not-allowed')
 		if override not in ('allowed', 'not-allowed'):
 			self.syntax_error('invalid override attribute value')
-		uid = attributes.get('uid')
+		uid = attributes.get('uid', '')
 		self.__custom_tests[id] = title, u_state == 'true', override == 'allowed', uid
 
 	def end_custom_test(self):
