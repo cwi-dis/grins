@@ -173,7 +173,6 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		self.InvalidateRect()
 			
 	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
-		print "DEBUG: Scrollvisible: received ", coordinates
 		if not self._canscroll:
 			return
 		box = self._convert_coordinates(coordinates, self._canvas, units = units)
