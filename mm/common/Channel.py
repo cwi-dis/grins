@@ -1093,7 +1093,7 @@ class ChannelWindow(Channel):
 		# through the hyperjump (default: None)
 		return (node, nametypelist, args)
 
-	def create_window(self, pchan, pgeom):
+	def create_window(self, pchan, pgeom, units = None):
 		menu = []
 		if pchan:
 			if hasattr(self._player, 'editmgr'):
@@ -1115,12 +1115,14 @@ class ChannelWindow(Channel):
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = transparent,
 						z = z,
-						type_channel = self._window_type)
+						type_channel = self._window_type,
+						units = units)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
 						transparent = transparent,
 						z = z,
-						type_channel = self._window_type)
+						type_channel = self._window_type,
+						units = units)
 			if hasattr(self._player, 'editmgr'):
 				menu.append(None)
 				menu.append('', 'resize',
@@ -1173,7 +1175,8 @@ class ChannelWindow(Channel):
 		pchan.window.create_box(
 			'Resize window for channel ' + self._name,
 			self._resize_callback,
-			self._attrdict['base_winoff'])
+			self._attrdict['base_winoff'],
+			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN))
 
 	def _resize_callback(self, *box):
 		if box:
@@ -1193,6 +1196,8 @@ class ChannelWindow(Channel):
 			pass
 		# create a window for this channel
 		pgeom = None
+		units = self._attrdict.get('units',
+					   windowinterface.UNIT_SCREEN)
 		if pchan:
 			#
 			# Find the base window offsets, or ask for them.
@@ -1216,10 +1221,11 @@ class ChannelWindow(Channel):
 				pchan.window.create_box(
 					'Draw a subwindow for %s in %s' %
 						(self._name, pchan._name),
-					self._box_callback)
+					self._box_callback,
+					units = units)
 				return None
 			self._curvals['base_winoff'] = pgeom, None
-		self.create_window(pchan, pgeom)
+		self.create_window(pchan, pgeom, units)
 		return 1
 
 	def _box_callback(self, *pgeom):
@@ -1231,7 +1237,9 @@ class ChannelWindow(Channel):
 			# subwindow was not drawn, draw top-level window.
 			pchan._subchannels.remove(self)
 			pchan = None
-		self.create_window(pchan, pgeom)
+		self.create_window(pchan, pgeom,
+				   units = self._attrdict.get('units',
+						windowinterface.UNIT_SCREEN))
 		self._is_shown = 1
 		self.after_show()
 
