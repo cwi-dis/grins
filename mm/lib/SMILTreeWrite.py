@@ -124,14 +124,16 @@ def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evalli
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress=None, prune=0):
+def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress=None, prune=0, convertfiles=1):
 	host, user, passwd, dir = ftpparams
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
 		try:
-			writer = SMILWriter(root, ftp, filename, cleanSMIL, grinsExt, copyFiles,
-						evallicense, tmpcopy=1, progress=progress, prune=prune)
+			writer = SMILWriter(root, ftp, filename, cleanSMIL, grinsExt, 
+						copyFiles, evallicense, tmpcopy=1, 
+						progress=progress, prune=prune,
+						convertfiles=convertfiles)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
@@ -2056,7 +2058,8 @@ class SMILWriter(SMIL):
 			self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 			self.push()
 		if interior:
-			if type == 'seq' and self.copydir and not x.GetChildren():
+			if type == 'seq' and self.copydir and not self.smilboston \
+						and not x.GetChildren():
 				# Warn the user for a bug in G2
 				import windowinterface
 				windowinterface.showmessage('Warning: some G2 versions crash on empty sequence nodes')
