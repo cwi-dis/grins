@@ -310,6 +310,9 @@ class SMIL:
 			'left':None,
 		        'right':None,
 		        'top':None,
+		        # registration point
+		        'regPoint':None,
+		        'regAlign':None,
 		        
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
@@ -371,6 +374,9 @@ class SMIL:
 			  'left':None,
 		          'right':None,
 		          'top':None,
+			  # registration point
+		          'regPoint':None,
+		          'regAlign':None,
 			  
 			  __layout:None,
 			  GRiNSns+' ' 'bgcolor':None,
@@ -509,7 +515,7 @@ class SMIL:
 		'smil': ['head', 'body'],
 		'head': ['layout', 'switch', 'meta', 'userAttributes', __layouts, 'transition'],
 		'userAttributes': ['uGroup'],
-		'layout': ['region', 'root-layout', 'viewport'],
+		'layout': ['region', 'root-layout', 'viewport', 'regPoint'],
 		'viewport': ['region'],
 		'region': ['region'],
 		__layouts: [__layout],

@@ -154,6 +154,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
 			'transition': (self.start_transition, self.end_transition),
+			'regPoint': (self.start_regpoint, self.end_regpoint),
 			}
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
@@ -192,6 +193,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__transitions = {}
 		self.__realpixnodes = []
 		self.__animatenodes = []
+		self.__regpoints = {}
 		self.__new_file = new_file
 		self.__check_compatibility = check_compatibility
 		self.__regionno = 0
@@ -870,6 +872,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##	 		if attributes['encoding'] not in ('base64', 'UTF'):
 ## 				self.syntax_error('bad encoding parameter')
 
+		# connect to the register point
+		if attributes.has_key('regPoint'):
+			if not self.__regpoints.has_key(attributes['regPoint']):
+				self.syntax_error('the registration point '+attributes['regPoint']+" doesn't exist")
+				del attributes['regPoint']				
+		if attributes.has_key('regAlign'):
+			ival = self.__parseRegAlignValue(attributes['regAlign'])
+			if ival == None:
+				self.syntax_error('invalid regAlign attribute value')
+				del attributes['regAlign']
+				
 		# create the node
 		if not self.__root:
 			# "can't happen"
@@ -976,7 +989,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			b = None
 		top = self.__topregion.get(node.__region)
 		# if top doesn't exist (and visible media, we create have to default top window)
-		import ChannelMap
+#		import ChannelMap
 		if top == None: #and ChannelMap.isvisiblechannel(mtype):
 			if not self.__tops.has_key(None):
 				attrs = {}
@@ -991,7 +1004,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__childregions[None] = []
 			self.__childregions[None].append(ch.get('id'))
 
-		if top == None:
+		import ChannelMap
+		if not ChannelMap.isvisiblechannel(mtype):
 			# not visible region
 			pass
 		elif self.__tops[top]['width'] > 0 and \
@@ -1022,6 +1036,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# want to make them at least visible...
 			width = 200
 			height = 100
+		
+		# to calculate the minsize, we take account of subregion positioning
+		width = _minsize(node.attrdict.get('left'),
+				 None,
+				 node.attrdict.get('right'),
+				 width)
+		height = _minsize(node.attrdict.get('top'),
+				 None,
+				 node.attrdict.get('bottom'),
+				 height)
+
 		if ch['minwidth'] < width:
 			ch['minwidth'] = width
 		if ch['minheight'] < height:
@@ -1073,7 +1098,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
 			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, [], (0, 0)))
 			self.__links.append((node.GetUID(), id, href, ltype))
-
+		
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
 			self.syntax_error('%s not in smil' % type)
@@ -1598,7 +1623,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# def MakeChannels(self):
 	# end old
 	# new 03-07-2000
-	def __makeChannels(self):	
+	def __makeLayoutChannels(self):	
 	# end new
 		ctx = self.__context
 		for top in self.__tops.keys():
@@ -1821,6 +1846,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				del node.__targetid
 		del self.__animatenodes
 			
+	def FixRegpoints(self):
+		for name, dict in self.__regpoints.items():
+			self.__context.addRegpoint(name, dict)
+		del self.__regpoints
+	
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
 			if key == 'time-slider':
@@ -1922,7 +1952,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__childregions[None] = []
 ##		self.FixRoot()
 		self.FixSizes()
-		self.__makeChannels()
+		self.__makeLayoutChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.Recurse(self.__root, self.CleanChanList)
 		self.FixLayouts()
@@ -1933,6 +1963,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.slideshow = SlideShow(node, self.__new_file)
 		del self.__realpixnodes
 		self.FixAnimateTargets()
+		self.FixRegpoints()
 
 	# head/body sections
 
@@ -2313,6 +2344,73 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_viewport(self):
 		self.__viewport = None
 
+	def start_regpoint(self, attributes):
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
+			return
+		if self.__in_layout != LAYOUT_EXTENDED:
+			self.syntax_error('regPoint not allowed in layout type %s' % SMIL_BASIC)
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('regPoint not compatible with SMIL 1.0')
+			
+		# default values
+		attrdict = {'regAlign': 'topLeft'}
+
+		for attr, val in attributes.items():
+			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
+				attr = attr[len(GRiNSns)+1:]
+			val = string.strip(val)
+			if attr == 'id':
+				attrdict[attr] = id = val
+				
+				res = xmllib.tagfind.match(id)
+				if res is None or res.end(0) != len(id):
+					self.syntax_error("illegal ID value `%s'" % id)
+				if self.__ids.has_key(id):
+					self.syntax_error('non-unique id %s' % id)
+				self.__ids[id] = 0
+				self.__regpoints[id] = attrdict
+			elif attr == 'top' or attr == 'bottom' or attr == 'left' or attr == 'right':
+				# for instance, we assume that we can't specify in the same time
+				# a top and bottom, a left and right attribute. The SMIL Boston specication
+				# is not clear yet about this
+				if (attrdict.has_key('top') and attr == 'bottom') or \
+					(attrdict.has_key('bottom') and attr == 'top'):
+					self.syntax_error("you can't specify both top and bottom attribute")
+				elif (attrdict.has_key('left') and attr == 'right') or \
+					(attrdict.has_key('right') and attr == 'left'):
+					self.syntax_error("you can't specify both left and right attribute")
+				else:
+					try:
+						if val[-1] == '%':
+							val = string.atof(val[:-1]) / 100.0
+						else:
+							if val[-2:] == 'px':
+								val = val[:-2]
+							val = string.atoi(val)
+						attrdict[attr] = val
+ 					except (string.atoi_error, string.atof_error):
+						self.syntax_error('invalid region attribute value')
+			elif attr == 'regAlign':
+				# this function doesn't test the enum value !
+				#value = parseattrval(attr, val, self.__context)
+				ival = self.__parseRegAlignValue(val)
+				if ival != None:
+					attrdict[attr] = ival
+				else:
+					self.syntax_error('invalid regAlign attribute value')						
+				
+	def __parseRegAlignValue(self, val):
+		if val == 'topLeft' or val == 'topMid' or val == 'topRight' or \
+			val == 'midLeft' or val == 'center' or val == 'midRight' or \
+			val == 'bottomLeft' or val == 'bottomMid' or val == 'bottomRight':
+			return val
+		return None		
+		
+	def end_regpoint(self):
+		pass
+		
 	def start_user_attributes(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('userAttributes not compatible with SMIL 1.0')
@@ -3239,7 +3337,9 @@ def _minsize(start, extent, end, minsize):
 			return int((start + minsize) / end + 0.5)
 		elif type(end) is type(0):
 			# no extent, end is pixel value
-			return end
+			# warning end is relative to the parent end egde 
+			return start + minsize + end
+#			return end
 		else:
 			# no extent and no end
 			return start + minsize
@@ -3259,7 +3359,10 @@ def _minsize(start, extent, end, minsize):
 			return 0
 		elif type(end) is type(0):
 			# no extent, end is pixel value
-			return end
+			# warning end is relative to the parent end egde 
+			################ not completed ###############
+			return end + minsize 
+#			return end
 		elif type(end) is type(0.0):
 			# no extent, end is fraction
 			if minsize > 0 and end > start:
@@ -3270,7 +3373,9 @@ def _minsize(start, extent, end, minsize):
 			return int(minsize / (1 - start) + 0.5)
 	elif type(end) is type(0):
 		# no start, end is pixel value
-		return end
+		# warning end is relative to the parent end egde 
+		return end + minsize
+#		return end
 	elif type(end) is type(0.0):
 		# no start, end is fraction
 		if end <= 0:

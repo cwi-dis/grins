@@ -26,6 +26,7 @@ class MMNodeContext:
 		self.layouts = {}
 		self.usergroups = {}
 		self.transitions = {}
+		self.regpoints = {}
 		self.baseurl = None
 		self.nextuid = 1
 		self.editmgr = None
@@ -247,10 +248,25 @@ class MMNodeContext:
 			self._ichanneldict[name] = c
 			self._ichannelnames.append(name)
 			self._ichannels.append(c)
+			
+	#
+	# registration points administration
+	#
+	
+	def addRegpoint(self, name, dict):
+		regpoint = MMRegPoint(self,name)
+		
+		for attr, val in dict.items():
+			if attr == 'top' or attr == 'bottom' or \
+				attr == 'left' or attr == 'right' or attr == 'regAlign':
+				regpoint[attr] = val
+		
+		self.regpoints[name] = regpoint
 
 	#
 	# Hyperlink administration
 	#
+	
 	def addhyperlinks(self, list):
 		self.hyperlinks.addlinks(list)
 
@@ -441,6 +457,28 @@ class MMNodeContext:
 		else:
 			self.__registers.append(x)
 
+class MMRegPoint:
+	def __init__(self, context, name):
+		self.context = context
+		self.name = name
+		self.attrdict = {}
+		
+	def __repr__(self):
+		return '<MMRegPoint instance, name=' + `self.name` + '>'
+		
+	#
+	# Emulate the dictionary interface
+	#
+
+	def __setitem__(self, key, value):
+		self.attrdict[key] = value
+		
+	def __getitem__(self, key):
+		return self.attrdict.get(key)
+	
+	def items(self):
+		return self.attrdict.items()
+		
 class MMChannel:
 	def __init__(self, context, name):
 		self.context = context
@@ -461,7 +499,7 @@ class MMChannel:
 
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
-
+	
 	# new 03-07-2000
 	# up in the channel tree until find a layoutchannel.
 	# a layout channel can be translated directly in SMIL region

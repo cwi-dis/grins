@@ -789,6 +789,9 @@ smil_attrs=[
 	("right", lambda writer, node:getsubregionatt(writer, node, 'right')),
 	("top", lambda writer, node:getsubregionatt(writer, node, 'top')),
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
+	# registration points
+	("regPoint", lambda writer, node:getstringattr(writer, node, "regPoint")),
+	("regAlign", lambda writer, node:getstringattr(writer, node, "regAlign")),
 	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
 	("to", lambda writer, node:getstringattr(writer, node, "to")),
@@ -821,6 +824,7 @@ cmif_node_attrs_ignore = {
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
 	'repeatdur':0, 'beginlist':0, 'endlist':0,
 	'left':0,'right':0,'top':0,'bottom':0,'units':0,
+	'regPoint':0, 'regAlign':0,
 	'transIn':0, 'transOut':0,
 	}
 cmif_node_realpix_attrs_ignore = {
@@ -1339,6 +1343,25 @@ class SMILWriter(SMIL):
 			for child in node.children:
 				self.syncidscheck(child)
 
+	def __writeRegPoint(self):
+		regpoints = self.root.GetContext().regpoints
+		for name, dict in regpoints.items():
+			attrlist = []
+			attrlist.append(('id', name))
+			
+			for attr, val in dict.items():
+				# for instance, we assume that a integer type value is a pixel value,
+				# and a float type value is a relative value (%)
+				if attr == 'top' or attr == 'bottom' or attr == 'left' or attr == 'right':
+					if type(val) == type(0):
+						attrlist.append((attr, '%d' % val))
+					else:
+						attrlist.append((attr, '%d%%' % int(val * 100 + .5)))
+				else:
+					attrlist.append((attr, val))
+				
+			self.writetag('regPoint', attrlist)
+
 	def writelayout(self):
 		"""Write the layout section"""
 		attrlist = []
@@ -1346,6 +1369,8 @@ class SMILWriter(SMIL):
 			attrlist.append(('type', SMIL_EXTENDED))
 		self.writetag('layout', attrlist)
 		self.push()
+		if self.smilboston:
+			self.__writeRegPoint()		
 		channels = self.root.GetContext().channels
 		for ch in self.top_levels:
 			attrlist = []
