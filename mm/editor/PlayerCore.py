@@ -99,6 +99,8 @@ class PlayerCore(Selecter):
 		if self.playing:
 			self.stop()
 		self.reset()
+		self.pause(1)
+		self.play()
 		if not self.gotonode(node, anchor, None):
 			return
 		self.playing = 1

@@ -764,17 +764,18 @@ class MMSyncArc:
 
 	def refnode(self):
 		node = self.dstnode
+		pnode = node.GetSchedParent()
 		if self.wallclock is not None:
-			refnode = node.GetSchedParent() or node
+			refnode = pnode or node
 			refnode = refnode.looping_body_self or refnode
-		elif self.srcnode == 'prev' or (self.srcnode is None and node.GetSchedParent().type == 'seq'):
-			refnode = node.GetSchedParent()
+		elif self.srcnode == 'prev' or (self.srcnode is None and pnode is not None and pnode.type == 'seq'):
+			refnode = pnode
 			for c in refnode.GetSchedChildren():
 				if c is node:
 					break
 				refnode = c
 		elif self.srcnode is None:
-			refnode = node.GetSchedParent()
+			refnode = pnode
 			refnode = refnode.looping_body_self or refnode
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
@@ -783,6 +784,8 @@ class MMSyncArc:
 		return refnode
 
 	def isresolved(self, timefunc):
+		if self.timestamp is not None:
+			return 1
 		if self.delay is None:
 			return 0
 		if self.wallclock is not None:
@@ -790,15 +793,31 @@ class MMSyncArc:
 				return 1
 			return 0
 		refnode = self.refnode()
-		if self.event is None and self.marker is None:
-			return 1
-		if self.event in ('begin', 'end'):
-			if refnode.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN, MMStates.PLAYED):
+		event = self.event
+		if event is None and self.marker is None:
+			# syncbase-relative offset
+			pnode = self.dstnode.GetSchedParent()
+			if pnode is None:
 				return 1
-			# XXX or maybe if refnode.isscheduled(): return 1
-			return 0
-		if self.event is not None and refnode.eventhappened(self.event):
-			return 1
+			if pnode.type == 'seq':
+				if refnode is pnode:
+					event = 'begin'
+				else:
+					event = 'end'
+		if event is not None:
+			t = refnode.isresolved()
+			if t is None:
+				return 0
+			if event == 'begin':
+				return 1
+			if event == 'end':
+				if refnode.playing == MMStates.PLAYED:
+					return 1
+				d = refnode.calcfullduration()
+				if d is None:
+					return 0
+				return 1
+			return refnode.eventhappened(event)
 		if self.marker is not None and refnode.markerhappened(self.marker):
 			return 1
 		return 0
@@ -846,16 +865,38 @@ class MMSyncArc:
 			return t + t1 - t0 + self.delay
 				
 		refnode = self.refnode()
-		if self.event == 'begin':
-			if refnode.start_time is None:
-				return refnode.isresolved() + self.delay
-			return refnode.start_time + self.delay
-		if self.event is not None:
-			return refnode.happenings[('event', self.event)] + self.delay
+		event = self.event
+		if event is None and self.marker is None:
+			# syncbase-relative offset
+			pnode = self.dstnode.GetSchedParent()
+			if pnode is None:
+				return 1
+			if pnode.type == 'seq':
+				if refnode is pnode:
+					event = 'begin'
+				else:
+					event = 'end'
+			else:
+				event = 'begin'
+		if event is not None:
+			t = refnode.isresolved()
+			if event == 'begin':
+				if refnode.start_time is not None:
+					self.timestamp = t + self.delay
+				return t + self.delay
+			if event == 'end':
+				if refnode.playing == MMStates.PLAYED:
+					return refnode.happenings[('event', event)] + self.delay
+				d = refnode.calcfullduration()
+				if refnode.start_time is not None and \
+				   refnode.fullduration is not None:
+					self.timestamp = t + d + self.delay
+				return t + d + self.delay
+			return refnode.happenings[('event', event)] + self.delay
 		if self.marker is not None:
 			return refnode.happenings[('marker', self.marker)] + self.delay
-		if self.dstnode.GetSchedParent().type == 'seq' and \
-		   refnode is not self.dstnode.GetSchedParent():
+		pnode = self.dstnode.GetSchedParent()
+		if pnode.type == 'seq' and refnode is not pnode:
 			# self is previous child in seq, so
 			# event is end
 			event = 'end'
@@ -1870,6 +1911,7 @@ class MMNode:
 		pnode = self.GetSchedParent()
 		if pnode is None:
 			# XXX is this true with begin="indefinite"?
+			self.start_time = 0
 			return 0	# root node is always resolved
 		presolved = pnode.isresolved()
 		if presolved is None:
@@ -1882,28 +1924,40 @@ class MMNode:
 				return None
 			if pnode.type == 'seq':
 				val = presolved
+				maybecached = pnode.start_time is not None
 				for c in pnode.GetSchedChildren():
 					if c is self:
+						if maybecached:
+							self.start_time = val
 						return val
-					e, maybecached = c.__calcendtime(val)
+					e, MBcached = c.__calcendtime(val)
 					if e is None or e < 0:
 						return None
+					if maybecached and not MBcached:
+						maybecached = 0
 					val = val + e
 				raise RuntimeError('cannot happen')
+			if pnode.start_time is not None:
+				self.start_time = presolved
 			return presolved
 		min = None
 		if self.sctx is not None:
 			timefunc = self.sctx.parent.timefunc
 		else:
 			timefunc = None
+		maybecached = 1
 		for arc in beginlist:
 			if arc.isresolved(timefunc):
 				v = arc.resolvedtime(timefunc)
 				if min is None or v < min:
 					min = v
+			if arc.timestamp is None:
+				maybecached = 0
 		if min is None:
 			# no resolved sync arcs
 			return None
+		if maybecached:
+			self.start_time = presolved + min
 		# return earliest resolved time
 		return presolved + min
 
