@@ -1,5 +1,7 @@
 __version__ = "$Id$"
 
+from fmtfloat import fmtfloat
+
 #
 #	Export interface 
 # 
@@ -502,6 +504,17 @@ class SMILXhtmlSmilWriter(SMIL):
 							pardur = val
 					else:
 						i = i + 1
+				if pardur is None:
+					# hack for IE
+					# will not start next element in a seq unless there is a dur attr
+					try:
+						t0, t1, t2, downloadlag, begindelay = node.GetTimes()
+						val = t1 - t0
+						pardur = fmtfloat(val, prec = 2)
+						divlist.append(('dur', pardur))
+					except: 
+						pardur = '2' # XXX: needs to be done. Will work only with an apropriate fill
+						divlist.append(('dur', pardur))
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
