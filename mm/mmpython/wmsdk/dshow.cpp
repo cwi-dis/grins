@@ -1,10 +1,10 @@
 
-/***********************************************************
+/*************************************************************************
 Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 
                         All Rights Reserved
 
-******************************************************************/
+**************************************************************************/
 
 #include "Python.h"
 
@@ -25,24 +25,15 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #define  OAFALSE (0)
 
 #include <initguid.h>
-DEFINE_GUID(IID_IRealConverter,
-0xe8d61c44, 0xd313, 0x472a, 0x84, 0x68, 0x2b, 0x1e, 0xd5, 0xb0, 0x5c, 0xab);
-struct IRealConverter : public IUnknown
-	{
-	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
-	};
-
-// {BDBC884C-0FCE-414f-9941-035F900E43B6}
-DEFINE_GUID(IID_IWMConverter,
-0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
-struct IWMConverter : public IUnknown
-	{
-	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI)=0;
-	};
+#include "dscom.h"
 
 static PyObject *ErrorObject;
 
 #define RELEASE(x) if(x) x->Release();x=NULL;
+
+#include "mtpycall.h"
+PyInterpreterState*
+PyCallbackBlock::s_interpreterState = NULL;
 
 static void
 seterror(const char *funcname, HRESULT hr)
@@ -358,7 +349,24 @@ newEnumFiltersObject()
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IPyListener *pI;
+} PyRenderingListenerObject;
 
+staticforward PyTypeObject PyRenderingListenerType;
+
+static PyRenderingListenerObject *
+newPyRenderingListenerObject()
+{
+	PyRenderingListenerObject *self;
+	self = PyObject_NEW(PyRenderingListenerObject, &PyRenderingListenerType);
+	if (self == NULL) return NULL;
+	self->pI = NULL;
+	return self;
+}
 
 //////////////////
 // Streams
@@ -478,6 +486,7 @@ newLargeIntObject(LONGLONG val)
 	self->ob_ival=val;
 	return self;
 }
+
 
 ////////////////////////////////////////////////////
 
@@ -1933,7 +1942,8 @@ static PyObject *
 WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
 {
 	UnknownObject *obj;
-	if (!PyArg_ParseTuple(args, "O",&obj))
+	BOOL callBeginEnd=FALSE;
+	if (!PyArg_ParseTuple(args, "O|i",&obj))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS
 	self->pWMConverter->SetWMWriter(obj->pI);
@@ -2780,6 +2790,60 @@ static PyTypeObject DirectDrawStreamSampleType = {
 /////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////
+// PyRenderingListener object 
+
+static struct PyMethodDef PyRenderingListener_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+PyRenderingListener_dealloc(PyRenderingListenerObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+PyRenderingListener_getattr(PyRenderingListenerObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(PyRenderingListener_methods, (PyObject *)self, name);
+}
+
+static char PyRenderingListenerType__doc__[] =
+""
+;
+
+static PyTypeObject PyRenderingListenerType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"PyRenderingListener",			/*tp_name*/
+	sizeof(PyRenderingListenerObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)PyRenderingListener_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)PyRenderingListener_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapPyRenderingListenerg*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	PyRenderingListenerType__doc__ /* Documentation string */
+};
+
+// End of code for PyRenderingListener object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
 // LargeInt object 
 static char LargeInt_low__doc__[] =
 ""
@@ -3260,6 +3324,29 @@ CreateMultiMediaStream(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char CreatePyRenderingListener__doc__[] =
+""
+;
+static PyObject *
+CreatePyRenderingListener(PyObject *self, PyObject *args)
+{
+	PyObject *listener;
+	if (!PyArg_ParseTuple(args, "O", &listener))
+		return NULL;
+
+	PyRenderingListenerObject *obj = newPyRenderingListenerObject();
+	if (obj == NULL)
+		return NULL;
+
+	HRESULT hr = CreatePyRenderingListener(listener, &obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("CreatePyRenderingListener", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static char large_int__doc__[] =
 ""
 ;
@@ -3326,6 +3413,7 @@ static struct PyMethodDef DShow_methods[] = {
 	{"CreateGraphBuilder", (PyCFunction)CreateGraphBuilder, METH_VARARGS, CreateGraphBuilder__doc__},
 	{"CreateFilter", (PyCFunction)CreateFilter, METH_VARARGS, CreateFilter__doc__},
 	{"CreateMultiMediaStream", (PyCFunction)CreateMultiMediaStream, METH_VARARGS, CreateMultiMediaStream__doc__},
+	{"CreatePyRenderingListener", (PyCFunction)CreatePyRenderingListener, METH_VARARGS, CreatePyRenderingListener__doc__},
 	{"large_int", (PyCFunction)large_int, METH_VARARGS, large_int__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
@@ -3352,6 +3440,7 @@ void initdshow()
 	ErrorObject = PyString_FromString("dshow.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
 
+	PyCallbackBlock::init();	
 
 	/* Check for errors */
 	if (PyErr_Occurred())
