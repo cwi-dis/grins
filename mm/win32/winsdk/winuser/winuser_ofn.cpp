@@ -24,6 +24,7 @@ struct PyOfn
 	TCHAR m_szFileTitle[MAX_PATH];
 	TCHAR m_szFileName[MAX_PATH];
 	TCHAR m_szInitialDir[MAX_PATH];
+	TCHAR m_szTitle[MAX_PATH];
 
 	static PyTypeObject type;
 	static PyMethodDef methods[];
@@ -39,6 +40,7 @@ struct PyOfn
 		p->m_szFileTitle[0] = '\0';
 		p->m_szFileName[0] = '\0';
 		p->m_szInitialDir[0] = '\0';
+		lstrcpy(p->m_szTitle, TEXT("Open"));
 
 		memset(&p->m_ofn, 0, sizeof(p->m_ofn));
 		p->m_ofn.lStructSize       = sizeof(OPENFILENAME);
@@ -53,7 +55,7 @@ struct PyOfn
 		p->m_ofn.lpstrFileTitle    = p->m_szFileTitle;
 		p->m_ofn.nMaxFileTitle     = MAX_PATH;
 		p->m_ofn.lpstrInitialDir   = p->m_szInitialDir;
-		p->m_ofn.lpstrTitle        = TEXT("Open");
+		p->m_ofn.lpstrTitle        = p->m_szTitle;
 		p->m_ofn.nFileOffset       = 0;
 		p->m_ofn.nFileExtension    = 0;
 		p->m_ofn.lpstrDefExt       = NULL;
@@ -85,7 +87,7 @@ PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args)
 	DWORD dwFlags = 0;
 	char *pszDefExt = NULL, *pszFileName=NULL, *pszFilter = NULL;
 	HWND hWndParent = NULL;
-	if (!PyArg_ParseTuple(args, "|izzizi", 
+	if (!PyArg_ParseTuple(args, "|izziziz", 
 		&bOpenFileDialog, &pszDefExt, &pszFileName, &dwFlags, &pszFilter, &hWndParent))
 		return NULL;
 	PyOfn *pyofn = PyOfn::createInstance();
@@ -210,10 +212,10 @@ static PyObject* PyOfn_SetOFNTitle(PyOfn *self, PyObject *args)
 		return NULL;
 		}
 	if(obj == Py_None)
-		self->m_szFileTitle[0] = '\0';
+		lstrcpy(self->m_szTitle, TEXT("Open"));
 	else
 		{
-		lstrcpy(self->m_szFileTitle, TextPtr(PyString_AsString(obj)));
+		lstrcpy(self->m_szTitle, TextPtr(PyString_AsString(obj)));
 		}
 	return none();
 	}
