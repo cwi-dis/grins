@@ -72,6 +72,7 @@ if exist FreezeOpts del FreezeOpts
 echo -x NodeInfo >> FreezeOpts
 echo -x AnchorEdit >> FreezeOpts
 echo -x cmifed >> FreezeOpts
+echo -x AutoLicense >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
