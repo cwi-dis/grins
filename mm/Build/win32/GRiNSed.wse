@@ -19,11 +19,11 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\GRiNSed_1.0beta_install.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-10beta.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=sjoerd
-  Upload Directory=/ufs/sjoerd/tmp
+  Upload Name=jack
+  Upload Directory=/var/www/OratrixWeb/downloaddir
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.0beta
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=1198178062
+  File Checksum=3206126650
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1463,31 +1463,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\video.tiff
   Destination=%MAINDIR%\GRiNS-Icons\video.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\bgm.aiff
-  Destination=%MAINDIR%\Data\bgm.aiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\index.html
-  Destination=%MAINDIR%\Data\index.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\h218.jpg
-  Destination=%MAINDIR%\Data\h218.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\h168.jpg
-  Destination=%MAINDIR%\Data\h168.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\map.jpg
-  Destination=%MAINDIR%\Data\map.jpg
   Flags=0000000010000010
 end
 item: Install File

@@ -1,7 +1,7 @@
 GRiNS Editor for Windows Release Notes
 
 This is the readme file for the GRiNS editor and player for Windows
-95/98/NT4, Release 0.5, patchlevel 6. More information on GRiNS can be
+95/98/NT4, Release 1.0beta. More information on GRiNS can be
 obtained at http://www.oratrix.com/GRiNS, or by email to
 grins-request@oratrix.com.  Release notes for this version can be
 found in the file relnotes.html in the top-level directory.  More
@@ -37,7 +37,7 @@ License keys
 To start the editor you need a license key. You may have been provided
 with a temporary license key in the same message in which you received
 the password for the download area. If not you can send an empty mail
-message to evalutation-license@oratrix.com and we will send you a
+message to evaluation-license@oratrix.com and we will send you a
 time-limited key, or we will mail you details on how to proceed.
 
 Windows user interface open issues
