@@ -22,6 +22,9 @@ class ShellChannel(Channel):
 		else:
 			import MMurl
 			prog = self.getfileurl(node)
+			if not prog:
+				self.errormsg(node, 'No URL set on this node')
+				return 1
 			try:
 				prog = MMurl.urlretrieve(prog)[0]
 			except IOError, msg:
