@@ -18,7 +18,6 @@ class _Button:
 				break
 		else:
 			buttons.append(self)
-		window = dispobj._window
 		self._color = self._hicolor = dispobj._fgcolor
 		self._width = self._hiwidth = dispobj._linewidth
 		self._newdispobj = None
