@@ -132,6 +132,12 @@ class EditMgr:
 	# Focus interface
 	#
 	def setglobalfocus(self, focustype, focusobject):
+		# Jack: Thank you for this elaborately documented code. We have absolutely
+		# no idea what type of object "focustype" is. Not only that, but it is
+		# probably not going to be used because we can always do isinstance(focusobject)==...
+
+		# Pas op all functions calling this: The focusobject may be None.. 
+		
 		# Quick return if this product does not have a shared focus
 		if not features.UNIFIED_FOCUS in features.feature_set:
 			return
@@ -140,6 +146,7 @@ class EditMgr:
 		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
 		self.focus_busy = 1
 		self.focus = (focustype, focusobject)
+		print "DEBUG: edit manager.setglobalfocus type is: ", focustype;
 		for client in self.focus_registry:
 			client.globalfocuschanged(focustype, focusobject)
 		self.focus_busy = 0
