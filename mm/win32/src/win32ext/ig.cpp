@@ -10,6 +10,8 @@
 
 #pragma comment (lib,"Gear32sd.lib")
 
+// Gif convertion
+#include "igif.h"
 
 #include "moddef.h"
 DECLARE_PYMODULECLASS(ig);
@@ -21,12 +23,48 @@ static PyObject* ig_load_file(PyObject *self, PyObject *args)
 	char *filename;
 	if(!PyArg_ParseTuple(args,"s",&filename))
 		return NULL;
+	HIGEAR img;
+	GUI_BGN_SAVE;
+	AT_ERRCOUNT nError=IG_load_file(filename,&img);
+	GUI_END_SAVE;
+	if(nError!=0) img=-1;
+	return Py_BuildValue("l",img);
+	}
+
+static PyObject* ig_load_gif(PyObject *self, PyObject *args)
+	{
+	char *filename;
+	if(!PyArg_ParseTuple(args,"s",&filename))
+		return NULL;
+	HIGEAR img=-1;
+	int transp=-1,rgb[3]={255,255,255};
+	GifConverter gc;
+	GUI_BGN_SAVE;
+	if(gc.LoadGif(filename))
+		{
+		transp=gc.m_transparent;
+		for(int i=0;i<3;i++)rgb[i]=gc.m_tc[i];
+		AT_ERRCOUNT nError=IG_load_mem(gc.m_pBmpBuffer,gc.m_dwSize,1,1,&img);
+		if(nError!=0) img=-1;
+		}
+	GUI_END_SAVE;
+	return Py_BuildValue("li(iii)",img,transp,rgb[0],rgb[1],rgb[2]);
+	}
+
+static PyObject* ig_load_mem(PyObject *self, PyObject *args)
+	{
+	LPVOID pImage;
+	DWORD dwSize;
+	UINT nPageNum=1;
+	UINT nTileNum=1;
+	if(!PyArg_ParseTuple(args,"ll",&pImage,&dwSize))
+		return NULL;
+	if(pImage==0)
+		RETURN_ERR("Invalid pointer to image");
 	
 	HIGEAR img;
-	AT_ERRCOUNT nError=IG_load_file(filename,&img);
-	if(nError!=0)
-		RETURN_ERR("ig_load_file failed");
-
+	AT_ERRCOUNT nError=IG_load_mem(pImage,dwSize,nPageNum,nTileNum,&img);
+	if(nError!=0) img=-1;
 	return Py_BuildValue("l",img);
 	}
 
@@ -178,6 +216,8 @@ static PyObject* ig_image_delete(PyObject *self, PyObject *args)
 
 BEGIN_PYMETHODDEF(ig)
 	{ "load_file", ig_load_file, 1},
+	{ "load_gif", ig_load_gif, 1},
+	{ "load_mem", ig_load_mem, 1},
     { "image_dimensions_get",ig_image_dimensions_get, 1},
 	{ "display_transparent_set",ig_display_transparent_set,1},
 	{ "device_rect_set",ig_device_rect_set,1},
