@@ -15,6 +15,7 @@ import usercmd
 import usercmdui
 import wndusercmd
 import grinsRC
+import DropTarget
 import ToolbarTemplate
 import settings
 
@@ -268,8 +269,6 @@ class GRiNSToolbar(window.Wnd):
 
 		# enable/disable tools draging
 		self._enableToolDrag = enabledrag
-		# shortcut for GRiNS private clipboard format
-		self.CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
 		if self._enableToolDrag:
 			self.hookMessages()
 			self._dragging = None
@@ -307,7 +306,7 @@ class GRiNSToolbar(window.Wnd):
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
 				str=`self._dragging`
 				# start drag and drop
-				self.DoDragDrop(self.CF_TOOL, str)
+				self.DoDragDrop(DropTarget.CF_TOOL, str)
 				self._dragging = None
 				self.ReleaseCapture()
 		return 1 # continue normal processing

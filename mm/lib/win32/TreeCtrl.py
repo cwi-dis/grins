@@ -8,6 +8,7 @@ import commctrl
 import appcon
 
 from win32mu import Win32Msg
+import DropTarget
 
 from pywinlib.mfc import window
 
@@ -18,10 +19,9 @@ EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 import MenuTemplate
 
 class TreeCtrl(window.Wnd):
-	dropMap = {}
-	dropMap['Region'] = Sdk.RegisterClipboardFormat('Region')
-	dropMap['Media'] = Sdk.RegisterClipboardFormat('Media')
-	dropMap['FileName'] = Sdk.RegisterClipboardFormat('FileName')
+	dropMap = {'Region': DropTarget.CF_REGION,
+		'Media': DropTarget.CF_MEDIA,
+		'FileName': DropTarget.CF_FILE,}
 
 	def __init__ (self, dlg=None, resId=None, ctrl=None):
 		# if the tree res is specified from a dialox box, we just create get the existing instance

@@ -54,6 +54,9 @@ class ListCtrl(window.Wnd):
 		regioninfo = dataobj.GetGlobalData(DropTarget.CF_REGION)
 		if regioninfo: print 'regioninfo', regioninfo
 
+		mediainfo = dataobj.GetGlobalData(DropTarget.CF_MEDIA)
+		if mediainfo: print 'mediainfo', mediainfo
+
 		return DropTarget.DROPEFFECT_NONE
 
 	def getStyle(self):
@@ -118,7 +121,7 @@ class ListCtrl(window.Wnd):
 ##			sel = self.getSelected()
 ##			if sel	>=	0:
 ##				print self.GetItemText(sel,3)
-##				self.DoDragDrop(self.CF_FILE, self.GetItemText(sel,3))
+##				self.DoDragDrop(DropTarget.CF_FILE, self.GetItemText(sel,3))
 ##				self._dragging = 1
 		return 1
 
