@@ -3639,13 +3639,13 @@ class MMNode:
 		# XXX should we do something special for fill="transition"?
 		# currently it is handled like fill="freeze"
 		fill = self.GetFill()
-		if fill == 'remove':
-			resolved = self.isresolved(sctx)
-			return resolved+self.__calcendtime(resolved, sctx)[0]
 		pnode = self.GetSchedParent()
-		if not pnode:
+		if fill == 'remove' or not pnode:
 			resolved = self.isresolved(sctx)
-			return resolved+self.__calcendtime(resolved, sctx)[0]
+			endtime = self.__calcendtime(resolved, sctx)[0]
+			if resolved is None or endtime is None or endtime < 0:
+				return -1
+			return resolved + endtime
 		if fill == 'hold':
 			return pnode.calcendfreezetime(sctx)
 		if pnode.type == 'seq':
