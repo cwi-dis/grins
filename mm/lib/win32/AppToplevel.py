@@ -101,13 +101,9 @@ class _Toplevel:
 		self._register_entries=[]
 
 		# embedding support state
-		self._createEmbedded = 0
+		self._peerdocid = 0
 		self._embeddedcallbacks = {}
-		self._embeddedHwnd = {}
-		self._embeddedwnd = {}
 		self._most_recent_docframe = None
-		self._last_embedded_id = 0
-		self._last_embedded_hwnd = 0
 
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
@@ -186,14 +182,14 @@ class _Toplevel:
 	def newdocument(self, cmifdoc, adornments=None, commandlist=None):
 		for frame in self._subwindows:
 			if not frame._cmifdoc:
-				frame.setdocument(cmifdoc,adornments,commandlist, self._createEmbedded)
+				frame.setdocument(cmifdoc,adornments,commandlist, self._peerdocid)
 				self._most_recent_docframe = frame
 				return frame
 		frame = MainFrame.MDIFrameWnd()
 		frame.createOsWnd(self._apptitle)
 		frame.init_cmif(None, None, 0, 0,self._apptitle,
 			UNIT_MM,self._appadornments,self._appcommandlist)
-		frame.setdocument(cmifdoc,adornments,commandlist, self._createEmbedded)
+		frame.setdocument(cmifdoc, adornments, commandlist, self._peerdocid)
 		self._most_recent_docframe = frame
 		for r in self._register_entries:
 			ev,cb,arg=r
@@ -244,21 +240,6 @@ class _Toplevel:
 			commodule.SetListener(listenerWnd.GetSafeHwnd())
 			commodule.RegisterClassObjects()
 	
-	def set_embedded_hwnd(self, id, hwnd):
-		self._last_embedded_id, self._last_embedded_hwnd = id, hwnd
-		self._embeddedHwnd[id] = hwnd
-
-	def get_embedded_hwnd(self, id):
-		return self._embeddedHwnd.get(id)
-
-	def set_embedded_wnd(self, id, wnd):
-		self._embeddedwnd[id] = wnd
-
-	def get_embedded_wnd(self, id):
-		return self._embeddedwnd.get(id)
-	
-	def get_last_embedded_hwnd(self):
-		return self._last_embedded_id, self._last_embedded_hwnd	
 	#
 	# Std interface
 	#

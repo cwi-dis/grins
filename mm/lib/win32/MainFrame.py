@@ -249,7 +249,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self.__fsPlayer = None
 
 		# 
-		self._createEmbedded = 0
+		self._peerdocid = 0
+		self._embeddedHwnd = 0
+		self._embeddedWnd = None
 
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
@@ -565,9 +567,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	
 
 	# Associate this frame with the document
-	def setdocument(self,cmifdoc,adornments,commandlist, embedded=0):
-		self._createEmbedded = embedded
-		self._cmifdoc=cmifdoc
+	def setdocument(self,cmifdoc,adornments,commandlist, peerdocid=0):
+		self._peerdocid = peerdocid
+		self._cmifdoc = cmifdoc
 		import urllib
 		basename=urllib.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
@@ -609,7 +611,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		if strid=='pview_':
 			exporting = adornments.get('exporting')
 			toplevel = __main__.toplevel
-			if toplevel.is_embedded() or self._createEmbedded:
+			if toplevel.is_embedded() or self._peerdocid:
 				return self.newEmbedded(x, y, w, h, title, units, adornments, canvassize, commandlist, strid, bgcolor)
 			elif exporting:
 				return self.newExport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
@@ -638,11 +640,21 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		return win32window.ViewportContext(self, w, h, units, bgcolor)
 
 	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
-		id, hwnd =  __main__.toplevel.get_last_embedded_hwnd()
 		import embedding
-		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, title, id, hwnd)
-		__main__.toplevel.set_embedded_wnd(id, wnd)
+		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, title, self._peerdocid)
+		if self._embeddedHwnd:
+			wnd.setPeerWindow(self._embeddedHwnd)
+		self._embeddedWnd = wnd
 		return wnd
+
+	def setEmbeddedHwnd(self, hwnd):
+		if self._embeddedWnd:
+			self._embeddedWnd.setPeerWindow(hwnd)
+		else:
+			self._embeddedHwnd = hwnd
+
+	def getEmbeddedWnd(self):
+		return self._embeddedWnd
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):

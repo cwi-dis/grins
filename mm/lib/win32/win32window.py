@@ -1129,6 +1129,15 @@ class DDWndLayer:
 		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
 
+	def	createPrimaryDDLayer(self, hwnd):
+		# create front buffer (shared with GDI)
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
+		self._frontBuffer = self._ddraw.CreateSurface(ddsd)
+		self._clipper = self._ddraw.CreateClipper(hwnd)
+		self._frontBuffer.SetClipper(self._clipper)
+
 	def createFullScreenDDLayer(self):
 		from __main__ import toplevel
 		w = toplevel._scr_width_pxl
