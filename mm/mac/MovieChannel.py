@@ -57,7 +57,11 @@ class MovieChannel(ChannelWindow):
 		self.arm_movie = None
 
 		# XXXX Some of these should go to arm...
-		movieBox = self.window.qdrect()
+		screenBox = self.window.qdrect()
+		movieBox = self.play_movie.GetMovieBox()
+##		print 'SCREEN', screenBox, 'MOVIE', movieBox
+		movieBox = self._scalerect(screenBox, movieBox)
+##		print 'SET', movieBox
 		self.play_movie.SetMovieBox(movieBox)
 		self.play_movie.GoToBeginningOfMovie()
 		self.play_movie.MoviesTask(0)
@@ -65,6 +69,21 @@ class MovieChannel(ChannelWindow):
 		
 		windowinterface.setidleproc(self._playsome)
 		
+	def _scalerect(self, (sl, st, sr, sb), (ml, mt, mr, mb)):
+		maxwidth, maxheight = sr-sl, sb-st
+		movwidth, movheight = mr-ml, mb-mt
+		if movwidth > maxwidth:
+			# Movie is too wide. Scale.
+			movheight = movheight*maxwidth/movwidth
+			movwidth = maxwidth
+		if movheight > maxheight:
+			# Movie is too high. Scale.
+			movwidth = movwidth*maxheight/movheight
+			movheight = maxheight
+		movleft = (maxwidth-movwidth)/2
+		movtop = (maxheight-movheight)/2
+		return sl+movleft, st+movtop, sl+movleft+movwidth, st+movtop+movheight
+					
 	# We override 'play', since we handle our own duration
 	def play(self, node):
 		if debug:
