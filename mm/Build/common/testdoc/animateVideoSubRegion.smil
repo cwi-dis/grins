@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL20.dtd">
+<!--		
+	Author: Kleanthis Kleanthous		
+	Version: Aug 25, 2000, v1		
+	Module: animate		
+	Feature: animate video subregion, time manipulations
+	File Name: animateVideoSubRegion.smil
+	Media Components: 1 MPG
+	Expected Behavior: the video makes a complete horizontal oscillation
+-->
+<smil>
+  <head>
+    <meta name="title" content=" SMIL "/>
+    <meta name="generator" content="GRiNS Pro for SMIL Boston, v2.0 "/>
+    <layout>
+      <viewport id="SMIL" backgroundColor="black" width="460" height="200">
+        <region id="unnamed-region-0" title="unnamed region 0" width="200" height="200"/>
+      </viewport>
+    </layout>
+  </head>
+  <body>
+    <par>
+      <video id="video1" region="unnamed-region-0" dur="5s" fill="freeze" fillDefault="freeze" src="testdatampg.mpg"/>
+      <animate id="oscillate" dur="5s" repeatCount="1.0" targetElement="video1" attributeName="left" speed="2" accelerate="0.5" decelerate="0.5" autoReverse="true" by="300"/>
+    </par>
+  </body>
+</smil>
