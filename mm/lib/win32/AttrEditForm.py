@@ -152,16 +152,32 @@ class ChannelCtrl(OptionsCtrl):
 	def OnInitCtrl(self):
 		OptionsCtrl.OnInitCtrl(self)
 		self._wnd.HookCommand(self.OnChannel,self._resid[2])
+		self._properties = components.Button(self._wnd,self._resid[2])
+		self._properties.attach_to_parent()
+		self.updateproperties()
 
 	def OnChannel(self,id,code):
 		if self._attr:
 			self._attr.channelprops()
-
+	
 	def OnCombo(self,id,code):
 		OptionsCtrl.OnCombo(self,id,code)
-		if code==win32con.CBN_SELCHANGE and \
-		   hasattr(self._attr, 'optioncb'):
-			self._attr.optioncb()
+		if code==win32con.CBN_SELCHANGE:
+			self.updateproperties()
+			if hasattr(self._attr, 'optioncb'):
+				self._attr.optioncb()
+
+	def updateproperties(self):
+		if self._attr and self.haschannelprops():
+			self._properties.enable(1)
+		else:
+			self._properties.enable(0)
+
+	def haschannelprops(self):
+		if self._attr: 
+			return self._attr.wrapper.context.getchannel(self._attr.getvalue())
+		return None
+
 
 class OptionsRadioCtrl(AttrCtrl):
 	want_default_help = 0
