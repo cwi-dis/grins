@@ -5,7 +5,7 @@ import string
 import sys
 import windowinterface
 import MMAttrdefs
-import socket, SOCKET
+import socket
 from AnchorDefs import *
 
 
@@ -17,9 +17,9 @@ class SocketChannel(Channel):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		if hasattr(SOCKET, 'SO_REUSEPORT'):
-			self.socket.setsockopt(SOCKET.SOL_SOCKET,
-					       SOCKET.SO_REUSEPORT, 1)
+		if hasattr(socket, 'SO_REUSEPORT'):
+			self.socket.setsockopt(socket.SOL_SOCKET,
+					       socket.SO_REUSEPORT, 1)
 		if attrdict.has_key('port'):
 			port = attrdict['port']
 		else:
