@@ -138,7 +138,7 @@ default_settings = {
 	'temporal_fillcolor': (150,150,150), # The color a node is for it's fill segment.
 	
 	# Attribute editor prefs
-	'show_all_attributes' : 0,
+	'show_all_attributes' : 1,
 	'enable_template': 0,
 }
 
