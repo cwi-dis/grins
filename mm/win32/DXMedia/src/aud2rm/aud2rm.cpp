@@ -105,7 +105,6 @@ Aud2rmRenderer::Aud2rmRenderer(LPUNKNOWN pUnk,HRESULT *phr) :
 Aud2rmRenderer::~Aud2rmRenderer()
 {
 	if(logFile) fclose(logFile);
-	m_ixsample=0;
 }
 
 CUnknown * WINAPI Aud2rmRenderer::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
@@ -141,7 +140,7 @@ HRESULT Aud2rmRenderer::CheckMediaType(const CMediaType *pmt)
         return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
-    WAVEFORMATEX *pwfx = (WAVEFORMATEX *) pmt->pbFormat;
+    WAVEFORMATEX *pwfx = (WAVEFORMATEX *) pmt->Format();;
 
     // Reject compressed audio
     if (pwfx->wFormatTag != WAVE_FORMAT_PCM) {
@@ -180,8 +179,13 @@ HRESULT Aud2rmRenderer::DoRenderSample(IMediaSample *pMediaSample)
 {
 	if(logFile)
 		{
+		WAVEFORMATEX *pwfx = (WAVEFORMATEX *) m_mtIn.Format();
+		int msec=1000*m_ixsample/pwfx->nSamplesPerSec;
+		CRefTime tStart,tStop;
+		if(SUCCEEDED(pMediaSample->GetMediaTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
+			msec=tStart.Millisecs();
 		char sz[256];
-		sprintf(sz,"sample %d size=%d\n",m_ixsample,pMediaSample->GetActualDataLength());
+		sprintf(sz,"sample %d size=%d\n time=%d",m_ixsample,pMediaSample->GetActualDataLength(),msec);
 		Log(sz);
 		}
 	EncodeSample(pMediaSample);
@@ -198,7 +202,11 @@ void Aud2rmRenderer::EncodeSample(IMediaSample *pMediaSample)
     int size = pMediaSample->GetActualDataLength();
 	bool isSync=(pMediaSample->IsSyncPoint()==S_OK);
 	WAVEFORMATEX *pwfx = (WAVEFORMATEX *)m_mtIn.Format();
+
 	int msec=1000*m_ixsample/pwfx->nSamplesPerSec;
+	CRefTime tStart,tStop;
+    if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
+		msec=tStart.Millisecs();
 	if(RProducer::HasEngine())
 		RProducer::EncodeSample(pBuffer,size,msec,isSync,false);
 	m_ixsample++;
