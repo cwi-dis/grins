@@ -658,6 +658,7 @@ class SMILWriter(SMIL):
 		else:
 			self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
 		self.files_generated = {}
+		self.bases_used = {}
 		self.progress = progress
 		if copyFiles:
 			dir, base = os.path.split(filename)
@@ -1410,16 +1411,17 @@ class SMILWriter(SMIL):
 				mtype = 'text/plain'
 			ext = mimetypes.guess_extension(mtype)
 			base = 'data'
-			file = base + ext
 		else:
 			file = MMurl.url2pathname(posixpath.basename(path))
 			base, ext = os.path.splitext(file)
-		i = 0
-		while self.files_generated.has_key(file):
-			file = base + `i` + ext
-			i = i + 1
-		self.files_generated[file] = None
-		return file
+		if self.bases_used.has_key(base):
+			i = 1
+			while self.bases_used.has_key(base + `i`):
+				i = i + 1
+			base = base + `i`
+		self.bases_used[base] = None
+		self.files_generated[base + ext] = None
+		return base + ext
 	
 	def copyfile(self, srcurl, node = None):
 		dstdir = self.copydir
@@ -1440,6 +1442,7 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
+			u = MMurl.urlopen(srcurl)
 		if u.headers.maintype == 'video' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertvideofile
@@ -1454,15 +1457,18 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
+			u = MMurl.urlopen(srcurl)
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
 			# will, currently, to '.jpg').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
-			file = convertimagefile(u, srcurl, dstdir, file, node)
-			self.files_generated[file] = 'b'
-			return file
+			cfile = convertimagefile(u, srcurl, dstdir, file, node)
+			if cfile:
+				self.files_generated[cfile] = 'b'
+				return cfile
+			u = MMurl.urlopen(srcurl)
 		if u.headers.maintype == 'text' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import converttextfile
