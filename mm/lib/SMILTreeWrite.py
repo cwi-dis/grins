@@ -434,6 +434,9 @@ def getfitatt(writer, node, attr):
 	return fit
 
 def getbgcoloratt(writer, node, attr):
+	import ChannelMap
+	if not ChannelMap.isvisiblechannel(node.GetChannelType()):
+		return None	
 	try:
 		# if transparent, there is no backgroundColor attribute
 		transparent = node.GetRawAttr('transparent', 1)
