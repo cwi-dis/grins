@@ -1,7 +1,9 @@
 # Node info editor using the FORMS library (fl, FL), based upon Dialog.
 
 
+import path
 import fl
+import gl
 from FL import *
 
 import MMExc
@@ -101,7 +103,7 @@ class NodeInfo() = Dialog():
 		return self.node.GetRoot() is self.root
 	#
 	def maketitle(self):
-		return 'Node info for ' + self.name
+		return 'Info for node: ' + self.name
 	#
 	def getattr(self, name): # Return the attribute or a default
 		return MMAttrdefs.getattr(self.node, name)
@@ -126,6 +128,8 @@ class NodeInfo() = Dialog():
 		else:
 			self.getvalues(FALSE)
 			self.updateform()
+			gl.winset(self.form.window)
+			gl.wintitle(self.maketitle())
 	#
 	def rollback(self):
 		pass
@@ -194,11 +198,11 @@ class NodeInfo() = Dialog():
 		    em.setnodetype(n, self.type)
 		    self.ch_type = 0
 		if self.ch_filename:
-		    em.setnodeattr(n, 'file', self.file)
+		    em.setnodeattr(n, 'file', self.filename)
 		    self.ch_file = 0
 		if self.ch_immtext:
 		    em.setnodevalues(n, self.immtext[:])
-		    self.ch_styles_list = 0
+		    self.ch_immtext = 0
 		em.commit()
 		return 1
 	#
@@ -240,13 +244,11 @@ class NodeInfo() = Dialog():
 	    #
 	    self.file_input.set_input(self.filename)
 	    #
-	    self.children_text.label = `len(self.children)`
-	    #
-	    self.child_select.clear_choice()
+	    self.children_browser.clear_browser()
 	    for i in self.children:
-		self.child_select.addto_choice(i)
+		self.children_browser.add_browser_line(i)
 	    if self.children:
-		self.child_select.set_choice(1)
+		self.children_browser.select_browser_line(1)
 	    #
 	    self.imm_group.hide_object()
 	    self.ext_group.hide_object()
@@ -325,7 +327,7 @@ class NodeInfo() = Dialog():
 		return
 	    # Check that the change is allowed.
 	    if (self.type = 'seq' or self.type = 'par') and \
-			newtype = 'seq' or newtype = 'par':
+			(newtype = 'seq' or newtype = 'par'):
 		pass	# This is ok.
 	    elif ((self.type = 'seq' or self.type = 'par') and \
 			self.children = []) or \
@@ -347,7 +349,7 @@ class NodeInfo() = Dialog():
 	def styles_add_callback(self, (obj,dummy)):
 	    i = self.styles_select.get_choice()
 	    if i = 0: return
-	    self.ch_styles = 1
+	    self.ch_styles_list = 1
 	    self.changed = 1
 	    new = self.allstyles[i-1]
 	    if not new in self.styles_list:
@@ -358,7 +360,7 @@ class NodeInfo() = Dialog():
 	def styles_delete_callback(self, (obj,dummy)):
 	    i = self.styles_browser.get_browser()
 	    if i:
-		self.ch_styles = 1
+		self.ch_styles_list = 1
 		self.changed = 1
 		self.styles_browser.delete_browser_line(i)
 		del self.styles_list[i-1]
@@ -406,6 +408,8 @@ class NodeInfo() = Dialog():
 		self.text_browser.delete_browser_line(i)
 		del self.immtext[i-1]
 		self.text_browser.select_browser_line(i)
+		line = self.text_browser.get_browser_line(i)
+		self.text_input.set_input(line)
 	#
 	# Callbacks for 'ext' type nodes
 	#
@@ -427,7 +431,7 @@ class NodeInfo() = Dialog():
 	# Callbacks for 'par' and 'seq' type nodes
 	#
 	def openchild_callback(self, (obj, dummy)):
-	    i = self.child_select.get_choice()
+	    i = self.children_browser.get_browser()
 	    if i = 0: return
 	    shownodeinfo(self.children_nodes[i-1])
 
