@@ -1,6 +1,8 @@
 SMIL_BASIC = 'text/smil-basic-layout'
 SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
 SMILdtd = "http://www.w3.org/TR/REC-smil/SMIL10.dtd"
+SMILBostonPubid = "-//W3C//DTD SMIL 2.0//EN"
+SMILBostonDtd = "http://www.w3.org/TR/REC-smil/SMIL20.dtd"
 GRiNSns = "http://www.oratrix.com/"
 
 class SMIL:

@@ -35,7 +35,7 @@
 (alt (string) '' 'Alternate text' default
 	'Alternate text for media object' raw light)
 
-(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (optenclosed (tuple (float) (float))))))
+(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (enclosed (tuple (float) (float))))))
 	() 'Anchors' hidden 'List of anchors on this node' raw light)
 
 (arm_duration (float) -1.0 'Arm duration' hidden
@@ -53,7 +53,7 @@
 	'Base URL of document, used for resolving relative URLs' raw light)
 
 (base_window (name) 'undefined' 'Channel base window' basechannelname
-	'Name of window in which channelwin is created' raw cmif)
+	'Name of window in which channelwin is created' raw smil2)
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Position and size' default 'Position and size, usually in pixels' channel light)
@@ -202,6 +202,9 @@
 (project_audiotype (int) 0 'Audio type' audiotype
 	'Audio type, determines quality of audio when converting to RealAudio'
 	raw light)
+
+(project_boston (bool) 0 'SMIL-Boston' default
+	'Document conforms to SMIL-Boston' raw smil)
 
 (project_convert (bool) 1 'Convert data' default
 	'Convert data to RealMedia format' raw smil)
