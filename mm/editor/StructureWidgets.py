@@ -1109,7 +1109,6 @@ class TransitionWidget(MMNodeWidget):
         # XXXX Note: this code assumes the select() is done on mousedown, and
         # that we can still post a menu at this time.
         self.parent.select()
-        self.posttransitionmenu()
 
     def unselect(self):
         self.parent.unselect()
@@ -1138,23 +1137,26 @@ class TransitionWidget(MMNodeWidget):
             which = 'transOut'
         curtransition = MMAttrdefs.getattr(self.node, which)
         if not curtransition:
-            curtransition = 'No Transition'
+            curtransition = 'No transition'
         if curtransition in transitionnames:
             transitionnames.remove(curtransition)
         transitionnames.insert(0, curtransition)
-        # XXXX Post menu and interact
-        print 'CURTRANS', curtransition, 'LIST', transitionnames
-        new = curtransition # XXXX Get from menu selection
+        return which, transitionnames
+
+    def transition_callback(self, which, new):
+        curtransition = MMAttrdefs.getattr(self.node, which)
+        if not curtransition:
+            curtransition = 'No transition'
         if new == curtransition:
             return
         if new == 'No transition':
             new = ''
-        editmgr = self.root.context.editmgr
+        editmgr = self.root.editmgr
         if not editmgr.transaction():
             return # Not possible at this time
         editmgr.setnodeattr(self.node, which, new)
         editmgr.commit()
- 
+
 class PushBackBarWidget(Widgets.Widget):
     # This is a push-back bar between nodes.
     def draw(self, displist):
