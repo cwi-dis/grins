@@ -309,34 +309,44 @@ class _Window:
 		self._depth = self._visual.depth
 		# convert to pixels
 		if units == UNIT_MM:
-			x = int(float(x) * toplevel._hmm2pxl + 0.5)
-			y = int(float(y) * toplevel._vmm2pxl + 0.5)
+			if x is not None:
+				x = int(float(x) * toplevel._hmm2pxl + 0.5)
+			if y is not None:
+				y = int(float(y) * toplevel._vmm2pxl + 0.5)
 			w = int(float(w) * toplevel._hmm2pxl + 0.5)
 			h = int(float(h) * toplevel._vmm2pxl + 0.5)
 		elif units == UNIT_SCREEN:
-			x = int(float(x) * toplevel._screenwidth + 0.5)
-			y = int(float(y) * toplevel._screenheight + 0.5)
+			if x is not None:
+				x = int(float(x) * toplevel._screenwidth + 0.5)
+			if y is not None:
+				y = int(float(y) * toplevel._screenheight + 0.5)
 			w = int(float(w) * toplevel._screenwidth + 0.5)
 			h = int(float(h) * toplevel._screenheight + 0.5)
 		elif units == UNIT_PXL:
-			x = int(x)
-			y = int(y)
+			if x is not None:
+				x = int(x)
+			if y is not None:
+				y = int(y)
 			w = int(w)
 			h = int(h)
 		else:
 			raise error, 'bad units specified'
 		# XXX--somehow set the position
-		geometry = '+%d+%d' % (x, y)
+		if x is None or y is None:
+			geometry = None
+		else:
+			geometry = '+%d+%d' % (x, y)
 		if not title:
 			title = ''
-		attrs = {'geometry' : geometry,
-			 'minWidth': min(w, 60),
+		attrs = {'minWidth': min(w, 60),
 			 'minHeight': min(h, 60),
 			 'width': max(w, 60), 'height': max(h, 60),
 			 'colormap': self._colormap,
 			 'visual': self._visual,
 			 'depth': self._depth,
 			 'title': title}
+		if geometry:
+			attrs['geometry'] = geometry
 		if title:
 			attrs['iconName'] = title
 		shell = parent._main.CreatePopupShell(
