@@ -57,7 +57,7 @@ class _LayoutView2(GenFormView):
 							'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
 							'ViewportCheck','RegionCheck','MediaCheck')
 		if features.CUSTOM_REGIONS in features.feature_set:
-			n = n + ('NewRegion', 'DelRegion')
+			n = n + ('NewRegion', 'DelRegion', 'NewView')
 			
 		i = 0
 		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL); i=i+1
@@ -80,6 +80,7 @@ class _LayoutView2(GenFormView):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWREGION); i=i+1
 			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_DELREGION); i=i+1
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWVIEW); i=i+1
 		
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
@@ -269,6 +270,8 @@ class _LayoutView2(GenFormView):
 						ctrlName = 'NewRegion'
 					elif id == self['DelRegion']._id:
 						ctrlName = 'DelRegion'
+					elif id == self['NewView']._id:
+						ctrlName = 'NewView'
 		
 			if ctrlName != None:
 				self._dialogHandler.onButtonClickCtrl(ctrlName)
