@@ -470,7 +470,7 @@ class NodeWrapper(Wrapper):
 			'name', ('channel',), ('file',), # From nodeinfo window
 			('.type',),
 			('terminator',),
-			('begin',), ('.begin1',), 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
+			'beginlist', 'endlist', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
 			('top',), ('height',), ('bottom',),
@@ -701,10 +701,10 @@ class AnimationWrapper(NodeWrapper):
 		NodeWrapper.__init__(self, toplevel, node)
 
 	def attrnames(self):
-		self._durattrs  = ['begin', 'duration', 'loop', 
+		self._durattrs  = ['beginlist', 'endlist', 'duration', 'loop', 
 			'repeatdur', 'speed', 'autoReverse']
 
-		namelist = ['name', 'begin', 'duration', 'loop', 'repeatdur',
+		namelist = ['name', 'beginlist', 'endlist', 'duration', 'loop', 'repeatdur',
 			    'restart', 'restartDefault', 'fill', 'fillDefault',
 			    'speed', 'accelerate', 'decelerate', 'autoReverse',
 			    ]
@@ -1833,7 +1833,7 @@ class TimelistAttrEditorField(AttrEditorField):
 					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
 				else:
 					tz = ''
-				s = s.append(date + time + tz)
+				s.append('wallclock(' + date + time + tz + ')')
 				continue
 			if a.marker is not None:
 				s.append('')
@@ -1845,7 +1845,7 @@ class TimelistAttrEditorField(AttrEditorField):
 				s.append('')
 				continue
 			if a.accesskey is not None:
-				s.append('accessKey(%s)' % a.accesskey)
+				s.append('accesskey(%s)' % a.accesskey)
 				continue
 			if a.srcnode == 'syncbase':
 				s.append('%gs' % a.delay)
