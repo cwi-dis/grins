@@ -36,6 +36,7 @@ else:
 CMIFPATH = [
 	os.path.join(CMIFDIR, 'bin\\win32'),
 	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
+	os.path.join(CMIFDIR, '%s\\g2lite' % specificPath),
 	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
