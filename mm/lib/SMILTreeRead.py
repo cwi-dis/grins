@@ -101,6 +101,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			CMIFns+' '+'u_group': (self.start_u_group, self.end_u_group),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
+			CMIFns+' '+'layouts': (self.start_layouts, self.end_layouts),
+			CMIFns+' '+'layout': (self.start_Glayout, self.end_Glayout),
 			'body': (self.start_body, self.end_body),
 			'par': (self.start_par, self.end_par),
 			'seq': (self.start_seq, self.end_seq),
@@ -134,7 +136,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__root_layout = None
 		self.__container = None
 		self.__node = None	# the media object we're in
-		self.__regions = {}	# mapping from region id to channel
+		self.__regions = {}	# mapping from region id to chan. attrs
+		self.__region2channel = {} # mapping from region to channels
 		self.__ids = {}		# collect all id's here
 		self.__width = self.__height = 0
 		self.__layout = None
@@ -146,6 +149,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__printfunc = printfunc
 		self.__printdata = []
 		self.__u_groups = {}
+		self.__layouts = {}
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -298,6 +302,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['u_group'] = val
 				else:
 					self.syntax_error("unknown u_group `%s'" % val)
+			elif attr == 'layout':
+				if self.__layouts.has_key(val):
+					attrdict['layout'] = val
+				else:
+					self.syntax_error("unknown layout `%s'" % val)
 
 	def NewNode(self, mediatype, attributes):
 		for key, val in attributes.items():
@@ -695,6 +704,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if ch is None:
 			# there is no channel of the right name and type
 			ch = MMNode.MMChannel(ctx, name)
+			if region != '<unnamed>':
+				if not self.__region2channel.has_key(region):
+					self.__region2channel[region] = []
+				self.__region2channel[region].append(ch)
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
@@ -767,6 +780,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['base_winoff'] = x, y, w, h
 		node.attrdict['channel'] = name
 
+	def FixLayouts(self):
+		if not self.__layouts:
+			return
+		layouts = self.__context.layouts
+		for layout, regions in self.__layouts.items():
+			channellist = []
+			for region in regions:
+				channels = self.__region2channel.get(region)
+				if channels is None:
+					continue
+				channellist = channellist + channels
+			layouts[layout] = channellist
+
 	def FixLinks(self):
 		hlinks = self.__context.hyperlinks
 		for node, aid, href, ltype in self.__links:
@@ -826,6 +852,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('empty document', self.lineno)
 		self.FixSizes()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
+		self.FixLayouts()
 		self.FixBaseWindow()
 		self.FixLinks()
 
@@ -1098,6 +1125,41 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__u_groups[id] = title, u_state, override
 
 	def end_u_group(self):
+		pass
+
+	def start_layouts(self, attributes):
+		for key, val in attributes.items():
+			if key[:len(CMIFns)+1] == CMIFns + ' ':
+				del attributes[key]
+				attributes[key[len(CMIFns)+1:]] = val
+		id = attributes.get('id')
+		if id is not None:
+			if self.__ids.has_key(id):
+				self.syntax_error('non-unique id %s' % id)
+			self.__ids[id] = 0
+
+	def end_layouts(self):
+		pass
+
+	def start_Glayout(self, attributes):
+		for key, val in attributes.items():
+			if key[:len(CMIFns)+1] == CMIFns + ' ':
+				del attributes[key]
+				attributes[key[len(CMIFns)+1:]] = val
+		id = attributes.get('id')
+		if id is None:
+			self.syntax_error('GRiNS layout without id attribute')
+			return
+		if self.__ids.has_key(id):
+			self.syntax_error('non-unique id %s' % id)
+		self.__ids[id] = 0
+		regions = attributes.get('regions')
+		if regions is None:
+			self.syntax_error('required attribute regions missing in GRiNS layout element')
+			return
+		self.__layouts[id] = string.split(regions)
+
+	def end_Glayout(self):
 		pass
 		
 	# container nodes

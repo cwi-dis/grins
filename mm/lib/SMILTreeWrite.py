@@ -302,6 +302,13 @@ def getugroup(writer, node):
 		return
 	return writer.ugr2name[u_group]
 
+def getlayout(writer, node):
+	if not node.GetContext().layouts:
+		return
+	layout = node.GetAttrDef('layout', 'undefined')
+	if layout == 'undefined':
+		return
+	return writer.layout2name[layout]
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -324,6 +331,7 @@ smil_attrs=[
 	("system-screen-depth", lambda writer, node:getcmifattr(writer, node, "system_screen_depth")),
 	("%s:bag-index" % NSprefix, getbagindex),
 	("%s:u_group" % NSprefix, getugroup),
+	("%s:layout" % NSprefix, getlayout),
 ]
 
 # Mapping from CMIF channel types to smil media types
@@ -360,6 +368,9 @@ class SMILWriter(SMIL):
 
 		self.ugr2name = {}
 		self.calcugrnames(node)
+
+		self.layout2name = {}
+		self.calclayoutnames(node)
 
 		self.ch2name = {}
 		self.top_levels = []
@@ -463,6 +474,7 @@ class SMILWriter(SMIL):
 				       ('content','GRiNS %s'%version.version)])
 		self.writelayout()
 		self.writeusergroups()
+		self.writegrinslayout()
 		self.pop()
 		self.writetag('body')
 		self.push()
@@ -488,6 +500,24 @@ class SMILWriter(SMIL):
 				name = nn
 			self.ids_used[name] = 1
 			self.ugr2name[ugroup] = name
+
+	def calclayoutnames(self, node):
+		"""Calculate unique names for layouts"""
+		layouts = node.GetContext().layouts
+		if not layouts:
+			return
+		self.uses_cmif_extension = 1
+		for layout in layouts.keys():
+			name = identify(layout)
+			if self.ids_used.has_key(name):
+				i = 0
+				nn = '%s-%d' % (name, i)
+				while self.ids_used.has_key(nn):
+					i = i+1
+					nn = '%s-%d' % (name, i)
+				name = nn
+			self.ids_used[name] = 1
+			self.layout2name[layout] = name
 
 	def calcnames1(self, node):
 		"""Calculate unique names for nodes; first pass"""
@@ -688,6 +718,21 @@ class SMILWriter(SMIL):
 			if override != 'allowed':
 				attrlist.append(('override', override))
 			self.writetag('%s:u_group' % NSprefix, attrlist)
+		self.pop()
+
+	def writegrinslayout(self):
+		layouts = self.root.GetContext().layouts
+		if not layouts:
+			return
+		self.writetag('%s:layouts' % NSprefix)
+		self.push()
+		for name, chans in layouts.items():
+			channames = []
+			for ch in chans:
+				channames.append(self.ch2name[ch])
+			self.writetag('%s:layout' % NSprefix,
+				      [('id', self.layout2name[name]),
+				       ('regions', string.join(channames))])
 		self.pop()
 
 	def writenode(self, x, root = 0):
