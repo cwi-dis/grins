@@ -1077,6 +1077,31 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,7,147,287,18,SS_SUNKEN
 END
 
+IDD_EDITATTR_R6 DIALOG DISCARDABLE  0, 0, 300, 200
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_1,5,10,287,98
+    CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    38,26,114,10
+    CONTROL         "Radio2",IDC_3,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    38,46,114,10
+    CONTROL         "Radio3",IDC_4,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    38,66,114,10
+    PUSHBUTTON      "Reset",IDC_8,259,92,28,12,NOT WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,244,170,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,187,170,50,14
+    PUSHBUTTON      "&Restore",IDUC_RESTORE,63,170,50,14
+    PUSHBUTTON      "&Apply",IDUC_APPLY,7,170,50,14
+    LTEXT           "",IDC_ATTR_INFO,7,147,287,18,SS_SUNKEN
+    CONTROL         "Radio4",IDC_5,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    174,26,114,10
+    CONTROL         "Radio5",IDC_6,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    174,46,114,10
+    CONTROL         "Radio6",IDC_7,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    174,66,114,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
