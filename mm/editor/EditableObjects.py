@@ -413,3 +413,20 @@ class EditableMMNode(MMNode.MMNode):
 
 	#def hyperlinkcall(self):
 	#	if self.focusobj: self.focusobj.hyperlinkcall()
+
+	# If the bandwidth computer thinks a delay will fix the
+	# bandwidth problems on this node it will pass this method
+	# as the fixcallback to set_infoicon().
+	def fixdelay_callback(self, extradelay):
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		for arc in self.GetAttrDef('beginlist', []):
+			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				extradelay = extradelay + arc.delay
+				em.delsyncarc(self, 'beginlist', arc)
+				break
+		newarc = MMNode.MMSyncArc(self, 'begin', srcnode = 'syncbase', delay = extradelay)
+		em.addsyncarc(self, 'beginlist', newarc, 0)
+		em.commit()
+
