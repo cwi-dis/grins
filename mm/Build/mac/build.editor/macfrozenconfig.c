@@ -89,11 +89,17 @@ extern void initSnd();
 #ifndef initmacfs
 extern void initmacfs();
 #endif
+#ifndef initNav
+extern void initNav();
+#endif
 #ifndef initScrap
 extern void initScrap();
 #endif
 #ifndef initMenu
 extern void initMenu();
+#endif
+#ifndef initIcn
+extern void initIcn();
 #endif
 #ifndef initEvt
 extern void initEvt();
@@ -140,6 +146,9 @@ extern void initimgjpeg();
 #ifndef inittime
 extern void inittime();
 #endif
+#ifndef initApp
+extern void initApp();
+#endif
 #ifndef initsocket
 extern void initsocket();
 #endif
@@ -155,9 +164,6 @@ extern void initrma();
 #ifndef initRes
 extern void initRes();
 #endif
-#ifndef initaudioop
-extern void initaudioop();
-#endif
 #ifndef initDlg
 extern void initDlg();
 #endif
@@ -172,6 +178,9 @@ extern void initimgpgm();
 #endif
 #ifndef initstruct
 extern void initstruct();
+#endif
+#ifndef initaudioop
+extern void initaudioop();
 #endif
 #ifndef initproducer
 extern void initproducer();
@@ -202,8 +211,10 @@ struct _inittab _PyImport_Inittab[] = {
 	{"strop", initstrop},
 	{"Snd", initSnd},
 	{"macfs", initmacfs},
+	{"Nav", initNav},
 	{"Scrap", initScrap},
 	{"Menu", initMenu},
+	{"Icn", initIcn},
 	{"Evt", initEvt},
 	{"Fm", initFm},
 	{"waste", initwaste},
@@ -219,17 +230,18 @@ struct _inittab _PyImport_Inittab[] = {
 	{"ColorPicker", initColorPicker},
 	{"imgjpeg", initimgjpeg},
 	{"time", inittime},
+	{"App", initApp},
 	{"socket", initsocket},
 	{"math", initmath},
 	{"imgppm", initimgppm},
 	{"rma", initrma},
 	{"Res", initRes},
-	{"audioop", initaudioop},
 	{"Dlg", initDlg},
 	{"cStringIO", initcStringIO},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
 	{"struct", initstruct},
+	{"audioop", initaudioop},
 	{"producer", initproducer},
 	{"MacOS", initMacOS},
 
