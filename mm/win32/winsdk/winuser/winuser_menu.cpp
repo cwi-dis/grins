@@ -5,6 +5,8 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
                         All Rights Reserved
 
 /*************************************************************************/
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #include "winuser_menu.h"
 
