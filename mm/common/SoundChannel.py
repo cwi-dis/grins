@@ -63,7 +63,7 @@ class SoundChannel() = Channel():
 			return
 		self.framestodo = self.info[2] # nsampframes
 		self.qid = \
-		    self.player.enter(0.001, 0, self._poll, (callback, arg))
+		    self.player.enter(0.0, 1, self._poll, (callback, arg))
 	#
 	def _poll(self, cb_arg):
 		self.qid = None
@@ -96,7 +96,10 @@ class SoundChannel() = Channel():
 				# Round down to whole number of frames!
 				todo = (todo / framewidth) * framewidth
 				data = data[:todo]
-			port.writesamps(data)
+			if self.showing:
+				port.writesamps(data)
+			else:
+				port.writesamps('\0'*len(data))
 		if self.framestodo + port.getfilled() > 0:
 			self.qid = \
 				self.player.enter(0.1, 0, self._poll, cb_arg)
