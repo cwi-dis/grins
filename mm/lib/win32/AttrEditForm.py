@@ -2771,6 +2771,13 @@ class ClipGroup(StringGroup):
 		return grinsRC.IDD_EDITATTR_S2a
 	def oninitdialog(self,wnd):pass
 
+class BandwidthGroup(StringGroup):
+	data=attrgrsdict['bandwidth']
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext('')
+
 class Duration2Group(AttrGroup):
 	data=attrgrsdict['timing2']
 
@@ -3331,7 +3338,9 @@ groupsui={
 	'file':FileGroup,
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
+	'bandwidth':BandwidthGroup,
 	}
+
 ###########################
 # already bound: &P, &B, &X, &Y, &W, &H
 
