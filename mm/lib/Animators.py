@@ -196,10 +196,56 @@ class MotionAnimator(Animator):
 
 class EffectiveAnimator:
 	def __init__(self, attr, domval):
-		self._attr = attr
-		self._domval = domval
-		self._animators = []
+		self.__attr = attr
+		self.__domval = domval
 
+		self.__animators = []
+
+		self.__node = None
+		self.__chan = None
+		self.__currvalue = None
+
+	def getDOMValue(self):
+		return self.__domval
+
+	def getAttrName(self):
+		return self.__attr
+	
+	def getCurrValue(self):
+		return self.__currvalue
+
+	def onAnimateBegin(self, targChan, targNode, animator):
+		for a in self.__animators:
+			if id(a) == id(animator):
+				self.__animators.remove(animator)			
+		self.__animators.append(animator)
+		if not self.__node:
+			self.__node = targNode
+		if not self.__chan:
+			self.__chan = targChan
+		if self.__node != targNode:
+			raise AssertionError
+		if self.__chan != targChan:
+			raise AssertionError
+
+	def onAnimateEnd(self, animator):
+		self.__animators.remove(animator)			
+		self.update()
+
+	# compute and apply animations composite effect
+	# this method is a notification from some animator 
+	# or some other knowledgeable entity that something has changed
+	def update(self):
+		cv = self._domval
+		for a in self._animators:
+			if a.isAdditive():
+				cv = cv + a.getCurrValue()
+			else:
+				cv = a.getCurrValue()
+		if self.__targetchan:
+			self.__targetchan.updateattr(self.__node, self.__attr, cv)
+		self.__currvalue = cv
+	
 
 ###########################
 # AnimateContext is an EffectiveAnimator repository
@@ -214,14 +260,14 @@ class AnimateContext:
 
 
 ###########################
-# Gen Impl. rem:
+# Gen impl. rem:
 # * implement specializations for elements: set, animateColor, animatePosition
 # * support additive and accumulate attributes
 # * if 'by' and not 'from': additive='sum'
 # * if 'to' and not 'from': additive= <mixed> (start from base but reach to)
 # * restart doc removes all anim effects even frozen val
 # * big remaining: smil-boston timing
-# * on syntax error: we must ignore animation effects but not timing
+# * on syntax error: we can ignore animation effects but not timing
 # * use f(0) if duration is undefined
 # * ignore keyTimes if dur indefinite
 
