@@ -235,8 +235,12 @@ class _LinkView(docview.FormView,components.ControlsDict):
 	# Response to the user selection to diaplay a popup menu
 	def on_menu(self,menu,str):
 		lc,tc,rc,bc=self[str].getwindowrect()
-		menu.TrackPopupMenu((rc,tc),
-			win32con.TPM_LEFTALIGN|win32con.TPM_LEFTBUTTON,self) 
+		try:
+			menu.TrackPopupMenu((rc,tc),
+				win32con.TPM_LEFTALIGN|win32con.TPM_LEFTBUTTON,self) 
+		except:
+			print 'TrackPopupMenu failed'
+
 	# Callback for commands from the popup menu
 	def menu_callback(self,id,code):
 		if self._mcb.has_key(id): 
@@ -301,7 +305,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 	def create_menu(self,mcl):
 		list=[]
 		for item in mcl:
-			list.append((0,item[0],None,self._mid))
+			list.append((1,0,item[0],None,self._mid))
 			self._mcb[self._mid]=item[1]
 			self._mid=self._mid+1
 		menu=win32menu.Menu('popup')
