@@ -118,7 +118,7 @@ class ArcInfo:
 		duration = 0.0
 		markers = []
 		filename = MMAttrdefs.getattr(node, 'file')
-		filename = node.context.findfile(filename)
+		filename = node.context.findurl(filename)
 		# XXX hack!
 		import SoundChannel
 		try:
