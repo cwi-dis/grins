@@ -18,7 +18,11 @@ class HtmlChannel(ChannelWindow):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def updatefixedanchors(self, node):
-		str = self.getstring(node)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		parlist = extract_paragraphs(str)
 		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
@@ -27,7 +31,11 @@ class HtmlChannel(ChannelWindow):
 	def do_arm(self, node, same=0):
 	        if same and self.armed_display:
 		        return 1
-		str = self.getstring(node)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		parlist = extract_paragraphs(str)
 		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
@@ -102,25 +110,6 @@ class HtmlChannel(ChannelWindow):
 			self.armed_display.drawfbox(self.gethicolor(node),
 						    xywh)
 		return 1
-
-	def getstring(self, node):
-		if node.type == 'imm':
-			return string.joinfields(node.GetValues(), '\n')
-		elif node.type == 'ext':
-			filename = self.getfileurl(node)
-			try:
-				fp = urlopen(filename)
-			except IOError:
-				print 'Cannot open text file', `filename`
-				return ''
-			text = fp.read()
-			fp.close()
-			if text[-1:] == '\n':
-				text = text[:-1]
-			return text
-		else:
-			raise CheckError, \
-				'gettext on wrong node type: ' +`node.type`
 
 	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
