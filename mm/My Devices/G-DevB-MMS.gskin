@@ -3,9 +3,9 @@
 
 # See gskin-spec.txt for details.
 
-image G-DevB.gif
+image G-DevB-MMS.gif
 display 42 153 169 220
-centerskin = 1
+
 play rect 101 377 10 12			# Play Icon
 pause rect 117 377 10 12		# Pause Icon
 stop rect 136 377 10 12			# Stop
@@ -14,4 +14,9 @@ open rect 75  134 13 13			# Open File Button
 
 
 profile MMS
-component WavAudio
+component MMS
+
+component WaveAudio
+
+# configuration prefs commands
+centerskin = 0

@@ -4,9 +4,9 @@
 
 # See gskin-spec.txt for details.
 
-image G-DevE.gif
+image G-DevE-US.gif
+
 display 83 49 640 480
-centerskin = 1
 play rect 750 403 18 20			# Play Icon
 pause rect 795 414 18 20		# Pause Icon
 stop rect 802 470 18 20			# Stop
@@ -14,5 +14,14 @@ exit rect 31 42 25 25			# Exit Button
 open rect 755 482 18 18			# Open File Button
 
 profile SMIL 2.0 Language profile
-component PSS5x SMIL2L USmarket
-component BigScreen NiceVideo
+component MMS
+component PSS5
+component SMIL2L
+
+component USmarket
+component BigScreen
+component NiceVideo
+component WaveAudio
+
+# configuration prefs commands
+centerskin = 1

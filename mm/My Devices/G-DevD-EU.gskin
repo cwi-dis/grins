@@ -5,12 +5,11 @@
 
 #image file for skin:
 
-image G-DevD.gif
+image G-DevD-EU.gif
 
 #display area for skin:
 
 display 83 39 540 340
-centerskin = 1
 
 #basic control buttons:
 
@@ -24,9 +23,15 @@ open rect 660 329 18 20			# Open File Button
 #SMIL profile supported by this device:
 
 profile 3GPP PSS5 Profile
+component MMS
+component PSS-5
+
 component BigScreen
 component NiceVideo
 component EUmarket
+component WaveAudio
 
 
 
+# configuration prefs commands
+centerskin = 1

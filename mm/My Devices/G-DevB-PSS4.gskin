@@ -3,9 +3,9 @@
 
 # See gskin-spec.txt for details.
 
-image G-DevB.gif
+image G-DevB-P4.gif
 display 62 125 240 320
-centerskin = 1
+
 play rect 151 511 54 54			# Play Icon
 pause rect 150 582 60 30		# Pause Icon
 stop rect 230 488 47 33			# Stop
@@ -13,4 +13,12 @@ exit rect 303 606 15 34			# Exit Button
 open rect 85  488 47 33			# Open File Button
 
 profile PSS4
-component WavAudio LowVideo
+component MMS
+component PSS4
+
+component WaveAudio
+component LowVideo
+
+
+# configuration prefs commands
+centerskin = 0
