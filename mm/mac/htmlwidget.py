@@ -335,7 +335,6 @@ class HTMLWidget:
 	
 	def new_font(self, font):
 		self.delayed_para_send()
-##		print 'FONT', font # DBG
 		if font == None:
 			font = (0, 0, 0, 0)
 		font = map(lambda x:x, font)
@@ -450,19 +449,13 @@ class MyHTMLParser(htmllib.HTMLParser):
 		self.do_p(attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
-##		print 'IMAGE', self.url, src
 		url = urllib.basejoin(self.url, src)
-##		print 'URL', url
-		fname = urllib.urlretrieve(url)[0]
-##		print 'FILENAME', fname
 		try:
-			image = img.reader(imgformat.macrgb16, fname)
-			data = image.read()
-		except img.error:
-			print 'Html: failed to get image', fname
+			handle = _gifkeeper.new(url)
+		except (IOError, img.error): # XXXX Work out which ones should really be catched
+			print 'Html: failed to get image', url
 			self.formatter.add_flowing_data(alt)
 			return
-		handle = _gifkeeper.new(fname, image.width, image.height, data)
 		self.formatter.my_add_image(handle)
 
 
@@ -530,13 +523,16 @@ class _Gifkeeper:
 	def __init__(self):
 		self.dict = {}
 		
-	def new(self, name, width, height, data):
-		if self.dict.has_key(name):
-			self.dict[name][0] = self.dict[name][0] + 1
-			return self.dict[name][1]
-		pixmap = mac_image.mkpixmap(width, height, imgformat.macrgb16, data)
-		handle = Res.Resource(name)
-		self.dict[name] = [1, handle, pixmap, data, width, height]
+	def new(self, url):
+		if self.dict.has_key(url):
+			self.dict[url][0] = self.dict[url][0] + 1
+			return self.dict[url][1]
+		fname = urllib.urlretrieve(url)[0]
+		image = img.reader(imgformat.macrgb16, fname)
+		data = image.read()
+		pixmap = mac_image.mkpixmap(image.width, image.height, imgformat.macrgb16, data)
+		handle = Res.Resource(url)
+		self.dict[url] = [1, handle, pixmap, data, image.width, image.height]
 		return handle
 		
 	def get(self, name):
@@ -545,8 +541,9 @@ class _Gifkeeper:
 		
 	def delete(self, name):
 		self.dict[name][0] = self.dict[name][0] - 1
-		if self.dict[name][0] == 0:
-			del self.dict[name]
+## Should do this optionally, i.e. on used memory
+##		if self.dict[name][0] == 0:
+##			del self.dict[name]
 			
 _gifkeeper = _Gifkeeper()
 
