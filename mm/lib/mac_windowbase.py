@@ -60,7 +60,7 @@ class FullPopupMenu:
 					self._fill_menu(m, callback, accelerators)
 				else:
 					m = MenuItem(menu, itemstring, '', callback)
-					if char and accelerators:
+					if char and not accelerators is None:
 						accelerators[char] = callback
 						# We abuse the mark position for the shortcut (sigh...)
 						m.setmark(ord(char))
@@ -720,7 +720,7 @@ class _CommonWindow:
 		pass
 
 	def create_menu(self, list, title = None):
-		self._accelerators = []
+		self._accelerators = {}
 		self._popupmenu = FullPopupMenu(list, title, self._accelerators)
 
 	def _image_size(self, file):
