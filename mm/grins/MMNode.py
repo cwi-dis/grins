@@ -12,6 +12,7 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 	def __init__(self, nodeclass):
 		MMNodeBase.MMNodeContext.__init__(self, nodeclass)
 		self.nextuid = 1
+		self.editmgr = None
 		self.armedmode = None
 
 	def newnode(self, type):
@@ -137,6 +138,15 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 		dstok = (('/' in uid2) or (self.uidmap.has_key(uid2) \
 		   and self.uidmap[uid2].GetRoot() in self._roots))
 		return (srcok and dstok)
+
+	#
+	# Editmanager
+	#
+	def seteditmgr(self, editmgr):
+		self.editmgr = editmgr
+
+	def geteditmgr(self):
+		return self.editmgr
 
 class MMChannel(MMNodeBase.MMChannel):
 	def _setname(self, name): # Only called from context.setchannelname()
@@ -416,6 +426,9 @@ class MMNode(MMNodeBase.MMNode):
 		self.parent = None
 		self.children = None
 		self.values = None
+		self.sync_from = None
+		self.sync_to = None
+		self.wtd_children = None
 ##		self.summaries = None
 
 	def Extract(self):
@@ -647,12 +660,13 @@ class MMNode(MMNodeBase.MMNode):
 
 
 	def EndPruneTree(self):
-		del self.sync_from
-		del self.sync_to
-		if self.type in ('seq', 'par'):
-			for c in self.wtd_children:
-				c.EndPruneTree()
-			del self.wtd_children
+		pass
+##		del self.sync_from
+##		del self.sync_to
+##		if self.type in ('seq', 'par'):
+##			for c in self.wtd_children:
+##				c.EndPruneTree()
+##			del self.wtd_children
 
 #	def gensr(self):
 #		if self.type in ('imm', 'ext'):
@@ -778,14 +792,87 @@ class MMNode(MMNodeBase.MMNode):
 		self.undef_dur = 0
 		return result
 	#
+	# gensr_headactions returns a list of srrecords and a list of
+	# events that start an interior node. Incoming syncarcs and looping
+	# are handled here.
+	#
+	def gensr_headactions(self, looping):
+		if looping:
+			# This is not the first time we're generating
+			# events, it is yet another time through the loop
+			return [], [(LOOPSTART_DONE, self)]
+		in0 = self.sync_from[0]		# incoming syncarcs to head
+		prereq = [(SCHED, self)] + in0	# all events needed to start
+		sr_list = []
+		loopcount = MMAttrdefs.getattr(self, 'loop')
+		self.isloopnode = (loopcount != 1)
+		if self.isloopnode:
+			# Looping node. Our SCHEDSTART (plus syncarcs) gives
+			# a LOOPSTART, and the LOOPSTART_DONE starts playing
+			# the node.
+			# First decrement of loopcount will be done
+			# during LOOPSTART.
+			if loopcount == 0:
+				self.curloopcount = -1
+			else:
+				self.curloopcount = loopcount
+			sr_list = [
+				(
+					prereq,
+					[(LOOPSTART, self)]
+				)
+			]
+			prereq = [(LOOPSTART_DONE, self)]
+		else:
+			# Non-looping node, so our SCHEDSTART (and arcs) just
+			# starts playing the node.
+			# There is no LOOPSTART, so we decrement the count
+			# here.
+			self.curloopcount = loopcount-1
+		return sr_list, prereq
+	#
+	# gensr_tailactions gets the list of events that should all have
+	# occurred before a node finishes. It returns the srrecords list
+	# that make the world continue revolving. This may include a loop
+	# end construct, or may be an immedeate SCHED_DONE and outgoing
+	# tail syncarc list
+	#
+	def gensr_tailactions(self, events, looping):
+		if looping:
+			# Second (or later) pass through the loop.
+			# Only regenerate records for the LOOPEND.
+			return [(events, [(LOOPEND, self)])]
+		out1 = self.sync_to[1]	# outgoing syncarcs from tail
+		if self.isloopnode:
+			# all children done -> LOOPEND
+			# LOOPEND_DONE -> SCHED_DONE, syncarcs
+			srlist = [(
+				    events,
+				    [(LOOPEND, self)]
+				  ) , (
+				    [(LOOPEND_DONE, self)],
+				    [(SCHED_DONE, self)]+out1
+				  )]
+		else:
+			# all children done -> SCHED_DONE, syncarcs
+			srlist = [(
+				    events,
+				    [(SCHED_DONE, self)]+out1
+				 )]
+		return srlist
+		
+			
+			
+	#
 	# Generate schedrecords for a sequential node
-	def gensr_seq(self):
+	def gensr_seq(self, looping=0):
 		if not self.wtd_children:
+			self.curloopcount = 0
 			return self.gensr_empty()
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		n_sr = len(self.wtd_children)+1
-		sr_list = []
+		sr_list, trigger_events = self.gensr_headactions(looping)
 		last_actions = []
 		t_list = []
 		duration = MMAttrdefs.getattr(self, 'duration')
@@ -802,8 +889,8 @@ class MMNode(MMNodeBase.MMNode):
 		for i in range(n_sr):
 			no_action = 0
 			if i == 0:
-				prereq = [(SCHED, self)] + in0
-				actions = out0
+				prereq = trigger_events
+				actions = out0[:]
 			else:
 				arg = self.wtd_children[i-1]
 				sr_list = sr_list + arg.gensr()
@@ -816,14 +903,16 @@ class MMNode(MMNodeBase.MMNode):
 					no_action = 1
 			if i == n_sr-1:
 				last_actions = actions
-				actions = [(SCHED_DONE, self)] + out1
+				tail_srlist = self.gensr_tailactions(prereq,
+						    looping)
+				sr_list[len(sr_list):] = tail_srlist
 			else:
 				arg = self.wtd_children[i]
 				actions.append((SCHED, arg))
 				t_list.append((TERMINATE, arg))
-			if no_action:
-				actions = []
-			sr_list.append((prereq, actions))
+				if no_action:
+					actions = []
+				sr_list.append((prereq, actions))
 		if duration > 0 or in1:
 			self.undef_dur = 0
 		sr_list.append( ([(SCHED_STOP, self)], last_actions) )
@@ -831,20 +920,25 @@ class MMNode(MMNodeBase.MMNode):
 		sr_list.append(([(TERMINATE, self)], t_list))
 		return sr_list
 
-	def gensr_par(self):
+	def gensr_par(self, looping=0):
 		if not self.wtd_children:
+			self.curloopcount = 0
 			return self.gensr_empty()
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		duration = MMAttrdefs.getattr(self, 'duration')
 		termtype = MMAttrdefs.getattr(self, 'terminator')
 		alist = out0[:]		# actions on SCHED of self
-		plist = []
-		slist = []		# stop children
-		tlist = []		# terminate children
-		result = [([(SCHED, self)] + in0, alist),
-			  ([(SCHED_STOP, self)], slist),
-			  ([(TERMINATE, self)], tlist)]
+		plist = []		# events needed before we stop
+		slist = []		# actions on SCHED_STOP of self
+		tlist = []		# actions on TERMINATE of self
+
+		result, trigger_events = self.gensr_headactions(looping)
+
+		result.append((trigger_events, alist))
+		result.append(([(SCHED_STOP, self)], slist))
+		result.append(([(TERMINATE, self)], tlist))
+
 		self.undef_dur = 1
 		if in1:
 			result.append((in1, [(TERMINATE, self)]))
@@ -880,26 +974,34 @@ class MMNode(MMNodeBase.MMNode):
 				# termtype=='LAST' or termtype refers to
 				# non-existent child
 				added_entry = 1
-				result.append((plist,
-					       [(SCHED_DONE, self)] + out1))
+				tail_srlist = self.gensr_tailactions(plist,
+								     looping)
+				result[len(result):] = tail_srlist
 			else:
 				# termtype refers to child, basically
 				# ignore the other children
 				result.append((plist, []))
 		if termtype != 'LAST' and added_entry:
+			# XXXX Comment by Jack: I _think_ this is also
+			# correct for looping nodes, but I'm not 100% sure.
 			tlist[len(tlist):] = [(SCHED_DONE, self)] + out1
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
 			# the node
 			alist.append((SYNC, (duration, self)))
-			if not added_entry:
-				result.append(([(SYNC_DONE, self)],
-					       [(SCHED_DONE, self)] + out1))
+			if self.undef_dur:
+				plist.append((SYNC_DONE, self))
+				self.undef_dur = 0
+			elif not added_entry:
+				tail_srlist = self.gensr_tailactions(
+					[(SYNC_DONE, self)], looping)
+				result[len(result):] = tail_srlist
 			else:
 				result.append(([(SYNC_DONE, self)],
 					       [(TERMINATE, self)]))
 		elif not self.wtd_children:
+			# XXXX Jack: This "shouldn't happen", I guess?
 			alist[len(alist):] = [(SCHED_DONE, self)] + out1
 		return result
 # 	#
@@ -924,12 +1026,13 @@ class MMNode(MMNodeBase.MMNode):
 	def GenAllSR(self, seeknode):
 		if not seeknode:
 			seeknode = self
-		if hasattr(seeknode, 'sractions'):
-			sractions = seeknode.sractions[:]
-			srevents = {}
-			for key, val in seeknode.srevents.items():
-				srevents[key] = val
-			return sractions, srevents
+## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
+##		if hasattr(seeknode, 'sractions'):
+##			sractions = seeknode.sractions[:]
+##			srevents = {}
+##			for key, val in seeknode.srevents.items():
+##				srevents[key] = val
+##			return sractions, srevents
 		#
 		# First generate arcs
 		#
@@ -949,6 +1052,18 @@ class MMNode(MMNodeBase.MMNode):
 		else:
 			srlist.append(([(SCHED_DONE, self)],
 				       [(SCHED_STOP, self)]))
+
+		sractions, srevents = self.splitsrlist(srlist)
+		
+		seeknode.sractions = sractions[:]
+		seeknode.srevents = {}
+		for key, val in srevents.items():
+			seeknode.srevents[key] = val
+		if self.context.editmgr:
+			self.context.editmgr.register(seeknode)
+		return sractions, srevents
+
+	def splitsrlist(self, srlist, offset=0):
 		sractions = [None]*len(srlist)
 		srevents = {}
 		for actionpos in range(len(srlist)):
@@ -960,12 +1075,25 @@ class MMNode(MMNodeBase.MMNode):
 			for ev in events:
 				if srevents.has_key(ev):
 					raise CheckError, 'Scheduler: Duplicate event: %s' % ev2string(ev)
-				srevents[ev] = actionpos
-		seeknode.sractions = sractions[:]
-		seeknode.srevents = {}
-		for key, val in srevents.items():
-			seeknode.srevents[key] = val
+				srevents[ev] = actionpos+offset
 		return sractions, srevents
+	#
+	# Re-generate SR actions/events for a loop. Called for the
+	# second and subsequent times through the loop.
+	#
+	def GenLoopSR(self, offset):
+		# XXXX Should we prunetree() here?
+		srlist = self.gensr(looping=1)
+		sractions, srevents = self.splitsrlist(srlist, offset)
+		return sractions, srevents
+	#
+	# Check whether the current loop has reached completion.
+	#
+	def moreloops(self, decrement=0):
+		rv = self.curloopcount
+		if decrement and self.curloopcount > 0:
+			self.curloopcount = self.curloopcount - 1
+		return (rv != 0)
 
 	def transaction(self):
 		return 1
@@ -987,6 +1115,7 @@ class MMNode(MMNodeBase.MMNode):
 			del self.prearmlists
 		except AttributeError:
 			pass
+		self.context.editmgr.unregister(self)
 
 	def kill(self):
 		pass
