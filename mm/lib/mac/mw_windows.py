@@ -1,8 +1,10 @@
 import Win
 import Qd
+import QuickDraw
 import Dlg
 import Ctl
 import Controls
+import MacOS
 import mac_image
 import imgformat
 import img
@@ -156,11 +158,14 @@ class _CommonWindow:
 		self._active_movie = 0
 		self._popupmenu = None
 		self._outline_color = None
+		self._rb_dialog = None
 		
 	def close(self):
 		"""Close window and all subwindows"""
 		if self._parent is None:
 			return		# already closed
+		if self._rb_dialog:
+			self._rb_cancel()
 		self._set_movie_active(0)
 		Qd.SetPort(self._wid)
 		self._parent._subwindows.remove(self)
@@ -496,9 +501,18 @@ class _CommonWindow:
 		for top-level windows (to do global-to-local coordinate
 		transforms)"""
 		#
+		# If we are rubberbanding handle that first.
+		#
+		if self._rb_dialog:
+			if down:
+				if self._rb_mousedown(where, shifted):
+					return
+			else:
+				if self._rb_mouseup(where, shifted):
+					return
+		#
 		# First see whether the click is in any of our children
 		#
-##		import pdb ; pdb.set_trace() # XXXX
 		for ch in self._subwindows:
 			if Qd.PtInRect(where, ch.qdrect()):
 				try:
@@ -642,10 +656,14 @@ class _CommonWindow:
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
 		
-		# Finally do transparent children bottom-to-top
+		# Then do transparent children bottom-to-top
 		still_to_do.reverse()
 		for child in still_to_do:
 					child._redraw(rgn)
+					
+		# Last, do the rubber box
+		if self._rb_dialog:
+			self._rb_redraw()
 					
 	def _do_redraw(self):
 		"""Do actual redraw"""
@@ -659,31 +677,28 @@ class _CommonWindow:
 		Qd.SetPort(self._wid)
 		
 	def create_box(self, msg, callback, box = None):
-		showmessage("Channel coordinates unknown, set to full base window.\nChange in channel view")
-		if box == None:
-			box = (0, 0, 1, 1)
-		apply(callback, box)
-##		global _in_create_box
-##		if _in_create_box:
+		global _in_create_box
+		if _in_create_box:
+			raise 'Recursive create_box'
 ##			_in_create_box._next_create_box.append((self, msg, callback, box))
 ##			return
-##		if self.is_closed():
-##			apply(callback, ())
-##			return
-##		_in_create_box = self
-##		self.pop()
-##		if msg:
-##			msg = msg + '\n\n' + _rb_message
-##		else:
-##			msg = _rb_message
-##		self._rb_dl = self._active_displist
-##		if self._rb_dl:
-##			d = self._rb_dl.clone()
-##		else:
-##			d = self.newdisplaylist()
-##		self._rb_transparent = []
-##		sw = self._subwindows[:]
-##		sw.reverse()
+		if self.is_closed():
+			apply(callback, ())
+			return
+		_in_create_box = self
+		self.pop()
+		if msg:
+			msg = msg + '\n\n' + _rb_message
+		else:
+			msg = _rb_message
+		self._rb_dl = self._active_displist
+		if self._rb_dl:
+			d = self._rb_dl.clone()
+		else:
+			d = self.newdisplaylist()
+		self._rb_transparent = []
+		sw = self._subwindows[:]
+		sw.reverse()
 ##		r = Xlib.CreateRegion()
 ##		for win in sw:
 ##			if not win._transparent:
@@ -692,250 +707,243 @@ class _CommonWindow:
 ##				win._transparent = 1
 ##				d.drawfbox(win._bgcolor, win._sizes)
 ##				apply(r.UnionRectWithRegion, win._rect) # XXXX
-##		for win in sw:
-##			b = win._sizes
-##			if b != (0, 0, 1, 1):
-##				d.drawbox(b)
-##		self._rb_display = d.clone()
-##		d.fgcolor((255, 0, 0))
-##		if box:
-##			d.drawbox(box)
+		for win in sw:
+			b = win._sizes
+			if b != (0, 0, 1, 1):
+				d.drawbox(b)
+		d.render()
+		self._rb_display = d
+		if box:
+			self._rb_box = self._convert_coordinates(box)
+		else:
+			self._rb_box = None
+		self._rb_dragpoint = None
+		Win.InvalRect(self.qdrect())
 ##		if self._rb_transparent:
 ##			self._mkclip()
 ##			self._do_expose(r)
 ##			self._rb_reg = r
-##		d.render()
-##		self._rb_curdisp = d
-##		self._rb_dialog = showmessage(
-##			msg, mtype = 'message', grab = 0,
-##			callback = (self._rb_done, ()),
-##			cancelCallback = (self._rb_cancel, ()))
-##		self._rb_callback = callback
-##		raise 'not implemented'
-##		form = self._form
-##		form.AddEventHandler(X.ButtonPressMask, FALSE,
-##				     self._start_rb, None)
-##		form.AddEventHandler(X.ButtonMotionMask, FALSE,
-##				     self._do_rb, None)
-##		form.AddEventHandler(X.ButtonReleaseMask, FALSE,
-##				     self._end_rb, None)
-##		cursor = form.Display().CreateFontCursor(Xcursorfont.crosshair)
-##		form.GrabButton(X.AnyButton, X.AnyModifier, TRUE,
-##				X.ButtonPressMask | X.ButtonMotionMask
-##					| X.ButtonReleaseMask,
-##				X.GrabModeAsync, X.GrabModeAsync, form, cursor)
-##		v = form.GetValues(['foreground', 'background'])
-##		v['foreground'] = v['foreground'] ^ v['background']
-##		v['function'] = X.GXxor
-##		v['line_style'] = X.LineOnOffDash
-##		self._gc_rb = form.GetGC(v)
-##		self._rb_box = box
-##		if box:
-##			x, y, w, h = self._convert_coordinates(box)
-##			if w < 0:
-##				x, w = x + w, -w
-##			if h < 0:
-##				y, h = y + h, -h
-##			self._rb_box = x, y, w, h
-##			self._rb_start_x = x
-##			self._rb_start_y = y
-##			self._rb_width = w
-##			self._rb_height = h
-##		else:
-##			self._rb_start_x, self._rb_start_y, self._rb_width, \
-##					  self._rb_height = self._rect
-##		try:
-##			Xt.MainLoop()
-##		except _rb_done:
-##			pass
+		self._rb_finished = 0
+		self._rb_dialog = showmessage(
+			msg, mtype = 'message', grab = 0,
+			callback = (self._rb_done, ()),
+			cancelCallback = (self._rb_cancel, ()))
+		self._rb_callback = callback
+
+		mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._wid])
+		while not self._rb_finished:
+			mw_globals.toplevel._eventloop(100)
+		mw_globals.toplevel.grab(None)
 
 	# supporting methods for create_box
 	def _rb_finish(self):
 		global _in_create_box
 		_in_create_box = None
-		if self._rb_transparent:
-			for win in self._rb_transparent:
-				win._transparent = 0
-			self._mkclip()
-			self._do_expose(self._rb_reg)
-			del self._rb_reg
-		del self._rb_transparent
-		raise 'not yet implemented'
-##		form = self._form
-##		form.RemoveEventHandler(X.ButtonPressMask, FALSE,
-##					self._start_rb, None)
-##		form.RemoveEventHandler(X.ButtonMotionMask, FALSE,
-##					self._do_rb, None)
-##		form.RemoveEventHandler(X.ButtonReleaseMask, FALSE,
-##					self._end_rb, None)
-##		form.UngrabButton(X.AnyButton, X.AnyModifier)
-		self._rb_dialog.close()
+##		if self._rb_transparent:
+##			for win in self._rb_transparent:
+##				win._transparent = 0
+##			self._mkclip()
+##			self._do_expose(self._rb_reg)
+##			del self._rb_reg
+##		del self._rb_transparent
 		if self._rb_dl and not self._rb_dl.is_closed():
 			self._rb_dl.render()
 		self._rb_display.close()
-		self._rb_curdisp.close()
 		del self._rb_callback
-		del self._rb_dialog
+		self._rb_dialog = None
 		del self._rb_dl
 		del self._rb_display
-		del self._gc_rb
 
 	def _rb_cvbox(self):
-		x0 = self._rb_start_x
-		y0 = self._rb_start_y
-		x1 = x0 + self._rb_width
-		y1 = y0 + self._rb_height
-		if x1 < x0:
-			x0, x1 = x1, x0
-		if y1 < y0:
-			y0, y1 = y1, y0
-		x, y, width, height = self._rect
-		if x0 < x: x0 = x
-		if x0 >= x + width: x0 = x + width - 1
-		if x1 < x: x1 = x
-		if x1 >= x + width: x1 = x + width - 1
-		if y0 < y: y0 = y
-		if y0 >= y + height: y0 = y + height - 1
-		if y1 < y: y1 = y
-		if y1 >= y + height: y1 = y + height - 1
-		return float(x0 - x) / (width - 1), \
-		       float(y0 - y) / (height - 1), \
-		       float(x1 - x0) / (width - 1), \
-		       float(y1 - y0) / (height - 1)
+		wx, wy, ww, wh = self._rect
+		x0, y0, x1, y1 = self._rb_box
+		x0 = float(x0-wx)/ww
+		y0 = float(y0-wy)/wh
+		x1 = float(x1-wx)/ww
+		y1 = float(y1-wy)/wh
+		return x0, y0, (x1-x0), (y1-y0)
+
+		raise 'not yet implemented'
+##		x0 = self._rb_start_x
+##		y0 = self._rb_start_y
+##		x1 = x0 + self._rb_width
+##		y1 = y0 + self._rb_height
+##		if x1 < x0:
+##			x0, x1 = x1, x0
+##		if y1 < y0:
+##			y0, y1 = y1, y0
+##		x, y, width, height = self._rect
+##		if x0 < x: x0 = x
+##		if x0 >= x + width: x0 = x + width - 1
+##		if x1 < x: x1 = x
+##		if x1 >= x + width: x1 = x + width - 1
+##		if y0 < y: y0 = y
+##		if y0 >= y + height: y0 = y + height - 1
+##		if y1 < y: y1 = y
+##		if y1 >= y + height: y1 = y + height - 1
+##		return float(x0 - x) / (width - 1), \
+##		       float(y0 - y) / (height - 1), \
+##		       float(x1 - x0) / (width - 1), \
+##		       float(y1 - y0) / (height - 1)
 
 	def _rb_done(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, self._rb_cvbox())
-		self._rb_end()
-		raise _rb_done
+##		self._rb_end()
+		self._rb_finished = 1
 
 	def _rb_cancel(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, ())
-		self._rb_end()
-		raise _rb_done
+##		self._rb_end()
+		self._rb_finished = 1
 
-	def _rb_end(self):
-		# execute pending create_box calls
-		next_create_box = self._next_create_box
-		self._next_create_box = []
-		for win, msg, cb, box in next_create_box:
-			win.create_box(msg, cb, box)
+##	def _rb_end(self):
+##		# execute pending create_box calls
+##		next_create_box = self._next_create_box
+##		self._next_create_box = []
+##		for win, msg, cb, box in next_create_box:
+##			win.create_box(msg, cb, box)
 
-	def _rb_draw(self):
-		x = self._rb_start_x
-		y = self._rb_start_y
-		w = self._rb_width
-		h = self._rb_height
-		if w < 0:
-			x, w = x + w, -w
-		if h < 0:
-			y, h = y + h, -h
-		raise 'not yet implemented'
-##		self._gc_rb.DrawRectangle(x, y, w, h)
-
-	def _rb_constrain(self, event):
-		x, y, w, h = self._rect
-		if event.x < x:
-			event.x = x
-		if event.x >= x + w:
-			event.x = x + w - 1
-		if event.y < y:
-			event.y = y
-		if event.y >= y + h:
-			event.y = y + h - 1
-
-	def _rb_common(self, event):
-		if not hasattr(self, '_rb_cx'):
-			self._start_rb(None, None, event)
-		self._rb_draw()
-		self._rb_constrain(event)
-		if self._rb_cx and self._rb_cy:
-			x, y, w, h = self._rect
-			dx = event.x - self._rb_last_x
-			dy = event.y - self._rb_last_y
-			self._rb_last_x = event.x
-			self._rb_last_y = event.y
-			self._rb_start_x = self._rb_start_x + dx
-			if self._rb_start_x + self._rb_width > x + w:
-				self._rb_start_x = x + w - self._rb_width
-			if self._rb_start_x < x:
-				self._rb_start_x = x
-			self._rb_start_y = self._rb_start_y + dy
-			if self._rb_start_y + self._rb_height > y + h:
-				self._rb_start_y = y + h - self._rb_height
-			if self._rb_start_y < y:
-				self._rb_start_y = y
+	def _rb_redraw(self):
+		if not self._rb_box:
+			return
+		if not self._clip:
+			self.mkclip()
+		Qd.SetClip(self._clip)
+		Qd.RGBForeColor((0xffff, 0, 0))
+		self._rb_doredraw()
+		
+	def _rb_movebox(self, where, final=0):
+		x, y = where
+		x0, y0, x1, y1 = self._rb_box
+		if self._rb_dragpoint == 0:	# top left
+			x0, y0 = x, y
+		elif self._rb_dragpoint == 1: # top right
+			x0, y1 = x, y
+		elif self._rb_dragpoint == 2: # bottom left
+			x1, y0 = x, y
+		elif self._rb_dragpoint == 3: # bottom right
+			x1, y1 = x, y
+		elif self._rb_dragpoint == 4: # center (move)
+			oldx = (x0+x1)/2
+			oldy = (y0+y1)/2
+			diffx = x-oldx
+			diffy = y-oldy
+			x0 = x0 + diffx
+			x1 = x1 + diffx
+			y0 = y0 + diffy
+			y1 = y1 + diffy
 		else:
-			if not self._rb_cx:
-				self._rb_width = event.x - self._rb_start_x
-			if not self._rb_cy:
-				self._rb_height = event.y - self._rb_start_y
-		self._rb_box = 1
+			raise 'funny dragpoint', self._rb_dragpoint
+		x0, y0 = self._rb_constrain((x0, y0))
+		x1, y1 = self._rb_constrain((x1, y1))
+		#
+		# New box computed. Return if same as old one.
+		#
+		if self._rb_box == (x0, y0, x1, y1):
+			return
+		
+		#
+		# Otherwise first erase old box, then draw the new one.
+		#
+		if not self._clip:
+			self.mkclip()
+		Qd.SetClip(self._clip)
+		port = self._wid.GetWindowPort()
+		oldmode = port.pnMode
+		Qd.RGBForeColor((0xffff, 0, 0))
+		Qd.PenMode(QuickDraw.patXor)
 
-	def _start_rb(self, w, data, event):
+		self._rb_doredraw()
+		if final:
+			Qd.PenMode(oldmode)
+			if x0 > x1:
+				x0, x1 = x1, x0
+			if y0 > y1:
+				y0, y1 = y1, y0
+		self._rb_box = x0, y0, x1, y1
+		self._rb_doredraw()
+		Qd.PenMode(oldmode)
+		
+	def _rb_doredraw(self):
+		Qd.FrameRect(self._rb_box)
+		smallboxes = self._rb_smallboxes()
+		for box in smallboxes:
+			Qd.PaintRect(box)
+			
+	def _rb_smallboxes(self):
+		x0, y0, x1, y1 = self._rb_box
+		points = [
+			(x0, y0),
+			(x0, y1),
+			(x1, y0),
+			(x1, y1),
+			((x0+x1)/2, (y0+y1)/2)]
+		smallboxes = []
+		for x, y in points:
+			smallboxes.append(x-2, y-2, x+2, y+2)
+		return smallboxes
+
+	def _rb_constrain(self, where):
+		x0, y0, x1, y1 = self.qdrect()
+		x, y = where
+		if x < x0: x = x0
+		if x > x1: x = x1
+		if y < y0: y = y0
+		if y > y1: y = y1
+		return x, y
+
+	def _rb_mousedown(self, where, shifted):
 		# called on mouse press
 		self._rb_display.render()
-		self._rb_curdisp.close()
-		self._rb_constrain(event)
+		x, y = where
+		dragpoint = None
 		if self._rb_box:
-			x = self._rb_start_x
-			y = self._rb_start_y
-			w = self._rb_width
-			h = self._rb_height
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			if x + w/4 < event.x < x + w*3/4:
-				self._rb_cx = 1
+			smallboxes = self._rb_smallboxes()
+			for i in range(len(smallboxes)):
+				x0, y0, x1, y1 = smallboxes[i]
+				if x0 <= x <= x1 and y0 <= y <= y1:
+					dragpoint = i
+					break
 			else:
-				self._rb_cx = 0
-				if event.x >= x + w*3/4:
-					x, w = x + w, -w
-			if y + h/4 < event.y < y + h*3/4:
-				self._rb_cy = 1
-			else:
-				self._rb_cy = 0
-				if event.y >= y + h*3/4:
-					y, h = y + h, -h
-			if self._rb_cx and self._rb_cy:
-				self._rb_last_x = event.x
-				self._rb_last_y = event.y
-				self._rb_start_x = x
-				self._rb_start_y = y
-				self._rb_width = w
-				self._rb_height = h
-			else:
-				if not self._rb_cx:
-					self._rb_start_x = x + w
-					self._rb_width = event.x - self._rb_start_x
-				if not self._rb_cy:
-					self._rb_start_y = y + h
-					self._rb_height = event.y - self._rb_start_y
-		else:
-			self._rb_start_x = event.x
-			self._rb_start_y = event.y
-			self._rb_width = self._rb_height = 0
-			self._rb_cx = self._rb_cy = 0
-		self._rb_draw()
+				#
+				# Hmm. Should we start a new box?
+				#
+				MacOS.SysBeep()
+				return 1
+		if dragpoint is None:
+			x, y = self._rb_constrain((x, y))
+			self._rb_box = (x, y, x, y)
+			dragpoint = 3
+		self._rb_dragpoint = dragpoint
+		print 'RB_MOUSEDOWN', self._rb_box, self._rb_dragpoint
+		if not self._clip:
+			self.mkclip()
+		Qd.SetClip(self._clip)
+		port = self._wid.GetWindowPort()
+		oldmode = port.pnMode
+		Qd.RGBForeColor((0xffff, 0, 0))
+		Qd.PenMode(QuickDraw.patXor)
+		self._do_redraw()
+		Qd.PenMode(oldmode)
+		mw_globals.toplevel.setmousetracker(self._rb_mousemove)
 
-	def _do_rb(self, w, data, event):
-		# called on mouse drag
-		self._rb_common(event)
-		self._rb_draw()
-
-	def _end_rb(self, w, data, event):
-		# called on mouse release
-		self._rb_common(event)
-		self._rb_curdisp = self._rb_display.clone()
-		self._rb_curdisp.fgcolor((255, 0, 0))
-		self._rb_curdisp.drawbox(self._rb_cvbox())
-		self._rb_curdisp.render()
-		del self._rb_cx
-		del self._rb_cy
+	def _rb_mousemove(self, event):
+		what, message, when, where, modifiers = event
+		Qd.SetPort(self._wid)
+		where = Qd.GlobalToLocal(where)
+		self._rb_movebox(where, 0)
+		
+	def _rb_mouseup(self, where, shifted):
+		mw_globals.toplevel.setmousetracker(None)
+		if self._rb_dragpoint is None:
+			# Mouse-up without previous mousedown
+			return
+		self._rb_movebox(where, 1)
+		self._rb_dragpoint = None
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""

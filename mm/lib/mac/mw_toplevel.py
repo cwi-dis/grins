@@ -66,8 +66,9 @@ class _Event:
 		self._timerfunc = None
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
 		self._idles = []
-		self._grabbed = None
+		self._grabbed_wids = []
 		self._active_movies = 0
+		self._mouse_tracker = None
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
@@ -76,14 +77,28 @@ class _Event:
 	def grab(self, dialog):
 		"""A dialog wants to be application-modal"""
 		if dialog:
-			if self._grabbed:
-				print 'Another window is already grabbed!'
-				beep()
-				self._grabbed = None
-				return
-			self._grabbed = dialog._wid
+			self.grabwids([dialog._wid])
 		else:
-			self._grabbed = None
+			self.grabwids([])
+			
+	def grabwids(self, widlist):
+		"""Grab a list of window-id's"""
+		if not widlist:
+			self._grabbed_wids = []
+			return
+		if self._grabbed_wids:
+			print 'Another window is already grabbed!'
+			beep()
+			self._grabbed_wids = []
+			return
+		self._grabbed_wids = widlist[:]
+		if not Win.FrontWindow() in self._grabbed_wids:
+			self._grabbed_wids[0].XXXX
+			
+	def setmousetracker(self, tracker):
+		if tracker and self._mouse_tracker:
+			raise 'Mouse tracker already active'
+		self._mouse_tracker = tracker
 					
 	def mainloop(self):
 		"""The event mainloop"""
@@ -102,7 +117,7 @@ class _Event:
 					self._timers[0] = sec, cb, tid
 					break
 					
-			if self._idles or self._active_movies:
+			if self._idles or self._active_movies or self._mouse_tracker:
 				timeout = MINIMAL_TIMEOUT
 			elif self._timers:
 				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
@@ -145,6 +160,8 @@ class _Event:
 				Qt.MoviesTask(0)
 			return 1
 		else:
+			if self._mouse_tracker:
+				self._mouse_tracker(event)
 			if self._active_movies:
 				Qt.MoviesTask(0)
 			if Dlg.IsDialogEvent(event):
@@ -319,16 +336,16 @@ class _Event:
 			frontwin = Win.FrontWindow()
 			if wid == frontwin:
 				# Check that we don't have a grabbed window that has been pushed behind
-				if self._grabbed and self._grabbed != wid:
+				if self._grabbed_wids and not frontwin in self._grabbed_wids:
 					beep()
-					self._grabbed.SelectWindow()
+					self._grabbed_wids[0].SelectWindow()
 					return
 				# Frontmost. Handle click.
 				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.shiftKey))
 			else:
-				if self._grabbed and self._grabbed != wid:
+				if self._grabbed_wids and not wid in self._grabbed_wids:
 					beep()
-					wid = self._grabbed
+					wid = self._grabbed_wids[0]
 				# Not frontmost. Activate.
 				wid.SelectWindow()
 		elif partcode == Windows.inDrag:
