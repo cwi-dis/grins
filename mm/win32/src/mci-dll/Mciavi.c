@@ -336,6 +336,32 @@ long AviFrame(MCI_AVI_STRUCT *mciAviInfo)
 	return position;	
 }
 
+long AviClip( MCI_AVI_STRUCT *mciAviInfo ,long clip)
+{
+    MCI_DGV_STATUS_PARMS mciStatus;
+    MCI_SET_PARMS mciSet;
+
+    mciSet.dwTimeFormat = MCI_FORMAT_FRAMES;
+    mciSendCommand(mciAviInfo->wAVIDeviceID,
+					MCI_SET, MCI_SET_TIME_FORMAT,
+					(DWORD)(LPMCI_STATUS_PARMS)&mciSet);
+
+    mciAviInfo->iSeekThere = clip;
+    AviSeek( mciAviInfo) ; 
+    
+    mciSet.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
+    mciSendCommand(mciAviInfo->wAVIDeviceID,
+					MCI_SET, MCI_SET_TIME_FORMAT,
+					(DWORD)(LPMCI_STATUS_PARMS)&mciSet);
+
+    mciStatus.dwItem = MCI_STATUS_POSITION ;
+    mciSendCommand(mciAviInfo->wAVIDeviceID,
+				MCI_STATUS, MCI_STATUS_ITEM ,
+						(DWORD)(LPMCI_STATUS_PARMS)&mciStatus);
+
+    return (long)mciStatus.dwReturn;
+}
+
 DWORD AviDuration(MCI_AVI_STRUCT *mciAviInfo)
 {
 
