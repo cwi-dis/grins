@@ -8,12 +8,15 @@ from fmtfloat import fmtfloat, round
 
 import colors
 
+debug = 0
+
 # abstraction of animation target 
 # represents MMNode and MMRegion targets 
 # makes explicit what is needed by AnimationData
 class AnimationTarget:
 	def __init__(self, node):
 		animparent = None
+		target = None
 		if hasattr(node, 'targetnode'):
 			target = node.targetnode
 		if target is None:
@@ -94,7 +97,7 @@ class AnimationDefaultWrapper:
 
 	def updateAnimators(self, node):
 		# for use re-create animators
-		self.createAnimators()
+		self.createAnimators(node)
 
 	def getRectAt(self, keyTime):
 		return self._domrect
@@ -127,6 +130,9 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 		AnimationDefaultWrapper.createAnimators(self, animnode)
 
 		animvals = animnode.GetAttrDef('animvals', [])
+
+		if debug:
+			print 'Create animator, animvals=',animvals
 		
 		times = []
 		animateMotionValues = []
@@ -147,9 +153,18 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 			height = vals.get('height')
 			if height is not None:
 				animateHeightValues.append(height)
-			height = vals.get('bgcolor')
+			bgcolor = vals.get('bgcolor')
 			if bgcolor is not None:
 				animateColorValues.append(bgcolor)
+
+		if debug:
+			print '**************************'
+			print 'Create animator, values='
+			print 'animateMotion:',animateMotionValues
+			print 'animateWidth:',animateWidthValues
+			print 'animateHeight:',animateHeightValues
+			print 'animateColor:',animateColorValues
+			print '**************************'
 																				
 		dur = 1.0
 
@@ -185,19 +200,22 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 		keyTime = self._clampKeyTime(keyTime)
 		if self._animateMotion is not None:
 			z = self._animateMotion.getValue(keyTime)
-			return self._animateMotion.convert(z)
+			left, top = self._animateMotion.convert(z)
+			left = round(int(left))
+			top = round(int(top))
+			return left, top
 		return AnimationDefaultWrapper.getPosAt(self)
 
 	def getWidthAt(self, keyTime):
 		keyTime = self._clampKeyTime(keyTime)
 		if self._animateWidth is not None:
-			return self._animateWidth.getValue(keyTime)
+			return round(int(self._animateWidth.getValue(keyTime)))
 		return AnimationDefaultWrapper.getWidthAt(self)
 
 	def getHeightAt(self, keyTime):
 		keyTime = self._clampKeyTime(keyTime)
 		if self._animateHeight is not None:
-			return self._animateHeight.getValue(keyTime)
+			return round(int(self._animateHeight.getValue(keyTime)))
 		return AnimationDefaultWrapper.getHeightAt(self)
 
 	#
@@ -208,7 +226,7 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 		if keyTime<0.0:
 			keyTime = 0.0
 		elif keyTime>=1.0:
-			keyTime = 1.0 - AnimationData.KEY_TIMES_EPSILON
+			keyTime = 1.0 - AnimationParWrapper.KEY_TIMES_EPSILON
 		return keyTime
 
 def getAnimationWrapper(animnode):
