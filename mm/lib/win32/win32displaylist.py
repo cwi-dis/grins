@@ -825,8 +825,11 @@ class _Button:
 			print 'Internal error: invalid shape type'			
 			self._inside = self._insideRect
 		
-		if self._color != dispobj._bgcolor:
-			self._dispobj.drawboxanchor(coordinates)
+		# for now, until draw works for circle and poly
+		# otherwise : crash
+		if shape == A_SHAPETYPE_RECT:
+			if self._color != dispobj._bgcolor:
+				self._dispobj.drawboxanchor(coordinates)
 
 	# Destroy button
 	def close(self):
@@ -902,7 +905,7 @@ class _Button:
 		cx, cy, rdx, rdy = self._coordinates
 		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
 		return CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh) and \
-			self._temporalinside()
+			self._insidetemporal()
 
 	######################################
 	# Animation experimental methods
