@@ -461,8 +461,22 @@ class _CmifStructView(_CmifView):
 	# Response to left button down
 	def onLButtonDown(self, params):
 		_CmifView.onLButtonDown(self, params)
+		self.checkDragDrop()
 		self._button_down=1
-				
+	
+	def checkDragDrop(self):
+		dragCmd=None
+		for cmd in self._commandlist:
+			if cmd.__class__==usercmd.COPY:
+				dragCmd=usercmd.COPY
+				break
+#			elif cmd.__class__==usercmd.COPY_CHANNEL:
+#				dragCmd=usercmd.COPY_CHANNEL
+#				break
+		if dragCmd:
+			self.DoDragDrop()
+		return dragCmd
+					
 	# Response to left button up
 	def onLButtonUp(self, params):
 		_CmifView.onLButtonUp(self, params)
