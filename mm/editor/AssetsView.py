@@ -245,7 +245,7 @@ class AssetsView(AssetsViewDialog):
 			mimetype, nodelist = v
 			pathname = urlparse.urlparse(url)[2]
 			shortname = posixpath.split(pathname)[1]
-			assetlist.append((None, mimetype, shortname, mimetype, `len(nodelist)`, url))
+			assetlist.append((nodelist, mimetype, shortname, mimetype, `len(nodelist)`, url))
 		return assetlist
 
 	def _getallassetstree(self, node, dict, intree=1):
@@ -295,7 +295,15 @@ class AssetsView(AssetsViewDialog):
 		self.setview(which)
 
 	def select_callback(self, number):
-		print 'select', number
+		if self.whichview == 'all':
+			self._showselection(number)
+
+	def _showselection(self, number):
+		# Tell other views about our selection
+		if number < 0 or number > len(self.listdata):
+			return # Do nothing. XXXX Or deselect??
+		nodelist = self.listdata[number][0]
+		self.editmgr.setglobalfocus(nodelist)
 
 	def sort_callback(self, column):
 		print 'sort', column
