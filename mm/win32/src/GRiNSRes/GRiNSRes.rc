@@ -13,6 +13,26 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -783,22 +803,21 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
+// Dutch (Netherlands) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
 #ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1253)
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+#pragma code_page(1252)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Cursor
+// Bitmap
 //
 
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
-#endif    // Neutral (Default) resources
+IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
+#endif    // Dutch (Netherlands) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -810,14 +829,6 @@ IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 #pragma code_page(1253)
 #endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
-IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -835,6 +846,14 @@ IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
 //
 
 IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
+IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
