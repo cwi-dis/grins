@@ -3,7 +3,7 @@
 # where function can be either a function object or a command list
 # (in the latter case defining a submenu).
 # Interface:
-#  m = MenuObject().init(title, commandlist)
+#  m = MenuObject(title, commandlist)
 #  func = m.popup(x, y)
 #  func = m.shortcut(c)
 # Note that the function isn't called here, it is only returned!
@@ -14,12 +14,11 @@ import gl
 class MenuObject:
 
 	# Initialize the object
-	def init(self, title, commandlist):
+	def __init__(self, title, commandlist):
 		self.menuids = []
 		self.menuprocs = []
 		self.keymap = {}
 		self.menu = self.makesubmenu(title, commandlist)
-		return self
 
 	# Destroy the object
 	def close(self):
