@@ -157,7 +157,7 @@ class Main(MainDialog):
 	def never_again(self):
 		# Called when the user selects the "don't show again" in the initial dialog
 		import settings
-		settings.set('no_initial_dialog', 1)
+		settings.set('initial_dialog', 0)
 		settings.save()
 
 	def new_callback(self):

@@ -1168,7 +1168,7 @@ class PreferenceWrapper(Wrapper):
 		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
 		'showhidden': 'Show hidden custom tests',
 		'saveopenviews': 'Save view placement in prefs file',
-		'no_initial_dialog': 'Skip initial dialog on application start',
+		'initial_dialog': 'Show initial dialog on application start',
 		}
 	__specprefs = {
 		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
