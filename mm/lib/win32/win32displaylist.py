@@ -506,7 +506,7 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('fbox', self._convert_color(color),
-				   (x, y, x+w-1, y+h-1)))
+				   (x, y, x+w, y+h)))
 		self._optimize((1,))
 		self._update_bbox(x, y, x+w, y+h)
 ##		return x, y, x+w, y+h
