@@ -112,11 +112,27 @@ SOURCE="$(InputPath)"
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\mtpycall.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\winuser.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\winuser.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_globals.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_pymenu.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_pywnd.cpp
 # End Source File
 # End Group
 # End Target
