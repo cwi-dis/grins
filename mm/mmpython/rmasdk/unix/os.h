@@ -57,7 +57,6 @@ LoadLibrary(char* pFileName)
 {
     char  pNewFileName[2048];
     char* pTemp = pNewFileName;
-    void* pDll=NULL;
 
     for (; *pFileName; pFileName++)
     {
@@ -78,6 +77,7 @@ LoadLibrary(char* pFileName)
 		 */
 	    return dlopen(pNewFileName, RTLD_LAZY|RTLD_GLOBAL);
 #elif defined _FREEBSD
+	    void* pDll=NULL;
 	    if (pDll = dlopen(pNewFileName, 1)) 
 		return pDll;
 	    else
