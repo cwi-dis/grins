@@ -115,7 +115,6 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		self.__node = None
 	
 	def read(self, url):
-		import MMurl
 		u = MMurl.urlopen(url)
 		data = u.read()
 		self.feed(data)
@@ -125,7 +124,7 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 			message = 'error: %s' % message
 		else:
 			message = 'error, line %d: %s' % (lineno, message)
-		raise MSyntaxError, msg + message
+		raise MSyntaxError, message
 
 	# asx contains everything
 	def start_asx(self, attrs):
@@ -279,9 +278,8 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		self.__container = self.__container.GetParent()
 
 	def __addAttrs(self, node, attrs):
-		attrdict = node.attrdict
 		# just copy for now
-		for attr, val in attrs.items():
+		for attr, val in node.attrdict.items():
 			node._setattr(attr, val)
 
 	def __newNode(self, tagname, attrs):
