@@ -32,6 +32,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
 		self.__rc = None
+		self.__type = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -110,7 +111,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__rc is not None:
 				self.__rc.stopit()
 		else:
-			self.__mc.stopit()
+			if self.__mc is not None:
+				self.__mc.stopit()
 		if self.window:
 			self.window.RedrawWindow()
 		Channel.ChannelWindowAsync.stopplay(self, node)
