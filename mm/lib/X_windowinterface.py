@@ -3202,17 +3202,23 @@ class _Widget(_MenuSupport):
 	# support methods, only used by derived classes
 	def _attachments(self, attrs, options):
 		for pos in ['left', 'top', 'right', 'bottom']:
+			attachment = pos + 'Attachment'
 			try:
 				widget = options[pos]
 			except:
 				pass
 			else:
-				if widget:
-					attrs[pos + 'Attachment'] = \
+				if type(widget) in (type(0.0), type(0)):
+					attrs[attachment] = \
+						  Xmd.ATTACH_POSITION
+					attrs[pos + 'Position'] = \
+						  int(widget * 100 + .5)
+				elif widget:
+					attrs[attachment] = \
 						  Xmd.ATTACH_WIDGET
 					attrs[pos + 'Widget'] = widget._form
 				else:
-					attrs[pos + 'Attachment'] = \
+					attrs[attachment] = \
 						  Xmd.ATTACH_FORM
 
 	def _destroy(self, widget, client_data, call_data):
