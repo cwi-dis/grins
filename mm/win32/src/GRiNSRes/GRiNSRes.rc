@@ -134,6 +134,7 @@ IDR_TB_EDITOR           BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
 IDR_TB_COMMON           BITMAP  DISCARDABLE     "res\\tb_player.bmp"
 IDR_TB_UNUSED           BITMAP  DISCARDABLE     "res\\tb_alignment.bmp"
 IDB_SPLASHREALONE       BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil2real\\splash8bit.bmp"
+IDB_SPLASHMOBILE        BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\mobile\\splash8bit.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
