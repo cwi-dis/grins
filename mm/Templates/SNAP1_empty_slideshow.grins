@@ -25,8 +25,10 @@
       <seq id="Caption_Audio" GRiNS:project_bandwidth_fraction="0.4" GRiNS:project_default_region="audioRegion_2" GRiNS:project_default_type="sound">
       </seq>
       <seq id="Background_Audio" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="audioRegion_1" GRiNS:project_default_type="sound" GRiNS:project_readonly="1">
+        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/bkgd_audio_example.aiff"/>
       </seq>
       <seq id="Background_Image" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="bkgd_imageRegion" GRiNS:project_default_type="image" GRiNS:project_readonly="1">
+        <img id="Background_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg" fill="freeze"/>
       </seq>
     </par>
   </body>
