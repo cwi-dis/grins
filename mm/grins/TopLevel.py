@@ -51,7 +51,6 @@ class TopLevel:
 	def destroy(self):
 		self.destroyplayer()
 		self.root.Destroy()
-		self.player.toplevel = None
 		if self in self.main.tops:
 			self.main.tops.remove(self)
 
@@ -76,6 +75,7 @@ class TopLevel:
 
 	def destroyplayer(self):
 		self.player.destroy()
+		self.player = None
 
 	#
 	# Callbacks.
@@ -167,7 +167,8 @@ class TopLevel:
 	def setready(self):
 		if not self.waiting: return
 		self.waiting = 0
-		self.player.setready()
+		if self.player is not None:
+			self.player.setready()
 		windowinterface.setcursor('')
 
 	#
