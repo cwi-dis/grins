@@ -181,8 +181,20 @@ class Main(MainDialog):
 		windowinterface.setwaiting()
 		import TopLevel
 		import MMurl
+		from MMExc import MSyntaxError, UserCancel
 		template_url = MMurl.pathname2url(filename)
-		top = TopLevel.TopLevel(self, self.getnewdocumentname(filename), template_url)
+		try:
+			top = TopLevel.TopLevel(self, self.getnewdocumentname(filename), template_url)
+		except IOError:
+			import windowinterface
+			windowinterface.showmessage('error opening document %s' % url)
+		except MSyntaxError:
+			import windowinterface
+			windowinterface.showmessage('parsing document %s failed' % url)
+		except UserCancel:
+			return
+		except TopLevel.Error:
+			return
 		self.new_top(top)
 		if htmltemplate:
 			top.context.attributes['project_html_page'] = htmltemplate
