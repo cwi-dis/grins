@@ -366,6 +366,8 @@ class _Window:
 		shell = parent._main.CreatePopupShell(
 			'toplevelShell', Xt.TopLevelShell, attrs)
 		shell.AddCallback('destroyCallback', self._destroy_callback, None)
+		shell.AddWMProtocolCallback(parent._delete_window,
+					    self._delete_callback, None)
 		self._shell = shell
 		form = shell.CreateManagedWidget('toplevelForm', Xm.Form,
 						 {'allowOverlap': 0})
@@ -414,7 +416,8 @@ class _Window:
 					     toplevel._default_colormap,
 					     self._accelerators)
 			self._menubar = mb
-		if canvassize is not None:
+		if canvassize is not None and \
+		   (menubar is None or (w > 0 and h > 0)):
 			form = form.CreateScrolledWindow('scrolledWindow',
 				{'scrollingPolicy': Xmd.AUTOMATIC,
 				 'width': attrs['width'],
@@ -447,19 +450,24 @@ class _Window:
 			spacing = form.spacing
 			attrs['width'] = width - spacing
 			attrs['height'] = height - spacing
+		self.setcursor(self._cursor)
+		if menubar is not None and w == 0 or h == 0:
+			# no canvas (DrawingArea) needed
+			self._form = None
+			shell.Popup(0)
+			self._rect = self._region = self._clip = \
+				     self._pixmap = self._gc = None
+			return
 		form = form.CreateManagedWidget('toplevel',
 						Xm.DrawingArea, attrs)
 		self._form = form
 		shell.Popup(0)
-		shell.AddWMProtocolCallback(parent._delete_window,
-					    self._delete_callback, None)
 
 		val = form.GetValues(['width', 'height'])
 		w, h = val['width'], val['height']
 		self._rect = 0, 0, w, h
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
-		self.setcursor(self._cursor)
 		if pixmap:
 			self._pixmap = form.CreatePixmap()
 			gc = self._pixmap.CreateGC({'foreground': bg,
@@ -663,7 +671,7 @@ class _Window:
 		if cursor == '' and self._curpos is not None and \
 		   apply(self._buttonregion.PointInRegion, self._curpos):
 			cursor = 'hand'
-		_setcursor(self._form, cursor)
+		_setcursor(self._shell, cursor)
 		self._curcursor = cursor
 
 	def newdisplaylist(self, bgcolor = None):
@@ -1245,6 +1253,14 @@ class _BareSubWindow:
 
 	def getgeometry(self, units = UNIT_MM):
 		return self._sizes
+
+	def setcursor(self, cursor):
+		self._cursor = cursor
+		if cursor == '' and self._curpos is not None and \
+		   apply(self._buttonregion.PointInRegion, self._curpos):
+			cursor = 'hand'
+		_setcursor(self._form, cursor)
+		self._curcursor = cursor
 
 	def pop(self):
 		parent = self._parent
