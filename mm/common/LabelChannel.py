@@ -25,7 +25,7 @@ class LabelChannel(ChannelWindow):
 			try:
 				box = self.armed_display.display_image_from_file(img, scale = MMAttrdefs.getattr(node, 'scale'))
 			except (windowinterface.error, IOError), msg:
-				if type(msg) == type(()):
+				if type(msg) is type(()):
 					msg = msg[1]
 				self.errormsg(node, img + ':\n' + msg)
 		str = self.getstring(node)

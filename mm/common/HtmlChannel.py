@@ -76,7 +76,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def cbdestroy(self, widget, userdata, calldata):
 		widget.FreeImageInfo()
-		if widget == self.htmlw:
+		if widget is self.htmlw:
 			self.htmlw = None
 
 	def cblink(self, widget, userdata, calldata):
@@ -109,7 +109,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def updatefixedanchors(self, node):
 		if self._armstate != Channel.AIDLE or \
 		   self._playstate != Channel.PIDLE:
-			if self._played_node == node:
+			if self._played_node is node:
 				# Ok, all is well, we've played it.
 				return 1
 			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
@@ -182,7 +182,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			w.background = bg
 			w.ChangeColor(bg)
 			w.foreground = fg
-			if w.Class() == Xm.ScrollBar:
+			if w.Class() is Xm.ScrollBar:
 				w.troughColor = bg
 		htmlw.SetText(self.armed_str, '', '')
 		htmlw.MapWidget()
@@ -234,7 +234,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		apply(cb, (anchor,))
 
 	def cbanchor(self, widget, userdata, calldata):
-		if widget <> self.htmlw:
+		if widget is not self.htmlw:
 			raise 'kaboo kaboo'
 		href = calldata.href
 		if href[:5] <> 'cmif:':
@@ -243,10 +243,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.cbcmifanchor(href, None)
 
 	def cbform(self, widget, userdata, calldata):
-		if widget <> self.htmlw:
+		if widget is not self.htmlw:
 			raise 'kaboo kaboo'
 		href = calldata.href
-		list = map(lambda a,b: (a,b),
+		list = map(None,
 			   calldata.attribute_names, calldata.attribute_values)
 		if not href or href[:5] <> 'cmif:':
 			self.www_jump(href, calldata.method,
@@ -257,7 +257,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def cbcmifanchor(self, href, list):
 		aname = href[5:]
 		tp = self.findanchortype(aname)
-		if tp == None:
+		if tp is None:
 			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
 			return
 		if tp == ATYPE_PAUSE:
@@ -301,7 +301,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def www_jump(self, href, method, enctype, list):
 		#
 		# Check that we understand what is happening
-		if enctype <> None:
+		if enctype is not None:
 			print 'HtmlChannel: unknown enctype:', enctype
 			return
 		if method not in (None, 'GET'):
@@ -363,9 +363,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		if hasattr(reader, 'transparent') and hasattr(reader, 'colormap'):
 			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
 		if format is imgformat.xcolormap:
-			colors = map(lambda x: x, reader.colormap)
+			colors = map(None, reader.colormap)
 		else:
-			colors = map(lambda x: (x, x, x), range(256))
+			colors = range(256)
+			colors = map(None, colors, colors, colors)
 		dict = {'width': reader.width, 'height': reader.height,
 			'image_data': reader.read(), 'colors': colors}
 		image_cache[src] = dict

@@ -111,7 +111,7 @@ class GraphChannel(ChannelWindow):
 			x = minx
 			d2 = []
 			for i in range(len(d)):
-				if d[i] <> None:
+				if d[i] is not None:
 					d2.append(XOFF+x,
 						  YOFF+(maxy-d[i])*ystepsize)
 				x = x + xstepsize
@@ -135,7 +135,7 @@ class GraphChannel(ChannelWindow):
 			c = colorlist[0]
 			del colorlist[0]
 			for yorg in d:
-				if yorg <> None:
+				if yorg is not None:
 					ytop = YOFF+(maxy-yorg)*ystepsize
 					ysize = yorg*ystepsize
 					self.armed_display.drawfbox(c,
@@ -152,7 +152,7 @@ class GraphChannel(ChannelWindow):
 			d2 = []
 			x = minx
 			for i in range(len(d)):
-				if d[i] <> None:
+				if d[i] is not None:
 					y = YOFF+(maxy-d[i])*ystepsize
 					d2.append(XOFF+x, y)
 					d2.append(XOFF+x+xstepsize, y)
@@ -199,7 +199,7 @@ class GraphChannel(ChannelWindow):
 		for i in str:
 			if type(i) in (type(0.0), type(0)):
 				curdatapoints.append(i)
-			elif type(i) == type(''):
+			elif type(i) is type(''):
 				if i == 'next':
 					if curdatapoints:
 						self.datapoints.append(
