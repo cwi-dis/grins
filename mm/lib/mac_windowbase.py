@@ -1,16 +1,23 @@
 import Win
 import Qd
+import Fm
 import time
 import Evt
 import Events
 import Windows
 import MacOS
-
+import string
+#import QuickDraw
 #
 # The cursors we need
 #
 _arrow = Qd.arrow
 _watch = Qd.GetCursor(4).data
+
+#
+# The fontfaces (which are unfortunately not defined in QuickDraw.py)
+_qd_bold = 1
+_qd_italic = 2
 
 #
 # Conversion factors for mm->pixels
@@ -43,9 +50,26 @@ _HEIGHT=3
 
 _size_cache = {}
 
-Version = 'dummy'
+Version = 'mac'
 
 from EVENTS import *
+
+# Routines to save/restore complete textfont info
+def savefontinfo(wid):
+	"""Return all font-pertaining info for a macos window"""
+	port = wid.GetWindowPort()
+	return port.txFont, port.txFace, port.txMode, port.txSize, port.spExtra
+	
+def restorefontinfo(wid, (font, face, mode, size, spextra)):
+	"""Set all font-pertaining info for a macos window"""
+	old = Qd.GetPort()
+	Qd.SetPort(wid)
+	Qd.TextFont(font)
+	Qd.TextFace(face)
+	Qd.TextMode(mode)
+	Qd.TextSize(size)
+	Qd.SpaceExtra(spextra)
+	Qd.SetPort(old)
 
 class _Event:
 	"""This class is only used as a base-class for toplevel.
@@ -207,6 +231,19 @@ class _Toplevel(_Event):
 		self._closecallbacks.append(func, args)
 
 	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
+		wid, w, h = self._openwindow(x, y, w, h, title)
+		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
+		self._wid_to_window[wid] = rv
+		return rv
+
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
+		wid, w, h = self._openwindow(x, y, w, h, title)
+		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
+		self._wid_to_window[wid] = rv
+		return rv
+		
+	def _openwindow(self, x, y, w, h, title):
+		"""Internal - Open window given xywh, title. Returns window-id"""
 		x = int(x*_x_pixel_per_mm)
 		y = int(y*_y_pixel_per_mm)
 		w = int(w*_x_pixel_per_mm)
@@ -214,23 +251,9 @@ class _Toplevel(_Event):
 		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		rBounds = (x-_window_left_offset, y-_window_top_offset, 
 				x+w+_window_right_offset, y+h+_window_bottom_offset)
+		print 'macos bounds', rBounds
 		wid = Win.NewCWindow(rBounds, title, 1, 0, -1, 1, 0 )
-		rv = _Window(self, wid, x, y, w, h, 0, pixmap, transparent)
-		self._wid_to_window[wid] = rv
-		return rv
-
-	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
-		x = int(x*_x_pixel_per_mm)
-		y = int(y*_y_pixel_per_mm)
-		w = int(w*_x_pixel_per_mm)
-		h = int(h*_y_pixel_per_mm)
-		print 'TOPLEVEL CM WINDOW', x, y, w, h, title
-		rBounds = (x-_window_left_offset, y-_window_top_offset, 
-				x+w+_window_right_offset, y+h+_window_bottom_offset)
-		wid = Win.NewCWindow(rBounds, title, 1, 0, -1, 1, 0 )
-		rv = _Window(self, wid, x, y, w, h, 1, pixmap, transparent)
-		self._wid_to_window[wid] = rv
-		return rv
+		return wid, w, h
 		
 	def _close_wid(self, wid):
 		"""Close a MacOS window and remove references to it"""
@@ -257,33 +280,28 @@ class _Toplevel(_Event):
 
 	def usewindowlock(self, lock):
 		pass
-
-class _Window:
-	"""Base window, also base class for subwindows (eventually)"""
-	
-	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
-			transparent = 0):
-		parent._subwindows.append(self)
+		
+class _CommonWindow:
+	"""Code common to toplevel window and subwindow"""
+		
+	def __init__(self, parent, wid):
+		parent._subwindows.insert(0, self)
 		self._parent = parent
 		self._wid = wid
 		self._subwindows = []
 		self._displists = []
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
-		self._transparent = transparent
-		# conversion factors to convert from mm to relative size
-		# (this uses the fact that _hfactor == _vfactor == 1.0
-		# in toplevel)
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
-		self._rect = 0, 0, w, h
 		self._clip = None
+		self._active_displist = None
 
 	def close(self):
+		"""Close window and all subwindows"""
 		if self._parent is None:
 			return		# already closed
 		self._parent._subwindows.remove(self)
 		self._parent._close_wid(self._wid)
+		self._wid = None
 		self._parent = None
 		for win in self._subwindows[:]:
 			win.close()
@@ -291,30 +309,46 @@ class _Window:
 			dl.close()
 			
 	def _close_wid(self, wid):
-		pass	# Not needed for subwindows
+		"""Called by children to close wid. Only implements real close
+		at TopLevel"""
+		pass
 
+	def _clipchanged(self):
+		"""Called when the clipping region is possibly changed"""
+		if not self._parent or not self._wid or not self._clip:
+			return
+		print '_clipchanged', self
+		Qd.DisposeRgn(self._clip)
+		self._clip = None
+		# XXXX Needed?
+		for ch in self._subwindows:
+			ch._clipchanged()
+			
 	def is_closed(self):
+		"""Return true if window is closed"""
 		return self._parent is None
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+		"""Create a new subwindow"""
 		print 'SUB WINDOW', x, y, w, h
-		rv = _Window(self, None, x, y, w, h, 0, pixmap, transparent)
-		self._clip = None
+		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent)
+		self._clipchanged()
 		return rv
 
 	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+		"""Create a new subwindow"""
 		print 'SUB CM WINDOW', x, y, w, h
-		rv = _Window(self, None, x, y, w, h, 1, pixmap, transparent)
-		self._clip = None
+		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent)
+		self._clipchanged()
 		return rv
 
 	def fgcolor(self, color):
-		r, g, b = color
-		self._fgcolor = r*0x101, g*0x101, b*0x101
+		"""Set foregroundcolor to 3-tuple 0..255"""
+		self._fgcolor = self._convert_color(color)
 
 	def bgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r*0x101, g*0x101, b*0x101
+		"""Set backgroundcolor to 3-tuple 0..255"""
+		self._bgcolor = self._convert_color(color)
 
 	def setcursor(self, cursor):
 		raise 'window.setcursor called'
@@ -322,29 +356,12 @@ class _Window:
 			win.setcursor(cursor)
 
 	def newdisplaylist(self, *bgcolor):
+		"""Return new, empty display list optionally specifying bgcolor"""
 		if bgcolor != ():
-			bgcolor = bgcolor[0]
-			bgcolor = bgcolor[0]*0x101, bgcolor[1]*0x101, bgcolor[2]*0x101
+			bgcolor = self._convert_color(bgcolor[0])
 		else:
 			bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
-
-	def settitle(self, title):
-		if self._parent != toplevel:
-			raise error, 'can only settitle at top-level'
-		pass
-
-	def pop(self):
-		if self._parent:
-			self._parent._clip = None
-		self._clip = None
-		pass
-
-	def push(self):
-		if self._parent:
-			self._parent._clip = None
-		self._clip = None
-		pass
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
@@ -368,6 +385,7 @@ class _Window:
 		pass
 
 	def _image_size(self, file):
+		"""Backward compatability: return wh of image given filename"""
 		if _size_cache.has_key(file):
 			return _size_cache[file]
 		import img
@@ -379,9 +397,11 @@ class _Window:
 		height = reader.height
 		_size_cache[file] = width, height
 		return width, height
+
 	def _convert_coordinates(self, coordinates):
-		# convert relative sizes to pixel sizes relative to
-		# upper-left corner of the window
+		"""Convert fractional xywh in our space to pixel-xywh
+		in toplevel-window relative pixels"""
+		
 		x, y = coordinates[:2]
 ##		if not (0 <= x <= 1 and 0 <= y <= 1):
 ##			raise error, 'coordinates out of bounds'
@@ -396,17 +416,83 @@ class _Window:
 		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
 		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
 		return px, py, pw, ph
+		
+	def _convert_color(self, (r, g, b)):
+		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
+		return r*0x101, g*0x101, b*0x101
+
 
 	def _qdrect(self):
-		"""return our xywh-style rect in quickdraw ltrb style"""
+		"""return our xywh rect (in pixels) as quickdraw ltrb style"""
 		return self._rect[0], self._rect[1], self._rect[0]+self._rect[2], \
 			self._rect[1]+self._rect[3]
+		
+	def _redraw(self):
+		"""Set clipping and color, redraw, redraw children"""
+		if not self._clip:
+			self._mkclip()
+		saveclip = Qd.NewRgn()
+		Qd.GetClip(saveclip)
+		Qd.SetClip(self._clip)
+		Qd.RGBBackColor(self._bgcolor)
+		Qd.RGBForeColor(self._fgcolor)
+		self._do_redraw()
+		Qd.SetClip(saveclip)
+		Qd.DisposeRgn(saveclip)
+		for child in self._subwindows:
+					child._redraw()
+					
+	def _do_redraw(self):
+		"""Do actual redraw"""
+##		Qd.EraseRect(self._qdrect())
+		if self._active_displist:
+			self._active_displist._render()
 			
-	def _mkclip(self):
-		if not self._parent:
+
+class _Window(_CommonWindow):
+	"""Toplevel window"""
+	
+	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
+			transparent = 0):
+		
+		_CommonWindow.__init__(self, parent, wid)
+		
+		if transparent:
+			raise 'Error: transparent toplevel window'
+		self._transparent = 0
+		
+		# Note: the toplevel init routine is called with pixel coordinates,
+		# not fractional coordinates
+		self._rect = 0, 0, w, h
+		
+		self._hfactor = parent._hfactor / (float(w) / _x_pixel_per_mm)
+		self._vfactor = parent._vfactor / (float(h) / _y_pixel_per_mm)
+		
+	def settitle(self, title):
+		"""Set window title"""
+		if not self._wid:
+			return  # Or raise error?
+		self._Wid.SetWTitle(title)
+
+	def pop(self):
+		"""Pop window to top of window stack"""
+		if not self._wid or not self._parent:
 			return
+		self._wid.SelectWindow()
+
+	def push(self):
+		"""Push window to bottom of window stack"""
+		if not self._wid or not self._parent:
+			return
+		self._wid.SendBehind(0)
+
+	def _mkclip(self):
+		if not self._wid or not self._parent:
+			return
+		print '_mkclip', self
 		# create region for whole window
 		if self._clip:
+			print '*** Already had one!'
 			Qd.DisposeRgn(self._clip)
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self._qdrect())
@@ -418,27 +504,104 @@ class _Window:
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 			w._mkclip()
+
+class _SubWindow(_Window):
+	"""Window "living in" with a toplevel window"""
+
+	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
+			transparent = 0):
 		
-	def _redraw(self):
-		if not self._clip:
-			self._mkclip()
-		saveclip = Qd.NewRgn()
-		Qd.GetClip(saveclip)
-		Qd.SetClip(self._clip)
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
-		Qd.EraseRect(self._rect)
-		Qd.SetClip(saveclip)
-		Qd.DisposeRgn(saveclip)
-		print 'REDRAW', self._bgcolor
+		_CommonWindow.__init__(self, parent, wid)
 		
+		x, y, w, h = parent._convert_coordinates(coordinates)
+		self._rect = x, y, w, h
+		print 'subwin:', self._rect
+		if w <= 0 or h <= 0:
+			raise 'Empty subwindow', coordinates
+		self._sizes = coordinates
+		
+		self._hfactor = parent._hfactor / self._sizes[_WIDTH]
+		self._vfactor = parent._vfactor / self._sizes[_HEIGHT]
+		
+		if parent._transparent:
+			self._transparent = parent._transparent
+		else:
+			self._transparent = transparent
+			
+		# XXXX pixmap to-be-done
+		
+		# XXXX Should we do redraw of parent or something??
+
+	def settitle(self, title):
+		"""Set window title"""
+		raise error, 'can only settitle at top-level'
+
+	def pop(self):
+		"""Pop to top of subwindow stack"""
+		if not self._parent:
+			return
+		if self._parent._subwindows[0] == self:
+			return
+		self._parent._subwindows.remove(self)
+		self._parent._subwindows.insert(0, self)
+		self._parent._clipchanged()
+		# XXXX Pixmap?
+		self._parent._redraw() # XXXX Too aggressive...
+
+	def push(self):
+		"""Push to bottom of subwindow stack"""
+		if not self._parent:
+			return
+		if self._parent._subwindows[-1] == self:
+			return
+		self._parent._subwindows.remove(self)
+		self._parent._subwindows.append(self)
+		self._parent._clipchanged()
+		# XXXX Pixmap?
+		self._parent._redraw() # XXXX Too aggressive...
+
+	def _mkclip(self):
+		if not self._parent:
+			return
+		print '_mkclip', self
+		# create region for our subwindow
+		if self._clip:
+			print '*** Already had one!'
+			Qd.DisposeRgn(self._clip)
+		self._clip = Qd.NewRgn()
+		Qd.RectRgn(self._clip, self._qdrect())
+		# subtract all our subsubwindows
+		for w in self._subwindows:
+			if not w._transparent:
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, w._qdrect())
+				Qd.DiffRgn(self._clip, r, self._clip)
+				Qd.DisposeRgn(r)
+			w._mkclip() # XXXX Needed??
+		# subtract our higher-stacked siblings
+		for w in self._parent._subwindows:
+			if w == self:
+				# Stop when we meet ourselves
+				break
+			if not w._transparent:
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, w._qdrect())
+				Qd.DiffRgn(self._clip, r, self._clip)
+				Qd.DisposeRgn(r)
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
-		r, g, b = bgcolor
 		self._window = window
 		window._displists.append(self)
+		self._bgcolor = bgcolor
+		self._fgcolor = window._fgcolor
+		self._linewidth = 1
 		self._buttons = []
+		self._list = []
+		self._rendered = 0
+		if not self._window._transparent:
+			self._list.append(('clear',))
+		self._font = None
 
 	def close(self):
 		if self._window is None:
@@ -446,37 +609,82 @@ class _DisplayList:
 		for b in self._buttons[:]:
 			b.close()
 		self._window._displists.remove(self)
+		if self._window._active_displist == self:
+			self._window._active_displist = None
 		self._window = None
+		del self._buttons
+		del self._list
 
 	def is_closed(self):
 		return self._window is None
 
 	def render(self):
-		pass
-
+		self._rendered = 1
+		# XXXX buttons?
+		self._render()
+		# XXXX render transparent sub/sibling windows?
+		
+	def _render(self):
+		self._window._active_displist = self
+		for i in self._list:
+			self._render_one(i)
+			
+	def _render_one(self, entry):
+		cmd = entry[0]
+		print 'RENDER', cmd, entry[1:]
+		if cmd == 'clear':
+			Qd.EraseRect(self._window._qdrect())
+		elif cmd == 'text':
+			Qd.MoveTo(entry[1], entry[2])
+			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
+		elif cmd == 'font':
+			entry[1]._setfont(self._window._wid)
+			
 	def fgcolor(self, color):
-		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		self._list.append('fg', self._window._convert_color(color))
+		self._fgcolor = color
+
 
 	def newbutton(self, coordinates):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
 		return 0.0, 0.0, 1.0, 1.0
 
 	def drawline(self, color, points):
-		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
-		for x, y in points:
-			pass
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		w = self._window
+		color = w._convert_color(color)
+		p = []
+		for point in points:
+			p.append(w._convert_coordinates(point))
+		self._list.append('line', color, p)
 
 	def drawbox(self, coordinates):
-		x, y, w, h = coordinates
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		self._list.append('box',
+				self._window._convert_coordinates(coordinates))
+##		self._optimize()
 
 	def drawfbox(self, color, coordinates):
-		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
-		x, y, w, h = coordinates
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		self._list.append('fbox', self._window._convert_color(color),
+				self._window._convert_coordinates(coordinates))
+##		self._optimize(1)
 
 	def usefont(self, fontobj):
 		self._font = fontobj
+		self._font._initparams(self._window._wid)
+		self._list.append('font', fontobj)
 		return self.baseline(), self.fontheight(), self.pointsize()
 
 	def setfont(self, font, size):
@@ -495,23 +703,49 @@ class _DisplayList:
 		return self._font.pointsize()
 
 	def strsize(self, str):
-		width, height = self._font.strsize(str)
+		width, height = self._font.strsize(self._window._wid, str)
+		print 'RELATIVE', float(width) * self._window._hfactor, \
+		       float(height) * self._window._vfactor
 		return float(width) * self._window._hfactor, \
 		       float(height) * self._window._vfactor
 
 	def setpos(self, x, y):
 		self._curpos = x, y
+		self._xpos = x
 
 	def writestr(self, str):
-		x, y = self._curpos
-		width, height = self.strsize(str)
-		return x, y, width, height
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		w = self._window
+		list = self._list
+##		f = self._font._font
+		base = self.baseline()
+		height = self.fontheight()
+		strlist = string.splitfields(str, '\n')
+		oldx, oldy = x, y = self._curpos
+		if len(strlist) > 1 and oldx > self._xpos:
+			oldx = self._xpos
+		oldy = oldy - base
+		maxx = oldx
+		for str in strlist:
+			x0, y0 = w._convert_coordinates((x, y))
+			list.append('text', x0, y0, str)
+##			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
+			# XXXX Must have correct font set...
+			self._curpos = x + float(Qd.TextWidth(str, 0, len(str))) / w._rect[_WIDTH], y
+			x = self._xpos
+			y = y + height
+			if self._curpos[0] > maxx:
+				maxx = self._curpos[0]
+		newx, newy = self._curpos
+		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
 class _Button:
 	def __init__(self, dispobj, coordinates):
 		x, y, w, h = coordinates
 		self._dispobj = dispobj
 		dispobj._buttons.append(self)
+		self._hicolor = self._color = dispobj._fgcolor
 
 	def close(self):
 		if self._dispobj is None:
@@ -526,7 +760,7 @@ class _Button:
 		pass
 
 	def hicolor(self, color):
-		r, g, b = color[0]*0x101, color[1]*0x101, color[2]*0x101
+		self._hicolor = color
 
 	def highlight(self):
 		pass
@@ -536,9 +770,54 @@ class _Button:
 
 _pt2mm = 25.4 / 72			# 1 inch == 72 points == 25.4 mm
 
+_fontmap = {
+	  'Times-Roman': ('Times', 0),
+	  'Times-Italic': ('Times', _qd_italic),
+	  'Times-Bold': ('Times', _qd_bold),
+	  'Utopia-Bold': ('New York', _qd_bold),
+	  'Palatino-Bold': ('Palatino', _qd_bold),
+	  'Helvetica': ('Helvetica', 0),
+	  'Helvetica-Bold': ('Helvetica', _qd_bold),
+	  'Helvetica-Oblique': ('Helvetica', _qd_italic),
+	  'Courier': ('Courier', 0),
+	  'Courier-Bold': ('Courier', _qd_bold),
+	  'Courier-Oblique': ('Courier', _qd_italic),
+	  'Courier-Bold-Oblique': ('Courier', _qd_italic+_qd_bold)
+	  }
+	  
+fonts = _fontmap.keys()
+
 class findfont:
 	def __init__(self, fontname, pointsize):
+		if not _fontmap.has_key(fontname):
+			raise error, 'Font not found: '+fontname
+		self._fontnum = Fm.GetFNum(_fontmap[fontname][0])
+		self._fontface = _fontmap[fontname][1]
 		self._pointsize = pointsize
+		self._inited = 0
+		
+	def _setfont(self, wid):
+		"""Set our font, saving the old one for later"""
+		self._old_fontinfo = savefontinfo(wid) # Save current font info
+		Qd.TextFont(self._fontnum)
+		Qd.TextFace(self._fontface)
+		Qd.TextSize(self._pointsize)
+		
+	def _restorefont(self, wid):
+		"""Restore the previous font"""
+		restorefontinfo(wid, self._old_fontinfo)
+		
+	def _initparams(self, wid):
+		"""Obtain font params like ascent/descent, if needed"""
+		if self._inited:
+			return
+		self._inited = 1
+		cur_fontinfo = savefontinfo(wid) # Save current font info
+		self._setfont(wid)
+		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
+		self._restorefont(wid)
+		restorefontinfo(wid, cur_fontinfo)
+		print 'FONTPARS', self.ascent, self.descent, self.leading
 
 	def close(self):
 		pass
@@ -546,40 +825,29 @@ class findfont:
 	def is_closed(self):
 		return 0
 
-	def strsize(self, str):
-		import string
+	def strsize(self, wid, str):
 		strlist = string.splitfields(str, '\n')
-		maxlen = 0
+		maxwidth = 0
+		maxheight = len(strlist) * (self.ascent + self.descent + self.leading)
+		self._setfont(wid)
 		for str in strlist:
-			l = len(str)
-			if l > maxlen:
-				maxlen = l
-		return maxlen * self._pointsize * .7 * _pt2mm, \
-		       len(strlist) * self.fontheight()
+			width = Qd.TextWidth(str, 0, len(str))
+			if width > maxwidth:
+				maxwidth = width
+		self._restorefont(wid)
+		print 'WIDTH OF', strlist, 'IS', maxwidth, maxheight
+		return float(maxwidth) / _x_pixel_per_mm, \
+		       float(maxheight) / _y_pixel_per_mm
 
 	def baseline(self):
-		return self._pointsize * _pt2mm
+		return float(self.ascent+self.leading) / _y_pixel_per_mm
 
 	def fontheight(self):
-		return self._pointsize * 1.2 * _pt2mm
+		return float(self.ascent + self.descent + self.leading) \
+			/ _y_pixel_per_mm
 
 	def pointsize(self):
 		return self._pointsize
-
-fonts = [
-	'Times-Roman',
-	'Times-Italic',
-	'Times-Bold',
-	'Utopia-Bold',
-	'Palatino-Bold',
-	'Helvetica',
-	'Helvetica-Bold',
-	'Helvetica-Oblique',
-	'Courier',
-	'Courier-Bold',
-	'Courier-Oblique',
-	'Courier-Bold-Oblique',
-	]
 
 class showmessage:
 	def __init__(self, text, type = 'message', grab = 1, callback = None,
