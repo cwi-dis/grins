@@ -382,6 +382,7 @@ class _CmifStructView(_CmifView):
 		_CmifView.__init__(self,doc)
 		self._button_down=0
 		self._drag_cmd_send=0
+		self._dropmap['Node']=(self.dragnode,self.dropnode)
 
 	def OnCreate(self,params):
 		_CmifView.OnCreate(self,params)
@@ -463,7 +464,7 @@ class _CmifStructView(_CmifView):
 		_CmifView.onLButtonDown(self, params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Press)
-
+		self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.COPY_UI.id)
 		self.checkDragDrop(msg.pos())
 		self._button_down=1
 	
@@ -473,14 +474,40 @@ class _CmifStructView(_CmifView):
 			if cmd.__class__==usercmd.COPY:
 				dragCmd=usercmd.COPY
 				break
+		dropRes=0
 		if dragCmd:
 			str='%d %d' % pos
-			# use this to register private format
-			#dropRes=self.DoDragDrop(dragCmd.__name__,str)
-			# this for text
-			dropRes=self.DoDragDrop(str)
+			dropRes=self.DoDragDrop('Node',str)
 		return dropRes
-					
+	
+		
+	def dragnode(self,dataobj,kbdstate,x,y):
+		node=dataobj.GetGlobalData('Node')
+		self._last_paste_cmd=None
+		if node:
+			dragCmd=None
+			self._last_paste_cmd=self.getpastecmd(kbdstate,(x,y))
+			if self._last_paste_cmd:return 1
+			return 0 
+		return 0
+
+	def dropnode(self,dataobj,effect,x,y):
+		node=dataobj.GetGlobalData('Node')
+		if node:
+			self.onMouseEvent((x,y),Mouse0Press)
+			self._parent.SendMessage(win32con.WM_COMMAND,self._last_paste_cmd.id)
+			return 1
+		return 0
+		
+	# Trivial for now. 
+	# Should check what paste cmd is available at pos given the kbdstate (user paste selection)
+	def getpastecmd(self,kbdstate,pos):
+		# Ctrl key pressed
+		if kbdstate==9 or kbdstate==8:
+			return usercmdui.PASTE_BEFORE_UI
+		else:
+			return usercmdui.PASTE_AFTER_UI
+							
 	# Response to left button up
 	def onLButtonUp(self, params):
 		_CmifView.onLButtonUp(self, params)
