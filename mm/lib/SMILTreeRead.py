@@ -1020,6 +1020,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node = self.__context.newnode(nodetype)
 		self.AddAttrs(node, attributes)
 
+		# + what AddAttrs has not translated to grins conventions
+		attributeName = attributes.get('attributeName')
+		if attributeName and attributeName == 'src':
+			node.attrdict['attributeName'] = 'file'
+
 		node.type = nodetype
 		node.subtype = 'animate'
 		node.attrdict['channel'] = chtype
