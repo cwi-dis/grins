@@ -415,6 +415,42 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				mediatype = mtype[0]
 				subtype = mtype[1]
 
+		# now determine channel type
+		if subtype is not None and \
+		   string.find(string.lower(subtype), 'real') >= 0:
+			# if it's a RealMedia type, use tag to determine chtype
+			if mtype == 'audio':
+				chtype = 'RealAudio'
+			elif mtype == 'img':
+				chtype = 'RealPix'
+			elif mtype == 'text':
+				chtype = 'RealText'
+			else:
+				chtype = 'RealVideo'
+		elif mediatype == 'audio':
+			chtype = 'sound'
+		elif mediatype == 'image':
+			chtype = 'image'
+		elif mediatype == 'video':
+			chtype = 'video'
+		elif mediatype == 'text':
+			if subtype == 'plain':
+				chtype = 'text'
+			else:
+				chtype = 'html'
+		elif mediatype == 'application' and \
+		     subtype == 'x-shockwave-flash':
+			chtype = 'RealVideo'
+		elif mediatype == 'cmif_cmif':
+			chtype = 'cmif'
+		elif mediatype == 'cmif_socket':
+			chtype = 'socket'
+		elif mediatype == 'cmif_shell':
+			chtype = 'shell'
+		else:
+			chtype = mediatype
+			self.warning('unrecognized media type %s' % chtype)
+
 ## 		if attributes['encoding'] not in ('base64', 'UTF'):
 ## 			self.syntax_error('bad encoding parameter')
 
@@ -431,6 +467,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.values = data
 		self.__node = node
 		self.AddAttrs(node, attributes)
+		node.__chantype = chtype
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
 		if mimetype is not None:
@@ -446,41 +483,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__node = None
 		del self.__attributes
 		mediatype, subtype = node.__mediatype
-		if mediatype == 'audio':
-			if subtype in ('vnd.rn-realaudio', 'x-pn-realaudio'):
-				mtype = 'RealAudio'
-			else:
-				mtype = 'sound'
-		elif mediatype == 'image':
-			if subtype == 'vnd.rn-realpix':
-				mtype = 'RealPix'
-			else:
-				mtype = 'image'
-		elif mediatype == 'video':
-			if subtype == 'vnd.rn-realvideo':
-				mtype = 'RealVideo'
-			else:
-				mtype = 'video'
-		elif mediatype == 'text':
-			if subtype == 'plain':
-				mtype = 'text'
-			elif subtype == 'vnd.rn-realtext':
-				mtype = 'RealText'
-			else:
-				mtype = 'html'
-		elif mediatype == 'application' and \
-		     subtype == 'x-shockwave-flash':
-			mtype = 'RealVideo'
-		elif mediatype == 'cmif_cmif':
-			mtype = 'cmif'
-		elif mediatype == 'cmif_socket':
-			mtype = 'socket'
-		elif mediatype == 'cmif_shell':
-			mtype = 'shell'
-		else:
-			mtype = mediatype
-			self.warning('unrecognized media type %s' % mtype)
-		node.__chantype = mtype
+		mtype = node.__chantype
 
 		if not self.__is_ext:
 			# don't warn since error message already printed
