@@ -155,7 +155,7 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'abstract', 'author', 'copyright',
+		namelist = ['name', 'title', 'abstract', 'author', 'copyright',
 			    'comment', 'layout', 'channel', 'u_group', 'loop',
 			    'system_bitrate', 'system_captions',
 			    'system_language', 'system_overdub_or_caption',
@@ -269,7 +269,7 @@ class ChannelWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['.cname', 'type', 'comment']
+		namelist = ['.cname', 'type', 'title', 'comment']
 		ctype = self.channel.get('type', 'unknown')
 		if channelmap.has_key(ctype):
 			cclass = channelmap[ctype]

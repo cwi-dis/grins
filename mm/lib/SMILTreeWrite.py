@@ -397,7 +397,7 @@ class SMILWriter(SMIL):
 		self.uses_cmif_extension = 0
 		self.root = node
 		self.fp = fp
-		self.__title = None
+		self.__title = node.GetContext().gettitle()
 
 		self.ids_used = {}
 
@@ -507,6 +507,9 @@ class SMILWriter(SMIL):
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
+		for key, val in self.root.GetContext().attributes.items():
+			self.writetag('meta', [('name', key),
+					       ('content', val)])
 		self.writelayout()
 		self.writeusergroups()
 		self.writegrinslayout()
