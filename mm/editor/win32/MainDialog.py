@@ -67,7 +67,7 @@ class MainDialog:
 			adornments = self.adornments,
 			commandlist = self.commandlist)
 		import settings
-		if not settings.get('no_initial_dialog'):
+		if not hasarguments and not settings.get('no_initial_dialog'):
 			f = windowinterface.getmainwnd()
 			windowinterface.OpenAppDialog(self.new_callback, self.open_callback, self.never_again, parent=f)
 		
