@@ -871,6 +871,10 @@ SOURCE=.\lib\win32\GenWnd.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\IconMixin.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\ListCtrl.py
 # End Source File
 # Begin Source File
@@ -908,6 +912,10 @@ SOURCE=.\lib\win32\Toolbars.py
 # Begin Source File
 
 SOURCE=.\lib\win32\TransitionBitBlit.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\TreeCtrl.py
 # End Source File
 # Begin Source File
 
