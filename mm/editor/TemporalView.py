@@ -32,8 +32,9 @@ class TemporalView(TemporalViewDialog):
 		pass;
 
 	def __add_commands(self):
-		# Messy function. Keep last.
-		pass
+		self.commands = [
+			CLOSE_WINDOW(callback = (self.hide, ())),
+			]
 
 	def show(self):
 		if self.is_showing():
@@ -61,3 +62,58 @@ class TemporalView(TemporalViewDialog):
 
 	def recalc(self):
 		self.scene.recalc()
+
+######################################################################
+		# Selection management.
+
+	def select_channel(self, channel):
+		self.selected_channels.append(channel)
+
+	def unselect_channels(self):
+		for i in self.selected_channels:
+			i.unselect()
+
+	def select_node(self, node):
+		self.selected_nodes.append(node)
+
+	def unselect_nodes(self):
+		for i in self.selected_nodes:
+			i.unselect()
+
+######################################################################
+		# window event handlers:
+
+	def ev_mouse0press(self, dummy, window, event, params):
+		x,y = params[0:2]
+		if x < 1.0 and y < 1.0:
+			x = x * self.geodl.canvassize[0]
+			y = y * self.geodl.canvassize[1]
+		self.scene.click((x,y))
+		self.draw()
+
+	def ev_mouse0release(self, dummy, window, event, params):
+		print "mouse released! :-( "
+
+	def ev_mouse2press(self, dummy, window, event, params):
+		print "right mouse pressed! :-)"
+
+	def ev_mouse2release(self, dummy, window, event, params):
+		print "rigth mouse released! :-)"
+
+	def ev_exit(self, dummy, window, event, params):
+		print "I should kill myself (the window, that is :-) )"
+
+	def ev_pastefile(self, dummy, window, event, params):
+		print "Pasting a file!"
+
+	def ev_dragfile(self, dummy, window, event, params):
+		print "Drag file!"
+
+	def ev_dropfile(self, dummy, window, event, params):
+		print "Dropping a file!"
+
+	def ev_dragnode(self, dummy, window, event, params):
+		print "Dragging a node!"
+
+	def ev_dropnode(self, dummy, window, event, params):
+		print "Dropped a node!"

@@ -47,6 +47,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.lbar = self._factory.createbar(self.node)
 		self.rbar = self._factory.createbar(self.node) # also.
 		self.__init_create_widgets(self.node, self.lbar, self.rbar)
+		self.editmgr = node.context.editmgr
 
 	def setup(self):
 		self.nodes_l = self.channelNameWidth + 6
@@ -119,6 +120,51 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			i.moveto((x,42,69,13)) # I just think that those numbers are cool. Life. Love. Death.
 		self.lbar.moveto((self.time2pixel(0), 1,2,3))
 		self.rbar.moveto((self.time2pixel(self.node.t1), 1, 2, 3))
+
+	def click(self, coords):
+		# The z-ordering goes as follows:
+		# 1) check the sync bars
+		# 2) check the nodes.
+		# You may need to add more to this as time goes by.
+		if self.lbar.is_hit(coords):
+			self.select_syncbar(self.lbar)
+		elif self.rbar.is_hit(coords):
+			self.select_syncbar(self.rbar)
+		else:
+			for i in self.breaks.values():
+				if i.is_hit(coords):
+					self.select_syncbar(i)
+			for c in self.channelWidgets.values():
+				if c.is_hit_y(coords):
+					if c.is_hit(coords):
+						self.select_channel(c)
+					else:
+						n = c.get_node_at(coords)
+						self.select_node(n)
+						
+	# TODO: what about CTRL-clicks for multiple selection?
+
+	def select_syncbar(self, bar):
+		print "Selected: ", bar, " (TODO)"
+		if isinstance(bar, SyncBarWidget):
+			bar.select()
+
+	def select_channel(self, channel):
+		print "Selected: ", channel, " (TODO)"
+		self.root.unselect_channels()
+		if isinstance(channel, ChannelWidget):
+			self.root.select_channel(channel)
+			channel.select()
+			self.editmgr.setglobalfocus('MMChannel', channel.channel)
+
+	def select_node(self, mmwidget):
+		print "Selected: ", mmwidget, " (TODO)"
+		self.root.unselect_nodes()
+		if isinstance(mmwidget, MMWidget):
+			self.root.select_node(mmwidget)
+			mmwidget.select()
+			self.editmgr.setglobalfocus('MMNode', mmwidget.node)
+			# Also, set the node's channel.
 
 ######################################################################
 # A factory to create new widgets in this file.
@@ -206,12 +252,26 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		# Append a node to this channel.
 		self.nodes.append(value)
 
+	def is_hit_y(self, coords):
+		hx,hy = coords
+		x,y,w,h = self.get_box()
+		if y < hy < y+h:
+			return 1
+		else:
+			return 0
+
+	def get_node_at(self, coords):
+		# My parent node has asked me to handle this click. Very well then.
+		for n in self.nodes:
+			if n.is_hit(coords):
+				return n
+
 
 class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 	# Abstract base class for any widget that has a start and end time.
 	# Instances of superclasses must be drawn on a time canvas (coords are 
 	def setup(self):
-		pass
+		self.editmgr = self.node.context.editmgr
 
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
@@ -241,6 +301,13 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	def get_endtime(self):
 		return self.node.t1
 
+	def select(self):
+		Widgets.Widget.select(self)
+		self.w_outerbox.set_color((255,255,255))
+
+	def unselect(self):
+		Widgets.Widget.unselect(self)
+		self.w_outerbox.set_color((0,0,0))
 
 class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 	# This is a syncronisation bar.
@@ -307,7 +374,8 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 		if t == None: t=0
 		if b == None: b = 10
 		self.w_bar.moveto((l-(barwidth/2), t-3, l+(barwidth/2), b+3))
-		#TimeWidget.moveto(self, (l-(barwidth/2), t, r+(barwidth/2), b))
+		# I need to move myself to handle clicks.
+		TimeWidget.moveto(self, (l-(barwidth/2), t-3, r+(barwidth/2), b+3))
 
 	def get_time(self):
 		if len(self.attached_right) > 0:
