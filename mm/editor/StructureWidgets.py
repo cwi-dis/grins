@@ -103,6 +103,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.iconbox = IconBox(self, self.mother)
 		self.cause_event_icon = None
 		self.infoicon = None
+		if node.infoicon:
+			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
 		if node.GetType() == 'comment':
 			self.playicon = None
 		else:
@@ -160,6 +162,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			return
 		self.playicon.set_icon(mode)
 		if redraw:
+			self.mother.playicons.append(self)
 			if self.mother.extra_displist is not None:
 				d = self.mother.extra_displist.clone()
 			else:
@@ -514,12 +517,38 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# Sets the information icon to this icon.
 		# icon is a string, msg is a string.
 		# XXXX This is wrong.
+		changed = self.node.infoicon != icon
+		if not changed and self.node.errormessage == msg:
+			# nothing to do
+			return
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		if self.infoicon is not None:
-			self.infoicon.set_icon(icon)
-		else:
+		if self.infoicon is None:
+			# create a new info icon
 			self.infoicon = self.iconbox.add_icon(icon, callback = self.show_mesg)
+			self.mother.need_resize = 1
+			self.mother.draw()
+			return
+		if not icon:
+			# remove the info icon
+			self.iconbox.del_icon(self.infoicon)
+			self.infoicon.destroy()
+			self.infoicon = None
+			self.mother.need_resize = 1
+			self.mother.draw()
+			return
+		# change the info icon
+		self.infoicon.set_icon(icon)
+		if changed:
+			if self.mother.extra_displist is not None:
+				d = self.mother.extra_displist.clone()
+			else:
+				d = self.mother.base_display_list.clone()
+			self.infoicon.draw(d)
+			d.render()
+			if self.mother.extra_displist is not None:
+				self.mother.extra_displist.close()
+			self.mother.extra_displist = d
 
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
