@@ -1679,16 +1679,19 @@ item: Install File
   Source=..\..\win32\DXMedia\bin\vidpipe.ax
   Destination=%MAINDIR%\Producer-SDK\vidpipe.ax
   Flags=0001000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\win32\DXMedia\bin\audpipe.ax
   Destination=%MAINDIR%\Producer-SDK\audpipe.ax
   Flags=0001000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Set Variable
   Variable=INSTALLDLLS
@@ -1796,6 +1799,7 @@ item: Install File
   Source=..\..\bin\win32\wingdi.pyd
   Destination=%MAINDIR%\wingdi.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\GRiNS-Icons\comment.tiff
@@ -1806,181 +1810,217 @@ item: Install File
   Source=..\..\bin\win32\dsound.pyd
   Destination=%MAINDIR%\dsound.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\GRiNS_RV2.exe
   Destination=%MAINDIR%\GRiNS_RV2.exe
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Common\rnco3260.dll
   Destination=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\rv303260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\rv303260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\rv203260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\erv13260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Tools\rmto3260.dll
   Destination=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Tools\rmme3260.dll
   Destination=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Tools\enlv3260.dll
   Destination=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\sipr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\rv103260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\espr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\ednt3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\dnet3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\14_43260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Plugins\basc3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Plugins\auth3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\28_83260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Plugins\sdpp3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\cook3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\atrc3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\atrc3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Common\pnrs3260.dll
   Destination=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\erv33260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\erv33260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Common\encn3260.dll
   Destination=%MAINDIR%\Producer-SDK\Common\encn3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\erv23260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Plugins\rn5a3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\win32trace.pyd
   Destination=%MAINDIR%\win32trace.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Scintilla.DLL
   Destination=%MAINDIR%\Scintilla.DLL
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\rmbe3260.dll
   Destination=%MAINDIR%\rmbe3260.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\pngu3266.dll
   Destination=%MAINDIR%\pngu3266.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\pncrt.dll
   Destination=%MAINDIR%\pncrt.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\imgop.pyd
   Destination=%MAINDIR%\imgop.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\imgjpeg.pyd
   Destination=%MAINDIR%\imgjpeg.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\imgformat.pyd
   Destination=%MAINDIR%\imgformat.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\imgcolormap.pyd
   Destination=%MAINDIR%\imgcolormap.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\GRiNS-Icons\prefetch.tiff
@@ -2001,41 +2041,49 @@ item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\tokr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\tokr3260.dll
   Flags=0000000010000011
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\wmfapi.pyd
   Destination=%MAINDIR%\wmfapi.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\GRiNS-Icons\RealVideo.tiff
@@ -2096,31 +2144,37 @@ item: Install File
   Source=..\..\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\rma.pyd
   Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\producer.pyd
   Destination=%MAINDIR%\producer.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: Install File
   Source=..\..\bin\win32\dshow.pyd
   Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000010
+  Extra Flags=00000010
 end
 item: End Block
 end
@@ -2327,6 +2381,7 @@ item: Create Shortcut
   Source=%MAINDIR%\GRiNS_RV2.exe
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for RealONE.lnk
   Icon Number=0
+  Flags=01000000
 end
 item: End Block
 end
@@ -2339,6 +2394,7 @@ item: Create Shortcut
   Source=%MAINDIR%\GRiNS_RV2.exe
   Destination=%CDESKTOPDIR%\GRiNS Editor for RealONE.lnk
   Icon Number=0
+  Flags=01000000
 end
 item: End Block
 end
@@ -2349,9 +2405,20 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\HowTo-Basic.pdf
-  Destination=%GROUP%\HowTo-Basic.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Tutorial.lnk
   Icon Number=0
-  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\REFM.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Reference Manual.lnk
+  Icon Number=0
 end
 item: End Block
 end
@@ -2364,9 +2431,20 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=HowTo-Basic
+  Icon Name=GRiNS Reference Manual
+  Command Line=%MAINDIR%\REFM.html
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Tutorial
   Command Line=%MAINDIR%\HowTo-Basic.pdf
-  Flags=01000000
 end
 item: End Block
 end
@@ -2555,6 +2633,42 @@ end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00000010
+end
+item: Set Variable
+  Variable=FINISH_ACTIONS
+  Value=B
+end
+item: Else Statement
+end
+item: Set Variable
+  Variable=FINISH_ACTIONS
+  Value=b
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00000010
+end
+item: Set Variable
+  Variable=FINISH_ACTIONS
+  Value=A
+  Flags=00000001
+end
+item: Else Statement
+end
+item: Set Variable
+  Variable=FINISH_ACTIONS
+  Value=a
+  Flags=00000001
+end
+item: End Block
+end
 item: Wizard Block
   Direction Variable=DIRECTION
   Display Variable=DISPLAY
@@ -2691,6 +2805,15 @@ item: Custom Dialog Set
       Text Norwegian=<&Tilbake
       Text Swedish=< &Tillbaka
     end
+    item: Checkbox
+      Rectangle=89 84 166 120
+      Variable=FINISH_ACTIONS
+      Enabled Color=00000000000000001111111111111111
+      Create Flags=01010000000000010000000000000011
+      Text=View QuickStart Guide
+      Text=Start Editor
+      Text=
+    end
     item: Set Control Attribute
       Control Name=BACK
       Operation=1
@@ -2735,6 +2858,26 @@ item: Edit Registry
     Value Name=Contact
     Root=2
   end
+end
+item: If/While Statement
+  Variable=FINISH_ACTIONS
+  Value=A
+  Flags=00000010
+end
+item: Execute Program
+  Pathname=%MAINDIR%\QuickStart.pdf
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=FINISH_ACTIONS
+  Value=B
+  Flags=00000010
+end
+item: Execute Program
+  Pathname=%MAINDIR%\GRiNS_RV2.exe
+end
+item: End Block
 end
 item: New Event
   Name=Cancel
