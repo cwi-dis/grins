@@ -132,28 +132,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	__truefalse = {'false': 0, 'true': 1}
 	__onoff = {'off': 0, 'on': 1}
 	__enumattrs = {
-		'accumulate': {'none':'none', 'sum':'sum'},
-		'additive': {'replace':'replace', 'sum':'sum'},
+		'accumulate': ['none', 'sum'],
+		'actuate': ['onLoad', 'onRequest'],
+		'additive': ['replace', 'sum'],
 		'attach-timebase': __truefalse,
-		'attributeType': {'CSS':'CSS', 'XML':'XML', 'auto':'auto'},
+		'attributeType': ['CSS', 'XML', 'auto'],
 		'autoReverse': __truefalse,
 		'autoplay': __truefalse,
 		'chapter-mode': {'all':0,'clip':1},
-		'clipBoundary': {'parent':'parent', 'children':'children'},
+		'clipBoundary': ['parent', 'children'],
 		'coordinated': __truefalse,
 		'defaultState': __truefalse,
-		'direction': {'forward':'forward', 'reverse':'reverse'},
-		'erase': {'never':'never', 'whenDone':'whenDone'},
-		'fill': {'freeze':'freeze', 'remove':'remove', 'hold':'hold', 'transition':'transition', 'auto':'auto', 'default':'default'},
-		'fillDefault': {'freeze':'freeze', 'remove':'remove', 'hold':'hold', 'transition':'transition', 'auto':'auto', 'inherit':'inherit'},
+		'direction': ['forward', 'reverse'],
+		'erase': ['never', 'whenDone'],
+		'fill': ['freeze', 'remove', 'hold', 'transition', 'auto', 'default'],
+		'fillDefault': ['freeze', 'remove', 'hold', 'transition', 'auto', 'inherit'],
 		'immediate-instantiation': __truefalse,
 		'immediate-instantiation': __truefalse,
-		'mode': {'in':'in', 'out':'out'},
-		'origin': {'parent':'parent', 'element':'element'},
-		'override': {'visible':'visible', 'hidden':'hidden'},
+		'mode': ['in', 'out'],
+		'origin': ['parent', 'element'],
+		'override': ['visible', 'hidden'],
+		'shape': ['rect', 'poly', 'circle'],
 		'syncMaster': __truefalse,
-		'systemAudioDesc': __onoff,
 		'system-captions': __onoff,
+		'systemAudioDesc': __onoff,
 		'systemCaptions': __onoff,
 		'time-slider': __truefalse,
 		}
@@ -232,7 +234,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__ids = {}		# collect all id's here
 		self.__nodemap = {}	# mapping from ID to MMNode instance
 		self.__idmap = {}
-		self.__anchormap = {}
 		self.__links = []
 		self.__base = ''
 		self.__printfunc = printfunc
@@ -240,7 +241,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__custom_tests = {}
 		self.__layouts = {}
 		self.__transitions = {}
-		self.__realpixnodes = []
 		self.__animatenodes = []
 		self.__regpoints = {}
 		self.__new_file = new_file
@@ -529,30 +529,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					xnode = self.__nodemap.get(name)
 				if xnode is None:
-					xanchor = self.__anchormap.get(name)
-					if xanchor is None:
-						xchan = self.__context.channeldict.get(name)
-						if xchan is None:
-							self.warning('ignoring sync arc from unknown element %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
-							continue
-						if event[:8] == 'viewport' or event[:9] == 'topLayout':
-							nsdict = self.getnamespace()
-							if event[:8] == 'viewport':
-								event = 'topLayout' + event[8:]
-								for ns in nsdict.values():
-									if ns in limited['viewport']:
-										break
-								else:
-									self.syntax_error('viewport deprecated in favor of topLayout')
+					xchan = self.__context.channeldict.get(name)
+					if xchan is None:
+						self.warning('ignoring sync arc from unknown element %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+						continue
+					if event[:8] == 'viewport' or event[:9] == 'topLayout':
+						nsdict = self.getnamespace()
+						if event[:8] == 'viewport':
+							event = 'topLayout' + event[8:]
+							for ns in nsdict.values():
+								if ns in limited['viewport']:
+									break
 							else:
-								for ns in nsdict.values():
-									if ns in limited['topLayout']:
-										break
-								else:
-									self.syntax_error('topLayout not available in old namespace')
-					else:
-						xnode, xanchor = xanchor
-				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,srcanchor=xanchor,channel=xchan,event=event,delay=offset or 0))
+								self.syntax_error('viewport deprecated in favor of topLayout')
+						else:
+							for ns in nsdict.values():
+								if ns in limited['topLayout']:
+									break
+							else:
+								self.syntax_error('topLayout not available in old namespace')
+				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,channel=xchan,event=event,delay=offset or 0))
 				continue
 		if boston:
 			if self.__context.attributes.get('project_boston') == 0:
@@ -911,7 +907,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
-		node.__anchorlist = []
 		attrdict = node.attrdict
 		pnode = node.GetSchedParent()
 		self.AddTestAttrs(attrdict, attributes)
@@ -949,7 +944,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val == 'indefinite':
 					attrdict['duration'] = -1
 				elif val == 'media':
-					if node.type in leaftypes:
+					if node.type in mediatypes:
 						attrdict['duration'] = -2
 					else:
 						self.syntax_error("no `media' value allowed on dur attribute on non-media elements")
@@ -965,7 +960,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				self.__context.attributes['project_boston'] = 1
 				if val == 'media':
-					if node.type in leaftypes:
+					if node.type in mediatypes:
 						attrdict[attr] = -2
 					else:
 						self.syntax_error("no `media' value allowed on %s attribute on non-media elements" % attr)
@@ -1365,10 +1360,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					pass
 
 	def parseEnumValue(self, attr, val):
-		dict = self.__enumattrs[attr]
-		if dict.has_key(val):
-			return dict[val]
-		valid = dict.keys()
+		values = self.__enumattrs[attr]
+		if type(values) is type({}):
+			if values.has_key(val):
+				return values[val]
+			valid = values.keys()
+		else:
+			if val in values:
+				return val
+			valid = values
 		valid.sort()
 		self.syntax_error("invalid `%s' value (valid values are: %s)" % (attr, ', '.join(valid)))
 
@@ -1828,13 +1828,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
 			# deal with hyperlink
-			href, atype, ltype, stype, dtype, id, access = self.__in_a[:-1]
+			href, actuate, ltype, stype, dtype, id, access = self.__in_a[:-1]
 			if id is not None and not self.__idmap.has_key(id):
 				self.__idmap[id] = node.GetUID()
-			anchorlist = node.__anchorlist
-			id = _uniqname(map(lambda a: a[2], anchorlist), id)
-			anchorlist.append((0, len(anchorlist), id, atype, [], (0, 0), access))
-			self.__links.append((node.GetUID(), id, href, ltype, stype, dtype))
+			# create the anchor node
+			node = self.__context.newnode('anchor')
+			self.__container._addchild(node)
+			node.__syncarcs = []
+			if access is not None:
+				node.attrdict['accesskey'] = access
+			if actuate is not None:
+				node.attrdict['actuate'] = actuate
+			self.__links.append((node, href, ltype, stype, dtype))
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
@@ -1979,15 +1984,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.Recurse(self.__root, self.__fixMediaPos)
 			
 	def __fixMediaPos(self, node):
-		if node.GetType() not in leaftypes:
+		if node.GetType() not in mediatypes:
 			return
 		channel = node.GetChannel()
-		if channel == None: return
+		if channel is None:
+			return
 		if not ChannelMap.isvisiblechannel(channel.get('type')):
 			return
 
 		region = channel.GetLayoutChannel()
-		if region == None: return
+		if region is None:
+			return
 		regCssId = region.getCssId()
 		if regCssId == None:
 			return
@@ -2278,16 +2285,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__fillchannel(ch, attrdict, chtype)
 				
 
-	def FixChannel(self, node):
-		if node.GetType() not in leaftypes:
-			return
-		if node.GetType() == 'animate':
-			return
-
-		if compatibility.G2 == features.compatibility:
-			if node.GetChannelType() == 'RealPix':
-				self.__realpixnodes.append(node)
-
 	def FixLayouts(self):
 		if not self.__layouts:
 			return
@@ -2297,56 +2294,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixLinks(self):
 		hlinks = self.__context.hyperlinks
-		for node, aid, url, ltype, stype, dtype in self.__links:
-			# node is either a node UID (int in string
-			# form) or a node id (anything else)
-			try:
-				string.atoi(node)
-			except string.atoi_error:
-				if not self.__nodemap.has_key(node):
-					self.warning('unknown node id %s' % node)
-					continue
-				node = self.__nodemap[node].GetUID()
-			if type(aid) is type(()):
-				aid, atype, args = aid
-			src = node, aid
+		for node, url, ltype, stype, dtype in self.__links:
 			href, tag = MMurl.splittag(url)
 			if not href:
 				# link intra document
-
-				if self.__anchormap.has_key(tag):
-					# link directly to an anchor
-					dst = self.__anchormap[tag]
-					dst = dst[0].GetUID(), dst[1]
-				else:
-					# link to a normal node.
-					# If there isn't dest anchor yet on this node,
-					# create an anchor with type value equal to ATYPE_DEST
-					# and store it in node.__anchorlist.
-					# Otherwise, if the anchor already exists, assume it's the dest anchor
-					if self.__nodemap.has_key(tag):
-						dst = self.__nodemap[tag]
-						dst = self.__destanchor(dst)
-					else:
-						self.warning("unknown node id `%s'" % tag)
-						continue
-				hlinks.addlink((src, dst, DIR_1TO2, ltype, stype, dtype))
+				if not self.__nodemap.has_key(tag):
+					self.warning("unknown node id `%s'" % tag)
+					continue
+				hlinks.addlink((node, self.__nodemap[tag], DIR_1TO2, ltype, stype, dtype))
 			else:
 				# external link
-				hlinks.addlink((src, url, DIR_1TO2, ltype, stype, dtype))
-
-	# Assume that an anchor list is a node attribute
-	# For each anchor, throw away the two fist arguments ( z-order and index)
-	# So each final anchor is composed of: (aid, atype, aargs, (begin,end))
-	def FixAnchors(self, node):
-		anchorlist = node.__anchorlist
-		if anchorlist:
-			alist = []
-			anchorlist.sort()
-			for a in anchorlist:
-				alist.append(apply(MMNode.MMAnchor, a[2:]))
-			node.attrdict['anchorlist'] = alist
-		del node.__anchorlist
+				hlinks.addlink((node, url, DIR_1TO2, ltype, stype, dtype))
 
 	def FixAnimateTargets(self):
 		for node, lineno in self.__animatenodes:
@@ -2355,11 +2313,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__nodemap.has_key(targetid):
 				targetnode = self.__nodemap[targetid]
 				node.targetnode = targetnode
-			else:
-				# check for not grins nodes
-				# regions, area, transitions etc
-				if not self.__regions.has_key(targetid) and not self.__anchormap.has_key(targetid):
-					self.warning("unknown targetElement `%s'" % targetid, lineno)
+			elif not self.__regions.has_key(targetid):
+				self.warning("unknown targetElement `%s'" % targetid, lineno)
 		del self.__animatenodes
 
 	def FixRegpoints(self):
@@ -2507,15 +2462,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not self.__childregions.has_key(None):
 				self.__childregions[None] = []
 		self.__makeLayoutChannels()
-		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
+		self.Recurse(self.__root, self.FixSyncArcs)
 		self.FixLayouts()
 		self.FixSizes()
 		self.FixBaseWindow()
 		self.FixLinks()
-		self.Recurse(self.__root, self.FixAnchors)
-		for node in self.__realpixnodes:
-			node.slideshow = SlideShow(node, self.__new_file)
-		del self.__realpixnodes
 		self.FixAnimateTargets()
 		self.FixAssets(self.__root)
 		metadata = ''.join(self.__metadata)
@@ -3266,7 +3217,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __fixendsync(self, node):
 		endsync = node.__endsync
 		del node.__endsync
-		if endsync is not None and node.type in leaftypes:
+		if endsync is not None and node.type in mediatypes:
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error("endsync attribute on media element not compatible with SMIL 1.0", node.__lineno)
 				if not features.editor:
@@ -3373,7 +3324,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container = node
 		node.__chanlist = {}
 		node.__syncarcs = []
-		node.__anchorlist = []
 		attrdict = node.attrdict
 		for attr, val in attributes.items():
 			val = string.strip(val)
@@ -3503,10 +3453,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		ltype, stype, dtype, access = self.__link_attrs(attributes)
 
-		# determinate atype according to actuate attribute
-		atype = self.__link_atype(attributes,ATYPE_WHOLE)
+		actuate = None
+		if attributes.has_key('actuate'):
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
+			if features.editor:
+				self.__context.attributes['project_boston'] = 1		
+			if self.__context.attributes.get('project_boston'):
+				actuate = self.parseEnumValue('actuate', attributes['actuate'])
 
-		self.__in_a = href, atype, ltype, stype, dtype, id, access, self.__in_a
+		self.__in_a = href, actuate, ltype, stype, dtype, id, access, self.__in_a
 
 	def end_a(self):
 		if self.__in_a is None:
@@ -3591,33 +3547,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		return ltype, stype, dtype, accesskey
 
-	def __link_atype(self, attributes, defaultValue):
-		# default value
-		atype = defaultValue
-				
-		actuate = attributes.get('actuate')
-		if actuate is not None:
-			if self.__context.attributes.get('project_boston') == 0:
-				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
-				if not features.editor:
-					return atype
-			self.__context.attributes['project_boston'] = 1		
-			if actuate == 'onRequest':
-				# default value
-				pass
-			elif actuate == 'onLoad':
-				atype = ATYPE_AUTO
-			else:
-				self.syntax_error('unknown actuate attribute value')
-				
-		return atype
-		
 	def start_anchor(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
 			return
+
+		# create the anchor node
+		node = self.__context.newnode('anchor')
+		self.__container._addchild(node)
+		self.__container = node
+		node.__syncarcs = []
+
+		if id is not None:
+			self.__nodemap[id] = node
+			self.__idmap[id] = node.GetUID()
+			node.attrdict['name'] = id
+
+		self.AddTestAttrs(node.attrdict, attributes)
+
 		nohref = attributes.get('nohref')
 		if nohref is not None:
 			if nohref != 'nohref':
@@ -3627,149 +3576,76 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			href = attributes.get('href') # None is dest only anchor
 		else:
 			href = None
-##		if href is None:
-##			#XXXX is this a document error?
-##			self.warning('required attribute href missing', self.lineno)
 		if href is not None and href[:1] != '#':
 			href = MMurl.basejoin(self.__base, href)
 			href = '%20'.join(href.split(' '))
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
-		uid = self.__node.GetUID()
-
-		nname = self.__node.GetRawAttrDef('name', None)
 
 		# show, sourcePlaystate and destinationPlaystate parsing
 		ltype, stype, dtype, access = self.__link_attrs(attributes)
-		
-		# default atype value
-		atype = ATYPE_WHOLE
-
-		# coord and shape parsing
-		
-		aargs = [A_SHAPETYPE_ALLREGION]
+		if access is not None:
+			node.attrdict['accesskey'] = access
 
 		# shape attribute
-		shape = attributes.get('shape')
-		if shape is None or shape == 'rect':
-			ashapetype = A_SHAPETYPE_RECT
-		elif shape == 'poly':
-			ashapetype = A_SHAPETYPE_POLY
-		elif shape == 'circle':
-			ashapetype = A_SHAPETYPE_CIRCLE
-		else:
-			ashapetype = A_SHAPETYPE_ALLREGION
-			self.syntax_error('Unknown shape type '+shape)
+		shape = None
+		if attributes.has_key('shape'):
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('shape attribute not compatible with SMIL 1.0')
+			if features.editor:
+				self.__context.attributes['project_boston'] = 1		
+			shape = self.parseEnumValue('shape', attributes['shape'])
+			if shape is not None:
+				node.attrdict['ashape'] = shape
 
 		# coords attribute
-		l = self.__parseCoords(attributes.get('coords'))
+		coords = self.__parseCoords(attributes.get('coords'))
 
-		if l is not None:
-			atype = ATYPE_NORMAL
-			if ashapetype == A_SHAPETYPE_RECT:
-				error = 0
-				if len(l) != 4:
+		if coords is not None:
+			error = 0
+			if shape is None or shape == 'rect':
+				if len(coords) != 4:
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
-				if not error:
-					x0, y0, x1, y1 = l[:]
-					# can't test anymore since you can mix poucent and pixel values
-#					if x1 <= x0 or y1 <= y0:
-#						self.warning('Anchor coordinates incorrect. XYWH-style?.',
-#							self.lineno)
-#						error = 1
-
-				if not error:
-#					aargs = [x0, y0, x1-x0, y1-y0]
-					aargs = [ashapetype, x0, y0, x1, y1]
-			elif ashapetype == A_SHAPETYPE_POLY:
-				error = 0
-				if (len(l) < 6) or (len(l) & 1):
+			elif shape == 'poly':
+				if (len(coords) < 6) or (len(coords) & 1):
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
-				if not error:
+				else:
 					# if the last coordinate is equal to the first coordinate, we supress the last
-					if l[-2] == l[0] and l[-1] == l[1]:
-						l = l[:-2]
-						if len(l) < 4:
-							self.syntax_error('Invalid number of coordinate values in anchor')
-							error = 1
-				if not error:
-					aargs = [ashapetype,]+l
-			elif ashapetype == A_SHAPETYPE_CIRCLE:
-				error = 0
-				if len(l) != 3:
+					if coords[-2:] == coords[:2]:
+						del coords[-2:]
+			else:		# shape == 'circle'
+				if len(coords) != 3:
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
-				if not error:
-					cx, cy, rd = l[:]
-					aargs = [ashapetype, cx, cy, rd]
 
-		begin = attributes.get('begin')
-		if begin is not None:
-			try:
-				begin = parseutil.parsecounter(begin, syntax_error = self.syntax_error, context = self.__context)
-			except parseutil.error, msg:
-				self.syntax_error(msg)
-				begin = None
-			else:
-				atype = ATYPE_NORMAL
-		end = attributes.get('end')
-		if end is not None:
-			try:
-				end = parseutil.parsecounter(end, syntax_error = self.syntax_error, context = self.__context)
-			except parseutil.error, msg:
-				self.syntax_error(msg)
-				end = None
-			else:
-				atype = ATYPE_NORMAL
-		# extension: accept z-index attribute
-		z = attributes.get('z-index', '0')
-		try:
-			z = string.atoi(z)
-		except string.atoi_error:
-			self.syntax_error('invalid z-index value')
-			z = 0
-		if z < 0:
-			self.syntax_error('anchor with negative z-index')
-			z = 0
-		anchorlist = self.__node.__anchorlist
+			if not error:
+				node.attrdict['acoords'] = coords
 
-		# compute an unique aid
-		# an aid is either:
-		#	- the fragment id
-		#	- the id specified in tag (string)
-		#	- an arbitrary id (integer)
-		#	- ?? from CMIF encoding
-
-		# a[2] if the aid of anchor
-		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
+		for attr in ('begin', 'end'):
+			val = attributes.get(attr)
+			if val is not None:
+				node.__syncarcs.append((attr, val, self.lineno))
 
 		if attributes.has_key('fragment'):
-			aid = attributes['fragment']
-			atype = ATYPE_NORMAL
-			aargs[0] = A_SHAPETYPE_FRAGMENT
-		elif nname is not None and id is not None and \
-		     id[:len(nname)+1] == nname + '-':
-			# undo CMIF encoding of anchor ID
-			aid = id[len(nname)+1:]
-		elif id is not None:
-			aid = id
+			node.attrdict['fragment'] = attributes['fragment']
 
-		# determinate new atype
-		# atype may be overide by the actuate attribute
-		atype = self.__link_atype(attributes, atype)
-				
-		if id is not None:
-			self.__anchormap[id] = self.__node, aid
-			self.__idmap[id] = uid, aid
-		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0), access))
+		if attributes.has_key('actuate'):
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
+			if features.editor:
+				self.__context.attributes['project_boston'] = 1		
+			if self.__context.attributes.get('project_boston'):
+				val = self.parseEnumValue('actuate', attributes['actuate'])
+				if val is not None:
+					node.attrdict['actuate'] = val
+
 		if href is not None:
-			self.__links.append((uid, (aid, atype, aargs),
-					     href, ltype, stype, dtype))
+			self.__links.append((node, href, ltype, stype, dtype))
 
 	def end_anchor(self):
-		pass
+		self.__container = self.__container.GetParent()
 
 	def start_area(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
@@ -4062,16 +3938,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.fatalerror()
 
 	# helper methods
-
-	def __destanchor(self, node):
-		anchorlist = node.__anchorlist
-		for a in anchorlist:
-			if a[3] == ATYPE_DEST:
-				break
-		else:
-			a = 0, len(anchorlist), '0', ATYPE_DEST, [], (0, 0), None
-			anchorlist.append(a)
-		return node.GetUID(), a[2]
 
 	def __convert_color(self, val):
 		val = val.lower()

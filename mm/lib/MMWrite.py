@@ -4,7 +4,7 @@ __version__ = "$Id$"
 
 
 from MMExc import *		# Exceptions
-from MMNode import alltypes, leaftypes, interiortypes
+from MMNode import interiortypes
 import MMCache
 import os
 

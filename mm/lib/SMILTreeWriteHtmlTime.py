@@ -120,7 +120,11 @@ class SMILHtmlTimeWriter(SMIL):
 		self.smilboston = 1
 		self.prune = 0
 		self.cleanSMIL = 1
-		ctx = node.GetContext()
+
+		# some abbreviations
+		self.context = ctx = node.GetContext()
+		self.hyperlinks = ctx.hyperlinks
+
 		self.root = node
 		self.fp = fp
 		self.__title = ctx.gettitle()
@@ -358,13 +362,8 @@ class SMILHtmlTimeWriter(SMIL):
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
 		name = self.uid2name[uid]
-		if not self.ids_used[name]:
-			alist = x.GetAttrDef('anchorlist', [])
-			hlinks = x.GetContext().hyperlinks
-			for a in alist:
-				if hlinks.finddstlinks((uid, a.aid)):
-					self.ids_used[name] = 1
-					break
+		if not self.ids_used[name] and self.hyperlinks.finddstlinks(x):
+			self.ids_used[name] = 1
 
 		attributes = self.attributes.get(xtype, {})
 		if type == 'prio':
