@@ -88,7 +88,7 @@ ITEMLIST_ALL=ITEMrange(ITEM_LEFT_ATITLE, ITEM_OK)
 
 __version__ = "$Id"
 
-class LinkEditDialog:
+class LinkEditDialog(windowinterface.MACDialog):
 	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
 		"""Create the LinkEditor dialog.
 
@@ -109,20 +109,12 @@ class LinkEditDialog:
 		cbarg2 -- any object -- argument passed on to
 			callbacks related to the right list
 		"""
+		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
+				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 		
 		self._left_client_data = cbarg1
 		self._right_client_data = cbarg2
 
-		self._itemlist_shown = ITEMLIST_ALL[:]
-		self._window = windowinterface.DialogWindow(ID_DIALOG_LINKEDIT)
-		self._dialog = self._window._wid
-		# Override event handler:
-		self._window.do_itemhit = self.do_itemhit
-
-		# Setup default key bindings
-		self._dialog.SetDialogDefaultItem(ITEM_OK)
-		self._dialog.SetDialogCancelItem(ITEM_CANCEL)
-		
 		# Create the scrolled lists
 		tp, h, rect = self._dialog.GetDialogItem(ITEM_LEFT_ALIST)
 		self._leftlist = self._window.ListWidget(rect)
@@ -134,77 +126,7 @@ class LinkEditDialog:
 		# Create the menus
 		self._leftmenu = windowinterface.FullPopupMenu(menu1)
 		self._rightmenu = windowinterface.FullPopupMenu(menu2)
-				
-	def _showitemlist(self, itemlist):
-		for item in itemlist:
-			if item in self._itemlist_shown:
-				continue
-			self._dialog.ShowDialogItem(item)
-			self._itemlist_shown.append(item)
-		
-	def _hideitemlist(self, itemlist):
-		for item in itemlist:
-			if item not in self._itemlist_shown:
-				continue
-			self._dialog.HideDialogItem(item)
-			self._itemlist_shown.remove(item)
-			
-	def _setsensitive(self, itemlist, sensitive):
-		for item in itemlist:
-			tp, h, rect = self._dialog.GetDialogItem(item)
-			ctl = h.as_Control()
-			if sensitive:
-				ctl.HiliteControl(0)
-			else:
-				ctl.HiliteControl(255)
-		if sensitive:
-			self._showitemlist(itemlist)
-			
-	def _setlabel(self, item, text):
-		tp, h, rect = self._dialog.GetDialogItem(item)
-		Dlg.SetDialogItemText(h, text)
-		
-	def close(self):
-		"""Close the dialog and free resources."""
-		self._window.close()
-		del self._window.do_itemhit
-		del self._dialog
-
-	def show(self):
-		"""Show the dialog."""
-		print "show", self
-		self._window.show()
-		self._window.register(WMEVENTS.WindowExit, self.goaway, ())
-		
-	def goaway(self, *args):
-		self.hide()
-
-	def hide(self):
-		"""Hide the dialog."""
-		print "hide", self
-		self._window.hide()
-
-	def settitle(self, title):
-		"""Set (change) the title of the window.
-
-		Arguments (no defaults):
-		title -- string to be displayed as new window title.
-		"""
-		self._window.settitle(title)
-
-	def is_showing(self):
-		"""Return whether dialog is showing."""
-		return self._window.is_showing()
-
-	def setcursor(self, cursor):
-		"""Set the cursor to a named shape.
-
-		Arguments (no defaults):
-		cursor -- string giving the name of the desired cursor shape
-		"""
-		print 'setcursor', self, cursor
-		self._window.setcursor(cursor)
-		
+						
 	def do_itemhit(self, item, event):
 		if item == ITEM_LEFT_NODESELECT:
 			self._showmenu(event, ITEM_LEFT_NODESELECT, self._leftmenu)
@@ -247,12 +169,10 @@ class LinkEditDialog:
 			print 'Unexpected dialog event, item', item, 'event', event
 			
 	def _typeclick(self, item):
-		print 'TYPE', item
 		self.linktypesetchoice(item)
 		self.linktype_callback()
 		
 	def _dirclick(self, item):
-		print 'DIR', item
 		self.linkdirsetchoice(item)
 		self.linkdir_callback()
 		
@@ -267,7 +187,6 @@ class LinkEditDialog:
 		tp, h, (x0, y0, x1, y1) = self._dialog.GetDialogItem(baseitem)
 		Qd.SetPort(self._dialog)
 		y, x = Qd.LocalToGlobal((x0, y0))
-		print y0, x0, 'to', y, x
 		menu.popup(x, y, event, self._window)
 			
 
@@ -295,7 +214,6 @@ class LinkEditDialog:
 		poslist -- list of integers -- the indices of the
 			items to be deleted
 		"""
-		print 'leftdellistitems', self, poslist
 		poslist = poslist[:]
 		poslist.sort()
 		poslist.reverse()
@@ -335,7 +253,6 @@ class LinkEditDialog:
 
 	def leftgetselected(self):
 		"""Return the index of the currently selected item or None."""
-		print 'leftgetselected'
 		return self._leftlist.getselect()
 
 	def leftgetlist(self):
@@ -348,7 +265,6 @@ class LinkEditDialog:
 		Arguments (no defaults):
 		pos -- index of item to be made visible.
 		"""
-		print 'leftmakevisible'
 		pass
 		
 	def leftbuttonssetsensitive(self, sensitive):
@@ -423,7 +339,6 @@ class LinkEditDialog:
 
 	def rightgetselected(self):
 		"""Return the index of the currently selected item or None."""
-		print 'rightgetselected'
 		return self._rightlist.getselect()
 
 	def rightgetlist(self):
@@ -436,7 +351,6 @@ class LinkEditDialog:
 		Arguments (no defaults):
 		pos -- index of item to be made visible.
 		"""
-		print 'rightmakevisible'
 		pass
 
 	def rightbuttonssetsensitive(self, sensitive):
@@ -489,7 +403,6 @@ class LinkEditDialog:
 		Arguments (no defaults):
 		pos -- index of item to be made visible.
 		"""
-		print 'middlemakevisible'
 		pass
 
 	def addsetsensitive(self, sensitive):
@@ -554,7 +467,7 @@ class LinkEditDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self._setsensitive(ITEMLIST_DIR[pos:pos], sensitive)
+		self._setsensitive(ITEMLIST_DIR[pos+1:pos+2], sensitive)
 
 	def linkdirsetchoice(self, choice):
 		"""Set the current choice of the link dir list.
@@ -587,7 +500,7 @@ class LinkEditDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self._setsensitive(ITEMLIST_TYPE[pos:pos], sensitive)
+		self._setsensitive(ITEMLIST_TYPE[pos+1:pos+2], sensitive)
 
 	def linktypesetchoice(self, choice):
 		"""Set the current choice of the link type list.
@@ -595,8 +508,6 @@ class LinkEditDialog:
 		Arguments (no defaults):
 		choice -- index of the new choice
 		"""
-##		print 'setchoice', choice # DBG
-##		return #DBG
 		for i in range(3):
 			tp, h, rect = self._dialog.GetDialogItem(ITEM_TYPE_JUMP+i)
 			ctl = h.as_Control()
