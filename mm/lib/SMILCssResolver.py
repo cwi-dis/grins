@@ -204,7 +204,7 @@ class Node:
 			raise 'SmilCssResolver: init failed, no root node'
 
 		self.container._toInitState()		
-		self._initialUpdate()
+		self.update()
 		self.isInit = 1
 				
 	def isInitState(self):
@@ -270,7 +270,7 @@ class RegionNode(Node):
 		Node.__init__(self, context, mmobj)
 		self.media = None
 
-	def _initialUpdate(self):
+	def update(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
 		if self.pxwidth <= 0: self.pxwidth = 1
 		self.pxtop, self.pxheight = self._resolveCSS2Rule(self.top, self.height, self.bottom, self.container.pxheight)
@@ -801,7 +801,7 @@ class RootNode(RegionNode):
 	def updateAll(self):
 		self._onGeomChanged()
 		for child in self.children:
-			child._initialUpdate()
+			child.update()
 			
 	def _onGeomChanged(self):
 		self.context._onPxValuesChanged(self, self._getPxGeom())
@@ -845,7 +845,7 @@ class MediaNode(Node):
 			self.intrinsicWidth = None
 			self.intrinsicHeight = None
 		
-	def _initialUpdate(self):
+	def update(self):
 		# get the intrinsic size
 		# note: for optimization, the defaultSizeHandler method has a cache
 		self.intrinsicWidth, self.intrinsicHeight = self.defaultSizeHandler(None, None)
