@@ -1,0 +1,30 @@
+Microsoft (R) COFF Binary File Dumper Version 6.00.8168
+Copyright (C) Microsoft Corp 1992-1998. All rights reserved.
+
+
+Dump of file WebPro32.ocx
+
+File Type: DLL
+
+  Image has the following dependencies:
+
+    WINMM.dll
+    MFC42.DLL
+    MSVCRT.dll
+    KERNEL32.dll
+    USER32.dll
+    GDI32.dll
+    comdlg32.dll
+    SHELL32.dll
+    ole32.dll
+    OLEAUT32.dll
+    WSOCK32.dll
+
+  Summary
+
+        7000 .data
+        3000 .idata
+       13000 .rdata
+        A000 .reloc
+       8E000 .rsrc
+       63000 .text

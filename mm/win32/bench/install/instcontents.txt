@@ -1,0 +1,33 @@
+Installation contents:
+
+mfc42.dll 
+	Install to <system> folder
+	Visual Studio 6, Service Pack 2
+msvcrt.dll
+	Install to <system> folder. 
+	Visual Studio 6, Service Pack 2
+
+Gear32sd.dll
+	Install to app folder
+msvcrt40.dll
+	Install to <system> folder
+
+WebPro32.ocx
+	Install to app folder and register it there.
+olepro32.dll
+	Install to <system> folder
+
+(
+Plus the usual Python stuff.
+	(Python15.dll, PyWinTypes15.dll, win32ui.pyd, [rma.pyd])
+	Install to app folder.
+Plus GRiNS
+	(GRiNSRes.dll, GRiNS.exe, GRiNSed.exe, <Data>, <Examples>, <Manuals>)
+	This is the app folder.
+)
+	
+Windows Media Player
+	The installation can be done either before or after.
+Real Player
+	This is optional. Needed only for Real Media support.
+

@@ -1,0 +1,25 @@
+Microsoft (R) COFF Binary File Dumper Version 6.00.8168
+Copyright (C) Microsoft Corp 1992-1998. All rights reserved.
+
+
+Dump of file GRiNSed.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    python15.dll
+    KERNEL32.dll
+    USER32.dll
+    ADVAPI32.dll
+    SHELL32.dll
+    OLEAUT32.dll
+    MSVCRT.dll
+    PyWinTypes15.dll
+
+  Summary
+
+      25E000 .data
+        2000 .rdata
+        3000 .rsrc
+        7000 .text
