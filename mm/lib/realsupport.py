@@ -754,6 +754,22 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None):
 			images[file] = handle, url
 	for handle, name in images.values():
 		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
+	if not tostring and bgcolor != (0,0,0):
+		if rp.tags:
+			# only write extra fill if first tag is not a fill starting at 0 which
+			# fills the whole region
+			attrs = rp.tags[0]
+			extrafill = attrs.get('tag', 'fill') != 'fill' or attrs.get('start', 0) != 0 or attrs.get('subregionxy', (0,0)) != (0,0) or attrs.get('subregionwh', (0,0)) != (0,0)
+		else:
+			extrafill = 1
+		if extrafill:
+			for name, val in colors.items():
+				if bgcolor == val:
+					color = name
+					break
+				else:
+					color = '#%02x%02x%02x' % bgcolor
+			f.write('  <fill start="0" color="%s"/>\n' % color)
 	start = 0
 	duration = 0
 	fadeouts = []
@@ -862,7 +878,7 @@ def writeRT(file, rp, node):
 	ch = node.GetChannel(attrname='captionchannel')
 	width, height = ch.get('base_winoff',(0,0,320,180))[2:4]
 	
-	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
+	bgcolor = node.GetAttrDef('bgcolor', ch.get('bgcolor'))
 	ctx = node.GetContext()
 	f = open(file, 'w')
 	f.write('<window width="%d" height="%d"' % (int(width), int(height)))
