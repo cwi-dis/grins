@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_MS2_win_2.0-149.exe
+  EXE Filename=..\..\bin\win32\grins_MS2_win_2.0-150.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1471,7 +1471,7 @@ end
 item: Install File
   Source=..\..\editor\hutchinson\win32\grprefs.txt
   Destination=%MAINDIR%\grprefs.txt
-  Flags=0000000010000010
+  Flags=0000000010001010
 end
 item: Install File
   Source=..\..\My Devices\H3G2.gskin
