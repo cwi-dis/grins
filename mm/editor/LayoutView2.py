@@ -342,8 +342,8 @@ class MediaRegion(Region):
 		self._ctx.applyGeomOnMedia(self.getNodeRef(), geom)
 
 	def onProperties(self):
-		# nothing for now
-		pass
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self._ctx.editProperties(self.getNodeRef())
 	
 class Viewport(Node):
 	def __init__(self, name, nodeRef, ctx):
@@ -1109,12 +1109,18 @@ class LayoutView2(LayoutViewDialog2):
 
 	def editProperties(self, nodeRef):
 		node = self.getNode(nodeRef)
-		if node != None and node.getNodeType() != TYPE_MEDIA:
-			# allow to choise attributes
-			import AttrEdit		
-			AttrEdit.showchannelattreditor(self.toplevel,
-						self.context.channeldict[nodeRef.name])
-
+		if node != None:
+			nodeType = node.getNodeType()
+			if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
+				# allow to choice attributes
+				import AttrEdit		
+				AttrEdit.showchannelattreditor(self.toplevel,
+							self.context.channeldict[nodeRef.name])
+			elif nodeType == TYPE_MEDIA:
+				# allow to choice attributes
+				import AttrEdit
+				AttrEdit.showattreditor(self.toplevel, nodeRef)
+			
 	def sendBack(self, regionRef):
 		currentZ = regionRef.GetAttrDef('z',0)
 
@@ -1552,7 +1558,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.dialogCtrl.enable('NewRegion',0)
 			self.dialogCtrl.enable('DelRegion',0)
 
-		commandList = []	
+		commandList = self.mkcommandlist()	
 		self.setcommands(commandList, '')
 				
 	def updateMediaGeomOnDialogBox(self, geom):
