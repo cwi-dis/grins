@@ -5,6 +5,9 @@ __version__ = "$Id$"
 import sys
 import os
 
+# The next line enables/disables the CORBA interface to GRiNS
+
+ENABLE_FNORB_SUPPORT = 0
 
 import getopt
 
@@ -81,8 +84,14 @@ class Main(MainDialog):
 				CRASH(callback = (self.crash_callback, ())),
 				]
 		MainDialog.__init__(self, 'CMIFed')
+
 		for file in files:
 			self.openURL_callback(MMurl.guessurl(file))
+
+		if ENABLE_FNORB_SUPPORT:
+			import CORBA.services
+			self.corba_services = CORBA.services.services(sys.argv)
+				
 
 	def new_callback(self):
 		import TopLevel
