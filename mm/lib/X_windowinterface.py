@@ -788,7 +788,7 @@ class _Window:
 		form.RemoveEventHandler(X.ButtonMotionMask, X.FALSE,
 					self._do_rb, None)
 		form.RemoveEventHandler(X.ButtonReleaseMask, X.FALSE,
-					self._do_rb, None)
+					self._end_rb, None)
 		form.UngrabButton(X.AnyButton, X.AnyModifier)
 		self._open_subwins()
 		self._rb_dialog.close()
