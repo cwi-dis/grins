@@ -77,7 +77,7 @@ class AnchorEditorDialog:
 			None, 'Id:', list, initial, (self.anchor_callback, ()),
 			top = None, left = None, right = self.__buttons,
 			bottom = self.__type_choice,
-			enterCallback = (self.id_callback, ()))
+			changeCallback = (self.id_callback, ()))
 		w.show()
 
 	def close(self):
