@@ -167,6 +167,22 @@ class TopLevel(ViewDialog):
 		self.setready()
 
 	def open_okcallback(self, filename):
+		if os.path.isabs(filename):
+			cwd = self.dirname
+			if not cwd:
+				cwd = os.getcwd()
+			elif not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+			if os.path.isdir(filename):
+				dir, file = filename, os.curdir
+			else:
+				dir, file = os.path.split(filename)
+			# XXXX maybe should check that dir gets shorter!
+			while len(dir) > len(cwd):
+				dir, f = os.path.split(dir)
+				file = os.path.join(f, file)
+			if dir == cwd:
+				filename = file
 		try:
 			top = TopLevel(self.main, filename, 0)
 		except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
