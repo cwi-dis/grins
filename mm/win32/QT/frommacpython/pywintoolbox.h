@@ -25,9 +25,22 @@
 
 /* Routines specific to Qt/Windows */
 int ToEventRecord(PyObject *obj, EventRecord  *pe);
-int ToRect(PyObject *obj, Rect  *pr);
 
 /* Mac routines we need (aside from those in pymactoolbox.h */
 extern PyObject *PyMac_GetOSErrException(void);
+
+/* Windows Direct Draw Python Objects */
+#include <ddraw.h>
+
+typedef struct {
+	PyObject_HEAD
+	IDirectDraw* pI;
+} DirectDrawObject;
+
+typedef struct {
+	PyObject_HEAD
+	IDirectDrawSurface* pI;
+} DirectDrawSurfaceObject;
+
 #endif
 
