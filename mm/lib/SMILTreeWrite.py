@@ -1502,8 +1502,8 @@ class SMILWriter(SMIL):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'null'):
+			if ch.GetParent() is None and \
+			   ChannelMap.isvisible(ch['type']):
 				# top-level channel with window
 				if not self.__title:
 					self.__title = ch.name
