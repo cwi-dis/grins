@@ -217,10 +217,10 @@ def propdown(root, node, stoptime, dftstarttime=0):
 				stoptime = -1
 		for c in children:
 			if term in ('LAST', 'ALL'):
-				if (stoptime >= 0 and c.t1 > stoptime) or c.t1 < 0:
+				if hasattr(c, 't1') and ((stoptime >= 0 and c.t1 > stoptime) or c.t1 < 0):
 					stoptime = c.t1
 			elif term == 'FIRST':
-				if stoptime >= 0 and c.t1 < stoptime:
+				if hasattr(c, 't1') and stoptime >= 0 and c.t1 < stoptime:
 					stoptime = c.t1
 			elif term == MMAttrdefs.getattr(c, 'name'):
 				propdown(root, c, stoptime, node.t0)
