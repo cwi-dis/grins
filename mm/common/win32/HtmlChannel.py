@@ -120,8 +120,16 @@ class HtmlChannel(Channel.ChannelWindow):
 			if not self.window.HasHtmlCtrl():
 				import settings
 				self.__which_control = settings.get('html_control')
-				self.window.CreateHtmlCtrl()
-				self.__arm(node)
+				# IE:0 or WEBSTER:1
+				if not self.__which_control:
+					self.__which_control = 0
+				try:
+					self.window.CreateHtmlCtrl(which = self.__which_control)
+				except:
+					msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed"
+					windowinterface.showmessage(msg)
+				else:
+					self.__arm(node)
 		return 1
 
 	def do_play(self, node):
