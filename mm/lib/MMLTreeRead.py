@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import xmllib
 import MMNode
 from windowinterface import UNIT_PXL
