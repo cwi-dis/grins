@@ -1740,7 +1740,7 @@ class HierarchyView(HierarchyViewDialog):
 		elif type == DRAG_PRIO:
 			ntype = 'prio'
 		elif type == DRAG_MEDIA:
-			ntype = 'ext'
+			ntype = 'imm'
 		elif type == DRAG_ANIMATE:
 			chtype = 'animate'
 		elif type == DRAG_BRUSH:
