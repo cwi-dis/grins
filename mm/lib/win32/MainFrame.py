@@ -1,42 +1,5 @@
 __version__ = "$Id$"
 
-
-""" @win32doc|MainFrame
-The main class in this module is the MDIFrameWnd.
-There is one to one corespondance between an MDIFrameWnd
-instance and a document, and between a document to a 
-TopLevelDialog instance. When the application has
-open documents an instance of an MDIFrameWnd represents 
-visually the open document. 
-When there no documents open the MDIFrameWnd
-just holds the toolbar and the menu and represents visualy 
-the application and its main control panel.
-
-The main purpose of an MDIFrameWnd instance is to provide 
-controls to the user (the menu and  the toolbars)
-and visually confine the document's views and other windows
-
-The Multiple Document Interface (MDI) is a specification for applications that handle
-multiple documents or views in MS Windows. This specification has also an operating system
-support. When you create an MDI window the operating system recognizes the fact and
-delivers to the application a standard
-set of messages concerning mainly the 
-parent-child structure, the windows menu and the child activation.
-
-There is an MFC wrapper class for an MDI window, the CMDIFrameWnd. 
-Objects of this class are exported
-to python through the win32ui pyd as objects of type PyMDIFrameWnd.
-The MDIFrameWnd defined in this module inherits from this class.
-
-MDIFrameWnd decoration:
-Main Menu: contains application level commands, 
-	document level commands and active view commands.
-	It contains also dynamic submenus depending on the document
-	and the active view.
-Dynamic Toolbar with states: Player,Editor no doc,Editor with doc
-"""
-
-
 # win32 libs
 import win32ui, win32con, win32api 
 Sdk = win32ui.GetWin32Sdk()
@@ -70,96 +33,61 @@ import win32dialog
 
 
 import settings
+
 if settings.user_settings.get('use_nodoc_menubar'):
 	USE_NODOC_MENUBAR = 1
 else:
 	USE_NODOC_MENUBAR = 0
-import features
-
-###########################################################
-
-# views types
-from _LayoutView import _LayoutView
-from _LayoutView2 import _LayoutView2
-from _UsergroupView import _UsergroupView
-from _TransitionView import _TransitionView
-from _LinkView import _LinkView
-from _StructView import _StructView
-from _SourceView import _SourceView
-
-#  Player views
-from _PlayerView import _PlayerView  
-
-# editor document views
-_HierarchyView=_StructView
-_ChannelView=_StructView
-
-# player document views
-if IsPlayer:
-	usercmd.HIDE_PLAYERVIEW=usercmd.CLOSE
-	usercmd.HIDE_HIERARCHYVIEW=None
-	usercmd.HIDE_CHANNELVIEW=None
-	usercmd.HIDE_LINKVIEW=None
-	usercmd.HIDE_LAYOUTVIEW=None
-	usercmd.HIDE_USERGROUPVIEW=None
-	usercmd.HIDE_TRANSITIONVIEW=None
-#	usercmd.HIDE_SOURCE=usercmd.SOURCE
-	usercmd.HIDE_LAYOUTVIEW2=None
-#	usercmd.HIDE_TEMPORALVIEW=None
-	usercmd.HIDE_SOURCEVIEW=usercmd.SOURCEVIEW
-
-# This is a list of classes that are instantiated for each particular view.
-# Not the simplest way of coding it, but it seems to work -mjvdg.
-##### THIS IS ONLY ACCESSED WITHIN THIS FILE #####
-appview={
-	0:{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
-	1:{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
-	2:{'cmd':usercmd.HIDE_CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,},
-	3:{'cmd':usercmd.HIDE_LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'freezesize':1},
-	4:{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
-	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom tests','id':'ugview_','class':_UsergroupView,'freezesize':1},
-	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
-	7:{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','id':'sview_','class':_SourceView,'freezesize':0},
-	8:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view','id':'lview2_','class':_LayoutView2,'hosted':0},
-#	9:{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','id':'tview_','class':_ChannelView,},
-}
-
-
-###########################################################
-
-# forms served
-if features.editor:
-	from AttrEditForm import AttrEditForm
-
-	appform={
-		'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1},
-		}
-else:
-	appform={}
-
-import features
-##if not features.lightweight:
-##	from NodeInfoForm import NodeInfoForm
-##	from AnchorEditForm import AnchorEditForm
-##	from ArcInfoForm import ArcInfoForm
-##	appform['node_info']={'cmd':-1,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1}
-##	appform['anchor_edit']={'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1}
-##	appform['arc_info']={'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1}
-
-# controls whether to remove or not the minimize button 
-# when resize is not allowed. (my preference is NO_MINIMIZEBOX = 1)
-NO_MINIMIZEBOX = 0
-
-
 
 # show a play seek control for player
 # when doc duration is resolved
 SHOW_PLAYER_SEEK = 0
 
-#########################################################
-from pywinlib.mfc import window, docview
+import features
 
 ###########################################################
+
+from _PlayerView import _PlayerView  
+from _SourceView import _SourceView
+
+if features.editor:
+	from _LayoutView import _LayoutView
+	from _LayoutView2 import _LayoutView2
+	from _UsergroupView import _UsergroupView
+	from _TransitionView import _TransitionView
+	from _LinkView import _LinkView
+	from _StructView import _StructView
+	from AttrEditForm import AttrEditForm
+	# editor document views
+	_HierarchyView =_StructView
+	_ChannelView =_StructView
+	# This is a list of classes that are instantiated for each particular view.
+	# Not the simplest way of coding it, but it seems to work -mjvdg.
+	##### THIS IS ONLY ACCESSED WITHIN THIS FILE #####
+	appview={
+		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','class':_PlayerView,},
+		'hview_':{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','class':_HierarchyView,},
+		'cview_':{'cmd':usercmd.HIDE_CHANNELVIEW,'title':'Timeline view','class':_ChannelView,},
+		'leview_':{'cmd':usercmd.HIDE_LINKVIEW,'title':'Hyperlinks', 'class':_LinkView},
+		'lview_':{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view', 'class':_LayoutView},
+		'ugview_':{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom tests','class':_UsergroupView},
+		'trview_':{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','class':_TransitionView},
+		'sview_':{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','class':_SourceView},
+		'lview2_':{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view','class':_LayoutView2},
+		#'tview_':{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','class':_ChannelView,},
+		'attr_edit':{'cmd':-1,'title':'Property Editor','class':AttrEditForm},
+	}
+else:
+	usercmd.HIDE_PLAYERVIEW = usercmd.CLOSE
+	usercmd.HIDE_SOURCEVIEW = usercmd.SOURCEVIEW
+	appview={
+		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','class':_PlayerView,},
+		'sview_':{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','class':_SourceView},
+		}
+
+
+#########################################################
+from pywinlib.mfc import window, docview
 
 # mixins
 import win32window
@@ -1085,9 +1013,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# END DYNAMIC CMD LIST SECTION
 	###############################################
-
-
-
 	# Fire a command class instance
 	def fire_cmd(self,cmdcl):
 		id=usercmdui.class2ui[cmdcl].id
@@ -1245,15 +1170,14 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Create and initialize a new view object 
 	# Keep instance of player
-	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
-		viewno=self.getviewno(strid)
-		
-		viewclass=appview[viewno]['class'] 
+	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):		
+		viewclass = appview[strid]['class'] 
+
 		# viewclass is a class that is initialised here now.
 		# For example, it is a _StructView (from _StructView.py) for the HierarchyView.
 		# -mjvdg.
 		view=viewclass(self.getdoc(), bgcolor)
-		self.add_common_interface(view,viewno)
+		self.add_common_interface(view,strid)
 		if not x or x<0: x=0
 		if not y or y<0: y=0
 		if not w or w<0: w = sysmetrics.scr_width_pxl/2
@@ -1270,116 +1194,55 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self.MDIActivate(f)
 		return view
 
-
 	# Create a new view object 
-	def newviewobj(self,strid):
-		viewno=self.getviewno(strid)
-		if appview[viewno].has_key('hosted') and appview[viewno]['hosted']:
-			viewclass=appview[viewno]['class']
-			viewobj=viewclass()
-			self.add_common_interface(viewobj,viewno)
+	def newviewobj(self, strid):
+		viewobj = None
+		viewdict =  appview.get(strid)
+		if viewdict:
+			viewclass = viewdict['class'] 
+			viewobj = viewclass(self.getdoc())
+			if viewdict['cmd'] > 0:
+				self.add_common_interface(viewobj, strid)
 			return viewobj
-		else:
-			return self._newviewobj(viewno)
+		return None
 
 	# Show the view passed as argument
-	def showview(self,view,strid):
+	def showview(self, view, strid):
 		if not view or not view._obj_:
 			return
-		viewno=self.getviewno(strid)
-		self.frameview(view,viewno)
+		self.frameview(view, strid)
 
 	# Create the view with string id
-	def createview(self,strid):
-		viewno=self.getviewno(strid)
-		view=self._newviewobj(viewno)
-		self.frameview(view,viewno)
+	def createview(self, strid):
+		view = self.newviewobj(strid)
+		self.frameview(view, strid)
 		return view
 
-	# Create the view with view number
-	def _newviewobj(self,viewno):
-		viewclass=appview[viewno]['class'] 
-		viewobj=viewclass(self.getdoc())
-		self.add_common_interface(viewobj,viewno)
-		return viewobj
-
-	# Return the view number from its string id
-	def getviewno(self,strid):
-		for viewno in appview.keys():
-			if appview[viewno]['id']==strid:
-				return viewno
-		raise error,'undefined requested view'
-
 	# Create the child frame that will host this view
-	def frameview(self,view,viewno):
-		freezeSize = appview[viewno].get('freezesize', 0)
-		f=ChildFrame(view,freezeSize)
-		rc=self.getPrefRect()
-		f.Create(appview[viewno]['title'],None,self,0)
+	def frameview(self, view, strid):
+		if not appview.has_key(strid): return
+		f = ChildFrame(view, not view.isResizeable())
+		f.Create(appview[strid]['title'],None,self,0)
 		self.MDIActivate(f)
 	
-	# Returns the child frame that hosts this view
-	# returns None if not exists
-	def getviewframe(self,strid):
-		return self.GetParent()
-
 	# Adds to the view interface some common attributes
-	def add_common_interface(self,viewobj,viewno):
-		#viewobj.getframe=viewobj.GetParent
-		viewobj._strid=appview[viewno]['id']
-		viewobj._commandlist=[]
-		viewobj._title=appview[viewno]['title']
-		cmd =  appview[viewno]['cmd']
+	def add_common_interface(self, viewobj, strid):
+		viewobj._strid = strid
+		viewobj._commandlist = []
+		viewobj._title = appview[strid]['title']
+		cmd =  appview[strid]['cmd']
 		if usercmdui.class2ui.has_key(cmd):
-			viewobj._closecmdid=usercmdui.class2ui[cmd].id
-
-
-	###########################################################
-	# Forms management
-
-	# Returns a new form object
-	def newformobj(self,strid):
-		if appform[strid].get('hosted'):
-			formclass=appform[strid]['class']
-			return formclass()
-		else:
-			return self._newformobj(strid)
-
-	# Show the form passed as argument
-	def showform(self,form,strid):
-		if not form or not form._obj_:
-			return
-		self.frameform(form,strid)
-
-	# Create the form with string id
-	def createform(self,strid):
-		form=self._newformobj(strid)
-		self.frameform(form,strid)
-		return form
-
-	# Create a new form with strid
-	def _newformobj(self,strid):
-		formclass=appform[strid]['class'] 
-		return formclass(self.getdoc())
-
-	# Create a ChildFrameForm to host this view
-	def frameform(self,form,strid):
-		freezeSize=appform[strid].get('freezesize', 0)
-		f=ChildFrameForm(form,freezeSize)
-		rc=self.getPrefRect()
-		f.Create(form._title,rc,self,0)
-		self.Activate(f)
-
+			viewobj._closecmdid = usercmdui.class2ui[cmd].id
 
 ################################################
 # The ChildFrame purpose is to host the views in its client area
 # according to the MDIFrameWnd pattern
 class ChildFrame(window.MDIChildWnd):
-	def __init__(self,view,freezesize=0):
+	def __init__(self, view, freezesize=0):
 		# This is usually called from MDIFrameWnd.newview
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._view=view		# Currently, this is the only place that this Frame's view is assigned.
-		self._freezesize=freezesize
+		self._freezesize = freezesize
 		self._sizeFreeze=0
 
 	# Create the OS window and hook messages
@@ -1472,100 +1335,8 @@ class ChildFrame(window.MDIChildWnd):
 
 	# Called by the framework before destroying the window
 	# Used to keep instance counting for player
-	def OnDestroy(self, msg):
+	def OnDestroyXXX(self, msg):
 		if self._view._strid=='pview_':
 			self.GetMDIFrame()._player=None
 
-
-################################################
-# The ChildFrameForm purpose is to host the forms in its client area
-class ChildFrameForm(window.MDIChildWnd):
-	def __init__(self,form=None, freezesize=0):
-		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
-		self._form=form
-		self._freezesize=freezesize
-
-	# Create the OS window
-	def Create(self, title, rect = None, parent = None, maximize=0):
-		self._title=title
-		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
-		self.CreateWindow(None, title, style, rect, parent,None)
-		#if maximize and parent:parent.maximize(self)
-		self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
-		self.ShowWindow(win32con.SW_SHOW)
-
-	# Change window style before creation
-	def PreCreateWindow(self, csd):
-		csd=self._obj_.PreCreateWindow(csd)
-		cs=win32mu.CreateStruct(csd)
-		if hasattr(self._form,'getcreatesize'):
-			cx,cy=self._form.getcreatesize()
-			if cx:cs.cx=cx
-			if cx:cs.cy=cy
-		if self._freezesize:
-			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED\
-				|win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU
-			if not NO_MINIMIZEBOX:
-				cs.style = cs.style |win32con.WS_MINIMIZEBOX
-		return cs.to_csd()
-	
-	# Called by the framework when this is activated or deactivated
-	def onMdiActivate(self,params):
-		msg=win32mu.Win32Msg(params)
-		hwndChildDeact = msg._wParam; # child being deactivated 
-		hwndChildAct = msg._lParam; # child being activated
-		if hwndChildAct == self.GetSafeHwnd():
-			self._form.activate()
-		elif hwndChildDeact == self.GetSafeHwnd():
-			self._form.deactivate()
-	
-	# Creates and sets the view 	
-	# create view (will be created by default if)
-	def OnCreateClient(self, cp, context):
-		if context is not None and context.template is not None:
-			context.template.CreateView(self, context)
-		elif self._form:
-			v=self._form
-			v.createWindow(self)
-			self.SetActiveView(v)
-			self.RecalcLayout()
-			v.OnInitialUpdate()
-		self._hwnd=self.GetSafeHwnd()
-
-	# Set the view from the argument view class
-	def setview(self,viewclass,id=None):
-		doc=docview.Document(docview.DocTemplate())
-		v = viewclass(doc)
-		v.CreateWindow(self)
-		self.SetActiveView(v)
-		self.RecalcLayout()
-		v.OnInitialUpdate()
-
-	# Response to user close command
-	# the user is closing the wnd directly
-	def OnClose(self):
-		# we must let the view to decide:
-		if hasattr(self._form,'OnClose'):
-			self._form.OnClose()
-		else:
-			self._obj_.OnClose()
-
-	# Called by the framework before destroying the window
-	def OnDestroy(self, msg):
-		window.MDIChildWnd.OnDestroy(self, msg)
-
-	# Called by the framework after the window has been created
-	def InitialUpdateFrame(self, doc, makeVisible):
-		pass
-
-	# Returns the parent MDIFrameWnd	
-	def getMDIFrame(self):
-		return self.GetMDIFrame()
-
-	# Target for commands that are enabled
-	def OnUpdateCmdEnable(self,cmdui):
-		cmdui.Enable(1)
-
-	# Target for commands that are dissabled
-	def OnUpdateCmdDissable(self,cmdui):
-		cmdui.Enable(0)
+ 

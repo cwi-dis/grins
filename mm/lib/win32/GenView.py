@@ -10,7 +10,13 @@ class GenView:
 		self._commandlist = []
 		self._cmd_state = {}
 		self._is_active = 0
-		
+	
+	#
+	# Creation attributes
+	#
+	def isResizeable(self):
+		return 1
+			
 	# Creates the actual OS window
 	def createWindow(self, parent):
 		self._parent = parent

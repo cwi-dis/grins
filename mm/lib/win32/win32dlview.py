@@ -60,6 +60,12 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		# scroll indicator
 		self._canscroll = 0
 
+	#
+	# Creation attributes
+	#
+	def isResizable(self):
+		return 1
+
 	# part of the constructor initialization
 	def _do_init(self,parent):
 		self._parent = parent
