@@ -52,6 +52,8 @@ class RealChannel:
 		if duration > 0:
 			self.__qid = self._scheduler.enter(duration, 0,
 							   self.__stop, ())
+		# WARNING: RealMedia player doesn't unquote, so we must do it
+		url = MMurl.unquote(url)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 		return 1
