@@ -14,6 +14,10 @@ __version__ = "$Id$"
 #
 # 'text'	string (plain ASCII text)
 # 'node'	MM subtree (must not have a parent)
+# 'multinode'	List of MM subtrees (none of which may have parent)
+# 'region'	MMChannel instance
+# 'viewport'	MMChannel instance representing a topLayout
+# 'media'	MMNode media element (LayoutView only)
 # ''		None (meaning the clipboard is empty)
 #
 # To implement Cut/Copy/Paste of MM nodes:
