@@ -28,7 +28,7 @@ class UsergroupViewDialog:
 			vertical = 1, top = None, right = None)
 		self.__list = w.List(None, [], (self.__list_callback, ()),
 				     top = None, bottom = None, left = None,
-				     right = self.__buttons, width = 50)
+				     right = self.__buttons, width = 200)
 
 	def __list_callback(self):
 		pos = self.__list.getselected()
