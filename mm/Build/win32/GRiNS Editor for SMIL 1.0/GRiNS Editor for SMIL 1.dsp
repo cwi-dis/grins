@@ -8,12 +8,12 @@ CFG=GRiNS SMIL - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "GRiNS Editor Pro for SMIL.mak".
+!MESSAGE NMAKE /f "GRiNS Editor for SMIL 1.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "GRiNS Editor Pro for SMIL.mak" CFG="GRiNS SMIL - Win32 Debug"
+!MESSAGE NMAKE /f "GRiNS Editor for SMIL 1.mak" CFG="GRiNS SMIL - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -186,6 +186,10 @@ SOURCE=.\M_ArcInfoForm.c
 # Begin Source File
 
 SOURCE=.\M_ArmStates.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ASXNode.c
 # End Source File
 # Begin Source File
 
@@ -926,6 +930,10 @@ SOURCE=.\M_SoundDuration.c
 # Begin Source File
 
 SOURCE=.\M_splash.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_splashbmp.c
 # End Source File
 # Begin Source File
 
