@@ -150,7 +150,7 @@ class QtPlayer:
 			self._videotimescale = self._videomedia.GetMediaTimeScale()
 			print 'videotimescale', self._videotimescale
 		except Qt.Error, arg:
-			print 'getVideoTracksInfo', msg
+			print 'getVideoTracksInfo', arg
 			self._videomedia = None
 			self._videotrack = None
 	
@@ -164,7 +164,7 @@ class QtPlayer:
 			self._audiodescr = self._audiomedia.GetAudioMediaSampleDescription(1)
 			print 'audiotimescale', self._audiotimescale
 		except Qt.Error, arg:
-			print 'getAudioTracksInfo', msg
+			print 'getAudioTracksInfo', arg
 			self._audiodescr = none
 			self._audiomedia = None
 			self._audiotrack = None
@@ -230,18 +230,16 @@ class QtPlayer:
 
 	def seek(self, secs):
 		if self._movie:
-			msecs = int(1000*secs)
-			self._movie.SetMovieTimeValue(msecs)
+			self._movie.SetMovieTimeValue(int(secs * self._movie.GetMovieTimeScale() + .5))
 
 	def getDuration(self):
 		if self._movie:
-			return 0.001*self._movie.GetMovieDuration()
+			return self._movie.GetMovieDuration() / float(self._movie.GetMovieTimeScale())
 		return 0
 
 	def getTime(self):
 		if self._movie:
-			msecs = self._movie.GetMovieTime()[0]
-			return msecs/1000.0
+			return self._movie.GetMovieTime()[0] / float(self._movie.GetMovieTimeScale())
 		return 0
 
 	def getDataAsRGB24(self):
