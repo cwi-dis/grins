@@ -255,7 +255,10 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		print 'Video real media converter filter is not installed'
 		return file
 	b.AddFilter(vf,'VRMC')
-	b.Render(lastpin)
+	enumpins=vf.EnumPins()
+	pin=enumpins.Next()
+	b.Connect(lastpin,pin)
+	#b.Render(lastpin)
 
 	try:
 		rconv=vf.QueryIRealConverter()
@@ -298,7 +301,10 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 			aurenderer=None
 		else:
 			b.AddFilter(af,'ARMC')
-			b.Render(lastpin)
+			enumpins=af.EnumPins()
+			pin=enumpins.Next()
+			b.Connect(lastpin,pin)
+			#b.Render(lastpin)
 
 	# set engine and audio pin
 	if aurenderer:
