@@ -670,6 +670,7 @@
 #define IDC_AUTOWRAP                    1444
 #define IDC_RELATIVE                    1446
 #define IDC_STATIC_MSG                  1447
+#define IDC_STATIC_MSG2                 1448
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -777,7 +778,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        446
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1448
+#define _APS_NEXT_CONTROL_VALUE         1449
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
