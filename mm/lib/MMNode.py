@@ -92,11 +92,21 @@ class MMNodeContext:
 			if not mtype:
 				return []
 			maintype, subtype = string.split(string.lower(mtype), '/')
-			if maintype == 'image':
-				if string.find(subtype, 'real') >= 0:
-					chtype = 'RealPix'
+			if string.find(subtype, 'real') >= 0:
+				# for Real media look inside the file
+				import realsupport
+				info = realsupport.getinfo(self.findurl(url))
+				if info.has_key('width'):
+					if maintype == 'image':
+						chtype = 'RealPix'
+					elif maintype == 'text':
+						chtype = 'RealText'
+					else:
+						chtype = 'video'
 				else:
-					chtype = 'image'
+					chtype = 'sound'
+			elif maintype == 'image':
+				chtype = 'image'
 			elif maintype == 'audio':
 				chtype = 'sound'
 			elif maintype == 'video':
@@ -104,8 +114,6 @@ class MMNodeContext:
 			elif maintype == 'text':
 				if subtype == 'html':
 					chtype = 'html'
-				elif string.find(subtype, 'real') >= 0:
-					chtype = 'RealText'
 				else:
 					chtype = 'text'
 			elif string.find(subtype, 'flash') >= 0:
