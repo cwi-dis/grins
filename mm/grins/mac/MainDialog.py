@@ -37,6 +37,10 @@ class MainDialog:
 		if __debug__:
 			self.commandlist.append(
 					usercmd.CONSOLE(callback=(self.console_callback, ())))
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(
+				usercmd.HELP(callback = (self.help_callback, ())))
 		self.__window = w = windowinterface.windowgroup(title, self.commandlist, globalgroup=1)
 		windowinterface.installaehandler('aevt', 'oapp', self._ae_openapp)
 		windowinterface.installaehandler('aevt', 'quit', self._ae_quit)
@@ -65,6 +69,10 @@ class MainDialog:
 	def console_callback(self):
 		import quietconsole
 		quietconsole.revert()
+
+	def help_callback(self, params=None):
+		import Help
+		Help.showhelpwindow()
 
 	def _ae_openapp(self, *args, **kwargs):
 		pass
