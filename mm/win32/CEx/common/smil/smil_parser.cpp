@@ -16,7 +16,8 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "windowinterface.h"
 
-//#include "smil_elements.h"
+#include "smil_node.h"
+#include "smil_attr_read.h"
 
 namespace smil {
 
@@ -492,7 +493,20 @@ void parser::end_node()
 void  parser::new_media_node(const std::string& tag, handler_arg_type attrs)
 	{
 	assert(m_curnode != NULL);
-	tree_node *p = new tree_node(tag, attrs);
+	
+	node *p = new node(tag, attrs);
+
+	// begin, dur, end, max, min, repeatCount, repeatDur
+	const char *raw_val = p->get_raw_attribute("dur");
+	if(raw_val != 0)
+		{
+		any *pv = read_clock_value(raw_val);
+		if(pv == 0) 
+			windowinterface::showmessage(TEXT("invalid dur attribute"));
+		else
+			p->set_parsed_attr("dur", pv);
+		}
+
 	m_curnode->appendChild(p);
 	m_curnode = p;
 	}
