@@ -34,50 +34,50 @@ from flags import *
 
 MENUBAR=(
 	('&File', (
-		(LIGHT, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
-		(LIGHT, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
-		(LIGHT, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
-		(LIGHT, ENTRY, '&Close Document', None, CLOSE),
-		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Preferences...', None, PREFERENCES),
-		(LIGHT|DBG, SEP,),
-		(LIGHT|DBG, CASCADE, '&Debug', (
-			(LIGHT|DBG, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
-			(LIGHT|DBG, TOGGLE, 'Enable call &tracing', None, TRACE),
-			(LIGHT|DBG, ENTRY, 'Enter &debugger', None, DEBUG),
-			(LIGHT|DBG, ENTRY, '&Abort', None, CRASH),
-			(LIGHT|DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
+		(FLAG_ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
+		(FLAG_ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
+		(FLAG_ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
+		(FLAG_ALL, ENTRY, '&Close Document', None, CLOSE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&Preferences...', None, PREFERENCES),
+		(FLAG_ALL|FLAG_DBG, SEP,),
+		(FLAG_ALL|FLAG_DBG, CASCADE, '&Debug', (
+			(FLAG_ALL|FLAG_DBG, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
+			(FLAG_ALL|FLAG_DBG, TOGGLE, 'Enable call &tracing', None, TRACE),
+			(FLAG_ALL|FLAG_DBG, ENTRY, 'Enter &debugger', None, DEBUG),
+			(FLAG_ALL|FLAG_DBG, ENTRY, '&Abort', None, CRASH),
+			(FLAG_ALL|FLAG_DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
-		(LIGHT, SEP,),
-		(LIGHT, ENTRY, 'E&xit', None, EXIT))),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'E&xit', None, EXIT))),
 
 
 	('&View', (
-		(LIGHT, TOGGLE, '&Source', None, SOURCE),)),
+		(FLAG_ALL, TOGGLE, '&Source', None, SOURCE),)),
 
 	('&Play', (
-		(LIGHT, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
-		(LIGHT, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
-		(LIGHT, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
-		(CMIF, SEP,),
-		(CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
-		(CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
+		(FLAG_ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
+		(FLAG_ALL, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
+		(FLAG_ALL, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
+		(FLAG_CMIF, SEP,),
+		(FLAG_CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
 	('&Window', (
-		(LIGHT, ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
+		(FLAG_ALL, ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
 
 	('&Help', (
-		(LIGHT, ENTRY, '&Contents', None, HELP_CONTENTS),
-		(LIGHT, ENTRY, 'Context &Help', None, HELP),
-		(LIGHT, SEP,),
-		(LIGHT, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
-		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
+		(FLAG_ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
+		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 MAIN_FRAME_POPUP = (
-		(LIGHT, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
-		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
-		(LIGHT, ENTRY, '&Close document', None, CLOSE),
+		(FLAG_ALL, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(FLAG_ALL, ENTRY, '&Close document', None, CLOSE),
 )
