@@ -34,7 +34,7 @@ import afxres,commctrl
 
 
 class LinkPropDlg(win32dialog.ResDialog):
-	def __init__(self,cbd,dir,type,dirsens,parent=None):
+	def __init__(self,cbd,dir,dirsens,parent=None):
 		win32dialog.ResDialog.__init__(self,grinsRC.IDD_LINK_PROPERTY,parent)
 
 		d0=components.RadioButton(self,grinsRC.IDC_RADIO1)
@@ -42,14 +42,8 @@ class LinkPropDlg(win32dialog.ResDialog):
 		d2=components.RadioButton(self,grinsRC.IDC_RADIO3)
 		self._dir_buttons = (d0, d1, d2)
 
-		t0=components.RadioButton(self,grinsRC.IDC_RADIO4)
-		t1=components.RadioButton(self,grinsRC.IDC_RADIO5)
-		t2=components.RadioButton(self,grinsRC.IDC_RADIO6)
-		self._type_buttons = (t0, t1, t2)
-
 		self._cbd = cbd
 		self._dir = dir
-		self._type = type
 		self._dirsens = dirsens
 
 	def OnInitDialog(self):
@@ -57,7 +51,6 @@ class LinkPropDlg(win32dialog.ResDialog):
 		# set initial data to dialog
 		# ...
 		self.linkdirsetchoice(self._dir)
-		self.linktypesetchoice(self._type)
 		for i in range(len(self._dirsens)):
 			self._dir_buttons[i].enable(self._dirsens[i])
 		return win32dialog.ResDialog.OnInitDialog(self)
@@ -69,26 +62,15 @@ class LinkPropDlg(win32dialog.ResDialog):
 		for i in range(3):
 			self._dir_buttons[i].setcheck(i==dir)
 
-	def linktypesetchoice(self, type):
-		for i in range(3):
-			self._type_buttons[i].setcheck(i==type)
-
 	def linkdirgetchoice(self):
 		for i in range(3):
 			if self._dir_buttons[i].getcheck():
 				return i
 		raise 'No dir button set!'
 
-	def linktypegetchoice(self):
-		for i in range(3):
-			if self._type_buttons[i].getcheck():
-				return i
-		raise 'No type button set'
-
 	def OnOK(self):
 		# 1. Tell upper layer to come and collect data
 		self.callcallback('LinkDir')
-		self.callcallback('LinkType')
 
 		# 2. close dlg
 		self._obj_.OnOK()
@@ -292,7 +274,6 @@ class _LinkView(docview.FormView,components.ControlsDict):
 
 		# hard res-coded values
 		# ignore dirstr <- -> <->
-		# ignore typestr
 
 		# menu callbacks dict
 		self._mcb={}

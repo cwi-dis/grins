@@ -1144,13 +1144,27 @@ class SMILXhtmlSmilWriter(SMIL):
 				x, y, w, h = self.getNodeMediaRect(node)
 				self.writetag('map', [('id', name+'map')])
 				self.push()
-			a1, a2, dir, ltype, stype, dtype = links[0]
+			a1, a2, dir = links[0]
 			attrlist = []
 			id = getid(self, anchor)
 			if id is None:
 				id = 'a' + node.GetUID()
 			attrlist.append(('id', id))
-			attrlist.extend(self.linkattrs(a2, ltype, stype, dtype))
+			if type(a2) is type(''):
+				attrlist.append(('href', a2))
+			else:
+				target =  self.uid2name[a2.GetUID()]
+				attrlist.append(('href', '#%s' % target))
+				# attrlist.append(('onclick', '%s.beginElement();' % target))
+			show = MMAttrdefs.getattr(anchor, 'show')
+			if show != 'replace':
+				attrlist.append(('show', show))
+			sstate = MMAttrdefs.getattr(anchor, 'sourcePlaystate')
+			if show != 'new' or sstate != 'play':
+				attrlist.append(('sourcePlaystate', sstate))
+			dstate = MMAttrdefs.getattr(anchor, 'destinationPlaystate')
+			if dstate != 'play':
+				attrlist.append(('destinationPlaystate', dstate))
 			fragment = MMAttrdefs.getattr(anchor, 'fragment')
 			if fragment:
 				attrlist.append(('fragment', fragment))
@@ -1178,7 +1192,7 @@ class SMILXhtmlSmilWriter(SMIL):
 
 			accesskey = anchor.GetAttrDef('accesskey', None)
 			if accesskey is not None:
-				attrs.append(('accesskey', accesskey))
+				attrlist.append(('accesskey', accesskey))
 
 			self.writetag('area', attrlist)
 			self.closehtmltag(0)
@@ -1512,36 +1526,6 @@ class SMILXhtmlSmilWriter(SMIL):
 			id = 'm' + node.GetUID()
 		return id
 
-	def linkattrs(self, a2, ltype, stype, dtype):
-		attrs = []
-		if ltype == Hlinks.TYPE_JUMP:
-			# default value, so we don't need to write it
-			pass
-		elif ltype == Hlinks.TYPE_FORK:
-			attrs.append(('show', 'new'))
-			if stype == Hlinks.A_SRC_PLAY:
-				# default sourcePlaystate value
-				pass
-			elif stype == Hlinks.A_SRC_PAUSE:
-				attrs.append(('sourcePlaystate', 'pause'))			
-			elif stype == Hlinks.A_SRC_STOP:
-				attrs.append(('sourcePlaystate', 'stop'))
-		
-		if dtype == Hlinks.A_DEST_PLAY:
-			# default value, so we don't need to write it
-			pass
-		elif dtype == Hlinks.A_DEST_PAUSE:
-			attrs.append(('destinationPlaystate', 'pause'))
-							
-		# else show="replace" (default)
-		if type(a2) is type(''):
-			attrs.append(('href', a2))
-		else:
-			target =  self.uid2name[a2.GetUID()]
-			attrs.append(('href', '#%s' % target))
-			# attrs.append(('onclick', '%s.beginElement();' % target))
-		return attrs
-
 	#
 	#
 	#
@@ -1565,7 +1549,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				links = self.hyperlinks.findsrclinks(anchor)
 				if not links:
 					continue
-				a1, a2, dir, ltype, stype, dtype = links[0]
+				a1, a2, dir = links[0]
 				id = getid(self, anchor)
 				if id is None:
 					id = 'a' + node.GetUID()

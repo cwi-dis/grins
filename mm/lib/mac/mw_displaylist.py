@@ -12,7 +12,6 @@ from types import *
 import struct
 import math
 import time
-from AnchorDefs import *
 import CheckInsideArea
 #
 # Stuff needed from other mw_ modules:
@@ -1041,12 +1040,12 @@ class _Button:
 		if not self._insidetemporal():
 			return None
 		rgn = Qd.NewRgn()
-		if self._shape == A_SHAPETYPE_RECT:
+		if self._shape == 'rect':
 			x0, y0 = self._convert_point(self._coordinates[0:2])
 			x1, y1 = self._convert_point(self._coordinates[2:4])
 			box = x0, y0, x1, y1
 			Qd.RectRgn(rgn, box)
-		elif self._shape == A_SHAPETYPE_POLY:
+		elif self._shape == 'poly':
 			Qd.OpenRgn()
 			xl, yl = self._convert_point(self._coordinates[-2:])
 			Qd.MoveTo(xl, yl)
@@ -1054,9 +1053,9 @@ class _Button:
 				x, y = self._convert_point(self._coordinates[i:i+2])
 				Qd.LineTo(x, y)
 			Qd.CloseRgn(rgn)
-		elif self._shape == A_SHAPETYPE_CIRCLE:
+		elif self._shape == 'circle':
 			print 'Circle not supported yet'
-		elif self._shape == A_SHAPETYPE_ELIPSE:
+		elif self._shape == 'ELIPSE':
 			# Note: rx/ry are width/height, not points
 			x, y, rx, ry = self._dispobj._window._convert_coordinates(self._coordinates)
 			Qd.OpenRgn()
@@ -1071,13 +1070,13 @@ class _Button:
 			return 0
 		if not self._insidetemporal():
 			return 0		
-		if self._shape == A_SHAPETYPE_RECT:
+		if self._shape == 'rect':
 			return self._insideRect(x, y)
-		elif self._shape == A_SHAPETYPE_POLY:
+		elif self._shape == 'poly':
 			return self._insidePoly(x, y)
-		elif self._shape == A_SHAPETYPE_CIRCLE:
+		elif self._shape == 'circle':
 			return self._insideCircle(x, y)
-		elif self._shape == A_SHAPETYPE_ELIPSE:
+		elif self._shape == 'elipse':
 			return self._insideElipse(x, y)
 
 		print 'Internal error: invalid shape type'			

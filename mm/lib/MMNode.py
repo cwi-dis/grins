@@ -7,7 +7,6 @@ from MMTypes import *
 from Owner import *
 from MMExc import *
 from SR import *
-from AnchorDefs import *
 from ArmStates import *
 from Hlinks import Hlinks
 import MMurl
@@ -5076,7 +5075,7 @@ def _valuedeepcopy(value):
 def _copyinternalhyperlinks(src_context, dst_context, uidremap):
 	links = src_context.hyperlinks.getall()
 	newlinks = []
-	for a1, a2, dir, ltype, stype, dtype in links:
+	for a1, a2, dir in links:
 		if type(a1) is type('') or type(a2) is type(''):
 			continue
 		uid1 = a1.GetUID()
@@ -5086,7 +5085,7 @@ def _copyinternalhyperlinks(src_context, dst_context, uidremap):
 			uid2 = uidremap[uid2]
 			a1 = dst_context.mapuid(uid1)
 			a2 = dst_context.mapuid(uid2)
-			link = a1, a2, dir, ltype, stype, dtype
+			link = a1, a2, dir
 			newlinks.append(link)
 	if newlinks:
 		dst_context.hyperlinks.addlinks(newlinks)
@@ -5095,7 +5094,7 @@ def _copyoutgoinghyperlinks(context, uidremap):
 	from Hlinks import DIR_1TO2, DIR_2TO1, DIR_2WAY
 	links = context.hyperlinks.getall()
 	newlinks = []
-	for a1, a2, dir, ltype, stype, dtype in links:
+	for a1, a2, dir in links:
 		changed = 0
 		if type(a1) is not type(''):
 			uid1 = a1.GetUID()
@@ -5112,7 +5111,7 @@ def _copyoutgoinghyperlinks(context, uidremap):
 				a2 = context.mapuid(uid2)
 				changed = 1
 		if changed:
-			link = a1, a2, dir, ltype, stype, dtype
+			link = a1, a2, dir
 			newlinks.append(link)
 	if newlinks:
 		context.hyperlinks.addlinks(newlinks)

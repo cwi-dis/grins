@@ -3,7 +3,6 @@ __version__ = "$Id$"
 import MMurl, realsupport
 import posixpath
 from MMNode import MMSyncArc
-from AnchorDefs import ATYPE_WHOLE
 from Hlinks import DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY, ANCHOR2
 
 def rpconvert(node, errorfunc = None):
@@ -447,7 +446,7 @@ def convertrp(node, errorfunc = None):
 			   not MMAttrdefs.getattr(a, 'acoords'):
 				links = hlinks.finddstlinks(a)
 				for l in links:
-					if type(l[ANCHOR2]) == type(''):
+					if type(l[ANCHOR2]) is type(''):
 						tagdict['href'] = l[ANCHOR2]
 						break
 

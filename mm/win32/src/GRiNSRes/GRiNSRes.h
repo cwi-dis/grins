@@ -279,6 +279,8 @@
 #define IDD_EDITATTR_ANIMATEVALUES      478
 #define IDD_EDITATTR_ACTIVEDUR          479
 #define IDD_EDITATTR_ANCHOR             480
+#define IDD_EDITATTR_ANCHOR2            480
+#define IDD_EDITATTR_LINK               481
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -817,6 +819,15 @@
 #define IDC_ACTUATEV                    1547
 #define IDC_SENDTOL                     1548
 #define IDC_ACTUATEL                    1549
+#define IDC_COMBO3                      1551
+#define IDC_STATIC3                     1552
+#define IDC_STATIC4                     1553
+#define IDC_COMBO4                      1554
+#define IDC_STATIC5                     1555
+#define IDC_STATIC0                     1556
+#define IDC_STATIC7                     1557
+#define IDC_STATIC8                     1558
+#define IDC_STATIC9                     1559
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -926,7 +937,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        465
 #define _APS_NEXT_COMMAND_VALUE         32902
-#define _APS_NEXT_CONTROL_VALUE         1550
+#define _APS_NEXT_CONTROL_VALUE         1560
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
