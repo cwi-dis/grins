@@ -131,9 +131,16 @@ SOURCE=.\dshow.cpp
 SOURCE=.\dshow.rc
 # End Source File
 # End Group
+# Begin Group "Python scripts"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\aud2rm.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\aud2wm.py
 # End Source File
 # Begin Source File
 
@@ -143,5 +150,6 @@ SOURCE=.\dshowplay.py
 
 SOURCE=.\vid2rm.py
 # End Source File
+# End Group
 # End Target
 # End Project
