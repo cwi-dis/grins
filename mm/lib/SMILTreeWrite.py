@@ -1379,11 +1379,7 @@ class SMILWriter(SMIL):
 			fp.write('<!--%s-->\n' % ctx.comment)
 		attrlist = []
 		if self.smilboston:
-			# XXX HACK: RealPlayer 9 only recognizes CR namespace
-			if self.rpExt:
-				attrlist.append(('xmlns', SMIL2ns[6]))
-			else:
-				attrlist.append(('xmlns', SMIL2ns[0]))
+			attrlist.append(('xmlns', SMIL2ns[0]))
 		if self.uses_grins_namespace:
 			attrlist.append((xmlnsGRiNS, GRiNSns))
 		if self.uses_rp_namespace and self.smilboston:
