@@ -409,6 +409,11 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		w=self._topwindow
 		frame=(w.GetParent()).GetMDIFrame()		
 		return frame._cmifdoc
+	# Returns the grins frame
+	def getgrinsframe(self):
+		w=self._topwindow
+		frame=(w.GetParent()).GetMDIFrame()		
+		return frame
 
 	# Returns the coordinates of this window
 	def getgeometry(self, units = UNIT_MM):
