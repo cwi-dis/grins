@@ -286,7 +286,7 @@ _warned_already = 0
 def set(setting, value):
 	global _warned_already
 	import windowinterface
-	if user_settings.get(settings) == value:
+	if user_settings.get(setting) == value:
 		# no change
 		return
 	if not transaction(auto=1):
