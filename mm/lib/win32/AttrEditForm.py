@@ -38,6 +38,8 @@ if settings.user_settings.get('use_input_validators'):
 else:
 	ENABLE_VALIDATORS = 0
 
+# Other parts of GRiNS.
+import EventEditor
 
 error = components.error
 
@@ -1100,6 +1102,150 @@ class FloatTupleCtrl(TupleCtrl):
 					s = st[i]
 				self._attrval[i].settext(s)
 
+class ListCtrl(AttrCtrl):
+	# This is a list control, but it's specific to events. If you
+	# want a generic list control, you'll need to rename this.
+	# _attr, _attrval, _initctrl, _listeners, _resid, _validator, _wnd
+	# I think _attrval is the value of the attribute (currently '[]')
+	
+	# Made by mjvdg; cut and paste from the tuple class above.
+	def __init__(self, wnd, attr, resid):
+		print 'ListCtrl.__init__'
+		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
+		#'attr': <TimelistAttrEditorField instance, name=beginlist>, 
+		#'resid': Tuple of ints (4)/resource ids - list, 'add', 'delete', 'edit' (3 buttons)
+		#'self': <AttrEditForm.ListCtrl instance at 1cbd9d0>} -> me :-).
+		AttrCtrl.__init__(self, wnd, attr, resid)
+		self._attrname=components.Control(wnd,resid[0])
+		#self._nedit=len(resid)-1 - how can an int have a length?
+		self._attrval=[]
+		#for i in range(self._nedit):
+		#	self._attrval.append(components.Edit(wnd,resid[i+1]))
+		self._list = components.ListBox(wnd, resid[1])
+		self._addbutton = components.Button(wnd, resid[2])
+		self._deletebutton = components.Button(wnd, resid[3])
+		self._editbutton = components.Button(wnd, resid[4])
+		
+
+	def OnInitCtrl(self):
+		print "DEBUG: ListCtrl.OnInitCtrl called."
+		# TODO: self._attrval needs to be a list of syncarcs.
+		self._attrval=['hello', 'world']
+		self._initctrl=self
+
+		self._attrname.attach_to_parent()
+		self._list.attach_to_parent() # TODO: what does this do? 
+		self._addbutton.attach_to_parent()
+		self._deletebutton.attach_to_parent()
+		self._editbutton.attach_to_parent()
+		self._wnd.HookCommand(self.OnAdd, self._resid[2])
+		self._wnd.HookCommand(self.OnDelete, self._resid[3])
+		self._wnd.HookCommand(self.OnEdit, self._resid[4])
+		#self._wnd.HookCommand(self.OnListEdit, self._resid[0])
+
+		self.setvalue(self._attr.getcurrent())
+
+		#self._attrname.attach_to_parent()
+		#if self.want_label:
+		#	label = self._attr.getlabel()
+		#	if self.want_colon_after_label:
+		#		label = label + ':'
+		#	self._attrname.settext(label)
+		#for i in range(self._nedit):		
+		#	self._attrval[i].attach_to_parent()
+		#strxy=self._attr.getcurrent()
+		#self.setvalue(strxy)
+		#for i in range(self._nedit):
+		#	self._attrval[i].hookcommand(self._wnd,self.OnEdit)
+
+	def sethelp(self):
+		print "TODO: sethelp."
+
+	def OnAdd(self, id, code):
+		# Callback from the "add" button
+		print "DEBUG: Add pressed!!!!"
+		self._list.addstring(0, "Adding not yet implemented.")
+		#s = EventEditor.newevent()
+
+	def OnDelete(self, id, code):
+		# callback for the "delete" button
+		print "DEBUG: Delete pressed!!!!"
+		a = self._list.getselected()
+		if a >= 0 and a < self._list.getcount():
+			self._list.deletestring(a)
+			print "TODO: also delete the event!"
+			# delete only from the list; this will later be converted to a lack of syncarc.
+		else:
+			print"Error: weirdly selected list memeber: ", a
+
+	def OnEdit(self, id, code):
+		# callback for the "edit" button.
+		print "DEBUG: Edit pressed!!!"
+		#print self._list.getlist()
+		print "TODO: edit element ", self._list.getselected(), " of the list."
+		selected = self._list.getselected()
+		edit = EventEditor.EventEditor(parent=self._wnd._form)
+		edit.set_eventstruct(self._value[selected])
+		edit.show()
+		self._value[selected] = edit.get_eventstruct()
+		self.setvalue(self._value)
+
+	#def OnListEdit(self, id, code):
+	#	print "OnListEdit: ", self._list.getselected(), self._list.getcursel()
+
+	def enable(self, enable):
+		print "DEBUG: ListCTrl.enable() called."
+		#for c in self._attrval:
+		#	c.enable(enable)
+
+	def setvalue(self, val):
+		# val is a list of syncarcs.
+		print "DEBUG: ListCtrl.setvalue() called. Value is: ", val
+		assert isinstance(val, type([]))
+		self._list.resetcontent()
+		self._value = val	# store for later use.
+		for i in range(0, len(val)):
+			self._list.insertstring(i, val[i].as_string())
+
+		# I don't have strings; I have event objects.
+		#for i in val:
+		#	st = EventEditor.syncarc2string(i)
+		#	self._list.addstring(st)
+		#self._list.addlistitems(val)
+		#if self._initctrl:
+		#	t=self.atoi_tuple(val)
+		#	st=self.dtuple2stuple(t,self._nedit)
+		#	default = string.split(self._attr.getdefault())
+		#	for i in range(self._nedit):
+		#		self._attrval[i].settext(st[i] or default[i])
+
+	def getvalue(self):
+		return self._value
+		#if not self._initctrl:
+		#	return self._attr.getcurrent()
+		#default = string.split(self._attr.getdefault())
+		#st=[]
+		#for i in range(self._nedit):
+		#	st.append(self._attrval[i].gettext() or default[i])
+		#return string.join(st)
+
+	#def OnEdit(self,id,code):
+	#	print "DEBUG: ListCtrl.OnEdit called."
+	#	if code==win32con.EN_SETFOCUS:
+	#		self.sethelp()
+	#	elif code==win32con.EN_CHANGE:
+	#		self.notifylisteners('change')
+	#		self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		print "DEBUG: ListCtrl.settooltips called."
+		help = self.gethelp()
+		for i in [0,1,2,3]:
+			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i]), help, None, 0)
+		#for i in range(self._nedit):
+		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
+
+
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
 # can optionally select the string from a drop down list
@@ -1292,6 +1438,7 @@ class AttrPage(dialog.PropertyPage):
 		self.createctrls()
 		import __main__
 		dll=__main__.resdll
+		# Create a new dialog box for this attribute.
 		dialog.PropertyPage.__init__(self,id,dll,grinsRC.IDR_GRINSED)
 		
 	def do_close(self):
@@ -1508,6 +1655,11 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_E1,
 			 StringNocolonCtrl,
 			 (grinsRC.IDC_11,grinsRC.IDC_12)),
+##		'timelist':		# A list of events.
+##			(grinsRC.IDD_EDITATTR_2LIST,
+##			 ListCtrl,
+##			 (grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9,)),
+##			  #grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6)),
 		}
 
 	def __init__(self,form,attr):
@@ -3518,6 +3670,23 @@ class WipeGroup(AttrGroup):
 		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))
 		return cd
 
+class TimeListGroup(AttrGroup):
+	data=attrgrsdict['timelist']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_2LIST
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('beginlist')
+		cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC1, grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9))
+		a = self.getattr('endlist')
+		cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC2, grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6))
+		return cd
+
 class Convert1Group(AttrGroup):
 	data = attrgrsdict['convert1']
 
@@ -3742,6 +3911,7 @@ groupsui={
 	'.cname':CNameGroup,
 	'intname':INameGroup,
 
+	'timelist':TimeListGroup,
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
 	'timing3':Duration3Group,
@@ -3937,7 +4107,7 @@ class AttrEditForm(GenFormView):
 		# create groups pages
 		grattrl=self.creategrouppages()
 		
-		# create singletons not desrciped by groups
+		# create singletons not desrcibed by groups
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
 			if a not in grattrl:

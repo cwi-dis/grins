@@ -511,7 +511,7 @@ class NodeWrapper(Wrapper):
 			'name', ('channel',), ('file',), # From nodeinfo window
 			('.type',),
 			('terminator',),
-##			'beginlist', 'endlist',
+			'beginlist', 'endlist',
 			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
@@ -1447,7 +1447,9 @@ class AttrEditor(AttrEditorDialog):
 				C = EnumAttrEditorField
 			else:
 				C = AttrEditorField
-			b = C(self, name, labeltext or name)
+
+			b = C(self, name, labeltext or name) # Instantiate the class.
+
 			if initattr and initattr == name:
 				initattrinst = b
 			if not self.show_all_attributes and b != initattrinst:
@@ -1813,6 +1815,7 @@ class AttrEditorField(AttrEditorDialogField):
 		return self.__name, self.getdefault(), self.attrdef[4]
 
 	def getcurrent(self):
+		# self.wrapper is a NodeWrapper instance. -mjvdg.
 		return self.valuerepr(self.wrapper.getvalue(self.__name))
 
 	def getdefault(self):
@@ -1981,48 +1984,67 @@ class TupleAttrEditorField(AttrEditorField):
 			return value
 		return AttrEditorField.valuerepr(self, value)
 
+import EventEditor
+
 class TimelistAttrEditorField(AttrEditorField):
-	type = 'text'
+	type = 'timelist'
 
-	def valuerepr(self, value):
-		s = []
-		for a in value:
-			if a.wallclock is not None:
-				yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = a.wallclock
-				if yr is not None:
-					date = '%04d-%02d-%02dT' % (yr, mt, dy)
-				else:
-					date = ''
-				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
-				if tzhr is not None:
-					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
-				else:
-					tz = ''
-				s.append('wallclock(' + date + time + tz + ')')
-				continue
-			if a.marker is not None:
-				s.append('')
-				continue
-			if a.delay is None:
-				s.append('indefinite')
-				continue
-			if a.channel is not None:
-				s.append('')
-				continue
-			if a.accesskey is not None:
-				s.append('accesskey(%s)' % a.accesskey)
-				continue
-			if a.srcnode == 'syncbase':
-				s.append('%gs' % a.delay)
-			elif a.srcnode == 'prev':
-				s.append('prev.%s+%gs' % (a.event, a.delay))
-			else:
-				s.append('')
-				continue
-		return string.join(s, '\n')
+	def valuerepr(self, listofsyncarcs):
+		print "DEBUG: listofsyncarcs is: ", listofsyncarcs
+		if listofsyncarcs is None: return []
+		# converts listofsyncarcs into a list of eventstructs
+		#return ['hello', 'world']
+		return_me = []
+		for i in listofsyncarcs:
+			return_me.append(EventEditor.EventStruct(i))
+		return return_me
+		
+##		print "DEBUG: TimelistAttrEditorField.valuerepr: received: ", value
+##		if value is None:
+##			return []
+##		s = []
 
-	def parsevalue(self, str):
-		return []
+##		for a in value:
+##			if a.wallclock is not None:
+##				yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = a.wallclock
+##				if yr is not None:
+##					date = '%04d-%02d-%02dT' % (yr, mt, dy)
+##				else:
+##					date = ''
+##				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+##				if tzhr is not None:
+##					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+##				else:
+##					tz = ''
+##				s.append('wallclock(' + date + time + tz + ')')
+##				continue
+##			if a.marker is not None:
+##				s.append('')
+##				continue
+##			if a.delay is None:
+##				s.append('indefinite')
+##				continue
+##			if a.channel is not None:
+##				s.append('')
+##				continue
+##			if a.accesskey is not None:
+##				s.append('accesskey(%s)' % a.accesskey)
+##				continue
+##			if a.srcnode == 'syncbase':
+##				s.append('%gs' % a.delay)
+##			elif a.srcnode == 'prev':
+##				s.append('prev.%s+%gs' % (a.event, a.delay))
+##			else:
+##				s.append('Yes, there is an event here, but I dont know what it is.')
+##				continue
+##		return s
+
+	def parsevalue(self, editorstruct):
+		# Converts editorstruct back into a list of syncarcs.
+		return_me = []
+		for i in editorstruct:
+			if i: return_me.append(i.get_value()) # i could be None.
+		return return_me
 
 import colors
 class ColorAttrEditorField(TupleAttrEditorField):

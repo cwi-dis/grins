@@ -226,6 +226,7 @@ class EditableMMNode(MMNode.MMNode):
 	#	if self.focusobj: self.focusobj.hyperlinkcall()
 
 	def deletecall(self):
+		print "TODO: fixsyncarcs (in HierarchyView.py)"
 		editmgr = self.context.editmgr
 		if not editmgr.transaction(): # Start a transaction.
 			return
@@ -234,16 +235,17 @@ class EditableMMNode(MMNode.MMNode):
 		editmgr.commit()
 
 	def cutcall(self):
-		em = self.context.editmgr
-		if not em.transaction():
-			return
+		print "TODO: fixsyncarcs (in HierarchyView.py)"		
+		#em = self.context.editmgr
+		#if not em.transaction():
+		#	return
 		windowinterface.setwaiting()
 		t,n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			n.Destroy()
 		Clipboard.setclip('node', self)
-		em.delnode(self)
-		em.commit()
+		#em.delnode(self)
+		#em.commit()
 
 	def copycall(self):
 		windowinterface.setwaiting()

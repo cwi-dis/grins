@@ -1159,6 +1159,3 @@ class CreateBoxBar(DlgBar):
 		if self._cancelCallback:
 			apply(apply,self._cancelCallback)
 
-
-
- 

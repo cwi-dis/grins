@@ -429,8 +429,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		import rpconvert
 		rpconvert.rpconvert(self.node)
 
-	def deletecall(self):
-		self.mother.deletefocus(0)
+# not called anymore.
+#	def deletecall(self):
+#		self.mother.deletefocus(0)
 
 	def cutcall(self):
 		self.mother.deletefocus(1)
