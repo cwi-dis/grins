@@ -26,11 +26,11 @@ struct PyWnd
 	static PyTypeObject type;
 	static PyMethodDef methods[];
 	static std::map<HWND, PyWnd*> wnds;
-	static PyWnd *createInstance()
+	static PyWnd *createInstance(HWND hWnd = NULL)
 		{
 		PyWnd *instance = PyObject_NEW(PyWnd, &type);
 		if (instance == NULL) return NULL;
-		instance->m_hWnd = NULL;
+		instance->m_hWnd = hWnd;
 		instance->m_phooks = NULL;
 		return instance;
 		}
@@ -197,30 +197,21 @@ PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 	PyWnd *parent = NULL;
 	UINT nID = 0;
 	LPVOID lpCreateParam = NULL;
-	if (!PyArg_ParseTuple(args, "iszi(ii)(ii)|O!i", &dwExStyle, &pstrWndClass, &szWindowName, &dwStyle,
-		&pt.x, &pt.y, &size.cx, &size.cy, &PyWnd::type, &parent, &nID))
+	if (!PyArg_ParseTuple(args, "iszi(ii)(ii)|Oi", &dwExStyle, &pstrWndClass, &szWindowName, &dwStyle,
+		&pt.x, &pt.y, &size.cx, &size.cy, &parent, &nID))
 		return NULL;
 #ifdef _WIN32_WCE
-	HWND hWnd = CreateWindow(TextPtr(pstrWndClass), TextPtr(szWindowName), WS_VISIBLE,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetAppHinstance(), NULL);
-	if(hWnd){
-		RECT rc;
-		GetWindowRect(hWnd, &rc);
-		rc.bottom -= 26;
-		MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, FALSE);
-		}
+	HWND hWnd = CreateWindow(TextPtr(pstrWndClass), TextPtr(szWindowName), dwStyle,
+		pt.x, pt.y, size.cx, size.cy, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)0, 
+		GetAppHinstance(), lpCreateParam);
 #else
 	HWND hWnd = ::CreateWindowEx(dwExStyle, TextPtr(pstrWndClass), TextPtr(szWindowName),
-			dwStyle, pt.x,pt.y, size.cx,
-			size.cy, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
+			dwStyle, pt.x,pt.y, size.cx, size.cy, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
 			GetAppHinstance(), lpCreateParam);
 #endif
 	std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(hWnd);
 	if(wit == PyWnd::wnds.end())
-		{
-		seterror("Internal error");
-		return NULL;
-		}
+		return (PyObject*)PyWnd::createInstance(hWnd);
 	Py_INCREF((*wit).second);
 	return (PyObject*)(*wit).second;
 	}
