@@ -53,7 +53,6 @@ class _RubberBand:
 		if box:
 			self.__drawbox(d, SELCOLOR, box, units)
 		if self.__transparent:
-			self._mkclip()
 			self._do_expose(r)
 			self.__reg = r
 		d.render()
@@ -132,7 +131,6 @@ class _RubberBand:
 		if self.__transparent:
 			for win in self.__transparent:
 				win._transparent = 0
-			self._mkclip()
 			self._do_expose(self.__reg)
 			del self.__reg
 		del self.__transparent
