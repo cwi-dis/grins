@@ -156,7 +156,15 @@ class _StructView(DisplayListView):
 			xp, yp = self._dragging
 			x, y = win32mu.Win32Msg(params).pos()
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
+				# experimental: get node at xp, yp
+				xp, yp = self._DPtoLP((xp,yp))
+				xp, yp = self._pxl2rel((xp, yp),self._canvas)
+				obj = self.onEventEx(QueryNode,(xp, yp))
+				print obj.GetUID(), obj
+				
+				# drag-n-drop node cookie
 				str='%d %d' % (xp, yp)
+
 				# Enter C++ code...
 				# this is defined in docview.ScrollView, a superclass.
 				# refer win32view.cpp in python/Extensions/PythonWin
