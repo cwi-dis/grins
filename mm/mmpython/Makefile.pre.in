@@ -116,7 +116,7 @@ LIBDEST=	$(SCRIPTDIR)/python$(VERSION)
 INCLUDEPY=	$(INCLUDEDIR)/python$(VERSION)
 LIBP=		$(exec_installdir)/lib/python$(VERSION)
 
-LIBPL=		$(LIBP)/lib
+LIBPL=		$(LIBP)/config
 
 PYTHONLIBS=	$(LIBPL)/libModules.a \
 		$(LIBPL)/libPython.a \
