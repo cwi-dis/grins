@@ -780,6 +780,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_stop)
 		# XXX WARNING: if you uncomment that method, you get some ramdom python crash
+		# We now use a different more safe implementation. 
+		# Do we get random crashes with the new implementation?
 		try:
 			self.updatePanelCmdUI()
 		except:
