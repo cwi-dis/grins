@@ -378,7 +378,19 @@ class SvgSvg(SvgElement):
 	def getSize(self):
 		w, h = self.get('width'), self.get('height')
 		if not w or not h:
-			w, h = 640, 480
+			vb = self.get('viewBox')
+			if (w is None or h is None) and vb:
+				# size not given
+				w, h = vb[2:]
+				if w>640 or h>480:
+					sx, sy = 640.0/float(w), 480.0/float(h)
+					scale = min(sx, sy)
+					w = int(w*scale+0.5)
+					h = int(h*scale+0.5)
+			else:
+				# percent of whatever available
+				# needs fix: this assumes 100% for root SVG
+				w, h = 640, 480
 		return w, h
 
 class SvgStyle(SvgElement):
