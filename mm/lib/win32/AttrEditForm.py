@@ -1436,6 +1436,7 @@ class EventCtrl(AttrCtrl):
 			del self._value[a]
 			self._eventstruct = None
 			self.resetlist()
+			self.initevent()
 			self.enableApply()
 			# delete only from the list; this will later be converted to a lack of syncarc.
 		else:
