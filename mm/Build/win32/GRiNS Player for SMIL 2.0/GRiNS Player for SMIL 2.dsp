@@ -417,10 +417,6 @@ SOURCE=.\M_features.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_FileCache.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_flags.c
 # End Source File
 # Begin Source File
@@ -538,6 +534,18 @@ SOURCE=.\M_languages.c
 # Begin Source File
 
 SOURCE=.\M_LayoutChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_license.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_LicenseDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_licparser.c
 # End Source File
 # Begin Source File
 
