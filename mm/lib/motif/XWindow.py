@@ -1373,6 +1373,9 @@ class _Window(_AdornmentSupport, _RubberBand):
 	def endtransition(self):
 		pass
 		
+	def jointransition(self, window, cb):
+		pass
+
 	def changed(self):
 		pass
 		
