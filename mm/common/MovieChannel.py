@@ -24,14 +24,15 @@ class MovieChannel(ChannelWindowThread):
 		try:
 			import VFile
 			vfile = VFile.RandomVinFile(filename)
-		except (EOFError, VFile.Error), msg:
+		except (EOFError, IOError, VFile.Error), msg:
 			if type(msg) == type(()):
 				msg = msg[1]
 			self.errormsg(filename + ':\n' + msg)
+			print 'Error: ' + filename + ': ' + msg
 			return 1
-		except IOError, msg:
-			print 'IO Error: ' + `msg`
-			return 1
+##		except IOError, msg:
+##			print 'IO Error: ' + `msg`
+##			return 1
 		try:
 			vfile.readcache()
 		except VFile.Error:
