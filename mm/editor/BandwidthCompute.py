@@ -183,7 +183,7 @@ def compute_bandwidth(root):
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
 				errorcount = errorcount + 1
-				print 'continuous overflow', overflow, node
+##				print 'continuous overflow', overflow, node
 				errorseconds = errorseconds + (overflow/maxbandwidth)
 	#
 	# Compute preroll bandwidth and internal RealPix bandwidth usage
@@ -192,7 +192,7 @@ def compute_bandwidth(root):
 		if prearm:
 			overflow, dummyt0, dummyt1, dummyboxes = accum.prearmreserve(0, t0, prearm)
 			if overflow:
-				print 'preroll overflow', overflow, node
+##				print 'preroll overflow', overflow, node
 				errorseconds = errorseconds + (overflow/maxbandwidth)
 				if not errornodes.has_key(node):
 					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
