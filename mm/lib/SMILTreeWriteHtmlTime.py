@@ -352,10 +352,13 @@ class SMILHtmlTimeWriter(SMIL):
 							pass # self.showunsupported(v)
 				
 				# endsync translation
-				if name == 'endsync':
+				if name == 'endsync' and value not in ('first' , 'last'):
 					if value[:3] == 'id(':
 						name = 'end'
-						value = value[3:-1] + '.end'
+						value = scriptid(value[3:-1]) + '.end'
+					else:
+						name = 'end'
+						value = scriptid(value) + '.end'
 
 				# scriptify ids of known refs
 				if value: value = scriptidref(value)
@@ -702,7 +705,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def writelink(self, x, a):
 		attrlist = []
 		aid = (x.GetUID(), a.aid)
-		attrlist.append(('id', self.aid2name[aid]))
+		attrlist.append(('id', scriptid(self.aid2name[aid])))
 
 		links = x.GetContext().hyperlinks.findsrclinks(aid)
 		if links:
