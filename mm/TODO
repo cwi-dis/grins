@@ -39,3 +39,9 @@ the file in A and not in B.
 The same happens when I traverse links with external anchors. 
 Playing the document is no problem. It finds the proper files. -mariat 27/1/97
 
+In the mondrian demo, the channel and hierarchy views do not redraw
+properly by themselves. However if I press the left mouse button they do
+redraw.
+Most likely it is a problem of the O2 and not of cmifed (that's what
+sjoerd claims!).
+The same problem does NOT happen in the tutorials.             -mariat 28/1/97
