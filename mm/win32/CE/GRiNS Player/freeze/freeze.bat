@@ -12,7 +12,7 @@ set OPT=-OO
 set main_script=.\startup.py
 
 set PYTHON_EXE=%PYTHONHOME%\PCbuild\python.exe
-set PYTHON_EXE=%GRINS_HOME%\..\python\PCbuild\python.exe
+rem set PYTHON_EXE=%GRINS_HOME%\..\python\PCbuild\python.exe
 
 rem call c:\"Program Files"\"Microsoft Visual Studio"\VC98\Bin\vcvars32.bat
 
@@ -46,7 +46,6 @@ rem we need to perform the freeze.
 set PYTHONPATH=%GRINS_HOME%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\wince
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\bin\wince
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\%PRODUCT%\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\%PRODUCT%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\wince
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
@@ -125,6 +124,7 @@ echo -x RealDuration >> FreezeOpts
 echo -x Evt >> FreezeOpts
 echo -x MacOS >> FreezeOpts
 echo -x macostools >> FreezeOpts
+echo -x macurl2path >> FreezeOpts
 echo -x EasyDialogs >> FreezeOpts
 echo -x videoreader >> FreezeOpts
 echo -x mm >> FreezeOpts
@@ -139,6 +139,7 @@ echo -x Xt >> FreezeOpts
 echo -x win32con >> FreezeOpts
 echo -x RealDuration >> FreezeOpts
 echo -x splash >> FreezeOpts
+echo -x svgdom >> FreezeOpts
 
 rem Other to be checked
 echo -x FCNTL >> FreezeOpts
@@ -155,6 +156,9 @@ echo -x greekconv >> FreezeOpts
 echo -x ic >> FreezeOpts
 echo -x sitecustomize >> FreezeOpts
 echo -x termios >> FreezeOpts
+echo -x random >> FreezeOpts
+echo -x getopt >> FreezeOpts
+echo -x longpath >> FreezeOpts
 
 echo -x CORBA >> FreezeOpts
 echo -x CORBA.services
@@ -163,6 +167,7 @@ echo -x pwd >> FreezeOpts
 
 rem Windows PYDs
 echo -x _socket >> FreezeOpts
+echo -x _sre >> FreezeOpts
 echo -x ddraw >> FreezeOpts
 echo -x dshow >> FreezeOpts
 echo -x gear32sd >> FreezeOpts
@@ -181,6 +186,7 @@ echo -x rma >> FreezeOpts
 echo -x win32api >> FreezeOpts
 echo -x win32trace >> FreezeOpts
 echo -x win32ui >> FreezeOpts
+echo -x _winreg >> FreezeOpts
 echo -x wmfapi >> FreezeOpts
 echo -x wingdi >> FreezeOpts
 echo -x winkernel >> FreezeOpts
@@ -196,7 +202,7 @@ rem do not use python -O for this
 
 %PYTHON_EXE% %OPT% %COMPILE% >> log.txt
 
-%PYTHON_EXE% %OPT% %FREEZE% -s com_dll -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% -m encodings encodings.ascii encodings.latin_1 encodings.utf_16 encodings.utf_16_be encodings.utf_16_le encodings.utf_8 >> log.txt
+%PYTHON_EXE% %OPT% %FREEZE% -s com_dll -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% -m mainloop encodings encodings.ascii encodings.latin_1 encodings.utf_16 encodings.utf_16_be encodings.utf_16_le encodings.utf_8 >> log.txt
 
 : Make the target
 rem echo Executing NMAKE
