@@ -15,9 +15,9 @@ def main():
 	stats = 0
 	opts, args = getopt.getopt(sys.argv[1:], 'ps')
 	for opt, arg in opts:
-		if opt = '-p':
+		if opt == '-p':
 			playnow = 1
-		elif opt = '-s':
+		elif opt == '-s':
 			stats = 1
 	if args:
 		filename = args[0]
@@ -54,7 +54,7 @@ def main():
 idebug = 0
 try:
 	1/0
-except:
+except ZeroDivisionError:
 	if sys.__dict__.has_key('exc_traceback'):
 		idebug = 1
 		import tb
