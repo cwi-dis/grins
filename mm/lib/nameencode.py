@@ -1,5 +1,7 @@
 __version__ = "$Id$"
 
+import string
+
 def nameencode(value):
 	"""Quote a value"""
 
