@@ -6,6 +6,7 @@ from compatibility import *
 import sys
 
 #
+version = 'pro'
 compatibility = QT
 compatibility_short = 'QT'
 cmif = 0

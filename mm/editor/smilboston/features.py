@@ -6,6 +6,7 @@ from compatibility import *
 import sys
 
 #
+version = 'pro'                         # I'm not sure here.. mjvdg
 compatibility = Boston
 compatibility_short = 'SMIL2'
 cmif = 0

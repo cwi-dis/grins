@@ -5,6 +5,7 @@ __version__ = "$Id$"
 from compatibility import *
 
 #
+version = ""                            # I'm not sure here - mjvdg.
 compatibility = SMIL10
 compatibility_short = 'SMIL'
 cmif = 0
