@@ -102,6 +102,9 @@ class Main(MainDialog):
 			PREFERENCES(callback=(self.preferences_callback, ())),
 			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			]
+		if not self._license.is_evaluation_license():
+			self.commandlist.append(
+				REGISTER(callback=(self.register_callback, ())))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -128,6 +131,17 @@ class Main(MainDialog):
 			import CORBA.services
 			self.corba_services = CORBA.services.services(sys.argv)
 			
+		if settings.get('registered') == 'notyet' and \
+				not self._license.is_evaluation_license():
+			answer = windowinterface.GetYesNoCancel("""
+You have not registered your copy of GRiNS yet.
+Do you want to register now?""")
+			astr = ['yes', 'no', 'notyet'][answer]
+			settings.set('registered', astr)
+			settings.save()
+			if astr == 'yes':
+				self.register_callback()
+
 	def collect_template_info(self):
 		import SMILTreeRead
 		import MMmimetypes
@@ -328,11 +342,10 @@ class Main(MainDialog):
 
 	def checkversion_callback(self):
 		import MMurl
-		import version
 		import windowinterface
-		import settings
 		import string
-		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
+		url = self._get_versiondep_url('updatecheck.txt')
+
 		try:
 			fp = MMurl.urlopen(url)
 			data = fp.read()
@@ -347,9 +360,28 @@ class Main(MainDialog):
 		if cancel:
 			return
 		data = string.strip(data)
-		# Pass the version and the second item of the license along.
-		id = string.split(settings.get('license'), '-')[1]
-		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
+		url = self._add_license_id(self, url)
+		windowinterface.htmlwindow(url)
+
+	def _get_versiondep_url(self, filename):
+		import version
+		return 'http://www.oratrix.com/indir/%s/%s' % (version.shortversion, filename)
+
+	def _add_license_id(self, url, fullkey=0):
+		import version
+		import settings
+		url = '%s?version=%s'%(url, version.shortversion)
+		if fullkey:
+			url = url + '&key=' + settings.get('license')
+		else:
+			id = string.split(settings.get('license'), '-')[1]
+			url = url + '&id=' + id
+		return url
+
+	def register_callback(self):
+		import windowinterface
+		url = self._get_versiondep_url('register.html')
+		url = self._add_license_id(url, fullkey=1)
 		windowinterface.htmlwindow(url)
 
 	def new_top(self, top):
