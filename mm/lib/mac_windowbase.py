@@ -277,13 +277,19 @@ class _Event:
 					self._menubar.dispatch(id, item, None, event)
 					return
 #				elif c == 'w':
-#					w = FrontWindow()
+#					w = Win.FrontWindow()
 #					if w:
 #						self.do_close(w)
 #					else:
 #						if DEBUG: print 'Command-W without front window'
 #				else:
 #					if DEBUG: print "Command-" +`c`
+		else:
+			w = Win.FrontWindow()
+			handled = self._handle_keyboardinput(w, c, where, event)
+			if not handled:
+				beep()
+			return
 		MacOS.HandleEvent(event)
 
 	# timer interface
@@ -500,6 +506,12 @@ class _Toplevel(_Event):
 			return
 		window._contentclick(down, where, event, shifted)
 		
+	def _handle_keyboardinput(self, wid, char, where, event):
+		window = self._find_wid(wid)
+		if not window:
+			return 0
+		return window._keyboardinput(char, where, event)
+		
 	def _handle_goaway(self, wid):
 		"""User asked to close a window. Dispatch to correct window"""
 		window = self._find_wid(wid)
@@ -554,6 +566,7 @@ class _CommonWindow:
 		self._eventhandlers = {}
 		self._redrawfunc = None
 		self._clickfunc = None
+		self._accelerators = {}
 		
 	def close(self):
 		"""Close window and all subwindows"""
@@ -578,6 +591,7 @@ class _CommonWindow:
 		del self._redrawfunc
 		del self._clickfunc
 		del self._wid
+		del self._accelerators
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
@@ -661,10 +675,17 @@ class _CommonWindow:
 		del self._eventhandlers[event]
 
 	def destroy_menu(self):
+		self._accelerators = {}
 		pass
 
 	def create_menu(self, list, title = None):
-		pass
+		# We only implement the accellerators, not the popup menu (yet)
+		for item in list:
+			if item is None:
+				continue
+			char, itemstring, callback = item
+			if char:
+				self._accelerators[char] = callback
 
 	def _image_size(self, file):
 		"""Backward compatability: return wh of image given filename"""
@@ -854,7 +875,41 @@ class _CommonWindow:
 				
 		func(arg, self, evttype, (x, y, buttons))
 		
-	def _redraw(self, rgn):
+	def _keyboardinput(self, char, where, event):
+		#
+		# First see whether position is in any of our children
+		#
+		for ch in self._subwindows:
+			if Qd.PtInRect(where, ch.qdrect()):
+				try:
+					handled = ch._keyboardinput(char, where, event)
+				except Continue:
+					pass
+				else:
+					return handled
+		#
+		# Next, check any popup menu accelerators
+		#
+		try:
+			func, args = self._accelerators[char]
+		except KeyError:
+			pass
+		else:
+			apply(func, args)
+			return 1
+		#
+		# Finally check for a KeyboardInput handler
+		#
+		try:
+			func, arg = self._eventhandlers[KeyboardInput]
+		except KeyError:
+			return 0
+		else:
+			func(arg, self, KeyboardInput, char)
+			return 1
+		
+		
+	def _redraw(self, rgn=None):
 		"""Set clipping and color, redraw, redraw children"""
 		if self._parent is None:
 			return
@@ -866,7 +921,7 @@ class _CommonWindow:
 		for child in self._subwindows:
 			if child._transparent == 0 or \
 					(child._transparent == -1 and child.active_displist):
-				child._redraw()
+				child._redraw(rgn)
 			else:
 				still_to_do.append(child)
 		
@@ -886,7 +941,7 @@ class _CommonWindow:
 		# Finally do transparent children bottom-to-top
 		still_to_do.reverse()
 		for child in still_to_do:
-					child._redraw()
+					child._redraw(rgn)
 					
 	def _do_redraw(self):
 		"""Do actual redraw"""
@@ -965,6 +1020,14 @@ class _Window(_CommonWindow):
 		where = Qd.GlobalToLocal(where)
 		_CommonWindow._contentclick(self, down, where, event, shifted)
 
+	def _keyboardinput(self, char, where, event):
+		"""A mouse click in our data-region"""
+		if not self._wid or not self._parent:
+			return
+		Qd.SetPort(self._wid)
+		where = Qd.GlobalToLocal(where)
+		return _CommonWindow._keyboardinput(self, char, where, event)
+
 	def _mkclip(self):
 		if not self._wid or not self._parent:
 			return
@@ -983,9 +1046,11 @@ class _Window(_CommonWindow):
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 
-	def _redraw(self):
-		_CommonWindow._redraw(self)
-		Ctl.UpdateControls(self._wid, self._wid.GetWindowPort().visRgn)
+	def _redraw(self, rgn=None):
+		_CommonWindow._redraw(self, rgn)
+		if rgn is None:
+			rgn = self._wid.GetWindowPort().visRgn
+		Ctl.UpdateControls(self._wid, rgn)
 
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
@@ -1182,9 +1247,9 @@ class _DisplayList:
 			points = entry[2]
 			fgcolor = wid.GetWindowPort().rgbFgColor
 			Qd.RGBForeColor(color)
-			Qd.MoveTo(points[0])
+			apply(Qd.MoveTo, points[0])
 			for np in points[1:]:
-				Qd.LineTo(np)
+				apply(Qd.LineTo, np)
 			Qd.RGBForeColor(fgcolor)
 		elif cmd == 'box':
 			x, y, w, h = entry[1]
@@ -1570,5 +1635,5 @@ def multchoice(prompt, list, defindex):
 	return defindex
 
 def beep():
-	import sys
-	sys.stderr.write('\7')
+	MacOS.SysBeep()
+	#import pdb ; pdb.set_trace()
