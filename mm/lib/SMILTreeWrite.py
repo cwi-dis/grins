@@ -923,6 +923,8 @@ smil_attrs=[
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("fill", lambda writer, node: getfill(writer, node, 'fill')),
 	("fillDefault", lambda writer, node: getfill(writer, node, 'fillDefault')),
+	("syncBehavior", lambda writer, node: getfill(writer, node, 'syncBehavior')),
+	("syncBehaviorDefault", lambda writer, node: getfill(writer, node, 'syncBehaviorDefault')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),

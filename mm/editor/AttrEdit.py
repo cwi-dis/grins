@@ -408,6 +408,7 @@ class NodeWrapper(Wrapper):
 			'restart',
 			('clipbegin',), ('clipend',),	# More time stuff
 			('fill',), ('fillDefault',),
+			('syncBehavior',), ('syncBehaviorDefault',),
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
 			'layout', 'u_group',
@@ -427,6 +428,8 @@ class NodeWrapper(Wrapper):
 			namelist.append('fill')
 		if self.context.attributes.get('project_boston', 0):
 			namelist.append('fillDefault')
+			namelist.append('syncBehavior')
+			namelist.append('syncBehaviorDefault')
 			namelist.append('min')
 			namelist.append('max')
 		if ntype == 'bag':
@@ -638,8 +641,6 @@ class AnimationWrapper(NodeWrapper):
 			root = self.node.GetRoot()
 			targnode = root.GetChildByName(value)
 			self.node.targetnode = targnode
-		elif name in self._durattrs:
-			self.node.fullduration = None # recalculate it
 		NodeWrapper.setattr(self, name, value)
 		
 class PrefetchWrapper(NodeWrapper):
