@@ -20,7 +20,7 @@ CAUSES = [				# What causes the event
 	]
 
 # Reference: pg 401 of the SMIL printout on my desk; or chapter 13.3.12 (events)
-EVENTS_NODE = [				# What the event actually is.
+EVENTS_CNODE = [				# What the event actually is.
 	'begin',
 	'end',
 	'repeat',			# what about it's integer argument??
@@ -31,8 +31,9 @@ EVENTS_NODE = [				# What the event actually is.
 	'beginEvent',
 	'endEvent',			
 	'repeatEvent',			# NO OFFSET!
-	'marker',
 	]
+
+EVENTS_MNODE = EVENTS_CNODE+['marker']
 
 EVENTS_REGION = [			# no offsets at all!
 	#'activateEvent',
@@ -153,7 +154,9 @@ class EventStruct:
 		if self.cause == 'node' or self.cause == 'region':
 			if not self.get_event()=='marker':
 				self.event = x.event
-
+				
+		self._setnode = x.srcnode
+		
 	def clear_vars(self):
 		# Resets all the variables.
 		self.event = None
@@ -349,17 +352,31 @@ class EventStruct:
 			if event not in EVENTS_REGION:
 				self._setevent = EVENTS_REGION[0]
 		elif cause == 'node':
-			if event not in EVENTS_NODE:
-				self._setevent = EVENTS_NODE[0]
+			if self.__isMediaNode():
+				if event not in EVENTS_MNODE:
+					self._set = EVENTS_MNODE[0]
+			else:
+				if event not in EVENTS_CNODE:
+					self._setevent = EVENTS_CNODE[0]
 
 	def set_event(self, newevent):
-		assert newevent in EVENTS_NODE or newevent in EVENTS_REGION
+		assert newevent in EVENTS_MNODE or newevent in EVENTS_REGION
 		self._setevent = newevent
 
+	def __isMediaNode(self):
+		node = self._setnode
+		from MMTypes import mediatypes
+		return node is not None and node.type in mediatypes
+		
 	def get_possible_events(self):
-		if self.get_cause() == 'node':
-			return EVENTS_NODE
-		elif self.get_cause() == 'region':
+		cause = self.get_cause()
+		if cause == 'node':
+			if self.__isMediaNode():
+				return EVENTS_MNODE
+			else:
+				return EVENTS_CNODE
+				
+		elif cause == 'region':
 			return EVENTS_REGION
 		else:
 			return None
