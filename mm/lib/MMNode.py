@@ -204,6 +204,7 @@ class MMNodeContext:
 					computedMimeType = MMmimetypes.guess_type(url)[0]
 				if url is not None and computedMimeType is None:
 					# last resort: get file and see what type it is
+					url = self.findurl(url)
 					try:
 						u = MMurl.urlopen(url)
 					except:
@@ -2671,6 +2672,18 @@ class MMNode(MMTreeElement):
 		chtypes = ChannelMime.MimeChannel.get(computedMimeType, [])
 		nchtypes = []
 		valid = ChannelMap.getvalidchanneltypes(self.context)
+		if computedMimeType == 'image/gif':
+			import RealChannel
+			if RealChannel.rma is not None:
+				from gifparser import isanimatedgif
+				try:
+					u = MMurl.urlopen(self.GetFile())
+				except:
+					pass
+				else:
+					if isanimatedgif(u):
+						chtypes = ['RealVideo']
+					u.close()
 		for chtype in chtypes:
 			while chtype not in valid:
 				if chtype == 'RealVideo':
