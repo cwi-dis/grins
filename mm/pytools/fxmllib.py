@@ -256,6 +256,8 @@ class XMLParser:
                 standalone = standalone[1:-1]
 ##            self.handle_xml(encoding, standalone)
 	    i = res.end(0)
+        if enc is None:
+            enc = 'utf-8'
         if type(data) is not type(u'a'):
             try:
                 data = unicode(data[i:], enc)
