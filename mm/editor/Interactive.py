@@ -121,7 +121,7 @@ class Interactive:
         self.clickable = 1;             # whether this will accept events
         self.movable = 1;               # whether this can be moved or resized.
         self.drag_dropable = 1;         # whether this does the D&D thing.
-        self.context_menu = None;       # Pops up when right-clicked.
+        self.context_menu = None;       # Pops up when right-clicked (not used);
 
         self.parent = None;             # Sometimes nodes have parents.
 
@@ -216,11 +216,9 @@ class Interactive:
 
     def select(self):
         self.selected = 1;
-        self.root.redraw();
 
     def unselect(self):
         self.selected = 0;
-        self.root.redraw();
 
     def get_minsize(self):
         # Return the least size that this widget is likely to be.
@@ -249,6 +247,14 @@ class Interactive:
         else:
             return 0;
 
+    def destroy(self):
+        # Python garbage collection is prone to circular references.
+        # Remove the self.esteem from this object.
+        self.root = None;
+        self.appended_to = None;
+        self.context_menu = None;
+        self.parent = None;
+
 ##############################################################################
 
 #                    ABSTRACT BASE CLASS EDITWINDOW
@@ -258,6 +264,10 @@ class Interactive:
 class EditWindow(Interactive):
     # An EditWindow is a container for Interactive objects.
     # This is a nestable container, so you can add and remove objects from it.
+    # The idea of this class is to have a container of objects which have
+    # their own position and z-index - objects float infront of and behind each
+    # other.
+
 
     # This object behaves like a collection - you can add and remove Interactives from
     # it. 
@@ -356,6 +366,12 @@ class EditWindow(Interactive):
             new_widgetlist.append(v);
 
         self.widgets = new_widgetlist;
+
+    def destroy(self):
+        Interactive.destroy(self);
+        for i in self.widgets:
+            i.destroy();
+        self.widgets = [];
     
 #    def get_minsize(self):
 #        # The minimum size of a container is the sum of all of it's children.
