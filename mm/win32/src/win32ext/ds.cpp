@@ -23,7 +23,7 @@ IMPLEMENT_PYMODULECLASS(DS,GetDS,"DirectShow Module Wrapper Object");
 
 // @object PyDS|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(DS)
-	{"CreateGraphBuilder",PyIClass<IGraphBuilder,GraphBuilderCreator>::Create,1},
+	{"CreateGraphBuilder",PyIClass<GraphBuilder,GraphBuilderCreator>::Create,1},
 END_PYMETHODDEF()
 
 DEFINE_PYMODULETYPE("PyDS",DS);
