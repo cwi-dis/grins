@@ -23,9 +23,7 @@ DEFS =	\
 	-DUSE_FCNTL \
 	-DMM_DEBUG \
 	-DUSE_CL \
-	-DUSE_XLIB -DUSE_XT -DUSE_XM \
-	-DUSE_GL -DUSE_FL -DUSE_FM \
-	-DUSE_MALLOC -Dmalloc=xmalloc -Drealloc=xrealloc -Dfree=xfree # -DCOUNT_ALLOCS
+	-DUSE_GL -DUSE_FL -DUSE_FM
 
 CFLAGS = -g -G0 -xansi -D__STDC__ -I$(PYTHON)/src $(DEFS)
 
@@ -35,7 +33,7 @@ LIBS =	$(LIBPYTHON) \
 	$(LIBREADLINE) \
 	-lm -lsun -laudio -lsvideo -lXext -limage -lgutil -lm  \
 	$(LIBDL) -lmld -lmpc -lfm_s -lgl_s \
-	-lXm_s -lPW -lXmu -lXt_s -lX11_s -ltermcap
+	-lXmu -lXt_s -lX11_s -ltermcap
 
 LIBDEPS = $(LIBPYTHON) \
 	$(LIBFORMS) \
