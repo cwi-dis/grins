@@ -3,8 +3,9 @@
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (WCE x86em) Dynamic-Link Library" 0x7f02
+# TARGTYPE "Win32 (WCE ARM) Dynamic-Link Library" 0x8502
 
-CFG=winkernel - Win32 (WCE x86em) Debug
+CFG=winkernel - Win32 (WCE ARM) Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,10 +14,12 @@ CFG=winkernel - Win32 (WCE x86em) Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "winkernel.vcn" CFG="winkernel - Win32 (WCE x86em) Debug"
+!MESSAGE NMAKE /f "winkernel.vcn" CFG="winkernel - Win32 (WCE ARM) Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
+!MESSAGE "winkernel - Win32 (WCE ARM) Release" (based on "Win32 (WCE ARM) Dynamic-Link Library")
+!MESSAGE "winkernel - Win32 (WCE ARM) Debug" (based on "Win32 (WCE ARM) Dynamic-Link Library")
 !MESSAGE "winkernel - Win32 (WCE x86em) Release" (based on "Win32 (WCE x86em) Dynamic-Link Library")
 !MESSAGE "winkernel - Win32 (WCE x86em) Debug" (based on "Win32 (WCE x86em) Dynamic-Link Library")
 !MESSAGE 
@@ -26,11 +29,74 @@ CFG=winkernel - Win32 (WCE x86em) Debug
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 # PROP ATL_Project 2
-CPP=cl.exe
-MTL=midl.exe
-RSC=rc.exe
 
-!IF  "$(CFG)" == "winkernel - Win32 (WCE x86em) Release"
+!IF  "$(CFG)" == "winkernel - Win32 (WCE ARM) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMRel"
+# PROP BASE Intermediate_Dir "ARMRel"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMRel"
+# PROP Intermediate_Dir "ARMRel"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /GX- /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /Oxs /M$(CECrtMT)  /c
+# ADD CPP /nologo /W3 /GX- /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /Oxs /M$(CECrtMT)  /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib   /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib   /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/winkernel.pyd" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+
+!ELSEIF  "$(CFG)" == "winkernel - Win32 (WCE ARM) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "ARMDbg"
+# PROP BASE Intermediate_Dir "ARMDbg"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "ARMDbg"
+# PROP Intermediate_Dir "ARMDbg"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /GX- /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /M$(CECrtMTDebug)  /c
+# ADD CPP /nologo /W3 /GX- /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /M$(CECrtMTDebug)  /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib   /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib   /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/winkernel_d.pyd" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+
+!ELSEIF  "$(CFG)" == "winkernel - Win32 (WCE x86em) Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -48,18 +114,21 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 EMPFILE=empfile.exe
+RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
-# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_USRDLL" /D "winkernel_EXPORTS" /YX /Gz /Oxs /c
-# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_USRDLL" /D "winkernel_EXPORTS" /YX /Oxs /Gz /c
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /GX- /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /Gz /Oxs  /c
+# ADD CPP /nologo /W3 /GX- /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /Gz /Oxs  /c
+MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMRel/winkernel.pyd" /windowsce:emulation /MACHINE:IX86
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc)   /nologo /stack:0x10000,0x1000 /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc)   /nologo /stack:0x10000,0x1000 /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMRel/winkernel.pyd" /windowsce:emulation /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "winkernel - Win32 (WCE x86em) Debug"
 
@@ -79,23 +148,28 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 EMPFILE=empfile.exe
+RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
-# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_USRDLL" /D "winkernel_EXPORTS" /YX /Gz /c
-# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_USRDLL" /D "winkernel_EXPORTS" /YX /Gz /c
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /GX- /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /Gz  /c
+# ADD CPP /nologo /W3 /GX- /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_USRDLL" /D "WINKERNEL_EXPORTS" /YX /Gz  /c
+MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMDbg/winkernel_d.pyd" /windowsce:emulation /MACHINE:IX86
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc)   /nologo /stack:0x10000,0x1000 /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc)   /nologo /stack:0x10000,0x1000 /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMDbg/winkernel_d.pyd" /windowsce:emulation /MACHINE:IX86
 
 !ENDIF 
 
 # Begin Target
 
+# Name "winkernel - Win32 (WCE ARM) Release"
+# Name "winkernel - Win32 (WCE ARM) Debug"
 # Name "winkernel - Win32 (WCE x86em) Release"
 # Name "winkernel - Win32 (WCE x86em) Debug"
 # Begin Group "Source Files"
@@ -104,6 +178,9 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=.\winkernel.cpp
+
+!IF  "$(CFG)" == "winkernel - Win32 (WCE ARM) Release"
+
 DEP_CPP_WINKE=\
 	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
 	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
@@ -146,27 +223,153 @@ DEP_CPP_WINKE=\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	".\utils.h"\
 	
+
+!ELSEIF  "$(CFG)" == "winkernel - Win32 (WCE ARM) Debug"
+
+DEP_CPP_WINKE=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	".\utils.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winkernel - Win32 (WCE x86em) Release"
+
+DEP_CPP_WINKE=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	".\utils.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winkernel - Win32 (WCE x86em) Debug"
+
+DEP_CPP_WINKE=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	".\utils.h"\
+	
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=.\winkernel.def
 # End Source File
-# Begin Source File
-
-SOURCE=.\winkernel.rc
-# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
-# Begin Source File
-
-SOURCE=.\resource.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\utils.h
-# End Source File
 # End Group
 # Begin Group "Resource Files"
 
