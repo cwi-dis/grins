@@ -361,6 +361,7 @@ DEP_CPP_WINMM=\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
+	".\winmm_waveout.h"\
 	
 
 !ENDIF 
@@ -369,6 +370,40 @@ DEP_CPP_WINMM=\
 # Begin Source File
 
 SOURCE=.\winmm.def
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\winmm_d.def
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
