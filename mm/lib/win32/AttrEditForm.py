@@ -1468,6 +1468,8 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 				import Sizes
 				url = a.wrapper.getcontext().findurl(f)
 				w, h = Sizes.GetSize(url)
+				if w == 0 or h == 0:
+					w, h = self._layoutsize
 			else:
 				w, h = self._layoutsize
 		self.__bbox = w,h
