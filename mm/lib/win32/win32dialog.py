@@ -11,6 +11,7 @@ Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 import win32mu
 import string
+import math
 import features
 import compatibility
 
@@ -599,8 +600,6 @@ class ProgressDialog:
 		del self._dialog
 
 class _ProgressDialog(ResDialog):
-	# Placeholder
-	
 	def __init__(self, title, cancelcallback=None, parent=None, delaycancel=1, percent=0):
 		self.cancelcallback = cancelcallback
 		self._title = title
@@ -658,6 +657,53 @@ class _ProgressDialog(ResDialog):
 			if cur2 == None:
 				cur2 = 0
 			self._progress.set(cur2)
+
+class SeekDialog(ResDialog):
+	def __init__(self, title, parent):
+		self._title = title
+		ResDialog.__init__(self,grinsRC.IDD_SEEK, parent)
+		self._parent=parent
+		self.IDC_SLIDER = grinsRC.IDC_SLIDER_POS+1
+
+		self.CreateWindow(parent)
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+
+	def OnInitDialog(self):
+		self.SetWindowText(self._title)
+
+		l,t,r,b = self.GetWindowRect()
+		placeholder = Control(self, grinsRC.IDC_SLIDER_POS)
+		placeholder.attach_to_parent()
+		rc = self.ScreenToClient(placeholder.getwindowrect())
+		self.slider = win32ui.CreateSliderCtrl()
+		style = win32con.WS_VISIBLE|win32con.WS_CHILD|commctrl.TBS_HORZ|commctrl.TBS_BOTH|commctrl.TBS_AUTOTICKS
+		self.slider.CreateWindow(style, rc, self, self.IDC_SLIDER)
+
+		self.slider.SetTicFreq(5)
+		self.slider.SetLineSize(5)
+		self.slider.SetPageSize(20)
+		self.slider.SetRange(0, 100)
+
+		self.HookMessage(self.OnNotify, win32con.WM_NOTIFY) 
+		return ResDialog.OnInitDialog(self)
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnCancel(self):
+		self.EndDialog(win32con.IDCANCEL)
+	
+	def setRange(self, min, max):
+		self.slider.SetRange(int(math.floor(min)), int(math.ceil(max)))
+		
+	def setPos(self, pos):
+		self.slider.SetPos(int(pos+0.5))
+
+	def OnNotify(self, params):
+		print self.slider.GetPos()
+
+
 		
 # Implementation of the channel undefined dialog
 class ChannelUndefDlg(ResDialog):
@@ -1077,3 +1123,4 @@ class CreateBoxBar(DlgBar):
 
 
 
+ 

@@ -1816,6 +1816,15 @@ BEGIN
                     44,8
 END
 
+IDD_SEEK DIALOG DISCARDABLE  0, 0, 307, 44
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seek"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_SLIDER_POS,"Static",SS_BLACKFRAME | NOT 
+                    WS_VISIBLE,7,9,293,25
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2135,6 +2144,13 @@ BEGIN
     IDD_EDITATTR_COLORSEL, DIALOG
     BEGIN
         RIGHTMARGIN, 295
+    END
+
+    IDD_SEEK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 300
+        BOTTOMMARGIN, 39
     END
 END
 #endif    // APSTUDIO_INVOKED
