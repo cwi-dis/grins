@@ -53,12 +53,14 @@ _icon_ids = {
 	'error': mw_resources.ID_ICON_ERROR,
 	'linksrc': mw_resources.ID_ICON_LINKSRC,
 	'linkdst': mw_resources.ID_ICON_LINKDST,
+	'danglinganchor': mw_resources.ID_ICON_DANGLINGANCHOR,
 ##	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
 	'transin': mw_resources.ID_ICON_TRANSIN,
 	'transout': mw_resources.ID_ICON_TRANSOUT,
 	'beginevent' : mw_resources.ID_ICON_EVENTIN,
 	'endevent' : mw_resources.ID_ICON_EVENTOUT,
 	'causeevent' : mw_resources.ID_ICON_CAUSEEVENT,
+	'danglingev' : mw_resources.ID_ICON_DANGLINGEVENT,
 	'repeat' : mw_resources.ID_ICON_REPEAT,
 	'playing': mw_resources.ID_ICON_PLAYING,	# 
 	'waitstop': mw_resources.ID_ICON_WAITSTOP, # 
