@@ -220,6 +220,12 @@
 (project_boston (bool) 0 'SMIL-Boston' default
 	'Document conforms to SMIL-Boston' raw (smil2))
 
+(project_default_region (name) undefined 'Default region' channelname
+	'Default region for descendants of this node' inherited (g2 qt smil10 smil2 cmif snap))
+
+(project_bandwidth_fraction (float) 0.0 'Bandwidth fraction' default
+	'Fraction of total bandwidth allocated to this sequence' raw (g2 qt smil10 smil2 cmif snap))
+
 (project_convert (bool) 1 'Convert data' default
 	'Convert data to RealMedia format' raw (g2_pro))
 
