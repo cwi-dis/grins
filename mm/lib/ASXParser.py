@@ -316,7 +316,8 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 
 	# experimental dirty code
 	def __getASXEntry(self, rootinfo, index, entrynode, baseurl):
-		str = """<par id="entry%d">\n<switch id="switch%d">""" % (index, index)
+		str = """<par id="entry%d" endsync="id(switch%d)">
+			<switch id="switch%d"> """ % (index, index, index)
 		entries = entrynode.GetChildrenOfType('ref')
 		altix = 1
 		for e in entries:
@@ -358,7 +359,7 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		copyright = MMurl.quote(copyright or '')
 		
 		str = str + """
-		<seq id="infoSequence%d" repeat="2">
+		<seq id="infoSequence%d" repeat="indefinite">
 		""" % index
 
 		if title:
