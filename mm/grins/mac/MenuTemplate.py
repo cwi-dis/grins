@@ -8,7 +8,7 @@ from usercmd import *
 
 #
 # Commands that we know are not implemented on the mac:
-UNUSED_COMMANDS=()
+UNUSED_COMMANDS=(MAGIC_PLAY,)   # Is implemented, but the check code doesn't know it
 
 #
 # Menu structure
