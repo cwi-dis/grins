@@ -1,0 +1,194 @@
+Microsoft Developer Studio Workspace File, Format Version 5.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "CmifEx"=.\CmifEx\CmifEx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "HtmlEx"=.\HtmlEx\HtmlEx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "TimerEx"=.\TimerEx\TimerEx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "_All GRiNS extensions"=".\_All GRiNS extensions.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name CmifEx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name cmifex2
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name HtmlEx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imageex
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mcidll
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name midiEx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mpegEx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name textex
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name TimerEx
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "cmifex2"=.\CmifEx2\cmifex2.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "gifex"=.\gifex\gifex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imageex"=.\imageex\imageex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "mcidll"=".\mci-dll\mcidll.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "midiEx"=.\soundex\MidiEx.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name mcidll
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mpegEx"=.\mpegex\mpegex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name midiEx
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "textex"=.\TextEx\Textex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "win32ui"=L:\src\pythonex\Pythonwin\win32ui.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
