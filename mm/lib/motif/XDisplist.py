@@ -25,7 +25,6 @@ _iconmap = {
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
-		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
 		self._buttons = []
@@ -106,8 +105,6 @@ class _DisplayList:
 		return new
 
 	def render(self):
-		import time
-		self.starttime = time.time()
 		window = self._window
 		if window._transparent == -1 and window._active_displist is None:
 			window._active_displist = self
@@ -351,10 +348,10 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		self._linewidth = width
 
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates, z = 0):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z, times)
+		return _Button(self, coordinates, z)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
@@ -480,7 +477,7 @@ class _DisplayList:
 		maxx = oldx
 		for str in strlist:
 			x0, y0 = w._convert_coordinates((x, y))
-			list.append('text', self._window._convert_color(self._fgcolor), self._font._font, x0, y0, str)
+			list.append(('text', self._window._convert_color(self._fgcolor), self._font._font, x0, y0, str))
 			self._optimize((1,))
 			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
 			x = self._xpos
@@ -634,10 +631,10 @@ class _DisplayList:
 			cos = math.cos(rotation)
 			sin = math.sin(rotation)
 			points = [(ndx, ndy)]
-			points.append(roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
-				      roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
-			points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
-				      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
+			points.append((roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
+				       roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos)))
+			points.append((roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
+				       roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window._arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		nsx, nsy, ndx, ndy, points = window._arrowcache[(src,dst)]
 		self._list.append(('arrow', color, self._linewidth,
