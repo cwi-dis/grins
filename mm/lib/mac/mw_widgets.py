@@ -8,6 +8,7 @@ import Controls
 import ControlAccessor
 import App
 import Evt
+import Dlg
 
 import img
 import imgformat
@@ -158,8 +159,9 @@ class _ListWidget(_ControlWidget):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
 
 class _AreaWidget(_ControlWidget):
-	def __init__(self, wid, item, callback=None):
+	def __init__(self, wid, item, callback=None, scaleitem=None):
 		self.wid = wid
+		self.scaleitem = scaleitem
 		self.control = wid.GetDialogItemAsControl(item)
 		self.rect = self.control.GetControlRect()
 		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
@@ -299,6 +301,14 @@ class _AreaWidget(_ControlWidget):
 		print 'scale', self.scale
 		Qd.SetPort(self.wid)
 		Win.InvalRect(fullrect)
+		if self.scaleitem != None:
+			if self.scale == 1:
+				text = ''
+			else:
+				text = '(scale 1:%d)'%self.scale
+			h = self.wid.GetDialogItemAsControl(self.scaleitem)
+			Dlg.SetDialogItemText(h, text)
+
 		
 	def recalclurven(self):
 		print 'ourrect', self.ourrect
