@@ -20,7 +20,6 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self._timer_id = None
-		self.play_data = ''
 
 	def do_arm(self, node, same=0):
 		if node.type != 'ext':
@@ -71,24 +70,26 @@ class SoundChannel(ChannelAsync):
 
 	def setpaused(self, paused):
 		if debug:
-			print 'setpaused', paused, self.play_data
+			print 'setpaused', paused
+		player.setpaused(paused)
 		self._paused = paused
-		if not self._paused and self.play_data:
-			self._playsome()
 
 class Player:
 	def __init__(self):
 		# __merger, __converter, __tid, and __data are all None/'',
 		# or none of them are.
+		self.__pausing = 0	# whether we're pausing
 		self.__port = audiodev.writer(qsize = 400000)
-		self.__merger = None
-		self.__converter = None
-		self.__tid = None
+		self.__merger = None	# merged readers
+		self.__converter = None	# merged readers, converted to port
+		self.__tid = None	# timer id
 		self.__framerate = 0
 		self.__readsize = 0
 		self.__timeout = 0
-		self.__data = ''
 		self.__callbacks = []
+		self.__data = ''	# data already read but not yet played
+		self.__oldpos = None	# start position of current __data
+		self.__prevpos = None	# previous value of __oldpos
 
 	def __callback(self, arg):
 		self.__callbacks.append(arg)
@@ -98,6 +99,8 @@ class Player:
 		if not self.__merger:
 			first = 1
 			self.__merger = audiomerge.merge()
+		else:
+			self.__converter.setpos(self.__oldpos)
 		self.__merger.add(rdr, (self.__callback, (cb,)))
 		if first:
 			self.__converter = audioconvert.convert(self.__merger,
@@ -111,7 +114,9 @@ class Player:
 			if fillable < self.__readsize:
 				self.__readsize = fillable
 			self.__timeout = 0.5 * self.__readsize / self.__framerate
-			self.__data = self.__converter.readframes(self.__readsize)
+		self.__oldpos = self.__converter.getpos()
+		self.__data = self.__converter.readframes(self.__readsize)
+		if first:
 			self.__playsome(1)
 
 	def stop(self, rdr):
@@ -124,9 +129,33 @@ class Player:
 				self.__port.stop()
 				self.__merger = None
 				self.__converter = None
+				self.__oldpos = None
+				self.__prevpos = None
 				if self.__tid:
 					windowinterface.canceltimer(self.__tid)
 					self.__tid = None
+
+	def setpaused(self, paused):
+		if self.__pausing == paused:
+			return
+		self.__pausing = paused
+		if not self.__merger:
+			return
+		if paused:
+			filled = self.__port.getfilled()
+			self.__port.stop()
+			self.__converter.setpos(self.__prevpos)
+			n = self.__readsize - filled
+			if n > 0:
+				dummy = self.__converter.readframes(n)
+			self.__oldpos = self.__converter.getpos()
+			self.__prevpos = None
+			self.__data = self.__converter.readframes(self.__readsize)
+			if self.__tid:
+				windowinterface.canceltimer(self.__tid)
+				self.__tid = None
+		else:
+			self.__playsome(1)
 
 	def __playsome(self, first = 0):
 		self.__tid = None
@@ -144,6 +173,7 @@ class Player:
 			if cb:
 				apply(cb[0], cb[1])
 		self.__callbacks = []
+		self.__prevpos = self.__oldpos
 		self.__oldpos = self.__converter.getpos()
 		self.__data = self.__converter.readframes(self.__readsize)
 		timeout = float(self.__port.getfilled())/self.__framerate - self.__timeout
