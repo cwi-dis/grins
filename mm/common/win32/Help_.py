@@ -63,11 +63,9 @@ def fixhelpdir():
 def givehelp(topic):
 	global helpwindow
 	import windowinterface
-	print 'givehelp for topic:', topic
 	fixhelpdir()
 	helpfile = 'player/%s.html'%topic
 	helpurl = MMurl.basejoin(helpbase,helpfile)
-	print 'helpurl',helpurl
 	helpurl=toabs(helpurl)
 	import win32api,win32con
 
