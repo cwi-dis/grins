@@ -225,8 +225,6 @@ class TimeMapper:
 				beforepos = self.minpos[aftertime]
 				afterpos = self.minpos[aftertime]+self.collisiondict[aftertime]
 				width = afterpos - beforepos
-				print 'preroll', beforetime, time, aftertime
-				print 'pos', beforepos, beforepos + factor*width, afterpos
 				return self.__pixel2pixel(beforepos + factor*width + 0.5)
 		if time < self.times[0]:
 			return self.__pixel2pixel(self.minpos[self.times[0]])
