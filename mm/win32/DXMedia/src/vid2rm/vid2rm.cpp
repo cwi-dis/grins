@@ -16,9 +16,7 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <stdio.h>
 
 // options
-#define PREVIEW_VIDEO
-#define LOG_ACTIVITY
-//#define SAVE_FRAMES_AS_BMP
+// #define LOG_ACTIVITY
 
 namespace RProducer {
 bool HasEngine();
@@ -273,6 +271,7 @@ void CVideoRenderer::PrepareRender()
 } 
 void CVideoRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
+
     DoRenderSample(pMediaSample);
 
 } 
@@ -321,42 +320,6 @@ void CVideoRenderer::EncodeSample(IMediaSample *pMediaSample)
 		RProducer::EncodeSample(pImage,pMediaSample->GetActualDataLength(),m_lastTimestamp,isSync,false);
 	m_ixframe++;
 
-#ifdef PREVIEW_VIDEO
-	HDC hdc=GetDC(NULL);
-    SetDIBitsToDevice(
-            (HDC) hdc,                            // Target device HDC
-            0,                      // X sink position
-            0,                       // Y sink position
-            w, // Destination width
-            h, // Destination height
-            0,                     // X source position
-            0,                     // Adjusted Y source position
-            (UINT) 0,                               // Start scan line
-            h,         // Scan lines present
-            pImage,      // Image data
-            (BITMAPINFO*)&bih,                    // DIB header
-            DIB_RGB_COLORS);                        // Type of palette
-	ReleaseDC(NULL,hdc);
-#endif
-
-#ifdef SAVE_FRAMES_AS_BMP
-	char szBmp[256];
-	sprintf(szBmp,"frame%d.bmp",m_ixframe);
-	FILE *bmpFile=fopen(szBmp,"wb");
-	if(bmpFile){
-	BITMAPFILEHEADER filehdr;	
-	ZeroMemory(&filehdr,sizeof(filehdr));
-	*((char*)&filehdr.bfType)='B';
-	*(((char*)&filehdr.bfType)+1)='M';
-	filehdr.bfOffBits =sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER); 
-	filehdr.bfSize=filehdr.bfOffBits+pMediaSample->GetActualDataLength();
-	filehdr.bfSize=filehdr.bfOffBits+pMediaSample->GetActualDataLength();
-	fwrite(&filehdr,1,sizeof(BITMAPFILEHEADER),bmpFile);
-	fwrite(&bih,1,sizeof(BITMAPINFOHEADER),bmpFile);
-	fwrite(pImage,1,pMediaSample->GetActualDataLength(),bmpFile);
-	fclose(bmpFile);
-	}
-#endif
 }
 
 
