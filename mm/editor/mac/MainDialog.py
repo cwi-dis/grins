@@ -23,7 +23,7 @@ import MMurl
 import windowinterface
 
 class MainDialog:
-	def __init__(self, title):
+	def __init__(self, title, hasarguments=1):
 		"""Create the Main dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -92,7 +92,7 @@ class MainDialog:
 	def _ae_openapp(self, *args, **kwargs):
 		import settings
 		if not settings.get('no_initial_dialog'):
-			OpenAppDialog(self.new_callback, self.open_callback)
+			OpenAppDialog(self.new_callback, self.open_callback, self.never_again)
 		
 	def _ae_opendoc(self, aliases, **kwargs):
 		print 'opendoc'
@@ -135,11 +135,12 @@ ITEM_NEVER_AGAIN=6
 ITEMLIST_OPENAPP_ALL=ITEMrange(ITEM_OK, ITEM_NEVER_AGAIN)
 
 class OpenAppDialog(windowinterface.MACDialog):
-	def __init__(self, cb_new, cb_open):
+	def __init__(self, cb_new, cb_open, cb_neveragain):
 		windowinterface.MACDialog.__init__(self, "Oratrix GRiNS", ID_DIALOG_OPENAPP,
 				ITEMLIST_OPENAPP_ALL, default=ITEM_OK)
 		self.cb_new = cb_new
 		self.cb_open = cb_open
+		self.cb_never_again = cb_never_again
 		self.cb = None
 		self.setradio(ITEM_NOTHING)
 		self.never_again = 0
@@ -163,9 +164,8 @@ class OpenAppDialog(windowinterface.MACDialog):
 		if n == ITEM_OK:
 			self.close()
 			if self.never_again:
-				import settings
-				settings.set('no_initial_dialog', 1)
-				settings.save()
+				if self.cb_never_again:
+					self.cb_never_again()
 			if self.cb:
 				self.cb()
 		elif n in (ITEM_NEW, ITEM_OPEN, ITEM_NOTHING):

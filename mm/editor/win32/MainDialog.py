@@ -33,7 +33,7 @@ import WMEVENTS
 
 class MainDialog:
 	adornments = {}
-	def __init__(self, title):
+	def __init__(self, title, hasarguments=1):
 		"""Create the Main dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -61,6 +61,9 @@ class MainDialog:
 		windowinterface.createmainwnd(title,
 			adornments = self.adornments,
 			commandlist = self.commandlist)
+		import settings
+		if not settings.get('no_initial_dialog'):
+			windowinterface.OpenAppDialog(self.new_callback, self.open_callback, self.never_again)
 		
 	def open_callback(self):
 		callbacks={
