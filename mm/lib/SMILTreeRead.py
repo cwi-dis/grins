@@ -489,24 +489,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# now determine channel type
 		if subtype is not None and \
-			string.find(string.lower(subtype), 'real') >= 0:
-				# if it's a RealMedia type, use tag to determine chtype
-				if tagname == 'audio':
+		   string.find(string.lower(subtype), 'real') >= 0:
+			# if it's a RealMedia type, use tag to determine chtype
+			if tagname == 'audio':
+				chtype = 'RealAudio'
+			elif tagname == 'image' or tagname == 'animation':
+				chtype = 'RealPix'
+			elif tagname == 'text' or tagname == 'textstream':
+				chtype = 'RealText'
+			else:
+				if mediatype == 'audio':
 					chtype = 'RealAudio'
-				elif tagname == 'image':
+				elif mediatype == 'image':
 					chtype = 'RealPix'
-				elif tagname == 'text':
+				elif mediatype == 'text':
 					chtype = 'RealText'
 				else:
-					if mediatype == 'audio':
-						chtype = 'RealAudio'
-					elif mediatype == 'image':
-						chtype = 'RealPix'
-					elif mediatype == 'text':
-						chtype = 'RealText'
-					else:
-						chtype = 'RealVideo'
-								
+					chtype = 'RealVideo'
+
 		elif mediatype == 'audio':
 			chtype = 'sound'
 		elif mediatype == 'image':
