@@ -10,12 +10,12 @@ class _Events:
 		self._windows = {}
 		self._select_fdlist = []
 		self._select_dict = {}
-		self._timenow = float(time.millitimer()) / 1000
+		self._timenow = time.time()
 		self._timerid = 0
 		self._modal = 0
 
 	def _checktime(self):
-		timenow = float(time.millitimer()) / 1000
+		timenow = time.time()
 		timediff = timenow - self._timenow
 		while self._timers:
 			(t, arg, tid) = self._timers[0]
@@ -117,13 +117,13 @@ class _Events:
 				return windowinterface.readevent()
 			if self._timers:
 				(t, arg, tid) = self._timers[0]
-				t0 = time.millitimer()
+				t0 = time.time()
 			else:
 				t = None
 			windowinterface.waitevent_timeout(t)
 			if self._timers:
-				t1 = time.millitimer()
-				dt = float(t1 - t0) / 1000
+				t1 = time.time()
+				dt = t1 - t0
 				self._timers[0] = (t - dt, arg, tid)
 
 	def remove_window_callbacks(self, window):

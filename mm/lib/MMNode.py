@@ -1081,6 +1081,8 @@ class MMNode:
 		while x <> None:
 			if self == x: return 1
 			xnew = x.parent
+			if not xnew:
+				return 0
 			try:
 				if not x in xnew.wtd_children:
 					return 0
