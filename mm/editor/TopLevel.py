@@ -1737,6 +1737,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if type(dstanchor) is type(''):
 			url, aid = MMurl.splittag(dstanchor)
 			url = MMurl.basejoin(self.filename, url)
+			# Check whether it's a control anchor
+			proto, command = MMurl.splittype(url)
+			if proto == 'grins':
+				return self.commandurl(command)
 		else:
 			url = self.filename
 			for aid, uid in self.root.SMILidmap.items():
@@ -1823,6 +1827,32 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 1
 		if MMurl.canonURL(self.filename) == MMurl.canonURL(url):
 			return 1
+		return 0
+
+
+	def commandurl(self, command):
+		# XXXX Or should we schedule it?
+		return self._docommandurl(command)
+
+	def _docommandurl(self, command):
+		if command == 'pause()':
+			self.player.pause(1)
+			return 1
+		if command == 'stop()':
+			self.player.stop()
+			return 1
+		if command == 'close()':
+			self.close_callback()
+			return 1
+		if command == 'open()':
+			# self.player.stop() ??
+			# self.close_callback() ??
+			self.main.open_callback()
+			return 1
+		if command == 'exit()':
+			self.main.close_callback()
+			return 1
+		print 'Unknown grins: command:', command
 		return 0
 
 	def __import_asx(self, filename):
