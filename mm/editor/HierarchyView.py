@@ -14,6 +14,7 @@ import fl
 import MMAttrdefs
 import MMNode
 import FontStuff
+import MenuMaker
 from Dialog import GLDialog
 from ViewDialog import ViewDialog
 
@@ -239,7 +240,9 @@ class HierarchyView(ViewDialog, GLDialog):
 			if children:
 				type = children[0].GetType()
 		node = self.root.context.newnode(type)
-		self.insertnode(node, where)
+		if self.insertnode(node, where):
+			import NodeInfo
+			NodeInfo.shownodeinfo(self.toplevel, node)
 
 	def paste(self, where):
 		import Clipboard
@@ -256,7 +259,7 @@ class HierarchyView(ViewDialog, GLDialog):
 			node = node.CopyIntoContext(self.root.context)
 		else:
 			Clipboard.setclip(type, node.DeepCopy())
-		self.insertnode(node, where)
+		dummy = self.insertnode(node, where)
 
 	def insertnode(self, node, where):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
@@ -266,11 +269,11 @@ class HierarchyView(ViewDialog, GLDialog):
 				fl.show_message( \
 				  'Can\'t insert before/after the root','','')
 				node.Destroy()
-				return
+				return 0
 		em = self.editmgr
 		if not em.transaction():
 			node.Destroy()
-			return
+			return 0
 		if where == 0:
 			em.addnode(self.focusnode, 0, node)
 		else:
@@ -281,6 +284,7 @@ class HierarchyView(ViewDialog, GLDialog):
 			em.addnode(parent, i, node)
 		self.focusnode = node
 		em.commit()
+		return 1
 
 	def zoomout(self):
 		if self.viewroot is self.root:
@@ -478,30 +482,6 @@ def makeboxes(list, node, left, top, right, bottom):
 
 
 # XXX The following should be merged with ChannelView's GO class :-(
-
-# Make a menu, a list of menuprocs, and a keymap.
-def makemenu(commandlist):
-	menuprocs = []
-	keymap = {}
-	menu = makesubmenu(commandlist, menuprocs, keymap)
-	return menu, menuprocs, keymap
-
-# Make a (sub)menu (subroutine for makemenu)
-def makesubmenu(commandlist, menuprocs, keymap):
-	menu = gl.newpup()
-	for char, text, proc in commandlist:
-		if char: keymap[char] = proc
-		else: char = '  '
-		text = char + ' ' + text
-		if proc is None:
-			gl.addtopup(menu, text, 0)
-		elif type(proc) is type([]):
-			submenu = makesubmenu(proc, menuprocs, keymap)
-			gl.addtopup(menu, text + '%m', submenu)
-		else:
-			gl.addtopup(menu, text + '%x' + `1+len(menuprocs)`, 0)
-			menuprocs.append(proc)
-	return menu
 
 # Create a new object
 def makeobject(mother, item):
@@ -749,7 +729,4 @@ class Object:
 		('Z', 'Zoom in%l', zoomincall), \
 		('h', 'Help...', helpcall), \
 		]
-	# XXX navigation commands: up/down/prev/next
-	menu, menuprocs, keymap = makemenu(commandlist)
-
-
+	menu, menuprocs, keymap = MenuMaker.makemenu('', commandlist)
