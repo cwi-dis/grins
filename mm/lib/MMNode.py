@@ -120,6 +120,38 @@ class MMNodeContext:
 	#
 	# Channel administration
 	#
+	def compatchtypes(self, url):
+		import MMmimetypes, ChannelMime, ChannelMap
+		mtype = MMmimetypes.guess_type(url)[0]
+		if not mtype:
+			return []
+		if mtype == 'application/vnd.rn-realmedia':
+			# for RealMedia look inside the file
+			import realsupport
+			info = realsupport.getinfo(self.findurl(url))
+			if info and not info.has_key('width'):
+				mtype = 'audio/vnd.rn-realaudio'
+			else:
+				mtype = 'video/vnd.rn-realvideo'
+		chtypes = ChannelMime.MimeChannel.get(mtype, [])
+		nchtypes = []
+		valid = ChannelMap.getvalidchanneltypes(self)
+		for chtype in chtypes:
+			while chtype not in valid:
+				if chtype == 'RealVideo':
+					chtype = 'video'
+				elif chtype == 'RealPix':
+					chtype = 'RealVideo'
+				elif chtype == 'RealAudio':
+					chtype = 'sound'
+				elif chtype == 'RealText':
+					chtype = 'video'
+				elif chtype == 'html':
+					chtype = 'text'
+			if chtype not in nchtypes:
+				nchtypes.append(chtype)
+		return nchtypes
+
 	def compatchannels(self, url = None, chtype = None):
 ##		# experimental SMIL Boston layout code
 ##		# now, the user associate a node to a LayoutChannel (SMIL Boston region)
@@ -135,19 +167,10 @@ class MMNodeContext:
 		# return a list of channels compatible with the given URL
 		if url:
 			# ignore chtype if url is set
-			import MMmimetypes, ChannelMime
-			mtype = MMmimetypes.guess_type(url)[0]
-			if not mtype:
+			chtypes = self.compatchtypes(url)
+			if not chtypes:
+				# couldn't figure out channel types
 				return []
-			if mtype == 'application/vnd.rn-realmedia':
-				# for RealMedia look inside the file
-				import realsupport
-				info = realsupport.getinfo(self.findurl(url))
-				if info and not info.has_key('width'):
-					mtype = 'audio/vnd.rn-realaudio'
-				else:
-					mtype = 'video/vnd.rn-realvideo'
-			chtypes = ChannelMime.MimeChannel.get(mtype, [])
 		elif chtype:
 			chtypes = [chtype]
 		else:
@@ -627,7 +650,7 @@ class MMChannel:
 		elif self.attrdict.has_key(name):
 			return self.attrdict[name]
 
-	def setvisiblechannelattrs(self):
+	def setvisiblechannelattrs(self, type):
 		from windowinterface import UNIT_PXL
 		if not settings.get('cmif'):
 			self.attrdict['units'] = UNIT_PXL
@@ -668,7 +691,7 @@ class MMChannel:
 		if key == 'type':
 			import ChannelMap
 			if ChannelMap.isvisiblechannel(value) and (not self.attrdict.has_key(key) or not ChannelMap.isvisiblechannel(self.attrdict[key])):
-				self.setvisiblechannelattrs()
+				self.setvisiblechannelattrs(value)
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
