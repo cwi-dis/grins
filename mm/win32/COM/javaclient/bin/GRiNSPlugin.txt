@@ -22,7 +22,7 @@ Installation:
 
 
 Use:
-	Open GRiNSPlayer.html with IE
+	Open GRiNSPlayer.html with Internet Explorer or Netscape
 	type or paste the smil filename or url of the file you want to open
 	press open and the play
 	(You can pass also the filename as param in GRiNSPlayer.html)
