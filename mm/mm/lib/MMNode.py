@@ -1,12 +1,7 @@
 # Implementation of Multimedia nodes
 
 
-# Exceptions
-
-CheckError = 'MMNode.CheckError'		# Invalid call
-NoSuchAttrError = 'MMNode.NoSuchAttrError'	# Attribute not found
-NoSuchUIDError = 'MMNode.NoSuchUIDError'	# UID not in UID map
-DuplicateUIDError = 'MMNode.DuplicateUIDError'	# UID already in UID map
+from MMExc import *		# Exceptions
 
 
 # The MMNodeContext class
