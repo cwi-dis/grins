@@ -774,8 +774,8 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 	if(FAILED(hr)){
 		// failed to restore,
 		// we can not do the blt now
-		Py_INCREF(Py_None);
-		return Py_None;
+		seterror("DirectDrawSurface_Blt::Restore", hr);
+		return NULL;
 	}
 
 	// check source surface
@@ -784,8 +784,8 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		// no point in proceeding
 		// what we have draw at the source surface
 		// has been lost
-		Py_INCREF(Py_None);
-		return Py_None;
+		seterror("DirectDrawSurface_Blt (source surface lost)", hr);
+		return NULL;
 	}
 
 	// cache source surface dimensions
