@@ -3,7 +3,7 @@
 This is a very simple dialog, it consists of four choices and three
 callback functions.
 
-Thex choices are labeled `New', `Open Location...', `Open File...', and
+The choices are labeled `New', `Open Location...', `Open File...', and
 `Exit'.  If either of the Open choices is selected, a dialog window
 asks for a URL or a file name respectively, and if one is selected,
 the callback self.open_callback is called with the selected location
@@ -17,6 +17,10 @@ self.close_callback is also called.
 
 """
 
+__version__ = "$Id$"
+
+from usercmd import *
+
 class MainDialog:
 	def __init__(self, title):
 		"""Create the Main dialog.
@@ -28,13 +32,11 @@ class MainDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as window title
 		"""
-		import windowinterface, WMEVENTS
 
-		self.__window = w = windowinterface.newcmwindow(None, None, 0, 0,
+		import windowinterface
+		self.__window = windowinterface.createmainwnd(None, None, 0, 0,
 				title, adornments = None,
-				commandlist = self.commandlist, context='frame')
-
-		pass
+				commandlist = self.commandlist)
 
 	def open_callback(self):
 		callbacks={
@@ -43,14 +45,18 @@ class MainDialog:
 			'Cancel':(self.__ccallback, ()),
 			}
 		import windowinterface
-		self.__owindow=windowinterface.OpenLocationDlg(callbacks)
-		self.__owindow.DoModal()
+		self.__owindow=windowinterface.OpenLocationDlg(callbacks,self.__window)
+		self.__text=self.__owindow._text
+		self.__owindow.show()
+
 
 	def __ccallback(self):
+		self.__owindow.close()
 		self.__owindow = None
+		self.__text = None
 
 	def __tcallback(self):
-		text = self.__owindow.gettext()
+		text = self.__text.gettext()
 		self.__ccallback()
 		if text:
 			self.openURL_callback(text)
@@ -75,17 +81,5 @@ class MainDialog:
 				file = os.path.join(f, file)
 			if dir == cwd:
 				filename = file
-		self.__owindow.settext(MMurl.pathname2url(filename))
+		self.__text.settext(MMurl.pathname2url(filename))
 
-	def setbutton(self, button, value):
-		pass			# for now...
-
-	def menubar(self):
-		return [('File', [
-			('', 'Open Location...', (self.__openURL_callback, ())),
-			('', 'Open File...', (self.__openfile_callback, ())),
-			('', 'Trace', (self.trace_callback, ()), 't'),
-			('', 'Debug', (self.debug_callback, ())),
-			None,
-			('', 'Exit', (self.close_callback, ())),
-			])]
