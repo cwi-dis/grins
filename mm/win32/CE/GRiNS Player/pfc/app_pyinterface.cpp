@@ -40,12 +40,13 @@ bool AppPyInterface::initialize(HWND hWnd)
 
 	// import winuser
 	s_winuser = PyInterface::import(TEXT("winuser"));
+	
 	if(s_winuser == NULL)
 		{
 		MessageBox (NULL, TEXT("Failed to import winuser module"), GetApplicationName(), MB_OK);
 		return false;
 		}
-
+	
 	// get application representation from winuser module
 	s_pyapp = get_application();
 	if(s_pyapp == NULL)
@@ -161,9 +162,12 @@ bool InitializePythonInterface(HWND hWnd)
 		}
 
 	PyInterface::addto_sys_path_dir(grins_bin);
+
 	AppPyInterface::initialize(hWnd);
 
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	PyInterface::run_command(grins_startup_cmd);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 
 	return true;
 	}
