@@ -1,8 +1,8 @@
-__version__ = "$Id$";
+__version__ = "$Id$"
 
-import settings;
-import windowinterface;
-import features;
+import settings
+import windowinterface
+import features
 
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
 root_expanded = settings.get('root_expanded')
@@ -46,76 +46,26 @@ FOCUSTOP = settings.get('structure_focustop')
 FOCUSRIGHT = settings.get('structure_focusright')
 FOCUSBOTTOM = settings.get('structure_focusbottom')
 
-class sizes_time:
-	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-	MINSIZE = 64 
-	MAXSIZE = 128
-	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < windowinterface.ICONSIZE_PXL:
-		TITLESIZE = windowinterface.ICONSIZE_PXL
-	CHNAMESIZE = int(f_channel.fontheightPXL()*1.2) #0
-	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
-	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
-	GAPSIZE = 0 #2						# size of gap between nodes
-	HEDGSIZE = 0 #3						# size of edges
-	VEDGSIZE = 3 #3						# size of edges
-	FLATBOX = 1
-	TIMEBARHEIGHT = f_timescale.strsizePXL('X')[1]*3
-	DROPAREA = MINSIZE + HOREXTRASIZE
+SIZEUNIT = windowinterface.UNIT_PXL # units for the following
+MINSIZE = 64
+MAXSIZE = 128
+TITLESIZE = int(f_title.fontheightPXL()*1.2)
+if TITLESIZE < windowinterface.ICONSIZE_PXL:
+	TITLESIZE = windowinterface.ICONSIZE_PXL
+CHNAMESIZE = 0
+LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
+HOREXTRASIZE = f_title.strsizePXL('XX')[0]
+ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
+ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 
-class sizes_notime:
-	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-	MINSIZE = 64
-	MAXSIZE = 128
-	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < windowinterface.ICONSIZE_PXL:
-		TITLESIZE = windowinterface.ICONSIZE_PXL
-	CHNAMESIZE = 0
-	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
-	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
+GAPSIZE = 4
+HEDGSIZE = 4
+VEDGSIZE = 4 #3						# size of edges		
 
-     	GAPSIZE = 4
-	HEDGSIZE = 4
-	VEDGSIZE = 4 #3						# size of edges		
-	HANDLESIZE = 16;		# Size of the handle.
-
-	DROPAREASIZE = 64;		# size of the decoration at the end of a "roll of film"
-	FLATBOX = 0
-	TIMEBARHEIGHT = 0
-	DROPAREA = MINSIZE + HOREXTRASIZE
-
-##class othersizes:
-##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
-##	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
-##	MAXSIZE = 2 * MINSIZE
-##	TITLESIZE = f_title.fontheight()*1.2
-##	CHNAMESIZE = 0
-##	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-##	HOREXTRASIZE = f_title.strsize('XX')[0]
-##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
-##	GAPSIZE = 1.0						# size of gap between nodes
-##	HEDGSIZE = 1.0						# size of edges
-##	VEDGSIZE = 1.0						# size of edges
-##	FLATBOX = 0
-
-
-##class oldsizes:
-##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
-##	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
-##	MAXSIZE = 2 * MINSIZE
-##	TITLESIZE = f_title.fontheight()*1.2
-##	CHNAMESIZE = f_channel.fontheight()*1.2
-##	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-##	HOREXTRASIZE = f_title.strsize('XX')[0]
-##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
-##	GAPSIZE = 1.0						# size of gap between nodes
-##	HEDGSIZE = 1.0						# size of edges
-##	VEDGSIZE = 1.0						# size of edges
-##	FLATBOX = 0
+DROPAREASIZE = 64			# size of the decoration at the end of a "roll of film"
+FLATBOX = 0
+TIMEBARHEIGHT = 0
+DROPAREA = MINSIZE + HOREXTRASIZE
 
 #
 # We expand a number of hierarchy levels on first open. The number
