@@ -16,6 +16,7 @@ default_settings = {
 	'system_required': (),		# Needs special handling in match...
 	'license': '',
 	'cmif': 0,			# Show cmif-only attributes
+	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
 	'vertical_structure': 1,	# Orientation of Structure View
 	'no_canvas_resize': 0, # Don't resize canvas after window resize (X)
