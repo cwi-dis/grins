@@ -9,6 +9,10 @@ import MMAttrdefs
 
 ALL_LAYOUTS = '(All Channels)'
 
+
+SHOW_SIBLING_MEDIA_IN_PAR = 0
+SHOW_MEDIA_ON_PREVIOUS_FOCUS = 1
+	
 ###########################
 # helper class to build tree from list
 
@@ -40,7 +44,7 @@ class Node:
 	def removeNode(self, node):
 		ind = 0
 		for child in self._children:
-			if child._name == node._name:
+			if child is node:
 				# remove child as well			
 				if node.isShowed():
 					node.hide()
@@ -504,19 +508,36 @@ class LayoutView2(LayoutViewDialog2):
 		# for now, we assume here that no region has been added or supressed
 		self.updateRegionTree()
 
+	def isValidMMNode(self, node):
+		from MMTypes import leaftypes
+		if not node.type in leaftypes:
+			return 0
+		if node.GetChannelType() == 'sound':
+			return 0
+
+		return 1		
+		
 	def globalfocuschanged(self, focustype, focusobject):
 		from MMNode import MMNode
 
 		# ensure that the last media selected node will be removed
-		self.unSetMediaNode()
-		
-		from MMTypes import leaftypes
-		if not (focusobject.type not in leaftypes or focusobject.GetChannelType() == 'sound'):
-			self.setMediaNode(focusobject)
+
+		if not SHOW_MEDIA_ON_PREVIOUS_FOCUS or not self.isValidMMNode(focusobject):
+			self.unSetMediaNode()
+		else:
+			self.removeMediaFromPreviousFocus()
+
+		self.setMediaNode(focusobject)			
+
+		l = len(self.currentMediaRegionList)
+		if l > 0:
+			lastMediaRegion, parentRegion = self.currentMediaRegionList[l-1]
 			
-		if len(self.currentMediaRegionList) > 0:
-			firstMediaRegion, parentRegion = self.currentMediaRegionList[0]
-			self.select(firstMediaRegion)
+			# display the right viewport
+			if self.currentViewport != parentRegion.getViewport():
+				self.displayViewport(parentRegion.getViewport().getName())
+			
+			self.select(lastMediaRegion)
 		else:			
 			# if no media selected any more desactive the media selecter
 			self.disableMediaListOnDialogBox()
@@ -526,7 +547,10 @@ class LayoutView2(LayoutViewDialog2):
 				region = self.currentNodeSelected.getParent()
 				if region != None:
 					self.select(region)
-				
+
+#		self.updateExcludeRegionOnDialogBox()
+#		self.updateRegionTree()
+		
 	def kill(self):
 		self.destroy()
 
@@ -579,6 +603,15 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentNodeSelected != None:
 			self.select(self.currentNodeSelected)
 
+	def removeMediaFromPreviousFocus(self):
+		l = len(self.currentMediaRegionList)
+		if l > 1:
+			mediaRegion, parentRegion = self.currentMediaRegionList[0]
+			parentRegion.removeNode(mediaRegion)
+			del self.currentMediaRegionList[0]
+			if self.lastMediaNameSelected == mediaRegion.getName():
+				self.lastMediaNameSelected = None
+			
 	def unSetMediaNode(self):
 		if len(self.currentMediaRegionList) > 0:
 			for mediaRegion, parentRegion in self.currentMediaRegionList:
@@ -587,28 +620,40 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentMediaRegionList = []
 		self.lastMediaNameSelected = None
 					
-	def setMediaNode(self, node):
-		channel = node.GetChannel()
-		if channel == None: return
-		layoutChannel = channel.GetLayoutChannel()
-		if layoutChannel == Node: return
-		layoutChannelName = layoutChannel.name
-		regionNode = self.getRegion(layoutChannelName)
-		if regionNode == None: return
-		newname = node.attrdict.get("name")
+	def setMediaNode(self, fnode):
+		nodeList = []
+		if self.isValidMMNode(fnode):
+			nodeList.append(fnode)
+		# alow to show sibling media
+		if SHOW_SIBLING_MEDIA_IN_PAR:
+			parentNode = fnode.parent
+			if parentNode != None:
+				if parentNode.type == 'par':
+					for node in parentNode.children:
+						if node != fnode:
+							if self.isValidMMNode(node):
+								nodeList.append(node)
+				
+		# create the media node according to nodeList
+		appendMediaRegionList = []
+		for node in nodeList:
+			channel = node.GetChannel()
+			if channel == None: continue
+			layoutChannel = channel.GetLayoutChannel()
+			if layoutChannel == Node: continue
+			layoutChannelName = layoutChannel.name
+			regionNode = self.getRegion(layoutChannelName)
+			if regionNode == None: continue
+			newname = node.attrdict.get("name")
 
-		newRegionNode = MediaRegion(newname, node, self)
+			newRegionNode = MediaRegion(newname, node, self)
 
-		# display the right viewport
-		if self.currentViewport != regionNode.getViewport():
-			self.displayViewport(regionNode.getViewport().getName())
-
-		# add the new media region
-		if self.currentViewport	!= None:
-			self.currentMediaRegionList.append((newRegionNode, regionNode))
+			# add the new media region
+			appendMediaRegionList.append((newRegionNode, regionNode))
 
 		# add the list of new media regions
-		for mediaRegion, parentRegion in self.currentMediaRegionList:
+		for mediaRegion, parentRegion in appendMediaRegionList:
+			self.currentMediaRegionList.append((mediaRegion, parentRegion))
 			parentRegion.addNode(mediaRegion)
 			mediaRegion.importAttrdict()
 			mediaRegion.show()
