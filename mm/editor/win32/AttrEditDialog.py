@@ -45,6 +45,17 @@ class AttrEditorDialog:
 ##		attriblist -- list of instances of subclasses of
 ##			AttrEditorDialogField
 ##		"""
+		if hasattr(self, 'willreopen') and self.willreopen:
+			# This is a reopen call.
+			w = self.__window
+			w._title=title
+			w._attriblist=attriblist
+			w._initattr = initattr
+			for a in attriblist:
+				a.attach_ui(w)
+			w.RecreateWindow()
+			self.fixbuttonstate()
+			return
 		formid='attr_edit'
 		
 		if toplevel:
@@ -91,6 +102,9 @@ class AttrEditorDialog:
 		# XXXX To be done: if willreopen=1 we should not close the window but
 		# reset it to the initial state. Also, in the init routine we should not
 		# create __window if it already exists.
+		self.willreopen = willreopen
+		if willreopen:
+			return
 		if self.__window:
 			self.__window.close()
 		self.__window=None
