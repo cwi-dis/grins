@@ -120,13 +120,14 @@ class PlayerCore(Selecter):
 			self.makemenu()
 		return ch
 	#	
-	def defanchor(self, node, anchor):
+	def defanchor(self, node, anchor, cb):
 		ch = self.anchorinit(node)
 		if ch == None:
 			windowinterface.showmessage('Cannot set internal anchor\n' + \
 				  '(node not on a channel)')
-			return None
-		return ch.defanchor(node, anchor)
+			apply(cb, (anchor,))
+			return
+		ch.defanchor(node, anchor, cb)
 	#
 	def updatefixedanchors(self, node):
 		ch = self.anchorinit(node)
@@ -239,7 +240,7 @@ class PlayerCore(Selecter):
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
-		ch = chclass().init(name, attrdict, self.scheduler, self)
+		ch = chclass(name, attrdict, self.scheduler, self)
 		ch.setpaused(self.pausing)
 		if self.waiting:
 			ch.setwaiting()

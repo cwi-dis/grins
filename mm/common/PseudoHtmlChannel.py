@@ -4,7 +4,6 @@
 #
 from Channel import ChannelWindow
 from AnchorDefs import *
-from debug import debug
 import string
 from urllib import urlopen
 
@@ -12,8 +11,8 @@ class HtmlChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
 		  'pointsize']
 
-	def init(self, name, attrdict, scheduler, ui):
-		return ChannelWindow.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
@@ -121,12 +120,12 @@ class HtmlChannel(ChannelWindow):
 			raise CheckError, \
 				'gettext on wrong node type: ' +`node.type`
 
-	def defanchor(self, node, anchor):
+	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
 		# have to edit the text to change the anchor.  We
 		# don't want a message, though, so we provide our own
 		# defanchor() method.
-		return anchor
+		apply(cb, (anchor,))
 
 # Convert an anchor to a set of boxes.
 def map_parpos_to_linepos(parno, charno, last, curlines, partoline):

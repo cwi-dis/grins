@@ -1,4 +1,3 @@
-from debug import debug
 from Channel import *
 import string
 import sys
@@ -13,8 +12,8 @@ class SocketChannel(Channel):
 		  'mcgroup', 'mcttl']
 	node_attrs = Channel.node_attrs + ['duration']
 	
-	def init(self, name, attrdict, scheduler, ui):
-		self = Channel.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.socket.setsockopt(SOCKET.SOL_SOCKET,
 				       SOCKET.SO_REUSEPORT, 1)
@@ -29,8 +28,8 @@ class SocketChannel(Channel):
 				  `arg`)
 			self.socket = None
 			return self
-		toplevel = self._player.toplevel
-		toplevel.select_setcallback(self.socket, self.socket_ready, ())
+		windowinterface.select_setcallback(self.socket,
+						   self.socket_ready, ())
 		self.anchorlist = None
 		self.hostaddr = socket.gethostbyname(socket.gethostname())
 		self.nonlocalonly = 0
@@ -46,9 +45,9 @@ class SocketChannel(Channel):
 		return self
 
 	def destroy(self):
-		toplevel = self._player.toplevel
 		if self.socket:
-			toplevel.select_setcallback(self.socket, None, ())
+			windowinterface.select_setcallback(self.socket,
+							   None, ())
 			self.socket.close()
 		del self.socket
 		Channel.destroy(self)

@@ -1,9 +1,8 @@
 #
 # XXXX This is an initial stab at a HTML channel.
 #
-from Channel import ChannelWindow
+import Channel
 from AnchorDefs import *
-from debug import debug
 import string
 import HTML
 import MMAttrdefs
@@ -15,14 +14,13 @@ if windowinterface.Version <> 'X':
 	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
 	raise ImportError
 
-class HtmlChannel(ChannelWindow):
+class HtmlChannel(Channel.ChannelWindow):
 
-	def init(self, name, attrdict, scheduler, ui):
-		self = ChannelWindow.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.want_default_colormap = 1
 		self.htmlw = None
 		self.widget_name = normalize(name)
-		return self
 
 	def do_show(self):
 		#
@@ -30,7 +28,7 @@ class HtmlChannel(ChannelWindow):
 		# that we don't use (except as a parent), but it doesn't harm
 		# us either.
 		#
-		if not ChannelWindow.do_show(self):
+		if not Channel.ChannelWindow.do_show(self):
 			return 0
 		#
 		# Step 2 - Create a values dictionary with width/height
@@ -38,6 +36,7 @@ class HtmlChannel(ChannelWindow):
 		#
 		wd = self.window
 		wh = wd._form.GetValues(['width', 'height'])
+		wh['visual'] = wd._visual
 		#
 		# Create the widget
 		#
@@ -59,18 +58,18 @@ class HtmlChannel(ChannelWindow):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
 
 	def updatefixedanchors(self, node):
-		if self._armstate != AIDLE:
+		if self._armstate != Channel.AIDLE:
 			raise error, 'Arm state must be idle when defining an anchor'
-		if self._playstate != PIDLE:
+		if self._playstate != Channel.PIDLE:
 			raise error, 'Play state must be idle when defining an anchor'
 		windowinterface.setcursor('watch')
-		context = AnchorContext().init()
+		context = Channel.AnchorContext()
 		self.startcontext(context)
 		self.syncarm = 1
 		self.arm(node)
 		self.syncplay = 1
 		self.play(node)
-		self._playstate = PLAYED
+		self._playstate = Channel.PLAYED
 		self.syncarm = 0
 		self.syncplay = 0
 		return 1
@@ -89,6 +88,11 @@ class HtmlChannel(ChannelWindow):
 		self.htmlw.SetValues(arg)
 		self.fixanchorlist(node)
 		self.play_node = node
+
+	def stopplay(self, node):
+		Channel.ChannelWindow.stopplay(self, node)
+		self.htmlw.SetValues({'text': '', 'headerText':'',
+				      'footerText':''})
 
 	def getstring(self, node):
 		if node.type == 'imm':
@@ -114,12 +118,12 @@ class HtmlChannel(ChannelWindow):
 				'gettext on wrong node type: ' +`node.type`
 
 
-	def defanchor(self, node, anchor):
+	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
 		# have to edit the text to change the anchor.  We
 		# don't want a message, though, so we provide our own
 		# defanchor() method.
-		return anchor
+		apply(cb, (anchor,))
 
 	def cbanchor(self, widget, userdata, calldata):
 		if widget <> self.htmlw:

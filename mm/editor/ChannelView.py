@@ -13,15 +13,8 @@
 
 
 from math import sin, cos, atan2, pi, ceil, floor
-import gl, GL, DEVICE
-import fl
-import GLLock
-import FontStuff
-import MenuMaker
-from Dialog import GLDialog
+import windowinterface, EVENTS, StringStuff
 from ViewDialog import ViewDialog
-
-_CHANNEL=2    # XXXX Temporary, created in GL_windowinterface
 
 from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
@@ -31,12 +24,8 @@ from AnchorDefs import *
 from ArmStates import *
 
 
-# Round an 8-bit RGB color triple to 4-bit (as used by doublebuffer)
-# Currently disabled -- doesn't seem to work as expected
+def fix(r, g, b): return r, g, b	# Hook for color conversions
 
-def fix(r, g, b):
-	return r, g, b
-##	return r/16*17, g/16*17, b/16*17
 
 # Color assignments (RGB)
 
@@ -61,9 +50,6 @@ FOCUSTOP    = fix(204, 204, 204)
 FOCUSRIGHT  = fix(40, 40, 40)
 FOCUSBOTTOM = fix(91, 91, 91)
 
-# Anchor indicator box size
-ABOXSIZE = 6
-
 # Arm colors
 armcolors = { \
 	     ARM_SCHEDULED: (200, 200, 0), \
@@ -81,8 +67,7 @@ ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 # Font we use
-f_title = FontStuff.FontObject().init('Helvetica', 10)
-f_fontheight = f_title.fontheight
+f_title = windowinterface.findfont('Helvetica', 10)
 
 # Types of things we can do in the (modal) channel-pointing mode
 PLACING_NEW = 1
@@ -92,12 +77,16 @@ PLACING_MOVE = 3
 
 # Channel view class
 
-class ChannelView(ViewDialog, GLDialog):
+class ChannelView(ViewDialog):
 
 	# Initialization.
 	# (Actually, most things are initialized by show().)
 
 	def init(self, toplevel):
+		self.window = None
+		self.displist = self.new_displist = None
+		self.waiting = 0
+		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
 		self.viewroot = None
@@ -109,27 +98,25 @@ class ChannelView(ViewDialog, GLDialog):
 		self.placing_channel = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		self = ViewDialog.init(self, 'cview_')
-		return GLDialog.init(self, title)
+		return self
 
 	def __repr__(self):
 		return '<ChannelView instance, root=' + `self.root` + '>'
 
-	# Dialog interface (extends GLDiallog.{setwin,show,hide})
-
-	def setwin(self):
-		GLDialog.setwin(self)
-		f_title.setfont()
+	# Dialog interface
 
 	def show(self):
 		if self.is_showing():
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-			self.setwin()
-			if GLLock.gl_lock:
-				GLLock.gl_lock.release()
 			return
-		GLDialog.show(self)
-		self.initwindow()
+		title = 'Channel View (' + self.toplevel.basename + ')'
+		self.load_geometry()
+		x, y, w, h = self.last_geometry
+		self.window = windowinterface.newcmwindow(x, y, w, h, title)
+		if self.waiting:
+			self.window.setcursor('watch')
+		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
+		self.window.register(EVENTS.ResizeWindow, self.redraw, None)
+		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
@@ -138,27 +125,44 @@ class ChannelView(ViewDialog, GLDialog):
 		focus = self.focus
 		if not focus: focus = ('b', None)
 		self.recalc(focus)
-		self.getshape()
 		self.reshape()
-		# don't draw because we'll get a redraw event in a nanosecond
-
-	def initwindow(self):
-		# Use RGB mode
-		gl.RGBmode()
-		gl.gconfig()
-		# Clear the window right now (looks better)
-		gl.RGBcolor(BGCOLOR)
-		gl.clear()
-		# Ask for events
-		self.initevents()
+		self.draw()
+		if self.focus:
+			obj = self.focus
+		else:
+			obj = self.baseobject
+		self.window.create_menu(obj.menutitle, obj.commandlist)
 
 	def hide(self):
 		if not self.is_showing():
 			return
-		GLDialog.hide(self)
+		self.save_geometry()
+		self.window.close()
+		self.window = None
+		self.displist = self.new_displist = None
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
+
+	def setwaiting(self):
+		self.waiting = 1
+		if self.window:
+			self.window.setcursor('watch')
+
+	def setready(self):
+		self.waiting = 0
+		if self.window:
+			self.window.setcursor('')
+
+	def is_showing(self):
+		return self.window is not None
+
+	def destroy(self):
+		self.hide()
+
+	def get_geometry(self):
+		if self.window:
+			self.last_geometry = self.window.getgeometry()
 
 	# Edit manager interface (as dependent client)
 
@@ -186,38 +190,23 @@ class ChannelView(ViewDialog, GLDialog):
 			focus = '', None
 		self.cleanup()
 		if self.is_showing():
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-			self.setwin()
 			self.fixviewroot()
 			self.recalc(focus)
 			self.reshape()
 			self.draw()
-			if GLLock.gl_lock:
-				GLLock.gl_lock.release()
 
 	def kill(self):
 		self.destroy()
 
 	# Event interface (override glwindow methods)
 
-	def initevents(self):
-		# Called by initwindow() above to ask for these events
-		fl.qdevice(DEVICE.LEFTMOUSE)
-		fl.qdevice(DEVICE.MIDDLEMOUSE)
-		fl.qdevice(DEVICE.RIGHTMOUSE)
-		fl.qdevice(DEVICE.KEYBD)
-
-	def winshut(self):
-		# WINSHUT event: close window, other windows remain.
-		# (Also called by default WINQUIT handler.)
-		self.hide()
-
-	def redraw(self):
-		# REDRAW event.  This may also mean a resize!
-		if (self.width, self.height) != gl.getsize():
-			self.getshape()
-			self.reshape()
+	def redraw(self, *rest):
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		bl, fh, ps = self.new_displist.usefont(f_title)
+		# RESIZE event.
+		self.reshape()
 		self.draw()
 
 	def channels_changed(self):
@@ -225,46 +214,14 @@ class ChannelView(ViewDialog, GLDialog):
 		# player (this bypasses the edit manager so it can be
 		# done even when the document is playing).
 		if self.is_showing():
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-			self.setwin()
 			self.redraw()
-			if GLLock.gl_lock:
-				GLLock.gl_lock.release()
 
-	def mouse(self, dev, val):
-		# MOUSE[123] event.
-		# 'dev' is MOUSE[123].  'val' is 1 for down, 0 for up.
-		# First translate (x, y) to world coordinates
-		# (This assumes world coord's are X-like)
-		x = gl.getvaluator(DEVICE.MOUSEX)
-		y = gl.getvaluator(DEVICE.MOUSEY)
-		x0, y0 = gl.getorigin()
-		width, height = gl.getsize()
-		x = x - x0
-		y = height - (y - y0)
-		#
-		if dev == DEVICE.LEFTMOUSE:
-		        if self.placing_channel:
-			        self.finish_channel(x, y)
-				return
-			if val == 0: # up
-				self.select(x, y)
-		elif dev == DEVICE.RIGHTMOUSE:
-			if val == 1: # down
-				if self.focus:
-					self.focus.popupmenu(x, y)
-				else:
-					self.baseobject.popupmenu(x, y)
-
-	def keybd(self, val):
-		# KEYBD event.
-		# 'val' is the ASCII value of the character.
-		c = chr(val)
-		if self.focus:
-			self.focus.shortcut(c)
+	def mouse(self, dummy, window, event, params):
+		x, y = params[0:2]
+		if self.placing_channel:
+			self.finish_channel(x, y)
 		else:
-			self.baseobject.shortcut(c)
+			self.select(x, y)
 
 	# Time-related subroutines
 
@@ -279,8 +236,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 		# Calculate our position in relative time
 		top = self.nodetop
-		bottom = self.height
-		height = bottom - top - f_fontheight
+		height = 1.0 - top - self.new_displist.fontheight()
 		vt0, vt1 = self.timerange()
 		dt = vt1 - vt0
 
@@ -326,9 +282,10 @@ class ChannelView(ViewDialog, GLDialog):
 	# Toggle 'showall' setting
 
 	def toggleshow(self):
+		windowinterface.setcursor('watch')
 		self.showall = (not self.showall)
-		self.reshape()
-		self.draw()
+		self.redraw()
+		windowinterface.setcursor('')
 
 	# Return list of currently visible channels
 
@@ -341,34 +298,25 @@ class ChannelView(ViewDialog, GLDialog):
 	# Recalculate the set of objects we should be drawing
 
 	def recalc(self, focus):
+		displist = self.window.newdisplaylist(BGCOLOR)
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = displist
+		bl, fh, ps = displist.usefont(f_title)
+		self.channelbottom = 4 * fh
+		self.nodetop = 6 * fh
+		self.timescaleborder = 1.0 - displist.strsize('999999')[0]
+
 		self.objects = []
 		self.focus = self.lockednode = None
-		self.baseobject = GO().init(self, '(base)')
+		self.baseobject = GO(self, '(base)')
 		self.baseobject.select()
 		self.objects.append(self.baseobject)
-		self.timescaleobject = TimeScaleBox().init(self)
+		self.timescaleobject = TimeScaleBox(self)
 		self.objects.append(self.timescaleobject)
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
-
-	# Get the current window shape and set the transformation.
-	# Note that the Y axis is made to point down, like X coordinates!
-	# Assume we are the current window.
-
-	def getshape(self):
-		gl.reshapeviewport()
-		self.width, self.height = gl.getsize()
-		x0, x1, y0, y1 = gl.getviewport()
-		width, height = x1-x0, y1-y0
-		MASK = 20
-		gl.viewport(x0-MASK, x1+MASK, y0-MASK, y1+MASK)
-		gl.scrmask(x0, x1, y0, y1)
-		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
-			  height+MASK-0.5, -MASK-0.5)
-		self.channelbottom = 4 * f_fontheight
-		self.nodetop = 6 * f_fontheight
-		self.timescaleborder = width - f_title.getstrwidth('999999')
 
 	# Recompute the locations where the objects should be drawn
 
@@ -383,10 +331,9 @@ class ChannelView(ViewDialog, GLDialog):
 	# Draw the window
 
 	def draw(self):
-		gl.RGBcolor(BGCOLOR)
-		gl.clear()
 		for obj in self.objects:
 			obj.draw()
+		self.render()
 
 	def drawarcs(self):
 		if self.is_showing():
@@ -397,7 +344,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def initchannels(self, focus):
 		for c in self.context.channels:
-			obj = ChannelBox().init(self, c)
+			obj = ChannelBox(self, c)
 			self.objects.append(obj)
 			if focus[0] == 'c' and focus[1] is c:
 				obj.select()
@@ -405,6 +352,7 @@ class ChannelView(ViewDialog, GLDialog):
 	# View root stuff
 
 	def nextviewroot(self):
+		windowinterface.setcursor('watch')
 		for c in self.viewroot.GetChildren():
 			node = c.FirstMiniDocument()
 			if node: break
@@ -413,8 +361,10 @@ class ChannelView(ViewDialog, GLDialog):
 			if node is None:
 				node = self.root.FirstMiniDocument()
 		self.setviewroot(node)
+		windowinterface.setcursor('')
 
 	def prevviewroot(self):
+		windowinterface.setcursor('watch')
 		children = self.viewroot.GetChildren()[:]
 		children.reverse()
 		for c in children:
@@ -425,6 +375,7 @@ class ChannelView(ViewDialog, GLDialog):
 			if node is None:
 				node = self.root.LastMiniDocument()
 		self.setviewroot(node)
+		windowinterface.setcursor('')
 
 	# Make sure the view root is set to *something*, and fix the title
 	def fixviewroot(self):
@@ -447,21 +398,17 @@ class ChannelView(ViewDialog, GLDialog):
 		self.cleanup()
 		self.viewroot = node
 		self.recalc(('b', None))
-		if GLLock.gl_lock:
-			GLLock.gl_lock.acquire()
-		self.setwin()
 		self.reshape()
 		self.fixtitle()
 		self.draw()
-		if GLLock.gl_lock:
-			GLLock.gl_lock.release()
 
 	def fixtitle(self):
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		if None <> self.viewroot <> self.root:
 			name = MMAttrdefs.getattr(self.viewroot, 'name')
 			title = title + ': ' + name
-		self.settitle(title)
+		if self.is_showing():
+			self.window.settitle(title)
 
 	# Node stuff
 
@@ -475,7 +422,6 @@ class ChannelView(ViewDialog, GLDialog):
 			if c.used: self.usedchannels.append(c)
 		self.addancestors()
 		self.addsiblings()
-		rebuild_menus()
 
 	def scantree(self, node, focus):
 		t = node.GetType()
@@ -483,7 +429,7 @@ class ChannelView(ViewDialog, GLDialog):
 			channel = node.GetChannel()
 			if channel:
 				channel.used = 1
-				obj = NodeBox().init(self, node)
+				obj = NodeBox(self, node)
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
@@ -497,8 +443,7 @@ class ChannelView(ViewDialog, GLDialog):
 		for c in node.GetChildren():
 			if c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
-				func = make_closure(GO.setviewrootcall, c)
-				tuple = ('', name, func)
+				tuple = ('', name, (self.setviewroot, (c,)))
 				self.baseobject.descendants.append(tuple)
 			elif c.GetType() == 'bag':
 				self.scandescendants(c)
@@ -511,8 +456,7 @@ class ChannelView(ViewDialog, GLDialog):
 		for node in path[:-1]:
 			if node.IsMiniDocument():
 				name = node.GetRawAttrDef('name', '(NoName)')
-				func = make_closure(GO.setviewrootcall, node)
-				tuple = ('', name, func)
+				tuple = ('', name, (self.setviewroot, (node,)))
 				self.baseobject.ancestors.append(tuple)
 
 	def addsiblings(self):
@@ -530,8 +474,7 @@ class ChannelView(ViewDialog, GLDialog):
 				name = c.GetRawAttrDef('name', '(NoName)')
 				if c is self.viewroot:
 					name = name + ' (current)'
-				func = make_closure(GO.setviewrootcall, c)
-				tuple = ('', name, func)
+				tuple = ('', name, (self.setviewroot, (c,)))
 				self.baseobject.siblings.append(tuple)
 			elif c.GetType() == 'bag':
 				self.scansiblings(c)
@@ -559,10 +502,10 @@ class ChannelView(ViewDialog, GLDialog):
 				# Skip sync arc from non-existing node
 				continue
 			if self.viewroot.IsAncestorOf(xnode) and \
-				xnode.GetType() in leaftypes and \
-				xnode.GetChannel():
-				obj = ArcBox().init(self, \
-					xnode, xside, delay, ynode, yside)
+			   xnode.GetType() in leaftypes and \
+			   xnode.GetChannel():
+				obj = ArcBox(self,
+					     xnode, xside, delay, ynode, yside)
 				arcs.append(obj)
 
 	# Focus stuff (see also recalc)
@@ -574,16 +517,22 @@ class ChannelView(ViewDialog, GLDialog):
 			self.focus = None
 
 	def select(self, x, y):
+		self.init_display()
 		self.deselect()
 		hits = []
 		for obj in self.objects:
 			if obj.ishit(x, y):
 				hits.append(obj)
-		if not hits:
-			return
-		obj = hits[-1] # Last object (the one drawn on top)
-		obj.select()
-		self.drawarcs()
+		if hits:
+			obj = hits[-1]	# Last object (the one drawn on top)
+			obj.select()
+			self.drawarcs()
+		self.render()
+		if self.focus:
+			obj = self.focus
+		else:
+			obj = self.baseobject
+		self.window.create_menu(obj.menutitle, obj.commandlist)
 
 	# Global focus stuff
 
@@ -605,30 +554,26 @@ class ChannelView(ViewDialog, GLDialog):
 			self.focus = ('n', node)
 			return
 		self.setviewroot(mini) # No-op if already there
-		if not hasattr(node, 'cv_obj'):
-			return
-		obj = node.cv_obj
-		if GLLock.gl_lock:
-			GLLock.gl_lock.acquire()
-		self.setwin()
-		self.deselect()
-		obj.select()
-		self.drawarcs()
-		if GLLock.gl_lock:
-			GLLock.gl_lock.release()
+		self.init_display()
+		if hasattr(node, 'cv_obj'):
+			obj = node.cv_obj
+			self.deselect()
+			obj.select()
+			self.drawarcs()
+		self.render()
 
 	# Create a new channel
 	# XXXX Index is obsolete!
 	def newchannel(self, index):
 		if self.visiblechannels() <> self.context.channels:
-			fl.show_message( \
-				  'You can\'t create a new channel', \
-				  'unless you are showing unused channels', \
-				  '(use shortcut \'T\')')
+			windowinterface.showmessage(
+				  "You can't create a new channel\n" +
+				  "unless you are showing unused channels\n" +
+				  "(use shortcut 'T')")
 			return
 	        if self.placing_channel:
-		        fl.show_message(
-			    'Please place the other channel first!', '','')
+		        windowinterface.showmessage(
+				'Please place the other channel first!',)
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -637,7 +582,6 @@ class ChannelView(ViewDialog, GLDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
-		import windowinterface
 		from ChannelMap import commonchanneltypes, otherchanneltypes
 		prompt = 'Select channel type, then place channel:'
 		list = commonchanneltypes[:]
@@ -656,21 +600,20 @@ class ChannelView(ViewDialog, GLDialog):
 				continue
 			type = list[i]
 			break
-		self.setwin()
-		gl.setcursor(_CHANNEL, 0, 0)
+		windowinterface.setcursor('channel')
 		self.placing_channel = PLACING_NEW
 		self.placing_type = type
 
 	def copychannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
-			fl.show_message( \
-				  'You can\'t create a new channel', \
-				  'unless you are showing unused channels', \
+			windowinterface.showmessage(
+				  'You can\'t create a new channel\n' +
+				  'unless you are showing unused channels\n' +
 				  '(use shortcut \'T\')')
 			return
 	        if self.placing_channel:
-		        fl.show_message(
-			    'Please place the other channel first!', '','')
+		        windowinterface.showmessage(
+				'Please place the other channel first!')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -679,21 +622,20 @@ class ChannelView(ViewDialog, GLDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
-		self.setwin()
-		gl.setcursor(_CHANNEL, 0, 0)
+		windowinterface.setcursor('channel')
 		self.placing_channel = PLACING_COPY
 		self.placing_orig = name
 
 	def movechannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
-			fl.show_message( \
-				  'You can\'t move a channel', \
-				  'unless you are showing unused channels', \
+			windowinterface.showmessage(
+				  'You can\'t move a channel\n' +
+				  'unless you are showing unused channels\n' +
 				  '(use shortcut \'T\')')
 			return
 	        if self.placing_channel:
-		        fl.show_message(
-			    'Please place the other channel first!', '','')
+		        windowinterface.showmessage(
+				'Please place the other channel first!')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -702,8 +644,7 @@ class ChannelView(ViewDialog, GLDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
-		self.setwin()
-		gl.setcursor(_CHANNEL, 0, 0)
+		windowinterface.setcursor('channel')
 		self.placing_channel = PLACING_MOVE
 		self.placing_orig = name
 
@@ -711,11 +652,10 @@ class ChannelView(ViewDialog, GLDialog):
 	        placement_type = self.placing_channel
 	        self.placing_channel = 0
 		index = self.channelgapindex(x)
-		self.setwin()
-	        gl.setcursor(0, 0, 0)
+	        windowinterface.setcursor('')
 		editmgr = self.editmgr
 		if not editmgr.transaction():
-		    return		    
+			return		    
 		i = 1
 		context = self.context
 		if placement_type in (PLACING_NEW, PLACING_COPY):
@@ -726,7 +666,7 @@ class ChannelView(ViewDialog, GLDialog):
 			name = base + `i`
 		else:
 		    name = self.placing_orig
-		    
+
 		if placement_type == PLACING_NEW:
 		    editmgr.addchannel(name, index, self.placing_type)
 		elif placement_type == PLACING_COPY:
@@ -741,8 +681,22 @@ class ChannelView(ViewDialog, GLDialog):
 		self.cleanup()
 		editmgr.commit()
 		if placement_type in (PLACING_NEW, PLACING_COPY):
-		    import AttrEdit
-		    AttrEdit.showchannelattreditor(channel)
+			import AttrEdit
+			AttrEdit.showchannelattreditor(channel)
+
+	# Window stuff
+
+	def init_display(self):
+		if self.new_displist:
+			print 'init_display: new_displist already exists'
+		self.new_displist = self.displist.clone()
+
+	def render(self):
+		self.new_displist.render()
+		if self.displist:
+			self.displist.close()
+		self.displist = self.new_displist
+		self.new_displist = None
 
 
 # Base class for Graphical Objects.
@@ -751,12 +705,31 @@ class ChannelView(ViewDialog, GLDialog):
 
 class GO:
 
-	def init(self, mother, name):
+	def __init__(self, mother, name):
 		self.mother = mother
 		self.name = name
 		self.selected = 0
 		self.ok = 0
-		return self
+
+		# Submenus listing related mini-documents
+
+		self.ancestors = []
+		self.descendants = []
+		self.siblings = []
+
+		# Menu and shortcut definitions are stored as data in
+		# the class
+
+		self.commandlist = c = []
+##		c.append('h', 'Help...', (self.helpcall, ()))
+		c.append('n', 'New channel...',  (self.newchannelcall, ()))
+		c.append('N', 'Next mini-document', (self.nextminicall, ()))
+		c.append('P', 'Previous mini-document', (self.prevminicall, ()))
+		c.append('',  'Ancestors', self.ancestors)
+		c.append('', 'Siblings', self.siblings)
+		c.append('', 'Descendants', self.descendants)
+		c.append('T', 'Toggle unused channels', (self.toggleshowcall, ()))
+		self.menutitle = 'Base ops'
 
 	def __repr__(self):
 		return '<GO instance, name=' + `self.name` + '>'
@@ -785,10 +758,10 @@ class GO:
 		total = len(self.mother.context.channels)
 		if visible == total: return
 		str = '%d more' % (total-visible)
-		gl.RGBcolor(TEXTCOLOR)
-		f_title.centerstring(self.mother.timescaleborder, 0, \
-			  self.mother.width, self.mother.channelbottom, \
-			  str)
+		d = self.mother.new_displist
+		d.fgcolor(TEXTCOLOR)
+		StringStuff.centerstring(d, self.mother.timescaleborder, 0,
+					 1.0, self.mother.channelbottom, str)
 
 	def select(self):
 		# Make this object the focus
@@ -797,6 +770,7 @@ class GO:
 		self.mother.deselect()
 		self.selected = 1
 		self.mother.focus = self
+		self.mother.window.create_menu(self.menutitle, self.commandlist)
 		if self.ok:
 			self.drawfocus()
 
@@ -807,24 +781,12 @@ class GO:
 		self.selected = 0
 		self.mother.focus = None
 		if self.ok:
+			self.mother.window.destroy_menu()
 			self.drawfocus()
 
 	def ishit(self, x, y):
 		# Check whether the given mouse coordinates are in this object
 		return 0
-
-	# Methods to handle interaction events
-
-	# Handle a right button mouse click in the object
-	def popupmenu(self, x, y):
-		func = self.__class__.menu.popup(x, y)
-		if func: func(self)
-
-	# Handle a shortcut in the object
-	def shortcut(self, c):
-		func = self.__class__.menu.shortcut(c)
-		if func: func(self)
-		else: gl.ringbell()
 
 	# Methods corresponding to the menu entries
 
@@ -844,49 +806,25 @@ class GO:
 	def toggleshowcall(self):
 		self.mother.toggleshow()
 
-	def setviewrootcall(self, node):
-		self.mother.setviewroot(node)
-
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!
 		return len(self.mother.context.channelnames)
-
-	# Submenus listing related mini-documents
-
-	ancestors = []
-	descendants = []
-	siblings = []
-
-	# Menu and shortcut definitions are stored as data in the class,
-	# since they are the same for all objects of a class...
-
-	commandlist = c = []
-	c.append('h', 'Help...',         helpcall)
-	c.append('n', 'New channel...',  newchannelcall)
-	c.append('N', 'Next mini-document', nextminicall)
-	c.append('P', 'Previous mini-document', prevminicall)
-	c.append('',  'Ancestors', ancestors)
-	c.append('', 'Siblings', siblings)
-	c.append('', 'Descendants', descendants)
-	c.append('T', 'Toggle unused channels', toggleshowcall)
-	menutitle = 'Base ops'
-	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
 
 
 # Class for the time scale object
 
 class TimeScaleBox(GO):
 
-	def init(self, mother):
-		return GO.init(self, mother, 'timescale')
+	def __init__(self, mother):
+		GO.__init__(self, mother, 'timescale')
 
 	def __repr__(self):
 		return '<TimeScaleBox instance>'
 
 	def reshape(self):
 		self.left = self.mother.timescaleborder + \
-			  f_title.getstrwidth(' ')
-		self.right = self.mother.width
+			  self.mother.new_displist.strsize(' ')[0]
+		self.right = 1.0
 		t0, t1 = self.mother.timerange()
 		self.top, self.bottom = self.mother.maptimes(t0, t1)
 		self.ok = 1
@@ -896,18 +834,17 @@ class TimeScaleBox(GO):
 		height = b-t
 		if height <= 0:
 			return
-		gl.RGBcolor(BORDERCOLOR)
+		d = self.mother.new_displist
+		f_fontheight = d.fontheight()
+		d.fgcolor(BORDERCOLOR)
 		# Draw rectangle around boxes
-		l = l+2
-		t = t+2
+		hmargin = d.strsize('x')[0] / 4
+		vmargin = d.fontheight() / 9
+		l = l + hmargin
+		t = t + vmargin
 		r = (4*l+r)/5
-		b = b-2
-		gl.bgnclosedline()
-		gl.v2f(l, t)
-		gl.v2f(r, t)
-		gl.v2f(r, b)
-		gl.v2f(l, b)
-		gl.endclosedline()
+		b = b - vmargin
+		d.drawbox(l, t, r - l, b - t)
 		# Compute number of division boxes
 		t0, t1 = self.mother.timerange()
 		dt = t1 - t0
@@ -927,37 +864,27 @@ class TimeScaleBox(GO):
 		# This gives MemoryError: for i in range(n):
 		# This code should be looked into.
 		i = -1
+		d.fgcolor(TEXTCOLOR)
 		while i < n:
 			i = i + 1
 			#
 			it0 = t0 + i*10
 			it1 = it0 + 5
 			t, b = self.mother.maptimes(it0, it1)
-			t = max(t, self.top + 2)
-			b = min(b, self.bottom - 2)
+			t = max(t, self.top)
+			b = min(b, self.bottom)
 			if b <= t:
 				continue
-			gl.RGBcolor(BORDERCOLOR)
-			gl.bgnpolygon()
-			gl.v2f(l, t)
-			gl.v2f(r, t)
-			gl.v2f(r, b)
-			gl.v2f(l, b)
-			gl.endpolygon()
+			d.drawfbox(BORDERCOLOR, l, t, r - l, b - t)
 			if i%div <> 0:
 				continue
-			gl.RGBcolor(TEXTCOLOR)
-			f_title.centerstring( \
-				  r, t-f_fontheight/2, \
-				  self.right, t+f_fontheight/2, \
+			StringStuff.centerstring(d,
+				  r, t-f_fontheight/2,
+				  self.right, t+f_fontheight/2,
 				  `i*10`)
 		for i in self.mother.discontinuities:
 		        t, b = self.mother.maptimes(i, i)
-			gl.RGBcolor(ANCHORCOLOR)
-			gl.bgnline()
-			gl.v2f(l-2, t)
-			gl.v2f(r+2, t)
-			gl.endline()
+			d.drawline(ANCHORCOLOR, [(l, t), (r, t)])
 			
 
 
@@ -965,17 +892,42 @@ class TimeScaleBox(GO):
 
 class ChannelBox(GO):
 
-	def init(self, mother, channel):
-		self = GO.init(self, mother, channel.name)
+	def __init__(self, mother, channel):
+		GO.__init__(self, mother, channel.name)
 		self.channel = channel
 		if channel.has_key('type'):
 			self.ctype = channel['type']
 		else:
 			self.ctype = '???'
-		return self
+		c = self.commandlist
+		c.append(None)
+		c.append('i', '', (self.attrcall, ()))
+		c.append('a', 'Channel attr...', (self.attrcall, ()))
+		c.append('d', 'Delete channel',  (self.delcall, ()))
+		c.append('m', 'Move channel', (self.movecall, ()))
+		c.append('c', 'Copy channel', (self.copycall, ()))
+		c.append(None)
+		c.append('', 'Toggle on/off', (self.channel_onoff, ()))
+		c.append(None)
+		c.append('', 'Highlight window', (self.highlight, ()))
+		c.append('', 'Unhighlight window', (self.unhighlight, ()))
+		self.menutitle = 'Channel ' + self.name + ' ops'
 
 	def __repr__(self):
 		return '<ChannelBox instance, name=' + `self.name` + '>'
+
+	def channel_onoff(self):
+		player = self.mother.toplevel.player
+		ch = self.channel
+		if player.is_showing():
+			player.cmenu_callback(ch.name)
+			return
+		if ch.attrdict.has_key('visible'):
+			isvis = ch.attrdict['visible']
+		else:
+			isvis = 1
+		ch.attrdict['visible'] = not isvis
+		self.mother.channels_changed()
 
 	def reshape(self):
 		left, right = self.mother.mapchannel(self.channel)
@@ -988,7 +940,7 @@ class ChannelBox(GO):
 		self.bottom = self.mother.channelbottom
 		self.xcenter = (self.left + self.right) / 2
 		self.ycenter = (self.top + self.bottom) / 2
-		self.farbottom = self.mother.height
+		self.farbottom = 1.0
 		self.ok = 1
 
 	def ishit(self, x, y):
@@ -1010,6 +962,8 @@ class ChannelBox(GO):
 		x = self.xcenter
 		y = self.ycenter
 
+		d = self.mother.new_displist
+
 		# Draw a diamond
 		cd = self.mother.context.channeldict[self.name]
 		if cd.has_key('visible'):
@@ -1017,106 +971,33 @@ class ChannelBox(GO):
 		else:
 			visible = 1
 		if visible:
-			gl.RGBcolor(CHANNELCOLOR)
+			color = CHANNELCOLOR
 		else:
-			gl.RGBcolor(CHANNELOFFCOLOR)
-		gl.bgnpolygon()
-		gl.v2f(l, y)
-		gl.v2f(x, t)
-		gl.v2f(r, y)
-		gl.v2f(x, b)
-		gl.endpolygon()
+			color = CHANNELOFFCOLOR
+		d.drawfdiamond(color, l, t, r - l, b - t)
 
 		# Outline the diamond; 'engraved' normally,
 		# 'sticking out' if selected
 		if self.selected:
-			n = int(3.0 * (r-l) / (b-t) + 0.5)
-			ll = l + n
-			tt = t + 3
-			rr = r - n
-			bb = b - 3
-
-			gl.RGBcolor(FOCUSLEFT)
-			gl.bgnpolygon()
-			gl.v2f(l, y)
-			gl.v2f(x, t)
-			gl.v2f(x, tt)
-			gl.v2f(ll, y)
-			gl.endpolygon()
-
-			gl.RGBcolor(FOCUSTOP)
-			gl.bgnpolygon()
-			gl.v2f(x, t)
-			gl.v2f(r, y)
-			gl.v2f(rr, y)
-			gl.v2f(x, tt)
-			gl.endpolygon()
-
-			gl.RGBcolor(FOCUSRIGHT)
-			gl.bgnpolygon()
-			gl.v2f(r, y)
-			gl.v2f(x, b)
-			gl.v2f(x, bb)
-			gl.v2f(rr, y)
-			gl.endpolygon()
-
-			gl.RGBcolor(FOCUSBOTTOM)
-			gl.bgnpolygon()
-			gl.v2f(l, y)
-			gl.v2f(ll, y)
-			gl.v2f(x, bb)
-			gl.v2f(x, b)
-			gl.endpolygon()
-
-			gl.RGBcolor(FOCUSBORDER)
-			gl.linewidth(1)
-			gl.bgnclosedline()
-			gl.v2f(l, y)
-			gl.v2f(x, t)
-			gl.v2f(r, y)
-			gl.v2f(x, b)
-			gl.endclosedline()
-		else:
-			gl.linewidth(1)
-			gl.RGBcolor(BORDERCOLOR)
-			gl.bgnclosedline()
-			gl.v2f(l, y)
-			gl.v2f(x, t)
-			gl.v2f(r, y)
-			gl.v2f(x, b)
-			gl.endclosedline()
-
-			gl.RGBcolor(BORDERLIGHT)
-			gl.bgnclosedline()
-			gl.v2f(l+1, y+1)
-			gl.v2f(x+1, t+1)
-			gl.v2f(r+1, y+1)
-			gl.v2f(x+1, b+1)
-			gl.endclosedline()
+			d.draw3ddiamond(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT,
+					FOCUSBOTTOM, l, t, r - l, b - t)
+		d.fgcolor(BORDERCOLOR)
+		d.drawdiamond(l, t, r - l, b - t)
 
 		# Draw the name
-		gl.RGBcolor(TEXTCOLOR)
-		f_title.centerstring(self.left, self.top, \
-			  self.right, self.bottom, self.name)
+		d.fgcolor(TEXTCOLOR)
+		StringStuff.centerstring(d, l, t, r, b, self.name)
 
 		# Draw the channel type
 		ctype = '(' + self.ctype + ')'
-		f_title.centerstring(self.left, self.bottom, \
-			  self.right, self.bottom + f_fontheight, ctype)
+		StringStuff.centerstring(d, l, b, r, b + d.fontheight(), ctype)
 
 	def drawline(self):
 		# Draw a gray and a white vertical line
-		gl.RGBcolor(BORDERCOLOR)
-		gl.linewidth(1)
-		gl.bgnline()
-		gl.v2f(self.xcenter, self.bottom)
-		gl.v2f(self.xcenter, self.farbottom)
-		gl.endline()
-		gl.RGBcolor(BORDERLIGHT)
-		gl.bgnline()
-		gl.v2f(self.xcenter+1, self.bottom)
-		gl.v2f(self.xcenter+1 , self.farbottom)
-		gl.endline()
+		d = self.mother.new_displist
+		d.fgcolor(BORDERCOLOR)
+		d.drawline(BORDERCOLOR, [(self.xcenter, self.bottom),
+					 (self.xcenter, self.farbottom)])
 
 	# Menu stuff beyond what GO offers
 
@@ -1126,9 +1007,9 @@ class ChannelBox(GO):
 
 	def delcall(self):
 		if self.channel in self.mother.usedchannels:
-			fl.show_message( \
-				  'You can\'t delete a channel', \
-				  'that is still in use', '')
+			windowinterface.showmessage(
+				  "You can't delete a channel\n" +
+				  'that is still in use')
 			return
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
@@ -1157,18 +1038,6 @@ class ChannelBox(GO):
 		if channels.has_key(self.name):
 			channels[self.name].unhighlight()
 
-	commandlist = c = GO.commandlist[:]
-	char, text, proc = c[-1]
-	c[-1] = char, text + '%l', proc
-	c.append('i', '', attrcall)
-	c.append('a', 'Channel attr...', attrcall)
-	c.append('d', 'Delete channel',  delcall)
-	c.append('m', 'Move channel', movecall)
-	c.append('c', 'Copy channel', copycall)
-	c.append('', 'Highlight window', highlight)
-	c.append('', 'Unhighlight window', unhighlight)
-	menutitle = 'Channel ops'
-	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
 
 
 class NodeBox(GO):
@@ -1176,7 +1045,7 @@ class NodeBox(GO):
 	def __repr__(self):
 		return '<NodeBox instance, name=' + `self.name` + '>'
 
-	def init(self, mother, node):
+	def __init__(self, mother, node):
 		self.node = node
 		self.pausenode = (MMAttrdefs.getattr(node, 'duration') < 0)
 		self.hasanchors = self.haspause = 0
@@ -1197,7 +1066,24 @@ class NodeBox(GO):
 			node.armedmode = ARM_NONE
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
-		return GO.init(self, mother, name)
+		GO.__init__(self, mother, name)
+		c = self.commandlist
+		c.append(None)
+		c.append('p', 'Play node...', (self.playcall, ()))
+		c.append('G', 'Play from here...', (self.playfromcall, ()))
+		c.append(None)
+		c.append('i', 'Node info...', (self.infocall, ()))
+		c.append('a', 'Node attr...', (self.attrcall, ()))
+		c.append('e', 'Edit contents...', (self.editcall, ()))
+		c.append('t', 'Edit anchors...', (self.anchorcall, ()))
+		c.append('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
+		c.append(None)
+		c.append('f', 'Push focus', (self.focuscall, ()))
+		c.append('l', 'Lock node', (self.lockcall, ()))
+		c.append('u', 'Unlock node', (self.unlockcall, ()))
+		c.append('s', 'New sync arc...', (self.newsyncarccall, ()))
+		self.menutitle = 'Node ' + self.name + ' ops'
+
 
 	def getnode(self):
 		return self.node
@@ -1212,14 +1098,11 @@ class NodeBox(GO):
 	def set_armedmode(self, mode):
 		# print 'node', self.name, 'setarmedmode', mode
 		if mode <> self.node.armedmode:
+			self.mother.init_display()
 			self.node.armedmode = mode
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-			self.mother.setwin()
 			self.drawfocus()
 			self.mother.drawarcs()
-			if GLLock.gl_lock:
-				GLLock.gl_lock.release()
+			self.mother.render()
 
 	def lock(self):
 		if not self.locked:
@@ -1249,9 +1132,9 @@ class NodeBox(GO):
 		    self.mother.discontinuities.append(
 			self.node.t0+self.node.timing_discont)
 
-		# Move top/bottom inwards by one pixel
-		top = top+1
-		bottom = bottom-1
+		vmargin = self.mother.new_displist.fontheight() / 15
+		top = top + vmargin
+		bottom = bottom - vmargin
 
 		# Move top down below the previous node if necessary
 		if top < channel.lowest:
@@ -1259,13 +1142,13 @@ class NodeBox(GO):
 
 		# Keep space for at least one line of text
 		# bottom = max(bottom, top+f_fontheight-2)
-		if top+f_fontheight-2 > bottom:
-		    bottom = top + f_fontheight-2
+		if top + self.mother.new_displist.fontheight() * 1.2 > bottom:
+		    bottom = top + self.mother.new_displist.fontheight() * 1.2
 		    self.mother.discontinuities.append(
 			(self.node.t0+self.node.t1)/2)
 
 		# Update channel's lowest node
-		channel.lowest = int(bottom)
+		channel.lowest = bottom
 
 		self.left, self.top, self.right, self.bottom = \
 			left, top, right, bottom
@@ -1279,130 +1162,54 @@ class NodeBox(GO):
 	def drawfocus(self):
 		l, t, r, b = self.left, self.top, self.right, self.bottom
 
+		d = self.mother.new_displist
+		w, h = d.strsize('m')
+		haboxsize = w / 2
+		vaboxsize = h / 3
+
 		# Draw a box
 		if self.locked:
-			gl.RGBcolor(LOCKEDCOLOR)
+			color = LOCKEDCOLOR
 		elif armcolors.has_key(self.node.armedmode):
-			gl.RGBcolor(armcolors[self.node.armedmode])
+			color = armcolors[self.node.armedmode]
 		else:
-			gl.RGBcolor(NODECOLOR)
-		gl.bgnpolygon()
-		gl.v2f(l, t)
-		gl.v2f(r, t)
-		gl.v2f(r, b)
-		gl.v2f(l, b)
-		gl.endpolygon()
+			color = NODECOLOR
+		d.drawfbox(color, l, t, r - l, b - t)
 
 		# If the end time was inherited, make the bottom-right
 		# triangle of the box a lighter color
 		if self.node.t0t1_inherited:
-			gl.RGBcolor(ALTNODECOLOR)
-			gl.bgnpolygon()
-			gl.v2f(r, t)
-			gl.v2f(r, b)
-			gl.v2f(l, b)
-			gl.endpolygon()
+			d.drawfpolygon(ALTNODECOLOR, [(r, t), (r, b), (l, b)])
 
 		# If there are anchors on this node,
 		# draw a small orange box in the bottom left corner
 		if self.hasanchors:
-			gl.RGBcolor(ANCHORCOLOR)
-			gl.bgnpolygon()
-			gl.v2f(l, b)
-			gl.v2f(l+ABOXSIZE, b)
-			gl.v2f(l+ABOXSIZE, b-ABOXSIZE)
-			gl.v2f(l, b-ABOXSIZE)
-			gl.endpolygon()
+			d.drawfbox(ANCHORCOLOR, l, b-vaboxsize,
+				   haboxsize, vaboxsize)
 
 		# If there is a pausing anchor,
 		# draw an orange line at the bottom
 		if self.haspause:
-			gl.RGBcolor(ANCHORCOLOR)
-			gl.bgnpolygon()
-			gl.v2f(l, b)
-			gl.v2f(r, b)
-			gl.v2f(r, b-ABOXSIZE)
-			gl.v2f(l, b-ABOXSIZE)
-			gl.endpolygon()
+			d.drawfbox(ANCHORCOLOR, l, b-vaboxsize,
+				   r - l, vaboxsize)
 
 		# If this is a pausing node
 		# draw a small orange box in the bottom right corner
 		if self.pausenode:
-			gl.RGBcolor(ANCHORCOLOR)
-			gl.bgnpolygon()
-			gl.v2f(r-ABOXSIZE, b)
-			gl.v2f(r, b)
-			gl.v2f(r, b-ABOXSIZE)
-			gl.v2f(r-ABOXSIZE, b-ABOXSIZE)
-			gl.endpolygon()
+			d.drawfbox(ANCHORCOLOR, r-haboxsize, b-vaboxsize,
+				   haboxsize, vaboxsize)
 
 		# Draw a "3D" border if selected, else an "engraved" outline
 		if self.selected:
-			l1 = l - 1
-			t1 = t - 1
-			r1 = r
-			b1 = b
-			ll = l + 3
-			tt = t + 3
-			rr = r - 3
-			bb = b - 3
-			gl.RGBcolor(FOCUSLEFT)
-			gl.bgnpolygon()
-			gl.v2f(l1, t1)
-			gl.v2f(ll, tt)
-			gl.v2f(ll, bb)
-			gl.v2f(l1, b1)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSTOP)
-			gl.bgnpolygon()
-			gl.v2f(l1, t1)
-			gl.v2f(r1, t1)
-			gl.v2f(rr, tt)
-			gl.v2f(ll, tt)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSRIGHT)
-			gl.bgnpolygon()
-			gl.v2f(r1, t1)
-			gl.v2f(r1, b1)
-			gl.v2f(rr, bb)
-			gl.v2f(rr, tt)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSBOTTOM)
-			gl.bgnpolygon()
-			gl.v2f(l1, b1)
-			gl.v2f(ll, bb)
-			gl.v2f(rr, bb)
-			gl.v2f(r1, b1)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSBORDER)
-			gl.linewidth(1)
-			gl.bgnclosedline()
-			gl.v2f(l1, t)
-			gl.v2f(r, t)
-			gl.v2f(r, b)
-			gl.v2f(l1, b)
-			gl.endclosedline()
+			d.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT,
+				    FOCUSBOTTOM, l, t, r - l, b - t)
 		else:
-			# Outline the box in 'engraved' look
-			gl.RGBcolor(BORDERCOLOR)
-			gl.linewidth(1)
-			gl.bgnclosedline()
-			gl.v2f(l-1, t)
-			gl.v2f(r, t)
-			gl.v2f(r, b-1)
-			gl.v2f(l-1, b-1)
-			gl.endclosedline()
-			gl.RGBcolor(BORDERLIGHT)
-			gl.bgnclosedline()
-			gl.v2f(l, t+1)
-			gl.v2f(r+1, t+1)
-			gl.v2f(r+1, b)
-			gl.v2f(l, b)
-			gl.endclosedline()
+			d.fgcolor(BORDERCOLOR)
+			d.drawbox(l, t, r - l, b - t)
 
 		# Draw the name, centered in the box
-		gl.RGBcolor(TEXTCOLOR)
-		f_title.centerstring(l, t, r, b, self.name)
+		d.fgcolor(TEXTCOLOR)
+		StringStuff.centerstring(d, l, t, r, b, self.name)
 
 	# Menu stuff beyond what GO offers
 
@@ -1435,11 +1242,11 @@ class NodeBox(GO):
 		if self.mother.lockednode:
 			self.mother.lockednode.unlock()
 		else:
-			gl.ringbell()
+			windowinterface.beep()
 
 	def newsyncarccall(self):
 		if not self.mother.lockednode:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
@@ -1460,33 +1267,22 @@ class NodeBox(GO):
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
 
-	commandlist = c = GO.commandlist[:]
-	char, text, proc = c[-1]
-	c[-1] = char, text + '%l', proc
-	c.append('p', 'Play node...', playcall)
-	c.append('G', 'Play from here...%l', playfromcall)
-	c.append('i', 'Node info...', infocall)
-	c.append('a', 'Node attr...', attrcall)
-	c.append('e', 'Edit contents...', editcall)
-	c.append('t', 'Edit anchors...', anchorcall)
-	c.append('L', 'Finish hyperlink...%l', hyperlinkcall)
-	c.append('f', 'Push focus', focuscall)
-	c.append('l', 'Lock node', lockcall)
-	c.append('u', 'Unlock node', unlockcall)
-	c.append('s', 'New sync arc...', newsyncarccall)
-	menutitle = 'Node ops'
-	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
-
 
 class ArcBox(GO):
 
 	def __repr__(self):
 		return '<ArcBox instance, name=' + `self.name` + '>'
 
-	def init(self, mother, snode, sside, delay, dnode, dside):
+	def __init__(self, mother, snode, sside, delay, dnode, dside):
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
 			snode, sside, delay, dnode, dside
-		return GO.init(self, mother, 'arc')
+		GO.__init__(self, mother, 'arc')
+		c = self.commandlist
+		c.append(None)
+		c.append('i', 'Sync arc info...', (self.infocall, ()))
+		c.append('d', 'Delete sync arc',  (self.delcall, ()))
+		self.menutitle = 'Sync arc ' + self.name + ' ops'
+
 
 	def reshape(self):
 		try:
@@ -1514,43 +1310,17 @@ class ArcBox(GO):
 
 	def ishit(self, x, y):
 		if not self.ok: return 0
-		# XXX Shouldn't we be using gl.pick() here?
-		# Translate
-		x, y = x - self.dx, y - self.dy
-		# Rotate
-		nx = x * self.cos - y * self.sin
-		ny = x * self.sin + y * self.cos
-		# Test
-		if ny > 0 or ny < -ARR_LENGTH:
-			return 0
-		if nx > -ARR_SLANT * ny or nx < ARR_SLANT * ny:
-			return 0
-		return 1
+		return self.mother.window.hitarrow(x, y, self.sx, self.sy,
+						   self.dx, self.dy)
 
 	def drawfocus(self):
 		# The entire sync arc has the focus color if selected
 		if self.selected:
-			gl.RGBcolor(FOCUSCOLOR)
+			color = FOCUSCOLOR
 		else:
-			gl.RGBcolor(ARROWCOLOR)
-		# Draw the line from src to dst
-		gl.linewidth(2)
-		gl.bgnline()
-		gl.v2f(self.sx, self.sy)
-		gl.v2f(self.dx, self.dy)
-		gl.endline()
-		# Draw the arrowhead
-		# Translate so that the point of the arrowhead is (0, 0)
-		# Rotate so that it comes in horizontally from the right
-		gl.pushmatrix()
-		gl.translate(self.dx, self.dy, 0)
-		gl.rot(self.rotation, 'z')
-		gl.bgnpolygon()
-		gl.v2f(0, 0)
-		gl.v2f(ARR_LENGTH, ARR_HALFWIDTH)
-		gl.v2f(ARR_LENGTH, -ARR_HALFWIDTH)
-		gl.endpolygon()
-		gl.popmatrix()
+			color = ARROWCOLOR
+		self.mother.new_displist.drawarrow(color, self.sx, self.sy,
+						   self.dx, self.dy)
 
 	# Menu stuff beyond what GO offers
 
@@ -1568,21 +1338,6 @@ class ArcBox(GO):
 			self.delay, self.dnode, self.dside)
 		self.mother.cleanup()
 		editmgr.commit()
-
-	commandlist = c = GO.commandlist[:]
-	char, text, proc = c[-1]
-	c[-1] = char, text + '%l', proc
-	c.append('i', 'Sync arc info...', infocall)
-	c.append('d', 'Delete sync arc',  delcall)
-	menutitle = 'Sync arc ops'
-	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
-
-# Rebuild all menus (to accomodate changes in entries)
-def rebuild_menus():
-	for cls in GO, ChannelBox, NodeBox, ArcBox:
-		cls.menu.close()
-		cls.menu = MenuMaker.MenuObject().init(cls.menutitle,
-						       cls.commandlist)
 
 # Wrap up a function and some arguments for later calling with fewer
 # arguments.  The arguments given here are passed *after* the

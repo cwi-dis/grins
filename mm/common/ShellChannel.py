@@ -1,12 +1,13 @@
-from debug import debug
+import os
+debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import Channel
 import string
 import os
 
 class ShellChannel(Channel):
-	def init(self, name, attrdict, scheduler, ui):
+	def __init__(self, name, attrdict, scheduler, ui):
 		self.pid = None
-		return Channel.init(self, name, attrdict, scheduler, ui)
+		Channel.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<ShellChannel instance, name=' + `self._name` + '>'

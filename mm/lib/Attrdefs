@@ -175,8 +175,8 @@
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel)
 
-(visible (bool) 1 'Channel visibility' hidden
-	'Determines visibility of channel' raw)
+(visible (bool) 1 'Channel visibility' default
+	'Determines visibility of channel' channel)
 
 (winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y) (x axis pointing down!)' raw)

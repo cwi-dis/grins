@@ -1,12 +1,8 @@
 from Channel import *
-from debug import debug
-from urllib import urlretrieve
+import urllib
 
 
 class SoundChannel(ChannelThread):
-	def init(self, name, attrdict, scheduler, ui):
-		return ChannelThread.init(self, name, attrdict, scheduler, ui)
-
 	def __repr__(self):
 		return '<SoundChannel instance, name=' + `self._name` + '>'
 
@@ -15,13 +11,24 @@ class SoundChannel(ChannelThread):
 		return soundchannel.init()
 
 	def do_arm(self, node):
+		if node.type != 'ext':
+			self.errormsg(node, 'Node must be external')
+			return 1
 		filename = self.getfilename(node)
-		filename = urlretrieve(filename)[0]
+		try:
+			filename = urllib.urlretrieve(filename)[0]
+		except IOError:
+			self.errormsg(node, 'Cannot open ' + filename)
+			return 1
 		import SoundDuration
 		try:
 			f, nchannels, nsampframes, sampwidth, samprate, format = \
 				  SoundDuration.getinfo(filename)
 		except IOError:
+			self.errormsg(node, 'Error reading ' + filename)
+			return 1
+		if format in ('eof', 'error'):
+			self.errormsg(node, 'Format error in ' + filename)
 			return 1
 		self.threads.arm(f, 0, 0, \
 			  {'nchannels': int(nchannels), \

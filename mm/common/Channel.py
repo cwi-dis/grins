@@ -2,7 +2,8 @@
 # as a superclass, but never more than one.
 
 from AnchorDefs import *
-from debug import debug
+import os
+debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
 import windowinterface, EVENTS
 error = 'Channel.error'
@@ -23,10 +24,10 @@ class Channel:
 	#
 	# The following methods can be called by higher levels.
 	#
-	chan_attrs = []
+	chan_attrs = ['visible']
 	node_attrs = ['file']
 
-	def init(self, name, attrdict, scheduler, ui):
+	def __init__(self, name, attrdict, scheduler, ui):
 		# Create and initialize a Channel object instance.
 		# The arguments are the name of the channel, an
 		# attribute dictionary and the scheduler and user
@@ -57,7 +58,6 @@ class Channel:
 		if debug:
 			print 'Channel.init() -> '+`self`
 		channels.append(self)
-		return self
 
 	def __repr__(self):
 		return '<Channel instance, name=' + `self._name` + '>'
@@ -619,12 +619,12 @@ class Channel:
 	def gethicolor(self, node):
 		return MMAttrdefs.getattr(node, 'hicolor')
 
-	def defanchor(self, node, anchor):
+	def defanchor(self, node, anchor, cb):
 		# This method is called when the user defines a new anchor. It
 		# may be overridden by derived classes.
 		windowinterface.showmessage('Channel '+self._name+
 			  ' does not support\nediting of anchors (yet)')
-		return anchor
+		apply(cb, (anchor,))
 
 	def updatefixedanchors(self, node):
 		# This method is called by the anchor editor to ensure that
@@ -635,6 +635,17 @@ class Channel:
 		# to edit an anchor.
 		return 0
 
+	def errormsg(self, node, msg):
+		if node:
+			name = MMAttrdefs.getattr(node, 'name')
+			if not name:
+				name = '<unnamed node>'
+			nmsg = ' node ' + name
+		else:
+			nmsg = ''
+		windowinterface.showmessage('Warning:\nWhile arming' + nmsg +
+				' on channel ' + self._name + ':\n' + msg)
+
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
 
@@ -642,8 +653,8 @@ class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'hicolor']
 
-	def init(self, name, attrdict, scheduler, ui):
-		self = Channel.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		Channel.__init__(self, name, attrdict, scheduler, ui)
 		if not hasattr(self._player, 'ChannelWinDict'):
 			self._player.ChannelWinDict = {}
 		self._player.ChannelWinDict[self._name] = self
@@ -652,7 +663,6 @@ class ChannelWindow(Channel):
 		self.nopop = 0
 		self._is_waiting = 0
 		self.want_default_colormap = 0
-		return self
 
 	def __repr__(self):
 		return '<ChannelWindow instance, name=' + `self._name` + '>'
@@ -665,36 +675,45 @@ class ChannelWindow(Channel):
 		del self.played_display
 
 	def highlight(self):
-		if self._is_shown:
+		if self._is_shown and self.window:
 			self.window.pop()
 			self.window.showwindow()
 
 	def unhighlight(self):
-		if self._is_shown:
+		if self._is_shown and self.window:
 			self.window.dontshowwindow()
 
 	def popup(self):
-		if self._is_shown:
+		if self._is_shown and self.window:
 			self.window.pop()
 
 	def popdown(self):
-		if self._is_shown:
+		if self._is_shown and self.window:
 			self.window.push()
 
+	def focuscall(self):
+		if self._playstate in (PLAYING, PLAYED):
+			node = self._played_node
+			top = self._player.toplevel
+			top.hierarchyview.globalsetfocus(node)
+			top.channelview.globalsetfocus(node)
+		else:
+			windowinterface.showmessage('Can only push focus when playing')
+
 	def save_geometry(self):
-		if self._is_shown:
+		if self._is_shown and self.window:
 			x, y, w, h = self.window.getgeometry()
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
 
 	def setwaiting(self):
 		self._is_waiting = 1
-		if self._is_shown:
+		if self._is_shown and self.window:
 			self.window.setcursor('watch')
 
 	def setready(self):
 		self._is_waiting = 0
-		if self._is_shown:
+		if self._is_shown and self.window:
 			self.window.setcursor('')
 
 	def mousepress(self, arg, window, event, value):
@@ -724,6 +743,8 @@ class ChannelWindow(Channel):
 		if pchan:
 			menu.append('', 'raise', (self.popup, ()))
 			menu.append('', 'lower', (self.popdown, ()))
+			menu.append(None)
+			menu.append('', 'push focus', (self.focuscall, ()))
 			menu.append(None)
 			menu.append('', 'highlight', (self.highlight, ()))
 			menu.append('', 'unhighlight', (self.unhighlight, ()))
@@ -765,18 +786,21 @@ class ChannelWindow(Channel):
 			self.window.create_menu(self._name, menu)
 
 	def resize_window(self, pchan):
-		import boxes
-		if self._player.playing:
-			windowinterface.showmessage(
-				'Cannot resize while playing')
+		if not self._player.editmgr.transaction():
 			return
-		pgeom = boxes.create_box(pchan.window,
-				'Resize window for channel ' + self._name,
-				self._attrdict['base_winoff'])
-		if pgeom:
-			self._attrdict['base_winoff'] = pgeom
+		pchan.window.create_box(
+			'Resize window for channel ' + self._name,
+			self._resize_callback,
+			self._attrdict['base_winoff'])
+
+	def _resize_callback(self, *box):
+		if box:
+			self._attrdict['base_winoff'] = box
 			self.hide()
 			self.show()
+			self._player.editmgr.commit()
+		else:
+			self._player.editmgr.rollback()
 
 	def do_show(self):
 		if debug:
@@ -832,17 +856,21 @@ class ChannelWindow(Channel):
 			if self._attrdict.has_key('base_winoff'):
 				pgeom = self._attrdict['base_winoff']
 			else:
-				import boxes
-				pgeom = boxes.create_box(pchan.window, 'Draw a subwindow for ' + self._name + ' in ' + pchan._name)
-				if pgeom:
-					self._attrdict['base_winoff'] = pgeom
-				else:
-					# subwindow was not drawn,
-					# draw top-level window.
-					pchan._subchannels.remove(self)
-					pchan = None
+				pchan.window.create_box('Draw a subwindow for ' + self._name + ' in ' + pchan._name, self._box_callback)
+				return 1
 		self.create_window(pchan, pgeom)
 		return 1
+
+	def _box_callback(self, *pgeom):
+		pname = self._attrdict['base_window']
+		pchan = self._player.ChannelWinDict[pname]
+		if pgeom:
+			self._attrdict['base_winoff'] = pgeom
+		else:
+			# subwindow was not drawn, draw top-level window.
+			pchan._subchannels.remove(self)
+			pchan = None
+		self.create_window(pchan, pgeom)
 
 	def do_hide(self):
 		if debug:
@@ -856,7 +884,6 @@ class ChannelWindow(Channel):
 	def resize(self, arg, window, event, value):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
-		import windowinterface
 		windowinterface.setcursor('watch')
 		if hasattr(self, 'threads'):
 			# hack for MovieChannel
@@ -892,7 +919,7 @@ class ChannelWindow(Channel):
 
 	def arm_0(self, node):
 		Channel.arm_0(self, node)
-		if not self._is_shown:
+		if not self._is_shown or not self.window:
 			return
 		if self.armed_display:
 			self.armed_display.close()
@@ -904,7 +931,7 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self._is_shown:
+		if self._is_shown and self.window:
 			if not self.nopop:
 				self.window.pop()
 			if self.armed_display.is_closed():
@@ -928,10 +955,26 @@ class ChannelWindow(Channel):
 			self.played_display.close()
 			self.played_display = None
 
+	# use this code to get the error message in the window instead
+	# of in a popup window
+##	def errormsg(self, node, msg):
+##		if node:
+##			name = MMAttrdefs.getattr(node, 'name')
+##			if not name:
+##				name = '<unnamed node>'
+##			nmsg = ' node ' + name
+##		else:
+##			nmsg = ''
+##		msg = 'Warning:\nWhile arming' + nmsg + ' on channel ' + self._name + ':\n' + msg
+##		parms = self.armed_display.fitfont('Times-Roman', msg)
+##		w, h = self.armed_display.strsize(msg)
+##		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
+##		self.armed_display.fgcolor(255, 0, 0)		# red
+##		box = self.armed_display.writestr(msg)
+
 class _ChannelThread:
-	def init(self):
+	def __init__(self):
 		self.threads = None
-		return self
 
 	def destroy(self):
 		del self.threads
@@ -955,11 +998,9 @@ class _ChannelThread:
 				attrdict['gl_lock'] = GLLock.gl_rawlock
 			elif hasattr(self.window, '_form'):
 				# Motif windowinterface
-				import windowinterface
 				attrdict['widget'] = self.window._form
 				attrdict['gc'] = self.window._gc
-				attrdict['visual'] = \
-					  windowinterface.toplevel._visual
+				attrdict['visual'] = self.window._visual
 			else:
 				print 'can\' work with this windowinterface'
 				return 0
@@ -1043,10 +1084,9 @@ class _ChannelThread:
 		self.callback(0, 0, 0, val)
 
 class ChannelThread(_ChannelThread, Channel):
-	def init(self, name, attrdict, scheduler, ui):
-		self = Channel.init(self, name, attrdict, scheduler, ui)
-		self = _ChannelThread.init(self)
-		return self
+	def __init__(self, name, attrdict, scheduler, ui):
+		Channel.__init__(self, name, attrdict, scheduler, ui)
+		_ChannelThread.__init__(self)
 
 	def __repr__(self):
 		return '<ChannelThread instance, name=' + `self._name` + '>'
@@ -1072,12 +1112,11 @@ class ChannelThread(_ChannelThread, Channel):
 		_ChannelThread.setpaused(self, paused)
 
 class ChannelWindowThread(_ChannelThread, ChannelWindow):
-	def init(self, name, attrdict, scheduler, ui):
-		import GLLock, windowinterface
+	def __init__(self, name, attrdict, scheduler, ui):
+		import GLLock
 		windowinterface.usewindowlock(GLLock.gl_lock)
-		self = ChannelWindow.init(self, name, attrdict, scheduler, ui)
-		self = _ChannelThread.init(self)
-		return self
+		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
+		_ChannelThread.__init__(self)
 
 	def __repr__(self):
 		return '<ChannelWindowThread instance, name=' + `self._name` + '>'
@@ -1161,9 +1200,6 @@ def dummy_callback(arg):
 	pass
 
 class AnchorContext:
-	def init(self):
-		return self
-
 	def arm_done(self, node):
 		raise error, 'AnchorContext.arm_done() called'
 

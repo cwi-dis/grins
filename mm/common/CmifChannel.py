@@ -1,4 +1,5 @@
-from debug import debug
+import os
+debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import *
 import string
 import sys
@@ -8,10 +9,9 @@ from AnchorDefs import *
 
 class CmifChannel(Channel):
 
-	def init(self, name, attrdict, scheduler, ui):
-		self = Channel.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.stopped = 0
-		return self
 	
 	def __repr__(self):
 		return '<CmifChannel instance, name=' + `self._name` + '>'

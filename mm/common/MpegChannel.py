@@ -8,16 +8,9 @@ class MpegChannel(ChannelWindowThread):
 		import mpegchannel
 		return mpegchannel.init()
 
-	def errormsg(self, msg):
-		parms = self.armed_display.fitfont('Times-Roman', msg)
-		w, h = self.armed_display.strsize(msg)
-		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-		self.armed_display.fgcolor(255, 0, 0)		# red
-		box = self.armed_display.writestr(msg)
-
 	def do_arm(self, node):
 		if node.type != 'ext':
-			self.errormsg('node must be external')
+			self.errormsg(node, 'Node must be external')
 			return 1
 		filename = self.getfilename(node)
 		try:
@@ -25,7 +18,7 @@ class MpegChannel(ChannelWindowThread):
 		except IOError, msg:
 			if type(msg) == type(()):
 				msg = msg[1]
-			self.errormsg(filename + ':\n' + msg)
+			self.errormsg(node, filename + ':\n' + msg)
 			return 1
 		except IOError, msg:
 			print 'IO Error: ' + `msg`
@@ -37,7 +30,7 @@ class MpegChannel(ChannelWindowThread):
 			self.threads.arm(fp, 0, 0, arminfo, None,
 				  self.syncarm)
 		except RuntimeError, msg:
-			print 'Bad mpeg file', `vfile.filename`, msg
+			print 'Bad mpeg file', `filename`, msg
 			return 1
 		return self.syncarm
 
