@@ -59,22 +59,22 @@ def needtimes(node):
 def do_times(node):
 	t0 = time.time()
 ## 	print 'do_times...'
-	
+
 	# These globals are used only while in do_times();
 	# they are changed by decrememt()
-	
+
 	global getd_times # Used to calculate time spent in getduration()
 	getd_times = 0
-	
+
 	global last_node # Keeps track of the last node played per channel
 	last_node = {}
-	
+
 	global initial_arms # Keeps track of the first node played per channel
 	initial_arms = []
 
 	node.t1 = 0
 	del node.t1
-	
+
 	prepare(node)
 	_do_times_work(node)
 	try:
@@ -175,7 +175,7 @@ def getduration(node):
 	        node.timing_discont = 9.9
 		return 10
 	return 0
-	
+
 
 
 ###########################################################
@@ -242,7 +242,7 @@ def propdown(node, stoptime, dftstarttime=0):
 	except AttributeError:
 		node.t1 = stoptime
 		node.timing_discont = node.t1 - node.t0 - 0.1
-		
+
 	if not node.t0t1_inherited:
 		stoptime = node.t1
 	if tp in ('par', 'alt'):
