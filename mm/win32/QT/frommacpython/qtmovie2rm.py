@@ -1,4 +1,8 @@
-# Qt sample using direct draw
+# QuickTime to RealMedia video converter
+
+# file to be converted
+# the output will be in the same dir with extension .rm
+QtMovieToConvert = r'D:\ufs\mm\cmif\win32\Qt\media\Sample.mov'
 
 import Qt
 
@@ -232,12 +236,11 @@ class QTWnd(MfcOsWnd):
 		ddcolor = self.__backBuffer.GetColorMatch(self.__bgcolor or (255, 255, 255) )
 		self.__backBuffer.BltFill((0, 0, w, h), ddcolor)
 
-		filename = r'D:\ufs\mm\cmif\win32\Qt\media\Sample.mov'
 		self.qtplayer = winqt.QtPlayer()
-		info = self.qtplayer.openForEncoding(filename, self.__ddraw)
+		info = self.qtplayer.openForEncoding(QtMovieToConvert, self.__ddraw)
 		if info is not None:
 			width, height, framerate = info
-			self._converter = RealVideoConverter(filename)
+			self._converter = RealVideoConverter(QtMovieToConvert)
 			self._converter.setVideoProperties(width, height, framerate)
 			self._converter.prepareToEncode()
 			self._converter.encode(self.qtplayer.getDataAsRGB24(), 0)
