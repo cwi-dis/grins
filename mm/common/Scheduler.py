@@ -654,7 +654,9 @@ class SchedulerContext:
 		elif fill != 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			self.freeze_play(node, timestamp)
 		pnode = node.GetSchedParent()
-		if pnode.type == 'excl' and node in pnode.pausestack:
+		if pnode is not None and \
+		   pnode.type == 'excl' and \
+		   node in pnode.pausestack:
 			pnode.pausestack.remove(node)
 		paused = self.parent.paused
 		self.parent.paused = 0
