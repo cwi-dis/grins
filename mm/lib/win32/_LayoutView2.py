@@ -1,7 +1,5 @@
 # Experimental layout view for light region view
 
-treeVersion = 1
-
 # editor features
 import features
 
@@ -42,62 +40,21 @@ from GenFormView import GenFormView
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
-		if treeVersion:
-			GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT_T1)			
-		else:
-			if features.CUSTOM_REGIONS in features.feature_set:
-				GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT3)
-			else:
-				GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)
+		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT_T1)
+		
 		self._layout = None
 		self._mmcontext = None
 
-		if not treeVersion:
-			# Initialize control objects
-			# save them in directory: accessible directly from LayoutViewDialog class
-			# note: if you modify the key names, you also have to modify them in LayoutViewDialog
-			self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
-							'RegionW','RegionH','RegionZ', 'ShowNames',
-							'AsOutLine',
-							'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
-							'ViewportCheck','RegionCheck','MediaCheck','HideRegion','HideMedia')
-			if features.CUSTOM_REGIONS in features.feature_set:
-				n = n + ('NewRegion', 'DelRegion', 'NewView', 'ShowAllRegions')
+		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','ShowAllMedias')
+		self.__listeners = {}
 			
-			i = 0
-			self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL); i=i+1
-			self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
-			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES); i=i+1
-			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE); i=i+1
-			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG); i=i+1
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK); i=i+1
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT); i=i+1
-			self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL); i=i+1
-			self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO); i=i+1
-			self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO); i=i+1
-			self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO); i=i+1
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEREGION); i=i+1
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEMEDIA); i=i+1
-			if features.CUSTOM_REGIONS in features.feature_set:
-				self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWREGION); i=i+1
-				self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_DELREGION); i=i+1
-				self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWVIEW); i=i+1
-				self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLREGIONS); i=i+1
-		else:
-			self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','ShowAllMedias')
-			
-			i = 0
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
-			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
-			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLMEDIAS); i=i+1
+		i = 0
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
+		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLMEDIAS); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
@@ -114,9 +71,8 @@ class _LayoutView2(GenFormView):
 		self._previousHandler = None
 		self._layout = LayoutManager()
 
-		if treeVersion:
-			# tree component
-			self._treeComponent = TreeManager()
+		# tree component
+		self._treeComponent = TreeManager()
 		
 		# allow to valid the field with the return key
 		self.lastModifyCtrlField = None
@@ -132,8 +88,8 @@ class _LayoutView2(GenFormView):
 		return self
 
 	# define a handler for callbacks fnc
-	def setDialogHandler(self, handler):
-		self._dialogHandler = handler
+	def setListener(self, ctrlName, listener):
+		self.__listeners[ctrlName] = listener
 
 	# tree component
 	def getTreeComponent(self):
@@ -154,9 +110,7 @@ class _LayoutView2(GenFormView):
 		bgcolor = (255, 255, 255)
 		self._layout.onInitialUpdate(self, rc, bgcolor)
 
-		# initialize the control tree
-		if treeVersion:
-			self._treeComponent.onInitialUpdate(self)
+		self._treeComponent.onInitialUpdate(self)
 			
 		# we have to notify layout if has capture
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
@@ -248,7 +202,9 @@ class _LayoutView2(GenFormView):
 		if id==win32con.IDOK or nmsg == win32con.EN_KILLFOCUS:
 			if self.lastModifyCtrlField != None:
 				value = self[self.lastModifyCtrlField].gettext()
-				self._dialogHandler.onFieldCtrl(self.lastModifyCtrlField, value)
+				listener = self.__listeners.get(self.lastModifyCtrlField)
+				if listener != None:
+					listener.onFieldCtrl(self.lastModifyCtrlField, value)
 				self.lastModifyCtrlField = None
 				return
 				
@@ -256,19 +212,6 @@ class _LayoutView2(GenFormView):
 		if nmsg==win32con.LBN_SELCHANGE:
 			ctrlName = None
 		
-			if not treeVersion:
-				if id == self['ViewportSel']._id:
-					ctrlName = 'ViewportSel'
-				elif id == self['RegionSel']._id:
-					ctrlName = 'RegionSel'
-				elif id == self['MediaSel']._id:
-					ctrlName = 'MediaSel'
-				if ctrlName != None:
-					self[ctrlName].callcb()
-					value = self[ctrlName].getvalue()
-					self._dialogHandler.onSelecterCtrl(ctrlName, value)				
-					return
-
 			# multi selection ctrl			
 #			if id == self['RegionList']._id:
 #				ctrlName = 'RegionList'
@@ -282,52 +225,20 @@ class _LayoutView2(GenFormView):
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
 			
-			if not treeVersion:
-				if id == self['ShowNames']._id:
-					ctrlName = 'ShowNames'
-				elif id == self['AsOutLine']._id:
-					ctrlName = 'AsOutLine'
-				elif id == self['ShowRbg']._id:
-					ctrlName = 'ShowRbg'
-				elif id == self['ViewportCheck']._id:
-					ctrlName = 'ViewportCheck'
-				elif id == self['RegionCheck']._id:
-					ctrlName = 'RegionCheck'
-				elif id == self['MediaCheck']._id:
-					ctrlName = 'MediaCheck'
-				if ctrlName == None:
-					if features.CUSTOM_REGIONS in features.feature_set:
-						if id == self['ShowAllRegions']._id:
-							ctrlName = 'ShowAllRegions'
-			else:
-				if id == self['ShowAllMedias']._id:
-					ctrlName = 'ShowAllMedias'
+			if id == self['ShowAllMedias']._id:
+				ctrlName = 'ShowAllMedias'
 						
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
-				self._dialogHandler.onCheckCtrl(ctrlName, value)
+				listener = self.__listeners.get(self.lastModifyCtrlField)
+				if listener != None:
+					listener.onCheckCtrl(ctrlName, value)
 				return 
-
-			if not treeVersion:
-				if id == self['SendBack']._id:
-					ctrlName = 'SendBack'
-				elif id == self['BringFront']._id:
-					ctrlName = 'BringFront'
-				elif id == self['HideRegion']._id:
-					ctrlName = 'HideRegion'
-				elif id == self['HideMedia']._id:
-					ctrlName = 'HideMedia'
-				if ctrlName == None:
-					if features.CUSTOM_REGIONS in features.feature_set:
-						if id == self['NewRegion']._id:
-							ctrlName = 'NewRegion'
-						elif id == self['DelRegion']._id:
-							ctrlName = 'DelRegion'
-						elif id == self['NewView']._id:
-							ctrlName = 'NewView'
 		
 			if ctrlName != None:
-				self._dialogHandler.onButtonClickCtrl(ctrlName)
+				listener = self.__listeners.get(self.lastModifyCtrlField)
+				if listener != None:
+					listener.onButtonClickCtrl(ctrlName)
 				return
 
 		if nmsg==win32con.EN_CHANGE:
