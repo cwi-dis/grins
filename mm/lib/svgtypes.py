@@ -19,17 +19,26 @@ _sign = r'(?P<sign>[+-]?)'
 
 intPat = r'(?P<int>\d+)'
 signedIntPat = _sign + _opS + intPat
-numberPat = r'(?P<int>\d+)?([.](?P<dec>\d+))?'
+
+n1pat = r'((?P<int1>\d+)(\.(?P<dec1>\d+))?)'
+n2pat = r'((?P<int2>\d+)\.)'
+n3pat = r'(\.(?P<dec3>\d+))'
+numberPat = '(' + n1pat + '|' + n2pat + '|' + n3pat + ')'
 signedNumberPat = _sign + _opS + numberPat
+
 lengthUnitsPat = r'(?P<units>(px)|(pt)|(pc)|(mm)|(cm)|(in)|(%))'
-opLengthUnitsPat = r'(?P<units>(px)|(pt)|(pc)|(mm)|(cm)|(in)|(%))?'
+
 angleUnitsPat = r'(?P<units>(deg)|(grad)|(rad))'
+
 freqUnitsPat = r'(?P<units>(Hz)|(kHz))'
-timeUnitsPat = r'(?P<time>(s)|(ms))'
+
+timeUnitsPat = r'(?P<units>s|ms)?'
 
 fargPat = r'(?P<arg>[(][^)]*[)])'
+
 transformPat = _opD + r'(?P<op>matrix|translate|scale|rotate|skewX|skewY)' + _opS + fargPat 
-percentPat = numberPat + _opS + '%'
+
+percentPat = numberPat + _opS + '%$'
 
 from svgcolors import svgcolors
 color = re.compile('(?:'
@@ -52,6 +61,10 @@ textcssPat = _opS + classdefPat + _opS
 entityNamePat = r'(?P<name>[a-zA-Z_:][-a-zA-Z0-9._:]*)' # entity name
 quoteDef = r'(?P<arg>["][^"]*["])' # quote content
 entityPat = _opS + '<!ENTITY' + _S + entityNamePat + _S + quoteDef + _opS + '>'
+
+# simple sync val
+ideventPat = r'((?P<name>[a-zA-Z_:][-a-zA-Z0-9_:]*)\.(?P<event>(begin)|(end)))'
+syncvalPat = ideventPat + '?' + _opS + _sign + _opS + numberPat + '?' + timeUnitsPat
 
 ################
 # utilities
@@ -137,17 +150,111 @@ def deg2rad(deg):
 	return (deg/180.0)*math.pi
 	
 ################
+# base classes
+
+# base class for animateable attributes
+class Animateable:
+	def __init__(self):
+		self.animators = []
+
+	def appendAnimator(self, a):
+		self.animators.append(a)
+
+	def removeAnimator(self, a):
+		self.animators.remove(a)
+
+	def hasAnimator(self, a):
+		return a in self.animators
+
+	def getPresentValue(self, below = None):
+		if not self.animators:
+			return self.getValue()
+		cv = self.getValue()
+		for a in self.animators:
+			if below and id(a) == id(below):
+				break
+			if a.isAdditive() and not a.isEffValueAnimator():
+				cv = self.addValues(cv, a.getCurrValue())
+			else:
+				cv = a.getCurrValue()
+		displayValue = cv
+		displayValue = self.convertAndClamp(displayValue)
+		return displayValue
+
+	def isAdditionDefined(self):
+		return 1
+
+	# override this method to force range
+	def convertAndClamp(self, val):
+		return val
+
+	# override this method to override addition
+	def addValues(self, val1, val2):
+		return val1 + val2
+
+	# override this method to override distance
+	def distValues(self, v1, v2):
+		return math.fabs(v2-v1)
+
+class SVGAttr(Animateable):
+	def __init__(self, node, str, default):
+		self._node = node
+		self._value = None
+		self._default = default
+		Animateable.__init__(self)
+
+class SVGSynchronizeable:
+	def __init__(self):
+		self.arcs = []
+		self.syncbaseval = None
+
+	def addSyncArc(self, a):
+		self.arcs.append(a)
+
+	def removeSyncArc(self, a):
+		self.arcs.remove(a)
+
+	# propagate changes
+	def synchronize(self):
+		pass
+
+	# set base value
+	def setSyncBaseValue(self, val):
+		self.syncbaseval = val
+
+################
 # svg types
 
 # import path related svg types
 from svgpath import PathSeg, SVGPath
 
-class SVGInteger:
+class SVGEnum(SVGAttr):
+	def __init__(self, node, val, default=None):
+		SVGAttr.__init__(self, node, val, default)
+		self._value = val
+
+	def getValue(self):
+		if self._value is not None:
+			return self._value
+		return self._default
+
+	def isDefault(self):
+		return self._value is None or self._value == self._default
+
+	def isAdditionDefined(self):
+		return 0
+
+	def getPresentValue(self, below=None):
+		if not self.animators:
+			return self.getValue()
+		n = len(self.animators)
+		a = self.animators[n-1]
+		return a.getCurrValue()
+
+class SVGInteger(SVGAttr):
 	classre = re.compile(_opS + signedIntPat + _opS)
 	def __init__(self, node, str, default=None):
-		self._node = node
-		self._value = None
-		self._default = default
+		SVGAttr.__init__(self, node, str, default)
 		if str:
 			str = string.strip(str)
 			mo = SVGInteger.classre.match(str)
@@ -162,30 +269,42 @@ class SVGInteger:
 	def isDefault(self):
 		return self._value == self._default
 
-class SVGNumber:
-	classre = re.compile(_opS + signedNumberPat + _opS)
+class SVGNumber(SVGAttr):
+	classre = re.compile(signedNumberPat + '$')
 	def __init__(self, node, str, default=None):
-		self._node = node
-		self._value = None
-		self._default = default
+		SVGAttr.__init__(self, node, str, default)
 		if str:
 			str = string.strip(str)
 			mo = SVGNumber.classre.match(str)
 			if mo is not None:
-				self._value = actof(mo.group('sign'), mo.group('int'), mo.group('dec'))
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._value = actof(mo.group('sign'), i, d)
 	def getValue(self):
 		if self._value is not None:
 			return self._value
 		return self._default
 
 	def isDefault(self):
-		return self._value == self._default
+		return self._value is None or self._value == self._default
 
-class SVGNumberList:
+class SVGGEZeroNumber(SVGNumber):
 	def __init__(self, node, str, default=None):
-		self._node = node
-		self._value = None
-		self._default = default
+		SVGNumber.__init__(self, node, str, default)
+		assert self._value is None or self._value>=0, 'number should be GE to zero'
+
+class SVGCount(SVGNumber):
+	def __init__(self, node, str, default=None):
+		SVGAttr.__init__(self, node, str, default)
+		if str == 'indefinite':
+			SVGAttr.__init__(self, node, None, default)
+			self._value = 'indefinite'
+		else:
+			SVGAttr.__init__(self, node, str, default)
+			assert self._value is None or self._value>=0, 'SVGCount should be GE to zero'
+
+class SVGNumberList(SVGAttr):
+	def __init__(self, node, str, default=None):
+		SVGAttr.__init__(self, node, str, default)
 		if str:
 			sl = splitlist(str)
 			self._value = []
@@ -206,17 +325,16 @@ class SVGNumberList:
 	def isDefault(self):
 		return self._value is None or len(self._value)==0
 
-class SVGPercent:
-	classre = re.compile(_opS + percentPat + _opS)
+class SVGPercent(SVGAttr):
+	classre = re.compile(percentPat)
 	def __init__(self, node, str, default=None):
-		self._node = node
-		self._value = None
-		self._default = default
+		SVGAttr.__init__(self, node, str, default)
 		if str:
 			str = string.strip(str)
 			mo = SVGPercent.classre.match(str)
 			if mo is not None:
-				self._value = actof(None, mo.group('int'), decg = mo.group('dec'))
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._value = actof(None, i, d)
 
 	def __repr__(self):
 		return '%s' % ff(self._value) + '%'
@@ -229,16 +347,14 @@ class SVGPercent:
 	def isDefault(self):
 		return self._value == self._default
 
-class SVGLength:
-	classre = re.compile(_opS + signedNumberPat + opLengthUnitsPat + _opS)
+class SVGLength(SVGAttr):
+	classre = re.compile(signedNumberPat + lengthUnitsPat + '?$')
 	#unitstopx = {'px':1.0, 'pt':1.25, 'pc':15.0, 'mm': 3.543307, 'cm':35.43307, 'in':90.0}
 	unitstopx = {'px': 1.0, 'pt': 1.0, 'pc': 12.0, 'mm': 2.8346456, 'cm': 28.346456, 'in': 72.0}
 	defaultunit = 'px'
 	def __init__(self, node, str, default=None):
-		self._node = node
+		SVGAttr.__init__(self, node, str, default)
 		self._units = None
-		self._value = None
-		self._default = default
 		if str is None:
 			return
 		if str == 'none':
@@ -246,12 +362,12 @@ class SVGLength:
 			return
 		if str:
 			str = string.strip(str)
-			str = string.lower(str) # allow PX, PT,... in place of px, pt, ...?
-			mo = SVGLength.classre.match(str)
+			mo = self.classre.match(str)
 			if mo is not None:
-				self._value = actof(mo.group('sign'), mo.group('int'), mo.group('dec'))
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._value = actof(mo.group('sign'), i, d)
 				if self._value is not None and self._value<0 and self.__class__ == SVGLength:
-					print 'length can not be negative'
+					assert 0, 'length can not be negative'
 				if self._value is not None:
 					self._units = mo.group('units')
 
@@ -293,27 +409,66 @@ class SVGLength:
 			elif f == 'h':
 				return int(tm.UHtoDH(val))
 		return val
+	
+	def getElement(self):
+		return self._node
+
+class SVGWidth(SVGLength):
+	pass
+
+class SVGHeight(SVGLength):
+	pass
 
 # like SVGLength but can be negative
 class SVGCoordinate(SVGLength):
 	pass
 
-class SVGAngle:
-	classre = re.compile(_opS + signedNumberPat + angleUnitsPat + _opS)
-	svgunits = ('deg', 'grad', 'rad',)
-	unitstorad = {'deg':math.pi/180.0, 'grad':math.pi/200.0, 'rad':1.0}
-	defaultunit = 'deg'
+class SVGPoint(SVGAttr):
+	def __init__(self, node, str, default=None):
+		SVGAttr.__init__(self, node, str, default)
+		if str:
+			L = splitlist(str, ' ,')
+			assert len(L) == 2, 'invalid point'
+			xstr, ystr = L
+			self._value = SVGLength(node, xstr).getLength(), SVGLength(node, ystr).getLength()
+
+	def getValue(self):
+		if self._value is not None:
+			return self._value
+		return self._default
+
+	def isDefault(self):
+		return self._value is None or self._value == self._default
+
+class XMLName:
+	classre = re.compile('[a-zA-Z_:][-a-zA-Z0-9._:]*')
 	def __init__(self, node, str, default=None):
 		self._node = node
-		self._units = None
 		self._value = None
 		self._default = default
 		if str:
 			str = string.strip(str)
-			str = string.lower(str) # allow DEG, GRAD,RAD in place of deg, grad, rad?
+			mo = self.classre.match(str)
+			assert mo is not None, 'invalid XML name'
+			self._value = str
+
+	def getValue(self):
+		return self._value		
+
+class SVGAngle(SVGAttr):
+	classre = re.compile(signedNumberPat + angleUnitsPat + '?$')
+	svgunits = ('deg', 'grad', 'rad',)
+	unitstorad = {'deg':math.pi/180.0, 'grad':math.pi/200.0, 'rad':1.0}
+	defaultunit = 'deg'
+	def __init__(self, node, str, default=None):
+		SVGAttr.__init__(self, node, str, default)
+		self._units = None
+		if str:
+			str = string.strip(str)
 			mo = SVGAngle.classre.match(str)
 			if mo is not None:
-				self._value = actof(mo.group('sign'), mo.group('int'), decg = mo.group('dec'))
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._value = actof(mo.group('sign'), i, d)
 				if self._value is not None:
 					units = mo.group('units')
 					if units is None:
@@ -336,12 +491,28 @@ class SVGAngle:
 	def isDefault(self):
 		return self._value == self._default
 
-class SVGColor:
+class SVGAnimRotate(SVGAngle):
+	def __init__(self, node, str, default=None):
+		if str in ('auto', 'auto-reverse'):
+			SVGAngle.__init__(self, node, None, default)
+			self._value = str
+		else:
+			SVGAngle.__init__(self, node, str, default)
+
+	def __repr__(self):
+		if self._value in ('auto', 'auto-reverse'):
+			return self._value
+		return '%s%s' % (ff(self._value), self._units)
+
+	def getValue(self, units='rad'):
+		if self._value in ('auto', 'auto-reverse'):
+			return self._value
+		return SVGAngle.getValue(self, units)
+
+class SVGColor(SVGAttr):
 	classre = color
 	def __init__(self, node, val, default=None):
-		self._node = node
-		self._value = None
-		self._default = default
+		SVGAttr.__init__(self, node, val, default)
 		if val is None:
 			return
 		if val == 'none':
@@ -394,20 +565,55 @@ class SVGColor:
 	def isDefault(self):
 		return self._value is None or self.value == self._default
 
-class SVGFrequency:
+	def getPresentValue(self, below=None):
+		if not self.animators:
+			return self.getValue()
+		cv = self.getValue()
+		if cv is None or cv == 'none':
+			cv = 0, 0, 0
+		for a in self.animators:
+			if below and id(a) == id(below):
+				break
+			if a.isAdditive() and not a.isEffValueAnimator():
+				cv = self.addValues(cv, a.getCurrValue())
+			else:
+				cv = a.getCurrValue()
+		displayValue = cv
+		displayValue = self.convertAndClamp(displayValue)
+		return displayValue
+
+	# override this method to force range
+	def convertAndClamp(self, v):
+		n = len(v)
+		r = []
+		for i in range(n):
+			val = int(v[i]+0.5)
+			if val<0: r.append(0)
+			elif val>255: r.append(255)
+			else: r.append(val)
+		return tuple(r)
+
+	# override this method to override addition
+	def addValues(self, v1, v2):
+		n = len(v1)
+		r = []
+		for i in range(n):
+			r.append(v1[i]+v2[i])
+		return tuple(r)
+
+class SVGFrequency(SVGAttr):
 	classre = re.compile(_opS + numberPat + freqUnitsPat + _opS)
 	svgunits = ('Hz', 'kHz')
 	defaultunit = 'Hz'
 	def __init__(self, node, str, default=None):
-		self._node = node
+		SVGAttr.__init__(self, node, str, default)
 		self._units = None
-		self._value = None
-		self._default = default
 		if str:
 			str = string.strip(str)
 			mo = SVGFrequency.classre.match(str)
 			if mo is not None:
-				self._value = actof(None, mo.group('int'), decg = mo.group('dec'))
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._value = actof(None, i, d)
 				if self._value is not None:
 					units = mo.group('units')
 					if units is None:
@@ -432,7 +638,7 @@ class SVGFrequency:
 		return self._value == self._default
 
 class SVGTime:
-	classre = re.compile(_opS + numberPat + timeUnitsPat + _opS)
+	classre = re.compile(signedNumberPat + timeUnitsPat + '$')
 	svgunits = ('s', 'ms')
 	defaultunit = 's'
 	def __init__(self, node, str, default=None):
@@ -442,9 +648,13 @@ class SVGTime:
 		self._default = default
 		if str:
 			str = string.strip(str)
+			if str == 'indefinite':
+				self._value = 'indefinite'
+				return
 			mo = SVGTime.classre.match(str)
 			if mo is not None:
-				self._value = actof(mo.group('sign'), mo.group('int'), mo.group('dec'))
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._value = actof(mo.group('sign'), i, d)
 				if self._value is not None:
 					units = mo.group('units')
 					if units is None:
@@ -456,8 +666,12 @@ class SVGTime:
 	
 	def getValue(self, units='s'):
 		if self._value is not None:
+			if self._value == 'indefinite':
+				return 'indefinite'
 			if self._units == 'ms':
 				val = 0.001*self._value
+			else:
+				val = self._value
 			if units == 's':
 				return val
 			return 1000.0*val
@@ -466,6 +680,67 @@ class SVGTime:
 	def isDefault(self):
 		return self._value == self._default
 
+class SVGSyncTime(SVGSynchronizeable):
+	classre = re.compile(syncvalPat + '$')
+	svgunits = ('s', 'ms')
+	defaultunit = 's'
+	def __init__(self, node, str, default=None):
+		SVGSynchronizeable.__init__(self)
+		self._node = node
+		self._offset = None
+		self._units = None
+		self._syncbase = None
+		self._syncevent = None
+		self._default = default
+		if str:
+			str = string.strip(str)
+			if str == 'indefinite':
+				self._offset = 'indefinite'
+				return
+			mo = self.classre.match(str)
+			if mo is not None:
+				self._syncbase, self._syncevent = mo.group('name'), mo.group('event')
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				self._offset = actof(mo.group('sign'), i, d)
+				if self._offset is not None:
+					units = mo.group('units')
+					if units is None:
+						units = self.defaultunit
+					self._units = units
+
+	def duradd(self, v1, v2):
+		if v1 is None or v2 is None:
+			return None
+		elif v1=='indefinite' or v2=='indefinite':
+			return 'indefinite'
+		else:
+			return v1 + v2
+
+	def getOffset(self, units='s'):
+		if self._offset is not None:
+			if self._offset == 'indefinite':
+				return 'indefinite'
+			if self._units == 'ms':
+				val = 0.001*self._offset
+			else:
+				val = self._offset
+			if units == 's':
+				return val
+			return 1000.0*val
+		return self._default
+
+	def getValue(self):
+		if self._syncbase is None:
+			return self.getOffset()
+		elif self.syncbaseval is None:
+			return 'unresolved'
+		elif self._offset is None:
+			return self.syncbaseval
+		return self.duradd(self.syncbaseval, self._offset)
+	
+	def hasSyncBaseTiming(self):
+		return 	self.syncbaseval is None
+			
 # fill:none; stroke:blue; stroke-width: 20
 class SVGStyle:
 	def __init__(self, node, str, default=None):
@@ -485,12 +760,8 @@ class SVGStyle:
 				else:
 					self._styleprops[prop] = val		
 		for prop, val in self._styleprops.items():
-			if prop == 'fill' or prop == 'stroke':
-				if val is not None and val!='none':
-					self._styleprops[prop] = SVGColor(self._node, val)
-			elif prop == 'stroke-width' or prop == 'font-size':
-				if val is not None and val != 'none':
-					self._styleprops[prop] = SVGLength(self._node, val)
+			if val is not None and val != 'none':
+				self._styleprops[prop] = CreateSVGAttr(self._node, prop, val)
 
 	def __repr__(self):
 		s = ''
@@ -516,6 +787,9 @@ class SVGStyle:
 
 	def isDefault(self):
 		return self._styleprops is None or len(self._styleprops)==0
+	
+	def update(self, other):
+		pass
 
 class SVGTextCss:
 	classre = re.compile(textcssPat)
@@ -644,13 +918,15 @@ class SVGAspectRatio:
 	def isDefault(self):
 		return self._align is None or (self._align == self.alignDefault and (self._meetOrSlice is None or self._meetOrSlice=='meet'))
 
-class SVGTransformList:
+class SVGTransformList(SVGAttr):
 	classre = re.compile(transformPat)
 	classtransforms = ('matrix', 'translate', 'scale', 'rotate', 'skewX' , 'skewY',) 
 	def __init__(self, node, str, default=None):
-		self._node = node
+		SVGAttr.__init__(self, node, str, default)
 		self._tflist = []
 		self._default = default
+		if not str:
+			return 
 		mo = SVGTransformList.classre.match(str)
 		while mo is not None:
 			str = str[mo.end(0):]
@@ -665,7 +941,7 @@ class SVGTransformList:
 				if tfname in ('rotate', 'skewX', 'skewY'):
 					arg = [(arg[0]/180.0)*math.pi,]
 				self._tflist.append((tfname, arg))
-			mo = SVGTransformList.classre.match(str)
+			mo = self.classre.match(str)
 
 	def __repr__(self):
 		return ''
@@ -675,6 +951,39 @@ class SVGTransformList:
 
 	def isDefault(self):
 		return self._tflist is None or len(self._tflist)==0
+
+	#
+	# Animateable interface
+	#
+	def getPresentValue(self, below = None):
+		if not self.animators:
+			return self.getValue()
+
+		cv1 = self.getValue()[:]
+		for a in self.animators:
+			if below and id(a) == id(below):
+				break
+			if a.__class__.__name__ == 'MotionAnimator':
+				if 1 or (a.isAdditive() and not a.isEffValueAnimator()):
+					cv1 = cv1 + a.getCurrTransform()
+				else:
+					cv1 = a.getCurrTransform()
+
+		cv2 = []
+		for a in self.animators:
+			if below and id(a) == id(below):
+				break
+			if a.__class__.__name__ != 'MotionAnimator':
+				if a.isAdditive() and not a.isEffValueAnimator():
+					cv2 = cv2 + a.getCurrTransform()
+				else:
+					cv2 = a.getCurrTransform()
+		return cv1 + cv2
+
+	# override this method to override distance
+	# v1, and v2 are transform arguments
+	def distValues(self, v1, v2):
+		return math.fabs(v2-v1)
 
 
 # SVG transformation matrix
@@ -790,3 +1099,289 @@ class TM:
 		return TM(self.elements)
 
 
+########################################
+stringtype = type('')
+		
+# entries: 
+# attrname or element.attrname: (typeOrClass, defaultValue)
+
+SVGAttrdefs = {'accent-height': (SVGHeight, None),
+	'alignment-baseline': (stringtype, None),
+	'alphabetic': (stringtype, None),
+	'amplitude': (stringtype, None),
+	'arabic-form': (stringtype, None),
+	'ascent': (stringtype, None),
+	'azimuth': (stringtype, None),
+	'baseFrequency': (SVGFrequency, None),
+	'baseline-shift': (stringtype, None),
+	'bbox': (stringtype, None),
+	'bias': (stringtype, None),
+	'cap-height': (stringtype, None),
+	'class': (stringtype, None),
+	'clip': (stringtype, None),
+	'clip-path': (stringtype, None),
+	'clip-rule': (stringtype, None),
+	'clipPathUnits': (stringtype, None),
+	'color': (stringtype, None),
+	'color-interpolation': (stringtype, None),
+	'color-profile': (stringtype, None),
+	'color-rendering': (stringtype, None),
+	'contentScriptType': (stringtype, 'text/ecmascript'),
+	'contentStyleType': (stringtype, 'text/css'),
+	'cursor': (stringtype, None),
+	'cx': (SVGCoordinate, 0),
+	'cy': (SVGCoordinate, 0),
+	'd': (SVGPath, None),
+	'descent': (stringtype, None),
+	'diffuseConstant': (stringtype, None),
+	'direction': (stringtype, None),
+	'display': (stringtype, None),
+	'divisor': (stringtype, None),
+	'dominant-baseline': (stringtype, None),
+	'dx': (SVGCoordinate, None),
+	'dy': (SVGCoordinate, None),
+	'edgeMode': (stringtype, 'duplicate'),
+	'elevation': (stringtype, None),
+	'enable-background': (stringtype, None),
+	'exponent': (stringtype, None),
+	'externalResourcesRequired': (stringtype, None),
+	'fill': (SVGColor, None),
+	'fill-opacity': (stringtype, None),
+	'fill-rule': (stringtype, None),
+	'filter': (stringtype, None),
+	'filterRes': (stringtype, None),
+	'filterUnits': (stringtype, None),
+	'flood-color': (stringtype, None),
+	'flood-opacity': (stringtype, None),
+	'font-family': (stringtype, None),
+	'font-size': (SVGHeight, None),
+	'font-size-adjust': (stringtype, None),
+	'font-stretch': (stringtype, None),
+	'font-style': (stringtype, None),
+	'font-variant': (stringtype, None),
+	'font-weight': (stringtype, None),
+	'format': (stringtype, None),
+	'fx': (stringtype, None),
+	'fy': (stringtype, None),
+	'g1': (stringtype, None),
+	'g2': (stringtype, None),
+	'glyph-name': (stringtype, None),
+	'glyph-orientation-horizontal': (stringtype, None),
+	'glyph-orientation-vertical': (stringtype, None),
+	'glyphRef': (stringtype, None),
+	'gradientTransform': (stringtype, None),
+	'gradientUnits': (stringtype, None),
+	'hanging': (stringtype, None),
+	'height': (SVGHeight, None),
+	'horiz-adv-x': (stringtype, None),
+	'horiz-origin-x': (stringtype, None),
+	'horiz-origin-y': (stringtype, None),
+	'id': (XMLName, None),
+	'ideographic': (stringtype, None),
+	'image-rendering': (stringtype, None),
+	'in': (stringtype, None),
+	'in2': (stringtype, None),
+	'intercept': (stringtype, None),
+	'k': (stringtype, None),
+	'k1': (stringtype, None),
+	'k2': (stringtype, None),
+	'k3': (stringtype, None),
+	'k4': (stringtype, None),
+	'kernelMatrix': (stringtype, None),
+	'kernelUnitLength': (stringtype, None),
+	'kerning': (stringtype, None),
+	'lang': (stringtype, None),
+	'lengthAdjust': (SVGLength, None),
+	'letter-spacin': (stringtype, None),
+	'lighting-color': (stringtype, None),
+	'limitingConeAngle': (stringtype, None),
+	'local': (stringtype, None),
+	'marker-end': (stringtype, None),
+	'marker-mid': (stringtype, None),
+	'marker-start': (stringtype, None),
+	'markerHeight': (stringtype, None),
+	'markerUnits': (stringtype, None),
+	'markerWidth': (stringtype, None),
+	'mask': (stringtype, None),
+	'maskContentUnits': (stringtype, None),
+	'maskUnits': (stringtype, None),
+	'mathematical': (stringtype, None),
+	'media': (stringtype, None),
+	'method': (stringtype, None),
+	'mode': (stringtype, 'normal'),
+	'name': (XMLName, None),
+	'numOctaves': (stringtype, None),
+	'offset': (stringtype, None),
+	'opacity': (stringtype, None),
+	'operator': (stringtype, 'erode'),
+	'order': (stringtype, None),
+	'orient': (stringtype, None),
+	'orientation': (stringtype, None),
+	'overflow': (stringtype, None),
+	'overline-position': (stringtype, None),
+	'overline-thickness': (stringtype, None),
+	'panose-1': (stringtype, None),
+	'pathLength': (SVGLength, None),
+	'patternContentUnits': (stringtype, None),
+	'patternTransform': (stringtype, None),
+	'patternUnits': (stringtype, None),
+	'pointer-events': (stringtype, None),
+	'points': (SVGPoints, None),
+	'pointsAtX': (stringtype, None),
+	'pointsAtY': (stringtype, None),
+	'pointsAtZ': (stringtype, None),
+	'preserveAlpha': (stringtype, None),
+	'preserveAspectRatio': (SVGAspectRatio, None),
+	'primitiveUnits': (stringtype, None),
+	'r': (SVGLength, None),
+	'radius': (stringtype, None),
+	'refX': (stringtype, None),
+	'refY': (stringtype, None),
+	'rendering-intent': (stringtype, 'auto'),
+	'requiredExtensions': (stringtype, None),
+	'requiredFeatures': (stringtype, None),
+	'result': (stringtype, None),
+	'rotate': (stringtype, None),
+	'rx': (stringtype, None),
+	'ry': (stringtype, None),
+	'scale': (stringtype, None),
+	'seed': (stringtype, None),
+	'shape-rendering': (stringtype, None),
+	'slope': (stringtype, None),
+	'spacing': (stringtype, None),
+	'specularConstant': (stringtype, None),
+	'specularExponent': (stringtype, None),
+	'spreadMethod': (stringtype, None),
+	'startOffset': (stringtype, None),
+	'stdDeviation': (stringtype, None),
+	'stemh': (stringtype, None),
+	'stemv': (stringtype, None),
+	'stitchTiles': (stringtype, 'noStitch'),
+	'stop-color': (stringtype, None),
+	'stop-opacity': (stringtype, None),
+	'strikethrough-position': (stringtype, None),
+	'strikethrough-thickness': (stringtype, None),
+	'stroke': (SVGColor, None),
+	'stroke-dasharray': (stringtype, None),
+	'stroke-dashoffset': (stringtype, None),
+	'stroke-linecap': (stringtype, None),
+	'stroke-linejoin': (stringtype, None),
+	'stroke-miterlimit': (stringtype, None),
+	'stroke-opacity': (stringtype, None),
+	'stroke-width': (SVGWidth, None),
+	'stroke-antialiasing':(stringtype, None),
+	'style': (SVGStyle, None),
+	'surfaceScale': (stringtype, None),
+	'systemLanguage': (stringtype, None),
+	'tableValues': (stringtype, None),
+	'target': (stringtype, None),
+	'targetX': (stringtype, None),
+	'targetY': (stringtype, None),
+	'text-anchor': (stringtype, None),
+	'text-decoration': (stringtype, None),
+	'text-rendering': (stringtype, None),
+	'text-align': (stringtype, None),
+	'text-antialiasing':(stringtype, None),
+	'textLength': (SVGLength, None),
+	'title': (stringtype, None),
+	'transform': (SVGTransformList, None),
+	'type': (stringtype, None),
+	'u1': (stringtype, None),
+	'u2': (stringtype, None),
+	'underline-position': (stringtype, None),
+	'underline-thickness': (stringtype, None),
+	'unicode': (stringtype, None),
+	'unicode-bidi': (stringtype, None),
+	'unicode-range': (stringtype, None),
+	'units-per-em': (stringtype, None),
+	'v-alphabetic': (stringtype, None),
+	'v-hanging': (stringtype, None),
+	'v-ideographic': (stringtype, None),
+	'v-mathematical': (stringtype, None),
+	'values': (stringtype, None),
+	'vert-adv-y': (stringtype, None),
+	'vert-origin-x': (stringtype, None),
+	'vert-origin-y': (stringtype, None),
+	'viewBox': (SVGNumberList, None),
+	'viewTarget': (stringtype, None),
+	'visibility': (('hidden', 'visible'), None),
+	'width': (SVGWidth, None),
+	'widths': (stringtype, None),
+	'word-spacing': (stringtype, None),
+	'writing-mode': (stringtype, None),
+	'x': (SVGCoordinate, 0),
+	'x-height': (SVGHeight, None),
+	'x1': (SVGCoordinate, 0),
+	'x2': (SVGCoordinate, 0),
+	'xChannelSelector': (stringtype, 'A'),
+	'xlink:actuate': (stringtype, 'onLoad'),
+	'xlink:arcrole': (stringtype, None),
+	'xlink:href': (stringtype, None),
+	'xlink:role': (stringtype, None),
+	'xlink:show': (stringtype, 'embed'),
+	'xlink:title': (stringtype, None),
+	'xlink:type': (stringtype, 'simple'),
+	'xml:lang': (stringtype, None),
+	'xml:space': (stringtype, None),
+	'y': (SVGCoordinate, 0),
+	'y1': (SVGCoordinate, None),
+	'y2': (SVGCoordinate, None),
+	'yChannelSelector': (stringtype, 'A'),
+	'z': (SVGCoordinate, None),
+	'zoomAndPan': (stringtype, 'magnify'),
+	
+	# time-animate elements
+    'accumulate': (('sum', 'none'), 'none'),
+	'additive': (('sum', 'replace'), 'replace'),
+	'attributeName': (stringtype, None),
+	'attributeType': (('CSS', 'XML', 'auto'), 'auto'),
+	'begin': (SVGSyncTime, None),
+	'by': (stringtype, None),
+	'calcMode': (('linear', 'paced', 'discrete', 'spline'), 'linear'),
+	'animateMotion.calcMode': (('linear', 'paced', 'discrete', 'spline'), 'paced'),
+	'dur': (SVGTime, None),
+	'end': (SVGSyncTime, None),
+	'from': (stringtype, None),
+	'keyPoints': (stringtype, None),
+	'keySplines': (stringtype, None),
+	'keyTimes': (stringtype, None),
+	'max': (SVGTime, None),
+	'min': (SVGTime, None),
+	'origin': (('default',), 'default'),
+	'path': (stringtype, None),
+	'repeatCount': (SVGCount, None),
+	'repeatDur': (SVGTime, None),
+	'restart': (('always', 'whenNotActive', 'never', 'default'), 'always'),
+	'rotate': (SVGAnimRotate, None),
+	'to': (stringtype, None),
+	'values': (stringtype, None),
+	'animateTransform.type': (('translate', 'rotate', 'scale', 'skewX', 'skewY'), 'translate'),}
+
+# add qualified fill smil attr
+#smilfillenum = (('remove', 'freeze', 'hold', 'transition', 'auto', 'default'), 'remove')
+svgfillenum = (('remove', 'freeze'), 'remove')
+for tag in ('animate','set','animateMotion','animateColor','animateTransform',):
+	qualifiedName = '%s.fill' % tag
+	SVGAttrdefs[qualifiedName] = svgfillenum
+
+def CreateSVGAttr(node, name, strval):
+	tag = node.getType() 
+	qualifiedName = '%s.%s' % (tag, name)
+	info =  SVGAttrdefs.get(qualifiedName)
+	if info is None:
+		info = SVGAttrdefs.get(name)
+	if info is None:
+		print 'no spec for', name, strval
+		return strval
+	typeOrClassInfo, defval = info
+	if typeOrClassInfo == stringtype:
+		return strval
+	elif type(typeOrClassInfo) == type(('',)):
+		if strval is not None and strval not in typeOrClassInfo:
+			strval = None
+		return SVGEnum(node, strval, defval)
+	return typeOrClassInfo(node, strval, defval)
+
+from svgdtd import SVG
+def IsCSSAttr(name):
+	return name in SVG.presentationAttrs.keys()
