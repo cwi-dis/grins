@@ -220,6 +220,8 @@
 #define IDD_EDITATTR_ID1                422
 #define IDD_EDITATTR_ID2                423
 #define IDD_EDITATTR_ID3                424
+#define IDD_EDITATTR_REGIONNAME         425
+#define IDD_EDITATTR_VIEWPORTNAME       426
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -617,7 +619,13 @@
 #define IDC_IDL                         1430
 #define IDC_IDV                         1431
 #define IDC_NAMEL                       1432
+#define IDC_REGIONIDL                   1432
 #define IDC_NAMEV                       1433
+#define IDC_REGIONIDV                   1433
+#define IDC_REGIONNAMEL                 1434
+#define IDC_TOPLAYOUTIDL                1434
+#define IDC_REGIONNAMEV                 1435
+#define IDC_TOPLAYOUTIDV                1435
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -706,7 +714,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        413
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1432
+#define _APS_NEXT_CONTROL_VALUE         1436
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
