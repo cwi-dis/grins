@@ -1336,10 +1336,6 @@ class EventCtrl(AttrCtrl):
 			new = components.RadioButton(self._wnd, k)
 			self._radiobuttonwidgets[v] = new
 
-		# Keep state for the event drop-down
-		self._old_eventlist = None
-		self._old_eventlist_selection = None
-
 		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
 					# now that also feels like a hack. Oh well.
 
@@ -1535,19 +1531,16 @@ class EventCtrl(AttrCtrl):
 			return
 		
 		l = self._eventstruct.get_possible_events()
-		if l is not self._old_eventlist:
-			if l:
-				self._eventwidget.resetcontent()
-				self._eventwidget.enable(1) # combo boxes don't have readonly attributes.
-				map(self._eventwidget.addstring, l)
-			else:
-				self._eventwidget.enable(0)
-			self._old_eventlist = l
+		self._eventwidget.resetcontent()
+		if l is not None:
+			self._eventwidget.enable(1)
+			map(self._eventwidget.addstring, l)
+		else:
+			self._eventwidget.enable(0)
 			
 		i = self._eventstruct.get_event_index()
-		if i is not self._old_eventlist_selection:
+		if i is not None:
 			self._eventwidget.setcursel(i)
-			self._old_eventlist_selection = i
 			
 	def set_textwidget(self):
 		if not self._eventstruct:

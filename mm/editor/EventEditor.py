@@ -105,9 +105,8 @@ class EventStruct:
 				s.__init__(self._node, action, srcnode = node, marker = self.get_marker(),
 					   delay=self.get_offset())
 			else:
-				s.__init__(self._node, action, srcnode = node, event=e,
-					   delay=self.get_offset())
-		elif c == 'region' and self._setregion:
+				s.__init__(self._node, action, srcnode = node, event=e, delay=self.get_offset())
+		elif c == 'region':
 			ch = self.get_region()
 			channel = self._node.context.channeldict[ch]
 			s.__init__(self._node, action, channel=channel, event=self.get_event(), delay = self.get_offset())
