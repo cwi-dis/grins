@@ -2399,7 +2399,8 @@ class SMILWriter(SMIL):
 			import windowinterface
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
-		if convert and u.headers.maintype == 'image':
+		if convert and u.headers.maintype == 'image' and \
+		   u.headers.subtype != 'svg-xml':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
 			# will, currently, to '.jpg').
@@ -2430,7 +2431,7 @@ class SMILWriter(SMIL):
 			file = converttextfile(u, dstdir, file, node)
 			self.files_generated[file] = ''
 			return file
-		if u.headers.maintype == 'text':
+		if u.headers.maintype == 'text' or string.find(u.headers.subtype, 'xml') >= 0:
 			binary = ''
 		else:
 			binary = 'b'
