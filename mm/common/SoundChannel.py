@@ -101,8 +101,7 @@ class SoundChannel(Channel):
 		
 	def play(self, (node, callback, arg)):
 		if not self.is_showing():
-			#callback(arg)
-			# XXX Try by Jack to get Guido's timing model:
+			# Don't play it, but still let the duration pass
 			dummy = \
 			  self.player.enter(node.t1-node.t0, 0,  callback, arg)
 			return
@@ -125,8 +124,15 @@ class SoundChannel(Channel):
 			  or self.old_info[3] <> self.info[3] \
 			  or self.old_info[4] <> self.info[4]:
 			self.port, self.config = openport(self.info)
-	        dummy = self.player.enter(0.001, 0, self._poll, (callback, arg))
-		dummy = self.player.enter(0.001, 1, self.player.opt_prearm, node)
+		if self.port == None:
+			# Don't play it, but still let the duration pass
+			dummy = \
+			  self.player.enter(node.t1-node.t0, 0,  callback, arg)
+			return
+	        dummy = \
+		   self.player.enter(0.001, 0, self._poll, (callback, arg))
+		dummy = \
+		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
 	#
 	def readsamples(self, f, nsamples, width, chunk):
 		data = f.read(nsamples*width)
@@ -168,13 +174,20 @@ class SoundChannel(Channel):
 
 	def unfill(self):
 		import al
+		if self.port == None:
+			return
 		f, nchannels, nsampframes, sampwidth, samprate, format = \
 			self.info
 		port = self.port
 		filled = int(port.getfilled() * self.rate)
 		port.closeport()
 		self.framestodo = self.framestodo + filled
-		self.port = al.openport('SoundChannel', 'w', self.config)
+		try:
+			self.port = al.openport('SoundChannel', 'w', \
+				self.config)
+		except RuntimeError:
+			print 'al.openport failed'
+			self.port = self.config = None
 		f.seek(-filled*nchannels*sampwidth, 1)
 		
 	#
@@ -191,9 +204,8 @@ class SoundChannel(Channel):
 	#
 	def stop(self):
 		if (self.port <> None and self.armed_info == None) or self.qid:
-			self.port.closeport()
-			restore()
-			self.info = self.port = None
+			closeport(self.port)
+			self.info = self.port = self.config = None
 		if self.qid <> None:
 			self.player.cancel(self.qid)
 			self.qid = None
@@ -264,15 +276,44 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 	# for. For that reason, we read a little more ahead
 	f.readahead(MAXQSIZE*sampwidth*nchannels)
 
+
+# Global administration:
+# - count number of ports
+# - if at least one port is open:
+#   - current and original sampling rate
+#
+n_open_ports = 0
+current_rate = 0
+original_rate = 0
+
+
+# Open a port with the appropriate parameters.
+# Return (port, config) or (None, None) if something fails.
+#
 def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 	import al
-	# Set sampling rate (can't be done at the port level)
-	# First get the new old sampling rate for restore()
-	al.getparams(AL.DEFAULT_DEVICE, sound_params)
-	pv = [AL.OUTPUT_RATE, int(samprate)]
-	al.setparams(AL.DEFAULT_DEVICE, pv)
+	global n_open_ports, current_rate, original_rate
+	# If there is already an open port,
+	# check that the sampling rate is compatible;
+	# else, save the original and set the current sampling rate
+	if n_open_ports <> 0:
+		if samprate <> current_rate:
+			print 'SoundChannel: incompatible sampling rates'
+			return None, None
+		print 'new open port is compatible'
+	else:
+		print 'opening first port'
+		# Save original rate
+		pv = [AL.OUTPUT_RATE, 0]
+		al.getparams(AL.DEFAULT_DEVICE, pv)
+		original_rate = pv[1]
+		# Set sampling rate (can't be done at the port level :-( )
+		pv = [AL.OUTPUT_RATE, int(samprate)]
+		al.setparams(AL.DEFAULT_DEVICE, pv)
+		current_rate = samprate
+	n_open_ports = n_open_ports + 1
 	# Compute queue size such that it can contain QSECS seconds of sound,
-	# but it shouldn't be bigger than 100K
+	# but it shouldn't be bigger than 100K (else the library crashes :-( )
 	QSECS = 10.0
 	queuesize = int(min(samprate * nchannels * QSECS, MAXQSIZE))
 	# Create a config object
@@ -281,21 +322,46 @@ def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 	config.setwidth(sampwidth)
 	config.setqueuesize(queuesize)
 	# Create a port object
-	port = al.openport('SoundChannel', 'w', config)
+	try:
+		port = al.openport('SoundChannel', 'w', config)
+	except RuntimeError:
+		print 'al.openport failed'
+		port = config = None
+		closeport(None) # Fix administration
 	return port, config
 
 
-# Save sound channel parameters for restore()
+# Closing counterpart of openport().
 #
-sound_params = [AL.OUTPUT_RATE, 0]
+def closeport(port):
+	global n_open_ports, current_rate, original_rate
+	n_open_ports = n_open_ports - 1
+	if n_open_ports < 0:
+		raise CheckError, 'restore_once called too often'
+	if port <> None:
+		port.closeport()
+	if n_open_ports > 0:
+		print 'another port is still open'
+	else:
+		print 'closing last port'
+		# Closing our last port -- restore the original rate
+		import al
+		pv = [AL.OUTPUT_RATE, original_rate]
+		al.setparams(AL.DEFAULT_DEVICE, pv)
+		original_rate = current_rate = 0
 
 
-# Restore sound channel parameters
+# External interface to restore the original sampling rate.
+# This must work even when called from a "finally" handler in main().
 #
 def restore():
-	if sound_params[1] <> 0:
+	global n_open_ports, current_rate, original_rate
+	if original_rate <> 0:
+		print 'Restoring original sampling rate'
 		import al
-		al.setparams(AL.DEFAULT_DEVICE, sound_params)
+		pv = [AL.OUTPUT_RATE, original_rate]
+		al.setparams(AL.DEFAULT_DEVICE, pv)
+		original_rate = 0
 
 
 # Cache durations
