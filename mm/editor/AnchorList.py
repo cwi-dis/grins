@@ -59,7 +59,12 @@ class AnchorList:
 	#	name.  The dialog callback is renamecb with the name
 	#	as argument.
 	#
-	# The Edit button callback is editcb().
+	# The Edit button callback is editcb(). The machine dependent code
+	# is responsible for calling fill() to update the visual box.
+	#
+	# Setbox is the callback to set a new box through the visual area.
+	# The machine dependent code should call fill() afterwards to copy
+	# the new data to the other fields.
 	#
 	# The callback when an item in the list of anchors is selected
 	#	is listcb(index) where index is the (zero-based) index
