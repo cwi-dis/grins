@@ -810,7 +810,10 @@ class MMChannel:
 					if self.attrdict.has_key('base_window'):
 						del self['base_window']
 					pchan = self.context.channeldict.get(value)
-					self.context.cssResolver.link(self._cssId, pchan._cssId)
+					if pchan == None:
+						print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
+					else:
+						self.context.cssResolver.link(self._cssId, pchan._cssId)
 		elif key == 'base_winoff':
 			if settings.activeFullSmilCss:
 				# keep the compatibility with old version
