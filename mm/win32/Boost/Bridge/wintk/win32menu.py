@@ -156,7 +156,8 @@ class Menu:
 			if item[1]==ENTRY:
 				if self._cb_obj2id:id=self._cb_obj2id(item[4])
 				else: id=item[4]
-				menu.AppendMenu(flags, id, item[2])
+				entry_flags = win32con.MF_STRING|win32con.MF_GRAYED
+				menu.AppendMenu(entry_flags, id, item[2])
 			elif item[1]==TOGGLE:
 				if self._cb_obj2id:id=self._cb_obj2id(item[4])
 				else: id=item[4]

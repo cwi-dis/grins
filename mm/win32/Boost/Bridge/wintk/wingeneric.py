@@ -26,7 +26,7 @@ class Wnd:
 		exstyle = win32con.WS_EX_CLIENTEDGE
 		style = win32con.WS_VISIBLE | win32con.WS_OVERLAPPEDWINDOW
 		wnd = winuser.CreateWindowEx(exstyle, MainWndClass.wndclassname, self._title, style, 
-			(win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT), (400, 300))
+			(win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT), (320, 240))
 		self.__dict__['_obj_'] = wnd
 		self.HookMessage(self.OnDestroy, win32con.WM_DESTROY)
 
@@ -35,8 +35,6 @@ class Wnd:
 		del self.__dict__['_obj_']
 		self.__dict__['_obj_'] = None
 
-	def close(self):
-		self.PostMessage(win32con.WM_CLOSE)
 
 
 

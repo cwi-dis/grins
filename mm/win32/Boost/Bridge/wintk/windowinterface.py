@@ -3,6 +3,12 @@ __version__ = "$Id$"
 # app constants
 from appcon import *
 
+import AppToplevel
+
+toplevel = AppToplevel._Toplevel()
+import __main__
+__main__.toplevel = toplevel
+
 # Registration function for close callbacks
 def addclosecallback(func, args):
 	pass
@@ -15,29 +21,28 @@ def register_event(ev, cb, arg):
 
 # Embedding Support	
 def register_embedded(event, func, arg):
-	_get_toplevel().register_embedded(event, func, arg)
+	toplevel.register_embedded(event, func, arg)
 
 def unregister_embedded(event):
-	_get_toplevel().unregister_embedded(event)
+	toplevel.unregister_embedded(event)
 
-def close():
-	_get_toplevel().close()
+close = toplevel.close
 
 # return main dialog
 # main dialog should support 
 # def set_dynamiclist(self, command, list): pass
 def createmainwnd(title = None, adornments = None, commandlist = None):
-	return _get_toplevel().createmainwnd(title, adornments, commandlist)
+	return toplevel.createmainwnd(title, adornments, commandlist)
 
 # return new document frame for doc
 def newdocument(cmifdoc, adornments=None, commandlist=None):
-	return _get_toplevel().newdocument(cmifdoc, adornments, commandlist)
+	return toplevel.newdocument(cmifdoc, adornments, commandlist)
 
 def getactivedocframe():
-	return _get_toplevel().getactivedocframe()
+	return toplevel.getactivedocframe()
 	
 def getmainwnd():
-	return _get_toplevel().getmainwnd()
+	return toplevel.getmainwnd()
 
 def getscreensize():
 	return 800, 600
@@ -46,24 +51,27 @@ def mainloop():
 	pass
 
 def settimer(sec, cb):
-	return _get_toplevel().settimer(sec, cb)
+	return toplevel.settimer(sec, cb)
 
 def canceltimer(id):
-	_get_toplevel().canceltimer(id)
+	toplevel.canceltimer(id)
 
 def setwaiting():
 	pass
 
 def setidleproc(cb):
-	return _get_toplevel().setidleproc(cb)
+	return toplevel.setidleproc(cb)
 
 def cancelidleproc(id):
-	return _get_toplevel().cancelidleproc(id)
+	return toplevel.cancelidleproc(id)
 
 # dialogs
 from wintk_dialog import showmessage, showquestion
 from wintk_dialog import ProgressDialog
 from FileDialog import FileDialog
+
+htmlwindow = AppToplevel.htmlwindow
+shell_execute = AppToplevel.shell_execute
 
 # new viewport
 def newwindow(x, y, w, h, title,
@@ -81,17 +89,3 @@ def GetImageSize(filename):
 	img = win32ig.load(filename) 
 	return win32ig.size(img)[:2]
 
-
-##
-## toplevel
-##
-def _get_toplevel():
-	import __main__
-	return __main__.toplevel
-
-def __create_toplevel():
-	from AppToplevel import _Toplevel
-	import __main__
-	__main__.toplevel = _Toplevel()
-
-__create_toplevel()
