@@ -3348,6 +3348,12 @@ class AttrGroup:
 		else:
 			return len(self._al)==len(self._data['attrs'])
 
+	def dont_show_anything(self):
+		for attr in self._al:
+			if attr.mustshow():
+				return 0
+		return 1
+
 	def alnames(self):
 		l=[]
 		for a in self._al:
@@ -4881,9 +4887,12 @@ class AttrEditForm(GenFormView):
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
 			if a not in grattrl:
-				page=SingleAttrPage(self,a)
+				if not a.mustshow():
+					page = None
+				else:
+					page=SingleAttrPage(self,a)
+					self._pages.append(page)
 				self._a2p[a]=page
-				self._pages.append(page)
 
 		# init pages
 		for page in self._pages:
@@ -4997,10 +5006,13 @@ class AttrEditForm(GenFormView):
 			group=groupsui[grname]()
 			group.visit(l)
 			if group.matches():
-				PageCl=group.getpageclass()
-				grouppage=PageCl(self)
-				self._pages.append(grouppage)
-				grouppage.setgroup(group)
+				if group.dont_show_anything():
+					grouppage = None
+				else:
+					PageCl=group.getpageclass()
+					grouppage=PageCl(self)
+					self._pages.append(grouppage)
+					grouppage.setgroup(group)
 				for a in group._al:
 					self._a2p[a]=grouppage
 					grattrl.append(a)
