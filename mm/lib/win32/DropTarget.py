@@ -12,6 +12,8 @@ CF_FILE = Sdk.RegisterClipboardFormat('FileName')
 CF_NODE = Sdk.RegisterClipboardFormat('Node')
 CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
 CF_NODEUID = Sdk.RegisterClipboardFormat('NodeUID')
+CF_REGION = Sdk.RegisterClipboardFormat('Region')
+CF_MEDIA = Sdk.RegisterClipboardFormat('Media')
 
 class DropTarget:
 	cfmap={'FileName':CF_FILE}
