@@ -215,12 +215,6 @@ PyObject* Object::GetMethodByType(PyObject *self, PyObject *args)
 	return Py_FindMethod(thisType->methods, self, attr);
 	}
 
-#ifdef MS_WIN32
-struct PyMethodDef Object::empty_methods[] = {
-	{NULL,	NULL}
-};
-#endif
-
 struct PyMethodDef Object_methods[] = {
 	{"GetMethodByType",Object::GetMethodByType,1},
 	{NULL,	NULL}
