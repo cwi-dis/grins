@@ -954,9 +954,9 @@ class _Toplevel(_Event):
 		lwhere = Evt.GetMouse()
 		where = Qd.LocalToGlobal(lwhere)
 		frontwid = Win.FrontWindow()
-		try:
+		if self._wid_to_window.has_key(frontwid):
 			frontwindow = self._wid_to_window[frontwid]
-		except KeyError:
+		else:
 			# The front window isn't ours. Use the arrow
 			self._installcursor('_arrow')
 			return None
