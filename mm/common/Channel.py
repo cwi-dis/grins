@@ -63,6 +63,7 @@ class Channel:
 		self.syncarm = 0
 		self.syncplay = 0
 		self.is_layout_channel = 0
+		self.seekargs = None
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
@@ -516,7 +517,7 @@ class Channel:
 		# instance to highlight the anchor. If the source anchor
 		# had arguments (as in HTML forms) these args are passed to
 		# the destination anchor here.
-		pass
+		self.seekargs = (node, aid, args)
 
 	def play(self, node):
 		# Play the node that was last armed.  This will change
@@ -630,6 +631,12 @@ class Channel:
 		self._armed_anchors.append((name, type, button))
 
 	def getfileurl(self, node):
+		name = node.GetAttrDef('name', None)
+		if name and self.seekargs and self.seekargs[0] is node and self.seekargs[2]:
+			name = name + '_file'
+			for arg, val in self.seekargs[2]:
+				if arg == name:
+					return node.context.findurl(val)
 		return node.context.findurl(MMAttrdefs.getattr(node, 'file'))
 
 	def getduration(self, node):
