@@ -11,6 +11,7 @@ import windowinterface
 ALL_LAYOUTS = '(All Channels)'
 
 debug = 0
+debugAlign = 0
 debug2 = 0
 
 TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
@@ -964,6 +965,7 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	
 	def onAlignLeft(self):
+		if debugAlign: print 'align left : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
 
@@ -986,6 +988,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 				
 	def onAlignCenter(self):
+		if debugAlign: print 'align center : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
 
@@ -998,8 +1001,8 @@ class LayoutView2(LayoutViewDialog2):
 				referenceValue = l
 
 		# for the reference object, determinate the center
-		l,t,w,h = node.getPxGeom()
-		referenceValue = int(referenceValue+w/2)
+		l,t,w,h = referenceNode.getPxGeom()
+		referenceValue = int(l+w/2)
 		
 		# make a list of node/attr to change
 		list = []
@@ -1014,6 +1017,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignRight(self):
+		if debugAlign: print 'align right : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
 
@@ -1026,8 +1030,7 @@ class LayoutView2(LayoutViewDialog2):
 				referenceValue = l
 
 		# for the reference object, determinate the right border
-		l,t,w,h = node.getPxGeom()
-		referenceValue = int(referenceValue+w/2)
+		l,t,w,h = referenceNode.getPxGeom()
 		referenceValue = l+w
 
 		# make a list of node/attr to change
@@ -1042,6 +1045,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignTop(self):
+		if debugAlign: print 'align top : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
 
@@ -1064,6 +1068,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignMiddle(self):
+		if debugAlign: print 'align middle : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
 
@@ -1076,8 +1081,8 @@ class LayoutView2(LayoutViewDialog2):
 				referenceValue = t
 
 		# for the reference object, determinate the center
-		l,t,w,h = node.getPxGeom()
-		referenceValue = int(referenceValue+h/2)
+		l,t,w,h = referenceNode.getPxGeom()
+		referenceValue = int(t+h/2)
 		
 		# make a list of node/attr to change
 		list = []
@@ -1092,6 +1097,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignBottom(self):
+		if debugAlign: print 'align bottom : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
 
@@ -1104,8 +1110,7 @@ class LayoutView2(LayoutViewDialog2):
 				referenceValue = t
 
 		# for the reference object, determinate the right border
-		l,t,w,h = node.getPxGeom()
-		referenceValue = int(referenceValue+w/2)
+		l,t,w,h = referenceNode.getPxGeom()
 		referenceValue = t+h
 
 		# make a list of node/attr to change
