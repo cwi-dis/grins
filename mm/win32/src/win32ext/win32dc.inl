@@ -30,7 +30,15 @@ ui_dc_select_object_from_handle(PyObject *self, PyObject *args)
   return Py_BuildValue("i",hr);
 }
 
-
+static PyObject *
+ui_dc_detach(PyObject *self, PyObject *args)
+	{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC)
+		return NULL;
+	HDC hdc = pDC->Detach();
+	return Py_BuildValue("i",hdc);
+	}
 
 // @pymethod |PyCDC|FrameRectFromHandle|Draws a border around the rectangle specified by rect
 // Return Values: None
@@ -324,6 +332,7 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 // @pymeth Rectangle|Draws a rectangle using the current pen. The interior of the rectangle is filled using the current brush. 
 // @pymeth DrawText|Formats text in the given rectangle
 #define DEF_NEW_PY_METHODS \
+	{"Detach", ui_dc_detach, 1},\
 	{"FrameRectFromHandle", ui_dc_framerect_from_handle, 1},\
 	{"SelectObjectFromHandle",	ui_dc_select_object_from_handle,1},
 
