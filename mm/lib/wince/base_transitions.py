@@ -43,6 +43,10 @@ class TransitionEngine:
 		# shortcut flag for static (not video) transitions
 		self._surf_updated = 0
 
+		# rect for use with wnd._paintOnSurf
+		# offset windowpos with respect to VisibleWindowPos
+		self._paint_rect = None
+
 	def __del__(self):
 		if self.__transitiontype:
 			self.endtransition()
@@ -105,11 +109,11 @@ class TransitionEngine:
 		else:
 			if not self._surf_updated:
 				if self.outtrans:
-					wnd._paintOnSurf(wnd._fromsurf)
+					wnd._paintOnSurf(wnd._fromsurf, xywh_clip = self._paint_rect)
 					#wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
 				else:
 					#wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
-					wnd._paintOnSurf(self._tosurf)
+					wnd._paintOnSurf(self._tosurf, xywh_clip = self._paint_rect)
 				if value > 0.0:
 					self._surf_updated = 1
 
@@ -123,7 +127,7 @@ class TransitionEngine:
 		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
 
 		# ~100-200 msec for current (13/2/02) impl under wince (dep on image/viewport size)
-		wnd.updateNow()
+		wnd.updateNow(wnd.getVisibleWindowPos())
 		 
 	def join(self, window, ismaster, cb):
 		# Join this (sub or super) window to an existing transition
@@ -158,8 +162,18 @@ class TransitionEngine:
 		except wingdi.error, arg:
 			print arg
 
-		# resize to this window
-		x, y, w, h = wnd._topwindow.LRtoDR(wnd._rect, round = 1)
+		# paint rect
+		w, h = wnd._drawsurf.GetSize()
+
+		# new origin
+		x1, y1, w1, h1 = wnd.getVisibleWindowPos()
+
+		x2, y2, w2, h2 = wnd.getwindowpos()
+		
+		# offset windowpos with respect to VisibleWindowPos
+		self._paint_rect = wnd._topwindow.LRtoDR( (x2-x1, y2-y1, w2, h2), round = 1)
+
+		# resize to this surface
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def __onIdle(self):
