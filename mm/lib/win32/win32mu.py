@@ -69,13 +69,9 @@ class Rect:
 
 	def normalizeRect(self):
 		if self.right<self.left:
-			t=self.left
-			self.left=self.right
-			self.right=t
+			self.right, self.left = self.left, self.right
 		if self.bottom<self.top:
-			t=self.top
-			self.top=self.bottom
-			self.bottom=t
+			self.top, self.bottom = self.bottom, self.top
 		if self.right==self.left:
 			self.right=self.right+1
 		if self.bottom==self.top:
