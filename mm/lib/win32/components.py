@@ -529,26 +529,23 @@ class Tooltip(Control):
 		self._toolscounter = 0
 
 	def createWindow(self, rc=(0,0,0,0), title=''):
-		Sdk.InitCommonControlsEx()
+		#Sdk.InitCommonControlsEx()
 		hwnd = self._parent.GetSafeHwnd()
 		rcd = win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT
 		self._hwnd = Sdk.CreateWindowEx(win32con.WS_EX_TOPMOST, 'tooltips_class32', title, 
-			win32con.WS_POPUP | commctrl.TTS_NOPREFIX | commctrl.TTS_ALWAYSTIP, rcd, hwnd, self._id)
+			win32con.WS_POPUP | commctrl.TTS_ALWAYSTIP, rcd, hwnd, self._id)
 		Sdk.SetWindowPos(self._hwnd, win32con.HWND_TOPMOST, (0,0,0,0),
 			win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
-		self.hookMouseMessages()
 
 	def addTool(self, rc):
 		hwnd = self._parent.GetSafeHwnd()
 		Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc)
 		self._toolscounter = self._toolscounter + 1
 
-	def hookMouseMessages(self):
-		assert self._hwnd>0, 'Tooltip control has not been created'
-		wnd = win32ui.CreateWindowFromHandle(self._hwnd)
-		wnd.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
-		wnd.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
-		wnd.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
+	def addToolText(self, rc, text):
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc, text)
+		self._toolscounter = self._toolscounter + 1
 
 	def relayEvent(self, params):
 		assert self._hwnd>0, 'Tooltip control has not been created'
@@ -565,6 +562,11 @@ class Tooltip(Control):
 		self.relayEvent(params)
 
 	def onMouseMove(self, params):
+		msg = win32mu.Win32Msg(params)
+		x, y = msg.pos()
+		rc = x, y, x+1, y+1
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.NewToolRect(self._hwnd, hwnd, self._id, rc)
 		self.relayEvent(params)
 
 ##############################
