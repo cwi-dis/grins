@@ -1073,8 +1073,11 @@ class Window:
 			return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
 		return sc*x, sc*y, sc*w, sc*h
 
-	def LDtoDD(self, d):
-		return d/self._device2logical
+	def LDtoDD(self, d, round=0):
+		sc = 1.0/self._device2logical
+		if round:
+			return int(sc*d+0.5)
+		return sc*d
 
 	def DDtoLD(self, d):
 		return d*self._device2logical
