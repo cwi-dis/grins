@@ -169,24 +169,26 @@ class HierarchyView(ViewDialog):
 		self.draw()
 
 	def mouse(self, dummy, window, event, params):
+		self.toplevel.setwaiting()
 		x, y = params[0:2]
 		self.select(x, y)
+		self.toplevel.setready()
 
-	# this doesn't work yet...
-	def rawkey(self, dev, val):
-		# raw key event (0-255)
-		# 'val' is the key code as defined in DEVICE or <device.h>
-		if val == 0: return # up
-		if dev in (DEVICE.LEFTARROWKEY, DEVICE.PAD4):
-			self.tosibling(-1)
-		if dev in (DEVICE.RIGHTARROWKEY, DEVICE.PAD6):
-			self.tosibling(1)
-		if dev in (DEVICE.UPARROWKEY, DEVICE.PAD8):
-			self.toparent()
-		if dev in (DEVICE.DOWNARROWKEY, DEVICE.PAD2):
-			self.tochild(0)
-		if dev in (DEVICE.PAD5, DEVICE.PADPERIOD):
-			self.zoomhere()
+## 	# this doesn't work yet...
+## 	def rawkey(self, dev, val):
+## 		# raw key event (0-255)
+## 		# 'val' is the key code as defined in DEVICE or <device.h>
+## 		if val == 0: return # up
+## 		if dev in (DEVICE.LEFTARROWKEY, DEVICE.PAD4):
+## 			self.tosibling(-1)
+## 		if dev in (DEVICE.RIGHTARROWKEY, DEVICE.PAD6):
+## 			self.tosibling(1)
+## 		if dev in (DEVICE.UPARROWKEY, DEVICE.PAD8):
+## 			self.toparent()
+## 		if dev in (DEVICE.DOWNARROWKEY, DEVICE.PAD2):
+## 			self.tochild(0)
+## 		if dev in (DEVICE.PAD5, DEVICE.PADPERIOD):
+## 			self.zoomhere()
 
 	#################################################
 	# Edit manager interface (as dependent client)  #
@@ -353,32 +355,26 @@ class HierarchyView(ViewDialog):
 		if self.viewroot is self.root:
 			windowinterface.beep()
 			return
-		windowinterface.setcursor('watch')
 		self.viewroot = self.viewroot.GetParent()
 		self.recalc()
 		self.draw()
-		windowinterface.setcursor('')
 
 	def zoomin(self):
 		if self.viewroot is self.focusnode or not self.focusnode:
 			windowinterface.beep()
 			return
-		windowinterface.setcursor('watch')
 		path = self.focusnode.GetPath()
 		i = path.index(self.viewroot)
 		self.viewroot = path[i+1]
 		self.recalc()
 		self.draw()
-		windowinterface.setcursor('')
 
 	def zoomhere(self):
 		if self.viewroot is self.focusnode or not self.focusnode:
 			return
-		windowinterface.setcursor('watch')
 		self.viewroot = self.focusnode
 		self.recalc()
 		self.draw()
-		windowinterface.setcursor('')
 
 	#################################################
 	# Internal subroutines                          #
@@ -452,11 +448,9 @@ class HierarchyView(ViewDialog):
 		if obj.node is self.focusnode:
 			# Double click -- zoom in or out
 			if self.viewroot is not self.focusnode:
-				windowinterface.setcursor('watch')
 				self.viewroot = self.focusnode
 				self.recalc()
 				self.draw()
-				windowinterface.setcursor('')
 			return
 		self.init_display()
 		self.setfocusobj(obj)

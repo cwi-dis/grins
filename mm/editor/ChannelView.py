@@ -291,12 +291,10 @@ class ChannelView(ViewDialog):
 	# Toggle 'showall' setting
 
 	def toggleshow(self):
-		windowinterface.setcursor('watch')
 		self.showall = (not self.showall)
 		for c in self.context.channels:
 			c.chview_map = None
 		self.redraw()
-		windowinterface.setcursor('')
 
 	# Return list of currently visible channels
 
@@ -327,7 +325,10 @@ class ChannelView(ViewDialog):
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
+		focus = self.focus
 		self.baseobject.select()
+		if focus is not None:
+			focus.select()
 
 	# Recompute the locations where the objects should be drawn
 
@@ -378,7 +379,6 @@ class ChannelView(ViewDialog):
 	# View root stuff
 
 	def nextviewroot(self):
-		windowinterface.setcursor('watch')
 		for c in self.viewroot.GetChildren():
 			node = c.FirstMiniDocument()
 			if node: break
@@ -387,10 +387,8 @@ class ChannelView(ViewDialog):
 			if node is None:
 				node = self.root.FirstMiniDocument()
 		self.setviewroot(node)
-		windowinterface.setcursor('')
 
 	def prevviewroot(self):
-		windowinterface.setcursor('watch')
 		children = self.viewroot.GetChildren()[:]
 		children.reverse()
 		for c in children:
@@ -401,7 +399,6 @@ class ChannelView(ViewDialog):
 			if node is None:
 				node = self.root.LastMiniDocument()
 		self.setviewroot(node)
-		windowinterface.setcursor('')
 
 	# Make sure the view root is set to *something*, and fix the title
 	def fixviewroot(self):
@@ -428,6 +425,11 @@ class ChannelView(ViewDialog):
 		self.fixtitle()
 		self.draw()
 
+	def setviewrootcb(self, node):
+		self.toplevel.setwaiting()
+		self.setviewroot(node)
+		self.toplevel.setready()
+
 	def fixtitle(self):
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		if None is not self.viewroot is not self.root:
@@ -448,7 +450,7 @@ class ChannelView(ViewDialog):
 			c.chview_map = None
 			if c.used:
 				self.usedchannels.append(c)
-			else:
+			elif not self.showall:
 				c.chview_map = 0, 0
 		self.addancestors()
 		self.addsiblings()
@@ -475,7 +477,7 @@ class ChannelView(ViewDialog):
 				self.scandescendants(c)
 			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
-				tuple = ('', name, (self.setviewroot, (c,)))
+				tuple = ('', name, (self.setviewrootcb, (c,)))
 				self.baseobject.descendants.append(tuple)
 			elif c.GetType() in interiortypes:
 				self.scandescendants(c)
@@ -486,7 +488,7 @@ class ChannelView(ViewDialog):
 		for node in path[:-1]:
 			if node.IsMiniDocument():
 				name = node.GetRawAttrDef('name', '(NoName)')
-				tuple = ('', name, (self.setviewroot, (node,)))
+				tuple = ('', name, (self.setviewrootcb, (node,)))
 				self.baseobject.ancestors.append(tuple)
 
 	def addsiblings(self):
@@ -506,7 +508,7 @@ class ChannelView(ViewDialog):
 				name = c.GetRawAttrDef('name', '(NoName)')
 				if c is self.viewroot:
 					name = name + ' (current)'
-				tuple = ('', name, (self.setviewroot, (c,)))
+				tuple = ('', name, (self.setviewrootcb, (c,)))
 				self.baseobject.siblings.append(tuple)
 
 	# Arc stuff
@@ -1092,14 +1094,15 @@ class ChannelBox(GO):
 				  'that is still in use',
 				  type = 'error')
 			return
-		editmgr = self.mother.editmgr
+		mother = self.mother
+		editmgr = mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
-		self.mother.toplevel.setwaiting()
+		mother.toplevel.setwaiting()
 		editmgr.delchannel(self.name)
-		self.mother.cleanup()
+		mother.cleanup()
 		editmgr.commit()
-		self.mother.toplevel.setready()
+		mother.toplevel.setready()
 
 	def movecall(self):
 	        self.mother.movechannel(self.name)
@@ -1471,15 +1474,16 @@ class ArcBox(GO):
 		self.mother.toplevel.setready()
 
 	def delcall(self):
-		editmgr = self.mother.editmgr
+		mother = self.mother
+		editmgr = mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
-		self.mother.toplevel.setwaiting()
+		mother.toplevel.setwaiting()
 		editmgr.delsyncarc(self.snode, self.sside, \
 			self.delay, self.dnode, self.dside)
-		self.mother.cleanup()
+		mother.cleanup()
 		editmgr.commit()
-		self.mother.toplevel.setready()
+		mother.toplevel.setready()
 
 # Wrap up a function and some arguments for later calling with fewer
 # arguments.  The arguments given here are passed *after* the
