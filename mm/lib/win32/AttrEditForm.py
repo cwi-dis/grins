@@ -4612,6 +4612,29 @@ class AnimateValuesGroup(StringGroup):
 	data=attrgrsdict['animateValues']
 
 #
+class InlineTransitionGroup(AttrGroup):
+	data=attrgrsdict['inlineTransition']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ITRANSITION
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('trtype')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+
+		a = self.getattr('subtype')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+
+		a = self.getattr('mode')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32, grinsRC.IDC_33))
+
+		a = self.getattr('fadeColor')
+		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42, grinsRC.IDC_43))
+
+		return cd
+
+#
 class TimeManipulationGroup(AttrGroup):
 	data=attrgrsdict['timeManipulation']
 	def __init__(self):
@@ -4891,6 +4914,7 @@ groupsui={
 	'timeManipulation':TimeManipulationGroup,
 	'calcMode':CalcModeGroup,
 	'timingsb':DurationSBGroup,
+	'inlineTransition':InlineTransitionGroup,
 
 	'transitionType': TransitionTypeGroup,
 	'transitionRepeat':TransitionRepeatGroup,

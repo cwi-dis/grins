@@ -575,6 +575,11 @@ attrgrs=(
 		'project_default_region_text',
 		]},
 
+	{'name':'inlineTransition',
+	 'title':'Transition',
+	 'attrs':['trtype', 'subtype', 'mode', 'fadeColor',],
+	 },
+
 	)
 
 
