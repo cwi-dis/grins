@@ -1,5 +1,7 @@
 # Interface to calculate the timing of a (sub)tree
 
+# XXXX Note: this module uses a couple of local variables that will
+# XXXX probably break it when we want to support multiple documents.
 import sched
 
 import MMAttrdefs
@@ -10,6 +12,29 @@ from ChannelMap import channelmap
 
 HD, TL = 0, 1	# Same as in Player!
 
+lastnode = {}
+initial_arms = None
+ia_root = None
+
+#
+# The interface is a bit convoluted, for backward compatability.
+# The routine 'calctimes' signifies that the timing might have changed
+# (but is needed at the moment), and the routine 'optcalctimes' signifies
+# that somebody needs correct timing (possibly resulting in a recalc).
+# Docalctimes does the actual calculation.
+def calctimes(root):
+	global ia_root
+	global initial_arms
+	ia_root = None
+	initial_arms = None
+
+# XXX Should be more intelligent: if ia_root is an ancestor of root the
+# XXX timing is also fine.
+def optcalctimes(root):
+	global ia_root
+	if ia_root == root:
+		return
+	docalctimes(root)
 
 # Calculate the nominal times for each node in the given subtree.
 # When the function is done, each node has two instance variables
@@ -23,7 +48,14 @@ HD, TL = 0, 1	# Same as in Player!
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
 #
-def calctimes(root):
+def docalctimes(root):
+	global lastnode
+	global initial_arms
+	global ia_root
+	global attach_count
+	lastnode = {}
+	initial_arms = []
+	ia_root = root
 	prepare(root)
 	pt = pseudotime().init(0.0)
 	q = sched.scheduler().init(pt.timefunc, pt.delayfunc)
@@ -31,6 +63,12 @@ def calctimes(root):
 	decrement(q, (0, root, HD))
 	q.run()
 
+def getinitial(root):
+        if initial_arms == None or root <> ia_root:
+	    print 'Timing.getinitial: have to compute initial arms'
+	    calctimes(root)
+	return initial_arms
+	    
 
 # Interface to the prep1() and prep2() functions; these are also used
 # by the player (which uses a different version of decrement()).
@@ -129,6 +167,7 @@ def adddep(xnode, xside, delay, ynode, yside):
 
 
 def decrement(q, (delay, node, side)):
+        global initial_arms
 	if delay > 0:
 		id = q.enter(delay, 0, decrement, (q, (0, node, side)))
 		return
@@ -142,10 +181,25 @@ def decrement(q, (delay, node, side)):
 		node.t0 = q.timefunc()
 	elif side == TL:
 		node.t1 = q.timefunc()
+	node.node_to_arm = None
 	if node.GetType() not in interiortypes:
 		if side == HD:
 			dt = getduration(node)
 			id = q.enter(dt, 0, decrement, (q, (0, node, TL)))
+			try:
+				cname = MMAttrdefs.getattr(node, 'channel')
+				if node.GetRawAttr('arm_duration') >= 0:
+				    if lastnode.has_key(cname):
+					ln = lastnode[cname]
+					ln.node_to_arm = node
+				    else:
+					initial_arms.append(node)
+			except:
+				pass
+			try:
+				lastnode[cname] = node
+			except:
+				pass
 	for arg in node.deps[side]:
 		decrement(q, arg)
 

@@ -82,9 +82,10 @@ class MovieWindow(ChannelWindow):
 			self.centerimage()
 	#
 	def setfile(self, (filename, node)):
-		self.clear()
+		#self.clear()
 		try:
 			self.vfile = VFile.VinFile().init(filename)
+			self.vfile.warmcache()
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
@@ -94,11 +95,11 @@ class MovieWindow(ChannelWindow):
 		self.node = node
 		self.vfile.magnify = MMAttrdefs.getattr(self.node, 'scale')
 		dummy = self.peekaboo()
-		if dummy <> None and self.wid <> None:
+		if self.lookahead <> None and self.wid <> 0:
 			gl.winset(self.wid)
+			#self.erase()
 			self.vfile.initcolormap()
 			self.rgbmode = (self.vfile.format == 'rgb')
-			self.erase()
 	#
 	def centerimage(self):
 		w, h = self.vfile.width, self.vfile.height
@@ -117,11 +118,11 @@ class MovieWindow(ChannelWindow):
 	def done(self):
 		return self.lookahead == None
 	#
-	def nextframe(self):
+	def nextframe(self, skip):
 		if self.lookahead == None:
 			return 0.0
 		time, size, chromsize = self.lookahead
-		if self.wid == 0:
+		if self.wid == 0 or skip:
 			try:
 				self.vfile.skipnextframedata(size, chromsize)
 			except VerrorList:
@@ -144,16 +145,21 @@ class MovieChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos']
-	node_attrs = ['file', 'scale', 'bgcolor']
+	chan_attrs = ['winsize', 'winpos', 'visible', 'border']
+	node_attrs = ['file', 'scale', 'bgcolor', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
 		self.window = MovieWindow().init(name, attrdict)
+		self.armed_node = None
 		return self
 	#
 	def show(self):
-		self.window.show()
+		if self.may_show():
+			self.window.show()
+			if self.no_border():
+				gl.noborder()
+				gl.winconstraints()
 	#
 	def hide(self):
 		self.window.hide()
@@ -167,20 +173,42 @@ class MovieChannel(Channel):
 	def save_geometry(self):
 		self.window.save_geometry()
 	#
-	def play(self, (node, callback, arg)):
+	
+	def arm(self, node):
+		if not self.is_showing():
+			return
 		filename = self.getfilename(node)
 		self.window.setfile(filename, node)
+		self.armed_node = node
+	def play(self, (node, callback, arg)):
+		if not self.is_showing():
+			callback(arg)
+			return
+	        if node <> self.armed_node:
+		    print 'MovieChannel: node not armed'
+		    self.arm(node)
+		self.armed_node = None
 		self.starttime = self.player.timefunc()
+		self.played = self.skipped = 0
 		self.poll(callback, arg) # Put on the first image right now
 	#
 	def poll(self, cb_arg):
 		self.qid = None
 		if self.window.done(): # Last frame
+			if self.played:
+				print 'Played ', self.played*100/ \
+					  (self.played+self.skipped), \
+					  '% of the frames'
 			callback, arg = cb_arg
 			callback(arg)
 			return
 		else:
-			t = self.window.nextframe()
+			t = self.window.nextframe(0)
+			self.played = self.played + 1
+			now = self.player.timefunc()
+			while t and self.starttime + t <= now:
+				t = self.window.nextframe(1)
+				self.skipped = self.skipped + 1
 			self.qid = self.player.enterabs(self.starttime + t, \
 				1, self.poll, cb_arg)
 	#
