@@ -25,6 +25,10 @@ See the Release Notes (relnotes.html or
 http://www.oratrix.com/GRiNS/Support/Relnotes/macintosh-1.0/) for more
 information.
 
+To uninstall GRiNS simply remove this whole folder: everything is installed
+here (with the sole exception of a small preferences file in the System
+Folder).
+
 For more information see:
     http://www.oratrix.com/
 or send e-mail to
