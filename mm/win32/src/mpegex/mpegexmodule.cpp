@@ -37,20 +37,20 @@ static PyObject*  py_mpeg_arm(PyObject *self, PyObject *args)
 	TRACE("Entering mpeg_arm\n");
 	if (first)
 		init();
-
+    
 	UINT k;
 	CWnd *Wnd; 
 	BOOL bStretch, bRet, center;
 	PyObject *Ob = Py_None;
 	char *FileName;
 	float scale;
-	
+	long clipbegin, clipend;
 
-	if(!PyArg_ParseTuple(args, "Osifi", &Ob, &FileName, &bStretch, &scale, &center))
+	if(!PyArg_ParseTuple(args, "Osifill", &Ob, &FileName, &bStretch, &scale, &center, &clipbegin, &clipend))
 	{
 		Py_INCREF(Py_None);
 		//AfxMessageBox("Error", MB_OK);
-		MpegExErrorFunc("py_mpeg_prepare(parent, filename, Stretch, scale, center)");
+		MpegExErrorFunc("py_mpeg_prepare(parent, filename, Stretch, scale, center,clipbegin, clipend");
 		return Py_None;
 	
 	}
@@ -81,7 +81,8 @@ static PyObject*  py_mpeg_arm(PyObject *self, PyObject *args)
 	ChanTable[k]->format = 1;
 	ChanTable[k]->scale = scale;
 	ChanTable[k]->center = center;
- 
+	ChanTable[k]->lAVIduration = 0;
+
 	bRet = AviOpen(ChanTable[k]);
 
 	if (! bRet)
@@ -89,7 +90,11 @@ static PyObject*  py_mpeg_arm(PyObject *self, PyObject *args)
 		free(ChanTable[k]);
 		ChanTable[k] = NULL;
 	}
-
+    else
+    {
+		ChanTable[k]->playstart = AviClip(ChanTable[k], clipbegin);
+		ChanTable[k]->playend = AviClip(ChanTable[k], clipend);
+	}
 	//strcpy(mciAviInfo.szFileName, PyString_AsString(PyFile_Name(file)));
 	//strcpy(FileName, PyString_AsString(PyFile_Name(file)));
 	
@@ -102,7 +107,7 @@ static PyObject*  py_mpeg_arm(PyObject *self, PyObject *args)
 	}*/	
 
 	if (!bRet)
-	return Py_BuildValue("i", -1);
+		return Py_BuildValue("i", -1);
 	
 	return Py_BuildValue("i", k);
 }
