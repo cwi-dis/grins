@@ -2186,7 +2186,8 @@ class HierarchyView(HierarchyViewDialog):
 			self.insertparent('par')
 
 	def createexclcall(self):
-		if self.get_selected_widget(): self.get_selected_widget().createexclcall()
+		if self.get_selected_widget(): #self.get_selected_widget().createexclcall()
+			self.insertparent('excl')
 
 	def createaltcall(self):
 		if self.get_selected_widget(): self.get_selected_widget().createaltcall()
