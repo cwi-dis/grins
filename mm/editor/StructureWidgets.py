@@ -471,10 +471,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		top.setwaiting()
 		top.player.playfrom(self.node)
 
-	def attrcall(self):
-		self.mother.toplevel.setwaiting()
-		import AttrEdit
-		AttrEdit.showattreditor(self.mother.toplevel, self.node)
+##	def attrcall(self):
+##		self.mother.toplevel.setwaiting()
+##		import AttrEdit
+##		AttrEdit.showattreditor(self.mother.toplevel, self.node)
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
