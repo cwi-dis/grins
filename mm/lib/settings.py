@@ -95,8 +95,7 @@ default_settings = {
 	'timeline_playinactivecolor': (0, 127, 0),
 	'timeline_playerrorcolor': (255, 0, 0),
 	# Locations on the net
-	'templatedir_url': 'http://www.oratrix.com/GRiNS/data',
-	'helpdir_url': 'http://www.oratrix.com/GRiNS/help',
+	'templatedir_url': 'http://www.oratrix.com/indir/images',
 }
 
 user_settings = {}
