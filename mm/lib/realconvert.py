@@ -114,7 +114,7 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 				break
 			data = data + d
 			nframes = nframes + n
-		ms.SetBuffer(data, 1000 * fread / frate, flags) # XXX what is the unit for the timestamp?
+		ms.SetBuffer(data, int(1000.0 * fread / frate), flags) # XXX what is the unit for the timestamp?
 		fread = fread + nframes
 		audiopin.Encode(ms)
 
