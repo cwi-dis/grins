@@ -6,6 +6,7 @@ import re
 import sys
 import time
 import stat
+import anydbm
 
 Error = 'maildb.Error'
 
@@ -227,10 +228,13 @@ class MdbDatabase:
 		id = obj.getid()
 		if not id:
 			id = self.getnewlockedid()
+		self._dosave(id, obj)
+		self.unlock(id, tempname)
+
+	def _dosave(self, id, obj):
 		tempname = self.id2filename(id, 'NEW')
 		fp = open(tempname, "w")
 		obj.saveto(fp)
-		self.unlock(id, tempname)
 
 	def remove(self, obj):
 		if not obj.is_locked():
@@ -254,6 +258,65 @@ class MdbDatabase:
 				matchids.append(id)
 		return matchids
 
+class Index:
+	def __init__(self, filename, mode='r', keylist=[]):
+		try:
+			self._db = anydbm.open(filename, mode)
+		except anydbm.error:
+			self._db = None
+			self._keylist = []
+			return
+		if 'c' in mode or 'n' in mode:
+			self._keylist = keylist
+			self._db['.KEYLIST'] = string.join(keylist, ',')
+		else:
+			self._keylist = string.split(self._db['.KEYLIST'], ',')
+
+	def add(self, key, value, id):
+		if not key in self._keylist:
+			raise Error, "Key not in keylist: %s"%key
+		keyname = '%s=%s'%(key, value)
+		if self._db.has_key(keyname):
+			new = self._db[keyname] + ',' + id
+		else:
+			new = id
+		self._db[keyname] = new
+
+	def get(self, key, value):
+		if not key in self._keylist:
+			raise Error, "Key not in keylist: %s"%key
+		keyname = '%s=%s'%(key, value)
+		if self._db.has_key(keyname):
+			return string.split(self._db[keyname], ',')
+		return []
+
+	def has_key(self, key):
+		return key in self._keylist
+
+	def keys(self):
+		return self._keylist[:]
+
+	def update(self, id, obj):
+		for key in self._keylist:
+			if obj.has_key(key):
+				self.add(key, obj[key], id)
+
+
+class IndexedMdbDatabase(MdbDatabase):
+	def __init__(self, dirname, *args, **kwargs):
+		apply(MdbDatabase.__init__, (self, dirname)+args, kwargs)
+		indexname = os.path.join(dirname, '.index')
+		self.__index = Index(indexname, 'w')
+
+	def search(self, field, value):
+		if self.__index.has_key(field):
+			return self.__index.get(field, value)
+		return MdbDatabase.search(self, field, value)
+
+	def _saveto(self, id, obj):
+		self.__index.update(id, obj)
+		MdbDatabase._saveto(self, id, obj)
+		
 def _test():
 	dbase = MdbDatabase('.', DmdbObject)
 	if len(sys.argv) == 1:
