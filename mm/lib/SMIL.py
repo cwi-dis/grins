@@ -496,7 +496,6 @@ class SMIL:
 	__animate_attrs = {'accelerate':'0',
 			   'accumulate':'none',
 			   'additive':'replace',
-			   'attribute':'',
 			   'attributeName':'',
 			   'attributeType':'',
 			   'autoReverse':'false',
