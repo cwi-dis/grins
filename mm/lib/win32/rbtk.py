@@ -111,7 +111,7 @@ class _rbtk:
 			self._rb_finish(userResponse)
 		
 
-	def _rb_finish(self,userResponse):
+	def end_box(self):
 		# 1. restore mode
 		self.set_create_box_mode(None)
 		if not self._rb_modeless:
@@ -134,7 +134,10 @@ class _rbtk:
 		else:
 			rb=()
 		self.DeleteContents()
-				
+		return rb
+
+	def _rb_finish(self,userResponse):
+		rb=self.end_box()	
 		# callback with the box or () according to self.EndModalLoop argument
 		if userResponse==win32con.IDOK:
 			apply(self._rb_callback, rb)
@@ -148,7 +151,7 @@ class _rbtk:
 ## 				apply(self._rb_callback, rb)
 ## 			else:	
  				apply(self._rb_callback,())
-			
+
 
 	def cancel_create_box(self):
 		"""Cancel create_box"""
@@ -166,10 +169,18 @@ class _rbtk:
 		if not self.in_create_box_mode():
 			raise 'Not _in_create_box', self
 		mw=self.get_box_modal_wnd()
+		if not mw: return
 		if self._rb_modeless:
 			mw._rb_finish(win32con.IDOK)
 		else:
 			mw.PostMessage(appcon.WM_USER_CREATE_BOX_OK)
+
+	def exit_create_box(self):
+		"""Cancel create_box without calling back"""
+		if not self.in_create_box_mode():
+			raise 'Not in_create_box mode', self
+		mw=self.get_box_modal_wnd()
+		if mw: mw.end_box()
 
 	def _rb_dirty(self,box):
 		if not self._rb_box and box: return 1
@@ -183,6 +194,10 @@ class _rbtk:
 	def assert_not_in_create_box(self):
 		if self.in_create_box_mode():
 			self.get_box_modal_wnd().cancel_create_box()
+
+	def exit_create_box(self):
+		if self.in_create_box_mode():
+			self.get_box_modal_wnd().end_box()
 
 	def onCreateBoxOK(self,params):
 		self.EndModalLoop(win32con.IDOK)
