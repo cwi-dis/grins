@@ -7,6 +7,7 @@ Afx=win32ui.GetAfx()
 import GenWnd
 import usercmd, usercmdui	
 from WMEVENTS import *
+import urlcache
 
 import string
 
@@ -196,8 +197,7 @@ class SliderPeer:
 
 		# find doc media
 		self.media = []
-		self.url2mtype = {}
-		self.findMedia(root, self.media, self.url2mtype)
+		self.findMedia(root, self.media)
 		framerate = self.findFrameRate()
 
 		# update peer for dur and first video/audio frameRate
@@ -214,9 +214,10 @@ class SliderPeer:
 		self.__updatepeer = 1
 
 	def GetMediaFrameRate(self, rurl):
-		if self.url2mtype.has_key(rurl):
-			mt = self.url2mtype[rurl]
-			url = self.ctx.findurl(rurl)
+		url = self.ctx.findurl(rurl)
+		mtype = urlcache.mimetype(url)
+		if mtype:
+			mt = mtype.split('/')
 			return FrameRate.GetFrameRate(url, mt[0], mt[1])
 		return -1	
 
@@ -241,37 +242,32 @@ class SliderPeer:
 		pass # setspeed 
 		self.__updatepeer = 1
 
-	def findMedia(self, node, media, url2mtype):
+	def findMedia(self, node, media):
 		import MMTypes
 		nt = node.GetType()
 		if nt == 'ext':
 			url = node.GetRawAttr('file')
 			if url:
 				media.append(url)
-				if not url2mtype.has_key(url):
-					import urlcache
-					mimetype = urlcache.mimetype(url)
-					try:
-						mtype, subtype = string.split(mimetype, '/')
-					except:
-						pass
-					else:
-						url2mtype[url] = mtype, subtype
 		if nt in MMTypes.interiortypes:
 			for child in node.GetChildren():
-				self.findMedia(child, media, url2mtype)
+				self.findMedia(child, media)
 
 	def findFrameRate(self):
 		for rurl in self.media:
-			mt = self.url2mtype.get(rurl)
-			if mt and mt[0] == 'video':
-				url = self.ctx.findurl(rurl)
-				return FrameRate.GetFrameRate(url, mt[0], mt[1])
+			url = self.ctx.findurl(rurl)
+			mtype = urlcache.mimetype(url)
+			if mtype:
+				mt = mtype.split('/')
+				if mt[0] == 'video':
+					return FrameRate.GetFrameRate(url, mt[0], mt[1])
 		for rurl in self.media:
-			mt = self.url2mtype.get(rurl)
-			if mt and mt[0] == 'audio':
-				url = self.ctx.findurl(rurl)
-				return FrameRate.GetFrameRate(url, mt[0], mt[1])
+			url = self.ctx.findurl(rurl)
+			mtype = urlcache.mimetype(url)
+			if mtype:
+				mt = mtype.split('/')
+				if mt[0] == 'audio':
+					return FrameRate.GetFrameRate(url, mt[0], mt[1])
 		return 20 
 
 ############################

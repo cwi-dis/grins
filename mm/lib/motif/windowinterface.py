@@ -186,13 +186,18 @@ class ProgressDialog:
 ##		print label
 		
 from imgimagesize import GetImageSize
-def GetVideoSize(file):
+def GetVideoSize(url):
 	try:
 		import mv		# SGI?
 	except ImportError:
 		import MPEGVideoSize
-		return MPEGVideoSize.getsize(file)
+		return MPEGVideoSize.getsize(url)
 	try:
+		import MMurl
+		try:
+			file = MMurl.urlretrieve(url)[0]
+		except IOError:
+			return 0, 0
 		movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
 		return track.GetImageWidth(), track.GetImageHeight()

@@ -7,9 +7,6 @@ __version__ = "$Id$"
 # when you want the duration of a media file (audio and video).
 
 import MMurl
-import MMmimetypes
-import urllib
-import settings
 
 import win32dxm
 
@@ -28,6 +25,6 @@ def get(url):
 			player.open(fn)
 			return player.getDuration()
 	url = MMurl.canonURL(url)
-	url = urllib.unquote(url)
+	url = MMurl.unquote(url)
 	return win32dxm.GetMediaDuration(url)
 

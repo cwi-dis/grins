@@ -3,9 +3,6 @@ __version__ = "$Id$"
 # Cache info about sound files
 
 import MMurl
-import urllib
-import MMmimetypes
-import settings
 
 # Used to get full info
 def getfullinfo(url):
@@ -25,7 +22,7 @@ def getfullinfo(url):
 				duration = player.getDuration()
 	if not duration:
 		url = MMurl.canonURL(url)
-		url = urllib.unquote(url)
+		url = MMurl.unquote(url)
 		import win32dxm
 		duration = win32dxm.GetMediaDuration(url)
 	if duration < 0:
