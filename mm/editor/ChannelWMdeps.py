@@ -114,18 +114,13 @@ class Channel:
 	def arm_and_measure(self, node):
 		if prearm_disabled: return
 		now = time.millitimer()
-		try:
-			oldduration = node.GetRawAttr('arm_duration')
-		except NoSuchAttrError:
-			oldduration = -1
+		self.player.setarmedmode(node, ARM_ARMING)
 		self.arm(node)
+		self.player.setarmedmode(node, ARM_ARMED)
 		duration = (time.millitimer() - now)/1000.0
-		if oldduration < 0 or \
-			  abs(oldduration-duration) > 0.1*oldduration + 0.1:
-			# Only update if more than 10% difference
-			node.SetAttr('arm_duration', duration)
-			self.player.timing_changed = 1
-			print 'Arm-time now', duration, ', was', oldduration
+		node.SetAttr('arm_duration', duration)
+		self.player.timing_changed = 1
+		print 'Arm-time now', duration
 
 	def arm_only(self, node):
 		if prearm_disabled:
