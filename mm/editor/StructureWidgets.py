@@ -381,8 +381,8 @@ class StructureObjWidget(MMNodeWidget):
 	def get_obj_at(self, pos):
 		# Return the MMNode widget at position x,y
 		# Oh, how I love recursive methods :-). Nice. -mjvdg.
-		if self.collapsebutton and self.collapsebutton.is_hit(pos):
-			return self.collapsebutton
+		#if self.collapsebutton and self.collapsebutton.is_hit(pos):
+		#	return self.collapsebutton
 		
 		if self.is_hit(pos):
 			if self.iscollapsed():
@@ -394,6 +394,23 @@ class StructureObjWidget(MMNodeWidget):
 			return self
 		else:
 			return None
+
+	def get_clicked_obj_at(self, pos):
+		# Returns an object which reacts to a click() event.
+		# This is duplicated code, so it's getting a bit hacky again.
+		if self.collapsebutton and self.collapsebutton.is_hit(pos):
+			return self.collapsebutton
+		if self.is_hit(pos):
+			if self.iscollapsed():
+				return self
+			for i in self.children:
+				ob = i.get_clicked_obj_at(pos)
+				if ob != None:
+					return ob
+			return self
+		else:
+			return None
+
 
 	def recalc(self):
 		if self.collapsebutton:
@@ -436,6 +453,7 @@ class StructureObjWidget(MMNodeWidget):
 		MMNodeWidget.removedependencies(self)
 		for ch in self.children:
 			ch.removedependencies()
+
 
 class SeqWidget(StructureObjWidget):
 	# Any sequence node.
@@ -1387,6 +1405,12 @@ class MediaWidget(MMNodeWidget):
 		return f
 
 	def get_obj_at(self, pos):
+		if self.is_hit(pos):
+			return self
+		else:
+			return None
+
+	def get_clicked_obj_at(self, pos):
 		if self.is_hit(pos):
 			if self.transition_in.is_hit(pos):
 				return self.transition_in

@@ -573,7 +573,7 @@ class HierarchyView(HierarchyViewDialog):
 		if x < 1.0 and y < 1.0:
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
-		obj = self.scene_graph.get_obj_at((x,y))
+		obj = self.scene_graph.get_clicked_obj_at((x,y))
 		if obj:
 			obj.mouse0release()
 			self.draw()
@@ -1139,7 +1139,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
-		widget = self.scene_graph.get_obj_at((x,y))
+		widget = self.scene_graph.get_clicked_obj_at((x,y))
 		if widget == None:
 			#print "DEBUG: No widget under the mouse."
 			pass
