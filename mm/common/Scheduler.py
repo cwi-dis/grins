@@ -295,6 +295,7 @@ class SchedulerContext:
 		srdict = pnode.gensr_child_par(node)
 		self.srdict.update(srdict)
 		self.parent.event(self, (SR.SCHED, node))
+		if debugevents: self.dump()
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
@@ -674,7 +675,11 @@ class Scheduler(scheduler):
 				else:
 					node = arg
 				for ch in arg.sched_children:
-					for arc in MMAttrdefs.getattr(ch, 'beginlist'):
+					beginlist = MMAttrdefs.getattr(ch, 'beginlist')
+					if not beginlist:
+						self.enter(0.0, 0, sctx.StartEvent, (ch,))
+						continue
+					for arc in beginlist:
 						if arc.event == 'begin' and \
 						   arc.src is node and \
 						   arc.marker is None and \
