@@ -58,6 +58,12 @@ CMIFED_PROJECT="maccmifed.prj"
 CMIFED_TARGET="cmifed FAT"
 
 #
+# Names of the Attrdefs input file and module.
+#
+ATTRDEFS_INPUT=":::Lib:Attrdefs"
+ATTRDEFS_OUTPUT=":::Lib:Attrdefs.py"
+
+#
 # AppleEvent stuff
 #
 import aetools
@@ -95,6 +101,9 @@ def main():
 	cmifed_py = myjoin(workdir, CMIFED_SRC)
 	cmifed_dir = myjoin(workdir, CMIFED_DIR)
 	cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
+	
+	checkattrdefs(myjoin(workdir, ATTRDEFS_INPUT),
+				  myjoin(workdir, ATTRDEFS_OUTPUT))
 	
 	e1 = build(grins_py, grins_dir, grins_prj, GRINS_TARGET, do_grins_freeze,
 				do_grins_build)
@@ -155,6 +164,21 @@ def dodialog():
 			rv.append(i)
 	return rv
 
+def checkattrdefs(input, output):
+	import stat
+	try:
+		in_info = os.stat(input)
+	except IOError:
+		print "Attrdefs input file not found:", input
+		sys.exit(1)
+	try:
+		out_info = os.stat(output)
+	except IOError:
+		print "Attrdefs output file not found (run GRiNS once):", output
+		sys.exit(1)
+	if in_info[stat.ST_MTIME] > out_info[stat.ST_MTIME]:
+		print "Attrdefs.py file outdated (run GRiNS once)"
+		sys.exit(1)
 	
 if __name__ == '__main__':
 	main()
