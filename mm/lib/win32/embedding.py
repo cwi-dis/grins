@@ -65,8 +65,6 @@ class ListenerWnd(GenWnd.GenWnd):
 			user = ''
 			organization = 'WGBH Educational Foundation'
 			license_features_needed = list(features.license_features_needed)
-			if 'smil2player' in license_features_needed:
-				license_features_needed.remove('smil2player')
 			if 'embeddedplayer' not in license_features_needed:
 				license_features_needed.append('embeddedplayer')
 			self.license = License(license_features_needed, licensestr, user, organization)

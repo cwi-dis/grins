@@ -48,8 +48,11 @@ class Main(MainDialog):
 		flag = hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded()
 		if hasattr(features, 'license_features_needed') and features.license_features_needed and not flag:
 			import license
+			license_features_needed = list(features.license_features_needed)
+			if 'smil2player' not in license_features_needed:
+				license_features_needed.append('smil2player')
 			self.tmplicensedialog = license.WaitLicense(self.do_init,
-					   features.license_features_needed)
+					   license_features_needed)
 		else:
 			self.do_init()
 		self.recent_file_list = []
