@@ -123,7 +123,14 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.smilboston = ctx.attributes.get('project_boston', 0)
 		self.copydir = self.copydirurl = self.copydirname = None
-		self.convertURLs = None
+		if convertURLs:
+			url = MMurl.canonURL(MMurl.pathname2url(filename))
+			i = string.rfind(url, '/')
+			if i >= 0: url = url[:i+1]
+			else: url = ''
+			self.convertURLs = url
+		else:
+			self.convertURLs = None
 
 		self.ids_used = {}
 
@@ -426,7 +433,11 @@ class SMILHtmlTimeWriter(SMIL):
 		if mtype=='video':
 			mtype = 'media'
 
-		if src: 
+		if src:
+			if self.convertURLs:
+				src = MMurl.canonURL(x.GetContext().findurl(src))
+				if src[:len(self.convertURLs)] == self.convertURLs:
+					src = src[len(self.convertURLs):]
 			attrlist.append(('src', src))
 					
 		if mtype == 'audio':

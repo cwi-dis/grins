@@ -957,7 +957,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						copyFiles = 0,
 						evallicense=evallicense,
 						progress = progress,
-						convertURLs = 0)
+						convertURLs = 1)
 		except IOError, msg:
 			operation = 'Publish'
 			windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
