@@ -492,6 +492,67 @@ class NewChannelDialog(DialogWindow):
 		ctl.HiliteControl(0)
 		self.close()
 		
+class TemplateDialog(DialogWindow):
+	DIALOG_ID= ID_TEMPLATE_DIALOG
+	
+	def __init__(self, names, descriptions, cb, cancelCallback = None):
+		# names: list of template names
+		# descriptions: list of (text, image, ...) parallel to names
+		#
+		# First create dialogwindow and set static items
+		DialogWindow.__init__(self, self.DIALOG_ID, 
+				default=ITEM_TEMPLATE_OK, cancel=ITEM_TEMPLATE_CANCEL)
+
+		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_TEMPLATE_POPUP, names)
+		self._cb = cb
+		self._cancel = cancelCallback
+		self.descriptions = descriptions
+		
+		self.type_select.select(0)
+		self._setdialoginfo(0)
+		
+		self.show()
+		
+	def close(self):
+		self.grabdone()
+		self.type_select.delete()
+		del self.type_select
+		DialogWindow.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == ITEM_INPUT_CANCEL:
+			if self._cancel:
+				self._cancel()
+			self.close()
+		elif item == ITEM_INPUT_OK:
+			self.done()
+		elif item == ITEM_TEMPLATE_POPUP:
+			self._setdialoginfo(self.type_select.getselectindex())
+		else:
+			print 'Unknown item', self, item, event
+		return 1
+			
+	def done(self):
+		which = self.type_select.getselectindex()
+		if 0 <= which < len(self.descriptions):
+			tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
+			ctl = h.as_Control()
+			ctl.HiliteControl(10)
+			self._cb(self.descriptions[which])
+			ctl.HiliteControl(0)
+		self.close()
+		
+	def _setdialoginfo(self, idx):
+		tp, htext, rect = self._wid.GetDialogItem(ITEM_TEMPLATE_DESCRIPTION)
+##		tp, himage, rect = self._wid.GetDialogItem(ITEM_TEMPLATE_IMAGE)
+		if 0 <= idx < len(self.descriptions):
+			text = self.descriptions[idx][0]
+##			image = self.descriptions[idx][1]
+		else:
+			text = ''
+##			image = None
+		Dlg.SetDialogItemText(htext, text)
+##		XXXX Set the image
 
 [TOP, CENTER, BOTTOM] = range(3)
 
