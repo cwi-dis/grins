@@ -2555,7 +2555,13 @@ class _ResizeableDisplayList(_DisplayList):
 				gear32sd.device_rect_set(imgid, (lm, tm, rm, bm))
 			elif fit=='meet':
 				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (lm, tm, rm, bm), gear32sd.IG_ASPECT_DEFAULT)
-				gear32sd.device_rect_set(imgid,(lm,tm,lm+rp-lp,tm+bp-tp))
+				w=lm+rp-lp
+				# w is sometimes equal to zero, this line avoid a crash if w=0
+				if w <= 0: w=1
+				h=tm+bp-tp
+				# h is sometimes equal to zero, this line avoid a crash if h=0
+				if h <= 0: h=1
+				gear32sd.device_rect_set(imgid,(lm,tm,w,h))
 			elif fit=='hidden':
 				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
 			elif fit=='slice':
@@ -2565,7 +2571,13 @@ class _ResizeableDisplayList(_DisplayList):
 				else: r = hr
 				wp, hp = int(wi*r+0.5), int(hi*r+0.5)
 				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (lm,tm,lm+wp,tm+hp), gear32sd.IG_ASPECT_DEFAULT)
-				gear32sd.device_rect_set(imgid,(lm,tm,lm+rp-lp,tm+bp-tp))
+				w = lm+rp-lp
+				# w is sometimes equal to zero, this line avoid a crash if w=0
+				if w<=0: w=1
+				h = tm+bp-tp
+				# h is sometimes equal to zero, this line avoid a crash if h=0
+				if h<=0: h=1
+				gear32sd.device_rect_set(imgid,(lm,tm,w,h))
 			elif fit=='scroll':
 				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
 			else:
