@@ -42,11 +42,6 @@ class VideoChannel(ChannelWindow):
 	def do_show(self, pchan):
 		if not ChannelWindow.do_show(self, pchan):
 			return 0
-		try:
-			from RealChannel import RealChannel
-			self.__rc = RealChannel(self)
-		except:
-			pass
 		return 1
 
 	def redraw(self):
@@ -54,6 +49,7 @@ class VideoChannel(ChannelWindow):
 			self.play_movie.UpdateMovie()
 
 	def do_arm(self, node, same=0):
+		self.__ready = 0	# set when arm succeeded
 		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
@@ -68,9 +64,16 @@ class VideoChannel(ChannelWindow):
 		if string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
-				self.errormsg(node, 'No playback support for RealVideo in this version')
-			else:
-				self.__rc.prepare_player(node)
+				import RealChannel
+				try:
+					self.__rc = RealChannel.RealChannel(self)
+				except RealChannel.error, msg:
+					# can't do RealVideo
+##					self.__rc = 0 # don't try again
+					self.errormsg(node, msg)
+			elif self.__rc:
+				if self.__rc.prepare_player(node):
+					self.__ready = 1
 			return 1
 		if not QT_AVAILABLE:
 			self.errormsg(node, "QuickTime not available")
@@ -105,6 +108,7 @@ class VideoChannel(ChannelWindow):
 		self.arm_loop = self.getloop(node)
 		self.place_movie(node, self.arm_movie)
 		self.make_ready(self.arm_movie)
+		self.__ready = 1
 		return 1
 		
 	def make_ready(self, movie):
@@ -183,8 +187,12 @@ class VideoChannel(ChannelWindow):
 			
 	def do_play(self, node):
 		self.__type = node.__type
+		if not self.__ready:
+			# arming failed, so don't even try playing
+			self.playdone(0)
+			return
 		if node.__type == 'real':
-			if self.__rc is None or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+			if not self.__rc or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
 				self.playdone(0)
 			return
 		if not self.arm_movie:
@@ -268,7 +276,7 @@ class VideoChannel(ChannelWindow):
 			self.play_movie.StopMovie()
 			self.play_movie = None
 			self.fixidleproc()
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
@@ -276,7 +284,7 @@ class VideoChannel(ChannelWindow):
 	def playstop(self):
 		if debug: print 'VideoChannel: playstop'
 		if self.__type == 'real':
-			if self.__rc is not None:
+			if self.__rc:
 				self.__rc.stopit()
 		elif self.play_movie:
 			self.play_movie.StopMovie()
@@ -300,7 +308,7 @@ class VideoChannel(ChannelWindow):
 		
 	def setpaused(self, paused):
 		self._paused = paused
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.pauseit(paused)
 		if self.play_movie:
 			if self._paused:

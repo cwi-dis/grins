@@ -35,12 +35,6 @@ class SoundChannel(ChannelAsync):
 	def do_show(self, pchan):
 		if not ChannelAsync.do_show(self, pchan):
 			return 0
-		try:
-			from RealChannel import RealChannel
-			self.__rc = RealChannel(self)
-		except:
-			# can't do RealAudio
-			pass
 		# we can only be shown if we can play
 		return player is not None or self.__rc is not None
 		
@@ -55,7 +49,15 @@ class SoundChannel(ChannelAsync):
 		except (IOError, EOFError, audio.Error):
 			return 0
 		if string.find(hdr.type, 'real') >= 0:
-			return self.__rc is not None
+			if self.__rc is None:
+				try:
+					from RealChannel import RealChannel
+					self.__rc = RealChannel(self)
+				except:
+					pass
+			elif self.__rc:
+				return 1
+			return 0
 		try:
 			fp = audio.reader(fn)
 		except (IOError, EOFError, audio.Error):
@@ -63,8 +65,7 @@ class SoundChannel(ChannelAsync):
 		return 1
 
 	def do_arm(self, node, same=0):
-		if same and self.arm_fp:
-			return 1
+		self.__ready = 0
 		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
@@ -79,9 +80,16 @@ class SoundChannel(ChannelAsync):
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
-				self.errormsg(node, 'No playback support for RealAudio in this version')
-			else:
-				self.__rc.prepare_player(node)
+				import RealChannel
+				try:
+					self.__rc = RealChannel.RealChannel(self)
+				except RealChannel.error, msg:
+					# can't do RealAudio
+##					self.__rc = 0 # don't try again
+					self.errormsg(node, msg)
+			elif self.__rc:
+				if self.__rc.prepare_player(node):
+					self.__ready = 1
 			return 1
 		if player is None:
 			return 1
@@ -113,26 +121,21 @@ class SoundChannel(ChannelAsync):
 		if begin or end:
 			from audio.select import select
 			self.arm_fp = select(self.arm_fp, [(begin, end)])
+		self.__ready = 1
 		return 1
 
 	def do_play(self, node):
 		self.__type = node.__type
+		if not self.__ready:
+			# arming failed, so don't even try playing
+			self.playdone(0)
+			return
 		if node.__type == 'real':
-			if self.__rc is None:
-				# complained already
-				self.playdone(0)
-			elif not self.__rc.playit(node):
-				import windowinterface, MMAttrdefs
-				name = MMAttrdefs.getattr(node, 'name')
-				if not name:
-					name = '<unnamed node>'
-				chtype = self.__class__.__name__[:-7] # minus "Channel"
-				windowinterface.showmessage('No playback support for %s on this system\n'
-							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
+			if not self.__rc or not self.__rc.playit(node):
 				self.playdone(0)
 			return
 		if not self.arm_fp or player is None:
-			print 'SoundChannel: not playing'
+##			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
 			self.playdone(0)
@@ -182,7 +185,7 @@ class SoundChannel(ChannelAsync):
 	def stopplay(self, node):
 		if debug: print 'SoundChannel: stopplay'
 		if self.__type == 'real':
-			if self.__rc is not None:
+			if self.__rc:
 				self.__rc.stopit()
 		else:
 			if self.__qid is not None:
@@ -208,7 +211,7 @@ class SoundChannel(ChannelAsync):
 
 	def setpaused(self, paused):
 		if debug: print 'setpaused', paused
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.pauseit(paused)
 		if player is not None:
 			player.setpaused(paused)
@@ -227,7 +230,7 @@ class SoundChannel(ChannelAsync):
 			self._qid = self._scheduler.enter(
 				float(nframes) / rate, 0,
 				self.playdone, (0,))
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None

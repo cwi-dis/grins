@@ -9,7 +9,7 @@ import Channel
 
 # common component
 import MediaChannel
-from RealChannel import RealChannel
+import RealChannel
 
 # node attributes
 import MMAttrdefs
@@ -33,17 +33,13 @@ class SoundChannel(Channel.ChannelAsync):
 		if not Channel.ChannelAsync.do_show(self, pchan):
 			return 0
 		self.__mc = MediaChannel.MediaChannel(self)
-		try:
-			self.__rc = RealChannel(self)
-		except:
-			pass
 		return 1
 
 	def do_hide(self):
 		self.__mc.unregister_for_timeslices()
 		self.__mc.release_res()
 		self.__mc = None
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
@@ -64,9 +60,15 @@ class SoundChannel(Channel.ChannelAsync):
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
-				self.errormsg(node, 'No playback support for RealAudio in this version')
-			elif self.__rc.prepare_player(node):
-				self.__ready = 1
+				try:
+					self.__rc = RealChannel.RealChannel(self)
+				except RealChannel.error, msg:
+					# can't do RealAudio
+##					self.__rc = 0 # don't try again
+					self.errormsg(node, msg)
+			elif self.__rc:
+				if self.__rc.prepare_player(node):
+					self.__ready = 1
 		else:
 			try:
 				self.__mc.prepare_player(node)
@@ -82,7 +84,7 @@ class SoundChannel(Channel.ChannelAsync):
 			self.playdone(0)
 			return
 		if node.__type == 'real':
-			if self.__rc is None:
+			if not self.__rc:
 				self.playdone(0)
 			elif not self.__rc.playit(node):
 				import windowinterface, MMAttrdefs
@@ -100,7 +102,7 @@ class SoundChannel(Channel.ChannelAsync):
 	# part of stop sequence
 	def stopplay(self, node):
 		if self.__type == 'real':
-			if self.__rc is not None:
+			if self.__rc:
 				self.__rc.stopit()
 		else:
 			self.__mc.stopit()
@@ -108,7 +110,7 @@ class SoundChannel(Channel.ChannelAsync):
 
 	# toggles between pause and run
 	def setpaused(self, paused):
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.pauseit(paused)
 		if self.__mc is not None:
 			self.__mc.pauseit(paused)
