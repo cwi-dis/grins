@@ -74,6 +74,63 @@ MODULES = {
 	'HostLanguage': 1,
 	'IntegrationSet': 1,
 }
+# MODULES dictionary for SMIL Basic
+##MODULES = {
+##	# SMIL 2.0 Modules
+##	'AccessKeyTiming': 0,
+##	'AudioLayout': 0,
+##	'BasicAnimation': 0,
+##	'BasicContentControl': 1,
+##	'BasicInlineTiming': 1,
+##	'BasicLayout': 1,
+##	'BasicLinking': 1,
+##	'BasicMedia': 1,
+##	'BasicTimeContainers': 1,
+##	'BasicTransitions': 0,
+##	'BrushMedia': 0,
+##	'CustomTestAttributes': 0,
+##	'EventTiming': 0,
+##	'ExclTimeContainers': 0,
+##	'FillDefault': 0,
+##	'HierarchicalLayout': 0,
+##	'InlineTransitions': 0,
+##	'LinkingAttributes': 0,
+##	'MediaAccessibility': 0,
+##	'MediaClipMarkers': 0,
+##	'MediaClipping': 0,
+##	'MediaDescription': 0,
+##	'MediaMarkerTiming': 0,
+##	'MediaParam': 0,
+##	'Metainformation': 0,
+##	'MinMaxTiming': 1,
+##	'MultiArcTiming': 0,
+##	'MultiWindowLayout': 0,
+##	'ObjectLinking': 0,
+##	'PrefetchControl': 0,
+##	'RepeatTiming': 1,
+##	'RestartDefault': 0,
+##	'RestartTiming': 0,
+##	'SkipContentControl': 1,
+##	'SplineAnimation': 0,
+##	'Structure': 1,
+##	'SyncbaseTiming': 0,
+##	'SyncBehavior': 0,
+##	'SyncBehaviorDefault': 0,
+##	'SyncMaster': 0,
+##	'TimeContainerAttributes': 0,
+##	'TimeManipulations': 0,
+##	'TransitionModifiers': 0,
+##	'WallclockTiming': 0,
+
+##	# SMIL 2.0 Psuedo Modules
+##	'NestedTimeContainers': 0,
+##	'DeprecatedFeatures': 1,
+
+##	# SMIL 2.0 Module Collections
+##	'Language': 1,
+##	'HostLanguage': 1,
+##	'IntegrationSet': 1,
+##}
 
 # settings that cannot be changed when running
 noprearm = 1				# don't prearm

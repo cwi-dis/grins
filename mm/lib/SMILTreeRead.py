@@ -339,10 +339,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				delay = 0.0
 			else:
 				event = 'begin'
-			list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=delay))
+			if settings.MODULES['DeprecatedFeatures']:
+				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=delay))
 		else:
 			vals = val.split(';')
 			if len(vals) > 1:
+				if not settings.MODULES['MultiArcTiming']:
+					return
 				boston = 'multiple %s values' % attr
 			for val in vals:
 				val = string.strip(val)
@@ -352,7 +355,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val == 'indefinite':
 					if not boston:
 						boston = 'indefinite'
-					list.append(MMNode.MMSyncArc(node, attr))
+					if settings.MODULES['BasicInlineTiming']:
+						list.append(MMNode.MMSyncArc(node, attr))
 					continue
 				try:
 					offset = parseutil.parsecounter(val, withsign = 1, syntax_error = self.syntax_error, context = self.__context)
@@ -361,7 +365,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('%s value starting with sign or digit must be offset value' % attr)
 						continue
 				else:
-					list.append(MMNode.MMSyncArc(node, attr, srcnode='syncbase', delay=offset))
+					if settings.MODULES['BasicInlineTiming']:
+						list.append(MMNode.MMSyncArc(node, attr, srcnode='syncbase', delay=offset))
 					if val[0] in '+-' and not boston:
 						boston = 'signed clock value'
 					continue
@@ -404,7 +409,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if res.group('Z') is not None:
 						tzhr = tzmn = 0
 						tzsg = '+'
-					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay = 0))
+					if settings.MODULES['WallclockTiming']:
+						list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay = 0))
 					continue
 				if val[:9] == 'wallclock':
 					self.syntax_error('bad wallclock value')
@@ -465,14 +471,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 								break
 						else:
 							self.syntax_error('accesskey not available in old namespace')
-					list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
+					if settings.MODULES['AccessKeyTiming']:
+						list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
 					continue
 
 				if '.' not in tokens:
 					# event value
 					# XXX this includes things like
 					# repeat(3)
-					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = ''.join(''.join(tokens).split('\\')), delay = offset or 0))
+					event = ''.join(''.join(tokens).split('\\'))
+					if (event[:7] == 'repeat(' and settings.MODULES['RepeatValueTiming']) or \
+					   (event in ('begin', 'end') and settings.MODULES['SyncbaseTiming']) or \
+					   (event[:7] not in ('repeat(', 'begin', 'end') and settings.MODULES['EventTiming']):
+						list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = event, delay = offset or 0))
 					if not boston:
 						boston = 'event value'
 					continue
@@ -515,7 +526,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 									self.warning('ignoring marker value from non-media element')
 									continue
 								marker = res.group('markername')
-								list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
+								if settings.MODULES['MediaMarkerTiming']:
+									list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
 								continue
 							self.syntax_error('bad marker value')
 							continue
@@ -553,7 +565,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 									break
 							else:
 								self.syntax_error('topLayout not available in old namespace')
-				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,channel=xchan,event=event,delay=offset or 0))
+				if (event[:7] == 'repeat(' and settings.MODULES['RepeatValueTiming']) or \
+				   (event in ('begin', 'end') and settings.MODULES['SyncbaseTiming']) or \
+				   (event[:7] not in ('repeat(', 'begin', 'end') and settings.MODULES['EventTiming']):
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,channel=xchan,event=event,delay=offset or 0))
 				continue
 		if boston:
 			if self.__context.attributes.get('project_boston') == 0:
@@ -799,7 +814,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val in ('discrete', 'linear', 'paced'):
 					attrdict['calcMode'] = val
 				elif val == 'spline':
-					if not settings.MODULES.get('SplineAnimation'):
+					if not settings.MODULES['SplineAnimation']:
 						self.warning('non-standard value for attribute calcMode', self.lineno)
 					attrdict['calcMode'] = val
 				else:
@@ -2818,11 +2833,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mods = ATTRIBUTES.get(attr)
 			if not ans and mods:
 				for mod in mods:
-					if MODULES.get(mod):
+					if settings.MODULES.get(mod):
 						break
 				else:
 					# silently ignore attribute in unsupported module
-					print 'silently ignore attribute',tagname,key
+					if __debug__:
+						print 'silently ignore attribute',tagname,key
 					del attributes[key]
 					continue
 
@@ -3815,22 +3831,36 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_par(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start par', attributes
+		if not settings.MODULES['NestedTimeContainers']:
+			if len(filter(lambda x: x.GetType() in ('par','seq'), self.__container.GetPath())) >= 2:
+				self.unknown_starttag('par', attributes)
+				return
 		self.start_parexcl('par', attributes)
 
 	def end_par(self):
 		if __debug__:
 			if parsedebug: print 'end par'
+		if self.__container.GetType() == 'foreign':
+			self.__container = self.__container.GetParent()
+			return
 		self.end_parexcl('par')
 
 	def start_seq(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start seq', attributes
+		if not settings.MODULES['NestedTimeContainers']:
+			if len(filter(lambda x: x.GetType() in ('par','seq'), self.__container.GetPath())) >= 2:
+				self.unknown_starttag('par', attributes)
+				return
 		id = self.__checkid(attributes)
 		self.NewContainer('seq', attributes)
 
 	def end_seq(self):
 		if __debug__:
 			if parsedebug: print 'end seq'
+		if self.__container.GetType() == 'foreign':
+			self.__container = self.__container.GetParent()
+			return
 		self.EndContainer('seq')
 
 	def start_assets(self, attributes):
@@ -4495,7 +4525,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# catch all
 
 	def unknown_starttag(self, tag, attrs):
-		if self.__container is not None:
+		if self.__in_body:
 			node = self.__context.newnode('foreign')
 			self.__container._addchild(node)
 			node.attrdict.update(attrs)
@@ -4656,9 +4686,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				content = self.entities[pns + ' ' + ptag]
 			else:
 				content = []
-			if tagname in content or (ns and (ns+' '+tagname) in content):
-				pass
-			else:
+			if tagname not in content and (not ns or (ns+' '+tagname) not in content):
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
 		elif tagname != 'smil' and len(nstag) == 2 and nstag[1] == 'smil':
 			# SMIL in unrecognized namespace
@@ -4678,10 +4706,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##				self._elements[ns + ' ' + tagname] = self._elements[tagname]
 		if method is not None:
 			for module in ELEMENTS.get(tagname, []):
-				if MODULES.get(module):
+				if settings.MODULES.get(module):
 					break
-		else:
-			method = None
+			else:
+				method = None
 		if method is not None:
 			for attr in attrdict.keys():
 				ATTRIBUTES.get(attr)
@@ -4694,12 +4722,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ns, tagname = nstag
 		else:
 			ns = ''
-		if self._elements.has_key(tagname):
-			method = self._elements[tagname][1]
-			if method is not None:
-				self.handle_endtag(tagname, method)
-				return
-		if self.__container is not None and self.__container.GetType() == 'foreign':
+		for module in ELEMENTS.get(tagname, []):
+			if settings.MODULES.get(module):
+				method = self._elements.get(tagname, (None, None))[1]
+				if method is not None:
+					self.handle_endtag(tagname, method)
+					return
+				break
+		if self.__in_body and self.__container is not None and self.__container.GetType() == 'foreign':
 			self.__container = self.__container.GetParent()
 
 	# update progress bar if needed
