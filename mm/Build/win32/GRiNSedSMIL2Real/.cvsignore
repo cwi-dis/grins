@@ -1,0 +1,14 @@
+*.c
+Editor.aps
+FreezeOpts
+GRiNS_RV2.exe
+GRiNS_RV2.exp
+GRiNS_RV2.lib
+GRiNS_RV2.ncb
+GRiNS_RV2.opt
+log.txt
+Makefile
+Release
+Build
+Debug
+*.plg
