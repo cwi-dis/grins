@@ -12,11 +12,9 @@ win32ui pyd which exports inherited objects from MFC objects
 """
 
 import win32ui,win32con
-from pywin.mfc import dialog
 import commctrl
 Sdk=win32ui.GetWin32Sdk()
 import grinsRC
-from usercmd import *
 import win32mu
 
 [FALSE, TRUE] = range(2)
@@ -44,7 +42,7 @@ class LightWeightControl:
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGL(self._hwnd,msg,wparam,lparam)
 	def enable(self,f):
-		if not self._hwnd: raise error, 'os control has not been created'
+		if not self._hwnd: raise error, 'os control %d has not been created'
 		if f==None:f=0
 		Sdk.EnableWindow(self._hwnd,f)
 	def show(self):
@@ -370,19 +368,83 @@ class ControlsDict:
 	def items(self): return self._subwnddict.items()
 	def values(self): return self._subwnddict.values()
 	def has_key(self, key): return self._subwnddict.has_key(key)
-	
+
 ##############################
+def dllFromDll(dllid):
+	" given a 'dll' (maybe a dll, filename, etc), return a DLL object "
+	if dllid==None:
+		return None
+	elif type('')==type(dllid):
+		return win32ui.LoadLibrary(dllid)
+	else:
+		try:
+			dllid.GetFileName()
+		except AttributeError:
+			raise TypeError, "DLL parameter must be None, a filename or a dll object"
+		return dllid
+
+from pywin.mfc import window
+
+class DialogBase(window.Wnd):
+	" Base class for a dialog"
+	def __init__( self, id, parent=None, dllid=None ):
+		""" id is the resource ID, or a template
+			dllid may be None, a dll object, or a string with a dll name """
+		# must take a reference to the DLL until InitDialog.
+		self.dll=dllFromDll(dllid)
+		if type(id)==type([]):	# a template
+			dlg=win32ui.CreateDialogIndirect(id)
+		else:
+			dlg=win32ui.CreateDialog(id, self.dll,parent)
+		window.Wnd.__init__(self, dlg)
+		self.HookCommands()
+		self.bHaveInit = None
+		
+	def HookCommands(self):
+		pass
+		
+	def OnAttachedObjectDeath(self):
+		self.data = self._obj_.data
+		window.Wnd.OnAttachedObjectDeath(self)
+
+	# provide virtuals.
+	def OnOK(self):
+		self._obj_.OnOK()
+	def OnCancel(self):
+		self._obj_.OnCancel()
+	def OnInitDialog(self):
+		self.bHaveInit = 1
+		if self._obj_.data:
+			self._obj_.UpdateData(0)
+		return 1 		# I did NOT set focus to a child window.
+	def OnDestroy(self,msg):
+		self.dll = None 	# theoretically not needed if object destructs normally.
+	# DDX support
+	def AddDDX( self, *args ):
+		self._obj_.datalist.append(args)
+	# Make a dialog object look like a dictionary for the DDX support
+	def __nonzero__(self):
+		return 1
+	def __len__(self): return len(self.data)
+	def __getitem__(self, key): return self.data[key]
+	def __setitem__(self, key, item): self._obj_.data[key] = item# self.UpdateData(0)
+	def keys(self): return self.data.keys()
+	def items(self): return self.data.items()
+	def values(self): return self.data.values()
+	def has_key(self, key): return self.data.has_key(key)
+
 # Base class for dialogs created using a resource template 
-class ResDialog(dialog.Dialog):
+class ResDialog(DialogBase):
 	def __init__(self,id,parent=None,resdll=None):
 		if not resdll:
 			import __main__
 			resdll=__main__.resdll
-		dialog.Dialog.__init__(self,id,resdll)
+		DialogBase.__init__(self,id,parent,resdll)
 		self._subwndlist = [] # controls add thrmselves to this list
 
 	# Get from the OS and set the window handles to the controls
 	def attach_handles_to_subwindows(self):
+		#if self._parent:self.SetParent(self._parent)
 		hdlg = self.GetSafeHwnd()
 		for ctrl in self._subwndlist:
 			ctrl.attach(Sdk.GetDlgItem(hdlg,ctrl._id))
@@ -401,7 +463,7 @@ class ResDialog(dialog.Dialog):
 			apply(func,arg)
 
 # A special class that it is both an MFC window and A LightWeightControl
-from pywin.mfc import window
+# from pywin.mfc import window
 class WndCtrl(LightWeightControl,window.Wnd):
 	def create_wnd_from_handle(self):
 		window.Wnd.__init__(self,win32ui.CreateWindowFromHandle(self._hwnd))
@@ -662,10 +724,12 @@ def showquestion(text, parent = None):
 
 # A general one line modal input dialog implementation
 # use DoModal
-class InputDialog(dialog.Dialog):
+class InputDialog(DialogBase):
 	def __init__(self, prompt, defValue, okCallback=None,cancelCallback=None, parent=None):
 		self.title=prompt
-		dialog.Dialog.__init__(self, win32ui.IDD_SIMPLE_INPUT,None,parent)
+		dll=None
+		DialogBase.__init__(self, win32ui.IDD_SIMPLE_INPUT,parent,dll)
+		self._parent=parent
 		self.AddDDX(win32ui.IDC_EDIT1,'result')
 		self.AddDDX(win32ui.IDC_PROMPT1, 'prompt')
 		self._obj_.data['result']=defValue
@@ -676,7 +740,7 @@ class InputDialog(dialog.Dialog):
 
 	def OnInitDialog(self):
 		self.SetWindowText(self.title)
-		return dialog.Dialog.OnInitDialog(self)
+		return DialogBase.OnInitDialog(self)
 	def OnOK(self):
 		self._obj_.UpdateData(1) # do DDX
 		if self._ok_callback:
@@ -749,7 +813,7 @@ class SimpleSelectDlg(ResDialog):
 		self._result=None
 
 	def OnInitDialog(self):
-		dialog.Dialog.OnInitDialog(self)
+		DialogBase.OnInitDialog(self)
 
 		self._prompt_ctrl.attach_to_parent()
 		if not self._prompt:self._prompt='Select:'
@@ -828,7 +892,7 @@ import win32ui,win32con,win32api
 import win32mu,components
 
 # std mfc windows stuf
-from pywin.mfc import window,object,docview,dialog
+from pywin.mfc import window,object,docview
 import afxres,commctrl
 
 # GRiNS resource ids
