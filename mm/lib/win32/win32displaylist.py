@@ -25,49 +25,9 @@ from sysmetrics import pixel_per_mm_x,pixel_per_mm_y
 
 # Icon storage
 _icons = {}
-_icon_ids = {
-	# '' is special: don't draw any icon (needed for removing icons in optimize)
-	'closed': grinsRC.IDI_ICON_CLOSED,
-	'open': grinsRC.IDI_ICON_OPEN,
-	'bandwidthgood': grinsRC.IDI_ICON_BANDWIDTHGOOD,
-	'bandwidthbad': grinsRC.IDI_ICON_BANDWIDTHBAD,
-	'error': grinsRC.IDI_ICON_ERROR,
-	'linksrc': grinsRC.IDI_ICON_LINKSRC,
-	'linkdst': grinsRC.IDI_ICON_LINKDST,
-	'danglingevent': grinsRC.IDI_DANGLINGEVENT,
-	'danglinganchor': grinsRC.IDI_DANGLINGANCHOR,
-##	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
-	'transin': grinsRC.IDI_ICON_TRANSIN,
-	'transout': grinsRC.IDI_ICON_TRANSOUT,
-	'beginevent' : grinsRC.IDI_EVENTIN,
-	'endevent' : grinsRC.IDI_EVENTOUT,
-	'activateevent' : grinsRC.IDI_ACTIVATEEVENT,
-	'animation' : grinsRC.IDI_ANIMATION,
-	'animate': grinsRC.IDI_ANIMATE,
-	'brush' : grinsRC.IDI_BRUSH,
-	'causeevent' : grinsRC.IDI_CAUSEEVENT,
-	'duration' : grinsRC.IDI_DURATION,
-	'focusin' : grinsRC.IDI_FOCUSIN,
-	'happyface' : grinsRC.IDI_HAPPYFACE,
-	'repeat' : grinsRC.IDI_REPEAT,
-	'spaceman': grinsRC.IDI_SPACEMAN,
-	'wallclock': grinsRC.IDI_WALLCLOCK,
-	'playing': grinsRC.IDI_PLAYING,
-	'waitstop': grinsRC.IDI_WAITSTOP,
-	'idle': grinsRC.IDI_IDLE,
-	'paropen': grinsRC.IDI_ICON_PAROPEN,
-	'parclosed': grinsRC.IDI_ICON_PARCLOSED,
-	'seqopen': grinsRC.IDI_ICON_SEQOPEN,
-	'seqclosed': grinsRC.IDI_ICON_SEQCLOSED,
-	'switchopen': grinsRC.IDI_ICON_SWITCHOPEN,
-	'switchclosed': grinsRC.IDI_ICON_SWITCHCLOSED,
-	'prioopen': grinsRC.IDI_ICON_PRIOOPEN,
-	'prioclosed': grinsRC.IDI_ICON_PRIOCLOSED,
-	'exclopen': grinsRC.IDI_ICON_EXCLOPEN,
-	'exclclosed': grinsRC.IDI_ICON_EXCLCLOSED,
-	'properties': grinsRC.IDI_PROPERTIES,
-	'unknown': grinsRC.IDI_UNKNOWN,
-}
+import IconMixin
+_icon_ids = IconMixin.ICONNAME_TO_RESID
+
 
 def _get_icon(which):
 	if not _icons:
