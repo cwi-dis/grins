@@ -395,13 +395,13 @@ class _Toplevel:
 		self._idles.append(cb)
 
 	# Register for receiving timeslices
-	def cancelidleproc(self,id):
+	def cancelidleproc(self, cb):
 		self._idles.remove(cb)
 
 	# Dispatch timeslices
 	def serve_timeslices(self):
-		for cb in self._idles:
-			apply(apply,cb)
+		for onIdle in self._idles:
+			onIdle()
 
 	################################
 		
