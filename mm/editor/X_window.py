@@ -7,7 +7,7 @@ import math
 
 _rb_message = """\
 Use left mouse button to draw a box.
-Click `Done' when ready or `Cancel' to cancel."""
+Click `OK' when ready or `Cancel' to cancel."""
 _rb_done = '_rb_done'			# exception to stop create_box loop
 _in_create_box = None
 
