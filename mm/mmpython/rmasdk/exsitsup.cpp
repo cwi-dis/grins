@@ -27,7 +27,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
     , m_pSiteManager(NULL)
     , m_pCCF(NULL)
     , m_pUnkPlayer(pUnkPlayer)
-
+    , m_posSizeValid(0)
 	,m_showInNewWnd(FALSE)
 	{
     if (m_pUnkPlayer)
@@ -129,6 +129,11 @@ ExampleSiteSupplier::SitesNeeded
 		hres=pSiteWindowed->AttachWindow(&m_PNxWindow);
 
     if (PNR_OK != hres)goto exit;
+    
+	if (m_posSizeValid) {
+		pSite->SetPosition(m_positionInWindow);
+		pSite->SetSize(m_sizeInWindow);
+	}
 
     /*
      * We need to wait until we have set all the properties before

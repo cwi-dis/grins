@@ -24,6 +24,10 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 
 	PNxWindow m_PNxWindow;
 	BOOL m_showInNewWnd;
+	
+	PNxPoint m_positionInWindow;
+	PNxSize  m_sizeInWindow;
+	BOOL m_posSizeValid;
 
     public:
     /****** Public Class Methods ******************************************/
@@ -35,6 +39,11 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 	 */
 	void SetOsWindow(void* p){m_PNxWindow.window=p;}
 	void ShowInNewWindow(BOOL f){m_showInNewWnd=f;}
+	void SetOsWindowPosSize(PNxPoint p, PNxSize s) {
+		m_positionInWindow = p;
+		m_sizeInWindow = s;
+		m_posSizeValid = 1;
+	}
 
 
     /************************************************************************
