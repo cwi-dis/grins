@@ -50,13 +50,13 @@ class LayoutView(LayoutViewDialog):
 		self.toplevel.player.setlayout()
 		LayoutViewDialog.hide(self)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		self.fill()
 
 	def kill(self):
