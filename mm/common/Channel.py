@@ -1612,10 +1612,8 @@ class ChannelWindow(Channel):
 			if not self._player.context.hyperlinks.findsrclinks(anchor):
 				sensitive = 0
 
-			# convert coordinates to relative image size
-			relativeCoordinates = self.convertShapeToRelImage(node, coordinates)
-			# convert coordinates from relative image to relative window size
-			windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
+			# convert coordinates relative to the window size
+			windowCoordinates = self.convertShapeToRelWindow(coordinates)
 
 			b = self.armed_display.newbutton(windowCoordinates, times = a.atimes, sensitive = sensitive)
 			b.hiwidth(3)
@@ -1644,7 +1642,8 @@ class ChannelWindow(Channel):
 		self._winabsgeom, self._winabsmedia = node.getPxAbsGeomMedia()
 
 	# get the space display area of media
-	# return pourcent values relative to the subregion or region
+	# return pourcent values relative to the subregion or region:
+	# tuple of (left/top/width/height)
 	def getmediageom(self, node):
 		subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
 		area_left, area_top, area_width, area_height = self._mediageom
@@ -1652,7 +1651,7 @@ class ChannelWindow(Channel):
 				 float(area_width)/subreg_width, float(area_height)/subreg_height
 
 	# get the channel geometry
-	# return pixel values relative to the parent region
+	# return pixel values relative to the parent region: tuple of (left/top/width/height)
 	def getwingeom(self):
 		return self._wingeom
 
@@ -1888,73 +1887,92 @@ class ChannelWindow(Channel):
 
 		return rArgs
 
-	# Convert pixel offsets/relative image offset to relative image offset
-	# according to the image size
-	def convertShapeToRelImage(self, node, args):
+	# convert shape coordinates (as defined in SMIL specification) relative to the window. The result is float values
+	# For this, we need to know the real size of media which fit inside the region
+	# --> method getArmBox (channel dependent)
+	# This box is defined only after the call of do_arm method
+	def convertShapeToRelWindow(self, args, arming = 1):
 		# in this case we assume it's a rectangle area
 		if not args or args[0] == A_SHAPETYPE_ALLREGION:
 			args =  [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0]
 
+		# note: mLeft, mTop, ... is the geometry of the media after centering, scaling, ...
+		if arming:
+			mLeftInPourcent, mTopInPourcent, mWidthInPourcent, mHeightInPourcent = self.getArmBox()
+		else:
+			mLeftInPourcent, mTopInPourcent, mWidthInPourcent, mHeightInPourcent = self.getPlayBox()
+			
+		wLeftInPixel, wTopInPixel, wWidthInPixel, wHeightInPixel = self.getwingeom()
+		
 		shapeType = args[0]
 
-		
 		if shapeType != A_SHAPETYPE_CIRCLE:
 			rArgs = [shapeType]
 			n=0
-			xsize = -1
 			for a in args[1:]:
-				# if integer, it's a pixel value, we need to convert in pourcent
 				if type(a) == type(0):	# any integer number
-					# for optimization
-					if xsize == -1:
-						xsize, ysize = node.GetDefaultMediaSize(100, 100)
-						# after a arming default, xsize or ysize value are equal to 0 !
-						if xsize == 0: xsize=1
-						if ysize == 0: ysize=1
+					# integer values: the coordinates aren't related to the arm/play box
 						
 					# test if xCoordinates or yCoordinates
 					if n%2 == 0:
-						rArgs.append(float(a)/xsize)
+						rArgs.append(float(a)/wWidthInPixel)
 					else:
-						rArgs.append(float(a)/ysize)
+						rArgs.append(float(a)/wHeightInPixel)
 				else:
-					rArgs.append(a)
+					# pourcent values: the coordinates are related to the arm/play box
+					
+					# test if xCoordinates or yCoordinates
+					if n%2 == 0:
+						# convert coordinates from image to window size
+						rArgs.append(a*mWidthInPourcent + mLeftInPourcent)
+					else:
+						rArgs.append(a*mHeightInPourcent + mTopInPourcent)
+						
 				n = n+1
 				
 		else:
 			# In internal, we manage only elipses
+			# note: for an elipse, the meaning of rArg is a tuple of (xcenter, ycenter, xradius, yradius) 
 			rArgs = [A_SHAPETYPE_ELIPSE]
 			xCenter, yCenter, radius = args[1:]
-			xsize, ysize = node.GetDefaultMediaSize(100, 100)
-			# after a arming default, xsize or ysize value are equal to 0 !
-			if xsize == 0: xsize=1
-			if ysize == 0: ysize=1
+#			xsize, ysize = node.GetDefaultMediaSize(100, 100)
+#			# after a arming default, xsize or ysize value are equal to 0 !
+#			if xsize == 0: xsize=1
+#			if ysize == 0: ysize=1
 			
 			if type(xCenter) == type(0): # any integer number
-				rArgs.append(float(xCenter)/xsize)
+				# integer values: the coordinates aren't related to the arm/play box
+				rArgs.append(float(xCenter)/wWidthInPixel)
 			else:
-				rArgs.append(xCenter)
+				# pourcent values: the coordinates are related to the arm/play box
+				rArgs.append(xCenter*mWidthInPourcent + mLeftInPourcent)
 				
 			if type(yCenter) == type(0): # any integer number
-				rArgs.append(float(yCenter)/ysize)
+				# integer values: the coordinates aren't related to the arm/play box
+				rArgs.append(float(yCenter)/wHeightInPixel)
 			else:
-				rArgs.append(yCenter)
+				# pourcent values: the coordinates are related to the arm/play box
+				rArgs.append(yCenter*mHeightInPourcent + mTopInPourcent)
 	
-			if type(radius) == type(0): # any integer number
-				rArgs.append(float(radius)/xsize)
-				rArgs.append(float(radius)/ysize)
+			if type(radius) == type(0): 
+				# integer values: the coordinates aren't related to the arm/play box
+				rArgs.append(float(radius)/wWidthInPixel)
+				rArgs.append(float(radius)/wHeightInPixel)
 			else:
-				if xsize > ysize:
+				mWidthInPixel = mWidthInPourcent*wWidthInPixel
+				mHeightInPixel = mHeightInPourcent*wHeightInPixel
+#				if xsize > ysize:
+				if mWidthInPixel > mHeightInPixel:
 					# radius is relative to the height
-					radiusInPixel = radius*ysize
+					radiusInPixel = radius*mHeightInPixel
 				else:
 					# radius is relative to the width
-					radiusInPixel = radius*xsize
-				rArgs.append(radiusInPixel/xsize)
-				rArgs.append(radiusInPixel/ysize)									
-	
-		return rArgs
+					radiusInPixel = radius*mWidthInPixel
+				rArgs.append(radiusInPixel/wWidthInPixel)
+				rArgs.append(radiusInPixel/wHeightInPixel)												
 
+		return rArgs
+	
 class ChannelAsync(Channel):
 
 	def play(self, node):
