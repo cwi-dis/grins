@@ -141,17 +141,6 @@ attrgrs=(
 		'transOut',
 		]},
 
-	{'name':'.cname-real',
-	'title':'General',
-	'attrs':[
-		'.cname',
-		'title',
-		'alt',
-		'longdesc',
-		'regionName',
-		'opacity',
-		]},
-
 	{'name':'.cname',
 	'title':'General',
 	'attrs':[
@@ -514,15 +503,30 @@ attrgrs=(
 		'fit','z',
 		]},
 
+	{'name':'Layout2Real',
+	'title':'Layout',
+	'attrs':[
+		'cssbgcolor',
+		'fit','z',
+		'soundLevel',
+		'showBackground',
+		'opacity',
+		]},
+
 	{'name':'Layout2',
 	'title':'Layout',
 	'attrs':[
 		'cssbgcolor',
-		'left', 'width', 'right',
-		'top', 'height', 'bottom',
 		'fit','z',
 		'soundLevel',
 		'showBackground',
+		]},
+
+	{'name':'Geometry',
+	'title':'Geometry',
+	'attrs':[
+		'left', 'width', 'right',
+		'top', 'height', 'bottom',
 		]},
 
 	{'name':'Layout3',

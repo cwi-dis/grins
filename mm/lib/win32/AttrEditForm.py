@@ -4116,9 +4116,6 @@ class NameGroup(AttrGroup):
 class CNameGroup(StringGroup):
 	data=attrgrsdict['.cname']
 
-class CNameRealGroup(StringGroup):
-	data=attrgrsdict['.cname-real']
-
 class INameGroup(NameGroup):
 	data=attrgrsdict['intname']
 	def getpageresid(self):
@@ -4680,19 +4677,20 @@ class CssBackgroundColorGroup(AttrGroup):
 									grinsRC.IDC_CTYPEI))
 		return cd
 
-class Layout2Group(AttrGroup):
+class GeomGroup(AttrGroup):
 	def __init__(self):
-		self.data=attrgrsdict['Layout2']
+		self.data=attrgrsdict['Geometry']
 		AttrGroup.__init__(self,self.data)
+
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_LAYOUT2
-	
-	def createcommonctrls(self, wnd):
+		return grinsRC.IDD_EDITATTR_GEOMETRY
+
+	def createctrls(self, wnd):
 		cd = {}
-		a = self.getattr('cssbgcolor')
-		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
-									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
-									grinsRC.IDC_CTYPEI))
+		self.creategeomctrls(wnd, cd)
+		return cd
+
+	def creategeomctrls(self, wnd, cd):
 		a = self.getattr('left')
 		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_LEFTL, grinsRC.IDC_LEFTV, grinsRC.IDC_LEFTU))
 		a = self.getattr('width')
@@ -4706,16 +4704,24 @@ class Layout2Group(AttrGroup):
 		a = self.getattr('bottom')
 		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_BOTTOML, grinsRC.IDC_BOTTOMV, grinsRC.IDC_BOTTOMU))
 
-		a = self.getattr('fit')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
-		a = self.getattr('z')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
-						   
-		return cd
+class Layout2Group(GeomGroup):
+	data = attrgrsdict['Layout2']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LAYOUT2
 	
 	def createctrls(self,wnd):
-		cd = self.createcommonctrls(wnd)
-		
+		cd = {}
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		a = self.getattr('fit')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
+		a = self.getattr('z')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
 		a = self.getattr('soundLevel')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SOUNDLEVELL, grinsRC.IDC_SOUNDLEVELV))
 		a = self.getattr('showBackground')
@@ -4723,15 +4729,35 @@ class Layout2Group(AttrGroup):
 						   
 		return cd
 
-class Layout1Group(Layout2Group):
+class LayoutRealGroup(Layout2Group):
+	data = attrgrsdict['Layout2Real']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LAYOUT2REAL
+	def createctrls(self,wnd):
+		cd = Layout2Group.createctrls(self,wnd)
+		a = self.getattr('opacity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_OL, grinsRC.IDC_OV))
+		return cd
+	
+class Layout1Group(GeomGroup):
 	data=attrgrsdict['Layout1']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
+
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LAYOUT1
+
 	def createctrls(self,wnd):
-		cd = Layout2Group.createcommonctrls(self, wnd)
-		
+		cd = {}
+		self.creategeomctrls(wnd, cd)
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		a = self.getattr('fit')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
+		a = self.getattr('z')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
 		a = self.getattr('regPoint')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
 		a = self.getattr('regAlign')
@@ -4743,6 +4769,7 @@ class Layout3Group(AttrGroup):
 	def __init__(self):
 		self.data=attrgrsdict['Layout3']
 		AttrGroup.__init__(self,self.data)
+
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LAYOUT3
 	
@@ -4851,8 +4878,10 @@ groupsui={
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
 	'CssBackgroundColor':CssBackgroundColorGroup,
+	'Geometry':GeomGroup,
 	'Layout1':Layout1Group,
 	'Layout2':Layout2Group,
+	'Layout2Real':LayoutRealGroup,
 	'Layout3':Layout3Group,
 	'containerlayout':ContainerLayoutGroup,
 	'regionname':RegionNameGroup,
@@ -4877,7 +4906,6 @@ groupsui={
 	'preferences2':Preferences2Group,
 	'name':NameGroup,
 	'.cname':CNameGroup,
-	'.cname-real':CNameRealGroup,
 	'intname':INameGroup,
 
 	'beginlist':BeginListGroup,

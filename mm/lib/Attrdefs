@@ -65,7 +65,7 @@
 	'Color used for background of window' region (g2 qt smil10 smil2 cmif snap))
 
 (cssbgcolor (tuple (name) (tuple (int) (int) (int))) (transparent 0 0 0) 'Background color' csscolor
-	'Color used for background of window' region (advanced smil2 snap))
+	'Color used for background of window' region (smil2 snap))
 
 (left (string) '' 'Left' csspos
 	'Left' region (advanced smil2 snap))
@@ -306,7 +306,7 @@
 	'Default value for the restart property on the children of this node' inherited (template cmif smil2 snap))
 
 (fit (enum meet hidden slice scroll fill) hidden 'Fit' fit
-	'Fit value' channel (advanced g2 qt smil10 smil2 cmif snap))
+	'Fit value' channel (g2 qt smil10 smil2 cmif snap))
 
 (sensitivity (int) 0 'Event sensitivity' sensitivity
 	'Event sensitivity of media (percentage in range 0 - 100)' raw (advanced cmif smil2))
@@ -405,7 +405,7 @@
 	'The language of the media item' raw (advanced smil2 cmif))
 
 (z (int) 0 'Z order' default
-	'Stacking order for regions, higher numbers are on top' normal (advanced g2 qt smil10 smil2 cmif snap))
+	'Stacking order for regions, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
 
 # SMIL system test attributes
 (system_audiodesc (bool) 0 'System audio descriptions' bool3
@@ -711,10 +711,10 @@
 # region
 
 (showBackground (enum always whenActive) always 'Show background' default
-	'Show when node is active the background color or always' raw (advanced smil2))
+	'Show when node is active the background color or always' raw (smil2))
 
 (soundLevel (float) 1 'Sound level' percent
-	'Specifies the relative volume in percent' raw (advanced smil2))
+	'Specifies the relative volume in percent' raw (smil2))
 
 # settings
 (vertical_icons (bool) 1 'Vertical icons' default
