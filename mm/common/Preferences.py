@@ -23,6 +23,10 @@ class Preferences(PreferencesDialog):
 		self.bool_names = self.getboolnames()
 		self.int_names = self.getintnames()
 		self.string_names = self.getstringnames()
+		if hasattr(self, 'getfloatnames'):
+			self.float_names = self.getfloatnames()
+		else:
+			self.float_names = []
 		self.callback = callback
 		self.load_settings()
 		self.show()
@@ -56,7 +60,13 @@ class Preferences(PreferencesDialog):
 						% (value, name))
 				value = None
 			self.setintitem(name, value)
-			
+		for name in self.float_names:
+			value = settings.get(name)
+			if value is not None and not type(value) in (type(0),type(0.0)):
+				windowinterface.showmessage("Warning: illegal value `%s' for preference %s" % (value, name))
+				value = None
+			self.setfloatitem(name, value)
+
 	def save_settings(self):
 		values = {}
 		for name in self.bool_names:
@@ -73,6 +83,13 @@ class Preferences(PreferencesDialog):
 			try:
 				value = self.getintitem(name)
 			except PreferencesDialogError, arg:
+				windowinterface.showmessage(arg)
+				return None
+			values[name] = value
+		for name in self.float_names:
+			try:
+				value = self.getfloatitem(name)
+			except PreferenceDialogError, arg:
 				windowinterface.showmessage(arg)
 				return None
 			values[name] = value
@@ -107,7 +124,7 @@ class Preferences(PreferencesDialog):
 		self.close()
 
 	def reset_callback(self):
-		for name in self.bool_names + self.int_names + self.string_names:
+		for name in self.bool_names + self.int_names + self.string_names + self.float_names:
 			settings.set(name, None)
 		self.load_settings()
 
