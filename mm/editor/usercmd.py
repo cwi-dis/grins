@@ -106,6 +106,9 @@ class TRANSITIONVIEW(_CommandBase):
 	help = 'Show Transition view'
 class LAYOUTVIEW2(_CommandBase):
 	help = 'Show new layout view'
+class TEMPORALVIEW(_CommandBase):
+	help = 'Show time-based view'
+
 
 # These are to hide the various views. They are basically
 # a workaround for Windows, where the "close" command is
