@@ -37,14 +37,11 @@ class TopLevelDialog:
 			if self.source is not None:
 				self.source.close()
 				self.source = None
-			self.window.set_toggle(SOURCE,0)
-			return
-		if self.source is not None:
-			self.showsource(); return
-			self.source.settext(source)
 		else:
-			self.source = self.window.textwindow(source)
-		self.window.set_toggle(SOURCE,1)
+			if self.source is not None:
+				self.source.settext(source)
+			else:
+				self.source = self.window.textwindow(source)
 
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
