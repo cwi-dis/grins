@@ -785,7 +785,7 @@ class _CommonWindow:
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
 		
-	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
 		if _in_create_box:
 			raise 'Recursive create_box'
