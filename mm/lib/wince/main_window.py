@@ -462,6 +462,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		import winmm
 		if flag:
 			if not self._in_gapi_mode:
+				self._toplevel.setready()
 				winmm.GXOpenDisplay(self.GetSafeHwnd())
 				self._in_gapi_mode = 1
 		else:
@@ -470,3 +471,4 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				self._in_gapi_mode = 0
 			
 
+		
