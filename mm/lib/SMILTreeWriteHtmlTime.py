@@ -450,7 +450,7 @@ class SMILHtmlTimeWriter(SMIL):
 			if mtype in not_xhtml_time_elements:
 				self.showunsupported(mtype)
 			self.writemedianode(x, nodeid, attrlist, mtype, regionName, transIn, transOut)
-		else:
+		elif type != 'animpar':
 			raise CheckError, 'bad node type in writenode'
 
 
