@@ -495,7 +495,7 @@ def _find_converter(srcfmt, dstfmt):
 	where each tuple is (srcfmt, dstfmt, func, lossy).
 	Calling each of the functions in order will convert your image.
 	"""
-	
+
 	global _generated
 	#
 	# If formats are the same return the dummy converter
@@ -514,7 +514,7 @@ def _find_converter(srcfmt, dstfmt):
 	if not _generated.has_key(srcfmt):
 		# Not there yet. Try to create it.
 		_generated[srcfmt] = _enumerate_converters(srcfmt)
-		
+
 	if not _generated[srcfmt].has_key(dstfmt):
 		raise Error, 'no conversion from %s to %s possible' % \
 			     (srcfmt.getname(), dstfmt.getname())

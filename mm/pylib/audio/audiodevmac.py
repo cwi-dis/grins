@@ -90,7 +90,7 @@ class AudioDevMAC:
 		del self.__gc[0]
 		if self.__usercallback:
 			self.__usercallback()
-			
+
 	def setcallback(self, callback):
 		self.__usercallback = callback
 

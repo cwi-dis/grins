@@ -18,7 +18,7 @@ elif sys.platform == 'mac':
 	del audiodevmac
 elif sys.platform == 'win32':
 	import audiodevwin
-	writer = audiodevwin.AudioDevMAC
+	writer = audiodevwin.AudioDevWin
 	del audiodevwin
 else:
 	raise ImportError, 'No module named audiodev'
