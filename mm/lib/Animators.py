@@ -5,18 +5,45 @@ import MMAttrdefs
 import string
 
 class Animator:
-	def __init__(self, attr, domval, fromval=None, toval=None, dur=0):
+	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None):
 		self._attr = attr
 		self._domval = domval
-		self._from = fromval
-		self._to = toval
 		self._dur = dur
-		self._inrepol = self._linear
+		self._values = values
+		self._times = times
+		self._splines = splines
+		self._mode = mode
 
-	def getValue(self, t):
-		if self._dur!=0:
-			return self._inrepol(self._from, self._to, self._dur, t)
-		return self.getDOMValue()
+		# set calc mode
+		if mode=='discrete': self._inrepol = self._discrete
+		elif mode=='paced': self._inrepol = self._paced
+		elif mode=='spline': self._inrepol = self._spline
+		else: self._inrepol = self._linear
+
+		# return value transformation (for example int())
+		self._transf = None
+
+		# construct boundaries of time intervals
+		self._efftimes = []
+		if not times:
+			# create uniform intervals
+			# for now assume also uniform intervals for 'paced' mode
+			n = len(values)
+			# for discrete mode n is the number of intervals
+			if mode == 'discrete': n = n + 1
+			if n <= 2:
+				self._efftimes = [0, dur]
+			else:
+				tau = dur/float(n-1)
+				t = 0.0
+				for i in range(n):
+					self._efftimes.append(t)
+					t = t + tau
+		else:
+			# scale times to dur
+			self._efftimes = []
+			for p in times:
+				self._efftimes.append(p*dur)	
 
 	def getDOMValue(self):
 		return self._domval
@@ -24,101 +51,113 @@ class Animator:
 	def getAttrName(self):
 		return self._attr
 
-	def _setCalcMode(self, parser, mode):
-		if mode=='discrete':
-			self._inrepol = self._linear
-		elif mode=='paced':
-			self._inrepol = self._linear
-		elif mode=='spline':
-			self._inrepol = self._linear
-		else:
-			self._inrepol = self._linear
-			
-	def _linear(self, v1, v2, dur, t):
-		return v1 + (v2-v1)*t/dur
-
-	def _linear_int(self, v1, v2, dur, t):
-		v = v1 + (v2-v1)*t/dur
-		return int(v + 0.5)
-
-	def _slinear(self, vl, dur, t):
-		if t<0 or t>dur: 
+	def getValue(self, t):
+		if t<0 or t>self._dur:
 			return self._domval
-		if len(vl)<2:
-			raise IndexError('interpolation list')
+		if self._dur == 0:
+			return self._values[0]
+		v = self._inrepol(t)
+		if self._transf:
+			return self._transf(v)
+		return v
+
+	# t in [0, dur]
+	def _getinterval(self, t):
+		tl = self._efftimes
+		n = len(tl)
+		for i in range(n-1):
+			if t >= tl[i] and t < tl[i+1]:
+				return i, (t - tl[i]) / (tl[i+1] - tl[i])
+		# t == dur
+		return n-2, 1.0
+
+	def _discrete(self, t):
+		n = len(self._values)
+		if n==0: return self._domval
+		elif n==1: return self._values[0]
+		ix, pdt = self._getinterval(t)
+		return self._values[ix]
+
+	def _linear(self, t):
+		vl = self._values
+		dur = self._dur
+		n = len(vl)
+		if t==dur:
+			return vl[n-1]
+		elif t==0 or n==1:
+			return vl[0]
+		ix, pdt = self._getinterval(t)
+		return vl[ix] + (vl[ix+1]-vl[ix])*pdt
+
+	def _paced(self, t):
+		return self._linear(t) 
+
+	def _spline(self, t):
+		vl = self._values
+		dur = self._dur
+		el = self._splines
+		n = len(vl)
+		if n<2 or len(el)!=n-1:
+			raise IndexError('values and splines missmatch')
 		if t==dur: 
 			return vl[len(vl)-1]
-		tau = dur/(len(vl) - 1)
-		ix = int(t/tau)
-		return vl[ix] + (vl[ix+1]-vl[ix])*(t-ix*tau)/tau
+		elif t==0:
+			return vl[0]
+		ix, pdt = self._getinterval(t)
+		return vl[ix] + (vl[ix+1]-vl[ix])*self.bezier(pdt, el[ix])
 
-	def _setprec(self, prec=0):
-		if prec == 0: 
-			self._inrepol = self._linear_int
-		else:
-			self._inrepol = self._linear
-			
+	# temporary parametric form
+	def bezier(self, t, e = (0,0,1,1)):
+		res = 20
+		step = 1.0/float(res)
+		s = 0.0
+		for i in range(res+1):
+			sc = 1.0-s
+			b = 3.0*sc*sc*s
+			c = 3.0*sc*s*s
+			d = s*s*s
+			tp = b*e[0] + c*e[2] + d
+			if tp >= t: 
+				return b*e[1] + c*e[3] + d
+			s = s + step
+
+	# return values transformations
+	def _round(self, val):
+		return int(val+0.5)
+
+
 class ConstAnimator(Animator):
-	def __init__(self, attr, domval, val):
-		Animator.__init__(self, attr, domval)
-		self.__val = val
-
-	def getValue(self, t):
-		return self.__val
+	def __init__(self, attr, domval, val, dur):
+		Animator.__init__(self, attr, domval, (val,), dur, mode=='discrete')
 
 
+# SequenceAnimator can be used for example for 2D or 3D positions
 class SequenceAnimator(Animator):	
-	def __init__(self, attr, domval, fromval, toval, dur):
-		Animator.__init__(self, attr, domval, fromval, toval, dur)
-		msg = 'Wrong SequenceLinearAnimator arguments'
-		if type(domval)!= type( () ) or type(domval)!= type( [] ):
-			raise TypeError(msg)
-		if type(fromval)!= type( () ) or type(fromval)!= type( [] ):
-			raise TypeError(msg)
-		if type(toval)!= type( () ) or type(toval)!= type( [] ):
-			raise TypeError(msg)
-		if len(domval)!=len(fromval):
-			raise ValueError(msg)
-		if len(domval)!=len(toval):
-			raise ValueError(msg)
+	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None):
+		Animator.__init__(self, attr, domval, values, dur, mode, times, splines)
+		self.__animators = []
+		# create an animator for each component
+		# ...
 
 	def getValue(self, t):
-		if self._dur==0:
-			return self.getDOMValue()
-		l = []
-		for i in range(len(self._from)):
-			l.append(self._inrepol(self._from[i], self._to[i], self._dur, t))
-		return l
-
-
-class URLPairAnimator(Animator):
-	def __init__(self, attr, domval, fromval, toval, dur):
-		Animator.__init__(self, attr, domval, fromval, toval, dur)
-
-	def getValue(self, t):
-		if t < self._dur/2.0:
-			return self._from
-		else:
-			return self._to
-
-
-class CompositeAnimator:
-	def __init__(self, animlist):
-		self.__animators = animlist
-	def getValue(self, t):
+		if t<0 or t>self._dur:
+			return self._domval
+		if self._dur == 0:
+			return self._values[0]
+		n = len(self.__animators)
 		l = []
 		for anim in self.__animators:
 			l.append(self.__animators.getValue(t))
-		return l
+		return tuple(l)
 
 
 # Impl. rem:
-# *syntax error handling: ignore animation
-# *for discrete 'to' animation set the "to" value for the simple duration
-# but for 'from-to' set the "from" value for the first half and the 'to' for the second
-# *attr types map
-# *use f(0) if duration is undefined
-# *ignore keyTimes if dur indefinite
+# * on syntax error: we must ignore animation
+# *	for discrete 'to' animation set the "to" value for the simple duration
+#	but for 'from-to' set the "from" value for the first half and the 'to' for the second
+# * attr types map
+# * use f(0) if duration is undefined
+# * ignore keyTimes if dur indefinite
 
 
 # Animation semantics parser
@@ -142,27 +181,28 @@ class AnimateElementParser:
 		if not self.__hasValidTarget:
 			return None
 
-		dt = self.getDuration()
+		attr = self.__attrname
+		domval = self.__domval
+		dur = self.getDuration()
+		mode = self.__calcMode 
+		times = self.getInterpolationKeyTimes() 
+		splines = self.getInterpolationKeySplines()
 
 		# src attribute animation
 		if self.__attrname=='file':
-			vs = self.getAlphaInterpolationValues()
-			if dt and len(vs)>=2:
-				anim = URLPairAnimator(self.__attrname, self.__domval, vs[0], vs[1], dt)
-				anim._setCalcMode(self, self.__calcMode)
-				return anim
+			values = self.getAlphaInterpolationValues()
+			mode = 'discrete' # override calc mode
+			return Animator(attr, domval, values, dur, mode, times, splines)
 		
 		## Begin temp grins extensions
 		if self.__grinsext:
-			vs = self.getNumInterpolationValues()
-			if dt and len(vs)>=2:
-				anim = Animator(self.__attrname, self.__domval, vs[0], vs[1], dt)
-				anim._setCalcMode(self, self.__calcMode)
-				anim._setprec(0)
-				return anim
+			values = self.getNumInterpolationValues()
+			anim = Animator(attr, domval, values, dur, mode, times, splines)
+			anim._transf = anim._round
+			return anim
 		## End temp grins extensions
 
-		return ConstAnimator(self.__attrname, self.__domval, self.__domval)
+		return ConstAnimator(attr, domval, domval, dur)
 
 	def getAttrName(self):
 		return self.__attrname
@@ -212,35 +252,6 @@ class AnimateElementParser:
 	def getLoop(self):
 		return MMAttrdefs.getattr(self.__anim, 'loop')
 
-	def __checkExtensions(self):
-		d = self.__target.GetChannel().attrdict
-		if not self.__domval and d.has_key('base_winoff'):
-			# check for temp grins extensions
-			self.__grinsext = 1
-			base_winoff = d['base_winoff']
-			if self.__attrname == 'region.left':
-				self.__domval = base_winoff[0]
-			elif self.__attrname == 'region.top':
-				self.__domval = base_winoff[1]
-			elif self.__attrname == 'region.width':
-				self.__domval = base_winoff[2]
-			elif self.__attrname == 'region.height':
-				self.__domval = base_winoff[3]
-
-	def _dump(self):
-		print '----------------------'
-		print 'animate attr:', self.__attrname
-		for name, value in self.__anim.attrdict.items():
-			print name, '=', `value`
-		print '----------------------'
-		print 'target element',self.__target		
-		for name, value in self.__target.attrdict.items():
-			print name, '=', `value`
-		print 'target element channel'		
-		for name, value in self.__target.GetChannel().attrdict.items():
-			print name, '=', `value`
-		print '----------------------'
-
 	# return list of interpolation values
 	def getNumInterpolationValues(self):	
 		# if 'values' are given ignore 'from/to/by'
@@ -285,7 +296,7 @@ class AnimateElementParser:
 		if not v1:
 			v1 = self.__domval
 
-		# we must have a 'to' value expl
+		# we must have an expl 'to' value
 		v2 = self.getTo()
 		if not v2:
 			return ()
@@ -345,6 +356,37 @@ class AnimateElementParser:
 			rl.append((x1, y1, x2, y2))
 		return rl
 
+
+	# temp
+	def __checkExtensions(self):
+		d = self.__target.GetChannel().attrdict
+		if not self.__domval and d.has_key('base_winoff'):
+			# check for temp grins extensions
+			self.__grinsext = 1
+			base_winoff = d['base_winoff']
+			if self.__attrname == 'region.left':
+				self.__domval = base_winoff[0]
+			elif self.__attrname == 'region.top':
+				self.__domval = base_winoff[1]
+			elif self.__attrname == 'region.width':
+				self.__domval = base_winoff[2]
+			elif self.__attrname == 'region.height':
+				self.__domval = base_winoff[3]
+
+	# temp
+	def _dump(self):
+		print '----------------------'
+		print 'animate attr:', self.__attrname
+		for name, value in self.__anim.attrdict.items():
+			print name, '=', `value`
+		print '----------------------'
+		print 'target element',self.__target		
+		for name, value in self.__target.attrdict.items():
+			print name, '=', `value`
+		print 'target element channel'		
+		for name, value in self.__target.GetChannel().attrdict.items():
+			print name, '=', `value`
+		print '----------------------'
 
 
 
