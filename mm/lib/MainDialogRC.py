@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 IDM_ABOUTBOX = 0x0010
 IDD_ABOUTBOX = 100
 IDS_ABOUTBOX = 101
