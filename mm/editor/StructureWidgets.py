@@ -83,14 +83,15 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.root.timemapper.adddependency(self.node.t0, self.node.t2, w)
 		
 	def addcollisions(self, mastert0, mastert1):
+		edge = sizes_notime.HEDGSIZE
 		if self.node.t0 == self.node.t2:
 			w, h = self.get_minsize_abs()
 			if self.node.t0 == mastert0:
-				return w, 0
+				return w+edge, edge
 			if self.node.t0 == mastert1:
-				return 0, w
-			self.root.timemapper.addcollision(self.node.t0, w)
-		return 0, 0
+				return egde, w+edge
+			self.root.timemapper.addcollision(self.node.t0, w+2*edge)
+		return edge, edge
 		
 	#   
 	# These a fillers to make this behave like the old 'Object' class.

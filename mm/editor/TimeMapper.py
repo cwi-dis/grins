@@ -3,7 +3,7 @@
 Error = 'TimeMapper.Error'
 import features
 
-CONSISTENT_TIME_MAPPING=1
+CONSISTENT_TIME_MAPPING=0
 
 class TimeMapper:
 	def __init__(self):
@@ -55,21 +55,28 @@ class TimeMapper:
 		minpos = 0
 		prev_t = self.times[0]
 		for t in self.times:
-			self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
+			if t != prev_t: # for times[0] don't add the dependency
+				self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
 ##			minpos = minpos + (t-prev_t) * min_pixels_per_second
 			self.minpos[t] = minpos
 			minpos = minpos + self.collisiondict[t] + 1
 			prev_t = t
-		pushover = {}
+		self.dependencies.sort()
+		print 'DEPENDENCIES NOW'
+		for item in self.dependencies:
+			print '\t%f\t%f\t%d'%item
+##		pushover = {}
 		for t1, t0, pixels in self.dependencies:
 			t0maxpos = self.minpos[t0] + self.collisiondict[t0]
 			t1minpos = t0maxpos + pixels
-			if t1minpos > self.minpos[t1] + pushover.get(t1, 0):
-				pushover[t1] = t1minpos - self.minpos[t1]
-		curpush = 0
-		for time in self.times:
-			curpush = curpush + pushover.get(time, 0)
-			self.minpos[time] = self.minpos[time] + curpush
+			if t1minpos > self.minpos[t1]:
+				self.minpos[t1] = t1minpos
+##			if t1minpos > self.minpos[t1] + pushover.get(t1, 0):
+##				pushover[t1] = t1minpos - self.minpos[t1]
+##		curpush = 0
+##		for time in self.times:
+##			curpush = curpush + pushover.get(time, 0)
+##			self.minpos[time] = self.minpos[time] + curpush
 		
 		print 'RANGES'
 		for t in self.times:
