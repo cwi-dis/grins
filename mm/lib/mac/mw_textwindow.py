@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import mw_globals
 import WMEVENTS
 import usercmd
