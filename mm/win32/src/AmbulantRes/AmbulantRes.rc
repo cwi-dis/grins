@@ -51,14 +51,14 @@ BEGIN
         BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Oratrix\0"
-            VALUE "FileDescription", "GRiNSed  resource dll\0"
+            VALUE "FileDescription", "Ambulant/G  resource dll\0"
             VALUE "FileVersion", "2.2\0"
             VALUE "InternalName", "AmbulantRes\0"
-            VALUE "LegalCopyright", "Copyright © 2001,2002 Oratrix\0"
+            VALUE "LegalCopyright", "Copyright © 2001,2002,2003 Oratrix\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "AmbulantRes.dll\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "GRiNS Application\0"
+            VALUE "ProductName", "Ambulant/G Player\0"
             VALUE "ProductVersion", "2.2\0"
             VALUE "SpecialBuild", "\0"
         END
