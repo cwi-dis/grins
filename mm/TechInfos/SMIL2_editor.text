@@ -1,0 +1,99 @@
+Issues to be resolved for the SMIL 2.0 editor.
+----------------------------------------------
+
+This is a list of items on an agenda that need to be agreed, discarded
+or altered. If something is obviously not dooable in the timeframe,
+then there is no point in discussing it.
+
+* Start-up structure.
+  - Splash screen.
+  - Wizards? Tip of the day?
+ 
+* Import capabilities.
+* Export capabilities.
+  - HTML+TIME
+  - SMiL 1.0
+  - obvously SMiL 2.0
+
+* Workflow aids
+  - Wizards?
+  - Screen layouts?
+  - General zoom in / zoom out? There are buttons on the toolbar, 
+    should we implement them for all views?
+      - in the structure view, collapse more nodes except for the
+	currently selected.
+      - in the temporal view, it already uses this.
+      - in the timeline view, compress time.
+      - in the layout view and player, make the window bigger. 
+      - in the source view.. er.. hm. :-).
+  - Full-screen support?
+	
+* Should the temporal view stay? 
+  - It does two jobs poorly that the structure + timeline view do well.
+  - It's not finished / there is a lot more work to do on it.
+
+* UNDO support!!!!
+
+* Changes to the Structure view
+  - hyperlinks and anchors.
+  - general speed (ideal: rewrite in C++! Never mind.)
+  - Changes in appearance (make it look "cooler"!)
+    - Vertical pars?
+    - Extra information, e.g. region name?
+    - Extra information for content control (switches)
+    - Make nodes look like nodes in the timeline view.
+    - Make it time-based.
+    - Infact, we could modify the temporal view to look like the
+      HierarchyView - just take away the regions.
+
+* Changes to the Timeline view
+  Conceptually, the timeline view is an "instance" viewer for a certain 
+  instance of the presentation.
+  - ability to add, move, explore regions.
+  - ability to fine-tune timing information
+    - begin delays
+    - end syncs.
+    - event based begins
+    - negative begins
+    - drag and drop.....? Not possible using display lists :-(.
+  - Display events? Clicks, begin events, end events..?
+  - change appearance?
+    - Show more information about a node.
+      It is possible to show a lot of information about a node, but we
+      must be careful not to show everything that is possible. 
+      KISS - Keep it simple.
+      - Fill times
+      - begin delays.
+      - show the nodes constraints within it's parents (different background color?)
+      - Timeline on bottom, channel list on right, each in seperate windows.
+      - repeats (Perhaps show as it plays! Once, again, again... as long as you keep scrolling.)
+      - Min / max
+      - events, accessKey, wallclock (!), etc.
+    - Make regions collapsable.
+
+* Changes to the Source editor
+  Maybe it's just enough to get the source editor to be able to 
+  edit.
+  - Make it an all-powerful SMIL 2.0 hacker's aid; a combined editor
+    and knowledge bank that allows developers to not only write but
+    also check SMIL while they create it.
+  - In-place drop-downs for SMIL attributes?
+  - Collapsable nodes, seperate the head and body in two windows
+    seperated by a split bar?
+  - Make it an integral part of the editor - selecting a node in the
+    source editor also selects it in the other views. Deleting it
+    would delete it in the other views. That would rock!
+    This could be a bit difficult to write!
+  - Make the background something other than grey. Greyness implies 
+    that it's read-only (which it currently is).
+
+* Changes to the layout view
+  - Is it possible to prevent having black-on-black-on-black?
+  - Is it possible to have a globally "selected time" which the
+    layout view renders?
+  - Make it more Adobe like? Floating toolbars?? 
+
+* Changes to other views.
+  - Animation support???
+  - Dialogs - editing one and only one node.
+  - Dump layout or structure to an editable tree widget?
