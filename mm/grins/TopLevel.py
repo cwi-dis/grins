@@ -186,7 +186,7 @@ class TopLevel(TopLevelDialog):
 		import urlcache
 		mtype = urlcache.mimetype(self.filename)
 		if mtype not in ('application/x-grins-project', 'application/smil'):
-			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen anyway?'):
+			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?'):
 				mtype = 'application/smil'
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			# init progress dialog
@@ -216,25 +216,9 @@ class TopLevel(TopLevelDialog):
 ##		elif mtype == 'application/x-grins-cmif':
 ##			import MMRead
 ##			self.root = MMRead.ReadFile(self.filename)
-		elif sys.platform == 'win32':
-			import MediaRead
-			self.root = MediaRead.MediaRead(self.filename, mtype, self.printfunc)		
 		else:
-			import SMILTreeRead
-			if mtype is None or \
-			   (mtype[:6] != 'audio/' and
-			    mtype[:6] != 'video/'):
-				dur = ' dur="indefinite"'
-			else:
-				dur = ''
-			from nameencode import nameencode
-			self.root = SMILTreeRead.ReadString('''\
-<smil>
-  <body>
-    <ref%s src=%s/>
-  </body>
-</smil>
-''' % (dur, nameencode(self.filename)), self.filename, self.printfunc)
+			from MediaRead import MediaRead
+			self.root = MediaRead(self.filename, mtype, self.printfunc)
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 		self.context = self.root.GetContext()
