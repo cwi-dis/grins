@@ -65,6 +65,7 @@ TITLESIZE = f_title.fontheight()*1.2
 CHNAMESIZE = f_channel.fontheight()*1.2
 LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 HOREXTRASIZE = f_title.strsize('XX')[0]
+ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
 GAPSIZE = 1.0				# size of gap between nodes
 EDGSIZE = 1.0				# size of edges
 
@@ -758,6 +759,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.vergap = float(GAPSIZE) / rh
 		self.horsize = float(MINSIZE + HOREXTRASIZE) / rw
 		self.versize = float(MINSIZE + LABSIZE) / rh
+		self.arrsize = float(ARRSIZE) / rw
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:
@@ -906,9 +908,13 @@ class HierarchyView(HierarchyViewDialog):
 
 # Recursive procedure to calculate geometry of boxes.
 def sizeboxes(node):
+	ntype = node.GetType()
 	if structure_name_size:
 		name = MMAttrdefs.getattr(node, 'name')
 		namewidth = (name and f_title.strsize(name)[0]) or 0
+		if ntype in MMNode.interiortypes or \
+		   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
+			namewidth = namewidth + ARRSIZE
 		minwidth = min(MAXSIZE, max(MINSIZE, namewidth)) + HOREXTRASIZE
 	else:
 		minwidth = MINSIZE + HOREXTRASIZE
@@ -920,7 +926,7 @@ def sizeboxes(node):
 		return node.boxsize
 	nchildren = len(children)
 	width = height = 0
-	horizontal = (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL
+	horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
 	for child in children:
 		w, h = sizeboxes(child)
 		if horizontal:
@@ -1031,6 +1037,7 @@ class Object:
 		dummy = d.usefont(f_title)
 		rw, rh = self.mother.canvassize
 		titleheight = self.mother.titleheight
+		awidth = self.mother.arrsize
 		chnameheight = self.mother.chnameheight
 		##hmargin = d.strsize('x')[0] / 1.5
 		##vmargin = titleheight / 5
@@ -1106,8 +1113,6 @@ class Object:
 		    or \
 		   (node.GetType() == 'ext' and
 		    node.GetChannelType() == 'RealPix'):
-			awidth = LABSIZE/rw - 2*hmargin
-			awidth = d.strsize('xx')[0]
 			title_left = title_left + awidth
 			aheight = titleheight - 2*vmargin
 			node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
