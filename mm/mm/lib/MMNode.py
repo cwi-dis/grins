@@ -14,17 +14,18 @@ import domcore
 
 def convertAttribute(name, value) :
 	"converts certain attributevalues to other-than string values"
-	print 'converting attribute'
+	print 'converting attribute ... ',
 	if name=="duration" :		# convert to float
-		print 'duration'
 		nwValue = float(value)
 	elif name=="winsize" or name=="base_winoff" :		# covert to tuple
-		print 'winsize base_winoff'
 		import string
 		nwValue = tuple(map(int,string.split(filter(lambda x: x not in ['(',')'], value),',')))
+	elif name=='anchorlist' or name=="from" or name=="to":
+		nwValue = eval(value)
 	else:
-		print 'other ', name, value
 		nwValue = value
+
+	print name, "=", nwValue
 
 	return nwValue
 
@@ -94,7 +95,8 @@ class MMNodeContext(domcore.Element):
 			print 'add hyperlink.... under construction '
 			linkTo = newChild._get_attributes().getNamedItem('to')._get_nodeValue()
 			linkFrom = newChild._get_attributes().getNamedItem('from')._get_nodeValue()
-			print 'linkTo ', linkTo
+			linkTo=convertAttribute("to", linkTo)
+			linkFrom=convertAttribute("from", linkFrom)
 			print 'linkFrom', linkFrom
 			if linkTo and linkFrom != None :
                 		if not em.transaction():

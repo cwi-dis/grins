@@ -53,11 +53,9 @@ class Document(Node):
 			nwChannel.setAttribute('type', '')
 			return nwChannel
 		elif tagName == 'link':
+			print "Document.createElement() creating link ..."
 			# hyperlink
 			nwLink = Element(tagName)
-			nwLink.setAttribute('to', '')
-			nwLink.setAttribute('from', '')
-			print 'nwHyperlink ', nwLink
 			return nwLink
 		else:
 			nwNode = self.root.context.newnode(tagName)
@@ -124,7 +122,6 @@ class Node:
 	def _get_firstChild(self) :
 		children = self._get_childNodes()
 		len = children._get_length()
-		print 'grinsdom: _get_firstChild : len : ',len
 		if len > 0:
 			return children.item(0)
 		else:
@@ -200,15 +197,11 @@ class Element(Node):
 	def _get_tagName(self):
 		return self.__name or self._get_nodeName()
 	def getAttribute(self, name):
-		print '....getAttribute..', name
 		result  = self.getAttributeNode(name)._get_value()
-		print 'in getAttribute2 ', result
 		return result 
 	def getAttributeNode(self, name):
-		print 'get attribute ', name 
 		return self._get_attributes().getNamedItem(name)
 	def setAttribute(self,name,value):
-		print '---- set attribute ', name, value
 		self.attrdict[name] = value
 	def removeAttribute(self, name):
 		raise self.ex
