@@ -81,6 +81,22 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime
 
 /*
  * Class:     GRiNSPlayer
+ * Method:    nmouseClicked
+ * Signature: (III)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nmouseClicked
+  (JNIEnv *, jobject, jint, jint, jint);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nmouseMoved
+ * Signature: (III)Z
+ */
+JNIEXPORT jboolean JNICALL Java_GRiNSPlayer_nmouseMoved
+  (JNIEnv *, jobject, jint, jint, jint);
+
+/*
+ * Class:     GRiNSPlayer
  * Method:    nopen
  * Signature: (ILjava/lang/String;)V
  */
