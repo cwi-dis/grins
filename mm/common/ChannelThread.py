@@ -88,7 +88,7 @@ class _ChannelThread:
 		if self._is_shown:
 			self.threads.armstop()
 
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		if self._is_shown:
 			self.threads.setrate(not paused)
 
@@ -151,9 +151,9 @@ class ChannelThread(_ChannelThread, Channel):
 		Channel.stopplay(self, node, curtime)
 		_ChannelThread.stopplay(self, node, curtime)
 
-	def setpaused(self, paused):
-		Channel.setpaused(self, paused)
-		_ChannelThread.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.setpaused(self, paused, timestamp)
+		_ChannelThread.setpaused(self, paused, timestamp)
 
 class ChannelWindowThread(_ChannelThread, ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -211,9 +211,9 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			w._gc.foreground = w._convert_color(w._bgcolor or (0,0,0))
 		_ChannelThread.stopplay(self, node, curtime)
 
-	def setpaused(self, paused):
-		ChannelWindow.setpaused(self, paused)
-		_ChannelThread.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		ChannelWindow.setpaused(self, paused, timestamp)
+		_ChannelThread.setpaused(self, paused, timestamp)
 
 	def play(self, node, curtime):
 		if debug:

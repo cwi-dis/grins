@@ -47,8 +47,8 @@ class PrefetchChannel(Channel.ChannelAsync):
 		
 		self.__startFetch()
 		
-	def setpaused(self, paused):
-		Channel.ChannelAsync.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.ChannelAsync.setpaused(self, paused, timestamp)
 		self.__pauseFetch(paused)
 
 	def stopplay(self, node, curtime):
