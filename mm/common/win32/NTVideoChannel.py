@@ -33,6 +33,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__mc = None
 		self.__rc = None
 		self.__type = None
+		self.need_armdone = 0
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -169,6 +170,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return None
 
 	def play(self, node):
+		self.need_armdone = 0
 		self.play_0(node)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
@@ -193,6 +195,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def playdone(self, dummy):
 		if self.need_armdone:
-			self.armdone()
 			self.need_armdone = 0
+			self.armdone()
 		Channel.ChannelWindowAsync.playdone(self, dummy)

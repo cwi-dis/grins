@@ -23,6 +23,7 @@ class SoundChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
 		self.__rc = None
+		self.need_armdone = 0
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -66,7 +67,7 @@ class SoundChannel(Channel.ChannelAsync):
 			else:
 				self.__rc.prepare_player(node)
 		elif not self.__mc.prepare_player(node):
-			self.showwarning(node,'System missing infrastructure to playback')
+			self.errormsg(node,'System missing infrastructure to playback')
 		return 1
 
 	def do_play(self, node):
@@ -84,7 +85,7 @@ class SoundChannel(Channel.ChannelAsync):
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0)
 		elif not self.__mc.playit(node):
-			self.showwarning(node,'Can not play')
+			self.errormsg(node,'Can not play')
 			self.playdone(0)
 
 	# part of stop sequence
@@ -104,22 +105,8 @@ class SoundChannel(Channel.ChannelAsync):
 			self.__mc.pauseit(paused)
 		Channel.ChannelAsync.setpaused(self, paused)
 
-
-############################ 
-# showwarning if the infrastucture is missing.
-# The user should install Windows Media Player
-# since then this infrastructure is installed
-
-	def showwarning(self,node,inmsg):
-		name = MMAttrdefs.getattr(node, 'name')
-		if not name:
-			name = '<unnamed node>'
-		chtype = self.__class__.__name__[:-7] # minus "Channel.ChannelAsync"
-		import windowinterface
-		windowinterface.showmessage('%s\n'
-						    '%s node %s on Channel.ChannelAsync %s' % (inmsg, chtype, name, self._name), mtype = 'warning')
-
 	def play(self, node):
+		self.need_armdone = 0
 		self.play_0(node)
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
@@ -134,6 +121,6 @@ class SoundChannel(Channel.ChannelAsync):
 
 	def playdone(self, dummy):
 		if self.need_armdone:
-			self.armdone()
 			self.need_armdone = 0
+			self.armdone()
 		Channel.ChannelAsync.playdone(self, dummy)
