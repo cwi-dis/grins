@@ -571,6 +571,20 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.updateMediaNodeList()
 
+	def showAllRegions(self):
+		# remove all selected nodes
+		self.removeAllMediaNodeList()
+
+		self.currentNodeListShowed = []
+		self.currentSelectedRegionList = None
+		
+		# re display all viewport
+		self.displayViewport(self.currentViewport.getName())		
+
+		# add the nodes which contain the focus
+		if self.previousFocus != None:
+			self.focusOnMMNode(self.previousFocus)
+		
 	def showNodeList(self, nodeobject):
 		# remove all selected nodes
 		self.removeAllMediaNodeList()
@@ -637,9 +651,11 @@ class LayoutView2(LayoutViewDialog2):
 		elif focustype == 'MMChannel':
 			self.focusOnMMChannel(focusobject)
 
-	def playerstatechanged(self, nodetype, nodeobject):
-		if nodetype == 'NodeList':
-			self.showNodeList(nodeobject)
+	def playerstatechanged(self, type, parameters):
+		if type == 'paused':
+			self.showNodeList(parameters)
+		elif type == 'stopped':
+			self.showAllRegions()
 		
 	def kill(self):
 		self.destroy()

@@ -241,6 +241,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 
 	def stopped(self):
 		PlayerCore.stopped(self)
+		self.updatePlayerStateOnStop()
 		if self._exporter:
 			self._exporter.finished()
 			for ch in self.channels.values():
