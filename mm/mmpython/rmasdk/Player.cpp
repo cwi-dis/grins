@@ -176,9 +176,13 @@ PlayerObject::Stop(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	CHECK_NO_ARGS(args);
+#ifdef _WIN32
 	Py_BEGIN_ALLOW_THREADS
+#endif
 	res=((PlayerObject*)self)->pPlayer->Stop();
+#ifdef _WIN32
 	Py_END_ALLOW_THREADS
+#endif
 	return Py_BuildValue("i",res);
 }
 
@@ -187,9 +191,13 @@ PlayerObject::Pause(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	CHECK_NO_ARGS(args);
+#ifdef _WIN32
 	Py_BEGIN_ALLOW_THREADS
+#endif
 	res=((PlayerObject*)self)->pPlayer->Pause();
+#ifdef _WIN32
 	Py_END_ALLOW_THREADS
+#endif
 	return Py_BuildValue("i",res);
 }
 
