@@ -69,7 +69,7 @@ class MMParser:
 		self.open()
 		type = self.gettoken()
 		if type not in alltypes:
-			raise SyntaxError, (type, 'node type')
+			raise MSyntaxError, (type, 'node type')
 		uid = self.getuidvalue(None)
 		node = self.context.newnodeuid(type, uid)
 		self.open()
@@ -108,9 +108,9 @@ class MMParser:
 			sign = ''
 		if t[0] in digits:
 			if '.' in t or 'e' in t or 'E' in t:
-				raise TypeError, 'int'
+				raise MTypeError, 'int'
 			return int(eval(sign + t))
-		raise TypeError, (t, 'int')
+		raise MTypeError, (t, 'int')
 	#
 	def getfloatvalue(self, dummy):
 		t = self.getobject()
@@ -121,24 +121,24 @@ class MMParser:
 			sign = ''
 		if t[0] in digits or (t[0] == '.' and t[1] in digits):
 			return float(eval(sign + t))
-		raise TypeError, (t, 'float')
+		raise MTypeError, (t, 'float')
 	#
 	def getstringvalue(self, dummy):
 		t = self.getobject()
 		if t[0] in ('\'', '"'): return eval(t)
-		raise TypeError, (t, 'string')
+		raise MTypeError, (t, 'string')
 	#
 	def getnamevalue(self, dummy):
 		t = self.getobject()
 		if t[0] in letters: return t
 		if t[0] in ('\'', '"'): return eval(t)
-		raise TypeError, (t, 'name')
+		raise MTypeError, (t, 'name')
 	#
 	def getuidvalue(self, dummy):
 		t = self.getobject()
 		if t[0] in letters or t[0] in digits: return t
 		if t[0] in ('\'', '"'): return eval(t)
-		raise TypeError, (t, 'uid')
+		raise MTypeError, (t, 'uid')
 	#
 	def getboolvalue(self, dummy):
 		t = self.getobject()
@@ -146,12 +146,12 @@ class MMParser:
 		true  = '1', 'y', 'yes', 't', 'on'
 		if t in false: return 0
 		if t in true: return 1
-		raise TypeError, (t, 'bool')
+		raise MTypeError, (t, 'bool')
 	#
 	def getenumvalue(self, list):
 		t = self.getobject()
 		if t in list: return t
-		raise TypeError, (t, 'enum' + `list`)
+		raise MTypeError, (t, 'enum' + `list`)
 	#
 	def gettuplevalue(self, funcarglist):
 		tuple = ()
@@ -173,7 +173,7 @@ class MMParser:
 			self.open()
 			key = self.getstringvalue(None)
 			if dict.has_key(key):
-				raise TypeError, (key, 'duplicate key string')
+				raise MTypeError, (key, 'duplicate key string')
 			dict[key] = func(self, arg)
 			self.close()
 		return dict
@@ -184,7 +184,7 @@ class MMParser:
 			self.open()
 			key = self.getnamevalue(None)
 			if dict.has_key(key):
-				raise TypeError, (key, 'duplicate key name')
+				raise MTypeError, (key, 'duplicate key name')
 			dict[key] = func(self, arg)
 			self.close()
 		return dict
@@ -194,7 +194,7 @@ class MMParser:
 		while self.more():
 			key, val = self.getattr()
 			if dict.has_key(key):
-				raise TypeError, (key, 'duplicate attr name')
+				raise MTypeError, (key, 'duplicate attr name')
 			dict[key] = val
 		return dict
 	#
@@ -204,7 +204,7 @@ class MMParser:
 		self.open()
 		name = self.gettoken()
 		if name[0] not in letters:
-			raise SyntaxError, (name, 'attr name')
+			raise MSyntaxError, (name, 'attr name')
 		if self.attrparsers.has_key(name):
 			func, arg = self.attrparsers[name]
 			value = func(self, arg)
@@ -235,9 +235,9 @@ class MMParser:
 #		for func, arg in funcarglist:
 #			try:
 #				return func(self, arg)
-#			except TypeError:
+#			except MTypeError:
 #				pass
-#		raise TypeError, 'union'
+#		raise MTypeError, 'union'
 	#
 	def getenclosedvalue(self, (func, arg)):
 		self.open()
@@ -281,7 +281,7 @@ class MMParser:
 			pass
 		# XXX union?
 		else:
-			raise TypeError, (type, 'type name')
+			raise MTypeError, (type, 'type name')
 		self.close()
 		return type, arg
 	#
@@ -294,7 +294,7 @@ class MMParser:
 		if t == '-':
 			t = self.gettoken()
 			if not t[0] in digits:
-				raise SyntaxError, ('-'+t, 'value')
+				raise MSyntaxError, ('-'+t, 'value')
 			return -eval(t)
 		if t[0] == '\'':
 			return eval(t)
@@ -304,7 +304,7 @@ class MMParser:
 			value = self.getlistvalue((MMParser.getanyvalue, None))
 			self.close()
 			return value
-		raise SyntaxError, (t, 'value')
+		raise MSyntaxError, (t, 'value')
 	#
 	# Initialize the mapping from type names to type parsers.
 	# This is an attribute of the class, not of its instances!
@@ -332,7 +332,7 @@ class MMParser:
 	def getobject(self):
 		t = self.gettoken()
 		if t in ('(', ')'):
-			raise SyntaxError, (t, 'object')
+			raise MSyntaxError, (t, 'object')
 		return t
 	#
 	def open(self):
@@ -345,7 +345,7 @@ class MMParser:
 		#print '#expect', exp
 		t = self.gettoken()
 		if t <> exp:
-			raise SyntaxError, (t, exp)
+			raise MSyntaxError, (t, exp)
 	#
 	def more(self):
 		if self.peektoken() == ')':
@@ -461,7 +461,7 @@ def parsevalue(string, typedef, context):
 	parserdef = MMAttrdefs.usetypedef(typedef, MMParser.basicparsers)
 	value = parser.getgenericvalue(parserdef)
 	if parser.peektoken() <> '':
-		raise SyntaxError, 'excess input'
+		raise MSyntaxError, 'excess input'
 	return value
 
 
@@ -474,7 +474,7 @@ def testtokenizer():
 		while 1: p.gettoken()
 	except EOFError:
 		print 'EOF'
-	except SyntaxError, msg:
+	except MSyntaxError, msg:
 		p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)
 
 
@@ -490,7 +490,7 @@ def testparser():
 	except EOFError:
 		print 'unexpected EOF at line', p.lineno
 		return
-	except SyntaxError, msg:
+	except MSyntaxError, msg:
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got ' + `gotten` + ', expected ' + `expected`
