@@ -535,7 +535,8 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 	if(hr==DDERR_SURFACELOST)
 		hr = self->pI->Restore();
 	
-	if(hr!=DD_OK){
+	if(FAILED(hr)){
+		// failed to restore,
 		// we can not do the blt now
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -544,7 +545,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 
 	// abd then the source
 	hr = ddsFrom->pI->IsLost();
-	if(hr!=DD_OK){
+	if(FAILED(hr)){
 		// no point in proceeding
 		// what we have draw at the source surface
 		// has been lost
@@ -578,7 +579,8 @@ DirectDrawSurface_Flip(DirectDrawSurfaceObject *self, PyObject *args)
 	if(hr==DDERR_SURFACELOST)
 		hr = self->pI->Restore();
 	
-	if(hr!=DD_OK){
+	if(FAILED(hr)){
+		// failed to restore
 		// we can not do the blt now
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -1177,7 +1179,7 @@ DirectDrawSurface_IsLost(DirectDrawSurfaceObject *self, PyObject *args)
 	hr=self->pI->IsLost();
 	Py_END_ALLOW_THREADS
 
-	if(hr!=DD_OK || hr!=DDERR_SURFACELOST){
+	if(hr!=DD_OK && hr!=DDERR_SURFACELOST){
 		seterror("DirectDrawSurface_IsLost", hr);
 		return NULL;
 	}
