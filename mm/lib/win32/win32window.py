@@ -137,10 +137,10 @@ class Window:
 		x, y = x-dx, y-dy
 		wd, hd = self._rect[2:]
 		ws, hs = self._mediadisplayrect[2:]
-		if x<0: x=0
 		if x>ws-wd: x = ws-wd
-		if y<0: y=0
+		if x<0: x=0
 		if y>hs-hd: y = hs-hd
+		if y<0: y=0
 		self._scrollpos = x, y
 		self.update(self.getwindowpos())
 
