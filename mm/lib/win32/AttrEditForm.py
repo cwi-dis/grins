@@ -1799,6 +1799,7 @@ class HrefCtrl(AttrCtrl):
 		self.__external = components.RadioButton(wnd,resid[3])
 		self.__browse = components.Button(wnd,resid[4])
 		self.__url = components.Edit(wnd,resid[5])
+		self.__browseurl = components.Button(wnd,resid[6])
 		self.__node = None
 		self.__string = ''
 		self.__curval = 0	# "impossible" value (important for first setvalue() call)
@@ -1816,6 +1817,8 @@ class HrefCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnBrowse,self._resid[4])
 		self.__url.attach_to_parent()
 		self._wnd.HookCommand(self.OnEdit,self._resid[5])
+		self.__browseurl.attach_to_parent()
+		self._wnd.HookCommand(self.OnBrowseURL,self._resid[6])
 		if val is None:
 			self.__node = None
 			self.__string = ''
@@ -1878,6 +1881,9 @@ class HrefCtrl(AttrCtrl):
 				val = self.__string
 			self.setvalue(val)
 			self.enableApply()
+
+	def OnBrowseURL(self,id,code):
+		self._attr.browser_callback()
 
 	def OnBrowse(self,id,code):
 		val = self.__curval
@@ -5312,7 +5318,7 @@ class GeneralAnchorGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('.href')
-		cd[a] = HrefCtrl(wnd,a,(grinsRC.IDC_STATIC0,grinsRC.IDC_RADIO1,grinsRC.IDC_RADIO2,grinsRC.IDC_RADIO3,grinsRC.IDC_BUTTON1,grinsRC.IDC_EDIT1))
+		cd[a] = HrefCtrl(wnd,a,(grinsRC.IDC_STATIC0,grinsRC.IDC_RADIO1,grinsRC.IDC_RADIO2,grinsRC.IDC_RADIO3,grinsRC.IDC_BUTTON1,grinsRC.IDC_EDIT1,grinsRC.IDC_BUTTON2))
 		a = self.getattr('show')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC1,grinsRC.IDC_COMBO1))
 		a = self.getattr('sourcePlaystate')

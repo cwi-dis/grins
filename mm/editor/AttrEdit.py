@@ -2821,11 +2821,44 @@ class AnchorCoordsAttrEditorField(AttrEditorField):
 				values.append(v)
 		return values
 
-class HrefAttrEditorField(AttrEditorField):
+class HrefAttrEditorField(FileAttrEditorField):
 	def valuerepr(self, value):
 		return value
 	def parsevalue(self, str):
 		return str
+
+	def browser_callback(self):
+		import os, MMurl, urlparse
+		cwd = self.wrapper.toplevel.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		url = self.getvalue()
+		if url is None or type(url) != type(''):
+			url = ''
+		if url == '' or url == '/dev/null':
+			dir, file = cwd, ''
+		else:
+			if hasattr(self.wrapper, 'node'):
+				node = self.wrapper.node
+				url = node.GetContext().findurl(url)
+			utype, host, path, params, query, fragment = urlparse.urlparse(url)
+			if (utype and utype != 'file') or \
+			   (host and host != 'localhost'):
+				dir, file = cwd, ''
+			else:
+				file = MMurl.url2pathname(path)
+				file = os.path.join(cwd, file)
+				if os.path.isdir(file):
+					dir, file = file, ''
+				else:
+					dir, file = os.path.split(file)
+		windowinterface.FileDialog('Choose File for ' + self.label,
+					   dir, ['/Html file', 'text/html'], file, self.setpathname, None,
+					   existing=1)
 
 DISPLAYERS = {
 	'acoords': AnchorCoordsAttrEditorField,

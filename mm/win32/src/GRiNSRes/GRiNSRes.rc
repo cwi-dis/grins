@@ -3066,7 +3066,7 @@ IDD_EDITATTR_ANCHOR1 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_EDIT1,82,44,203,14,ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_EDIT1,82,44,150,14,ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "No hyperlink",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP | WS_TABSTOP,18,28,55,10
     CONTROL         "Internal link",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
@@ -3095,6 +3095,7 @@ BEGIN
     LTEXT           "Actuate:",IDC_STATIC6,166,109,28,8
     COMBOBOX        IDC_COMBO5,221,106,64,93,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
+    PUSHBUTTON      "Browse...",IDC_BUTTON2,233,44,50,14
 END
 
 IDD_EDITATTR_EMPTYGROUP DIALOG DISCARDABLE  0, 0, 300, 164
@@ -4053,7 +4054,7 @@ BEGIN
     IDUC_DISTRIBUTE_VERTICALLY 
                             "Distribute vertical space\nDistribute vertical space"
     IDUC_CREATE_ANCHOR      "Create simple hyperlink source\nCreate simple hyperlink source"
-    IDUC_FINISH_LINK        "Finish hyperlink\nFinish hyperlink"
+    IDUC_FINISH_LINK        "Finish simple link to selection\nFinish simple link to selection"
 END
 
 STRINGTABLE DISCARDABLE 
