@@ -779,11 +779,10 @@ class MMNode(MMNodeBase.MMNode):
 			return self.gensr_empty()
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
-		arg = self
-		result = [([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),
-			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),
-			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]),
-			  ([(TERMINATE, arg)]     ,[])]
+		result = [([(SCHED, self)] + in0,  [(BAG_START, self)] + out0),
+			  ([(BAG_DONE, self)],     [(SCHED_DONE,self)] + out1),
+			  ([(SCHED_STOP, self)],   [(BAG_STOP, self)]),
+			  ([(TERMINATE, self)],    [])]
 		for ev in in1:
 			result.append(([ev], [(TERMINATE, self)]))
 		return result
@@ -808,7 +807,6 @@ class MMNode(MMNodeBase.MMNode):
 			# the node.
 			# First decrement of loopcount will be done
 			# during LOOPSTART.
-			actions = [(LOOPSTART, self)]
 			if loopcount == 0:
 				self.curloopcount = -1
 			else:
@@ -816,7 +814,7 @@ class MMNode(MMNodeBase.MMNode):
 			sr_list = [
 				(
 					prereq,
-					actions
+					[(LOOPSTART, self)]
 				)
 			]
 			prereq = [(LOOPSTART_DONE, self)]
@@ -843,16 +841,12 @@ class MMNode(MMNodeBase.MMNode):
 		if self.isloopnode:
 			# all children done -> LOOPEND
 			# LOOPEND_DONE -> SCHED_DONE, syncarcs
-			if self.curloopcount == -1:
-				dlist = []
-			else:
-				dlist = [(SCHED_DONE, self)]+out1
 			srlist = [(
 				    events,
 				    [(LOOPEND, self)]
 				  ) , (
 				    [(LOOPEND_DONE, self)],
-				    dlist
+				    [(SCHED_DONE, self)]+out1
 				  )]
 		else:
 			# all children done -> SCHED_DONE, syncarcs
@@ -891,8 +885,8 @@ class MMNode(MMNodeBase.MMNode):
 			else:
 				arg = self.wtd_children[i-1]
 				sr_list = sr_list + arg.gensr()
-				prereq = [(SCHED_DONE, self.wtd_children[i-1])]
-				actions = [(SCHED_STOP, self.wtd_children[i-1])]
+				prereq = [(SCHED_DONE, arg)]
+				actions = [(SCHED_STOP, arg)]
 			if i == n_sr-1:
 				last_actions = actions
 				tail_srlist = self.gensr_tailactions(prereq,
@@ -919,7 +913,7 @@ class MMNode(MMNodeBase.MMNode):
 		out0, out1 = self.sync_to
 		duration = MMAttrdefs.getattr(self, 'duration')
 		termtype = MMAttrdefs.getattr(self, 'terminator')
-		alist = out0[:]
+		alist = out0[:]		# actions on SCHED of self
 		plist = []		# events needed before we stop
 		slist = []		# actions on SCHED_STOP of self
 		tlist = []		# actions on TERMINATE of self
@@ -1026,6 +1020,7 @@ class MMNode(MMNodeBase.MMNode):
 		#
 		srlist = self.gensr()
 		srlist.append(([(SCHED_DONE, self)], [(SCHED_STOP, self)]))
+
 		sractions, srevents = self.splitsrlist(srlist)
 		
 		seeknode.sractions = sractions[:]
