@@ -3,8 +3,11 @@ __version__ = "$Id$"
 import ViewDialog
 import windowinterface, usercmd
 from usercmd import *
+import features
 
 class SourceViewDialog(ViewDialog.ViewDialog):
+	readonly = features.SOURCE_VIEW_EDIT not in features.feature_set
+
 	def __init__(self):
 		ViewDialog.ViewDialog.__init__(self, 'sourceview_')
 		self.__textwindow = None
@@ -16,23 +19,32 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		self._findOptions = (0,0)
 		self.__selChanged = 1
 		self.__replacing = 0
-		
+
 	def __setCommonCommandList(self):
 		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ())),
-								   FIND(callback = (self.onFind, ())),
-								   FINDNEXT(callback = (self.onFindNext, ())),
-								   REPLACE(callback = (self.onReplace, ())),
-								   ]
-		
+					   FIND(callback = (self.onFind, ())),
+					   FINDNEXT(callback = (self.onFindNext, ())),
+					   ]
+		self._copyCommand = [COPY(callback = (self.onCopy, ()))]
+		if self.readonly:
+			self._undoCommand = []
+			self._cutCommand = []
+			self._pasteComamnd = []
+		else:
+			self._commonCommandList.append(REPLACE(callback = (self.onReplace, ())))
+			self._undoCommand = [UNDO(callback = (self.onUndo, ()))]
+			self._copyCommand.append(CUT(callback = (self.onCut, ())))
+			self._pasteComamnd = [PASTE(callback = (self.onPaste, ()))]
+
 	def destroy(self):
 		self.__textwindow = None
-		
+
 	def show(self):
 		self.load_geometry()
 		if not self.__textwindow:
 			import MenuTemplate
 			self.window = self.__textwindow = \
-				self.toplevel.window.textwindow("", readonly=0, xywh=self.last_geometry)
+				self.toplevel.window.textwindow("", readonly=self.readonly, xywh=self.last_geometry)
 			self.__textwindow.set_mother(self)
 			self.setpopup(MenuTemplate.POPUP_SOURCEVIEW)
 		else:
@@ -45,35 +57,29 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		if self.__textwindow:
 			self.last_geometry = self.__textwindow.getgeometry(windowinterface.UNIT_PXL)
 			return self.last_geometry
-			 
+
 	def pop(self):
 		if self.__textwindow != None:
 			self.__textwindow.pop()
-			
+
 	def __updateCommandList(self):
 		commandList = []
 
 		# undo
-		if self.__textwindow.canUndo():
+		if not self.readonly and self.__textwindow.canUndo():
 			commandList.append(UNDO(callback = (self.onUndo, ())))
 
-		# copy/paste/cut			
+		# copy/paste/cut
 		if self.__textwindow.isSelected():
-			if self.__textwindow.isClipboardEmpty():
-				commandList.append(COPY(callback = (self.onCopy, ())))
-				commandList.append(CUT(callback = (self.onCut, ())))
-			else:
-				commandList.append(COPY(callback = (self.onCopy, ())))
-				commandList.append(CUT(callback = (self.onCut, ())))
-				commandList.append(PASTE(callback = (self.onPaste, ())))
-		elif not self.__textwindow.isClipboardEmpty():
-			commandList.append(PASTE(callback = (self.onPaste, ())))
+			commandList = commandList + self._copyCommand
+		if not self.readonly and not self.__textwindow.isClipboardEmpty():
+			commandList = commandList + self._pasteComamnd
 
 		# other operations all the time actived
 		commandList = commandList+self._commonCommandList
-		
+
 		self.setcommandlist(commandList)
-		
+
 	def is_showing(self):
 		if self.__textwindow:
 			return 1
@@ -90,7 +96,7 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		if self._findReplaceDlg:
 			self._findReplaceDlg.hide()
 			self._findReplaceDlg = None
-			
+
 	def setcommandlist(self, commandlist):
 		if self.__textwindow:
 			self.__textwindow.set_commandlist(commandlist)
@@ -112,6 +118,8 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 			print "ERROR (set text): No text window"
 
 	def is_changed(self):
+		if self.readonly:
+			return 0
 		if self.__textwindow:
 			return self.__textwindow.isChanged()
 
@@ -134,38 +142,43 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		if self.__textwindow:
 			return self.__textwindow.getLineNumber()
 		return 0
-	
+
 	#
 	# text window listener interface
 	#
-	
+
 	# this call back is called when the selection change
 	def onSelChanged(self):
 		self.__updateCommandList()
 		self.__selChanged = 1
 		if not self.__replacing and self._findReplaceDlg != None:
 			self._findReplaceDlg.enableReplace(0)
-					
+
 	# this call back is called when the content of the clipboard change (or may have changed)
 	def onClipboardChanged(self):
 		self.__updateCommandList()
-			
+
 	#
 	# command listener interface
 	#
-	
+
 	# note: these copy, paste and cut operation don't use the GRiNS clipboard
 	def onCopy(self):
 		self.__textwindow.Copy()
 
 	def onCut(self):
-		self.__textwindow.Cut()
+		if self.readonly:
+			self.__textwindow.Copy()
+		else:
+			self.__textwindow.Cut()
 
 	def onPaste(self):
-		self.__textwindow.Paste()
+		if not self.readonly:
+			self.__textwindow.Paste()
 
 	def onUndo(self):
-		self.__textwindow.Undo()
+		if not self.readonly:
+			self.__textwindow.Undo()
 
 
 	#
@@ -181,13 +194,16 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		import win32dialog
 		self._findReplaceDlg = win32dialog.FindDialog(self.doFindNext, self._findText, self._findOptions, self.window)
 		self._findReplaceDlg.show()
-	
+
 	def onFindNext(self):
 		if self._findText != None:
 			self.doFindNext(self._findText, self._findOptions)
 
 	def onReplace(self):
-		# if another dlg was showed, we hide it
+		if self.readonly:
+			return
+
+		# if another dlg was shown, we hide it
 		if self._findReplaceDlg != None:
 			self._findReplaceDlg.hide()
 			self._findReplaceDlg = None
@@ -198,7 +214,7 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		self._findReplaceDlg.show()
 		if not self.__selChanged:
 			self._findReplaceDlg.enableReplace(1)
-		
+
 	def doFindNext(self, text, options):
 		if not self.__textwindow:
 			return
@@ -224,21 +240,21 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 			self._findReplaceDlg.enableReplace(found)
 		# raz the flag whitch allows to know if a replace if directly possible.
 		self.__selChanged = 0
-					
+
 	def doReplace(self, text, options, replaceText):
-		if not self.__textwindow:
+		if self.readonly or not self.__textwindow:
 			return
 
 		# save the text and options for the next time
 		self._findOptions = options
-		
+
 		if self._findText != text:
 			# the findwhat value has changed since the last find
 			# in this special case, we jump to the next value without automatic replace
 			self._findText = text
 			self.onFindNext()
 			return
-		
+
 		self.__replacing = 1
 		# save the text and options for the next time
 		self._findText = text
@@ -247,21 +263,21 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		self._replaceText = replaceText
 		if self.__textwindow:
 			self.__textwindow.replaceSel(replaceText)
-			# seek on the next occurrence found			
+			# seek on the next occurrence found
 			self.onFindNext()
 
 		self.__replacing = 0
 
 	def doReplaceAll(self, text, options, replaceText):
-		if not self.__textwindow:
+		if self.readonly or not self.__textwindow:
 			return
 
 		self.__replacing = 1
-		
+
 		# save the text and options for the next time
 		self._findText = text
 		self._findOptions = options
-			
+
 		begin = 0
 		nocc = 0
 		lastPos = None
@@ -276,5 +292,3 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		self.__replacing = 0
 
 		windowinterface.showmessage("Replaced "+`nocc`+' occurrences.')
-		
-	

@@ -32,6 +32,7 @@ __version__ = "$Id$";
 	ASSETS_VIEW,
 	CHANNEL_VIEW,
 	SOURCE_VIEW,			# show the source view for editing smil source.
+	SOURCE_VIEW_EDIT,		# allow editing of the source in the source view
 	USER_GROUPS,
 	SOURCE,
 	ERRORS_VIEW,
@@ -48,4 +49,4 @@ __version__ = "$Id$";
 	H_DROPBOX,			# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,			# Enable internal node collapsing.
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
-] = range(28)				# don't forget to update this range!
+] = range(29)				# don't forget to update this range!
