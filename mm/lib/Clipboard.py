@@ -40,12 +40,15 @@ class Clipboard:
 	def __repr__(self):
 		return '<Clipboard instance, type=' + `self.type` + '>'
 
-	def _setclip(self, data, owned=0):
+	def setclip(self, data, owned=0):
 		if not type(data) in (type(()), type([])):
 			print 'Clipboard.setclip : data is not a list ',data
 			return
+		for node in self.__data:
+			node.removeOwner(OWNER_CLIPBOARD)
 		for node in data:
 			node.addOwner(OWNER_CLIPBOARD)
+		
 		self.__data = data
 		self.__owned = owned
 

@@ -2,13 +2,13 @@
 # different possible values:
 # OWNER_NONE: none is owner
 # OWNER_DOCUMENT: the node is part of the document
-# OWNER_UNDOSTACK: the node is in the 'standard' part of the undo stack
-# OWNER_CLIPBOARD: the node is either in the clipboard or in the undo stack (clipboard part)
+# OWNER_CLIPBOARD: the node is part of the clipboard
+# OWNER_ASSET: the node is part of the asset view
 
 OWNER_NONE = 0
 OWNER_DOCUMENT = 1
-OWNER_UNDOSTACK = 2
-OWNER_CLIPBOARD = 4
+OWNER_CLIPBOARD = 2
+OWNER_ASSET = 4
 
 class Owner:
 	def __init__(self):
