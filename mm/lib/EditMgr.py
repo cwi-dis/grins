@@ -572,6 +572,7 @@ class EditMgr(Clipboard.Clipboard):
 	def clean_addchannel(self, channel):
 		pass
 
+	# Not currently used. 
 	def copychannel(self, name, i, orig):
 		self.attrs_changed = 1
 		c = self.context.getchannel(name)
@@ -586,12 +587,15 @@ class EditMgr(Clipboard.Clipboard):
 		self.context.copychannel(name, i, orig)
 		self.next_focus = [self.context.getchannel(name)]
 
+	# Not currently used. 
 	def undo_copychannel(self, name):
 		self.delchannel(name)
 
+	# Not currently used. 
 	def clean_copychannel(self, name):
 		pass
 
+	# Not currently used. 
 	def movechannel(self, name, i):
 		self.attrs_changed = 1
 		old_i = self.context.channelnames.index(name)
@@ -599,9 +603,11 @@ class EditMgr(Clipboard.Clipboard):
 		self.context.movechannel(name, i)
 		self.next_focus = [self.context.getchannel(name)]
 
+	# Not currently used. 
 	def undo_movechannel(self, name, old_i):
 		self.movechannel(name, old_i)
 
+	# Not currently used. 
 	def clean_movechannel(self, name, old_i):
 		pass
 
@@ -635,7 +641,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.addchannel(parent, i, channel)
 
 	def clean_delchannel(self, parent, i, channel):
-		self.context.delchannel(channel.name)
+		channel.Destroy()
 
 	def setchannelname(self, name, newname):
 		self.attrs_changed = 1
