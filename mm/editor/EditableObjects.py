@@ -147,29 +147,6 @@ class EditableMMNode(MMNode.MMNode):
 	# Note that the commands should control the EditMgr - they
 	# are essentually macro-level commands that use the methods above. -mjvdg.
 
-	def playablecall(self):
-		self.toplevel.setwaiting()
-		self.showplayability = not self.showplayability
-		self.settoggle(PLAYABLE, self.showplayability)
-		self.draw()
-
-	def bandwidthcall(self):
-		print "TODO: bandwidth compute."
-##		self.toplevel.setwaiting()
-##		bandwidth = settings.get('system_bitrate')
-##		if bandwidth > 1000000:
-##			bwname = "%dMbps"%(bandwidth/1000000)
-##		elif bandwidth % 1000 == 0:
-##			bwname = "%dkbps"%(bandwidth/1000)
-##		else:
-##			bwname = "%dbps"%bandwidth
-##		msg = 'Computing bandwidth usage at %s...'%bwname
-##		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
-##		bandwidth, prerolltime, delaycount, errorseconds, errorcount = \
-##			BandwidthCompute.compute_bandwidth(self.root)
-##		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
-##		dialog.done()
-
 	def playcall(self):
 		self.context.toplevel.player.playsubtree(self)
 
@@ -228,7 +205,6 @@ class EditableMMNode(MMNode.MMNode):
 
 	def createbeforecall(self, chtype=None):
 		assert 0
-		if self.focusobj: self.focusobj.createbeforecall(chtype)
 
 	def createbeforeintcall(self, ntype):
 		assert 0
@@ -303,7 +279,6 @@ class EditableMMNode(MMNode.MMNode):
 		
 	def pasteundercall(self, index):
 		# Index is the index of this node.
-		print "DEBUG: pasting under."
 		if self.IsLeafNode():
 			windowinteface.beep()
 			return
@@ -320,6 +295,22 @@ class EditableMMNode(MMNode.MMNode):
 			self._insertnode(pasteme, index)
 			em.commit()
 
+	def take(self, othernode, index):
+		# othernode is a leafnode or sub-tree that I'm going to grab and put under me.
+		# index is which of my children it will be.
+		em = self.context.editmgr
+		print "DEBUG: Hang on.."
+		if isinstance(othernode, EditableMMNode) \
+		   and not self.IsAncestorOf(othernode) \
+		   and othernode is not self.context.root \
+		   and othernode not in self.children \
+		   and index < len(self.children) \
+		   and em.transaction():
+			print "DEBUG: Passed. Adding node."
+			em.delnode(othernode)
+			em.addnode(self, index, othernode)
+			em.commit()
+			
 ######################################################################
 # Editing regions.
 # TODO.
