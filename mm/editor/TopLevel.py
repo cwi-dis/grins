@@ -58,7 +58,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 	def destroy(self):
 		BasicDialog.destroy(self)
 		self.destroyviews()
-		AttrEdit.closeall(self.root)
+		AttrEdit.hideall(self.root)
 		NodeInfo.closeall(self.root)
 	#
 	# Main interface.
@@ -134,22 +134,27 @@ class TopLevel() = ViewDialog(), BasicDialog():
 	#
 	def makeviews(self):
 		import BlockView
-		self.blockview = BlockView.BlockView().init(self.root)
+		self.blockview = BlockView.BlockView().init(self)
+		#
 		import ChannelView
 		self.channelview = \
-			ChannelView.ChannelView().init(self.root)
+			ChannelView.ChannelView().init(self)
+		#
 		import Player
-		self.presview = Player.Player().init(self.root)
+		self.player = Player.Player().init(self)
 		setcurrenttime = self.channelview.setcurrenttime
-		self.presview.set_setcurrenttime_callback(setcurrenttime)
+		self.player.set_setcurrenttime_callback(setcurrenttime)
+		#
 		import StyleEdit
-		self.styleview = StyleEdit.StyleEditor().init(self.root)
+		self.styleview = StyleEdit.StyleEditor().init(self)
+		#
 		self.views = [self.blockview, self.channelview, \
-				self.presview, self.styleview]
+				self.player, self.styleview]
+		#
 		self.bvbutton.set_call_back(self.view_callback, self.blockview)
 		self.cvbutton.set_call_back(self.view_callback, \
 						self.channelview)
-		self.pvbutton.set_call_back(self.view_callback, self.presview)
+		self.pvbutton.set_call_back(self.view_callback, self.player)
 		self.svbutton.set_call_back(self.view_callback, self.styleview)
 	#
 	def hideviews(self):
