@@ -3,14 +3,14 @@ __version__ = "$Id$"
 from Channel import Channel
 import MMAttrdefs
 import string
-import os
+import os, sts
 import MMurl
 
 if os.name == 'posix':
 	ProgramAttrname = 'unixprog'
 elif os.name == 'mac':
 	ProgramAttrname = 'macprog'
-elif os.name == 'win':
+elif sys.platform == 'win32':
 	ProgramAttrname = 'winprog'
 else:
 	print 'Warning: unknown OS for ExternalChannel'
