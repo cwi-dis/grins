@@ -158,7 +158,8 @@ CommandUI(PREVSIBLING,IDUC_PREVSIBLING)
 # Command to hierarchy/channel view
 #
 CommandUI(ATTRIBUTES,IDUC_ATTRIBUTES)
-
+CommandUI(CREATEANCHOR, IDUC_CREATE_ANCHOR)
+CommandUI(FINISH_LINK, IDUC_FINISH_LINK)
 
 #
 # Channel view commands
