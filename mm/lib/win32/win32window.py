@@ -2110,7 +2110,7 @@ class ViewportContext:
 	def onTimer(self, params):
 		self._viewport.update()
 
-	def update(self, rc=None):
+	def update(self, rc=None, exclwnd=None):
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
 				return
@@ -2131,7 +2131,7 @@ class ViewportContext:
 			return
 
 		if self._viewport:
-			self._viewport.paint(rc)
+			self._viewport.paint(rc, exclwnd)
 
 	def setcursor(self, strid):
 		pass
