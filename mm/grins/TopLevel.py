@@ -19,6 +19,7 @@ class TopLevel(TopLevelDialog):
 		self.select_dict = {}
 		self._last_timer_id = None
 		self.main = main
+		self.url = url
 		utype, host, path, params, query, fragment = urlparse(url)
 		dir, base = posixpath.split(path)
 		if (not utype or utype == 'file') and \
@@ -45,6 +46,7 @@ class TopLevel(TopLevelDialog):
 		self.makeplayer()
 		self.commandlist = [
 			CLOSE(callback = (self.close_callback, ())),
+			RELOAD(callback = (self.reload_callback, ())), 
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -121,35 +123,35 @@ class TopLevel(TopLevelDialog):
 		self.showsource(self.root.source)
 ##		self.source.set_mother(self)
 
-	def open_okcallback(self, filename):
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
-		try:
-			top = TopLevel(self.main, MMurl.pathname2url(filename))
-		except:
-			msg = sys.exc_value
-			if type(msg) is type(self):
-				if hasattr(msg, 'strerror'):
-					msg = msg.strerror
-				else:
-					msg = msg.args[0]
-			windowinterface.showmessage('Open operation failed.\n'+
-						    'File: '+filename+'\n'+
-						    'Error: '+`msg`)
-			return
-		top.show()
-		top.player.show()
-		top.player.playsubtree(top.root)
+#	def open_okcallback(self, filename):
+#		if os.path.isabs(filename):
+#			cwd = os.getcwd()
+#			if os.path.isdir(filename):
+#				dir, file = filename, os.curdir
+#			else:
+#				dir, file = os.path.split(filename)
+#			# XXXX maybe should check that dir gets shorter!
+#			while len(dir) > len(cwd):
+#				dir, f = os.path.split(dir)
+#				file = os.path.join(f, file)
+#			if dir == cwd:
+#				filename = file
+#		try:
+#			top = TopLevel(self.main, MMurl.pathname2url(filename))
+#		except:
+#			msg = sys.exc_value
+#			if type(msg) is type(self):
+#				if hasattr(msg, 'strerror'):
+#					msg = msg.strerror
+#				else:
+#					msg = msg.args[0]
+#			windowinterface.showmessage('Open operation failed.\n'+
+#						    'File: '+filename+'\n'+
+#						    'Error: '+`msg`)
+#			return
+#		top.show()
+#		top.player.show()
+#		top.player.playsubtree(top.root)
 
 	def progressCallback(self, pValue):
 		self.progress.set(self.progressMessage, None, None, pValue*100, 100)
@@ -234,7 +236,20 @@ class TopLevel(TopLevelDialog):
 		self.reload()
 
 	def reload(self):
-		self.open_okcallback(self.filename);
+		try:
+			top = TopLevel(self.main, self.url)
+		except IOError:
+			import windowinterface
+			windowinterface.showmessage('error opening document %s' % self.url)
+			return
+		except MSyntaxError:
+			import windowinterface
+			windowinterface.showmessage('parsing document %s failed' % self.url)
+			return
+		top.show()
+		top.player.show()
+		top.player.playsubtree(top.root)
+		
 		self.close()
 		
 	def close_callback(self):
