@@ -58,8 +58,13 @@ class BasicDialog() = (glwindow.glwindow)():
 	#
 	def show(self):
 		if self.showing: return
+		self.load_geometry()
 		glwindow.setgeometry(self.last_geometry)
-		self.form.show_form(PLACE_SIZE, TRUE, self.title)
+		if self.last_geometry = None:
+			place = PLACE_SIZE
+		else:
+			place = PLACE_FREE
+		self.form.show_form(place, TRUE, self.title)
 		glwindow.register(self, self.form.window)
 		gl.winset(self.form.window)
 		gl.winconstraints()
@@ -69,6 +74,7 @@ class BasicDialog() = (glwindow.glwindow)():
 	def hide(self):
 		if not self.showing: return
 		self.get_geometry()
+		self.save_geometry()
 		glwindow.unregister(self)
 		self.form.hide_form()
 		self.showing = 0
@@ -84,6 +90,14 @@ class BasicDialog() = (glwindow.glwindow)():
 	def winshut(self):
 		self.hide()
 	#
+	# Clients can override these methods to copy self.last_geometry
+	# from/to more persistent storage:
+	#
+	def load_geometry(self):
+		pass
+	#
+	def save_geometry(self):
+		pass
 
 
 class Dialog() = BasicDialog():
@@ -159,21 +173,24 @@ class Dialog() = BasicDialog():
 class GLDialog() = (glwindow.glwindow)():
 	#
 	def init(self, title):
-		self.title = None
+		self.title = title
 		self.wid = 0
 		self.last_geometry = None
 		return self
 	#
 	def show(self):
 		if self.wid <> 0: return
+		self.load_geometry()
 		glwindow.setgeometry(self.last_geometry)
 		self.wid = gl.winopen(self.title)
+		gl.winconstraints()
 		glwindow.register(self, self.wid)
 		fl.qdevice(DEVICE.WINSHUT)
 	#
 	def hide(self):
 		if self.wid = 0: return
 		self.get_geometry()
+		self.save_geometry()
 		glwindow.unregister(self)
 		gl.winclose(self.wid)
 		self.wid = 0
@@ -189,6 +206,15 @@ class GLDialog() = (glwindow.glwindow)():
 	def winshut(self):
 		self.hide()
 	#
+	# Clients can override these methods to copy self.last_geometry
+	# from/to more persistent storage:
+	#
+	def load_geometry(self):
+		pass
+	#
+	def save_geometry(self):
+		pass
+	#
 
 
 # Test function for Dialog()
@@ -197,8 +223,9 @@ def test():
 	d = Dialog().init(400, 200, 'Dialog.test', 'hint hint')
 	d.show()
 	n = 5
-	while n > 0:
+	while 1:
 		fl.check_forms()
 		if not d.showing:
 			n = n-1
+			if n < 0: break
 			d.show()
