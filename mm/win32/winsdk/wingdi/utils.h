@@ -68,6 +68,7 @@ class PyIntListConverter
 				return false;
 			m_pint[i] = PyInt_AsLong(pyval);
 			}
+		return true;
 		}
 	~PyIntListConverter()
 		{
@@ -85,6 +86,7 @@ class PyIntListConverter
 		m_pbyte = new BYTE[m_num];
 		for(int i=0;i<m_num;i++) 
 			m_pbyte[i]=BYTE(m_pint[i]);
+		return m_pbyte;
 		}
 	private:
 	int m_num;
