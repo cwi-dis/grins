@@ -447,11 +447,26 @@ class _Window:
 		gc.foreground = self._convert_color((255,0,0))
 		x, y, w, h = self._rect
 		gc.DrawRectangle(x, y, w-1, h-1)
+		if hasattr(self, '_pixmap'):
+			x, y, w, h = self._rect
+			self._pixmap.CopyArea(self._form, gc,
+					      x, y, w, h, x, y)
+		toplevel._main.UpdateDisplay()
 
 	def dontshowwindow(self):
 		if self._showing:
 			self._showing = 0
-			self._topwindow._do_expose(self._region)
+			x, y, w, h = self._rect
+			r = Xlib.CreateRegion()
+			r.UnionRectWithRegion(x, y, w, h)
+			r1 = Xlib.CreateRegion()
+			r1.UnionRectWithRegion(x+1, y+1, w-2, h-2)
+			r.SubtractRegion(r1)
+			self._topwindow._do_expose(r)
+			if hasattr(self, '_pixmap'):
+				self._gc.SetRegion(r)
+				self._pixmap.CopyArea(self._form, self._gc,
+						      x, y, w, h, x, y)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent)
@@ -1102,6 +1117,8 @@ class _DisplayList:
 
 	def render(self):
 		w = self._window
+		for b in self._buttons:
+			b._highlighted = 0
 		region = w._clip
 		# draw our bit
 		self._render(region)
@@ -1168,6 +1185,9 @@ class _DisplayList:
 		for i in range(clonestart, len(self._list)):
 			self._do_render(self._list[i], region)
 		w._active_displist = self
+		for b in self._buttons:
+			if b._highlighted:
+				b._do_highlight()
 
 	def _do_render(self, entry, region):
 		cmd = entry[0]
@@ -1378,6 +1398,7 @@ class _Button:
 		self._color = self._hicolor = dispobj._fgcolor
 		self._width = self._hiwidth = dispobj._linewidth
 		self._newdispobj = None
+		self._highlighted = 0
 		if self._color == dispobj._bgcolor:
 			return
 		dispobj.drawbox(self._coordinates)
@@ -1413,20 +1434,48 @@ class _Button:
 		if self._color == dispobj._bgcolor and \
 		   self._hicolor == dispobj._bgcolor:
 			return
-		new = dispobj.clone()
-		new.fgcolor(self._hicolor)
-		new.linewidth(self._hiwidth)
-		new.drawbox(self._coordinates)
-		new.render()
-		self._newdispobj = new
+		self._highlighted = 1
+		self._do_highlight()
+		if hasattr(window, '_pixmap'):
+			x, y, w, h = window._rect
+			window._pixmap.CopyArea(window._form, window._gc,
+						x, y, w, h, x, y)
+		toplevel._main.UpdateDisplay()
+
+	def _do_highlight(self):
+		window = self._dispobj._window
+		gc = window._gc
+		gc.foreground = window._convert_color(self._hicolor)
+		gc.line_width = self._hiwidth
+		gc.SetRegion(window._clip)
+		apply(gc.DrawRectangle, window._convert_coordinates(self._coordinates))
 
 	def unhighlight(self):
-		if not self._newdispobj:
+		dispobj = self._dispobj
+		if dispobj is None:
 			return
-		if self._dispobj._window._active_displist is self._newdispobj:
-			self._dispobj.render()
-		self._newdispobj.close()
-		self._newdispobj = None
+		window = dispobj._window
+		if window._active_displist is not dispobj:
+			return
+		if not self._highlighted:
+			return
+		self._highlighted = 0
+		# calculate region to redisplay
+		x, y, w, h = window._convert_coordinates(self._coordinates)
+		lw = self._hiwidth / 2
+		r = Xlib.CreateRegion()
+		r.UnionRectWithRegion(x - lw, y - lw,
+				      w + 2*lw + 1, h + 2*lw + 1)
+		r1 = Xlib.CreateRegion()
+		r1.UnionRectWithRegion(x + lw + 1, y + lw + 1,
+				       w - 2*lw - 1, h - 2*lw - 1)
+		r.SubtractRegion(r1)
+		window._do_expose(r)
+		if hasattr(window, '_pixmap'):
+			x, y, w, h = window._rect
+			window._pixmap.CopyArea(window._form, window._gc,
+						x, y, w, h, x, y)
+		toplevel._main.UpdateDisplay()
 
 	def _inside(self, x, y):
 		# return 1 iff the given coordinates fall within the button
