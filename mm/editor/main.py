@@ -39,7 +39,7 @@ class Main:
 		self.tops = []
 		self._mm_callbacks = {}
 		try:
-			import mm, posix
+			import mm, posix, fcntl, FCNTL
 		except ImportError:
 			pass
 		else:
@@ -47,7 +47,8 @@ class Main:
 			mm.setsyncfd(pipe_w)
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
-						self._mmcallback, ())
+						self._mmcallback,
+						(posix.read, fcntl.fcntl, FCNTL))
 		new_file = 0
 		if not files:
 			files = ['NEW-DOCUMENT.cmif']
@@ -104,14 +105,13 @@ class Main:
 		elif self._mm_callbacks.has_key(dev):
 			del self._mm_callbacks[dev]
 
-	def _mmcallback(self):
-		import posix, fcntl, FCNTL
+	def _mmcallback(self, read, fcntl, FCNTL):
 		# set in non-blocking mode
-		dummy = fcntl.fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.O_NDELAY)
+		dummy = fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.O_NDELAY)
 		# read a byte
-		devval = posix.read(self._mmfd, 1)
+		devval = read(self._mmfd, 1)
 		# set in blocking mode
-		dummy = fcntl.fcntl(self._mmfd, FCNTL.F_SETFL, 0)
+		dummy = fcntl(self._mmfd, FCNTL.F_SETFL, 0)
 		# return if nothing read
 		if not devval:
 			return
