@@ -110,7 +110,7 @@ def readattrdefs(fp, filename):
 		fpc.write('\n')
 		fpc.close()
 	except IOError, msg:
-		print 'Can\'t write compiled attributes to', filename_com
+		print 'Can\'t write compiled attributes to', filename_py
 		print msg[1]
 	if verbose:
 	    print 'Done.'
