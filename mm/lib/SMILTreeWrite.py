@@ -941,6 +941,9 @@ def getpath(writer, node):
 	attr = string.join(string.split(attr,','),' ')
 	return attr
 
+def getcollapsed(writer, node):
+	if node.GetType() in interiortypes and node.collapsed:
+		return 'true'
 	
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
@@ -1041,6 +1044,7 @@ smil_attrs=[
 	("mediaTime", lambda writer, node:getstringattr(writer, node, "mediaTime")),
 	("bandwidth", lambda writer, node:getstringattr(writer, node, "bandwidth")),
 
+	("collapsed", getcollapsed),
 ]
 prio_attrs = [
 	("id", getid),
@@ -1052,6 +1056,7 @@ prio_attrs = [
 	('peers', lambda writer, node: getcmifattr(writer, node, 'peers', 'stop')),
 	('higher', lambda writer, node: getcmifattr(writer, node, 'higher', 'pause')),
 	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit')),
+	("collapsed", getcollapsed),
 	]
 
 # attributes that we know about and so don't write into the SMIL file using
@@ -1417,11 +1422,7 @@ class SMILWriter(SMIL):
 		self.writetransitions()
 		self.writegrinslayout()
 		self.pop()
-		self.writetag('body')
-		self.push()
 		self.writenode(self.root, root = 1)
-##		self.pop()
-##		self.pop()
 		self.close()
 
 	def writebare(self):
@@ -2021,11 +2022,18 @@ class SMILWriter(SMIL):
 	def writenode(self, x, root = 0):
 		"""Write a node (possibly recursively)"""
 		type = x.GetType()
+		# XXX I don't like this special casing here --sjoerd
 		if type=='imm' and x.GetChannelType()=='animate':
-			self.writeanimatenode(x, root)
+			if root:
+				self.writetag('body')
+				self.push()
+			self.writeanimatenode(x)
 			return
 		elif x.GetChannelType()=='prefetch':
-			self.writeprefetchnode(x, root)
+			if root:
+				self.writetag('body')
+				self.push()
+			self.writeprefetchnode(x)
 			return
 
 		if type == 'bag':
@@ -2108,21 +2116,26 @@ class SMILWriter(SMIL):
 ##			     not cmif_node_realpix_attrs_ignore.has_key(key))):
 ##				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),
 ##						 MMAttrdefs.valuerepr(key, val)))
+		if not interior and root:
+			self.writetag('body')
+			self.push()
 		if interior:
 			if type == 'seq' and self.copydir and not x.GetChildren():
 				# Warn the user for a bug in G2
 				import windowinterface
 				windowinterface.showmessage('Warning: some G2 versions crash on empty sequence nodes')
 				x.set_infoicon('error', 'Warning: some G2 versions crash on empty sequence nodes')
-			if root and (attrlist or type != 'seq'):
-				root = 0
-			if not root:
-				self.writetag(mtype, attrlist)
-				self.push()
+			if root:
+				if type != 'seq' or (not self.smilboston and attrlist):
+					self.writetag('body')
+					self.push()
+				else:
+					mtype = 'body'
+			self.writetag(mtype, attrlist)
+			self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
-			if not root:
-				self.pop()
+			self.pop()
 		elif is_realpix and self.copydir:
 			# If we are exporting handle RealPix specially: we might want
 			# to convert it into a <par> containing a realpix node and a
@@ -2219,7 +2232,7 @@ class SMILWriter(SMIL):
 		for i in range(pushed):
 			self.pop()
 
-	def writeanimatenode(self, node, root):
+	def writeanimatenode(self, node):
 		attrlist = []
 		tag = node.GetAttrDict().get('tag')
 		attributes = self.attributes.get(tag, {})
@@ -2230,7 +2243,7 @@ class SMILWriter(SMIL):
 					attrlist.append((name, value))
 		self.writetag(tag, attrlist)
 
-	def writeprefetchnode(self, node, root):
+	def writeprefetchnode(self, node):
 		attrlist = []
 		attributes = self.attributes.get('prefetch', {})
 		for name, func in smil_attrs:
