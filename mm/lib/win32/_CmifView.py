@@ -120,15 +120,22 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
 		self._rect=0,0,msg.width(),msg.height()
-		self.fitCanvas(msg.width(),msg.height())
-		self._resize_tree()
+		if self.fitCanvas(msg.width(),msg.height()):
+			self._resize_tree()
 
-	def fitCanvas(self,width,height):		
-		x,y,w,h=self._canvas
-		if width>w:w=width
-		if height>h:h=height	
-		self._canvas = (x,y,w,h)
+	def fitCanvas(self,width,height):
+		changed = 0		
+		import settings
+		no_canvas_resize = settings.get('no_canvas_resize')
+		if not no_canvas_resize:
+			x,y,w,h=self._canvas
+			if width>w:w=width
+			if height>h:h=height
+			self._canvas = (x,y,w,h)
+			changed = 1
+		# Otherwise we only have to update scroll position	
 		self._scroll(-1)
+		return changed
 		
 	# Adjusts the scroll sizes of the scroll view. Part of the set canvas sequence. 
 	def _scroll(self,how):
