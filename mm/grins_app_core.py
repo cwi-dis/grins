@@ -27,7 +27,9 @@ def SafeCallbackCaller(fn, args):
 		# We trap all other errors, ensure the main window is shown, then
 		# print the traceback.
 		try:
-			win32ui.GetMainFrame().ShowWindow(win32con.SW_SHOW)
+			import __main__
+			if not hasattr(__main__,'embedded') or not __main__.embedded:
+				win32ui.GetMainFrame().ShowWindow(win32con.SW_SHOW)
 		except win32ui.error:
 			print "Cant show the main frame!"
 		traceback.print_exc()
@@ -104,8 +106,9 @@ class GrinsApp(thread.WinApp):
 		self.frame.LoadFrame(win32ui.IDR_MAINFRAME, win32con.WS_OVERLAPPEDWINDOW)
 		#self.frame.DragAcceptFiles()	# we can accept these.
 
-#		self.frame.ShowWindow(win32ui.GetInitialStateRequest());
-#		self.frame.UpdateWindow();
+		if 0:
+			self.frame.ShowWindow(win32ui.GetInitialStateRequest());
+			self.frame.UpdateWindow();
 
 		self.frame.SetWindowText("GRiNS Debugging Terminal")
 		self.HookCommands()
