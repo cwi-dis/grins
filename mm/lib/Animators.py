@@ -622,8 +622,8 @@ class EffectiveAnimator:
 		self.__lastanimator = None
 		
 		# helper variables
-		self.__region = None
-		self.__regionContents = []
+		self.__layout = None
+		self.__layoutContents = []
 
 	def getDOMValue(self):
 		return self.__domval
@@ -636,6 +636,15 @@ class EffectiveAnimator:
 
 	def getTargetNode(self):
 		return self.__node
+
+	def getCssObj(self, mmobj):
+		return self.__context._cssResolver.getCssObj(mmobj)
+
+	def getCssAttr(self, mmobj, name):		
+		return self.getCssObj(mmobj).getRawAttr(name)
+
+	def getPxGeom(self, mmobj):
+		return self.getCssObj(mmobj).getPxGeom()
 
 	def onAnimateBegin(self, targChan, animator):
 		for a in self.__animators:
@@ -716,14 +725,14 @@ class EffectiveAnimator:
 				print 'update',self.__attr,'of node',name,'to',displayValue		
 	
 
-	def __getregion(self, name):
+	def __getLayoutChannel(self, name):
 		from Channel import channels
 		for chan in channels:
 			type = chan._attrdict.get('type')
 			if type == 'layout' and chan._name == name:
 				return chan
 
-	def __appendsubregions(self, region, childs):
+	def __appendLayoutChannels(self, region, childs):
 		from Channel import channels
 		for chan in channels:
 			chtype = chan._attrdict.get('type')
@@ -731,7 +740,7 @@ class EffectiveAnimator:
 				base_window = chan._attrdict.get('base_window')
 				if base_window == region._name:
 					childs.append(chan)
-					self.__appendsubregions(chan, childs)
+					self.__appendLayoutChannels(chan, childs)
 
 	# update region attributes display value
 	def __updateregion(self, value):
@@ -740,38 +749,47 @@ class EffectiveAnimator:
 		regionname = ch.name
 
 		# locate region and its contents (once)
-		if not self.__region:
-			self.__region = self.__getregion(regionname)
-			self.__appendsubregions(self.__region, self.__regionContents)
-	
-		mmlchan = self.__region._attrdict
+		if not self.__layout:
+			self.__layout = self.__getLayoutChannel(regionname)
+			self.__appendLayoutChannels(self.__layout, self.__layoutContents)			
+
+		region = self.__layout._attrdict
+		cssregion = self.getCssObj(region)
 
 		# fit (scale): ['hidden':1, 'meet':0, 'slice': -1, 'fill':-3]
-		scale = mmlchan.getCssRawAttr('scale',1)
+		scale = cssregion.getScale()
 
 		if attr == 'position':
-			region = mmlchan.getCssId()
-			region.move(value)
-			coords = region.getPxGeom()
-			self.__updatecoordinates(coords, scale=scale)
+			cssregion.move(value)
+			coords = cssregion.getPxGeom()
+			self.__updatecoordinates(coords, UNIT_PXL, scale)
+			for lch in self.__layoutContents:
+				reg = lch._attrdict
+				cssreg = self.getCssObj(reg)
+				if lch.window:
+					lch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale())
 
 		elif attr in ('left','top','width','height','right','bottom'):
-			region = mmlchan.getCssId()
-			region.changeRawAttr(attr, value)
-			coords = region.getPxGeom()
-			self.__updatecoordinates(coords, scale=scale)
-			
+			cssregion.changeRawAttr(attr, value)
+			coords = cssregion.getPxGeom()
+			self.__updatecoordinates(coords, UNIT_PXL, scale)
+			for lch in self.__layoutContents:
+				reg = lch._attrdict
+				cssreg = self.getCssObj(reg)
+				if lch.window:
+					lch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale())
+
 		elif attr=='z':
 			self.__updatezindex(value)
-			mmlchan.SetPresentationAttr(attr, value)
+			region.SetPresentationAttr(attr, value)
 
 		elif attr=='bgcolor':
 			self.__updatebgcolor(value)
-			mmlchan.SetPresentationAttr(attr, value)
+			region.SetPresentationAttr(attr, value)
 
 		elif attr=='soundLevel':
 			self.__updatesoundlevel(value)
-			mmlchan.SetPresentationAttr(attr, value)
+			region.SetPresentationAttr(attr, value)
 		else:
 			print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
 
@@ -779,24 +797,24 @@ class EffectiveAnimator:
 			print 'update',attr,'of region',regionname,'to',value
 
 	def __updatecoordinates(self, coords, units = UNIT_PXL, scale=None):
-		if self.__region and self.__region.window:
-			self.__region.window.updatecoordinates(coords, units, scale)
+		if self.__layout and self.__layout.window:
+			self.__layout.window.updatecoordinates(coords, units, scale)
 
 	def __updatezindex(self, z):
-		if self.__region and self.__region.window:
-			self.__region.window.updatezindex(z)
+		if self.__layout and self.__layout.window:
+			self.__layout.window.updatezindex(z)
 			
 	def __updatebgcolor(self, color):
-		if self.__region and self.__region.window:
-			self.__region.window.updatebgcolor(color)
+		if self.__layout and self.__layout.window:
+			self.__layout.window.updatebgcolor(color)
 			# update content with inherited backgroundColor
-			for chan in self.__regionContents:
+			for lch in self.__layoutContents:
 				# check for inherited attr
-				if not chan._attrdict.get('bgcolor') and chan.window: 
-					chan.window.updatebgcolor(color)
+				if not lch._attrdict.get('bgcolor') and lch.window: 
+					lch.window.updatebgcolor(color)
 			
 	def __updatesoundlevel(self, level):
-		for chan in self.__regionContents:
+		for chan in self.__layoutContents:
 			if hasattr(chan,'updatesoundlevel'):
 				chan.updatesoundlevel(level)
 	
@@ -828,7 +846,7 @@ class EffectiveAnimator:
 		scale = mmlchan.getCssRawAttr('scale',1)
 
 		if self.__attr == 'position':
-			resolver = self.__context.getCssResolver()
+			resolver = self.__context.getPrimaryCssResolver() # XXX temp
 			region = self.__node.getSubRegCssId()
 			resolver.link(region, mmlchan.getCssId())
 			region.move(value)
@@ -838,7 +856,7 @@ class EffectiveAnimator:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
 
 		elif self.__attr in ('left','top','width','height','right','bottom'):
-			resolver = self.__context.getCssResolver()
+			resolver = self.__context.getPrimaryCssResolver() # XXX temp
 			region = self.__node.getSubRegCssId()
 			resolver.link(region, mmlchan.getCssId())
 			region.changeRawAttr(self.__attr, value)
@@ -882,7 +900,8 @@ class AnimateContext:
 		self._player = player
 		self._effAnimators = {}
 		self._id2key = {}
-		self._cssResolver = player.context.cssResolver
+		self._mmtree = MMNode.MMChannelTree(player.context)
+		self._cssResolver = self._mmtree.toCssResolver()
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
@@ -904,6 +923,11 @@ class AnimateContext:
 	
 	def getCssResolver(self):
 		return self._cssResolver
+
+	# temporary
+	# until we complete work with animation instance
+	def getPrimaryCssResolver(self):
+		return self._player.cssResolver
 
 ###########################
 # Gen impl. rem:
