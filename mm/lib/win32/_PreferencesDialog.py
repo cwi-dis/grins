@@ -25,6 +25,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		self['system_language']= Edit(self,grinsRC.IDC_EDIT2)
 		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK1)
 		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK2)
+		self['cmif']=CheckButton(self, grinsRC.IDC_CHECK3)
 
 		self['OK']=Button(self,win32con.IDOK)
 		self['Cancel']=Button(self,win32con.IDCANCEL)
@@ -134,7 +135,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 	def setboolitem(self, item, value):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
-		self[item].setcheck(1)
+		self[item].setcheck(value)
 
 	# get the attribute of the bool item
 	def getboolitem(self, item):
