@@ -130,6 +130,7 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		self['Title']=components.Edit(self,grinsRC.IDC_EDIT2)
 		self['State']=components.ComboBox(self,grinsRC.IDC_COMBO1)
 		self['Override']=components.ComboBox(self,grinsRC.IDC_COMBO2)
+		self['UID']=components.Edit(self,grinsRC.IDC_EDIT3)
 		self['Cancel']=components.Button(self,win32con.IDCANCEL)
 		self['Restore']=components.Button(self,grinsRC.IDC_RESTORE)
 		self['Apply']=components.Button(self,grinsRC.IDC_APPLY)
@@ -140,12 +141,12 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		self.HookCommand(self.OnRestore,self['Restore']._id)
 		self.HookCommand(self.OnApply,self['Apply']._id)
 
-	def do_init(self, ugroup, title, ustate, override, cbdict):
+	def do_init(self, ugroup, title, ustate, override, cbdict, uid):
 		ls=['NOT RENDERED', 'RENDERED']
 		self['State'].initoptions(ls)
 		lo=['not-allowed', 'allowed', 'uid-only']
 		self['Override'].initoptions(lo)
-		self.setstate(ugroup, title, ustate, override)
+		self.setstate(ugroup, title, ustate, override, uid)
 		self._cbdict=cbdict
 
 	def OnOK(self):
@@ -167,7 +168,7 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		"""Close the dialog."""
 		self.DestroyWindow()
 
-	def setstate(self, ugroup, title, ustate, override):
+	def setstate(self, ugroup, title, ustate, override, uid):
 		"""Set the values in the dialog.
 
 		Arguments (no defaults):
@@ -175,9 +176,11 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
 		override -- string 'allowed', 'not-allowed' or 'uid-only'
+		uid -- string URI
 		"""
 		self['Name'].settext(ugroup)
 		self['Title'].settext(title)
+		self['UID'].settext(uid)
 		if ustate == 'RENDERED':
 			upos = 1
 		else:
@@ -196,4 +199,5 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		return self['Name'].gettext(), \
 		       self['Title'].gettext(), \
 		       self['State'].getvalue(), \
-		       self['Override'].getvalue()
+		       self['Override'].getvalue(), \
+		       self['UID'].gettext()
