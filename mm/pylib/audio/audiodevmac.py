@@ -17,7 +17,7 @@ class AudioDevMAC:
 
 	def __init__(self, fmt = None, qsize = None):
 		if qsize is None:
-			qsize = 100000
+			qsize = 48000
 		self.__format = None
 		self.__nchannels = self.__sampwidth = 0
 		self.__chan = None
@@ -63,8 +63,7 @@ class AudioDevMAC:
 		if len(data) != nframes * self.__nchannels * self.__sampwidth:
 			raise error, 'data is not a whole number of frames'
 		while self.__gc and \
-			  self.getfilled() + nframes > \
-				self.__qsize / self.__nchannels / self.__sampwidth:
+			  self.getfilled() + nframes > self.__qsize:
 			time.sleep(0.1)
 		h1 = struct.pack('llhhllbbl',
 			id(data)+MacOS.string_id_to_buffer,	# ARGH!!!  HACK, HACK!
@@ -122,4 +121,4 @@ class AudioDevMAC:
 		return filled / self.__nchannels / self.__sampwidth
 
 	def getfillable(self):
-		return (self.__qsize / self.__nchannels / self.__sampwidth) - self.getfilled()
+		return self.__qsize - self.getfilled()
