@@ -47,27 +47,27 @@ public interface SMILDocument {
     boolean isViewportOpen(int index);
     
     /**
-    *   Get the duration of this document in seconds.
-    *   The returned value maybe zero or negative with the following meaning:
-    *   A zero return value means that the duration is unresolved
-    *   A negative return value means that the duration is indefinite
+    *  Returns the number of frames per second of the first video of this document.
+    *  If there is no video then of the first audio.  
+    *  If there's neither one, an estimated value is returned.
     */
    double getDuration();
     
     
     /**
     *  Return the number of frames per second for this document.
-    *  The number returned is the rate of the [first] video component if there is one, 
-    *  or else of the [first] audio component if there's no video.  
+    *  The number returned is the rate of the first video component if there is one, 
+    *  or else of the first audio component if there's no video.  
     *  If there's neither one an ad hoc value is returned.
     */
     int getFrameRate();
    
    
     /**
-    *  Return the number of frames per second of the desinated media element.
+    *  Returns the number of frames per second of the designated media element.
+    *  The argument relativeUrlStr is relative to the smil document
     */
-    int getMediaFrameRate(String fileOrUrlStr) throws GRiNSException;
+    int getMediaFrameRate(String relativeUrlStr) throws GRiNSException;
     
     /**
     *  After using a SMILDocument you should <em>always</em> call this method 
