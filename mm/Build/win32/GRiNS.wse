@@ -31,8 +31,8 @@ item: Global
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
-  Step View=Visual Basic
-  File Checksum=478417022
+  Step View=All
+  File Checksum=3499317296
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1794,27 +1794,9 @@ item: Edit Registry
   end
 end
 item: Edit Registry
-  Total Keys=5
-  item: Key
-    Key=.cmc
-    New Value=CMIFCacheFile
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/smil
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/smil
-    New Value=.smil
-    Value Name=Extension
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/x-grins-cmif
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/x-grins-cmif
-    New Value=.cmif
-    Value Name=Extension
-  end
+  Total Keys=1
+  Key=.cmc
+  New Value=CMIFCacheFile
 end
 item: Edit Registry
   Total Keys=1
@@ -1822,10 +1804,40 @@ item: Edit Registry
   New Value=GRiNS CMIF Cache File
 end
 item: Edit Registry
-  Total Keys=2
+  Total Keys=1
+  Key=CMIFfile\shell\open\command
+  New Value=%MAINDIR%\GRiNS.exe "%%1"
+end
+item: Edit Registry
+  Total Keys=1
+  Key=SMILfile\shell\open\command
+  New Value=%MAINDIR%\GRiNS.exe "%%1"
+end
+item: Edit Registry
+  Total Keys=1
+  Key=MIME\Database\Content Type\application/x-grins-cmif
+  New Value=.cmif
+  Value Name=Extension
+end
+item: Edit Registry
+  Total Keys=1
+  Key=MIME\Database\Content Type\applicaiton/smil
+  New Value=.smil
+  Value Name=Extension
+end
+item: Edit Registry
+  Total Keys=4
+  item: Key
+    Key=CMIFfile\shell\open
+    New Value=Open with GRiNS
+  end
   item: Key
     Key=CMIFfile\shell\open\command
     New Value=%MAINDIR%\GRiNS.exe "%%1"
+  end
+  item: Key
+    Key=SMILfile\shell\open
+    New Value=Open with GRiNS
   end
   item: Key
     Key=SMILfile\shell\open\command
@@ -1876,6 +1888,12 @@ item: Add Text to INSTALL.LOG
 end
 item: Add Text to INSTALL.LOG
   Text=File Tree: %MAINDIR%\
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: MIME\Database\Content Type\applicaiton/smil
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
 end
 item: Wizard Block
   Direction Variable=DIRECTION
