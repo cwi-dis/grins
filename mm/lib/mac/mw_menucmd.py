@@ -26,6 +26,8 @@ class MyMenuMixin:
 		sub = MyMenu(self.bar, title, -1)
 		item = self.additem(label, '\x1B', None, 'submenu')
 		self.menu.SetItemMark(item, sub.id)
+		sub._parent = self
+		sub._parent_item = item
 		return sub
 
 class MyMenu(MyMenuMixin, Menu):
@@ -139,7 +141,9 @@ class _DynamicMenu:
 						self.menus[-1].check(1)
 					else:
 						self.menus[-1].check(0)
-		self.menu.enable(not not self.items)
+		anything_there = (not not self.items)
+		self.menu.enable(anything_there)
+		return anything_there
 		
 class _SpecialMenu(_DynamicMenu):
 	"""_SpecialMenu - Helper class for CommandHandler Window and Document menus"""
@@ -150,13 +154,14 @@ class _SpecialMenu(_DynamicMenu):
 		
 	def set(self, list, cur):
 		dynlist = map(lambda x: (x,x), list)
-		_DynamicMenu.set(self, dynlist)
+		anything_there = _DynamicMenu.set(self, dynlist)
 		if cur != self.cur:
 			if self.cur != None:
 				self.menus[self.cur].check(0)
 			if cur != None:
 				self.menus[cur].check(1)
 			self.cur = cur
+		return anything_there
 	
 
 class CommandHandler:
@@ -306,7 +311,7 @@ class CommandHandler:
 			elif itemtype == MenuTemplate.DYNAMICCASCADE:
 				itemtype, cmd, dynamicmenu = item
 				dynamiclist = self.find_command_dynamic_list(cmd)
-				dynamicmenu.set(dynamiclist)
+				must_be_enabled = dynamicmenu.set(dynamiclist)
 			else:
 				itemtype, cmd = item
 				must_be_enabled = (not not self.find_command(cmd))
