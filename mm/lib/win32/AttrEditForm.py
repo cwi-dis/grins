@@ -1840,7 +1840,7 @@ class AttrEditForm(GenFormView):
 			page.do_init()
 
 		# add pages to the sheet in the correct group order
-		l=self._pages[:]
+		l=self._pages
 		self._pages=[]
 		ix=0
 		initindex = 0
@@ -1848,13 +1848,16 @@ class AttrEditForm(GenFormView):
 			a=self._attriblist[i]
 			p=self._a2p[a]
 			if p in l:
-				if self._initattr and self._initattr == a.getname():
-					initindex = ix
 				p.settabix(ix)
 				ix=ix+1
 				self._pages.append(p)
 				prsht.AddPage(p)
 				l.remove(p)
+		if self._initattr:
+			p = self._a2p.get(self._initattr)
+			if p:
+				initindex = self._pages.index(p)
+		self._initattr = None
 
 		self.CreateWindow(parent)
 		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
@@ -1871,6 +1874,15 @@ class AttrEditForm(GenFormView):
 		prsht.SetActivePage(self._pages[initindex])
 		prsht.RedrawWindow()
 
+	def getcurattr(self):
+		page = self._prsht.GetActivePage()
+		if page:
+			group = page._group
+			if group:
+				return group._al[0]
+			else:
+				return page._attr
+		return None
 
 	def creategrouppages(self):
 		grattrl=[]	 # all attr in groups
