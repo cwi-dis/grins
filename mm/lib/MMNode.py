@@ -2320,22 +2320,26 @@ class MMNode(MMTreeElement):
 		# nodes are in the same priority class
 		return 0, p1, p2
 
+	def __checkchild(self, check_playability):
+		if check_playability and not self._CanPlay():
+			return []
+		if self.type == 'prio':
+			return self.GetSchedChildren(check_playability)
+		elif self.type == 'foreign':
+			if self.attrdict.get('skip-content', 'true') != 'true':
+				return self.GetSchedChildren(check_playability)
+		elif check_playability and self.type == 'switch':
+			c = self.ChosenSwitchChild()
+			if c is not None:
+				return c.__checkchild(check_playability)
+		else:
+			return [self]
+		return []
+
 	def GetSchedChildren(self, check_playability = 1):
 		children = []
 		for c in self.children:
-			if check_playability and not c._CanPlay():
-				continue
-			if c.type == 'prio':
-				children = children + c.GetSchedChildren(check_playability)
-			elif c.type == 'foreign':
-				if c.attrdict.get('skip-content', 'true') != 'true':
-					children = children + c.GetSchedChildren(check_playability)
-			elif check_playability and c.type == 'switch':
-				c = c.ChosenSwitchChild()
-				if c is not None:
-					children.append(c)
-			else:
-				children.append(c)
+			children = children + c.__checkchild(check_playability)
 		return children
 
 	def IsTimeChild(self, x):
@@ -4156,16 +4160,12 @@ class MMNode(MMTreeElement):
 	def ChosenSwitchChild(self, childrentopickfrom=None):
 		"""For alt nodes, return the child that will be played"""
 		if childrentopickfrom is None:
-			childrentopickfrom = self.GetSchedChildren()
+			childrentopickfrom = self.GetChildren()
 		for ch in childrentopickfrom:
 			if ch.force_switch_choice:
-				if ch.type == 'switch':
-					return ch.ChosenSwitchChild()
 				return ch
 		for ch in childrentopickfrom:
 			if ch._CanPlay():
-				if ch.type == 'switch':
-					return ch.ChosenSwitchChild()
 				return ch
 		return None
 
