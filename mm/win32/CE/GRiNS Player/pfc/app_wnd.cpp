@@ -90,12 +90,12 @@ static PyObject* PyWnd_DestroyWindow(PyWnd *self, PyObject *args)
 
 static PyObject* PyWnd_InvalidateRect(PyWnd *self, PyObject *args)
 {
-	PyObject *pyrc; 
-	BOOL bErase;
-	if (!PyArg_ParseTuple(args, "Oi", &pyrc, &bErase))
+	PyObject *pyrc = NULL; 
+	BOOL bErase = TRUE;
+	if (!PyArg_ParseTuple(args, "|Oi", &pyrc, &bErase))
 		return NULL;
 	RECT rc, *prc = NULL;
-	if(pyrc != Py_None)
+	if(pyrc != NULL && pyrc != Py_None)
 		{
 		if(!PyArg_ParseTuple(pyrc, "iiii", &rc.left, &rc.top, &rc.right, &rc.bottom)) 
 			{
@@ -105,7 +105,7 @@ static PyObject* PyWnd_InvalidateRect(PyWnd *self, PyObject *args)
 		prc = &rc;
 		}
 	ASSERT_ISWINDOW(self->m_hWnd)
-	BOOL res = ::InvalidateRect(self->m_hWnd, prc, bErase);
+	BOOL res = InvalidateRect(self->m_hWnd, prc, bErase);
 	if(!res){
 		seterror("InvalidateRect", GetLastError());
 		return NULL;
