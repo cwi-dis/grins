@@ -123,7 +123,7 @@ class TextChannel() = Channel():
 	#
 	def showtext(self, node):
 		self.window.settext(self.getstring(node))
-		#
+	#
 	def getstring(self, node):
 		# XXX Doesn't use self...
 		if node.type = 'imm':
