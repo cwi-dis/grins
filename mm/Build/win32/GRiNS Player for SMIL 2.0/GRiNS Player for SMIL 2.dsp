@@ -197,27 +197,7 @@ SOURCE=.\M___main__.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__AssetsView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__ErrorsView.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M__FSPlayerView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__LayoutView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__LayoutView2.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__LinkView.c
 # End Source File
 # Begin Source File
 
@@ -225,23 +205,7 @@ SOURCE=.\M__PlayerView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__PreferencesDialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M__SourceView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__StructView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__TransitionView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M__UsergroupView.c
 # End Source File
 # Begin Source File
 
@@ -449,10 +413,6 @@ SOURCE=.\M_ftplib.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_FtpWriter.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_GenFormView.c
 # End Source File
 # Begin Source File
@@ -474,10 +434,6 @@ SOURCE=.\M_getpass.c
 # Begin Source File
 
 SOURCE=.\M_gifparser.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_GLLock.c
 # End Source File
 # Begin Source File
 
@@ -581,10 +537,6 @@ SOURCE=.\M_linecache.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ListCtrl.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_longpath.c
 # End Source File
 # Begin Source File
@@ -658,6 +610,10 @@ SOURCE=.\M_MMurl.c
 # Begin Source File
 
 SOURCE=.\M_MMWrite.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_nameencode.c
 # End Source File
 # Begin Source File
 
@@ -1017,6 +973,10 @@ SOURCE=.\M_SMIL.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_smil_mediatype.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_SMILCssResolver.c
 # End Source File
 # Begin Source File
@@ -1026,10 +986,6 @@ SOURCE=.\M_smiltime.c
 # Begin Source File
 
 SOURCE=.\M_SMILTreeRead.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_SMILTreeWrite.c
 # End Source File
 # Begin Source File
 
@@ -1193,10 +1149,6 @@ SOURCE=.\M_Transitions.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_TreeCtrl.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_types.c
 # End Source File
 # Begin Source File
@@ -1290,10 +1242,6 @@ SOURCE=.\M_windowinterface.c
 # Begin Source File
 
 SOURCE=.\M_winerror.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_winlayout.c
 # End Source File
 # Begin Source File
 

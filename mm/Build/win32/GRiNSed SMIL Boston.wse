@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-77.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-78.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1734,37 +1734,37 @@ item: Set Variable
   Variable=BACKUPDIR
 end
 item: Install File
-  Source=c:\Winnt\system32\Oleaut32.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\mfc42.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\mfc42.dll
   Destination=%SYS32%\mfc42.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\Msvcp60.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\Msvcirt.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\Olepro32.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\olepro32.dll
   Destination=%SYS32%\Olepro32.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\Msvcrt.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt.dll
   Destination=%SYS32%\Msvcrt.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\Msvcrt40.dll
+  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
   Flags=0000001010000011
 end

@@ -69,6 +69,14 @@ echo -x NodeInfo >> FreezeOpts
 echo -x AnchorEdit >> FreezeOpts
 echo -x AttrEditForm >> FreezeOpts
 echo -x cmifed >> FreezeOpts
+echo -x _LayoutView >> FreezeOpts
+echo -x _LayoutView2 >> FreezeOpts
+echo -x _UsergroupView >> FreezeOpts
+echo -x _TransitionView >> FreezeOpts
+echo -x _LinkView >> FreezeOpts
+echo -x _StructView >> FreezeOpts
+echo -x _AssetsView >> FreezeOpts
+echo -x _ErrorsView >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
