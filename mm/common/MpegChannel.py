@@ -80,7 +80,13 @@ class MpegChannel(ChannelWindowThread):
 		self.armed_display = None
 		thread_play_called = 0
 		if self.threads.armed:
-			self.window.setredrawfunc(self.threads.resized)
+			w = self.window
+			w.setredrawfunc(self.do_redraw)
+			try:
+				w._gc.SetRegion(w._clip)
+				w._gc.foreground = w._convert_color(self.getbgcolor(node))
+			except AttributeError:
+				pass
 			self.threads.play()
 			thread_play_called = 1
 		self.do_play(node)

@@ -394,6 +394,7 @@ class _Window:
 		self._menu = None
 		self._transparent = 0
 		self._showing = 0
+		self._redrawfunc = None
 
 	def close(self):
 		if self._parent is None:
@@ -501,7 +502,7 @@ class _Window:
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
-			pass
+			self._redrawfunc = func
 		else:
 			raise error, 'invalid function'
 
@@ -859,6 +860,9 @@ class _Window:
 				gc.SetRegion(r)
 				gc.foreground = self._convert_color(self._bgcolor)
 				apply(gc.FillRectangle, self._rect)
+			if self._redrawfunc:
+				self._gc.SetRegion(r)
+				self._redrawfunc()
 		# finally draw transparent subwindow, bottom-most first
 		sw = self._subwindows[:]
 		sw.reverse()
