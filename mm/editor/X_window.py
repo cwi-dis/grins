@@ -1322,8 +1322,7 @@ class Selection(_Widget, _List):
 		    Xmd.DIALOG_CANCEL_BUTTON, Xmd.DIALOG_DEFAULT_BUTTON, \
 		    Xmd.DIALOG_HELP_BUTTON, Xmd.DIALOG_OK_BUTTON, \
 		    Xmd.DIALOG_SEPARATOR:
-			w = selection.SelectionBoxGetChild(widget)
-			w.UnmanageChild()
+			selection.SelectionBoxGetChild(widget).UnmanageChild()
 		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
 		if listprompt is None:
 			w.UnmanageChild()
@@ -1339,6 +1338,12 @@ class Selection(_Widget, _List):
 		list = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST)
 		list.selectionPolicy = Xmd.SINGLE_SELECT
 		list.listSizePolicy = Xmd.CONSTANT
+		try:
+			cb = options['enterCallback']
+		except KeyError:
+			pass
+		else:
+			selection.AddCallback('okCallback', self._callback, cb)
 		_List.__init__(self, list, itemlist, sel_cb)
 		_Widget.__init__(self, parent, selection)
 
@@ -1350,7 +1355,7 @@ class Selection(_Widget, _List):
 		_Widget.close(self)
 
 	def setlabel(self, label):
-		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
+		w = self._form.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
 		w.labelString = label
 
 	def getselection(self):
