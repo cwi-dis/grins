@@ -290,7 +290,7 @@ class XMLParser:
             docname, publit, syslit, docdata = res.group('docname', 'publit',
                                                         'syslit', 'data')
             self.docname = docname
-            if publit: publit = publit[1:-1]
+            if publit: publit = string.join(string.split(publit[1:-1]))
             if syslit: syslit = syslit[1:-1]
             self.handle_doctype(docname, publit, syslit, docdata)
             i = res.end(0)
@@ -899,7 +899,7 @@ class XMLParser:
                     else:
                         r = externalid.match(pvalue)
                         publit, syslit = r.group('publit', 'syslit')
-                        if publit: publit = publit[1:-1]
+                        if publit: publit = string.join(string.split(publit[1:-1]))
                         if syslit: syslit = syslit[1:-1]
                         self.pentitydefs[pname] = publit, syslit
                 else:
@@ -933,7 +933,7 @@ class XMLParser:
                     else:
                         r = externalid.match(value)
                         publit, syslit = r.group('publit', 'syslit')
-                        if publit: publit = publit[1:-1]
+                        if publit: publit = string.join(string.split(publit[1:-1]))
                         if syslit: syslit = syslit[1:-1]
                         r1 = ndata.match(value, r.end(0))
                         if r1 is not None:
@@ -1259,8 +1259,11 @@ class TestXMLParser(XMLParser):
         print '&%s;' % name
 
 class CanonXMLParser(XMLParser):
+    __cache = {}
 
     def read_external(self, publit, syslit):
+        if publit and self.__cache.has_key(publit):
+            return self.__cache[publit]
         try:
             import urllib
             if type(syslit) is type(u'a'):
@@ -1270,6 +1273,8 @@ class CanonXMLParser(XMLParser):
             u.close()
         except 'x':
             return ''
+        if publit:
+            self.__cache[publit] = data
         return data
 
     def handle_data(self, data):
@@ -1306,6 +1311,25 @@ class CanonXMLParser(XMLParser):
             data = tr.join(data.split(c))
         return data.encode('utf-8')
 
+class CheckXMLParser(XMLParser):
+    __cache = {}
+
+    def read_external(self, publit, syslit):
+        if publit and self.__cache.has_key(publit):
+            return self.__cache[publit]
+        try:
+            import urllib
+            if type(syslit) is type(u'a'):
+                syslit = syslit.encode('latin-1')
+            u = urllib.urlopen(syslit)
+            data = u.read()
+            u.close()
+        except 'x':
+            return ''
+        if publit:
+            self.__cache[publit] = data
+        return data
+
 def test(args = None):
     import sys, getopt
     from time import time
@@ -1313,7 +1337,7 @@ def test(args = None):
     if not args:
         args = sys.argv[1:]
 
-    opts, args = getopt.getopt(args, 'cstnv')
+    opts, args = getopt.getopt(args, 'cstnvC')
     klass = TestXMLParser
     do_time = 0
     namespace = 1
@@ -1321,6 +1345,8 @@ def test(args = None):
     for o, a in opts:
         if o == '-c':
             klass = CanonXMLParser
+        elif o == '-C':
+            klass = CheckXMLParser
         elif o == '-s':
             klass = XMLParser
         elif o == '-t':
