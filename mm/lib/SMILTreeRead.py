@@ -3347,7 +3347,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if tagname not in self.entities.get(ptag, ()):
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
 		elif tagname != 'smil':
-			self.syntax_error('outermost element must be "smil"')
+			self.error('outermost element must be "smil"', self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 		
 class SMILMetaCollector(xmllib.XMLParser):
