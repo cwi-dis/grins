@@ -14,12 +14,12 @@ else:
 UNIQUEDIR=os.path.join(DATABASE, ".uniqdir")
 
 try:
-        USER=os.environ['USER']
+	USER=os.environ['USER']
 except KeyError:
-        try:
-                USER=os.environ['LOGNAME']
+	try:
+		USER=os.environ['LOGNAME']
         except KeyError:
-                USER='unknown'
+		USER='unknown'
 
 class GrinsDmdbObject(maildb.DmdbObject):
 	"""Like DmdbObject, but keep track of last modification"""

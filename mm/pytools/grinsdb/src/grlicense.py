@@ -26,6 +26,7 @@ PRODUCT_TO_FEATURE = {
 	None: ["editor"],
 	"editor": ["editor"],
 	"GSE": ["editor"],
+	"GS1": ["editor"],
 
 	"light": ["light"],
 	"lite": ["light"],
@@ -33,8 +34,14 @@ PRODUCT_TO_FEATURE = {
 
 	"pro": ["pro"],
 	"GRP": ["pro"],
+	
+	"smil2player": ["smil2player"],
+	"SM2": ["smil2player"],
+	
+	"smil2lite": ["smil2lite"],
+	"smil2pro": ["smil2pro"],
 
-	"ALLPRODUCTS": ["editor", "light", "pro"]
+	"ALLPRODUCTS": ["ALLPRODUCTS"]
 	}
 
 PLATFORM_TO_PLATFORM = {
@@ -43,16 +50,25 @@ PLATFORM_TO_PLATFORM = {
 	"SUN": "sunos5",
 	"SGI": "irix6",
 	None: "ALLPLATFORMS",
+	"ALLPLATFORMS": "ALLPLATFORMS",
 	}
 
-def gencommerciallicense(version=None, platform=None):
+def gencommerciallicense(version=None, platform=None,
+			 user=None, organization=None):
 	features = PRODUCT_TO_FEATURE[version]
 	features = features + [PLATFORM_TO_PLATFORM[platform]]
 	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
 	date = None
-	name = None
+	if user and organization:
+		name = user + ',' + organization
+	elif user:
+		name = user + ','
+	elif organization:
+		name = organization
+	else:
+		name = None
 	license = codelicense(newid, date, features, name)
 	grinsdb.loglicense(license)
 	dbase.close()
@@ -73,7 +89,7 @@ def genevaluationlicense(version=None, valid=14, platform=None):
 	
 def main():
 	try:
-		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:")
+		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:D:")
 	except getopt.error:
 		usage()
 		sys.exit(1)
@@ -86,6 +102,7 @@ def main():
 	name = None
 	features = []
 	outfile = None
+	decode = None
 	for opt, optarg in options:
 		if opt == '-l':
 			list = 1
@@ -96,6 +113,8 @@ def main():
 		if opt == '-E':
 			eval = 1
 			create = 1
+		if opt == '-D':
+			decode = optarg
 		if opt == '-n':
 			try:
 				newid = string.atoi(optarg)
@@ -119,17 +138,18 @@ def main():
 			name = optarg
 		if opt == '-o':
 			outfile = optarg
-	if not eval and not args:
-		usage()
-		sys.exit(1)
 	if eval and not date:
 		print "Error: evaluation licenses need a date"
 		usage()
 		sys.exit(1)
-	if list + create  + remove != 1:
-		print "Error: exactly one of -c, -r or -l should be specified"
+	if (not not decode) + list + create  + remove != 1:
+		print "Error: exactly one of -D, -c, -r or -l should be specified"
 		usage()
 		sys.exit(1)
+	if decode:
+		info = decodelicense(decode)
+		print info
+		sys.exit(0)
 	if (list or remove) and (newid or date or features or name):
 		print "Error: -l and -r exclusive with all other options"
 		usage()
@@ -163,7 +183,9 @@ def main():
 			delfield(dbase, email, 'license')
 	else:
 		if not features:
-			features = getdefaultfeatures()
+			raise 'You must specify features for a commercial license'
+		if not args:
+			args = [None]
 		for email in args:
 			if newid:
 				thisid = newid
@@ -171,7 +193,10 @@ def main():
 				thisid = grinsdb.uniqueid()
 			license = codelicense(thisid, date, features, name)
 			grinsdb.loglicense(license)
-			addfield(dbase, email, 'License', license)
+			if email:
+				addfield(dbase, email, 'License', license)
+			else:
+				print license
 	dbase.close()
 	if outfile:
 		sys.stdout.close()
@@ -192,9 +217,10 @@ def usage():
 	print " -f f1,f2,... Enable these features (default: all features, all platforms!)"
 	print " -u name      Encode this licenseename"
 	print " -o file      Write output to file (with backup)"
+	print " -D license   Decode a license and print information"
 
 def getdefaultfeatures():
-	return encodefeatures(["editor", "light", "pro", "ALLPLATFORMS"])
+	return encodefeatures(["ALLPRODUCTS", "ALLPLATFORMS"])
 
 def encodefeatures(list):
 	rv = 0
@@ -206,10 +232,17 @@ def getfeatures(str):
 	strlist = string.split(str, ',')
 	features = 0
 	for f in strlist:
+		if PRODUCT_TO_FEATURE.has_key(f):
+			fnew = PRODUCT_TO_FEATURE[f]
+			if len(fnew) > 1:
+				raise 'Canot specify featurelist here: %s'%f
+			f = fnew[0]
+		elif PLATFORM_TO_PLATFORM.has_key(f):
+			f = PLATFORM_TO_PLATFORM[f]
 		try:
 			features = features + license.FEATURES[f]
-		except IndexError:
-			raise ValueError, "Unknown feature: %s"%f
+		except KeyError:
+			raise ValueError, "Unknown feature: %s. Valid: %s"%(f, PRODUCT_TO_FEATURE.keys()+PLATFORM_TO_PLATFORM.keys()+license.FEATURES.keys())
 	return features
 			
 def getdate(str):
@@ -284,13 +317,40 @@ def codelicense(uniqid, date, features, user):
 	all = ['A']	# License type
 	all.append(_codeint(uniqid, 4))
 	all.append(_codedate(date))
-	all.append(_codeint(features, 2))
+	all.append(_codeint(features, 3))
 	if user:
 		all.append(_codestr(user))
 	license = _codecheck(all)
 	all.append(license)
 	return string.join(all, '-')
 
+def decodelicense(lic):
+	status = 'Valid'
+	uniqid = ''
+	date = (0,0,0)
+	features = 0
+	user = ''
+	fnames = []
+	try:
+		uniqid, date, features, user = license._decodelicense(lic)
+		fnames, dummy, dummy = license._parselicense(lic)
+	except license.Error, arg:
+		status = 'Invalid: %s'%arg
+	fnames = string.join(fnames, ',')
+	if date == None or date[0] >= 3000:
+		date = 'indefinite'
+	else:
+		date = "%04.4d/%02.2d/%02.2d"%date
+	report="""
+License: %s
+Status: %s
+Unique ID: %s
+Expiry Date: %s
+Features: %s (0x%x)
+Licensee Name: %s
+"""%(lic, status, uniqid, date, fnames, features, user)
+	return report
+		
 if __name__ == '__main__':
 	main()
 	
