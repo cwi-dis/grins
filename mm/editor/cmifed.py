@@ -241,6 +241,10 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
 		usage(msg)
+
+	if 'PRELOADDOC' in os.environ.keys() and len(files)==0:
+		files.append(os.environ['PRELOADDOC'])
+
 	if sys.argv[0] and sys.argv[0][0] == '-':
 		sys.argv[0] = 'cmifed'
 	try:
