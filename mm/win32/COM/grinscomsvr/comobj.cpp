@@ -116,6 +116,7 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
     virtual HRESULT __stdcall getSpeed(/* [out] */ double __RPC_FAR *ps);
 	virtual HRESULT __stdcall setSpeed(/* [in] */ double s);
     virtual HRESULT __stdcall getCookie(/* [out] */ long __RPC_FAR *cookie);
+    virtual HRESULT __stdcall getFrameRate(/* [out] */ long __RPC_FAR *pfr);
 
 	// Implemenation
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
@@ -155,6 +156,7 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 
 	void adviceSetCursor(char *cursor){memcpy(m_cursor, cursor, strlen(cursor)+1);}
 	void adviceSetDur(double dur){m_dur=dur;}
+	void adviceSetFrameRate(int fr){m_framerate=fr;}
 	
 	static CSimpleMap<int, GRiNSPlayerAuto*> s_documents;
 
@@ -181,6 +183,7 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	double m_dur; // in secs
 	char m_cursor[32];
 	int m_focuswndid;
+	int m_framerate; 
 	};
 
 class GRiNSPlayerMoniker : public IGRiNSPlayerMoniker
@@ -252,13 +255,18 @@ void GRiNSPlayerAutoAdviceSetDur(int docid, double dur)
 	GRiNSPlayerAuto *p = GRiNSPlayerAuto::s_documents.Lookup(docid);
 	if(p) p->adviceSetDur(dur);
 	}
+void GRiNSPlayerAutoAdviceSetFrameRate(int docid, int fr)
+	{
+	GRiNSPlayerAuto *p = GRiNSPlayerAuto::s_documents.Lookup(docid);
+	if(p) p->adviceSetFrameRate(fr);
+	}
 
 // static
 CSimpleMap<int, GRiNSPlayerAuto*> GRiNSPlayerAuto::s_documents;
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_nViewports(0),
-	m_dur(0), m_focuswndid(0)
+	m_dur(0), m_focuswndid(0), m_framerate(20)
 	{
 	s_documents.Add(int(this), this);
 	adviceSetCursor("arrow");
@@ -291,25 +299,25 @@ HRESULT __stdcall GRiNSPlayerAuto::close()
 
 HRESULT __stdcall GRiNSPlayerAuto::play()
 	{
-	SendMessage(getListener(), WM_USER_PLAY, WPARAM(this), 0);
+	PostMessage(getListener(), WM_USER_PLAY, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::stop()
 	{
-	SendMessage(getListener(), WM_USER_STOP, WPARAM(this), 0);
+	PostMessage(getListener(), WM_USER_STOP, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::pause()
 	{
-	SendMessage(getListener(), WM_USER_PAUSE, WPARAM(this), 0);
+	PostMessage(getListener(), WM_USER_PAUSE, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::update()
 	{
-	SendMessage(getListener(), WM_USER_UPDATE, WPARAM(this), 0);
+	PostMessage(getListener(), WM_USER_UPDATE, WPARAM(this), 0);
 	return S_OK;
 	}
 
@@ -342,7 +350,7 @@ HRESULT __stdcall GRiNSPlayerAuto::setTopLayoutWindow(/* [in] */ int index,/* [i
 	Viewport *p = m_pViewports[index];
 	char *buf = new char[64];
 	sprintf(buf, "%d %d", p->m_id, int(hwnd));
-	SendMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(buf));
+	PostMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(buf));
 	return S_OK;
 	}
 
@@ -431,7 +439,7 @@ HRESULT __stdcall GRiNSPlayerAuto::getTime(/* [out] */ double __RPC_FAR *pt)
 
 HRESULT __stdcall GRiNSPlayerAuto::setTime(/* [in] */ double t)
 	{
-	SendMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(floor(1000.0*t+0.5)));	
+	PostMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(floor(1000.0*t+0.5)));	
 	return S_OK;
 	}
 
@@ -451,6 +459,12 @@ HRESULT __stdcall GRiNSPlayerAuto::setSpeed(/* [in] */ double s)
 HRESULT __stdcall GRiNSPlayerAuto::getCookie(/* [out] */ long __RPC_FAR *cookie)
 	{
 	*cookie = int(this);
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::getFrameRate(/* [out] */ long __RPC_FAR *pfr)
+	{
+	*pfr = m_framerate;
 	return S_OK;
 	}
 
