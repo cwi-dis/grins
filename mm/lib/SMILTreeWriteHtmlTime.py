@@ -35,19 +35,19 @@ class XHTML_TIME:
 		    'autoReverse':None,
 		    }
 	attributes = {
-		'animate': {}
-		'animateColor': {}
-		'animateMotion': {}
-		'audio': {}
-		'excl': {}
-		'img': {}
-		'media': {}
-		'par': {}
-		'priorityClass': {}
-		'ref': {}
-		'seq': {}
-		'set': {}
-		'video': {}
+		'animate': {},
+		'animateColor': {},
+		'animateMotion': {},
+		'audio': {},
+		'excl': {},
+		'img': {},
+		'media': {},
+		'par': {},
+		'priorityClass': {},
+		'ref': {},
+		'seq': {},
+		'set': {},
+		'video': {},
 	}
 
 
@@ -231,6 +231,8 @@ class SMILHtmlTimeWriter(SMIL):
 		regionName = None
 		src = None
 		nodeid = None
+		transIn = None
+		transOut = None
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
@@ -265,7 +267,12 @@ class SMILHtmlTimeWriter(SMIL):
 					src = value
 				elif name == 'id':
 					self.ids_written[value] = 1
-				if name not in ('top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src'):
+					nodeid = value
+				elif name == 'transIn':
+					transIn = value
+				elif name == 'transOut':
+					transOut = value
+				if name not in ('id', 'top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src', 'transIn', 'transOut'):
 					attrlist.append((name, value))
 		
 		if interior:
@@ -281,7 +288,7 @@ class SMILHtmlTimeWriter(SMIL):
 		elif type in ('imm', 'ext'):
 			children = x.GetChildren()
 			if not children:				
-				self.writemedianode(x, attrlist, mtype, regionName, src)
+				self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
 			else:
 				self.writetag(mtype, attrlist)
 				self.push()
@@ -292,13 +299,16 @@ class SMILHtmlTimeWriter(SMIL):
 			raise CheckError, 'bad node type in writenode'
 
 
-	def writemedianode(self, x, attrlist, mtype, regionName, src):
+	def writemedianode(self, x, nodeid, attrlist, mtype, regionName, src, transIn, transOut):
 		if mtype=='video':
 			mtype = 'media'
+
 		if src: 
 			attrlist.append(('src', src))
 					
 		if mtype == 'audio':
+			if nodeid:
+				attrlist.insert(0,('id', nodeid))
 			self.writetag('t:'+mtype, attrlist)
 			return	
 
@@ -334,23 +344,49 @@ class SMILHtmlTimeWriter(SMIL):
 				self.ids_written[name] = 1
 				pushed = pushed + 1
 
+		if transIn:
+			if not nodeid:
+				nodeid = 'm' + x.GetUID()
+			subregid = nodeid + 'd1'
+
+		subRegGeom, mediaGeom = None, None
 		geoms = x.getPxGeomMedia()
 		if geoms:
 			subRegGeom, mediaGeom = geoms
-			if subRegGeom != mediaGeom:
-				divlist = []
-				divlist.append(('style', self.rc2style(subRegGeom)))
-				self.writetag('div', divlist)
+
+		if subRegGeom:
+			divlist = []
+			style = self.rc2style(subRegGeom)
+			if transIn:
+				divlist.append(('id', subregid))
+				style = style + 'visibility=hidden;'
+				style = style + transIris(dur=1, style='circle', motion='out')
+				self.writetag('t:par', [('dur', '8s')])
 				self.push()
 				pushed = pushed + 1
+			divlist.append(('style', style))
+			self.writetag('div', divlist)
+			self.push()
+			pushed = pushed + 1
+
+		if mediaGeom:
+			if nodeid:
+				attrlist.insert(0,('id', nodeid))
 			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
 			attrlist.append( ('style',style) )
 
 		self.writetag('t:'+mtype, attrlist)
 
+		if transIn:
+			self.pop()
+			pushed = pushed - 1
+			self.writetag('t:ref', [ ('begin','%s.begin' % nodeid), ('dur', '1'), ('onbegin', 'transIn(%s)' % subregid), ])
+			self.pop()
+			pushed = pushed - 1
+		
 		for i in range(pushed):
 			self.pop()
-
+				
 	def writeEmptyRegion(self, regionName):
 		parents = []
 		viewport = None
