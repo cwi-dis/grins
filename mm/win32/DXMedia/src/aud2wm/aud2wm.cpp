@@ -17,7 +17,6 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <mmsystem.h>
 #include <assert.h>
 
-#include "wmwriter.h"
 
 const AMOVIESETUP_MEDIATYPE sudAudPinTypes =
 {
@@ -63,7 +62,6 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
 Aud2wmRenderer::Aud2wmRenderer(LPUNKNOWN pUnk,HRESULT *phr) :
     CBaseRenderer(CLSID_Aud2wm, NAME("Audio Windows Media Converter"), pUnk, phr),
-	m_pWMWriter(NULL),
 	m_pAdviceSink(NULL)
 {
 } 
@@ -71,7 +69,6 @@ Aud2wmRenderer::Aud2wmRenderer(LPUNKNOWN pUnk,HRESULT *phr) :
 Aud2wmRenderer::~Aud2wmRenderer()
 {
 	if(m_pAdviceSink) m_pAdviceSink->Release();
-	delete m_pWMWriter;
 }
 
 CUnknown * WINAPI Aud2wmRenderer::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
@@ -105,7 +102,6 @@ HRESULT Aud2wmRenderer::CheckMediaType(const CMediaType *pmt)
         return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
-	/*
     WAVEFORMATEX *pwfx = (WAVEFORMATEX *) pmt->Format();;
 
     // Reject compressed audio
@@ -116,7 +112,7 @@ HRESULT Aud2wmRenderer::CheckMediaType(const CMediaType *pmt)
     // Accept only 8 or 16 bit
     if (pwfx->wBitsPerSample!=8 && pwfx->wBitsPerSample!=16) {
         return VFW_E_TYPE_NOT_ACCEPTED;
-    }*/
+    }
 
     return NOERROR;
 } 
@@ -131,65 +127,34 @@ HRESULT Aud2wmRenderer::SetMediaType(const CMediaType *pmt)
 
 void Aud2wmRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
-	if(m_ixsample==0){
-		if(m_pWMWriter) m_pWMWriter->BeginWriting();
-	}
-	m_ixsample=0;
-
 } 
 
 HRESULT Aud2wmRenderer::DoRenderSample(IMediaSample *pMediaSample)
 {
-	if(m_pWMWriter) EncodeSample(pMediaSample);
 	if(m_pAdviceSink) m_pAdviceSink->OnRenderSample(pMediaSample);
     return NOERROR;
-} 
-
-void Aud2wmRenderer::EncodeSample(IMediaSample *pMediaSample)
-{
-    BYTE *pBuffer;
-    HRESULT hr = pMediaSample->GetPointer(&pBuffer);
-    if (FAILED(hr)) {
-        return;
-    }
-	CRefTime tStart,tStop;
-    if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
-		m_pWMWriter->WriteAudioSample(pBuffer,pMediaSample->GetActualDataLength(), tStart.m_time);
-	m_ixsample++;
 }
+
 
 HRESULT Aud2wmRenderer::Active()
 {
 	if(m_pAdviceSink) m_pAdviceSink->OnActive();
-	if(m_pWMWriter) m_pWMWriter->SetAudioFormat(&m_mtIn);
 	return CBaseRenderer::Active();
 } 
 
 HRESULT Aud2wmRenderer::Inactive()
 {
 	if(m_pAdviceSink) m_pAdviceSink->OnInactive();
-	if(m_pWMWriter)
-		{
-		m_pWMWriter->Flush();
-		m_pWMWriter->EndWriting();
-		}
 	return CBaseRenderer::Inactive();
 }
 
-HRESULT Aud2wmRenderer::SetWMWriter(IUnknown *pI)
-	{
-	delete m_pWMWriter;
-	m_pWMWriter = new WMWriter();
-    return m_pWMWriter->SetWMWriter(pI);	
-	}
-
 HRESULT Aud2wmRenderer::SetRendererAdviceSink(IRendererAdviceSink *pI)
-	{
+{
 	if(m_pAdviceSink) m_pAdviceSink->Release();
 	m_pAdviceSink = pI;
 	m_pAdviceSink->AddRef();
 	return S_OK;
-	}
+}
 
 ////////////////////////////////////////////////
 // Filter registration

@@ -17,9 +17,9 @@ DEFINE_GUID(IID_IRendererAdviceSink,
 interface IRendererAdviceSink : public IUnknown
 	{
 	virtual HRESULT __stdcall OnSetMediaType(const CMediaType *pmt) = 0;
-	virtual HRESULT __stdcall OnActive()=0;
-	virtual HRESULT __stdcall OnInactive()=0;
-	virtual HRESULT __stdcall OnRenderSample(IMediaSample *pMediaSample) = 0;
+	virtual HRESULT __stdcall OnActive() = 0;
+	virtual HRESULT __stdcall OnInactive() = 0;
+	virtual HRESULT __stdcall OnRenderSample(IMediaSample *pMediaSample) = 0; 
 	};
 
 // {BDBC884C-0FCE-414f-9941-035F900E43B6}
@@ -27,7 +27,6 @@ DEFINE_GUID(IID_IWMConverter,
 0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
 interface IWMConverter : public IUnknown
 	{
-	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI) = 0;
 	virtual HRESULT __stdcall SetRendererAdviceSink(IRendererAdviceSink *pI) = 0;
 	};
 
@@ -53,17 +52,15 @@ public:
 
     HRESULT BreakConnect();
     HRESULT CheckMediaType(const CMediaType *pmt);
+	HRESULT DoRenderSample(IMediaSample *pMediaSample);
     HRESULT SetMediaType(const CMediaType *pmt);
-    HRESULT DoRenderSample(IMediaSample *pMediaSample);
     void OnReceiveFirstSample(IMediaSample *pMediaSample);
     HRESULT Active();
 	HRESULT Inactive();
 
-	void EncodeSample(IMediaSample *pMediaSample);
 
 	// Implements IWMConverter
     DECLARE_IUNKNOWN
-	HRESULT __stdcall SetWMWriter(IUnknown *p);
 	HRESULT __stdcall SetRendererAdviceSink(IRendererAdviceSink *pI);
 	
 protected:
