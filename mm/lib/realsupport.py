@@ -816,10 +816,15 @@ def writeRT(file, rp, node):
 	from SMILTreeWrite import nameencode
 	import MMAttrdefs
 
+	# no size specified, initialize with channel size
+	# XXXX Note: incorrect if units are something else than pixels
+	ch = node.GetChannel(attrname='captionchannel')
+	width, height = ch.get('base_winoff',(0,0,320,180))[2:4]
+	
 	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
 	ctx = node.GetContext()
 	f = open(file, 'w')
-	f.write('<window')
+	f.write('<window width="%d" height="%d"' % (int(width), int(height)))
 	dur = MMAttrdefs.getattr(node, 'duration')
 	if dur:
 		f.write(' duration="%g"' % dur)
