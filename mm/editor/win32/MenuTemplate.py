@@ -99,6 +99,7 @@ MENUBAR=(
 ##		(FLAG_PRO, ENTRY, '&Info...', 'I', INFO),
 		(FLAG_ALL, ENTRY, 'Propertie&s...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
+		(FLAG_PRO, ENTRY, 'Con&vert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Pre&ferences...', None, PREFERENCES),
 		)),
@@ -268,6 +269,7 @@ POPUP_HVIEW_LEAF = (
 		# light version
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New node &before...', None, NEW_BEFORE),
+		(FLAG_PRO, ENTRY, 'Con&vert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
