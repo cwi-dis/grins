@@ -16,6 +16,9 @@ WM_USER_GETSTATUS = win32con.WM_USER+6
 WM_USER_SETHWND = win32con.WM_USER+7
 WM_USER_UPDATE = win32con.WM_USER+8
 
+STOPPED, PAUSING, PLAYING = range(3)
+UNKNOWN = -1
+
 class ListenerWnd(GenWnd.GenWnd):
 	def __init__(self, toplevel):
 		GenWnd.GenWnd.__init__(self)
@@ -79,6 +82,7 @@ import grinsRC
 class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 	def __init__(self, wnd, w, h, units, bgcolor, hwnd=0, title='', id=0):
 		self._cmdframe = wnd
+		self._smildoc = wnd.getgrinsdoc()
 		self._peerid = id
 		self._destroywnd = 0
 		if hwnd:
@@ -133,6 +137,23 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		title=urllib.unquote(title)
 		self._title=title
 		self.SetWindowText(title)
+
+	#
+	# Playback query support
+	#
+	def getTime(self):
+		player = self._smildoc.player
+		if not player: return UNKNOWN
+		scheduler = player.scheduler
+		return scheduler.timefunc()
+
+	def getDuration(self):
+		return -1
+
+	def getState(self):
+		player = self._smildoc.player
+		if not player: return UNKNOWN
+		return player.getstate()
 
 	#
 	# Mouse input
