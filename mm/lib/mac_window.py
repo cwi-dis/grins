@@ -2516,3 +2516,8 @@ getscreensize = toplevel.getscreensize
 getscreendepth = toplevel.getscreendepth
 
 lopristarting = toplevel.lopristarting
+
+setidleproc = toplevel.setidleproc
+
+cancelidleproc = toplevel.cancelidleproc
+
