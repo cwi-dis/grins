@@ -249,8 +249,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					othernode = l[ANCHOR1]
 					while othernode is not None and not othernode.views.has_key('struct_view'):
 						othernode = othernode.GetParent()
-					if othernode is not None:
-						otherwidget = othernode.views['struct_view'].get_linksrc_icon()
+					if othernode is None:
+						# link from deleted node
+						continue
+					otherwidget = othernode.views['struct_view'].get_linksrc_icon()
 				if self.linkdst_icon is None:
 					self.linkdst_icon = self.iconbox.add_icon('linkdst', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
 					self.linkdst_icon.set_icon('linkdst')
