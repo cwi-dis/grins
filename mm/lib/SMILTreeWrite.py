@@ -228,7 +228,15 @@ def getsrc(writer, node):
 			realnode.writenode(node)
 		if tmp_file_name:
 			node.DelAttr('file')
-	if not val or not writer.copydir:
+	if not val:
+		if writer.copydir:
+			# Exporting without a URL is an error
+			node.set_infoicon('error', 'The URL field is empty')
+		else:
+			# If not exporting we insert a placeholder
+			val = '#'
+		return val
+	if not writer.copydir:		
 		return val
 	ctx = node.GetContext()
 	url = ctx.findurl(val)

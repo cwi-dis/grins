@@ -240,7 +240,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = res.group('name')
 				attrdict['name'] = val
 			elif attr == 'src':
-				attrdict['file'] = MMurl.basejoin(self.__base, val)
+				if val == '#':	
+					# Special case: # is used as a placeholder for empty URL fields
+					attrdict['file'] = ''
+				else:
+					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append((attr, val))
 			elif attr == 'dur':
