@@ -57,6 +57,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			CHANNELVIEW(callback = (self.view_callback, (2,))),
 			LINKVIEW(callback = (self.view_callback, (3,))),
 			LAYOUTVIEW(callback = (self.view_callback, (4,))),
+			USERGROUPVIEW(callback = (self.view_callback, (5,))),
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
 			]
@@ -136,9 +137,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.layoutview = LayoutView.LayoutView(self)
 		self.layoutview.__command = LAYOUTVIEW
 
+		import UsergroupView
+		self.ugroupview = UsergroupView.UsergroupView(self)
+		self.ugroupview.__command = USERGROUPVIEW
+
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
-			      self.channelview, self.links, self.layoutview]
+			      self.channelview, self.links, self.layoutview,
+			      self.ugroupview]
 
 	def hideviews(self):
 		for v in self.views:

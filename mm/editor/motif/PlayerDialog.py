@@ -28,6 +28,7 @@ class PlayerDialog(PlayerDialogBase):
 				('Pause', PAUSE, 't'),
 				('Stop', STOP, 't'),
 				]),
+			('User groups', USERGROUPS),
 			('Channels', CHANNELS),
 			('Options', [
 				('Keep Channel View in sync', SYNCCV, 't'),
