@@ -59,6 +59,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name vaud2rm
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name gear32sd
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -152,6 +155,21 @@ Package=<5>
 
 Package=<4>
 {{{
+}}}
+
+###############################################################################
+
+Project: "gear32sd"=..\ACCUSOFT\src\gear32sd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
 }}}
 
 ###############################################################################
