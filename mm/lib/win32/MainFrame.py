@@ -628,9 +628,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Response to resizing		
 	def onSize(self,params):
-		self.RecalcLayout()
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
+		self.RecalcLayout()
 		self._rect=self._canvas=0,0,msg.width(),msg.height()
 		MDIFrameWnd.wndismax=msg.maximized()
 		if not msg.maximized():
