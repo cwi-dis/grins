@@ -600,15 +600,20 @@ class LayoutView2(LayoutViewDialog2):
 					regionToRemoveList.append(regionId)
 		
 		# call effective add/remove operations in the right order
-		for viewportId in viewportToRemoveList:
-			self.removeViewport(viewportId)
 		for regionId in regionToRemoveList:
 			self.removeRegion(regionId)
+		for viewportId in viewportToRemoveList:
+			self.removeViewport(viewportId)
 		for viewportRef in viewportToAppendList:
 			self.addViewport(viewportRef)
 		for regionRef, parentRef in regionToAppendList:
 			self.addRegion(regionRef, parentRef)
 
+		# update dialog box if needed
+		if len(viewportToAppendList) > 0 or len(viewportToRemoveList) > 0:
+			self.fillViewportListOnDialogBox()
+		# the other properties will be refreshed with a selection
+			
 	def addRegion(self, regionRef, parentRef):
 		# update data structure
 		pNode = self.getNode(parentRef.name)
@@ -643,7 +648,8 @@ class LayoutView2(LayoutViewDialog2):
 		del list[ind]
 		
 	def removeViewport(self, viewportId):		
-		print 'remove viewport : not implemented yet'
+		del self._viewports[viewportId]
+		del self._viewportsRegions[viewportId]
 					 
 	def commit(self, type):
 		if type == 'REGION_TREE':
@@ -944,7 +950,6 @@ class LayoutView2(LayoutViewDialog2):
 	def displayViewport(self, name):
 		if self.currentViewport != None:
 			self.currentViewport.hide()
-			
 		self.currentViewport = self._viewports[name]
 		self.currentViewport.showAllNodes()
 #		self.select(self.currentViewport)
@@ -1050,11 +1055,12 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	
 	def initDialogBox(self):
-		self.currentViewportList = self.getViewportNameList()
-		self.dialogCtrl.fillSelecterCtrl('ViewportSel', self.currentViewportList)
+		self.fillViewportListOnDialogBox()
 		self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
 		self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
 		self.disableMediaListOnDialogBox()
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self.dialogCtrl.enable('NewView',1)
 		
 	def applyGeomOnViewport(self, viewport, geom):
 		# apply new size
@@ -1151,6 +1157,21 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.addchannel(name, 0, 'layout')
 			self.editmgr.setchannelattr(name, 'base_window', parentId)
+			self.editmgr.setchannelattr(name, 'transparent', 1)
+			self.editmgr.setchannelattr(name, 'center', 0)
+			self.editmgr.setchannelattr(name, 'drawbox', 0)
+			self.editmgr.setchannelattr(name, 'z', -1)
+			self.editmgr.commit('REGION_TREE')
+
+	def applyNewViewport(self, name):
+		if self.editmgr.transaction():
+			self.editmgr.addchannel(name, 0, 'layout')
+			self.editmgr.setchannelattr(name, 'transparent', 0)
+			self.editmgr.setchannelattr(name, 'center', 0)
+			self.editmgr.setchannelattr(name, 'drawbox', 0)
+			self.editmgr.setchannelattr(name, 'z', -1)
+			self.editmgr.setchannelattr(name, 'winsize', (400, 400))
+			self.editmgr.setchannelattr(name, 'units', UNIT_PXL)									
 			self.editmgr.commit('REGION_TREE')
 
 	def applyDelRegion(self, regionId):
@@ -1159,7 +1180,9 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.commit('REGION_TREE')
 			
 	def applyDelViewport(self, viewportId):
-		print 'apply del viewport : not implemented yet'
+		if self.editmgr.transaction():
+			self.editmgr.delchannel(viewportId)
+			self.editmgr.commit('REGION_TREE')
 		
 	def updateExcludeRegionOnDialogBox(self):
 		# set exclude region name list
@@ -1343,6 +1366,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('MediaSel',1)
 		self.dialogCtrl.enable('MediaCheck', 1)
 
+	def fillViewportListOnDialogBox(self):
+		self.currentViewportList = self.getViewportNameList()
+		self.dialogCtrl.fillSelecterCtrl('ViewportSel', self.currentViewportList)
+		
 	def fillRegionListOnDialogBox(self):
 		list = []
 		for regionName in self.currentRegionNameList:
@@ -1535,6 +1562,7 @@ class LayoutView2(LayoutViewDialog2):
 			
 		if viewport != None:
 			self.displayViewport(viewport.getName())
+			self.select(viewport)
 
 	def __selectRegion(self, name=None):
 		if name == None:
@@ -1579,7 +1607,7 @@ class LayoutView2(LayoutViewDialog2):
 	def newRegion(self, parentId):
 		# choice a default name which doesn't exist		
 		channeldict = self.context.channeldict
-		baseName = 'NEW'
+		baseName = 'region'
 		i = 1
 		name = baseName + `i`
 		while channeldict.has_key(name):
@@ -1593,24 +1621,50 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyNewRegion(self.__parentId, name)
 		self.select(self.getNode(name))
 
-	def __newNode(self):
+	def newViewport(self):
+		# choice a default name which doesn't exist		
+		channeldict = self.context.channeldict
+		baseName = 'viewport'
+		i = 1
+		name = baseName + `i`
+		while channeldict.has_key(name):
+			i = i+1
+			name = baseName + `i`
+			
+		self.askname(name, 'Name for viewport', self.__viewportNamedCallback)
+
+	def __viewportNamedCallback(self, name):
+		self.applyNewViewport(name)
+		self.displayViewport(name)
+		self.select(self.getNode(name))
+
+	def __newRegion(self):
 		if self.currentNodeSelected != None:
-			nodeSelected = self.currentNodeSelected
-			if nodeSelected.getNodeType() == TYPE_VIEWPORT:
-				self.newRegion(nodeSelected.getName())
-			elif nodeSelected.getNodeType() == TYPE_REGION:
-				self.newRegion(nodeSelected.getName())
-								
+			self.newRegion(self.currentNodeSelected.getName())
+
+	def __newViewport(self):
+		self.newViewport()
+
+	def delRegion(self, regionNode):
+		parentNode = regionNode.getParent()
+		self.applyDelRegion(regionNode.getName())
+		# select parent node
+		self.select(parentNode)
+
+	def delViewport(self, viewportNode):
+		self.applyDelViewport(viewportNode.getName())
+		# choice another viewport to show (this first in the list)
+		viewportName = self.currentViewportList[0]
+		self.displayViewport(viewportName)
+		self.select(self.getNode(viewportName))
+		
 	def __delNode(self):
 		if self.currentNodeSelected != None:
 			nodeSelected = self.currentNodeSelected
 			if nodeSelected.getNodeType() == TYPE_VIEWPORT:
-				self.applyDelViewport(nodeSelected.getName())
+				self.delViewport(nodeSelected)
 			elif nodeSelected.getNodeType() == TYPE_REGION:
-				parentNode = nodeSelected.getParent()
-				self.applyDelRegion(nodeSelected.getName())
-				# select parent node
-				self.select(parentNode)
+				self.delRegion(nodeSelected)
 	
 	#
 	# interface implementation of 'previous tree node' 
@@ -1683,7 +1737,9 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'BringFront':
 			self.__bringFront()
 		elif ctrlName == 'NewRegion':
-			self.__newNode()
+			self.__newRegion()
+		elif ctrlName == 'NewView':
+			self.__newViewport()
 		elif ctrlName == 'DelRegion':
 			self.__delNode()
 
