@@ -18,7 +18,6 @@ class TopLevelDialog:
 		pass
 
 	def show(self):
-		print 'show document',self.filename
 		if self.window is not None:
 			return
 		self.window = windowinterface.newdocument(self, 
@@ -27,7 +26,6 @@ class TopLevelDialog:
 	def hide(self):
 		if self.window is None:
 			return
-		print 'close document',self.filename
 		self.window.close()
 		self.window = None
 
