@@ -1183,7 +1183,7 @@ class ListCtrl(AttrCtrl):
 	def OnEdit(self, id, code):
 		# callback for the "edit" button.
 		selected = self._list.getselected()
-		if selected > 0 and selected < len(self._value):
+		if selected >= 0 and selected < len(self._value):
 			edit = EventEditor.EventEditor(parent=self._wnd._form)
 			edit.set_eventstruct(self._value[selected])
 			edit.show()

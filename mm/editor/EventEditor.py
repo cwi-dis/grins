@@ -18,6 +18,7 @@ import MMNode, windowinterface
 
 CAUSES = [				# What causes the event
 	# This list is incomplete
+	'delay'
 	'indefinite',		       
 	'node',				# extrainfo is a pointer to an MMNode or string??
 	'region',			# extrainfo is a pointer or string repr a region.
@@ -223,7 +224,7 @@ class EventStruct:
 			if isinstance(x.srcnode, MMNode.MMNode):
 				self.thing = x.srcnode.GetName()
 			else:
-				self.thing = x.srcnode
+				self.cause = 'delay'
 		# The event.
 		if self.cause == 'node' or self.cause == 'region':
 			self.event = x.event
@@ -245,7 +246,12 @@ class EventStruct:
 			else:
 				r = 'unknown'
 		elif c == 'region':
-			r = "TODO: Region name"# + "." + self.get_event() # TODO.
+			if self._setregion:
+				r = self._setregion
+			elif s:
+				r = s.channel
+			else:
+				r = 'unknown'
 		elif c == 'prev':
 			if self._setevent:
 				r = 'prev' + self._setevent
@@ -254,7 +260,18 @@ class EventStruct:
 			else:
 				r = 'prev'
 		elif c == 'accessKey':
-			r = 'accessKey' # TODO!!
+			if self._setkey:
+				r = 'accessKey(' + self._setkey + ')'
+			elif self._syncarc:
+				r = 'accessKey(' + self._syncarc.accesskey + ')'
+			else:
+				r = 'accessKey(?)'
+		elif c == 'delay':
+			d = self.get_offset()
+			if d:
+				return "Delay of " + d
+			else:
+				return "Error: strange event."
 		d = self.get_offset()
 		if d == "0" or d is None:
 			return r
@@ -276,11 +293,12 @@ class EventStruct:
 			return self.event
 	def get_event_index(self):
 		# return the current event index from the list of possible events.
-		if not self.event:
+		e = self.get_event()
+		if not e:
 			return None
 		else:
 			try:
-				return self.get_possible_events().index(self.get_event())
+				return self.get_possible_events().index(e)
 			except Exception:
 				return None
 	def set_event(self, newevent):
@@ -314,7 +332,12 @@ class EventStruct:
 			print "TODO: display a region properly."
 			name = "Region:"
 			readonly = 1
-			thing = "TODO"
+			if self._setregion:
+				thing = self._setregion
+			elif self._syncarc:
+				thing = self._syncarc.channel
+			else:
+				thing = "unknown"
 			#return ("Region:", repr(self._syncarc.channel), 0, 0)
 		elif c == 'accessKey':
 			name = "Key:"
@@ -355,7 +378,7 @@ class EventStruct:
 	def get_offset(self):
 		if self._setoffset:
 			return self._setoffset
-		if self.get_cause() in ['node', 'prev', 'accessKey']: # TODO: check these.
+		if self._syncarc and self.get_cause() in ['node', 'prev', 'accessKey']: # TODO: check these.
 			return `self._syncarc.delay`
 		else:
 			return None

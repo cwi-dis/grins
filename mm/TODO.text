@@ -2,8 +2,9 @@ TODO for Michael :-)
 ---------------------------------------------
 
 * Event dialog boxs.
+* Editing events directly from the Structure view.
 * Bug - right-clicking on a node first doesn't work.
-* Events seem to be a bit wrong! Test them.
+* Events seem to be a bit wrong in the structure view! Test them.
 * Test if editing the document makes the events stay properly.
 * Bug - EM commits in the layout view lose the focus.
 
