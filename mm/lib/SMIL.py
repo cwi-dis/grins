@@ -11,8 +11,10 @@ SMIL2 = 'http://www.w3.org/2000/SMIL20/CR/'
 # namespaces recognized by GRiNS
 # the first one is the required default namespace, but SMIL1
 # doesn't generate a warning
-SMIL2ns = [SMIL2 + 'Language',
-	   SMIL2,
+SMIL2ns = ['http://www.w3.org/2000/SMIL20/CR/Language',
+	   'http://www.w3.org/2000/SMIL20/CR/',
+	   'http://www.w3.org/2001/SMIL20/PR/Language',	# should become first in this list when going to PR
+	   'http://www.w3.org/2001/SMIL20/PR/',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Language',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
@@ -20,6 +22,14 @@ SMIL2ns = [SMIL2 + 'Language',
 	   SMIL1]
 GRiNSns = "http://www.oratrix.com/"
 QTns = "http://www.apple.com/quicktime/resources/smilextensions"
+
+# list elements here that are not valid in all namespaces with the
+# namespaces they are valid in
+limited = {
+	# viewport was changed to topLayout between CR and PR
+	'viewport': SMIL2ns[:2] + SMIL2ns[4:],
+	'topLayout': SMIL2ns[:4],
+	}
 
 import string
 
@@ -112,17 +122,17 @@ class SMIL:
 				'skip-content':'true',
 				'width':'0',
 				},
-		'viewport': {'backgroundColor':'transparent',
-				'customTest':None,
-				'height':'0',
-				'skip-content':'true',
-				'width':'0',
-				'close':'onRequest',
-				'open':'onStart',
-				# edit preferences of new layout view
-				GRiNSns+' ' 'showEditBackground':None,
-				GRiNSns+' ' 'editBackground':None,					 
-				},
+		'topLayout': {'backgroundColor':'transparent',
+			      'customTest':None,
+			      'height':'0',
+			      'skip-content':'true',
+			      'width':'0',
+			      'close':'onRequest',
+			      'open':'onStart',
+			      # edit preferences of new layout view
+			      GRiNSns+' ' 'showEditBackground':None,
+			      GRiNSns+' ' 'editBackground':None,					 
+			      },
 		'region': {'background-color':'transparent',
 			   'backgroundColor':None,
 			   'bottom':None,
@@ -403,8 +413,9 @@ class SMIL:
 			     },
 		}
 
-	attributes[__bag] = attributes[__choice]
-	attributes['anchor'] = attributes['area']
+	attributes['viewport'] = attributes['topLayout'].copy()
+	attributes[__bag] = attributes[__choice].copy()
+	attributes['anchor'] = attributes['area'].copy()
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', 'brush',
@@ -542,8 +553,8 @@ class SMIL:
 		'head': ['layout', 'switch', 'meta', 'metadata',
 			 'customAttributes', __layouts, 'transition'],
 		'customAttributes': ['customTest'],
-		'layout': ['region', 'root-layout', 'viewport', 'regPoint', 'switch'],
-		'viewport': ['region', 'switch'],
+		'layout': ['region', 'root-layout', 'topLayout', 'viewport', 'regPoint', 'switch'],
+		'topLayout': ['region', 'switch'],
 		'region': ['region', 'switch'],
 		'transition': ['param'],
 		__layouts: [__layout],
@@ -554,7 +565,7 @@ class SMIL:
 		'priorityClass': __container_content,
 		__choice: __container_content,
 		__bag: __container_content,
-		'switch': ['layout', 'region', 'viewport'] + __container_content,
+		'switch': ['layout', 'region', 'topLayout', 'viewport'] + __container_content,
 		'ref': __media_content,
 		'audio': __media_content,
 		'img': __media_content,
@@ -568,6 +579,7 @@ class SMIL:
 		__socket: __media_content,
 		'a': __schedule + ['switch'],
 		}
+	entities['viewport'] = entities['topLayout'][:]
 
 	# cleanup
 	del __choice, __bag, __cmif, __shell, __socket, __null
@@ -644,3 +656,5 @@ extensions = {
 for _k, _v in _modules.items():
 	extensions[SMIL2 + _k] = _v
 	extensions['http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/' + _k] = _v
+	extensions['http://www.w3.org/2000/SMIL20/CR/' + _k] = _v
+del _k, _v, _modules

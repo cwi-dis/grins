@@ -1605,7 +1605,7 @@ class ChannelWindow(Channel):
 			self.armed_display = self.played_display = None
 			self.update_display = None
 			if self._attrdict.get('base_window', 'undefined') == 'undefined':
-				self.event((self._attrdict, 'viewportCloseEvent'))
+				self.event((self._attrdict, 'topLayoutCloseEvent'))
 
 	def resize(self, arg, window, event, value):
 		if debug:

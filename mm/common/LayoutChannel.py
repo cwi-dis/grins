@@ -145,7 +145,7 @@ class LayoutChannel(ChannelWindow):
 					bgcolor = bgcolor)
 			if self._player._exporter:
 				self._player._exporter.createWriter(self.window)
-			self.event((self._attrdict, 'viewportOpenEvent'))
+			self.event((self._attrdict, 'topLayoutOpenEvent'))
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(('', 'select in timeline view',
 ##					     (self.focuscall, ())))

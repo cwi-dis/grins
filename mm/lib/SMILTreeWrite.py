@@ -1721,7 +1721,7 @@ class SMILWriter(SMIL):
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
 						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
-				self.writetag('viewport', attrlist)
+				self.writetag('topLayout', attrlist)
 				self.push()
 				self.writeregion(ch)
 				self.pop()
