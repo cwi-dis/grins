@@ -43,7 +43,9 @@ class MovieWindow(ChannelWindow):
 		return self
 	#
 	def show(self):
-		if self.wid <> 0: return
+		if self.wid <> 0:
+			self.setwin()
+			return
 		ChannelWindow.show(self)
 		self.clear()
 	#
@@ -96,6 +98,7 @@ class MovieWindow(ChannelWindow):
 		self.vfile.magnify = MMAttrdefs.getattr(self.node, 'scale')
 		dummy = self.peekaboo()
 		if self.lookahead <> None and self.wid <> 0:
+			self.pop()
 			gl.winset(self.wid)
 			#self.erase()
 			self.vfile.initcolormap()
@@ -146,7 +149,7 @@ class MovieChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos', 'visible', 'border']
+	chan_attrs = ['winsize', 'winpos', 'visible']
 	node_attrs = ['file', 'scale', 'bgcolor', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
@@ -158,9 +161,6 @@ class MovieChannel(Channel):
 	def show(self):
 		if self.may_show():
 			self.window.show()
-			if self.no_border():
-				gl.noborder()
-				gl.winconstraints()
 	#
 	def hide(self):
 		self.window.hide()
@@ -222,22 +222,7 @@ class MovieChannel(Channel):
 		# to estimate the number of images; multiply this with
 		# the time listed for the first image...
 		filename = self.getfilename(node)
-		totalsize = getfilesize(filename)
-		try:
-			vfile = VFile.VinFile().init(filename)
-		except VerrorList:
-			print 'Cannot open movie file',
-			print `filename`, 'to get duration'
-			return 0.0
-		pos1 = vfile.fp.tell()
-		try:
-			time = vfile.skipnextframe()
-		except EOFError:
-			return 0.0
-		pos2 = vfile.fp.tell()
-		imagesize = pos2 - pos1
-		imagecount = (totalsize - pos1) / imagesize
-		return 0.001 * time * imagecount
+		return duration_cache.get(filename)
 	#
 	def getfilename(self, node):
 		return MMAttrdefs.getattr(node, 'file')
@@ -251,3 +236,27 @@ def getfilesize(filename):
 		return st[ST_SIZE]
 	except posix.error:
 		return -1
+
+
+# Cache durations
+
+def getduration(filename):
+	totalsize = getfilesize(filename)
+	try:
+		vfile = VFile.VinFile().init(filename)
+	except VerrorList:
+		print 'Cannot open movie file',
+		print `filename`, 'to get duration'
+		return 0.0
+	pos1 = vfile.fp.tell()
+	try:
+		time = vfile.skipnextframe()
+	except EOFError:
+		return 0.0
+	pos2 = vfile.fp.tell()
+	imagesize = pos2 - pos1
+	imagecount = (totalsize - pos1) / imagesize
+	return 0.001 * time * imagecount
+
+import FileCache
+duration_cache = FileCache.FileCache().init(getduration)
