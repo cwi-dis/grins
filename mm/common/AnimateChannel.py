@@ -90,9 +90,10 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 
 	def __startAnimate(self):
+		if self.__animator:
+			print 'start animation, initial value', self.__animator.getValue(0)
 		self.__start = time.time()
 		self.__register_for_timeslices()
-		print 'start animation'
 
 	def __stopAnimate(self):
 		if self.__animator:
@@ -110,7 +111,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		# animate target node.attribute
 		# taking into account additive, accumulate attrs
 		dt = time.time()-self.__start
-		print 'animating:', self.__animator.getValue(dt)
+		msg = 'animating %s =' % self.__animator.getAttrName()
+		print msg, self.__animator.getValue(dt)
 
 	def __onAnimateDur(self):
 		if not self.__animating:
