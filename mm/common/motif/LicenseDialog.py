@@ -179,7 +179,7 @@ class LicenseDialog:
 		apply(apply, callback)
 
 class EnterkeyDialog:
-	def __init__(self, ok_callback, user='', org=''):
+	def __init__(self, ok_callback, user='', org='', license=''):
 		if _dialog_widget:
 			parent = _dialog_widget
 		else:
@@ -250,7 +250,8 @@ class EnterkeyDialog:
 					 'leftAttachment': Xmd.ATTACH_WIDGET,
 					 'leftWidget': l3,
 					 'rightAttachment': Xmd.ATTACH_FORM,
-					 'bottomAttachment': Xmd.ATTACH_FORM})
+					 'bottomAttachment': Xmd.ATTACH_FORM,
+					 'value': license})
 		self.__key = t3
 		t3.AddCallback('valueChangedCallback', self.__changed, None)
 		f1.ManageChild()
