@@ -104,8 +104,9 @@ class Main(MainDialog):
 			self.openURL_callback(MMurl.guessurl(file), 0)
 		self._update_recent(None)
 		# then play them
-		for top in self.tops:
-			top.player.playsubtree(top.root)
+		if not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded():
+			for top in self.tops:
+				top.player.playsubtree(top.root)
 
 	def openURL_callback(self, url, startplay = 1, update_recent = 1):
 		import windowinterface
@@ -127,7 +128,7 @@ class Main(MainDialog):
 			top.player.show()
 			if update_recent:
 				self._update_recent(url)
-			if startplay:
+			if startplay and (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
 				top.player.playsubtree(top.root)
 
 	def open_recent_callback(self, url):
