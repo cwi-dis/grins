@@ -485,7 +485,7 @@ class SlideWrapper(NodeWrapper):
 				    'displayfull', 'subregionxy',
 				    'subregionwh', 'subregionanchor', 'start',
 				    'tduration', 'maxfps', 'href',
-				    'project_quality']
+				    'project_quality', 'project_convert']
 			if tag == 'wipe':
 				namelist.append('direction')
 				namelist.append('wipetype')
@@ -1246,6 +1246,7 @@ class AttrEditor(AttrEditorDialog):
 
 class AttrEditorField(AttrEditorDialogField):
 	type = 'string'
+	nodefault = 0
 
 	def __init__(self, attreditor, name, label):
 		self.__name = name
@@ -1292,6 +1293,8 @@ class AttrEditorField(AttrEditorDialogField):
 	def valuerepr(self, value):
 		"""Return string representation of value."""
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return ''
 		return self.wrapper.valuerepr(self.__name, value)
 
@@ -1337,6 +1340,8 @@ class StringAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
 		"""Return string representation of value."""
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return ''
 		return value
 
@@ -1426,6 +1431,8 @@ class TextAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
 		"""Return string representation of value."""
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return ''
 		return string.join(value, '\n')
 
@@ -1489,6 +1496,8 @@ class PopupAttrEditorField(AttrEditorField):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return DEFAULT
 		return value
 
@@ -1503,6 +1512,8 @@ class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return DEFAULT
 		options = self.getoptions()
 		if value not in options:
@@ -1522,6 +1533,7 @@ class PopupAttrEditorFieldNoDefault(PopupAttrEditorField):
 class BoolAttrEditorField(PopupAttrEditorField):
 	__offon = ['off', 'on']
 	default = 'Not set'
+	nodefault = 1
 
 	def parsevalue(self, str):
 		if str == self.default:
@@ -1530,6 +1542,8 @@ class BoolAttrEditorField(PopupAttrEditorField):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return self.default
 		return self.__offon[value]
 
@@ -1537,6 +1551,7 @@ class BoolAttrEditorField(PopupAttrEditorField):
 		return self.__offon
 
 class BoolAttrEditorFieldWithDefault(BoolAttrEditorField):
+	nodefault = 0
 	def getoptions(self):
 		return [self.default] + BoolAttrEditorField.getoptions(self)
 
@@ -1557,6 +1572,7 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 
 class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['caption', 'overdub']
+	nodefault = 1
 
 	def getoptions(self):
 		return self.__values
@@ -1564,6 +1580,7 @@ class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 	__values = ['caption', 'overdub']
 	default = 'Not set'
+	nodefault = 0
 
 	def parsevalue(self, str):
 		if str == self.default:
@@ -1572,6 +1589,8 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return self.default
 		return value
 
@@ -1581,6 +1600,7 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 class LanguageAttrEditorField(PopupAttrEditorField):
 	from languages import *
 	default = 'Not set'
+	nodefault = 1
 
 	def getoptions(self):
 		options = self.l2a.keys()
@@ -1594,10 +1614,13 @@ class LanguageAttrEditorField(PopupAttrEditorField):
 
 	def valuerepr(self, value):
 		if not value:
+			if self.nodefault:
+				return self.getdefault()
 			return self.default
 		return self.a2l[value]
 
 class LanguageAttrEditorFieldWithDefault(LanguageAttrEditorField):
+	nodefault = 0
 	def getoptions(self):
 		options = LanguageAttrEditorField.getoptions(self)
 		return [self.default] + options
@@ -1606,6 +1629,7 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 	__values = [14400, 19200, 28800, 33600, 34400, 57600, 115200, 262200, 307200, 524300, 1544000, 10485800]
 	__strings = ['14.4K Modem', '19.2K Connection', '28.8K Modem', '33.6K Modem', '56K Modem', '56K Single ISDN', '112K Dual ISDN', '256Kbps DSL/Cable', '300Kbps DSL/Cable', '512Kbps DSL/Cable', 'T1 / LAN', '10Mbps LAN']
 	default = 'Not set'
+	nodefault = 1
 
 	def parsevalue(self, str):
 		if str == self.default:
@@ -1614,6 +1638,8 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return self.default
 		str = self.__strings[0]
 		for i in range(len(self.__values)):
@@ -1631,6 +1657,8 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 		return self.valuerepr(val)
 
 class BitrateAttrEditorFieldWithDefault(BitrateAttrEditorField):
+	nodefault = 0
+
 	def getoptions(self):
 		return [self.default] + BitrateAttrEditorField.getoptions(self)
 
@@ -1861,6 +1889,8 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return UNDEFINED
 		return value
 
@@ -1918,6 +1948,8 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 	def valuerepr(self, value):
 		if value is None:
+			if self.nodefault:
+				return self.getdefault()
 			return self.__nocaptions
 		return value
 
