@@ -126,8 +126,20 @@ class _StructView(DisplayListView):
 			x, y =win32mu.Win32Msg(params).pos()
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
 				str='%d %d' % (xp, yp)
-				self.DoDragDrop(self.CF_NODE, str)
+				# Enter C++ code...
+				# this is defined in docview.ScrollView, a superclass.
+				# refer win32view.cpp in python/Extensions/PythonWin
+				# DoDragDrop calls the C++ function "ui_view_do_drag_drop" in
+				# python/Extensions/Pythonwin/win32view.cpp.
+				# The returned value is whether the drop result was successful or not.
+				dropresult = self.DoDragDrop(self.CF_NODE, str)
+				# If the drop was unsuccessful (i.e. dropped where the node is not allowed to)
+				# then cancel the drag/drop operation.
+				if dropresult == 0:
+					self._dragging = 0
 
+# OnDragLeave is a callback that is called when a dragging node leaves the current
+# window.
 ##	def OnDragLeave(self):
 ##		self._dragging = None
 
@@ -148,7 +160,9 @@ class _StructView(DisplayListView):
 				cmd = 'move'
 			else:
 				cmd = 'copy'
+			#print "DEBUG: dragging node doing a self.onEventEx", DragNode
 			return self.onEventEx(DragNode,(x, y, cmd, xf, yf))
+		#print "DEBUG: dragging node not doing anything."
 		return DropTarget.DROPEFFECT_NONE
 
 	def dropnode(self, dataobj, effect, x, y):
