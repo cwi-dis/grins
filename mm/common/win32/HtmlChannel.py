@@ -127,13 +127,13 @@ class HtmlChannel(Channel.ChannelWindow):
 			print 'Warning: Failed to create Html control'
 
 
-	def stopplay(self, node, no_extend = 0):
+	def stopplay(self, node):
 #		if self.window:
 #			self.window.SetImmHtml(' ')
 		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
 			self.window.DestroyHtmlCtrl()
 			self.window.setredrawfunc(None)
-		Channel.ChannelWindow.stopplay(self, node, no_extend)
+		Channel.ChannelWindow.stopplay(self, node)
 		
 
 	def __arm(self,node):
