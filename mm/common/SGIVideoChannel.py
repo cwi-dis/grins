@@ -25,7 +25,7 @@ mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		      ['clipbegin', 'clipend']
+		      ['clipbegin', 'clipend', 'project_videotype', 'project_targets']
 	if Channel.CMIF_MODE:
 		node_attrs = node_attrs + _our_attrs
 	else:
