@@ -3,6 +3,9 @@ import string, sys
 import imgformat, img
 
 error = 'windowinterface.error'
+
+Continue = 'Continue'
+
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 
@@ -335,7 +338,7 @@ class _Toplevel:
 		return c
 
 class _Window:
-	# Instances of this clas represent top-level windows.  This
+	# Instances of this class represent top-level windows.  This
 	# class is also used as base class for subwindows, but then
 	# some of the methods are overridden.
 	#
@@ -839,15 +842,22 @@ class _Window:
 	def _input_callback(self, form, client_data, call_data):
 		if self._parent is None:
 			return		# already closed
-		self._do_input_callback(form, client_data, call_data)
+		try:
+			self._do_input_callback(form, client_data, call_data)
+		except Continue:
+			pass
 
 	def _do_input_callback(self, form, client_data, call_data):
 		event = call_data.event
 		x, y = event.x, event.y
 		for w in self._subwindows:
 			if w._region.PointInRegion(x, y):
-				w._do_input_callback(form, client_data, call_data)
-				return
+				try:
+					w._do_input_callback(form, client_data, call_data)
+				except Continue:
+					pass
+				else:
+					return
 		# not in a subwindow, handle it ourselves
 		if event.type == X.KeyPress:
 			string = Xlib.LookupString(event)[0]
