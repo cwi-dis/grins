@@ -57,7 +57,7 @@ class Chunk:
 		if self.size_read >= self.chunksize:
 			return ''
 		if length > self.chunksize - self.size_read:
- 			length = self.chunksize - self.size_read
+			length = self.chunksize - self.size_read
 		data = self.file.read(length)
 		self.size_read = self.size_read + len(data)
 		return data
@@ -87,7 +87,7 @@ class reader:
 		if formdata != 'WAVE':
 			raise Error, 'not a WAVE file'
 		fmt_chunk_read = 0
-		while formlength > 0:
+		while formlength > 1:
 			data_seek_needed = 1
 			chunk = Chunk(self.__file)
 			if chunk.chunkname == 'fmt ':
@@ -103,7 +103,7 @@ class reader:
 						 fmt.getblocksize()
 				data_seek_needed = 0
 			formlength = formlength - 8 - chunk.chunksize
-			if formlength > 0:
+			if formlength > 1:
 				chunk.skip()
 		if not fmt_chunk_read or not self.__data_chunk:
 			raise Error, 'fmt chunk and/or data chunk missing'
