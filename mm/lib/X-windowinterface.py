@@ -366,6 +366,9 @@ class _Window:
 			if _toplevel._win_lock:
 				_toplevel._win_lock.release()
 
+	def setcursor(self, cursor):
+		pass
+
 	def newdisplaylist(self, *bgcolor):
 		list = _DisplayList(self)
 		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
