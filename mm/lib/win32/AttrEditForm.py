@@ -1015,37 +1015,37 @@ class CssColorCtrl(ColorCtrl):
 	def settooltips(self,tooltipctrl):
 		ColorCtrl.settooltips(self, tooltipctrl)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[3]),'Non-transparent color',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),self.__getTransparentHelp(),None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),self.__getInheritHelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),self._getTransparentHelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),self._getInheritHelp(),None,0)
 		
 class NodeCssColorCtrl(CssColorCtrl):
 
-	def __getTransparentHelp(self):
+	def _getTransparentHelp(self):
 		return 'Transparent (overrides region default)'
 
-	def __getInheritHelp(self):
+	def _getInheritHelp(self):
 		return 'Inherit the color from the region'
 		
 	def gethelp(self):
 		if self.currentValue == 'transparent':
-			return self.__getTransparentHelp()
+			return self._getTransparentHelp()
 		elif self.currentValue == 'inherit':
-			return self.__getInheritHelp()
+			return self._getInheritHelp()
 		return ColorCtrl.gethelp(self) + '  (overrides region default)'
 
 class RegionCssColorCtrl(CssColorCtrl):
 
-	def __getTransparentHelp(self):
+	def _getTransparentHelp(self):
 		return 'Transparent'
 
-	def __getInheritHelp(self):
+	def _getInheritHelp(self):
 		return 'Inherit the color from the parent region'
 		
 	def gethelp(self):
 		if self.currentValue == 'transparent':
-			return self.__getTransparentHelp()
+			return self._getTransparentHelp()
 		elif self.currentValue == 'inherit':
-			return self.__getInheritHelp()
+			return self._getInheritHelp()
 		return ColorCtrl.gethelp(self)
 
 # Ctrl representing a css pos value
