@@ -95,7 +95,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._rect=self._canvas=(0,0,r-l,b-t)
 		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
 		self.ResizeParentToFit()
-	
+
 	# called by the framework before the window is closed
 	def OnClose(self):
 		if self.in_create_box_mode():return
@@ -381,6 +381,11 @@ class _CmifStructView(_CmifView):
 		_CmifView.__init__(self,doc)
 		self._button_down=0
 		self._drag_cmd_send=0
+
+	def OnCreate(self,params):
+		_CmifView.OnCreate(self,params)
+		# enable drag and drop
+		self.dragAcceptFiles()
 
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
