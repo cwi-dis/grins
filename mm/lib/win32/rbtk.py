@@ -197,9 +197,17 @@ class _rbtk:
 	def notifyListener(self,key,params):
 		if not self.in_create_box_mode(): return 0
 		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
-		elif key=='onLButtonUp':DrawTk.DrawLayer.onLButtonUp(self,params)
 		elif key=='onMouseMove':DrawTk.DrawLayer.onMouseMove(self,params)
 		elif key=='OnDraw':DrawTk.DrawLayer.DrawObjLayer(self,params)
+		elif key=='onLButtonUp':
+			DrawTk.DrawLayer.onLButtonUp(self,params)
+			if self._rb_modeless:
+				# If this is a modeless resize check whether something changed.
+				if self._objects:
+					drawObj=self._objects[0]
+					rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = self._rb_units)
+					if self._rb_dirty(rb):
+						self._rb_finish(win32con.IDOK)
 		return 1
 
 	# returns true if we are in create box mode 
