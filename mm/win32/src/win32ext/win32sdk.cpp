@@ -859,6 +859,16 @@ sdk_register_clipboard_format(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", cfPrivate);
 }
 
+
+
+static PyObject*
+sdk_get_dialog_base_units(PyObject *self, PyObject *args) 
+	{
+	CHECK_NO_ARGS2(args,GetDialogBaseUnits);
+	LONG l=GetDialogBaseUnits();
+	return Py_BuildValue("(i,i)", LOWORD(l), HIWORD(l));
+	}
+
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
@@ -905,6 +915,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"GetClipboardFileData",sdk_get_clipboard_file_data,1}, 
 	{"RegisterClipboardFormat",sdk_register_clipboard_format,1}, 
 
+	{"GetDialogBaseUnits",sdk_get_dialog_base_units,1}, 
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
