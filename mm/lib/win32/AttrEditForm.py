@@ -1151,52 +1151,8 @@ class Renderer:
 
 	# borrow cmifwnd's _prepare_image but make some adjustments
 	def adjustSize(self, size, crop = (0,0,0,0), scale = 0, center = 1):
-		xsize, ysize = size
-		x,y,r,b=self._rc
-		width, height=r-x,b-y
-
-		# check for valid crop proportions
-		top, bottom, left, right = crop
-		if top + bottom >= 1.0 or left + right >= 1.0 or \
-		   top < 0 or bottom < 0 or left < 0 or right < 0:
-			raise error, 'bad crop size'
-
-		top = int(top * ysize + 0.5)
-		bottom = int(bottom * ysize + 0.5)
-		left = int(left * xsize + 0.5)
-		right = int(right * xsize + 0.5)
-		rcKeep=left,top,xsize-right,ysize-bottom
-
-		# compute scale taking into account the hint (0,-1)
-		if scale == 0:
-			scale = min(float(width)/(xsize - left - right),
-				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
-			scale = max(float(width)/(xsize - left - right),
-				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
-			scale = min(float(width)/(xsize - left - right),
-				    float(height)/(ysize - top - bottom))
-			if scale > 1:
-				scale = 1
-
-		# scale crop sizes
-		top = int(top * scale + .5)
-		bottom = int(bottom * scale + .5)
-		left = int(left * scale + .5)
-		right = int(right * scale + .5)
-
-		mask=None
-		w=xsize
-		h=ysize
-		if scale != 1:
-			w = int(xsize * scale + .5)
-			h = int(ysize * scale + .5)
-
-		if center:
-			x, y = x + (width - (w - left - right)) / 2, \
-			       y + (height - (h - top - bottom)) / 2
-		return left, top, x, y, w - left - right, h - top - bottom, rcKeep
+		rc=win32mu.Rect(self._rc)
+		return rc.adjustSize(size,crop,scale,center)
 
 	def inflaterc(self,rc,dl=1,dt=1,dr=1,db=1):
 		l,t,r,b=rc
@@ -1348,8 +1304,6 @@ class VideoRenderer(MediaRenderer):
 		MediaRenderer.__init__(self,wnd,rc,baseURL)
 	def needswindow(self):
 		return 1
-	def needsoswindow(self):
-		return 1
 
 class AudioRenderer(MediaRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
@@ -1407,6 +1361,7 @@ class RealRenderer(Renderer):
 		import MMurl
 		url = MMurl.unquote(url)
 		self._rmaplayer.OpenURL(url)
+		self._wnd.ShowWindow(win32con.SW_SHOW)
 			
 	def play(self):
 		if self._rmaplayer:
@@ -1419,8 +1374,9 @@ class RealRenderer(Renderer):
 	def stop(self):
 		if self._rmaplayer:
 			# stop requires to recreate player
-			# if want it to be confined
+			# in order to be confined
 			self._rmaplayer.Pause()
+			#self._rmaplayer.Seek(0)
 
 class RealWndRenderer(RealRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
@@ -1436,17 +1392,23 @@ class RealAudioRenderer(RealRenderer):
 	def needswindow(self):
 		return 0
 
-# a not resizeable ctrl for rma
+# a ctrl resizeable in a special way for rma
 class RealWndCtrl(components.WndCtrl):
 	def prepare(self):
 		self.HookMessage(self.onSize,win32con.WM_SIZE)
-		self._rect=self.GetClientRect()
+		l,t,r,b=self.GetWindowRect()
+		lr,tr,rr,br=self.GetParent().GetWindowRect()
+		self._rcref=win32mu.Rect((l-lr,t-tr,r-lr,b-tr))
+		self._box=None
+
 	def onSize(self,params):
-		# we should adjust rect, but for now:
-		msg=win32mu.Win32Msg(params)
-		l,t,r,b=self._rect
-		self.SetWindowPos(self.GetSafeHwnd(),(0,0,r,b),
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+		if not self._box:
+			msg=win32mu.Win32Msg(params)		
+			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
+				self._rcref.adjustSize((msg.width(),msg.height()))
+			self._box=(dest_x, dest_y, width, height)
+		self.SetWindowPos(self.GetSafeHwnd(),self._box,
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
 
 
 #################################
@@ -1486,7 +1448,6 @@ class PreviewPage(AttrPage):
 			preview.create_wnd_from_handle()
 			preview.prepare()
 			self._renderer._wnd=preview
-			preview.ShowWindow(win32con.SW_SHOW)
 		l1,t1,r1,b1=self.GetWindowRect()
 		l2,t2,r2,b2=preview.getwindowrect()
 		self._renderer._rc=(l2-l1,t2-t1,r2-l1,b2-t1)
@@ -1914,7 +1875,6 @@ class FileGroup(AttrGroup):
 			self._preview=1
 			mtype='realwnd'
 		self._mtypesig=mtype
-		if mtype == 'realwnd': self._preview = 0 # XXXX for now...
 		return self._preview
 
 	def getpageresid(self):
@@ -1924,8 +1884,6 @@ class FileGroup(AttrGroup):
 				return getattr(grinsRC, 'IDD_EDITATTR_PF1')
 			else: 
 				# continous media i.e play,stop
-				if self._mtypesig=='realwnd':
-					return getattr(grinsRC, 'IDD_EDITATTR_WF1')	
 				return getattr(grinsRC, 'IDD_EDITATTR_MF1')	
 		else:
 			return getattr(grinsRC, 'IDD_EDITATTR_F1')
