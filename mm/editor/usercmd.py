@@ -37,6 +37,30 @@ class HELP(_CommandBase):
 class PREFERENCES(_CommandBase):
 	help = 'Display application preferences'
 
+# Alignment commands	
+class ALIGN(_CommandBase):
+	help = 'Align'
+class ALIGN_LEFT(_CommandBase):
+	help = 'Align the left borders'
+class ALIGN_CENTER(_CommandBase):
+	help = 'Align the horizontal center axes'
+class ALIGN_RIGHT(_CommandBase):
+	help = 'Align the right borders'
+class ALIGN_TOP(_CommandBase):
+	help = 'Align the top borders'
+class ALIGN_MIDDLE(_CommandBase):
+	help = 'Align the vertical center axes'
+class ALIGN_BOTTOM(_CommandBase):
+	help = 'Align the bottom borders'
+
+# Distribute commands	
+class DISTRIBUTE(_CommandBase):
+	help = 'Distribute'
+class DISTRIBUTE_HORIZONTALLY(_CommandBase):
+	help = 'Distribute horizontally'
+class DISTRIBUTE_VERTICALLY(_CommandBase):
+	help = 'Distribute vertically'
+
 #
 # MainDialog commands
 #
