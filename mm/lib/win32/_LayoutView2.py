@@ -200,6 +200,7 @@ class _LayoutView2(GenFormView):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
 
 		self.addZoomButtons()
 		self.addFocusCtrl()
@@ -246,31 +247,38 @@ class _LayoutView2(GenFormView):
 	# end setup the dialog control values
 	#
 	def onLButtonDown(self, params):
-		msg = win32mu.Win32Msg(params)
-		point = msg.pos()
-		flags = msg._wParam
-		if self._slider:
+		if self._slider and self._slider.isEnabled():
+			msg = win32mu.Win32Msg(params)
+			point = msg.pos()
+			flags = msg._wParam
 			self._slider.onSelect(point, flags)
 		if self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
 	def onLButtonUp(self, params):
-		msg = win32mu.Win32Msg(params)
-		point = msg.pos()
-		flags = msg._wParam
-		if self._slider:
+		if self._slider and self._slider.isEnabled():
+			msg = win32mu.Win32Msg(params)
+			point = msg.pos()
+			flags = msg._wParam
 			self._slider.onDeselect(point, flags)
 		if self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
 	def onMouseMove(self, params):
-		msg = win32mu.Win32Msg(params)
-		point = msg.pos()
-		flags = msg._wParam
-		if self._slider:
+		if self._slider and self._slider.isEnabled():
+			msg = win32mu.Win32Msg(params)
+			point = msg.pos()
+			flags = msg._wParam
 			self._slider.onDrag(point, flags)
 		if self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
+
+	def onLButtonDblClk(self, params):
+		if self._slider and self._slider.isEnabled():
+			msg = win32mu.Win32Msg(params)
+			point = msg.pos()
+			flags = msg._wParam
+			self._slider.onActivate(point, flags)
 
 	# Sets the acceptable command list by delegating to its parent keeping a copy.
 	def set_commandlist(self, list):
