@@ -938,13 +938,15 @@
 #define IDUC_ZOOMIN                     32900
 #define IDUC_ZOOMOUT                    32901
 #define IDUC_CREATE_ANCHOREXTENDED      32902
+#define IDUC_CREATE_ANCHOR_CONTEXT      32903
+#define IDUC_CREATE_ANCHOR_BROWSER      32904
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        465
-#define _APS_NEXT_COMMAND_VALUE         32903
+#define _APS_NEXT_COMMAND_VALUE         32905
 #define _APS_NEXT_CONTROL_VALUE         1562
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

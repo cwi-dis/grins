@@ -97,19 +97,26 @@ FRAME_TEMPLATE = (
 ##	)
 ##)
 
+buttonlist = [
+	Button(usercmd.CREATEANCHOR, TBICON_CREATE_ANCHOR),
+	Button(usercmd.FINISH_LINK, TBICON_FINISH_LINK),
+	Separator(6),
+	Button(usercmd.CREATEANCHOREXTENDED, TBICON_CREATE_ANCHOREXTENDED),
+	Separator(6),
+	Button(usercmd.CREATE_EVENT_SOURCE, TBICON_EVENT_SOURCE),
+	Button(usercmd.CREATE_BEGIN_EVENT, TBICON_BEGIN_EVENT),
+	Button(usercmd.CREATE_END_EVENT, TBICON_END_EVENT),
+	]
+if features.EXPORT_REAL in features.feature_set:
+	# add animate button between media and brush
+	buttonlist.insert(4, Button(usercmd.CREATEANCHOR_CONTEXT, TBICON_CREATE_ANCHOR_CONTEXT))
+	buttonlist.insert(5, Button(usercmd.CREATEANCHOR_BROWSER, TBICON_CREATE_ANCHOR_BROWSER))
+
 LINKING_TEMPLATE = (
-	('Linking and Timing', 'toolbar', 'docked', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
-		Button(usercmd.CREATEANCHOR, TBICON_CREATE_ANCHOR),
-		Button(usercmd.FINISH_LINK, TBICON_FINISH_LINK),
-		Separator(6),
-		Button(usercmd.CREATEANCHOREXTENDED, TBICON_CREATE_ANCHOREXTENDED),
-		Separator(6),
-		Button(usercmd.CREATE_EVENT_SOURCE, TBICON_EVENT_SOURCE),
-		Button(usercmd.CREATE_BEGIN_EVENT, TBICON_BEGIN_EVENT),
-		Button(usercmd.CREATE_END_EVENT, TBICON_END_EVENT),
-		)
+	('Linking and Timing', 'toolbar', 'docked', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, tuple(buttonlist)
 	)
 )
+
 
 ALIGN_TEMPLATE = (
 	('Region alignment', 'toolbar', 'docked', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, 0, (

@@ -3941,6 +3941,8 @@ BEGIN
     BUTTON      IDUC_REGION
     BUTTON      IDUC_TOPLAYOUT
     BUTTON      IDUC_CREATE_ANCHOREXTENDED
+    BUTTON      IDUC_CREATE_ANCHOR_CONTEXT
+    BUTTON      IDUC_CREATE_ANCHOR_BROWSER
 END
 
 IDR_TB_COMMON TOOLBAR DISCARDABLE  16, 15
@@ -4088,6 +4090,10 @@ BEGIN
     IDUC_ZOOMOUT            "Zoom out\nZoom out"
     IDUC_CREATE_ANCHOREXTENDED 
                             "Create full hyperlink source and edit...\nCreate full hyperlink source and edit..."
+    IDUC_CREATE_ANCHOR_CONTEXT 
+                            "Create a link to the Context subwindow\nCreate a link to the Context subwindow"
+    IDUC_CREATE_ANCHOR_BROWSER 
+                            "Create a link to the Browser subwindow\nCreate a link to the Browser subwindow"
 END
 
 #endif    // English (U.S.) resources

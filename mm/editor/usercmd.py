@@ -391,6 +391,10 @@ class CREATEANCHOR(_CommandBase):
 	help = 'Create a simple fullnode anchor on the selection'
 class CREATEANCHOREXTENDED(_CommandBase):
 	help = 'Create an anchor on the selection and edit the properties'
+class CREATEANCHOR_BROWSER(_CommandBase):
+	help = 'Create a link to the Browser subwindow'
+class CREATEANCHOR_CONTEXT(_CommandBase):
+	help = 'Create a link to the Context subwindow'
 class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
 class CREATE_EVENT_SOURCE(_CommandBase):
