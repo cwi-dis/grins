@@ -1583,7 +1583,7 @@ class LayoutView2(LayoutViewDialog2):
 				elif type == 'media' and COPY_PASTE_MEDIAS:
 					doPaste = 0
 					if self.existRef(node):
-						ret = windowinterface.GetOKCancel("Do you really want to move the media inside the selected region ?", self.toplevel.window)
+						ret = windowinterface.GetOKCancel("Do you really want to move the media to the selected region ?", self.toplevel.window)
 						if ret == 0:
 							# ok
 							doPaste = 1
