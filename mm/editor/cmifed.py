@@ -40,7 +40,6 @@ from MainDialog import MainDialog
 class Main(MainDialog):
 	def __init__(self, opts, files):
 		self._tracing = 0
-		from MMExc import MSyntaxError
 		self.tops = []
 		self._mm_callbacks = {}
 		try:
@@ -65,12 +64,16 @@ class Main(MainDialog):
 		self.new_top(top)
 
 	def open_callback(self, url):
+		from MMExc import MSyntaxError
 		import TopLevel
 		try:
 			top = TopLevel.TopLevel(self, url, 0)
 		except IOError:
 			import windowinterface
 			windowinterface.showmessage('error opening URL %s' % url)
+		except MSyntaxError:
+			import windowinterface
+			windowinterface.showmessage('parsing URL %s failed' % url)
 		else:
 			self.new_top(top)
 		
