@@ -211,7 +211,7 @@ implements SMILListener
     }
     public void setState(int state){
     }
-	public void newViewport(int index){
+	public void updateViewports(){
 	}
     
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
