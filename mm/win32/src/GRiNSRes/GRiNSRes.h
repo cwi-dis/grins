@@ -949,13 +949,14 @@
 #define IDUC_CREATE_ANCHOREXTENDED      32902
 #define IDUC_CREATE_ANCHOR_CONTEXT      32903
 #define IDUC_CREATE_ANCHOR_BROWSER      32904
+#define IDUC_MARK                       32905
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        487
-#define _APS_NEXT_COMMAND_VALUE         32905
+#define _APS_NEXT_COMMAND_VALUE         32906
 #define _APS_NEXT_CONTROL_VALUE         1564
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
