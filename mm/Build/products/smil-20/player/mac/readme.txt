@@ -1,7 +1,7 @@
-GRiNS Player 2.0b1 Readme
+GRiNS Player 2.0b2 Readme
 =========================
 
-GRiNS Player 2.0b1 is a SMiL 2.0 player for the Macintosh and
+GRiNS Player 2.0b2 is a SMiL 2.0 player for the Macintosh and
 Windows platforms.
 
 Disclaimer
@@ -22,16 +22,17 @@ System Requirements
 
 GRiNS requires any PowerPC Macintosh running MacOS 8.5. The preferred
 configuration, though, is at least a 200Mhz machine and 32Mb of RAM. To
-play back RealMedia 64Mb is required.
+play back RealMedia 64Mb is required. On MacOSX GRiNS will run in Classic
+compatibility mode.
+
+This player will playback RealMedia items in your SMIL 2.0 presentation
+if you have also installer RealPlayer on your system.
 
 General Information
 -------------------
 
 Please see the Oratrix website, http://www.oratrix.com for more
 information on the GRiNS editor and player. 
-
-This player will playback RealMedia items in your SMIL 2.0 presentation
-if you have also installer RealPlayer on your system.
 
 In order to enable this feature you need RealPlayer G2 or later,
 either in the Basic or Plus version. See the RealNetworks website
