@@ -16,16 +16,16 @@
     </layout>
   </head>
   <body>
-    <par>
-      <img id="RealPix-Slideshow" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
-	  <seq>
-        <audio id="Background-Audio" region="audioRegion_1" src="media/background-sound.aiff"/>
+    <par id="RealPix_Slideshow">
+      <img id="RealPix_1" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
+	  <seq id="Audio_Sequence>
+        <audio id="Clip_1" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
-	  <seq>
-        <audio id="Additional-Audio" region="audioRegion_2" src="media/background-sound.aiff"/>
+	  <seq id="Background_Audio">
+        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
-	  <seq>
-        <img id="Background-Image" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
+	  <seq id="Background_Images">
+        <img id="Image_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
 	  </seq>
     </par>
   </body>
