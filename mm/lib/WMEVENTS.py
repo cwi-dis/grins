@@ -14,7 +14,7 @@ ResizeWindow = 8
 WindowExit = 9
 WindowActivate = 11 # Mac-only
 WindowDeactivate = 12 # Mac-only
-
+MouseMove = 13 # Windows only
 
 # File descriptor ready events
 FileEvent = 10
@@ -28,3 +28,11 @@ PasteFile = 31
 DropURL = 32
 DragFile = 33
 DragURL = 34
+DragNode = 35
+DropNode = 36
+
+# Underlying OS window/bitmap has changed (onscreen<->offscreen bitmap, etc)
+OSWindowChanged = 40
+# Something has dran to the window. Note that this is really expensive, and really
+# for export-to-wmp and such only
+WindowContentChanged = 41

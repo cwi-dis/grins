@@ -282,7 +282,7 @@ class _DisplayList:
 	def newbutton(self, coordinates, z = 0, times = None):
 		return _Button(self, coordinates)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1):
 		return 0.0, 0.0, 1.0, 1.0
 
