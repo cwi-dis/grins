@@ -1,4 +1,4 @@
-from Channel import Channel
+from Channel import ChannelAsync
 import windowinterface
 import time
 import audiodev
@@ -8,12 +8,12 @@ import os
 
 debug = os.environ.has_key('CHANNELDEBUG')
 
-class SoundChannel(Channel):
+class SoundChannel(ChannelAsync):
 	def __repr__(self):
 		return '<NonThreadedSoundChannel instance, name=' + `self._name` + '>'
 
 	def __init__(self, name, attrdict, scheduler, ui):
-		Channel.__init__(self, name, attrdict, scheduler, ui)
+		ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		if debug: print 'SoundChannel: init', name
 		self.port = None
 		self.arm_fp = None
@@ -57,7 +57,6 @@ class SoundChannel(Channel):
 		self.arm_nchannels = self.arm_fp.getnchannels()
 		self.arm_readsize = self.arm_framerate	# XXXX 1 second, tied to timer!!
 		self.arm_data = self.arm_fp.readframes(self.arm_readsize)
-		# XXXX armed_duration??
 		return 1
 		
 	def _playsome(self, *dummy):
@@ -69,10 +68,13 @@ class SoundChannel(Channel):
 			self.play_data = self.play_fp.readframes(self.play_readsize)
 		if self.play_data:
 			windowinterface.settimer(0.5, (self._playsome, ()))
+		else:
+			self.playdone(0)
 			
 	def do_play(self, node):
 		if not self.arm_fp or not self.port:
 			self.play_fp = None
+			self.playdone(0)
 			return
 			
 		if debug: print 'SoundChannel: play', node
