@@ -1,4 +1,4 @@
-import re
+import re, string
 from xmllib import _opS
 
 clock_val = (_opS +
