@@ -338,12 +338,15 @@ class TemporalView(TemporalViewDialog):
 
 	def ev_dragfile(self, dummy, window, event, params):
 		print "Drag file!"
+		return windowinterface.DROPEFFECT_MOVE
 
 	def ev_dropfile(self, dummy, window, event, params):
 		print "Dropping a file!"
+		return windowinterface.DROPEFFECT_MOVE
 
 	def ev_dragnode(self, dummy, window, event, params):
 		print "DEBUG: ev_dragnode called."
+		return windowinterface.DROPEFFECT_MOVE
 		x,y,mode, xf, yf= params[0:5]
 		x,y = self.rel2abs((x,y))
 		xf, yf = self.rel2abs((xf, yf))
@@ -352,7 +355,7 @@ class TemporalView(TemporalViewDialog):
 
 	def ev_dropnode(self, dummy, window, event, params):
 		print "Dropped a node!"
-		return 0
+		return windowinterface.DROPEFFECT_MOVE
 
 ######################################################################
 	# Commands from the menus.
