@@ -60,14 +60,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Oratrix Development B.V.\0"
             VALUE "FileDescription", "GRiNSed  resource dll\0"
-            VALUE "FileVersion", "1.0Beta\0"
+            VALUE "FileVersion", "1.0\0"
             VALUE "InternalName", "GRiNSRes\0"
             VALUE "LegalCopyright", "Copyright © 1999 Oratrix Development B.V.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "GRiNSRes.dll\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "GRiNS Application\0"
-            VALUE "ProductVersion", "1.0Beta\0"
+            VALUE "ProductVersion", "1.0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
