@@ -123,12 +123,14 @@ class PlayerDialog:
 		self.__window = self.toplevel.window
 		self.__window.set_commandlist(self.stoplist,self.__cmdtgt)
 
-
 	def show(self):
 		if self.__menu_created is None:
 			if self.__window is None:
 				self.__create()
-
+		import sys
+		if sys.platform == 'wince':
+			self.__window.show()
+				
 	def hide(self):
 		if self.__window is not None:
 			self.__window.set_commandlist(None,self.__cmdtgt)
