@@ -95,14 +95,24 @@ PlayerObject::~PlayerObject()
 
 PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 {
-	int hwnd, x, y, w, h;
+	int x, y, w, h;
+#ifdef _MACINTOSH
+	WindowPtr hwnd;
+	
+	if (!PyArg_ParseTuple(args, "O&((ii)(ii))", WinObj_Convert, &hwnd, &x, &y, &w, &h))
+		return NULL;
+#else
 #ifdef _UNIX
-	int dpy;
+	int hwnd, dpy;
+	
 	if (!PyArg_ParseTuple(args, "(ii)((ii)(ii))", &hwnd, &dpy, &x, &y, &w, &h))
 		return NULL;
 #else
+	int hwnd;
+	
 	if (!PyArg_ParseTuple(args, "i((ii)(ii))", &hwnd, &x, &y, &w, &h))
 		return NULL;
+#endif
 #endif
 	IRMAClientEngine *pClientEngine = GetEngine(engine);
 	PlayerObject *obj = (PlayerObject*) RMAObject::make(PlayerObject::type);
