@@ -5,9 +5,12 @@
 #include "mpglib/mpeg_video_bitstream.h"
 #include "mpeg_player.h"
 
+#include "../common/profiler.h"
+
 ///////////////
 int main(int argc, char *argv[])
 	{
+	//TCHAR filename[] = TEXT("D:\\ufs\\mm\\cmif\\win32\\winsdk\\mpegdec\\bin\\test_audio_video.mpg");
 	TCHAR filename[] = TEXT("D:\\ufs\\mm\\cmif\\win32\\winsdk\\mpegdec\\bin\\test.mpg");
 
 	mpeg_input_stream *is = open_mpeg_input_stream(filename);
@@ -28,9 +31,12 @@ int main(int argc, char *argv[])
 		delete is;
 		return 1;
 		}
+	
+	{
+	profiler pf("get_duration");
 	printf("duration = %f\n", player.get_duration());
+	}
 
-	player.decode_audio_stream();
 
 	surface<color_repr_t> *psurf = new surface<color_repr_t>(player.get_width(), player.get_height());
 	player.prepare_playback(psurf);
@@ -38,10 +44,10 @@ int main(int argc, char *argv[])
 	
 	player.resume_playback();
 	int i = 0;
-	while(!player.finished_playback() && ++i<2)
+	while(!player.finished_playback())
 		{
 		printf(".");
-		Sleep(5000);
+		Sleep(50);
 		}
 	printf("\n");
 	player.close();
