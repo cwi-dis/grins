@@ -219,8 +219,7 @@ class SchedulerContext:
 	#
 	def prepare_minidoc(self, seeknode):
 		self.sractions, self.srevents = \
-			self.playroot.GenAllSR(seeknode,
-					       self.parent.ui.getchannelbynode)
+			self.playroot.GenAllSR(seeknode)
 	#
 	# Re-initialize SR actions and events for a looping node, preparing
 	# for the next time through the loop

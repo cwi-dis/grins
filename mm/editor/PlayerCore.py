@@ -28,6 +28,7 @@ class PlayerCore(Selecter):
 		self.editmgr.register(self)
 		self.chans_showing = 0
 		Selecter.__init__(self)
+		self.context.registergetchannelbynode(self.getchannelbynode)
 	#
 	# EditMgr interface (as dependent client).
 	#
