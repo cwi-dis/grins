@@ -144,7 +144,7 @@ echo -x sitecustomize >> FreezeOpts
 echo -x termios >> FreezeOpts
 
 echo -x CORBA >> FreezeOpts
-echo -x CORBA.services
+echo -x CORBA.services >> FreezeOpts
 echo -x readline >> FreezeOpts
 echo -x pwd >> FreezeOpts
 
