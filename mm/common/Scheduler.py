@@ -142,6 +142,8 @@ class SchedulerContext:
 	# anchor specified.
 	#
 	def seekanchor(self, node, aid, aargs):
+		if isinstance(node, MMNode.MMNode_body):
+			node = node.parent
 		chan = self.parent.ui.getchannelbynode(node)
 		if chan:
 			chan.seekanchor(node, aid, aargs)
@@ -760,10 +762,13 @@ class SchedulerContext:
 			node.delayed_arcs = []
 			getchannelfunc = node.context.getchannelbynode
 			if node.type in leaftypes and getchannelfunc:
-				chan = getchannelfunc(node)
+				xnode = node
+				if isinstance(xnode, MMNode.MMNode_body):
+					xnode = xnode.parent
+				chan = getchannelfunc(xnode)
 				if chan:
 					if debugevents: print 'stopplay',`node`,parent.timefunc()
-					chan.stopplay(node)
+					chan.stopplay(xnode)
 			if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 				for c in [node.looping_body_self,
 					  node.realpix_body,
@@ -860,10 +865,13 @@ class SchedulerContext:
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			getchannelfunc = node.context.getchannelbynode
 			if node.type in leaftypes and getchannelfunc:
-				chan = getchannelfunc(node)
+				xnode = node
+				if isinstance(xnode, MMNode.MMNode_body):
+					xnode = xnode.parent
+				chan = getchannelfunc(xnode)
 				if chan:
 					if debugevents: print 'freeze',`node`,parent.timefunc()
-					chan.freeze(node)
+					chan.freeze(xnode)
 			for c in node.GetSchedChildren():
 				self.do_terminate(c, timestamp, fill = 'freeze')
 				if not parent.playing:
@@ -903,10 +911,13 @@ class SchedulerContext:
 			return
 		getchannelfunc = node.context.getchannelbynode
 		if node.type in leaftypes and getchannelfunc:
-			chan = getchannelfunc(node)
+			xnode = node
+			if isinstance(xnode, MMNode.MMNode_body):
+				xnode = xnode.parent
+			chan = getchannelfunc(xnode)
 			if chan:
 				if debugevents: print 'freeze',`node`,self.parent.timefunc()
-				chan.pause(node, action)
+				chan.pause(xnode, action)
 		for c in node.GetSchedChildren():
 			self.pause_play(c, action, timestamp)
 		node.playing = MMStates.PAUSED
@@ -933,10 +944,13 @@ class SchedulerContext:
 			return
 		getchannelfunc = node.context.getchannelbynode
 		if node.type in leaftypes and getchannelfunc:
-			chan = getchannelfunc(node)
+			xnode = node
+			if isinstance(xnode, MMNode.MMNode_body):
+				xnode = xnode.parent
+			chan = getchannelfunc(xnode)
 			if chan:
 				if debugevents: print 'freeze',`node`,self.parent.timefunc()
-				chan.resume(node)
+				chan.resume(xnode)
 		if node.type == 'excl':
 			for c in node.GetSchedChildren():
 				if c.playing == MMStates.PAUSED and \
@@ -1314,7 +1328,10 @@ class Scheduler(scheduler):
 		if debugevents: print 'do_play',`node`,node.start_time, timestamp,self.timefunc()
 		if self.starting_to_play:
 			self.starting_to_play = 0
-		chan = self.ui.getchannelbynode(node)
+		xnode = node
+		if isinstance(xnode, MMNode.MMNode_body):
+			xnode = xnode.parent
+		chan = self.ui.getchannelbynode(xnode)
 		if chan not in sctx.channels:
 			sctx.channels.append(chan)
 			chan.startcontext(sctx)
@@ -1323,7 +1340,7 @@ class Scheduler(scheduler):
 ##		ndur = node.calcfullduration(self)
 ##		if ndur is not None and ndur >= 0:
 ##			sctx.sched_arcs(node, 'end', timestamp = timestamp+ndur)
-		chan.play(node)
+		chan.play(xnode)
 
 	#
 	# Execute a PLAY_STOP SR.
@@ -1332,8 +1349,11 @@ class Scheduler(scheduler):
 		if node.playing not in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			if debugevents: print 'do_play_stop: already stopped',`node`,self.timefunc()
 			return
-		chan = self.ui.getchannelbynode(node)
-		chan.freeze(node)
+		xnode = node
+		if isinstance(xnode, MMNode.MMNode_body):
+			xnode = xnode.parent
+		chan = self.ui.getchannelbynode(xnode)
+		chan.freeze(xnode)
 		node.stopplay(timestamp)
 
 	#
