@@ -1725,6 +1725,8 @@ class EventCtrl(AttrCtrl):
 					self._eventstruct.get_node(), filter = 'node')
 				if dlg.show():
 					self._eventstruct.set_node(dlg.getmmobject())
+					self._eventstruct.check_event()
+					self.update()
 			self.enableApply()
 			self.update()
 
