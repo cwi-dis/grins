@@ -331,7 +331,6 @@ class Channel:
 		self._armstate = ARMING
 		if self._armed_node is node:
 			# Same as last time, apparently
-			##print 'Same node on', self # DBG
 			return 1
 		self._armed_node = node
 		self._armed_anchors = []
@@ -548,18 +547,14 @@ class Channel:
 		# Arm the specified node.  This will change the arming
 		# state from AIDLE to ARMING.  When the arm is
 		# finished, the state changes to ARMED.
-		# Superclasses should define a method do_arm to do the
-		# actual arming.  Do_arm should return 1
-		# When arming is done, callback should be called with
-		# the given arg.
+		# Subclasses should define a method do_arm to do the
+		# actual arming.
 		# Do_arm() is called to do the actual arming.  If it
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
 		same = self.arm_0(node)
 		if self._is_shown and not self.do_arm(node, same):
-		        if same: print 'Could not skip arm on', self # DBG
 			return
-##		if same: print 'Skipped an arm on', self # DBG
 		self.arm_1()
 
 	def seekanchor(self, node, aid, args):
@@ -656,7 +651,6 @@ class Channel:
 			print 'Channel.stopcontext'+`(self, ctx)`
 		if ctx is not self._playcontext and \
 		   ctx is not self._armcontext:
-##		if not ctx in (self._playcontext, self._armcontext):
 			raise error, 'stopcontext with unknown context'
 		if self._playcontext is ctx:
 			if self._playstate in (PLAYING, PLAYED):
