@@ -132,14 +132,17 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__targetChannel:
 			return self.__targetChannel
 		targnode = self.__effAnimator.getTargetNode()
-		if targnode._type == 'mmnode':
-			self.__targetChannel = self._player.getRenderer(targnode)
-		elif targnode._type == 'region':
-			regionName = targnode.GetChannelName()
+		if targnode is None:
+			return None
+		if targnode.getClassName() in ('Region', 'Viewport'):
+			regionName = targnode.GetUID()
 			self.__targetChannel = self._player.getchannelbyname(regionName)
-		elif targnode._type == 'area':
-			parentnode = targnode.attrdict.get('parent')
-			self.__targetChannel = self._player.getRenderer(parentnode)
+		else:
+			if targnode.GetType() == 'anchor': # area
+				parentnode = targnode.GetParent()
+				self.__targetChannel = self._player.getRenderer(parentnode)
+			else:
+				self.__targetChannel = self._player.getRenderer(targnode)
 		return self.__targetChannel
 		
 	def __startAnimate(self):
