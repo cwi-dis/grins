@@ -1,0 +1,46 @@
+Asset management
+----------------
+
+This can be divided into two different problems:
+* Asset management for a certain grins project.
+* Clipboard management.
+
+Personal perspective (flamewar welcome)
+---------------------
+
+A clipboard manager is a waste of time. If a user wants to keep
+something, he should use the Asset manager to store it. e.g. "cut",
+"copy", "paste", "move to asset manager".
+
+An Asset manager
+----------------
+
+This could be a simple list of assets, with icons and possibly
+information about them.
+
+For the whole asset manager, you can:
+- import a directory, maybe with wildcards.
+
+For each asset, you can:
+- play it, preview it, whatever.
+- cut, copy, delete.
+- open it in the structure view (for structure nodes).
+- drag and drop.
+
+Typically, assets would be: 
+- Structure nodes.
+- Regions?? Maybe not.
+- Standard media assets, e.g. sounds, images, movies, text.
+- Bits of text - URL's etc. 
+- Inline nodes - realtext of iets.
+
+Assets would be part of a document and stored in the grins file and
+the MMNode structure.
+
+We assume that this would use template-based editing, which is how
+people would end up with a library of GRiNS-based assets.
+
+For structure nodes, they could open up a seperate structure view,
+seperate from the root node. This could get confusing, so we have to
+find a way of differentiating the root node structure view from
+others.
