@@ -720,6 +720,22 @@ class LayoutManager(LayoutManagerBase):
 	#
 	# winlayout.MSDrawContext listener interface
 	#
+
+	#
+	# overrided methods to manage the mouse capture
+	#
+	def onLButtonDown(self, params):
+		self.SetCapture()
+		LayoutManagerBase.onLButtonDown(self, params)
+
+	def onLButtonUp(self, params):
+		LayoutManagerBase.onLButtonUp(self, params)
+		self.ReleaseCapture()
+
+	#
+	#
+	#
+	
 	def onDSelChanged(self, selections):
 		self._selectedList = selections
 		if self._listener != None:
