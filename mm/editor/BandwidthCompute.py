@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import Bandwidth
 
 # Indicators for bandwidth type. STREAM is allocated first, then PREROLL.

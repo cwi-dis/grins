@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from LayoutViewDialog2 import LayoutViewDialog2
 from windowinterface import UNIT_PXL
 
