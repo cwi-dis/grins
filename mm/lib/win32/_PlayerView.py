@@ -27,6 +27,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self.__lastMouseMoveParams = None
 
 		self._usesLightSubWindows = 1
+		self._wndclasscursor = 'arrow'
 
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 
@@ -72,7 +73,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def close(self):
 		if self._canclose:
 			DisplayListView.close(self)
-					
+	
 	# The response of the view for the WM_SIZE (Resize) message						
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
@@ -118,6 +119,14 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			DisplayListView.OnDraw(self,dc)
 		else:
 			self.update()
+
+	# override DisplayListView default to eliminate cursor flashing
+	def setcursor(self, strid):
+		if self._wndclasscursor == strid: return
+		self._wndclasscursor = strid
+		import win32ui
+		cursor = self.getcursorhandle(strid)
+		win32ui.GetWin32Sdk().SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 
 	def onMouseEvent(self, point, ev, params=None):
 		cont, stop = 0, 1	
