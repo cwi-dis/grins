@@ -1240,6 +1240,9 @@ class _DisplayList:
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, width, height, x, y)
 		toplevel._main.UpdateDisplay()
+		
+	def render_now(self):
+		self.render()
 
 	def _render(self, region):
 		self._rendered = TRUE
