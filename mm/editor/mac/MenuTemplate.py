@@ -10,7 +10,7 @@ from usercmd import *
 # Some commands are optional, depending on preference settings:
 ALL=''
 CMIF='cmif'
-DEBUG='debug'
+DBG='debug'
 #
 # commands we know are not useable on the Mac:
 UNUSED_COMMANDS=(
@@ -38,17 +38,17 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Document Properties...', None, PROPERTIES),
 		(ALL, SEP,),
-		(DEBUG, CASCADE, 'Debug', (
+		(DBG, CASCADE, 'Debug', (
 			(ALL, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(ALL, TOGGLE, ('Enable call tracing','Disable call tracing'), None, TRACE),
 			(ALL, ENTRY, 'Enter debugger', None, DEBUG),
 			(ALL, ENTRY, 'Abort', None, CRASH),
 			(ALL, ENTRY, 'Show log/debug window', None, CONSOLE),
 			)),
-		(DEBUG, SEP,),
+		(DBG, SEP,),
 		(ALL, ENTRY, 'Quit', 'Q', EXIT),
 		)),
-		
+
 	(ALL, CASCADE, 'Edit', (
 		(ALL, ENTRY, 'Undo', 'Z', UNDO),
 		(ALL, SEP,),
@@ -85,7 +85,7 @@ MENUBAR=(
 		(ALL, SEP, ),
 		(ALL, ENTRY, 'Preferences...', None, PREFERENCES),
 		)),
-		
+
 	(ALL, CASCADE, 'Play', (
 		(ALL, ENTRY, 'Play', 'P', PLAY),
 		(ALL, ENTRY, 'Pause', None, PAUSE),
@@ -106,7 +106,7 @@ MENUBAR=(
 		(ALL, ENTRY, 'Create Syncarc from Selection...', None, FINISH_ARC),
 		(ALL, DYNAMICCASCADE, 'Select Sync Arc', SYNCARCS),
 		)),
-		
+
 	(ALL, CASCADE, 'View', (
 		(ALL, ENTRY, 'Expand/Collapse', None, EXPAND),
 		(ALL, ENTRY, 'Expand All', None, EXPANDALL),
@@ -131,7 +131,7 @@ MENUBAR=(
 			(CMIF, DYNAMICCASCADE, 'Siblings', SIBLINGS),
 			)),
 		)),
-		
+
 	(ALL, CASCADE, 'Windows', (
 		(ALL, ENTRY, 'Close Window', 'W', CLOSE_WINDOW),
 		(ALL, SEP,),
@@ -270,4 +270,3 @@ CHANNEL_ADORNMENTS = {
 #
 # CNTL resource for the toolbar and its height
 TOOLBAR=(2500, 62, 22)
-
