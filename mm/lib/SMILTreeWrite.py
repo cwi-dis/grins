@@ -973,6 +973,7 @@ smil_mediatype={
 	'animate': 'animate',
 	'brush': 'brush',
 	'prefetch': 'prefetch',
+	'svg': 'img',
 }
 
 def mediatype(chtype, error=0):
