@@ -623,7 +623,7 @@ class _CommonWindow:
 		#
 		# Next, check for popup menu, if we have one
 		#
-		if shifted:
+		if down and shifted:
 			if self._menu or self._popupmenu:
 				self._contentpopupmenu(where, event)
 				return
@@ -1019,6 +1019,7 @@ class _CommonWindow:
 ##		self._do_redraw()
 ##		Qd.PenMode(oldmode)
 		mw_globals.toplevel.setmousetracker(self._rb_mousemove)
+		return 1
 
 	def _rb_mousemove(self, event):
 		"""Called on mouse moved with button down and final mouseup"""
@@ -1593,9 +1594,9 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			raise error, 'bad units specified'
 		return rv
 
-	def pop(self):
+	def pop(self, poptop=1):
 		"""Pop window to top of window stack"""
-		if not self._wid or not self._parent:
+		if not self._wid or not self._parent or not poptop:
 			return
 		self._wid.SelectWindow()
 		mw_globals.toplevel._mouseregionschanged()
@@ -1859,7 +1860,7 @@ class _SubWindow(_CommonWindow):
 	def getgeometry(self, units=UNIT_MM):
 		return self._sizes
 
-	def pop(self):
+	def pop(self, poptop=1):
 		"""Pop to top of subwindow stack"""
 		if not self._parent:
 			return
@@ -1878,7 +1879,7 @@ class _SubWindow(_CommonWindow):
 		Qd.SetPort(self._wid)
 		if self._transparent <= 0:
 			Win.InvalRect(self.qdrect())
-		parent.pop()
+		parent.pop(poptop)
 
 	def push(self):
 		"""Push to bottom of subwindow stack"""
