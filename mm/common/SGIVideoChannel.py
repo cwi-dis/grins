@@ -23,7 +23,7 @@ mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'center', 'loop',
+		     ['bucolor', 'hicolor', 'scale', 'center',
 		      'clipbegin', 'clipend']
 
 	def __init__(self, name, attrdict, scheduler, ui):
