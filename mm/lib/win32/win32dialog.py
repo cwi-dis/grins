@@ -1,8 +1,7 @@
 __version__ = "$Id$"
 
 
-""" @win32doc|win32dialog
-"""
+# @win32doc|win32dialog
 
 import win32api, win32ui, win32con
 import commctrl
@@ -19,7 +18,7 @@ from components import *
 
 ##############################
 def dllFromDll(dllid):
-	" given a 'dll' (maybe a dll, filename, etc), return a DLL object "
+	# given a 'dll' (maybe a dll, filename, etc), return a DLL object
 	if dllid==None:
 		return None
 	elif type('')==type(dllid):
@@ -39,10 +38,10 @@ def loadBitmapFromResId(resid):
 	return bmp	
 
 class DialogBase(window.Wnd):
-	" Base class for a dialog"
+	# Base class for a dialog
 	def __init__( self, id, parent=None, dllid=None ):
-		""" id is the resource ID, or a template
-			dllid may be None, a dll object, or a string with a dll name """
+		# id is the resource ID, or a template
+		# dllid may be None, a dll object, or a string with a dll name
 		# must take a reference to the DLL until InitDialog.
 		self.dll=dllFromDll(dllid)
 		if type(id)==type([]):	# a template

@@ -1,8 +1,7 @@
 __version__ = "$Id$"
 
 
-""" @win32doc|DisplayListView
-"""
+# @win32doc|DisplayListView
 
 # win32 libs
 import win32ui, win32con, win32api
