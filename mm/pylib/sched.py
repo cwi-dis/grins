@@ -39,33 +39,33 @@ class scheduler:
     def enterabs(self, time, priority, action, argument):
         """Enter a new event in the queue at an absolute time.
 
-	Returns an ID for the event which can be used to remove it,
-	if necessary.
+        Returns an ID for the event which can be used to remove it,
+        if necessary.
 
-	"""
+        """
         event = time, priority, action, argument
-	i = 0
-	while i < len(self.queue) and self.queue[i][:2] <= event[:2]:
-		i = i+1
-	self.queue.insert(i, event)
+        i = 0
+        while i < len(self.queue) and self.queue[i][:2] <= event[:2]:
+            i = i+1
+        self.queue.insert(i, event)
         return event # The ID
 
     def enter(self, delay, priority, action, argument):
         """A variant that specifies the time as a relative time.
 
-	This is actually the more commonly used interface.
+        This is actually the more commonly used interface.
 
-	"""
+        """
         time = self.timefunc() + delay
         return self.enterabs(time, priority, action, argument)
 
     def cancel(self, event):
         """Remove an event from the queue.
 
-	This must be presented the ID as returned by enter().
-	If the event is not in the queue, this raises RuntimeError.
+        This must be presented the ID as returned by enter().
+        If the event is not in the queue, this raises RuntimeError.
 
-	"""
+        """
         self.queue.remove(event)
 
     def empty(self):
@@ -75,24 +75,24 @@ class scheduler:
     def run(self):
         """Execute events until the queue is empty.
    
-	When there is a positive delay until the first event, the
-	delay function is called and the event is left in the queue;
-	otherwise, the event is removed from the queue and executed
-	(its action function is called, passing it the argument).  If
-	the delay function returns prematurely, it is simply
-	restarted.
+        When there is a positive delay until the first event, the
+        delay function is called and the event is left in the queue;
+        otherwise, the event is removed from the queue and executed
+        (its action function is called, passing it the argument).  If
+        the delay function returns prematurely, it is simply
+        restarted.
 
-	It is legal for both the delay function and the action
-	function to to modify the queue or to raise an exception;
-	exceptions are not caught but the scheduler's state remains
-	well-defined so run() may be called again.
+        It is legal for both the delay function and the action
+        function to to modify the queue or to raise an exception;
+        exceptions are not caught but the scheduler's state remains
+        well-defined so run() may be called again.
 
-	A questionably hack is added to allow other threads to run:
-	just after an event is executed, a delay of 0 is executed, to
-	avoid monopolizing the CPU when other threads are also
-	runnable.
+        A questionably hack is added to allow other threads to run:
+        just after an event is executed, a delay of 0 is executed, to
+        avoid monopolizing the CPU when other threads are also
+        runnable.
 
-	"""
+        """
         q = self.queue
         while q:
             time, priority, action, argument = q[0]
