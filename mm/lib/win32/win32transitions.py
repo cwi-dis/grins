@@ -7,9 +7,11 @@ import time
 
 class TransitionEngine:
 	def __init__(self, window, outtrans, runit, dict):
-		self.window = window
+		self.windows = [window,]
+		self.outtrans = outtrans
+		self.dict = dict
+		
 		self.duration = dict.get('dur', 1)
-		self.outtransition = outtrans
 
 		trtype = dict['trtype']
 		subtype = dict.get('subtype')
@@ -17,9 +19,6 @@ class TransitionEngine:
 		self.transitiontype = klass(self, dict)
 
 		self.__fiber_id = 0
-
-		x, y, w, h = self.window._rect
-		self.transitiontype.move_resize((0, 0, w, h))
 
 		self.startprogress = dict['startProgress']
 		self.endprogress = dict['endProgress']
@@ -36,12 +35,36 @@ class TransitionEngine:
 		if self.transitiontype:
 			self.endtransition()
 
+	def join(self, window, ismaster):
+		"""Join this (sub or super) window to an existing transition"""
+		if ismaster:
+			self.windows.insert(0, window)
+		else:
+			self.windows.append(window)
+		x, y, w, h = self.windows[0]._rect
+		self.transitiontype.move_resize((0, 0, w, h))
+
 	def begintransition(self):
+		# transition window
+		# or parent window in multiElement transitions
+		wnd = self.windows[0]
+		
+		# resize to this window
+		x, y, w, h = wnd._rect
+		self.transitiontype.move_resize((0, 0, w, h))
+
+		# we should now take into account
+		# multiElement and childrenClip attributes
+		# if multiElement: 
+		#	if not childrenClip: do transition within wnd rect overriting children
+		#	else: do transition within childs union region
+
+
 		# create surfaces
-		self._passive = self.window._passive
-		self.window._drawsurf = self.window.createDDS()
-		self._active = self.window.createDDS()
-		self._tmp = self.window.createDDS()
+		self._passive = wnd._passive
+		wnd._drawsurf = wnd.createDDS()
+		self._active = wnd.createDDS()
+		self._tmp = wnd.createDDS()
 
 		self.__start = time.time() - self.__begin
 		self.settransitionvalue(self.startprogress)
@@ -52,7 +75,7 @@ class TransitionEngine:
 
 	def endtransition(self):
 		self.__unregister_for_timeslices()
-		self.window._drawsurf = None
+		self.windows[0]._drawsurf = None
 		self.transitiontype = None
 	
 	def settransitionvalue(self, value):
@@ -60,18 +83,19 @@ class TransitionEngine:
 			raise AssertionError
 
 		parameters = self.transitiontype.computeparameters(value)
-		self.window.paintOnDDS(self._active, self.window)
-		if self.outtransition:
+		wnd = self.windows[0]
+		wnd.paintOnDDS(self._active, wnd)
+		if self.outtrans:
 			vfrom = self._active
-			vto = self.window._passive
+			vto = wnd._passive
 		else:
-			vfrom = self.window._passive
+			vfrom = wnd._passive
 			vto = self._active
 		tmp  = self._tmp
-		dst  = self.window._drawsurf
+		dst  = wnd._drawsurf
 		dstrgn = None
 		self.transitiontype.updatebitmap(parameters, vto, vfrom, tmp, dst, dstrgn)
-		self.window.update()
+		wnd.update()
 
 	def onIdle(self):
 		t_sec = time.time() - self.__start
