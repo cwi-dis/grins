@@ -580,6 +580,15 @@ class _CmifPlayerView(_CmifView):
 	def getwindowrect(self):
 		return self._rect
 
+	def getContextOsWnd(self):
+		return self
+
+	def getDrawBuffer(self):
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				return None
+		return self._backBuffer
+
 	def paintOn(self, dc):
 		self.update()
 
@@ -1345,6 +1354,6 @@ class _OSSubWindow(cmifwnd._CmifWnd,window.Wnd):
 def _LightSubWindow(parent, rel_coordinates, transparent, type_channel, 
 	defcmap, pixmap, z=0, units=None, bgcolor=None):
 	import win32window
-	return win32window.SubWindow(parent, rel_coordinates, transparent, z, units, bgcolor)
+	return win32window.Region(parent, rel_coordinates, transparent, z, units, bgcolor)
 
 
