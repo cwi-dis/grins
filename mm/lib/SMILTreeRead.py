@@ -273,7 +273,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			name = res.group('name')
 			event = res.group('event')
 			if event:
-				delay = self.__parsecounter(event, 1)
+				delay = self.__parsecounter(event, maybe_relative = 1)
 			else:
 				delay = 0
 			xnode = self.__nodemap.get(name)
@@ -469,6 +469,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'dur':
 				if val == 'indefinite':
 					attrdict['duration'] = -1
+				elif val == 'media':
+					if node.type in leaftypes:
+						attrdict['duration'] = -2
+					else:
+						self.syntax_error("no `media' value allowed on dur attribute on non-media elements")
 				else:
 					try:
 						attrdict['duration'] = self.__parsecounter(val)
@@ -478,14 +483,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				try:
-					attrdict[attr] = self.__parsecounter(val)
-				except error, msg:
-					self.syntax_error(msg)
+				if val == 'media':
+					if node.type in leaftypes:
+						attrdict[attr] = -2
+					else:
+						self.syntax_error("no `media' value allowed on %s attribute on non-media elements" % attr)
+				elif val == 'indefinite':
+					if attr == 'max':
+						attrdict[attr] = -1
+					else:
+						self.syntax_error("no `indefinite' value allowed on min attribute")
 				else:
-					if attr == 'min' and \
-					   attrdict[attr] == 0:
-						del attrdict[attr]
+					try:
+						attrdict[attr] = self.__parsecounter(val)
+					except error, msg:
+						self.syntax_error(msg)
+					else:
+						if attr == 'min' and \
+						   attrdict[attr] == 0:
+							del attrdict[attr]
 			elif attr == 'repeat' or attr == 'repeatCount':
 				if attr == 'repeatCount':
 					if self.__context.attributes.get('project_boston') == 0:
@@ -4378,7 +4394,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if res.group('npt'):
 			val = res.group('nptclip')
 			if val:
-				val = float(self.__parsecounter(val, 0))
+				val = float(self.__parsecounter(val, maybe_relative = 0))
 			else:
 				start = None
 		elif res.group('clock'):
