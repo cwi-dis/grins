@@ -2981,7 +2981,10 @@ class MMNode:
 			for arc in beginlist:
 				#print 'deleting arc',`arc`
 				refnode = arc.refnode()
-				refnode.sched_children.remove(arc)
+				try:
+					refnode.sched_children.remove(arc)
+				except ValueError:
+					pass
 				if arc.qid is not None:
 					try:
 						sched.cancel(arc.qid)
@@ -2992,7 +2995,10 @@ class MMNode:
 			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
 				#print 'deleting arc',`arc`
 				refnode = arc.refnode()
-				refnode.sched_children.remove(arc)
+				try:
+					refnode.sched_children.remove(arc)
+				except ValueError:
+					pass
 				if arc.qid is not None:
 					try:
 						sched.cancel(arc.qid)
@@ -3518,7 +3524,7 @@ class MMNode:
 				if debug: print 'calcfullduration: max',duration,maxtime
 				duration = maxtime
 
-		if debug: print 'calcfullduration:',`self`,`duration`,`maybecached`
+		if debug: print 'calcfullduration:',`self`,`duration`
 		return duration
 
 	def compute_download_time(self):
