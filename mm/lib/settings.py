@@ -13,7 +13,7 @@ G2 = 'g2'
 
 # Defaults:
 default_settings = {
-	'license': 'A-XEKA-Q4BBB-DA-DDDH',
+	'license': 'A-2HKA-Q4BBP-DA-TCX1',
 
 	'lightweight': 0,		# Lightweight version
 
