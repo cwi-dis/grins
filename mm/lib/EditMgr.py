@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Edit Manager.
 # Amazing as it may seem, this module is not dependent on window software!
 

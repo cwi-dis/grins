@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Get the duration of a node.
 # This module knows which channel types need special treatment.
 
