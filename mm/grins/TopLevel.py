@@ -208,7 +208,7 @@ class TopLevel(TopLevelDialog):
 
 	def read_it_with_skin(self):
 		if settings.get('askskin'):
-			windowinterface.FileDialog('Open components file', '.', ['text/x-grins-skin'], '',
+			windowinterface.FileDialog('Open Components File', '.', ['text/x-grins-skin'], '',
 						   self.__skin_done, self.__skin_done, 1,
 						   parent = windowinterface.getmainwnd())
 		else:
