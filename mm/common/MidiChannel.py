@@ -15,7 +15,7 @@ import sys
 import select
 import urllib
 
-sys.path.append('/ufs/jack/src/python/Extensions/midi/build.irix5')
+sys.path.append('/ufs/jack/src/python/Extensions/midi/build.irix6')
 sys.path.append('/ufs/jack/src/python/Extensions/midi/Lib')
 try:
     import sgimidi
