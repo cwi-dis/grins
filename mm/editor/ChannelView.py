@@ -779,9 +779,12 @@ class GO:
 		if not self.selected:
 			return
 		self.selected = 0
-		self.mother.focus = None
+		mother = self.mother
+		mother.focus = None
 		if self.ok:
-			self.mother.window.destroy_menu()
+			baseobject = mother.baseobject
+			mother.window.create_menu(baseobject.menutitle,
+						  baseobject.commandlist)
 			self.drawfocus()
 
 	def ishit(self, x, y):
@@ -1106,22 +1109,18 @@ class NodeBox(GO):
 
 	def lock(self):
 		if not self.locked:
-			self.mother.init_display()
 			self.deselect()
 			if self.mother.lockednode:
 				self.mother.lockednode.unlock()
 			self.locked = 1
 			self.mother.lockednode = self
 			self.drawfocus()
-			self.mother.render()
 
 	def unlock(self):
 		if self.locked:
-			self.mother.init_display()
 			self.locked = 0
 			self.mother.lockednode = None
 			self.drawfocus()
-			self.mother.render()
 
 	def select(self):
 		self.unlock()
@@ -1240,11 +1239,15 @@ class NodeBox(GO):
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
 
 	def lockcall(self):
+		self.mother.init_display()
 		self.lock()
+		self.mother.render()
 
 	def unlockcall(self):
 		if self.mother.lockednode:
+			self.mother.init_display()
 			self.mother.lockednode.unlock()
+			self.mother.render()
 		else:
 			windowinterface.beep()
 
