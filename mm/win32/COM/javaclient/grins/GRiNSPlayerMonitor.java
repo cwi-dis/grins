@@ -17,16 +17,14 @@ class GRiNSPlayerMonitor extends Thread {
             viewportsCount = n;
             }
         while(hgrins!=0 && !interrupted()){
-            player.updatePosition(ngetTime(hgrins));
             player.updateState(ngetState(hgrins));
+            player.updatePosition(ngetTime(hgrins));
             n = ngetTopLayoutCount(hgrins);
             if(n!=viewportsCount){
                 player.updateViewports();
                 viewportsCount = n;
                 }
-            try {
-                Thread.sleep(interval);
-                }
+            try {Thread.sleep(interval);}
             catch(InterruptedException e) {break;}
             }
         if(hgrins!=0)
