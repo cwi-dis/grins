@@ -50,10 +50,12 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def do_arm(self, node, same=0):
 		# read imm script
-		print 'armed'
+		print 'AnimateChannel.do_arm',node.attrdict
+		print 'target node:',node.targetnode
 		return 1
 
 	def do_play(self, node):
+		print 'AnimateChannel.do_play'
 		# get target node and attribute to animate
 		# ....
 		# get additive and accumulate attrs
@@ -68,6 +70,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__startAnimate()
 
 	def stopplay(self, node):
+		print 'AnimateChannel.stopplay'
 		if self.__animating is node and node is not None:
 			self.__stopAnimate()
 		self.__animating = None
