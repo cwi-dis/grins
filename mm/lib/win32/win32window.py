@@ -57,7 +57,10 @@ class Window:
 		self.__setcoordinates(coordinates, units)
 		self.__set_z_order(z)
 		self.__settransparent(transparent)
-		self._bgcolor = bgcolor
+		if bgcolor:
+			self._bgcolor = bgcolor
+		else:
+			self._bgcolor = parent._bgcolor
 
 	def __repr__(self):
 		return '<Window instance at %x>' % id(self)
