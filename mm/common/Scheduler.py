@@ -34,7 +34,7 @@ class SchedulerContext:
 
 		self.prepare_minidoc(seeknode)
 
-	
+
 	#
 	# stop - cleanup SchedulerContext.
 	#
@@ -140,7 +140,7 @@ class SchedulerContext:
 ##		for ch, val in self.prearmlists.items():
 ##			s_node.prearmlists[ch._name] = val[:]
 		return 1
-	
+
 	def cancelprearms(self, node):
 		"""Cancel prearms for node and its descendents, it has
 		just been terminated"""
@@ -152,7 +152,7 @@ class SchedulerContext:
 ##		and reset the loopcount to the initial value"""
 ##		for list in self.prearmlists.values():
 ##			list.revive(node)
-		
+
 	#
 	def startcontextchannels(self):
 		for ch in self.channels:
@@ -183,7 +183,7 @@ class SchedulerContext:
 	# run_initial_prearms schedules the first prearms.
 	# Prearms that are immedeately needed are scheduled in a hi-pri queue,
 	# the ones that are not needed until later in a lo-pri queue. Also, the
-	# lo-pri queue is run one-event-at-a-time, so we put them in there 
+	# lo-pri queue is run one-event-at-a-time, so we put them in there
 	# sorted by time
 	#
 	def run_initial_prearms(self):
@@ -353,7 +353,7 @@ class SchedulerContext:
 				del self.unexpected_armdone[ev, arg]
 				return 1
 		return 0
-		
+
 class Scheduler(scheduler):
 	def __init__(self, ui):
 		self.queue = []
@@ -422,7 +422,7 @@ class Scheduler(scheduler):
 			print '---- context',i
 			self.sctx_list[i].dump()
 		print '==============================='
-		
+
 	def stop_all(self):
 ##		print 'STOP_ALL', self.sctx_list
 		to_stop = self.sctx_list[:]
@@ -579,7 +579,7 @@ class Scheduler(scheduler):
 	#
 	def add_runqueue(self, sctx, prio, sr):
 		self.runqueues[prio].append(sctx, sr, 0)
-		
+
 	def add_lopriqueue(self, sctx, time, sr):
 		runq = self.runqueues[PRIO_LO]
 		for i in range(len(runq)):
@@ -587,7 +587,7 @@ class Scheduler(scheduler):
 				runq.insert(i, (sctx, sr, time))
 				return
 		runq.append(sctx, sr, time)
-			
+
 	#
 	# Try to run one SR. Return 0 if nothing to be done.
 	#
@@ -658,7 +658,7 @@ class Scheduler(scheduler):
 	def remove_terminate(self, sctx, node):
 		ev = SR.TERMINATE, node
 ##		for ev in [(SR.TERMINATE, node), (SR.TERMINATE, node.looping_body_self)]:
-		if 1: # Simple test 
+		if 1: # Simple test
 			if sctx.srevents.has_key(ev):
 				pos = sctx.srevents[ev]
 				del sctx.srevents[ev]
@@ -843,7 +843,7 @@ class Scheduler(scheduler):
 	#
 	def getpaused(self):
 		return self.paused
-		
+
 	def setpaused(self, paused):
 		if self.paused == paused:
 			return
@@ -897,7 +897,7 @@ class ArmStorageTree:
 		self.onemoretime = 0
 		for ch in self.children[self.index:]:
 			ch.do_cancel()
-			
+
 	def next(self):
 		"""Return next ArmStorage to query and next node to arm"""
 		if self.index >= len(self.children) and self.onemoretime:
@@ -917,7 +917,7 @@ class ArmStorageTree:
 ##			self.parent.children.remove(self)
 ##			self.parent = None
 		return parent.next()
-		
+
 	def append(self, x):
 		self.children.append(x)
 
@@ -976,7 +976,7 @@ class ArmStorageLeaf:
 
 	def do_looponcemore(self):
 		pass
-		
+
 #
 # GenAllPrearms fills the prearmlists dictionary with all arms needed.
 #

@@ -33,7 +33,7 @@ class PythonChannel(Channel):
 			print "EXCEPTION IN PYTHONCHANNEL NODE"
 			import pdb
 			pdb.post_mortem(sys.exc_traceback)
-			
+
 
 	def play_1(self):
 		# It could be we jumped away so are not playing anymore

@@ -41,7 +41,7 @@ class Selecter:
 	#
 	def stop(self):
 		if self.playing:
-			self.scheduler.stop_all()	
+			self.scheduler.stop_all()
 		else:
 			self.fullreset()
 		self.stopped()
@@ -170,7 +170,7 @@ class Selecter:
 			self.runslots.append(slot)
 			prevslot = slot
 		return 1
-		
+
 	#
 	# killslot - Remove a run slot
 	#
@@ -340,7 +340,7 @@ class Selecter:
 			self.scheduler.event(parent_sctx, (SR.BAG_DONE, bag))
 			self.bags_needing_done_ev.remove(bag)
 		self.updateuibaglist()
-		
+
 	#
 	# Create baglist for user interface
 	#
@@ -377,7 +377,7 @@ def nodename(node):
 	str = MMAttrdefs.getattr(node, 'name')
 	str = str + '#' + node.GetUID()
 	return str
-		
+
 # Choose an item from a bag, or None if the bag is empty
 # This is a modal dialog!
 # (Also note the similarity with NodeEdit._showmenu...)
