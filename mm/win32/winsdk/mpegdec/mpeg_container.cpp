@@ -11,12 +11,12 @@
 
 ///////////////
 // open platform input stream
-#include "stdio_mpeg_input_stream.h"
+#include "wnds_mpeg_input_stream.h"
 
 mpeg_input_stream *open_mpeg_input_stream(TCHAR *path)
 	{
 	//_tprintf(TEXT("open_mpeg_input_stream\n"));
-	stdio_mpeg_input_stream *p = new stdio_mpeg_input_stream(path);
+	wnds_mpeg_input_stream *p = new wnds_mpeg_input_stream(path);
 	if(p != NULL && !p->is_valid())
 		{
 		delete p;
