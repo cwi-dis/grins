@@ -1264,7 +1264,8 @@ class SMILWriter(SMIL):
 		dstdir = self.copydir
 		file = self.newfile(srcurl)
 		u = MMurl.urlopen(srcurl)
-		if u.headers.maintype == 'audio':
+		if u.headers.maintype == 'audio' and \
+		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertaudiofile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
 			# will, currently, to '.ra').
@@ -1276,13 +1277,14 @@ class SMILWriter(SMIL):
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
-			# will, currently, to '.ra').
+			# will, currently, to '.jpg').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 			file = convertimagefile(u, srcurl, dstdir, file, node)
 			self.files_generated[file] = 'b'
 			return file
-		if u.headers.maintype == 'text':
+		if u.headers.maintype == 'text' and \
+		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import converttextfile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
 			# will, currently, to '.rt').
