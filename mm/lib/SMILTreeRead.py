@@ -2846,7 +2846,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				lcd['showBackground'] = 'whenActive'
 				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
-			else:
+				continue
+			# key in ['open','play','pause','stop','exit','skin','tab','rocker','key']
+			for val in val:
 				a = ctx.newnode('anchor')
 				a.attrdict['tabindex'] = -1 # keep out of tabbing order
 				if val[0] == 'rocker':
