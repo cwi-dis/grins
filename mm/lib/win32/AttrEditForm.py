@@ -69,6 +69,7 @@ class AttrDlgBar(DlgBar):
 	def OnReset(self,id,code):
 		apply(self._reset_cb,())
 
+
 	# Pass indirectly focus to the list
 	def PassFocus(self):
 		# Do not call directly SetFocus.
@@ -352,9 +353,12 @@ class AttrEditForm(docview.ListView):
 
 	# Response to keyboard input
 	# set focus to dlg on Tab
-	def onTabKey(self,key):self._dlgBar.SetFocus();
-	def onEnter(self,key):self.call('OK')
-	def onEsc(self,key):self.call('Cancel')
+	def onTabKey(self,key):
+		if self._dlgBar:self._dlgBar.SetFocus();
+	def onEnter(self,key):
+		if self._dlgBar:self.call('OK')
+	def onEsc(self,key):
+		if self._dlgBar:self.call('Cancel')
 
 	# Helper function to set the extented style of the list control
 	def SetExStyle(self,or_style):
