@@ -21,14 +21,14 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_win_2.0-133.exe
+  EXE Filename=..\..\bin\win32\grins_win_2.0-134.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
   Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=2.1
+  Version File=2.2
   Version Description=GRiNS/SMIL 2.0
   Version Copyright=Copyright © 2001,2002 Oratrix
   Version Company=Oratrix
@@ -39,7 +39,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~2
+  Variable Default2=E:\Program Files\Wise Installation System
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -2621,7 +2621,7 @@ item: Edit Registry
   Total Keys=5
   item: Key
     Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
-    New Value=2.1
+    New Value=2.2
     Value Name=DisplayVersion
     Root=2
   end
