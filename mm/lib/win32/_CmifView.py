@@ -160,7 +160,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
 
 	# It is called by the core system when it wants to create a child window
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, units):
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)	
 
 	# Sets the dynamic commands by delegating to its parent
