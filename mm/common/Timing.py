@@ -48,6 +48,7 @@ def computetimes(node, which):
 		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
 	propdown(node, node, node.t1, node.t0)
+	propdown2(node, node, node.t1, node.t0)
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -131,31 +132,49 @@ def prep1(node):
 
 
 def prep2(node, root):
-	# XXX we only deal with a single offset syncarc; all others are ignored
-	delay = None
-	# We ask the node for its begindelay.
+	# XXX we only deal with a single syncarc; all others are ignored
 	# If we're computing timing with download lags we should also get the
 	# lag (which has been computed before we're called), otherwise the lag will be
 	# zero. 
-	delay, downloadlag = node.GetDelays(timingtype)
-	delay = delay + downloadlag
-	parent = node.GetSchedParent(1)
-	# in case the root of the tree we're interested in is a switch
-	if parent is None or parent.IsAncestorOf(root):
-		parent = root
-	if delay > 0 and parent is not None:
-		if parent.GetType() == 'seq':
-			xnode = parent
-			xside = HD
-			for n in parent.GetSchedChildren(1):
-				if n is node:
-					break
-				xnode = n
+	for arc in node.GetBeginList():
+		if arc.srcnode == 'syncbase':
+			parent = node.GetSchedParent(1)
+			# in case the root of the tree we're interested in is a switch
+			if parent is None or parent.IsAncestorOf(root):
+				if root is node:
+					parent = None
+				else:
+					parent = root
+			if parent is None:
+				# ignore syncarcs from outside our subtree
+				continue
+			if parent.GetType() == 'seq':
+				xnode = parent
+				xside = HD
+				for n in parent.GetSchedChildren(1):
+					if n is node:
+						break
+					xnode = n
+					xside = TL
+			else:
+				xnode = parent
+				xside = HD
+			adddep(xnode, xside, arc.delay, node, HD)
+			break
+		if arc.srcnode is None or arc.srcnode == 'prev':
+			# can't deal with this at the moment
+			continue
+		# arc.srcnode is a MMNode instance
+		if arc.event in ('begin','end'):
+			if arc.srcnode.CommonAncestor(root) is not root:
+				# out of scope
+				continue
+			if arc.event == 'begin':
+				xside = HD
+			else:
 				xside = TL
-		else:
-			xnode = parent
-			xside = HD
-		adddep(xnode, xside, delay, node, HD)
+			adddep(arc.srcnode, xside, arc.delay, node, HD)
+			break
 	for c in node.GetSchedChildren(1):
 		prep2(c, root)
 
@@ -170,20 +189,21 @@ def propdown(root, node, stoptime, dftstarttime=0):
 		node.t1 = stoptime
 
 	if node.GetFill() == 'remove':
-		stoptime = node.t1
+		stoptime = min(node.t1, stoptime)
 
 	node.t2 = stoptime
 
+	children = node.GetSchedChildren(1)
+
 	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
 		term = node.GetTerminator()
-		children = node.GetSchedChildren(1)
 		if term == 'LAST':
-			stoptime = 0
+			stoptime = node.t0
 		elif term == 'FIRST':
 			stoptime = -1
 		elif term == 'ALL':
 			if len(node.GetSchedChildren(0)) == len(children):
-				stoptime = 0
+				stoptime = node.t0
 			else:
 				stoptime = -1
 		for c in children:
@@ -194,21 +214,24 @@ def propdown(root, node, stoptime, dftstarttime=0):
 				if stoptime >= 0 and c.t1 < stoptime:
 					stoptime = c.t1
 			elif term == MMAttrdefs.getattr(c, 'name'):
+				propdown(root, c, stoptime, node.t0)
 				stoptime = c.t1
+				children.remove(c) # propagated this one already
+				break
 		node.t1 = stoptime
 		if node is root:
 			node.t2 = stoptime
 		for c in children:
 			propdown(root, c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
-		children = node.GetSchedChildren(1)
 		if not children:
 			return
 		nextstart = node.t0
 		for i in range(len(children)):
 			c = children[i]
 			fill = c.GetFill()
-			if fill == 'freeze':
+			if fill in ('freeze', 'transition'):
+				# not correct for transition
 				if i == len(children)-1:
 					endtime = node.t2
 				elif hasattr(children[i+1], 't0'):
@@ -217,9 +240,44 @@ def propdown(root, node, stoptime, dftstarttime=0):
 					endtime = node.t2
 			elif fill == 'hold':
 				endtime = node.t2
-			else:
+			else:		# fill == 'remove'
 				endtime = c.t1
 			propdown(root, c, endtime, nextstart)
+			nextstart = c.t1
+	if node is root:
+		node.t2 = node.t1
+
+def propdown2(root, node, stoptime, dftstarttime=0):
+	tp = node.GetType()
+	if node.GetFill() == 'remove':
+		stoptime = min(node.t1, stoptime)
+
+	node.t2 = stoptime
+
+	children = node.GetSchedChildren(1)
+	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
+		for c in children:
+			propdown2(root, c, stoptime, node.t0)
+	elif tp == 'seq': # XXX not right!
+		if not children:
+			return
+		nextstart = node.t0
+		for i in range(len(children)):
+			c = children[i]
+			fill = c.GetFill()
+			if fill in ('freeze', 'transition'):
+				# not correct for transition
+				if i == len(children)-1:
+					endtime = node.t2
+				elif hasattr(children[i+1], 't0'):
+					endtime = children[i+1].t0
+				else:
+					endtime = node.t2
+			elif fill == 'hold':
+				endtime = node.t2
+			else:		# fill == 'remove'
+				endtime = c.t1
+			propdown2(root, c, endtime, nextstart)
 			nextstart = c.t1
 
 def adddep(xnode, xside, delay, ynode, yside):
@@ -243,7 +301,6 @@ def decrement(q, delay, node, side):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	node.t0t1_inherited = node.GetFill() != 'remove'
 	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(1):
 		dt = getduration(node)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
