@@ -46,7 +46,7 @@ ITEM_RESTORE=10
 ITEM_APPLY=11
 ITEM_OK=12
 
-ITEM_BALLOONHELP=16
+ITEM_BALLOONHELP=17
 
 LAST_COMMON_ITEM=7
 ITEMLIST_COMMON=ITEMrange(ITEM_SELECT, ITEM_OK)+[ITEM_BALLOONHELP]
@@ -58,13 +58,17 @@ ITEM_FILE_BROWSE=14
 
 ITEM_OPTION=15
 
-ITEMLIST_NOTCOMMON=ITEMrange(ITEM_STRING, ITEM_OPTION)
+ITEM_COLOR_SELECT=16
+
+ITEMLIST_NOTCOMMON=ITEMrange(ITEM_STRING, ITEM_COLOR_SELECT)
 ITEMLIST_STRING=[ITEM_STRING]
-ITEMLISTNOT_STRING=[ITEM_FILE_BROWSE, ITEM_OPTION]
+ITEMLISTNOT_STRING=[ITEM_FILE_BROWSE, ITEM_OPTION, ITEM_COLOR_SELECT]
 ITEMLIST_OPTION=[ITEM_OPTION]
-ITEMLISTNOT_OPTION=[ITEM_FILE_BROWSE, ITEM_STRING]
+ITEMLISTNOT_OPTION=[ITEM_FILE_BROWSE, ITEM_STRING, ITEM_COLOR_SELECT]
 ITEMLIST_FILE=[ITEM_STRING, ITEM_FILE_BROWSE]
-ITEMLISTNOT_FILE=[ITEM_OPTION]
+ITEMLISTNOT_FILE=[ITEM_OPTION, ITEM_COLOR_SELECT]
+ITEMLIST_COLOR=[ITEM_STRING, ITEM_COLOR_SELECT]
+ITEMLISTNOT_COLOR=[ITEM_OPTION, ITEM_FILE_BROWSE]
 
 ITEMLIST_ALL=ITEMrange(ITEM_SELECT, ITEM_BALLOONHELP)
 
@@ -153,6 +157,9 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		elif item == ITEM_OPTION:
 			if self._cur_attrfield:
 				self._cur_attrfield._option_click()
+		elif item == ITEM_COLOR_SELECT:
+			if self._cur_attrfield:
+				self._cur_attrfield._select_color()
 		elif item == ITEM_CANCEL:
 			self.cancel_callback()
 		elif item == ITEM_OK:
@@ -270,6 +277,9 @@ class AttrEditorDialogField:
 		if t == 'file':
 			toshow=ITEMLIST_FILE
 			tohide=ITEMLISTNOT_FILE
+		elif t == 'color':
+			toshow=ITEMLIST_COLOR
+			tohide=ITEMLISTNOT_COLOR
 		elif t == 'option':
 			list = self.getoptions()
 			toshow=ITEMLIST_OPTION
@@ -301,6 +311,33 @@ class AttrEditorDialogField:
 	def _option_click(self):
 		pass
 		
+	def _select_color(self):
+		import ColorPicker
+		value = self.__parent._getlabel(ITEM_STRING)
+		import string
+		rgb = string.split(string.strip(value))
+		if len(rgb) == 3:
+			r = g = b = 0
+			try:
+				r = string.atoi(rgb[0])
+				g = string.atoi(rgb[1])
+				b = string.atoi(rgb[2])
+			except ValueError:
+				pass
+			if r > 255: r = 255
+			if g > 255: g = 255
+			if b > 255: b = 255
+			if r < 0: r = 0
+			if g < 0: g = 0
+			if b < 0: b = 0
+		else:
+			r = g = b = 0
+		color, ok = ColorPicker.GetColor("Select color", ( (r|r<<8), (g|g<<8), b|b<<8))
+		if ok:
+			r, g, b = color
+			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
+			self.__parent._setlabel(ITEM_STRING, value)
+			
 ##	def __option_callback(self):
 ##		"""Callback called when a new option is to be selected."""
 ##		_MySelectionDialog(self.getlabel(), self.__label,
