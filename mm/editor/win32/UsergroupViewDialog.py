@@ -120,7 +120,7 @@ class UsergroupEditDialog:
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed', 'not-allowed', or 'uid-only'
+		override -- string 'visible' or 'hidden'
 		uid -- string UID of the user group
 		"""
 		self.__window.setstate(ugroup, title, ustate, override, uid)

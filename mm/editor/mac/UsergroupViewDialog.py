@@ -134,8 +134,8 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 ##					    top = self.__title, left = None,
 ##					    right = None)
 ##		self.__override = w.OptionMenu('User override',
-##					       ['not allowed', 'allowed'],
-##					       override == 'allowed', None,
+##					       ['hidden', 'visible'],
+##					       override == 'visible', None,
 ##					       top = self.__state,
 ##					       left = None, right = None)
 ##		sep = w.Separator(top = self.__override, left = None,
@@ -163,7 +163,7 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 		self._setlabel(ITEM_E_NAME, ugroup)
 		self._setlabel(ITEM_E_TITLE, title)
 		self._setbutton(ITEM_E_RENDERED, (ustate == 'RENDERED'))
-		self._setbutton(ITEM_E_OVERRIDE, (override == 'allowed'))
+		self._setbutton(ITEM_E_OVERRIDE, (override == 'visible'))
 
 	def getstate(self):
 		if self._getbutton(ITEM_E_RENDERED):
@@ -171,9 +171,9 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 		else:
 			ustate = 'NOT RENDERED'
 		if self._getbutton(ITEM_E_OVERRIDE):
-			override = 'allowed'
+			override = 'visible'
 		else:
-			override = 'not allowed'
+			override = 'hidden'
 		uid = ''		# XXX to be supplied
 		return (
 			self._getlabel(ITEM_E_NAME),

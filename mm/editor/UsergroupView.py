@@ -93,7 +93,7 @@ class UsergroupView(UsergroupViewDialog):
 		self.editmgr.commit()
 
 class UsergroupEdit(UsergroupEditDialog):
-	def __init__(self, parent, ugroup = '', title = '', ustate = 'RENDERED', override = 'allowed', uid = ''):
+	def __init__(self, parent, ugroup = '', title = '', ustate = 'RENDERED', override = 'visible', uid = ''):
 		self.__parent = parent
 		self.__usergroups = parent.context.usergroups
 		self.__ugroup = ugroup
@@ -133,7 +133,7 @@ class UsergroupEdit(UsergroupEditDialog):
 		else:
 			val = self.__usergroups.get(self.__ugroup)
 		if val is None:
-			title, ustate, override, uid = '', 'RENDERED', 'allowed', ''
+			title, ustate, override, uid = '', 'RENDERED', 'visible', ''
 		else:
 			title, ustate, override, uid = val
 		self.setstate(self.__ugroup, title, ustate, override, uid)
