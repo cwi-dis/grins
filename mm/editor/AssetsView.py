@@ -109,8 +109,8 @@ class AssetsView(AssetsViewDialog):
 			print "No transaction"
 			return
 		self.editmgr.delasset(item)
-		self.editmgr.commit()
 		self.editmgr.setclip([item])
+		self.editmgr.commit()
 
 	def callback_paste(self):
 		data = self.editmgr.getclip()
@@ -139,7 +139,11 @@ class AssetsView(AssetsViewDialog):
 			print "No selection"
 			return
 		item = self.listdata[i][0]
+		if not self.editmgr.transaction():
+			print 'No transaction'
+			return
 		self.editmgr.setclip([item])
+		self.editmgr.commit()
 
 	def callback_delete(self):
 		i = self.getselection()
