@@ -186,7 +186,7 @@ class _DisplayList:
 		clonestart = self._clonestart
 		if self._cloneof and self._cloneof == window._active_displist and \
 				self._cloneof._really_rendered:
-		   render_now = 1
+			render_now = 1
 		else:
 			render_now = self._can_render_now()
 		if render_now:
