@@ -100,7 +100,7 @@ def readattrdefs(filename):
 # Map a typedef to a (func, arg) pair.
 #
 def usetypedef(typedef, mapping):
-	_stat('MMAttrdefs.usetypedef')
+	##_stat('MMAttrdefs.usetypedef')
 	type, rest = typedef
 	func = mapping[type]
 	arg = None
@@ -118,7 +118,7 @@ def usetypedef(typedef, mapping):
 # Use the type definitions from the attrdefs table.
 #
 def useattrdefs(mapping):
-	_stat('MMAttrdefs.useattrdefs')
+	##_stat('MMAttrdefs.useattrdefs')
 	dict = {}
 	for attrname in attrdefs.keys():
 		dict[attrname] = usetypedef(attrdefs[attrname][0], mapping)
@@ -128,14 +128,14 @@ def useattrdefs(mapping):
 # Functional interface to the attrdefs table.
 #
 def getdef(attrname):
-	_stat('MMAttrdefs.getdef')
+	##_stat('MMAttrdefs.getdef')
 	if attrdefs.has_key(attrname):
 		return attrdefs[attrname]
 	# Undefined attribute -- fake something reasonable
 	return (('any', None), None, '', 'default', '',  'normal')
 #
 def getnames():
-	_stat('MMAttrdefs.getnames')
+	##_stat('MMAttrdefs.getnames')
 	names = attrdefs.keys()
 	names.sort()
 	return names
@@ -168,7 +168,7 @@ def showstats(a):
 toplevel = None
 #
 def getattr(node, attrname):
-	_stat('MMAttrdefs.getattr')
+	##_stat('MMAttrdefs.getattr')
 	if attrstats != None:
 		if attrstats.has_key(attrname):
 			attrstats[attrname] = attrstats[attrname] + 1
@@ -177,10 +177,11 @@ def getattr(node, attrname):
 	# Check the cache
 	try:
 		rv = node.attrcache[attrname]
-		_stat('cache hit: ' + attrname)
+		##_stat('cache hit: ' + attrname)
 		return rv
 	except:
-		_stat('cache miss: ' + attrname)
+		##_stat('cache miss: ' + attrname)
+		pass
 	#
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
@@ -227,7 +228,7 @@ def flushcache(node):
 # Get the default value for a node's attribute, *ignoring* its own value
 #
 def getdefattr(node, attrname):
-	_stat('MMAttrdefs.getdefattr')
+	##_stat('MMAttrdefs.getdefattr')
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
@@ -258,13 +259,13 @@ def getdefattr(node, attrname):
 				' for attr ' + `attrname`
 
 def valuerepr(name, value):
-	_stat('MMAttrdefs.valuerepr')
+	##_stat('MMAttrdefs.valuerepr')
 	import MMWrite
 	return MMWrite.valuerepr(value, getdef(name)[0])
 
 
 def parsevalue(name, string, context):
-	_stat('MMAttrdefs.parsevalue')
+	##_stat('MMAttrdefs.parsevalue')
 	import MMParser
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
