@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content="   Welcome to GRiNS   "/>
+    <layout>
+      <root-layout id="Welcome-to-GRiNS-" title="   Welcome to GRiNS   " background-color="#000000" width="300" height="300"/>
+      <region id="logo-Ani" title="logo-Ani" left="23%" top="26%" width="53%" height="40%" z-index="3" background-color="#000000"/>
+      <region id="audio" title="audio" fit="meet"/>
+      <region id="text" title="text" top="72%" z-index="5" background-color="#000000"/>
+      <region id="logo-Big" title="logo-Big" left="16%" top="13%" width="66%" height="66%" z-index="2" background-color="#ffffff"/>
+      <region id="GRiNS" title="GRiNS" left="22%" top="2%" width="59%" height="16%" z-index="5"/>
+    </layout>
+  </head>
+  <body>
+    <par>
+      <seq>
+        <par id="Welcome-to-GRiNS">
+          <seq id="animation" repeat="4">
+            <img id="ani1" region="logo-Ani" src="data/logo1.gif" dur="0.060s"/>
+            <img id="ani2" region="logo-Ani" src="data/logo2.gif" dur="0.060s"/>
+            <img id="ani3" region="logo-Ani" src="data/logo3.gif" dur="0.060s"/>
+            <img id="ani4" region="logo-Ani" src="data/logo4.gif" dur="0.060s"/>
+            <img id="ani5" region="logo-Ani" src="data/logo5.gif" dur="0.060s"/>
+            <img id="ani6" region="logo-Ani" src="data/logo6.gif" dur="0.060s"/>
+            <img id="ani7" region="logo-Ani" src="data/logo7.gif" dur="0.060s"/>
+            <img id="ani8" region="logo-Ani" src="data/logo8.gif" dur="0.060s"/>
+            <img id="ani9" region="logo-Ani" src="data/logo9.gif" dur="0.060s"/>
+            <img id="ani10" region="logo-Ani" src="data/logo10.gif" dur="0.060s"/>
+            <img id="ani11" region="logo-Ani" src="data/logo11.gif" dur="0.060s"/>
+            <img id="ani12" region="logo-Ani" src="data/logo12.gif" dur="0.060s"/>
+            <img id="ani13" region="logo-Ani" src="data/logo13.gif" dur="0.060s"/>
+            <img id="ani14" region="logo-Ani" src="data/logo14.gif" dur="0.060s"/>
+            <img id="ani15" region="logo-Ani" src="data/logo15.gif" dur="0.060s"/>
+            <img id="ani16" region="logo-Ani" src="data/logo16.gif" dur="0.060s"/>
+          </seq>
+          <audio id="rhythm" region="audio" src="data/welcome.au" repeat="indefinite"/>
+          <text id="thanks" region="text" src="data/thanks.html"/>
+        </par>
+        <par id="more-info" dur="100s">
+          <img id="background-white" region="logo-Big" src="data/bigw.gif"/>
+          <text id="link" region="text" src="data/links.html"/>
+        </par>
+      </seq>
+      <img id="grins-white" region="GRiNS" src="data/wgrins.gif"/>
+    </par>
+  </body>
+</smil>

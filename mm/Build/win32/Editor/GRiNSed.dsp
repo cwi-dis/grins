@@ -43,7 +43,8 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "BUILD_FREEZE" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "BUILD_FREEZE" /FD /c
+# SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "NDEBUG"
@@ -104,6 +105,38 @@ SOURCE=.\M___main__.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M__CmifView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__LayoutView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__LinkView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__PreferencesDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__SourceView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_adornpref.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_afxexttb.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_afxres.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
@@ -116,27 +149,19 @@ SOURCE=.\M_AnchorEditDialog.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AnchorEditForm.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AppDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AppForms.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AppMessages.c
+SOURCE=.\M_AppGlobals.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_AppToplevel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AppWnds.c
 # End Source File
 # Begin Source File
 
@@ -145,6 +170,10 @@ SOURCE=.\M_ArcInfo.c
 # Begin Source File
 
 SOURCE=.\M_ArcInfoDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ArcInfoForm.c
 # End Source File
 # Begin Source File
 
@@ -161,6 +190,10 @@ SOURCE=.\M_AttrEdit.c
 # Begin Source File
 
 SOURCE=.\M_AttrEditDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_AttrEditForm.c
 # End Source File
 # Begin Source File
 
@@ -244,7 +277,15 @@ SOURCE=.\M_cmifed.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_cmifwnd.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_commctrl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_components.c
 # End Source File
 # Begin Source File
 
@@ -253,6 +294,10 @@ SOURCE=.\M_copy.c
 # Begin Source File
 
 SOURCE=.\M_DisplayList.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_DrawTk.c
 # End Source File
 # Begin Source File
 
@@ -272,15 +317,7 @@ SOURCE=.\M_exec_cmif.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_fastimp.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_FileCache.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_FileDialog.c
 # End Source File
 # Begin Source File
 
@@ -288,7 +325,15 @@ SOURCE=.\M_Font.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_FormServer.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ftplib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_GenWnd.c
 # End Source File
 # Begin Source File
 
@@ -352,15 +397,23 @@ SOURCE=.\M_ImageChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_InputDialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_LabelChannel.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_LayoutChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_LayoutView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_LayoutViewDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_license.c
 # End Source File
 # Begin Source File
 
@@ -381,6 +434,14 @@ SOURCE=.\M_macurl2path.c
 # Begin Source File
 
 SOURCE=.\M_MainDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_MainFrame.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_MenuTemplate.c
 # End Source File
 # Begin Source File
 
@@ -408,23 +469,11 @@ SOURCE=.\M_MMNode.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMNodeBase.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_MMParser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMPlayerTree.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_MMRead.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_MMStat.c
 # End Source File
 # Begin Source File
 
@@ -448,6 +497,10 @@ SOURCE=.\M_MMWrite.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_MPEGVideoDuration.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_NodeEdit.c
 # End Source File
 # Begin Source File
@@ -457,6 +510,10 @@ SOURCE=.\M_NodeInfo.c
 # Begin Source File
 
 SOURCE=.\M_NodeInfoDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_NodeInfoForm.c
 # End Source File
 # Begin Source File
 
@@ -509,6 +566,14 @@ SOURCE=.\M_posixpath.c
 # Begin Source File
 
 SOURCE=.\M_pprint.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_Preferences.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_PreferencesDialog.c
 # End Source File
 # Begin Source File
 
@@ -620,6 +685,10 @@ SOURCE=.\M_random.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_rbtk.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_re.c
 # End Source File
 # Begin Source File
@@ -652,14 +721,6 @@ SOURCE=.\M_Selecter.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SelectionDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_SelectionMenuDialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_settings.c
 # End Source File
 # Begin Source File
@@ -673,10 +734,6 @@ SOURCE=.\M_Sizes.c
 # Begin Source File
 
 SOURCE=.\M_SMIL.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_SMILTree.c
 # End Source File
 # Begin Source File
 
@@ -708,19 +765,15 @@ SOURCE=.\M_SoundDuration.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_splash.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_splashimg.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_SR.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_stat.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_staticlicense.c
 # End Source File
 # Begin Source File
 
@@ -733,6 +786,10 @@ SOURCE=.\M_StringIO.c
 # Begin Source File
 
 SOURCE=.\M_StringStuff.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_sysmetrics.c
 # End Source File
 # Begin Source File
 
@@ -784,6 +841,14 @@ SOURCE=.\M_urlparse.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_usercmd.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_usercmdui.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_UserDict.c
 # End Source File
 # Begin Source File
@@ -808,15 +873,23 @@ SOURCE=.\M_ViewDialog.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ViewServer.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_wc.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_whrandom.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Widgets.c
+SOURCE=.\M_win32con.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_win32con.c
+SOURCE=.\M_win32menu.c
 # End Source File
 # Begin Source File
 
@@ -844,16 +917,16 @@ SOURCE=.\M_WMEVENTS.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_wndusercmd.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_WordChannel.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_xmllib.c
 # End Source File
-# End Group
-# Begin Group "Header Files"
-
-# PROP Default_Filter "h;hpp;hxx;hm;inl"
 # End Group
 # Begin Group "Resource Files"
 
@@ -881,6 +954,34 @@ SOURCE=..\..\..\..\python\Extensions\win32\src\win32apimodule.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\python\Extensions\win32\src\win32trace.cpp
+# End Source File
+# End Group
+# Begin Group "Freeze cmd files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\domkp.bat
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\exec_cmif.py
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\fGRiNSed.py
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\grins_app_core.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\log.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\Readme.txt
 # End Source File
 # End Group
 # End Target
