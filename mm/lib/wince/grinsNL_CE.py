@@ -5,13 +5,6 @@ __version__ = "$Id$"
 import sys
 import os
 
-try:
-	sys.path.remove('')
-except:
-	pass
-
-import getopt
-
 NUM_RECENT_FILES = 10
 
 def usage(msg):
@@ -27,7 +20,7 @@ from usercmd import *
 from version import version
 
 class Main(MainDialog):
-	def __init__(self, opts, files):
+	def __init__(self):
 		import windowinterface, features
 		if hasattr(features, 'expiry_date') and features.expiry_date:
 			import time
@@ -42,49 +35,18 @@ class Main(MainDialog):
 					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
 					windowinterface.htmlwindow(url)
 				sys.exit(0)
-		self.tmpopts = opts
-		self.tmpfiles = files
 
-		if sys.platform == 'wince':
-			self.do_init()
-			self.recent_file_list = []
-			return
-			
-		flag = hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded()
-		if hasattr(features, 'license_features_needed') and features.license_features_needed and not flag:
-			import license
-			license_features_needed = list(features.license_features_needed)
-			if 'smil2player' not in license_features_needed:
-				license_features_needed.append('smil2player')
-			self.tmplicensedialog = license.WaitLicense(self.do_init,
-					   license_features_needed)
-		else:
-			self.do_init()
+		self.do_init()
 		self.recent_file_list = []
 				
 	def do_init(self, license=None):
 		# We ignore the license, not needed in the player
 		import MMurl, windowinterface
-		opts, files = self.tmpopts, self.tmpfiles
-		del self.tmpopts
-		del self.tmpfiles
 		self._tracing = 0
 		self.nocontrol = 0	# For player compatability
 		self._closing = 0
-		self._mm_callbacks = {}
 		self.tops = []
 		self.last_location = ''
-		try:
-			import mm, posix, fcntl, FCNTL
-		except ImportError:
-			pass
-		else:
-			pipe_r, pipe_w = posix.pipe()
-			mm.setsyncfd(pipe_w)
-			self._mmfd = pipe_r
-			windowinterface.select_setcallback(pipe_r,
-						self._mmcallback,
-						(posix.read, fcntl.fcntl, FCNTL))
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
@@ -104,13 +66,7 @@ class Main(MainDialog):
 				CRASH(callback = (self.crash_callback, ())),
 				]
 		MainDialog.__init__(self, 'GRiNS')
-		# first open all files
-		for file in files:
-			self.openURL_callback(MMurl.guessurl(file))
 		self._update_recent(None)
-		# then play them
-		for top in self.tops:
-			top.player.playsubtree(top.root)
 
 	def openURL_callback(self, url):
 		import windowinterface
@@ -173,13 +129,6 @@ class Main(MainDialog):
 		if sys.platform == 'mac':
 			import MacOS
 			MacOS.OutputSeen()
-		if sys.platform == 'wince':
-			return
-		if exitcallback:
-			rtn, arg = exitcallback
-			apply(rtn, arg)
-		else:
-			raise SystemExit, 0
 
 	def crash_callback(self):
 		raise 'Crash requested by user'
@@ -246,120 +195,9 @@ class Main(MainDialog):
 		import windowinterface
 		windowinterface.mainloop()
 
-	def setmmcallback(self, dev, callback):
-		if callback:
-			self._mm_callbacks[dev] = callback
-		elif self._mm_callbacks.has_key(dev):
-			del self._mm_callbacks[dev]
-
-	def _mmcallback(self, read, fcntl, FCNTL):
-		# set in non-blocking mode
-		dummy = fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.O_NDELAY)
-		# read a byte
-		devval = read(self._mmfd, 1)
-		# set in blocking mode
-		dummy = fcntl(self._mmfd, FCNTL.F_SETFL, 0)
-		# return if nothing read
-		if not devval:
-			return
-		devval = ord(devval)
-		dev, val = devval >> 2, devval & 3
-		if self._mm_callbacks.has_key(dev):
-			func = self._mm_callbacks[dev]
-			func(val)
-		else:
-			print 'Warning: unknown device in mmcallback'
-
 def main():
-	if sys.platform == 'wince':
-		opts = None
-		files = []
-		m = Main(opts, files)
-		m.run()
-		return
-	try:
-		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
-	except getopt.error, msg:
-		usage(msg)
-	if not files and sys.platform not in ('mac', 'win32'):
-		usage('No files specified')
-
-	if sys.argv[0] and sys.argv[0][0] == '-':
-		sys.argv[0] = 'grins'
-
-	try:
-		import splash
-	except ImportError:
-		splash = None
-	else:
-		splash.splash(version = 'GRiNS ' + version)
-
-##	import Help
-##	if hasattr(Help, 'sethelpprogram'):
-##		Help.sethelpprogram('player')
-		
-	import settings
-	kbd_int = KeyboardInterrupt
-	if ('-q', '') in opts:
-		sys.stdout = open('/dev/null', 'w')
-	elif settings.get('debug'):
-		try:
-			import signal, pdb
-		except ImportError:
-			pass
-		else:
-			signal.signal(signal.SIGINT,
-				      lambda s, f, pdb=pdb: pdb.set_trace())
-			kbd_int = 'dummy value to prevent interrupts to be caught'
-
-	import Channel
-
-	m = Main(opts, files)
-
-	if splash is not None:
-		splash.unsplash()
-
-	try:
-		try:
-			m.run()
-		except kbd_int:
-			print 'Interrupt.'
-		except SystemExit, sts:
-			if type(sts) is type(m):
-				if sts.code:
-					print 'Exit %d' % sts.code
-			elif sts:
-				print 'Exit', sts
-			sys.last_traceback = None
-			sys.exc_traceback = None
-			sys.exit(sts)
-		except:
-			sys.stdout = sys.stderr
-			if hasattr(sys, 'exc_info'):
-				exc_type, exc_value, exc_traceback = sys.exc_info()
-			else:
-				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
-			if __debug__:
-				import traceback, pdb
-				print
-				print '\t-------------------------------------------------'
-				print '\t| Fatal error - Please mail this output to      |'
-				print '\t| grins-support@oratrix.com with a description  |'
-				print '\t| of the circumstances.                         |'
-				print '\t-------------------------------------------------'
-				print
-				traceback.print_exception(exc_type, exc_value, exc_traceback)
-				print
-				pdb.post_mortem(exc_traceback)
-			else:
-				import traceback
-				print
-				print 'GRiNS crash, please e-mail this output to grins-support@cwi.nl:'
-				traceback.print_exception(exc_type, exc_value, exc_traceback)
-	finally:
-		import windowinterface
-		windowinterface.close()
-
+	m = Main()
+	m.run()
 
 # A copy of cmif.findfile().  It is copied here rather than imported
 # because the result is needed to extend the Python search path to
