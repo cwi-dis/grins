@@ -96,8 +96,15 @@ class VideoChannel(ChannelWindowAsync):
 		if not fn:
 			self.errormsg(node, 'No URL set on node.')
 			return 1
-		import MMmimetypes, string
-		mtype = MMmimetypes.guess_type(fn)[0]
+		mtype = node.GetAttrDef('type', None)
+		import settings
+		if not mtype and settings.get('checkext'):
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(fn)[0]
+		if not mtype:
+			import urlcache
+			mtype = urlcache.mimetype(fn)
+		import string
 		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
 			node.__type = 'real'
 		self.prepare_armed_display(node)
