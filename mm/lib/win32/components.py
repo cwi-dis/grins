@@ -700,6 +700,9 @@ class TipWindow(window.Wnd):
 		dc.FrameRectFromHandle(self.GetClientRect(), self._blackbrush)
 		self.EndPaint(paintStruct)
 	
+	def OnEraseBkgnd(self,dc):
+		return 1 # promise: we will paint our background
+
 	def settext(self, text):
 		self._text = text
 		if Sdk.IsWindow(self.GetSafeHwnd()):
@@ -709,10 +712,13 @@ class TipWindow(window.Wnd):
 		self._text = text
 		x, y = pos
 		x =  x + self._dxoffset
+		rc = self.GetWindowRect()
 		Sdk.SetWindowPos(self.GetSafeHwnd(), win32con.HWND_TOPMOST, (x,y,0,0),
 			win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE |  win32con.SWP_NOZORDER | win32con.SWP_NOREDRAW)
 		if show and not self.IsWindowVisible():
 			self.ShowWindow(win32con.SW_SHOW)
+		self.__updatewnd(self._parent, rc)
+		self.__updatewnd(self._parent.GetParent(), rc)
 		self.InvalidateRect()
 
 	def show(self):
@@ -721,6 +727,10 @@ class TipWindow(window.Wnd):
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
 			
+	def __updatewnd(self, wnd, rc):
+		rc = wnd.ScreenToClient(rc)
+		wnd.InvalidateRect(rc)
+		wnd.UpdateWindow()
 
 ##############################
 # Base class for controls creation classes
