@@ -186,7 +186,10 @@ def main():
 ##		except KeyboardInterrupt:
 ##			print 'Interrupt.'
 		except SystemExit, sts:
-			if sts:
+			if type(sts) is type(m):
+				if sts.code:
+					print 'Exit %d' % sts.code
+			elif sts:
 				print 'Exit', sts
 			sys.last_traceback = None
 			sys.exc_traceback = None
