@@ -38,6 +38,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__animating = None
 		self.__curloop = 0
 		self.__moreloops = 0
+		self.__effAnimator = None
 
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
