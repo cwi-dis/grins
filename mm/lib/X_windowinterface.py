@@ -13,12 +13,14 @@ _DEF_FGCOLOR =   0,  0,  0		# black
 #from debug import debug
 debug = 0
 
-_mscreenwidth = 293
-_mscreenheight = 234
-_screenwidth = 1280
-_screenheight = 1024
-_dpi_x = 111
-_dpi_y = 111
+# These variables are filled in by the _Toplevel.__init__() method
+# when the module is initialized.
+_mscreenwidth = 0
+_mscreenheight = 0
+_screenwidth = 0
+_screenheight = 0
+_dpi_x = 0
+_dpi_y = 0
 
 _image_cache = {}			# cache of prepared images
 _cache_full = 0				# 1 if we shouldn't cache more images
@@ -1427,7 +1429,7 @@ class _Font:
 
 _FOUNDRY = 1
 _FONT_FAMILY = 2
-_WIGHT = 3
+_WEIGHT = 3
 _SLANT = 4
 _SET_WIDTH = 5
 _PIXELS = 7
