@@ -1,3 +1,8 @@
+// CMIF_ADD
+//
+// kk@epsilon.com.gr
+//
+
 #include "stdafx.h"
 
 
@@ -173,7 +178,7 @@ static PyObject* ig_image_delete(PyObject *self, PyObject *args)
 
 BEGIN_PYMETHODDEF(ig)
 	{ "load_file", ig_load_file, 1},
-        { "image_dimensions_get",ig_image_dimensions_get, 1},
+    { "image_dimensions_get",ig_image_dimensions_get, 1},
 	{ "display_transparent_set",ig_display_transparent_set,1},
 	{ "device_rect_set",ig_device_rect_set,1},
 	{ "display_desktop_pattern_set",ig_display_desktop_pattern_set,1},
