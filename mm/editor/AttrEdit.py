@@ -5,6 +5,8 @@ import MMAttrdefs
 from ChannelMap import channelmap
 from MMExc import *			# exceptions
 import MMNode
+from AnchorDefs import *		# ATYPE_*
+from Hlinks import DIR_1TO2, TYPE_JUMP
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -151,19 +153,67 @@ class NodeWrapper(Wrapper):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Properties of node ' + name
 
+	def __findlink(self, new = None):
+		alist = MMAttrdefs.getattr(self.node, 'anchorlist')
+		maxid = 0
+		for id, atype, args in alist:
+			if atype == ATYPE_WHOLE:
+				break
+			try:
+				id = eval('0+'+id)
+			except:
+				pass
+			else:
+				if id > maxid:
+					maxid = id
+		else:
+			# no whole-node anchors, hence no hyperlinks
+			if not new:
+				return None
+			id = `maxid + 1`
+			alist = alist + [(id, ATYPE_WHOLE, [])]
+			self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
+		links = self.node.GetContext().hyperlinks.findsrclinks((self.node.GetUID(), id))
+		if links and new is not None:
+			self.editmgr.dellink(links[0])
+			links = []
+		if not links:
+			if not new:
+				return None
+			link = (self.node.GetUID(), id), new, DIR_1TO2, TYPE_JUMP
+			self.editmgr.addlink(link)
+			links = [link]
+		anchor = links[0][1]
+		if type(anchor) == type(''):
+			# external link
+			return anchor
+		return '<Hyperlink within document>'	# place holder for internal link
+
 	def getattr(self, name): # Return the attribute or a default
+		if name == '.hyperlink':
+			return self.__findlink() or ''
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
+		if name == '.hyperlink':
+			return self.__findlink()
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
+		if name == '.hyperlink':
+			return None
 		return MMAttrdefs.getdefattr(self.node, name)
 
 	def setattr(self, name, value):
+		if name == '.hyperlink':
+			self.__findlink(value)
+			return
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
+		if name == '.hyperlink':
+			self.__findlink('')
+			return
 		self.editmgr.setnodeattr(self.node, name, None)
 
 	def delete(self):
@@ -178,10 +228,11 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
+		import settings
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
-			'name', 'channel', ('file',),	# From nodeinfo window
+			'name', ('file',),	# From nodeinfo window
 			('terminator',),
 			'begin', ('duration',), 'loop',	# Time stuff
 			('clipbegin',), ('clipend',),	# More time stuff
@@ -195,6 +246,8 @@ class NodeWrapper(Wrapper):
 			'system_screen_depth',
 			]
 		ntype = self.node.GetType()
+		if ntype in ('ext', 'imm') or not settings.get('lightweight'):
+			namelist[1:1] = ['channel']
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
@@ -204,6 +257,7 @@ class NodeWrapper(Wrapper):
 		if ntype in ('ext', 'imm'):
 			namelist.append('alt')
 			namelist.append('longdesc')
+			namelist.append('.hyperlink')
 		# Get the channel class (should be a subroutine!)
 		ctype = self.node.GetChannelType()
 		if channelmap.has_key(ctype):
@@ -238,6 +292,14 @@ class NodeWrapper(Wrapper):
 			else:
 				retlist.append(name)
 		return retlist
+
+	def getdef(self, name):
+		if name == '.hyperlink':
+			# Channelname -- special case
+			return (('string', None), '',
+				'Hyperlink', 'default',
+				'Hyperlink', 'raw', 'light')
+		return MMAttrdefs.getdef(name)
 
 class SlideWrapper(NodeWrapper):
 	def attrnames(self):
