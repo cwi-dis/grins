@@ -449,6 +449,8 @@ class _CommonWindow:
 		else:
 			w, h = 0, 0
 		rx, ry, rw, rh = self._rect
+		hf, vf = self._scrollsizefactors()
+		rw, rh = rw*hf, rh*vf
 ##		if not (0 <= x <= 1 and 0 <= y <= 1):
 ##			raise error, 'coordinates out of bounds'
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
@@ -1179,6 +1181,7 @@ class _ScrollMixin:
 	def _scrollsizefactors(self):
 		if self._canvassize is None:
 			return 1, 1
+		print 'DBG factor', self._canvassize
 		return self._canvassize
 		
 	def setcanvassize(self, how):
@@ -1195,6 +1198,23 @@ class _ScrollMixin:
 		self._canvassize = (w, h)
 		self._adjust_scrollbar_max()
 		self._do_resize0()
+		
+	def adjustcanvasforresize(self, width, height):
+		if not self._barx:
+			return
+		self._canvassize = 1, 1	# Not very elegant, but better than nothing
+		self._adjust_scrollbar_max()
+		return
+		print 'DBG old', self._canvassize
+		x, y, w, h = self._rect
+		wf, hf = self._canvassize
+		virtual_w, virtual_h = w*wf, h*hf
+		new_wf = virtual_w / width
+		new_hf = virtual_h / height
+		if new_wf < 1: new_wf = 1
+		if new_hf < 1: new_hf = 1
+		self._canvassize = wf, hf
+		print 'DBG new', self._canvassize
 		
 	def _adjust_scrollbar_max(self):
 		"""Adjust scrollbar maximum for new window/canvassize. This may update
@@ -1556,6 +1576,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		Win.InvalRect(self.qdrect())
 		self._clipchanged()
 
+		_ScrollMixin.adjustcanvasforresize(self, width, height)
 		x, y = self._rect[:2]
 		self._rect = x, y, width, height
 		_AdornmentsMixin._resized(self)
