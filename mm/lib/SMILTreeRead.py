@@ -158,6 +158,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'regPoint': (self.start_regpoint, self.end_regpoint),
 			'prefetch': (self.start_prefetch, self.end_prefetch),
 			}
+		for key, val in self.elements.items():
+			if ' ' not in key:
+				self.elements[SMIL2+' '+key] = val
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
 		self.__in_smil = 0
@@ -2267,6 +2270,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# smil contains everything
 	def start_smil(self, attributes):
+		ns = self.getnamespace().get('')
+		if ns is None or ns == SMIL1:
+			self.__context.attributes['project_boston'] = 0
+		elif ns == SMIL2:
+			self.__context.attributes['project_boston'] = 1
 		for attr in attributes.keys():
 			if attr != 'id' and \
 			   self.attributes['body'].get(attr) != attributes[attr]:
@@ -4020,12 +4028,43 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 	def finish_starttag(self, tagname, attrdict, method):
+		nstag = string.split(tagname, ' ')
+		if len(nstag) == 2 and \
+		   nstag[0] in (SMIL1, SMIL2, GRiNSns):
+			ns, tagname = nstag
+			d = {}
+			for key, val in attrdict.items():
+				nstag = string.split(key, ' ')
+				if len(nstag) == 2 and \
+				   nstag[0] in (SMIL1, SMIL2, GRiNSns):
+					key = nstag[1]
+				d[key] = val
+			attrdict = d
+		else:
+			ns = ''
 		if len(self.stack) > 1:
 			ptag = self.stack[-2][2]
-			if tagname not in self.entities.get(ptag, ()):
+			nstag = string.split(ptag, ' ')
+			if len(nstag) == 2 and \
+			   nstag[0] in (SMIL1, SMIL2, GRiNSns):
+				pns, ptag = nstag
+			else:
+				pns = ''
+			if self.entities.has_key(ptag):
+				# parent is SMIL 1.0 entity
+				content = self.entities[ptag]
+			elif pns and self.entities.as_key(pns + ' ' + ptag):
+				content = self.entities[pns + ' ' + ptag]
+			else:
+				content = []
+			if tagname in content or (ns and (ns+' '+tagname) in content):
+				pass
+			else:
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
 		elif tagname != 'smil':
 			self.error('outermost element must be "smil"', self.lineno)
+		elif ns and self.getnamespace().get('', '') != ns:
+			self.error('outermost element must be "smil" with default namespace declaration', self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 class SMILMetaCollector(xmllib.XMLParser):
