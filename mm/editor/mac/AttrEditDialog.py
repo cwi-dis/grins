@@ -1462,7 +1462,8 @@ class ChannelAreaTabPage(AreaTabPage):
 	ITEM_H=9
 	ITEM_UNITS=11
 	ITEM_Z=13
-	N_ITEMS=13
+	ITEM_PREVIEW=14
+	N_ITEMS=14
 	_attr_to_checkbox = {
 	}
 	_attr_to_string = {
@@ -1477,6 +1478,8 @@ class ChannelAreaTabPage(AreaTabPage):
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
 		self._unitspopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_UNITS, [], None)
+		self._area = self.attreditor._window.AreaWidget(self.item0+self.ITEM_PREVIEW)
+		self._area.setinfo((0, 0, 640, 480)) # XXX
 		return rv
 		
 	def do_itemhit(self, item, event):
@@ -1493,6 +1496,9 @@ class ChannelAreaTabPage(AreaTabPage):
 			value = self._attr_to_field[name]._getvalueforpage()
 			self.attreditor._setlabel(self.item0+item, value)
 		AreaTabPage.update(self)
+		x, y, w, h = self._getxywh() # XXX
+		x, y, w, h = string.atoi(x), string.atoi(y), string.atoi(w), string.atoi(h) # XXX
+		self._area.set((x, y, w, h)) # XXX
 		
 	def _getxywh(self):
 		str = self._attr_to_field[self._xywhfield]._getvalueforpage()
