@@ -7,7 +7,7 @@ from MMExc import *		# Exceptions
 from Hlinks import Hlinks
 import MMAttrdefs
 import os
-import urllib
+import MMurl
 
 from SR import *
 
@@ -33,7 +33,7 @@ class MMNodeContext:
 
 	def setdirname(self, dirname):
 		if not self.dirname:
-			self.dirname = urllib.pathname2url(dirname)
+			self.dirname = MMurl.pathname2url(dirname)
 			if not self.dirname:
 				self.dirname = '.'
 			if self.dirname[-1] <> '/':
@@ -45,11 +45,11 @@ class MMNodeContext:
 			# XXXX May also work for msdos, etc. (not for mac)
 			filename = os.path.expandvars(filename)
 			filename = os.path.expanduser(filename)
-		urltype, urlpath = urllib.splittype(filename)
+		urltype, urlpath = MMurl.splittype(filename)
 		if urltype or filename[:1] == '/':
 			return filename
 		if self.dirname:
-			filename = urllib.basejoin(self.dirname, filename)
+			filename = MMurl.basejoin(self.dirname, filename)
 		return filename
 		
 	def newnodeuid(self, type, uid):

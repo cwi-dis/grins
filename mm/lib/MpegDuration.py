@@ -3,7 +3,7 @@ __version__ = "$Id$"
 # Cache durations of mpeg files
 
 import FileCache
-import urllib
+import MMurl
 import string
 
 VidRateNum = [30., 24., 24., 25., 30., 30., 50., 60.,
@@ -14,7 +14,7 @@ def getduration(filename, bufsiz = 10240):
 	if bufsiz < 1024:
 		bufsiz = 1024
 
-	filename = urllib.urlretrieve(filename)[0]
+	filename = MMurl.urlretrieve(filename)[0]
 	fp = open(filename, 'rb')
 	nframes = 0
         rate = 0

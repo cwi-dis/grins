@@ -5,7 +5,7 @@ __version__ = "$Id$"
 # Used to get full info
 def getfullinfo(filename):
 	import audio
-	from urllib import urlretrieve
+	from MMurl import urlretrieve
 	filename = urlretrieve(filename)[0]
 	try:
 		a = audio.reader(filename)
