@@ -1,7 +1,8 @@
 __version__ = "$Id$"
 
 import windowinterface, Help
-import win32api, win32con, cmifex2
+import win32api, win32con
+from win32modules import cmifex2
 
 class TopLevelDialog:
 	def show(self):
