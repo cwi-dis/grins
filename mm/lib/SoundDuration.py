@@ -18,6 +18,9 @@ def getfullinfo(filename):
 		f.seek(0)
 		try:
 			a = sunau.openfp(f, 'r')
+		except EOFError:
+			print 'EOF on sound file', filename
+			return f, 1, 0, 1, 8000, 'eof', []
 		except sunau.Error:
 			print 'error in sound file', filename, ':', msg
 			return f, 1, 0, 1, 8000, 'error', []
