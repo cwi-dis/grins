@@ -247,11 +247,11 @@ EngineObject::CreatePlayer(PyObject *self, PyObject *args)
 PyObject *
 EngineObject::EventOccurred(PyObject *self, PyObject *args)
 {
-	PNxEvent pn_event;
 	PN_RESULT res;
 	
 	/* Event = PyArg_ParseTuple(blabla) */
 #ifdef _MACINTOSH
+	PNxEvent pn_event;
 	EventRecord ev;
 	if (!PyArg_ParseTuple(args, "O&", PyMac_GetEventRecord, &ev))
 		return NULL;
