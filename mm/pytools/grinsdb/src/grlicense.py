@@ -189,7 +189,7 @@ def usage():
 	print " -E           Evaluation license, no user required"
 	print " -n id        Use this id for new license"
 	print " -d yyyymmdd  Use this expiry date (+N for N days in future)"
-	print " -f f1,f2,... Enable these features"
+	print " -f f1,f2,... Enable these features (default: all features, all platforms!)"
 	print " -u name      Encode this licenseename"
 	print " -o file      Write output to file (with backup)"
 
