@@ -1,6 +1,18 @@
 __version__ = "$Id$"
 
 import os, sys
+import MMurl
+import urlparse
+
+def identicalfiles(srcurl, fullpath):
+	if os.path.exists(fullpath):
+		scheme, netloc, url, params, query, fragment = urlparse.urlparse(srcurl)
+		if (not scheme or scheme == 'file') and (not netloc or netloc == 'localhost'):
+			srcurl = MMurl.canonURL(srcurl)
+			dsturl = MMurl.canonURL(MMurl.pathname2url(fullpath))
+			if srcurl == dsturl:
+				return 1
+	return 0
 
 try:
 	import producer
@@ -42,6 +54,12 @@ def convertaudiofile(u, srcurl, dstdir, file, node, progress = None):
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.ra'
 	fullpath = os.path.join(dstdir, file)
+	if identicalfiles(srcurl, fullpath):
+		# src and dst files are the same, don't do anything
+		u.close()
+		if __debug__:
+			print 'src and dst files are identical',fullpath
+		return file
 	if engine is None:
 		engine = producer.CreateRMBuildEngine()
 	if audiopin is None:
@@ -162,10 +180,15 @@ def convertaudiofile(u, srcurl, dstdir, file, node, progress = None):
 
 
 def convertimagefile(u, srcurl, dstdir, file, node):
-	import MMurl
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.jpg'
 	fullpath = os.path.join(dstdir, file)
+	if identicalfiles(srcurl, fullpath):
+		# src and dst files are the same, don't do anything
+		u.close()
+		if __debug__:
+			print 'src and dst files are identical',fullpath
+		return file
 	import imgjpeg, imgconvert
 	if u is not None:
 		u.close()
@@ -221,12 +244,18 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 		macostools.touched(fss)
 	return file
 
-def converttextfile(u, dstdir, file, node):
+def converttextfile(u, srcurl, dstdir, file, node):
 	import MMAttrdefs, windowinterface
 	import colors
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rt'
 	fullpath = os.path.join(dstdir, file)
+	if identicalfiles(srcurl, fullpath):
+		# src and dst files are the same, don't do anything
+		u.close()
+		if __debug__:
+			print 'src and dst files are identical',fullpath
+		return file
 	data = u.read()
 	u.close()
 	f = open(fullpath, 'w')
@@ -279,6 +308,12 @@ def _win_convertaudiofile(u, srcurl, dstdir, file, node, progress = None):
 		# ignore suggested extension and make our own
 		file = os.path.splitext(file)[0] + '.ra'
 		fullpath = os.path.join(dstdir, file)
+		if identicalfiles(srcurl, fullpath):
+			# src and dst files are the same, don't do anything
+			u.close()
+			if __debug__:
+				print 'src and dst files are identical',fullpath
+			return file
 		if engine is None:
 			engine = producer.CreateRMBuildEngine()
 		if audiopin is None:
@@ -375,7 +410,7 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	u.close()
 
 	global engine
-	import MMAttrdefs, MMurl
+	import MMAttrdefs
 	try:
 		import win32dxm
 		reader = win32dxm.MediaReader(srcurl)
@@ -385,6 +420,12 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		# ignore suggested extension and make our own
 		file = os.path.splitext(file)[0] + '.rm'
 		fullpath = os.path.join(dstdir, file)
+		if identicalfiles(srcurl, fullpath):
+			# src and dst files are the same, don't do anything
+			u.close()
+			if __debug__:
+				print 'src and dst files are identical',fullpath
+			return file
 		if engine is None:
 			engine = producer.CreateRMBuildEngine()
 		videopin = None
@@ -549,7 +590,7 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 
 def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	global engine
-	import MMAttrdefs, MMurl
+	import MMAttrdefs
 	u.close()
 	try:
 		import videoreader
@@ -562,6 +603,12 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		# ignore suggested extension and make our own
 		file = os.path.splitext(file)[0] + '.rm'
 		fullpath = os.path.join(dstdir, file)
+		if identicalfiles(srcurl, fullpath):
+			# src and dst files are the same, don't do anything
+			u.close()
+			if __debug__:
+				print 'src and dst files are identical',fullpath
+			return file
 		if engine is None:
 			engine = producer.CreateRMBuildEngine()
 		videopin = None
