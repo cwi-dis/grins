@@ -631,7 +631,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		   bg != 'inherit':
 			layout['bgcolor'] = bg
 		if self.__width == 0:
-			self.__widthcm = 640
+			self.__width = 640
 		if self.__height == 0:
 			self.__height = 480
 		layout['winsize'] = \
@@ -847,6 +847,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_head(self):
 		self.__in_head = 0
+		if self.__root_layout is not None:
+			self.CreateLayout()
 
 	def start_body(self, attributes):
 		for key, val in attributes.items():
