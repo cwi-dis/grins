@@ -20,24 +20,22 @@ self.close_callback is also called.
 __version__ = "$Id$"
 
 from usercmd import *
+from flags import *
 
 class MainDialog:
 	adornments = {
 		'toolbar' : [
-			('New', NEW_DOCUMENT),
-			('Open...', OPEN),
-			('Preferences...', PREFERENCES),
-			('Help...', HELP),
-			('Exit', EXIT),
+			(ALL, 'New', NEW_DOCUMENT),
+			(ALL, 'Open...', OPEN),
+			(ALL, 'Preferences...', PREFERENCES),
+			(DBG, 'Trace', TRACE, 't'),
+			(DBG, 'Debug', DEBUG),
+			(DBG, 'Crash', CRASH),
+			(ALL, 'Help...', HELP),
+			(ALL, 'Exit', EXIT),
 			],
 		'close': [ EXIT, ],
 		}
-	if __debug__:
-		adornments['toolbar'][3:3] = [
-			('Trace', TRACE, 't'),
-			('Debug', DEBUG),
-			('Crash', CRASH),
-			]
 
 	def __init__(self, title):
 		"""Create the Main dialog.
@@ -52,6 +50,7 @@ class MainDialog:
 
 		import windowinterface, WMEVENTS
 
+		self.adornments['flags'] = curflags()
 		self.__window = w = windowinterface.newcmwindow(None, None, 0, 0,
 				title, adornments = self.adornments,
 				commandlist = self.commandlist)
@@ -138,7 +137,7 @@ class MainDialog:
 	def openfile_callback(self):
 		"""On Unix we only have to "open url" dialog"""
 		self.open_callback()
-		
+
 	def setbutton(self, button, value):
 		pass			# for now...
 
