@@ -104,7 +104,7 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def make_form(self):
 		width, height = self.width, self.height
-		bheight = height/9
+		bheight = height/10
 		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
 		# The top four buttons in the menu open/close views.
@@ -132,6 +132,10 @@ class TopLevel(ViewDialog, BasicDialog):
 		y = y - h
 		self.svbutton = \
 		    form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Style sheet')
+		#
+		y = y - h
+		self.lvbutton = \
+		    form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Hyperlinks')
 		#
 		y = y - h
 		self.helpbutton = \
@@ -177,15 +181,19 @@ class TopLevel(ViewDialog, BasicDialog):
 		import Help
 		self.help = Help.HelpWindow().init(HELPDIR, self)
 		#
+		import LinkEdit
+		self.links = LinkEdit.LinkEdit().init(self)
+		#
 		# Views that are destroyed by restore (currently all)
-		self.views = [self.blockview, self.channelview, \
-				self.player, self.styleview, self.help]
+		self.views = [self.blockview, self.channelview, self.player, \
+			  self.styleview, self.links, self.help]
 		#
 		self.bvbutton.set_call_back(self.view_callback, self.blockview)
 		self.cvbutton.set_call_back(self.view_callback, \
 						self.channelview)
 		self.pvbutton.set_call_back(self.view_callback, self.player)
 		self.svbutton.set_call_back(self.view_callback, self.styleview)
+		self.lvbutton.set_call_back(self.view_callback, self.links)
 		self.helpbutton.set_call_back(self.view_callback, self.help)
 	#
 	def hideviews(self):
@@ -200,6 +208,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.helpbutton.set_button(self.help.is_showing())
 	#
 	def destroyviews(self):
+		self.hideviews()
 		for v in self.views: v.destroy()
 	#
 	# Callbacks.
