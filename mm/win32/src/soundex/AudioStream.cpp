@@ -248,7 +248,7 @@ BOOL AudioStream::WriteWaveData (UINT size)
 //  DOUT2 ("    dwPlayCursor = %d, dwWriteCursor = %d\n\r", dwPlayCursor, dwWriteCursor);
     
     // Lock the sound buffer
-    hr = m_pdsb->Lock (m_cbBufOffset, size, &lpbuf1, &dwsize1, &lpbuf2, &dwsize2, 0);
+    hr = m_pdsb->Lock (m_cbBufOffset, size, (void **)&lpbuf1, &dwsize1, (void **)&lpbuf2, &dwsize2, 0);
     if (hr == DS_OK)
     {
         // Write data to sound buffer. Because the sound buffer is circular, we may have to
@@ -309,7 +309,7 @@ BOOL AudioStream::WriteSilence (UINT size)
     BOOL fRtn = SUCCESS;
 
     // Lock the sound buffer
-    hr = m_pdsb->Lock (m_cbBufOffset, size, &lpbuf1, &dwsize1, &lpbuf2, &dwsize2, 0);
+    hr = m_pdsb->Lock (m_cbBufOffset, size, (void **)&lpbuf1, &dwsize1, (void **)&lpbuf2, &dwsize2, 0);
     if (hr == DS_OK)
     {
         // Get silence data for this file format. Although word sizes vary for different
