@@ -39,6 +39,7 @@ MENUBAR=(
 		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for G2 and Upload...', None, UPLOAD_G2),
 		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for WMP', None, EXPORT_WMP),
 		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for WMP and Upload', None, UPLOAD_WMP),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for HTML+Time', None, EXPORT_HTML_TIME),
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Publish SMIL...', None, EXPORT_SMIL),
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Publish SMIL and Upload...', None, UPLOAD_SMIL),
 		(FLAG_SMIL_1_0|FLAG_QT|FLAG_G2|FLAG_PRO, SEP,),
