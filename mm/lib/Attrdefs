@@ -27,7 +27,7 @@
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
-(abstract (string) '' 'Abstract' default 'Abstract' raw)
+(abstract (string) '' 'Abstract' default 'A brief description of the contents (documentary) ' raw)
 
 (align (string) 'left' 'Alignment' CMIFdefault
 	'Alignment of short datasets' channel)
@@ -38,7 +38,7 @@
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
 
-(author (string) '' 'Author' default 'Author' raw)
+(author (string) '' 'Author' default 'Author (documentary)' raw)
 
 (axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' CMIFdefault
 	'Draw axis if >0, specifies tick-interval' channel)
@@ -47,7 +47,7 @@
 	'Name of child auto-started when choice node plays' normal)
 
 (base (string) '' 'Base URL' default
-	'Base URL of document' raw)
+	'Base URL of document, used for resolving relative URLs' raw)
 
 (base_window (name) 'undefined' 'Channel base window' CMIFbasechannelname
 	'Name of window in which channelwin is created' raw)
@@ -56,10 +56,10 @@
 	'Position and size' default 'Position and size. See also "units"' channel)
 
 (transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window' raw)
+	'Determines transparency of window. Overrides background color.' raw)
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
-	'Color used for background of window' channel)
+	'Color used for background of window. Overriden by "transparent".' channel)
 
 (bgimg (string) '' 'Background image' CMIFfile
 	'Background image for window' channel)
@@ -74,22 +74,22 @@
 	'Determines whether image is centered' channel)
 
 (channel (name) undefined 'Channel' channelname
-	'Name of channel used to render this node/subtree' inherited)
+	'Name of channel used to render this node' inherited)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' hidden
 	'Channels used in this document (root node only)')
 
 (clipbegin (string) '' 'Clip begin' default
-	'Start of range of frames to be played' channel)
+	'Start of range of frames to be played. Simplest form is "npt=3s".' channel)
 
 (clipend (string) '' 'Clip end' default
-	'End of range of frames to be played' channel)
+	'End of range of frames to be played. Simplest form is "npt=3s".' channel)
 
 (comment (string) '' 'Comment' default
-	 'A comment, for your convenience only' raw)
+	 'A comment (authoring convenience only)' raw)
 
-(copyright (string) '' 'Copyright' default 'Copyright' raw)
+(copyright (string) '' 'Copyright' default 'Copyright of the item (documentary)' raw)
 
 (crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' CMIFdefault
     'Crop image.  Values are fractions to crop from top, bottom, left, right.'
@@ -105,9 +105,9 @@
 	'Draw anchors as boxes' channel)
 
 (duration (float) 0.0 'Duration' default
-	'Duration of a node/subtree (in seconds)' normal)
+	'Duration of a node or subtree (in seconds)' normal)
 
-(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
+(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' CMIFcolor
 	'Color used for text/images in window' channel)
 
 (file (string) '' 'File' file
@@ -137,10 +137,10 @@
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
 
-(layout (name) undefined 'Layout' layoutname
-	'Layout for this node and its descendants' inherited)
+(layout (name) undefined 'Screen' layoutname
+	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited)
 
-(layouts (list (enclosed (tuple (name) (list (name))))) () 'Layouts list'
+(layouts (list (enclosed (tuple (name) (list (name))))) () 'List of screens'
 	hidden 'List of layouts within this document (root node only)' raw)
 
 (links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
@@ -192,7 +192,7 @@
 	'Audio playback queue size' channel)
 
 (scale (float) 0.0 'Scale factor' default
-	'Image magnification (0.0 means fit in window)' channel)
+	'Image magnification (0 means fit in channel)' channel)
 
 (scalefilter (name) '' 'Scaling filter' CMIFdefault
 	'Name of filter used after image scaling' channel)
@@ -214,11 +214,11 @@
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)
 
-(terminator (name) 'LAST' 'Terminator child' termnodename
+(terminator (name) 'LAST' 'Terminator child' CMIFtermnodename
 	'Name of child that terminates parallel node' normal)
 
 (title (string) '' 'Title' default
-	 'The title of this object' raw)
+	 'The title of this object (documentary)' raw)
 
 (toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
 	 'Window position for top level menu' raw)
@@ -229,7 +229,7 @@
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw)
 
-(u_group (name) undefined 'User group' usergroup
+(u_group (name) undefined 'User group' CMIFusergroup
 	'User group that controls rendering of this node' inherited)
 
 (unixprog (string) '' 'Unix program name' CMIFdefault
@@ -245,7 +245,7 @@
 (video (bool) 0 'Video output' CMIFdefault
 	'Do image smoothing for video output' channel)
 
-(visible (bool) 1 'Channel visibility' default
+(visible (bool) 1 'Channel visibility' CMIFdefault
 	'Are nodes played to the channel actually rendered?' raw)
 
 (wanturl (bool) 0 'Pass URL' CMIFdefault
@@ -261,7 +261,7 @@
 	'Initial window size' raw)
 
 (z (int) 0 'Z order' default
-	'Z order' normal)
+	'Z order (higher numbers are on top)' normal)
 
 # SMIL system test attributes
 (system_bitrate (int) 0 'System bitrate' default
