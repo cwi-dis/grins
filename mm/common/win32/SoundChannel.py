@@ -131,9 +131,7 @@ class SoundChannel(Channel):
 				arg = arg.strerror
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (fn, arg))
 			return 1
-		fn = MMurl.canonURL(fn)
-		# we need the next call (idiosyncrasy of Media Player)
-		fn = self.urlorpathname(fn)
+		fn = os.path.join(os.getcwd(), fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
 			if not builder.RenderFile(fn):
@@ -267,12 +265,3 @@ class SoundChannel(Channel):
 		import windowinterface
 		windowinterface.unregister(self._fiber_id)
 		self._fiber_id=0
-
-	def toabs(self,url):
-		# no need to duplicate code...
-		import Help_
-		return Help_.toabs(url)
-	def urlorpathname(self,url):
-		import Help_
-		return Help_.urlorpathname(url)
-
