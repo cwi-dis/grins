@@ -2,6 +2,8 @@ error = 'windowinterface.error'
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 
+_size_cache = {}
+
 Version = 'dummy'
 
 from EVENTS import *
@@ -63,7 +65,9 @@ class _Toplevel:
 				sec = sec - (t - self._time)
 				self._time = t
 				if sec <= 0:
+					print 'BEFORE DEL', len(self._timers), self._timers[0][0]
 					del self._timers[0]
+					print 'AFTER DEL', len(self._timers), self._timers[0][0]
 					func, args = cb
 					apply(func, args)
 				else:
@@ -228,6 +232,19 @@ class _Window:
 
 	def create_menu(self, list, title = None):
 		pass
+
+	def _image_size(self, file):
+		if _size_cache.has_key(file):
+			return _size_cache[file]
+		import img
+		try:
+			reader = img.reader(None, file)
+		except img.error, arg:
+			raise error, arg
+		width = reader.width
+		height = reader.height
+		_size_cache[file] = width, height
+		return width, height
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):

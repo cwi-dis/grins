@@ -2,8 +2,10 @@
 
 import FileCache
 import cl
+import urllib
 
 def getduration(filename):
+	filename = urllib.url2pathname(filename)
 	fp = open(filename, 'rb')
 	hsize = cl.QueryMaxHeaderSize(cl.MPEG_VIDEO)
 	hdr = fp.read(hsize)

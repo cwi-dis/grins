@@ -9,7 +9,7 @@ def get(node):
 		context = node.GetContext()
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
-		filename = context.findfile(filename)
+		filename = context.findurl(filename)
 		if ctype == 'movie':
 			import MovieDuration
 			try:

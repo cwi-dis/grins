@@ -5,6 +5,8 @@ from MMExc import *		# Exceptions
 from Hlinks import Hlinks
 import MMAttrdefs
 from MMStat import _stat
+import os
+import urllib
 
 from SR import SCHED, SCHED_DONE, PLAY, PLAY_DONE, \
 	  SCHED_STOP, PLAY_STOP, SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, \
@@ -39,24 +41,30 @@ class MMNodeContext:
 	def setdirname(self, dirname):
 		##_stat('setdirname')
 		if not self.dirname:
-			self.dirname = dirname
+			self.dirname = urllib.pathname2url(dirname)
+			if self.dirname[-1] <> '/':
+				self.dirname = self.dirname + '/'
 	#
-	def findfile(self, filename):
-		##_stat('findfile')
-		import os
-		import urllib
-		filename = os.path.expandvars(filename)
-		filename = os.path.expanduser(filename)
+	def findurl(self, filename):
+		"Locate a file given by url-style filename."
+		##_stat('findurl')
+		if os.name == 'posix':
+			# XXXX May also work for msdos, etc. (not for mac)
+			filename = os.path.expandvars(filename)
+			filename = os.path.expanduser(filename)
 		urltype, urlpath = urllib.splittype(filename)
-		if urltype or os.path.isabs(filename):
+		if urltype or filename[0] == '/':
 			return filename
 		if self.dirname:
-			altfilename = os.path.join(self.dirname, filename)
+			altfilename = urllib.basejoin(self.dirname, filename)
+			altfilename = urllib.url2pathname(altfilename)
 			if os.path.exists(altfilename):
-				return altfilename
+				return urllib.pathname2url(altfilename)
 		# As a last resort, search along the cmif search path
 		import cmif
-		return cmif.findfile(filename)
+		filename = urllib.url2pathname(filename)
+		filename = cmif.findfile(filename)
+		return urllib.pathname2url(filename)
 	#
 	def newnode(self, type):
 		##_stat('newnode')
