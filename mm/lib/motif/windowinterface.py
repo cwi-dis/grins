@@ -134,6 +134,11 @@ def htmlwindow(url):
 	os.system(cmd)
 	# don't return a value!
 
+# open an external application in order to manage the media specified in url
+# verb is the action executed by the external application. may be print, ... (for now ignore)
+def shell_execute(url,verb='open'):
+	htmlwindow(url)
+
 class ProgressDialog:
 	# Placeholder
 	
