@@ -14,12 +14,13 @@ implements the actual view.
 from ViewDialog import ViewDialog
 import WMEVENTS
 from usercmd import *
-from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE
+from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_SLIDE, POPUP_HVIEW_STRUCTURE
 
 class HierarchyViewDialog(ViewDialog):
 	adornments = {}
 	interior_popupmenu = POPUP_HVIEW_STRUCTURE
 	leaf_popupmenu = POPUP_HVIEW_LEAF
+	slide_popupmenu = POPUP_HVIEW_SLIDE
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')

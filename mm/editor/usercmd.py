@@ -146,6 +146,14 @@ class NEW_BEFORE_VIDEO(_CommandBase):
 	help = 'Create new video node before selected node'
 class NEW_BEFORE_SLIDESHOW(_CommandBase):
 	help = 'Create new slideshow node before selected node'
+class NEW_BEFORE_SEQ(_CommandBase):
+	help = 'Create new sequential node before selected node'
+class NEW_BEFORE_PAR(_CommandBase):
+	help = 'Create new parallel node before selected node'
+class NEW_BEFORE_CHOICE(_CommandBase):
+	help = 'Create new choice node before selected node'
+class NEW_BEFORE_ALT(_CommandBase):
+	help = 'Create new alt node before selected node'
 class NEW_AFTER(_CommandBase):
 	help = 'Create new node after selected node'
 class NEW_AFTER_IMAGE(_CommandBase):
@@ -158,6 +166,14 @@ class NEW_AFTER_VIDEO(_CommandBase):
 	help = 'Create new video node after selected node'
 class NEW_AFTER_SLIDESHOW(_CommandBase):
 	help = 'Create new slideshow node after selected node'
+class NEW_AFTER_SEQ(_CommandBase):
+	help = 'Create new sequential node after selected node'
+class NEW_AFTER_PAR(_CommandBase):
+	help = 'Create new parallel node after selected node'
+class NEW_AFTER_CHOICE(_CommandBase):
+	help = 'Create new choice node after selected node'
+class NEW_AFTER_ALT(_CommandBase):
+	help = 'Create new alt node after selected node'
 class NEW_UNDER(_CommandBase):
 	help = 'Create new node under selected node'
 class NEW_UNDER_IMAGE(_CommandBase):
@@ -170,6 +186,14 @@ class NEW_UNDER_VIDEO(_CommandBase):
 	help = 'Create new video node under selected node'
 class NEW_UNDER_SLIDESHOW(_CommandBase):
 	help = 'Create new slideshow node under selected node'
+class NEW_UNDER_SEQ(_CommandBase):
+	help = 'Create new sequential node under selected node'
+class NEW_UNDER_PAR(_CommandBase):
+	help = 'Create new parallel node under selected node'
+class NEW_UNDER_CHOICE(_CommandBase):
+	help = 'Create new choice node under selected node'
+class NEW_UNDER_ALT(_CommandBase):
+	help = 'Create new alt node under selected node'
 class NEW_SEQ(_CommandBase):
 	help = 'Create new sequential node above selected node'
 class NEW_PAR(_CommandBase):
