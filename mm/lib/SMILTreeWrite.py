@@ -934,6 +934,7 @@ smil_attrs=[
 	("emptyColor", lambda writer, node: getcolor(writer, node, "empty_color"), "empty_color"),
 	("emptyDur", lambda writer, node:getduration(writer, node, "empty_duration"), "empty_duration"),
 	("emptyShow", lambda writer, node: getboolean(writer, node, 'empty_nonempty', 1), "empty_nonempty"),
+	("dropIcon", lambda writer, node: geturl(writer, node, 'dropicon'), "dropicon"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("allowedmimetypes", getallowedmimetypes, None),
