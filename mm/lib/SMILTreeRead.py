@@ -1031,8 +1031,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.attrdict['attributeName'] = 'file'
 			
 		node.attrdict['type'] = 'animate'
+		node.attrdict['tag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
-	
+
 		# synthesize a name for the channel
 		# intrenal for now so no conflicts
 		chname = 'animate%s' % node.GetUID()
@@ -1042,14 +1043,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# add this node to the tree if it is possible 
 		# else keep it for later fix
 		if targetnode:
-			targetnode.__chanlist = {}
 			node.targetnode = targetnode
 		elif targetid:
 			node.__targetid = targetid
 			self.__animatenodes.append(node)
 		
 		# add to context an internal channel for this node
-		chname = node.attrdict['channel']
 		self.__context.addinternalchannels( [(chname, node.attrdict), ] )
 
 
