@@ -38,6 +38,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.editmgr.unregister(self)
 		SourceViewDialog.SourceViewDialog.hide(self)
 
+	def updateFocus(self):
+		focustype, focusobject = self.editmgr.getglobalfocus()
+		self.__setFocus(focustype, focusobject)
+		
 	def __setFocus(self, focustype, focusobject):
 		# the normal focus is set only if there is no parsing error
 		parseErrors = self.context.getParseErrors()
@@ -54,10 +58,19 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	def globalfocuschanged(self, focustype, focusobject):
 		self.__setFocus(focustype, focusobject)
 
-	def updateFocus(self):
-		# set the focus, if already there
-		focustype,focusobject = self.editmgr.getglobalfocus()
-		self.__setFocus(focustype, focusobject)
+	def raiseError(self):
+		parseErrors = self.context.getParseErrors()
+		if parseErrors != None:
+			# get first error
+			firstError = parseErrors.getErrorList()[0]
+			msg, line = firstError
+			if line != None:
+				# for now, make selection working only when the source is unmodified
+				# to avoid some position re-computations adter each modification
+				if not self.is_changed():
+					self.select_lines(line, line+1)
+			# XXX pop the source view
+			# to do
 				
 	def setRoot(self, root):
 		self.root = root
@@ -96,28 +109,16 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			self.set_text(text)
 		else:
 			self.set_text(parseErrors.getSource())
-			
-			# get first error
-			firstError = parseErrors.getErrorList()[0]
-			msg, line = firstError
-			if line != None:
-				# for now, make selection working only when the source is unmodified
-				# to avoid some position re-computations adter each modification
-				if not self.is_changed():
-					self.select_lines(line, line+1)
-			# XXX pop the source view
-			# to do
+			self.raiseError()
 			
 	def write_text(self):
 		# Writes the text back to the MMNode structure.
 		self.toplevel.save_source_callback(self.get_text())
 		
-	def __startTransaction(self, hide, autoFixErrors=0):
+	def __applySource(self, wantToHide, autoFixErrors=0):
 		self.myCommit = 1
 		if self.editmgr.transaction('source'):
 			text = self.get_text()
-			if hide:
-				self.hide()
 
 			root = self.toplevel.change_source(text)
 			root = self.toplevel.checkParseErrors(root)
@@ -149,6 +150,9 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 					return
 			else:
 				# no error
+				if wantToHide:
+					# allow to hide only if no error
+					self.hide()
 				# update edit manager 
 				self.editmgr.deldocument(self.root) # old root
 				self.editmgr.adddocument(root) # new root
@@ -157,25 +161,39 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 						
 		self.myCommit= 0
 
-	def write_text_and_close(self, autoFixErrors=0):
-		self.__startTransaction(1, autoFixErrors)
-
 	def apply_callback(self):
-		self.__startTransaction(0)
+		# apply source, not hide, and ask to the user if he wants an automatic GRiNS's fixes
+		self.__applySource(0, 0)
 
-	# XXX Hack: see as well TopLevelDialog
+	# this method is called by the framework when the user try to close the window
 	def close_callback(self):
-		#self.toplevel.save_source_callback(text)
 		if self.is_changed():
-			saveme = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.toplevel.window)
-			if saveme == 0:		# Which means "YES"
-				self.write_text_and_close() # Which will close all windows.
-			elif saveme == 1: # Which means "No"
-				self.hide()
-			else:		# "Cancel"
-				# Pass through to the end of this method.
-				pass	# I know, it's extraneous, but it's here for completion so it's not a hidden option.
+			parseErrors = self.context.getParseErrors()
+			if parseErrors == None:
+				# the source contains some datas not applied, and the original source contains mo error
+				saveme = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.toplevel.window)
+				if saveme == 0:
+					# Which means "YES"
+					self.__applySource(1) # Which will close all windows.
+				elif saveme == 1:
+					# Which means "No"
+					self.hide()
+				else:
+					# "Cancel"
+					# Pass through to the end of this method.
+					pass	# I know, it's extraneous, but it's here for completion so it's not a hidden option.
+			else:
+				# the source contains some datas not applied, and the original source contains some errors
+				# in this case, if the user don't want to apply the changes, we can't close the view
+				saveme = windowinterface.GetOKCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.toplevel.window)
+				if saveme == 0:
+					# Which means "OK"
+					self.__applySource(1) # Which will close all windows.
+				else:
+					# cancel
+					pass
 		else:
+			# no change
 			parseErrors = self.context.getParseErrors()
 			if parseErrors == None:
 				# no error, so the view can be closed
@@ -185,10 +203,11 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				ret = windowinterface.GetYesNo("The source document still contains some errors.\nDo you wish to accept GRiNS' automatic fixes?", self.toplevel.window)
 				if ret == 0:
 					# yes
-					self.write_text_and_close(1)
+					# apply the source, hide the window, and accept automaticly the GRiNS's fixes
+					self.__applySource(1, 1)
 				else:
-					# otherwise, we don't allow to close the window, and we re-select the first error
-					self.updateFocus()
+					# otherwise, we don't allow to close the window, and we re-raise the error
+					self.raiseError()
 
 	def kill(self):
 		self.destroy()
