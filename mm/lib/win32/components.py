@@ -1361,7 +1361,7 @@ class _MultChoice:
 		self.msg_list = msg_list
 		list = []
 		for msg in msg_list:
-			list.append(msg, (self.callback, (msg,)))
+			list.append((msg, (self.callback, (msg,))))
 		self.dialog = Dialog(list, title = None, prompt = prompt,
 				     grab = 1, vertical = 1,
 				     parent = parent,defaultindex=defindex)

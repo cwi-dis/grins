@@ -366,7 +366,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		prompt = 'Select Charset:'
 		list = []
 		for name in Font.win32_charsets_list:
-			list.append(name, (Font.set_win32_charset, (name,)))
+			list.append((name, (Font.set_win32_charset, (name,))))
 		Dialog(list, title = 'Select Charset', prompt = prompt, grab = 1, vertical = 1, parent = self)
 
 	# Response to windows arrangement commands
