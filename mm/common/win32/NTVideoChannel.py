@@ -187,7 +187,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.stopit()
-					if USE_WINDOWLESS_REAL_RENDERING:
+					if self.__windowless_real_rendering:
 						self.cleanVideoRenderer()
 			else:
 				self.__mc.stopit()
