@@ -211,8 +211,8 @@ def prep2(node, root):
 ##	if not node.GetSummary('synctolist'): return
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
 	delay = node.GetAttrDef('begin', 0.0)
-	if delay > 0:
-		parent = node.GetParent()
+	parent = node.GetParent()
+	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
 			xnode = None
 			xside = TL
@@ -236,8 +236,6 @@ def prep2(node, root):
 		except NoSuchUIDError:
 			# Skip sync arc from non-existing node
 			continue
-		if xside not in (HD, TL):
-			xside = HD	# XYZZY
 		# skip out-of-minidocument sync arcs
 		if xnode.FindMiniDocument() is node.FindMiniDocument():
 			adddep(xnode, xside, delay, node, yside)
@@ -278,7 +276,7 @@ def propdown(node, stoptime, dftstarttime=0):
 
 def adddep(xnode, xside, delay, ynode, yside):
 	ynode.counter[yside] = ynode.counter[yside] + 1
-	if delay >= 0 and xside in (HD, TL):
+	if delay >= 0:
 		xnode.deps[xside].append((delay, ynode, yside))
 
 
