@@ -136,6 +136,7 @@ class Channel:
 
 	def arm_only(self, node):
 		if prearm_disabled:
+			node.prearm_event = None
 			del node.prearm_event
 			return
 		self.player.setarmedmode(node, ARM_ARMING)
@@ -192,4 +193,18 @@ class Channel:
 	# This should only be called in stopped state.
 
 	def reset(self):
+		pass
+
+	# Reset the channel's state if it currently has a node.
+
+	def softreset(self):
+		if self.node != None:
+			self.reset()
+
+	# Set or clear the watch cursor for the window (override in subclass)
+
+	def setwaiting(self):
+		pass
+
+	def setready(self):
 		pass
