@@ -115,6 +115,7 @@ _comma_sp = _opS + '(' + _S + '|,)' + _opS
 _fp = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'
 controlpt = re.compile('^'+_opS+_fp+_comma_sp+_fp+_comma_sp+_fp+_comma_sp+_fp+_opS+'$')
 fpre = re.compile('^' + _fp + '$')
+fppairre = re.compile('^'+_opS+_fp+_comma_sp+_fp+_opS+'$')
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 
 	'type', 'clipBegin', 'clipEnd',
@@ -1935,12 +1936,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('node in layout')
 			return
 		
-##		# at least for now
-##		if self.__node:
-##			# message already given
-##			#self.error('%s elements can not be in the content model of media elements' % tagname)
-##			return
-
 		# find target node (explicit or implicit)
 		targetnode = None
 		targetid = attributes.get('targetElement')
@@ -1958,6 +1953,114 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			not attributes.has_key('attributeName'):
 			self.syntax_error('required attribute attributeName missing in %s element' % tagname)
 			attributes['attributeName'] = ''
+
+		# guess attr type
+		attributeName = attributes.get('attributeName')
+		attrtype = 'string'
+		if tagname == 'animateMotion':
+			attrtype = 'position'
+		elif tagname == 'animateColor':
+			attrtype = 'color'
+		elif attributeName in ('left', 'top', 'width', 'height','right','bottom'):
+			attrtype = 'coord'
+		elif attributeName == 'z-index':
+			attrtype = 'int'
+		elif attributeName == 'soundLevel':
+			attrtype = 'coord' # similar
+			
+		# check animation type and values
+		animtype = None
+		if attributes.has_key('path'):
+			animtype = 'path'
+			if tagname != 'animateMotion':
+				self.syntax_error("invalid attribute in %s element" % tagname)
+			# check path	
+		elif attributes.has_key('values'): 
+			animtype = 'values'
+			val = attributes['values']
+			vals = val.split(';')
+			if tagname == 'animateMotion':
+				for v in vals:
+					if v and not fppairre.match(v):
+						self.syntax_error("invalid motion values")
+						break
+			elif tagname == 'animateColor':
+				for v in vals:
+					if v and not self.__convert_color(v):
+						self.syntax_error("invalid color values")
+						break
+			elif attrtype == 'coord':
+				for v in vals:
+					if v and not coordre.match(v):
+						self.syntax_error("invalid %s values" % attributeName)
+						break
+			elif attrtype == 'int':
+				for v in vals:
+					try: v = string.atoi(v)
+					except string.atoi_error: self.syntax_error('invalid %s values' % attributeName)
+					break
+		else:
+			v1 = attributes.get('from')
+			v2 = attributes.get('to')
+			dv = attributes.get('by')
+			if v2 or dv:
+				if v1:
+					if tagname == 'animateMotion' and not fppairre.match(v1):
+						self.syntax_error("invalid from value")
+					elif tagname == 'animateColor' and not self.__convert_color(v1):
+						self.syntax_error("invalid from value")
+					elif attrtype == 'coord' and not coordre.match(v1):
+						self.syntax_error("invalid from value")
+					elif attrtype == 'int':
+						try: v = string.atoi(v1)
+						except string.atoi_error:self.syntax_error('invalid from value')
+					if v2:			
+						animtype = 'from-to'
+						if tagname == 'animateMotion' and not fppairre.match(v2):
+							self.syntax_error("invalid to value")
+						elif tagname == 'animateColor' and not self.__convert_color(v2):
+							self.syntax_error("invalid to value")
+						elif attrtype == 'coord' and not coordre.match(v2):
+							self.syntax_error("invalid to value")
+						elif attrtype == 'int':
+							try: v = string.atoi(v2)
+							except string.atoi_error:self.syntax_error('invalid to value')
+					else:
+						animtype = 'from-by'
+						if tagname == 'animateMotion' and not fppairre.match(dv):
+							self.syntax_error("invalid by value")
+						elif tagname == 'animateColor' and not self.__convert_color(dv):
+							self.syntax_error("invalid by value")
+						elif attrtype == 'coord' and not coordre.match(dv):
+							self.syntax_error("invalid by value")
+						elif attrtype == 'int':
+							try: v = string.atoi(dv)
+							except string.atoi_error:self.syntax_error('invalid by value')
+				else:
+					if v2:			
+						animtype = 'to'
+						if tagname == 'animateMotion' and not fppairre.match(v2):
+							self.syntax_error("invalid to value")
+						elif tagname == 'animateColor' and not self.__convert_color(v2):
+							self.syntax_error("invalid to value")
+						elif attrtype == 'coord' and not coordre.match(v2):
+							self.syntax_error("invalid to value")
+						elif attrtype == 'int':
+							try: v = string.atoi(v2)
+							except string.atoi_error:self.syntax_error('invalid to value')
+					else:
+						animtype = 'by'
+						if tagname == 'animateMotion' and not fppairre.match(dv):
+							self.syntax_error("invalid by value")
+						elif tagname == 'animateColor' and not self.__convert_color(dv):
+							self.syntax_error("invalid by value")
+						elif attrtype == 'coord' and not coordre.match(dv):
+							self.syntax_error("invalid by value")
+						elif attrtype == 'int':
+							try: v = string.atoi(dv)
+							except string.atoi_error:self.syntax_error('invalid by value')
+		if animtype is None:
+			self.syntax_error('invalid values in %s element' % tagname)
 
 		# create the node
 		node = self.__context.newnode('animate')
