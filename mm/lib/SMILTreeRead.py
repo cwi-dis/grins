@@ -2208,8 +2208,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# end attribute
 				# XXX to do
 
+			# for accept only animate group containing all geometry attributes
+			if not errorMsg and not (posValues and widthValues and heightValues):
+				errorMsg = 'incompatible set of attributes'
+			
 			if errorMsg:
-				self.syntax_error('can not edit this node as an group of animate nodes:%s' % errorMsg, lineno)
+				self.syntax_error('bad group of animate nodes:%s' % errorMsg, lineno)
 			else:
 				ctx = self.__context
 				# transfert the set of animate nodes to a animpar node 
