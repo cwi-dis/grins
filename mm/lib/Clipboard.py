@@ -31,6 +31,9 @@ class GlobalClipboard:
 		self.data = None
 		return self
 
+	def __repr__(self):
+		return '<GlobalClipboard instance, type=' + `self.type` + '>'
+
 	def setclip(self, type, data):
 		self.type = type
 		self.data = data
