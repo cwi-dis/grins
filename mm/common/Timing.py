@@ -11,6 +11,8 @@ from HDTL import HD, TL
 
 real_interiortypes = ('par', 'seq', 'alt', 'excl')
 
+# Yuck, global variable.
+timingtype = 'virtual'
 
 # Calculate the nominal times for each node in the given subtree.
 # When the function is done, each node has two instance variables
@@ -24,9 +26,13 @@ real_interiortypes = ('par', 'seq', 'alt', 'excl')
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
 
-def computetimes(node):
+def computetimes(node, which):
+	global timingtype
+	timingtype = which
 	node.t1 = 0
 	del node.t1
+	
+	
 
 	prepare(node)
 	_do_times_work(node)
@@ -144,12 +150,12 @@ def prep2(node, root):
 	# XXX we only deal with a single offset syncarc; all others are ignored
 	arcs = MMAttrdefs.getattr(node, 'beginlist')
 	delay = None
-	for arc in arcs:
-		if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-			if delay is None or arc.delay < delay:
-				delay = arc.delay
-	else:
-		delay = 0.0
+	# We ask the node for its begindelay.
+	# If we're computing timing with download lags we should also get the
+	# lag (which has been computed before we're called), otherwise the lag will be
+	# zero. 
+	delay, downloadlag = node.GetDelays(timingtype)
+	delay = delay + downloadlag
 	parent = node.GetSchedParent()
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
