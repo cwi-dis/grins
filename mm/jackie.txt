@@ -6,6 +6,8 @@ Suggestions for Changes/ Queries/Defects
 implemented throughout as they only appear in the Menu titles
 currently?
 	Sjoerd: Shortcuts need to be implemented.
+	Kleanthis: Ampersand shortcuts have been added. 
+	For real shortcuts (see 18 below) after patchlevel 5 
 
 2. File Menu - This has the menu item `Charset' is this name
 sufficient for a new user who may not be familiar with the different
@@ -17,6 +19,9 @@ full name.
 	there should be a way of specifying the charset of immediate
 	text nodes.  But this is not the way.  This needs thought, and 
 	probably some system-independent code.
+	Kleanthis: The `Charset' menu item has been removed. We will thing 
+	about it. It was entered temporary to solve an urgent user's need. 
+	(patchlevel 5)
 
 3. File Menu - "Open" menu item takes the User to the dialog `Open
 Location'.  This refers to the file so should read `Open file', the
@@ -27,6 +32,8 @@ obtained by Browsing.
 	want to specify a file, you need to use URL syntax.  The
 	Browse... dialog takes care of the conversion (or at least it
 	should).
+	Kleanthis: The dialog's title has been replaced with the more 
+	generic 'Open' and a help string was added (patchlevel 5)
 
 4. File Menu - New Menu item - I find it slightly confusing that have
 to select a template before I can be given a new document.  (However
@@ -35,7 +42,10 @@ documentation:-)) Also can the user define their own Template???
 	Sjoerd: There should be a way to say, I don't want to use a
 	template, although using the empty.smil or empty.cmif template 
 	accomplishes that.
-
+	Kleanthis: I agree with Jackie. I think that templates should be 
+	opened as special files, having the same result as now, but 
+	through 'Open'. For an example see how Word opens templates.
+	 
 5. File menu - Preferences- GRiNS Preferences dialog - The `Preferred
 language' requests 2 characters.  This can be come confusing as not
 everyone uses `Gr, Fr, It, Sp' etc some people use `D, F, I, E' for
@@ -47,16 +57,27 @@ be a selectable list box of the countries.
 	there could be a more user-friendly interface to the
 	standard.  If we do anything, it should be done
 	system-independently.
+	Kleanthis: I think that confirmation is better. And, maybe a help 
+	button pointing to the html topic with the international standard used.
 
 6. View Menu - `Select syncarc' menu item I think this should read
 `Select sync arc' with a space to match the later Menu item `Display
 sync arcs'.
 	Sjoerd: I agree.
+	Kleanthis: Done (patchlevel 5)
 
 7. Layout View - Can the `X' on the top right be made bold so that it
 looks more like a close button for the View.
 	Sjoerd: I agree.  Can the layout view be made more like the
 	other views with the same type of window border?
+	Kleanthis: The X can not be made directly bold without affecting the dialog.
+	It can be done using a special (custom draw) button but later. 
+	This view is not like the other views for the same reasons that 
+	a toolbar is not like the other windows. 
+	This 'view' is a kind of a toolbar for the player view.
+	In any case I need more 'votes' against to change it.
+
+	
 
 8. Layout View - Choosing `New...' in the Layouts section gives the
 dialog titled `Name for Layout' - I think the dialog Title should read
@@ -66,11 +87,13 @@ dialog titled `Name for Layout' - I think the dialog Title should read
 	prompt should be "Layout name:".  The new channel dialog
 	should then be called "New channel" and the prompt should be
 	"Channel name:".
+	Kleanthis: Done as Sjoerd (patchlevel>=5)
 
 9. Layout View - Choosing `New..'in the Layout channels section gives
 the `New Channel' dialog.  The dialog text `Name for channel:' should
 read `New channel name:'
 	Sjoerd: See above..
+	Kleanthis: See above..
 
 10. Doing the following produces a crash ( Windows 98, 48MB RAM, Hard
 Drive 1.96 GB, Free 140MB):
@@ -94,6 +117,11 @@ This displays the Debugging window with the error message and report.
 	   window.
 	I have seen similar crashes when exiting the GRiNS editor in
 	this same way.
+	Kleanthis: I can not reproduce it on NT with patchlevel 5. 
+	Since the hyperlink view has been changed since Dec 7 it may be 
+	that the problem has been corrected. When exiting GRiNS editor on 
+	Win95 (not on NT) the system complained about an 'illegal operation'.
+	I think that the problem has been solved now. (patchlevel 5)
 
 11.Doing the following causes a crash:
 Steps to Recreate:
@@ -116,6 +144,7 @@ This displays the Debugging window with the error message and report.
 	
 	When I terminated this invocation using the X on the pop-up
 	debugging window I again got an illegal operatin crash.
+	Kleanthis: Yes it was a bug. It has been already corrected (patchlevel>=5)
 
 12. Attributes for node: Dialog
 Is it normal to be able to move all the headings on top of each other
@@ -130,6 +159,7 @@ Title text.  That way the user can set it up to view all of the
 explanations which could be quite long and useful, but no be able to
 reduce the Headings so that you can't see them.
 	Sjoerd: I agree.
+	Kleanthis: I agree but it belongs to a second order of corrections.
 
 13. Tools Menu - Anchors for node: dialog - While there is nothing in
 this dialog the Buttons `Edit...' and `Export...' are active.  However,
@@ -147,6 +177,8 @@ exportation.)
 	As to the other Export problem, it looks like clicking the
 	button doesn't invoke the callback.  In any case, the dialog
 	asking for the external name for the anchor isn't popped up.
+	Kleanthis: It was again an 'InputDialog' problem that has been
+	corrected. (patchlevel>=5)
 
 14. Doing the following caused a Crash
 Steps to recreate:
@@ -165,12 +197,14 @@ The following message is displayed in a `GRiNS' titled dialog
 Debugging Window.
 	Sjoerd: The windowinterface.multchoice function hasn't been
 	implemented.
+	Kleanthis: Bug corrected. (patchlevel>=5)
 
 15. Choosing `Edit contents...' from the Tools menu gives a Dialog
 Titled `Choose' I think there's some text missing it should read
 `Choose Editor'.  The dropdown list box in this dialog has `Cancel' as
 an item I don't think it should be there.
 	Sjoerd: I agree.
+	Kleanthis: Done. (patchlevel>=5)
 
 16. Error message about inserting new channel while playing a document
 has `OK' and `Cancel' buttons choosing `Cancel' stopped playing and
@@ -182,6 +216,7 @@ title for a Dialog maybe it's better to use `GRiNS Editor'
 	to create a new channel.  It seems the
 	windowinterface.showquestion function doesn't function
 	properly.
+	Kleanthis: Bug corrected. (patchlevel>=5)
 
 17. Doing the following causes a Crash
 Steps to Recreate:
@@ -196,15 +231,18 @@ f. Then click on the item now highlighted in yellow.
 Results
 The Debugging Window appears with the message and report.
 	Sjoerd: self.cview seems to be None in ArcInfoDialog.__init__.
+	Kleanthis: Bug corrected. (patchlevel>=5)
 
 18. Shortcuts
 Main Menu shortcuts should be given for Main features Open, Close,
 Exit, Cut, Copy, Paste as well as the Views together with any other
 Features that are considered important.
+	Kleanthis: I agree but after patchlevel 5
 
 19. General - all dialog boxes should have an ampersand shortcut in
 them.  If this extends to the OK and Cancel buttons then it should be
 followed consistently through out the application.
+	Kleanthis: I agree but after patchlevel 5
 
 20. When two copies of the Editor are running and an item is copied to
 the clipboard in one it is not then available for Pasting into the
@@ -220,11 +258,15 @@ encountered yet!!
 	documents may be different.
 	An "intelligent" Paste might be possible.  This paste would
 	probably have to remove all channel attributes in all nodes.
+	Kleanthis: I think that the Copy/Paste facility must be available 
+	between documents in later versions. 
+
 
 21. Tools Menu - The menu item `Create syncarc from focus...' should
 read `Create sync arc from focus...' to maintain consistency with the
 other references in the View menu.
 	Sjoerd: I agree.
+	Kleanthis: Done. (patchlevel>=5)
 
 22. Using a new document with Undefined nodes pasted into the Template
 `empty.smil' in the Hierarchy view.  Move to the Timeline view and then
@@ -235,6 +277,8 @@ Content; information which is displayed.  CRASH: Clicking on the `Open'
 button at this stage causes the Debugging windows to be displayed and
 the application crashes.
 	Sjoerd: I haven't been able to reproduce this.
+	Kleanthis: Neither me, using patchlevel 5 but there was such a type 
+	of bug. (It was actually a Win32-MFC layout bug)
 
 23. Doing the following causes a crash
 Steps to Recreate:
@@ -255,6 +299,8 @@ This produces the Debugging window with it's message and report.
 	point.
 	Also, the focus on the anchor in the list of anchors seems to
 	be lost.  In any case the visual cue is lost.
+	Kleanthis: There was a visual hint that these entries were invalid (brackets).
+	Now it is also not possible to select them (patchlevel>=5)
 
 24. Doing the following causes a crash
 Steps to recreate:
@@ -272,6 +318,9 @@ Results
 This causes the Debugging windws to be displayed with it's message and report.
 	Sjoerd: Looks like the same problem as nr. 10 above.  Seems to 
 	be fixed in the Dec 7 version.
+	Kleanthis: I can not reproduce it on NT with patchlevel 5. 
+	Since the hyperlink view has been changed since Dec 7 it may be 
+	that the problem has been corrected. 
 
 25. This is only a comment - It seems strange that the user is unable
 to Edit the `Source' document in the Editor.  Although the User can use
@@ -282,13 +331,21 @@ dragging and dropping the .smil files onto a Text Editor, I use Text
 documents all the time and don't have this facility setup on my PC as
 I prefer to choose the Editor that I wish to use and this can only be
 achieved if the Associated Editor is left undefined.
+	Kleanthis: I think that the user must be able to Edit the `Source' 
+	in later versions. I understand that this is not easy since in order to 
+	keep the other views in sync the application must be in a kind of 
+	'Open document' loop while the user edits the documen.
+	(I do not understand Jackie's comments about the Operating System editor.
+	The source is already displayed in an editor but with its read-only attribute set)
 
 26. Another suggestion - It would be nice to see some right mouse
 button facilities even if it were for basics eg.  Cut, Copy, Paste and
 possibly the views.  I have become used to using the right mouse button
 in Windows for Copying and Pasting.
 	Sjoerd: This is implemented in the Dec 7 version.
-
+	Kleanthis: Yes, but the popup menu must contain the more often used
+	entries, something that I have not done yet (patchlevel 5)
+	 
 27. WHY??? In the Editor the user can open more than one document but
 must `close' a document to be able to reach the previously opened
 one.  WOuld it not be better to allow the user to Select the Document
@@ -298,15 +355,27 @@ Hierarchy (stroll6sw) .  This would also help clarify/rectify the
 quirkyness of the copying and pasting to the Clipboard.
 	Sjoerd: At least in the Dec 7 version you can edit (and look
 	at) two or more documents at the same time.
+	Kleanthis: I am not sure that I understand the problem. Even 
+	before patclevel 1 (testing patchlevel is 3) the editor was able 
+	to open multiple documents. If this is the problem Jackie refers 
+	to then it may be that a debugging line was forgotten in the code 
+	just in this patchlevel. I use a continously evolving version and 
+	so I can not be sure about this.
 
 Information Required
 
 Minimum Hardware Specification for running Editor, possible the same
 as Premiere or PhotoShop but the amount of memory required may differ.
+	Kleanthis: For Win95/Win98 a Pentium CPU at 120MHz with 32MB RAM
+	and for NT4/NT5(Win2000) a Pentium CPU at 120MHz with 64MB RAM
 
 What other applications are likely to be running at the same time as
 the Editor it maybe useful to test the Editor with some of these
 running in the background.
+	Kleanthis: Not very important since it is just a matter of 
+	what memory the other applications consume and this depends 
+	on the document been open. If RAM is exausted then the disk 
+	(virtual memory) will be used.
 
 Crash encountered on Sunday
 
