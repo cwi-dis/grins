@@ -51,6 +51,7 @@ class Channel:
 		self.showing = 0
 		self.autoanchor = None
 		self.haspauseanchor = 0
+		self.node = None
 		return self
 
 	def show(self):
@@ -133,6 +134,17 @@ class Channel:
 		self.arm(node)
 		self.player.setarmedmode(node, ARM_ARMED)
 
+	def clear(self):
+		# Sanity checks:
+		if self.qid:
+			print 'Channel: clearnode with pending event'
+		self.node = None
+		
+	def clearnode(self, node):
+		print 'Clearnode: ', node, self.node
+		if node == self.node:
+			self.clear()
+
 	# Start playing a node.
 
 	def play(self, (node, callback, arg)):
@@ -145,14 +157,13 @@ class Channel:
 
 	def done(self, dummy):
 		self.qid = None
+		if self.haspauseanchor:
+			return
 		callback, arg = self.cb
-		if not self.haspauseanchor:
-			callback(arg)
+		callback(arg)
 		if self.autoanchor:
-			self.player.anchorfired(self.node, [self.autoanchor])
-		self.haspauseanchor = None
+			rv = self.player.anchorfired(self.node, [self.autoanchor])
 		self.autoanchor = None
-		self.node = None
 
 	# Setting the playback rate to 0.0 freezes the channel.
 	# Ignored by null channels -- the timer queue already
