@@ -308,7 +308,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		#	i.moveto((x,42,69,13)) # I just think that those numbers are cool. Life. Love. Death.
 
 		nwidth = self.mainnode.get_width(self.timescale)
-		print "DEBUG: nwidth is: ", nwidth
+		#print "DEBUG: nwidth is: ", nwidth
 		self.mainnode.moveto((NODESTART, 2, NODESTART+nwidth, t+self.channelHeight+2))
 		self.mainnode.recalc()
 
@@ -347,7 +347,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		if isinstance(w_channel, ChannelWidget):
 			w_channel.select()
 			self.mother.select_channel(w_channel)
-			self.editmgr.setglobalfocus('MMChannel', w_channel.get_channel())
+#			self.editmgr.setglobalfocus('MMChannel', w_channel.get_channel())
 
 	def select_node(self, mmwidget):
 		# TODO: also structure nodes.
@@ -356,7 +356,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		if isinstance(mmwidget, MMWidget) or isinstance(mmwidget, MultiMMWidget):
 			self.mother.select_node(mmwidget)
 			mmwidget.select()
-			self.editmgr.setglobalfocus('MMNode', mmwidget.node)
+#			self.editmgr.setglobalfocus('MMNode', mmwidget.node)
 			# Also, set the node's channel.
 
 	def dragging_node(self, tgtcoords, srccoords, mode):
@@ -740,7 +740,7 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 
 	def get_width(self, timescale):
 		times = self.node.GetTimes()
-		print "DEBUG: Node times are: ", times
+		#print "DEBUG: Node times are: ", times
 		return (times[1] - times[0])*timescale
 
 
@@ -784,12 +784,12 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 			f = (end_time-start_time) / (endfill_time - start_time)
 		except ZeroDivisionError:
 			f = 0
-		print "DEBUG: Let me introduce myself: ", self
-		print "DEBUG: Times are: ", self.node.GetTimes()
-		print "DEBUG: f is: ", f
+		#print "DEBUG: Let me introduce myself: ", self
+		#print "DEBUG: Times are: ", self.node.GetTimes()
+		#print "DEBUG: f is: ", f
 		# and
 		middle = f * (r-l) + l
-		print "DEBUG: l,m,r: ", l,middle, r
+		#print "DEBUG: l,m,r: ", l,middle, r
 		# so:
 		#middle = (end_time / (endfill_time - start_time)) * (r-l) + l
 		self.w_fbox.moveto((l,t,middle,b))
