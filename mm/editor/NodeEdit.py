@@ -65,15 +65,20 @@ def _merge(f, filename):	# Merge editors file into data structures
 		elif not channeleditors[fields[0]].has_key(fields[1]):
 			channeleditors[fields[0]][fields[1]] = fields[2]
 
-def _showmenu(menu):	# Show (modal) editor choice dialog
+def _do_edit(cmd, filename):
+	import os
+	cmd = 'file=%s; %s &' % (filename, cmd)
+	void = os.system(cmd)
+
+def _showmenu(menu, filename):	# Show (modal) editor choice dialog
 	keys = menu.keys()
 	keys.sort()
-	keys.append('Cancel')
-	i = windowinterface.multchoice('Choose an editor:', keys, len(keys)-1)
-	if 0 <= i < len(keys)-1:
-		return menu[keys[i]]
-	else:
-		return None
+	list = []
+	for key in keys:
+		list.append(key, (_do_edit, (menu[key], filename)))
+	list.append(None)
+	list.append('Cancel', None)
+	w = windowinterface.Dialog('Choose', 'Choose an editor:', 1, 0, list)
 
 # InitEditors - Initialize the module.
 def InitEditors():
@@ -115,14 +120,9 @@ def showeditor(node):
 			raise _LocalError
 		editor = channeleditors[chtype]
 		if type(editor) == type(''):
-			cmd = editor
+			_do_edit(editor, filename)
 		else:
-			cmd = _showmenu(editor)
-			if cmd == None:
-				print 'NodeEdit.showeditor: no editor chosen'
-				raise _LocalError
-		cmd = 'file='+filename+' ; '+cmd+' &'
-		void = os.system(cmd)
+			cmd = _showmenu(editor, filename)
 	except _LocalError:
 		windowinterface.beep()
 
