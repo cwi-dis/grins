@@ -42,7 +42,6 @@ class RealPixChannel(RealWindowChannel):
 		RealWindowChannel.stoparm(self)
 		
 	def optional_parallel_arm(self, node):
-		return
 		self.__parallel_channel = None
 		self.__parallel_url = None
 		captionchannel = node.GetAttrDef('captionchannel', None)
@@ -52,22 +51,23 @@ class RealPixChannel(RealWindowChannel):
 		if not ch:
 			self.errormsg(node, 'Caption channel "%s" does not exist'%captionchannel)
 			return
+		if not hasattr(ch, 'parallel_arm'):
+			self.errormsg(node, 'Channel "%s" is incorrect type for captions'%captionchannel)
+			return
 		self.__parallel_channel = ch
-		rtfilename = tempfile.mktemp()
+		rtfilename = tempfile.mktemp()+'.rt'
 		import realsupport
 		realsupport.writeRT(rtfilename, node.slideshow.rp, node)
 		self.__parallel_url = MMurl.pathname2url(rtfilename)
 		self.__parallel_channel.parallel_arm(node, self.__parallel_url)
 		
 	def optional_parallel_play(self, node):
-		return
 		if not self.__parallel_channel:
 			return
 		print 'parallel play', node
 		self.__parallel_channel.parallel_play(node, self.__parallel_url)
 
 	def optional_parallel_stopplay(self, node):
-		return
 		if not self.__parallel_channel:
 			return
 		print 'parallel stopplay', node
@@ -81,7 +81,6 @@ class RealPixChannel(RealWindowChannel):
 			self.__parallel_url = None
 		
 	def optional_parallel_stoparm(self):
-		return
 		if not self.__parallel_channel:
 			return
 		print 'parallel stoparm'
