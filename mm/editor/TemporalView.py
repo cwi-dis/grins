@@ -159,10 +159,12 @@ class TemporalView(TemporalViewDialog):
 		print "Dropping a file!"
 
 	def ev_dragnode(self, dummy, window, event, params):
-		x,y,filename = params[0:3]
+		x,y,mode, xf, yf= params[0:5]
 		x,y = self.rel2abs((x,y))
-		self.scene.dragging_node((x,y),filename)
-		self.draw()
+		xf, yf = self.rel2abs((xf, yf))
+		return self.scene.dragging_node((x,y), (xf, yf), mode)
+		
 
 	def ev_dropnode(self, dummy, window, event, params):
 		print "Dropped a node!"
+		return 0
