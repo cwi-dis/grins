@@ -10,6 +10,7 @@ from MMTypes import *
 from AnchorDefs import *		# ATYPE_*
 from Hlinks import DIR_1TO2, TYPE_JUMP
 import string
+import os
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -742,6 +743,8 @@ class PreferenceWrapper(Wrapper):
 		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
 		if settings.get('lightweight'):
 			attrs.remove('cmif')
+			attrs.remove('html_control')
+		elif os.name in ('posix', 'mac'):
 			attrs.remove('html_control')
 		attrs.sort()
 		return attrs
