@@ -58,6 +58,7 @@ class Main(MainDialog):
 		self._tracing = 0
 		self.tops = []
 		self._mm_callbacks = {}
+		self.last_location = ''
 		self._untitled_counter = 1
 		try:
 			import mm, posix, fcntl, FCNTL
@@ -132,6 +133,7 @@ class Main(MainDialog):
 
 	def openURL_callback(self, url):
 		import windowinterface
+		self.last_location = url
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
