@@ -70,7 +70,7 @@ class glwindow:
 		# 'val' is the ASCII value of the character.
 		pass
 	#
-	def mouse(self, (dev, val)):
+	def mouse(self, dev, val):
 		# MOUSE[123] event.
 		# 'dev' is MOUSE[123].  'val' is 1 for down, 0 for up.
 		pass

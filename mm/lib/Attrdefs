@@ -29,8 +29,8 @@
 (anchorid (int) 1 'Next anchor UID' hidden
 	'Next anchor UID to use' raw)
 
-(anchorlist (list (enclosed (tuple (int) (int) (enclosed (list (int)))))) () 'Anchors' hidden
-	'List of anchors on this node' raw)
+(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))))))
+	() 'Anchors' hidden 'List of anchors on this node' raw)
 
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
@@ -105,8 +105,8 @@
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)
 
-(hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (int)))
-                                   (enclosed (tuple (string) (int)))
+(hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
+                                   (enclosed (tuple (string) (any)))
 				   (int) (int)))) ()
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
