@@ -2,9 +2,9 @@
 #include <fcntl.h>
 #include <stropts.h>
 #include <poll.h>
-#include "thread.h"
 #include "allobjects.h"
 #include "modsupport.h"
+#include "thread.h"
 #include "mmmodule.h"
 #include <sys/time.h>
 #include <errno.h>
