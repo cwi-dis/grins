@@ -1,0 +1,10 @@
+# Glossary of GRiNS-based tech terms. 
+# 26 Sept 2000, updated often. MJVDG.
+
+Channel - 
+
+Element - 
+
+Node - 
+
+Sequence - Ordered collection of elements
