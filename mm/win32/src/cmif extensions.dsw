@@ -120,6 +120,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "producer"=..\..\mmpython\producer\producer.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "python"=..\..\..\python\PCbuild\python.dsp - Package Owner=<4>
 
 Package=<5>
