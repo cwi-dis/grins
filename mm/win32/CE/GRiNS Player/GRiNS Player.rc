@@ -63,9 +63,11 @@ END
 
 IDM_MENU SHMENUBAR MOVEABLE PURE 
 BEGIN
-    IDM_MENU, 1,
+    IDM_MENU, 2,
     I_IMAGENONE, IDM_MAIN_COMMAND1, TBSTATE_ENABLED, 
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_HELP, 0, 0,
+    I_IMAGENONE, IDM_MAIN_COMMAND2, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MAIN_COMMAND2, 0, 1,
 END
 
 
@@ -79,6 +81,12 @@ BEGIN
     POPUP "Tools"
     BEGIN
         MENUITEM "About",                       IDM_HELP_ABOUT
+    END
+    POPUP "Play"
+    BEGIN
+        MENUITEM "Play",                        IDM_PLAY
+        MENUITEM "Pause",                       IDM_PAUSE
+        MENUITEM "Stop",                        IDM_STOP
     END
 END
 
@@ -98,6 +106,15 @@ BEGIN
     LTEXT           "GRiNS Player Version 1.0",IDC_STATIC,40,10,87,8,
                     SS_NOPREFIX
     LTEXT           "Copyright (C) 2001 Oratrix",IDC_STATIC,40,25,93,8
+END
+
+IDD_PYSTDOUT DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GRiNS Player Console"
+FONT 8, "System"
+BEGIN
+    EDITTEXT        IDC_STDOUT,7,7,172,81,ES_MULTILINE | WS_VSCROLL | 
+                    WS_HSCROLL
 END
 
 
@@ -128,6 +145,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 50
     END
+
+    IDD_PYSTDOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -152,6 +177,12 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_COMMAND1            "Done "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_MENUITEM40005   "Play"
+    IDS_MAIN_COMMAND2       "Play"
 END
 
 #endif    // English (U.S.) resources
