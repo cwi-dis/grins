@@ -495,12 +495,12 @@ class HierarchyView(HierarchyViewDialog):
 		
 		self.refresh_scene_graph()
 		self.need_resize = 1
-		focustype, focusobject = self.editmgr.getglobalfocus()
+		focusobject = self.editmgr.getglobalfocus()
 		self.focus_lock = 0
-		if focustype is None and focusobject is None:
-			self.editmgr.setglobalfocus('multinode', [self.root])
+		if not focusobject:
+			self.editmgr.setglobalfocus([self.root])
 		else:
-			self.globalfocuschanged(focustype, focusobject)
+			self.globalfocuschanged(focusobject)
 		if self.need_redraw:
 			self.draw()
 
@@ -692,36 +692,18 @@ class HierarchyView(HierarchyViewDialog):
 	# Outside interface (inherited from ViewDialog) #
 	#################################################
 
-	def globalsetfocus(self, node):
-		if not self.is_showing():
-			return
-		if not self.root.IsAncestorOf(node):
-			raise RuntimeError, 'bad node passed to globalsetfocus'
-		self.select_node(node, 1)
-
-	def globalfocuschanged(self, focustype, focusobject, redraw = 1):
+	def globalfocuschanged(self, focusobject, redraw = 1):
 		# for now, catch only multinode focus ( a list of selected nodes)
 		if self.focus_lock:
 			return
 
 		if not focusobject:
 			return # shouldn't really happen. Fail here??
-		if focustype == 'multinode' and type(focusobject)==type([]):
-			self.select_nodes(focusobject, external=1)
-		elif focustype == 'MMNode':
-			node = self.get_selected_node()
-			if node is focusobject:
-				return
-			self.select_node(focusobject, external=1)
-		elif focustype == "List":
-			# Then the focus came from the Layout view and it's a combined list of nodes and channels.
-			select_us = []
-			for (ntype, nnode) in focusobject:
-				if ntype=='MMNode' and isinstance(nnode, MMNode.MMNode):
-					select_us.append(nnode)
-			self.select_nodes(select_us, external=1)
-		else:
-			print "DEBUG: the hierarchyview recieved a global focus change of unrecognised type ", focustype
+		select_us = []
+		for nnode in focusobject:
+			if nnode.getClassName() == 'MMNode':
+				select_us.append(nnode)
+		self.select_nodes(select_us, external=1)
 		if redraw:
 			self.draw()
 
@@ -890,9 +872,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Call this method to:
 		# 1. determine if there is a single selected node (for positional operations e.g. paste)
 		# 2. get that node.
-		if len(self.multi_selected_widgets) > 1:
-			return None
-		elif len(self.multi_selected_widgets) < 1:
+		if len(self.multi_selected_widgets) != 1:
 			return None
 		else:
 			widget = self.multi_selected_widgets[0]
@@ -939,12 +919,11 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Delete the selected node.
 	def migrate_focus(self, nodes):
-		# fix the structure view selection nodes is a list of
-		# nodes that are going to be deleted we select the
-		# common ancestor of these nodes, and if that is also
-		# to be deleted, we select a node near by.
-		# this also starts a transaction
-		# returns true if successful and deletion can proceed
+		# Fix the structure view selection.  Nodes is a list
+		# of nodes that are going to be deleted.  We select
+		# the common ancestor of these nodes, and if that is
+		# also to be deleted, we select a node near by.
+		# Returns true if successful and deletion can proceed.
 
 		# In english: move the focus to a safe place before deleting
 		# or copying a selection.
@@ -982,8 +961,9 @@ class HierarchyView(HierarchyViewDialog):
 			assert len(nodes) == 0
 			return 0
 
-		self.migrate_focus(nodes)	# migrate the focus to a safe place.
-		
+		if not self.migrate_focus(nodes):	# migrate the focus to a safe place.
+			return 0
+
 		if not self.editmgr.transaction():
 			return 0
 
@@ -1093,7 +1073,8 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return 0
 
-		self.migrate_focus(nodes)	# move the focus before we delete it.
+		if self.migrate_focus(nodes):	# move the focus before we delete it.
+			return 0
 
 		if not self.editmgr.transaction():
 			return 0
@@ -1232,12 +1213,12 @@ class HierarchyView(HierarchyViewDialog):
 	def commit(self, type):
 		self.refresh_scene_graph()
 		
-		focustype, focusobject = self.editmgr.getglobalfocus()
-		if focustype is None and focusobject is None:
+		focusobject = self.editmgr.getglobalfocus()
+		if not focusobject:
 			# Shouldn't the editmgr do this?
-			self.editmgr.setglobalfocus('MMNode', self.root)
+			self.editmgr.setglobalfocus([self.root])
 		else:
-			self.globalfocuschanged(focustype, focusobject, redraw = 0)
+			self.globalfocuschanged(focusobject, redraw = 0)
 		#if type == 'STRUCTURE_CHANGED':	# for example, something was deleted or added
 		#	self.need_resize = 1
 		#elif type == 'ATTRS_CHANGED': # for example, a new event was added.
@@ -1438,7 +1419,7 @@ class HierarchyView(HierarchyViewDialog):
 		em.setnodeattr(newnode, 'file', url)
 		em.setnodeattr(newnode, 'name', name)
 		
-		em.setglobalfocus('node', newnode)
+		em.setglobalfocus([newnode])
 		expandnode(newnode)
 
 		self.aftersetfocus()
@@ -1512,10 +1493,10 @@ class HierarchyView(HierarchyViewDialog):
 			# Add (using editmgr) a child to the node with focus
 			# Index is the index in the list of children
 			# Node is the new node
-			em.addnode(self.get_selected_widget().get_node(), index, node)
+			em.addnode(self.get_selected_node(), index, node)
 		else:
 			children = parent.GetChildren()
-			i = children.index(self.get_selected_widget().get_node())
+			i = children.index(self.get_selected_node())
 			if where > 0:	# Insert after
 				i = i+1
 				em.addnode(parent, i, node)
@@ -1525,7 +1506,7 @@ class HierarchyView(HierarchyViewDialog):
 			else:		# Insert before
 				em.addnode(parent, i, node)
 
-		em.setglobalfocus('MMNode', node)
+		em.setglobalfocus([node])
 		self.aftersetfocus()
 		if end_transaction:
 			em.commit()
@@ -1747,7 +1728,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not external:
 			# If this method is called, there is only _one_ widget selected.
 			self.focus_lock = 1
-			self.editmgr.setglobalfocus('MMNode', self.get_selected_node())
+			self.editmgr.setglobalfocus([self.get_selected_node()])
 			self.focus_lock = 0
 
 	def also_select_widget(self, widget, external=0, scroll=1):
@@ -1769,24 +1750,23 @@ class HierarchyView(HierarchyViewDialog):
 			# Toggle multi-selective widgets.
 			self.multi_selected_widgets.remove(widget)
 			self.old_multi_selected_widgets.append(widget)
+			if not external:
+				self.focus_lock = 1
+				self.editmgr.delglobalfocus([widget.get_node()])
+				self.focus_lock = 0
 		elif isinstance(widget, StructureWidgets.MMNodeWidget):
 			self.multi_selected_widgets.append(widget)
 			widget.select()
+			if not external:
+				self.focus_lock = 1
+				self.editmgr.addglobalfocus([widget.get_node()])
+				self.focus_lock = 0
 
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
 		self.aftersetfocus()	# XXX
 		self.need_redraw_selection = 1
-
-		if not external:
-			# If this method is called, there is only _one_ widget selected.
-			select_us = []
-			for n in self.get_selected_widgets():
-				select_us.append( ('MMNode', n.get_node()) )
-			self.focus_lock = 1
-			self.editmgr.setglobalfocus('List', select_us)
-			self.focus_lock = 0
 
 	def unselect_all(self):
 		# XXX UNTESTED
@@ -1807,12 +1787,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def select_node(self, node, external = 0, scroll = 1):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
-		assert isinstance(node, MMNode.MMNode)
-		if not node:
-			self.select_widget(None, external, scroll)
-		elif node.views.has_key('struct_view'):
-			widget = node.views['struct_view']
-			self.select_widget(widget, external, scroll)
+		self.select_nodes([node], external = external, scroll = scroll)
 
 	def select_nodes(self, nodelist, external = 0, scroll = 1):
 		# Select a list of nodes.
@@ -1905,9 +1880,9 @@ class HierarchyView(HierarchyViewDialog):
 			which = 'focus'
 			node = self.root
 		elif which == 'focus':
-			node = self.get_selected_widget().node
+			node = self.get_selected_node()
 		else:
-			node = self.get_selected_widget().node
+			node = self.get_selected_node()
 		if node.showtime == which:
 			self.clear_showtime(node)
 		else:

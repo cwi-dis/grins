@@ -26,16 +26,15 @@ NEW_REGION = 'New region...'
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
-def getwrapperclass(selvalue):
-	if not selvalue:
+def getwrapperclass(selvaluelist):
+	if len(selvaluelist) != 1:
 		return None
-	if type(selvalue) in (type(()), type([])):
-		print 'Multinode not yet supported'
-		return None
+	selvalue = selvaluelist[0]
 	if not hasattr(selvalue, 'getClassName'):
 		print 'Focus items should have getClassName() method'
 		return None
-	if selvalue.getClassName() == 'MMNode':
+	className = selvalue.getClassName()
+	if className == 'MMNode':
 		if selvalue.GetChannelType() == 'animate' :
 			wrapperclass = AnimationWrapper
 		elif selvalue.GetChannelType() == 'prefetch' :
@@ -46,7 +45,7 @@ def getwrapperclass(selvalue):
 			selvalue.GetChannelType() == 'RealPix' and \
 			not hasattr(selvalue, 'slideshow'):
 			return None
-	elif selvalue.getClassName() == 'MMChannel':
+	elif className == 'MMChannel':
 		wrapperclass = ChannelWrapper
 		
 	return wrapperclass
@@ -1530,7 +1529,7 @@ class AttrEditor(AttrEditorDialog):
 		self.follow_selection = not self.follow_selection
 		self.fixbuttonstate()
 		if self.wrapper != None:
-			type, object = self.wrapper.editmgr.getglobalfocus()
+			object = self.wrapper.editmgr.getglobalfocus()
 			self.followselection(object)
 		
 	def cancel_callback(self):
@@ -1703,7 +1702,7 @@ class AttrEditor(AttrEditorDialog):
 		else:
 			self.redisplay()
 			
-	def globalfocuschanged(self, focustype, focusobject):
+	def globalfocuschanged(self, focusobject):
 		if not self.follow_selection:
 			return
 		if self.pagechange_allowed():
@@ -1712,19 +1711,20 @@ class AttrEditor(AttrEditorDialog):
 			# XXX should restore the focus. But can't be done here
 			pass
 			
-	def followselection(self, focusobject):
+	def followselection(self, focuslist):
 		newwrapper = None
 		# get the right wrapper according to the selection
 		# if the wrapper doesn't exist, do nothing
-		wrapperclass = getwrapperclass(focusobject)
-		if wrapperclass != None:
-			if not isinstance(self.wrapper, wrapperclass):
-				# the wrapper has to change
-				toplevel = self.wrapper.toplevel
-				newwrapper = wrapperclass(toplevel, focusobject)
-		else:
+		wrapperclass = getwrapperclass(focuslist)
+		if wrapperclass is None:
 			# no wrapper available for this selection type
 			return
+		# we know here that there is exactly one element in focuslist
+		focusobject = focuslist[0]
+		if not isinstance(self.wrapper, wrapperclass):
+			# the wrapper has to change
+			toplevel = self.wrapper.toplevel
+			newwrapper = wrapperclass(toplevel, focusobject)
 
 		# update attreditor. 
 		selection = self.wrapper.getselection()

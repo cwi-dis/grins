@@ -1429,7 +1429,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			
 	def changeRoot(self, root, text=None):
 		# raz the focus
-		self.editmgr.setglobalfocus(None, None)
+		self.editmgr.setglobalfocus([])
 
 		# destroy the views
 		showing = []

@@ -67,8 +67,8 @@ class EditMgr(Clipboard.Clipboard):
 		self.future = []
 		self.registry = []
 		self.focus_registry = []
-		self.focus = None, None
-		self.save_focus = None
+		self.focus = []		# the focus is always a list of items
+		self.save_focus = []
 		self.focus_busy = 0
 
 		self.playerstate_registry = []
@@ -215,11 +215,11 @@ class EditMgr(Clipboard.Clipboard):
 		self.structure_changed = 0
 		self.attrs_changed = 0
 		if self.save_focus != self.focus:
-			focustype, focusobject = self.focus
+			focuslist = self.focus
 			for client in self.focus_registry:
-				client.globalfocuschanged(focustype, focusobject)
-		self.save_focus = None
-		self.next_focus = None, None
+				client.globalfocuschanged(focuslist)
+		self.save_focus = []
+		self.next_focus = []
 			
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
@@ -230,7 +230,7 @@ class EditMgr(Clipboard.Clipboard):
 			x.rollback()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
-		self.next_focus = None, None
+		self.next_focus = []
 
 	#
 	# player state interface
@@ -251,24 +251,54 @@ class EditMgr(Clipboard.Clipboard):
 	#
 	# Focus interface
 	#
-	def setglobalfocus(self, focustype, focusobject):
-		# Jack: Thank you for this elaborately documented code. We have absolutely
-		# no idea what type of object "focustype" is.
-
-		# Pas op all functions calling this: The focusobject may be None..
-
+	def setglobalfocus(self, focuslist):
+		# set the global focus to the given list of items
 		# Quick return if this product does not have a shared focus
 		if not features.UNIFIED_FOCUS in features.feature_set:
 			return
-		if (focustype, focusobject) == self.focus:
+		if focuslist == self.focus:
 			return
 		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
 		self.focus_busy = 1
-		self.focus = (focustype, focusobject)
+		self.focus = focuslist
 		if not self.busy:
 			# delay calling this until commit
 			for client in self.focus_registry:
-				client.globalfocuschanged(focustype, focusobject)
+				client.globalfocuschanged(focuslist)
+		self.focus_busy = 0
+
+	def addglobalfocus(self, list):
+		# add items in list to global focus
+		if not features.UNIFIED_FOCUS in features.feature_set:
+			return
+		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
+		self.focus_busy = 1
+		changed = 0
+		for item in list:
+			if item not in self.focus:
+				self.focus.append(item)
+				changed = 1
+		if not self.busy:
+			# delay calling this until commit
+			for client in self.focus_registry:
+				client.globalfocuschanged(self.focus)
+		self.focus_busy = 0
+
+	def delglobalfocus(self, list):
+		# remove items in list from global focus
+		if not features.UNIFIED_FOCUS in features.feature_set:
+			return
+		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
+		self.focus_busy = 1
+		changed = 0
+		for item in list:
+			if item in self.cocus:
+				self.focus.remove(item)
+				changed = 1
+		if not self.busy:
+			# delay calling this until commit
+			for client in self.focus_registry:
+				client.globalfocuschanged(self.focus)
 		self.focus_busy = 0
 
 	def getglobalfocus(self):
@@ -307,11 +337,11 @@ class EditMgr(Clipboard.Clipboard):
 		if not self.__start_transaction(None, 1):
 			return 0
 		del self.history[-1]
-		self.next_focus = None, None
+		self.next_focus = []
 		self.__do_undo(step)
-		nextfocustype, nextfocusvalue = self.next_focus
+		nextfocusvalue = self.next_focus
 		self.commit()
-		self.setglobalfocus(nextfocustype, nextfocusvalue)
+		self.setglobalfocus(nextfocusvalue)
 		return 1
 
 	def redo(self):
@@ -322,11 +352,11 @@ class EditMgr(Clipboard.Clipboard):
 		if not self.__start_transaction(None):
 			return 0
 		del self.future[-1]
-		self.next_focus = None, None
+		self.next_focus = []
 		self.__do_undo(step)
-		nextfocustype, nextfocusvalue = self.next_focus
+		nextfocusvalue = self.next_focus
 		self.commit()
-		self.setglobalfocus(nextfocustype, nextfocusvalue)
+		self.setglobalfocus(nextfocusvalue)
 		return 1
 
 	# XXX The undo/redo business is unfinished.
@@ -351,7 +381,16 @@ class EditMgr(Clipboard.Clipboard):
 		i = parent.GetChildren().index(node)
 		self.addstep('delnode', parent, i, node)
 		node.Extract()
-		self.next_focus = 'node', parent
+		sibs = parent.GetChildren()
+		if i < len(sibs):
+			# select next sibling
+			self.next_focus = [sibs[i]]
+		elif len(sibs) > 0:
+			# select previous sibling
+			self.next_focus = [sibs[-1]]
+		else:
+			# select parent
+			self.next_focus = [parent]
 
 	def undo_delnode(self, parent, i, node):
 		self.addnode(parent, i, node)
@@ -364,7 +403,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.structure_changed = 1
 		self.addstep('addnode', node)
 		node.AddToTree(parent, i)
-		self.next_focus = 'node', node
+		self.next_focus = [node]
 
 	def undo_addnode(self, node):
 		self.delnode(node)
@@ -377,7 +416,7 @@ class EditMgr(Clipboard.Clipboard):
 		oldtype = node.GetType()
 		self.addstep('setnodetype', node, oldtype)
 		node.SetType(type)
-		self.next_focus = 'node', node
+		self.next_focus = [node]
 
 	def undo_setnodetype(self, node, oldtype):
 		self.setnodetype(node, oldtype)
@@ -393,7 +432,7 @@ class EditMgr(Clipboard.Clipboard):
 			node.SetAttr(name, value)
 		else:
 			node.DelAttr(name)
-		self.next_focus = 'node', node
+		self.next_focus = [node]
 
 	def undo_setnodeattr(self, node, name, oldvalue):
 		self.setnodeattr(node, name, oldvalue)
@@ -406,7 +445,7 @@ class EditMgr(Clipboard.Clipboard):
 		# is stored in MMNode.values[]
 		self.addstep('setnodevalues', node, node.GetValues())
 		node.SetValues(values)
-		self.next_focus = 'node', node
+		self.next_focus = [node]
 
 	def undo_setnodevalues(self, node, oldvalues):
 		# XXX Shouldn't this be (self, node, oldvalues)?? 
@@ -429,7 +468,7 @@ class EditMgr(Clipboard.Clipboard):
 			list.append(arc)
 		node.SetAttr(attr, list)
 		self.addstep('addsyncarc', node, attr, arc, pos)
-		self.next_focus = 'node', node
+		self.next_focus = [node]
 
 	def undo_addsyncarc(self, node, attr, arc, pos):
 		self.delsyncarc(node, attr, arc)
@@ -451,7 +490,7 @@ class EditMgr(Clipboard.Clipboard):
 		else:
 			node.DelAttr(attr)
 		self.addstep('delsyncarc', node, attr, arc, i)
-		self.next_focus = 'node', node
+		self.next_focus = [node]
 
 	def undo_delsyncarc(self, node, attr, arc, i):
 		self.addsyncarc(node, attr, arc, i)
@@ -476,7 +515,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.attrs_changed = 1
 		self.addstep('addlink', link)
 		self.context.hyperlinks.addlink(link)
-		self.next_focus = None, None # this object cannot have focus (yet)
+##		self.next_focus = []	# this object cannot have focus (yet)
 
 	def undo_addlink(self, link):
 		self.dellink(link)
@@ -488,7 +527,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.attrs_changed = 1
 		self.addstep('dellink', link)
 		self.context.hyperlinks.dellink(link)
-		self.next_focus = None, None # this object cannot have focus (yet)
+##		self.next_focus = []	# this object cannot have focus (yet)
 
 	def undo_dellink(self, link):
 		self.addlink(link)
@@ -501,7 +540,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.addstep('addexternalanchor', url)
 		# context.externalanchors is a list.
 		self.context.externalanchors.append(url)
-		self.next_focus = None, None # this object cannot have focus (yet)
+##		self.next_focus = []	# this object cannot have focus (yet)
 
 	def undo_addexternalanchor(self, url):
 		self.delexternalanchor(url)
@@ -513,7 +552,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.attrs_changed = 1
 		self.addstep('delexternalanchor', url)
 		self.context.externalanchors.remove(url)
-		self.next_focus = None, None # this object cannot have focus (yet)
+##		self.next_focus = []	# this object cannot have focus (yet)
 
 	def undo_delexternalanchor(self, url):
 		self.addexternalanchor(url)
@@ -532,7 +571,7 @@ class EditMgr(Clipboard.Clipboard):
 				'duplicate channel name in addchannel'
 		self.addstep('addchannel', name)
 		self.context.addchannel(name, i, type)
-		self.next_focus = None, None # XXXX To be done (can be either region or toplayout)
+		self.next_focus = [self.context.getchannel(name)]
 
 	def undo_addchannel(self, name):
 		self.delchannel(name)
@@ -552,7 +591,7 @@ class EditMgr(Clipboard.Clipboard):
 				'unknown orig channel name in copychannel'
 		self.addstep('copychannel', name)
 		self.context.copychannel(name, i, orig)
-		self.next_focus = None, None # XXXX To be done (can be either region or toplayout)
+		self.next_focus = [self.context.getchannel(name)]
 
 	def undo_copychannel(self, name):
 		self.delchannel(name)
@@ -565,7 +604,7 @@ class EditMgr(Clipboard.Clipboard):
 		old_i = self.context.channelnames.index(name)
 		self.addstep('movechannel', name, old_i)
 		self.context.movechannel(name, i)
-		self.next_focus = None, None # XXXX To be done (can be either region or toplayout)
+		self.next_focus = [self.context.getchannel(name)]
 
 	def undo_movechannel(self, name, old_i):
 		self.movechannel(name, old_i)
@@ -592,7 +631,7 @@ class EditMgr(Clipboard.Clipboard):
 		attrdict['collapsed'] = c.collapsed
 		self.addstep('delchannel', name, i, attrdict)
 		self.context.delchannel(name)
-		self.next_focus = None, None # XXXX To be done (can be either region or toplayout)
+		self.next_focus = []	# XXXX To be done (can be either region or toplayout)
 
 	def undo_delchannel(self, name, i, attrdict):
 		self.attrs_changed = 1
@@ -619,7 +658,7 @@ class EditMgr(Clipboard.Clipboard):
 				  'unknown channel name in setchannelname'
 		self.addstep('setchannelname', name, newname)
 		self.context.setchannelname(name, newname)
-		self.next_focus = None, None # XXXX To be done (can be either region or toplayout)
+		self.next_focus = [self.context.getchannel(newname)]
 
 	def undo_setchannelname(self, oldname, name):
 		self.setchannelname(name, oldname)
@@ -644,7 +683,7 @@ class EditMgr(Clipboard.Clipboard):
 			del c[attrname]
 		else:
 			c[attrname] = value
-		self.next_focus = None, None # XXXX To be done (can be either region or toplayout)
+		self.next_focus = [c]
 
 	def undo_setchannelattr(self, name, attrname, oldvalue):
 		self.setchannelattr(name, attrname, oldvalue)
@@ -661,7 +700,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'duplicate layout name in addlayout'
 		self.addstep('addlayout', name)
 		self.context.addlayout(name)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_addlayout(self, name):
 		self.dellayout(name)
@@ -675,7 +714,7 @@ class EditMgr(Clipboard.Clipboard):
 			raise MMExc.AssertError, 'unknown layout in dellayout'
 		self.addstep('dellayout', name, layout)
 		self.context.dellayout(name)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_dellayout(self, name, layout):
 		self.addlayout(name)
@@ -695,7 +734,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'channel already in layout in addlayoutchannel'
 		self.addstep('addlayoutchannel', name, channel)
 		self.context.addlayoutchannel(name, channel)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_addlayoutchannel(self, name, channel):
 		self.dellayoutchannel(name, channel)
@@ -713,7 +752,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'channel not in layout in dellayoutchannel'
 		self.addstep('dellayoutchannel', name, channel)
 		self.context.dellayoutchannel(name, channel)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_dellayoutchannel(self, name, channel):
 		self.addlayoutchannel(name, channel)
@@ -732,7 +771,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'name already in use in setlayoutname'
 		self.addstep('setlayoutname', name, newname)
 		self.context.setlayoutname(name, newname)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_setlayoutname(self, oldname, name):
 		self.setlayoutname(name, oldname)
@@ -749,7 +788,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'duplicate usergroup name in addusergroup'
 		self.addstep('addusergroup', name)
 		self.context.addusergroup(name, value)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_addusergroup(self, name):
 		self.delusergroup(name)
@@ -763,7 +802,7 @@ class EditMgr(Clipboard.Clipboard):
 			raise MMExc.AssertError, 'unknown usergroup in delusergroup'
 		self.addstep('delusergroup', name, usergroup)
 		self.context.delusergroup(name)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_delusergroup(self, name, usergroup):
 		self.addusergroup(name, usergroup)
@@ -779,7 +818,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'name already in use in setusergroupname'
 		self.addstep('setusergroupname', name, newname)
 		self.context.setusergroupname(name, newname)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def clean_delusergroup(self, name, usergroup):
 		pass
@@ -800,7 +839,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'duplicate transition name in addtransition'
 		self.addstep('addtransition', name)
 		self.context.addtransition(name, value)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_addtransition(self, name):
 		self.deltransition(name)
@@ -815,7 +854,7 @@ class EditMgr(Clipboard.Clipboard):
 			raise MMExc.AssertError, 'unknown transition in deltransition'
 		self.addstep('deltransition', name, transition)
 		self.context.deltransition(name)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_deltransition(self, name, transition):
 		self.attrs_changed = 1
@@ -838,7 +877,7 @@ class EditMgr(Clipboard.Clipboard):
 			      'name already in use in settransitionname'
 		self.addstep('settransitionname', name, newname)
 		self.context.settransitionname(name, newname)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_settransitionname(self, oldname, name):
 		self.settransitionname(name, oldname)
@@ -858,7 +897,7 @@ class EditMgr(Clipboard.Clipboard):
 		# XXX should we delete key if value==None?
 		dict[key] = value
 		self.addstep('settransitionvalue', name, key, oldvalue)
-		self.next_focus = None, None # This object cannot have focus (yet)
+##		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_settransitionvalue(self, name, key, oldvalue):
 		self.settransitionvalue(name, key, oldvalue)
@@ -871,12 +910,12 @@ class EditMgr(Clipboard.Clipboard):
 	#
 	def deldocument(self, root):
 		self.addstep('deldocument', root)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def adddocument(self, root):
 		self.addstep('adddocument', root)
 		self.__newRoot = root
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_deldocument(self, root):
 		self.adddocument(root)
@@ -900,14 +939,14 @@ class EditMgr(Clipboard.Clipboard):
 		self.__errorstateChanged = 1
 		if self.context != None:
 			self.context.setParseErrors(None)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 			
 	def addparsestatus(self, parsestatus):
 		self.addstep('addparsestatus', parsestatus)
 		self.__errorstateChanged = 1
 		if self.context != None:
 			self.context.setParseErrors(parsestatus)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 			
 	def undo_delparsestatus(self, parsestatus):
 		self.addparsestatus(parsestatus)
@@ -927,12 +966,12 @@ class EditMgr(Clipboard.Clipboard):
 	def addasset(self, asset):
 		self.addstep('addasset', asset)
 		self.context.addasset(asset)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def delasset(self, asset):
 		self.addstep('delasset', asset)
 		self.context.delasset(asset)
-		self.next_focus = None, None # This object cannot have focus (yet)
+		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_addasset(self, asset):
 		self.delasset(asset)

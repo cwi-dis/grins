@@ -58,23 +58,26 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		SourceViewDialog.SourceViewDialog.hide(self)
 
 	def updateFocus(self):
-		focustype, focusobject = self.editmgr.getglobalfocus()
-		self.__setFocus(focustype, focusobject)
+		focusobject = self.editmgr.getglobalfocus()
+		self.__setFocus(focusobject)
 		
-	def __setFocus(self, focustype, focusobject):
+	def __setFocus(self, focuslist):
 		# the normal focus is set only if there is no parsing error
 		parseErrors = self.context.getParseErrors()
-		if parseErrors != None:
+		if parseErrors is not None:
 			return
 		
-		if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
-			# for now, make selection working only when the source is unmodified
-			# to avoid some position re-computations adter each modification
-			if not self.is_changed():
+		# for now, make selection working only when the source is unmodified
+		# to avoid some position re-computations adter each modification
+		if self.is_changed():
+			return
+
+		for focusobject in focuslist:
+			if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
 				apply(self.select_chars, focusobject.char_positions)
 		
-	def globalfocuschanged(self, focustype, focusobject):
-		self.__setFocus(focustype, focusobject)
+	def globalfocuschanged(self, focusobject):
+		self.__setFocus(focusobject)
 
 	def updateError(self):
 		# if an error is occured, we set the focus on one specified error
@@ -286,8 +289,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 
 		# at last select object
 		if objectToSelect != None:
-			className = objectToSelect.getClassName()
-			self.editmgr.setglobalfocus(className, objectToSelect)
+			self.editmgr.setglobalfocus([objectToSelect])
 		else:
 			# if no object, show a warning
 			windowinterface.showmessage("Node not found", mtype = 'error')

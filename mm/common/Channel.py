@@ -1220,14 +1220,14 @@ class ChannelWindow(Channel):
 		if self._is_shown and self.window:
 			self.window.push()
 
-	def focuscall(self):
-		if self._playstate in (PLAYING, PLAYED):
-			node = self._played_node
-			top = self._player.toplevel
-			if top.hierarchyview is not None:
-				top.hierarchyview.globalsetfocus(node)
-		else:
-			windowinterface.showmessage('No node currently playing on %s'%self._name, mtype = 'warning', grab = 1, parent = self.window)
+##	def focuscall(self):
+##		if self._playstate in (PLAYING, PLAYED):
+##			node = self._played_node
+##			top = self._player.toplevel
+##			if top.hierarchyview is not None:
+##				top.hierarchyview.globalsetfocus(node)
+##		else:
+##			windowinterface.showmessage('No node currently playing on %s'%self._name, mtype = 'warning', grab = 1, parent = self.window)
 
 ##	def save_geometry(self):
 ##		if self._is_shown and self.window:
