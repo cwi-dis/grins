@@ -31,10 +31,7 @@ from wndusercmd import TOOLBAR_GENERAL
 # player panel support module
 import winplayerdlg
 
-DEFAULT_PLAYER_PANEL_ATTRIBUTES = [ ('option','Bitrate'),
-	('option', 'Language'),
-	('boolean', 'boolean attribute 1'),
-	('boolean', 'boolean attribute 2'),]
+DEFAULT_PLAYER_PANEL_ATTRIBUTES = []
 
 # player panel mixin
 class PanelMixin:
