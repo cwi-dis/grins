@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # This module implements some common treatments between the player version and the editor version
 # Currently, all renderers (and create/destroy optimization) are created in this module
 
