@@ -120,7 +120,8 @@ class SVGChannel(Channel.ChannelWindow):
 		if sw and sh:
 			dw, dh = self.svgdstrect[2:]
 			sx, sy = dw/float(sw), dh/float(sh)
-			svggraphics.applyTfList([('scale',[sx, sy]),])
+			sx = sy = min(sx, sy)
+			svggraphics.applyTfList( [('scale',[sx, sy]),])
 		self.svgdds.BltFill(self.svgsrcrect, self.svgddcolor)
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
