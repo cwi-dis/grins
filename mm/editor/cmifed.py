@@ -350,7 +350,7 @@ def main():
 	except getopt.error, msg:
 		usage(msg)
 
-	if 'PRELOADDOC' in os.environ.keys() and len(files)==0:
+	if os.environ.has_key('PRELOADDOC') and not files:
 		files.append(os.environ['PRELOADDOC'])
 
 	if sys.argv[0] and sys.argv[0][0] == '-':
