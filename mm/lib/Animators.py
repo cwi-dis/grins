@@ -737,20 +737,14 @@ class EffectiveAnimator:
 
 
 	def __updatecoordinates(self, coordinates, units):
-		import sys
-		if sys.platform != 'win32': return
 		if self.__region and self.__region.window:
 			self.__region.window.updatecoordinates(coordinates, units)
 
 	def __updatezindex(self, z):
-		import sys
-		if sys.platform != 'win32': return
 		if self.__region and self.__region.window:
 			self.__region.window.updatezindex(z)
 
 	def __updatebgcolor(self, color):
-		import sys
-		if sys.platform != 'win32': return
 		for chan in self.__regionContents:
 			if chan.window:
 				chan.window.updatebgcolor(color)
