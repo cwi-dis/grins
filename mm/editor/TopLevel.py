@@ -414,7 +414,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if hasLayoutView2 is None or hasLayoutView2:
 				try:
 					import LayoutView2
-				except ImportError:
+				except (ImportError, AttributeError):
 					hasLayoutView2 = 0
 					self.layoutview2 = None
 				else:
@@ -453,7 +453,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			try:
 				import ErrorsView
 				self.errorsview = ErrorsView.ErrorsView(self)
-			except ImportError:
+			except (ImportError, AttributeError):
 				self.errorsview = None
 
 		if features.ASSETS_VIEW in features.feature_set:
