@@ -210,7 +210,6 @@ class XMLParser:
                     if k < 0: break
                     self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
                     i =  k
-                    self.literal = 0
                     continue
                 if commentopen.match(rawdata, i):
                     if self.literal:
@@ -555,6 +554,7 @@ class XMLParser:
                 if not self.stack or tag != self.stack[-1]:
                     self.handle_data(rawdata[i])
                     return i+1
+                self.literal = 0
             k = res.end(0)
         if endbracket.match(rawdata, k) is None:
             self.syntax_error('garbage in end tag')
