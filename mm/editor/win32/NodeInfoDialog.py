@@ -106,11 +106,10 @@ class NodeInfoDialog:
 
 		formid=adornments['form_id']
 		toplevel_window=self.toplevel.window
-		fs=toplevel_window.getformserver()
-		w=fs.newformobj(formid)
+		w=toplevel_window.newformobj(formid)
 		w.do_init(title, channelnames, initchannel, types, inittype,
 		     name, filename, children, immtext,adornments)
-		fs.showform(w,formid)
+		toplevel_window.showform(w,formid)
 		self.__window=w
 
 	def close(self):
