@@ -522,6 +522,7 @@ class HierarchyView(HierarchyViewDialog):
 		if url is not None:
 			node.SetAttr('file', url)
 		if type != 'slide' and layout == 'undefined' and \
+		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where, index):
@@ -1380,7 +1381,8 @@ class Object:
 	def focuscall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
-		top.channelview.globalsetfocus(self.node)
+		if top.channelview is not None:
+			top.channelview.globalsetfocus(self.node)
 
 	def deletecall(self):
 		self.mother.deletefocus(0)

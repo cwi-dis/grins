@@ -144,7 +144,8 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.after_chan_show()
 
 	def hide(self, *rest):
-		self.toplevel.layoutview.hide()
+		if self.toplevel.layoutview is not None:
+			self.toplevel.layoutview.hide()
 		if not self.showing: return
 		self.showing = 0
 		self.stop()
@@ -312,7 +313,8 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			windowinterface.showmessage('No such channel: '+name)
 			return
 		ch.set_visible(onoff)
-		self.toplevel.channelview.channels_changed()
+		if self.toplevel.channelview is not None:
+			self.toplevel.channelview.channels_changed()
 		self.setchannel(name, onoff)
 
 	def synccv_callback(self):

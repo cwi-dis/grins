@@ -632,7 +632,8 @@ class ChannelView(ChannelViewDialog):
 	def focuscall(self):
 		top = self.toplevel
 		top.setwaiting()
-		top.hierarchyview.globalsetfocus(self.viewroot)
+		if top.hierarchyview is not None:
+			top.hierarchyview.globalsetfocus(self.viewroot)
 
 	def setviewrootcb(self, node):
 		self.toplevel.setwaiting()
@@ -2234,7 +2235,8 @@ class NodeBox(GO, NodeBoxCommand):
 	def focuscall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
-		top.hierarchyview.globalsetfocus(self.node)
+		if top.hierarchyview is not None:
+			top.hierarchyview.globalsetfocus(self.node)
 
 	def createanchorcall(self):
 		self.mother.toplevel.links.wholenodeanchor(self.node)
