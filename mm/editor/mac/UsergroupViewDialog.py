@@ -111,7 +111,7 @@ class UsergroupViewDialog(windowinterface.MACDialog):
 class UsergroupEditDialog(windowinterface.MACDialog):
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
 
-	def __init__(self, ugroup, title, ustate, override):
+	def __init__(self, ugroup, title, ustate, override, uid):
 		"""Create the UsergroupEdit dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -119,7 +119,7 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_UGROUP_EDITOR,
 				ITEMLIST_E_ALL, default=ITEM_E_OK, cancel=ITEM_E_CANCEL)
-		self.setstate(ugroup, title, ustate, override)
+		self.setstate(ugroup, title, ustate, override, uid)
 ##		w = windowinterface.Window('Edit user group', resizable = 1)
 ##		self.__window = w
 ##		self.__ugroup = w.TextInput('User group name', ugroup, None,
@@ -151,7 +151,7 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 	def showmessage(self, text):
 		windowinterface.showmessage(text)
 
-	def setstate(self, ugroup, title, ustate, override):
+	def setstate(self, ugroup, title, ustate, override, uid):
 		"""Set the values in the dialog.
 
 		Arguments (no defaults):
@@ -174,11 +174,13 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 			override = 'allowed'
 		else:
 			override = 'not allowed'
+		uid = ''		# XXX to be supplied
 		return (
 			self._getlabel(ITEM_E_NAME),
 			self._getlabel(ITEM_E_TITLE),
 			ustate,
-			override)
+			override,
+			uid)
 					
 	def do_itemhit(self, item, event):
 		if item == ITEM_E_NAME:
