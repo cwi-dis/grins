@@ -83,16 +83,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
-	# check the errors on the first load. And if any error, ask to the user if he wants to leave the editor
-	# to fix automaticly the errors. Note: this test is a bit different as the test in the source view:
-	# if any error, there is no rollback
+	# check the errors on the first load. And if any error, ask
+	# the user whether he wants the editor to fix the errors
+	# automatically. Note: this test is a bit different than the
+	# test in the source view: if any error, there is no rollback
 	def __checkInitialErrors(self):
 		context = self.root.GetContext()
 		parseErrors = context.getParseErrors()
 		if parseErrors != None:
-			ret = windowinterface.GetYesNoCancel('The source document contains some errors\nDo you wish to leave the editor to fix automaticly the errors', self.window)
+			ret = windowinterface.GetYesNoCancel("The source document contains some errors.\nDo you wish to accept GRiNS' automatic fixes", self.window)
 			if ret == 0: # yes
-				# accept the errors automaticly fixed by GRiNS
+				# accept the errors automatically fixed by GRiNS
 				context.setParseErrors(None)
 			elif ret == 1: # no
 				# default treatement: accept errors and don't allow to edit another view
