@@ -693,14 +693,6 @@ SOURCE=.\M_pprint.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Preferences.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_PreferencesDialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_PseudoHtmlChannel.c
 # End Source File
 # Begin Source File
