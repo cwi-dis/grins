@@ -1044,6 +1044,7 @@ class SMILWriter(SMIL):
 				if isidre.match(id) is None or \
 				   self.ids_used.has_key(id):
 					aname = '%s-%s' % (self.uid2name[uid], id)
+					aname = identify(aname)
 				else:
 					aname = id
 				if self.ids_used.has_key(aname):
