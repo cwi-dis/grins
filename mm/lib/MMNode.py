@@ -3176,13 +3176,11 @@ class MMNode(MMTreeElement):
 
 	# Timing interface
 	def GetBeginDelay(self):
-		begindelay = 0.0
 		for arc in self.GetAttrDef('beginlist', []):
 			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
 				# use the first simple offset
-				begindelay = arc.delay
-				break
-		return begindelay
+				return arc.delay
+		return 0.0
 
 	def GetTimes(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
