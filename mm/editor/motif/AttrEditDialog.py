@@ -89,6 +89,11 @@ class AttrEditorDialog:
 		"""
 		self.__window.settitle(title)
 
+	def showmessage(self, *args, **kw):
+		nkw = {'parent': self.__window}
+		nkw.update(kw)
+		apply(windowinterface.showmessage, args, nkw)
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
