@@ -121,10 +121,10 @@ MENUBAR=(
 			(FLAG_BOSTON, ENTRY, '&After', None, NEW_AFTER_BRUSH),
 			(FLAG_BOSTON, ENTRY, '&Within', None, NEW_UNDER_BRUSH),
 		)),
-		(FLAG_ALL, CASCADE, '&Animation', (
-			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
-			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
-			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+		(FLAG_ALL, CASCADE, '&Animate', (
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATE),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATE),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATE),
 		)),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, CASCADE, '&Parallel node', (
@@ -328,10 +328,10 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_BOSTON, ENTRY, '&Before', None, NEW_BEFORE_BRUSH),
 				(FLAG_BOSTON, ENTRY, '&After', None, NEW_AFTER_BRUSH),
 			)),
-			(FLAG_ALL, CASCADE, 'Animation', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
-				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+			(FLAG_ALL, CASCADE, 'Animate', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATE),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATE),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATE),
 			)),
 			(FLAG_ALL, SEP,),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
@@ -448,10 +448,10 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_BOSTON, ENTRY, '&After', None, NEW_AFTER_BRUSH),
 				(FLAG_BOSTON, ENTRY, '&Within', None, NEW_UNDER_BRUSH),
 			)),
-			(FLAG_ALL, CASCADE, '&Animation', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
-				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+			(FLAG_ALL, CASCADE, '&Animate', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATE),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATE),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATE),
 			)),
 			(FLAG_ALL, SEP,),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
