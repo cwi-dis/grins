@@ -775,7 +775,7 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 			images[file] = handle, url
 	for handle, name in images.values():
 		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
-	if not tostring and bgcolor != (0,0,0):
+	if not tostring and bgcolor is not None and bgcolor != (0,0,0):
 		if rp.tags:
 			# only write extra fill if first tag is not a fill starting at 0 which
 			# fills the whole region
@@ -784,14 +784,7 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 		else:
 			extrafill = 1
 		if extrafill:
-			if bgcolor == None:
-				# avoid the crash
-				# currently the only way to pass here should be
-				# transparent = 1
-				# In this case I don't know what is the right behavior ???
-				# so for now, just affect a black bg color
-				color = '#000000'
-			elif colors.rcolors.has_key(bgcolor):
+			if colors.rcolors.has_key(bgcolor):
 				color = colors.rcolors[bgcolor]
 			else:
 				color = '#%02x%02x%02x' % bgcolor
