@@ -2084,7 +2084,12 @@ class DrawContext:
 			self._selected.invalidateDragHandles()	
 		self._selected = shape
 		self.__notifyListeners(shape)
-			
+	
+	def showproperties(self):
+		if self._selected:
+			for obj in self._listeners:
+				obj.onProperties(self._selected)
+				
 	#
 	# Mouse input
 	#
@@ -2097,6 +2102,9 @@ class DrawContext:
 	def onMouseMove(self, flags, point):
 		self._curtool.onMouseMove(flags, point)
 	
+	def onLButtonDblClk(self, flags, point):
+		self._curtool.onLButtonDblClk(flags, point)
+
 	def __notifyListeners(self, shape):
 		for obj in self._listeners:
 			obj.onShapeChange(shape)
@@ -2144,6 +2152,9 @@ class DrawTool:
 		ctx = self._ctx
 		ctx.setcursor('arrow')
 	
+	def onLButtonDblClk(self, flags, point):
+		pass
+
 
 class SelectTool(DrawTool):
 	def __init__(self, ctx):
@@ -2208,6 +2219,19 @@ class SelectTool(DrawTool):
 			return
 
 		DrawTool.onMouseMove(self, flags, point)
+
+	def onLButtonDblClk(self, flags, point):
+		if self._ctx._selected:
+			self._ctx.showproperties()
+
+
+
+
+			
+
+
+
+
 
 
 
