@@ -6,6 +6,7 @@ import MMAttrdefs
 import glwindow
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
+from MMNode import alltypes, leaftypes, interiortypes
 
 # the block view class.
 # *** Hacked by --Guido ***
@@ -193,7 +194,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		node.bv_obj	= obj
 	
 		kids = node.GetChildren()
-		if type in ('seq','par','grp'):
+		if type in interiortypes:
 			node.bv_xywh    = (x,y,w,h)
 			if node.bv_OC < 0:
 			     node.bv_OC = 1
@@ -217,7 +218,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			# Create childrens' boxes
 			if kids:
 			    h = h - MMARG - BH
-			    if type in ('grp', 'seq') :
+			    if type = 'seq':
 				    h = h / len(kids)
 				    dx, dy = 0, h
 			    else: 				 # parallel node
@@ -474,6 +475,7 @@ def _doInsertNode (bv, after, cb) :
 	bv.changing_node = parent
 	node.context.editmgr.commit()
 	bv.changing_node = None
+	if not cb: NodeInfo.shownodeinfo(newnode)
 def InsertBeforeNode(bv):
 	_doInsertNode(bv, 0, 0)
 def CInsertBeforeNode(bv):
@@ -490,7 +492,7 @@ def _InsertChildNode (bv,cb) :
 	parent = bv.focus
 	em = bv.editmgr
 
-	if not parent.GetType() in ('seq','par'):
+	if not parent.GetType() in interiortypes:
 	    gl.ringbell()
 	    return
 	if not em.transaction(): return
@@ -509,6 +511,8 @@ def _InsertChildNode (bv,cb) :
 	bv.focus = newnode
 	parent.context.editmgr.commit()
 	bv.changing_node = None
+	if not cb: NodeInfo.shownodeinfo(newnode)
+
 def InsertChildNode(bv):
 	_InsertChildNode(bv,0)
 def CInsertChildNode(bv):

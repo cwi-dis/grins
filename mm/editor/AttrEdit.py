@@ -9,6 +9,7 @@ import MMExc
 import MMAttrdefs
 import MMParser
 import MMWrite
+from MMNode import alltypes, leaftypes, interiortypes
 
 from ChannelMap import channelmap
 
@@ -658,7 +659,7 @@ def hideall(root):
 
 def hidenode(node):
 	hideattreditor(node)
-	if node.GetType() in ('seq', 'par'):
+	if node.GetType() in interiortypes:
 		for child in node.GetChildren():
 			hidenode(child)
 

@@ -2,6 +2,7 @@
 
 
 from MMExc import *		# Exceptions
+from MMNode import alltypes, leaftypes, interiortypes
 
 
 # Write a node to a CMF file, given by filename
@@ -35,7 +36,7 @@ def writenode(x, fp):
 	fp.write('(' + type + ' ' + `uid` + ' (')
 	writeattrdict(x.GetAttrDict(), None, fp)
 	fp.write(')')
-	if type in ('seq', 'par', 'grp'):
+	if type in interiortypes:
 		for child in x.GetChildren():
 			fp.write('\n')
 			writenode(child, fp)

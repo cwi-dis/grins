@@ -2,6 +2,7 @@
 
 
 from MMExc import *		# Exceptions
+from MMNode import alltypes, leaftypes, interiortypes
 
 
 import regexp
@@ -75,7 +76,7 @@ class MMParser():
 	def getnode(self):
 		self.open()
 		type = self.gettoken()
-		if type not in ('seq', 'par', 'grp', 'imm', 'ext'):
+		if type not in alltypes:
 			raise SyntaxError, (type, 'node type')
 		uid = self.getuidvalue(None)
 		node = self.context.newnodeuid(type, uid)
@@ -83,7 +84,7 @@ class MMParser():
 		attrdict = self.getattrdictvalue(None)
 		self.close()
 		node.attrdict = attrdict
-		if type in ('seq', 'par', 'grp'):
+		if type in interiortypes:
 			while self.more():
 				child = self.getnode()
 				node._addchild(child)
