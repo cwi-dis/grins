@@ -9,7 +9,7 @@ from AnchorDefs import *
 from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
 import re
 
-error = 'MMLTreeRead.error'
+error = 'SMILTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
