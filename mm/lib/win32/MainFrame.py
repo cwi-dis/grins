@@ -118,7 +118,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._canscroll = 0
 
 		# player state
-		self.__playerstate = usercmd.STOP
+		self.__playerstate = None
 
 		# full screen player
 		self.__fsPlayer = None
@@ -443,6 +443,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		basename=urllib.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
 		self.set_commandlist(commandlist,'document')
+		self.setplayerstate(usercmd.STOP)
 		if adornments and adornments.has_key('pulldown'):
 			pulldownmenus = adornments['pulldown']
 		else:
@@ -605,6 +606,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self.setEditorDocumentMenu(0)
 		# and document's views
 		self.close_all_views()
+		self.setplayerstate(None)
 
 		# 3. if there is another top-level frame
 		# we should close self frame
@@ -812,6 +814,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
+		else:
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
