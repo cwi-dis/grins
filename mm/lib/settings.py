@@ -31,12 +31,19 @@ default_settings = {
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
+	'structure_darkleaf': (203,203,170),
 	'structure_rpcolor': (196,159,127),
+	'structure_darkrp': (196,159,127),
 	'structure_slidecolor': (222,255,255),
+	'structure_darkslide': (164,181,181),
 	'structure_bagcolor': (148,117,166),
+	'structure_darkbag': (131,119,137),
 	'structure_altcolor': (184,95,95),
+	'structure_darkalt': (157,108,108),
 	'structure_parcolor': (79,156,130),
+	'structure_darkpar': (91,126,114),
 	'structure_seqcolor': (116,154,189),
+	'structure_darkseq': (108,128,146),
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle

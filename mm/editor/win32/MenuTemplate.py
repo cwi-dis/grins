@@ -140,6 +140,8 @@ MENUBAR=(
 		(ALL, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
 		(ALL, TOGGLE, 'Image thum&bnails', None, THUMBNAIL),
 		(ALL, TOGGLE, 'Bandwidth &usage strip', None, TOGGLE_BWSTRIP),
+		(ALL, TOGGLE, 'Show Playable', None, PLAYABLE),
+		(ALL, TOGGLE, 'Show Durations', None, TIMESCALE),
 		(CMIF, SEP,),
 		(CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
 		(CMIF, CASCADE, '&Minidoc navigation', (
