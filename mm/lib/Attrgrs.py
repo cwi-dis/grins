@@ -267,6 +267,16 @@ attrgrs=(
 		'loop', # repeatcount
 		'repeatdur',
 		]},
+
+	# active duration group without endsync and without fill/filldefault
+	{'name':'activeduration',
+	'title':'Active duration',
+	'attrs':[
+		'duration',
+		'min', 'max',
+		'loop', # repeatcount
+		'repeatdur',
+		]},
 	
 	{'name':'timingsb',
 	'title':'Timing',

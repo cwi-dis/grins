@@ -4683,21 +4683,17 @@ class Convert5Group(Convert4Group):
 
 #
 
-class ActiveDuration2Group(AttrGroup):
-	data=attrgrsdict['activeduration2']
+class ActiveDurationGroup(AttrGroup):
+	data=attrgrsdict['activeduration']
 
 	def __init__(self):
 		AttrGroup.__init__(self, self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ACTIVEDUR2
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR
 
 	def createctrls(self, wnd):
 		cd = {}
-		a = self.getattr('fill')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FILLL, grinsRC.IDC_FILLV))
-		a = self.getattr('fillDefault')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FILLDEFL,grinsRC.IDC_FILLDEFV))
 		a = self.getattr('duration')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_DURL,grinsRC.IDC_DURV))
 		a = self.getattr('min')
@@ -4708,6 +4704,24 @@ class ActiveDuration2Group(AttrGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_LOOPL,grinsRC.IDC_LOOPV))
 		a = self.getattr('repeatdur')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REPDURL,grinsRC.IDC_REPDURV))
+		return cd
+
+
+class ActiveDuration2Group(ActiveDurationGroup):
+	data=attrgrsdict['activeduration2']
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR2
+
+	def createctrls(self, wnd):
+		cd = ActiveDurationGroup.createctrls(self, wnd)
+		a = self.getattr('fill')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FILLL, grinsRC.IDC_FILLV))
+		a = self.getattr('fillDefault')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FILLDEFL,grinsRC.IDC_FILLDEFV))
 		return cd
 
 class ActiveDuration3Group(ActiveDuration2Group):
@@ -5143,6 +5157,7 @@ groupsui={
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
 	'bandwidth':BandwidthGroup,
+	'activeduration':ActiveDurationGroup,
 	'activeduration1':ActiveDuration1Group,
 	'activeduration2':ActiveDuration2Group,
 	'activeduration3':ActiveDuration3Group,
