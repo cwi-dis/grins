@@ -35,6 +35,7 @@ import Help
 import AttrEdit
 import Hlinks				# for merging nodes only.
 import Sizes
+import Duration
 
 import settings
 
@@ -1336,6 +1337,9 @@ class HierarchyView(HierarchyViewDialog):
 
 		if url is not None:
 			node.SetAttr('file', url)
+			# if node has no intrinsic duration, set a default duration
+			if Duration.getintrinsicduration(node, 0) == 0:
+				node.SetAttr('duration', 3)
 			# figure out a reasonable default name for the new node
 			# the name is the basename of the URL
 			# figure out file name part

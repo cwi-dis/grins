@@ -376,27 +376,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def calculate_minsize(self, timemapper):
 		# return the minimum size of this node, in pixels.
 		# Called to work out the size of the canvas.
-		xsize = ysize = MINSIZE
 		node = self.node
-		if not MMAttrdefs.getattr(node, 'thumbnail_scale'):
-			import Sizes
-			icon = node.GetAttrDef('thumbnail_icon', None)
-			if icon is not None:
-				icon = node.context.findurl(icon)
-				icon = MMurl.urlretrieve(icon)[0]
-			elif node.GetType() in MMTypes.mediatypes and node.GetType() != 'brush':
-				icon = self.__get_image_filename(node, image = 0)
-			else:
-				icon = None
-			if icon:
-				w, h = Sizes.GetImageSize(icon)
-				if w > 0 and h > 0:
-					self.__image_size = w, h
-					xsize = 6*(w/5)
-					ysize = 6*(h/4) + TITLESIZE
 
-		if self.dropbox is not None:
-			xsize = xsize  + GAPSIZE + self.dropbox.recalc_minsize()[0]
+		# iconbox is displayed at top or left
 		if self.iconbox is not None and node.infoicon and self.infoicon is None:
 			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
 		elif not node.infoicon and self.infoicon is not None:
@@ -409,27 +391,86 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			node.set_armedmode = self.set_armedmode
 			self.set_armedmode(node.armedmode, redraw = 0)
 		if self.iconbox is not None:
-			ixsize, iysize = self.iconbox.recalc_minsize()
-			if self.iconbox.vertical:
-				iysize = iysize + 2*VEDGSIZE
-			else:
-				ixsize = ixsize + 2*HEDGSIZE
+			ibxsize, ibysize = self.iconbox.recalc_minsize()
 		else:
-			ixsize = iysize = 0
-		if self.name and (self.iconbox is None or not self.iconbox.vertical):
-			ixsize = ixsize + f_title.strsizePXL(self.name)[0]
-		xsize = min(max(xsize, ixsize), MAXSIZE)
-		ysize = min(max(ysize, iysize), MAXSIZE)
+			ibxsize = ibysize = 0
+
+		# thumbnail
+		icon = None
+		if not node.GetChildren():
+			# use empty_icon if no children and it exists
+			icon = node.GetAttrDef('empty_icon', None)
+		if icon is None:
+			# use thumbnail icon if defined (and we're not using empty_icon)
+			icon = node.GetAttrDef('thumbnail_icon', None)
+		imxsize = imysize = 24
+		if not MMAttrdefs.getattr(node, 'thumbnail_scale'):
+			import Sizes
+			if icon is not None:
+				icon = node.context.findurl(icon)
+				icon = MMurl.urlretrieve(icon)[0]
+			elif node.GetType() in MMTypes.mediatypes and node.GetType() != 'brush':
+				icon = self.__get_image_filename(node, image = 0)
+
+			if icon:
+				imxsize, imysize = Sizes.GetImageSize(icon)
+				if imxsize > 0 and imysize > 0:
+					self.__image_size = imxsize, imysize
+
+		text = None
+		if not node.GetChildren():
+			text = node.GetAttrDef('empty_text', None)
+		if text:
+			txxsize, txysize = f_title.strsizePXL(text)
+		elif self.name:
+			txxsize, txysize = f_title.strsizePXL(self.name)
+		else:
+			txxsize = txysize = 0
+
+		# put things together
+		if self.iconbox is not None and self.iconbox.vertical:
+			# icons on the left, then thumbnail, then text
+			# if text var not empty, text is required, else optional
+			xsize = ibxsize + imxsize + 2*HEDGSIZE
+			if text:
+				xsize = xsize + 2 + txxsize
+			ysize = max(ibysize, imysize, txysize) + 2*VEDGSIZE
+			xsize = max(xsize, MINSIZE)
+			ysize = max(ysize, MINSIZE)
+			if not text:
+				xsize = min(xsize, MAXSIZE)
+		else:
+			# icons at the top with text next to it
+			xsize1 = ibxsize
+			if not text:
+				xsize1 = xsize1 + txxsize
+			xsize2 = imxsize
+			if text:
+				xsize2 = xsize2 + 2 + txxsize
+			xsize = max(xsize1, xsize2) + 2*HEDGSIZE
+			ysize = ibysize + imysize + 2*VEDGSIZE
+			xsize = max(xsize, MINSIZE)
+			ysize = max(ysize, MINSIZE)
+			if not text:
+				xsize = min(xsize, MAXSIZE)
+
+		# add ons
+		if self.dropbox is not None:
+			dbxsize, dbysize = self.dropbox.recalc_minsize()
+			xsize = xsize  + GAPSIZE + dbxsize
+			if dbysize + 2*VEDGSIZE > ysize:
+				ysize = dbysize + 2*VEDGSIZE
+
 		if self.timeline is not None:
 			w, h = self.timeline.recalc_minsize()
 			if w > xsize:
 				xsize = w
 			ysize = ysize + h
-		if timemapper is not None:
-			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
-			if t0 == t2:
-				# very special case--zero duration element
-				return ICONSIZE+2*HEDGSIZE, MINSIZE
+##		if timemapper is not None and not text:
+##			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
+##			if t0 == t2:
+##				# very special case--zero duration element
+##				return ICONSIZE+2*HEDGSIZE, MINSIZE
 		return xsize, ysize
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
@@ -502,13 +543,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if icon is not None:
 			icon = self.node.context.findurl(icon)
 			icon = MMurl.urlretrieve(icon)[0]
-			self.do_draw_image(icon, (x,y,w,h), displist)
+			self.do_draw_image(icon, self.name, (x,y,w,h), displist)
 		elif node.GetChannelType() == 'brush':
 			displist.drawfbox(MMAttrdefs.getattr(node, 'fgcolor'), (x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 			displist.fgcolor(TEXTCOLOR)
 			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 		elif w > 0 and h > 0:
-			self.do_draw_image(self.__get_image_filename(node), (x,y,w,h), displist)
+			self.do_draw_image(self.__get_image_filename(node), self.name, (x,y,w,h), displist)
 
 	def __get_image_filename(self, node, image = 1):
 		# return a file name for a thumbnail image
@@ -536,22 +577,21 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	# used by MediaWidget and CommentWidget
-	def do_draw_image(self, image_filename, (x,y,w,h), displist):
-		if not image_filename or w <= 0 or h <= 0:
+	def do_draw_image(self, image_filename, name, (x,y,w,h), displist, forcetext = 0, image_size = None):
+		if w <= 0 or h <= 0:
 			return
-		r = x + w - HEDGSIZE
-		x = x + HEDGSIZE
-		b = y + h - VEDGSIZE
-		y = y + VEDGSIZE
-		imw = r - x
-		imh = b - y
-##		imw = 5*(w/6)
-##		imh = 4*(h/6)
-		if self.__image_size is not None:
+		r = x + w
+		b = y + h
+		imw = w
+		imh = h
+		if image_size is not None:
+			imw, imh = image_size
+		elif self.__image_size is not None:
 			imw, imh = self.__image_size
 		coordinates = (x, y, imw, imh)
 		displist.fgcolor(TEXTCOLOR)
-		if coordinates[2] > 4 and coordinates[3] > 4:
+		box = x, y, 0, h	# default if no image
+		if image_filename and coordinates[2] > 4 and coordinates[3] > 4:
 			try:
 				box = displist.display_image_from_file(
 					image_filename,
@@ -559,47 +599,47 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					coordinates = coordinates,
 					fit = 'icon')
 			except windowinterface.error:
-				# some error displaying image, forget it
-				pass
+				# some error displaying image
+				box = x, y, 0, h
 			else:
 				displist.drawbox(box)
-				box2 = (0,0,0,0)
-				if self.iconbox is not None and self.iconbox.vertical:
-					# draw name next to image
-					displist.fgcolor(CTEXTCOLOR)
-					displist.usefont(f_title)
-					nx = box[0] + box[2] + 2
-					ny = box[1] + box[3] - 2
-					displist.setpos(nx, ny)
-					namewidth = displist.strsizePXL(self.name)[0]
-					if nx + namewidth <= r:
-						# name fits fully
-						box2 = displist.writestr(self.name)
-					else:
-						for i in range(len(self.name)-1,-1,-1):
-							if nx + displist.strsizePXL(self.name[:i]+'...')[0] <= r:
-								box2 = displist.writestr(self.name[:i]+'...')
-								break
-				# calculate number of copies that'll fit in the remaining space
-				n = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/(box[2]+box2[2]+NAMEDISTANCE)
-				if n <= 0:
-					return
-				# calculate distance between left edges to get copies equidistant
-				distance = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/n
-				while x + distance + box[2] + box2[2] <= r:
-					x = x + distance
-					# draw line between copies
-					displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
-					coordinates = (x, y, imw, imh)
-					box = displist.display_image_from_file(
-						image_filename,
-						center = 0,
-						coordinates = coordinates,
-						fit = 'icon')
-					displist.drawbox(box)
-					if self.iconbox is not None and self.iconbox.vertical:
-						displist.setpos(box[0] + box[2] + 2, box[1] + box[3] - 2)
-						displist.writestr(self.name)
+		box2 = (0,0,0,0)
+		if forcetext or (self.iconbox is not None and self.iconbox.vertical):
+			# draw name next to image
+			displist.fgcolor(CTEXTCOLOR)
+			displist.usefont(f_title)
+			nx = box[0] + box[2] + 2
+			ny = box[1] + box[3] - 2
+			displist.setpos(nx, ny)
+			namewidth = displist.strsizePXL(name)[0]
+			if nx + namewidth <= r:
+				# name fits fully
+				box2 = displist.writestr(name)
+			else:
+				for i in range(len(name)-1,-1,-1):
+					if nx + displist.strsizePXL(name[:i]+'...')[0] <= r:
+						box2 = displist.writestr(name[:i]+'...')
+						break
+		# calculate number of copies that'll fit in the remaining space
+		n = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/(box[2]+box2[2]+NAMEDISTANCE)
+		if n <= 0:
+			return
+		# calculate distance between left edges to get copies equidistant
+		distance = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/n
+		while x + distance + box[2] + box2[2] <= r:
+			x = x + distance
+			# draw line between copies
+			displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
+			coordinates = (x, y, imw, imh)
+			box = displist.display_image_from_file(
+				image_filename,
+				center = 0,
+				coordinates = coordinates,
+				fit = 'icon')
+			displist.drawbox(box)
+			if forcetext or (self.iconbox is not None and self.iconbox.vertical):
+				displist.setpos(box[0] + box[2] + 2, box[1] + box[3] - 2)
+				displist.writestr(name)
 
 	#
 	# These a fillers to make this behave like the old 'Object' class.
@@ -852,6 +892,9 @@ class StructureObjWidget(MMNodeWidget):
 		self.dont_draw_children = 0
 		if parent is None:
 			self.add_event_icons()
+		if self.node.children and self.node.GetAttrDef('empty_nonempty', 0):
+			self.dropbox = EmptyWidget(self, mother)
+
 
 	def destroy(self):
 		if self.children:
@@ -1051,11 +1094,13 @@ class StructureObjWidget(MMNodeWidget):
 			this_w, this_h = self.channelbox.get_minsize()
 			self.channelbox.moveto((my_l, my_t, my_l+this_w, my_b))
 			my_l = my_l + this_w + GAPSIZE
+			min_width = min_width - this_w - GAPSIZE
 
 		if self.dropbox is not None:
 			this_w,this_h = self.dropbox.get_minsize()
 			self.dropbox.moveto((my_r-this_w,my_t,my_r,my_b))
 			my_r = my_r - this_w - GAPSIZE
+			min_width = min_width - this_w - GAPSIZE
 
 		free_width = (my_r-my_l) - min_width
 		if vertical_spread:
@@ -1113,6 +1158,8 @@ class StructureObjWidget(MMNodeWidget):
 				this_r = tm.time2pixel(tend) + neededpixel1
 				if t0 == tend:
 					this_r = min(this_l + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), this_l + this_w)
+				if not self.HORIZONTAL:
+					this_r = min(tm.time2pixel(tend, 'right'), my_r)
 				max_r = min(this_r, my_r)
 			else:
 				this_r = this_l + this_w + freewidth_per_child
@@ -1193,7 +1240,7 @@ class StructureObjWidget(MMNodeWidget):
 			if icon is not None:
 				icon = self.node.context.findurl(icon)
 				icon = MMurl.urlretrieve(icon)[0]
-				self.do_draw_image(icon, (l,t,r-l,b-t), displist)
+				self.do_draw_image(icon, self.name, (l,t,r-l,b-t), displist)
 			elif self.DRAWCOLLAPSEDMEDIACHILD and children and children[0].GetType() in MMTypes.mediatypes:
 				self.drawnodecontent(displist, (l,t,r-l,b-t), children[0])
 			elif self.HORIZONTAL:
@@ -1210,12 +1257,23 @@ class StructureObjWidget(MMNodeWidget):
 			if self.children:
 				for i in self.children:
 					i.draw(displist)
+					l = i.pos_abs[2] + GAPSIZE
 			else:
-				displist.fgcolor(CTEXTCOLOR)
-				displist.usefont(f_title)
-				displist.centerstring(l, t, r, b, 'Drop assets here')
+				self.draw_empty(displist, l, t, r, b)
 
 		MMNodeWidget.draw(self, displist)
+
+	def draw_empty(self, displist, l, t, r, b):
+		icon = self.node.GetAttrDef('empty_icon', None)
+		if icon is not None:
+			icon = self.node.context.findurl(icon)
+			icon = MMurl.urlretrieve(icon)[0]
+		text = self.node.GetAttrDef('empty_text', self.name)
+		color = self.node.GetAttrDef('empty_color', None)
+		if color is not None:
+			displist.drawfbox(color, (l,t,r-l,b-t))
+		if icon or text:
+			self.do_draw_image(icon, text, (l,t,r-l,b-t), displist, 1)
 
 	def get_popupmenu(self):
 		return self.mother.interior_popupmenu
@@ -1299,7 +1357,10 @@ class HorizontalWidget(StructureObjWidget):
 		mw = mw + GAPSIZE*(len(self.children)-1) + 2*HEDGSIZE
 
 		if self.dropbox is not None:
-			mw = mw + self.dropbox.recalc_minsize()[0] + GAPSIZE
+			dbxsize, dbysize = self.dropbox.recalc_minsize()
+			mw = mw + dbxsize + GAPSIZE
+			if dbysize > mh:
+				mh = dbysize
 
 		mh = mh + 2*VEDGSIZE
 		if self.timeline is not None:
@@ -1338,15 +1399,18 @@ class HorizontalWidget(StructureObjWidget):
 			t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 		tend = t2
 		myt0, myt1, myt2, mytend = t0, t1, t2, tend
-		maxneededpixel0 = HEDGSIZE
-		if self.iconbox is not None and self.iconbox.vertical:
+		if self.timemapper is None:
+			maxneededpixel0 = HEDGSIZE
+		else:
+			maxneededpixel0 = 0
+		if self.iconbox is not None and self.iconbox.vertical and self.timemapper is None:
 			maxneededpixel0 = maxneededpixel0 + self.iconbox.get_minsize()[0]
 		maxneededpixel1 = HEDGSIZE
 		if self.channelbox is not None:
 			mw, mh = self.channelbox.get_minsize()
 			maxneededpixel0 = maxneededpixel0 + mw + GAPSIZE
 		if self.dropbox is not None:
-			mw, mw =self.dropbox.get_minsize()
+			mw, mh = self.dropbox.get_minsize()
 			maxneededpixel1 = maxneededpixel1 + mw + GAPSIZE
 		for i in range(len(self.children)):
 			if self.children[i].node.WillPlay():
@@ -1498,8 +1562,9 @@ class VerticalWidget(StructureObjWidget):
 				maxneededpixel0 = neededpixel0
 			if neededpixel1 > maxneededpixel1:
 				maxneededpixel1 = neededpixel1
-		maxneededpixel0 = maxneededpixel0 + HEDGSIZE
-		if self.iconbox is not None and self.iconbox.vertical:
+		if self.timemapper is None:
+			maxneededpixel0 = maxneededpixel0 + HEDGSIZE
+		if self.iconbox is not None and self.iconbox.vertical and self.timemapper is None:
 			maxneededpixel0 = maxneededpixel0 + self.iconbox.get_minsize()[0]
 		maxneededpixel1 = maxneededpixel1 + HEDGSIZE
 		if t0 == tend == mastert0:
@@ -1895,6 +1960,7 @@ class MediaWidget(MMNodeWidget):
 			t = t + VEDGSIZE
 		else:
 			t = t + TITLESIZE
+		l = l + HEDGSIZE
 		b = b - VEDGSIZE
 		r = r - HEDGSIZE
 
@@ -1904,16 +1970,8 @@ class MediaWidget(MMNodeWidget):
 				t = self.timeline.pos_abs[3]
 			else:
 				b = self.timeline.pos_abs[1]
-		x = l
-		y = t
-		w = r - l
-		h = b - t
-
-		ntype = self.node.GetType()
-
 		# Draw the image.
-		self.drawnodecontent(displist, (x,y,w,h), self.node)
-
+		self.drawnodecontent(displist, (l,t,r-l,b-t), self.node)
 		MMNodeWidget.draw(self, displist)
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
@@ -1997,7 +2055,7 @@ class CommentWidget(MMNodeWidget):
 		# Draw the image.
 		image_filename = os.path.join(self.mother.datadir, 'comment.tiff')
 		if w > 0 and h > 0:
-			self.do_draw_image(image_filename, (x,y,w,h), displist)
+			self.do_draw_image(image_filename, self.name, (x,y,w,h), displist)
 
 		if self.iconbox is not None:
 			# Draw the icon box.
@@ -2639,6 +2697,41 @@ class DropBoxWidget(ImageBoxWidget):
 	def _get_image_filename(self):
 		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
 		return f
+
+class EmptyWidget(ImageBoxWidget):
+	def recalc_minsize(self):
+		node = self.mmwidget.node
+		icon = node.GetAttrDef('empty_icon', None)
+		imxsize = imysize = 24
+		if icon and not MMAttrdefs.getattr(node, 'thumbnail_scale'):
+			import Sizes
+			icon = node.context.findurl(icon)
+			icon = MMurl.urlretrieve(icon)[0]
+			imxsize, imysize = Sizes.GetImageSize(icon)
+		self.__image_size = imxsize, imysize
+
+		text = node.GetAttrDef('empty_text', None)
+		if text:
+			txxsize, txysize = f_title.strsizePXL(text)
+		else:
+			txxsize = txysize = 0
+
+		self.boxsize = imxsize + 2 + txxsize, max(imysize, txysize)
+		return self.boxsize
+
+	def draw(self, displist):
+		l,t,r,b = self.pos_abs
+		node = self.mmwidget.node
+		icon = node.GetAttrDef('empty_icon', None)
+		if icon is not None:
+			icon = node.context.findurl(icon)
+			icon = MMurl.urlretrieve(icon)[0]
+		text = node.GetAttrDef('empty_text', self.name)
+		color = node.GetAttrDef('empty_color', None)
+		if color is not None:
+			displist.drawfbox(color, (l,t,r-l,b-t))
+		if icon or text:
+			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, 1, self.__image_size)
 
 
 class ChannelBoxWidget(ImageBoxWidget):

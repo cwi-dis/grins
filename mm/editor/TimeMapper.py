@@ -176,7 +176,7 @@ class TimeMapper:
 	def __pixel2pixel(self, pos):
 		if self.width == 0:
 			return pos
-		return int(pos * self.width / float(self.range[1] - self.range[0]) + self.offset + .5)
+		return int(pos / float(self.range[1] - self.range[0]) * self.width + self.offset + .5)
 
 	def time2pixel(self, time, align='left'):
 		# Return either the leftmost or rightmost pixel for a given
