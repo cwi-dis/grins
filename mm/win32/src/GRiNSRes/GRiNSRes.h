@@ -557,6 +557,7 @@
 #define IDC_REGPOINTV                   1392
 #define IDC_REGPOINTL                   1393
 #define IDC_FITL                        1394
+#define IDC_ZL                          1395
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -645,7 +646,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1395
+#define _APS_NEXT_CONTROL_VALUE         1396
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
