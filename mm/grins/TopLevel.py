@@ -17,7 +17,6 @@ class TopLevel(TopLevelDialog):
 	def __init__(self, main, url):
 		self.__immediate = 0
 		self.__intimer = 0
-		self.waiting = 1
 		windowinterface.setcursor('watch')
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -78,7 +77,6 @@ class TopLevel(TopLevelDialog):
 		while self.__immediate:
 			self.__immediate = 0
 			self.player.timer_callback()
-		self.setready()
 		self.__intimer = 0
 
 	def set_timer(self, delay):
@@ -139,7 +137,6 @@ class TopLevel(TopLevelDialog):
 		top.show()
 		top.player.show()
 		top.player.playsubtree(top.root)
-		top.setready()
 
 	def read_it(self):
 ## 		import time
@@ -182,7 +179,6 @@ class TopLevel(TopLevelDialog):
 			self.source.close()
 		self.source = None
 		self.close()
-		self.setready()
 
 	def close(self):
 		self.destroy()
@@ -192,17 +188,7 @@ class TopLevel(TopLevelDialog):
 		Help.showhelpwindow()
 
 	def setwaiting(self):
-		if self.waiting: return
-		self.waiting = 1
-		windowinterface.setcursor('watch')
-		self.player.setwaiting()
-
-	def setready(self):
-		if not self.waiting: return
-		self.waiting = 0
-		if self.player is not None:
-			self.player.setready()
-		windowinterface.setcursor('')
+		windowinterface.setwaiting()
 
 	#
 	# Global hyperjump interface

@@ -115,7 +115,6 @@ class PlayerDialog:
 		if self.__menu_created is None:
 			if self.__window is None:
 				self.__create()
-			self.__window.setcursor('watch')
 
 	def hide(self):
 		if self.__window is not None:
@@ -178,10 +177,6 @@ class PlayerDialog:
 
 	def getgeometry(self):
 		pass
-
-	def setcursor(self, cursor):
-		if self.__window is not None:
-			self.__window.setcursor(cursor)
 
 	def get_adornments(self, channel):
 		if self.__menu_created is not None or \

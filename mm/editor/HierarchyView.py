@@ -108,7 +108,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.window = None
 		self.displist = None
 		self.new_displist = None
-		self.waiting = 0
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
@@ -160,16 +159,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
-
-	def setwaiting(self):
-		self.waiting = 1
-		if self.window:
-			self.window.setcursor('watch')
-
-	def setready(self):
-		self.waiting = 0
-		if self.window:
-			self.window.setcursor('')
 
 	def is_showing(self):
 		return self.window is not None
@@ -224,7 +213,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
 		self.select(x, y)
-		self.toplevel.setready()
 
 ## 	# this doesn't work yet...
 ## 	def rawkey(self, dev, val):
@@ -298,7 +286,6 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			self.destroynode = node
 		em.commit()
-		self.toplevel.setready()
 
 	def copyfocus(self):
 		node = self.focusnode
@@ -341,7 +328,6 @@ class HierarchyView(HierarchyViewDialog):
 		if self.insertnode(node, where):
 			import NodeInfo
 			NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
-		self.toplevel.setready()
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -371,7 +357,6 @@ class HierarchyView(HierarchyViewDialog):
 		em.commit()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.toplevel, newnode)
-		self.toplevel.setready()
 
 	def paste(self, where):
 		import Clipboard
@@ -392,7 +377,6 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			Clipboard.setclip(type, node.DeepCopy())
 		dummy = self.insertnode(node, where)
-		self.toplevel.setready()
 
 	def insertnode(self, node, where):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
@@ -964,37 +948,31 @@ class Object:
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playsubtree(self.node)
-		top.setready()
 
 	def playfromcall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playfrom(self.node)
-		top.setready()
 
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def infocall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
-		self.mother.toplevel.setready()
 
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
@@ -1003,25 +981,21 @@ class Object:
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.channelview.globalsetfocus(self.node)
-		top.setready()
 
 	def zoomoutcall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.zoomout()
-		mother.setready()
 
 	def zoomincall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.zoomin()
-		mother.setready()
 
 	def zoomherecall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.zoomhere()
-		mother.setready()
 
 	def deletecall(self):
 		self.mother.deletefocus(0)
@@ -1031,9 +1005,8 @@ class Object:
 
 	def copycall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.copyfocus()
-		mother.setready()
 
 	def createbeforecall(self):
 		self.mother.create(-1)

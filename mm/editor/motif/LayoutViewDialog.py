@@ -88,6 +88,7 @@ class LayoutViewDialog:
 			self.__otherlist.selectitem(None)
 
 	def __layoutcb(self):
+		self.toplevel.setwaiting()
 		sel = self.__layoutlist.getselected()
 		if sel is None:
 			self.curlayout = None
@@ -96,6 +97,7 @@ class LayoutViewDialog:
 		self.fill()
 
 	def __channelcb(self):
+		self.toplevel.setwaiting()
 		sel = self.__channellist.getselected()
 		if sel is None:
 			self.curchannel = None
@@ -104,18 +106,13 @@ class LayoutViewDialog:
 		self.fill()
 
 	def __othercb(self):
+		self.toplevel.setwaiting()
 		sel = self.__otherlist.getselected()
 		if sel is None:
 			self.curother = None
 		else:
 			self.curother = self.__otherlist.getlistitem(sel)
 		self.fill()
-
-	def setwaiting(self):
-		self.__window.setcursor('watch')
-
-	def setready(self):
-		self.__window.setcursor('')
 
 	def setcommandlist(self, commandlist):
 		self.__window.set_commandlist(commandlist)

@@ -402,13 +402,12 @@ class AttrEditor(AttrEditorDialog):
 			# can't do a transaction
 			return 1
 		# this may take a while...
-		windowinterface.setcursor('watch')
+		self.wrapper.toplevel.setwaiting()
 		for name, value in dict.items():
 			self.wrapper.delattr(name)
 			if value is not None:
 				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
-		windowinterface.setcursor('')
 
 	#
 	# EditMgr interface

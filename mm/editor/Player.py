@@ -51,7 +51,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.curchannel = None
 		self.savecurchannel = None
 		self.showing = 0
-		self.waiting = 0
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
 		self.makechannels()
@@ -231,7 +230,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		else:
 			# nothing, restore state.
 			self.showstate()
-		self.toplevel.setready()
 
 	def pause_callback(self):
 		self.toplevel.setwaiting()
@@ -245,12 +243,10 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# Case 3: not playing. Go to paused mode
 			self.pause(1)
 			self.play()
-		self.toplevel.setready()
 
 	def stop_callback(self):
 		self.toplevel.setwaiting()
 		self.cc_stop()
-		self.toplevel.setready()
 
 	def magic_play(self):
 		if self.playing:
@@ -267,7 +263,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.setwaiting()
 		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
-		self.toplevel.setready()
 
 	def cc_stop(self):
 		self.stop()
@@ -315,15 +310,3 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			channels.append((name, self.channels[name].is_showing()))
 		channels.sort()
 		self.setchannels(channels)
-
-	def setwaiting(self):
-		self.waiting = 1
-		self.setcursor('watch')
-		for cname in self.channelnames:
-			self.channels[cname].setwaiting()
-
-	def setready(self):
-		self.waiting = 0
-		for cname in self.channelnames:
-			self.channels[cname].setready()
-		self.setcursor('')

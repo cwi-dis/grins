@@ -119,9 +119,6 @@ class LayoutViewDialog(windowinterface.MACDialog):
 	def setwaiting(self):
 		pass
 
-	def setready(self):
-		pass
-
 	def setcommandlist(self, commandlist):
 		self._window.set_commandlist(commandlist)
 

@@ -81,7 +81,6 @@ class Main(MainDialog):
 			top.setwaiting()
 			top.show()
 			top.player.show()
-			top.setready()
 
 	def close_callback(self):
 		raise SystemExit, 0

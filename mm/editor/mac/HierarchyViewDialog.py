@@ -21,8 +21,6 @@ class HierarchyViewDialog(ViewDialog):
 		x, y, w, h = self.last_geometry
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, commandlist=self.commands, canvassize = (w, h))
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
-		if self.waiting:
-			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.WindowExit, self.hide, None)

@@ -241,7 +241,5 @@ class PlayerCore(Selecter):
 		chclass = channelmap[type]
 		ch = chclass(name, attrdict, self.scheduler, self)
 		ch.setpaused(self.pausing)
-		if self.waiting:
-			ch.setwaiting()
 		self.channels[name] = ch
 		self.channeltypes[name] = type

@@ -132,7 +132,6 @@ class LayoutView(LayoutViewDialog):
 			editmgr.setlayoutname(self.curlayout, name)
 		self.curlayout = name
 		editmgr.commit()
-		self.toplevel.setready()
 
 	def rename_callback(self):
 		if not self.editmgr.transaction():
@@ -183,7 +182,6 @@ class LayoutView(LayoutViewDialog):
 		editmgr.addlayoutchannel(self.curlayout, ch)
 		self.curchannel = name
 		editmgr.commit()
-		self.toplevel.setready()
 
 	def delete_callback(self):
 		if self.curlayout is None:
@@ -195,7 +193,6 @@ class LayoutView(LayoutViewDialog):
 		editmgr.dellayout(self.curlayout)
 		self.curlayout = None
 		editmgr.commit()
-		self.toplevel.setready()
 
 	def remove_callback(self):
 		if self.curlayout is None or self.curchannel is None:
@@ -208,7 +205,6 @@ class LayoutView(LayoutViewDialog):
 				self.context.channeldict[self.curchannel])
 		self.curchannel = None
 		editmgr.commit()
-		self.toplevel.setready()
 
 	def attr_callback(self):
 		if self.curlayout is None or self.curchannel is None:
@@ -217,7 +213,6 @@ class LayoutView(LayoutViewDialog):
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.toplevel,
 				self.context.channeldict[self.curchannel])
-		self.toplevel.setready()
 
 	def add_callback(self):
 		if self.curlayout is None or self.curother is None:
@@ -230,4 +225,3 @@ class LayoutView(LayoutViewDialog):
 		self.curchannel = self.curother
 		self.curother = None
 		editmgr.commit()
-		self.toplevel.setready()

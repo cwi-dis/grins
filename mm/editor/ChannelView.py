@@ -92,7 +92,6 @@ class ChannelView(ChannelViewDialog):
 	def __init__(self, toplevel):
 		self.window = None
 		self.displist = self.new_displist = None
-		self.waiting = 0
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = toplevel.root
@@ -149,16 +148,6 @@ class ChannelView(ChannelViewDialog):
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
-
-	def setwaiting(self):
-		self.waiting = 1
-		if self.window:
-			self.window.setcursor('watch')
-
-	def setready(self):
-		self.waiting = 0
-		if self.window:
-			self.window.setcursor('')
 
 	def is_showing(self):
 		return self.window is not None
@@ -270,7 +259,6 @@ class ChannelView(ChannelViewDialog):
 		else:
 			self.toplevel.setwaiting()
 			self.select(x, y)
-			self.toplevel.setready()
 
 	# Time-related subroutines
 
@@ -341,7 +329,6 @@ class ChannelView(ChannelViewDialog):
 			c.chview_map = None
 		self.settoggle(TOGGLE_UNUSED, self.showall)
 		self.redraw()
-		self.toplevel.setready()
 
 	def togglearcs(self):
 		self.toplevel.setwaiting()
@@ -349,7 +336,6 @@ class ChannelView(ChannelViewDialog):
 		self.settoggle(TOGGLE_ARCS, self.showarcs)
 		self.arcs = []
 		self.resize()
-		self.toplevel.setready()
 
 	# Return list of currently visible channels
 
@@ -492,12 +478,10 @@ class ChannelView(ChannelViewDialog):
 		top = self.toplevel
 		top.setwaiting()
 		top.hierarchyview.globalsetfocus(self.viewroot)
-		top.setready()
 
 	def setviewrootcb(self, node):
 		self.toplevel.setwaiting()
 		self.setviewroot(node)
-		self.toplevel.setready()
 
 	def fixtitle(self):
 		title = 'Channel View (' + self.toplevel.basename + ')'
@@ -821,7 +805,6 @@ class ChannelView(ChannelViewDialog):
 			import AttrEdit
 			AttrEdit.showchannelattreditor(self.toplevel,
 						       channel, new = 1)
-		self.toplevel.setready()
 
 	# Window stuff
 
@@ -968,13 +951,11 @@ class GO(GOCommand):
 		mother = self.mother
 		mother.toplevel.setwaiting()
 		mother.nextviewroot()
-		mother.toplevel.setready()
 
 	def prevminicall(self):
 		mother = self.mother
 		mother.toplevel.setwaiting()
 		mother.prevviewroot()
-		mother.toplevel.setready()
 
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!
@@ -1091,7 +1072,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 		ch = self.channel
 		if player.is_showing():
 			player.channel_callback(ch.name)
-			self.mother.toplevel.setready()
 			return
 		try:
 			isvis = ch.attrdict['visible']
@@ -1099,7 +1079,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 			isvis = 1
 		ch.attrdict['visible'] = not isvis
 		self.mother.channels_changed()
-		self.mother.toplevel.setready()
 
 	def reshape(self):
 		top, bottom = self.mother.mapchannel(self.channel)
@@ -1183,7 +1162,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.mother.toplevel,
 					       self.channel)
-		self.mother.toplevel.setready()
 
 	def delcall(self):
 		if self.channel in self.mother.usedchannels:
@@ -1200,7 +1178,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 		editmgr.delchannel(self.name)
 		mother.cleanup()
 		editmgr.commit()
-		mother.toplevel.setready()
 
 	def movecall(self):
 	        self.mother.movechannel(self.name)
@@ -1290,7 +1267,6 @@ class NodeBox(GO, NodeBoxCommand):
 				arc.select()
 				mother.drawarcs()
 				mother.render()
-				mother.toplevel.setready()
 				return
 
 	def getnode(self):
@@ -1490,37 +1466,31 @@ class NodeBox(GO, NodeBoxCommand):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playsubtree(self.node)
-		top.setready()
 
 	def playfromcall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playfrom(self.node)
-		top.setready()
 
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def infocall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
-		self.mother.toplevel.setready()
 
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def newsyncarccall(self):
 		self.mother.init_display()
@@ -1531,7 +1501,6 @@ class NodeBox(GO, NodeBoxCommand):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.hierarchyview.globalsetfocus(self.node)
-		top.setready()
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
@@ -1624,7 +1593,6 @@ class ArcBox(GO, ArcBoxCommand):
 		ArcInfo.showarcinfo(self.mother, self.mother.root,
 				    self.snode, self.sside, self.delay,
 				    self.dnode, self.dside)
-		self.mother.toplevel.setready()
 
 	def delcall(self):
 		mother = self.mother
@@ -1636,10 +1604,8 @@ class ArcBox(GO, ArcBoxCommand):
 			self.delay, self.dnode, self.dside)
 		mother.cleanup()
 		editmgr.commit()
-		mother.toplevel.setready()
 
 	def selnode(self, node):
 		top = self.mother.toplevel
 		top.setwaiting()
 		self.mother.globalsetfocus(node)
-		top.setready()

@@ -28,7 +28,6 @@ class Player(PlayerCore, PlayerDialog):
 		PlayerDialog.__init__(self, self.get_geometry(),
 				      'Player (' + toplevel.basename + ')')
 		self.showing = 0
-		self.waiting = 0
 		self.channelnames = []
 		self.channels = {}
 		self.channeltypes = {}
@@ -130,7 +129,6 @@ class Player(PlayerCore, PlayerDialog):
 		else:
 			# nothing, restore state.
 			self.showstate()
-		self.toplevel.setready()
 
 	def pause_callback(self):
 		self.toplevel.setwaiting()
@@ -144,12 +142,10 @@ class Player(PlayerCore, PlayerDialog):
 			# Case 3: not playing. Go to paused mode
 			self.pause(1)
 			self.play()
-		self.toplevel.setready()
 
 	def stop_callback(self):
 		self.toplevel.setwaiting()
 		self.cc_stop()
-		self.toplevel.setready()
 
 	def magic_play(self):
 		if self.playing:
@@ -163,7 +159,6 @@ class Player(PlayerCore, PlayerDialog):
 		self.toplevel.setwaiting()
 		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
-		self.toplevel.setready()
 
 	def cc_stop(self):
 		self.stop()
@@ -207,15 +202,3 @@ class Player(PlayerCore, PlayerDialog):
 			channels.append((name, self.channels[name].is_showing()))
 		channels.sort()
 		self.setchannels(channels)
-
-	def setwaiting(self):
-		self.waiting = 1
-		self.setcursor('watch')
-		for cname in self.channelnames:
-			self.channels[cname].setwaiting()
-
-	def setready(self):
-		self.waiting = 0
-		for cname in self.channelnames:
-			self.channels[cname].setready()
-		self.setcursor('')
