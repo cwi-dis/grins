@@ -641,7 +641,7 @@ class _DisplayList:
 		return self.__font_size_cache[2]
 
 	def strsize(self, str):
-		width, height = self._font.strsizePXL(self._window._wid, str)
+		width, height = self._font.strsizePXL(str, wid=self._window._wid)
 		return self._window._pxl2rel((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
