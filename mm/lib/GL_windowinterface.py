@@ -1926,6 +1926,9 @@ _fontmap = {
 	  'Times-Bold':		'Times-Bold',
 	  'Utopia-Bold':	'Utopia-Bold',
 	  'Palatino-Bold':	'Palatino-Bold',
+	  'Helvetica':		'Helvetica',
+	  'Helvetica-Bold':	'Helvetica-Bold',
+	  'Helvetica-Oblique':	'Helvetica-Oblique',
 	  }
 
 toplevel = _Toplevel()
