@@ -265,20 +265,40 @@ class MediaRegion(Region):
 		else:
 			fit = 'fill'
 		self.fit = fit
-		
-		# ajust the internal geom for edition. If no constraint neither on right nor botton,
-		# with fit==hidden: chg the internal region size.
-		# it avoid a unexepected effet during the edition when you resize. don't change the semantic
-		right =	self.mmnode.GetAttrDef('right', None) 
-		bottom = self.mmnode.GetAttrDef('bottom', None) 
-		self.media_width, self.media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
-		if fit == 'hidden':
-			if right == None:
-				x,y,w,h = wingeom
-				wingeom = x,y,self.media_width,h
-			if bottom == None:
-				x,y,w,h = wingeom
-				wingeom = x,y,w,self.media_height
+
+		if not settings.activeFullSmilCss:		
+			# ajust the internal geom for edition. If no constraint neither on right nor botton,
+			# with fit==hidden: chg the internal region size.
+			# it avoid a unexepected effet during the edition when you resize. don't change the semantic
+			right =	self.mmnode.GetAttrDef('right', None) 
+			bottom = self.mmnode.GetAttrDef('bottom', None) 
+			self.media_width, self.media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
+			if fit == 'hidden':
+				if right == None:
+					x,y,w,h = wingeom
+					wingeom = x,y,self.media_width,h
+				if bottom == None:
+					x,y,w,h = wingeom
+					wingeom = x,y,w,self.media_height
+		else:
+			# ajust the internal geom for edition. If no constraint neither on right nor botton,
+			# with fit==hidden: chg the internal region size.
+			# it avoid a unexepected effet during the edition when you resize. don't change the semantic
+			right =	self.mmnode.GetRawAttrDef('right', None) 
+			bottom = self.mmnode.GetRawAttrDef('bottom', None) 
+			width =	self.mmnode.GetRawAttrDef('width', None) 
+			height = self.mmnode.GetRawAttrDef('height', None)
+			regPoint = self.mmnode.GetAttr('regPoint', None)
+			regAlign = self.mmnode.GetAttr('regAlign', None)
+			self.media_width, self.media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
+			if regPoint == 'topLeft' and regAlign == 'topLeft':
+				if fit == 'hidden':
+					if right == None and width == None:
+						x,y,w,h = wingeom
+						wingeom = x,y,self.media_width,h
+					if bottom == None and height == None:
+						x,y,w,h = wingeom
+						wingeom = x,y,w,self.media_height
 				
 		self._curattrdict['wingeom'] = wingeom
 		
@@ -928,20 +948,23 @@ class LayoutView2(LayoutViewDialog2):
 				scale = -3
 			
 			x,y,w,h = value
-			self.editmgr.setnodeattr(media.mmnode, 'scale', scale)			
-			self.editmgr.setnodeattr(media.mmnode, 'left', x)
-			self.editmgr.setnodeattr(media.mmnode, 'top' , y)
+			if not settings.activeFullSmilCss:
+				self.editmgr.setnodeattr(media.mmnode, 'scale', scale)			
+				self.editmgr.setnodeattr(media.mmnode, 'left', x)
+				self.editmgr.setnodeattr(media.mmnode, 'top' , y)
 
-			mw = media.media_width
-			mh = media.media_height
-			# parent region size
-			parent = media.getParent()
-			px, py, pw, ph = parent.getGeom()
-			right = pw-(x+w)
-			self.editmgr.setnodeattr(media.mmnode, 'right', right)
-			bottom = ph-(y+h)
-			self.editmgr.setnodeattr(media.mmnode, 'bottom' , bottom)
-			
+				mw = media.media_width
+				mh = media.media_height
+				# parent region size
+				parent = media.getParent()
+				px, py, pw, ph = parent.getGeom()
+				right = pw-(x+w)
+				self.editmgr.setnodeattr(media.mmnode, 'right', right)
+				bottom = ph-(y+h)
+				self.editmgr.setnodeattr(media.mmnode, 'bottom' , bottom)
+			else:
+				self.editmgr.setnodeattr(media.mmnode, 'base_winoff', (x,y,w,h))
+							
 			# todo: some ajustements for take into account all fit values
 			self.editmgr.commit('MEDIA_GEOM')
 		
@@ -1474,7 +1497,7 @@ class LayoutView2(LayoutViewDialog2):
 	# return in pixel value
 	def _getwingeom(self, channel, node):
 		if settings.activeFullSmilCss:
-			regGeom, mediaGeom = node.getPxGeomMedia()
+			regGeom = node.getPxGeom()
 			return regGeom
 		subreg_left = node.GetAttrDef('left', 0)
 		subreg_right = node.GetAttrDef('right', 0)
