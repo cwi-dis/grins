@@ -77,6 +77,8 @@ class Main(MainDialog):
 			import windowinterface
 			windowinterface.showmessage('Parse error in document: %s' % url)
 		else:
+			while self.tops:
+				self.tops[0].close_callback()
 			self.tops.append(top)
 			top.show()
 			top.player.show()
