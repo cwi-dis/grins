@@ -120,43 +120,30 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	object *n, *v;
 
 	dprintf(("sound_arm\n"));
-	if (!is_listobject(attrlist)) {
-		err_setstr(RuntimeError, "attributes not a list");
+	if (!is_dictobject(attrlist)) {
+		err_setstr(RuntimeError, "attributes not a dictionary");
 		return 0;
 	}
-	length = getlistsize(attrlist);
 	PRIV->s_arm.nchannels = 1;
 	PRIV->s_arm.samprate = 8000;
 	PRIV->s_arm.sampwidth = 1;
 	PRIV->s_arm.offset = 0;
 	PRIV->s_playrate = 1.0;
-	for (i = 0; i < length; i++) {
-		v = getlistitem(attrlist, i);
-		if (!is_tupleobject(v) || gettuplesize(v) != 2) {
-			err_setstr(RuntimeError, "attrlist not a proper list");
-			return 0;
-		}
-		n = gettupleitem(v, 0);
-		if (!is_stringobject(n)) {
-			err_setstr(RuntimeError, "attrlist not a proper list");
-			return 0;
-		}
-		name = getstringvalue(n);
-		n = gettupleitem(v, 1);
-		if (!is_intobject(n))
-			continue;
-		value = getintvalue(n);
-		if (strcmp(name, "nchannels") == 0)
-			PRIV->s_arm.nchannels = value;
-		else if (strcmp(name, "nsampframes") == 0)
-			PRIV->s_arm.nsampframes = value;
-		else if (strcmp(name, "sampwidth") == 0)
-			PRIV->s_arm.sampwidth = value;
-		else if (strcmp(name, "samprate") == 0)
-			PRIV->s_arm.samprate = value;
-		else if (strcmp(name, "offset") == 0)
-			PRIV->s_arm.offset = value;
-	}
+	v = dictlookup(attrlist, "nchannels");
+	if (v && is_intobject(v))
+		PRIV->s_arm.nchannels = getintvalue(v);
+	v = dictlookup(attrlist, "nsampframes");
+	if (v && is_intobject(v))
+		PRIV->s_arm.nsampframes = getintvalue(v);
+	v = dictlookup(attrlist, "sampwidth");
+	if (v && is_intobject(v))
+		PRIV->s_arm.sampwidth = getintvalue(v);
+	v = dictlookup(attrlist, "samprate");
+	if (v && is_intobject(v))
+		PRIV->s_arm.samprate = getintvalue(v);
+	v = dictlookup(attrlist, "offset");
+	if (v && is_intobject(v))
+		PRIV->s_arm.offset = getintvalue(v);
 	PRIV->s_arm.f = getfilefile(file);
 	return 1;
 }
@@ -242,6 +229,7 @@ sound_player(self)
 				  n, PRIV->s_play.f);
 			if (n <= 0) {
 				dprintf(("fread returned %d at %ld (nsamps = %d)\n", n, ftell(PRIV->s_play.f), nsamps));
+				n = 0;
 			} else {
 				dprintf(("fread %d samples\n", n));
 			}
@@ -275,9 +263,9 @@ sound_player(self)
 				filled = ALgetfilled(PRIV->s_port);
 			ALcloseport(PRIV->s_port);
 			if (c == 'p' || c == 'r') {
-				fseek(PRIV->s_play.f, -(filled - n) * PRIV->s_play.sampwidth, 1);
+				fseek(PRIV->s_play.f, -(filled + n) * PRIV->s_play.sampwidth, 1);
+				dprintf(("filled = %ld, nsamps before = %ld\n", filled, nsamps));
 				nsamps += filled;
-				PRIV->s_play.nsampframes = nsamps;
 			}
 			if (c == 'p') {
 				dprintf(("waiting to continue\n"));

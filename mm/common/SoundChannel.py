@@ -118,12 +118,12 @@ class SoundChannel(Channel):
 			f, nchannels, nsampframes, sampwidth, samprate, format = self.armed_info
 ##			print 'SoundChannel.arm: self.threads = ' + `self.threads`
 			self.threads.arm(f.f, 0, 0, \
-				  [('nchannels', int(nchannels)), \
-				   ('nsampframes', int(nsampframes)), \
-				   ('sampwidth', int(sampwidth)), \
-				   ('samprate', int(samprate)), \
-				   ('format', format), \
-				   ('offset', int(f.f.tell()))], \
+				  {'nchannels': int(nchannels), \
+				   'nsampframes': int(nsampframes), \
+				   'sampwidth': int(sampwidth), \
+				   'samprate': int(samprate), \
+				   'format': format, \
+				   'offset': int(f.f.tell())}, \
 				  None)
 		except IOError:
 			self.armed_info = None
