@@ -703,10 +703,10 @@ class PopupButtonRow(ButtonRow):
 		return '<PopupButtonRow instance, name=' + `self.name` + '>'
 
 	def createwidget(self, parent, left, right, top, bottom):
-		choices = ['None'] + self.choices()
+		choices = ['Default'] + self.choices()
 		current = self.getcurrent()
 		if current is None:
-			current = 'None'
+			current = 'Default'
 			cur = 0
 		else:
 			try:
@@ -733,7 +733,7 @@ class PopupButtonRow(ButtonRow):
 		else:
 			func = self.widget.settext
 		self.choosewin = SelectionDialog(self.widget.gettext(),
-						 ['None'] + self.choices(),
+						 ['Default'] + self.choices(),
 						 func)
 
 	def getvalue(self):
@@ -741,15 +741,15 @@ class PopupButtonRow(ButtonRow):
 			value = self.widget.getvalue()
 		else:
 			value = self.widget.gettext()
-			if value not in ['None'] + self.choices():
+			if value not in ['Default'] + self.choices():
 				raise RuntimeError, '%s not a valid option' % value
-		if value == 'None':
+		if value == 'Default':
 			return None
 		return self.parsevalue(value)
 
 	def setvalue(self, value):
 		if value is None:
-			value = 'None'
+			value = 'Default'
 		else:
 			value = self.valuerepr(value)
 		if self.isoption:
@@ -810,8 +810,8 @@ class BaseChannelnameButtonRow(ChannelnameButtonRow):
 			if name == chname:
 				continue
 			ch = ctx.channeldict[name]
-			if ch.attrdict['type'] == 'layout':
-				list.append(name)
+##			if ch.attrdict['type'] == 'layout':
+			list.append(name)
 		return list
 
 class ChildnodenameButtonRow(PopupButtonRow):

@@ -608,12 +608,12 @@ class ChannelView(ViewDialog):
 				  "You can't create a new channel\n" +
 				  "unless you are showing unused channels\n" +
 				  "(use shortcut 'T')",
-				  type = 'warning')
+				  mtype = 'warning')
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
 				'Please place the other channel first!',
-				type = 'error')
+				mtype = 'error')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -663,12 +663,12 @@ class ChannelView(ViewDialog):
 				  "You can't create a new channel\n" +
 				  "unless you are showing unused channels\n" +
 				  "(use shortcut 'T')",
-				  type = 'warning')
+				  mtype = 'warning')
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
 				'Please place the other channel first!',
-				type = 'error')
+				mtype = 'error')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -688,12 +688,12 @@ class ChannelView(ViewDialog):
 				  "You can't move a channel\n" +
 				  "unless you are showing unused channels\n" +
 				  "(use shortcut 'T')",
-				  type = 'warning')
+				  mtype = 'warning')
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
 				'Please place the other channel first!',
-				type = 'error')
+				mtype = 'error')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -1093,7 +1093,7 @@ class ChannelBox(GO):
 			windowinterface.showmessage(
 				  "You can't delete a channel\n" +
 				  'that is still in use',
-				  type = 'error')
+				  mtype = 'error')
 			return
 		mother = self.mother
 		editmgr = mother.editmgr
