@@ -488,6 +488,7 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def __init__(self):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
 		win32window.MSDrawContext.__init__(self)
+		self._listener = None
 		
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
@@ -572,7 +573,8 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		shape.onProperties()
 
 	def onMultiSelChanged(self, selections):
-		print 'onMultiSelChanged', selections
+		if self._listener != None:
+			self._listener.onMultiSelChanged(selections)
 
 	# 
 	# interface implementation: function called from an external module
@@ -582,7 +584,10 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	# define a handler for the layout component
 	def setListener(self, listener):
 		self._listener = listener
-			
+
+	def removeListener(self):
+		self._listener = None
+		
 	# create a new viewport
 	def newViewport(self, attrdict, name):
 		x,y,w, h = attrdict.get('wingeom')

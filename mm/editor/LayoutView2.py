@@ -1936,6 +1936,9 @@ class PreviousWidget(Widget):
 
 		self.previousCtrl = self._context.previousCtrl
 
+		# to prevent against indefite loop
+		self.__selecting = 0
+
 	#
 	# inherited methods
 	#
@@ -1945,8 +1948,10 @@ class PreviousWidget(Widget):
 		currentViewportList = self._context.getViewportRefList()
 		viewport = currentViewportList[0]
 		self.displayViewport(viewport)
+		self.previousCtrl.setListener(self)
 
 	def destroy(self):
+		self.previousCtrl.removeListener()
 		if self.currentViewport != None:
 			self.currentViewport.hideAllNodes()
 			self.currentViewport = None
@@ -1957,6 +1962,9 @@ class PreviousWidget(Widget):
 		self.previousCtrl = None
 
 	def selectNodeList(self, nodeRefList):
+		# to prevent against indefite loop
+		self.__selecting = 1
+		
 		if not self.localSelect:
 		# remove previous medias which are not selected anymore
 			mediaToRemove = []
@@ -1978,6 +1986,8 @@ class PreviousWidget(Widget):
 				self.selectRegion(nodeRef)
 			elif nodeType == TYPE_MEDIA:
 				self.selectMedia(nodeRef)
+
+		self.__selecting = 0
 
 	#
 	#
@@ -2110,6 +2120,7 @@ class PreviousWidget(Widget):
 				newNode.show()
 
 	def onSelect(self, nodeList):
+		self.hasAlreadyFocus = 0		
 		self.localSelect = 1
 		self._context.onSelect(nodeList)
 		
@@ -2151,6 +2162,20 @@ class PreviousWidget(Widget):
 			self.currentViewport.hideAllNodes()
 		self.currentViewport = self.getNode(viewportRef)
 		self.currentViewport.showAllNodes()
+
+	def onMultiSelChanged(self, objectList):
+		# prevent against infinite loop
+		if self.__selecting:
+			return
+		
+		# build the list of the reference nodes selected
+		list = []
+		# xxx to optimize
+		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			for obj in objectList:
+				if nodeTree._graphicCtrl is obj:
+					list.append(nodeRef)
+		self.onSelect(list)
 								
 class Node:
 	def __init__(self, name, nodeRef, ctx):
