@@ -569,6 +569,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Response to mouse move
 	def onMouseMove(self, params):
+		if not self.cursorCanChangeOnMove():return
 		if self.in_create_box_mode():
 			self.notifyListener('onMouseMove',params)
 			return
@@ -592,13 +593,31 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Set the cursor given its string id		
 	def setcursor(self, strid):
+		if strid!='arrow': print 'cmifwnd.setcursor',strid
 		if strid=='hand':
 			#cursor=Sdk.LoadStandardCursor(win32con.IDC_HAND)
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
+		elif strid=='channel':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
+		elif strid=='stop':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
 		else:
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+			strid='arrow'
 		if self._window_type==MPEG:Sdk.SetCursor(cursor)
 		else: self.SetWndCursor(cursor)
+		self.setsyscursor(strid)
+
+	# set/get current cursor string identifier
+	def setsyscursor(self,strid):
+		self._curcursor=strid
+#		__main__.toplevel._cursor=strid
+	def getsyscursor(self):
+		return self._curcursor
+		#return __main__.toplevel._cursor
+	# return true if the cursor can change on move
+	def cursorCanChangeOnMove(self):
+		return self._curcursor in ('','arrow','hand')
 
 	# Apply window cursor
 	def SetWndCursor(self,cursor):
