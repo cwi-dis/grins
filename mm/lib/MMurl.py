@@ -8,6 +8,11 @@ class FancyURLopener(_OriginalFancyURLopener):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
 
+	def open(self, fullurl, data=None):
+		result = _OriginalFancyURLopener.open(self, fullurl, data)
+		self.openedurl = result.url
+		return result
+
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
 		void = fp.read()
 		fp.close()
