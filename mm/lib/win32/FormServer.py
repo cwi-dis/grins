@@ -46,6 +46,7 @@ class ChildFrame(window.MDIChildWnd):
 	def __init__(self,form=None):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._form=form
+		self._sizeFreeze=0
 
 	# Create the OS window
 	def Create(self, title, rect = None, parent = None, maximize=0):
@@ -87,7 +88,7 @@ class ChildFrame(window.MDIChildWnd):
 			context.template.CreateView(self, context)
 		elif self._form:
 			v=self._form
-			v.CreateWindow(self)
+			v.createWindow(self)
 			self.SetActiveView(v)
 			self.RecalcLayout()
 			v.OnInitialUpdate()
@@ -130,6 +131,13 @@ class ChildFrame(window.MDIChildWnd):
 	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
+
+	# Freeze window size
+	def freezeSize(self):
+		self._sizeFreeze=1
+		l,t,r,b=self.GetWindowRect()
+		self._rc_freeze=(0,0,r-l-1,b-t-1)
+		self.ModifyStyle(win32con.WS_MAXIMIZEBOX|win32con.WS_THICKFRAME,0,0)
 
 # This class implements a Form Server. Any client can request
 # a form by passing its string id
