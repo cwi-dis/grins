@@ -346,15 +346,12 @@ class NodeInfo(NodeInfoDialog):
 			while self.context.channeldict.has_key(name):
 				i = i+1
 				name = base + `i`
-			windowinterface.InputDialog('Name for new channel',
-						    name,
-						    self.newchan_cb,
-						    cancelCallback = (self.newchan_cb, ()))
+			self.askchannelname(name)
 		elif self.origchannelname <> self.channelname:
 			self.ch_channelname = 1
 			self.changed = 1
 
-	def newchan_cb(self, name = None):
+	def newchan_callback(self, name = None):
 		all = self.allchannelnames
 		self.channelname = name or UNDEFINED
 		if self.origchannelname <> self.channelname:
