@@ -780,7 +780,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_stop)
 		# XXX WARNING: if you uncomment that method, you get some ramdom python crash
-#		self.updatePanelCmdUI()
+		try:
+			self.updatePanelCmdUI()
+		except:
+			pass
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
@@ -813,6 +816,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# the control
 		# note: to change the state of any check marks (in menu), use a different method
 		cmdui.Enable(0)
+		cmdui.ContinueRouting()
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
