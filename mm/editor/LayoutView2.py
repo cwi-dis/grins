@@ -1236,17 +1236,14 @@ class LayoutView2(LayoutViewDialog2):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
-		
+		import AttrEdit		
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			# allow to choice attributes
-			import AttrEdit		
-			AttrEdit.showchannelattreditor(self.toplevel,
-						self.context.channeldict[nodeRef.name])
+			AttrEdit.showchannelattreditor(self.toplevel, nodeRef, 'cssbgcolor')
 		elif nodeType == TYPE_MEDIA:
 			# allow to choice attributes
-			import AttrEdit
-			AttrEdit.showattreditor(self.toplevel, nodeRef)
+			AttrEdit.showattreditor(self.toplevel, nodeRef, 'cssbgcolor')
 		
 	def sendBack(self, regionRef):
 		currentZ = regionRef.GetAttrDef('z',0)
