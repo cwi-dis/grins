@@ -12,13 +12,13 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python16
+    Project_Dep_Name Python16
     End Project Dependency
 }}}
 
 ###############################################################################
 
-Project: "Python"=..\..\..\..\PYTHON_CE\PCBUILD\CE\Python.vcp - Package Owner=<4>
+Project: "Python16"=..\..\..\..\PYTHON_CE\PCBUILD\CE\Python16.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -26,9 +26,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -43,9 +40,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name GRiNS Player
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name python16
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name wingdi
@@ -72,7 +66,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python16"=..\..\..\..\PYTHON_CE\PCBUILD\CE\python16.vcp - Package Owner=<4>
+Project: "python15"=..\..\..\..\python_ce\PCbuild\ce\python15.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -93,7 +87,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python16
+    Project_Dep_Name Python16
     End Project Dependency
 }}}
 
@@ -108,7 +102,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python16
+    Project_Dep_Name Python16
     End Project Dependency
 }}}
 
@@ -123,7 +117,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python16
+    Project_Dep_Name Python16
     End Project Dependency
 }}}
 
