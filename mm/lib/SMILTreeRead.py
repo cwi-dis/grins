@@ -545,12 +545,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
-			self.__regions[region] = ch = \
-					{'minwidth': 0, 'minheight': 0,
-					 'left': 0, 'top': 0,
-					 'width': 0, 'height': 0,
-					 'z-index': 0, 'fit': 'hidden',
-					 'background-color': 'transparent'}
+			self.__in_layout = LAYOUT_SMIL
+			ch = {}
+			for key, val in self.attributes['region'].items():
+				if val is not None:
+					ch[key] = val
+			ch['id'] = region
+			self.start_region(ch)
+			self.end_region()
+			self.__in_layout = LAYOUT_NONE
+			ch = self.__regions[region]
 		width = height = 0
 		x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 		if self.__width > 0 and self.__height > 0:
@@ -737,7 +741,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['height'] = h
 		#
 		thetype = None # type of 1st elem != 0
-		broken = 0
 		for val in x, y, w, h:
 			if val == 0:
 				continue
@@ -746,26 +749,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				continue
 			elif type(val) is thetype:
 				continue
-			broken = 1
-			break
-		else:
-			# all the same type or 0
-			if thetype is type(0) or thetype is None:
-				units = UNIT_PXL
-			else:
-				units = UNIT_SCREEN
-			attrdict['units'] = units
-			if w == 0 and type(width) is type(0):
-				if units == UNIT_PXL:
-					w = width - int(x)
-				else:
-					w = 1.0 - x
-			if h == 0 and type(height) is type(0):
-				if units == UNIT_PXL:
-					h = height - int(y)
-				else:
-					h = 1.0 - y
-		if broken:
 			# we only get here if there
 			# are multiple values != 0 of
 			# different types
@@ -786,6 +769,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					h = float(h) / height
 			attrdict['units'] = UNIT_SCREEN
+			break
+		else:
+			# all the same type or 0
+			if thetype is type(0) or thetype is None:
+				units = UNIT_PXL
+			else:
+				units = UNIT_SCREEN
+			attrdict['units'] = units
+			if w == 0 and type(width) is type(0):
+				if units == UNIT_PXL:
+					w = width - int(x)
+				else:
+					w = 1.0 - x
+			if h == 0 and type(height) is type(0):
+				if units == UNIT_PXL:
+					h = height - int(y)
+				else:
+					h = 1.0 - y
 		attrdict['left'] = x
 		attrdict['top'] = y
 		attrdict['width'] = w
@@ -1013,6 +1014,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						     region, self.lineno)
 					self.__in_layout = LAYOUT_SMIL
 					self.start_region({'id': region})
+					self.end_region()
 					self.__in_layout = LAYOUT_NONE
 				# we're going to change this locally...
 				attrdict = self.__regions[region]
@@ -1275,6 +1277,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout
 			return
+		from windowinterface import UNIT_PXL
 		id = None
 		attrdict = {'left': 0,
 			    'top': 0,
