@@ -49,6 +49,9 @@ def _shownodeinfo(node,new):
 	except NameError:
 		nodeinfo = NodeInfo().init(node)
 		node.nodeinfo = nodeinfo
+	except AttributeError: # new style exceptions
+		nodeinfo = NodeInfo().init(node)
+		node.nodeinfo = nodeinfo
 	nodeinfo.open(new)
 
 def shownodeinfo(node): _shownodeinfo(node,0)
@@ -59,6 +62,8 @@ def hidenodeinfo(node):
 	try:
 		nodeinfo = node.nodeinfo
 	except NameError:
+		return # No node info form active
+	except AttributeError: # new style exceptions
 		return # No node info form active
 	nodeinfo.close()
 
@@ -71,6 +76,8 @@ def hasnodeinfo(node):
 	try:
 		nodeinfo = node.nodeinfo
 	except NameError:
+		return 0 # No node info form active
+	except AttributeError: # new style exceptions
 		return 0 # No node info form active
 	return nodeinfo.showing
 #
@@ -244,7 +251,9 @@ class NodeInfo() = Dialog():
 		self.channel_select.addto_choice(i)
 	    try:
 		self.channel_select.set_choice(self.allchannelnames.index(self.channelname)+1)
-	    except RuntimeError:
+	    except RuntimeError: # the .index() failed
+		self.channel_select.set_choice(0)
+	    except ValueError: # the .index() failed (new style Python)
 		self.channel_select.set_choice(0)
 	    #
 	    self.styles_browser.clear_browser()
