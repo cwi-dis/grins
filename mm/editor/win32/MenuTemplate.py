@@ -182,7 +182,7 @@ MENUBAR=(
 		(SMIL, TOGGLE, 'Unused c&hannels', None, TOGGLE_UNUSED),
 		(SMIL, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
 		(SMIL, TOGGLE, '&Image thumbnails', None, THUMBNAIL),
-		(LIGHT, TOGGLE, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
+		(LIGHT, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
 		(SMIL, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
 		(SMIL, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(SMIL, TOGGLE, 'Show &Durations', None, TIMESCALE),
