@@ -553,13 +553,14 @@ class NodeWrapper(Wrapper):
 				namelist.append('system_cpu')
 				namelist.append('system_operating_system')
 				namelist.append('system_component')
-				namelist.append('restart')
-				namelist.append('restartDefault')
-				namelist.append('fillDefault')
-				namelist.append('syncBehavior')
-				namelist.append('syncBehaviorDefault')
-				namelist.append('min')
-				namelist.append('max')
+				if ntype != 'switch':
+					namelist.append('restart')
+					namelist.append('restartDefault')
+					namelist.append('fillDefault')
+					namelist.append('syncBehavior')
+					namelist.append('syncBehaviorDefault')
+					namelist.append('min')
+					namelist.append('max')
 				if ntype in leaftypes:
 					namelist.append('readIndex')
 					namelist.append('erase')
@@ -567,7 +568,7 @@ class NodeWrapper(Wrapper):
 			# Snap!
 			if ntype != 'switch':
 				namelist.append('.begin1')
-		if not snap and (ntype in leaftypes or boston):
+		if not snap and (ntype in leaftypes or boston) and ntype != 'switch':
 			namelist.append('fill')
 		if boston:
 			namelist.append('alt')
@@ -581,6 +582,10 @@ class NodeWrapper(Wrapper):
 			if 'begin' in namelist:
 				namelist.remove('begin')
 			namelist.remove('loop')
+			namelist.remove('duration')
+			namelist.remove('repeatdur')
+			namelist.remove('beginlist')
+			namelist.remove('endlist')
 		if ntype in leaftypes:
 			namelist.append('alt')
 			if not snap:
