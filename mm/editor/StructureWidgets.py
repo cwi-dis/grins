@@ -834,7 +834,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			# don't propagate message-less info
 			return
 		self.makevisible()
-		if not self.mother.calculating:
+		if not self.mother.calculating and not self.mother.creating:
 			self.mother.need_redraw = 1
 			self.mother.draw()
 
