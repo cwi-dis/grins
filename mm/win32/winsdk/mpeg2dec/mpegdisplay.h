@@ -25,6 +25,7 @@ struct display_info
 	bool mpeg2_flag;
 	bool progressive_frame;
 	int matrix_coefficients;
+	double frame_rate;
 	};
 
 class MpegDisplay
