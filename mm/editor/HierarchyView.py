@@ -1150,19 +1150,21 @@ class HierarchyView(HierarchyViewDialog):
 		
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()
-		bandwidth, prerolltime, errorcount, errorseconds = \
-				BandwidthCompute.compute_bandwidth(self.root)
+		import settings
+		import BandwidthCompute
+		bandwidth = settings.get('system_bitrate')
 		if bandwidth > 1000000:
 			bwname = "%dMbps"%(bandwidth/1000000)
 		elif bandwidth % 1000 == 0:
 			bwname = "%dkbps"%(bandwidth/1000)
 		else:
 			bwname = "%dbps"%bandwidth
-		msg = "Bandwidth usage report (%s):\n"%bwname
-		msg = msg + "Preroll time: %d seconds\n"%prerolltime
-		msg = msg + "Stall time: %d seconds\n"%errorseconds
-		msg = msg + "Caused by: %d media items\n"%errorcount
-		windowinterface.showmessage(msg)
+		msg = 'Computing bandwidth usage at %s...'%bwname
+		dialog = windowinterface.BandwidthComputeDialog(msg)
+		bandwidth, prerolltime, errorcount, errorseconds = \
+			BandwidthCompute.compute_bandwidth(self.root)
+		dialog.setinfo(prerolltime, errorseconds, errorcount)
+		dialog.done()
 
 	def playcall(self):
 		if self.focusobj: self.focusobj.playcall()
