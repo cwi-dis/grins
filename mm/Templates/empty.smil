@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content="root-layout"/>
+    <layout>
+      <root-layout id="root-layout" title="root-layout" width="640" height="480"/>
+    </layout>
+  </head>
+  <body>
+  </body>
+</smil>
