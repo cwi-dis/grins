@@ -63,7 +63,7 @@ public interface SMILDocument {
    
     /**
     *  Returns the number of frames per second of the designated media element.
-    *  The argument relativeUrlStr is relative to the smil document
+    *  The argument relativeUrlStr should be relative to the smil document
     */
     int getMediaFrameRate(String relativeUrlStr) throws GRiNSException;
     
