@@ -5,19 +5,9 @@ from MMExc import *		# Exceptions
 from MMNode import alltypes, leaftypes, interiortypes
 
 
-import regexp
+from tokenize import tokenprog
 
-
-# Globals used by class MMParser
-
-expr = '0[xX][0-9a-fA-F]+|[0-9]+(\.[0-9]*)?([eE][-+]?[0-9]+)?'
-matchnumber = regexp.compile(expr).match
-
-expr = '[a-zA-Z_][a-zA-Z0-9_]*'
-matchname = regexp.compile(expr).match
-
-letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-digits = '0123456789'
+from string import letters, digits
 
 
 # Parser for CMIF files.
@@ -380,15 +370,11 @@ class MMParser:
 	# the parser is too slow.
 	#
 	def getnexttoken(self):
-		self.tokstart = self.pos
-		#
-		# Look for the start of a token (returns '' if EOF hit)
-		#
 		while 1:
-			#
-			# Read next line if necessary
-			#
-			if self.pos >= len(self.nextline):
+			while tokenprog.match(self.nextline, self.pos) < 0:
+				#
+				# End of line hit
+				#
 				if self.eofseen:
 					self.nextline = ''
 				else:
@@ -413,52 +399,11 @@ class MMParser:
 					if len(cont) < 2:
 						break
 			#
-			# Skip whitespace and comments
+			# Found a token
 			#
-			i, n = self.pos, len(self.nextline)
-			while i < n and self.nextline[i] in ' \t\n\f\v':
-				i = i+1
-			if i < n and self.nextline[i] == '#':
-				i = n
-			self.pos = i
-			if i < n:
-				break
-		#
-		# Process the token
-		#
-		line = self.nextline
-		i, n = self.pos, len(line)
-		c = line[i]
-		self.tokstart = i
-		if c == '\'':
-			i = i+1
-			while i < n:
-				c = line[i]
-				i = i+1
-				if c == '\'':
-					token = line[self.pos : i]
-					self.pos = i
-					return token
-				if c == '\\':
-					i = i+1
-			raise SyntaxError, 'unterminated string'
-		if c in digits:
-			match = matchnumber(line, i)
-			if match:
-				first, last = match[0]
-				token = line[first : last]
-				self.pos = last
-				return token
-			raise SyntaxError, 'number syntax error'
-		if c in letters:
-			match = matchname(line, i)
-			if match:
-				first, last = match[0]
-				token = line[first : last]
-				self.pos = last
-				return token
-		self.pos = i+1
-		return c
+			self.tokstart, self.pos = tokenprog.regs[3]
+			token = self.nextline[self.tokstart:self.pos]
+			if token != '\n': return token
 	#
 	# Default error handlers.
 	#
@@ -550,7 +495,9 @@ def testtokenizer():
 #
 def testparser():
 	import sys
-	p = MMParser().init(sys.stdin)
+	import MMNode
+	context = MMNode.MMNodeContext().init(MMNode.MMNode)
+	p = MMParser().init(sys.stdin, context)
 	try:
 		x = p.getnode()
 	except EOFError:
