@@ -79,7 +79,7 @@ class Channel:
 		self._highlighted = None
 		self._in_modeless_resize = 0
 		self.nopop = 0
-		self.syncarm = 0
+		self.syncarm = settings.noprearm
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
@@ -479,11 +479,17 @@ class Channel:
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._armed_node is not node:
-			raise error, 'node was not the armed node '+`self,node`
+			if settings.noprearm:
+				self.arm(node)
+			else:
+				raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
-			raise error, 'arm not ready'
+			if settings.noprearm:
+				self.arm(node)
+			else:
+				raise error, 'arm not ready'
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
@@ -1407,7 +1413,7 @@ class ChannelWindow(Channel):
 				self.armed_display.fgcolor(self.getbucolor(node))
 			else:
 				self.armed_display.fgcolor(bgcolor)
-			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0))
+			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0), times = armed_anchor[A_TIMES])
 			b.hiwidth(3)
 			b.hicolor(self.gethicolor(node))
 			self.armed_display.fgcolor(fgcolor)

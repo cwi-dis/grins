@@ -375,7 +375,7 @@
 (fullimage (bool) 1 'Use whole image' default
 	'Use whole image' normal light)
 
-(maxfps (int) 0 'Max fps' default 'Framerate for playback, 0 for as high as possible' inherited smil)
+(maxfps (int) 0 'Max fps' default 'Transition framerate, 0 for as high as possible' inherited smil)
 
 (preroll (float) 0.0 'Preroll time' default
 	'Time for which data should be buffered before presentation starts, see RealPix documentation'

@@ -79,6 +79,7 @@ def _get_icon(which):
 
 class DisplayList:
 	def __init__(self, window, bgcolor):
+		self.starttime = 0
 		r, g, b = bgcolor
 		self._window = window			
 		window._displists.append(self)
@@ -134,6 +135,8 @@ class DisplayList:
 #====================================== Rendering
 	# Called by any client that wants to activate the display list
 	def render(self):
+		import time
+		self.starttime = time.time()
 		wnd = self._window
 		if not wnd or not hasattr(wnd,'_obj_')or not hasattr(wnd,'RedrawWindow'):
 			return
@@ -388,10 +391,10 @@ class DisplayList:
 		self._fgcolor = color
 
 	# Define a new button
-	def newbutton(self, coordinates, z = 0):
+	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z)
+		return _Button(self, coordinates, z, times)
 
 
 	# display image from file
@@ -804,10 +807,11 @@ class DisplayList:
 ####################################################
 
 class _Button:
-	def __init__(self, dispobj, coordinates, z=0):
+	def __init__(self, dispobj, coordinates, z=0, times=None):
 		self._coordinates = coordinates
 		self._dispobj = dispobj
 		self._z = z
+		self._times = times
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -854,5 +858,14 @@ class _Button:
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
-		return (bx <= x < bx+bw and by <= y < by+bh)
-
+		if (bx <= x < bx+bw and by <= y < by+bh):
+			if self._times:
+				import time
+				curtime = time.time() - self._dispobj.starttime
+				t0, t1 = self._times
+				if (not t0 or t0 <= curtime) and \
+				   (not t1 or curtime < t1):
+					return 1
+				return 0
+			return 1
+		return 0

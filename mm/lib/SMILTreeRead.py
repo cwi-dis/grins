@@ -261,7 +261,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						offset = 0
 					xnode = self.__nodemap.get(name)
 					if xnode is None:
-						self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
+						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 						continue
 					if event == 'end':
 						xside = TL
@@ -276,7 +276,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if not boston:
 						boston = 'marker'
 					name = res.group('id')
+					xnode = self.__nodemap.get(name)
+					if xnode is None:
+						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+						continue
 					marker = res.group('markername')
+					synctolist.append((xnode.GetUID(), marker, 0.0, yside))
 					continue
 				res = wallclock.match(val)
 				if res is not None:
@@ -1836,6 +1841,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.attrdict['terminator'] = 'FIRST'
 		elif endsync == 'last':
 			node.attrdict['terminator'] = 'LAST'
+		elif endsync == 'all':
+			node.attrdict['terminator'] = 'ALL'
 		else:
 			res = idref.match(endsync)
 			if res is None:

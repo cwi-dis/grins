@@ -279,7 +279,7 @@ class _DisplayList:
 	def fgcolor(self, color):
 		r, g, b = color
 
-	def newbutton(self, coordinates):
+	def newbutton(self, coordinates, z = 0, times = None):
 		return _Button(self, coordinates)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
