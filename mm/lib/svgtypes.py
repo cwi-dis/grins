@@ -234,10 +234,7 @@ class SVGLength:
 	#unitstopx = {'px':1.0, 'pt':1.25, 'pc':15.0, 'mm': 3.543307, 'cm':35.43307, 'in':90.0}
 	unitstopx = {'px': 1.0, 'pt': 1.0, 'pc': 12.0, 'mm': 2.8346456, 'cm': 28.346456, 'in': 72.0}
 	#unitstopx =  {'px': 1.0, 'mm': 3.7795274666666665, 'in': 96.0, 'cm': 37.795274666666664, 'pt': 1.3333333333333333, 'pc': 16.0}
-
-	factor = 2.0
 	defaultunit = 'px'
-	import sys
 	def __init__(self, node, str, default=None):
 		self._node = node
 		self._units = None
@@ -268,7 +265,7 @@ class SVGLength:
 			if self._units=='%':
 				pass # find parent size
 			f1 = self.unitstopx.get(self._units)
-			pixels = self._value
+			pixels = f1*self._value
 			if units == 'px':
 				return int(pixels)
 			f2 = self.unitstopx.get(units)
