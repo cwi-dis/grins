@@ -8,7 +8,7 @@ from AnchorDefs import *
 
 
 class MpegChannel(ChannelWindowThread):
-	node_attrs = ChannelWindowThread.node_attrs + ['bucolor', 'hicolor']
+	node_attrs = ChannelWindowThread.node_attrs + ['bucolor', 'hicolor', 'scale']
 
 	def threadstart(self):
 		import mpegchannel
@@ -29,7 +29,7 @@ class MpegChannel(ChannelWindowThread):
 			return 1
 		try:
 			import MMAttrdefs, GLLock
-			arminfo = {'scale': MMAttrdefs.getattr(node, 'scale'),
+			arminfo = {'scale': float(MMAttrdefs.getattr(node, 'scale')),
 				   'bgcolor': self.getbgcolor(node)}
 			self.threads.arm(fp, 0, 0, arminfo, None,
 				  self.syncarm)
