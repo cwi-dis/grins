@@ -138,14 +138,6 @@ SOURCE=.\Qt.rc
 
 SOURCE=.\Qtmodule.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\test.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\test2.py
-# End Source File
 # End Group
 # Begin Group "Temp"
 
@@ -161,6 +153,18 @@ SOURCE=.\MovieObj.inc
 # Begin Source File
 
 SOURCE=.\qt.inc
+# End Source File
+# End Group
+# Begin Group "Python scripts"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\DdTestQt.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\testqt.py
 # End Source File
 # End Group
 # End Target
