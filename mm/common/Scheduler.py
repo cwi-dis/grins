@@ -88,10 +88,15 @@ class SchedulerContext:
 		todo = []
 		for cn in self.channelnames:
 			ch = self.parent.ui.getchannelbyname(cn)
+			if not ch:
+			        import windowinterface
+				windowinterface.showmessage(
+				    'Channel does not exist: ' + cn)
+				return 0
 			if ch in self.parent.channels_in_use:
 				import windowinterface
-				windowinterface.showmessage('Channel already in use: '\
-					  + cn)
+				windowinterface.showmessage(
+				    'Channel already in use: ' + cn)
 				return 0
 			todo.append(ch)
 		# Next, actually set them to be in use.
