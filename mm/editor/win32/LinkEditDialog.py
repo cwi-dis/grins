@@ -92,11 +92,10 @@ class LinkBrowserDialog:
 	# as an os object but it isn't before self.show
 	def assertcreated(self):
 		toplevel_window=self.toplevel.window
-		if not self.__window:
+		if not self.__window or not self.__window.is_oswindow():
 			w=toplevel_window.newviewobj(self._adornments['form_id'])
 			apply(w.do_init,self._init_args)
 			self.__window=w	
-		if not self.__window.is_oswindow():
 			toplevel_window.showview(self.__window,'leview_')
 			self.__window.show()
 

@@ -182,10 +182,12 @@ class _LinkView(docview.FormView,components.ControlsDict):
 
 	# Called by the frame work before closing this View
 	def OnClose(self):
-		if self._closecmdid>0:
-			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
-		else:
-			self.GetParent().DestroyWindow()
+# UNCOMMENT NEXT LINES WHEN LinkEdit class is fixed
+# so that it works the same way as the other views
+#		if self._closecmdid>0:
+#			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
+#		else:
+		self.GetParent().DestroyWindow()
 
 	# Returns true if the OS window exists
 	def is_oswindow(self):
