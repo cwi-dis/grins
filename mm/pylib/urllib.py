@@ -620,9 +620,14 @@ def basejoin(base, url):
 		# Interpret ../ (important because of symlinks)
 		while basepath and path[:3] == '../':
 			path = path[3:]
-			i = string.rfind(basepath, '/')
+			i = string.rfind(basepath[:-1], '/')
 			if i > 0:
-				basepath = basepath[:i-1]
+				basepath = basepath[:i+1]
+			elif i == 0:
+				basepath = '/'
+				break
+			else:
+				basepath = ''
 			
 		path = basepath + path
 	if type and host: return type + '://' + host + path
