@@ -30,7 +30,6 @@ WM_USER_SELWND = win32con.WM_USER+13
 STOPPED, PAUSING, PLAYING = range(3)
 UNKNOWN = -1
 
-
 class ListenerWnd(GenWnd.GenWnd):
 	def __init__(self, toplevel):
 		GenWnd.GenWnd.__init__(self)
@@ -57,8 +56,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.HookMessage(self.OnSelWnd, WM_USER_SELWND)
 
 	def OnDestroy(self, params):
-		if self.__timerid:
-			self.KillTimer(self.__timerid)
+		pass
 
 	def GetPermission(self, licensestr):
 		import features
@@ -101,15 +99,21 @@ class ListenerWnd(GenWnd.GenWnd):
 
 	def OnPlay(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
+		if frame: 
+			id = usercmdui.usercmd2id(usercmd.PLAY)
+			frame.OnUserCmd(id, 0)
 
 	def OnStop(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
+		if frame: 
+			id = usercmdui.usercmd2id(usercmd.STOP)
+			frame.OnUserCmd(id, 0)
 
 	def OnPause(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
+		if frame: 
+			id = usercmdui.usercmd2id(usercmd.PAUSE)
+			frame.OnUserCmd(id, 0)
 
 	def OnSetWindow(self, params):
 		frame = self._docmap.get(params[2])
@@ -317,6 +321,9 @@ class EmbeddedWnd(win32window.DDWndLayer):
 		import MMurl
 		title=MMurl.unquote(title)
 		self._title=title
+
+	def getgrinsdoc(self):
+		return self._smildoc
 
 	#
 	# paint
