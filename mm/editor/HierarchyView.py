@@ -6,10 +6,12 @@ __version__ = "$Id$"
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-# mjvdg: TODO:
-# drawing with no children doesn't work well yet.
-# There seems to be a bug which prevents an image being displayed if starting from
-# an empty 'document' - investigate.
+# XXX delete this:
+TODO = """
+Move focus back to parent node before deleting anything.
+"""
+
+
 
 import windowinterface, WMEVENTS
 import MMAttrdefs
@@ -80,13 +82,14 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_refresh = 1	# Whether to refresh the whole scene graph, for example when a node is added / deleted / moved.
 		self.need_resize = 1	# Whether the tree needs to be resized. Implies need_redraw
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
+		self.need_redraw_selection = 0 # Whether we only need to redraw the selection.
 
 		self.base_display_list = None # A display list that may be cloned and appended to.
 		self.extra_displist = None
 
 		# Selections
-		self.selected_widget = None # Is a MMWidget, which could resemble a node or a widget.
-		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
+		#self.selected_widget = None # Is a MMWidget, which could resemble a node or a widget.
+		#self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
 		self.selected_icon = None
 		self.old_selected_icon = None
 
@@ -100,9 +103,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.old_event_sources = []
 		self.droppable_widget = None # ahh.. something that sjoerd added. Assume that it's used for the fancy drop-notification.
 		self.old_droppable_widget = None
-
-		# Remove sometime.
-		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
 
 		self.arrow_list = []	# A list of arrows to be drawn after everything else.
 		self.__select_arrow_list = [] # Used for working out the selected arrows.
@@ -327,7 +327,13 @@ class HierarchyView(HierarchyViewDialog):
 	def __compute_commands(self, commands):
 		# Compute the commands for the current selected object.
 		# TODO: Make context menu setting within the StructureWidgets menu instead.
-		fnode = self.focusnode
+		if len(self.multi_selected_widgets) > 1:
+			return self.__compute_multi_commands(commands)
+		elif len(self.multi_selected_widgets) < 1:
+			# No node selected.
+			return self.commands # XXX or should I return an empty list??
+		
+		fnode = self.get_selected_node()
 		fntype = fnode.GetType()	
 
 		if fnode.WillPlay():
@@ -385,38 +391,41 @@ class HierarchyView(HierarchyViewDialog):
 		# commands is not mutable here.
 		return commands
 
-	
+	def __compute_multi_commands(self, commands, widgets = None):
+		if not widgets:		# saves a few cycles.
+			widgets = self.get_selected_widgets()
+		if len(self.event_sources) > 0:
+			commands = commands + self.finisheventcommands
+		if not self.scene_graph in widgets:
+			commands = commands + self.notatrootcommands
+		return commands
+		
 	def aftersetfocus(self):
 		# Called after the focus has been set to a specific node.
 		# This:
 		# 1) Determines the commands for the node (requires: node, view?)
 		# 2) Determines a pop-up menu for the node (requires: node, view if there is view spec info.)
-		fnode = self.selected_widget.get_node()
-		#commands = []
 
-		if isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
-			which, transitionnames = self.selected_widget.posttransitionmenu()
-			self.translist = []
-			for trans in transitionnames:
-				self.translist.append((trans, (which, trans)))
+		widgets = self.get_selected_widgets()
+
+		if len(widgets) < 1:
+			return
 
 		commands = self.commands # Use a copy.. the original is a template.
-		fntype = self.focusnode.GetType()
-		
-		# Choose the pop-up menu.
-		if len(self.multi_selected_widgets) > 0:
+
+		if len(widgets) == 1:# If there is one selected element:
+			widget = widgets[0]
+			if isinstance(widget, StructureWidgets.TransitionWidget):
+				# O.k, I'm not quite sure what this is meant to do: -mjvdg
+				which, transitionnames = self.get_selected_widget().posttransitionmenu()
+				self.translist = []
+				for trans in transitionnames:
+					self.translist.append((trans, (which, trans)))
+			popupmenu = widget.get_popupmenu()
+			#commands = commands + widget.get_commands() # I would like to do it like this -mjvdg
+		else: # There is more than one selected element
 			popupmenu = self.multi_popupmenu
-		elif fntype in MMNode.interiortypes: # for all internal nodes.
-			popupmenu = self.interior_popupmenu
-			# if node has children enable
-			# the TOCHILD command
-			if fnode.children:
-				commands = commands + self.navigatecommands[1:2]
-		elif isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
-			popupmenu = self.transition_popupmenu
-			commands = commands + self.transitioncommands
-		else:
-			popupmenu = self.leaf_popupmenu	# for all leaf nodes.
+			#commands = commands + ??.. how to you treat a multiple selection like a single object?
 
 		commands = self.__compute_commands(commands) # Adds to the commands for the current focus node.		
 		#commands = fnode.GetCommands() # The preferred way of doing things.
@@ -435,8 +444,15 @@ class HierarchyView(HierarchyViewDialog):
 		self.setstate()
 
 		# make sure focus is visible
-		if self.focusnode.GetParent():
-			self.focusnode.GetParent().ExpandParents()
+		# XXX print "TODO: make sure the focus is visible."
+		# Although I'm not really sure if this is needed, because
+		# I can't think of a circumstance where the focus is hidden.
+		# Selecting a node from elsewhere??
+		#for w in widgets:
+		#	if not w.iscollapsed():
+		#		w.uncollapse()
+##		if node.GetParent():
+##			node.GetParent().ExpandParents()
 
 
 	##############################################################################
@@ -541,7 +557,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.redrawing = 1
 
-##		import time
+		w = self.get_selected_widget()
 
 		# 1. Do we need a new display list?
 		if self.need_redraw or self.base_display_list is None:
@@ -561,7 +577,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_multi_selected_widgets = []
 			self.old_event_sources = []
 			self.playicons = []
-		elif self.selected_widget is self.old_selected_widget and \
+		elif w is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
 		     len(self.old_multi_selected_widgets)==0 and \
@@ -585,18 +601,18 @@ class HierarchyView(HierarchyViewDialog):
 		self.old_multi_selected_widgets = []
 
 		if self.old_droppable_widget is not None:
-			if self.old_droppable_widget is self.selected_widget:
+			if self.old_droppable_widget is w:
 				pass
 			elif self.old_droppable_widget is self.old_selected_widget:
 				pass
 			else:
 				self.old_droppable_widget.draw_unselected(d)
 			self.old_droppable_widget = None
-		if self.selected_widget is not self.old_selected_widget:
-			if self.old_selected_widget is not None:
-				self.old_selected_widget.draw_unselected(d)
-			self.selected_widget.draw_selected(d)
-			self.old_selected_widget = self.selected_widget
+##		if w is not self.old_selected_widget:
+##			if self.old_selected_widget is not None:
+##				self.old_selected_widget.draw_unselected(d)
+##			w.draw_selected(d)
+##			self.old_selected_widget = w
 		if self.selected_icon is not self.old_selected_icon:
 			if self.old_selected_icon is not None:
 				self.old_selected_icon.draw_unselected(d)
@@ -671,11 +687,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Outside interface (inherited from ViewDialog) #
 	#################################################
 
-	def getfocus(self):
-		return self.focusnode
-
 	def globalsetfocus(self, node):
-		#print "DEBUG: HierarchyView received globalsetfocus with ", node
 		if not self.is_showing():
 			return
 		if not self.root.IsAncestorOf(node):
@@ -687,6 +699,12 @@ class HierarchyView(HierarchyViewDialog):
 		#print "DEBUG: HierarchyView received globalfocuschanged with ", focustype
 		# XXX Temporary: pick first item of multiselect. Michael will
 		# fix this later.
+
+		#print "DEBUG: globalfocuschanged; temporarily disabled."
+		return
+
+		# XXX Yes, Michael will fix this later..
+
 		if not focusobject:
 			return # XXXX Or should we de-select?
 		if type(focusobject) == type([]):
@@ -697,7 +715,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if focusobject.getClassName() != 'MMNode':
 			return
-		if self.selected_widget is not None and self.selected_widget.get_node() is focusobject:
+		if self.get_selected_widget() is not None and self.get_selected_widget().get_node() is focusobject:
 			return
 		self.select_node(focusobject, external = 1, scroll = redraw)
 		if redraw:
@@ -853,21 +871,80 @@ class HierarchyView(HierarchyViewDialog):
 	#   - Move multiple nodes to another view?
 
 	######################################################################
+	# Selection management
+	#
+	# The selection is stored in a list of selected widgets.
+	# If the list is empty, there is no selection.
+	# When there is one entry, there is one node selected.
+	# When there are multiple entries, well, then there is are multiple
+	# nodes selected.
+	# Also be aware that more selection code exists to show which icon
+	# is selected.
+
+	def get_selected_node(self):
+		if len(self.multi_selected_widgets) > 1:
+			assert 0	# we don't want this.
+		elif len(self.multi_selected_widgets) < 1:
+			return None
+		else:
+			widget = self.multi_selected_widgets[0]
+			assert isinstance(widget, StructureWidgets.MMNodeWidget)
+			node = widget.get_node()
+			assert isinstance(node, MMNode.MMNode)
+			return node;
+
+	def get_selected_nodes(self):
+		allnodes=[]
+		rv = []
+		for i in self.multi_selected_widgets:
+			n = i.get_node()
+			assert isinstance(n, MMNode.MMNode)
+			allnodes.append(n)
+		# If there is a child-parent relationship, return only the parent:
+		for i in allnodes:
+			for j in allnodes:
+				if j is not i and j.IsAncestorOf(i):
+					break
+			else:
+				rv.append(i)
+		return rv;
+
+	def get_selected_widgets(self):
+		return self.multi_selected_widgets
+	
+	def get_selected_widget(self):
+		if len(self.multi_selected_widgets) == 1:
+			return self.multi_selected_widgets[0]	# we don't want to return the first widget.
+		else:
+			return None
+
+	######################################################################
+	# Operations on nodes
+	#
+
+
+	#def movenode(self, bla)
+	# def cb_copynode(self, bla): clipboard interface
+	# whatever..
+
+
+	######################################################################
 	# Adding a node.
 	# This code is near the end of this class under various createbefore.. createafter.. callbacks.
 	# At some stage they need to be moved here; there is no need to yet.
 	
 	######################################################################
 	# Delete the selected node.
-	def fixselection(self, nodes):
+	def migrate_focus(self, nodes):
 		# fix the structure view selection nodes is a list of
 		# nodes that are going to be deleted we select the
 		# common ancestor of these nodes, and if that is also
 		# to be deleted, we select a node near by.
 		# this also starts a transaction
 		# returns true if successful and deletion can proceed
-		if not nodes:
-			return 0	# failed
+
+		# In english: move the focus to a safe place before deleting
+		# or copying a selection.
 		anc = nodes[0]
 		for n in nodes:
 			if n is self.root:
@@ -875,8 +952,6 @@ class HierarchyView(HierarchyViewDialog):
 				windowinterface.beep()
 				return 0 # failed
 			anc = n.CommonAncestor(anc)
-		if not self.editmgr.transaction():
-			return 0	# failed
 		if anc in nodes:
 			parent = anc.GetParent()
 			siblings = parent.GetChildren()
@@ -891,61 +966,72 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_node(anc)
 		return 1		# succeeded
 
-	def deletecall(self, cut = 0):
-		# Called for both delete /and/ cut.. maybe it's a bad name? -mjvdg.
-		if len(self.multi_selected_widgets) > 0:
-			# Delete multiple nodes.
-			self.toplevel.setwaiting()
-			nodes = self.get_multi_nodes()
-			if self.fixselection(nodes): # selects another node, and starts a transation.
-				for n in nodes:
-					self.editmgr.delnode(n)
-				self.fixsyncarcs(self.root, nodes)
-				self.editmgr.commit()
-				if cut:
-					self.editmgr.setclip('multinode', nodes)
-		else:
-			node = self.selected_widget.get_node()
-			self.toplevel.setwaiting()
-			if self.fixselection([node]):
-				self.editmgr.delnode(node)
-				self.fixsyncarcs(self.root, [node]) #  TODO: shouldn't this be done in the editmanager? -mjvdg
-				self.editmgr.commit()
-				if cut:
-					self.editmgr.setclip('node', node)
+	def deletecall(self):
+		# XXX UNTESTED
+		# The "delete" event handler
+		self.toplevel.setwaiting()
+		nodes = self.get_selected_nodes()
+
+		# Preconditions:
+		if len(nodes) < 1:
+			return 0
+		if self.root in nodes:
+			# In theory, if the root node is in the selection then it would be the only node.
+			assert len(nodes) == 0
+			return 0
+
+		self.migrate_focus(nodes)	# migrate the focus to a safe place.
+		
+		if not self.editmgr.transaction():
+			return 0
+
+		for node in nodes:
+			self.editmgr.delnode(node)
+			self.fixsyncarcs(self.root, nodes)
+
+		self.editmgr.commit()
+
 
 	######################################################################
 	# Edit a node
 	def attrcall(self):
 		if self.selected_icon:
 			self.selected_icon.attrcall()
-		elif self.selected_widget:
-			self.selected_widget.attrcall()
+		elif self.get_selected_widget():
+			self.get_selected_widget().attrcall()
 
 	def infocall(self):
-		if self.selected_widget: self.selected_widget.infocall()
+		if self.get_selected_widget(): self.get_selected_widget().infocall()
 
 	def editcall(self):
-		if self.selected_widget: self.selected_widget.editcall()
+		if self.get_selected_widget(): self.get_selected_widget().editcall()
 
 	# win32++
 	def _editcall(self):
-		if self.selected_widget: self.selected_widget._editcall()
+		if self.get_selected_widget(): self.get_selected_widget()._editcall()
 	def _opencall(self):
-		if self.selected_widget: self.selected_widget._opencall()
+		if self.get_selected_widget(): self.get_selected_widget()._opencall()
 
 	######################################################################
 	# Copy a node.
 	def copycall(self):
+		# UNTESTED XXX
+		# The event handler for copying nodes.
 		windowinterface.setwaiting()
-		if len(self.multi_selected_widgets) > 0:
-			copyme = []
-			for i in self.get_multi_nodes():
-				copyme.append(i.DeepCopy())
-			self.editmgr.setclip('multinode', copyme, owned=1)
-		else:
-			copyme = self.focusnode.DeepCopy()
-			self.editmgr.setclip('node', copyme, owned=1)
+		nodes = self.get_selected_nodes()
+
+		if len(nodes) < 1:
+			windowinterface.beep()
+			return 0
+		# it is permissable to copy to the root node, so that does not need to be checked.
+
+		copyme = []
+		for i in self.get_selected_nodes():
+			copyme.append(i.DeepCopy())
+		# XXX so where is this method?
+		# self.__clean_clipboard()
+		self.editmgr.setclip('multinode', copyme, owned=1)
+
 		self.aftersetfocus()
 
 	######################################################################
@@ -954,8 +1040,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not hasattr(windowinterface, 'mmultchoice'):
 			windowinterface.beep()
 			return
-		assert(self.focusnode)
-		node = self.focusnode
+		node = self.get_selected_node()
 		context = node.context
 		attrlist = node.getattrnames()
 		defattrlist = attrlist[:]
@@ -994,20 +1079,45 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Cut a node.
 	def cutcall(self):
-		self.deletecall(cut = 1)
-		
+		#  UNTESTED XXX
+		# The "cut" event handler.
+		self.toplevel.setwaiting()
+		nodes = self.get_selected_nodes()
+
+		if len(nodes) < 1:
+			windowinterface.beep()
+			return 0
+		if self.root in nodes:
+			assert len(nodes)==0
+			windowinterface.beep()
+			return 0
+
+		self.migrate_focus(nodes)	# move the focus before we delete it.
+
+		if not self.editmgr.transaction():
+			return 0
+
+		for n in nodes:
+			self.editmgr.delnode(n)
+			self.fixsyncarcs(self.root, nodes)
+		self.editmgr.commit()
+		self.editmgr.setclip('multinode', nodes)
+	
 		
 	######################################################################
 	# Paste a node. (TODO: multiple selected nodes).
 	# see self.paste()
 	def pastebeforecall(self):
-		if self.selected_widget: self.selected_widget.pastebeforecall()
+		# XXX Change me
+		if self.get_selected_widget(): self.paste(-1)
 
 	def pasteaftercall(self):
-		if self.selected_widget: self.selected_widget.pasteaftercall()
+		# XXX Change me
+		if self.get_selected_widget(): self.paste(1)
 
 	def pasteundercall(self):
-		if self.selected_widget: self.selected_widget.pasteundercall()
+		# XXX Change me
+		if self.get_selected_widget(): self.paste(0)
 
 	######################################################################
 	# Drag and drop
@@ -1110,23 +1220,6 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			windowinterface.setdragcursor('dragset')
 
-	def get_multi_nodes(self):
-		# Returns a list of currently selected nodes.
-		# Actually, returns a list of the common parents of the nodes.
-		if self.selected_widget is None:
-			return []
-		r = [self.selected_widget.get_node()]
-		for i in self.multi_selected_widgets:
-			r.append(i.get_node())
-		r2 = []
-		for i in r:
-			for j in r:
-				if j is not i and j.IsAncestorOf(i):
-					break
-			else:
-				r2.append(i)
-		return r2
-
 	#################################################
 	# Edit manager interface (as dependent client)  #
 	#################################################
@@ -1136,20 +1229,13 @@ class HierarchyView(HierarchyViewDialog):
 
 	def rollback(self):
 		pass
-##		self.destroynode = None
 
 	def commit(self, type):
-##		if self.destroynode:
-##			self.destroynode.Destroy()
-##		self.destroynode = None
-		self.selected_widget = None
-		self.focusnode = None
-
-		#print "TODO: Optimisation in the HierarchyView here: refreshing scene graph on each commit."
 		self.refresh_scene_graph()
 		
 		focustype, focusobject = self.editmgr.getglobalfocus()
 		if focustype is None and focusobject is None:
+			# Shouldn't the editmgr do this?
 			self.editmgr.setglobalfocus('MMNode', self.root)
 		else:
 			self.globalfocuschanged(focustype, focusobject, redraw = 0)
@@ -1190,7 +1276,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		start_transaction = 1
 		lightweight = features.lightweight
-		node = self.focusnode
+		node = self.get_selected_node()
 		if node is None:
 			self.draw()
 			windowinterface.showmessage(
@@ -1301,12 +1387,13 @@ class HierarchyView(HierarchyViewDialog):
 
 	def insertparent(self, type):
 		# Inserts a parent node before this one.
-		if not self.selected_widget:
+		# XXX TODO: rewrite me.
+		if not self.get_selected_widget():
 			windowinterface.showmessage(
 				'There is no selection to insert at',
 				mtype = 'error', parent = self.window)
 			return None
-		node = self.selected_widget.get_node()
+		node = self.get_selected_widget().get_node()
 		parent = node.GetParent()
 		if parent is None:
 			windowinterface.showmessage(
@@ -1352,7 +1439,7 @@ class HierarchyView(HierarchyViewDialog):
 		em.setnodeattr(newnode, 'file', url)
 		em.setnodeattr(newnode, 'name', name)
 		
-		em.setglobalfocus('MMNode', newnode)
+		em.setglobalfocus('node', newnode)
 		expandnode(newnode)
 
 		self.aftersetfocus()
@@ -1361,13 +1448,14 @@ class HierarchyView(HierarchyViewDialog):
 			AttrEdit.showattreditor(self.toplevel, newnode, 'name')
 
 	def paste(self, where):
+		# XXX rewrite me.
 		type, node = self.editmgr.getclip()
 		if node is None:
 			windowinterface.showmessage(
 			    'The clipboard does not contain a node to paste',
 			    mtype = 'error', parent = self.window)
 			return
-		if self.focusnode is None:
+		if self.get_selected_node() is None:
 			windowinterface.showmessage(
 				'There is no selection to paste into',
 			 	mtype = 'error', parent = self.window)
@@ -1385,7 +1473,7 @@ class HierarchyView(HierarchyViewDialog):
 			for n in node:	# I can't use insertnode because I need to access the editmanager.
 				if n.context is not self.root.context:
 					n = n.CopyIntoContext(self.root.context)
-				self.editmgr.addnode(self.focusnode, -1, n)
+				self.editmgr.addnode(self.get_selected_node(), -1, n)
 			self.editmgr.commit()
 
 	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
@@ -1396,7 +1484,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		if where <> 0:
 			# Get the parent
-			parent = self.focusnode.GetParent()
+			parent = self.get_selected_widget().GetParent()
 			if parent is None:
 				windowinterface.showmessage(
 					"Can't insert before/after the root",
@@ -1405,7 +1493,7 @@ class HierarchyView(HierarchyViewDialog):
 				return 0
 		elif where == 0 and node.GetChannelType()!='animate':
 			# Special condition for animate
-			ntype = self.focusnode.GetType()
+			ntype = self.get_selected_widget().GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
 			    node.GetChannelType() != 'animate'): 
@@ -1422,10 +1510,10 @@ class HierarchyView(HierarchyViewDialog):
 			# Add (using editmgr) a child to the node with focus
 			# Index is the index in the list of children
 			# Node is the new node
-			em.addnode(self.focusnode, index, node)
+			em.addnode(self.get_selected_widget(), index, node)
 		else:
 			children = parent.GetChildren()
-			i = children.index(self.focusnode)
+			i = children.index(self.get_selected_widget())
 			if where > 0:	# Insert after
 				i = i+1
 				em.addnode(parent, i, node)
@@ -1447,7 +1535,7 @@ class HierarchyView(HierarchyViewDialog):
 		xd, yd = pos
 		# Problem: dstobj will be an internal node.
 		dstobj = self.whichhit(xd, yd)
-		self.focusnode = dstobj.node
+		self.select_widget(dstobj)
 		if type == DRAG_PAR:
 			ntype = 'par'
 		elif type == DRAG_SEQ:
@@ -1475,11 +1563,12 @@ class HierarchyView(HierarchyViewDialog):
 		srcnode = srcobj.node.DeepCopy()
 		if srcnode.context is not self.root.context:
 			srcnode = srcnode.CopyIntoContext(self.root.context)
-		self.focusnode = dstobj.node
+		self.select_widget(dstobj)
 		dummy = self.insertnode(srcnode, 0)
 
 	# Move node at position src to position dst
 	def movenode(self, dst, src):
+		# XXX TODO: check this code.
 		xd, yd = dst
 		xs, ys = src
 		srcobj = self.whichhit(xs, ys)
@@ -1490,8 +1579,8 @@ class HierarchyView(HierarchyViewDialog):
 			return
 
 		# We need to keep the nodes, because the objects get purged during each commit.
-		srcnode = srcobj.node
-		destnode = dstobj.node
+		srcnode = srcobj.get_node()
+		destnode = dstobj.get_node()
 
 		# If srcnode is a parent of destnode, then we have a major case of incest.
 		# the node will be removed from it's position and appended to one of it's children.
@@ -1506,13 +1595,15 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 
+		# Check that the node isn't itself, or a leaf node.
+		# If so, redraw and return.
 		if isinstance(dstobj, StructureWidgets.StructureObjWidget): # If it's an internal node.
 			nodeindex = dstobj.get_nearest_node_index(dst) # works for seqs and verticals!! :-)
-			self.focusnode = destnode
+			self.select_node(destnode)
 			if nodeindex != -1:
 				assert nodeindex < len(destnode.children)
-				self.focusnode = destnode.children[nodeindex] # I hope that works!
-				if self.focusnode is srcnode: # The same node.
+				self.select_node(destnode.children[nodeindex])
+				if self.get_selected_widget() is srcnode: # The same node.
 					self.draw()
 					return
 			else:
@@ -1544,20 +1635,25 @@ class HierarchyView(HierarchyViewDialog):
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
 			self.scene_graph = None
-		self.selected_widget = None
+		self.multi_selected_widgets = []
 
 	# Navigation functions
 
+	# XXX TODO: rewrite these. Audit the code. Oh yes, give the code soul.
+	# Now that I think about it, we could add occasional poetry to the code.
+	# or even better, write obfuscated ascii-art code.
+	# def an_ode_to_code(self, x, y):
+
 	def tosibling(self, direction):
-		if not self.focusnode:
+		if not self.get_selected_widget():
 			windowinterface.beep()
 			return
-		parent = self.focusnode.GetParent()
+		parent = self.get_selected_widget().GetParent()
 		if not parent:
 			windowinterface.beep()
 			return
 		siblings = parent.GetChildren()
-		i = siblings.index(self.focusnode) + direction
+		i = siblings.index(self.get_selected_widget()) + direction
 		if not 0 <= i < len(siblings):
 			# XXX Could go to parent instead?
 			windowinterface.beep()
@@ -1566,10 +1662,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def toparent(self):
-		if not self.focusnode:
+		if not self.get_selected_widget():
 			windowinterface.beep()
 			return
-		parent = self.focusnode.GetParent()
+		parent = self.get_selected_widget().GetParent()
 		if not parent:
 			windowinterface.beep()
 			return
@@ -1577,7 +1673,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def tochild(self, i):
-		node = self.focusnode
+		node = self.get_selected_widget()
 		if not node:
 			windowinterface.beep()
 			return
@@ -1599,71 +1695,57 @@ class HierarchyView(HierarchyViewDialog):
 		# it is a node, icon or anything else which is selected.
 		# Make the widget the current selection.
 		# If external is enabled, don't call the editmanager.
+		# Deselect the old selected widgets.
 
-		if self.selected_widget is widget:
+		# If the widget is None, well just clear everything.
+		if widget is None:
+			self.unselect_all()
+			return
+
+		# If this is the old selected widget, do nothing.
+		if len(self.multi_selected_widgets) == 1 and self.multi_selected_widgets[0] is widget \
+		   and (self.selected_icon is None or not isinstance(self.multi_selected_widgets[0], StructureWidgets.MMNodeWidget)):
 			# don't do anything if the focus is already set to the requested widget.
 			# this is important because of the setglobalfocus call below.
 
 			# If we select an icon, then we also select it's widget when we have really selected it's icon.
-			if self.selected_icon is None or not isinstance(self.selected_widget, StructureWidgets.MMNodeWidget):
-				return
+			return
 
-		# First, unselect the old widget.
-		if isinstance(self.selected_widget, Widgets.Widget):
-			self.selected_widget.unselect()
-		if isinstance(self.selected_icon, StructureWidgets.Icon):
-			self.selected_icon.unselect()
-			self.selected_icon = None
-
-		# Remove these two lines of code at some stage.
-		self.prevfocusnode = self.focusnode
+		self.unselect_all()
 
 		# Now select the widget.
-		if widget is None:
-			self.focusnode = None
-		else:			# All cases where the widget is not None follow here:
-			if isinstance(widget, StructureWidgets.MMWidgetDecoration):
-				if isinstance(widget, StructureWidgets.Icon) and widget.is_selectable():
-					if self.selected_icon is not widget:
-						self.selected_icon = widget # keep it so we can unselect it later.
-						self.selected_icon.select()
-				# Select the underlying mmwidget of the decoration..
-				widget = widget.get_mmwidget()
-			widget.select()
-			self.focusnode = widget.get_node() # works on all widgets.
-			if scroll:
-				self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
-		self.old_selected_widget = self.selected_widget
-		self.selected_widget = widget
-		self.old_multi_selected_widgets = self.multi_selected_widgets
-		self.multi_selected_widgets = []
+		# If it's an icon, select it and then continue with it's parent.
+		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
+			if isinstance(widget, StructureWidgets.Icon) and widget.is_selectable():
+				if self.selected_icon is not widget:
+					self.selected_icon = widget # keep it so we can unselect it later.
+					self.selected_icon.select()
+			# Select the underlying mmwidget of the decoration..
+			widget = widget.get_mmwidget()
 
-		self.aftersetfocus()
+		widget.select()
+		if scroll:
+			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
+
+		self.multi_selected_widgets = [widget]
+		self.aftersetfocus()	# XXX change this.
+
 		if not external:
-			# avoid recursive setglobalfocus
-			if len(self.multi_selected_widgets) > 0: # This will never happen. The code here is unreachable.
-					# see 6 lines back.
-				a = []
-				for i in self.multi_selected_widgets:
-					a.append(i.get_node())
-				self.editmgr.setglobalfocus("MMNode", a)
-			else:
-				self.editmgr.setglobalfocus("MMNode", self.selected_widget.get_node())
+			self.editmgr.setglobalfocus('MMNode', self.get_selected_widgets())
 
 	def also_select_widget(self, widget):
+		# XXX UNTESTED
 		# Select another widget without losing the selection (ctrl-click).
 
-		if self.selected_widget is None:
+		if len(self.multi_selected_widgets) == 0:
 			self.select_widget(widget)
 			return
 		
 		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
 			widget = widget.get_mmwidget()
 
-		if widget is self.selected_widget:
-			return
-		elif widget in self.multi_selected_widgets:
+		if widget in self.get_selected_widgets():
 			# Toggle multi-selective widgets.
 			self.multi_selected_widgets.remove(widget)
 			self.old_multi_selected_widgets.append(widget)
@@ -1671,8 +1753,25 @@ class HierarchyView(HierarchyViewDialog):
 			self.multi_selected_widgets.append(widget)
 			widget.select()
 
-		self.aftersetfocus()
+		self.aftersetfocus()	# XXX
 		self.need_redraw_selection = 1
+
+	def unselect_all(self):
+		# XXX UNTESTED
+		# Clears the current selection completely, widget, icon and all.
+		# First, unselect the old widget.
+		widgets = self.get_selected_widgets()
+		self.old_multi_selected_widgets = widgets
+
+		for w in widgets:
+			if isinstance(w, Widgets.Widget):
+				w.unselect()
+		self.multi_selected_widgets = []
+		# and if there is a selected icon..
+		if isinstance(self.selected_icon, StructureWidgets.Icon):
+			self.selected_icon.unselect()
+			self.selected_icon = None
+		# This isn't needed: self.need_redraw_selection = 1
 
 	def select_node(self, node, external = 0, scroll = 1):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
@@ -1687,8 +1786,6 @@ class HierarchyView(HierarchyViewDialog):
 		# caller is an MMNodewidget, src and dest are coordinates.
 		caller.attrcall(initattr='beginlist')
 
-	# TODO: Jack: I know that this is going to mess the mac stuff up.
-	# I'm not quite sure how to do right-clicks on a mac. Sorry. -mjvdg.
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
 		# mjvdg: This causes a bug. By not returning from this function, the ui thinks that
@@ -1721,29 +1818,25 @@ class HierarchyView(HierarchyViewDialog):
 		#print "DEBUG: you shouldn't call this function."
 		return node.views['struct_view']
 
-	# Select the given object, deselecting the previous focus
-	def setfocusobj(self, obj):
-		#print "DEBUG: you shouldn't call this function."
-		select_widget(obj)
-		return
-
 	##############################################################################
 	# Menu handling functions - Callbacks.
 	##############################################################################
 
 	def helpcall(self):
-		if self.selected_widget: self.selected_widget.helpcall()
+		# I'm uncertain whether this gets ever called - mjvdg
+		# There is no helpcall in selected_widget
+		if self.get_selected_widget(): self.get_selected_widget().helpcall()
 
 	def expandcall(self):
-		if self.selected_widget:
+		if self.get_selected_widget():
 			self.toplevel.setwaiting()
-			self.selected_widget.expandcall()
+			self.get_selected_widget().expandcall()
 			self.draw()
 
 	def expandallcall(self, expand):
-		if self.selected_widget:
+		if self.get_selected_widget():
 			self.toplevel.setwaiting()
-			self.selected_widget.expandallcall(expand)
+			self.get_selected_widget().expandallcall(expand)
 			self.draw()
 
 	def thumbnailcall(self):
@@ -1766,9 +1859,9 @@ class HierarchyView(HierarchyViewDialog):
 			which = 'focus'
 			node = self.root
 		elif which == 'focus':
-			node = self.selected_widget.node
+			node = self.get_selected_widget().node
 		else:
-			node = self.selected_widget.node
+			node = self.get_selected_widget().node
 		if node.showtime == which:
 			self.clear_showtime(node)
 		else:
@@ -1800,75 +1893,71 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def transition_callback(self, which, transition):
-		if self.selected_widget: self.selected_widget.transition_callback(which, transition)
+		if self.get_selected_widget(): self.get_selected_widget().transition_callback(which, transition)
 
 	def playcall(self):
-		if self.selected_widget: self.selected_widget.playcall()
+		if self.get_selected_widget(): self.get_selected_widget().playcall()
 
 	def playfromcall(self):
-		if self.selected_widget: self.selected_widget.playfromcall()
+		if self.get_selected_widget(): self.get_selected_widget().playfromcall()
 
 	def anchorcall(self):
-		if self.selected_widget: self.selected_widget.anchorcall()
+		if self.get_selected_widget(): self.get_selected_widget().anchorcall()
 
 	def createanchorcall(self):
-		if self.selected_widget: self.selected_widget.createanchorcall()
+		if self.get_selected_widget(): self.get_selected_widget().createanchorcall()
 
 	def hyperlinkcall(self):
-		if self.selected_widget: self.selected_widget.hyperlinkcall()
+		if self.get_selected_widget(): self.get_selected_widget().hyperlinkcall()
 
 	def rpconvertcall(self):
-		if self.selected_widget:
+		if self.get_selected_widget():
 			self.toplevel.setwaiting()
-			self.selected_widget.rpconvertcall()
+			self.get_selected_widget().rpconvertcall()
 
 	def convertrpcall(self):
-		if self.selected_widget:
+		if self.get_selected_widget():
 			self.toplevel.setwaiting()
-			self.selected_widget.convertrpcall()
+			self.get_selected_widget().convertrpcall()
 
 	def createbeforecall(self, chtype=None):
-		if self.selected_widget: self.selected_widget.createbeforecall(chtype)
+		if self.get_selected_widget(): self.get_selected_widget().createbeforecall(chtype)
 
 	def createbeforeintcall(self, ntype):
-		if self.selected_widget: self.selected_widget.createbeforeintcall(ntype)
+		if self.get_selected_widget(): self.get_selected_widget().createbeforeintcall(ntype)
 
 	def createaftercall(self, chtype=None):
-		if self.selected_widget: self.selected_widget.createaftercall(chtype)
+		if self.get_selected_widget(): self.get_selected_widget().createaftercall(chtype)
 
 	def createafterintcall(self, ntype):
-		if self.selected_widget: self.selected_widget.createafterintcall(ntype)
+		if self.get_selected_widget(): self.get_selected_widget().createafterintcall(ntype)
 
 	def createundercall(self, chtype=None):
-		if self.selected_widget: self.selected_widget.createundercall(chtype)
+		if self.get_selected_widget(): self.get_selected_widget().createundercall(chtype)
 
 	def createunderintcall(self, ntype=None):
-		if self.selected_widget: self.selected_widget.createunderintcall(ntype)
+		if self.get_selected_widget(): self.get_selected_widget().createunderintcall(ntype)
 
 	def createseqcall(self):
-		if self.selected_widget: #self.selected_widget.createseqcall()
+		if self.get_selected_widget(): #self.get_selected_widget().createseqcall()
 			self.insertparent('seq')
 			
 	def createparcall(self):
-		if self.selected_widget: #self.selected_widget.createparcall()
+		if self.get_selected_widget(): #self.get_selected_widget().createparcall()
 			self.insertparent('par')
 
 	def createexclcall(self):
-		if self.selected_widget: self.selected_widget.createexclcall()
+		if self.get_selected_widget(): self.get_selected_widget().createexclcall()
 
 	def createaltcall(self):
-		if self.selected_widget: self.selected_widget.createaltcall()
+		if self.get_selected_widget(): self.get_selected_widget().createaltcall()
 
 	def set_event_source(self):
 		if len(self.multi_selected_widgets) > 0:
 			self.__clear_event_source()
-			for w in self.multi_selected_widgets + [self.selected_widget]:
+			for w in self.multi_selected_widgets: # This must be the _actual_ list of widgets.
 				self.event_sources.append(w.get_node())
 				w.set_dangling_event()
-		elif self.selected_widget:
-			self.__clear_event_source()
-			self.event_sources = [self.selected_widget.get_node()] # which works even if it's an icon.
-			self.selected_widget.set_dangling_event()
 		else:
 			windowinterface.beep() # Should not happen
 		self.draw()
@@ -1883,22 +1972,36 @@ class HierarchyView(HierarchyViewDialog):
 		self.event_sources = []
 			
 	def create_begin_event_dest(self):
-		if self.selected_widget and len(self.event_sources) > 0:
+		widgets = self.get_selected_widgets()
+
+		if len(widgets)==1 and len(self.event_sources) > 0:
+			if not self.editmgr.transaction():
+				return 0
+			node = widgets[0].get_node()
 			for src in self.event_sources:
-				self.selected_widget.get_node().NewBeginEvent(src, 'activateEvent')
+				# XXX BUG! each NewBeginEvent is another transaction. Idiot.
+				node.NewBeginEvent(src, 'activateEvent', editmgr=self.editmgr)
 				# I assume a draw is not needed (due to NewBeginEvent)...
+			self.editmgr.commit()
 			self.event_sources = []
 			self.old_event_sources = []
 		else:
 			windowinterface.beep() # Should not happen
 
 	def create_end_event_dest(self):
-		if self.selected_widget and self.event_sources:
+		widgets = self.get_selected_widgets()
+
+		if len(widgets)==1 and len(self.event_sources) > 0:
+			if not self.editmgr.transaction():
+				return 0
+			node = widgets[0].get_node()
 			for src in self.event_sources:
-				self.selected_widget.get_node().NewEndEvent(src, 'activateEvent')
+				# XXX BUG! each NewBeginEvent is another transaction. Idiot.
+				node.NewEndEvent(src, 'activateEvent', editmgr=self.editmgr)
+				# I assume a draw is not needed (due to NewBeginEvent)...
+			self.editmgr.commit()
 			self.event_sources = []
 			self.old_event_sources = []
-			# I assume a draw is not needed (due to NewEndEvent)...
 		else:
 			windowinterface.beep() # Should not happen
 
@@ -1927,13 +2030,13 @@ class HierarchyView(HierarchyViewDialog):
 		# - special types of nodes (comment nodes, priority classes)
 		
 		# first check if this can happen.
-		if not self.selected_widget:
+		if not self.get_selected_widget():
 			self.popup_error("No selected node!")
 			return
-		if not isinstance(self.selected_widget, StructureWidgets.MMNodeWidget):
+		if not isinstance(self.get_selected_widget(), StructureWidgets.MMNodeWidget):
 			self.popup_error("You can only merge nodes!")
 			return
-		child = self.selected_widget.node
+		child = self.get_selected_widget().node
 		if not child.parent:
 			self.popup_error("The root node has no parent to merge with!")
 			return

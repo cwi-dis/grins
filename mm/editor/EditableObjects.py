@@ -37,25 +37,26 @@ class EditableMMNode(MMNode.MMNode):
 			return "not_yet_defined"
 	#def GetType(self) - defined in MMNode.py
 	
-	def NewBeginEvent(self, othernode, event):
-		# I'm called from the HierarchyView
-		#print "DEBUG: NewBeginEvent"
-		em = self.context.editmgr
-		if not em.transaction():
-			return
-		e = MMNode.MMSyncArc(self, 'begin', srcnode=othernode, event=event, delay=0)
-		em.addsyncarc(self, 'beginlist', e)
-		em.commit()
+	def NewBeginEvent(self, othernode, event, editmgr = None):
+		# I'm called only from the HierarchyView
+		self.__new_beginorend_event('begin', 'beginlist', othernode, event, editmgr)
 
-	def NewEndEvent(self, othernode, event):
-		# I'm called from the HierarchyView
-		#print "DEBUG: NewEndEvent"
-		em = self.context.editmgr
-		if not em.transaction():
-			return
-		e = MMNode.MMSyncArc(self, 'end', srcnode=othernode, event=event, delay=0)
-		em.addsyncarc(self, 'endlist', e)
-		em.commit()
+	def NewEndEvent(self, othernode, event, editmgr = None):
+		# I'm called only from the HierarchyView
+		self.__new_beginorend_event('end', 'endlist', othernode, event, editmgr)
+
+	def __new_beginorend_event(self, type, attrib, othernode, event, editmgr):
+		# Only called from the two methods above; reuse similar code.
+		if not editmgr:
+			em = self.context.editmgr
+			if not em.transaction():
+				return
+		else:
+			em = editmgr
+		e = MMNode.MMSyncArc(self, type, srcnode=othernode, event=event, delay=0)
+		em.addsyncarc(self, attrib, e)
+		if not editmgr:
+			em.commit()
 
 	def GetCollapsedParent(self):
 		# return the top-most collapsed ancestor, or None if all ancestors are uncollapsed
