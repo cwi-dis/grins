@@ -313,16 +313,10 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 
 	def onStateIconClick(self, hititem):
 		currentState = self.getState(hititem)
-		# for now, just swap between one state to another (check box)
-		if currentState:
-			newState = 0
-		else:
-			newState = 1
-		self.setState(hititem, newState)
 
 		# update the listeners
 		for listener in self._stateListeners:
-			listener.OnStateChanged(hititem, newState)
+			listener.OnStateActivated(hititem, currentState)
 			
 	def getState(self, item):
 		imageIndex = (self.GetItemState(item, commctrl.TVIS_STATEIMAGEMASK) & commctrl.TVIS_STATEIMAGEMASK) / SHIFTBIT
@@ -621,9 +615,9 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		self.__selecting = 0
 
 	# change the state icon of a list of items
-	def ChangeStateItemList(self, list):
+	def SetStateItemList(self, itemList, state):
 		if self._stateOption:
-			for item, state in list:
+			for item in itemList:
 				self.setState(item, state)
 				
 	# unselect all children of the item
@@ -695,7 +689,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 
 	# add a listener 
 	def addStateListener(self, listener):
-		if hasattr(listener, 'OnStateChanged'):
+		if hasattr(listener, 'OnStateActivated'):
 			self._stateListeners.append(listener)
 
 	# remove a listener
