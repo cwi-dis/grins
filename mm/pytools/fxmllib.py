@@ -24,6 +24,7 @@ class Error(Exception):
             msg = '%s at line %d' % (msg, self.lineno)
         return '%s: %s' % (msg, self.args[0])
 
+# The character sets below are taken directly from the XML spec.
 _BaseChar = u'\u0041-\u005A\u0061-\u007A\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF' \
             u'\u0100-\u0131\u0134-\u013E\u0141-\u0148\u014A-\u017E' \
             u'\u0180-\u01C3\u01CD-\u01F0\u01F4-\u01F5\u01FA-\u0217' \
@@ -125,16 +126,23 @@ _PublicLiteral = '(?P<publit>"[-\'()+,./:=?;!*#@$_%% \n\ra-zA-Z0-9]*"|' \
                             "'[-()+,./:=?;!*#@$_%% \n\ra-zA-Z0-9]*')"
 _ExternalId = '(?:SYSTEM|PUBLIC'+_S+_PublicLiteral+')'+_S+_SystemLiteral
 externalid = re.compile(_ExternalId)
+ndata = re.compile(_S+'NDATA'+_S+'(?P<name>'+_Name+')')
 doctype = re.compile('<!DOCTYPE'+_S+'(?P<docname>'+_Name+')(?:'+_S+_ExternalId+')?'+_opS+'(?:\\[(?P<data>(?:'+_S+'|%'+_Name+';|'+comment.pattern+'|<(?:![^-]|[^!])(?:[^\'">]|\'[^\']*\'|"[^"]*")*>)*)\\]'+_opS+')?>')
               
-xmldecl = re.compile('<\?xml'+_S+
-                     'version'+_opS+'='+_opS+'(?P<version>'+_QStr+')'+
+xmldecl = re.compile('<\?xml'+
+                     _S+'version'+_opS+'='+_opS+'(?P<version>'+_QStr+')'+
                      '(?:'+_S+'encoding'+_opS+'='+_opS+
                         "(?P<encoding>'[A-Za-z][-A-Za-z0-9._]*'|"
                         '"[A-Za-z][-A-Za-z0-9._]*"))?'
                      '(?:'+_S+'standalone'+_opS+'='+_opS+
                         '(?P<standalone>\'(?:yes|no)\'|"(?:yes|no)"))?'+
                      _opS+'\?>')
+textdecl = re.compile('<\?xml'
+                      '(?:'+_S+'version'+_opS+'='+_opS+'(?P<version>'+_QStr+'))?'+
+                      '(?:'+_S+'encoding'+_opS+'='+_opS+
+                      "(?P<encoding>'[A-Za-z][-A-Za-z0-9._]*'|"
+                      '"[A-Za-z][-A-Za-z0-9._]*"))?'+
+                      _opS+'\?>')
 pidecl = re.compile('<\\?(?![xX][mM][lL][ \t\r\n?])(?P<name>'+_Name+')(?:'+_S+'(?P<data>(?:[^?]|\\?(?!>))*))?\\?>')
 
 # XML NAMESPACES
@@ -157,12 +165,12 @@ paren = re.compile('[()]')
 attdef = re.compile(_S+'(?P<atname>'+_Name+')'+_S+'(?P<attype>CDATA|ID(?:REFS?)?|ENTIT(?:Y|IES)|NMTOKENS?|NOTATION'+_S+r'\('+_opS+_Name+'(?:'+_opS+r'\|'+_opS+_Name+')*'+_opS+r'\)|\('+_opS+_Nmtoken+'(?:'+_opS+r'\|'+_opS+_Nmtoken+')*'+_opS+r'\))'+_S+'(?P<atvalue>#REQUIRED|#IMPLIED|(?:#FIXED'+_S+')?(?P<atstring>'+_QStr+'))')
 attlist = re.compile('<!ATTLIST'+_S+'(?P<elname>'+_Name+')(?P<atdef>(?:'+attdef.pattern+')*)'+_opS+'>')
 _EntityVal = '"(?:[^"&%]|'+ref.pattern+'|%'+_Name+';)*"|' \
-             "'(?:[^'&%]|"+ref.pattern+"|%'+_Name+';)*'"
+             "'(?:[^'&%]|"+ref.pattern+"|%"+_Name+";)*'"
 entity = re.compile('<!ENTITY'+_S+'(?:%'+_S+'(?P<pname>'+_Name+')'+_S+'(?P<pvalue>'+_EntityVal+'|'+_ExternalId+')|(?P<ename>'+_Name+')'+_S+'(?P<value>'+_EntityVal+'|'+_ExternalId+'(?:'+_S+'NDATA'+_S+_Name+')?))'+_opS+'>')
 notation = re.compile('<!NOTATION'+_S+'(?P<name>'+_Name+')'+_S+'(?P<value>SYSTEM'+_S+_SystemLiteral+'|PUBLIC'+_S+_PublicLiteral+'(?:'+_S+_SystemLiteral+')?)'+_opS+'>')
 peref = re.compile('%(?P<name>'+_Name+');')
 ignore = re.compile(r'<!\[|\]\]>')
-bracket = re.compile('[<>]')
+bracket = re.compile('[<>\'"%]')
 conditional = re.compile(r'<!\['+_opS+'(?:(?P<inc>INCLUDE)|(?P<ign>IGNORE))'+_opS+r'\[')
 
 class XMLParser:
@@ -198,7 +206,7 @@ class XMLParser:
 	self.rawdata = []
 	self.parse(data)
 
-    def __parse_textdecl(self, data):
+    def __parse_textdecl(self, data, document = 0):
         # Figure out the encoding of a file by looking at the first
         # few bytes and the <?xml?> tag that may come at the very
         # beginning of the file.
@@ -226,12 +234,19 @@ class XMLParser:
             i = 0
             self.__encoding = enc
 	# optional XMLDecl
-	res = xmldecl.match(data, i)
+        if document:
+            res = xmldecl.match(data, i)
+        else:
+            res = textdecl.match(data, i)
 	if res is not None:
-	    version, encoding, standalone = res.group('version',
-						      'encoding',
-						      'standalone')
-	    if version[1:-1] != '1.0':
+            if document:
+                version, encoding, standalone = res.group('version',
+                                                          'encoding',
+                                                          'standalone')
+            else:
+                version, encoding = res.group('version', 'encoding')
+                standalone = None
+	    if version is not None and version[1:-1] != '1.0':
 		self.__error('only XML version 1.0 supported', data, res.start('version'), fatal = 1)
             if encoding:
                 encoding = encoding[1:-1]
@@ -245,13 +260,15 @@ class XMLParser:
                 self.__encoding = 'utf-8'
             if standalone:
                 standalone = standalone[1:-1]
-            self.handle_xml(encoding, standalone)
+##            self.handle_xml(encoding, standalone)
 	    i = res.end(0)
         if type(data) is not type(u'a'):
             try:
                 data = unicode(data[i:], self.__encoding)
             except UnicodeError:
                 self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
+        else:
+            data = data[i:]
         return data
         
     def __normalize_linefeed(self, data):
@@ -266,7 +283,7 @@ class XMLParser:
 
     def parse(self, data):
         """Parse the data as an XML document."""
-        data = self.__parse_textdecl(data)
+        data = self.__parse_textdecl(data, 1)
         data = self.__normalize_linefeed(data)
 	# (Comment | PI | S)*
 	i = self.__parse_misc(data, 0)
@@ -458,16 +475,24 @@ class XMLParser:
 		name = res.group('name')
 		if name:
 		    if self.entitydefs.has_key(name):
-			val = self.entitydefs[name]
-                        del self.entitydefs[name] # to break recursion
-			n = self.__parse_content(val, 0, ptagname, namespaces, states)
-                        self.entitydefs[name] = val
-			if n is None:
-			    return
-			if type(n) is type(res) or n != len(val):
-                            if type(n) is type(res):
-                                n = res.start(0)
-			    self.__error('misformed entity value', data, n, fatal = 0)
+			sval = val = self.entitydefs[name]
+                        if type(val) is type(()):
+                            if val[2] is not None:
+                                apply(self.handle_ndata, val)
+                                val = None
+                            else:
+                                val = self.__read_pentity(val[1])
+			if val is not None:
+                            del self.entitydefs[name] # to break recursion
+                            n = self.__parse_content(val, 0, ptagname, namespaces, states)
+                            self.entitydefs[name] = sval # restore value
+                        if val is not None:
+                            if n is None:
+                                return
+                            if type(n) is type(res) or n != len(val):
+                                if type(n) is type(res):
+                                    n = res.start(0)
+                                self.__error('misformed entity value', data, n, fatal = 0)
 		    else:
                         if self.docname:
                             self.__error("unknown entity reference `&%s;' in element `%s'" % (name, ptagname), data, i, fatal = 0)
@@ -718,6 +743,8 @@ class XMLParser:
                 # entity reference (e.g. "&lt;")
 		if self.entitydefs.has_key(name):
 		    val = self.entitydefs[name]
+                    if type(val) is type(()):
+                        self.__error("no external parsed entity allowed in attribute value", data, res.start(0), fatal = 1)
                     del self.entitydefs[name]
 		    nval = self.__parse_attrval(val, attype)
                     self.entitydefs[name] = val
@@ -756,6 +783,15 @@ class XMLParser:
             self.__error('bad character reference', data, i, fatal = 0)
         return c
 
+    def __read_pentity(self, syslit):
+        import urllib
+        syslit = urllib.basejoin(self.baseurl, syslit)
+        baseurl = self.baseurl
+        self.baseurl = syslit
+        val = self.read_external(syslit)
+        val = self.__parse_textdecl(val)
+        return self.__normalize_linefeed(val)
+
     def parse_dtd(self, data, internal = 1):
         """Parse the DTD.
            Argument is a string containing the full DTD.
@@ -765,9 +801,7 @@ class XMLParser:
         matched = 1
         ilevel = 0                      # nesting level of ignored sections
         while i < len(data) and matched:
-            matched = i                 # remember where we were
-            i = self.__parse_misc(data, i)
-            matched = i > matched       # matched anything?
+            matched = 0
             res = peref.match(data, i)
             if res is not None:
                 matched = 1
@@ -776,18 +810,7 @@ class XMLParser:
                     val = self.pentitydefs[name]
                     encoding = None
                     if type(val) is type(()):
-                        publit, syslit = val
-                        if syslit:
-                            import urllib
-                            syslit = urllib.basejoin(self.baseurl, syslit)
-                            baseurl = self.baseurl
-                            self.baseurl = syslit
-                            val = self.read_external(syslit)
-                            encoding = self.__encoding
-                            val = self.__parse_textdecl(val)
-                            val = self.__normalize_linefeed(val)
-                        else:
-                            val = ''
+                        val = self.__read_pentity(val[1])
                     self.parse_dtd(val, internal)
                     if encoding is not None:
                         self.__encoding = encoding
@@ -875,6 +898,8 @@ class XMLParser:
                             else:
                                 self.__error("unknown entity `%s' referenced" % nm, data, i)
                                 repl = '%%%s;' % nm
+                            if type(repl) is type(()):
+                                repl = self.__read_pentity(repl[1])
                             pvalue = pvalue[:cres.start(0)] + repl + pvalue[cres.end(0):]
                             cres = entref.search(pvalue, cres.start(0)+len(repl))
                         self.pentitydefs[pname] = pvalue
@@ -904,6 +929,8 @@ class XMLParser:
                                 repl = self.__parse_charref(cres.group('char'), data, i)
                             elif self.pentitydefs.has_key(nm):
                                 repl = self.pentitydefs[nm]
+                                if type(repl) is type(()):
+                                    repl = self.__read_pentity(repl[1])
                             else:
                                 self.__error("unknown entity `%s' referenced" % nm, data, i)
                                 repl = '%%%s;' % nm
@@ -911,8 +938,16 @@ class XMLParser:
                             cres = entref.search(value, cres.start(0)+len(repl))
                         self.entitydefs[name] = value
                     else:
-                        # XXX needs to do something with external entity
-                        pass
+                        r = externalid.match(value)
+                        publit, syslit = r.group('publit', 'syslit')
+                        if publit: publit = publit[1:-1]
+                        if syslit: syslit = syslit[1:-1]
+                        r1 = ndata.match(value, r.end(0))
+                        if r1 is not None:
+                            ndataname = r1.group('name')
+                        else:
+                            ndataname = None
+                        self.entitydefs[name] = publit, syslit, ndataname
                 i = res.end(0)
             res = notation.match(data, i)
             if res is not None:
@@ -921,33 +956,41 @@ class XMLParser:
                 if not self.notation.has_key(name):
                     self.notation[name] = value
                 i = res.end(0)
+            j = i                       # remember where we were
+            i = self.__parse_misc(data, i)
+            matched = matched or i > j  # matched anything?
             if not internal:
                 if data[i:i+1] == '<':
                     hlevel = 1
+                    qlevel = []
                     j = i+1
                     while hlevel > 0:
                         res = bracket.search(data, j)
                         if res is None:
                             self.__error("unexpected EOF", data, i, fatal = 1)
-                        if data[res.start(0)] == '<':
-                            hlevel = hlevel + 1
-                        else:
-                            hlevel = hlevel - 1
                         j = res.end(0)
-                    k = i+1
-                    res = peref.search(data, k, j-1)
-                    while res is not None:
-                        pname = res.group('name')
-                        if self.pentitydefs.has_key(pname):
-                            val = self.pentitydefs[pname]
-                            if type(val) is not type(()):
-                                data = data[:res.start(0)] + val + data[res.end(0):]
-                                j = j - len(res.group(0)) + len(val)
-                            else:
-                                k = res.end(0)
-                        else:
-                            k = res.end(0)
-                        res = peref.search(data, k, j-1)
+                        c = data[res.start(0)]
+                        if c == '<':
+                            hlevel = hlevel + 1
+                        elif qlevel and c == qlevel[-1]:
+                            del qlevel[-1]
+                        elif c in ('"', "'"):
+                            qlevel.append(c)
+                        elif c == '>':
+                            hlevel = hlevel - 1
+                        elif hlevel == 1 and not qlevel:
+                            # only expand parsed entities at lowest level
+                            res = peref.match(data, res.start(0))
+                            if res is not None:
+                                pname = res.group('name')
+                                if self.pentitydefs.has_key(pname):
+                                    repl = self.pentitydefs[pname]
+                                    if type(repl) is type(()):
+                                        repl = self.__read_pentity(repl[1])
+                                    data = data[:res.start(0)] + ' ' + repl + ' ' + data[res.end(0):]
+                                    j = res.start(0) + len(repl) + 2
+                                else:
+                                    j = res.end(0)
                 res = conditional.match(data, i)
                 if res is not None:
                     inc, ign = res.group('inc', 'ign')
@@ -1335,7 +1378,7 @@ def test(args = None):
                     print `info.text[i:j]`
                 else:
                     print ' '*(info.offset-i)+'^'
-        if klass is CanonXMLParser:
+        if klass is CanonXMLParser and (verbose or len(args) > 1):
             sys.stdout.write('\n')
         t1 = time()
         if do_time:
