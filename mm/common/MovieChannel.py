@@ -74,20 +74,20 @@ class MovieWindow(ChannelWindow):
 			r, g, b = self.attrdict['bgcolor']
 		else:
 			r, g, b = 255, 255, 255
+		if self.vfile:
+			self.vfile.clearto(r, g, b)
+			self.centerimage()
+			return
 		#
 		if self.rgbmode:
 			gl.RGBcolor(r, g, b)
 		else:
-			# XXXX Not nice. Should ask VFile for nearest
-			#      color.
-			INDEX = 255
+			INDEX = 31 # Overwrite a "harmless" color index
 			gl.mapcolor(INDEX, r, g, b)
 			gl.color(INDEX)
+			gl.gflush()
 		#
 		gl.clear()
-		#
-		if self.vfile <> None:
-			self.centerimage()
 	#
 	def setfile(self, (filename, node, do_warm)):
 		self.clear()
