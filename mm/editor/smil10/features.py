@@ -4,7 +4,7 @@ __version__ = "$Id$"
 
 from compatibility import *
 from FeatureSet import *
-feature_set = [];
+feature_set = []
 
 #
 version = ""                            # I'm not sure here - mjvdg.
