@@ -1461,6 +1461,9 @@ class _CommonWindow:
 		"""Called if upper layers have modified the drawing surface"""
 		if self._transition:
 			self._transition.changed()
+		if self._eventhandlers.has_key(WindowContentChanged):
+			func, arg = self._eventhandlers[WindowContentChanged]
+			func(arg, self, WindowContentChanged, mw_globals.toplevel.getcurtime())
 		
 	def settransitionvalue(self, value):
 		if self._transition:
@@ -2323,7 +2326,10 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 			rgn = self._onscreen_wid.GetWindowPort().visRgn
 		Ctl.UpdateControls(self._onscreen_wid, rgn)
 		_ScrollMixin._redraw(self)
-		
+		if self._eventhandlers.has_key(WindowContentChanged):
+			func, arg = self._eventhandlers[WindowContentChanged]
+			func(arg, self, WindowContentChanged, mw_globals.toplevel.getcurtime())
+					
 	def _redraw_now(self, rgn):
 		"""Do a redraw of the specified region now"""
 		self._redraw(rgn)
