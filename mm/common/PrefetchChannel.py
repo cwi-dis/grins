@@ -80,16 +80,16 @@ class PrefetchChannel(Channel.ChannelAsync):
 		except:
 			print 'Warning: cannot open url %s' % url
 			self.__urlopener = None
-		else:
-			print filename, headers
 			
 	def __ready(self):
 		return self.__urlopener!=None
 			
 	def __startFetch(self, repeat=0):
-		self.__start = time.time()
-		if repeat:
-			self.__urlopener.begin_retrieve(self.__url)
+		self.__start = self.__fetching.start_time
+		if self.__start is None:
+			print 'Warning: None start_time for node',self.__fetching
+			self.__start = 0
+		self.__urlopener.begin_retrieve(self.__url)
 		self.__fetch()
 		self.__register_for_timeslices()
 
@@ -108,8 +108,8 @@ class PrefetchChannel(Channel.ChannelAsync):
 				self.__register_for_timeslices()
 
 	def __fetch(self):
-		dt = time.time() - self.__start
-		if self.__urlopener and self._playstate == PLAYING:
+		dt = self._scheduler.timefunc() - self.__start
+		if self.__urlopener and self._playstate == Channel.PLAYING:
 			if not self.__urlopener.do_retrieve(self.__url, 1024):
 				self.__urlopener.end_retrieve(url)
 				self.playdone(0)
@@ -131,8 +131,8 @@ class PrefetchChannel(Channel.ChannelAsync):
 		if not USE_IDLE_PROC:
 			self.__fiber_id = 0
 		if self.__fetching:
-			t_sec = time.time() - self.__start
-			if t_sec>=self.__duration:
+			t_sec=self._scheduler.timefunc() - self.__start
+			if self.__duration and t_sec>=self.__duration:
 				self.__onFetchDur()
 				self.__unregister_for_timeslices()
 			else:
