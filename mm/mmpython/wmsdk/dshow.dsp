@@ -137,6 +137,10 @@ SOURCE=.\aud2rm.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\dshowplay.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\vid2rm.py
 # End Source File
 # End Target
