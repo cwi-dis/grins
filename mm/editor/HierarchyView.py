@@ -1423,6 +1423,12 @@ class HierarchyView(HierarchyViewDialog):
 						# and assign
 						node.SetAttr('name', base)
 
+			if features.EXPORT_REAL in features.feature_set:
+				# some types shouldn't be converted to RealMedia
+				mimetype = MMmimetypes.guess_type(url)[0]
+				if mimetype in ('image/png', 'image/jpeg', 'audio/mpeg') or mimetype.find('real') >= 0:
+					node.SetAttr('project_convert', 0)
+
 		dftchannel = None
 		# try to find out the default channel following two rules (evaluated in the right order):
 		# 1) according to the GRiNS project_default_region_xxx attributes
