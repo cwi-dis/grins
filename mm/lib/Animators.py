@@ -1557,6 +1557,7 @@ class AnimateElementParser:
 			self.__domval = values[len(values)-1]
 		anim = Animator(attr, self.__domval, values, dur, calcmode, times, splines, accumulate, additive)
 		self.__setTimeManipulators(anim)
+		anim.setRange((0.0,1.0))
 
 		dict = {'trtype':trtype, 'subtype':trsubtype, 'mode':trmode}
 		anim.setTransition(dict)
