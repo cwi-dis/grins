@@ -27,6 +27,10 @@
 # getnames()	A function that returns a sorted list of keys
 #		in attrdefs.
 #
+# getdefattr(node, name)
+#		A function that gets the default value for a node's
+#		attribute, *ignoring* the node's raw attribute list.
+#
 # getattr(node, name)
 #		A function that gets a node's attribute value, from
 #		the node or from several defaults, guided by the
@@ -153,19 +157,51 @@ def getattr(node, attrname):
 	elif inheritance = 'inherited':
 		return node.GetInherAttrDef(attrname, defaultvalue)
 	elif inheritance = 'channel':
-		value = node.GetInherAttrDef(attrname, None)
-		if value = None:
-			channelname = node.GetInherAttr('channel')
-			channelattrdict = node.context.channeldict[channelname]
-			if channelattrdict.has_key(attrname):
-				value = channelattrdict[attrname]
-			else:
-				value = defaultvalue
+		try:
+			return node.GetInherAttr(attrname)
+		except NoSuchAttrError:
+			try:
+				cname = node.GetInherAttr('channel')
+				attrdict = node.context.channeldict[cname]
+				return attrdict[attrname]
+			except:
+				return defaultvalue
 	else:
 		raise RuntimeError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
-	return value
 
+
+# Get the default value for a node's attribute, *ignoring* its own value
+#
+def getdefattr(node, attrname):
+	attrdef = getdef(attrname)
+	inheritance = attrdef[5]
+	defaultvalue = attrdef[1]
+	if inheritance = 'raw':
+		return defaultvalue
+	elif inheritance = 'normal':
+		try:
+			return node.GetDefAttr(attrname)
+		except NoSuchAttrError:
+			return defaultvalue
+	elif inheritance = 'inherited':
+		try:
+			return node.GetDefInherAttr(attrname)
+		except NoSuchAttrError:
+			return defaultvalue
+	elif inheritance = 'channel':
+		try:
+			return node.GetDefInherAttr(attrname)
+		except NoSuchAttrError:
+			try:
+				cname = node.GetInherAttr('channel')
+				attrdict = node.context.channeldict[cname]
+				return attrdict[attrname]
+			except:
+				return defaultvalue
+	else:
+		raise RuntimeError, 'bad inheritance ' +`inheritance` + \
+				' for attr ' + `attrname`
 
 def valuerepr(name, value):
 	import MMWrite
