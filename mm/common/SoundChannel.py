@@ -3,7 +3,7 @@
 from Channel import ChannelAsync
 import windowinterface
 import time
-import audio, audiodev
+import audio, audiodev, audiomerge, audioconvert
 import urllib
 import os
 
@@ -11,7 +11,6 @@ debug = os.environ.has_key('CHANNELDEBUG')
 
 class SoundChannel(ChannelAsync):
 	# shared between all instances
-	__port = None			# the audio device
 	__maxbytes = 0			# queue size in bytes
 	__playing = 0			# # of active channels
 
@@ -26,28 +25,7 @@ class SoundChannel(ChannelAsync):
 		self._timer_id = None
 		self.play_data = ''
 
-	def _openport(self):
-		if debug: print 'SoundChannel: openport'
-		if self.__port == 'no-audio':
-			print 'Error: No audio available'
-			return 0
-		if self.__port:
-			return 1
-		try:
-			SoundChannel.__port = audiodev.writer(qsize=400000)
-		except audiodev.Error, arg:
-			print 'Error: No audio available:', arg
-			SoundChannel.__port = 'no-audio'
-			return 0
-		# initialize to known state to find out queuesize in bytes
-## 		self.__port.setsampwidth(2)
-## 		self.__port.setnchannels(2)
-## 		SoundChannel.__maxbytes = self.__port.getfillable() * 4
-		return 1
-
 	def do_arm(self, node, same=0):
-		if not self._openport():
-			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -55,9 +33,7 @@ class SoundChannel(ChannelAsync):
 		fn = self.getfileurl(node)
 		try:
 			fn = urllib.urlretrieve(fn)[0]
-			self.arm_fp = audio.reader(fn,
-						   self.__port.getformats(),
-						   self.__port.getframerates())
+			self.arm_fp = audio.reader(fn)
 		except IOError:
 			print 'Cannot open audio file', fn
 			self.arm_fp = None
@@ -68,90 +44,28 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		self.arm_framerate = self.arm_fp.getframerate()
-		self.arm_format = self.arm_fp.getformat()
-		self.arm_readsize = self.arm_framerate	# XXXX 1 second, tied to timer!!
-## 		if self.arm_readsize*self.arm_bps*2 > self.__maxbytes:
-## 			# The audio output queue is too small to fit
-## 			# our readsize. Lower it.
-## 			self.arm_readsize = self.__maxbytes / self.arm_bps / 2
-## 			print 'AudioChannel: Warning: reading', \
-## 			      self.arm_readsize, 'samples per cycle'
-## 		self.arm_time = float(self.arm_readsize/self.arm_bps)/self.arm_framerate/2
-		self.arm_data = self.arm_fp.readframes(self.arm_readsize)
-		if debug:
-			print 'Audio arm: framerate', self.arm_framerate
-			print 'Audio arm: format', self.arm_format
-			print 'Audio arm: readsize', self.arm_readsize
-			print 'Audio arm: len(data)', len(self.arm_data)
 		return 1
 		
-	def _playsome(self):
-		if self._paused or not self.play_fp or not self.__port:
-			if debug:
-				print 'not playing some...', self._paused, \
-				      self.play_fp, self.__port
-			return
-		in_buffer = len(self.play_data)
-		if debug:
-			print 'SoundChannel: playsome', in_buffer, \
-			      self.__port.getfillable()
-## 		while self.__port.getfillable() >= in_buffer and \
-## 		      self.play_data:
-		if self.play_data:
-			self.__port.writeframes(self.play_data)	# may hang :-(
-			self.play_data = self.play_fp.readframes(self.play_readsize)
-		if self.play_data:
-			self._timer_id = windowinterface.settimer(self.play_time, (self._playsome, ()))
-		else:
-			samples_left = self.__port.getfilled()
-			time_left = samples_left/float(self.play_framerate)
-			if debug:
-				print 'SoundChannel: playsome end', samples_left, time_left
-			if time_left == 0:
-				time_left = 0.01
-			self._timer_id = windowinterface.settimer(time_left, (self.myplaydone, (0,)))
-			
-	def myplaydone(self, arg):
-		self._timer_id = None
-		self.__port.wait()
-		SoundChannel.__playing = SoundChannel.__playing - 1
-		self.playdone(arg)
-			
 	def do_play(self, node):
-		if not self.arm_fp or not self.__port:
+		if not self.arm_fp:
 			self.play_fp = None
+			self.arm_fp = None
 			self.playdone(0)
 			return
 			
 		if debug: print 'SoundChannel: play', node
-		SoundChannel.__playing = SoundChannel.__playing + 1
-		if self.__playing > 1:
-			import audioconvert
-			self.arm_fp = audioconvert.convert(self.arm_fp,
-						(self.__port.getformat(),),
-						(self.__port.getframerate(),))
-			print 'Warning: %d sound channels active' % SoundChannel.__playing
+		player.play(self.arm_fp, (self.playdone, (0,)))
 		self.play_fp = self.arm_fp
-		self.play_readsize = self.arm_readsize
-		self.play_framerate = self.arm_framerate
-		self.play_format = self.arm_format
-		self.play_data = self.arm_data
-		self.play_time = float(self.play_readsize)/self.play_framerate/2
 		self.arm_fp = None
-		self.arm_data = None
-		self.__port.setformat(self.play_format)
-		self.__port.setframerate(self.play_framerate)
-		self._playsome()
 		
+	def playdone(self, outside_induces):
+		if debug: print 'SoundChannel: playdone',`self`
+		if self.play_fp:
+			player.stop(self.play_fp)
+		ChannelAsync.playdone(self, outside_induces)
+
 	def playstop(self):
-		if not self.__port:
-			return
 		if debug: print 'SoundChannel: playstop'
-		self.__port.stop()
-		SoundChannel.__playing = SoundChannel.__playing - 1
-		if self._timer_id:
-			windowinterface.canceltimer(self._timer_id)
 		self.playdone(1)
 
 	def setpaused(self, paused):
@@ -160,3 +74,68 @@ class SoundChannel(ChannelAsync):
 		self._paused = paused
 		if not self._paused and self.play_data:
 			self._playsome()
+
+class Player:
+	def __init__(self):
+		self.__port = audiodev.writer(qsize = 400000)
+		self.__merger = None
+		self.__converter = None
+		self.__tid = None
+		self.__framerate = 0
+		self.__readsize = 0
+		self.__timeout = 0
+		self.__data = ''
+		self.__callbacks = []
+		self.__is_playing = 0
+
+	def __callback(self, arg):
+		self.__callbacks.append(arg)
+
+	def play(self, rdr, cb):
+		first = 0
+		if not self.__merger:
+			first = 1
+			self.__merger = audiomerge.merge()
+		self.__is_playing = 1
+		self.__merger.add(rdr, (self.__callback, (cb,)))
+		if first:
+			self.__converter = audioconvert.convert(self.__merger,
+						 self.__port.getformats(),
+						 self.__port.getframerates())
+			self.__framerate = self.__converter.getframerate()
+			self.__readsize = self.__framerate
+			self.__timeout = 0.5 * self.__readsize / self.__framerate
+			self.__port.setformat(self.__converter.getformat())
+			self.__port.setframerate(self.__converter.getframerate())
+			self.__data = self.__converter.readframes(self.__readsize)
+			self.__playsome(1)
+
+	def stop(self, rdr):
+		if self.__merger:
+			self.__merger.delete(rdr)
+
+	def __playsome(self, first = 0):
+		if not self.__is_playing:
+			self.__port.wait()
+			for cb in self.__callbacks:
+				if cb:
+					apply(cb[0], cb[1])
+			self.__callbacks = []
+			self.__merger = None
+			self.__converter = None
+			return
+		self.__port.writeframes(self.__data)
+		for cb in self.__callbacks:
+			if cb:
+				apply(cb[0], cb[1])
+		self.__callbacks = []
+		self.__data = self.__converter.readframes(self.__readsize)
+		if not self.__data:
+			self.__is_playing = 0
+		timeout = float(self.__port.getfilled())/self.__framerate - self.__timeout
+		if timeout <= 0:
+			timeout = 0.001
+		self.__tid = windowinterface.settimer(timeout,
+						      (self.__playsome, ()))
+
+player = Player()
