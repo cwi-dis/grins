@@ -1,5 +1,19 @@
 __version__ = "$Id$"
 
+from fmtfloat import fmtfloat, round
+from nameencode import nameencode
+import math
+import Animators
+import Duration
+import tokenizer
+from MMTypes import interiortypes
+from MMExc import CheckError
+import colors
+import MMAttrdefs
+import MMurl
+
+from SMILTreeWriteBase import *
+from SMIL import SMIL
 
 #
 #	Export interface 
@@ -108,31 +122,21 @@ class XHTML_SMIL:
 #
 #	SMILXhtmlSmilWriter
 # 
-from SMILTreeWrite import *
-
-# imported by SMILTreeWrite:
-# import string 
-# from fmtfloat import fmtfloat 
-# from nameencode import nameencode
-from fmtfloat import round
-import math
-import Animators
-import Duration
-import tokenizer
 
 # debug flags
 debug = 0
 
-class SMILXhtmlSmilWriter(SMIL):
+class SMILXhtmlSmilWriter(SMIL, SMILWriterBase):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0):
+		ctx = node.GetContext()
+		SMILWriterBase.__init__(self, ctx, filename, copyFiles, tmpcopy, convertURLs, 0, '', 1, progress)
 		self.smilboston = 1
 		self.prune = 0
 		self.cleanSMIL = 1
 
 		# some abbreviations
-		self.context = ctx = node.GetContext()
 		self.hyperlinks = ctx.hyperlinks
 
 		# used by SMILTreeWrite module
@@ -140,36 +144,22 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		self.root = node
 		self.fp = fp
-		self.__title = ctx.gettitle()
+		self.title = ctx.gettitle()
 		self.__animateContext = Animators.AnimateContext(node=node)
-		self.copydir = self.copydirurl = self.copydirname = None
-		if convertURLs:
-			url = MMurl.canonURL(MMurl.pathname2url(filename))
-			i = string.rfind(url, '/')
-			if i >= 0: url = url[:i+1]
-			else: url = ''
-			self.convertURLs = url
-		else:
-			self.convertURLs = None
 
 		self.ids_used = {}
 
 		self.ugr2name = {}
-		self.calcugrnames(node)
+		self.calcugrnames()
 
-		self.layout2name = {}
-		self.calclayoutnames(node)
-		
-		self.transition2name = {}
-		self.name2transition = {}
-		self.calctransitionnames(node)
+		self.calctransitionnames()
 
 		# remove next as soon as getRegionFromName becomes obsolete
 		self.chnamedict = {} 
 
 		self.ch2name = {}
-		self.top_levels = []
-		self.calcchnames1(node)
+		self.top_levels = ctx.getviewports()
+		self.calcchnames1()
 		self.hasMultiWindowLayout = (len(self.top_levels) > 1)
 		self.regions_alias = {}
 
@@ -178,7 +168,7 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# second pass
 		self.calcnames2(node)
-		self.calcchnames2(node)
+		self.calcchnames2()
 
 		self.syncidscheck(node)
 
@@ -229,9 +219,9 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.push()
 		
 		# head contents
-		if self.__title:
+		if self.title:
 			self.writetag('meta', [('name', 'title'),
-					       ('content', self.__title)])
+					       ('content', self.title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
 
@@ -288,7 +278,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			write('/>\n')
 			self.__isopen = 0
 			del self.__stack[-1]
-		write('<!--%s-->\n' % string.join(x.values, '\n'))
+		write('<!--%s-->\n' % '\n'.join(x.values))
 
 	def writetag(self, tag, attrs = None):
 		if attrs is None:
@@ -417,7 +407,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				if attr == 'namespace' or attr == 'elemname':
 					continue
 				if ' ' in attr:
-					ans, attr = string.split(attr, ' ', 1)
+					ans, attr = attr.split(' ', 1)
 					if not extensions.has_key(ans):
 						extensions[ans] = 'x%s' % len(extensions)
 						attrlist.append(('xmlns:%s' % extensions[ans], ans))
@@ -615,7 +605,7 @@ class SMILXhtmlSmilWriter(SMIL):
 					break
 			for i in range(len(values)):
 				values[i] = nameencode(values[i])[1:-1]
-			text = string.join(values, '<br/>')
+			text = '<br/>'.join(values)
 			if text:
 				self.fp.write(text)
 			self.fp.write('</p>')
@@ -632,11 +622,11 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.push()
 				self.fp.write('<p>')
 				if text:
-					text_list = string.split(text, '\n')
+					text_list = text.split('\n')
 					ne_text_list = []
 					for line in text_list:
 						ne_text_list.append(nameencode(line)[1:-1])
-					text = string.join(ne_text_list, '<br/>')
+					text = '<br/>'.join(ne_text_list)
 					self.fp.write(text)
 				self.fp.write('</p>')
 				self.pop()
@@ -771,7 +761,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		# apply soundLevel
 		volume = currMediaRegion.get('soundLevel', None)
 		if volume is not None:
-			volume = 100.0*string.atof(volume)
+			volume = 100.0*float(volume)
 			volume = fmtfloat(volume)
 			divlist.append(('volume', volume))
 
@@ -799,7 +789,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			divlist.append(('style', regstyle))
 			volume = region.get('soundLevel', None)
 			if volume is not None:
-				volume = 100.0*string.atof(volume)
+				volume = 100.0*float(volume)
 				volume = fmtfloat(volume)
 				self.replaceAttrVal(divlist, 'volume', volume)
 				divlist.append(('volume', volume))
@@ -918,7 +908,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				val = self.removeAttr(attrlist, 'begin')
 				if val:
 					try:
-						diff = string.atof(val) - string.atof(fix)
+						diff = float(val) - float(fix)
 					except:
 						pass
 					else:
@@ -966,7 +956,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		# apply soundLevel
 		volume = nodeRegion.get('soundLevel', None)
 		if volume is not None:
-			volume = 100.0*string.atof(volume)
+			volume = 100.0*float(volume)
 			volume = fmtfloat(volume)
 			attrlist.append(('volume', volume))
 			
@@ -1577,7 +1567,7 @@ class SMILXhtmlSmilWriter(SMIL):
 	def getstring(self, node):
 		import urlparse
 		if node.type == 'imm':
-			return string.join(node.GetValues(), '\n')
+			return '\n'.join(node.GetValues())
 		elif node.type == 'ext':
 			url = MMAttrdefs.getattr(node, 'file')
 			if not url:
@@ -1600,8 +1590,8 @@ class SMILXhtmlSmilWriter(SMIL):
 			#
 			# Convert dos/mac newlines to ours
 			#
-			text = string.join(string.split(text, '\r\n'), '\n')
-			text = string.join(string.split(text, '\r'), '\n')
+			text = '\n'.join('\r\n'.split(text))
+			text = '\n'.join('\r'.split(text))
 			return text
 		else:
 			return ''
@@ -1647,172 +1637,6 @@ class SMILXhtmlSmilWriter(SMIL):
 					if node.attrdict.get('attributeName') != 'z-index':
 						self.animate_nodes.append(target)
 					if motion: self.animate_motion_nodes.append(target)
-
-	def calcugrnames(self, node):
-		# Calculate unique names for usergroups
-		usergroups = node.GetContext().usergroups
-		if not usergroups:
-			return
-		for ugroup in usergroups.keys():
-			name = identify(ugroup, html = 1)
-			if self.ids_used.has_key(name):
-				i = 0
-				nn = '%s_%d' % (name, i)
-				while self.ids_used.has_key(nn):
-					i = i+1
-					nn = '%s_%d' % (name, i)
-				name = nn
-			self.ids_used[name] = 1
-			self.ugr2name[ugroup] = name
-
-	def calclayoutnames(self, node):
-		# Calculate unique names for layouts
-		layouts = node.GetContext().layouts
-		if not layouts:
-			return
-		self.uses_grins_namespaces = 1
-		for layout in layouts.keys():
-			name = identify(layout, html = 1)
-			if self.ids_used.has_key(name):
-				i = 0
-				nn = '%s_%d' % (name, i)
-				while self.ids_used.has_key(nn):
-					i = i+1
-					nn = '%s_%d' % (name, i)
-				name = nn
-			self.ids_used[name] = 1
-			self.layout2name[layout] = name
-
-	def calctransitionnames(self, node):
-		# Calculate unique names for transitions
-		transitions = node.GetContext().transitions
-		if not transitions:
-			return
-		for transition in transitions.keys():
-			name = identify(transition, html = 1)
-			if self.ids_used.has_key(name):
-				i = 0
-				nn = '%s_%d' % (name, i)
-				while self.ids_used.has_key(nn):
-					i = i+1
-					nn = '%s_%d' % (name, i)
-				name = nn
-			self.ids_used[name] = 1
-			self.transition2name[transition] = name
-			self.name2transition[name] = transition
-
-	def calcnames1(self, node):
-		# Calculate unique names for nodes; first pass
-		uid = node.GetUID()
-		name = node.GetRawAttrDef('name', '')
-		if name:
-			name = identify(name, html = 1)
-			if not self.ids_used.has_key(name):
-				self.ids_used[name] = 1
-				self.uid2name[uid] = name
-		ntype = node.GetType()
-		if ntype in interiortypes:
-			for child in node.children:
-				self.calcnames1(child)
-				for c in child.children:
-					self.calcnames1(c)
-
-	def calcnames2(self, node):
-		# Calculate unique names for nodes; second pass
-		uid = node.GetUID()
-		name = node.GetRawAttrDef('name', '')
-		if not self.uid2name.has_key(uid):
-			isused = name != ''
-			if isused:
-				name = identify(name, html = 1)
-			else:
-				name = 'node'
-			# find a unique name by adding a number to the name
-			i = 0
-			nn = '%s_%d' % (name, i)
-			while self.ids_used.has_key(nn):
-				i = i+1
-				nn = '%s_%d' % (name, i)
-			name = nn
-			self.ids_used[name] = isused
-			self.uid2name[uid] = name
-		if node.GetType() in interiortypes:
-			for child in node.children:
-				self.calcnames2(child)
-				for c in child.children:
-					self.calcnames2(c)
-
-	def calcchnames1(self, node):
-		# Calculate unique names for channels; first pass
-		context = node.GetContext()
-		channels = context.channels
-		for ch in channels:
-			name = identify(ch.name, html = 1)
-			if not self.ids_used.has_key(name):
-				self.ids_used[name] = 0
-				self.ch2name[ch] = name
-				self.chnamedict[name] = ch.name
-			if ch.GetParent() is None and \
-			   ChannelMap.isvisiblechannel(ch['type']):
-				# top-level channel with window
-				self.top_levels.append(ch)
-				if not self.__title:
-					self.__title = ch.name
-		if not self.__title and channels:
-			# no channels with windows, so take very first channel
-			self.__title = channels[0].name
-
-	def calcchnames2(self, node):
-		# Calculate unique names for channels; second pass
-		context = node.GetContext()
-		channels = context.channels
-		for ch in context.getviewports():
-			if ChannelMap.isvisiblechannel(ch['type']):
-				# first top-level channel
-				top0 = ch.name
-				break
-		else:
-			top0 = None
-		for ch in channels:
-			if not self.ch2name.has_key(ch):
-				name = identify(ch.name, html = 1)
-				i = 0
-				nn = '%s_%d' % (name, i)
-				while self.ids_used.has_key(nn):
-					i = i+1
-					nn = '%s_%d' % (name, i)
-				name = nn
-				self.ids_used[name] = 0
-				self.ch2name[ch] = name
-				self.chnamedict[name] = ch.name
-
-	# copied from SMILTreeWrite.py
-	def syncidscheck(self, node):
-		# make sure all nodes referred to in sync arcs get their ID written
-		for arc in node.GetRawAttrDef('beginlist', []) + node.GetRawAttrDef('endlist', []):
-			# see also getsyncarc() for similar code
-			if arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
-				pass
-			elif arc.wallclock is not None:
-				pass
-			elif arc.accesskey is not None:
-				pass
-			elif arc.marker is None:
-				srcnode = arc.srcnode
-				if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase'):
-					srcnode = arc.refnode()
-					if srcnode is None:
-						continue
-				if arc.channel is not None:
-					pass
-				elif srcnode in ('syncbase', 'prev'):
-					pass
-				elif srcnode is not node:
-					self.ids_used[self.uid2name[srcnode.GetUID()]] = 1
-			else:
-				self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
-		for child in node.children:
-			self.syncidscheck(child)
 
 
 #
