@@ -179,7 +179,7 @@ movie_init(self)
 		(void) PyErr_NoMemory();
 		return 0;
 	}
-	if ((PRIV->m_dispsema = allocate_sema(0)) == NULL) {
+	if ((PRIV->m_dispsema = PyThread_allocate_sema(0)) == NULL) {
 		ERROR(movie_init, PyExc_RuntimeError, "cannot create semaphore");
 		goto error_return_no_close;
 	}
@@ -335,7 +335,7 @@ movie_init(self)
 	(void) close(PRIV->m_pipefd[1]);
  error_return_no_close:
 	if (PRIV->m_dispsema)
-		free_sema(PRIV->m_dispsema);
+		PyThread_free_sema(PRIV->m_dispsema);
 	free(self->mm_private);
 	self->mm_private = NULL;
 	return 0;
@@ -384,7 +384,7 @@ movie_dealloc(self)
 		return;
 	movie_free_old(&PRIV->m_play);
 	movie_free_old(&PRIV->m_arm);
-	free_sema(PRIV->m_dispsema);
+	PyThread_free_sema(PRIV->m_dispsema);
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
 	free(self->mm_private);
@@ -921,7 +921,7 @@ movie_play(self)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
 
-	while (down_sema(PRIV->m_dispsema, NOWAIT_SEMA) > 0)
+	while (PyThread_down_sema(PRIV->m_dispsema, NOWAIT_SEMA) > 0)
 		;
 
 	switch (windowsystem) {
@@ -1036,7 +1036,7 @@ movie_do_display(self)
 	default:
 		abort();
 	}
-	up_sema(PRIV->m_dispsema);
+	PyThread_up_sema(PRIV->m_dispsema);
 }
 
 static void
@@ -1082,7 +1082,7 @@ movie_player(self)
 			if (gl_lock)
 				release_lock(gl_lock);
 #endif
-			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
+			(void) PyThread_down_sema(PRIV->m_dispsema, WAIT_SEMA);
 			break;
 #endif /* USE_GL */
 #ifdef USE_XM
@@ -1096,7 +1096,7 @@ movie_player(self)
 #else
 			my_qenter(self->mm_ev, 3);
 #endif
-			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
+			(void) PyThread_down_sema(PRIV->m_dispsema, WAIT_SEMA);
 			break;
 #endif /* USE_XM */
 		default:
@@ -1300,7 +1300,7 @@ movie_playstop(self)
 	if (write(PRIV->m_pipefd[1], "s", 1) < 0)
 		perror("write");
 	/* in case they're waiting */
-	up_sema(PRIV->m_dispsema);
+	PyThread_up_sema(PRIV->m_dispsema);
 	return 1;
 }
 
