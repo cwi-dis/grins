@@ -1891,16 +1891,17 @@ class NodeBox(GO, NodeBoxCommand):
 			self.drawfocus()
 
 	def finishlink(self):
-		if not self.mother.lockednode:
+		mother = self.mother
+		if not mother.lockednode:
 			windowinterface.beep()
 			return
-		self.mother.window.setcursor('')
-		editmgr = self.mother.editmgr
+		mother.window.setcursor('')
+		editmgr = mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
-		root = self.mother.root
+		root = mother.root
 		snode, sside, delay, dnode, dside, new = \
-			self.mother.lockednode.node, 1, 0.0, self.node, 0, 1
+			mother.lockednode.node, 1, 0.0, self.node, 0, 1
 ##		# find a sync arc between the two nodes and use that
 ##		list = dnode.GetRawAttrDef('synctolist', None)
 ##		if list is None:
@@ -1911,11 +1912,11 @@ class NodeBox(GO, NodeBoxCommand):
 ##				sside, delay, dside, new = xs, de, ys, 0
 ##				break
 		editmgr.addsyncarc(snode, sside, delay, dnode, dside)
-		self.mother.cleanup()
+		mother.cleanup()
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import ArcInfo
-		ArcInfo.showarcinfo(self.mother, root, snode, sside, delay,
+		ArcInfo.showarcinfo(mother, root, snode, sside, delay,
 				    dnode, dside, new = new)
 
 	def select(self):
