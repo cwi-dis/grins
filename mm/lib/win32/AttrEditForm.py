@@ -1109,7 +1109,7 @@ class SingleAttrPage(AttrPage):
 		'option':(OptionsCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'file':(FileCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
 		'color':(ColorCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
-		'string':(StringCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))}
+		'string':(StringCtrl,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))}
 	idmap={'option':grinsRC.IDD_EDITATTR_O1,
 		'file':grinsRC.IDD_EDITATTR_F1,
 		'color':grinsRC.IDD_EDITATTR_C1,
@@ -1134,6 +1134,14 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		AttrPage.OnInitDialog(self)
 		self._layoutctrl=self.createLayoutCtrl()
 		self.create_box(self.getcurrentbox())
+
+	def OnSetActive(self):
+		if not self._layoutctrl.in_create_box_mode():
+			self.create_box(self.getcurrentbox())
+		return self._obj_.OnSetActive()
+
+	def OnDestroy(self,params):
+		self._layoutctrl.exit_create_box()
 
 	def createLayoutCtrl(self):
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
@@ -1172,18 +1180,17 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		else:
 			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		
-		DW=220
-		DH=3*DW/4.0
-
+		DW=200
+		DH=3*DW/4
+		
 		self._xscale=DW/float(sw)
 		self._yscale=DH/float(sh)
 		if self._xscale<self._yscale:
 			self._yscale=self._xscale
 		else:
 			self._xscale=self._yscale
-				
-		self._xmax=int(self._xscale*sw+0.5)+2
-		self._ymax=int(self._yscale*sh+0.5)+2
+		self._xmax=int(self._xscale*sw+0.5)
+		self._ymax=int(self._yscale*sh+0.5)
 		
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
@@ -1196,6 +1203,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			x=self._xscale
 			y=self._yscale
 			if self._units==appcon.UNIT_PXL:
+				l,t,w,h=box;rc=(l,t,l+w,t+h)
+				return self._layoutctrl.drawTk.ToScaledCoord(win32mu.Rect(rc)).tuple_ps()
 				return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
 			else:
 				return (box[0]/x,box[1]/y,box[2]/x,box[3]/y)
@@ -1212,8 +1221,9 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			else:
 				return (box[0]*x,box[1]*y,box[2]*x,box[3]*y)
 
+
 	def create_box(self,box):
-		self._layoutctrl.assert_not_in_create_box()
+		self._layoutctrl.exit_create_box()
 		if box and (box[2]==0 or box[3]==0):box=None
 		units=self._form.getunits()
 		if self._units!=units and box:
@@ -1223,7 +1233,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			box=self._layoutctrl.inverse_coordinates(box,units=units)
 			self._units=units
 			apply(self.update, box)
-
+		
 		# call create box against layout control but be modeless and cool!
 		modeless=1;cool=1;
 		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
@@ -1241,22 +1251,24 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def getcurrentbox(self):
 		lc=self.getctrl('base_winoff')
 		val=lc.getcurrent()
-		if not val:
-			box=()
-		else:
-			box=lc.atoft(val)
-			box=self.tolayout(box)		
-		return box
-	
+		lbox,box=self.val2layoutbox(val)
+		self._layoutctrl.drawTk.AdjustScale(lbox,box)
+		return lbox	
+
 	def setvalue2layout(self,val):
+		lbox,box=self.val2layoutbox(val)
+		self.create_box(lbox)
+	
+	def val2layoutbox(self,val):
 		if not val:
+			lbox=None
 			box=None
 		else:
 			lc=self.getctrl('base_winoff')
 			box=lc.atoft(val)
-			box=self.tolayout(box)
-		self.create_box(box)
-	
+			lbox=self.tolayout(box)
+		return lbox,box
+
 	def islayoutattr(self,attr):
 		if self._group:
 			return self._group.islayoutattr(attr)
