@@ -270,15 +270,25 @@ class SliderPeer:
 			if mtype:
 				mt = mtype.split('/')
 				if mt[0] == 'video':
-					return FrameRate.GetFrameRate(url, mt[0], mt[1])
+					cache = urlcache.urlcache[url]
+					rate = cache.get('framerate')
+					if rate is not None:
+						rate = FrameRate.GetFrameRate(url, mt[0], mt[1])
+						cache['framerate'] = rate
+					return rate
 		for rurl in self.media:
 			url = self.ctx.findurl(rurl)
 			mtype = urlcache.mimetype(url)
 			if mtype:
 				mt = mtype.split('/')
 				if mt[0] == 'audio':
-					return FrameRate.GetFrameRate(url, mt[0], mt[1])
-		return 20 
+					cache = urlcache.urlcache[url]
+					rate = cache.get('framerate')
+					if rate is not None:
+						rate = FrameRate.GetFrameRate(url, mt[0], mt[1])
+						cache['framerate'] = rate
+					return rate
+		return 20
 
 ############################
 import win32window
