@@ -675,10 +675,10 @@ class MMChannel:
 		self.name = name
 
 	def _destroy(self):
-		self.context = None
 		if settings.activeFullSmilCss:
 			if self.attrdict.get('type') == 'layout':
 				self.context.cssResolver.unlink(self._cssId)
+		self.context = None
 
 	def stillvalid(self):
 		return self.context is not None
@@ -931,7 +931,6 @@ class MMChannelTree:
 			return chan.__parent
 		context = self.__node.GetContext()
 		chan = context.channeldict.get(chan)
-		print chan
 		if chan: return chan.__parent
 		return None
 
