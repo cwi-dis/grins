@@ -227,6 +227,14 @@ class _rbtk:
 							apply(self._rb_callback, rb)
 		return 1
 
+	# Notify the toolkit about mouse and paint messages
+	def _notifyListener(self,key,params):
+		if not self.in_create_box_mode(): return 0
+		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
+		elif key=='onMouseMove':DrawTk.DrawLayer.onMouseMove(self,params)
+		elif key=='OnDraw':DrawTk.DrawLayer.DrawObjLayer(self,params)
+		elif key=='onLButtonUp':DrawTk.DrawLayer.onLButtonUp(self,params)
+
 	# returns true if we are in create box mode 
 	def in_create_box_mode(self):
 		return __main__.toplevel._in_create_box is self
