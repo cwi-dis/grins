@@ -102,6 +102,7 @@ class ChannelView(ChannelViewDialog):
 		self.focus = None
 		self.future_focus = None
 		self.showall = 1
+		self.showarcs = 1
 		self.placing_channel = 0
 		self.thumbnails = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
@@ -318,10 +319,21 @@ class ChannelView(ChannelViewDialog):
 	# Toggle 'showall' setting
 
 	def toggleshow(self):
+		self.toplevel.setwaiting()
 		self.showall = (not self.showall)
 		for c in self.context.channels:
 			c.chview_map = None
+		self.settoggle(TOGGLE_UNUSED, self.showall)
 		self.redraw()
+		self.toplevel.setready()
+
+	def togglearcs(self):
+		self.toplevel.setwaiting()
+		self.showarcs = not self.showarcs
+		self.settoggle(TOGGLE_ARCS, self.showarcs)
+		self.arcs = []
+		self.resize()
+		self.toplevel.setready()
 
 	# Return list of currently visible channels
 
@@ -547,6 +559,8 @@ class ChannelView(ChannelViewDialog):
 	# Arc stuff
 
 	def initarcs(self, focus):
+		if not self.showarcs:
+			return
 		arcs = []
 		self.scanarcs(self.viewroot, focus, arcs)
 		self.objects[len(self.objects):] = self.arcs = arcs
@@ -826,8 +840,9 @@ class GO(GOCommand):
 			ANCESTORS(callback = self.mother.setviewrootcb),
 			SIBLINGS(callback = self.mother.setviewrootcb),
 			DESCENDANTS(callback = self.mother.setviewrootcb),
-			TOGGLE_UNUSED(callback = (self.toggleshowcall, ())),
+			TOGGLE_UNUSED(callback = (self.mother.toggleshow, ())),
 			THUMBNAIL(callback = (self.mother.thumbnailcall, ())),
+			TOGGLE_ARCS(callback = (self.mother.togglearcs, ())),
 			]
 		import Help
 		if Help.hashelp():
@@ -922,12 +937,6 @@ class GO(GOCommand):
 		mother = self.mother
 		mother.toplevel.setwaiting()
 		mother.prevviewroot()
-		mother.toplevel.setready()
-
-	def toggleshowcall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.toggleshow()
 		mother.toplevel.setready()
 
 	def newchannelindex(self):
@@ -1217,18 +1226,19 @@ class NodeBox(GO, NodeBoxCommand):
 			SYNCARCS(callback = self.selsyncarc),
 			]
 		self.arcmenu = arcmenu = []
-		for arc in MMAttrdefs.getattr(node, 'synctolist'):
-			xuid, xside, delay, yside = arc
-			try:
-				xnode = node.MapUID(xuid)
-			except NoSuchUIDError:
-				# Skip sync arc from non-existing node
-				continue
-			if xnode.FindMiniDocument() is mother.viewroot:
-				xname = MMAttrdefs.getattr(xnode, 'name')
-				if not xname:
-					xname = '#' + xuid
-				arcmenu.append('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside))
+		if mother.showarcs:
+			for arc in MMAttrdefs.getattr(node, 'synctolist'):
+				xuid, xside, delay, yside = arc
+				try:
+					xnode = node.MapUID(xuid)
+				except NoSuchUIDError:
+					# Skip sync arc from non-existing node
+					continue
+				if xnode.FindMiniDocument() is mother.viewroot:
+					xname = MMAttrdefs.getattr(xnode, 'name')
+					if not xname:
+						xname = '#' + xuid
+					arcmenu.append('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside))
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 

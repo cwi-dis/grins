@@ -54,7 +54,8 @@ class ChannelViewDialog(ViewDialog):
 				('Select sync arc', SYNCARCS),
 				]),
 			('View', [
-				('Toggle unused channels', TOGGLE_UNUSED),
+				('Show unused channels', TOGGLE_UNUSED, 't'),
+				('Show sync arcs', TOGGLE_ARCS, 't'),
 				None,
 				('Minidocument', [
 					('Next', NEXT_MINIDOC),
@@ -89,6 +90,8 @@ class ChannelViewDialog(ViewDialog):
 		x, y, w, h = self.last_geometry
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, adornments = self.adornments, canvassize = (w, h))
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
+		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
+		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
 		if self.waiting:
 			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
