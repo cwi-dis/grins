@@ -33,7 +33,10 @@ def GuessCMIFRoot():
 		dir = ''
 		for s in l:
 			dir = dir + s
-			if s == 'cmif':
+			for sub in ('editor','grins','common','lib'):
+				if not os.path.exists(os.path.join(dir, sub)):
+					break
+			else:
 				return dir
 			dir = dir + '\\'
 	return r'D:\ufs\mm\cmif'	# default, in case we can't find the directory dynamically
