@@ -61,12 +61,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
 			]
-		self.__save = None
+		#self.__save = None
 		if self.main.cansave():
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
+				SAVE(callback = (self.save_callback, ())),
 				]
-			self.__save = SAVE(callback = (self.save_callback, ()))
+			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -413,8 +414,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.changed = 1
 		MMAttrdefs.flushcache(self.root)
 		Timing.changedtimes(self.root)
-		if self.__save is not None:
-			self.setcommands(self.commandlist + [self.__save])
+		#if self.__save is not None:
+		#	self.setcommands(self.commandlist + [self.__save])
 
 	def rollback(self):
 		# Nothing has happened.
