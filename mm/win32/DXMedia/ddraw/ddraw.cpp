@@ -1343,7 +1343,17 @@ DirectDrawSurface_Blt_RGB24_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 	return Py_None;	
 	}
 
-	
+inline BYTE getC(BYTE *p, int row, int col, int w){return *(p + (row/2)*(w/2) + (col/2));}
+inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
+	float yf = 1.164f*(Y - 16.0f);
+	float rf = yf + 1.596f*(Cr - 128.0f);
+	float gf = yf - 0.813f*(Cr - 128.0f) - 0.391f*(Cb - 128.0f);
+	float bf = 	yf + 2.018f*(Cb - 128.0f);
+	r = BYTE( (rf<0.0f)?0.0f:(rf>255.0f?255.0f:rf) );
+	g = BYTE( (gf<0.0f)?0.0f:(gf>255.0f?255.0f:gf) );
+	b = BYTE( (bf<0.0f)?0.0f:(bf>255.0f?255.0f:bf) );
+}
+
 static char DirectDrawSurface_Blt_YUV420_On_RGB32__doc__[] =
 ""
 ;
@@ -1364,18 +1374,23 @@ DirectDrawSurface_Blt_YUV420_On_RGB32(DirectDrawSurfaceObject *self, PyObject *a
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Blt_YUV420_On_RGB32", hr);
 		return NULL;
-	}			
-	// XXX: blt only Y plain for now (luma only image)
+	}	
+	BYTE *pYp = pImageBits;
+	BYTE *pCb = pImageBits + w*h;
+	BYTE *pCr = pCb + w*h/4;
 	for(DWORD row=0;row<h;row++)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
 		for (DWORD col=0;col<w;col++)
 			{
-			DWORD y = *pImageBits++;
-			DWORD r = y;
-			DWORD g = y;
-			DWORD b = y;
-			*(DWORD*)surfpixel = (r << loREDbit)|(g << loGREENbit)|(b << loBLUEbit);
+			BYTE Yp = *pYp++;
+			int Cb = getC(pCb,row,col,w);
+			int Cr = getC(pCr,row,col,w);
+
+			BYTE r,g,b;
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+				
+			*(DWORD*)surfpixel = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			surfpixel++;
 			}
 		}
@@ -1405,16 +1420,21 @@ DirectDrawSurface_Blt_YUV420_On_RGB24(DirectDrawSurfaceObject *self, PyObject *a
 		seterror("DirectDrawSurface_Blt_YUV420_On_RGB24", hr);
 		return NULL;
 	}			
-	// XXX: blt only Y plain for now (luma only image)
+	BYTE *pYp = pImageBits;
+	BYTE *pCb = pImageBits + w*h;
+	BYTE *pCr = pCb + w*h/4;
 	for(DWORD row=0;row<h;row++)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
 		for (DWORD col=0;col<w;col++)
 			{
-			DWORD y = *pImageBits++;
-			DWORD r = y;
-			DWORD g = y;
-			DWORD b = y;
+			BYTE Yp = *pYp++;
+			BYTE Cb = getC(pCb,row,col,w);
+			BYTE Cr = getC(pCr,row,col,w);
+			
+			BYTE r,g,b;
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			
 			*((DWORD*)surfpixel) = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			surfpixel++;
 			}
@@ -1448,16 +1468,21 @@ DirectDrawSurface_Blt_YUV420_On_RGB16(DirectDrawSurfaceObject *self, PyObject *a
 	int rs=256/(int)pow(2,numREDbits);
 	int gs=256/(int)pow(2,numGREENbits);
 	int bs=256/(int)pow(2,numBLUEbits);
-	// XXX: blt only Y plain for now (luma only image)
+	BYTE *pYp = pImageBits;
+	BYTE *pCb = pImageBits + w*h;
+	BYTE *pCr = pCb + w*h/4;
 	for(DWORD row=0;row<h;row++)
 		{
 		WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
 		for (DWORD col=0;col<w;col++)
 			{
-			WORD y = *pImageBits++;			
-			WORD r = y;
-			WORD g = y;
-			WORD b = y;
+			BYTE Yp = *pYp++;
+			BYTE Cb = getC(pCb,row,col,w);
+			BYTE Cr = getC(pCr,row,col,w);
+			
+			BYTE r,g,b;
+			YCrCb2RGB(Yp,Cr,Cb,r,g,b);
+			
 			*surfpixel = WORD((WORD(r/float(rs)) <<loREDbit)  | 
 				(WORD(g/float(gs)) <<loGREENbit) | 
 				(WORD(b/float(bs)) <<loBLUEbit));
