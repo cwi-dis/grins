@@ -597,16 +597,18 @@ class HierarchyView(HierarchyViewDialog):
 		x, y = params[0:2]
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]
+		self.mousehitx = x
+		self.mousehity = y
 		self.select(x, y)
 		self.draw()
 
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x,y = params[0:2]
-
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_obj_at((x,y))
-		if obj is self.selected_widget:
-			obj.mouse0release()
+		obj.mouse0release()
 		self.draw()
 
 	def cvdrop(self, node, window, event, params):

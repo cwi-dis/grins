@@ -623,9 +623,10 @@ class ImageBoxWidget(Widgets.Widget):
 					# The coordinates should all be floating point numbers.
 					# Wrong - now they are pixels -mjvdg.
 					#coordinates = (float(x+w)/12, float(y+h)/6, 5*(float(w)/6), 4*(float(h)/6)),
-					coordinates = (x, y, 16, 16),
+					coordinates = (x, y, 32, 32),
 					scale = -2
 					)
+#				print "TODO: fix those 32x32 hard-coded sizes."
 			except windowinterface.error:
 				pass
 			else:
@@ -863,7 +864,8 @@ class VerticalWidget(StructureObjWidget):
 			if w > mw: mw=w
 			mh=mh+h
 		mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
-		# Add the titleheight
+		# Add the titleheight		print "DEBUG: Icon size is ", sizes_notime.ERRSIZE
+
 		mh = mh + sizes_notime.TITLESIZE
 		mw = mw + 2*sizes_notime.HEDGSIZE
 		return mw, mh
@@ -1039,8 +1041,9 @@ class MediaWidget(MMNodeWidget):
 		MMNodeWidget.destroy(self)
 
 	def is_hit(self, pos):
-		return self.transition_in.is_hit(pos) or self.transition_out.is_hit(pos) or self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos)
-
+		hit = self.transition_in.is_hit(pos) or self.transition_out.is_hit(pos) or self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos)
+		return hit
+		
 	def compute_download_time(self):
 		# Compute the download time for this widget.
 		# Values are in distances (self.downloadtime is a distance).
@@ -1387,6 +1390,7 @@ class Icon(MMNodeWidget):
 		self.callback = callback, args
 
 	def mouse0release(self):
+		print "DEBUG: Icon: recieved event mouse0release."
 		if self.callback and self.icon and self.selected:
 			# Freaky code that Sjoerd showed me: -mjvdg
 			apply(apply, self.callback)
