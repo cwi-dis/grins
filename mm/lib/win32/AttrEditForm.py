@@ -1510,6 +1510,28 @@ class InfoGroup(AttrGroup):
 		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
 
 
+class UploadGroup(AttrGroup):
+	data=attrgrsdict['upload_info']
+
+	def __init__(self):
+		AttrGroup.__init__(self,InfoGroup.data)
+
+	def createctrls(self,wnd):
+		cd={}
+		for ix in range(len(self._al)):
+			a=self._al[ix]
+			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
+		return cd
+
+	def getctrlids(self,ix):
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+
+	def getpageresid(self):
+		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
+
+
 # base_winoff
 class LayoutGroup(AttrGroup):
 	data=attrgrsdict['base_winoff']
@@ -1664,6 +1686,7 @@ groupsui={
 	'.cname':CNameGroup,
 
 	'duration_and_loop':DurationGroup,
+	'upload_info':UploadGroup,
 	}
 
 
