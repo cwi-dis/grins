@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm_d.ax" /align:0x1000 /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 ..\..\lib\strmbase.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm_d.ax" /align:0x1000 /debug:mapped,full /subsystem:windows,4.0
 
 !ENDIF 
 
@@ -157,9 +157,13 @@ DEP_CPP_RPROD=\
 	"..\..\..\..\mmpython\producer\include\progsink.h"\
 	"..\..\..\..\mmpython\producer\include\rmaenum.h"\
 	"..\..\..\..\mmpython\producer\include\rmapckts.h"\
-	"..\..\..\..\mmpython\producer\include\rmavalue.h"\
 	"..\..\..\..\mmpython\producer\include\rmbldeng.h"\
 	"..\..\..\..\mmpython\producer\include\rmmetain.h"\
+	
+NODEP_CPP_RPROD=\
+	"..\..\..\..\mmpython\producer\include\types\vxTypesOld.h"\
+	"..\..\..\..\mmpython\producer\include\vxWorks.h"\
+	"..\..\..\..\mmpython\producer\include\vxworks\MemOverd.h"\
 	
 # End Source File
 # End Target
