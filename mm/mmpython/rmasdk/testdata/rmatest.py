@@ -45,10 +45,11 @@ url3="file:" + urllib.pathname2url(os.path.join(cwd,"news.rt"))
 # real pixel
 url4="file:" + urllib.pathname2url(os.path.join(cwd,"fadein.rp"))
 
-url = url2
+url = url1
 
 import rma
-player=rma.CreatePlayer()
+engine = rma.CreateEngine()
+player=engine.CreatePlayer()
 x1 = player.SetStatusListener(PrintRMListener())
 print 'SetStatusListener returned', x1
 x2 = player.OpenURL(url)
@@ -57,6 +58,16 @@ x3 = player.Begin()
 print 'Begin returned', hex(x3)
 
 if os.name == 'mac':
+	import MacOS, Evt, Events
+	
+	# Disable event processing
+	oldparms = MacOS.SchedParams(0, 0)
+	while not player.IsDone():
+		ok, evt = Evt.WaitNextEvent(-1, 0)	# No timeout, immedeate return
+		if evt[0] == Events.keyDown:	# Stop on any key
+			break
+		engine.EventOccurred(evt)
+	apply(MacOS.SchedParams, oldparms)
 	print 'press return to exit-'
 	sys.stdin.readline()
 # for console apps, enter message loop
