@@ -699,7 +699,8 @@ class ChannelView(ChannelViewDialog):
 			return
 		prompt = 'Select channel type, then place channel:'
 		list = []
-		for name in commonchanneltypes + otherchanneltypes:
+		import ChannelMap
+		for name in ChannelMap.getvalidchanneltypes():
 			list.append(name, (self.select_cb, (name,)))
 		list.append(None)
 		list.append('Cancel')
