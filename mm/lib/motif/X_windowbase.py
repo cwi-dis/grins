@@ -1451,7 +1451,7 @@ class _DisplayList:
 			w._buttonregion.UnionRegion(bregion)
 			w = w._parent
 		toplevel._main.UpdateDisplay()
-		
+
 	def _render(self, region):
 		self._rendered = TRUE
 		w = self._window
@@ -1671,6 +1671,37 @@ class _DisplayList:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
+
+	# Draw a string centered in a box, breaking lines if necessary
+	def centerstring(self, left, top, right, bottom, str):
+		fontheight = self.fontheight()
+		baseline = self.baseline()
+		width = right - left
+		height = bottom - top
+		curlines = [str]
+		if height >= 2*fontheight:
+			import StringStuff
+			curlines = StringStuff.calclines([str], self.strsize, width)[0]
+		nlines = len(curlines)
+		needed = nlines * fontheight
+		if nlines > 1 and needed > height:
+			nlines = max(1, int(height / fontheight))
+			curlines = curlines[:nlines]
+			curlines[-1] = curlines[-1] + '...'
+		x0 = (left + right) * 0.5	# x center of box
+		y0 = (top + bottom) * 0.5	# y center of box
+		y = y0 - nlines * fontheight * 0.5
+		for i in range(nlines):
+			str = string.strip(curlines[i])
+			# Get font parameters:
+			w = self.strsize(str)[0]	# Width of string
+			while str and w > width:
+				str = str[:-1]
+				w = self.strsize(str)[0]
+			x = x0 - 0.5*w
+			y = y + baseline
+			self.setpos(x, y)
+			self.writestr(str)
 
 	def _optimize(self, ignore = ()):
 		entry = self._list[-1]
@@ -1949,8 +1980,8 @@ def findfont(fontname, pointsize):
 			raise error, "can't find any fonts"
 	fontobj = _Font(thefont, psize)
 	_fontcache[key] = fontobj
-	return fontobj	
-	
+	return fontobj
+
 class _Font:
 	def __init__(self, fontname, pointsize):
 		self._font = toplevel._main.LoadQueryFont(fontname)
@@ -2184,7 +2215,7 @@ class Dialog:
 		if not 0 <= button < len(self._buttons):
 			raise error, 'button number out of range'
 		self._buttons[button].set = onoff
-		
+
 class MainDialog(Dialog):
 	pass	# Same as Dialog, for X
 

@@ -1318,7 +1318,7 @@ class PulldownMenu(_Widget):
 			w.set = onoff
 		if sensitive is not None:
 			w.sensitive = sensitive
-		
+
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
 		del self._buttons
@@ -1426,7 +1426,7 @@ class _List:
 			self._list.ListSetPos(toppos)
 		else:
 			raise error, 'bad argument for scrolllist'
-			
+
 
 	def _callback(self, w, (func, arg), call_data):
 		if _in_create_box or self.is_closed():
@@ -2402,6 +2402,17 @@ class _MultChoice:
 
 def multchoice(prompt, list, defindex):
 	return _MultChoice(prompt, list, defindex).run()
+
+def textwindow(text):
+	w = Window('Source', resizable = 1, deleteCallback = 'hide')
+	b = w.ButtonRow([('Close', (w.hide, ()))],
+			top = None, left = None, right = None,
+			vertical = 0)
+	t = w.TextEdit(text, None, editable = 0,
+		       top = b, left = None, right = None,
+		       bottom = None, rows = 30, columns = 80)
+	w.show()
+	return w
 
 fonts = X_windowbase.fonts
 
