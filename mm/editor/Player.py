@@ -367,7 +367,7 @@ class Player() = scheduler():
 		self.prep1(self.root)
 		self.prep2(self.root)
 		if self.root.counter[HD] <> 0:
-			raise TypeError, 'head of root has dependencies!?!?!'
+			raise RuntimeError, 'head of root has dependencies!?!'
 		self.root.counter[HD] = 1
 		self.decrement(0, self.root, HD)
 	#
