@@ -391,21 +391,21 @@ class HierarchyView(HierarchyViewDialog):
 		x, y = params[0:2]
 		self.select(x, y)
 
-	def cvdrop(self, obj, window, event, params):
+	def cvdrop(self, node, window, event, params):
 		em = self.editmgr
 		if not em.transaction():
 			return
-		node = obj.node
 		em.setnodevalues(node, [])
 		em.setnodetype(node, 'ext')
 		em.commit()
 		# try again, now with an ext node as destination
-		self.dropfile(obj, window, event, params)
+		self.dropfile(node, window, event, params)
 
-	def dropfile(self, maybeobj, window, event, params):
+	def dropfile(self, maybenode, window, event, params):
 		x, y, filename = params
-		if maybeobj is not None:
-			obj = maybeobj
+		if maybenode is not None:
+			self.setfocusnode(maybenode)
+			obj = self.whichobj(maybenode)
 		else:
 			obj = self.whichhit(x, y)
 			if not obj:
@@ -419,7 +419,7 @@ class HierarchyView(HierarchyViewDialog):
 		t = obj.node.GetType()
 		if t == 'imm':
 			self.render()
-			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj, window, event, params)))
+			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)))
 			return
 		if t == 'ext' and \
 		   obj.node.GetChannelType() == 'RealPix':
@@ -584,17 +584,12 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			type = 'ext'
 		chname = None
-		if type != 'slide':		# For slides the channel is determined
-			if url is not None:
-				chlist = ctx.compatchannels(url, None)
-			elif chtype is not None:
-				chlist = ctx.compatchannels(url, chtype)
-			else:
-				chlist = []
+		if type == 'ext' or type == 'imm':
+			chlist = ctx.compatchannels(url, chtype)
 			if chlist:
 				chname = chlist[0]
-			elif settings.get('lightweight'):
-				self.render()
+			elif settings.get('lightweight') and \
+			     (url is not None or chtype is not None):
 				windowinterface.showmessage(
 					'No compatible channels for this file',
 					mtype = 'error')
