@@ -207,6 +207,12 @@ class _DisplayList:
 			for x, y in points[1:]:
 				gc.DrawLine(x0, y0, x, y)
 				x0, y0 = x, y
+		elif cmd == '3dhline':
+			color1, color2, x0, x1, y = entry[1:]
+			gc.foreground = color1
+			gc.DrawLine(x0, y, x1, y)
+			gc.foreground = color2
+			gc.DrawLine(x0, y+1, x, y+1)
 		elif cmd == 'box':
 			gc.foreground = entry[1]
 			gc.line_width = entry[2]
@@ -234,7 +240,7 @@ class _DisplayList:
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
 			# l, r, t, b are the corners
-			l3 = l+3
+			l3 = l + 3
 			t3 = t + 3
 			r3 = r - 3
 			b3 = b - 3
@@ -350,6 +356,16 @@ class _DisplayList:
 				   self._linewidth, p))
 		self._optimize((1,))
 
+	def draw3dhline(self, color1, color2, x0, x1, y, units = UNIT_SCREEN):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		w = self._window
+		x0, y = w._convert_coordinates((x0, y), units=units)
+		x1, dummy = w._convert_coordinates((x1, y), units=units)
+		self._list.append(('3dhline', w._convert_color(color1), w._convert_color(color2),
+				   x0, x1, y))
+		self._optimize((1,))
+
 	def drawbox(self, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -374,6 +390,10 @@ class _DisplayList:
 		self._list.append(('marker', w._convert_color(color),
 				   w._convert_coordinates(coordinates)))
 
+	def get3dbordersize(self):
+		# This is the same "3" as in 3dbox bordersize
+		return self._window._pxl2rel((0,0,3,3))[2:4]
+		
 	def usefont(self, fontobj):
 		if self._rendered:
 			raise error, 'displaylist already rendered'

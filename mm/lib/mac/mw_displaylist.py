@@ -215,6 +215,16 @@ class _DisplayList:
 				x, y = np
 				Qd.LineTo(x+xscrolloffset, y+yscrolloffset)
 			Qd.RGBForeColor(fgcolor)
+		elif cmd == '3dhline':
+			color1, color2, x0, x1, y = entry[1:]
+			fgcolor = wid.GetWindowPort().rgbFgColor
+			Qd.RGBForeColor(color1)
+			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset)
+			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset)
+			Qd.RGBForeColor(color2)
+			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset+1)
+			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset+1)
+			Qd.RGBForeColor(fgcolor)
 		elif cmd == 'box':
 			x, y, w, h = entry[1]
 			x, y = x+xscrolloffset, y+yscrolloffset
@@ -426,6 +436,14 @@ class _DisplayList:
 ##		self._update_bbox(min(xvalues), min(yvalues),
 ##				  max(xvalues), max(yvalues))
 
+	def draw3dhline(self, color1, color2, x1, x2, y):
+		w = self._window
+		color1 = w._convert_color(color1)
+		color2 = w._convert_color(color2)
+		x1, y = w._convert_coordinates((x1, y))
+		x2, dummy = w._convert_coordinates((x2, y))
+		self._list.append('3dhline', color1, color2, x1, x2, y)
+
 	def drawbox(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -582,6 +600,9 @@ class _DisplayList:
 			data = data + struct.pack("hh", y+yscrolloffset, x+xscrolloffset)
 		return Res.Resource(data)
 
+	def get3dbordersize(self):
+		return self._window._pxl2rel((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
+		
 	def usefont(self, fontobj):
 		self._font = fontobj
 		self._font._initparams(self._window._wid)

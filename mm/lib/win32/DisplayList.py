@@ -550,6 +550,10 @@ class DisplayList:
 	def drawvideo(self,cbf):
 		self._list.append('video',cbf)
 		
+	def get3dbordersize(self):
+		# This is the same "1" as in 3dbox bordersize
+		return self._window._inverse_coordinates((0,0,1,1))[2:4]
+		
 	# Returns font attributes
 	def usefont(self, fontobj):
 		if self._rendered:
