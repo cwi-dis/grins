@@ -954,7 +954,7 @@ class SMIL:
 	# add basicTiming to certain elements
 	for __el in ('a', 'animate', 'set',
 		     'animateMotion', 'animateColor',
-		     'area', 'anchor', 'transition',
+		     'area', 'anchor',
 		     ):
 		attributes[__el].update(__basicTiming)
 	if profileExtensions.get('InlineTransitions'):
