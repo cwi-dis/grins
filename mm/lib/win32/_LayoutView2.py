@@ -526,7 +526,8 @@ class TreeManager:
 		# media nodes
 		for name, idRes in [('image',grinsRC.IDB_IMAGE), ('sound',grinsRC.IDB_SOUND),
 							('video',grinsRC.IDB_VIDEO), ('text',grinsRC.IDB_TEXT),
-							('html',grinsRC.IDB_HTML),('brush',grinsRC.IDB_IMAGE)]:
+							('html',grinsRC.IDB_HTML),('brush',grinsRC.IDB_IMAGE),
+							('svg',grinsRC.IDB_SVG)]:
 			bitmap = self._loadbmp(idRes)
 			id = self.__addImage(bitmap)
 			self.bitmapNameToId[name] = id
