@@ -199,13 +199,12 @@ class Selecter:
 				dialogs.showmessage( \
 				'No hyperlink source at this anchor')
 			return 0
-		if len(destlist) > 1:
-			self.toplevel.setready()
-			dialogs.showmessage( \
-				'Sorry, multiple links not supported')
-			return 0
-		# XXX This assumes all links have this lay-out!
-		anchor1, anchor2, dir, type = destlist[0]
+		for dest in destlist:
+			if not self.gotoanchor(dest):
+				return 0
+		return 1
+
+	def gotoanchor(self, (anchor1, anchor2, dir, type)):
 		if type <> 0:
 			dialogs.showmessage('Sorry, will JUMP anyway')
 		dest_uid, dest_aid = anchor2
