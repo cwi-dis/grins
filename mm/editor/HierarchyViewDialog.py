@@ -5,6 +5,7 @@
 from ViewDialog import ViewDialog
 import windowinterface
 import WMEVENTS
+import Help
 
 class HierarchyViewDialog(ViewDialog):
 
@@ -72,6 +73,9 @@ class HierarchyViewDialog(ViewDialog):
 				('Z', 'Zoom in', (self.zoomincall, ()))
 				]),
 			]
+		if Help.hashelp():
+			self.menu.append(('Help', [
+				('h', 'Help...', (self.helpcall, ()))]))
 
 	def show(self):
 		if self.is_showing():
@@ -99,3 +103,5 @@ class HierarchyViewDialog(ViewDialog):
 			title = 'Hierarchy View (' + self.toplevel.basename + ')'
 			self.window.settitle(title)
 
+	def helpcall(self):
+		Help.givehelp('Hierarchy_view')
