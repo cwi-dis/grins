@@ -1,4 +1,31 @@
-# Modeless dialog base class
+# Modeless dialog base classes.
+#
+# Use these classes as bases for your own dialog classes.
+#
+# BasicDialog creates an empty form and can show and hide it.
+# While the form is shown, it is registered with glwindow, so a
+# derived class can define event handling methods; by default,
+# the winshut() handler hides the window.
+# When the form is hidden and then shown again, it appears where
+# is was last seen.  The user can always resize the window.
+#
+# Dialog adds Cancel/Restore/Apply/OK buttons with callbacks and a
+# hint string, and has a winshut handler that calls the cancel callback.
+#
+# Besides their methods, these classes define these instance variables
+# that may be used by derived classes:
+# form			the form
+# showing		true when the form is shown
+# width, height		form dimensions
+# title			window title
+# last_geometry		the window's geometry when last hidden, or None
+#
+# The Dialog class also defines cancel_button, restore_button,
+# hint_button (really a text object), apply_button and ok_button.
+#
+# Class GLDialog is similar to BasicDialog but uses plain GL windows
+# instead of FORMS windows.  It uses self.wid instead of self.form
+# self.showing.
 
 import gl, GL, DEVICE
 import fl
@@ -6,26 +33,73 @@ from FL import *
 import glwindow
 
 
-class Dialog() = (glwindow.glwindow)():
+class BasicDialog() = (glwindow.glwindow)():
 	#
-	# Initialization routine
+	# Initialization.
+	# Derived classes must extend this method.
+	# XXX Shouldn't have (width, height) argument?
 	#
-	def init(self, (width, height, title, hint)):
+	def init(self, (width, height, title)):
 		self.width = width
 		self.height = height
 		self.title = title
-		self.hint = hint
 		self.showing = 0
 		self.last_geometry = None
 		self.make_form()
 		return self
 	#
-	# Internal routine to create the form and buttons
+	# Make the form.
+	# Derived classes are expected to override this method.
+	#
+	def make_form(self):
+		self.form = fl.make_form(FLAT_BOX, self.width, self.height)
+	#
+	# Standard show/hide/destroy interface.
+	#
+	def show(self):
+		if self.showing: return
+		glwindow.setgeometry(self.last_geometry)
+		self.form.show_form(PLACE_SIZE, TRUE, self.title)
+		glwindow.register(self, self.form.window)
+		gl.winset(self.form.window)
+		gl.winconstraints()
+		fl.qdevice(DEVICE.WINSHUT)
+		self.showing = 1
+	#
+	def hide(self):
+		if not self.showing: return
+		self.get_geometry()
+		glwindow.unregister(self)
+		self.form.hide_form()
+		self.showing = 0
+	#
+	def get_geometry(self):
+		if not self.showing: return
+		gl.winset(self.form.window)
+		self.last_geometry = glwindow.getgeometry()
+	#
+	def destroy(self):
+		self.hide()
+	#
+	def winshut(self):
+		self.hide()
+	#
+
+
+class Dialog() = BasicDialog():
+	#
+	# Initialization routine.
+	#
+	def init(self, (width, height, title, hint)):
+		self.hint = hint
+		return BasicDialog.init(self, (width, height, title))
+	#
+	# Internal routine to create the form and buttons.
 	#
 	def make_form(self):
 		self.form = fl.make_form(FLAT_BOX, self.width, self.height)
 		#
-		# Add buttons for cancel/restore/apply/OK commands to
+		# Add buttons for Cancel/Restore/Apply/OK commands near
 		# the bottom of the form, and a hint text between them.
 		#
 		form = self.form
@@ -60,38 +134,13 @@ class Dialog() = (glwindow.glwindow)():
 		self.ok_button = b
 		#
 	#
-	# Standard show/hide/destroy interface
-	#
-	def show(self):
-		if not self.showing:
-			if self.last_geometry:
-				glwindow.setgeometry(self.last_geometry)
-			self.form.show_form(PLACE_SIZE, TRUE, self.title)
-			gl.winset(self.form.window)
-			fl.qdevice(DEVICE.WINSHUT)
-			gl.winconstraints()
-			glwindow.register(self, self.form.window)
-			self.showing = 1
-	#
-	def hide(self):
-		if self.showing:
-			glwindow.unregister(self)
-			gl.winset(self.form.window)
-			self.last_geometry = glwindow.getgeometry()
-			self.form.hide_form()
-			self.showing = 0
-	#
-	def destroy(self):
-		self.hide()
-		# XXX collect other garbage here
-		del self.form
-	#
-	# Callback for GL event -- equate WINSHUT with cancel button
+	# Callback for GL event maps WINSHUT to the cancel button.
 	#
 	def winshut(self):
 		self.cancel_callback(self.cancel_button, None)
 	#
-	# Standard callbacks -- derived classes should override or extend these
+	# Standard callbacks.
+	# Derived classes should override or extend these methods.
 	#
 	def cancel_callback(self, (obj, arg)):
 		self.hide()
@@ -107,7 +156,42 @@ class Dialog() = (glwindow.glwindow)():
 	#
 
 
-# Test function
+class GLDialog() = (glwindow.glwindow)():
+	#
+	def init(self, title):
+		self.title = None
+		self.wid = 0
+		self.last_geometry = None
+		return self
+	#
+	def show(self):
+		if self.wid <> 0: return
+		glwindow.setgeometry(self.last_geometry)
+		self.wid = gl.winopen(self.title)
+		glwindow.register(self, self.wid)
+		fl.qdevice(DEVICE.WINSHUT)
+	#
+	def hide(self):
+		if self.wid = 0: return
+		self.get_geometry()
+		glwindow.unregister(self)
+		gl.winclose(self.wid)
+		self.wid = 0
+	#
+	def get_geometry(self):
+		if self.wid = 0: return
+		gl.winset(self.wid)
+		self.last_geometry = glwindow.getgeometry()
+	#
+	def destroy(self):
+		self.hide()
+	#
+	def winshut(self):
+		self.hide()
+	#
+
+
+# Test function for Dialog()
 
 def test():
 	d = Dialog().init(400, 200, 'Dialog.test', 'hint hint')
