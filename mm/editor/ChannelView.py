@@ -530,7 +530,6 @@ class ChannelView(ViewDialog):
 				self.scanarcs(c, focus, arcs)
 
 	def addarcs(self, ynode, arcs):
-		IsAncestorOf = self.viewroot.IsAncestorOf
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
 			xuid, xside, delay, yside = arc
 			try:
@@ -538,7 +537,7 @@ class ChannelView(ViewDialog):
 			except NoSuchUIDError:
 				# Skip sync arc from non-existing node
 				continue
-			if IsAncestorOf(xnode) and \
+			if xnode.FindMiniDocument() is self.viewroot and \
 			   xnode.GetType() in leaftypes and \
 			   xnode.GetChannel():
 				obj = ArcBox(self,
@@ -1160,7 +1159,7 @@ class NodeBox(GO):
 			except NoSuchUIDError:
 				# Skip sync arc from non-existing node
 				continue
-			if mother.viewroot.IsAncestorOf(xnode) and \
+			if xnode.FindMiniDocument() is mother.viewroot and \
 			   xnode.GetType() in leaftypes and \
 			   xnode.GetChannel():
 				xname = MMAttrdefs.getattr(xnode, 'name')

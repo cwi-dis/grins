@@ -16,13 +16,6 @@ if os.path.join(CMIF, 'common') not in sys.path:
 
 from AnchorDefs import *
 
-def getviewroot(node):
-	parent = node.parent
-	while parent and parent.type != 'bag':
-		node = parent
-		parent = node.parent
-	return node
-
 # recurse through the complete CMIF hierarchy and call func on each node.
 def recur(root, func, arg):
 	func(root, arg)
@@ -51,6 +44,8 @@ def cleansyncarcs(node, attr):
 		val = node.GetAttr(attr)
 	except:
 		return			# no such attribute
+	root = node.FindMiniDocument()
+
 	dellist = []
 	for i in range(len(val)):
 		xuid, xside, delay, yside = val[i]
@@ -60,11 +55,11 @@ def cleansyncarcs(node, attr):
 			# dangling sync arc: remove
 			dellist.append(i)
 		else:
-			root = getviewroot(node)
-			if root.IsAncestorOf(xnode) and \
-			   xnode.GetType() in leaftypes and \
-			   xnode.GetChannel():
-				pass
+			if xnode.FindMiniDocument() is root:
+				if xnode.GetType() not in leaftypes:
+					print 'Warning: sync arc to non-leaf node'
+				elif xnode.GetChannel():
+					print 'Warning: sync arc to channel-less node'
 			else:
 				# other end in other minidoc: remove
 				dellist.append(i)
