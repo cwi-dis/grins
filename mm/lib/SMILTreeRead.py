@@ -847,6 +847,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad autoReverse attribute')
 				else:
 					attrdict['autoReverse'] = val == 'true'
+			elif attr in ('accelerate', 'decelerate'):
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					val = string.atof(val)
+				except string.atof_error:
+					self.syntax_error('bad %s attribute' % attr)
+				else:
+					attrdict[attr] = val
 				
 			elif attr == 'syncBehavior':
 				if self.__context.attributes.get('project_boston') == 0:
