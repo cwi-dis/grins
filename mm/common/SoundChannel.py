@@ -169,6 +169,7 @@ class SoundChannel(Channel):
 		port = self.port
 		filled = int(port.getfilled() * self.rate)
 		port.closeport()
+		self.framestodo = self.framestodo + filled # XXX Correct?
 		self.port = al.openport('SoundChannel', 'w', self.config)
 		f.seek(-filled*nchannels*sampwidth, 1)
 		
