@@ -48,7 +48,7 @@ class DisplayList:
 		self._xpos = 0
 		self._clonebboxes = []
 		self._win32rgn=None
-		if window._transparent!=1 and window._window_type != HTM:
+		if window._transparent!=1 and not hasattr(window, '_browser'):
 			self.clear(self._canvas)
 		self._hfactor = 1.0/(self._canvas[2]/pixel_per_mm_x)
 		self._vfactor = 1.0/(self._canvas[3]/pixel_per_mm_y)
@@ -117,8 +117,11 @@ class DisplayList:
 			for i in range(clonestart, len(self._list)):
 				self._do_render(self._list[i], dc, region)
 			self._curfg = self._window._fgcolor
-			if w._showing:
+			if w.is_showing():
 				w.showwindow()
+		for b in self._buttons:
+			if b._highlighted:
+				b._do_highlight()
 		self._rendered = 1
 
 	def _do_render(self, entry, dc, region):

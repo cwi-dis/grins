@@ -51,6 +51,12 @@ def CheckMenuItem(menu,pos,check):
 		flags = flags | win32con.MF_CHECKED
 	menu.CheckMenuItem(pos,flags)
 
+def ClearSubmenu(menu,ix):
+	sm=menu.GetSubMenu(ix)
+	n=sm.GetMenuItemCount()
+	for i in range(n):
+		sm.DeleteMenu(0,win32con.MF_BYPOSITION) 
+	return sm
 
 # positions are used as the cmd ids
 def AppendMenu(menu,str,pos):
@@ -167,19 +173,3 @@ def _create_menu(menu, list, menuid, cbdict, acc = None):
 	t = (id, dict, buts)
 	return t
 
-MENUID_File = 1000
-CMDID_New		= MENUID_File + 1
-CMDID_Open		= MENUID_File + 2
-CMDID_Save		= MENUID_File + 3
-CMDID_SaveAs	= MENUID_File + 4
-CMDID_Exit		= MENUID_File + 5
-
-def AppendFileMenu(menu):
-	submenu=win32ui.CreateMenu()
-	submenu.AppendMenu(win32con.MF_STRING,CMDID_New,'&New\tCtrl+N')
-	submenu.AppendMenu(win32con.MF_STRING,CMDID_Open,'&Open\tCtrl+O')
-	submenu.AppendMenu(win32con.MF_STRING,CMDID_Save,'&Save\tCtrl+S')
-	submenu.AppendMenu(win32con.MF_STRING,CMDID_SaveAs,'Save &As...')
-	submenu.AppendMenu(win32con.MF_SEPARATOR,0,'')
-	submenu.AppendMenu(win32con.MF_STRING,CMDID_Exit,'Exit')
-	menu.AppendMenu(win32con.MF_POPUP,submenu.GetHandle(),"&File")
