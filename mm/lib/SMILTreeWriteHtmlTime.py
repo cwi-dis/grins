@@ -92,6 +92,13 @@ class SMILHtmlTimeWriter(SMIL):
 		self.calcnames2(node)
 		self.calcchnames2(node)
 
+		# must come after second pass
+		self.aid2name = {}
+		self.anchortype = {}
+		self.calcanames(node)
+
+		self.syncidscheck(node)
+
 		self.__isopen = 0
 		self.__stack = []
 
@@ -385,6 +392,10 @@ class SMILHtmlTimeWriter(SMIL):
 			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
 			attrlist.append( ('style',style) )
 
+		if self.writeAnchors(x):
+			self.push()
+			pushed = pushed + 1
+
 		self.writetag('t:'+mtype, attrlist)
 
 		if transIn or transOut:
@@ -399,6 +410,22 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		for i in range(pushed):
 			self.pop()
+
+
+	def writeAnchors(self, x):
+		alist = MMAttrdefs.getattr(x, 'anchorlist')
+		hassrc = 0		# 1 if has source anchors
+		for a in alist:
+			if a.atype in SourceAnchors:
+				hassrc = 1
+				break
+		if hassrc:
+			for a in alist:
+				if a.atype in SourceAnchors:
+					self.writelink(x, a)
+					return 1 # XXX: allow one anchor for now
+		return 0
+
 				
 	def writeEmptyRegion(self, regionName):
 		parents = []
@@ -516,6 +543,114 @@ class SMILHtmlTimeWriter(SMIL):
 		x, y, w, h = rc
 		return 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (x, y, w, h)
 
+	def writelink(self, x, a):
+		attrlist = []
+		aid = (x.GetUID(), a.aid)
+		attrlist.append(('id', self.aid2name[aid]))
+
+		links = x.GetContext().hyperlinks.findsrclinks(aid)
+		if links:
+			if len(links) > 1:
+				print '** Multiple links on anchor', \
+				      x.GetRawAttrDef('name', '<unnamed>'), \
+				      x.GetUID()
+			a1, a2, dir, ltype, stype, dtype = links[0]
+			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype, a.aaccess)
+		if a.atype == ATYPE_NORMAL:
+			ok = 0
+			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?
+			try:
+				shapeType = a.aargs[0]
+				if shapeType == A_SHAPETYPE_RECT or shapeType == A_SHAPETYPE_POLY or \
+						shapeType == A_SHAPETYPE_CIRCLE:
+					coords = []
+					for c in a.aargs[1:]:
+						if type(c) == type(0):
+							# pixel coordinates
+							coords.append('%d' % c)
+						else:
+							# relative coordinates
+							coords.append(fmtfloat(c*100, '%', prec = 2))
+					coords = string.join(coords, ',')
+					ok = 1
+				elif shapeType == A_SHAPETYPE_ALLREGION:
+					ok = 1
+			except:
+				pass						
+			if ok:
+				if shapeType == A_SHAPETYPE_POLY:
+					attrlist.append(('shape', 'poly'))
+				elif shapeType == A_SHAPETYPE_CIRCLE:
+					attrlist.append(('shape', 'circle'))
+				elif shapeType == A_SHAPETYPE_RECT:
+					attrlist.append(('shape', 'rect'))
+					
+				if shapeType != A_SHAPETYPE_ALLREGION:
+					attrlist.append(('coords', coords))
+			else:
+				attrlist.append(('fragment', id))						
+		elif a.atype == ATYPE_AUTO:
+			attrlist.append(('actuate', 'onLoad'));
+			
+		begin, end = a.atimes
+		if begin:
+			attrlist.append(('begin', fmtfloat(begin, 's')))
+		if end:
+			attrlist.append(('end', fmtfloat(end, 's')))
+		self.writetag('a', attrlist)
+
+	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
+		attrs = []
+		# deprecated
+#		if ltype == Hlinks.TYPE_CALL:
+#			attrs.append(('show', "pause"))
+		if ltype == Hlinks.TYPE_JUMP:
+			# default value, so we don't need to write it
+			pass
+		elif ltype == Hlinks.TYPE_FORK:
+			attrs.append(('show', 'new'))
+			if stype == Hlinks.A_SRC_PLAY:
+				# default sourcePlaystate value
+				pass
+			elif stype == Hlinks.A_SRC_PAUSE:
+				attrs.append(('sourcePlaystate', 'pause'))			
+			elif stype == Hlinks.A_SRC_STOP:
+				attrs.append(('sourcePlaystate', 'stop'))
+		
+		if dtype == Hlinks.A_DEST_PLAY:
+			# default value, so we don't need to write it
+			pass
+		elif dtype == Hlinks.A_DEST_PAUSE:
+				attrs.append(('destinationPlaystate', 'pause'))
+							
+		# else show="replace" (default)
+		if type(a2) is type(()):
+			uid2, aid2 = a2
+			if '/' in uid2:
+				if aid2:
+					href, tag = a2
+				else:
+					lastslash = string.rfind(uid2, '/')
+					href, tag = uid2[:lastslash], uid2[lastslash+1:]
+					if tag == '1':
+						tag = None
+			else:
+				href = ''
+				if self.anchortype.get(a2) == ATYPE_NORMAL and \
+				   self.aid2name.has_key(a2):
+					tag = self.aid2name[a2]
+				else:
+					tag = self.uid2name[uid2]
+			if tag:
+				href = href + '#' + tag
+		else:
+			href = a2
+		attrs.append(('href', href))
+
+		if accesskey is not None:
+			attrs.append(('accesskey', accesskey))
+
+		return attrs
 
 	#
 	#
@@ -691,6 +826,40 @@ class SMILHtmlTimeWriter(SMIL):
 			for ch in childs:
 				ch.__parent = parchan
 
+	def calcanames(self, node):
+		"""Calculate unique names for anchors"""
+		uid = node.GetUID()
+		alist = MMAttrdefs.getattr(node, 'anchorlist')
+		for a in alist:
+			aid = (uid, a.aid)
+			self.anchortype[aid] = a.atype
+			if a.atype in SourceAnchors:
+				if isidre.match(a.aid) is None or \
+				   self.ids_used.has_key(a.aid):
+					aname = '%s-%s' % (self.uid2name[uid], a.aid)
+					aname = identify(aname)
+				else:
+					aname = a.aid
+				if self.ids_used.has_key(aname):
+					i = 0
+					nn = '%s-%d' % (aname, i)
+					while self.ids_used.has_key(nn):
+						i = i+1
+						nn = '%s-%d' % (aname, i)
+					aname = nn
+				self.aid2name[aid] = aname
+				self.ids_used[aname] = 0
+		if node.GetType() in interiortypes:
+			for child in node.children:
+				self.calcanames(child)
+
+	def syncidscheck(self, node):
+		# make sure all nodes referred to in sync arcs get their ID written
+		for srcuid, srcside, delay, dstside in node.GetRawAttrDef('synctolist', []):
+			self.ids_used[self.uid2name[srcuid]] = 1
+		if node.GetType() in interiortypes:
+			for child in node.children:
+				self.syncidscheck(child)
 
 #
 #	Transitions
