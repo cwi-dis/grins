@@ -146,12 +146,12 @@ class Dialog() = BasicDialog():
 		self.hint_button = b
 		#
 		x = width - 70 - 68
-		b = form.add_button(RETURN_BUTTON, x, y, w, h, 'Apply')
+		b = form.add_button(NORMAL_BUTTON, x, y, w, h, 'Apply')
 		b.set_call_back(self.apply_callback, None)
 		self.apply_button = b
 		#
 		x = x + 70
-		b = form.add_button(NORMAL_BUTTON, x, y, w, h, 'OK')
+		b = form.add_button(RETURN_BUTTON, x, y, w, h, 'OK')
 		b.set_call_back(self.ok_callback, None)
 		self.ok_button = b
 		#
