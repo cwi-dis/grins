@@ -637,6 +637,19 @@ class AnchorlistCtrl(AttrCtrl):
 							aargs.append(0)
 						aargs[i] = val
 					break
+			for i in range(2):
+				if id == self._se[i]._id:
+					str = self._se[i].gettext()
+					try:
+						val = string.atof(str)
+					except string.atof_error:
+						pass
+					else:
+						times = list(times)
+						times[i] = val
+						times = tuple(times)
+						self.__anchorlinks[self.__curanchor] = atype, aargs, times, links
+					break
 			self.notifylisteners('change')
 			self.enableApply()
 
