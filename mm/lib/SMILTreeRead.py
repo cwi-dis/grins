@@ -1386,7 +1386,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = None
 				if val is not None:
 					attrdict[attr] = val
-			elif attr == ('chromaKey', 'chromaKeyTolerance'):
+			elif attr in ('chromaKey', 'chromaKeyTolerance'):
 				ck = self.__convert_color(val)
 				if ck is None:
 					pass # error already given
