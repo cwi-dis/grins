@@ -235,10 +235,11 @@ class MMNodeContext:
 	#
 	def _isgoodlink(self, link):
 		(uid1, aid1), (uid2, aid2), dir, type = link
-		return self.uidmap.has_key(uid1) \
-		   and self.uidmap.has_key(uid2) \
-		   and self.uidmap[uid1].GetRoot() in self._roots \
-		   and self.uidmap[uid2].GetRoot() in self._roots
+		srcok = (self.uidmap.has_key(uid1) \
+		   and self.uidmap[uid1].GetRoot() in self._roots)
+		dstok = (('/' in uid2) or (self.uidmap.has_key(uid2) \
+		   and self.uidmap[uid2].GetRoot() in self._roots))
+		return (srcok and dstok)
 
 
 # The Channel class
