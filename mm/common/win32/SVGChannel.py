@@ -51,7 +51,7 @@ class SVGChannel(Channel.ChannelWindow):
 			except IOError, arg:
 				if type(arg) is type(self):
 					arg = arg.strerror
-				self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+				self.errormsg(node, 'Cannot resolve URL "%s": %s' % (url, arg))
 				return 1
 			
 			source = u.read()
@@ -67,7 +67,7 @@ class SVGChannel(Channel.ChannelWindow):
 		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
-			self.svgorgsize = svgdom.GetSvgDocSize(svgdoc)
+			self.svgorgsize = svgdoc.getSize()
 			self.svgsrcrect = 0, 0, width, height # promise for svg scaling
 			self.svgdds = self.window.createDDS(width, height)
 			self.svgddcolor = self.svgdds.GetColorMatch(bgcolor)
