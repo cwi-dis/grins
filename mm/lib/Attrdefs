@@ -147,7 +147,7 @@
 	 'Size of link edit window' raw)
 
 (loop (int) 1 'Loop' default
-	'Number of times the node should loop (0 is infinite)' raw)
+	'Number of times the node should loop (0 is indefinite)' raw)
 
 (macprog (string) '' 'Mac program signature' CMIFdefault
 	'4-byte application signature (mac only)' channel)
