@@ -16,7 +16,8 @@ import Duration
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
-CENTER = settings.get('structure_label_center')
+NAMEDISTANCE = 150
+SPACEWIDTH = f_title.strsizePXL(' ')[0]
 
 ICONSIZE = windowinterface.ICONSIZE_PXL
 ARROWCOLOR = (0,255,0)
@@ -410,16 +411,35 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			l = l + self.iconbox.get_minsize()[0]
 			if l <= r:
 				self.iconbox.draw(displist)
-		if CENTER:
-			if l <= r:
-				displist.centerstring(l,t,r,b, self.name)
-		elif l <= r:
-			displist.setpos(l, t+displist.baselinePXL()+2)
-			for i in range(len(self.name),-1,-1):
-				name = self.name[:i]
-				if displist.strsizePXL(name)[0] <= r-l:
-					displist.writestr(name)
-					break
+		if l < r and self.name:
+			x, y = l, t+displist.baselinePXL()+2
+			displist.setpos(x, y)
+			namewidth = displist.strsizePXL(self.name)[0]
+			liney = y-displist.baselinePXL()/2
+			r = r - HEDGSIZE
+			if namewidth <= r-l:
+				# name fits fully
+				# number of repeats
+				n = (r-l-namewidth) / (namewidth + NAMEDISTANCE)
+				# distance between repeats (including name itself)
+				distance = namewidth + NAMEDISTANCE
+				if n > 0:
+					distance = (r-l-namewidth) / n
+				while x + namewidth <= r:
+					displist.writestr(self.name)
+##					if x + distance + namewidth < r:
+##						# there'll be a next name, draw a line between the names
+##						displist.drawline((150,150,150),[(x+namewidth+SPACEWIDTH,liney),(x+distance-SPACEWIDTH,liney)])
+					x = x + distance
+					displist.setpos(x, y)
+			else:
+				# name doesn't fit fully; fit as much as we can
+				for c in self.name:
+					cw = displist.strsizePXL(c)[0]
+					if x + cw >= r:
+						break
+					displist.writestr(c)
+					x = x + cw
 		if self.timeline is not None:
 			self.timeline.draw(displist)
 		# Draw the silly transitions.
@@ -437,6 +457,46 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		displist.drawfbox((0,0,0), (l,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
 		displist.drawfbox((0,0,0), (r-DRAGHANDLESIZE,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
 		
+	# used by MediaWidget and CommentWidget
+	def do_draw_image(self, image_filename, (x,y,w,h), displist):
+		if not image_filename or w <= 0 or h <= 0:
+			return
+		r = x + w - MINSIZE/12
+		x = x + MINSIZE/12
+		imw = 5*(w/6)
+		imh = 4*(h/6)
+		coordinates = (x, y, imw, imh)
+		displist.fgcolor(TEXTCOLOR)
+		if coordinates[2] > 4 and coordinates[3] > 4:
+			try:
+				box = displist.display_image_from_file(
+					image_filename,
+					center = 0,
+					coordinates = coordinates,
+					fit = 'icon')
+			except windowinterface.error:
+				# some error displaying image, forget it
+				pass
+			else:
+				displist.drawbox(box)
+				# calculate number of copies that'll fit in the remaining space
+				n = (w-box[2]-MINSIZE/12-MINSIZE/12)/(box[2]+NAMEDISTANCE)
+				if n <= 0:
+					return
+				# calculate distance between left edges to get copies equidistant
+				distance = (w-box[2]-MINSIZE/12-MINSIZE/12)/n
+				while x + distance + box[2] <= r:
+					x = x + distance
+					# draw line between copies
+					displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
+					coordinates = (x, y, imw, imh)
+					box = displist.display_image_from_file(
+						image_filename,
+						center = 0,
+						coordinates = coordinates,
+						fit = 'icon')
+					displist.drawbox(box)
+
 	#   
 	# These a fillers to make this behave like the old 'Object' class.
 	#
@@ -1626,6 +1686,8 @@ class MediaWidget(MMNodeWidget):
 		MMNodeWidget.destroy(self)
 
 	def init_timemapper(self, timemapper):
+		if not self.node.WillPlay():
+			return None
 		return timemapper
 
 	def remove_set_armedmode(self):
@@ -1788,49 +1850,28 @@ class MediaWidget(MMNodeWidget):
 			displist.drawfbox(MMAttrdefs.getattr(self.node, 'fgcolor'), (x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 			displist.fgcolor(TEXTCOLOR)
 			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
-		else:
-			image_filename = self.__get_image_filename()
-			box = None
-			if image_filename != None and w > 0 and h > 0:
-				try:
-					if CENTER:
-						coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6))
-					else:
-						coordinates = (x+(MINSIZE/12), y, 5*(w/6), 4*(h/6))
-					if coordinates[2] > 4 and coordinates[3] > 4:
-						box = displist.display_image_from_file(
-							image_filename,
-							center = CENTER,
-							coordinates = coordinates,
-							fit = 'icon')
-				except windowinterface.error:
-					pass					# Shouldn't I use another icon or something?
-				if box is not None:
-					displist.fgcolor(TEXTCOLOR)
-					displist.drawbox(box)
-
+		elif w > 0 and h > 0:
+			self.do_draw_image(self.__get_image_filename(), (x,y,w,h), displist)
 		MMNodeWidget.draw(self, displist)
 
 	def __get_image_filename(self):
-		# I just copied this.. I don't know what it does. -mjvdg.
-		f = None
-
+		# return a file name for a thumbnail image
 		url = self.node.GetAttrDef('file', None)
-		if url:
-			media_type = MMmimetypes.guess_type(url)[0]
-		else:
+		if not url:
+			# no file attr, so no thumbnail
 			return None
 
+		media_type = MMmimetypes.guess_type(url)[0]
+
 		channel_type = self.node.GetChannelType()
-		if url and self.mother.thumbnails and channel_type == 'image':
+		if self.mother.thumbnails and channel_type == 'image':
 			url = self.node.context.findurl(url)
 			try:
-				f = MMurl.urlretrieve(url)[0]
+				return MMurl.urlretrieve(url)[0]
 			except IOError, arg:
 				self.set_infoicon('error', 'Cannot load image: %s'%`url`)
-		else:
-			f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
-		return f
+		# either not an image, or image couldn't be found
+		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		if self.need_draghandles is not None:
@@ -1917,23 +1958,7 @@ class CommentWidget(MMNodeWidget):
 		# Draw the image.
 		image_filename = os.path.join(self.mother.datadir, 'comment.tiff')
 		if w > 0 and h > 0:
-			box = None
-			try:
-				if CENTER:
-					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6))
-				else:
-					coordinates = (x+(MINSIZE/12), y, 5*(w/6), 4*(h/6))
-				if coordinates[2] > 4 and coordinates[3] > 4:
-					box = displist.display_image_from_file(
-						image_filename,
-						center = CENTER,
-						coordinates = coordinates,
-						fit = 'icon')
-			except windowinterface.error:
-				pass					# Shouldn't I use another icon or something?
-			if box is not None:
-				displist.fgcolor(TEXTCOLOR)
-				displist.drawbox(box)
+			self.do_draw_image(image_filename, (x,y,w,h), displist)
 
 		# Draw the icon box.
 		self.iconbox.draw(displist)
