@@ -31,35 +31,9 @@ def urlopen(url, data=None):
 	else:
 		return _urlopener.open(url, data)
 
-class SMILParser(fxmllib.XMLParser):
-	def read_external(self, name):
-		import urllib
-		if type(name) is type(unicode('a')):
-			name = name.encode('latin-1')
-		u = urlopen(name)
-		data = u.read()
-		u.close()
-		return data
-
 import string, time
 
-def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
-	x = SMILParser()
-	try:
-		x.parse('''<?xml version="1.0" encoding="latin-1" standalone="no"?>
-<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN" "%s">
-<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language"/>
-''' % dtd)
-	except fxmllib.Error, info:
-		print str(info)
-		if info.text is not None and info.offset is not None:
-			i = string.rfind(info.text, '\n', 0, info.offset) + 1
-			j = string.find(info.text, '\n', info.offset)
-			if j == -1: j = len(info.offset)
-			print info.text[i:j]
-			print ' '*(info.offset-i)+'^'
-		return
-
+def prdtdtable(x, dtd):
 	elems = x.elems.keys()
 	elems.sort()
 	if string.find(dtd, 'SMIL20.dtd') >= 0:
@@ -101,6 +75,43 @@ def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
 				default = default.encode('latin-1')
 			print '<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (attr, atype, default)
 	print '</table></body></html>'
+
+def prdtd(x):
+	taglist = x.elems.keys()
+	taglist.sort()
+	for tag in taglist:
+		nfa, attrdict, start, end, content = x.elems[tag]
+		print '<!ELEMENT %s %s>' % (tag.encode('utf-8'), content.encode('utf-8'))
+		print '<!ATTLIST %s' % tag.encode('utf-8')
+		attrlist = attrdict.keys()
+		attrlist.sort()
+		for attr in attrlist:
+			attype, atvalue, atstring = attrdict[attr]
+			if type(attype) is type([]):
+				attype = u'(' + u'|'.join(attype) + u')'
+			if atstring is None:
+				atstring = u''
+			print '\t%s %s %s' % (attr.encode('utf-8'), attype.encode('utf-8'), atvalue.encode('utf-8'))
+		print '>'
+
+def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
+	x = fxmllib.CheckXMLParser()
+	try:
+		x.parse('''<?xml version="1.0" encoding="latin-1" standalone="no"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN" "%s">
+<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language"/>
+''' % dtd)
+	except fxmllib.Error, info:
+		print str(info)
+		if info.text is not None and info.offset is not None:
+			i = string.rfind(info.text, '\n', 0, info.offset) + 1
+			j = string.find(info.text, '\n', info.offset)
+			if j == -1: j = len(info.offset)
+			print info.text[i:j]
+			print ' '*(info.offset-i)+'^'
+		return
+	prdtdtable(x, dtd)
+##	prdtd(x)
 
 if __name__ == '__main__':
 	import sys
