@@ -151,12 +151,15 @@ class TimeMapper:
 			pos = pos + self.collisiondict[time]
 		return self.__pixel2pixel(pos)
 		
-	def interptime2pixel(self, time):
+	def interptime2pixel(self, time, align='left'):
 		# Return a pixel position for any time value, possibly interpolating
 		if self.collecting:
 			raise Error, 'time2pixel called while still collecting data'
 		if self.minpos.has_key(time):
-			return self.__pixel2pixel(self.minpos[time])
+			pos = self.minpos[time]
+			if align == 'right':
+				pos = pos + self.collisiondict[time]
+			return self.__pixel2pixel(pos)
 		if time < self.times[0]:
 			return self.__pixel2pixel(self.minpos[self.times[0]])
 		if time > self.times[-1]:
