@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from Channel import ChannelWindowThread
-import urllib
+import MMurl
 
 class MovieChannel(ChannelWindowThread):
 	def threadstart(self):
@@ -14,7 +14,7 @@ class MovieChannel(ChannelWindowThread):
 			return 1
 		import MMAttrdefs, GLLock, VFile
 		filename = self.getfileurl(node)
-		filename = urllib.urlretrieve(filename)[0]
+		filename = MMurl.urlretrieve(filename)[0]
 		try:
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:

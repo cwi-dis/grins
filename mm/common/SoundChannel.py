@@ -7,7 +7,7 @@ import MMAttrdefs
 import windowinterface
 import time
 import audio, audiodev, audiomerge, audioconvert
-import urllib
+import MMurl
 import os
 
 debug = os.environ.has_key('CHANNELDEBUG')
@@ -37,7 +37,7 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: arm', node
 		fn = self.getfileurl(node)
 		try:
-			fn = urllib.urlretrieve(fn)[0]
+			fn = MMurl.urlretrieve(fn)[0]
 			self.arm_fp = audio.reader(fn)
 		except IOError:
 			self.errormsg(node, '%s: Cannot open audio file' % fn)

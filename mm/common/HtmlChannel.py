@@ -11,7 +11,7 @@ import MMAttrdefs
 from MMExc import *
 import sys
 import windowinterface
-import urllib
+import MMurl
 from TextChannel import getfont, mapfont
 try:
 	import Xrm
@@ -189,7 +189,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def do_arm(self, node, same=0):
 	        if not same:
 	        	try:
-				self.armed_str = self.getstring(node, urlopen=urlopen)
+				self.armed_str = self.getstring(node)
 			except Channel.error, arg:
 				self.armed_str = '<H1>Cannot Open</H1>\n'+arg+'\n<P>\n'
 		if self._is_shown and not self.htmlw:
@@ -374,7 +374,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def resolveImage(self, widget, src, noload = 0):
 		import X
-		src = urllib.basejoin(self.url, src)
+		src = MMurl.basejoin(self.url, src)
 		try:
 			return image_cache[src]
 		except KeyError:
@@ -382,7 +382,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if noload:
 			return None
 		try:
-			filename, info = urlretrieve(src)
+			filename, info = MMurl.urlretrieve(src)
 		except IOError:
 			return None
 		import img, imgformat
@@ -442,10 +442,10 @@ class HtmlChannel(Channel.ChannelWindow):
 				self.url = self.played_url
 				self.htmlw.SetText(self.played_str, '', '')
 				return
-			href = urllib.basejoin(self.url, href)
+			href = MMurl.basejoin(self.url, href)
 		else:
 			href = self.url
-		type, rest = urllib.splittype(href)
+		type, rest = MMurl.splittype(href)
 		if method not in (None, 'GET') and \
 		   (type != 'http' or method != 'POST'):
 			print 'HtmlChannel: unknown method:', method
@@ -461,9 +461,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			else:
 				href = addquery(href, list)
 		self.backlist.append((href, data))
-		self.url, tag = urllib.splittag(href)
+		self.url, tag = MMurl.splittag(href)
 		try:
-			u = urlopen(self.url, data)
+			u = MMurl.urlopen(self.url, data)
 			self.url = u.geturl()
 			if u.headers.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
@@ -501,13 +501,13 @@ def encodequery(query):
 	return (name, value)
 
 def encodestring(s):
-	return urllib.quote(s or '')	# Catches None as well!
+	return MMurl.quote(s or '')	# Catches None as well!
 
 #
 # Get the data-behind-the-URL
 #
 def urlget(newurl):
-	return urlopen(newurl).read()
+	return MMurlurlopen(newurl).read()
 
 #
 # Turn a CMIF channel name into a name acceptable for an X widget
@@ -532,94 +532,3 @@ def normalize(name):
 ## 		print 'HtmlChannel: "%s" has resource name "%s"'%(
 ## 			name, newname)
 	return newname
-
-_end_loop = '_end_loop'
-class HtmlUrlOpener(urllib.FancyURLopener):
-	def prompt_user_passwd(self, host, realm):
-		try:
-			w = windowinterface.Window('passwd', grab = 1)
-		except AttributeError:
-			return urllib.FancyURLopener.prompt_user_passwd(self, host, realm)
-		import Xt
-		l = w.Label('Enter username and password for %s at %s' % (realm, host))
-		t1 = w.TextInput('User:', '', None, (self.usercb, ()),
-				 top = l, left = None, right = None)
-		t2 = w.TextInput('Passwd:', '', None, (self.passcb, ()),
-				 top = t1, left = None, right = None)
-		b = w.ButtonRow([('Cancel', (self.cancelcb, ()))],
-				vertical = 0,
-				top = t2, left = None, right = None, bottom = None)
-		t2._text.AddCallback('modifyVerifyCallback', self.modifycb, None)
-		self.userw = t1
-		self.passwdw = t2
-		self.passwd = []
-		self.user = ''
-		self.password = ''
-		w.show()
-		self.looping = 1
-		while self.looping:
-			Xt.DispatchEvent(Xt.NextEvent())
-		w.hide()
-		w.close()
-		del self.userw, self.passwdw
-		return self.user, self.password
-
-	def modifycb(self, w, client_data, call_data):
-		if call_data.text:
-			if call_data.text == '\b':
-				if self.passwd:
-					del self.passwd[-1]
-				call_data.text = ''
-				return
-			self.passwd.append(call_data.text)
-			call_data.text = '*' * len(call_data.text)
-
-	def usercb(self):
-		self.user = self.userw.gettext()
-		if self.password:
-			self.do_return()
-		else:
-			import Xmd
-			self.passwdw._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
-
-	def passcb(self):
-		self.password = string.joinfields(self.passwd, '')
-		if self.user:
-			self.do_return()
-		else:
-			import Xmd
-			self.userw._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
-
-	def cancelcb(self):
-		self.user = self.password = None
-		self.do_return()
-
-	def do_return(self):
-		self.looping = 0
-
-_urlopener = None
-def urlopen(url, data = None):
-	global _urlopener
-	if not _urlopener:
-		_urlopener = HtmlUrlOpener()
-	return _urlopener.open(url, data)
-
-_urlretrievecache = {}
-def urlretrieve(url):
-	try:
-		return _urlretrievecache[url]
-	except KeyError:
-		pass
-	global _urlopener
-	if not _urlopener:
-		_urlopener = HtmlUrlOpener()
-	info = _urlopener.retrieve(url)
-	_urlretrievecache[url] = info
-	return info
-
-def urlcleanup():
-	if _urlopener:
-		_urlopener.cleanup()
-
-# cleanup temporary files when we finish
-windowinterface.addclosecallback(urlcleanup, ())

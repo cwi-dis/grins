@@ -5,7 +5,7 @@ import MMAttrdefs
 from MMExc import *			# exceptions
 from AnchorDefs import *
 import windowinterface
-import urllib
+import MMurl
 import Xlib
 
 class VideoChannel(Channel.ChannelWindowAsync):
@@ -67,7 +67,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		file = self.getfileurl(node)
 		try:
-			f = urllib.urlretrieve(file)[0]
+			f = MMurl.urlretrieve(file)[0]
 		except IOError, arg:
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (file, arg[1]))
 			return 1

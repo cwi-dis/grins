@@ -4,7 +4,7 @@ from Channel import *
 from MMExc import *			# exceptions
 from AnchorDefs import *
 import windowinterface			# for windowinterface.error
-from urllib import urlretrieve
+from MMurl import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
