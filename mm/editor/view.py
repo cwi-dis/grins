@@ -263,6 +263,12 @@ class view () :
 			blobj.boxtype = FG_BOX
 			blobj.hidden = 1 - self.debug
 			node.ch_blockobj = blobj
+		except AttributeError:	# a newly created node!
+			# (new style exceptions)
+			blobj = box().new(FOCUS_BOX,x,y,w,h,'')
+			blobj.boxtype = FG_BOX
+			blobj.hidden = 1 - self.debug
+			node.ch_blockobj = blobj
 		blobj.label = name
 		if type in interiortypes:
 			left = self.dividor
@@ -279,7 +285,13 @@ class view () :
 		try:
 			chobj = node.ch_channelobj
 		except NameError:	# a newly created node!
-			chobj = box().new(FOCUS_BOX,left,bottom,right-left,top-bottom,'')
+			chobj = box().new(FOCUS_BOX,left,bottom, \
+					  right-left,top-bottom,'')
+			node.ch_channelobj = chobj
+		except AttributeError:	# a newly created node!
+			# new style exceptions
+			chobj = box().new(FOCUS_BOX,left,bottom, \
+					  right-left,top-bottom,'')
 			node.ch_channelobj = chobj
 		if type in interiortypes:
 			chobj.hidden = 1
