@@ -37,8 +37,9 @@ MENUBAR=(
 	('&File', (
 		(ENTRY, '&New\tCtrl+N', 'N', NEW_DOCUMENT),
 		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
 		(ENTRY, '&Close document', None, CLOSE),
-                (ENTRY, 'Document &Properties...', None, PROPERTIES),
+        (ENTRY, 'Document &Properties...', None, PROPERTIES),
 		(SEP,),
 		(ENTRY, '&Save\tCtrl+S', 'S', SAVE),
 		(ENTRY, 'Save &as...', None, SAVE_AS),
