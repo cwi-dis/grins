@@ -5,6 +5,7 @@ mimetypes = {
 	'.smil': 'application/smil',
 	'.cmi': 'application/x-grins-cmif',
 	'.cmif': 'application/x-grins-cmif',
+	'.grins': 'application/x-grins-project',
 
 	'.ra': 'audio/vnd.rn-realaudio',
 	'.ram': 'audio/vnd.rn-realaudio',
