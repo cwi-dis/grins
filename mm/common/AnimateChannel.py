@@ -40,6 +40,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__playdone = 0
 		self.__animator = None
 		self.__effAnimator = None
+		self.__targetChannel = None
 		self.__lastvalue = None
 		if not hasattr(self._player,'_animateContext'):
 			self._player._animateContext = Animators.AnimateContext()
@@ -64,7 +65,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			context = self._player._animateContext
 			self.__effAnimator = context.getEffectiveAnimator(
 				parser.getTargetNode(), 
-				parser.getAttrName(), 
+				parser.getGrinsAttrName(), 
 				parser.getDOMValue())
 		return 1
 
@@ -98,14 +99,17 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__pauseAnimate(paused)
 		Channel.ChannelAsync.setpaused(self, paused)
 
-	def __startAnimate(self):
-		self.__start = time.time()
-			
+	def __getTargetChannel(self):
+		if self.__targetChannel:
+			return self.__targetChannel
 		targnode = self.__effAnimator.getTargetNode()
 		chname =  MMAttrdefs.getattr(targnode, 'channel') 
-		targetchan = self._player.getchannelbyname(chname)
-		self.__effAnimator.onAnimateBegin(targetchan, self.__animator)
-
+		self.__targetChannel = self._player.getchannelbyname(chname)
+		return self.__targetChannel
+		
+	def __startAnimate(self):
+		self.__start = time.time()		
+		self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
 		self.__animate()
 		self.__register_for_timeslices()
 
@@ -113,7 +117,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__unregister_for_timeslices()
 		if not self.__animating or not self.__animator:
 			return
-		self.__effAnimator.onAnimateEnd(self.__animator)
+		self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator)
 
 	def __pauseAnimate(self, paused):
 		if self.__animating:
@@ -127,7 +131,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		val = self.__animator.getValue(dt)
 		if self.__effAnimator:
 			if self.__lastvalue != val:
-				self.__effAnimator.update()
+				self.__effAnimator.update(self.__getTargetChannel())
 				self.__lastvalue = val
 
 	def __onAnimateDur(self):
