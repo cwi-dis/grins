@@ -12,16 +12,17 @@ class _Events:
 		self._select_fdlist = []
 		self._select_dict = {}
 		self._timenow = float(time.millitimer()) / 1000
+		self._timerid = 0
 		return self
 
 	def _checktime(self):
 		timenow = float(time.millitimer()) / 1000
 		timediff = timenow - self._timenow
 		while self._timers:
-			(t, arg) = self._timers[0]
+			(t, arg, tid) = self._timers[0]
 			t = t - timediff
 			if t > 0:
-				self._timers[0] = (t, arg)
+				self._timers[0] = (t, arg, tid)
 				self._timenow = timenow
 				return
 			# Timer expired, enter it in event queue.
@@ -34,14 +35,27 @@ class _Events:
 	def settimer(self, sec, arg):
 		self._checktime()
 		t = 0
+		self._timerid = self._timerid + 1
 		for i in range(len(self._timers)):
-			time, dummy = self._timers[i]
+			time, dummy, tid = self._timers[i]
 			if t + time > sec:
-				self._timers[i] = (time - sec + t, dummy)
-				self._timers.insert(i, (sec - t, arg))
-				return
+				self._timers[i] = (time - sec + t, dummy, tid)
+				self._timers.insert(i, (sec - t, arg, self._timerid))
+				return self._timerid
 			t = t + time
-		self._timers.append(sec - t, arg)
+		self._timers.append(sec - t, arg, self._timerid)
+		return self._timerid
+
+	def canceltimer(self, id):
+		for i in range(len(self._timers)):
+			t, arg, tid = self._timers[i]
+			if tid == id:
+				del self._timers[i]
+				if i < len(self._timers):
+					tt, arg, tid = self._timers[i]
+					self._timers[i] = (tt + t, arg, tid)
+				return
+##		raise error, 'unknown timer id'
 
 	def enterevent(self, win, event, arg):
 		self._checktime()
@@ -96,7 +110,7 @@ class _Events:
 				return windowinterface.readevent()
 			if self._timers or self._select_fdlist:
 				if self._timers:
-					(t, arg) = self._timers[0]
+					(t, arg, tid) = self._timers[0]
 					t0 = time.millitimer()
 				else:
 					t = 0
@@ -110,7 +124,7 @@ class _Events:
 				if self._timers:
 					t1 = time.millitimer()
 					dt = float(t1 - t0) / 1000
-					self._timers[0] = (t - dt, arg)
+					self._timers[0] = (t - dt, arg, tid)
 			else:
 				windowinterface.waitevent()
 

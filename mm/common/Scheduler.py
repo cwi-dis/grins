@@ -14,6 +14,8 @@ import SR
 
 import dialogs
 
+debugtimer = 0
+
 # Priorities for the various events:
 N_PRIO = 5
 [PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
@@ -370,6 +372,7 @@ class Scheduler(scheduler):
 		# Also, e have to choose here between an eager and a non-eager
 		# algorithm. For now, we're eager, on both queues.
 		#
+		if debugtimer: print 'timer_callback'
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			when, prio, action, argument = self.queue[0]
@@ -406,14 +409,14 @@ class Scheduler(scheduler):
 				work = 1
 		if not self.playing:
 			delay = 0
-			#print 'updatetimer: not playing' #DBG
+			if debugtimer: print 'updatetimer: not playing' #DBG
 		elif not self.paused and work:
 			#
 			# We have SR actions to execute. Make the callback
 			# happen as soon as possible.
 			#
 			delay = 0.001
-			#print 'updatetimer: runnable events' #DBG
+			if debugtimer: print 'updatetimer: runnable events' #DBG
 		elif self.runqueues[PRIO_PREARM_NOW] or \
 			  self.runqueues[PRIO_LO]:
 			#
@@ -436,13 +439,13 @@ class Scheduler(scheduler):
 				delay = 0.001
 			else:
 				self.ui.showtime()
-			#print 'updatetimer: timed events' #DBG
+			if debugtimer: print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
 			# No more events (and nothing runnable either).
 			# We're thru.
 			#
-			#print 'updatetimer: no more work' #DBG
+			if debugtimer: print 'updatetimer: no more work' #DBG
 			self.ui.showtime()
 			self.stop_all()
 			return
@@ -454,8 +457,8 @@ class Scheduler(scheduler):
 			delay = 1
 			self.ui.showtime()
 			#self.ui.showpauseanchor(1) # Does not work...
-			#print 'updatetimer: idle' #DBG
-		#print 'updatetimer: delay=', delay
+			if debugtimer:  'updatetimer: idle' #DBG
+		if debugtimer: print 'updatetimer: delay=', delay
 		self.ui.set_timer(delay)
 	#
 	# Incoming events from channels, or the start event.
