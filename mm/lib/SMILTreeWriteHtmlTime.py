@@ -118,6 +118,8 @@ class SMILHtmlTimeWriter(SMIL):
 		     evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0):
 		self.smilboston = 1
+		self.prune = 0
+		self.cleanSMIL = 1
 		ctx = node.GetContext()
 		self.root = node
 		self.fp = fp
@@ -345,7 +347,7 @@ class SMILHtmlTimeWriter(SMIL):
 			chtype = x.GetChannelType()
 			if not chtype:
 				chtype = 'unknown'
-			mtype, xtype = mediatype(chtype)
+			mtype, xtype = mediatype(x)
 		
 		regionName = None
 		src = None
