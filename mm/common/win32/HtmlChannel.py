@@ -122,7 +122,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.window.Refresh()
 
 	def stopplay(self, node):
-		self.window.SetImmHtml(' ')
+		if self.window:
+			self.window.SetImmHtml(' ')
 ##		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
 ##			self.window.DestroyHtmlCtrl()
 ##			self.window.setredrawfunc(None)
@@ -179,7 +180,13 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.cbcmifanchor(href, list)
 
 	def cbcmifanchor(self, href, list):
-		aname = href[5:]
+		print 'DBG cbcmifanchor:', href
+		# Workaround for something that turns "cmif:xx" anchors
+		# into "cmif:///xx" anchors
+		if href[:8] == "cmif:///":
+			aname = href[8:]
+		else:
+			aname = href[5:]
 		tp = self.findanchortype(aname)
 		if tp == None:
 			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
