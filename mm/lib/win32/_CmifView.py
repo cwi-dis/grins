@@ -407,6 +407,16 @@ class _CmifPlayerView(_CmifView):
 		self._canclose=1
 		self._tid=None
 
+	def OnCreate(self,params):
+		if USE_NEWSUBWINDOWSIMPL: 
+			self.__initDD()
+		_CmifView.OnCreate(self,params)
+
+	def OnDestroy(self, msg):		
+		if USE_NEWSUBWINDOWSIMPL: 
+			self.__delDD()
+		_CmifView.OnDestroy(self, msg)
+
 	def OnInitialUpdate(self):
 		_CmifView.OnInitialUpdate(self)
 		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
@@ -505,9 +515,25 @@ class _CmifPlayerView(_CmifView):
 	def getwindowpos(self):
 		return self._rect
 
-	# draw everything bottom up for now
-	# we don't use clipping yet
+	def getwindowrect(self):
+		return self._rect
+
 	def paintOn(self, dc):
+		self.update()
+		return
+
+		# first paint opaque subwindows
+		trsubwindows = []
+		for w in self._subwindows:
+			if 0 and (w._transparent == 0 or \
+			   (w._transparent == -1 and
+			    w._active_displist)):
+				w.paintOn(dc)
+				dc.ExcludeClipRect(w.getwindowrect())
+			else:
+				trsubwindows.append(w)
+		
+		# then paint self
 		x, y, w, h = self.getwindowpos()
 		x0, y0 = dc.SetWindowOrg((-x,-y))
 		if self._active_displist:
@@ -516,11 +542,98 @@ class _CmifPlayerView(_CmifView):
 			self._redrawfunc()
 		dc.SetWindowOrg((x0,y0))
 
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
+		# then paint transparent children
+		trsubwindows.reverse()
+		for w in trsubwindows:
 			w.paintOn(dc)
+
+	def	__initDD(self):
+		self._islocked = 0
+		import ddraw
+		self._ddraw = ddraw.CreateDirectDraw()
+		self._ddraw.SetCooperativeLevel(self.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
+		self._frontBuffer = self._ddraw.CreateSurface()
+		from __main__ import toplevel
+		w = toplevel._scr_width_pxl
+		h = toplevel._scr_height_pxl
+		self._backBuffer = self._ddraw.CreateSurface(w,h)
+		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
+		self._frontBuffer.SetClipper(self._clipper)
+
+	def __delDD(self):
+		del self._frontBuffer
+		del self._backBuffer
+		del self._clipper
+		del self._ddraw
+		self._frontBuffer = None
+		self._backBuffer = None
+		self._ddraw = None
 		
+	def CreateSurface(self, w, h):
+		if not self._ddraw: return
+		return self._ddraw.CreateSurface(w, h)
+	
+	def GetDDDC(self):
+		if self._islocked:
+			return None
+		self._islocked = 1
+		hdc = self._backBuffer.GetDC()
+		return win32ui.CreateDCFromHandle(hdc)
+
+	def ReleaseDDDC(self, dc):
+		hdc = dc.Detach()
+		self._backBuffer.ReleaseDC(hdc)
+		self._islocked = 0
+
+	def update(self):
+		if USE_NEWSUBWINDOWSIMPL:
+			self.paint()
+			self.flip()
+		else:
+			_CmifView.update(self)
+
+	def paint(self):
+		if not self._backBuffer: return
+		sd = self._backBuffer.GetSurfaceDesc()
+		w, h = sd.GetSize()
+		dc = self.GetDDDC()
+		if not dc: return
+		dc.PatBlt( (0, 0), (w, h), win32con.BLACKNESS)
+		self.ReleaseDDDC(dc)
+
+		# first paint opaque subwindows
+		trsubwindows = []
+		for w in self._subwindows:
+			if 0 and (w._transparent == 0 or \
+			   (w._transparent == -1 and
+			    w._active_displist)):
+				w.paint()
+			else:
+				trsubwindows.append(w)
+		
+		# then paint self
+		dc = self.GetDDDC()
+		if not dc: return
+		x, y, w, h = self.getwindowpos()
+		x0, y0 = dc.SetWindowOrg((-x,-y))
+		if self._active_displist:
+			self._active_displist._render(dc,None)
+		if self._redrawfunc:
+			self._redrawfunc()
+		dc.SetWindowOrg((x0,y0))
+		self.ReleaseDDDC(dc)
+
+		# then paint transparent children
+		trsubwindows.reverse()
+		for w in trsubwindows:
+			w.paint()
+		
+	def flip(self):
+		if self._islocked or not self._backBuffer: return
+		rcBack = self.GetClientRect()
+		rcFront = self.ClientToScreen(rcBack)
+		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+			
 #################################################
 # Specialization of _CmifView for smooth drawing	
 class _CmifStructView(_CmifView):
@@ -551,7 +664,6 @@ class _CmifStructView(_CmifView):
 		rect=win32mu.Rect(dc.GetClipBox())
 
 		# draw to offscreen bitmap for fast looking repaints
-		#dcc=win32ui.CreateDC()
 		dcc=dc.CreateCompatibleDC()
 
 		bmp=win32ui.CreateBitmap()
