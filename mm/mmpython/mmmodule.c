@@ -33,6 +33,9 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
+#ifdef SOLARIS
+#include <time.h>
+#endif
 
 #ifdef MM_DEBUG
 static int mm_debug = 0;
@@ -302,7 +305,16 @@ do_stop(self, args, busyflag, stopflag, func)
 				break;
 			}
 			up_sema(self->mm_flagsema);
+#ifdef SOLARIS
+			{
+				struct timespec rqt;
+				rqt.tv_sec = 0;
+				rqt.tv_nsec = 50000;
+				nanosleep(&rqt, NULL);
+			}
+#else
 			sginap(5); /* release CPU for a bit */
+#endif
 		}
 		dprintf(("exit loop\n"));
 	} else {
