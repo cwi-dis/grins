@@ -258,7 +258,7 @@ System profiles
 20 3Mb Video
 """
 # select profile
-SYSTEM_PROFILE  = 14
+SYSTEM_PROFILE  = 18
 		
 class WMWriter:
 	def __init__(self, ctx, w, h, filename):
@@ -277,22 +277,25 @@ class WMWriter:
 		self._timerid = 0
 
 	def beginWriting(self):
-		self._timerid = windowinterface.settimer(0.1,(self.write,()))
 		self.__start = time.time()
 		self._writer.BeginWriting()
+		self.write(self, first=1)
 
 	def endWriting(self):
 		if self._timerid:
 			windowinterface.canceltimer(self._timerid)
 			self._timerid = 0
-		windowinterface.settimer
+		self.write(settimer=0)
 		self._writer.Flush()
 		self._writer.EndWriting()
 
-	def write(self):
+	def write(self, settimer=1, first=0):
 		dds = self._ctx.getDrawBuffer()
-		secs = time.time() - self.__start
-		msecs = int(secs*1000.0+0.5)
+		if first:
+			msecs = 0
+		else:
+			secs = time.time() - self.__start
+			msecs = int(secs*1000.0+0.5)
 		try:
 			rc = 0, 0, self._w, self._h
 			self._dds.Blt(rc, dds, rc)
@@ -301,7 +304,8 @@ class WMWriter:
 			return
 		self._writer.WriteDDSurface(self._dds.GetBuffer(), msecs)
 		self._dds.ReleaseBuffer()
-		self._timerid = windowinterface.settimer(0.1,(self.write,()))
+		if settimer:
+			self._timerid = windowinterface.settimer(0.1,(self.write,()))
 
 	def __getFormat(self, pxlfmt):
 		screenBPP = pxlfmt[0]
