@@ -662,7 +662,7 @@ class RegionNode(Node):
 		else:
 			# default value: hidden
 			# todo: get value from mmattrdef
-			return 1
+			return 'hidden'
 		
 	def getRegPoint(self):
 		if self.regPoint != None:
