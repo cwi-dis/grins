@@ -763,10 +763,10 @@ class Object:
 						gl.endline()
 
 	def drawchannelname(self, l, t, r, b):
+		import ChannelMap
 		cname = self.node.GetChannelName()
 		ctype = self.node.GetChannelType()
-		map = {'sound': 'S', 'image': 'I', 'movie': 'M', \
-			  'text': 'T', 'python': 'P', 'shell': '!'}
+		map = ChannelMap.shortcuts
 		if map.has_key(ctype):
 			C = map[ctype]
 		else:
