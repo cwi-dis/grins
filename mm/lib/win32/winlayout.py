@@ -987,9 +987,13 @@ class LayoutWnd:
 			parent = self.GetParent()
 			if hasattr(parent, 'OnDelete'):
 				parent.OnDelete()
+		else:
+			# continue normal processing
+			return 1
 		if dx or dy:
 			self._drawContext.moveSelectionBy(dx, dy)
-		return 1
+		# absorb event
+		return 0
 	
 	def OnDestroy(self, params):
 		if self._hsmallfont:
