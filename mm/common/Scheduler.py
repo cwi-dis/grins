@@ -16,7 +16,7 @@ import settings
 import MMStates
 
 debugtimer = 0
-debugevents = 0
+debugevents = 1
 
 # Priorities for the various events:
 N_PRIO = 6
@@ -655,9 +655,14 @@ class Scheduler(scheduler):
 	def sched_arcs(self, sctx, node, event = None, marker = None):
 		if debugevents: print 'sched_arcs',`node`,event
 		for arc in node.sched_children:
-			if arc.event == event and \
-			   arc.marker == marker and \
-			   arc.delay is not None:
+			if (arc.event == event and
+			    arc.marker == marker and
+			    arc.delay is not None) or \
+			   (arc.event is None and
+			    arc.marker is None and
+			    marker is None and
+			    ((arc.dstnode in node.children and event == 'begin') or
+			     (arc.dstnode not in node.children and event == 'end'))):
 				arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
 				self.enter(arc.delay, 0, sctx.trigger, (arc,))
 
