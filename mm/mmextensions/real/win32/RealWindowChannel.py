@@ -14,6 +14,10 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 		RealChannel.RealChannel.__init__(self)
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
+	def do_arm(self, node, same = 0):
+		self.prepare_player(node)
+		return 1
+
 	def do_play(self, node):
 		self.playit(node, self.window.GetSafeHwnd())
 
