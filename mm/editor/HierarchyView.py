@@ -188,8 +188,10 @@ class HierarchyView(HierarchyViewDialog):
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
 			]
-		self.noslidecommands = [
+		self.noaudiocommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
+			]
+		self.noslidecommands = [
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
@@ -294,6 +296,9 @@ class HierarchyView(HierarchyViewDialog):
 			if fntype in MMNode.interiortypes or \
 			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
 				commands = commands + self.interiorcommands
+			if fntype not in MMNode.interiortypes and \
+			   fnode.GetChannelType() != 'sound':
+				commands = commands + self.noaudiocommands
 		if fnode is not self.root:
 			# can't do certain things to the root
 			commands = commands + self.notatrootcommands + self.navigatecommands[0:1]
