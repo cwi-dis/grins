@@ -1,119 +1,22 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
-    <title>GRiNS Editor for Windows Release Notes</title>
+    <title>GRiNS Editor and Player for SMIL Release 1.0 Release Notes
+      for Windows</title>
   </head>
 
   <body>
-    <h1>GR<i>i</i>NS Editor for Windows Release Notes</h1>
+    <h1>GR<i>i</i>NS Editor for SMIL Release 1.0 Release Notes for Windows</h1>
 
     <p>
-      These are the release notes for the GR<i>i</i>NS editor and player for
-      Windows 95/98/NT4, Release 1.0 beta. More information on
-      GR<i>i</i>NS can be obtained at
-      <A HREF="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GR<i>i</i>NS</A>,
-      or by email to
-      <A HREF="mailto:grins-request@oratrix.com">grins-request@oratrix.com</A>.
+      These are the release notes for the GRiNS Editor and Player for
+      SMIL Release 1.0 for Windows.  These release notes were last
+      updated on August 26 1999.  For a more up-to-date version of
+      these notes, look
+      <a href="http://www.oratrix.com/GRiNS/Support/Relnotes/windows-1.0/">here</a>.
     </p>
 
-    <p>
-      What (sparse) documentation on GR<i>i</i>NS is available at this 
-      time can also be found on the homepage.
-    </p>
-
-    <h3>Prerequisites</h3>
-    <p>
-      For decent performance you probably need at least a 100Mhz
-      Pentium with 32Mb, but more memory and a faster processor are
-      definitely preferred. You need about 10Mb of free diskspace.
-    </p>
-    <p>
-      For some older versions of Windows 95, and possibly NT too, you
-      may need a COM patch and/or an Active Movie patch. See the
-      <A HREF="#problems">problems</A> section below for the symptoms
-      and the solution.
-    </p>
-
-
-    <h3>Installation instructions</h3>
-    <p>
-      Just execute the installer and follow the directions of the wizard.
-    </p>
-
-    <h3>Feedback</h3>
-    <p>
-      Bug reports and other technical feedback should be sent to
-      <A HREF="mailto:grins-support@oratrix.com">grins-support@oratrix.com</A>,
-      please check the
-      <A HREF="http://www.oratrix.com/GRiNS/feedback.html">feedback section</A>
-      on the homepage for details.
-    </p>
-
-    <p>
-      Non-technical feedback should be sent to
-      <A HREF="mailto:info@oratrix.com">info@oratrix.com</A>.
-    </p>
-
-    <h3>Example documents</h3>
-    <p>
-      A number of example documents can be found in the Examples
-      directory. More examples will be added to the
-      <a href="http://www.oratrix.com/GRiNS">GRiNS home page</a> over
-      time.
-    </p>
-    
-    <h3>Platform dependencies in media handling</h3>
-    <p>
-      There are some differences between the various platforms.  See
-      the
-      <a href="http://www.oratrix.com/GRiNS/Software/GS-supported1.html">chart
-	of supported media types</a> on the GR<i>i</i>NS website
-      for the supported media types on the various supported
-      platforms.
-    </p>
-
-    <h3>Access methods</h3>
-    <p>
-      The GR<i>i</i>NS player supports the following access methods
-      (URL schemes).
-    </p>
-    <ul>
-      <li>file</li>
-      <li>http</li>
-      <li>ftp</li>
-      <li>data</li>
-      <li>gopher</li>
-    </ul>
-
-    <h3><a name="unsup">Unsupported SMIL features</a></h3>
-    <p>
-      There are only a few SMIL features that are not supported
-      by the GR<i>i</i>NS player.  Documents that make use of these
-      features are parsed correctly, but the features are ignored.
-    </p>
-
-    <ul>
-      <li>
-	<code>begin</code> and <code>end</code> attributes in the
-	<code>anchor</code> element.
-      </li>
-      <li>
-	<code>fit="fill"</code> and <code>fit="scroll"</code>
-	attribute values in <code>region</code> element.
-      </li>
-      <li>
-	<code>name="pics-label"</code> attribute value in
-	<code>meta</code> element.
-      </li>
-      <li>
-	<code>alt</code> attribute in media object elements.
-      </li>
-      <li>
-	<code>fill</code> attribute.
-      </li>
-    </ul>
-
-    <h3>Windows user interface open issues</h3>
+    <h3>Windows User Interface Open Issues</h3>
     <p>
       GR<i>i</i>NS can render HTML either through the Internet
       Explorer HTML control (part of IE4) or the built-in WebsterPro
@@ -140,22 +43,66 @@
       Media Player download page</a> for details.
     </p>
 
-    <h3>Platform-specific issues</h3>
+    <h3>Open Issues</h3>
     <p>
-      No known issues.
+      Windows that were hidden behind other windows may pop up at
+      seemingly random moments.  Move your windows so that they don't
+      fully overlap.  In that way you can easily get back to the
+      window you were working with.
     </p>
 
+    <h3>Access Methods</h3>
     <p>
-      As issues are reported they are added to the release notes and
-      open issues sections on the
-      <a href="http://www.oratrix.com/GRiNS/">GR<i>i</i>NS home page</a>.
+      The GR<i>i</i>NS Editor and Player for SMIL supports the
+      following access methods (URL schemes):
     </p>
+    <ul>
+      <li>file</li>
+      <li>http</li>
+      <li>ftp</li>
+      <li>data</li>
+      <li>gopher</li>
+    </ul>
+    <p>
+      It is possible to create and edit documents that make use of
+      other access methods (in particular the rtsp access method), but
+      they cannot be previewed.
+    </p>
+
+    <h3><a name="unsup">Unsupported SMIL Features</a></h3>
+    <p>
+      There are only a few SMIL features that are not supported by the
+      GR<i>i</i>NS Editor and Player for SMIL.  Documents that make
+      use of these features are parsed correctly, but the features are
+      ignored.
+    </p>
+
+    <ul>
+      <li>
+	<code>begin</code> and <code>end</code> attributes in the
+	<code>anchor</code> element.
+      </li>
+      <li>
+	<code>fit="fill"</code> and <code>fit="scroll"</code>
+	attribute values in <code>region</code> element.
+      </li>
+      <li>
+	<code>name="pics-label"</code> attribute value in
+	<code>meta</code> element.
+      </li>
+      <li>
+	<code>alt</code> attribute in media object elements.
+      </li>
+      <li>
+	<code>fill</code> attribute.
+      </li>
+    </ul>
 
     <hr>
     <address><a href="http://www.oratrix.com/GRiNS/">the GRiNS support staff</a></address>
 <!-- Created: Thu Jul 23 16:58:52 MET DST 1998 -->
 <!-- hhmts start -->
-Last modified: Mon Aug  9 17:29:16 MET DST 1999
+Last modified: Thu Aug 26 17:13:15 MET DST 1999
 <!-- hhmts end -->
   </body>
 </html>
