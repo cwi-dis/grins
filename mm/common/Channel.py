@@ -832,7 +832,7 @@ class ChannelWindow(Channel):
 				width, height = self._attrdict['winsize']
 			else:
 				# provide defaults
-				width, height = 20, 20
+				width, height = 50, 50
 			if self._attrdict.has_key('winpos'):
 				x, y = self._attrdict['winpos']
 			else:
