@@ -148,7 +148,7 @@ class NodeInfo(Dialog):
 	    self.ch_name = 0
 	if always or not self.ch_channelname:
 	    self.origchannelname = self.channelname = \
-		    MMAttrdefs.getattr(self.node, 'channel')
+		    self.node.GetChannelName()
 	    self.ch_channelname = 0
 	if always or not self.ch_type:
 	    self.type = self.node.GetType()
