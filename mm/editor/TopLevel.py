@@ -1164,7 +1164,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		return 1
 
 	def restore_callback(self):
-		if self.changed:
+		if self.changed or (self.sourceview != None and self.sourceview.is_changed()):
 			l1 = 'Are you sure you want to re-read the file?\n'
 			l2 = '(This will destroy the changes you have made)\n'
 			l3 = 'Click OK to restore, Cancel to keep your changes'
