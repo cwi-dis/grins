@@ -1136,7 +1136,7 @@ class _Toplevel(_Event):
 		
 	def _mouseregionschanged(self, *which):
 		"""Clear mouse region cache, because windows have moved or buttons changed"""
-##		print 'regions changed', which
+##		print 'regions changed', which #DBG
 		if not which:
 			which = self._cached_regions.keys()
 		for key in which:
@@ -1152,7 +1152,7 @@ class _Toplevel(_Event):
 			return self._cached_regions[which]
 		except KeyError:
 			pass
-##		print 'region not cached', which
+##		print 'region not cached', which #DBG
 		if which == 'inside':
 			x0, y0, x1, y1 = frontwin.qdrect()
 			Qd.SetPort(frontwin._wid)

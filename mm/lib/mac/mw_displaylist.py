@@ -9,6 +9,7 @@ import QuickDraw
 from types import *
 import struct
 import math
+import time
 
 #
 # Stuff needed from other mw_ modules:
@@ -17,6 +18,7 @@ from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT, ICONSIZE_PXL
 from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER
+import mw_globals
 import mw_fonts
 import mw_resources
 
@@ -53,6 +55,7 @@ def _get_icon(which):
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
+		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
 		self._bgcolor = bgcolor
@@ -76,7 +79,9 @@ class _DisplayList:
 		if self._window is None:
 			return
 		win = self._window
+		buttons_changed = 0
 		for b in self._buttons[:]:
+			buttons_changed = 1
 			b.close()
 		win._displists.remove(self)
 		for d in win._displists:
@@ -84,7 +89,7 @@ class _DisplayList:
 				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
-			if self._buttons:
+			if self._buttons or buttons_changed:
 				win._buttonschanged()
 			if win._transparent == -1 and win._parent:
 				win._parent._clipchanged()
@@ -123,8 +128,9 @@ class _DisplayList:
 		rgn = Qd.NewRgn()
 		for b in self._buttons:
 			brgn = b._get_button_region()
-			Qd.UnionRgn(rgn, brgn, rgn)
-			Qd.DisposeRgn(brgn)
+			if brgn:
+				Qd.UnionRgn(rgn, brgn, rgn)
+				Qd.DisposeRgn(brgn)
 		return rgn
 		
 	def _setfgcolor(self, fgcolor):
@@ -157,6 +163,7 @@ class _DisplayList:
 		#
 		window = self._window
 		self._rendered = 1
+		self.starttime = time.time()
 		# XXXX buttons?
 		Qd.SetPort(window._wid)
 		if window._transparent == -1:
@@ -190,7 +197,19 @@ class _DisplayList:
 		window._active_displist = self
 		if self._buttons:
 			window._buttonschanged()
-
+			self._startbuttontimers()
+	
+	def _startbuttontimers(self):
+		"""Set callbacks to update mouse button region at any time a
+		button changes sensitivity"""
+		changetimes = {}
+		for b in self._buttons:
+			if not b._times:
+				continue
+			t0, t1 = b._times
+			changetimes[t0] = changetimes[t1] = 1
+		for t in changetimes.keys():
+			mw_globals.toplevel.settimer(t, (self._window._buttonschanged, ()))
 	
 	def _can_render_now(self):
 		"""Return true if we can do the render now, in stead of
@@ -455,7 +474,7 @@ class _DisplayList:
 	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates)
+		return _Button(self, coordinates, z, times)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
@@ -825,10 +844,11 @@ class _DisplayList:
 		self._optimdict[x] = len(self._list) - 1
 
 class _Button:
-	def __init__(self, dispobj, coordinates, z=0):
+	def __init__(self, dispobj, coordinates, z=0, times=None):
 		self._coordinates = coordinates
 		self._dispobj = dispobj
 		self._z = z
+		self._times = times
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -865,11 +885,25 @@ class _Button:
 		
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
-		return (bx <= x <= bx+bw and by <= y <= by+bh)
+		if bx <= x < bx+bw and by <= y < by+bh:
+			if self._times:
+				curtime = time.time() - self._dispobj.starttime
+				t0, t1 = self._times
+				if (not t0 or t0 <= curtime) and \
+				   (not t1 or curtime < t1):
+					return 1
+				return 0
+			return 1
+		return 0
 		
 	def _get_button_region(self):
-		"""Return our region, in global coordinates"""
-		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates) # XXXXSCROLL
+		"""Return our region, in global coordinates, if we are active"""
+		if self._times:
+			curtime = time.time() - self._dispobj.starttime
+			t0, t1 = self._times
+			if curtime < t0 or curtime >= t1:
+				return None
+		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
 		x1, y1 = x0+w, y0+h
 		x0, y0 = Qd.LocalToGlobal((x0, y0))
 		x1, y1 = Qd.LocalToGlobal((x1, y1))
