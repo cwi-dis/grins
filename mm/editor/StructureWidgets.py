@@ -3119,23 +3119,22 @@ class Icon(MMWidgetDecoration):
 			return
 ##		displist.drawfbox((0,0,0),self.get_box())
 		self.draw(displist)
-		for arrow, color in self.arrowto:
-			p = arrow.get_node().GetCollapsedParent()
+		l,t,r,b = self.pos_abs
+		thispt = ((l+r)/2, (t+b)/2)
+		for dest, color in self.arrowto:
+			p = dest.get_node().GetCollapsedParent()
 			if p:
 				l,t,r,b = p.views['struct_view'].get_collapse_icon().pos_abs
 			else:
-				l,t,r,b = arrow.pos_abs
+				l,t,r,b = dest.pos_abs
 			if l == 0:
 				return
 			xd = (l+r)/2
 			yd = (t+b)/2
-			l,t,r,b = self.pos_abs
-			xs = (l+r)/2
-			ys = (t+b)/2
 			if self.issrc:
-				self.mother.add_arrow(self, color, (xs,ys),(xd,yd))
+				self.mother.add_arrow(self, dest, color, thispt, (xd,yd))
 			else:
-				self.mother.add_arrow(self, color, (xd,yd),(xs,ys))
+				self.mother.add_arrow(dest, self, color, (xd,yd), thispt)
 
 	def draw_unselected(self, displist):
 		self.draw(displist)

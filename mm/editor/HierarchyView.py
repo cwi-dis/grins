@@ -681,13 +681,12 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw_selection = 0
 		self.redrawing = 0
 
-	def add_arrow(self, caller, color, source, dest):
+	def add_arrow(self, srcicon, dsticon, color, source, dest):
 		# Draw arrows on top of everything else.
-		self.arrow_list.append((caller, color,source, dest))
+		self.arrow_list.append((srcicon, dsticon, color, source, dest))
 
 	def draw_arrows(self, displist):
-		for i in self.arrow_list:
-			caller, color,source,dest = i
+		for srcicon, dsticon, color, source, dest in self.arrow_list:
 			displist.drawarrow(color, source, dest)
 		self.__select_arrow_list = self.arrow_list
 		self.arrow_list = []	# You need to remake it every time.
@@ -705,9 +704,6 @@ class HierarchyView(HierarchyViewDialog):
 		return self.window is not None
 
 	def destroy(self):
-		if self.scene_graph is not None:
-			self.scene_graph.destroy()
-		self.scene_graph = None
 		self.hide()
 
 	def init_display(self):
@@ -1798,6 +1794,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.scene_graph.destroy()
 			self.scene_graph = None
 		self.multi_selected_widgets = []
+		self.__select_arrow_list = []
 
 	# Navigation functions
 
@@ -1978,22 +1975,16 @@ class HierarchyView(HierarchyViewDialog):
 				if node.views.has_key('struct_view'):
 					self.also_select_widget(node.views['struct_view'], external=external)
 
-	def select_arrow(self, arrow):
-		caller, colour, src, dest = arrow
-		# caller is an MMNodewidget, src and dest are coordinates.
-		caller.attrcall(initattr='beginlist')
-
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
-		# mjvdg: This causes a bug. By not returning from this function, the ui thinks that
-		# the click has not finished when the dialog box is popped up (attrcall above does this).
-		#for i in self.__select_arrow_list:
-		#	caller, colour, src, dest = i
-		#	if self.window.hitarrow((x,y), src, dest):
-		#		self.select_arrow(i)
-		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
+		point = (x, y)
+##		for srcicon, dsticon, color, source, dest in self.__select_arrow_list:
+##			if self.window.hitarrow(point, source, dest):
+##				# found an arrow
+##				pass
+		clicked_widget = self.scene_graph.get_clicked_obj_at(point)
 		if clicked_widget:
-			clicked_widget.mouse0press((x,y))
+			clicked_widget.mouse0press(point)
 			self.select_widget(clicked_widget, scroll=0)
 		self.draw()
 
