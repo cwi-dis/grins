@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=4089658603
+  File Checksum=1903427106
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix GRiNS 0.4
+  Value=Oratrix\GRiNS 0.4
   Flags=10000000
 end
 item: Check Configuration
@@ -1376,6 +1376,18 @@ item: Else Statement
 end
 item: If/While Statement
   Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
   Value=A
   Flags=00001010
 end
@@ -1425,7 +1437,7 @@ end
 item: End Block
 end
 item: Edit Registry
-  Total Keys=11
+  Total Keys=10
   item: Key
     Key=.cmif
     New Value=CMIFfile
@@ -1434,10 +1446,6 @@ item: Edit Registry
     Key=.cmif
     New Value=application/x-grins-cmif
     Value Name=Content Type
-  end
-  item: Key
-    Key=.cmc
-    New Value=CMIFCacheFile
   end
   item: Key
     Key=.smi
@@ -1475,21 +1483,93 @@ item: Edit Registry
   end
 end
 item: Edit Registry
-  Total Keys=2
+  Total Keys=9
+  item: Key
+    Key=.cmc
+    New Value=CMIFCacheFile
+  end
+  item: Key
+    Key=CMIFfile\shell\edit\command
+    New Value=%MAINDIR%\GRiNSed.exe %%1
+  end
   item: Key
     Key=CMIFfile\shell\open\command
+    New Value=%MAINDIR%\GRiNS.exe %%1
+  end
+  item: Key
+    Key=SMILfile\shell\edit\command
     New Value=%MAINDIR%\GRiNSed.exe %%1
   end
   item: Key
     Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNSed.exe %%1
+    New Value=%MAINDIR%\GRiNS.exe %%1
   end
+  item: Key
+    Key=MIME\Database\Content Type\application/smil
+  end
+  item: Key
+    Key=MIME\Database\Content Type\application/smil
+    New Value=.smil
+    Value Name=Extension
+  end
+  item: Key
+    Key=MIME\Database\Content Type\application/x-grins-cmif
+  end
+  item: Key
+    Key=MIME\Database\Content Type\application/x-grins-cmif
+    New Value=.cmif
+    Value Name=Extension
+  end
+end
+item: Edit Registry
+  Total Keys=1
+  Key=CMIFCacheFile
+  New Value=GRiNS CMIF Cache File
 end
 item: Self-Register OCXs/DLLs
   Description=Updating System Configuration, Please Wait...
 end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: .cmc
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: .cmif
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: CMIFCacheFile
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: CMIFfile
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: MIME\Database\Content Type\application/x-grins-cmif
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Tree: SMILfile
+end
+item: Add Text to INSTALL.LOG
+  Text=RegDB Root: 0
+end
+item: Add Text to INSTALL.LOG
+  Text=File Tree: %MAINDIR%\
 end
 item: Wizard Block
   Direction Variable=DIRECTION
