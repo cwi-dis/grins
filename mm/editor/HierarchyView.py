@@ -432,6 +432,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.dropfile(node, window, event, params)
 
 	def dropfile(self, maybenode, window, event, params):
+		from mimetypes import guess_type
 		x, y, filename = params
 		if maybenode is not None:
 			self.setfocusnode(maybenode)
@@ -453,7 +454,6 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if t == 'ext' and \
 		   obj.node.GetChannelType() == 'RealPix':
-			from mimetypes import guess_type
 			mtype = guess_type(url)[0]
 			interior = (mtype != 'image/vnd.rn-realpix')
 		else:
@@ -481,10 +481,15 @@ class HierarchyView(HierarchyViewDialog):
 			self.create(0, url, i)
 		else:
 			ctx = obj.node.GetContext()
-			if settings.get('lightweight') and \
+			# check that URL compatible with node's channel
+			if t != 'slide' and settings.get('lightweight') and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
 				self.render()
 				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
+				return
+			if t == 'slide' and (guess_type(url)[0] or '')[:5] != 'image':
+				self.render()
+				windowinterface.showmessage("only images allowed in RealPix node", mtype = 'error', parent = self.window)
 				return
 			em = self.editmgr
 			if not em.transaction():
