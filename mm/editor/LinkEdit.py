@@ -658,8 +658,18 @@ class LinkEditEditor(LinkEditorDialog):
 		self.editlink = editlink
 		self.changed = isnew
 		self.oksetsensitive(self.changed)
+		ltype = parent.findanchor(editlink[ANCHOR1])[A_TYPE]
+		rtype = parent.findanchor(editlink[ANCHOR2])[A_TYPE]
 		LinkEditorDialog.__init__(self, title, dirstr, typestr,
-					  editlink[DIR], editlink[TYPE])
+					  editlink[DIR], editlink[TYPE],
+					  [ltype in SourceAnchors and
+					   rtype in DestinationAnchors,
+					   ltype in DestinationAnchors and
+					   rtype in SourceAnchors,
+					   ltype in SourceAnchors and
+					   ltype in DestinationAnchors and
+					   rtype in SourceAnchors and
+					   rtype in DestinationAnchors])
 
 	def run(self):
 		self.show()
