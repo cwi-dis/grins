@@ -121,6 +121,10 @@ class Player(PlayerCore, PlayerDialog):
 		h, v = self.root.GetRawAttrDef('player_winpos', (None, None))
 		width, height = MMAttrdefs.getattr(self.root, 'player_winsize')
 		return h, v, width, height
+		
+	def after_chan_show(self, chan = None):
+		PlayerDialog.after_chan_show(self, chan)
+		PlayerCore.after_chan_show(self, chan)
 
 	#
 	# FORMS callbacks.
