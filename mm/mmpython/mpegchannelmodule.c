@@ -97,7 +97,7 @@ mpeg_display(self)
 {
 	denter(mpeg_display);
 	do_display(self);
-	up_sema(PRIV->dispsema);
+	PyThread_up_sema(PRIV->dispsema);
 }
 
 static void
@@ -134,7 +134,7 @@ mpeg_player(self)
 		gettimeofday(&tm0, NULL);
 		my_qenter(self->mm_ev, 3);
 		/* mpeg_display(self); */
-		(void) down_sema(PRIV->dispsema, WAIT_SEMA);
+		(void) PyThread_down_sema(PRIV->dispsema, WAIT_SEMA);
 		PRIV->play.moreframes = GetMPEGFrame(&PRIV->play.imagedesc,
 						     PRIV->play.image->data);
 		gettimeofday(&tm1, NULL);
@@ -304,7 +304,7 @@ mpeg_play(self)
 		;
 	(void) fcntl(PRIV->pipefd[0], F_SETFL, 0);
 
-	while (down_sema(PRIV->dispsema, NOWAIT_SEMA) > 0)
+	while (PyThread_down_sema(PRIV->dispsema, NOWAIT_SEMA) > 0)
 		;
 
 	switch (windowsystem) {
@@ -330,7 +330,7 @@ mpeg_playstop(self)
 	if (write(PRIV->pipefd[1], "s", 1) < 0)
 		perror("write");
 	/* in case they're waiting */
-	up_sema(PRIV->dispsema);
+	PyThread_up_sema(PRIV->dispsema);
 	return 1;
 }
 
@@ -486,7 +486,7 @@ mpeg_init(self)
 	PRIV->arm.file = PRIV->play.file = NULL;
 	PRIV->arm.imagedesc.vid_stream = NULL;
 	PRIV->arm.imagedesc.Colormap = NULL;
-	if ((PRIV->dispsema = allocate_sema(0)) == NULL) {
+	if ((PRIV->dispsema = PyThread_allocate_sema(0)) == NULL) {
 		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create semaphore");
 		goto error_return_no_close;
 	}
@@ -572,7 +572,7 @@ error_return:
 	(void) close(PRIV->pipefd[1]);
 error_return_no_close:
 	if (PRIV->dispsema)
-		free_sema(PRIV->dispsema);
+		PyThread_free_sema(PRIV->dispsema);
 	free(self->mm_private);
 	self->mm_private = NULL;
 	return 0;
@@ -585,7 +585,7 @@ mpeg_dealloc(self)
 	denter(mpeg_dealloc);
 	if (self->mm_private == NULL)
 		return;
-	free_sema(PRIV->dispsema);
+	PyThread_free_sema(PRIV->dispsema);
 	(void) close(PRIV->pipefd[0]);
 	(void) close(PRIV->pipefd[1]);
 	free(self->mm_private);
