@@ -16,7 +16,7 @@ item: Global
   Message Font=MS Sans Serif
   Font Size=8
   Pages Modified=00011000010100000000000000000010
-  Extra Pages=00000000000000000000101110010000
+  Extra Pages=00000000000000000000101110110000
   Disk Label=Default
   Disk Filename=SETUP
   Patch Flags=0000000000000001
@@ -24,7 +24,11 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
+  EXE Filename=C:\Documents and Settings\sjoerd\My Documents\src\cmif\win32\CE\GRiNS Player\grins_ipaq.exe
   FTP Cluster Size=20
+  Upload Host=oratrix.oratrix.nl
+  Upload Name=sjoerd
+  Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.0
@@ -33,6 +37,7 @@ item: Global
   Version Company=Oratrix
   Crystal Format=10111100101100000010001001001001
   Crystal Destination=00000000000000000000000000001011
+  Distribute Type=2
   Step View=Properties
   Variable Name1=_SYS_
   Variable Default1=c:\winnt\System32
