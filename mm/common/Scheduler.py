@@ -728,7 +728,7 @@ class SchedulerContext:
 			parent.event(self, ev, timestamp)
 		parent.updatetimer()
 
-	def cancelarc(self, arc, timestamp):
+	def cancelarc(self, arc, timestamp, cancel_gensr = 1):
 		if debugevents: print 'cancelarc',`arc`,timestamp
 		try:
 			self.parent.cancel(arc.qid)
@@ -740,10 +740,10 @@ class SchedulerContext:
 		arc.qid = None
 		deparcs = arc.deparcs
 		arc.deparcs = []
-		if arc.isstart:
+		if arc.isstart and cancel_gensr:
 			self.cancel_gensr(arc.dstnode)
 		for a in deparcs:
-			self.cancelarc(a, timestamp)
+			self.cancelarc(a, timestamp, cancel_gensr)
 			a.depends = None
 
 	def gototime(self, node, gototime, timestamp, path = None):
@@ -820,6 +820,12 @@ class SchedulerContext:
 		ev = (SR.SCHED_DONE, node)
 		if node.playing == MMStates.IDLE and \
 		   self.srdict.has_key(ev):
+			for e, s in self.srdict.items():
+				numac = s[e]
+				if numac is None:
+					continue
+				if ev in numac[1]:
+					return
 			srdict = self.srdict[ev]
 			val = srdict[ev]
 			del self.srdict[ev]
@@ -829,6 +835,7 @@ class SchedulerContext:
 				num = num - 1
 				if num > 0:
 					val[0] = num
+			del node.GetSchedParent().srdict[ev]
 
 	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1):
 		parent = self.parent
@@ -840,7 +847,7 @@ class SchedulerContext:
 		for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
 			if arc.qid is not None:
 				if debugevents: print 'cancel',`arc`,parent.timefunc()
-				self.cancelarc(arc, timestamp)
+				self.cancelarc(arc, timestamp, not cancelarcs)
 ##				if debugevents: print 'scheduled_children-1 h',`arc.dstnode`,arc.dstnode.scheduled_children,parent.timefunc()
 ##				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 		if fill == 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
