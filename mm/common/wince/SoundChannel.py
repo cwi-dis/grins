@@ -77,7 +77,7 @@ class AudioPlayer:
 	def __init__(self, srcurl):
 		self._data = None
 		self._waveout = None
-		self._fmt = None
+		self._wfx = None
 
 		u = MMurl.urlopen(srcurl)
 		if u.headers.maintype != 'audio':
@@ -89,8 +89,21 @@ class AudioPlayer:
 			atype = 'aiff'
 		elif u.headers.subtype == 'x-wav':
 			atype = 'wav'
+		elif u.headers.subtype in ('mp3', 'mpeg', 'x-mp3'):
+			atype = 'mp3'
 		else:
 			atype = 'au'
+
+		if atype == 'mp3':
+			self.read_mp3_audio(u, atype)
+		else:
+			self.read_basic_audio(u, atype)
+
+		cbwnd = windowinterface.getmainwnd()
+		self.hook_callbacks(cbwnd)
+		self._waveout = winmm.WaveOutOpen(self._wfx, cbwnd.GetSafeHwnd())
+
+	def read_basic_audio(self, u, atype):
 		try:
 			rdr = audio.reader(u, [audio.format.linear_16_mono], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
 			fmt = rdr.getformat()
@@ -109,9 +122,65 @@ class AudioPlayer:
 		can_play = winmm.WaveOutQuery(wfx)
 		if not can_play:
 			raise error, 'The device cant play audio format.'
-		cbwnd = windowinterface.getmainwnd()
-		self.hook_callbacks(cbwnd)
-		self._waveout = winmm.WaveOutOpen(wfx, cbwnd.GetSafeHwnd())
+
+		# device can play data with format
+		self._wfx = wfx
+
+	def read_mp3_audio(self, u, atype):
+		# create mp3 decoder
+		try:
+			decoder = winmm.CreateMp3Decoder()
+		except winmm.error, msg:
+			u.close()
+			raise error, 'CreateMp3Decoder() failed'
+
+		# size of buffer holding encoded data
+		decode_buf_size = 8192	
+
+		# limit decode size so that we don't break audio subsystem
+		# decode/add more when some have been played
+		max_data_buf_size = 500000 # upper bound size of decoded data
+
+		# read first chunk to read header
+		data = u.read(decode_buf_size)
+		wfx = decoder.GetWaveFormat(data)
+		can_play = winmm.WaveOutQuery(wfx)
+		if not can_play:
+			# resample with proposed frequency
+			decoder.Reset()		
+			if wfx[1] == 48000:
+				nSamplesPerSec = 44100
+			else:
+				nSamplesPerSec = 22050
+			wfx = decoder.GetWaveFormat(data, nSamplesPerSec)
+			can_play = winmm.WaveOutQuery(wfx)
+			if not can_play:
+				u.close()
+				raise error, 'The device cant play audio format.'
+		
+		# device can play data with format
+		self._wfx = wfx
+
+		# decode some
+		self._data = ''
+		status = len(data)
+		while status > 0 and len(self._data) < max_data_buf_size:
+			decdata, done, inputpos, status = decoder.DecodeBuffer(data)
+			if done>0:
+				self._data = self._data + decdata[:done]
+			while not status:
+				decdata, done, status, status = decoder.DecodeBuffer()
+				if done>0:
+					self._data = self._data + decdata[:done]
+			if status > 0:
+				status = status - 1
+			data = data[decode_buf_size - status:]
+			newdata =  u.read(decode_buf_size - status)
+			if not newdata:
+				break
+			data = data + newdata
+			status = len(data)
+		u.close()
 
 	def play(self):
 		if self._waveout:
