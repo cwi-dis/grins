@@ -564,7 +564,8 @@ class SMILXhtmlSmilWriter(SMIL):
 			if fill:
 				divlist.append(('fill', fill))
 				
-			# transfer timing to div				
+			# transfer timing to div
+			timespecount = 0 				
 			if 1: 
 				divlist.append( ('timeContainer', 'par'))
 				inpar = 1
@@ -572,6 +573,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				while i < len(attrlist):
 					attr, val = attrlist[i]
 					if attr in ('begin', 'dur', 'end'):
+						timespecount = timespecount + 1
 						divlist.append((attr, val))
 						del attrlist[i]
 						if attr == 'dur':
@@ -580,7 +582,7 @@ class SMILXhtmlSmilWriter(SMIL):
 						i = i + 1
 
 			# duration hint for IE scheduler				
-			if 1:
+			if timespecount <= 1:
 				if pardur is None:
 					# hack for IE
 					# will not start next element in a seq unless there is a dur attr
