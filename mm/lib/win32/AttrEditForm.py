@@ -3173,8 +3173,6 @@ class MediaRenderer(Renderer):
 			self.update()
 			return
 		url=self.urlqual(rurl)
-		import MMurl
-		url = MMurl.unquote(url)
 		if not self._builder.RenderFile(url):
 			if self.needswindow():
 				self.update()
@@ -3431,6 +3429,7 @@ class RealRenderer(Renderer):
 			self._rmaplayer.SetOsWindow(self._wnd.GetSafeHwnd())
 		url=self.urlqual(rurl)
 		import MMurl
+		url = MMurl.canonURL(url)
 		url = MMurl.unquote(url)
 		self._rmaplayer.OpenURL(url)
 		self._isstopped=0

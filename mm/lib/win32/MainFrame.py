@@ -412,8 +412,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._peerdocid = peerdocid
 		self._cmifdoc = cmifdoc
 		self.assertPanelVisible()
-		import urllib
-		basename=urllib.unquote(cmifdoc.basename)
+		import MMurl
+		basename=MMurl.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
 		self.set_commandlist(commandlist,'document')
 		import Player

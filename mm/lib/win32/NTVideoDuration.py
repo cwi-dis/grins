@@ -24,7 +24,4 @@ def get(url):
 			player = winqt.QtPlayer()
 			player.open(fn)
 			return player.getDuration()
-	url = MMurl.canonURL(url)
-	url = MMurl.unquote(url)
 	return win32dxm.GetMediaDuration(url)
-
