@@ -26,7 +26,13 @@ DOCDESTDIR=	$LIBDEST/doc
 lib:	lib.dvi
 
 # Dependencies
-lib.dvi: boilerplate.tex copyright.tex
+lib.dvi: myformat.sty fix_hack boilerplate.tex copyright.tex
+
+myformat.sty:
+	ln -s $(DOCDIR)/myformat.sty .
+
+fix_hack:
+	ln -s $(DOCDIR)/fix_hack .
 
 boilerplate.tex:
 	ln -s $(DOCDIR)/boilerplate.tex .
@@ -37,11 +43,11 @@ copyright.tex:
 LIBFILES=libaudio.tex
 
 lib.dvi: $(LIBFILES)
-	$(DOCDIR)/tools/newind.py > lib.ind
-	TEXINPUTS=$(DOCDIR)/texinputs: $(LATEX) lib
-	$(DOCDIR)/tools/fix_hack lib.idx
+	touch lib.ind
+	$(LATEX) lib
+	./fix_hack lib.idx
 	$(MAKEINDEX) lib
-	TEXINPUTS=$(DOCDIR)/texinputs: $(LATEX) lib
+	$(LATEX) lib
 	$(DVIPS) lib >lib.ps
 
 # Housekeeping targets
