@@ -87,7 +87,7 @@ MENUBAR=(
 			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&After', None, PASTE_AFTER),
 			)),
 		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
-		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
+		(FLAG_ALL, ENTRY, '&Delete\tDel', None, DELETE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, '&Align', (
 			(FLAG_ALL, ENTRY, '&Left', 'L', ALIGN_LEFT),
