@@ -28,8 +28,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -49,7 +49,7 @@ BEGIN
             VALUE "FileDescription", "dsound dynamic library\0"
             VALUE "FileVersion", "2.0\0"
             VALUE "InternalName", "dsound\0"
-            VALUE "LegalCopyright", "Copyright © 2000 Oratrix Holding B.V.\0"
+            VALUE "LegalCopyright", "Copyright © 2001 Oratrix Holding B.V.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "dsound.pyd\0"
             VALUE "PrivateBuild", "\0"
