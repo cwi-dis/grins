@@ -117,6 +117,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
 			self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
 			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
+			self.commandlist.append(EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())))
 			
 			self.commandlist = self.commandlist + [
 					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
@@ -471,14 +472,30 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					cwd = os.path.join(os.getcwd(), cwd)
 			else:
 				cwd = os.getcwd()
+			basename = self.basename + ".wmv"
 			windowinterface.FileDialog('Export to WMP file:', cwd, 'video/x-ms-wmv',
-						'', self.export_WMP_okcallback, None)
+						basename, self.export_WMP_okcallback, None)
 		else:
 			windowinterface.showmessage('No WMP export components on this system.')
 	
 	def export_WMP_okcallback(self, pathname):
 		import wmpsupport
 		wmpsupport.Exporter(pathname, self.player)
+
+	def export_HTML_TIME_callback(self):
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		basename = self.basename + '.html'
+		windowinterface.FileDialog('Export to HTML+TIME file:', cwd, 'text/html',
+					basename, self.export_HTML_TIME_okcallback, None)
+	
+	def export_HTML_TIME_okcallback(self, pathname):
+		self.export_to_html_time(pathname)
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
@@ -896,6 +913,46 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def cancel_upload(self):
 		raise KeyboardInterrupt
+
+	def export_to_html_time(self, filename):
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
+		evallicense= (license < 0)
+		url = MMurl.pathname2url(filename)
+		mimetype = MMmimetypes.guess_type(url)[0]
+		if mimetype != 'text/html':
+			windowinterface.showmessage('Publish to HTML (*.htm or *.html) files only')
+			return
+		self.pre_save()
+		print 'saving to', filename, '...'
+		try:
+			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
+			progress.set('Publishing document...')
+			progress = progress.set
+			import SMILTreeWriteHtmlTime
+			SMILTreeWriteHtmlTime.WriteFileAsHtmlTime(self.root, filename,
+						cleanSMIL = 1,
+						grinsExt = 0,
+						copyFiles = 1,
+						evallicense=evallicense,
+						progress = progress,
+						convertURLs = 1)
+		except IOError, msg:
+			operation = 'Publish'
+			windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
+			return 0
+		except KeyboardInterrupt:
+			# Clear exception:
+			try:
+				raise 'foo'
+			except:
+				pass
+			windowinterface.showmessage('Publish interrupted.')
+			return 0
+		print 'done saving.'
+		return 1
 
 	def restore_callback(self):
 		if self.changed:
