@@ -120,6 +120,9 @@
 (links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
 	 'Size of link edit window' raw)
 
+(macprog (string) '' 'Mac program signature' default
+	'4-byte application signature (mac only)' channel)
+
 (mcgroup (string) '' 'Multicast group' default
 	'IP Multicast group address to listen to' raw)
 
@@ -182,14 +185,23 @@
 (type (name) null 'Channel type' channeltype
 	'Channel type (channel dictionary only)' raw)
 
+(unixprog (string) '' 'Unix program name' default
+	'Application name (unix only)' channel)
+
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel)
 
 (visible (bool) 1 'Channel visibility' default
 	'Determines visibility of channel' channel)
 
+(wanturl (bool) 0 'Pass URL' default
+	'Pass URL to program (otherwise pass filename)' channel)
+	
 (winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y) (x axis pointing down!)' raw)
+
+(winprog (string) '' 'Windows program name' default
+	'Application name (windows only)' channel)
 
 (winsize (tuple (float) (float)) (0 0) 'Window size' hidden
 	'Initial window size (width, height)' raw)
