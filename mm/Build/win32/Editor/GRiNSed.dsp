@@ -161,10 +161,6 @@ SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorList.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File
@@ -354,10 +350,6 @@ SOURCE=.\M_exceptions.c
 # Begin Source File
 
 SOURCE=.\M_exec_cmif.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_features.c
 # End Source File
 # Begin Source File
 
@@ -582,10 +574,6 @@ SOURCE=.\M_MMCache.c
 # Begin Source File
 
 SOURCE=.\M_MMExc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_MMmimetypes.c
 # End Source File
 # Begin Source File
 
@@ -1057,19 +1045,15 @@ SOURCE=.\M_ViewServer.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_wc.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_whrandom.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_win32con.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32dialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32dxm.c
 # End Source File
 # Begin Source File
 
