@@ -43,7 +43,7 @@ public:
 protected:
 	PlayerObject();
 	~PlayerObject();
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	virtual string repr();
 #else
 	virtual char *repr();
@@ -110,7 +110,7 @@ PyObject *PlayerObject_CreateInstance(PyObject *engine, PyObject *args)
 	return PlayerObject::CreateInstance(engine, args);
 }
 
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 string
 #else
 char *
@@ -119,7 +119,7 @@ PlayerObject::repr()
 {
 	char buf[256];
 	sprintf(buf, " instance 0x%X", this);
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	sprintf (buf, " instance 0x%X", this);
 	return RMAObject::repr() + buf;
 #else
