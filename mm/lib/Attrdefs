@@ -207,25 +207,25 @@
 	'Convert data to RealMedia format' raw (g2_pro))
 
 (project_ftp_host (string) '' 'Webserver' default
-	'FTP hostname to use for webpage upload' raw (all))
+	'FTP hostname to use for webpage upload' raw (g2 qt))
 
 (project_ftp_host_media (string) '' 'Mediaserver' default
 	'FTP hostname to use for media file upload (default: same as webserver)' raw (all))
 
 (project_ftp_user (string) '' 'Webserver User' default
-	'FTP username to use for webpage upload' raw (all))
+	'FTP username to use for webpage upload' raw (g2 qt))
 
 (project_ftp_user_media (string) '' 'Mediaserver User' default
 	'FTP username to use for media file upload' raw (all))
 
 (project_ftp_dir (string) '' 'Webserver Directory' default
-	'Directory on FTP server where webpage will be stored' raw (all))
+	'Directory on FTP server where webpage will be stored' raw (g2 qt))
 
 (project_ftp_dir_media (string) '' 'Mediaserver Directory' default
 	'Directory on FTP server where media files will be stored' raw (all))
 
 (project_html_page (string) '' 'HTML template' default
-	'Template used to generate web page for this presentation' raw (all))
+	'Template used to generate web page for this presentation' raw (g2 qt))
 
 (project_mobile (bool) 0 'Mobile play' default
 	'Allow download' raw (g2_pro))
@@ -237,7 +237,7 @@
 	'Quality of image conversion to JPEG' raw (g2))
 
 (project_smil_url (string) '' 'Mediaserver URL' default
-	'URL of SMIL document on the media server' raw (all))
+	'URL of SMIL document on the media server' raw (g2 qt))
 
 (project_targets (int) 3 'Target audience' targets
 	'One or more bandwidths for which this item should be converted' raw (g2))
