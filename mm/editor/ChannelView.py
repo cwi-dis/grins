@@ -1220,7 +1220,7 @@ class NodeBox(GO):
 			self.node.armedmode = mode
 			self.drawfocus()
 ## 			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
- 			self.mother.render()
+			self.mother.render()
 			self.mother.delay_drawarcs()
 
 	def lock(self):
@@ -1235,7 +1235,7 @@ class NodeBox(GO):
 
 	def unlock(self):
 		if self.locked:
-		        self.mother.window.setcursor('')
+			self.mother.window.setcursor('')
 			self.locked = 0
 			self.mother.lockednode = None
 			self.drawfocus()
@@ -1277,7 +1277,9 @@ class NodeBox(GO):
 		channel = self.node.GetChannel()
 		if self.pausenode:
 			parent = self.node.GetParent()
-			if parent.GetType() == 'seq':
+			if parent is None:
+				t1 = self.node.t1
+			elif parent.GetType() == 'seq':
 				siblings = parent.GetChildren()
 				index = siblings.index(self.node)
 				if len(siblings) > index+1:
