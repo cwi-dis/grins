@@ -1258,7 +1258,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 		r.UnionRegion(self._clip)
 		r.IntersectRegion(region)
 		if not r.EmptyRegion():
-			if self._transparent and not recursive:
+			if self._transparent and not recursive and \
+			   (not self._active_displist or not self._active_displist._fullwindow):
 				self._parent._do_expose(r)
 			elif self._active_displist:
 				self._active_displist._render(r)
@@ -1346,11 +1347,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 			self.setcursor(cursor)
 
 	def updatebgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
-		# do update bgcolor if active display list
-		# ...
-		print 'window.updatebgcolor',color
+		self.bgcolor(color)
+		if self._active_displist and self._active_displist._list and self._active_displist._list[0][0] == 'clear':
+			self._active_displist._list[0] = ('clear', self._convert_color(color))
+			self._do_expose(self._clip)
 
 	# transition interface, placeholder
 	
@@ -1558,8 +1558,6 @@ class _SubWindow(_Window):
 
 		# first convert any coordinates to pixel
 		coordinates = parent._convert_coordinates(coordinates,units=units)
-		print 'window.updatecoordinates',coordinates, units
-
 		x, y = coordinates[:2]
 
 		# move or/and resize window
@@ -1574,27 +1572,37 @@ class _SubWindow(_Window):
 			# nothing to do
 			return
 
-		# do move/resize
 		r = Xlib.CreateRegion()
 		r.UnionRegion(self._region)
-		resize = 0
-		if (w,h) != self._rect[2:]:
-			# change size
-			for d in self._displists[:]:
-				d.close()
-			for win in self._subwindows:
-				win._do_resize1()
-			resize = 1
-		self._rect = x, y, w, h
-		self._sizes = parent._pxl2rel(self._rect)
-		self._region = Xlib.CreateRegion()
-		apply(self._region.UnionRectWithRegion, self._rect)
+
+		resize = (w,h) != self._rect[2:]
+
+		self._updcoords(coordinates)
+
 		parent._mkclip()
 		r.UnionRegion(self._region)
 		parent._do_expose(r)
 		if resize:
 			# call callback functions
 			self._do_resize2()
+
+	def _updcoords(self, coordinates):
+		x, y, w, h = coordinates
+		# do move/resize
+		if (w,h) != self._rect[2:]:
+			# change size
+			for d in self._displists[:]:
+				d.close()
+			for win in self._subwindows:
+				win._do_resize1()
+		ox, oy, ow, oh = self._rect
+		self._rect = x, y, w, h
+		self._sizes = self._parent._pxl2rel(self._rect)
+		self._region = Xlib.CreateRegion()
+		apply(self._region.UnionRectWithRegion, self._rect)
+		for win in self._subwindows:
+			sx, sy, sw, sh = win._rect
+			win._updcoords((sx + x - ox, sy + y - oy, min(w,sx+sw-ox), min(h,sy+sh-oy)))
 
 	def updatezindex(self, z):
 		self._z = z
