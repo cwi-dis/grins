@@ -21,7 +21,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\magpie-113.exe
+  EXE Filename=..\..\bin\win32\magpie-113b.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -73,21 +73,25 @@ item: Set Variable
   Variable=FIND_DIRECTORY
 end
 item: Search for File
-  Variable=JAVA_RUNTIME
+  Variable=JAVA
   Pathname List=jaws.jar
   Description=Searching for Java Runtime...
   Flags=00000001
 end
 item: If/While Statement
-  Variable=JAVA_RUNTIME
+  Variable=JAVA
   Flags=00000001
 end
 item: Set Variable
-  Variable=JAVA_RUNTIME
+  Variable=JAVA
   Value=\ext
   Flags=00000001
 end
 item: End Block
+end
+item: Set Variable
+  Variable=JAVA_SAVE
+  Value=%JAVA%
 end
 item: Check Configuration
   Flags=10000000
@@ -806,7 +810,7 @@ item: Custom Dialog Set
   end
 end
 item: Custom Dialog Set
-  Name=Destination Directory for GRiNS/Magpie Java Runtime
+  Name=Choose Destination Location for GRiNS/Magpie Java Runtime
   Display Variable=DISPLAY
   item: Dialog
     Title=Choose Destination Location for GRiNS/Magpie Java Runtime
@@ -931,6 +935,7 @@ item: Custom Dialog Set
       Text Swedish=Du kan välja att inte installera %APPTITLE% genom att klicka på Avbryt för att lämna installationsprogrammet.
     end
     item: Static
+      Control Name=JAVA2
       Rectangle=90 134 260 162
       Action=1
       Create Flags=01010000000000000000000000000111
@@ -946,9 +951,10 @@ item: Custom Dialog Set
       Text Swedish=Destinationsmapp
     end
     item: Push Button
+      Control Name=JAVA3
       Rectangle=213 143 255 157
-      Variable=MAINDIR_SAVE
-      Value=%MAINDIR%
+      Variable=JAVA_SAVE
+      Value=%JAVA%
       Destination Dialog=1
       Action=2
       Create Flags=01010000000000010000000000000000
@@ -964,10 +970,11 @@ item: Custom Dialog Set
       Text Swedish=&Bläddra
     end
     item: Static
+      Control Name=JAVA4
       Rectangle=95 146 211 157
       Destination Dialog=2
       Create Flags=01010000000000000000000000000000
-      Text=%JAVA_RUNTIME%
+      Text=%JAVA%
       Text French=%MAINDIR%
       Text German=%MAINDIR%
       Text Portuguese=%MAINDIR%
@@ -980,7 +987,7 @@ item: Custom Dialog Set
     end
   end
   item: Dialog
-    Title=Select Destination Directory
+    Title=Select Destination Directory for Java Runtime
     Title French=Choisissez le répertoire de destination
     Title German=Zielverzeichnis wählen
     Title Portuguese=Seleccionar Directório de Destino
@@ -996,10 +1003,11 @@ item: Custom Dialog Set
     Font Size=8
     item: Listbox
       Rectangle=5 2 160 149
-      Variable=MAINDIR
-      Create Flags=01010000100000010000000101000000
-      Flags=0000110000100010
-      Text=%MAINDIR%
+      Variable=JAVA
+      Create Flags=01010000100000010000000101000001
+      Flags=0000110000000010
+      Text=%JAVA%
+      Text=
       Text French=%MAINDIR%
       Text German=%MAINDIR%
       Text Portuguese=%MAINDIR%
@@ -1026,8 +1034,8 @@ item: Custom Dialog Set
     end
     item: Push Button
       Rectangle=167 25 212 40
-      Variable=MAINDIR
-      Value=%MAINDIR_SAVE%
+      Variable=JAVA
+      Value=%JAVA_SAVE%
       Create Flags=01010000000000010000000000000000
       Flags=0000000000000001
       Text=Cancel
@@ -1658,7 +1666,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\products\smil-20\player\splash8bit.bmp
+  Pathname=..\products\smil-20\player\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1692,41 +1700,6 @@ item: Install File
   Source=..\..\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
-end
-item: Install File
-  Source=vcredist\olepro32.dll
-  Destination=%SYS32%\olepro32.dll
-  Flags=0001000010000011
-end
-item: Install File
-  Source=vcredist\msvcp60.dll
-  Destination=%SYS32%\msvcp60.dll
-  Flags=0000000010000011
-end
-item: Install File
-  Source=vcredist\msvcrt.dll
-  Destination=%SYS32%\msvcrt.dll
-  Flags=0000000010000011
-end
-item: Install File
-  Source=vcredist\msvcrt40.dll
-  Destination=%SYS32%\msvcrt40.dll
-  Flags=0000000010000011
-end
-item: Install File
-  Source=vcredist\mfc42.dll
-  Destination=%SYS32%\mfc42.dll
-  Flags=0001000010000011
-end
-item: Install File
-  Source=vcredist\msvcirt.dll
-  Destination=%SYS32%\msvcirt.dll
-  Flags=0000000010000011
-end
-item: Install File
-  Source=vcredist\oleaut32.dll
-  Destination=%SYS32%\oleaut32.dll
-  Flags=0001000010000011
 end
 item: Install File
   Source=..\..\bin\win32\_socket.pyd
@@ -1798,31 +1771,6 @@ item: Install File
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
 end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: If/While Statement
-  Variable=JAVA_RUNTIME
-  Flags=00000001
-end
-item: Install File
-  Source=..\..\win32\Com\javaclient\bin\grinsp.jar
-  Destination=%JAVA_RUNTIME%\grinsp.jar
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\win32\Com\javaclient\bin\grinsp.dll
-  Destination=%JAVA_RUNTIME%\grinsp.dll
-  Flags=0000000010000010
-end
-item: End Block
-end
-item: End Block
-end
 item: Set Variable
   Variable=INSTALLDLLS
   Value=no
@@ -1846,7 +1794,7 @@ end
 item: End Block
 end
 item: Check Configuration
-  Flags=11110110
+  Flags=11110010
 end
 item: Set Variable
   Variable=INSTALLDLLS
@@ -1855,7 +1803,7 @@ end
 item: End Block
 end
 item: Check Configuration
-  Flags=11110010
+  Flags=11110110
 end
 item: Set Variable
   Variable=INSTALLDLLS
@@ -1867,8 +1815,46 @@ item: If/While Statement
   Variable=INSTALLDLLS
   Value=yes
 end
+item: Remark
+  Text=don't make backups of system dlls
+end
 item: Set Variable
   Variable=BACKUPDIR
+end
+item: Install File
+  Source=vcredist\olepro32.dll
+  Destination=%SYS32%\olepro32.dll
+  Flags=0001000010000011
+end
+item: Install File
+  Source=vcredist\msvcp60.dll
+  Destination=%SYS32%\msvcp60.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=vcredist\msvcrt.dll
+  Destination=%SYS32%\msvcrt.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=vcredist\msvcrt40.dll
+  Destination=%SYS32%\msvcrt40.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=vcredist\mfc42.dll
+  Destination=%SYS32%\mfc42.dll
+  Flags=0001000010000011
+end
+item: Install File
+  Source=vcredist\msvcirt.dll
+  Destination=%SYS32%\msvcirt.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=vcredist\oleaut32.dll
+  Destination=%SYS32%\oleaut32.dll
+  Flags=0001000010000011
 end
 item: If/While Statement
   Variable=DOBACKUP
@@ -1877,6 +1863,31 @@ end
 item: Set Variable
   Variable=BACKUPDIR
   Value=%BACKUP%
+end
+item: End Block
+end
+item: End Block
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: If/While Statement
+  Variable=JAVA
+  Flags=00000001
+end
+item: Install File
+  Source=..\..\win32\Com\javaclient\bin\grinsp.jar
+  Destination=%JAVA%\grinsp.jar
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\win32\Com\javaclient\bin\grinsp.dll
+  Destination=%JAVA%\grinsp.dll
+  Flags=0000000010000010
 end
 item: End Block
 end
