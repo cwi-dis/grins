@@ -328,7 +328,6 @@ class HierarchyView(HierarchyViewDialog):
 	
 	def aftersetfocus(self):
 		# Called after the focus has been set to a specific node.
-
 		fnode = self.focusnode
 
 		if isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
@@ -358,15 +357,15 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Forcidably change the pop-up menu if we have selected an Icon.
 		if self.selected_icon is not None:
-			print "DEBUG: Selected icon!"
+			print "DEBUG: after set focus: elected icon!"
 			a = self.selected_icon.get_contextmenu()
 			if a is not None:
 				self.setpopup(a)
 			else:
-				print "DEBUG: icon has no popup menu."
+				print "DEBUG: after set focus: icon has no popup menu."
 				self.setpopup(popupmenu)
 		else:
-			print "DEBUG: No selected icon."
+			print "DEBUG: after set focus: No selected icon."
 			self.setpopup(popupmenu)
 
 		self.setstate()
@@ -433,10 +432,16 @@ class HierarchyView(HierarchyViewDialog):
 
 	######################################################################
 		# Redrawing the Structure View.
-	# If you want a redraw, set flags and just call this function!!
-	#
+	######################################################################
+	# A small note about redrawing:
+	# * Only call at the end of (every) top-level event handlers just before you return to the
+	#   event loop.
+	# * Optimisations are done using flags - if you want certain optimisations done, set and read
+	#   these flags. This is much more flexible and easier than state management.
+	# -mjvdg.
+
+		
 	def draw(self):
-		#import time
 		# Recalculate the size of all boxes and draw on screen.
 		if self.drawing == 1:
 			return
@@ -1231,28 +1236,46 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def select_widget(self, widget, external = 0, scroll = 1):
-		# Set the focus to a specific widget on the user interface.
+		# Set the focus to a specific widget on the user interface, whether
+		# it is a node, icon or anything else which is selected.
 		# Make the widget the current selection.
 		# If external is enabled, don't call the editmanager.
+
 		if self.selected_widget == widget:
 			# don't do anything if the focus is already set to the requested widget.
 			# this is important because of the setglobalfocus call below.
 			return
+
+		# First, unselect the old widget.
 		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
 		if isinstance(self.selected_icon, StructureWidgets.Icon):
 			self.selected_icon.unselect()
-		self.old_selected_widget = self.selected_widget
-		self.selected_widget = widget
+
+		# Remove these two lines of code at some stage.
 		self.focusobj = widget	# Used for callbacks.
 		self.prevfocusnode = self.focusnode
+
+		# Now select the widget.
 		if widget is None:
 			self.focusnode = None
-		else: 
-			self.focusnode = widget.node
+		else:			# All cases where the widget is not None follow here:
+			if isinstance(widget, StructureWidgets.MMWidgetDecoration):
+				if isinstance(widget, StructureWidgets.Icon):
+					print "DEBUG: Clicked on an icon!"
+					if self.selected_icon is not widget:
+						self.selected_icon = widget # keep it so we can unselect it later.
+						self.selected_icon.select()
+				# Select the underlying mmwidget of the decoration..
+				widget = widget.get_mmwidget()
 			widget.select()
+			self.focusnode = widget.get_node() # works on all widgets.
 			if scroll:
 				self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
+
+		self.old_selected_widget = self.selected_widget
+		self.selected_widget = widget
+
 		self.aftersetfocus()
 		self.only_redraw_selection = 1
 		if not external:
@@ -1267,31 +1290,19 @@ class HierarchyView(HierarchyViewDialog):
 			widget = node.views['struct_view']
 			self.select_widget(widget, external)
 		
-	def setfocusnode(self, node, external = 0):
-		# Try not to call this function
-		print "DEBUG: Please don't call HierarchyView.setfocusnode!"
-		import traceback; traceback.print_stack()
-		print "and don't complain about the traceback. It's your fault."
-		self.select_node(node, external)
+#	def setfocusnode(self, node, external = 0):
+#		# Try not to call this function
+#		print "DEBUG: Please don't call HierarchyView.setfocusnode!"
+#		import traceback; traceback.print_stack()
+#		print "and don't complain about the traceback. It's your fault."
+#		self.select_node(node, external)
 
 	def click(self, x, y):
+		# Called only from self.mouse, which is the event handler.
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
-		if isinstance(clicked_widget, StructureWidgets.MMNodeWidget):
-			self.select_widget(clicked_widget, scroll=0)
-		elif isinstance(clicked_widget, StructureWidgets.MMWidgetDecoration):
-			select_me = clicked_widget.get_mmwidget()
-			self.select_widget(select_me, scroll=0)
-			if isinstance(clicked_widget, StructureWidgets.Icon):
-				print "DEBUG: Clicked on an icon!"
-				if self.selected_icon == clicked_widget:
-					return
-				if self.selected_icon:
-					self.selected_icon.unselect()
-				self.selected_icon = clicked_widget # keep it so we can unselect it later.
-				clicked_widget.select()
-		else:
-			print "DEBUG: no widget selectable."
+		self.select_widget(clicked_widget, scroll=0)
+		# The calling method will cause a re-draw.
 
 	# Handle a selection click at (x, y)
 #	def select(self, x, y):
