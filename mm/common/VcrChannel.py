@@ -115,6 +115,7 @@ class VcrChannel(Channel):
 	def seekanchor(self, node, aid):
 		try:
 			alist = node.GetRawAttr('anchorlist')
+			modanchorlist(alist)
 		except NoSuchAttrError:
 			print 'vcrchannel: no anchors on this node?'
 			return

@@ -13,6 +13,13 @@ class TextChannel(ChannelWindow):
 	def __repr__(self):
 		return '<TextChannel instance, name=' + `self._name` + '>'
 
+	def updatefixedanchors(self, node):
+		str = self.getstring(node)
+		parlist = extract_paragraphs(str)
+		taglist = extract_taglist(parlist)
+		fix_anchorlist(node, taglist)
+		return 1
+		
 	def do_arm(self, node):
 		str = self.getstring(node)
 		parlist = extract_paragraphs(str)
@@ -211,6 +218,7 @@ def fix_anchorlist(node, taglist):
 	for item in taglist:
 		names_in_anchors.append(item[4])
 	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
+	modanchorlist(oldanchors)
 	anchors = oldanchors[:]
 	for i in range(len(anchors)):
 		aid, atype, args = a = anchors[i]
