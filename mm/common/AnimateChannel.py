@@ -17,7 +17,6 @@ __version__ = "$Id$"
 
 import Channel
 import MMAttrdefs
-import time
 import Animators
 
 # for timer support
@@ -121,7 +120,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		return self.__targetChannel
 		
 	def __startAnimate(self, repeat=0):
-		self.__start = time.time()
+		self.__start = self.__animating.start_time
 		if not repeat:		
 			self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
 		self.__animate()
@@ -136,14 +135,13 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __pauseAnimate(self, paused):
 		if self.__animating:
 			if paused:
-				self._pausedt = time.time() - self.__start
 				self.__unregister_for_timeslices()
 			else:
-				self.__start = time.time() - self._pausedt
 				self.__register_for_timeslices()
 
 	def __animate(self):
-		dt = time.time() - self.__start
+		dt = self._scheduler.timefunc() - self.__start
+		dt = dt - self.__duration * int(float(dt) / self.__duration)
 		val = self.__animator.getValue(dt)
 		if self.__effAnimator:
 			if self.__lastvalue != val:
@@ -169,7 +167,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		if not USE_IDLE_PROC:
 			self.__fiber_id = 0
 		if self.__animating:
-			t_sec=time.time() - self.__start
+			t_sec=self._scheduler.timefunc() - self.__start
 			# end-point exclusive model
 			if t_sec>=self.__duration:
 				self.__onAnimateDur()
