@@ -18,6 +18,7 @@ import Timing
 from math import ceil
 import string
 import MMmimetypes
+import features
 
 
 import settings
@@ -150,7 +151,7 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def __init__(self, toplevel):
-		lightweight = settings.get('lightweight')
+		lightweight = features.lightweight
 		self.sizes = sizes_notime
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
@@ -239,7 +240,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def _getmediaundercommands(self, ctx, slide = 0):
 		import settings
-		heavy = not settings.get('lightweight')
+		heavy = not features.lightweight
 		rv = [
 			NEW_UNDER(callback = (self.createundercall, ())),
 			]
@@ -262,7 +263,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def _getmediacommands(self, ctx, slide = 0):
 		import settings
-		heavy = not settings.get('lightweight')
+		heavy = not features.lightweight
 		if slide:
 			rv = []
 		else:
@@ -522,7 +523,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.create(0, url, i)
 		else:
 			# check that URL compatible with node's channel
-			if t != 'slide' and settings.get('lightweight') and \
+			if t != 'slide' and features.lightweight and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
 				self.render()
 				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
@@ -630,7 +631,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
-		lightweight = settings.get('lightweight')
+		lightweight = features.lightweight
 		node = self.focusnode
 		if node is None:
 			self.opt_render()
@@ -752,7 +753,7 @@ class HierarchyView(HierarchyViewDialog):
 		expandnode(newnode)
 		self.aftersetfocus()
 		em.commit()
-##		if not settings.get('lightweight'):
+##		if not features.lightweight:
 ##			import NodeInfo
 ##			NodeInfo.shownodeinfo(self.toplevel, newnode)
 
