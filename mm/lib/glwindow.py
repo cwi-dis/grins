@@ -87,16 +87,6 @@ class glwindow():
 		# By default, call the method for closing any old window.
 		self.winshut()
 	#
-	# Force old users to convert their programs.
-	#
-	def register(self, wid):
-		print 'oldfashioned glwindow.register call!'
-		raise RuntimeError
-	#
-	def unregister(self):
-		print 'oldfashioned glwindow.unregister call!'
-		raise RuntimeError
-	#
 
 
 # Global state
