@@ -252,7 +252,7 @@ def do_node_play(cwin):
 
 def do_node_info(cwin):
 	import NodeInfo
-	NodeInfo.shownodeinfo(cwin.channel.player.toplevel, cwin.node)
+	NodeInfo.shownodeinfo(cwin.channel.ui.toplevel, cwin.node)
 
 def do_node_attr(cwin):
 	import AttrEdit
@@ -264,10 +264,10 @@ def do_node_edit(cwin):
 
 def do_node_anchors(cwin):
 	import AnchorEdit
-	AnchorEdit.showanchoreditor(cwin.channel.player.toplevel, cwin.node)
+	AnchorEdit.showanchoreditor(cwin.channel.ui.toplevel, cwin.node)
 
 def do_node_focus(cwin):
-	cwin.channel.player.toplevel.hierarchyview.globalsetfocus(cwin.node)
-	cwin.channel.player.toplevel.channelview.globalsetfocus(cwin.node)
+	cwin.channel.ui.toplevel.hierarchyview.globalsetfocus(cwin.node)
+	cwin.channel.ui.toplevel.channelview.globalsetfocus(cwin.node)
 
 # XXX should add "Hide channel"?
