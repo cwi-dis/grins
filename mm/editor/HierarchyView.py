@@ -777,13 +777,16 @@ class HierarchyView(HierarchyViewDialog):
 				em.addchannel(chname, len(ctx.channelnames), dftchtype)
 				chlist = [chname]
 				bch = ctx.getchannel(dftchannel)
-				if bch.has_key('base_window'):
-					w, h = bch['base_winoff'][2:]
+				if not settings.activeFullSmilCss:
+					if bch.has_key('base_window'):
+						w, h = bch['base_winoff'][2:]
+					else:
+						w, h = bch['winsize']
+					em.setchannelattr(chname, 'units', windowinterface.UNIT_PXL)
+					em.setchannelattr(chname, 'base_window', dftchannel)
+					em.setchannelattr(chname, 'base_winoff', (0,0,w,h))
 				else:
-					w, h = bch['winsize']
-				em.setchannelattr(chname, 'units', windowinterface.UNIT_PXL)
-				em.setchannelattr(chname, 'base_window', dftchannel)
-				em.setchannelattr(chname, 'base_winoff', (0,0,w,h))
+					em.setchannelattr(chname, 'base_window', dftchannel)					
 			else:
 				chlist = ctx.compatchannels(url, chtype)
 				if dftchannel:
