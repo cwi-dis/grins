@@ -189,7 +189,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 			return
 		if node.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
@@ -205,7 +205,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if not self.__windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
-				self.playdone(0)
+				self.playdone(0, node.start_time)
 				return
 			if self.__windowless_real_rendering:
 				res =self.__rc.playit(node,windowless=1)
@@ -314,7 +314,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.need_armdone = 0 # play_1 calls armdone()
 			self.play_1()
 
-	def playdone(self, outside_induced, end_time):
+	def playdone(self, outside_induced, end_time = None):
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
