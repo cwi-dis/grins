@@ -141,9 +141,12 @@ class Region(Node):
 	#
 	# update of visualization attributes (not document)
 	#
-	
-	def updateAllShowNames(self, value):
+
+	def updateShowName(self,value):
 		self._graphicCtrl.showName(value)
+		
+	def updateAllShowNames(self, value):
+		self.updateShowName(value)
 		for child in self._children:
 			child.updateAllShowNames(value)
 
@@ -229,6 +232,13 @@ class MediaRegion(Region):
 		
 		self._curattrdict['z'] = 0
 
+	def updateShowName(self,value):
+		# no name showed
+		pass
+
+	def getGeom(self):
+		return self._curattrdict['wingeom']
+	
 	def onSelected(self):
 		self._ctx.onPreviousSelectMedia(self)
 
@@ -430,7 +440,15 @@ class LayoutView2(LayoutViewDialog2):
 		# insure that last media node selected will be removed
 		self.unSetMediaNode()
 		self.setMediaNode(focusobject)
-		
+		self.fillMediaListOnDialogBox()
+		if len(self.currentMediaRegionList) > 0:
+			firstMediaRegion, parentRegion = self.currentMediaRegionList[0]
+			firstMediaRegion.select()
+			self.enableMediaListOnDialogBox()
+			self.updateMediaOnDialogBox(firstMediaRegion)
+		else:			
+			self.disableMediaListOnDialogBox()
+				
 	def kill(self):
 		self.destroy()
 
@@ -508,7 +526,7 @@ class LayoutView2(LayoutViewDialog2):
 		layoutChannelName = layoutChannel.name
 		regionNode = self.getRegion(layoutChannelName)
 		if regionNode == None: return
-		newname = channel.name
+		newname = node.attrdict.get("name")
 
 		newRegionNode = MediaRegion(newname, node, self)
 
@@ -524,7 +542,6 @@ class LayoutView2(LayoutViewDialog2):
 		for mediaRegion, parentRegion in self.currentMediaRegionList:
 			parentRegion.addNode(mediaRegion)
 			mediaRegion.show()
-			mediaRegion.select()
 						
 	# extra pass to initialize map the region name list to the node object
 	def __initRegionList(self, node, isRoot=1):
@@ -543,6 +560,13 @@ class LayoutView2(LayoutViewDialog2):
 	def getRegion(self, regionName):
 		return self._nameToRegionNode.get(regionName)
 
+	def getMedia(self, mediaName):
+		for mediaRegion, parentRegion in self.currentMediaRegionList:
+			mmnode = mediaRegion.mmnode
+			if mmnode.attrdict.get('name') == mediaName:
+				return mediaRegion
+		return None
+			
 	def displayViewport(self, name):
 		if self.currentViewport != None:
 			self.currentViewport.hide()
@@ -554,13 +578,15 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentNodeSelected = self.currentViewport
 
 	def selectBgColor(self, node):
-		dict = node.getDocDict()
-		bgcolor = dict.get('bgcolor')
-		transparent = dict.get('transparent')
+		if node.getNodeType() != TYPE_MEDIA:
+			dict = node.getDocDict()
+			bgcolor = dict.get('bgcolor')
+			transparent = dict.get('transparent')
 		
-		newbg = self.chooseBgColor(bgcolor)
-		if newbg != None:
-			self.applyBgColor(node, newbg, transparent)
+			newbg = self.chooseBgColor(bgcolor)
+			if newbg != None:
+				self.applyBgColor(node, newbg, transparent)
+		
 
 	def sendBack(self, region):
 		dict = region.getDocDict()
@@ -702,7 +728,9 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentRegionNameList = self.getRegionNameList(viewport.getName())		
 		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
 		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentRegionNameList)
-		
+
+		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
+			
 		# get the current geom value
 		dict = viewport.getDocDict()
 		geom = dict.get('winsize')		
@@ -713,6 +741,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('BringFront',0)
 		self.dialogCtrl.enable('ShowRbg',0)
 		self.dialogCtrl.enable('RegionZ',0)
+
+		self.dialogCtrl.enable('BgColor', 1)
 		
 		self.dialogCtrl.enable('RegionX',0)
 		self.dialogCtrl.enable('RegionY',0)
@@ -737,12 +767,16 @@ class LayoutView2(LayoutViewDialog2):
 			index = self.currentRegionNameList.index(region.getName())
 			if index >= 0:
 				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
+
+		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 								
 		# enable valid fields
 		self.dialogCtrl.enable('SendBack',1)
 		self.dialogCtrl.enable('BringFront',1)
 		self.dialogCtrl.enable('ShowRbg',1)
 		self.dialogCtrl.enable('RegionZ',1)
+
+		self.dialogCtrl.enable('BgColor', 1)
 
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
@@ -761,11 +795,50 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[2])		
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
 
-	def updateMediaOnDialogBox(self, media):
-		print 'update on media on dialog box not implemented yet'
+	def fillMediaListOnDialogBox(self):
+		list = []
+		for mediaRegion, parentRegion in self.currentMediaRegionList:
+			mmnode = mediaRegion.mmnode
+			list.append(mmnode.attrdict.get('name'))
+		self.currentMediaNameList = list
+		self.dialogCtrl.fillSelecterCtrl('MediaSel', self.currentMediaNameList)
 
+	def disableMediaListOnDialogBox(self):
+		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)		
+		self.dialogCtrl.enable('MediaSel',0)
+
+	def enableMediaListOnDialogBox(self):
+		self.dialogCtrl.enable('MediaSel',1)
+		
+	def updateMediaOnDialogBox(self, media):
+		mmnode = media.mmnode
+		mediaName = mmnode.attrdict.get('name')
+		# update the selecter
+		if self.currentMediaNameList != None:
+			index = self.currentMediaNameList.index(mediaName)
+			if index >= 0:
+				self.dialogCtrl.setSelecterCtrl('MediaSel',index)
+		
+		# get the current geom value: todo
+		geom = media.getGeom()
+
+		# clear and disable not valid fields
+		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
+		self.dialogCtrl.enable('SendBack',0)
+		self.dialogCtrl.enable('BringFront',0)
+		self.dialogCtrl.enable('ShowRbg',0)
+		self.dialogCtrl.enable('RegionZ',0)
+
+		self.dialogCtrl.enable('BgColor', 0)
+							   
+		self.dialogCtrl.enable('RegionX',1)
+		self.dialogCtrl.enable('RegionY',1)
+		self.dialogCtrl.enable('RegionZ',0)
+		self.dialogCtrl.setFieldCtrl('RegionZ',"")
+		self.updateMediaGeomOnDialogBox(geom)
+		
 	def updateMediaGeomOnDialogBox(self, geom):
-		print 'update media geom on dialog box not implemented yet'
+		self.updateRegionGeomOnDialogBox(geom)
 
 	#
 	# internal methods
@@ -795,13 +868,19 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'RegionH':
 			h = value			
 		self.applyGeomOnRegion(self.currentNodeSelected, (x,y,w,h))
+
+	def __updateGeomOnMedia(self, ctrlName, value):
+		print '__updateGeomOnMedia: todo'
 		
 	def __updateGeom(self, ctrlName, value):
 		if self.currentNodeSelected != None:
 			if self.currentNodeSelected.getNodeType() == TYPE_VIEWPORT:
 				self.__updateGeomOnViewport(ctrlName, value)
-			else:
+			elif self.currentNodeSelected.getNodeType() == TYPE_REGION:
 				self.__updateGeomOnRegion(ctrlName, value)
+			elif self.currentNodeSelected.getNodeType() == TYPE_MEDIA:
+				self.__updateGeomOnMedia(ctrlName, value)
+				
 				
 
 	def __selectBgColor(self):
@@ -822,6 +901,13 @@ class LayoutView2(LayoutViewDialog2):
 			region.select()
 			self.currentNodeSelected = region												
 			self.updateRegionOnDialogBox(region)
+
+	def __selectMedia(self, name):
+		media = self.getMedia(name)
+		if media != None:
+			media.select()
+			self.currentNodeSelected = media
+			self.updateMediaOnDialogBox(media)
 		
 	#
 	# interface implementation of 'previous tree node' 
@@ -848,6 +934,8 @@ class LayoutView2(LayoutViewDialog2):
 			self.displayViewport(value)
 		elif ctrlName == 'RegionSel':
 			self.__selectRegion(value)	
+		elif ctrlName == 'MediaSel':
+			self.__selectMedia(value)	
 
 	def onMultiSelCtrl(self, ctrlName, itemList):
 		if ctrlName == 'RegionList':
