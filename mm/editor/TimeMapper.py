@@ -94,7 +94,8 @@ class TimeMapper:
 		if self.collecting:
 			raise Error, 'time2pixel called while still collecting data'
 		if not self.minpos.has_key(time):
-			raise Error, 'Interpolating time not implemented yet'
+			print 'Warning: TimeMapper: Interpolating time', time
+			return self.interptime2pixel(time)
 		pos = self.minpos[time]
 		if align == 'right':
 			pos = pos + self.collisiondict[time]
