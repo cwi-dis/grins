@@ -294,6 +294,34 @@ class FileDialog:
 	def is_closed(self):
 		return 1
 		
+class ProgressDialog:
+	# Placeholder
+	
+	def __init__(self, title, cancelcallback=None):
+		import EasyDialogs
+		self.cancelcallback = cancelcallback
+		self.progressbar = EasyDialogs.ProgressBar(title)
+		self.oldlabel = ""
+		self.oldvalues = (0, 0)
+		
+	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
+		try:
+			if cur1 != None:
+				label = label + " (%d of %d)"%(cur1, max1)
+			if label != self.oldlabel:
+				self.progressbar.label(label)
+				self.oldlabel = label
+			if (cur2, max2) != self.oldvalues:
+				if cur2 == None:
+					cur2 = 0
+				if max2 == None:
+					max2 = 0
+				self.progressbar.set(cur2, max2)
+				self.oldvalues = (cur2, max2)
+		except KeyboardInterrupt:
+			if self.cancelcallback:
+				self.cancelcallback()
+		
 class SelectionDialog(DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default, fixed=0, hascancel=1):
 		# First create dialogwindow and set static items
@@ -392,6 +420,7 @@ class InputDialog(DialogWindow):
 	def __init__(self, prompt, default, cb, cancelCallback = None,
 			passwd=0):
 		# XXXX passwd parameter to be implemted
+		self._is_passwd_dialog = passwd
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
@@ -421,10 +450,17 @@ class InputDialog(DialogWindow):
 		rv = Dlg.GetDialogItemText(h)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
 		ctl = h.as_Control()
-		ctl.HiliteControl(10)
-		self._cb(rv)
-		ctl.HiliteControl(0)
-		self.close()
+		if self._is_passwd_dialog:
+			# For password dialogs make it disappear quickly
+			ctl.HiliteControl(10)
+			ctl.HiliteControl(0)
+			self.close()
+			self._cb(rv)
+		else:
+			ctl.HiliteControl(10)
+			self._cb(rv)
+			ctl.HiliteControl(0)
+			self.close()
 		
 class InputURLDialog(InputDialog):
 	DIALOG_ID=ID_INPUTURL_DIALOG

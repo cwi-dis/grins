@@ -126,3 +126,17 @@ def htmlwindow(url):
 		cmd = '%s %s &' % (browser, url)
 	os.system(cmd)
 	# don't return a value!
+
+class ProgressDialog:
+	# Placeholder
+	
+	def __init__(self, title, cancelcallback=None):
+		self.cancelcallback = cancelcallback
+		
+	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
+		if cur1 != None:
+			label = label + " (%d of %d)"%(cur1, max1)
+		if cur2 != None:
+			label = label + ": %d%%"%(cur2*100/max2)
+		print label
+		
