@@ -3,3 +3,5 @@ Debug
 audpipe.lib
 audpipe.exp
 audpipe.aps
+audpipe_d.lib
+audpipe_d.exp

@@ -3,3 +3,5 @@ Debug
 vidpipe.lib
 vidpipe.exp
 vidpipe.aps
+vidpipe_d.lib
+vidpipe_d.exp
