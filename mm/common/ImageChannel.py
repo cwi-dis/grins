@@ -288,7 +288,7 @@ class ImageChannel(Channel):
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = ImageWindow().init(name, attrdict, self)
-		self.armed_node = 0
+		self.armed_node = None
 		return self
 	#
 	def __repr__(self):
