@@ -51,6 +51,9 @@ class Selecter:
 		self.updateuibaglist()
 		self.showstate()
 	#
+	def reset(self):
+		self.scheduler.resettimer()
+	#
 	# Routines to manipulate run slots
 	#
 	# mkbaglist - Called when a bag is played to select the node in it.
