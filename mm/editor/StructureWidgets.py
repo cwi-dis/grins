@@ -99,24 +99,21 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			return
 		self.has_event_icons = 1
 		beginevents = MMAttrdefs.getattr(self.node, 'beginlist')
-##		endevents = MMAttrdefs.getattr(self.node, 'endlist')
+		endevents = MMAttrdefs.getattr(self.node, 'endlist')
 
-		# DEBUG - check all icons.
-		#import win32displaylist
-		#for i in win32displaylist._icon_ids.keys():
-		#	self.iconbox.add_icon(i)
+		self.__add_events_helper(beginevents, 'beginevent')
+		self.__add_events_helper(endevents, 'endevent')
 
-		#self.iconbox.add_icon('activateevent')
-
+	def __add_events_helper(self, events, iconname):
 		icon = None
-		for b in beginevents:
+		for b in events:
 			othernode = b.refnode()
 			if othernode:
 				# Known bug: TODO: I'm not worrying if the node is collapsed.
 				# TODO: Add end events also.
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
-					icon = self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu_dest)
+					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu_dest)
 				else:
 					icon.add_arrow(otherwidget)
 				otherwidget.add_arrow(icon)
@@ -1829,28 +1826,30 @@ class Icon(MMWidgetDecoration):
 	def is_selectable(self):
 		return self.selectable
 
-class CollapseIcon(Icon):
-	# For collapsing and uncollapsing nodes
-	def setup(self):
-		Icon.setup(self)
-		self.selectable = 0
-		self.callbackable = 1
-		self.arrowable = 0
-		self.contextmenu = None
 
-class EventSourceIcon(Icon):
-	# Is the source of an event
-	def setup(self):
-		Icon.setup(self)
-		self.selectable = 1
-		self.callbackable = 1
-		self.arrowable = 1
-		self.arrowdirection = 1
-		self.contextmenu = None
+# Maybe one day.
+##class CollapseIcon(Icon):
+##	# For collapsing and uncollapsing nodes
+##	def setup(self):
+##		Icon.setup(self)
+##		self.selectable = 0
+##		self.callbackable = 1
+##		self.arrowable = 0
+##		self.contextmenu = None
 
-class EventIcon(Icon):
-	# Is the actual event.
-	pass
+##class EventSourceIcon(Icon):
+##	# Is the source of an event
+##	def setup(self):
+##		Icon.setup(self)
+##		self.selectable = 1
+##		self.callbackable = 1
+##		self.arrowable = 1
+##		self.arrowdirection = 1
+##		self.contextmenu = None
+
+##class EventIcon(Icon):
+##	# Is the actual event.
+##	pass
 
 
 
