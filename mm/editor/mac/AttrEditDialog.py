@@ -29,6 +29,7 @@ import WMEVENTS
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
 from mw_resources import ID_DIALOG_NODEATTR
+ID_DIALOG_EXTRAS=635
 
 # Common items:
 ITEM_OK=1
@@ -79,6 +80,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_NODEATTR,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+		self._dialog.AppendDialogItemList(ID_DIALOG_EXTRAS, 0)
 ## This doesn't work for (a) tabbing to a field and (b) popup menus
 		self._ok_enabled = 0
 ##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
@@ -176,8 +178,11 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page = self._pages[item] # XXXX?
 			self._cur_page.show()
 			self._pagebrowser.select(item)
-		for i in ITEMLIST_ALL:
-			print '%d:%d',i, self._dialog.GetDialogItemAsControl(i).IsControlVisible()
+		for i in range(1,1000):
+			try:
+				print '%d:%d',i, self._dialog.GetDialogItemAsControl(i).IsControlVisible()
+			except:
+				break
 		print
 
 
@@ -227,17 +232,6 @@ class TabPage:
 		controls and update their values"""
 		self.update()
 		self.attreditor._showitemcontrols([self.GROUP])
-		if not self.attrs_on_page:
-			# Multi-attribute pages are responsible for their own labels.
-			# For single-attribute pages we do the work.
-			attrname, default, help = self.fieldlist[0].gethelpdata()
-			self.attreditor._setlabel(ITEM_TABGROUP, attrname)
-			self.attreditor._setlabel(ITEM_HELP, help)
-			if default:
-				self.attreditor._setlabel(ITEM_DEFAULT, default)
-				self.attreditor._showitemcontrols([ITEM_DEFAULTGROUP])
-			else:
-				self.attreditor._hideitemcontrols([ITEM_DEFAULTGROUP])
 			
 	def hide(self):
 		"""Called by the dialog when the page is hidden. Save values
@@ -259,8 +253,22 @@ class TabPage:
 		
 	def do_itemhit(self, item, event):
 		return 0	# To be overridden
-				
-class StringTabPage(TabPage):
+		
+class SingleTabPage(TabPage):
+
+	def show(self):
+		# For single-attribute pages we do the help and default work
+		attrname, default, help = self.fieldlist[0].gethelpdata()
+		self.attreditor._setlabel(ITEM_TABGROUP, attrname)
+		self.attreditor._setlabel(ITEM_HELP, help)
+		if default:
+			self.attreditor._setlabel(ITEM_DEFAULT, default)
+			self.attreditor._showitemcontrols([ITEM_DEFAULTGROUP])
+		else:
+			self.attreditor._hideitemcontrols([ITEM_DEFAULTGROUP])
+		TabPage.show(self)
+
+class StringTabPage(SingleTabPage):
 	attrs_on_page=None
 	type_supported=None
 	GROUP=ITEM_1_GROUP
@@ -280,7 +288,7 @@ class StringTabPage(TabPage):
 		value = self.fieldlist[0]._getvalueforpage()
 		self.attreditor._setlabel(ITEM_1_STRING, value)
 
-class FileTabPage(TabPage):
+class FileTabPage(SingleTabPage):
 	attrs_on_page=None
 	type_supported='file'
 	GROUP=ITEM_2_GROUP
@@ -303,7 +311,7 @@ class FileTabPage(TabPage):
 		value = self.fieldlist[0]._getvalueforpage()
 		self.attreditor._setlabel(ITEM_2_STRING, value)
 
-class ColorTabPage(TabPage):
+class ColorTabPage(SingleTabPage):
 	attrs_on_page=None
 	type_supported='color'
 	GROUP=ITEM_3_GROUP
@@ -354,7 +362,7 @@ class ColorTabPage(TabPage):
 			self.attreditor._setlabel(ITEM_3_STRING, value)
 			self.attreditor._selectinputfield(ITEM_3_STRING)
 		
-class OptionTabPage(TabPage):
+class OptionTabPage(SingleTabPage):
 	attrs_on_page=None
 	type_supported='option'
 	GROUP=ITEM_4_GROUP
@@ -362,6 +370,7 @@ class OptionTabPage(TabPage):
 	def init_controls(self):
 		self._option = windowinterface.SelectWidget(self.attreditor._dialog, ITEM_4_MENU,
 				[], None)
+		pass
 
 	def close(self):
 		self._option.delete()
