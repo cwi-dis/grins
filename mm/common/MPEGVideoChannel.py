@@ -38,7 +38,11 @@ class VideoChannel(ChannelWindowThread):
 			print 'Bad mpeg file', `url`, msg
 			return 1
 
-		self.armed_display.fgcolor(self.getbucolor(node))
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')
+		if drawbox:
+			self.armed_display.fgcolor(self.getbucolor(node))
+		else:
+			self.armed_display.fgcolor(self.getbgcolor(node))
 		hicolor = self.gethicolor(node)
 		for a in node.GetRawAttrDef('anchorlist', []):
 			atype = a[A_TYPE]
@@ -46,7 +50,8 @@ class VideoChannel(ChannelWindowThread):
 				continue
 			b = self.armed_display.newbutton((0,0,1,1))
 			b.hiwidth(3)
-			b.hicolor(hicolor)
+			if drawbox:
+				b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return self.syncarm
 
