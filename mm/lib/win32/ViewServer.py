@@ -45,7 +45,7 @@ if appcon.IsPlayer:
 	HIDE_LINKVIEW=None
 	HIDE_LAYOUTVIEW=None
 	HIDE_USERGROUPVIEW=None
-	HIDE_SOURCE=None
+	HIDE_SOURCE=SOURCE
 
 appview={
 	0:{'cmd':HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
@@ -246,4 +246,6 @@ class ViewServer:
 		viewobj._strid=appview[viewno]['id']
 		viewobj._commandlist=[]
 		viewobj._title=appview[viewno]['title']
-		viewobj._closecmdid=usercmdui.class2ui[appview[viewno]['cmd']].id
+		cmd =  appview[viewno]['cmd']
+		if usercmdui.class2ui.has_key(cmd):
+			viewobj._closecmdid=usercmdui.class2ui[cmd].id
