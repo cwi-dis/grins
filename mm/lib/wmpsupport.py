@@ -106,7 +106,8 @@ class Exporter:
 
 	def _computeduration(self, node):
 		fdur = node.calcfullduration()
-		if fdur: return fdur
+		if fdur>0: return fdur
+		print 'unresolved dur, assuming a 30sec doc'
 		return 30.0
 		
 	# temp: get progess based on doc duration estimation
