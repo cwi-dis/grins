@@ -255,6 +255,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "dsound"=..\DXMedia\dsound\dsound.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "gear32sd"=..\ACCUSOFT\src\gear32sd.dsp - Package Owner=<4>
 
 Package=<5>

@@ -33,7 +33,7 @@ item: Global
   Distribute Path=\\UNIXSERVER\auginet\GRiNS
   Distribute Type=2
   Step View=All
-  File Checksum=2167234356
+  File Checksum=1197937465
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -965,6 +965,11 @@ item: Display Graphic
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
+  Destination=%MAINDIR%\dsound.pyd
+  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\grinsproxy.dll
