@@ -670,7 +670,7 @@ class MMChannel:
 		if animated:
 			resolver = self.context.icssResolver
 		else:
-			resolver = self.context.icssResolver
+			resolver = self.context.cssResolver
 		if not isRoot:
 			return resolver.newRegion()
 		else:
@@ -712,7 +712,7 @@ class MMChannel:
 			resolver = self.context.icssResolver
 			id = self._icssId
 		else:
-			resolver = self.context.icssResolver
+			resolver = self.context.cssResolver
 			id = self._cssId
 		resolver.setRawAttr(id, name, value)
 
@@ -721,7 +721,7 @@ class MMChannel:
 			resolver = self.context.icssResolver
 			id = self._icssId
 		else:
-			resolver = self.context.icssResolver
+			resolver = self.context.cssResolver
 			id = self._cssId
 		value = resolver.getAttr(id, name)
 		if value == None:
@@ -732,7 +732,7 @@ class MMChannel:
 			resolver = self.context.icssResolver
 			id = self._icssId
 		else:
-			resolver = self.context.icssResolver
+			resolver = self.context.cssResolver
 			id = self._cssId
 		if id == None:
 			return defaultValue
@@ -892,7 +892,7 @@ class MMChannel:
 			resolver = self.context.icssResolver
 			id = self._icssId
 		else:
-			resolver = self.context.icssResolver
+			resolver = self.context.cssResolver
 			id = self._cssId
 		if self.attrdict.get('type') == 'layout':
 			return resolver.getPxGeom(id)
@@ -907,7 +907,7 @@ class MMChannel:
 			resolver = self.context.icssResolver
 			id = self._icssId
 		else:
-			resolver = self.context.icssResolver
+			resolver = self.context.cssResolver
 			id = self._cssId
 		if self.attrdict.get('type') == 'layout':
 			left, top, width, height = geom
