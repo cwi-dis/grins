@@ -1128,6 +1128,8 @@ class FileDialog:
 			try:
 				if cb_cancel:
 					ret = cb_cancel()
+				else:
+					ret = None
 			except:
 				showmessage("Internal error:\nexception %s"%`sys.exc_info()`)
 				ret = None
