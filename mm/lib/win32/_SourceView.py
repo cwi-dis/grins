@@ -20,6 +20,7 @@ import afxres,commctrl
 class _SourceView(docview.EditView):
 	# Class contructor. Calls the base EditView constructor
 	def __init__(self,doc):
+		self._mdiframe = None
 		docview.EditView.__init__(self,doc)
 		self._text=''
 		self._close_cmd_list=[]
@@ -53,6 +54,9 @@ class _SourceView(docview.EditView):
 	# Set the text to be shown
 	def settext(self,text):
 		self._text=self.convert2ws(text)
+		# if already visible, update text in window
+		if self._mdiframe is not None:
+			self.GetEditCtrl().SetWindowText(self._text)
 
 	# Convert the text from unix or mac to windows
 	def convert2ws(self,text):
