@@ -424,6 +424,7 @@ class SMIL:
 	__layout = GRiNSns + ' ' + 'layout'
 	__null = GRiNSns + ' ' 'null'
 	__assets = GRiNSns + ' ' 'assets'
+	__viewinfo = GRiNSns + ' ' 'viewinfo'
 
 	# abbreviations for collections of attributes
 	__Core = {'alt':None,
@@ -568,6 +569,13 @@ class SMIL:
 			     },
 		__layouts: {},
 		__layout: {GRiNSns+' ' 'regions':None},
+		__viewinfo: {
+				'view':None,
+				'top': None,
+				'left': None,
+				'width': None,
+				'height': None,
+				},
 		'par': {'abstract':None,
 			'author':None,
 			'copyright':None,
@@ -1014,7 +1022,7 @@ class SMIL:
 	entities = {
 		'smil': ['head', 'body'],
 		'head': ['layout', 'switch', 'meta', 'metadata',
-			 'customAttributes', __layouts, 'transition'],
+			 'customAttributes', __layouts, 'transition', __viewinfo],
 		'customAttributes': ['customTest'],
 		'layout': ['region', 'root-layout', 'topLayout', 'viewport', 'regPoint', 'switch'],
 		'topLayout': ['region', 'switch'],
