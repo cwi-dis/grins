@@ -820,10 +820,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Copy a node.
 	def copycall(self):
 		windowinterface.setwaiting()
-		t,n = Clipboard.getclip()
-		if t == 'node' and n is not None:
-			n.Destroy()	# Wha ha ha ha. <evil grin>
-
+		self.__clean_clipboard()
 		if len(self.multi_selected_widgets) > 0:
 			copyme = []
 			for i in self.get_multi_nodes():
@@ -833,9 +830,19 @@ class HierarchyView(HierarchyViewDialog):
 			copyme = self.focusnode.DeepCopy()
 			Clipboard.setclip('node', copyme)
 
+	def __clean_clipboard(self):
+		t,n = Clipboard.getclip()
+		if t == 'node' and n is not None:
+			n.Destroy()
+		elif t == 'multinode' and n is not None:
+			for i in n:
+				i.Destroy()
+
 	######################################################################
 	# Cut a node.
 	def cutcall(self):
+		windowinterface.setwaiting()
+		self.__clean_clipboard()
 		if len(self.multi_selected_widgets) > 0:
 			# Delete multiple nodes.
 			if not self.editmgr.transaction():
@@ -866,6 +873,7 @@ class HierarchyView(HierarchyViewDialog):
 		
 	######################################################################
 	# Paste a node. (TODO: multiple selected nodes).
+	# see self.paste()
 	def pastebeforecall(self):
 		if self.selected_widget: self.selected_widget.pastebeforecall()
 
@@ -1253,7 +1261,7 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusnode is None:
 			windowinterface.showmessage(
 				'There is no selection to paste into',
-				mtype = 'error', parent = self.window)
+			 	mtype = 'error', parent = self.window)
 			return
 		self.toplevel.setwaiting()
 
@@ -1267,9 +1275,10 @@ class HierarchyView(HierarchyViewDialog):
 			if not self.editmgr.transaction():
 				return
 			for i in node:	# I can't use insertnode because I need to access the editmanager.
-				if i.context is not self.root.context:
-					i = i.CopyIntoContext(self.root.context)
-				self.editmgr.addnode(self.focusnode, -1, i)
+				n = i.DeepCopy()
+				if n.context is not self.root.context:
+					n = n.CopyIntoContext(self.root.context)
+				self.editmgr.addnode(self.focusnode, -1, n)
 			self.editmgr.commit()
 
 	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
