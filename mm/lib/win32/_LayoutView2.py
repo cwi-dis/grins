@@ -1695,8 +1695,8 @@ class Polyline(winlayout.Polyline, Shape, UserEventMng):
 		pointList = self.getDevicePoints()
 		px, py, pw, ph = self.LRtoDR(self._parent.getwindowpos(), round=1)
 		for x,y in pointList:
-			x,y = x-px,y-py
-			pList.append(self.DPtoLP((x,y)))
+			x,y = self.DPtoLP((x-px,y-py))
+			pList.append((int(x+0.5),int(y+0.5)))
 		return pList
 
 
