@@ -107,7 +107,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	# detect the errors/fatal errors
 	# if it's a fatal error, then load an empty document to keep GRiNS in a stable state
-	def __checkParseErrors(self, root):
+	def checkParseErrors(self, root):
 		parseErrors = root.GetContext().getParseErrors()
 		if parseErrors != None:
 			if parseErrors.getType() == 'fatal':
@@ -479,9 +479,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##			view.show()
 
 	def change_source(self, text):		
-		# update edit manager to delete the current root
-		self.editmgr.deldocument(self.root)
-
 		# init progress bar dialog
 		self.progress = windowinterface.ProgressDialog("Reloading")
 		self.progressMessage = "Reloading SMIL document from source view..."
@@ -499,13 +496,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		# just update that the loading is finished
 		self.progressCallback(1.0)
-		
-		root = self.__checkParseErrors(root)
-		self.editmgr.adddocument(root)
 
 		# the progress bar will desapear
 		self.progress = None
-				
+						
 		# return the new root
 		return root
 		
@@ -910,7 +904,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		save_new = self.new_file
 		self.new_file = 1
 		self.do_read_it(tmp)	# Reads the file and creates the MMNode heirarchy.
-		self.root = self.__checkParseErrors(self.root)
+		self.root = self.checkParseErrors(self.root)
 		self.setRoot(self.root)
 		self.new_file = save_new
 		try:
@@ -1218,7 +1212,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
 		else:
 			self.do_read_it(self.filename)
-		self.root = self.__checkParseErrors(self.root)
+		self.root = self.checkParseErrors(self.root)
 		self.setRoot(self.root)
 		if self.new_file:
 			self.context.baseurl = ''
@@ -1395,7 +1389,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# the progress bar will desapear
 		self.progress = None
 		
-		self.root = self.__checkParseErrors(self.root)
+		self.root = self.checkParseErrors(self.root)
 		self.setRoot(self.root)
 		
 	def printfunc(self, msg):

@@ -116,6 +116,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				self.hide()
 
 			root = self.toplevel.change_source(text)
+			root = self.toplevel.checkParseErrors(root)
 			context = root.GetContext()
 			parseErrors = context.getParseErrors()
 			if parseErrors != None:
@@ -124,13 +125,25 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				if ret == 0: # yes
 					# accept the errors automaticly fixed by GRiNS
 					context.setParseErrors(None)
+					# update edit manager
+					self.editmgr.deldocument(self.root) # old root
+					self.editmgr.adddocument(root) # new root
 				elif ret == 1: # no
+					# update edit manager
+					# in this case, update juste the source file with the parse errors
+					self.editmgr.delparsestatus(self.context.getParseErrors()) # old errors
+					self.editmgr.addparsestatus(context.getParseErrors()) # new errors
 					# default treatement: accept errors and don't allow to edit another view
-					pass
 				else: # cancel
 					self.editmgr.rollback()
 					self.myCommit= 0
 					return
+			else:
+				# no error
+				# update edit manager 
+				self.editmgr.deldocument(self.root) # old root
+				self.editmgr.adddocument(root) # new root
+				
 			self.editmgr.commit()
 						
 		self.myCommit= 0
