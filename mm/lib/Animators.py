@@ -591,6 +591,8 @@ class MotionAnimator(Animator):
 # * we must either assert that onAnimateBegin are called in the proper order
 # or implement within EffectiveAnimator a proper ordering method
 # 
+# XXX: Fix keyTimes for discrete animations
+
 class EffectiveAnimator:
 	def __init__(self, context, targnode, attr, domval):
 		self.__context = context
@@ -1095,6 +1097,7 @@ class AnimateElementParser:
 			anim = Animator(attr, domval, values, dur, mode=mode, accumulate=accumulate, additive='sum')
 			if self.__attrtype == 'int':
 				anim.setRetunedValuesConverter(_round)
+			self.__setTimeManipulators(anim)
 			return anim
 			
 
@@ -1139,8 +1142,7 @@ class AnimateElementParser:
 					accumulate, additive)
 				self.__setTimeManipulators(anim)
 				return anim
-			else:
-				return None
+			return None
 
 		################
 		# animate
@@ -1516,27 +1518,23 @@ class AnimateElementParser:
 					coords.append(pt)
 			return tuple(coords)
 
-		# 'from' is optional
-		# use 'zero' value if missing
-		v1 = self.getFrom()
-		if not v1:
-			v1 = complex(0,0)
-		pt1 = self.__getNumPair(v1)
-		if pt1==None: return ()
+		if self.__animtype == 'from-to':
+			return self.__getNumPair(self.getFrom()), self.__getNumPair(self.getTo())
+		elif self.__animtype == 'from-by':
+			v1 = self.__getNumPair(self.getFrom())
+			dv = self.__getNumPair(self.getBy())
+			return v1, (v1[0]+dv[0], v1[1]+dv[1])
+		elif self.__animtype == 'to':
+			return 	self.__getNumPair(self.getTo())
+		elif self.__animtype == 'by':
+			return (0, 0), self.__getNumPair(self.getBy())
+		return ()	
 
-		v2 = self.getTo()
-		dv = self.getBy()
-		if v2:
-			pt2 = self.__getNumPair(v2)
-			if pt2!=None:
-				return pt1, pt2
-		if dv:
-			dpt = self.__getNumPair(dv)
-			if dpt:
-				dx, dy = dpt
-				x1, y1 = pt1
-				return (x1, y1), (x1+dx,y1+dy)
-		return ()
+	def __getNumTuple(self, v):
+		if not v: return None
+
+	def __getZeroTuple(self):
+		pass
 
 	# return list of interpolation numeric tuples
 	def __getNumTupleInterpolationValues(self):	
@@ -1551,54 +1549,42 @@ class AnimateElementParser:
 					L.append(t)
 			return tuple(L)
 
-		# 'from' is optional
-		# use 'zero' value if missing
-		v1 = self.getFrom()
-		if not v1:
-			v1 = self.__domval
-			L = []
-			for i in range(len(self.__domval)):
-				L.append(0)
-			t1 = tuple(L)
-		else:
-			t1 = self.__splitf(v1)
-		if t1==None: return ()
-
-		v2 = self.getTo()
-		dv = self.getBy()
-		if v2:
-			t2 = self.__splitf(v2)
-			if t2!=None:
-				return tuple(t1), tuple(t2)
-		if dv:
-			dt = self.__splitf(dv)
-			if dt:
-				ts = []
-				for i in range(len(dt)):
-					ts.append(t1[i]+dt[i])
-				return t1, tuple(ts)
-		return ()
+		if self.__animtype == 'from-to':
+			return self.__splitf(self.getFrom()), self.__splitf(self.getTo())
+		elif self.__animtype == 'from-by':
+			v1 = self.__splitf(self.getFrom())
+			dv = self.__splitf(self.getBy())
+			ts = []
+			for i in range(len(dv)):
+				ts.append(v1[i]+dv[i])
+			return v1, tuple(ts)
+		elif self.__animtype == 'to':
+			return 	self.__splitf(self.getTo())
+		elif self.__animtype == 'by':
+			dv = self.__splitf(self.getBy())
+			tz = []
+			for i in range(len(dv)):
+				tz.append(0)
+			return tuple(tz), dv
+		return ()	
 
 
 	# return list of interpolation strings
 	def __getAlphaInterpolationValues(self):
-		
 		# if values are given ignore from/to/by
-		values =  self.getValues()
-		if values:
-			return string.split(values,';')
-		
-		v1 = self.getFrom()
-		v2 = self.getTo()
-
-		# a 'to' value must exist for string attributes
-		if v2:
-			if v1:
-				return v1, v2
-			else:
-				return v2
-		else:
+		if self.__animtype == 'values':
+			values =  self.getValues()
+			if values:
+				return string.split(values,';')
+		elif self.__animtype == 'from-to':
+			return self.getFrom(), self.getTo()
+		elif self.__animtype == 'from-by':
 			return ()
+		elif self.__animtype == 'to':
+			return 	self.getTo()
+		elif self.__animtype == 'by':
+			return ()
+		return ()	
 
 
 	# copy from SMILTreeRead
@@ -1648,26 +1634,18 @@ class AnimateElementParser:
 			except ValueError:
 				return ()
 
-		# 'from' is optional
-		# use dom value if missing
-		v1 = self.getFrom()
-		if not v1:
-			v1 = self.__domval
-		if v1: 
-			v1 = self.__convert_color(v1)
-
-		# we must have a 'to' value (expl or through 'by')
-		v2 = self.getTo()
-		dv = self.getBy()
-		if v2:
-			v2 = self.__convert_color(v2)
-		elif dv:
-			dv = self.__convert_color(dv)
-			v2 = v1 + dv
-		else:
-			return ()
-		return v1, v2
-
+		if self.__animtype == 'from-to':
+			return self.__convert_color(self.getFrom()),self.__convert_color(self.getTo())
+		elif self.__animtype == 'from-by':
+			v1 = self.__convert_color(self.getFrom())
+			dv = self.__convert_color(self.getBy())
+			return v1, (v1[0]+dv[0], v1[1]+dv[1], v1[2]+dv[2])
+		elif self.__animtype == 'to':
+			return 	self.__splitf(self.getTo())
+		elif self.__animtype == 'by':
+			dv = self.__convert_color(self.getBy())
+			return (0, 0, 0), dv
+		return ()	
 
 	# len of interpolation list values
 	# len == 0 is a syntax error
@@ -1696,7 +1674,7 @@ class AnimateElementParser:
 
 		# len of values must be equal to len of keyTimes
 		lvl = self.__countInterpolationValues()
-		if self.__calcMode=='discrete': lvl = lvl + 1
+		#if self.__calcMode=='discrete': lvl = lvl + 1
 		if  lvl != len(tl):
 			print 'values vs times mismatch'		 
 			return ()
@@ -1723,7 +1701,7 @@ class AnimateElementParser:
 				return ()
 		elif self.__calcMode == 'discrete':
 			if first!=0.0: 
-				print 'not sero start keyTime'
+				print 'not zero start keyTime'
 				return ()
 		elif self.__calcMode == 'paced':
 			print 'ignoring keyTimes for paced mode'
