@@ -79,7 +79,7 @@ class Channel:
 		self._highlighted = None
 		self._in_modeless_resize = 0
 		self.nopop = 0
-		self.syncarm = 0
+		self.syncarm = settings.noprearm
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
@@ -479,7 +479,10 @@ class Channel:
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._armed_node is not node:
-			raise error, 'node was not the armed node '+`self,node`
+			if settings.noprearm:
+				self.arm(node)
+			else:
+				raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:

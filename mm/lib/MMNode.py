@@ -954,6 +954,7 @@ class MMNode:
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
+		self.srdict = None
 
 	def Extract(self):
 		if self.parent is None: raise CheckError, 'Extract() root node'
@@ -1239,8 +1240,11 @@ class MMNode:
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		arg = self
-		result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
-			   [(PLAY, arg)] + out0)]
+		if settings.noprearm:
+			result = [([(SCHED, arg)] + in0, [(PLAY, arg)] + out0)]
+		else:
+			result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
+				   [(PLAY, arg)] + out0)]
 		if not Duration.get(self):
 			# there is no (intrinsic or explicit) duration
 			# PLAY_DONE comes immediately, so in effect
@@ -1871,10 +1875,6 @@ class MMNode:
 
 	def commit(self):
 ##		print 'MMNode: deleting cached values'
-		try:
-			del self.prearmlists
-		except AttributeError:
-			pass
 		self.editmgr.unregister(self)
 		del self.editmgr
 
