@@ -40,6 +40,9 @@
 #define IDB_SPLASHPLAY                  243
 #define IDD_LICENSE                     244
 #define IDD_CHANNEL_UNDEF               245
+#define IDI_GRINS_QUESTION              246
+#define IDI_GRINS_INFO                  247
+#define IDI_GRINS_STOP                  248
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -119,6 +122,7 @@
 #define IDUC_EVALLICENSE                1120
 #define IDUC_ENTERKEY                   1121
 #define IDC_LEAVE_UNDEF                 1124
+#define IDC_STATIC_ICON                 1127
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -163,9 +167,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        245
+#define _APS_NEXT_RESOURCE_VALUE        249
 #define _APS_NEXT_COMMAND_VALUE         32829
-#define _APS_NEXT_CONTROL_VALUE         1125
+#define _APS_NEXT_CONTROL_VALUE         1128
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
