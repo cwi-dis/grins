@@ -17,17 +17,23 @@ _qd_italic = 2
 # Routines to save/restore complete textfont info
 def _checkfontinfo(wid, finfo):
 	"""Return true if font info different from args"""
+	if not wid:
+		return 1
 	port = wid.GetWindowPort()
 	curfinfo = (port.txFont, port.txFace, port.txSize)
 	return finfo <> curfinfo
 	
 def _savefontinfo(wid):
 	"""Return all font-pertaining info for a macos window"""
+	if not wid:
+		return ()
 	port = wid.GetWindowPort()
 	return port.txFont, port.txFace, port.txMode, port.txSize, port.spExtra
 	
 def _restorefontinfo(wid, (font, face, mode, size, spextra)):
 	"""Set all font-pertaining info for a macos window"""
+	if not wid:
+		return
 	old = Qd.GetPort()
 	Qd.SetPort(wid)
 	Qd.TextFont(font)
@@ -137,10 +143,10 @@ class findfont:
 			_restorefontinfo(wid, old_fontinfo)
 		return maxwidth, maxheight
 		       
-	def strsize(self, wid, str):
+	def strsize(self, str):
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
-		maxw, maxh = self.strsizePXL(wid, str)
+		maxw, maxh = self.strsizePXL(None, str)
 		return float(maxw) / _x_pixel_per_mm, \
 		       float(maxh) / _y_pixel_per_mm
 		
