@@ -4,7 +4,8 @@ import Xt, Xm, Xmd, Xlib, X, Xcursorfont
 import string, sys
 import img
 
-error = 'windowinterface.error'
+import splash
+error = splash.error
 
 Continue = 'Continue'
 
@@ -62,7 +63,6 @@ class _Toplevel:
 		self._immediate = []
 		# file descriptor handling
 		self._fdiddict = {}
-		import splash
 		items = splash.init()
 		for key, val in items:
 			setattr(self, '_' + key, val)
@@ -1751,7 +1751,11 @@ def findfont(fontname, pointsize):
 	scfont = None
 	thefont = None
 	for font in fontlist:
-		parsedfont = _parsefontname(font)
+		try:
+			parsedfont = _parsefontname(font)
+		except:
+			# XXX catch parsing errors from the mac
+			continue
 ## scaled fonts don't look very nice, so this code is disabled
 ##		# scale the font if possible
 ##		if parsedfont[_PIXELS] == '0':
