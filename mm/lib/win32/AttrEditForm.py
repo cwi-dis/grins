@@ -2696,6 +2696,12 @@ class StringGroup(AttrGroup):
 		ctrl.attach_to_parent()
 		ctrl.settext(self._data['title'])
 
+class StringGroupNoTitle(StringGroup):
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext('')
+
 class InfoGroup(StringGroup):
 	data=attrgrsdict['infogroup']
 
@@ -2773,6 +2779,9 @@ class BandwidthGroup(StringGroup):
 		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
 		ctrl.attach_to_parent()
 		ctrl.settext('')
+
+class DurationSBGroup(StringGroup):
+	data=attrgrsdict['timingsb']
 
 class Duration2Group(AttrGroup):
 	data=attrgrsdict['timing2']
@@ -3395,6 +3404,19 @@ class CalcModeGroup(AttrGroup):
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
+
+
+#
+class TransitionTypeGroup(StringGroupNoTitle):
+	data=attrgrsdict['transitionType']
+
+#
+class TransitionRepeatGroup(StringGroupNoTitle):
+	data=attrgrsdict['transitionRepeat']
+#
+class TransitionStartEndGroup(StringGroupNoTitle):
+	data=attrgrsdict['transitionStartEnd']
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -3443,6 +3465,11 @@ groupsui={
 	'animateValues':AnimateValuesGroup,
 	'timeManipulation':TimeManipulationGroup,
 	'calcMode':CalcModeGroup,
+	'timingsb':DurationSBGroup,
+
+	'transitionType': TransitionTypeGroup,
+	'transitionRepeat':TransitionRepeatGroup,
+	'transitionStartEnd':TransitionStartEndGroup,
 	}
 
 ###########################
