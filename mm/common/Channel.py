@@ -109,10 +109,7 @@ class Channel:
 	def may_show(self):
 		# Indicate to the higher level whether this channel is
 		# visible and may be shown.
-		if not self._attrdict.has_key('visible'):
-			return 1
-		else:
-			return self._attrdict['visible']
+		return self._attrdict.get('visible', 1)
 
 	def check_visible(self):
 		if self.may_show():
@@ -837,9 +834,8 @@ class ChannelWindow(Channel):
 	def check_popup(self):
 		if self.nopop or not self._is_shown or not self.window:
 			return
-		if self._attrdict.has_key('popup'):
-			if self._attrdict['popup'] == 0:
-				return
+		if not self._attrdict.get('popup', 1):
+			return
 		self.window.pop()
 
 	def popdown(self):
@@ -861,8 +857,8 @@ class ChannelWindow(Channel):
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
-			units = self._attrdict('units',
-					       windowinterface.UNIT_MM)
+			units = self._attrdict.get('units',
+						   windowinterface.UNIT_MM)
 			x, y, w, h = self.window.getgeometry(units = units)
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
