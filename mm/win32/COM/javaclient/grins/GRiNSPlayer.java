@@ -67,7 +67,6 @@ implements SMILDocument, SMILController, SMILRenderer
     public void open(String fn)
         {
         if(hgrins!=0) return;
-        
         initializeThreadContext();
         hgrins = nconnect();
         if(hgrins!=0) 
@@ -78,7 +77,6 @@ implements SMILDocument, SMILController, SMILRenderer
                 nsetTopLayoutWindow(hgrins, 0, canvas);   
                 nupdate(hgrins);
                 }
-            //viewportSize = ngetTopLayoutDimensions(hgrins, 0);
             dur = ngetDuration(hgrins);
             frameRate = ngetFrameRate(hgrins);
             monitor = new GRiNSPlayerMonitor(this, 100);
@@ -94,11 +92,8 @@ implements SMILDocument, SMILController, SMILRenderer
         if(hgrins!=0) 
             {
             if(monitor!=null) monitor.interrupt();
-            
-            //nstop(hgrins);
-            //nclose(hgrins);
             ndisconnect(hgrins);
-            hgrins = 0;
+            resetParams();
             uninitializeThreadContext();
             }
          if(canvas!=null && canvas.isDisplayable())
@@ -189,6 +184,14 @@ implements SMILDocument, SMILController, SMILRenderer
         if(listener!=null) listener.updateViewports();
         }
     
+    private void resetParams(){
+        hgrins = 0;
+        curstate = 0;
+        curpos = 0;
+        dur = 0;
+        frameRate = 0;
+        }
+        
     private Dimension viewportSize;
     private double dur;
     private double curpos;

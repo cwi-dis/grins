@@ -291,13 +291,18 @@ implements SMILListener
 
 	void buttonGetInfo_ActionPerformed(java.awt.event.ActionEvent event)
 	{
-	    if(player!=null) System.out.println("t="+player.getTime());
+	    double currTime = player.getTime();
+	    if(player!=null) System.out.println("t="+currTime);
 	    if(smil!=null)   System.out.println("dur="+smil.getDuration());
 	    if(smil!=null)   System.out.println("frameRate="+smil.getFrameRate());
+	    if(player!=null) 
+	        {
+	        player.setTime(currTime+1.0);
+	        System.out.println("Current time incremented by 1 sec");
+	        }
 	    
-	    try {if(smil!=null)System.out.println("mediaFrameRate="+smil.getMediaFrameRate("../videos/nasa.qt"));} 
-	    catch(Exception e){System.out.println(""+e);}
-	    
+	    //try {if(smil!=null)System.out.println("mediaFrameRate="+smil.getMediaFrameRate("../videos/nasa.qt"));} 
+	    //catch(Exception e){System.out.println(""+e);}
 			 
 	}
 }
