@@ -1019,6 +1019,8 @@ class AttrEditor(AttrEditorDialog):
 				C = QualityAttrEditorField
 			elif displayername == '.anchorlist':
 				C = AnchorlistAttrEditorField
+			elif displayername == 'scale':
+				C = ScaleAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1596,6 +1598,20 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['mm', 'relative', 'pixels']
 	__valuesmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
 		       windowinterface.UNIT_PXL]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+		return self.__values
+
+	def parsevalue(self, str):
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		return self.__values[self.__valuesmap.index(value)]
+
+class ScaleAttrEditorField(PopupAttrEditorFieldNoDefault):
+	__values = ['actual size', 'show whole image', 'fill whole region']
+	__valuesmap = [1, 0, -1]
 
 	# Choose from a list of unit types
 	def getoptions(self):
