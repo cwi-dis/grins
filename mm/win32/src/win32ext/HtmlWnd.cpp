@@ -13,7 +13,6 @@
 #include "websterpro.h"
 // leave it as text?
 static CString strLicKey("Webster Pro - Copyright (c) 1995-1998 Home Page Software Inc. - A Webster CodeBase Product"); 
-static BSTR bstrLicKey=strLicKey.AllocSysString(); 
 
 
 // FRAMESET SUPPORT FOR IE5
@@ -30,8 +29,8 @@ class CHtmlWnd: public CWnd
 	DECLARE_MESSAGE_MAP()
 
 	public:
-	CHtmlWnd():m_selHtmlCtrl(0),m_bCtrlCreated(false),m_isclient(false),m_majorCtrlVersion(1){}
-	virtual ~CHtmlWnd(){}
+	CHtmlWnd();
+	virtual ~CHtmlWnd();
 	virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName,
 		DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID,
 		CCreateContext* pContext = NULL);
@@ -71,6 +70,8 @@ class CHtmlWnd: public CWnd
 	bool m_isclient;
 	bool m_bCtrlCreated;
 
+	BSTR bstrLicKey;
+
 	// Generated message map functions
 	protected:
 	//{{AFX_MSG(CHtmlWnd)
@@ -103,6 +104,20 @@ BEGIN_EVENTSINK_MAP(CHtmlWnd, CWnd)
 	ON_EVENT(CHtmlWnd, AFX_IDW_PANE_FIRST, 12 /* BeforeNavigate */, OnBeforeNavigateWebster, VTS_PBSTR VTS_I4 VTS_I4 VTS_PBSTR VTS_PBSTR VTS_PBSTR VTS_PBOOL)
 	//}}AFX_EVENTSINK_MAP
 END_EVENTSINK_MAP()
+
+CHtmlWnd::CHtmlWnd()
+:	m_selHtmlCtrl(0),
+	m_bCtrlCreated(false),
+	m_isclient(false),
+	m_majorCtrlVersion(1)
+	{
+	bstrLicKey=strLicKey.AllocSysString(); 
+	}
+
+CHtmlWnd::~CHtmlWnd()
+	{
+	::SysFreeString(bstrLicKey);
+	}
 
 void CHtmlWnd::OnDestroy()
 	{
