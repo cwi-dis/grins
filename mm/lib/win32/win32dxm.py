@@ -349,4 +349,288 @@ class MMStream:
 		return secs
 
 
+###################################
+class VideoFormat:
+	def __init__(self, name, descr, width, height, format):
+		self.__name = name
+		self.__descr = descr
+		self.__width = width
+		self.__height = height
+		self.__format = format
+		
+	def getname(self):
+		return self.__name
+		
+	def getdescr(self):
+		return self.__descr
+		
+	def getsize(self):
+		return self.__width, self.__height
+		
+	def getformat(self):
+		return self.__format
+
+class AudioFormat:
+	def __init__(self, name, descr, nchannels, samplespersec, bitspersample, format):
+		self.__name = name
+		self.__descr = descr
+		self.__nchannels = nchannels
+		self.__samplespersec = samplespersec
+		self.__bitspersample = bitspersample
+		self.__format = format
+
+	def __repr__(self):
+		return self.__name
+
+	def getname(self):
+		return self.__name
+
+	def getdescr(self):
+		return self.__descr
+
+	def getnchannels(self):
+		return self.__nchannels
+
+	def getsamplespersec(self):
+		return self.__samplespersec
+
+	def getbitspersample(self):
+		return self.__bitspersample
+
+	def getbytespersample(self):
+		return self.__bitspersample/8
+
+	def getformat(self):
+		return self.__format
+
+	def getnsamples(self, nbytes):
+		return nbytes/self.getbytespersample()
+
+class ReaderFilter:
+	def __init__(self, driver, dispname):
+		self._driver = driver
+		self._dispname = dispname
+		self._active = 0
+		self._dataqueue = []
+		self._properties = None
+		self._time = 0
+
+	def getProperties(self):
+		return self._properties
+
+	def isActive(self):
+		return self._active
+
+	def getTime(self):
+		return self._time
+
+	def OnSetMediaType(self, mt):
+		props = None
+		if mt.GetType() == 'audio':
+			props = mt.GetAudioInfo()
+		elif mt.GetType() == 'video':
+			props = mt.GetVideoInfo()
+		self._properties = props
+
+	def OnActive(self):
+		if self._dispname is not None:
+			print self._dispname, 'OnActive'
+		self._active = 1
+
+	def OnInactive(self):
+		if self._dispname is not None:
+			print self._dispname, 'OnInactive'
+		self._active = 0
+
+	def OnRenderSample(self, ms):
+		if self._active and self._driver.isActive():
+			data = ms.GetData()
+			btime, etime = ms.GetTime()
+			packet = btime, data
+			self._dataqueue.append(packet)
+			self._time = btime
+
+	def nextData(self):
+		if self._dataqueue:
+			data = self._dataqueue[0]
+			self._dataqueue = self._dataqueue[1:]
+			return data
+		return self._time, None
+
+	def readData(self):
+		if not self.isActive():
+			return self.nextData()
+		import win32ui
+		while not self._dataqueue and self._active and self._driver.isActive():
+			win32ui.PumpWaitingMessages(0,0)
+		return self.nextData()
+
+class MediaReader:
+	def __init__(self, url):		
+		self._filtergraph = None
+
+		self._videofilter = None
+		self._videopeer = None
+
+		self._audiofilter = None
+		self._audiopeer = None
+
+		self._active = 0
+		self._started = 0
+
+		self._filtergraph = dshow.CreateGraphBuilder()
+		try:
+			self._filtergraph.RenderFile(url)
+		except dshow.error, arg:
+			self._filtergraph = None
+			print arg
+		if self._filtergraph is None:
+			raise IOError, "Cannot open: %s" % filename
+
+		self._buildReaderFilterGraph(self._filtergraph)
+		
+	def __del__(self):
+		if self._active: 
+			self._stop()
+		self._audiopeer = None
+		self._audiofilter = None
+		self._videopeer = None
+		self._videofilter = None
+		self._filtergraph = None
+
+	def GetAudioDuration(self):
+		if self._filtergraph:
+			mp = self._filtergraph.QueryIMediaPosition()
+			return int(1000*mp.GetDuration()+0.5)
+		return 0
+
+	def GetVideoDuration(self):
+		if self._filtergraph:
+			mp = self._filtergraph.QueryIMediaPosition()
+			return int(1000*mp.GetDuration()+0.5)
+		return 0
+
+	def isActive(self):
+		if not self._active:
+			return 0
+		if self._filtergraph.WaitForCompletion(0)==0:
+			return 1
+		self._stop()
+		self._active = 0
+		return 0
+
+	def HasAudio(self):
+		return self._audiofilter is not None
+
+	def HasVideo(self):
+		return self._videofilter is not None
+
+	def ReadAudio(self, frames=None):
+		if not self._started:
+			self._run()
+		return self._audiofilter.readData()
+
+	def ReadVideo(self):
+		if not self._started:
+			self._run()
+		return self._videofilter.readData()
+
+	def GetVideoFormat(self):
+		import imgformat
+		width, height, framerate, isrgb24 = self._videofilter.getProperties()
+		return VideoFormat('dummy_format', 'Dummy Video Format', width, height, imgformat.bmprgble_noalign)
+
+	def GetVideoFrameRate(self):
+		width, height, framerate, isrgb24 = self._videofilter.getProperties()
+		return framerate
+
+	def GetAudioFormat(self):
+		nChannels, nSamplesPerSec, bitsPerSample, isPCM = self._audiofilter.getProperties()
+		return nChannels, nSamplesPerSec, bitsPerSample
+		
+	def GetAudioFormat(self):
+		nChannels, nSamplesPerSec, bitsPerSample, isPCM = self._audiofilter.getProperties()
+		return AudioFormat('', '', nChannels, nSamplesPerSec, bitsPerSample, 'WAVE_FORMAT_PCM')
+			
+	def GetAudioFrameRate(self):
+		nChannels, nSamplesPerSec, bitsPerSample, isPCM = self._audiofilter.getProperties()
+		return nSamplesPerSec
+
+	def _run(self):
+		self._active = 1
+		mc = self._filtergraph.QueryIMediaControl()
+		mc.Run()
+		self._started = 1
+
+	def _stop(self):
+		self._active = 0
+		mc = self._filtergraph.QueryIMediaControl()
+		mc.Stop()
+
+	def _buildReaderFilterGraph(self, fg):
+		try:
+			videorenderer = fg.FindFilterByName('Video Renderer')
+		except:
+			videorenderer = None
+		
+		if videorenderer:
+			enumpins = videorenderer.EnumPins()
+			pin = enumpins.Next()
+			lastpin = pin.ConnectedTo()
+			fg.RemoveFilter(videorenderer)
+
+			# create wmv converter filter
+			try:
+				vpf = dshow.CreateFilter('Video Pipe')
+			except dshow.error:
+				print 'Video converter pipe filter not installed'
+				raise dshow.error, 'Video converter pipe filter not installed'
+		
+			# set listener
+			try:
+				pipe = vpf.QueryIPipe()
+			except:
+				print 'Filter does not support IPipe'
+				raise dshow.error, 'Filter does not support IPipe'
+
+			self._videofilter = ReaderFilter(self, 'video filter')
+			self._videopeer = dshow.CreatePyRenderingListener(self._videofilter)
+			pipe.SetAdviceSink(self._videopeer)
+
+			# add and connect wmv converter filter
+			fg.AddFilter(vpf,'VPF')
+			enumpins = vpf.EnumPins()
+			pin = enumpins.Next()
+			fg.Connect(lastpin, pin)
+
+		# find audio renderer
+		try:
+			audiorenderer = fg.FindFilterByName('Default DirectSound Device')
+		except:
+			audiorenderer=None
+		if not audiorenderer:
+			try:
+				audiorenderer = fg.FindFilterByName('Default WaveOut Device')
+			except:
+				audiorenderer = None
+		if audiorenderer:
+			enumpins = audiorenderer.EnumPins()
+			pin = enumpins.Next()
+			aulastpin = pin.ConnectedTo()
+			fg.RemoveFilter(audiorenderer)
+			try:
+				apf = dshow.CreateFilter('Audio Pipe')
+			except:
+				print 'Audio pipe filter not installed'
+				raise dshow.error, 'Audio pipe filter not installed'
+			try:
+				pipe = apf.QueryIPipe()
+			except:
+				print 'Filter does not support IPipe'
+				raise dshow.error, 'Filter does not support IPipe'
+			self._audiofilter = ReaderFilter(self, 'audio filter')
+			self._audiopeer = dshow.CreatePyRenderingListener(self._audiofilter)
+			pipe.SetAdviceSink(self._audiopeer)
+			fg.AddFilter(apf,'APF')
+			fg.Render(aulastpin)
 
