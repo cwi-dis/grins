@@ -2,8 +2,7 @@
 import java.awt.Canvas;
 
 interface SMILPlayer {
-    Canvas getCanvas();
-    void setCanvas(Canvas c);
+    void setCanvas(PlayerCanvas c);
     
     void open(String fn);
     void close();

@@ -43,8 +43,8 @@ class GRiNSPlayerComModule
 	HWND getListenerHwnd() const {return m_hListenerWnd;}
 
 	void adviceSetSize(int id, int w, int h){GRiNSPlayerAutoAdviceSetSize(id, w, h);}
-	void AdviceSetCursor(int id, char *cursor){GRiNSPlayerAutoAdviceSetCursor(id, cursor);}
-
+	void adviceSetCursor(int id, char *cursor){GRiNSPlayerAutoAdviceSetCursor(id, cursor);}
+	
 	private:
 	IClassFactory *m_pIFactory;
 	DWORD m_dwRegID;		

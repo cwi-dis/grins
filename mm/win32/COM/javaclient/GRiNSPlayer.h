@@ -28,16 +28,8 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nclose
  * Method:    nconnect
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__
+JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect
   (JNIEnv *, jobject);
-
-/*
- * Class:     GRiNSPlayer
- * Method:    nconnect
- * Signature: (Ljava/awt/Component;)I
- */
-JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2
-  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     GRiNSPlayer
@@ -142,6 +134,14 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed
  */
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime
   (JNIEnv *, jobject, jint, jdouble);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nsetWindow
+ * Signature: (ILjava/awt/Component;)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetWindow
+  (JNIEnv *, jobject, jint, jobject);
 
 /*
  * Class:     GRiNSPlayer

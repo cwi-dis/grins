@@ -36,16 +36,34 @@ static void ThrowCOMException(JNIEnv *env, const char *funcname, HRESULT hr) {
 	LocalFree(pszmsg);
 	env->ThrowNew(env->FindClass("GRiNSInterfaceException"), sz);
 	} 
-	
+/*
+ * Class:     GRiNSPlayer
+ * Method:    initializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_initializeThreadContext(JNIEnv *env, jobject player)
+	{
+	CoInitialize(NULL);
+	}
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    uninitializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_uninitializeThreadContext(JNIEnv *env, jobject player)
+	{
+	CoUninitialize();		
+	}
+
+
 /*
  * Class:     GRiNSPlayer
  * Method:    nconnect
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__(JNIEnv *env, jobject player)
+JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect(JNIEnv *env, jobject player)
 	{
-	CoInitialize(NULL);
-
 	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
 	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
 	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
@@ -59,23 +77,11 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__(JNIEnv *env, jobject player)
 
 /*
  * Class:     GRiNSPlayer
- * Method:    connect
- * Signature: (Ljava/awt/Graphics;)V
+ * Method:    nsetWindow
+ * Signature: (ILjava/awt/Component;)V
  */
-JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2(JNIEnv *env, jobject player, jobject component)
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetWindow(JNIEnv *env, jobject player, jint hgrins, jobject component)
 	{
-	CoInitialize(NULL);
-	
-	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
-	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
-	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
-	if(FAILED(hr))
-		{
-		ThrowCOMException(env, "CoCreateInstance", hr);
-		return 0;
-		}
-	jint hgrins = jint(pIGRiNSPlayer);
-	
 	// Get the AWT
 	JAWT awt;
  	awt.version = JAWT_VERSION_1_3;
@@ -111,14 +117,18 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2(JNIEnv *
  	// Free the drawing surface
  	awt.FreeDrawingSurface(ds);
 
-	hr = pIGRiNSPlayer->setWindow(hwnd);
-	if(FAILED(hr))
+	
+	//////////////////////////////
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	if(pIGRiNSPlayer)
 		{
-		ThrowCOMException(env, "setWindow", hr);
-		return hgrins;
+		HRESULT hr = pIGRiNSPlayer->setWindow(hwnd);
+		if(FAILED(hr))
+			ThrowCOMException(env, "setWindow", hr);
 		}
-	return hgrins;
+	
 	}
+
 
 /*
  * Class:     GRiNSPlayer
@@ -132,8 +142,6 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_ndisconnect(JNIEnv *env, jobject player,
 		IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 		if(pIGRiNSPlayer) pIGRiNSPlayer->Release();
 		}
-
-	CoUninitialize();	
 	}
 
 /*

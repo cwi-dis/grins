@@ -81,6 +81,7 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
     virtual HRESULT __stdcall setTime(/* [in] */ double t);
     virtual HRESULT __stdcall getSpeed(/* [out] */ double __RPC_FAR *ps);
 	virtual HRESULT __stdcall setSpeed(/* [in] */ double s);
+	
     virtual HRESULT __stdcall mouseClicked(/* [in] */ int x, /* [in] */ int y);
     virtual HRESULT __stdcall mouseMoved(/* [in] */ int x, /* [in] */ int y, /* [out] */ BOOL __RPC_FAR *phot);	
 
@@ -90,9 +91,12 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	HWND getListener() {return m_pModule->getListenerHwnd();}
 	void adviceSetSize(int w, int h){m_width=w;m_height=h;}
 	void adviceSetCursor(char *cursor){memcpy(m_cursor, cursor, strlen(cursor)+1);}
+	
 	private:
 	long m_cRef;
 	GRiNSPlayerComModule *m_pModule;
+
+	
 	HWND m_hWnd;
 	int m_width, m_height;
 	char m_cursor[32];
@@ -120,7 +124,6 @@ void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor)
 		p->adviceSetCursor(cursor);
 		}
 	}
-
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_width(0), m_height(0)
