@@ -19,6 +19,7 @@ attrgrs=(
 		'displayfull',
 		'subregionanchor',
 		'aspect',
+		'project_quality',
 		]},
 
 	{'name':'base_winoff_and_units',

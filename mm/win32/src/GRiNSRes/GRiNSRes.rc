@@ -1066,29 +1066,32 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,238,14,24,10
+                    WS_TABSTOP,238,6,24,10
     CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,263,
-                    14,24,10
-    EDITTEXT        IDC_12,178,60,27,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_13,206,60,27,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_14,234,60,27,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_15,262,60,27,14,ES_AUTOHSCROLL
-    COMBOBOX        IDC_32,179,95,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    6,24,10
+    EDITTEXT        IDC_12,178,50,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_13,206,50,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_14,234,50,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_15,262,50,27,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_32,179,83,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    GROUPBOX        "Destination region",IDC_11,173,43,121,37
-    LTEXT           "x",IDC_GROUP1,179,52,8,8
-    LTEXT           "y",IDC_GROUP1,207,51,8,8
-    LTEXT           "w",IDC_GROUP1,235,52,8,8
-    LTEXT           "h",IDC_GROUP1,263,52,8,8
-    GROUPBOX        "Destination region anchor",IDC_31,173,84,121,34
+    GROUPBOX        "Destination region",IDC_11,173,35,121,35
+    LTEXT           "x",IDC_GROUP1,179,42,8,8
+    LTEXT           "y",IDC_GROUP1,207,41,8,8
+    LTEXT           "w",IDC_GROUP1,235,42,8,8
+    LTEXT           "h",IDC_GROUP1,263,42,8,8
+    GROUPBOX        "Destination region anchor",IDC_31,173,72,121,29
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "Use whole region",IDC_21,174,15,60,8
-    LTEXT           "Keep aspect ratio",IDC_41,174,29,60,8
-    CONTROL         "off",IDC_42,"Button",BS_AUTORADIOBUTTON,238,28,24,10
-    CONTROL         "on",IDC_43,"Button",BS_AUTORADIOBUTTON,263,28,24,10
+    LTEXT           "Use whole region",IDC_21,174,7,60,8
+    LTEXT           "Keep aspect ratio",IDC_41,174,21,60,8
+    CONTROL         "off",IDC_42,"Button",BS_AUTORADIOBUTTON,238,20,24,10
+    CONTROL         "on",IDC_43,"Button",BS_AUTORADIOBUTTON,263,20,24,10
+    COMBOBOX        IDC_52,179,112,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    GROUPBOX        "Image quality",IDC_51,173,102,121,29
 END
 
 
