@@ -302,10 +302,10 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, 'Pa&ste file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		(FLAG_ALL, CASCADE, '&Merge', (
-			(FLAG_ALL, ENTRY, 'with parent', None, MERGE_PARENT),
-			(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
-			)),
+		#(FLAG_ALL, CASCADE, '&Merge', (
+		(FLAG_ALL, ENTRY, 'Merge with parent', None, MERGE_PARENT),
+		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
+		#	)),
 		(FLAG_ALL, CASCADE, '&Insert', (
 			(FLAG_ALL, CASCADE, '&Image node', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
@@ -418,10 +418,10 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, SEP,),
 #		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		(FLAG_ALL, CASCADE, '&Merge', (
-			(FLAG_ALL, ENTRY, 'with parent', None, MERGE_PARENT),
-			(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
-			)),
+		#(FLAG_ALL, CASCADE, '&Merge', (
+		(FLAG_ALL, ENTRY, 'Merge with parent', None, MERGE_PARENT),
+		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
+		#	)),
 		(FLAG_ALL, CASCADE, '&Insert', (
 			(FLAG_ALL, CASCADE, '&Image node', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
