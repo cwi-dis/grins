@@ -202,9 +202,9 @@ class Selecter:
 		if self.scheduler.getpaused():
 			self.pause(0)
 		for i in anchorlist:
-			if i[A_TYPE] == ATYPE_PAUSE:
+			if i.atype == ATYPE_PAUSE:
 				pause_anchor = 1
-			aid = (node.GetUID(), i[A_ID])
+			aid = (node.GetUID(), i.aid)
 			rv = self.context.hyperlinks.findsrclinks(aid)
 			destlist = destlist + rv
 		if not destlist:
@@ -292,7 +292,7 @@ class Selecter:
 		if not aid:
 			return None
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			if a[A_ID] == aid and a[A_TYPE] == ATYPE_COMP:
+			if a.aid == aid and a.atype == ATYPE_COMP:
 				return arg
 		return None
 	#
