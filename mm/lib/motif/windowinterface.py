@@ -975,15 +975,21 @@ class _Widget(_MenuSupport):
 		widget.ManageChild()
 		_MenuSupport.__init__(self)
 		self._form.AddCallback('destroyCallback', self._destroy, None)
+		self.__tid = None
+		self.__popup = None
 		if tooltip is not None:
-			self.__tid = None
-			self.__popup = None
-			widget.AddEventHandler(
-				X.EnterWindowMask|X.LeaveWindowMask, 0,
-				self.__tooltipeh, tooltip)
+			self._addtthandler(widget, tooltip)
 
 	def __repr__(self):
 		return '<_Widget instance at %x>' % id(self)
+
+	def _addtthandler(self, widget, tooltip):
+		widget.AddEventHandler(
+			X.EnterWindowMask|X.LeaveWindowMask, 0,
+			self.__tooltipeh, tooltip)
+		for w in widget.children or []:
+			if not w.IsSubclass(Xm.Gadget):
+				self._addtthandler(w, tooltip)
 
 	def __tooltipeh(self, widget, tooltip, event):
 		if self.__tid:
@@ -991,22 +997,26 @@ class _Widget(_MenuSupport):
 		self.__tid = None
 		if event.type == X.EnterNotify:
 			self.__tid = Xt.AddTimeOut(500, self.__tooltipto,
-						   tooltip)
+						   (tooltip, widget))
 		elif event.type == X.LeaveNotify:
 			if self.__popup:
 				self.__popup.DestroyWidget()
 				self.__popup.Popdown()
 				self.__popup = None
 
-	def __tooltipto(self, tooltip, id):
-		form = self._form
-		x, y = form.TranslateCoords(0, 0)
-		val = form.GetValues(['width', 'height'])
+	def __tooltipto(self, (tooltip, widget), id):
+		self.__tid = None
+		try:
+			x, y = widget.TranslateCoords(0, 0)
+		except:
+			# maybe widget was already destroyed
+			return
+		val = widget.GetValues(['width', 'height'])
 		w = val['width']
 		h = val['height']
 		# place below center of widget
-		popup = form.CreatePopupShell('help_popup', Xt.OverrideShell,
-					      {'x': x+w/2, 'y': y+h+5})
+		popup = widget.CreatePopupShell('help_popup', Xt.OverrideShell,
+						{'x': x+w/2, 'y': y+h+5})
 		self.__popup = popup
 		if callable(tooltip):
 			tooltip = tooltip()
@@ -1161,7 +1171,7 @@ class OptionMenu(_Widget):
 	'''Option menu window object.'''
 	def __init__(self, parent, label, optionlist, startpos, cb,
 		     useGadget = _def_useGadget, name = 'windowOptionMenu',
-		     **options):
+		     tooltip = None, **options):
 		'''Create an option menu window object.
 
 		PARENT is the parent window, LABEL is a label for the
@@ -1201,7 +1211,7 @@ class OptionMenu(_Widget):
 			option.labelString = label
 			self._text = label
 		self._callback = cb
-		_Widget.__init__(self, parent, option)
+		_Widget.__init__(self, parent, option, tooltip)
 
 	def __repr__(self):
 		return '<OptionMenu instance at %x, label=%s>' % (id(self), self._text)
@@ -1282,15 +1292,20 @@ class OptionMenu(_Widget):
 		self._optionlist = optionlist[:]
 		self._value = startpos
 		self._buttons = []
-		if self._useGadget:
-			createfunc = menu.CreatePushButtonGadget
-		else:
-			createfunc = menu.CreatePushButton
 		for i in range(len(optionlist)):
 			item = optionlist[i]
+			tooltip = None
+			if type(item) is TupleType:
+				item = item, tooltip
+			if self._useGadget and tooltip is None:
+				createfunc = menu.CreatePushButtonGadget
+			else:
+				createfunc = menu.CreatePushButton
 			button = createfunc('windowOptionButton',
 					    {'labelString': item})
 			button.AddCallback('activateCallback', self._cb, i)
+			if tooltip is not None:
+				self._addtthandler(button, tooltip)
 			button.ManageChild()
 			if startpos == i:
 				initbut = button
@@ -1578,7 +1593,7 @@ class Selection(_Widget, _List):
 class List(_Widget, _List):
 	def __init__(self, parent, listprompt, itemlist, sel_cb,
 		     rows = 10, useGadget = _def_useGadget,
-		     name = 'windowList', **options):
+		     name = 'windowList', tooltip = None, **options):
 		attrs = {'resizePolicy': parent.resizePolicy}
 		self._attachments(attrs, options)
 		if listprompt is not None:
@@ -1627,7 +1642,7 @@ class List(_Widget, _List):
 			widget = list
 			self._text = '<None>'
 		_List.__init__(self, list, itemlist, 0, sel_cb)
-		_Widget.__init__(self, parent, widget)
+		_Widget.__init__(self, parent, widget, tooltip)
 
 	def __repr__(self):
 		return '<List instance at %x; label=%s>' % (id(self), self._text)
@@ -1860,14 +1875,8 @@ class ButtonRow(_Widget):
 		self._cb = callback
 		if useGadget:
 			separator = Xm.SeparatorGadget
-			cascadebutton = Xm.CascadeButtonGadget
-			pushbutton = Xm.PushButtonGadget
-			togglebutton = Xm.ToggleButtonGadget
 		else:
 			separator = Xm.Separator
-			cascadebutton = Xm.CascadeButton
-			pushbutton = Xm.PushButton
-			togglebutton = Xm.ToggleButton
 		self._attachments(attrs, options)
 		rowcolumn = parent._form.CreateManagedWidget(name,							Xm.RowColumn, attrs)
 		self._buttons = []
@@ -1882,6 +1891,7 @@ class ButtonRow(_Widget):
 				continue
 			btype = buttontype
 			initial = 0
+			tooltip = None
 			if type(entry) is TupleType:
 				label, callback = entry[:2]
 				if len(entry) > 2:
@@ -1897,10 +1907,16 @@ class ButtonRow(_Widget):
 					{'colormap': toplevel._default_colormap,
 					'visual': toplevel._default_visual,
 					 'depth': toplevel._default_visual.depth})
+				if useGadget and tooltip is None:
+					gadget = Xm.CascadeButtonGadget
+				else:
+					gadget = Xm.CascadeButton
 				button = menu.CreateManagedWidget(
 					'submenuLabel', cascadebutton,
 					{'labelString': label,
 					 'subMenuId': submenu})
+				if tooltip is not None:
+					self._addtthandler(button, tooltip)
 				X_windowbase._create_menu(submenu, callback,
 					  toplevel._default_visual,
 					  toplevel._default_colormap)
@@ -1909,16 +1925,25 @@ class ButtonRow(_Widget):
 			if callback and type(callback) is not TupleType:
 				callback = (callback, (label,))
 			if btype[0] in ('b', 'p'): # push button
-				gadget = pushbutton
+				if useGadget and tooltip is None:
+					gadget = Xm.PushButtonGadget
+				else:
+					gadget = Xm.PushButton
 				battrs = {}
 				callbackname = 'activateCallback'
 			elif btype[0] == 't': # toggle button
-				gadget = togglebutton
+				if useGadget and tooltip is None:
+					gadget = Xm.ToggleButtonGadget
+				else:
+					gadget = Xm.ToggleButton
 				battrs = {'indicatorType': Xmd.N_OF_MANY,
 					  'set': initial}
 				callbackname = 'valueChangedCallback'
 			elif btype[0] == 'r': # radio button
-				gadget = togglebutton
+				if useGadget and tooltip is None:
+					gadget = Xm.ToggleButtonGadget
+				else:
+					gadget = Xm.ToggleButton
 				battrs = {'indicatorType': Xmd.ONE_OF_MANY,
 					  'set': initial}
 				callbackname = 'valueChangedCallback'
