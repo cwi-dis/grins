@@ -1308,12 +1308,12 @@ DEP_CPP_WINGDI_S=\
 	"..\common\charconv.h"\
 	"..\common\memfile.h"\
 	"..\common\memman.h"\
+	"..\common\surface.h"\
 	".\decode_bmp.h"\
 	".\decode_gif.h"\
 	".\decode_i.h"\
 	".\decode_jpg.h"\
 	".\decode_png.h"\
-	".\surface.h"\
 	".\utils.h"\
 	".\wingdi_surf.h"\
 	
@@ -1540,7 +1540,7 @@ SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\surface.h
+SOURCE=..\common\surface.h
 # End Source File
 # Begin Source File
 
