@@ -53,7 +53,8 @@ class AnchorList:
 	#	AttrEdit.AnchorlistAttrEditorField instance as
 	#	argument.
 	#
-	# The Type check button callback is typecb().
+	# The Type check button callback is typecb(). The machine-dependent
+	# code may have to call editcb() first to obtain xywh values.
 	#
 	# The Rename button pops up a dialog asking for a new anchor
 	#	name.  The dialog callback is renamecb with the name
