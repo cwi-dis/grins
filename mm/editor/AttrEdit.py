@@ -1449,6 +1449,7 @@ class AttrEditor(AttrEditorDialog):
 			# guess the channel type
 			url = self.wrapper.getattr('file')
 			compatChannelTypeList = ctx.compatchtypes(url)
+			oldChannelName = None
 			if len(compatChannelTypeList) == 0:
 				# if not valid URL yet, the channel have to be cleared
 				channelName = None
