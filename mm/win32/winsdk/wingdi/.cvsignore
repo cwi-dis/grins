@@ -1,7 +1,7 @@
-ARMDbg
-ARMRel
-X86EMDbg
-X86EMRel
+ARMDbg*
+ARMRel*
+X86EMDbg*
+X86EMRel*
 Debug
 Release
 *.aps
