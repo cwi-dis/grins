@@ -42,6 +42,9 @@ class Main:
 		for fn in files:
 			try:
 				top = TopLevel.TopLevel(self, fn)
+			except IOError, msg:
+				print 'reading file %s failed: %s' % (fn, msg[1])
+				continue
 			except MSyntaxError, msg:
 				print 'parsing file %s failed: %s' % (fn, msg)
 				continue
@@ -123,19 +126,19 @@ def main():
 	if sys.argv[0] and sys.argv[0][0] == '-':
 		sys.argv[0] = 'cmifplay'
 
-	for fn in files:
-		try:
-			# Make sure the files exist first...
-			f = open(fn, 'r')
-			f.close()
-		except IOError, msg:
-			import types
-			if type(msg) is types.InstanceType:
-				msg = msg.strerror
-			else:
-				msg = msg[1]
-			sys.stderr.write('%s: cannot open: %s\n' % (fn, msg))
-			sys.exit(2)
+## 	for fn in files:
+## 		try:
+## 			# Make sure the files exist first...
+## 			f = open(fn, 'r')
+## 			f.close()
+## 		except IOError, msg:
+## 			import types
+## 			if type(msg) is types.InstanceType:
+## 				msg = msg.strerror
+## 			else:
+## 				msg = msg[1]
+## 			sys.stderr.write('%s: cannot open: %s\n' % (fn, msg))
+## 			sys.exit(2)
 
 ## 	# patch the module search path
 ## 	# so we are less dependent on where we are called
