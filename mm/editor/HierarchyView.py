@@ -43,10 +43,10 @@ COLCOLOR = fix(0, 255, 0)		# Green
 
 # Focus color assignments (from light to dark gray)
 
-FOCUSLEFT   = fix(244, 244, 244)
-FOCUSTOP    = fix(244, 244, 244)
-FOCUSRIGHT  = fix(91, 91, 91)
-FOCUSBOTTOM = fix(91, 91, 91)
+FOCUSLEFT   = fix(200, 200, 200)
+FOCUSTOP    = fix(200, 200, 200)
+FOCUSRIGHT  = fix(40, 40, 40)
+FOCUSBOTTOM = fix(40, 40, 40)
 ##FOCUSLEFT   = fix(244, 244, 244)
 ##FOCUSTOP    = fix(204, 204, 204)
 ##FOCUSRIGHT  = fix(40, 40, 40)
@@ -670,6 +670,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.vergap = float(GAPSIZE) / rh
 		self.horsize = float(MINSIZE) / rw
 		self.versize = float(MINSIZE + LABSIZE) / rh
+		print 'DBG canvassize, horedge, veredge, horgap, vergap, title, horsize, versize', \
+			self.canvassize, self.horedge, self.veredge, self.horgap, self.vergap, \
+			self.titleheight, self.horsize, self.versize
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:

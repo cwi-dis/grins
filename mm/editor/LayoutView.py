@@ -3,7 +3,7 @@ __version__ = "$Id$"
 from LayoutViewDialog import LayoutViewDialog
 from usercmd import *
 
-ALL_LAYOUTS = 'All combined'
+ALL_LAYOUTS = '(All Channels)'
 
 class LayoutView(LayoutViewDialog):
 	def __init__(self, toplevel):
@@ -123,7 +123,7 @@ class LayoutView(LayoutViewDialog):
 	def new_callback(self):
 		if not self.editmgr.transaction():
 			return		# Not possible at this time
-		base = 'NEW'
+		base = 'NEW SCREEN '
 		i = 1
 		name = base + `i`
 		while self.context.layouts.has_key(name):
@@ -140,7 +140,7 @@ class LayoutView(LayoutViewDialog):
 		if self.context.layouts.has_key(name):
 			import windowinterface
 			editmgr.rollback()
-			windowinterface.showmessage('layout name already exists')
+			windowinterface.showmessage('screen name already exists')
 			return
 		self.toplevel.setwaiting()
 		if self.__newlayout:
