@@ -30,8 +30,8 @@ import urllib
 knownfiles = [
     "/usr/local/etc/httpd/conf/mime.types",
     "/usr/local/lib/netscape/mime.types",
-    "/usr/local/etc/httpd/conf/mime.types",	# Apache 1.2
-    "/usr/local/etc/mime.types",		# Apache 1.3
+    "/usr/local/etc/httpd/conf/mime.types",     # Apache 1.2
+    "/usr/local/etc/mime.types",                # Apache 1.3
     ]
 
 inited = 0
@@ -56,24 +56,24 @@ def guess_type(url):
         init()
     scheme, url = urllib.splittype(url)
     if scheme == 'data':
-	# syntax of data URLs:
-	# dataurl   := "data:" [ mediatype ] [ ";base64" ] "," data
-	# mediatype := [ type "/" subtype ] *( ";" parameter )
-	# data      := *urlchar
-	# parameter := attribute "=" value
-	# type/subtype defaults to "text/plain"
-	comma = string.find(url, ',')
-	if comma < 0:
-	    # bad data URL
-	    return None, None
-	semi = string.find(url, ';', 0, comma)
-	if semi >= 0:
-	    type = url[:semi]
-	else:
-	    type = url[:comma]
-	if '=' in type or '/' not in type:
-	    type = 'text/plain'
-	return type, None		# never compressed, so encoding is None
+        # syntax of data URLs:
+        # dataurl   := "data:" [ mediatype ] [ ";base64" ] "," data
+        # mediatype := [ type "/" subtype ] *( ";" parameter )
+        # data      := *urlchar
+        # parameter := attribute "=" value
+        # type/subtype defaults to "text/plain"
+        comma = string.find(url, ',')
+        if comma < 0:
+            # bad data URL
+            return None, None
+        semi = string.find(url, ';', 0, comma)
+        if semi >= 0:
+            type = url[:semi]
+        else:
+            type = url[:comma]
+        if '=' in type or '/' not in type:
+            type = 'text/plain'
+        return type, None               # never compressed, so encoding is None
     base, ext = posixpath.splitext(url)
     while suffix_map.has_key(ext):
         base, ext = posixpath.splitext(base + suffix_map[ext])
@@ -106,31 +106,6 @@ def guess_extension(type):
         if type == stype:
             return ext
     return None
-    
-def _longestfirst(s1, s2):
-    ret = len(s2) - len(s1)
-    if ret == 0:
-        return cmp(s1, s2)
-    return ret
-
-def get_extensions(type):
-    """Get all extensions mapping to this mimetype"""
-    global inited
-    if not inited:
-        init()
-    type = string.lower(type)
-    if not '/' in type:
-        majortype = type
-    else:
-        majortype = None
-    extlist = []
-    for ext, stype in types_map.items():
-        if type == stype:
-            extlist.append(ext)
-        elif majortype and string.split(stype, '/')[0] == majortype:
-            extlist.append(ext)
-    extlist.sort(_longestfirst)
-    return extlist
 
 def init(files=None):
     global inited
@@ -183,7 +158,6 @@ types_map = {
     '.avi': 'video/x-msvideo',
     '.bcpio': 'application/x-bcpio',
     '.bin': 'application/octet-stream',
-    '.bmp':	'image/bmp',
     '.cdf': 'application/x-netcdf',
     '.cpio': 'application/x-cpio',
     '.csh': 'application/x-csh',
@@ -208,7 +182,6 @@ types_map = {
     '.mif': 'application/x-mif',
     '.mov': 'video/quicktime',
     '.movie': 'video/x-sgi-movie',
-    '.mp3':	'audio/mpeg',
     '.mpe': 'video/mpeg',
     '.mpeg': 'video/mpeg',
     '.mpg': 'video/mpeg',
@@ -255,6 +228,8 @@ types_map = {
     '.txt': 'text/plain',
     '.ustar': 'application/x-ustar',
     '.wav': 'audio/x-wav',
+	'.wma': 'audio/x-ms-wma',
+ 	'.wmv': 'video/x-ms-wmv',
     '.xbm': 'image/x-xbitmap',
     '.xml': 'text/xml',
     '.xsl': 'application/xml',
