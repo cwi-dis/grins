@@ -201,6 +201,7 @@ MENUBAR=(
 		(FLAG_PRO, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
 		(FLAG_PRO, TOGGLE, 'Show Playable', None, PLAYABLE),
 		(FLAG_ALL, TOGGLE, 'Show Time in Structure', None, CORRECTLOCALTIMESCALE),
+		(FLAG_ALL, TOGGLE, 'Show Bandwidth Usage', None, TOGGLE_BWSTRIP),
 ##		(FLAG_ALL, CASCADE, 'Show Time in Structure', (
 ##			(FLAG_ALL, TOGGLE, 'Whole Document, Adaptive', None, TIMESCALE),
 ##			(FLAG_ALL, TOGGLE, 'Selection Only, Adaptive', None, LOCALTIMESCALE),
