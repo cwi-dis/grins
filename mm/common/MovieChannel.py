@@ -19,10 +19,9 @@ class MovieChannel(ChannelWindowThread):
 		if node.type != 'ext':
 			self.errormsg('node must be external')
 			return 1
-		import MMAttrdefs, GLLock
+		import MMAttrdefs, GLLock, VFile
 		filename = self.getfilename(node)
 		try:
-			import VFile
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:
 			if type(msg) == type(()):
