@@ -172,7 +172,7 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arc(self, node, arc, curtime, event = None, marker = None, timestamp = None, depth = 0, external = 0, propagate = 1, force = 0):
+	def sched_arc(self, node, arc, curtime, event = None, accesskey = None, marker = None, timestamp = None, depth = 0, external = 0, propagate = 1, force = 0):
 		# Schedules a single SyncArc for a node.
 		
 		# node is the node for the start of the arc.
@@ -182,7 +182,7 @@ class SchedulerContext:
 		# timestamp is the time.. now.
 
 		if __debug__:
-			if debugevents: print 'sched_arc',`node`,`arc`,curtime,event,marker,propagate,timestamp,self.parent.timefunc()
+			if debugevents: print 'sched_arc',`node`,`arc`,curtime,event,accesskey,marker,propagate,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self)-arc.delay
 		elif arc.marker is not None and '#' in arc.marker:
@@ -204,7 +204,7 @@ class SchedulerContext:
 					self.parent.updatetimer(curtime)
 				return
 		else:
-			if event is not None and event not in ('begin', 'end'):
+			if (event is not None and event not in ('begin', 'end')) or (event is None and accesskey is not None):
 				# a real event, only does something when node is active
 				if arc.dstnode.playing in (MMStates.IDLE, MMStates.PLAYED):
 					if external:
@@ -381,7 +381,7 @@ class SchedulerContext:
 				if do_continue:
 					continue
 			arc.__in_sched_arcs = 1	# to break recursion
-			self.sched_arc(node, arc, curtime, event, marker, timestamp, depth, propagate = propagate)
+			self.sched_arc(node, arc, curtime, event=event, accesskey=accesskey, marker=marker, timestamp=timestamp, depth=depth, propagate=propagate)
 			arc.__in_sched_arcs = 0
 		if depth == 0 and event == 'begin':
 			# also do children that are runnable
@@ -393,7 +393,7 @@ class SchedulerContext:
 							if __debug__:
 								if debugevents: print 'sched_arcs: also do',arc,timestamp,t
 							arc.__in_sched_arcs = 1	# to break recursion
-							self.sched_arc(node, arc, curtime, event, None, t-arc.delay, depth)
+							self.sched_arc(node, arc, curtime, event=event, accesskey=accesskey, timestamp=t-arc.delay, depth=depth)
 							arc.__in_sched_arcs = 0
 		if __debug__:
 			if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
@@ -629,27 +629,34 @@ class SchedulerContext:
 			fill = node.GetFill()
 			if fill == 'hold':
 				fill = 'freeze'
-		endtime = node.calcendfreezetime(self, fill = fill)
-		if endtime is not None and endtime >= 0 and endtime <= curtime:
-			found = 0
-		elif endlist:
-			found = 0
+		found = 0
+		if endlist:
 			for a in endlist:
-				if a.event is not None and a.event not in ('begin', 'end'):
-					# events can happen again and again
+				if (a.event is not None and a.event not in ('begin', 'end')) or (a.event is None and a.accesskey is not None):
 					found = 1
-				elif not a.isresolved(self):
-					# any unresolved time is after any resolved time
-					found = 1
-				else:
-					ats = a.resolvedtime(self)
-					if ats > curtime:
+					break
+		if not found:
+			endtime = node.calcendfreezetime(self, fill = fill)
+			if endtime is not None and endtime >= 0 and endtime <= curtime:
+				found = 0
+			elif endlist:
+				found = 0
+				for a in endlist:
+					if (a.event is not None and a.event not in ('begin', 'end')) or (a.event is None and a.accesskey is not None):
+						# events can happen again and again
 						found = 1
-					elif ats == curtime:
+					elif not a.isresolved(self):
+						# any unresolved time is after any resolved time
 						found = 1
-						break
-		else:
-			found = 1
+					else:
+						ats = a.resolvedtime(self)
+						if ats > curtime:
+							found = 1
+						elif ats == curtime:
+							found = 1
+							break
+			else:
+				found = 1
 		if not found:
 			# we didn't find a time interval
 			if __debug__:
@@ -673,7 +680,7 @@ class SchedulerContext:
 			if not parent.playing:
 				return
 			self.flushqueue(curtime)
-			if arc is not None and arc.event is not None and arc.event not in ('begin','end'):
+			if arc is not None and ((arc.event is not None and arc.event not in ('begin','end')) or arc.accesskey is not None):
 				# node starting because of event: clear old time stamp
 				if __debug__:
 					if debugevents: print 'clear timestamp',node
