@@ -68,7 +68,7 @@ AE_EVENTMASK=Events.everyEvent
 TICKS_PER_SECOND=60.0	# Standard mac thing
 MINIMAL_TIMEOUT=0	# How long we yield at the very least
 MAXIMAL_TIMEOUT=int(0.5*TICKS_PER_SECOND)	# Check at least every half second
-
+DOUBLECLICK_TIME=Evt.GetDblTime()
 
 class _Event(AEServer):
 	"""This class is only used as a base-class for toplevel.
@@ -87,6 +87,8 @@ class _Event(AEServer):
 		self._active_movies = 0
 		self._mouse_tracker = None
 		self._mouse_timer = None
+		self._last_mouse_where = (-100, -100)
+		self._last_mouse_when = -100
 		self._eventmask = NO_AE_EVENTMASK
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
@@ -122,7 +124,7 @@ class _Event(AEServer):
 		
 	def setmousetimer(self, timerfunc, args):
 		self.cancelmousetimer()
-		self._mouse_timer = self.settimer(0.3, (timerfunc, args))
+		self._mouse_timer = self.settimer(0.4, (timerfunc, args))
 		
 	def cancelmousetimer(self):
 		if self._mouse_timer:
@@ -402,7 +404,20 @@ class _Event(AEServer):
 					self._mouseregionschanged()
 					return
 				# Frontmost. Handle click.
-				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.controlKey))
+				double = 0
+				if when - self._last_mouse_when < DOUBLECLICK_TIME:
+					x1, y1 = self._last_mouse_where
+					x2, y2 = where
+					if abs(x2-x1) < 5 and abs(y2-y1) < 5:
+						double = 1
+				if double:
+					self._last_mouse_where = -100, -100
+					self._last_mouse_when = -100
+				else:
+					self._last_mouse_where = where
+					self._last_mouse_when = when
+				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.controlKey),
+						double)
 			else:
 				if self._grabbed_wids and not wid in self._grabbed_wids:
 					beep()
@@ -442,7 +457,7 @@ class _Event(AEServer):
 		if partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
-				self._handle_contentclick(wid, 0, where, event, (modifiers & Events.controlKey))
+				self._handle_contentclick(wid, 0, where, event, (modifiers & Events.controlKey), 0)
 
 	def _handle_keydown(self, event):
 		"""Handle a MacOS keyDown event"""
@@ -926,13 +941,13 @@ class _Toplevel(_Event):
 	# Handling of events that are forwarded to windows
 	#
 	
-	def _handle_contentclick(self, wid, down, where, event, shifted):
+	def _handle_contentclick(self, wid, down, where, event, shifted, double):
 		"""A mouse-click inside a window, dispatch to the
 		correct window"""
 		window = self._find_wid(wid)
 		if not window:
 			return
-		window._contentclick(down, where, event, shifted)
+		window._contentclick(down, where, event, shifted, double)
 		
 	def _handle_keyboardinput(self, wid, char, where, event):
 		window = self._find_wid(wid)
