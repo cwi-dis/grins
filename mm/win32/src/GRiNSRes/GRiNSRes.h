@@ -87,6 +87,7 @@
 #define IDB_SPLASHQTPRO                 289
 #define IDB_SPLASHSMIL2                 290
 #define IDB_BITMAP1                     291
+#define IDB_SPLASHSNAP                  291
 #define IDB_BITMAP2                     292
 #define IDI_ICON_TRANSOUT               293
 #define IDI_ICON_TRANSIN                294
