@@ -31,6 +31,12 @@ import gl, GL, DEVICE
 import fl
 from FL import *
 import glwindow
+import watchcursor
+
+ARROW = 0 # predefined
+WATCH = 1
+
+watchcursor.defwatch(WATCH)
 
 
 class BasicDialog(glwindow.glwindow):
@@ -87,6 +93,16 @@ class BasicDialog(glwindow.glwindow):
 			gl.winset(self.form.window)
 		else:
 			print 'BasicDialog: setwin() of hidden window'
+	#
+	def setwaiting(self):
+		if self.showing:
+			gl.winset(self.form.window)
+			gl.setcursor(WATCH, 0, 0)
+	#
+	def setready(self):
+		if self.showing:
+			gl.winset(self.form.window)
+			gl.setcursor(ARROW, 0, 0)
 	#
 	def settitle(self, title):
 		if title == self.title:
@@ -279,6 +295,16 @@ class GLDialog(glwindow.glwindow):
 			gl.winset(self.wid)
 		else:
 			print 'GLDialog: setwin() of hidden window'
+	#
+	def setwaiting(self):
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			gl.setcursor(1, 1, 1)
+	#
+	def setready(self):
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			gl.setcursor(0, 0, 0)
 	#
 	def is_showing(self):
 		return self.wid <> 0
