@@ -112,7 +112,7 @@ class Window:
 				 DragNode, DropNode,
 				 WindowExit, WindowContentChanged):
 			self._callbacks[event] = func, arg
-			if event == DropFile:
+			if event in (DropFile, PasteFile, DragFile, DragNode, DropNode):
 				self.registerDropTarget()
 		else:
 			raise error, 'Registering unknown event %d'%event
