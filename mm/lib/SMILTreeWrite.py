@@ -714,7 +714,7 @@ def getadditive(writer, node):
 	additive = MMAttrdefs.getattr(node, 'additive')
 	if additive == 'replace':
 		return None
-	return replace
+	return additive
 
 def getcalcmode(writer, node):
 	mode = MMAttrdefs.getattr(node, 'calcMode')
