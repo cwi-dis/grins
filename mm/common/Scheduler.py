@@ -207,8 +207,10 @@ class SchedulerContext:
 					a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
 		if arc.qid is None:
 			if arc.isstart:
-				if arc.dstnode.GetSchedParent():
-					srdict = arc.dstnode.GetSchedParent().gensr_child(arc.dstnode, runchild = 0, sctx = self, curtime = self.parent.timefunc())
+				pnode = arc.dstnode.GetSchedParent()
+				if pnode is not None:
+					srdict = pnode.gensr_child(arc.dstnode, runchild = 0, sctx = self, curtime = self.parent.timefunc())
+					pnode.starting_children = pnode.starting_children + 1
 					self.srdict.update(srdict)
 					if debugevents: print 'scheduled_children+1 c',`arc.dstnode`,`arc`,event,arc.dstnode.scheduled_children,self.parent.timefunc()
 					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
@@ -356,6 +358,13 @@ class SchedulerContext:
 			timestamp = arc.resolvedtime(self)
 			node = arc.dstnode
 			arc.qid = None
+			try:
+				if arc.isstart:
+					node.depends['begin'].remove(arc)
+				else:
+					node.depends['end'].remove(arc)
+			except ValueError:
+				pass
 ##			if arc in node.durarcs:
 ##				node.sched_children.remove(arc)
 ##				node.durarcs.remove(arc)
@@ -392,7 +401,8 @@ class SchedulerContext:
 							if debugevents: print 'trigger: not stopping (ismin)'
 							return
 			if arc.isstart:
-				if pnode:
+				if pnode is not None:
+					pnode.starting_children = pnode.starting_children - 1
 					if debugevents: print 'scheduled_children-1 f',`node`,`arc`,node.scheduled_children,parent.timefunc()
 					if node.scheduled_children > 0:
 						node.scheduled_children = node.scheduled_children - 1
@@ -417,6 +427,10 @@ class SchedulerContext:
 					# ignore end event if not playing
 					if debugevents: print 'node not playing',parent.timefunc()
 					node.endtime = (timestamp, arc.getevent())
+					parent.updatetimer()
+					return
+				if node.starting_children > 0 and node.GetTerminator() == 'LAST':
+					if debugevents: print 'not stopping (scheduled children)'
 					parent.updatetimer()
 					return
 				if debugevents: print 'terminating node',parent.timefunc()
@@ -1297,6 +1311,9 @@ class Scheduler(scheduler):
 		elif action == SR.SCHED_STOPPING:
 			if arg.scheduled_children:
 				if debugevents: print 'not stopping',`arg`,arg.scheduled_children,self.timefunc()
+				return
+			if arg.starting_children > 0 and arg.GetTerminator() == 'LAST':
+				if debugevents: print 'not stopping (scheduled children)',`arg`,arg.scheduled_children,self.timefunc()
 				return
 			if arg.type in interiortypes and \
 			   arg.playing != MMStates.PLAYED and \
