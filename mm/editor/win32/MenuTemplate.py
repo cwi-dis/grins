@@ -262,6 +262,7 @@ MENUBAR=(
 		(FLAG_BOSTON, ENTRY, 'T&ransitions', None, TRANSITIONVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'SMIL Sourc&e...', '7', SOURCEVIEW),
+		(FLAG_ALL, ENTRY, 'Error messages', '8', ERRORSVIEW),
 		)),
 
 	('&Help', (
