@@ -4,4 +4,4 @@ __version__ = "$Id$"
 
 def getResId():
 	import grinsRC
-	return grinsRC.IDB_SPLASHSMILBOSTON
+	return grinsRC.IDB_SPLASHMOBILE
