@@ -13,6 +13,7 @@ import urllib
 import htmlwidget
 from TextChannel import getfont, mapfont
 import WMEVENTS
+import greekconv
 
 error = 'HtmlChannel.error'
 
@@ -123,7 +124,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 	def do_arm(self, node, same=0):
 		if not same:
-			self.armed_str = self.getstring(node)
+			str = self.getstring(node)
+			# XXXX Note: this is incorrect, really:
+			self.armed_str = string.translate(str, 
+					greekconv.iso_8859_7_to_mac)
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		return 1
