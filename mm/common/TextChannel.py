@@ -274,7 +274,7 @@ def fix_anchorlist(node, taglist):
 			i = i - 1	# compensate for later increment
 		else:
 			names_in_taglist.append(aid)
-			anchor_types[aid] = atype
+			anchor_types[aid] = atype, times
 		i = i + 1
 	for i in range(len(taglist)):
 		item = taglist[i]
@@ -282,8 +282,8 @@ def fix_anchorlist(node, taglist):
 		if not anchor_types.has_key(name):
 			print 'Add text anchor to anchorlist:', name
 			anchors.append((name, ATYPE_NORMAL, [], (0,0)))
-			anchor_types[name] = ATYPE_NORMAL
-		taglist[i] = taglist[i] + (anchor_types[name],)
+			anchor_types[name] = ATYPE_NORMAL, (0, 0)
+		taglist[i] = taglist[i] + anchor_types[name]
 	if anchors <> oldanchors:
 		print 'New anchors:', anchors
 		node.SetAttr('anchorlist', anchors)
