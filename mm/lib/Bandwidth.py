@@ -48,6 +48,9 @@ def getstreamdata(node, target=0):
 		return 0, bitrate, bitrate, 0
 
 	url = MMAttrdefs.getattr(node, 'file')
+	if not url or url == '#':
+		# Special case for empty URLs
+		return 0, 0, 0, 0
 	url = context.findurl(url)
 	val = urlcache.urlcache[url].get('bandwidth')
 	if val is not None:
