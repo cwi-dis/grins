@@ -138,6 +138,10 @@ class _LayoutView2(GenFormView):
 				self[ctrlName].addstring(0, vname)
 			self[ctrlName].setcursel(0)
 
+	def setMultiSelecterCtrl(self, ctrlName, vItem, bValue):
+		# for now
+		self[ctrlName].sendmessage(win32con.LB_SETSEL, bValue, vItem)
+		
 	def setSelecterCtrl(self, ctrlName, value):
 		self[ctrlName].setcursel(value)
 		
@@ -234,7 +238,8 @@ class _LayoutView2(GenFormView):
 			elif id == self['RegionCheck']._id:
 				ctrlName = 'RegionCheck'
 			elif id == self['MediaCheck']._id:
-				ctrlName = 'MediaCheck'						
+				ctrlName = 'MediaCheck'
+						
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
 				self._dialogHandler.onCheckCtrl(ctrlName, value)
