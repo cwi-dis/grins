@@ -35,6 +35,9 @@ class TransitionEngine:
 		if self.__endprogress <= self.__startprogress:
 			self.__transperiod = 0
 			#raise AssertionError
+		elif self.__duration <= 0:
+			self.__transperiod = 0
+			self.__startprogress = self.__endprogress
 		else:
 			self.__transperiod = float(self.__endprogress - self.__startprogress) / self.__duration
 
@@ -267,5 +270,3 @@ class InlineTransitionEngine:
 		# resize to this window
 		x, y, w, h = wnd._rect
 		self.__transitiontype.move_resize((0, 0, w, h))
-
- 
