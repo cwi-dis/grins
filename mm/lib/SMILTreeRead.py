@@ -1624,6 +1624,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container = node
 		node.__chantype = chtype
 
+		# XXX The background color shouldn't be set by default from the parser:
+		# XXX deal with inherit value. This part should be clean at some point, but you'll have
+		# XXX to take into account the bgcolor code is not localize, and we have to keep as well the
+		# XXX compatibility with G2 version, ...
+		if node.attrdict.has_key('transparent'):
+			del node.attrdict['transparent']
+
 		# for SMIL 2, the default bgcolor is transparent
 		if self.__context.attributes.get('project_boston') != 0:
 			if not attributes.has_key('backgroundColor'):

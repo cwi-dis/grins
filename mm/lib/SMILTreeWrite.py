@@ -429,12 +429,15 @@ def getbgcoloratt(writer, node, attr):
 	if not ChannelMap.isvisiblechannel(node.GetChannelType()):
 		return None
 	# if transparent, there is no backgroundColor attribute
-	if node.GetRawAttrDef('transparent', 1):
+	transparent = node.GetRawAttrDef('transparent', None)
+	if transparent is None:
+		return 'inherit'
+	elif transparent:
 		return None
-
+	
 	bgcolor = node.GetRawAttrDef('bgcolor', None)
 	if bgcolor is None:
-		return 'inherit'
+		return None
 	return translatecolor(bgcolor)
 
 def getcmifattr(writer, node, attr, default = None):
@@ -924,7 +927,7 @@ smil_attrs=[
 	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft'), "regPoint"),
 	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft'), "regAlign"),
 
-	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor"), "bgcolor"),
+	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor"), None),
 	("z-index", lambda writer, node:getcmifattr(writer, node, "z"), "z"),
 	("from", lambda writer, node: node.GetRawAttrDef("from", None), "from"),
 	("to", lambda writer, node: node.GetRawAttrDef("to", None), "to"),
