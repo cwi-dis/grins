@@ -1011,8 +1011,12 @@ class MMNode:
 		arcs = self.GetAttrDef('synctolist', [])
 		for arc in arcs:
 			n1uid, s1, delay, s2 = arc
-			synctolist.append((self.MapUID(n1uid), s1, \
-				  self, s2, delay))
+			try:
+				n1 = self.MapUID(n1uid)
+			except NoSuchUIDError:
+				print 'GetArcList: skipping syncarc with deleted source'
+				continue
+			synctolist.append((n1, s1, self, s2, delay))
 		if self.GetType() in interiortypes:
 			for c in self.wtd_children:
 				synctolist = synctolist + c.GetArcList()
