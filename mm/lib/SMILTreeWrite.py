@@ -24,10 +24,16 @@ interiortypes = interiortypes + ['foreign']
 
 def nameencode(value):
 	"""Quote a value"""
-	value = string.join(string.split(value,'&'),'&amp;')
-	value = string.join(string.split(value,'>'),'&gt;')
-	value = string.join(string.split(value,'<'),'&lt;')
-	value = string.join(string.split(value,'"'),'&quot;')
+
+	if '&' in value:
+		value = string.join(string.split(value,'&'),'&amp;')
+	if '>' in value:
+		value = string.join(string.split(value,'>'),'&gt;')
+	if '<' in value:
+		value = string.join(string.split(value,'<'),'&lt;')
+	if '"' in value:
+		value = string.join(string.split(value,'"'),'&quot;')
+
 	return '"' + value + '"'
 
 NSGRiNSprefix = 'GRiNS'
@@ -117,7 +123,9 @@ def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evalli
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
 		return
+
 	writer.write()
+	
 	if os.name == 'mac':
 		import macfs
 		import macostools
