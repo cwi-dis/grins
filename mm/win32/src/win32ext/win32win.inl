@@ -675,6 +675,31 @@ ui_window_subclass_window(PyObject *self, PyObject *args)
 	return Py_BuildValue( "i", rc);
 }
 
+// @pymethod <o PyCWnd>|win32ui|SubclassDlgItem|“dynamically subclass” a control created from a dialog template and attach it to this CWnd object
+PyObject *
+ui_window_subclass_dlg_item(PyObject *self, PyObject *args)
+{
+	UINT nID;
+	PyObject *obParent;
+	if (!PyArg_ParseTuple(args, "iO:SubclassDlgItem", &nID, &obParent)) 
+		return NULL;
+
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+
+	CWnd *pParent = GetWndPtr(obParent);
+	if (pParent==NULL)
+		RETURN_TYPE_ERR("The parent window is not a valid PyWnd");
+	
+	GUI_BGN_SAVE;
+	BOOL rc = pWnd->SubclassDlgItem(nID, pParent);
+	GUI_END_SAVE;
+	return Py_BuildValue( "i", rc);
+}
+
+
+
 // @pymethod <o PyCWnd>|win32ui|ScrollWindow|Scrolls the contents of the client area of the current CWnd object
 PyObject *
 ui_window_scroll_window(PyObject *self, PyObject *args)
@@ -780,6 +805,7 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
 // @pymeth KillTimer|Destroys a system timer
 // ...
 // @pymethod (x, y)|PyCWnd|ChildWindowFromPoint|Returns the child window that contains the point and if not found the window asked for
+// @pymethod <o PyCWnd>|win32ui|SubclassDlgItem|“dynamically subclass” a control created from a dialog template and attach it to this CWnd object
 
 #define DEF_NEW_PY_METHODS_PyCWnd \
 	{"IsKindOfMDIChildWnd",ui_window_is_kind_of_mdi_child_wnd,1},\
@@ -792,9 +818,8 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
 	{"ValidateRect",ui_window_validate_rect,1},\
 	{"RegisterDropTarget",ui_window_register_drop_target,1},\
 	{"RevokeDropTarget",ui_window_revoke_drop_target,1},\
-	{"DoDragDrop",ui_window_do_drag_drop,1}, 
-
-
+	{"DoDragDrop",ui_window_do_drag_drop,1},\
+	{"SubclassDlgItem",ui_window_subclass_dlg_item,1}, 
 
 
 /*
