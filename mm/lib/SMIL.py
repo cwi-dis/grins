@@ -272,6 +272,11 @@ class SMIL:
 		    'syncToleranceDefault':None,
 		    }
 	__Timing.update(__basicTiming)
+	__timeManipulations = {'speed':None,
+			       'accelerate':None,
+			       'decelerate':None,
+			       'autoReverse':None,
+			       }
 
 	# all allowed entities with all their attributes
 	_attributes = {
@@ -746,79 +751,114 @@ class SMIL:
 			     GRiNSns+' ' 'timezoom':None,
 			     GRiNSns+' ' 'RTIPA-server':None,
 			     },
+		'animate': {'accumulate': None,
+			    'additive': None,
+			    'attributeName': None,
+			    'attributeType': None,
+			    'by': None,
+			    'calcMode': None,
+			    'customTest': None,
+			    'fill': None,
+			    'fillDefault': None,
+			    'from': None,
+			    'keySplines': None,
+			    'keyTimes': None,
+			    'skip-content': None,
+			    'targetElement': None,
+			    'to': None,
+			    'values': None,
+			    GRiNSns+' ' 'editGroup': None,
+			    },
+		'animateColor': {'accumulate': None,
+				 'additive': None,
+				 'attributeName': None,
+				 'attributeType': None,
+				 'by': None,
+				 'calcMode': None,
+				 'customTest': None,
+				 'fill': None,
+				 'fillDefault': None,
+				 'from': None,
+				 'keySplines': None,
+				 'keyTimes': None,
+				 'skip-content': None,
+				 'targetElement': None,
+				 'to': None,
+				 'values': None,
+				 },
+		'animateMotion': {'accumulate': None,
+				  'additive': None,
+				  'by': None,
+				  'calcMode': None,
+				  'customTest': None,
+				  'fill': None,
+				  'fillDefault': None,
+				  'from': None,
+				  'keySplines': None,
+				  'keyTimes': None,
+				  'origin': None,
+				  'path': None,
+				  'skip-content': None,
+				  'targetElement': None,
+				  'to': None,
+				  'values': None,
+				  GRiNSns+' ' 'editGroup': None,
+				  },
+		'set': {'attributeName': None,
+			'attributeType': None,
+			'customTest': None,
+			'fill': None,
+			'fillDefault': None,
+			'skip-content': None,
+			'targetElement': None,
+			'to': None,
+			},
+		'transitionFilter': {'accumulate': None,
+				     'additive': None,
+				     'borderColor': None,
+				     'borderWidth': None,
+				     'by': None,
+				     'calcMode': None,
+				     'customTest': None,
+				     'fadeColor': None,
+				     'fill': None,
+				     'fillDefault': None,
+				     'from': None,
+				     'horzRepeat': None,
+				     'keySplines': None,
+				     'keyTimes': None,
+				     'mode': None,
+				     'skip-content': None,
+				     'subtype': None,
+				     'targetElement': None,
+				     'to': None,
+				     'type': None,
+				     'values': None,
+				     'vertRepeat': None,
+				     },
 		}
 
 	_attributes['viewport'] = _attributes['topLayout'].copy()
 	_attributes['anchor'] = _attributes['area'].copy()
-
+	
+	# Abbreviations for collections of elements
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', 'brush',
 			  'prefetch']
+	__schedule = ['par', 'seq', 'excl'] + __media_object
+	__animate_elements = ['animate', 'animateMotion', 'animateColor', 'set', 'transitionFilter']
+	__container_content = __schedule + ['switch', 'a'] + __animate_elements + [__assets]
+	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
 
+	# all media objects are like ref
 	__at = None
 	for __el in __media_object:
 		if not _attributes.has_key(__el):
 			_attributes[__el] = _attributes['ref']
 
-	__animate_elements = ['animate', 'animateMotion',
-			      'animateColor', 'set', 'transitionFilter']
-	__animate_attrs_core = {'attributeName':None,
-				'attributeType':None,
-				'customTest':None,
-				'fill':None,
-				'fillDefault':None,
-				'skip-content':None,
-				'targetElement': None,
-				'to':None,
-				}
-	__animate_attrs_extra = {'accumulate':None,
-				 'additive':None,
-				 'by':None,
-				 'calcMode':None,
-				 'from':None,
-				 'values':None,
-				 'keySplines':None,
-				 'keyTimes':None,
-				 }
-	__timeManipulations = {'speed':None,
-		    'accelerate':None,
-		    'decelerate':None,
-		    'autoReverse':None,
-		    }
-
-	_attributes['animateMotion'] = __animate_attrs_core.copy()
-	_attributes['animateMotion'].update(__animate_attrs_extra)
-	_attributes['animateMotion']['calcMode'] = None
-	_attributes['animateMotion']['path'] = None
-	_attributes['animateMotion']['origin'] = None
-	_attributes['animateMotion'][GRiNSns+' ' 'editGroup'] = None
-	del _attributes['animateMotion']['attributeName']
-	del _attributes['animateMotion']['attributeType']
-
-	_attributes['animate'] = __animate_attrs_core.copy()
-	_attributes['animate'].update(__animate_attrs_extra)
-	_attributes['animate'][GRiNSns+' ' 'editGroup'] = None
-
-	_attributes['animateColor'] = __animate_attrs_core.copy()
-	_attributes['animateColor'].update(__animate_attrs_extra)
-
-	_attributes['set'] = __animate_attrs_core.copy()
-
-	_attributes['transitionFilter'].update(__animate_attrs_core)
-	_attributes['transitionFilter'].update(__animate_attrs_extra)
-	del _attributes['transitionFilter']['attributeName']
-	del _attributes['transitionFilter']['attributeType']
-
-	del __animate_attrs_core, __animate_attrs_extra
-
 	# add TimeManipulations to certain elements
 	for __el in __animate_elements:
 		_attributes[__el].update(__timeManipulations)
-
-	# Abbreviations for collections of elements
-	__schedule = ['par', 'seq', 'excl'] + __media_object
-	__container_content = __schedule + ['switch', 'a'] + __animate_elements + [__assets]
-	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
 	for __el in _attributes.keys():
