@@ -12,7 +12,7 @@ EMPTY = "(seq '1' ((channellist) (hyperlinks) (styledict)))"
 opentops = []
 
 class TopLevel(ViewDialog):
-	def init(self, main, filename, new_file):
+	def __init__(self, main, filename, new_file):
 		ViewDialog.init(self, 'toplevel_')
 		self.showing = 0
 		self.select_fdlist = []
@@ -28,7 +28,6 @@ class TopLevel(ViewDialog):
 		self.makeviews()
 		self.window = None
 		opentops.append(self)
-		return self
 
 	def __repr__(self):
 		return '<TopLevel instance, filename=' + `self.filename` + '>'
@@ -147,7 +146,7 @@ class TopLevel(ViewDialog):
 
 	def open_okcallback(self, filename):
 		try:
-			top = TopLevel().init(self.main, filename)
+			top = TopLevel(self.main, filename, 0)
 		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
 			windowinterface.showmessage('Open operation failed.\n'+
 						    'File: '+filename+'\n'+
@@ -360,7 +359,7 @@ class TopLevel(ViewDialog):
 				break
 		else:
 			try:
-				top = TopLevel().init(self.main, filename)
+				top = TopLevel(self.main, filename, 0)
 			except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
 				windowinterface.showmessage(
 					'Open operation failed.\n'+
