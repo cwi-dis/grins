@@ -524,25 +524,34 @@ class MMNode(grinsDOM.dom.core.Element):
 		else:
 			return None
 
-	# 	def _get_previousSibling(self):
-	# 		print 'not implemented (yet)' 
-	# 		return None 
-	
-	# 	def _get_get_nextSibling(self): 
-	# 		print 'not implemented (yet)'
-	# 		return None
+	def _get_previousSibling(self):
+		if not self.parent: return None # the root has no siblings
+		siblings = self.parent.children
+		my_index = siblings.index(self)
+		if my_index  == 0: return None # I am the first child
+		else: return siblings[my_index-1]
+
+	def _get_nextSibling(self): 
+		if not self.parent: return None # the root has no siblings
+		siblings = self.parent.children
+		my_index = siblings.index(self)
+		if my_index+1  == len(siblings): return None # I am the last child
+		else: return siblings[my_index+1]
 
 	def _get_attributes(self):
 		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
-		for a in self.attrdict.items() :
-			if a[1]: # skip empty attributes
-				newAttribute = grinsDOM.dom.core.Attr(a[0],str(a[1]))
+		namedNodeMap.setNamedItem(grinsDOM.dom.core.Attr('uid', str(self.uid)))
+		for name, value in self.attrdict.items():
+			# skip empty and complex attributes
+			if value:
+				# and not name=='anchorlist' and not name=='synctolist': 
+				newAttribute = grinsDOM.dom.core.Attr(name,str(value))
 				namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 	
-	# not in XML-DOM terms!
+	# toxml2 is more efficient, but not using XML-DOM interface.
+	# To get all dom stuff, use toxml() defined in grinsDOM.dom.core.Element
 	def toxml2(self, level=0, tab="  ", nl="\n") :
-		s = ""
 		s = level*tab + "<" + self.type
 		for name,value in self.attrdict.items():
 			if value :
