@@ -122,7 +122,7 @@ class EditMgr:
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
 		import MMAttrdefs, Timing
 		MMAttrdefs.flushcache(self.root)
-		Timing.changedtimes(self.root)
+		self.context.changedtimes()
 		self.root.clear_infoicon()
 		self.root.ResetPlayability()
 		for x in self.registry[:]:
