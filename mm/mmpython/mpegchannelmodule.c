@@ -126,7 +126,7 @@ mpeg_player(self)
 		gettimeofday(&tm0, NULL);
 		my_qenter(self->mm_ev, 3);
 		/* mpeg_display(self); */
-		down_sema(PRIV->dispsema);
+		(void) down_sema(PRIV->dispsema, WAIT_SEMA);
 		PRIV->play.moreframes = GetMPEGFrame(&PRIV->play.imagedesc,
 						     PRIV->play.image->data);
 		gettimeofday(&tm1, NULL);
@@ -295,6 +295,9 @@ mpeg_play(self)
 		;
 	(void) fcntl(PRIV->pipefd[0], F_SETFL, 0);
 
+	while (down_sema(PRIV->dispsema, NOWAIT_SEMA) > 0)
+		;
+
 	switch (windowsystem) {
 #ifdef USE_XM
 	case WIN_X:
@@ -317,6 +320,8 @@ mpeg_playstop(self)
 	denter(mpeg_playstop);
 	if (write(PRIV->pipefd[1], "s", 1) < 0)
 		perror("write");
+	/* in case they're waiting */
+	up_sema(PRIV->dispsema);
 	return 1;
 }
 

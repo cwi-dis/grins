@@ -920,6 +920,10 @@ movie_play(self)
 	while (read(PRIV->m_pipefd[0], &c, 1) == 1)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
+
+	while (down_sema(PRIV->m_dispsema, NOWAIT_SEMA) > 0)
+		;
+
 	switch (windowsystem) {
 #ifdef USE_GL
 	case WIN_GL:
@@ -1078,7 +1082,7 @@ movie_player(self)
 			if (gl_lock)
 				release_lock(gl_lock);
 #endif
-			down_sema(PRIV->m_dispsema);
+			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 			break;
 #endif /* USE_GL */
 #ifdef USE_XM
@@ -1092,7 +1096,7 @@ movie_player(self)
 #else
 			my_qenter(self->mm_ev, 3);
 #endif
-			down_sema(PRIV->m_dispsema);
+			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 			break;
 #endif /* USE_XM */
 		default:
@@ -1254,7 +1258,7 @@ movie_resized(self, x, y, w, h)
 				clear();
 			}
 			movie_do_display(self);
-			down_sema(PRIV->m_dispsema);
+			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 		}
 		if (gl_lock)
 			release_lock(gl_lock);
@@ -1272,7 +1276,7 @@ movie_resized(self, x, y, w, h)
 				       PRIV->m_rect[WIDTH],
 				       PRIV->m_rect[HEIGHT]);
 			movie_do_display(self);
-			down_sema(PRIV->m_dispsema);
+			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 		}
 		break;
 	}
@@ -1299,6 +1303,8 @@ movie_playstop(self)
 	denter(movie_playstop);
 	if (write(PRIV->m_pipefd[1], "s", 1) < 0)
 		perror("write");
+	/* in case they're waiting */
+	up_sema(PRIV->m_dispsema);
 	return 1;
 }
 
