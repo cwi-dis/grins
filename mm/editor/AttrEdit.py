@@ -1606,7 +1606,7 @@ class AttrEditor(AttrEditorDialog):
 						pass
 				try:
 					value = b.parsevalue(str)
-				except ValueError, eparam:
+				except (ValueError, MTypeError), eparam:
 					print "DEBUG: ValueError exception: ", eparam
 					typedef = self.wrapper.getdef(name)[0]
 					exp = typedef[0]
