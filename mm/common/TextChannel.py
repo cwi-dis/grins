@@ -119,8 +119,11 @@ class TextChannel(ChannelWindow):
 			try:
 				fp = urlopen(filename)
 			except IOError, msg:
-				print 'Cannot open text file', `filename`,
-				print ':', msg
+				if type(msg) is type(()):
+					msg = msg[1]
+				self.errormsg(node, filename + ':\n' + msg)
+## 				print 'Cannot open text file', `filename`,
+## 				print ':', msg
 				return ''
 			text = fp.read()
 			fp.close()

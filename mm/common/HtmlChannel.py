@@ -118,7 +118,11 @@ class HtmlChannel(Channel.ChannelWindow):
 			if self._played_node is node:
 				# Ok, all is well, we've played it.
 				return 1
-			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
+			if self.window:
+				grab = self.window
+			else:
+				grab = 1
+			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)', grab = grab)
 			return 1
 		windowinterface.setcursor('watch')
 		context = Channel.AnchorContext()
@@ -273,7 +277,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		aname = href[5:]
 		tp = self.findanchortype(aname)
 		if tp is None:
-			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
+			windowinterface.showmessage('Unknown CMIF anchor: '+aname, grab = self.window)
 			return
 		if tp == ATYPE_PAUSE:
 			f = self.pause_triggered
@@ -465,10 +469,10 @@ class HtmlUrlOpener(urllib.FancyURLopener):
 		self.user = ''
 		self.password = ''
 		w.show()
-		try:
-			Xt.MainLoop()
-		except _end_loop:
-			pass
+		self.looping = 1
+		while self.looping:
+			Xt.DispatchEvent(Xt.NextEvent())
+		w.hide()
 		w.close()
 		del self.userw, self.passwdw
 		return self.user, self.password
@@ -504,7 +508,7 @@ class HtmlUrlOpener(urllib.FancyURLopener):
 		self.do_return()
 
 	def do_return(self):
-		raise _end_loop
+		self.looping = 0
 
 _urlopener = None
 def urlopen(url):

@@ -653,7 +653,7 @@ class Channel:
 		# may be overridden by derived classes.
 		windowinterface.showmessage('Channel '+self._name+
 			  ' does not support\nediting of anchors (yet)',
-					    type = 'warning')
+					    mtype = 'warning')
 		apply(cb, (anchor,))
 
 	def updatefixedanchors(self, node):
@@ -676,7 +676,7 @@ class Channel:
 		windowinterface.showmessage(
 			'While arming %s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
-			type = 'warning')
+			mtype = 'warning')
 
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
@@ -730,7 +730,11 @@ class ChannelWindow(Channel):
 			top.hierarchyview.globalsetfocus(node)
 			top.channelview.globalsetfocus(node)
 		else:
-			windowinterface.showmessage('Can only push focus when playing', type = 'warning')
+			if self.window:
+				grab = self.window
+			else:
+				grab = 1
+			windowinterface.showmessage('Can only push focus when playing', mtype = 'warning', grab = grab)
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
@@ -883,21 +887,21 @@ class ChannelWindow(Channel):
 			#
 			if self._player.ChannelWinDict.has_key(pname):
 				pchan = self._player.ChannelWinDict[pname]
-				if not pchan.is_layout_channel:
-				    print 'Warning: Base channel is not a layout channel:', pname
+## 				if not pchan.is_layout_channel:
+## 				    print 'Warning: Base channel is not a layout channel:', pname
 			else:
 				pchan = None
 				windowinterface.showmessage(
 					'Base window '+`pname`+' for '+
 					`self._name`+' not found',
-					type = 'error')
+					mtype = 'error')
 				
 ##			if isin(self, pchan._subchannels):
 			if pchan and self in pchan._subchannels:
 				windowinterface.showmessage(
 					'Channel '+`self._name`+' is part of'+
 					' a base-window loop',
-					type = 'error')
+					mtype = 'error')
 				pchan = None
 		if pchan:
 			pchan._subchannels.append(self)
@@ -910,7 +914,7 @@ class ChannelWindow(Channel):
 				windowinterface.showmessage(
 					'parent window for ' + `self._name`+
 					' not shown (channel order problem?)',
-					type = 'warning')
+					mtype = 'warning')
 				pchan._subchannels.remove(self)
 				pchan = None
 		if pchan:
@@ -1060,6 +1064,34 @@ class ChannelWindow(Channel):
 ##		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
 ##		self.armed_display.fgcolor((255, 0, 0))		# red
 ##		box = self.armed_display.writestr(msg)
+
+	# use this code to get the error message on top of the window
+	# it belongs to (so that a subsequent pop() does not obscure
+	# the message).
+	def errormsg(self, node, msg):
+		if node:
+			name = MMAttrdefs.getattr(node, 'name')
+			if not name:
+				name = '<unnamed node>'
+			nmsg = ' node ' + name
+		else:
+			nmsg = ''
+		windowinterface.showmessage(
+			'While arming %s on channel %s:\n%s' %
+				(nmsg, self._name, msg),
+			mtype = 'warning', grab = self.window)
+
+	def defanchor(self, node, anchor, cb):
+		# This method is called when the user defines a new anchor. It
+		# may be overridden by derived classes.
+		if self.window:
+			grab = self.window
+		else:
+			grab = 1
+		windowinterface.showmessage('Channel '+self._name+
+			  ' does not support\nediting of anchors (yet)',
+					    mtype = 'warning', grab = grab)
+		apply(cb, (anchor,))
 
 class _ChannelThread:
 	def __init__(self):
