@@ -440,13 +440,19 @@ class _CommonWindow:
 			image, w, h, mask = _image_cache[key]
 		except:			# reading from cache failed
 			if not reader:
-				reader = img.reader(format, file)
+				try:
+					reader = img.reader(format, file)
+				except (img.error, IOError), arg:
+					raise error, arg
 			if hasattr(reader, 'transparent'):
 				r = img.reader(imgformat.xrgb8, file)
 				for i in range(len(r.colormap)):
 					r.colormap[i] = 255, 255, 255
 				r.colormap[r.transparent] = 0, 0, 0
-				image = r.read()
+				try:
+					image = reader.read()
+				except:
+					raise error, 'unspecified error reading image'
 				if scale != 1:
 					w = int(xsize * scale + .5)
 					h = int(ysize * scale + .5)
