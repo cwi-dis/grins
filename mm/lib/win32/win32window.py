@@ -1043,10 +1043,12 @@ class DDWndLayer:
 		self._backBuffer = None
 		self._clipper = None
 		self._bgcolor = bgcolor
+		self._ddbgcolor = None
 
-	def	createDDLayer(self, w=0, h=0):
+	def	createDDLayer(self, w=0, h=0, hwnd=0):
+		if hwnd==0: hwnd = self._wnd.GetSafeHwnd()
 		self._ddraw = ddraw.CreateDirectDraw()
-		self._ddraw.SetCooperativeLevel(self._wnd.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
+		self._ddraw.SetCooperativeLevel(hwnd, ddraw.DDSCL_NORMAL)
 
 		# create front buffer (shared with GDI)
 		ddsd = ddraw.CreateDDSURFACEDESC()
@@ -1081,13 +1083,51 @@ class DDWndLayer:
 				print 'warning: viewport size too big'
 				self._backBuffer = self._ddraw.CreateSurface(ddsd)
 				
-		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
+		self._clipper = self._ddraw.CreateClipper(hwnd)
 		self._frontBuffer.SetClipper(self._clipper)
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
 
 		# fill back buffer with default player background (white)
-		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
-		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
+		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
+		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
+
+	def	createBackDDLayer(self, w=0, h=0, hwnd=0):
+		if hwnd==0: hwnd = self._wnd.GetSafeHwnd()
+		self._ddraw = ddraw.CreateDirectDraw()
+		self._ddraw.SetCooperativeLevel(hwnd, ddraw.DDSCL_NORMAL)
+
+		# size of back buffer
+		# for now we create it at the size of the screen
+		# to avoid resize manipulations
+		from __main__ import toplevel
+		W = toplevel._scr_width_pxl
+		H = toplevel._scr_height_pxl
+		if w==0 or h==0:
+			w = W
+			h = H
+		if w>1600: w = 1600
+		if h>1200: h = 1200
+
+		# create back buffer 
+		# we draw everything on this surface and 
+		# then blit it to the front surface
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		try:
+			self._backBuffer = self._ddraw.CreateSurface(ddsd)
+		except ddraw.error, arg:
+			print arg
+			if self.fixDimensions(w, h, ddsd):
+				print 'warning: viewport size too big'
+				self._backBuffer = self._ddraw.CreateSurface(ddsd)
+				
+		self._pxlfmt = self._backBuffer.GetPixelFormat()
+
+		# fill back buffer with default player background (white)
+		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
+		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
 
 	def createFullScreenDDLayer(self):
 		from __main__ import toplevel
@@ -1661,7 +1701,7 @@ class Region(Window):
 	def getBackDDS(self, exclwnd=None):
 		dds = self.createDDS()
 		bf = self._topwindow.getDrawBuffer()
-		while bf.IsLost():
+		while bf and bf.IsLost():
 			win32api.Sleep(50)
 			bf.Restore()
 		x, y, w, h = self.getwindowpos()
@@ -2702,3 +2742,4 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
+ 
