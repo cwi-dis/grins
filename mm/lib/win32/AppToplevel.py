@@ -21,6 +21,9 @@ import MainFrame
 
 from appcon import *
 from win32ig import win32ig
+import string
+import mimetypes
+import grins_mimetypes
 
 def beep():
 	win32api.MessageBeep()
@@ -506,16 +509,37 @@ class FileDialog:
 		if not parent:
 			import __main__
 			parent=__main__.toplevel._subwindows[0]
-
-		if not filter or filter=='*':
-			filter = 'All files (*.*)|*.*||'
-			dftext = None
-		else:
-			if existing:
-				filter = 'smil files (*.smil;*.smi)|*.smil;*.smi|cmif files (*.cmif)|*.cmif|All files *.*|*.*||'
+		if not filter or type(filter) == type('') and not '/' in filter:
+			# Old style (pattern) filter
+			if not filter or filter == '*':
+				filter = 'All files (*.*)|*.*||'
+				dftext = None
 			else:
-				filter = 'smil or cmif file (*.smil;*.smi;*.cmif)|*.smil;*.smi;*.cmif|All files *.*|*.*||'
-			dftext = '.smil'
+				filter = '%s|%s||'%(filter, filter)
+				dftext = string.split(filter, '.')[-1]
+		else:
+			# New-style mimetype filter
+			if type(filter) == type(''):
+				filter = [filter]
+			dftext = None
+			newfilter = []
+			for f in filter:
+				extlist = mimetypes.get_extensions(f)
+				if not extlist:
+					extlist = ('.*',)
+				elif not dftext:
+					dftext = extlist[0]
+				description = grins_mimetypes.descriptions.get(f, f)
+				# Turn the extension list into the ; separated pattern list
+				extlist = string.join(map(lambda x:"*."+x, extlist), ';')
+				newfilter.append('%s (%s)|%s'%(description, extlist, extlist))
+			filter = string.join(newfilter, '|') + '||'
+##		else:
+##			if existing:
+##				filter = 'smil files (*.smil;*.smi)|*.smil;*.smi|cmif files (*.cmif)|*.cmif|All files *.*|*.*||'
+##			else:
+##				filter = 'smil or cmif file (*.smil;*.smi;*.cmif)|*.smil;*.smi;*.cmif|All files *.*|*.*||'
+##			dftext = '.smil'
 		self._dlg =dlg= win32ui.CreateFileDialog(existing,dftext,file,flags,filter,parent)
 		dlg.SetOFNTitle(prompt)
 
