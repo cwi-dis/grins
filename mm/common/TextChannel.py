@@ -220,16 +220,19 @@ def fix_anchorlist(node, taglist):
 	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
 	modanchorlist(oldanchors)
 	anchors = oldanchors[:]
-	for i in range(len(anchors)):
+	i = 0
+	while i < len(anchors):
 		aid, atype, args = a = anchors[i]
 		if type(aid) <> type(''):
-			continue
-		if aid not in names_in_anchors:
+			pass
+		elif aid not in names_in_anchors:
 			print 'Remove text anchor from anchorlist:', a
 			anchors.remove(a)
+			i = i - 1	# compensate for later increment
 		else:
 			names_in_taglist.append(aid)
 			anchor_types[aid] = atype
+		i = i + 1
 	for i in range(len(taglist)):
 		item = taglist[i]
 		name = item[4]
