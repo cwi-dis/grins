@@ -1072,7 +1072,7 @@ class SimpleSelectDlg(ResDialog):
 
 		self._prompt_ctrl.attach_to_parent()
 		if not self._prompt:self._prompt='Select:'
-		self._prompt_ctrl.settext(self._prompt)
+#		self._prompt_ctrl.settext(self._prompt)
 
 		if not self._title:
 			if self._prompt:self._title=self._prompt
