@@ -54,6 +54,7 @@ else:
 # Mangle sys.path. Here are the directives for macfreeze:
 #
 # macfreeze: path :
+# macfreeze: path :::editor:g2lite
 # macfreeze: path :::editor:mac
 # macfreeze: path :::editor
 # macfreeze: path :::common:mac
@@ -154,6 +155,7 @@ if not STANDALONE:
 	
 	CMIFPATH = [
 		CMIFDIR+":mac",
+		CMIFDIR+":editor:g2lite",
 		CMIFDIR+":editor:mac",
 		CMIFDIR+":editor",
 		CMIFDIR+":common:mac",
@@ -177,7 +179,6 @@ else:
 import splash
 splash.splash('loadprog')
 import settings
-settings.default_settings['lightweight'] = 1
 license = settings.get('license')
 user = settings.get('license_user')
 org = settings.get('license_organization')

@@ -54,6 +54,7 @@ else:
 # Mangle sys.path. Here are the directives for macfreeze:
 #
 # macfreeze: path :
+# macfreeze: path :::editor:g2pro
 # macfreeze: path :::editor:mac
 # macfreeze: path :::editor
 # macfreeze: path :::common:mac
@@ -136,6 +137,7 @@ if not STANDALONE:
 	
 	CMIFPATH = [
 		CMIFDIR+":mac",
+		CMIFDIR+":editor:g2pro",
 		CMIFDIR+":editor:mac",
 		CMIFDIR+":editor",
 		CMIFDIR+":common:mac",
