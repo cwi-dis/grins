@@ -73,6 +73,7 @@ GENERAL_TEMPLATE = (
 		Separator(6),
 		Button(usercmd.ZOOMIN, TBICON_ZOOMIN),
 		Button(usercmd.ZOOMOUT, TBICON_ZOOMOUT),
+		Button(usercmd.ZOOMRESET, TBICON_ZOOMRESET),
 		Separator(6),
 		Button(usercmd.HELP, TBICON_HELP),
 		)
