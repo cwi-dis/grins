@@ -1183,6 +1183,25 @@ class AttrEditor(AttrEditorDialog):
 						exp = exp + " or `indefinite'"
 					self.showmessage('%s: value should be a%s %s.' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
+				if name == 'file':
+					ntype = self.wrapper.node.GetType()
+					if value[:5] == 'data:' and ntype == 'ext':
+						import MMmimetypes
+						mtype = MMmimetypes.guess_type(value)[0]
+						if mtype == 'text/plain':
+							import MMurl
+							# convert data URL to immediate text
+							dict['.type'] = 'imm'
+							f = MMurl.urlopen(value)
+							str = f.read()
+							f.close()
+							str = '\n'.join(str.split('\r\n')) # CRLF -> LF
+							str = '\n'.join(str.split('\r')) # CR -> LF
+							dict['.values'] = str.split('\n')
+							value = None # delete file attribute
+					elif ntype == 'imm':
+						# not a data URL, must be ext node
+						dict['.type'] = 'ext'
 				# if we change any of this attribute, we have to check the consistence,
 				# and re, compute the computedMimeType, channel type, ...
 				if name in ('file', 'mimetype', '.type', 'channel'):
