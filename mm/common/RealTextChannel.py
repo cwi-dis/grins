@@ -27,6 +27,7 @@ class RealTextChannel(RealWindowChannel):
 			return RealWindowChannel.getfileurl(self, node)
 
 def _deltmpfiles():
+	import os
 	for f in RealTextChannel.tmpfiles:
 		try:
 			os.unlink(f)
