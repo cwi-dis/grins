@@ -34,8 +34,14 @@ PRODUCT_TO_FEATURE = {
 
 	"pro": ["pro"],
 	"GRP": ["pro"],
+	
+	"smil2player": ["smil2player"],
+	"SM2": ["smil2player"],
+	
+	"smil2lite": ["smil2lite"],
+	"smil2pro": ["smil2pro"],
 
-	"ALLPRODUCTS": ["editor", "light", "pro"]
+	"ALLPRODUCTS": ["ALLPRODUCTS"]
 	}
 
 PLATFORM_TO_PLATFORM = {
