@@ -42,6 +42,7 @@ class TemporalView(TemporalViewDialog):
 		self.showing = 1
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		TemporalViewDialog.show(self)
+		self.recalc()
 		self.draw()
 
 	def is_showing(self):
@@ -49,6 +50,7 @@ class TemporalView(TemporalViewDialog):
 
 	def init_scene(self):
 		self.scene = TimeCanvas(self.root, self)
+		self.scene.setup()
 		self.scene.set_display(self.geodl)
 
 	def get_geodl(self):
@@ -56,3 +58,6 @@ class TemporalView(TemporalViewDialog):
 
 	def draw(self):
 		self.geodl.redraw()
+
+	def recalc(self):
+		self.scene.recalc()
