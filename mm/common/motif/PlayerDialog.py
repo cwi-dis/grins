@@ -61,9 +61,6 @@ class PlayerDialog:
 			deleteCallback = (self.close_callback, ()))
 		self.__menu = m = window.PulldownMenu(
 			[('Close', [('Close', (self.close_callback, ()))]),
-			 ('Play', [('Play', (self.play_callback, ())),
-				   ('Pause', (self.pause_callback, ())),
-				   ('Stop', (self.stop_callback, ()))]),
 			 ('Channels', []),
 			 ('Options', [])],
 			top = None, left = None, right = None)
@@ -148,13 +145,13 @@ class PlayerDialog:
 		self.__window.hide()
 
 	def setchannels(self, channels):
-		self.__menu.setmenu(2,
+		self.__menu.setmenu(1,
 				    map(lambda c, cb = self.channel_callback:
 					(c[0], (cb, (c[0],)), 't', c[1]),
 					channels))
 
 	def setchannel(self, channel, onoff):
-		self.__menu.setmenuentry(2, [channel], onoff = onoff)
+		self.__menu.setmenuentry(1, [channel], onoff = onoff)
 
 	def setoptions(self, options):
 		menu = []
@@ -167,7 +164,7 @@ class PlayerDialog:
 			else:
 				menu.append((opt,
 					     (self.option_callback, (opt,))))
-		self.__menu.setmenu(3, menu)
+		self.__menu.setmenu(2, menu)
 
 	def settitle(self, title):
 		self.__window.settitle(title)
