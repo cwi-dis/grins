@@ -711,7 +711,7 @@ class SubWindow(Window):
 	def ReleaseDC(self, dc):
 		self._topwindow.ReleaseDC(dc)
 			
-	def Invalidate(self):
+	def update(self):
 		x, y, w, h = self.getwindowpos()
 		self._topwindow.InvalidateRect((x, y, x+w, y+h))			
 
@@ -776,7 +776,7 @@ class SubWindow(Window):
 				break
 		else:
 			parent._subwindows.append(self)
-		self.__invalidate()
+		self.update()
 	
 	def updatebgcolor(self, color):
 		r, g, b = color
