@@ -321,7 +321,7 @@ class NodeWrapper(Wrapper):
 				mimetype = ''
 			path = urlparse.urlparse(url)[2]
 			filename = posixpath.split(path)[1]
-			if url and filename:
+			if mimetype and filename:
 				return 'Properties of node (%s %s)' % (mimetype, filename)
 			if filename:
 				return 'Properties of node (%s)' % filename
