@@ -91,35 +91,59 @@ LINK32=link.exe
 # Name "vid2rm - Win32 Debug"
 # Begin Source File
 
-SOURCE=.\rconvert.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\rprod.cpp
 DEP_CPP_RPROD=\
-	{$(INCLUDE)}"engcodec.h"\
-	{$(INCLUDE)}"engtargs.h"\
-	{$(INCLUDE)}"engtypes.h"\
+	"..\..\..\..\mmpython\producer\include\engcodec.h"\
+	"..\..\..\..\mmpython\producer\include\engtargs.h"\
+	"..\..\..\..\mmpython\producer\include\engtypes.h"\
+	"..\..\..\..\mmpython\producer\include\pncom.h"\
+	"..\..\..\..\mmpython\producer\include\pnwintyp.h"\
+	"..\..\..\..\mmpython\producer\include\progsink.h"\
+	"..\..\..\..\mmpython\producer\include\rmaenum.h"\
+	"..\..\..\..\mmpython\producer\include\rmapckts.h"\
+	"..\..\..\..\mmpython\producer\include\rmbldeng.h"\
+	"..\..\..\..\mmpython\producer\include\rmmetain.h"\
 	{$(INCLUDE)}"pnbastsd.h"\
-	{$(INCLUDE)}"pncom.h"\
 	{$(INCLUDE)}"pnresult.h"\
 	{$(INCLUDE)}"pntypes.h"\
-	{$(INCLUDE)}"pnwintyp.h"\
-	{$(INCLUDE)}"progsink.h"\
-	{$(INCLUDE)}"rmaenum.h"\
-	{$(INCLUDE)}"rmapckts.h"\
 	{$(INCLUDE)}"rmavalue.h"\
-	{$(INCLUDE)}"rmbldeng.h"\
-	{$(INCLUDE)}"rmmetain.h"\
 	
 # End Source File
 # Begin Source File
 
 SOURCE=.\vid2rm.cpp
 DEP_CPP_VID2R=\
-	".\rconvert.h"\
+	"..\..\classes\base\amextra.h"\
+	"..\..\classes\base\amfilter.h"\
+	"..\..\classes\base\cache.h"\
+	"..\..\classes\base\combase.h"\
+	"..\..\classes\base\cprop.h"\
+	"..\..\classes\base\ctlutil.h"\
+	"..\..\classes\base\dllsetup.h"\
+	"..\..\classes\base\fourcc.h"\
+	"..\..\classes\base\measure.h"\
+	"..\..\classes\base\msgthrd.h"\
+	"..\..\classes\base\mtype.h"\
+	"..\..\classes\base\outputq.h"\
+	"..\..\classes\base\pstream.h"\
+	"..\..\classes\base\refclock.h"\
+	"..\..\classes\base\reftime.h"\
+	"..\..\classes\base\renbase.h"\
+	"..\..\classes\base\Schedule.h"\
+	"..\..\classes\base\source.h"\
+	"..\..\classes\base\streams.h"\
+	"..\..\classes\base\strmctl.h"\
+	"..\..\classes\base\sysclock.h"\
+	"..\..\classes\base\transfrm.h"\
+	"..\..\classes\base\transip.h"\
+	"..\..\classes\base\videoctl.h"\
+	"..\..\classes\base\vtrans.h"\
+	"..\..\classes\base\winctrl.h"\
+	"..\..\classes\base\winutil.h"\
+	"..\..\classes\base\wxdebug.h"\
+	"..\..\classes\base\wxlist.h"\
+	"..\..\classes\base\wxutil.h"\
 	".\vid2rm.h"\
-	".\vid2rmuids.h"\
 	
 # End Source File
 # Begin Source File
@@ -137,10 +161,6 @@ SOURCE=..\..\..\..\mmpython\wmsdk\vid2rm.py
 # Begin Source File
 
 SOURCE=.\vid2rm.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\vid2rmuids.h
 # End Source File
 # Begin Source File
 
