@@ -116,7 +116,7 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
-		windowinterface.FileDialog('Open file', 'Desktop', filetypes, '',
+		windowinterface.FileDialog('Open Document', 'Desktop', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
 
