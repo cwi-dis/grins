@@ -35,6 +35,7 @@ static int mpegchannel_debug = 0;
 struct mpeg_data {
 	ImageDesc imagedesc;	/* descriptor of image */
 	long bgcolor;		/* background color for node */
+	int center;		/* whether to center the video */
 	PyObject *file;		/* file being played */
 #ifdef USE_XM
 	XImage *image;		/* X image to put image in */
@@ -72,7 +73,18 @@ static void
 do_display(self)
 	mmobject *self;
 {
+	int x, y, w, h;
+
 	denter(do_display);
+	w = PRIV->play.imagedesc.Width;
+	h = PRIV->play.imagedesc.Height;
+	if (PRIV->play.center) {
+		x = PRIV->rect[X] + (PRIV->rect[WIDTH] - w) / 2;
+		y = PRIV->rect[Y] + (PRIV->rect[HEIGHT] - h) / 2;
+	} else {
+		x = PRIV->rect[X];
+		y = PRIV->rect[Y];
+	}
 	switch (windowsystem) {
 #ifdef USE_XM
 	case WIN_X:
@@ -80,10 +92,7 @@ do_display(self)
 			break;
 		XPutImage(XtDisplay(PRIV->widget), XtWindow(PRIV->widget),
 			  PRIV->gc, PRIV->play.image, 0, 0,
-			  PRIV->rect[X] + (PRIV->rect[WIDTH] - PRIV->play.imagedesc.Width) / 2,
-			  PRIV->rect[Y] + (PRIV->rect[HEIGHT] - PRIV->play.imagedesc.Height) / 2,
-			  PRIV->play.imagedesc.Width,
-			  PRIV->play.imagedesc.Height);
+			  x, y, w, h);
 		XFlush(XtDisplay(PRIV->widget));
 		break;
 #endif
@@ -225,6 +234,15 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	} else {
 		ERROR(mpeg_arm, PyExc_RuntimeError, "no background color specified");
 		return 0;
+	}
+	v = PyDict_GetItemString(attrdict, "center");
+	if (v && PyInt_Check(v)) {
+		PRIV->arm.center = PyInt_AsLong(v);
+	} else if (v) {
+		ERROR(mpeg_arm, PyExc_RuntimeError, "bad center value");
+		return 0;
+	} else {
+		PRIV->arm.center = 0;
 	}
 	Py_INCREF(file);
 	PRIV->arm.file = file;
