@@ -1385,24 +1385,33 @@ class SMILWriter(SMIL):
 			if len(args) == 4:
 				x, y, w, h = tuple(args)
 				try:
-					x = int(x*100 + 0.5)
-					y = int(y*100 + 0.5)
-					w = int(w*100 + 0.5)
-					h = int(h*100 + 0.5)
+					if int(x) == x and \
+					   int(y) == y and \
+					   int(w) == w and \
+					   int(h) == h and \
+					   (x,y,w,h) != (0,0,1,1):
+						if x < 0:
+							x, w = 0, w + x
+						if y < 0:
+							y, h = 0, h + y
+						coords = '%d,%d,%d,%d' % (int(x),int(y),int(x+w),int(y+h))
+					else:
+						# restrain coordinates to [0,1]
+						if x < 0:
+							x, w = 0.0, w + x
+						if y < 0:
+							y, h = 0.0, h + y
+						if x + w > 1:
+							w = 1.0 - x
+						if y + h > 1:
+							h = 1.0 - y
+						coords = '%d%%,%d%%,%d%%,%d%%,%d%%' % (int(x*100 + .5), int(y*100 + .5), int((x+w)*100 + .5), int((y+h)*100 + .5))
 				except TypeError:
 					pass
 				else:
 					ok = 1
 			if ok:
-				if x < 0: x = 0
-				if y < 0: y = 0
-				if w > 100: w = 100
-				if h > 100: h = 100
-				x0, y0, x1, y1 = x, y, x+w, y+h
-				if (x0, y0, x1, y1) != (0,0,100,100):
-					attrlist.append(('coords',
-							 "%d%%,%d%%,%d%%,%d%%"%
-							 (x0,y0,x1,y1)))
+				attrlist.append(('coords', coords))
 			elif args:
 				print '** Unparseable args on', aid, args
 			else:
