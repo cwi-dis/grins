@@ -2281,8 +2281,6 @@ def beep():
 
 settimer = toplevel.settimer
 
-settimerfunc = toplevel.settimerfunc
-
 select_setcallback = toplevel.select_setcallback
 
 mainloop = toplevel.mainloop

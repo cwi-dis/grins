@@ -966,9 +966,6 @@ usewindowlock = toplevel.usewindowlock
 
 settimer = event.settimer
 
-def settimerfunc(func, arg):
-	event.setcallback(TimerEvent, func, arg)
-
 select_setcallback = event.select_setcallback
 
 mainloop = event.mainloop

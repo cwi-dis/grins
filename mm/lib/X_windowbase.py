@@ -189,7 +189,6 @@ class _Toplevel:
 		_linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
 		_stopcursor = dpy.CreateFontCursor(Xcursorfont.pirate)
 		self._main.RealizeWidget()
-		self._timer_callback_func = None
 		self._fdmap = {}
 		self._closecallbacks = []
 
@@ -289,21 +288,17 @@ class _Toplevel:
 		Xt.MainLoop()
 
 	# timer interface
-	def settimer(self, sec, arg):
-		id = Xt.AddTimeOut(int(sec * 1000), self._timer_callback, arg)
+	def settimer(self, sec, cb):
+		id = Xt.AddTimeOut(int(sec * 1000), self._timer_callback, cb)
 		return id
 
 	def canceltimer(self, id):
 		if id is not None:
 			Xt.RemoveTimeOut(id)
 
-	def settimerfunc(self, func, arg):
-		self._timer_callback_func = func, arg
-
 	def _timer_callback(self, client_data, id):
-		if self._timer_callback_func:
-			func, arg = self._timer_callback_func
-			func(arg, None, TimerEvent, client_data)
+		func, args = client_data
+		apply(func, args)
 
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
@@ -499,16 +494,16 @@ class _Window:
 		# this stuff is needed because events don't always
 		# arrive at the correct window.  this is especially
 		# true for menu button presses.
-		x, y = event.x, event.y
-		for w in self._subwindows:
-			v = w._form.GetValues(['x', 'y', 'width', 'height'])
-			fx, fy = v['x'], v['y']
-			fw, fh = v['width'], v['height']
-			if fx <= x < fx + fw and fy <= y < fy + fh:
-				event.x = x - fx
-				event.y = y - fy
-				w._input_callback(widget, client_data, call_data)
-				return
+##		x, y = event.x, event.y
+##		for w in self._subwindows:
+##			v = w._form.GetValues(['x', 'y', 'width', 'height'])
+##			fx, fy = v['x'], v['y']
+##			fw, fh = v['width'], v['height']
+##			if fx <= x < fx + fw and fy <= y < fy + fh:
+##				event.x = x - fx
+##				event.y = y - fy
+##				w._input_callback(widget, client_data, call_data)
+##				return
 		if event.type == X.KeyPress:
 			string = Xlib.LookupString(event)[0]
 			if self._accelerators.has_key(string):
@@ -949,8 +944,9 @@ class _DisplayList:
 			gc = window._gc
 		else:
 			gc = window._form.CreateGC({})
-		font = fg = None
-		i = 0
+		font = None
+		fg = self._list[0][2]
+		i = 1
 		while i < self._clonestart:
 			entry = self._list[i]
 			if entry[0] == 'font':

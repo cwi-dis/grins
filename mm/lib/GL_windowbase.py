@@ -193,20 +193,20 @@ class _Event:
 		timenow = time.time()
 		timediff = timenow - self._timenow
 		while self._timers:
-			(t, arg, tid) = self._timers[0]
+			(t, cb, tid) = self._timers[0]
 			t = t - timediff
 			if t > 0:
-				self._timers[0] = (t, arg, tid)
+				self._timers[0] = (t, cb, tid)
 				self._timenow = timenow
 				return
 			# Timer expired, enter it in event queue.
 			# Also, check next timer in timer queue (by looping).
 			del self._timers[0]
-			self._queue.append((None, TimerEvent, arg))
+			self._queue.append((None, TimerEvent, cb))
 			timediff = -t	# -t is how much too late we were
 		self._timenow = timenow # Fix by Jack
 
-	def settimer(self, sec, arg):
+	def settimer(self, sec, cb):
 		self._checktime()
 		t = 0
 		self._timerid = self._timerid + 1
@@ -214,20 +214,20 @@ class _Event:
 			time, dummy, tid = self._timers[i]
 			if t + time > sec:
 				self._timers[i] = (time - sec + t, dummy, tid)
-				self._timers.insert(i, (sec - t, arg, self._timerid))
+				self._timers.insert(i, (sec - t, cb, self._timerid))
 				return self._timerid
 			t = t + time
-		self._timers.append(sec - t, arg, self._timerid)
+		self._timers.append(sec - t, cb, self._timerid)
 		return self._timerid
 
 	def canceltimer(self, id):
 		for i in range(len(self._timers)):
-			t, arg, tid = self._timers[i]
+			t, cb, tid = self._timers[i]
 			if tid == id:
 				del self._timers[i]
 				if i < len(self._timers):
-					tt, arg, tid = self._timers[i]
-					self._timers[i] = (tt + t, arg, tid)
+					tt, cb, tid = self._timers[i]
+					self._timers[i] = (tt + t, cb, tid)
 				return
 ##		raise error, 'unknown timer id'
 
@@ -432,6 +432,10 @@ class _Event:
 					func, arg = accdict[value]
 					apply(func, arg)
 					return 1
+		if event == TimerEvent:
+			del self._queue[0]
+			apply(value[0], value[1])
+			return 1
 		for w in [window, None]:
 			while 1:
 				for key in [(w, event), (w, None)]:
