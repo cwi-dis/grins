@@ -550,17 +550,7 @@ no)	;;
 				;;
 			esac
 		done &&
-		install -m 0444 -idb $dist.help.intro -src mm/Intro/intro.smil -F /usr/local/grins/Intro -O intro.smil &&
-		for f in mm/Intro/data/*
-		do
-			case "${f##*/}" in
-			CVS|\*)	;;
-			*)
-				install -m 0444 -idb $dist.help.intro -src $f -F /usr/local/grins/Intro/data ${f##*/}
-				;;
-			esac
-		done &&
-		install -m 0444 -idb $dist.relnotes.$help -src www-GRiNS/$help/IRIX6.3/relnotes.html -F /usr/local/grins -O relnotes.html &&
+		install -m 0444 -idb $dist.relnotes.$help -src mm/Build/unix/$help/relnotes.html -F /usr/local/grins -O relnotes.html &&
 		case $dist in
 		grinsed)
 			for f in mm/Templates/*
