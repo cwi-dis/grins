@@ -49,6 +49,8 @@ class TopLevel(TopLevelDialog):
 					qos = settings.RTIPA_classes.get(ip)
 					if qos is not None:
 						query = query + '&class=' + qos
+				if settings.get('RTIPA_debug'):
+					windowinterface.showmessage('Adding query string "%s"' % query)
 			# RTIPA end
 ##		if base[-5:] == '.cmif':
 ##			self.basename = base[:-5]
@@ -200,6 +202,9 @@ class TopLevel(TopLevelDialog):
 				else:
 					if ct == 'GRIN' and tp == 'TEXT':
 						mtype = 'application/x-grins-project'
+		if mtype not in ('application/x-grins-project', 'application/smil'):
+			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nFix?'):
+				mtype = 'application/smil'
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			# init progress dialog
 			if mtype == 'application/smil':
@@ -239,13 +244,14 @@ class TopLevel(TopLevelDialog):
 				dur = ' dur="indefinite"'
 			else:
 				dur = ''
+			from nameencode import nameencode
 			self.root = SMILTreeRead.ReadString('''\
 <smil>
   <body>
-    <ref%s src="%s"/>
+    <ref%s src=%s/>
   </body>
 </smil>
-''' % (dur, self.filename), self.filename, self.printfunc)
+''' % (dur, nameencode(self.filename)), self.filename, self.printfunc)
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 		self.context = self.root.GetContext()
