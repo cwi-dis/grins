@@ -22,7 +22,6 @@
 //CmifEx Header Files
 #include "resource.h"
 #include "cmifexhelp.h"
-#define PyIMPORT  __declspec(dllimport)
 #define PyEXPORT  __declspec(dllexport)
 
 #endif
