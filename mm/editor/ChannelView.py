@@ -185,6 +185,9 @@ class ChannelView(ChannelViewDialog):
 		pass
 
 	def commit(self):
+		self.redrawafterchange()
+
+	def redrawafterchange(self):
 ##		self.layouts = [('All channels', ())]
 ##		for name in self.context.layouts.keys():
 ##			self.layouts.append((name, (name,)))
@@ -244,12 +247,7 @@ class ChannelView(ChannelViewDialog):
 		else:
 			self.chanheight = NOTHUMB_CHANHEIGHT
 		self.settoggle(THUMBNAIL, self.thumbnails)
-##		if self.new_displist:
-##			self.new_displist.close()
-##		self.new_displist = self.window.newdisplaylist(BGCOLOR)
-##		bl, fh, ps = self.new_displist.usefont(f_title)
-##		self.draw()
-		self.reshape()
+		self.redrawafterchange()
 
 	def canvascall(self, code):
 		from windowinterface import UNIT_MM
@@ -420,7 +418,7 @@ class ChannelView(ChannelViewDialog):
 		self.toplevel.setwaiting()
 		self.showbandwidthstrip = not self.showbandwidthstrip
 		self.settoggle(TOGGLE_BWSTRIP, self.showbandwidthstrip)
-		self.commit()
+		self.redrawafterchange()
 
 	# Return list of currently visible channels
 
