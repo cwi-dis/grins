@@ -1,3 +1,4 @@
+__version__ = "$Id$"
 
 import WMEVENTS
 import win32ui, win32con

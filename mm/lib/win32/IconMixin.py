@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Common code factored out of TreeCtrl/ListCtrl
 # and _AssetsView/__LayoutView
 
