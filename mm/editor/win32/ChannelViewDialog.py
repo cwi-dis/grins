@@ -44,7 +44,6 @@ class ChannelViewDialog(ViewDialog):
 		x, y, filename = params
 		obj = self.whichhit(x, y)
 		if not obj or not obj.is_node_object:
-			print 'DROPEFFECT_NONE'
 			return windowinterface.DROPEFFECT_NONE
 		else:
 			return windowinterface.DROPEFFECT_MOVE
