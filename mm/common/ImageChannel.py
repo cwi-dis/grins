@@ -12,7 +12,8 @@ import imgfile
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
-from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE
+from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, \
+	ATYPE_AUTO
 
 def between(v, x0, x1):
 	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))
@@ -64,6 +65,9 @@ class ImageWindow(ChannelWindow):
 			self.hicolor = 255, 0, 0
 	#
 	def mouse(self, (dev, val)):
+		if not self.node:
+			gl.ringbell()
+			return
 		mx, my = fl.get_mouse()
 		width, height = gl.getsize()
 		x = int(width - self.xsize*self.scale) / 2
@@ -84,10 +88,6 @@ class ImageWindow(ChannelWindow):
 			return
 		if (dev, val) <> (DEVICE.MOUSE3, 1):
 			return
-		if not self.node:
-			print 'mouse: no current node'
-			gl.ringbell()
-			return
 		if not self.anchors:
 			print 'mouse: no anchors on this node'
 		al2 = []
@@ -101,7 +101,11 @@ class ImageWindow(ChannelWindow):
 			gl.ringbell()
 			return
 		rv = self.player.anchorfired(self.node, al2)
-		# XXXX Check for ATYPE_PAUSE anchor.
+		# If this was a paused anchor and it didn't fire
+		# stop showing the node
+		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
+			self.channel.haspauseanchor = 0
+			self.channel.done(0)
 	#
 	def armimage(self, (filename, node)):
 		self.parray = None
@@ -204,6 +208,11 @@ class ImageChannel(Channel):
 	def getduration(self, node):
 		return Channel.getduration(self, node)
 	#
+	# clear is called by Channel.clearnode() to clear remains of
+	# previous node.
+	def clear(self):
+		self.window.clear()
+	#
 	def play(self, (node, callback, arg)):
 		if not self.is_showing():
 			callback(arg)
@@ -215,6 +224,7 @@ class ImageChannel(Channel):
 		self.showanchors(node)
 		self.window.showimage()
 		Channel.play(self, node, callback, arg)
+	#
 	def defanchor(self, node, anchor):
 		self.arm(node)
 		self.window.setdefanchor(anchor)
@@ -234,7 +244,13 @@ class ImageChannel(Channel):
 			self.window.setanchors([])
 			return
 		al2 = []
+		self.autoanchor = None
+		self.haspauseanchor = 0
 		for a in alist:
+			if a[A_TYPE] == ATYPE_AUTO:
+				self.autoanchor = a
+			if a[A_TYPE] == ATYPE_PAUSE:
+				self.haspauseanchor = 1
 			if a[A_TYPE] not in (ATYPE_NORMAL, ATYPE_PAUSE):
 				continue
 			if len(a[A_ARGS]) <> 4:
