@@ -522,7 +522,7 @@ bool mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output
 
 /////////////////////////
 
-// Channel is 0 to channels - 1
+// Channel is 0 to num channels - 1
 bool mpeg2audio_decode_audio(mpeg2audio_t *audio, short *output_i, 
 		int channel, long start_position, long len, long *pwritelen)
 	{
@@ -583,18 +583,13 @@ bool mpeg2audio_decode_audio(mpeg2audio_t *audio, short *output_i,
 			}
 		}
 
-	// filter constants for wince
-	const float pf = 0.25f;
-	const float fr = 0.5f;
-
-	// Copy the buffer to the output
+	// Copy the buffer to the output 
+	// We currently use always 16 bits per sample
 	for(i = 0, j = (start_position - audio->pcm_position) * audio->channels + channel; 
 		i < len && j < audio->pcm_size * audio->channels; 
 		i++, j += audio->channels)
 		{	
-			float v = audio->pcm_sample[j];
-			v = (v<-pf)? (-pf + fr*(v+pf)):((v>pf)? (pf + fr*(v-pf)):v);
-			int sample = int(v  * SHRT_MAX);
+			int sample = int(audio->pcm_sample[j]  * SHRT_MAX);
 			output_i[i] = short((sample > SHRT_MAX)?SHRT_MAX:((sample < SHRT_MIN)?SHRT_MIN:sample));
 		}
 	*pwritelen = i;
