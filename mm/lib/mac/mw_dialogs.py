@@ -508,7 +508,7 @@ class NewChannelDialog(DialogWindow):
 	def done(self):
 		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		name = Dlg.GetDialogItemText(h)
-		type = self.type_select.getselect()
+		type = self.type_select.getselectvalue()
 		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
 		ctl.HiliteControl(10)
 		self._cb(name, type)
@@ -552,7 +552,7 @@ class TemplateDialog(DialogWindow):
 		elif item == ITEM_INPUT_OK:
 			self.done()
 		elif item == ITEM_TEMPLATE_POPUP:
-			self._setdialoginfo(self.type_select.getselectindex())
+			self._setdialoginfo(self.type_select.getselect())
 		elif item in (ITEM_TEMPLATE_PLAYER, ITEM_TEMPLATE_PLUGIN):
 			self.settarget(item)
 		else:
@@ -573,7 +573,7 @@ class TemplateDialog(DialogWindow):
 		return ctl.GetControlValue()
 		
 	def done(self):
-		which = self.type_select.getselectindex()
+		which = self.type_select.getselect()
 		if 0 <= which < len(self.descriptions):
 			cbarg = self.descriptions[which]
 			if self._getbutton(ITEM_TEMPLATE_PLAYER):

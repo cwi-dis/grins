@@ -25,6 +25,8 @@ class _Widget:
 class _ListWidget:
 	def __init__(self, wid, item, content=[], multi=0):
 		self.control = wid.GetDialogItemAsControl(item)
+##		d1, d2, self.rect = wid.GetDialogItem(item)
+		self.rect = (0, 0, 1000, 1000) # DBG
 		h = self.control.GetControlDataHandle(Controls.kControlListBoxPart, 
 			Controls.kControlListBoxListHandleTag)
 		self.list = List.as_List(h)
@@ -68,22 +70,17 @@ class _ListWidget:
 		return self.list.LAddRow(count, where)
 		
 	def delete(self, fr=None, count=1):
-##?		Qd.SetPort(self.wid)
-##?		self.list.LSetDrawingMode(0)
 		self._delete(fr, count)
-##?		self.list.LSetDrawingMode(1)
-##?		Win.InvalRect(self.rect)
-##		self._redraw() # DBG
+		Qd.SetPort(self.wid)
+		Win.InvalRect(self.rect)
 		
-	def set(self, content):
-##?		Qd.SetPort(self.wid)
-##?		self.list.LSetDrawingMode(0)
+	def setitems(self, content=[], select=None):
 		self._delete()
 		self._insert(count=len(content))
 		self._setcontent(0, len(content), content)
-##?		self.list.LSetDrawingMode(1)
-##?		Win.InvalRect(self.rect)
-##		self._redraw() # DBG
+		self.select(select)
+		Qd.SetPort(self.wid)
+		Win.InvalRect(self.rect)
 		
 	def get(self):
 		return self._data
@@ -92,30 +89,26 @@ class _ListWidget:
 		return self._data[item]
 		
 	def insert(self, where=-1, content=[]):
-##?		Qd.SetPort(self.wid)
-##?		self.list.LSetDrawingMode(0)
 		where = self._insert(where, len(content))
 		self._setcontent(where, where+len(content), content)
-##?		self.list.LSetDrawingMode(1)
-##?		Win.InvalRect(self.rect)
-##		self._redraw() # DBG
+		Qd.SetPort(self.wid)
+		Win.InvalRect(self.rect)
 		
 	def replace(self, where, what):
-##?		Qd.SetPort(self.wid)
-##?		self.list.LSetDrawingMode(0)
 		self._setcontent(where, where+1, [what])
-##?		self.list.LSetDrawingMode(1)
-##?		Win.InvalRect(self.rect)
-##		self._redraw() # DBG
+		Qd.SetPort(self.wid)
+		Win.InvalRect(self.rect)
 		
-	def deselectall(self):
+	def _deselectall(self):
 		while 1:
 			ok, pt = self.list.LGetSelect(1, (0,0))
 			if not ok: return
 			self.list.LSetSelect(0, pt)
 			
 	def select(self, num):
-		self.deselectall()
+		self._deselectall()
+		if num in self._data:
+			num = self._data.index(num)
 		if num is None or num < 0:
 			return
 		self.list.LSetSelect(1, (0, num))
@@ -126,36 +119,12 @@ class _ListWidget:
 			return None
 		return y
 		
-##	def getselectvalue(self):
-##		num = self.getselect()
-##		if num is None:
-##			return None
-##		return self._data[num]
-			
-## 	def click(self, where, modifiers):
-## 		is_double = self.list.LClick(where, modifiers)
-## 		ok, (x, y) = self.list.LGetSelect(1, (0, 0))
-## 		if ok:
-## 			return y, is_double
-## 		else:
-## 			return None, is_double
-## 			
-## 	# draw a frame around the list, List Manager doesn't do that
-## 	def drawframe(self):
-## 		Qd.SetPort(self.wid)
-## 		Qd.EraseRect(self.rect)
-## 		Qd.FrameRect(self.rect)
-## 		
-## 	def _redraw(self, rgn=None):
-## 		if rgn == None:
-## 			rgn = self.wid.GetWindowPort().visRgn
-## 		self.drawframe()
-## 		self.list.LUpdate(rgn)
-## 		
-## 	def _activate(self, onoff):
-## ##		print 'ACTIVATE', self, onoff
-## 		self.list.LActivate(onoff)
-		
+	def getselectvalue(self):
+		num = self.getselect()
+		if num is None:
+			return None
+		return self._data[num]
+					
 class _ImageWidget(_Widget):
 	def __init__(self, wid, item, image=None):
 		_Widget.__init__(self, wid, item)
@@ -168,6 +137,7 @@ class _ImageWidget(_Widget):
 		Win.InvalRect(self.rect)
 			
 	def setfromfile(self, image):
+		Qd.SetPort(self.wid)
 		Win.InvalRect(self.rect)
 		self.image_data = None
 
@@ -265,11 +235,11 @@ class SelectWidget:
 ##	def click(self, event=None):
 ##		self.usercallback()
 		
-	def getselect(self):
+	def getselectvalue(self):
 		item = self.control.GetControlValue()-1
 		if 0 <= item < len(self.data):
 			return self.data[item]
 		return None
 		
-	def getselectindex(self):
+	def getselect(self):
 		return self.control.GetControlValue()-1
