@@ -585,7 +585,7 @@ class AnimateContext:
 def getregionattr(node, attr):
 	v = None
 	d = node.GetChannel().attrdict
-	if attr in ('position', 'size', 'left', 'top', 'width', 'height'):
+	if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
 		if d.has_key('base_winoff'):
 			r = d['base_winoff']
 			if attr == 'position':
@@ -594,25 +594,21 @@ def getregionattr(node, attr):
 				v = r[2], r[3]
 			elif attr == 'left':
 				v = r[0]
-			elif pos=='top':
+			elif attr=='top':
 				v = r[1]
-			elif pos=='width':
+			elif attr == 'right':
+				v = r[0] + r[2]
+			elif attr == 'bottom':
+				v = r[1] + r[3]
+			elif attr == 'width':
 				v = r[2]
-			elif pos=='height':
+			elif attr == 'height':
 				v = r[3]
 		return v, attr, 'int'
-	elif attr == 'transparent' and d.has_key('transparent'):
-		return d['transparent'], attr, 'int'
+	elif attr == 'bgcolor' and d.has_key('bgcolor'):
+		return d['bgcolor'], attr, 'color'
 	elif attr == 'z' and d.has_key('z'):
 		return d['z'], attr, 'int'
-	elif attr == 'center' and d.has_key('center'):
-		return d['center'], attr, 'int'
-	elif attr == 'scale' and d.has_key('scale'):
-		return d['scale'], attr, 'int'
-	elif attr == 'drawbox' and d.has_key('drawbox'):
-		return d['drawbox'], drawbox, 'int'
-	elif attr == 'bgcolor' and d.has_key('bgcolor'):
-		return d['bgcolor'], bgcolor, 'color'
 	return None, attr, ''
 
 def getrenamed(node, attr):
@@ -622,10 +618,12 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'right':(lambda node:getregionattr(node,'right')),
 	'width':(lambda node:getregionattr(node,'width')),
 	'height':(lambda node:getregionattr(node,'height')),
-	'transparent':(lambda node:getregionattr(node,'transparent')),
-	'z':(lambda node:getregionattr(node,'z')),
-	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
+	'right':(lambda node:getregionattr(node,'right')),
+	'bottom':(lambda node:getregionattr(node,'bottom')),
 	'position':(lambda node:getregionattr(node,'position')),
+	'size':(lambda node:getregionattr(node,'size')),
+	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
+	'z-index':(lambda node:getregionattr(node,'z')),
 
 	'src': (lambda node:getrenamed(node,'file')),
 	}
