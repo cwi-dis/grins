@@ -618,7 +618,8 @@ toplevel = _Toplevel()
 from X_windowbase import *
 
 class FileDialog:
-	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel):
+	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
+		     existing=0):
 		import os
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
