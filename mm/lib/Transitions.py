@@ -829,11 +829,12 @@ class SingleSweepWipeTransition(_MatrixTransitionClass):
 		for i in range(vindex):
 			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
 			rectlist.append(rect)
-		ylasttop = self.vboundaries[vindex]
-		ylastbottom = self.vboundaries[vindex+1]
-		for i in range(hindex):
-			rect = (self.hboundaries[i], ylasttop, self.hboundaries[i+1], ylastbottom)
-			rectlist.append(rect)
+		if hindex:
+			ylasttop = self.vboundaries[vindex]
+			ylastbottom = self.vboundaries[vindex+1]
+			for i in range(hindex):
+				rect = (self.hboundaries[i], ylasttop, self.hboundaries[i+1], ylastbottom)
+				rectlist.append(rect)
 		return rectlist, self.ltrb
 		
 class SnakeWipeTransition(_MatrixTransitionClass):
@@ -848,15 +849,16 @@ class SnakeWipeTransition(_MatrixTransitionClass):
 		for i in range(vindex):
 			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
 			rectlist.append(rect)
-		ylasttop = self.vboundaries[vindex]
-		ylastbottom = self.vboundaries[vindex+1]
-		for i in range(hindex):
-			if vindex % 2:
-				idx = self.hsteps-i-1
-			else:
-				idx = i
-			rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
-			rectlist.append(rect)
+		if hindex:
+			ylasttop = self.vboundaries[vindex]
+			ylastbottom = self.vboundaries[vindex+1]
+			for i in range(hindex):
+				if vindex % 2:
+					idx = self.hsteps-i-1
+				else:
+					idx = i
+				rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
+				rectlist.append(rect)
 		return rectlist, self.ltrb
 		
 class ParallelSnakesWipeTransition(_MatrixTransitionClass):
@@ -874,19 +876,20 @@ class ParallelSnakesWipeTransition(_MatrixTransitionClass):
 			rectlist.append(rect)
 			rect = (x0, self.vboundaries[self.vsteps-i-1], x1, self.vboundaries[self.vsteps-i])
 			rectlist.append(rect)
-		ylasttop = self.vboundaries[vindex]
-		ylastbottom = self.vboundaries[vindex+1]
-		ydowntop = self.vboundaries[self.vsteps-vindex-1]
-		ydownbottom = self.vboundaries[self.vsteps-vindex]
-		for i in range(hindex):
-			if vindex % 2:
-				idx = self.hsteps-i-1
-			else:
-				idx = i
-			rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
-			rectlist.append(rect)
-			rect = (self.hboundaries[idx], ydowntop, self.hboundaries[idx+1], ydownbottom)
-			rectlist.append(rect)
+		if hindex:
+			ylasttop = self.vboundaries[vindex]
+			ylastbottom = self.vboundaries[vindex+1]
+			ydowntop = self.vboundaries[self.vsteps-vindex-1]
+			ydownbottom = self.vboundaries[self.vsteps-vindex]
+			for i in range(hindex):
+				if vindex % 2:
+					idx = self.hsteps-i-1
+				else:
+					idx = i
+				rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
+				rectlist.append(rect)
+				rect = (self.hboundaries[idx], ydowntop, self.hboundaries[idx+1], ydownbottom)
+				rectlist.append(rect)
 		return rectlist, self.ltrb
 		
 class SpiralWipeTransition(_MatrixTransitionClass):
