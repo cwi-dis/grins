@@ -933,14 +933,17 @@ def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
 	extraw = 0
 	extrah = 0
+	minw = 0
+	minh = 0
 	if adornments and adornments.has_key('toolbar'):
-		resid, height = MenuTemplate.TOOLBAR
+		resid, width, height = MenuTemplate.TOOLBAR
 		extrah = extrah + height
+		minw = width
 	# XXXX Add scrollbar size if applicable
 	if canvassize:
 		extraw = extraw + SCROLLBARSIZE - 1
 		extrah = extrah + SCROLLBARSIZE - 1
-	return extraw, extrah
+	return extraw, extrah, minw, minh
 		
 class _ScrollMixin:
 	"""Mixin class for scrollable/resizable toplevel windows"""
@@ -1035,7 +1038,7 @@ class _ScrollMixin:
 	def _needs_grow_cursor(self):
 		if self._barx:
 			return 0
-		return 1
+		return self._resizable
 		
 	def _redraw(self):
 		if self._barx:
@@ -1172,7 +1175,7 @@ class _AdornmentsMixin:
 			#
 			# Create the toolbar
 			#
-			resid, height = MenuTemplate.TOOLBAR
+			resid, width, height = MenuTemplate.TOOLBAR
 			try:
 				cntl = Ctl.GetNewControl(resid, self._wid)
 			except Ctl.Error, arg:
@@ -1201,7 +1204,7 @@ class _AdornmentsMixin:
 		if not self._cmd_to_cntl:
 			return
 		x, y, w, h = self._rect
-		resid, height = MenuTemplate.TOOLBAR
+		resid, width, height = MenuTemplate.TOOLBAR
 		self._rect = x, y+height, w, h-height
 			
 	def _iscontrolclick(self, down, local, event):
@@ -1254,9 +1257,11 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
-			title="", adornments=None, canvassize = None, commandlist=None):
+			title="", adornments=None, canvassize = None, commandlist=None,
+			resizable=1):
 		
 		self._istoplevel = 1
+		self._resizable = resizable
 		_CommonWindow.__init__(self, parent, wid)
 		
 		self._transparent = 0
@@ -1667,7 +1672,8 @@ class DialogWindow(_Window):
 			cmdlist.append(
 				usercmd.CLOSE_WINDOW(callback=(self._do_cancelhit, ())))
 			wid.SetDialogCancelItem(cancel)
-		_Window.__init__(self, mw_globals.toplevel, wid, 0, 0, w, h, commandlist=cmdlist)
+		_Window.__init__(self, mw_globals.toplevel, wid, 0, 0, w, h, 
+				commandlist=cmdlist, resizable=0)
 		mw_globals.toplevel._register_wid(wid, self)
 		Qd.SetPort(wid)
 		self._widgetdict = {}
@@ -1698,9 +1704,6 @@ class DialogWindow(_Window):
 		del self._item_to_cmd
 		del self._itemhandler
 		_Window.close(self)
-		
-	def _needs_grow_cursor(self):
-		return 0
 		
 	def addwidget(self, num, widget):
 		self._widgetdict[num] = widget

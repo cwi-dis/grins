@@ -680,32 +680,39 @@ class _Toplevel(_Event):
 	
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
-		      adornments=None, canvassize=None, commandlist=[]):
+		      adornments=None, canvassize=None, commandlist=[],
+		      resizable=1):
 		print 'NEWWINDOW', x, y
-		extraw, extrah = mw_windows.calc_extra_size(adornments, canvassize)
-		wid, w, h = self._openwindow(x, y, w, h, title, units, extraw, extrah)
+		extras = mw_windows.calc_extra_size(adornments, canvassize)
+		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
 					title, adornments, canvassize,
-					commandlist)
+					commandlist, resizable)
 		self._register_wid(wid, rv)
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
 			type_channel = None, pixmap = 0, units=UNIT_MM,
-			adornments=None, canvassize=None, commandlist=[]):
+			adornments=None, canvassize=None, commandlist=[],
+			resizable=1):
 		print 'NEWCMWINDOW', x, y
-		extraw, extrah = mw_windows.calc_extra_size(adornments, canvassize)
-		wid, w, h = self._openwindow(x, y, w, h, title, units, extraw, extrah)
+		extras = mw_windows.calc_extra_size(adornments, canvassize)
+		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,
 					title, adornments, canvassize,
-					commandlist)
+					commandlist, resizable)
 		self._register_wid(wid, rv)
 		return rv
 		
-	def _openwindow(self, x, y, w, h, title, units, extraw=0, extrah=0):
+	def _openwindow(self, x, y, w, h, title, units, resizable=1, extras=(0,0,0,0)):
 		"""Internal - Open window given xywh, title.
 		Returns window-id"""
-		if w <= 0 or h <= 0:
+		extraw, extrah, minw, minh = extras
+		if w == 0 and h == 0:
+			units = UNIT_PXL
+			w = minw
+			h = minh
+		if w <= 0 and h <= 0:
 			raise 'Illegal window size'
 		#
 		# First determine x, y position
@@ -775,7 +782,11 @@ class _Toplevel(_Event):
 			diff = (b-4)-y1
 			y, y1 = y+diff, y1+diff
 			
-		wid = Win.NewCWindow((x, y, x1, y1), title, 1, 0, -1, 1, 0 )
+		if resizable:
+			defprocid = 0
+		else:
+			defprocid = 4
+		wid = Win.NewCWindow((x, y, x1, y1), title, 1, defprocid, -1, 1, 0 )
 		
 		return wid, w, h
 		
