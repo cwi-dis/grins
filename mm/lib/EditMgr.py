@@ -67,7 +67,6 @@ class EditMgr:
 		MMAttrdefs.flushcache(self.root)
 		Timing.changedtimes(self.root)
 		self.root.clear_infoicon()
-		self.root.ResetPlayability()
 		for x in self.registry[:]:
 			x.commit()
 		self.busy = 0
@@ -147,7 +146,8 @@ class EditMgr:
 	#
 	# Sync arc operations
 	#
-	def __isbegin(self, xnode, xside, ynode, yside):
+	def addsyncarc(self, xnode, xside, delay, ynode, yside):
+		skip = 0
 		if yside == HD:
 			if ynode.GetParent().GetType() == 'seq' and xside == TL:
 				prev = None
@@ -156,21 +156,15 @@ class EditMgr:
 						break
 					prev = n
 				if prev is not None and xnode is prev:
-					return 1
+					self.setnodeattr(ynode, 'begin', delay)
+					skip = 1
 			elif xside == HD and xnode is ynode.GetParent():
-				return 1
-		return 0
-
-	def addsyncarc(self, xnode, xside, delay, ynode, yside):
-		skip = 0
-		if self.__isbegin(xnode, xside, ynode, yside):
-			skip = 1
-			self.setnodeattr(ynode, 'begin', delay)
+				self.setnodeattr(ynode, 'begin', delay)
+				skip = 1
 		list = ynode.GetRawAttrDef('synctolist', None)
-		if list is None:
+		if list is None and not skip:
 			list = []
-			if not skip:
-				ynode.SetAttr('synctolist', list)
+			ynode.SetAttr('synctolist', list)
 		xuid = xnode.GetUID()
 		for item in list:
 			xn, xs, de, ys = item
@@ -181,11 +175,21 @@ class EditMgr:
 		if not skip:
 			self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
 			list.append((xuid, xside, delay, yside))
-
+	#
 	def delsyncarc(self, xnode, xside, delay, ynode, yside):
-		if self.__isbegin(xnode, xside, ynode, yside):
-			self.setnodeattr(ynode, 'begin', None)
-			return
+		if yside == HD:
+			if ynode.GetParent().GetType() == 'seq' and xside == TL:
+				prev = None
+				for n in ynode.GetParent().GetChildren():
+					if n is ynode:
+						break
+					prev = n
+				if prev is not None and xnode is prev and ynode.GetAttrDef('begin',None) == delay:
+					self.setnodeattr(ynode, 'begin', None)
+					return
+			elif xside == HD and xnode is ynode.GetParent() and ynode.GetAttrDef('begin',None) == delay:
+				self.setnodeattr(ynode, 'begin', None)
+				return
 		list = ynode.GetRawAttrDef('synctolist', [])
 		xuid = xnode.GetUID()
 		for item in list:
@@ -209,6 +213,10 @@ class EditMgr:
 	def dellink(self, link):
 		self.addstep('dellink', link)
 		self.context.hyperlinks.dellink(link)
+
+	def addexternalanchor(self, url):
+		self.addstep('addexternalanchor', url)
+		self.context.externalanchors.append(url)
 	#
 	# Channel operations
 	#
