@@ -247,7 +247,7 @@ class SlideWrapper(NodeWrapper):
 			namelist = ['color', 'displayfull', 'subregionxy',
 				    'subregionwh', 'subregionanchor', 'start']
 		elif tag in ('fadein', 'crossfade', 'wipe'):
-			namelist = ['file', 'fullimage', 'imgcropxy',
+			namelist = ['file', 'caption', 'fullimage', 'imgcropxy',
 				    'imgcropwh', 'imgcropanchor', 'aspect',
 				    'displayfull', 'subregionxy',
 				    'subregionwh', 'subregionanchor', 'start',
