@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL20.dtd">
+<smil>
+  <head>
+    <meta name="title" content="A'DAM FACADES - HERENGRACHT"/>
+    <meta name="generator" content="GRiNS Pro for SMIL Boston, v2.0 "/>
+    <layout type="text/smil-extended-layout">
+      <viewport id="A-DAM-FACADES--HERENGRACHT" backgroundColor="black" width="600" height="400">
+        <region id="image1" left="59" top="13" width="398" height="341" backgroundColor="red"/>
+        <region id="image2" left="226" top="26" width="344" height="336" fit="meet" backgroundColor="black"/>
+        <region id="image3" left="167" width="433" height="400" fit="meet" backgroundColor="black"/>
+        <region id="Acknowledgements1" width="600" height="400" fit="meet" backgroundColor="black"/>
+      </viewport>
+    </layout>
+  </head>
+  <body>
+    <seq id="Animate-motion-compose">
+      <par id="mapanimation">
+        <img id="mode1" region="image1" src="jbeans.jpg" dur="6s"/>
+        <animateMotion id="path-motion" targetElement="image1" dur="6s" accelerate="0.500" decelerate="0.500" path="M0,0 C 100,50 200,50 200,250" additive="sum"/>
+        <animateMotion id="motion" targetElement="image1" dur="6s" accelerate="0.500" decelerate="0.500" from="0,0" to="100,100" additive="sum"/>
+        <animateColor id="animColor" targetElement="image1" attributeName="backgroundColor" dur="4s" from="rgb(0, 0, 0)" to="rgb(0, 255, 255)"/>
+      </par>
+      <img id="node2" region="image2" src="peppers.jpg" dur="3s">
+        <anchor id="roorf" coords="26,19,132,120" end="4.000s"/>
+      </img>
+      <text id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam%0a" type="text/plain" dur="3s"/>
+    </seq>
+  </body>
+</smil>
