@@ -492,6 +492,7 @@ class MMNode:
 	def _setattr(self, name, value):
 		# ASSERT not self.attrdict.has_key(name)
 		self.attrdict[name] = value
+		MMAttrdefs.flushcache(self)
 
 	#
 	# Public methods for read-only access
@@ -763,12 +764,14 @@ class MMNode:
 
 	def SetAttr(self, name, value):
 		self.attrdict[name] = value
+		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
 
 	def DelAttr(self, name):
 		if not self.attrdict.has_key(name):
 			raise NoSuchAttrError, 'in DelAttr()'
 		del self.attrdict[name]
+		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
 
 	def Destroy(self):
