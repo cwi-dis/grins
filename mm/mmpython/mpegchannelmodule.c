@@ -68,10 +68,10 @@ static int windowsystem;	/* which window system to use */
 static unsigned char ctab[128];
 
 static void
-mpeg_display(self)
+do_display(self)
 	mmobject *self;
 {
-	denter(mpeg_display);
+	denter(do_display);
 	switch (windowsystem) {
 #ifdef USE_XM
 	case WIN_X:
@@ -89,6 +89,14 @@ mpeg_display(self)
 	default:
 		abort();
 	}
+}
+
+static void
+mpeg_display(self)
+	mmobject *self;
+{
+	denter(mpeg_display);
+	do_display(self);
 	up_sema(PRIV->dispsema);
 }
 
@@ -179,6 +187,7 @@ mpeg_resized(self, x, y, w, h)
 	PRIV->rect[Y] = y;
 	PRIV->rect[WIDTH] = w;
 	PRIV->rect[HEIGHT] = h;
+	do_display(self);
 	return 1;
 }
 
