@@ -2,6 +2,8 @@ __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
 from usercmd import *
+from wndusercmd import *
+
 
 """ @win32doc|TopLevelDialog
 There is one to one corespondance between a TopLevelDialog
@@ -15,6 +17,13 @@ class TopLevelDialog:
 	adornments = {}
 
 	def __init__(self):
+		self.commandlist = self.commandlist + [
+			PAUSE(callback = (self.pause_callback, ())),
+			STOP(callback = (self.stop_callback, ())),
+			TB_PLAY(callback = (self.play_callback, ())),
+			TB_PAUSE(callback = (self.pause_callback, ())),
+			TB_STOP(callback = (self.stop_callback, ())),
+		]
 		pass
 
 	def show(self):
@@ -22,6 +31,8 @@ class TopLevelDialog:
 			return
 		self.window = windowinterface.newdocument(self, 
 			adornments = self.adornments,commandlist = self.commandlist)
+		import Player
+		self.setplayerstate(Player.STOPPED)
 
 	def hide(self):
 		if self.window is None:
@@ -31,6 +42,9 @@ class TopLevelDialog:
 
 	def setbuttonstate(self, command, showing):
 		self.window.set_toggle(command, showing)
+
+	def setplayerstate(self, state):
+		self.window.setplayerstate(state)
 
 	def showsource(self, source = None, optional=0):
 		if source is None:
