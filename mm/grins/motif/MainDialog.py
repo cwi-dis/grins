@@ -96,6 +96,10 @@ class MainDialog:
 		self.__lasturl = MMurl.pathname2url(filename)
 		self.__text.settext(self.__lasturl)
 
+	def openfile_callback(self):
+		"""On Unix we only have to "open url" dialog"""
+		self.open_callback()
+		
 	def set_recent_list(self, list):
 		recent = []
 		for base, url in list:
