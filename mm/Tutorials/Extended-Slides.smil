@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" basewindow "/>
+    <meta name="generator" content="GRiNS editor 0.5 win32 patchlevel 0"/>
+    <layout>
+      <root-layout id="basewindow-" title=" basewindow " width="636" height="476"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Top-L" title="Top-L" width="300" height="300" GRiNS:type="image"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Mid" title="Mid" left="229" top="108" width="167" height="300" z-index="1" GRiNS:type="image"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Bot-R" title="Bot-R" left="329" top="169" width="300" height="300" z-index="2" GRiNS:type="image"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Audio" title="Audio" GRiNS:type="sound"/>
+    </layout>
+  </head>
+  <body>
+    <seq id="Extended-Slideshow">
+      <par id="Audio-Video-Show">
+        <audio id="Audio-0" region="Audio" src="put-audio-here"/>
+        <seq id="Image-Sequence">
+          <img id="Picture-1" region="Top-L" src="picture_1"/>
+          <img id="picture-2" region="Mid" src="Picture_2"/>
+          <img id="picture-3" region="Bot-R" src="picture_3"/>
+        </seq>
+      </par>
+    </seq>
+  </body>
+</smil>
