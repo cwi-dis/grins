@@ -6,12 +6,13 @@ import regexp
 
 SyntaxError = 'MMParser.SyntaxError'
 CheckError = 'MMParser.CheckError'
+TypeError = 'MMParser.TypeError'
 
 expr = '0[xX][0-9a-fA-F]+|[0-9]+(\.[0-9]*)?([eE][-+]?[0-9]+)?'
-matchnumber = regexp.compile(expr)
+matchnumber = regexp.compile(expr).exec
 
 expr = '[a-zA-Z_][a-zA-Z0-9_]*'
-matchname = regexp.compile(expr)
+matchname = regexp.compile(expr).exec
 
 letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
 digits = '0123456789'
@@ -27,6 +28,28 @@ class MMParser():
 		#
 		self.input = input
 		self.reset()
+		self.context = MMNode.MMNodeContext().init(MMNode.MMNode)
+		self.attrparsers = {}
+		self.attrparsers['styledict'] = \
+		self.attrparsers['channeldict'] = \
+			MMParser.getnamedictvalue, \
+				(MMParser.getattrdictvalue, None)
+		self.attrparsers['style'] = \
+			MMParser.getlistvalue, (MMParser.getnamevalue, None)
+		self.attrparsers['channel'] = \
+		self.attrparsers['type'] = \
+			MMParser.getnamevalue, None
+		self.attrparsers['scrollbars'] = \
+			MMParser.gettuplevalue, \
+				((MMParser.getboolvalue, None),)*2
+		self.attrparsers['winsize'] = \
+			MMParser.gettuplevalue, \
+				((MMParser.getintvalue, None),)*2
+		self.attrparsers['winpos'] = \
+			MMParser.gettuplevalue, \
+				((MMParser.getintvalue, None),)*2
+		self.attrparsers['font'] = \
+			MMParser.getstringvalue, None
 		return self
 	#
 	def reset(self):
@@ -40,8 +63,13 @@ class MMParser():
 		self.open()
 		type = self.gettoken()
 		if type not in ('seq', 'par', 'grp', 'imm', 'ext'):
-			raise SyntaxError, (t, 'node type')
-		node = MMNode.MMNode()._init(type)
+			raise SyntaxError, (type, 'node type')
+		if self.peektoken() = '(':
+			# XXX Temporary hack to accomodate old syntax (no uid)
+			uid = self.context.newuid()
+		else:
+			uid = self.getuid()
+		node = self.context.newnodeuid(type, uid)
 		self.open()
 		while self.more():
 			name, value = self.getattr()
@@ -56,40 +84,148 @@ class MMParser():
 				node._addvalue(value)
 		else:
 			# External node
-			self.expect(')')
+			self.close()
 		return node
 	#
 	def getattr(self):
 		self.open()
 		name = self.gettoken()
-		if name in ('styledict', 'channeldict'):
-			# Special syntax for style and channel dictionary:
-			# each item is a named attribute list
-			value = {}
-			while self.more():
-				self.open()
-				name1 = self.gettoken()
-				value1 = {}
-				while self.more():
-					name2, value2 = self.getattr()
-					value1[name2] = value2
-				value[name1] = value1
+		if name[:1] not in letters:
+			raise SyntaxError, (name, 'name')
+		if self.attrparsers.has_key(name):
+			func, arg = self.attrparsers[name]
+			value = func(self, arg)
 		elif name[-4:] = 'dict':
-			# Special syntax for other dictionaries
-			value = {}
-			while self.more():
-				name1, value1 = self.getattr()
-				value[name1] = value1
+			# Default syntax for dictionaries
+			value = \
+			    self.getnamedictvalue(MMParser.getanyvalue, None)
+		elif name[-4:] = 'list':
+			# Default syntax for lists
+			value = self.getlistvalue(MMParser.getanyvalue, None)
 		else:
-			values = []
-			while self.more():
-				values.append(self.getvalue())
-			if len(values) = 1 and \
-				    name <> 'style' and name[-4:] <> 'list':
-				value = values[0]
-			else:
-				value = values
+			# Default syntax for other things
+			# (returned as lists if more than one item,
+			# else as single value)
+			value = self.getlistvalue(MMParser.getanyvalue, None)
+			if len(value) = 1:
+				value = value[0]
+		self.close()
 		return name, value
+	#
+	# Experimental attr-specific parsers
+	# These raise an exception if the type isn't right
+	# These do NOT eat the next token, even if it is ')'
+	#
+	def getintvalue(self, dummy):
+		t = self.needtoken()
+		if t[0] in digits:
+			if '.' in t or 'e' in t or 'E' in t:
+				raise TypeError, 'int'
+			return int(eval(t))
+		raise TypeError, (t, 'int')
+	#
+	def getfloatvalue(self, dummy):
+		t = self.needtoken()
+		if t[0] in digits: return float(eval(t))
+		raise TypeError, (t, 'float')
+	#
+	def getstringvalue(self, dummy):
+		t = self.needtoken()
+		if t[0] = '\'': return eval(t)
+		raise TypeError, (t, 'string')
+	#
+	def getnamevalue(self, dummy):
+		t = self.needtoken()
+		if t[0] in letters: return t
+		raise TypeError, (t, 'name')
+	#
+	def getboolvalue(self, dummy):
+		t = self.needtoken()
+		false = '0', 'n', 'no',  'f', 'off'
+		true  = '1', 'y', 'yes', 't', 'on'
+		if t in false: return 0
+		if t in true: return 1
+		raise TypeError, (t, 'bool')
+	#
+	def getenumvalue(self, list):
+		t = self.needtoken()
+		if t in list: return t
+		raise TypeError, (t, 'enum' + `list`)
+	#
+	def getlistvalue(self, (func, arg)):
+		list = []
+		while self.more():
+			v = func(self, arg)
+			list.append(v)
+		self.ungettoken(')')
+		return list
+	#
+	def getdictvalue(self, (func, arg)):
+		dict = {}
+		while self.more():
+			self.open()
+			key = self.getstringvalue(None)
+			if dict.has_key(key):
+				raise TypeError, (t, 'duplicate key string')
+			dict[key] = func(self, arg)
+			self.close()
+		self.ungettoken(')')
+		return dict
+	#
+	def getnamedictvalue(self, (func, arg)):
+		dict = {}
+		while self.more():
+			self.open()
+			key = self.getnamevalue(None)
+			if dict.has_key(key):
+				raise TypeError, (t, 'duplicate key name')
+			dict[key] = func(self, arg)
+			self.close()
+		self.ungettoken(')')
+		return dict
+	#
+	def getattrdictvalue(self, dummy):
+		dict = {}
+		while self.more():
+			key, val = self.getattr()
+			if dict.has_key(key):
+				raise TypeError, (t, 'duplicate attr name')
+			dict[key] = val
+		self.ungettoken(')')
+		return dict
+	#
+	def gettuplevalue(self, funcarglist):
+		tuple = ()
+		for func, arg in funcarglist:
+			v = func(self, arg)
+			tuple = tuple + (v,)
+		return tuple
+	#
+# BOGUS! Should reset tokenizer first...
+#	def getunionvalue(self, funcarglist):
+#		for func, arg in funcarglist:
+#			try:
+#				return func(self, arg)
+#			except TypeError:
+#				pass
+#		raise TypeError, 'union'
+	#
+	def getenclosedvalue(self, (func, arg)):
+		self.open()
+		v = func(self, arg)
+		self.close()
+		return v
+	#
+	def getanyvalue(self, dummy):
+		return self.getvalue()
+	#
+	def needtoken(self):
+		t = self.gettoken()
+		if t = '': raise EOFError
+		if t in ('(', ')'): raise SyntaxError, (t, 'value')
+		return t
+	#
+	# End experiments
 	#
 	def getvalue(self):
 		t = self.gettoken()
@@ -108,11 +244,24 @@ class MMParser():
 			return values
 		raise SyntaxError, (t, 'value')
 	#
+	def getuid(self):
+		t = self.gettoken()
+		if t = '':
+			raise EOFError
+		if t[0] in letters or t[0] in digits:
+			return t
+		if t[0] = '\'':
+			return eval(t)
+		raise SyntaxError, (t, 'value')
 	#
 	def open(self):
 		self.expect('(')
 	#
+	def close(self):
+		self.expect(')')
+	#
 	def expect(self, exp):
+		#print '#expect', exp
 		t = self.gettoken()
 		if t <> exp:
 			raise SyntaxError, (t, exp)
@@ -135,7 +284,7 @@ class MMParser():
 			self.pushback = ''
 		else:
 			token = self.getnexttoken()
-		# print 'next token:', token
+		#print '#gettoken', token
 		return token
 	#
 	def ungettoken(self, token):
@@ -206,7 +355,7 @@ class MMParser():
 					i = i+1
 			raise SyntaxError, 'unterminated string'
 		if c in digits:
-			match = matchnumber.exec(line, i)
+			match = matchnumber(line, i)
 			if match:
 				first, last = match[0]
 				token = line[first : last]
@@ -214,7 +363,7 @@ class MMParser():
 				return token
 			raise SyntaxError, 'number syntax error'
 		if c in letters:
-			match = matchname.exec(line, i)
+			match = matchname(line, i)
 			if match:
 				first, last = match[0]
 				token = line[first : last]
