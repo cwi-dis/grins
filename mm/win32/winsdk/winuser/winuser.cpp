@@ -20,8 +20,10 @@ PyObject *ErrorObject;
 
 #include "mtpycall.h"
 
+#ifdef WITH_THREAD
 PyInterpreterState*
 PyCallbackBlock::s_interpreterState = NULL;
+#endif
 
 static struct PyMethodDef winuser_methods[] = {
 	{"GetApplication", (PyCFunction)Winuser_GetApplication, METH_VARARGS, ""},
@@ -57,7 +59,9 @@ void initwinuser()
 	{
 	PyObject *m, *d;
 
-	PyCallbackBlock::init();	
+#ifdef WITH_THREAD
+	PyCallbackBlock::init();
+#endif
 
 	// Create the module and add the functions
 	m = Py_InitModule4("winuser", winuser_methods,

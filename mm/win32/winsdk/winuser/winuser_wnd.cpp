@@ -90,7 +90,9 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 		std::map<UINT, PyObject*>::iterator hit = hooks.find(uMsg);
 		if(hit != hooks.end())
 			{
+#ifdef WITH_THREAD
 			PyCallbackBlock cbblock;
+#endif
 			PyObject *method = (*hit).second;
 			PyObject *arglst = Py_BuildValue("((iiiii(ii)))",
 				msg.hwnd,msg.message,msg.wParam,msg.lParam,msg.time,msg.pt.x,msg.pt.y);
