@@ -75,7 +75,7 @@ class HierarchyView(ViewDialog):
 		title = 'Hierarchy View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title)
+		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1)
 		if self.waiting:
 			self.window.setcursor('watch')
 		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
