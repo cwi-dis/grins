@@ -33,7 +33,7 @@ import grinsRC
 import win32window
 
 #
-from SMILTreeWrite import fmtfloat
+from fmtfloat import fmtfloat
 
 # units
 from appcon import *
