@@ -203,6 +203,7 @@ class RPParser(xmllib.XMLParser):
 			   'fadeouttime':'0',
 			   'fadeoutduration':'0',
 			   'fadeoutcolor':'black',
+			   'project_convert':'1',
 			   },
 		'fadeout': {'color':None,
 			    'grins_image_caption':'',
@@ -214,7 +215,7 @@ class RPParser(xmllib.XMLParser):
 			    'maxfps':None,
 			    'start':None,},
 		'crossfade': {'aspect':None,
-				  'grins_image_caption':'',
+			      'grins_image_caption':'',
 			      'dsth':'0',
 			      'dstw':'0',
 			      'dstx':'0',
@@ -227,7 +228,8 @@ class RPParser(xmllib.XMLParser):
 			      'srcy':'0',
 			      'start':None,
 			      'target':None,
-			      'url':None,},
+			      'url':None,
+			      'project_convert':'1',},
 		'wipe': {'aspect':None,
 			 'grins_image_caption':'',
 			 'direction':None,
@@ -244,7 +246,8 @@ class RPParser(xmllib.XMLParser):
 			 'start':None,
 			 'target':None,
 			 'type':None,
-			 'url':None,},
+			 'url':None,
+			 'project_convert':'1',},
 		'viewchange': {'dsth':'0',
 				   'grins_image_caption':'',
 			       'dstw':'0',
@@ -484,8 +487,14 @@ class RPParser(xmllib.XMLParser):
 		elif not self.__images.has_key(target):
 			self.syntax_error("unknown `target' attribute")
 		url = attributes.get('url')
+		try:
+			convert = string.atoi(attributes.get('grins_convert', '1'))
+		except string.atoi_error:
+			self.syntax_error("attribute `grins_convert' is not an integer" % str)
+			convert = 1
 		attrs = {'tag': tag,
 			 'caption': attributes.get('grins_image_caption', ''),
+			 'project_convert': attributes.get('grins_convert', 1),
 			 'file': self.__images.get(target),
 			 'imgcropxy': srcrect[:2],
 			 'imgcropwh': srcrect[2:],

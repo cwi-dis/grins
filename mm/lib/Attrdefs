@@ -203,6 +203,9 @@
 	'Audio type, determines quality of audio when converting to RealAudio'
 	raw light)
 
+(project_convert (bool) 1 'Convert data' default
+	'Convert data to RealMedia format' raw smil)
+
 (project_ftp_host (string) '' 'Webserver' default
 	'FTP hostname to use for webpage upload' raw light)
 
