@@ -13,12 +13,17 @@ import string
 import os
 import MMurl
 import regsub
+import re
+
+from SMIL import *
 
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
-CMIFns = '<?xml:namespace ns="http://www.cwi.nl/Chameleon/" prefix="cmif"?>\n'
-SMILdtd = '<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"\n\
-                      "http://www.w3.org/AudioVideo/Group/SMIL10.dtd">\n'
+NSdecl = '<?xml:namespace ns="%s" prefix="cmif"?>\n' % CMIFns
+doctype = '<!DOCTYPE smil PUBLIC "%s"\n\
+                      "%s">\n' % (SMILpubid,SMILdtd)
+
+nonascii = re.compile('[\200-\377]')
 
 # A fileish object with indenting
 class IndentedFile:
@@ -251,12 +256,12 @@ def mediatype(chtype, error=0):
 		print '** Unimplemented channel type', chtype
 	return 'cmif:'+chtype
 
-class SMILWriter:
+class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename):
 		self.uses_cmif_extension = 0
-		self.__title = None
 		self.root = node
 		self.fp = fp
+		self.__title = None
 
 		self.ids_used = {}
 
@@ -279,23 +284,27 @@ class SMILWriter:
 			print '** Document uses multiple toplevel channels'
 			self.uses_cmif_extension = 1
 		
-		self.tmpdirname = filename + '.data'
+		dir, file = os.path.split(filename) # get parent dir
+		file, ext = os.path.splitext(file) # and base name
+		rel = file + '.dir'	# relative name of data directory
+		abs = os.path.join(dir, rel) # possibly absolute name of same
+		self.tmpdirname = abs, rel # record both names
 
 	def write(self):
 		fp = self.fp
 		fp.write(SMILdecl)
 		if self.uses_cmif_extension:
-			fp.write(CMIFns)
-		fp.write(SMILdtd)
+			fp.write(NSdecl)
+		fp.write(doctype)
 		fp.write('<smil>\n')
 		fp.push()
 		fp.write('<head>\n')
 		fp.push()
-		fp.write('<meta name="sync" content="soft"/>\n')
-		self.writelayout()
+## 		fp.write('<meta name="sync" content="soft"/>\n')
 		if self.__title:
-			fp.write('<meta name="title" content=%s/>\n' %
-				 nameencode(self.__title))
+			self.fp.write('<meta name="title" content=%s/>\n' %
+				      nameencode(self.__title))
+		self.writelayout()
 		fp.pop()
 		fp.write('</head>\n')
 		fp.write('<body>\n')
@@ -354,13 +363,22 @@ class SMILWriter:
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if not ch.has_key('base_window') and ch['type'] not in ('sound', 'shell', 'python', 'null', 'vcr', 'socket', 'cmif', 'midi', 'external'):
+			if not ch.has_key('base_window') and \
+			   ch['type'] not in ('sound', 'shell', 'python',
+					      'null', 'vcr', 'socket', 'cmif',
+					      'midi', 'external'):
+				# top-level channel with window
 				self.top_levels.append(ch)
+				if not self.__title:
+					self.__title = ch.name
 			# also check if we need to use the CMIF extension
 			if not self.uses_cmif_extension and \
 			   not smil_mediatype.has_key(ch['type']) and \
 			   ch['type'] != 'layout':
 				self.uses_cmif_extension = 1
+		if not self.__title and channels:
+			# no channels with windows, so take very first channel
+			self.__title = channels[0].name
 
 	def calcchnames2(self, node):
 		"""Calculate unique names for channels; second pass"""
@@ -410,8 +428,8 @@ class SMILWriter:
 			ch = self.top_levels[0]
 			if ch['type'] == 'layout':
 				attrlist.append('id=%s' % nameencode(self.ch2name[ch]))
-			if ch.has_key('transparent') and \
-			   ch['transparent'] == 1:
+			attrlist.append('title=%s' % nameencode(ch.name))
+			if ch.get('transparent', 0) == 1:
 				# background-color="transparent" is default
 				pass
 			elif ch.has_key('bgcolor'):
@@ -441,13 +459,11 @@ class SMILWriter:
 			   not ch.has_key('base_window'):
 				# top-level layout channel has been handled
 				continue
-			attrlist = ['<region id=%s' %
-				    nameencode(self.ch2name[ch])]
+			attrlist = ['<region id=%s title=%s' %
+				    (nameencode(self.ch2name[ch]),
+				     nameencode(ch.name))]
 			# if toplevel window, define a region elt, but
 			# don't define coordinates (i.e., use defaults)
-			if not ch.has_key('base_window'):
-				if not self.__title:
-					self.__title = ch.name
 			if ch.has_key('base_window') and \
 			   ch.has_key('base_winoff'):
 				x, y, w, h = ch['base_winoff']
@@ -531,28 +547,38 @@ class SMILWriter:
 					break
 
 		imm_href = None
+## 		if type == 'imm':
+## 			data = string.join(x.GetValues(), '\n')
+## 			if mtype != 'text' and mtype[:5] != 'cmif:':
+## 				# binary data, use base64 encoding
+## 				import base64
+## 				data = base64.encodestring(data)
+## 			elif '<' in data or '&' in data:
+## 				# text data containing < or &: use
+## 				# <!{CDATA[...]]>
+## 				# "quote" ]]> in string
+## 				data = string.join(string.split(data, ']]>'),
+## 						   ']]>]]<![CDATA[>')
+## 				data = '<![CDATA[%s]]>\n' % data
+## 			else:
+## 				# other text data, can go as is
+## 				data = data + '\n'
+## 		else:
+## 			data = None
 		if type == 'imm':
-			data = string.join(x.GetValues(), '\n')
-			if mtype != 'text' and mtype[:5] != 'cmif:':
-				# binary data, use base64 encoding
-				import base64
-				data = base64.encodestring(data)
-			elif '<' in data or '&' in data:
-				# text data containing < or &: use
-				# <!{CDATA[...]]>
-				# "quote" ]]> in string
-				data = string.join(string.split(data, ']]>'),
-						   ']]>]]<![CDATA[>')
-				data = '<![CDATA[%s]]>\n' % data
+			if chtype == 'html':
+				mime = 'text/html'
 			else:
-				# other text data, can go as is
-				data = data + '\n'
-		else:
-			data = None
+				mime = ''
+			data = string.join(x.GetValues(), '\n')
+			if nonascii.search(data):
+				mime = mime + ';charset=ISO-8859-1'
+			imm_href = 'data:%s,%s' % (mime, MMurl.quote(data))
+		data = None
 
 		for name, func in smil_attrs:
 			if name == 'src' and type == 'imm':
-				value = None
+				value = imm_href
 			else:
 				value = func(self, x)
 			if value:
@@ -686,10 +712,10 @@ class SMILWriter:
 	def smiltempfile(self, node, suffix = '.html'):
 		"""Return temporary file name for node"""
 		nodename = self.uid2name[node.GetUID()]
-		if not os.path.exists(self.tmpdirname):
-			os.mkdir(self.tmpdirname)
+		if not os.path.exists(self.tmpdirname[0]):
+			os.mkdir(self.tmpdirname[0])
 		filename = nodename + suffix
-		return os.path.join(self.tmpdirname, filename)
+		return os.path.join(self.tmpdirname[1], filename)
 
 
 def nameencode(value):
