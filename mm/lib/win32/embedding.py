@@ -126,22 +126,35 @@ class ListenerWnd(GenWnd.GenWnd):
 
 	def OnSetPos(self, params):
 		pos = 0.001*params[3]
-		self._slidermap[params[2]].setPos(pos)
+		slider = self._slidermap.get(params[2])
+		if slider:
+			slider.setPos(pos)
 
 	def OnSetSpeed(self, params):
 		frame = self._docmap.get(params[2])
 		if frame: 
 			speed = 0.001*params[3]
-			self._slidermap[params[2]].setSpeed(speed)
+			slider = self._slidermap.get(params[2])
+			if slider:
+				slider.setSpeed(speed)
 
 	def GetPos(self, id):
-		return int(1000*self._slidermap[id].getPos())
+		slider = self._slidermap.get(id)
+		if slider:
+			return int(1000*slider.getPos())
+		return 0
 
 	def GetMediaFrameRate(self, id, rurl):
-		return self._slidermap[id].GetMediaFrameRate(rurl)
+		slider = self._slidermap.get(id)
+		if slider:
+			return slider.GetMediaFrameRate(rurl)
+		return 20
 
 	def GetState(self, id):
-		return self._slidermap[id].getState()
+		slider = self._slidermap.get(id)
+		if slider:
+			return slider.getState()
+		return 0
 
 ############################
 import FrameRate
@@ -209,28 +222,33 @@ class SliderPeer:
 		self.__updatepeer = 1
 
 	def findMedia(self, node, media, url2mtype):
-		import MMTypes
+		import MMTypes, MMmimetypes
 		nt = node.GetType()
 		if nt == 'ext':
 			url = node.GetRawAttr('file')
 			if url:
 				media.append(url)
 				if not url2mtype.has_key(url):
-					mimetype = node.GetComputedMimeType()
-					url2mtype[url] = string.split(mimetype, '/')
+					mimetype = 	MMmimetypes.guess_type(url)[0]
+					try:
+						mtype, subtype = string.split(mimetype, '/')
+					except:
+						pass
+					else:
+						url2mtype[url] = mtype, subtype
 		if nt in MMTypes.interiortypes:
 			for child in node.GetChildren():
 				self.findMedia(child, media, url2mtype)
 
 	def findFrameRate(self):
 		for rurl in self.media:
-			mt = self.url2mtype[rurl]
-			if mt[0] == 'video':
+			mt = self.url2mtype.get(rurl)
+			if mt and mt[0] == 'video':
 				url = self.ctx.findurl(rurl)
 				return FrameRate.GetFrameRate(url, mt[0], mt[1])
 		for rurl in self.media:
-			mt = self.url2mtype[rurl]
-			if mt[0] == 'audio':
+			mt = self.url2mtype.get(rurl)
+			if mt and mt[0] == 'audio':
 				url = self.ctx.findurl(rurl)
 				return FrameRate.GetFrameRate(url, mt[0], mt[1])
 		return 20 
