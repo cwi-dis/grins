@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Global constants/variables used by all modules
 #

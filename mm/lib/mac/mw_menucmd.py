@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Carbon import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
 import MenuTemplate
