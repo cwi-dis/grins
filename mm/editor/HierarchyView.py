@@ -2070,8 +2070,8 @@ class HierarchyView(HierarchyViewDialog):
 		
 	def clear_showtime(self, node):
 		node.showtime = 0
-##		for c in node.children:
-##			self.clear_showtime(c)
+		for c in node.children:
+			self.clear_showtime(c)
 
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()
