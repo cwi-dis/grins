@@ -332,7 +332,7 @@ class ChannelView(ChannelViewDialog):
 	def timerange(self):
 		# Return the range of times used in the window
 		v = self.viewroot
-		t0, t1 = v.t0 - self.prerolltime, v.t1
+		t0, t1 = v.t0 - self.prerolltime, v.t2
 		return t0, max(t1, t0 + 10)
 
 	def maptimes(self, t0, t1):
@@ -526,12 +526,12 @@ class ChannelView(ChannelViewDialog):
 			for o in list:
 				for i in range(len(x)):
 					if o.node.t0 >= x[i]:
-						x[i] = o.node.t1
+						x[i] = o.node.t2
 						o.channelline = i
 						break
 				else:
 					o.channelline = len(x)
-					x.append(o.node.t1)
+					x.append(o.node.t2)
 			channels[ch] = len(x)
 		self.channellines = channels
 
@@ -1780,7 +1780,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 def nodesort(o1, o2):
 	d = cmp(o1.node.t0, o2.node.t0)
 	if d == 0:
-		d = cmp(o1.node.t1, o2.node.t1)
+		d = cmp(o1.node.t2, o2.node.t2)
 	return d
 
 class NodeBox(GO, NodeBoxCommand):
@@ -1938,20 +1938,20 @@ class NodeBox(GO, NodeBoxCommand):
 		if self.pausenode:
 			parent = self.node.GetParent()
 			if parent is None:
-				t1 = self.node.t1
+				t1 = self.node.t2
 			elif parent.GetType() == 'seq':
 				siblings = parent.GetChildren()
 				index = siblings.index(self.node)
 				if len(siblings) > index+1:
 					t1 = siblings[index+1].t0
 				else:
-					t1 = parent.t1
+					t1 = parent.t2
 			else:
-				t1 = parent.t1
+				t1 = parent.t2
 			if t1 == self.node.t0:
-				t1 = self.node.t1
+				t1 = self.node.t2
 		else:
-			t1 = self.node.t1
+			t1 = self.node.t2
 		left, right = self.mother.maptimes(self.node.t0, t1)
 		top, bottom = self.mother.mapchannel(channel, self.channelline)
 		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
@@ -2092,7 +2092,7 @@ class NodeBox(GO, NodeBoxCommand):
 		if not self.node.WillPlay():
 			return None
 		t0 = self.node.t0
-		t1 = self.node.t1
+		t1 = self.node.t2
 		try:
 			prearm, bandwidth = Bandwidth.get(self.node)
 		except Bandwidth.Error, msg:
@@ -2166,7 +2166,7 @@ class INodeBox(GO):
 		GO.cleanup(self)
 
 	def reshape(self):
-		left, right = self.mother.maptimes(self.node.t0, self.node.t1)
+		left, right = self.mother.maptimes(self.node.t0, self.node.t2)
 		self.left = left
 		self.right = right
 		self.top = 0
