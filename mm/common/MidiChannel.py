@@ -15,8 +15,6 @@ import sys
 import select
 import MMurl
 
-sys.path.append('/ufs/jack/src/python/Extensions/midi/build.irix6')
-sys.path.append('/ufs/jack/src/python/Extensions/midi/Lib')
 try:
     import sgimidi
     import midi
