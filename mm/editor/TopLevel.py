@@ -327,6 +327,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if (utype and utype != 'file') or host or query or fragment:
 			# nonlocal url
 			return url
+		pathname = MMurl.url2pathname(pathname)
 		cwd = self.dirname
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
