@@ -79,12 +79,14 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t\tCtrl+X', 'X', CUT),
 		(FLAG_ALL, ENTRY, '&Copy\tCtrl+C', 'C', COPY),
+		(FLAG_ALL, ENTRY, 'Copy Properties...', None, COPYPROPERTIES),
 		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE_AFTER),
 		(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, CASCADE, 'P&aste special', (
 			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Before', None, PASTE_BEFORE),
 			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Within', None, PASTE_UNDER),
 			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&After', None, PASTE_AFTER),
 			)),
+		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
 		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, '&Align', (
