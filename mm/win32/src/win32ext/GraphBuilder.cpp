@@ -10,44 +10,62 @@
 
 #include "GraphBuilder.h"
 
+// Purpose: This module exports to Python the interface IGraphBuilder and indirectly 
+// other interfaces related to the DirectShow Infrastructure. The indirectly exposed interface
+// is sufficient to control a media stream (sound and video)
+
+
+// Create an instance of a GraphBuilder (a wrapper object to the COM interface IGraphBuilder)
+// Arguments: No
+// Return Values: a GraphBuilder object that is a wrapper to the COM interface IGraphBuilder
 //static 
 PyObject *GraphBuilderCreator::Create(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
 
-	IGraphBuilder *pGraph=NULL;
+	IGraphBuilder *pIGraph=NULL;
 	GUI_BGN_SAVE;
 	HRESULT hr = CoCreateInstance(CLSID_FilterGraph,
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           IID_IGraphBuilder,
-                          (void **)&pGraph);
+                          (void **)&pIGraph);
 	GUI_END_SAVE;
 	if (FAILED(hr)) RETURN_NONE;
-	return ui_assoc_object::make(PyIClass<IGraphBuilder,GraphBuilderCreator>::type,pGraph);
+
+	GraphBuilder* pGraph=new GraphBuilder(pIGraph);
+	return ui_assoc_object::make(PyClass<GraphBuilder,GraphBuilderCreator>::type,pGraph);
 	}
 
-
+// Release the interface associated with the GraphBuilder
+// Arguments: No
+// Return Values: None
 static PyObject* py_release(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,Release);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
 
 	GUI_BGN_SAVE;
-	if(pGraph) pGraph->Release();
+	pGraphBuilder->Release();
 	GUI_END_SAVE;
 
 	RETURN_NONE;
 	}
 
+// Render the media file passed as argument
+// Arguments: filename to parse (string)
+// Return Values: None
 static PyObject* py_render_file(PyObject *self, PyObject *args)
 	{
 	char* pszFileName;
 	if(!PyArg_ParseTuple(args,"s:RenderFile",&pszFileName))
 		return NULL;
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
     WCHAR wPath[MAX_PATH];
     MultiByteToWideChar(CP_ACP,0,pszFileName,-1, wPath, MAX_PATH);
@@ -56,17 +74,23 @@ static PyObject* py_render_file(PyObject *self, PyObject *args)
 	HRESULT hr=pGraph->RenderFile(wPath, NULL);
 	GUI_END_SAVE;
 
-	if(FAILED(hr)) RETURN_ERR("RenderFile failed");
+	BOOL res=TRUE;
+	if(FAILED(hr)) 
+		res=FALSE; //RETURN_ERR("RenderFile failed");
 
-	RETURN_NONE;
+	return Py_BuildValue("i",res);
 	}
 
+// Run (start playing) the rendered stream
+// Arguments: No
+// Return Values: None
 static PyObject* py_run(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,Run);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IMediaControl *pMC=NULL;
 	HRESULT	hr = pGraph->QueryInterface(IID_IMediaControl, (void **) &pMC);
@@ -80,12 +104,17 @@ static PyObject* py_run(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+// Stop the rendered media stream
+// Arguments: No
+// Return Values: None
 static PyObject* py_stop(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,Stop);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
+
 	IMediaControl *pMC=NULL;
 	HRESULT	hr = pGraph->QueryInterface(IID_IMediaControl, (void **) &pMC);
     if(SUCCEEDED(hr))
@@ -97,12 +126,17 @@ static PyObject* py_stop(PyObject *self, PyObject *args)
         }
 	RETURN_NONE;
 	}
+
+// Pause the rendered media stream
+// Arguments: No
+// Return Values: None
 static PyObject* py_pause(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,Pause);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph) return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IMediaControl* pMC=NULL;
 	HRESULT	hr = pGraph->QueryInterface(IID_IMediaControl, (void **) &pMC);
@@ -116,21 +150,26 @@ static PyObject* py_pause(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+// Get the duration (in msec) of the rendered file
+// Arguments: No
+// Return Values: duration in msecs
+
 static PyObject* py_get_duration(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,GetDuration);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
-    IMediaPosition* pMP=NULL;
-    HRESULT hr = pGraph->QueryInterface(IID_IMediaPosition, (void**) &pMP);
+	HRESULT hr=S_OK;
+	if(!pGraphBuilder->m_pIMP)
+		hr = pGraph->QueryInterface(IID_IMediaPosition, (void**)&(pGraphBuilder->m_pIMP));
     if(SUCCEEDED(hr) )
 		{
         REFTIME tLength; // double in secs
 		GUI_BGN_SAVE;
-        hr = pMP->get_Duration(&tLength);
-		pMP->Release();
+        hr = pGraphBuilder->m_pIMP->get_Duration(&tLength);
 		GUI_END_SAVE;
 		if (SUCCEEDED(hr))
 			return Py_BuildValue("i", int(tLength*1000)); // in msec
@@ -138,20 +177,25 @@ static PyObject* py_get_duration(PyObject *self, PyObject *args)
 	RETURN_ERR("GetDuration failed");
 	}
 
+// Get the current sample position (in msec) within the stream
+// Arguments: No
+// Return Values: position within the stream in msecs
 static PyObject* py_get_position(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,GetPosition);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
-    IMediaPosition * pMP=NULL;
-    HRESULT hr = pGraph->QueryInterface(IID_IMediaPosition, (void**) &pMP);
-    if(SUCCEEDED(hr) )
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
+
+	HRESULT hr=S_OK;
+	if(!pGraphBuilder->m_pIMP)
+		hr = pGraph->QueryInterface(IID_IMediaPosition, (void**)&(pGraphBuilder->m_pIMP));
+    if(SUCCEEDED(hr))
 		{
         REFTIME tCurrent; // double in secs
 		GUI_BGN_SAVE;
-        hr = pMP->get_CurrentPosition(&tCurrent);
-		pMP->Release();
+        hr = pGraphBuilder->m_pIMP->get_CurrentPosition(&tCurrent);
 		GUI_END_SAVE;
 		if (SUCCEEDED(hr))
 			return Py_BuildValue("i", int(tCurrent*1000)); // in msec
@@ -159,35 +203,44 @@ static PyObject* py_get_position(PyObject *self, PyObject *args)
 	RETURN_ERR("GetPosition failed");
 	}
 
+// Set to sample position (in msec) within the stream
+// Arguments: position in msec
+// Return Values: None
 static PyObject* py_set_position(PyObject *self, PyObject *args)
 	{
 	int pos; // in msec
 	if(!PyArg_ParseTuple(args,"i:SetPosition",&pos))
 		return NULL;
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
-    IMediaPosition* pMP=NULL;
-    HRESULT hr = pGraph->QueryInterface(IID_IMediaPosition, (void**) &pMP);
-    if(SUCCEEDED(hr) )
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
+
+	HRESULT hr=S_OK;
+	if(!pGraphBuilder->m_pIMP)
+		hr = pGraph->QueryInterface(IID_IMediaPosition, (void**)&(pGraphBuilder->m_pIMP));
+    if(SUCCEEDED(hr))
 		{
 		GUI_BGN_SAVE;
         REFTIME tPos=double(pos)/1000.0; // double in secs
-        hr = pMP->put_CurrentPosition(tPos);
-		pMP->Release();
+        hr = pGraphBuilder->m_pIMP->put_CurrentPosition(tPos);
 		GUI_END_SAVE;
         }
 	RETURN_NONE;
 	}
 
+// Set the visible property to the value passed as argument (only for video)
+// Arguments: visible flag 
+// Return Values: None
 static PyObject* py_set_visible(PyObject *self, PyObject *args)
 	{
 	int flag; 
 	if(!PyArg_ParseTuple(args,"i:SetVisible",&flag))
 		return NULL;
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 	
 	long Visible=flag?-1:0; // OATRUE (-1),OAFALSE (0)
 	IVideoWindow  *pivw  = NULL;
@@ -202,7 +255,9 @@ static PyObject* py_set_visible(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-
+// Set the owner and notification window (only for video)
+// Arguments: a PyCWnd object and optionaly the message id for notifications
+// Return Values: None
 static PyObject* py_set_window(PyObject *self, PyObject *args)
 	{
 	int WM_GRAPHNOTIFY=WM_USER+101;
@@ -212,8 +267,9 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
 	CWnd *pWnd = GetWndPtr(obWnd);
 	if(!pWnd)RETURN_TYPE_ERR("The arg must be a PyCWnd object");
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 
 	IVideoWindow  *pivw  = NULL;
@@ -240,15 +296,18 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-
+// Set window position(only for video)
+// Arguments: the window rectangle 
+// Return Values: None
 static PyObject* py_set_window_position(PyObject *self, PyObject *args)
 	{
 	CRect rc;
 	if (!PyArg_ParseTuple(args,"(iiii):SetWindowPosition", &rc.left, &rc.top, &rc.right, &rc.bottom))
 		return NULL;
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IVideoWindow  *pivw  = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IVideoWindow,(void **)&pivw);
@@ -262,14 +321,18 @@ static PyObject* py_set_window_position(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-// returns (left,top,width,height)
+// Get window position(only for video)
+// Arguments: No 
+// Return Values: window position as (left,top,width,height)
+
 static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,GetWindowPosition);
 
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IVideoWindow  *pivw  = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IVideoWindow,(void **)&pivw);
@@ -286,13 +349,17 @@ static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 	}
 
 
+// Set the owner window to Null (only for video)
+// Arguments: No 
+// Return Values: None
 
 static PyObject* py_set_window_null(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,SetWindowNull);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IVideoWindow* pivw  = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IVideoWindow,(void **)&pivw);
@@ -301,12 +368,16 @@ static PyObject* py_set_window_null(PyObject *self, PyObject *args)
 		GUI_BGN_SAVE;
         pivw->put_Visible(0);
         pivw->put_Owner(NULL);
+		pivw->Release();
 		GUI_END_SAVE;
 		}
 	RETURN_NONE;
 	}
 
 
+// Set the window that will receive stream notification messages
+// Arguments: a PyCWnd object and optionaly the message id for notifications
+// Return Values: None
 static PyObject* py_set_notify_window(PyObject *self, PyObject *args)
 	{
 	int WM_GRAPHNOTIFY=WM_USER+101;
@@ -316,8 +387,9 @@ static PyObject* py_set_notify_window(PyObject *self, PyObject *args)
 	CWnd *pWnd = GetWndPtr(obWnd);
 	if(!pWnd)RETURN_TYPE_ERR("The arg must be a PyCWnd object");
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IMediaEventEx *pimex = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IMediaEventEx,(void **)&pimex);
@@ -329,12 +401,16 @@ static PyObject* py_set_notify_window(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+// Check if the stream has completed
+// Arguments: No
+// Return Values: Not zero if completed 
 static PyObject* py_is_complete_event(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,IsCompleteEvent);
 
-	IGraphBuilder *pGraph=(IGraphBuilder*)((PyIClass<IGraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraph)return NULL;
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IMediaEventEx *pimex = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IMediaEventEx,(void **)&pimex);
@@ -347,6 +423,7 @@ static PyObject* py_is_complete_event(PyObject *self, PyObject *args)
             hr = pimex->FreeEventParams(evCode, evParam1, evParam2);
             if(evCode==EC_COMPLETE){completed=1;}
 			}
+		pimex->Release();
 		}
 	return Py_BuildValue("i",completed);
 	}
@@ -378,9 +455,9 @@ static struct PyMethodDef PyGraphBuilder_methods[] = {
 };
 
 
-ui_type PyIClass<IGraphBuilder,GraphBuilderCreator>::type ("PyGraphBuilder",
+ui_type PyClass<GraphBuilder,GraphBuilderCreator>::type ("PyGraphBuilder",
 				&ui_assoc_object::type,
-				sizeof(PyIClass<IGraphBuilder,GraphBuilderCreator>),
+				sizeof(PyClass<GraphBuilder,GraphBuilderCreator>),
 				PyGraphBuilder_methods,
-				PyIClass<IGraphBuilder,GraphBuilderCreator>::PyObConstruct);
+				PyClass<GraphBuilder,GraphBuilderCreator>::PyObConstruct);
 
