@@ -61,10 +61,9 @@ class ArcInfoDialog:
 
 		import windowinterface 
 		frame=windowinterface.getactivedocframe()
-		fs=frame.getformserver()
-		self._window=fs.newformobj(formid)
+		self._window=frame.newformobj(formid)
 		self._window.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
-		fs.showform(self._window,formid)
+		frame.showform(self._window,formid)
 		self._window.show()
 
 	#

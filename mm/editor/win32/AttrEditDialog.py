@@ -50,8 +50,7 @@ class AttrEditorDialog:
 			toplevel_window=self.wrapper.toplevel.window
 		else:
 			toplevel_window = windowinterface.getmainwnd()
-		fs=toplevel_window.getformserver()
-		w=fs.newformobj(formid)
+		w=toplevel_window.newformobj(formid)
 		w._title=title
 		w._attriblist=attriblist
 		w._cbdict={
@@ -64,7 +63,7 @@ class AttrEditorDialog:
 		for a in attriblist:
 			a.attach_ui(w)
 		self.__window=w
-		fs.showform(w,formid)
+		toplevel_window.showform(w,formid)
 
 
 	def close(self):
