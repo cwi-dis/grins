@@ -51,6 +51,9 @@ class LicenseDialog(windowinterface.MACDialog):
 			self.cb_eval()
 		elif n == ITEM_ENTERKEY:
 			self.cb_enterkey()
+		else:
+			print 'Unknown LicenseDialog item', n
+		return 1
 			
 	def _optenable(self, onoff, item):
 		tp, h, rect = self.dialog.GetDialogItem(item)
