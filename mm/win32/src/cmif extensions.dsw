@@ -48,12 +48,6 @@ Package=<4>
     Project_Dep_Name dshow
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name vid2rm
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name vaud2rm
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name gear32sd
     End Project Dependency
     Begin Project Dependency
@@ -61,12 +55,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name wmfapi
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name vaud2wm
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name vid2wm
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name grinspapi
@@ -459,55 +447,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "vaud2rm"=..\DXMedia\src\aud2rm\aud2rm.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "vaud2wm"=..\DXMedia\src\aud2wm\aud2wm.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "vaudpipe"=..\DXMedia\src\audpipe\audpipe.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "vid2rm"=..\DXMedia\src\vid2rm\vid2rm.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "vid2wm"=..\DXMedia\src\vid2wm\vid2wm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
