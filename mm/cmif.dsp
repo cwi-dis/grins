@@ -160,6 +160,10 @@ SOURCE=.\common\AnchorDefs.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\AnimateChannel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\ArmStates.py
 # End Source File
 # Begin Source File
@@ -241,6 +245,10 @@ SOURCE=.\common\MPEGVideoChannel.py
 # Begin Source File
 
 SOURCE=.\common\NullChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\PrefetchChannel.py
 # End Source File
 # Begin Source File
 
@@ -767,10 +775,6 @@ SOURCE=.\lib\win32\components.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\DisplayList.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\DrawTk.py
 # End Source File
 # Begin Source File
@@ -819,7 +823,15 @@ SOURCE=.\lib\win32\sysmetrics.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\TransitionBitBlit.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\win32dialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\win32displaylist.py
 # End Source File
 # Begin Source File
 
@@ -836,6 +848,14 @@ SOURCE=.\lib\win32\win32menu.py
 # Begin Source File
 
 SOURCE=.\lib\win32\win32mu.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\win32transitions.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\win32window.py
 # End Source File
 # Begin Source File
 
@@ -1508,6 +1528,10 @@ SOURCE=.\bin\win32\iGRiNSlight.py
 # Begin Source File
 
 SOURCE=.\bin\win32\iGRiNSplayer.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNSPlayer_SMIL2.py
 # End Source File
 # End Group
 # End Group
