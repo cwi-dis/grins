@@ -755,12 +755,16 @@ class _Window(_AdornmentSupport):
 ##			raise error, 'coordinates out of bounds'
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
 			px = int(x)
+			dx = 0
 		else:
 			px = int(rw * x + 0.5)
+			dx = px - rw * x
 		if units == UNIT_PXL or (units is None and type(y) is type(0)):
 			py = int(y)
+			dy = 0
 		else:
 			py = int(rh * y + 0.5)
+			dy = py - rh * y
 		pw = ph = 0
 		if crop:
 			if px < 0:
@@ -774,13 +778,13 @@ class _Window(_AdornmentSupport):
 		if len(coordinates) == 2:
 			return px+rx, py+ry
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
-			pw = int(w + pw)
+			pw = int(w + pw - dx)
 		else:
-			pw = int(rw * w + 0.5) + pw
+			pw = int(rw * w + 0.5 - dx) + pw
 		if units == UNIT_PXL or (units is None and type(h) is type(0)):
-			ph = int(h + ph)
+			ph = int(h + ph -dy)
 		else:
-			ph = int(rh * h + 0.5) + ph
+			ph = int(rh * h + 0.5 - dy) + ph
 		if crop:
 			if pw <= 0:
 				pw = 1
