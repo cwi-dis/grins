@@ -106,6 +106,14 @@ SOURCE=.\rma.cpp
 
 SOURCE=.\rma.rc
 # End Source File
+# Begin Source File
+
+SOURCE=.\ssupplier.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ssupplier.h
+# End Source File
 # End Group
 # Begin Group "Python files"
 
