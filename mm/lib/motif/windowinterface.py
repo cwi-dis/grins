@@ -1043,7 +1043,7 @@ class Button(_Widget):
 		called when the button is activated.  The callback is
 		a tuple consiting of a callable object and an argument
 		tuple.'''
-		self._text = label
+		self.__text = label
 		attrs = {'labelString': label}
 		self._attachments(attrs, options)
 		if useGadget:
@@ -1053,23 +1053,23 @@ class Button(_Widget):
 		button = parent._form.CreateManagedWidget(name, button, attrs)
 		if callback:
 			button.AddCallback('activateCallback',
-					   self._callback, callback)
+					   self.__callback, callback)
 		_Widget.__init__(self, parent, button)
 
 	def __repr__(self):
-		return '<Button instance at %x, text=%s>' % (id(self), self._text)
+		return '<Button instance at %x, text=%s>' % (id(self), self.__text)
 
 	def setlabel(self, text):
 		self._form.labelString = text
-		self._text = text
+		self.__text = text
 
 	def setsensitive(self, sensitive):
 		self._form.sensitive = sensitive
 
-	def _callback(self, widget, callback, call_data):
+	def __callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
-		apply(callback[0], callback[1])
+		apply(apply, callback)
 
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
@@ -1891,9 +1891,9 @@ class ButtonRow(_Widget):
 		if self.is_closed():
 			return
 		if self._cb:
-			apply(self._cb[0], self._cb[1])
+			apply(apply, self._cb)
 		if callback:
-			apply(callback[0], callback[1])
+			apply(apply, callback)
 
 	def _popup(self, widget, submenu, call_data):
 		submenu.ManageChild()
@@ -1960,7 +1960,7 @@ class Slider(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
-		apply(callback[0], callback[1])
+		apply(apply, callback)
 
 	def _calcrange(self, minimum, initial, maximum):
 		self._minimum, self._maximum = minimum, maximum
@@ -2133,6 +2133,12 @@ class Window(_WindowHelpers, _MenuSupport):
 			  'colormap': toplevel._default_colormap,
 			  'visual': toplevel._default_visual,
 			  'depth': toplevel._default_visual.depth}
+		if options.has_key('width'):
+			wattrs['width'] = int(float(options['width']) * toplevel._hmm2pxl + 0.5)
+		if options.has_key('height'):
+			wattrs['height'] = int(float(options['height']) * toplevel._vmm2pxl + 0.5)
+		if options.has_key('x') and options.has_key('y'):
+			wattrs['geometry'] = '+%d+%d' % (int(float(options['x']) * toplevel._hmm2pxl + 0.5), int(float(options['y']) * toplevel._vmm2pxl + 0.5))
 		attrs = {'allowOverlap': FALSE,
 			 'resizePolicy': self.resizePolicy}
 		if not resizable:
