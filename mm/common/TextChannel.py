@@ -3,10 +3,11 @@ from AnchorDefs import *
 import string
 from urllib import urlopen
 import StringStuff
+import MMAttrdefs
 
 class TextChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
-		  'pointsize']
+		  'pointsize', 'noanchors']
 
 	def __repr__(self):
 		return '<TextChannel instance, name=' + `self._name` + '>'
@@ -21,7 +22,10 @@ class TextChannel(ChannelWindow):
 	def do_arm(self, node):
 		str = self.getstring(node)
 		parlist = extract_paragraphs(str)
-		taglist = extract_taglist(parlist)
+		if MMAttrdefs.getattr(node, 'noanchors'):
+		    taglist = []
+		else:
+		    taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
 ##			if taglist: print `taglist`
 		fontspec = getfont(node)
