@@ -455,8 +455,8 @@ class SMILHtmlTimeWriter(SMIL):
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
 			subregid = nodeid + 'd1'
-			subregid = string.join(string.split(subregid, '-_'), '')
-
+			subregid = string.join(string.split(subregid, '-'), '')
+			subregid = string.join(string.split(subregid, '_'), '')
 
 		subRegGeom, mediaGeom = None, None
 		geoms = x.getPxGeomMedia()
