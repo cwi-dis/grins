@@ -24,6 +24,9 @@ import rma
 
 # ddraw.error
 import ddraw
+
+# temporary
+dissable_windowless_real_rendering = 1
 	
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
@@ -140,7 +143,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.__windowless_real_rendering = 0
 			if self.__subtype=='flash':
 				self.__windowless_real_rendering = 0
-				
+			
+			# temporary
+			if dissable_windowless_real_rendering:
+				self.__windowless_real_rendering = 0
+
 			if not self.__windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
@@ -292,9 +299,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.initVideoRenderer()
 		return self
 
-	def onRealChannelBegin(self):
-		self.__realChannelBegin = 1
-
 	# 
 	# Implement interface of real video renderer
 	# 
@@ -322,7 +326,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def initVideoRenderer(self):
 		self.__rmdds = None
 		self.__rmrender = None
-		self.__realChannelBegin = 0
 		
 	def cleanVideoRenderer(self):
 		if self.window:
@@ -361,7 +364,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
 			
 	def Blt(self, data):
-		if not self.__realChannelBegin: return
 		if self.__rmdds and self.__rmrender:
 			blt, w, h = self.__rmrender
 			try:
@@ -380,3 +382,4 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 
 
+ 
