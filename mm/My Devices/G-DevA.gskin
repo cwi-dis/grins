@@ -1,0 +1,16 @@
+# GRiNS G-SKIN file Definition
+# v2.1
+
+# See gskin-spec.txt for details.
+
+image G-DevA.gif
+display 52 145 160 130
+centerskin 1
+play rect 36 300 57 32			# Play Icon
+pause rect 117 312 30 30		# Pause Icon
+stop rect 175 300 57 32			# Stop
+exit rect 197 340 25 25			# Exit Button
+open rect 39  340 25 25			# Open File Button
+
+profile MMS
+component NoVideo LowAudio
