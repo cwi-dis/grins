@@ -9,3 +9,5 @@ activate rect 107 248 25 25		# center of rocker
 key ' ' poly 110 241 119 225 127 241	# UP arrow
 skin poly 110 273 119 289 127 273	# DOWN arrow
 pause poly 87 258 103 250 103 267	# LEFT arrow
+component http://www.oratrix.com/GRiNS/smil2.0
+component http://www.oratrix.com/GRiNS/examplecomponent/hasnavigationbutton
