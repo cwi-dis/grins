@@ -1,31 +1,15 @@
 *******************************************************************
 *** Don't delete entries that have been dealt with -- move them ***
-*** to the "FIXED" section at the end of this file!  ***
+*** to the "FIXED" section at the end of this file!             ***
 *******************************************************************
 
 ------------------------------ BUGS -------------------------------
-
-image channel: bad image file (e.g. /dev/null) causes exit(0)
 
 Timing: (opt)calctimes isn't a very meaningful name.
 
 MovieChannel: center the image.
 
-VanGogh demo: move data to subdirectory.
-
-Player: "late" display keeps old value during initialization.
-
-channel view: deleted arc is still drawn
-
-channel view: add channel complains about duplucate name
-
-channel view: add channel opens wrong channel?!?!
-
 edit mgr: doesn't fix channel dictionary
-
-channel view: doesn't draw thermo on show()
-
-channel view: resize behavior is weird
 
 block view: open/close must be done different; opening something that
 had a red button before zooming should open all of it, not keep it
@@ -42,8 +26,6 @@ general: sometimes, after a while the entire CMIF editor hangs...
 
 ------------------------------ PERFORMANCE ------------------------
 
-channel view: many double redraws
-
 movie channel: takes so much priority that sound doesn't play and
 buttons don't react
 
@@ -56,33 +38,31 @@ form loader: parsing .fd files takes ages
 general: need to use CVS for project management
 
 ------------------------------ FEATURES ---------------------------
-channel view: open info window on new sync arc
 
 arc edit: larger delay range
 
 player: "keep" attribute (default 1)
-
-channel view: needs command structure like block view
-
-channel view: need commands to add/delete channels
 
 block & channel view: want to show other view's focus
 
 block & channel view: use channel colors instead of default gray / yellow
 
 ------------------------------ NITS -------------------------------
+
+Need uniform approach to configuration files/directories (help directory,
+Attrdefs, .cmif_editors -- what else?)
+
+VanGogh demo: move data to subdirectory.
+
+Player: "late" display keeps old value during initialization.
+
+channel view: need a text box to specify the delay as well
+
+channel view: settings of new sync arc can be copied from last created one?
+
 block view: get rid of dialog on wrong character
 
-channel view: get rid of dialog on wrong character
-
 general: need a template for a simple e-mail document
-
-channel view: should display no dialogs when transactions fail
-
-channel view: help is printed on stdout
-
-channel view: uninformative dialog box for unknown keyboard input
-(should beep)
 
 block view: should beep instead of pop up a dialog offering help for
 wrong keyboard entry (a static help button in the menu bar is a better
@@ -90,8 +70,6 @@ way to offer help)
 
 toplevel: sometimes complaint about unknown command when clicking in
 toplevel menu while things are busy?
-
-player: should remember & save which channels are "off"
 
 player: when playing a subtree, should make sure that at least one
  	of the channels it uses is on?
@@ -168,3 +146,40 @@ text channel: after a while the font manager fails with
 time chart: when the player is stopped, active or armed nodes aren't reset.
 
 top level: should close help window on "Restore"
+
+player: should remember & save which channels are "off"
+
+image channel: bad image file (e.g. /dev/null) causes exit(0)
+
+channel view: need commands to add/delete channels
+
+channel attr: crash when applying 'reset' to channel name
+
+(- - - channel view rewritten - - -)
+
+channel view: deleted arc is still drawn
+
+channel view: add channel complains about duplucate name
+
+channel view: add channel doesn't make the new channel the focus
+
+channel view: doesn't draw thermo on show()
+
+channel view: resize behavior is weird
+
+channel view: many double redraws
+
+channel view: new channel, new arc should select & open info for the new object
+
+channel view: open info window on new sync arc
+
+channel view: needs command structure like block view
+
+channel view: get rid of dialog on wrong character
+
+channel view: should display no dialogs when transactions fail
+
+channel view: help is printed on stdout
+
+channel view: uninformative dialog box for unknown keyboard input
+(should beep)
