@@ -1178,6 +1178,7 @@ class EventCtrl(AttrCtrl):
 		self._eventwidget.hookcommand(self._wnd, self._eventwidgetcallback)
 		self._textwidget.hookcommand(self._wnd, self._textwidgetcallback)
 		self._offsetwidget.hookcommand(self._wnd, self._offsetwidgetcallback)
+		self._repeatwidget.hookcommand(self._wnd, self._repeatwidgetcallback)
 
 		bob = self._attr.getcurrent()
 		self.setvalue(bob)
@@ -1290,8 +1291,7 @@ class EventCtrl(AttrCtrl):
 		i = self._eventstruct.get_event_index()
 		if i:
 			self._eventwidget.setcursel(i)
-		else:
-			print "DEBUG: event widget has no index."
+		# else this doesn't really apply here. Maybe I should disable the event box.
 			
 	def set_textwidget(self):
 		if not self._eventstruct:
@@ -1326,9 +1326,17 @@ class EventCtrl(AttrCtrl):
 		#	self._offsetwidget.settext("")
 		#	self._offsetwidget.setreadonly(1)
 	def set_repeatwidget(self):
+		# Only for event widgets or markers.
 		if not self._eventstruct:
 			self._repeatwidget.settext("")
 			self._repeatwidget.setreadonly(1)
+		else:
+			i = self._eventstruct.get_repeat()
+			if i:
+				self._repeatwidget.settext(`i`)
+				self._repeatwidget.setreadonly(0)
+			
+			
 
 	def _listcallback(self, id, code):
 		if code != win32con.CBN_SELCHANGE:
@@ -1369,7 +1377,6 @@ class EventCtrl(AttrCtrl):
 	def _offsetwidgetcallback(self, id, code):
 		if code != win32con.EN_KILLFOCUS:
 			return
-		print "DEBUG: Offset widget got focus changed."
 		if not self._eventstruct:
 			return
 		try:
@@ -1384,7 +1391,18 @@ class EventCtrl(AttrCtrl):
 			self._eventstruct.set_cause(newcause)
 			self.update()
 			self.selected_radiobutton = newcause
-
+	def _repeatwidgetcallback(self, id, code):
+		if code == win32con.EN_KILLFOCUS and self._eventstruct:
+			if self._eventstruct.get_repeat():
+				try:
+					self._eventstruct.set_repeat(float(self._repeatwidget.gettext()))
+				except ValueError:
+					win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
+					return
+			else:
+				print "TODO: media marker."
+			self.update()
+				
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
 # can optionally select the string from a drop down list

@@ -83,7 +83,11 @@ class EventStruct:
 			# The problem here is that I don't know how to map a name of a node to it's instance.
 			if not s.srcnode:
 				print "TODO: No node!! (EventEditor)"
-			s.__init__(self._node, action, srcnode = s.srcnode, event=self.get_event(), delay=self.get_offset())
+			e = self.get_event()
+			if e.startswith('repeat'):
+				e = e + '(' + `self.get_repeat()` + ')'
+			s.__init__(self._node, action, srcnode = s.srcnode, event=e,
+				   delay=self.get_offset())
 		elif c == 'region' and self._setregion:
 			print "TODO: don't know how to set region."
 		elif c == 'accesskey' and self._setkey:
@@ -151,6 +155,7 @@ class EventStruct:
 		self._setmarker = None	# for later reference - a marker is a special element within the actual media.
 					# e.g. a video could have markers at certain times.
 		self._setwallclock = None
+		self._setrepeat = None
 		if self.get_cause() == 'indefinite':
 			self.delay = None
 		else:
@@ -187,8 +192,13 @@ class EventStruct:
 		# Now for the offset things
 		elif c == 'node':
 			_, r, _, _ = self.get_thing_string()
-			if r: r = r + '.' + self.get_event()
-			else: r = self.get_event()
+			e = self.get_event()
+			if r: r = r + '.' + e
+			else: r = e
+			if e.startswith('repeat'):
+				r = r + "(" + `self.get_repeat()` + ")"
+			elif e.startswith('marker'):
+				print "TODO: markers"
 			##if isinstance(s, MMNode.MMSyncArc):
 ##				if isinstance(s.srcnode, MMNode.MMNode):
 ##					r = s.srcnode.GetName() + "." + self.get_event()
@@ -355,4 +365,14 @@ class EventStruct:
 			return 0
 	def set_offset(self, newoffset):
 		self._setoffset = newoffset
-
+	def get_repeat(self):
+		if self._setrepeat:
+			return self._setrepeat
+		else:
+			a = self._syncarc.get_repeat()
+			if a:
+				return a
+			else:
+				return 1
+	def set_repeat(self, repeat):
+		self._setrepeat = repeat
