@@ -12,7 +12,7 @@ class LabelChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
 		     ['bucolor', 'hicolor', 'fgcolor',
 		      'font', 'pointsize', 'textalign',
-		      'bgimg', 'scale', 'center', 'crop', 'noanchors']
+		      'scale', 'center', 'crop', 'noanchors']
 
 	def updatefixedanchors(self, node):
 		try:
@@ -31,24 +31,6 @@ class LabelChannel(ChannelWindow):
 		fgcolor = self.getfgcolor(node)
 		bucolor = self.getbucolor(node)
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		img = MMAttrdefs.getattr(node, 'bgimg')
-		if img:
-			try:
-				img = MMurl.urlretrieve(img)[0]
-			except IOError:
-				pass
-			scale = MMAttrdefs.getattr(node, 'scale')
-			crop = MMAttrdefs.getattr(node, 'crop')
-			center = MMAttrdefs.getattr(node, 'center')
-			try:
-				box = self.armed_display.display_image_from_file(
-					img, scale = scale, crop = crop, center = center)
-			except (windowinterface.error, IOError), msg:
-				if type(msg) is type(self):
-					msg = msg.strerror
-				elif type(msg) is type(()):
-					msg = msg[1]
-				self.errormsg(node, img + ':\n' + msg)
 		try:
 			str = self.getstring(node)
 		except error, arg:
