@@ -712,18 +712,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if self.__transitions.has_key(val):
-					attrdict['transIn'] = val
-				else:
-					self.syntax_error("unknown transIn `%s'" % val)
+				val = map(string.strip, string.split(val, ';'))
+				attrdict['transIn'] = val
+				# XXX Should we warn on non-existent IDs?
 			elif attr == 'transOut':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if self.__transitions.has_key(val):
-					attrdict['transOut'] = val
-				else:
-					self.syntax_error("unknown transOut `%s'" % val)
+				val = map(string.strip, string.split(val, ';'))
+				attrdict['transOut'] = val
+				# XXX Should we warn on non-existent IDs?
 			elif attr == 'layout':
 				if self.__layouts.has_key(val):
 					attrdict['layout'] = val

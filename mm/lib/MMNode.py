@@ -499,10 +499,24 @@ class MMNodeContext:
 		# Patch references to this transition in nodes
 		for uid in self.uidmap.keys():
 			n = self.uidmap[uid]
-			if n.GetRawAttrDef('transIn', None) == oldname:
-				n.SetAttr('transIn', newname)
-			if n.GetRawAttrDef('transOut', None) == oldname:
-				n.SetAttr('transOut', newname)
+			trlist = n.GetRawAttrDef('transIn', None)
+			if trlist and oldname in trlist:
+				newtrlist = []
+				for tr in trlist:
+					if tr == oldname:
+						newtrlist.append(newname)
+					else:
+						newtrlist.append(tr)
+				n.SetAttr('transIn', newtrlist)
+			trlist = n.GetRawAttrDef('transOut', None)
+			if trlist and oldname in trlist:
+				newtrlist = []
+				for tr in trlist:
+					if tr == oldname:
+						newtrlist.append(newname)
+					else:
+						newtrlist.append(tr)
+				n.SetAttr('transOut', newtrlist)
 
 	# Internal: predicates to select nodes pertaining to self._roots
 	def _isbadlink(self, link):
