@@ -440,6 +440,12 @@ class MainDialog(Dialog):
 def multchoice(prompt, list, defindex, parent = None):
 	return defindex
 
+def GetYesNoCancel(prompt, parent = None):
+	return multchoice(prompt, ["Yes", "No", "Cancel"], 0)
+	
+def GetOKCancel(prompt, parent = None):
+	return multchoice(prompt, ["OK", "Cancel"], 0)
+	
 def beep():
 	import sys
 	sys.stderr.write('\7')
