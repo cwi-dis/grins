@@ -8,6 +8,7 @@ import windowinterface
 import MMurl
 import mv
 import Xlib
+import string
 
 _mvmap = {}			# map of MVid to channel
 
@@ -38,7 +39,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__qid = None
 
 	def getaltvalue(self, node):
-		import string
 		url = self.getfileurl(node)
 		i = string.rfind(url, '.')
 		if i > 0:
@@ -100,14 +100,17 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		file = self.getfileurl(node)
+		url = self.getfileurl(node)
 		try:
-			f = MMurl.urlretrieve(file)[0]
+			f, hdr = MMurl.urlretrieve(url)
 		except IOError, arg:
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (file, arg[1]))
+			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (url, arg[1]))
+			return 1
+		if string.find(hdr.subtype, 'real') >= 0:
+			self.errormsg(node, 'No playback support for RealVideo in this version')
 			return 1
 		if not mv.IsMovieFile(f):
-			self.errormsg(node, '%s: Not a movie' % file)
+			self.errormsg(node, '%s: Not a movie' % url)
 			return 1
 		if MMAttrdefs.getattr(node, 'clipbegin') or \
 		   MMAttrdefs.getattr(node, 'clipend'):
@@ -118,7 +121,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		try:
 			self.armed_movie = movie = mv.OpenFile(f, flag)
 		except mv.error, msg:
-			self.errormsg(node, '%s: %s' % (file, msg))
+			self.errormsg(node, '%s: %s' % (url, msg))
 			return 1
 		_mvmap[movie] = self
 		movie.SetPlaySpeed(1)
