@@ -59,9 +59,16 @@ MINSIZE = settings.get('thumbnail_size')		# minimum size for a node
 TITLESIZE = f_title.fontheight()*1.2
 CHNAMESIZE = f_channel.fontheight()*1.2
 LABSIZE = TITLESIZE+CHNAMESIZE	# height of labels
+HOREXTRASIZE = f_title.strsize('XX')[0]
 GAPSIZE = 1.0				# size of gap between nodes
 EDGSIZE = 1.0				# size of edges
 
+#
+# We expand a number of hierarchy levels on first open. The number
+# given here is the number of _nodes_ we minimally want to open.
+# We (of course) continue to open all nodes on the same level.
+#
+NODES_WANTED_OPEN = 7
 
 class HierarchyView(HierarchyViewDialog):
 
@@ -127,6 +134,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusnode = self.prevfocusnode = self.root
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
+		self.expand_on_show = 1
 		self.thumbnails = 1
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
@@ -189,6 +197,11 @@ class HierarchyView(HierarchyViewDialog):
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
+		if self.expand_on_show:
+			# Only do this the first time: open a few nodes
+			self.expand_on_show = 0
+			levels = countlevels(self.root, NODES_WANTED_OPEN)
+			do_expand(self.root, 1, levels)
 		expandnode(self.root)
 		self.recalc()
 
@@ -659,6 +672,8 @@ class HierarchyView(HierarchyViewDialog):
 				size = size + MINSIZE
 				if not horizontal:
 					size = size + LABSIZE
+				else:
+					size = size + HOREXTRASIZE
 			else:
 				size = size + child.expanded[not horizontal]
 		# size is minimum size required for children in mm
@@ -678,6 +693,8 @@ class HierarchyView(HierarchyViewDialog):
 				size = MINSIZE
 				if not horizontal:
 					size = size + LABSIZE
+				else:
+					size = size + HOREXTRASIZE
 			else:
 				size = child.expanded[not horizontal]
 			if horizontal:
@@ -713,7 +730,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.veredge = float(EDGSIZE) / rh
 		self.horgap = float(GAPSIZE) / rw
 		self.vergap = float(GAPSIZE) / rh
-		self.horsize = float(MINSIZE) / rw
+		self.horsize = float(MINSIZE + HOREXTRASIZE) / rw
 		self.versize = float(MINSIZE + LABSIZE) / rh
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
@@ -868,7 +885,7 @@ def sizeboxes(node):
 	if not hasattr(node, 'expanded') or not children:
 ##		if node.__class__ is SlideMMNode:
 ##			return 2*MINSIZE, MINSIZE + LABSIZE
-		return MINSIZE, MINSIZE + LABSIZE
+		return MINSIZE + HOREXTRASIZE, MINSIZE + LABSIZE
 	nchildren = len(children)
 	width = height = 0
 	horizontal = (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL
@@ -893,7 +910,11 @@ def sizeboxes(node):
 	node.expanded = (width, height)
 	return width, height
 
-def do_expand(node, expand):
+def do_expand(node, expand, nlevels=None):
+	if nlevels == 0:
+		return 0
+	if nlevels != None:
+		nlevels = nlevels - 1
 	ntype = node.GetType()
 	if ntype not in MMNode.interiortypes and \
 	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
@@ -907,9 +928,22 @@ def do_expand(node, expand):
 		collapsenode(node)
 		changed = 1
 	for child in node.GetChildren():
-		if do_expand(child, expand):
+		if do_expand(child, expand, nlevels):
 			changed = 1
 	return changed			# any changes in this subtree
+
+def countlevels(node, numwanted):
+	on_this_level = [node]
+	level = 1
+	while 1:
+		numwanted = numwanted - len(on_this_level)
+		if numwanted <= 0 or not on_this_level:
+			return level
+		on_next_level = []
+		for n in on_this_level:
+			on_next_level = on_next_level + n.GetChildren()
+		on_this_level = on_next_level
+		level = level + 1
 
 # XXX The following should be merged with ChannelView's GO class :-(
 
