@@ -643,7 +643,7 @@
 	'Alignment point associate to the media' raw (smil2))
 
 (regPoint (string) 'topLeft' 'Registration point' default
-	'Registration point associate to the channel' raw (smil2))
+	'Registration point associate to the channel' channel (smil2))
 
 # prefetch
 
