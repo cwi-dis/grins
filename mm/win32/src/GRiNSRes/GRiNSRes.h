@@ -116,6 +116,9 @@
 #define IDD_EDITATTR_T2                 357
 #define IDD_EDITATTR_LS1O3a             358
 #define IDD_EDITATTR_LS1O2a             359
+#define IDD_EDITATTR_LS1O3b             360
+#define IDD_EDITATTR_T4                 361
+#define IDD_EDITATTR_T3C                362
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -362,7 +365,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        276
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1207
+#define _APS_NEXT_CONTROL_VALUE         1208
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

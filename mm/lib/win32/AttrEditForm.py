@@ -1300,7 +1300,6 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if not val:
 			box=None
 		else:
-			lc=self.getctrl('base_winoff')
 			box=atoft(val)
 		return box
 		
@@ -1391,11 +1390,15 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		self._wh=None
 
 	def OnInitDialog(self):
+		tag = None
+		file = None
 		for a in self._form._attriblist:
+			if a.getname() == 'tag':
+				tag = a.getvalue()
 			if a.getname() == 'file':
+				file = a
+			if tag is not None and file is not None:
 				break
-		else:
-			a = None
 		AttrPage.OnInitDialog(self)
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
@@ -1406,16 +1409,21 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		l2,t2,r2,b2=preview.getwindowrect()
 		self._layoutpos =(l2-l1,t2-t1)
 		self._layoutsize = (r2-l2,b2-t2)
-		if a:
-			f = a.getvalue()
+		if tag == 'viewchange':
+			import MMAttrdefs
+			pnode = self._form._node.parent
+			w, h = MMAttrdefs.getattr(pnode, 'size')
 		else:
-			f = None
-		if f:
-			import Sizes
-			url = a.wrapper.getcontext().findurl(f)
-			w, h = Sizes.GetSize(url)
-		else:
-			w = h = 0
+			if file is not None:
+				f = file.getvalue()
+			else:
+				f = None
+			if f:
+				import Sizes
+				url = a.wrapper.getcontext().findurl(f)
+				w, h = Sizes.GetSize(url)
+			else:
+				w, h = self._layoutsize
 		self.__bbox = w,h
 		self.createLayoutContext((w,h))
 		self._layoutctrl=self.createLayoutCtrl()
@@ -1427,9 +1435,9 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		else:
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
-		if a:
-			url = a.wrapper.getcontext().findurl(f)
-			self.loadimg(url)
+##		if tag != 'viewchange' and file:
+##			url = a.wrapper.getcontext().findurl(f)
+##			self.loadimg(url)
 
 	def init_tk(self, v):
 		v.drawTk.SetLayoutMode(0)
@@ -1459,6 +1467,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		img = win32ig.load(f)
 		if img<0:
 			print 'failed to load',f
+			return
 		self._layoutctrl.drawTk.SetBkImg(img)
 		
 ############################
@@ -2244,6 +2253,30 @@ class Duration3Group(Duration2Group):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
+class Duration3cGroup(Duration2Group):
+	data=attrgrsdict['timing3c']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_T3C
+
+	def createctrls(self,wnd):
+		cd = Duration2Group.createctrls(self,wnd)
+		a = self.getattr('color')
+		cd[a] = ColorNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
+		return cd
+
+class Duration4Group(Duration3Group):
+	data=attrgrsdict['timing4']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_T4
+
+	def createctrls(self,wnd):
+		cd = Duration3Group.createctrls(self,wnd)
+		a = self.getattr('color')
+		cd[a] = ColorNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		return cd
+
 class DurationParGroup(AttrGroup):
 	data=attrgrsdict['timingpar']
 
@@ -2344,7 +2377,7 @@ class Imgregion1Group(AttrGroup):
 		return SubImgLayoutPage
 
 	def islayoutattr(self,attr):
-		return (attr.getname()==self._attrnames['xy']) or (attr.getname()==self._attrnames['wh'])
+		return attr.getname() in (self._attrnames['xy'], self._attrnames['wh'])
 
 class ImgregionGroup(Imgregion1Group):
 	data=attrgrsdict['imgregion']
@@ -2356,12 +2389,21 @@ class ImgregionGroup(Imgregion1Group):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O2
 
-class Subregion1Group(ImgregionGroup):
-	data=attrgrsdict['subregion1']
+class Subregion2Group(ImgregionGroup):
+	data=attrgrsdict['subregion2']
 	_attrnames = {'xy':'subregionxy',
 		      'wh':'subregionwh',
 		      'full':'displayfull',
 		      }
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LS1O3b
+
+	def getpageclass(self):
+		return PosSizeLayoutPage
+
+class Subregion1Group(Subregion2Group):
+	data=attrgrsdict['subregion1']
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O3a
@@ -2373,9 +2415,6 @@ class Subregion1Group(ImgregionGroup):
 		a = self.getattr('project_quality')
 		cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
 		return cd
-
-	def getpageclass(self):
-		return PosSizeLayoutPage
 
 class SubregionGroup(Subregion1Group):
 	data=attrgrsdict['subregion']
@@ -2606,6 +2645,7 @@ groupsui={
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
 	'imgregion1':Imgregion1Group,
+	'subregion2':Subregion2Group,
 
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
@@ -2616,6 +2656,8 @@ groupsui={
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
 	'timing3':Duration3Group,
+	'timing3c':Duration3cGroup,
+	'timing4':Duration4Group,
 	'timingfadeout':TimingFadeoutGroup,
 	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
