@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=271659140
+  File Checksum=3969718975
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1409,6 +1409,26 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\SNAP1_empty_slideshow.grins
+  Destination=%MAINDIR%\Templates\SNAP1_empty_slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\prefetch.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\prefetch.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\dropbox.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\dropbox.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\animate.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\animate.tiff
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SNP.exe
