@@ -76,12 +76,28 @@ class G2Transformer(MyTransformer):
 			if not canhandleurl(url):
 				node2 = self.convertnode(node)
 				if node2:
-					return [SWITCH('\n', node2,'\n',
-						       node, '\n')]
+					self.other_g2_conversions(node2)
+					if node.attributes.has_key('id'):
+						the_id = node.attributes['id']
+						del node.attributes['id']
+						del node2.attributes['id']
+						return [SWITCH(
+							'\n',node2,
+							'\n',node,
+							'\n',
+							id=the_id)]
+					else:
+						return [SWITCH(
+							'\n',node2,
+							'\n',node,
+							'\n')]
 				elif self.within_switch:
+					self.other_g2_conversions(node)
 					return [node]
 				else:
+					self.other_g2_conversions(node)
 					return [SWITCH('\n', node, '\n')]
+		self.other_g2_conversions(node)
 		return [node]
 				
 	do_animation = do_ref
@@ -90,6 +106,14 @@ class G2Transformer(MyTransformer):
 	do_text = do_ref
 	do_textstream = do_ref
 	do_video = do_ref
+
+	def do_region(self, node):
+		# G2 player needs width/height. Set to 100% if not specified
+		if not node.attributes.has_key('width'):
+			node.attributes['width'] = '100%'
+		if not node.attributes.has_key('height'):
+			node.attributes['height'] = '100%'
+		return [node]
 
 	def tree_switch(self, node):
 		if canhandle(node):
@@ -117,6 +141,8 @@ class G2Transformer(MyTransformer):
 			attrs = node.attributes.items()
 			newnode = self.dom_factory.createElement(tag, {})
 			for attr, value in attrs:
+				if attr == 'id':
+					value = 'g2_' + value
 				newnode.attributes[attr] = value
 			for ch in node.getChildren():
 				newch = self.dupnode(ch)
@@ -129,6 +155,14 @@ class G2Transformer(MyTransformer):
 		else:
 			raise 'dupnode: unimplemented NodeType', node.NodeType
 
+	def other_g2_conversions(self, node):
+		# Handles various other things G2 doesn't do
+		if node.attributes.has_key('dur'):
+			dur = node.attributes['dur']
+			if dur == 'indefinite':
+				node.attributes['dur'] = '9999s'
+				print 'WARNING: indefinite duration set to 9999'
+				print
 def converturl(url, type):
 	scheme, location, path, parameters, query, fragment = \
 		urlparse.urlparse(url)
@@ -156,6 +190,7 @@ def savedata(url, type):
 	fp = createurlfile(new)
 	fp.write(urllib.urlopen(url).read())
 	fp.close()
+	return new
 
 USED={}
 def newfilename(filebase, ext):
@@ -165,7 +200,12 @@ def newfilename(filebase, ext):
 		while 1:
 			filename = 'g2cdata/%s%03d%s'%(filebase, num, ext)
 			if not USED.has_key(filename):
-				break
+				path = urllib.url2pathname(filename)
+				dir, dummy = os.path.split(path)
+				if not os.path.exists(dir):
+					break
+				if not os.path.exists(path):
+					break
 			num = num + 1
 	USED[filename] = 1
 	return filename
