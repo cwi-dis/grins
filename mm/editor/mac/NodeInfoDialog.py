@@ -59,28 +59,24 @@ ID_DIALOG_NODEINFO=520
 
 ITEM_NAME_LABEL=1
 ITEM_NAME=2
-ITEM_TYPE_LABEL=3
-ITEM_TYPE=4
-ITEM_TYPE_SELECT=5
-ITEM_CHANNEL_LABEL=6
-ITEM_CHANNEL=7
-ITEM_CHANNEL_SELECT=8
+ITEM_TYPE=3
+ITEM_CHANNEL=4
 
-ITEM_CANCEL=9
-ITEM_RESTORE=10
-ITEM_ATTREDIT=11
-ITEM_ANCHOREDIT=12
-ITEM_APPLY=13
-ITEM_OK=14
+ITEM_CANCEL=5
+ITEM_RESTORE=6
+ITEM_ATTREDIT=7
+ITEM_ANCHOREDIT=8
+ITEM_APPLY=9
+ITEM_OK=10
 
-ITEM_URL_LABEL=15
-ITEM_URL=16
-ITEM_URL_BROWSE=17
-ITEM_URL_EDIT=18
+ITEM_URL_LABEL=11
+ITEM_URL=12
+ITEM_URL_BROWSE=13
+ITEM_URL_EDIT=14
 ITEMLIST_EXT=ITEMrange(ITEM_URL_LABEL, ITEM_URL_EDIT)
 
-ITEM_IMM_LABEL=19
-ITEM_IMM=20
+ITEM_IMM_LABEL=15
+ITEM_IMM=16
 ITEMLIST_IMM=ITEMrange(ITEM_IMM_LABEL, ITEM_IMM)
 
 ITEMLIST_ALL=ITEMrange(1, ITEM_IMM)
@@ -117,10 +113,10 @@ class NodeInfoDialog(windowinterface.MACDialog):
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_NODEINFO,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 				
-		self.__type_select=windowinterface.SelectWidget(self._dialog, ITEM_TYPE_SELECT,
-				types, inittype, ITEM_TYPE, self.type_callback)
-		self.__channel_select=windowinterface.SelectWidget(self._dialog, ITEM_CHANNEL_SELECT,
-				channelnames, initchannel, ITEM_CHANNEL, self.channel_callback)
+		self.__type_select=windowinterface.SelectWidget(self._dialog, ITEM_TYPE,
+				types, inittype, self.type_callback)
+		self.__channel_select=windowinterface.SelectWidget(self._dialog, ITEM_CHANNEL,
+				channelnames, initchannel, self.channel_callback)
 
 		self.setname(name)
 		self.setfilename(filename)
@@ -143,10 +139,10 @@ class NodeInfoDialog(windowinterface.MACDialog):
 	def do_itemhit(self, item, event):
 		if item == ITEM_NAME:
 			pass
-		elif item == ITEM_TYPE_SELECT:
-			self.__type_select.click(event)
-		elif item == ITEM_CHANNEL_SELECT:
-			self.__channel_select.click(event)
+		elif item == ITEM_TYPE:
+			self.__type_select.click()
+		elif item == ITEM_CHANNEL:
+			self.__channel_select.click()
 		elif item == ITEM_ATTREDIT:
 			self.attributes_callback()
 		elif item == ITEM_ANCHOREDIT:
@@ -303,9 +299,8 @@ class NodeInfoDialog(windowinterface.MACDialog):
 		immtext -- list of strings or a single string with
 			embedded linefeeds
 		"""
-		if type(immtext) == type(''):
-			immtext = string.split(immtext, '\n')
-		immtext = string.join(immtext, '\r')
+		if type(immtext) == type([]):
+			immtext = string.join(immtext, '\r')
 		self._setlabel(ITEM_IMM, immtext)
 
 	def gettext(self):
@@ -316,7 +311,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 	def gettextlines(self):
 		"""Return the current text as a list of strings."""
 		text = self._getlabel(ITEM_IMM)
-		return string.split(text, '\r')
+		return string.split(text, '\n')
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
