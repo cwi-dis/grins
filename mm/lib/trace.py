@@ -16,6 +16,7 @@ class Trace:
 		self.depth = 0
 		self.__printargs = 1
 		self.outputfile = open("trace.txt", 'w'); # This is never actually closed.
+		sys.debugfile = self.outputfile	# so other modules can use it.
 		print "Sending trace output to trace.txt in working directory.";
 
 	def run(self, cmd, globals = None, locals = None):
@@ -69,9 +70,8 @@ class Trace:
 			plineno = ' (%d)' % pframe.f_lineno
 		else:
 			plineno = ''
-##		print '%s> %s:%d %s(%s)%s' % (' '*self.depth,os.path.split(filename)[1],lineno,funcname,args,plineno)
-		#print '%s> %s:%d %s' % (' '*self.depth, os.path.split(filename)[1], lineno, funcname)
-		self.outputfile.write('%s> %s:%d %s\n' % (' '*self.depth, os.path.split(filename)[1], lineno, funcname))
+		#print '%s> %s:%d %s(%s)%s' % (' '*self.depth,os.path.split(filename)[1],lineno,funcname,args,plineno)
+		self.outputfile.write('%s> %s:%d %s(%s)%s\n' % (' '*self.depth,os.path.split(filename)[1],lineno,funcname,args,plineno))
 		self.outputfile.flush()	# Incase the program crashes.
 		
 		frame.f_locals['__start_time'] = time()
