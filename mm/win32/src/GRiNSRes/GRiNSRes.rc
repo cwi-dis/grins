@@ -479,16 +479,18 @@ BEGIN
                     WS_DISABLED,7,7,317,160
 END
 
-IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 200, 62
+IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 227, 58
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Channel is undefined"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_CHANNEL_NAME,87,10,105,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,7,40,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,142,40,50,14
-    PUSHBUTTON      "Leave undefined",IDC_LEAVE_UNDEF,62,40,75,14
-    LTEXT           "Create channel named:",-1,8,12,75,8
+    EDITTEXT        IDC_CHANNEL_NAME,114,10,105,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,11,38,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,38,50,14
+    PUSHBUTTON      "Leave undefined",IDC_LEAVE_UNDEF,78,38,75,14
+    LTEXT           "Create channel named:",-1,35,12,75,8
+    ICON            IDI_GRINS_QUESTION,IDC_STATIC_ICON,6,6,20,20,NOT 
+                    WS_VISIBLE
 END
 
 
@@ -670,9 +672,9 @@ BEGIN
     IDD_CHANNEL_UNDEF, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 193
+        RIGHTMARGIN, 220
         TOPMARGIN, 7
-        BOTTOMMARGIN, 55
+        BOTTOMMARGIN, 51
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -731,7 +733,12 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+IDI_GRINS_ED            ICON    DISCARDABLE     "res\\grins_ed.ico"
 IDR_GRINSED             ICON    DISCARDABLE     "res\\GRiNSed.ico"
+IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
+IDI_GRINS_QUESTION      ICON    DISCARDABLE     "res\\icon1.ico"
+IDI_GRINS_INFO          ICON    DISCARDABLE     "res\\ico00002.ico"
+IDI_GRINS_STOP          ICON    DISCARDABLE     "res\\ico00003.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -910,16 +917,6 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
 IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_GRINS_ED            ICON    DISCARDABLE     "res\\grins_ed.ico"
-IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
