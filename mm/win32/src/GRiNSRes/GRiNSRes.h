@@ -550,13 +550,13 @@
 #define IDC_RIGHTL                      1384
 #define IDC_BOTTOML                     1385
 #define IDC_LEFTV                       1386
-#define IDC_WIDTHL2                     1387
 #define IDC_FITV                        1388
 #define IDC_WIDTHL3                     1389
 #define IDC_REGALIGNV                   1390
 #define IDC_REGALIGNL                   1391
 #define IDC_REGPOINTV                   1392
 #define IDC_REGPOINTL                   1393
+#define IDC_FITL                        1394
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -645,7 +645,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1387
+#define _APS_NEXT_CONTROL_VALUE         1395
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
