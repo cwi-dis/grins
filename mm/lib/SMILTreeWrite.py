@@ -2064,7 +2064,7 @@ class SMILWriter(SMIL):
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
-					value = node.GetRwaAttrDef('trtype', None)
+					value = node.GetRawAttrDef('trtype', None)
 				else:
 					value = func(self, node)
 				if value and value != attributes[name]:
@@ -2381,3 +2381,4 @@ def intToEnumString(intValue, dict):
 		return dict[intValue]
 	else:
 		return dict[0]
+ 
