@@ -1,21 +1,30 @@
+import string, MMurl
+
 cache = {}
 
-def GetSize(file, maintype, subtype):
-	if cache.has_key(file):
-		return cache[file]
-	if subtype[:6] == 'vnd.rn':
+def GetSize(url, maintype = None, subtype = None):
+	if cache.has_key(url):
+		return cache[url]
+	u = None
+	if maintype is None:
+		u = MMurl.urlopen(url)
+		maintype = u.headers.getmaintype()
+		subtype = u.headers.getsubtype()
+	if string.find(string.lower(subtype), 'real') >= 0:
 		# any RealMedia type
 		import realsupport
-		info = realsupport.getinfo(file)
+		info = realsupport.getinfo(url, u)
 		width = info.get('width', 200)
 		height = info.get('height', 200)
 	elif maintype == 'image':
+		file = MMurl.urlretrieve(url)[0]
 		width, height = GetImageSize(file)
 	elif maintype == 'video':
+		file = MMurl.urlretrieve(url)[0]
 		width, height = GetVideoSize(file)
 	else:
 		width = height = 0
-	cache[file] = width, height
+	cache[url] = width, height
 	return width, height
 
 def GetImageSize(file):

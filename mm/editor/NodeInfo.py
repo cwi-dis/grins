@@ -246,7 +246,13 @@ class NodeInfo(NodeInfoDialog):
 			ch['base_window'] = root
 			units = ch.get('units', UNIT_SCREEN)
 			if units == UNIT_PXL:
-				ch['base_winoff'] = 0,0,100,100
+				import Sizes
+				w, h = Sizes.GetSize(self.url)
+				if w == 0:
+					w = 100 # default size
+				if h == 0:
+					h = 100 # default size
+				ch['base_winoff'] = 0,0,w,h
 			elif units == UNIT_SCREEN:
 				ch['base_winoff'] = 0,0,.2,.2
 		# if the node belongs to a layout, add the new channel

@@ -415,14 +415,15 @@ def rmff(file, fp):
 cache = {}
 import MMurl
 
-def getinfo(file):
+def getinfo(file, fp = None):
 	if cache.has_key(file):
 		return cache[file]
-	try:
-		fp = MMurl.urlopen(file)
-	except:
-		cache[file] = info = {}
-		return info
+	if fp is None:
+		try:
+			fp = MMurl.urlopen(file)
+		except:
+			cache[file] = info = {}
+			return info
 	head = fp.read(4)
 	if head == '<imf':
 		# RealPix
