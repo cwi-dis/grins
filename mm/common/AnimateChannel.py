@@ -113,7 +113,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			self._player._animateContext = Animators.AnimateContext(self._player)
 		ctx = self._player._animateContext
 		
-		parser = Animators.AnimateElementParser(node, ctx)
+		parser = Animators.AnimateElementParser(node, ctx, self._playcontext)
 		self.__animator = parser.getAnimator()
 		if self.__animator:
 			# find and apply parent speed

@@ -4532,7 +4532,7 @@ class MMNode(MMTreeElement):
 			return c.__calcduration(sctx)
 		return 0, 0
 
-	def calcfullduration(self, sctx, ignoremin = 0, ignoreloop = 0):
+	def calcfullduration(self, sctx, ignoremin = 0, ignoreloop = 0, useend = 0):
 		if not ignoreloop and self.fullduration is not None:
 			duration = self.fullduration
 		else:
@@ -4624,6 +4624,22 @@ class MMNode(MMTreeElement):
 				if debug: print 'calcfullduration: max',duration,maxtime
 				duration = maxtime
 
+		if useend and endlist:
+			start = self.isresolved(sctx)
+			if start is not None:
+				hasresolved = found = 0
+				for a in endlist:
+					if a.isresolved(sctx):
+						hasresolved = 1
+						end = a.resolvedtime(sctx)
+						if end >= start:
+							if end - start < duration or duration < 0:
+								if debug: print 'calcfullduration: adjusting duration',start,end
+								found = 1
+								duration = end - start
+				if hasresolved and not found:
+					if debug: print 'calcfullduration: end too early'
+					duration = 0
 		if debug: print 'calcfullduration:',`self`,`duration`,self.fullduration
 		return duration
 
