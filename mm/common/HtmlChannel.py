@@ -154,7 +154,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def do_play(self, node):
 		import Xm
 		htmlw = self.htmlw
-		self.url = self.armed_url
+		self.played_url = self.url = self.armed_url
 		self.played_str = self.armed_str
 		attrs = {}
 		fontspec = getfont(node)
@@ -218,18 +218,19 @@ class HtmlChannel(Channel.ChannelWindow):
 			filename = self.getfileurl(node)
 			self.armed_url = filename
 			try:
-				fp = urllib.urlopen(filename)
+				fp = urlopen(filename)
 			except IOError:
 				return '<H1>Cannot Open</H1><P>'+ \
 					  'Cannot open '+filename+':<P>'+ \
 					  `(sys.exc_type, sys.exc_value)`+ \
 					  '<P>\n'
+			self.armed_url = fp.geturl()
 			# use undocumented feature so we can cleanup
-			if urllib._urlopener.tempcache is None:
-				urllib._urlopener.tempcache = {}
+			if _urlopener.tempcache is None:
+				_urlopener.tempcache = {}
 				# cleanup temporary files when we finish
 				windowinterface.addclosecallback(
-					urllib.urlcleanup, ())
+					urlcleanup, ())
 			text = fp.read()
 			fp.close()
 			if text[-1:] == '\n':
@@ -327,6 +328,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			return
 		if href:
 			if href == 'XXXX:play/node':
+				self.url = self.played_url
 				self.htmlw.SetText(self.played_str, '', '')
 				return
 			href = urllib.basejoin(self.url, href)
@@ -337,7 +339,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = addquery(href, list)
 		self.url, tag = urllib.splittag(href)
 		try:
-			u = urllib.urlopen(self.url)
+			u = urlopen(self.url)
 			if u.headers.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
 			else:
@@ -363,7 +365,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if noload:
 			return None
 		try:
-			filename, info = urllib.urlretrieve(src)
+			filename, info = urlretrieve(src)
 		except IOError:
 			return None
 		import img, imgformat
@@ -414,7 +416,7 @@ def encodestring(s):
 # Get the data-behind-the-URL
 #
 def urlget(newurl):
-	return urllib.urlopen(newurl).read()
+	return urlopen(newurl).read()
 
 #
 # Turn a CMIF channel name into a name acceptable for an X widget
@@ -439,3 +441,87 @@ def normalize(name):
 		print 'HtmlChannel: "%s" has resource name "%s"'%(
 			name, newname)
 	return newname
+
+_end_loop = '_end_loop'
+class HtmlUrlOpener(urllib.FancyURLopener):
+	def prompt_user_passwd(self, host, realm):
+		try:
+			w = windowinterface.Window('passwd', grab = 1)
+		except AttributeError:
+			return urllib.FancyURLopener.prompt_user_passwd(self, host, realm)
+		import Xt
+		l = w.Label('Enter username and password for %s at %s' % (realm, host))
+		t1 = w.TextInput('User:', '', None, (self.usercb, ()),
+				 top = l, left = None, right = None)
+		t2 = w.TextInput('Passwd:', '', None, (self.passcb, ()),
+				 top = t1, left = None, right = None)
+		b = w.ButtonRow([('Cancel', (self.cancelcb, ()))],
+				vertical = 0,
+				top = t2, left = None, right = None, bottom = None)
+		t2._text.AddCallback('modifyVerifyCallback', self.modifycb, None)
+		self.userw = t1
+		self.passwdw = t2
+		self.passwd = []
+		self.user = ''
+		self.password = ''
+		w.show()
+		try:
+			Xt.MainLoop()
+		except _end_loop:
+			pass
+		w.close()
+		del self.userw, self.passwdw
+		return self.user, self.password
+
+	def modifycb(self, w, client_data, call_data):
+		if call_data.text:
+			if call_data.text == '\b':
+				if self.passwd:
+					del self.passwd[-1]
+				call_data.text = ''
+				return
+			self.passwd.append(call_data.text)
+			call_data.text = '*' * len(call_data.text)
+
+	def usercb(self):
+		self.user = self.userw.gettext()
+		if self.password:
+			self.do_return()
+		else:
+			import Xmd
+			self.passwdw._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
+
+	def passcb(self):
+		self.password = string.joinfields(self.passwd, '')
+		if self.user:
+			self.do_return()
+		else:
+			import Xmd
+			self.userw._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
+
+	def cancelcb(self):
+		self.user = self.password = None
+		self.do_return()
+
+	def do_return(self):
+		raise _end_loop
+
+_urlopener = None
+def urlopen(url):
+	global _urlopener
+	if not _urlopener:
+		_urlopener = HtmlUrlOpener()
+	return _urlopener.open(url)
+
+def urlretrieve(url, filename = None):
+	global _urlopener
+	if not _urlopener:
+		_urlopener = HtmlUrlOpener()
+	if filename:
+		return _urlopener.retrieve(url, filename)
+	else:
+		return _urlopener.retrieve(url)
+
+def urlcleanup():
+	if _urlopener:
+		_urlopener.cleanup()
