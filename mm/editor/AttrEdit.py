@@ -1433,6 +1433,9 @@ class AttrEditor(AttrEditorDialog):
 		# settings.save()
 		self.redisplay()
 
+	def followselection_callback(self):
+		print 'follow-selection notimp'
+
 	def cancel_callback(self):
 		self.close()
 
