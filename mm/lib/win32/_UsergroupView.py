@@ -54,7 +54,6 @@ class _UsergroupView(GenFormView):
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
-		self.GetParent().freezeSize()
 		self.EnableCmd('Groups',1)
 		self.EnableCmd('New',1)
 		if len(self._init_ugroups):
