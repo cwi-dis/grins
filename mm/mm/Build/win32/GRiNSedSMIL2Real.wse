@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_real_win_2.0-140.exe
+  EXE Filename=..\..\bin\win32\grins_real_win_2.0-141.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1466,6 +1466,111 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=..\..\GRiNS-Icons\video-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\video-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\video.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\video.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\text-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\text-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\text.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\text.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\svg.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\svg.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\sound-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\sound-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\sound.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\RealVideo.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\RealText.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\RealPix.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\RealAudio.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\prefetch.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\prefetch.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\null.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\null.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\layout.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\image-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\image-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\image.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\image.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\html.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\html.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\dropbox.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\dropbox.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\comment.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\comment.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\animate.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\animate.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\anchor.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\anchor.tiff
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\RealOneTemplates\T-icons\video_2_1A.bmp
   Destination=%MAINDIR%\Templates\T-icons\video_2_1A.bmp
   Flags=0000000010000010
@@ -1791,20 +1896,10 @@ end
 item: End Block
 end
 item: Install File
-  Source=..\..\GRiNS-Icons\svg.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\svg.tiff
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\bin\win32\wingdi.pyd
   Destination=%MAINDIR%\wingdi.pyd
   Flags=0000000010000010
   Extra Flags=00000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\comment.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\comment.tiff
-  Flags=0000000010000010
 end
 item: Install File
   Source=..\..\bin\win32\dsound.pyd
@@ -1963,19 +2058,19 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32trace.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32trace.pyd
   Destination=%MAINDIR%\win32trace.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32api.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\Scintilla.DLL
+  Source=..\..\..\python\Extensions\Pythonwin\Build\Scintilla.DLL
   Destination=%MAINDIR%\Scintilla.DLL
   Flags=0000000010000010
   Extra Flags=00000010
@@ -1999,43 +2094,28 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgop.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgop.pyd
   Destination=%MAINDIR%\imgop.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgjpeg.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgjpeg.pyd
   Destination=%MAINDIR%\imgjpeg.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgformat.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgformat.pyd
   Destination=%MAINDIR%\imgformat.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgcolormap.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgcolormap.pyd
   Destination=%MAINDIR%\imgcolormap.pyd
   Flags=0000000010000010
   Extra Flags=00000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\prefetch.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\prefetch.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\dropbox.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\dropbox.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\animate.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\animate.tiff
-  Flags=0000000010000010
 end
 item: Install File
   Source=..\..\bin\win32\Producer-SDK\Codecs\tokr3260.dll
@@ -2062,19 +2142,19 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\_socket.pyd
+  Source=..\..\..\python\PCbuild\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\PyWinTypes.dll
+  Source=..\..\..\python\Extensions\win32\Build\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\python16.dll
+  Source=..\..\..\python\PCbuild\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2086,62 +2166,7 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\GRiNS-Icons\RealVideo.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\RealAudio.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\video.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\video.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\text.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\text.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\sound.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\html.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\html.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\image.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\image.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\layout.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\null.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\null.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\RealPix.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\GRiNS-Icons\RealText.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\bin\win32\win32ui.pyd
+  Source=..\..\..\python\Extensions\Pythonwin\Build\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2153,7 +2178,7 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\Gear32sd.dll
+  Source=..\..\win32\ACCUSOFT\Gear\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2283,76 +2308,6 @@ end
 item: Install File
   Source=..\products\smil2real\TDG.html
   Destination=%MAINDIR%\TDG.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Back3.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Back3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Pict-3.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Pict-2.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Pict-1.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Grachten.ra
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Grachten.ra
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Fiets.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Fiets.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Pict-3.jpg
-  Destination=%MAINDIR%\DocCommon\Assets\Pict-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Pict-2.jpg
-  Destination=%MAINDIR%\DocCommon\Assets\Pict-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Pict-1.jpg
-  Destination=%MAINDIR%\DocCommon\Assets\Pict-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Grachten.mp3
-  Destination=%MAINDIR%\DocCommon\Assets\Grachten.mp3
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Fiets.gif
-  Destination=%MAINDIR%\DocCommon\Assets\Fiets.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.smil
-  Destination=%MAINDIR%\DocCommon\QSG-T1.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.html
-  Destination=%MAINDIR%\DocCommon\QSG-T1.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.grins
-  Destination=%MAINDIR%\DocCommon\QSG-T1.grins
   Flags=0000000010000010
 end
 item: Install File
