@@ -79,9 +79,13 @@ class RealWindowChannel(Channel.ChannelWindow):
 
 		if not self._rmaplayer:
 			self._rmaplayer=rma.CreatePlayer()
+		self._rmaplayer.SetStatusListener(self)
 		self._rmaplayer.SetOsWindow(self.window.GetSafeHwnd())
-		self._rmaplayer.OpenURL(url)	
+		self._rmaplayer.OpenURL(url)
 		self._rmaplayer.Begin()
+
+	def OnStop(self):
+		self.playdone(0)
 
 	def stopplay(self, node):
 		self.release_player()
