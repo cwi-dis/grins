@@ -56,7 +56,6 @@ else:
 # macfreeze: path :::lib:mac
 # macfreeze: path :::lib
 # macfreeze: path :::pylib
-# macfreeze: path :::pylib:audio
 #
 # and some modules we don't want:
 # macfreeze: exclude X_window
@@ -100,12 +99,12 @@ else:
 # macfreeze: exclude VcrChannel
 # macfreeze: exclude NTVideoChannel
 # macfreeze: exclude MPEGVideoChannel
-# macfreeze: exclude audiohcom
-# macfreeze: exclude audio8svx
-# macfreeze: exclude audiosdnr
-# macfreeze: exclude audiosndt
-# macfreeze: exclude audiosndr
-# macfreeze: exclude audiovoc
+# macfreeze: exclude audio.hcom
+# macfreeze: exclude audio.8svx
+# macfreeze: exclude audio.sdnr
+# macfreeze: exclude audio.sndt
+# macfreeze: exclude audio.sndr
+# macfreeze: exclude audio.voc
 # macfreeze: exclude imgpng
 # macfreeze: exclude msvcrt
 # macfreeze: exclude termios
@@ -134,7 +133,6 @@ if not STANDALONE:
 		CMIFDIR+":lib",
 	# Overrides for Python distribution
 		CMIFDIR+":pylib",
-		CMIFDIR+":pylib:audio"
 	]
 	sys.path[0:0] = CMIFPATH
 	

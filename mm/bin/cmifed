@@ -88,6 +88,7 @@ if [ -d $CMIF/pylib ]
 then
 	for dir in `find $CMIF/pylib -type d ! -name CVS -print`
 	do
+		[ -f $dir/__init__.py ] ||
 		PYTHONPATH=$PYTHONPATH:$dir
 	done
 fi
