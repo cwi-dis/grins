@@ -315,7 +315,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				commandlist = commandlist + self.__ugroup
 		if self.context.isValidDocument():
 			if self.changed:
-				commandlist = commandlist + self.savecommandlist
+				utype, host, path, params, query, fragment = urlparse(self.filename)
+				if (not utype or utype == 'file') and (not host or host == 'localhost'):
+					commandlist = commandlist + self.savecommandlist
 			if not self.context.attributes.get('project_boston', 0):
 				commandlist = commandlist + self.publishg2commandlist
 			commandlist = commandlist + self.publishcommandlist
@@ -640,13 +642,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 'no file specified'
 		self.setwaiting()
 		if self.save_to_file(filename):
+			if self.closeonsave:
+				self.close()
+				return 1
 			self.filename = MMurl.pathname2url(filename)
 ##			self.context.setbaseurl(self.filename)
 			self.fixtitle()
 		else:
 			return 1
 
-	def saveas_callback(self, prune = 0, smil_one = 0):
+	def saveas_callback(self, prune = 0, smil_one = 0, close = 0):
 		if self.new_file:
 			cwd = settings.get('savedir')
 		else:
@@ -671,6 +676,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
 			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
+		self.closeonsave = close
 		windowinterface.FileDialog(title, cwd, filetypes,
 					   dftfilename, self.saveas_okcallback, None)
 
@@ -1617,8 +1623,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# the user want to save the document, before to close
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		if (utype and utype != 'file') or (host and host != 'localhost'):
-			windowinterface.showmessage('Cannot save nonlocal document.',
-						    mtype = 'warning')
+			self.saveas_callback(close = 1)
 			return 0
 		file = MMurl.url2pathname(path)
 		# XXXX This is wrong, we should ask where to save if self.new_file is set.
