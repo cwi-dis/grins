@@ -573,14 +573,24 @@ def getsyncarc(writer, node, isend):
 				date = '%04d-%02d-%02dT' % (yr, mt, dy)
 			else:
 				date = ''
-			if sc == 0:
+			# time is optional if there is a date
+			if date and hr == mn == sc == 0:
+				time = ''
+				date = date[:-1] # remove T at end
+			elif sc == 0:
+				# seconds are optional
 				time = '%02d:%02d' % (hr, mn)
 			elif int(sc) == sc:
+				# fraction of seconds is optional
 				time = '%02d:%02d:%02d' % (hr, mn, int(sc))
 			else:
 				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
 			if tzhr is not None:
-				tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+				if tzsg == '+' and tzhr == tzmn == 0:
+					# UTC/GMT can be abbreviated to just "Z"
+					tz = 'Z'
+				else:
+					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
 			else:
 				tz = ''
 			list.append('wallclock(%s%s%s)' % (date, time, tz))
@@ -2381,4 +2391,3 @@ def intToEnumString(intValue, dict):
 		return dict[intValue]
 	else:
 		return dict[0]
- 
