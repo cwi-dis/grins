@@ -4,7 +4,7 @@
 <smil>
   <head>
     <meta name="title" content="root-layout"/>
-    <meta name="template_name" content="Empty"/>
+    <meta name="template_name" content="(Obsolete) Empty"/>
     <meta name="template_description" content="An empty document"/>
     <layout>
       <root-layout id="root-layout" title="root-layout" width="640" height="480"/>
