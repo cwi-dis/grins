@@ -2633,9 +2633,14 @@ class TimelineWidget(MMWidgetDecoration):
 		x, y, w, h = self.get_box()
 		line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot = self.params
 		timemapper = self.__timemapper
-		t0, t1, t2, download, begindelay = self.get_mmwidget().GetTimes('virtual')
-		min = timemapper.time2pixel(t0, 'left')
-		max = timemapper.time2pixel(t2, 'right')
+##		t0, t1, t2, download, begindelay = self.get_mmwidget().GetTimes('virtual')
+##		min = timemapper.time2pixel(t0, 'left')
+##		max = timemapper.time2pixel(t2, 'right')
+		segments = timemapper.gettimesegments()
+		t0 = segments[0][0]
+		min = segments[0][1]
+		t2 = segments[-1][0]
+		max = segments[-1][2]
 		displist.drawline(TEXTCOLOR, [(min, line_y), (max, line_y)])
 		length = max - min	# length of real timeline
 		displist.usefont(f_timescale)
