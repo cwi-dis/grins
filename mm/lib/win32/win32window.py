@@ -1,4 +1,5 @@
 
+# app constants
 from appcon import *
 from WMEVENTS import *
 
@@ -86,19 +87,34 @@ class Window:
 		else:
 			raise error, 'invalid function'
 
+	#
+	# WMEVENTS section
+	#
+
+	# Register user input callbacks
 	def register(self, event, func, arg):
 		if func is None or callable(func):
 			pass
 		else:
 			raise error, 'invalid function'
-		if event in (ResizeWindow, KeyboardInput, Mouse0Press,
+		if event in(ResizeWindow, KeyboardInput, Mouse0Press,
 			     Mouse0Release, Mouse1Press, Mouse1Release,
-			     Mouse2Press, Mouse2Release):
+			     Mouse2Press, Mouse2Release, 
+				 DropFile, PasteFile, DragFile,
+				 DragNode, DropNode,
+				 WindowExit):
 			self._callbacks[event] = func, arg
+			if event == DropFile:
+				self.registerDropTarget()
+		else:
+			raise error, 'Unregister event',event
 
+	# Unregister user input callbacks
 	def unregister(self, event):
 		try:
 			del self._callbacks[event]
+			if event == DropFile:
+				self.revokeDropTarget()
 		except KeyError:
 			pass
 
@@ -114,6 +130,117 @@ class Window:
 			except Continue:
 				return 0
 		return 1
+	
+	# Call registered callback with return value
+	def onEventEx(self,event,params=None):
+		ret=None
+		try:
+			func, arg = self._callbacks[event]			
+		except KeyError:
+			pass
+		else:
+			try:
+				ret=func(arg, self, event, params)
+			except Continue:
+				pass
+		return ret
+
+
+	#
+	# Mouse and cursor related support
+	#
+
+	# convert device point to logical
+	# may differ when self._rect != self._canvas
+	def _DPtoLP(self, point):
+		return point
+
+	def onMouseEvent(self,point, ev):
+		cont, stop = 0, 1
+		if self.is_closed(): return cont
+		point = self._DPtoLP(point)
+		for wnd in self._subwindows:
+			# test that point is inside the window (not the media space area)
+			if wnd.inside(point):
+				if wnd.onMouseEvent(point, ev):
+					return stop
+			
+		disp = self._active_displist
+		if disp:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point= xp-x, yp-y
+			x,y = self._pxl2rel(point,self._canvas)
+			buttons = []
+			for button in disp._buttons:
+				if button._inside(x,y):
+					buttons.append(button)
+			if self.onEvent(ev,(x, y, buttons)):
+				# a button has received event, so we have to stop
+				return stop
+
+		# at this point, we didn't find a "anchor button" associated to this event
+		if self._transparent==0:
+			# if window is not transparent, we have to stop to look for whichever the
+			# display list (existing or not)
+			return stop
+		else:
+			if disp:
+				# if the channel is transparent, we have to check if the event location
+				# is inside or outside the media. Note: the media area depend of media type
+				# Currently, only win32displaylist give this information (it's at least the
+				# case for images).
+				if disp._insideMedia(x,y):
+					# event inside the media, we have to stop
+					return stop
+				else:
+					# outside the media, and transparent window. So check the next window
+					return cont
+			else:
+				# not active display list and transparent window. So check the next window
+				return cont
+
+	def setcursor_from_point(self, point):
+		cont, stop = 0, 1
+		point = self._DPtoLP(point)
+		for w in self._subwindows:
+			if w.inside(point):
+				if w.setcursor_from_point(point):
+					return stop
+
+		if self._active_displist:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point = xp-x, yp-y
+			x, y = self._pxl2rel(point,self._canvas)
+
+			for button in self._active_displist._buttons:
+				if button._inside(x,y):
+					self.setcurcursor('hand')
+					return stop
+			
+		# at this point, we don't find a "valid button"
+		if self._transparent==0:
+			# if window is not transparent, we have to stop to look for whichever the
+			# display list
+			self.setcurcursor('arrow')
+			return stop
+		else:
+			if self._active_displist:
+				# if the channel is transparent, we have to check if the event location
+				# is inside or outside the media. Note: the media area depend of media type
+				# Currently, only win32displaylist give this information (it's at least the
+				# case for image).
+				if self._active_displist._insideMedia(x,y):
+					# event inside the media, we have to stop
+					self.setcurcursor('arrow')
+					return stop
+				else:
+					# outside the media, and transparent window. So check the next window
+					return cont
+			else:
+				# not active display list and transparent window. So check the next window
+				return cont 
 
 	# bring the subwindow infront of windows with the same z	
 	def pop(self, poptop=1):
@@ -213,7 +340,7 @@ class Window:
 		return l, t, r-l, b-t
 
 	# return the coordinates of this window in units
-	def getgeometry(self, units = UNIT_SCREEN):
+	def getgeometry(self, units = UNIT_MM):
 		toplevel=__main__.toplevel
 		if units == UNIT_PXL:
 			return self._rectb
@@ -1114,94 +1241,6 @@ class Region(Window):
 	def _image_handle(self, file):
 		return  __main__.toplevel._image_cache[file]
 
-	#
-	# Mouse and cursor related support
-	#
-	
-	def onMouseEvent(self,point, ev):
-		cont, stop = 0, 1
-		if self.is_closed(): return cont
-		for wnd in self._subwindows:
-			# test that point is inside the window (not the media space area)
-			if wnd.inside(point):
-				if wnd.onMouseEvent(point, ev):
-					return stop
-			
-		disp = self._active_displist
-		if disp:
-			x, y, w, h = self.getwindowpos()
-			xp, yp = point
-			point= xp-x, yp-y
-			x,y = self._pxl2rel(point,self._canvas)
-			buttons = []
-			for button in disp._buttons:
-				if button._inside(x,y):
-					buttons.append(button)
-			if self.onEvent(ev,(x, y, buttons)):
-				# a button has received event, so we have to stop
-				return stop
-
-		# at this point, we didn't find a "anchor button" associated to this event
-		if self._transparent==0:
-			# if window is not transparent, we have to stop to look for whichever the
-			# display list (existing or not)
-			return stop
-		else:
-			if disp:
-				# if the channel is transparent, we have to check if the event location
-				# is inside or outside the media. Note: the media area depend of media type
-				# Currently, only win32displaylist give this information (it's at least the
-				# case for images).
-				if disp._insideMedia(x,y):
-					# event inside the media, we have to stop
-					return stop
-				else:
-					# outside the media, and transparent window. So check the next window
-					return cont
-			else:
-				# not active display list and transparent window. So check the next window
-				return cont
-
-	def setcursor_from_point(self, point):
-		cont, stop = 0, 1
-		for w in self._subwindows:
-			if w.inside(point):
-				if w.setcursor_from_point(point):
-					return stop
-
-		if self._active_displist:
-			x, y, w, h = self.getwindowpos()
-			xp, yp = point
-			point = xp-x, yp-y
-			x, y = self._pxl2rel(point,self._canvas)
-
-			for button in self._active_displist._buttons:
-				if button._inside(x,y):
-					self.setcurcursor('hand')
-					return stop
-			
-		# at this point, we don't find a "valid button"
-		if self._transparent==0:
-			# if window is not transparent, we have to stop to look for whichever the
-			# display list
-			self.setcurcursor('arrow')
-			return stop
-		else:
-			if self._active_displist:
-				# if the channel is transparent, we have to check if the event location
-				# is inside or outside the media. Note: the media area depend of media type
-				# Currently, only win32displaylist give this information (it's at least the
-				# case for image).
-				if self._active_displist._insideMedia(x,y):
-					# event inside the media, we have to stop
-					self.setcurcursor('arrow')
-					return stop
-				else:
-					# outside the media, and transparent window. So check the next window
-					return cont
-			else:
-				# not active display list and transparent window. So check the next window
-				return cont 
 
 	#
 	# Box creation section
@@ -1807,6 +1846,7 @@ class Viewport(Region):
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
 					self.setcurcursor('hand')
+					return
 		self.setcurcursor('arrow')
 
 
