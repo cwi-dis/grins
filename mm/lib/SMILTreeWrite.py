@@ -2550,17 +2550,24 @@ class SMILWriter(SMIL):
 	def getsubchans(self):
 		return self.__subchans
 
-namechars = string.letters + string.digits + '_-.'
+htmlnamechars = string.letters + string.digits + '_.'
+namechars = htmlnamechars + '-'
 
-def identify(name):
+def identify(name, html = 0):
 	"""Turn a CMIF name into an identifier"""
+	if html:
+		minus = '_'
+		nmchrs = htmlnamechars
+	else:
+		minus = '-'
+		nmchrs = namechars
 	rv = []
 	for ch in name:
-		if ch in namechars:
+		if ch in nmchrs:
 			rv.append(ch)
 		else:
-			if rv and rv[-1] != '-':
-				rv.append('-')
+			if rv and rv[-1] != minus:
+				rv.append(minus)
 	# the first character must not be a digit
 	if rv and rv[0] in string.digits:
 		rv.insert(0, '_')
