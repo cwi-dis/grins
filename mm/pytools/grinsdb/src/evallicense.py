@@ -11,17 +11,22 @@ import grinsdb
 import grpasswd
 
 # Configurable
-HOST="trawler.cwi.nl"
-SSHIDENT=os.path.join(grinsdb.DATABASE, ".sshidentity")
-SSHOPTS="-i %s -l jack"%SSHIDENT
-REMOTECMD="/ufs/jack/bin/addgrinspasswd"
-ADDPASSWDCMD= "ssh " + \
-	      SSHOPTS + " " + \
-	      HOST + " " + \
-	      REMOTECMD + " '%s' '%s' '%s'"
 
-DIR="/usr/local/www.cwi.nl/GRiNS/player"
-PASSWD=os.path.join(DIR, ".htpasswd")
+# set to 1 if sending current license allowed (else send previously
+# sent license)
+SEND_NEW_LICENSE = 0
+
+##HOST="trawler.cwi.nl"
+##SSHIDENT=os.path.join(grinsdb.DATABASE, ".sshidentity")
+##SSHOPTS="-i %s -l jack"%SSHIDENT
+##REMOTECMD="/ufs/jack/bin/addgrinspasswd"
+##ADDPASSWDCMD= "ssh " + \
+##	      SSHOPTS + " " + \
+##	      HOST + " " + \
+##	      REMOTECMD + " '%s' '%s' '%s'"
+
+##DIR="/usr/local/www.cwi.nl/GRiNS/player"
+##PASSWD=os.path.join(DIR, ".htpasswd")
 
 RESPONSE_OK=os.path.join(grinsdb.DATABASE, ".mail-license")
 RESPONSE_NOTOK=os.path.join(grinsdb.DATABASE, ".mail-no-license")
@@ -79,10 +84,15 @@ def evallicense(file, filename):
 		now = time.localtime(time.time())
 		elr = elr + time.strftime("%d-%h-%Y", now)
 		obj['Eval-License-Req'] = elr
-		try:
-			obj['Eval-License'] = string.split(license)[1]
-		except:
-			pass
+		if not SEND_NEW_LICENSE and obj.has_key('Eval-License'):
+			# send previously sent license
+			license = obj['Eval-License']
+		else:
+			# send current license (and record it)
+			try:
+				obj['Eval-License'] = string.split(license)[1]
+			except:
+				pass
 		dbase.save(obj)
 		mailok(email, license)
 	while file.read(10000):
