@@ -23,7 +23,7 @@ import Animators
 
 import windowinterface
 
-debug = 1
+debug = 0
 
 class AnimateChannel(Channel.ChannelAsync):
 	node_attrs = ['targetElement','attributeName',
@@ -41,8 +41,9 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__animator = None
 		self.__effAnimator = None
 		self.__targetchan = None
-		self.__isattrsupported = 0
 		self.__lastvalue = None
+		if not hasattr(self._player,'_animateContext'):
+			self._player._animateContext = Animators.AnimateContext()
 		
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
@@ -63,27 +64,16 @@ class AnimateChannel(Channel.ChannelAsync):
 		targetchname = MMAttrdefs.getattr(node.targetnode, 'channel') 
 		self.__targetchan = self._player.getchannelbyname(targetchname)
 		if self.__targetchan and self.__animator:
-			self.__isattrsupported = self.__targetchan.canupdateattr(node.targetnode, self.__animator.getAttrName())
-			if not self.__isattrsupported:
-				print 'animating attribute %s is not supported.' % self.__animator.getAttrName()
-			self.__isattrsupported = 1 # support all for dev
-			self.__lastvalue = self.__animator.getDOMValue()
-			
-			context = Animators.animateContext
+			context = self._player._animateContext
 			self.__effAnimator = context.getEffectiveAnimator(node.targetnode, 
 				self.__animator.getAttrName(), 
 				self.__animator.getDOMValue())
-
-		if debug:
-			print 'AnimateChannel.do_arm',node.attrdict
-			print 'target node:',node.targetnode.attrdict
-
 		return 1
 
 	def do_play(self, node):
 		if debug: print 'AnimateChannel.do_play'
 		
-		if not self.__animator or not self.__targetchan or not self.__isattrsupported:
+		if not self.__animator or not self.__targetchan:
 			# arming failed, so don't even try playing
 			self.playdone(0)
 			return
@@ -124,7 +114,6 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__unregister_for_timeslices()
 		if not self.__animating or not self.__animator:
 			return
-
 		self.__effAnimator.onAnimateEnd(self.__animator)
 
 	def __pauseAnimate(self, paused):
@@ -144,7 +133,7 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__effAnimator.update()
 				self.__lastvalue = val
 		if debug:
-			msg = 'animating %s =' % self.__animator.getAttrName()
+			msg = 'animating %s =' % attr
 			print msg, self.__animator.getValue(dt)
 
 	def __onAnimateDur(self):
