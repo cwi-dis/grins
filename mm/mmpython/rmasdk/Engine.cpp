@@ -32,7 +32,7 @@ public:
 protected:
 	EngineObject();
 	~EngineObject();
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	virtual string repr();
 #else
 	virtual char *repr();
@@ -211,13 +211,14 @@ EngineObject::CreateInstance(PyObject *self, PyObject *args)
 	return EngineObject::inst;
 }
 
+
 PyObject *
 EngineObject_CreateInstance(PyObject *self, PyObject *args)
 {
 	return EngineObject::CreateInstance(self, args);
 }
 
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 string
 #else
 char *
@@ -225,7 +226,7 @@ char *
 EngineObject::repr()
 {
 	char buf[256];
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	sprintf (buf, " instance 0x%X", this);
 	return RMAObject::repr() + buf;
 #else
