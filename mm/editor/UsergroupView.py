@@ -141,7 +141,7 @@ class UsergroupEdit(UsergroupEditDialog):
 	def do_apply(self):
 		ugroup, title, ustate, override, uid = self.getstate()
 		if not ugroup:
-			self.showmessage('Custom test name is required')
+			self.showmessage('Custom test name is required.')
 			return 0
 		if not self.__editmgr.transaction():
 			return 0
@@ -149,13 +149,13 @@ class UsergroupEdit(UsergroupEditDialog):
 			# we're editing an existing one
 			if not self.__usergroups.has_key(self.__ugroup):
 				# hmm, it didn't exist after all
-				self.showmessage('internal error')
+				self.showmessage('internal error: it does not exist.')
 				self.__editmgr.rollback()
 				return 0
 			if self.__ugroup != ugroup and \
 			   self.__usergroups.has_key(ugroup):
 				# trying to rename to existing name
-				self.showmessage('Non-unique user group name')
+				self.showmessage('Custom test name must be unique.')
 				self.__editmgr.rollback()
 				return 0
 			self.__editmgr.delusergroup(self.__ugroup)
