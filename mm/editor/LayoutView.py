@@ -134,6 +134,7 @@ class LayoutView(LayoutViewDialog):
 			editmgr.rollback()
 			return
 		if self.context.layouts.has_key(name):
+			import windowinterface
 			editmgr.rollback()
 			windowinterface.showmessage('layout name already exists')
 			return
@@ -190,7 +191,13 @@ class LayoutView(LayoutViewDialog):
 		editmgr.addchannel(name, len(self.context.channels), type)
 		ch = context.channeldict[name]
 		if root:
+			from windowinterface import UNIT_PXL, UNIT_SCREEN
 			ch['base_window'] = root
+			units = ch.get('units', UNIT_SCREEN)
+			if units == UNIT_PXL:
+				ch['base_winoff'] = 0,0,100,100
+			elif units == UNIT_SCREEN:
+				ch['base_winoff'] = 0,0,.2,.2
 		if self.curlayout != ALL_LAYOUTS:
 			editmgr.addlayoutchannel(self.curlayout, ch)
 		self.curchannel = name
