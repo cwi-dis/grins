@@ -1634,6 +1634,9 @@ class MMChannel(MMTreeElement):
 
 	# animparent: the parent node (MMNode) of the animations targeting self
 	def computeAnimationData(self, animparent):
+		if animparent is None or not isinstance(animparent, MMNode):
+			print 'not a MMNode argument'
+			return
 		if self._animationData is None:
 			root = animparent.GetRoot()
 			self._animationData = AnimationData.AnimationData(root, self, animparent)
@@ -5058,6 +5061,9 @@ class MMNode(MMTreeElement):
 	# if none is given then self is assumed
 	def computeAnimationData(self, animparent=None):
 		# XXX to do: update animation data according to animation nodes
+		if animparent is not None and not isinstance(animparent, MMNode):
+			print 'not a MMNode argument'
+			return
 		if self._animationData is None:
 			if animparent is None:
 				animparent = self
