@@ -1128,7 +1128,7 @@ class ListCtrl(AttrCtrl):
 		self._addbutton = components.Button(wnd, resid[2])
 		self._deletebutton = components.Button(wnd, resid[3])
 		self._editbutton = components.Button(wnd, resid[4])
-		
+		self._node = None	# MMNode. Needed for creating new nodes.
 
 	def OnInitCtrl(self):
 		# TODO: self._attrval needs to be a list of syncarcs.
@@ -1145,7 +1145,7 @@ class ListCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnEdit, self._resid[4])
 		#self._wnd.HookCommand(self.OnListEdit, self._resid[0])
 
-		self.setvalue(self._attr.getcurrent())
+		#self.setvalue(self._attr.getcurrent())
 
 		#self._attrname.attach_to_parent()
 		#if self.want_label:
@@ -1164,8 +1164,10 @@ class ListCtrl(AttrCtrl):
 		print "TODO: sethelp."
 
 	def OnAdd(self, id, code):
-		# Callback from the "add" button
-		n = EventEditor.EventStruct(None)
+		# Callback from the "add" button, which I renamed to "new"
+		# self._node should be an MMNode
+		assert self._node is not None
+		n = EventEditor.EventStruct(None, node = self._node, action = self._attr.getname())
 		edit = EventEditor.EventEditor(parent=self._wnd._form)
 		edit.set_eventstruct(n)
 		if edit.show():
@@ -1182,7 +1184,7 @@ class ListCtrl(AttrCtrl):
 			self.resetlist()
 			# delete only from the list; this will later be converted to a lack of syncarc.
 		else:
-			print "DEBUG: weirdly selected list memeber: ", a
+			print "DEBUG: weirdly selected list member: ", a
 
 	def OnEdit(self, id, code):
 		# callback for the "edit" button.
@@ -1204,12 +1206,6 @@ class ListCtrl(AttrCtrl):
 		#for c in self._attrval:
 		#	c.enable(enable)
 
-	def setvalue(self, val):
-		# val is a list of syncarcs.
-		assert isinstance(val, type([]))
-		self._value = val	# store for later use.
-		self.resetlist()
-
 	def resetlist(self):
 		self._list.resetcontent()
 		for i in range(0, len(self._value)):
@@ -1227,8 +1223,20 @@ class ListCtrl(AttrCtrl):
 		#	for i in range(self._nedit):
 		#		self._attrval[i].settext(st[i] or default[i])
 
+	def setvalue(self, val):
+		# val should be a tuple of (node, EventStructs)
+		print "DEBUG: val is: ", val
+		import traceback ; traceback.print_stack()
+		if isinstance(val, type(())):
+			self._node, self._value = val	# store for later use.
+		elif isinstance(val, type([])):
+			self._value = val
+		else:
+			print "ERROR: ListCtrl.setvalue received an invalid value."
+		self.resetlist()
+
 	def getvalue(self):
-		return self._value
+		return (self._node, self._value)
 		#if not self._initctrl:
 		#	return self._attr.getcurrent()
 		#default = string.split(self._attr.getdefault())

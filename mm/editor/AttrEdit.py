@@ -2028,6 +2028,11 @@ import EventEditor
 class TimelistAttrEditorField(AttrEditorField):
 	type = 'timelist'
 
+	# Jack: I worked out the reason why I decided to do it this way.
+	# valuerepr and parsevalue should be sending and receiving copies or
+	# representations of the syncarcs, not the syncarcs themselves.
+	# It's a form of encapsulation, and to me it "feels" right.
+
 	def valuerepr(self, listofsyncarcs):
 		if listofsyncarcs is None: return []
 		# converts listofsyncarcs into a list of eventstructs
@@ -2036,52 +2041,16 @@ class TimelistAttrEditorField(AttrEditorField):
 		n = self.wrapper.node
 		for i in listofsyncarcs:
 			return_me.append(EventEditor.EventStruct(i, n))
-		return return_me
-		
-##		print "DEBUG: TimelistAttrEditorField.valuerepr: received: ", value
-##		if value is None:
-##			return []
-##		s = []
-
-##		for a in value:
-##			if a.wallclock is not None:
-##				yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = a.wallclock
-##				if yr is not None:
-##					date = '%04d-%02d-%02dT' % (yr, mt, dy)
-##				else:
-##					date = ''
-##				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
-##				if tzhr is not None:
-##					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
-##				else:
-##					tz = ''
-##				s.append('wallclock(' + date + time + tz + ')')
-##				continue
-##			if a.marker is not None:
-##				s.append('')
-##				continue
-##			if a.delay is None:
-##				s.append('indefinite')
-##				continue
-##			if a.channel is not None:
-##				s.append('')
-##				continue
-##			if a.accesskey is not None:
-##				s.append('accesskey(%s)' % a.accesskey)
-##				continue
-##			if a.srcnode == 'syncbase':
-##				s.append('%gs' % a.delay)
-##			elif a.srcnode == 'prev':
-##				s.append('prev.%s+%gs' % (a.event, a.delay))
-##			else:
-##				s.append('Yes, there is an event here, but I dont know what it is.')
-##				continue
-##		return s
+		return (n, return_me)	# The editor (see AttrEditForm.py) needs the node, this is the
+					# only way I know to get it there. Possible TODO.
 
 	def parsevalue(self, editorstruct):
+		# editorstruct is a tuple of (node, EventStructs[])
+		# The node is there for consistancy.
 		# Converts editorstruct back into a list of syncarcs.
 		return_me = []
-		for i in editorstruct:
+		node, value = editorstruct # ignore the node.
+		for i in value:
 			if i: return_me.append(i.get_value()) # i could be None.
 		return return_me
 

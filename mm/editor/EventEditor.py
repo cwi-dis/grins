@@ -70,27 +70,27 @@ class EventEditor(EventEditorDialog.EventEditorDialog):
 class EventStruct:
 	# This encapsulates an event. An event is essentually a syncarc; this is a
 	# copy of that syncarc which can return another syncarc.
-	def __init__(self, syncarc, node):
+	def __init__(self, syncarc, node=None, action=None):
 		# if syncarc is None, make a new one. 
-		self._syncarc = syncarc
-		self._node = node
-		self.cause = None	# Cause is always set.
+		# TODO: action is not a good name.. 
 		self.clear_vars()
-		if self._syncarc:
-			self.set_vars()
-		else:
+		if not syncarc:
+			if action == 'endlist':
+				a = 'end'
+			else: # if action is None, for example.
+				a = 'begin'
+			assert isinstance(self._node, MMNode.MMNode)
+			self._syncarc = MMNode.MMSyncArc(self._node, a)
 			self.set_cause('node')
 			self.set_event('activateEvent')
 			self.set_offset('0')
-
+		else:
+			self._syncarc = syncarc
+			self.set_vars()
+			
 	def get_value(self):
 		# Returns the result of editing this syncarc.
-		if not self._syncarc:
-			print "ERROR: this code is not complete. I can't find a node to make a syncarc on."
-			assert 0
-			# TODO: here, make a new syncarc.
 		s = self._syncarc
-
 		if self._setcause:
 			# Only causes without parameters (i.e. indefinite and prev)
 			c = self._setcause
@@ -106,6 +106,7 @@ class EventStruct:
 			s.delay = int(self._setoffset)
 		c = self.get_cause()
 		if c == 'node' and self._setnode:
+			# The problem here is that I don't know how to map a name of a node to it's instance.
 			print "TODO: don't know how to set node."
 		elif c == 'region' and self._setregion:
 			print "TODO: don't know how to set region."
@@ -120,10 +121,8 @@ class EventStruct:
 		x = self._syncarc
 
 		# The cause and the thing.
-		if self.cause:
-			assert 0
-		elif x.delay is None:
-			self.cause == 'indefinite'
+		if x.delay is None:
+			self.cause = 'indefinite'
 		elif x.wallclock is not None:
 			self.cause = 'wallclock'
 			self.delay = None
@@ -195,6 +194,7 @@ class EventStruct:
 			else:
 				wc = ""
 			return "wallclock( "+wc+" )"
+
 		# Now for the offset things
 		elif c == 'node':
 			_, r, _, _ = self.get_thing_string()
@@ -238,6 +238,8 @@ class EventStruct:
 			else:
 				print "Got strange looking event: ", self._syncarc
 				return "Error: strange event."
+		else:
+			print "ERROR: Unknown cause: ", c
 		d = self.get_offset()
 		if d == "0" or d is None:
 			return r
@@ -249,8 +251,10 @@ class EventStruct:
 		if self._setcause:
 			return self._setcause
 		else:
+			assert self.cause
 			return self.cause
 	def set_cause(self, newcause):
+		assert newcause in CAUSES
 		self._setcause = newcause
 	def get_event(self):
 		# Only return the element which is in EVENTS_whatever list.
@@ -258,7 +262,7 @@ class EventStruct:
 			return self._setevent
 		elif not self.event: # This should _never_ happen anyway..
 					# if it does then there is something wrong with the event lists.
-			return None
+			return ""
 		elif self.event.startswith('repeat'):
 			# TODO: repeated times.
 			return 'repeat'
