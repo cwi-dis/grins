@@ -115,6 +115,9 @@
 (duration (float) 0.0 'Duration' default
 	'Duration of a node or subtree, 0 uses natural duration' normal (all))
 
+(erase (enum never whenDone) whenDone 'Erase media' default
+	'Whether to erase the media when done playing' raw (cmif smil2))
+
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
 	'Color used for text/images in window' channel (cmif))
 

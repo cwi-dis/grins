@@ -407,7 +407,7 @@ class NodeWrapper(Wrapper):
 			'begin', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
-			('fill',), ('fillDefault',),
+			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
@@ -434,6 +434,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('syncBehaviorDefault')
 			namelist.append('min')
 			namelist.append('max')
+			namelist.append('erase')
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
@@ -1133,7 +1134,7 @@ class AttrEditor(AttrEditorDialog):
 		lightweight = features.lightweight
 		smil2 = 0
 		if hasattr(wrapper, 'context'):
-			smil2 = wrapper.context.attributes.get('project_boston', 0)
+			smil2 = wrapper.context.attributes.get('projectb_oston', 0)
 		if not lightweight:
 			cmif = settings.get('cmif')
 		else:
