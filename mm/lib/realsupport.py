@@ -1080,7 +1080,10 @@ def getinfo(url, fp = None, printfunc = None):
 			'duration': rp.duration,}
 	elif head == '.RMF':
 		# RealMedia
-		info = rmff(url, fp)
+		try:
+			info = rmff(url, fp)
+		except:
+			info = {}
 	elif head == '.ra\375':
 		# RealAudio
 		import struct
