@@ -273,14 +273,6 @@ SOURCE=.\M_Attrdefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AttrEditForm.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_Attrgrs.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_audio.c
 # End Source File
 # Begin Source File
