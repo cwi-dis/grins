@@ -40,11 +40,11 @@ def writenode(x, fp):
 		for child in x.GetChildren():
 			fp.write('\n')
 			writenode(child, fp)
-	elif type = 'imm':
+	elif type == 'imm':
 		for value in x.GetValues():
 			fp.write('\n')
 			writeany(value, None, fp)
-	elif type = 'ext':
+	elif type == 'ext':
 		pass
 	else:
 		raise CheckError, 'bad node type in writenode'
@@ -73,7 +73,7 @@ import string
 namechars = string.letters + string.digits + '_'
 def writename(value, dummy, fp):
 	needquote = 0
-	if value = '':
+	if value == '':
 		needquote = 1
 	else:
 		for c in value:
@@ -152,11 +152,11 @@ def writeenclosed(value, (func, arg), fp):
 def writetype(value, dummy, fp):
 	type, arg = value
 	fp.write('(' + type)
-	if type = 'enum':
+	if type == 'enum':
 		for name in arg:
 			fp.write(' ')
 			writename(name)
-	elif type = 'tuple':
+	elif type == 'tuple':
 		for t in arg:
 			fp.write(' ')
 			writetype(t, None, fp)
@@ -167,7 +167,7 @@ def writetype(value, dummy, fp):
 def writeany(value, dummy, fp):
 	if type(value) in (type(0), type(0.0), type('')):
 		fp.write(`value`)
-	elif type(value) = type({}):
+	elif type(value) == type({}):
 		fp.write('(')
 		writedict(value, (writeany, dummy), fp)
 		fp.write(')')
@@ -219,7 +219,7 @@ class StringOutputNoNL:
 		self.buf = ''
 		return self
 	def write(self, str):
-		if str[-1:] = '\n': str = str[:-1]
+		if str[-1:] == '\n': str = str[:-1]
 		self.buf = self.buf + str
 	def get(self):
 		return self.buf

@@ -6,7 +6,7 @@ import flp
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 
-class HelpWindow() = ViewDialog(), BasicDialog():
+class HelpWindow(ViewDialog, BasicDialog):
     def init(self, (dirname, toplevel)):
     	self = ViewDialog.init(self, 'help_')
 	self = BasicDialog.init(self, (0, 0, 'Help'))
@@ -40,7 +40,7 @@ class HelpWindow() = ViewDialog(), BasicDialog():
 	self.button_return.hide_object()
     def givehelp(self, topic):
 	self.inittopics()
-	if type(topic) = type(()):
+	if type(topic) == type(()):
 	    topic, subtopic = topic
 	else:
 	    subtopic = ''
@@ -52,14 +52,14 @@ class HelpWindow() = ViewDialog(), BasicDialog():
 	    self.return_stack.insert(0,(self.curtopic,num))
 	    self.button_return.show_object()
 	for i in range(0,len(self.topics)):
-	    if self.topics[i] = topic:
+	    if self.topics[i] == topic:
 		self.topic.deselect_browser()
 		self.topic.select_browser_line(i+1)
 		self.topic.set_browser_topline(i+1)
 		self.help.load_browser(self.dirname + topic)
 		self.curtopic = topic
 		if subtopic:
-		    if type(subtopic) = type(1):
+		    if type(subtopic) == type(1):
 			j = subtopic
 		    else:
 			j = findtopicline(self.dirname + topic, subtopic)
@@ -84,7 +84,7 @@ class HelpWindow() = ViewDialog(), BasicDialog():
 	    self.givehelp(topic)
     def cb_topic(self, arg):
 	i = arg[0].get_browser()
-	if i = 0:
+	if i == 0:
 	    self.help.clear_browser()
 	else:
 	    self.givehelp(self.topics[i-1])
@@ -110,7 +110,7 @@ def findtopicline(file, str):
     while s <> '':
 	i = i + 1
 	s = f.readline()
-	if s[:sl] = str:
+	if s[:sl] == str:
 	    return i
     return 0
 

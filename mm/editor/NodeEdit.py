@@ -18,9 +18,7 @@ error = 'NodeEditorError'
 _LocalError = '_LocalError'
 formdone = 'Form Done'
 
-class Struct(): pass
-_global = Struct()
-_global.formdef = None
+formdef = None
 
 channeleditors = {}
 
@@ -59,13 +57,14 @@ def _do_convert(node, fn):	# Convert imm node to ext
 # events for other forms at the moemnt.
 # Usage: call init() to create everything and work() to do the dialog.
 #
-class _convert_dialog():
+class _convert_dialog:
     def init(self, node):
+    	global formdef
 	self.node = node
 	self.doconvert = 0
-	if _global.formdef = None:
-	    _global.formdef = flp.parse_form('NodeEditForm', 'form')
-	flp.create_full_form(self, _global.formdef)
+	if formdef == None:
+	    formdef = flp.parse_form('NodeEditForm', 'form')
+	flp.create_full_form(self, formdef)
 	self.err_groupshown = 0
 	self.err_group.hide_object()
 	chname = MMAttrdefs.getattr(node, 'channel')
@@ -116,7 +115,7 @@ def _merge(f, filename):	# Merge editors file into data structures
 	l = l[:-1]
 	fields = string.splitfields(l,':')
 	# Skip blank lines and comments
-	if fields = [''] or fields[0][:1] = '#': continue
+	if fields == [''] or fields[0][:1] == '#': continue
 	if len(fields) <> 3:
 	    print 'Bad line in', `filename` + ':', l
 	    continue
@@ -157,21 +156,23 @@ def _showmenu(menu):	# Show (modal) editor choice dialog
 
 # InitEditors - Initialize the module.
 def InitEditors():
+    # XXX Should add the directory where the .cmif file resides...
+    # XXX (toplevel.dirname)
     dirs = ['.', posix.environ['HOME'], '/ufs/guido/mm/demo/mm4']
     for dirname in dirs:
     	filename = path.join(dirname, '.cmif_editors')
     	try:
     		f = open(filename, 'r')
-    	except:
+    	except IOError:
     		continue
 	_merge(f, filename)
 	f.close()
 
 # showeditor - Show the editor (or selector) for a given node
 def showeditor(node):
-    if len(channeleditors) = 0:
+    if len(channeleditors) == 0:
 	InitEditors()
-    if node.GetType() = 'imm':
+    if node.GetType() == 'imm':
 	done = _convert(node)
 	if not done: return
     if node.GetType() <> 'ext':
@@ -182,11 +183,11 @@ def showeditor(node):
     try:
 	chtype = _getchtype(node)
 	editor = channeleditors[chtype]
-	if type(editor) = type(''):
+	if type(editor) == type(''):
 	    cmd = editor
 	else:
 	    cmd = _showmenu(editor)
-	    if cmd = None:
+	    if cmd == None:
 		raise _LocalError
 	cmd = 'file='+filename+' ; '+cmd+' &'
 	void = posix.system(cmd)

@@ -34,7 +34,7 @@ def clear_window():
 	clear()
 
 # define a rectangular box with vertex at (x,y); width w and heigth h.
-class box():
+class box:
 
 	def new(self,(kind,x,y,w,h,name)):
 		self.boxtype = kind
@@ -47,7 +47,7 @@ class box():
 		return self
 
 	def draw(self):
-		if self.hidden <> 0 or self.boxtype = BG_BOX:
+		if self.hidden <> 0 or self.boxtype == BG_BOX:
 			return
 		nodecolor()
 		l = getlwidth()
@@ -64,9 +64,9 @@ class box():
 		v2f(0, h)
 		endpolygon()
 		linewidth(l * 2)
-		if self.boxtype = FOCUS_BOX:
+		if self.boxtype == FOCUS_BOX:
 			focuscolor()
-		elif self.boxtype = LOCK_BOX:
+		elif self.boxtype == LOCK_BOX:
 			altfocuscolor()
 		else:
 			nodecolor()
@@ -89,7 +89,7 @@ class box():
 # rectangle.  the rectangle has one vertex at (x,y), width w and height h
 # moreover, this pattern contains a line from the bottom of the diamond
 # extending for l units.  the line is not part of the hotspot.
-class diamond():
+class diamond:
 
 	def new(self,(x,y,w,h,l,name)):
 		self.kind = NORM_CHAN
@@ -137,7 +137,7 @@ class diamond():
 			endline()
 		l = getlwidth()
 		linewidth(l * 2)
-		if self.kind = FOCUS_CHAN:
+		if self.kind == FOCUS_CHAN:
 			focuscolor()
 		bgnclosedline()
 		v2f(0, 0)
@@ -185,7 +185,7 @@ class diamond():
 
 # define an arrow from (fx,fy) to (tx,ty).
 # the hotspot is the arrowhead
-class arrow():
+class arrow:
 
 	def new(self, (fx, fy, tx, ty, arc, src, dst)):
 		self.repos(fx, fy, tx, ty)
@@ -212,7 +212,7 @@ class arrow():
 		pushmatrix()
 		l = getlwidth()
 		linewidth(l*2)
-		if self.kind = NORM_ARROW:
+		if self.kind == NORM_ARROW:
 			arrowcolor()
 		else:
 			focuscolor()
@@ -254,7 +254,7 @@ def putlabel(label):
 	charstr(label)
 
 # define a thermometer with vertex at (x,y); width w and heigth h.
-class thermo():
+class thermo:
 
 	def new(self,(x,y,w,h)):
 		self.x = x

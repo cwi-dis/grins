@@ -25,7 +25,7 @@ from Dialog import Dialog
 FORMWIDTH=535
 FORMHEIGHT=255
 
-class Struct(): pass
+class Struct: pass
 _global = Struct()
 
 _global.cwd = posix.getcwd()+'/'
@@ -83,7 +83,7 @@ def hasnodeinfo(node):
 #
 #
 
-class NodeInfo() = Dialog():
+class NodeInfo(Dialog):
 	def init(self, node):
 		self.node = node
 		self.context = node.GetContext()
@@ -93,7 +93,7 @@ class NodeInfo() = Dialog():
 		#
 		title = self.maketitle()
 		self = Dialog.init(self, (FORMWIDTH, FORMHEIGHT, title,''))
-		if _global.forms = None:
+		if _global.forms == None:
 		    _global.forms = flp.parse_forms('NodeInfoForm')
 		#
 		for i in _global.forms.keys():
@@ -212,7 +212,7 @@ class NodeInfo() = Dialog():
 		    em.setnodeattr(n, 'channel', self.channelname)
 		    self.ch_channelname = 0
 		if self.ch_type:
-		    if self.oldtype = 'imm' and self.type <> 'imm':
+		    if self.oldtype == 'imm' and self.type <> 'imm':
 			em.setnodevalues(n,[])
 			self.ch_immtext = 0
 		    em.setnodetype(n, self.type)
@@ -286,13 +286,13 @@ class NodeInfo() = Dialog():
 	# show_correct_group - Show correct type-dependent group of buttons
 	#
 	def show_correct_group(self):
-	    if self.type = 'imm':
+	    if self.type == 'imm':
 		group = self.imm_group
-	    elif self.type = 'ext':
+	    elif self.type == 'ext':
 		group = self.ext_group
 	    else:
 		group = self.int_group
-	    if group = self.cur_group:
+	    if group == self.cur_group:
 		return
 	    if self.cur_group <> None:
 		self.cur_group.hide_object()
@@ -350,16 +350,16 @@ class NodeInfo() = Dialog():
 	def type_callback(self, (obj,dummy)):
 	    newtype = obj.get_choice_text()
 	    self.fixfocus()
-	    if newtype = self.type:
+	    if newtype == self.type:
 		return
 	    # Check that the change is allowed.
 	    if (self.type in interiortypes) and \
 			(newtype in interiortypes):
 		pass	# This is ok.
 	    elif ((self.type in interiortypes) and \
-			self.children = []) or \
-		 (self.type = 'imm' and len(self.immtext) = 1) or \
-		 (self.type = 'ext'):
+			self.children == []) or \
+		 (self.type == 'imm' and len(self.immtext) == 1) or \
+		 (self.type == 'ext'):
 		pass
 	    else:
 		fl.show_message('Cannot change type on', 'non-empty node', '')
@@ -376,7 +376,7 @@ class NodeInfo() = Dialog():
 		self.changed = 1
 	def styles_add_callback(self, (obj,dummy)):
 	    i = self.styles_select.get_choice()
-	    if i = 0: return
+	    if i == 0: return
 	    self.ch_styles_list = 1
 	    self.changed = 1
 	    new = self.allstyles[i-1]
@@ -408,13 +408,13 @@ class NodeInfo() = Dialog():
 	    line = obj.get_input()
 	    i = self.text_browser.get_browser()
 	    if i:
-		if line = self.immtext[i-1]: return
+		if line == self.immtext[i-1]: return
 		self.ch_immtext = 1
 		self.changed = 1
 		self.text_browser.replace_browser_line(i, line)
 		self.immtext[i-1] = line
 		# Did we change the dummy last line?
-		if i = len(self.immtext):
+		if i == len(self.immtext):
 		    self.immtext.append('')
 		    self.text_browser.addto_browser('')
 	    else:
@@ -457,13 +457,13 @@ class NodeInfo() = Dialog():
 	# dir from the resulting pathname.
 	def browser_callback(self, (obj,dummy)):
 	    dir, file = path.split(self.filename)
-	    if file = '' or self.filename = '/dev/null': # YUCK!
+	    if file == '' or self.filename == '/dev/null': # YUCK!
 		dir = _global.dir
 		file = ''
 	    result = fl.file_selector('Select file', dir, '*', file)
 	    if result:
 		try:
-		    if string.index(result,_global.cwd) = 0:
+		    if string.index(result,_global.cwd) == 0:
 			result = result[len(_global.cwd):]
 		except string.index_error:
 		    pass
@@ -481,7 +481,7 @@ class NodeInfo() = Dialog():
 	#
 	def openchild_callback(self, (obj, dummy)):
 	    i = self.children_browser.get_browser()
-	    if i = 0: return
+	    if i == 0: return
 	    shownodeinfo(self.children_nodes[i-1])
 
 # Routine to close all attribute editors in a node and its context.
@@ -522,7 +522,7 @@ def test():
 	print 'go ...'
 	while 1:
 		obj = fl.do_forms()
-		if obj = quitbutton:
+		if obj == quitbutton:
 			hidenodeinfo(root)
 			break
 		print 'This object should have a callback!', `obj.label`

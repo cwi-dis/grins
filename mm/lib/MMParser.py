@@ -11,10 +11,10 @@ import regexp
 # Globals used by class MMParser
 
 expr = '0[xX][0-9a-fA-F]+|[0-9]+(\.[0-9]*)?([eE][-+]?[0-9]+)?'
-matchnumber = regexp.compile(expr).exec
+matchnumber = regexp.compile(expr).match
 
 expr = '[a-zA-Z_][a-zA-Z0-9_]*'
-matchname = regexp.compile(expr).exec
+matchname = regexp.compile(expr).match
 
 letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
 digits = '0123456789'
@@ -88,7 +88,7 @@ class MMParser:
 			while self.more():
 				child = self.getnode()
 				node._addchild(child)
-		elif type = 'imm':
+		elif type == 'imm':
 			while self.more():
 				value = self.getanyvalue(None)
 				node._addvalue(value)
@@ -132,19 +132,19 @@ class MMParser:
 	#
 	def getstringvalue(self, dummy):
 		t = self.getobject()
-		if t[0] = '\'': return eval(t)
+		if t[0] == '\'': return eval(t)
 		raise TypeError, (t, 'string')
 	#
 	def getnamevalue(self, dummy):
 		t = self.getobject()
 		if t[0] in letters: return t
-		if t[0] = '\'': return eval(t)
+		if t[0] == '\'': return eval(t)
 		raise TypeError, (t, 'name')
 	#
 	def getuidvalue(self, dummy):
 		t = self.getobject()
 		if t[0] in letters or t[0] in digits: return t
-		if t[0] = '\'': return eval(t)
+		if t[0] == '\'': return eval(t)
 		raise TypeError, (t, 'uid')
 	#
 	def getboolvalue(self, dummy):
@@ -217,12 +217,12 @@ class MMParser:
 			value = func(self, arg)
 		else:
 			print 'Warning: unrecognized attr', name
-			if name[-4:] = 'dict':
+			if name[-4:] == 'dict':
 				# Default syntax for dictionaries
 				value = \
 				    self.getnamedictvalue( \
 				    	MMParser.getanyvalue, None)
-			elif name[-4:] = 'list':
+			elif name[-4:] == 'list':
 				# Default syntax for lists
 				value = self.getlistvalue( \
 					MMParser.getanyvalue, None)
@@ -232,7 +232,7 @@ class MMParser:
 				# else as single value)
 				value = self.getlistvalue( \
 					MMParser.getanyvalue, None)
-				if len(value) = 1:
+				if len(value) == 1:
 					value = value[0]
 		self.close()
 		return name, value
@@ -256,35 +256,35 @@ class MMParser:
 		self.open()
 		type = self.getnamevalue(None)
 		arg = None
-		if type = 'int':
+		if type == 'int':
 			pass
-		elif type = 'float':
+		elif type == 'float':
 			pass
-		elif type = 'string':
+		elif type == 'string':
 			pass
-		elif type = 'name':
+		elif type == 'name':
 			pass
-		elif type = 'uid':
+		elif type == 'uid':
 			pass
-		elif type = 'bool':
+		elif type == 'bool':
 			pass
-		elif type = 'enum':
+		elif type == 'enum':
 			arg = self.getlistvalue(MMParser.getnamevalue, None)
-		elif type = 'tuple':
+		elif type == 'tuple':
 			arg = self.getlistvalue(MMParser.gettypevalue, None)
-		elif type = 'list':
+		elif type == 'list':
 			arg = self.gettypevalue(None)
-		elif type = 'dict':
+		elif type == 'dict':
 			arg = self.gettypevalue(None)
-		elif type = 'namedict':
+		elif type == 'namedict':
 			arg = self.gettypevalue(None)
-		elif type = 'attrdict':
+		elif type == 'attrdict':
 			pass
-		elif type = 'enclosed':
+		elif type == 'enclosed':
 			arg = self.gettypevalue(None)
-		elif type = 'type':
+		elif type == 'type':
 			pass
-		elif type = 'any':
+		elif type == 'any':
 			pass
 		# XXX union?
 		else:
@@ -298,9 +298,9 @@ class MMParser:
 			return t
 		if t[0] in digits:
 			return eval(t)
-		if t[0] = '\'':
+		if t[0] == '\'':
 			return eval(t)
-		if t[0] = '(':
+		if t[0] == '(':
 			value = self.getlistvalue(MMParser.getanyvalue, None)
 			self.close()
 			return value
@@ -348,7 +348,7 @@ class MMParser:
 			raise SyntaxError, (t, exp)
 	#
 	def more(self):
-		if self.peektoken() = ')':
+		if self.peektoken() == ')':
 			return 0
 		else:
 			return 1
@@ -365,7 +365,7 @@ class MMParser:
 		else:
 			token = self.getnexttoken()
 		#print '#gettoken', token
-		if token = '':
+		if token == '':
 			raise EOFError
 		return token
 	#
@@ -403,7 +403,7 @@ class MMParser:
 				#
 				# Read continuation lines if any
 				#
-				while self.nextline[-2:] = '\\\n':
+				while self.nextline[-2:] == '\\\n':
 					self.nextline = self.nextline[:-2]
 					cont = self.input.readline()
 					if not cont:
@@ -418,7 +418,7 @@ class MMParser:
 			i, n = self.pos, len(self.nextline)
 			while i < n and self.nextline[i] in ' \t\n\f\v':
 				i = i+1
-			if i < n and self.nextline[i] = '#':
+			if i < n and self.nextline[i] == '#':
 				i = n
 			self.pos = i
 			if i < n:
@@ -430,16 +430,16 @@ class MMParser:
 		i, n = self.pos, len(line)
 		c = line[i]
 		self.tokstart = i
-		if c = '\'':
+		if c == '\'':
 			i = i+1
 			while i < n:
 				c = line[i]
 				i = i+1
-				if c = '\'':
+				if c == '\'':
 					token = line[self.pos : i]
 					self.pos = i
 					return token
-				if c = '\\':
+				if c == '\\':
 					i = i+1
 			raise SyntaxError, 'unterminated string'
 		if c in digits:
@@ -479,7 +479,7 @@ class MMParser:
 				n = max(1, self.pos - i)
 				fp.write('^'*n)
 				break
-			elif line[i] = '\t':
+			elif line[i] == '\t':
 				fp.write('\t')
 			elif ' ' <= line[i] < '\177':
 				fp.write(' ')
@@ -523,7 +523,7 @@ class StringInput:
 		i = self.pos
 		n = len(string)
 		while i < n:
-			if string[i] = '\n':
+			if string[i] == '\n':
 				i = i+1
 				break
 			i = i+1
@@ -557,7 +557,7 @@ def testparser():
 		print 'unexpected EOF at line', p.lineno
 		return
 	except SyntaxError, msg:
-		if type(msg) = type(()):
+		if type(msg) == type(()):
 			gotten, expected = msg
 			msg = 'got ' + `gotten` + ', expected ' + `expected`
 		p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)

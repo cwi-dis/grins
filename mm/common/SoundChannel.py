@@ -28,7 +28,7 @@ import MMAttrdefs
 from Channel import Channel
 
 
-class SoundChannel() = Channel():
+class SoundChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
@@ -47,7 +47,7 @@ class SoundChannel() = Channel():
 		filename = self.getfilename(node)
 		try:
 			return getduration(filename)
-		except:
+		except IOError:
 			print 'cannot get duration for sound file ' + filename
 			return MMAttrdefs.getattr(node, 'duration')
 	#
@@ -56,7 +56,7 @@ class SoundChannel() = Channel():
 		try:
 			self.info = getinfo(filename)
 			self.prep = prepare(self.info)
-		except '':
+		except IOError:
 			self.info = self.prep = None
 			print 'cannot open sound file ' + filename
 			callback(arg)
@@ -83,7 +83,7 @@ class SoundChannel() = Channel():
 			data = f.read(nbytes)
 			if len(data) < nbytes:
 				print 'short read from sound file'
-			if data = '':
+			if data == '':
 				self.framestodo = 0
 			else:
 				self.framestodo = self.framestodo - \
@@ -127,11 +127,7 @@ class SoundChannel() = Channel():
 	# Internal methods.
 	#
 	def getfilename(self, node):
-		# XXX Doesn't use self...
-		if node.type = 'imm':
-			return string.join(node.GetValues())
-		elif node.type = 'ext':
-			return MMAttrdefs.getattr(node, 'file')
+		return MMAttrdefs.getattr(node, 'file')
 	#
 
 
@@ -146,7 +142,7 @@ def getinfo(filename):
 	f = open(filename, 'r')
 	magic = f.read(4)
 	# Look for AIFF header as produced by recordaiff
-	if magic = 'FORM':
+	if magic == 'FORM':
 		totalsize = aiff.read_long(f)
 		aiff.read_form_chunk(f)
 		type, size = aiff.read_chunk_header(f)
@@ -159,11 +155,11 @@ def getinfo(filename):
 	else:
 		# Look for old-fashioned header
 		offset = 4
-		if magic = '0008':
+		if magic == '0008':
 			samprate = 8000.0
-		elif magic = '0016':
+		elif magic == '0016':
 			samprate = 16000.0
-		elif magic = '0032':
+		elif magic == '0032':
 			samprate = 32000.0
 		else:
 			# Assume old-fashioned file without header
@@ -181,7 +177,7 @@ def getinfo(filename):
 
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 	import al
-	if format = 'FORM':
+	if format == 'FORM':
 		type, size = aiff.read_chunk_header(f)
 		if type <> 'SSND':
 			raise aiff.Error, 'no SSND header where expected'

@@ -56,13 +56,13 @@ def _readparser(p, filename):
 		p.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
 	except SyntaxError, msg:
-		if type(msg) = type(()):
+		if type(msg) == type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Syntax error: ' + msg, sys.stderr)
 		raise SyntaxError, msg
 	except TypeError, msg:
-		if type(msg) = type(()):
+		if type(msg) == type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Type error: ' + msg, sys.stderr)
