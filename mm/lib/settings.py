@@ -327,23 +327,6 @@ default_settings = {
 	'show_all_attributes' : 1,
 	'enable_template': 0,
 	'registered': 'notyet',
-
-	# RTIPA start
-	'RTIPA_debug': 1,
-	'RTIPA_config': '',	# URL where RTIPA config file is to be found
-	'RTIPA_QoS': {'AF11': 115200, 'EF': 1000000,}, # mapping from QoS class to bitrate
-	'RTIPA_add_params': 0,		# add query params with widht/height/class to SMIL file URL
-	'RTIPA_config_re':
-		'^[^/]*'		# router name
-		'/add flow'		# command we're looking for
-		' +dev +.* '		# device (e.g. eth0)
-		'dst_addr +'
-		r'(?P<IP>[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)' # IP address
-		'/32.*'			# IP address ends with /32
-		' class '
-		'(?P<class>[^ ]+)',	# class of service (currently only AF or EF)
-	'RTIPA_client_IP': '192.0.22.1',
-	# RTIPA end
 }
 
 # Set cpu/os type
@@ -400,11 +383,6 @@ def restore():
 	for k in user_settings.keys():
 		if k[:2] == '__':
 			del user_settings[k]
-	# start RTIPA
-	import features
-	if hasattr(features, 'RTIPA') and features.RTIPA:
-		read_RTIPA()
-	# end RTIPA
 	read_components_from_skin()
 
 def factory_defaults():
@@ -577,76 +555,6 @@ def commit(auto=0):
 	save()
 	for listener in _registry:
 		listener.commit('preference')
-
-#
-# RTIPA start
-#
-
-# mapping from host (IP address converted with socket.inet_aton) to bitrate
-RTIPA_classes = {}
-
-def match_bitrate_RTIPA(wanted_value, host):
-	myname = get('RTIPA_client_IP')
-	import socket
-	try:
-		ip = socket.gethostbyname(myname)
-	except socket.error:
-		# host unknown, default to normal processing
-		return match('system_bitrate', wanted_value)
-	RTIPA_QoS = get('RTIPA_QoS')
-	ip = socket.inet_aton(ip) # normalize
-	qos = RTIPA_classes.get(ip)
-	if qos is None or not RTIPA_QoS.has_key(qos):
-		# host or class unknown defaults to normal processing
-		return match('system_bitrate', wanted_value)
-	real_value = RTIPA_QoS[qos]
-	return real_value >= wanted_value
-
-# regular expression to match interesting lines from RTIPA config file
-# a typical line looks like:
-# <router-name>/add_flow dev eth0 src_addr 191.192.192.192/32 class EF
-# we're interested in the IP address and the class
-import re
-RTIPA_re = None
-
-def read_RTIPA():
-	global RTIPA_re
-	if RTIPA_re is None:
-		RTIPA_re = re.compile(get('RTIPA_config_re'))
-	import socket, MMurl
-	import windowinterface
-	RTIPA_classes.clear()
-	url = get('RTIPA_config')
-	if not url:
-		windowinterface.showmessage("No RTIPA config file configured")
-		return
-	try:
-		u = MMurl.urlopen(url)
-	except:
-		windowinterface.showmessage("Failed opening RTIPA config file `%s'" % url)
-		return
-	missed = []
-	while 1:
-		line = u.readline()
-		if not line:
-			u.close()
-			break
-		res = RTIPA_re.match(line)
-		if res is None:
-			missed.append(line)
-			continue
-		ip, qos = res.group('IP', 'class')
-		ip = socket.inet_aton(ip) # normalize
-		RTIPA_classes[ip] = qos
-	msg = []
-	for ip, qos in RTIPA_classes.items():
-		msg.append('%s %s' % (socket.inet_ntoa(ip), qos))
-	if get('RTIPA_debug'):
-		windowinterface.showmessage('Parsed RTIPA config file:\n' + '\n'.join(msg) + '\nignored lines:\n' + ''.join(missed))
-
-#
-# RTIPA end
-#
 
 def read_components_from_skin(skindict = None):
 	global components

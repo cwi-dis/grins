@@ -1428,7 +1428,6 @@ smil_attrs=[
 	("project_autoroute", lambda writer, node:getboolean(writer, node, "project_autoroute", 1, 0), "project_autoroute"),
 	("project_readonly", lambda writer, node:getboolean(writer, node, "project_readonly", 1, 0), "project_readonly"),
 	("showAnimationPath", lambda writer, node:getboolean(writer, node, "showAnimationPath", 1, 1), "showAnimationPath"),
-	("RTIPA-server", lambda writer, node:getcmifattr(writer, node, "RTIPA_server"), "RTIPA_server"),
 	("iwidth", getintrinsicwidth, None),
 	("iheight", getintrinsicheight, None),
 	("idur", getintrinsicduration, None),
@@ -1456,5 +1455,4 @@ prio_attrs = [
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),
-	("RTIPA-server", lambda writer, node:getcmifattr(writer, node, "RTIPA_server"), "RTIPA_server"),
 	]
