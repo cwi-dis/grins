@@ -28,14 +28,17 @@ def ev2string(ev):
 	try:
 		opcode, node = ev
 		if opcode == SYNC:
-			return 'SYNC' + `node`
-		elif opcode == SYNC_DONE:
-			return 'SYNC_DONE('+`node` + ')'
-		uid = node.GetUID()
-		name = node.GetAttrDef('name', '') + '#' + uid
+			delay, node = node
+			return 'SYNC(%e, %s)'%(delay, _getname(node))
+		name = _getname(node)
 		return op_names[opcode] + '(' + name + ')'
 	except:
 		return 'ILL-FORMED-EVENT:'+`ev`
+		
+def _getname(node):
+		uid = node.GetUID()
+		name = node.GetAttrDef('name', '') + '#' + uid
+		return name
 
 def evlist2string(evlist):
 	first = 1
