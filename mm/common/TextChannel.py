@@ -47,59 +47,93 @@ MASK = 20
 class TextWindow() = ChannelWindow():
 	#
 	def init(self, (title, attrdict)):
+		self = ChannelWindow.init(self, (title, attrdict))
 		self.text = [] # Initially, display no text
-		return ChannelWindow.init(self, (title, attrdict))
+		self.node = None
+		self.setcolors()
+		return self
+	#
+	def setcolors(self):
+		if self.attrdict.has_key('bgcolor'):
+			self.bgcolor = self.attrdict['bgcolor']
+		else:
+			self.bgcolor = 255, 255, 255
+		if self.attrdict.has_key('fgcolor'):
+			self.fgcolor = self.attrdict['fgcolor']
+		else:
+			self.fgcolor = 0, 0, 0
 	#
 	def show(self):
 		if self.wid <> 0: return
 		self.resetfont()
 		ChannelWindow.show(self)
 		# Clear it immediately (looks better)
-		gl.RGBcolor(255, 255, 255)
+		gl.RGBcolor(self.bgcolor)
 		gl.clear()
 	#
 	def resetfont(self):
+		# Get the default colors
+		if self.node = None:
+			self.setcolors()
+		else:
+			self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
+			self.fgcolor = MMAttrdefs.getattr(self.node, 'fgcolor')
 		# Get the default font and point size for the window
-		if self.attrdict.has_key('font'):
+		if self.node <> None:
+			fontspec = MMAttrdefs.getattr(self.node, 'font')
+		elif self.attrdict.has_key('font'):
 			fontspec = self.attrdict['font']
 		else:
 			fontspec = 'default'
 		self.fontname, self.pointsize = mapfont(fontspec)
-		if self.attrdict.has_key('pointsize'):
+		# Get the explicit point size, if any
+		if self.node <> None:
+			ps = MMAttrdefs.getattr(self.node, 'pointsize')
+		elif self.attrdict.has_key('pointsize'):
 			ps = self.attrdict['pointsize']
-			if ps <> 0: self.pointsize = ps
-		# Create the default font object
-		self.font1 = fm.findfont(self.fontname) # At 1 point...
+		else:
+			ps = 0
+		if ps <> 0: self.pointsize = ps
+		try:
+			self.font1 = fm.findfont(self.fontname) # At 1 point...
+		except:
+			print 'Bad fontname', `self.fontname`,
+			print '; using default', `mapfont('default')[0]`
+			self.font1 = fm.findfont(mapfont('default')[0])
 		self.font = self.font1.scalefont(self.pointsize)
 		# Find out some parameters of the font
 		self.avgcharwidth, self.baseline, self.fontheight = \
 			getfontparams(self.font)
 	#
 	# settext resets on a new screen
-	def settext(self, text):
+	def settext(self, (text, node)):
 		# comment these two out if you want to see addtext feature
-		self.text = [text]
+		self.text = preptext(text)
+		self.node = node
+		self.resetfont()
 		self.redraw()
 		# to show addtext feature
 		#self.addtext(text)
 	#
 	# addtext adds text to a screen with possible scroll
 	def addtext(self, text):
-		self.text.append(text)
+		self.text = self.text + preptext(text)
 		self.redraw()
 	#
 	# while addtext adds the additional text on a new line, appendtext
 	# continues on the same line
 	def appendtext(self, text):
-		l = len(self.text) - 1
+		lines = preptext(text)
+		l = len(self.text) - 1 # Index of last item
 		if l >= 0:
-			self.text[l] = self.text[l] + ' ' + text
+			self.text[l] = self.text[l] + ' ' + lines[0]
+			self.text = self.text + lines[1:]
 		else:
-			self.text = [text]
+			self.text = lines
 		self.redraw()
 	#
 	# a hack.  currently redraw recalculates everything.  when window size
-	# is not changed it sould only calculate possibly added text.
+	# is not changed it should only calculate possibly added text.
 	def redraw(self):
 		if self.wid = 0: return
 		gl.winset(self.wid)
@@ -110,10 +144,10 @@ class TextWindow() = ChannelWindow():
 		gl.scrmask(x0, x1, y0, y1)
 		gl.ortho2(-MASK, width+MASK, height+MASK, -MASK)
 		#
-		gl.RGBcolor(255, 255, 255)
+		gl.RGBcolor(self.bgcolor)
 		gl.clear()
 		#
-		gl.RGBcolor(0, 0, 0)
+		gl.RGBcolor(self.fgcolor)
 		self.font.setfont()
 	#
 		curbase = self.baseline
@@ -141,6 +175,25 @@ class TextWindow() = ChannelWindow():
 			curbase = curbase + self.fontheight
 
 
+# Turn a text string into a list of strings, each representing a paragraph.
+# Blank lines separate paragraphs; other newlines are replaced by spaces.
+
+def preptext(text):
+	lines = string.splitfields(text, '\n')
+	result = []
+	current = ''
+	for line in lines:
+		if line = '':
+			if current = '': current = ' '
+			result.append(current)
+			current = ''
+		if current: current = current + ' '
+		current = current + line
+	if current = '': current = ' '
+	result.append(current)
+	return result
+
+
 # XXX Make the text channel class a derived class from TextWindow?!
 
 class TextChannel() = Channel():
@@ -150,7 +203,7 @@ class TextChannel() = Channel():
 	#
 	chan_attrs = ['winsize', 'winpos']
 	node_attrs = \
-		['font', 'pointsize', 'file', 'wait_for_close', 'duration']
+		['font', 'pointsize', 'file', 'duration', 'fgcolor', 'bgcolor']
 	#
 	# Initialization function.
 	#
@@ -195,11 +248,10 @@ class TextChannel() = Channel():
 			Channel.play(self, (node, callback, arg))
 	#
 	def reset(self):
-		self.window.resetfont()
-		self.window.settext('')
+		self.window.settext('', None)
 	#
 	def showtext(self, node):
-		self.window.settext(self.getstring(node))
+		self.window.settext(self.getstring(node), node)
 	#
 	def getstring(self, node):
 		# XXX Doesn't use self...
