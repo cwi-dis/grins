@@ -181,6 +181,9 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		if stroke is not None and stroke!='none':
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
+			strokeMiterlimit = self.getStyleAttr('stroke-miterlimit', style)
+			if strokeMiterlimit:
+				oldStrokeMiterlimit = wingdi.SetMiterLimit(self.hdc, strokeMiterlimit)
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
 				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
 				pen = wingdi.SelectObject(self.hdc, pen)
@@ -190,6 +193,8 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				print arg,  style, tflist
 			if pen:
 				wingdi.DeleteObject(wingdi.SelectObject(self.hdc, pen))
+			if strokeMiterlimit:
+				wingdi.SetMiterLimit(self.hdc, oldStrokeMiterlimit)
 
 		if tflist:
 			wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
