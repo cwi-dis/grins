@@ -401,11 +401,11 @@ class SchedulerContext:
 			atime = 0
 			if arc.srcanchor is not None:
 				for a in node.attrdict.get('anchorlist', []):
-					if a[A_ID] == arc.srcanchor:
+					if a.aid == arc.srcanchor:
 						if event == 'end':
-							atime = a[A_TIMES][1]
+							atime = a.atimes[1]
 						else:
-							atime = a[A_TIMES][0]
+							atime = a.atimes[0]
 						break
 			self.sched_arc(node, arc, event, marker, deparc, timestamp+atime)
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
