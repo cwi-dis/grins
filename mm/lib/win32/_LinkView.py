@@ -34,6 +34,60 @@ import afxres,commctrl
 # std interface required by the core system. It is used to implement the LinkView
 
 
+class LinkPropDlg(components.ResDialog):
+	def __init__(self,cb_ok,cancelCallback=None,parent=None):
+		components.ResDialog.__init__(self,grinsRC.IDD_LINK_PROPERTY,parent)
+
+		self._D0=components.RadioButton(self,grinsRC.IDC_RADIO1)
+		self._D1=components.RadioButton(self,grinsRC.IDC_RADIO2)
+		self._D2=components.RadioButton(self,grinsRC.IDC_RADIO3)
+
+		self._T0=components.RadioButton(self,grinsRC.IDC_RADIO4)
+		self._T1=components.RadioButton(self,grinsRC.IDC_RADIO5)
+		self._T2=components.RadioButton(self,grinsRC.IDC_RADIO6)
+
+		self._cb_ok=cb_ok
+		self._cbd_cancel=cancelCallback
+
+	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		# set initial data to dialog
+		# ...
+		self._D0.setcheck(1)
+		self._T0.setcheck(1)
+		return components.ResDialog.OnInitDialog(self)
+
+	def show(self):
+		self.DoModal()
+
+	def OnOK(self):
+		# 1. read data
+		if self._D0.getcheck()==1:
+			pass
+		elif self._D1.getcheck()==1:
+			pass
+		else:
+			pass
+
+		if self._T0.getcheck()==1:
+			pass
+		elif self._T1.getcheck()==1:
+			pass
+		else:
+			pass
+
+		# 2. close dlg
+		self._obj_.OnOK()
+
+		# 3. apply callback with data as arg
+		if self._cb_ok:
+			pass
+
+	def OnCancel(self):
+		self._obj_.OnCancel()
+		if self._cbd_cancel:
+			apply(apply,self._cbd_cancel)
+
 
 # This class implements the LinkView required by the core system
 class _LinkView(docview.FormView,components.ControlsDict):
