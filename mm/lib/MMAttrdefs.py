@@ -107,7 +107,7 @@ def readattrdefs(fp, filename):
 		import pprint
 		if verbose:
 		    print 'Writing compiled attributes to', filename_py
-		fpc.write('mtime = %d\nAttrdefs = ' % sf[ST_MTIME])
+		fpc.write('mtime = %s\nAttrdefs = ' % sf[ST_MTIME])
 		fpc.write(pprint.pformat(dict))
 		fpc.write('\n')
 		fpc.close()
