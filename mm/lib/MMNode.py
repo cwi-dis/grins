@@ -867,6 +867,10 @@ class MMNode(MMNodeBase.MMNode):
 			# head to tail.
 			out0 = out0[:] + [(SYNC, (duration, self))]
 			in1 = in1[:] + [(SYNC_DONE, self)]
+		elif duration < 0:
+			# Infinite duration, simulate with SYNC_DONE event
+			# for which there is no SYNC action
+			in1 = in1[:] + [(SYNC_DONE, self)]
 
 		#
 		# We are started when we get our SCHED and all our
@@ -987,20 +991,33 @@ class MMNode(MMNodeBase.MMNode):
 				body_schedstop_actions) )
 		
 		#
-		# We signal to our parent we're done when the loop terminates,
-		# unless we loop indefinitely, then we signal it when
-		# we enter the loop. We then also request a TERMINATE for
-		# ourselves upon a SCHED_STOP
+		# Three cases for signalling the parent we're done:
+		# 1. Incoming tail sync arcs or an explicit duration:
+		#	When these fire we signal SCHED_DONE and TERMINATE
+		#	ourselves. No special action on end-of-loop
+		# 2. We loop indefinite:
+		#	Immedeately tell our parents we are done. No special
+		#	actions on end-of-loop.
+		# 3. Other cases (fixed loopcount and no duration/tailsync):
+		#	End-of-loop signals SCHED_DONE.
+		# In all cases a SCHED_STOP is translated to a terminate of
+		# ourselves.
 		#
-		if self.curloopcount < 0:
+		if terminate_events:
+			srlist.append(terminate_events, scheddone_actions +
+				      [(TERMINATE, self)])
+			terminate_actions.append( (TERMINATE, self) )
+			srlist.append( ([(LOOPEND_DONE, self)], []) )
+		elif self.curloopcount < 0:
 			sched_actions = sched_actions + scheddone_actions
 			terminate_actions.append( (TERMINATE, self) )
 			srlist.append( ([(LOOPEND_DONE, self)], []) )
 		else:
 			srlist.append( ([(LOOPEND_DONE, self)],
 					scheddone_actions) )
-		for ev in terminate_events + [(TERMINATE, self)]:
-			srlist.append( [ev], terminate_actions )
+##		for ev in terminate_events + [(TERMINATE, self)]:
+##			srlist.append( [ev], terminate_actions )
+		srlist.append([(TERMINATE, self)], terminate_actions)
 		
 		return sched_actions, terminate_actions, srlist
 		
