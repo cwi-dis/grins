@@ -275,6 +275,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		utype, host, path, params, query, tag = urlparse.urlparse(href)
 		self.url = urlparse.urlunparse((utype, host, path, params, query, ''))
 		# XXXX do something with the tag
+		u = None
 		try:
 			u = MMurl.urlopen(self.url)
 			if u.headers.maintype == 'image':
@@ -286,6 +287,8 @@ class HtmlChannel(Channel.ChannelWindow):
 				  'Cannot open '+self.url+':<P>'+ \
 				  `(sys.exc_type, sys.exc_value)`+ \
 				  '<P>\n'
+		if u is not None:
+			u.close()
 		footer = '<HR>[<A HREF="XXXX:play/node">BACK</A> to CMIF node]'
 		self.htmlw.insert_html(newtext+footer, self.url)
 ##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\

@@ -1355,6 +1355,7 @@ class SlideShow:
 			utype, host, path, params, query, tag = urlparse.urlparse(url)
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
 			self.url = url
+			fp = None
 			try:
 				fn, hdr = MMurl.urlretrieve(url)
 				fp = open(fn)
@@ -1364,6 +1365,8 @@ class SlideShow:
 			except:
 				windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
 				rp = DummyRP()
+			if fp is not None:
+				fp.close()
 		self.url = url
 		self.rp = rp
 		attrdict = node.GetAttrDict()
@@ -1464,6 +1467,7 @@ class SlideShow:
 					except:
 						windowinterface.showmessage('error while reading RealPix file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
 						rp = DummyRP()
+					fp.close()
 				if rp is not self.rp and hasattr(node, 'tmpfile'):
 					# new content, delete temp file
 ##					windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
