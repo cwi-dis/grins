@@ -1296,15 +1296,35 @@ class HierarchyView(HierarchyViewDialog):
 		if not em.transaction():
 			return
 		self.toplevel.setwaiting()
-		siblings = parent.GetChildren()
-		i = siblings.index(node)
-		em.delnode(node)
-		newnode = node.GetContext().newnode(type)
-		em.addnode(parent, i, newnode)
-		em.addnode(newnode, 0, node)
-		self._copyattrdict(node, newnode, copylist, editmgr=em)
+
+		# This is one way of doing this.
+##		siblings = parent.GetChildren()
+##		i = siblings.index(node)
+##		em.delnode(node)
+##		newnode = node.GetContext().newnode(type)
+##		em.addnode(parent, i, newnode)
+##		em.addnode(newnode, 0, node)
+##		self._copyattrdict(node, newnode, copylist, editmgr=em)
+
+		# This is another.
+		url = MMAttrdefs.getattr(node, 'file')
+		name = MMAttrdefs.getattr(node, 'name')
+		newtype = node.type
+		em.setnodeattr(node, 'file', None)
+		em.setnodeattr(node, 'name', None)
+		em.setnodetype(node, type)
+		newnode = node.GetContext().newnode(newtype)
+		children = node.children[:]
+		for i in range(0, len(children)):
+			em.delnode(children[i])
+			em.addnode(newnode, -1, children[i])
+		em.addnode(node, 0, newnode)
+		em.setnodeattr(newnode, 'file', url)
+		em.setnodeattr(newnode, 'name', name)
+		
 		em.setglobalfocus('MMNode', newnode)
 		expandnode(newnode)
+
 		self.aftersetfocus()
 		em.commit()
 		if not features.lightweight:
