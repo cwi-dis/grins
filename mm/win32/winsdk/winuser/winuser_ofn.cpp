@@ -96,19 +96,19 @@ PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args)
 	if(pszFilter != NULL)
 		{
 		pyofn->m_pszFilter = new TCHAR[strlen(pszFilter)+1];
-		lstrcpy(pyofn->m_pszFilter, toTEXT(pszFilter));
+		lstrcpy(pyofn->m_pszFilter, TextPtr(pszFilter));
 		TCHAR *pch = pyofn->m_pszFilter;
-		while( (pch = textchr(pch, '|')) != NULL )
+		while( (pch = text_strchr(pch, '|')) != NULL )
 			*pch++ = '\0';
 		}
 	if(pszDefExt != NULL)
 		{
 		pyofn->m_pszDefExt = new TCHAR[strlen(pszDefExt)+1];
-		lstrcpy(pyofn->m_pszDefExt, toTEXT(pszDefExt));
+		lstrcpy(pyofn->m_pszDefExt, TextPtr(pszDefExt));
 		}
 	if (pszFileName != NULL)
 		{
-		memcpy(pyofn->m_szFileName, toTEXT(pszFileName), MAX_PATH*sizeof(TCHAR));
+		lstrcpy(pyofn->m_szFileName, TextPtr(pszFileName));
 		}
 	pyofn->m_ofn.hwndOwner = hWndParent;
 	pyofn->m_ofn.lpstrFile = pyofn->m_szFileName;
@@ -213,7 +213,7 @@ static PyObject* PyOfn_SetOFNTitle(PyOfn *self, PyObject *args)
 		self->m_szFileTitle[0] = '\0';
 	else
 		{
-		memcpy(self->m_szFileTitle, toTEXT(PyString_AsString(obj)), MAX_PATH*sizeof(TCHAR));
+		lstrcpy(self->m_szFileTitle, TextPtr(PyString_AsString(obj)));
 		}
 	return none();
 	}
@@ -232,7 +232,7 @@ static PyObject* PyOfn_SetOFNInitialDir(PyOfn *self, PyObject *args)
 		self->m_szInitialDir[0] = '\0';
 	else
 		{
-		memcpy(self->m_szInitialDir, toTEXT(PyString_AsString(obj)), MAX_PATH*sizeof(TCHAR));
+		lstrcpy(self->m_szInitialDir, TextPtr(PyString_AsString(obj)));
 		}
 	return none();
 	}
@@ -243,7 +243,8 @@ static PyObject* PyOfn_GetPathName(PyOfn *self, PyObject *args)
 		return NULL;
 	if(self->m_ofn.lpstrFile == NULL)
 		return Py_BuildValue("s", "");
-	return Py_BuildValue("s", toMB(self->m_ofn.lpstrFile));
+	TextPtr tstr(self->m_ofn.lpstrFile);
+	return Py_BuildValue("s", tstr.str());
 	}
 
 static PyObject* PyOfn_GetFileName(PyOfn *self, PyObject *args)
@@ -252,7 +253,8 @@ static PyObject* PyOfn_GetFileName(PyOfn *self, PyObject *args)
 		return NULL;
 	if(self->m_ofn.lpstrFileTitle == NULL)
 		return Py_BuildValue("s", "");
-	return Py_BuildValue("s", toMB(self->m_ofn.lpstrFileTitle));
+	TextPtr tstr(self->m_ofn.lpstrFileTitle);
+	return Py_BuildValue("s", tstr.str());
 	}
 
 PyMethodDef PyOfn::methods[] = {
