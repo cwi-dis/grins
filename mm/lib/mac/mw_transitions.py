@@ -2,6 +2,7 @@ import time
 import Qd
 import QuickDraw
 import mw_globals
+import math
 
 class TransitionClass:
 	def __init__(self, engine, dict):
@@ -68,6 +69,37 @@ class RlistR2OverlapBlitterClass(BlitterClass):
 			Qd.RectRgn(rgn2, rect)
 			Qd.UnionRgn(rgn, rgn2, rgn)
 			Qd.DisposeRgn(rgn2)
+		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, rgn)
+		Qd.DisposeRgn(rgn)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
+		
+	def needtmpbitmap(self):
+		return 1
+
+def _mkpoly(pointlist):
+	poly = Qd.OpenPoly()
+	apply(Qd.MoveTo, pointlist[-1])
+	for x, y in pointlist:
+		Qd.LineTo(x, y)
+	Qd.ClosePoly(poly)
+	return poly
+	
+def _mkpolyrgn(pointlist):
+	rgn = Qd.NewRgn()
+	Qd.OpenRgn()
+	apply(Qd.MoveTo, pointlist[-1])
+	for x, y in pointlist:
+		Qd.LineTo(x, y)
+	Qd.CloseRgn(rgn)
+	return rgn
+	
+class PolyR2OverlapBlitterClass(BlitterClass):
+	"""Like R1R2OverlapBlitterClass, but first item is a polygon (list of points)"""
+		
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		pointlist, rect2 = parameters
+		Qd.CopyBits(src2, tmp, rect2, rect2, QuickDraw.srcCopy, None)
+		rgn = _mkpolyrgn(pointlist)
 		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, rgn)
 		Qd.DisposeRgn(rgn)
 		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
@@ -145,7 +177,54 @@ class BarnDoorWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		xmid = (x0+x1)/2
 		xpixels = int(value*(xmid-x0)+0.5)
 		return ((xmid-xpixels, y0, xmid+xpixels, y1), (x0, y0, x1, y1))
-			
+		
+class DiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+
+	def computeparameters(self, value, oldparameters):
+		x0, y0, x1, y1 = self.ltrb
+		xwidth = (x1-x0)
+		xmin = x0 - 2*xwidth
+		xcur = xmin + int(value*2*xwidth)
+		poly = (
+			(xcur, y0),
+			(xcur+2*xwidth, y0),
+			(xcur+xwidth, y1),
+			(xcur, y1))
+		return poly, self.ltrb
+
+TAN_PI_DIV_3 = math.tan(math.pi/3)
+
+class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	
+	def __init__(self, engine, dict):
+		TransitionClass.__init__(self, engine, dict)
+		self._recomputetop()
+		
+	def move_resize(self, ltrb):
+		TransitionClass.move_resize(self, ltrb)
+		self._recomputetop()
+		
+	def _recomputetop(self):
+		x0, y0, x1, y1 = self.ltrb
+		self.xmid = (x0+x1)/2
+		self.ymid = (y0+y1)/2
+		ytop = y1 + int(TAN_PI_DIV_3*(self.xmid-x0))
+		self.range = ytop-self.ymid
+		
+	def computeparameters(self, value, oldparameters):
+		totop = int(value*self.range)
+		ytop = self.ymid - totop
+		ybot = self.ymid + totop/2
+		height = ybot - ytop
+		base_div_2 = height / TAN_PI_DIV_3
+		xleft = int(self.xmid - base_div_2)
+		xright = int(self.xmid + base_div_2)
+		points = (
+			(xleft, ybot),
+			(self.xmid, ytop),
+			(xright, ybot))
+		return points, self.ltrb
+	
 class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 
 	def computeparameters(self, value, oldparameters):
@@ -162,7 +241,6 @@ class _MatrixTransitionClass(TransitionClass, RlistR2OverlapBlitterClass):
 
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
-		x0, y0, x1, y1 = self.ltrb
 ##XXXX It seems this is _not_ the intention of horzRepeat and vertRepeat
 ##		hr = dict.get('horzRepeat', 0)+1
 ##		vr = dict.get('vertRepeat', 0)+1
@@ -255,13 +333,13 @@ TRANSITIONDICT = {
 	"boxWipe" : BoxWipeTransition,
 	"fourBoxWipe" : FourBoxWipeTransition,
 	"barnDoorWipe" : BarnDoorWipeTransition,
-#	"dialogalWipe" : DiagonalWipeTransition,
+	"diagonalWipe" : DiagonalWipeTransition,
 #	"bowTieWipe" : BowTieWipeTransition,
 #	"miscDiagonalWipe" : MiscDiagonalWipeTransition,
 #	"veeWipe" : VeeWipeTransition,
 #	"barnVeeWipe" : BarnVeeWipeTransition,
 	"miscShapeWipe" : MiscShapeWipeTransition,
-#	"triangleWipe" : TriangleWipeTransition,
+	"triangleWipe" : TriangleWipeTransition,
 #	"arrowHeadWipe" : ArrowHeadWipeTransition,
 #	"pentagonWipe" : PentagonWipeTransition,
 #	"hexagonWipe" : HexagonWipeTransition,
