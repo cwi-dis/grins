@@ -12,6 +12,7 @@ import DropTarget
 import IconMixin
 
 from pywinlib.mfc import window
+SHIFTBIT = 4096 # the image index for state icon is set in the bits 12-15
 
 debug = 0
 
@@ -24,10 +25,11 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 ##		'Media': DropTarget.CF_MEDIA,
 ##		'FileName': DropTarget.CF_FILE,}
 
-	def __init__ (self, dlg=None, resId=None, ctrl=None):
+	def __init__ (self, dlg=None, resId=None, ctrl=None, stateOption=0):
 		# if the tree res is specified from a dialox box, we just create get the existing instance
 		# if try to re-create it, the focus doesn't work, and you get some very unexpected behavior
 		self.parent = dlg
+		self._stateOption = stateOption
 		if not ctrl:
 			if resId != None:
 				ctrl = dlg.GetDlgItem(resId)
@@ -41,6 +43,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		self._multiSelListeners = []
 		self._expandListeners = []
 		self._dragdropListener = []
+		self._stateListeners = []
 		self._selEventSource = None
 
 		self.__selecting = 0
@@ -61,6 +64,9 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
 				 | commctrl.TVS_LINESATROOT | commctrl.LVS_SHAREIMAGELISTS
+		if self._stateOption:
+			# For now use the predefined check box
+			style = style | commctrl.TVS_CHECKBOXES
 		return style
 
 	# create a new instance of the tree ctrl.
@@ -152,12 +158,28 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		flags = msg._wParam
 
 		self._selEventSource = EVENT_SRC_LButtonDown
-
+		
 		hitflags, hititem = self.HitTest(point)
+		# some informations about hitflags:
+		# a item consists of different parts. The most important are:
+		# - the button (the icon on the left which allows to expand/collapse a node)
+		# - the state icon (the check box if the global option check box is activated, or a user defined state icon)
+		# - the icon (the main icon)
+		# - the label (the text on the right of the main icon
+		# for each of these part, there is a defined mask specified in hiflags (in the same order):
+		# TVHT_ONITEMBUTTON, TVHT_ONITEMSTATEICON, TVHT_ONITEMICON, TVHT_ONITEMLABEL
+		# in addition, TVHT_ONITEM consists of three masks (three parts):
+		# TVHT_ONITEM = TVHT_ONITEMSTATEICON, TVHT_ONITEMICON, TVHT_ONITEMLABEL
 		if not (hitflags & commctrl.TVHT_ONITEM):
 			if debug: self.scheduleDump()
 			return 1
-
+		if self._stateOption and hitflags & commctrl.TVHT_ONITEMSTATEICON:
+			# special treatment if the user click on the state icon
+			# don't leave the system automaticly handles this event. it doesn't do exactly the right things:
+			# it selects as well the item, and we don't want that
+			self.onStateIconClick(hititem)
+			return 0
+			
 		if not (flags & win32con.MK_CONTROL) and not (flags & win32con.MK_SHIFT):
 			# remove multi-select mode
 #			nsel = len(self._selections)
@@ -288,7 +310,34 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 				self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 			self.__selecting = 0
 		self.OnMultiSelUpdated(hititem, updateFl)
+
+	def onStateIconClick(self, hititem):
+		currentState = self.getState(hititem)
+		# for now, just swap between one state to another (check box)
+		if currentState:
+			newState = 0
+		else:
+			newState = 1
+		self.setState(hititem, newState)
+
+		# update the listeners
+		for listener in self._stateListeners:
+			listener.OnStateChanged(hititem, newState)
+			
+	def getState(self, item):
+		imageIndex = (self.GetItemState(item, commctrl.TVIS_STATEIMAGEMASK) & commctrl.TVIS_STATEIMAGEMASK) / SHIFTBIT
+		if imageIndex == 1:
+			return 0
+		else:
+			return 1
 		
+	def setState(self, item, state):
+		if state:
+			imageIndex = 2
+		else:
+			imageIndex = 1
+		self.SetItemState(item, SHIFTBIT*imageIndex , commctrl.TVIS_STATEIMAGEMASK)
+	
 	def OnLButtonUp(self, params):
 		return 1
 
@@ -570,6 +619,12 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 			self.appendSelection(lastItem)
 			
 		self.__selecting = 0
+
+	# change the state icon of a list of items
+	def ChangeStateItemList(self, list):
+		if self._stateOption:
+			for item, state in list:
+				self.setState(item, state)
 				
 	# unselect all children of the item
 	def __unselectChildren(self, item):
@@ -637,6 +692,16 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 			hasattr(listener, 'OnMultiSelUpdated') and \
 			listener not in self._multiSelListeners:
 			self._multiSelListeners.append(listener)
+
+	# add a listener 
+	def addStateListener(self, listener):
+		if hasattr(listener, 'OnStateChanged'):
+			self._stateListeners.append(listener)
+
+	# remove a listener
+	def removeStateListener(self, listener):
+		if listener in self._stateListeners:
+			self._stateListeners.remove(listener)
 
 	# remove a listener
 	def removeMultiSelListener(self, listener):
