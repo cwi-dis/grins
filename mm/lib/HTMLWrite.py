@@ -83,6 +83,7 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 	ramurl = MMurl.pathname2url(ramfile)
+	ramurl = MMurl.unquote(ramurl)
 	try:
 		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir)
 		writer.write()
@@ -191,7 +192,7 @@ class HTMLWriter:
 		#
 		outdict = {}
 
-		outdict['title'] = nameencode(self.__title)
+		outdict['title'] = nameencode(self.__title)[1:-1]
 		outdict['generator'] = '<meta name="generator" content="GRiNS %s">'%version.version
 		outdict['generatorname'] = 'GRiNS %s'%version.version
 		if self.evallicense:
@@ -200,8 +201,8 @@ class HTMLWriter:
 		outdict['ramurl'] = self.ramurl
 		outdict['unquotedramurl'] = MMurl.unquote(self.ramurl)
 		outdict['templatedir'] = self.templatedir_url
-		outdict['author'] = nameencode(ctxa.get('author', ''))
-		outdict['copyright'] = nameencode(ctxa.get('copyright', ''))
+		outdict['author'] = nameencode(ctxa.get('author', ''))[1:-1]
+		outdict['copyright'] = nameencode(ctxa.get('copyright', ''))[1:-1]
 		
 		playername = 'clip_1'
 		
