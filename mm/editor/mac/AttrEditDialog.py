@@ -73,7 +73,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		# that fit on such a page
 		#
 		attribnames = map(lambda a: a.getname(), attriblist)
-		print 'DBG NAMES:', attribnames
+##		print 'DBG NAMES:', attribnames
 		for cl in MULTI_ATTR_CLASSES:
 			if tabpage_multi_match(cl, attribnames):
 				# Instantiate the class and filter out the attributes taken care of
@@ -179,12 +179,6 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page = self._pages[item] # XXXX?
 			self._cur_page.show()
 			self._pagebrowser.select(item)
-		for i in range(1,1000):
-			try:
-				print '%d:%d'%(i, self._dialog.GetDialogItemAsControl(i).IsControlVisible()),
-			except:
-				break
-		print
 
 	def _is_shown(self, attrfield):
 		"""Return true if this attr is currently being displayed"""
@@ -225,7 +219,6 @@ class TabPage:
 		if __debug__:
 			if self.attreditor._dialog.CountDITL() != self.item0+self.N_ITEMS:
 				raise 'CountDITL != N_ITEMS', (self._dialog.CountDITL(), self.item0+self.N_ITEMS)
-			print self, self.item0, self.N_ITEMS
 		return self.item0 + self.N_ITEMS
 		
 	def close(self):
@@ -303,6 +296,32 @@ class StringTabPage(SingleDefaultTabPage):
 	ITEM_DEFAULT=5
 	ITEM_STRING=6
 	N_ITEMS=6
+
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_STRING:
+			self.attreditor._enable_ok()
+			return 1
+		return 0
+
+	def save(self):
+		value = self.attreditor._getlabel(self.item0+self.ITEM_STRING)
+		self.fieldlist[0]._savevaluefrompage(value)
+		
+	def update(self):
+		"""Update controls to self.__value"""
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
+		
+class TextTabPage(SingleTabPage):
+	attrs_on_page=None
+	type_supported='text'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TEXT
+	ITEM_GROUP=1
+	ITEM_HELPGROUP=2
+	ITEM_HELP=3
+	ITEM_STRING=4
+	N_ITEMS=4
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
@@ -471,7 +490,28 @@ class ChannelTabPage(OptionTabPage):
 class CaptionChannelTabPage(ChannelTabPage):
 	attrs_on_page=['captionchannel']
 		
-class InfoTabPage(MultiTabPage):
+class MultiStringTabPage(MultiTabPage):
+	
+	def do_itemhit(self, item, event):
+		if item-self.item0 in self._items_on_page:
+			return 1
+		return 0
+		
+	def update(self):
+		for field in self.fieldlist:
+			attr = field.getname()
+			item = self._attr_to_item[attr]
+			value = field._getvalueforpage()
+			self.attreditor._setlabel(self.item0+item, value)
+
+	def save(self):
+		for field in self.fieldlist:
+			attr = field.getname()
+			item = self._attr_to_item[attr]
+			value = self.attreditor._getlabel(self.item0+item)
+			field._savevaluefrompage(value)
+
+class InfoTabPage(MultiStringTabPage):
 	TAB_LABEL='Info'
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_INFO
@@ -493,27 +533,77 @@ class InfoTabPage(MultiTabPage):
 	}
 	attrs_on_page = _attr_to_item.keys()
 	_items_on_page = _attr_to_item.values()
+
+class TimingTabPage(MultiStringTabPage):
+	TAB_LABEL='Timing'
 	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TIMING
+	ITEM_GROUP=1
+	ITEM_DURATION=3
+	ITEM_LOOP=5
+	ITEM_BEGIN=7
+	N_ITEMS=7
+	_attr_to_item = {
+		'duration': ITEM_DURATION,
+		'loop': ITEM_LOOP,
+		'begin': ITEM_BEGIN,
+	}
+	attrs_on_page = _attr_to_item.keys()
+	_items_on_page = _attr_to_item.values()
+
+class TargetAudienceTabPage(MultiTabPage):
+	TAB_LABEL='Target audience'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TARGET_AUDIENCE
+	ITEM_GROUP=1
+	ITEM_28K8=2
+	ITEM_56K=3
+	ITEM_ISDN=4
+	ITEM_2ISDN=5
+	ITEM_CABLE=6
+	ITEM_LAN=7
+	N_ITEMS=7
+	# Note: the keys here are the values in AttrEdit.RMTargetsAttrEditorField
+	_value_to_item = {
+		'28k8 modem': ITEM_28K8,
+		'56k modem': ITEM_56K,
+		'Single ISDN': ITEM_ISDN,
+		'Double ISDN': ITEM_2ISDN,
+		'Cable modem': ITEM_CABLE,
+		'LAN': ITEM_LAN,
+	}
+	attrs_on_page = ['project_targets']
+	_items_on_page = _value_to_item.values()
+
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._items_on_page:
+			self.attreditor._togglebutton(item)
 			return 1
 		return 0
 		
 	def update(self):
-		for field in self.fieldlist:
-			attr = field.getname()
-			item = self._attr_to_item[attr]
-			value = field._getvalueforpage()
-			self.attreditor._setlabel(self.item0+item, value)
-			print 'update', attr, item, value
+		self.update_target()
+		
+	def update_target(self):
+		field = self.fieldlist[0]
+		attr = field._getvalueforpage()
+		targets = string.split(attr, ',')
+		print 'update dbg targets', targets
+		for t, item in self._value_to_item.items():
+			print 'dbg', item, t, t in targets
+			self.attreditor._setbutton(self.item0+item, (t in targets))
 
 	def save(self):
-		for field in self.fieldlist:
-			attr = field.getname()
-			item = self._attr_to_item[attr]
-			value = self.attreditor._getlabel(self.item0+item)
-			field._savevaluefrompage(value)
-			print 'save', attr, item, value
+		self.save_target()
+		
+	def save_target(self):
+		field = self.fieldlist[0]
+		targets = []
+		for t, item in self._value_to_item.items():
+			if self.attreditor._getbutton(self.item0+item):
+				targets.append(t)
+		print 'save dbg targets', targets
+		field._savevaluefrompage(string.join(targets, ','))
 
 class GeneralTabPage(MultiTabPage):
 	TAB_LABEL='General'
@@ -576,9 +666,38 @@ class GeneralTabPage(MultiTabPage):
 		self.fieldlist[1]._savevaluefrompage(value)
 		value = self._typepopup.getselectvalue()
 		self.fieldlist[2]._savevaluefrompage(value)
-	
-SINGLE_ATTR_CLASSES = [ FileTabPage, ColorTabPage, OptionTabPage, StringTabPage ]
-MULTI_ATTR_CLASSES = [ GeneralTabPage, InfoTabPage, ChannelTabPage, CaptionChannelTabPage ]
+
+#
+# List of classes handling pages with multiple attributes. The order is
+# important: we loop over these classes in order, and if all attributes
+# required by the class are in the current list of attributes we instantiate
+# the page and remove the attributes from the list. So, the first fully
+# matching class will get the attribute.
+# The order is also the order in which the tabpages will be presented to the
+# user
+#
+MULTI_ATTR_CLASSES = [ 
+	GeneralTabPage,
+	TimingTabPage,
+	InfoTabPage,
+	ChannelTabPage,
+	CaptionChannelTabPage,
+	TargetAudienceTabPage,
+]
+#
+# List of classes handling a generic page for a single attribute.
+# The order is important: for all attributes that didn't fit on a multi-attr
+# page we look at these in order. The first one to have a matching 'type'
+# will be used. The last class, the generic string page, has type_supported
+# None and will math everything.
+#
+SINGLE_ATTR_CLASSES = [
+	FileTabPage,
+	ColorTabPage,
+	OptionTabPage,
+	TextTabPage,
+	StringTabPage,
+]
 
 def tabpage_single_find(attrfield):
 	"""Find the best single-attribute page class that can handle this attribute field"""
