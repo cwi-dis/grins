@@ -44,6 +44,12 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name imgjpeg
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgcolormap
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgop
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -129,6 +135,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "imgcolormap"=..\..\..\python\Extensions\img\win32\imgcolormap.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "imgformat"=..\..\..\python\Extensions\img\win32\imgformat.dsp - Package Owner=<4>
 
 Package=<5>
@@ -142,6 +160,18 @@ Package=<4>
 ###############################################################################
 
 Project: "imgjpeg"=..\..\..\python\Extensions\img\win32\imgjpeg.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imgop"=..\..\..\python\Extensions\img\win32\imgop.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
