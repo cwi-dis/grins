@@ -39,6 +39,9 @@ class LightWeightControl:
 	def sendmessage_rs(self,msg,wparam,lparam):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageRS(self._hwnd,msg,wparam,lparam)
+	def sendmessage_ra(self,msg):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageRA(self._hwnd,msg)
 	def sendmessage_gl(self,msg,wparam,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGL(self._hwnd,msg,wparam,lparam)
@@ -178,7 +181,11 @@ class Edit(Control):
 		return self.sendmessage_gl(win32con.EM_GETLINE,ix)
 	def getmodify(self):
 		return self.sendmessage(win32con.EM_GETMODIFY)
-	
+	def getsel(self):
+		return self.sendmessage_ra(win32con.EM_GETSEL)[:2]
+	def getinspos(self):
+		return self.sendmessage_ra(win32con.EM_GETSEL)[2]
+
 	def getlines(self):
 		if hasattr(self,'_textlines'):
 			if self.getmodify()==0:
