@@ -4213,7 +4213,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.entities.has_key(ptag):
 				# parent is SMIL 1.0 entity
 				content = self.entities[ptag]
-			elif pns and self.entities.as_key(pns + ' ' + ptag):
+			elif pns and self.entities.has_key(pns + ' ' + ptag):
 				content = self.entities[pns + ' ' + ptag]
 			else:
 				content = []
