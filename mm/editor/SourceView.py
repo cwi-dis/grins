@@ -99,7 +99,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				# for now, make selection working only when the source is unmodified
 				# to avoid some position re-computations adter each modification
 				if not self.is_changed():
-					self.select_line(line)
+					self.select_lines(line, line+1)
 			# XXX pop the source view
 			# to do
 			

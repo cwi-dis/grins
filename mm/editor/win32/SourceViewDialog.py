@@ -84,9 +84,9 @@ class SourceViewDialog:
 		if self.__textwindow:
 			self.__textwindow.select_chars(s,e)
 
-	def select_line(self, line):
+	def select_lines(self, sLine, eLine):
 		if self.__textwindow:
-			self.__textwindow.select_line(line)
+			self.__textwindow.select_line(sLine)
 
 	#
 	# text window listener interface
