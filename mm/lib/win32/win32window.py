@@ -1017,6 +1017,9 @@ class Window:
 		h = h+2*delta
 		self.update((x, y, w, h))
 
+	def isResizeable(self):
+		return 1
+
 #################################################
 class DDWndLayer:
 	def __init__(self, wnd, bgcolor = None):
@@ -2250,7 +2253,10 @@ class Shape:
 	
 	def invalidateDragHandles(self):
 		pass
-								
+	
+	def isResizeable(self):
+		return 1
+									
 class DrawTool:
 	def __init__(self, ctx):
 		self._ctx = ctx
@@ -2288,7 +2294,7 @@ class SelectTool(DrawTool):
 		shape = ctx._selected
 		if shape:
 			ctx._ixDragHandle = shape.getDragHandleAt(point)
-			if ctx._ixDragHandle:
+			if ctx._ixDragHandle and shape.isResizeable():
 				ctx._selmode = SM_SIZE
 				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 		
@@ -2328,7 +2334,7 @@ class SelectTool(DrawTool):
 		if not ctx.hasCapture():
 			if shape and ctx.inSelectMode():
 				ctx._ixDragHandle = shape.getDragHandleAt(point)
-				if ctx._ixDragHandle:
+				if ctx._ixDragHandle and shape.isResizeable():
 					ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 					return
 			if ctx.inSelectMode():
@@ -2355,7 +2361,8 @@ class SelectTool(DrawTool):
 
 		if ctx._selmode == SM_SIZE and ctx.inSelectMode():
 			ctx._lastPt = point
-			ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
+			if shape.isResizeable():
+				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 			return
 
 		ctx._lastPt = point
@@ -2392,14 +2399,75 @@ class ShapeTool(DrawTool):
 		ctx.setcursor('cross')
 
 
+#########################################
+# Experimental resizeable DisplayList
 
+from win32ig import win32ig
+import gear32sd
 
+class _ResizeableDisplayList(_DisplayList):
+	def __init__(self, window, bgcolor):
+		_DisplayList.__init__(self, window, bgcolor)
 
+	def _do_render(self, entry, dc, region):
+		cmd = entry[0]
+		wnd = self._window
+		rc = x, y, w, h = wnd.LRtoDR(wnd._rect)
+		ltrb = x, y, x+w, y+h
+		if cmd == 'clear' and entry[1]:
+			dc.FillSolidRect(rc,win32mu.RGB(entry[1]))
+		elif cmd == 'image':
+			imgid = entry[1]
+			fit = entry[2]
+			if fit=='fill':
+				gear32sd.device_rect_set(imgid, ltrb)
+			elif fit=='meet':
+				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, ltrb, gear32sd.IG_ASPECT_DEFAULT)
+				gear32sd.device_rect_set(imgid,(x,y,x+rp-lp,y+bp-tp))
+			elif fit=='hidden':
+				wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
+				gear32sd.device_rect_set(imgid,(x,y,x+wi,y+hi))
+			elif fit=='slice':
+				wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
+				wr = w/float(wi)
+				hr = h/float(hi)
+				if wr>hr: r = wr
+				else: r = hr
+				wp, hp = int(wi*r+0.5), int(hi*r+0.5)
+				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (x,y,x+wp,y+hp), gear32sd.IG_ASPECT_DEFAULT)
+				gear32sd.device_rect_set(imgid,(x,y,x+rp-lp,y+bp-tp))
+			elif fit=='scroll':
+				wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
+				gear32sd.device_rect_set(imgid,(x,y,x+wi,y+hi))
+			gear32sd.display_desktop_pattern_set(imgid,0)
+			gear32sd.display_image(imgid,dc.GetSafeHdc())
+		elif cmd == 'label':
+			str = entry[1]
+			dc.SetBkMode(win32con.TRANSPARENT)
+			dc.DrawText(str, ltrb, win32con.DT_SINGLELINE | win32con.DT_CENTER | win32con.DT_VCENTER)
+		else:
+			_DisplayList._do_render(self, entry, dc, region)
 
-	
+	scale2fit = {1:'hidden',0:'meet',-1:'slice',-2:'scroll',-3:'fill'}
+	def newimage(self, filename, fit='hidden'):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
 
+		if type(fit) != type('') and _ResizeableDisplayList.scale2fit.has_key(fit):
+			fit = _ResizeableDisplayList.scale2fit[fit]
+		if fit not in _ResizeableDisplayList.scale2fit.values():
+			raise error, 'invalid fit attribute'
 
+		try:
+			imgid = win32ig.load(filename)
+		except:
+			print 'failed to load', filename
+			return
+		self._list.append(('image', imgid, fit))
 
-
+	def newlabel(self, str):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		self._list.append(('label', str))
 
 
