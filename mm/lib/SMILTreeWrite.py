@@ -1669,6 +1669,8 @@ class SMILWriter(SMIL):
 				bgcolor = ch['bgcolor']
 			elif features.compatibility == features.G2:
 				bgcolor = 0,0,0
+			elif self.smilboston:
+				bgcolor = 0,0,0
 			else:
 				bgcolor = 255,255,255
 			if colors.rcolors.has_key(bgcolor):
