@@ -78,6 +78,8 @@ PLACING_COPY = 2
 PLACING_MOVE = 3
 
 
+begend = ('begin', 'end')
+
 # Channel view class
 
 class ChannelView(ViewDialog):
@@ -119,7 +121,7 @@ class ChannelView(ViewDialog):
 		if self.waiting:
 			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
-		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
+		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.WindowExit, self.hide, None)
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
@@ -204,9 +206,26 @@ class ChannelView(ViewDialog):
 	def kill(self):
 		self.destroy()
 
-	# Event interface (override glwindow methods)
+	# Event interface
 
-	def redraw(self, *rest):
+	def resize(self, *rest):
+		if self.focus is None:
+			focus = '', None
+		elif type(self.focus) is type(()):
+			focus = self.focus
+		elif self.focus.__class__ is ChannelBox:
+			focus = 'c', self.focus.channel
+		elif self.focus.__class__ is NodeBox:
+			focus = 'n', self.focus.node
+		elif self.focus.__class__ is ArcBox:
+			focus = 'a', None
+		else:
+			focus = '', None
+		self.recalc(focus)
+		self.reshape()
+		self.draw()
+		
+	def redraw(self):
 		if self.new_displist:
 			self.new_displist.close()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
@@ -471,6 +490,8 @@ class ChannelView(ViewDialog):
 		elif t in bagtypes:
 			self.scandescendants(node)
 		else:
+			obj = INodeBox(self, node)
+			self.objects.append(obj)
 			for c in node.GetChildren():
 				self.scantree(c, focus)
 
@@ -538,9 +559,7 @@ class ChannelView(ViewDialog):
 			except NoSuchUIDError:
 				# Skip sync arc from non-existing node
 				continue
-			if xnode.FindMiniDocument() is self.viewroot and \
-			   xnode.GetType() in leaftypes and \
-			   xnode.GetChannel():
+			if xnode.FindMiniDocument() is self.viewroot:
 				obj = ArcBox(self,
 					     xnode, xside, delay, ynode, yside)
 				arcs.append(obj)
@@ -779,7 +798,11 @@ class GO:
 		self.menutitle = 'Base ops'
 
 	def __repr__(self):
-		return '<GO instance, name=' + `self.name` + '>'
+		if hasattr(self, 'name'):
+			name = ', name=' + `self.name`
+		else:
+			name = ''
+		return '<%s instance%s>' % (self.__class__.__name__, name)
 
 	def getnode(self):
 		# Called by mother's getfocusnode()
@@ -879,9 +902,6 @@ class TimeScaleBox(GO):
 	def __init__(self, mother):
 		GO.__init__(self, mother, 'timescale')
 
-	def __repr__(self):
-		return '<TimeScaleBox instance>'
-
 	def reshape(self):
 		self.top = self.mother.timescaleborder + \
 			   self.mother.new_displist.fontheight()
@@ -973,9 +993,6 @@ class ChannelBox(GO):
 		c.append('', 'Highlight window', (self.highlight, ()))
 		c.append('', 'Unhighlight window', (self.unhighlight, ()))
 		self.menutitle = 'Channel ' + self.name + ' ops'
-
-	def __repr__(self):
-		return '<ChannelBox instance, name=' + `self.name` + '>'
 
 	def channel_onoff(self):
 		self.mother.toplevel.setwaiting()
@@ -1118,9 +1135,6 @@ class ChannelBox(GO):
 
 class NodeBox(GO):
 
-	def __repr__(self):
-		return '<NodeBox instance, name=' + `self.name` + '>'
-
 	def __init__(self, mother, node):
 		self.node = node
 		duration = MMAttrdefs.getattr(node, 'duration')
@@ -1167,13 +1181,11 @@ class NodeBox(GO):
 			except NoSuchUIDError:
 				# Skip sync arc from non-existing node
 				continue
-			if xnode.FindMiniDocument() is mother.viewroot and \
-			   xnode.GetType() in leaftypes and \
-			   xnode.GetChannel():
+			if xnode.FindMiniDocument() is mother.viewroot:
 				xname = MMAttrdefs.getattr(xnode, 'name')
 				if not xname:
 					xname = '#' + xuid
-				arcmenu.append('', 'From %s of node "%s"' % (('begin', 'end')[xside], xname), (self.selsyncarc, (xnode, xside, delay, yside)))
+				arcmenu.append('', 'From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (self.selsyncarc, (xnode, xside, delay, yside)))
 		if arcmenu:
 			c.append('', 'Select sync arc', arcmenu)
 		self.menutitle = 'Node ' + self.name + ' ops'
@@ -1403,10 +1415,34 @@ class NodeBox(GO):
 		self.mother.toplevel.links.finish_link(self.node)
 
 
-class ArcBox(GO):
+class INodeBox(GO):
 
-	def __repr__(self):
-		return '<ArcBox instance, name=' + `self.name` + '>'
+	def __init__(self, mother, node):
+		self.node = node
+		node.cv_obj = self
+		name = MMAttrdefs.getattr(node, 'name')
+		GO.__init__(self, mother, name)
+
+	def getnode(self):
+		return self.node
+
+	def cleanup(self):
+		del self.node.cv_obj
+		GO.cleanup(self)
+
+	def reshape(self):
+		left, right = self.mother.maptimes(self.node.t0, self.node.t1)
+		self.left = left
+		self.right = right
+		self.top = 0
+		self.bottom = 0
+		self.ok = 1
+
+	def drawfocus(self):
+		return
+
+	
+class ArcBox(GO):
 
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
@@ -1432,6 +1468,8 @@ class ArcBox(GO):
 		else: self.dx = dobj.left
 		self.sy = (sobj.top + sobj.bottom) / 2
 		self.dy = (dobj.top + dobj.bottom) / 2
+		if self.sy == 0: self.sy = self.dy
+		if self.dy == 0: self.dy = self.sy
 		if self.sx == self.dx and self.sy == self.dy:
 			# start and end of arrow are the same
 			# force a difference by moving up the start
@@ -1476,17 +1514,3 @@ class ArcBox(GO):
 		mother.cleanup()
 		editmgr.commit()
 		mother.toplevel.setready()
-
-# Wrap up a function and some arguments for later calling with fewer
-# arguments.  The arguments given here are passed *after* the
-# arguments given on the call.
-def make_closure(func, *args):
-	return Closure(func, args).call_it
-
-# helper class for make_closure
-class Closure:
-	def __init__(self, func, argstuple):
-		self.func = func
-		self.argstuple = argstuple
-	def call_it(self, *args):
-		return apply(self.func, args + self.argstuple)
