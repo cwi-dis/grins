@@ -117,6 +117,18 @@ SOURCE=.\RES\ico00001.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\ico00002.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00003.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\icon1.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Nodrop.cur
 # End Source File
 # Begin Source File
