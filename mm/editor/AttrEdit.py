@@ -228,7 +228,7 @@ class NodeWrapper(Wrapper):
 				# remove the anchor since it isn't used
 				alist = MMAttrdefs.getattr(self.node, 'anchorlist')[:]
 				for i in range(len(alist)):
-					if alist[i][A_TYPE] == ATYPE_WHOLE:
+					if alist[i].atype == ATYPE_WHOLE:
 						del alist[i]
 						break
 				self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
@@ -248,16 +248,16 @@ class NodeWrapper(Wrapper):
 		anchors = {}
 		uid = self.node.GetUID()
 		hlinks = self.context.hyperlinks
-		for aid, atype, aargs, times, access in alist:
+		for a in alist:
 			links = []
-			if atype == ATYPE_DEST:
+			if a.atype == ATYPE_DEST:
 				# don't show destination-only anchors
 				continue
-			for link in hlinks.findsrclinks((uid, aid)):
+			for link in hlinks.findsrclinks((uid, a.aid)):
 				links.append(link[1:])
 			links.sort()
-			times = times[0], times[1] - times[0]
-			anchors[aid] = atype, aargs, times, access, links
+			times = a.times[0], a.times[1] - a.times[0]
+			anchors[a.aid] = a.atype, a.aargs, times, a.aaccess, links
 		return anchors
 
 	def __setanchors(self, newanchors):
@@ -274,7 +274,7 @@ class NodeWrapper(Wrapper):
 		for aid in oldanchors.keys():
 			anchor = uid, aid
 			for i in range(len(anchorlist)):
-				if anchorlist[i][A_ID] == aid:
+				if anchorlist[i].aid == aid:
 					del anchorlist[i]
 					break
 			for link in hlinks.findsrclinks(anchor):
@@ -295,7 +295,7 @@ class NodeWrapper(Wrapper):
 			times = times[0], times[0] + times[1]
 			if len(a) > 5:
 				oldname = a[5]
-			anchorlist.append((aid, atype, aargs, times, access))
+			anchorlist.append(MMNode.MMAnchor(aid, atype, aargs, times, access))
 			if links:
 				if anchor in linkview.interesting:
 					linkview.interesting.remove(anchor)
