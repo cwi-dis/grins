@@ -31,6 +31,28 @@ static PyObject* ig_load_file(PyObject *self, PyObject *args)
 	return Py_BuildValue("l",img);
 	}
 
+static PyObject* ig_error_check(PyObject *self, PyObject *args)
+	{
+	if(!PyArg_ParseTuple(args,""))
+		return NULL;
+	GUI_BGN_SAVE;
+	AT_ERRCOUNT nError=IG_error_check();
+	GUI_END_SAVE;
+	return Py_BuildValue("l",(long)nError);
+	}
+
+static PyObject* ig_error_get(PyObject *self, PyObject *args)
+	{
+	  INT index;
+	  AT_ERRCODE code;
+	if(!PyArg_ParseTuple(args,"i", &index))
+		return NULL;
+	GUI_BGN_SAVE;
+	IG_error_get(index,NULL,0,NULL,&code,NULL,NULL);
+	GUI_END_SAVE;
+	return Py_BuildValue("l",(long)code);
+	}
+
 #ifdef INCLUDE_GIF
 static PyObject* ig_load_gif(PyObject *self, PyObject *args)
 	{
@@ -230,6 +252,8 @@ BEGIN_PYMETHODDEF(ig)
 	{ "display_image", ig_display_image,1},
 	{ "image_delete",ig_image_delete,1},
 	{ "palette_entry_get",ig_palette_entry_get,1},
+{"error_check",ig_error_check,1},
+{"error_get",ig_error_get,1},
 END_PYMETHODDEF()
 
 
