@@ -46,6 +46,8 @@ def mustfitstring(s, sizefunc, length):
 		return l
 	raise nofit_error, (s, length)
 
+def between(v, x0, x1):
+	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))
 
 class TextWindow(ChannelWindow):
 	#
@@ -54,6 +56,9 @@ class TextWindow(ChannelWindow):
 		self.player = player
 		self.text = [] # Initially, display no text
 		self.node = None
+		self.vobj = None
+		self.setanchor = 0
+		self.anchors = []
 		self.setcolors()
 		return self
 	#
@@ -66,6 +71,10 @@ class TextWindow(ChannelWindow):
 			self.fgcolor = self.attrdict['fgcolor']
 		else:
 			self.fgcolor = 0, 0, 0
+		if self.attrdict.has_key('hicolor'):
+			self.hicolor = self.attrdict['hicolor']
+		else:
+			self.hicolor = 255, 0, 0
 	#
 	def show(self):
 		if self.wid <> 0: return
@@ -77,21 +86,39 @@ class TextWindow(ChannelWindow):
 		gl.clear()
 	#
 	def mouse(self, (dev, val)):
+		mx, my = fl.get_mouse()
+		mx, my = gl.mapw2(self.vobj, int(mx), int(my))
+		mx, my = int(mx), int(my)
+		if self.setanchor:
+			# We're not playing, we're defining anchors
+			if dev <> DEVICE.MOUSE3:
+				gl.ringbell()
+				return
+			if val == 1:
+				self.pm = (mx, my)
+			else:
+				self.anchors[0] = (self.anchors[0][0], \
+					  [self.pm[0], self.pm[1], mx, my])
+				self.redraw()
+			return
 		if (dev, val) <> (DEVICE.MOUSE3, 1):
 			return
 		if not self.node:
 			print 'mouse: no current node'
 			gl.ringbell()
 			return
-		try:
-			alist = self.node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			# No anchors on this node, ignore.
-			print 'Mouse: no anchors on this node'
+		if not self.anchors:
+			print 'mouse: no anchors on this node'
+		al2 = []
+		for a in self.anchors:
+			x0, y0, x1, y1 = a[1][0], a[1][1], a[1][2], a[1][3]
+			if between(mx, x0, x1) and between(my, y0, y1):
+				al2.append(a)
+		if not al2:
+			print 'Mouse: No anchor selected'
 			gl.ringbell()
 			return
-		# XXX Should see *which* anchor fired here
-		self.player.anchorfired(self.node, alist)
+		self.player.anchorfired(self.node, al2)
 	#
 	def resetfont(self):
 		# Get the default colors
@@ -100,6 +127,7 @@ class TextWindow(ChannelWindow):
 		else:
 			self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
 			self.fgcolor = MMAttrdefs.getattr(self.node, 'fgcolor')
+			self.hicolor = MMAttrdefs.getattr(self.node, 'hicolor')
 		# Get the default font and point size for the window
 		if self.node <> None:
 			fontspec = MMAttrdefs.getattr(self.node, 'font')
@@ -133,6 +161,7 @@ class TextWindow(ChannelWindow):
 		self.text = preptext(text)
 		self.node = node
 		self.resetfont()
+		self.anchors = []
 		self.redraw()
 		# to show addtext feature
 		#self.addtext(text)
@@ -154,6 +183,27 @@ class TextWindow(ChannelWindow):
 			self.text = lines
 		self.redraw()
 	#
+	# Set the anchor list.
+	#
+	def setanchors(self, anchors):
+		self.anchors = anchors
+		self.redraw()
+	#
+	# Start defining an anchor
+	def setdefanchor(self, anchor):
+		self.anchors = [anchor]
+		self.setanchor = 1
+		self.redraw()
+	# Stop defining an anchor
+	def getdefanchor(self):
+		self.setanchor = 0
+		return self.anchors[0]
+	# Abort defining an anchor
+	def enddefanchor(self, anchor):
+		self.anchors = [anchor]
+		self.setanchor = 0
+		self.redraw()
+	#
 	# a hack.  currently redraw recalculates everything.  when window size
 	# is not changed it should only calculate possibly added text.
 	def redraw(self):
@@ -163,17 +213,22 @@ class TextWindow(ChannelWindow):
 		x0, x1, y0, y1 = gl.getviewport()
 		width, height = x1-x0, y1-y0
 		MASK = 20
+		if self.vobj == None:
+			self.vobj = gl.genobj()
+		gl.makeobj(self.vobj)
 		gl.viewport(x0-MASK, x1+MASK, y0-MASK, y1+MASK)
 		gl.scrmask(x0, x1, y0, y1)
 		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
 			  height+MASK-0.5, -MASK-0.5)
+		gl.closeobj()
+		gl.callobj(self.vobj)
 		#
 		gl.RGBcolor(self.bgcolor)
 		gl.clear()
 		#
 		gl.RGBcolor(self.fgcolor)
 		self.font.setfont()
-	#
+		#
 		curbase = self.baseline
 		margin = int(self.avgcharwidth / 2)
 		fmaxlines = height / self.fontheight
@@ -197,6 +252,16 @@ class TextWindow(ChannelWindow):
 			gl.cmov2(margin,curbase)
 			fm.prstr(str)
 			curbase = curbase + self.fontheight
+		# Draw the anchors.
+		gl.RGBcolor(self.hicolor)
+		for dummy, a in self.anchors:
+			if len(a) <> 4: continue
+			gl.bgnclosedline()
+			gl.v2i(a[0], a[1])
+			gl.v2i(a[0], a[3])
+			gl.v2i(a[2], a[3])
+			gl.v2i(a[2], a[1])
+			gl.endclosedline()
 
 
 # Turn a text string into a list of strings, each representing a paragraph.
@@ -227,7 +292,8 @@ class TextChannel(Channel):
 	#
 	chan_attrs = ['winsize', 'winpos', 'visible', 'border']
 	node_attrs = \
-		['font', 'pointsize', 'file', 'duration', 'fgcolor', 'bgcolor']
+		['font', 'pointsize', 'file', 'duration', 'fgcolor', \
+		 'hicolor', 'bgcolor']
 	#
 	# Initialization function.
 	#
@@ -260,7 +326,34 @@ class TextChannel(Channel):
 	#
 	def play(self, (node, callback, arg)):
 		self.showtext(node)
+		self.showanchors(node)
 		Channel.play(self, node, callback, arg)
+	#
+	def defanchor(self, node, anchor):
+		self.showtext(node)
+		self.window.setdefanchor(anchor)
+
+		import AdefDialog
+		if AdefDialog.run('Select reactive area with mouse'):
+			return self.window.getdefanchor()
+		else:
+			self.window.enddefanchor(anchor)
+			return None
+		
+	def showanchors(self, node):
+		try:
+			alist = node.GetRawAttr('anchorlist')
+		except NoSuchAttrError:
+			self.window.setanchors([])
+			return
+		al2 = []
+		for a in alist:
+			if len(a[1]) == 0: continue
+			if len(a[1]) <> 4:
+				print 'TextChannel: funny-sized anchor'
+			else:
+				al2.append(a)
+		self.window.setanchors(al2)
 	#
 	def reset(self):
 		self.window.settext('', None)
