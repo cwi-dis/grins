@@ -46,7 +46,7 @@ class AttrCtrl:
 		infoc=self._wnd._attrinfo
 		a=self._attr
 		hd=a.gethelpdata()
-		if hd[1] or self.want_default_help:
+		if hd[1] and self.want_default_help:
 			infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
 		else:
 			infoc.settext(hd[2])
