@@ -49,6 +49,9 @@ class ToolbarMixin:
 			self._bars[cmdid] = None
 
 	def _restoreToolbarState(self):
+		if self.IsFirstTime():
+			self.PositionForFirstTime()
+			return
 		try:
 			self.LoadBarState("GRiNSToolBars")
 		except:
@@ -56,6 +59,22 @@ class ToolbarMixin:
 ##			for bar in self._bars.values():
 ##				self.ShowControlBar(bar,1,0)
 ##				bar.RedrawWindow()
+
+	def IsFirstTime(self):
+		return win32ui.GetProfileVal('ToolbarDefault-Summary', 'Bars', -1) == -1
+
+	def PositionForFirstTime(self):
+		y = 10000
+		for bar in self._bars.values():
+			self.DockControlBar(bar, afxres.AFX_IDW_DOCKBAR_TOP)
+			self.RecalcLayout()
+			y = min(y, bar.GetWindowRect()[1])
+		i = 0
+		for bar in self._bars.values():
+			self.DockControlBar(bar, afxres.AFX_IDW_DOCKBAR_TOP, (i, y, i, y))
+			self.RecalcLayout()
+			i = i + 1
+		self.RecalcLayout()
 
 	def OnClose(self):
 		self.SaveBarState("GRiNSToolBars")
@@ -120,8 +139,8 @@ class ToolbarMixin:
 		cmdid = usercmdui.class2ui[command].id
 		bar = GRiNSToolbar(self, name, barid, resid, 0)
 		self._bars[cmdid] = bar
-##		self.DockControlBar(bar)
-		self._DockControlBarNextPosition(bar)
+		self.DockControlBar(bar)
+##		self._DockControlBarNextPosition(bar)
 
 		# Initialize it
 		nbuttons = len(buttonlist)
