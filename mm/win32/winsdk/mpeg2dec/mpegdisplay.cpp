@@ -46,6 +46,8 @@ MpegDisplay::~MpegDisplay()
 
 void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int incr, int vsteps)
 	{
+	if(m_surf == 0) return;
+
 	if (m_di.chroma_format==CHROMA444)
 		{
 		u444 = src[1];
@@ -74,11 +76,13 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
 	int cgv = Inverse_Table_6_9[m_di.matrix_coefficients][3];
   
 	m_cs.enter();
+	color_repr_t *pcr = 0;
 	for (int yi=0; yi<vsteps; yi++)
 		{
 		unsigned char *py = src[0] + offset + incr*yi;
 		unsigned char *pu = u444 + offset + incr*yi;
 		unsigned char *pv = v444 + offset + incr*yi;
+		color_repr_t *pcr = m_surf->get_row(yi);
 		for (int xi=0; xi<m_di.horizontal_size; xi++)
 			{
 			int u = *pu++ - 128;
@@ -87,10 +91,8 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
 			int r = Clip[(y + crv*v + 32768)>>16];
 			int g = Clip[(y - cgu*u - cgv*v + 32768)>>16];
 			int b = Clip[(y + cbu*u + 32786)>>16];
-
 			// store to bitmap surface for display
-			if(m_surf != 0) 
-				m_surf->set_pixel(xi, yi, color_repr_t(r, g, b));
+			*pcr++ = color_repr_t(r, g, b);
 			}
 		}
 	m_cs.leave();
