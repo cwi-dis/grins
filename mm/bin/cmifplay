@@ -1,11 +1,13 @@
 #!/bin/sh
-# Common code for cmifed and cmifplay. Set
-# $function set to "editor" or "player"
+# Common code for cmifed, grins and cmifplay.
+#
+# Set $function to "editor", "grins" or "player"
 #
 
 prog="$0"
 
 case $prog in
+*grins)	function=grins;;
 *play)	function=player;;
 *)	function=editor;;
 esac
