@@ -2870,6 +2870,10 @@ class MMNode:
 		if self.type in leaftypes:
 			import Duration
 			return Duration.get(self, ignoreloop=1), maybecached
+		elif self.type == 'excl':
+			# XXX it's too hard to calculate this properly with all
+			# this pause stuff in priorityClasses
+			return None, 0
 		else:
 			syncbase = self.isresolved()
 			if self.type in ('par', 'excl'):
