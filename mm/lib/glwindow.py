@@ -138,7 +138,7 @@ from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
 from DEVICE import WINSHUT, WINQUIT, MOUSEX, MOUSEY
 
 anchors = {}				# dictionary of anchors
-highlight = None			# highlighted button
+##highlight = None			# highlighted button
 
 def add_anchor(button, func, arg):
 	anchors[button] = (func, arg)
@@ -161,21 +161,32 @@ def dispatch(dev, val):
 	event = windowinterface._event._doevent(dev, val)
 ##	print 'dispatch now:', event #DBG
 	if event:
-		global highlight
+##		global highlight
 		window, event, value = event
 		if event == EVENTS.Mouse0Press:
 			buttons = value[2]
 			if len(buttons) == 1 and not buttons[0].is_closed():
+				# XXXX Note by Jack: this is the wrong place
+				# to do the highlighting, but at the higher
+				# levels we have unfortunately forgotten all
+				# about the anchors/buttons. So, for the time
+				# being we'll keep it this way.
 				but = buttons[0]
 				but.highlight()
-				highlight = but
+##				highlight = but
 				if anchors.has_key(but):
+					windowinterface.setcursor('watch')
 					f, a = anchors[but]
 					dummy = apply(f, a)
-		elif event == EVENTS.Mouse0Release:
-			if highlight and not highlight.is_closed():
-				highlight.unhighlight()
-			highlight = None
+					windowinterface.setcursor('')
+				if not but.is_closed():
+					but.unhighlight()
+			else:	# Added by Jack. Correct?
+				gl.ringbell()
+##		elif event == EVENTS.Mouse0Release:
+##			if highlight and not highlight.is_closed():
+##				highlight.unhighlight()
+##			highlight = None
 	if waslocked:
 ##		print 're-acquire'
 		GLLock.gl_lock.acquire()
