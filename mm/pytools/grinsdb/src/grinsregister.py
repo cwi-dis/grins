@@ -27,19 +27,19 @@ def main():
 	status = 0
 	if len(sys.argv) <= 1:
 		try:
-			register(sys.stdin)
+			register(sys.stdin, "<stdin>")
 		except Error:
 			status = 1
 	else:
 		for file in sys.argv[1:]:
 			fp = open(file)
 			try:
-				register(fp)
+				register(fp, file)
 			except Error:
 				status = 1
 	sys.exit(status)
 	
-def register(file):
+def register(file, filename):
 	dbase = grinsdb.Database()
 	msg = rfc822.Message(file)
 	obj = dbase.new(msg)
@@ -54,10 +54,10 @@ def register(file):
 		raise Error
 	prevtime = find_duplicate(dbase, obj)
 	if prevtime and prevtime > time.time() - 3*24*3600:
-		print "Warning: not added, recent duplicate"
+		print "Warning: %s: not added, recent duplicate"%filename
 		return
 	if prevtime:
-		print "Duplicate, not added"
+		print "Duplicate, not added:", filename
 		raise Error
 
 	grpasswd.addpasswd(obj)
@@ -67,7 +67,7 @@ def register(file):
 	crypted = crypt_passwd(clear)
 	add_passwd(PASSWD, user, crypted)
 	mail(user, clear)
-	print "%s: added"%user
+	print "%s: added (%s)"%(user, filename)
 
 def find_duplicate(dbase, obj):
 	user = obj['email']
