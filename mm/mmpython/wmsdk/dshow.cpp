@@ -132,6 +132,30 @@ newFileSinkFilterObject()
 	return self;
 }
 
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IMediaControl* pCtrl;
+} MediaControlObject;
+
+staticforward PyTypeObject MediaControlType;
+
+
+static MediaControlObject *
+newMediaControlObject()
+{
+	MediaControlObject *self;
+
+	self = PyObject_NEW(MediaControlObject, &MediaControlType);
+	if (self == NULL)
+		return NULL;
+	self->pCtrl = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
 ////////////////////////////////////////////////////
 
 static char GraphBuilder_AddSourceFilter__doc__[] =
@@ -205,10 +229,66 @@ GraphBuilder_Render(GraphBuilderObject *self, PyObject *args)
 }
 
 
+
+static char GraphBuilder_QueryIMediaControl__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_QueryIMediaControl(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	MediaControlObject *obj = newMediaControlObject();
+	res = self->pGraphBuilder->QueryInterface(IID_IMediaControl, (void **) &obj->pCtrl);
+	if (FAILED(res)) {
+		seterror("GraphBuilder_QueryIMediaControl", res);
+		obj->pCtrl=NULL;
+		Py_DECREF(obj);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
+
+
+static char GraphBuilder_WaitForCompletion__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+    IMediaEventEx *pME;
+	res=self->pGraphBuilder->QueryInterface(IID_IMediaEventEx, (void **) &pME);
+	if (FAILED(res)) {
+		seterror("GraphBuilder_WaitForCompletion", res);
+		return NULL;
+	}
+	long evCode=0;
+	res=pME->WaitForCompletion(INFINITE,&evCode);
+	if (FAILED(res)) {
+		seterror("WaitForCompletion", res);
+		pME->Release();
+		return NULL;
+	}
+	pME->Release();
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
 static struct PyMethodDef GraphBuilder_methods[] = {
 	{"AddSourceFilter", (PyCFunction)GraphBuilder_AddSourceFilter, METH_VARARGS, GraphBuilder_AddSourceFilter__doc__},
 	{"AddFilter", (PyCFunction)GraphBuilder_AddFilter, METH_VARARGS, GraphBuilder_AddFilter__doc__},
 	{"Render", (PyCFunction)GraphBuilder_Render, METH_VARARGS, GraphBuilder_Render__doc__},
+	{"QueryIMediaControl", (PyCFunction)GraphBuilder_QueryIMediaControl, METH_VARARGS, GraphBuilder_QueryIMediaControl__doc__},
+	{"WaitForCompletion", (PyCFunction)GraphBuilder_WaitForCompletion, METH_VARARGS, GraphBuilder_WaitForCompletion__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -489,6 +569,121 @@ static PyTypeObject FileSinkFilterType = {
 };
 
 // End of FileSinkFilter
+////////////////////////////////////////////
+
+/////////////////////////////////////////////
+// MediaControl
+
+
+static char MediaControl_Run__doc__[] =
+""
+;
+
+static PyObject *
+MediaControl_Run(MediaControlObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->pCtrl->Run();
+	if (FAILED(res)) {
+		seterror("MediaControl_Run", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MediaControl_Stop__doc__[] =
+""
+;
+
+static PyObject *
+MediaControl_Stop(MediaControlObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->pCtrl->Stop();
+	if (FAILED(res)) {
+		seterror("MediaControl_Stop", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MediaControl_Pause__doc__[] =
+""
+;
+
+static PyObject *
+MediaControl_Pause(MediaControlObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->pCtrl->Pause();
+	if (FAILED(res)) {
+		seterror("MediaControl_Pause", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef MediaControl_methods[] = {
+	{"Run", (PyCFunction)MediaControl_Run, METH_VARARGS, MediaControl_Run__doc__},
+	{"Stop", (PyCFunction)MediaControl_Stop, METH_VARARGS, MediaControl_Stop__doc__},
+	{"Pause", (PyCFunction)MediaControl_Pause, METH_VARARGS, MediaControl_Pause__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+MediaControl_dealloc(MediaControlObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pCtrl);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MediaControl_getattr(MediaControlObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MediaControl_methods, (PyObject *)self, name);
+}
+
+static char MediaControlType__doc__[] =
+""
+;
+
+static PyTypeObject MediaControlType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MediaControl",			/*tp_name*/
+	sizeof(MediaControlObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MediaControl_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MediaControl_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MediaControlType__doc__ /* Documentation string */
+};
+
+// End of MediaControl
 ////////////////////////////////////////////
 
 //
