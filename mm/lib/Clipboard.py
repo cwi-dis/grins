@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Clipboard module.
 #
 # There is one *global* clipboard object, but it is implemented as a class,
