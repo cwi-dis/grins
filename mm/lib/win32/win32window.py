@@ -2024,7 +2024,7 @@ class DrawContext:
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
-		
+	
 	def setCapture(self):
 		self._capture = self
 
@@ -2104,6 +2104,12 @@ class DrawContext:
 	
 	def onLButtonDblClk(self, flags, point):
 		self._curtool.onLButtonDblClk(flags, point)
+
+	def onNCButton(self):
+		self._last = 0, 0
+		self._selmode = SM_NONE
+		self._ixDragHandle = 0
+		self._capture = None
 
 	def __notifyListeners(self, shape):
 		for obj in self._listeners:
