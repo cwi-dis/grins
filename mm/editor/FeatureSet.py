@@ -50,6 +50,8 @@ __version__ = "$Id$";
 
 	ALIGNTOOL,			# enable align tools
 
+	EDIT_TYPE,			# allow editing of node type
+
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
 	H_MODIFY_STRUCTURE,		# This is the biggy - decides between templates or not.
@@ -58,4 +60,4 @@ __version__ = "$Id$";
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
 	H_PLAYABLE,			# Toggle showing of playability of nodes
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
-] = range(36)				# don't forget to update this range!
+] = range(37)				# don't forget to update this range!
