@@ -14,7 +14,7 @@ ARR_HEAD = 18
 ARR_SLANT = float(ARR_WIDTH) / float(ARR_HEAD)
 
 def clear_window():
-	color(BLACK)
+	color(WHITE)
 	clear()
 
 # define a rectangular box with vertex at (x,y); width w and heigth h.
@@ -139,11 +139,12 @@ class diamond():
 # the hotspot is the arrowhead
 class arrow():
 
-	def new(self, (fx, fy, tx, ty)):
+	def new(self, (fx, fy, tx, ty, arc)):
 		self.fx = fx
 		self.fy = fy
 		self.lx = tx - fx
 		self.ly = ty - fy
+		self.arc = arc
 		self.length = int(sqrt(self.lx*self.lx+self.ly*self.ly))
 		self.angle = atan2(self.lx, self.ly)
 		self.cos = cos(self.angle)
