@@ -216,7 +216,10 @@ void mpeg_player::close()
 		display = 0;
 		}
 	if(pwavout != 0)
+		{
 		delete pwavout;
+		pwavout = 0;
+		}
 	}
 
 int mpeg_player::get_width() const

@@ -32,6 +32,7 @@ class wave_out_device
 		{
 		if(m_needs_unprepare) stop();
 		if(is_open()) close();
+		if(m_hDoneEvent!=NULL) CloseHandle(m_hDoneEvent);
 		}
 	
 	bool open(int rate)
