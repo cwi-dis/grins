@@ -1122,6 +1122,9 @@ class Renderer:
 	def needswindow(self):
 		return 1
 
+	def needsoswindow(self):
+		return 0
+
 	def urlqual(self,rurl):
 		if not rurl:
 			return rurl
@@ -1345,6 +1348,8 @@ class VideoRenderer(MediaRenderer):
 		MediaRenderer.__init__(self,wnd,rc,baseURL)
 	def needswindow(self):
 		return 1
+	def needsoswindow(self):
+		return 1
 
 class AudioRenderer(MediaRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
@@ -1396,41 +1401,52 @@ class RealRenderer(Renderer):
 			if self.needswindow():
 				self.update()
 			return
-		if 0 and self.needswindow():
+		if self.needswindow():
 			self._rmaplayer.SetOsWindow(self._wnd.GetSafeHwnd())
-			width,height = self._rc[2]-self._rc[0],self._rc[3]-self._rc[1]
-			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
-				self.adjustSize((width,height))
-			self._rmaplayer.SetPositionAndSize((dest_x, dest_y), (width, height))
 		url=self.urlqual(rurl)
 		import MMurl
 		url = MMurl.unquote(url)
 		self._rmaplayer.OpenURL(url)
-	
-
+			
 	def play(self):
 		if self._rmaplayer:
 			self._rmaplayer.Begin()
-
+			
 	def pause(self):
 		if self._rmaplayer:
 			self._rmaplayer.Pause()
 
 	def stop(self):
 		if self._rmaplayer:
-			self._rmaplayer.Stop()
+			# stop requires to recreate player
+			# if want it to be confined
+			self._rmaplayer.Pause()
 
 class RealWndRenderer(RealRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		RealRenderer.__init__(self,wnd,rc,baseURL)
 	def needswindow(self):
-		return 0
+		return 1
+	def needsoswindow(self):
+		return 1
 
 class RealAudioRenderer(RealRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		RealRenderer.__init__(self,wnd,rc,baseURL)
 	def needswindow(self):
 		return 0
+
+# a not resizeable ctrl for rma
+class RealWndCtrl(components.WndCtrl):
+	def prepare(self):
+		self.HookMessage(self.onSize,win32con.WM_SIZE)
+		self._rect=self.GetClientRect()
+	def onSize(self,params):
+		# we should adjust rect, but for now:
+		msg=win32mu.Win32Msg(params)
+		l,t,r,b=self._rect
+		self.SetWindowPos(self.GetSafeHwnd(),(0,0,r,b),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 
 
 #################################
@@ -1464,8 +1480,13 @@ class PreviewPage(AttrPage):
 			self._armed=1
 
 	def setRendererRc(self):
-		preview=components.Control(self,grinsRC.IDC_PREVIEW)
+		preview=RealWndCtrl(self,grinsRC.IDC_PREVIEW)
 		preview.attach_to_parent()
+		if self._renderer.needsoswindow():
+			preview.create_wnd_from_handle()
+			preview.prepare()
+			self._renderer._wnd=preview
+			preview.ShowWindow(win32con.SW_SHOW)
 		l1,t1,r1,b1=self.GetWindowRect()
 		l2,t2,r2,b2=preview.getwindowrect()
 		self._renderer._rc=(l2-l1,t2-t1,r2-l1,b2-t1)
@@ -1903,6 +1924,8 @@ class FileGroup(AttrGroup):
 				return getattr(grinsRC, 'IDD_EDITATTR_PF1')
 			else: 
 				# continous media i.e play,stop
+				if self._mtypesig=='realwnd':
+					return getattr(grinsRC, 'IDD_EDITATTR_WF1')	
 				return getattr(grinsRC, 'IDD_EDITATTR_MF1')	
 		else:
 			return getattr(grinsRC, 'IDD_EDITATTR_F1')
