@@ -1621,10 +1621,9 @@ class AttrEditor(AttrEditorDialog):
 		self.close()
 
 	def ok_callback(self):
-		if not self.apply_callback():
-			self.close()
+		self.apply_callback(close = 1)
 
-	def apply_callback(self):
+	def apply_callback(self, close = 0):
 		# For those of us who can't tell verbs from nouns, apply here means "The Apply button"
 		# and this is a callback for when the "Apply button" is pressed - although it gets called
 		# from the "Ok" button also.
@@ -1705,7 +1704,10 @@ class AttrEditor(AttrEditorDialog):
 		if checkType:
 			self.checkType(self.wrapper.node)
 			
-		self.wrapper.commit()
+		editmgr = self.wrapper.editmgr
+		if close:
+			self.close()
+		editmgr.commit()
 
 	# but need to check if mimetype compatible, with region type, url, ...
 	# for now, do nothing
