@@ -28,6 +28,7 @@ class RealPixChannel(RealWindowChannel):
 					os.unlink(f)
 				except:
 					pass
+				node.rptmpfile = None
 				del node.rptmpfile
 			realsupport.writeRP(node.tmpfile, node.slideshow.rp, node, baseurl = node.tmpfile)
 			return MMurl.pathname2url(node.tmpfile)
