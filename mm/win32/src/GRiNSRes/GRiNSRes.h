@@ -49,9 +49,11 @@
 #define IDD_FORM1                       251
 #define IDD_EDITCOLORATTR1              252
 #define IDD_EDITCOLORATTR2              253
+#define IDD_DIALOG1                     253
 #define IDD_EDITFILEATTR1               254
 #define IDD_EDITOPTIONSATTR1            255
 #define IDD_EDITSTRINGATTR1             256
+#define IDD_EDITRECTATTR                257
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -185,7 +187,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        252
+#define _APS_NEXT_RESOURCE_VALUE        254
 #define _APS_NEXT_COMMAND_VALUE         32833
 #define _APS_NEXT_CONTROL_VALUE         1135
 #define _APS_NEXT_SYMED_VALUE           104
