@@ -74,14 +74,18 @@ class AttrCtrl:
 	def drawOn(self,dc):
 		pass
 
-	def enableApply(self):
+	def enableApply(self,flag=-1):
 		if not self._wnd._form: return
-		if self._attr.getcurrent()!=self.getvalue():
-			flag=1
-		else:
-			flag=0	
-		self._wnd._form.enableApply(self._attr, flag)
+		if flag>=0:
+			self._wnd._form.enableApply(self._attr, flag)
+		else:	
+			if self._attr.getcurrent()!=self.getvalue():
+				flag=1
+			else:
+				flag=0	
+			self._wnd._form.enableApply(self._attr, flag)
 
+		
 	def OnKeyDown(self,params):
 		vk = params[2]
 		if self._validator:
