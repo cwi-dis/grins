@@ -6,7 +6,7 @@
 
 image G-DevE.gif
 display 83 49 640 480
-centerskin 1
+centerskin = 1
 play rect 750 403 18 20			# Play Icon
 pause rect 795 414 18 20		# Pause Icon
 stop rect 802 470 18 20			# Stop

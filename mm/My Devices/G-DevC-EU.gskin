@@ -5,7 +5,7 @@
 
 image G-DevC.gif
 display 55 101 240 268
-centerskin 0
+centerskin = 0
 play rect 67 373 18 20			# Play Icon
 pause rect 88 373 18 20		# Pause Icon
 stop rect 109 373 18 20			# Stop
