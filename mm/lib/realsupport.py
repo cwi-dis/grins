@@ -870,14 +870,14 @@ def decode_time(str, fmt = 'dd:hh:mm:ss.xyz'):
 	seconds = string.atof(seconds)
 	return seconds + 60 * minutes
 
-def rmff(file, fp):
+def rmff(url, fp):
 	from StringIO import StringIO
 	from chunk import Chunk
 	import struct
 	info = {}
 	size, object_version = struct.unpack('>lh', fp.read(6))
 	if object_version != 0 and object_version != 1:
-		print '%s: unknown .RMF version' % file
+		print '%s: unknown .RMF version' % url
 		return info
 	else:
 		file_version, num_headers = struct.unpack('>ll', fp.read(8))
@@ -887,7 +887,7 @@ def rmff(file, fp):
 		if name == 'PROP':
 			object_version = struct.unpack('>h', chunk.read(2))[0]
 			if object_version != 0:
-				print '%s: unknown PROP version' % file
+				print '%s: unknown PROP version' % url
 			else:
 				max_bit_rate, avg_bit_rate, max_packet_size, avg_packet_size, num_packets, duration, preroll, index_offset, data_offset, num_streams, flags = struct.unpack('>lllllllllhh', chunk.read(40))
 				info['duration'] = float(duration)/1000
@@ -897,7 +897,7 @@ def rmff(file, fp):
 		elif name == 'MDPR':
 			object_version = struct.unpack('>h', chunk.read(2))[0]
 			if object_version != 0:
-				print '%s: unknown MDPR version' % file
+				print '%s: unknown MDPR version' % url
 			else:
 				stream_number, max_bit_rate, avg_bit_rate, max_packet_size, avg_packet_size, start_time, preroll, duration, stream_name_size = struct.unpack('>hlllllllb', chunk.read(31))
 				if stream_name_size > 0:
@@ -922,7 +922,7 @@ def rmff(file, fp):
 		elif name == 'CONT':
 			object_version = struct.unpack('>h', chunk.read(2))[0]
 			if object_version != 0:
-				print '%s: unknown CONT version' % file
+				print '%s: unknown CONT version' % url
 			else:
 				title_len = struct.unpack('>h', chunk.read(2))[0]
 				title = chunk.read(title_len)
@@ -945,13 +945,13 @@ def rmff(file, fp):
 			break		# we've seen enough
 ##			object_version = struct.unpack('>h', chunk.read(2))[0]
 ##			if object_version != 0:
-##				print '%s: unknown DATA version' % file
+##				print '%s: unknown DATA version' % url
 ##			else:
 ##				num_packets, next_data_header = struct.unpack('>ll', chunk.read(8))
 		elif name == 'INDX':
 			object_version = struct.unpack('>h', chunk.read(2))[0]
 			if object_version != 0:
-				print '%s: unknown INDX version' % file
+				print '%s: unknown INDX version' % url
 			else:
 				num_indices, stream_number, next_index_header = struct.unpack('>lhl', chunk.read(10))
 		chunk.close()
@@ -959,19 +959,19 @@ def rmff(file, fp):
 
 cache = {}
 
-def getinfo(file, fp = None, printfunc = None):
-	if cache.has_key(file):
-		return cache[file]
+def getinfo(url, fp = None, printfunc = None):
+	if cache.has_key(url):
+		return cache[url]
 	if fp is None:
 		try:
-			fp = MMurl.urlopen(file)
+			fp = MMurl.urlopen(url)
 		except:
-			cache[file] = info = {}
+			cache[url] = info = {}
 			return info
 	head = fp.read(4)
 	if head == '<imf':
 		# RealPix
-		rp = RPParser(file, printfunc = printfunc)
+		rp = RPParser(url, printfunc = printfunc)
 		rp.feed(head)
 		rp.feed(fp.read())
 		rp.close()
@@ -981,7 +981,7 @@ def getinfo(file, fp = None, printfunc = None):
 			'bitrate': rp.bitrate,}
 	elif string.lower(head) == '<win':
 		# RealText
-		rp = RTParser(file, printfunc = printfunc)
+		rp = RTParser(url, printfunc = printfunc)
 		rp.feed(head)
 		rp.feed(fp.read())
 		rp.close()
@@ -990,7 +990,7 @@ def getinfo(file, fp = None, printfunc = None):
 			'duration': rp.duration,}
 	elif head == '.RMF':
 		# RealMedia
-		info = rmff(file, fp)
+		info = rmff(url, fp)
 	elif head == '.ra\375':
 		# RealAudio
 		info = {}
@@ -998,5 +998,5 @@ def getinfo(file, fp = None, printfunc = None):
 		# unknown format
 		info = {}
 	fp.close()
-	cache[file] = info
+	cache[url] = info
 	return info
