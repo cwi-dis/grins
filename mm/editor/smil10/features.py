@@ -10,3 +10,6 @@ compatibility_short = 'SMIL'
 lightweight = 0
 editor = 1
 level = ''
+
+# no sys.platform required in this product
+license_features_needed = ('editor',)
