@@ -18,6 +18,8 @@ WM_USER_SETHWND = win32con.WM_USER+7
 WM_USER_UPDATE = win32con.WM_USER+8
 WM_USER_MOUSE_CLICKED  = win32con.WM_USER+9
 WM_USER_MOUSE_MOVED  = win32con.WM_USER+10
+WM_USER_SETPOS = win32con.WM_USER+11
+WM_USER_SETSPEED = win32con.WM_USER+12
 
 STOPPED, PAUSING, PLAYING = range(3)
 UNKNOWN = -1
@@ -29,6 +31,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		self._toplevel = toplevel
 		self.create()
 		self._docmap = {}
+		self._slidermap = {}
 		self.HookMessage(self.OnOpen, WM_USER_OPEN)
 		self.HookMessage(self.OnClose, WM_USER_CLOSE)
 		self.HookMessage(self.OnPlay, WM_USER_PLAY)
@@ -39,6 +42,14 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.HookMessage(self.OnUpdate, WM_USER_UPDATE)
 		self.HookMessage(self.OnMouseClicked, WM_USER_MOUSE_CLICKED)
 		self.HookMessage(self.OnMouseMoved, WM_USER_MOUSE_MOVED)
+		self.HookMessage(self.OnSetPos, WM_USER_SETPOS)
+		self.HookMessage(self.OnSetSpeed, WM_USER_SETSPEED)
+		self.HookMessage(self.OnTimer, win32con.WM_TIMER)
+		self.__timerid = self.SetTimer(1,100)
+
+	def OnDestroy(self, params):
+		if self.__timerid:
+			self.KillTimer(self.__timerid)
 
 	def OnOpen(self, params):
 		# lParam (params[3]) is a pointer to a c-string
@@ -51,10 +62,14 @@ class ListenerWnd(GenWnd.GenWnd):
 			self._docmap[params[2]] = self._toplevel.get_most_recent_docframe()
 		except: pass
 		self._toplevel._peerdocid = 0
+		frame = self._docmap[params[2]] 
+		self._slidermap[params[2]] = SliderPeer(frame._cmifdoc, params[2])
 	
 	def OnClose(self, params):
 		frame = self._docmap.get(params[2])
 		if frame: frame.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
+		del self._docmap[params[2]]
+		del self._slidermap[params[2]]
 
 	def OnPlay(self, params):
 		frame = self._docmap.get(params[2])
@@ -97,6 +112,62 @@ class ListenerWnd(GenWnd.GenWnd):
 			if wnd:
 				x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
 				wnd.onMouseMoveEvent((x,y))
+
+	def OnSetPos(self, params):
+		pos = 0.001*params[3]
+		self._slidermap[params[2]].setPos(pos)
+
+	def OnSetSpeed(self, params):
+		frame = self._docmap.get(params[2])
+		speed = 0.001*params[3]
+		self._slidermap[params[2]].setSpeed(speed)
+
+	def OnTimer(self, params):
+		for slider in self._slidermap.values():
+			slider.OnTimer(params)
+
+############################
+class SliderPeer:
+	def __init__(self, smildoc, peerid):
+		self.__smildoc = smildoc
+		self.__peerid = peerid
+		player = smildoc.player
+		ctx = player.userplayroot.GetContext()
+		# indefinite: -1, unknown: 0, else: >0
+		fulldur = player.userplayroot.calcfullduration(ctx)
+		if not fulldur: fulldur = 0
+		# update peer for dur
+		try:
+			from __main__ import commodule
+			if id: commodule.AdviceSetDur(peerid, fulldur)
+		except: pass
+		self.updateposcallback = player.setstarttime
+		self.timefunction = player.scheduler.timefunc
+		self.canusetimefunction = player.isplaying
+		self.getstatefunction = player.getstate
+		self.__updatepeer = 1
+
+	# set player pos
+	def setPos(self, pos):
+		self.__updatepeer = 0
+		self.updateposcallback(pos)
+		self.__updatepeer = 1
+
+	# set player speed
+	def setSpeed(self, speed):
+		self.__updatepeer = 0
+		pass # setspeed 
+		self.__updatepeer = 1
+
+	# update peer for pos and state
+	def OnTimer(self, params):
+		if self.__updatepeer and self.canusetimefunction and\
+			self.canusetimefunction() and self.timefunction:
+			try:
+				from __main__ import commodule
+				commodule.AdviceSetPos(self.__peerid, self.timefunction())
+				commodule.AdviceSetState(self.__peerid, self.getstatefunction())
+			except: pass
 
 ############################
 import win32window
