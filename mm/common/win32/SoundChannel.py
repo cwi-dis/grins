@@ -17,8 +17,10 @@ import MMAttrdefs
 debug=0
 
 class SoundChannel(Channel.ChannelAsync):
-	node_attrs = Channel.ChannelAsync.node_attrs + ['duration',
-						'clipbegin', 'clipend', 'project_audiotype', 'project_targets']
+	node_attrs = Channel.ChannelAsync.node_attrs + [
+		'duration', 'clipbegin', 'clipend',
+		'project_audiotype', 'project_targets',
+		'project_perfect', 'project_mobile']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None

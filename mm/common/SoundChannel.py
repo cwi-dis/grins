@@ -19,7 +19,8 @@ SECONDS_TO_BUFFER=4
 class SoundChannel(ChannelAsync):
 	node_attrs = ChannelAsync.node_attrs + [
 		'duration', 'clipbegin', 'clipend',
-		'project_audiotype', 'project_targets']
+		'project_audiotype', 'project_targets',
+		'project_perfect', 'project_mobile']
 
 	# shared between all instances
 	__playing = 0			# # of active channels
