@@ -1180,28 +1180,32 @@ sdk_init_common_controls_ex(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-//AddToolInfo
+///////////////////////////
+// Tooltip
+
+// AddTool
 static PyObject*
-sdk_add_tool_info(PyObject *self, PyObject *args)
+sdk_add_tool(PyObject *self, PyObject *args)
 	{
 	HWND hwnd, hwndParent;
 	int id;
 	RECT rc;
 	char *pszText=NULL;
-	if (!PyArg_ParseTuple(args,"iii(iiii)|s:AddToolInfo", &hwnd, &hwndParent, &id,
+	if (!PyArg_ParseTuple(args,"iii(iiii)|s:AddTool", &hwnd, &hwndParent, &id,
 		        &rc.left, &rc.top, &rc.right,&rc.bottom, &pszText))
 		return NULL;
 	char *buf = pszText;
 	if(pszText!=NULL)
 		{
-		buf = new char[strlen(pszText)+1];
-		strcpy(buf, pszText);
+		buf = new char[256]; // assert big enough for reuse
+		strncpy(buf, pszText, min(256, strlen(pszText)+1));
+		buf[255]='\0';
 		}
     TOOLINFO ti;
 	ti.cbSize = sizeof(TOOLINFO);
     ti.uFlags = 0; // TTF_SUBCLASS;
     ti.hwnd = hwndParent;
-    ti.hinst = AfxGetInstanceHandle();
+    ti.hinst = 0;
     ti.uId = id;
     ti.lpszText = buf?buf:LPSTR_TEXTCALLBACK;
     ti.rect.left = rc.left;    
@@ -1210,6 +1214,24 @@ sdk_add_tool_info(PyObject *self, PyObject *args)
     ti.rect.bottom = rc.bottom;
     SendMessage(hwnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);	
 	return Py_BuildValue("i", int(buf));
+	}
+
+// DeleteTool
+static PyObject*
+sdk_del_tool(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	char *pszText=NULL;
+	if (!PyArg_ParseTuple(args,"iii:DeleteTool", &hwnd, &hwndParent, &id))
+		return NULL;
+    TOOLINFO ti;
+	memset(&ti, 0, sizeof(TOOLINFO));
+	ti.cbSize = sizeof(TOOLINFO);
+    ti.hwnd = hwndParent;
+    ti.uId = id;
+    SendMessage(hwnd, TTM_DELTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	RETURN_NONE;
 	}
 
 // NewToolRect
@@ -1223,10 +1245,11 @@ sdk_new_tool_rect(PyObject *self, PyObject *args)
 		        &rc.left, &rc.top, &rc.right,&rc.bottom))
 		return NULL;
     TOOLINFO ti;
+	memset(&ti, 0, sizeof(TOOLINFO));
 	ti.cbSize = sizeof(TOOLINFO);
     ti.uFlags = 0;
     ti.hwnd = hwndParent;
-    ti.hinst = 0; //AfxGetInstanceHandle();
+    ti.hinst = 0;
     ti.uId = id;
     ti.lpszText = NULL;
     ti.rect.left = rc.left;    
@@ -1235,6 +1258,34 @@ sdk_new_tool_rect(PyObject *self, PyObject *args)
     ti.rect.bottom = rc.bottom;
     SendMessage(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM) (LPTOOLINFO) &ti);	
 	RETURN_NONE;
+	}
+
+// UpdateTipText
+static PyObject*
+sdk_update_tip_text(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	char *pszText;
+	int pval;
+	if (!PyArg_ParseTuple(args,"iiisi:UpdateTipText", &hwnd, &hwndParent, &id,
+		        &pszText, &pval))
+		return NULL;
+	
+	char *buf = (char*)pval;
+	strncpy(buf, pszText, min(256, strlen(pszText)+1));
+	buf[255]='\0';
+
+	TOOLINFO ti;
+	memset(&ti, 0, sizeof(TOOLINFO));
+	ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = 0;
+    ti.hwnd = hwndParent;
+    ti.hinst = 0;
+    ti.uId = id;
+    ti.lpszText = buf;
+    SendMessage(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	return Py_BuildValue("i", int(buf));
 	}
 
 
@@ -1304,8 +1355,12 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"MapVirtualKey",sdk_map_virtual_key,1},
 	
 	{"InitCommonControlsEx",sdk_init_common_controls_ex,1},
-	{"AddToolInfo",sdk_add_tool_info,1},
+
+	// Tooltps support
+	{"AddTool",sdk_add_tool,1},
+	{"DelTool",sdk_del_tool,1},
 	{"NewToolRect",sdk_new_tool_rect,1},
+	{"UpdateTipText",sdk_update_tip_text,1},
 	
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
