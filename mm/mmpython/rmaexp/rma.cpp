@@ -504,6 +504,27 @@ newAuthenticationManagerObject()
 	return self;
 }
 
+//(general but defined here for indepentance)
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IUnknown* pI;
+} UnknownObject;
+
+staticforward PyTypeObject UnknownType;
+
+static UnknownObject *
+newUnknownObject()
+{
+	UnknownObject *self;
+
+	self = PyObject_NEW(UnknownObject, &UnknownType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
@@ -888,6 +909,29 @@ static PyTypeObject RMAPlayerType = {
 ////////////////////////////////////////////
 // RMAErrorSinkControl object 
 
+static char RMAErrorSinkControl_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+RMAErrorSinkControl_QueryIUnknown(RMAErrorSinkControlObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	UnknownObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newUnknownObject();
+	if(obj==NULL) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("RMAErrorSinkControl_QueryIUnknown", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static char RMAErrorSinkControl_AddErrorSink__doc__[] =
 ""
 ;
@@ -912,6 +956,7 @@ RMAErrorSinkControl_AddErrorSink(RMAErrorSinkControlObject *self, PyObject *args
 }
 
 static struct PyMethodDef RMAErrorSinkControl_methods[] = {
+	{"QueryIUnknown", (PyCFunction)RMAErrorSinkControl_QueryIUnknown, METH_VARARGS, RMAErrorSinkControl_QueryIUnknown__doc__},
 	{"AddErrorSink", (PyCFunction)RMAErrorSinkControl_AddErrorSink, METH_VARARGS, RMAErrorSinkControl_AddErrorSink__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -966,7 +1011,30 @@ static PyTypeObject RMAErrorSinkControlType = {
 ////////////////////////////////////////////
 // ClientContext object 
 
+
+static char ClientContext_AddInterface__doc__[] =
+""
+;
+static PyObject *
+ClientContext_AddInterface(ClientContextObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	UnknownObject *obj;
+	if (!PyArg_ParseTuple(args, "O!", &UnknownType,&obj))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->AddInterface(obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		seterror("ClientContext_AddInterface", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef ClientContext_methods[] = {
+	{"AddInterface", (PyCFunction)ClientContext_AddInterface, METH_VARARGS, ClientContext_AddInterface__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1021,7 +1089,31 @@ static PyTypeObject ClientContextType = {
 ////////////////////////////////////////////
 // ClientAdviseSink object 
 
+static char ClientAdviseSink_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+ClientAdviseSink_QueryIUnknown(ClientAdviseSinkObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	UnknownObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newUnknownObject();
+	if(obj==NULL) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("ClientAdviseSink_QueryIUnknown", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef ClientAdviseSink_methods[] = {
+	{"QueryIUnknown", (PyCFunction)ClientAdviseSink_QueryIUnknown, METH_VARARGS, ClientAdviseSink_QueryIUnknown__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1076,7 +1168,31 @@ static PyTypeObject ClientAdviseSinkType = {
 ////////////////////////////////////////////
 // ErrorSink object 
 
+static char ErrorSink_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+ErrorSink_QueryIUnknown(ErrorSinkObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	UnknownObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newUnknownObject();
+	if(obj==NULL) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("ErrorSink_QueryIUnknown", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef ErrorSink_methods[] = {
+	{"QueryIUnknown", (PyCFunction)ErrorSink_QueryIUnknown, METH_VARARGS, ErrorSink_QueryIUnknown__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1131,7 +1247,31 @@ static PyTypeObject ErrorSinkType = {
 ////////////////////////////////////////////
 // SiteSupplier object 
 
+static char SiteSupplier_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+SiteSupplier_QueryIUnknown(SiteSupplierObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	UnknownObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newUnknownObject();
+	if(obj==NULL) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("SiteSupplier_QueryIUnknown", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef SiteSupplier_methods[] = {
+	{"QueryIUnknown", (PyCFunction)SiteSupplier_QueryIUnknown, METH_VARARGS, SiteSupplier_QueryIUnknown__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1186,7 +1326,31 @@ static PyTypeObject SiteSupplierType = {
 ////////////////////////////////////////////
 // AuthenticationManager object 
 
+static char AuthenticationManager_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+AuthenticationManager_QueryIUnknown(SiteSupplierObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	UnknownObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newUnknownObject();
+	if(obj==NULL) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("AuthenticationManager_QueryIUnknown", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef AuthenticationManager_methods[] = {
+	{"QueryIUnknown", (PyCFunction)AuthenticationManager_QueryIUnknown, METH_VARARGS, AuthenticationManager_QueryIUnknown__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1235,6 +1399,60 @@ static PyTypeObject AuthenticationManagerType = {
 };
 
 // End of code for AuthenticationManager object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// Unknown object (general but defined here for indepentance) 
+
+static struct PyMethodDef Unknown_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+Unknown_dealloc(UnknownObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+Unknown_getattr(UnknownObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(Unknown_methods, (PyObject *)self, name);
+}
+
+static char UnknownType__doc__[] =
+""
+;
+
+static PyTypeObject UnknownType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"Unknown",			/*tp_name*/
+	sizeof(UnknownObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)Unknown_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)Unknown_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	UnknownType__doc__ /* Documentation string */
+};
+
+// End of code for Unknown object 
 ////////////////////////////////////////////
 
 
