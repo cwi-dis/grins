@@ -18,7 +18,7 @@ from AnchorDefs import *
 # channel types and message
 import windowinterface
 
-debug=1
+debug=0
 
 import rma
 
