@@ -52,7 +52,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_USRDLL" /D "winmm_EXPORTS" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_USRDLL" /D "winmm_EXPORTS" /D "LINK_MP3LIB" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_USRDLL" /D "winmm_EXPORTS" /D "LINK_MP3LIB" /D "USE_GAPI" /FR /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -318,7 +318,11 @@ DEP_CPP_WINMM=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
+	".\winmm_mp3dec.h"\
+	".\winmm_video.h"\
+	".\winmm_wavehdr.h"\
 	".\winmm_waveout.h"\
 	
 
@@ -553,6 +557,7 @@ DEP_CPP_WINMM_=\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\..\CE\mp3lib\mp3lib.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	
 
@@ -652,10 +657,13 @@ DEP_CPP_WINMM_V=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\CE\gx\inc\gx.h"\
 	"..\common\charconv.h"\
+	"..\common\platform.h"\
 	"..\common\surface.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\mpeg_player.h"\
 	".\utils.h"\
-	".\winmm_ivideo.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
@@ -703,6 +711,8 @@ DEP_CPP_WINMM_V=\
 	"..\common\charconv.h"\
 	"..\common\surface.h"\
 	".\utils.h"\
+	
+NODEP_CPP_WINMM_V=\
 	".\winmm_ivideo.h"\
 	
 
@@ -749,9 +759,11 @@ DEP_CPP_WINMM_V=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\platform.h"\
 	"..\common\surface.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\mpeg_player.h"\
 	".\utils.h"\
-	".\winmm_ivideo.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
@@ -799,6 +811,8 @@ DEP_CPP_WINMM_V=\
 	"..\common\charconv.h"\
 	"..\common\surface.h"\
 	".\utils.h"\
+	
+NODEP_CPP_WINMM_V=\
 	".\winmm_ivideo.h"\
 	
 
@@ -948,7 +962,11 @@ DEP_CPP_WINMM_W=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
+	".\winmm_wavehdr.h"\
+	".\winmm_wavehdr_impl.h"\
+	".\winmm_waveout_impl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
@@ -1144,8 +1162,11 @@ DEP_CPP_WINMM_WA=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
+	".\winmm_wavehdr_impl.h"\
 	".\winmm_waveout.h"\
+	".\winmm_waveout_impl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
@@ -1208,11 +1229,19 @@ SOURCE=..\common\charconv.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\platform.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\surface.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\utils.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\winmm_ivideo.h
+SOURCE=..\common\video.h
 # End Source File
 # Begin Source File
 
@@ -1238,6 +1267,600 @@ SOURCE=.\winmm_waveout_impl.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# End Group
+# Begin Group "Mpeg Files"
+
+# PROP Default_Filter ""
+# Begin Group "Mpeg Lib Files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getbits.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getblk.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\gethdr.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getpic.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getvlc.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getvlc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\global.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\idct.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\idctref.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\motion.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\mpeg2dec.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\recon.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\spatscal.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\systems.c
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\mpeg2dec\libglobals.cpp
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\libglobals.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpeg_player.cpp
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpeg_player.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdecoder.cpp
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdisplay.cpp
+
+!IF  "$(CFG)" == "winmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MPEGDI=\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MPEGDI=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MPEGDI=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "winmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MPEGDI=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdisplay.h
+# End Source File
 # End Group
 # End Target
 # End Project
