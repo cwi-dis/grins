@@ -1,14 +1,15 @@
 # License dialog
 import windowinterface
 import components
+import win32dialog
 import grinsRC
 import win32con
 import win32ui
 import win32mu
 
-class LicenseDialog(components.ResDialog):
+class LicenseDialog(win32dialog.ResDialog):
 	def __init__(self):
-		components.ResDialog.__init__(self, grinsRC.IDD_LICENSE)
+		win32dialog.ResDialog.__init__(self, grinsRC.IDD_LICENSE)
 
 		self.__enabled = {}
 
@@ -33,7 +34,7 @@ class LicenseDialog(components.ResDialog):
 		self.__try.hookcommand(self, self.On_try)
 		self.__splash.create_wnd_from_handle()
 		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
-		rv = components.ResDialog.OnInitDialog(self)
+		rv = win32dialog.ResDialog.OnInitDialog(self)
 		self.__initialized = 1
 		self.setdialoginfo()
 		return rv
@@ -93,7 +94,7 @@ class LicenseDialog(components.ResDialog):
 	def On_try(self, id, code):
 		self.cb_try()
 
-EnterkeyDialog = components.EnterKeyDlg
+EnterkeyDialog = win32dialog.EnterKeyDlg
 
 ##def EnterkeyDialog(ok_callback):
 ##	import windowinterface
