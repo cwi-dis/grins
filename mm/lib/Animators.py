@@ -693,7 +693,7 @@ class EffectiveAnimator:
 		elif self.__tag == 'area':
 			self.__updatearea(displayValue)
 			return
-		elif self.__attr in ('top','left','width','height','right','bottom','position'):
+		elif self.__attr in ('top','left','width','height','right','bottom','position', 'z', 'bgcolor'):
 			self.__updatesubregion(displayValue)
 			return
 	
@@ -847,9 +847,13 @@ class EffectiveAnimator:
 			if chan.window:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
 		
-		elif attr=='bgcolor':
+		elif self.__attr=='bgcolor':
 			if chan.window:
 				chan.window.updatebgcolor(color)
+
+		elif self.__attr=='z':
+			if chan.window:
+				chan.window.updatezindex(value)
 
 		if debug:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
@@ -1415,6 +1419,11 @@ class AnimateElementParser:
 				if not self.__domval:
 					self.__domval = 0, 0, 0
 				return 1
+			elif self.__target._type == 'mmnode':
+				self.__domval = self.__target.attrdict.get('bgcolor')
+				if not self.__domval:
+					self.__domval = 0, 0, 0
+				return 1
 			return 0
 
 		if self.__attrname == 'z-index':
@@ -1423,6 +1432,9 @@ class AnimateElementParser:
 			if self.__target._type == 'region':
 				ch = self.__target._region
 				self.__domval = ch.get('z')
+				return 1
+			elif self.__target._type == 'mmnode':
+				self.__domval = self.__target.attrdict.get('z')
 				return 1
 			return 0
 
