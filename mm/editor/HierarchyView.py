@@ -1278,11 +1278,13 @@ class SlideShow:
 			attrdict['title'] = rp.title
 		if rp.url is not None:
 			attrdict['href'] = rp.url
+		self.editmgr = ctx.editmgr
 		ctx.editmgr.register(self)
 
 	def destroy(self):
 		del self.node
 		del self.rp
+		del self.editmgr
 
 	def transaction(self):
 		return 1
@@ -1298,7 +1300,7 @@ class SlideShow:
 		if node.GetType() != 'ext' or \
 		   node.GetChannelType() != 'RealPix':
 			# not a RealPix node anymore
-			node.GetContext().editmgr.unregister(self)
+			self.editmgr.unregister(self)
 			collapsenode(node)
 			del node.slideshow
 			self.destroy()
