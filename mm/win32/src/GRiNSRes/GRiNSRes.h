@@ -139,6 +139,7 @@
 #define IDD_EDITATTR_CONV1              372
 #define IDD_EDITATTR_QTPREF             373
 #define IDD_EDITATTR_QTMEDIAPREF        374
+#define IDD_EDITATTR_S1R3S6             375
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
