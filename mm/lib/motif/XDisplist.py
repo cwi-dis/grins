@@ -78,8 +78,8 @@ class _DisplayList:
 				win._gc.SetRegion(win._region)
 				win._pixmap.CopyArea(win._form, win._gc,
 						     x, y, w, h, x, y)
-			if win._transparent == 0:
-				w = win._parent
+			w = win._parent
+			if win._transparent == 0 and w is not None:
 				region = win._getmyarea()
 				while w is not None and w is not toplevel:
 					w._buttonregion.SubtractRegion(
