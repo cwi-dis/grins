@@ -152,20 +152,23 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		csd=self._obj_.PreCreateWindow(csd)
 		cs=win32mu.CreateStruct(csd)
 
-		# sizes
-		if not MDIFrameWnd.wndsize:
+		# Set sizes (balance forces)
+		if not MDIFrameWnd.wndsize or MDIFrameWnd.wndismax:
 			MDIFrameWnd.wndsize=win32mu.Point(((3*scr_width_pxl/4),(3*scr_height_pxl/4)))
 		cs.cx,cs.cy=MDIFrameWnd.wndsize.tuple()
+		cxmax=3*scr_width_pxl/4
+		cymax=3*scr_height_pxl/4
+		if cs.cx>cxmax:cs.cx=cxmax
+		if cs.cy>cymax:cs.cy=cymax
 
-		# initial pos
+		# Set pos (balance forces)
+		# if it is the first then center else leave the system to select
 		if not MDIFrameWnd.wndpos:
 			MDIFrameWnd.wndpos=win32mu.Point((scr_width_pxl/8,scr_height_pxl/8))
-		cs.x,cs.y=MDIFrameWnd.wndpos.tuple()
-
-		# if the user has maximized the window, repect his selection
-		if MDIFrameWnd.wndismax:
+			cs.x,cs.y=MDIFrameWnd.wndpos.tuple()
+		else:
 			cs.x=win32con.CW_USEDEFAULT
-			cs.y=win32con.SW_SHOWMAXIMIZED
+			cs.y=win32con.CW_USEDEFAULT
 
 		# menu from MenuTemplate
 		# hold instance for dynamic menus
