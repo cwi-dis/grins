@@ -13,6 +13,7 @@ from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
 from LayoutChannel import LayoutChannel
+from MidiChannel import MidiChannel
 try:
 	from HtmlChannel import HtmlChannel
 except ImportError:
@@ -35,6 +36,7 @@ channelmap = {
 	'html':		HtmlChannel,
 	'graph':	GraphChannel,
 	'layout':	LayoutChannel,
+	'midi':		MidiChannel,
 	}
 
 channeltypes = ['null', 'text', 'image']
