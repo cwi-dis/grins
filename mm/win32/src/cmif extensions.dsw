@@ -84,10 +84,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name puthon15
+    Project_Dep_Name win32ui
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name win32ui
+    Project_Dep_Name python
     End Project Dependency
 }}}
 
