@@ -770,6 +770,27 @@ sdk_set_window_pos(PyObject *self, PyObject *args)
 	RETURN_NONE;
 }
 
+// @sdkproto     
+// @pymethod |PyWin32Sdk|MoveWindow|Moves the windows
+static PyObject *
+sdk_move_window(PyObject *self, PyObject *args)
+{
+	HWND hWnd;
+	int x,y,cx,cy;
+	BOOL bRepaint = TRUE;
+    // @pyparm int|hWnd||The hwnd to set its position
+	// @pyparm (x,y,cx,cy)|position||The new position of the window.
+	// @pyparm int|bRepaint||Repaint flag
+	if (!PyArg_ParseTuple(args,"i(iiii)|i:MoveWindow",&hWnd,
+		        &x, &y, &cx, &cy, &bRepaint ))
+		return NULL;
+	GUI_BGN_SAVE;
+	// @pyseesdk MoveWindow
+	MoveWindow(hWnd, x, y, cx, cy, bRepaint);
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
+
 // @sdkproto BOOL IntersectRect(LPRECT lprcDst,CONST RECT *lprcSrc1,CONST RECT *lprcSrc2)  
 // @pymethod |PyWin32Sdk|IntersectRect|Calculates the intersection of two source rectangles 
 static PyObject *
@@ -1175,6 +1196,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"EnableWindow",sdk_enable_window,1}, // @pymeth GetDlgItem|enables or disables mouse and keyboard input to the specified window or control
 	{"CreateWindowEx",sdk_create_window_ex,1}, // @pymeth CreateWindowEx|Creates an overlapped, pop-up, or child window with an extended style
 	{"SetWindowPos",sdk_set_window_pos,1}, // @pymeth SetWindowPos|Sets the windows position information.
+	{"MoveWindow",sdk_move_window,1}, // @pymeth MoveWindow|Move window.
 	{"GetWindowRect",sdk_get_window_rect,1}, // @pymeth GetWindowRect|Get the windows rectangle.
 	{"ShowWindow",sdk_show_window,1}, // @pymeth ShowWindow|sets the specified window's show state
 	{"SetClassLong",sdk_set_class_long,1}, // @pymeth SetClassLong|
