@@ -3,6 +3,9 @@ __version__ = "$Id$"
 import win32ui, win32con, afxres
 import commctrl
 
+Sdk = win32ui.GetWin32Sdk()
+
+
 import ListCtrl
 import components
 from win32mu import Win32Msg
@@ -34,6 +37,8 @@ ICONNAME_TO_RESID={
 }
 
 class _AssetsView(GenView.GenView, docview.ListView):
+	CF_URL = Sdk.RegisterClipboardFormat('URL')
+
 	def __init__(self, doc, bgcolor=None):
 		GenView.GenView.__init__(self, bgcolor)
 		docview.ListView.__init__(self, doc)
@@ -150,3 +155,22 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		if not self.listCtrl:
 			return -1
 		return self.listCtrl.getSelected()
+
+	# Called by the listCtrl code when it wants to start
+	# a drag. If the current focus is draggable start the
+	# drag and return 1.
+	def startDrag(self):
+		cursel = self.listCtrl.getSelected()
+		if cursel < 0:
+			return 0
+		cb = self._cmddict.get('startdrag')
+		if not cb:
+			return 0
+		type, value = cb(cursel)
+		if not type:
+			return 0
+		if type == 'URL':
+			self.listCtrl.DoDragDrop(self.CF_URL, value)
+			return 1
+		print 'Unknown assetview dragtype', type
+		return 0
