@@ -26,7 +26,7 @@ class LayoutViewDialog:
 				   ],
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
-		l2 = w2.List('Layout channels', [], (self.__channelcb, ()),
+		l2 = w2.List('Channels in layout', [], (self.__channelcb, ()),
 ## 			     tooltip = 'List of channels in current layout',
 			     top = None, left = None, right = None, bottom = b2)
 		self.__channellist = l2
@@ -34,7 +34,7 @@ class LayoutViewDialog:
 				   ],
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
-		l3 = w3.List('Other channels', [], (self.__othercb, ()),
+		l3 = w3.List('Remaining channels', [], (self.__othercb, ()),
 ## 			     tooltip = 'List of channels not in current layout',
 			     top = None, left = None, right = None, bottom = b3)
 		self.__otherlist = l3
