@@ -1,14 +1,13 @@
 __version__ = "$Id$"
 
-""" @win32doc|components
-The components defined in this module are a sufficient 
-family of light-weight controls (Button,Edit,etc)
-The controls are not based on MFC but on win32 Sdk.
-They are at the same level as MFC is to the Sdk 
-(a fact that justifies the name light weight)
-This is in contrast to all the objects exported by the 
-win32ui pyd which exports inherited objects from MFC objects
-"""
+# @win32doc|components
+# The components defined in this module are a sufficient 
+# family of light-weight controls (Button,Edit,etc)
+# The controls are not based on MFC but on win32 Sdk.
+# They are at the same level as MFC is to the Sdk 
+# (a fact that justifies the name light weight)
+# This is in contrast to all the objects exported by the 
+# win32ui pyd which exports inherited objects from MFC objects
 
 import win32ui, win32con, win32api
 import commctrl
@@ -82,7 +81,7 @@ class LightWeightControl:
 		if not hparent: raise error, 'parent is not a window'
 		self.attach(Sdk.GetDlgItem(hparent,self._id))
 	def init(self):
-		"""called when os wnd exists"""
+		# called when os wnd exists
 		pass
 	def detach(self):
 		hwnd=self._hwnd
