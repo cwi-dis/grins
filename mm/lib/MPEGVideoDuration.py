@@ -2,14 +2,13 @@ __version__ = "$Id$"
 
 # Cache durations of mpeg files
 
-import FileCache
 import MMurl
 import string
 
 VidRateNum = [30., 24., 24., 25., 30., 30., 50., 60.,
 	      60., 15., 30., 30., 30., 30., 30., 30.]
 
-def getduration(filename, bufsiz = 10240):
+def get(filename, bufsiz = 10240):
 	# sanity check
 	if bufsiz < 1024:
 		bufsiz = 1024
@@ -17,7 +16,7 @@ def getduration(filename, bufsiz = 10240):
 	filename = MMurl.urlretrieve(filename)[0]
 	fp = open(filename, 'rb')
 	nframes = 0
-        rate = 0
+	rate = 0
 
 	# for efficiency, cache attribute lookups
 	find = string.find
@@ -39,11 +38,11 @@ def getduration(filename, bufsiz = 10240):
 		elif w == '\263':
 			# SEQ_START_CODE
 			try:
-				rate = ord(data[i+2]) & 0x0F
+				rate = ord(data[i+4]) & 0x0F
 			except IndexError:
 				data = data[i:] + read(bufsiz)
 				i = 0
-				rate = ord(data[i+2]) & 0x0F
+				rate = ord(data[i+4]) & 0x0F
 		elif w == '\267':
 			# SEQ_END_CODE
 			break
@@ -61,7 +60,3 @@ def getduration(filename, bufsiz = 10240):
 		rate = 30.0
 	if nframes == 0: nframes = rate
 	return nframes / rate
-
-duration_cache = FileCache.FileCache(getduration)
-
-get = duration_cache.get

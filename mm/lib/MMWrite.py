@@ -53,7 +53,7 @@ def fixroot(root):
 	root.attrdict['layouts'] = llist
 	ulist = []
 	for name, group in root.context.usergroups.items():
-		ulist.append((name, (group[0], group[1] == 'RENDERED', group[2] == 'allowed')))
+		ulist.append((name, (group[0], group[1] == 'RENDERED', group[2])))
 	root.attrdict['usergroups'] = ulist
 
 def unfixroot(root):

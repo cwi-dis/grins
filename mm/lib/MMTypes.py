@@ -1,7 +1,9 @@
 __version__ = "$Id$"
 
-leaftypes = ['imm', 'ext']
-bagtypes = ['bag']
-interiortypes = ['seq', 'par', 'alt', 'excl'] + bagtypes
-playabletypes = leaftypes + bagtypes
+mediatypes = ['imm', 'ext', 'brush']
+leafcontroltypes = ['prefetch', 'animate']
+leaftypes = mediatypes + leafcontroltypes
+interiortypes = ['seq', 'par', 'switch', 'excl', 'prio']
+playabletypes = leaftypes
+partypes = ['par'] + leaftypes
 alltypes = leaftypes + interiortypes

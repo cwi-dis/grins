@@ -1,175 +1,266 @@
+__version__ = "$Id$"
+
+EVALcomment = ' Created with an evaluation copy of GRiNS '
 SMIL_BASIC = 'text/smil-basic-layout'
-SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
-SMILdtd = "http://www.w3.org/TR/REC-smil/SMIL10.dtd"
-GRiNSns = "http://www.oratrix.com/"
-QTns = "http://www.apple.com/quicktime/resources/smilextensions"
+SMILpubid = '-//W3C//DTD SMIL 1.0//EN'
+SMILdtd = 'http://www.w3.org/TR/REC-smil/SMIL10.dtd'
+SMIL1 = 'http://www.w3.org/TR/REC-smil'
+SMILBostonPubid = '-//W3C//DTD SMIL 2.0//EN'
+SMILBostonDtd = 'http://www.w3.org/2001/SMIL20/WD/SMIL20.dtd'
+SMIL2 = 'http://www.w3.org/2001/SMIL20/WD/'
+# namespaces recognized by GRiNS
+# the first one is the required default namespace, but SMIL1
+# doesn't generate a warning
+SMIL2ns = ['http://www.w3.org/2001/SMIL20/WD/Language',
+	   'http://www.w3.org/2001/SMIL20/WD/',
+	   'http://www.w3.org/2000/SMIL20/CR/Language',
+	   'http://www.w3.org/2000/SMIL20/CR/',
+	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Language',
+	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/',
+	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
+	   'http://www.w3.org/TR/REC-smil/2000/SMIL20',
+	   SMIL1]
+GRiNSns = 'http://www.oratrix.com/'
+QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
+
+# list elements here that are not valid in all namespaces with the
+# namespaces they are valid in
+limited = {
+	# viewport was changed to topLayout after CR
+	'viewport': SMIL2ns[2:],
+	'topLayout': SMIL2ns[:4],
+	}
+
+import string
 
 class SMIL:
 	# some abbreviations
 	__layouts = GRiNSns + ' ' + 'layouts'
 	__layout = GRiNSns + ' ' + 'layout'
-	__choice = GRiNSns + ' ' 'choice'
-	__bag = GRiNSns + ' ' 'bag'
 	__null = GRiNSns + ' ' 'null'
-	__cmif = GRiNSns + ' ' 'cmif'
-	__shell = GRiNSns + ' ' 'shell'
-	__socket = GRiNSns + ' ' 'socket'
-	__user_attributes = GRiNSns + ' ' 'user-attributes'
-	__u_group = GRiNSns + ' ' 'u-group'
+
+	# abbreviations for collections of attributes
+	__Core = {'alt':None,
+		  'class':None,
+		  'id':None,
+		  'longdesc':None,
+		  'title':None,
+		  'xml:base':None,}
+	__I18n = {'xml:lang':None,}
+	__Test = {'system-bitrate':None,
+		  'system-captions':None,
+		  'system-language':None,
+		  'system-overdub-or-caption':None,
+		  'system-required':None,
+		  'system-screen-depth':None,
+		  'system-screen-size':None,
+		  'systemAudioDesc':None,
+		  'systemBitrate':None,
+		  'systemCaptions':None,
+		  'systemComponent':None,
+		  'systemCPU':None,
+		  'systemLanguage':None,
+		  'systemOperatingSystem':None,
+		  'systemOverdubOrSubtitle':None,
+		  'systemRequired':None,
+		  'systemScreenDepth':None,
+		  'systemScreenSize':None,}
+	__basicTiming = {'begin':None,
+			 'dur':None,
+			 'end':None,
+			 'max':None,
+			 'min':None,
+			 'repeat':None,
+			 'repeatCount':None,
+			 'repeatDur':None,
+			 }
+	__Timing = {'fillDefault':None,
+		    'restart':None,
+		    'restartDefault':None,
+		    'syncBehavior':None,
+		    'syncBehaviorDefault':None,
+		    'syncMaster':None,
+		    'syncTolerance':None,
+		    'syncToleranceDefault':None,
+		    }
+	__Timing.update(__basicTiming)
 
 	# all allowed entities with all their attributes
 	attributes = {
-		'smil': {'id':None,
-			QTns+' ' 'time-slider':None,
-			QTns+' ' 'next':None,
-			QTns+' ' 'autoplay':None,
-			QTns+' ' 'chapter-mode':None,
-			QTns+' ' 'immediate-instantiation':None,
-			},
-		'head': {'id':None},
-		'body': {'id':None},
+		'smil': {QTns+' ' 'time-slider':None,
+			 QTns+' ' 'next':None,
+			 QTns+' ' 'autoplay':None,
+			 QTns+' ' 'chapter-mode':None,
+			 QTns+' ' 'immediate-instantiation':None,
+			 },
+		'head': {},
+		'body': {'abstract':'',
+			 'author':'',
+			 'copyright':'',
+			 'fill':None,
+			 __layout:None,
+			 GRiNSns+' ' 'collapsed':None,
+			 GRiNSns+' ' 'comment':None,
+			 },
 		'meta': {'content':None,
-			 'id':None,
-			 'name':None},
-		'layout': {'id':None,
-			   'type':SMIL_BASIC},
+			 'name':None,
+			 'skip-content':'true',
+			 },
+		'metadata': {'skip-content':'true',
+			     },
+		'layout': {'customTest':None,
+			   'type':SMIL_BASIC,
+			   },
+		'root-layout': {'background-color':'transparent',
+				'backgroundColor':None,
+				'customTest':None,
+				'height':'0',
+				'skip-content':'true',
+				'width':'0',
+				GRiNSns+' ' 'collapsed':None,
+				},
+		'topLayout': {'backgroundColor':'transparent',
+			      'customTest':None,
+			      'height':'0',
+			      'skip-content':'true',
+			      'width':'0',
+			      'close':'onRequest',
+			      'open':'onStart',
+			      # edit preferences of new layout view
+			      GRiNSns+' ' 'showEditBackground':None,
+			      GRiNSns+' ' 'editBackground':None,					 
+			      GRiNSns+' ' 'traceImage':None,					 
+			      GRiNSns+' ' 'collapsed':None,
+			      },
 		'region': {'background-color':'transparent',
+			   'backgroundColor':None,
+			   'bottom':None,
+			   'customTest':None,
 			   'fit':'hidden',
-			   'height':'0',
-			   'id':None,
-			   'left':'0',
+			   'height':None,
+			   'left':None,
+##			   'regAlign':None,
+##			   'regPoint':None,
+			   'regionName': None,
+			   'right':None,
+			   'showBackground':None,
 			   'skip-content':'true',
-			   'title':None,
-			   'top':'0',
-			   'width':'0',
+			   'soundLevel':None,
+			   'top':None,
+			   'width':None,
 			   'z-index':'0',
-			   GRiNSns+' ' 'border':None,
-			   GRiNSns+' ' 'bucolor':None,
-			   GRiNSns+' ' 'center':None,
 			   GRiNSns+' ' 'comment':None,
-			   GRiNSns+' ' 'drawbox':None,
 			   GRiNSns+' ' 'duration':None,
 			   GRiNSns+' ' 'fgcolor':None,
 			   GRiNSns+' ' 'file':None,
-			   GRiNSns+' ' 'font':None,
-			   GRiNSns+' ' 'hicolor':None,
-			   GRiNSns+' ' 'pointsize':None,
 			   GRiNSns+' ' 'transparent':None,
 			   GRiNSns+' ' 'type':None,
 			   GRiNSns+' ' 'visible':None,
-			   },
-		'root-layout': {'background-color':'transparent',
-				'height':'0',
-				'id':None,
-				'overflow':'hidden',
-				'skip-content':'true',
-				'title':None,
-				'width':'0'},
-		__layouts: {GRiNSns+' ' 'id':None},
-		__layout: {GRiNSns+' ' 'id':None,
-##			   GRiNSns+' ' 'title':None,
-			   GRiNSns+' ' 'regions':None},
+			   GRiNSns+' ' 'collapsed':None,
+
+				# edit preferences of new layout view
+				GRiNSns+' ' 'showEditBackground':None,
+				GRiNSns+' ' 'editBackground':None,
+			},
+		'regPoint': {'bottom':None,
+			     'customTest':None,
+			     'left':None,
+			     'regAlign':None,
+			     'right':None,
+			     'skip-content':'true',
+			     'top':None,
+			     },
+		__layouts: {},
+		__layout: {GRiNSns+' ' 'regions':None},
 		'par': {'abstract':'',
 			'author':'',
-			'begin':None,
 			'copyright':'',
-			'dur':None,
-			'end':None,
+			'customTest':None,
 			'endsync':None,
-			'id':None,
+			'fill':None,
 			'region':None,
-			'repeat':'1',
-			'system-bitrate':None,
-			'system-captions':None,
-			'system-language':None,
-			'system-overdub-or-caption':None,
-			'system-required':None,
-			'system-screen-depth':None,
-			'system-screen-size':None,
-			'title':None,
-			__u_group:None,
 			__layout:None,
+			GRiNSns+' ' 'collapsed':None,
 			GRiNSns+' ' 'comment':None,
 			},
 		'seq': {'abstract':'',
 			'author':'',
-			'begin':None,
 			'copyright':'',
-			'dur':None,
-			'end':None,
-			'id':None,
-			'repeat':'1',
-			'system-bitrate':None,
-			'system-captions':None,
-			'system-language':None,
-			'system-overdub-or-caption':None,
-			'system-required':None,
-			'system-screen-depth':None,
-			'system-screen-size':None,
-			'title':None,
-			__u_group:None,
+			'customTest':None,
+			'fill':None,
+			'region':None,
 			__layout:None,
+			GRiNSns+' ' 'collapsed':None,
 			GRiNSns+' ' 'comment':None,
+			GRiNSns+' ' 'project_default_region':None,
+			GRiNSns+' ' 'project_default_type':None,
+			GRiNSns+' ' 'project_bandwidth_fraction':None,
+			GRiNSns+' ' 'project_readonly':None,
 			},
-		'switch': {'id':None,
-			   'system-bitrate':None,
-			   'system-captions':None,
-			   'system-language':None,
-			   'system-overdub-or-caption':None,
-
-			   'system-required':None,
-			   'system-screen-depth':None,
-			   'system-screen-size':None,
-			   __u_group:None,
-			   __layout:None},
-		__choice: {GRiNSns+' ' 'abstract':'',
-			   GRiNSns+' ' 'author':'',
-			   GRiNSns+' ' 'choice-index':None,
-			   GRiNSns+' ' 'copyright':'',
-			   GRiNSns+' ' 'id':None,
-			   GRiNSns+' ' 'system-bitrate':None,
-			   GRiNSns+' ' 'system-captions':None,
-			   GRiNSns+' ' 'system-language':None,
-			   GRiNSns+' ' 'system-overdub-or-caption':None,
-			   GRiNSns+' ' 'system-required':None,
-			   GRiNSns+' ' 'system-screen-depth':None,
-			   GRiNSns+' ' 'system-screen-size':None,
-			   GRiNSns+' ' 'title':None,
-			   __u_group:None,
+		'switch': {'customTest':None,
 			   __layout:None,
-			   GRiNSns+' ' 'comment':None,
+			   GRiNSns+' ' 'collapsed':None,
 			   },
+		'excl': {'abstract':'',
+			 'author':'',
+			 'copyright':'',
+			 'customTest':None,
+			 'endsync':None,
+			 'fill':None,
+			 'region':None,
+			 'skip-content':'true',
+			 __layout:None,
+			 GRiNSns+' ' 'collapsed':None,
+			 GRiNSns+' ' 'comment':None,
+			 },
+		'priorityClass': {'abstract':'',
+				  'author':'',
+				  'copyright':'',
+				  'customTest':None,
+				  'higher':'pause',
+				  'lower':'defer',
+				  'pauseDisplay':None,
+				  'peers':'stop',
+				  'skip-content':'true',
+				  GRiNSns+' ' 'collapsed':None,
+				  },
 		'ref': {'abstract':'',
-			'alt':None,
 			'author':'',
-			'begin':None,
 			'clip-begin':None,
 			'clip-end':None,
+			'clipBegin':None,
+			'clipEnd':None,
 			'copyright':'',
-			'dur':None,
-			'end':None,
+			'customTest':None,
+			'endsync':None,
+			'erase':None,
 			'fill':None,
-			'id':None,
-			'longdesc':None,
+			'mediaRepeat':None,
+			'readIndex':None,
 			'region':None,
-			'repeat':'1',
+			'sensitivity':None,
 			'src':None,
-			'system-bitrate':None,
-			'system-captions':None,
-			'system-language':None,
-			'system-overdub-or-caption':None,
-			'system-required':None,
-			'system-screen-depth':None,
-			'system-screen-size':None,
-			'title':None,
+			'tabindex':None,
+			'transIn':None,
+			'transOut':None,
 			'type':None,
-			__u_group:None,
+			# subregion positioning attributes
+			'bottom':None,
+			'height':None,
+			'left':None,
+			'right':None,
+			'top':None,
+			'width':None,
+			'z-index':None,
+			'fit':None,
+			# registration point
+			'regPoint':None,
+			'regAlign':None,
+
+			'backgroundColor':None,
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
 			GRiNSns+' ' 'comment':None,
-			GRiNSns+' ' 'font':None,
-			GRiNSns+' ' 'hicolor':None,
-			GRiNSns+' ' 'pointsize':None,
 			GRiNSns+' ' 'scale':None,
 			GRiNSns+' ' 'captionchannel':None,
 			GRiNSns+' ' 'project_audiotype':None,
@@ -179,91 +270,417 @@ class SMIL:
 			GRiNSns+' ' 'project_quality':None,
 			GRiNSns+' ' 'project_targets':None,
 			GRiNSns+' ' 'project_videotype':None,
-			QTns+' ' 'immediate-instantiation':None,			
-			QTns+' ' 'bitrate':None,			
-			QTns+' ' 'system-mime-type-supported':None,			
-			QTns+' ' 'attach-timebase':None,			
-			QTns+' ' 'chapter':None,			
-			QTns+' ' 'composite-mode':None,			
+			QTns+' ' 'immediate-instantiation':None,
+			QTns+' ' 'bitrate':None,
+			QTns+' ' 'system-mime-type-supported':None,
+			QTns+' ' 'attach-timebase':None,
+			QTns+' ' 'chapter':None,
+			QTns+' ' 'composite-mode':None,
 			},
-		'a': {'href':None,
-		      'id':None,
+		'brush': {'abstract':'',
+			  'author':'',
+			  'color':None,
+			  'copyright':'',
+			  'customTest':None,
+			  'endsync':None,
+			  'erase':None,
+			  'fill':None,
+			  'readIndex':None,
+			  'region':None,
+			  'sensitivity':None,
+			  'skip-content':'true',
+			  'tabindex':None,
+			  'transIn':None,
+			  'transOut':None,
+			  # subregion positioning attributes
+			  'bottom':None,
+			  'height':None,
+			  'left':None,
+			  'right':None,
+			  'top':None,
+			  'width':None,
+			  'z-index':None,
+			  'fit':None,
+			  # registration point
+			  'regPoint':None,
+			  'regAlign':None,
+
+			  'backgroundColor':None,
+			  __layout:None,
+			  GRiNSns+' ' 'bgcolor':None,
+			  GRiNSns+' ' 'comment':None,
+			  QTns+' ' 'immediate-instantiation':None,
+			  QTns+' ' 'bitrate':None,
+			  QTns+' ' 'system-mime-type-supported':None,
+			  QTns+' ' 'attach-timebase':None,
+			  QTns+' ' 'chapter':None,
+			  QTns+' ' 'composite-mode':None,
+			  },
+		'param': {'customTest':None,
+			  'name':None,
+			  'skip-content':'true',
+			  'type':None,
+			  'value':None,
+			  'valuetype':None,
+			  },
+		'a': {'accesskey':None,
+		      'actuate':None,
+		      'customTest':None,
+		      'destinationLevel':None,
+		      'destinationPlaystate':None,
+		      'external':None,
+		      'href':None,
 		      'show':'replace',
-		      'title':None},
-		'anchor': {'begin':None,
-			   'coords':None,
-			   'end':None,
-			   'href':None,
-			   'id':None,
-			   'show':'replace',
-			   'skip-content':'true',
-			   'title':None,
-			   GRiNSns+' ' 'fragment-id':None},
-		__user_attributes: {GRiNSns+' ' 'id':None,
-				    },
-		__u_group: {GRiNSns+' ' 'id':None,
-			    GRiNSns+' ' 'u-state':'RENDERED',
-			    GRiNSns+' ' 'title':None,
-			    GRiNSns+' ' 'override':'allowed',
-			    },
+		      'sourceLevel':None,
+		      'sourcePlaystate':None,
+		      'tabindex':None,
+		      'target':None,
+		      },
+		'area': {'accesskey':None,
+			 'actuate':None,
+			 'coords':None,
+			 'customTest':None,
+			 'destinationLevel':None,
+			 'destinationPlaystate':None,
+			 'external':None,
+			 'fragment':None,
+			 'href':None,
+			 'nohref':None,
+			 'shape':None,
+			 'show':'replace',
+			 'skip-content':'true',
+			 'sourceLevel':None,
+			 'sourcePlaystate':None,
+			 'tabindex':None,
+			 'target':None,
+			 },
+		'customAttributes': {'skip-content':'true',
+				     },
+		'customTest': {'defaultState':'false',
+			       'override':'hidden',
+			       'skip-content':'true',
+			       'uid':None,
+			       },
+		'transition':{'type':None,
+			      'subtype':None,
+			      'dur':'1s',
+			      'startProgress':'0.0',
+			      'endProgress':'1.0',
+			      'direction':'forward',
+			      'fadeColor':None,
+			      'horzRepeat':'1',
+			      'vertRepeat':'1',
+			      'borderWidth':'0',
+			      'borderColor':None,
+##			      'coordinated':'false',
+##			      'clipBoundary':'children',
+			      'skip-content':'true',
+			      'customTest':None,
+			      },
+		'prefetch': {'bandwidth':'100%',
+			     'clip-begin':None,
+			     'clip-end':None,
+			     'clipBegin':None,
+			     'clipEnd':None,
+			     'customTest':None,
+			     'mediaSize':'100%',
+			     'mediaTime':'100%',
+			     'skip-content':'true',
+			     'src':None,
+			     },
 		}
-	attributes[__bag] = attributes[__choice]
+
+	attributes['viewport'] = attributes['topLayout'].copy()
+	attributes['anchor'] = attributes['area'].copy()
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
-			  'textstream', 'ref', __null, __cmif, __shell,
-			  __socket]
+			  'textstream', 'ref', 'brush',
+			  'prefetch',
+			  __null]
 
 	__at = None
 	for __el in __media_object:
-		if ' ' in __el:
+		if attributes.has_key(__el):
+			continue
+		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
 			attributes[__el] = __at = {}
-			for key, val in attributes['ref'].items():
-				if ' ' in key:
-					__at[key] = val
+			for __key, __val in attributes['ref'].items():
+				if ' ' in __key:
+					__at[__key] = __val
+					__at[GRiNSns+' '+string.split(__key,' ')[1]] = __val
 				else:
-					__at[GRiNSns+' '+key] = val
+					__at[GRiNSns+' '+__key] = __val
 		else:
 			attributes[__el] = attributes['ref']
-	del __el, __at
 
-	__schedule = ['par', 'seq', __choice, __bag] + __media_object
-	__container_content = __schedule + ['switch', 'a']
-	__assoc_link = ['anchor']
-	__empty = []
+	__animate_elements = ['animate', 'animateMotion',
+			      'animateColor', 'set']
+	__animate_attrs_core = {'attributeName':None,
+				'attributeType':None,
+				'customTest':None,
+				'fill':None,
+				'fillDefault':None,
+				'skip-content':None,
+				'targetElement': None,
+				'to':None,
+				}
+	__animate_attrs_extra = {'accumulate':'none',
+				 'additive':'replace',
+				 'by':None,
+				 'calcMode':None,
+				 'from':None,
+				 'values':None,
+				 }
+	__timeManipulations = {'speed':'1',
+		    'accelerate':'0',
+		    'decelerate':'0',
+		    'autoReverse': 'false',
+		    }
+
+	__transitionFilter_transition = {'type':None,
+			      'subtype':None,
+				  'mode':'in',
+			      'fadeColor':None,
+				}
+	__transitionModifiers = {'horzRepeat':'1',
+			      'vertRepeat':'1',
+			      'borderWidth':'0',
+			      'borderColor':None,
+				  }
+
+	from settings import profileExtensions
+	
+	if profileExtensions.get('SplineAnimation'):
+		__animate_attrs_extra['keySplines'] = None
+		__animate_attrs_extra['keyTimes'] = None
+
+	attributes['animateMotion'] = __animate_attrs_core.copy()
+	attributes['animateMotion'].update(__animate_attrs_extra)
+	attributes['animateMotion']['calcMode'] = 'paced'
+	if profileExtensions.get('SplineAnimation'):
+		attributes['animateMotion']['path'] = None
+	attributes['animateMotion']['origin'] = None
+
+	attributes['animate'] = __animate_attrs_core.copy()
+	attributes['animate'].update(__animate_attrs_extra)
+
+	attributes['animateColor'] = __animate_attrs_core.copy()
+	attributes['animateColor'].update(__animate_attrs_extra)
+
+	attributes['set'] = __animate_attrs_core.copy()
+
+	if profileExtensions.get('InlineTransitions'):
+		__animate_elements.append('transitionFilter')
+		attributes['transitionFilter'] = __animate_attrs_core.copy()
+		attributes['transitionFilter'].update(__animate_attrs_extra)
+		attributes['transitionFilter'].update(__transitionFilter_transition)
+		attributes['transitionFilter'].update(__transitionModifiers)
+		del attributes['transitionFilter']['attributeName']
+		del attributes['transitionFilter']['attributeType']
+
+	del __animate_attrs_core, __animate_attrs_extra
+
+	if profileExtensions.get('TimeManipulations'):
+		# add TimeManipulations to certain elements
+		for __el in __animate_elements:
+			attributes[__el].update(__timeManipulations)
+
+	# Abbreviations for collections of elements
+	__Schedule = ['par', 'seq', 'excl']
+	__MediaContent = ['text', 'img', 'audio', 'video', 'ref', 'animation', 'textstream', 'brush', 'param']
+	__ContentControl = ['switch', 'prefetch']
+	__LinkAnchor = ['a', 'area', 'anchor']
+	__Animation = ['animate', 'set', 'animateMotion', 'animateColor']
+	if profileExtensions.get('InlineTransitions'):__Animation.append('transitionFilter')
+
+	__schedule = ['par', 'seq', 'excl'] + __media_object
+	__container_content = __schedule + ['switch', 'a'] + __animate_elements
+	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
+
+	# Core, Test and I18n attribs are added to all elements in the language
+	for __el in attributes.keys():
+		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
+			for __key, __val in __Core.items() + __Test.items():
+				if ' ' in __key:
+					attributes[__el][__key] = __val
+					attributes[__el][GRiNSns+' '+string.split(__key,' ')[1]] = __val
+				else:
+					attributes[__el][GRiNSns+' '+__key] = __val
+		else:
+			attributes[__el].update(__Core)
+			if __el not in ('head', 'meta', 'metadata',
+					'body', 'customTest'):
+				attributes[__el].update(__Test)
+		attributes[__el].update(__I18n)
+
+	# add basicTiming to certain elements
+	for __el in ('a', 'animate', 'set',
+		     'animateMotion', 'animateColor',
+		     'area', 'anchor', 'transition',
+		     ):
+		attributes[__el].update(__basicTiming)
+	if profileExtensions.get('InlineTransitions'):
+		attributes['transitionFilter'].update(__basicTiming)
+
+	# add Timing to certain other elements
+	for __el in ('text', 'img', 'audio', 'animation', 'video', 'ref',
+		     'textstream', 'brush', 'body', 'par', 'seq',
+		     'excl', 'prefetch'):
+		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
+			for __key, __val in __Timing.items():
+				if ' ' in __key:
+					attributes[__el][__key] = __val
+					attributes[__el][GRiNSns+' '+string.split(__key,' ')[1]] = __val
+				else:
+					attributes[__el][GRiNSns+' '+__key] = __val
+		else:
+			attributes[__el].update(__Timing)
+
+	# fix up SMIL 2.0 namespace
+	for __el, __atd in attributes.items():
+		if ' ' not in __el and ':' not in __el:
+			# SMIL 1.0 element, make a SMIL 2.0 copy
+			__atd = __atd.copy()
+			for __ns in SMIL2ns:
+				attributes[__ns+' '+__el] = __atd
+			for __at, __vl in __atd.items():
+				if ' ' not in __at and ':' not in __at:
+					for __ns in SMIL2ns:
+						__atd[__ns+' '+__at] = __vl
+##					del __atd[__at]
+					if __at in ('path','keySplines','keyTimes'):
+						__atd[SMIL2 + 'SplineAnimation'+' '+__at] = __vl
+	del __el, __atd, __at, __vl, __key, __val, __ns
 
 	# all entities with their allowed content
+	# no allowed content is default, so we don't specify empty ones here
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta', __user_attributes, __layouts],
-		__user_attributes: [__u_group,],
-		__u_group: __empty,
-		'layout': ['region', 'root-layout'],
-		'region': __empty,
-		'meta': __empty,
+		'head': ['layout', 'switch', 'meta', 'metadata',
+			 'customAttributes', __layouts, 'transition'],
+		'customAttributes': ['customTest'],
+		'layout': ['region', 'root-layout', 'topLayout', 'viewport', 'regPoint', 'switch'],
+		'topLayout': ['region', 'switch'],
+		'region': ['region', 'switch'],
+		'transition': ['param'],
 		__layouts: [__layout],
 		'body': __container_content,
 		'par': __container_content,
 		'seq': __container_content,
-		__choice: __container_content,
-		__bag: __container_content,
-		'switch': ['layout'] + __container_content,
-		'ref': __assoc_link,
-		'audio': __assoc_link,
-		'img': __assoc_link,
-		'video': __assoc_link,
-		'text': __assoc_link,
-		'animation': __assoc_link,
-		'textstream': __assoc_link,
-		__null: __assoc_link,
-		__cmif: __assoc_link,
-		__shell: __assoc_link,
-		__socket: __assoc_link,
+		'excl': __container_content + ['priorityClass'],
+		'priorityClass': __container_content,
+		'switch': ['layout', 'region', 'topLayout', 'viewport'] + __container_content,
+		'ref': __media_content,
+		'audio': __media_content,
+		'img': __media_content,
+		'video': __media_content,
+		'text': __media_content,
+		'animation': __media_content,
+		'textstream': __media_content,
+		'brush': __media_content,
+		__null: __media_content,
 		'a': __schedule + ['switch'],
-		'anchor': __empty,
+
+##		'switch': __Schedule + __MediaContent + __ContentControl + __LinkAnchor + __Animation + ['priorityClass','layout'],
+##		'customAttributes': ['customTest'],
+##		'region': ['region'],
+##		'topLayout': ['region'],
+##		'layout': ['root-layout', 'region', 'topLayout', 'viewport', 'regPoint'],
+##		'a': __Schedule + __MediaContent + __ContentControl + __Animation,
+##		'area': ['animate', 'set'],
+##		'anchor': ['animate', 'set'],
+##		'text': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'img': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'audio': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'animation': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'video': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'ref': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'textstream': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'brush': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'smil': ['head', 'body'],
+##		'head': ['meta', 'customAttributes', 'metadata', 'layout', 'switch', 'transition'],
+##		'body': __Schedule + __MediaContent + __ContentControl + ['a'],
+##		'par': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation,
+##		'seq': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation,
+##		'excl': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation + ['priorityClass'],
+##		'priorityClass': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation,
 		}
+	entities['viewport'] = entities['topLayout'][:]
 
 	# cleanup
-	del __choice, __bag, __cmif, __shell, __socket, __user_attributes
-	del __u_group, __media_object, __schedule, __container_content,
-	del __assoc_link, __empty
+	del __null
+	del __media_object, __schedule, __container_content,
+	del __media_content
 	del __layouts, __layout
+	del __animate_elements
+	del __I18n, __basicTiming, __Timing, __Core, __Test
+
+_modules = {
+	# SMIL 2.0 Modules
+	'AccessKeyTiming': 1,
+	'AudioLayout': 1,
+	'BasicAnimation': 1,
+	'BasicContentControl': 1,
+	'BasicInlineTiming': 1,
+	'BasicLayout': 1,
+	'BasicLinking': 1,
+	'BasicMedia': 1,
+	'BasicTimeContainers': 1,
+	'BasicTransistions': 1,
+	'BrushMedia': 1,
+##	'CoordinatedTransitions': 1,
+	'CustomTestAttributes': 1,
+	'EventTiming': 1,
+	'ExclTimeContainers': 1,
+	'FillDefault': 1,
+	'HierarchicalLayout': 1,
+	'InlineTransitions': 1,
+	'LinkingAttributes': 1,
+	'MediaAccessibility': 1,
+	'MediaClipMarkers': 0,
+	'MediaClipping': 1,
+	'MediaDescriptions': 1,
+	'MediaMarkerTiming': 0,
+	'MediaParam': 1,
+	'Metainformation': 1,
+	'MinMaxTiming': 1,
+	'MultiArcTiming': 1,
+	'MultiWindowLayout': 1,
+	'ObjectLinking': 1,
+	'PrefetchControl': 1,
+	'PrevTiming': 1,
+	'RepeatTiming': 1,
+	'RestartDefault': 1,
+	'RestartTiming': 1,
+	'SkipContentControl': 1,
+	'SplineAnimation': 1,
+	'Structure': 1,
+	'SyncbaseTiming': 1,
+	'SyncBehavior': 1,
+	'SyncBehaviorDefault': 1,
+	'SyncMaster': 0,
+	'TimeContainerAttributes': 0,
+	'TimeManipulations': 1,
+	'TransitionModifiers': 1,
+	'WallclockTiming': 1,
+
+	# SMIL 2.0 Psuedo Modules
+	'NestedTimeContainers': 1,
+	'DeprecatedFeatures': 1,
+
+	# SMIL 2.0 Module Collections
+	'Language': 1,
+	'HostLanguage': 1,
+	'IntegrationSet': 1,
+}
+
+extensions = {
+	# SMIL 1.0
+	'http://www.w3.org/TR/REC-smil/': 1,
+}
+
+for _k, _v in _modules.items():
+	extensions[SMIL2 + _k] = _v
+	extensions['http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/' + _k] = _v
+	extensions['http://www.w3.org/2000/SMIL20/CR/' + _k] = _v
+del _k, _v, _modules

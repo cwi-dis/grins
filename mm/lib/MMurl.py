@@ -1,36 +1,9 @@
 __version__ = "$Id$"
 
+import string
 from urllib import *
-import os
-if os.name == 'mac':
-	import ic
-	import macfs
-	try:
-		_mac_icinstance = ic.IC()
-	except:
-		_mac_icinstance = None
-	
-	def _mac_setcreatortype(filename):
-		if not _mac_icinstance:
-			return
-		try:
-			# Get current creator/type of the file
-			fss = macfs.FSSpec(filename)
-			cr, tp = fss.GetCreatorType()
-			# Check whether actual type matches expected type.
-			# XXXX Note: the mapping here is done on filename extension.
-			# it would be better to do it on the basis of the mimetype, but
-			# IC doesn't have that interface.
-			descr = _mac_icinstance.mapfile(filename)
-			wtd_tp = descr[1]
-			wtd_cr = descr[2]
-			if tp == wtd_tp:
-				return
-			# They're different. Try setting it correctly.
-			fss.SetCreatorType(wtd_cr, wtd_tp)
-		except:
-			# Any errors are ignored.
-			pass
+# Grr, 2.1 __all__ compatibility:
+from urllib import unwrap, pathname2url, url2pathname, splittype, splithost, splitquery, splitattr
 
 _OriginalFancyURLopener = FancyURLopener
 
@@ -40,17 +13,15 @@ class FancyURLopener(_OriginalFancyURLopener):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
 
+		# prefetch support
+		self.__prefetchcache = {}
+		self.__prefetchtempfiles = {}
+
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
 		void = fp.read()
 		fp.close()
 		raise IOError, (errcode, 'http error: ' + errmsg, headers)
 
-	def retrieve(self, url, filename=None, reporthook=None):
-		filename, headers = _OriginalFancyURLopener.retrieve(self, url, filename, reporthook)
-		if os.name == 'mac':
-			_mac_setcreatortype(filename)
-		return filename, headers
-    			
 	def http_error_302(self, url, fp, errcode, errmsg, headers):
 		# XXX The server can force infinite recursion here!
 		if headers.has_key('location'):
@@ -130,6 +101,137 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def do_return(self):
 		raise _end_loop
 
+	def open_local_file(self, url):
+		import urlparse
+		scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+		url = urlparse.urlunparse((scheme, netloc, url, '', '', ''))
+		return _OriginalFancyURLopener.open_local_file(self, url)
+	#
+	# Prefetch section
+	#
+	# override retrieve for prefetch implementation
+	def retrieve(self, url, filename=None, reporthook=None):
+		"""retrieve(url) returns (filename, None) for a local object
+		or (tempfilename, headers) for a remote object."""
+		url = unwrap(url)
+		import urlparse
+		scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+		if not scheme or scheme == 'file':
+			i = string.find(path, '?')
+			if i > 0:
+				path = path[:i]
+			url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
+		if self.__prefetchcache.has_key(url):
+			# complete prefetch first
+			#print 'completing prefetch'
+			self.__fin_retrieve(url)
+		if self.__prefetchtempfiles.has_key(url):
+			#print 'retrieving prefetched',self.__prefetchtempfiles[url]
+			return self.__prefetchtempfiles[url]
+		return _OriginalFancyURLopener.retrieve(self, url, filename, reporthook)
+
+	# override cleanup for prefetch implementation
+	def cleanup(self):
+		# first close open streams
+		for fp, tfp in self.__prefetchcache.values():
+			fp.close()
+			tfp.close()
+		self.__prefetchcache = {}
+
+		# unlink temp files
+		for file, header in self.__prefetchtempfiles.values():
+			try:
+				os.unlink(file)
+			except:
+				pass
+		self.__prefetchtempfiles = {}
+
+		# call original cleanup
+		_OriginalFancyURLopener.cleanup(self)
+	
+	# open stream to url and read headers but not data yet
+	# see retrieve for signature
+	def begin_retrieve(self, url, filename=None, reporthook=None):
+		url = unwrap(url)
+		self.__clean_retrieve(url)
+		type, url1 = splittype(url)
+		if not filename and (not type or type == 'file'):
+			try:
+				fp = self.open_local_file(url1)
+				hdrs = fp.info()
+				del fp
+				return url2pathname(splithost(url1)[1]), hdrs
+			except IOError, msg:
+				pass
+		fp = self.open(url)
+		headers = fp.info()
+		if not filename:
+			import tempfile
+			garbage, path = splittype(url)
+			garbage, path = splithost(path or "")
+			path, garbage = splitquery(path or "")
+			path, garbage = splitattr(path or "")
+			suffix = os.path.splitext(path)[1]
+			filename = tempfile.mktemp(suffix)
+			self.__prefetchtempfiles[url] = filename, headers
+		tfp = open(filename, 'wb')
+		self.__prefetchcache[url] = fp, tfp
+		return filename, headers
+	
+	# retrieve a block of length bs from already open stream to url
+	def do_retrieve(self, url, bs):
+		if not self.__prefetchcache.has_key(url):
+			return None
+		fp, tfp = self.__prefetchcache[url]
+		block = fp.read(bs)
+		if block:
+			tfp.write(block)
+		return block!=None
+
+	# prefetch completed
+	def end_retrieve(self, url):
+		if not self.__prefetchcache.has_key(url):
+			return
+		fp, tfp = self.__prefetchcache[url]
+		fp.close()
+		tfp.close()
+		del self.__prefetchcache[url]
+
+	# retrieve rest of resource
+	def __fin_retrieve(self, url):
+		if not self.__prefetchcache.has_key(url):
+			return None
+		fp, tfp = self.__prefetchcache[url]
+		del self.__prefetchcache[url]
+		bs = 1024*8
+		block = fp.read(bs)
+		while block:
+			tfp.write(block)
+			block = fp.read(bs)
+		fp.close()
+		tfp.close()
+
+	# clean any refs and resources for url
+	def __clean_retrieve(self, url):
+		if self.__prefetchcache.has_key(url):
+			fp, tfp = self.__prefetchcache[url]
+			fp.close()
+			tfp.close()		
+			del self.__prefetchcache[url]
+		if self.__prefetchtempfiles.has_key(url):
+			file, hdr = self.__prefetchtempfiles[url]
+			try:
+				os.unlink(file)
+			except:
+				pass
+			del self.__prefetchtempfiles[url]
+
+	def _retrieved(self, url):
+		if self.tempcache.has_key(url):
+			return 1
+		return self.__prefetchtempfiles.has_key(url) and \
+			not self.__prefetchcache.has_key(url)
+
 _urlopener = None
 def urlopen(url, data=None):
 	global _urlopener
@@ -150,6 +252,16 @@ def urlretrieve(url, filename=None):
 def urlcleanup():
 	if _urlopener:
 		_urlopener.cleanup()
+def geturlopener():
+	global _urlopener
+	if not _urlopener:
+		_urlopener = FancyURLopener()
+	return _urlopener
+def urlretrieved(url):
+	global _urlopener
+	if not _urlopener:
+		_urlopener = FancyURLopener()
+	return _urlopener._retrieved(url)
 
 import urlparse
 basejoin = urlparse.urljoin # urljoin works better...
