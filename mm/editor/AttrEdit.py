@@ -1334,7 +1334,7 @@ class Language3AttrEditorField(LanguageAttrEditorField):
 		return [self.default] + options
 
 class BitrateAttrEditorField(PopupAttrEditorField):
-	__values = [14400, 19200, 28800, 33600, 56000, 56*1024, 112*1024, 256*1024, 300*1024, 512*1024, 2*1024*1024, 10*1024*1024]
+	__values = [14400, 19200, 28800, 33600, 34400, 57600, 115200, 262200, 307200, 524300, 1544000, 10485800]
 	__strings = ['14.4K Modem', '19.2K Connection', '28.8K Modem', '33.6K Modem', '56K Modem', '56K Single ISDN', '112K Dual ISDN', '256Kbps DSL/Cable', '300Kbps DSL/Cable', '512Kbps DSL/Cable', 'T1 / LAN', '10Mbps LAN']
 	default = 'Not set'
 
