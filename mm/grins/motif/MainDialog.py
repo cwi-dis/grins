@@ -75,7 +75,11 @@ class MainDialog:
 			if not type or type == 'file':
 				import os
 				dir, file = os.path.split(MMurl.url2pathname(MMurl.splithost(rest)[1]))
-		windowinterface.FileDialog('Open file', dir, '*.smil', file,
+		filetypes = ['application/x-grins-project', 'application/smil']
+		import settings
+		if not settings.get('lightweight'):
+			filetypes.append('application/x-grins-cmif')
+		windowinterface.FileDialog('Open file', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = self.__owindow)
 
