@@ -73,9 +73,9 @@ mm_armer(arg)
 	denter(mm_armer);
 
 	for (;;) {
-		(void) down_sema(self->mm_armsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_armsema, WAIT_SEMA);
 
-		(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 		if (self->mm_flags & EXIT) {
 			/* we must tell them that we finished arming, */
 			/* even if we didn't do a thing */
@@ -83,17 +83,17 @@ mm_armer(arg)
 				my_qenter(self->mm_ev, ARMDONE);
 			break;
 		}
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 
 		(*self->mm_chanobj->chan_funcs->armer)(self);
 
-		(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 		self->mm_flags &= ~(ARMING|STOPARM);
 		self->mm_flags |= ARMED;
 		if (self->mm_flags & SYNCARM) {
 			dprintf(("mm_armer(%lx): done synchronous arm\n",
 				 (long) self));
-			up_sema(self->mm_armwaitsema);
+			PyThread_up_sema(self->mm_armwaitsema);
 		} else {
 			dprintf(("mm_armer(%lx): qenter(self->mm_ev, ARMDONE);\n",
 				 (long) self));
@@ -103,11 +103,11 @@ mm_armer(arg)
 		if (self->mm_flags & EXIT)
 			break;
 #endif
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 	}
-	up_sema(self->mm_flagsema);
-	up_sema(self->mm_exitsema);
-	exit_thread();
+	PyThread_up_sema(self->mm_flagsema);
+	PyThread_up_sema(self->mm_exitsema);
+	PyThread_exit_thread();
 	/*NOTREACHED*/
 }
 
@@ -120,9 +120,9 @@ mm_player(arg)
 	denter(mm_player);
 
 	for (;;) {
-		(void) down_sema(self->mm_playsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_playsema, WAIT_SEMA);
 
-		(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 		if (self->mm_flags & EXIT) {
 			/* we must tell them that we finished playing, */
 			/* even if we didn't do a thing */
@@ -130,11 +130,11 @@ mm_player(arg)
 				my_qenter(self->mm_ev, PLAYDONE);
 			break;
 		}
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 
 		(*self->mm_chanobj->chan_funcs->player)(self);
 
-		(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 		self->mm_flags &= ~(PLAYING|STOPPLAY);
 		dprintf(("mm_player(%lx): qenter(self->mm_ev, PLAYDONE);\n",
 			 (long) self));
@@ -143,11 +143,11 @@ mm_player(arg)
 		if (self->mm_flags & EXIT)
 			break;
 #endif
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 	}
-	up_sema(self->mm_flagsema);
-	up_sema(self->mm_exitsema);
-	exit_thread();
+	PyThread_up_sema(self->mm_flagsema);
+	PyThread_up_sema(self->mm_exitsema);
+	PyThread_exit_thread();
 	/*NOTREACHED*/
 }
 
@@ -201,9 +201,9 @@ mm_arm(self, args)
 	if (!PyArg_ParseTuple(args, "OiiOO|i", &file, &delay, &duration,
 			      &attrdict, &anchorlist, &syncarm))
 		return NULL;
-	(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 	if (self->mm_flags & ARMING) {
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		PyErr_SetString(MmError, "already arming");
 		return NULL;
 	}
@@ -213,17 +213,17 @@ mm_arm(self, args)
 		self->mm_flags |= SYNCARM;
 	else
 		self->mm_flags &= ~SYNCARM;
-	up_sema(self->mm_flagsema);
+	PyThread_up_sema(self->mm_flagsema);
 	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration,
 						  attrdict, anchorlist)) {
-		(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 		self->mm_flags &= ~ARMING;
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		return NULL;
 	}
-	up_sema(self->mm_armsema);
+	PyThread_up_sema(self->mm_armsema);
 	if (syncarm)
-		(void) down_sema(self->mm_armwaitsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_armwaitsema, WAIT_SEMA);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -244,28 +244,28 @@ mm_play(self, args)
 	denter(mm_play);
 	if (!PyArg_NoArgs(args))
 		return NULL;
-	(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 	if (self->mm_flags & PLAYING) {
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		PyErr_SetString(MmError, "already playing");
 		return NULL;
 	}
 	if (!(self->mm_flags & ARMED)) {
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		dprintf(("mm_play(%lx): node not armed\n", (long) self));
 		PyErr_SetString(MmError, "not armed");
 		return NULL;
 	}
 	self->mm_flags |= PLAYING;
 	self->mm_flags &= ~ARMED;
-	up_sema(self->mm_flagsema);
+	PyThread_up_sema(self->mm_flagsema);
 	if (!(*self->mm_chanobj->chan_funcs->play)(self)) {
-		(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 		self->mm_flags &= ~PLAYING;
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		return NULL;
 	}
-	up_sema(self->mm_playsema);
+	PyThread_up_sema(self->mm_playsema);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -287,21 +287,21 @@ do_stop(self, args, busyflag, stopflag, func)
 	if (args && !PyArg_NoArgs(args))
 		return NULL;
 
-	(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 	if (self->mm_flags & busyflag) {
 		self->mm_flags |= stopflag;
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		if (!(*func)(self))
 			return NULL;
 		/*DEBUG: wait until player has actually stopped */
 		for (;;) {
-			(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+			(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 			dprintf(("looping %x\n", self->mm_flags));
 			if ((self->mm_flags & busyflag) == 0) {
-				up_sema(self->mm_flagsema);
+				PyThread_up_sema(self->mm_flagsema);
 				break;
 			}
-			up_sema(self->mm_flagsema);
+			PyThread_up_sema(self->mm_flagsema);
 			tv.tv_sec = 0;
 			tv.tv_usec = 5000;
 			select(0, NULL, NULL, NULL, &tv);
@@ -309,7 +309,7 @@ do_stop(self, args, busyflag, stopflag, func)
 		dprintf(("exit loop\n"));
 	} else {
 		/* printf("mmmodule: mm_stop: already stopped\n"); */
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 	}
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -355,13 +355,13 @@ mm_finished(self, args)
 	PyObject *args;
 {
 	denter(mm_finished);
-	(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 	if (self->mm_flags & PLAYING) {
-		up_sema(self->mm_flagsema);
+		PyThread_up_sema(self->mm_flagsema);
 		PyErr_SetString(MmError, "still playing");
 		return NULL;
 	}
-	up_sema(self->mm_flagsema);
+	PyThread_up_sema(self->mm_flagsema);
 	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->finished)(self))
@@ -399,26 +399,26 @@ do_close(self)
 	int flags;
 
 	/* tell other threads to exit */
-	(void) down_sema(self->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(self->mm_flagsema, WAIT_SEMA);
 	flags = self->mm_flags;
 	self->mm_flags |= EXIT;
-	up_sema(self->mm_flagsema);
+	PyThread_up_sema(self->mm_flagsema);
 	if (flags & ARMTHREAD) {
 		do_stop(self, NULL, ARMING, STOPARM,
 			self->mm_chanobj->chan_funcs->armstop);
-		up_sema(self->mm_armsema);
+		PyThread_up_sema(self->mm_armsema);
 	}
 	if (flags & PLAYTHREAD) {
 		do_stop(self, NULL, PLAYING, STOPPLAY,
 			self->mm_chanobj->chan_funcs->playstop);
-		up_sema(self->mm_playsema);
+		PyThread_up_sema(self->mm_playsema);
 	}
 
 	/* wait for other threads to exit */
 	if (flags & ARMTHREAD)
-		(void) down_sema(self->mm_exitsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_exitsema, WAIT_SEMA);
 	if (flags & PLAYTHREAD)
-		(void) down_sema(self->mm_exitsema, WAIT_SEMA);
+		(void) PyThread_down_sema(self->mm_exitsema, WAIT_SEMA);
 
 	/* give module a chance to do some cleanup */
 	(*self->mm_chanobj->chan_funcs->dealloc)(self);
@@ -426,15 +426,15 @@ do_close(self)
 	/* now cleanup our own mess */
 	Py_XDECREF(self->mm_attrdict);
 	self->mm_attrdict = NULL;
-	free_sema(self->mm_armsema);
+	PyThread_free_sema(self->mm_armsema);
 	self->mm_armsema = NULL;
-	free_sema(self->mm_playsema);
+	PyThread_free_sema(self->mm_playsema);
 	self->mm_playsema = NULL;
-	free_sema(self->mm_flagsema);
+	PyThread_free_sema(self->mm_flagsema);
 	self->mm_flagsema = NULL;
-	free_sema(self->mm_exitsema);
+	PyThread_free_sema(self->mm_exitsema);
 	self->mm_exitsema = NULL;
-	free_sema(self->mm_armwaitsema);
+	PyThread_free_sema(self->mm_armwaitsema);
 	self->mm_armwaitsema = NULL;
 	Py_DECREF(self->mm_chanobj);
 	self->mm_chanobj = NULL;
@@ -533,11 +533,11 @@ newmmobject(ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, ch
 	mmobject *mmp;
 	mmp = PyObject_NEW(mmobject, &Mmtype);
 	if (mmp == NULL) {
-		free_sema(armsema);
-		free_sema(playsema);
-		free_sema(flagsema);
-		free_sema(exitsema);
-		free_sema(armwaitsema);
+		PyThread_free_sema(armsema);
+		PyThread_free_sema(playsema);
+		PyThread_free_sema(flagsema);
+		PyThread_free_sema(exitsema);
+		PyThread_free_sema(armwaitsema);
 		return NULL;
 	}
 	mmp->mm_ev = ev;
@@ -598,17 +598,17 @@ mm_init(self, args)
 		 chanobj->ob_type->tp_name));
 
 	/* allocate necessary semaphores */
-	if ((armsema = allocate_sema(0)) == NULL ||
-	    (playsema = allocate_sema(0)) == NULL ||
-	    (flagsema = allocate_sema(1)) == NULL ||
-	    (exitsema = allocate_sema(0)) == NULL ||
-	    (armwaitsema = allocate_sema(0)) == NULL) {
+	if ((armsema = PyThread_allocate_sema(0)) == NULL ||
+	    (playsema = PyThread_allocate_sema(0)) == NULL ||
+	    (flagsema = PyThread_allocate_sema(1)) == NULL ||
+	    (exitsema = PyThread_allocate_sema(0)) == NULL ||
+	    (armwaitsema = PyThread_allocate_sema(0)) == NULL) {
 		PyErr_SetString(PyExc_IOError, "could not allocate all semaphores");
-		if (armsema) free_sema(armsema);
-		if (playsema) free_sema(playsema);
-		if (flagsema) free_sema(flagsema);
-		if (exitsema) free_sema(exitsema);
-		if (armwaitsema) free_sema(armwaitsema);
+		if (armsema) PyThread_free_sema(armsema);
+		if (playsema) PyThread_free_sema(playsema);
+		if (flagsema) PyThread_free_sema(flagsema);
+		if (exitsema) PyThread_free_sema(exitsema);
+		if (armwaitsema) PyThread_free_sema(armwaitsema);
 		return NULL;
 	}
 
@@ -619,20 +619,20 @@ mm_init(self, args)
 		return NULL;
 	if (!(*chanobj->chan_funcs->init)(mmp))
 		goto error_return;
-	if (!start_new_thread(mm_armer, (void *) mmp)) {
+	if (!PyThread_start_new_thread(mm_armer, (void *) mmp)) {
 		PyErr_SetString(PyExc_IOError, "could not start arm thread");
 		goto error_return;
 	}
-	(void) down_sema(mmp->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(mmp->mm_flagsema, WAIT_SEMA);
 	mmp->mm_flags |= ARMTHREAD;
-	up_sema(mmp->mm_flagsema);
-	if (!start_new_thread(mm_player, (void *) mmp)) {
+	PyThread_up_sema(mmp->mm_flagsema);
+	if (!PyThread_start_new_thread(mm_player, (void *) mmp)) {
 		PyErr_SetString(PyExc_IOError, "could not start play thread");
 		goto error_return;
 	}
-	(void) down_sema(mmp->mm_flagsema, WAIT_SEMA);
+	(void) PyThread_down_sema(mmp->mm_flagsema, WAIT_SEMA);
 	mmp->mm_flags |= PLAYTHREAD;
-	up_sema(mmp->mm_flagsema);
+	PyThread_up_sema(mmp->mm_flagsema);
 	return (PyObject *) mmp;
 
  error_return:
