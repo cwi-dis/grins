@@ -863,10 +863,10 @@ class _CommonWindow:
 	def _do_resize(self):
 		"""The (sub)window has changed size through external means. Recompute
 		everything for ourselves and our children"""
-		self._sizes = self._parent._pxl2rel(self._rect)
 		if self._istoplevel:
 			self._clipchanged()
 		else:
+			self._sizes = self._parent._pxl2rel(self._rect)
 			self._parent._clipchanged()
 		for d in self._displists[:]:
 			d.close()
