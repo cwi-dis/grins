@@ -17,6 +17,7 @@ def _freeze_dummy_func():
 	import AnimateChannel
 	import BrushChannel
 	import PrefetchChannel
+	import VideoChannel
 
 class ChannelMap:
 	channelmap = {
@@ -24,6 +25,7 @@ class ChannelMap:
 		'text': 	'TextChannel',
 		'sound':	'SoundChannel',
 		'image': 	'ImageChannel',
+		'video':	'VideoChannel',
 		'layout':	'LayoutChannel',
 		'animate':	'AnimateChannel',
 		'brush':	'BrushChannel',
