@@ -654,7 +654,8 @@ class _Event:
 				accdict, dummy = self._windows[key]
 				if accdict.has_key(value):
 					del self._queue[0]
-					apply(accdict[value])
+					func, arg = accdict[value]
+					apply(func, arg)
 					return 1
 		for w in [window, None]:
 			while 1:
@@ -2407,11 +2408,13 @@ class _Window:
 	def _popup_menu(self, *args):
 		i = gl.dopup(self._menu)
 		if 0 < i < len(self._menuprocs):
-			apply(self._menuprocs[i])
+			func, arg = self._menuprocs[i]
+			apply(func, arg)
 
 	def _keyb_inp(self, arg, win, ev, val):
 		if self._accelerators.has_key(val):
-			apply(self._accelerators[val])
+			func, arg = self._accelerators[val]
+			apply(func, arg)
 
 	def create_menu(self, title, list):
 		self.destroy_menu()
@@ -2904,7 +2907,7 @@ class Dialog:
 				else:
 					callback = self._callbacks[self.buttons[i]]
 					if callback:
-						apply(callback)
+						apply(callback[0], callback[1])
 				if self._finish is None:
 					self._finish = 1
 		for but in self.highlighted:
@@ -2920,7 +2923,7 @@ class Dialog:
 				self._finish = 1
 			callback = self._accelerators[val]
 			if callback:
-				apply(callback)
+				apply(callback[0], callback[1])
 			if self._looping:
 				raise _break_loop
 		
@@ -3461,7 +3464,7 @@ class ListDialog:
 	def _callback(self, obj, arg):
 		callback = self._callbacks[arg]
 		if callback:
-			apply(callback)
+			apply(callback[0], callback[1])
 
 	def name_callback(self, obj, arg):
 		# When the user presses TAB or RETURN,
