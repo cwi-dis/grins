@@ -382,8 +382,8 @@
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw (g2 qt smil10 smil2 cmif snap))
 
-(u_group (name) undefined 'User group' usergroup
-	'User group that controls rendering of this node' inherited (smil2 cmif))
+(u_group (list (name)) () 'Custom tests' usergroup
+	'Custom tests that controls rendering of this node' inherited (smil2 cmif))
 
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel (cmif))
@@ -427,7 +427,7 @@
 	'Play node only if end-user prefers this language' raw (g2 qt smil10 smil2 cmif snap))
 (system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
 	'Play node only depending on end user overdub/caption preference' raw (g2 qt smil10 smil2 cmif))
-(system_required (string) '' 'System required' default
+(system_required (list (string)) () 'System required' reqlist
 	'Play node only if player supports these features' raw (g2 qt smil10 smil2 cmif))
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
 	'Play node only if screen bigger than this' raw (g2 qt smil10 smil2 cmif))

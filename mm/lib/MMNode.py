@@ -3201,10 +3201,9 @@ class MMNode:
 						    self.attrdict[setting])
 				if not ok:
 					return 0
-		# And if our user group doesn't match we shouldn't
+		# And if any of our user groups doesn't match we shouldn't
 		# play either
-		u_group = self.GetAttrDef('u_group', 'undefined')
-		if u_group != 'undefined':
+		for u_group in self.GetAttrDef('u_group', []):
 			val = self.context.usergroups.get(u_group)
 			if val is not None and val[1] != 'RENDERED':
 				return 0

@@ -665,30 +665,36 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad systemOverdubOrSubtitle attribute')
 			elif attr == 'system-required':
 				if not attrdict.has_key('system_required'):
+					attrdict['system_required'] = []
 					nsdict = self.getnamespace()
-					nsuri = nsdict.get(val)
-					if not nsuri:
-						self.syntax_error('no namespace declaration for %s in effect' % val)
-					else:
-						attrdict['system_required'] = nsuri
+					for v in map(string.strip, string.split(val, '+')):
+						nsuri = nsdict.get(v)
+						if not nsuri:
+							self.syntax_error('no namespace declaration for %s in effect' % v)
+						else:
+							attrdict['system_required'].append(nsuri)
 			elif attr == 'systemRequired':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
+				attrdict['system_required'] = []
 				nsdict = self.getnamespace()
-				nsuri = nsdict.get(val)
-				if not nsuri:
-					self.syntax_error('no namespace declaration for %s in effect' % val)
-				else:
-					attrdict['system_required'] = nsuri
+				for v in map(string.strip, string.split(val, '+')):
+					nsuri = nsdict.get(v)
+					if not nsuri:
+						self.syntax_error('no namespace declaration for %s in effect' % v)
+					else:
+						attrdict['system_required'].append(nsuri)
 			elif attr == 'customTest':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if self.__custom_tests.has_key(val):
-					attrdict['u_group'] = val
-				else:
-					self.syntax_error("unknown customTest `%s'" % val)
+				attrdict['u_group'] = []
+				for v in map(string.strip, string.split(val, '+')):
+					if self.__custom_tests.has_key(v):
+						attrdict['u_group'].append(v)
+					else:
+						self.syntax_error("unknown customTest `%s'" % v)
 			elif attr == 'transIn':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)

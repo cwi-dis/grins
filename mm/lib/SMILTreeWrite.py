@@ -801,8 +801,9 @@ def getboolean(writer, node, attr):
 			return 'off'
 
 def getsysreq(writer, node, attr):
-	if getrawcmifattr(writer, node, "system_required"):
-		return 'extension'
+	sysreq = node.GetRawAttrDef('system_required', [])
+	if sysreq:
+		return string.join(map(lambda i: 'ext%d' % i, range(len(sysreq))), ' + ')
 	return None
 
 def getscreensize(writer, node):
@@ -826,14 +827,15 @@ def getbagindex(writer, node):
 def getugroup(writer, node):
 	if not node.GetContext().usergroups:
 		return
-	u_group = MMAttrdefs.getattr(node, 'u_group')
-	if u_group == 'undefined':
+	names = []
+	for u_group in MMAttrdefs.getattr(node, 'u_group'):
+		try:
+			names.append(writer.ugr2name[u_group])
+		except KeyError:
+			print '** Attempt to write unknown usergroup', u_group
+	if not names:
 		return
-	try:
-		return writer.ugr2name[u_group]
-	except KeyError:
-		print '** Attempt to write unknown usergroup', u_group
-		return
+	return string.join(names, ' + ')
 
 def getlayout(writer, node):
 	if not node.GetContext().layouts:
@@ -959,7 +961,6 @@ smil_attrs=[
 	("systemLanguage", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
 	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_operating_system")) or None),
 	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
-	("xmlns:extension", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
 	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None),
 	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
 	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
@@ -1955,6 +1956,10 @@ class SMILWriter(SMIL):
 			attrs = prio_attrs
 		else:
 			attrs = smil_attrs
+			# special case for systemRequired
+			sysreq = x.GetRawAttrDef('system_required', [])
+			for i in range(len(sysreq)):
+				attrlist.append(('ext%d' % i, sysreq[i]))
 		for name, func in attrs:
 			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
