@@ -235,6 +235,9 @@ def getsrc(writer, node):
 	if writer.copycache.has_key(url):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
+		import settings
+		if settings.get('compatibility') == settings.G2:
+			val = MMurl.unquote(val)
 		return val
 	if chtype == 'RealPix':
 		# special case code for RealPix file
