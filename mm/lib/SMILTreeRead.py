@@ -146,6 +146,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'mode': ['in', 'out'],
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
+		'regAlign': ['topLeft', 'topMid', 'topRight', 'midLeft', 'center', 'midRight', 'bottomLeft', 'bottomMid', 'bottomRight'],
 		'reliable': __truefalse,
 		'resizeBehavior': ['percentOnly', 'zoom'],
 		'sendTo': {'_rpcontextwin':'rpcontextwin', '_rpbrowser':'rpbrowser', 'osdefaultbrowser':'osdefaultbrowser', 'rpengine':'rpengine'},
@@ -153,6 +154,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'show': ['replace', 'pause', 'new'],
 		'showAnimationPath': __truefalse,
 		'sourcePlaystate': ['play', 'pause', 'stop'],
+		'syncBehavior': ['canSlip', 'locked', 'independent', 'default'],
+		'syncBehaviorDefault': ['canSlip', 'locked', 'independent', 'inherit'],
 		'syncMaster': __truefalse,
 		'system-captions': __onoff,
 		'systemAudioDesc': __onoff,
@@ -313,7 +316,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			list = beginlist
 		else:
 			list = endlist
-		val = string.strip(val)
+		val = val.strip()
 		res = syncbase.match(val)
 		if res is not None:
 			# SMIL 1.0 begin value
@@ -348,7 +351,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					return
 				boston = 'multiple %s values' % attr
 			for val in vals:
-				val = string.strip(val)
+				val = val.strip()
 				if not val:
 					self.syntax_error('illegal empty value in %s attribute' % attr)
 					continue
@@ -367,7 +370,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					if settings.MODULES['BasicInlineTiming']:
 						list.append(MMNode.MMSyncArc(node, attr, srcnode='syncbase', delay=offset))
-					if val[0] in '+-' and not boston:
+					if val[0] in '-+' and not boston:
 						boston = 'signed clock value'
 					continue
 
@@ -375,7 +378,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is not None:
 					if not boston:
 						boston = 'wallclock time'
-					wc = string.strip(res.group('wallclock'))
+					wc = res.group('wallclock').strip()
 					res = wallclockval.match(wc)
 					if res is None:
 						self.syntax_error('bad wallclock value')
@@ -423,7 +426,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# this can't match the first
 					# time round because of part
 					# above
-					if tokens[i] in ('-','+'):
+					if tokens[i] in '-+':
 						try:
 							offset = parseutil.parsecounter(''.join(tokens[i:]), withsign = 1, syntax_error = self.syntax_error, context = self.__context)
 						except parseutil.error:
@@ -677,7 +680,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if features.editor:
 				self.__context.attributes['project_boston'] = 1
 			if self.__context.attributes.get('project_boston'):
-				attrdict['system_cpu'] = string.lower(val)
+				attrdict['system_cpu'] = val.lower()
 		if attributes.has_key('systemOperatingSystem'):
 			val = attributes['systemOperatingSystem']
 			del attributes['systemOperatingSystem']
@@ -686,7 +689,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if features.editor:
 				self.__context.attributes['project_boston'] = 1
 			if self.__context.attributes.get('project_boston'):
-				attrdict['system_operating_system'] = string.lower(val)
+				attrdict['system_operating_system'] = val.lower()
 		if attributes.has_key('system-overdub-or-caption'):
 			val = attributes['system-overdub-or-caption']
 			del attributes['system-overdub-or-caption']
@@ -786,7 +789,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					continue
 				val = attributes[attr]
 				try:
-					if val and val[0] in '+-':
+					if val and val[0] in '-+':
 						raise ValueError('no sign allowed')
 					val = int(val)
 				except ValueError:
@@ -862,7 +865,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['borderColor'] = (-1,-1,-1)
 				else:
 					val = self.__convert_color(val)
-					if type(val) is type(string):
+					if type(val) is type(''):
 						self.syntax_error('bad borderColor attribute value')
 					elif val is not None:
 						attrdict['borderColor'] = val
@@ -939,503 +942,608 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if compatibility.QT == features.compatibility:
 			self.addQTAttr(attrdict, attributes)
 		for attr, val in attributes.items():
-			val = string.strip(val)
-			if attr == 'id':
-				self.__nodemap[val] = node
-				self.__idmap[val] = node.GetUID()
-				res = namedecode.match(val)
-				if res is not None:
-					val = res.group('name')
-				attrdict['name'] = val
-			elif attr in ('abstract', 'copyright', 'author'):
-				if val:
-					attrdict[attr] = val
-			elif attr == 'src':
-				# Special case: # is used as a placeholder for empty URL fields
-				if val != '#':
-					attrdict['file'] = MMurl.basejoin(self.__base, val)
-			elif attr == 'begin' or attr == 'end':
-				if attr == 'begin' and \
-				   pnode is not None and \
-				   pnode.type == 'seq' and \
-				   (offsetvalue.match(val) is None or
-				    val[0] == '-'):
-					self.syntax_error('bad begin attribute for child of seq node')
-					# accept anyway ...
-					node.set_infoicon('error', 'bad begin attribute for child of seq node')
-				node.__syncarcs.append((attr, val, self.lineno))
-			elif attr == 'dur':
-				if val == 'indefinite':
-					attrdict['duration'] = -1
-				elif val == 'media':
-					if node.type in mediatypes:
-						attrdict['duration'] = -2
-					else:
-						self.syntax_error("no `media' value allowed on dur attribute on non-media elements")
-				else:
-					try:
-						attrdict['duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
-					except parseutil.error, msg:
-						self.syntax_error(msg)
-			elif attr in ('min', 'max'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val == 'media':
-					if node.type in mediatypes:
-						attrdict[attr] = -2
-					else:
-						self.syntax_error("no `media' value allowed on %s attribute on non-media elements" % attr)
-				elif val == 'indefinite':
-					if attr == 'max':
-						attrdict[attr] = -1
-					else:
-						self.syntax_error("no `indefinite' value allowed on min attribute")
-				else:
-					try:
-						attrdict[attr] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
-					except parseutil.error, msg:
-						self.syntax_error(msg)
-					else:
-						if attr == 'min' and \
-						   attrdict[attr] == 0:
-							del attrdict[attr]
-			elif attr == 'repeat' or attr == 'repeatCount':
-				if attr == 'repeatCount':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-						if not features.editor:
-							continue
-					self.__context.attributes['project_boston'] = 1
-				ignore = attr == 'repeat' and attrdict.has_key('loop')
-				if val == 'indefinite':
-					repeat = 0
-				else:
-					try:
-						# fractional values are actually allowed in repeatCount
-						repeat = float(val)
-					except ValueError:
-						self.syntax_error('bad repeat attribute')
-						ignore = 1
-					else:
-						if repeat <= 0:
-							self.syntax_error('bad %s value' % attr)
-							ignore = 1
-						elif attr == 'repeat' and '.' in val:
-							self.syntax_error('fractional repeat value not allowed')
-							ignore = 1
-				if not ignore:
-					attrdict['loop'] = repeat
-			elif attr == 'repeatDur':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val == 'indefinite':
-					attrdict['repeatdur'] = -1
-				else:
-					try:
-						attrdict['repeatdur'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
-					except parseutil.error, msg:
-						self.syntax_error(msg)
-			elif attr == 'restart':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('always', 'whenNotActive', 'never', 'default'):
-					attrdict['restart'] = val
-				else:
-					self.syntax_error('bad %s attribute' % attr)
-			elif attr == 'restartDefault':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('always', 'whenNotActive', 'never', 'inherit'):
-					attrdict['restartDefault'] = val
-				else:
-					self.syntax_error('bad %s attribute' % attr)
-			elif attr in ('mediaSize', 'mediaTime', 'bandwidth'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				try:
-					if val[-1:]=='%':
-						p = float(val[:-1])
-					elif attr in ('mediaSize', 'bandwidth'):
-						p = float(val)
-					elif attr == 'mediaTime':
-						p = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context) 
-					attrdict[attr] = val;	
-				except ValueError:
-					self.syntax_error('bad %s attribute' % attr)
-				except parseutil.error, msg:
-					self.syntax_error(msg)
-			elif attr in ('readIndex', 'tabindex'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				try:
-					index = int(val)
-					if index < 0:
-						raise ValueError, 'negative value'
-				except ValueError:
-					self.syntax_error('bad %s attribute' % attr)
-				else:
-					attrdict[attr] = index
-			elif attr == 'sensitivity':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val == 'opaque':
-					attrdict['sensitivity'] = 0
-				elif val == 'transparent':
-					attrdict['sensitivity'] = 100
-				else:
-					res = percent.match(val)
-					if res is None:
-						self.syntax_error('bad sensitivity attribute value')
-					else:
-						attrdict['sensitivity'] = int(val[:-1])
-			elif attr in ('transIn', 'transOut'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				transitions = []
-				warned = 0
-				for val in map(string.strip, val.split(';')):
-					if self.__transitions.has_key(val):
-						transitions.append(val)
-					elif not warned:
-						self.syntax_error("invalid transition specified in %s attribute" % attr)
-						warned = 1
-				attrdict[attr] = transitions
-			elif attr == 'layout':
-				if self.__layouts.has_key(val):
-					attrdict['layout'] = val
-				else:
-					self.syntax_error("unknown layout `%s'" % val)
-			elif attr == 'fill':
-				val = self.parseEnumValue(attr, val)
-				if val is not None:
-					if node.type in interiortypes or \
-					   val in ('hold', 'transition', 'auto', 'default'):
-						if self.__context.attributes.get('project_boston') == 0:
-							self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-							if not features.editor:
-								continue
-						self.__context.attributes['project_boston'] = 1
-					attrdict['fill'] = val
-			elif attr == 'fillDefault':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				val = self.parseEnumValue(attr, val)
-				if val is not None:
-					attrdict['fillDefault'] = val
-			elif attr == 'erase':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				val = self.parseEnumValue(attr, val)
-				if val is not None:
-					attrdict['erase'] = val
-			elif attr == 'mediaRepeat':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('strip', 'preserve'):
-					attrdict['mediaRepeat'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'color' and node.__chantype == 'brush':
-				fg = self.__convert_color(val)
-				if fg is None:
-					pass # error already given
-				elif type(fg) is not type(()):
-					self.syntax_error("bad %s attribute" % attr)
-				else:
-					attrdict['fgcolor'] = fg
-			# sub-positionning attibutes allows to SMIL-Boston layout
-			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val != 'auto': # "auto" is equivalent to no attribute
-					try:
-						if val[-1:] == '%':
-							val = float(val[:-1]) / 100.0
-						else:
-							if val[-2:] == 'px':
-								val = val[:-2]
-							val = int(val)
-					except ValueError:
-						self.syntax_error('invalid subregion attribute value')
-					else:
-						attrdict[attr] = val
-			elif attr == 'backgroundColor':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				bg = self.__convert_color(val)
-				if bg is None:
-					pass
-				elif bg == 'transparent':
-					attrdict['transparent'] = 1
-					attrdict['bgcolor'] = 0,0,0
-				elif bg != 'inherit':
-					attrdict['transparent'] = 0
-					attrdict['bgcolor'] = bg
-				else:
-					# for inherit value, we assume there is no transparent and bgcolor attribute
-					pass
-			elif attr == 'z-index':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				try:
-					val = int(val)
-				except ValueError:
-					self.syntax_error('bad z-index attribute')
-				else:
-					if val < 0:
-						self.syntax_error('region with negative z-index')
-					else:
-						attrdict['z'] = val
-			elif attr == 'regPoint':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				attrdict['regPoint'] = val
-			elif attr == 'regAlign':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('topLeft', 'topMid', 'topRight', 'midLeft', 'center', 'midRight', 'bottomLeft', 'bottomMid', 'bottomRight'):
-					attrdict['regAlign'] = val
-				else:
-					self.syntax_error('bad regAlign attribute')
-			elif attr == 'speed':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				try:
-					speed = float(val)
-				except ValueError:
-					self.syntax_error('bad speed attribute')
-				else:
-					attrdict['speed'] = speed
-			elif attr in ('autoReverse', 'syncMaster'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				val = self.parseEnumValue(attr, val)
-				if val is not None:
-					attrdict[attr] = val
-			elif attr in ('syncTolerance', 'syncToleranceDefault'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if (attr == 'syncTolerance' and val == 'default') or \
-				   (attr == 'syncToleranceDefault' and val == 'inherit'):
-					val = -1
-				else:
-					try:
-						val = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
-					except parseutil.error, msg:
-						self.syntax_error(msg)
-						val = None
-				if val is not None:
-					attrdict[attr] = val
-			elif attr in ('accelerate', 'decelerate'):
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				try:
-					val = float(val)
-				except ValueError:
-					self.syntax_error('bad %s attribute' % attr)
-				else:
-					if 0 <= val <= 1:
-						attrdict[attr] = val
-						if attrdict.get('accelerate', 0) + attrdict.get('decelerate', 0) > 1:
-							self.syntax_error('accelerate + decelerate > 1')
-					else:
-						self.syntax_error("`%s' attribute value out of allowed range" % attr)
-			elif attr == 'syncBehavior':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('canSlip', 'locked', 'independent', 'default'):
-					attrdict['syncBehavior'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'syncBehaviorDefault':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('canSlip', 'locked', 'independent', 'inherit'):
-					attrdict['syncBehaviorDefault'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'project_default_region':
-				region = self.__selectregion(val)
-				attrdict['project_default_region'] = region
-			elif attr == 'project_default_type':
-				attrdict['project_default_type'] = val
-			elif attr == 'project_bandwidth_fraction':
-				try:
-					if val[-1]=='%':
-						p = float(val[:-1])/100.0
-					else:
-						p = float(val)
-					attrdict[attr] = p
-				except ValueError:
-					self.syntax_error('bad %s attribute' % attr)
-			elif attr in ('project_default_duration', 'project_default_duration_image', 'project_default_duration_text'):
-				if val == 'indefinite':
-					attrdict[attr] = -1
-				else:
-					try:
-						attrdict[attr] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
-					except parseutil.error, msg:
-						self.syntax_error(msg)
-			elif attr == 'collapsed':
-				collapsed = self.parseEnumValue(attr, val)
-				if collapsed is not None:
-					node.collapsed = collapsed
-			elif attr == 'showtime':
-				if val in ('focus', 'cfocus', 'bwstrip'):
-					# ignore in player
-					if features.editor:
-						node.showtime = val
-				else:
-					self.syntax_error('bad %s attribute' % attr)
-			elif attr == 'timezoom':
-				try:
-					node.min_pxl_per_sec = float(val)
-				except ValueError:
-					self.syntax_error('invalid timezoom attribute value')
-			elif attr == 'allowedmimetypes':
-				attrdict[attr] = map(string.strip, val.split(','))
-			elif attr == 'project_forcechild':
-				node.__forcechild = val, self.lineno
-			elif attr == 'skip-content':
-				if val in ('true', 'false'):
-					attrdict['skip_content'] = val == 'true'
-				else:
-					self.syntax_error('bad %s attribute' % attr)
-			elif attr == 'thumbnailIcon':
-				attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
-			elif attr == 'thumbnailScale':
-				attrdict['thumbnail_scale'] = val == 'true'
-			elif attr == 'showAnimationPath':
-				showAP = self.parseEnumValue(attr, val)
-				if showAP is not None:
-					attrdict['showAnimationPath'] = showAP
-			elif attr == 'emptyIcon':
-				attrdict['empty_icon'] = MMurl.basejoin(self.__base, val)
-			elif attr == 'emptyText':
-				attrdict['empty_text'] = val
-			elif attr == 'emptyColor':
-				val = self.__convert_color(val)
-				if val is not None:
-					attrdict['empty_color'] = val
-			elif attr == 'emptyDur':
-				try:
-					attrdict['empty_duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
-				except parseutil.error, msg:
-					self.syntax_error(msg)
-			elif attr == 'emptyShow':
-##				attrdict['empty_nonempty'] = val == 'true'
-				pass
-			elif attr == 'nonEmptyIcon':
-				attrdict['non_empty_icon'] = MMurl.basejoin(self.__base, val)
-			elif attr == 'nonEmptyText':
-				attrdict['non_empty_text'] = val
-			elif attr == 'nonEmptyColor':
-				val = self.__convert_color(val)
-				if val is not None:
-					attrdict['non_empty_color'] = val
-			elif attr == 'dropIcon':
-				attrdict['dropicon'] = MMurl.basejoin(self.__base, val)
-			elif attr in ('backgroundOpacity', 'chromaKeyOpacity', 'mediaOpacity'):
-				try:
-					if val[-1] == '%':
-						val = float(val[:-1]) / 100.0
-						if val < 0 or val > 1:
-							self.syntax_error('%s value out of range' % attr)
-							val = None
-					else:
-						self.syntax_error('only percentage values allowed on %s attribute' % attr)
-						val = None
-				except ValueError:
-					self.syntax_error('invalid %s attribute value' % attr)
-					val = None
-				if val is not None:
-					attrdict[attr] = val
-			elif attr in ('chromaKey', 'chromaKeyTolerance'):
-				ck = self.__convert_color(val)
-				if ck is None:
-					pass # error already given
-				elif type(ck) is not type(()):
-					self.syntax_error("bad %s attribute" % attr)
-				else:
-					attrdict[attr] = ck
-			# RTIPA start
-			elif attr == 'RTIPA-server':
-				attrdict['RTIPA_server'] = val
-			# RTIPA end
-			elif attr not in smil_node_attrs:
+			val = val.strip()
+			func = self.__parseattrdict.get(attr)
+			if func is not None:
+				func(self, node, attr, val, attrdict)
+			else:
 				# catch all
 				# this should not be used for normal operation
 				try:
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
 					self.syntax_error("couldn't parse `%s' value" % attr)
-					pass
+
+	def __do_id(self, node, attr, val, attrdict):
+		self.__nodemap[val] = node
+		self.__idmap[val] = node.GetUID()
+		res = namedecode.match(val)
+		if res is not None:
+			val = res.group('name')
+		attrdict['name'] = val
+
+	def __do_literal(self, node, attr, val, attrdict):
+		if val:
+			attrdict[attr] = val
+
+	def __do_src(self, node, attr, val, attrdict):
+		# Special case: # is used as a placeholder for empty URL fields
+		if val != '#':
+			attrdict['file'] = MMurl.basejoin(self.__base, val)
+
+	def __do_sync(self, node, attr, val, attrdict):
+		if attr == 'begin' and \
+		   pnode is not None and \
+		   pnode.type == 'seq' and \
+		   (offsetvalue.match(val) is None or
+		    val[0] == '-'):
+			self.syntax_error('bad begin attribute for child of seq node')
+			# accept anyway ...
+			node.set_infoicon('error', 'bad begin attribute for child of seq node')
+		node.__syncarcs.append((attr, val, self.lineno))
+
+	def __do_dur(self, node, attr, val, attrdict):
+		if val == 'indefinite':
+			attrdict['duration'] = -1
+		elif val == 'media':
+			if node.type in mediatypes:
+				attrdict['duration'] = -2
+			else:
+				self.syntax_error("no `media' value allowed on dur attribute on non-media elements")
+		else:
+			try:
+				attrdict['duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
+				self.syntax_error(msg)
+
+	def __do_minmax(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val == 'media':
+			if node.type in mediatypes:
+				attrdict[attr] = -2
+			else:
+				self.syntax_error("no `media' value allowed on %s attribute on non-media elements" % attr)
+		elif val == 'indefinite':
+			if attr == 'max':
+				attrdict[attr] = -1
+			else:
+				self.syntax_error("no `indefinite' value allowed on min attribute")
+		else:
+			try:
+				attrdict[attr] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
+				self.syntax_error(msg)
+			else:
+				if attr == 'min' and \
+				   attrdict[attr] == 0:
+					del attrdict[attr]
+
+	def __do_repeatCount(self, node, attr, val, attrdict):
+		if attr == 'repeatCount':
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				if not features.editor:
+					return
+			self.__context.attributes['project_boston'] = 1
+		ignore = attr == 'repeat' and attrdict.has_key('loop')
+		if val == 'indefinite':
+			repeat = 0
+		else:
+			try:
+				# fractional values are actually allowed in repeatCount
+				repeat = float(val)
+			except ValueError:
+				self.syntax_error('bad repeat attribute')
+				ignore = 1
+			else:
+				if repeat <= 0:
+					self.syntax_error('bad %s value' % attr)
+					ignore = 1
+				elif attr == 'repeat' and '.' in val:
+					self.syntax_error('fractional repeat value not allowed')
+					ignore = 1
+		if not ignore:
+			attrdict['loop'] = repeat
+
+	def __do_repeatDur(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val == 'indefinite':
+			attrdict['repeatdur'] = -1
+		else:
+			try:
+				attrdict['repeatdur'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
+				self.syntax_error(msg)
+
+	def __do_restart(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val in ('always', 'whenNotActive', 'never', 'default'):
+			attrdict['restart'] = val
+		else:
+			self.syntax_error('bad %s attribute' % attr)
+
+	def __do_restartDefault(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val in ('always', 'whenNotActive', 'never', 'inherit'):
+			attrdict['restartDefault'] = val
+		else:
+			self.syntax_error('bad %s attribute' % attr)
+
+	def __do_prefetch(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		try:
+			if val[-1:]=='%':
+				p = float(val[:-1])
+			elif attr in ('mediaSize', 'bandwidth'):
+				p = float(val)
+			elif attr == 'mediaTime':
+				p = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context) 
+			attrdict[attr] = val;	
+		except ValueError:
+			self.syntax_error('bad %s attribute' % attr)
+		except parseutil.error, msg:
+			self.syntax_error(msg)
+
+	def __do_index(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		try:
+			index = int(val)
+			if index < 0:
+				raise ValueError, 'negative value'
+		except ValueError:
+			self.syntax_error('bad %s attribute' % attr)
+		else:
+			attrdict[attr] = index
+
+	def __do_sensitivity(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val == 'opaque':
+			attrdict['sensitivity'] = 0
+		elif val == 'transparent':
+			attrdict['sensitivity'] = 100
+		else:
+			res = percent.match(val)
+			if res is None:
+				self.syntax_error('bad sensitivity attribute value')
+			else:
+				attrdict['sensitivity'] = int(val[:-1])
+
+	def __do_transition(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		transitions = []
+		warned = 0
+		for val in map(string.strip, val.split(';')):
+			if self.__transitions.has_key(val):
+				transitions.append(val)
+			elif not warned:
+				self.syntax_error("invalid transition specified in %s attribute" % attr)
+				warned = 1
+		attrdict[attr] = transitions
+
+	def __do_layout(self, node, attr, val, attrdict):
+		if self.__layouts.has_key(val):
+			attrdict['layout'] = val
+		else:
+			self.syntax_error("unknown layout `%s'" % val)
+
+	def __do_fill(self, node, attr, val, attrdict):
+		val = self.parseEnumValue(attr, val)
+		if val is not None:
+			if node.type in interiortypes or \
+			   val in ('hold', 'transition', 'auto', 'default'):
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					if not features.editor:
+						return
+				self.__context.attributes['project_boston'] = 1
+			attrdict['fill'] = val
+
+	def __do_fillDefault(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		val = self.parseEnumValue(attr, val)
+		if val is not None:
+			attrdict['fillDefault'] = val
+
+	def __do_erase(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		val = self.parseEnumValue(attr, val)
+		if val is not None:
+			attrdict['erase'] = val
+
+	def __do_mediaRepeat(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val in ('strip', 'preserve'):
+			attrdict['mediaRepeat'] = val
+		else:
+			self.syntax_error("bad %s attribute" % attr)
+
+	def __do_color(self, node, attr, val, attrdict):
+		if node.__chantype != 'brush':
+			return
+		fg = self.__convert_color(val)
+		if fg is None:
+			pass # error already given
+		elif type(fg) is not type(()):
+			self.syntax_error("bad %s attribute" % attr)
+		else:
+			attrdict['fgcolor'] = fg
+
+	def __do_subposition(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if val != 'auto': # "auto" is equivalent to no attribute
+			try:
+				if val[-1:] == '%':
+					val = float(val[:-1]) / 100.0
+				else:
+					if val[-2:] == 'px':
+						val = val[:-2]
+					val = int(val)
+			except ValueError:
+				self.syntax_error('invalid subregion attribute value')
+			else:
+				attrdict[attr] = val
+
+	def __do_backgroundColor(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		bg = self.__convert_color(val)
+		if bg is None:
+			pass
+		elif bg == 'transparent':
+			attrdict['transparent'] = 1
+			attrdict['bgcolor'] = 0,0,0
+		elif bg != 'inherit':
+			attrdict['transparent'] = 0
+			attrdict['bgcolor'] = bg
+		else:
+			# for inherit value, we assume there is no transparent and bgcolor attribute
+			pass
+
+	def __do_z_index(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		try:
+			val = int(val)
+		except ValueError:
+			self.syntax_error('bad z-index attribute')
+		else:
+			if val < 0:
+				self.syntax_error('region with negative z-index')
+			else:
+				attrdict['z'] = val
+
+	def __do_regPoint(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		attrdict['regPoint'] = val
+
+	def __do_speed(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		try:
+			speed = float(val)
+		except ValueError:
+			self.syntax_error('bad speed attribute')
+		else:
+			attrdict['speed'] = speed
+
+	def __do_enum(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		val = self.parseEnumValue(attr, val)
+		if val is not None:
+			attrdict[attr] = val
+
+	def __do_syncTolerance(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		if (attr == 'syncTolerance' and val == 'default') or \
+		   (attr == 'syncToleranceDefault' and val == 'inherit'):
+			val = -1
+		else:
+			try:
+				val = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
+				self.syntax_error(msg)
+				val = None
+		if val is not None:
+			attrdict[attr] = val
+
+	def __do_accelerate(self, node, attr, val, attrdict):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if not features.editor:
+				return
+		self.__context.attributes['project_boston'] = 1
+		try:
+			val = float(val)
+		except ValueError:
+			self.syntax_error('bad %s attribute' % attr)
+		else:
+			if 0 <= val <= 1:
+				attrdict[attr] = val
+				if attrdict.get('accelerate', 0) + attrdict.get('decelerate', 0) > 1:
+					self.syntax_error('accelerate + decelerate > 1')
+			else:
+				self.syntax_error("`%s' attribute value out of allowed range" % attr)
+
+	def __do_default_region(self, node, attr, val, attrdict):
+		region = self.__selectregion(val)
+		attrdict['project_default_region'] = region
+
+	def __do_bandwidth_fraction(self, node, attr, val, attrdict):
+		try:
+			if val[-1]=='%':
+				p = float(val[:-1])/100.0
+			else:
+				p = float(val)
+			attrdict[attr] = p
+		except ValueError:
+			self.syntax_error('bad %s attribute' % attr)
+
+	def __do_default_duration(self, node, attr, val, attrdict):
+		if val == 'indefinite':
+			attrdict[attr] = -1
+		else:
+			try:
+				attrdict[attr] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
+				self.syntax_error(msg)
+
+	def __do_collapsed(self, node, attr, val, attrdict):
+		collapsed = self.parseEnumValue(attr, val)
+		if collapsed is not None:
+			node.collapsed = collapsed
+
+	def __do_showtime(self, node, attr, val, attrdict):
+		if val in ('focus', 'cfocus', 'bwstrip'):
+			# ignore in player
+			if features.editor:
+				node.showtime = val
+		else:
+			self.syntax_error('bad %s attribute' % attr)
+
+	def __do_timezoom(self, node, attr, val, attrdict):
+		try:
+			node.min_pxl_per_sec = float(val)
+		except ValueError:
+			self.syntax_error('invalid timezoom attribute value')
+
+	def __do_allowedmimetypes(self, node, attr, val, attrdict):
+		attrdict[attr] = map(string.strip, val.split(','))
+
+	def __do_forcechild(self, node, attr, val, attrdict):
+		node.__forcechild = val, self.lineno
+
+	def __do_skip_content(self, node, attr, val, attrdict):
+		if val in ('true', 'false'):
+			attrdict['skip_content'] = val == 'true'
+		else:
+			self.syntax_error('bad %s attribute' % attr)
+
+	def __do_thumbnailIcon(self, node, attr, val, attrdict):
+		attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
+
+	def __do_thumbnailScale(self, node, attr, val, attrdict):
+		attrdict['thumbnail_scale'] = val == 'true'
+
+	def __do_showAnimationPath(self, node, attr, val, attrdict):
+		showAP = self.parseEnumValue(attr, val)
+		if showAP is not None:
+			attrdict['showAnimationPath'] = showAP
+
+	def __do_emptyIcon(self, node, attr, val, attrdict):
+		attrdict['empty_icon'] = MMurl.basejoin(self.__base, val)
+
+	def __do_emptyText(self, node, attr, val, attrdict):
+		attrdict['empty_text'] = val
+
+	def __do_emptyColor(self, node, attr, val, attrdict):
+		val = self.__convert_color(val)
+		if val is not None:
+			attrdict['empty_color'] = val
+
+	def __do_emptyDur(self, node, attr, val, attrdict):
+		try:
+			attrdict['empty_duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+		except parseutil.error, msg:
+			self.syntax_error(msg)
+
+	def __do_nonEmptyIcon(self, node, attr, val, attrdict):
+		attrdict['non_empty_icon'] = MMurl.basejoin(self.__base, val)
+
+	def __do_nonEmptyText(self, node, attr, val, attrdict):
+		attrdict['non_empty_text'] = val
+
+	def __do_nonEmptyColor(self, node, attr, val, attrdict):
+		val = self.__convert_color(val)
+		if val is not None:
+			attrdict['non_empty_color'] = val
+
+	def __do_dropIcon(self, node, attr, val, attrdict):
+		attrdict['dropicon'] = MMurl.basejoin(self.__base, val)
+
+	def __do_opacity(self, node, attr, val, attrdict):
+		try:
+			if val[-1] == '%':
+				val = float(val[:-1]) / 100.0
+				if val < 0 or val > 1:
+					self.syntax_error('%s value out of range' % attr)
+					val = None
+			else:
+				self.syntax_error('only percentage values allowed on %s attribute' % attr)
+				val = None
+		except ValueError:
+			self.syntax_error('invalid %s attribute value' % attr)
+			val = None
+		if val is not None:
+			attrdict[attr] = val
+
+	def __do_chromaKey(self, node, attr, val, attrdict):
+		ck = self.__convert_color(val)
+		if ck is None:
+			pass # error already given
+		elif type(ck) is not type(()):
+			self.syntax_error("bad %s attribute" % attr)
+		else:
+			attrdict[attr] = ck
+
+	# RTIPA start
+	def __do_RTIPA_server(self, node, attr, val, attrdict):
+		attrdict['RTIPA_server'] = val
+	# RTIPA end
+
+	def __do_pass(self, node, attr, val, attrdict):
+		pass
+
+	__parseattrdict = {
+		'id': __do_id,
+		'abstract': __do_literal,
+		'copyright': __do_literal,
+		'author': __do_literal,
+		'src': __do_src,
+		'begin': __do_sync,
+		'end': __do_sync,
+		'dur': __do_dur,
+		'min': __do_minmax,
+		'max': __do_minmax,
+		'repeat': __do_repeatCount,
+		'repeatCount': __do_repeatCount,
+		'repeatDur': __do_repeatDur,
+		'restart': __do_restart,
+		'restartDefault': __do_restartDefault,
+		'mediaSize': __do_prefetch,
+		'mediaTime': __do_prefetch,
+		'bandwidth': __do_prefetch,
+		'readIndex': __do_index,
+		'tabindex': __do_index,
+		'sensitivity': __do_sensitivity,
+		'transIn': __do_transition,
+		'transOut': __do_transition,
+		'layout': __do_layout,
+		'fill': __do_fill,
+		'fillDefault': __do_fillDefault,
+		'erase': __do_erase,
+		'mediaRepeat': __do_mediaRepeat,
+		'color': __do_color,
+		'left': __do_subposition,
+		'right': __do_subposition,
+		'width': __do_subposition,
+		'height': __do_subposition,
+		'top': __do_subposition,
+		'bottom': __do_subposition,
+		'backgroundColor': __do_backgroundColor,
+		'z-index': __do_z_index,
+		'regPoint': __do_regPoint,
+		'regAlign': __do_enum,
+		'speed': __do_speed,
+		'autoReverse': __do_enum,
+		'syncMaster': __do_enum,
+		'syncTolerance': __do_syncTolerance,
+		'syncToleranceDefault': __do_syncTolerance,
+		'accelerate': __do_accelerate,
+		'decelerate': __do_accelerate,
+		'syncBehavior': __do_enum,
+		'syncBehaviorDefault': __do_enum,
+		'project_default_region': __do_default_region,
+		'project_default_type': __do_literal,
+		'project_bandwidth_fraction': __do_bandwidth_fraction,
+		'project_default_duration': __do_default_duration,
+		'project_default_duration_image': __do_default_duration,
+		'project_default_duration_text': __do_default_duration,
+		'collapsed': __do_collapsed,
+		'showtime': __do_showtime,
+		'timezoom': __do_timezoom,
+		'allowedmimetypes': __do_allowedmimetypes,
+		'project_forcechild': __do_forcechild,
+		'skip-content': __do_skip_content,
+		'thumbnailIcon': __do_thumbnailIcon,
+		'thumbnailScale': __do_thumbnailScale,
+		'showAnimationPath': __do_showAnimationPath,
+		'emptyIcon': __do_emptyIcon,
+		'emptyText': __do_emptyText,
+		'emptyColor': __do_emptyColor,
+		'emptyDur': __do_emptyDur,
+		'nonEmptyIcon': __do_nonEmptyIcon,
+		'nonEmptyText': __do_nonEmptyText,
+		'nonEmptyColor': __do_nonEmptyColor,
+		'dropIcon': __do_dropIcon,
+		'backgroundOpacity': __do_opacity,
+		'chromaKeyOpacity': __do_opacity,
+		'mediaOpacity': __do_opacity,
+		'chromaKey': __do_chromaKey,
+		'chromaKeyTolerance': __do_chromaKey,
+		'RTIPA-server': __do_RTIPA_server,
+		}
+	for __attr in smil_node_attrs:
+		__parseattrdict[__attr] = __do_pass
+	del __attr
 
 	def parseEnumValue(self, attr, val, default = None):
 		if val is None:
@@ -1542,7 +1650,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 			# now determine channel type
 			if subtype is not None and \
-			   string.find(string.lower(subtype), 'real') >= 0:
+			   subtype.lower().find('real') >= 0:
 				# if it's a RealMedia type, use tag to determine chtype
 				if tagname == 'audio':
 					chtype = 'RealAudio'
@@ -2047,7 +2155,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			for attr in ('from', 'to', 'by'):
 				val = attributes.get(attr)
 				if val is None:
-					continue
+					return
 				if tagname == 'animateMotion' and not fppairre.match(val):
 					if fppairre_bad.match(val):
 						self.syntax_error("missing parentheses in from value")
@@ -2749,14 +2857,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# methods for start and end tags
 
+	__keep_ns = {GRiNSns:0, QTns:0, RP9ns:0}
+	__smil2_ns = {}
+	for __x in SMIL2ns: __smil2_ns[__x] = 0
+	del __x
 	def __fix_attributes(self, ns, tagname, attributes):
 		# fix up attributes by removing namespace qualifiers.
 		# this also tests for the attributes that are
 		# specified in multiple namespaces.
 		if ns:
-			if ns in (GRiNSns, QTns, RP9ns):
+			if self.__keep_ns.has_key(ns): # ns in (GRiNSns, QTns, RP9ns)
 				pass
-			elif ns in SMIL2ns:
+			elif self.__smil2_ns.has_key(ns): # ns in SMIL2ns
 				ns = ''
 			else:
 				mod = ''
@@ -2792,9 +2904,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mod = ''
 			if len(nsattr) == 2:
 				ans, attr = nsattr
-				if ans in (GRiNSns, QTns, RP9ns):
+				if self.__keep_ns.has_key(ans): # ans in (GRiNSns, QTns, RP9ns)
 					pass
-				elif ans in SMIL2ns:
+				elif self.__smil2_ns.has_key(ans): # ans in SMIL2ns
 					ans = ''
 				else:
 					mod = ''
@@ -2926,7 +3038,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_smil(self):
 		if __debug__:
 			if parsedebug: print 'end smil'
-		from realnode import SlideShow
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
@@ -3020,7 +3131,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__in_meta = 1
 		if attributes.has_key('name'):
-			name = string.lower(attributes['name'])
+			name = attributes['name'].lower()
 		else:
 			self.syntax_error('required attribute name missing in meta element')
 			return
@@ -3200,7 +3311,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for attr, val in attributes.items():
 			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
 				attr = attr[len(GRiNSns)+1:]
-			val = string.strip(val)
+			val = val.strip()
 			if attr == 'id':
 				# already dealt with
 				pass
@@ -3563,7 +3674,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for attr, val in attributes.items():
 			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
 				attr = attr[len(GRiNSns)+1:]
-			val = string.strip(val)
+			val = val.strip()
 			if attr == 'id':
 				attrdict[attr] = id = val
 
@@ -3934,7 +4045,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__syncarcs = []
 		attrdict = node.attrdict
 		for attr, val in attributes.items():
-			val = string.strip(val)
+			val = val.strip()
 			if attr == 'id':
 				self.__nodemap[val] = node
 				self.__idmap[val] = node.GetSchedParent().GetUID()
@@ -4641,17 +4752,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return None
 
 	def __strToIntList(self, str):
-		sl = string.split(str,';')
 		vl = []
-		for s in sl:
+		for s in str.split(';'):
 			if s: 
 				vl.append(int(s))
 		return vl	
 
 	def __strToPosList(self, str):
-		sl = string.split(str,';')
 		vl = []
-		for s in sl:
+		for s in str.split(';'):
 			if s: 
 				pair = self.__getNumPair(s)
 				if pair:
@@ -4660,7 +4769,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def __getNumPair(self, str):
 		if not str: return None
-		str = string.strip(str)
+		str = str.strip()
 		if str[:1] == '(' and str[-1:] == ')':
 			str = str[1:-1].strip()
 		import tokenizer
@@ -4671,7 +4780,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return None
 
 	def __strToColorList(self, str):
-		vl = map(self.__convert_color, string.split(str,';'))
+		vl = map(self.__convert_color, str.split(';'))
 		return vl
 
 	# the rest is to check that the nesting of elements is done
@@ -4866,7 +4975,7 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 	u = MMurl.urlopen(url)
 	if not new_file:
 		baseurl = u.geturl()
-		i = string.rfind(baseurl, '/')
+		i = baseurl.rfind('/')
 		if i >= 0:
 			baseurl = baseurl[:i+1]	# keep the slash
 		else:
