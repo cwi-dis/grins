@@ -573,9 +573,21 @@ DirectDrawSurface_Flip(DirectDrawSurfaceObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "|i",&dwFlags))
 		return NULL;	
 	HRESULT hr;
+
+	hr = self->pI->IsLost();
+	if(hr==DDERR_SURFACELOST)
+		hr = self->pI->Restore();
+	
+	if(hr!=DD_OK){
+		// we can not do the blt now
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+	
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Flip(NULL,dwFlags);
 	Py_END_ALLOW_THREADS
+		
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Flip", hr);
 		return NULL;
@@ -593,6 +605,16 @@ DirectDrawSurface_GetDC(DirectDrawSurfaceObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
 	HRESULT hr;
+	
+	hr = self->pI->IsLost();
+	if(hr==DDERR_SURFACELOST)
+		hr = self->pI->Restore();
+	
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_GetDC:Restore", hr);
+		return NULL;
+	}
+	
 	HDC hdc;
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->GetDC(&hdc);
@@ -1021,7 +1043,31 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	DWORD depth  = desc.ddpfPixelFormat.dwRGBBitCount;
 
 	HRESULT hr;
-	
+
+	// try restoring target if lost
+	hr = self->pI->IsLost();
+	if(hr==DDERR_SURFACELOST)
+		hr = self->pI->Restore();
+	if (FAILED(hr)){
+		// we can not do anything, 
+		// retry with next iteration
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	// try next time if we lost sources
+	// what we have paint has gone
+	hr = ddsFrom->pI->IsLost();
+	if (FAILED(hr)){
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+	hr = ddsTo->pI->IsLost();
+	if (FAILED(hr)){
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
 	Py_BEGIN_ALLOW_THREADS
 	if (depth==8)
 		hr=BltBlend8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
@@ -1090,14 +1136,30 @@ DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "(iiii)|i",&rect.left,&rect.top,
 			&rect.right,&rect.bottom,&ddcolor))
 		return NULL;
+
+	// try first restoring target if lost
+	HRESULT hr = self->pI->IsLost();
+	if(hr==DDERR_SURFACELOST)
+		hr = self->pI->Restore();
+	if (FAILED(hr)){
+		// next time please
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+	
 	DDBLTFX bltfx;
 	ZeroMemory(&bltfx,sizeof(bltfx));
 	bltfx.dwSize = sizeof(bltfx);
 	bltfx.dwFillColor = ddcolor;
-	HRESULT hr;
 	Py_BEGIN_ALLOW_THREADS
 	hr=self->pI->Blt(&rect,0,0,DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
 	Py_END_ALLOW_THREADS
+		
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_BltFill", hr);
+		return NULL;
+	}		
+		
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
@@ -1138,8 +1200,6 @@ DirectDrawSurface_Restore(DirectDrawSurfaceObject *self, PyObject *args)
 	int ret = (hr==DD_OK)?1:0;
 	return Py_BuildValue("i",ret);
 	}
-
-
 
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
