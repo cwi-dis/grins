@@ -6,6 +6,10 @@ set GRINS_HOME=..\..
 rem Check if environment variables need setting up!
 if '%PYTHONEX%==' goto no_env
 
+if not '%FREEZE%==' goto freeze_override
+set FREEZE %PYTHONHOME%\Tools\freeze\freeze.py
+:freeze_override
+
 if not '%FREEZE_ENV%==' goto freeze
 
 echo Setting up freeze environment variables.
@@ -35,7 +39,7 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
 
-set main_script=%GRINS_HOME%\grins_app.py 
+set main_script=%GRINS_HOME%\runGRiNS.py 
 rem set main_script=test.py
 
 : Do the freeze
@@ -87,10 +91,11 @@ echo -x win32ui  >> FreezeOpts
 echo -x win32dbg >> FreezeOpts
 
 
-%PYTHONHOME%\Tools\freeze\freeze.py -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script%
+%FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script%
 if errorlevel 1 goto xit
 
 : Make the target
+echo Executing NMAKE
 nmake
 goto xit
 
@@ -99,6 +104,8 @@ echo You must set the following environment variables before freezing:
 echo PYTHONEX=The path to the Python extensions (eg, the directory with
 echo          "win32" and "pythonwin" sub-directories.
 echo PYTHONHOME=The path to the root of Python-1.5.x
+echo .
+echo If you want to use a nonstandard freeze.py set FREEZE to its path
 goto xit
 
 
