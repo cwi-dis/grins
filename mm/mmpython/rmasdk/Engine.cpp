@@ -156,11 +156,13 @@ CreateEngine()
 #endif
     
 	if ((EngineObject::hDll = LoadLibrary(szDllName)) == NULL) {
+#ifdef FUNNY_FPRINTFS
 #if defined(_UNIX)
 		fprintf(stdout, "Failed to load the 'rmacore.so.6.0' shared library\n");
 		fprintf(stdout, dlerror());
 #else
 		fprintf(stdout, "Failed to load the '%s' library.\n", szDllName);
+#endif
 #endif
 		return cleanup();
 	}
