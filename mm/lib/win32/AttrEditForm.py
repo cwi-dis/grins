@@ -812,9 +812,9 @@ class ElementSelCtrl(AttrCtrl):
 
 	def OnBrowse(self,id,code):
 		parent = self._wnd._form
-		elements = None
+		mmnode = self._wnd._form._node
 		selected = self._attrval.gettext()
-		dlg = win32dialog.SelectElementDlg(parent, elements, selected)
+		dlg = win32dialog.SelectElementDlg(parent, mmnode, selected)
 		if dlg.DoModal() == win32con.IDOK:
 			if selected != dlg.gettext():
 				self._attrval.settext(dlg.gettext())
