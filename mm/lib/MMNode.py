@@ -1351,7 +1351,7 @@ class MMSyncArc:
 		return refnode
 
 	def getevent(self):
-		if self.srcnode in ('prev', 'syncbase'):
+		if self.srcnode == 'syncbase':
 			refnode = self.refnode()
 			pnode = self.dstnode.GetSchedParent()
 			if pnode.looping_body_self:
