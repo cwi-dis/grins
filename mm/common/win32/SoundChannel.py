@@ -35,7 +35,6 @@ class SoundChannel(Channel.ChannelAsync):
 	def do_show(self, pchan):
 		if not Channel.ChannelAsync.do_show(self, pchan):
 			return 0
-		self.__mc = MediaChannel.MediaChannel(self)
 		return 1
 
 	def do_hide(self):
@@ -75,6 +74,8 @@ class SoundChannel(Channel.ChannelAsync):
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
+			if not self.__mc:
+				self.__mc = MediaChannel.MediaChannel(self)
 			try:
 				self.__mc.prepare_player(node)
 				self.__ready = 1
