@@ -26,8 +26,8 @@ import MMmimetypes
 import features
 import compatibility
 
-if features.H_NIPPLES in features.feature_set:
-	grins_snap = 1;			# TODO: this is not used properly everywhere in this file.
+# TODO: this is not used properly everywhere in this file.
+grins_snap = features.H_NIPPLES in features.feature_set
 
 import settings
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
