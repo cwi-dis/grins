@@ -76,8 +76,7 @@ class PanelMixin:
 
 	def setOptions(self, optionsdict):
 		if not self._pbar: return
-		for name, info in optionsdict.items():
-			self._pbar.setOption(name, info)
+		self._pbar.setOptions(optionsdict)
 
 	def update(self):
 		if self._pbar:
@@ -120,7 +119,7 @@ class ToolbarMixin(PanelMixin):
 		self._pulldowncallbackdict = {}
 		#
 		for template in ToolbarTemplate.TOOLBARS:
-			name, command, barid, resid, candrag, buttonlist = template
+			name, tp, state, command, barid, resid, candrag, buttonlist = template
 			cmdid = usercmdui.usercmd2id(command)
 			self._bars[cmdid] = None
 
@@ -215,7 +214,7 @@ class ToolbarMixin(PanelMixin):
 
 	def _setToolbarFromTemplate(self, template):
 		# First count number of buttons
-		name, command, barid, resid, candrag, buttonlist = template
+		name, tp, state, command, barid, resid, candrag, buttonlist = template
 
 		# Create the toolbar
 		cmdid = usercmdui.usercmd2id(command)
@@ -259,8 +258,11 @@ class ToolbarMixin(PanelMixin):
 		self._lastbar = bar
 
 	def setToolbarPulldowns(self, pulldowndict):
-		PanelMixin.setOptions(self, pulldowndict)
+		if pulldowndict == self._pulldowndict:
+			print 'It is the same!'
+			return
 		self._pulldowndict = pulldowndict
+		PanelMixin.setOptions(self, pulldowndict)
 		self._recalcPulldownEnable()
 
 	def _recalcPulldownEnable(self):

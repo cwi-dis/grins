@@ -204,6 +204,18 @@ class PlayerDlgBar(window.Wnd):
 		for ctrl in self._ctrls.values():
 			ctrl.attach_to_parent()
 
+	def setOptions(self, optionsdict):
+		old_keys = self._ctrls.keys()
+		new_keys = optionsdict.keys()
+		old_keys.sort()
+		new_keys.sort()
+		if old_keys != new_keys:
+			print 'PLAYDLG SHOULD UPDATE'
+			print 'old', old_keys
+			print 'new', new_keys
+		for name, info in optionsdict.items():
+			self.setOption(name, info)
+
 	def setOption(self, name, info):
 		ctrl = self._ctrls.get(name)
 		if ctrl is not None:
