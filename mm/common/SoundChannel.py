@@ -72,6 +72,7 @@ class SoundChannel(Channel):
 		self = Channel.init(self, name, attrdict, player)
 		self.info = self.port = None
 		self.rate = 0.0
+		self.cancelled_qid = 0
 		self.armed_node = None
 		self.armed_info = None
 		return self
@@ -169,7 +170,7 @@ class SoundChannel(Channel):
 		port = self.port
 		filled = int(port.getfilled() * self.rate)
 		port.closeport()
-		self.framestodo = self.framestodo + filled # XXX Correct?
+		self.framestodo = self.framestodo + filled
 		self.port = al.openport('SoundChannel', 'w', self.config)
 		f.seek(-filled*nchannels*sampwidth, 1)
 		
@@ -177,10 +178,13 @@ class SoundChannel(Channel):
 	def setrate(self, rate):
 		if self.qid:
 			self.unfill()		
-		self.rate = rate
-		if self.qid:
 			self.player.cancel(self.qid)
+			self.qid = None
+			self.cancelled_qid = 1
+		self.rate = rate
+		if self.rate and self.cancelled_qid:
 			self.qid = self.player.enter(0, 0, self._poll, self.cb_arg)
+			self.cancelled_qid = 0
 	#
 	def stop(self):
 		if (self.port <> None and self.armed_info == None) or self.qid:
@@ -190,6 +194,7 @@ class SoundChannel(Channel):
 		if self.qid <> None:
 			self.player.cancel(self.qid)
 			self.qid = None
+		self.cancelled_qid = 0
 	#
 	def reset(self):
 		pass
