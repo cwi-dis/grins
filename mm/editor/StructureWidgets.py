@@ -293,6 +293,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				node.views['struct_view'].uncollapse()
 		#self.mother.need_redraw = 1
 
+
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
 		edge = 0
 		if mytimes is not None:
@@ -402,9 +403,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if self.timemapper is not None:
 				t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 				p0, p1 = self.addcollisions(t0, t2, timemapper, (t0, t1, t2, download, begindelay))
-				if self.iconbox is None or not self.iconbox.vertical:
-					self.timemapper.addcollision(t0, p0)
-					self.timemapper.addcollision(t2, p1)
+##				if self.iconbox is None or not self.iconbox.vertical:
+				self.timemapper.addcollision(t0, p0)
+				self.timemapper.addcollision(t2, p1)
 				pxl_per_sec = timemapper.calculate(self.node.showtime in ('cfocus', 'bwstrip'))
 				self.node.min_pxl_per_sec = pxl_per_sec
 				t0, t1, t2, dummy, dummy = self.GetTimes('virtual')
@@ -1295,7 +1296,8 @@ class StructureObjWidget(MMNodeWidget):
 				my_b = my_b - tl_h
 				greyout_t = my_b - tl_h/2
 			y = self.timeline.params[0]
-			self.need_draghandles = my_l,my_r,y-DRAGHANDLESIZE/2
+			self.need_draghandles = None # no draghandles on node with timeline
+##			self.need_draghandles = my_l,my_r,y-DRAGHANDLESIZE/2
 			min_height = min_height - tl_h
 
 		if self.bwstrip is not None:
