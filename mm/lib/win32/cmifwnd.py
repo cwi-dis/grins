@@ -255,20 +255,20 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	# Helper function to display window info
 	def _display_info(self,dc):
 		if self._active_displist: return
-		rc=win32mu.Rect(self.GetClientRect())	
-		DrawTk.drawTk.SetSmallFont(dc)
-		if self._showing:
-			old=dc.SetTextColor(win32mu.RGB(self._showing))
-		if hasattr(self,'_z'):
-			s = '%s (z=%d)'%(self._title,self._z)
-		else:
-			s = self._title
-		rc.inflateRect(-2,-2)
-		dc.SetBkMode(win32con.TRANSPARENT)
-		dc.DrawText(s,rc.tuple(),win32con.DT_SINGLELINE|win32con.DT_TOP|win32con.DT_CENTER)
-		if self._showing:
-			old=dc.SetTextColor(old)
-		DrawTk.drawTk.RestoreFont(dc)
+##		rc=win32mu.Rect(self.GetClientRect())	
+##		DrawTk.drawTk.SetSmallFont(dc)
+##		if self._showing:
+##			old=dc.SetTextColor(win32mu.RGB(self._showing))
+##		if hasattr(self,'_z'):
+##			s = '%s (z=%d)'%(self._title,self._z)
+##		else:
+##			s = self._title
+##		rc.inflateRect(-2,-2)
+##		dc.SetBkMode(win32con.TRANSPARENT)
+##		dc.DrawText(s,rc.tuple(),win32con.DT_SINGLELINE|win32con.DT_TOP|win32con.DT_CENTER)
+##		if self._showing:
+##			old=dc.SetTextColor(old)
+##		DrawTk.drawTk.RestoreFont(dc)
 
 	def dump_active_displist(self):
 		print 'active_displist:',self._active_displist
