@@ -1,9 +1,0 @@
-<imfl>
-  <head timeformat="dd:hh:mm:ss.xyz"
-        duration="6.6272"
-        bitrate="10000"
-        width="100"
-        height="100"/>
-  <image handle="1" name="slide-1.jpg"/>
-  <fadein start="6.6272" duration="0" target="1" grins_image_caption="&lt;clear/&gt;"/>
-</imfl>
