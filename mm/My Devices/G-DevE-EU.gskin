@@ -3,9 +3,9 @@
 
 # See gskin-spec.txt for details.
 
-image G-DevE.gif
+image G-DevE-EU.gif
+
 display 83 49 640 480
-centerskin = 1
 play rect 750 403 18 20			# Play Icon
 pause rect 795 414 18 20		# Pause Icon
 stop rect 802 470 18 20			# Stop
@@ -13,6 +13,13 @@ exit rect 31 42 25 25			# Exit Button
 open rect 755 482 18 18			# Open File Button
 
 profile 3GPP PSS5 Profile
-component PSS5x
+component MMS
+component PSS5
 component EUmarket
-component BigScreen NiceVideo
+
+component BigScreen 
+component NiceVideo
+component WaveAudio
+
+# configuration prefs commands
+centerskin = 1
