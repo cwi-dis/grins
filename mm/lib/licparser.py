@@ -152,6 +152,7 @@ class License:
 		return type(self.__moredays) == type(0)
 
 	def getbaselicense(self):
+		import settings
 		basefeaturewanted = []
 		baseproductnames = []
 		for f in self.__available_features:
