@@ -1,5 +1,17 @@
 __version__ = "$Id$"
 
+""" @win32doc|win32mu
+This module contain simple class utilities
+and function utilities that simplify 
+the process of working with win32 structures
+The classes defined here are: 
+	Point: (x,y)
+	Size: (cx,cy)
+	Rect : (left,top,right,bottom)
+	SizeRect: (x,y,width,height)
+	Win32Msg: cracks win32 messages into meaningful parts
+	CreateStruct: simplifies win32 CREATESTRUCT manipulation
+"""
 
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
@@ -233,8 +245,8 @@ def FrameRect(dc,rc,rgb):
 	dc.FrameRectFromHandle(rc,br)
 	Sdk.DeleteObject(br)
 	
-def DrawRectangle(dc,rc,rgb,st):
-	if st == "d":
+def DrawRectangle(dc,rc,rgb,st='f'):
+	if st == 'd':
 		pen=Sdk.CreatePen(win32con.PS_SOLID,0,win32api.RGB(0,0,0))
 		oldpen=dc.SelectObjectFromHandle(pen)
 		DrawRectanglePath(dc,rc)
@@ -266,5 +278,89 @@ def DrawLines(dc,ll,rgb):
 	Sdk.DeleteObject(pen)
 
 
+################################## Print Screen to Bitmap
 
+from sysmetrics import scr_width_pxl,scr_height_pxl
+SCR=Rect((0,0,scr_width_pxl,scr_height_pxl))
 
+# Limits rectangle in screen
+def GetVisible(rct):
+	rc=Rect(rct)
+	if rc.left<0:rc.left=0
+	if rc.top<0:rc.top=0
+	if rc.right>SCR.right:rc.right=SCR.right
+	if rc.bottom>SCR.bottom:rc.bottom=SCR.bottom
+	return rc
+
+# Creates a bitmap copying the screen
+def ScreenToBitmap(rct):
+	hdcscr=Sdk.CreateDC('DISPLAY')
+	dcscr=win32ui.CreateDCFromHandle(hdcscr)
+	dcmem=win32ui.CreateDC()
+	dcmem.CreateCompatibleDC(dcscr)
+	rc=GetVisible(rct)
+	bmp=win32ui.CreateBitmap()
+	bmp.CreateCompatibleBitmap(dcscr,rc.width(),rc.height())
+	old=dcmem.SelectObject(bmp)
+	dcmem.BitBlt((0,0),rc.size(),dcscr,rc.pos(),win32con.SRCCOPY)
+	bmp=dcmem.SelectObject(old)
+	dcscr.DeleteDC()
+	dcmem.DeleteDC()
+	return bmp
+
+def BitBltBmp(dc,bmp,rc_dst):
+	dcmem=win32ui.CreateDC()
+	dcmem.CreateCompatibleDC(dc)
+	old=dcmem.SelectObject(bmp)
+	pt_dst=(rc_dst[0],rc_dst[1])
+	sz_dst=(rc_dst[2]-rc_dst[0],rc_dst[3]-rc_dst[1])
+	dc.BitBlt(pt_dst,sz_dst,dcmem,(0,0),win32con.SRCCOPY)
+	dcmem.SelectObject(old)
+	dcmem.DeleteDC()
+
+def StretchBltBmp(dc,bmp,rc_dst):
+	dcmem=win32ui.CreateDC()
+	dcmem.CreateCompatibleDC(dc)
+	old=dcmem.SelectObject(bmp)
+	pt_dst=(rc_dst[0],rc_dst[1])
+	sz_dst=(rc_dst[2]-rc_dst[0],rc_dst[3]-rc_dst[1])
+	pt_src=(0,0)
+	sz_src=bmp.GetSize()
+	dc.StretchBlt(pt_dst,sz_dst,dcmem,pt_src,sz_src,win32con.SRCCOPY)
+	dcmem.SelectObject(old)
+	dcmem.DeleteDC()
+	
+def BitBltBmpFramed(dc,bmp,rc_dst):
+	BitBltBmp(dc,bmp,rc_dst)
+	br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+	dc.FrameRectFromHandle(rc_dst,br)
+	Sdk.DeleteObject(br)
+
+def WndToBmp(wnd):
+	rc=wnd.GetWindowRect()
+	return ScreenToBitmap(rc)
+
+################################### DlgTemplate
+from Font import findfont
+
+class DlgTemplate:
+	def __init__(self,id):
+		self._templ=win32ui.LoadDialogResource(id)
+		#print self._templ
+		self._header=self._templ[0]
+		self._dlg_rc=self._header[1]
+		if len(self._header)>4:		
+			pointsize=self._header[4][0]
+			fontname=self._header[4][1]
+			font=findfont(fontname, pointsize)
+			self._cx = font._tm['tmAveCharWidth']+1
+			self._cy = font._tm['tmHeight']
+
+	# dlg units should be computed from dialog font
+	def getRect(self):
+		if len(self._header)>4:	
+			l,t,r,b=self._dlg_rc
+			cx,cy=self._cx,self._cy
+			return Rect(((l*cx+2)/4,(t*cy+4)/8,(r*cx+2)/4,(b*cy+4)/8))
+		else:
+			return Rect(0,0,200,200)
