@@ -266,6 +266,9 @@
 (showEditBackground (bool) 1 'Show edit background' default
 	'Show edit background color in Layout View' channel (g2 qt smil10 smil2 cmif snap))
 
+(skip_content (bool) 1 'Skip unknown content' default
+	'Skip unknown content when parsing this document' raw (cmif smil2))
+
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw (cmif))
 
