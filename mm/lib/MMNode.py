@@ -21,6 +21,8 @@ import re
 debuggensr = 0
 debug = 0
 
+_CssAttrs = ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']
+
 class MMNodeContext:
 	"Adds context information about each MMNode" # -mjvdg. TODO: elaborate.
 	def __init__(self, nodeclass):
@@ -63,8 +65,7 @@ class MMNodeContext:
 		self.cssResolver = None
 
 	def __repr__(self):
-		return '<MMNodeContext instance, channelnames=' \
-			+ `self.channelnames` + '>'
+		return '<%s instance, channelnames=%s>' % (self.__class__.__name__, `self.channelnames`)
 
 	def settitle(self, title):
 		self.title = title
@@ -641,7 +642,7 @@ class MMRegPoint:
 		self.attrdict = {}
 
 	def __repr__(self):
-		return '<MMRegPoint instance, name=' + `self.name` + '>'
+		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
 
 	#
 	# Emulate the dictionary interface
@@ -742,7 +743,7 @@ class MMChannel:
 				self.attrdict['base_winoff'] = (0, 0, 100, 100)
 
 	def __repr__(self):
-		return '<MMChannel instance, name=' + `self.name` + '>'
+		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
 
 	def _fillChannel(self):
 		# fill the region with the requiered default attribute values
@@ -809,7 +810,7 @@ class MMChannel:
 		return value
 
 	def isCssAttr(self, name):
-		return name in ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']
+		return name in _CssAttrs
 
 	#
 	# Set animated attribute
@@ -1264,7 +1265,7 @@ class MMSyncArc:
 				tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
 			else:
 				tz = ''
-			return '<MMSyncArc instance, wallclock=%s%s%s%s>' % (date, time, tz, path)
+			return '<%s instance, wallclock=%s%s%s%s>' % (self.__class__.__name__, date, time, tz, path)
 		if self.delay is None:
 			src = 'indefinite'
 		elif self.channel is not None:
@@ -1300,7 +1301,7 @@ class MMSyncArc:
 			ts = ', timestamp = %g' % self.timestamp
 		else:
 			ts = ''
-		return '<MMSyncArc instance %x, from %s to %s%s%s>' % (id(self), src, dst, ts, path)
+		return '<%s instance %x, from %s to %s%s%s>' % (self.__class__.__name__, id(self), src, dst, ts, path)
 
 	def refnode(self):
 		node = self.dstnode
@@ -1724,8 +1725,8 @@ class MMNode:
 			name = MMAttrdefs.getattr(self, 'name')
 		except:
 			name = ''
-		return '<MMNode instance, type=%s, uid=%s, name=%s, playing=%s>' % \
-		       (`self.type`, `self.uid`, `name`, MMStates.states[self.playing])
+		return '<%s instance, type=%s, uid=%s, name=%s, playing=%s>' % \
+		       (self.__class__.__name__, `self.type`, `self.uid`, `name`, MMStates.states[self.playing])
 
 	def _fill(self):
 		# fill with the requiered default attribute values
@@ -1855,10 +1856,7 @@ class MMNode:
 		return value
 
 	def isCssAttr(self, name):
-		if name in ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
-			return 1
-
-		return 0
+		return name in _CssAttrs
 
 	# this method return the media positioning (subregiongeom+mediageom) in pixel values.
 	# All values are relative to the parent region/subregion
@@ -2754,6 +2752,11 @@ class MMNode:
 		uidremap[self.uid] = copy.uid
 		# note that beginlist/endlist are fixed later
 		copy.attrdict = _valuedeepcopy(self.attrdict)
+		# special action for positioning attributes
+		for attr in _CssAttrs:
+			val = self.GetRawAttrDef(attr, None)
+			if val is not None:
+				copy.SetAttr(attr, val)
 		copy.values = _valuedeepcopy(self.values)
 		children = self.children
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
