@@ -1653,7 +1653,11 @@ class ChannelWindow(Channel):
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+			if MMAttrdefs.getattr(node, 'transparent'):
+				bgcolor = None
+			else:
+				bgcolor = self.getbgcolor(node)
+			self.armed_display.fgcolor(bgcolor)
 		hicolor = self.gethicolor(node)
 		for a in node.GetRawAttrDef('anchorlist', []):
 			coordinates = a[A_ARGS]
