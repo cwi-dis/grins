@@ -688,6 +688,9 @@ class TemplateDialog(ResDialog):
 		self._select=ComboBox(self,grinsRC.IDC_TEMPLATECOMBO)
 		self._explanation = Static(self, grinsRC.IDC_EXPLANATION)
 		self._picture = WndCtrl(self, grinsRC.IDC_PICTURE)
+		self._html_templates = (
+			RadioButton(self, grinsRC.IDC_TARGET_EXTERN),
+			RadioButton(self, grinsRC.IDC_TARGET_EMBEDDED))
 		self._bmp = None
 
 		self.show()
@@ -697,6 +700,8 @@ class TemplateDialog(ResDialog):
 		self.init_subwindows()
 		for i in range(len(self._names)):
 			self._select.insertstring(i, self._names[i])
+		self._html_templates[0].setcheck(1)
+		self._html_templates[1].setcheck(0)
 		self._select.setcursel(0)
 		self._select.hookcommand(self, self.OnChangeTemplate)
 		self._setdialoginfo()
@@ -747,7 +752,12 @@ class TemplateDialog(ResDialog):
 	def OnOK(self):
 		which = self._select.getcursel()
 		if 0 <= which <= len(self._descriptions):
-			self._cb(self._descriptions[which])
+			rv = self._descriptions[which]
+			if self._html_templates[0].getcheck():
+				rv = rv + ('external_player.html',)
+			else:
+				rv = rv + ('embedded_player.html',)
+			self._cb(rv)
 		self.close()
 
 	def OnCancel(self):
