@@ -57,6 +57,9 @@ class _Toplevel:
 		self._pixel_per_mm_x = sysmetrics.pixel_per_mm_x
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 	
+		self._id_systemtimer = 0;
+		self._waiting=0
+		
 		# generic wnd class
 		import GenWnd
 		self.genericwnd=GenWnd.GenWnd
@@ -300,8 +303,18 @@ class _Toplevel:
 		wnd.create()
 		wnd.HookMessage(self.serve_events,win32con.WM_USER)
 		win32ui.GetApp().RunLoop(wnd)
-
+		
 		wnd.DestroyWindow()
+
+	# Set un event system timer
+	def setsystemtimer(self, sec):
+		self._id_systemtimer = self._subwindows[0].SetTimer(1,sec*1000)
+		
+	# callback of system timer
+	def systemtimer_callback(self):
+		if self._id_systemtimer > 0:
+			Afx.GetMainWnd().KillTimer(self._id_systemtimer)
+		self.serve_events()
 
 	def monitor(self,handler,count):
 		self.serve_events()
@@ -323,17 +336,22 @@ class _Toplevel:
 				break
 		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		self.serve_timeslices()
+		if self._waiting:self.setready()				
 
 	# Called by the core sustem to set the waiting cursor
-	_waiting=0
 	def setwaiting(self):
 		if not self._waiting:
 			win32ui.GetApp().BeginWaitCursor()
+			self._waiting = 1
 
 	# Called by the core sustem to remove the waiting cursor
 	def setready(self):
 		if self._waiting:
+			# if you take one call, the end cursor doesn't hide
 			win32ui.GetApp().EndWaitCursor()
+			win32ui.GetApp().EndWaitCursor()
+			self._waiting = 0
+			self.setsystemtimer(0.1)
 
 	#
 	# delta timer interface
@@ -353,11 +371,15 @@ class _Toplevel:
 			if t + time0 > sec:
 				self._timers[i] = (time0 - sec + t, dummy, tid)
 				self._timers.insert(i, (sec - t, cb, self._timer_id))
+				if self._timers:
+					self.setsystemtimer(self._timers[0][0])
 				return self._timer_id
 			t = t + time0
 		self._timers.append((sec - t, cb, self._timer_id))
 		#print 'new event:',self._timer_id,sec - t,cb
 		Afx.GetMainWnd().PostMessage(WM_KICKIDLE)
+		if self._timers:
+			self.setsystemtimer(self._timers[0][0])
 		return self._timer_id
 
 

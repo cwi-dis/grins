@@ -67,8 +67,7 @@ class CommandUI:
 			self.id= idend
 			self.iduc=None
 			idend=idend+1
-		class2ui[cmdcl]=self
-			
+		class2ui[cmdcl]=self	
 
 #
 # Global commands
@@ -138,9 +137,9 @@ CommandUI(HIDE_SOURCE)
 #
 # Player commands
 #
-CommandUI(PLAY,IDUC_PLAY)
-CommandUI(PAUSE,IDUC_PAUSE)
-CommandUI(STOP,IDUC_STOP)
+CommandUI(TB_PLAY,IDUC_PLAY)
+CommandUI(TB_PAUSE,IDUC_PAUSE)
+CommandUI(TB_STOP,IDUC_STOP)
 CommandUI(MAGIC_PLAY,IDUC_MAGIC_PLAY)
 CommandUI(CHANNELS,casc2ui[CHANNELS])
 CommandUI(USERGROUPS,casc2ui[USERGROUPS])
