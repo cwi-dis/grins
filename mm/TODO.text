@@ -1,7 +1,6 @@
 TODO for Michael :-)
 ----------------------
 
-* Get the menus working properly.
 * Enable Quicktime support
 
 * Disable drag + drop of structure nodes.
@@ -9,7 +8,12 @@ TODO for Michael :-)
 * Test + Fix D&D of everything.
 * Windows media support.
 
+* Display the player and the structure view at startup.
+
 * Toolbar or asset box - D&D transitions
 * Create templates for Snap! (slideshow)
 
 * Be happy. Enjoy life. Or at least try.
+
+* Traverse through the files and use the options
+	in features.py.
