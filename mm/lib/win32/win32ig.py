@@ -16,7 +16,9 @@ import win32ui,win32api
 
 class ImageLib:
 	def __init__(self):
-		self.lib=win32ui.Getig()
+		#self.lib=win32ui.Getig()
+		import gear32sd
+		self.lib = gear32sd
 		self._imglist = []
 		self._transpdict = {}
 
