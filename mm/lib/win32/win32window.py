@@ -1830,7 +1830,7 @@ class Region(Window):
 		x1, y1, w1, h1 = self.getwindowpos()
 
 		# sense a size change/restore
-		if not self._resizing:
+		if 0 and not self._resizing:
 			if w!=w0 or h!=h0:
 				self._resizing = 1
 				self._mediacoords = mediacoords
