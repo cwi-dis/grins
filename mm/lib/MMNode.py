@@ -1078,7 +1078,6 @@ class MMTreeElement(Owner):
 		pass
 		
 	def Extract(self):
-		# remove owner document (if set)
 		# look at the Owner module for more comments
 		if not self.parent is None: 
 			parent = self.parent
