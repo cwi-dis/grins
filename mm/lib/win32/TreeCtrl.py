@@ -19,13 +19,20 @@ class TreeCtrl(window.Wnd):
 	def create(self, parent, rc, id):
 		style = win32con.WS_VISIBLE | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
-				win32con.WS_BORDER | win32con.WS_TABSTOP |\
-				commctrl.TVS_LINESATROOT  
+				win32con.WS_BORDER | win32con.WS_TABSTOP\
+				# | commctrl.TVS_LINESATROOT  
 		self.CreateWindow(style, rc, parent, id)
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
 		parent.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
 		self.HookMessage(self.OnDump, win32con.WM_USER+1)
+
+	def createAsDlgItem(self, dlg, id):
+		wnd = dlg.GetDlgItem(id)
+		rc = wnd.GetWindowRect()
+		wnd.DestroyWindow()
+		rc = dlg.ScreenToClient(rc)
+		self.create(dlg, rc, id)
 
 	def OnLButtonDown(self, params):
 		msg = Win32Msg(params)
