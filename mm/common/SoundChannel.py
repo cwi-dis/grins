@@ -135,6 +135,10 @@ class SoundChannel(ChannelAsync):
 		self.__ready = 1
 		return 1
 
+	def __marker(self, node, marker):
+		if self._played_node == node:
+			node.marker(self._scheduler.timefunc(), marker)
+
 	def do_play(self, node):
 		self.__playing = node
 		self.__type = node.__type
@@ -175,6 +179,9 @@ class SoundChannel(ChannelAsync):
 			else:
 				qid = self._scheduler.enter(t, 0, self._playcontext.trigger, (arc,))
 				self.__evid.append(qid)
+		for marker, t in self.play_markers.items():
+			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
+			self.__evid.append(qid)
 		if repeatdur > 0:
 			self.__qid = self._scheduler.enter(
 				repeatdur, 0, self.__stopplay, ())
