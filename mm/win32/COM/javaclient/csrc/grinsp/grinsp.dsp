@@ -129,10 +129,6 @@ SOURCE=..\..\grins_GRiNSPlayerMonitor.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\grinscomsvr\idl\IGRiNSPlayerAuto.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\StdAfx.h
 # End Source File
 # End Group
