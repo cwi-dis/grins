@@ -126,5 +126,13 @@ SOURCE=.\dshow.cpp
 
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\any2wav.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\vid2rm.py
+# End Source File
 # End Target
 # End Project
