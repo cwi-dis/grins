@@ -79,7 +79,7 @@ class EventStruct:
 		if c == 'indefinite':
 			s.__init__(s.dstnode, action, delay=None)
 			return s
-		elif c == 'node' and self._setnode:
+		elif c == 'node':# and self._setnode:
 			# The problem here is that I don't know how to map a name of a node to it's instance.
 			print "TODO: don't know how to set node."
 			s.__init__(s.dstnode, action, srcnode = s.srcnode, event=self.get_event(), delay=self.get_offset_number())
@@ -90,7 +90,7 @@ class EventStruct:
 		elif c == 'marker' and self._setmarker:
 			s.__init__(s.dstnode, action, marker=self._setmarker)
 		elif c == 'delay':
-			s.__init__(s.dstnode, action, delay=self.get_offset_number())
+			s.__init__(s.dstnode, action, srcnode='syncbase', delay=self.get_offset_number())
 		elif c == 'wallclock':
 			print "TODO: editing wallclock attributes."
 			#s.__init__(s.dstnode, action,

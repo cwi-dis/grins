@@ -1137,6 +1137,7 @@ class EventCtrl(AttrCtrl):
 		self._thingnamewidget = components.Edit(self._wnd, grinsRC.IDC_THINGNAME) # static text box.
 		self._resultwidget = components.Edit(self._wnd, grinsRC.IDC_EVENTLASSOO)
 		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
+		self._repeatwidget = components.Edit(self._wnd, grinsRC.IDC_EDITREPEAT)
 
 		g = grinsRC
 		self._radiobuttons = {
@@ -1164,11 +1165,12 @@ class EventCtrl(AttrCtrl):
 		self._thingnamewidget.attach_to_parent()
 		self._resultwidget.attach_to_parent()
 		self._offsetwidget.attach_to_parent()
+		self._repeatwidget.attach_to_parent()
 		self.__init_radiobuttons()
 
 		# Top half of window.
 		self._list.hookcommand(self._wnd, self._listcallback)
-		self._wnd.HookCommand(self.OnAdd, grinsRC.IDC_NEWBUTTON)
+		self._wnd.HookCommand(self.OnNew, grinsRC.IDC_NEWBUTTON)
 		self._wnd.HookCommand(self.OnDelete, grinsRC.IDC_DELETEBUTTON)
 
 		# Bottom half of window
@@ -1203,11 +1205,12 @@ class EventCtrl(AttrCtrl):
 		self.set_textwidget()
 		self.set_offsetwidget()
 		self.set_resultwidget()
+		self.set_repeatwidget()
 
 	def sethelp(self):
 		print "TODO: sethelp."
 
-	def OnAdd(self, id, code):
+	def OnNew(self, id, code):
 		# Callback from the "add" button, which I renamed to "new"
 		# self._node should be an MMNode
 		if self._node is None:
@@ -1261,11 +1264,17 @@ class EventCtrl(AttrCtrl):
 		#for i in range(self._nedit):
 		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
 
+	def clear_radiobuttons(self):
+		# Yes, this is a hack. The radio buttons wouldn't behave so I'm using brute force.
+		for i in self._radiobuttonwidgets.values():
+			i.setcheck(0)
+
 	def set_radiobuttons(self):
 		if not self._eventstruct:
 			return
 		cause = self._eventstruct.get_cause()
-		self._radiobuttonwidgets[self.selected_radiobutton].setcheck(0)
+		self.clear_radiobuttons() # fix a stupid bug by brute force.
+		#self._radiobuttonwidgets[self.selected_radiobutton].setcheck(0)
 		self._radiobuttonwidgets[cause].setcheck(1)
 	def set_eventwidget(self):
 		# Sets the value of the event widget.
@@ -1316,6 +1325,10 @@ class EventCtrl(AttrCtrl):
 		else:
 			self._offsetwidget.settext("")
 			self._offsetwidget.setreadonly(1)
+	def set_repeatwidget(self):
+		if not self._eventstruct:
+			self._repeatwidget.settext("")
+			self._repeatwidget.setreadonly(1)
 
 	def _listcallback(self, id, code):
 		if code != win32con.CBN_SELCHANGE:
@@ -1346,7 +1359,7 @@ class EventCtrl(AttrCtrl):
 	def _textwidgetcallback(self, id, code):
 		if not self._eventstruct:
 			return
-		if code != win32con.EN_CHANGE:
+		if code != win32con.EN_KILLFOCUS:
 			return
 		t = self._textwidget.gettext()
 		error = self._eventstruct.set_thing_string(t)
@@ -1354,8 +1367,9 @@ class EventCtrl(AttrCtrl):
 			print "ERROR:", error
 		self.update()
 	def _offsetwidgetcallback(self, id, code):
-		if code != win32con.EN_CHANGE:
+		if code != win32con.EN_KILLFOCUS:
 			return
+		print "DEBUG: Offset widget got focus changed."
 		if not self._eventstruct:
 			return
 		if not self._eventstruct.set_offset(self._offsetwidget.gettext()):
