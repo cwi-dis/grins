@@ -92,7 +92,7 @@ default_settings = {
 	'structure_dropcolor': (0, 0, 0),
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
-	'defaultviews' : ['hierarchy'],	# Default views to open
+	'openviews' : [('structure', (-1, -1, -1, -1))],	# Default views to open
 	'showsource' : 0,	# Hidden preference to show source window in the player
 
 	# The temporal view
