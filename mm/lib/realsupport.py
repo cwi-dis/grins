@@ -1051,7 +1051,7 @@ def getinfo(url, fp = None, printfunc = None):
 		rp.close()
 		info = {'width': rp.width,
 			'height': rp.height,
-			'duration': rp.duration,
+			'duration': rp.duration or _calcdur(rp.tags),
 			'bitrate': rp.bitrate,}
 	elif string.lower(head) == '<win':
 		# RealText
