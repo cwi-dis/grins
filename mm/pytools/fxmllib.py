@@ -318,7 +318,7 @@ class XMLParser:
         i = self.__parse_misc(data, 0)
         # doctypedecl?
         res = doctype.match(data, i)
-        if res is not None:
+        if res is not None and self.doctype is None:
             docname, publit, syslit, docdata = res.group('docname', 'publit',
                                                         'syslit', 'data')
             self.docname = docname
@@ -329,6 +329,10 @@ class XMLParser:
         elif self.doctype:
             # do as if there was a <!DOCTYPE> declaration
             self.handle_doctype(None, '', self.doctype, '')
+        else:
+            # self.doctype == '' or no DOCTYPE
+            # ignore DOCTYPE
+            self.doctype = None
         t1 = time()
         # (Comment | PI | S)*
         i = self.__parse_misc(data, i)
@@ -723,9 +727,6 @@ class XMLParser:
                     if d.has_key(prefix):
                         ns = d[prefix]
                         break
-                else:
-                    if prefix != '':
-                        ns = self.__namespaces.get(prefix)
                 if ns is not None:
                     tagname = ns + ' ' + nstag
                 elif prefix != '':
@@ -746,9 +747,6 @@ class XMLParser:
                             if d.has_key(prefix):
                                 ans = d[prefix]
                                 break
-                        else:
-                            if prefix != '':
-                                ans = self.__namespaces.get(prefix)
                         if ans is not None:
                             attr = ans + ' ' + nsattr
                         elif prefix != '':
