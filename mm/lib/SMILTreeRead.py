@@ -3908,7 +3908,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass
 			else:
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
-				self.__skipping = self.__saved_attrdict.get('skip-content', 'false') == 'true'
+				for key, val in attrdict.items():
+					if string.split(key, ' ')[-1] == 'skip-content':
+						self.__skipping = val == 'true'
+						break
+				else:
+					for key, val in self.__saved_attrdict.items():
+						if string.split(key, ' ')[-1] == 'skip-content':
+							self.__skipping = val == 'true'
+							break
 				if self.__skipping:
 					method = None
 		elif tagname != 'smil':
