@@ -398,6 +398,13 @@ class LinkEdit(ViewDialog):
 					names.append(name)
 				str.browser.delalllistitems()
 				str.browser.addlistitems(names, -1)
+		# deal with possible node name changes
+		list = str.browser.getlist()
+		for i in range(len(str.anchors)):
+			a = str.anchors[i]
+			name = self.makename(a)
+			if name != list[i]:
+				str.browser.replacelistitem(i, name)
 		if focusvalue:
 			try:
 				str.focus = str.anchors.index(focusvalue)
