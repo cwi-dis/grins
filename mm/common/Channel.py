@@ -1610,6 +1610,8 @@ class ChannelWindow(Channel):
 		self.setanchor(None, None, b, None)
 
 		# create buttons for all anchors
+		ctx = node.GetContext()
+		root = node.GetRoot()
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
 			coordinates = a.aargs
 			if coordinates and coordinates[0] == A_SHAPETYPE_FRAGMENT:
@@ -1620,8 +1622,15 @@ class ChannelWindow(Channel):
 			   atype in (ATYPE_AUTO, ):
 				sensitive = 0
 			anchor = node.GetUID(), a.aid
-			if not self._player.context.hyperlinks.findsrclinks(anchor):
+			srclinks = self._player.context.hyperlinks.findsrclinks(anchor)
+			if not srclinks:
 				sensitive = 0
+			else:
+				for link in srclinks:
+					if ctx.isgoodlink(link, root):
+						break
+				else:
+					sensitive = 0
 
 			# convert coordinates relative to the window size
 			windowCoordinates = self.convertShapeToRelWindow(coordinates)
