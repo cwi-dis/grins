@@ -301,7 +301,6 @@ def initattrdefs():
 		except Res.Error:
 			pass
 		else:
-			print 'ATTRDEFS', len(atcres.data), `atcres.data[:4]`
 			return marshal.loads(atcres.data)
 			
 	filename = 'Attrdefs'
