@@ -552,15 +552,20 @@ class ChannelWindow(ChannelWindowWM, Channel):
 				raise error, \
 					  'base window '+`pname`+' for '+\
 					  `self._name`+' not found'
-			if self._attrdict.has_key('base_winoff'):
-				pgeom = self._attrdict['base_winoff']
-			else:
-				raise error, 'no geometry for '+`self._name`
 			if not pchan.window:
 				pchan.show()
 			if not pchan.window:
 				raise error, 'parent window for ' + \
 					  `self._name` + ' not shown'
+			if self._attrdict.has_key('base_winoff'):
+				pgeom = self._attrdict['base_winoff']
+			else:
+				import boxes
+				pgeom = boxes.create_box(pchan.window, 'Draw a subwindow for ' + self._name + ' in ' + pchan._name)
+				if pgeom:
+					self._attrdict['base_winoff'] = pgeom
+				else:
+					raise error, 'no geometry for '+`self._name`
 			self.window = pchan.window.newwindow(pgeom)
 		else:
 			# no basewindow, create a top-level window

@@ -21,7 +21,6 @@ class ImageChannel(ChannelWindow):
 			alist = []
 		self.armed_display.fgcolor(self.gethicolor(node))
 		for a in alist:
-##				print 'anchor:',`a`
 			args = a[A_ARGS]
 			if len(args) == 0:
 				args = [0,0,1,1]
@@ -43,31 +42,32 @@ class ImageChannel(ChannelWindow):
 		return 1
 
 	def defanchor(self, node, anchor):
-		import boxes
+		import boxes, windowinterface
 		if self._armstate != AIDLE:
 			raise error, 'Arm state must be idle when defining an anchor'
 		if self._playstate != PIDLE:
 			raise error, 'Play state must be idle when defining an anchor'
+		windowinterface.setcursor('watch')
 		context = AnchorContext().init()
 		self.startcontext(context)
 		self.syncarm = 1
 		self.arm(node)
 		self.syncplay = 1
 		self.play(node)
-		self._armstate = AIDLE
-		self._playstate = PIDLE
 		self.syncarm = 0
 		self.syncplay = 0
 		box = anchor[2]
+		windowinterface.setcursor('')
+		msg = 'Draw anchor in ' + self._name + '.'
 		if box == []:
-			box = boxes.create_box(self.window)
+			box = boxes.create_box(self.window, msg)
 		else:
 			# convert coordinates from image size to window size.
 			x = box[0] * self._arm_imbox[2] + self._arm_imbox[0]
 			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]
 			w = box[2] * self._arm_imbox[2]
 			h = box[3] * self._arm_imbox[3]
-			box = boxes.create_box(self.window, (x, y, w, h))
+			box = boxes.create_box(self.window, msg, (x, y, w, h))
 		self.stopcontext(context)
 		if box:
 			# convert coordinates from window size to image size.
@@ -75,7 +75,6 @@ class ImageChannel(ChannelWindow):
 			y = (box[1] - self._arm_imbox[1]) / self._arm_imbox[3]
 			w = box[2] / self._arm_imbox[2]
 			h = box[3] / self._arm_imbox[3]
-			[box,self._arm_imbox,(x,y,w,h)]
 			return (anchor[0], anchor[1], [x, y, w, h])
 		return None
 
