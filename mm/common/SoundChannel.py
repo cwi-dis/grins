@@ -203,7 +203,7 @@ class SoundChannel(Channel):
 	# Internal methods.
 	#
 	def getfilename(self, node):
-		return aiffcache.get(MMAttrdefs.getattr(node, 'file'))
+		return aiffcache.get(Channel.getfilename(self, node))
 	#
 	def destroy(self):
 ##		print 'SoundChannel.destroy: self.threads = ' + `self.threads`

@@ -13,8 +13,8 @@ pertaining to an object depends on the object only, not on the view...
 
 ------------------------------ CRASHES ----------------------------
 
-Pressing the "reset" button next to the channel name in a channel
-attributes dialog causes a crash -- self.currenttext is None.
+When opening a second document, we usually crash soon, in FORMS (in
+fl_qread).
 
 (Lynda: "I was adding and deleting sync arcs":)
 MMExc.AssertError: 'bad delsyncarc call'
@@ -38,11 +38,8 @@ Kaboo!: None
 
 ------------------------------ BUGS -------------------------------
 
-There's a hack in MMAttrdefs which calls toplevel.findfile() when it
-is getting 'file' attributes, however now we can have multiple
-toplevel menus this should be done differently (possibly each channel
-should call a function of the toplevel).  (Also this might put
-absolute filenames in the attributes???)
+ImageChannel: anchors are drawn at the wrong place when the file isn't
+found (also the window isn't popped in this case -- it probably should).
 
 ImageChannel: anchor editing doesn't scale the anchor we're editing
 right (once you edit it comes at the right place though)
@@ -622,3 +619,18 @@ is opened after the channel view) causes a crash.
 
 rewrite the block view without using FORMS, so user interface can be
 improved
+
+--- 4 Feb 1992 ---
+
+Pressing the "reset" button next to the channel name in a channel
+attributes dialog causes a crash -- self.currenttext is None, and so
+is self.currentvalue.  [Fix: the getdefault() routine returned None
+for the channel name.]
+
+There's a hack in MMAttrdefs which calls toplevel.findfile() when it
+is getting 'file' attributes, however now we can have multiple
+toplevel menus this should be done differently (possibly each channel
+should call a function of the toplevel).  (Also this might put
+absolute filenames in the attributes???)  [Fixed by moving the hack
+to the context, where it belongs.  Initialized when the first file
+is read into the context.]

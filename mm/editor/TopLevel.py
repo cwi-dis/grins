@@ -36,7 +36,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.dirname, self.basename = os.path.split(self.filename)
 		if self.basename[-5:] == '.cmif':
 			self.basename = self.basename[:-5]
-		MMAttrdefs.toplevel = self # For hack in MMAttrdefs.getattr()
 		self.read_it()
 		width, height = \
 			MMAttrdefs.getattr(self.root, 'toplevel_winsize')
@@ -52,14 +51,16 @@ class TopLevel(ViewDialog, BasicDialog):
 	# directory, if the resulting filename exists.
 	#
 	def findfile(self, filename):
-		if os.path.isabs(filename):
-			return filename
-		altfilename = os.path.join(self.dirname, filename)
-		if os.path.exists(altfilename):
-			return altfilename
-		# As a last resort, search along the $CMIFPATH
-		import cmif
-		return cmif.findfile(filename)
+		return self.context.findfile(filename)
+	#
+	# Interface to MMAttrdefs.getattr() which applies findfile to
+	# the result if the attribute name is 'file'
+	#
+	def getattr(self, node, attrname):
+		value = MMAttrdefs.getattr(node, attrname)
+		if attrname == 'file':
+			value = self.context.findfile(value)
+		return value
 	#
 	# Extend inherited show/hide/destroy interface.
 	#
@@ -348,10 +349,6 @@ class TopLevel(ViewDialog, BasicDialog):
 	def restore_callback(self, obj, arg):
 		if not obj.pushed:
 			return
-		if not self.editmgr.transaction():
-			obj.set_button(0)
-			return
-		self.editmgr.rollback()
 		if self.changed:
 			l1 = 'Are you sure you want to re-read the file?'
 			l2 = '(This will destroy the changes you have made)'
@@ -360,6 +357,10 @@ class TopLevel(ViewDialog, BasicDialog):
 			if not reply:
 				obj.set_button(0)
 				return
+		if not self.editmgr.transaction():
+			obj.set_button(0)
+			return
+		self.editmgr.rollback()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
 		self.context.seteditmgr(None)

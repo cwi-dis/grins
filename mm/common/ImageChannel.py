@@ -407,9 +407,6 @@ class ImageChannel(Channel):
 		self.window.armimage(self.getfilename(node), node)
 		self.armed_node = node
 	#
-	def getfilename(self, node):
-		return MMAttrdefs.getattr(node, 'file')
-	#
 	def setwaiting(self):
 		self.window.setwaiting()
 	#

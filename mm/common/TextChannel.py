@@ -603,7 +603,7 @@ class TextChannel(Channel):
 		if node.type == 'imm':
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
-			filename = MMAttrdefs.getattr(node, 'file')
+			filename = self.player.toplevel.getattr(node, 'file')
 			try:
 				fp = open(filename, 'r')
 			except IOError:

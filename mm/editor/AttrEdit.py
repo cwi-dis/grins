@@ -281,6 +281,7 @@ class ChannelWrapper(Wrapper):
 			return None
 	#
 	def getdefault(self, name): # Return the default or None
+		if name == '.cname': return ''
 		return MMAttrdefs.getdef(name)[1]
 	#
 	def setattr(self, name, value):

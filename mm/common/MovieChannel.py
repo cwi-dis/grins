@@ -356,9 +356,6 @@ class MovieChannel(Channel):
 		filename = self.getfilename(node)
 		return duration_cache.get(filename)
 	#
-	def getfilename(self, node):
-		return MMAttrdefs.getattr(node, 'file')
-	#
 	def setwaiting(self):
 		self.window.setwaiting()
 	#
