@@ -836,7 +836,7 @@ class Window:
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_PXL, mediacoords=None):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates,units=units)
@@ -1297,8 +1297,9 @@ class Region(Window):
 
 		# resizing
 		self._resizing = 0
-		self._mediacoords = None
+		self._scale = None
 		self._orgrect = self._rect
+		self._scalesurf = None
 						
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
@@ -1325,6 +1326,7 @@ class Region(Window):
 		del self._video 
 		del self._drawsurf
 		del self._fromsurf
+		del self._scalesurf
 
 	#
 	# OS windows simulation support
@@ -1514,7 +1516,7 @@ class Region(Window):
 	#
 
 	def getClipRgn(self, rel=None):
-		x, y, w, h = self.getwindowpos(rel);
+		x, y, w, h = self.getwindowpos(rel)
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		if rel==self: return rgn
@@ -1714,7 +1716,7 @@ class Region(Window):
 			win32api.Sleep(50)
 			bf.Restore()
 		x, y, w, h = self.getwindowpos()
-		self._topwindow.paint(exclwnd=exclwnd)
+		self._topwindow.paint(rc=(x, y, w, h), exclwnd=exclwnd)
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
@@ -1882,40 +1884,14 @@ class Region(Window):
 	# painting while resizing
 	def _paint_5(self, rc=None, exclwnd=None):
 		if exclwnd==self: return
-		# lie for a moment 
-		# we 'll restore truth before anybody notice it
-		temp = self._rect
-		self._rect = self._orgrect
+		if self._resizing and self._scale and self._scalesurf:
+			self.bltDDS(self._scalesurf)
 
-		# first paint self but on org rect
-		dst = self._orgrect
-		dds = self.createDDS(dst[2],dst[3])
-		self.clearSurface(dds)
-		try:
-			self._paintOnDDS(dds, dst)
-		except ddraw.error, arg:
-			print arg			
-
-		# then paint children bottom up relative to us
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			try:
-				w.paintOnDDS(dds, self)
-			except ddraw.error, arg:
-				print arg			
-
-		# restore truth
-		self._rect = temp
-
-		# and scale to current rect
-		self.bltDDS(dds)
-		
 	def paint(self, rc=None, exclwnd=None):
 		if not self._isvisible or exclwnd==self:
 			return
 
-		if self._resizing and self._mediacoords:
+		if self._resizing and self._scale and self._scalesurf:
 			self._paint_5(rc, exclwnd)
 			return
 
@@ -1946,10 +1922,10 @@ class Region(Window):
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_PXL, mediacoords=None):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
-			coordinates = self._convert_coordinates(coordinates,units=units)
+			coordinates = self._convert_coordinates(coordinates, units=units)
 		
 		if coordinates==self._rectb:
 			return
@@ -1961,13 +1937,17 @@ class Region(Window):
 		x1, y1, w1, h1 = self.getwindowpos()
 
 		# sense a size change/restore
-		if 0 and not self._resizing:
+		if not self._resizing:
 			if w!=w0 or h!=h0:
+				self._scalesurf = self.getBackDDS()
 				self._resizing = 1
-				self._mediacoords = mediacoords
+				self._scale = scale
 				self._orgrect = self._rect
 		elif w==w0 and h==h0:	
 			self._resizing = 0
+			del self._scalesurf
+			self._scalesurf = None
+		
 							
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
