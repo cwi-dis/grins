@@ -1231,6 +1231,10 @@ class HierarchyView(HierarchyViewDialog):
 				children = node.GetChildren()
 				if children:
 					type = children[0].GetType()
+		elif chtype == 'brush':
+			type = 'brush'
+		elif chtype == 'text':
+			type = 'imm'
 		else:
 			type = 'ext'
 
