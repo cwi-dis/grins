@@ -40,10 +40,10 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append((func, args))
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
+	def newwindow(self, x, y, w, h, title, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 0, pixmap, 0)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 1, pixmap, 0)
 
 	def setcursor(self, cursor):
@@ -174,10 +174,10 @@ class _Window:
 	def is_closed(self):
 		return self._parent is None
 
-	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
+	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		return _Window(self, x, y, w, h, '', 0, pixmap, transparent)
 
-	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
+	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		return _Window(self, x, y, w, h, '', 1, pixmap, transparent)
 
 	def showwindow(self):
