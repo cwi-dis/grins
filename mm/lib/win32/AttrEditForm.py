@@ -584,8 +584,10 @@ class AttrCtrl:
 		self._resid=resid
 		self._initctrl=None
 
-	def sethelp(self,infoc):
+	def sethelp(self):
 		if not self._initctrl: return
+		if not hasattr(self._wnd,'_attrinfo'): return
+		infoc=self._wnd._attrinfo
 		a=self._attr
 		hd=a.gethelpdata()
 		if hd[1]:
@@ -636,7 +638,7 @@ class OptionsCtrl(AttrCtrl):
 		if self._attr:self._attr.reset_callback()
 
 	def OnCombo(self,id,code):
-		self.sethelp(self._wnd._attrinfo)
+		self.sethelp()
 
 ##################################
 class FileCtrl(AttrCtrl):
@@ -672,7 +674,7 @@ class FileCtrl(AttrCtrl):
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
-			self.sethelp(self._wnd._attrinfo)
+			self.sethelp()
 
 ##################################
 class ColorCtrl(AttrCtrl):
@@ -730,7 +732,7 @@ class ColorCtrl(AttrCtrl):
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
-			self.sethelp(self._wnd._attrinfo)
+			self.sethelp()
 
 ##################################
 class StringCtrl(AttrCtrl):
@@ -762,7 +764,7 @@ class StringCtrl(AttrCtrl):
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
-			self.sethelp(self._wnd._attrinfo)
+			self.sethelp()
 
 ##################################
 class AttrPage(dialog.PropertyPage):
@@ -838,7 +840,7 @@ class SingleAttrPage(AttrPage):
 		l=self._cd.values()
 		for ctrl in l:
 			ctrl.OnInitCtrl()
-			ctrl.sethelp(self._attrinfo)
+			ctrl.sethelp()
 
 	def createctrls(self):
 		# for each attr create a ctrl
@@ -878,13 +880,10 @@ import DrawTk
 #   works with reference the full screen instead of the parent layout
 
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
-	def __init__(self,form,attr):
+	def __init__(self,form):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
 		self._layoutctrl=None
-		self._attr=attr
-		self._title=self._attr.getlabel()
-		self._al.append(attr)
 
 		# for now work only in pixels
 		self._units=appcon.UNIT_PXL
@@ -901,31 +900,10 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._yscale=sh/float(self._ymax)
 
 		DrawTk.drawTk.SetScale(self._xscale,self._yscale)
-
-	# creation overrides
-	def getpageresid(self):
-		return grinsRC.IDD_EDITRECTATTR1
-	def createctrls(self):
-		self._cd[self._attr]=StringCtrl(self,self._attr,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
 		
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		self._cd[self._attr].sethelp(self._attrinfo)
-
-		# get box and units from self._attr
-		val=self._attr.getcurrent()
-		if not val:
-			box=None
-		else:
-			box=self.a2tuple(val)
-			box=self.tolayout(box)		
-
-		# create layout control
 		self._layoutctrl=self.createLayoutCtrl()
-
-		# call create box against layout control but be modeless and cool!
-		modeless=1;cool=1
-		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
 
 	def createLayoutCtrl(self):
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
@@ -939,27 +917,17 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		v.UpdateWindow()	
 		return v
 		
+	def create_box(self,box):
+		# call create box against layout control but be modeless and cool!
+		modeless=1;cool=1
+		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+		
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
 	def update(self,*box):
 		if self._initdialog and box:
 			box=self.fromlayout(box)
-			self._cd[self._attr].setvalue('%d %d %d %d' % box)
-
-	def setvalue(self, attr, val):
-		if self._initdialog:
-			self._cd[attr].setvalue(val)
-			if not val:
-				box=None
-			else:
-				box=self.a2tuple(val)
-				box=self.tolayout(box)
-			self._layoutctrl.assert_not_in_create_box()
-			modeless=1;cool=1
-			self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
-
-	def getvalue(self, attr):
-		return self._cd[attr].getvalue()
+			#self._cd[self._attr].setvalue('%d %d %d %d' % box)
 	
 	def fromlayout(self,box):
 		if not box: return
@@ -984,6 +952,53 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 
 	def OnDestroy(self,params):
 		DrawTk.drawTk.RestoreState()
+
+class SingleAttrLayoutPage(LayoutPage):
+	def __init__(self,form,attr):
+		LayoutPage.__init__(self,form)
+		self._attr=attr
+		self._title=self._attr.getlabel()
+		self._al.append(attr)
+
+	def OnInitDialog(self):
+		LayoutPage.OnInitDialog(self)
+		self._cd[self._attr].sethelp()
+		val=self._attr.getcurrent()
+		if not val:
+			box=None
+		else:
+			box=self.a2tuple(val)
+			box=self.tolayout(box)		
+		self.create_box(box)
+
+	# creation overrides
+	def getpageresid(self):
+		return grinsRC.IDD_EDITRECTATTR1
+	def createctrls(self):
+		self._cd[self._attr]=StringCtrl(self,self._attr,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
+
+	# called back by create_box on every change
+	# the user can press reset to cancel changes
+	def update(self,*box):
+		if self._initdialog and box:
+			box=self.fromlayout(box)
+			self._cd[self._attr].setvalue('%d %d %d %d' % box)
+
+	def setvalue(self, attr, val):
+		if self._initdialog:
+			self._cd[attr].setvalue(val)
+			if not val:
+				box=None
+			else:
+				box=self.a2tuple(val)
+				box=self.tolayout(box)
+			self._layoutctrl.assert_not_in_create_box()
+			modeless=1;cool=1
+			self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+
+	def getvalue(self, attr):
+		return self._cd[attr].getvalue()
+
 
 ############################
 # Covers simple group pages
@@ -1012,8 +1027,8 @@ class GroupPage(AttrPage):
 # all attributes not in complete groups 
 # will be displayed on their own page
 
-attrgrs={
-	'infogroup':{
+attrgrs=(
+	{'name':'infogroup',
 	'title': 'Info',
 	'attrs':[
 		'title',
@@ -1022,26 +1037,37 @@ attrgrs={
 		'longdesc',
 		'author',
 		'copyright',
-		'comment',
+		'comment'
 		]},
 
-	'infogroup2':{
+	{'name':'infogroup2',
 	'title': 'Info',
 	'attrs':[
 		'title',
 		'abstract',
 		'author',
 		'copyright',
-		'comment',
+		'comment'
 		]},
 
-	'infogroup3':{
+	{'name':'infogroup3',
 	'title': 'Info',
 	'attrs':[
 		'title',
-		'comment',
+		'comment'
 		]},
-	}
+
+	{'name':'subregion',
+	'title':'Destination region',
+	'attrs':[
+		'subregionxy',
+		'subregionwh'
+		]},
+	)
+
+attrgrsdict={}
+for d in attrgrs:
+	attrgrsdict[d['name']]=d
 
 # if the policy is not first match first and we want platform
 # independance then we must implement getmatch function:
@@ -1054,50 +1080,67 @@ def getmatch(al):
 ############################
 # platform and implementation dependent group
 # one per group
-class InfoGroup:
-	data=attrgrs['infogroup']
-
-	def __init__(self):
+class AttrGroup:
+	def __init__(self,data):
+		self._data=data
 		self._al=[]
-		self._data=InfoGroup.data
-	# section 1
+
 	# decision interface (may be platform independent)
 	def visit(self,al):
+		self._al=[]
 		for a in al:
-			if a.getname() in InfoGroup.data['attrs']:
+			if a.getname() in self._data['attrs']:
 				self._al.append(a)
 	def matches(self):
 		return len(self._al)==len(self._data['attrs'])
 
+	def gettitle(self):
+		return self._data['title']
 
-	# section 2
-	# ui interface platform and implementation dependent
+	def getpageclass(self):
+		return GroupPage
+
+
+class InfoGroup(AttrGroup):
+	data=attrgrsdict['infogroup']
+
+	def __init__(self,data=None):
+		if data:
+			AttrGroup.__init__(self,data)
+		else:
+			AttrGroup.__init__(self,InfoGroup.data)
+
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
 		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
 		return ids
-
-	def gettitle(self):
-		return self._data['title']
-
 	def getpageresid(self):
 		return grinsRC.IDD_EDITSTRINGATTR2
 
 class InfoGroup2(InfoGroup):
-	data=attrgrs['infogroup2']
+	data=attrgrsdict['infogroup2']
 	def __init__(self):
-		self._al=[]
-		self._data=InfoGroup2.data
+		InfoGroup.__init__(self,InfoGroup2.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITSTRINGATTR3
 
 class InfoGroup3(InfoGroup):
-	data=attrgrs['infogroup3']
+	data=attrgrsdict['infogroup3']
 	def __init__(self):
-		self._al=[]
-		self._data=InfoGroup3.data
+		InfoGroup.__init__(self,InfoGroup3.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITSTRINGATTR4
+
+class SubregionGroup(InfoGroup):
+	data=attrgrsdict['subregion']
+	def __init__(self):
+		InfoGroup.__init__(self,SubregionGroup.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITRECTATTR2
+	def getctrlids(self,a):
+		ix=self._data['attrs'].index(a.getname())
+		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
+		return ids
 
 ############################
 # platform dependent association
@@ -1106,6 +1149,7 @@ groupsui={
 	'infogroup':InfoGroup,
 	'infogroup2':InfoGroup2,
 	'infogroup3':InfoGroup3,
+	'subregion':SubregionGroup,
 	}
 
 ###########################
@@ -1133,14 +1177,14 @@ class AttrEditFormNew(GenFormView):
 		prsht.EnableStackedTabs(1)
 
 		grattrl=[] # list of attr in groups (may be all)
-		# create groups
-		grattrl=self.createGroupPages()
+		# create groups pages
+		grattrl=self.creategrouppages()
 		
 		# create singletons not desrciped by groups
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
 			if a not in grattrl:
-				page=self.getpage(a)
+				page=self.getsingleattrpage(a)
 				self._a2p[a]=page
 				self._pages.append(page)
 
@@ -1177,14 +1221,17 @@ class AttrEditFormNew(GenFormView):
 		prsht.SetActivePage(self._pages[0])
 		prsht.RedrawWindow()
 
-	def createGroupPages(self):
+	def creategrouppages(self):
 		grattrl=[]	 # all attr in groups
 		l=self._attriblist[:]
-		for grkey in groupsui.keys():
-			group=groupsui[grkey]()
-			group.visit(self._attriblist)
+		for grdict in attrgrs:
+			grname=grdict['name']
+			if not groupsui.has_key(grname): continue
+			group=groupsui[grname]()
+			group.visit(l)
 			if group.matches():
-				grouppage=GroupPage(self)
+				PageCl=group.getpageclass()
+				grouppage=PageCl(self)
 				self._pages.append(grouppage)
 				grouppage.setgroup(group)
 				for a in group._al:
@@ -1193,10 +1240,7 @@ class AttrEditFormNew(GenFormView):
 					l.remove(a)
 		return grattrl
 
-	# This should be the main attributes-typesetting method
-	# based on attribute's group return a page
-	# for now return a new page on every attribute
-	def getpage(self,a):
+	def getsingleattrpage(self,a):
 		t = a.gettype()
 		if t == 'option':
 			page=SingleAttrPage(self,a)
@@ -1205,8 +1249,8 @@ class AttrEditFormNew(GenFormView):
 		elif t == 'color':
 			page=SingleAttrPage(self,a)
 		else:
-			if a.getlabel()=='Position and size':
-				page=LayoutPage(self,a)
+			if a.getname()=='base_winoff':
+				page=SingleAttrLayoutPage(self,a)
 			else:
 				page=SingleAttrPage(self,a)
 		return page
