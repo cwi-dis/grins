@@ -55,6 +55,7 @@ class Clipboard:
 			for d in data:
 				new_data.append(d.DeepCopy())
 		# We return the old one and put the new one on the clipboard
+		self.__owned = 0 # So setclip doesn't destroy what we are going to return
 		self.setclip(type, new_data, owned=1)
 		return type, data
 
