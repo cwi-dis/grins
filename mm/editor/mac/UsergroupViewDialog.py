@@ -99,10 +99,6 @@ class UsergroupViewDialog(windowinterface.MACDialog):
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_B_BROWSER:
-			(what, message, when, where, modifiers) = event
-			Qd.SetPort(self._dialog)
-			where = Qd.GlobalToLocal(where)
-			item, is_double = self.__list.click(where, modifiers)
 			self.__list_callback()
 		elif item == ITEM_B_NEW:
 			self.new_callback()
