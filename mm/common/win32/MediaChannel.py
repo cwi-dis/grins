@@ -323,6 +323,7 @@ class VideoStream:
 		self.play_loop = self.__channel.getloop(node)
 		self.__iteration = 0
 		self.__pausedelay = 0
+		self.__pausetime = 0
 		duration = node.GetAttrDef('duration', None)
 		self.__duration = duration
 		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
