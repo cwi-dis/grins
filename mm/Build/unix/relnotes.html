@@ -1,155 +1,25 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
-    <title>GRiNS for Unix Release Notes</title>
+    <title>GRiNS Editor and Player for SMIL Release 1.0 Release Notes
+      for Unix</title>
   </head>
 
   <body>
-    <h1>GR<i>i</i>NS for Unix Release Notes</h1>
+    <h1>GR<i>i</i>NS Editor for SMIL Release 1.0 Release Notes for Unix</h1>
 
     <p>
-      These are the release notes for the GR<i>i</i>NS editor and
-      player Release 1.0beta for Silicon Graphics IRIX 6.5
-      and for Sun Solaris 2.5.  More information on GR<i>i</i>NS can
-      be obtained at
-      <a href="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GR<i>i</i>NS</a>,
-      or by email to
-      <a href="mailto:grins-request@oratrix.com">grins-request@oratrix.com</a>.
+      These are the release notes for the GRiNS Editor and Player for
+      SMIL Release 1.0 for Unix.  These release notes were last
+      updated on August 26 1999.  For a more up-to-date version of
+      these notes, look
+      <a href="http://www.oratrix.com/GRiNS/Support/Relnotes/unix-1.0/">here</a>.
     </p>
 
+    <h3>Access Methods</h3>
     <p>
-      What (sparse) documentation on GR<i>i</i>NS is available at this 
-      time can also be found on the homepage.
-    </p>
-
-    <h3>Prerequisites</h3>
-    <p>
-      The SGI version of the GR<i>i</i>NS editor and player have only
-      been tested on an SGI O2 running IRIX 6.5.2.  Other systems may
-      or may not work.
-    </p>
-    <p>
-      The GR<i>i</i>NS editor and player use a number of system shared
-      libraries.  Not all of these libraries are installed by
-      default.  Ask your system administrator to install these images
-      if they haven't been installed already.  Which images are
-      installed can be seen with the standard program <em>versions</em>.
-      Shared libraries from the following images are used:
-    </p>
-    <ul>
-      <li>compiler_eoe.sw.lib</li>
-      <li>dmedia_eoe.sw.audio</li>
-      <li>dmedia_eoe.sw.lib</li>
-      <li>eoe.sw.base</li>
-      <li>eoe.sw.gfx</li>
-      <li>motif_eoe.sw.eoe</li>
-      <li>x_eoe.sw.eoe</li>
-    </ul>
-
-    <h3>Installation instructions</h3>
-    <p>
-      For IRIX-6.5 (and later) on SGI systems, you have two options
-      when installing the GR<i>i</i>NS Editor and Player: using the SGI inst
-      tools or using the gzipped Tar distribution.  For Sun/Solaris
-      the only option is usgin a gzipped Tar distribution.
-    </p>
-    <ol>
-      <li>
-	<p>
-	  Using <code>grins.tardist</code> or
-	  <code>grinsed.tardist</code>: Download the file
-	  (<code>grins.tardist</code> for the Player-only or
-	  <code>grinsed.tardist</code> for the Editor and Player). If
-	  your browser is setup correctly, it will start the SGI
-	  Software Manager automatically. If not, you can extract the
-	  tardist file in a new directory and start the Software
-	  Manager (<code>swmgr</code>) or <code>inst</code>
-	  manually. Point either program to the directory where the
-	  extracted files reside to start the installation
-	  process. From the Software Manager or inst, select the
-	  subsystems you want to install (in the player-pnly version,
-	  the product is called <em>grins</em> instead of
-	  <em>grinsed</em> and the editor subsystem is not present):
-	</p>
-	<ul>
-	  <li>grinsed.sw.player contains the GR<i>i</i>NS Player and is required.</li>
-	  <li>grinsed.sw.editor contains the GR<i>i</i>NS Editor and is required.</li>
-	  <li>grinsed.sw.templates contains editing templates for the GR<i>i</i>NS Editor and is required</li>
-	  <li>grinsed.help contains help information and is recommended.</li>
-	  <li>grinsed.relnotes contains the release notes and is also
-	    recommended.</li>
-	</ul>
-	<p>
-	  Important Note: You need superuser (root) privileges to use
-	  the inst installation method. The GR<i>i</i>NS Player and Editor (and
-	  the supporting files) will be installed in
-	  /usr/local/grins.
-	</p>
-      </li>
-      <li>
-	<p>
-	  Using <code>grins.tar.gz</code> or
-	  <code>grinsed.tar.gz</code>: If you don't have super-user
-	  privileges, download the appropriate file
-	  (<code>grins.tar.gz</code> for the Player-only version of
-	  GR<i>i</i>NS and <code>grinsed.tar.gz</code> for the Editor and
-	  Player) and extract it in a directory of your choice. The
-	  command to do this is something like this:
-	  <code>gzip -cd grins.tar.gz | tar xf -</code>
-	  (for the GR<i>i</i>NS Player), or
-	  <code>gzip -cd grinsed.tar.gz | tar xf -</code> (for the
-	  GR<i>i</i>NS Editor). The tar file contains the same files as the
-	  tardist files and in the same relative configuration.
-	</p>
-      </li>
-    </ol>
-
-    <h3>Feedback</h3>
-    <p>
-      Bug reports and other technical feedback should be sent to
-      <a href="mailto:grins-support@oratrix.com">grins-support@oratrix.com</a>,
-      please check the
-      <a href="http://www.oratrix.com/GRiNS/feedback.html">feedback section</a>
-      on the homepage for details.
-    </p>
-
-    <p>
-      Non-technical feedback should be sent to
-      <a href="mailto:info@oratrix.com">info@oratrix.com</a>.
-    </p>
-
-    <h3>Example documents</h3>
-    <p>
-      A number of example documents can be found in the Examples
-      directory. More examples will be added to the
-      <a href="http://www.oratrix.com/GRiNS">GRiNS home page</a> over
-      time.
-    </p>
-    
-    <h3>License keys</h3>
-    <p>
-      To start the editor you need a license key. You may have been
-      provided with a temporary license key in the same message in
-      which you received the password for the download area. If not
-      you can send an empty mail message to
-      <a href="mailto:evalutation-license@oratrix.com">evalutation-license@oratrix.com</a>
-      and we will send you a time-limited key, or we will mail you
-      details on how to proceed.
-    </p>
-
-    <h3>Platform dependencies in media handling</h3>
-    <p>
-      There are some differences between the various platforms.  See
-      the <a href="http://www.oratrix.com/GRiNS/Software/GS-supported1.html">chart
-	of supported media types</a> on the GR<i>i</i>NS website
-      for the supported media types on the various supported
-      platforms.
-    </p>
-
-    <h3>Access methods</h3>
-    <p>
-      The GR<i>i</i>NS player supports the following access methods
-      (URL schemes).
+      The GR<i>i</i>NS Editor and Player for SMIL supports the
+      following access methods (URL schemes):
     </p>
     <ul>
       <li>file</li>
@@ -158,12 +28,18 @@
       <li>data</li>
       <li>gopher</li>
     </ul>
-
-    <h3><a name="unsup">Unsupported SMIL features</a></h3>
     <p>
-      There are only a few SMIL features that are not supported
-      by the GR<i>i</i>NS player.  Documents that make use of these
-      features are parsed correctly, but the features are ignored.
+      It is possible to create and edit documents that make use of
+      other access methods (in particular the rtsp access method), but
+      they cannot be previewed.
+    </p>
+
+    <h3><a name="unsup">Unsupported SMIL Features</a></h3>
+    <p>
+      There are only a few SMIL features that are not supported by the
+      GR<i>i</i>NS Editor and Player for SMIL.  Documents that make
+      use of these features are parsed correctly, but the features are
+      ignored.
     </p>
 
     <ul>
@@ -187,30 +63,11 @@
       </li>
     </ul>
 
-    <h3>SGI-Irix user interface open issues</h3>
-    <p>
-      No known issues.
-    </p>
-
-    <h3>Other open issues issues</h3>
-    <p>
-      No known issues.
-    </p>
-
-    <p>
-      As issues are reported they are added to the release notes and
-      open issues on the
-      <a href="http://www.oratrix.com/GRiNS/">GR<i>i</i>NS home page</a>.
-    </p>
-
-
-
-
     <hr>
     <address><a href="http://www.oratrix.com/GRiNS/">the GRiNS support staff</a></address>
-<!-- Created: Fri Mar 26 13:09:28 MET 1999 -->
+<!-- Created: Thu Jul 23 16:58:52 MET DST 1998 -->
 <!-- hhmts start -->
-Last modified: Mon Aug  9 17:25:23 MET DST 1999
+Last modified: Thu Aug 26 17:25:08 MET DST 1999
 <!-- hhmts end -->
   </body>
 </html>
