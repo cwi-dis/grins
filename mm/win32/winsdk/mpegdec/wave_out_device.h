@@ -14,7 +14,9 @@
 #endif
 
 #pragma warning(disable: 4018) // signed/unsigned mismatch
+#pragma warning(disable: 4786) 
 #include <string>
+#include <deque>
 
 class wave_out_device
 	{
@@ -22,17 +24,15 @@ class wave_out_device
 
 	wave_out_device()
 	:	m_hWaveOut(NULL),
-		m_hDoneEvent(CreateEvent(NULL, TRUE, TRUE, NULL)),
-		m_needs_unprepare(false)
+		m_hDoneEvent(CreateEvent(NULL, TRUE, TRUE, NULL))
 		{
-		memset(&m_waveHdr, 0, sizeof(WAVEHDR));
 		}
 	
 	~wave_out_device()
 		{
-		if(m_needs_unprepare) stop();
 		if(is_open()) close();
-		if(m_hDoneEvent!=NULL) CloseHandle(m_hDoneEvent);
+		clear_data();
+		if(m_hDoneEvent != NULL) CloseHandle(m_hDoneEvent);
 		}
 	
 	bool open(int nSamplesPerSec, int nChannels)
@@ -42,7 +42,7 @@ class wave_out_device
 		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
 		WAVEFORMATEX wf = {WAVE_FORMAT_PCM, 
 			WORD(nChannels), 
-			DWORD(nSamplesPerSec), 
+			DWORD(nSamplesPerSec/nChannels), 
 			DWORD(nAvgBytesPerSec),
 			WORD(nBlockAlign),
 			WORD(wBitsPerSample),
@@ -65,6 +65,7 @@ class wave_out_device
 				seterror("waveOutOpen", "WAVERR_SYNC, Device is synchronous but waveOutOpen was called without using the WAVE_ALLOWSYNC flag");
 			return false;
 			}
+		waveOutPause(m_hWaveOut);
 		return true;
 		}
 
@@ -95,62 +96,88 @@ class wave_out_device
 		return waveOutRestart(m_hWaveOut) == MMSYSERR_NOERROR;
 		}
 
-	bool prepare_playback()
-		{
-		if(m_audio_data.empty()) return false;
-
-		m_waveHdr.lpData = const_cast<char*>(m_audio_data.data());
-		m_waveHdr.dwBufferLength = m_audio_data.length();
-		MMRESULT mmres = waveOutPrepareHeader(m_hWaveOut, &m_waveHdr, sizeof(WAVEHDR));
-		if(mmres != MMSYSERR_NOERROR)
-			return false;
-		m_needs_unprepare = true;
-		suspend();
-		mmres = waveOutWrite(m_hWaveOut, &m_waveHdr, sizeof(WAVEHDR));
-		return (mmres == MMSYSERR_NOERROR);
-		}
-
 	bool play()
 		{
-		if(!m_needs_unprepare) 
-			{
-			if(!prepare_playback())
-				return false;
-			}
 		return resume();
 		}
 
 	void stop()
 		{
 		reset();
-		waveOutUnprepareHeader(m_hWaveOut, &m_waveHdr, sizeof(WAVEHDR));
-		m_needs_unprepare = false;
-		memset(&m_waveHdr, 0, sizeof(WAVEHDR));
 		}
 
 	void seterror(const char *funcname, const char *msg)
 		{
-		printf("%s failed, %s", funcname, msg);
+		printf("%s failed, %s\n", funcname, msg);
+		}
+	void seterror(const char *funcname)
+		{
+		printf("%s failed\n", funcname);
 		}
 
 	static void __stdcall callback(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
 		{
 		wave_out_device *wout = (wave_out_device*)dwInstance;
-		if(uMsg == WOM_DONE)
+		if(uMsg == WOM_OPEN)
+			{
+			;//printf("WOM_OPEN\n");
+			}
+		else if(uMsg == WOM_DONE)
+			{
+			//printf("WOM_DONE\n");
+			wout->unprepare_front_chunk();
+			if(!wout->has_audio_data())
+				SetEvent(wout->m_hDoneEvent);
+			}
+		else if(uMsg == WOM_CLOSE)
+			{
+			//printf("WOM_CLOSE\n");
+			wout->clear_data();
 			SetEvent(wout->m_hDoneEvent);
+			}
 		}
 
 	bool is_open() const { return (m_hWaveOut != NULL);}
-	std::basic_string<char>& get_data_ref() { return m_audio_data;}
 	operator HWAVEOUT() { return m_hWaveOut;}
 	HANDLE get_done_event() const { return m_hDoneEvent;}
 
+	bool write_audio_chunk(char *data, int len)
+		{
+		m_audio_data.push_back(WAVEHDR());
+		WAVEHDR& waveHdr = m_audio_data.back();
+		memset(&waveHdr, 0, sizeof(WAVEHDR));
+		waveHdr.lpData = data;
+		waveHdr.dwBufferLength = len;
+		MMRESULT mmres = waveOutPrepareHeader(m_hWaveOut, &waveHdr, sizeof(WAVEHDR));
+		if(mmres != MMSYSERR_NOERROR)
+			seterror("waveOutPrepareHeader()");
+		mmres = waveOutWrite(m_hWaveOut, &waveHdr, sizeof(WAVEHDR));
+		if(mmres != MMSYSERR_NOERROR)
+			seterror("waveOutWrite()");
+		return (mmres == MMSYSERR_NOERROR);
+		}
+
+	void unprepare_front_chunk()
+		{
+		if(!m_audio_data.empty())
+			{
+			WAVEHDR& waveHdr = m_audio_data.front();
+			if(m_hWaveOut) waveOutUnprepareHeader(m_hWaveOut, &waveHdr, sizeof(WAVEHDR));
+			delete[] waveHdr.lpData;
+			m_audio_data.pop_front();
+			}
+
+		}
+	bool has_audio_data() const { return !m_audio_data.empty();}
+	void clear_data()
+		{
+		while(has_audio_data()) unprepare_front_chunk();
+		}
+	size_t get_audio_data_size() const { return m_audio_data.size();}
 	private:
 	HWAVEOUT m_hWaveOut;
-	std::basic_string<char> m_audio_data;
-	WAVEHDR m_waveHdr;
+	std::deque<WAVEHDR> m_audio_data;
 	HANDLE m_hDoneEvent;
-	bool m_needs_unprepare;
 	};
 
-#endif INC_WAVE_OUT_DEVICE
+#endif // INC_WAVE_OUT_DEVICE
