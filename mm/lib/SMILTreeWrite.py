@@ -425,25 +425,6 @@ def getsubregionatt(writer, node, attr):
 			return str(val)
 	return None
 
-def getfitatt(writer, node, attr):
-	try:
-		val = node.getRawAttrDef(attr)
-	except:
-		fit = None
-	else:
-		fit = None		# 'hidden' is default
-		if val == 0:
-			fit = 'meet'
-		elif val == -1:
-			fit = 'slice'
-		elif val == 1:
-			fit = None	# 'hidden' is default
-		elif val == -3:
-			fit = 'fill'
-		elif val == -4:
-			fit = 'scroll'
-	return fit
-
 def getbgcoloratt(writer, node, attr):
 	if not ChannelMap.isvisiblechannel(node.GetChannelType()):
 		return None
