@@ -70,6 +70,7 @@ class SlideShow:
 				else:
 					file = baseurl = url
 				try:
+					self.filename = url
 					fp = MMurl.urlopen(url)
 					rp = realsupport.RPParser(file, baseurl = baseurl, printfunc = self.printfunc)
 					rp.feed(fp.read())
@@ -95,6 +96,7 @@ class SlideShow:
 					file = url
 					baseurl = ourl
 				try:
+					self.filename = url
 					fp = MMurl.urlopen(url)
 					rp = realsupport.RPParser(file, baseurl = baseurl, printfunc = self.printfunc)
 					rp.feed(fp.read())
