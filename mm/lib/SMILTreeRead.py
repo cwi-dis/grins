@@ -63,9 +63,9 @@ mediamarker = re.compile(		# id-ref ".marker(" name ")"
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
 	r'marker\(' + _opS + r'(?P<markername>' + xmllib._Name + r')' + _opS + r'\)' + _opS + r'$'	# "marker(...)"
 	)
-accesskey = re.compile(			# "accessKey(" character ")"
+accesskey = re.compile(			# "accesskey(" character ")"
 	_opS +
-	r'accessKey\((?P<character>.)\)' +
+	r'(?P<accesskey>access[kK]ey)\((?P<character>.)\)' +
 	_opS + r'$'
 	)
 wallclock = re.compile(			# "wallclock(" wallclock-value ")"
@@ -339,8 +339,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				res = accesskey.match(val)
 				if res is not None:
 					if not boston:
-						boston = 'accessKey'
+						boston = 'accesskey'
 					char = res.group('character')
+					nsdict = self.getnamespace()
+					if res.group('accesskey') == 'accessKey':
+						for ns in nsdict.values():
+							if ns in limited['viewport']:
+								break
+						else:
+							self.syntax_error('accessKey deprecated in favor of accesskey')
+					else:
+						for ns in nsdict.values():
+							if ns in limited['topLayout']:
+								break
+						else:
+							self.syntax_error('accesskey not available in old namespace')
 					list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
 					continue
 				res = wallclock.match(val)

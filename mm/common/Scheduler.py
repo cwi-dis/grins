@@ -255,7 +255,7 @@ class SchedulerContext:
 		# attrs.
 
 		# node is the node.
-		# event is a tuple of (event, ?, ((channel, event)|accessKey))
+		# event is a tuple of (event, ?, ((channel, event)|accesskey))
 		# marker is (?)
 		# timestamp is the time "now".
 
@@ -266,7 +266,7 @@ class SchedulerContext:
 		if event is not None:	# Retrieve the event if it was not supplied.
 			node.event(timestamp, event)
 			if type(event) is type(()): # If the event is an empty tuple.
-				if event[1] == 'accessKey': # If the event was from a keypress
+				if event[1] == 'accesskey': # If the event was from a keypress
 					accesskey = event[2]
 					event = None
 				else:

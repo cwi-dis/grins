@@ -582,7 +582,7 @@ def getsyncarc(writer, node, isend):
 				tz = ''
 			list.append('wallclock(%s%s%s)' % (date, time, tz))
 		elif arc.accesskey is not None:
-			key = 'accessKey(%s)' % arc.accesskey
+			key = 'accesskey(%s)' % arc.accesskey
 			if arc.delay:
 				key = key + fmtfloat(arc.delay, withsign = 1)
 			list.append(key)

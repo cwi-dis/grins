@@ -1270,7 +1270,7 @@ class MMSyncArc:
 		elif self.channel is not None:
 			src = self.channel.name
 		elif self.accesskey is not None:
-			src = 'accessKey(%s)' % self.accesskey
+			src = 'accesskey(%s)' % self.accesskey
 		elif self.srcnode == 'syncbase':
 			src = 'syncbase'
 		elif self.srcnode == 'prev':
@@ -3750,62 +3750,62 @@ class MMNode:
 			# XXX it's too hard to calculate this properly with all
 			# this pause stuff in priorityClasses
 			return None, 0
-		else:
-			syncbase = self.isresolved(sctx)
-			if self.type in partypes + ['excl']:
-				if termtype not in ('LAST', 'FIRST', 'ALL'):
-					for c in self.GetSchedChildren():
-						if MMAttrdefs.getattr(c, 'name') == termtype:
-							return c.__calcendtime(syncbase, sctx)
-					termtype = 'LAST' # fallback
-				val = -1
-				scheduled_children = 0
+		syncbase = self.isresolved(sctx)
+		if self.type in partypes + ['excl']:
+			if termtype not in ('LAST', 'FIRST', 'ALL'):
 				for c in self.GetSchedChildren():
-					e, mc = c.__calcendtime(syncbase, sctx)
-					if e is not None:
-						scheduled_children = 1
-					if not mc:
-						maybecached = 0
-					if termtype == 'FIRST':
-						if (e is None or e < 0) and val < 0:
-							pass
-						elif val < 0:
-							val = e
-						elif e >= 0 and e < val:
-							val = e
-					elif termtype == 'LAST':
-						if e is None:
-							continue
-						if e < 0:
-							return -1, maybecached
-						if val < 0 or e > val:
-							val = e
-					elif termtype == 'ALL':
-						if e is None or e < 0:
-							return -1, maybecached
-						if val < 0 or e > val:
-							val = e
-				if not scheduled_children and \
-				   termtype == 'LAST':
-					return 0, 1
-				return val, maybecached
-			if self.type == 'seq':
-				val = 0
-				for c in self.GetSchedChildren():
-					e, mc = c.__calcendtime(syncbase, sctx)
-					if not mc:
-						maybecached = 0
+					if MMAttrdefs.getattr(c, 'name') == termtype:
+						return c.__calcendtime(syncbase, sctx)
+				termtype = 'LAST' # fallback
+			val = -1
+			scheduled_children = 0
+			for c in self.GetSchedChildren():
+				e, mc = c.__calcendtime(syncbase, sctx)
+				if e is not None:
+					scheduled_children = 1
+				if not mc:
+					maybecached = 0
+				if termtype == 'FIRST':
+					if (e is None or e < 0) and val < 0:
+						pass
+					elif val < 0:
+						val = e
+					elif e >= 0 and e < val:
+						val = e
+				elif termtype == 'LAST':
+					if e is None:
+						continue
+					if e < 0:
+						return -1, maybecached
+					if val < 0 or e > val:
+						val = e
+				elif termtype == 'ALL':
 					if e is None or e < 0:
 						return -1, maybecached
-					val = val + e
-					if syncbase is not None:
-						syncbase = syncbase + e
-				return val, maybecached
-			if self.type == 'alt':
-				c = self.ChosenSwitchChild()
-				if c is None:
-					return 0, maybecached
-				return c.__calcduration(sctx)
+					if val < 0 or e > val:
+						val = e
+			if not scheduled_children and \
+			   termtype == 'LAST':
+				return 0, 1
+			return val, maybecached
+		if self.type == 'seq':
+			val = 0
+			for c in self.GetSchedChildren():
+				e, mc = c.__calcendtime(syncbase, sctx)
+				if not mc:
+					maybecached = 0
+				if e is None or e < 0:
+					return -1, maybecached
+				val = val + e
+				if syncbase is not None:
+					syncbase = syncbase + e
+			return val, maybecached
+		if self.type == 'alt':
+			c = self.ChosenSwitchChild()
+			if c is None:
+				return 0, maybecached
+			return c.__calcduration(sctx)
+		return 0, 0
 
 	def calcfullduration(self, sctx, ignoremin = 0):
 		if self.fullduration is not None:
