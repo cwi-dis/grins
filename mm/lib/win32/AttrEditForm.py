@@ -1278,7 +1278,7 @@ class EventCtrl(AttrCtrl):
 		
 		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
 					# now that also feels like a hack. Oh well.
-		self.__tooltips = [
+	__tooltips = [
 			(grinsRC.IDC_EVENTLIST, 'Lists the begin or end conditions for this node.'),
 			(grinsRC.IDC_NEWBUTTON, 'Add a new condition for this node to begin or end'), # begin or end.. hmm.
 			(grinsRC.IDC_DELETEBUTTON, 'Remove a condition for this node to begin or end'),
