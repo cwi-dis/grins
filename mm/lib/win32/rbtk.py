@@ -38,6 +38,7 @@ class _rbtk:
 			return
 
 		# set application in create box mode
+		self.getgrinsframe().showChilds(0)
 		self.set_create_box_mode(self)
 		self.pop() # bring to top
 	
@@ -108,7 +109,8 @@ class _rbtk:
 		
 		# 1. restore mode
 		self.set_create_box_mode(None)
-		
+		self.getgrinsframe().showChilds(1)
+
 		# 2. restore wnds state
 		self._topwindow.ShowWindows(win32con.SW_SHOW)
 
