@@ -219,8 +219,8 @@ else
 	$make ${1+"$@"} Makefile
 fi &&
 $make ${1+"$@"} lib.a &&
-case $ARCH in
-irix*)
+if [ -f /usr/include/midi.h -a $ARCH =~ 'irix*' ]
+then
 	cd ../../midi/build.$ARCH &&
 	if [ ! -f Makefile ]
 	then
@@ -232,8 +232,9 @@ irix*)
 		$make ${1+"$@"} Makefile
 	fi &&
 	$make lib.a
-	;;
-esac &&
+else
+	:
+fi &&
 case $ARCH in
 irix6*)	;;
 *)
@@ -254,8 +255,9 @@ $make ${1+"$@"} python &&
 cd $depth &&
 CMIF=$CHAMELEON/mm PYTHONPATH=$CHAMELEON/mm/lib:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH $python -c 'import MMAttrdefs'
 ) &&
+{
 [ "$nomake" ] || (
-compdir -r $CHAMELEON/python/Lib
+compdir -r $CHAMELEON/python/Lib &&
 for d in $CHAMELEON/mm/common/motif $CHAMELEON/mm/common \
 	 $CHAMELEON/mm/editor/motif $CHAMELEON/mm/editor \
 	 $CHAMELEON/mm/grins/motif $CHAMELEON/mm/grins \
@@ -266,12 +268,13 @@ for d in $CHAMELEON/mm/common/motif $CHAMELEON/mm/common \
 	 $CHAMELEON/python/Extensions/midi/Lib \
 	 $CHAMELEON/cartermill/code
 do
-	compdir $d
+	compdir $d || exit $?
 done
-)
 # alternative command:
 #$python $CHAMELEON/python/Lib/compileall.py $CHAMELEON/{python/{Lib,Extensions/{X11,img,midi}/Lib},mm/{common,editor,grins,lib,player,pylib,video}}
 #$python -O $CHAMELEON/python/Lib/compileall.py $CHAMELEON/{python/{Lib,Extensions/{X11,img,midi}/Lib},mm/{common,editor,grins,lib,player,pylib,video}}
+)
+} &&
 
 case $freeze in
 no)	;;
@@ -317,3 +320,4 @@ no)	;;
 	make CHAMELEON=$CHAMELEON
 	;;
 esac
+
