@@ -151,6 +151,9 @@ class TopLevel(TopLevelDialog):
 		top.player.show()
 		top.player.playsubtree(top.root)
 
+	def progressCallback(self, pValue):
+		self.progress.set(self.progressMessage, None, None, pValue*100, 100)
+
 	def read_it(self):
 ##		import time
 		import MMmimetypes
@@ -176,8 +179,23 @@ class TopLevel(TopLevelDialog):
 					if ct == 'GRIN' and tp == 'TEXT':
 						mtype = 'application/x-grins-project'
 		if mtype in ('application/x-grins-project', 'application/smil'):
+			# init progress dialog
+			if mtype == 'application/smil':
+				self.progress = windowinterface.ProgressDialog("Loading")
+				self.progressMessage = "Loading SMIL document..."
+			else:
+				self.progress = windowinterface.ProgressDialog("Loading")
+				self.progressMessage = "Loading GRiNS document..."				
+			
 			import SMILTreeRead
-			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc)
+			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc, \
+										progressCallback=(self.progressCallback, 0.5))
+
+			# just update that the loading is finished
+			self.progressCallback(1.0)
+			# the progress dialog will desapear
+			self.progress = None
+			
 ##		elif mtype == 'application/x-grins-cmif':
 ##			import MMRead
 ##			self.root = MMRead.ReadFile(self.filename)
