@@ -103,11 +103,7 @@ class _Toplevel:
 	def forcePaint(self):
 		for w in self._subwindows:
 			w._forcePaint()
-	
-	# 
-	def forceclose(self):
-		(win32ui.GetAfx()).PostQuitMessage(0)
-	
+		
 	# Call by the core to close the application
 	def close(self):
 		for func, args in self._closecallbacks:
@@ -124,8 +120,7 @@ class _Toplevel:
 		import Font
 		Font.delfonts()
 
-		import DrawTk
-		del DrawTk.drawTk
+		win32ui.GetMainFrame().PostMessage(win32con.WM_CLOSE)
 
 
 	# Registration function for close callbacks
@@ -300,7 +295,6 @@ class _Toplevel:
 		win32ui.GetApp().RunLoop(wnd)
 
 		wnd.DestroyWindow()
-		Afx.GetMainWnd().PostMessage(win32con.WM_CLOSE)
 
 	def monitor(self,handler,count):
 		self.serve_events()
