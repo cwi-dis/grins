@@ -3,6 +3,7 @@ __version__ = "$Id$"
 # License dialog
 import windowinterface
 import Xm, Xmd, X
+import ToolTip
 
 _dialog_widget = None
 
@@ -53,6 +54,7 @@ class LicenseDialog:
 					   'leftAttachment': Xmd.ATTACH_FORM})
 		tryb.AddCallback('activateCallback', self.__callback,
 				 (self.cb_try, ()))
+		ToolTip.addtthandler(tryb, 'Try out his software')
 		self.__try = tryb
 		eval = w.CreatePushButton('eval',
 					  {'labelString': 'Get Evaluation License...',
@@ -63,6 +65,7 @@ class LicenseDialog:
 					   'leftWidget': tryb})
 		eval.AddCallback('activateCallback', self.__callback,
 				 (self.cb_eval, ()))
+		ToolTip.addtthandler(eval, 'Direct web browser to web site to get evaluation key')
 		self.__eval = eval
 		buy = w.CreatePushButton('buy',
 					 {'labelString': 'Buy now...',
@@ -73,6 +76,7 @@ class LicenseDialog:
 					  'leftWidget': eval})
 		buy.AddCallback('activateCallback', self.__callback,
 				(self.cb_buy, ()))
+		ToolTip.addtthandler(buy, 'Direct web browser to web site to buy a copy')
 		key = w.CreatePushButton('key',
 					 {'labelString': 'Enter key...',
 					  'foreground': fg, 'background': bg,
@@ -82,6 +86,7 @@ class LicenseDialog:
 					  'leftWidget': buy})
 		key.AddCallback('activateCallback', self.__callback,
 				(self.cb_enterkey, ()))
+		ToolTip.addtthandler(key, 'Enter a license key')
 		self.__key = key
 		quit = w.CreatePushButton('quit',
 					  {'labelString': 'Quit',
@@ -92,6 +97,7 @@ class LicenseDialog:
 					   'bottomAttachment': Xmd.ATTACH_FORM})
 		quit.AddCallback('activateCallback', self.__callback,
 				 (self.cb_quit, ()))
+		ToolTip.addtthandler(quit, 'Exit the program')
 		label = w.CreateLabel('label',
 				      {'labelString': 'Or see http://www.oratrix.com/ for more information',
 				       'foreground': fg, 'background': bg,
