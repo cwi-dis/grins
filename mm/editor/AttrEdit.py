@@ -425,6 +425,9 @@ class AttrEditor(AttrEditorDialog):
 	def rollback(self):
 		pass
 
+	def kill(self):
+		self.close()
+
 class AttrEditorField(AttrEditorDialogField):
 	type = 'string'
 
