@@ -701,6 +701,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	def copyfocus(self):
 		# Copies the node with focus to the clipboard.
+		import traceback
+		traceback.print_stack()
 		node = self.focusnode
 		if not node:
 			windowinterface.beep()
@@ -955,6 +957,9 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Copy node at position src to position dst
 	def copynode(self, dst, src):
+		import traceback
+		traceback.print_stack()
+		
 		xd, yd = dst
 		xs, ys = src
 		# Problem: dstobj will be an internal node.
@@ -975,23 +980,43 @@ class HierarchyView(HierarchyViewDialog):
 		srcobj = self.whichhit(xs, ys)
 		dstobj = self.whichhit(xd, yd)
 
+		if srcobj is dstobj:
+			return;
+
+		# We need to keep the nodes, because the objects get purged during each commit.
 		srcnode = srcobj.node
+		destnode = dstobj.node
+		
 		if not srcnode or srcnode is self.root:
 			windowinterface.beep()
 			return
+
+		if isinstance(dstobj, StructureObjWidget): # If it's an internal node.
+			nodeindex = dstobj.get_nearest_node_index(dst) # works for seqs and verticals!! :-)
+			self.focusnode = destnode
+			if nodeindex is not -1:
+				if self.focusnode is not self.root and self.focusnode.GetParent().GetChildren().index(self.focusnode) is nodeindex:
+					print "DEBUG: just dropped node on itself.";
+					# TODO: working here -mjvdg.
+					return;
+				self.focusnode = destnode.children[nodeindex] # I hope that works!
+							
 		em = self.editmgr
 		if not em.transaction():
 			return
 		self.toplevel.setwaiting()
-		em.delnode(srcnode)
-		em.commit()
+		new_srcnode = srcnode.DeepCopy()
+		em.delnode(srcnode)	# Why don't we simply detach that node from the MMNode tree?
 
-		srcnode = srcnode.DeepCopy()
 		self.toplevel.setwaiting()
-		if srcnode.context is not self.root.context:
-			srcnode = srcnode.CopyIntoContext(self.root.context)
-		self.focusnode = dstobj.node
-		dummy = self.insertnode(srcnode, 0)
+		if new_srcnode.context is not self.root.context:
+			newsrcnode = newsrcnode.CopyIntoContext(self.root.context)
+
+		em.commit()
+		if nodeindex == -1:
+			dummy = self.insertnode(new_srcnode, 0)
+		else:
+			self.insertnode(new_srcnode, -1)
 
 	#################################################
 	# Internal subroutines                          #

@@ -147,7 +147,7 @@ class _StructView(DisplayListView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		DROP_FAILED, DROP_SUCCEEDED = 0, 1
-		node = dataobj.GetGlobalData(self.CF_NODE)
+		node = dataobj.GetGlobalData(self.CF_NODE) 
 		if node and self._dragging:
 			
 			# the drag and drop cmd is:
@@ -160,15 +160,16 @@ class _StructView(DisplayListView):
 			xf, yf = self._dragging
 			xf, yf = self._DPtoLP((xf,yf))
 			xf, yf = self._pxl2rel((xf, yf),self._canvas)
+
 			self._dragging = None
 
 			# if the operation can not be executed return DROP_FAILED
 			# else return DROP_SUCCEEDED
 
 			if effect == DropTarget.DROPEFFECT_MOVE:
-				cmd = 'move'
-			else:
 				cmd = 'copy'
+			else:
+				cmd = 'move'
 
 			return self.onEventEx(DropNode,(x, y, cmd, xf, yf))
 

@@ -4,7 +4,7 @@
 
 import Widgets
 import Bandwidth
-import MMurl, MMAttrdefs, MMmimetypes
+import MMurl, MMAttrdefs, MMmimetypes, MMNode
 import features
 import os
 import settings
@@ -43,6 +43,7 @@ class MMNodeWidget(Widgets.Widget):
     def __init__(self, node, root):
         Widgets.Widget.__init__(self, root)
         self.node = node               # : MMNode
+        assert isinstance(node, MMNode.MMNode)
         self.node.views['struct_view'] = self
         self.name = MMAttrdefs.getattr(self.node, 'name')
         
@@ -262,6 +263,8 @@ class SeqWidget(StructureObjWidget):
         StructureObjWidget.draw(self, display_list)
         if self.root.dropbox:
             self.dropbox.draw(display_list);
+
+        assert self.node is not None
 
     def get_nearest_node_index(self, pos):
         # Return the index of the node at the specific drop position.
@@ -679,7 +682,7 @@ class MediaWidget(MMNodeWidget):
             prevnode_duration = 0
         lagtime = prearmtime - prevnode_duration
         
-        print 'DBG:', self.node, prearmtime, lagtime
+        print 'DEBUG:', self.node, prearmtime, lagtime
         
         # Now convert this from time to distance. 
         node_duration = (self.node.t1-self.node.t0)
