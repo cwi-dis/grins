@@ -163,12 +163,6 @@ class RealChannel:
 		self.__using_engine = 1
 		return 1
 
-	def __doBegin(self):
-		node, window, winpossize, url, windowless = self._playargs
-		if windowless:
-			self.__channel.onRealChannelBegin()
-		self.__rmaplayer.Begin()
-
 	def OnPresentationOpened(self):
 		if not self.__spark: return
 		node = self._playargs[0]
@@ -180,12 +174,12 @@ class RealChannel:
 			except rma.error, arg:
 				print arg
 		else:
-			windowinterface.settimer(0.1,(self.__doBegin,()))
+			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
 			self.__spark = 0
 
 	def OnPostSeek(self, oldTime, newTime):
 		if self.__spark:
-			windowinterface.settimer(0.1,(self.__doBegin,()))
+			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
 			self.__spark = 0
 
 	def replay(self):
