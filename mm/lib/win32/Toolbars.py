@@ -37,16 +37,8 @@ class ToolbarMixin:
 
 	def CreateToolbars(self):
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
-		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
-
-		self.__bars[barid]=GRiNSToolbar(self)
-		self.DockControlBar(self.__bars[barid])
-		if 0:
-			self.setPlayerToolbar()
-			self.LoadAccelTable(grinsRC.IDR_GRINS)
-		else:
-			self.setEditorFrameToolbar()
-			self.LoadAccelTable(grinsRC.IDR_GRINSED)
+		for template in ToolbarTemplate.TOOLBARS:
+			self._setToolbarFromTemplate(template)
 
 	def DestroyToolbars(self):
 		for bar in self.__bars.values():
@@ -87,11 +79,17 @@ class ToolbarMixin:
 		cmdui.Enable(1)
 		cmdui.SetCheck(bar.IsWindowVisible())
 
-	def _setToolbarFromTemplate(self, template):
+	def _setToolbarFromTemplate(self, template, adornments=None):
 		# First count number of buttons
 		name, command, resid, buttonlist = template
+
+		# Create the toolbar
 		barid = usercmdui.class2ui[command].id
-		bar = self.__bars[barid]
+		bar = GRiNSToolbar(self, name, resid, 0)
+		self.__bars[barid] = bar
+		self.DockControlBar(bar)
+
+		# Initialize it
 		nbuttons = len(buttonlist)
 		if buttonlist and buttonlist[-1].type == 'pulldown':
 			nbuttons = nbuttons - 1
@@ -106,28 +104,32 @@ class ToolbarMixin:
 				bar.SetButtonInfo(buttonindex, afxexttb.ID_SEPARATOR,
 					afxexttb.TBBS_SEPARATOR, button.width)
 			elif button.type == 'pulldown':
-				pass
+				if adornments:
+					buttonindex = self._fillCombos(bar, buttonindex, adornments)
 			else:
 				raise 'Unknown toolbar item type', button.type
 			buttonindex = buttonindex+1
-		return nbuttons
+		self.ShowControlBar(self.__bars[barid],1,0)
+		self.__bars[barid].RedrawWindow()
 
 			
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
-		self._setToolbarFromTemplate(ToolbarTemplate.FRAME_TEMPLATE)
-		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
-		self.ShowControlBar(self.__bars[barid],1,0)
-		self.__bars[barid].RedrawWindow()
-
+		pass
+##		self._setToolbarFromTemplate(ToolbarTemplate.FRAME_TEMPLATE)
 
 	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self, adornments):
-		num_buttons = self._setToolbarFromTemplate(ToolbarTemplate.GENERAL_TEMPLATE)
-		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
-		bar = self.__bars[barid]
+		pass
+##		num_buttons = self._setToolbarFromTemplate(ToolbarTemplate.GENERAL_TEMPLATE, adornments)
+
+	# Set the player toolbar
+	def setPlayerToolbar(self):
+		pass
+##		self._setToolbarFromTemplate(ToolbarTemplate.PLAYER_TEMPLATE)
+
+	def _fillCombos(self, bar, index, adornments):
 		if adornments.has_key('pulldown'):
-			index = num_buttons
 			for list, cb, init in adornments['pulldown']:
 				bar.SetButtonInfo(index,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 				index = index + 1
@@ -140,16 +142,7 @@ class ToolbarMixin:
 				for str in list:
 					tbcb.addstring(str)
 				tbcb.setcursel(list.index(init))
-
-		self.ShowControlBar(bar,1,0)
-
-
-	# Set the player toolbar
-	def setPlayerToolbar(self):
-		self._setToolbarFromTemplate(ToolbarTemplate.PLAYER_TEMPLATE)
-		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
-		self.ShowControlBar(self.__bars[barid],1,0)
-
+		return index
 
 	def createToolBarCombo(self, bar, index, ctrlid, width, ddheight, responseCb=None):
 		bar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
@@ -183,7 +176,7 @@ class ToolbarMixin:
 					return
 
 class GRiNSToolbar(window.Wnd):
-	def __init__(self, parent):
+	def __init__(self, parent, name, resid, enabledrag):
 		style = win32con.WS_CHILD |\
 			win32con.WS_VISIBLE |\
 			afxres.CBRS_TOP |\
@@ -191,14 +184,14 @@ class GRiNSToolbar(window.Wnd):
 			afxres.CBRS_FLYBY|\
 			afxres.CBRS_SIZE_DYNAMIC
 		wndToolBar = win32ui.CreateToolBar(parent,style,afxres.AFX_IDW_TOOLBAR)
-		wndToolBar.LoadToolBar(grinsRC.IDR_GRINSED)
+		wndToolBar.LoadToolBar(resid)
 		wndToolBar.EnableDocking(afxres.CBRS_ALIGN_ANY)
-		wndToolBar.SetWindowText("General")
+		wndToolBar.SetWindowText(name)
 		wndToolBar.ModifyStyle(0, commctrl.TBSTYLE_FLAT)
 		window.Wnd.__init__(self,wndToolBar)
 
 		# enable/dissable tools draging
-		self._enableToolDrag = 1
+		self._enableToolDrag = enabledrag
 		# shortcut for GRiNS private clipboard format
 		self.CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
 		if self._enableToolDrag:
