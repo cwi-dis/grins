@@ -180,11 +180,12 @@ class _Window(_AdornmentSupport):
 			 'bottomAttachment': Xmd.ATTACH_FORM}
 		self._menubar = None
 		if menubar is not None:
-			mb = form.CreateMenuBar(
-				'menubar',
-				{'leftAttachment': Xmd.ATTACH_FORM,
-				 'rightAttachment': Xmd.ATTACH_FORM,
-				 'topAttachment': Xmd.ATTACH_FORM})
+			mattrs = {'leftAttachment': Xmd.ATTACH_FORM,
+				  'rightAttachment': Xmd.ATTACH_FORM,
+				  'topAttachment': Xmd.ATTACH_FORM}
+			if toolbar is None and (w == 0 or h == 0):
+				mattrs['bottomAttachment'] = Xmd.ATTACH_FORM
+			mb = form.CreateMenuBar('menubar', mattrs)
 			mb.ManageChild()
 			attrs['topAttachment'] = Xmd.ATTACH_WIDGET
 			attrs['topWidget'] = mb
@@ -205,6 +206,9 @@ class _Window(_AdornmentSupport):
 				   'topAttachment': Xmd.ATTACH_FORM,
 				   'navigationType': Xmd.NONE,
 				   }
+			if w == 0 or h == 0:
+				fattrs['bottomAttachment'] = Xmd.ATTACH_FORM
+				fattrs['rightAttachment'] = Xmd.ATTACH_FORM
 			if toolbarvertical:
 				tbattrs['orientation'] = Xmd.VERTICAL
 				tbattrs['rightAttachment'] = Xmd.ATTACH_FORM
