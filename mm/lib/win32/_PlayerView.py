@@ -19,6 +19,9 @@ import win32window
 # ddraw.error
 import ddraw
 
+import wmwriter
+import time
+
 class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def __init__(self,doc,bgcolor=None):
 		DisplayListView.__init__(self,doc)
@@ -31,12 +34,13 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 
 		self._viewport = None
-		self.__wmwriter = None
+		self._writer = None	
 
 	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
 			commandlist=commandlist, bgcolor=bgcolor)
 		x, y, w, h = rc
+		self.createDDLayer(w, h)
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
@@ -47,8 +51,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def OnCreate(self,params):
 		DisplayListView.OnCreate(self, params)
-		if self._usesLightSubWindows:
-			self.createDDLayer()
+#		self.createDDLayer()
 
 	def OnDestroy(self, msg):		
 		if self._usesLightSubWindows:
@@ -171,9 +174,10 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			return 
 
 		self.paint(rc)
-
+		
 		if rc is None:
-			rcBack = self.GetClientRect()
+			x, y, w, h = self._viewport._rect
+			rcBack = x, y, x+w, y+h
 		else:
 			rcBack = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]
 		
@@ -194,7 +198,8 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def paint(self, rc=None):
 		if rc is None:
-			rcPaint = self.GetClientRect()
+			x, y, w, h = self._viewport._rect
+			rcPaint = x, y, x+w, y+h
 		else:
 			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
 		if self._convbgcolor == None:
@@ -205,115 +210,31 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			print arg
 			return
 
-		if self._viewport:	
+		if self._viewport:
 			self._viewport.paint(rc)
 	
-	def beginExport(self):
-		print 'beginExport', self._title
-		if self.__wmwriter:
-			return
-		x, y, w, h = self.GetClientRect()
-		filename = '%s.wmv' % self._title
-		self.__wmwriter = WMWriter(self, w, h, filename)
-		self.__wmwriter.beginWriting()
-
-	def endExport(self):
-		print 'endExport', self._title
-		if self.__wmwriter:
-			self.__wmwriter.endWriting()
-			self.__wmwriter = None
-			
-##################################
-# This is temporary here for testing
-
-import time
-import windowinterface
-
-
-"""
-System profiles
-0 Dial-up Modems - ISDN Multiple Bit Rate Video
-1 Intranet - High Speed LAN Multiple Bit Rate Video
-2 28.8, 56, and 100 Multiple Bit Rate Video
-3 6.5 voice audio
-4 16 AM Radio
-5 28.8 FM Radio Mono
-6 28.8 FM Radio Stereo
-7 56 Dial-up High Quality Stereo
-8 64 Near CD Quality Audio
-9 96 CD Quality Audio
-10 128 CD Quality Audio
-11 28.8 Video - Voice
-12 28.8 Video - Audio Emphasis
-13 28.8 Video for Web Server
-14 56 Dial-up Modem Video
-15 56 Dial-up Video for Web Server
-16 100 Video
-17 250 Video
-18 512 Video
-19 1Mb Video
-20 3Mb Video
-"""
-# select profile
-SYSTEM_PROFILE  = 18
-		
-class WMWriter:
-	def __init__(self, ctx, w, h, filename):
-		import wmfapi
-		profman = wmfapi.CreateProfileManager()
-		prof = profman.LoadSystemProfile(SYSTEM_PROFILE) 
-		writer = wmfapi.CreateDDWriter(prof)
-		writer.SetOutputFilename(filename)
-		rgbfmt = self.__getFormat(ctx._pxlfmt)
-		wmtype = wmfapi.CreateVideoWMType(w, h, rgbfmt)
-		writer.SetVideoFormat(wmtype)
-		
-		self._writer = writer
-		self._w, self._h = w, h
-		self._dds = ctx.CreateSurface(w, h)
-		self._ctx = ctx
-		self._timerid = 0
-
 	def beginWriting(self):
-		self.__start = time.time()
-		self._writer.BeginWriting()
-		self.write(self, first=1)
+		self.HookMessage(self.onTimer,win32con.WM_TIMER)
+		self.__timer_id = self.SetTimer(1,200)
+	
+	def onTimer(self, params):
+		if not self._writer:
+			self._writer = wmwriter.WMWriter(self._backBuffer, profile=20)
+			self._writer.setOutputFilename('output.wmv')
+			self._start = time.time()
+			self._writer.beginWriting()
+			print 'beginWriting'
+		else:
+			dt = time.time() - self._start
+			self._writer.update(dt)
 
 	def endWriting(self):
-		if self._timerid:
-			windowinterface.canceltimer(self._timerid)
-			self._timerid = 0
-		self.write(settimer=0)
-		self._writer.Flush()
-		self._writer.EndWriting()
+		self.KillTimer(self.__timer_id)
+		if self._writer:
+			self._writer.endWriting()
+			self._writer = None	
+			print 'endWriting'
 
-	def write(self, settimer=1, first=0):
-		dds = self._ctx.getDrawBuffer()
-		if first:
-			msecs = 0
-		else:
-			secs = time.time() - self.__start
-			msecs = int(secs*1000.0+0.5)
-		try:
-			rc = 0, 0, self._w, self._h
-			self._dds.Blt(rc, dds, rc)
-		except ddraw.error, arg:
-			print arg
-			return
-		self._writer.WriteDDSurface(self._dds.GetBuffer(), msecs)
-		self._dds.ReleaseBuffer()
-		if settimer:
-			self._timerid = windowinterface.settimer(0.1,(self.write,()))
 
-	def __getFormat(self, pxlfmt):
-		screenBPP = pxlfmt[0]
-		if screenBPP==32:
-			rgbfmt = 'RGB32'
-		elif screenBPP==24:
-			rgbfmt = 'RGB24'
-		elif screenBPP==16:
-			rgbfmt = 'RGB%d%d%d' % pxlfmt[1:]
-		else:
-			import wmfapi
-			raise wmfapi.error
-		return rgbfmt
+
+
