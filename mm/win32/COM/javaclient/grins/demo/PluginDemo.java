@@ -136,6 +136,8 @@ implements SMILListener
 	        buttonStop.setEnabled(false);
             }
         }
+	public void newViewport(int index){
+	}
 	
     private void open(String filename){
         // create SMIL doc
@@ -149,7 +151,7 @@ implements SMILListener
 	    else
 	        labelStatus.setText(str + (int)(dur+0.5) + " secs");
 	    
-	    Dimension d = smil.getViewportSize();
+	    Dimension d = smil.getViewportSize(0);
 	    Rectangle rc  = canvas.getBounds();
 	    
 	    int x=rc.x, y=rc.y, w=rc.width, h=rc.height;
@@ -166,7 +168,7 @@ implements SMILListener
 	    canvas.setBounds(x,y,w,h);
 	    
 	    // set SMIL canvas
-	    try {smil.getRenderer().setCanvas(canvas);}
+	    try {smil.getRenderer().setCanvas(0, canvas);}
 	    catch(Exception e){System.out.println(""+e);}
 	    
 	    // get controller

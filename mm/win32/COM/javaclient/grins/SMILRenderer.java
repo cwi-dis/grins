@@ -2,5 +2,5 @@
 package grins;
 
 public interface SMILRenderer {
-    void setCanvas(SMILCanvas canvas) throws Exception;
+    void setCanvas(int index, SMILCanvas canvas) throws Exception;
 }

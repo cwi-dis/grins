@@ -11,9 +11,19 @@ class GRiNSPlayerMonitor extends Thread {
     public void run(){
         initializeThreadContext();
         hgrins = nconnect(cookie);
+        int n = ngetTopLayoutCount(hgrins);
+        if(n>0){
+            for(int i=0; i<n; i++) player.newViewport(i);
+            viewportsCount = n;
+            }
         while(hgrins!=0 && !interrupted()){
             player.updatePosition(ngetTime(hgrins));
             player.updateState(ngetState(hgrins));
+            n = ngetTopLayoutCount(hgrins);
+            if(n!=viewportsCount){
+                for(int i=viewportsCount;i<n; i++)player.newViewport(i);
+                viewportsCount = n;
+                }
             try {
                 Thread.sleep(interval);
             }
@@ -33,6 +43,9 @@ class GRiNSPlayerMonitor extends Thread {
     private native void ndisconnect(int hgrins);
     private native int ngetState(int hgrins);
     private native double ngetTime(int hgrins);
+    private native int ngetTopLayoutCount(int hgrins);
+    private native int ngetTopLayoutState(int hgrins, int index);
+    
     static {
          System.loadLibrary("grinsp");
      }    
@@ -40,4 +53,5 @@ class GRiNSPlayerMonitor extends Thread {
     private int cookie; 
     private GRiNSPlayer player;
     private int interval = 100;
+    private int viewportsCount = 0;
 }

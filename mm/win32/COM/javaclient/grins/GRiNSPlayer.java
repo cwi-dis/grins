@@ -30,20 +30,31 @@ implements SMILDocument, SMILController, SMILRenderer
         this.listener = null;
     }
     
-    public Dimension getViewportSize()
+    public int getViewportCount(){
+        return ngetTopLayoutCount(hgrins);
+    }
+    
+    public Dimension getViewportSize(int index)
         {
-        return viewportSize;
+        return ngetTopLayoutDimensions(hgrins, index);
+        }
+        
+    public String getViewportTitle(int index)
+        {
+        String title = ngetTopLayoutTitle(hgrins, index);
+        if(title!=null) return title;
+        return "";
         }
     
-    public void setCanvas(SMILCanvas c) throws Exception
+    public void setCanvas(int index, SMILCanvas c) throws Exception
         {
         if(c==null || !c.isDisplayable()) 
             throw new Exception("PlayerCanvas not displayable"); 
         canvas = c;
-        c.setRenderer(this);
+        c.setRenderer(this, index);
         if(hgrins!=0)
             {
-            nsetWindow(hgrins, canvas);   
+            nsetTopLayoutWindow(hgrins, index, canvas);   
             nupdate(hgrins);
             }
         }
@@ -59,10 +70,10 @@ implements SMILDocument, SMILController, SMILRenderer
             nopen(hgrins, fn);
             if(canvas!=null && canvas.isDisplayable())
                 {
-                nsetWindow(hgrins, canvas);   
+                nsetTopLayoutWindow(hgrins, 0, canvas);   
                 nupdate(hgrins);
                 }
-            viewportSize = ngetPreferredSize(hgrins);
+            //viewportSize = ngetTopLayoutDimensions(hgrins, 0);
             dur = ngetDuration(hgrins);
             monitor = new GRiNSPlayerMonitor(this, 100);
             monitor.start();
@@ -93,14 +104,14 @@ implements SMILDocument, SMILController, SMILRenderer
         if(hgrins!=0) nupdate(hgrins);
         }
     
-    public void mouseClicked(int x, int y)
+    public void mouseClicked(int index, int x, int y)
         {
-        if(hgrins!=0) nmouseClicked(hgrins, x, y);
+        if(hgrins!=0) nmouseClicked(hgrins, index, x, y);
         }
     
-    public boolean mouseMoved(int x, int y)
+    public boolean mouseMoved(int index, int x, int y)
         {
-        if(hgrins!=0) return nmouseMoved(hgrins, x, y);
+        if(hgrins!=0) return nmouseMoved(hgrins, index, x, y);
         return false;
         }
         
@@ -159,7 +170,11 @@ implements SMILDocument, SMILController, SMILRenderer
         {
         if(listener!=null) listener.setState(state);
         }
-        
+     
+    void newViewport(int index){
+        if(listener!=null) listener.newViewport(index);
+        }
+    
     private Dimension viewportSize;
     private double dur;
     private SMILListener listener;
@@ -172,7 +187,6 @@ implements SMILDocument, SMILController, SMILRenderer
     private native void uninitializeThreadContext();
     
     private native int nconnect();
-    private native void nsetWindow(int hgrins, Component g);
     private native void ndisconnect(int hgrins);
     private native void nopen(int hgrins, String str);
     private native void nclose(int hgrins);
@@ -181,14 +195,20 @@ implements SMILDocument, SMILController, SMILRenderer
     private native void npause(int hgrins);
     private native void nupdate(int hgrins);
     private native int ngetState(int hgrins);
-    private native Dimension ngetPreferredSize(int hgrins);
+    
+    private native int ngetTopLayoutCount(int hgrins);
+    private native void nsetTopLayoutWindow(int hgrins, int index, Component g);
+    private native Dimension ngetTopLayoutDimensions(int hgrins, int index);
+    private native String ngetTopLayoutTitle(int hgrins, int index);
+    private native int ngetTopLayoutState(int hgrins, int index);
+    private native void nmouseClicked(int hgrins, int index, int x, int y);
+    private native boolean nmouseMoved(int hgrins, int index, int x, int y);
+    
     private native double ngetDuration(int hgrins);
     private native void nsetTime(int hgrins, double t);
     private native double ngetTime(int hgrins);
     private native void nsetSpeed(int hgrins, double v);
     private native double ngetSpeed(int hgrins);
-    private native void nmouseClicked(int hgrins, int x, int y);
-    private native boolean nmouseMoved(int hgrins, int x, int y);
     private native int ngetCookie(int hgrins);
     static {
          System.loadLibrary("grinsp");
