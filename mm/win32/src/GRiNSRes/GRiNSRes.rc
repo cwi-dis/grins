@@ -13,6 +13,46 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
+IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -56,10 +96,10 @@ END
 
 IDD_LAYOUT_NAME DIALOG DISCARDABLE  0, 0, 186, 55
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "New layout"
+CAPTION "New screen"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Layout name:",IDC_STATIC,7,8,44,8
+    LTEXT           "Screen name:",IDC_STATIC,7,8,45,8
     EDITTEXT        IDC_EDIT1,51,7,128,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,59,34,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,129,34,50,14
@@ -311,13 +351,13 @@ BEGIN
     PUSHBUTTON      "Delete",IDCMD_DELETE,86,69,29,13
     LISTBOX         IDC_LAYOUTS,6,14,108,52,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Layouts",-1,6,4,108,10,SS_SUNKEN
+    LTEXT           "Screens",-1,6,4,108,10,SS_SUNKEN
     PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,120,69,32,13
     PUSHBUTTON      "»»»",IDCMD_REMOVE_CHANNEL,226,43,22,13
     PUSHBUTTON      "Properties...",IDCMD_ATTRIBUTES,174,69,47,13
     LISTBOX         IDC_LAYOUT_CHANNELS,119,14,102,52,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Channels in selected layout:",-1,119,4,102,10,SS_SUNKEN
+    LTEXT           "Channels in selected screen",-1,119,4,102,10,SS_SUNKEN
     PUSHBUTTON      "«««",IDCMD_ADD_CHANNEL,226,24,22,13
     LISTBOX         IDC_OTHER_CHANNELS,255,14,102,52,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
@@ -798,46 +838,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Neutral resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-#pragma code_page(1253)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
-IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
-#endif    // Neutral resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1253)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
-#endif    // Neutral (Default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
