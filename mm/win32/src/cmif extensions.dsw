@@ -81,6 +81,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "GRiNSed Light"="..\..\Build\win32\GRiNSed Light\GRiNSed Light.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "PyWinTypes"=..\..\..\python\Extensions\win32\PyWinTypes.dsp - Package Owner=<4>
 
 Package=<5>
