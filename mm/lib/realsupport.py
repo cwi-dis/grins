@@ -337,7 +337,7 @@ def rmff(file, fp):
 	else:
 		file_version, num_headers = struct.unpack('>ll', fp.read(8))
 	for i in range(num_headers):
-		chunk = Chunk(fp, align = 0)
+		chunk = Chunk(fp, align = 0, inclheader = 1)
 		name = chunk.getname()
 		if name == 'PROP':
 			object_version = struct.unpack('>h', chunk.read(2))[0]
