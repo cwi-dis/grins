@@ -1,9 +1,11 @@
 __version__ = "$Id$"
 
 import Xlib, Xt, Xm, X, Xmd
+import sys, os
 import math
 from types import TupleType
-import img
+import img, imgconvert, imgformat
+import imageop
 from XTopLevel import toplevel
 from XConstants import *
 from XConstants import _WAITING_CURSOR, _READY_CURSOR, _WIDTH, _HEIGHT
@@ -19,6 +21,17 @@ no_canvas_resize = settings.get('no_canvas_resize')
 
 import re
 dtre = re.compile(r'LPATH=(?P<lpathstart>\d+)-(?P<lpathend>\d+):(?P<value>.*)')
+
+class _Reader:
+	def __init__(self, width, height, data, format):
+		self.width = width
+		self.height = height
+		self.data = data
+		self.format = format
+		self.format_choices = (format,)
+
+	def read(self):
+		return self.data
 
 class _Window(_AdornmentSupport, _RubberBand):
 	# Instances of this class represent top-level windows.  This
@@ -928,7 +941,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			xsize, ysize = toplevel._image_size_cache[file]
 		else:
 			try:
-				reader = img.reader(format, file)
+				reader = img.reader(None, file)
 			except (img.error, IOError), arg:
 				raise error, arg
 			xsize = reader.width
@@ -972,7 +985,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 				del toplevel._image_size_cache[file]
 				return self._prepare_image(file, crop, oscale, center, coordinates)
 			if hasattr(reader, 'transparent'):
-				import imageop, imgformat
 				r = img.reader(imgformat.xrgb8, file)
 				for i in range(len(r.colormap)):
 					r.colormap[i] = 255, 255, 255
@@ -990,19 +1002,24 @@ class _Window(_AdornmentSupport, _RubberBand):
 						image[i*w:(i+1)*w], w, 1, 128)
 				mask = tw._visual.CreateImage(1, X.XYPixmap, 0,
 							bitmap, w, h, 8, 0)
+				# mask.byte_order doesn't matter
 			else:
 				mask = None
-			try:
-				image = reader.read()
-			except:
-				import sys
-				raise error, sys.exc_value
 			if scale != 1:
-				import imageop
+				try:
+					image = reader.read()
+				except:
+					raise error, sys.exc_value
 				w = int(xsize * scale + .5)
 				h = int(ysize * scale + .5)
-				image = imageop.scale(image, depth,
+				image = imageop.scale(image, reader.format.descr['size'] / 8,
 						      xsize, ysize, w, h)
+				reader = _Reader(w, h, image, reader.format)
+			try:
+				reader = imgconvert.stackreader(format, reader)
+				image = reader.read()
+			except:
+				raise error, sys.exc_value
 			try:
 				import tempfile
 				cfile = tempfile.mktemp()
@@ -1011,7 +1028,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			except:
 				print 'Warning: caching image failed'
 				try:
-					import os
 					os.unlink(cfile)
 				except:
 					pass
@@ -1025,8 +1041,9 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
-		xim = tw._visual.CreateImage(tw._depth, X.ZPixmap, 0, image,
-					     w, h, depth * 8, w * depth)
+		xim = tw._visual.CreateImage(tw._visual.depth, X.ZPixmap, 0, image,
+					     w, h, format.descr['align'], 0)
+		xim.byte_order = toplevel._byteorder
 		return xim, mask, left, top, x, y, w - left - right, h - top - bottom
 
 	def _destroy_callback(self, form, client_data, call_data):
