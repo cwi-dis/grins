@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import ChannelWindow, MPEG
 import urllib
 import mpegex, win32con
