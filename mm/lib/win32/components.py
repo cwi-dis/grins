@@ -235,7 +235,9 @@ class ListBox(Control):
 		return self.sendmessage_rs(win32con.LB_GETTEXT,ix,n)
 	def resetcontent(self):
 		self.sendmessage(win32con.LB_RESETCONTENT)
-
+	def sethorizontalextent(self,npixels):
+		self.sendmessage(win32con.LB_SETHORIZONTALEXTENT,npixels)
+	 
 	# cmif interface
 	# initialize cmif related part
 	def __icmif(self):
@@ -282,6 +284,18 @@ class ListBox(Control):
 	# Return the item at the index
 	def getlistitem(self,ix):
 		return self.gettext(ix)
+
+	def recalchorizontalextent(self):
+		from Font import _Font
+		font = _Font('MS Sans Serif',8)
+		npixels = 0
+		l = self.getlist()
+		for s in l:
+			np = font.gettextextent(s)[0]
+			if np>npixels:
+				npixels = np
+		npixels = npixels + 8  # plus 8 pixel margin 
+		self.sendmessage(win32con.LB_SETHORIZONTALEXTENT,npixels)
 
 
 # ComboBox control class
@@ -370,7 +384,7 @@ class ComboBox(Control):
 			str='['+str+']'
 			self.insertstring(pos,str)
 		self.setcursel(seloption)
-
+	
 
 ##################
 # A special class that it is both an MFC window and A LightWeightControl
@@ -404,6 +418,7 @@ class TabCtrl(Control):
 		self.sendmessage(commctrl.TCM_SETCURSEL,ix)
 	def getcursel(self):
 		return self.sendmessage(commctrl.TCM_GETCURSEL)
+
 
 ##############################
 # Base class for controls creation classes
