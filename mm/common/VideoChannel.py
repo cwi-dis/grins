@@ -35,6 +35,25 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__context = widget.CreateContext(visual, None, 1)
 
 	def do_hide(self):
+		if self.played_movie:
+			movie = self.played_movie
+			self.played_movie = None
+			movie.Stop()
+			t = float(movie.GetCurrentTime(1000)) / 1000
+			d = float(movie.GetMovieDuration(1000)) / 1000
+			looplimit = movie.GetPlayLoopLimit()
+			loopcount = movie.GetPlayLoopCount()
+			movie.UnbindOpenGLWindow()
+			del _mvmap[movie]
+			if self.__qid is None and \
+			   looplimit != mv.MV_LIMIT_FOREVER and \
+			   self._playstate == Channel.PLAYING:
+				t = d-t	# time remaining in current loop
+				if looplimit > 1:
+					# add time of remaining loops
+					t = (looplimit - loopcount - 1) * d + t
+				self._qid = self._scheduler.enter(
+					t, 0, self.playdone, (0,))
 		if self.__context:
 			self.__context.DestroyContext()
 			self.__context = None
@@ -141,7 +160,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			del _mvmap[self.played_movie]
 			self.played_movie = None
 			self.__qid = None
-			self.playdone(0)
+		self.playdone(0)
 
 	def playstop(self):
 		if self.__qid:

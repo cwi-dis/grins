@@ -1479,7 +1479,7 @@ class ChannelWindowAsync(ChannelWindow):
 		if debug:
 			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self._is_shown and self.window:
+		if self._is_shown and self.window and not self.syncplay:
 			try:
 				winoff = self.winoff
 				winoff = MMAttrdefs.getattr(node, 'base_winoff')
