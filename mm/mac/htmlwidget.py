@@ -37,6 +37,10 @@ HTML_SIZE={
 	'h2': 2
 }
 
+# Parts of the scrollbar we track:
+TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
+		Controls.inPageUp, Controls.inPageDown)
+
 class HTMLWidget:
 	def __init__(self, window, rect, name):
 		init_waste()
@@ -243,10 +247,13 @@ class HTMLWidget:
 			# Check for control
 			ptype, ctl = Ctl.FindControl(local, self.wid)
 			if ptype and ctl:
-				part = ctl.TrackControl(local)
-				if part:
-					self.scrollbar_callback(ctl, part)
-					return
+				if ptype in TRACKED_PARTS:
+					dummy = ctl.TrackControl(local, self.scrollbar_callback)
+				else:
+					part = ctl.TrackControl(local)
+					if part:
+						self.scrollbar_callback(ctl, part)
+				return
 			# Remember, so we react to mouse-up next time
 			self.last_mouse_was_down = 1
 		else:
