@@ -144,18 +144,12 @@ class _DisplayList:
 ##			return
 		Qd.RGBForeColor(fgcolor)
 		
-	def _setbgcolor(self, bgcolor):
-##		if bgcolor == 'theme_background':
-##			depth=16 # XXX
-##			App.SetThemeBackground(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
-##			return
-		if bgcolor is None:
-			bgcolor = (0,0,0)
-		Qd.RGBBackColor(bgcolor)
-		
 	def _restorecolors(self):
 		self._setfgcolor(self._fgcolor)
-		self._setbgcolor(self._bgcolor)
+		bgcolor = self._bgcolor
+		if bgcolor is None:
+			bgcolor = (0, 0, 0)
+		Qd.RGBBackColor(bgcolor)
 
 	def _setblackwhitecolors(self):
 		# For image draw
@@ -262,16 +256,15 @@ class _DisplayList:
 		if clonestart:
 			list = self._list[clonestart:]
 		else:
-			if window._transparent <= 0:
-				# XXXX Or should we erase the onscreen window?
-				Qd.EraseRect(window.qdrect())
+##			if window._transparent <= 0:
+##				# XXXX Or should we erase the onscreen window?
+##				Qd.EraseRect(window.qdrect())
 			list = self._list
 		for entry in list:
 			self._render_one(entry, window, grafport)
 			
 	def _render_one(self, entry, window, grafport):
 		cmd = entry[0]
-		xscrolloffset, yscrolloffset = window._scrolloffset()
 		
 		if cmd == 'clear':
 			if self._bgcolor != None:
@@ -281,31 +274,28 @@ class _DisplayList:
 		elif cmd == 'font':
 			entry[1]._setfont(grafport)
 		elif cmd == 'text':
-			Qd.MoveTo(entry[1]+xscrolloffset, entry[2]+yscrolloffset)
+			x, y = self._convert_coordinates(entry[1:3])
+			Qd.MoveTo(x, y)
 			 # XXXX Incorrect for long strings:
 			Qd.DrawText(entry[3], 0, len(entry[3]))
 		elif cmd == 'icon':
 			if entry[2] != None:
-				x, y, w, h = entry[1]
-				x = x+xscrolloffset
-				y = y+yscrolloffset
-				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
+				x0, y0, x1, y1 = self._convert_coordinates(entry[1])
+				if x1-x0 < ICONSIZE_PXL:
+					leftextra = (ICONSIZE_PXL - (x1-x0))/2
+					x0 = x0 + leftextra
+					x1 = x0 + ICONSIZE_PXL
+				if y1-y0 < ICONSIZE_PXL:
+					topextra = (ICONSIZE_PXL - (y1-y0))/2
+					y0 = y0 + topextra
+					y1 = y0 + ICONSIZE_PXL
+				Icn.PlotCIcon((x0, y0, x1, y1), entry[2])
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
+			dstrect = self._convert_coordinates((dstx, dsty, w, h))
+			w = dstrect[2]-dstrect[0]
+			h = dstrect[3]-dstrect[1]
 			srcrect = srcx, srcy, srcx+w, srcy+h
-			dstrect = dstx, dsty, dstx+w, dsty+h
-##			winrect = window.qdrect()
-##			if dstrect != winrect and self._bgcolor != None:
-##				# The image is smaller than the window. Clear the rest.
-##				dstrgn = Qd.NewRgn()
-##				Qd.RectRgn(dstrgn, dstrect)
-##				winrgn = Qd.NewRgn()
-##				Qd.RectRgn(winrgn, winrect)
-##				Qd.DiffRgn(winrgn, dstrgn, winrgn)
-##				Qd.EraseRgn(winrgn)
-##				Qd.DisposeRgn(winrgn)
-##				Qd.DisposeRgn(dstrgn)
 			self._setblackwhitecolors()
 			if mask:
 				Qd.CopyMask(image[0], mask[0],
@@ -322,33 +312,33 @@ class _DisplayList:
 			color = entry[1]
 			points = entry[2]
 			self._setfgcolor(color)
-			x, y = points[0]
-			Qd.MoveTo(x+xscrolloffset, y+yscrolloffset)
+			x, y = self._convert_coordinates(points[0])
+			Qd.MoveTo(x, y)
 			for np in points[1:]:
-				x, y = np
-				Qd.LineTo(x+xscrolloffset, y+yscrolloffset)
+				x, y = self._convert_coordinates(np)
+				Qd.LineTo(x, y)
 			self._restorecolors()
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
 			fgcolor = grafport.rgbFgColor
 			self._setfgcolor(color1)
-			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset)
-			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset)
+			x0, y0 = self._convert_coordinates((x0, y))
+			x1, y1 = self._convert_coordinates((x1, y))
+			Qd.MoveTo(x0, y0)
+			Qd.LineTo(x1, y1)
 			self._setfgcolor(color2)
-			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset+1)
-			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset+1)
+			Qd.MoveTo(x0, y0+1)
+			Qd.LineTo(x1, y1+1)
 			self._setfgcolor(fgcolor)
 			self._restorecolors()
 		elif cmd == 'box':
-			x, y, w, h = entry[1]
-			x, y = x+xscrolloffset, y+yscrolloffset
-			Qd.FrameRect((x, y, x+w, y+h))
+			rect = self._convert_coordinates(entry[1])
+			Qd.FrameRect(rect)
 		elif cmd == 'fbox':
 			color = entry[1]
-			x, y, w, h = entry[2]
-			x, y = x+xscrolloffset, y+yscrolloffset
+			rect = self._convert_coordinates(entry[2])
 			self._setfgcolor(color)
-			Qd.PaintRect((x, y, x+w, y+h))
+			Qd.PaintRect(rect)
 			self._restorecolors()
 		elif cmd == 'linewidth':
 			Qd.PenSize(entry[1], entry[1])
@@ -363,8 +353,7 @@ class _DisplayList:
 			ctr = _colormix(ct, cr)
 			crb = _colormix(cr, cb)
 			cbl = _colormix(cb, cl)
-			l, t, w, h = entry[2]
-			r, b = l + w, t + h
+			l, t, r, b = self._convert_coordinates(entry[2])
 ##			print '3Dbox', (l, t, r, b) # DBG
 ##			print 'window', window.qdrect() # DBG
 			# l, r, t, b are the corners
@@ -374,73 +363,47 @@ class _DisplayList:
 			b3 = b - SIZE_3DBORDER
 			# draw left side
 			self._setfgcolor(cl)
-			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)])
+			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			# draw top side
 			self._setfgcolor(ct)
-			polyhandle = self._polyhandle([(l, t), (r, t), (r3, t3), (l3, t3)])
+			polyhandle = self._polyhandle([(l, t), (r, t), (r3, t3), (l3, t3)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			# draw right side
 			self._setfgcolor(cr)
-			polyhandle = self._polyhandle([(r3, t3), (r, t), (r, b), (r3, b3)])
+			polyhandle = self._polyhandle([(r3, t3), (r, t), (r, b), (r3, b3)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			# draw bottom side
 			self._setfgcolor(cb)
-			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)])
+			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			# draw topleft
 			self._setfgcolor(clt)
-			Qd.PaintRect((l+xscrolloffset, t+yscrolloffset, l3+xscrolloffset, t3+yscrolloffset))
+			Qd.PaintRect((l, t, l3, t3))
 			# draw topright
 			self._setfgcolor(ctr)
-			Qd.PaintRect((r3+xscrolloffset, t+yscrolloffset, r+xscrolloffset, t3+yscrolloffset))
+			Qd.PaintRect((r3, t, r, t3))
 			# draw botright
 			self._setfgcolor(crb)
-			Qd.PaintRect((r3+xscrolloffset, b3+yscrolloffset, r+xscrolloffset, b+yscrolloffset))
+			Qd.PaintRect((r3, b3, r, b))
 			# draw leftbot
 			self._setfgcolor(cbl)
-			Qd.PaintRect((l+xscrolloffset, b3+yscrolloffset, l3+xscrolloffset, b+yscrolloffset))
-##			l = l+1
-##			t = t+1
-##			r = r-1
-##			b = b-1
-##			l1 = l - 1
-##			t1 = t - 1
-##			r1 = r
-##			b1 = b
-##			ll = l + 2
-##			tt = t + 2
-##			rr = r - 2
-##			bb = b - 3
-
-
-##			Qd.RGBForeColor(cl)
-##			polyhandle = self._polyhandle([(l1, t1), (ll, tt), (ll, bb), (l1, b1)])
-##			Qd.PaintPoly(polyhandle)
-			
-##			Qd.RGBForeColor(ct)
-##			polyhandle = self._polyhandle([(l1, t1), (r1, t1), (rr, tt), (ll, tt)])
-##			Qd.PaintPoly(polyhandle)
-			
-##			Qd.RGBForeColor(cr)
-##			polyhandle = self._polyhandle([(r1, t1), (r1, b1), (rr, bb), (rr, tt)])
-##			Qd.PaintPoly(polyhandle)
-			
-##			Qd.RGBForeColor(cb)
-##			polyhandle = self._polyhandle([(l1, b1), (ll, bb), (rr, bb), (r1, b1)])
-##			Qd.PaintPoly(polyhandle)
+			Qd.PaintRect((l, b3, l3, b))
 			
 			self._restorecolors()
 		elif cmd == 'diamond':
-			x, y, w, h = entry[1]
-			x, y = x+xscrolloffset, y+yscrolloffset
+			x, y, x1, y1 = self._convert_coordinates(entry[1])
+			w = x1-x
+			h = y1-y
 			Qd.MoveTo(x, y + h/2)
 			Qd.LineTo(x + w/2, y)
 			Qd.LineTo(x + w, y + h/2)
 			Qd.LineTo(x + w/2, y + h)
 			Qd.LineTo(x, y + h/2)
 		elif cmd == 'fdiamond':
-			x, y, w, h = entry[2]
+			x, y, x1, y1 = self._convert_coordinates(entry[2])
+			w = x1-x
+			h = y1-y
 			self._setfgcolor(entry[1])
 			polyhandle = self._polyhandle([(x, y + h/2),
 					(x + w/2, y),
@@ -451,7 +414,9 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
-			l, t, w, h = entry[2]
+			l, t, r, b = self._convert_coordinates(entry[2])
+			w = r-l
+			h = b-t
 			r = l + w
 			b = t + h
 			x = l + w/2
@@ -464,29 +429,29 @@ class _DisplayList:
 
 
 			self._setfgcolor(cl)
-			polyhandle = self._polyhandle([(l, y), (x, t), (x, tt), (ll, y)])
+			polyhandle = self._polyhandle([(l, y), (x, t), (x, tt), (ll, y)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(ct)
-			polyhandle = self._polyhandle([(x, t), (r, y), (rr, y), (x, tt)])
+			polyhandle = self._polyhandle([(x, t), (r, y), (rr, y), (x, tt)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(cr)
-			polyhandle = self._polyhandle([(r, y), (x, b), (x, bb), (rr, y)])
+			polyhandle = self._polyhandle([(r, y), (x, b), (x, bb), (rr, y)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(cb)
-			polyhandle = self._polyhandle([(l, y), (ll, y), (x, bb), (x, b)])
+			polyhandle = self._polyhandle([(l, y), (ll, y), (x, bb), (x, b)], conv=0)
 			Qd.PaintPoly(polyhandle)
 			
 			self._restorecolors()
 		elif cmd == 'arrow':
 			color = entry[1]
-			points = entry[2]
+			src = entry[2]
+			dst = entry[3]
+			x0, y0, x1, y1, points = self._arrowdata(src,dst)
+
 			self._setfgcolor(color)
-			x0, y0, x1, y1 = points
-			x0, y0 = x0+xscrolloffset, y0+yscrolloffset
-			x1, y1 = x1+xscrolloffset, y1+yscrolloffset
 
 			Qd.MoveTo(x0, y0)
 			Qd.LineTo(x1, y1)
@@ -495,7 +460,19 @@ class _DisplayList:
 			self._restorecolors()
 		else:
 			raise 'Unknown displaylist command', cmd
-						
+
+	def _convert_coordinates(self, coords):
+		"""Convert coordinates from window xywh style to quickdraw style"""						
+		xscrolloffset, yscrolloffset = self._window._scrolloffset()
+		coords = self._window._convert_coordinates(coords)
+		x = coords[0] + xscrolloffset
+		y = coords[1] + yscrolloffset
+		if len(coords) == 2:
+			return x, y
+		else:
+			w, h = coords[2:]
+			return (x, y, x+w, y+h)
+		
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -539,62 +516,37 @@ class _DisplayList:
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize(2)
-##		# Optimize out the initial clear, if possible
-##		if win.qdrect() == (dest_x, dest_y, dest_x+width, dest_y+height):
-##			if self._list[0][0] == 'clear':
-##				del self._list[0]
-##				print 'Removed clear'
-##			print 'No clear there'
-##		else:
-##			print 'Could not remove clear', win.qdrect(),  (dest_x, dest_y, dest_x+width, dest_y+height)
-##		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
-		x, y, w, h = win._rect
-		wf, hf = win._scrollsizefactors()
-		w, h = w*wf, h*hf
-		return float(dest_x - x) / w, float(dest_y - y) / h, \
-		       float(width) / w, float(height) / h
+##		x, y, w, h = win._rect
+##		wf, hf = win._scrollsizefactors()
+##		w, h = w*wf, h*hf
+##		return float(dest_x - x) / w, float(dest_y - y) / h, \
+##		       float(width) / w, float(height) / h
+		return dest_x, dest_y, width, height
 
 	def drawline(self, color, points):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		color = w._convert_color(color)
-		p = []
-		xvalues = []
-		yvalues = []
-		for point in points:
-			x, y = w._convert_coordinates(point)
-			p.append((x,y))
-			xvalues.append(x)
-			yvalues.append(y)
-		self._list.append(('line', color, p))
-##		self._update_bbox(min(xvalues), min(yvalues),
-##				  max(xvalues), max(yvalues))
+		self._list.append(('line', color, points[:]))
 
 	def draw3dhline(self, color1, color2, x1, x2, y):
 		w = self._window
 		color1 = w._convert_color(color1)
 		color2 = w._convert_color(color2)
-		x1, y = w._convert_coordinates((x1, y))
-		x2, dummy = w._convert_coordinates((x2, y))
 		self._list.append(('3dhline', color1, color2, x1, x2, y))
 
 	def drawbox(self, coordinates, clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._window._convert_coordinates(coordinates)
-		self._list.append(('box', (x, y, w, h)))
+		self._list.append(('box', coordinates))
 		self._optimize()
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._window._convert_coordinates(coordinates)
-		self._list.append(('fbox', self._window._convert_color(color),
-				   (x, y, w, h)))
+		self._list.append(('fbox', self._window._convert_color(color), coordinates))
 		self._optimize(1)
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawmarker(self, color, coordinates):
 		pass # XXXX To be implemented
@@ -604,42 +556,25 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		color = w._convert_color(color)
-		p = []
-		xvalues = []
-		yvalues = []
-		for point in points:
-			x, y = w._convert_coordinates(point)
-			p.append((x, y))
-			xvalues.append(x)
-			yvalues.append(y)
-		self._list.append(('fpolygon', color, p))
+		self._list.append(('fpolygon', color, points[:]))
 		self._optimize(1)
-##		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-##		print '3DBOX orig', coordinates
-		coordinates = window._convert_coordinates(coordinates)
-##		print 'conv', coordinates
 		cl = window._convert_color(cl)
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
 		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
 		self._optimize(1)
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		coordinates = self._window._convert_coordinates(coordinates)
 		self._list.append(('diamond', coordinates))
 		self._optimize()
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
@@ -650,13 +585,10 @@ class _DisplayList:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		coordinates = window._convert_coordinates((x, y, w, h))
+		coordinates = (x, y, w, h)
 		color = window._convert_color(color)
 		self._list.append(('fdiamond', color, coordinates))
 		self._optimize(1)
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
-
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -666,42 +598,34 @@ class _DisplayList:
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		coordinates = window._convert_coordinates(coordinates)
 		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize(1)
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawicon(self, coordinates, icon):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		x, y, w, h = window._convert_coordinates(coordinates)
-		# Keep it square, top it off, center it
-		size = min(w, h, ICONSIZE_PXL)
-		xextra = w-size
-		yextra = h-size
-		if xextra > 0:
-			x = x + xextra/2
-		if yextra > 0:
-			y = y + yextra/2
 		data = _get_icon(icon)
-		self._list.append(('icon', (x, y, size, size), data))
+		self._list.append(('icon', coordinates, data))
 		self._optimize(2)
-
 		
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
 		color = self._window._convert_color(color)
+		self._list.append(('arrow', color, src, dst))
+		self._optimize(1)
+##		self._update_bbox(nsx, nsy, ndx, ndy)
+		
+	def _arrowdata(self, src, dst):
 		try:
 			nsx, nsy, ndx, ndy, points = window.arrowcache[(src,dst)]
 		except KeyError:
 			sx, sy = src
 			dx, dy = dst
-			nsx, nsy = window._convert_coordinates((sx, sy))
-			ndx, ndy = window._convert_coordinates((dx, dy))
+			nsx, nsy = self._convert_coordinates((sx, sy))
+			ndx, ndy = self._convert_coordinates((dx, dy))
 			if nsx == ndx and sx != dx:
 				if sx < dx:
 					nsx = nsx - 1
@@ -727,11 +651,9 @@ class _DisplayList:
 			points.append((_roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				       _roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
-		self._list.append(('arrow', color, (nsx, nsy, ndx, ndy), points))
-		self._optimize(1)
-##		self._update_bbox(nsx, nsy, ndx, ndy)
-		
-	def _polyhandle(self, pointlist):
+		return nsx, nsy, ndx, ndy, points
+	
+	def _polyhandle(self, pointlist, conv=1):
 		"""Return polygon structure"""
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
 
@@ -743,13 +665,19 @@ class _DisplayList:
 			if y < miny: miny = y
 			if x > maxx: maxx = x
 			if y > maxy: maxy = y
+		if conv:
+			minx, miny = self._convert_coordinates((minx, miny))
+			maxx, maxy = self._convert_coordinates((maxx, maxy))
 		# Create structure head
 		size = len(pointlist)*4 + 10
-		data = struct.pack("hhhhh", size, miny+yscrolloffset, minx+xscrolloffset, 
-				maxy+yscrolloffset, maxx+xscrolloffset)
+		data = struct.pack("hhhhh", size, miny, minx, maxy, maxx)
 ##		self._update_bbox(minx, miny, maxx, maxy)
-		for x, y in pointlist:
-			data = data + struct.pack("hh", y+yscrolloffset, x+xscrolloffset)
+		for pt in pointlist:
+			if conv:
+				x, y = self._convert_coordinates(pt)
+			else:
+				x, y = pt
+			data = data + struct.pack("hh", y, x)
 		return Res.Handle(data)
 
 	def get3dbordersize(self):
@@ -823,12 +751,9 @@ class _DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			x0, y0 = w._convert_coordinates((x, y))
-			list.append(('text', x0, y0, str))
+			list.append(('text', x, y, str))
 			twidth = Qd.TextWidth(str, 0, len(str))
 			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
-##			self._update_bbox(x0, y0, x0+twidth,
-##					  y0+int(height/self._window._vfactor))
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
@@ -868,15 +793,6 @@ class _DisplayList:
 			self.setpos(x, y)
 			self.writestr(str)
 
-##	def _update_bbox(self, minx, miny, maxx, maxy):
-##		assert type(minx) == type(maxx) == \
-##		       type(miny) == type(maxy) == type(1)
-##		if minx > maxx:
-##			minx, maxx = maxx, minx
-##		if miny > maxy:
-##			miny, maxy = maxy, miny
-##		self._clonebboxes.append((minx, miny, maxx, maxy))
-		
 	def _optimize(self, ignore = []):
 		if type(ignore) is IntType:
 			ignore = [ignore]
@@ -889,11 +805,6 @@ class _DisplayList:
 					z = tuple(z)
 				x.append(z)
 		x = tuple(x)
-##		try:
-##			i = self._optimdict[x]
-##		except KeyError:
-##			pass
-##		else:
 		if self._optimdict.has_key(x):
 			i = self._optimdict[x]
 			del self._list[i]
@@ -936,7 +847,7 @@ class _DisplayList:
 
 	# Update background color
 	def updatebgcolor(self, color):
-		self._bgcolor = color
+		self._bgcolor = self._window._convert_color(color)
 
 	#
 	# End of animation experimental methods

@@ -527,8 +527,9 @@ class _CommonWindow:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
 		xim = mac_image.mkpixmap(w, h, format, image)
-		return (xim, image), mask, left, top, \
-		       x, y, w - left - right, h - top - bottom
+		rvx0, rvy0, rvw, rvh = self._convert_qdcoords(
+				(x, y, x + w - left - right, y + h - top - bottom), ignorescroll=1)
+		return (xim, image), mask, left, top, rvx0, rvy0, rvw, rvh
 
 	def _put_image_in_cache(self, key, image, w, h, mask):
 		if len(image) > IMAGE_CACHE_SIZE/2:
@@ -622,11 +623,16 @@ class _CommonWindow:
 		them to upper layers, i.e. 1 divided by the amount of the window visible"""
 		return 1, 1
 		
-	def _convert_qdcoords(self, coordinates, units = UNIT_SCREEN):
+	def _convert_qdcoords(self, coordinates, units = UNIT_SCREEN, ignorescroll=0):
 		"""Convert QD coordinates to fractional xy or xywh coordinates"""
 		x0, y0 = coordinates[:2]
 		xscrolloff, yscrolloff = self._scrolloffset()
-		x, y = x0-xscrolloff, y0-yscrolloff
+		if ignorescroll:
+			x = x0
+			y = y0
+		else:
+			x = x0-xscrolloff
+			y = y0-yscrolloff
 		if len(coordinates) == 2:
 			coordinates = x, y
 		else:
@@ -880,10 +886,6 @@ class _CommonWindow:
 		
 	def _redraw(self, rgn=None):
 		"""Set clipping and color, redraw, redraw children"""
-		print '_redraw', self, self._bgcolor
-		if 29000 < self._bgcolor[2]< 30000:
-			import pdb
-			pdb.set_trace()
 		if self._parent is None:
 			return
 		if not self._clip or not self._clipincludingchildren:
