@@ -42,7 +42,7 @@ TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
 		Controls.inPageUp, Controls.inPageDown)
 
 class HTMLWidget:
-	def __init__(self, window, rect, name):
+	def __init__(self, window, rect, name, controlhandler=None):
 		init_waste()
 		self.last_mouse_was_down = 0
 		self.url = ''
@@ -60,6 +60,7 @@ class HTMLWidget:
 		self.font_size = 12
 		self.name = name
 		self.wid = window
+		self.controlhandler = controlhandler
 		l, t, r, b = rect
 		self.rect = rect
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
@@ -99,6 +100,8 @@ class HTMLWidget:
 		#
 		if self.bary:
 			self.bary.DisposeControl()
+			if self.controlhandler:
+				self.controlhandler._del_control(self.bary)
 		self.bary = None
 		l, t, r, b = self.rect
 		if reset:
@@ -120,6 +123,8 @@ class HTMLWidget:
 			self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
 			if not self.activated: self.bary.HiliteControl(255)
 			self.updatedocview()
+			self.controlhandler._add_control(self.bary, 
+						self.scrollbar_callback, self.scrollbar_callback)
 		else:
 			vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 			dr = dr[0], dr[1], dr[0]+vr[2]-vr[0], dr[3]
@@ -328,6 +333,38 @@ class HTMLWidget:
 			if tag:
 				print 'Warning: no tag named', tag
 			pos = 0
+		self.ted.WESetSelection(pos, pos)
+##		self.ted.WESetSelection(0, 0)
+		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
+		Win.InvalRect(self.rect)
+
+		self.createscrollbars(reset=1)
+
+	def insert_plaintext(self, data):		
+		if data == '':
+			self.must_clear = 1
+			Qd.SetPort(self.wid)
+			Win.InvalRect(self.rect)
+			return
+
+		self.must_clear = 0
+		Qd.SetPort(self.wid)
+		Qd.RGBBackColor(self.bg_color)
+		self.current_data_loaded = None
+		
+		# Remember where we are, and don't update
+		Qd.SetPort(self.wid)
+		self.ted.WESetSelection(0, 0x3fffffff)
+		self.ted.WEDelete()
+		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
+
+		self.html_init()
+		self.new_font([0, 0, 0, 1])		# Set typewriter font
+		self.send_literal_data(data)	# And insert the data.
+		
+		self.anchor_hrefs = []
+
+		pos = 0
 		self.ted.WESetSelection(pos, pos)
 ##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
