@@ -68,11 +68,13 @@ PlayerObject::PlayerObject()
 
 PlayerObject::~PlayerObject()
 	{
+	BGN_SAVE;
 	if(pContext)
 		pContext->m_pClientSink->SetPyAdviceSink(NULL);
 	if(pPlayer)pPlayer->Stop();
 	ReleaseObjects();
 	EngineObject_Release();
+	END_SAVE;
 	}
 
 PyObject *PlayerObject::CreateInstance(PyObject *self, PyObject *args)
