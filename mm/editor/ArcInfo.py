@@ -107,32 +107,32 @@ class ArcInfo(Dialog):
 
 	# Standard callbacks (referenced from Dialog)
 
-	def cancel_callback(self, args):
+	def cancel_callback(self, *args):
 		self.close()
 
-	def restore_callback(self, args):
+	def restore_callback(self, *args):
 		self.getvalues()
 
-	def apply_callback(self, args):
+	def apply_callback(self, *args):
 		self.setvalues()
 
-	def ok_callback(self, args):
+	def ok_callback(self, *args):
 		self.setvalues()
 		self.close()
 
-	def one_sec_callback(self, args):
+	def one_sec_callback(self, *args):
 		delay = min(1.0, self.delay_slider.get_slider_value())
 		self.delay_slider.set_slider_value(delay)
 		self.delay_slider.set_slider_bounds(0.0, 1.0)
 		self.delay_slider.set_slider_precision(2)
 
-	def ten_sec_callback(self, args):
+	def ten_sec_callback(self, *args):
 		delay = min(10.0, self.delay_slider.get_slider_value())
 		self.delay_slider.set_slider_value(delay)
 		self.delay_slider.set_slider_bounds(0.0, 10.0)
 		self.delay_slider.set_slider_precision(1)
 
-	def hundred_sec_callback(self, args):
+	def hundred_sec_callback(self, *args):
 		delay = min(100.0, self.delay_slider.get_slider_value())
 		self.delay_slider.set_slider_value(delay)
 		self.delay_slider.set_slider_bounds(0.0, 100.0)
@@ -140,7 +140,7 @@ class ArcInfo(Dialog):
 
 	# Dummy callback for from/to beginning/end buttons and delay slider
 
-	def dummy_callback(self, args):
+	def dummy_callback(self, *args):
 		pass
 
 	# Get/set values

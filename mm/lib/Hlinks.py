@@ -100,7 +100,8 @@ class Hlinks:
 		return rv
 
 	# Reverse representation of a link
-	def revlink(self, (a1, a2, dir, type)):
+	def revlink(self, link):
+		a1, a2, dir, type = link
 		if dir == DIR_1TO2:
 			dir = DIR_2TO1
 		elif dir == DIR_2TO1:

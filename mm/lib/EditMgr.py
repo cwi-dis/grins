@@ -95,7 +95,7 @@ class EditMgr:
 	# (ideally rollback must be able to roll back even if
 	# an arbitrary keyboard interrupt hit).
 	#
-	def addstep(self, step):
+	def addstep(self, *step):
 		# This fails if we're not busy because self.undostep is deleted
 		self.undostep.append(step)
 	#
@@ -109,16 +109,16 @@ class EditMgr:
 		self.addstep('delnode', parent, i, node)
 		node.Extract()
 	#
-	def addnode(self, (parent, i, node)):
+	def addnode(self, parent, i, node):
 		self.addstep('addnode', parent, i, node)
 		node.AddToTree(parent, i)
 	#
-	def setnodetype(self, (node, type)):
+	def setnodetype(self, node, type):
 		oldtype = node.GetType()
 		self.addstep('setnodetype', node, oldtype, type)
 		node.SetType(type)
 	#
-	def setnodeattr(self, (node, name, value)):
+	def setnodeattr(self, node, name, value):
 		if name == 'synctolist':
 			raise MMExc.AssertError, 'cannot set synctolist attr'
 		oldvalue = node.GetRawAttrDef(name, None)
@@ -128,13 +128,13 @@ class EditMgr:
 		elif oldvalue <> None:
 			node.DelAttr(name)
 	#
-	def setnodevalues(self, (node, values)):
+	def setnodevalues(self, node, values):
 		self.addstep('setnodevalues', node, node.GetValues(), values)
 		node.SetValues(values)
 	#
 	# Sync arc operations
 	#
-	def addsyncarc(self, (xnode, xside, delay, ynode, yside)):
+	def addsyncarc(self, xnode, xside, delay, ynode, yside):
 		list = ynode.GetRawAttrDef('synctolist', None)
 		if list == None:
 			list = []
@@ -147,9 +147,9 @@ class EditMgr:
 				list.remove(item)
 				break
 		self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
-		list.append(xuid, xside, delay, yside)
+		list.append((xuid, xside, delay, yside))
 	#
-	def delsyncarc(self, (xnode, xside, delay, ynode, yside)):
+	def delsyncarc(self, xnode, xside, delay, ynode, yside):
 		list = ynode.GetRawAttrDef('synctolist', [])
 		xuid = xnode.GetUID()
 		for item in list:
@@ -161,7 +161,7 @@ class EditMgr:
 		else:
 			raise MMExc.AssertError, 'bad delsyncarc call'
 	#
-	def setsyncarcdelay(self, (xnode, xside, delay, ynode, yside)):
+	def setsyncarcdelay(self, xnode, xside, delay, ynode, yside):
 		list = ynode.GetRawAttrDef('synctolist', [])
 		xuid = xnode.GetUID()
 		for i in range(len(list)):
@@ -176,7 +176,7 @@ class EditMgr:
 	#
 	# Channel operations
 	#
-	def addchannel(self, (name, i, type)):
+	def addchannel(self, name, i, type):
 		if name in self.context.channelnames:
 			raise MMExc.AssertError, \
 				'duplicate channel name in addchannel'
@@ -191,7 +191,7 @@ class EditMgr:
 		del self.context.channelnames[i]
 		del self.context.channeldict[name]
 	#
-	def setchannelname(self, (name, newname)):
+	def setchannelname(self, name, newname):
 		if newname in self.context.channelnames:
 			raise MMExc.AssertError, \
 				'duplicate channel name in setchannelname'
@@ -202,7 +202,7 @@ class EditMgr:
 		self.context.channelnames[i] = newname
 		del self.context.channeldict[name]
 	#
-	def setchannelattr(self, (name, attrname, value)):
+	def setchannelattr(self, name, attrname, value):
 		attrdict = self.context.channeldict[name]
 		if attrdict.has_key(attrname):
 			oldvalue = attrdict[attrname]
@@ -229,7 +229,7 @@ class EditMgr:
 		self.addstep('delstyle', name, self.context.styledict[name])
 		del self.context.styledict[name]
 	#
-	def setstylename(self, (name, newname)):
+	def setstylename(self, name, newname):
 		if self.context.styledict.has_key(newname):
 			raise MMExc.AssertError, \
 				'duplicate style name in setstylename'
@@ -238,7 +238,7 @@ class EditMgr:
 		self.context.styledict[newname] = attrdict
 		del self.context.styledict[name]
 	#
-	def setstyleattr(self, (name, attrname, value)):
+	def setstyleattr(self, name, attrname, value):
 		attrdict = self.context.styledict[name]
 		if attrdict.has_key(attrname):
 			oldvalue = attrdict[attrname]

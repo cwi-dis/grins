@@ -222,16 +222,16 @@ class Dialog(BasicDialog):
 	# Standard callbacks.
 	# Derived classes should override or extend these methods.
 	#
-	def cancel_callback(self, (obj, arg)):
+	def cancel_callback(self, obj, arg):
 		self.hide()
 	#
-	def restore_callback(self, (obj, arg)):
+	def restore_callback(self, obj, arg):
 		pass
 	#
-	def apply_callback(self, (obj, arg)):
+	def apply_callback(self, obj, arg):
 		pass
 	#
-	def ok_callback(self, (obj, arg)):
+	def ok_callback(self, obj, arg):
 		self.hide()
 	#
 	# A standard way of changing the appearance of the

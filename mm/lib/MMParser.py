@@ -214,17 +214,17 @@ class MMParser:
 				# Default syntax for dictionaries
 				value = \
 				    self.getnamedictvalue( \
-				    	MMParser.getanyvalue, None)
+				    	(MMParser.getanyvalue, None))
 			elif name[-4:] == 'list':
 				# Default syntax for lists
 				value = self.getlistvalue( \
-					MMParser.getanyvalue, None)
+					(MMParser.getanyvalue, None))
 			else:
 				# Default syntax for other things
 				# (returned as lists if more than one item,
 				# else as single value)
 				value = self.getlistvalue( \
-					MMParser.getanyvalue, None)
+					(MMParser.getanyvalue, None))
 				if len(value) == 1:
 					value = value[0]
 		self.close()
@@ -245,7 +245,7 @@ class MMParser:
 		self.close()
 		return v
 	#
-	def gettypevalue(self, None):
+	def gettypevalue(self, dummy):
 		self.open()
 		type = self.getnamevalue(None)
 		arg = None
@@ -262,9 +262,9 @@ class MMParser:
 		elif type == 'bool':
 			pass
 		elif type == 'enum':
-			arg = self.getlistvalue(MMParser.getnamevalue, None)
+			arg = self.getlistvalue((MMParser.getnamevalue, None))
 		elif type == 'tuple':
-			arg = self.getlistvalue(MMParser.gettypevalue, None)
+			arg = self.getlistvalue((MMParser.gettypevalue, None))
 		elif type == 'list':
 			arg = self.gettypevalue(None)
 		elif type == 'dict':
@@ -294,7 +294,7 @@ class MMParser:
 		if t[0] == '\'':
 			return eval(t)
 		if t[0] == '(':
-			value = self.getlistvalue(MMParser.getanyvalue, None)
+			value = self.getlistvalue((MMParser.getanyvalue, None))
 			self.close()
 			return value
 		raise SyntaxError, (t, 'value')
@@ -410,7 +410,7 @@ class MMParser:
 	#
 	# Default error handlers.
 	#
-	def reporterror(self, (filename, message, fp)):
+	def reporterror(self, filename, message, fp):
 		fp.write(filename)
 		fp.write(':' + `self.lineno` + ': ')
 		fp.write(message)
