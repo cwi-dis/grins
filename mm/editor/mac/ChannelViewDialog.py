@@ -100,7 +100,6 @@ class NodeBoxCommand:
 class ArcBoxCommand:
 	def __init__(self):
 		c = self.commandlist
-		c.append(None)
 		c.append(UserCmd.INFO, (self.infocall, ()))
 		c.append(UserCmd.DELETE,  (self.delcall, ()))
 		self.menutitle = 'Sync arc ' + self.name + ' ops'
