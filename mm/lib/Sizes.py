@@ -6,12 +6,8 @@ def GetImageSize(file):
 	try:
 		import img
 	except ImportError:
-		try:
-			import imageex
-		except ImportError:
-			return 0, 0
-		else:
-			width, height = imageex.SizeOfImage(file)
+		import windowinterface
+		width, height = windowinterface.GetImageSize(file)
 	else:
 		rdr = img.reader(None, file)
 		width, height = rdr.width, rdr.height
@@ -25,7 +21,7 @@ def GetVideoSize(file):
 		import mv
 	except ImportError:
 		import windowinterface
-		width, height = windowinterface.GetVideoSize(h,file)
+		width, height = windowinterface.GetVideoSize(file)
 	else:
 		movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
