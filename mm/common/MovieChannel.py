@@ -13,6 +13,9 @@
 # if it is zero (indicating a color movie).
 # An EOF indicates the end of the file; 
 
+import sys
+sys.path.append('/ufs/guido/src/video')	# For VFile
+
 import posix
 from stat import *
 
@@ -20,6 +23,9 @@ import MMExc
 import MMAttrdefs
 
 import gl
+import GL
+
+import VFile
 
 from Channel import Channel
 from ChannelWindow import ChannelWindow
@@ -29,8 +35,9 @@ class MovieWindow() = ChannelWindow():
 	# Initialization function.
 	#
 	def init(self, (title, attrdict)):
-		self.fp = None
-		return ChannelWindow.init(self, (title, attrdict))
+		self = ChannelWindow.init(self, (title, attrdict))
+		self.clear()
+		return self
 	#
 	def show(self):
 		if self.wid <> 0: return
@@ -43,74 +50,93 @@ class MovieWindow() = ChannelWindow():
 		self.erase()
 	#
 	def clear(self):
-		self.fp = None
+		self.node = self.vfile = self.lookahead = None
 		if self.wid <> 0:
 			gl.winset(self.wid)
+			gl.RGBmode()
+			gl.gconfig()
+			self.rgbmode = 1
 			self.erase()
 	#
 	def erase(self):
-		gl.RGBcolor(255, 255, 255)
+		if self.node <> None:
+			r, g, b = MMAttrdefs.getattr(self.node, 'color')
+			print r, g, b, 'from node'
+		elif self.attrdict.has_key('color'):
+			r, g, b = self.attrdict['color']
+			print r, g, b, 'from channel'
+		else:
+			r, g, b = 255, 255, 255
+			print r, g, b, 'from built-in default'
+		#
+		if self.rgbmode:
+			print 'rgb mode'
+			gl.RGBcolor(r, g, b)
+		else:
+			print 'colormap mode'
+			INDEX = 255
+			gl.mapcolor(INDEX, r, g, b)
+			gl.color(INDEX)
+		#
 		gl.clear()
+		#
+		if self.vfile <> None:
+			self.centerimage()
 	#
-	def setfile(self, (filename, scale)):
+	def setfile(self, (filename, node)):
+		self.clear()
 		try:
-			self.fp = open(filename, 'r')
-		except:
-			print 'Cannot open movie file', filename
-			self.fp = None
+			self.vfile = VFile.VinFile().init(filename)
+		except EOFError:
+			print 'Empty movie file', `filename`
 			return
-		line = self.fp.readline()
-		if line[:4] = 'CMIF':
-			line = self.fp.readline()
-		if not line:
-			print 'Empty movie file', filename
-			self.fp = None
+		except (VFile.Errror, posix.error, RuntimeError), msg:
+			print 'Cannot open movie file', `filename`, ':', msg
 			return
-		x = eval(line[:-1])
-		if len(x) = 2:
-			self.w, self.h = x
-			self.pf = 2
-		else:
-			self.w, self.h, self.pf = x
-		self.scale = scale
-	#
-	def nextframe(self):
-		if not self.fp:
-			return
-		line = self.fp.readline()
-		if line = '' or line = '\n':
-			self.fp = None
-			return
-		if self.pf:
-			w, h = self.w/self.pf, self.h/self.pf
-		else:
-			w, h = self.w, self.h
-		x = eval(line[:-1])
-		if type(x) = type(0):
-			t = 0
-			if self.pf: size = w*h
-			else: size = w*h*4
-		else:
-			t, size = x
-		data = self.fp.read(size)
-		if self.wid <> 0:
+		self.node = node
+		self.vfile.magnify = MMAttrdefs.getattr(self.node, 'scale')
+		dummy = self.peekaboo()
+		if dummy <> None and self.wid <> None:
 			gl.winset(self.wid)
-			if self.pf:
-				data = gl.unpackrect(w, h, 1, data)
-				zoom = self.pf * self.scale
-			else:
-				zoom = self.scale
-			zoom = int(zoom+0.999) # Round up
-			gl.rectzoom(zoom, zoom)
-			# Center it in the window
-			xsize, ysize = gl.getsize()
-			x = (xsize-w*zoom)/2
-			y = (ysize-h*zoom)/2
-			gl.lrectwrite(x, y, x+w-1, y+h-1, data)
-		return t * 0.001
+			self.vfile.initcolormap()
+			self.rgbmode = (self.vfile.format = 'rgb')
+			self.erase()
+	#
+	def centerimage(self):
+		w, h = self.vfile.width, self.vfile.height
+		w, h = int(w*self.vfile.magnify), int(h*self.vfile.magnify)
+		W, H = gl.getsize()
+		self.vfile.xorigin, self.vfile.yorigin = (W-w)/2, (H-h)/2
+	#
+	def peekaboo(self):
+		try:
+			self.lookahead = self.vfile.getnextframeheader()
+			return self.lookahead[0] * 0.001
+		except (EOFError, VFile.Error):
+			self.lookahead = None
+			return 0.0
 	#
 	def done(self):
-		return self.fp = None
+		return self.lookahead = None
+	#
+	def nextframe(self):
+		if self.lookahead = None:
+			return 0.0
+		time, size, chromsize = self.lookahead
+		if self.wid = 0:
+			try:
+				self.vfile.skipnextframedata(size, chromsize)
+			except (VFile.Error, EOFError):
+				return 0.0
+		else:
+			gl.winset(self.wid)
+			try:
+				data, chromdata = \
+				  self.vfile.getnextframedata(size, chromsize)
+				self.vfile.showframe(data, chromdata)
+			except (VFile.Error, EOFError):
+				return 0.0
+		return self.peekaboo()
 
 
 # XXX Make the movie channel class a derived class from MovieWindow?!
@@ -120,8 +146,8 @@ class MovieChannel() = Channel():
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos', 'scale']
-	node_attrs = ['file']
+	chan_attrs = ['winsize', 'winpos']
+	node_attrs = ['file', 'scale', 'color']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
@@ -145,19 +171,18 @@ class MovieChannel() = Channel():
 	#
 	def play(self, (node, callback, arg)):
 		filename = self.getfilename(node)
-		scale = MMAttrdefs.getattr(node, 'scale')
-		self.window.setfile(filename, scale)
+		self.window.setfile(filename, node)
 		self.starttime = self.player.timefunc()
 		self.poll(callback, arg) # Put on the first image right now
 	#
 	def poll(self, cb_arg):
 		self.qid = None
-		t = self.window.nextframe()
 		if self.window.done(): # Last frame
 			callback, arg = cb_arg
 			callback(arg)
 			return
 		else:
+			t = self.window.nextframe()
 			self.qid = self.player.enterabs(self.starttime + t, \
 				1, self.poll, cb_arg)
 	#
@@ -165,39 +190,40 @@ class MovieChannel() = Channel():
 		self.window.clear()
 	#
 	def getduration(self, node):
+		# To estimate the duration: read the header and the first
+		# image; use stat to get the total file size; use this
+		# to estimate the number of images; multiply this with
+		# the time listed for the first image...
 		filename = self.getfilename(node)
+		totalsize = getfilesize(filename)
 		try:
-			fp = open(filename, 'r')
+			vfile = VFile.VinFile().init(filename)
 		except:
-			print 'cannot get duration of movie', filename
-			return MMAttrdefs.getattr(node, 'duration')
-		line = fp.readline()
-		if line[:4] = 'CMIF':
-			line = fp.readline()
-		if not line:
-			print 'Empty movie file', filename
-			self.fp = None
-			return MMAttrdefs.getattr(node, 'duration')
-		del fp
-		x = eval(line[:-1])
-		if len(x) = 2:
-			w, h = x
-			pf = 2
-		else:
-			w, h, pf = x
-		if pf = 0:
-			bytesperpixel = 4.0
-		else:
-			bytesperpixel = 1.0/pf/pf
-		st = posix.stat(filename)
-		size = st[ST_SIZE]
-		nframes = size / (w*h*bytesperpixel)
-		return nframes / 6.0 # Estimate for frames/sec
+			print 'Cannot open', `filename`, 'to get duration'
+			return 0.0
+		pos1 = vfile.fp.tell()
+		try:
+			time = vfile.skipnextframe()
+		except EOFError:
+			return 0.0
+		pos2 = vfile.fp.tell()
+		imagesize = pos2 - pos1
+		imagecount = (totalsize - pos1) / imagesize
+		return 0.001 * time * imagecount
 	#
 	def getfilename(self, node):
 		# XXX Doesn't use self...
-		if node.type = 'imm':
-			return string.join(node.GetValues())
-		elif node.type = 'ext':
+		if node.type = 'ext':
 			return MMAttrdefs.getattr(node, 'file')
+		else:
+			return None
 	#
+
+
+def getfilesize(filename):
+	from stat import ST_SIZE
+	try:
+		st = posix.stat(filename)
+		return st[ST_SIZE]
+	except:
+		return -1
