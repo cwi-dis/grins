@@ -707,6 +707,7 @@ class XMLParser:
 
     # Internal -- finish processing of end tag
     def finish_endtag(self, tag):
+        self.literal = 0
         if not tag:
             self.syntax_error('name-less end tag')
             found = len(self.stack) - 1
