@@ -1526,10 +1526,11 @@ class HierarchyView(HierarchyViewDialog):
 				AttrEdit.showattreditor(self.toplevel, newnode)
 			return
 
-		type = node.GetType()
+		# type is the type of the to-be-created node
 		if ntype is not None:
-			type = ntype
+			type = ntype	# specified explicitly, so use it
 		elif url is None and chtype is None:
+			# nothing specified, figure out from context
 			type = node.GetType()
 			if where == 0:
 				children = node.GetChildren()
@@ -1563,10 +1564,10 @@ class HierarchyView(HierarchyViewDialog):
 				cnode.collapsed = 1
 				cnode.SetAttr('project_autoroute', 1)
 				newnode = cnode.findMimetypeAcceptor(mimetype)
-		if newnode:
+		if newnode is not None:
 			node = newnode
 		else:
-			if cnode:
+			if cnode is not None:
 				# Can happen if we had a forced child,
 				# but the forced child did not accept the
 				# media type after all. I think this "should
@@ -1583,22 +1584,23 @@ class HierarchyView(HierarchyViewDialog):
 			# if node has no intrinsic duration, set a default duration
 			cnode.setduration = 1
 
-			# figure out a reasonable default name for the new node
-			# the name is the basename of the URL
-			# figure out file name part
-			path = urlparse.urlparse(url)[2]
-			if path:
-				import posixpath
-				# get last bit (after last slash)
-				base = posixpath.split(path)[1]
-				if base:
-					# remove extensions
-					base = posixpath.splitext(base)[0]
+			if features.H_ASSIGN_NAME in Features.feature_set:
+				# figure out a reasonable default name for the new node
+				# the name is the basename of the URL
+				# figure out file name part
+				path = urlparse.urlparse(url)[2]
+				if path:
+					import posixpath
+					# get last bit (after last slash)
+					base = posixpath.split(path)[1]
 					if base:
-						# convert %-escapes
-						base = MMurl.unquote(base)
-						# and assign
-						node.SetAttr('name', base)
+						# remove extensions
+						base = posixpath.splitext(base)[0]
+						if base:
+							# convert %-escapes
+							base = MMurl.unquote(base)
+							# and assign
+							node.SetAttr('name', base)
 
 			if features.EXPORT_REAL in features.feature_set:
 				# some types shouldn't be converted to RealMedia
@@ -1608,63 +1610,64 @@ class HierarchyView(HierarchyViewDialog):
 				   mimetype.find('real') >= 0:
 					node.SetAttr('project_convert', 0)
 
-		dftchannel = None
-		# try to find out the default channel following two rules (evaluated in the right order):
-		# 1) according to the GRiNS project_default_region_xxx attributes
-		# 2) if at this stage, no default channel found, take the first media found which has a region from the parent nodes
-		computedType = node.GetChannelType()
+		if type in MMTypes.mediatypes:
+			# try to find out the default channel following two rules (evaluated in the right order):
+			# 1) according to the GRiNS project_default_region_xxx attributes
+			# 2) if at this stage, no default channel found, take the first media found which has a region from the parent nodes
+			dftchannel = None
+			computedType = node.GetChannelType()
 
-		# stage 1:
-		# find the project_default_region_xxx attribute to look at according to the channel type
-		attributeName = None
-		if computedType in ('video', 'RealPix'):
-			attributeName = 'project_default_region_video'
-		elif computedType in ('text', 'RealText'):
-			attributeName = 'project_default_region_text'
-		elif computedType == 'sound':
-			attributeName = 'project_default_region_sound'
-		elif computedType in ('image','svg','html','brush'):
-			attributeName = 'project_default_region_image'
+			# stage 1:
+			# find the project_default_region_xxx attribute to look at according to the channel type
+			attributeName = None
+			if computedType in ('video', 'RealPix'):
+				attributeName = 'project_default_region_video'
+			elif computedType in ('text', 'RealText'):
+				attributeName = 'project_default_region_text'
+			elif computedType == 'sound':
+				attributeName = 'project_default_region_sound'
+			elif computedType in ('image','svg','html','brush'):
+				attributeName = 'project_default_region_image'
 
-		# the default channel is stored in the container nodes
-		if attributeName and pnode:
-			dftchannel = pnode.GetInherAttrDef(attributeName, None)
+			# the default channel is stored in the container nodes
+			if attributeName and pnode:
+				dftchannel = pnode.GetInherAttrDef(attributeName, None)
 
-		# stage 2:
-		# look at the region defined for the sibling nodes
-		if not dftchannel:
-			dftchannel = self.__searchRegion1(pnode, node)
+			# stage 2:
+			# look at the region defined for the sibling nodes
+			if not dftchannel:
+				dftchannel = self.__searchRegion1(pnode, node)
 
-		# stage 3: create a channel of the correct type
-		if not dftchannel:
-			context = self.root.context
-			# Create unique name
-			chbasename = 'region'
-			i = 1
-			chid = chbasename + `i`
-			while context.channeldict.has_key(id):
-				i = i+1
+			# stage 3: create a channel of the correct type
+			if dftchannel is None:
+				context = self.root.context
+				# Create unique name
+				chbasename = 'region'
+				i = 1
 				chid = chbasename + `i`
-			# Find a viewport
-			chparent = ''
-			for key, val in context.channeldict.items():
-				if val.get('base_window') is None:
-					chparent = key
-					break
-			if chparent:
-				chparentRef = context.getchannel(chparent)
-				# Create the region
-				channel = context.newchannel(chid, -1, 'layout')
-				if start_transaction:
-					if not self.editmgr.transaction():
-						# XXXX Should free channel?
-						return
-					start_transaction = 0
-				self.editmgr.addchannel(chparentRef, -1, channel)
-				dftchannel = chid
+				while context.channeldict.has_key(chid):
+					i = i+1
+					chid = chbasename + `i`
+				# Find a viewport
+				chparent = ''
+				for key, val in context.channeldict.items():
+					if val.get('base_window') is None:
+						chparent = key
+						break
+				if chparent:
+					chparentRef = context.getchannel(chparent)
+					# Create the region
+					channel = context.newchannel(chid, -1, 'layout')
+					if start_transaction:
+						if not self.editmgr.transaction():
+							# XXXX Should free channel?
+							return
+						start_transaction = 0
+					self.editmgr.addchannel(chparentRef, -1, channel)
+					dftchannel = chid
 
-		if dftchannel:
-			node.SetAttr('channel', dftchannel)
+			if dftchannel is not None:
+				node.SetAttr('channel', dftchannel)
 
 		if layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
@@ -1689,7 +1692,7 @@ class HierarchyView(HierarchyViewDialog):
 ##				self.editmgr.addsyncarc(node, 'beginlist', arc)
 ###
 			self.editmgr.commit()
-			if not dftchannel:
+			if type in MMTypes.mediatypes and not dftchannel:
 				AttrEdit.showattreditor(self.toplevel, node, 'channel')
 
 
