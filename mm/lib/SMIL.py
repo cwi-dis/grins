@@ -348,8 +348,6 @@ class SMIL:
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', __null, __cmif, __shell,
 			  __socket]
-	__animate = ['animate', 'set', 'animateMotion', 'animateColor']
-
 	__at = None
 	for __el in __media_object:
 		if ' ' in __el:
@@ -362,6 +360,40 @@ class SMIL:
 		else:
 			attributes[__el] = attributes['ref']
 	del __el, __at
+	
+	__animate = ['animate',  'animateMotion', 'animateColor', 'set',]
+	__animateAttrs ={'begin':None,
+		'dur':None,
+		'end':None,
+		'fill':None,
+		'repeatCount':None,
+		'repeatDur':None,
+		'restart':None,
+		'targetElement': '',
+		'attribute':'',
+		'attributeName':'',
+		'attributeType':'', 
+		'additive':'replace', 
+		'accumulate':'none',
+		'id':None, 
+		'calcMode':'linear', 
+		'values':None, 
+		'keyTimes':None, 
+		'keySplines':None, 
+		'from':None, 
+		'to':None, 
+		'by':None,
+		'path':None, 
+		'origin':None,}
+	attributes['animateMotion'] = __animateAttrs.copy()
+	del __animateAttrs['path'], __animateAttrs['origin']
+	attributes['animate'] = __animateAttrs.copy()
+	attributes['animateColor'] = attributes['animate']
+	del __animateAttrs['calcMode'], __animateAttrs['values'],
+	del	__animateAttrs['keyTimes'], __animateAttrs['keySplines']
+	del	__animateAttrs['from'], __animateAttrs['to'],
+	attributes['set'] = __animateAttrs.copy()
+	del __animateAttrs
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate
@@ -403,3 +435,4 @@ class SMIL:
 	del __media_object, __schedule, __container_content,
 	del __assoc_link
 	del __layouts, __layout
+	del __animate
