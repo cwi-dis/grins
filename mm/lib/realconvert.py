@@ -194,16 +194,11 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 		import __main__
 		import imgformat
 		from win32ig import win32ig
-		img = __main__.toplevel._image_cache.get(f)
-		if img is None:
-			try:
-				img = win32ig.load(f)
-			except:
-				# can't load image, so can't convert
-				return
-		width, height, depth = win32ig.size(img)
-		if depth != 24:
+		doc = __main__.toplevel.getActiveDocFrame()
+		img = __main__.toplevel._image_handle(f, doc)
+		if __main__.toplevel._image_depth(f, doc) != 24:
 			win32ig.color_promote(img, 3) # IG_PROMOTE_TO_24
+		width, height = __main__.toplevel._image_size(f, doc)
 		data = win32ig.read(img)
 		srcfmt = imgformat.bmprgble_noalign
 	else:

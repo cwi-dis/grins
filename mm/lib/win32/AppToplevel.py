@@ -469,7 +469,7 @@ class _Toplevel:
 			raise error, 'file does not exist'
 		img = win32ig.load(file) # raises error if unsuccessful
 		xsize, ysize, depth = win32ig.size(img)
-		self._image_cache[file] = img, (xsize, ysize), stmtime
+		self._image_cache[file] = img, (xsize, ysize, depth), stmtime
 		if self._image_docmap.has_key(doc):
 			if file not in self._image_docmap[doc]:
 				self._image_docmap[doc].append(file)
@@ -479,10 +479,18 @@ class _Toplevel:
 	def _image_size(self, file, doc):
 		self.__check_image_cache(file, doc)
 		try:
-			xsize, ysize = self._image_cache[file][1]
+			xsize, ysize, depth = self._image_cache[file][1]
 		except KeyError:
 			xsize, ysize, depth = win32ig.size(-1)
 		return xsize, ysize
+
+	def _image_depth(self, file, doc):
+		self.__check_image_cache(file, doc)
+		try:
+			xsize, ysize, depth = self._image_cache[file][1]
+		except KeyError:
+			xsize, ysize, depth = win32ig.size(-1)
+		return depth
 
 	def _image_handle(self, file, doc):
 		self.__check_image_cache(file, doc)
