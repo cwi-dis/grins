@@ -54,6 +54,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		self.interesting = []
 
 		LinkEditDialog.__init__(self, self.__maketitle(), dirstr,
+			typestr,
 			[('All', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
@@ -272,9 +273,12 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		dstanchor = self.wholenodeanchor(node)
 		if not dstanchor:
 			return
+		em = self.editmgr
+		if not em.transaction(): return
 		self.interesting.remove(srcanchor)
 		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP
-		self.context.hyperlinks.addlink(link)
+		em.addlink(link)
+		em.commit()
 		
 	def set_interesting(self, anchor):
 		self.interesting.append(anchor)
@@ -550,6 +554,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		linkdir = self.editlink[DIR]
 		linktype = self.editlink[TYPE]
 		self.linkdirsetchoice(linkdir)
+		self.linktypesetchoice(linktype)
 		self.editgroupshow()
 		if self.linkfocus is None:
 			# We seem to be adding
@@ -658,7 +663,10 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 			print 'LinkEdit: delete link w/o focus!'
 			return
 		l = self.links[self.linkfocus]
-		self.context.hyperlinks.dellink(l)
+		em = self.editmgr
+		if not em.transaction(): return
+		em.dellink(l)
+		em.commit()
 		self.updateform()
 
 	def link_edit_callback(self):
@@ -676,16 +684,27 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 					l[TYPE]
 			self.set_radio_buttons()
 
+	def linktype_callback(self):
+		linktype = self.linktypegetchoice()
+		l = self.editlink
+		if l[TYPE] != linktype:
+			self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], \
+					linktype
+			self.set_radio_buttons()
+
 	def ok_callback(self):
 		# XXX Focus isn't correct after an add.
 		if not self.linkedit:
 			print 'LinkEdit: OK while not editing!'
 			return
+		em = self.editmgr
+		if not em.transaction(): return
 		if self.linkfocus is not None:
 			l = self.links[self.linkfocus]
-			self.context.hyperlinks.dellink(l)
-		self.context.hyperlinks.addlink(self.editlink)
+			em.dellink(l)
+		em.addlink(self.editlink)
 		self.linkedit = 0
+		em.commit()
 		self.updateform()
 
 	def cancel_callback(self):
