@@ -561,7 +561,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self._canvas=self._rect=(l,t,r-l,b-t)
 	
 	# Called when a new document is opened
-	def newdocument(self,cmifdoc,adornments,commandlist):
+	def newdocumentXXX(self,cmifdoc,adornments,commandlist):
 		if not self._cmifdoc:
 			self.setdocument(cmifdoc,adornments,commandlist)
 			return self
@@ -583,8 +583,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		if not IsPlayer:
 			self.setEditorDocumentToolbar(adornments)
 			self.setEditorDocumentMenu(1)
-			self.RecalcLayout()	
-		self.ActivateFrame()
+			self.RecalcLayout()
+		if not __main__.toplevel.is_embedded():		
+			self.ActivateFrame(win32con.SW_SHOW)
 
 	def setEditorDocumentMenu(self,flag):
 		if USE_NODOC_MENUBAR:
@@ -696,7 +697,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	def setready(self):
 		import windowinterface
 		windowinterface.toplevel.setready()
-		self.ActivateFrame()
+		if not __main__.toplevel.is_embedded():		
+			self.ActivateFrame(win32con.SW_SHOW)
 
 	# Close the opened document
 	def close(self):
