@@ -99,9 +99,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.iconbox = IconBox(self, self.mother)
 		self.has_event_icons = 0
 		self.cause_event_icon = None
+		self.info_icon = None
 		if node.GetType() == 'comment':
 			self.playicon = None
 		else:
+			# XXXX Comment by Jack: Why is this not done through the IconBox?
+			# XXXX Answer by Jack: it may be doable now, now that IconBox semantics
+			#      don't move things around anymore.
 			self.playicon = Icon(self, self.mother)
 			self.playicon.set_properties(selectable=0, callbackable=0)
 			if self.isvisible(): # terribily inefficient
@@ -112,6 +116,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.transition_out = None
 		self.dropbox = None
 		self.channelbox = None
+		self.link_icon = self.iconbox.add_icon(self.getlinkicon())
 
 	def __repr__(self):
 		return '<%s instance, name="%s", node=%s, id=%X>' % (self.__class__.__name__, self.name, `self.node`, id(self))
@@ -123,6 +128,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.playicon.destroy()
 			self.playicon = None
 			del self.node.set_armedmode
+		self.cause_event_icon = None
+		self.info_icon = None
+		self.link_icon = None
 		if self.iconbox is not None:
 			self.iconbox.destroy()
 			self.iconbox = None
@@ -134,6 +142,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			del self.node.set_infoicon
 			self.node = None
 		self.set_infoicon = None
+		self.cause_event_icon = None
+		self.info_icon = None
+		self.link_icon = None
 
 	def set_armedmode(self, mode, redraw = 1):
 		self.playicon.set_icon(mode or 'idle')
@@ -359,9 +370,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def set_infoicon(self, icon, msg=None):
 		# Sets the information icon to this icon.
 		# icon is a string, msg is a string.
+		# XXXX This is wrong.
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		self.iconbox.add_icon(icon, callback = self.show_mesg)
+		if self.infoicon:
+			self.infoicon.set_icon(icon)
+		else:
+			self.infoicon = self.iconbox.add_icon(icon, callback = self.show_mesg)
 
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
@@ -1995,7 +2010,7 @@ class IconBox(MMWidgetDecoration):
 			icon.set_contextmenu(contextmenu)
 		if arrowto:
 			icon.add_arrow(arrowto)
-			self._iconlist.append(icon)
+		self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
 
@@ -2018,10 +2033,9 @@ class IconBox(MMWidgetDecoration):
 
 	def draw(self, displist):
 		l,t,r,b = self.pos_abs
-		for i in self._iconlist:
-			#i = self._iconlist[iconname]
-			i.moveto((l,t,r,b))
-			i.draw(displist)
+		for icon in self._iconlist:
+			icon.moveto((l,t,r,b))
+			icon.draw(displist)
 			l = l + ICONSIZE
 
 	draw_selected = draw
