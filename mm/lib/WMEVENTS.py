@@ -14,7 +14,7 @@ ResizeWindow = 8
 WindowExit = 9
 WindowActivate = 11 # Mac-only
 WindowDeactivate = 12 # Mac-only
-
+MouseMove = 13 # Windows only
 
 # File descriptor ready events
 FileEvent = 10

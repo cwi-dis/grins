@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 # HierarchyView dialog - Version for standard windowinterface
-# XXXX Note: the separation isn't correct: there are still things in HierarchyView
+# XXXX Note: the separation is not correct: there are still things in HierarchyView
 # that really belong here...
 
 """ @win32doc|HierarchyViewDialog
@@ -56,6 +56,7 @@ class HierarchyViewDialog(ViewDialog):
 
 		self.window.register(WMEVENTS.DragNode, self.dragnode, None)
 		self.window.register(WMEVENTS.DropNode, self.dropnode, None)
+		self.window.register(WMEVENTS.MouseMove, self.mousemove, None)
 
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent

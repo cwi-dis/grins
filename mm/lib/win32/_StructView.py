@@ -120,7 +120,9 @@ class _StructView(DisplayListView):
 				self._dragging = None
 
 	def onMouseMove(self, params):
-		DisplayListView.onMouseMove(self, params)
+		msg=win32mu.Win32Msg(params)
+		point=msg.pos()
+		self.onEvent(MouseMove, point)
 		if self._enableNodeDragDrop and self._dragging:
 			xp, yp = self._dragging
 			x, y =win32mu.Win32Msg(params).pos()

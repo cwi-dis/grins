@@ -100,13 +100,40 @@ class TimeMapper:
 			print 'RANGES'
 			for t in self.times:
 				print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
+			print self.minpos
 		self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]] + 1
 		
-	def pixel2time(self):
+	def pixel2time(self, pxl):
 		if self.collecting:
 			raise Error, 'pixel2time called while still collecting data'
-		raise Error, 'Pixel2time not implemented yet'
-		return 0
+		pos = (pxl - self.offset) * float(self.range[1] - self.range[0]) / self.width
+		lasttime = lastpos = None
+		for tm in self.times:
+			mp = self.minpos[tm]
+			cd = self.collisiondict[tm]
+			if pos < mp:
+				if lasttime is not None:
+					return lasttime + float(pos - lastpos) * (tm - lasttime) / float(mp - lastpos)
+				# before left edge
+				# extrapolate first interval to the left
+				for tm2 in self.times: # find first time that's different
+					if tm2 != tm:
+						# extrapolate
+						return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp)
+				# no multiple times, use pixel == second
+				return tm + (pos - mp)
+			if mp <= pos <= mp + cd:
+				return tm
+			lastpos = mp + cd
+			lasttime = tm
+		# beyond right edge
+		# extrapolate last interval to the right
+		times = self.times[:]
+		times.reverse()
+		for tm2 in times:
+			if tm2 != tm:
+				return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp)
+		return tm + (pos - mp)
 		
 	def __pixel2pixel(self, pos):
 		return int(pos * self.width / float(self.range[1] - self.range[0]) + self.offset)

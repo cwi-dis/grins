@@ -2570,15 +2570,20 @@ class MMNode(MMTreeElement):
 			print
 
 	# Timing interface
+	def GetBeginDelay(self):
+		begindelay = 0.0
+		for arc in self.GetAttrDef('beginlist', []):
+			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				# use the first simple offset
+				begindelay = arc.delay
+				break
+		return begindelay
+
 	def GetTimes(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
 			self.context.needtimes(which)
 		t0, t1, t2, downloadlag = self.timing_info_dict[which].GetTimes()
-		begindelay = 0.0
-		for arc in self.GetBeginList():
-			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-				begindelay = arc.delay
-		return t0, t1, t2, downloadlag, begindelay
+		return t0, t1, t2, downloadlag, self.GetBeginDelay()
 
 	def GetTimesObject(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
@@ -2593,7 +2598,7 @@ class MMNode(MMTreeElement):
 		# not recompute anything; in fact this method is there only for the t0/t1 recomputation
 		# in the Timing module.
 		begindelay = 0.0
-		for arc in self.GetBeginList():
+		for arc in self.GetAttrDef('beginlist', []):
 			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
 				begindelay = arc.delay
 		downloadlag = 0.0
@@ -2879,10 +2884,10 @@ class MMNode(MMTreeElement):
 		self.attrdict[name] = value
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
-		# Special case if it is the filename - set the name of this function.
-		if name == 'file' and value and not MMAttrdefs.getattr(self, 'name'):
-			shortname = os.path.splitext(os.path.basename(value))[0]
-			self.SetAttr('name', shortname)
+##		# Special case if it is the filename - set the name of this function.
+##		if name == 'file' and value and not MMAttrdefs.getattr(self, 'name'):
+##			shortname = os.path.splitext(os.path.basename(value))[0]
+##			self.SetAttr('name', shortname)
 
 		if name in ('file', 'mimetype'):
 			# invalidate the current channel type. The next call to GetChannelType will re compute this value
