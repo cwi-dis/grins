@@ -3,7 +3,7 @@ This module implements conversions between SMPTE time codes.
 
 4 variants of SMPTE timecodes have been implemented, and conversions
 between all 4 are possible.  The 4 SMPTE timecodes are:
-SMPTE-30-drop (29.97 frames per second, frame numbers go from 0 to 29, 
+SMPTE-30-drop (29.97 frames per second, frame numbers go from 0 to 29,
 	but some frame numbers are skipped);
 SMPTE-30 (30 frames per second, frames numbers go from 0 to 29);
 SMPTE-25 (25 frames per second, frames numbers go from 0 to 24);
@@ -20,7 +20,7 @@ This timecode can be specified in several ways:
 - as a string of the form hh:mm:ss.ff where all but the ss are
   optional;
 - as an instance of one of the 4 classes defined in this module.  In
-  this case the frame number of the initializer is converted to a time 
+  this case the frame number of the initializer is converted to a time
   using the frame rate of the initializer, and this time is converted
   to a frame number using the frame rate of the class being created.
 Instances have the following methods:
@@ -108,7 +108,7 @@ class _SMPTE:
 
 	def _convert(self, h, m, s, f):
 		return ((h * 60 + m) * 60 + s) * self.FramesPerSecond + f
-		
+
 	def GetHMSF(self):
 		h, f = divmod(self._frames, self.FramesPerHour)
 		m, f = divmod(f, self.FramesPerMinute)
@@ -135,7 +135,7 @@ class Smpte30Drop(_SMPTE):
 		drop = drop * 18
 		drop = drop + (m % 10) * 2
 		return (m * 60 + s) * 30 + f - drop
-		
+
 	def GetHMSF(self):
 		m, f = divmod(self._frames, 17982) # 17982 frames in 10 min
 		h, m = divmod(m * 10, 60)
