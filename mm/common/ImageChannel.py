@@ -73,6 +73,7 @@ class ImageChannel(ChannelWindow):
 		if box == []:
 			box = boxes.create_box(self.window, msg)
 		else:
+			box = self.convert_args(self.getfilename(node), box)
 			# convert coordinates from image size to window size.
 			x = box[0] * self._arm_imbox[2] + self._arm_imbox[0]
 			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]
@@ -103,8 +104,7 @@ class ImageChannel(ChannelWindow):
 				break
 		if not need_conversion:
 			return args
-		import imgfile
-		xsize, ysize, zsize = imgfile.getsizes(file)
+		xsize, ysize = self.window._image_size(file)
 		x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
 		y0 = ysize - y0
 		y1 = ysize - y1
