@@ -1682,21 +1682,10 @@ class Region(Window):
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine is responsible to paint correctly everything below
 	def _paint_3(self):
-		# the rgn where the transition will play is self region
-		# self should be the master of the multielement transition
-		# ask for rgn coords relative to topwindow
-		rgn = self.getClipRgn(self._topwindow)
+		# 1. first do a normal painting to paint children
+		self._paint_0()
 
-		# first paint self on the complement of self._subwindows region
-		rgn2 = self.getChildrenRgnComplement(self._topwindow)
-		dst = self.getwindowpos(self._topwindow)
-		buf = self._topwindow.getDrawBuffer()
-		try:
-			self._paintOnDDS(buf, dst, rgn2)
-		except ddraw.error, arg:
-			print arg			
-		rgn2.DeleteObject()
-
+		# 2. and then a _paint_2 but on ChildrenRgnComplement
 		# use GDI to paint transition surface 
 		# (gdi supports clipping but surface bliting not)
 		src = self._drawsurf
@@ -1704,6 +1693,7 @@ class Region(Window):
 
 		dstDC = self.__getDC(dst)	
 		srcDC = self.__getDC(src)	
+		rgn = self.getChildrenRgnComplement(self._topwindow)
 		dstDC.SelectClipRgn(rgn)
 		x, y, w, h = self.getwindowpos()
 		try:
@@ -1712,7 +1702,6 @@ class Region(Window):
 			print arg			
 		self.__releaseDC(dst,dstDC)
 		self.__releaseDC(src,srcDC)
-		
 		rgn.DeleteObject()			
 	
 	# paint while frozen
