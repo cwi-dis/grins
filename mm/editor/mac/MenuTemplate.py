@@ -381,6 +381,34 @@ POPUP_HVIEW_STRUCTURE = (
 ##		(FLAG_PRO, ENTRY, 'Anchors...', 'T', ANCHORS),
 )
 
+POPUP_HVIEW_TRANS = (
+		(FLAG_ALL, DYNAMICCASCADE, 'Transition', TRANSITION),
+		)
+
+POPUP_MULTI = (
+		(FLAG_ALL, ENTRY, 'Cut', None, CUT),
+		(FLAG_ALL, ENTRY, 'Copy', None, COPY),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event Source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
+)
+
+POPUP_EVENT_DEST = (
+	(FLAG_ALL, ENTRY, 'Find Event Source', None, FIND_EVENT_SOURCE),
+#	(FLAG_ALL, ENTRY, 'Remove event', None, REMOVE_EVENT), # This points to many events..
+	(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
+	)
+
+POPUP_EVENT_SOURCE = (
+	(FLAG_ALL, ENTRY, 'Find Event Destination', None, FIND_EVENT_SOURCE),
+#	(FLAG_ALL, ENTRY, 'Remove event', None, CRASH),
+#	(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
+	)
+
+
 POPUP_CVIEW_NONE = (
 		(FLAG_ALL, ENTRY, 'New Region...', 'M', NEW_REGION),
 )
