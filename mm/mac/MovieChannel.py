@@ -122,15 +122,17 @@ class MovieChannel(ChannelWindow):
 
 	def do_hide(self):
 		self.arm_movie = None
-		self.playstop() # XXXX Is this correct?
-		
+		if self.play_movie:
+			self.play_movie.StopMovie()
+			windowinterface.cancelidleproc(self._playsome)
+			self.play_movie = None
+
 	def playstop(self):
 		if debug: print 'MovieChannel: playstop'
-		if not self.play_movie:
-			return
-		self.play_movie.StopMovie()
+		if self.play_movie:
+			self.play_movie.StopMovie()
+			windowinterface.cancelidleproc(self._playsome)
 		self.playdone(1)
-		windowinterface.cancelidleproc(self._playsome)
 		self.play_movie = None
 
 	def setpaused(self, paused):
