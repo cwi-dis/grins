@@ -249,8 +249,8 @@ def showmessage(text):
 ##	if hasattr(windowinterface, 'Xt'):
 ##		import Xm, Xmd
 ##		dialog = Xm.CreateMessageDialog(windowinterface._toplevel._main, 'popup', {'messageString': text})
-##		Xm.MessageBoxGetChild(d, Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
-##		Xm.MessageBoxGetChild(d, Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
+##		Xm.MessageBoxGetChild(dialog, Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
+##		Xm.MessageBoxGetChild(dialog, Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
 ##		dialog.ManageChild()
 ##		return
 	dummy = showdialog(text, DEFBUTTON + DONEMSG)
@@ -279,6 +279,7 @@ def multchoice(prompt, list, defindex):
 	return None
 		
 def getstring(prompt):
+	events.startmodal()
 	fg = 0, 0, 0
 	bg = 255, 255, 255
 	w = windowinterface.newwindow(0,0,50,10,'DIALOG')
@@ -303,6 +304,7 @@ def getstring(prompt):
 		win, ev, val = events.readevent()
 		if ev == EVENTS.WindowExit:
 			w.close()
+			events.endmodal()
 			return None
 		elif ev == EVENTS.ResizeWindow:
 			redraw = 1
@@ -314,6 +316,7 @@ def getstring(prompt):
 					curpos = curpos - 1
 			elif val in ('\033', '\n', '\r'):
 				w.close()
+				events.endmodal()
 				return str
 			elif ' ' <= val <= '~':
 				str = str[:curpos] + val + str[curpos:]
