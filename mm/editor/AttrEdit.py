@@ -1682,7 +1682,8 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 		return [self.default] + self.__values
 
 class LanguageAttrEditorField(PopupAttrEditorField):
-	from languages import *
+	from 
+	ges import *
 	default = 'Not set'
 	nodefault = 1
 
@@ -1709,30 +1710,29 @@ class LanguageAttrEditorFieldWithDefault(LanguageAttrEditorField):
 		options = LanguageAttrEditorField.getoptions(self)
 		return [self.default] + options
 
+import bitrates
 class BitrateAttrEditorField(PopupAttrEditorField):
-	__values = [14400, 19200, 28800, 33600, 34400, 57600, 115200, 262200, 307200, 524300, 1544000, 10485800]
-	__strings = ['14.4K Modem', '19.2K Connection', '28.8K Modem', '33.6K Modem', '56K Modem', '56K Single ISDN', '112K Dual ISDN', '256Kbps DSL/Cable', '300Kbps DSL/Cable', '512Kbps DSL/Cable', 'T1 / LAN', '10Mbps LAN']
 	default = 'Not set'
 	nodefault = 1
 
 	def parsevalue(self, str):
 		if str == self.default:
 			return None
-		return self.__values[self.__strings.index(str)]
+		return bitrates.l2a[str]
 
 	def valuerepr(self, value):
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
 			return self.default
-		str = self.__strings[0]
-		for i in range(len(self.__values)):
-			if self.__values[i] <= value:
-				str = self.__strings[i]
+		str = bitrates.names[0]
+		for i in range(len(bitrates.rates)):
+			if bitrates.rates[i] <= value:
+				str = bitrates.names[i]
 		return str
 
 	def getoptions(self):
-		return self.__strings
+		return bitrates.names
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
