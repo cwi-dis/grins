@@ -68,7 +68,7 @@ class SVGChannel(Channel.ChannelWindow):
 		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
-			self.svgorgsize = svgdoc.getSize()
+			self.svgorgsize = svgdoc.getSize(width, height)
 			self.svgsrcrect = 0, 0, width, height # promise for svg scaling
 			self.svgdds = self.window.createDDS(width, height)
 			self.svgddcolor = self.svgdds.GetColorMatch(bgcolor)

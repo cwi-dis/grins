@@ -1,5 +1,12 @@
 __version__ = "$Id$"
 
+# this module contains a feww useful functions to deal with floats
+
+# format a floating point number as a string
+# never return anything in scientific notation
+# optionally add a suffix
+# optionally add a sign
+# optionally round at a given precision
 def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 	if val < 0:
 		val = -val
@@ -52,3 +59,14 @@ def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 	if not str:
 		str = '0'
 	return sign + str + suffix
+
+# truncate a floating point number to an integer (always towards
+# -infinity)
+def trunc(x):
+	if x < 0:
+		return trunc(x + 1024) - 1024
+	return int(x)
+
+# round a floating point number to the nearest integer
+def round(x):
+	return trunc(x + 0.5)
