@@ -4423,7 +4423,7 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 			wN = wM2 / wR2 + 0.5
 			# test if the size is acceptable
 			if wN > MAX_REGION_SIZE:
-				 wN = MAX_REGION_SIZE
+				wN = MAX_REGION_SIZE
 			if wN > newsize:
 				newsize = wN
 	elif type(wR2) is type (0):
@@ -4452,7 +4452,7 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 			wN = wM1 / wR1 + 0.5
 			# test if the size is acceptable
 			if wN > MAX_REGION_SIZE:
-				 wN = MAX_REGION_SIZE
+				wN = MAX_REGION_SIZE
 			if wN > newsize:
 				newsize = wN
 	elif type(wR1) is type (0):
