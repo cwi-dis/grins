@@ -1733,44 +1733,6 @@ DirectDrawSurface_Blt_YUV420_On_RGB8(DirectDrawSurfaceObject *self, PyObject *ar
 	return Py_None;	
 	}
 
-static char DirectDrawSurface_GetBuffer__doc__[] =
-""
-;
-static PyObject *
-DirectDrawSurface_GetBuffer(DirectDrawSurfaceObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-	
-	DDSURFACEDESC desc;
-	ZeroMemory(&desc, sizeof(desc));
-	desc.dwSize=sizeof(desc);
-	HRESULT hr;
-	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->Lock(0,&desc, DDLOCK_WAIT, 0);
-	Py_END_ALLOW_THREADS	
-	if (FAILED(hr)){
-		seterror("DirectDrawSurface_GetBuffer", hr);
-		return NULL;
-	}	
-
-	BYTE* surfpixel=(BYTE*)desc.lpSurface;
-	return Py_BuildValue("iii",int(surfpixel),desc.lPitch, desc.dwHeight);
-}
-
-static char DirectDrawSurface_ReleaseBuffer__doc__[] =
-""
-;
-static PyObject *
-DirectDrawSurface_ReleaseBuffer(DirectDrawSurfaceObject *self, PyObject *args)
-{
-	if(!PyArg_ParseTuple(args,"")) 
-		return NULL;
-	self->pI->Unlock(0);
-	Py_INCREF(Py_None);
-	return Py_None;	
-}
-
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
 	{"GetAttachedSurface", (PyCFunction)DirectDrawSurface_GetAttachedSurface, METH_VARARGS, DirectDrawSurface_GetAttachedSurface__doc__},
@@ -1804,8 +1766,6 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"Blt_YUV420_On_RGB16", (PyCFunction)DirectDrawSurface_Blt_YUV420_On_RGB16, METH_VARARGS, DirectDrawSurface_Blt_YUV420_On_RGB16__doc__},
 	{"Blt_YUV420_On_RGB8", (PyCFunction)DirectDrawSurface_Blt_YUV420_On_RGB8, METH_VARARGS, DirectDrawSurface_Blt_YUV420_On_RGB8__doc__},
 
-	{"GetBuffer", (PyCFunction)DirectDrawSurface_GetBuffer, METH_VARARGS, DirectDrawSurface_GetBuffer__doc__},
-	{"ReleaseBuffer", (PyCFunction)DirectDrawSurface_ReleaseBuffer, METH_VARARGS, DirectDrawSurface_ReleaseBuffer__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
