@@ -176,13 +176,15 @@ class _DisplayList:
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((x, y, x+w, y+h), convbgcolor)
 			elif cmd == 'image':
+				# XXX: clip is missing yet
 				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
-				rcsrc = 0, 0, width, height
-				rcdst = x+dest_x, y+dest_y, x+dest_x + width, y+dest_y+height
+ 				rcsrc = 0, 0, width, height
+ 				rcdst = x+dest_x, y+dest_y, x+dest_x + width, y+dest_y+height
 				try:	
-					dds.Blt(rcdst, image, rcsrc, ddraw.DDBLT_WAIT)
-				except:
-					pass
+ 					dds.Blt(rcdst, image, rcsrc, ddraw.DDBLT_WAIT)
+ 				except:
+ 					pass
+ 
 
 	def close(self):
 		wnd = self._window
