@@ -286,7 +286,8 @@ class _Splash:
 						  'colormap': cmap,
 						  'mappedWhenManaged': X.FALSE,
 						  'input': X.TRUE,
-						  'x': 500, 'y': 500})
+						  'x': 500, 'y': 500,
+						  'width':1, 'height':1})
 		main.RealizeWidget()
 		self.main = main
 		self.watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
