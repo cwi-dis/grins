@@ -7,10 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#define APSTUDIO_HIDDEN_SYMBOLS
-#include "windows.h"
-#undef APSTUDIO_HIDDEN_SYMBOLS
-#include "ver.h"
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -49,7 +46,7 @@ BEGIN
         BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Oratrix Holding B.V.\0"
-            VALUE "FileDescription", "aud2wm.ax filter\0"
+            VALUE "FileDescription", "aud2wm filter\0"
             VALUE "FileVersion", "1.5\0"
             VALUE "InternalName", "aud2wm\0"
             VALUE "LegalCopyright", "Copyright © 2000 Oratrix Holding B.V.\0"
@@ -95,10 +92,7 @@ END
 
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""ver.h""\r\n"
+    "#include ""afxres.h""\r\n"
     "\0"
 END
 
