@@ -48,6 +48,7 @@ class view () :
 		self._initcommanddict()
 		self.channellist = []
 		self.arrowlist = []
+		Timing.calctimes(root)
 	 	duration = self.calcDuration(root) # for channel headers
 		self.channellist.sort()
 		self.nrchannels = len(self.channellist)
@@ -56,8 +57,9 @@ class view () :
 		w = w / 2
 		self.unitwidth = (w - THERMW) / self.nrchannels
 		self.unitheight = (h - HDR_SIZE) / root.t1
-		self.thermo = thermo().new(self.thermleft + XMARG, YMARG, THERMW - XMARG * 2, h - HDR_SIZE - YMARG * 2)
-		self.currenttime = root.t0
+		self.thermo = thermo().new(self.thermleft + XMARG, \
+			YMARG, THERMW - XMARG * 2, h - HDR_SIZE - YMARG * 2)
+		self.currenttime = 0
 		self.dividor = w
 		xi = w + XMARG
 		wi = self.unitwidth - XMARG*2
@@ -65,20 +67,23 @@ class view () :
 		yi = h - YMARG - hi
 		li = h - YMARG*2 - hi
 		for i in range(self.nrchannels):
-			self.chanboxes.append(diamond().new(xi,yi,wi,hi,li,self.channellist[i]))
+			self.chanboxes.append(diamond().\
+				new(xi,yi,wi,hi,li,self.channellist[i]))
 			xi = xi + self.unitwidth
 		self.mkView((0,0,w,h,h-HDR_SIZE),root)
 		self.mkArrows(root)
 		self.focus = root
+		self.focusarrow = None
+		self.focuschan = None
 		self.setfocus(root)
 		self.locked_focus = None
 		return self
 
 	def recalc(self):
-		# XXX This should be called in response to commit...
 		Timing.calctimes(self.root)
 		self.unitheight = (self.h - HDR_SIZE) / self.root.t1
-		self.re_mkView((0,0,self.w / 2,self.h,self.h-HDR_SIZE),self.root)
+		self.re_mkView((0,0,self.w / 2,self.h,self.h-HDR_SIZE),\
+			self.root)
 		for arrow in self.arrowlist:
 			self.mod_arrow(arrow)
 
@@ -95,17 +100,13 @@ class view () :
 	def _initcommanddict(self) :
 		self.addtocommand('a', attreditfunc, 'attribute editor')
 		self.addtocommand('c', channeleditfunc, 'channel editor')
-#TMP		self.addtocommand('d', deleteNode, 'delete node')
+		self.addtocommand('d', deletearrow, 'delete timing arc')
 		self.addtocommand('h', helpfunc, 'help message')
-		self.addtocommand('i', infofunc, 'open node info window')
 		self.addtocommand('l', lock_focus, 'lock current focus')
-#TMP		self.addtocommand('p', addParallel, 'add parallel node')
+		self.addtocommand('m', modify_arrow, 'modify timing arc')
 		self.addtocommand('r', redrawfunc, 'redraw')
-#TMP		self.addtocommand('s', addSequential, 'add sequential node')
 		self.addtocommand('t', add_arrow, 'add timing arc')
 		self.addtocommand('u', unlock_focus, 'unfocus locked focus')
-#TMP		self.addtocommand('u', unzoomfunc, 'unzoom node')
-#TMP		self.addtocommand('z', zoomfunc, 'zoom node')
 	#
 
 	# calcDuration calculates the duration of each node, moreover it
@@ -146,7 +147,7 @@ class view () :
 		blobj.label = name
 		blobj.boxtype = FG_BOX
 		blobj.hidden = 1 - self.debug
-		node.blockobj = blobj
+		node.ch_blockobj = blobj
 		if type in ('seq','par','grp'):
 			text = ''
 			left = self.dividor
@@ -171,7 +172,7 @@ class view () :
 		chobj.w = right - left
 		chobj.y = bottom
 		chobj.h = top - bottom
-		node.channelobj = chobj
+		node.ch_channelobj = chobj
 		if type in ('seq','par','grp') and len(kids) > 0:
                         if type in ('grp', 'seq') :
 				y = y + h
@@ -192,7 +193,10 @@ class view () :
 	def re_mkView(self, ((x,y,w,h,h1), node)):
 		text = node.GetInherAttrDef('channel', '?')
 		type = node.GetType()
+		name = node.GetAttrDef('name', 'NoName')
 		kids = node.GetChildren()
+		blobj = node.ch_blockobj
+		blobj.label = name
 		if type in ('seq','par','grp'):
 			left = self.dividor
 			right = self.nrchannels * self.unitwidth + self.dividor
@@ -205,7 +209,8 @@ class view () :
 		bottom = top - self.unitheight * duration + YMARG * 2
 		if bottom > top:
 			bottom = top
-		chobj = node.channelobj
+		chobj = node.ch_channelobj
+		chobj.label = name
 		chobj.x = left
 		chobj.w = right - left
 		chobj.y = bottom
@@ -238,10 +243,10 @@ class view () :
 	# delete all the objects (made by channelview) form the node
 	#
 	def rmView (self, node) :
-		node.blockobj.hidden = 1
-		del node.blockobj
-		node.channelobj.hidden = 1
-		del node.channelobj
+		node.ch_blockobj.hidden = 1
+		del node.ch_blockobj
+		node.ch_channelobj.hidden = 1
+		del node.ch_channelobj
 		for child in node.GetChildren () :
 			self.rmView(child)
 	#
@@ -270,7 +275,7 @@ class view () :
 		if node = None:
 			return
 
-		if node.blockobj.boxtype <> FG_BOX:
+		if node.ch_blockobj.boxtype <> FG_BOX:
 			return
 		if mx<self.dividor or node.GetType() not in ('seq','par','grp'):
 			if self.focus <> None:
@@ -292,10 +297,10 @@ class view () :
 		if node = None:
 			return
 		if node.GetType() not in ('seq','par','grp'):
-			node1 = self._find_node2(self.root, (node.blockobj.x,node.blockobj.y),(self.focus.blockobj.x,self.focus.blockobj.y))
+			node1 = self._find_node2(self.root, (node.ch_blockobj.x,node.ch_blockobj.y),(self.focus.ch_blockobj.x,self.focus.ch_blockobj.y))
 			if node1 = None:
 				raise 'view'
-			if node1.blockobj.boxtype <> FG_BOX:
+			if node1.ch_blockobj.boxtype <> FG_BOX:
 				return
 			self.unfocus(self.focus)
 			self.redraw_node(self.focus)
@@ -312,9 +317,9 @@ class view () :
 		node = self.focus
 		if node = None:
 			return
-		if node.blockobj.boxtype <> FOCUS_BOX:
+		if node.ch_blockobj.boxtype <> FOCUS_BOX:
 			return
-		node.blockobj.boxtype = LOCK_BOX
+		node.ch_blockobj.boxtype = LOCK_BOX
 		self.lockchanfocus(node)
 		self.locked_focus = node
 		self.focus = None
@@ -325,7 +330,7 @@ class view () :
 		node = self.locked_focus
 		if node = None:
 			return
-		node.blockobj.boxtype = FG_BOX
+		node.ch_blockobj.boxtype = FG_BOX
 		self.unfocuschan(node)
 		self.locked_focus = None
 		self.redraw_node(node)
@@ -335,18 +340,28 @@ class view () :
 	# setfocus
 	#
 	def setfocus (self, node) :
-		node.blockobj.boxtype = FOCUS_BOX
+		node.ch_blockobj.boxtype = FOCUS_BOX
 		if node <> self.root:
 			self.setchanfocus (node)
 		self.focus = node
+		if self.focusarrow <> None:
+			self.focusarrow.kind = NORM_ARROW
+			self.focusarrow.draw()
+			self.focusarrow = None
+		if self.focuschan <> None:
+			self.focuschan.kind = NORM_CHAN
+			self.focuschan.redraw()
+			self.focuschan = None
 	def setchanfocus(self, node):
 		if node.GetType() in ('seq','par','grp'):
 			for child in node.GetChildren():
 				self.setchanfocus(child)
 		else:
-			node.channelobj.boxtype = FOCUS_BOX
+			node.ch_channelobj.boxtype = FOCUS_BOX
 	def unfocus (self, node) :
-		node.blockobj.boxtype = FG_BOX
+		if node = None:
+			return
+		node.ch_blockobj.boxtype = FG_BOX
 		if node <> self.root:
 			self.unchanfocus (node)
 		self.focus = node
@@ -355,19 +370,19 @@ class view () :
 			for child in node.GetChildren():
 				self.unchanfocus(child)
 		else:
-			node.channelobj.boxtype = FG_BOX
+			node.ch_channelobj.boxtype = FG_BOX
 	def lockchanfocus(self, node):
 		if node.GetType() in ('seq','par','grp'):
 			for child in node.GetChildren():
 				self.lockchanfocus(child)
 		else:
-			node.channelobj.boxtype = LOCK_BOX
+			node.ch_channelobj.boxtype = LOCK_BOX
 	def unfocuschan(self, node):
 		if node.GetType() in ('seq','par','grp'):
 			for child in node.GetChildren():
 				self.unfocuschan(child)
 		else:
-			node.channelobj.boxtype = FG_BOX
+			node.ch_channelobj.boxtype = FG_BOX
 	#
 	# timing arcs
 	#
@@ -381,8 +396,8 @@ class view () :
 		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0).draw()
 
 	def add_arrow_at(self, (src, dst, f, d, t)):
-		fro = src.channelobj
-		too = dst.channelobj
+		fro = src.ch_channelobj
+		too = dst.ch_channelobj
 		frx = fro.x + fro.w / 2
 		fry = fro.y
 		if f = 0:
@@ -403,8 +418,8 @@ class view () :
 		return(arr)
 
 	def mod_arrow(self, arr):
-		fro = arr.src.channelobj
-		too = arr.dst.channelobj
+		fro = arr.src.ch_channelobj
+		too = arr.dst.ch_channelobj
 		view, dst, info = arr.arc
 		uid, f, delay, t = info
 		frx = fro.x + fro.w / 2
@@ -418,7 +433,19 @@ class view () :
 		arr.repos(frx, fry, tox, toy)
 
 	def arrowhit(self, arrow):
-		showarceditor(arrow)
+		if self.focus <> None:
+			self.unfocus(self.focus)
+			self.redraw_node(self.focus)
+		if self.focusarrow <> None:
+			self.focusarrow.kind = NORM_ARROW
+			self.focusarrow.draw()
+		if self.focuschan <> None:
+			self.focuschan.kind = NORM_CHAN
+			self.focuschan.redraw()
+			self.focuschan = None
+		self.focusarrow = arrow
+		arrow.kind = FOCUS_ARROW
+		arrow.draw()
 	def setarcvalues(self, (arrow, newinfo)):
 		view, dst, arcinfo = arrow.arc
 		arrow.arc = (view, dst, newinfo)
@@ -426,18 +453,34 @@ class view () :
 		arclist.remove(arcinfo)
 		arclist.append(newinfo)
 		dst.SetAttr('synctolist', arclist)
-	#def deletearc(self, arrow):
-	#	view, dst, arcinfo = arrow.arc
-	#	arclist = MMAttrdefs.getattr(dst, 'synctolist')
-	#	arclist.remove(arcinfo)
-	#	dst.SetAttr('synctolist', arclist)
-	#	arrow.hidden = 1
-	#	del arrow
-	#	self.redraw(self)
+	def deletearc(self):
+		if self.focusarrow = None:
+			return
+		arrow = self.focusarrow
+		view, dst, arcinfo = arrow.arc
+		arclist = MMAttrdefs.getattr(dst, 'synctolist')
+		arclist.remove(arcinfo)
+		dst.SetAttr('synctolist', arclist)
+		arrow.hidden = 1
+		del arrow
+		self.focusarrow = None
+		self.redrawfunc()
 	def diamhit(self, diam):
+		if self.focus <> None:
+			self.unfocus(self.focus)
+			self.redraw_node(self.focus)
+		if self.focusarrow <> None:
+			self.focusarrow.kind = NORM_ARROW
+			self.focusarrow.draw()
+		if self.focuschan <> None:
+			self.focuschan.kind = NORM_CHAN
+			self.focuschan.redraw()
+			self.focuschan = None
 		i = self.chanboxes.index(diam)
 		name = self.channellist[i]
-		AttrEdit.showchannelattreditor(self.root.context, name)
+		self.focuschan = self.chanboxes[i]
+		self.focuschan.kind = FOCUS_CHAN
+		self.focuschan.redraw()
 
 
 	#
@@ -447,7 +490,6 @@ class view () :
 		self.w, self.h = w, h
 		self.focus = 0
 		self.commanddict = {}
-	#	self.form = 0
 		self.root = 0
 	#
 	# _find_node : given a mouse positioin, find the corresponding node
@@ -483,24 +525,28 @@ class view () :
 	# the associated command.
 	#
 	def command(self, key):
+		print key
 		if self.commanddict.has_key (key) :
 			self.commanddict[key][0](self)
 		else :
 			fl.show_message ('What does this mean?','','')
 
 
-
+	def modify_arrow(self):
+		if self.focusarrow = None:
+			return
+		showarceditor(self.focusarrow)
 
 
 
 	def _in_bounds (self, (node, (x, y))) :
-		o = node.channelobj
+		o = node.ch_channelobj
 		if x > o.x and x < o.w+o.x and y > o.y and y < o.h+o.y:
 			return node
 		return self._in_bounds_bl(node, (x, y))
 
 	def _in_bounds_bl(self, (node, (x, y))):
-		o = node.blockobj
+		o = node.ch_blockobj
 		if x > o.x and x < o.w+o.x and y > o.y and y < o.h+o.y:
 			return node
 		return None
@@ -516,7 +562,7 @@ class view () :
 		if yl > yu:
 			yl = y2
 			yu = y1
-		o = node.blockobj
+		o = node.ch_blockobj
 		if xl > o.x and xu < o.w+o.x and yl > o.y and yu < o.h+o.y:
 			return node
 		return None
@@ -535,8 +581,8 @@ class view () :
 		self.redraw()
 
 	def redraw_node(self, node):
-		node.blockobj.draw()
-		node.channelobj.draw()
+		node.ch_blockobj.draw()
+		node.ch_channelobj.draw()
 		for child in node.GetChildren():
 			self.redraw_node(child)
 
@@ -559,26 +605,18 @@ def attreditfunc (bv) :
 		return
 	AttrEdit.showattreditor (bv.focus)
 def channeleditfunc(bv):
-	node = bv.focus
-	if node = None:
-		fl.show_message ('No node selected','','')
-		return
-	if node.GetType() in ['seq','par','grp']:
-		fl.show_message('Not a single node selected','','')
-		return
-	name = node.GetInherAttrDef('channel', '?')
+	if bv.focuschan <> None:
+		name = bv.focuschan.label
+	else:
+		node = bv.focus
+		if node = None:
+			fl.show_message ('No node selected','','')
+			return
+		if node.GetType() in ['seq','par','grp']:
+			fl.show_message('Not a single node selected','','')
+			return
+		name = node.GetInherAttrDef('channel', '?')
 	AttrEdit.showchannelattreditor(bv.root.context, name)
-
-import NodeInfo
-
-def infofunc(bv):
-	node = bv.focus
-	if node = None:
-		fl.show_message ('No node selected','','')
-		return
-	NodeInfo.shownodeinfo(node)
-
-
 #
 # delete the focussed node.
 # focus switches to parent.
@@ -595,3 +633,13 @@ def add_arrow(self):
 	self.add_arrow()
 def redrawfunc(self):
 	self.redrawfunc()
+def modify_arrow(self):
+	if self.focusarrow = None:
+		fl.show_message ('No arc selected','','')
+		return
+	self.modify_arrow()
+def deletearrow(self):
+	if self.focusarrow = None:
+		fl.show_message ('No arc selected','','')
+		return
+	self.deletearc()
