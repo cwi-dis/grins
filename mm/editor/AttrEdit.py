@@ -1125,26 +1125,12 @@ class FileAttrEditorField(StringAttrEditorField):
 					   existing=1)
 
 	def __ok_cb(self, pathname):
-		import MMurl, os
-		if os.path.isabs(pathname):
-			cwd = self.wrapper.toplevel.dirname
-			if cwd:
-				cwd = MMurl.url2pathname(cwd)
-				if not os.path.isabs(cwd):
-					cwd = os.path.join(os.getcwd(), cwd)
-			else:
-				cwd = os.getcwd()
-			if os.path.isdir(pathname):
-				dir, file = pathname, os.curdir
-			else:
-				dir, file = os.path.split(pathname)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				pathname = file
-		url = MMurl.pathname2url(pathname)
+		import MMurl
+		if not pathname:
+			url = ''
+		else:
+			url = MMurl.pathname2url(pathname)
+			url = self.wrapper.context.relativeurl(url)
 		self.setvalue(url)
 		if self.wrapper.__class__ is SlideWrapper and url:
 			import HierarchyView

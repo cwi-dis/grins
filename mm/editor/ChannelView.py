@@ -313,7 +313,7 @@ class ChannelView(ChannelViewDialog):
 			return
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
-			url = self.toplevel.relative_url(url)
+			url = self.context.relativeurl(url)
 		else:
 			url = filename
 		obj.node.SetAttr('file', url)

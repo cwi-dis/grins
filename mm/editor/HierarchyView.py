@@ -485,6 +485,7 @@ class HierarchyView(HierarchyViewDialog):
 			url = MMurl.pathname2url(filename)
 		else:
 			url = filename
+		ctx = obj.node.GetContext()
 		t = obj.node.GetType()
 		if t == 'imm':
 			self.render()
@@ -497,7 +498,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
 		# make URL relative to document
-		url = self.toplevel.relative_url(url)
+		url = ctx.relativeurl(url)
 		if interior:
 			horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
 			i = -1
@@ -518,7 +519,6 @@ class HierarchyView(HierarchyViewDialog):
 					i = -1
 			self.create(0, url, i)
 		else:
-			ctx = obj.node.GetContext()
 			# check that URL compatible with node's channel
 			if t != 'slide' and settings.get('lightweight') and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
