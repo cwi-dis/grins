@@ -697,6 +697,11 @@ class MMChannel:
 			pchan = self.context.channeldict.get(pname)
 			if pchan:
 				return pchan.get('bgcolor', default)
+		elif key == 'regPoint' and self.attrdict.has_key('base_window'):
+			pname = self.attrdict['base_window']
+			pchan = self.context.channeldict.get(pname)
+			if pchan:
+				return pchan.get(key, default)
 		return default
 
 # The Sync Arc class
@@ -1473,11 +1478,22 @@ class MMNode:
 		return self.context.regpoints.get(regpointname)
 
 	def GetRegAlign(self, regpoint):
-		if self.attrdict.has_key('regAlign'):
-			return self.attrdict['regAlign']
+		# first looking for in node
+		regAlign = self.attrdict.get('regAlign')
 		
-		return regpoint.getregalign()
+		# if not found looking for in channel
+		if regAlign == None:
+			ch = self.GetChannel()
+			lch = ch.GetLayoutChannel()
+			if lch != None:
+				regAlign = lch.get('regAlign', None)
 
+		# at last, if not found get regAlign defined in regPoint element
+		if regAlign == None:		
+			regAlign = regpoint.getregalign()
+		
+		return regAlign
+		
 	# get default media size in pixel
 	# if not defined, return width and height
 	def GetDefaultMediaSize(self, defWidth, defHeight):

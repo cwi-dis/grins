@@ -1048,6 +1048,7 @@ cmif_chan_attrs_ignore = {
 	# end new
 	'showBackground':0,	
 	'soundLevel':0,
+	'regAlign':0, 'regPoint':0,
 	}
 
 qt_node_attrs = {
@@ -1779,7 +1780,15 @@ class SMILWriter(SMIL):
 				if soundLevel != None and soundLevel != 1.0:
 					value = '%d%%' % int(soundLevel*100)
 					attrlist.append(('soundLevel', value))
-
+			
+				regPoint = ch.get('regPoint')
+				if regPoint != None:
+					attrlist.append(('regPoint',regPoint))
+				
+				regAlign = ch.get('regAlign')
+				if regAlign != None:
+					attrlist.append(('regAlign',regAlign))
+				
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))

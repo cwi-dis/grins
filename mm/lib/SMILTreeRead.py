@@ -1975,6 +1975,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('soundLevel'):
 			ch['soundLevel'] = attrdict['soundLevel']
 			del attrdict['soundLevel']
+			
+		if attrdict.has_key('regAlign'):
+			ch['regAlign'] = attrdict['regAlign']
+			del attrdict['regAlign']
+
+		if attrdict.has_key('regPoint'):
+			regName = attrdict['regPoint']
+			if not self.__context.regpoints.has_key(regName):
+				self.syntax_error('the registration point '+regName+" doesn't exist")
+			else:
+				ch['regPoint'] = regName
+			del attrdict['regPoint']
 
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo',
@@ -2833,6 +2845,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['system_required'] = nsuri
 				
 			# end experimental code for switch layout
+			
+			elif attr == 'regAlign':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				if not self.__alignvals.has_key(val):
+					self.syntax_error('invalid regAlign attribute value')
+				else:
+					attrdict[attr] = val
+			elif attr == 'regPoint':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			        # catch the value. We can't check if registration point exist at this point,
+			        # because, it may be defined after in layout section. So currently, the checking
+			        # is done whithin __fillchannel
+				attrdict[attr] = val
 			else:
 				# catch all
 				attrdict[attr] = val
