@@ -135,6 +135,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# enumeration values for parseEnumValue
 	__truefalse = {'false': 0, 'true': 1}
+	__onoff = {'off': 0, 'on': 1}
 	__enumattrs = {
 		'accumulate': {'none':'none', 'sum':'sum'},
 		'additive': {'replace':'replace', 'sum':'sum'},
@@ -151,6 +152,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'mode': {'in':'in', 'out':'out'},
 		'origin': {'parent':'parent', 'element':'element'},
 		'syncMaster': __truefalse,
+		'systemAudioDesc': __onoff,
+		'system-captions': __onoff,
+		'systemCaptions': __onoff,
 		'time-slider': __truefalse,
 		}
 
@@ -615,36 +619,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							attrdict['system_screen_depth'] = depth
 		for attr in ('system-captions', 'systemCaptions'):
 			if attributes.has_key(attr):
-				val = attributes[attr]
-				del attributes[attr]
 				boston = '-' not in attr
 				if boston and self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				if boston and features.editor:
 					self.__context.attributes['project_boston'] = 1
 				if not boston or self.__context.attributes.get('project_boston'):
-					if val == 'on':
-						if not attrdict.has_key('system_captions'):
-							attrdict['system_captions'] = 1
-					elif val == 'off':
-						if not attrdict.has_key('system_captions'):
-							attrdict['system_captions'] = 0
-					else:
-						self.syntax_error('bad %s attribute value' % attr)
+					val = self.parseEnumValue(attr, attributes[attr])
+					if val is not None:
+						attrdict['system_captions'] = val
+				del attributes[attr]
 		if attributes.has_key('systemAudioDesc'):
-			val = attributes['systemAudioDesc']
-			del attributes['systemAudioDesc']
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 			if features.editor:
 				self.__context.attributes['project_boston'] = 1
 			if self.__context.attributes.get('project_boston'):
-				if val == 'on':
-					attrdict['system_audiodesc'] = 1
-				elif val == 'off':
-					attrdict['system_audiodesc'] = 0
-				else:
-					self.syntax_error('bad %s attribute value' % attr)
+				val = self.parseEnumValue('systemAudioDesc', attributes['systemAudioDesc'])
+				if val is not None:
+					attrdict['system_audiodesc'] = val
+			del attributes['systemAudioDesc']
 		for attr in ('system-language', 'systemLanguage'):
 			if attributes.has_key(attr):
 				val = attributes[attr]
@@ -891,12 +885,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['qtcompositemode'] = attributes['composite-mode']
 			del attributes['composite-mode']
 
+	def AddCoreAttrs(self, attrdict, attributes):
+		for attr in ('alt', 'longdesc', 'title'):
+			if attributes.has_key(attr):
+				attrdict[attr] = attributes[attr]
+				del attributes[attr]
+		if attributes.has_key('class'):
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				if features.editor:
+					self.__context.attributes['project_boston'] = 1
+			if self.__context.attributes.get('project_boston'):
+				attrdict[attr] = attributes['class']
+			del attributes['class']
+		if attributes.has_key('xml:lang'):
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				if features.editor:
+					self.__context.attributes['project_boston'] = 1
+			if self.__context.attributes.get('project_boston'):
+				attrdict['xmllang'] = attributes['xml:lang']
+			del attributes['xml:lang']
+
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
 		node.__anchorlist = []
 		attrdict = node.attrdict
 		pnode = node.GetSchedParent()
 		self.AddTestAttrs(attrdict, attributes)
+		self.AddCoreAttrs(attrdict, attributes)
 		if node.type == 'animate':
 			self.AddAnimateAttrs(attrdict, attributes)
 		if compatibility.QT == features.compatibility:
@@ -910,7 +927,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is not None:
 					val = res.group('name')
 				attrdict['name'] = val
-			elif attr in ('abstract', 'copyright', 'title', 'author', 'alt', 'longdesc'):
+			elif attr in ('abstract', 'copyright', 'author'):
 				if val:
 					attrdict[attr] = val
 			elif attr == 'src':
@@ -1185,8 +1202,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error('bad z-index attribute')
-					val = -1
-				attrdict['z'] = val
+				else:
+					if val < 0:
+						self.syntax_error('region with negative z-index')
+					else:
+						attrdict['z'] = val
 			elif attr == 'regPoint':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -1314,13 +1334,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'thumbnail-scale':
 				attrdict['thumbnail_scale'] = val == 'true'
-			elif attr == 'class':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				attrdict[attr] = val
 			elif attr not in smil_node_attrs:
 				# catch all
 				# this should not be used for normal operation
@@ -2076,12 +2089,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 				cssId = ch.getCssId()
 				self.__context.cssResolver.setRawAttrs(cssId, [('width', ch.get('width')),
-																		   ('height',ch.get('height'))])
+									       ('height',ch.get('height'))])
 				# if not width or height specified, guess it
 				width, height = self.__context.cssResolver.getPxGeom(ch.getCssId())
 				# fix all the time a pixel geom value for viewport.
 				self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
-																		   ('height', height)])
+									       ('height', height)])
 				ch['width'] = width
 				ch['height'] = height
 				continue
@@ -2675,6 +2688,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# provide default
 			attributes['background-color'] = 'transparent'
 
+		self.AddCoreAttrs(attrdict, attributes)
 		self.AddTestAttrs(attrdict, attributes)
 
 		for attr, val in attributes.items():
@@ -2700,10 +2714,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not features.editor:
 							continue
 					self.__context.attributes['project_boston'] = 1
-				if val == 'auto':
-					# equivalent to no attribute
-					pass
-				else:
+				if val != 'auto': # "auto" is equivalent to no attribute
 					try:
 						if val[-1] == '%':
 							val = string.atof(val[:-1]) / 100.0
@@ -2726,11 +2737,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error('invalid z-index value')
-					val = 0
-				if val < 0:
-					self.syntax_error('region with negative z-index')
-					val = 0
-				attrdict['z-index'] = val
+				else:
+					if val < 0:
+						self.syntax_error('region with negative z-index')
+					else:
+						attrdict['z-index'] = val
 			elif attr == 'fit':
 				if val not in ('meet', 'slice', 'fill',
 					       'hidden', 'scroll'):
@@ -2827,6 +2838,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = 0
 				else:
 					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'xml:lang':
+				attrdict['xmllang'] = val
 			else:
 				# catch all
 				attrdict[attr] = val
@@ -2904,6 +2917,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				     'declwidth':width,
 				     'declheight':height,
 				     'attrs':attributes}
+		self.AddTestAttrs(self.__tops[None], attributes)
+		self.AddCoreAttrs(self.__tops[None], attributes)
 		if not self.__childregions.has_key(None):
 			self.__childregions[None] = []
 
@@ -2938,6 +2953,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			    'attrs':attributes}
 
 		self.AddTestAttrs(attrdict, attributes)
+		self.AddCoreAttrs(attrdict, attributes)
 
 		for attr,val in attributes.items():
 			if attr == 'id':
