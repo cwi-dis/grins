@@ -1620,6 +1620,9 @@ class LayoutView2(LayoutViewDialog2):
 		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
 			type, node = self.editmgr.getclip()
+			# XXXX Note by Jack: we may have to call getclipcopy() here in some cases
+			# to make sure we don't get multiple references to the same MMChannel object
+			# or something.
 			cNode = None
 			if self.editmgr.transaction():
 				if type == 'region':

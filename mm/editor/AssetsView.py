@@ -113,7 +113,6 @@ class AssetsView(AssetsViewDialog):
 			return
 		self.editmgr.delasset(item)
 		self.editmgr.commit()
-		self.__clean_clipboard()
 		self.editmgr.setclip('node', item)
 
 	def callback_paste(self):
@@ -121,6 +120,7 @@ class AssetsView(AssetsViewDialog):
 		if not tp in ('node', 'multinode'):
 			print 'cannot paste', (tp, data)
 			return
+		tp, data = self.editmgr.getclipcopy()
 		if tp == 'node':
 			tp = 'multinode'
 			data = [data]
@@ -137,7 +137,6 @@ class AssetsView(AssetsViewDialog):
 			print "No selection"
 			return
 		item = self.listdata[i][0]
-		self.__clean_clipboard()
 		self.editmgr.setclip('node', item)
 
 	def callback_delete(self):
@@ -152,16 +151,6 @@ class AssetsView(AssetsViewDialog):
 		self.editmgr.delasset(item)
 		self.editmgr.commit()
 		# XXX item.Destroy() ???
-
-	def __clean_clipboard(self):
-		# Note: after this call you *MUST* set the clipboard to
-		# a new value
-		t,n = self.editmgr.getclip()
-		if t == 'node' and n is not None:
-			n.Destroy()
-		elif t == 'multinode' and n is not None:
-			for i in n:
-				i.Destroy()
 
 	def getunusedassets(self):
 		assetlist = []

@@ -31,14 +31,41 @@ class Clipboard:
 	def __init__(self):
 		self.__type = ''
 		self.__data = None
+		self.__owned = 0
 
 	def __repr__(self):
 		return '<Clipboard instance, type=' + `self.type` + '>'
 
-	def setclip(self, type, data):
+	def setclip(self, type, data, owned=0):
+		if self.__owned:
+			self.clearclip()
 		self.__type = type
 		self.__data = data
+		self.__owned = owned
 
 	def getclip(self):
 		return self.__type, self.__data
+		
+	def getclipcopy(self):
+		type, data = self.getclip()
+		if type == 'node':
+			new_data = data.DeepCopy()
+		elif type == 'multinode':
+			new_data = []
+			for d in data:
+				new_data.append(d.DeepCopy())
+		# We return the old one and put the new one on the clipboard
+		self.setclip(type, new_data, owned=1)
+		return type, data
 
+	def clearclip(self):
+		if self.__owned:
+			if hasattr(self.__data, 'Destroy'):
+				self.__data.Destroy()
+			elif type(self.__data) in (type(()), type([])):
+				for i in self.__data:
+					if hasattr(i, 'Destroy'):
+						i.Destroy()
+			self.__owned = 0
+		self.__type = ''
+		self.__data = None
