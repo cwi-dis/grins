@@ -408,7 +408,8 @@ class ChannelView(ChannelViewDialog):
 		if self.showbandwidthstrip:
 			# Wild guess: make bandwidth strip 5 textlines high, but at most
 			# 15% of the window
-			stripheight = 5 * displist.strsize('X')[1]
+			stripheight = 5 * fh
+##			print 'DBG', stripheight
 			if stripheight > 0.15:
 				stripheight = 0.15
 			self.bandwidthstripborder = self.timescaleborder - stripheight
