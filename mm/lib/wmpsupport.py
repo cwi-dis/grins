@@ -45,6 +45,8 @@ class Exporter:
 			self.writer.beginWriting()
 
 	def finished(self):
+		if self.progress:
+			self.progress.set('Encoding document for WMP...', 100, 100, 100, 100)
 		if self.writer:
 			self.writer.endWriting()
 			print 'End export', self.writer._filename
