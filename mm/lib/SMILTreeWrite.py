@@ -341,6 +341,32 @@ def getcolor(writer, node):
 		fgcolor = '#%02x%02x%02x' % fgcolor
 	return fgcolor
 
+def getsubregionatt(writer, node, attr):
+	from windowinterface import UNIT_PXL, UNIT_SCREEN
+	
+	val = MMAttrdefs.getattr(node, attr)
+	if val is not None:
+		units = MMAttrdefs.getattr(node, 'units')
+		if units is None:
+			units = UNIT_PXL
+			
+		# save only if subregion positioning is different as region
+		if attr == 'left' or attr == 'top':
+			if val == 0:
+				return None
+		else:
+			if units == UNIT_PXL and val == 0:
+				return None
+			elif units == UNIT_SCREEN and val == 1.0:
+				return None
+
+		if units == UNIT_SCREEN:
+			val = val*100
+			return "%.1f%%" % val
+		else:
+			return str(val)
+	return None
+	
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
 	if val is not None:
@@ -745,6 +771,12 @@ smil_attrs=[
 	("uGroup", getugroup),
 	("layout", getlayout),
 	("color", getcolor),		# only for brush element
+	# subregion positioning
+	("left", lambda writer, node:getsubregionatt(writer, node, 'left')),
+	("right", lambda writer, node:getsubregionatt(writer, node, 'right')),
+	("top", lambda writer, node:getsubregionatt(writer, node, 'top')),
+	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
+	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
 	("to", lambda writer, node:getstringattr(writer, node, "to")),
 	("by", lambda writer, node:getstringattr(writer, node, "by")),
@@ -775,6 +807,7 @@ cmif_node_attrs_ignore = {
 	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
 	'repeatdur':0, 'beginlist':0, 'endlist':0,
+	'left':0,'right':0,'top':0,'bottom':0,'units':0,
 	'transIn':0, 'transOut':0,
 	}
 cmif_node_realpix_attrs_ignore = {
