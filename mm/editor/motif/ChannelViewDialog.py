@@ -118,7 +118,7 @@ class ChannelViewDialog(ViewDialog):
 
 class GOCommand:
 	def __init__(self):
-		pass
+		self.popupmenu = None # XXXX
 
 	def helpcall(self):
 		pass
@@ -126,12 +126,12 @@ class GOCommand:
 
 class ChannelBoxCommand:
 	def __init__(self):
-		pass
+		self.popupmenu = None # XXXX
 
 class NodeBoxCommand:
 	def __init__(self, mother, node):
-		pass
+		self.popupmenu = None # XXXX
 
 class ArcBoxCommand:
 	def __init__(self):
-		pass
+		self.popupmenu = None # XXXX

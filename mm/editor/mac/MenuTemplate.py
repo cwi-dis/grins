@@ -127,6 +127,89 @@ MENUBAR=(
 )
 
 #
+# Popup menus for various states
+#
+POPUP_HVIEW_LEAF = (
+		(ENTRY, 'Cut', 'X', CUT),
+		(ENTRY, 'Copy', 'C', COPY),
+		(ENTRY, 'Delete', None, DELETE),
+		(SEP,),
+		(ENTRY, 'Paste Before', None, PASTE_BEFORE),
+		(ENTRY, 'Paste After', None, PASTE_AFTER),
+		(SEP,),
+		(ENTRY, 'New node Before', None, NEW_BEFORE),
+		(ENTRY, 'New node After', 'K', NEW_AFTER),
+		(SEP,),
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM),
+		(SEP,)
+		(ENTRY, 'Zoom in', None, ZOOMIN),
+		(ENTRY, 'Zoom out', None, ZOOMOUT),
+		(SEP,)
+		(ENTRY, 'Show info', 'I', INFO),
+		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
+		(ENTRY, 'Show anchors', 'T', ANCHORS),
+)
+
+POPUP_HVIEW_STRUCTURE = (
+		(ENTRY, 'Cut', 'X', CUT),
+		(ENTRY, 'Copy', 'C', COPY),
+		(ENTRY, 'Delete', None, DELETE),
+		(SEP,),
+		(ENTRY, 'Paste Before', None, PASTE_BEFORE),
+		(ENTRY, 'Paste After', None, PASTE_AFTER),
+		(ENTRY, 'Paste As child', None, PASTE_UNDER))),
+		(SEP,),
+		(ENTRY, 'New node Before', None, NEW_BEFORE),
+		(ENTRY, 'New node After', 'K', NEW_AFTER),
+		(ENTRY, 'New Child', 'D', NEW_UNDER),
+		(SEP,),
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM),
+		(SEP,)
+		(ENTRY, 'Zoom in', None, ZOOMIN),
+		(ENTRY, 'Zoom out', None, ZOOMOUT),
+		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
+		(SEP,)
+		(ENTRY, 'Show info', 'I', INFO),
+		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
+		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Edit content', 'E', CONTENT),
+)
+
+POPUP_CVIEW_NONE = (
+		(ENTRY, 'New channel', 'M', NEW_CHANNEL),
+)
+
+POPUP_CVIEW_CHANNEL = (
+		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
+		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
+		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF),
+		(SEP,)
+		(ENTRY, 'Delete', None, DELETE),
+
+)
+
+POPUP_CVIEW_NODE = (
+		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
+		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
+		(SEP,),
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM),
+		(SEP,),
+		(ENTRY, 'Show info', 'I', INFO),
+		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
+		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Edit content', 'E', CONTENT),
+)
+
+POPUP_CVIEW_SYNCARC = (
+		(ENTRY, 'Show info', 'I', INFO),
+		(SEP,)
+		(ENTRY, 'Delete', None, DELETE),
+)
+
+#
 # Adornments
 #
 PLAYER_ADORNMENTS = {
