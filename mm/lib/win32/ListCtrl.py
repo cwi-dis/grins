@@ -5,7 +5,7 @@ import win32ui
 import win32con
 import commctrl
 
-from win32mu import Win32Msg
+import win32mu
 
 from pywin.mfc import window
 
@@ -20,7 +20,9 @@ class ListCtrl(window.Wnd):
 		else:
 			ctrl.SetWindowLong(win32con.GWL_STYLE, self.getStyle())
 		window.Wnd.__init__(self, ctrl)
+		self.hookMessages()
 		self.popup = None
+		self.selected = -1
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD\
@@ -47,7 +49,7 @@ class ListCtrl(window.Wnd):
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
 		self.HookMessage(self.OnKeyDown, win32con.WM_KEYDOWN)
 
-		self.GetParent().HookNotify(self.OnItemChanging, commctrl.LVN_ITEMCHANGING)
+		# list notifications
 		self.GetParent().HookNotify(self.OnItemChanged, commctrl.LVN_ITEMCHANGED)
 
 		# popup menu
@@ -58,7 +60,7 @@ class ListCtrl(window.Wnd):
 	# response to hooked windows messages
 	#
 	def OnLButtonDown(self, params):
-		msg = Win32Msg(params)
+		msg = win32mu.Win32Msg(params)
 		point = msg.pos()
 		flags = msg._wParam
 		return 1
@@ -67,7 +69,7 @@ class ListCtrl(window.Wnd):
 		return 1
 
 	def OnRButtonDown(self, params):		
-		msg = Win32Msg(params)
+		msg = win32mu.Win32Msg(params)
 		point = msg.pos()
 		flags = msg._wParam
 		point = self.ClientToScreen(point)
@@ -85,12 +87,18 @@ class ListCtrl(window.Wnd):
 		if self.popup:
 			self.popup.DestroyMenu()
 
+	def OnItemChanged(self, std, extra):
+		nmsg = win32mu.Win32NotifyMsg( std, extra, 'list')
+		if nmsg.state & commctrl.LVIS_SELECTED:
+			self.selected = nmsg.row
+			print 'selection: row', nmsg.row, `self.GetItemText(nmsg.row,0)`
+
 	#
 	#  command responses
 	#
 	# delegate to what GRiNS thinks as the view
 	def OnCommand(self, params):
-		msg = Win32Msg(params)
+		msg = win32mu.Win32Msg(params)
 		self.getView().onUserCmd(msg.cmdid())
 
 	#
@@ -216,4 +224,30 @@ class ListCtrl(window.Wnd):
 
 	def getItemCount(self):
 		return self.GetItemCount()
+
+	def selectItem(self, row):
+		self.SetItemState(row, commctrl.LVIS_SELECTED | commctrl.LVIS_FOCUSED, commctrl.LVIS_SELECTED | commctrl.LVIS_FOCUSED)
+	
+	def deselectItem(self, row):
+		self.SetItemState(row, commctrl.LVIS_SELECTED | commctrl.LVIS_FOCUSED, 0)
+
+	def isItemSelected(self, row):
+		return self.GetItemState(row, commctrl.LVIS_SELECTED) & commctrl.LVIS_SELECTED
+
+	def findSelected(self):
+		n = self.GetItemCount()
+		for row in range(n):
+			if self.GetItemState(row, commctrl.LVIS_SELECTED) & commctrl.LVIS_SELECTED:
+				return row
+		return -1
+
+	def getSelected(self):
+		if self.selected < 0:
+			return -1
+		# assert
+		if self.isItemSelected(self.selected):
+			return self.selected
+		return -1
+
+
 
