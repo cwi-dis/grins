@@ -291,6 +291,11 @@ class MMParser:
 			return t
 		if t[0] in digits:
 			return eval(t)
+		if t == '-':
+			t = self.gettoken()
+			if not t[0] in digits:
+				raise SyntaxError, ('-'+t, 'value')
+			return -eval(t)
 		if t[0] == '\'':
 			return eval(t)
 		if t[0] == '(':
