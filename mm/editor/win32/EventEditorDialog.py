@@ -16,7 +16,6 @@ class EventEditorDialog(win32dialog.ResDialog):
 	def OnInitDialog(self):
 		self.attach_handles_to_subwindows()
 		self._causewidget.resetcontent()
-		self._causewidget.setcursel(0)
 		map(self._causewidget.addstring, EventEditor.CAUSES)
 		self._causewidget.setcursel(EventEditor.CAUSES.index(self._eventstruct.get_cause()))
 		self.set_eventwidget()
@@ -26,6 +25,7 @@ class EventEditorDialog(win32dialog.ResDialog):
 
 		d = self._eventstruct._syncarc
 		self._textwidget.settext("DEBUG:"+d.event+" from: "+repr(d.srcnode))
+		print d
 		
 		return win32dialog.ResDialog.OnInitDialog(self)
 
@@ -38,6 +38,8 @@ class EventEditorDialog(win32dialog.ResDialog):
 		i = self._eventstruct.get_event_index()
 		if i:
 			self._eventwidget.setcursel(i)
+		else:
+			print "DEBUG: no index."
 
 	def set_textwidget(self):
 		string, isnumber, isreadonly = self._eventstruct.get_thing_string()
