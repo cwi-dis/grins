@@ -121,6 +121,6 @@ def GuessCMIFRoot():
 			break
 		dir=dir+'\\'
 	if found:return dir
-	return 'd:\\cmif'
+	return 'd:\\ufs\\mm\\cmif'
 
 Boot(WHAT)
