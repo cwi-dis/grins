@@ -3,7 +3,6 @@ __version__ = "$Id$"
 # Cache durations of mpeg files
 
 import MMurl
-import string
 
 VidRateNum = [30., 24., 24., 25., 30., 30., 50., 60.,
 	      60., 15., 30., 30., 30., 30., 30., 30.]
@@ -19,11 +18,10 @@ def get(url, bufsiz = 10240):
 	rate = 0
 
 	# for efficiency, cache attribute lookups
-	find = string.find
 	read = fp.read
 
 	data = read(bufsiz)
-	i = find(data, '\000\000\001')
+	i = data.find('\000\000\001')
 	while i >= 0:
 		i = i + 3
 		try:
@@ -46,12 +44,12 @@ def get(url, bufsiz = 10240):
 		elif w == '\267':
 			# SEQ_END_CODE
 			break
-		i = find(data, '\000\000\001', i+1)
+		i = data.find('\000\000\001', i+1)
 		while i < 0:
 			data = data[-2:] + read(bufsiz)
 			if len(data) <= 2:
 				break
-			i = find(data, '\000\000\001')
+			i = data.find('\000\000\001')
 	fp.close()
 	try:
 		rate = VidRateNum[rate]
