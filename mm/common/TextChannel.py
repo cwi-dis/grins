@@ -23,7 +23,7 @@ class TextChannel(ChannelWindow):
 		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
 		return 1
-		
+
 	def do_arm(self, node, same=0):
 		if same and self.armed_display:
 			return 1
