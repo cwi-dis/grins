@@ -211,7 +211,7 @@ class _DisplayList:
 			gc.foreground = entry[1]
 			gc.line_width = entry[2]
 			x,y,w,h = entry[3]
-			gc.DrawRectangle(x,y,w-2,h-2)
+			gc.DrawRectangle(x,y,w-1,h-1)
 		elif cmd == 'fbox':
 			gc.foreground = entry[1]
 			apply(gc.FillRectangle, entry[2])
