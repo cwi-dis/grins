@@ -164,11 +164,18 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 				# system should be out of memory
 				self.InvalidateRect(self.GetClientRect())
 				return
+		
+		# do we have anything to update?
+		if rc and (rc[2]==0 or rc[3]==0): 
+			return 
+
 		self.paint(rc)
+
 		if rc is None:
 			rcBack = self.GetClientRect()
 		else:
 			rcBack = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]
+			
 		rcFront = self.ClientToScreen(rcBack)
 		try:
 			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
