@@ -35,6 +35,12 @@ text:emacs:emacs $file
 text:gnuclient:/usr/local/bin/gnuclient $file
 text:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
+label:vi-xterm:xterm -e vi $file
+label:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
+label:emacs:emacs $file
+label:gnuclient:/usr/local/bin/gnuclient $file
+label:emacsclient:/usr/local/emacs/bin/emacsclient $file
+
 graph:vi-xterm:xterm -e vi $file
 graph:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 graph:emacs:emacs $file
