@@ -1,4 +1,4 @@
 __version__ = "$Id$"
 
 from patchlevel import patchlevel
-version = 'player 0.5 ' + patchlevel
+version = 'player 1.0Beta ' + patchlevel
