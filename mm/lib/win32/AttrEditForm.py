@@ -1232,7 +1232,7 @@ class PosSizeLayoutPage(LayoutPage):
 		self._xy=None
 		self._wh=None
 		ch = form._node.parent.GetChannel()
-		if ch.has_key('base_window'):
+		if ch and ch.has_key('base_window'):
 			self._boxoff = ch.get('base_winoff', (0,0,0,0))[:2]
 
 	def getcurrentbox(self):
@@ -1280,6 +1280,67 @@ class PosSizeLayoutPage(LayoutPage):
 				awh=fttoa(box[2:],2,prec)
 				self._xy.setvalue(axy)
 				self._wh.setvalue(awh)
+
+class SubImgLayoutPage(PosSizeLayoutPage):
+	def __init__(self, form):
+		LayoutPage.__init__(self,form)
+		self._xy=None
+		self._wh=None
+
+	def OnInitDialog(self):
+		for a in self._form._attriblist:
+			if a.getname() == 'file':
+				break
+		else:
+			a = None
+		AttrPage.OnInitDialog(self)
+		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+		preview=components.Control(self,grinsRC.IDC_PREVIEW)
+		preview.attach_to_parent()
+		l1,t1,r1,b1=self.GetWindowRect()
+		l2,t2,r2,b2=preview.getwindowrect()
+		self._layoutpos =(l2-l1,t2-t1)
+		self._layoutsize = (r2-l2,b2-t2)
+		if a:
+			f = a.getvalue()
+		else:
+			f = None
+		if f:
+			import Sizes
+			url = a.wrapper.getcontext().findurl(f)
+			w, h = Sizes.GetSize(url)
+		else:
+			w = h = 0
+		self.__bbox = w,h
+		self.createLayoutContext((w,h))
+		self._layoutctrl=self.createLayoutCtrl()
+
+		t=components.Static(self,grinsRC.IDC_SCALE1)
+		t.attach_to_parent()
+		if self._isintscale:
+			t.settext('scale 1 : %.0f' % self._xscale)
+		else:
+			t.settext('scale 1 : %.1f' % self._xscale)
+		self.create_box(self.getcurrentbox())
+
+	def init_tk(self, v):
+		v.drawTk.SetLayoutMode(0)
+		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
+		v.drawTk.SetScale(self._scale)
+
+		x=y=0
+		w,h = self.__bbox
+		rc=(x,y,x+w,y+h)
+		rc = v._convert_coordinates(rc, units = UNIT_PXL)
+		rc=self._scale.layoutbox(rc,UNIT_PXL)
+		v.drawTk.SetBRect(rc)
+
+		rc=(x,y,x+w,y+h)
+		rc = v._convert_coordinates(rc, units = UNIT_PXL)
+		rc=self._scale.layoutbox(rc,UNIT_PXL)
+		v.drawTk.SetCRect(rc)
 
 ############################
 # Base class for media renderers
@@ -2073,10 +2134,7 @@ class DurationParGroup(AttrGroup):
 class LayoutGroup(AttrGroup):
 	data=attrgrsdict['base_winoff']
 	def __init__(self,data=None):
-		if data:
-			AttrGroup.__init__(self,data)
-		else:
-			AttrGroup.__init__(self,LayoutGroup.data)
+		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1
@@ -2096,8 +2154,6 @@ class LayoutGroup(AttrGroup):
 # base_winoff, units
 class LayoutGroupWithUnits(LayoutGroup):
 	data=attrgrsdict['base_winoff_and_units']
-	def __init__(self):
-		LayoutGroup.__init__(self,LayoutGroupWithUnits.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O1
 
@@ -2109,12 +2165,12 @@ class LayoutGroupWithUnits(LayoutGroup):
 		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		return cd
 
-class SubregionGroup(AttrGroup):
-	data=attrgrsdict['subregion']
-	_attrnames = {'xy':'subregionxy',
-		      'wh':'subregionwh',
-		      'full':'displayfull',
-		      'anchor':'subregionanchor'}
+class ImgregionGroup(AttrGroup):
+	data=attrgrsdict['imgregion']
+	_attrnames = {'xy':'imgcropxy',
+		      'wh':'imgcropwh',
+		      'full':'fullimage',
+		      'anchor':'imgcropanchor'}
 
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
@@ -2129,9 +2185,12 @@ class SubregionGroup(AttrGroup):
 		a=self.getattr(self._attrnames['wh'])
 		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15))
 		a=self.getattr(self._attrnames['full'])
-		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
+		if len(self._attrnames) == 4:
+			cd[a]=OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
+		else:
+			cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
 		a=self.getattr(self._attrnames['anchor'])
-		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))		
+		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
 	def oninitdialog(self,wnd):
@@ -2140,17 +2199,31 @@ class SubregionGroup(AttrGroup):
 		ctrl.settext(self._data['title'])
 
 	def getpageclass(self):
-		return PosSizeLayoutPage
+		return SubImgLayoutPage
 
 	def islayoutattr(self,attr):
 		return (attr.getname()==self._attrnames['xy']) or (attr.getname()==self._attrnames['wh'])
 
-class ImgregionGroup(SubregionGroup):
-	data=attrgrsdict['imgregion']
-	_attrnames = {'xy':'imgcropxy',
-		      'wh':'imgcropwh',
-		      'full':'fullimage',
-		      'anchor':'imgcropanchor'}
+class SubregionGroup(ImgregionGroup):
+	data=attrgrsdict['subregion']
+	_attrnames = {'xy':'subregionxy',
+		      'wh':'subregionwh',
+		      'full':'displayfull',
+		      'anchor':'subregionanchor',
+		      'aspect':'aspect',
+		      }
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LS1O3
+
+	def createctrls(self,wnd):
+		cd = ImgregionGroup.createctrls(self,wnd)
+		a = self.getattr(self._attrnames['aspect'])
+		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		return cd
+
+	def getpageclass(self):
+		return PosSizeLayoutPage
 
 class SystemGroup(AttrGroup):
 	data=attrgrsdict['system']
