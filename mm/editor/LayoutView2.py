@@ -1775,8 +1775,6 @@ class LayoutView2(LayoutViewDialog2):
 
 	def onEnableAnimation(self):
 		if len(self.currentSelectedNodeList) > 0:
-			if not self.editmgr.transaction():
-				return
 			selectedNode = self.currentSelectedNodeList[0]
 			nodeType = self.getNodeType(selectedNode)
 			animationData = selectedNode.getAnimationData()
@@ -1791,11 +1789,16 @@ class LayoutView2(LayoutViewDialog2):
 						animparent = dlg.getmmobject()
 						assert animparent.getClassName() == 'MMNode', ''
 					else:
-						print 'cant create/edit animation'
+						# do not create animation
+						return
 					# XXX save parent
 					selectedNode._animparent = animparent
 					
 					animationData = selectedNode.computeAnimationData(animparent)
+
+			if not self.editmgr.transaction():
+				return
+					
 			if animationData.isEmpty():
 				geom = selectedNode.getPxGeom()
 				bgcolor = selectedNode.GetInherAttrDef('bgcolor', (0,0,0))
