@@ -1539,8 +1539,8 @@ class ChannelWindow(Channel):
 		# media. So we can't create the sensitive button here. Otherwise we have to select all region, and 
 		# not just the media area !. Instead, this code is done is _prepareAnchors method
 		
-#		fgcolor = self.getfgcolor(node)
-#		self.armed_display.fgcolor(fgcolor)
+		fgcolor = self.getfgcolor(node)
+		self.armed_display.fgcolor(fgcolor)
 #		alist = node.GetRawAttrDef('anchorlist', [])
 #		armed_anchor = None
 		
