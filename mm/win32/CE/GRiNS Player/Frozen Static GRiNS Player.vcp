@@ -2003,6 +2003,21 @@ SOURCE=.\freeze\M_bisect.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\freeze\M_bitrates.c
+
+!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\freeze\M_BrushChannel.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
@@ -2589,6 +2604,21 @@ SOURCE=.\freeze\M_httplib.c
 # Begin Source File
 
 SOURCE=.\freeze\M_ImageChannel.c
+
+!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\freeze\M_languages.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
 
@@ -3579,6 +3609,21 @@ SOURCE=.\freeze\M_sysmetrics.c
 # Begin Source File
 
 SOURCE=.\freeze\M_SystemColors.c
+
+!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\freeze\M_systemtestnames.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
 
