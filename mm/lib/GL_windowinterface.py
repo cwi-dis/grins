@@ -1167,7 +1167,10 @@ class _Window:
 		self._subwindows_closed = 0
 		self._displaylists = []
 		self._active_display_list = None
+		self._menu = None
 		self._menuids = []
+		self._accelerators = None
+		self._menuprocs = None
 		self._closecallbacks = []
 		_window_list[self._window_id] = self
 		self._redraw_func = None
@@ -1855,7 +1858,8 @@ class _Window:
 		self.destroy_menu()
 		self._menu = self._create_menu(title, list)
 		self.register(Mouse2Press, self._popup_menu, None)
-		self.register(_Accelerator, self._accelerators, None)
+		if self._accelerators:
+			self.register(_Accelerator, self._accelerators, None)
 
 	def _create_menu(self, title, list):
 		menu = self._menu = gl.newpup()
