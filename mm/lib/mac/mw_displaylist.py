@@ -240,9 +240,7 @@ class _DisplayList:
 			if cmd == 'image':
 				xscrolloffset, yscrolloffset = window._scrolloffset()
 				mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-				dstx0, dsty0 = dstx+xscrolloffset, dsty+yscrolloffset
-				dstx1, dsty1 = dstx+w, dsty+h
-				dstrect = dstx0, dsty0, dstx1, dsty1
+				dstrect = self._convert_coordinates((dstx, dsty, w, h))
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, dstrect)
 				return r

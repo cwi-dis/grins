@@ -808,6 +808,11 @@ class _CommonWindow:
 			func(arg, self, evttype, (x, y, buttons))
 		except Continue:
 			pass
+		else:
+			return
+		# XXX Not correct. We should check our redrawguarantee, I think...
+		if self._transparent:
+			raise Continue
 		
 	def _contentpopupmenu(self, where, event):
 		mw_globals.toplevel.clearmousetimer()
@@ -936,6 +941,7 @@ class _CommonWindow:
 			Qd.RGBForeColor(self._fgcolor)
 			if self._redrawfunc:
 				if not self._transparent:
+					# XXX This causes flashing in movie windows and such.
 					Qd.EraseRect(self.qdrect())
 				self._redrawfunc()
 			else:
@@ -963,8 +969,6 @@ class _CommonWindow:
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
-##			if not self._transparent:
-##				Qd.EraseRect(self.qdrect())
 			self._active_displist._render()
 		elif self._frozen and not self._transition:
 ##			self._mac_setwin(mw_globals.BM_ONSCREEN)
