@@ -59,10 +59,10 @@ def showquestion(text, parent = None):
 
 class ProgressDialog:
 	def __init__(self, *args):
-		print 'ProgressDialog', args
+		pass
 
 	def set(self, *args):
-		print 'ProgressDialog', args
+		pass
 
 
 class FileDialog:
