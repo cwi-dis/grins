@@ -152,6 +152,26 @@ class AssetsView(AssetsViewDialog):
 		self.editmgr.commit()
 		# XXX item.Destroy() ???
 
+	def startdrag_callback(self, index):
+		if self.whichview == 'clipboard':
+			return None, None
+		if index < 0 or index > len(self.listdata):
+			windowinterface.beep()
+			return None, None
+		if self.whichview == 'all':
+			url = self.listdata[index][5]
+			return 'URL', url
+		if self.whichview == 'unused':
+			if type(self.listdata[index][0]) == type(''):
+				# String means it's a url
+				url = self.listdata[index][3]
+				return 'URL', url
+			else:
+				windowinterface.beep()
+				return None, None
+		print 'Unknown self.whichview', self.whichview
+		return None, None
+
 	def getunusedassets(self):
 		assetlist = []
 		for node in self.context.getassets():
