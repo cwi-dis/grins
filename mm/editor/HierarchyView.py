@@ -2399,7 +2399,7 @@ class HierarchyView(HierarchyViewDialog):
 				em.addlink((n1,parent,dir))
 
 		child_type=child.type
-		child_children = child.children
+		child_children = child.children[:]
 
 		# Lastly, delete the child node.
 		em.delnode(child)
