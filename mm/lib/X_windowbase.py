@@ -672,7 +672,7 @@ class _Window:
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, scale):
+	def _prepare_image(self, file, crop, scale, center):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -682,9 +682,9 @@ class _Window:
 		format = toplevel._imgformat
 		depth = format.descr['align'] / 8
 		reader = None
-		try:
+		if toplevel._image_size_cache.has_key(file):
 			xsize, ysize = toplevel._image_size_cache[file]
-		except KeyError:
+		else:
 			try:
 				reader = img.reader(format, file)
 			except img.error, arg:
@@ -701,6 +701,9 @@ class _Window:
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
+		elif scale == -1:
+			scale = max(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)
 		left = int(left * scale + .5)
@@ -714,7 +717,7 @@ class _Window:
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, oscale)
+				return self._prepare_image(file, crop, oscale, center)
 			if hasattr(reader, 'transparent'):
 				import imageop, imgformat
 				r = img.reader(imgformat.xrgb8, file)
@@ -758,8 +761,16 @@ class _Window:
 					os.unlink(cfile)
 				except:
 					pass
-		x, y = x + (width - (w - left - right)) / 2, \
-		       y + (height - (h - top - bottom)) / 2
+		# x -- left edge of window
+		# y -- top edge of window
+		# width -- width of window
+		# height -- height of window
+		# w -- width of image
+		# h -- height of image
+		# left, right, top, bottom -- part to be cropped
+		if center:
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
 		xim = tw._visual.CreateImage(tw._depth, X.ZPixmap, 0, image,
 					     w, h, depth * 8, w * depth)
 		return xim, mask, left, top, x, y, w - left - right, h - top - bottom
@@ -1392,12 +1403,13 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates, z)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
+	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+				    center = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale)
+		       w._prepare_image(file, crop, scale, center)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
