@@ -551,7 +551,7 @@ class Path:
 		n = len(coords)
 		if n==0: return
 		self.moveTo(coords[0])
-		for i in range(1,n)::
+		for i in range(1,n):
 			self.lineTo(coords[i])
 		
 	# main query method
