@@ -245,7 +245,9 @@ class _LayoutView2(GenFormView):
 
 	# Sets the acceptable command list by delegating to its parent keeping a copy.
 	def set_commandlist(self, list):
-		GenFormView.set_commandlist(self, list)
+		splitter = self.GetParent()
+		mainframe = splitter.GetParent().GetMDIFrame()
+		mainframe.set_commandlist(list, self._strid)
 		self.set_localcommandlist(list)
 				
 	# Sets the acceptable commands. 
