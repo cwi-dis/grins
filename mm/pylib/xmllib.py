@@ -807,129 +807,130 @@ class XMLParser:
         self.syntax_error("reference to unknown entity `&%s;'" % name)
 
 
-class TestXMLParser(XMLParser):
+if __debug__:
+    class TestXMLParser(XMLParser):
 
-    def __init__(self, **kw):
-        self.testdata = ""
-        apply(XMLParser.__init__, (self,), kw)
+        def __init__(self, **kw):
+            self.testdata = ""
+            apply(XMLParser.__init__, (self,), kw)
 
-    def handle_xml(self, encoding, standalone):
-        self.flush()
-        print 'xml: encoding =',encoding,'standalone =',standalone
+        def handle_xml(self, encoding, standalone):
+            self.flush()
+            print 'xml: encoding =',encoding,'standalone =',standalone
 
-    def handle_doctype(self, tag, pubid, syslit, data):
-        self.flush()
-        print 'DOCTYPE:',tag, `data`
+        def handle_doctype(self, tag, pubid, syslit, data):
+            self.flush()
+            print 'DOCTYPE:',tag, `data`
 
-    def handle_data(self, data):
-        self.testdata = self.testdata + data
-        if len(`self.testdata`) >= 70:
+        def handle_data(self, data):
+            self.testdata = self.testdata + data
+            if len(`self.testdata`) >= 70:
+                self.flush()
+
+        def flush(self):
+            data = self.testdata
+            if data:
+                self.testdata = ""
+                print 'data:', `data`
+
+        def handle_cdata(self, data):
+            self.flush()
+            print 'cdata:', `data`
+
+        def handle_proc(self, name, data):
+            self.flush()
+            print 'processing:',name,`data`
+
+        def handle_comment(self, data):
+            self.flush()
+            r = `data`
+            if len(r) > 68:
+                r = r[:32] + '...' + r[-32:]
+            print 'comment:', r
+
+        def syntax_error(self, message):
+            print 'error at line %d:' % self.lineno, message
+
+        def unknown_starttag(self, tag, attrs):
+            self.flush()
+            if not attrs:
+                print 'start tag: <' + tag + '>'
+            else:
+                print 'start tag: <' + tag,
+                for name, value in attrs.items():
+                    print name + '=' + '"' + value + '"',
+                print '>'
+
+        def unknown_endtag(self, tag):
+            self.flush()
+            print 'end tag: </' + tag + '>'
+
+        def unknown_entityref(self, ref):
+            self.flush()
+            print '*** unknown entity ref: &' + ref + ';'
+
+        def unknown_charref(self, ref):
+            self.flush()
+            print '*** unknown char ref: &#' + ref + ';'
+
+        def close(self):
+            XMLParser.close(self)
             self.flush()
 
-    def flush(self):
-        data = self.testdata
-        if data:
-            self.testdata = ""
-            print 'data:', `data`
+    def test(args = None):
+        import sys, getopt
+        from time import time
 
-    def handle_cdata(self, data):
-        self.flush()
-        print 'cdata:', `data`
+        if not args:
+            args = sys.argv[1:]
 
-    def handle_proc(self, name, data):
-        self.flush()
-        print 'processing:',name,`data`
+        opts, args = getopt.getopt(args, 'st')
+        klass = TestXMLParser
+        do_time = 0
+        for o, a in opts:
+            if o == '-s':
+                klass = XMLParser
+            elif o == '-t':
+                do_time = 1
 
-    def handle_comment(self, data):
-        self.flush()
-        r = `data`
-        if len(r) > 68:
-            r = r[:32] + '...' + r[-32:]
-        print 'comment:', r
-
-    def syntax_error(self, message):
-        print 'error at line %d:' % self.lineno, message
-
-    def unknown_starttag(self, tag, attrs):
-        self.flush()
-        if not attrs:
-            print 'start tag: <' + tag + '>'
+        if args:
+            file = args[0]
         else:
-            print 'start tag: <' + tag,
-            for name, value in attrs.items():
-                print name + '=' + '"' + value + '"',
-            print '>'
+            file = 'test.xml'
 
-    def unknown_endtag(self, tag):
-        self.flush()
-        print 'end tag: </' + tag + '>'
+        if file == '-':
+            f = sys.stdin
+        else:
+            try:
+                f = open(file, 'r')
+            except IOError, msg:
+                print file, ":", msg
+                sys.exit(1)
 
-    def unknown_entityref(self, ref):
-        self.flush()
-        print '*** unknown entity ref: &' + ref + ';'
+        data = f.read()
+        if f is not sys.stdin:
+            f.close()
 
-    def unknown_charref(self, ref):
-        self.flush()
-        print '*** unknown char ref: &#' + ref + ';'
-
-    def close(self):
-        XMLParser.close(self)
-        self.flush()
-
-def test(args = None):
-    import sys, getopt
-    from time import time
-
-    if not args:
-        args = sys.argv[1:]
-
-    opts, args = getopt.getopt(args, 'st')
-    klass = TestXMLParser
-    do_time = 0
-    for o, a in opts:
-        if o == '-s':
-            klass = XMLParser
-        elif o == '-t':
-            do_time = 1
-
-    if args:
-        file = args[0]
-    else:
-        file = 'test.xml'
-
-    if file == '-':
-        f = sys.stdin
-    else:
+        x = klass()
+        t0 = time()
         try:
-            f = open(file, 'r')
-        except IOError, msg:
-            print file, ":", msg
+            if do_time:
+                x.feed(data)
+                x.close()
+            else:
+                for c in data:
+                    x.feed(c)
+                x.close()
+        except Error, msg:
+            t1 = time()
+            print msg
+            if do_time:
+                print 'total time: %g' % (t1-t0)
             sys.exit(1)
-
-    data = f.read()
-    if f is not sys.stdin:
-        f.close()
-
-    x = klass()
-    t0 = time()
-    try:
-        if do_time:
-            x.feed(data)
-            x.close()
-        else:
-            for c in data:
-                x.feed(c)
-            x.close()
-    except Error, msg:
         t1 = time()
-        print msg
         if do_time:
             print 'total time: %g' % (t1-t0)
-        sys.exit(1)
-    t1 = time()
-    if do_time:
-        print 'total time: %g' % (t1-t0)
 
 
-if __name__ == '__main__':
-    test()
+    if __name__ == '__main__':
+        test()
