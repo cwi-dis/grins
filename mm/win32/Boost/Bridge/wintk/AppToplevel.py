@@ -16,6 +16,11 @@ class _Toplevel:
 		self._time = float(winkernel.GetTickCount())/TICKS_PER_SECOND
 
 		self._frame = None
+	
+	def close(self):
+		if self._frame:
+			self._frame.close()
+			self._frame = None
 
 	def newdocument(self, cmifdoc, adornments=None, commandlist=None):
 		if self._frame is None:
