@@ -85,11 +85,8 @@ class DisplayList:
 		rcc = xc, yc, wc, hc = wnd.xywh(ltrb)
 
 		if cmd == 'clear':
-			brush = wingdi.CreateSolidBrush(entry[1])
-			old_brush = dc.SelectObject(brush)
-			dc.Rectangle(wnd.ltrb(rcc))
-			dc.SelectObject(old_brush)
-			wingdi.DeleteObject(brush)
+			rgb = winstruct.RGB(entry[1])
+			dc.FillSolidRect(wnd.ltrb(rcc), rgb)
 
 		elif cmd == 'image':
 			fit = wnd._fit
@@ -138,11 +135,8 @@ class DisplayList:
 				dest_x, dest_y, width, height = mediadisplayrect
 			rcc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
 			if rcc is not None:
-				brush = wingdi.CreateSolidBrush(entry[1])
-				old_brush = dc.SelectObject(brush)
-				dc.Rectangle(wnd.ltrb(rcc))
-				dc.SelectObject(old_brush)
-				wingdi.DeleteObject(brush)
+				rgb = winstruct.RGB(entry[1])
+				dc.FillSolidRect(wnd.ltrb(rcc), rgb)
 
 		elif cmd == 'text':
 			modeorg = dc.SetBkMode(wincon.TRANSPARENT)

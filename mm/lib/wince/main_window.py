@@ -233,6 +233,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				if ltrb:
 					ltrb = winstruct.inflate(ltrb, 2, 2)
 					dcc = dc.CreateCompatibleDC()
+					dcc.SetViewportOrg((0,0))
 					oldbuf = dcc.SelectObject(buf)
 					rgn = wingdi.CreateRectRgn(ltrb)
 					dcc.SelectClipRgn(rgn)

@@ -23,13 +23,13 @@ class Region(base_window.Window):
 			rc = self.getwindowpos()
 			x, y, w, h = self._topwindow.LRtoDR(rc, round = 1)
 			self._canvas = 0, 0, w, h
-						
+					
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
 		
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
-	
+
 	def newdisplaylist(self, bgcolor = None, units = UNIT_SCREEN):
 		if bgcolor is None:
 			if not self._transparent:
@@ -98,12 +98,9 @@ class Region(base_window.Window):
 			elif not self._transparent:
 				bgcolor = self._bgcolor
 			if bgcolor:
-				brush = wingdi.CreateSolidBrush(bgcolor)
-				old_brush = dc.SelectObject(brush)
 				x, y, w, h = xywh_dst
-				dc.Rectangle((x, y, x+w, y+h))
-				dc.SelectObject(old_brush)
-				wingdi.DeleteObject(brush)
+				rgb = winstruct.RGB(self._bgcolor)
+				dc.FillSolidRect((x, y, x+w, y+h), rgb)
 			self._active_displist._render(dc, ltrb, xywh_dst, start=1)
 			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
@@ -111,12 +108,9 @@ class Region(base_window.Window):
 				wingdi.DeleteObject(brush)
 
 		elif self._transparent == 0 and self._bgcolor:
-			brush = wingdi.CreateSolidBrush(self._bgcolor)
-			old_brush = dc.SelectObject(brush)
 			x, y, w, h = xywh_dst
-			dc.Rectangle((x, y, x+w, y+h))
-			dc.SelectObject(old_brush)
-			wingdi.DeleteObject(brush)
+			rgb = winstruct.RGB(self._bgcolor)
+			dc.FillSolidRect((x, y, x+w, y+h), rgb)
 
 		dc.SelectObject(oldsurf)
 		dc.DeleteDC()
@@ -136,12 +130,9 @@ class Region(base_window.Window):
 			elif not self._transparent:
 				bgcolor = self._bgcolor
 			if bgcolor:
-				brush = wingdi.CreateSolidBrush(bgcolor)
-				old_brush = dc.SelectObject(brush)
 				x, y, w, h = xywh_dst
-				dc.Rectangle((x, y, x+w, y+h))
-				dc.SelectObject(old_brush)
-				wingdi.DeleteObject(brush)
+				rgb = winstruct.RGB(self._bgcolor)
+				dc.FillSolidRect((x, y, x+w, y+h), rgb)
 			self._active_displist._render(dc, ltrb, xywh_dst, start = 1)
 			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
@@ -149,12 +140,9 @@ class Region(base_window.Window):
 				wingdi.DeleteObject(brush)
 
 		elif self._transparent == 0 and self._bgcolor:
-			brush = wingdi.CreateSolidBrush(self._bgcolor)
-			old_brush = dc.SelectObject(brush)
 			x, y, w, h = xywh_dst
-			dc.Rectangle((x, y, x+w, y+h))
-			dc.SelectObject(old_brush)
-			wingdi.DeleteObject(brush)
+			rgb = winstruct.RGB(self._bgcolor)
+			dc.FillSolidRect((x, y, x+w, y+h), rgb)
 
 	# normal painting
 	def _paint_0(self, dc, exclwnd = None):
@@ -295,9 +283,7 @@ class Viewport(Region):
 		
 		# scaling
 		self._device2logical = self._ctx._d2l
-			
-		self._bgbrush = wingdi.CreateSolidBrush(bgcolor)
-			
+						
 		# init bmp 
 		wd, hd = self.LPtoDP(coordinates[2:])
 		self._backBuffer = self.createSurface(wd, hd, bgcolor)
@@ -329,12 +315,6 @@ class Viewport(Region):
 			dl.close()
 		del self._topwindow
 		ctx.update()
-
-		#
-		if self._bgbrush:
-			wingdi.DeleteObject(self._bgbrush)
-		self._bgbrush = 0
-
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
@@ -388,10 +368,9 @@ class Viewport(Region):
 
 	def paint(self, dc, exlwnd = None):
 		ltrb = dc.GetClipBox()
-		old_brush = dc.SelectObject(self._bgbrush)
-		dc.Rectangle(ltrb)
-		dc.SelectObject(old_brush)
-		
+		rgb = winstruct.RGB(self._bgcolor)
+		dc.FillSolidRect(ltrb, rgb)
+				
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
@@ -422,8 +401,7 @@ class Viewport(Region):
 			self.paint(dcBack, exlwnd = exclwnd)
 
 		dcReg = dcBack.CreateCompatibleDC()
-		bgcolor = region._bgcolor or self._bgcolor
-		regSurf = wingdi.CreateDIBSurface(dcBack, wd, hd, bgcolor)
+		regSurf = wingdi.CreateDIBSurface(dcBack, wd, hd)
 		oldReg = dcReg.SelectObject(regSurf)
 
 		# copy back to reg
