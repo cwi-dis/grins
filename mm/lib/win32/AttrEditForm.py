@@ -1175,6 +1175,39 @@ class IntTupleCtrl(TupleCtrl):
 				s = '%d' % string.atoi(st[i])
 				self._attrval[i].settext(s)
 
+class SystemScreenSizeCtrl(IntTupleCtrl):
+	want_label = 0
+
+	# in this case, the help doesn't depend only of data, but also of this control.
+	# to not affect any other plateform the help is set here
+	def sethelp(self):
+		if not self._initctrl: return
+		self._wnd._attrinfo.settext(self.gethelp())
+
+	def gethelp(self):
+		return "Play node only if screen bigger than the specified pixel value (leave empty for Not set)"
+	
+	def setvalue(self, val):
+		if val == '':
+			for i in range(self._nedit):
+				self._attrval[i].settext('')
+		else:
+			IntTupleCtrl.setvalue(self,val)
+
+	def getvalue(self):
+		if not self._initctrl:
+			return self._attr.getcurrent()
+		default = string.split(self._attr.getdefault())
+		st=[]
+		for i in range(self._nedit):
+			st.append(self._attrval[i].gettext())
+		strval = string.strip(string.join(st))
+		return strval
+
+	def settooltips(self,tooltipctrl):
+		for i in range(self._nedit):
+			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
+	
 class FloatTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
@@ -3816,7 +3849,8 @@ class SystemGroup(PreferencesGroup):
 		a = self.getattr('system_screen_depth')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
 		a = self.getattr('system_screen_size')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+#		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+		cd[a] = SystemScreenSizeCtrl(wnd,a,(grinsRC.IDC_GROUP8, grinsRC.IDC_WIDTHV,grinsRC.IDC_HEIGHTV))
 		return cd
 
 class SystemGroup2(SystemGroup):

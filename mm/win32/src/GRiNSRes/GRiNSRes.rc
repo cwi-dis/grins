@@ -2118,54 +2118,59 @@ IDD_EDITATTR_S1R3S6 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    COMBOBOX        IDC_12,38,16,96,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_12,36,10,96,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    COMBOBOX        IDC_22,180,16,108,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_22,181,9,108,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Not set",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,48,34,37,10
-    CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,86,
-                    34,22,10
+                    WS_TABSTOP,45,29,36,10
+    CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,83,
+                    29,22,10
     CONTROL         "off",IDC_34x,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    120,34,22,10
-    EDITTEXT        IDC_72,196,33,92,12,ES_AUTOHSCROLL
-    CONTROL         "Not set",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,79,50,35,10
-    CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY,118,50,38,10
-    CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    155,50,39,10
-    EDITTEXT        IDC_62,254,49,34,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_52,54,64,234,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_SCOMPONENTV,54,79,234,12,ES_AUTOHSCROLL
-    CONTROL         "Not Set",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,56,111,37,10
-    CONTROL         "on",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY,95,111,22,10
-    CONTROL         "off",IDC_SAUDIODESCV3,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY,126,111,22,10
-    EDITTEXT        IDC_SCUSTOMTESTSV,205,110,83,12,ES_AUTOHSCROLL
-    GROUPBOX        "System properties",IDC_GROUP1,6,5,287,123
-    LTEXT           "Bitrate:",IDC_11,12,18,26,8
-    LTEXT           "Captions:",IDC_31,12,34,31,8
-    GROUPBOX        "",IDC_GROUP2,44,28,103,17
-    LTEXT           "Language:",IDC_21,141,18,34,8
-    LTEXT           "Overdub or Subtitle:",IDC_41,12,50,63,8
-    GROUPBOX        "",IDC_GROUP3,76,44,121,17
-    LTEXT           "Required:",IDC_51,12,66,34,8
-    LTEXT           "Screen depth:",IDC_61,205,51,48,8
-    LTEXT           "Screen size:",IDC_71,153,35,42,8
+                    115,29,22,10
+    EDITTEXT        IDC_62,244,47,36,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_52,51,64,238,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SCOMPONENTV,51,79,238,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SCUSTOMTESTSV,193,112,96,12,ES_AUTOHSCROLL
+    GROUPBOX        "Test properties",IDC_GROUP1,6,0,287,129
+    LTEXT           "Bitrate:",IDC_11,10,11,26,8
+    GROUPBOX        "",IDC_GROUP3,42,22,98,19
+    LTEXT           "Language:",IDC_21,139,10,34,8
+    LTEXT           "Required:",IDC_51,10,66,34,8
+    LTEXT           "Depth:",IDC_61,218,49,23,8
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    LTEXT           "Component:",IDC_SCOMPONENTL,12,81,38,8
-    LTEXT           "Operating system:",IDC_SOPERATINGSYSTEML,12,96,57,8
-    LTEXT           "CPU:",IDC_SCPUL,173,96,18,8
-    LTEXT           "Audio desc:",IDC_SAUDIODESCL,12,111,38,8
-    GROUPBOX        "",IDC_GROUP6,54,105,98,17
-    LTEXT           "Custom tests:",IDC_SCUSTOMTESTSL,159,112,44,8
-    COMBOBOX        IDC_SCPUV,192,94,96,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    LTEXT           "Component:",IDC_SCOMPONENTL,10,81,38,8
+    LTEXT           "Operating system:",IDC_SOPERATINGSYSTEML,10,97,57,8
+    LTEXT           "CPU:",IDC_SCPUL,178,97,16,8
+    LTEXT           "Custom\n tests:",IDC_SCUSTOMTESTSL,167,110,25,16
+    COMBOBOX        IDC_SCPUV,197,95,92,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    COMBOBOX        IDC_SOPERATINGSYSTEMV,70,94,96,109,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_SOPERATINGSYSTEMV,69,95,92,109,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_HEIGHTV,77,47,36,12,ES_AUTOHSCROLL
+    LTEXT           "Height:",IDC_HEIGHTL,50,49,23,8
+    EDITTEXT        IDC_WIDTHV,161,47,36,12,ES_AUTOHSCROLL
+    LTEXT           "Width:",IDC_WIDTHL,135,49,22,8
+    GROUPBOX        "",IDC_GROUP7,42,40,247,21
+    CONTROL         "Not Set",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,195,29,37,10
+    CONTROL         "on",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,233,29,22,10
+    CONTROL         "off",IDC_SAUDIODESCV3,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,265,29,22,10
+    GROUPBOX        "",IDC_GROUP6,191,22,98,19
+    CONTROL         "Not set",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,46,114,35,10
+    CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,84,114,36,10
+    CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    120,114,39,10
+    GROUPBOX        "",IDC_GROUP2,43,107,119,19
+    LTEXT           "Overdub \nor subtitle:",IDC_SOPERATINGSYSTEML2,10,110,
+                    34,17
+    LTEXT           "Captions:",IDC_31,10,28,30,10
+    LTEXT           "Audio desc:",IDC_SAUDIODESCL,149,28,39,9
+    LTEXT           "Screen:",IDC_GROUP8,10,48,27,10
 END
 
 IDD_EDITATTR_SYNCHRONIZATION DIALOG DISCARDABLE  0, 0, 300, 164

@@ -390,7 +390,7 @@
 	'Play node only depending on end user overdub/subtitle preference' raw (g2 qt smil10 smil2 cmif))
 (system_required (list (string)) () 'System required' reqlist
 	'Play node only if player supports these features' raw (g2 qt smil10 smil2 cmif))
-(system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
+(system_screen_size (tuple (int) (int)) (0 0) 'System screen size' screensize
 	'Play node only if screen bigger than this (width height)' raw (g2 qt smil10 smil2 cmif))
 (system_screen_depth (int) 0 'System screen depth' default
 	'Play node only if screen has more bits-per-pixel than this' raw (g2 qt smil10 smil2 cmif))
