@@ -22,13 +22,33 @@ import time
 		
 Error = license.Error
 
-def gencommerciallicense(version=None):
-	if version in (None, 'GSE', 'editor'):
-		features = getdefaultfeatures()
-	elif version in ('light', 'lite', 'GRL'):
-		features = getdefaultlightfeatures()
-	else:
-		raise Error, ('Unknown license type', version)
+PRODUCT_TO_FEATURE = {
+	None: ["editor"],
+	"editor": ["editor"],
+	"GSE": ["editor"],
+
+	"light": ["light"],
+	"lite": ["light"],
+	"GRL": ["light"],
+
+	"pro": ["pro"],
+	"GRP": ["pro"],
+
+	"ALLPRODUCTS": ["editor", "lite", "pro"]
+	}
+
+PLATFORM_TO_PLATFORM = {
+	"WIN": "win32",
+	"MAC": "mac",
+	"SUN": "sunos5",
+	"SGI": "irix6",
+	None: "ALLPLATFORMS",
+	}
+
+def gencommerciallicense(version=None, platform=None):
+	features = PRODUCT_TO_FEATURE[version]
+	features = features + PLATFORM_TO_PLATFORM[platform]
+	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
 	date = None
@@ -38,13 +58,10 @@ def gencommerciallicense(version=None):
 	dbase.close()
 	return license
 	
-def genevaluationlicense(version=None, valid=14):
-	if version in (None, 'GSE', 'editor'):
-		features = getdefaultfeatures()
-	elif version in ('light', 'lite', 'GRL'):
-		features = getdefaultlightfeatures()
-	else:
-		raise Error, ('Unknown license type', version)
+def genevaluationlicense(version=None, valid=14, platform=None):
+	features = PRODUCT_TO_FEATURE[version]
+	features = features + PLATFORM_TO_PLATFORM[platform]
+	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
 	date = getdate("+%d"%valid)
@@ -177,10 +194,13 @@ def usage():
 	print " -o file      Write output to file (with backup)"
 
 def getdefaultfeatures():
-	return license.FEATURES["editor"]
+	return encodefeatures(["editor", "light", "pro", "ALLPLATFORMS"])
 
-def getdefaultlightfeatures():
-	return license.FEATURES["light"]
+def encodefeatures(list):
+	rv = 0
+	for i in list:
+		rv = rv | license.FEATURES[i]
+	return rv
 
 def getfeatures(str):
 	strlist = string.split(str, ',')
