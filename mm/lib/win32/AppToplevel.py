@@ -1,16 +1,16 @@
 __version__ = "$Id$"
 
-""" @win32doc|AppTopLevel
-An instance of the _Toplevel class defined in this module
-represents the platform dependent part of the application.
- (The other part is platform independent and is an instance of Main)
-It contains the main message loop of the application which beyond dispatching messages
-it serves a delta timer (see tcp process) and tasks registered for timeslices.
-This class is also the main interface between the core part of the system
-that is platform independent with the part of the system that is 
-platform dependent. This interface is exposed to the core system through
-a module (windowinterface.py) which contains mainly alias to members of this class
-"""
+# @win32doc|AppTopLevel
+# An instance of the _Toplevel class defined in this module
+# represents the platform dependent part of the application.
+#  (The other part is platform independent and is an instance of Main)
+# It contains the main message loop of the application which beyond dispatching messages
+# it serves a delta timer (see tcp process) and tasks registered for timeslices.
+# This class is also the main interface between the core part of the system
+# that is platform independent with the part of the system that is 
+# platform dependent. This interface is exposed to the core system through
+# a module (windowinterface.py) which contains mainly alias to members of this class
+
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
@@ -262,17 +262,17 @@ class _Toplevel:
 
 	# Returns screen size in mm	
 	def getsize(self):
-		"""size of the screen in mm"""
+		# size of the screen in mm
 		return self._scr_width_mm, self._scr_height_mm
 
 	# Returns screen size in pixel
 	def getscreensize(self):
-		"""Return screen size in pixels"""
+		# Return screen size in pixels
 		return self._scr_width_pxl, self._scr_height_pxl
 
 	# Returns screen depth
 	def getscreendepth(self):
-		"""Return screen depth"""
+		# Return screen depth
 		return sysmetrics.depth
 
 
@@ -644,10 +644,9 @@ class FileDialog:
 
 #######################################
 
-""" @win32doc|shell_execute
-The shell function calls the win32 functions ShellExecute with the given url and verb
-The verb can be one of 'open','edit','print'
-"""
+# @win32doc|shell_execute
+# The shell function calls the win32 functions ShellExecute with the given url and verb
+# The verb can be one of 'open','edit','print'
 
 # url parsing
 import MMurl, urlparse
@@ -682,9 +681,8 @@ def shell_execute(url,verb='open', showmsg=1):
 		return rc
 	return 0
 
-""" @win32doc|htmlwindow
-Class htmlwindow just calls the shell to open the given file
-"""
+# @win32doc|htmlwindow
+# Class htmlwindow just calls the shell to open the given file
 
 class htmlwindow:
 	def __init__(self,url):

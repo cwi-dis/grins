@@ -1,15 +1,13 @@
 __version__ = "$Id$"
 
-""" @win32doc|_ErrorsView
-This module contains the ui implementation of the ErrorsView.
-It is implemented as a Form view.
-The MFC CFormView is essentially a view that contains controls. 
-These controls are laid out based on a dialog-template resource
-similar to a dialog box.
-Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCFormView.
-
-"""
+# @win32doc|_ErrorsView
+# This module contains the ui implementation of the ErrorsView.
+# It is implemented as a Form view.
+# The MFC CFormView is essentially a view that contains controls. 
+# These controls are laid out based on a dialog-template resource
+# similar to a dialog box.
+# Objects of this class are exported to Python through the win32ui pyd
+# as objects of type PyCFormView.
 
 # std win32 modules
 import win32ui,win32con,win32api
