@@ -103,6 +103,7 @@ class MMNodeContext:
 
 	def newnodeuid(self, type, uid):
 		node = self.nodeclass(type, self, uid)
+		node._fill()
 		self.knownode(uid, node)
 		return node
 
@@ -1725,6 +1726,12 @@ class MMNode:
 			name = ''
 		return '<MMNode instance, type=%s, uid=%s, name=%s, playing=%s>' % \
 		       (`self.type`, `self.uid`, `name`, MMStates.states[self.playing])
+
+	def _fill(self):
+		# fill with the requiered default attribute values
+		import MMTypes
+		if self.GetType() in MMTypes.mediatypes:
+			self.attrdict['transparent'] = 1
 
 	# methods that have to do with playback
 	def reset(self, full_reset = 1):
