@@ -694,7 +694,6 @@ class SchedulerContext:
 		# max times.
 		ndur = node.calcfullduration(self)
 		mintime, maxtime = node.GetMinMax()
-		print ndur,mintime,maxtime,timestamp,node
 		if ndur is None:
 			# unknown duration, assume indefinite
 			ndur = -1
@@ -706,12 +705,6 @@ class SchedulerContext:
 			runchild = 0
 		else:
 			runchild = 1
-		print runchild
-##		if mintime == 0 and \
-##		   (equal or (ndur == 0 and node.GetFill() == 'remove')):
-##			runchild = 0
-##		else:
-##			runchild = 1
 		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self, curtime = parent.timefunc())
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
