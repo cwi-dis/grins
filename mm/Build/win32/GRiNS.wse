@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=1036621481
+  File Checksum=2095417380
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -966,6 +966,11 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
+  Source=c:\Winnt\System32\Oleaut32.dll
+  Destination=%SYS32%\Oleaut32.dll
+  Flags=0000001010000011
+end
+item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000011
@@ -1152,7 +1157,57 @@ item: Create Shortcut
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\Readme.lnk
   Icon Number=0
 end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 1.0, v1.5.lnk
+  Icon Number=0
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS.exe
+  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL 1.0, v1.5.lnk
+  Icon Number=0
+end
+item: Create Shortcut
+  Source=%MAINDIR%\license.txt
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 1.0 v1.5 License.lnk
+  Icon Number=0
+end
+item: Create Shortcut
+  Source=%MAINDIR%\relnotes.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Release Notes.lnk
+  Icon Number=0
+end
 item: Else Statement
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0, v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Release Notes
+  Command Line=%MAINDIR%\relnotes.html
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0, v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5 License
+  Command Line=%MAINDIR%\license.txt
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0, v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0, v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
 end
 item: Add ProgMan Icon
   Group=%GROUP%
