@@ -154,6 +154,7 @@
 #define IDD_EDITATTR_O2                 383
 #define IDD_EDITATTR_TRANSITION         384
 #define IDD_EDITATTR_SUBREGION          385
+#define IDD_LAYOUT3                     386
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -176,11 +177,13 @@
 #define IDCMD_ADD_CHANNEL               1034
 #define IDC_COMBO1                      1034
 #define IDC_82                          1034
+#define IDC_LAYOUT_NEWREGION            1034
 #define IDC_COMBO2                      1035
 #define IDC_LAYOUT_SENDBACK             1035
 #define IDUC_APPLY                      1036
 #define IDC_LAYOUT_BRINGFRONT           1036
 #define IDC_OTHER_CHANNELS              1037
+#define IDC_LAYOUT_DELREGION            1037
 #define IDUC_RESET                      1043
 #define IDUC_BROWSE                     1044
 #define IDUC_RESET2                     1044
