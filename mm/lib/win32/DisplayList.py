@@ -71,7 +71,9 @@ class DisplayList:
 
 #====================================== Rendering
 	def render(self):
-		wnd = self._window			
+		wnd = self._window
+		if not wnd or not hasattr(wnd,'_obj_')or not hasattr(wnd,'RedrawWindow'):
+			return
 		for b in self._buttons:
 			b._highlighted = 0	
 		wnd._active_displist = self
@@ -281,7 +283,8 @@ class DisplayList:
 				win.setTransparent(1)
 				win._parent.RedrawWindow()
 			else:
-				win.RedrawWindow(None,self._win32rgn)
+				if win and hasattr(win,'RedrawWindow'):
+					win.RedrawWindow(None,self._win32rgn)
 		self._window = None
 		if self._win32rgn:
 			self._win32rgn.DeleteObject()

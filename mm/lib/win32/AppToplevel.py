@@ -3,7 +3,7 @@ __version__ = "$Id$"
 import win32ui, win32con, win32api
 import sysmetrics
 
-import win32mu,AppWnds
+import win32mu,MainFrame,GenWnd
 
 toplevel = None
 
@@ -44,13 +44,13 @@ class _Toplevel:
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 		self._hfactor = self._vfactor = 1.000
 
-		self._timerWnd=AppWnds.MfcOsWnd()
+		self._timerWnd=GenWnd.GenWnd()
 		self._timerWnd.create()
 		self._timerWnd.HookMessage(self._timer_callback, win32con.WM_TIMER)
 		self._timerWnd.HookMessage(self._message_callback,WM_MAINLOOP)
 	
 		self._mainwnd=None
-		self.genericwnd=AppWnds.MfcOsWnd
+		self.genericwnd=GenWnd.GenWnd
 
 	def _do_init(self):
 		if self._initialized:
@@ -120,11 +120,11 @@ class _Toplevel:
 		return self._mainwnd._newwindow(self, x, y, w, h, title, 1, pixmap, units,
 			       adornments, canvassize, commandlist, resizable)
 
-	############ SDI Model Support
+	############ SDI/MDI Model Support
 	def createmainwnd(self, x, y, w, h, title,
 		      units = UNIT_MM,adornments = None, commandlist = None):
 		if self._mainwnd==None:
-			self._mainwnd= AppWnds._FrameWnd()
+			self._mainwnd= MainFrame.MDIFrameWnd()
 			self._mainwnd.create(title)
 			self._mainwnd.init_cmif(x, y, w, h, title,
 				units, adornments,commandlist)
@@ -132,7 +132,9 @@ class _Toplevel:
 		
 	def getmainwnd(self):
 		return self._mainwnd
-		
+	def getformserver(self):
+		return self._mainwnd._formServer
+				
 	def newdocument(self,title,adornments=None,commandlist=None):
 		return self._mainwnd.newdocument(title,adornments,commandlist)
 
@@ -147,21 +149,33 @@ class _Toplevel:
 
 	def showview(self,view,context='view'):
 		self._mainwnd.showview(view,context)
-	def createview(self,view):
-		self._mainwnd.createview(view)
 
+	def createview(self,strid):
+		return self._mainwnd.createview(strid)
 
-	############ /SDI Model Support	
+	def getviewframe(self,strid):
+		if not self._mainwnd:return None
+		frame=self._mainwnd.getviewframe(strid)
+		if not frame: return self._mainwnd
+		return frame
 
-	def setwaiting(self,context):
-		self.setcursor('watch')
+	############ /SDI-MDI Model Support	
+
+	def textwindow(self,text):
+		sv=self.newviewobj('sview_')
+		sv.settext(text)
+		self.showview(sv,'sview_')
+		import appcon
+		if appcon.IsEditor: sv.set_close_commandlist()
+		return sv
+
+	def setwaiting(self):
 		if self._mainwnd:
-			self._mainwnd.setwaiting(context)
-	def setready(self,context):
-		self.setcursor('')
+			self._mainwnd.setwaiting()
+	def setready(self):
 		if self._mainwnd:
-			self._mainwnd.setready(context)
-
+			self._mainwnd.setready()
+	
 	def getsize(self):
 		"""size of the screen in mm"""
 		return toplevel._scr_width_mm, toplevel._scr_height_mm
@@ -213,7 +227,7 @@ class _Toplevel:
 		if self.MainDialog <> None : 
 			self.MainDialog.show()
 
-	def serve_events(self):		
+	def serve_events(self):	
 		if (self.serving == 0): return
 		import time, select
 		while self._timers:
@@ -330,16 +344,90 @@ class _Toplevel:
 		    (b << self._blue_shift)
 		return c
 
-	
+	def GetImageSize(self,file):
+		from win32modules import imageex
+		try:
+			xsize, ysize = self._image_size_cache[file]
+		except KeyError:
+			try:
+				img = imageex.load(file)
+			except img.error, arg:
+				raise error, arg
+			xsize,ysize,depth=imageex.size(img)
+			self._image_size_cache[file] = xsize, ysize
+			self._image_cache[file] = img
+		return xsize, ysize
+
+	def GetVideoSize(self,file):
+		from win32modules import mpegex
+		w=GenWnd.GenWnd()
+		w.create()
+		width, height = mpegex.SizeOfImage(w,file)
+		w.DestroyWindow()
+		return (width, height)
 
 toplevel = _Toplevel()
-AppWnds.toplevel=toplevel
+MainFrame.toplevel=toplevel
 
 import cmifwnd
 cmifwnd.toplevel=toplevel
 
-import AppForms
-AppForms.toplevel=toplevel
 
-import InputDialog
-InputDialog.toplevel= toplevel
+#######################################################
+# FileDialog
+#
+#
+# Note:
+# expected args from win32ui function CreateFileDialog:
+# "i|zzizO",
+#bFileOpen, // @pyparm int|bFileOpen||A flag indicating if the Dialog is a FileOpen or FileSave dialog.
+#szDefExt,  // @pyparm string|defExt|None|The default file extension for saved files. If None, no extension is supplied.
+#szFileName, // @pyparm string|fileName|None|The initial filename that appears in the filename edit box. If None, no filename initially appears.
+#flags,     // @pyparm int|flags|win32con.OFN_HIDEREADONLY\|win32con.OFN_OVERWRITEPROMPT|The flags for the dialog.  See the API documentation for full details.
+#szFilter, // @pyparm string|filter|None|A series of string pairs that specify filters you can apply to the file. 
+#	                        // If you specify file filters, only selected files will appear 
+#	                        // in the Files list box. The first string in the string pair describes 
+#	                        // the filter; the second string indicates the file extension to use. 
+#	                        // Multiple extensions may be specified using ';' as the delimiter. 
+#	                        // The string ends with two '\|' characters.  May be None.
+#obParent  // @pyparm <o PyCWnd>|parent|None|The parent or owner window of the dialog.
+
+class FileDialog:
+	def __init__(self, prompt,directory,filter,file, cb_ok, cb_cancel,existing = 0,parent=None):
+		
+		if existing: 
+			flags=win32con.OFN_HIDEREADONLY|win32con.OFN_FILEMUSTEXIST
+		else:
+			flags=win32con.OFN_OVERWRITEPROMPT
+		if not parent:
+			parent=toplevel._mainwnd
+
+		if not filter or filter=='*':
+			filter = 'All files (*.*)|*.*||'
+		else:
+			filter = 'smil files (*.smi;*.smil)|*.smi;*.smil|cmif files (*.cmif)|*.cmif|All files *.*|*.*||'
+			
+		self._dlg =dlg= win32ui.CreateFileDialog(existing,None,file,flags,filter,parent)
+		dlg.SetOFNTitle(prompt)
+
+		if dlg.DoModal()==win32con.IDOK:
+			if cb_ok: cb_ok(dlg.GetPathName())
+		else:
+			if cb_cancel: cb_cancel()
+	def GetPathName(self):
+		return self._dlg.GetPathName()
+
+#######################################
+#################################################
+# useful functions
+# some are defined here to import only windowinterface and not pyds 
+
+
+def GetStringLength(wnd,str):
+	dc = wnd.GetDC();
+	cx,cy=dc.GetTextExtent(str)
+	wnd.ReleaseDC(dc)
+	return cx
+
+
+

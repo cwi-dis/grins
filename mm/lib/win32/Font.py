@@ -31,19 +31,6 @@ _fontmap = {
 	  }
 fonts = _fontmap.keys()
 
-_FOUNDRY = 1
-_FONT_FAMILY = 2
-_WEIGHT = 3
-_SLANT = 4
-_SET_WIDTH = 5
-_PIXELS = 7
-_POINTS = 8
-_RES_X = 9
-_RES_Y = 10
-_SPACING = 11
-_AVG_WIDTH = 12
-_REGISTRY = 13
-_ENCODING = 14
 
 def _parsefontname(fontname):
 	list = string.splitfields(fontname, '-')
@@ -62,13 +49,6 @@ def findfont(fontname, pointsize):
 		return _fontcache[key]
 	except KeyError:
 		pass
-# use fontcache but not fontmap. 
-# leave the system to synthesize one
-#	try:
-#		fontname = _fontmap[fontname]
-#	except KeyError:
-#		raise error, 'Unknown font ' + `fontname`
-#	fontname = 'Arial'
 	fontobj = _Font(fontname, pointsize)
 	_fontcache[key] = fontobj
 	return fontobj	
@@ -95,7 +75,8 @@ def findfont(fontname, pointsize):
 
 class _Font:
 	def __init__(self, fontname, pointsize):
-		self._fd={'name':fontname,'size':pointsize,'weight':700}
+		pointsize=pointsize+4 # tmp bias
+		self._fd={'name':fontname,'height':pointsize,'weight':700}
 		self._hfont=Sdk.CreateFontIndirect(self._fd)		
 		self._tm=self.gettextmetrics()
 
@@ -124,7 +105,7 @@ class _Font:
 		return pxl2mm_y(self._tm['tmHeight'])
 
 	def pointsize(self):
-		return self._fd['size']
+		return self._fd['height']
 		
 
 
