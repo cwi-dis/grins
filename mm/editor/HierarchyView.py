@@ -19,6 +19,7 @@ def fix(r, g, b): return r, g, b	# Hook for color conversions
 
 import settings
 DISPLAY_VERTICAL = settings.get('vertical_structure')
+hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
 
 
 # Color assignments (RGB)
@@ -577,13 +578,17 @@ class HierarchyView(HierarchyViewDialog):
 	# Recalculate the set of objects
 	def makeboxes(self, list, node, box):
 		t = node.GetType()
+		left, top, right, bottom = box
 		if t in MMNode.leaftypes or \
 		   not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
-			list.append((node, LEAFBOX, box))
-			return
+			if hierarchy_minimum_sizes:
+				right = left + self.horsize
+				bottom = top + self.versize
+			list.append((node, LEAFBOX, (left, top, right, bottom)))
+			return left, top, right, bottom
+		listindex = len(list)
 		list.append((node, INNERBOX, box))
-		left, top, right, bottom = box
 		top = top + self.titleheight
 		left = left + self.horedge
 		bottom = bottom - self.veredge
@@ -608,6 +613,8 @@ class HierarchyView(HierarchyViewDialog):
 			totsize = bottom - top
 		# totsize is total available size for all children with inter-child gap
 		factor = (totsize - (len(children) - 1) * gapsize) / size
+		maxr = 0
+		maxb = 0
 		for child in children:
 			cht = child.GetType()
 			if cht in MMNode.leaftypes or not hasattr(child, 'expanded'):
@@ -620,11 +627,22 @@ class HierarchyView(HierarchyViewDialog):
 				right = left + size * factor
 			else:
 				bottom = top + size * factor
-			self.makeboxes(list, child, (left, top, right, bottom))
+			l,t,r,b = self.makeboxes(list, child, (left, top, right, bottom))
 			if horizontal:
-				left = right + gapsize
+				left = r + gapsize
+				if b > maxb: maxb = b
 			else:
-				top = bottom + gapsize
+				top = b + gapsize
+				if r > maxr: maxr = r
+		if horizontal:
+			maxr = left - gapsize + self.horedge
+			maxb = maxb + self.veredge
+		else:
+			maxb = top - gapsize + self.veredge
+			maxr = maxr + self.horedge
+		box = box[0], box[1], maxr, maxb
+		list[listindex] = node, INNERBOX, box
+		return box
 
 	def recalcboxes(self):
 		self.focusobj = None
@@ -637,6 +655,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.veredge = float(EDGSIZE) / rh
 		self.horgap = float(GAPSIZE) / rw
 		self.vergap = float(GAPSIZE) / rh
+		self.horsize = float(MINSIZE) / rw
+		self.versize = float(MINSIZE + LABSIZE) / rh
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:
@@ -670,7 +690,8 @@ class HierarchyView(HierarchyViewDialog):
 		width, height = sizeboxes(self.root)
 		cwidth, cheight = window.getcanvassize(UNIT_MM)
 		mwidth = mheight = 0 # until we have a way to get the min. size
-		if (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
+		if not hierarchy_minimum_sizes and \
+		   (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
 		   (height <= cheight <= height * 1.1 or height < cheight <= mheight):
 			# size change not big enough, just redraw
 			self.redraw()
