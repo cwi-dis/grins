@@ -2355,7 +2355,7 @@ class SMILWriter(SMIL):
 				if shapeType != A_SHAPETYPE_ALLREGION:
 					attrlist.append(('coords', coords))
 			else:
-				attrlist.append(('fragment', id))						
+				attrlist.append(('fragment', a.aid))						
 		elif a.atype == ATYPE_AUTO:
 			attrlist.append(('actuate', 'onLoad'));
 			
