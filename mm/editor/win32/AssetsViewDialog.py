@@ -18,8 +18,8 @@ class AssetsViewDialog:
 			'select': self.select_callback,
 			'sort': self.sort_callback,
 			'startdrag': self.startdrag_callback,
-			'dragurl': self.dragurl,
-			'dropurl': self.dropurl,
+			'dragitem': self.dragitem,
+			'dropitem': self.dropitem,
 			 }
 
 	def destroy(self):
