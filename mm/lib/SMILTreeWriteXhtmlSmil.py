@@ -599,10 +599,6 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
-		# optional: ignore smil layout for audio
-		if mtype == 'audio':
-			return pushed, inpar, pardur, regionid
-
 		lch = node.GetChannel().GetLayoutChannel()
 		path = self.getRegionPath(lch)
 		if not path:
@@ -629,16 +625,21 @@ class SMILXhtmlSmilWriter(SMIL):
 			regionid = name
 		divlist.append(('id', regionid))
 
-		# apply region style and fill attribute
-		prevRegion = None
-		if self.currLayout:
-			n = len(self.currLayout)
-			prevRegion = self.currLayout[n-1]
+		# apply region style
 		forceTransparent = (prevRegion == currRegion or mtype == 'audio')
-		regstyle = self.getRegionStyle(lch, node, forceTransparent)
+		regstyle = self.getRegionStyle(currRegion, node, forceTransparent)
+		divlist.append(('class', 'time'))
+
+		# apply soundLevel
+		volume = currRegion.get('soundLevel', None)
+		if volume is not None:
+			volume = 100.0*string.atof(volume)
+			volume = fmtfloat(volume)
+			divlist.append(('volume', volume))
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
-		divlist.append(('class', 'time'))
+
+		# apply fill
 		if fill:
 			divlist.append(('fill', fill))
 				
