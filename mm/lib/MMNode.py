@@ -621,10 +621,10 @@ class MMRegPoint:
 		return self.attrdict.items()
 		
 class MMChannel:
-	def __init__(self, context, name):
+	def __init__(self, context, name, type='undefined'):
 		self.context = context
 		self.name = name
-		self.attrdict = {}
+		self.attrdict = {'type':type}
 		self.d_attrdict = {}
 		if settings.activeFullSmilCss:
 			self.cssId = context.cssResolver.newRegion()
