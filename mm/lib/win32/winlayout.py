@@ -125,6 +125,12 @@ class DrawContext:
 	def addListener(self, entity):
 		self._listeners.append(entity)
 
+	def removeListener(self, entity):
+		for ind in range(len(self._listeners)):
+			if self._listeners[ind] is entity:
+				del self._listeners[ind]
+				break
+			
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._moveRefPt
@@ -1171,6 +1177,7 @@ class LayoutWnd:
 		wc, hc = rc-lc, bc-tc
 			
 		# draw to offscreen bitmap for fast looking repaints
+
 		dcc = dc.CreateCompatibleDC()
 
 		bmp = win32ui.CreateBitmap()
