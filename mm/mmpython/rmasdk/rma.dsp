@@ -56,14 +56,14 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /machine:I386 /out:"Release/rma.pyd"
 # Begin Custom Build
-OutDir=.\Release
 TargetPath=.\Release\rma.pyd
 InputPath=.\Release\rma.pyd
 SOURCE="$(InputPath)"
 
-"$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(TargetPath) d:\ufs\mm\cmif\bin\win32
-
+"..\..\bin\win32\rma.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\bin\win32\rma.pyd 
+	copy $(TargetPath) ..\..\bin\win32 
+	
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "rma - Win32 Debug"
@@ -93,13 +93,14 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /debug /machine:I386 /out:"Debug/rma_d.pyd" /pdbtype:sept
 # Begin Custom Build
-OutDir=.\Debug
+TargetPath=.\Debug\rma_d.pyd
 InputPath=.\Debug\rma_d.pyd
 SOURCE="$(InputPath)"
 
-"$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(OutDir)\rma_d.pyd d:\ufs\mm\cmif\bin
-
+"..\..\bin\win32\rma_d.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\bin\win32\rma_d.pyd 
+	copy $(TargetPath) ..\..\bin\win32 
+	
 # End Custom Build
 
 !ENDIF 
