@@ -77,7 +77,7 @@ class SoundChannel(ChannelAsync):
 		self.play_fp = self.arm_fp
 		self.arm_fp = None
 		self.play_loop = self.armed_loop
-		if self.armed_duration:
+		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
 		try:
