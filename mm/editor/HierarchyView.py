@@ -17,6 +17,7 @@ import urlparse, MMurl
 import Timing
 from math import ceil
 import string
+import mimetypes
 
 
 import settings
@@ -472,7 +473,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.dropfile(node, window, event, params)
 
 	def dropfile(self, maybenode, window, event, params):
-		from mimetypes import guess_type
 		x, y, filename = params
 		if maybenode is not None:
 			self.setfocusnode(maybenode)
@@ -495,7 +495,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if t == 'ext' and \
 		   obj.node.GetChannelType() == 'RealPix':
-			mtype = guess_type(url)[0]
+			mtype = mimetypes.guess_type(url)[0]
 			interior = (mtype != 'image/vnd.rn-realpix')
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
@@ -528,7 +528,7 @@ class HierarchyView(HierarchyViewDialog):
 				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
 				return
 			if t == 'slide':
-				ftype = guess_type(url)[0] or ''
+				ftype = mimetypes.guess_type(url)[0] or ''
 				if ftype[:5] != 'image' or \
 				   string.find(ftype, 'real') >= 0:
 					self.render()
@@ -1570,12 +1570,20 @@ class Object:
 			# draw thumbnail/icon if enough space
 ##			if b1-t1 >= titleheight and \
 ##			   r-l >= hmargin * 2.5:
+			url = node.GetAttrDef('file', None)
+			if url:
+				mtype = mimetypes.guess_type(url)[0]
+			else:
+				mtype = None
 			ctype = node.GetChannelType()
 			if node.__class__ is SlideMMNode and \
 			   MMAttrdefs.getattr(node, 'tag') in ('fadein', 'crossfade', 'wipe'):
 				ctype = 'image'
+			elif ctype == 'sound' and mtype and string.find(mtype, 'real') >= 0:
+				ctype = 'RealAudio'
+			elif ctype == 'video' and mtype and string.find(mtype, 'real') >= 0:
+				ctype = 'RealVideo'
 			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
-			url = node.GetAttrDef('file', None)
 			if url and self.mother.thumbnails and ctype == 'image':
 				url = node.context.findurl(url)
 				try:
