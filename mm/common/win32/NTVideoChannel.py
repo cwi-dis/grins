@@ -22,8 +22,10 @@ debug=0
 
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
-	node_attrs = Channel.ChannelWindow.node_attrs + \
-		      ['clipbegin', 'clipend', 'project_audiotype', 'project_videotype', 'project_targets']
+	node_attrs = Channel.ChannelWindow.node_attrs + [
+		'clipbegin', 'clipend',
+		'project_audiotype', 'project_videotype', 'project_targets',
+		'project_perfect', 'project_mobile']
 	if Channel.CMIF_MODE:
 		node_attrs = node_attrs + _our_attrs
 	else:
