@@ -60,6 +60,7 @@ class Main(MainDialog):
 		self._mm_callbacks = {}
 		self.last_location = ''
 		self._untitled_counter = 1
+		self.template_info = None
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
@@ -100,17 +101,42 @@ class Main(MainDialog):
 		if ENABLE_FNORB_SUPPORT:
 			import CORBA.services
 			self.corba_services = CORBA.services.services(sys.argv)
-				
+			
+	def collect_template_info(self):
+		import SMILTreeRead
+		self.templatedir = findfile('Templates')
+		if not os.path.exists(self.templatedir):
+			self.template_info = ()
+			return
+		names = []
+		descriptions = []
+		files = os.listdir(self.templatedir)
+		for file in files:
+			if not (file[-4:] == '.smi' or file[-5:] == '.smil'):
+				continue
+			pathname = os.path.join(self.templatedir, file)
+			try:
+				attrs = SMILTreeRead.ReadMetaData(pathname)
+			except IOError:
+				windowinterface.showmessage('Invalid template: %s'%file)
+			name = attrs.get('template_name', file)
+			description = attrs.get('template_description', '')
+			image = attrs.get('template_snapshot', None)
+			if image:
+				image = os.path.join(self.templatedir, image)
+			names.append(name)
+			descriptions.append(description, image, pathname)
+		self.template_info = (names, descriptions)
 
 	def new_callback(self):
 		import TopLevel
 		import windowinterface
 		
-		templatedir = findfile('Templates')
-		if os.path.exists(templatedir):
-			windowinterface.FileDialog('Select a template',
-				templatedir, '*.smil', '',
-				self._new_ok_callback, None, 1)
+		if self.template_info is None:
+			self.collect_template_info()
+		if self.template_info:
+			names, descriptions = self.template_info
+			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback)
 		else:
 			windowinterface.showmessage("No Templates found, creating empty document")
 			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.smil'), 1)
@@ -120,7 +146,10 @@ class Main(MainDialog):
 		import Help
 		Help.showhelpwindow()
 
-	def _new_ok_callback(self, filename):
+	def _new_ok_callback(self, info):
+		if not info:
+			return
+		d1, d2, filename = info
 		import windowinterface
 		windowinterface.setwaiting()
 		import TopLevel
