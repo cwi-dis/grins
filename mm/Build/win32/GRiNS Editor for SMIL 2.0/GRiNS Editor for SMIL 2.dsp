@@ -757,6 +757,10 @@ SOURCE=.\M_parsehtml.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_parseskin.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_parseutil.c
 # End Source File
 # Begin Source File
