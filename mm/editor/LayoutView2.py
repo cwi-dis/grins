@@ -911,15 +911,28 @@ class LayoutView2(LayoutViewDialog2):
 		if enabled:
 			self.updateAnimationWrapper()
 			self.settoggle(ENABLE_ANIMATION, 1)
+			animvals = animateNode.attrdict.get('animvals')
+			if animvals is not None and len(animvals) > 0:
+				t, v = animvals[0]
+				selected = v.get('selected')
+				if selected is not None:
+					self.setKeyTimeIndex(selected, self.currentFocus[0])
+				else:
+					v['selected'] = 0
+					self.setKeyTimeIndex(0 , self.currentFocus[0])
+			else:
+				# invalid node
+				self.setKeyTimeIndex(None, None)
 		else:
 			self.currentTargetAnimateNode = None
 			self.currentAnimateNode = None
 			self.settoggle(ENABLE_ANIMATION, 0)
-
-		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
 			self.setKeyTimeIndex(None, None)
-		elif (self.previousSelectedNodeList is None or len(self.previousSelectedNodeList) != 1 or (not self.currentFocus[0] is self.previousSelectedNodeList[0])):
-			self.setKeyTimeIndex(0, self.currentFocus[0])
+
+#		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
+#			self.setKeyTimeIndex(None, None)
+#		elif (self.previousSelectedNodeList is None or len(self.previousSelectedNodeList) != 1 or (not self.currentFocus[0] is self.previousSelectedNodeList[0])):
+#			self.setKeyTimeIndex(0, self.currentFocus[0])
 				
 		if self.timeValueChanged:
 			self.previousWidget.mustBeUpdated()
@@ -1085,6 +1098,8 @@ class LayoutView2(LayoutViewDialog2):
 				animvals = animateNode.GetAttrDef('animvals', [])
 				if len(animvals) > keyTimeIndex:
 					self.currentTimeValue, vals = animvals[keyTimeIndex]
+				t, v = animvals[0] 
+				v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo					
 			self.isAKeyTime = 1
 		else:
 			self.currentTimeValue = None
@@ -1150,9 +1165,16 @@ class LayoutView2(LayoutViewDialog2):
 						left, top, width, height = self.animationWrapper.getRectAt(tp)
 #						bgcolor = self.animationWrapper.getColorAt(tp)
 						newvals = {'left':left, 'top':top, 'width':width, 'height':height}
-					animvals = animvals[:] # don't modify the original to make undo/redo working
-					animvals.insert(index, (tp, newvals))
-					self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
+
+					t, v = animvals[0] 
+					v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo
+						
+					canimvals = [] # don't modify the original to make undo/redo working
+					for t, v in animvals:
+						canimvals.append((t, v.copy()))
+						
+					canimvals.insert(index, (tp, newvals))
+					self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 
 		if index > 0:
 			self.setKeyTimeIndex(index, nodeRef) # XXX for new code, nodeRef should be removed
@@ -1164,10 +1186,17 @@ class LayoutView2(LayoutViewDialog2):
 		animateNode = self.getAnimateNode()
 		animvals = animateNode.GetAttrDef('animvals', [])
 		if index > 0 and index < len(animvals)-1:
-			animvals = animvals[:] # don't modify the original to make undo/redo working
+			
+			t, v = animvals[0] 
+			v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo
+			
+			canimvals = [] # don't modify the original to make undo/redo working
+			for t, v in animvals:
+				canimvals.append((t, v.copy()))
+			
 			# can only remove a key between the first and the end
-			del animvals[index]
-			self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
+			del canimvals[index]
+			self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 			self.animateControlWidget.removeKey(index)
 			self.setKeyTimeIndex(index-1, nodeRef)
 		
@@ -1456,10 +1485,11 @@ class LayoutView2(LayoutViewDialog2):
 		if animationEnabled:
 			animateNode = self.getAnimateNode()
 			animvals = animateNode.GetAttrDef('animvals', [])
-			animvals = animvals[:] # don't modify the original to make undo/redo working
-			canimvals = []
+			
+			canimvals = [] # don't modify the original to make undo/redo working
 			for t, v in animvals:
 				canimvals.append((t, v.copy()))
+				
 			keyTimeIndex = self.getKeyTimeIndex()
 			currentTimeValue = self.getCurrentTimeValue()
 			if not currentTimeValue is None:
@@ -2873,9 +2903,11 @@ class AnimateControlWidget(LightWidget):
 
 			animateNode = self._context.getAnimateNode()
 			animvals = animateNode.GetAttrDef('animvals', [])
+
+			t, v = animvals[0] 
+			v['selected'] = self._context.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo
 			
-			animvals = animvals[:] # don't modify the original to make undo/redo working
-			canimvals = []
+			canimvals = [] # don't modify the original to make undo/redo working
 			for t, v in animvals:
 				canimvals.append((t, v.copy()))
 			
