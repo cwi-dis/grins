@@ -22,8 +22,10 @@ MENUBAR=(
 		(ENTRY, 'Preferences...', None, PREFERENCES),
 		(SEP,),
 		(CASCADE, 'Debug', (
+			(ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(TOGGLE, 'Enable call tracing', None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),
+			(ENTRY, 'Crash', None, CRASH),
 			(ENTRY, 'Show log/debug window', None, CONSOLE))),
 		(SEP,),
 		(ENTRY, 'Quit', 'Q', EXIT))),
@@ -55,7 +57,15 @@ PLAYER_ADORNMENTS = {
 		(TOGGLE, 1000, STOP),
 		(TOGGLE, 1500, PLAY),
 		(TOGGLE, 2000, PAUSE),
-		)
+		),
+	'shortcuts': {
+		' ': MAGIC_PLAY
+	}
+}
+CHANNEL_ADORNMENTS = {
+	'shortcuts': {
+		' ': MAGIC_PLAY
+	}
 }
 
 #

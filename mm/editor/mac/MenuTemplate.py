@@ -31,6 +31,7 @@ MENUBAR=(
 		(ENTRY, 'Preferences...', None, PREFERENCES),
 		(SEP,),
 		(CASCADE, 'Debug', (
+			(ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(TOGGLE, ('Enable call tracing','Disable call tracing'), None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),
 			(ENTRY, 'Abort', None, CRASH),
@@ -100,6 +101,7 @@ MENUBAR=(
 		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
 		(TOGGLE, 'Display image thumbnails', None, THUMBNAIL),
 		(SEP,),
+		(TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		(CASCADE, 'Minidoc navigation', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
 			(ENTRY, 'Previous', None, PREV_MINIDOC),
@@ -127,7 +129,15 @@ PLAYER_ADORNMENTS = {
 		(TOGGLE, 1000, STOP),
 		(TOGGLE, 1500, PLAY),
 		(TOGGLE, 2000, PAUSE),
-		)
+		),
+	'shortcuts': {
+		' ': MAGIC_PLAY
+	}
+}
+CHANNEL_ADORNMENTS = {
+	'shortcuts': {
+		' ': MAGIC_PLAY
+	}
 }
 
 #
