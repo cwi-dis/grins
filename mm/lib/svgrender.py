@@ -22,15 +22,40 @@ class SVGRenderer:
 		# for save/restore graphics
 		self._grstack = []
 	
+		# regions
+		self.regions = []
+		self.node2rgn = {}
+
 		#
 		self._verbose = 0
+
+	def __del__(self):
+		self.delAnchors()
 
 	def getFilter(self): return SVGRenderer.filter
 	def getWidth(self): return self._renderbox[2]
 	def getHeight(self): return self._renderbox[3]
 	def getSize(self): return self._renderbox[2:]
 	def getRenderBox(self): return self._renderbox
-					
+
+	def getElementAt(self, pt):
+		rgns = self.regions[:]
+		rgns.reverse()
+		for node, rgn in rgns:
+			if self.graphics.inside(rgn, pt):
+				return node
+		return None
+
+	def delRegions(self):
+		for rgn in self.rgn2node.keys():
+			self.graphics.delRegion(rgn)	
+		self.regions = []
+		self.node2rgn = {}
+
+	def appendRegion(self, node, rgn):
+		self.regions.append((node, rgn))
+		self.node2rgn[node] = rgn
+							
 	def render(self):
 		self.graphics.onBeginRendering()
 		iter = svgdom.DOMIterator(self.svgdoc, self, filter=SVGRenderer.filter)
@@ -164,17 +189,29 @@ class SVGRenderer:
 		pos = node.get('x'), node.get('y')
 		size = node.get('width'), node.get('height')
 		rxy = node.get('rx'), node.get('ry')
-		self.graphics.drawRect(pos, size, rxy, node.getStyle(), node.getTransform())
-  
+		if self.node2rgn.get(node) is None:
+			rgn = self.graphics.drawRect(pos, size, rxy, node.getStyle(), node.getTransform(), 1)
+			self.appendRegion(node, rgn)
+		else:
+			self.graphics.drawRect(pos, size, rxy, node.getStyle(), node.getTransform())
+					
 	def circle(self, node):
 		pos = node.get('cx'), node.get('cy')
 		r = node.get('r')
-		self.graphics.drawCircle(pos,  r, node.getStyle(), node.getTransform())
+		if self.node2rgn.get(node) is None:
+			rgn = self.graphics.drawCircle(pos,  r, node.getStyle(), node.getTransform(), 1)
+			self.appendRegion(node, rgn)
+		else:
+			self.graphics.drawCircle(pos,  r, node.getStyle(), node.getTransform())
 
 	def ellipse(self, node):
 		pos = node.get('cx'), node.get('cy')
 		rxy = node.get('rx'), node.get('ry')
-		self.graphics.drawEllipse(pos,  rxy, node.getStyle(), node.getTransform())
+		if self.node2rgn.get(node) is None:
+			rgn = self.graphics.drawEllipse(pos,  rxy, node.getStyle(), node.getTransform(), 1)
+			self.appendRegion(node, rgn)
+		else:
+			self.graphics.drawEllipse(pos,  rxy, node.getStyle(), node.getTransform())
 
 	def line(self, node):
 		pt1 = node.get('x1'), node.get('y1')
@@ -187,7 +224,11 @@ class SVGRenderer:
 
 	def polygon(self, node):
 		points = node.get('points')
-		self.graphics.drawPolygon(points, node.getStyle(), node.getTransform())
+		if self.node2rgn.get(node) is None:
+			rgn = self.graphics.drawPolygon(points, node.getStyle(), node.getTransform(), 1)
+			self.appendRegion(node, rgn)
+		else:
+			self.graphics.drawPolygon(points, node.getStyle(), node.getTransform())
 
 	def path(self, node):
 		d = node.get('d')
