@@ -33,9 +33,6 @@ class FancyURLopener(_OriginalFancyURLopener):
 			h.headers.append('Content-Location: %s\r\n' % newurl)
 		return fp
 
-	# Error 301 -- also relocated (permanently)
-	http_error_301 = http_error_302
-
 	def prompt_user_passwd(self, host, realm):
 		import windowinterface
 		try:
@@ -48,7 +45,8 @@ class FancyURLopener(_OriginalFancyURLopener):
 		t2 = w.TextInput('Passwd:', '', None, (self.passcb, ()),
 				 modifyCB = self.modifycb,
 				 top = t1, left = None, right = None)
-		b = w.ButtonRow([('Cancel', (self.cancelcb, ()))],
+		b = w.ButtonRow([('OK', (self.do_return, ())),
+				 ('Cancel', (self.cancelcb, ()))],
 				vertical = 0,
 				top = t2, left = None, right = None, bottom = None)
 		self.userw = t1
