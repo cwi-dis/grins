@@ -1463,7 +1463,9 @@ class HierarchyView(HierarchyViewDialog):
 			if features.EXPORT_REAL in features.feature_set:
 				# some types shouldn't be converted to RealMedia
 				mimetype = urlcache.mimetype(self.root.context.findurl(url))
-				if not mimetype or mimetype in ('image/png', 'image/jpeg', 'audio/mpeg') or mimetype.find('real') >= 0:
+				if not mimetype or mimetype in \
+						('image/png', 'image/jpeg', 'image/gif', 'audio/mpeg') \
+						or mimetype.find('real') >= 0:
 					node.SetAttr('project_convert', 0)
 
 		dftchannel = None
