@@ -1,33 +1,22 @@
 # Movie channel
+#
+# (This consists mostly of wrappers around the C module "moviechannel".)
 
-# This uses the "VFile" to read and display a "variety" of video formats.
-
-import sys
 
 import os
-from stat import *
-
-import MMExc
-import MMAttrdefs
-
 import gl
-import GL
-
 import VFile
-
-
+import MMAttrdefs
 import GLLock
-
-# Errors that VFile operations may raise
-VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
 
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
+# Errors that VFile operations may raise
+VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
+
 
 class MovieWindow(ChannelWindow):
-	#
-	# Initialization function.
 	#
 	def init(self, name, attrdict, channel):
 		self = ChannelWindow.init(self, name, attrdict, channel)
@@ -52,7 +41,7 @@ class MovieWindow(ChannelWindow):
 			self.channel.threads.resized()
 	#
 	def clear(self):
-		self.node = self.lookahead = None
+		self.node = None
 		self.cleared = 1
 		if self.wid <> 0:
 			self.setwin()
@@ -69,8 +58,6 @@ class MovieWindow(ChannelWindow):
 		else:
 			r, g, b = 255, 255, 255
 		if not self.cleared:
-##			self.vfile.clearto(r, g, b)# XYZZY
-##			self.centerimage()
 			return
 		#
 		if self.rgbmode:
@@ -83,33 +70,8 @@ class MovieWindow(ChannelWindow):
 		#
 		gl.clear()
 	#
-##	def setfile(self, filename, node, do_warm):
-##		self.clear()
-##		self.vfile = None
-##		try:
-##			self.vfile = VFile.VinFile().init(filename)
-##			if do_warm:
-##				try:
-##					self.vfile.readcache()
-##				except VFile.Error:
-##					print filename, ': no cached index'
-##		except EOFError:
-##			print 'Empty movie file', `filename`
-##			return
-##		except VerrorList, msg:
-##			print 'Cannot open movie file', `filename`, ':', msg
-##			return
-##		self.node = node
-##		self.vfile.magnify = MMAttrdefs.getattr(self.node, 'scale')
-##		dummy = self.peekaboo()
-##		if self.lookahead <> None and self.is_showing():
-##			self.setwin()
-##			self.vfile.initcolormap()
-##			self.rgbmode = (self.vfile.format == 'rgb')
-##			self.centerimage()
-	#
 	def setfile(self, filename, node, do_warm):
-		self.node = self.vfile = self.lookahead = None
+		self.node = self.vfile = None
 		try:
 			self.vfile = VFile.RandomVinFile().init(filename)
 			if do_warm:
@@ -124,57 +86,17 @@ class MovieWindow(ChannelWindow):
 			print 'Cannot open movie file', `filename`, ':', msg
 			return
 		self.node = node
-##		self.vfile.magnify = MMAttrdefs.getattr(self.node, 'scale')
-		dummy = self.peekaboo()
 		self.rgbmode = (self.vfile.format == 'rgb')
 	#
 	def popup(self):
 		if gl.windepth(self.wid) <> 1:
 			self.pop()
 			if gl.getdisplaymode() in (0, 5):
-				gl.RGBcolor(200, 200, 200) # XXX rather light grey
+				gl.RGBcolor(200, 200, 200)
 				gl.clear()
 				return
 			gl.writemask(0xffffffff)
 			gl.clear()
-##			if self.vfile:
-##				self.vfile.clear()# XYZZY
-	#
-##	def centerimage(self):
-##		w, h = self.vfile.width, self.vfile.height
-##		w, h = int(w*self.vfile.magnify), int(h*self.vfile.magnify)
-##		W, H = gl.getsize()
-##		self.vfile.xorigin, self.vfile.yorigin = (W-w)/2, (H-h)/2
-	#
-	def peekaboo(self):
-		try:
-			self.lookahead = self.vfile.getnextframeheader()
-			return self.lookahead[0] * 0.001
-		except VerrorList:
-			self.lookahead = None
-			return 0.0
-	#
-	def done(self):
-		return self.lookahead == None
-	#
-##	def nextframe(self, skip):
-##		if self.lookahead == None:
-##			return 0.0
-##		time, size, chromsize = self.lookahead
-##		if self.wid == 0 or skip:
-##			try:
-##				self.vfile.skipnextframedata(size, chromsize)
-##			except VerrorList:
-##				return 0.0
-##		else:
-##			self.setwin()
-##			try:
-##				data, chromdata = \
-##				  self.vfile.getnextframedata(size, chromsize)
-##				self.vfile.showframe(data, chromdata)
-##			except VerrorList:
-##				return 0.0
-##		return self.peekaboo()
 
 
 # XXX Make the movie channel class a derived class from MovieWindow?!
@@ -238,7 +160,11 @@ class MovieChannel(Channel):
 				  stopped, 0)
 			if not GLLock.gl_lock:
 				GLLock.init()
-			self.threads.arm(self.window.vfile.fp, 0, 0, \
+			# The C code doesn't support all the formats that
+			# VFile recognizes.  If an unsupported format is
+			# found, it raises RuntimeError.
+			try:
+				self.threads.arm(self.window.vfile.fp, 0, 0, \
 				  {'width': self.window.vfile.width, \
 				   'height': self.window.vfile.height, \
 				   'format': self.window.vfile.format, \
@@ -252,6 +178,11 @@ class MovieChannel(Channel):
 				   'bgcolor': MMAttrdefs.getattr(node, 'bgcolor'), \
 				   'gl_lock': GLLock.gl_lock}, \
 				   None)
+			except RuntimeError, msg:
+				print 'Bad movie file', \
+				      self.window.vfile.filename, msg
+				self.window.vfile = None
+				self.window.node = None
 		self.armed_node = node
 	#
 	def arm(self, node):
@@ -283,20 +214,16 @@ class MovieChannel(Channel):
 			self.window.popup() # was: .pop(); --Guido
 			self.late_arm(node)
 		else:
-##			self.window.setfile_2()
 			self.window.popup()
 		self.armed_node = None
-##		self.starttime = self.player.timefunc()
-##		self.played = self.skipped = 0
-##		self.poll() # Put on the first image right now
-##		print 'MovieChannel.play: self.threads = ' + `self.threads`
 		import glwindow, mm
 		glwindow.devregister(`self.deviceno`+':'+`mm.playdone`, \
 			  self.done, None)
 		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
 			  stopped, 0)
 		self.window.cleared = 0
-		self.threads.play()
+		if self.window.vfile:
+			self.threads.play()
 		self.player.arm_ready(self.name)
 	#
 	#DEBUG: remove dummy entry from queue and call proper done method
@@ -305,45 +232,25 @@ class MovieChannel(Channel):
 			# apparently someone has already called stop()
 			return
 		Channel.done(self, arg)
-		#self.node = None
 	#
 	def stop(self):
-		if GLLock.gl_lock:
-			GLLock.gl_lock.release()
-		self.threads.stop()
-		if GLLock.gl_lock:
-			GLLock.gl_lock.acquire()
+		if self.window.vfile:
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
+			self.threads.stop()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 		Channel.stop(self)
 		self.window.vfile = None
 	#
 	def setrate(self, rate):
 		self.threads.setrate(rate)
 	#
-##	def poll(self):
-##		self.qid = None
-##		if self.window.done(): # Last frame
-##			if self.played:
-##				print 'Played ', self.played*100/ \
-##					  (self.played+self.skipped), \
-##					  '% of the frames'
-##			self.done(None)
-##			return
-##		else:
-##			t = self.window.nextframe(0)
-##			self.played = self.played + 1
-##			now = self.player.timefunc()
-##			while t and self.starttime + t <= now:
-##				t = self.window.nextframe(1)
-##				self.skipped = self.skipped + 1
-##			self.qid = self.player.enterabs(self.starttime + t, \
-##				1, self.poll, ())
-	#
 	def reset(self):
 		self.window.clear()
 		self.node = None # Attempt to fix obscure bug --Guido
 	#
 	def clear(self):
-		print 'MOVIECHANNEL CLEAR!'
 		self.reset()
 	#
 	def getduration(self, node):

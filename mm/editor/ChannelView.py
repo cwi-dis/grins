@@ -12,7 +12,7 @@
 # - accept middle button as shortcut for lock/unlock?
 
 
-from math import sin, cos, atan2, pi
+from math import sin, cos, atan2, pi, ceil, floor
 import gl, GL, DEVICE
 import fl
 import FontStuff
@@ -104,23 +104,6 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def __repr__(self):
 		return '<ChannelView instance, root=' + `self.root` + '>'
-
-	# Special interface for the Player to show armed state of nodes
-
-##	def setarmedmode(self, node, mode):
-##		try:
-##			obj = node.cv_obj
-##		except AttributeError:
-##			return # Invisible node
-##		obj.setarmedmode(mode)
-##		self.drawarcs()
-##
-##	def unarm_all(self):
-##		if self.is_showing():
-##			for obj in self.objects:
-##				obj.resetarmedmode()
-##			self.setwin()
-##			self.draw()
 
 	# Dialog interface (extends GLDiallog.{setwin,show,hide})
 
@@ -217,6 +200,9 @@ class ChannelView(ViewDialog, GLDialog):
 		self.draw()
 
 	def channels_changed(self):
+		# Called when a channel is switched on or off from the
+		# player (this bypasses the edit manager so it can be
+		# done even when the document is playing).
 		if self.is_showing():
 			self.setwin()
 			self.redraw()
@@ -252,6 +238,39 @@ class ChannelView(ViewDialog, GLDialog):
 		else:
 			self.baseobject.shortcut(c)
 
+	# Time-related subroutines
+
+	def timerange(self):
+		# Return the range of times used in the window
+		v = self.viewroot
+		t0, t1 = v.t0, v.t1
+		return t0, max(t1, t0 + 10)
+
+	def maptimes(self, t0, t1):
+		# Map begin and end times to top and bottom in window
+
+		# Calculate our position in relative time
+		top = self.nodetop
+		bottom = self.height
+		height = bottom - top - f_fontheight
+		vt0, vt1 = self.timerange()
+		dt = vt1 - vt0
+
+		# Compute the 'ideal' top/bottom
+		return top + (height * (t0 - vt0) / dt), \
+		       top + (height * (t1 - vt0) / dt)
+
+	def mapchannel(self, channel):
+		# Map channel to left and right coordinates
+		list = self.visiblechannels()
+		nchannels = len(list)
+		try:
+			i = list.index(channel)
+		except ValueError:
+			return 0, 0
+		width = float(self.timescaleborder) / nchannels
+		return (i + 0.1) * width, (i + 0.9) * width
+
 	# Clear the list of objects we know
 
 	def cleanup(self):
@@ -261,6 +280,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.objects = []
 		self.arcs = []
 		self.baseobject = None
+		self.timescaleobject = None
 
 	# Toggle 'showall' setting
 
@@ -285,6 +305,8 @@ class ChannelView(ViewDialog, GLDialog):
 		self.baseobject = GO().init(self, '(base)')
 		self.baseobject.select()
 		self.objects.append(self.baseobject)
+		self.timescaleobject = TimeScaleBox().init(self)
+		self.objects.append(self.timescaleobject)
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
@@ -305,6 +327,7 @@ class ChannelView(ViewDialog, GLDialog):
 			  height+MASK-0.5, -MASK-0.5)
 		self.channelbottom = 4 * f_fontheight
 		self.nodetop = 6 * f_fontheight
+		self.timescaleborder = width - f_title.getstrwidth('999999')
 
 	# Recompute the locations where the objects should be drawn
 
@@ -455,6 +478,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.drawarcs()
 
 	# Global focus stuff
+
 	def getfocus(self):
 		if self.focus:
 			return self.focus.getnode()
@@ -480,6 +504,45 @@ class ChannelView(ViewDialog, GLDialog):
 		obj.select()
 		self.drawarcs()
 
+	# Create a new channel
+
+	def newchannel(self, index):
+		if self.visiblechannels() <> self.context.channels:
+			fl.show_message( \
+				  'You can\'t create a new channel', \
+				  'unless you are showing unused channels', \
+				  '(use shortcut \'T\')')
+			return
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return		# Not possible at this time
+		import multchoice
+		from ChannelMap import channeltypes
+		prompt = 'Channel type:'
+		list = channeltypes[:]
+		list.append('Cancel')
+		default = list.index('text')
+		i = multchoice.multchoice(prompt, list, default)
+		if i+1 >= len(list):
+			editmgr.rollback()
+			return		# User doesn't want to choose a type
+		type = list[i]
+		i = 1
+		base = 'NEW'
+		name = base + `i`
+		context = self.context
+		while context.channeldict.has_key(name):
+			i = i+1
+			name = base + `i`
+		editmgr.addchannel(name, index, type)
+		channel = context.channels[index]
+		self.future_focus = 'c', channel
+		self.showall = 1	# Force showing the new channel
+		self.cleanup()
+		editmgr.commit()
+		import AttrEdit
+		AttrEdit.showchannelattreditor(channel)
+
 
 # Base class for Graphical Objects.
 # These live in close symbiosis with their "mother", the ChannelView!
@@ -498,6 +561,8 @@ class GO:
 		return '<GO instance, name=' + `self.name` + '>'
 
 	def getnode(self):
+		# Called by mother's getfocusnode()
+		# Overridden by NodeBox
 		return None
 
 	def cleanup(self):
@@ -510,12 +575,19 @@ class GO:
 
 	def draw(self):
 		# Draw everything, if ok
-		if not self.ok: return 0
+		if not self.ok: return
 		self.drawfocus()
 
 	def drawfocus(self):
 		# Draw the part that changes when the focus changes
-		pass
+		visible = len(self.mother.visiblechannels())
+		total = len(self.mother.context.channels)
+		if visible == total: return
+		str = '%d more' % (total-visible)
+		gl.RGBcolor(TEXTCOLOR)
+		f_title.centerstring(self.mother.timescaleborder, 0, \
+			  self.mother.width, self.mother.channelbottom, \
+			  str)
 
 	def select(self):
 		# Make this object the focus
@@ -540,52 +612,7 @@ class GO:
 		# Check whether the given mouse coordinates are in this object
 		return 0
 
-	# Subroutine to calculate a node's position
-
-	def nodebox(self, node):
-		# Compute the left/right sides from the channel position
-		channel = node.GetChannel()
-		list = self.mother.visiblechannels()
-		nchannels = len(list)
-		i = list.index(channel)
-		width = self.mother.width / nchannels
-		left = (i + 0.1) * width
-		right = (i + 0.9) * width
-
-		# Calculate our position in relative time
-		totaltop = self.mother.nodetop
-		totalbottom = self.mother.height
-		totalheight = totalbottom - totaltop - f_fontheight
-		totaltime = self.mother.viewroot.t1 - self.mother.viewroot.t0
-		if totaltime <= 0: totaltime = 1
-		starttime = node.t0 - self.mother.viewroot.t0
-		stoptime  = node.t1 - self.mother.viewroot.t0
-
-		# Compute the 'ideal' top/bottom
-		top = totaltop + (totalheight * starttime / totaltime)
-		bottom = totaltop + (totalheight * stoptime / totaltime)
-
-		# Move top/bottom inwards by one pixel
-		top = top+1
-		bottom = bottom-1
-
-		# Move top down below the previous node if necessary
-		if top < channel.lowest:
-			top = channel.lowest
-
-		# Keep space for at least one line of text
-		bottom = max(bottom, top+f_fontheight-2)
-
-		# Update channel's lowest node
-		channel.lowest = int(bottom)
-
-		#print top, ':', bottom, '(', margin, ')', top, ':', bottom,
-		#print MMAttrdefs.getattr(node, 'name')
-
-		return int(left), int(top), int(right), int(bottom)
-
 	# Methods to handle interaction events
-
 
 	# Handle a right button mouse click in the object
 	def popupmenu(self, x, y):
@@ -605,44 +632,7 @@ class GO:
 		Help.givehelp('Channel_view')
 
 	def newchannelcall(self):
-		# This ought to be done by the mother
-		if self.mother.visiblechannels() <> \
-			  self.mother.context.channels:
-			fl.show_message( \
-				  'You can\'t create a new channel', \
-				  'unless you are showing unused channels', '')
-			return
-		editmgr = self.mother.editmgr
-		context = self.mother.context
-		if not editmgr.transaction():
-			return # Not possible at this time
-		import multchoice
-		from ChannelMap import channeltypes
-		prompt = 'Channel type:'
-		list = channeltypes[:]
-		list.append('Cancel')
-		default = list.index('text')
-		i = multchoice.multchoice(prompt, list, default)
-		if i+1 >= len(list):
-			editmgr.rollback()
-			return # User doesn't want to choose a type
-		type = list[i]
-		i = 1
-		base = 'NEW'
-		name = base + `i`
-		while self.mother.context.channeldict.has_key(name):
-			i = i+1
-			name = base + `i`
-		j = self.newchannelindex()
-		editmgr.addchannel(name, j, type)
-		channel = self.mother.context.channels[j]
-		self.mother.future_focus = 'c', channel
-		self.mother.showall = 1 # Force showing the new channel
-		self.mother.cleanup()
-		editmgr.commit()
-		# NB: when we get here, this object is nearly dead already!
-		import AttrEdit
-		AttrEdit.showchannelattreditor(channel)
+		self.mother.newchannel(self.newchannelindex())
 
 	def nextminicall(self):
 		self.mother.nextviewroot()
@@ -669,6 +659,79 @@ class GO:
 	menu = MenuMaker.MenuObject().init('Base ops', commandlist)
 
 
+# Class for the time scale object
+
+class TimeScaleBox(GO):
+
+	def init(self, mother):
+		return GO.init(self, mother, 'timescale')
+
+	def __repr__(self):
+		return '<TimeScaleBox instance>'
+
+	def reshape(self):
+		self.left = self.mother.timescaleborder + \
+			  f_title.getstrwidth(' ')
+		self.right = self.mother.width
+		t0, t1 = self.mother.timerange()
+		self.top, self.bottom = self.mother.maptimes(t0, t1)
+		self.ok = 1
+
+	def drawfocus(self):
+		l, t, r, b = self.left, self.top, self.right, self.bottom
+		height = b-t
+		if height <= 0:
+			return
+		gl.RGBcolor(TEXTCOLOR)
+		# Draw rectangle around boxes
+		l = l+2
+		t = t+2
+		r = (4*l+r)/5
+		b = b-2
+		gl.bgnclosedline()
+		gl.v2f(l, t)
+		gl.v2f(r, t)
+		gl.v2f(r, b)
+		gl.v2f(l, b)
+		gl.endclosedline()
+		# Compute number of division boxes
+		t0, t1 = self.mother.timerange()
+		dt = t1 - t0
+		n = int(ceil(dt/10.0))
+		# Compute distance between numeric indicators
+		div = 1
+		i = 0
+		while (n/div) * 1.5 * f_fontheight >= height:
+			if i%3 == 0:
+				div = div*2
+			elif i%3 == 1:
+				div = div/2*5
+			else:
+				div = div/5*10
+			i = i+1
+		# Draw division boxes and numeric indicators
+		for i in range(n):
+			it0 = t0 + i*10
+			it1 = it0 + 5
+			t, b = self.mother.maptimes(it0, it1)
+			t = max(t, self.top + 2)
+			b = min(b, self.bottom - 2)
+			if b <= t:
+				continue
+			gl.bgnpolygon()
+			gl.v2f(l, t)
+			gl.v2f(r, t)
+			gl.v2f(r, b)
+			gl.v2f(l, b)
+			gl.endpolygon()
+			if i%div <> 0:
+				continue
+			f_title.centerstring( \
+				  r, t-f_fontheight/2, \
+				  self.right, t+f_fontheight/2, \
+				  `i*10`)
+
+
 # Class for Channel Objects
 
 class ChannelBox(GO):
@@ -686,19 +749,14 @@ class ChannelBox(GO):
 		return '<ChannelBox instance, name=' + `self.name` + '>'
 
 	def reshape(self):
-		list = self.mother.visiblechannels()
-		nchannels = len(list)
-		if self.channel not in list:
+		left, right = self.mother.mapchannel(self.channel)
+		if left == right:
 			self.ok = 0
 			return
-		i = list.index(self.channel)
-		height = self.mother.channelbottom
-		width = self.mother.width / nchannels
-		space = gl.strwidth(' ')
-		self.left = int(i * width + space*0.5)
-		self.right = int((i+1) * width - space)
+		self.left = left
+		self.right = right
 		self.top = 0
-		self.bottom = height
+		self.bottom = self.mother.channelbottom
 		self.xcenter = (self.left + self.right) / 2
 		self.ycenter = (self.top + self.bottom) / 2
 		self.farbottom = self.mother.height
@@ -734,10 +792,10 @@ class ChannelBox(GO):
 		else:
 			gl.RGBcolor(CHANNELOFFCOLOR)
 		gl.bgnpolygon()
-		gl.v2i(l, y)
-		gl.v2i(x, t)
-		gl.v2i(r, y)
-		gl.v2i(x, b)
+		gl.v2f(l, y)
+		gl.v2f(x, t)
+		gl.v2f(r, y)
+		gl.v2f(x, b)
 		gl.endpolygon()
 
 		# Outline the diamond; 'engraved' normally,
@@ -751,60 +809,60 @@ class ChannelBox(GO):
 
 			gl.RGBcolor(FOCUSLEFT)
 			gl.bgnpolygon()
-			gl.v2i(l, y)
-			gl.v2i(x, t)
-			gl.v2i(x, tt)
-			gl.v2i(ll, y)
+			gl.v2f(l, y)
+			gl.v2f(x, t)
+			gl.v2f(x, tt)
+			gl.v2f(ll, y)
 			gl.endpolygon()
 
 			gl.RGBcolor(FOCUSTOP)
 			gl.bgnpolygon()
-			gl.v2i(x, t)
-			gl.v2i(r, y)
-			gl.v2i(rr, y)
-			gl.v2i(x, tt)
+			gl.v2f(x, t)
+			gl.v2f(r, y)
+			gl.v2f(rr, y)
+			gl.v2f(x, tt)
 			gl.endpolygon()
 
 			gl.RGBcolor(FOCUSRIGHT)
 			gl.bgnpolygon()
-			gl.v2i(r, y)
-			gl.v2i(x, b)
-			gl.v2i(x, bb)
-			gl.v2i(rr, y)
+			gl.v2f(r, y)
+			gl.v2f(x, b)
+			gl.v2f(x, bb)
+			gl.v2f(rr, y)
 			gl.endpolygon()
 
 			gl.RGBcolor(FOCUSBOTTOM)
 			gl.bgnpolygon()
-			gl.v2i(l, y)
-			gl.v2i(ll, y)
-			gl.v2i(x, bb)
-			gl.v2i(x, b)
+			gl.v2f(l, y)
+			gl.v2f(ll, y)
+			gl.v2f(x, bb)
+			gl.v2f(x, b)
 			gl.endpolygon()
 
 			gl.RGBcolor(FOCUSBORDER)
 			gl.linewidth(1)
 			gl.bgnclosedline()
-			gl.v2i(l, y)
-			gl.v2i(x, t)
-			gl.v2i(r, y)
-			gl.v2i(x, b)
+			gl.v2f(l, y)
+			gl.v2f(x, t)
+			gl.v2f(r, y)
+			gl.v2f(x, b)
 			gl.endclosedline()
 		else:
 			gl.linewidth(1)
 			gl.RGBcolor(BORDERCOLOR)
 			gl.bgnclosedline()
-			gl.v2i(l, y)
-			gl.v2i(x, t)
-			gl.v2i(r, y)
-			gl.v2i(x, b)
+			gl.v2f(l, y)
+			gl.v2f(x, t)
+			gl.v2f(r, y)
+			gl.v2f(x, b)
 			gl.endclosedline()
 
 			gl.RGBcolor(BORDERLIGHT)
 			gl.bgnclosedline()
-			gl.v2i(l+1, y+1)
-			gl.v2i(x+1, t+1)
-			gl.v2i(r+1, y+1)
-			gl.v2i(x+1, b+1)
+			gl.v2f(l+1, y+1)
+			gl.v2f(x+1, t+1)
+			gl.v2f(r+1, y+1)
+			gl.v2f(x+1, b+1)
 			gl.endclosedline()
 
 		# Draw the name
@@ -822,13 +880,13 @@ class ChannelBox(GO):
 		gl.RGBcolor(BORDERCOLOR)
 		gl.linewidth(1)
 		gl.bgnline()
-		gl.v2i(self.xcenter, self.bottom)
-		gl.v2i(self.xcenter, self.farbottom)
+		gl.v2f(self.xcenter, self.bottom)
+		gl.v2f(self.xcenter, self.farbottom)
 		gl.endline()
 		gl.RGBcolor(BORDERLIGHT)
 		gl.bgnline()
-		gl.v2i(self.xcenter+1, self.bottom)
-		gl.v2i(self.xcenter+1 , self.farbottom)
+		gl.v2f(self.xcenter+1, self.bottom)
+		gl.v2f(self.xcenter+1 , self.farbottom)
 		gl.endline()
 
 	# Menu stuff beyond what GO offers
@@ -927,8 +985,27 @@ class NodeBox(GO):
 		GO.select(self)
 
 	def reshape(self):
+		# Compute ideal box coordinates
+		channel = self.node.GetChannel()
+		left, right = self.mother.mapchannel(channel)
+		top, bottom = self.mother.maptimes(self.node.t0, self.node.t1)
+
+		# Move top/bottom inwards by one pixel
+		top = top+1
+		bottom = bottom-1
+
+		# Move top down below the previous node if necessary
+		if top < channel.lowest:
+			top = channel.lowest
+
+		# Keep space for at least one line of text
+		bottom = max(bottom, top+f_fontheight-2)
+
+		# Update channel's lowest node
+		channel.lowest = int(bottom)
+
 		self.left, self.top, self.right, self.bottom = \
-			self.nodebox(self.node)
+			left, top, right, bottom
 		self.ok = 1
 
 	def ishit(self, x, y):
@@ -947,10 +1024,10 @@ class NodeBox(GO):
 		else:
 			gl.RGBcolor(NODECOLOR)
 		gl.bgnpolygon()
-		gl.v2i(l, t)
-		gl.v2i(r, t)
-		gl.v2i(r, b)
-		gl.v2i(l, b)
+		gl.v2f(l, t)
+		gl.v2f(r, t)
+		gl.v2f(r, b)
+		gl.v2f(l, b)
 		gl.endpolygon()
 
 		# If the end time was inherited, make the bottom-right
@@ -958,9 +1035,9 @@ class NodeBox(GO):
 		if self.node.t0t1_inherited:
 			gl.RGBcolor(ALTNODECOLOR)
 			gl.bgnpolygon()
-			gl.v2i(r, t)
-			gl.v2i(r, b)
-			gl.v2i(l, b)
+			gl.v2f(r, t)
+			gl.v2f(r, b)
+			gl.v2f(l, b)
 			gl.endpolygon()
 
 		# If there are anchors on this node,
@@ -968,10 +1045,10 @@ class NodeBox(GO):
 		if self.hasanchors:
 			gl.RGBcolor(ANCHORCOLOR)
 			gl.bgnpolygon()
-			gl.v2i(l, b)
-			gl.v2i(l+ABOXSIZE, b)
-			gl.v2i(l+ABOXSIZE, b-ABOXSIZE)
-			gl.v2i(l, b-ABOXSIZE)
+			gl.v2f(l, b)
+			gl.v2f(l+ABOXSIZE, b)
+			gl.v2f(l+ABOXSIZE, b-ABOXSIZE)
+			gl.v2f(l, b-ABOXSIZE)
 			gl.endpolygon()
 
 		# If there is a pausing anchor,
@@ -979,10 +1056,10 @@ class NodeBox(GO):
 		if self.haspause:
 			gl.RGBcolor(ANCHORCOLOR)
 			gl.bgnpolygon()
-			gl.v2i(l, b)
-			gl.v2i(r, b)
-			gl.v2i(r, b-ABOXSIZE)
-			gl.v2i(l, b-ABOXSIZE)
+			gl.v2f(l, b)
+			gl.v2f(r, b)
+			gl.v2f(r, b-ABOXSIZE)
+			gl.v2f(l, b-ABOXSIZE)
 			gl.endpolygon()
 
 		# Draw a "3D" border if selected, else an "engraved" outline
@@ -997,56 +1074,56 @@ class NodeBox(GO):
 			bb = b - 3
 			gl.RGBcolor(FOCUSLEFT)
 			gl.bgnpolygon()
-			gl.v2i(l1, t1)
-			gl.v2i(ll, tt)
-			gl.v2i(ll, bb)
-			gl.v2i(l1, b1)
+			gl.v2f(l1, t1)
+			gl.v2f(ll, tt)
+			gl.v2f(ll, bb)
+			gl.v2f(l1, b1)
 			gl.endpolygon()
 			gl.RGBcolor(FOCUSTOP)
 			gl.bgnpolygon()
-			gl.v2i(l1, t1)
-			gl.v2i(r1, t1)
-			gl.v2i(rr, tt)
-			gl.v2i(ll, tt)
+			gl.v2f(l1, t1)
+			gl.v2f(r1, t1)
+			gl.v2f(rr, tt)
+			gl.v2f(ll, tt)
 			gl.endpolygon()
 			gl.RGBcolor(FOCUSRIGHT)
 			gl.bgnpolygon()
-			gl.v2i(r1, t1)
-			gl.v2i(r1, b1)
-			gl.v2i(rr, bb)
-			gl.v2i(rr, tt)
+			gl.v2f(r1, t1)
+			gl.v2f(r1, b1)
+			gl.v2f(rr, bb)
+			gl.v2f(rr, tt)
 			gl.endpolygon()
 			gl.RGBcolor(FOCUSBOTTOM)
 			gl.bgnpolygon()
-			gl.v2i(l1, b1)
-			gl.v2i(ll, bb)
-			gl.v2i(rr, bb)
-			gl.v2i(r1, b1)
+			gl.v2f(l1, b1)
+			gl.v2f(ll, bb)
+			gl.v2f(rr, bb)
+			gl.v2f(r1, b1)
 			gl.endpolygon()
 			gl.RGBcolor(FOCUSBORDER)
 			gl.linewidth(1)
 			gl.bgnclosedline()
-			gl.v2i(l1, t)
-			gl.v2i(r, t)
-			gl.v2i(r, b)
-			gl.v2i(l1, b)
+			gl.v2f(l1, t)
+			gl.v2f(r, t)
+			gl.v2f(r, b)
+			gl.v2f(l1, b)
 			gl.endclosedline()
 		else:
 			# Outline the box in 'engraved' look
 			gl.RGBcolor(BORDERCOLOR)
 			gl.linewidth(1)
 			gl.bgnclosedline()
-			gl.v2i(l-1, t)
-			gl.v2i(r, t)
-			gl.v2i(r, b-1)
-			gl.v2i(l-1, b-1)
+			gl.v2f(l-1, t)
+			gl.v2f(r, t)
+			gl.v2f(r, b-1)
+			gl.v2f(l-1, b-1)
 			gl.endclosedline()
 			gl.RGBcolor(BORDERLIGHT)
 			gl.bgnclosedline()
-			gl.v2i(l, t+1)
-			gl.v2i(r+1, t+1)
-			gl.v2i(r+1, b)
-			gl.v2i(l, b)
+			gl.v2f(l, t+1)
+			gl.v2f(r+1, t+1)
+			gl.v2f(r+1, b)
+			gl.v2f(l, b)
 			gl.endclosedline()
 
 		# Draw the name, centered in the box
@@ -1175,8 +1252,8 @@ class ArcBox(GO):
 		# Draw the line from src to dst
 		gl.linewidth(2)
 		gl.bgnline()
-		gl.v2i(self.sx, self.sy)
-		gl.v2i(self.dx, self.dy)
+		gl.v2f(self.sx, self.sy)
+		gl.v2f(self.dx, self.dy)
 		gl.endline()
 		# Draw the arrowhead
 		# Translate so that the point of the arrowhead is (0, 0)
@@ -1185,9 +1262,9 @@ class ArcBox(GO):
 		gl.translate(self.dx, self.dy, 0)
 		gl.rot(self.rotation, 'z')
 		gl.bgnpolygon()
-		gl.v2i(0, 0)
-		gl.v2i(ARR_LENGTH, ARR_HALFWIDTH)
-		gl.v2i(ARR_LENGTH, -ARR_HALFWIDTH)
+		gl.v2f(0, 0)
+		gl.v2f(ARR_LENGTH, ARR_HALFWIDTH)
+		gl.v2f(ARR_LENGTH, -ARR_HALFWIDTH)
 		gl.endpolygon()
 		gl.popmatrix()
 
