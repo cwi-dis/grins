@@ -28,8 +28,12 @@ class CUT(_CommandBase):
 	help = 'Cut selected object'
 class COPY(_CommandBase):
 	help = 'Copy selected object'
+class COPYPROPERTIES(_CommandBase):
+	help = 'Copy properties of selected object'
 class PASTE(_CommandBase):
 	help = 'Paste copied/cut object'
+class PASTEPROPERTIES(_CommandBase):
+	help = 'Assign properties to object'
 class DELETE(_CommandBase):
 	help = 'Delete selected object'
 class HELP(_CommandBase):
