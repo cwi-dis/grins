@@ -1466,7 +1466,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout:
 			self.syntax_error('node in layout')
 			return
-
+		
+		# at least for now
+		if self.__node:
+			self.error('%s elements can not be in the content model of media elements' % tagname)
+			return
+			
 		# find target node (explicit or implicit)
 		targetnode = None
 		targetid = attributes.get('targetElement')
