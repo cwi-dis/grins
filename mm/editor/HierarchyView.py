@@ -501,6 +501,7 @@ class HierarchyView(HierarchyViewDialog):
 		em.addnode(newnode, 0, node)
 		self.prevfocusnode = self.focusnode
 		self.focusnode = newnode
+		expandnode(newnode)
 		self.aftersetfocus()
 		em.commit()
 		import NodeInfo
