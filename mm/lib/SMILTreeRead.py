@@ -1273,6 +1273,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				val = self.__convert_color(val)
 				if val is not None:
 					attrdict['background-color'] = val
+			elif attr == 'type':
+				if val == 'RealAudio':
+					val = 'sound'
+				elif val == 'RealVideo':
+					val = 'video'
+				attrdict[attr] = val
 			else:
 				# catch all
 				attrdict[attr] = val
