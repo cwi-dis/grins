@@ -370,12 +370,19 @@ attrgrs=(
 		'vertRepeat',
 		]},
 
-	{'name':'transitionStartEnd',
+	{'name':'transitionTiming',
 	'title':'Transition timing',
 	'attrs':[
 		'startPercent',
 		'endPercent',
 		'dur',
+		]},
+
+	{'name':'machine',
+	'title':'Machine properties',
+	'attrs':[
+		'system_operating_system',
+		'system_cpu',
 		]},
 	)
 
