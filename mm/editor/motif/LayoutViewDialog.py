@@ -17,7 +17,7 @@ class LayoutViewDialog:
 				   ],
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
-		l1 = w1.List('Layouts', [], (self.__layoutcb, ()),
+		l1 = w1.List('Screens', [], (self.__layoutcb, ()),
 			     top = None, left = None, right = None, bottom = b1)
 		self.__layoutlist = l1
 		b2 = w2.ButtonRow([('New...', NEW_CHANNEL),
@@ -26,8 +26,8 @@ class LayoutViewDialog:
 				   ],
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
-		l2 = w2.List('Channels in layout', [], (self.__channelcb, ()),
-## 			     tooltip = 'List of channels in current layout',
+		l2 = w2.List('Channels in screen', [], (self.__channelcb, ()),
+## 			     tooltip = 'List of channels used in selected screen',
 			     top = None, left = None, right = None, bottom = b2)
 		self.__channellist = l2
 		b3 = w3.ButtonRow([('Add', ADD_CHANNEL),
@@ -35,7 +35,7 @@ class LayoutViewDialog:
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
 		l3 = w3.List('Remaining channels', [], (self.__othercb, ()),
-## 			     tooltip = 'List of channels not in current layout',
+## 			     tooltip = 'List of channels not used in current screen',
 			     top = None, left = None, right = None, bottom = b3)
 		self.__otherlist = l3
 
@@ -118,7 +118,7 @@ class LayoutViewDialog:
 		self.__window.set_commandlist(commandlist)
 
 	def asklayoutname(self, default):
-		windowinterface.InputDialog('Name for layout',
+		windowinterface.InputDialog('Screen name',
 					    default,
 					    self.newlayout_callback,
 					    cancelCallback = (self.newlayout_callback, ()),
