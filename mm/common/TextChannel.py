@@ -6,6 +6,7 @@ import string
 from urllib import urlopen
 import StringStuff
 import MMAttrdefs
+import os
 
 class TextChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
@@ -23,6 +24,9 @@ class TextChannel(ChannelWindow):
 	        if same and self.armed_display:
 		    return 1
 		str = self.getstring(node)
+		if os.name == 'mac':
+			import greekconv
+			str = string.translate(str, greekconv.iso_8859_7_to_mac)
 		parlist = extract_paragraphs(str)
 		if MMAttrdefs.getattr(node, 'noanchors'):
 		    taglist = []
