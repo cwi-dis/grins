@@ -213,7 +213,6 @@ class XMLParser:
         # This will convert the data to unicode from whatever format
         # it was originally.
         i = 0
-        self.__encoding = 'utf-8'
 	if data[:2] == '\376\377':
 	    enc = 'utf-16-be'
 	    i = 2
@@ -232,7 +231,6 @@ class XMLParser:
             except UnicodeError:
                 self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
             i = 0
-            self.__encoding = enc
 	# optional XMLDecl
         if document:
             res = xmldecl.match(data, i)
@@ -253,18 +251,14 @@ class XMLParser:
                 if enc and enc != encoding.lower() and \
                    enc[:6] != encoding.lower():
                     self.__error("declared encoding doesn't match actual encoding", data, res.start('encoding'), fatal = 1)
-                self.__encoding = encoding.lower()
-            elif enc:
-                self.__encoding = enc
-            else:
-                self.__encoding = 'utf-8'
+                enc = encoding.lower()
             if standalone:
                 standalone = standalone[1:-1]
 ##            self.handle_xml(encoding, standalone)
 	    i = res.end(0)
         if type(data) is not type(u'a'):
             try:
-                data = unicode(data[i:], self.__encoding)
+                data = unicode(data[i:], enc)
             except UnicodeError:
                 self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
         else:
@@ -272,13 +266,14 @@ class XMLParser:
         return data
         
     def __normalize_linefeed(self, data):
-        # normalize line endings: firsr \r\n -> \n, then \r -> \n
+        # normalize line endings: first \r\n -> \n, then \r -> \n
         return u'\n'.join(u'\n'.join(data.split(u'\r\n')).split(u'\r'))
 
     def __normalize_space(self, data):
+        # normalize white space: tab, linefeed and carriage return -> space
         data = ' '.join(data.split('\t'))
         data = ' '.join(data.split('\n'))
-        data = ' '.join(data.split('\r'))
+        data = u' '.join(data.split('\r'))
         return data
 
     def parse(self, data):
@@ -362,7 +357,7 @@ class XMLParser:
     def __update_state(self, dfa, states, tagname):
         # update the list of states in the dfa.  If tagname is None,
         # we're looking for the final state, so return a list of all
-        # states reqchable using epsilon transitions
+        # states reachable using epsilon transitions
         nstates = []
         seenstates = {}
         while states:
@@ -481,7 +476,7 @@ class XMLParser:
                                 apply(self.handle_ndata, val)
                                 val = None
                             else:
-                                val = self.__read_pentity(val[1])
+                                val = self.__read_pentity(val[0], val[1])
 			if val is not None:
                             del self.entitydefs[name] # to break recursion
                             n = self.__parse_content(val, 0, ptagname, namespaces, states)
@@ -783,12 +778,12 @@ class XMLParser:
             self.__error('bad character reference', data, i, fatal = 0)
         return c
 
-    def __read_pentity(self, syslit):
+    def __read_pentity(self, publit, syslit):
         import urllib
         syslit = urllib.basejoin(self.baseurl, syslit)
         baseurl = self.baseurl
         self.baseurl = syslit
-        val = self.read_external(syslit)
+        val = self.read_external(publit, syslit)
         val = self.__parse_textdecl(val)
         return self.__normalize_linefeed(val)
 
@@ -808,13 +803,9 @@ class XMLParser:
                 name = res.group('name')
                 if self.pentitydefs.has_key(name):
                     val = self.pentitydefs[name]
-                    encoding = None
                     if type(val) is type(()):
-                        val = self.__read_pentity(val[1])
+                        val = self.__read_pentity(val[0], val[1])
                     self.parse_dtd(val, internal)
-                    if encoding is not None:
-                        self.__encoding = encoding
-                        self.baseurl = baseurl
                 else:
                     self.__error("unknown entity `%%%s;'" % name, data, i, fatal = 0)
                 i = res.end(0)
@@ -899,7 +890,7 @@ class XMLParser:
                                 self.__error("unknown entity `%s' referenced" % nm, data, i)
                                 repl = '%%%s;' % nm
                             if type(repl) is type(()):
-                                repl = self.__read_pentity(repl[1])
+                                repl = self.__read_pentity(repl[0], repl[1])
                             pvalue = pvalue[:cres.start(0)] + repl + pvalue[cres.end(0):]
                             cres = entref.search(pvalue, cres.start(0)+len(repl))
                         self.pentitydefs[pname] = pvalue
@@ -930,7 +921,7 @@ class XMLParser:
                             elif self.pentitydefs.has_key(nm):
                                 repl = self.pentitydefs[nm]
                                 if type(repl) is type(()):
-                                    repl = self.__read_pentity(repl[1])
+                                    repl = self.__read_pentity(repl[0], repl[1])
                             else:
                                 self.__error("unknown entity `%s' referenced" % nm, data, i)
                                 repl = '%%%s;' % nm
@@ -986,7 +977,7 @@ class XMLParser:
                                 if self.pentitydefs.has_key(pname):
                                     repl = self.pentitydefs[pname]
                                     if type(repl) is type(()):
-                                        repl = self.__read_pentity(repl[1])
+                                        repl = self.__read_pentity(repl[0], repl[1])
                                     data = data[:res.start(0)] + ' ' + repl + ' ' + data[res.end(0):]
                                     j = res.start(0) + len(repl) + 2
                                 else:
@@ -1105,12 +1096,10 @@ class XMLParser:
             syslit = urllib.basejoin(self.baseurl, syslit)
             baseurl = self.baseurl
             self.baseurl = syslit
-            external = self.read_external(syslit)
-            encoding = self.__encoding
+            external = self.read_external(publit, syslit)
             external = self.__parse_textdecl(external)
             external = self.__normalize_linefeed(external)
             self.parse_dtd(external, 0)
-            self.__encoding = encoding
             self.baseurl = baseurl
 
     def __error(self, message, data = None, i = None, fatal = 1):
@@ -1133,7 +1122,7 @@ class XMLParser:
         self.parse_doctype(tag, publit, syslit, data)
 
     # Example -- read external file referenced from DTD with a SystemLiteral
-    def read_external(self, name):
+    def read_external(self, publit, syslit):
         return ''
 
     # Example -- handle comment, could be overridden
@@ -1199,13 +1188,13 @@ class TestXMLParser(XMLParser):
         self.flush()
         print 'xml: encoding = %s standalone = %s' % (encoding, standalone)
 
-    def read_external(self, name):
+    def read_external(self, publit, syslit):
         print 'reading %s' % name
         try:
             import urllib
-            if type(name) is type(u'a'):
-                name = name.encode('latin-1')
-            u = urllib.urlopen(name)
+            if type(syslit) is type(u'a'):
+                syslit = syslit.encode('latin-1')
+            u = urllib.urlopen(syslit)
             data = u.read()
             u.close()
         except 'x':
@@ -1269,12 +1258,12 @@ class TestXMLParser(XMLParser):
 
 class CanonXMLParser(XMLParser):
 
-    def read_external(self, name):
+    def read_external(self, publit, syslit):
         try:
             import urllib
-            if type(name) is type(u'a'):
-                name = name.encode('latin-1')
-            u = urllib.urlopen(name)
+            if type(syslit) is type(u'a'):
+                syslit = syslit.encode('latin-1')
+            u = urllib.urlopen(syslit)
             data = u.read()
             u.close()
         except 'x':
