@@ -178,17 +178,13 @@ def HasVideo(url):
 
 # Returns the size of a video	
 def GetVideoSize(url):
+	import MMmimetypes
 	mtype = MMmimetypes.guess_type(url)[0]
 	if mtype and mtype.find('quicktime') >= 0:
 		import winqt
 		if winqt.HasQtSupport():
-			try:
-				fn = MMurl.urlretrieve(url)[0]
-			except IOError, arg:
-				print arg
-				return 100, 100
 			player = winqt.QtPlayer()
-			player.open(fn)
+			player.open(url)
 			return player.getMovieRect()[2:]
 	try:
 		builder = GraphBuilder()
