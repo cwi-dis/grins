@@ -290,6 +290,27 @@ attrgrs=(
 		'preroll',
 		]},
 
+	{'name':'qtpreferences',
+	'title':'QuickTime preferences',
+	'attrs':[
+		'autoplay',
+		'qtnext',
+		'qttimeslider',
+		'qtchaptermode',
+		'immediateinstantiation',
+		]},
+
+	{'name':'qtmediapreferences',
+	'title':'QuickTime properties',
+	'attrs':[
+		'immediateinstantiationmedia',
+		'bitratenecessary',
+		'systemmimetypesupported',
+		'attachtimebase',
+		'qtchapter',
+		'qtcompositemode',
+		]},
+	
 	)
 
 

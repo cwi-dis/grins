@@ -17,6 +17,8 @@ import re
 from cmif import findfile
 import windowinterface
 import MMurl
+import compatibility
+import features
 
 
 def nameencode(value):
@@ -59,7 +61,16 @@ isidre = re.compile('^[a-zA-Z_][-A-Za-z0-9._]*$')
 
 Error = 'Error'
 
-def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
+def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exporttype = compatibility.G2):
+	if exporttype == compatibility.G2:
+		__WriteFileG2(root, filename, smilurl, oldfilename, evallicense)
+	elif exporttype == compatibility.QT:
+		__WriteFileQT(root, filename, smilurl, oldfilename, evallicense)
+	else:
+		windowinterface.showmessage('don''t support export type %s'%exporttype)
+	        return
+	
+def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
 	import cmif
 	templatedir = cmif.findfile('Templates')
@@ -71,11 +82,14 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 	smilurl = MMurl.unquote(smilurl)
 	fp = open(filename, 'w')
 	ramfile = ramfilename(filename)
+	
+	# specific to g2
 	try:
 		open(ramfile, 'w').write(smilurl+'\n')
 	except IOError, arg:
-		showmessage('I/O Error writing %s: %s'%(ramfile, arg), mtype = 'error')
+		windowinterface.showmessage('I/O Error writing %s: %s'%(ramfile, arg), mtype = 'error')
 		return
+			
 	if os.name == 'mac':
 		import macfs
 		import macostools
@@ -87,6 +101,7 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 	try:
 		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir)
 		writer.write()
+		fp.close()
 	except Error, msg:
 		windowinterface.showmessage(msg, mtype = 'error')
 		return
@@ -94,6 +109,27 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 		fss = macfs.FSSpec(filename)
 		fss.SetCreatorType('MOSS', 'TEXT')
 		macostools.touched(fss)
+
+def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
+	# XXXX If oldfilename set we should use that as a template
+	import cmif
+	templatedir = cmif.findfile('Templates')
+	templatedir = MMurl.pathname2url(templatedir)
+	#
+	# This is a bit of a hack. G2 appears to want its URLs without
+	# %-style quoting.
+	#
+	smilurl = MMurl.unquote(smilurl)
+	fp = open(filename, 'w')
+	
+	try:
+		writer = HTMLWriter(root, fp, filename, smilurl, oldfilename, evallicense, templatedir)
+		writer.write()
+		fp.close()
+	except Error, msg:
+		windowinterface.showmessage(msg, mtype = 'error')
+		return
+
 
 import FtpWriter
 def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0):
@@ -153,6 +189,11 @@ class HTMLWriter:
 		self.ch2name = {}
 		self.top_levels = []
 		self.calcchnames1(node)
+
+		self.objectgenerator = {
+			compatibility.G2: self.outobjectG2,
+			compatibility.QT: self.outobjectQT,
+		}
 
 		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
@@ -217,7 +258,8 @@ class HTMLWriter:
 				tmp2 = tmp2+ ' z-index:%d'%z
 			out = out + '<div layout="position:absolute; %s">\n'%tmp2
 			
-			out = out + self.outobject(w, h, [
+			# we have to take account of slider's width and height in dimension calculation
+			out = out + self.objectgenerator[features.compatibility](w+20, h+20, [
 				('controls', 'ImageWindow'),
 				('console', playername),
 				('autostart', 'false'),
@@ -239,7 +281,8 @@ class HTMLWriter:
 
 			out = out + '<div>\n'
 			
-			out = out + self.outobject(w, h, [
+			# we have to take account of slider's width and height in dimension calculation
+			out = out + self.objectgenerator[features.compatibility](w+20, h+20, [
 				('controls', 'ImageWindow'),
 				('console', playername),
 				('autostart', 'false'),
@@ -280,7 +323,7 @@ class HTMLWriter:
 			rv.append((name, x, y, w, h, z))
 		return rv
 		
-	def outobject(self, width, height, arglist):
+	def outobjectG2(self, width, height, arglist):
 		out = self.outtag('object', [
 			('classid', 'clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA'),
 			('width', `width`),
@@ -296,6 +339,15 @@ class HTMLWriter:
 		arglist.append(('nojava', 'true'))
 		out = out + self.outtag('embed', arglist)
 		out = out + '</object>\n'
+		return out
+		
+	def outobjectQT(self, width, height, arglist):
+		arglist = arglist[:]
+		arglist.append(('width', `width`))
+		arglist.append(('height', `height`))
+		arglist.append(('type', 'video/quicktime'))
+		arglist.append(('nojava', 'true'))
+		out = self.outtag('embed', arglist)
 		return out
 		
 	def calcchnames1(self, node):
