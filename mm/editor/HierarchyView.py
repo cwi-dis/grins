@@ -25,7 +25,7 @@ import MMmimetypes
 import features
 import compatibility
 import Widgets
-from StructureWidgets import *
+import StructureWidgets
 import TimeMapper
 import Help
 import Clipboard
@@ -319,7 +319,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		fnode = self.focusnode
 
-		if isinstance(self.selected_widget, TransitionWidget):
+		if isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
 			which, transitionnames = self.selected_widget.posttransitionmenu()
 			self.translist = []
 			for trans in transitionnames:
@@ -335,7 +335,7 @@ class HierarchyView(HierarchyViewDialog):
 			# the TOCHILD command
 			if fnode.children:
 				commands = commands + self.navigatecommands[1:2]
-		elif isinstance(self.selected_widget, TransitionWidget):
+		elif isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
 			popupmenu = self.transition_popupmenu
 			commands = commands + self.transitioncommands
 		else:
@@ -371,7 +371,7 @@ class HierarchyView(HierarchyViewDialog):
 		# As such, any old references into the old scene graph need to be reinitialised.
 		self.selected_widget = None
 		self.focusobj = None
-		self.scene_graph = create_MMNode_widget(self.root, self)
+		self.scene_graph = StructureWidgets.create_MMNode_widget(self.root, self)
 		self.dirty = 1
 		self.need_resize = 1
 		if self.window and self.focusnode:
@@ -560,7 +560,7 @@ class HierarchyView(HierarchyViewDialog):
 		y = y * self.mcanvassize[1]
 		self.mousehitx = x
 		self.mousehity = y
-		self.select(x, y)
+		self.click(x, y)
 
 		if self.need_resize:
 			self.draw()
@@ -574,8 +574,9 @@ class HierarchyView(HierarchyViewDialog):
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_clicked_obj_at((x,y))
+		print "DEBUG: mouse0release, object is: ", obj
 		if obj:
-			obj.mouse0release()
+			obj.mouse0release((x,y))
 			self.draw()
 
 	def cvdrop(self, node, window, event, params):
@@ -1017,7 +1018,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 
-		if isinstance(dstobj, StructureObjWidget): # If it's an internal node.
+		if isinstance(dstobj, StructureWidgets.StructureObjWidget): # If it's an internal node.
 			nodeindex = dstobj.get_nearest_node_index(dst) # works for seqs and verticals!! :-)
 			self.focusnode = destnode
 			if nodeindex != -1:
@@ -1101,7 +1102,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusnode(children[i])
 		self.draw()
 
-	def select_widget(self, widget, external = 0):
+	def select_widget(self, widget, external = 0, scroll = 1):
 		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
 		if self.selected_widget == widget:
@@ -1118,7 +1119,8 @@ class HierarchyView(HierarchyViewDialog):
 		else: 
 			self.focusnode = widget.node
 			widget.select()
-			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
+			if scroll:
+				self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
 		self.dirty = 1
 		if not external:
@@ -1137,19 +1139,32 @@ class HierarchyView(HierarchyViewDialog):
 			widget = node.views['struct_view']
 			self.select_widget(widget, external)
 
-	# Handle a selection click at (x, y)
-	def select(self, x, y):
-		widget = self.scene_graph.get_clicked_obj_at((x,y))
-		if widget == None:
-			#print "DEBUG: No widget under the mouse."
-			pass
-		if widget==None or widget==self.selected_widget:
-			return
+	def click(self, x, y):
+		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
+		clicked_widget.mouse0press((x,y))
+		if isinstance(clicked_widget, StructureWidgets.MMNodeWidget):
+			self.select_widget(clicked_widget, scroll=0)
+		elif isinstance(clicked_widget, StructureWidgets.MMWidgetDecoration):
+			select_me = clicked_widget.get_mmwidget()
+			self.select_widget(select_me)
 		else:
-			self.select_widget(widget)
-##			self.aftersetfocus()
-			self.dirty = 1
-		assert isinstance(widget.node, MMNode.MMNode)
+			print "DEBUG: no widget selectable."
+
+	# Handle a selection click at (x, y)
+#	def select(self, x, y):
+#		import traceback; traceback.print_stack()
+#		widget = self.scene_graph.get_obj_at((x,y))
+#		print "DEBUG: Clicked object is: ", widget
+#		if widget == None:
+#			#print "DEBUG: No widget under the mouse."
+#			pass
+#		if widget==None or widget==self.selected_widget:
+#			return
+#		else:
+#			self.select_widget(widget)
+###			self.aftersetfocus()
+#			self.dirty = 1
+#		assert isinstance(widget.node, MMNode.MMNode)
 #		print "DEBUG: Hierarchyview recieved select(x,y)"
 
 
