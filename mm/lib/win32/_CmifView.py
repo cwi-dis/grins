@@ -156,12 +156,12 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return pt
 
 	# It is called by the core system when it wants to create a child window
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
+		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
 
 	# It is called by the core system when it wants to create a child window
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z)	
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, units):
+		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)	
 
 	# Sets the dynamic commands by delegating to its parent
 	def set_dynamiclist(self, cmd, list):
@@ -310,26 +310,19 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	# Class contructor. Initializes the class and creates the OS window
-	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0):
+	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0, units=None):
 		cmifwnd._CmifWnd.__init__(self)
 		self._do_init(parent)
 
 		self._window_type = type_channel
 		self._topwindow = parent._topwindow
 		self._z = z
-
-		self._sizes = rel_coordinates
-		x, y, w, h = rel_coordinates
-		if not x or x<0:x=0
-		if not y or w<0:y=0
-		if not w:w=100
-		if not h:h=100
-		rel_coordinates=x, y, w, h
-
-		x, y,w,h = parent._convert_coordinates(rel_coordinates)
+		x, y, w, h = parent._convert_coordinates(rel_coordinates,
+					crop = 1, units = units)
 		self._rect = 0, 0, w, h
 		self._canvas = 0, 0, w, h
 		self._rectb = x, y, w, h
+		self._sizes = parent._inverse_coordinates(self._rectb)
 
 		# create an artificial name 
 		self._num = len(parent._subwindows)+1
@@ -374,12 +367,12 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		self.show()
 
 	# Called by the core system to create a child window to the subwindow
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
+		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
 
 	# Called by the core system to create a child window to the subwindow
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z)
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
+		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)
 	
 	# Report string for this class
 	def __repr__(self):
@@ -434,8 +427,19 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		self.z_order_subwindows()
 
 	# return the coordinates of this subwindow
-	def getgeometry(self, units=UNIT_MM):
-		return self._sizes
+	def getgeometry(self, units = UNIT_SCREEN):
+		if units == UNIT_PXL:
+			return self._rectb
+		elif units == UNIT_SCREEN:
+			return self._sizes
+		elif units == UNIT_MM:
+			x, y, w, h = self._rectb
+			return float(x) / toplevel._pixel_per_mm_x, \
+			       float(y) / toplevel._pixel_per_mm_y, \
+			       float(w) / toplevel._pixel_per_mm_x, \
+			       float(h) / toplevel._pixel_per_mm_y
+		else:
+			raise error, 'bad units specified'
 	
 	def isclient(self):
 		if self._sizes[0]==0.0 and self._sizes[1]==0.0 and\

@@ -23,19 +23,23 @@ class _rbtk:
 		self._next_create_box = []
 
 	# Called by the core system to create or resize a box
-	def create_box(self, msg, callback, box = None):
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
 		#print "Creating box in:",self._title
 		#print 'active_displist=',self._active_displist
 
 		# if we are in create box mode, queue request
 		if self.in_create_box_mode():
-			self.get_box_modal_wnd()._next_create_box.append((self, msg, callback, box))
+			self.get_box_modal_wnd()._next_create_box.append((self, msg, callback, box, units))
 			return
 
 		# if we are closed call cancel
 		if self.is_closed():
 			apply(callback, ())
 			return
+
+		if box:
+			# convert box to relative sizes if necessary
+			box = self._inverse_coordinates(self._convert_coordinates(box, units = units))
 
 		# set application in create box mode
 		self.getgrinsframe().showChilds(0)
@@ -48,7 +52,6 @@ class _rbtk:
 		
 		# hold current display list and create new 
 		# to be used during drawing
-		self._rb_callback = callback		
 		self._rb_dl = self._active_displist
 		if self._rb_dl:
 			d = self._rb_dl.clone()
@@ -124,20 +127,20 @@ class _rbtk:
 		# 5. get user object
 		if len(self._objects):
 			drawObj=self._objects[0]
-			rb=self.get_relative_coords100(drawObj._position.tuple_ps())		
+			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)		
 		self.DeleteContents()
 				
 		# call user selected callback
 		if userResponse==win32con.IDOK:
-			apply(self._rb_callback, rb)
+			apply(callback, rb)
 		else:
-			apply(self._rb_callback,())	
+			apply(callback,())	
 
 		# execute pending create_box calls
 		next_create_box = self._next_create_box
 		self._next_create_box = []
-		for win, msg, cb, box in next_create_box:
-			win.create_box(msg, cb, box)
+		for win, msg, cb, box, units in next_create_box:
+			win.create_box(msg, cb, box, units)
 
 	# Notify the toolkit about mouse and paint messages
 	def notifyListener(self,key,params):
