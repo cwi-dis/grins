@@ -34,9 +34,7 @@ class CmifChannel(Channel):
 				self._player.cc_stop()
 				self.stopped = 1
 			elif fields[0] == 'exit':
-				import windowinterface
-				windowinterface.enterevent(None,
-						       EVENTS.WindowExit, None)
+				self._player.toplevel.main.do_exit()
 			else:
 				print 'CmifChannel: bad cmd:', cmd
 				return
