@@ -365,17 +365,22 @@ class SchedulerContext:
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
 		if timestamp is None:
 			timestamp = self.parent.timefunc()
-		channel = None
+		channel = accesskey = None
 		if event is not None:
 			node.event(timestamp, event)
 			if type(event) is type(()):
-				channel, event = event
+				if event[1] == 'accessKey':
+					accesskey = event[2]
+					event = None
+				else:
+					channel, event = event[:2]
 		if marker is not None:
 			node.marker(timestamp, marker)
 		for arc in node.sched_children:
 			if (arc.channel != channel or
 			    arc.event != event or
 			    arc.marker != marker or
+			    arc.accesskey != accesskey or
 			    arc.delay is None) and \
 			   (arc.event is not None or
 			    arc.marker is not None or

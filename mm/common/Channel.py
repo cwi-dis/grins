@@ -1498,6 +1498,7 @@ class ChannelWindow(Channel):
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
+		self.window.register(WMEVENTS.KeyboardInput, self.keyinput, None)
 		if self._exporter:
 			self.register_exporter(self._exporter)
 ##		if menu:
@@ -1514,6 +1515,10 @@ class ChannelWindow(Channel):
 		if self.window:
 			self.window.unregister(WMEVENTS.WindowContentChanged)
 				
+	def keyinput(self, arg, window, event, value):
+		if value:
+			self.event((self._attrdict, 'accessKey', value))
+
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
 			return
