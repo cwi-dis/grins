@@ -11,8 +11,10 @@ SMIL2 = 'http://www.w3.org/2000/SMIL20/CR/'
 # namespaces recognized by GRiNS
 # the first one is the required default namespace, but SMIL1
 # doesn't generate a warning
-SMIL2ns = [SMIL2,
+SMIL2ns = [SMIL2 + 'Language',
+	   SMIL2,
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Language',
+	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20',
 	   SMIL1]
@@ -551,3 +553,71 @@ class SMIL:
 	del __layouts, __layout
 	del __animate_elements
 	del __I18n, __basicTiming, __Timing, __Core, __Test
+
+_modules = {
+	# SMIL 2.0 Modules
+	'AccessKeyTiming': 0,
+	'AudioLayout': 1,
+	'BasicAnimation': 1,
+	'BasicContentControl': 1,
+	'BasicInlineTiming': 1,
+	'BasicLayout': 1,
+	'BasicLinking': 1,
+	'BasicMedia': 1,
+	'BasicTimeContainers': 1,
+	'BasicTransistions': 1,
+	'BrushMedia': 1,
+	'CustomTestAttributes': 1,
+	'EventTiming': 1,
+	'ExclTimeContainers': 1,
+	'FillDefault': 1,
+	'HierarchicalLayout': 1,
+	'InlineTransitions': 0,
+	'LinkingAttributes': 1,
+	'MediaAccessibility': 1,
+	'MediaClipMarkers': 0,
+	'MediaClipping': 1,
+	'MediaDescriptions': 1,
+	'MediaMarkerTiming': 0,
+	'MediaParam': 1,
+	'Metainformation': 1,
+	'MinMaxTiming': 1,
+	'MultiElementTransitions': 1,
+	'MultiArcTiming': 1,
+	'MultiWindowLayout': 1,
+	'ObjectLinking': 1,
+	'PrefetchControl': 1,
+	'PrevTiming': 1,
+	'RepeatTiming': 1,
+	'RestartDefault': 1,
+	'RestartTiming': 1,
+	'SkipContentControl': 1,
+	'SplineAnimation': 0,
+	'Structure': 1,
+	'SyncbaseTiming': 1,
+	'SyncBehavior': 1,
+	'SyncBehaviorDefault': 1,
+	'SyncMaster': 0,
+	'TimeContainerAttributes': 0,
+	'TimeManipulations': 0,
+	'TransitionModifiers': 1,
+	'WallclockTiming': 1,
+
+	# SMIL 2.0 Psuedo Modules
+	'NestedTimeContainers': 1,
+	'DeprecatedFeatures': 1,
+
+	# SMIL 2.0 Module Collections
+	'Language': 1,
+	'HostLanguage': 1,
+	'IntegrationSet': 1,
+}
+
+extensions = {
+	# SMIL 1.0
+	'http://www.w3.org/TR/REC-smil/': 1,
+}
+
+for _k, _v in _modules.items():
+	extensions[SMIL2 + _k] = _v
+	extensions['http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/' + _k] = _v
