@@ -34,6 +34,7 @@
 #define IDC_STOP                        233
 #define IDD_ARC_INFO_FORM               233
 #define IDD_NODE_INFO                   234
+#define IDD_EDITCOLORATTR               235
 #define IDC_DRAGMOVE                    237
 #define IDC_DRAGLINK                    238
 #define IDB_SPLASHPLAY                  243
