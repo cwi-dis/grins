@@ -175,7 +175,16 @@ class AnimationData:
 			self._data.append((rect, color))
 		
 	# create animate nodes from self data
-	def applyData(self, editmgr):
+	def applyData(self, editmgr, replace=0):
+		em = editmgr
+		if not em.transaction():
+			return 0
+
+		if replace:
+			animations = self._target.getAnimations()
+			for animation in animations:
+				em.delnode(animation)
+
 		animateMotionValues, animateWidthValues,\
 		animateHeightValues, animateColorValues = self._dataToValuesAttr()
 		keyTimes = self._timesToKeyTimesAttr()
@@ -201,10 +210,6 @@ class AnimationData:
 		if parent != self._target.getMMObj():
 			targname = self._target.getUID()
 		context = self._target.getContext()
-
-		em = editmgr
-#		if not em.transaction():
-#			return 0
 
 		anim = existing.get('pos')
 		if anim is not None:
