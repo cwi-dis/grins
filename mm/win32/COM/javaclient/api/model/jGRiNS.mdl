@@ -3088,7 +3088,8 @@
 			    (object Inheritance_Relationship
 				attributes 	(list Attribute_Set)
 				quid       	"3BA0E096014D"
-				supplier   	"Logical View::java::lang::Thread"))
+				supplier   	"Logical View::java::lang::Thread"
+				quidu      	"3BA0E096014C"))
 			exportControl 	"Implementation"
 			operations 	(list Operations
 			    (object Operation "GRiNSPlayerMonitor"
@@ -4302,7 +4303,8 @@
 					    (object Realize_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E09701FC"
-						supplier   	"Logical View::java::awt::event::ActionListener"))
+						supplier   	"Logical View::java::awt::event::ActionListener"
+						quidu      	"3BA0E09701FB"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymAction"
@@ -4394,7 +4396,8 @@
 					    (object Inheritance_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E097029A"
-						supplier   	"Logical View::java::awt::event::MouseAdapter"))
+						supplier   	"Logical View::java::awt::event::MouseAdapter"
+						quidu      	"3BA0E0970299"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymMouse"
@@ -4486,7 +4489,8 @@
 					    (object Inheritance_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E097033A"
-						supplier   	"Logical View::java::awt::event::MouseMotionAdapter"))
+						supplier   	"Logical View::java::awt::event::MouseMotionAdapter"
+						quidu      	"3BA0E0970339"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymMouseMotion"
@@ -4578,12 +4582,14 @@
 				    (object Inheritance_Relationship
 					attributes 	(list Attribute_Set)
 					quid       	"3BA0E09B0071"
-					supplier   	"Logical View::java::applet::Applet"))
+					supplier   	"Logical View::java::applet::Applet"
+					quidu      	"3BA0E09B0070"))
 				realized_interfaces 	(list realize_rel_list
 				    (object Realize_Relationship
 					attributes 	(list Attribute_Set)
 					quid       	"3BA0E09B0072"
-					supplier   	"Logical View::grins::SMILListener"))
+					supplier   	"Logical View::grins::SMILListener"
+					quidu      	"3BA0E096007E"))
 				operations 	(list Operations
 				    (object Operation "PluginDemo"
 					attributes 	(list Attribute_Set
@@ -5162,7 +5168,8 @@
 					    (object Realize_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E09A0050"
-						supplier   	"Logical View::java::awt::event::ActionListener"))
+						supplier   	"Logical View::java::awt::event::ActionListener"
+						quidu      	"3BA0E09701FB"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymAction"
@@ -5254,7 +5261,8 @@
 					    (object Inheritance_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E09A00F0"
-						supplier   	"Logical View::java::awt::event::KeyAdapter"))
+						supplier   	"Logical View::java::awt::event::KeyAdapter"
+						quidu      	"3BA0E09A00EF"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymKey"
@@ -5346,7 +5354,8 @@
 				    (object Inheritance_Relationship
 					attributes 	(list Attribute_Set)
 					quid       	"3BA0E09B01A6"
-					supplier   	"Logical View::java::awt::Frame"))
+					supplier   	"Logical View::java::awt::Frame"
+					quidu      	"3BA0E09B01A5"))
 				operations 	(list Operations
 				    (object Operation "Viewport"
 					attributes 	(list Attribute_Set
@@ -6055,7 +6064,8 @@
 					    (object Realize_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E09B03D9"
-						supplier   	"Logical View::java::awt::event::ActionListener"))
+						supplier   	"Logical View::java::awt::event::ActionListener"
+						quidu      	"3BA0E09701FB"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymAction"
@@ -6153,7 +6163,8 @@
 					    (object Realize_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E09E02D4"
-						supplier   	"Logical View::java::awt::event::ActionListener"))
+						supplier   	"Logical View::java::awt::event::ActionListener"
+						quidu      	"3BA0E09701FB"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymAction"
@@ -6251,7 +6262,8 @@
 					    (object Realize_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E09F0273"
-						supplier   	"Logical View::java::awt::event::ActionListener"))
+						supplier   	"Logical View::java::awt::event::ActionListener"
+						quidu      	"3BA0E09701FB"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymAction"
@@ -6343,7 +6355,8 @@
 					    (object Inheritance_Relationship
 						attributes 	(list Attribute_Set)
 						quid       	"3BA0E0A0013D"
-						supplier   	"Logical View::java::awt::event::KeyAdapter"))
+						supplier   	"Logical View::java::awt::event::KeyAdapter"
+						quidu      	"3BA0E09A00EF"))
 					exportControl 	"Implementation"
 					operations 	(list Operations
 					    (object Operation "SymKey"
@@ -6435,12 +6448,14 @@
 				    (object Inheritance_Relationship
 					attributes 	(list Attribute_Set)
 					quid       	"3BA0E0A102E5"
-					supplier   	"Logical View::java::awt::Component"))
+					supplier   	"Logical View::java::awt::Component"
+					quidu      	"3BA0E0A102E4"))
 				realized_interfaces 	(list realize_rel_list
 				    (object Realize_Relationship
 					attributes 	(list Attribute_Set)
 					quid       	"3BA0E0A102ED"
-					supplier   	"Logical View::java::lang::Runnable"))
+					supplier   	"Logical View::java::lang::Runnable"
+					quidu      	"3BA0E0A102EC"))
 				operations 	(list Operations
 				    (object Operation "Scheduler"
 					attributes 	(list Attribute_Set
@@ -6673,7 +6688,8 @@
 				    (object Inheritance_Relationship
 					attributes 	(list Attribute_Set)
 					quid       	"3BA0E0A1037B"
-					supplier   	"Logical View::java::awt::AWTEvent"))
+					supplier   	"Logical View::java::awt::AWTEvent"
+					quidu      	"3BA0E0A1037A"))
 				operations 	(list Operations
 				    (object Operation "TimerEvent"
 					attributes 	(list Attribute_Set
@@ -7162,7 +7178,7 @@
 		max_height 	28350
 		max_width  	21600
 		origin_x   	0
-		origin_y   	0
+		origin_y   	950
 		items      	(list diagram_item_list
 		    (object ClassView "Class" "Logical View::grins::GRiNSToolkit" @1
 			ShowCompartmentStereotypes 	TRUE
@@ -7217,7 +7233,7 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	3
-			    max_width  	381)
+			    max_width  	390)
 			width      	402
 			height     	282
 			annotation 	8
@@ -7246,7 +7262,7 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	3
-			    max_width  	644)
+			    max_width  	653)
 			width      	664
 			height     	282
 			annotation 	8
@@ -7285,7 +7301,7 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	11
-			    max_width  	441)
+			    max_width  	450)
 			width      	462
 			height     	738
 			annotation 	8
@@ -7324,7 +7340,7 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	10
-			    max_width  	347)
+			    max_width  	356)
 			width      	368
 			height     	688
 			annotation 	8
@@ -7363,7 +7379,7 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	2
-			    max_width  	263)
+			    max_width  	271)
 			width      	308
 			height     	288
 			annotation 	8
@@ -7402,45 +7418,16 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	7
-			    max_width  	431)
+			    max_width  	440)
 			width      	452
 			height     	538
 			annotation 	8
 			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::grins::SMILCanvas" @8
-			ShowCompartmentStereotypes 	TRUE
-			IncludeAttribute 	TRUE
-			IncludeOperation 	TRUE
-			location   	(1888, 2144)
-			label      	(object ItemLabel
-			    Parent_View 	@8
-			    location   	(1704, 1790)
-			    fill_color 	13434879
-			    nlines     	1
-			    max_width  	368
-			    justify    	0
-			    label      	"SMILCanvas")
-			icon_style 	"Icon"
-			line_color 	3342489
-			fill_color 	13434879
-			quidu      	"3BA0E09602BE"
-			compartment 	(object Compartment
-			    Parent_View 	@8
-			    location   	(1704, 1893)
-			    icon_style 	"Icon"
-			    fill_color 	13434879
-			    anchor     	2
-			    nlines     	12
-			    max_width  	366)
-			width      	386
-			height     	732
-			annotation 	8
-			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::grins::GRiNSPlayer" @9
+		    (object ClassView "Class" "Logical View::grins::GRiNSPlayer" @8
 			ShowCompartmentStereotypes 	TRUE
 			location   	(1888, 1296)
 			label      	(object ItemLabel
-			    Parent_View 	@9
+			    Parent_View 	@8
 			    location   	(1751, 1221)
 			    fill_color 	13434879
 			    nlines     	1
@@ -7455,38 +7442,38 @@
 			height     	174
 			annotation 	8
 			autoResize 	TRUE)
-		    (object RealizeView "" @10
+		    (object RealizeView "" @9
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3BA0E096005F"
-			client     	@9
+			client     	@8
 			supplier   	@4
+			line_style 	0)
+		    (object RealizeView "" @10
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3BA0E0960066"
+			client     	@8
+			supplier   	@5
 			line_style 	0)
 		    (object RealizeView "" @11
 			stereotype 	TRUE
 			line_color 	3342489
-			quidu      	"3BA0E0960066"
-			client     	@9
-			supplier   	@5
-			line_style 	0)
-		    (object RealizeView "" @12
-			stereotype 	TRUE
-			line_color 	3342489
 			quidu      	"3BA0E0960069"
-			client     	@9
+			client     	@8
 			supplier   	@6
 			line_style 	0)
-		    (object AssociationViewNew "$UNNAMED$2" @13
+		    (object AssociationViewNew "$UNNAMED$2" @12
 			location   	(1151, 1696)
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3BA0E096007F"
 			roleview_list 	(list RoleViews
-			    (object RoleView "listener" @14
-				Parent_View 	@13
+			    (object RoleView "listener" @13
+				Parent_View 	@12
 				location   	(-737, 400)
-				label      	(object SegLabel @15
-				    Parent_View 	@14
+				label      	(object SegLabel @14
+				    Parent_View 	@13
 				    location   	(662, 1917)
 				    anchor     	1
 				    anchor_loc 	1
@@ -7500,15 +7487,15 @@
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3BA0E0960081"
-				client     	@13
+				client     	@12
 				supplier   	@7
 				line_style 	0)
-			    (object RoleView "$UNNAMED$3" @16
-				Parent_View 	@13
+			    (object RoleView "$UNNAMED$3" @15
+				Parent_View 	@12
 				location   	(-737, 400)
-				label      	(object SegLabel @17
-				    Parent_View 	@16
-				    location   	(1604, 1403)
+				label      	(object SegLabel @16
+				    Parent_View 	@15
+				    location   	(1603, 1403)
 				    hidden     	TRUE
 				    anchor     	1
 				    anchor_loc 	1
@@ -7522,9 +7509,38 @@
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3BA0E0960080"
-				client     	@13
-				supplier   	@9
+				client     	@12
+				supplier   	@8
 				line_style 	0)))
+		    (object ClassView "Class" "Logical View::grins::SMILCanvas" @17
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1888, 2144)
+			label      	(object ItemLabel
+			    Parent_View 	@17
+			    location   	(1704, 1790)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	368
+			    justify    	0
+			    label      	"SMILCanvas")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3BA0E09602BE"
+			compartment 	(object Compartment
+			    Parent_View 	@17
+			    location   	(1704, 1893)
+			    icon_style 	"Icon"
+			    fill_color 	13434879
+			    anchor     	2
+			    nlines     	12
+			    max_width  	375)
+			width      	386
+			height     	732
+			annotation 	8
+			autoResize 	TRUE)
 		    (object AssociationViewNew "$UNNAMED$12" @18
 			location   	(1888, 1580)
 			stereotype 	TRUE
@@ -7550,7 +7566,7 @@
 				line_color 	3342489
 				quidu      	"3BA0E09602CC"
 				client     	@18
-				supplier   	@9
+				supplier   	@8
 				line_style 	0)
 			    (object RoleView "$UNNAMED$13" @21
 				Parent_View 	@18
@@ -7572,20 +7588,29 @@
 				line_color 	3342489
 				quidu      	"3BA0E09602CB"
 				client     	@18
-				supplier   	@8
+				supplier   	@17
 				line_style 	0)))
 		    (object UsesView "" @23
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3BA0E1430050"
 			client     	@1
-			supplier   	@9
+			supplier   	@8
 			line_style 	0)))))
     root_subsystem 	(object SubSystem "Component View"
 	quid       	"3BA0E08E02FB"
 	physical_models 	(list unit_reference_list
+	    (object module "grinsp" "NotAModuleType" "NotAModulePart"
+		quid       	"3BA0E3590116"
+		stereotype 	"DLL")
 	    (object SubSystem "grins"
 		quid       	"3BA0E0950244"
+		visible_modules 	(list dependency_list
+		    (object Dependency_Relationship
+			quid       	"3BA0E4FC0317"
+			supplier   	"Component View::grinsp"
+			quidu      	"3BA0E3590116"
+			supplier_is_spec 	TRUE))
 		physical_models 	(list unit_reference_list
 		    (object module "GRiNSException" "NotAModuleType" "NotAModulePart"
 			attributes 	(list Attribute_Set
@@ -7884,7 +7909,49 @@
 		max_width  	21600
 		origin_x   	0
 		origin_y   	0
-		items      	(list diagram_item_list))))
+		items      	(list diagram_item_list
+		    (object ModView "Component View::grinsp" "NotAModuleType" "NotAModulePart" @24
+			location   	(1344, 208)
+			label      	(object ItemLabel
+			    Parent_View 	@24
+			    location   	(1309, 183)
+			    fill_color 	13434879
+			    anchor_loc 	3
+			    nlines     	2
+			    max_width  	127
+			    label      	"grinsp")
+			icon       	"DLL"
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3BA0E3590116"
+			width      	228
+			autoResize 	TRUE
+			width      	228
+			height     	162)
+		    (object SubSysView "Component View::grins" @25
+			location   	(576, 208)
+			label      	(object ItemLabel
+			    Parent_View 	@25
+			    location   	(432, 139)
+			    fill_color 	13434879
+			    nlines     	2
+			    max_width  	288
+			    justify    	0
+			    label      	"grins")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3BA0E0950244"
+			width      	300
+			height     	150)
+		    (object ModVisView "" @26
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3BA0E4FC0317"
+			client     	@25
+			supplier   	@24
+			line_style 	0)))))
     process_structure 	(object Processes
 	quid       	"3BA0E08E02FC"
 	ProcsNDevs 	(list
