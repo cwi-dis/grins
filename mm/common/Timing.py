@@ -6,7 +6,7 @@ import time
 import sched
 import MMAttrdefs
 from MMExc import *
-from MMNode import alltypes, leaftypes, interiortypes
+from MMTypes import *
 from HDTL import HD, TL
 
 real_interiortypes = ('par', 'seq')
@@ -201,7 +201,7 @@ def prep1(node):
 			adddep(c, TL, 0, node, TL)
 		# Make sure there is *some* path from head to tail
 		adddep(node, HD, 0, node, TL)
-	elif type == 'bag':
+	elif type in bagtypes:
 		adddep(node, HD, 0, node, TL)
 	else:
 		# Special case -- delay -1 means execute leaf node

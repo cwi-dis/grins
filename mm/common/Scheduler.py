@@ -7,7 +7,7 @@ from sched import scheduler
 from MMExc import *
 import MMAttrdefs
 import Timing
-from MMNode import alltypes, leaftypes, interiortypes
+from MMTypes import *
 from ArmStates import *
 from HDTL import HD, TL
 # Not needed? from AnchorDefs import *
@@ -300,6 +300,7 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def play(self, node, seek_node, anchor_id, anchor_arg):
+		# XXXX Is the following true for alt nodes too?
 		if node.GetType() == 'bag':
 			raise 'Cannot play bag node'
 		# XXXX This statement should move to an intermedeate level.
@@ -646,7 +647,7 @@ class Scheduler(scheduler):
 #
 def GenAllPrearms(ui, node, prearmlists):
 	nodetype = node.GetType()
-	if nodetype == 'bag':
+	if nodetype in bagtypes:
 		return
 	if nodetype in leaftypes:
 		chan = ui.getchannelbynode(node)
@@ -678,6 +679,6 @@ def unarmallnodes(node):
 	except AttributeError:
 		return
 	for child in children:
-		if child.GetType() != 'bag':
+		if child.GetType() not in bagtypes:
 			unarmallnodes(child)
 

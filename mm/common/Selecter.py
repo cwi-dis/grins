@@ -8,7 +8,7 @@ __version__ = "$Id$"
 import MMAttrdefs
 from Scheduler import Scheduler
 from AnchorDefs import *
-from MMNode import leaftypes
+from MMTypes import *
 import windowinterface
 import SR
 
@@ -61,7 +61,8 @@ class Selecter:
 	#
 	def mkbaglist(self, node):
 		list = [(node, None, None, None)]
-		while node.GetType() == 'bag':
+		# XXXX has to be changed for alt nodes
+		while node.GetType() in bagtypes:
 			newnode = choosebagitem(node, 1)
 			if newnode is None:
 				return None
@@ -151,7 +152,7 @@ class Selecter:
 	#
 	def startbaglist(self, baglist, prevslot):
 		for slot in baglist:
-			if slot[RS_NODE].GetType() <> 'bag':
+			if slot[RS_NODE].GetType() not in bagtypes:
 				mini, sctx, bag, parent = slot
 				if prevslot:
 					seeknode = prevslot[RS_BAG]
@@ -247,7 +248,7 @@ class Selecter:
 					rv = 1
 			return rv
 		# It is not a composite anchor. Continue
-		while seek_node.GetType() == 'bag':
+		while seek_node.GetType() in bagtypes:
 			dest_aid = None
 			seek_node = choosebagitem(seek_node, 1)
 			if seek_node is None:
@@ -351,7 +352,7 @@ class Selecter:
 			if sctx:
 				str = 'node '
 			else:
-				str = 'bag '
+				str = 'bag/alt '
 			str = str + nodename(mini)
 			str = str + ' in '
 			str = str + nodename(bag)
@@ -365,7 +366,7 @@ class Selecter:
 			if sctx:
 				str = 'node '
 			else:
-				str = 'bag '
+				str = 'bag/alt '
 			str = str + nodename(mini)
 			str = str + ' in '
 			str = str + nodename(bag)
