@@ -23,14 +23,14 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(X_windowbase._Toplevel):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = None, units = UNIT_MM,
+		      type_channel = SINGLE, pixmap = 1, units = UNIT_MM,
 		      menubar = None, canvassize = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
 		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar, canvassize)
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-			type_channel = SINGLE, pixmap = None, units = UNIT_MM,
+			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 			menubar = None, canvassize = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
