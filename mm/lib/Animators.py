@@ -15,6 +15,7 @@ import windowinterface
 import settings
 
 debug = 0
+debugParser = 1
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
@@ -1041,7 +1042,6 @@ alltypes = ['string',] + additivetypes
 # main decision attrs:
 # elementTag (__elementTag)
 # node type (self.__target._type)
-
 # valuesType, attrType, additivity
 # syntaxError:	invalidTarget, invalidValues, invalidKeyTimes, invalidKeySplines,
 #				invalidEnumAttr, invalidTimeManipAttr,
@@ -1082,7 +1082,8 @@ class AnimateElementParser:
 				anim.targetnode = anim.GetParent()
 				anim.targetnode._type = 'mmnode'	
 		else:
-			anim.targetnode._type = 'mmnode'
+			if not hasattr(anim.targetnode, '_type'):
+				anim.targetnode._type = 'mmnode'
 				
 		if not anim.targetnode:
 			# the target node does not exist within grins
@@ -1094,7 +1095,9 @@ class AnimateElementParser:
 		else:
 			self.__target = anim.targetnode
 
-		if debug:
+
+		# verify
+		if debugParser:
 			print self.__elementTag, self.__target._type
 
 
@@ -1104,6 +1107,9 @@ class AnimateElementParser:
 		# do we have a valid target attribute?
 		self.__hasValidTarget = self.__checkTarget()
 
+		# verify
+		if debugParser:
+			print self.__grinsattrname, self.__attrname, self.__domval, self.__attrtype
 
 		########################################
 		# Cache some attributes
