@@ -55,7 +55,10 @@ class Selecter:
 		#self.showpauseanchor(0) # also see Scheduler.py
 		# Firing an anchor continues the player if it was paused.
 		if self.scheduler.getpaused():
+			self.toplevel.waspaused = 1
 			self.pause(0)
+		else:
+			self.toplevel.waspaused = 0
 		destlist = self.context.hyperlinks.findsrclinks(node)
 		if not destlist:
 			windowinterface.showmessage(
