@@ -12,7 +12,7 @@ def getduration(filename, bufsiz = 10240):
 	if bufsiz < 1024:
 		bufsiz = 1024
 
-	filename = urllib.url2pathname(filename)
+	filename = urllib.urlretrieve(filename)[0]
 	fp = open(filename, 'rb')
 	nframes = 0
         rate = 0
