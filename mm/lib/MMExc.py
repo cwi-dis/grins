@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # This module only defines exceptions.
 # Suggested usage:
 #	from MMExc import *
