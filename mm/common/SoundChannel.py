@@ -71,7 +71,7 @@ class SoundChannel(ChannelAsync):
 		import mimetypes
 		mtype = mimetypes.guess_type(fn)[0]
 		node.__type = ''
-		if string.find(mtype, 'real') >= 0:
+		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
 				self.errormsg(node, 'No playback support for RealAudio in this version')
