@@ -877,13 +877,16 @@ class SchedulerContext:
 			self.do_terminate(node, gototime, timestamp)
 			if not parent.playing:
 				return
-		if path is not None or node.playing == MMStates.IDLE:
+		if path is not None or node.playing in (MMStates.IDLE, MMStates.PLAYED):
 			# no intervals yet, check whether we should play
 			resolved = node.isresolved(self)
 			if path is not None and resolved is None:
 				resolved = gototime
 			if resolved is not None:
-				self.trigger(gototime, None, node, path, resolved)
+				if resolved <= gototime:
+					self.trigger(gototime, None, node, path, resolved)
+				else:
+					self.parent.enterabs(resolved, 0, self.trigger, (resolved, None, node, path, resolved))
 				self.sched_arcs(node, gototime, 'begin', timestamp = resolved)
 
 	def cancel_gensr(self, node):
