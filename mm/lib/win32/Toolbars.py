@@ -44,9 +44,9 @@ class ToolbarMixin:
 		self._pulldowncallbackdict = {}
 		#
 		for template in ToolbarTemplate.TOOLBARS:
-			name, command, resid, buttonlist = template
-			barid = usercmdui.class2ui[command].id
-			self._bars[barid] = None
+			name, command, barid, resid, buttonlist = template
+			cmdid = usercmdui.class2ui[command].id
+			self._bars[cmdid] = None
 
 	def _restoreToolbarState(self):
 		try:
@@ -57,10 +57,6 @@ class ToolbarMixin:
 				self.ShowControlBar(bar,1,0)
 				bar.RedrawWindow()
 
-	def _saveToolbarState(self):
-		pass
-##		self.SaveBarState("GRiNSToolBars")
-
 	def OnClose(self):
 		self.SaveBarState("GRiNSToolBars")
 
@@ -70,9 +66,9 @@ class ToolbarMixin:
 			self._setToolbarFromTemplate(template)
 		self._recalcPulldownEnable()
 		self._restoreToolbarState()
+		self.RecalcLayout()
 
 	def DestroyToolbars(self):
-		self._saveToolbarState()
 		for bar in self._bars.values():
 			bar.DestroyWindow()
 		self._bars = {}
@@ -106,7 +102,6 @@ class ToolbarMixin:
 			bar.RedrawWindow()
 		else:
 			self.ShowControlBar(bar,0,0)
-		self._saveToolbarState()
 
 	def OnUpdateToolbarCommand(self, cmdui):
 		barid = cmdui.m_nID
@@ -116,12 +111,12 @@ class ToolbarMixin:
 
 	def _setToolbarFromTemplate(self, template):
 		# First count number of buttons
-		name, command, resid, buttonlist = template
+		name, command, barid, resid, buttonlist = template
 
 		# Create the toolbar
-		barid = usercmdui.class2ui[command].id
-		bar = GRiNSToolbar(self, name, resid, 0)
-		self._bars[barid] = bar
+		cmdid = usercmdui.class2ui[command].id
+		bar = GRiNSToolbar(self, name, barid, resid, 0)
+		self._bars[cmdid] = bar
 		self.DockControlBar(bar)
 
 		# Initialize it
@@ -218,7 +213,7 @@ class ToolbarMixin:
 			cb(tbcb.getvalue())
 
 class GRiNSToolbar(window.Wnd):
-	def __init__(self, parent, name, resid, enabledrag):
+	def __init__(self, parent, name, barid, resid, enabledrag):
 		CBRS_GRIPPER = 0x00400000   # Missing from afxres.py
 		style = (win32con.WS_CHILD |
 			win32con.WS_VISIBLE |
@@ -227,7 +222,7 @@ class GRiNSToolbar(window.Wnd):
 			afxres.CBRS_FLYBY|
 			afxres.CBRS_SIZE_DYNAMIC|
 			CBRS_GRIPPER)
-		wndToolBar = win32ui.CreateToolBar(parent,style,afxres.AFX_IDW_TOOLBAR)
+		wndToolBar = win32ui.CreateToolBar(parent,style,barid)
 		wndToolBar.LoadToolBar(resid)
 		wndToolBar.EnableDocking(afxres.CBRS_ALIGN_ANY)
 		wndToolBar.SetWindowText(name)
