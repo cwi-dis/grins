@@ -1,4 +1,4 @@
-import grins_app_core
+import grins_app_core, string
 resdll = None
 
 runApp = 1
@@ -22,14 +22,14 @@ if grinspapi:
 	for i in range(1, len(sys.argv)):
 		arg = sys.argv[i]
 		if arg[:1]=='/' or arg[:1]=='-':
-			val = arg[1:]
-			if val == 'UnregServer':
+			val = string.lower(arg[1:])
+			if val == 'unregserver':
 				grinspapi.UnregisterServer()
 				runApp = 0
-			elif val == 'RegServer':
+			elif val == 'regserver':
 				grinspapi.RegisterServer()
 				runApp = 0
-			elif val == 'Embedding':
+			elif val == 'embedding':
 				sys.argv = sys.argv[:1]
 				embedded = 1
 				runApp = 1
