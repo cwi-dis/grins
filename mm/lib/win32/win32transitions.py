@@ -143,12 +143,12 @@ class TransitionEngine:
 		wnd = self.windows[0]
 		while 1:
 			try:
-				wnd._fromsurf = wnd.getBackDDS(dopaint = 1)
+				wnd._fromsurf = wnd.getBackDDS(exclwnd = wnd, dopaint = 1)
 				# use getBackDDS instead of createDDS
 				# just in case of an early repaint 
-				wnd._drawsurf = wnd.getBackDDS(dopaint = 0)
-				self._tosurf = wnd.getBackDDS(dopaint = 0)
-				self._tmp = wnd.getBackDDS(dopaint = 0)
+				wnd._drawsurf = wnd.getBackDDS(exclwnd = wnd, dopaint = 0)
+				self._tosurf = wnd.getBackDDS(exclwnd = wnd, dopaint = 0)
+				self._tmp = wnd.getBackDDS(exclwnd = wnd, dopaint = 0)
 			except ddraw.error, arg:
 				print arg
 				win32api.Sleep(50)
