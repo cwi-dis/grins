@@ -33,6 +33,7 @@ class Exporter:
 	
 	def createWriter(self, window):
 		self.topwindow = window
+		self.fulldur = self._computeduration(self.player.userplayroot)
 		self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile)
 		self._setAudioFormat()
 		self.writer.setOutputFilename(self.filename)
@@ -103,13 +104,14 @@ class Exporter:
 		if urls:
 			self.writer.setAudioFormatFromFile(urls[0])
 
-	# temp: document duration estimation
-	def _getdocdurestimate(self):
+	def _computeduration(self, node):
+		fdur = node.calcfullduration()
+		if fdur: return fdur
 		return 30.0
-
+		
 	# temp: get progess based on doc duration estimation
 	def _getprogress(self, dt):
-		d = self._getdocdurestimate()/3.0
+		d = self.fulldur/3.0
 		i = 1
 		p = 0
 		while 1:
