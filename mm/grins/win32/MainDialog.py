@@ -28,7 +28,7 @@ The only case that the 1:1 corespondance between an MDIFrameWnd
 and a document is not valid is when the application has no
 open documents 
 """
-
+import features
 
 __version__ = "$Id$"
 
@@ -94,8 +94,7 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', '.', filetypes, '',
 					   self.__openfile_done, None, 1,
@@ -127,8 +126,7 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', '.', filetypes, '',
 					   self.__filecvt, None, 1,
