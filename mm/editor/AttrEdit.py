@@ -272,7 +272,7 @@ class NodeWrapper(Wrapper):
 				rename[a[4]] = aid
 		for aid, a in newanchors.items():
 			anchor = uid, aid
-			oldname = None
+			oldname = aid
 			atype, aargs, times, links = a[:4]
 			times = times[0], times[0] + times[1]
 			if len(a) > 4:
