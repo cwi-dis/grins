@@ -99,6 +99,7 @@ class textwindow(_common_window):
 		self.show()
 
 	def settext(self, data):
+		self.show()
 		self.data = data
 		self.widget.insert_plaintext(data)
 	
@@ -123,6 +124,7 @@ class htmlwindow(_common_window):
 		self.show()
 
 	def goto_url(self, href):
+		self.show()
 		self.load(href)
 		self.widget.insert_html(self.data, self.url)
 
