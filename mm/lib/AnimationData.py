@@ -4,7 +4,7 @@ import string
 
 import MMAttrdefs
 
-from fmtfloat import fmtfloat
+from fmtfloat import fmtfloat, round
 
 import colors
 
@@ -289,7 +289,9 @@ class AnimationData:
 
 	def getRectAt(self, keyTime):
 		x, y = self.getPosAt(keyTime)
-		return x, y, self.getWidthAt(keyTime), self.getHeightAt(keyTime)
+		w = self.getWidthAt(keyTime)
+		h = self.getHeightAt(keyTime)
+		return x, y, w, h
 
 	def getColorAt(self, keyTime):
 		if self._animateColor is not None:
@@ -304,12 +306,12 @@ class AnimationData:
 
 	def getWidthAt(self, keyTime):
 		if self._animateWidth is not None:
-			return self._animateWidth.getValue(keyTime)
+			return round(self._animateWidth.getValue(keyTime))
 		return self._domrect[2]
 
 	def getHeightAt(self, keyTime):
 		if self._animateHeight is not None:
-			return self._animateHeight.getValue(keyTime)
+			return round(self._animateHeight.getValue(keyTime))
 		return self._domrect[3]
 
 	#
