@@ -355,6 +355,10 @@ SOURCE=.\editor\win32\ArcInfoDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\AssetsViewDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\AttrEditDialog.py
 # End Source File
 # Begin Source File
@@ -657,6 +661,10 @@ SOURCE=.\editor\AnchorList.py
 # Begin Source File
 
 SOURCE=.\editor\ArcInfo.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\AssetsView.py
 # End Source File
 # Begin Source File
 
