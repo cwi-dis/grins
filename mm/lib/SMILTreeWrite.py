@@ -709,6 +709,10 @@ class SMILWriter(SMIL):
 				else:
 					ok = 1
 			if ok:
+				if x < 0: x = 0
+				if y < 0: y = 0
+				if w > 100: w = 100
+				if h > 100: h = 100
 				if (x, y, w, h) != (0,0,100,100):
 					items.append('coords="%d%%,%d%%,%d%%,%d%%"'%
 						     (x,y,w,h))
