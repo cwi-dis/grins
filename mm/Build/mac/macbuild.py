@@ -21,9 +21,9 @@
 import os
 import sys
 import macfs
-import Res
-import Ctl
-import Dlg
+from Carbon import Res
+from Carbon import Ctl
+from Carbon import Dlg
 
 # Find macfreeze directory
 FREEZEDIR=os.path.join(sys.prefix, ":Mac:Tools:macfreeze")
@@ -134,7 +134,7 @@ ATTRDEFS_OUTPUT=":::Lib:Attrdefs.py"
 # AppleEvent stuff
 #
 import aetools
-import AppleEvents
+from Carbon import AppleEvents
 OLDAESUPPORT = 0
 
 if OLDAESUPPORT:
