@@ -7,8 +7,6 @@
 #	- the AIFF id
 #	- one COMM chunk
 #	- one SSND chunk followed by all data
-#
-# We also support sound files created by our tools on the 4D/25.
 
 
 import os
@@ -203,7 +201,7 @@ class SoundChannel(Channel):
 			self.cancelled_qid = 0
 	#
 	def stop(self):
-		if (self.port <> None and self.armed_info == None) or self.qid:
+		if self.port <> None:
 			closeport(self.port)
 			self.info = self.port = self.config = None
 		if self.qid <> None:
@@ -297,10 +295,15 @@ def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 	# check that the sampling rate is compatible;
 	# else, save the original and set the current sampling rate
 	if n_open_ports <> 0:
+		if n_open_ports < 0:
+			print 'SoundChannel: n_open_ports < 0 !?!?'
+			return None, None
 		if samprate <> current_rate:
 			print 'SoundChannel: incompatible sampling rates'
 			return None, None
+##		print 'openport: another port is already open -- no action'
 	else:
+##		print 'openport: setting sampling rate'
 		# Save original rate
 		pv = [AL.OUTPUT_RATE, 0]
 		al.getparams(AL.DEFAULT_DEVICE, pv)
@@ -309,6 +312,7 @@ def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 		pv = [AL.OUTPUT_RATE, int(samprate)]
 		al.setparams(AL.DEFAULT_DEVICE, pv)
 		current_rate = samprate
+##	print 'openport:', n_open_ports, '++'
 	n_open_ports = n_open_ports + 1
 	# Compute queue size such that it can contain QSECS seconds of sound,
 	# but it shouldn't be bigger than 100K (else the library crashes :-( )
@@ -333,15 +337,21 @@ def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 #
 def closeport(port):
 	global n_open_ports, current_rate, original_rate
+##	print 'closeport:', n_open_ports, '--'
 	n_open_ports = n_open_ports - 1
 	if n_open_ports < 0:
-		raise CheckError, 'restore_once called too often'
+		raise CheckError, 'closeport called too often'
 	if port <> None:
+##		print 'closeport: closing port'
 		port.closeport()
-	if n_open_ports > 0:
-		print 'another port is still open'
 	else:
-		# Closing our last port -- restore the original rate
+##		print 'closeport: port == None'
+		pass
+	if n_open_ports > 0:
+##		print 'closeport: another port is still open -- no action'
+		pass
+	else:
+##		print 'closeport: last port -- restore the original rate'
 		import al
 		pv = [AL.OUTPUT_RATE, original_rate]
 		al.setparams(AL.DEFAULT_DEVICE, pv)
