@@ -20,15 +20,15 @@ class TransitionEngine:
 		self.__multiElement = dict.get('multiElement')
 		self.__childrenClip = dict.get('childrenClip')
 
-		trtype = dict['trtype']
+		trtype = dict.get('trtype', 'fade')
 		subtype = dict.get('subtype')
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.__transitiontype = klass(self, dict)
 
 		self.__fiber_id = None
 
-		self.__startprogress = dict['startProgress']
-		self.__endprogress = dict['endProgress']
+		self.__startprogress = dict.get('startProgress', 0)
+		self.__endprogress = dict.get('endProgress', 1)
 		if self.__endprogress<=self.__startprogress:
 			self.__startprogress = 0.0
 			self.__endprogress = 1.0
