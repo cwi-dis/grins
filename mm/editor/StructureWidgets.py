@@ -101,6 +101,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		self.timemapper = None
 		self.timeline = None
+		self.greyout = None
 		self.bwstrip = None
 		self.need_draghandles = None
 
@@ -151,6 +152,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.timeline is not None:
 			self.timeline.destroy()
 			self.timeline = None
+		if self.greyout is not None:
+			self.greyout.destroy()
+			self.greyout = None
 		if self.bwstrip is not None:
 			self.bwstrip.destroy()
 			self.bwstrip = None
@@ -366,12 +370,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.timeline = None
 			if self.timemapper is not None:
 				self.timemapper = None
+		self.greyout = None
+		if self.timeline:
+			self.greyout = GreyoutWidget(self, self.mother)
 		if self.node.showtime == 'bwstrip' and not ignore_time:
 			if self.bwstrip is None:
 				self.bwstrip = BandWidthWidget(self, self.mother)
 				maxbandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls = \
 					BandwidthCompute.compute_bandwidth(self.node)
-				print 'DBG: Computed bandwidths'
 				if timemapper:
 					if prerolltime:
 						timemapper.addstalltime(0, prerolltime, 'preroll')
@@ -612,6 +618,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.transition_out.draw(displist)
 		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		self.draw_draghandles(displist)
+		if self.greyout is not None:
+			self.greyout.draw(displist)
 
 	def draw_draghandles(self, displist):
 		if self.need_draghandles is None:
@@ -1215,15 +1223,23 @@ class StructureObjWidget(MMNodeWidget):
 		if self.bwstrip:
 			bwstrip = self.bwstrip
 
-		# Add the timeline
+		# Add the timeline, the bandwidth strip and the greyout
+		# widget. The greyout widget covers both the timeline and
+		# the bandwidth strip.
 		if self.timeline is not None:
 			tl_w, tl_h = self.timeline.get_minsize()
 			if TIMELINE_AT_TOP:
 				self.timeline.moveto((my_l, my_t, my_r, my_t+tl_h), timemapper)
+				# Tricky.... We know where the line in the timeline
+				# widget is
+				greyout_t = my_t + tl_h/2
 				my_t = my_t + tl_h
+				greyout_b = my_t
 			else:
 				self.timeline.moveto((my_l, my_b-tl_h, my_r, my_b), timemapper)
+				greyout_b = my_b
 				my_b = my_b - tl_h
+				greyout_t = my_b - tl_h/2
 			y = self.timeline.params[0]
 			self.need_draghandles = my_l,my_r,y-DRAGHANDLESIZE/2
 			min_height = min_height - tl_h
@@ -1233,11 +1249,15 @@ class StructureObjWidget(MMNodeWidget):
 			if TIMELINE_AT_TOP:
 				self.bwstrip.moveto((my_l, my_t, my_r, my_t + bw_h))
 				my_t = my_t + bw_h
+				greyout_b = my_t
 			else:
 				self.bwstrip.moveto((my_l, my_b - bw_h, my_r, my_b))
 				my_b = my_b - bw_h
+				greyout_t = my_b
 			self.bwstrip.addallbandwidthinfo(self.node, timemapper)
-				
+		if self.greyout is not None:
+			self.greyout.moveto((my_l, greyout_t, my_r, greyout_b), timemapper)
+
 		if timemapper is None:
 			self.need_draghandles = None
 		else:
@@ -2095,7 +2115,8 @@ class MediaWidget(MMNodeWidget):
 			else:
 				self.bwstrip.moveto((l, b-bw_h, r, b), timemapper)
 				b = b - bw_h
-
+		# XXXX Support for greyout widget not added, because timelines
+		# on media nodes isn't used anyway nowadays.
 		pix16x = 16
 		pix16y = 16
 		if self.transition_in is not None:
@@ -2448,6 +2469,43 @@ class PushBackBarWidget(MMWidgetDecoration):
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node, '.begin1')
 
+class GreyoutWidget(MMWidgetDecoration):
+	# A widget greying out timeline/bandwidth areas that
+	# are meaningless
+	def __init__(self, mmwidget, mother):
+		MMWidgetDecoration.__init__(self, mmwidget, mother)
+		self.greyout_ranges = []
+
+	def recalc_minsize(self):
+		return 0, 0
+
+	def moveto(self, coords, timemapper):
+		MMWidgetDecoration.moveto(self, coords)
+		self.__timemapper = timemapper
+		self.greyout_ranges = []
+
+	def _recalc_ranges(self):
+		t0, t1, t2, download, begindelay = self.get_mmwidget().GetTimes('virtual')
+		timemapper = self.__timemapper
+		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
+			if left != right:
+				stalltime, stalltype = timemapper.getstall(time)
+				if not stalltime:
+					self.greyout_ranges.append((left+1, right))
+
+	def draw(self, displist):
+		self._recalc_ranges()
+		x, y, w, h = self.get_box()
+		for left, right in self.greyout_ranges:
+			displist.drawstipplebox(self.mmwidget.PLAYCOLOR, (left, y, right-left+1, h))
+
+	def redraw_partial(self, displist, left, right):
+		x, y, w, h = self.get_box()
+		for rl, rr in self.greyout_ranges:
+			if left <= rr and right >= rl:
+				displist.drawstipplebox(self.mmwidget.PLAYCOLOR, (rl, y, rr-rl+1, h))
+			if right < rl:
+				break
 
 class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
@@ -2521,7 +2579,6 @@ class TimelineWidget(MMWidgetDecoration):
 						color = BWMAYSTALLCOLOR
 					else:
 						color = BWSTALLCOLOR
-					print stalltype, color
 					displist.fgcolor(color)
 					label = '%ds %s'%(stalltime, stalltype)
 					lw = displist.strsizePXL(label)[0]
@@ -2531,9 +2588,7 @@ class TimelineWidget(MMWidgetDecoration):
 						lw = displist.strsizePXL(label)[0]
 					if lw < right-left:
 						displist.centerstring(left, longtick_top, right, longtick_bot, label)
-				else:
-					color = COLCOLOR
-				displist.drawline(color, [(left, line_y), (right, line_y)])
+					displist.drawline(color, [(left, line_y), (right, line_y)])
 				length = length - (right - left)
 		displist.fgcolor(TEXTCOLOR)
 		if t0 >= t2:
@@ -2595,9 +2650,10 @@ class TimelineWidget(MMWidgetDecoration):
 				continue
 			if time > t2:
 				break
-			tick_x = timemapper.interptime2pixel(time)
+##			tick_x = timemapper.interptime2pixel(time)
 			tick_x2 = timemapper.interptime2pixel(time, align='right')
-			tick_x_mid = (tick_x + tick_x2) / 2
+##			tick_x_mid = (tick_x + tick_x2) / 2
+			tick_x = tick_x_mid = tick_x2
 			# Check whether it is time for a tick
 			if t % mod == 0: # and tick_x > lastlabelpos + halflabelwidth:
 				lastlabelpos = tick_x_mid + halflabelwidth
@@ -2624,10 +2680,11 @@ class TimelineWidget(MMWidgetDecoration):
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
 			displist.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])
-			if tick_x != tick_x2:
-				displist.drawline(COLCOLOR, [(tick_x2, cur_tick_top), (tick_x2, cur_tick_bot)])
+##			if tick_x != tick_x2:
+##				displist.drawline(COLCOLOR, [(tick_x2, cur_tick_top), (tick_x2, cur_tick_bot)])
 # to also draw a horizontal line between the tips of the two ticks, use the following instead
 ##				displist.drawline(COLCOLOR, [(tick_x, cur_tick_top), (tick_x2, cur_tick_top), (tick_x2, cur_tick_bot), (tick_x, cur_tick_bot)])
+		displist.fgcolor((255, 0, 0))
 	draw_selected = draw
 
 class BandWidthWidget(MMWidgetDecoration):
@@ -2726,7 +2783,6 @@ class BandWidthWidget(MMWidgetDecoration):
 ##		self.params = line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot
 
 	def draw(self, displist):
-		print 'DBG: draw'
 		x, y, w, h = self.get_box()
 		y = y + 3
 		h = h - 6
@@ -2754,24 +2810,29 @@ class BandWidthWidget(MMWidgetDecoration):
 		tonotok = []
 		tookfocus = []
 		tonotokfocus = []
+		redrawareas = []
 		for n, box in self.okboxes:
 			if n in focusnodes:
 				tookfocus.append((n, box))
+				redrawareas.append((box[0], box[0]+box[2]))
 		for nb in tookfocus:
 			self.okboxes.remove(nb)
 		for n, box in self.notokboxes:
 			if n in focusnodes:
 				tonotokfocus.append((n, box))
+				redrawareas.append((box[0], box[0]+box[2]))
 		for nb in tonotokfocus:
 			self.notokboxes.remove(nb)
 		for n, box in self.okfocusboxes:
 			if not n in focusnodes:
 				took.append((n, box))
+				redrawareas.append((box[0], box[0]+box[2]))
 		for nb in took:
 			self.okfocusboxes.remove(nb)
 		for n, box in self.notokfocusboxes:
 			if not n in focusnodes:
 				tonotok.append((n, box))
+				redrawareas.append((box[0], box[0]+box[2]))
 		for nb in tonotok:
 			self.notokfocusboxes.remove(nb)
 		for nb in took:
@@ -2787,6 +2848,9 @@ class BandWidthWidget(MMWidgetDecoration):
 		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, tonotok)
 		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, tookfocus)
 		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, tonotokfocus)
+		if self.mmwidget.greyout:
+			for left, right in redrawareas:
+				self.mmwidget.greyout.redraw_partial(displist, left, right)
 
 # A box with icons in it.
 # Comes before the node's name.
