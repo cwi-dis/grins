@@ -13,16 +13,20 @@ class HelpWindow() = ViewDialog(), BasicDialog():
     	self.toplevel = toplevel
     	self.root = toplevel.root # For ViewDialog
 	self.dirname = dirname + '/'
+	self.topics = None
+	return self
+    def inittopics(self):
+	if self.topics <> None: return
 	self.topics = []
-	for topic in posix.listdir(dirname):
+	for topic in posix.listdir(self.dirname):
 		if topic[:1] not in ('.', '#') and topic[-1:] <> '~':
 			self.topics.append(topic)
 	self.topics.sort()
 	for line in self.topics:
 	    self.topic.add_browser_line(line)
 	self.curtopic = ''
-	return self
     def show(self):
+	self.inittopics()
     	BasicDialog.show(self)
     	self.toplevel.checkviews()
     def hide(self):
@@ -32,6 +36,7 @@ class HelpWindow() = ViewDialog(), BasicDialog():
 	# This sets self.topic and self.help:
 	self.form = help_form.mk_form_help_form(self)
     def givehelp(self, topic):
+	self.inittopics()
 	if type(topic) = type(()):
 	    topic, subtopic = topic
 	else:
@@ -44,7 +49,7 @@ class HelpWindow() = ViewDialog(), BasicDialog():
 		self.help.load_browser(self.dirname + topic)
 		self.curtopic = topic
 		if subtopic:
-                    j = findtopicline(self.topics[i], subtopic)
+                    j = findtopicline(self.dirname + topic, subtopic)
                     if j:
                         self.help.set_browser_topline(j)
                         self.help.select_browser_line(j)
