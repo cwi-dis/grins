@@ -426,7 +426,7 @@ class ChannelView(ViewDialog, GLDialog):
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
-		else:
+		elif node.GetType() <> 'bag':
 			for c in node.GetChildren():
 				self.scantree(c, focus)
 

@@ -6,6 +6,8 @@ from MMExc import *
 from MMNode import alltypes, leaftypes, interiortypes
 from HDTL import HD, TL
 
+real_interiortypes = ('par', 'seq')
+
 
 # Subroutine to check whether a node is a mini-document.
 # This is true if either it is the root or its parent is a bag node.
@@ -183,7 +185,7 @@ def prep1(node):
 	node.counter = [0, 0]
 	node.deps = [], []
 	type = node.GetType()
-	if type in ('seq', 'bag'): # XXX not right!
+	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
 		for c in node.GetChildren():
 			prep1(c)
@@ -218,7 +220,7 @@ def prep2(node, root):
 		if root.IsAncestorOf(xnode):
 			adddep(xnode, xside, delay, node, yside)
 	#
-	if node.GetType() in interiortypes:
+	if node.GetType() in real_interiortypes:
 		for c in node.GetChildren(): prep2(c, root)
 
 
@@ -230,7 +232,7 @@ def propdown(node, stoptime):
 	if tp == 'par':
 		for c in node.GetChildren():
 			propdown(c, stoptime)
-	elif tp in ('seq', 'bag'): # XXX not right!
+	elif tp == 'seq': # XXX not right!
 		children = node.GetChildren()
 		if not children:
 			return
@@ -250,6 +252,7 @@ def adddep(xnode, xside, delay, ynode, yside):
 
 
 def decrement(q, delay, node, side):
+	print 'DEC', delay, node, side
 	if delay > 0:
 		id = q.enter(delay, 0, decrement, (q, 0, node, side))
 		return
@@ -264,7 +267,7 @@ def decrement(q, delay, node, side):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	if node.GetType() in interiortypes:
+	if node.GetType() in real_interiortypes:
 		node.t0t1_inherited = 1
 	elif side == HD:
 		import time
