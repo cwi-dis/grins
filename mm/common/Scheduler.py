@@ -324,6 +324,12 @@ class SchedulerContext:
 			elif ev[0] == SR.ARM_DONE:
 				self.unexpected_armdone[ev] = 1
 				return []
+			elif ev[0] == SR.SCHED_DONE:
+				# XXXX Hack to forestall crash on interior
+				# nodes with duration that are terminated:
+				# their terminating syncarc is still there...
+				print 'Warning: unexpected', SR.ev2string(ev)
+				return []
 			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
 		srlist = self.sractions[actionpos]
 		if srlist is None:
