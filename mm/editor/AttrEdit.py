@@ -677,7 +677,12 @@ class PreferenceWrapper(Wrapper):
 		return 1
 
 	def commit(self):
+		attr = None
+		if prefseditor:
+			attr = prefseditor.getcurattr()
 		self.__callback()
+		if prefseditor and attr:
+			prefseditor.setcurattr(attr)
 
 	def rollback(self):
 		pass
@@ -773,7 +778,7 @@ class AttrEditor(AttrEditorDialog):
 		wrapper.register(self)
 		self.__open_dialog(initattr)
 
-	def __open_dialog(self, initattr = None):
+	def __open_dialog(self, initattr):
 		import settings
 		wrapper = self.wrapper
 		list = []
@@ -969,9 +974,11 @@ class AttrEditor(AttrEditorDialog):
 				del self.attrlist
 				self.__open_dialog(attr)
 			else:
+				a = self.getcurattr()
 ##				self.fixvalues()
 				self.resetall()
 				self.settitle(self.wrapper.maketitle())
+				self.setcurattr(a)
 
 	def rollback(self):
 		pass
