@@ -43,7 +43,11 @@ class DownloadChannel(Channel.ChannelAsync):
 		self.release_res()
 		amf=win32ui.CreateAsyncMonikerFile()
 		amf.SetStatusListener(self)
-		url = MMurl.canonURL(self.getfileurl(node))
+		url = self.getfileurl(node)
+		if not url:
+			self.errormsg(node, 'No URL set on node')
+			return 1
+		url = MMurl.canonURL(url)
 		self._asyncMonikerFile=amf
 		self._asyncMonikerFile.Open(url)
 		return 0
