@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 
 import MMAttrdefs
+import MMNode
 import string
 import math
 import svgpath
@@ -9,6 +10,9 @@ import re
 
 # units, messages
 import windowinterface
+
+# conditional behaviors
+import settings
 
 debug = 0
 
@@ -715,7 +719,10 @@ class EffectiveAnimator:
 		# implemented fit='meet' (0) and fit='hidden' (1)
 		scale = mmregion['scale']
 
-		coordinates = mmregion.GetPresentationAttr('base_winoff')
+		if settings.activeFullSmilCss:
+			coordinates = mmregion.getPxGeom()
+		else:
+			coordinates = mmregion.GetPresentationAttr('base_winoff')
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
 			units = ch.get('units')
@@ -809,9 +816,15 @@ class EffectiveAnimator:
 		mmchan = chan._attrdict
 
 		# implemented fit='meet' (0) and fit='hidden' (1)
-		scale = mmchan['scale']
+		if settings.activeFullSmilCss:
+			scale = 1
+		else:
+			scale = mmchan['scale']
 
-		coordinates = mmchan.GetPresentationAttr('base_winoff')
+		if settings.activeFullSmilCss:
+			coordinates, rcm = self.__node.getPxGeomMedia()
+		else:
+			coordinates = mmchan.GetPresentationAttr('base_winoff')
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
 			units = mmchan.get('units')
@@ -1247,14 +1260,23 @@ class AnimateElementParser:
 	def __checkTarget(self):
 		# for animate motion the implicit target attribute is region.position
 		if self.__elementTag=='animateMotion':
-			d = self.__target.GetChannel().attrdict
-			if d.has_key('base_winoff'):
-				base_winoff = d['base_winoff']
-				self.__attrname = 'position'
-				self.__grinsattrname = self.__attrname
-				self.__domval = complex(base_winoff[0], base_winoff[1])
+			self.__grinsattrname = self.__attrname = 'position'
+			if settings.activeFullSmilCss:
+				if self.__target.__class__ == MMNode.MMNode:
+					rc, rcm = self.__target.getPxGeomMedia()
+					x, y, w, h = rc
+				else:
+					x, y, w, h = self.__target.getPxGeom()
+				self.__domval = complex(x, y)
 				return 1
-
+			else:
+				d = self.__target.GetChannel().attrdict
+				if d.has_key('base_winoff'):
+					base_winoff = d['base_winoff']
+					self.__domval = complex(base_winoff[0], base_winoff[1])
+					return 1
+			return 0
+				
 		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
 		if not self.__attrname:
 			print 'failed to get attributeName'
@@ -1625,7 +1647,6 @@ class AnimateElementParser:
 		return rl
 
 	def __checkNotNodeElementsTargets(self, te):
-		from MMNode import MMNode
 		anim = self.__anim
 		ctx = anim.GetContext()
 		if ctx.channeldict.has_key(te):
@@ -1634,7 +1655,7 @@ class AnimateElementParser:
 			if hasattr(targchan,'_vnode'):
 				newnode = targchan._vnode
 			else:
-				newnode = MMNode('imm',ctx,ctx.newuid())
+				newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
 				newnode.attrdict = targchan.attrdict.copy()
 				newnode.attrdict['channel'] = te
 				newnode.attrdict['tag'] = 'region'
@@ -1644,7 +1665,7 @@ class AnimateElementParser:
 			# transition
 			# XXX fix: create one virtual node per transition
 			tr = ctx.transitions[te]
-			newnode = MMNode('imm',ctx,ctx.newuid())
+			newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
 			newnode.attrdict = tr.copy()
 			newnode.attrdict['channel'] = te
 			newnode.attrdict['tag'] = 'transition'
@@ -1659,7 +1680,7 @@ class AnimateElementParser:
 				if hasattr(parent,vnodename):
 					newnode = getattr(parent, vnodename)
 				else:
-					newnode = MMNode('imm', ctx, ctx.newuid())
+					newnode = MMNode.MMNode('imm', ctx, ctx.newuid())
 					newnode.attrdict = parent.attrdict.copy()
 					newnode.attrdict['tag'] = 'area'
 					newnode.attrdict['coords'] = a.aargs
@@ -1702,4 +1723,5 @@ class AnimateElementParser:
 		
 
 
+ 
  
