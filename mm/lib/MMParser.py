@@ -28,7 +28,7 @@ digits = '0123456789'
 # or other get*() methods.  (This resets the scanner except for the
 # current line number.)
 
-class MMParser():
+class MMParser:
 	#
 	def init(self, (input, context)):
 		#
@@ -511,7 +511,7 @@ def parsevalue(string, typedef, context):
 
 # A class to parse from a string
 
-class StringInput():
+class StringInput:
 	#
 	def init(self, string):
 		self.string = string

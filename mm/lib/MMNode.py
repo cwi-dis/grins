@@ -11,7 +11,7 @@ alltypes = leaftypes + interiortypes
 
 # The MMNodeContext class
 #
-class MMNodeContext():
+class MMNodeContext:
 	#
 	def init(self, nodeclass):
 		self.nodeclass = nodeclass
@@ -103,7 +103,7 @@ class MMNodeContext():
 
 # The Node class
 #
-class MMNode():
+class MMNode:
 	#
 	# Create a new node.
 	#
