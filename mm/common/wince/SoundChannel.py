@@ -212,9 +212,23 @@ class AudioPlayer:
 		self._u = u
 
 		# decode some
+		
+		# the following loop may break because
+		# a) of no more data, or
+		# b) len(self._wavhdrs) >= AudioPlayer.buffers_start
+		
+		# before the loop exits, the 'data' buffer is filled
+		# a) an empty 'data' buffer means no more data
+		# b) filled or half-filled 'data' buffer will be decoded 
+		# by 'read_more_mp3_audio' next time
+		# c) exception to (b): when self._u has been closed 
+		# the 'data' buffer if not empty contains useless data (filler byte or garbage)
+			
 		decbuf = ''
 		status = len(data)
 		while status > 0 and len(self._wavhdrs) < AudioPlayer.buffers_start:
+
+			# decode as much as possible from 'data' buffer
 			decdata, done, inputpos, status = decoder.DecodeBuffer(data)
 			if done>0:
 				decbuf = decbuf + decdata[:done]
@@ -225,26 +239,38 @@ class AudioPlayer:
 			if status > 0:
 				status = status - 1
 			data = data[decode_buf_size - status:]
+			
+			# re-fill 'data' buffer
 			newdata =  u.read(decode_buf_size - status)
 			if not newdata:
 				self._u.close()
 				self._u = None
+				# break though 'data' may contain encoded bytes;
+				# if they could be decoded they would have been 
+				# decoded by the first section of this loop
 				break
 			data = data + newdata
 			status = len(data)
+
+			# if 'decbuf' is sufficiently large send it to the device 
 			if len(decbuf) >= AudioPlayer.wavehdr_size:
 				wavhdr = winmm.CreateWaveHdr(decbuf)
 				self._wavhdrs.append(wavhdr)
 				decbuf = ''
+		
+		# send half-filled buffer to the device 
 		if len(decbuf):
 			wavhdr = winmm.CreateWaveHdr(decbuf)
 			self._wavhdrs.append(wavhdr)
+		
+		# hold any remaining encoded data
 		self._rest = data		
 
 	def read_more_mp3_audio(self):
 		if self._waveout is None or self.decoder is None:
 			return
 		decoder = self.decoder
+		
 		# size of buffer holding encoded data
 		decode_buf_size = AudioPlayer.decode_buf_size	
 
@@ -252,6 +278,8 @@ class AudioPlayer:
 		data = self._rest
 		status = len(data)
 		while status > 0 and len(self._wavhdrs) < AudioPlayer.buffers_hi:
+
+			# decode as much as possible from 'data' buffer
 			decdata, done, inputpos, status = decoder.DecodeBuffer(data)
 			if done>0:
 				decbuf = decbuf + decdata[:done]
@@ -262,6 +290,8 @@ class AudioPlayer:
 			if status > 0:
 				status = status - 1
 			data = data[decode_buf_size - status:]
+
+			# fill  'data' buffer
 			newdata =  self._u.read(decode_buf_size - status)
 			if not newdata:
 				self._u.close()
@@ -269,17 +299,23 @@ class AudioPlayer:
 				break
 			data = data + newdata
 			status = len(data)
+
+			# if 'decbuf' is sufficiently large send it to the device 
 			if len(decbuf) >= AudioPlayer.wavehdr_size:
 				hdr = winmm.CreateWaveHdr(decbuf)
 				self._wavhdrs.append(hdr)
 				hdr.PrepareHeader(self._waveout)
 				self._waveout.Write(hdr)
 				decbuf = ''
+
+		# send any half-filled buffer to the device 
 		if len(decbuf):
 			hdr = winmm.CreateWaveHdr(decbuf)
 			self._wavhdrs.append(hdr)
 			hdr.PrepareHeader(self._waveout)
 			self._waveout.Write(hdr)
+
+		# hold any remaining encoded data
 		self._rest = data		
 
 	def play(self):
