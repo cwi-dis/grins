@@ -168,37 +168,31 @@ class CommandHandler:
 	def __init__(self, menubartemplate):
 		self.cmd_to_menu = {}
 		self.cmd_enabled = {}
-		self.must_update_window_menu = 1
-		self.must_update_document_menu = 1
+##		self.must_update_window_menu = 1
+##		self.must_update_document_menu = 1
 		self.all_cmd_groups = [None, None, None]
 		self.menubartraversal = []
 		for menutemplate in menubartemplate:
 			entrytype, title, content = menutemplate
 			menu = mw_globals.toplevel._addmenu(title)
-			if entrytype == MenuTemplate.CASCADE:
-				itemlist = self.makemenu(menu, content)
-				self.menubartraversal.append(entrytype, menu, itemlist)
-			elif entrytype == MenuTemplate.DYNAMICCASCADE:
-				dynamicmenu = _DynamicMenu(menu, self.dynamic_callback, (cmd,))
-				self.menubartraversal.append(entrytype, cmd, dynamicmenu)
-			else:
-				raise 'Incorrect menubar item type', entrytype
-		# Create special menus
-		menu = mw_globals.toplevel._addmenu('Documents')
-		self.document_menu = _SpecialMenu(menu,
-			mw_globals.toplevel._pop_group)
-		menu = mw_globals.toplevel._addmenu('Windows')
-		self.window_menu = _SpecialMenu(menu,
-			mw_globals.toplevel._pop_window)
+			rv = self.fillmenu(menu, entrytype, content)
+			self.menubartraversal.append(rv)
+##		# Create special menus
+##		menu = mw_globals.toplevel._addmenu('Documents')
+##		self.document_menu = _SpecialMenu(menu,
+##			mw_globals.toplevel._pop_group)
+##		menu = mw_globals.toplevel._addmenu('Windows')
+##		self.window_menu = _SpecialMenu(menu,
+##			mw_globals.toplevel._pop_window)
 			
 	def install_cmd(self, number, group):
 		if self.all_cmd_groups[number] == group:
 			return 0
 		self.all_cmd_groups[number] = group
-		if number == 0:
-			self.must_update_window_menu = 1
-		else:
-			self.must_update_document_menu = 1
+##		if number == 0:
+##			self.must_update_window_menu = 1
+##		else:
+##			self.must_update_document_menu = 1
 		# Don't update, we do that in the event loop by calling
 		# update_menus_enabled
 		return 1
@@ -238,23 +232,37 @@ class CommandHandler:
 				itemlist.append(entry_type, cmd, name)
 			elif entry_type == MenuTemplate.SEP:
 				menu.addseparator()
-			elif entry_type == MenuTemplate.CASCADE:
+			elif entry_type in (MenuTemplate.CASCADE, MenuTemplate.DYNAMICCASCADE,
+					MenuTemplate.SPECIAL):
 				dummy, name, subcontent = entry
 				submenu = SubMenu(menu, name, name)
-				subitemlist = self.makemenu(submenu,
-							    subcontent)
-				itemlist.append(entry_type, submenu,
-						subitemlist)
-			elif entry_type == MenuTemplate.DYNAMICCASCADE:
-				dummy, name, cmd = entry
-				submenu = SubMenu(menu, name, name)
-				dynamicmenu = _DynamicMenu(submenu, self.dynamic_callback, (cmd,))
-				self.cmd_to_menu[cmd] = dynamicmenu
-				self.cmd_enabled[cmd] = 1
-				itemlist.append(entry_type, cmd, dynamicmenu)
+				rv = self.fillmenu(submenu, entry_type, subcontent)
+				itemlist.append(rv)
 			else:
 				raise 'Unknown menu entry type', entry_type
 		return itemlist
+		
+	def fillmenu(self, submenu, entrytype, subcontent):
+		if entrytype == MenuTemplate.CASCADE:
+			subitemlist = self.makemenu(submenu, subcontent)
+			return (entrytype, submenu, subitemlist)
+		elif entrytype == MenuTemplate.DYNAMICCASCADE:
+			cmd = subcontent
+			dynamicmenu = _DynamicMenu(submenu, self.dynamic_callback, (cmd,))
+			self.cmd_to_menu[cmd] = dynamicmenu
+			self.cmd_enabled[cmd] = 1
+			return (entrytype, cmd, dynamicmenu)
+		elif entrytype == MenuTemplate.SPECIAL:
+			if subcontent == 'documents':
+				callback = mw_globals.toplevel._pop_group
+				filler = self.update_document_menu
+			elif subcontent == 'windows':
+				callback = mw_globals.toplevel._pop_window
+				filler = self.update_window_menu
+			specialmenu = _SpecialMenu(submenu, callback)
+			return (entrytype, specialmenu, filler)
+		else:
+			raise 'Unknown menu type', entry_type
 				
 	def toggle_callback(self, cmd):
 		mentry = self.cmd_to_menu[cmd]
@@ -316,6 +324,9 @@ class CommandHandler:
 				itemtype, cmd, dynamicmenu = item
 				dynamiclist = self.find_command_dynamic_list(cmd)
 				must_be_enabled = dynamicmenu.set(dynamiclist)
+			elif itemtype == MenuTemplate.SPECIAL:
+				itemtype, specialmenu, fillerfunc = item
+				must_be_enabled = fillerfunc(specialmenu)
 			else:
 				itemtype, cmd, names = item
 				must_be_enabled = (not not self.find_command(cmd))
@@ -339,17 +350,17 @@ class CommandHandler:
 
 	def update_menus(self):
 		self._update_one(self.menubartraversal)
-		if self.must_update_window_menu:
-			self.update_window_menu()
-			self.must_update_window_menu = 0
-		if self.must_update_document_menu:
-			self.update_document_menu()
-			self.must_update_document_menu = 0
+##		if self.must_update_window_menu:
+##			self.update_window_menu()
+##			self.must_update_window_menu = 0
+##		if self.must_update_document_menu:
+##			self.update_document_menu()
+##			self.must_update_document_menu = 0
 				
-	def update_window_menu(self):
+	def update_window_menu(self, menu):
 		list, cur = mw_globals.toplevel._get_window_names()
-		self.window_menu.set(list, cur)
+		return menu.set(list, cur)
 		
-	def update_document_menu(self):
+	def update_document_menu(self, menu):
 		list, cur = mw_globals.toplevel._get_group_names()
-		self.document_menu.set(list, cur)
+		return menu.set(list, cur)
