@@ -160,13 +160,10 @@ class Node:
 			self.changeAlignAttr(name, value)
 	
 	def move(self, pos):
-		# XXX: needs optimization
-		x, y = pos
-		l, t, w, h = self.getPxGeom()
+		x = convertToPx(pos[0], self.container.pxwidth)
+		y = convertToPx(pos[1], self.container.pxheight)
 		self.changeRawAttr('left', x)
 		self.changeRawAttr('top', y)
-		self.changeRawAttr('width', w)
-		self.changeRawAttr('height', h)
 			
 	def link(self, container):
 		# if already link, unlink before
@@ -258,10 +255,17 @@ class Node:
 		self._onGeomChanged()
 	
 	def getAbsPos(self):
+		assert self.container, 'Node not linked'
 		X, Y = self.container.getAbsPos()
-		x, y = self.left, self.right
-		return X+x, Y+y, w, h
-			
+		x, y = self.pxleft, self.pxtop 
+		return X+x, Y+y
+		
+	def getRoot(self):
+		node = self
+		while node.container:
+			node = node.container
+		return node
+				
 	def __dump(self):
 		print self.__class__.__name__, self.mmobj, self.getPxGeom(), 'scale=',self.scale, 'media=',self.media
 		for child in self.children:
@@ -648,7 +652,7 @@ class RegionNode(Node):
 		self.context._onPxValuesChanged(self, self._getPxGeom())
 
 	def _getPxGeom(self):
-		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
+		return self.pxleft, self.pxtop, self.pxwidth, self.pxheight
 		
 	def getScale(self):
 		if self.scale != None:
@@ -842,6 +846,8 @@ class MediaNode(Node):
 		self.intrinsicWidth = None
 		self.intrinsicHeight = None
 		self.defaultSizeHandler = defaultSizeHandler
+		self.mmRegPoint = None # allow for a private instance 
+		self.dx, self.dy = 0, 0 # allow for offsets 
 
 	def copyRawAttrs(self, srcNode):
 		Node.copyRawAttrs(self,srcNode)
@@ -876,6 +882,19 @@ class MediaNode(Node):
 	def updateTree(self):
 		self.update()
 
+	def getMMRegPoint(self):
+		if self.mmRegPoint:
+			return self.mmRegPoint
+		regPoint = self.getRegPoint()
+		return self.context.getDocumentContext().GetRegPoint(regPoint)
+	
+	def move(self, pos):
+		self.dx = convertToPx(pos[0], self.container.pxwidth)
+		self.dy = convertToPx(pos[1], self.container.pxheight)
+
+	def isDOMRegPoint(self):
+		return self.dx==0 and self.dy==0
+
 	# return the tuple x,y alignment in pourcent value
 	# alignOveride is an optional overide id
 	def _getxyAlign(self, alignOveride=None):
@@ -903,7 +922,7 @@ class MediaNode(Node):
 			return 100,100
 		
 		regPoint = self.getRegPoint()		
-		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
+		regPointObject = self.getMMRegPoint()
 		regAlign = self._getRegAlign(regPointObject)
 		
 		# convert regalignid to pourcent value
@@ -1063,7 +1082,7 @@ class MediaNode(Node):
 		# It's not a problem as long as regpoint element is not animable
 		regPoint = self.getRegPoint()
 
-		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
+		regPointObject = self.getMMRegPoint()
 
 		regpoint_x = regPointObject.getx(self.container.pxwidth)
 		regpoint_y = regPointObject.gety(self.container.pxheight)
@@ -1197,8 +1216,7 @@ class MediaNode(Node):
 		return 'topLeft'			
 
 	def getRegAlign(self):
-		regPoint = self.getRegPoint()
-		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
+		regPointObject = self.getMMRegPoint()
 		return self._getRegAlign(regPointObject)
 		
 	def _getRegAlign(self, regPointObject):
@@ -1222,6 +1240,7 @@ class MediaNode(Node):
 		self.context._onPxValuesChanged(self, self._getPxGeom())
 
 	def _getPxGeom(self):
-		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
+		return self.pxleft+self.dx, self.pxtop+self.dy, self.pxwidth, self.pxheight
 
 
+ 
