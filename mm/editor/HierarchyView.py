@@ -629,22 +629,7 @@ class HierarchyView(HierarchyViewDialog):
 			i = -1
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
-			if hasattr(obj.node, 'expanded'):
-				# find the index of the first child where the
-				# appropriate drop coordinate is after the
-				# center of the child
-				# if no such child, return -1 (which means
-				# at the end)
-
-				i = obj.get_nearest_node_index((x,y));
-
-##				children = obj.node.children
-##				for i in range(len(children)):
-##					box = children[i].views['struct_view'].get_box();
-##					if (x,y)[not horizontal] <= (box[not horizontal] + box[(not horizontal) + 2]) / 2:
-##						break
-##				else:
-##					i = -1
+			i = obj.get_nearest_node_index((x,y))
 			self.create(0, url, i)
 		else:
 			# check that URL compatible with node's channel
