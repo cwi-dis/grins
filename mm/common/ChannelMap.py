@@ -14,19 +14,19 @@ from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
 from HtmlChannel import HtmlChannel
 
-channelmap = { \
-	'null': 	NullChannel, \
-	'text': 	TextChannel, \
-	'sound':	SoundChannel, \
-	'image': 	ImageChannel, \
-	'movie': 	MovieChannel, \
-	'python': 	PythonChannel, \
-	'shell': 	ShellChannel, \
-	'vcr':		VcrChannel, \
-	'socket':	SocketChannel, \
-	'mpeg':		MpegChannel, \
-	'cmif':		CmifChannel, \
-	'html':		HtmlChannel, \
+channelmap = {
+	'null': 	NullChannel,
+	'text': 	TextChannel,
+	'sound':	SoundChannel,
+	'image': 	ImageChannel,
+	'movie': 	MovieChannel,
+	'python': 	PythonChannel,
+	'shell': 	ShellChannel,
+	'vcr':		VcrChannel,
+	'socket':	SocketChannel,
+	'mpeg':		MpegChannel,
+	'cmif':		CmifChannel,
+	'html':		HtmlChannel,
 	}
 
 channeltypes = ['null', 'text', 'image']
