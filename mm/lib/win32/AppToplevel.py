@@ -355,7 +355,7 @@ class _Toplevel:
 				self._timers.insert(i, (sec - t, cb, self._timer_id))
 				return self._timer_id
 			t = t + time0
-		self._timers.append(sec - t, cb, self._timer_id)
+		self._timers.append((sec - t, cb, self._timer_id))
 		#print 'new event:',self._timer_id,sec - t,cb
 		Afx.GetMainWnd().PostMessage(WM_KICKIDLE)
 		return self._timer_id
