@@ -1728,6 +1728,8 @@ class SMILWriter(SMIL):
 				fit = 'hidden'
 			elif scale == -3:
 				fit = 'fill'
+			elif scale == -4:
+				fit = 'scroll'
 			else:
 				fit = None
 				print '** Channel uses unsupported scale value', name
