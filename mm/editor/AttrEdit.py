@@ -1014,6 +1014,8 @@ class AttrEditor(AttrEditorDialog):
 				C = BitrateAttrEditorFieldWithDefault
 			elif displayername == 'quality':
 				C = QualityAttrEditorField
+			elif displayername == 'chanpos':
+				C = ChanPosAttrEditorField
 			elif displayername == '.anchorlist':
 				C = AnchorlistAttrEditorField
 			elif displayername == 'scale':
@@ -1595,9 +1597,11 @@ class BoolAttrEditorFieldWithDefault(BoolAttrEditorField):
 		return [self.default] + BoolAttrEditorField.getoptions(self)
 
 class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['mm', 'relative', 'pixels']
-	__valuesmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
-		       windowinterface.UNIT_PXL]
+#	__values = ['mm', 'relative', 'pixels']
+#	__valuesmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
+#		       windowinterface.UNIT_PXL]
+	__values = ['relative', 'pixels']
+	__valuesmap = [windowinterface.UNIT_SCREEN, windowinterface.UNIT_PXL]
 
 	# Choose from a list of unit types
 	def getoptions(self):
