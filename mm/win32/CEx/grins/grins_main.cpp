@@ -44,6 +44,8 @@ void Main::close()
 		}
 	}
 
+itoplevel* Main::get_toplevel() 
+	{ return m_toplevel;}
 
 } // namespace grins
 

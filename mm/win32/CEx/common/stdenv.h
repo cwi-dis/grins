@@ -6,7 +6,10 @@
 
 // signed/unsigned mismatch
 #pragma warning(disable: 4018)
- 
+
+// windows CE defs for STL
+#include <wce_defs.h>
+
 // std c++ library
 #include <iterator>
 #include <memory>

@@ -7,11 +7,13 @@
 #include "charconv.h"
 #include "memfile.h"
 
-#include "tree_node.h"
+#include "smil/smil_node.h"
 
 #include "xml_parsers.h"
 
 #include "smil/smil_parser.h"
+
+#include "grins_player.h"
 
 #include "windowinterface.h"
 
@@ -22,12 +24,15 @@ static smil::parser smil_parser;
 TopLevel::TopLevel(Main *pMain, const TCHAR *url)
 :	m_pMain(pMain), 
 	m_url(url),
-	m_root(0)
+	m_root(0),
+	m_player(0)
 	{
 	}
 		
 TopLevel::~TopLevel()
 	{
+	if(m_player != 0)
+		delete m_player;
 	if(m_root != 0)
 		delete m_root;
 	}
@@ -63,8 +68,18 @@ bool TopLevel::read_it()
 	// get ownership of root
 	m_root = smil_parser.detach();
 
+	// 
+	makeplayer();
+
 	return true;
 	}
 
+void TopLevel::makeplayer()
+	{
+	m_player = new Player(this);
+	}
+
+iplayer* TopLevel::get_player() 
+	{ return m_player;}
 
 } // namespace grins
