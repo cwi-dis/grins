@@ -1,0 +1,89 @@
+Microsoft eMbedded Visual Tools Workspace File, Format Version 3.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "Python"=..\..\..\..\python_ce\PCbuild\ce\Python.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "python16"=..\..\..\..\PYTHON_CE\PCBUILD\CE\python16.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "wincegdi"=..\..\WINSDK\WINGDI\wincegdi.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "wincekernel"=..\..\WINSDK\WINKERNEL\wincekernel.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "winceuser"=..\..\winsdk\winuser\winceuser.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
