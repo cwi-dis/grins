@@ -22,6 +22,7 @@ class LicenseDialog(win32dialog.ResDialog):
 		self.__buy = components.Button(self,grinsRC.IDUC_BUY)
 		self.__eval = components.Button(self,grinsRC.IDUC_EVALLICENSE)
 		self.__enterkey = components.Button(self,grinsRC.IDUC_ENTERKEY)
+		self.__openfile = components.Button(self, grinsRC.IDUC_OPENFILE)
 		self.__try = components.Button(self,win32con.IDOK)
 
 		self.loadbmp()
@@ -33,6 +34,7 @@ class LicenseDialog(win32dialog.ResDialog):
 		self.__buy.hookcommand(self, self.On_buy)
 		self.__eval.hookcommand(self, self.On_eval)
 		self.__enterkey.hookcommand(self, self.On_enterkey)
+		self.__openfile.hookcommand(self, self.On_openfile)
 		self.__try.hookcommand(self, self.On_try)
 		self.__splash.create_wnd_from_handle()
 		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
@@ -101,6 +103,9 @@ class LicenseDialog(win32dialog.ResDialog):
 
 	def On_enterkey(self, id, code):
 		self.cb_enterkey()
+
+	def On_openfile(self, id, code):
+		self.cb_open()
 
 	def On_try(self, id, code):
 		self.cb_try()
