@@ -41,6 +41,16 @@ def _GetDragData(dataobj):
 	for name, format in formats.items():
 		data = dataobj.GetGlobalData(format)
 		if data is not None:
+			if name == 'FileName':
+				# There may be more filenames, in which we
+				# return a MultipleFileNames flavor.
+				# Currently this flavor is unknown to the rest
+				# of the program, but at least we don't get the
+				# strange behaviour anymore that it will pick the
+				# first of the filenames and ignore the rest.
+				filenames = dataobj.GetFileNames()
+				if len(filenames) > 1:
+					return 'MultipleFileNames', filenames
 			return name, data
 	if DEBUG:
 		print "No supported format in drag object"
