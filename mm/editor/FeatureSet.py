@@ -14,7 +14,7 @@
 __version__ = "$Id$";
 
 [
-	EXPORT_SMIL1,
+	EXPORT_SMIL1,			# not implemented
 	EXPORT_SMIL2,
 	EXPORT_REAL,
 	EXPORT_QT,			# export to Quicktime-capable SMIL
@@ -27,14 +27,12 @@ __version__ = "$Id$";
 	STRUCTURE_VIEW,
 	PLAYER_VIEW,
 	TRANSITION_VIEW,
-	STRUCTURE_VIEW,
 	LAYOUT_VIEW,
 	HYPERLINKS_VIEW,
 	ASSETS_VIEW,
 	SOURCE_VIEW,			# show the source view for editing smil source.
 	SOURCE_VIEW_EDIT,		# allow editing of the source in the source view
 	USER_GROUPS,
-	SOURCE,
 	ERRORS_VIEW,
 
 	UNIFIED_FOCUS,			# All views share their focus
@@ -63,4 +61,4 @@ __version__ = "$Id$";
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
 
 	AUTO_EVALUATE,		# Don't need trial license to evaluate
-] = range(39)				# don't forget to update this range!
+] = range(37)				# don't forget to update this range!
