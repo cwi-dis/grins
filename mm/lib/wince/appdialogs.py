@@ -58,12 +58,54 @@ def showquestion(text, parent = None):
 	return showmessage(text, mtype = 'yesno', parent = parent)
 
 class ProgressDialog:
-	def __init__(self, *args):
-		pass
+	def __init__(self, title = '', cancelcallback=None, parent=None, delaycancel=1, percent=0):
+		self._title = title
+		self.cancelcallback = cancelcallback
+		self._percent = percent
+		self._parent=parent
+		self._curcur = None
+		self._curmax = None
+		
+		# create progress bar within toplevel window
+		from __main__ import toplevel
+		self._wnd = toplevel.getmainwnd() 
+		self._progress = self._wnd.CreateProgressBar()
+		self._wnd.setStatusMsg(title)
+		
+	def cleanup(self):
+		if self._progress:
+			self._progress.DestroyWindow()
+			self._wnd.setStatusMsg('')
+			self._wnd.InvalidateRect()
+			self._progress = None
 
-	def set(self, *args):
-		pass
+	def __del__(self):
+		self.cleanup()
 
+	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
+		if cur1 != None:
+			if self._percent:
+				label = label + "    %.0f%s" % (cur1, '%')
+			else:
+				label = label + " (%d of %d)" % (cur1, max1)
+		if self._progress:
+			self._wnd.setStatusMsg(label)
+		if max2 == None:
+			cur2 = None
+		if max2 != self._curmax:
+			self._curmax = max2
+			if max2 == None:
+				max2 = 0
+			if self._progress:
+				self._progress.SendMessage(wincon.PBM_SETRANGE, 0, max2)
+		if cur2 != self._curcur:
+			self._curcur = cur2
+			if cur2 == None:
+				cur2 = 0
+			if self._progress:
+				self._progress.SendMessage(wincon.PBM_SETPOS, cur2, 0)
+				if cur2 == max2:
+					self.cleanup()
 
 class FileDialog:
 	# Remember last location when the program does not request a specific
@@ -143,6 +185,8 @@ class FileDialog:
 			directory = FileDialog.last_location
 		dlg.SetOFNInitialDir(directory)
 		result = dlg.DoModal()
+		parent.InvalidateRect()
+		parent.UpdateWindow()
 		if default_dir:
 			FileDialog.last_location = '' # os.getcwd()
 		#os.chdir(curdir)
