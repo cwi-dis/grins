@@ -23,6 +23,7 @@ class SourceViewDialog:
 		else:
 			return 0
 	def hide(self):
+		self.__textwindow.close()
 		self.__textwindow = None
 
 	def get_text(self):
