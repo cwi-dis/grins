@@ -90,7 +90,7 @@ class _LayoutView2(GenFormView):
 
 		# layout component
 		self._previousHandler = None
-		self._layout = LayoutManager()
+		self._layout = LayoutManager(self)
 
 		# tree component
 		self._treeComponent = TreeManager()
@@ -516,29 +516,49 @@ class _LayoutView2(GenFormView):
 	#
 	# Focus adjustements
 	#
+	
 	def addFocusCtrl(self):
-		fctrl = components.Control(self, grinsRC.IDC_1)
-		fctrl.attach_to_parent()
-		fctrl.hookmessage(self.OnHilight, win32con.WM_SETFOCUS)
-		fctrl.hookmessage(self.OnUnhilight, win32con.WM_KILLFOCUS)
-		fctrl.hookmessage(self.OnPaneKey, win32con.WM_KEYDOWN)
+		treeFocusCtrl = components.Control(self, grinsRC.IDC_TREEFOCUS)
+		treeFocusCtrl.attach_to_parent()
+		treeFocusCtrl.hookmessage(self.OnSetTreeFocusCtrl, win32con.WM_SETFOCUS)
 
-	def OnHilight(self, params):
+		self.paneFocusCtrl = self.GetDlgItem(grinsRC.IDC_PANEFOCUS)
+		self.paneFocusCtrl.HookMessage(self.OnSetPaneFocusCtrl, win32con.WM_SETFOCUS)
+		self.paneFocusCtrl.HookMessage(self.OnKillPaneFocusCtrl, win32con.WM_KILLFOCUS)
+		self.paneFocusCtrl.HookMessage(self.OnPaneFocusCtrlKey, win32con.WM_KEYDOWN)
+		
+	def OnSetPaneFocusCtrl(self, params):
+		# hilight the pane to simulate the focus
 		self._layout.hilight(1)
 					
-	def OnUnhilight(self, params):
+	def OnKillPaneFocusCtrl(self, params):
 		focusReceiver =  params[2] 
 		if focusReceiver != self._layout.GetSafeHwnd():
-			self._layout.hilight(0)			
+			# remove the hilight from the pane
+			self._layout.hilight(0)
 
-	def OnPaneKey(self, params):
+	def OnPaneFocusCtrlKey(self, params):
 		key = params[2]
-		if key == win32con.VK_TAB: 
-			self.GetParent().GetPane(0,0).GetTreeCtrl().SetFocus()
+		if key == win32con.VK_TAB:
+			# normal bevavior
+			return 1
 		else:
+			# redirect the key to the pane
 			self._layout.onKeyDown(params)
 		return 0
 
+	def OnSetTreeFocusCtrl(self, params):
+		# redirect the focus to tree
+		self.GetParent().GetPane(0,0).GetTreeCtrl().SetFocus()
+
+	def OnChangeTreeFocus(self):
+		# set the pane to the pane
+		self.paneFocusCtrl.SetFocus()
+
+	def OnSetPaneFocus(self):
+		# redirect the focus to the pane focus ctrl
+		self.paneFocusCtrl.SetFocus()
+	
 	#
 	# Reposition controls on size
 	#
@@ -795,7 +815,7 @@ LayoutManagerBase = winlayout.LayoutScrollOsWnd
 LayoutManagerDrawContext = winlayout.MSDrawContext
 
 class LayoutManager(LayoutManagerBase):
-	def __init__(self):
+	def __init__(self, parent):
 		LayoutManagerBase.__init__(self, LayoutManagerDrawContext())
 		self._drawContext.addListener(self)
 		self._drawContext.setShapeContainer(self)
@@ -803,6 +823,7 @@ class LayoutManager(LayoutManagerBase):
 		self._listener = None
 		self._viewport = None
 		self._hasfocus = 0
+		self._parent = parent
 	
 		self._popup = None
 
@@ -824,7 +845,6 @@ class LayoutManager(LayoutManagerBase):
 		LayoutManagerBase.OnCreate(self, cs)
 		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
-		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
 
 		# popup menu
 		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
@@ -1161,10 +1181,7 @@ class LayoutManager(LayoutManagerBase):
 		self.InvalidateRect(self.GetClientRect())	
 
 	def OnSetFocus(self, params):
-		self.hilight(1)
-
-	def OnKillFocus(self, f):
-		self.hilight(0)
+		self._parent.OnSetPaneFocus()
 
 # for now manage only on listener in the same time
 # it should be enough
