@@ -53,7 +53,7 @@ PRODUCT_TO_FEATURE = {
 	
 	"upgradefromsmil1editor": ["upgradefromsmil1editor"],
 	"upgradefromsmil2real": ["upgradefromsmil2real"],
-	"upgradefromany": ["upgradefromsmil2real", "upgradefromsmil1editor"]
+	"upgradefromany": ["upgradefromsmil2real", "upgradefromsmil1editor"],
 
 	"G2U": ["upgradefromsmil1editor", "smil2real"],
 	"G2V": ["upgradefromsmil1editor", "smil2pro"],
@@ -346,7 +346,7 @@ def codelicense(uniqid, date, features, user):
 	all = ['A']	# License type
 	all.append(_codeint(uniqid, 4))
 	all.append(_codedate(date))
-	all.append(_codeint(features, 3))
+	all.append(_codeint(features, 4))
 	if user:
 		all.append(_codestr(user))
 	license = _codecheck(all)
