@@ -157,6 +157,109 @@ class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		yc1 = int((ymid+value*(y1-ymid))+0.5)
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
 	
+class _RadialTransitionClass(TransitionClass, PolyR2OverlapBlitterClass):
+	# Generic subclass for radial transitions. Our angle system has 0 is up, 90 degrees is left.
+	
+	def __init__(self, engine, dict):
+		TransitionClass.__init__(self, engine, dict)
+		self._recomputeangles()
+		
+	def move_resize(self, ltrb):
+		TransitionClass.move_resize(self, ltrb)
+		self._recomputeangles()
+		
+	def _recomputeangles(self):
+		x0, y0, x1, y1 = self.ltrb
+		self.xmid = (x0+x1)/2.0
+		self.ymid = (y0+y1)/2.0
+		self.xradius = (x1-x0)/2.0
+		self.yradius = (y1-y0)/2.0
+		# Note: second arg to atan2 is reversed because 0,0 is topleft in our
+		# coordinate system (as oposed to botleft in math coordinate system)
+		self.angle_topleft = math.atan2(self.yradius, -self.xradius)
+		self.angle_topright = math.atan2(self.yradius, self.xradius)
+		self.angle_botleft = math.atan2(-self.yradius, -self.xradius)
+		self.angle_botright = math.atan2(-self.yradius, self.xradius)
+##		print 'DBG: topleft', self.angle_topleft * 180 / math.pi
+##		print 'DBG: topright', self.angle_topright * 180 / math.pi
+##		print 'DBG: botleft', self.angle_botleft * 180 / math.pi
+##		print 'DBG: botright', self.angle_botright * 180 / math.pi
+##		print 'xradius, yradius', self.xradius, self.yradius
+		
+	def _angle2edge(self, angle):
+		# First normalize to range -pi..pi
+		while angle < -math.pi:
+			angle = angle + 2*math.pi
+		while angle >= math.pi:
+			angle = angle - 2*math.pi
+		# Next find the edge on which our point lies
+		if angle >= self.angle_topright and angle <= math.pi / 2:
+			edge = 0
+		elif angle <= self.angle_topright and angle >= self.angle_botright:
+			edge = 1
+		elif angle >= self.angle_botleft and angle <= self.angle_botright:
+			edge = 2
+		elif angle >= self.angle_topleft or angle <= self.angle_botleft:
+			edge = 3
+		elif angle >= math.pi / 2 and angle <= self.angle_topleft:
+			edge = 4
+		else:
+			raise 'Impossible angle', angle
+		x0, y0, x1, y1 = self.ltrb
+		if edge == 0 or edge == 4:
+			x = int(self.xmid + (1/math.tan(angle))*self.xradius + 0.5)
+			y = y0
+		elif edge == 1:
+			x = x1
+			y = int(self.ymid - math.tan(angle)*self.yradius + 0.5)
+		elif edge == 2:
+			x = int(self.xmid - (1/math.tan(angle))*self.xradius + 0.5)
+			y = y1
+		elif edge == 3:
+			x = x0
+			y = int(self.ymid + math.tan(angle)*self.yradius + 0.5)
+		else:
+			raise 'impossible edge', edge
+##		print 'angle2edge', angle * 180 / math.pi, edge, (x, y)
+		return edge, (x, y)
+		
+	def _angle2poly(self, angle, clockwise=1):
+		x0, y0, x1, y1 = self.ltrb
+		xm = self.xmid
+		ym = self.ymid
+		edge, point = self._angle2edge(angle)
+		if clockwise:
+			if edge == 0:
+				return ( (xm, ym), (xm, y0), point)
+			if edge == 1:
+				return ( (xm, ym), (xm, y0), (x1, y0), point)
+			elif edge == 2:
+				return ( (xm, ym), (xm, y0), (x1, y0), (x1, y1), point)
+			elif edge == 3:
+				return ( (xm, ym), (xm, y0), (x1, y0), (x1, y1), (x0, y1), point)
+			elif edge == 4:
+				return ( (xm, ym), (xm, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0), point)
+		else:
+			if edge == 4:
+				return ( (xm, ym), (xm, y0), point)
+			if edge == 3:
+				return ( (xm, ym), (xm, y0), (x0, y0), point)
+			elif edge == 2:
+				return ( (xm, ym), (xm, y0), (x0, y0), (x0, y1), point)
+			elif edge == 1:
+				return ( (xm, ym), (xm, y0), (x0, y0), (x0, y1), (x1, y1), point)
+			elif edge == 0:
+				return ( (xm, ym), (xm, y0), (x0, y0), (x0, y1), (x1, y1), (x1, y0), point)
+		raise 'impossible edge/clockwise', (edge, clockwise)
+		
+class ClockWipeTransition(_RadialTransitionClass):
+	# A clockwise radial reveal from the center
+	
+	def computeparameters(self, value):
+		angle = math.pi/2 - (value*2*math.pi)
+		poly = self._angle2poly(angle, clockwise=1)
+		return poly, self.ltrb
+		
 class _MatrixTransitionClass(TransitionClass, RlistR2OverlapBlitterClass):
 	# Generic subclass for all the matrix transitions
 
@@ -334,8 +437,6 @@ class BoxSnakesWipeTransition(_MatrixTransitionClass):
 		self._xy_to_step.append((x, self.vsteps-y-1))
 		self._xy_to_step.append((x, y))
 		self._xy_to_step.append((x, self.vsteps-y-1))
-		for i in range(len(self._xy_to_step)):
-			print i, self._xy_to_step[i]
 		
 	def computeparameters(self, value):
 		index = int(value*self.hsteps*self.vsteps+0.5)
@@ -409,7 +510,7 @@ TRANSITIONDICT = {
 #	"eyeWipe" : EyeWipeTransition,
 #	"roundRectWipe" : RoundRectWipeTransition,
 #	"starWipe" : StarWipeTransition,
-#	"clockWipe" : ClockWipeTransition,
+	"clockWipe" : ClockWipeTransition,
 #	"pinWheelWipe" : PinWheelWipeTransition,
 	"singleSweepWipe" : SingleSweepWipeTransition,
 #	"fanWipe" : FanWipeTransition,
