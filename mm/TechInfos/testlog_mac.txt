@@ -263,24 +263,24 @@ ora-jumpforw.smil	Works (Jack, 7-Sep)
 ora-layout-bg-md-ov.smil	Works (Jack, 7-Sep)
 ora-layout-bg-md.smil	Works (Jack, 7-Sep)
 ora-layout-bg-rg-ov2.smil	Works (Jack, 7-Sep)
-ora-layout-bg-rg.smil
-ora-layout-bg-vp-def.smil
-ora-layout-bg-vp.smil
-ora-layout-close.smil
-ora-layout-fit-fill-regp-.smil
-ora-layout-fit-fill.smil
-ora-layout-fit-hidden.smil
-ora-layout-fit-media.smil
-ora-layout-fit-meet-regp-.smil
-ora-layout-fit-meet.smil
-ora-layout-fit-meet2-regp.smil
-ora-layout-fit-ov-.smil
-ora-layout-fit-scroll.smil
-ora-layout-fit-slice-regp-.smil
-ora-layout-fit-slice.smil
-ora-layout-fit-slice2-regp.smil
-ora-layout-fit-subreg-regp.smil
-ora-layout-hierarc-clip.smil
+ora-layout-bg-rg.smil	Works (Jack, 7-Sep)
+ora-layout-bg-vp-def.smil	Works (Jack, 7-Sep)
+ora-layout-bg-vp.smil	Works (Jack, 7-Sep)
+ora-layout-close.smil	Does not work: vp opens at start of doc, closes when node done, reopens at stop (Jack, 7-Sep)
+ora-layout-fit-fill-regp-.smil	Does not work: aligned topleft, not scaled (Jack, 7-Sep)
+ora-layout-fit-fill.smil	Does not work: aligned topleft, unscaled (Jack, 7-Sep)
+ora-layout-fit-hidden.smil	Works (Jack, 7-Sep)
+ora-layout-fit-media.smil	Works (Jack, 7-Sep)
+ora-layout-fit-meet-regp-.smil	Works (Jack, 7-Sep)
+ora-layout-fit-meet.smil	Works (Jack, 7-Sep)
+ora-layout-fit-meet2-regp.smil	Works (Jack, 7-Sep)
+ora-layout-fit-ov-.smil	Works (Jack, 7-Sep)
+ora-layout-fit-scroll.smil	Does not work, gives warning during parse (Jack, 7-Sep)
+ora-layout-fit-slice-regp-.smil	Works (Jack, 7-Sep)
+ora-layout-fit-slice.smil	Works (Jack, 7-Sep)
+ora-layout-fit-slice2-regp.smil	Works (Jack, 7-Sep)
+ora-layout-fit-subreg-regp.smil	Works (Jack, 7-Sep)
+ora-layout-hierarc-clip.smil	Works (Jack, 7-Sep)
 ora-layout-hierarc1.smil
 ora-layout-md-without-rg.smil
 ora-layout-open-close.smil
@@ -350,7 +350,7 @@ ora-layout-z-cp-video1.smil
 ora-layout-z-cp1.smil
 ora-layout-z-nsib.smil
 ora-layout-z-same-dto.smil
-ora-layout-z-same-tpo.smil
+ora-layout-z-same-tpo.smil	Works (Jack, 7-Sep)
 ora-layout-z-sp1.smil
 ora-layout-z-sp2.smil
 ora-link-ext-dps-pause.smil
