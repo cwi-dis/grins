@@ -1,7 +1,10 @@
 # Qt sample using direct draw
 
 import Qt
-import QuickTime
+
+import sys
+sys.path.append(r'D:\ufs\mm\cmif\lib\win32')
+import winqtcon
 
 import win32ui, win32api, win32con
 Afx=win32ui.GetAfx()
