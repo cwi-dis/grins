@@ -165,6 +165,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 			self.apply_callback()
 		else:
 			print 'Unknown NodeInfoDialog item', item, 'event', event
+		return 1
 
 	# Interface to the list of channel names.  This part consists
 	# of a label and a list of strings of which one is always the

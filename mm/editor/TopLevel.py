@@ -9,6 +9,7 @@ from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from usercmd import *
 
 # an empty document
 EMPTY = "(seq '1' ((channellist ('root-layout' (type layout) (units 2) (winsize  640 480))) (hyperlinks)))"
@@ -17,11 +18,11 @@ from TopLevelDialog import TopLevelDialog
 
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
-		self.waiting = 0
 		ViewDialog.__init__(self, 'toplevel_')
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
+		self.main = main
 		self.new_file = new_file
 		utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
@@ -45,19 +46,42 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if utype:
 			url = '%s:%s' % (utype, url)
 		self.filename = url
-		self.main = main
+		self.window = None
 		self.source = None
 		self.read_it()
+
+		self.commandlist = [
+			PLAY(callback = (self.play_callback, ())),
+			PLAYERVIEW(callback = (self.view_callback, (0,))),
+			HIERARCHYVIEW(callback = (self.view_callback, (1,))),
+			CHANNELVIEW(callback = (self.view_callback, (2,))),
+			LINKVIEW(callback = (self.view_callback, (3,))),
+			LAYOUTVIEW(callback = (self.view_callback, (4,))),
+			RESTORE(callback = (self.restore_callback, ())),
+			CLOSE(callback = (self.close_callback, ())),
+			]
+		if self.main.cansave():
+			self.commandlist = self.commandlist + [
+				SAVE(callback = (self.save_callback, ())),
+				SAVE_AS(callback = (self.saveas_callback, ())),
+				]
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(
+				HELP(callback = (self.help_callback, ())))
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'textwindow'):
+			self.commandlist.append(
+				SOURCE(callback = (self.source_callback, ())))
+
+		TopLevelDialog.__init__(self)
 		self.makeviews()
-		self.window = None
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
 	def showstate(self, view, showing):
-		for i in range(len(self.views)):
-			if view is self.views[i]:
-				self.setbuttonstate(i, showing)
+		self.setbuttonstate(view.__command, showing)
 
 	def destroy(self):
 		self.editmgr.unregister(self)
@@ -94,19 +118,27 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def makeviews(self):
 		import HierarchyView
 		self.hierarchyview = HierarchyView.HierarchyView(self)
+		self.hierarchyview.__command = HIERARCHYVIEW
 
 		import ChannelView
 		self.channelview = ChannelView.ChannelView(self)
+		self.channelview.__command = CHANNELVIEW
 
 		import Player
 		self.player = Player.Player(self)
+		self.player.__command = PLAYERVIEW
 
 		import LinkEdit
 		self.links = LinkEdit.LinkEdit(self)
+		self.links.__command = LINKVIEW
+
+		import LayoutView
+		self.layoutview = LayoutView.LayoutView(self)
+		self.layoutview.__command = LAYOUTVIEW
 
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
-			      self.channelview, self.links]
+			      self.channelview, self.links, self.layoutview]
 
 	def hideviews(self):
 		for v in self.views:
@@ -125,7 +157,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def play_callback(self):
 		self.setwaiting()
 		self.player.show((self.player.playsubtree, (self.root,)))
-		self.setready()
 
 	def source_callback(self):
 		self.showsource(self.root.source)
@@ -137,48 +168,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			view.hide()
 		else:
 			view.show()
-		self.setready()
-
-	def open_okcallback(self, filename):
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
-		try:
-			top = TopLevel(self.main, MMurl.pathname2url(filename), 0)
-		except:
-			msg = sys.exc_value
-			if type(msg) is type(self):
-				if hasattr(msg, 'strerror'):
-					msg = msg.strerror
-				else:
-					msg = msg.args[0]
-			windowinterface.showmessage('Open operation failed.\n'+
-						    'File: '+filename+'\n'+
-						    'Error: '+`msg`)
-			return
-		top.show()
-		top.setready()
-
-	def open_callback(self):
-		cwd = self.dirname
-		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
-		else:
-			cwd = os.getcwd()
-		windowinterface.FileDialog('Open SMIL file:', cwd, '*.smil',
-					   '', self.open_okcallback, None,
-					   existing = 1)
 
 	def save_callback(self):
 		if self.new_file:
@@ -193,20 +182,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		file = MMurl.url2pathname(url)
 		self.setwaiting()
 		ok = self.save_to_file(file)
-		self.setready()
 
 	def saveas_okcallback(self, filename):
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
-		try:
-			if self.save_to_file(filename):
-				self.filename = MMurl.pathname2url(filename)
-				self.fixtitle()
-			else:
-				return 1
-		finally:
-			self.setready()
+		if self.save_to_file(filename):
+			self.filename = MMurl.pathname2url(filename)
+			self.fixtitle()
+		else:
+			return 1
 
 	def saveas_callback(self):
 		cwd = self.dirname
@@ -245,6 +230,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
 		roots = [self.root]
 		import Clipboard
 		type, data = Clipboard.getclip()
@@ -301,7 +290,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.root.Destroy()
 		self.read_it()
 		self.makeviews()
-		self.setready()
 
 	def read_it(self):
 		self.changed = 0
@@ -314,6 +302,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			self.do_read_it(self.filename)
 		self.context = self.root.GetContext()
+		if self.new_file:
+			self.context.dirname = ''
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
@@ -332,8 +322,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.root = MMRead.ReadFile(filename)
 		else:
 			import SMILTreeRead
-			if mtype[:6] != 'audio/' and \
-			   mtype[:6] != 'video/':
+			if mtype is None or \
+			   (mtype[:6] != 'audio/' and \
+			    mtype[:6] != 'video/'):
 				dur = ' dur="indefinite"'
 			else:
 				dur = ''
@@ -357,7 +348,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.source.close()
 		self.source = None
 		self.close()
-		self.setready()
 
 	def close(self):
 		ok = self.close_ok()
@@ -386,18 +376,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		Help.showhelpwindow()
 
 	def setwaiting(self):
-		if self.waiting: return
-		self.waiting = 1
-		windowinterface.setcursor('watch')
-		for v in self.views:
-			v.setwaiting()
-
-	def setready(self):
-		if not self.waiting: return
-		self.waiting = 0
-		for v in self.views:
-			v.setready()
-		windowinterface.setcursor('')
+		windowinterface.setwaiting()
 
 	#
 	# EditMgr interface (as dependent client).

@@ -161,12 +161,6 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		del self.left
 		del self.right
 
-	def setwaiting(self):
-		self.setcursor('watch')
-
-	def setready(self):
-		self.setcursor('')
-
 	def get_geometry(self):
 		pass
 
@@ -588,10 +582,10 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		except NoSuchUIDError:
 			print 'LinkEdit: anchor with unknown node UID!'
 			return
-		windowinterface.setcursor('watch')
-		self.toplevel.hierarchyview.globalsetfocus(node)
-		self.toplevel.channelview.globalsetfocus(node)
-		windowinterface.setcursor('')
+		top = self.toplevel
+		top.setwaiting()
+		top.hierarchyview.globalsetfocus(node)
+		top.channelview.globalsetfocus(node)
 
 	def menu_callback(self, str, ind):
 		str.hidden = 0

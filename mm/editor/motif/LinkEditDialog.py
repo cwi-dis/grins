@@ -133,7 +133,6 @@ class LinkEditDialog:
 		# the below assignments are merely for efficiency
 		self.settitle = self.__window.settitle
 		self.is_showing = self.__window.is_showing
-		self.setcursor = self.__window.setcursor
 		self.leftsetlabel = self.__left_browser.setlabel
 		self.leftdellistitems = self.__left_browser.dellistitems
 		self.leftdelalllistitems = self.__left_browser.delalllistitems
@@ -180,7 +179,6 @@ class LinkEditDialog:
 		# the below del's only if efficiency assignments above are done
 		del self.settitle
 		del self.is_showing
-		del self.setcursor
 		del self.leftsetlabel
 		del self.leftdellistitems
 		del self.leftdelalllistitems
@@ -226,14 +224,6 @@ class LinkEditDialog:
 	def is_showing(self):
 		"""Return whether dialog is showing."""
 		return self.__window.is_showing()
-
-	def setcursor(self, cursor):
-		"""Set the cursor to a named shape.
-
-		Arguments (no defaults):
-		cursor -- string giving the name of the desired cursor shape
-		"""
-		self.__window.setcursor(cursor)
 
 	# Interface to the left list and associated buttons.
 	def lefthide(self):

@@ -5,6 +5,7 @@ import os
 
 channeleditors = {}
 
+# XXXX This is incorrect: it looks in the current directory, not the document dir
 def _inventname(ch):		# Invent file name from channel name
 	import os
 	for i in range(1,99):
@@ -115,6 +116,7 @@ def showeditor(node):
 		return
 	import MMAttrdefs, MMurl
 	url = MMAttrdefs.getattr(node,'file')
+	url = node.context.findurl(url)
 	utype, url = MMurl.splittype(url)
 	if utype:
 		windowinterface.showmessage(

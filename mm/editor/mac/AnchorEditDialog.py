@@ -162,6 +162,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 			self.apply_callback()
 		else:
 			print 'Unknown AnchorEditDialog item', item, 'event', event
+		return 1
 		
 	def _setidfromlist(self):
 		"""Propagate list selection to id field"""

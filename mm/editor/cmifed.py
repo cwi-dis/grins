@@ -5,15 +5,6 @@ __version__ = "$Id$"
 import sys
 import os
 
-try:
-	sys.path.remove('')
-except:
-	pass
-
-if os.name == 'posix' and __file__ != '<frozen>':
-	import fastimp
-	fastimp.install()
-
 
 import getopt
 
@@ -41,7 +32,26 @@ from MainDialog import MainDialog
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
+		import windowinterface
+		import license
+		self.tmpopts = opts
+		self.tmpfiles = files
+		self.tmplicensedialog = license.WaitLicense(self.do_init,
+					   ('save', 'editdemo'))
+
+	def do_init(self, license):
+		opts, files = self.tmpopts, self.tmpfiles
+		del self.tmpopts
+		del self.tmpfiles
+##		del self.tmplicensedialog
 		import MMurl
+		import windowinterface
+		self._license = license
+		if not self._license.have('save'):
+			windowinterface.showmessage(
+				'This is a demo version.\n'+
+				'You will not be able to save your changes.',
+				title='CMIFed license')
 		self._tracing = 0
 		self.tops = []
 		self._mm_callbacks = {}
@@ -51,16 +61,28 @@ class Main(MainDialog):
 		except ImportError:
 			pass
 		else:
-			import windowinterface
 			pipe_r, pipe_w = posix.pipe()
 			mm.setsyncfd(pipe_w)
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
+		from usercmd import *
+		self.commandlist = [
+			EXIT(callback = (self.close_callback, ())),
+			NEW_DOCUMENT(callback = (self.new_callback, ())),
+			OPEN(callback = (self.open_callback, ())),
+			PREFERENCES(callback=(self.preferences_callback, ())),
+			]
+		if __debug__:
+			self.commandlist = self.commandlist + [
+				TRACE(callback = (self.trace_callback, ())),
+				DEBUG(callback = (self.debug_callback, ())),
+				CRASH(callback = (self.crash_callback, ())),
+				]
 		MainDialog.__init__(self, 'CMIFed')
 		for file in files:
-			self.open_callback(MMurl.guessurl(file))
+			self.openURL_callback(MMurl.guessurl(file))
 
 	def new_callback(self):
 		import TopLevel
@@ -76,6 +98,8 @@ class Main(MainDialog):
 			self.new_top(top)
 	
 	def _new_ok_callback(self, filename):
+		import windowinterface
+		windowinterface.setwaiting()
 		import TopLevel
 		import MMurl
 		template_url = MMurl.pathname2url(filename)
@@ -88,7 +112,9 @@ class Main(MainDialog):
 		dummy, ext = os.path.splitext(templatename)
 		return name + ext
 
-	def open_callback(self, url):
+	def openURL_callback(self, url):
+		import windowinterface
+		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
 		try:
@@ -103,7 +129,12 @@ class Main(MainDialog):
 			self.new_top(top)
 
 	def close_callback(self):
+		import windowinterface
+		windowinterface.setwaiting()
 		self.do_exit()
+
+	def crash_callback(self):
+		raise 'Crash requested by user'
 
 	def debug_callback(self):
 		import pdb
@@ -117,16 +148,19 @@ class Main(MainDialog):
 		else:
 			self._tracing = 1
 			trace.set_trace()
-		self.setbutton('Trace', self.tracing)
+			
+	def preferences_callback(self):
+		import Preferences
+		Preferences.showpreferences(1)
 
 	def new_top(self, top):
-		top.setwaiting()
 		top.show()
 		top.checkviews()
 		self.tops.append(top)
-		top.setready()
 
 	def do_exit(self):
+		import Preferences
+		Preferences.showpreferences(0)
 		ok = 1
 		toclose = []
 		for top in self.tops:
@@ -179,12 +213,27 @@ class Main(MainDialog):
 			ok = top.save_callback()
 			top.new_file = nf
 
+	def cansave(self):
+		return self._license.have('save')
+	
+	def wanttosave(self):
+		import license
+		import windowinterface
+		try:
+			features = self._license.need('save')
+		except license.Error, arg:
+			print "No license:", arg
+			return None
+		return features
+
 def main():
 	os.environ['CMIF_USE_X'] = '1'
 	try:
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
 		usage(msg)
+	if sys.argv[0] and sys.argv[0][0] == '-':
+		sys.argv[0] = 'cmifed'
 	try:
 		import splash
 	except ImportError:
@@ -202,9 +251,6 @@ def main():
 		else:
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
-
-	if sys.argv[0] and sys.argv[0][0] == '-':
-		sys.argv[0] = 'cmifed'
 
 ## 	for fn in files:
 ## 		try:
@@ -327,8 +373,5 @@ def findfile(name):
 		if os.path.exists(fullname):
 			return fullname
 	return name
-
-
-# Call the main program
 
 main()

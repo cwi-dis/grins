@@ -21,11 +21,9 @@ For these buttons there are callbacks.
 
 __version__ = "$Id$"
 
-import windowinterface, win32api, win32con
+import windowinterface
 
 class ArcInfoDialog:
-	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
-
 	def __init__(self, title, srclist, srcinit, dstlist, dstinit, delay):
 		"""Create the ArcInfo dialog.
 
@@ -44,170 +42,35 @@ class ArcInfoDialog:
 		delay -- 0.0 <= delay <= 100.0 -- the initial value of
 			the floating point value
 		"""
+		adornments = {
+			'form_id':'arc_info',
+			'host_id':'cview_',
+			'callbacks':{
+				'Cancel':(self.cancel_callback, ()),
+				'Restore':(self.restore_callback, ()),
+				'Apply':(self.apply_callback, ()),
+				'OK':(self.ok_callback, ()),
+			},
+		}
 
-		self.__window = w = windowinterface.Window(title, resizable = 1,
-					deleteCallback = (self.cancel_callback, ()))
-		#self.__src_choice = self.__window.OptionMenu('From:',
-		#			srclist, srcinit,
-		#			None, top = None, left = None)
-		#self.__dst_choice = self.__window.OptionMenu('To:',
-		#			dstlist, dstinit,
-		#			None, top = None,
-		#			left = self.__src_choice, right = None)
-		#if delay > 10.0:
-		#	rangeinit = 2
-		#elif delay > 1.0:
-		#	rangeinit = 1
-		#else:
-		#	rangeinit = 0
-		#range = float(10 ** rangeinit)
-		#self.__delay_slider = self.__window.Slider(None, 0, delay, range,
-		#			None,
-		#			top = self.__src_choice, left = None)
-		#self.__range_choice = self.__window.OptionMenu(None,
-		#			self.__rangelist,
-		#			rangeinit, (self.__range_callback, ()),
-		#			top = self.__dst_choice,
-		#			left = self.__delay_slider, right = None)
-		#buttons = self.__window.ButtonRow(
-		#	[('Cancel', (self.cancel_callback, ())),
-		#	 ('Restore', (self.restore_callback, ())),
-		#	 ('Apply', (self.apply_callback, ())),
-		#	 ('OK', (self.ok_callback, ()))],
-		#	left = None, top = self.__delay_slider, vertical = 0)
+		formid=adornments['form_id']
+		hostid=adornments['host_id']
 
-
-		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
-		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
-		self._w = constant2
-		self._h = constant
-		hbw = 0
-		lb1w = 0
-		lb2w = 0
-		lb3w = 0
-		sbw = 200
-		sbh = 50
-		max = 0
-
-
-		ls = srclist
-
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = windowinterface.GetStringLength(self.__window._wnd,label)
-			if length>lb1w:
-				lb1w = length
-		lb1w = lb1w + windowinterface.GetStringLength(self.__window._wnd,'From: ')+30
-
-
-		ls = dstlist
-
-		length = 0
-		for item in ls:
-			label = item
-			if label:
-				length = windowinterface.GetStringLength(self.__window._wnd,label)
-			if length>lb2w:
-				lb2w = length
-		lb2w = lb2w + windowinterface.GetStringLength(self.__window._wnd,'To: ')+30
-
-		max = lb1w + lb2w + 15
-
-
-		ls = [('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))]
-
-		length = 0
-		for item in ls:
-			label = item[0]
-			if (label==None or label==''):
-				label=' '
-			length = windowinterface.GetStringLength(self.__window._wnd,label)
-			hbw = hbw + length + 15
-
-		if max<hbw:
-			max = hbw
-
-		ls = self.__rangelist
-
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = windowinterface.GetStringLength(self.__window._wnd,label)
-			if length>lb3w:
-				lb3w = length
-		lb3w = lb3w + 30
-
-		if max<lb3w+sbw+15:
-			max = lb3w+sbw+15
-
-		self._w = self._w + max +10
-		self._h = self._h + 130
-
-
-		self.__src_choice = self.__window.OptionMenu('From: ',
-					srclist, srcinit,
-					None, left = 5, top = 5, right = lb1w, bottom = 125)
-		self.__dst_choice = self.__window.OptionMenu('To: ',
-					dstlist, dstinit,
-					None, left = lb1w+10, top = 5, right = lb2w, bottom = 125)
-		if delay > 10.0:
-			rangeinit = 2
-		elif delay > 1.0:
-			rangeinit = 1
-		else:
-			rangeinit = 0
-		range = float(10 ** rangeinit)
-		self.__delay_slider = self.__window.Slider(None, 0, delay, range,
-					None,
-					left = 5, top = 35, right = sbw, bottom = sbh)
-		self.__range_choice = self.__window.OptionMenu(None,
-					self.__rangelist,
-					rangeinit, (self.__range_callback, ()),
-					left = sbw+5, top = 35, right = lb3w, bottom = 125)
-		buttons = self.__window.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))],
-			left = 5, top = 90, right = hbw, bottom = 30, vertical = 0)
-		windowinterface.ResizeWindow(w._wnd, self._w, self._h)
-		self.__window._wnd.HookKeyStroke(self.helpcall,104)
-		self.__window.show()
-
-	def __range_callback(self):
-		i = self.__range_choice.getpos()
-		range = float(10 ** i)
-		delay = min(range, self.__delay_slider.getvalue())
-		self.__delay_slider.setvalue(0)
-		self.__delay_slider.setrange(0, range)
-		self.__delay_slider.setvalue(delay)
+		fs=windowinterface.getformserver()
+		w=fs.newformobj(formid)
+		w.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
+		frame=windowinterface.getviewframe(hostid)
+		w.create(frame)
+		self.__window=w
 
 	#
 	# interface methods
 	#
 
-	def helpcall(self, params=None):
-		import Help
-		Help.givehelp(self.__window._wnd, 'Arc Info Dialog')
-
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
 		del self.__window
-		del self.__src_choice
-		del self.__dst_choice
-		del self.__delay_slider
-		del self.__range_choice
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -224,11 +87,11 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
-		self.__src_choice.setpos(pos)
+		self.__window.src_setpos( pos)
 
 	def src_getpos(self):
 		"""Return the current selection in the source list."""
-		return self.__src_choice.getpos()
+		return self.__window.src_getpos()
 
 	# Interface to the destination list.
 	def dst_setpos(self, pos):
@@ -237,11 +100,11 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
-		self.__dst_choice.setpos(pos)
+		self.__window.dst_setpos(pos)
 
 	def dst_getpos(self):
 		"""Return the current selection in the destination list."""
-		return self.__dst_choice.getpos()
+		return self.__window.dst_getpos()
 
 	# Interface to the delay value.
 	def delay_setvalue(self, delay):
@@ -251,24 +114,12 @@ class ArcInfoDialog:
 		delay -- 0.0 <= delay <= 100.0 -- the new value of the
 			delay
 		"""
-		if delay > 10.0:
-			rangeinit = 2
-		elif delay > 1.0:
-			rangeinit = 1
-		else:
-			rangeinit = 0
-		range = float(10 ** rangeinit)
-		self.__range_choice.setpos(rangeinit)
-		#self.__delay_slider.setvalue(0)
-		self.__delay_slider.setrange(0, range)
-		self.__delay_slider.setvalue(delay)
+		self.__window.delay_setvalue(delay)
 
 	def delay_getvalue(self):
 		"""Return the current value of the delay."""
 		# return delay with an accuracy of 2 digits
-		d = self.__delay_slider.getvalue()
-		p = 100.0 / self.__delay_slider.getrange()[1]
-		return int(d*p + 0.5) / p
+		return self.__window.delay_getvalue()
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from

@@ -10,8 +10,10 @@ import MMAttrdefs
 from ViewDialog import ViewDialog
 import Timing
 import windowinterface, WMEVENTS
+from usercmd import *
 
-titles = ['Channels', 'Options']
+RED = 255, 0, 0
+BLACK = 0, 0, 0
 
 # The Player class normally has only a single instance.
 #
@@ -25,6 +27,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	# Initialization.
 	#
 	def __init__(self, toplevel):
+		self.updateuibaglist = self.dummy_updateuibaglist
 		ViewDialog.__init__(self, 'player_')
 		self.playing = self.pausing = self.locked = 0
 		PlayerCore.__init__(self, toplevel)
@@ -32,7 +35,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')
 		self.channelnames = []
-		self.measure_armtimes = 0
 		self.channels = {}
 		self.channeltypes = {}
 		self.seeking = 0
@@ -44,17 +46,49 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.pause_minidoc = 1
 		self.sync_cv = 1
 		self.toplevel = toplevel
+		self.curlayout = None
+		self.savecurlayout = None
+		self.curchannel = None
+		self.savecurchannel = None
 		self.showing = 0
-		self.waiting = 0
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
-		self.updateuibaglist = self.dummy_updateuibaglist
+		self.makechannels()
+		self.commandlist = [
+			CLOSE_WINDOW(callback = (self.close_callback, ()),
+				     help = 'Close the Player View'),
+			CHANNELS(callback = self.channel_callback),
+			SCHEDDUMP(callback = (self.scheduler.dump, ())),
+			SYNCCV(callbac = (self.synccv_callback, ())),
+			]
+		play = PLAY(callback = (self.play_callback, ()))
+		pause = PAUSE(callback = (self.pause_callback, ()))
+		stop = STOP(callback = (self.stop_callback, ()))
+		self.stoplist = self.commandlist + [
+			# when stopped, we can play and pause
+			play,
+			pause,
+			]
+		self.playlist = self.commandlist + [
+			# when playing, we can pause and stop
+			pause,
+			stop,
+			]
+		self.pauselist = self.commandlist + [
+			# when pausing, we can continue (play or
+			# pause) and stop
+			play,
+			pause,
+			stop,
+			]
+		self.alllist = self.pauselist
 
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
 			# already destroyed
 			return
 		self.hide()
+		self.destroychannels()
 		self.close()
 		del self.channelnames
 		del self.channels
@@ -64,6 +98,10 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		del self.toplevel
 		del self.set_timer
 		del self.timer_callback
+		del self.commandlist
+		del self.stoplist
+		del self.playlist
+		del self.pauselist
 		del self.updateuibaglist
 
 	def fixtitle(self):
@@ -82,18 +120,21 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if self.is_showing():
 			PlayerDialog.show(self)
 			if afterfunc is not None:
-				apply(afterfunc[0], afterfunc[1])
+				apply(apply, afterfunc)
 			return
 		self.aftershow = afterfunc
 		self.toplevel.showstate(self, 1)
-		self.makechannels()
 		self.fullreset()
 		self.toplevel.checkviews()
 		PlayerDialog.show(self)
 		self.showing = 1
-		self.makeomenu()
-		self.showchannels()
+		self.before_chan_show()
+		if self.curlayout is None:
+			self.showchannels()
+		else:
+			self.setlayout(self.curlayout, self.curchannel)
 		self.showstate()
+		self.after_chan_show()
 
 	def hide(self, *rest):
 		if not self.showing: return
@@ -104,7 +145,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.save_geometry()
 		PlayerDialog.hide(self)
 		self.toplevel.checkviews()
-		self.destroychannels()
+		self.hidechannels()
 
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)
@@ -116,6 +157,66 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if geometry is not None:
 			self.last_geometry = geometry
 
+	def setlayout(self, layout, channel):
+		self.curlayout = layout
+		self.curchannel = channel
+		if not self.showing or self.playing:
+			return
+		context = self.context
+		channels = None
+		if layout is not None:
+			from LayoutView import ALL_LAYOUTS
+			if layout == ALL_LAYOUTS:
+				channels = context.channels
+			else:
+				channels = context.layouts.get(layout)
+			if channels is None:
+				self.curlayout = layout = None
+		if layout is None:
+			channels = context.channels
+		channeldict = {}
+		for ch in channels:
+			chname = ch.name
+			channeldict[chname] = 0
+			if not self.channels.has_key(chname):
+				self.newchannel(chname,
+						context.channeldict[chname])
+				self.channelnames.append(chname)
+		for chname in self.channelnames:
+			ch = self.channels[chname]
+			if channeldict.has_key(chname):
+				del channeldict[chname]
+				if layout is None:
+					ch.check_visible()
+					ch.unhighlight()
+					ch.hideimg()
+				else:
+					ch.show()
+					ch.showimg()
+					if channel is not None and \
+					   channel == chname:
+						ch.highlight(RED)
+					else:
+						ch.highlight(BLACK)
+			elif not ch._attrdict.has_key('base_window'):
+				ch.show()
+				ch.showimg()
+			else:
+				ch.hide()
+		self.makemenu()
+
+	def play(self):
+		self.savecurlayout = self.curlayout
+		self.savecurchannel = self.curchannel
+		self.setlayout(None, None)
+		PlayerCore.play(self)
+
+	def stopped(self):
+		PlayerCore.stopped(self)
+		if self.curlayout is None:
+			self.setlayout(self.savecurlayout, self.savecurchannel)
+		else:
+			self.setlayout(self.curlayout, self.curchannel)
 	#
 	# FORMS callbacks.
 	#
@@ -130,7 +231,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		else:
 			# nothing, restore state.
 			self.showstate()
-		self.toplevel.setready()
 
 	def pause_callback(self):
 		self.toplevel.setwaiting()
@@ -144,12 +244,18 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# Case 3: not playing. Go to paused mode
 			self.pause(1)
 			self.play()
-		self.toplevel.setready()
 
 	def stop_callback(self):
 		self.toplevel.setwaiting()
 		self.cc_stop()
-		self.toplevel.setready()
+
+	def magic_play(self):
+		if self.playing:
+			# toggle pause if playing
+			self.pause_callback()
+		else:
+			# start playing if stopped
+			self.play_callback()
 
 	def close_callback(self):
 		self.hide()
@@ -158,7 +264,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.setwaiting()
 		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
-		self.toplevel.setready()
 
 	def cc_stop(self):
 		self.stop()
@@ -175,42 +280,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.channelview.channels_changed()
 		self.setchannel(name, onoff)
 
-	def option_callback(self, option):
-		self.toplevel.setwaiting()
-		if option == 'Calculate timing':
-			self.measure_armtimes = (not self.measure_armtimes)
-			if self.measure_armtimes:
-				del_timing(self.root)
-				Timing.changedtimes(self.root)
-		elif option == 'Play all nodes within choice':
-			self.play_all_bags = (not self.play_all_bags)
-		elif option == 'Ignore delays':
-			self.ignore_delays = (not self.ignore_delays)
-		elif option == 'Ignore pauses':
-			self.ignore_pauses = (not self.ignore_pauses)
-		elif option == 'Keep Timechart in sync':
-			self.sync_cv = (not self.sync_cv)
-		elif option == 'autopause minidoc':
-			self.pause_minidoc = (not self.pause_minidoc)
-		elif option == 'Crash CMIF':
-			raise 'Crash requested by user'
-		elif option == 'Dump scheduler data':
-			self.scheduler.dump()
-		else:
-			print 'Player: Option menu: funny choice', i
-		self.toplevel.setready()
+	def synccv_callback(self):
+		self.sync_cv = (not self.sync_cv)
 
-	def slotmenu_callback(self, slot):
-		node = self.runslots[slot][0]
-		if node:
-			self.toplevel.channelview.globalsetfocus(node)
-		else:
-			windowinterface.showmessage('That slot is not active')
-
-	def dummy_callback(self, *dummy):
-		pass
-	#
-	#
 	def showstate(self):
 		if not self.is_showing():
 			return
@@ -222,7 +294,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		else:
 			state = STOPPED
 		self.setstate(state)
-	#
+
 	def showpauseanchor(self, pausing):
 		if pausing:
 			state = PAUSING
@@ -230,23 +302,8 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			state = PLAYING
 		self.setstate(state)
 
-	def makeslotmenu(self, list):
-		pass
-
 	def dummy_updateuibaglist(self):
 		pass
-
-	def makeomenu(self):
-		self.setoptions(
-			[('Calculate timing', self.measure_armtimes),
-			 ('Play all nodes within choice', self.play_all_bags),
-			 ('Ignore delays', self.ignore_delays),
-			 ('Ignore pauses', self.ignore_pauses),
-			 ('Keep Timechart in sync', self.sync_cv),
-			 ('autopause minidoc', self.pause_minidoc),
-			 'Crash CMIF',
-			 'Dump scheduler data',
-			 ])
 
 	def makemenu(self):
 		channels = []
@@ -254,15 +311,3 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			channels.append((name, self.channels[name].is_showing()))
 		channels.sort()
 		self.setchannels(channels)
-
-	def setwaiting(self):
-		self.waiting = 1
-		self.setcursor('watch')
-		for cname in self.channelnames:
-			self.channels[cname].setwaiting()
-
-	def setready(self):
-		self.waiting = 0
-		for cname in self.channelnames:
-			self.channels[cname].setready()
-		self.setcursor('')
