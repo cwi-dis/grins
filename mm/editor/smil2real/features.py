@@ -20,6 +20,7 @@ feature_set = [
 	TRANSITION_VIEW,
 	UNIFIED_FOCUS,
 	AUTO_EVALUATE,
+	SHOW_MEDIA_CHILDREN,
 	]
 
 version = 'Real'
