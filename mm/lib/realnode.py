@@ -113,6 +113,7 @@ class SlideShow:
 			self.update(changed = 1)
 
 	def destroy(self):
+		self.node.GetContext().unregister(self)
 		del self.node
 		del self.rp
 
@@ -134,6 +135,7 @@ class SlideShow:
 		new.rp.title = self.rp.title
 		new.rp.url = self.rp.url
 		new.rp.tags = MMNode._valuedeepcopy(self.rp.tags)
+		self.node.GetContext().register(new)
 		return new
 
 	def printfunc(self, msg):
@@ -154,7 +156,6 @@ class SlideShow:
 		if node.GetType() != 'ext' or \
 		   node.GetChannelType() != 'RealPix':
 			# not a RealPix node anymore
-			node.GetContext().geteditmgr().unregister(self)
 			if hasattr(node, 'expanded'):
 				import HierarchyView
 				HierarchyView.collapsenode(node)
@@ -173,70 +174,56 @@ class SlideShow:
 			return
 		ctx = node.GetContext()
 		url = MMAttrdefs.getattr(node, 'file')
-		if not url:
-			# no URL specified, give warning and keep content
-			name = MMAttrdefs.getattr(node, 'name') or '<unnamed>'
-			cname = node.GetChannelName()
-			windowinterface.showmessage('No URL specified for slideshow node %s on channel %s' % (name, cname), mtype = 'warning')
-		else:
-			ourl = url
+		ourl = url
+		if url:
 			url = ctx.findurl(url)
 			utype, host, path, params, query, tag = urlparse.urlparse(url)
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
-			if url != self.url:
-				# different URL specified
+		if url != self.url:
+			# different URL specified
+			try:
+				if not url:
+					raise IOError
+				fn, hdr = MMurl.urlretrieve(url)
+			except IOError:
+				# new file does not exist, keep content
+				rp = self.rp
+			else:
+				# new file exists, use it
+				import realsupport
+				fp = open(fn)
+				rp = realsupport.RPParser(url, baseurl = ourl)
 				try:
-					fn, hdr = MMurl.urlretrieve(url)
-				except IOError:
-					# new file does not exist
-					if self.url:
-						outype, ohost, opath, oparams, oquery, tag = urlparse.urlparse(self.url)
-						import posixpath
-						if (outype, ohost, oparams, oquery) != (utype, host, params, query) or posixpath.dirname(opath) != posixpath.dirname(path):
-							# different directory, new content
-							rp = DummyRP()
-						else:
-							# same directory, keep content
-							rp = self.rp
-					else:
-						# no original URL, keep content
-						rp = self.rp
+					rp.feed(fp.read())
+					rp.close()
+				except:
+					windowinterface.showmessage('error while reading RealPix file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+					rp = DummyRP()
+				fp.close()
+			if rp is not self.rp and hasattr(node, 'tmpfile'):
+				# new content, delete temp file
+##				windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+				choice = windowinterface.multchoice('Save changes to %s?' % self.url, ['Yes', 'No', 'Cancel'], 2)
+				if choice == 2:
+					# cancel
+					node.SetAttr('file', self.url)
+					self.update()
+					return
+				if choice == 0:
+					# yes, save file
+					node.SetAttr('file', self.url)
+					writenode(node)
+					node.SetAttr('file', url)
 				else:
-					# new file exists, use it
-					import realsupport
-					fp = open(fn)
-					rp = realsupport.RPParser(url, baseurl = ourl)
+					# no, discard changes
+					import os
 					try:
-						rp.feed(fp.read())
-						rp.close()
+						os.unlink(node.tmpfile)
 					except:
-						windowinterface.showmessage('error while reading RealPix file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-						rp = DummyRP()
-					fp.close()
-				if rp is not self.rp and hasattr(node, 'tmpfile'):
-					# new content, delete temp file
-##					windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-					choice = windowinterface.multchoice('Save changes to %s?' % self.url, ['Yes', 'No', 'Cancel'], 2)
-					if choice == 2:
-						# cancel
-						node.SetAttr('file', self.url)
-						self.update()
-						return
-					if choice == 0:
-						# yes, save file
-						node.SetAttr('file', self.url)
-						writenodes(node)
-						node.SetAttr('file', url)
-					else:
-						# no, discard changes
-						import os
-						try:
-							os.unlink(node.tmpfile)
-						except:
-							pass
-						del node.tmpfile
-				self.url = url
-				self.rp = rp
+						pass
+					del node.tmpfile
+			self.url = url
+			self.rp = rp
 		rp = self.rp
 		attrdict = node.GetAttrDict()
 		if attrdict['bitrate'] != rp.bitrate:
@@ -389,30 +376,23 @@ def deltmpfiles():
 			pass
 	SlideShow.tmpfiles = []
 
-def writenodes(node, evallicense=0):
-	from MMNode import interiortypes
-	if node.GetType() in interiortypes:
-		for child in node.children:
-			writenodes(child, evallicense)
-	elif hasattr(node, 'tmpfile'):
-		import realsupport
-		realsupport.writeRP(node.tmpfile, node.slideshow.rp, node)
-		url = MMAttrdefs.getattr(node, 'file')
-		if not url:
-			# XXX--no URL specified for RealPix node
-			return
-		url = node.GetContext().findurl(url)
-		utype, host, path, params, query, tag = urlparse.urlparse(url)
-		if (not utype or utype == 'file') and \
-		   (not host or host == 'localhost'):
-			try:
-				f = open(MMurl.url2pathname(path), 'w')
-				f.write(open(node.tmpfile).read())
-				f.close()
-			except:
-				print 'cannot write file for node',node
-			else:
-				del node.tmpfile
+def writenode(node, evallicense = 0):
+	if not hasattr(node, 'tmpfile'):
+		return
+	import realsupport
+	realsupport.writeRP(node.tmpfile, node.slideshow.rp, node)
+	url = MMAttrdefs.getattr(node, 'file')
+	url = node.GetContext().findurl(url)
+	utype, host, path, params, query, tag = urlparse.urlparse(url)
+	if (not utype or utype == 'file') and \
+	   (not host or host == 'localhost'):
+		try:
+			f = open(MMurl.url2pathname(path), 'w')
+			f.write(open(node.tmpfile).read())
+			f.close()
+		except:
+			windowinterface.showmessage("cannot write file for node `%s'" % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
 		else:
-			# XXX complain
-			print 'cannot write file for node',node
+			del node.tmpfile
+	else:
+		windowinterface.showmessage("cannot write remote file for node `%s'" % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))

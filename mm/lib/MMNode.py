@@ -725,6 +725,14 @@ class MMNode:
 		uidremap[self.uid] = copy.uid
 		copy.attrdict = _valuedeepcopy(self.attrdict)
 		copy.values = _valuedeepcopy(self.values)
+		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
+			if not hasattr(self, 'slideshow'):
+				print 'MMNode._deepcopy: creating SlideShow'
+				import realnode
+				self.slideshow = realnode.SlideShow(self)
+			self.slideshow.copy(copy)
+			if copy.attrdict.has_key('file'):
+				del copy.attrdict['file']
 		for child in self.children:
 			copy._addchild(child._deepcopy(uidremap, context))
 		return copy
@@ -807,6 +815,9 @@ class MMNode:
 		if self.parent is not None:
 			raise CheckError, 'Destroy() non-root node'
 
+		if hasattr(self, 'slideshow'):
+			self.slideshow.destroy()
+			del self.slideshow
 		# delete hyperlinks referring to anchors here
 		alist = MMAttrdefs.getattr(self, 'anchorlist')
 		hlinks = self.context.hyperlinks
@@ -831,9 +842,6 @@ class MMNode:
 		self.wtd_children = None
 ##		self.summaries = None
 		self.looping_body_self = None
-		if hasattr(self, 'slideshow'):
-			self.slideshow.destroy()
-			del self.slideshow
 
 	def Extract(self):
 		if self.parent is None: raise CheckError, 'Extract() root node'

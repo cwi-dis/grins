@@ -191,11 +191,14 @@ def getid(writer, node):
 
 def getsrc(writer, node):
 	ntype = node.GetType()
+	chtype = node.GetChannelType()
 	if ntype == 'ext':
 		val = MMAttrdefs.getattr(node, 'file')
 	elif ntype == 'imm':
-		if node.GetChannelType() == 'html':
+		if chtype == 'html':
 			mime = 'text/html'
+##		elif chtype == 'RealPix':
+##			mime = 'image/vnd.rn-realpix'
 		else:
 			mime = ''
 		data = string.join(node.GetValues(), '\n')
@@ -207,6 +210,13 @@ def getsrc(writer, node):
 		val = 'data:%s,%s' % (mime, MMurl.quote(data))
 	else:
 		return None
+	if not val and chtype == 'RealPix':
+		# special case for RealPix nodes
+		import realnode
+		val = writer.gen_rpfile()
+		node.SetAttr('file', val)
+		realnode.writenode(node)
+		node.DelAttr('file')
 	if not val or not writer.copydir:
 		return val
 	ctx = node.GetContext()
@@ -215,7 +225,7 @@ def getsrc(writer, node):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
 		return val
-	if node.GetChannelType() == 'RealPix':
+	if chtype == 'RealPix':
 		# special case code for RealPix file
 		if not hasattr(node, 'slideshow'):
 			import realnode
@@ -231,6 +241,7 @@ def getsrc(writer, node):
 				continue
 			nurl = attrs.get('file')
 			if not nurl:
+				# XXX URL missing for transition
 				continue
 			nurl = ctx.findurl(nurl)
 			if writer.copycache.has_key(nurl):
@@ -242,10 +253,13 @@ def getsrc(writer, node):
 		rp.tags = ntags
 		file = writer.newfile(url)
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-		ofile = node.attrdict['file']
+		ofile = MMAttrdefs.getattr(node, 'file')
 		node.SetAttr('file', val)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
-		node.SetAttr('file', ofile)
+		if ofile:
+			node.SetAttr('file', ofile)
+		else:
+			node.DelAttr('file')
 		writer.files_generated[file] = ''
 		rp.tags = otags
 	else:
@@ -567,6 +581,8 @@ class SMILWriter(SMIL):
 				copyFiles = 0, evallicense = 0, tmpcopy = 0, progress=None):
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
 		self.evallicense = evallicense
+		self.__generate_number = 0
+		self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
 		self.files_generated = {}
 		self.progress = progress
 		if copyFiles:
@@ -718,9 +734,16 @@ class SMILWriter(SMIL):
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-		if ctx.baseurl and ctx.baseurlset and not self.copydir:
+		i = string.rfind(ctx.baseurl or '', '/')
+		if i >= 0:
+			# baseurl up to and including last slash
+			baseurl = ctx.baseurl[:i+1]
+		else:
+			# no baseurl
+			baseurl = None
+		if baseurl and ctx.baseurlset and not self.copydir:
 			self.writetag('meta', [('name', 'base'),
-					       ('content', ctx.baseurl)])
+					       ('content', baseurl)])
 		for key, val in ctx.attributes.items():
 			# for export don't write attributes starting with project_, they are meant
 			# for internal information-keeping only
@@ -1325,6 +1348,11 @@ class SMILWriter(SMIL):
 		
 	def getcopyinfo(self):
 		return self.copydir, self.copydirname, self.files_generated
+
+	def gen_rpfile(self):
+		i = self.__generate_number
+		self.__generate_number = self.__generate_number + 1
+		return self.__generate_basename + `i` + '.rp'
 
 namechars = string.letters + string.digits + '_-.'
 
