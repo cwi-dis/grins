@@ -743,6 +743,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.window.drawxorline((px,py),(px, y+h/2))
 
 	def mouse0release(self, dummy, window, event, params):
+		self.toplevel.setwaiting()
 		x,y = params[0:2]
 		px = int(x * self.mcanvassize[0] + .5)
 		py = int(y * self.mcanvassize[1] + .5)
@@ -781,7 +782,6 @@ class HierarchyView(HierarchyViewDialog):
 		if x >= 1 or y >= 1:
 			# out of bounds, ignore
 			return
-		self.toplevel.setwaiting()
 		obj = self.scene_graph.get_clicked_obj_at((px,py))
 		if obj:
 ##			import time
