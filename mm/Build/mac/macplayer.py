@@ -115,6 +115,10 @@ else:
 # macfreeze: exclude CORBA.services
 # macfreeze: exclude win32ig
 # macfreeze: optional rma
+# macfreeze: exclude HierarchyView
+# macfreeze: exclude dshow
+# macfreeze: exclude producer
+# macfreeze: exclude SMILTreeWrite
 #
 # And here's the code for non-standalone version of the editor:
 
