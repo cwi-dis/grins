@@ -41,6 +41,7 @@
 #define IDR_GRINS                       229
 #define IDD_LINK_PROPERTY               230
 #define IDI_CREATE_BOX                  231
+#define IDD_USERGROUP1                  231
 #define IDC_PLAY                        1001
 #define IDC_PAUSE                       1002
 #define IDC_PLAYER                      1010
