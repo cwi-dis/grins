@@ -945,7 +945,8 @@ class Channel:
 		windowinterface.showmessage(
 			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
-			mtype = 'warning')
+			mtype = 'question',
+			cancelCallback = (self._player.cc_stop, ()))
 
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
