@@ -1100,8 +1100,8 @@ class _ChannelThread:
 			pass
 		try:
 			import mm
-			self.threads = mm.init(self.threadstart(), 0,
-				  self._deviceno, attrdict)
+			self.threads = mm.init(self.threadstart(),
+					       self._deviceno, attrdict)
 		except ImportError:
 			print 'Warning: cannot import mm, so channel ' + \
 				  `self._name` + ' remains hidden'
