@@ -96,8 +96,6 @@ class _Toplevel:
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
 		window = _Window().init(self, x, y, w, h, title)
 		_event._qdevice()
-		window._parent_window = self
-		window._toplevel = window
 		dummy = testevent()
 		return window
 
@@ -326,9 +324,9 @@ class _Font:
 ##		print '_Font().init() pointsize:',size,self._pointsize
 		return self
 
-	def __repr__(self):
-		return '<_Font instance, font=' + self._fontname + ', ps=' + \
-			  `self._pointsize` + '>'
+##	def __repr__(self):
+##		return '<_Font instance, font=' + self._fontname + ', ps=' + \
+##			  `self._pointsize` + '>'
 
 	def close(self):
 		self._closed = 1
@@ -373,6 +371,7 @@ class _Font:
 
 class _Button:
 	def init(self, dispobj, x, y, w, h):
+##		print 'create',`self`
 		if debug: print 'Button.init()'
 		self._dispobj = dispobj
 		window = dispobj._window
@@ -392,6 +391,9 @@ class _Button:
 		dispobj._buttonlist.append(self)
 		return self
 
+##	def __del__(self):
+##		print 'delete',`self`
+
 	def close(self):
 		dispobj = self._dispobj
 		if dispobj:
@@ -400,6 +402,9 @@ class _Button:
 
 	def is_closed(self):
 		return self._dispobj == None
+
+	def getwindow(self):
+		return self._dispobj._window
 
 	def hiwidth(self, width):
 		self._hiwidth = width
@@ -461,6 +466,7 @@ class _Button:
 class _DisplayList:
 	def init(self, window):
 		self._window = window	# window to which this belongs
+##		print 'create',`self`
 		if debug: print 'DisplayList.init'+`self,window`
 		self._rendered = 0	# 1 iff rendered at some point
 		self._bgcolor = window._bgcolor
@@ -478,8 +484,11 @@ class _DisplayList:
 		window._displaylists.append(self)
 		return self
 
-	def __repr__(self):
-		return '<_DisplayList instance, window='+`self._window`+'>'
+##	def __del__(self):
+##		print 'delete',`self`
+
+##	def __repr__(self):
+##		return '<_DisplayList instance, window='+`self._window`+'>'
 
 	def close(self):
 		if debug: print `self`+'.close()'
@@ -815,8 +824,12 @@ class _Window:
 ##		s = s + '>'
 ##		return s
 
+##	def __del__(self):
+##		print 'delete',`self`
+
 	def _init2(self):
 		if debug: print `self`+'.init2()'
+##		print 'create',`self`
 		# we are already locked on entry, we are unlocked on return
 		gl.RGBmode()
 		gl.gconfig()
@@ -830,10 +843,15 @@ class _Window:
 		self._subwindows = []
 		self._displaylists = []
 		self._active_display_list = None
+		self._closecallbacks = []
 		_window_list[self._window_id] = self
 		self._redraw()
 		self._setcursor(self._parent_window._cursor)
 		self._parent_window._subwindows.append(self)
+		if hasattr(self._parent_window, '_toplevel'):
+			self._toplevel = self._parent_window._toplevel
+		else:
+			self._toplevel = self
 		return self
 
 	def newwindow(self, *coordinates):
@@ -868,6 +886,9 @@ class _Window:
 		if not _window_list.has_key(self._window_id):
 			# apparently already closed
 			return
+		for func in self._closecallbacks[:]:
+			func(self)
+		del self._closecallbacks
 		for win in self._subwindows[:]:
 			win.close()
 		for displist in self._displaylists[:]:
@@ -878,6 +899,7 @@ class _Window:
 		parent = self._parent_window
 		parent._subwindows.remove(self)
 		self._parent_window = None
+		self._toplevel = None
 		# let our parent window inherit events meant for us
 		dummy = testevent()	# read all pending events
 		q = []
@@ -889,6 +911,10 @@ class _Window:
 				win = parent
 			q.append((win, ev, val))
 		_event._queue = q
+
+	def _call_on_close(self, func):
+		if not func in self._closecallbacks:
+			self._closecallbacks.append(func)
 
 	def is_closed(self):
 		return not _window_list.has_key(self._window_id)
@@ -1306,6 +1332,8 @@ class _Window:
 		# are the amount to crop off the image in pixels.
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
+		if zsize == 4:
+			zsize = 3
 		return x, y, width - left - right, height - top - bottom, \
 			  left, bottom, width, height, zsize, scale, image, 1
 

@@ -131,6 +131,12 @@ class _Events:
 			else:
 				windowinterface.waitevent()
 
+	def remove_window_callbacks(self, window):
+		# called when window closes
+		for (w, e) in self._windows.keys():
+			if w == window:
+				self.unregister(w, e)
+
 	def setcallback(self, event, func, arg):
 		self.register(None, event, func, arg)
 
@@ -138,6 +144,8 @@ class _Events:
 		key = (win, event)
 		if func:
 			self._windows[key] = (func, arg)
+			if win:
+				win._call_on_close(self.remove_window_callbacks)
 		elif self._windows.has_key(key):
 			del self._windows[key]
 		else:
@@ -148,6 +156,11 @@ class _Events:
 			self.register(win, event, None, None)
 		except error:
 			pass
+
+	def clean_callbacks(self):
+		for (win, event) in self._windows.keys():
+			if win and win.is_closed():
+				self.register(win, event, None, None)
 
 	def select_setcallback(self, fd, cb, arg):
 		if cb == None:
@@ -199,6 +212,9 @@ def register(win, event, func, arg):
 
 def unregister(win, event):
 	_event_instance.unregister(win, event)
+
+def clean_callbacks():
+	_event_instance.clean_callbacks()
 
 def select_setcallback(fd, cb, arg):
 	_event_instance.select_setcallback(fd, cb, arg)
