@@ -1,6 +1,6 @@
 # Experimental layout view for light region view
 
-treeVersion = 0
+treeVersion = 1
 
 # editor features
 import features
@@ -494,6 +494,9 @@ class TreeManager:
 
 		self.treeCtrl.SetImageList(self.__imageList, commctrl.LVSIL_NORMAL)
 
+	def removeNode(self, item):
+		self.treeCtrl.DeleteItem(item)
+		
 	def insertNode(self, parent, text, imageName, selectedImageName):
 		iImage = self.bitmapNameToId.get(imageName)
 		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
@@ -523,6 +526,9 @@ class TreeManager:
 				except:
 					child = None
 
+	def expand(self, item):
+		self.treeCtrl.Expand(item, commctrl.TVE_EXPAND)
+		
 	def destroyAllNodes(self):								  		
 		self.treeCtrl.DeleteAllItems()
 
