@@ -18,9 +18,9 @@
     <seq id="City-Walk">
       <par id="Audio-Visual-Show">
         <seq id="Images">
-          <img id="Picture_1" region="Top-L" dur="5s"/>
-          <img id="Picture_2" region="Mid" dur="5s"/>
-          <img id="Picture_3" region="Bot-R" dur="5s"/>
+          <img id="Picture_1" region="Top-L" dur="5s" src="Assets/mapc.jpg"/>
+          <img id="Picture_2" region="Mid" dur="5s" src="Assets/h168c.jpg"/>
+          <img id="Picture_3" region="Bot-R" dur="5s" src="Assets/h218c.jpg"/>
         </seq>
       </par>
     </seq>
