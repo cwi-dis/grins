@@ -518,8 +518,7 @@ class LinkEditorDialog(windowinterface.MACDialog):
 		choice -- index of the new choice
 		"""
 		for i in range(3):
-			tp, h, rect = self._dialog.GetDialogItem(ITEM_DIR_RIGHT+i)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEM_DIR_RIGHT+i)
 			if i == choice:
 				ctl.SetControlValue(1)
 			else:
@@ -528,8 +527,7 @@ class LinkEditorDialog(windowinterface.MACDialog):
 	def linkdirgetchoice(self):
 		"""Return the current choice in the link dir list."""
 		for i in range(3):
-			tp, h, rect = self._dialog.GetDialogItem(ITEM_DIR_RIGHT+i)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEM_DIR_RIGHT+i)
 			if ctl.GetControlValue():
 				return i
 		raise 'No direction set?'
@@ -551,8 +549,7 @@ class LinkEditorDialog(windowinterface.MACDialog):
 		choice -- index of the new choice
 		"""
 		for i in range(3):
-			tp, h, rect = self._dialog.GetDialogItem(ITEM_TYPE_JUMP+i)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEM_TYPE_JUMP+i)
 			if i == choice:
 				ctl.SetControlValue(1)
 			else:
@@ -561,8 +558,7 @@ class LinkEditorDialog(windowinterface.MACDialog):
 	def linktypegetchoice(self):
 		"""Return the current choice in the link type list."""
 		for i in range(3):
-			tp, h, rect = self._dialog.GetDialogItem(ITEM_TYPE_JUMP+i)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEM_TYPE_JUMP+i)
 			if ctl.GetControlValue():
 				return i
 		raise 'No type set?'
