@@ -197,6 +197,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookMessage(self.onMove,win32con.WM_MOVE)
 		self.HookMessage(self.onKey,win32con.WM_KEYDOWN)
 		self.HookMessage(self.onInitMenu,win32con.WM_INITMENU)
+		self.HookMessage(self.onActivate,win32con.WM_ACTIVATE)
 
 		# the view is responsible for user input
 		# so do not hook other messages
@@ -235,6 +236,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	def onKey(self,key):
 		self.PostMessage(WM_KICKIDLE)
 		print key
+
+	def onActivate(self,params):
+		msg=win32mu.Win32Msg(params)
+		flag=msg.LOWORD_wParam()
+		if flag!=win32con.WA_INACTIVE:
+			__main__.toplevel.setActiveDocFrame(self)
 
 	# Mirrors mdi window-menu to tab bar (not impl)
 	# do ... on new activate	
@@ -517,13 +524,14 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if context not in self._activecmds.keys():
 			self._activecmds[context]={}
 		contextcmds=self._activecmds[context]
-		otherids=self.othercmdids(context)
+		viewsids=self.viewscmdids()
 		menu=self.GetMenu()
-		for id in contextcmds.keys():
-			if id not in otherids.keys():
-				self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
+		# dissable all commands set by views previously
+		for id in viewsids.keys():
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 		contextcmds.clear()
 		if not commandlist: return
+		# enable the commands set by the caller view
 		for cmd in commandlist:
 			usercmd_ui = usercmdui.class2ui[cmd.__class__]
 			id=usercmd_ui.id
@@ -531,11 +539,11 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			contextcmds[id]=cmd
 		self.PostMessage(WM_KICKIDLE)
 
-	# Return the command ids with other contexts
-	def othercmdids(self,except_context):
+	# Return the command ids of all the views
+	def viewscmdids(self):
 		d={}
 		for context in self._activecmds.keys():
-			if context==except_context:continue
+			if context=='frame' or context=='document':continue
 			contextcmds=self._activecmds[context]
 			for id in contextcmds.keys():d[id]=1
 		return d
