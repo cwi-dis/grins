@@ -1446,7 +1446,7 @@ class SVGPlayer:
 		self._timeroot.setOsTimer(self._ostimer)
 		self._timeroot.seekElement(0.0)
 		self._timeroot.beginElement()
-		self._timerid = self._ostimer.settimer(0.001, (self.timerCallback, ()))
+		self._timerid = self._ostimer.settimer(self._timeresolution, (self.timerCallback, ()))
 
 	def stop(self):
 		self._timeroot.endElement()
@@ -1464,7 +1464,7 @@ class SVGPlayer:
 	def resume(self):
 		self._timeroot.resumeElement()
 		if self._timerid is None:
-			self._timerid = self._ostimer.settimer(0.001, (self.timerCallback, ()))
+			self._timerid = self._ostimer.settimer(self._timeresolution, (self.timerCallback, ()))
 
 	#
 	# timer rendering callback
