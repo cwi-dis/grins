@@ -249,6 +249,7 @@ class VideoStream:
 		self.__fiber_id=None
 		self.__rcMediaWnd = None
 		self.__qid = self.__dqid = None
+		self.__iteration = 0
 
 	def destroy(self):
 		if self.__window:
