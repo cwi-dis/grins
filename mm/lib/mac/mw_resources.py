@@ -61,3 +61,6 @@ ID_ICON_BANDWIDTH_ERROR=615		# red bulging pipeline
 ##ID_ICON_TRIANGLE_RIGHT=616	# Windows-style boxed +
 ##ID_ICON_TRIANGLE_DOWN=617		# Windows-style boxed -
 ID_ICON_ERROR=618				# Warning trafficsign
+ID_ICON_LINKSRC=621				# Source of hyperlinks
+ID_ICON_LINKDST=620				# Destination of hyperlinks
+ID_ICON_LINKSRCDST=619			# Both source and destination

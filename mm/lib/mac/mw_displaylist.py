@@ -37,7 +37,10 @@ _icon_ids = {
 	'open': mw_resources.ID_ICON_TRIANGLE_DOWN,
 	'bandwidthgood': mw_resources.ID_ICON_BANDWIDTH_OK,
 	'bandwidthbad': mw_resources.ID_ICON_BANDWIDTH_ERROR,
-	'error': mw_resources.ID_ICON_ERROR
+	'error': mw_resources.ID_ICON_ERROR,
+	'linksrc': mw_resources.ID_ICON_LINKSRC,
+	'linkdst': mw_resources.ID_ICON_LINKDST,
+	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
 }
 
 def _get_icon(which):
