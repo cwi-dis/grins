@@ -177,8 +177,9 @@ class AnchorEditForm(docview.ListView):
 	def fittemplate(self):
 		frame=self.GetParent()
 		rc=win32mu.DlgTemplate(grinsRC.IDD_EDIT_ANCHOR_BAR).getRect()
+		if not rc: return
 		from sysmetrics import cycaption,cyborder,cxborder,cxframe
-		h= 240 #rc.height() + 2*cycaption+ 2*cyborder
+		h= 268 #rc.height() + 2*cycaption+ 2*cyborder
 		w=rc.width()+2*cxframe+2*cxborder
 		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE|win32con.SWP_NOMOVE
 		frame.SetWindowPos(0, (0,0,w,h),flags)
