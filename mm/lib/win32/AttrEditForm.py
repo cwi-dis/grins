@@ -1815,6 +1815,9 @@ class HrefCtrl(AttrCtrl):
 		self.__external.hookcommand(self._wnd,self.OnRadio)
 		self.__browse.attach_to_parent()
 		self._wnd.HookCommand(self.OnBrowse,self._resid[4])
+		if features.EXPORT_SMIL2 not in features.feature_set:
+			self.__internal.hide()
+			self.__browse.hide()
 		self.__url.attach_to_parent()
 		self._wnd.HookCommand(self.OnEdit,self._resid[5])
 		self.__browseurl.attach_to_parent()
