@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Module to handle various system attributes
 import os
 import windowinterface
