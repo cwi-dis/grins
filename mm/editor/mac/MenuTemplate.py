@@ -191,7 +191,7 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'Timeline View', '7', CHANNELVIEW),
 		(FLAG_PRO, ENTRY, 'Layout View', '8', LAYOUTVIEW),
 		(FLAG_PRO, ENTRY, 'Hyperlinks', '9', LINKVIEW),
-		(FLAG_BOSTON, ENTRY, 'User Groups', '0', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'Custom Tests', '0', USERGROUPVIEW),
 		(FLAG_BOSTON, ENTRY, 'Transitions', None, TRANSITIONVIEW),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Source', None, SOURCE),

@@ -37,7 +37,7 @@ class PlayerDialog(PlayerDialogBase):
 				(FLAG_ALL, 'Pause', PAUSE, 't'),
 				(FLAG_ALL, 'Stop', STOP, 't'),
 				(FLAG_BOSTON, None),
-				(FLAG_BOSTON, 'User Groups', USERGROUPS),
+				(FLAG_BOSTON, 'Custom Tests', USERGROUPS),
 				(FLAG_CMIF, 'Channels', CHANNELS),
 				]),
 			(FLAG_ALL, 'Help', [

@@ -254,12 +254,12 @@ END
 
 IDD_EDIT_USERGROUP DIALOG DISCARDABLE  0, 0, 188, 121
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit User Group"
+CAPTION "Edit Custom Test"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "User group name:",IDC_STATIC,7,9,57,8
+    LTEXT           "Custom test name:",IDC_STATIC,7,9,59,8
     EDITTEXT        IDC_EDIT1,68,7,112,14,ES_AUTOHSCROLL
-    LTEXT           "User group title:",IDC_STATIC,7,27,50,8
+    LTEXT           "Custom test title:",IDC_STATIC,7,27,52,8
     EDITTEXT        IDC_EDIT2,68,26,112,14,ES_AUTOHSCROLL
     LTEXT           "Initial state:",IDC_STATIC,7,45,36,8
     COMBOBOX        IDC_COMBO1,68,45,81,46,CBS_DROPDOWN | CBS_SORT | 

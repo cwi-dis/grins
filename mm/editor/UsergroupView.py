@@ -144,7 +144,7 @@ class UsergroupEdit(UsergroupEditDialog):
 	def do_apply(self):
 		ugroup, title, ustate, override, uid = self.getstate()
 		if not ugroup:
-			self.showmessage('User group name is required')
+			self.showmessage('Custom test name is required')
 			return 0
 		if not self.__editmgr.transaction():
 			return 0
