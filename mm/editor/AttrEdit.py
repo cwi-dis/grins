@@ -153,10 +153,10 @@ def hastransitionattreditor(toplevel, trname):
 # A similar interface for program preferences (note different arguments!).
 
 prefseditor = None
-def showpreferenceattreditor(callback, initattr = None):
+def showpreferenceattreditor(initattr = None):
 	global prefseditor
 	if prefseditor is None:
-		prefseditor = AttrEditor(PreferenceWrapper(callback), initattr = initattr)
+		prefseditor = AttrEditor(PreferenceWrapper(), initattr = initattr)
 	else:
 		prefseditor.pop()
 
@@ -1170,13 +1170,14 @@ class PreferenceWrapper(Wrapper):
 ##		'system_overdub_or_subtitle': 'Overdub or subtitles',
 		}
 
-	def __init__(self, callback):
-		self.__callback = callback
+	def __init__(self):
 		self.toplevel = None
+
+	def closing(self):
+		return 0
 
 	def close(self):
 		global prefseditor
-		del self.__callback
 		prefseditor = None
 
 	def canhideproperties(self):
@@ -1189,21 +1190,18 @@ class PreferenceWrapper(Wrapper):
 		pass
 
 	def register(self, object):
-		pass
+		settings.register(object)
 
 	def unregister(self, object):
-		pass
+		settings.unregister(object)
 
 	def transaction(self):
-		return 1
+		print 'SETTINGS TRANSACTION'
+		return settings.transaction()
 
 	def commit(self):
-		attr = None
-		if prefseditor:
-			attr = prefseditor.getcurattr()
-		self.__callback()
-		if prefseditor and attr:
-			prefseditor.setcurattr(attr)
+		print 'SETTINGS COMMIT'
+		settings.commit()
 
 	def rollback(self):
 		pass
@@ -1416,9 +1414,10 @@ class AttrEditor(AttrEditorDialog):
 			if not b.getvalue() and not b.getcurrent():
 				continue
 			if b.getvalue() != b.getcurrent():
-				#print 'DBG changed', b
-				#print 'VALUE', b.getvalue()
-				#print 'CURRENT', b.getcurrent()
+				print 'DBG changed', b
+				print 'VALUE', b.getvalue()
+				print 'CURRENT', b.getcurrent()
+				import pdb ; pdb.set_trace()
 				return 1
 		return 0
 				

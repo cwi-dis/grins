@@ -317,14 +317,8 @@ class Main(MainDialog):
 			
 	def preferences_callback(self):
 		import AttrEdit
-		AttrEdit.showpreferenceattreditor(self.prefschanged)
+		AttrEdit.showpreferenceattreditor()
 
-	def prefschanged(self):
-		import settings
-		for top in self.tops:
-			top.prefschanged()
-		settings.save()
-		
 	def checkversion_callback(self):
 		import MMurl
 		import version
