@@ -535,7 +535,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# append and update media node list
 		self.appendMediaNodeList(appendList)
-		self.updateMediaNodeList()
+#		self.updateMediaNodeList()
 		self.updateFocus(focusobject)
 		
 	def updateFocus(self, object):
@@ -546,6 +546,9 @@ class LayoutView2(LayoutViewDialog2):
 				if mediaRegion.getName() == name:
 					self.select(mediaRegion)
 					break
+		else:
+			if self.currentViewport != None:
+				self.select(self.currentViewport)
 
 	def showAllRegions(self):
 		# remove all selected nodes
@@ -600,14 +603,15 @@ class LayoutView2(LayoutViewDialog2):
 			if self.currentViewport != parentRegion.getViewport():
 				self.displayViewport(parentRegion.getViewport().getName())
 		else:			
-			# if no media selected any more desactive the media selecter
-			self.disableMediaListOnDialogBox()
 			# active the region of the last selected media
+			print 'update media node list no media'
 			if self.currentNodeSelected != None:
+				print 'update media node list no media 2'
 				if self.currentNodeSelected.getNodeType() == TYPE_MEDIA:				
-					self.currentNodeSelected.hide()
+					print 'update media node list no media 3'
 					region = self.currentNodeSelected.getParent()
 					if region != None:
+						print 'update media node list no media 4'
 						self.select(region)
 		
 	def isSelectedRegion(self, regionName):
@@ -628,8 +632,8 @@ class LayoutView2(LayoutViewDialog2):
 		
 		if focustype == 'MMNode':
 			self.focusOnMMNode(focusobject)
-		elif focustype == 'MMChannel':
-			self.focusOnMMChannel(focusobject)
+#		elif focustype == 'MMChannel':
+#			self.focusOnMMChannel(focusobject)
 
 	def playerstatechanged(self, type, parameters):
 		if type == 'paused':
