@@ -14,7 +14,8 @@ __version__ = "$Id$"
 ##	is an instance of the editmanager.
 ##	* That view calls em.transaction() to tell everybody in
 ##	em.registry that it wants an exclusive lock on making changes.
-##	* The view does it's stuff to the data structures.
+##	* The view does it's stuff to the data structures through calls
+##	to methods of em.
 ##	* the view calls em.commit(). commit will record the changes
 ##	and let all other views know that the document has changed.
 
