@@ -29,9 +29,6 @@ class RealWindowChannel(Channel.ChannelWindow):
 		windowinterface.addclosecallback(self.release_player,())	
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
-	def __repr__(self):
-		return '<RealWindowChannel instance, name=' + `self._name` + '>'
-	
 	def do_hide(self):
 		self.release_player()
 		Channel.ChannelWindow.do_hide(self)
@@ -41,9 +38,7 @@ class RealWindowChannel(Channel.ChannelWindow):
 		Channel.ChannelWindow.destroy(self)
 
 	def release_player(self):
-		if self._rmaplayer:
-			del self._rmaplayer
-			self._rmaplayer=None
+		self._rmaplayer = None
 
 	def do_arm(self, node, same = 0):
 		if not self._rmaplayer:
@@ -72,12 +67,9 @@ class RealWindowChannel(Channel.ChannelWindow):
 		if not self._has_rma_support:
 			Channel.ChannelWindow.do_play(self,node)
 			return
+		print 'RealWindowChannel.do_play',self.getfileurl(node)
 		url = MMurl.canonURL(self.getfileurl(node))
-		print 'play',url
-##		url = MMurl.basejoin(MMurl.pathname2url(os.getcwd())+'/',url)
-##		type, url = MMurl.splittype(url)
-##		url = 'file:/'+ url
-
+		print 'url',url
 		if not self._rmaplayer:
 			self._rmaplayer=rma.CreatePlayer()
 		self._rmaplayer.SetStatusListener(self)
@@ -86,12 +78,7 @@ class RealWindowChannel(Channel.ChannelWindow):
 		self._rmaplayer.Begin()
 
 	def OnPresentationClosed(self):
-		print 'OnPresentationClosed'
 		self.playdone(0)
-
-	def OnStop(self):
-		print 'OnStop'
-		#self.playdone(0)
 
 	def stopplay(self, node):
 		self.release_player()
@@ -111,7 +98,7 @@ class RealWindowChannel(Channel.ChannelWindow):
 		name = MMAttrdefs.getattr(node, 'name')
 		if not name:
 			name = '<unnamed node>'
-		msg = 'Warning:\nNo playback support for RealMedia on your system\n' \
+		msg = 'Warning:\nNo playback support for RealMedia on this system\n' \
 		      'node %s on channel %s' % (name, self._name)
 		parms = self.armed_display.fitfont('Times-Roman', msg)
 		w, h = self.armed_display.strsize(msg)
