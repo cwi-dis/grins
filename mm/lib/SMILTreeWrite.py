@@ -424,6 +424,8 @@ def getfitatt(writer, node, attr):
 			fit = 'slice'
 		elif val == 1:
 			fit = 'hidden'
+		elif val == -3:
+			fit = 'fill'
 	return fit
 
 def getregpointatt(writer, node, attr):
@@ -1704,6 +1706,8 @@ class SMILWriter(SMIL):
 				fit = 'slice'
 			elif scale == 1:
 				fit = 'hidden'
+			elif scale == -3:
+				fit = 'fill'
 			else:
 				fit = None
 				print '** Channel uses unsupported scale value', name

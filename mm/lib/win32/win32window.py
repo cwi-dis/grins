@@ -436,16 +436,22 @@ class Window:
 		
 		# compute scale taking into account the hint (0,-1,-2)
 		if scale == 0:
-			scale = min(float(width)/(xsize - left - right),
+			xscale = yscale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 		elif scale == -1:
-			scale = max(float(width)/(xsize - left - right),
+			xscale = yscale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 		elif scale == -2:
-			scale = min(float(width)/(xsize - left - right),
+			xscale = yscale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-			if scale > 1:
-				scale = 1
+			if xscale > 1:
+				xscale = yscale = 1
+		elif scale == -3:
+			xscale = float(width)/(xsize - left - right)
+			yscale = float(height)/(ysize - top - bottom)
+		else:
+			# default rule
+			xscale = yscale = scale
 
 		# scale crop sizes
 		top = int(top * scale + .5)
@@ -460,9 +466,10 @@ class Window:
 		# scale image sizes
 		w=xsize
 		h=ysize
-		if scale != 1:
-			w = int(xsize * scale + .5)
-			h = int(ysize * scale + .5)
+		if xscale != 1:
+			w = int(xsize * xscale + .5)
+		if yscale != 1:
+			h = int(ysize * yscale + .5)
 
 		if center:
 			x, y = x + (width - (w - left - right)) / 2, \

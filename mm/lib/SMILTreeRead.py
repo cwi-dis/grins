@@ -985,7 +985,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if val not in ('meet', 'slice', 'fill',
 				       'hidden', 'scroll'):
 				self.syntax_error('illegal fit attribute')
-			elif val in ('fill', 'scroll'):
+			elif val == 'scroll':
 				self.warning('fit="%s" value not implemented' % val, self.lineno)
 			else:
 				if val == 'hidden':
@@ -994,6 +994,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attributes['scale'] = "0"
 				elif val == 'slice':
 					attributes['scale'] = "-1"
+				elif val == 'fill':
+					attributes['scale'] = "-3"
 
 		# create the node
 		if not self.__root:
@@ -1825,6 +1827,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['scale'] = 0
 			elif fit == 'slice':
 				ch['scale'] = -1
+			elif fit == 'fill':
+				ch['scale'] = -3
 			ch['center'] = 0
 			# other fit options not implemented
 
@@ -2422,7 +2426,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val not in ('meet', 'slice', 'fill',
 					       'hidden', 'scroll'):
 					self.syntax_error('illegal fit attribute')
-				elif val in ('fill', 'scroll'):
+				elif val == 'scroll':
 					self.warning('fit="%s" value not implemented' % val, self.lineno)
 				attrdict['fit'] = val
 			elif attr == 'backgroundColor':

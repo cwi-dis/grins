@@ -1000,6 +1000,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 				    float(height)/(ysize - top - bottom))
 			if scale > 1:
 				scale = 1
+		elif scale < 0:
+			# value not reconized. Set scale to 1
+			scale = 1
+				
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)
 		left = int(left * scale + .5)
