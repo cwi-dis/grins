@@ -70,7 +70,7 @@ class Main(MainDialog):
 		self.tops = []
 		self.last_location = ''
 		try:
-			import mm, posix, fcntl, FCNTL
+			import mm, posix, fcntl
 		except ImportError:
 			pass
 		else:
@@ -79,7 +79,7 @@ class Main(MainDialog):
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
-						(posix.read, fcntl.fcntl, FCNTL))
+						(posix.read, fcntl.fcntl, fcntl))
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
