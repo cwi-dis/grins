@@ -1,5 +1,10 @@
-"""Dialog for the Preferences window.
+__version__ = "$Id$"
 
+
+""" @win32doc|_PreferencesDialog
+This module contains the ui implementation of the PreferencesDialog
+The _LayoutView is created using the resource dialog template 
+with identifier IDD_PREFERENCES.
 """
 
 __version__ = "$Id$"
@@ -10,8 +15,11 @@ import string
 
 
 class PreferencesDialog(ResDialog,ControlsDict):
+
+	# Class constructor. Calls base class constructors and associates ids to controls
 	def __init__(self,cbd=None,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_PREFERENCES,parent)
+		ControlsDict.__init__(self)
 
 		self['system_bitrate']= Edit(self,grinsRC.IDC_EDIT1)
 		self['system_language']= Edit(self,grinsRC.IDC_EDIT2)
@@ -26,27 +34,35 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		#mark as int edit
 		self['system_bitrate']._int=1
 
+	# Called by the OS after the OS window has been created
 	def OnInitDialog(self):	
 		self.attach_handles_to_subwindows()	
 		self.HookCommand(self.OnReset,self['Reset']._id)
 
+	# Create the actual OS window
 	def create(self):
 		self.CreateWindow()
+	# Called by the core system to close the Dialog
 	def close(self):
 		self.DestroyWindow()
 
-
+	# Response to the button OK
 	def OnOK(self):	apply(apply,self._cbd['OK'])
+	# Response to the button Cancel
 	def OnCancel(self):apply(apply,self._cbd['Cancel'])
+	# Response to the button Reset
 	def OnReset(self,id,code):apply(apply,self._cbd['Reset'])
 
 
+	# Called by the core syatem to show the Dialog
 	def show(self):
 		self.CenterWindow(self.GetParent())
 		self.ShowWindow(win32con.SW_SHOW)
 
+	# Called by the core syatem to hide the Dialog
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
+	# Called by the core system to bring the Dialog in front
 	def pop(self):
 		self.show()
 
@@ -63,22 +79,26 @@ class PreferencesDialog(ResDialog,ControlsDict):
 	#
 	# interface methods
 	#
+	# set the attribute of the string item to the value
 	def setstringitem(self, item, value):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
 		self[item].settext(value)
 		
+	# get the attribute of the string item
 	def getstringitem(self, item):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
 		return self[item].gettext()
-		
+	
+	# Get all string attributes	
 	def getstringnames(self):
 		l=[]
 		for k in self.keys():
 			if self.is_string(k):l.append(k)
 		return l
 		
+	# set the attribute of the int item to the value
 	def setintitem(self, item, value):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
@@ -87,6 +107,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		else:
 			self[item].settext('%d' % value)
 		
+	# get the attribute of the int item
 	def getintitem(self, item):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
@@ -99,22 +120,26 @@ class PreferencesDialog(ResDialog,ControlsDict):
 			raise PreferencesDialogError, '%s value should be integer'%item
 		return value
 		
+	# Get all int attributes	
 	def getintnames(self):
 		l=[]
 		for k in self.keys():
 			if self.is_int(k):l.append(k)
 		return l
 
+	# set the attribute of the bool item to the value
 	def setboolitem(self, item, value):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
 		self[item].setcheck(1)
 
+	# get the attribute of the bool item
 	def getboolitem(self, item):
 		if not self.has_key(item):
 			raise 'Unknown preference item', item
 		return self[item].getcheck()
 		
+	# Get all bool attributes	
 	def getboolnames(self):
 		l=[]
 		for k in self.keys():
