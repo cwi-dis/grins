@@ -169,14 +169,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
-		self.interiorcommands = [
-			NEW_UNDER(callback = (self.createundercall, ())),
-			NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))),
-			NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))),
-			NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))),
-			NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))),
-			NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))),
-			]
+		self.interiorcommands = self._getmediacommands(toplevel.root.context, under=1)
 		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
 			]
@@ -184,19 +177,8 @@ class HierarchyView(HierarchyViewDialog):
 			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
 			PASTE_AFTER(callback = (self.pasteaftercall, ())),
 			]
-		self.notatrootcommands = [
-			NEW_BEFORE(callback = (self.createbeforecall, ())),
-			NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))),
-			NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))),
-			NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))),
-			NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))),
-			NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))),
-			NEW_AFTER(callback = (self.createaftercall, ())),
-			NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))),
-			NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))),
-			NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))),
-			NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))),
-			NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))),
+		self.notatrootcommands = self._getmediacommands(toplevel.root.context) + \
+		    [
 			NEW_SEQ(callback = (self.createseqcall, ())),
 			NEW_PAR(callback = (self.createparcall, ())),
 			NEW_CHOICE(callback = (self.createbagcall, ())),
@@ -247,6 +229,49 @@ class HierarchyView(HierarchyViewDialog):
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
+
+	def _getmediacommands(self, ctx, under=0):
+		import settings
+		heavy = not settings.get('lightweight')
+		rv = []
+		for x in ('image', 'sound', 'video', 'text', 'RealPix'):
+			print 'DBG:', (x, ctx.compatchannels(chtype=x))
+		if under:
+			rv.append(NEW_UNDER(callback = (self.createundercall, ())))
+			if heavy or ctx.compatchannels(chtype='image'):
+				rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
+			if heavy or ctx.compatchannels(chtype='sound'):
+				rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
+			if heavy or ctx.compatchannels(chtype='video'):
+				rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
+			if heavy or ctx.compatchannels(chtype='text'):
+				rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
+			if heavy or ctx.compatchannels(chtype='RealPix'):
+				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
+			return rv
+		rv.append(NEW_BEFORE(callback = (self.createbeforecall, ())))
+		if heavy or ctx.compatchannels(chtype='image'):
+			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
+		if heavy or ctx.compatchannels(chtype='sound'):
+			rv.append(NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))))
+		if heavy or ctx.compatchannels(chtype='video'):
+			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
+		if heavy or ctx.compatchannels(chtype='text'):
+			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
+		if heavy or ctx.compatchannels(chtype='RealPix'):
+			rv.append(NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))))
+		rv.append(NEW_AFTER(callback = (self.createaftercall, ())))
+		if heavy or ctx.compatchannels(chtype='image'):
+			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
+		if heavy or ctx.compatchannels(chtype='sound'):
+			rv.append(NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))))
+		if heavy or ctx.compatchannels(chtype='video'):
+			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
+		if heavy or ctx.compatchannels(chtype='text'):
+			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
+		if heavy or ctx.compatchannels(chtype='RealPix'):
+			rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
+		return rv
 
 	def aftersetfocus(self):
 		import Clipboard
