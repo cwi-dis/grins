@@ -51,10 +51,13 @@ enum
 {
     ENC_TARGET_28_MODEM = 0,
     ENC_TARGET_56_MODEM,
-    ENC_TARGET_SINGLE_ISDN,
-    ENC_TARGET_DUAL_ISDN,
-    ENC_TARGET_LAN_LOW,
-    ENC_TARGET_LAN_HIGH,
+    ENC_TARGET_SINGLE_ISDN, // Deprecated
+    ENC_TARGET_DUAL_ISDN,  
+    ENC_TARGET_LAN_LOW,		// Deprecated
+    ENC_TARGET_LAN_HIGH,  
+    ENC_TARGET_256_DSL_CABLE,
+    ENC_TARGET_384_DSL_CABLE,
+    ENC_TARGET_512_DSL_CABLE,
     ENC_NUM_TARGET_AUDIENCES
 };
 
@@ -159,6 +162,15 @@ enum
  *	title, author, copyright, filenames, server name, etc.
  */
 const ULONG32 ENC_MAX_STR = 255;
+
+/****************************************************************************
+ * 
+ *  Constant: ENC_MAX_META_DESCRIPTION_STR
+ *
+ *	Use this constant as the maximum string length for the  
+ *	Meta Description field.
+ */
+const ULONG32 ENC_MAX_META_DESCRIPTION_STR = 1024;
 
 /****************************************************************************
  * 

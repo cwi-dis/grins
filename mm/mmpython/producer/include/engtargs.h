@@ -4,7 +4,7 @@
  *
  *  engtargs.h
  *
- *  Copyright ©1998 RealNetworks.
+ *  Copyright ©1998-2000 RealNetworks.
  *  All rights reserved.
  *
  *  http://www.real.com/devzone
@@ -24,6 +24,7 @@ typedef _INTERFACE IUnknown			IUnknown;
 typedef _INTERFACE IRMATargetSettings		IRMATargetSettings;
 typedef _INTERFACE IRMABasicTargetSettings	IRMABasicTargetSettings;
 typedef _INTERFACE IRMATargetAudienceInfo	IRMATargetAudienceInfo;
+typedef _INTERFACE IRMATargetAudienceInfo2	IRMATargetAudienceInfo2;
 typedef _INTERFACE IRMATargetAudienceManager	IRMATargetAudienceManager;
 
 /****************************************************************************
@@ -255,7 +256,12 @@ DECLARE_INTERFACE_(IRMABasicTargetSettings, IUnknown)
  *
  *  Purpose:
  *
- *  manager of the target audiences which are used to create the audio and video physical stream templates
+ *	Properties interface for an individual target audience.
+ *
+ *  Notes:
+ *
+ *	To access the object that supports this interface, call
+ *	IRMATargetAudienceManager::GetTargetAudienceInfo().
  *
  *  IRMATargetAudienceInfo
  *
@@ -264,11 +270,6 @@ DECLARE_INTERFACE_(IRMABasicTargetSettings, IUnknown)
  */
 DEFINE_GUID(IID_IRMATargetAudienceInfo,
 	    0xff8da4c3, 0xbc, 0x11d2, 0x89, 0xb3, 0x0, 0xc0, 0xf0, 0x17, 0x77, 0x20);
-
-/*
- *  You access objects that support this interface from the IRMATargetAudienceManager object,using the GetTargetAudienceInfo function
- */
-#define CLSID_IRMATargetAudienceInfo IID_IRMATargetAudienceInfo
 
 #undef  INTERFACE
 #define INTERFACE   IRMATargetAudienceInfo
@@ -373,6 +374,150 @@ DECLARE_INTERFACE_(IRMATargetAudienceInfo, IUnknown)
 	REF(float) fMaxFrameRate) PURE;
     STDMETHOD(SetMaxFrameRate)	(THIS_
 	float fMaxFrameRate) PURE;
+};
+
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMATargetAudienceInfo2
+ *
+ *  Purpose:
+ *
+ *	Extended properties interface for an individual target audience.
+ *
+ *  Notes:
+ *
+ *	To access the object that support this interface, call
+ *	IRMATargetAudienceManager::GetTargetAudienceInfo(), then
+ *	QI the returned interface for IRMATargetAudienceInfo2.
+ *
+ *  IRMATargetAudienceInfo2
+ *
+ *  {1FB16E20-D566-11d3-86A3-C40E92000000}
+ *
+ */
+DEFINE_GUID(IID_IRMATargetAudienceInfo2,
+	    0x1fb16e20, 0xd566, 0x11d3, 0x86, 0xa3, 0xc4, 0xe, 0x92, 0x0, 0x0, 0x0);
+
+#undef  INTERFACE
+#define INTERFACE   IRMATargetAudienceInfo2
+
+DECLARE_INTERFACE_(IRMATargetAudienceInfo2, IRMATargetAudienceInfo)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)	(THIS_
+	REFIID riid,
+	void** ppvObj) PURE;
+    
+    STDMETHOD_(UINT32,AddRef)	(THIS) PURE;
+    
+    STDMETHOD_(UINT32,Release)	(THIS) PURE;
+    
+    /*********************************************
+     *
+     *	IRMATargetAudienceInfo2 methods
+     */
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::GetVariableBitRateEncoding()
+     *	Purpose:
+     *	    Determine if Variable Bit Rate (VBR) video encoding is on or off.
+     *	Parameters:
+     *	    pbVBR - [out] TRUE if VBR is on, FALSE if VBR is off
+     */
+    STDMETHOD(GetVariableBitRateEncoding) (THIS_
+	BOOL* pbVBR) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::SetVariableBitRateEncoding()
+     *	Purpose:
+     *	    Turn on/off Variable Bit Rate (VBR) video encoding.
+     *	Parameters:
+     *	    bVBR - [in] TRUE = VBR on, FALSE = VBR off
+     */
+    STDMETHOD(SetVariableBitRateEncoding) (THIS_
+	BOOL bVBR) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::GetLossProtection()
+     *	Purpose:
+     *	    Determine if Loss Protection mode of video encoding is on or off.
+     *	Parameters:
+     *	    pbLoss - [out] TRUE if loss protection is on, FALSE if loss protection is off
+     */
+    STDMETHOD(GetLossProtection) (THIS_
+	BOOL* pbLoss) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::SetLossProtection()
+     *	Purpose:
+     *	    Turn on/off additional loss protection in video codec.
+     *	Parameters:
+     *	    bLoss - [in] TRUE = on, FALSE = off
+     */
+    STDMETHOD(SetLossProtection) (THIS_
+	BOOL bLoss) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::GetMaxTimeBetweenKeyframes()
+     *	Purpose:
+     *	    Gets the current setting for maximum time interval between 
+     *	    keyframes in the video stream.
+     *	Parameters:
+     *	    pulMaxTimeBetweenKeyframes - [out] max time between keyframes in milleseconds
+     */
+    STDMETHOD(GetMaxTimeBetweenKeyframes) (THIS_
+	UINT32* pulMaxTimeBetweenKeyframes) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::SetMaxTimeBetweenKeyframes()
+     *	Purpose:
+     *	    Set the maximum time interval between keyframes in the 
+     *	    video stream.
+     *	Parameters:
+     *	    ulMaxTimeBetweenKeyframes - [in] max time between keyframes in milleseconds
+     */
+    STDMETHOD(SetMaxTimeBetweenKeyframes) (THIS_
+	UINT32 ulMaxTimeBetweenKeyframes) PURE;
+      
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::GetVBRLatency()
+     *	Purpose:
+     *	    Gets the current setting for maximum latency (or preroll) of 
+     *	    Variable Bit Rate video streams.
+     *	Parameters:
+     *	    pulVBRLatency - [out] maximum VBR Latency in milliseconds
+     *	Notes:
+     *	    VBR Latency is only used when Variable Bit Rate encoding is set
+     *	    to TRUE.
+     */
+    STDMETHOD(GetVBRLatency) (THIS_
+	UINT32* pulVBRLatency) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMATargetAudienceInfo2::SetVBRLatency()
+     *	Purpose:
+     *	    Set the maximum latency (or preroll) for Variable Bit Rate streams.
+     *	Parameters:
+     *	    ulVBRLatency - [out] maximum VBR Latency in milliseconds
+     *	Notes:
+     *	    VBR Latency is only used when Variable Bit Rate encoding is set
+     *	    to TRUE.
+     */
+    STDMETHOD(SetVBRLatency) (THIS_
+	UINT32 ulVBRLatency) PURE;
+
 };
 
  
