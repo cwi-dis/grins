@@ -413,7 +413,7 @@ class SchedulerContext:
 				if debugevents: print 'scheduled_children-1',`node`
 				if node.scheduled_children > 0:
 					node.scheduled_children = node.scheduled_children - 1
-				if node.playing not in (MMStates.PLAYING, MMStates.PAUSED):
+				if node.playing not in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 					# ignore end event if not playing
 					if debugevents: print 'node not playing'
 					return
