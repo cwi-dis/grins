@@ -20,6 +20,7 @@ import fl, FL
 # List of windows, indexed by window id converted to string.
 windowmap = {}
 
+# The base class for GL windows
 class glwindow():
 	#
 	# Registration method.  Call this from your init method,
@@ -79,32 +80,28 @@ class glwindow():
 		# This may be refused.
 		pass
 
+# Debug/warning output function
+def report(s):
+	print 'glwindow:', s
+
+# Global state
 class Struct(): pass
 state = Struct()
 state.focuswindow = None
 
+
+# Some utility functions
+
 def mainloop():
 	while 1:
-		obj = fl.do_forms()
-		if obj = FL.EVENT:
-			dev, val = fl.qread()
-			dispatch(dev, val)
-		else:
-			if obj = None:
-				print 'do_forms returned NULL object!'
-			else:
-				print 'do_forms returned alien object!'
+		if fl.do_forms() = FL.EVENT:
+			dispatch(fl.qread())
 
 def check():
 	while 1:
 		obj = fl.check_forms()
-		if obj = None:
-			return None
-		if obj = FL.EVENT:
-			dev, val = fl.qread()
-			dispatch(dev, val)
-		else:
-			return obj
+		if obj <> FL.EVENT: break
+		dispatch(fl.qread())
 
 def dispatch(dev, val):
 	if dev = REDRAW:
@@ -114,12 +111,12 @@ def dispatch(dev, val):
 		if state.focuswindow:
 			state.focuswindow.keybd(val)
 		else:
-			print 'KEYBD event with no focus window!'
+			report('KEYBD event with no focus window!')
 	elif dev in (MOUSE3, MOUSE2, MOUSE1): # In left-to-right order
 		if state.focuswindow:
 			state.focuswindow.mouse(dev, val)
 		else:
-			print 'MOUSE event with no focus window!'
+			report('MOUSE event with no focus window!')
 	elif dev = INPUTCHANGE:
 		if state.focuswindow:
 			state.focuswindow.leave()
@@ -127,20 +124,16 @@ def dispatch(dev, val):
 		if val = 0:
 			pass
 		else:
-			try:
-				state.focuswindow = windowmap[`val`]
-			except RuntimeError:
-				# Catch bug in FORMS library!
-				print 'Bad INPUTCHANGE for window id', val,
-				print '; valid values :', windowmap.keys()
-			if state.focuswindow:
-				state.focuswindow.enter()
+			state.focuswindow = windowmap[`val`]
+			state.focuswindow.enter()
 	elif dev = WINSHUT:
 		window = windowmap[`val`]
 		window.winshut()
 	elif dev = WINQUIT:
 		window = windowmap[`val`]
 		window.winquit()
+	else:
+		report('dispatch unrecognized event')
 
 
 # Useful subroutine to call prefposition/prefsize.
