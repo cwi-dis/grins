@@ -1356,6 +1356,10 @@ SOURCE=.\lib\MPEGVideoDuration.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\parseskin.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\README
 # End Source File
 # Begin Source File
@@ -1560,6 +1564,18 @@ SOURCE=.\grins\motif\PreferencesDialog.py
 # Begin Source File
 
 SOURCE=.\grins\motif\TopLevelDialog.py
+# End Source File
+# End Group
+# Begin Group "grins/wince"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\grins\wince\Preferences.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\wince\usercmdui.py
 # End Source File
 # End Group
 # Begin Source File
