@@ -1668,7 +1668,10 @@ class Scheduler(scheduler):
 
 	def settime(self, timestamp):
 		if debugevents: print 'settime',timestamp
-		self.time_origin = self.time_pause - timestamp
+		if self.__paused:
+			self.time_origin = self.time_pause - timestamp
+		else:
+			self.time_origin = time.time() - timestamp
 
 	def setpaused(self, paused, curtime = None, propagate = 1):
 		if curtime is None:
