@@ -37,9 +37,11 @@ class _DisplayList:
 				'background': window._convert_color(bgcolor),
 				'line_width': 1}
 		self._list = []
-		if window._transparent <= 0:
-			self._list.append(('clear',
-					self._window._convert_color(bgcolor)))
+		if window._transparent <= 0 or bgcolor is not None:
+			self._list.append(('clear', bgcolor))
+			self._fullwindow = 1
+		else:
+			self._fullwindow = 0
 		self._optimdict = {}
 		self._cloneof = None
 		self._clonestart = 0
@@ -102,6 +104,7 @@ class _DisplayList:
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
+		new._fullwindow = self._fullwindow
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
@@ -200,7 +203,10 @@ class _DisplayList:
 		w = self._window
 		gc = w._gc
 		if cmd == 'clear':
-			gc.foreground = entry[1]
+			color = entry[1]
+			if color is None:
+				color = w._bgcolor
+			gc.foreground = w._convert_color(color)
 			apply(gc.FillRectangle, w._rect)
 		elif cmd == 'image':
 			clip = entry[2]
@@ -394,6 +400,8 @@ class _DisplayList:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
+			if (dest_x, dest_y, width, height) == w._rect:
+				self._fullwindow = 1
 		self._list.append(('image', mask, clip, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
@@ -440,6 +448,8 @@ class _DisplayList:
 		w = self._window
 		self._list.append(('fbox', w._convert_color(color),
 				   w._convert_coordinates(coordinates, units = units)))
+		if self._list[-1][2] == w._rect:
+			self._fullwindow = 1
 		self._optimize((1,))
 
 	def drawmarker(self, color, coordinates):
