@@ -1233,12 +1233,7 @@ class FloatTupleCtrl(TupleCtrl):
 from fmtfloat import fmtfloat
 
 class EventCtrl(AttrCtrl):
-	# This is a list control, but it's specific to events. If you
-	# want a generic list control, you'll need to rename this.
-	# _attr, _attrval, _initctrl, _listeners, _resid, _validator, _wnd
-	# I think _attrval is the value of the attribute (currently '[]')
-	
-	# Made by mjvdg; cut and paste from the tuple class above.
+	# This is an editor for the 'begin' and 'end'tabs.
 	def __init__(self, wnd, attr, resid):
 		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
 		#'attr': <TimelistAttrEditorField instance, name=beginlist>, 
@@ -1403,15 +1398,21 @@ class EventCtrl(AttrCtrl):
 	def clear_radiobuttons(self):
 		# Yes, this is a hack. The radio buttons wouldn't behave so I'm using brute force.
 		for i in self._radiobuttonwidgets.values():
+			i.enable(1)
 			i.setcheck(0)
 
 	def set_radiobuttons(self):
 		if not self._eventstruct:
-			return
-		cause = self._eventstruct.get_cause()
-		self.clear_radiobuttons() # fix a stupid bug by brute force.
-		#self._radiobuttonwidgets[self.selected_radiobutton].setcheck(0)
-		self._radiobuttonwidgets[cause].setcheck(1)
+			self.clear_radiobuttons()
+			for button in self._radiobuttonwidgets.values():
+				button.enable(0)
+		else:
+			# Disable radiobuttons if there is no node..
+			cause = self._eventstruct.get_cause()
+			self.clear_radiobuttons() # fix a stupid bug by brute force.
+			self._radiobuttonwidgets[cause].setcheck(1)
+			if not self._eventstruct.has_node():
+				self._radiobuttonwidgets['node'].enable(0)
 	def set_eventwidget(self):
 		# Sets the value of the event widget.
 		if not self._eventstruct:
