@@ -23,6 +23,9 @@ import imgformat
 import mac_image
 import formatter
 
+##PIXELFORMAT=imgformat.macrgb16
+PIXELFORMAT=imgformat.macrgb
+
 LEFTMARGIN=4
 TOPMARGIN=4
 RIGHTMARGIN=2
@@ -714,9 +717,9 @@ class _Gifkeeper:
 			self.dict[url][0] = self.dict[url][0] + 1
 			return self.dict[url][1]
 		fname = MMurl.urlretrieve(url)[0]
-		image = img.reader(imgformat.macrgb16, fname)
+		image = img.reader(PIXELFORMAT, fname)
 		data = image.read()
-		pixmap = mac_image.mkpixmap(image.width, image.height, imgformat.macrgb16, data)
+		pixmap = mac_image.mkpixmap(image.width, image.height, PIXELFORMAT, data)
 		handle = Res.Resource(url)
 		self.dict[url] = [1, handle, pixmap, data, image.width, image.height]
 		return handle

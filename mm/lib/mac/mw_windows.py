@@ -47,6 +47,11 @@ SCROLLBARSIZE=16		# Full size, overlapping 1 pixel with window border
 # Parts of the scrollbar we track:
 TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
 		Controls.inPageUp, Controls.inPageDown)
+
+
+##PIXELFORMAT=imgformat.macrgb16
+PIXELFORMAT=imgformat.macrgb
+
 		
 #
 # The dragpoints of a box (lurven, in dutch:-)
@@ -436,7 +441,7 @@ class _CommonWindow:
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
 		oscale = scale
-		format = imgformat.macrgb16
+		format = PIXELFORMAT
 		depth = format.descr['size'] / 8
 		reader = None
 		if _size_cache.has_key(file):
@@ -1459,9 +1464,7 @@ class _CommonWindow:
 		self._transition_setup_after()
 
 	def endtransition(self):
-##		print 'DBG: endtransition', self, self._transition
 		if not self._transition:
-			print 'endtransition() called for window not in a transition!'
 			return
 		if not self._parent:
 			print 'endtransition() called for a window that is not visible anymore!'
@@ -1639,7 +1642,7 @@ class _OffscreenMixin:
 			#
 			# No such offscreen bitmap yet. Create it.
 			#
-			cur_depth = 16 # XXX
+			cur_depth = 32
 			cur_rect = self.qdrect()
 			gworld = Qdoffs.NewGWorld(cur_depth,  cur_rect, None, None, QDOffscreen.keepLocal)
 			grafptr = gworld.as_GrafPtr()

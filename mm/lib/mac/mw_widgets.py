@@ -14,6 +14,9 @@ import img
 import imgformat
 import mac_image
 
+##PIXELFORMAT=imgformat.macrgb16
+PIXELFORMAT=imgformat.macrgb
+
 #
 # Stuff needed from other mw_ modules
 #
@@ -44,7 +47,7 @@ class _ImageMixin:
 	def _loadimagefromfile(self, image, scale=None):
 		if not image:
 			return
-		format = imgformat.macrgb16
+		format = PIXELFORMAT
 		try:
 			rdr = img.reader(format, image)
 			bits = rdr.read()
