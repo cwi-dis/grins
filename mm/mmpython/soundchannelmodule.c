@@ -6,7 +6,7 @@
 #endif
 #include <stropts.h>
 #include <poll.h>
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
@@ -20,13 +20,13 @@ static soundchannel_debug = 0;
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 #define ERROR(func, errortype, msg)	{				\
 		dprintf((# func "(%lx): " msg "\n", (long) self));	\
-		err_setstr(errortype, msg);				\
+		PyErr_SetString(errortype, msg);			\
 		}
 
 
 struct sound_data {
 	FILE *f;		/* file from which to read samples */
-	object *file;		/* file object from which f is gotten */
+	PyObject *file;		/* file object from which f is gotten */
 	int nchannels;		/* # of channels (mono or stereo) */
 	int sampwidth;		/* size of samples in bytes */
 	int nsamples;		/* # of samples to play */
@@ -73,7 +73,7 @@ sound_init(self)
 	denter(sound_init);
 	self->mm_private = malloc(sizeof(struct sound));
 	if (self->mm_private == NULL) {
-		(void) err_nomem();
+		(void) PyErr_NoMemory();
 		return 0;
 	}
 	PRIV->s_play.sampbuf = NULL;
@@ -82,7 +82,7 @@ sound_init(self)
 	PRIV->s_play.file = NULL;
 	PRIV->s_sema = allocate_sema(1);
 	if (PRIV->s_sema == NULL) {
-		ERROR(sound_init, RuntimeError, "cannot allocate semaphore");
+		ERROR(sound_init, PyExc_RuntimeError, "cannot allocate semaphore");
 		free(self->mm_private);
 		self->mm_private = NULL;
 		return 0;
@@ -90,7 +90,7 @@ sound_init(self)
 	PRIV->s_flag = 0;
 	PRIV->s_port = NULL;
 	if (pipe(PRIV->s_pipefd) < 0) {
-		ERROR(sound_init, RuntimeError, "cannot create pipe");
+		ERROR(sound_init, PyExc_RuntimeError, "cannot create pipe");
 		free_sema(PRIV->s_sema);
 		free(self->mm_private);
 		self->mm_private = NULL;
@@ -112,8 +112,8 @@ sound_dealloc(self)
 		free(PRIV->s_play.sampbuf);
 	if (PRIV->s_arm.sampbuf)
 		free(PRIV->s_arm.sampbuf);
-	XDECREF(PRIV->s_arm.file);
-	XDECREF(PRIV->s_play.file);
+	Py_XDECREF(PRIV->s_arm.file);
+	Py_XDECREF(PRIV->s_play.file);
 	(void) close(PRIV->s_pipefd[0]);
 	(void) close(PRIV->s_pipefd[1]);
 	free(self->mm_private);
@@ -122,17 +122,17 @@ sound_dealloc(self)
 static int
 sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	mmobject *self;
-	object *file;
+	PyObject *file;
 	int delay, duration;
-	object *attrlist, *anchorlist;
+	PyObject *attrlist, *anchorlist;
 {
 	int length, value, i;
 	char *name;
-	object *n, *v;
+	PyObject *n, *v;
 
 	denter(sound_arm);
-	if (!is_dictobject(attrlist)) {
-		ERROR(sound_arm, RuntimeError, "attributes not a dictionary");
+	if (!PyDict_Check(attrlist)) {
+		ERROR(sound_arm, PyExc_RuntimeError, "attributes not a dictionary");
 		return 0;
 	}
 	PRIV->s_arm.nchannels = 1;
@@ -140,25 +140,25 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	PRIV->s_arm.sampwidth = 1;
 	PRIV->s_arm.offset = 0;
 	PRIV->s_playrate = 1.0;
-	v = dictlookup(attrlist, "nchannels");
-	if (v && is_intobject(v))
-		PRIV->s_arm.nchannels = getintvalue(v);
-	v = dictlookup(attrlist, "nsampframes");
-	if (v && is_intobject(v))
-		PRIV->s_arm.nsamples = getintvalue(v) * PRIV->s_arm.nchannels;
-	v = dictlookup(attrlist, "sampwidth");
-	if (v && is_intobject(v))
-		PRIV->s_arm.sampwidth = getintvalue(v);
-	v = dictlookup(attrlist, "samprate");
-	if (v && is_intobject(v))
-		PRIV->s_arm.framerate = getintvalue(v);
-	v = dictlookup(attrlist, "offset");
-	if (v && is_intobject(v))
-		PRIV->s_arm.offset = getintvalue(v);
-	XDECREF(PRIV->s_arm.file);
+	v = PyDict_GetItemString(attrlist, "nchannels");
+	if (v && PyInt_Check(v))
+		PRIV->s_arm.nchannels = PyInt_AsLong(v);
+	v = PyDict_GetItemString(attrlist, "nsampframes");
+	if (v && PyInt_Check(v))
+		PRIV->s_arm.nsamples = PyInt_AsLong(v) * PRIV->s_arm.nchannels;
+	v = PyDict_GetItemString(attrlist, "sampwidth");
+	if (v && PyInt_Check(v))
+		PRIV->s_arm.sampwidth = PyInt_AsLong(v);
+	v = PyDict_GetItemString(attrlist, "samprate");
+	if (v && PyInt_Check(v))
+		PRIV->s_arm.framerate = PyInt_AsLong(v);
+	v = PyDict_GetItemString(attrlist, "offset");
+	if (v && PyInt_Check(v))
+		PRIV->s_arm.offset = PyInt_AsLong(v);
+	Py_XDECREF(PRIV->s_arm.file);
 	PRIV->s_arm.file = file;
-	INCREF(PRIV->s_arm.file);
-	PRIV->s_arm.f = getfilefile(file);
+	Py_INCREF(PRIV->s_arm.file);
+	PRIV->s_arm.f = PyFile_AsFile(file);
 	return 1;
 }
 
@@ -197,7 +197,7 @@ sound_play(self)
 	PRIV->s_flag = 0;
 	if (PRIV->s_play.sampbuf)
 		free(PRIV->s_play.sampbuf);
-	XDECREF(PRIV->s_play.file);
+	Py_XDECREF(PRIV->s_play.file);
 	PRIV->s_play = PRIV->s_arm;
 	PRIV->s_arm.sampbuf = NULL;
 	PRIV->s_arm.file = NULL;
@@ -423,7 +423,7 @@ sound_player(self)
 #ifdef sun
 				audio_flush_play(PRIV->s_port);
 #endif
-				goto cleanup;
+				goto Py_Cleanup;
 			}
 		}
 		if (pollfd[1].revents & (POLLERR|POLLHUP|POLLNVAL)) {
@@ -474,7 +474,7 @@ sound_player(self)
 #ifdef sun
 	close(PRIV->s_port);
 #endif
- cleanup:
+ Py_Cleanup:
 	PRIV->s_port = NULL;
 	PRIV->s_flag &= ~PORT_OPEN;
 	up_sema(PRIV->s_sema);
@@ -582,21 +582,21 @@ soundchannel_dealloc(self)
 	if (self != sound_chan_obj) {
 		dprintf(("soundchannel_dealloc: arg != sound_chan_obj\n"));
 	}
-	DEL(self);
+	PyMem_DEL(self);
 	sound_chan_obj = NULL;
 }
 
-static object *
+static PyObject *
 soundchannel_getattr(self, name)
 	channelobject *self;
 	char *name;
 {
-	err_setstr(AttributeError, name);
+	PyErr_SetString(PyExc_AttributeError, name);
 	return NULL;
 }
 
-static typeobject Soundchanneltype = {
-	OB_HEAD_INIT(&Typetype)
+static PyTypeObject Soundchanneltype = {
+	PyObject_HEAD_INIT(&PyType_Type)
 	0,			/*ob_size*/
 	"channel:sound",	/*tp_name*/
 	sizeof(channelobject),	/*tp_size*/
@@ -610,31 +610,31 @@ static typeobject Soundchanneltype = {
 	0,			/*tp_repr*/
 };
 
-static object *
+static PyObject *
 soundchannel_init(self, args)
 	channelobject *self;
-	object *args;
+	PyObject *args;
 {
 	channelobject *p;
 
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (sound_chan_obj == 0) {
 		dprintf(("soundchannel_init: creating new object\n"));
-		sound_chan_obj = NEWOBJ(channelobject, &Soundchanneltype);
+		sound_chan_obj = PyObject_NEW(channelobject, &Soundchanneltype);
 		if (sound_chan_obj == NULL)
 			return NULL;
 		sound_chan_obj->chan_funcs = &sound_channel_funcs;
 	} else {
 		dprintf(("soundchannel_init: return old object\n"));
-		INCREF(sound_chan_obj);
+		Py_INCREF(sound_chan_obj);
 	}
 
-	return (object *) sound_chan_obj;
+	return (PyObject *) sound_chan_obj;
 }
 
-static struct methodlist soundchannel_methods[] = {
-	{"init",		(method)soundchannel_init},
+static PyMethodDef soundchannel_methods[] = {
+	{"init",		(PyCFunction)soundchannel_init},
 	{NULL,			NULL}
 };
 
@@ -645,8 +645,8 @@ initsoundchannel()
 	soundchannel_debug = getenv("SOUNDDEBUG") != 0;
 #endif
 	dprintf(("initsoundchannel\n"));
-	(void) initmodule("soundchannel", soundchannel_methods);
+	(void) Py_InitModule("soundchannel", soundchannel_methods);
 	device_sema = allocate_sema(1);
 	if (device_sema == NULL)
-		fatal("soundchannelmodule: can't allocate semaphore");
+		Py_FatalError("soundchannelmodule: can't allocate semaphore");
 }
