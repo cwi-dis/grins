@@ -124,6 +124,11 @@ def getsyncarc(writer, node, isend):
 				arc = srcuid, srcside, delay, dstside
 	if not arc:
 		return
+	if not writer.uid2name.has_key(srcuid):
+		print '** Syncarc with unknown source to', \
+		      node.GetRawAttrDef('name', '<unnamed>'),\
+		      node.GetUID()
+		return
 	srcuid, srcside, delay, dstside = arc
 	sign, delay = encodeduration(delay)
 	parent = node.GetParent()
