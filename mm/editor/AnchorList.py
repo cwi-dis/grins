@@ -121,30 +121,14 @@ class AnchorList:
 			self._se.clear()
 			self._se.enable(0)
 		else:
+			a = self.__anchorlinks[self.__curanchor]
 			i = self.__anchors.index(self.__curanchor)
 			self._list.setcursel(i)
-			atype, aargs, times = self.__anchorlinks[self.__curanchor][:3]
+			atype, aargs, times = a[:3]
 			self._rename.enable(1)
 			self._delete.enable(1)
-			self._link.enable(1)
+			self._link.enable(len(a) == 4)
 			self._type.enable(1)
-##			typelist = []
-##			index = None
-##			for i in range(len(AnchorDefs.TypeValues)):
-##				if AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_DEST:
-##					continue
-##				elif AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_COMP:
-##					continue
-##				elif AnchorDefs.TypeValues[i] in AnchorDefs.WholeAnchors:
-##					if self.__editable or atype in AnchorDefs.WholeAnchors:
-##						typelist.append(AnchorDefs.TypeLabels[i])
-##				elif self.__editable or atype not in AnchorDefs.WholeAnchors:
-##					typelist.append(AnchorDefs.TypeLabels[i])
-##				if atype == AnchorDefs.TypeValues[i]:
-##					index = len(typelist) - 1
-##			self._type.resetcontent()
-##			self._type.setoptions(typelist)
-##			self._type.setcursel(index)
 			if atype not in AnchorDefs.WholeAnchors:
 				self._type.setcheck(1)
 				self._xywh.enable(1)
