@@ -907,10 +907,6 @@ class ListEdit(_Widget):
 ##			 'rightOffset': 20,
 			 'value': inittext}
 		if prompt is not None:
-			if useGadget:
-				labelwidget = Xm.LabelGadget
-			else:
-				labelwidget = Xm.Label
 			label = listedit.CreateManagedWidget(
 				name + 'Label', Xm.Label,
 				{'topAttachment': Xmd.ATTACH_FORM,
@@ -989,7 +985,7 @@ class ListEdit(_Widget):
 
 	def setlist(self, itemlist):
 		self.__list.ListDeleteAllItems()
-		self.__list.ListAddItems(items, 1)
+		self.__list.ListAddItems(itemlist, 1)
 		self.__itemlist = itemlist
 
 	def settext(self, text):
