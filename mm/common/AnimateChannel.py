@@ -160,7 +160,11 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __stopAnimate(self):
 		if self.__animating:
 			self.__unregister_for_timeslices()
-			self.__animator.setToEnd()
+			val = self.__animator.setToEnd()
+			if self.__effAnimator:
+				if self.__lastvalue != val:
+					self.__effAnimator.update(self.__getTargetChannel())
+					self.__lastvalue = val
 			self.__animating = None
 
 	def __removeAnimate(self):
@@ -198,7 +202,11 @@ class AnimateChannel(Channel.ChannelAsync):
 		if not self.__animating:
 			return
 		# set to the end for the benefit of freeze and repeat
-		self.__animator.setToEnd()
+		val = self.__animator.setToEnd()
+		if self.__effAnimator:
+			if self.__lastvalue != val:
+				self.__effAnimator.update(self.__getTargetChannel())
+				self.__lastvalue = val
 		self.playdone(0)
 
 	def onIdle(self):
