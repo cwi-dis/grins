@@ -3848,21 +3848,25 @@ class Window(_WindowHelpers, _MenuSupport):
 
 	def close(self):
 		try:
+			shell = self._shell
+		except AttributeError:
+			shell = None
+		try:
 			form = self._form
 		except AttributeError:
 			pass
 		else:
-			self.hide()
+			if not shell:
+				form.UnmanageChild()
+			else:
+				self.hide()
 			del self._form
 			form.DestroyWidget()
-		try:
-			shell = self._shell
-		except AttributeError:
-			pass
-		else:
-			del self._shell
+			del form
+		if shell:
 			shell.UnmanageChild()
 			shell.DestroyWidget()
+			del self._shell
 			del shell
 		_WindowHelpers.close(self)
 		_MenuSupport.close(self)
