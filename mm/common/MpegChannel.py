@@ -14,7 +14,7 @@ class MpegChannel(ChannelWindowThread):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		filename = self.getfileurl(node)
-		filename = urllib.url2pathname(filename)
+		filename = urllib.urlretrieve(filename)[0]
 		try:
 			fp = open(filename, 'rb')
 		except IOError, msg:

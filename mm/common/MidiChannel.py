@@ -60,7 +60,7 @@ class MidiChannel(Channel):
 		if same and self.arm_data:
 		    return 1
 		fn = self.getfileurl(node)
-		fn = urllib.url2pathname(fn)
+		fn = urllib.urlretrieve(fn)[0]
 		#
 		# Read the midifile, mixing all tracks
 		#
