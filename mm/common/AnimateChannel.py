@@ -24,6 +24,7 @@ import Animators
 import windowinterface
 
 debug = 0
+USE_IDLE_PROC=hasattr(windowinterface, 'setidleproc')
 
 class AnimateChannel(Channel.ChannelAsync):
 	node_attrs = ['targetElement','attributeName',
@@ -165,23 +166,30 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__startAnimate(repeat=1)
 
 	def onIdle(self):
-		self.__fiber_id = 0
+		if not USE_IDLE_PROC:
+			self.__fiber_id = 0
 		if self.__animating:
 			t_sec=time.time() - self.__start
 			# end-point exclusive model
 			if t_sec>=self.__duration:
 				self.__onAnimateDur()
+				self.__unregister_for_timeslices()
 			else:
 				self.__animate()
 				self.__register_for_timeslices()
 			
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			self.__fiber_id = windowinterface.settimer(0.05, (self.onIdle,()))
+			if USE_IDLE_PROC:
+				windowinterface.setidleproc(self.onIdle)
+				self.__fiber_id = 1
+			else:
+				self.__fiber_id = windowinterface.settimer(0.05, (self.onIdle,()))
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id:
-			windowinterface.canceltimer(self.__fiber_id)
+			if USE_IDLE_PROC:
+				windowinterface.cancelidleproc(self.onIdle)
+			else:
+				windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = 0
-
-
