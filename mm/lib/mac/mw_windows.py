@@ -430,7 +430,7 @@ class _CommonWindow:
 		_size_cache[file] = width, height
 		return width, height
 
-	def _prepare_image(self, file, crop, scale, center, coordinates):
+	def _prepare_image(self, file, crop, scale, center, coordinates, units):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -460,7 +460,7 @@ class _CommonWindow:
 		if coordinates is None:
 			x, y, width, height = self._convert_coordinates((0,0,1,1))
 		else:
-			x, y, width, height = self._convert_coordinates(coordinates)
+			x, y, width, height = self._convert_coordinates(coordinates, units=units)
 		
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
@@ -538,7 +538,7 @@ class _CommonWindow:
 			       y + (height - (h - top - bottom)) / 2
 		xim = mac_image.mkpixmap(w, h, format, image)
 		rvx0, rvy0, rvw, rvh = self._convert_qdcoords(
-				(x, y, x + w - left - right, y + h - top - bottom), ignorescroll=1)
+				(x, y, x + w - left - right, y + h - top - bottom), ignorescroll=1, units=units)
 		return (xim, image), mask, left, top, rvx0, rvy0, rvw, rvh
 
 	def _put_image_in_cache(self, key, image, w, h, mask):
@@ -2378,6 +2378,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		mustresize = _ScrollMixin.mustadjustcanvasforresize(self, old_w, old_h)
 		if mustresize:
 			self._do_resize()
+		else:
+			self._clipchanged()
 		
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
