@@ -26,12 +26,13 @@ class MainDialog:
 		'toolbar' : [
 			('New', NEW_DOCUMENT),
 			('Open...', OPEN),
+			('Preferences...', PREFERENCES),
 			('Exit', EXIT),
 			],
 		'close': [ EXIT, ],
 		}
 	if __debug__:
-		adornments['toolbar'][2:2] = [
+		adornments['toolbar'][3:3] = [
 			('Trace', TRACE, 't'),
 			('Debug', DEBUG),
 			('Crash', CRASH),
