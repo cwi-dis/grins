@@ -14,6 +14,7 @@ class RealChannel:
 
 	def __init__(self):
 		self.__rmaplayer = None
+		self.__qid = None
 		if self.__engine is None and self.__has_rma_support:
 			try:
 				RealChannel.__engine = rma.CreateEngine()
@@ -41,23 +42,37 @@ class RealChannel:
 		if not self.__rmaplayer:
 			return 0
 		self.__loop = self.getloop(node)
+		duration = self.getduration(node)
 		url = MMurl.canonURL(self.getfileurl(node))
 		self.__url = url
 		self.__window = window
 		self.__rmaplayer.SetStatusListener(self)
 		if window is not None:
 			self.__rmaplayer.SetOsWindow(window)
+		if duration > 0:
+			self.__qid = self._scheduler.enter(duration, 0,
+							   self.__stop, ())
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 		return 1
+
+	def __stop(self):
+		self.__qid = None
+		if self.__rmaplayer:
+			self.__loop = 1
+			self.__rmaplayer.Stop()
+			# XXX does this indeed cause OnStop to be called?
+		else:
+			self.playdone(0)
 
 	def OnStop(self):
 		if self.__loop:
 			self.__loop = self.__loop - 1
 			if self.__loop == 0:
-				self.playdone(0)
+				if self.__qid is None:
+					self.playdone(0)
 				return
-		print 'looping'
+##		print 'looping'
 		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
 #		self.__rmaplayer.Stop()
 #		self.__rmaplayer.Begin()
