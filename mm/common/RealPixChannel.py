@@ -12,3 +12,11 @@ class RealPixChannel(RealWindowChannel):
 			realsupport.writeRP(node.tmpfile, node.slideshow.rp, node)
 			return MMurl.pathname2url(node.tmpfile)
 		return RealWindowChannel.getfileurl(self, node)
+
+	def getduration(self, node):
+		# use duration attribute if different from what's in the file
+		duration = RealWindowChannel.getduration(self, node)
+		if hasattr(node, 'slideshow') and \
+		   node.slideshow.rp.duration == duration:
+			return 0
+		return duration

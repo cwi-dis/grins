@@ -10,6 +10,9 @@ import urlcache
 
 def get(node, ignoreloop=0):
 	duration = MMAttrdefs.getattr(node, 'duration')
+	if hasattr(node, 'slideshow') and \
+	   node.slideshow.rp.duration == duration:
+		duration = 0
 	ctype = node.GetChannelType()
 	if duration == 0 and ctype:
 		if ignoreloop:
