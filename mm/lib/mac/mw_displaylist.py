@@ -98,9 +98,7 @@ class _DisplayList:
 				win._buttonschanged()
 			if win._transparent == -1 and win._parent:
 				win._parent._clipchanged()
-			if win._wid:
-				Qd.SetPort(win._wid)
-				Win.InvalRect(win.qdrect())
+			win._mac_invalwin()
 		self._window = None
 		del self._cloneof
 		try:
@@ -170,7 +168,7 @@ class _DisplayList:
 		self._rendered = 1
 		self.starttime = time.time()
 		# XXXX buttons?
-		Qd.SetPort(window._wid)
+		window._mac_setwin() # XXXX
 		if window._transparent == -1:
 			window._parent._clipchanged()
 		#
@@ -186,7 +184,7 @@ class _DisplayList:
 		   render_now = 1
 		else:
 			render_now = self._can_render_now()
-		Qd.SetPort(window._wid)
+		window._mac_setwin() # XXXX
 		if render_now:
 			if not window._clip:
 				window._mkclip()
@@ -197,7 +195,7 @@ class _DisplayList:
 			Qd.SetClip(saveclip)
 			Qd.DisposeRgn(saveclip)
 		else:
-			Win.InvalRect(window.qdrect())
+			window._mac_invalwin()
 		
 		window._active_displist = self
 		if self._buttons:
@@ -219,34 +217,38 @@ class _DisplayList:
 	def _can_render_now(self):
 		"""Return true if we can do the render now, in stead of
 		scheduling the update event"""
-		##return 0
 		# First check that no update events are pending.
 		window = self._window
 		rgn = Qd.NewRgn()
-		window._wid.GetWindowUpdateRgn(rgn)
+		window._onscreen_wid.GetWindowUpdateRgn(rgn)
 		ok = Qd.EmptyRgn(rgn)
+		# Next check that we're topmost
 		if ok:
 			ok = window._is_on_top()
+		# Finally check that we're not in a transition
+		if ok:
+			ok = (window._onscreen_wid == window._drawing_wid)
 		Qd.DisposeRgn(rgn)
 		return ok
 		
 	def _render(self, clonestart=0):
 		self._really_rendered = 1
-		self._window._active_displist = self
+		window = self._window
+		wid = window._mac_getoswindow()
+		window._active_displist = self
 		self._restorecolors()
 		if clonestart:
 			list = self._list[clonestart:]
 		else:
-			if self._window._transparent <= 0:
-				Qd.EraseRect(self._window.qdrect())
+			if window._transparent <= 0:
+				# XXXX Or should we erase the onscreen window?
+				Qd.EraseRect(window.qdrect())
 			list = self._list
-		for i in list:
-			self._render_one(i)
+		for entry in list:
+			self._render_one(entry, window, wid)
 			
-	def _render_one(self, entry):
+	def _render_one(self, entry, window, wid):
 		cmd = entry[0]
-		window = self._window
-		wid = window._wid
 		xscrolloffset, yscrolloffset = window._scrolloffset()
 		
 		if cmd == 'clear':
@@ -707,7 +709,8 @@ class _DisplayList:
 			return None
 		if fontobj != self._font:
 			self._font = fontobj
-			self._font._initparams(self._window._wid)
+			# XXXX Or should this be done on the onscreen window?
+			self._font._initparams(self._window._mac_getoswindow())
 			self._list.append(('font', fontobj))
 			self.__font_size_cache = self.__baseline(), self.__fontheight(), self.__pointsize()
 		return self.__font_size_cache
@@ -739,7 +742,8 @@ class _DisplayList:
 		return self.__font_size_cache[2]
 
 	def strsize(self, str):
-		width, height = self._font.strsizePXL(str, wid=self._window._wid)
+		# XXXX Or on the _onscreen_wid??
+		width, height = self._font.strsizePXL(str, wid=self._window._mac_getoswindow())
 		return self._window._pxl2rel((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
@@ -752,9 +756,11 @@ class _DisplayList:
 		w = self._window
 		list = self._list
 		old_fontinfo = None
-		if self._font._checkfont(w._wid):
-			old_fontinfo = mw_fonts._savefontinfo(w._wid)
-		self._font._setfont(w._wid)
+		# XXXX Or on the _onscreen_wid??
+		wid = w._mac_getoswindow()
+		if self._font._checkfont(wid):
+			old_fontinfo = mw_fonts._savefontinfo(wid)
+		self._font._setfont(wid)
 		base = self.baseline()
 		height = self.fontheight()
 		strlist = string.splitfields(str, '\n')
@@ -775,8 +781,6 @@ class _DisplayList:
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-##		if old_fontinfo:
-##			mw_fonts._restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 		
 	# Draw a string centered in a box, breaking lines if necessary
