@@ -34,9 +34,9 @@ class CmifChannel(Channel):
 			arg = cmd[len(fields[0]):]
 			arg = string.strip(arg)
 			if fields[0] == 'show':
-			        self._player.cc_enable_ch(arg, 1)
+				self._player.cc_enable_ch(arg, 1)
 			elif fields[0] == 'hide':
-			        self._player.cc_enable_ch(arg, 0)
+				self._player.cc_enable_ch(arg, 0)
 			elif fields[0] == 'stop':
 				self._player.cc_stop()
 				self.stopped = 1
