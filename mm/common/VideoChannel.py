@@ -139,7 +139,18 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
 		window.setredrawfunc(self.redraw)
-		movie.BindOpenGLWindow(self.window._form, self.__context)
+		try:
+			movie.BindOpenGLWindow(self.window._form, self.__context)
+		except mv.error, msg:
+			name = MMAttrdefs.getattr(node, 'name')
+			if not name:
+				name = '<unnamed node>'
+			windowinterface.showmessage(
+				'Cannot play movie node %s on channel %s:\n%s'%
+					(name, self._name, msg),
+				mtype = 'warning')
+			self.playdone(0)
+			return
 		range = MMAttrdefs.getattr(node, 'range')
 		if range[0]:
 			movie.SetStartFrame(range[0])
