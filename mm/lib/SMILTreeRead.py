@@ -672,6 +672,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['type'] = mtype
 			if mediatype in ('image', 'video', 'text'):
 				# deal with channel with window
+				ch['drawbox'] = 0
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region)
