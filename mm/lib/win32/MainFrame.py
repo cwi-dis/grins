@@ -800,7 +800,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_stop)
-		self.updatePanelCmdUI()
+		# XXX WARNING: if you uncomment that method, you get some ramdom python crash
+#		self.updatePanelCmdUI()
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
@@ -810,31 +811,19 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):
-		if hasattr(cmdui, 'Enable'):
-			cmdui.Enable(1)
-		else:
-			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
+		cmdui.Enable(1)
 
 	def OnUpdateCmdEnableAndCheck(self,cmdui):
-		if hasattr(cmdui, 'Enable'):
-			cmdui.SetCheck(1)
-			cmdui.Enable(1)
-		else:
-			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
+		cmdui.SetCheck(1)
+		cmdui.Enable(1)
 
 	def OnUpdateCmdEnableAndUncheck(self,cmdui):
-		if hasattr(cmdui, 'Enable'):
-			cmdui.SetCheck(0)
-			cmdui.Enable(1)
-		else:
-			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
+		cmdui.SetCheck(0)
+		cmdui.Enable(1)
 
 	def OnUpdateCmdDissableAndUncheck(self,cmdui):
-		if hasattr(cmdui, 'Enable'):
-			cmdui.SetCheck(0)
-			cmdui.Enable(0)
-		else:
-			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
+		cmdui.SetCheck(0)
+		cmdui.Enable(0)
 
 	def OnUpdateCmdDissable(self,cmdui):
 		# WARNING. Don't call the SetCheck method here.
@@ -844,10 +833,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# for this three button, we have a special method (OnUpdateCmdDissableAndUncheck) with uncheck as well
 		# the control
 		# note: to change the state of any check marks (in menu), use a different method
-		if hasattr(cmdui, 'Enable'):
-			cmdui.Enable(0)
-		else:
-			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
+		cmdui.Enable(0)
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
