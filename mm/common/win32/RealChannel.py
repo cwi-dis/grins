@@ -1,12 +1,16 @@
 __version__ = "$Id$"
 
 import windowinterface
-import rma
+try:
+	import rma
+except ImportError:
+	# no Real support available
+	rma = None
 import MMurl
 
 class RealChannel:
 	__engine = None
-	__has_rma_support = 1
+	__has_rma_support = rma is not None
 
 	def __init__(self):
 		self.__rmaplayer = None
@@ -35,7 +39,7 @@ class RealChannel:
 
 	def playit(self, node, window = None):
 		if not self.__rmaplayer:
-			return
+			return 0
 		self.__loop = self.getloop(node)
 		url = MMurl.canonURL(self.getfileurl(node))
 		self.__url = url
@@ -45,6 +49,7 @@ class RealChannel:
 			self.__rmaplayer.SetOsWindow(window)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
+		return 1
 
 	def OnStop(self):
 		if self.__loop:
