@@ -29,8 +29,6 @@ class PathSeg:
 	PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS = 18
 	PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL = 19
 
-	SVG_PATHSEG_UNKNOWN = 0
-
 	commands = 'MmLlCcZzSsHhVvQqTtAa'
 
 	def __init__(self,):
@@ -54,13 +52,20 @@ class PathSeg:
 	def setTypeAsLetter(self):
 		pass
 
+	def getPointAt(self, t):
+		return complex(0, 0)
+
+	def getLength(self):
+		return 0.0
+
 	def __repr__(self):
 		return '<%s instance, type=%s>' % (self.__class__.__name__, self.getTypeAsLetter())
 
 
 class Path:
-	def __init__(self):
+	def __init__(self,  pathstr):
 		self._pathSegList = []
+		self.constructPathSegList(pathstr)
 
 	def __repr__(self):
 		return '<%s instance>' % self.__class__.__name__
@@ -73,7 +78,10 @@ class Path:
 	# main query method
 	# get point at length t
 	def getPointAt(self, t):
-		return 0, 0
+		return complex(0, 0)
+
+	def getLength(self):
+		return 0.0
 
 	def addCommand(self, cmd, params):
 		pass
