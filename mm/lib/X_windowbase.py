@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import Xt, Xm, Xmd, Xlib, X, Xcursorfont
 import string, sys
 import imgformat, img
