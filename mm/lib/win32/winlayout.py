@@ -694,7 +694,10 @@ class Polyline:
 	# insert point nearest to pt (pt in device coordinates)
 	def insertPoint(self, pt):
 		projpt, index = self.projection(pt)
+		x0, y0 = self._viewport.getDeviceOrg()
 		if projpt is not None:
+			x, y = projpt
+			projpt = self.DPtoLP((x - x0, y - y0))
 			self._points.insert(index, projpt)
 		self.update()
 
@@ -841,30 +844,28 @@ class Polyline:
 		 
 	# point in device coordinates
 	def inside(self, point, dist=4):
-		x0, y0 = self.DPtoLP(point)
-		dx, dy = self._viewport.getOrg()
-		x0, y0 = x0 - dx, y0 - dy
-		n = len(self._points)
+		x0, y0 = self.LPtoDP(point)
+		points = self.getDevicePoints()
+		n = len(points)
 		d = 100000.0
 		for i in range(1,n):
-			x1, y1 = self._points[i-1]
-			x2, y2 = self._points[i]
+			x1, y1 = points[i-1]
+			x2, y2 = points[i]
 			dp, t = self.distanceFromLineSegment(x0, y0, x1, y1, x2, y2)
 			d = min(d, dp)
 		return d<=dist
 
 	# point in device coordinates
 	def projection(self, point, dist=4):
-		x0, y0 = self.DPtoLP(point)
-		dx, dy = self._viewport.getOrg()
-		x0, y0 = x0 - dx, y0 - dy
-		n = len(self._points)
+		x0, y0 = self.LPtoDP(point)
+		points = self.getDevicePoints()
+		n = len(points)
 		d = 100000.0
 		projpt = None
 		index = -1
 		for i in range(1,n):
-			x1, y1 = self._points[i-1]
-			x2, y2 = self._points[i]
+			x1, y1 = points[i-1]
+			x2, y2 = points[i]
 			dp, t = self.distanceFromLineSegment(x0, y0, x1, y1, x2, y2)
 			if t is not None and dp<d:
 				d = dp
