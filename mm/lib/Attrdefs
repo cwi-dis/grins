@@ -603,6 +603,9 @@
 (clipBoundary (enum children parent) children 'Clip to children' default
 	'Is transition limited to children only or parent plus children?' raw (smil2))
 
+(mode (enum in out) in 'Inline transition mode' default
+	'Is transition in or out?' raw (smil2))
+
 # registration points
 
 (regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'Alignment' default
