@@ -55,6 +55,7 @@ class DrawnButton(windowinterface._Widget):
 class PlayerDialog:
 	def __init__(self, coords, title):
 		x, y, w, h = coords
+		self.__state = STOPPED
 		self.__window = window = windowinterface.Window(
 			title, resizable = 1,
 			width = w, height = h, x = x, y = y,
