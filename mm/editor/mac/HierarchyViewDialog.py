@@ -28,6 +28,7 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.WindowExit, self.hide, None)
+		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 
 	def hide(self, *rest):
 		self.save_geometry()
