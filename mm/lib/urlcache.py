@@ -32,7 +32,7 @@ def mimetype(url):
 		if not mtype:
 			try:
 				u = MMurl.urlopen(url)
-			except IOError:
+			except (IOError, OSError):
 				pass
 			else:
 				mtype = u.headers.type
