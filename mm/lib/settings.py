@@ -156,6 +156,10 @@ default_settings = {
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
+
+	'default_sync_behavior_locked' : 0,
+	'default_sync_tolerance' : 0.1,
+
 ##	'compatibility': G2,		# Try to be compatible with...
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
