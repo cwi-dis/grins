@@ -21,7 +21,8 @@ import gl, GL, DEVICE
 import fm
 import string
 from EVENTS import *
-from debug import debug
+#from debug import debug
+debug = 0
 import time, select
 
 error = 'windowinterface.error'
@@ -1314,6 +1315,7 @@ class _Window:
 		self._subwindows_closed = 0
 
 	def sizebox(self, (x, y, w, h), constrainx, constrainy):
+		if debug: print `self`+'.sizebox()'
 		if self.is_closed():
 			raise error, 'window already closed'
 		if constrainx and constrainy:
@@ -1391,6 +1393,7 @@ class _Window:
 		return x, y, w, h
 
 	def movebox(self, (x, y, w, h), constrainx, constrainy):
+		if debug: print `self`+'.movebox()'
 		if self.is_closed():
 			raise error, 'window already closed'
 		if constrainx and constrainy:
@@ -1528,8 +1531,9 @@ class _Window:
 		enterevent(self, ResizeWindow, None)
 
 	def _redraw(self):
-		if debug: print `self`+'._redraw()'
+		if debug: print `self`+'._redraw()',
 		if self._subwindows_closed:
+			if debug: print 'draw subwindows'
 			toplevel._win_lock.acquire()
 			gl.winset(self._window_id)
 			gl.RGBcolor(self._bgcolor)
@@ -1540,9 +1544,11 @@ class _Window:
 				x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
 				gl.recti(x0, y0, x1, y1)
 			toplevel._win_lock.release()
-		elif self._redraw_func:
+		if self._redraw_func:
+			if debug: print 'use redraw func'
 			self._redraw_func()
 		elif self._active_display_list:
+			if debug: print 'use display list'
 			buttons = []
 			for but in self._active_display_list._buttonlist:
 				if but._highlighted:
@@ -1551,6 +1557,7 @@ class _Window:
 			for but in buttons:
 				but.highlight()
 		else:
+			if debug: print 'clear'
 			toplevel._win_lock.acquire()
 			gl.winset(self._window_id)
 			gl.RGBcolor(self._bgcolor)
