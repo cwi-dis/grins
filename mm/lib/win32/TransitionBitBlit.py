@@ -110,6 +110,7 @@ class PolyR2OverlapBlitterClass(BlitterClass):
 		if pointlist:
 			rgn = self.createRegion(pointlist)
 			self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
+			rgn.DeleteObject()
 		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 
 class PolylistR2OverlapBlitterClass(BlitterClass):
@@ -122,8 +123,10 @@ class PolylistR2OverlapBlitterClass(BlitterClass):
 			rgn = self.createRegion(pointlist[0])
 			for pl in pointlist[1:]:
 				newrgn = self.createRegion(pl)
-				rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)		
+				rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)
+				newrgn.DeleteObject()		
 			self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
+			rgn.DeleteObject()
 		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 
 	
@@ -131,6 +134,6 @@ class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
 		value = parameters
-		dst.ApplyTransform(value, src2, src1)			
+		dst.BltBlend(src2, src1, value)			
 
 
