@@ -89,6 +89,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.translist = []	# dynamic transition menu
 		self.show_links = 1	# Show HTML links??? I think.. -mjvdg.
 		self.sizes = sizes_notime
+		self.arrow_list = []	# A list of arrows to be drawn after everything else.
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
 		
@@ -352,8 +353,17 @@ class HierarchyView(HierarchyViewDialog):
 
 		commands = self.__compute_commands(commands) # Adds to the commands for the current focus node.		
 		self.setcommands(commands)
-		
-		self.setpopup(popupmenu)
+
+		# Forcidably change the pop-up menu if we have selected an Icon.
+		if self.selected_icon is not None:
+			a = self.selected_icon.get_contextmenu()
+			if a is not None:
+				self.setpopup(a)
+			else:
+				self.setpopup(popupmenu)
+		else:
+			self.setpopup(popupmenu)
+
 		self.setstate()
 
 		# make sure focus is visible
@@ -513,6 +523,7 @@ class HierarchyView(HierarchyViewDialog):
 ##			print "DEBUG: scene_graph.draw()" , time.time()
 			self.scene_graph.draw(d)
 ##			print "DEBUG: done drawing. Rendering..", time.time()
+			self.draw_arrows(d)
 			d.render()
 ##			print "DEBUG: Done rendering. ", time.time()
 			self.need_redraw = 0
@@ -547,13 +558,24 @@ class HierarchyView(HierarchyViewDialog):
 				self.selected_widget.draw_border(d)
 			if self.old_selected_widget:
 				self.old_selected_widget.draw_border(d)
-			
+
 			self.only_redraw_selection = 0
 			self.old_display_list = d
+			self.draw_arrows(d)
 			d.render()
 		else:
 			pass
 		self.redrawing = 0
+
+	def add_arrow(self, color, source, dest):
+		# Draw arrows on top of everything else.
+		self.arrow_list.append((color,source, dest))
+
+	def draw_arrows(self, displist):
+		for i in self.arrow_list:
+			color,source,dest = i
+			displist.drawarrow(color, source, dest)
+		self.arrow_list = []	# You need to remake it every time.
 
 	def hide(self, *rest):
 		if not self.is_showing():

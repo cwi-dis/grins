@@ -106,8 +106,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if othernode:
 				# Known bug: TODO: I'm not worrying if the node is collapsed.
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
-				self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1)
-
+				self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu)
 
 	def collapse_levels(self, level):
 		# Place holder for a recursive function.
@@ -1591,11 +1590,13 @@ class Icon(MMWidgetDecoration):
 		self.callback = None
 		self.arrowto = None	# another MMWidget.
 		self.icon = ""
+		self.contextmenu = None
 		
 		# Enable / disable.
 		self.callbackable = 1
 		self.selectable = 1
 		self.arrowable = 0
+
 
 	def destroy(self):
 		MMWidgetDecoration.destroy(self)
@@ -1650,15 +1651,20 @@ class Icon(MMWidgetDecoration):
 
 			if self.arrowable and self.arrowto and self.selected:
 				l,t,r,b = self.arrowto.pos_abs
+				if l == 0:
+					return
 				xd = (l+r)/2
 				yd = (t+b)/2
 				l,t,r,b = self.pos_abs
 				xs = (l+r)/2
 				ys = (t+b)/2
-				displist.drawarrow(ARROWCOLOR,(xd,yd),(xs,ys))
+				self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
+				#displist.drawarrow(ARROWCOLOR,(xd,yd),(xs,ys))
 
 	def set_contextmenu(self, foobar):
-		pass			# TODO.
+		self.contextmenu = foobar			# TODO.
+	def get_contextmenu(self):
+		return self.contextmenu
 
 	def add_arrow(self, dest):
 		# dest can be any MMWidget.
