@@ -10,6 +10,7 @@ public interface SMILDocument {
     int getViewportCount();
     Dimension getViewportSize(int index);
     String getViewportTitle(int index);
+    boolean isViewportOpen(int index);
     double getDuration();
     void close();
 }
