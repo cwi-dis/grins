@@ -2,7 +2,7 @@
 import string
 import sys
 from licparser import *
-from LicenseDialog import LicenseDialog
+from LicenseDialog import LicenseDialog, EnterkeyDialog
 
 
 class WaitLicense(LicenseDialog):
@@ -61,10 +61,11 @@ class WaitLicense(LicenseDialog):
 		Help.givehelp('eval')
 		
 	def cb_enterkey(self):
-		import windowinterface
-		windowinterface.InputDialog("Enter key:", "", self.ok_callback, (self.cb_quit, ()))
+##		import windowinterface
+##		windowinterface.InputDialog("Enter key:", "", self.ok_callback, (self.cb_quit, ()))
+		EnterkeyDialog(self.ok_callback)
 
-	def ok_callback(self, str):
+	def ok_callback(self, str, name=None, organization=None):
 		import settings
 		import sys
 		self.accept_license(str)
