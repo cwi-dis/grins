@@ -548,6 +548,10 @@ SOURCE=.\editor\UsergroupView.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\version.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\ViewDialog.py
 # End Source File
 # End Group
@@ -1117,6 +1121,10 @@ SOURCE=.\grins\TopLevel.py
 # Begin Source File
 
 SOURCE=.\grins\usercmd.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\version.py
 # End Source File
 # End Group
 # Begin Group "pylib"
