@@ -124,9 +124,18 @@ def WriteString(root, cleanSMIL = 0):
 def newfile(srcurl, dstdir):
 	import posixpath, urlparse
 	utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
-	file = MMurl.url2pathname(posixpath.basename(path))
+	if utype == 'data':
+		import mimetypes
+		mtype = mimetypes.guess_type(srcurl)[0]
+		if mtype is None:
+			mtype = 'text/plain'
+		ext = mimetypes.guess_extension(mtype)
+		base = 'data'
+		file = base + ext
+	else:
+		file = MMurl.url2pathname(posixpath.basename(path))
+		base, ext = os.path.splitext(file)
 	i = 0
-	base, ext = os.path.splitext(file)
 	while os.path.exists(os.path.join(dstdir, file)):
 		file = base + `i` + ext
 		i = i + 1
@@ -135,7 +144,8 @@ def newfile(srcurl, dstdir):
 def copyfile(srcurl, dstdir):
 	file = newfile(srcurl, dstdir)
 	u = MMurl.urlopen(srcurl)
-	f = open(os.path.join(dstdir, file), 'wb')
+	binary = u.headers.maintype != 'text'
+	f = open(os.path.join(dstdir, file), 'wb'[:binary+1])
 	while 1:
 		data = u.read(10240)
 		if not data:
@@ -155,13 +165,30 @@ def getid(writer, node):
 		return name
 
 def getsrc(writer, node):
-	val = MMAttrdefs.getattr(node, 'file')
+	ntype = node.GetType()
+	if ntype == 'ext':
+		val = MMAttrdefs.getattr(node, 'file')
+	elif ntype == 'imm':
+		if node.GetChannelType() == 'html':
+			mime = 'text/html'
+		else:
+			mime = ''
+		data = string.join(node.GetValues(), '\n')
+		if data and data[-1] != '\n':
+			# end with newline if not empty
+			data = data + '\n'
+		if nonascii.search(data):
+			mime = mime + ';charset=ISO-8859-1'
+		val = 'data:%s,%s' % (mime, MMurl.quote(data))
+	else:
+		return None
 	if not val or not writer.copydir:
 		return val
-	if writer.copycache.has_key(val):
-		# already seen and copied
-		return MMurl.basejoin(writer.copydirurl, writer.copycache[val])
 	ctx = node.GetContext()
+	url = ctx.findurl(val)
+	if writer.copycache.has_key(url):
+		# already seen and copied
+		return MMurl.basejoin(writer.copydirurl, writer.copycache[url])
 	if node.GetChannelType() == 'RealPix':
 		# special case code for RealPix file
 		if not hasattr(node, 'slideshow'):
@@ -176,27 +203,26 @@ def getsrc(writer, node):
 			ntags.append(attrs)
 			if attrs.get('tag','fill') not in ('fadein', 'crossfade', 'wipe'):
 				continue
-			url = attrs.get('file')
-			if not url:
+			nurl = attrs.get('file')
+			if not nurl:
 				continue
-			url = MMurl.basejoin(val, url)
-			if writer.copycache.has_key(url):
-				file = writer.copycache[url]
+			nurl = ctx.findurl(MMurl.basejoin(val, nurl))
+			if writer.copycache.has_key(nurl):
+				file = writer.copycache[nurl]
 			else:
-				nurl = ctx.findurl(url)
 				file = copyfile(nurl, writer.copydir)
-				writer.copycache[url] = file
+				writer.copycache[nurl] = file
 			attrs['file'] = MMurl.pathname2url(file)
 		rp.tags = ntags
-		file = newfile(ctx.findurl(val), writer.copydir)
+		file = newfile(url, writer.copydir)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
 		rp.tags = otags
-		writer.copycache[val] = file
+		writer.copycache[url] = file
 		return MMurl.basejoin(writer.copydirurl, file)
-	url = ctx.findurl(val)
-	file = copyfile(url, writer.copydir)
-	writer.copycache[val] = file
-	return MMurl.basejoin(writer.copydirurl, file)
+	else:
+		file = copyfile(url, writer.copydir)
+		writer.copycache[url] = file
+		return MMurl.basejoin(writer.copydirurl, file)
 
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
@@ -1017,23 +1043,9 @@ class SMILWriter(SMIL):
 					self.ids_used[name] = 1
 					break
 
-		imm_href = None
-		if type == 'imm':
-			if chtype == 'html':
-				mime = 'text/html'
-			else:
-				mime = ''
-			data = string.join(x.GetValues(), '\n')
-			if nonascii.search(data):
-				mime = mime + ';charset=ISO-8859-1'
-			imm_href = 'data:%s,%s' % (mime, MMurl.quote(data))
-
 		attributes = self.attributes[xtype]
 		for name, func in smil_attrs:
-			if name == 'src' and type == 'imm':
-				value = imm_href
-			else:
-				value = func(self, x)
+			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
 			# name is the attribute name as recorded in SMIL file
 			gname = '%s %s' % (GRiNSns, name)
