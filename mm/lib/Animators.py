@@ -41,6 +41,17 @@ class Animator:
 		v = v1 + (v2-v1)*t/dur
 		return int(v + 0.5)
 
+	def _slinear(self, vl, dur, t):
+		if t<0 or t>dur: 
+			return self._domval
+		if len(vl)<2:
+			raise IndexError('interpolation list')
+		if t==dur: 
+			return vl[len(vl)-1]
+		tau = dur/(len(vl) - 1)
+		ix = int(t/tau)
+		return vl[ix] + (vl[ix+1]-vl[ix])*(t-ix*tau)/tau
+
 	def _setprec(self, prec=0):
 		if prec == 0: 
 			self._inrepol = self._linear_int
@@ -104,6 +115,7 @@ class CompositeAnimator:
 # Impl. rem:
 # *attr types map
 # *use f(0) if duration is undefined
+# *ignore keyTimes if dur indefinite
 
 
 # Animation semantics parser
@@ -188,6 +200,9 @@ class AnimateElementParser:
 	def getValues(self):
 		return MMAttrdefs.getattr(self.__anim, 'values')
 
+	def getKeyTimes(self):
+		return MMAttrdefs.getattr(self.__anim, 'keyTimes')
+
 	def getLoop(self):
 		return MMAttrdefs.getattr(self.__anim, 'loop')
 
@@ -270,5 +285,36 @@ class AnimateElementParser:
 		if not v2:
 			return ()
 		return v1, v2
+
+
+	def getInterpolationKeyTimes(self):
+		values =  self.getValues()
+		if not values: return ()
+		vl = string.split(values,';')
+
+		keyTimes = self.getKeyTimes()
+		if not values: return ()
+		tl = string.split(values,';')
+
+		# len of values must be equal to len of keyTimes
+		if len(vl)!=len(tl): return ()
+			
+		tt = tuple(map(string.atof, tl))
+
+		# check boundary constraints
+		first = tt[0]
+		last = tt[len(tt)-1]
+		if self.__calcMode == 'linear' or self.__calcMode == 'spline':
+			if first!=0.0 or last!=1.0: return ()
+		elif self.__calcMode == 'discrete':
+			if first!=0.0: return ()
+		
+		# values should be increasing and in [0,1]
+		if first>1.0 or first<0:return ()
+		for i in  range(1,len(tt)):
+			if tt[i] < tt[i-1] or tt[i]>1.0 or tt[i]<0:
+				return ()
+
+		return tt
 
 
