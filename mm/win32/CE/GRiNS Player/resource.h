@@ -14,7 +14,6 @@
 #define IDC_STDOUT                      1001
 #define IDM_MAIN_COMMAND1               40001
 #define IDM_HELP_ABOUT                  40003
-#define IDS_CAP_MENUITEM40005           40006
 #define IDM_MAIN_COMMAND2               40007
 #define IDS_MAIN_COMMAND2               40008
 #define IDM_PLAY                        40009

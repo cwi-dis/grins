@@ -176,10 +176,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND *phWnd)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	HDC hdc;
+	//HDC hdc;
 	int wmId, wmEvent;
-	PAINTSTRUCT ps;
-	TCHAR szHello[MAX_LOADSTRING];
+	//PAINTSTRUCT ps;
+	//TCHAR szHello[MAX_LOADSTRING];
 
 	switch (message) 
 	{
