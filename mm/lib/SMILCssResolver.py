@@ -99,6 +99,9 @@ class SMILCssResolver:
 
 	def getPxGeom(self, node):
 		return node.getPxGeom()
+
+	def getPxAbsGeom(self, node):
+		return node.getPxAbsGeom()
 	
 	def _onPxValuesChanged(self, node, geom):
 		if node.pxValuesListener != None:
@@ -135,15 +138,12 @@ class Node:
 		self.pxValuesHasChanged = 0
 		
 		self.isInit = 0
-
+		self.isRoot = 0
+		
 	def link(self, container):
 		self.container = container
 		self.context = container.context		
 		container.children.append(self)
-
-		if container.isInit:			
-			self._initialUpdate()
-			self.isInit = 1
 
 	def unlink(self):
 		self.isInit = 0
@@ -160,6 +160,37 @@ class Node:
 	def setGeomListener(self, listener):
 		self.pxValuesListener = listener
 
+	def _toUnInitState(self):
+		self.isInit = 0
+		for child in self.children:
+			if child.isInitState():
+				child.toUnInitState()
+		
+	def _toInitState(self):
+		if self.isInit:
+			# already in init state. do nothing
+			return
+
+		if self.container == None:
+			raise 'SmilCssResolver: init failed, no root node'
+
+		self.container._toInitState()		
+		self._initialUpdate()
+		self.isInit = 1
+				
+	def isInitState(self):
+		return self.isInit
+
+	def getPxGeom(self):
+		self._toInitState()
+		return self._getPxGeom()
+
+	def getPxAbsGeom(self):
+		self._toInitState()
+		left, top, width, height = self._getPxGeom()
+		pleft, ptop, pwidth, pheight = self.container.getPxAbsGeom()
+		return pleft+left, ptop+top, width, height
+
 class RegionNode(Node):
 	def __init__(self):
 		Node.__init__(self)
@@ -172,9 +203,6 @@ class RegionNode(Node):
 		self.pxtop, self.pxheight = self._resolveCSS2Rule(self.top, self.height, self.bottom, self.container.pxheight)
 		self._onGeomChanged()
 
-		for child in self.children:
-			child._initialUpdate()
-
 	def setRawValues(self, left, width, right, top, height, bottom):
 		if width != None and width <= 0: width = 1
 		if height != None and height <= 0: height = 1
@@ -185,6 +213,8 @@ class RegionNode(Node):
 		self.top = top
 		self.height = height
 		self.bottom = bottom
+		
+		self._toUnInitState()
 
 	def _resolveCSS2Rule(self, beginValue, sizeValue, endValue, containersize):
 		pxbegin = None
@@ -271,6 +301,7 @@ class RegionNode(Node):
 	# determinate recursively all changement needed in children as well
 	# for each pixel value changed, the callback onChangePxValue is called
 	def changeRawValue(self, name, value):
+		self._toInitState()
 		self.pxValuesHasChanged = 0
 
 		if name in ('left', 'width', 'right'):
@@ -326,6 +357,7 @@ class RegionNode(Node):
 			self._onGeomChanged()
 
 	def changeAlignAttr(self, name, value):
+		self._toInitState()
 		if name == 'regPoint':
 			self.regPoint = value
 		elif name == 'regAlign':
@@ -367,6 +399,7 @@ class RegionNode(Node):
 	# according to the changement modify the raw values in order to keep all constraint valid
 	# for each raw value changed, the callback onChangeRawValue is called
 	def changePxValue(self, name, value):
+		self._toInitState()
 		self.pxValuesHasChanged = 0
 
 		if name == 'left':
@@ -468,9 +501,9 @@ class RegionNode(Node):
 		self.pxValuesHasChanged = 1
 
 	def _onGeomChanged(self):
-		self.context._onPxValuesChanged(self, self.getPxGeom())
+		self.context._onPxValuesChanged(self, self._getPxGeom())
 
-	def getPxGeom(self):
+	def _getPxGeom(self):
 		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
 		
 	def getScale(self):
@@ -495,7 +528,108 @@ class RegionNode(Node):
 
 		# if no regAlign defined here, the default come from regPoint
 		return None
-	
+
+	def _minsize(self, start, extent, end, minsize):
+		# Determine minimum size for parent window given that it
+		# has to contain a subwindow with the given start/extent/end
+		# values.  Start and extent can be integers or floats.  The
+		# type determines whether they are interpreted as pixel values
+		# or as fractions of the top-level window.
+		# end is only used if extent is None.
+		if start == 0:
+			# make sure this is a pixel value
+			start = 0
+##	if extent is None and (type(start) is type(end) or start == 0):
+##		extent = end - start
+##		end = None
+		if type(start) is type(0):
+			# start is pixel value
+			if type(extent) is type(0.0):
+				# extent is fraction
+				if extent == 0 or (extent == 1 and start > 0):
+					raise error, 'region with impossible size'
+				if extent == 1:
+					return minsize
+				size = int(start / (1 - extent) + 0.5)
+				if minsize > 0 and extent > 0:
+					size = max(size, int(minsize/extent + 0.5))
+				return size
+			elif type(extent) is type(0):
+				# extent is pixel value
+				if extent == 0:
+					extent = minsize
+				return start + extent
+			elif type(end) is type(0.0):
+				# no extent, end is fraction
+				return int((start + minsize) / (1 - end) + 0.5)
+			elif type(end) is type(0):
+				# no extent, end is pixel value
+				# warning end is relative to the parent end egde
+				return start + minsize + end
+			else:
+				# no extent and no end
+				return start + minsize
+		elif type(start) is type(0.0):
+			# start is fraction
+			if start == 1:
+				raise error, 'region with impossible size'
+			if type(extent) is type(0):
+				# extent is pixel value
+				if extent == 0:
+					extent = minsize
+				return int(extent / (1 - start) + 0.5)
+			elif type(extent) is type(0.0):
+				# extent is fraction
+				if minsize > 0 and extent > 0:
+					return int(minsize / extent + 0.5)
+				return 0
+			elif type(end) is type(0):
+				# no extent, end is pixel value
+				return int ((minsize + end) / (1 - start) + 0.5)
+			elif type(end) is type(0.0):
+				# no extent, end is fraction
+				return int(minsize / (1 - start - end) + 0.5)
+			else:
+				# no extent and no end
+				return int(minsize / (1 - start) + 0.5)
+		elif type(end) is type(0):
+			# no start, end is pixel value
+			# warning end is relative to the parent end egde
+			return end + minsize
+		elif type(end) is type(0.0):
+			# no start, end is fraction
+			if end <= 0:
+				return minsize
+			if type(extent) is type(0):
+				# extent is pixel value
+				if extent == 0:
+					extent = minsize
+				return int(extent / end + 0.5)
+			elif type(extent) is type(0.0):
+				# extent is fraction
+				return int(minsize / end + 0.5)
+		elif type(extent) is type(0):
+			return extent
+		elif type(extent) is type(0.0) and extent > 0:
+			return int(minsize / extent + 0.5)
+		return minsize
+
+	def guessSize(self):
+		minWidth = 100
+		minHeight = 100
+		for child in self.children:
+			widthChild, heightChild = child.guessSize()
+			width = self._minsize(self.left, self.width,
+					self.right,widthChild)
+			if width > minWidth:
+				minWidth = width
+			height = self._minsize(self.top, self.height,
+					self.bottom, heightChild)
+			if height > minHeight:
+				minHeight = height
+		
+		return minWidth, minHeight
+			
 class RootNode(RegionNode):
 	def __init__(self, context):
 		Node.__init__(self)
@@ -509,21 +643,28 @@ class RootNode(RegionNode):
 
 		self.pxwidth = width
 		self.pxheight = height
-		# we assume that this node is init as soon as we know its size
-		self.isInit = 1
+		self._toUnInitState()
 
 	def updateAll(self):
-		if self.isInit:
-			self._onGeomChanged()
-			for child in self.children:
-				child._initialUpdate()
+		self._onGeomChanged()
+		for child in self.children:
+			child._initialUpdate()
 			
 	def _onGeomChanged(self):
-		self.context._onPxValuesChanged(self, self.getPxGeom())
+		self.context._onPxValuesChanged(self, self._getPxGeom())
 
-	def getPxGeom(self):
+	def _getPxGeom(self):
 		return (self.pxwidth, self.pxheight)
 
+	def getPxAbsGeom(self):
+		self._toInitState()
+		return 0, 0, self.pxwidth, self.pxheight
+		
+	def _toInitState(self):
+		if self.pxwidth == None or self.pxheight == None:
+			self.pxwidth, self.pxheight = self.guessSize()
+		self.isInit = 1
+		
 class MediaNode(Node):
 	def __init__(self):
 		Node.__init__(self)
@@ -535,8 +676,135 @@ class MediaNode(Node):
 		self.intrinsicHeight = None
 
 	def _initialUpdate(self):
-		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
+		self.pxleft, self.pxtop, self.pxwidth, self.pxheight = self._getMediaSpaceArea()
 		self._onGeomChanged()
+
+	# return the tuple x,y alignment in pourcent value
+	# alignOveride is an optional overide id
+	def _getxyAlign(self, alignOveride=None):
+		alignId = None
+		if alignOveride == None:
+			alignId = self.getregalign()
+		else:
+			alignId = alignOveride
+			
+		from RegpointDefs import alignDef
+		xy = alignDef.get(alignId)
+		if xy == None:		
+			# impossible value, avoid a crash if bug
+			xy = (0.0, 0.0)
+		return xy
+
+	def guessSize(self):
+		# if no intrinsic size, return a default value
+		if self.intrinsicHeight == None or self.intrinsicWidth == None:
+			return 100,100
+		
+		regPoint = self.getRegPoint()		
+		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
+		regAlign = self.getRegAlign(regPointObject)
+		
+		# convert regalignid to pourcent value
+		regAlignX, regAlignY = self._getxyAlign(regAlign)
+
+		# convert value to pixel, relative to the media
+		regAlignW1 = int (regAlignX * self.intrinsicWidth + 0.5)
+		regAlignW2 = int ((1-regAlignX) * self.intrinsicWidth + 0.5)
+
+		regAlignH1 = int (regAlignY * self.intrinsicHeight + 0.5)
+		regAlignH2 = int ((1-regAlignY) * self.intrinsicHeight + 0.5)
+
+		width = self._minsizeRp(regPointObject['left'],
+					 regPointObject['right'],
+					 regAlignW1, regAlignW2, self.intrinsicWidth)
+
+		height = self._minsizeRp(regPointObject['top'],
+					regPointObject['bottom'],
+					regAlignH1, regAlignH2, self.intrinsicHeight)
+
+		return width, height
+	
+	# Determine the minimum size for the container  the regpoint/regalign
+	# wR1 is the size from container left edge to regpoint.
+	# wR2 is the size from regpoint to container right edge)
+	# wR1 and wR2 are in pourcent (float) or pixel (integer). You can't have the both in the same time
+	# wM1 is the size from media left edge to alignPoint
+	# wM2 is the size from alignpoint to media right edge
+	# wM1 and wM2 are pixel only (integer). You have to specify the both in the same time
+	def _minsizeRp(self, wR1, wR2, wM1, wM2, minsize):
+		# for now. Avoid to have in some case some to big values
+		MAX_REGION_SIZE = 5000
+
+		if wR1 is not None and wR2 is not None:
+			# conflict regpoint attribute
+			return minsize
+
+		if wM1 is None or wM2 is None:
+			# bad parameters
+			raise minsize
+
+		# first constraint
+		newsize = minsize
+		if type(wR1) is type (0.0):
+			if wR1 == 1.0:
+				raise error, 'regpoint with impossible alignment'
+			wN = int (wM2 / (1-wR1) + 0.5)
+			if wN > newsize:
+				newsize = wN
+		elif type(wR1) is type (0):
+			wN = wR1 + wM2
+			if wN > newsize:
+				newsize = wN
+		elif type(wR2) is type (0.0):
+			if wR2 == 0.0:
+				# the media will stay invisible whichever the value
+				# we keep the same size
+				pass
+			else:
+				wN = int(wM2 / wR2 + 0.5)
+				# test if the size is acceptable
+				if wN > MAX_REGION_SIZE:
+					wN = MAX_REGION_SIZE
+				if wN > newsize:
+					newsize = wN
+		elif type(wR2) is type (0):
+			# keep the same size
+			pass
+		else:
+			# no constraint
+			pass
+
+		# second constraint
+		if type(wR2) is type (0.0):
+			if wR2 == 1.0:
+				raise error, 'regpoint with impossible alignment'
+			wN = int(wM1 / (1.0-wR2) + 0.5)
+			if wN > newsize:
+				newsize = wN
+		elif type(wR2) is type (0):
+			# don't change anything
+			pass
+		elif type(wR1) is type (0.0):
+			if wR1 == 0.0:
+				# the media will stay invisible whichever the value
+				# we keep the same size
+				pass
+			else:
+				wN = int(wM1 / wR1 + 0.5)
+				# test if the size is acceptable
+				if wN > MAX_REGION_SIZE:
+					wN = MAX_REGION_SIZE
+				if wN > newsize:
+					newsize = wN
+		elif type(wR1) is type (0):
+			wN = wR1 + wM1
+			if wN > newsize:
+				newsize = wN
+		else:
+			# no constraint
+			pass
+
+		return newsize
 
 	def setIntrinsicSize(self, width, height):
 		# avoid crashes
@@ -544,6 +812,7 @@ class MediaNode(Node):
 		if height <= 0: height = 1
 		self.intrinsicWidth = width
 		self.intrinsicHeight = height
+		self._toUnInitState()
 
 	def setAlignAttr(self, name, value):
 		if name == 'regPoint':
@@ -552,8 +821,10 @@ class MediaNode(Node):
 			self.regAlign = value
 		elif name == 'scale':
 			self.scale = value
+		self._toUnInitState()
 		
 	def changeAlignAttr(self, name, value):
+		self._toInitState()
 		self.setAlignAttr(name, value)
 
 		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
@@ -630,9 +901,9 @@ class MediaNode(Node):
 			media_ratio = float(self.intrinsicWidth)/float(self.intrinsicHeight)
 			# print 'ratio=',media_ratio
 			if area_height*media_ratio > area_width:
-				area_height = area_width/media_ratio
+				area_height = int(area_width/media_ratio+0.5)
 			else:
-				area_width = area_height*media_ratio
+				area_width = int(area_height*media_ratio+0.5)
 
 		elif scale == -1: # slice
 			if regalign in ('topLeft', 'topMid', 'topRight'):
@@ -715,7 +986,7 @@ class MediaNode(Node):
 		else:
 			regAlign = self.container.getRegAlign()
 			if regAlign == None:
-				regAlign = regPointObject.getRegAlign()
+				regAlign = regPointObject.getregalign()
 				
 			return regAlign
 
@@ -723,8 +994,8 @@ class MediaNode(Node):
 		self.pxValuesHasChanged = 1
 
 	def _onGeomChanged(self):
-		self.context._onPxValuesChanged(self, self.getPxGeom())
+		self.context._onPxValuesChanged(self, self._getPxGeom())
 
-	def getPxGeom(self):
+	def _getPxGeom(self):
 		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
-
+		
