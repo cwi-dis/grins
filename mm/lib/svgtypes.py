@@ -19,7 +19,7 @@ _sign = r'(?P<sign>[+-]?)'
 
 intPat = r'(?P<int>\d+)'
 signedIntPat = _sign + _opS + intPat
-numberPat = r'(?P<int>\d+)([.](?P<dec>\d+))?'
+numberPat = r'(?P<int>\d+)?([.](?P<dec>\d+))?'
 signedNumberPat = _sign + _opS + numberPat
 lengthUnitsPat = r'(?P<units>(px)|(pt)|(pc)|(mm)|(cm)|(in)|(%))'
 opLengthUnitsPat = r'(?P<units>(px)|(pt)|(pc)|(mm)|(cm)|(in)|(%))?'
@@ -233,13 +233,17 @@ class SVGLength:
 	classre = re.compile(_opS + signedNumberPat + opLengthUnitsPat + _opS)
 	#unitstopx = {'px':1.0, 'pt':1.25, 'pc':15.0, 'mm': 3.543307, 'cm':35.43307, 'in':90.0}
 	unitstopx = {'px': 1.0, 'pt': 1.0, 'pc': 12.0, 'mm': 2.8346456, 'cm': 28.346456, 'in': 72.0}
-	#unitstopx =  {'px': 1.0, 'mm': 3.7795274666666665, 'in': 96.0, 'cm': 37.795274666666664, 'pt': 1.3333333333333333, 'pc': 16.0}
 	defaultunit = 'px'
 	def __init__(self, node, str, default=None):
 		self._node = node
 		self._units = None
 		self._value = None
 		self._default = default
+		if str is None:
+			return
+		if str == 'none':
+			self._value = 'none'
+			return
 		if str:
 			str = string.strip(str)
 			str = string.lower(str) # allow PX, PT,... in place of px, pt, ...?
@@ -249,13 +253,14 @@ class SVGLength:
 				if self._value is not None and self._value<0 and self.__class__ == SVGLength:
 					print 'length can not be negative'
 				if self._value is not None:
-					units = mo.group('units')
-					if units is None:
-						units = SVGLength.defaultunit
-					self._units = units
+					self._units = mo.group('units')
 
 	def __repr__(self):
-		if self._units=='px':
+		if self._value is None:
+			return ''
+		elif self._value is 'none':
+			return 'none'
+		elif self._units is None:
 			return '%s' % ff(self._value)
 		else:	
 			return '%s%s' % (ff(self._value), self._units)
@@ -264,7 +269,7 @@ class SVGLength:
 		if self._value is not None:
 			if self._units=='%':
 				pass # find parent size
-			f1 = self.unitstopx.get(self._units)
+			f1 = self.unitstopx.get(self._units or 'px')
 			pixels = f1*self._value
 			if units == 'px':
 				return int(pixels)
@@ -272,8 +277,22 @@ class SVGLength:
 			return pixels/f2
 		return self._default
 
+	def getUnits(self):
+		return self._units
+
 	def isDefault(self):
 		return self._value == self._default
+
+	def getDeviceValue(self, tm, f):
+		val = self.getValue()
+		if self._units is not None:
+			tm = tm.copy()
+			tm.inverse()
+			if f == 'w':
+				return int(tm.UWtoDW(val))
+			elif f == 'h':
+				return int(tm.UHtoDH(val))
+		return val
 
 # like SVGLength but can be negative
 class SVGCoordinate(SVGLength):
@@ -323,7 +342,10 @@ class SVGColor:
 		self._node = node
 		self._value = None
 		self._default = default
-		if str is None:
+		if val is None:
+			return
+		if val == 'none':
+			self._value = 'none'
 			return
 		val = string.lower(val)
 		if svgcolors.has_key(val):
@@ -331,7 +353,7 @@ class SVGColor:
 			return
 		res = SVGColor.classre.match(val)
 		if res is None:
-			print 'bad color specification'
+			print 'bad color specification', val
 			return
 		else:
 			hex = res.group('hex')
@@ -360,7 +382,9 @@ class SVGColor:
 		self._value = r, g, b
 
 	def __repr__(self):
-		return ''
+		if self._value is None or self._value == 'none':
+			return 'none'
+		return 'rgb(%d, %d, %d)' % self._value
 
 	def getValue(self):
 		if self._value is not None:
@@ -368,7 +392,7 @@ class SVGColor:
 		return self._default
 
 	def isDefault(self):
-		return self._value == self._default
+		return self._value is None or self.value == self._default
 
 class SVGFrequency:
 	classre = re.compile(_opS + numberPat + freqUnitsPat + _opS)
@@ -462,16 +486,17 @@ class SVGStyle:
 					self._styleprops[prop] = val		
 		for prop, val in self._styleprops.items():
 			if prop == 'fill' or prop == 'stroke':
-				if val is not None and val != 'none':
-					val = SVGColor(self._node, val).getValue()
-				self._styleprops[prop] = val
+				if val is not None and val!='none':
+					self._styleprops[prop] = SVGColor(self._node, val)
 			elif prop == 'stroke-width' or prop == 'font-size':
-				val = SVGLength(self._node, val).getValue()
-				self._styleprops[prop] = val
+				if val is not None and val != 'none':
+					self._styleprops[prop] = SVGLength(self._node, val)
 
 	def __repr__(self):
 		s = ''
 		for prop, val in self._styleprops.items():
+			if val is not None and type(val) != type(''):
+				val = val.getValue()
 			if val:
 				s = s + prop + ':' + self.toString(prop, val) + '; '
 		return s[:-2]
@@ -572,6 +597,53 @@ class SVGPoints:
 	def isDefault(self):
 		return self._points is None or len(self._points)==0
 
+class SVGAspectRatio:
+	aspectRatioPat = r'(?P<align>[a-zA-Z_:][-a-zA-Z0-9._:]*)' + '([ ]+(?P<meetOrSlice>[a-zA-Z_:][-a-zA-Z0-9._:]*))?'
+	classre = re.compile(_opS + aspectRatioPat + _opS)
+	alignEnum = ('none', 
+		'xMinYMin', 'xMidYMin', 'xMaxYMin', 
+		'xMinYMid', 'xMidYMid', 'xMaxYMid', 
+		'xMinYMax', 'xMidYMax', 'xMaxYMax',)
+	meetOrSliceEnum = ('meet', 'slice')
+	alignDefault = 'xMidYMid'
+	meetOrSliceDefault = 'meet'
+	def __init__(self, node, str, default=None):
+		self._node = node
+		self._align = None
+		self._meetOrSlice = None
+		self._default = default
+		if str:
+			mo =  self.classre.match(str)
+			if mo is not None:
+				self._align = mo.group('align')
+				self._meetOrSlice = mo.group('meetOrSlice')
+				if self._align not in self.alignEnum:
+					self._align = None
+				if self._meetOrSlice not in self.meetOrSliceEnum:
+					self._meetOrSlice = None
+
+	def __repr__(self):
+		s = ''
+		if self._align is not None and self._align != self.alignDefault:
+			s = s + self._align
+		if self._meetOrSlice is not None and self._meetOrSlice != self.meetOrSliceDefault:
+			s = s + ' ' + self._meetOrSlice
+		return s
+
+	def getValue(self):
+		if self._align is None:
+			align = self.alignDefault
+		else:
+			align = self._align
+		if self._meetOrSlice is None:
+			meetOrSlice = self.meetOrSliceDefault
+		else:
+			meetOrSlice = self._meetOrSlice
+		return align, meetOrSlice
+
+	def isDefault(self):
+		return self._align is None or (self._align == self.alignDefault and (self._meetOrSlice is None or self._meetOrSlice=='meet'))
+
 class SVGTransformList:
 	classre = re.compile(transformPat)
 	classtransforms = ('matrix', 'translate', 'scale', 'rotate', 'skewX' , 'skewY',) 
@@ -603,6 +675,7 @@ class SVGTransformList:
 
 	def isDefault(self):
 		return self._tflist is None or len(self._tflist)==0
+
 
 # SVG transformation matrix
 # TM = [a, b, c, d, e, f]
@@ -696,10 +769,21 @@ class TM:
 		matrix(tm.elements)
 
 	# helpers
-	def UPtoVP(self, point):
+	def UPtoDP(self, point):
 		a, b, c, d, e, f = self.elements
 		xu, yu = point
 		return a*xu + c*yu + e, b*xu + d*yu + f
+
+	def URtoDR(self, rc):
+		x, y = self.UPtoDP(rc[:2])
+		w, h = self.UPtoDP(rc[2:])
+		return x, y, w, h
+
+	def UWtoDW(self, w):
+		return self.UPtoDP((w, 0))[0]
+
+	def UHtoDH(self, h):
+		return self.UPtoDP((0, h))[1]
 
 	def copy(self):
 		return TM(self.elements)
