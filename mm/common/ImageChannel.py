@@ -121,7 +121,7 @@ class ImageChannel(ChannelWindow):
 			# convert coordinates from window size to image size.
 			relativeCoordinates = self.convertShapeRelWindowToRelImage(winCoordinates)
 			from MMNode import MMAnchor
-			arg = MMAnchor(self._anchor.aid, self._anchor.atype, relativeCoordinates, self._anchor.atimes, self._achor.aaccess)
+			arg = MMAnchor(self._anchor.aid, self._anchor.atype, relativeCoordinates, self._anchor.atimes, self._anchor.aaccess)
 		else:
 			arg = self._anchor
 		apply(self._anchor_cb, (arg,))

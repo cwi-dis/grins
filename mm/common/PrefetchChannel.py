@@ -118,7 +118,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 		dt = self._scheduler.timefunc() - self.__start
 		if self.__urlopener and self._playstate == Channel.PLAYING:
 			if not self.__urlopener.do_retrieve(self.__url, 1024):
-				self.__urlopener.end_retrieve(url)
+				self.__urlopener.end_retrieve(self.__url)
 				self.playdone(0, self._scheduler.timefunc())
 
 	def __onFetchDur(self):

@@ -268,7 +268,7 @@ class RealChannel:
 	def freezeit(self):
 		if self.__rmaplayer:
 			if realenginedebug:
-				print 'RealChannel.pauseit', self, paused
+				print 'RealChannel.freezeit', self
 			if self.__qid:
 				self.__channel._scheduler.cancel(self.__qid)
 			self.__qid = 0
