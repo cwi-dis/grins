@@ -651,7 +651,7 @@ class Window:
 	# 3. if center then do the obvious
 	# 4. coordinates specify placement rect
 	# 5. clip specifies the src rect
-	def _prepare_image(self, file, crop, fit, center, coordinates, clip, units):
+	def _prepare_image(self, file, crop, fit, center, coordinates, clip, align, units):
 		
 		# get image size. If it can't be found in the cash read it.
 		xsize, ysize = self._image_size(file)
@@ -722,7 +722,29 @@ class Window:
 		if yscale != 1:
 			h = int(ysize * yscale + .5)
 
-		if center:
+		if align == 'topleft':
+			pass
+		elif align == 'centerleft':
+			y = y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomleft':
+			y = y + height - h
+		elif align == 'topcenter':
+			x = x + (width - (w - left - right)) / 2
+		elif align == 'center':
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomcenter':
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + height - h
+		elif align == 'topright':
+			x = x + width - w
+		elif align == 'centerright':
+			x, y = x + width - w, \
+			       y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomright':
+			x, y = x + width - w, \
+			       y + height - h
+		elif center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
 	

@@ -958,7 +958,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, fit, center, coordinates, units = UNIT_SCREEN):
+	def _prepare_image(self, file, crop, fit, center, coordinates, align, units = UNIT_SCREEN):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -1026,7 +1026,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, fit, center, coordinates, units = units)
+				return self._prepare_image(file, crop, fit, center, coordinates, align, units = units)
 			if hasattr(reader, 'transparent'):
 				if type(file) is type(''):
 					r = img.reader(imgformat.xrgb8, file)
@@ -1111,7 +1111,29 @@ class _Window(_AdornmentSupport, _RubberBand):
 		# w -- width of image
 		# h -- height of image
 		# left, right, top, bottom -- part to be cropped
-		if center:
+		if align == 'topleft':
+			pass
+		elif align == 'centerleft':
+			y = y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomleft':
+			y = y + height - h
+		elif align == 'topcenter':
+			x = x + (width - (w - left - right)) / 2
+		elif align == 'center':
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomcenter':
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + height - h
+		elif align == 'topright':
+			x = x + width - w
+		elif align == 'centerright':
+			x, y = x + width - w, \
+			       y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomright':
+			x, y = x + width - w, \
+			       y + height - h
+		elif center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
 		xim = tw._visual.CreateImage(tw._visual.depth, X.ZPixmap, 0, image,

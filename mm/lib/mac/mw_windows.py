@@ -439,7 +439,7 @@ class _CommonWindow:
 		_size_cache[file] = width, height
 		return width, height
 
-	def _prepare_image(self, file, crop, fit, center, coordinates, units):
+	def _prepare_image(self, file, crop, fit, center, coordinates, align, units):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -541,7 +541,29 @@ class _CommonWindow:
 			# Put it in the cache, possibly emptying other things
 			#
 			self._put_image_in_cache(key, image, w, h, mask)
-		if center:
+		if align == 'topleft':
+			pass
+		elif align == 'centerleft':
+			y = y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomleft':
+			y = y + height - h
+		elif align == 'topcenter':
+			x = x + (width - (w - left - right)) / 2
+		elif align == 'center':
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomcenter':
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + height - h
+		elif align == 'topright':
+			x = x + width - w
+		elif align == 'centerright':
+			x, y = x + width - w, \
+			       y + (height - (h - top - bottom)) / 2
+		elif align == 'bottomright':
+			x, y = x + width - w, \
+			       y + height - h
+		elif center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
 		xim = mac_image.mkpixmap(w, h, format, image)

@@ -703,9 +703,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			try:
 				box = displist.display_image_from_file(
 					image_filename,
-					center = 0,
 					coordinates = coordinates,
-					fit = 'icon')
+					fit = 'icon',
+					align = 'bottomleft')
 			except windowinterface.error:
 				# some error displaying image
 				box = x, y, 0, h
@@ -2171,7 +2171,6 @@ class MediaWidget(MMNodeWidget):
 		if dur > ad:
 			dur = ad
 
-		displist.drawfbox(color, (x,y,w,16)) # top bar
 		if dur >= 0 and t2 > t0:
 			if dur == 0:
 				align = 'right'
@@ -2184,8 +2183,6 @@ class MediaWidget(MMNodeWidget):
 			dw = w
 ##		self.need_draghandles = x,x+dw,y+h/2
 		self.need_draghandles = x,x+dw,y+h-8
-		if dw > 0:
-			displist.drawfbox(color, (x, y+16, dw, h-16))
 		if dw < w:
 			if ad > dur:
 ##				adw = min(int(w*float(ad-dur)/(t2-t0) + .5), w-dw)
@@ -2195,12 +2192,15 @@ class MediaWidget(MMNodeWidget):
 			else:
 				adw = 0
 			if adw > 0:
-				displist.drawfbox(REPEATCOLOR, (x+dw, y+16, adw, h-16))
+				displist.drawfbox(REPEATCOLOR, (x+dw, y, adw, h))
 			if dw+adw < w:
-				displist.drawfbox(FREEZECOLOR, (x+dw+adw, y+16, w-dw-adw, h-16))
+				displist.drawfbox(FREEZECOLOR, (x+dw+adw, y, w-dw-adw, h))
 		if dur > t2-t0:
 			# duration truncated
 			displist.drawfbox(TRUNCCOLOR, (x+w-TRUNCSIZE,y,TRUNCSIZE,h))
+		if dw > 0:
+			displist.drawfbox(color, (x, y, dw, h))
+		displist.drawfbox(color, (x,y,w,16)) # fill bar
 
 	def draw_selected(self, displist):
 		self.__draw_box(displist, (255,255,255))
@@ -2247,7 +2247,7 @@ class MediaWidget(MMNodeWidget):
 				b = self.timeline.pos_abs[1]
 		# XXXX Should we cater for a bandwidth strip here too?
 		if self.need_draghandles is not None:
-			b = b - 8	# leave space for draghandles
+			b = b - 6	# leave space for draghandles
 		# Draw the image.
 		self.drawnodecontent(displist, (l,t,r-l,b-t), self.node)
 		MMNodeWidget.draw(self, displist)
