@@ -26,3 +26,6 @@ class HELP_CONTENTS(_CommandBase):
 
 class GRINS_WEB(_CommandBase):
 	help = 'GRiNS on the Web'
+
+class PASTE_FILE(_CommandBase):
+	help = 'Paste file'
