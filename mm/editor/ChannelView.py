@@ -609,7 +609,8 @@ class GO:
 	# Methods corresponding to the menu entries
 
 	def helpcall(self):
-		self.mother.toplevel.help.givehelp('Time_chart')
+		import Help
+		Help.givehelp('Time_chart')
 
 	def newchannelcall(self):
 		editmgr = self.mother.editmgr
