@@ -418,7 +418,11 @@ class ChannelView(ViewDialog, GLDialog):
 	def addarcs(self, ynode, arcs):
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
 			xuid, xside, delay, yside = arc
-			xnode = ynode.MapUID(xuid)
+			try:
+				xnode = ynode.MapUID(xuid)
+			except NoSuchUIDError:
+				# Skip sync arc from non-existing node
+				continue
 			if self.viewroot.IsAncestorOf(xnode) and \
 				xnode.GetType() in leaftypes and \
 				MMAttrdefs.getattr(xnode, 'channel') in \
