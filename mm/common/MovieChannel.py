@@ -39,4 +39,4 @@ class MovieChannel(ChannelWindowThread):
 		except RuntimeError, msg:
 			print 'Bad movie file', `vfile.filename`, msg
 			return 1
-		return 0
+		return self.syncarm
