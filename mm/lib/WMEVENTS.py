@@ -33,3 +33,6 @@ DropNode = 36
 
 # Underlying OS window/bitmap has changed (onscreen<->offscreen bitmap, etc)
 OSWindowChanged = 40
+# Something has dran to the window. Note that this is really expensive, and really
+# for export-to-wmp and such only
+WindowContentChanged = 41
