@@ -172,7 +172,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				for ns in SMIL2ns:
 					self.elements[ns+' '+key] = val
 		xmllib.XMLParser.__init__(self)
-		self.__skipping = 0
 		self.__seen_smil = 0
 		self.__in_smil = 0
 		self.__in_head = 0
@@ -3685,8 +3684,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	__whitespace = re.compile(_opS + '$')
 	def handle_data(self, data):
-		if self.__skipping:
-			return
 		if self.__in_metadata:
 			self.__metadata.append(data)
 			return
@@ -3961,10 +3958,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 	def finish_starttag(self, tagname, attrdict, method):
-		self.__skipping = 0
 		nstag = string.split(tagname, ' ')
 		if len(nstag) == 2 and \
-		   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
+		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 			d = {}
 			for key, val in attrdict.items():
@@ -3998,17 +3994,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass
 			else:
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
-##				for key, val in attrdict.items():
-##					if string.split(key, ' ')[-1] == 'skip-content':
-##						self.__skipping = val == 'true'
-##						break
-##				else:
-##					for key, val in self.__saved_attrdict.items():
-##						if string.split(key, ' ')[-1] == 'skip-content':
-##							self.__skipping = val == 'true'
-##							break
-##				if self.__skipping:
-##					method = None
 		elif tagname != 'smil':
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
@@ -4019,14 +4004,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 		self.__saved_attrdict = attrdict
-##		if self.__skipping:
-##			self.setliteral()
-
-	def handle_endtag(self, tag, method):
-		if self.__skipping:
-			self.__skipping = 0
-		else:
-			method()
 
 class SMILMetaCollector(xmllib.XMLParser):
 	"""Collect the meta attributes from a smil file"""
