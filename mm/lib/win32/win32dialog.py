@@ -305,7 +305,7 @@ class OpenLocationDlg(ResDialog):
 
 class SelectElementDlg(ResDialog):
 	ET_TOPLAYOUT, ET_REGION, ET_SUBREGION = range(3)
-	mtypes = {'image':0, 'audio':1, 'video':2, 'text':3, 'html':4, 'brush':0, 'svg':5}
+	mtypes = {'image':0, 'audio':1, 'video':2, 'text':3, 'html':4, 'brush':0, 'svg':5, 'null': 0}
 	images = [grinsRC.IDB_IMAGE, grinsRC.IDB_SOUND, grinsRC.IDB_VIDEO, grinsRC.IDB_TEXT, grinsRC.IDB_HTML, grinsRC.IDB_SVG]
 	def __init__(self, parent, mmnode, selection=''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
@@ -415,7 +415,10 @@ class SelectElementDlg(ResDialog):
 					regid = self.__reg2id.get(reg)
 					if regid is not None:
 						mimetype = node.GetComputedMimeType()
-						mtype = string.split(mimetype, '/')[0]
+						if mimetype:
+							try: mtype = string.split(mimetype, '/')[0]
+							except: mtype = 'null'
+						else: mtype = 'null'
 						imageix = self.ET_SUBREGION + (self.mtypes.get(mtype) or 0)
 						self.insertLabel(name, self.ET_SUBREGION, imageix, regid) 
 			self.__appendNodes(node)
