@@ -1146,6 +1146,7 @@ class _Event:
 			self._loop()
 
 	def _looping_timeout_callback(self, client_data, id):
+		if debug: print 'event._looping_timeout_callback'
 		self._checktime()
 
 	def settimer(self, sec, arg):
@@ -1189,14 +1190,17 @@ class _Event:
 			self._loop()
 
 	def _timeout_callback(self, client_data, id):
+		if debug: print 'event._timeout_callback'
 		self._timeout_called = 1
 ##		Xlib.PutBackEvent(toplevel._main.Display(), '\0'*96)
 
 	def _input_callback(self, client_data, fd, id):
+		if debug: print 'event._input_callback'
 		self.entereventunique(None, FileEvent, fd)
-		Xt.RemoveInput(self._fdlist[fd])
-		del self._fdlist[fd]
-		self._savefds.append(fd)
+		if not self._looping:
+			Xt.RemoveInput(self._fdlist[fd])
+			del self._fdlist[fd]
+			self._savefds.append(fd)
 
 	def _getevent(self, timeout):
 		if toplevel._win_lock:
@@ -1332,6 +1336,7 @@ class _Event:
 			return None
 
 	def setfd(self, fd):
+		if debug: print 'setfd',`fd`
 		self._fdlist[fd] = Xt.AddInput(fd, Xtdefs.XtInputReadMask,
 			  self._input_callback, None)
 
