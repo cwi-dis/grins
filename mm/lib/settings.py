@@ -58,6 +58,7 @@ default_settings = {
 	'no_initial_dialog': 0,		# Don't show initial dialog if true
 	'RPthumbnails': 0,		# RealPix thumbnails in timeline view
 	'cascade': 0,			# Cascade regions when no <layout>
+	'no_image_cache': 0,		# Don't cache images (or info about them)
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
