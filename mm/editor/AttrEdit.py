@@ -26,6 +26,31 @@ NEW_REGION = 'New region...'
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
+def getwrapperclass(selvalue):
+	if not selvalue:
+		return None
+	if type(selvalue) in (type(()), type([])):
+		print 'Multinode not yet supported'
+		return None
+	if not hasattr(selvalue, 'getClassName'):
+		print 'Focus items should have getClassName() method'
+		return None
+	if selvalue.getClassName() == 'MMNode':
+		if selvalue.GetChannelType() == 'animate' :
+			wrapperclass = AnimationWrapper
+		elif selvalue.GetChannelType() == 'prefetch' :
+			wrapperclass = PrefetchWrapper
+		else:	
+			wrapperclass = NodeWrapper
+		if selvalue.GetType() == 'ext' and \
+			selvalue.GetChannelType() == 'RealPix' and \
+			not hasattr(selvalue, 'slideshow'):
+			return None
+	elif selvalue.getClassName() == 'MMChannel':
+		wrapperclass = ChannelWrapper
+		
+	return wrapperclass
+		
 def showattreditor(toplevel, node, initattr = None):
 	try:
 		attreditor = node.attreditor
@@ -221,10 +246,10 @@ class Wrapper: # Base class -- common operations
 		return 1
 	def canfollowselection(self):
 		return 0
-	def link_to_selection(self, onoff, attreditor):
-		raise 'link_to_selection() called for attreditor not supporting it'
-	def selection_changed(self, seltype, selvalue, doit=1):
-		raise 'selection_changed() called for attreditor not supporting it'
+	def getselection(self):
+		raise 'getselection() called for attreditor not supporting it'
+	def setselection(self, selection):
+		raise 'setselection() called for attreditor not supporting it'
 
 class NodeWrapper(Wrapper):
 	def __init__(self, toplevel, node):
@@ -247,36 +272,7 @@ class NodeWrapper(Wrapper):
 		
 	def canfollowselection(self):
 		return 1
-		
-	def link_to_selection(self, onoff, attreditor):
-		if onoff:
-			if self.node.attreditor != attreditor:
-				print 'attreditor confusion'
-				print 'I am', attreditor
-				print 'node has', self.node.attreditor
-				raise 'attreditor confusion'
-			del self.node.attreditor
-		else:
-			if hasattr(self.node, 'attreditor'):
-				raise 'Node already has attreditor!'
-			self.node.attreditor = attreditor
-			
-	def selection_changed(self, seltype, selvalue, doit=1):
-		if not selvalue:
-			return
-		if type(selvalue) in (type(()), type([])):
-			print 'Multinode not yet supported'
-			return 0
-		if not hasattr(selvalue, 'getClassName'):
-			print 'Focus items should have getClassName() method'
-			return 0
-		if selvalue.getClassName() != 'MMNode':
-			return 0
-		if doit:
-			self.node = selvalue
-##		self.root = self.node.GetRoot()   # XXXX Is this needed?
-		return 1
-
+					
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Properties of node ' + name
@@ -712,6 +708,12 @@ class NodeWrapper(Wrapper):
 				'List of anchors on this node', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
+	def getselection(self):
+		return self.node
+
+	def setselection(self, selection):
+		self.node = selection
+	
 class SlideWrapper(NodeWrapper):
 	def attrnames(self):
 		import realsupport
@@ -882,35 +884,7 @@ class ChannelWrapper(Wrapper):
 
 	def canfollowselection(self):
 		return 1
-		
-	def link_to_selection(self, onoff, attreditor):
-		if onoff:
-			if self.channel.attreditor != attreditor:
-				print 'attreditor confusion'
-				print 'I am', attreditor
-				print 'node has', self.channel.attreditor
-				raise 'attreditor confusion'
-			del self.channel.attreditor
-		else:
-			if hasattr(self.channel, 'attreditor'):
-				raise 'Channel already has attreditor!'
-			self.channel.attreditor = attreditor
-			
-	def selection_changed(self, seltype, selvalue, doit=1):
-		if not selvalue:
-			return
-		if type(selvalue) in (type(()), type([])):
-			print 'Multinode not yet supported'
-			return 0
-		if not hasattr(selvalue, 'getClassName'):
-			print 'Focus items should have getClassName() method'
-			return 0
-		if selvalue.getClassName() != 'MMChannel':
-			return 0
-		if doit:
-			self.channel = selvalue
-		return 1
-
+					
 	def maketitle(self):
 		return 'Properties of region ' + self.channel.name
 
@@ -1072,6 +1046,12 @@ class ChannelWrapper(Wrapper):
 	def parsevalue(self, name, str):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, str, self.context)
+
+	def getselection(self):
+		return self.channel
+
+	def setselection(self, selection):
+		self.channel = selection
 
 class DocumentWrapper(Wrapper):
 	# XXX disable temporarly 'project_boston'
@@ -1402,7 +1382,6 @@ class PreferenceWrapper(Wrapper):
 		elif self.__specprefs.has_key(name):
 			return str
 
-
 # Attribute editor class.
 
 from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
@@ -1502,14 +1481,20 @@ class AttrEditor(AttrEditorDialog):
 			return 1
 		
 		self.pop()
-		answer = windowinterface.GetYesNoCancel("Save modified properties?")
+		# XXX for now, cancel is not allowed. A lot of work to have something reliable:
+		# if the user cancel, it would mean that the selection have to be restored
+		# as well if followselection is activated, or have a mechanism which allow to
+		# check if the selection is possible before selecting (like 'transaction'), etc ...
+		# answer = windowinterface.GetYesNoCancel("Save modified properties?")
+		answer = windowinterface.GetYesNo("Save modified properties?")
 		if answer == 0:
 			self.apply_callback()
 			return 1
 		if answer == 1:
-			self.resetall()
+#			self.resetall()
 			return 1
-		return 0
+		return 1
+		#return 0
 
 	def is_changed(self):
 		# Return true if any property value has been edited.
@@ -1525,10 +1510,11 @@ class AttrEditor(AttrEditorDialog):
 		return 0
 				
 	def showall_callback(self):
-		if not self.pagechange_allowed():
-			self.fixbuttonstate()
-			return
+#		if not self.pagechange_allowed():
+#			self.fixbuttonstate()
+#			return
 		self.show_all_attributes = not self.show_all_attributes
+		self.fixbuttonstate()
 		import settings
 		settings.set('show_all_attributes', self.show_all_attributes)
 		# settings.save()
@@ -1537,11 +1523,14 @@ class AttrEditor(AttrEditorDialog):
 
 	def followselection_callback(self):
 		if not self.pagechange_allowed():
+			# restore the button state
 			self.fixbuttonstate()
 			return
 		self.follow_selection = not self.follow_selection
-		self.wrapper.link_to_selection(self.follow_selection, self)
-		self.redisplay()
+		self.fixbuttonstate()
+		if self.wrapper != None:
+			type, object = self.wrapper.editmgr.getglobalfocus()
+			self.followselection(object)
 		
 	def cancel_callback(self):
 		self.close()
@@ -1697,7 +1686,7 @@ class AttrEditor(AttrEditorDialog):
 	#
 	def transaction(self, type):
 		return 1
-
+	
 	def commit(self, type):
 		if self.wrapper.closing():
 			pass
@@ -1709,20 +1698,43 @@ class AttrEditor(AttrEditorDialog):
 	def globalfocuschanged(self, focustype, focusobject):
 		if not self.follow_selection:
 			return
-##		print 'Focus changed', (focustype, focusobject)
-		if self.wrapper.selection_changed(focustype, focusobject, doit=0):
-			if self.pagechange_allowed():
-				self.wrapper.selection_changed(focustype, focusobject, doit=1)
-			else:
-				# The user said "cancel". Our only reasonable option is to
-				# decouple the dialog from focus
-				self.follow_selection = 0
-				self.wrapper.link_to_selection(self.follow_selection, self)
-			self.redisplay()
-		
-	def redisplay(self):	
-		namelist = self.wrapper.attrnames()
-		if namelist != self.__namelist:
+		if self.pagechange_allowed():
+			self.followselection(focusobject)
+		else:
+			# XXX should restore the focus. But can't be done here
+			pass
+			
+	def followselection(self, focusobject):
+		newwrapper = None
+		# get the right wrapper according to the selection
+		# if the wrapper doesn't exist, do nothing
+		wrapperclass = getwrapperclass(focusobject)
+		if wrapperclass != None:
+			if not isinstance(self.wrapper, wrapperclass):
+				# the wrapper has to change
+				toplevel = self.wrapper.toplevel
+				newwrapper = wrapperclass(toplevel, focusobject)
+		else:
+			# no wrapper available for this selection type
+			return
+
+		# update attreditor. 
+		selection = self.wrapper.getselection()
+		if hasattr(selection, 'attreditor'):
+			# remove attreditor on previous node selected
+			del selection.attreditor
+		focusobject.attreditor = self
+
+		# update selection					
+		if not newwrapper:
+			self.wrapper.setselection(focusobject)
+		else:
+			newwrapper.setselection(focusobject)
+
+		self.redisplay(newwrapper)
+
+	def redisplay(self, newwrapper = None):
+		if newwrapper or self.wrapper.attrnames() != self.__namelist:
 			# re-open with possibly different size
 			attr = self.getcurattr()
 			if attr:
@@ -1731,6 +1743,9 @@ class AttrEditor(AttrEditorDialog):
 			for b in self.attrlist:
 				b.close()
 			del self.attrlist
+			if newwrapper:
+				# if the wrapper has changed, set the new wrapper
+				self.wrapper = newwrapper
 			self.__open_dialog(attr)
 		else:
 			a = self.getcurattr()
