@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import windowinterface
+import os
 
 channeleditors = {}
 
@@ -31,7 +32,7 @@ class _Convert:
 		self.node = node
 		windowinterface.FileDialog(
 			'This is an internal node. Convert to external?',
-			'.', '*', _inventname(node.GetChannelName()),
+			os.curdir, '*', _inventname(node.GetChannelName()),
 			self.ok, None)
 
 	def ok(self, file):
