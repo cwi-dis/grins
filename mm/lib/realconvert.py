@@ -11,15 +11,27 @@ except ImportError:
 		raise ImportError('no RealProducer SDK')
 else:
 	import cmif
-	dir = cmif.findfile('Producer-SDK')
-	if os.path.exists(dir):
+	if sys.platform == 'mac':
+		# Newer SDK version with different paths
+		dllpath = cmif.findfile('enceng60.dll')
+		dir = os.path.split(dllpath)[0]
+		if not dir:
+			dir = os.getcwd()
 		producer.SetDllAccessPath(
-			'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
-			'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
-			'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
-			'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+				'DT_Plugins=%s\000' % dir +
+				'DT_Codecs=%s\000' % dir +
+				'DT_EncSDK=%s\000' % dir +
+				'DT_Common=%s\000' % dir)
 	else:
-		raise ImportError('no G2 codecs')
+		dir = cmif.findfile('Producer-SDK')
+		if os.path.exists(dir):
+			producer.SetDllAccessPath(
+				'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
+				'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
+				'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
+				'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+		else:
+			raise ImportError('no G2 codecs')
 
 engine = None
 audiopin = None
