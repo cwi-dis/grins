@@ -222,7 +222,7 @@ class RectTool(DrawTool):
 				drawObj = wnd._selection[len(wnd._selection)-1]
 				wnd.Remove(drawObj);
 				del drawObj
-			wnd.selectTool.onLButtonDown(wnd,flags,point) # try a select!
+			wnd.selectTool.onLButtonDown(flags,point) # try a select!
 		wnd.selectTool.onLButtonUp(flags, point)
 		wnd.OnNewRect()		
 
@@ -761,7 +761,8 @@ class DrawLayer:
 
 		# background decoration on dcc
 		#dcc.FillSolidRect(rect.tuple(),win32mu.RGB((228,255,228)))
-		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
+		if self._active_displist:
+			dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
 
 		# show draw area
 		if not self.InLayoutMode():
@@ -903,7 +904,7 @@ class DrawLayer:
 	def InLayoutMode(self):
 		return self._layoutmode
 
-	def	SetScale(self, scale):
+	def SetScale(self, scale):
 		self._scale = scale
 
 	def GetScale(self):
@@ -911,10 +912,12 @@ class DrawLayer:
 			return None
 		return self._scale
 
-	def	SetBRect(self, rc):
+	def SetBRect(self, rc):
 		self._brect = Rect(rc)
-	def	SetCRect(self, rc):
+
+	def SetCRect(self, rc):
 		self._crect = Rect(rc)
+
 	def SetBkImg(self,img):
 		self._bkimg = img
 
@@ -938,7 +941,7 @@ class DrawLayer:
 		if len(objs):objs[0].setunits(units)
 		self._ref_wnd._rb_units=units
 
-	def	RestoreState(self):
+	def RestoreState(self):
 		self._scale=None
 		self._layoutmode=1
 		self._has_scale=0
