@@ -393,7 +393,7 @@ class FancyURLopener(URLopener):
 			match = re.match(
 			    '[ \t]*([^ \t]+)[ \t]+realm="([^"]*)"', stuff)
 			if match:
-			        scheme, realm = match.group()
+			        scheme, realm = match.groups()
 				if string.lower(scheme) == 'basic':
 					return self.retry_http_basic_auth(
 						url, realm)
