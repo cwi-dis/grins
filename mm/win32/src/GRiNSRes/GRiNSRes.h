@@ -167,7 +167,9 @@
 #define IDCMD_ADD_CHANNEL               1034
 #define IDC_COMBO1                      1034
 #define IDC_COMBO2                      1035
+#define IDC_LAYOUT_SENDBACK             1035
 #define IDUC_APPLY                      1036
+#define IDC_LAYOUT_BRINGFRONT           1036
 #define IDC_OTHER_CHANNELS              1037
 #define IDUC_RESET                      1043
 #define IDUC_BROWSE                     1044
@@ -356,12 +358,14 @@
 #define IDC_LAYOUT_VIEWPORT_SEL         1253
 #define IDC_LAYOUT_SHOW_NAMES           1254
 #define IDC_PREVIOUS_AREA               1255
+#define IDC_LAYOUT_SHOW_BGCOLOR         1255
 #define IDC_SUBREG_X                    1256
 #define IDC_SUBREG_Y                    1257
 #define IDC_SUBREG_W                    1258
 #define IDC_SUBREG_H                    1259
 #define IDC_SUBREG_SHONLYREG            1260
 #define IDC_SUBREG_FIT                  1261
+#define IDC_LAYOUT_REGIONLIST           1262
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -440,7 +444,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        291
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1262
+#define _APS_NEXT_CONTROL_VALUE         1263
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
