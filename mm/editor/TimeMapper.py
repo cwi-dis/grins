@@ -7,7 +7,7 @@ CONSISTENT_TIME_MAPPING=0
 DEBUG=0
 
 class TimeMapper:
-	def __init__(self):
+	def __init__(self, min_pxl_per_sec):
 		self.collecting = 1
 		self.dependencies = []
 		self.collisions = []
@@ -17,46 +17,56 @@ class TimeMapper:
 		self.offset = 0
 		self.width = 0
 		self.range = 0, 0
-		
+		self.min_pxl_per_sec = min_pxl_per_sec
+
 	def setoffset(self, offset, width):
+		if __debug__ and DEBUG: print 'setoffset',offset,width
 		self.offset = offset
 		self.width = width
 
-	def adddependency(self, t0, t1, minpixeldistance):
+	def adddependency(self, t0, t1, minpixeldistance, node):
 		if not self.collecting:
 			raise Error, 'Adding dependency while not collecting data anymore'
+		if __debug__ and DEBUG: print 'adddependency',t0,t1,minpixeldistance,node
 		self.dependencies.append((t1, t0, minpixeldistance))
 		self.collisiondict[t0] = 0
 		self.collisiondict[t1] = 0
-		
+
 	def addcollision(self, time, minpixeldistance):
 		if not self.collecting:
 			raise Error, 'Adding collision while not collecting data anymore'
+		if __debug__ and DEBUG: print 'addcollision',time,minpixeldistance
 		self.collisions.append((time, minpixeldistance))
 		self.collisiondict[time] = 0
-		
+
 	def addstalltime(self, time, stalltime, stalltype='stall'):
 		if not self.collecting:
 			raise Error, 'Adding stilltime while not collecting data anymore'
+		if __debug__ and DEBUG: print 'addstalltime',time,stalltime,stalltype
 		oldstalltime, oldstalltype = self.stalldict.get(time, (0, None))
 		stalltime = oldstalltime + stalltime
 		# XXXX Adding is not correct for different types of stalls
 		# XXXX We should take the worst of stalltype and oldstalltype
 		self.stalldict[time] = stalltime, stalltype
 		self.collisiondict[time] = 0
-		
-	def calculate(self, realtime=0, min_pixels_per_second = 0):
+
+	def calculate(self, realtime=0):
+		min_pixels_per_second =  self.min_pxl_per_sec
 		if not self.collecting:
 			raise Error, 'Calculate called while not collecting data'
+		if __debug__ and DEBUG: print 'calculate',realtime,min_pixels_per_second
 		self.collecting = 0
 		self.dependencies.sort()
-		if DEBUG:
+		if __debug__ and DEBUG:
 			print 'DEPENDENCIES'
 			for item in self.dependencies:
 				print item
 			print 'COLLISIONS'
 			self.collisions.sort()
 			for item in self.collisions:
+				print item
+			print 'STALLS'
+			for item in self.stalldict.items():
 				print item
 		for time, pixels in self.collisions:
 			oldpixels = self.collisiondict[time]
@@ -71,6 +81,8 @@ class TimeMapper:
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		elif min_pixels_per_second == 0:
 			min_pixels_per_second = 2
+		if __debug__ and DEBUG:
+			print 'min pxl per sec:',min_pixels_per_second
 		for time, (stalltime, stalltype) in self.stalldict.items():
 			stallpixels = stalltime * min_pixels_per_second
 			if stallpixels > self.collisiondict[time]:
@@ -88,7 +100,7 @@ class TimeMapper:
 			minpos = minpos + self.collisiondict[t] + 1
 			prev_t = t
 		self.dependencies.sort()
-		if DEBUG:
+		if __debug__ and DEBUG:
 			print 'MINPOS'
 			for t in self.times:
 				print (t, self.minpos[t])
@@ -107,20 +119,20 @@ class TimeMapper:
 ##		for time in self.times:
 ##			curpush = curpush + pushover.get(time, 0)
 ##			self.minpos[time] = self.minpos[time] + curpush
-		if DEBUG:
+		if __debug__ and DEBUG:
 			print 'MINPOS'
 			for t in self.times:
 				print (t, self.minpos[t])
 			print 'RANGES'
 			for t in self.times:
-				print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
+				print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
 			print self.minpos
 		self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]] + 1
 		if realtime:
 			return min_pixels_per_second
 		else:
 			return 0
-		
+
 	def pixel2time(self, pxl):
 		if self.collecting:
 			raise Error, 'pixel2time called while still collecting data'
@@ -187,7 +199,7 @@ class TimeMapper:
 			if tm2 != tm:
 				return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp)
 		return tm + (pos - mp)
-		
+
 	def __pixel2pixel(self, pos):
 		if self.width == 0:
 			return pos
@@ -204,8 +216,9 @@ class TimeMapper:
 		pos = self.minpos[time]
 		if align == 'right':
 			pos = pos + self.collisiondict[time]
+		if __debug__ and DEBUG: print 'time2pixel',time,align,'->',pos,self.__pixel2pixel(pos)
 		return self.__pixel2pixel(pos)
-		
+
 	def interptime2pixel(self, time, align='left'):
 		# Return a pixel position for any time value, possibly interpolating
 		if self.collecting:

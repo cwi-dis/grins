@@ -278,7 +278,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return
 
 	def iscollapsed(self):
-		return 0
+		return 1
 
 	def isvisible(self):
 		# a node is visible if none of its ancestors is collapsed
@@ -292,12 +292,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if node.collapsed:
 				node.views['struct_view'].uncollapse()
 		#self.mother.need_redraw = 1
-
-	def adddependencies(self, timemapper):
-		t0, t1, t2, download, begindelay = self.GetTimes('virtual')
-		w, h = self.get_minsize()
-		if t0 != t2:
-			timemapper.adddependency(t0, t2, w)
 
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
 		edge = 0
@@ -353,7 +347,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				for c in self.children:
 					c.node.showtime = showtime
 			else:
-				timemapper = TimeMapper.TimeMapper()
+				min_pxl_per_sec = MIN_PXL_PER_SEC_DEFAULT
+				try:
+					min_pxl_per_sec = self.node.min_pxl_per_sec
+				except AttributeError:
+					pass
+				timemapper = TimeMapper.TimeMapper(min_pxl_per_sec)
 				# Hack by Jack - if we already have a timemapper
 				# we copy the stalls. This is probably not a good
 				# idea, but I don't know why we reallocate a timemapper
@@ -398,21 +397,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def fix_timemapper(self, timemapper):
 		if timemapper is not None:
-			self.adddependencies(timemapper)
 			if self.timemapper is not None:
 				t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 				p0, p1 = self.addcollisions(t0, t2, timemapper, (t0, t1, t2, download, begindelay))
-				self.timemapper.addcollision(t0, p0)
-				self.timemapper.addcollision(t2, p1)
-				min_pxl_per_sec = MIN_PXL_PER_SEC_DEFAULT
-				if self.timeline is None or self.timeline.minwidth == 0:
-					try:
-						min_pxl_per_sec = self.node.min_pxl_per_sec
-					except AttributeError:
-						pass
-				pxl_per_sec = timemapper.calculate(self.node.showtime in ('cfocus', 'bwstrip'), min_pixels_per_second = min_pxl_per_sec)
-				if not hasattr(self.node, 'min_pxl_per_sec'):
-					self.node.min_pxl_per_sec = pxl_per_sec
+				if self.iconbox is None or not self.iconbox.vertical:
+					self.timemapper.addcollision(t0, p0)
+					self.timemapper.addcollision(t2, p1)
+				pxl_per_sec = timemapper.calculate(self.node.showtime in ('cfocus', 'bwstrip'))
+				self.node.min_pxl_per_sec = pxl_per_sec
 				t0, t1, t2, dummy, dummy = self.GetTimes('virtual')
 				w = timemapper.time2pixel(t2, align='right') - timemapper.time2pixel(t0)
 				if w > self.boxsize[0]:
@@ -482,10 +474,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			ibxsize = ibysize = 0
 
 		# thumbnail
-		icon = None
+		icon = text = None
 		if not node.GetChildren() and not self.iscollapsed():
 			# use empty_icon if no children and it exists
 			icon = node.GetAttrDef('empty_icon', None)
+			text = node.GetAttrDef('empty_text', None)
 		if icon is None:
 			# use thumbnail icon if defined (and we're not using empty_icon)
 			icon = node.GetAttrDef('thumbnail_icon', None)
@@ -509,9 +502,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if imxsize > 0 and imysize > 0:
 					self.__image_size = imxsize, imysize
 
-		text = None
-		if not node.GetChildren():
-			text = node.GetAttrDef('empty_text', None)
 		if text:
 			txxsize, txysize = f_title.strsizePXL(text)
 		elif self.name:
@@ -565,6 +555,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if w > xsize:
 				xsize = w
 			ysize = ysize + h
+		if timemapper is not None and (self.timemapper is None or self.iconbox is None or not self.iconbox.vertical):
+			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
+			if t2 > t0 and self.iscollapsed():
+				if xsize / float(t2 - t0) < timemapper.min_pxl_per_sec:
+					xsize = int(timemapper.min_pxl_per_sec * (t2 - t0) + .5)
+				timemapper.adddependency(t0, t2, xsize, self.node)
 ##		if timemapper is not None and not text:
 ##			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
 ##			if t0 == t2:
