@@ -12,31 +12,29 @@ DefaultState = r"""
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar0]
 "BarID"=dword:0000e81b
-"Bars"=dword:00000008
+"Bars"=dword:00000007
 "Bar#0"=dword:00000000
 "Bar#1"=dword:0000e800
-"Bar#2"=dword:0000e805
-"Bar#3"=dword:00000000
-"Bar#4"=dword:0001e804
-"Bar#5"=dword:00000000
-"Bar#6"=dword:0001e803
-"Bar#7"=dword:00000000
+"Bar#2"=dword:0000e803
+"Bar#3"=dword:0000e805
+"Bar#4"=dword:00000000
+"Bar#5"=dword:0001e804
+"Bar#6"=dword:00000000
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar1]
 "BarID"=dword:0000e803
-"Visible"=dword:00000000
-"XPos"=dword:fffffffe
+"XPos"=dword:00000111
 "YPos"=dword:fffffffe
-"MRUWidth"=dword:00000079
+"MRUWidth"=dword:00000045
 "Docking"=dword:00000001
-"MRUDockID"=dword:00000000
-"MRUDockLeftPos"=dword:fffffffe
-"MRUDockTopPos"=dword:0000001c
-"MRUDockRightPos"=dword:0000008e
-"MRUDockBottomPos"=dword:0000003c
+"MRUDockID"=dword:0000e81b
+"MRUDockLeftPos"=dword:00000111
+"MRUDockTopPos"=dword:fffffffe
+"MRUDockRightPos"=dword:000001b8
+"MRUDockBottomPos"=dword:0000001e
 "MRUFloatStyle"=dword:00002000
-"MRUFloatXPos"=dword:000000dc
-"MRUFloatYPos"=dword:0000013d
+"MRUFloatXPos"=dword:000000b0
+"MRUFloatYPos"=dword:000000ee
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar2]
 "BarID"=dword:0000e804
@@ -47,12 +45,12 @@ DefaultState = r"""
 "Docking"=dword:00000001
 "MRUDockID"=dword:00000000
 "MRUDockLeftPos"=dword:fffffffe
-"MRUDockTopPos"=dword:0000001c
+"MRUDockTopPos"=dword:00000015
 "MRUDockRightPos"=dword:000000f0
-"MRUDockBottomPos"=dword:0000003c
+"MRUDockBottomPos"=dword:00000035
 "MRUFloatStyle"=dword:00002000
-"MRUFloatXPos"=dword:00000106
-"MRUFloatYPos"=dword:00000148
+"MRUFloatXPos"=dword:000000d2
+"MRUFloatYPos"=dword:000000f6
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar3]
 "BarID"=dword:0000e800
@@ -65,29 +63,29 @@ DefaultState = r"""
 "MRUDockRightPos"=dword:000000fc
 "MRUDockBottomPos"=dword:0000001e
 "MRUFloatStyle"=dword:00002004
-"MRUFloatXPos"=dword:80000000
+"MRUFloatXPos"=dword:9999999a
 "MRUFloatYPos"=dword:00000000
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar4]
 "BarID"=dword:0000e805
-"XPos"=dword:000000fa
+"XPos"=dword:000001b6
 "YPos"=dword:fffffffe
 "Docking"=dword:00000001
 "MRUDockID"=dword:0000e81b
-"MRUDockLeftPos"=dword:000000fa
+"MRUDockLeftPos"=dword:000001b6
 "MRUDockTopPos"=dword:fffffffe
-"MRUDockRightPos"=dword:0000015a
-"MRUDockBottomPos"=dword:0000001e
+"MRUDockRightPos"=dword:00000216
+"MRUDockBottomPos"=dword:0000001d
 "MRUFloatStyle"=dword:00002000
-"MRUFloatXPos"=dword:000002d3
-"MRUFloatYPos"=dword:000000df
+"MRUFloatXPos"=dword:000001ba
+"MRUFloatYPos"=dword:00000113
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar5]
 "BarID"=dword:0000e81f
 "Horz"=dword:00000001
 "Floating"=dword:00000001
-"XPos"=dword:0000010a
-"YPos"=dword:0000015c
+"XPos"=dword:000000d5
+"YPos"=dword:00000105
 "Bars"=dword:00000003
 "Bar#0"=dword:00000000
 "Bar#1"=dword:0000e804
@@ -127,9 +125,9 @@ DefaultState = r"""
 "Bar#2"=dword:00000000
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Summary]
-"Bars"=dword:00000007
-"ScreenCX"=dword:00000500
-"ScreenCY"=dword:00000400
+"Bars"=dword:00000006
+"ScreenCX"=dword:00000400
+"ScreenCY"=dword:00000300
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\ToolbarDefault-Bar0]
 "BarID"=dword:0000e801
@@ -146,18 +144,20 @@ DefaultState = r"""
 "MRUDockBottomPos"=dword:0000001e
 "MRUFloatStyle"=dword:00002004
 "MRUFloatXPos"=dword:80000000
-"MRUFloatYPos"=dword:000003e0
+"MRUFloatYPos"=dword:000002e0
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\ToolbarDefault-Bar2]
 "BarID"=dword:0000e81b
-"Bars"=dword:00000003
+"Bars"=dword:00000005
 "Bar#0"=dword:00000000
-"Bar#1"=dword:0000e800
+"Bar#1"=dword:00000000
 "Bar#2"=dword:00000000
+"Bar#3"=dword:0000e800
+"Bar#4"=dword:00000000
 
 [HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\ToolbarDefault-Summary]
 "Bars"=dword:00000003
-"ScreenCX"=dword:00000500
-"ScreenCY"=dword:00000400
+"ScreenCX"=dword:00000400
+"ScreenCY"=dword:00000300
 
 """ % {'registryname': registryname, 'registrykey': registrykey}
