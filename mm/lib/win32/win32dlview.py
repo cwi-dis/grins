@@ -28,7 +28,6 @@ import usercmd, usercmdui, wndusercmd
 
 # draw box imports
 import win32dialog
-from DrawTk import DrawLayer, DrawRect
 from win32mu import Point, Rect
 
 # base classes
@@ -37,7 +36,6 @@ import win32window
 	
 # mixins
 import DropTarget
-import DrawTk
 
 class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTarget):
 	def __init__(self, doc):

@@ -1624,7 +1624,7 @@ class LayoutScale:
 ##################################
 # LayoutPage
 import win32window
-import _PlayerView
+import winlayout
 import appcon, sysmetrics
 import string
 
@@ -1683,19 +1683,13 @@ class LayoutPage(AttrPage,win32window.Window):
 			pass #self._layoutctrl.exit_create_box()
 
 	def createLayoutCtrl(self):
-		v=_PlayerView._PlayerView(docview.Document(docview.DocTemplate()))
-		v.createWindow(self)
+		v = winlayout.LayoutOsWnd()
 		x,y,w,h=self.getboundingbox()
 		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
 		dh=2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
 		rc=(self._layoutpos[0],self._layoutpos[1],w+dw,h+dh)
-		v.init(rc,'Untitled',units=UNIT_PXL)
-		v.SetWindowPos(self.GetSafeHwnd(),rc,
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
-		v.OnInitialUpdate()
-		v.ShowWindow(win32con.SW_SHOW)
-		v.UpdateWindow()	
-		self.init_tk(v)
+		v.createWindow(self, rc, (0,0,0))
+		# self.init_tk(v)
 		return v
 	
 	def init_tk(self, v):
@@ -4258,4 +4252,4 @@ class AttrEditForm(GenFormView):
 		if self._tid:
 			import __main__
 			__main__.toplevel.canceltimer(self._tid)
- 
+ 

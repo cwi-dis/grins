@@ -685,6 +685,9 @@ class LayoutWndContext:
 		self.paintOn(dc)
 		dc.SelectObjectFromHandle(hf)
 	
+	def paintOn(self, dc):
+		pass
+
 	def getClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn(self._canvas)
