@@ -525,8 +525,11 @@ class TopLevel(ViewDialog, BasicDialog):
 	def is_document(self, filename):
 		import posix
 
-		ourdata = posix.stat(self.filename)
-		hisdata = posix.stat(filename)
+		try:
+			ourdata = posix.stat(self.filename)
+			hisdata = posix.stat(filename)
+		except posix.error:
+			return 0
 		return (ourdata == hisdata)
 	#
 	def _getlocalexternalanchors(self):
