@@ -141,6 +141,7 @@ class SMILHtmlTimeWriter(SMIL):
 		self.calclayoutnames(node)
 		
 		self.transition2name = {}
+		self.name2transition = {}
 		self.calctransitionnames(node)
 
 		self.ch2name = {}
@@ -499,7 +500,7 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + 'filter:'
 			
 			if transIn:
-				td = transitions.get(transIn)
+				td = transitions.get(self.name2transition[transIn])
 				if not td:
 					trtype = 'barWipe'
 					subtype = None
@@ -518,7 +519,7 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + trans
 
 			if transOut:
-				td = transitions.get(transOut)
+				td = transitions.get(self.name2transition[transOut])
 				if not td:
 					trtype = 'barWipe'
 					subtype = None
@@ -915,6 +916,7 @@ class SMILHtmlTimeWriter(SMIL):
 				name = nn
 			self.ids_used[name] = 1
 			self.transition2name[transition] = name
+			self.name2transition[name] = transition
 
 	def calcnames1(self, node):
 		"""Calculate unique names for nodes; first pass"""
@@ -1230,22 +1232,3 @@ def TransitionFactory(trtype, subtype):
 		return TRANSITIONDICT[(trtype, None)]
 
 	return defaultTrans
-
-#
-#########################
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
- 
- 
