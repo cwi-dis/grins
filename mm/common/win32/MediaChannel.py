@@ -47,6 +47,8 @@ WM_REDRAW=win32con.WM_USER+102
 # generic wnd for implementing notification mechanism
 from windowinterface import genericwnd
 
+debug = 0
+
 class MediaChannel:
 	def __init__(self):
 		# DirectShow Graph builder
@@ -206,7 +208,7 @@ class MediaChannel:
 				self._playBuilder.Run()
 				return
 			# no more loops
-			self.__freeze()
+			self._freeze()
 			self.__playdone=1
 			# if event wait scheduler
 			if self.__qid is not None:return
@@ -217,6 +219,8 @@ class MediaChannel:
 		self._playBuilder.SetPosition(0)
 		self._playBuilder.Run()
 
+	def _freeze(self):
+		pass
 
 ############################### 
 # ui delays management

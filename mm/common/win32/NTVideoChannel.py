@@ -130,7 +130,7 @@ class VideoChannel(ChannelWindowAsync,MediaChannel.MediaChannel):
 
 ############################# unused stuff but keep it for now
 	# Make a copy of frame and keep it until stopplay is called
-	def __freeze(self):
+	def _freeze(self):
 		return # bmp not used
 		import win32mu,win32api
 		if not hasattr(self,'_bmp'):self._bmp=None
