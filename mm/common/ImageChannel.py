@@ -79,7 +79,7 @@ class ImageChannel(ChannelWindow):
 			b = self.armed_display.newbutton((x, y, w, h))
 			b.hiwidth(3)
 			b.hicolor(hicolor)
-			self.setanchor(a[A_ID], atype, b)
+			self.setanchor(a[A_ID], atype, b, a[A_TIMES])
 		return 1
 
 	def defanchor(self, node, anchor, cb):
@@ -109,7 +109,7 @@ class ImageChannel(ChannelWindow):
 		self.syncarm = save_syncarm
 		self.syncplay = save_syncplay
 		self._anchor = anchor
-		box = anchor[2]
+		box = anchor[A_ARGS]
 		self._anchor_cb = cb
 		msg = 'Draw anchor in ' + self._name + '.'
 		if box == []:
@@ -136,7 +136,7 @@ class ImageChannel(ChannelWindow):
 			y = (box[1] - self._arm_imbox[1]) / self._arm_imbox[3]
 			w = box[2] / self._arm_imbox[2]
 			h = box[3] / self._arm_imbox[3]
-			arg = (self._anchor[0], self._anchor[1], [x, y, w, h])
+			arg = (self._anchor[0], self._anchor[1], [x, y, w, h], self._anchor[3])
 		else:
 			arg = self._anchor
 		apply(self._anchor_cb, (arg,))
