@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content="  A'DAM FACADES - HERENGRACHT "/>
+    <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
+    <layout>
+      <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="600" height="400"/>
+      <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
+      <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
+      <region id="image2" title="image2" left="37%" top="13%" width="46%" height="80%"/>
+      <region id="image3" title="image3" left="35%" top="13%" width="38%" height="80%"/>
+      <region id="image4" title="image4" left="30%" top="17%" width="38%" height="80%" fit="meet"/>
+    </layout>
+  </head>
+  <body>
+
+<switch>
+        <seq id="HERENGRACHT_stroll-high" system-bitrate="28800">
+          <img id="map" region="image1" src="1map.gif" dur="3s"/>
+          <img id="herengracht_168" region="image2" src="1h168.gif" dur="3s"/>
+          <img id="herengracht_218" region="image3" src="1h218.gif" dur="3s"/>
+          <img id="herengracht_284" region="image2" src="1h284.gif" dur="3s"/>
+          <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="indefinite"/>
+        </seq>
+        <seq id="HERENGRACHT_stroll-low" system-bitrate="14400">
+          <img id="map-l" region="image1" src="map.gif" dur="3s"/>
+          <img id="herengracht_168-l" region="image2" src="h168.gif" dur="3s"/>
+          <img id="herengracht_218-l" region="image4" src="h218.gif" dur="3s"/>
+          <img id="herengracht_284-l" region="image2" src="h284.gif" dur="3s"/>
+          <text type="text/plain" id="Credits-l" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="indefinite"/>
+        </seq>
+</switch>
+  </body>
+</smil>

@@ -9,8 +9,8 @@
       <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="600" height="400"/>
       <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
       <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
-      <region id="image2" title="image2" left="44%" top="10%" width="46%" height="80%"/>
-      <region id="image3" title="image3" left="38%" top="15%" width="38%" height="80%" fit="meet"/>
+      <region id="image2" title="image2" left="43%" top="10%" width="46%" height="80%"/>
+      <region id="image3" title="image3" left="40%" top="10%" width="38%" height="80%"/>
       <region id="image4" title="image4" left="75" top="1%" width="450" height="25"/>
       <region id="adress" title="adress" left="5%" top="80%" width="50%" height="5%" z-index="3"/>
       <region id="year" title="year" left="77%" top="80%" width="25%" height="5%" z-index="3"/>
@@ -28,10 +28,10 @@
 
         <seq id="HERENGRACHT_stroll">
 
-        <img id="map" region="image1" src="map.gif" dur="5s"/>
+        <img id="map" region="image1" src="1map.gif" dur="5s"/>
 
          <par id="herengracht_168">      
-          <img id="herengracht_168-image" region="image2" src="h168.gif"/>
+          <img id="herengracht_168-image" region="image2" src="1h168.gif"/>
           <text type="text/plain" id="herengracht_168-adress" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
           <text type="text/plain" id="herengracht_168-year" region="year" src="data:,ANNO%201638" dur="5.521s"/>
           <audio id="herengracht_168-sound" region="sound" src="168.au"/>
@@ -40,7 +40,7 @@
 
          <par id="herengracht_218">
 
-          <img id="herengracht_218-image" region="image3" src="h218.gif"/>
+          <img id="herengracht_218-image" region="image3" src="1h218.gif"/>
           <text type="text/plain" id="herengracht_218-adress" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
           <text type="text/plain" id="herengracht_218-year" region="year" src="data:,ANNO%201616" dur="8.613s"/>
           <audio id="herengracht_218-sound" region="sound" src="218.au"/>
@@ -48,7 +48,7 @@
          </par>
 
          <par id="herengracht_284">
-          <img id="herengracht_284-image" region="image2" src="h284.gif"/>
+          <img id="herengracht_284-image" region="image2" src="1h284.gif"/>
           <text type="text/plain" id="herengracht_284-adress" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
           <text type="text/plain" id="herengracht_284-year" region="year" src="data:,ANNO%201728" dur="5.604s"/>
           <audio id="herengracht_284-sound" region="sound" src="284.au"/>

@@ -9,39 +9,32 @@
       <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="600" height="400"/>
       <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
       <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
-      <region id="image2" title="image2" left="37%" top="10%" width="46%" height="80%"/>
-      <region id="image3" title="image3" left="30%" top="17%" width="38%" height="80%" fit="meet"/>
+      <region id="image2" title="image2" left="37%" top="13%" width="46%" height="80%"/>
+      <region id="image3" title="image3" left="35%" top="13%" width="38%" height="80%"/>
       <region id="image4" title="image4" left="75" top="1%" width="450" height="25"/>
-      <region id="sound" title="sound"/>
-    </layout>
+      <region id="image5" title="image5" left="30%" top="17%" width="38%" height="80%" fit="meet"/>
+   </layout>
   </head>
   <body>
+
     <par id="HERENGRACHT">
       <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
         <img id="stroll" region="image4" src="stroll.gif"/>
 
-
-
-        <seq id="HERENGRACHT_stroll">
-
-        <img id="map" region="image1" src="map.gif" dur="5s"/>
-
-         <par id="herengracht_168">      
-          <img id="herengracht_168-image" region="image2" src="h168.gif"/>
-          <audio id="herengracht_168-sound" region="sound" src="168.au"/>
-         </par>
-
-         <par id="herengracht_218">
-          <img id="herengracht_218-image" region="image3" src="h218.gif"/>
-          <audio id="herengracht_218-sound" region="sound" src="218.au"/>
-         </par>
-
-         <par id="herengracht_284">
-          <img id="herengracht_284-image" region="image2" src="h284.gif"/>
-          <audio id="herengracht_284-sound" region="sound" src="284.au"/>
-         </par>
-
-        </seq>
+<switch>
+        <seq id="HERENGRACHT_stroll-high" system-bitrate="28800">
+        <img id="map" region="image1" src="1map.gif" dur="5s"/>
+          <img id="herengracht_168-image" region="image2" src="1h168.gif" dur="5s"/>
+          <img id="herengracht_218-image" region="image3" src="1h218.gif" dur="5s"/>
+          <img id="herengracht_284-image" region="image2" src="1h284.gif" dur="5s"/>
+      </seq>
+        <seq id="HERENGRACHT_stroll-low" system-bitrate="14400">
+        <img id="map-l" region="image1" src="map.gif" dur="5s"/>
+          <img id="herengracht_168-image-l" region="image2" src="h168.gif" dur="5s"/>
+          <img id="herengracht_218-image-l" region="image5" src="h218.gif" dur="5s"/>
+          <img id="herengracht_284-image-l" region="image2" src="h284.gif" dur="5s"/>
+      </seq>
+</switch>
     </par>
       <text type="text/plain" id="Credits1" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="10s"/>
   </body>
