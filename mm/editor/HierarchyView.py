@@ -241,6 +241,11 @@ class HierarchyView(HierarchyViewDialog):
 	def dropfile(self, dummy, window, event, params):
 		print 'HVIEW DROP', window, event, params
 		x, y, filename = params
+		self.select(x, y)
+		if self.focusobj:
+			self.focusobj.select()
+			self.focusobj.changefile(filename)
+
 
 	#################################################
 	# Edit manager interface (as dependent client)  #
@@ -983,6 +988,16 @@ class Object:
 		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
+
+	def changefile(self,file):
+		self.mother.toplevel.setwaiting()
+		try:
+			import NodeInfoHelper
+			h=NodeInfoHelper.NodeInfoHelper(self.mother.toplevel, self.node,0)
+			h.browserfile_callback(file)
+			h.ok_callback()
+		except:
+			pass
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
