@@ -550,7 +550,7 @@ class RegionNode(Node):
 					self.width = value
 					self._onChangeRawValue('width',self.width)
 				if type(self.width) != type(None) and type(self.right) != type(None):
-					if type(left) == type(None):
+					if type(self.left) == type(None):
 						if type(self.right) is type(0.0):
 							self.right = float(self.right-offset)/self.container.pxwidth
 							self._onChangeRawValue('right',self.right)
