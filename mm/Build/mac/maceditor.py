@@ -28,6 +28,7 @@ import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
+	Res.OpenResFile(':pro.rsrc')
 	Res.OpenResFile(':editor.rsrc')
 	Res.OpenResFile(':playercontrols.rsrc')
 	Res.OpenResFile(':common.rsrc')
