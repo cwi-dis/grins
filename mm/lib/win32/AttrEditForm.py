@@ -781,7 +781,6 @@ class AttrPage(dialog.PropertyPage):
 		self._initdialog=None
 		self._attrinfo=components.Static(self,grinsRC.IDC_ATTR_INFO)
 		
-	# call it after adding attributes for this page
 	def do_init(self):
 		id=self.getpageresid()
 		self.createctrls()
@@ -853,19 +852,17 @@ class AttrPage(dialog.PropertyPage):
 class SingleAttrPage(AttrPage):
 	def __init__(self,form,attr):
 		AttrPage.__init__(self,form)
-		self._attr=attr
-		self._title=self._attr.getlabel()
+		self._al=[attr]
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		l=self._cd.values()
-		for ctrl in l:
-			ctrl.OnInitCtrl()
-			ctrl.sethelp()
+		ctrl=self._cd[self._al[0]]
+		ctrl.OnInitCtrl()
+		ctrl.sethelp()
 
 	def createctrls(self):
-		# for each attr create a ctrl
-		a=self._attr
+		a=self._al[0]
+		self._title=a.getlabel()
 		t = a.gettype()
 		if SingleAttrPage.ctrlmap.has_key(t):
 			self._cd[a] = SingleAttrPage.ctrlmap[t][0](self,a,SingleAttrPage.ctrlmap[t][1])
@@ -873,7 +870,7 @@ class SingleAttrPage(AttrPage):
 			self._cd[a] = SingleAttrPage.ctrlmap['string'][0](self,a,SingleAttrPage.ctrlmap['string'][1])
 
 	def getpageresid(self):
-		a=self._attr
+		a=self._al[0]
 		t = a.gettype()
 		if SingleAttrPage.ctrlmap.has_key(t):
 			return SingleAttrPage.idmap[t]
@@ -890,6 +887,45 @@ class SingleAttrPage(AttrPage):
 		'string':grinsRC.IDD_EDITSTRINGATTR1}
 
 ##################################
+
+import sysmetrics
+
+# Layout context class (helper)
+class ScreenLayoutContext:
+	def __init__(self):
+		self._units=appcon.UNIT_PXL
+
+		sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+		self._aspect=sw/float(sh)
+
+		self._ymax=190
+		self._xmax=int(self._ymax*self._aspect)
+
+		self._xscale=sw/float(self._xmax)
+		self._yscale=sh/float(self._ymax)
+
+	def getboundingbox(self):
+		return (0,0,self._xmax,self._ymax)
+	def getxscale(self):
+		return self._xscale
+	def getyscale(self):
+		return self._yscale
+	def getunits(self):
+		return self._units
+
+	def fromlayout(self,box):
+		if not box: return box
+		x=self._xscale
+		y=self._yscale
+		return int(box[0]*x+0.5),int(box[1]*y+0.5),int(box[2]*x+0.5),int(box[3]*y+0.5)
+
+	def tolayout(self,box):
+		if not box: return box
+		x=self._xscale
+		y=self._yscale
+		return (int(0.5+box[0]/x),int(0.5+box[1]/y),int(0.5+box[2]/x),int(0.5+box[3]/y))
+
+##################################
 # LayoutPage
 import cmifwnd, _CmifView
 import appcon, sysmetrics
@@ -901,26 +937,15 @@ import DrawTk
 #   works with reference the full screen instead of the parent layout
 
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
-	def __init__(self,form):
+	def __init__(self,form,layoutcontext):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
-		self._layoutctrl=None
-
-		# for now work only in pixels
-		self._units=appcon.UNIT_PXL
-
-		# try to preserve screen aspect ratio
-		# but should be layout channel 
-		sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
-		self._aspect=sw/float(sh)
-
-		self._ymax=190
-		self._xmax=int(self._ymax*self._aspect)
-
-		self._xscale=sw/float(self._xmax)
-		self._yscale=sh/float(self._ymax)
-
-		DrawTk.drawTk.SetScale(self._xscale,self._yscale)
+		if not layoutcontext:
+			self._layoutcontext=ScreenLayoutContext()
+		else:
+			self._layoutcontext=layoutcontext
+		lc=self._layoutcontext
+		DrawTk.drawTk.SetScale(lc.getxscale(),lc.getyscale())
 		
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
@@ -929,7 +954,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def createLayoutCtrl(self):
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
 		v.createWindow(self)
-		rc=(20,20,self._xmax,self._ymax)
+		x,y,w,h=self._layoutcontext.getboundingbox()
+		rc=(20,20,w,h)
 		v.init(rc)
 		v.SetWindowPos(self.GetSafeHwnd(),rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
@@ -941,28 +967,20 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def create_box(self,box):
 		# call create box against layout control but be modeless and cool!
 		self._layoutctrl.assert_not_in_create_box()
-		if box[2]==0 or box[3]==0:box=None	
+		if box and (box[2]==0 or box[3]==0):box=None	
 		modeless=1;cool=1
-		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+		self._layoutctrl.create_box('',self.update,box,self._layoutcontext.getunits(),modeless,cool)
 		
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
 	def update(self,*box):
-		if self._initdialog and box:
-			box=self.fromlayout(box)
-			#self._cd[self._attr].setvalue('%d %d %d %d' % box)
+		pass
 	
 	def fromlayout(self,box):
-		if not box: return
-		x=self._xscale
-		y=self._yscale
-		return int(box[0]*x+0.5),int(box[1]*y+0.5),int(box[2]*x+0.5),int(box[3]*y+0.5)
+		return self._layoutcontext.fromlayout(box)
 
 	def tolayout(self,box):
-		if not box: return
-		x=self._xscale
-		y=self._yscale
-		return (int(0.5+box[0]/x),int(0.5+box[1]/y),int(0.5+box[2]/x),int(0.5+box[3]/y))
+		return self._layoutcontext.tolayout(box)
 	
 	# not validating
 	def a2tuple(self,str):
@@ -977,23 +995,23 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		DrawTk.drawTk.RestoreState()
 
 class SingleAttrLayoutPage(LayoutPage):
-	def __init__(self,form,attr):
-		LayoutPage.__init__(self,form)
+	def __init__(self,form,attr,layoutcontext=None):
+		LayoutPage.__init__(self,form,layoutcontext)
 		self._al.append(attr)
-		self._attr=attr
 
 	# creation overrides
 	def getpageresid(self):
 		return grinsRC.IDD_EDITRECTATTR1
 	def createctrls(self):
-		self._title=self._attr.getlabel()
-		self._cd[self._attr]=StringCtrl(self,self._attr,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
+		a=self._al[0]
+		self._title=a.getlabel()
+		self._cd[a]=StringCtrl(self,self._al[0],(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
 
 	def OnInitDialog(self):
 		LayoutPage.OnInitDialog(self)
-
-		self._cd[self._attr].sethelp()
-		val=self._attr.getcurrent()
+		a=self._al[0]
+		self._cd[a].sethelp()
+		val=a.getcurrent()
 		if not val:
 			box=None
 		else:
@@ -1006,7 +1024,8 @@ class SingleAttrLayoutPage(LayoutPage):
 	def update(self,*box):
 		if self._initdialog and box:
 			box=self.fromlayout(box)
-			self._cd[self._attr].setvalue('%d %d %d %d' % box)
+			a=self._al[0]
+			self._cd[a].setvalue('%d %d %d %d' % box)
 
 	def setvalue(self, attr, val):
 		if self._initdialog:
@@ -1021,9 +1040,11 @@ class SingleAttrLayoutPage(LayoutPage):
 	def getvalue(self, attr):
 		return self._cd[attr].getvalue()
 
+
+
 class PosSizeLayoutPage(LayoutPage):
-	def __init__(self,form):
-		LayoutPage.__init__(self,form)
+	def __init__(self,form,layoutcontext=None):
+		LayoutPage.__init__(self,form,layoutcontext)
 		self._xy=None
 		self._wh=None
 
@@ -1064,8 +1085,6 @@ class PosSizeLayoutPage(LayoutPage):
 		return self._cd[attr].getvalue()
 
 
-
-		
 ############################
 #  goes in:  Attrgrs.py
 
