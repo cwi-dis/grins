@@ -192,7 +192,9 @@ class _DisplayList:
 			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
+			fgcolor = wid.GetWindowPort().rgbFgColor
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0, 0, 0))
 			if mask:
 				Qd.CopyMask(image[0], mask[0],
 					    wid.GetWindowPort().portBits,
@@ -204,6 +206,7 @@ class _DisplayList:
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
 				      None)
 			Qd.RGBBackColor(self._bgcolor)
+			Qd.RGBForeColor(fgcolor)
 		elif cmd == 'line':
 			color = entry[1]
 			points = entry[2]
