@@ -777,8 +777,8 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 		else:
 			extrafill = 1
 		if extrafill:
-			if colors.rcolors.has_key(val):
-				color = colors.rcolors[val]
+			if colors.rcolors.has_key(bgcolor):
+				color = colors.rcolors[bgcolor]
 			else:
 				color = '#%02x%02x%02x' % bgcolor
 			f.write('  <fill start="0" color="%s"/>\n' % color)
