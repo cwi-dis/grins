@@ -14,7 +14,7 @@ item: Global
   Log Pathname=%MAINDIR%\INSTALL.LOG
   Message Font=MS Sans Serif
   Font Size=8
-  Pages Modified=00010000110111000001001100000101
+  Pages Modified=00010000110111000001001100000111
   Extra Pages=00000000000000000000000010100010
   Disk Label=Default
   Disk Filename=SETUP
@@ -71,6 +71,23 @@ item: Install File
 end
 item: Set Variable
   Variable=FIND_DIRECTORY
+end
+item: Search for File
+  Variable=JAVA_RUNTIME
+  Pathname List=jaws.jar
+  Description=Searching for Java Runtime...
+  Flags=00000001
+end
+item: If/While Statement
+  Variable=JAVA_RUNTIME
+  Flags=00000001
+end
+item: Set Variable
+  Variable=JAVA_RUNTIME
+  Value=\ext
+  Flags=00000001
+end
+item: End Block
 end
 item: Check Configuration
   Flags=10000000
@@ -227,6 +244,7 @@ item: Remark
 end
 item: Set Variable
   Variable=COMPONENTS
+  Value=AB
   Flags=10000000
 end
 item: Remark
@@ -788,6 +806,244 @@ item: Custom Dialog Set
   end
 end
 item: Custom Dialog Set
+  Name=Destination Directory for GRiNS/Magpie Java Runtime
+  Display Variable=DISPLAY
+  item: Dialog
+    Title=Choose Destination Location for GRiNS/Magpie Java Runtime
+    Title French=Choisissez la localisation de destination
+    Title German=Zielpfad wählen
+    Title Portuguese=Escolher Local de Destino
+    Title Spanish=Elegir una localización de destino
+    Title Italian=Scegli Posizione di Destinazione
+    Title Danish=Vælg destinationsmappe
+    Title Dutch=Kies doellocatie
+    Title Norwegian=Velg målplassering
+    Title Swedish=Välj ställe för installationen
+    Width=280
+    Height=224
+    Font Name=Helv
+    Font Size=8
+    item: Push Button
+      Rectangle=172 185 214 199
+      Variable=DIRECTION
+      Value=N
+      Create Flags=01010000000000010000000000000001
+      Text=&Next >
+      Text French=&Suivant>
+      Text German=&Weiter>
+      Text Portuguese=&Próximo>
+      Text Spanish=&Siguiente >
+      Text Italian=&Avanti >
+      Text Danish=&Næste>
+      Text Dutch=&Volgende>
+      Text Norwegian=&Neste>
+      Text Swedish=&Nästa >
+    end
+    item: Push Button
+      Rectangle=130 185 172 199
+      Variable=DIRECTION
+      Value=B
+      Create Flags=01010000000000010000000000000000
+      Flags=0000000000000001
+      Text=< &Back
+      Text French=<&Retour
+      Text German=<&Zurück
+      Text Portuguese=<&Retornar
+      Text Spanish=<&Retroceder
+      Text Italian=< &Indietro
+      Text Danish=<&Tilbage
+      Text Dutch=<&Terug
+      Text Norwegian=<&Tilbake
+      Text Swedish=< &Tillbaka
+    end
+    item: Push Button
+      Rectangle=222 185 264 199
+      Action=3
+      Create Flags=01010000000000010000000000000000
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Annuller
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+    item: Static
+      Rectangle=9 177 263 178
+      Action=3
+      Create Flags=01010000000000000000000000000111
+    end
+    item: Static
+      Rectangle=90 10 260 122
+      Create Flags=01010000000000000000000000000000
+      Text=Setup will install the GRiNS/Magpie Java Runtime in the following folder.
+      Text=
+      Text=To install into a different folder, click Browse, and select another folder. 
+      Text=
+      Text=You can choose not to install the Java Runtime by deselecting it from the Select Components dialog later in this wizard.
+      Text French=%APPTITLE% va être installé dans le répertoire ci-dessous
+      Text French=
+      Text French=Pour l'installer dans un répertoire différent, cliquez sur Parcourir et sélectionnez un autre répertoire
+      Text French=
+      Text French=Vous pouvez choisir de ne pas installer %APPTITLE% en cliquant sur Annuler pour quitter l'Installation
+      Text German=Installation speichert %APPTITLE% im unten angegebenen Ordner:
+      Text German=
+      Text German=Zur Installation in einem anderen Ordner auf Blättern klicken und einen anderen Ordner wählen.
+      Text German=
+      Text German=Wenn Sie %APPTITLE% nicht installieren möchten, können Sie durch Klicken auf Abbrechen die Installation beenden.
+      Text Portuguese=Configuração instalará %APPTITLE% na seguinte pasta
+      Text Portuguese=
+      Text Portuguese=Para instalar numa pasta diferente, faça um clique sobre Procurar, e seleccione uma outra pasta.
+      Text Portuguese=
+      Text Portuguese=Pode escolher não instalar %APPTITLE% clicando no botão Cancelar para sair da Configuração
+      Text Spanish=El programa de Configuración instalará %APPTITLE% en la siguiente carpeta.
+      Text Spanish=
+      Text Spanish=Para instalar en una carpeta diferente, haga un clic en Visualizar, y seleccione otra carpeta.
+      Text Spanish=
+      Text Spanish=Puede elegir no instalar %APPTITLE% haciendo un clic en Cancelar para salir de Configuración.
+      Text Italian=Il programma di installazione installerà %APPTITLE% nella seguente cartella.
+      Text Italian=
+      Text Italian=Per effettuare l’installazione in una cartella diversa, fai clic su Sfoglia, e scegli un’altra cartella.
+      Text Italian=
+      Text Italian=Puoi scegliere di non installare %APPTITLE% facendo clic su Annulla per uscire dal programma di installazione
+      Text Danish=Installationsprogrammet installerer %APPTITLE% i denne mappe.
+      Text Danish=
+      Text Danish=Man installerer i en anden mappe ved at klikke på Browse og vælge en anden mappe.
+      Text Danish=
+      Text Danish=Man kan vælge ikke at installere %APPTITLE% ved at klikke på Slet og forlade installationsprogrammet.
+      Text Dutch=Het installatieprogramma installeert %APPTITLE% in de volgende directory.
+      Text Dutch=
+      Text Dutch=Als u het in een andere directory wilt installeren, klik dan op Bladeren en kies een andere locatie.
+      Text Dutch=
+      Text Dutch=U kunt ervoor kiezen om %APPTITLE% niet te installeren: klik op Annuleren om het installatieprogramma te verlaten.
+      Text Norwegian=Oppsett vil installere %APPTITLE% i følgende mappe.
+      Text Norwegian=
+      Text Norwegian=For å installere i en annen mappe, klikk Bla igjennom og velg en annen mappe.
+      Text Norwegian=
+      Text Norwegian=Du kan velge å ikke installere %APPTITLE% ved å velge Avbryt for å gå ut av Oppsett.
+      Text Swedish=Installationsprogrammet installerar %APPTITLE% i följande mapp.
+      Text Swedish=
+      Text Swedish=Om du vill att installationen ska göras i en annan mapp, klickar du på Bläddra och väljer en annan mapp.
+      Text Swedish=
+      Text Swedish=Du kan välja att inte installera %APPTITLE% genom att klicka på Avbryt för att lämna installationsprogrammet.
+    end
+    item: Static
+      Rectangle=90 134 260 162
+      Action=1
+      Create Flags=01010000000000000000000000000111
+      Text=Destination Folder
+      Text French=Répertoire de destination
+      Text German=Zielordner
+      Text Portuguese=Pasta de Destino
+      Text Spanish=Carpeta de Destino
+      Text Italian=Cartella di destinazione
+      Text Danish=Destinationsmappe
+      Text Dutch=Doeldirectory
+      Text Norwegian=Målmappe
+      Text Swedish=Destinationsmapp
+    end
+    item: Push Button
+      Rectangle=213 143 255 157
+      Variable=MAINDIR_SAVE
+      Value=%MAINDIR%
+      Destination Dialog=1
+      Action=2
+      Create Flags=01010000000000010000000000000000
+      Text=B&rowse...
+      Text French=P&arcourir
+      Text German=B&lättern...
+      Text Portuguese=P&rocurar
+      Text Spanish=V&isualizar...
+      Text Italian=Sfoglia...
+      Text Danish=&Gennemse...
+      Text Dutch=B&laderen...
+      Text Norwegian=Bla igjennom
+      Text Swedish=&Bläddra
+    end
+    item: Static
+      Rectangle=95 146 211 157
+      Destination Dialog=2
+      Create Flags=01010000000000000000000000000000
+      Text=%JAVA_RUNTIME%
+      Text French=%MAINDIR%
+      Text German=%MAINDIR%
+      Text Portuguese=%MAINDIR%
+      Text Spanish=%MAINDIR%
+      Text Italian=%MAINDIR%
+      Text Danish=%MAINDIR%
+      Text Dutch=%MAINDIR%
+      Text Norwegian=%MAINDIR%
+      Text Swedish=%MAINDIR%
+    end
+  end
+  item: Dialog
+    Title=Select Destination Directory
+    Title French=Choisissez le répertoire de destination
+    Title German=Zielverzeichnis wählen
+    Title Portuguese=Seleccionar Directório de Destino
+    Title Spanish=Seleccione el Directorio de Destino
+    Title Italian=Seleziona Directory di destinazione
+    Title Danish=Vælg Destinationsbibliotek
+    Title Dutch=Kies doeldirectory
+    Title Norwegian=Velg målkatalog
+    Title Swedish=Välj destinationskalatog
+    Width=221
+    Height=173
+    Font Name=Helv
+    Font Size=8
+    item: Listbox
+      Rectangle=5 2 160 149
+      Variable=MAINDIR
+      Create Flags=01010000100000010000000101000000
+      Flags=0000110000100010
+      Text=%MAINDIR%
+      Text French=%MAINDIR%
+      Text German=%MAINDIR%
+      Text Portuguese=%MAINDIR%
+      Text Spanish=%MAINDIR%
+      Text Italian=%MAINDIR%
+      Text Danish=%MAINDIR%
+      Text Dutch=%MAINDIR%
+      Text Norwegian=%MAINDIR%
+      Text Swedish=%MAINDIR%
+    end
+    item: Push Button
+      Rectangle=167 6 212 21
+      Create Flags=01010000000000010000000000000001
+      Text=OK
+      Text French=OK
+      Text German=OK
+      Text Portuguese=OK
+      Text Spanish=ACEPTAR
+      Text Italian=OK
+      Text Danish=OK
+      Text Dutch=OK
+      Text Norwegian=OK
+      Text Swedish=OK
+    end
+    item: Push Button
+      Rectangle=167 25 212 40
+      Variable=MAINDIR
+      Value=%MAINDIR_SAVE%
+      Create Flags=01010000000000010000000000000000
+      Flags=0000000000000001
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen 
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Slet
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+  end
+end
+item: Custom Dialog Set
   Name=Backup Replaced Files
   Display Variable=DISPLAY
   item: Dialog
@@ -1070,6 +1326,168 @@ item: Custom Dialog Set
   end
 end
 item: Custom Dialog Set
+  Name=Select Components
+  Display Variable=DISPLAY
+  Flags=00000001
+  item: Dialog
+    Title=Select Components 
+    Title French=Sélectionner les éléments
+    Title German=Komponenten auswählen
+    Title Portuguese=Seleccionar Componentes
+    Title Spanish=Seleccione los Componentes
+    Title Italian=Seleziona Componenti
+    Title Danish=Vælg komponenter
+    Title Dutch=Selecteer onderdelen
+    Title Norwegian=Velg komponenter
+    Title Swedish=Välj komponenter
+    Width=280
+    Height=224
+    Font Name=Helv
+    Font Size=8
+    item: Push Button
+      Rectangle=172 185 214 199
+      Variable=DIRECTION
+      Value=N
+      Create Flags=01010000000000010000000000000001
+      Text=&Next >
+      Text French=&Suivant>
+      Text German=&Weiter>
+      Text Portuguese=&Próximo>
+      Text Spanish=&Siguiente >
+      Text Italian=&Avanti >
+      Text Danish=&Næste>
+      Text Dutch=&Volgende>
+      Text Norwegian=&Neste>
+      Text Swedish=&Nästa >
+    end
+    item: Push Button
+      Rectangle=130 185 172 199
+      Variable=DIRECTION
+      Value=B
+      Create Flags=01010000000000010000000000000000
+      Text=< &Back
+      Text French=<&Retour
+      Text German=<&Zurück
+      Text Portuguese=<&Retornar
+      Text Spanish=<&Retroceder
+      Text Italian=< &Indietro
+      Text Danish=<&Tilbage
+      Text Dutch=<&Terug
+      Text Norwegian=<&Tilbake
+      Text Swedish=< &Tillbaka
+    end
+    item: Push Button
+      Rectangle=222 185 264 199
+      Action=3
+      Create Flags=01010000000000010000000000000000
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Annuller
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+    item: Static
+      Rectangle=9 177 263 178
+      Action=3
+      Create Flags=01010000000000000000000000000111
+    end
+    item: Static
+      Rectangle=205 156 253 166
+      Variable=COMPONENTS
+      Value=MAINDIR
+      Create Flags=01010000000000000000000000000010
+    end
+    item: Static
+      Rectangle=205 148 253 157
+      Variable=COMPONENTS
+      Create Flags=01010000000000000000000000000010
+    end
+    item: Static
+      Rectangle=95 147 184 158
+      Create Flags=01010000000000000000000000000000
+      Text=Disk Space Required:
+      Text French=Espace disque requis
+      Text German=Benötigter Festplattenspeicher:
+      Text Portuguese=Espaço de disco necessário:
+      Text Spanish=Espacio de Disco Requerido:
+      Text Italian=Spazio su disco richiesto:
+      Text Danish=Nødvendig diskplads:
+      Text Dutch=Vereiste hoeveelheid schijfruimte
+      Text Norwegian=Diskplass nødvendig:
+      Text Swedish=Erforderligt diskutrymme
+    end
+    item: Static
+      Rectangle=95 157 190 167
+      Create Flags=01010000000000000000000000000000
+      Text=Disk Space Remaining:
+      Text French=Espace disque disponible
+      Text German=Verbleibender Festplattenspeicher:
+      Text Portuguese=Espaço de disco restante:
+      Text Spanish=Espacio de Disco Remanente:
+      Text Italian=Spazio su disco rimanente:
+      Text Danish=Ledig diskplads:
+      Text Dutch=Resterende schijfruimte
+      Text Norwegian=Ledig diskplass:
+      Text Swedish=Återstående diskutrymme
+    end
+    item: Static
+      Rectangle=90 138 264 168
+      Action=1
+      Create Flags=01010000000000000000000000000111
+    end
+    item: Static
+      Rectangle=90 8 260 41
+      Create Flags=01010000000000000000000000000000
+      Text=In the options list below, select the checkboxes for the options that you would like to have installed.  The disk space fields reflect the requirements of the options you have selected.
+      Text French=Dans la liste d'options suivante, veuillez sélectionner les cases des options que vous désirez installer. Le champ d'espace disque indique les conditions requises pour les options choisies
+      Text German=Wählen Sie in der Optionenliste unten die Kontrollkästchen für diejenigen Optionen, die Sie installieren möchten. Die Speicherfelder zeigen die benötigte Speicherkapazität für die gewählten Optionen an.
+      Text Portuguese=Na lista de opções abaixo, seleccione as caixas de verificação para as opções que gostaria de ter instalado. Os campos de espaço de disco reflectem os requerimentos das opções que seleccionou.
+      Text Spanish=En la lista de opciones que se ofrece a continuación, seleccione las casillas de comprobación para las opciones que desea instalar. Los campos del espacio en el disco reflejan los requerimientos de las opciones que ha seleccionado.
+      Text Italian=Nell’elenco delle opzioni sotto, marca le caselle di controllo delle opzioni che vuoi installare. I campi dello spazio sul disco riflettono i requisiti delle opzioni selezionate.
+      Text Danish=Marker afkrydsningsfelterne for de komponenter, der skal installeres, på listen herunder. Diskpladsfelterne angiver pladskravene for de valgte komponenter.
+      Text Dutch=Kruis in de onderstaande lijst het vakje aan naast de opties die u wilt installeren. Achter elke optie staat de benodigde schijfruimte vermeld.
+      Text Norwegian=I listen over alternativer nedenfor, klikk i kontrollrutene for de alternativene du ønsker å installere. Diskplassfeltene gjenspeiler kravene for de alternativene du har valgt.
+      Text Swedish=Kryssa för i rutorna nedan vilka alternativ du vill få installerade. I diskutrymmesfälten anges utrymmesbehoven för de alternativ du väljer.
+    end
+    item: Listbox
+      Rectangle=90 42 263 133
+      Variable=COMPONENTS
+      Create Flags=01010000101000010000000101010001
+      Flags=0000010001000111
+      Text=GRiNS/Magpie Player
+      Text=Java Runtime Extension
+      Text=
+      Text French=GRiNS/Magpie Player
+      Text French=Java Runtime Extension
+      Text French=
+      Text German=GRiNS/Magpie Player
+      Text German=Java Runtime Extension
+      Text German=
+      Text Portuguese=%1%
+      Text Portuguese=
+      Text Spanish=GRiNS/Magpie Player
+      Text Spanish=Java Runtime Extension
+      Text Spanish=
+      Text Italian=GRiNS/Magpie Player
+      Text Italian=Java Runtime Extension
+      Text Italian=
+      Text Danish=%1%
+      Text Danish=
+      Text Dutch=%1%
+      Text Dutch=
+      Text Norwegian=%1%
+      Text Norwegian=
+      Text Swedish=%1%
+      Text Swedish=
+    end
+  end
+end
+item: Custom Dialog Set
   Name=Start Installation
   Display Variable=DISPLAY
   item: Dialog
@@ -1250,104 +1668,65 @@ end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Install File
+  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Destination=%MAINDIR%\WebPro32.ocx
+  Flags=0001001010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Destination=%MAINDIR%\wingdi.pyd
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
+  Destination=%MAINDIR%\win32ui.pyd
+  Flags=0000000010000010
+end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
 end
-item: Set Variable
-  Variable=INSTALLDLLS
-  Value=no
-end
-item: Check Configuration
-  Flags=10100000
-end
-item: Set Variable
-  Variable=INSTALLDLLS
-  Value=yes
-end
-item: End Block
-end
-item: Check Configuration
-  Flags=10111001
-end
-item: Set Variable
-  Variable=INSTALLDLLS
-  Value=yes
-end
-item: End Block
-end
-item: Check Configuration
-  Flags=11110110
-end
-item: Set Variable
-  Variable=INSTALLDLLS
-  Value=no
-end
-item: End Block
-end
-item: Check Configuration
-  Flags=11110010
-end
-item: Set Variable
-  Variable=INSTALLDLLS
-  Value=no
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=INSTALLDLLS
-  Value=yes
-end
-item: Set Variable
-  Variable=BACKUPDIR
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\olepro32.dll
+  Destination=%SYS32%\olepro32.dll
+  Flags=0001000010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\mfc42.dll
-  Destination=%SYS32%\mfc42.dll
-  Flags=0001001010000011
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcp60.dll
+  Destination=%SYS32%\msvcp60.dll
+  Flags=0000000010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt40.dll
-  Destination=%SYS32%\Msvcrt40.dll
-  Flags=0000001010000011
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt.dll
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcrt.dll
   Destination=%SYS32%\msvcrt.dll
-  Flags=0000001010000011
+  Flags=0000000010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcp60.dll
-  Destination=%SYS32%\Msvcp60.dll
-  Flags=0000001010000011
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcrt40.dll
+  Destination=%SYS32%\msvcrt40.dll
+  Flags=0000000010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\olepro32.dll
-  Destination=%SYS32%\Olepro32.dll
-  Flags=0001001010000011
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\mfc42.dll
+  Destination=%SYS32%\mfc42.dll
+  Flags=0001000010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\oleaut32.dll
-  Destination=%SYS32%\Oleaut32.dll
-  Flags=0001001010000011
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcirt.dll
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcirt.dll
   Destination=%SYS32%\msvcirt.dll
-  Flags=0000001010000011
+  Flags=0000000010000011
 end
-item: If/While Statement
-  Variable=DOBACKUP
-  Value=A
-end
-item: Set Variable
-  Variable=BACKUPDIR
-  Value=%BACKUP%
-end
-item: End Block
-end
-item: End Block
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\win32\vcredist\oleaut32.dll
+  Destination=%SYS32%\oleaut32.dll
+  Flags=0001000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
@@ -1419,25 +1798,94 @@ item: Install File
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
 end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: If/While Statement
+  Variable=JAVA_RUNTIME
+  Flags=00000001
+end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
-  Destination=%MAINDIR%\win32ui.pyd
+  Source=d:\ufs\mm\cmif\win32\Com\javaclient\bin\grinsp.jar
+  Destination=%JAVA_RUNTIME%\grinsp.jar
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
-  Destination=%MAINDIR%\wingdi.pyd
-  Flags=0000000010000011
+  Source=d:\ufs\mm\cmif\win32\Com\javaclient\bin\grinsp.dll
+  Destination=%JAVA_RUNTIME%\grinsp.dll
+  Flags=0000000010000010
+end
+item: End Block
+end
+item: End Block
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=no
+end
+item: Check Configuration
+  Flags=10100000
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=yes
+end
+item: End Block
+end
+item: Check Configuration
+  Flags=10111001
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=yes
+end
+item: End Block
+end
+item: Check Configuration
+  Flags=11110110
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=no
+end
+item: End Block
+end
+item: Check Configuration
+  Flags=11110010
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=no
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=INSTALLDLLS
+  Value=yes
+end
+item: Set Variable
+  Variable=BACKUPDIR
+end
+item: If/While Statement
+  Variable=DOBACKUP
+  Value=A
+end
+item: Set Variable
+  Variable=BACKUPDIR
+  Value=%BACKUP%
+end
+item: End Block
+end
+item: End Block
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
-end
-item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
-  Destination=%MAINDIR%\WebPro32.ocx
-  Flags=0001001010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\BugReportForm.txt
