@@ -166,11 +166,11 @@ def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, copyFiles = 0, evallicens
 				ofp.close()
 	except FtpWriter.all_errors, msg:
 		from windowinterface import showmessage
-		showmessage('Mediaserver upload failed:\n' + msg, mtype = 'error')
+		showmessage('Mediaserver upload failed: %s'%(msg,), mtype = 'error')
 		return
 	except IOError, arg:
 		from windowinterface import showmessage
-		showmessage('Mediaserver upload failed:\n' + msg, mtype = 'error')
+		showmessage('Mediaserver upload failed: %s'%(msg,), mtype = 'error')
 		return
 
 import StringIO
