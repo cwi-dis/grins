@@ -640,7 +640,7 @@ class TreeManager(IconMixin.ViewMixin):
 						0, #state mask
 						None, #lParam
 						parent, # parent
-						commctrl.TVI_FIRST)
+						commctrl.TVI_LAST)
 		return item
 
 	def updateNode(self, item, text, imageName, selectedImageName):
