@@ -86,7 +86,7 @@ class SoundChannel(ChannelAsync):
 			print 'Audio arm: len(data)', len(self.arm_data)
 		return 1
 		
-	def _playsome(self, *dummy):
+	def _playsome(self):
 		if self._paused or not self.play_fp or not self.__port:
 			if debug:
 				print 'not playing some...', self._paused, \
@@ -106,6 +106,10 @@ class SoundChannel(ChannelAsync):
 		else:
 			samples_left = self.__port.getfilled()
 			time_left = samples_left/float(self.play_framerate)
+			if debug:
+				print 'SoundChannel: playsome end', samples_left, time_left
+			if time_left == 0:
+				time_left = 0.01
 			self._timer_id = windowinterface.settimer(time_left, (self.myplaydone, (0,)))
 			
 	def myplaydone(self, arg):
@@ -123,6 +127,10 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: play', node
 		SoundChannel.__playing = SoundChannel.__playing + 1
 		if self.__playing > 1:
+			import audioconvert
+			self.arm_fp = audioconvert.convert(self.arm_fp,
+						(self.__port.getformat(),),
+						(self.__port.getframerate(),))
 			print 'Warning: %d sound channels active' % SoundChannel.__playing
 		self.play_fp = self.arm_fp
 		self.play_readsize = self.arm_readsize
