@@ -1841,14 +1841,6 @@ class NodeBox(GO, NodeBoxCommand):
 			SYNCARCS(callback = self.selsyncarc),
 			]
 
-		# win32++
-		import sys
-		if sys.platform == 'win32':
-			self.commandlist = self.commandlist + [
-				CONTENT_EDIT_REG(callback = (self._editcall, ())),
-				CONTENT_OPEN_REG(callback = (self._opencall, ())),
-				]
-
 		self.arcmenu = arcmenu = []
 		if mother.showarcs:
 			for arc in MMAttrdefs.getattr(node, 'synctolist'):
@@ -2119,15 +2111,6 @@ class NodeBox(GO, NodeBoxCommand):
 		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
-
-	def _editcall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeEdit
-		NodeEdit._showeditor(self.node)
-	def _opencall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeEdit
-		NodeEdit._showviewer(self.node)
 
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
