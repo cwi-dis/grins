@@ -36,6 +36,7 @@ GRiNSns = 'http://www.oratrix.com/'
 RP9ns = 'http://features.real.com/2001/SMIL20/Extensions'
 QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
 PSS4ns = 'http://www.3gpp.org/SMIL20/PSS4/'
+PSS5ns = 'http://www.3gpp.org/SMIL20/PSS5/'
 
 # list elements here that are not valid in all namespaces with the
 # namespaces they are valid in
@@ -968,17 +969,3 @@ class SMIL:
 	del __layouts, __layout
 	del __animate_elements
 	del __I18n, __basicTiming, __Timing, __Core, __Test
-
-extensions = {
-	# SMIL 1.0
-	'http://www.w3.org/TR/REC-smil/': 1,
-	# 3GPP PSS4
-	PSS4ns: 1,
-}
-
-from settings import MODULES
-for _k, _v in MODULES.items():
-	for _ns in SMIL2ns:
-		if _ns[-1] == '/':
-			extensions[_ns + _k] = _v
-del _k, _v, _ns
