@@ -3,14 +3,14 @@ __version__ = "$Id$"
 # Cache info about sound files
 
 import MMurl
+import urllib
 
 # Used to get full info
 def getfullinfo(url):
 	url = MMurl.canonURL(url)
+	url = urllib.unquote(url)
 	import windowinterface
-	#return nframes, framerate, markers
 	duration = windowinterface.GetMediaDuration(url)
-##	print 'SOUNDDURATION', url, duration
 	if duration < 0:
 		duration = 0
 	bandwidth = 1
