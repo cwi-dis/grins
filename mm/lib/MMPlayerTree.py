@@ -134,8 +134,8 @@ def dump(node, mini, f, targets):
 			node.attrdict[name] = MMAttrdefs.getattr(node, name)
 			newattrs.append(name)
 	parent = node.parent
-	if not parent or parent.type == 'bag':
-		if parent:
+	if parent is None or parent.type == 'bag':
+		if parent is not None:
 			node.attrdict['bag'] = parent.uid
 		else:
 			node.attrdict['bag'] = None
@@ -168,12 +168,6 @@ def dump(node, mini, f, targets):
 		node.attrdict['sr_no'] = len(srrecs) # index of entry in list
 		newattrs.append('sr_no')
 		srrecs.append((sractions, newevents, prearmlists))
-##		node.attrdict['sractions'] = sractions
-##		node.attrdict['srevents'] = newevents
-##		node.attrdict['prearmlists'] = prearmlists
-##		newattrs.append('sractions')
-##		newattrs.append('srevents')
-##		newattrs.append('prearmlists')
 	try:
 		node.attrdict['t0'] = node.t0
 		node.attrdict['t1'] = node.t1
@@ -204,7 +198,7 @@ def load(f, context):
 			del attrdict['channels']
 	else:
 		node.values = extra
-	node.mini = mapuid(context, attrdict['mini'])
+	node.mini = context.uidmap[attrdict['mini']]
 	del attrdict['mini']
 	try:
 		node.t0 = attrdict['t0']
@@ -220,13 +214,14 @@ def load(f, context):
 	else:
 		# node is a mini document
 		if bag:
-			node.bag = mapuid(context, bag)
+			node.bag = context.uidmap[bag]
 		else:
 			node.bag = None
 		del attrdict['bag']
 	try:
 		node.sr_no = attrdict['sr_no']
 	except KeyError:
+		# backward compatibility actions
 		try:
 			sractions = attrdict['sractions']
 			srevents = attrdict['srevents']
