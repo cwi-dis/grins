@@ -204,7 +204,7 @@ EngineObject::CreateInstance(PyObject *self, PyObject *args)
 	EngineObject::inst= (EngineObject*) RMAObject::make(EngineObject::type);
 	if (!CreateEngine()) {
 		PyErr_SetString(PyExc_IOError, "CreateEngine failed");
-		Py_DECREF(EngineObject::inst);
+		Py_XDECREF(EngineObject::inst);
 		EngineObject::inst = NULL;
 		return NULL;
 	}
