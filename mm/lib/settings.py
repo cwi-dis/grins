@@ -119,7 +119,8 @@ elif os.name == 'mac':
 	PREFSFILENAME=fss.as_pathname()
 else:
 	default_settings['html_control'] = 0	# which HTML control to use
-	PREFSFILENAME='grprefs.txt'
+	import cmif
+	PREFSFILENAME=cmif.findfile('grprefs.txt')
 
 def restore():
 	global user_settings
