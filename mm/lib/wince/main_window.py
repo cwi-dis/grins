@@ -389,8 +389,14 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			try:
 				dict = parseskin.parsegskin(MMurl.urlopen(skin))
 				filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['image']))[0]
+			except parsesking.error, msg:
+				settings.set('skin', '')
+				from windowinterface import showmessage
+				showmessage(msg)
 			except:
 				settings.set('skin', '')
+				from windowinterface import showmessage
+				showmessage('Error reading skin')
 			else:
 				self.HideMenu()
 				self._menu_height = 0
