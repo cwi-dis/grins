@@ -757,3 +757,29 @@ class EditMgr:
 		# destroy the root only if it's not the current root
 		if root is not self.root:
 			self.toplevel.destroyRoot(root)
+
+	#
+	# parsestatus operations
+	#
+	def delparsestatus(self, parsestatus):
+		self.addstep('delparsestatus', parsestatus)
+		if self.context != None:
+			self.context.setParseErrors(None)
+			
+	def addparsestatus(self, parsestatus):
+		self.addstep('addparsestatus', parsestatus)
+		if self.context != None:
+			self.context.setParseErrors(parsestatus)
+			
+	def undo_delparsestatus(self, parsestatus):
+		self.addparsestatus(parsestatus)
+
+	def undo_addparsestatus(self, parsestatus):
+		self.delparsestatus(parsestatus)
+
+	def clean_delparsestatus(self, parsestatus):
+		pass		
+
+	def clean_addparsestatus(self, parsestatus):
+		if self.context != None:
+			self.context.setParseErrors(None)
