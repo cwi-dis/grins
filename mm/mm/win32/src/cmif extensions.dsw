@@ -1,0 +1,515 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "All cmif extensions"=".\All cmif extensions.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name win32api
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32trace
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32ui
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name pythonwin
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GRiNSRes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name rma
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name producer
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgformat
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgcolormap
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgop
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgjpeg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name dshow
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name gear32sd
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ddraw
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wmfapi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinspapi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name dsound
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wingdi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Qt
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name vaudpipe
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name vidpipe
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinsp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "GRiNS Player SMIL2"="..\..\Build\win32\GRiNS Player for SMIL 2.0\GRiNS Player for SMIL 2.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "GRiNS SMIL Boston"="..\..\Build\win32\GRiNS Editor for SMIL 2.0\GRiNS Editor for SMIL 2.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "GRiNSRes"=".\GRiNSRes\GRiNSRes.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name win32ui
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "GRiNSedSMIL2Real"="..\..\Build\win32\GRiNSedSMIL2Real\GRiNSedSMIL2Real.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "PyWinTypes"="..\..\..\python\Extensions\win32\PyWinTypes.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name _socket
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Qt"="..\QT\frommacpython\Qt.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "_socket"="..\..\..\python\PCbuild\_socket.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "cmif"="..\..\cmif.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ddraw"="..\DXMedia\ddraw\ddraw.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "dshow"="..\..\mmpython\wmsdk\dshow.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "dsound"="..\DXMedia\dsound\dsound.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "gear32sd"="..\ACCUSOFT\src\gear32sd.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "grinsp"="..\COM\javaclient\csrc\grinsp\grinsp.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "grinspapi"="..\COM\grinscomsvr\grinspapi.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "grinsproxy"="..\COM\grinscomsvr\idl\grinsproxy.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imgcolormap"="..\..\..\python\Extensions\img\win32\imgcolormap.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imgformat"="..\..\..\python\Extensions\img\win32\imgformat.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imgjpeg"="..\..\..\python\Extensions\img\win32\imgjpeg.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libjpeg
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "imgop"="..\..\..\python\Extensions\img\win32\imgop.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libjpeg"="..\..\..\lib-src\jpeg\win32\libjpeg.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "producer"="..\..\mmpython\producer\producer.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "python"="..\..\..\python\PCbuild\python.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "python16"="..\..\..\python\PCbuild\python16.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "pythonwin"="..\..\..\python\Extensions\Pythonwin\pythonwin.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name win32ui
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "rma"="..\..\mmpython\rmasdk\rma.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "vaudpipe"="..\DXMedia\src\audpipe\audpipe.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "vidpipe"="..\DXMedia\src\vidpipe\vidpipe.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "win32api"="..\..\..\python\Extensions\win32\win32api.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "win32trace"="..\..\..\python\Extensions\win32\win32trace.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "win32ui"="..\..\..\python\Extensions\Pythonwin\win32ui.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name win32api
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32trace
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "wingdi"="..\winsdk\wingdi\wingdi.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "wmfapi"="..\wmsdk\wmfsdk\src\wmfapi.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
