@@ -85,6 +85,14 @@ PyObject* Winmm_WaveOutOpen(PyObject *self, PyObject *args)
 	return (PyObject*)PyWaveOut::createInstance(hWaveOut); 
 }
 
+PyObject* Winmm_WaveOutFromHandle(PyObject *self, PyObject *args)
+	{
+	HWAVEOUT hWaveOut;
+	if (!PyArg_ParseTuple(args, "i", &hWaveOut))
+		return NULL;
+	return (PyObject*)PyWaveOut::createInstance(hWaveOut); 
+	}
+
 ///////////////////////////////////////////
 // module
 
@@ -155,12 +163,22 @@ static PyObject* PyWaveOut_Restart(PyWaveOut *self, PyObject *args)
 	return none(); 
 }
 
+static PyObject* PyWaveOut_Detach(PyWaveOut *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HWAVEOUT hWaveOut = self->m_hWaveOut;
+	self->m_hWaveOut = 0;
+	return Py_BuildValue("i", hWaveOut);
+}
+
 PyMethodDef PyWaveOut::methods[] = {
 	{"Close", (PyCFunction)PyWaveOut_Close, METH_VARARGS, ""},
 	{"Reset", (PyCFunction)PyWaveOut_Reset, METH_VARARGS, ""},
 	{"Write", (PyCFunction)PyWaveOut_Write, METH_VARARGS, ""},
 	{"Pause", (PyCFunction)PyWaveOut_Pause, METH_VARARGS, ""},
 	{"Restart", (PyCFunction)PyWaveOut_Restart, METH_VARARGS, ""},
+	{"Detach", (PyCFunction)PyWaveOut_Detach, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
