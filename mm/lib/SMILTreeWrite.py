@@ -500,128 +500,128 @@ def getsyncarc(writer, node, isend):
 	if not list:
 		return
 	return string.join(list, ';')
-	allarcs = node.GetRawAttrDef('synctolist', [])
-	arc = None
-	for srcuid, srcside, delay, dstside in allarcs:
-		if dstside == isend:
-			if arc:
-				print '** Multiple syncarcs to', \
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-			else:
-				arc = srcuid, srcside, delay, dstside
-	if not isend:
-		delay = node.GetRawAttrDef('begin', None)
-		if delay:
-			if arc:
-				print '** Multiple syncarcs to', \
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-			elif delay < 0:
-				print '** Negative start delay to', \
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-			else:
-				return '%.3fs' % delay
-	if not arc:
-		return
-	if not writer.uid2name.has_key(srcuid):
-		print '** Syncarc with unknown source to', \
-		      node.GetRawAttrDef('name', '<unnamed>'),\
-		      node.GetUID()
-		return
-	srcuid, srcside, delay, dstside = arc
-	if delay < 0:
-		print '** Negative delay for', \
-		      node.GetRawAttrDef('name', '<unnamed>'),\
-		      node.GetUID()
-		return
-	parent = node.GetParent()
-	ptype = parent.GetType()
-	siblings = parent.GetChildren()
-	index = siblings.index(node)
-	if srcside == 0 and \
-	   (srcuid == parent.GetUID() and
-	    (ptype == 'par' or (ptype == 'seq' and index == 0) or ptype == 'excl')) or \
-	   (srcside and ptype == 'seq' and index > 0 and
-	    srcuid == siblings[index-1].GetUID()):
-		# sync arc from parent/previous node
-		rv = '%.3fs' % delay
-	elif srcside == 1:
-		srcname = writer.uid2name[srcuid]
-		rv = 'id(%s)'%srcname
-		if srcside:
-			rv = rv+'(end)'
-			if delay:
-				print '** Delay required with end syncarc',\
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-##			rv = rv+'+%.3f'%delay
-		else:
-			rv = rv+'(%.3fs)' % delay
-		for s in siblings:
-			if srcuid == s.GetUID():
-				# in scope
-				break
-		else:
-			# out of scope
-			rv = fixsyncarc(writer, node, srcuid, srcside,
-					delay, dstside, rv)
-	else:
-		print '** Unimplemented SMIL-Boston sync arc', \
-		      node.GetRawAttrDef('name', '<unnamed>'),\
-		      node.GetUID()
-		return
-	return rv
+##	allarcs = node.GetRawAttrDef('synctolist', [])
+##	arc = None
+##	for srcuid, srcside, delay, dstside in allarcs:
+##		if dstside == isend:
+##			if arc:
+##				print '** Multiple syncarcs to', \
+##				      node.GetRawAttrDef('name', '<unnamed>'),\
+##				      node.GetUID()
+##			else:
+##				arc = srcuid, srcside, delay, dstside
+##	if not isend:
+##		delay = node.GetRawAttrDef('begin', None)
+##		if delay:
+##			if arc:
+##				print '** Multiple syncarcs to', \
+##				      node.GetRawAttrDef('name', '<unnamed>'),\
+##				      node.GetUID()
+##			elif delay < 0:
+##				print '** Negative start delay to', \
+##				      node.GetRawAttrDef('name', '<unnamed>'),\
+##				      node.GetUID()
+##			else:
+##				return '%.3fs' % delay
+##	if not arc:
+##		return
+##	if not writer.uid2name.has_key(srcuid):
+##		print '** Syncarc with unknown source to', \
+##		      node.GetRawAttrDef('name', '<unnamed>'),\
+##		      node.GetUID()
+##		return
+##	srcuid, srcside, delay, dstside = arc
+##	if delay < 0:
+##		print '** Negative delay for', \
+##		      node.GetRawAttrDef('name', '<unnamed>'),\
+##		      node.GetUID()
+##		return
+##	parent = node.GetParent()
+##	ptype = parent.GetType()
+##	siblings = parent.GetChildren()
+##	index = siblings.index(node)
+##	if srcside == 0 and \
+##	   (srcuid == parent.GetUID() and
+##	    (ptype == 'par' or (ptype == 'seq' and index == 0) or ptype == 'excl')) or \
+##	   (srcside and ptype == 'seq' and index > 0 and
+##	    srcuid == siblings[index-1].GetUID()):
+##		# sync arc from parent/previous node
+##		rv = '%.3fs' % delay
+##	elif srcside == 1:
+##		srcname = writer.uid2name[srcuid]
+##		rv = 'id(%s)'%srcname
+##		if srcside:
+##			rv = rv+'(end)'
+##			if delay:
+##				print '** Delay required with end syncarc',\
+##				      node.GetRawAttrDef('name', '<unnamed>'),\
+##				      node.GetUID()
+####			rv = rv+'+%.3f'%delay
+##		else:
+##			rv = rv+'(%.3fs)' % delay
+##		for s in siblings:
+##			if srcuid == s.GetUID():
+##				# in scope
+##				break
+##		else:
+##			# out of scope
+##			rv = fixsyncarc(writer, node, srcuid, srcside,
+##					delay, dstside, rv)
+##	else:
+##		print '** Unimplemented SMIL-Boston sync arc', \
+##		      node.GetRawAttrDef('name', '<unnamed>'),\
+##		      node.GetUID()
+##		return
+##	return rv
 
-def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
-	if writer.smilboston:
-		return rv
-	if dstside != 0 or srcside != 0:
-		print '** Out of scope syncarc to',\
-		      node.GetRawAttrDef('name', '<unnamed>'),\
-		      node.GetUID()
-		return rv
-	srcnode = node.GetContext().mapuid(srcuid)
-	a = node.CommonAncestor(srcnode)
-	x = srcnode
-	while x is not a:
-		p = x.GetParent()
-		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
-			print '** Out of scope syncarc to',\
-			      node.GetRawAttrDef('name', '<unnamed>'),\
-			      node.GetUID()
-			return rv
-		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
-			if yside == 0 and xdelay != 0:
-				# too complicated
-				print '** Out of scope syncarc to',\
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-				return rv
-		x = p
-	x = node
-	while x is not a:
-		p = x.GetParent()
-		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
-			print '** Out of scope syncarc to',\
-			      node.GetRawAttrDef('name', '<unnamed>'),\
-			      node.GetUID()
-			return rv
-		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
-			if yside == 0 and xdelay != 0 and x is not node:
-				# too complicated
-				print '** Out of scope syncarc to',\
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-				return rv
-		x = p
-	print '*  Fixing out of scope syncarc to',\
-	      node.GetRawAttrDef('name', '<unnamed>'),\
-	      node.GetUID()
-	return '%.3fs' % delay
+##def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
+##	if writer.smilboston:
+##		return rv
+##	if dstside != 0 or srcside != 0:
+##		print '** Out of scope syncarc to',\
+##		      node.GetRawAttrDef('name', '<unnamed>'),\
+##		      node.GetUID()
+##		return rv
+##	srcnode = node.GetContext().mapuid(srcuid)
+##	a = node.CommonAncestor(srcnode)
+##	x = srcnode
+##	while x is not a:
+##		p = x.GetParent()
+##		t = p.GetType()
+##		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
+##			print '** Out of scope syncarc to',\
+##			      node.GetRawAttrDef('name', '<unnamed>'),\
+##			      node.GetUID()
+##			return rv
+##		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
+##			if yside == 0 and xdelay != 0:
+##				# too complicated
+##				print '** Out of scope syncarc to',\
+##				      node.GetRawAttrDef('name', '<unnamed>'),\
+##				      node.GetUID()
+##				return rv
+##		x = p
+##	x = node
+##	while x is not a:
+##		p = x.GetParent()
+##		t = p.GetType()
+##		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
+##			print '** Out of scope syncarc to',\
+##			      node.GetRawAttrDef('name', '<unnamed>'),\
+##			      node.GetUID()
+##			return rv
+##		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
+##			if yside == 0 and xdelay != 0 and x is not node:
+##				# too complicated
+##				print '** Out of scope syncarc to',\
+##				      node.GetRawAttrDef('name', '<unnamed>'),\
+##				      node.GetUID()
+##				return rv
+##		x = p
+##	print '*  Fixing out of scope syncarc to',\
+##	      node.GetRawAttrDef('name', '<unnamed>'),\
+##	      node.GetUID()
+##	return '%.3fs' % delay
 
 def getterm(writer, node):
 	terminator = MMAttrdefs.getattr(node, 'terminator')
