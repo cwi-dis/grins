@@ -28,11 +28,11 @@ import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
-	Res.OpenResFile(':macg2pro.rsrc')
-	Res.OpenResFile(':editor.rsrc')
-	Res.OpenResFile(':playercontrols.rsrc')
-	Res.OpenResFile(':common.rsrc')
-	Res.OpenResFile(':editorballoons.rsrc')
+	Res.FSpOpenResFile(':macg2pro.rsrc', 0)
+	Res.FSpOpenResFile(':editor.rsrc', 0)
+	Res.FSpOpenResFile(':playercontrols.rsrc', 0)
+	Res.FSpOpenResFile(':common.rsrc', 0)
+	Res.FSpOpenResFile(':editorballoons.rsrc', 0)
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 
 # Now time for real work.
@@ -106,7 +106,6 @@ else:
 # macfreeze: exclude VcrChannel
 # macfreeze: exclude NTVideoChannel
 # macfreeze: exclude MPEGVideoChannel
-# macfreeze: exclude HtmlChannel
 # macfreeze: exclude audio.hcom
 # macfreeze: exclude audio.svx8
 # macfreeze: exclude audio.sdnr
