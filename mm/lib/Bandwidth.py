@@ -15,6 +15,10 @@ import string
 
 Error="Bandwidth.Error"
 
+# This value has to be determined.
+DEFAULT_STREAMING_MEDIA_PRELOAD=5
+DEFAULT_STATIC_MEDIA_BITRATE=12000
+
 # These rates are derived from the Real Producer SDK documentation.
 # Later we may want to give the user the ability to change the bitrates.
 TARGET_BITRATES = [
@@ -26,11 +30,11 @@ TARGET_BITRATES = [
 	150 * 1024,			# LAN
 	]
 
-def get(node, target=0):
+def getstreamdata(node, target=0):
 	ntype = node.GetType()
 	if ntype not in ('ext', 'slide'):
 		# Nodes that are not external consume no bandwidth
-		return 0, 0
+		return 0, 0, 0, 0
 	if ntype == 'slide':
 		raise Error, 'Cannot compute bandwidth for slide'
 	
@@ -40,7 +44,8 @@ def get(node, target=0):
 	if ntype == 'ext' and ctype == 'RealPix':
 		# Get information from the attributes
 		bitrate = MMAttrdefs.getattr(node, 'bitrate')
-		return 0, bitrate
+		# XXX Incorrect
+		return 0, bitrate, bitrate, 0
 
 	url = MMAttrdefs.getattr(node, 'file')
 	url = context.findurl(url)
@@ -52,11 +57,11 @@ def get(node, target=0):
 	type, rest = MMurl.splittype(url)
 	if type and type != 'file':
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
-		return None, None
+		return None, None, None, None
 	host, rest = MMurl.splithost(rest)
 	if host and host != 'localhost':
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
-		return None, None
+		return None, None, None, None
 
 	if urlcache[url].has_key('mimetype'):
 		maintype, subtype = urlcache[url]['mimetype']
@@ -76,13 +81,17 @@ def get(node, target=0):
 		# we have to take preroll time and such into account.
 		import realsupport
 		info = realsupport.getinfo(url)
-		prearm = 0
 		bandwidth = 0
 		if info.has_key('bitrate'):
 			bandwidth = info['bitrate']
+		if info.has_key('preroll'):
+			prerolltime = info['preroll']
+		else:
+			prerolltime = DEFAULT_STREAMING_MEDIA_PRELOAD
+		prerollbits = prerolltime*bandwidth
 ##		print "DBG: Bandwidth.get: real:", url, prearm, bandwidth
-		urlcache[url]['bandwidth'] = prearm, bandwidth
-		return prearm, bandwidth
+		urlcache[url]['bandwidth'] = prerollbits, prerolltime, bandwidth, bandwidth
+		return prerollbits, prerolltime, bandwidth, bandwidth
 	if maintype == 'audio' or maintype == 'video':
 		targets = MMAttrdefs.getattr(node, 'project_targets')
 		bitrate = TARGET_BITRATES[0] # default: 28k8 modem
@@ -90,16 +99,21 @@ def get(node, target=0):
 			if targets & (1 << i):
 				bitrate = TARGET_BITRATES[i]
 		# don't cache since the result depends on project_targets
-		return 0, bitrate
+		prerolltime = DEFAULT_STREAMING_MEDIA_PRELOAD
+		prerollbits = prerolltime*bitrate
+		return prerollbits, prerollseconds, bitrate, bitrate
 
+	# XXXX Need to pass more args (crop, etc)
 	attrs = {'project_quality':MMAttrdefs.getattr(node, 'project_quality')}
 	filesize = GetSize(url, target, attrs, MMAttrdefs.getattr(node, 'project_convert'))
 	if filesize is None:
-		return None, 0
+		return None, None, None, None
 
 ##	print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
-	urlcache[url]['bandwidth'] = float(filesize)*8, 0
-	return float(filesize)*8, 0
+	bits = float(filesize)*8
+	prerollbitrate = DEFAULT_STATIC_MEDIA_BITRATE
+	urlcache[url]['bandwidth'] = bits, None, prerollbitrate, None
+	return bits, None, prerollbitrate, None
 
 def GetSize(url, target=0, attrs = {}, convert = 1):
 	val = urlcache[url].get('filesize')
@@ -132,7 +146,7 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 		except:
 			# XXXX Too many different errors can occur in convertimagefile:
 			# I/O errors, image file errors, etc.
-			cfile = None
+			raise Error, 'Conversion to RealMedia failed'
 		if cfile: file = cfile
 		filename = tmp = os.path.join(dir, file)
 	try:

@@ -1,5 +1,9 @@
 import Bandwidth
 
+# Indicators for bandwidth type. STREAM is allocated first, then PREROLL.
+STREAM=0
+PREROLL=1
+
 class BandwidthAccumulator:
 	# Accumulated used bandwidth. The datastructure used is a
 	# list of (starttime, bandwidth) tuples, sorted by _reverse_
@@ -66,82 +70,128 @@ class BandwidthAccumulator:
 			t1 = self.used[i-1][0]
 		return bw, t1
 
-	def reserve(self, t0, t1, bandwidth, bwtype=1):
+	def reserve(self, t0, t1, bits, minbps, maxbps):
 		boxes = []
 		overflow = 0
 		while 1:
 			i, cur_t1 = self._find(t0, t1)
-			t0_0, oldbw, maxbw = self.used[i]
-			if bwtype <= 1 and bandwidth+oldbw > maxbw:
-				curbwtype = bwtype + 2
+			t0_0, oldusedbps, maxusedbps = self.used[i]
+			#
+			# Check how much bandwidth we're going to use.
+			# We always used minbps (even if it doesn't fit)
+			# We never use more than maxbps
+			#
+			availbps = maxusedbps - oldusedbps
+			if availbps < minbps:
+				usedbps = minbps
+			elif availbps < maxbps:
+				usedbps = availbps
 			else:
-				curbwtype = bwtype
-			newbw = oldbw + bandwidth
-			boxes.append((t0, cur_t1, oldbw, newbw,
-				      curbwtype))
-			self.used[i] = (t0, newbw, maxbw)
-			if newbw > maxbw:
-				# Compute how much too much we've used
-				bottombw = max(oldbw, maxbw)
-				overflow = overflow + (newbw-bottombw)*(cur_t1-t0)
-			if newbw > self.maxused:
-				self.maxused = newbw
+				usedbps = maxbps
+			#
+			# There's one exception to "never using more than maxbps": if we
+			# are close to the deadline we will use anything.
+			#
+			if t1-t0 < 1.0 or cur_t1 >= t1:
+				usedbps = bits/(t1-t0)
+			if usedbps <= 0:
+				t0 = cur_t1
+				continue
+			#
+			# Next check whether we have room to spare, because we have
+			# more aggregate bandwidth than we have bits for. We solve this
+			# by lowering cur_t1. The _find call will split the bandwidth slot.
+			#
+			if bits < (cur_t1-t0)*usedbps:
+				cur_t1 = t0 + (bits/usedbps)
+				i, cur_t1 = self._find(t0, cur_t1)
+				t0_0, oldusedbps, maxusedbps = self.used[i]
+			newusedbps = oldusedbps + usedbps
+			if newusedbps > maxusedbps:
+				tp = 'overflow'
+				if newusedbps - maxusedbps > overflow:
+					overflow = newusedbps - maxusedbps
+			else:
+				tp = None
+			boxes.append((t0, cur_t1, oldusedbps, newusedbps, tp))
+			self.used[i] = (t0, newusedbps, maxusedbps)
+			
+			bits = bits - usedbps*(t1-t0)
+
+##			if newbw > maxbw:
+##				# Compute how much too much we've used
+##				bottombw = max(oldbw, maxbw)
+##				overflow = overflow + (newbw-bottombw)*(cur_t1-t0)
+			if newusedbps > self.maxused:
+				self.maxused = newusedbps
 			t0 = cur_t1
-			if t0 >= t1:
+			if not bits:
 				break
 		return overflow, boxes
-
-	def prearmreserve(self, t0, t1, size):
-		# First pass: see whether we can do it. For each "slot"
-		# we check the available bandwidth and see whether there
-		# is enough before t1 passes
-		size = float(size)
-		sizeremain = size
-		tcur = tnext = t0
-		overall_t0 = overall_t1 = None
-		while sizeremain > 0 and tnext < t1:
-			availbw, tnext = self._findavailbw(tcur)
-			if tnext > t1:
-				tnext = t1
-			size_in_slot = availbw*(tnext-tcur)
-			if size_in_slot > 0:
-				sizeremain = sizeremain - size_in_slot
-			tcur = tnext
-		if sizeremain > 0:
-			# It didn't fit. We reserve continuous bandwidth
-			# so the picture makes sense.
-			if t1 == t0:
-				t1 = t0 + 0.1
-			dummy, boxes = self.reserve(t0, t1, size/(t1-t0), bwtype=2)
-			return sizeremain, t0, t1, boxes
-		# It did fit. Do the reservations.
-		boxes = []
-		while size > 0:
-			if t0 >= t1:
-				raise 'Bandwidth algorithm error'
-			i, tnext = self._find(t0, t1)
-			t0_0, oldbw, maxbw = self.used[i]
-			bwfree = maxbw - oldbw
-			size_in_slot = bwfree*(tnext-t0)
-			if size_in_slot <= 0:
-				t0 = tnext
-				continue
-			if size_in_slot > size:
-				# Yes, everything fits. Compute end time
-				# and possibly create new slot
-				tnext = t0 + size/bwfree
-				i, tnext = self._find(t0, tnext)
-				size_in_slot = size
-			boxes.append((t0, tnext, oldbw, maxbw, 0))
-			if overall_t0 is None:
-				overall_t0 = t0
-			overall_t1 = tnext
-			self.used[i] = t0, maxbw, maxbw
-			if maxbw > self.maxused:
-				self.maxused = maxbw
-			size = int(size - size_in_slot)
-			t0 = tnext
-		return 0, overall_t0, overall_t1, boxes
+		
+	def getstalltime(self):
+		totaloverflowseconds = 0
+		t1 = self.used[0][0]
+		for t0, usedbps, maxbps in self.used:
+			if usedbps > maxbps:
+				overflowbps = (usedbps-maxbps)
+				overflowbits = overflowbps * (t1-t0)
+				overflowseconds = overflowbits / self.initialmax
+				totaloverflowseconds = totaloverflowseconds + overflowseconds
+			t1 = t0
+		return totaloverflowseconds
+		
+##	def prearmreserve(self, t0, t1, size):
+##		# First pass: see whether we can do it. For each "slot"
+##		# we check the available bandwidth and see whether there
+##		# is enough before t1 passes
+##		size = float(size)
+##		sizeremain = size
+##		tcur = tnext = t0
+##		overall_t0 = overall_t1 = None
+##		while sizeremain > 0 and tnext < t1:
+##			availbw, tnext = self._findavailbw(tcur)
+##			if tnext > t1:
+##				tnext = t1
+##			size_in_slot = availbw*(tnext-tcur)
+##			if size_in_slot > 0:
+##				sizeremain = sizeremain - size_in_slot
+##			tcur = tnext
+##		if sizeremain > 0:
+##			# It didn't fit. We reserve continuous bandwidth
+##			# so the picture makes sense.
+##			if t1 == t0:
+##				t1 = t0 + 0.1
+##			dummy, boxes = self.reserve(t0, t1, size/(t1-t0), bwtype=2)
+##			return sizeremain, t0, t1, boxes
+##		# It did fit. Do the reservations.
+##		boxes = []
+##		while size > 0:
+##			if t0 >= t1:
+##				raise 'Bandwidth algorithm error'
+##			i, tnext = self._find(t0, t1)
+##			t0_0, oldbw, maxbw = self.used[i]
+##			bwfree = maxbw - oldbw
+##			size_in_slot = bwfree*(tnext-t0)
+##			if size_in_slot <= 0:
+##				t0 = tnext
+##				continue
+##			if size_in_slot > size:
+##				# Yes, everything fits. Compute end time
+##				# and possibly create new slot
+##				tnext = t0 + size/bwfree
+##				i, tnext = self._find(t0, tnext)
+##				size_in_slot = size
+##			boxes.append((t0, tnext, oldbw, maxbw, 0))
+##			if overall_t0 is None:
+##				overall_t0 = t0
+##			overall_t1 = tnext
+##			self.used[i] = t0, maxbw, maxbw
+##			if maxbw > self.maxused:
+##				self.maxused = maxbw
+##			size = int(size - size_in_slot)
+##			t0 = tnext
+##		return 0, overall_t0, overall_t1, boxes
 
 def compute_bandwidth(root, seticons=1, storetiming=None):
 	"""Compute bandwidth usage of a tree. Sets error icons, and returns
@@ -163,92 +213,109 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 	# Compute preroll time (prearms needed at t0==0)
 	#
 	i = 0
+	# Skip the streaming data (which is now at the front)
+	while i < len(allbandwidthdata) and allbandwidthdata[1][0] == STREAM:
+		i = i + 1
+	# Compute prearms for t0=0
 	while i<len(allbandwidthdata):
-		t0, t1, node, prearm, bandwidth = allbandwidthdata[i]
-		if t0 > 0:
+##		t0, t1, node, prearm, bandwidth = allbandwidthdata[i]
+		tp, t0, t1, node, bits, minbps, maxbps = allbandwidthdata[i]
+		if t0 > 0 or t1 > 0:
 			break
-		if prearm:
-			prerolltime = prerolltime + (prearm/float(maxbandwidth))
-			allbandwidthdata[i] = t0, t1, node, 0, bandwidth
+		if bits:
+			prerolltime = prerolltime + (bits/float(maxbandwidth))
+			allbandwidthdata[i] = tp, t0, t1, node, 0, minbps, maxbps
 		i = i + 1
 	#
 	# Compute continuous media bandwidth
 	#
 	accum = BandwidthAccumulator(maxbandwidth)
-	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
-		if bandwidth:
-			overflow, dummy = accum.reserve(t0, t1, bandwidth)
-			# For continuous media overflow we set the error icon always
-			# even if seticons isn't set.
-			if overflow:
-				msg = 'Uses %d bps more bandwidth than available'%overflow
+##	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
+	for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
+		if bits:
+			overflow, dummy = accum.reserve(t0, t1, bits, minbps, maxbps)
+##			print 'BW', node, overflow, dummy
+			if overflow and seticons:
+				if overflow > 1000000:
+					overflow = '%d Mbps'%(overflow/1000000)
+				elif overflow > 1000:
+					overflow = '%d Kbps'%(overflow/1000)
+				else:
+					overflow = '%d bps'%overflow
+				msg = 'Uses %s more bandwidth than available'%overflow
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
 				delaycount = delaycount + 1
 ##				print 'continuous overflow', overflow, node
-				errorseconds = errorseconds + (overflow/maxbandwidth)
-	#
-	# Compute preroll bandwidth and internal RealPix bandwidth usage
-	#
-	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
-		if prearm:
-			overflow, dummyt0, dummyt1, dummyboxes = accum.prearmreserve(0, t0, prearm)
-			if overflow:
-##				print 'preroll overflow', overflow, node
-				errorseconds = errorseconds + (overflow/maxbandwidth)
-				if seticons and not errornodes.has_key(node):
-					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
-					node.set_infoicon('bandwidthbad', msg)
-					errornodes[node] = 1
-					delaycount = delaycount + 1
-				if storetiming:
-					timeobj = node.GetTimesObject(storetiming)
-					timeobj.downloadlag = errorseconds
-		if node.GetType() == 'ext' and \
-		   node.GetChannelType() == 'RealPix':
-			# Create the SlideShow if it somehow doesn't exist yet
-			if not hasattr(node, 'slideshow'):
-				import realnode
-				node.slideshow = realnode.SlideShow(node)
-			slack, errors = node.slideshow.computebandwidth()
-			errorseconds = errorseconds + slack
-			delaycount = delaycount + errors
+##				errorseconds = errorseconds + (overflow/maxbandwidth)
+##	#
+##	# Compute preroll bandwidth and internal RealPix bandwidth usage
+##	#
+##	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
+##		if prearm:
+##			overflow, dummyt0, dummyt1, dummyboxes = accum.prearmreserve(0, t0, prearm)
+##			if overflow:
+####				print 'preroll overflow', overflow, node
+##				errorseconds = errorseconds + (overflow/maxbandwidth)
+##				if seticons and not errornodes.has_key(node):
+##					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
+##					node.set_infoicon('bandwidthbad', msg)
+##					errornodes[node] = 1
+##					delaycount = delaycount + 1
+##				if storetiming:
+##					timeobj = node.GetTimesObject(storetiming)
+##					timeobj.downloadlag = errorseconds
+##		if node.GetType() == 'ext' and \
+##		   node.GetChannelType() == 'RealPix':
+##			# Create the SlideShow if it somehow doesn't exist yet
+##			if not hasattr(node, 'slideshow'):
+##				import realnode
+##				node.slideshow = realnode.SlideShow(node)
+##			slack, errors = node.slideshow.computebandwidth()
+##			errorseconds = errorseconds + slack
+##			delaycount = delaycount + errors
 
 	#
 	# Finally show "bandwidth fine" icon on all nodes that deserve it
 	#
 	if seticons:
-		for t0, t1, node, prearm, bandwidth in allbandwidthdata:
+		for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
 			if not errornodes.has_key(node):
 				node.set_infoicon('bandwidthgood')
-	
+	errorseconds = accum.getstalltime()
 	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount
 	
 def _getallbandwidthdata(datalist, node):
 	"""Recursively get all bandwidth usage info. Modifies first argument"""
 	errorcount = 0
 	try:
-		this = _getbandwidthdata(node)
+		_getbandwidthdatainto(datalist, node)
 	except Bandwidth.Error, arg:
 		node.set_infoicon('error', arg)
-		this = None
 		errorcount = 1
-	if this:
-		datalist.append(this)
 	for child in node.children:
 		errorcount = errorcount + _getallbandwidthdata(datalist, child)
 	return errorcount
 	
-def _getbandwidthdata(node):
+def _getbandwidthdatainto(datalist, node):
 	"""Get bandwidth usage info for a single node"""
 	if node.type != 'ext':
-		return None
+		return
 	if not node.WillPlay():
-		return None
+		return
 	t0, t1, dummy, dummy, dummy = node.GetTimes()
-	prearm, bandwidth = Bandwidth.get(node, target=1)
-	return t0, t1, node, prearm, bandwidth
-        # t0 - start time.
-	# t1 - stop time
-	# prearm - number of bits that need to be downloaded before node can start
-	# bandwidth - number of bits downloaded during play time (per second)
+##	prearm, bandwidth = Bandwidth.get(node, target=1)
+	prerollbits, prerollseconds, prerollbps, streambps = Bandwidth.getstreamdata(node, target=1)
+##	print 'DBG BWdata', node, t0, t1, prerollbits, prerollseconds, prerollbps, streambps
+	rv = []
+	if prerollbits:
+		datalist.append((PREROLL, 0, t0, node, prerollbits, 0, prerollbps))
+	if streambps:
+		# First we subtract the preroll from the end
+		if prerollseconds:
+			t1 = t1 - prerollseconds
+		# If there's anything left we add it as continuous bandwidth
+		if t1 > t0:
+			totalbits = streambps*(t1-t0)
+			datalist.append((STREAM, t0, t1, node, totalbits, streambps, streambps))
+	return rv
