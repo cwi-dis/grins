@@ -4,7 +4,7 @@ __version__ = "$Id$"
 """ @win32doc|win32dialog
 """
 
-import win32ui,win32con
+import win32api, win32ui, win32con
 import commctrl
 import afxres
 Sdk=win32ui.GetWin32Sdk()
@@ -304,11 +304,109 @@ class OpenLocationDlg(ResDialog):
 ##############################
 
 class SelectElementDlg(ResDialog):
-	ET_TOPLAYOUT, ET_REGION, ET_MEDIA = range(3)
-	mtypes = {'image':0, 'audio':1, 'video':2, 'text':3, 'html':4, 'brush':0, 'svg':5, 'null': 0}
-	images = [grinsRC.IDB_IMAGE, grinsRC.IDB_SOUND, grinsRC.IDB_VIDEO, grinsRC.IDB_TEXT, grinsRC.IDB_HTML, grinsRC.IDB_SVG]
-	from MMTypes import mediatypes
+	tag2imgid = {'layout': grinsRC.IDI_PROPERTIES,
+		'topLayout': grinsRC.IDI_VIEWPORT,
+		'region': grinsRC.IDI_REGION,
+		
+		'body':  grinsRC.IDI_ICON_SEQOPEN,
+		'par': grinsRC.IDI_ICON_PAROPEN,
+		'seq': grinsRC.IDI_ICON_SEQOPEN,
+		'excl': grinsRC.IDI_ICON_EXCLOPEN,
+		'switch': grinsRC.IDI_ICON_SWITCHOPEN,
+		'priority': grinsRC.IDI_ICON_PRIOOPEN, 
+
+		'img': grinsRC.IDI_ICON_ASSET_IMAGE,
+		'text': grinsRC.IDI_ICON_ASSET_TEXT,
+		'audio': grinsRC.IDI_ICON_ASSET_AUDIO,
+		'video': grinsRC.IDI_ICON_ASSET_VIDEO,
+		'ref': grinsRC.IDI_ICON_ASSET_BLANK,
+		'textstream': grinsRC.IDI_ICON_ASSET_TEXT,
+		'animation': grinsRC.IDI_ANIMATION,
+		'brush': grinsRC.IDI_BRUSH,
+		'animate': grinsRC.IDI_ANIMATE,
+		'prefetch': grinsRC.IDI_ICON_ASSET_BLANK,
+		}
+	ICON_WIDTH, ICON_HEIGHT = 16, 16
+
 	from SMILTreeWrite import smil_mediatype
+	from MMTypes import mediatypes
+	ctrlinteriortypes = ['switch', 'priority']
+
+	# wrapper for MMChannel and MMNode (EditableMMNode) objects
+	# each entry in the display tree is associated (1:1) with a wrapper object
+	class MMObjWrapper:
+		def __init__(self, mmobj, tag):
+			if tag == 'prio': tag = 'priority'
+			assert tag in SelectElementDlg.tag2imgid.keys(), 'invalid smil element %s' % tag
+			self._mmobj = mmobj
+			self._tag = tag
+			self._display_id = 0
+
+		def getTag(self):
+			return self._tag
+
+		def getMMObj(self):
+			return self._mmobj
+
+		def getDisplayId(self):
+			return self._display_id
+
+		def setDisplayId(self, id):
+			self._display_id = id
+
+		def isRegion(self):
+			return self._mmobj.__class__.__name__ == 'MMChannel'
+			
+		def getId(self):
+			if self._mmobj is None: return ''
+			if self.isRegion():
+				return self._mmobj.GetUID()
+			else:
+				return self._mmobj.GetRawAttrDef('name', '')
+
+		def getSrc(self):
+			if self._mmobj is None: return ''
+			if not self.isRegion():
+				if self._mmobj.GetType()=='ext':
+					return self._mmobj.GetRawAttr('file') or ''
+				elif self._mmobj.GetType()=='imm':
+					return 'immediate'	
+			return ''
+
+		def getMimetype(self):
+			if self._mmobj is None: return ''
+			if not self.isRegion() and self._mmobj.GetType() == 'ext':
+				return self._mmobj.GetComputedMimeType() or ''
+			return ''
+
+		def getDisplayImgId(self):
+			return SelectElementDlg.tag2imgid.get(self._tag) or grinsRC.IDB_IMAGE
+
+		def getDisplayName(self):
+			# 1. no MMObj -> tag 
+			dname = self._tag
+			if self._mmobj is None: 
+				return dname
+			
+			# 2. MMObj with id -> tag id="..."
+			id = self.getId()
+			if id:
+				dname = dname + ' id=\"' + id + '\"'
+
+			# 3. MMObj with region -> tag id="..."
+			regname = self.getRegName()
+			if regname:
+				dname = dname + ' region=\"' + regname + '\"'
+
+			return dname
+		
+		def getRegName(self):
+			if not self.isRegion():
+				mmchan = self._mmobj.GetChannel()
+				if mmchan:
+					reg = mmchan.GetLayoutChannel()
+					return reg.GetUID()
+			return ''
 
 	def __init__(self, parent, mmnode, selection='', filter = ''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
@@ -317,41 +415,52 @@ class SelectElementDlg(ResDialog):
 		
 		# selection refs
 		self._selection = selection
-		self._selectionid = 0
-		self._mmobj = None
+		self._selwrapper = None
 
-		self._rootid = 0
-
+		# ui flags
 		self.__isoswnd = 0
 		self.__lockupdate = 0
 
+		# create default dialog title
 		if not filter:
 			self._title = 'Select element'
 		elif filter == 'region':
 			self._title = 'Select region'
 		elif filter == 'node':
-			self._title = 'Select media element'
+			self._title = 'Select node'
 		elif filter == 'topLayout':
-			self._title = 'Select topLayout element'
+			self._title = 'Select topLayout'
 		# self._title can be overriden from calling code 
 		# before the show or DoModal call
 
+		# create controls
 		self._bselect = Button(self,win32con.IDOK)
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._editsel = Edit(self, grinsRC.IDC_EDIT1)
 		self._msg = Edit(self, grinsRC.IDC_STATIC_MSG)
 		self._msg2 = Edit(self, grinsRC.IDC_STATIC_MSG2)
 
+		# tree and maps
 		self._tree = None
-		self._item2element = {}
-		self._element2item = {}
-		self._name2item = {}
-		self._imageList = win32ui.CreateImageList(16, 12, 0, 8, 8)
-		self.appendImage(grinsRC.IDB_VIEWPORT)
-		self.appendImage(grinsRC.IDB_REGION)
-		for id in self.images:
-			self.appendImage(id)
-	
+		self._wrappers = {}
+		self._mmid2wrapper = {}
+
+		# image list
+		self._tag2index = {}
+		initsize = grow = len(self.tag2imgid)
+		mask = 0
+		self._imageList = win32ui.CreateImageList(self.ICON_WIDTH, self.ICON_HEIGHT, mask, initsize, grow)
+		self._imageList.SetBkColor(win32api.RGB(255,255,255))
+		index = 0
+		for tag, id in self.tag2imgid.items():
+			self.appendIcon(id)
+			self._tag2index[tag] = index
+			index = index + 1
+
+	def appendIcon(self, resid):
+		icon = win32ui.GetApp().LoadIcon(resid)
+		self._imageList.Add(icon)
+
 	def appendImage(self, resid):
 		bitmap = loadBitmapFromResId(resid)
 		self._imageList.Add(bitmap.GetHandle(), 0)
@@ -359,7 +468,7 @@ class SelectElementDlg(ResDialog):
 	def OnInitDialog(self):	
 		self.__isoswnd = 1
 
-		# soft title
+		# soft dialog title
 		self.SetWindowText(self._title)
 
 		# controls binding
@@ -372,20 +481,19 @@ class SelectElementDlg(ResDialog):
 		self._tree.SetImageList(self._imageList, commctrl.LVSIL_NORMAL)
 		self.buildElementsTree()
 		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
-		if self._selection:
-			self._selectionid = self._name2item.get(self._selection)
-			if self._selectionid:
-				self._tree.Select(self._selectionid, commctrl.TVGN_CARET)
-		if not self._selectionid:
-			self._tree.Select(self._rootid, commctrl.TVGN_CARET)
 
+		# set initial tree selection
+		if self._selection:
+			self._selwrapper = self._mmid2wrapper.get(self._selection)
+			if self._selwrapper:
+				self._tree.Select(self._selwrapper.getDisplayId(), commctrl.TVGN_CARET)
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
 		# update sel refs from edit text
-		self._selection = self._editsel.gettext()
-		self._selectionid = self._name2item.get(self._selection)
-		self._mmobj = self._item2element.get(self._selectionid)
+		self._selection = self.gettext()
+		if self._selection:
+			self._selwrapper = self._mmid2wrapper.get(self._selection)
 		
 		# force selection and filter?
 		if not self.__validate():
@@ -401,23 +509,25 @@ class SelectElementDlg(ResDialog):
 		return self._obj_.OnCancel()
 
 	def __cleanup(self):
-		del self._item2element
-		del self._element2item
-		del self._name2item
+		del self._wrappers
+		del self._mmid2wrapper
+		del self._tag2index
 
+	# showmessage and return false for invalid selections
+	# invalid selections: element without id or not in filter set
 	def __validate(self):
 		msg = None
-		item = self._name2item.get(self._selection)
-		if item is None:
+		if not self._selection or not self._selwrapper:
 			msg = 'Invalid element ID' 
 		else:
-			etype = self._tree.GetItemData(item)
-			if filter == 'topLayout' and etype != ET_TOPLAYOUT:
+			if self._filter == 'topLayout' and self._selwrapper.getTag() != 'topLayout':
 				msg = 'Selected element is not a topLayout' 
-			elif filter == 'region' and etype == ET_MEDIA:
+			elif self._filter == 'region' and not self._selwrapper.isRegion():
 				msg = 'Selected element is not a region' 
-			elif filter == 'node' and etype != ET_MEDIA:
-				msg = 'Selected element is not a media node' 
+			elif self._filter == 'node' and self._selwrapper.isRegion():
+				msg = 'Selected element is not a timing node' 
+			elif self._filter == 'node' and self._selwrapper.getTag() in self.ctrlinteriortypes:
+				msg = 'Selected element is not a timing node' 
 		if msg:
 			showmessage(msg, mtype='warning', parent = self)
 			return 0
@@ -431,11 +541,14 @@ class SelectElementDlg(ResDialog):
 		return self.DoModal() == win32con.IDOK
 
 	def OnEdit(self, id, code):
+		if self.__lockupdate: return
 		if code==win32con.EN_CHANGE:
 			self.__lockupdate = 1
-			item = self._name2item.get(self._editsel.gettext())
-			if item is not None:
-				self._tree.Select(item, commctrl.TVGN_CARET)
+			self._selection = self._editsel.gettext()
+			if self._selection:
+				self._selwrapper = self._mmid2wrapper.get(self._selection)
+			if self._selwrapper:
+				self._tree.Select(self._selwrapper.getDisplayId(), commctrl.TVGN_CARET)
 			self.__lockupdate = 0
 
 	def gettext(self):
@@ -446,9 +559,13 @@ class SelectElementDlg(ResDialog):
 	def getmmobject(self):
 		if self.__isoswnd:
 			text = self._editsel.gettext()
-			item = self._name2item.get(text)
-			return self._item2element.get(item)
-		return self._mmobj
+			if text:
+				wrapper = self._mmid2wrapper.get(text)
+				if wrapper:
+					return wrapper.getMMObj()
+		elif self._selwrapper:
+			return self._selwrapper.getMMObj()
+		return None
 
 	def settext(self, text):
 		self._selection = text
@@ -460,62 +577,55 @@ class SelectElementDlg(ResDialog):
 		if self.__isoswnd:
 			self.SetWindowText(text)
 
-	# build browser tree with all regions and nodes with unique ids
+	# build browser tree (layout and/or body) appropriate for the filter specified
 	def buildElementsTree(self):
+		filter = self._filter
+		if not filter or filter == 'region' or filter == 'topLayout':
+			self.__buildLayoutTree()
+		if not filter or filter == 'node':
+			self.__buildBodyTree()
+	
+	# build layout tree
+	def __buildLayoutTree(self):
 		ctx = self._mmnode.GetContext()
 		root = self._mmnode.GetRoot()
 		top_levels = ctx.getviewports()
-		self._element2item = {}
+		wrapper = self.MMObjWrapper(None, 'layout')
+		layoutid = self.insertMMObjWrapper(wrapper)
 		for top in top_levels:
-			name = self.__getMMObjName(top)
-			if not self._name2item.has_key(name):
-				itemid = self.insertMMObj(top, name, self.ET_TOPLAYOUT, self.ET_TOPLAYOUT)
+			wrapper = self.MMObjWrapper(top, 'topLayout')
+			itemid = self.insertMMObjWrapper(wrapper, layoutid)
 			self.__appendRegions(top, itemid)
-		self.__appendNodes(root)
-		if self._filter != 'topLayout':
-			for top in top_levels:
-				item = self._element2item.get(top)
-				if item: self.__expand(item)
 					
 	def __appendRegions(self, parent, itemid):
 		for reg in parent.GetChildren():
 			if reg.get('type') == 'layout':
-				name = self.__getMMObjName(reg)
-				if not self._name2item.has_key(name):
-					childitemid = self.insertMMObj(reg, name, self.ET_REGION, self.ET_REGION, itemid)
-					self.__appendRegions(reg, childitemid)
+				wrapper = self.MMObjWrapper(reg, 'region')
+				citemid = self.insertMMObjWrapper(wrapper, itemid)
+				self.__appendRegions(reg, citemid)
 		
-	def __appendNodes(self, parent):
+	# build body tree
+	def __buildBodyTree(self):
+		ctx = self._mmnode.GetContext()
+		root = self._mmnode.GetRoot()
+		wrapper = self.MMObjWrapper(root, 'body')
+		rootid = self.insertMMObjWrapper(wrapper)
+		self.__appendNodes(root, rootid)
+
+	def __appendNodes(self, parent, itemid):
 		for node in parent.children:
 			ntype = node.GetType()
 			if ntype in self.mediatypes:
-				name = self.__getMMObjName(node)
-				mmchan = node.GetChannel()
-				if name and mmchan and not self._name2item.has_key(name):
-					reg = mmchan.GetLayoutChannel()
-					regid = self._element2item.get(reg)
-					if regid is not None:
-						imageix = self.__getNodeImageIndex(node)
-						nodeid = self.insertMMObj(node, name, self.ET_MEDIA, imageix, regid)
-			self.__appendNodes(node)
+				smiltype = self.smil_mediatype.get(node.GetChannelType()) or 'ref'
+				wrapper = self.MMObjWrapper(node, smiltype)
+				citemid = self.insertMMObjWrapper(wrapper, itemid)
+			else:
+				smiltype = node.GetType()
+				wrapper = self.MMObjWrapper(node, smiltype)
+				citemid = self.insertMMObjWrapper(wrapper, itemid)
+			self.__appendNodes(node, citemid)
 	
-	# return name of MMNode or MMChannel obj
-	def __getMMObjName(self, mmobj):
-		if mmobj.__class__.__name__ == 'MMChannel':
-			return mmobj.GetUID()
-		else:
-			return mmobj.GetRawAttrDef('name', '')
-
-	# return image index of MMNode
-	def __getNodeImageIndex(self, node):
-		mimetype = node.GetComputedMimeType()
-		if mimetype:
-			try: mtype = string.split(mimetype, '/')[0]
-			except: mtype = 'null'
-		else: mtype = 'null'
-		return self.ET_MEDIA + (self.mtypes.get(mtype) or 0)
-
-	# expand item branch
+	# expand item branch helper
 	def __expand(self, item):
 		if self._tree.ItemHasChildren(item):
 			self._tree.Expand(item, commctrl.TVE_EXPAND)
@@ -525,54 +635,33 @@ class SelectElementDlg(ResDialog):
 				try: item = self._tree.GetNextSiblingItem(item)
 				except: item = None
 
+	# response on a tree selection change
 	def OnSelChanged(self, std, extra):
+		if self.__lockupdate: return
 		nmsg = win32mu.Win32NotifyMsg(std, extra, 'tree')
-		self._selectionid = itemid = nmsg.itemNew[0]
-		text = self._tree.GetItemText(itemid)
-		etype = self._tree.GetItemData(itemid)
-		if not self.__lockupdate:
-			self.__setfilteredtext(etype, text)
-		self.__sethelpstring(itemid, etype)
-
-	# set selection edit box when the selection is not filtered out
-	def __setfilteredtext(self, etype, text):
-		if not self._filter:
-			self.settext(text)
-		elif etype == self.ET_REGION and self._filter == 'region':
-			self.settext(text)
-		elif etype == self.ET_MEDIA and self._filter == 'node':
-			self.settext(text)
-		elif etype == self.ET_TOPLAYOUT and self._filter in ('topLayout', 'region'):
-			self.settext(text)
+		itemid = nmsg.itemNew[0]
+		wrapper = self._wrappers.get(itemid)
+		if wrapper:
+			self.__lockupdate = 1
+			self._editsel.settext(wrapper.getId())
+			self._msg.settext(wrapper.getSrc())
+			self._msg2.settext(wrapper.getMimetype())
+			self.__lockupdate = 0
 		else:
-			self.settext('')
-			
-	# set the help string for the selected item
-	def __sethelpstring(self, itemid, etype):
-		if etype == self.ET_REGION:
-			self._msg.settext('region element')
-			self._msg2.settext('')
-		elif etype == self.ET_MEDIA:
-			node = self._item2element.get(itemid)
-			if node:
-				mimetype = node.GetComputedMimeType()
-			else:
-				mimetype = 'unknown'
-			smiltype = self.smil_mediatype.get(node.GetChannelType()) or 'ref'
-			self._msg.settext('%s element (%s)' % (smiltype, mimetype))
-			self._msg2.settext(node.GetRawAttr('file') or '')
-		elif etype == self.ET_TOPLAYOUT:
-			self._msg.settext('topLayout element')
-			self._msg2.settext('')
-	
-	# insert MMObject to the tree and update maps
-	def insertMMObj(self, mmobj, name, etype = 0, imageix = 0, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
+			print 'missing wrapper for item', self._tree.GetItemText(itemid)
+
+	# insert MMObjWrapper to the tree and update maps
+	def insertMMObjWrapper(self, wrapper, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
 		mask = commctrl.TVIF_TEXT | commctrl.TVIF_PARAM |  commctrl.TVIF_IMAGE | commctrl.TVIF_SELECTEDIMAGE
-		itemid = self._tree.InsertItem(mask, name, imageix, imageix, 0, 0, etype, parent, after)
-		self._element2item[mmobj] = itemid
-		self._name2item[name] = itemid
-		self._item2element[itemid] = mmobj
-		if not self._rootid: self._rootid = itemid
+		name = wrapper.getDisplayName()
+		imageix = self._tag2index.get(wrapper.getTag()) or 0
+		itemid = self._tree.InsertItem(mask, name, imageix, imageix, 0, 0, 0, parent, after)
+		wrapper.setDisplayId(itemid)
+		if not self._wrappers.has_key(itemid):
+			self._wrappers[itemid] = wrapper
+		mmid = wrapper.getId()
+		if mmid:
+			self._mmid2wrapper[mmid] = wrapper
 		return itemid
 
 # Implementation of the Layout name dialog
