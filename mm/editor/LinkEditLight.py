@@ -116,6 +116,7 @@ class LinkEditLight:
 				em.setnodeattr(anchor, 'sendTo', 'osdefaultbrowser')
 			else:
 				em.setnodeattr(anchor, 'actuate', 'onLoad')
+				em.setnodeattr(anchor, 'external', 1)
 				if extended == 2:
 					em.setnodeattr(anchor, 'sendTo', 'rpcontextwin')
 				elif extended == 3:
