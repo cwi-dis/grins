@@ -6,6 +6,8 @@ import sys, imp, os
 suffixes = map(lambda x: x[0], imp.get_suffixes())
 
 cache = {}
+modcache = {}
+absdirs = {}
 
 def fast__import__(name, globals=None, locals=None, fromlist=None):
     # Fast path: see if the module has already been imported.
@@ -48,20 +50,50 @@ def fast__import__(name, globals=None, locals=None, fromlist=None):
         fp.close()
 
 def fast_find_module(module):
+	global path, stat, modcache
+	npath = tuple(sys.path)
+	if npath != path and (len(npath) <= len(path) or
+			      npath[:len(path)] != path):
+		print 'path changed'
+		# sys.path has changed by something other than
+		# extending at the end, so invalidate the cache
+		path = tuple(sys.path)
+		modcache = {}
+	path = npath
+
+	if absdirs:
+		nstat = os.stat(os.curdir)
+		if nstat != stat:
+			print 'dir changed'
+			# directory has changed, invalidate cache
+			stat = nstat
+			modcache = {}
+			for dir in absdirs.keys():
+				try:
+					del cache[dir]
+				except KeyError:
+					pass
+
 	isabs = os.path.isabs
+	
+	try:
+		dir = modcache[module]
+	except KeyError:
+		pass
+	else:
+		try:
+			return imp.find_module(module, [dir])
+		except ImportError, msg:
+			if msg[:16] == 'No module named ':
+				# not found, remove from cache
+				del modcache[module]
+			else:
+				# some other reason
+				raise ImportError, msg
 	for dir in sys.path:
 		if not isabs(dir):
-			try:
-				# just try it for relative paths
-				m = imp.find_module(module, [dir])
-			except ImportError, msg:
-				if msg[:16] == 'No module named ':
-					# not found
-					continue
-				else:
-					raise ImportError, msg
-			else:
-				return m
+			absdirs[dir] = 0
+
 		try:
 			cd = cache[dir]
 		except KeyError:
@@ -75,12 +107,33 @@ def fast_find_module(module):
 					for suff in suffixes:
 						n = len(suff)
 						if name[-n:] == suff:
-							cd[name[:-n]] = None
+							nm = name[:-n]
+							cd[nm] = 0
+							if not modcache.has_key(nm):
+								modcache[nm] = dir
 		if cd.has_key(module):
-			return imp.find_module(module, [dir])
+			try:
+				m = imp.find_module(module, [dir])
+			except ImportError, msg:
+				if msg[:16] == 'No module named ':
+					# not found
+					del cd[module]
+					try:
+						del modcache[module]
+					except KeyError:
+						pass
+					continue
+				else:
+					raise ImportError, msg
+			else:
+				return m
 	raise ImportError, 'no module named %s' % module
 
 def install():
+	global path, stat, modcache
+	path = tuple(sys.path)		# save a copy of sys.path
+	stat = os.stat(os.curdir)
+	modcache = {}
 	import __builtin__
 	__builtin__.__import__ = fast__import__
 
