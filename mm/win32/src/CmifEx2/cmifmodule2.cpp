@@ -9,12 +9,12 @@ static PyObject *CmifEx2Error;
 static PyObject *CallbackMap = NULL;
 
 
-PyIMPORT CWnd *GetWndPtr(PyObject *);
-char cmifClass[100]="";
-WNDPROC		orgProc;
-BOOL flag=FALSE;
+PYW_EXPORT CWnd *GetWndPtr(PyObject *);
+static char cmifClass[100]="";
+static WNDPROC		orgProc;
+static BOOL flag=FALSE;
 
-HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
+static HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
                     int iDeciPtWidth, int iAttributes, BOOL fLogRes)
 {
 	FLOAT      cxDpi, cyDpi ;
@@ -957,7 +957,7 @@ static PyObject* py_example_CreateVSlider(PyObject *self, PyObject *args)
 }
 
 
-LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 
 	switch (iMsg)
