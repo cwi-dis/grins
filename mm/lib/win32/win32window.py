@@ -244,7 +244,7 @@ class Window:
 		for wnd in self._subwindows:
 			# test that point is inside the window (not the media space area)
 			if wnd.inside(point):
-				if wnd.onMouseEvent(point, ev,params=params):
+				if wnd.onMouseEvent(point, ev, params=params):
 					return stop
 			
 		disp = self._active_displist
@@ -257,8 +257,7 @@ class Window:
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-			# I don't know who did this, but I kind of like to get all params, not just (x,y,buttons) -mjvdg.
-			if self.onEvent(ev,(x, y, buttons, params)): # mjvdg added params. It's a hack.
+			if self.onEvent(ev,(x, y, buttons, params)):
 				# a button has received event, so we have to stop
 				return stop
 
@@ -2277,7 +2276,7 @@ class Viewport(Region):
 	def imgAddDocRef(self, file):
 		self._ctx.imgAddDocRef(file)
 
-	def onMouseEvent(self, point, event):
+	def onMouseEvent(self, point, event, params=None):
 		import WMEVENTS
 		for w in self._subwindows:
 			if w.inside(point):
