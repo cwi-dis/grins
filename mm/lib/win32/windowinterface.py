@@ -102,3 +102,9 @@ def serve_events():
 
 def sleep(t):
 	win32api.Sleep(int(t*1000.0+0.5))
+
+def HasSvgSupport():
+	import win32ui
+	return win32ui.HasSvgSupport()
+
+
