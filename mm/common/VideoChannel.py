@@ -136,6 +136,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def __stopplay(self):
 		if self.played_movie:
 			self.played_movie.Stop()
+			self.played_movie.UnbindOpenGLWindow()
+			del _mvmap[self.played_movie]
 			self.played_movie = None
 			self.__qid = None
 			self.playdone(0)
@@ -146,7 +148,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__qid = None
 		if self.played_movie:
 			self.played_movie.Stop()
-			self.played_movie = None
 		self.playdone(1)
 
 	def stopplay(self, node):
@@ -200,7 +201,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not self.__stopped:
 			if self.__qid:
 				return
-			self.played_movie = None
 			self.playdone(0)
 
 def _selcb():
