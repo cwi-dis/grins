@@ -130,7 +130,17 @@ class _WindowGroup:
 		else:
 			func, arglist = callback
 			apply(func, arglist)
-
+			
+	def close_window_command(self):
+		# First see whether there's a WindowExit handler
+		if self._eventhandlers.has_key(WindowExit):
+			func, arg = self._eventhandlers[WindowExit]
+			func(arg, self, WindowExit, (0, 0, 0))
+			return 1
+		if self.has_command(MenuTemplate.CLOSE_WINDOW):
+			self.call_command(MenuTemplate.CLOSE_WINDOW)
+			return 1
+		return 0
 
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
@@ -468,16 +478,6 @@ class _CommonWindow:
 		       self._rect[0]+self._rect[2], \
 			self._rect[1]+self._rect[3]
 			
-	def _goaway(self):
-		"""User asked us to go away. Tell upper layers
-		(but don't go yet)"""
-		try:
-			func, arg = self._eventhandlers[WindowExit]
-		except KeyError:
-			sys.exc_traceback = None
-			return
-		func(arg, self, WindowExit, (0, 0, 0))
-		
 	def _activate(self, active):
 		for ch in self._subwindows:
 			ch._activate(active)
@@ -1351,6 +1351,12 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	def _is_on_top(self):
 		return 1
 		
+	def _goaway(self):
+		"""User asked us to go away. Tell upper layers
+		(but don't go yet)"""
+		if not self.close_window_command():
+			print 'No way to close this window!', self
+		
 	def _contentclick(self, down, where, event, shifted):
 		"""A mouse click in our data-region"""
 		if not self._wid or not self._parent:
@@ -1642,19 +1648,23 @@ class DialogWindow(_Window):
 			usercmd.PASTE(callback=(wid.DialogPaste, ())),
 			usercmd.CUT(callback=(wid.DialogCut, ())),
 			usercmd.DELETE(callback=(wid.DialogDelete, ())),
-		]			
+		]
+		if not default is None:
+			self._do_defaulthit = self._optional_defaulthit
+			self.__default = default
+			wid.SetDialogDefaultItem(default)
+		if not cancel is None:
+			self._do_cancelhit = self._optional_cancelhit
+			self.__cancel = cancel
+			cmdlist.append(
+				usercmd.CLOSE_WINDOW(callback=(self._do_cancelhit, ())))
+			wid.SetDialogCancelItem(cancel)
 		_Window.__init__(self, mw_globals.toplevel, wid, 0, 0, w, h, commandlist=cmdlist)
 		mw_globals.toplevel._register_wid(wid, self)
 		Qd.SetPort(wid)
 		self._widgetdict = {}
 		self._is_shown = 0 # XXXX Is this always true??!?
 		self.title = title
-		if not default is None:
-			self._do_defaulthit = self._optional_defaulthit
-			self._default = default
-			self._wid.SetDialogDefaultItem(default)
-		if not cancel is None:
-			self._wid.SetDialogCancelItem(cancel)
 		
 	def __repr__(self):
 		return '<DialogWindow %s>'%self.title
@@ -1705,9 +1715,16 @@ class DialogWindow(_Window):
 	# The event handling will then call this when return is pressed.
 	#
 	def _optional_defaulthit(self):
-		tp, h, rect = self._wid.GetDialogItem(self._default)
+		tp, h, rect = self._wid.GetDialogItem(self.__default)
 		h.as_Control().HiliteControl(Controls.inButton)
-		self.do_itemhit(self._default, None)
+		self.do_itemhit(self.__default, None)
+	#
+	# Similarly for cancel, which is bound to close window (not to cmd-dot yet)
+	#
+	def _optional_cancelhit(self):
+		tp, h, rect = self._wid.GetDialogItem(self.__cancel)
+		h.as_Control().HiliteControl(Controls.inButton)
+		self.do_itemhit(self.__cancel, None)
 		
 	def do_itemdraw(self, item):
 		try:
