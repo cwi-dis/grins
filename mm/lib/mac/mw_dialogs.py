@@ -379,6 +379,9 @@ class SingleSelectionDialog(SelectionDialog):
 			apply(rtn, args)
 			self.grabdone()
 			
+	def CancelCallback(self):
+		self.grabdone()
+			
 class InputDialog(DialogWindow):
 	DIALOG_ID= ID_INPUT_DIALOG
 	
