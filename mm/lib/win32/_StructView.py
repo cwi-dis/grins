@@ -79,16 +79,16 @@ class _StructView(DisplayListView):
 		dcc.OffsetViewportOrg((-rect.left, -rect.top))
 		oldBitmap = dcc.SelectObject(bmp)
 		dcc.SetBrushOrg((rect.left % 8, rect.top % 8))
-		dcc.IntersectClipRect(rect.tuple())
+		dcc.IntersectClipRect(rect.ltrb_tuple())
 
 		# background decoration on dcc
 		if self._active_displist:color=self._active_displist._bgcolor
 		else: color=self._bgcolor
-		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(color))
+		dcc.FillSolidRect(rect.ltrb_tuple(),win32mu.RGB(color))
 
 		# draw objects on dcc
 		if self._active_displist:
-			self._active_displist._render(dcc,rect.tuple())
+			self._active_displist._render(dcc,rect.xywh_tuple())
 
 		# copy bitmap
 		dcc.SetViewportOrg((0, 0))
