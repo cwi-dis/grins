@@ -6,6 +6,10 @@
 
 #include "sockserver/SocketServer.h"
 
+#include "mtpycall.h"
+
+#include "lib/StrRec.h"
+
 char Connection::s_readbuf[8192];
 
 Connection::Connection(SOCKET s, SocketServer *pss)
@@ -14,11 +18,17 @@ Connection::Connection(SOCKET s, SocketServer *pss)
 	sendB(0),
 	recvB(0),
 	pXMLParser(NULL),
-	pSocketServer(pss)
+	pSocketServer(pss),
+	pListener((PyObject*)pss->getContext())
 	{
 	pXMLParser = new XMLParser("cml");
 	pXMLParser->beginParsing();	
 	addCmdHandler("open", &Connection::executeOpenCmd);	
+	addCmdHandler("close", &Connection::executeCloseCmd);	
+	addCmdHandler("play", &Connection::executePlayCmd);	
+	addCmdHandler("stop", &Connection::executeStopCmd);	
+	addCmdHandler("pause", &Connection::executePauseCmd);	
+	addCmdHandler("onClick", &Connection::executeOnClickCmd);	
 	}
 
 Connection::~Connection() 
@@ -131,11 +141,84 @@ void Connection::processRecvCommands()
 	}
 
 
-/*
-	<open src="" />
-*/
+// <open src="" />
 void Connection::executeOpenCmd(Element *pe)
 	{
+	if(pListener==NULL) return;
+	
+	string src = pe->getAttribute("src");
+	if(src.length()==0) return;
+	
+	CallbackHelper helper("Open",pListener);
+	if(helper.cancall())
+		{
+		PyObject *arg = Py_BuildValue("(s)", src.c_str());
+		helper.call(arg);
+		}
 	}
 
+// <close/>
+void Connection::executeCloseCmd(Element *pe)
+	{
+	if(pListener==NULL) return;
+	CallbackHelper helper("Close",pListener);
+	if(helper.cancall())
+		{
+		PyObject *arg = Py_BuildValue("()");
+		helper.call(arg);
+		}
+	}
+
+
+// <play/>
+void Connection::executePlayCmd(Element *pe)
+	{
+	if(pListener==NULL) return;
+	CallbackHelper helper("Play",pListener);
+	if(helper.cancall())
+		{
+		PyObject *arg = Py_BuildValue("()");
+		helper.call(arg);
+		}
+	}
+
+// <stop/>
+void Connection::executeStopCmd(Element *pe)
+	{
+	if(pListener==NULL) return;
+	CallbackHelper helper("Stop",pListener);
+	if(helper.cancall())
+		{
+		PyObject *arg = Py_BuildValue("()");
+		helper.call(arg);
+		}
+	}
+
+// <pause/>
+void Connection::executePauseCmd(Element *pe)
+	{
+	if(pListener==NULL) return;
+	CallbackHelper helper("Pause",pListener);
+	if(helper.cancall())
+		{
+		PyObject *arg = Py_BuildValue("()");
+		helper.call(arg);
+		}
+	}
+
+// <onClick position="10,10"/>
+void Connection::executeOnClickCmd(Element *pe)
+	{
+	string pos = pe->getAttribute("position");
+	if(pos.length()==0) return;
+	StrRec sr(pos.c_str(),",");
+	if(sr.size()!=2) return;
+	CallbackHelper helper("OnClick",pListener);
+	if(helper.cancall())
+		{
+		PyObject *arg = Py_BuildValue("(ii)", atoi(sr[0]),atoi(sr[1]));
+		helper.call(arg);
+		}
+	
+	}
 
