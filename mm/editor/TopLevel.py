@@ -26,15 +26,14 @@ class TopLevel(ViewDialog):
 		self._last_timer_id = None
 		self.new_file = new_file
 		# convert filename to URL
-		type, url = MMurl.splittype(filename)
-		if not type or type not in ('http', 'file', 'ftp', 'rtsp'):
+		utype, url = MMurl.splittype(filename)
+		if not utype or utype not in ('http', 'file', 'ftp', 'rtsp'):
 			# assume filename using local convention
-			type = None
 			url = MMurl.pathname2url(filename)
-			type, url = MMurl.splittype(url)
+			utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
 		dir, base = posixpath.split(url)
-		if not type and not host:
+		if not utype and not host:
 			# local file
 			self.dirname = dir
 		else:
@@ -50,8 +49,8 @@ class TopLevel(ViewDialog):
 			self.basename = base
 		if host:
 			url = '//%s%s' % (host, url)
-		if type:
-			url = '%s:%s' % (type, url)
+		if utype:
+			url = '%s:%s' % (utype, url)
 		self.filename = url
 		self.main = main
 		self.read_it()
@@ -239,9 +238,9 @@ class TopLevel(ViewDialog):
 		if self.new_file:
 			self.saveas_callback()
 			return
-		type, url = MMurl.splittype(self.filename)
+		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if type or host:
+		if utype or host:
 			windowinterface.showmessage('Cannot save to URL',
 						    mtype = 'warning')
 			return
@@ -252,9 +251,9 @@ class TopLevel(ViewDialog):
 
 	def save_player_callback(self):
 		self.save_callback()
-		type, url = MMurl.splittype(self.filename)
+		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if type or host:
+		if utype or host:
 			# already warned
 			return
 		filename = MMurl.url2pathname(url)
@@ -292,10 +291,10 @@ class TopLevel(ViewDialog):
 					   '', self.saveas_okcallback, None)
 
 	def fixtitle(self):
-		type, url = MMurl.splittype(filename)
+		utype, url = MMurl.splittype(filename)
 		host, url = MMurl.splithost(url)
 		dir, base = posixpath.split(url)
-		if not type and not host:
+		if not utype and not host:
 			# local file
 			self.dirname = dir
 		else:
@@ -454,9 +453,9 @@ class TopLevel(ViewDialog):
 			return 0
 		if reply == 1:
 			return 1
-		type, url = MMurl.splittype(self.filename)
+		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if type or host:
+		if utype or host:
 			windowinterface.showmessage('Cannot save to URL',
 						    mtype = 'warning')
 			return 0
@@ -520,7 +519,7 @@ class TopLevel(ViewDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, uid, aid, type):
+	def jumptoexternal(self, uid, aid, atype):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
@@ -531,17 +530,17 @@ class TopLevel(ViewDialog):
 			url = uid[:-2]
 		else:
 			url = uid
-		type, url = MMurl.splittype(url)
+		utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
-		if not type and not host:
+		if not utype and not host:
 			filename = MMurl.url2pathname(url)
 			if not os.path.isabs(filename) and self.dirname:
 				filename = os.path.join(self.dirname, filename)
 			url = MMurl.pathname2url(filename)
 		if host:
 			url = '//%s%s' % (host, url)
-		if type:
-			url = '%s:%s' % (type, url)
+		if utype:
+			url = '%s:%s' % (utype, url)
 		for top in opentops:
 			if top is not self and top.is_document(url):
 				break
@@ -568,9 +567,9 @@ class TopLevel(ViewDialog):
 			except NoSuchUIDError:
 				print 'uid not found in document'
 		top.player.show((top.player.playfromanchor, (node, aid)))
-		if type == TYPE_CALL:
+		if atype == TYPE_CALL:
 			self.player.pause(1)
-		elif type == TYPE_JUMP:
+		elif atype == TYPE_JUMP:
 			self.close()
 		return 1
 

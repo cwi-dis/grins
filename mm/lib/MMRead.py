@@ -20,15 +20,15 @@ def ReadFile(url):
 
 def ReadFileContext(url, context):
 	import os, MMurl, posixpath
-	type, str = MMurl.splittype(url)
+	utype, str = MMurl.splittype(url)
 	host, path = MMurl.splithost(str)
 	dir = posixpath.dirname(path)
 	if host:
 		dir = '//%s%s' % (host, dir)
-	if type:
-		dir = '%s:%s' % (type, dir)
+	if utype:
+		dir = '%s:%s' % (utype, dir)
 	context.setdirname(dir)
-	if not type and not host:
+	if not utype and not host:
 		root = MMCache.loadcache(MMurl.url2pathname(url), context)
 	else:
 		root = None
@@ -38,7 +38,7 @@ def ReadFileContext(url, context):
 	# no cache file, parse the file and create the cache (if possible)
 	u = MMurl.urlopen(url)
 	root = ReadOpenFileContext(u, url, context)
-	if not type and not host:
+	if not utype and not host:
 		import MMWrite
 		MMWrite.fixroot(root)
 		MMCache.dumpcache(root, MMurl.url2pathname(url))

@@ -421,9 +421,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = MMurl.basejoin(self.url, href)
 		else:
 			href = self.url
-		type, rest = MMurl.splittype(href)
+		utype, rest = MMurl.splittype(href)
 		if method not in (None, 'GET') and \
-		   (type != 'http' or method != 'POST'):
+		   (utype != 'http' or method != 'POST'):
 			print 'HtmlChannel: unknown method:', method
 			print 'href:', href
 			print 'method:', method

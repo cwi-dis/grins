@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import os, posixpath
+import os, sys, posixpath
 import windowinterface
 import MMExc, MMAttrdefs, MMTree, MMurl
 import Timing
@@ -22,15 +22,14 @@ class TopLevel:
 		self._last_timer_id = None
 		self.main = main
 		# convert filename to URL
-		type, url = MMurl.splittype(filename)
-		if not type or type not in ('http', 'file', 'ftp', 'rtsp'):
+		utype, url = MMurl.splittype(filename)
+		if not utype or utype not in ('http', 'file', 'ftp', 'rtsp'):
 			# assume filename using local convention
-			type = None
 			url = MMurl.pathname2url(filename)
-			type, url = MMurl.splittype(url)
+			utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
 		dir, base = posixpath.split(url)
-		if not type and not host:
+		if not utype and not host:
 			# local file
 			self.dirname = dir
 		else:
@@ -46,8 +45,8 @@ class TopLevel:
 			self.basename = base
 		if host:
 			url = '//%s%s' % (host, url)
-		if type:
-			url = '%s:%s' % (type, url)
+		if utype:
+			url = '%s:%s' % (utype, url)
 		self.filename = url
 		self.read_it()
 		self.makeplayer()
@@ -218,7 +217,7 @@ class TopLevel:
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, uid, aid, type):
+	def jumptoexternal(self, uid, aid, atype):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
@@ -229,17 +228,17 @@ class TopLevel:
 			url = uid[:-2]
 		else:
 			url = uid
-		type, url = MMurl.splittype(url)
+		utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
-		if not type and not host:
+		if not utype and not host:
 			filename = MMurl.url2pathname(url)
 			if not os.path.isabs(filename) and self.dirname:
 				filename = os.path.join(self.dirname, filename)
 			url = MMurl.pathname2url(filename)
 		if host:
 			url = '//%s%s' % (host, url)
-		if type:
-			url = '%s:%s' % (type, url)
+		if utype:
+			url = '%s:%s' % (utype, url)
 		for top in opentops:
 			if top is not self and top.is_document(url):
 				break
@@ -266,9 +265,9 @@ class TopLevel:
 			except NoSuchUIDError:
 				print 'uid not found in document'
 		top.player.show((top.player.playfromanchor, (node, aid)))
-		if type == TYPE_CALL:
+		if atype == TYPE_CALL:
 			self.player.pause(1)
-		elif type == TYPE_JUMP:
+		elif atype == TYPE_JUMP:
 			self.close()
 		return 1
 
