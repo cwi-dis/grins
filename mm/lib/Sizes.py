@@ -59,20 +59,23 @@ def GetImageSize(file):
 	import windowinterface
 	try:
 		return windowinterface.GetImageSize(file)
-	except:
+	except Exception, arg:
+		print 'GetImageSize raised Exception', arg
 		return 0, 0
 
 def GetSvgSize(url):
 	import svgdom
 	try:
 		return svgdom.GetSvgSize(url)
-	except:
+	except Exception, arg:
+		print 'GetSvgSize raised Exception', arg
 		return 0, 0
 		
-def GetVideoSize(file):
+def GetVideoSize(file, subtype=None):
 	import windowinterface
 	try:
 		width, height = windowinterface.GetVideoSize(file)
-	except:
+	except Exception, arg:
+		print 'GetVideoSize raised Exception', arg
 		width = height = 0
 	return width, height
