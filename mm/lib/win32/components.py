@@ -896,7 +896,7 @@ class BandwidthComputeDialog(ResDialog):
 		self.callback = callback
 		self._ok.enable(1)
 		if cancancel:
-			self._ok.settext('Proceed')
+			self._ok.settext('Proceed...')
 			self._cancel.enable(1)
 
 	def close(self):
