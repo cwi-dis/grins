@@ -37,6 +37,8 @@ idc=((idbegin+100)/m+1)*m
 casc2ui={
 CHANNELS:idc,
 USERGROUPS:idc+m,
+OPEN_RECENT:idc+2*m
+
 }
 def get_cascade(id):
 	global idc,m,casc2ui
@@ -83,6 +85,7 @@ SELECT_CHARSET_UI=CommandUI(SELECT_CHARSET)
 # MainDialog commands
 #
 OPEN_UI=CommandUI(OPEN,IDUC_OPEN)
+OPEN_RECENT_UI=CommandUI(OPEN_RECENT,casc2ui[OPEN_RECENT])
 TRACE_UI=CommandUI(TRACE)
 DEBUG_UI=CommandUI(DEBUG)
 CONSOLE_UI=CommandUI(CONSOLE)
