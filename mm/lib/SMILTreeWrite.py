@@ -436,14 +436,6 @@ def getregpointatt(writer, node, attr):
 
 	return regpoint
 
-def getregalignatt(writer, node, attr):
-	try:
-		regalign = node.GetRawAttr(attr)
-	except:
-		regalign = None
-
-	return regalign
-
 def getbgcoloratt(writer, node, attr):
 	try:
 		# if transparent, there is no backgroundColor attribute
@@ -972,8 +964,8 @@ smil_attrs=[
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
 	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
 	# registration points
-	("regPoint", lambda writer, node:getregpointatt(writer, node, "regPoint")),
-	("regAlign", lambda writer, node:getregalignatt(writer, node, "regAlign")),
+	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint")),
+	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft')),
 	
 	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
@@ -1786,7 +1778,7 @@ class SMILWriter(SMIL):
 					attrlist.append(('regPoint',regPoint))
 				
 				regAlign = ch.get('regAlign')
-				if regAlign != None:
+				if regAlign != None and regAlign != 'topLeft':
 					attrlist.append(('regAlign',regAlign))
 				
 		for key, val in ch.items():
