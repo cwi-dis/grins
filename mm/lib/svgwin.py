@@ -20,31 +20,32 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	# called to intialize platform toolkit before rendering
 	def tkStartup(self, params):
 		hdc = params
-		self.hdc = hdc
+		self.dc = wingdi.CreateDCFromHandle(hdc)
 
 		# context vars
 		self.tk = Tk()
-		self.saveidorg = self.tk.saveid = wingdi.SaveDC(hdc)
+		self.saveidorg = self.tk.saveid = self.dc.SaveDC()
 		self._tkstack = []
 
-		wingdi.SetGraphicsMode(hdc, win32con.GM_ADVANCED)
-		wingdi.SetBkMode(hdc, win32con.TRANSPARENT)
-		wingdi.SetTextAlign(hdc, win32con.TA_BASELINE)
+		self.dc.SetGraphicsMode(win32con.GM_ADVANCED)
+		self.dc.SetBkMode(win32con.TRANSPARENT)
+		self.dc.SetTextAlign(win32con.TA_BASELINE)
 			
 	# called to dispose platform toolkit objects after rendering
 	def tkShutdown(self):
-		wingdi.SetGraphicsMode(self.hdc, win32con.GM_COMPATIBLE)
-		wingdi.SetMapMode(self.hdc, win32con.MM_TEXT) 
-		wingdi.RestoreDC(self.hdc, self.tk.saveid)
+		self.dc.SetGraphicsMode(win32con.GM_COMPATIBLE)
+		self.dc.SetMapMode(win32con.MM_TEXT) 
+		self.dc.RestoreDC(self.tk.saveid)
+		self.dc.Detach()
 
 	# we start rendering
 	def tkOnBeginRendering(self):
-		wingdi.SetMapMode(self.hdc, win32con.MM_ISOTROPIC)
-		vcx, vcy = wingdi.GetViewportExtEx(self.hdc)
+		self.dc.SetMapMode(win32con.MM_ISOTROPIC)
+		vcx, vcy = self.dc.GetViewportExtEx()
 		if vcy<0: vcy = -vcy
-		wingdi.SetWindowExtEx(self.hdc, (vcx, vcy))
-		wingdi.SetViewportExtEx(self.hdc, (vcx, vcy))
-		wingdi.SetViewportOrgEx(self.hdc, (0, 0))
+		self.dc.SetWindowExtEx((vcx, vcy))
+		self.dc.SetViewportExtEx((vcx, vcy))
+		self.dc.SetViewportOrgEx((0, 0))
 
 	# we finished rendering
 	def tkOnEndRendering(self):
@@ -63,36 +64,36 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		self.saveTk()
 
 		# save dc and hold its id for restore
-		self.tk.saveid = wingdi.SaveDC(self.hdc)
+		self.tk.saveid = self.dc.SaveDC()
 		
 		# establish tk pen
 		stroke = self.getStyleAttr('stroke')
 		strokeWidth = self.getStyleAttr('stroke-width')
 		if stroke is not None and stroke!='none':
 			self.tk.pen = wingdi.ExtCreatePen(strokeWidth, stroke)
-			wingdi.SelectObject(self.hdc, self.tk.pen)
+			self.dc.SelectObject(self.tk.pen)
 
 		# establish tk brush
 		fill = self.getStyleAttr('fill')
 		if fill is not None and fill != 'none':
 			self.tk.brush = wingdi.CreateSolidBrush(fill)
-			wingdi.SelectObject(self.hdc, self.tk.brush)
+			self.dc.SelectObject(self.tk.brush)
 
 		# establish tk font
 		fontFamily = self.getStyleAttr('font-family')
 		fontSize = self.getStyleAttr('font-size')
 		if fontFamily is not None:
 			self.tk.font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize,  'outprecision':win32con.OUT_OUTLINE_PRECIS, })
-			wingdi.SelectObject(self.hdc, self.tk.font)
+			self.dc.SelectObject(self.tk.font)
 
 		# establish tk transform
-		wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
+		self.dc.SetWorldTransform(self.ctm.getElements())
 
 	# end of context
 	# self state reflects the restored context
 	def tkOnEndContext(self):
 		# restore dc to its previous state before deleting objects
-		wingdi.RestoreDC(self.hdc, self.tk.saveid)
+		self.dc.RestoreDC(self.tk.saveid)
 
 		if self.tk.pen:
 			wingdi.DeleteObject(self.tk.pen)
@@ -107,27 +108,27 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		self.restoreTk()
 
 		# establish tk transform
-		wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
+		self.dc.SetWorldTransform(self.ctm.getElements())
 
 	# init toolkit objects for 'other' 
 	def tkInitInstance(self, other):
-		other.hdc = self.hdc
+		other.dc = self.dc
 		other.tk = self.tk
 		other._tkstack = self._tkstack
 
 	def tkClipBox(self, clipbox):
 		if clipbox is not None:
-			tmprev = svgtypes.TM(wingdi.GetWorldTransform(self.hdc))
-			wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
+			tmprev = svgtypes.TM(self.dc.GetWorldTransform())
+			self.dc.SetWorldTransform(self.ctm.getElements())
 			x, y, w, h = clipbox
 			ltrb = x, y, x+w, y+h
-			tm = svgtypes.TM(wingdi.GetWorldTransform(self.hdc))
+			tm = svgtypes.TM(self.dc.GetWorldTransform())
 			ltrb = tm.URtoDR(ltrb)
-			wingdi.SetWorldTransform(self.hdc, [1, 0, 0, 1, 0, 0])
+			self.dc.SetWorldTransform([1, 0, 0, 1, 0, 0])
 			rgn = wingdi.CreateRectRgn(ltrb)
-			wingdi.SelectClipRgn(self.hdc, rgn)
+			self.dc.SelectClipRgn(rgn)
 			rgn.DeleteObject()
-			wingdi.SetWorldTransform(self.hdc, tmprev.getElements())
+			self.dc.SetWorldTransform(tmprev.getElements())
 
 	#
 	#  platform line art interface
@@ -136,7 +137,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		if tflist:
 			tm = self.ctm.copy()
 			tm.applyTfList(tflist)
-			wingdi.SetWorldTransform(self.hdc, tm.getElements())
+			self.dc.SetWorldTransform(tm.getElements())
 
 	def endDraw(self, style, tflist):
 		# fill should be painted first, then the stroke, and then the marker symbols
@@ -151,27 +152,27 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextFill = self.getStyleAttr('fill')
 			if contextFill != fill:
 				brush = wingdi.CreateSolidBrush(fill)
-				brush = wingdi.SelectObject(self.hdc, brush)
+				brush = self.dc.SelectObject(brush)
 			try:
 				if stroke and stroke != 'none':
 					# keep path for stroke
-					dcid = wingdi.SaveDC(self.hdc)
+					dcid = self.dc.SaveDC()
 					if fillRule == 'nonzero':
-						wingdi.SetPolyFillMode(self.hdc, win32con.WINDING)
+						self.dc.SetPolyFillMode(win32con.WINDING)
 					else:
-						wingdi.SetPolyFillMode(self.hdc, win32con.ALTERNATE)
-					wingdi.FillPath(self.hdc)
-					wingdi.RestoreDC(self.hdc, dcid)
+						self.dc.SetPolyFillMode(win32con.ALTERNATE)
+					self.dc.FillPath()
+					self.dc.RestoreDC(dcid)
 				else:
 					if fillRule == 'nonzero':
-						wingdi.SetPolyFillMode(self.hdc, win32con.WINDING)
+						self.dc.SetPolyFillMode(win32con.WINDING)
 					else:
-						wingdi.SetPolyFillMode(self.hdc, win32con.ALTERNATE)
-					wingdi.FillPath(self.hdc)
+						self.dc.SetPolyFillMode(win32con.ALTERNATE)
+					self.dc.FillPath()
 			except wingdi.error, arg:
 				print arg,  style, tflist
 			if brush:
-				wingdi.DeleteObject(wingdi.SelectObject(self.hdc, brush))
+				wingdi.DeleteObject(self.dc.SelectObject(brush))
 			
 		# stroke attrs
 		pen = None
@@ -181,38 +182,38 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			strokeMiterlimit = self.getStyleAttr('stroke-miterlimit', style)
 			if strokeMiterlimit:
-				oldStrokeMiterlimit = wingdi.SetMiterLimit(self.hdc, strokeMiterlimit)
+				oldStrokeMiterlimit = self.dc.SetMiterLimit(strokeMiterlimit)
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
 				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
-				pen = wingdi.SelectObject(self.hdc, pen)
+				pen = self.dc.SelectObject(pen)
 			try:
-				wingdi.StrokePath(self.hdc)
+				self.dc.StrokePath()
 			except wingdi.error, arg:
 				print arg,  style, tflist
 			if pen:
-				wingdi.DeleteObject(wingdi.SelectObject(self.hdc, pen))
+				wingdi.DeleteObject(self.dc.SelectObject(pen))
 			if strokeMiterlimit:
-				wingdi.SetMiterLimit(self.hdc, oldStrokeMiterlimit)
+				self.dc.SetMiterLimit(oldStrokeMiterlimit)
 
 		if tflist:
-			wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
+			self.dc.SetWorldTransform(self.ctm.getElements())
 	
 	def getDeviceRegion(self):
-		dcid = wingdi.SaveDC(self.hdc)
-		rgn = wingdi.PathToRegion(self.hdc)
-		wingdi.RestoreDC(self.hdc, dcid)			
+		dcid = self.dc.SaveDC()
+		rgn = self.dc.PathToRegion()
+		self.dc.RestoreDC(dcid)			
 		return rgn
 						
 	def drawRect(self, pos, size, rxy, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
+		self.dc.BeginPath()
 		ltrb = pos[0], pos[1], pos[0]+size[0], pos[1]+size[1]
 		rx, ry = rxy
 		if rx is None or ry is None:
-			wingdi.Rectangle(self.hdc, ltrb)
+			self.dc.Rectangle(ltrb)
 		else:
-			wingdi.RoundRect(self.hdc, ltrb, rxy)
-		wingdi.EndPath(self.hdc)
+			self.dc.RoundRect(ltrb, rxy)
+		self.dc.EndPath()
 		if a: rgn = self.getDeviceRegion()
 		else: rgn = None
 		self.endDraw(style, tflist)
@@ -220,10 +221,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 	def drawCircle(self, center, r, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
+		self.dc.BeginPath()
 		ltrb = center[0]-r, center[1]-r, center[0]+r, center[1]+r
-		wingdi.Ellipse(self.hdc, ltrb)
-		wingdi.EndPath(self.hdc)
+		self.dc.Ellipse(ltrb)
+		self.dc.EndPath()
 		if a: rgn = self.getDeviceRegion()
 		else: rgn = None
 		self.endDraw(style, tflist)
@@ -231,10 +232,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 	def drawEllipse(self, center, rxy, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
+		self.dc.BeginPath()
 		ltrb = center[0]-rxy[0], center[1]-rxy[1], center[0]+rxy[0], center[1]+rxy[1]
-		wingdi.Ellipse(self.hdc, ltrb)
-		wingdi.EndPath(self.hdc)
+		self.dc.Ellipse(ltrb)
+		self.dc.EndPath()
 		if a: rgn = self.getDeviceRegion()
 		else: rgn = None
 		self.endDraw(style, tflist)
@@ -242,24 +243,24 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 	def drawLine(self, pt1, pt2, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
-		wingdi.MoveToEx(self.hdc, pt1)
-		wingdi.LineTo(self.hdc, pt2)
-		wingdi.EndPath(self.hdc)
+		self.dc.BeginPath()
+		self.dc.MoveToEx(pt1)
+		self.dc.LineTo(pt2)
+		self.dc.EndPath()
 		self.endDraw(style, tflist)
 
 	def drawPolyline(self, points, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
-		wingdi.Polyline(self.hdc, points)
-		wingdi.EndPath(self.hdc)
+		self.dc.BeginPath()
+		self.dc.Polyline(points)
+		self.dc.EndPath()
 		self.endDraw(style, tflist)
 		
 	def drawPolygon(self, points, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
-		wingdi.Polygon(self.hdc, points)
-		wingdi.EndPath(self.hdc)
+		self.dc.BeginPath()
+		self.dc.Polygon(points)
+		self.dc.EndPath()
 		if a: rgn = self.getDeviceRegion()
 		else: rgn = None
 		self.endDraw(style, tflist)
@@ -269,7 +270,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		if tflist:
 			tm = self.ctm.copy()
 			tm.applyTfList(tflist)
-			wingdi.SetWorldTransform(self.hdc, tm.getElements())
+			self.dc.SetWorldTransform(tm.getElements())
 
 		font = None
 		fontFamily = self.getStyleAttr('font-family', style)
@@ -281,7 +282,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				fontSizeObj = self.getStyleAttrObj('font-size', style)
 				dsize =  fontSize # fontSizeObj.getDeviceValue(self.ctm, 'h')				
 				font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':dsize, 'outprecision':win32con.OUT_OUTLINE_PRECIS})
-				wingdi.SelectObject(self.hdc, font)
+				self.dc.SelectObject(font)
 
 		fill = self.getStyleAttr('fill', style)
 		stroke = self.getStyleAttr('stroke', style)
@@ -291,37 +292,37 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			# text will be invisible
 			# make it visible as black
 			fill = 0, 0, 0
-			oldcolor = wingdi.SetTextColor(self.hdc, fill)
-			wingdi.TextOut(self.hdc, pos, text)
-			wingdi.SetTextColor(self.hdc, oldcolor)
+			oldcolor = self.dc.SetTextColor(fill)
+			self.dc.TextOut(pos, text)
+			self.dc.SetTextColor(oldcolor)
 
 		elif fill is not None:
-			oldcolor = wingdi.SetTextColor(self.hdc, fill)
-			wingdi.TextOut(self.hdc, pos, text)
-			wingdi.SetTextColor(self.hdc, oldcolor)
+			oldcolor = self.dc.SetTextColor(fill)
+			self.dc.TextOut(pos, text)
+			self.dc.SetTextColor(oldcolor)
 
 		pen = None
 		strokeWidth = self.getStyleAttr('stroke-width', style)
 		if stroke:
 			# create path
-			wingdi.BeginPath(self.hdc)
-			wingdi.TextOut(self.hdc, pos, text)
-			wingdi.EndPath(self.hdc)
+			self.dc.BeginPath()
+			self.dc.TextOut(pos, text)
+			self.dc.EndPath()
 			
 			# stroke path
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
 				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
-				pen = wingdi.SelectObject(self.hdc, pen)
-			wingdi.StrokePath(self.hdc)
+				pen = self.dc.SelectObject(pen)
+			self.dc.StrokePath()
 			if pen:
-				wingdi.DeleteObject(wingdi.SelectObject(self.hdc, pen))
+				wingdi.DeleteObject(self.dc.SelectObject(pen))
 
 		if font:
-			wingdi.DeleteObject(wingdi.SelectObject(self.hdc, font))
+			wingdi.DeleteObject(self.dc.SelectObject(font))
 		if tflist:
-			wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
+			self.dc.SetWorldTransform(self.ctm.getElements())
 
 	def computeArcCenter(self, x1, y1, rx, ry, a, x2, y2, fa, fs):
 		cos = math.cos(a)
@@ -368,14 +369,14 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			scale = 1.0
 			saround = self.scale1AndRound
 
-		wingdi.BeginPath(self.hdc)
-		oldtf = wingdi.GetWorldTransform(self.hdc)
+		self.dc.BeginPath()
+		oldtf = self.dc.GetWorldTransform()
 		tm = svgtypes.TM(oldtf)
 		tm.scale([scale, scale])
-		wingdi.SetWorldTransform(self.hdc, tm.getElements())
+		self.dc.SetWorldTransform(tm.getElements())
 		self.drawPathSegList(path._pathSegList, saround)
-		wingdi.EndPath(self.hdc)
-		wingdi.SetWorldTransform(self.hdc, oldtf)
+		self.dc.EndPath()
+		self.dc.SetWorldTransform(oldtf)
 
 		self.endDraw(style, tflist)
 		
@@ -407,14 +408,14 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						print 'assuming abs moveto'
 					if seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
-						wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
+						self.dc.MoveToEx((saround(lastX), saround(lastY)))
 					else:
 						lastX, lastY = seg._x, seg._y
-						wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
+						self.dc.MoveToEx((saround(lastX), saround(lastY)))
 				isstart = 0
 			else:
 				if seg._type == PathSeg.SVG_PATHSEG_CLOSEPATH:
-					wingdi.CloseFigure(self.hdc)
+					self.dc.CloseFigure()
 					lastX = 0
 					lastY = 0
 					lastC = None
@@ -423,56 +424,56 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_ABS:
 					lastX, lastY = seg._x, seg._y
 					lastC = None
-					wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
+					self.dc.MoveToEx((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 					if seg._x != 0 or seg._y != 0:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
 						lastC = None
-						wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
+						self.dc.MoveToEx((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_ABS:
 					if seg._x != lastX or seg._y != lastY:
 						lastX, lastY = seg._x, seg._y
 						lastC = None
-						wingdi.LineTo(self.hdc, (saround(seg._x), saround(seg._y)))
+						self.dc.LineTo((saround(seg._x), saround(seg._y)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_REL:
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 					lastC = None
-					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
+					self.dc.LineTo((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS:
 					lastX = seg._x
 					lastC = None
-					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
+					self.dc.LineTo((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL:
 					lastX = lastX + seg._x
 					lastC = None
-					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
+					self.dc.LineTo((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS:
 					lastY = seg._y
 					lastC = None
-					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
+					self.dc.LineTo((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL:
 					lastY = lastY + seg._y
 					lastC = None
-					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
+					self.dc.LineTo((saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS:
 					x1, y1, x2, y2, x, y = seg._x1, seg._y1, seg._x2, seg._y2, seg._x, seg._y
 					bl = [(saround(x1),saround(y1)), (saround(x2),saround(y2)), (saround(x),saround(y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = seg._x2,seg._y2
 					lastX, lastY = seg._x, seg._y
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL:
 					x1, y1, x2, y2, x, y = lastX + seg._x1, lastY + seg._y1, lastX + seg._x2, lastY + seg._y2, lastX + seg._x, lastY + seg._y
 					bl = [(saround(x1),saround(y1)), (saround(x2),saround(y2)), (saround(x),saround(y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = lastX + seg._x2,lastY + seg._y2
 					lastX, lastY = lastX + seg._x,lastY + seg._y
 
@@ -481,7 +482,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						lastC = lastX, lastY
 					x1, y1 = 2*lastX - lastC[0], 2*lastY - lastC[1]
 					bl = [(saround(x1), saround(y1)),(saround(seg._x2), saround(seg._y2)),(saround(seg._x), saround(seg._y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = seg._x2, seg._y2
 					lastX, lastY = seg._x, seg._y
 
@@ -490,19 +491,19 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						lastC = lastX, lastY
 					x1, y1 = 2*lastX - lastC[0], 2*lastY - lastC[1]
 					bl = [(saround(x1), saround(y1)),(saround(lastX + seg._x2), saround(lastY + seg._y2)),(saround(lastX + seg._x), saround(lastY + seg._y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = lastX + seg._x2, lastY + seg._y2
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS:
 					bl = [(saround(lastX), saround(lastY)),(saround(seg._x1), saround(seg._y1)),(saround(seg._x), saround(seg._y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = seg._x1, seg._y1
 					lastX, lastY = seg._x, seg._y
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL:
 					bl = [(saround(lastX), saround(lastY)),(saround(lastX + seg._x1), saround(lastY + seg._y1)),(saround(lastX + seg._x), saround(lastY + seg._y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = lastX + seg._x1, lastY + seg._y1
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 
@@ -511,7 +512,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						lastC = lastX, lastY
 					nextC = 2*lastX - lastC[0], 2*lastY - lastC[1]
 					bl = [(saround(lastX), saround(lastY)),(saround(nextC[0]), saround(nextC[1])),(saround(seg._x), saround(seg._y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = nextC
 					lastX, lastY = seg._x, seg._y
 
@@ -520,7 +521,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						lastC = lastX, lastY
 					nextC = 2*lastX - lastC[0], 2*lastY - lastC[1]
 					bl = [(saround(lastX), saround(lastY)),(saround(nextC[0]), saround(nextC[1])),(saround(lastX+seg._x), saround(lastY+seg._y))]
-					wingdi.PolyBezierTo(self.hdc, bl)
+					self.dc.PolyBezierTo(bl)
 					lastC = nextC
 					lastX, lastY = lastX+seg._x, lastY+seg._y
 
@@ -533,12 +534,12 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if r1<0: r1 = -r1
 					if r2<0: r2 = -r2
 					if r1 == 0 or r2 == 0:
-						wingdi.LineTo(self.hdc, (saround(seg._x), saround(seg._y)))
+						self.dc.LineTo((saround(seg._x), saround(seg._y)))
 					else:
 						if fs:
-							olddir = wingdi.SetArcDirection(self.hdc, win32con.AD_CLOCKWISE)
+							olddir = self.dc.SetArcDirection(win32con.AD_CLOCKWISE)
 						else:
-							olddir = wingdi.SetArcDirection(self.hdc, win32con.AD_COUNTERCLOCKWISE)
+							olddir = self.dc.SetArcDirection(win32con.AD_COUNTERCLOCKWISE)
 						cx, cy = self.computeArcCenter(lastX, lastY, r1, r2, angle, seg._x, seg._y, fa, fs)
 						if angle:
 							tm = svgtypes.TM()
@@ -548,20 +549,20 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							x1, y1 = tm.UPtoDP((lastX, lastY))
 							x2, y2 = tm.UPtoDP((seg._x, seg._y))
 
-							oldtf = wingdi.GetWorldTransform(self.hdc)
+							oldtf = self.dc.GetWorldTransform()
 							tm = self.ctm.copy()
 							tm.applyTfList([('translate',[cx, cy]), ('rotate',[angle,]),])
-							wingdi.SetWorldTransform(self.hdc, tm.getElements())
+							self.dc.SetWorldTransform(tm.getElements())
 							rc = -r1, -r2, r1, r2
-							wingdi.Arc(self.hdc, rc, (x1, y1), (x2, y2))
-							wingdi.SetWorldTransform(self.hdc, oldtf)
-							wingdi.MoveToEx(self.hdc, (saround(seg._x), saround(seg._y)))
+							self.dc.Arc(rc, (x1, y1), (x2, y2))
+							self.dc.SetWorldTransform(oldtf)
+							self.dc.MoveToEx((saround(seg._x), saround(seg._y)))
 						else:
 							rc = cx-r1, cy-r2, cx+r1, cy+r2
 							x1, y1 = lastX, lastY
 							x2, y2 = seg._x, seg._y
-							wingdi.ArcTo(self.hdc, rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
-						wingdi.SetArcDirection(self.hdc, olddir)	
+							self.dc.ArcTo(rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
+						self.dc.SetArcDirection(olddir)	
 					lastC = None
 					lastX, lastY = seg._x, seg._y
 
@@ -578,12 +579,12 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if r1<0: r1 = -r1
 					if r2<0: r2 = -r2
 					if r1 == 0 or r2 == 0:
-						wingdi.LineTo(self.hdc, (saround(lastX + seg._x), saround(lastY + seg._y)))
+						self.dc.LineTo((saround(lastX + seg._x), saround(lastY + seg._y)))
 					else:
 						if fs:
-							olddir = wingdi.SetArcDirection(self.hdc, win32con.AD_CLOCKWISE)
+							olddir = self.dc.SetArcDirection(win32con.AD_CLOCKWISE)
 						else:
-							olddir = wingdi.SetArcDirection(self.hdc, win32con.AD_COUNTERCLOCKWISE)
+							olddir = self.dc.SetArcDirection(win32con.AD_COUNTERCLOCKWISE)
 						cx, cy = self.computeArcCenter(lastX, lastY, r1, r2, angle, lastX + seg._x, lastY + seg._y, fa, fs)	
 						if angle:
 							tm = svgtypes.TM()
@@ -593,20 +594,20 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							x1, y1 = tm.UPtoDP((lastX, lastY))
 							x2, y2 = tm.UPtoDP((lastX + seg._x, lastY + seg._y))
 
-							oldtf = wingdi.GetWorldTransform(self.hdc)
+							oldtf = self.dc.GetWorldTransform()
 							tm = self.ctm.copy()
 							tm.applyTfList([('translate',[cx, cy]), ('rotate',[angle,]),])
-							wingdi.SetWorldTransform(self.hdc, tm.getElements())
+							self.dc.SetWorldTransform(tm.getElements())
 							rc = -r1, -r2, r1, r2
-							wingdi.Arc(self.hdc, rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
-							wingdi.SetWorldTransform(self.hdc, oldtf)
-							wingdi.MoveToEx(self.hdc, (saround(lastX + seg._x), saround(lastY + seg._y)))
+							self.dc.Arc(rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
+							self.dc.SetWorldTransform(oldtf)
+							self.dc.MoveToEx((saround(lastX + seg._x), saround(lastY + seg._y)))
 						else:
 							rc = cx-r1, cy-r2, cx+r1, cy+r2
 							x1, y1 = lastX, lastY
 							x2, y2 = lastX + seg._x, lastY + seg._y
-							wingdi.ArcTo(self.hdc, rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
-						wingdi.SetArcDirection(self.hdc, olddir)
+							self.dc.ArcTo(rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
+						self.dc.SetArcDirection(olddir)
 					lastC = None
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 		
