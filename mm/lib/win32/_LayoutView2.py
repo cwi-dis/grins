@@ -484,6 +484,8 @@ class TreeManager:
 			self._listener.onExpandTreeNodeCtrl(item, isExpanded)
 						 
 ###########################
+debugPreview = 0
+
 class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def __init__(self):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
@@ -522,7 +524,7 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 
 	def __initState(self):
 		# allow to know the last state about shape (selected, moving, resizing)
-		self._selected = None
+		self._selectedList = []
 		self._isGeomChanging = 0
 		self._wantDown = 0
 		self._oldSelected = None
@@ -549,7 +551,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		if self.__hsmallfont:
 			Sdk.DeleteObject(self.__hsmallfont)
 
-
 	def onShapeChange(self, shape):
 		if shape is None:
 			# update user events
@@ -557,7 +558,7 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 				self._mouse_update = 1
 				self._oldSelected.onUnselected()
 				
-			self._selected = None
+			self._selectedList = []
 			self._isGeomChanging = 0
 						
 			self._mouse_update = 0
@@ -574,21 +575,28 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 				self._oldSelected = shape
 				shape.onSelected()
 						
-		self._selected = shape
+		self._selectedList = [shape]
 		self._mouse_update = 0
 
 	#
 	# win32window.MSDrawContext listener interface
-	# 
- 	def onDSelChanged(self, selections):
+	#
+	
+	def onDSelChanged(self, selections):
+		self._selectedList = selections
 		if self._listener != None:
 			self._listener.onMultiSelChanged(selections)
 
 	def onDSelMove(self, selections):
-		pass
-
- 	def onDSelResize(self, selection):
-		self.onShapeChange(selection)
+		self._isGeomChanging = 1
+		self.onGeomChanging(selections)
+			
+	def onDSelResize(self, selection):
+#		rc = selection._rectb		
+#		if selection._rc != rc:
+		self._isGeomChanging = 1
+		self.onGeomChanging([selection])
+#			selection._rc = rc
 
 	def onDSelProperties(self, selection): 
 		if not selection: return
@@ -598,6 +606,13 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	# interface implementation: function called from an external module
 	#
 
+	def onGeomChanged(self, shapeList):
+		if self._listener != None:
+			self._listener.onGeomChanged(shapeList)		
+
+	def onGeomChanging(self, shapeList):
+		if self._listener != None:
+			self._listener.onGeomChanging(shapeList)		
 
 	# define a handler for the layout component
 	def setListener(self, listener):
@@ -620,12 +635,19 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 
 	# selection of a list of nodes
 	def selectNodeList(self, shapeList):
+		self._selectedList = shapeList
 		self.selectShapes(shapeList)			
 	
 	#
 	# end implementation interface 
 	#
-		
+
+	def __isInsideShapeList(self, selectedList, point):
+		for selected in selectedList:
+			if selected.inside(point):
+				return 1
+		return 0
+
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
@@ -633,26 +655,33 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		self._wantDown = 1
 		self._sflags = flags
 		self._spoint = point
-		self._oldSelected = self._selected
-		if self._selected != None:
-			if not self._selected.inside(point):
-				self._wantDown = 0
-				win32window.MSDrawContext.onLButtonDown(self, flags, point)
+		
+		# save the previous selection
+		self._oldSelectedList = []
+		for selected in self._selectedList:
+			self._oldSelectedList.append(selected)
+
+		if not self.__isInsideShapeList(self._selectedList, point):
+			self._wantDown = 0
+			if debugPreview: print 'onLButtonDown: call MSDrawContext.onLButtonDown'
+			win32window.MSDrawContext.onLButtonDown(self, flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
 		if self._wantDown:
-			if not self._isGeomChanging:
-				win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
-				self._wantDown = 0
+			if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonDown'
+#			if not self._isGeomChanging:
+			win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
+			self._wantDown = 0
+		if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonUp'
 		win32window.MSDrawContext.onLButtonUp(self, flags, point)
 
 		# update user events
-		if self._selected:
-			if self._isGeomChanging:
-					self._selected.onGeomChanged(self._selected._rectb)
+		if self._isGeomChanging:
+			if debugPreview: print 'onLButtonUp: call onGeomChanged'
+			self.onGeomChanged(self._selectedList)
 					
 		self._isGeomChanging = 0
 	
@@ -661,10 +690,11 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
 		if self._wantDown:
-			if not self._isGeomChanging:
-				self._isGeomChanging = 1
-				win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
-				self._wantDown = 0
+			if debugPreview: print 'onLButtonMove: call MSDrawContext.onLButtonDown'
+#			if not self._isGeomChanging:
+			self._isGeomChanging = 1
+			win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
+			self._wantDown = 0
 		win32window.MSDrawContext.onMouseMove(self, flags, point)
 
 	def onLButtonDblClk(self, params):
@@ -708,11 +738,15 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 			if not self._isGeomChanging:
 				return self._viewport.getMouseTarget(point)
 			else:
-				if self._selected != None:
-					if self._selected.inside(point):
-						return self._selected
-					
-				self._viewport.getMouseTarget(point)
+				# The shapes move. In this case, if the mouse hit a previous target
+				# we have to keep the same, and not change of target (for a region/media child)
+				for selected in self._selectedList:
+					if selected.inside(point):
+						return selected
+
+				# Otherwise, choice another target according to the shape hierarchy.
+				# the priority is the shape which are on the front
+				return self._viewport.getMouseTarget(point)
 		return None
 
 	def update(self, rc=None):
@@ -894,6 +928,10 @@ class Viewport(win32window.Window, UserEventMng):
 	# interface implementation: function called from an external module
 	#
 
+	# return the current geometry
+	def getGeom(self):
+		return self._rectb
+	
 	# add a sub region	
 	def addRegion(self, attrdict, name):
 		rgn = Region(self, name, self._ctx, attrdict, self._scale)
@@ -901,14 +939,22 @@ class Viewport(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		if self._ctx._selected is region:
-			region.unselect()
-		ind = 0
-		for w in self._subwindows:
-			if w == region:
+		
+		# update the selection
+		selectChanged = 0
+		for ind in range(len(self._ctx._selectedList)):
+			if self._ctx._selectedList[ind] is region:
+				del self._ctx._selectedList[ind]
+				selectChanged = 1
+				break
+		if selectChanged:
+			self._ctx.selectShapes(self._ctx._selectedList)
+
+		# remove the link with the parent
+		for ind in range(len(self._subwindows)):
+			if self._subwindows[ind] is region:
 				del self._subwindows[ind]
 				break
-			ind = ind+1
 				
 	def select(self):
 		self._ctx.select(self)
@@ -1120,6 +1166,10 @@ class Region(win32window.Window, UserEventMng):
 	# interface implementation: function called from an external module
 	#
 
+	# return the current geometry
+	def getGeom(self):
+		return self._rectb
+
 	# add a sub region
 	def addRegion(self, attrdict, name):
 		rgn = Region(self, name, self._ctx, attrdict, self._scale)
@@ -1127,14 +1177,22 @@ class Region(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		if self._ctx._selected is region:
-			region.unselect()
-		ind = 0
-		for w in self._subwindows:
-			if w == region:
+		
+		# update the selection
+		selectChanged = 0
+		for ind in range(len(self._ctx._selectedList)):
+			if self._ctx._selectedList[ind] is region:
+				del self._ctx._selectedList[ind]
+				selectChanged = 1
+				break
+		if selectChanged:
+			self._ctx.selectShapes(self._ctx._selectedList)
+
+		# remove the link with the parent
+		for ind in range(len(self._subwindows)):
+			if self._subwindows[ind] is region:
 				del self._subwindows[ind]
 				break
-			ind = ind+1
 
 	def select(self):
 		self._ctx.selectRequest(self)
