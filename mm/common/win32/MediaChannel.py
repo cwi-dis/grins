@@ -444,18 +444,14 @@ class VideoStream:
 			if not running or t_sec >= self.__playEnd:
 				self.onMediaEnd()
 	
-	def is_callable(self):
-		return self.__mmstream
-
 	def __register_for_timeslices(self):
-		if self.__fiber_id: return
-		import windowinterface
-		self.__fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+		if not self.__fiber_id:
+			self.__fiber_id=windowinterface.register( (self.on_idle_callback,()) )
 
 	def __unregister_for_timeslices(self):
-		if not self.__fiber_id: return
-		windowinterface.unregister(self.__fiber_id)
-		self.__fiber_id=0
+		if self.__fiber_id:
+			windowinterface.unregister(self.__fiber_id)
+			self.__fiber_id=0
 
 	# Define the anchor area for visible medias
 	def prepare_anchors(self, node, window, coordinates):
