@@ -17,7 +17,7 @@ typedef struct {
 	int mm_ev;		/* event number */
 	int mm_flags;		/* flags */
 	type_sema mm_flagsema;	/* semaphore to protect mm_flags */
-	object *mm_attrlist;	/* channel attribute list */
+	object *mm_attrdict;	/* channel attribute dictionary */
 	type_sema mm_armsema;	/* semaphore for starting arm thread */
 	type_sema mm_playsema;	/* semaphore for starting play thread */
 	type_sema mm_exitsema;	/* semaphore used for exiting */
@@ -38,6 +38,7 @@ struct mmfuncs {
 	int (*setrate) PROTO((mmobject *, double));
 	int (*init) PROTO((mmobject *));
 	void (*dealloc) PROTO((mmobject *));
+	void (*do_display) PROTO((mmobject *));
 };
 
 typedef struct channelobject {

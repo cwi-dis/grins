@@ -722,10 +722,27 @@ class _ChannelThread(_ChannelThreadWM):
 	def do_show(self):
 		if debug:
 			print 'ChannelThread.do_show('+`self`+')'
+		attrdict = {}
+		if hasattr(self, 'window'):
+			if hasattr(self.window, '_window_id'):
+				# GL window interface
+				import GLLock
+				attrdict['wid'] = self.window._window_id
+				attrdict['gl_lock'] = GLLock.gl_rawlock
+			elif hasattr(self.window, '_form'):
+				# Motif windowinterface
+				import windowinterface
+				attrdict['widget'] = self.window._form
+				attrdict['gc'] = self.window._gc
+				attrdict['visual'] = \
+					  windowinterface._toplevel._visual
+			else:
+				print 'can\' work with this windowinterface'
+				return 0
 		try:
 			import mm
 			self.threads = mm.init(self.threadstart(), 0, \
-				  self._deviceno, None)
+				  self._deviceno, attrdict)
 		except ImportError:
 			print 'Warning: cannot import mm, so channel ' + \
 				  `self._name` + ' remains hidden'
@@ -796,6 +813,8 @@ class _ChannelThread(_ChannelThreadWM):
 				self.arm_1()
 			elif self._armstate != AIDLE:
 				raise error, 'armdone event when not arming'
+		elif value == 3:	# KLUDGE for X movies
+			self.threads.do_display()
 		else:
 			raise error, 'unrecognized event '+`value`
 
@@ -854,6 +873,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		return 0
 
 	def do_hide(self):
+		self.window.setredrawfunc(None)
 		_ChannelThread.do_hide(self)
 		ChannelWindow.do_hide(self)
 
@@ -876,6 +896,8 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		ChannelWindow.armstop(self)
 
 	def stopplay(self, node):
+		if self.window:
+			self.window.setredrawfunc(None)
 		ChannelWindow.stopplay(self, node)
 		_ChannelThread.stopplay(self, node)
 
@@ -904,6 +926,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		self.armed_display = None
 		thread_play_called = 0
 		if self.threads.armed:
+			self.window.setredrawfunc(self.threads.resized)
 			self.threads.play()
 			thread_play_called = 1
 		self.do_play(node)
