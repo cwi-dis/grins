@@ -18,7 +18,7 @@ import os
 import regsub
 import string
 import htmllib
-import urllib
+import MMurl
 import img
 import imgformat
 import mac_image
@@ -449,7 +449,7 @@ class MyHTMLParser(htmllib.HTMLParser):
 		self.do_p(attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
-		url = urllib.basejoin(self.url, src)
+		url = MMurl.basejoin(self.url, src)
 		try:
 			handle = _gifkeeper.new(url)
 		except (IOError, img.error), arg: # XXXX Work out which ones should really be catched
@@ -527,7 +527,7 @@ class _Gifkeeper:
 		if self.dict.has_key(url):
 			self.dict[url][0] = self.dict[url][0] + 1
 			return self.dict[url][1]
-		fname = urllib.urlretrieve(url)[0]
+		fname = MMurl.urlretrieve(url)[0]
 		image = img.reader(imgformat.macrgb16, fname)
 		data = image.read()
 		pixmap = mac_image.mkpixmap(image.width, image.height, imgformat.macrgb16, data)
