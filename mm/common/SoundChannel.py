@@ -122,12 +122,13 @@ class SoundChannel(ChannelAsync):
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
 		if begin or end or duration:
-			from audio.select import select
 			if duration is not None and duration > 0:
 				duration = int(duration * rate + .5)
-				if duration < end - begin:
-					end = begin + duration
-			self.arm_fp = select(self.arm_fp, [(begin, end)])
+				if not end or (begin or 0) + duration < end:
+					end = (begin or 0) + duration
+			if begin or (end and end < self.arm_fp.getnframes()):
+				from audio.select import select
+				self.arm_fp = select(self.arm_fp, [(begin, end)])
 		self.armed_markers = {}
 		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
 			self.armed_markers[mname] = mpos
