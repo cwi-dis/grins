@@ -2845,12 +2845,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				a = ctx.newnode('anchor')
 				a.attrdict['tabindex'] = -1 # keep out of tabbing order
-				a.attrdict['ashape'] = val[0]
-				coords = val[1]
-				if val[0] == 'rect':
-					a.attrdict['acoords'] = [coords[0],coords[1],coords[0]+coords[2],coords[1]+coords[3]]
+				if val[0] == 'rocker':
+					arc = MMNode.MMSyncArc(a, 'begin', accesskey = val[1], delay = 0)
+					a.attrdict['beginlist'] = [arc]
+					a.attrdict['actuate'] = 'onLoad'
 				else:
-					a.attrdict['acoords'] = coords
+					a.attrdict['ashape'] = val[0]
+					coords = val[1]
+					if val[0] == 'rect':
+						a.attrdict['acoords'] = [coords[0],coords[1],coords[0]+coords[2],coords[1]+coords[3]]
+					else:
+						a.attrdict['acoords'] = coords
 				img._addchild(a)
 				if key in ('play', 'toggle'):
 					arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = a, event = 'activateEvent', delay = 0)

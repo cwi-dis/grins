@@ -18,7 +18,9 @@ error = 'parseskin.error'
 #
 # The key is a single, possibly quoted, character.  If either ", ', or
 # a space character needs to be specified, it must be surrounded with
-# quotes, eitherwise quotes are optional.  Use ' to quote " and v.v.
+# quotes, otherwise quotes are optional.  Use ' to quote " and v.v.
+# Some special characters can also be specified: Use \t for TAB, \r
+# for ENTER, \b for BACKSPACE, and \n for LINEFEED.
 #
 # The possible commands are:
 # "open", "play", "pause", "stop", "exit".
@@ -29,10 +31,23 @@ error = 'parseskin.error'
 # "poly" with an even number of numbers, each pair describing the x
 # and y coordinates of a point.
 #
+# A special shape is "rocker".  The possible 'coordinates' for the
+# "rocker" shape are "left", "right", "up", "down", "center".
+#
 # The component command may be repeated and all components are
 # returned as a single list
 #
 # Example skin definition file:
+#	image Classic.gif
+#	display 0 0 240 268
+#	play rect 12 272 18 18			# Play Icon
+#	pause rect 32 272 18 18			# Pause Icon
+#	stop rect 54 272 18 18			# Stop
+#	exit rect 143 275 18 18			# Exit Button
+#	open rect 86 272 18 18			# Open File Button
+#	skin rect 110 272 18 18
+#	tab rocker right			# right side of rocker panel
+#	activate rocker center			# center of rocker panel
 
 import string				# for whitespace
 def parsegskin(file):
@@ -140,16 +155,25 @@ def parsegskin(file):
 		else:
 			shape = coords[0]
 			del coords[0]
-		try:
-			coords = map(lambda v: int(v, 0), coords)
-		except ValueError:
-			raise error, 'syntax error in skin on line %d' % lineno
-		if shape == 'poly' and coords[:2] == coords[-2:]:
-			del coords[-2:]
-		if (shape != 'rect' or len(coords) != 4) and \
-		   (shape != 'circle' or len(coords) != 3) and \
-		   (shape != 'poly' or len(coords) < 6 or len(coords) % 2 != 0):
-			raise error, 'syntax error in skin on line %d' % lineno
+		if shape == 'rocker':
+			if len(coords) != 1:
+				raise error, 'syntas error in skin on line %d' % lineno
+			coords = coords[0]
+			if coords == 'centre': # undocumented alternative spelling
+				coords = 'center'
+			if coords not in ('left','right','up','down','center'):
+				raise error, 'syntas error in skin on line %d' % lineno
+		else:
+			try:
+				coords = map(lambda v: int(v, 0), coords)
+			except ValueError:
+				raise error, 'syntax error in skin on line %d' % lineno
+			if shape == 'poly' and coords[:2] == coords[-2:]:
+				del coords[-2:]
+			if (shape != 'rect' or len(coords) != 4) and \
+			   (shape != 'circle' or len(coords) != 3) and \
+			   (shape != 'poly' or len(coords) < 6 or len(coords) % 2 != 0):
+				raise error, 'syntax error in skin on line %d' % lineno
 		if cmd == 'key':
 			dict[cmd] = shape, coords, key
 		else:

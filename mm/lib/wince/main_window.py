@@ -251,11 +251,11 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		#winuser.MessageBox('OnLButtonDblClk %d %d' % lpt)
 
 	__keymap = {
-		wincon.VK_RETURN: 'RETURN',
-		wincon.VK_LEFT: 'LEFT',
-		wincon.VK_UP: 'UP',
-		wincon.VK_DOWN: 'DOWN',
-		wincon.VK_RIGHT: 'RIGHT',
+		wincon.VK_RETURN: 'center',
+		wincon.VK_LEFT: 'left',
+		wincon.VK_UP: 'up',
+		wincon.VK_DOWN: 'down',
+		wincon.VK_RIGHT: 'right',
 		}
 	def OnKeyDown(self, params):
 		if self.__keymap.has_key(params[2]):
