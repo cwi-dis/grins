@@ -128,20 +128,22 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def expandcall(self):
 		# 'Expand' the view of this node.
 		# Also, if this node is expanded, collapse it!
-		if self.iscollapsed():
-			self.uncollapse()
-		else:
-			self.collapse()
-		self.root.dirty = 1
+		if isinstance(self, StructureObjWidget):
+			if self.iscollapsed():
+				self.uncollapse()
+			else:
+				self.collapse()
+			self.root.dirty = 1
 
 	def expandallcall(self, expand):
 		# Expand the view of this node and all kids.
 		# if expand is 1, expand. Else, collapse.
-		if expand:
-			self.uncollapse_all()
-		else:
-			self.collapse_all()
-		self.root.dirty = 1
+		if isinstance(self, StructureObjWidget):
+			if expand:
+				self.uncollapse_all()
+			else:
+				self.collapse_all()
+			self.root.dirty = 1
 
 	def playcall(self):
 		top = self.root.toplevel
