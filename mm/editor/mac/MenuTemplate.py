@@ -206,6 +206,21 @@ POPUP_HVIEW_LEAF = (
 		(ENTRY, 'Edit Content', 'E', CONTENT),
 )
 
+POPUP_HVIEW_SLIDE = (
+		(ENTRY, 'New Node Before', None, NEW_BEFORE_IMAGE),
+		(ENTRY, 'New Node After', 'K', NEW_AFTER_IMAGE),
+		(SEP,),
+		(ENTRY, 'Cut', 'X', CUT),
+		(ENTRY, 'Copy', 'C', COPY),
+		(ENTRY, 'Delete', None, DELETE),
+		(SEP,),
+		(ENTRY, 'Paste Before', None, PASTE_BEFORE),
+		(ENTRY, 'Paste After', None, PASTE_AFTER),
+		(SEP,),
+		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
+		(ENTRY, 'Edit Content', 'E', CONTENT),
+)
+
 POPUP_HVIEW_STRUCTURE = (
 		(ENTRY, 'New Node Before', None, NEW_BEFORE),
 		(ENTRY, 'New Node After', 'K', NEW_AFTER),
