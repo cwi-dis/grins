@@ -865,7 +865,10 @@ class Window:
 	def getwindowpos(self, rel=None):
 		if rel==self:
 			return self._rect
-		X, Y, W, H = self._parent.getwindowpos(rel)
+		if self._parent:
+			X, Y, W, H = self._parent.getwindowpos(rel)
+		else:
+			X, Y, W, H = 0, 0, 0, 0
 		x, y, w, h = self._rectb
 		return X+x, Y+y, w, h
 				
@@ -924,7 +927,10 @@ class Window:
 
 	# redraw this window and its childs
 	def update(self, rc=None):
-		self._topwindow.update(rc)
+		if self._topwindow != self:
+			self._topwindow.update(rc)
+		else:
+			print 'you must override update for a top window'
 
 	# return all ancestors of self including topwindow
 	def getAncestors(self):
