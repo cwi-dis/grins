@@ -645,8 +645,8 @@ class MMNode:
 	#
 	# Channel management
 	#
-	def GetChannel(self):
-		cname = self.GetInherAttrDef('channel', None)
+	def GetChannel(self, attrname='channel'):
+		cname = self.GetInherAttrDef(attrname, None)
 		if not cname:		# cname == '' or cname == None
 			return None
 		return self.context.channeldict.get(cname)
