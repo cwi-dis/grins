@@ -13,6 +13,7 @@ a module (windowinterface.py) which contains mainly alias to members of this cla
 """
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
+Afx=win32ui.GetAfx()
 
 import sysmetrics
 
@@ -236,26 +237,28 @@ class _Toplevel:
 		pass
 
 	#########################################
-	# Main message loop of the applicatio
+	# Main message loop of the application
 	def mainloop(self):
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
-		#win32ui.GetApp().AddIdleHandler(self.monitor)
+		win32ui.GetApp().AddIdleHandler(self.monitor)
+
 		wnd=self.genericwnd()
 		wnd.create()
-		self._autostop=0
-		wnd.HookMessage(self.serve_events,win32con.WM_USER+999)
+		wnd.HookMessage(self.serve_events,win32con.WM_USER)
 		win32ui.GetApp().RunLoop(wnd)
 		wnd.DestroyWindow()
+
 		win32ig.deltemp()
 		self.close()
 		(win32ui.GetAfx()).PostQuitMessage(0)
 
-	#def monitor(self,handler,count):
-	#	return 0
+	def monitor(self,handler,count):
+		self.serve_events()
+		return 0 # no more, next time
 
 	# It is actualy part of the main loop and part of a delta timer 
-	def serve_events(self,params):	
+	def serve_events(self,params=None):	
 		if self._waiting:self.setready()				
 		while self._timers:
 			t = float(Sdk.GetTickCount())/TICKS_PER_SECOND
@@ -270,7 +273,6 @@ class _Toplevel:
 				break
 		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		self.serve_timeslices()
-		win32api.Sleep(0)
 
 	# Called by the core sustem to set the waiting cursor
 	_waiting=0
@@ -307,6 +309,7 @@ class _Toplevel:
 			t = t + time0
 		self._timers.append(sec - t, cb, self._timer_id)
 		#print 'new event:',self._timer_id,sec - t,cb
+		Afx.GetMainWnd().PostMessage(WM_KICKIDLE)
 		return self._timer_id
 
 
