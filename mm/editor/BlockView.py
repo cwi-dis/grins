@@ -128,16 +128,11 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.addmenus(0,h,w,MENUH)
 		self.rootview = root
 		self._initcommanddict()
-		self.setopenclose(root, 1)
 		self.mkBlockview((0, 0, w,h), root)
 		self.presentlabels(root)
 		self.setfocus(root)
 
 		return self
-	def setopenclose(self, (node, OC)):
-		node.bv_OC = OC
-		for i in node.GetChildren():
-		    self.setopenclose(i, OC)
 	#
 	# addtocommand adds a command to the commanddictionary.
 	# Anybody can submit their own commands
@@ -188,8 +183,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	def mkBlockview(self, ((x, y, w, h), node)) :
 		type = node.GetType()
 
-		obj = self.form.add_box (UP_BOX, x, y, w, h, '')
-		obj.boxtype = FRAME_BOX
+		obj = self.form.add_box (FRAME_BOX, x, y, w, h, '')
 
 		node.bv_form 	= self.form
 		node.bv_obj	= obj
@@ -197,8 +191,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		kids = node.GetChildren()
 		if type in interiortypes:
 			node.bv_xywh    = (x,y,w,h)
-			if node.bv_OC < 0:
-			     node.bv_OC = 1
 			# Create the open/close button:
 			bx = x + LMARG
 			by = y + h - TMARG - BH
@@ -229,35 +221,29 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			    toosmall = ((h < TMARG+BMARG+BH) or \
 					(w < LMARG+RMARG+BW))
 			    if toosmall:
-				node.bv_OC = 0
 				node.bv_openclose.col1 = GL.RED
 				node.bv_toosmall = 1
 				# x, y = 0, 0
 				# w, h = 1, 1
-			    elif not node.bv_OC:
+			    elif self.isclosedlocal(node):
 				o = node.bv_openclose
 				o.col1, o.col2 = o.col2, o.col1
 			    else:
 				x,y = x+LMARG,y+BMARG
 				# w,h = w-LMARG-RMARG,h-TMARG-BMARG
 				w,h = w-RMARG,h-TMARG
-			    if node.bv_OC:
+			    if not self.isclosedlocal(node):
 				if node.GetType() = 'seq':
 				    kids = kids[:]
 				    kids.reverse()
 				for child in kids :
 				    self.mkBlockview(((x, y, w, h), child))
 				    x, y = x + dx, y + dy
-			    else:
-				self.setopenclose(node,node.bv_OC)
 
 	#
 	# delete all the objects (made by blockview) form the node
 	#
 	def rmBlockview (self, node) :
-		if node.bv_OC = -1:
-		    node.bv_OC = node.GetParent().bv_OC
-		    return
 		try:
 		    node.bv_obj.delete_object ()
 		    del node.bv_obj
@@ -276,10 +262,11 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	#
 	def fixfocus(self):
 		focus = self.focus
-		if focus = self.root:
+		if focus = self.root or not self.isclosed(focus):
+		    self.setfocus(focus)
 		    return
 		parent = focus.GetParent()
-		while parent.bv_OC = 0:
+		while self.isclosed(parent):
 		    focus = parent
 		    if focus = self.root:
 			break
@@ -295,7 +282,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		node.bv_labeltext.label = MMAttrdefs.getattr(node, 'name')
 		node.bv_obj.label = ''
 		num = 1
-		if node.bv_OC:
+		if not self.isclosedlocal(node):
 		    for child in node.GetChildren () :
 			self.presentlabels (child)
 	#
@@ -335,7 +322,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	# in the (possibly folded) tree
 	#
 	def _find_node (self, (node, (x, y))) :
-		if node.bv_OC = 0 : return node
+		if self.isclosedlocal(node) : return node
 
 		for child in node.GetChildren () :
 			if self._in_bounds (child, (x, y)) <> None :
@@ -371,7 +358,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		node.bv_form.freeze_form ()
 
 		self.rmBlockview(node)
-		node.bv_OC = (not node.bv_OC)		# toggle open/close
+		node.SetAttr('closed', not node.GetRawAttrDef('closed',0))
 		self.mkBlockview(node.bv_xywh,node)
 		self.fixfocus()
 		node.bv_obj.show_object ()		# show this node
@@ -393,7 +380,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	def GetNewNode(self) :
 		type = self.focus.GetType()
 		child = self.root.context.newnode(type)
-		child.bv_OC = -1	# Signal that it is new
 		return child
 	#
 	def fromclipboard(self):
@@ -401,7 +387,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		if type <> 'node' or data = None:
 			return None
 		Clipboard.setclip(type, data.DeepCopy())
-		self.setopenclose(data, -1)
 		return data
 	def toclipboard(self, node):
 		if node = None:
@@ -410,9 +395,27 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			type, data = 'node', node
 		Clipboard.setclip(type, data)
 
+	#
+	# isclosedlocal - Is node closed, knowing that ancestors are open?
+	#
+	def isclosedlocal(self, node):
+		try:
+		    if node.bv_toosmall:
+			return 1
+		except AttributeError:
+		    pass
+		return node.GetRawAttrDef('closed',0)
+	#
+	# isclosed - Is node closed, not knowing about ancestors?
+	#
+	def isclosed(self, node):
+		if node <> self.root:
+		    if self.isclosed(node.GetParent()):
+			return 1
+		return self.isclosedlocal(node)
+
 def helpfunc (bv) :
 	bv.toplevel.help.givehelp('Hierarchy')
-
 
 import AttrEdit
 
@@ -528,7 +531,7 @@ def _InsertChildNode (bv,cb) :
 	parent = bv.focus
 	em = bv.editmgr
 
-	if (not parent.GetType() in interiortypes) or parent.bv_OC = 0:
+	if (not parent.GetType() in interiortypes) or bv.isclosedlocal(parent):
 	    gl.ringbell()
 	    return
 	if not em.transaction(): return
