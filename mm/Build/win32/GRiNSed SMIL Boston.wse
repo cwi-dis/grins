@@ -1465,6 +1465,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vidpipe.ax
+  Destination=%MAINDIR%\Producer-SDK\vidpipe.ax
+  Flags=0001000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\audpipe.ax
+  Destination=%MAINDIR%\Producer-SDK\audpipe.ax
+  Flags=0001000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\icons\extend.tiff
   Destination=%MAINDIR%\Templates\icons\extend.tiff
   Flags=0000000010000010
@@ -1820,16 +1830,6 @@ item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
   Destination=%MAINDIR%\dsound.pyd
   Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vid2rm.ax
-  Destination=%MAINDIR%\Producer-SDK\vid2rm.ax
-  Flags=0001000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\aud2rm.ax
-  Destination=%MAINDIR%\Producer-SDK\aud2rm.ax
-  Flags=0001000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
