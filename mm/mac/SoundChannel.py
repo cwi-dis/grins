@@ -6,7 +6,7 @@ import aifc
 import urllib
 import os
 
-debug = os.environ.has_key('CHANNELDEBUG')
+debug = 1 # os.environ.has_key('CHANNELDEBUG')
 
 class SoundChannel(ChannelAsync):
 	def __repr__(self):
@@ -18,7 +18,7 @@ class SoundChannel(ChannelAsync):
 		self.port = None
 		self.arm_fp = None
 		self.play_fp = None
-		self.has_callback = 0
+		self._timer_id = None
 
 	def _openport(self):
 		if debug: print 'SoundChannel: openport'
@@ -62,18 +62,24 @@ class SoundChannel(ChannelAsync):
 		
 	def _playsome(self, *dummy):
 		if debug: print 'SoundChannel: playsome'
-		if not self.play_fp or not self.port:
+		if self._paused or not self.play_fp or not self.port:
+			if debug:
+				print 'not playing some...', self._paused, self.play_fp, self.port
 			return
 		in_buffer = len(self.play_data)/self.play_bps
 		while self.port.getfillable() >= in_buffer and self.play_data:
 			self.port.writeframes(self.play_data)
 			self.play_data = self.play_fp.readframes(self.play_readsize)
 		if self.play_data:
-			windowinterface.settimer(0.5, (self._playsome, ()))
+			self._timer_id = windowinterface.settimer(0.5, (self._playsome, ()))
 		else:
 			samples_left = self.port.getfilled()
 			time_left = samples_left/float(self.play_framerate)
-			windowinterface.settimer(time_left, (self.playdone, (0,)))
+			self._timer_id = windowinterface.settimer(time_left, (self.myplaydone, (0,)))
+			
+	def myplaydone(self, arg):
+		self._timer_id = None
+		self.playdone(arg)
 			
 	def do_play(self, node):
 		if not self.arm_fp or not self.port:
@@ -99,7 +105,14 @@ class SoundChannel(ChannelAsync):
 		if not self.port:
 			return
 		if debug: print 'SoundChannel: playstop'
-		pass # XXXX Stop playing
+		self.port.stop()
+		if self._timer_id:
+			windowinterface.canceltimer(self._timer_id)
+		self.playdone(1)
 
 	def setpaused(self, paused):
-		pass # XXXX pause!
+		if debug:
+			print 'setpaused', paused, self.play_data
+		self._paused = paused
+		if not self._paused and self.play_data:
+			self._playsome()
