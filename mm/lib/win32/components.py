@@ -730,6 +730,49 @@ class ChannelUndefDlg(ResDialog):
 			apply(self._cb_undef_ok,())
 		self.close()
 
+# Implementation of the channel undefined dialog
+class EnterKeyDlg(ResDialog):
+	def __init__(self,cb_ok,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_ENTER_KEY,parent)
+		self._cb_ok = cb_ok
+		self._bok = Button(self,win32con.IDOK)
+		self._bcancel = Button(self,win32con.IDCANCEL)
+		self._tuser = Edit(self,grinsRC.IDC_NAME)
+		self._torg = Edit(self,grinsRC.IDC_ORGANIZATION)
+		self._tkey = Edit(self,grinsRC.IDC_KEY)
+		self.show()
+
+	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		self._tuser.hookcommand(self,self.OnEditChange)
+		self._torg.hookcommand(self,self.OnEditChange)
+		self._tkey.hookcommand(self,self.OnEditChange)
+		self._bok.enable(0)
+		return ResDialog.OnInitDialog(self)
+
+	def show(self):
+		self.DoModal()
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnEditChange(self, id, code):
+		if code != win32con.EN_CHANGE:
+			return
+		ok = (self._tuser.gettext() or self._torg.gettext()) and \
+				self._tkey.gettext()
+		self._bok.enable(not not ok)
+
+	def OnOK(self):
+		if self._cb_ok:
+			user=self._tuser.gettext()
+			org=self._torg.gettext()
+			key=self._tkey.gettext()
+			apply(self._cb_ok,(key, user, org))
+		self.close()
+
+	def OnCancel(self):
+		self.close()
 
 # Implementation of a modeless message box
 class ModelessMessageBox(ResDialog):
