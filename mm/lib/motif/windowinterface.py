@@ -10,6 +10,7 @@ from XTopLevel import *			# toplevel and various functions
 from XFont import *
 from XDialog import *
 from XFormWindow import Window
+from XTemplate import TemplateDialog
 
 def beep():
 	dpy = toplevel._main.Display()
