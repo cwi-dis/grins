@@ -35,10 +35,10 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent=0):
+	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
 		return _Window(self, x, y, w, h, title, 0, pixmap, transparent)
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent):
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
 		return _Window(self, x, y, w, h, title, 1, pixmap, transparent)
 
 	def setcursor(self, cursor):
