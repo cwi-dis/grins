@@ -2090,10 +2090,10 @@ class Dialog(_DummyButtons):
 	def close(self):
 		self.window.close()
 
-def showmessage(text, type = 'message', grab = 1, callback = None,
+def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		cancelCallback = None, **options):
 	list = [('\r', 'Done', callback)]
-	if cancelCallback or type == 'question':
+	if cancelCallback or mtype == 'question':
 		list.append('', 'Cancel', cancelCallback)
 	d = Dialog(list, title = None, prompt = text, grab = grab,
 		   vertical = 0)

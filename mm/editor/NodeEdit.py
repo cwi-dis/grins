@@ -37,7 +37,7 @@ class _Convert:
 		if os.path.exists(file):
 			windowinterface.showmessage(
 				'File already exists. Overwrite?',
-				type = 'question', title = 'Overwrite?',
+				mtype = 'question', title = 'Overwrite?',
 				callback = (self.convert, (file,)))
 			return 1	# don't remove dialog
 		self.convert(file)
