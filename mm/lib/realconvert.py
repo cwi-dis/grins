@@ -472,16 +472,16 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 			video_props.SetVideoFormat(prod_format)
 			video_props.SetCroppingEnabled(0)
 			video_sample = engine.CreateMediaSample()
-			
+
 		if has_audio:
 			audio_fmt = reader.GetAudioFormat()
 			audio_props = audiopin.GetPinProperties()
 			audio_props.SetSampleRate(audio_fmt.getsamplespersec())
 			audio_props.SetNumChannels(audio_fmt.getnchannels())
 			audio_props.SetSampleSize(audio_fmt.getbitspersample())
-	
 			audio_sample = engine.CreateMediaSample()
 			
+		audio_failed = 0
 		engine.PrepareToEncode()
 		# Put the rest inside a try/finally, so a KeyboardInterrupt will cleanup
 		# the engine.
@@ -514,7 +514,12 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 							audio_done = 1
 							audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
 						audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
-						audiopin.Encode(audio_sample)
+						try:
+							audiopin.Encode(audio_sample)
+						except producer.error, arg:
+							print 'Audio sample:', arg, audio_time, audio_flags
+							audio_failed = 1
+							audio_done = 1
 						audio_time = next_audio_time
 						audio_data = next_audio_data
 				if not video_done:
@@ -533,6 +538,10 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 					apply(progress[0], progress[1] + (now, dur))
 		finally:
 			engine.DoneEncoding()
+		
+		if audio_failed:
+			import windowinterface
+			windowinterface.showmessage('Converted video only: could not handle audio')
 		return file
 	except producer.error, arg:
 		import windowinterface
