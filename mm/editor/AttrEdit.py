@@ -736,7 +736,8 @@ class DocumentWrapper(Wrapper):
 			if attrs.has_key(name):
 				names.remove(name)
 		import settings
-		if not settings.get('lightweight'):
+		if not settings.get('lightweight') and \
+		   not attrs.has_key('project_html_page'):
 			names.append('project_html_page')
 		names.sort()
 		return self.__stdnames + names
