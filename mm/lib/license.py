@@ -7,6 +7,7 @@ from LicenseDialog import LicenseDialog, EnterkeyDialog
 
 class WaitLicense(LicenseDialog):
 	def __init__(self, callback, features):
+		import settings
 		self.can_try = 0
 		self.can_eval = 0
 		
@@ -14,6 +15,12 @@ class WaitLicense(LicenseDialog):
 		self.features = features
 		self.secondtime = 0
 		self.dialog = None
+		
+		self._user = settings.get('license_user')
+		if self._user[-18:] == ' (evaluation copy)':
+			self._user = self._user[:-18]
+		self._org = settings.get('license_organization')
+		
 		if self.accept_license():
 			self.do_callback()
 		else:
@@ -60,13 +67,18 @@ class WaitLicense(LicenseDialog):
 ##		import windowinterface
 ##		windowinterface.InputDialog("Enter key:", "", self.ok_callback, (self.cb_quit, ()))
 		import settings
-		user = settings.get('license_user')
-		if user[-18:] == ' (evaluation copy)':
-			user = user[:18]
-		EnterkeyDialog(self.ok_callback, user=settings.get('license_user'), org=settings.get('license_organization'))
+		if self._user is None:
+			self._user = ''
+		if self._org is None:
+			self._org = ''
+		EnterkeyDialog(self.ok_callback, user=self._user, org=self._org)
 
 	def ok_callback(self, str, name=None, organization=None):
 		str = string.strip(str)
+		self._user = name
+		if self._user[-18:] == ' (evaluation copy)':
+			self._user = self._user[:-18]
+		self._org = organization
 		if self.accept_license(str, name, organization):
 			self.close()
 			self.do_callback()
