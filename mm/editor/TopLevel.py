@@ -36,7 +36,6 @@ Error = 'TopLevel.Error'
 
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
-		import settings
 		ViewDialog.__init__(self, 'toplevel_')
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -154,8 +153,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# View manipulation.
 	#
 	def makeviews(self):
-		import settings
-
 		import HierarchyView
 		self.hierarchyview = HierarchyView.HierarchyView(self)
 
@@ -270,7 +267,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		filetypes = ['application/x-grins-project', 'application/smil']
 		import settings
-		if not features.lightweight:
+		if settings.get('cmif'):
 			filetypes.append('application/x-grins-cmif')
 		dftfilename = ''
 		if self.filename:
@@ -572,7 +569,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only')
 			return
 		if mimetype == 'application/x-grins-cmif':
-			import settings
 			if features.lightweight:
 				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
 				return 0
@@ -777,7 +773,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##				# XXXX Not sure about this, this may mess up code in read_it
 ##				self.new_file = 1
 		elif mtype == 'application/x-grins-cmif':
-			import settings
 			if features.lightweight:
 				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
 				raise Error, filename
