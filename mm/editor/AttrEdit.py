@@ -792,6 +792,7 @@ class AttrEditor(AttrEditorDialog):
 					continue
 			namelist.append(name)
 		self.__namelist = namelist
+		initattrinst = None
 		for i in range(len(namelist)):
 			name = namelist[i]
 			typedef, defaultvalue, labeltext, displayername, \
@@ -872,8 +873,10 @@ class AttrEditor(AttrEditorDialog):
 				C = AttrEditorField
 			b = C(self, name, labeltext or name)
 			list.append(b)
+			if initattr and initattr == name:
+				initattrinst = b
 		self.attrlist = list
-		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattr)
+		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattrinst)
 
 	def resetall(self):
 		for b in self.attrlist:
@@ -957,11 +960,14 @@ class AttrEditor(AttrEditorDialog):
 			namelist = self.wrapper.attrnames()
 			if namelist != self.__namelist:
 				# re-open with possibly different size
+				attr = self.getcurattr()
+				if attr:
+					attr = attr.getname()
 				AttrEditorDialog.close(self)
 				for b in self.attrlist:
 					b.close()
 				del self.attrlist
-				self.__open_dialog()
+				self.__open_dialog(attr)
 			else:
 ##				self.fixvalues()
 				self.resetall()
