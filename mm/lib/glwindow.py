@@ -26,13 +26,13 @@ class glwindow():
 	# with the window ID of the window you've created.
 	#
 	def register(self, wid):
-		self.wid = wid
+		self.glwindow_wid = wid
 		windowmap[`wid`] = self
 	#
 	# Unregistration method.  Call this when you close the window.
 	#
 	def unregister(self):
-		del windowmap[`self.wid`]
+		del windowmap[`self.glwindow_wid`]
 	#
 	# Event dispatchers, named after the events.
 	# Note: the window is *not* made current; you must call winset()!
