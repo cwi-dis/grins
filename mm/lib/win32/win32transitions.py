@@ -40,29 +40,40 @@ class TransitionEngine:
 	def join(self, window, ismaster):
 		"""Join this (sub or super) window to an existing transition"""
 		if ismaster:
-			self.windows.insert(0, window)
+			if self.__isrunning():
+				self.windows.insert(0, window)
+				self.__createSurfaces()
+			else:
+				self.windows.insert(0, window)
 		else:
 			self.windows.append(window)
+
 		x, y, w, h = self.windows[0]._rect
 		self.transitiontype.move_resize((0, 0, w, h))
 
 	def ismaster(self, wnd):
 		return self.windows[0]==wnd
 
-	def begintransition(self):
+	def __isrunning(self, wnd):
+		return self.windows[0]._drawsurf!=None
+
+	def __createSurfaces(self):
 		# transition window
 		# or parent window in multiElement transitions
 		wnd = self.windows[0]
-		
-		# resize to this window
-		x, y, w, h = wnd._rect
-		self.transitiontype.move_resize((0, 0, w, h))
 
-		# create surfaces
 		self._passive = wnd._passive
 		wnd._drawsurf = wnd.createDDS()
 		self._active = wnd.createDDS()
 		self._tmp = wnd.createDDS()
+
+		# resize to this window
+		x, y, w, h = wnd._rect
+		self.transitiontype.move_resize((0, 0, w, h))
+	
+	def begintransition(self):		
+		# create surfaces
+		self.__createSurfaces()
 
 		self.__start = time.time() - self.__begin
 		self.settransitionvalue(self.startprogress)
@@ -79,13 +90,31 @@ class TransitionEngine:
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
 			raise AssertionError
-
 		parameters = self.transitiontype.computeparameters(value)
+		
+		# transition window
+		# or parent window in multiElement transitions
 		wnd = self.windows[0]
 		
+		# assert that we paint the active surface the correct way 
+		# for each of the following cases:
+		# 1. multiElement==true, childrenClip==true
+		# 2. multiElement==true, childrenClip==false
+		# 3. multiElement==false
 		if self._multiElement:
-			wnd.paintOnDDS(self._active, wnd)
+			if childrenClip:
+				# since children clipping will be done in wnd's paint method
+				# do a normal painting on active surface
+				# (currently we don't support overall clipping in blitter classes
+				# this has prose: use the more efficient surface blitting
+				# and conse: we paint something we will throw away)
+				wnd.paintOnDDS(self._active, wnd)
+			else:
+				# do a normal painting on active surface
+				wnd.paintOnDDS(self._active, wnd)
 		else:
+			# just paint what wnd is responsible for
+			# i.e. do not paint children
 			wnd._paintOnDDS(self._active, wnd._rect)
 
 		if self.outtrans:
