@@ -2015,9 +2015,6 @@ class _WindowHelpers:
 		return apply(Slider,
 			     (self, prompt, minimum, initial, maximum, cb),
 			     options)
-	def Canvas(self, **options):
-		from WindowCanvas import Canvas
-		return apply(Canvas, (self,), options)
 	def SubWindow(self, **options):
 		return apply(SubWindow, (self,), options)
 	def AlternateSubWindow(self, **options):
