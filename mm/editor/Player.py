@@ -57,6 +57,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (self.close_callback, ()),
 				     help = 'Close the Player View'),
+			USERGROUPS(callback = self.usergroup_callback),
 			CHANNELS(callback = self.channel_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			SYNCCV(callbac = (self.synccv_callback, ())),
@@ -134,6 +135,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.showchannels()
 		else:
 			self.setlayout(self.curlayout, self.curchannel)
+		self.makeugroups()
 		self.showstate()
 		self.after_chan_show()
 
@@ -261,6 +263,18 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def close_callback(self):
 		self.hide()
 
+	def usergroup_callback(self, name):
+		self.toplevel.setwaiting()
+		title, u_state, override = self.context.usergroups[name]
+		if override == 'allowed':
+			if u_state == 'RENDERED':
+				u_state = 'NOT_RENDERED'
+			else:
+				u_state = 'RENDERED'
+			self.context.usergroups[name] = title, u_state, override
+		self.setusergroup(name, u_state == 'RENDERED')
+		self.root.ResetPlayability()
+
 	def channel_callback(self, name):
 		self.toplevel.setwaiting()
 		isvis = self.channels[name].may_show()
@@ -312,3 +326,13 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			channels.append((name, self.channels[name].is_showing()))
 		channels.sort()
 		self.setchannels(channels)
+
+	def makeugroups(self):
+		ugroups = []
+		for name, (title, u_state, override) in self.context.usergroups.items():
+			if override != 'allowed':
+				continue
+			if not title:
+				title = name
+			ugroups.append((name, title, u_state == 'RENDERED'))
+		self.setusergroups(ugroups)
