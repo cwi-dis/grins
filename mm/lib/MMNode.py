@@ -1020,7 +1020,7 @@ class MMNode:
 			# Empty node needs special code:
 			return [ \
 			     ([(SCHED, self)]+in0,[(SCHED_DONE, self)]+out0),\
-			     ([(SCHED_STOP, self)]+in1,out1) ]
+			     ([(SCHED_STOP, self)]+in1,out1) ], []
 		alist = []
 		plist = []
 		slist = []
