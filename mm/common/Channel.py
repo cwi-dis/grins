@@ -507,7 +507,7 @@ class Channel:
 		if self._is_shown and not self.do_arm(node, same):
 		        if same: print 'Could not skip arm on', self # DBG
 			return
-		if same: print 'Skipped an arm on', self # DBG
+##		if same: print 'Skipped an arm on', self # DBG
 		self.arm_1()
 
 	def seekanchor(self, node, aid, args):
