@@ -155,22 +155,27 @@ class RealChannel:
 		self._playargs = (node, window, winpossize, url, windowless)
 		self.__rmaplayer.OpenURL(url)
 		
-		# postpone till the presentation is open
-#		t0 = self.__channel._scheduler.timefunc()
-#		if t0 > node.start_time:
-##			print 'skipping',node.start_time,t0,t0-node.start_time
-#			self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
-#		self.__rmaplayer.Begin()
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > node.start_time:
+			if windowless:
+				self.__spark = 0
+				self.__rmaplayer.Begin()
+			else:
+				# event driven begin
+				self.__spark = 1
+		else:
+			self.__spark = 0
+			self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
-		self.__spark = 1
 		return 1
 
 	def OnPresentationOpened(self):
+		if not self.__spark: return
 		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
-			print 'skipping',node.start_time,t0,t0-node.start_time
+			print 'RealChannel: skipping',node.start_time,t0,t0-node.start_time
 			try:
 				self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
 			except rma.error, arg:
