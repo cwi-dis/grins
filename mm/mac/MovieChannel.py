@@ -29,6 +29,10 @@ class MovieChannel(ChannelWindow):
 		self.idleprocactive = 0
 		Qt.EnterMovies()
 
+	def redraw(self):
+		if self.play_movie:
+			self.play_movie.MoviesTask(0)
+
 	def do_arm(self, node, same=0):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
@@ -43,8 +47,12 @@ class MovieChannel(ChannelWindow):
 		except (ValueError, Qt.Error), arg:
 			self.errormsg(node, 'Cannot open: '+`arg`)
 			return 1
-		self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
+		try:
+			self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
 					QuickTime.newMovieActive)
+		except (ValueError, Qt.Error), arg:
+			self.errormsg(node, 'Not a valid movie file: '+`arg`)
+			return 1
 		rate = self.arm_movie.GetMoviePreferredRate()
 		self.arm_movie.PrerollMovie(0, rate)
 		return 1
@@ -58,6 +66,8 @@ class MovieChannel(ChannelWindow):
 		
 		if self.play_movie.IsMovieDone():
 			self.play_movie = None
+			if self.window:
+				self.window.setredrawfunc(None)
 			windowinterface.cancelidleproc(self._playsome)
 			self.playdone(0)
 			
@@ -82,6 +92,7 @@ class MovieChannel(ChannelWindow):
 		self.play_movie.GoToBeginningOfMovie()
 ##		self.play_movie.MoviesTask(0) # This appears to be a bad idea...
 		self.play_movie.StartMovie()
+		self.window.setredrawfunc(self.redraw)
 		
 		windowinterface.setidleproc(self._playsome)
 		
@@ -105,12 +116,20 @@ class MovieChannel(ChannelWindow):
 		if debug:
 			print 'MacMovieChannel.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or self.syncplay:
+		if not self._is_shown or not node.IsPlayable() or self.syncplay:
 			self.play_1()
 			return
 		if not self.nopop:
 			self.window.pop()
 
+		if self.armed_display.is_closed():
+			# assume that we are going to get a
+			# resize event
+			pass
+		else:
+			self.armed_display.render()
+		if self.played_display:
+			self.played_display.close()
 		self.played_display = self.armed_display
 		self.armed_display = None
 		self.do_play(node)
@@ -121,6 +140,8 @@ class MovieChannel(ChannelWindow):
 		ChannelWindow.resize(self, arg, window, event, value)
 
 	def do_hide(self):
+		if self.window:
+			self.window.setredrawfunc(None)
 		self.arm_movie = None
 		if self.play_movie:
 			self.play_movie.StopMovie()
@@ -134,6 +155,8 @@ class MovieChannel(ChannelWindow):
 			windowinterface.cancelidleproc(self._playsome)
 		self.playdone(1)
 		self.play_movie = None
+		if self.window:
+			self.window.setredrawfunc(None)
 
 	def setpaused(self, paused):
 		pass # XXXX pause!
