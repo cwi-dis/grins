@@ -463,26 +463,28 @@ class SMILHtmlTimeWriter(SMIL):
 			if transIn:
 				td = transitions[transIn]
 				trtype = td.get('trtype')
-				transInDur = td.get('dur')
-				if not transInDur: transInDur = 1
-				if trtype=='fade':
-					transInName = 'Fade'
-					style = style + transFade(dur=transInDur)
+				subtype = td.get('subtype')
+				dur = td.get('dur')
+				if not dur: dur = 1
+				transInName, properties = TransitionFactory(trtype, subtype)
+				if properties:
+					trans = '%s.%s(%s,dur=%.1f)' % (msfilter, transInName, properties, dur)
 				else:
-					transInName = 'Iris'	
-					style = style + transIris(dur=transInDur, style='rectangle', motion='out')
+					trans = '%s.%s(dur=%.1f)' % (msfilter, transInName, dur)
+				style = style + trans
 
 			if transOut:
 				td = transitions[transOut]
 				trtype = td.get('trtype')
+				subtype = td.get('subtype')
 				transOutDur = td.get('dur')
 				if not transOutDur: transOutDur = 1
-				if trtype=='fade':
-					transOutName = 'Fade'
-					style = style + transFade(dur=transOutDur)
+				transOutName, properties = TransitionFactory(trtype, subtype)
+				if properties:
+					trans = '%s.%s(%s,dur=%.1f)' % (msfilter, transOutName, properties, transOutDur)
 				else:
-					transOutName = 'Iris'	
-					style = style + transIris(dur=transOutDur, style='rectangle', motion='out')
+					trans = '%s.%s(dur=%.1f)' % (msfilter, transOutName, transOutDur)
+				style = style + trans
 				
 			if transIn or transOut:
 				style = style + ';'
@@ -982,40 +984,107 @@ transScript = "<script language=JavaScript>\n%s%s</script>\n" % (transInScript, 
 
 msfilter = 'progid:DXImageTransform.Microsoft'
 
-def trans(trname='Iris', properties='dur=1.0'):
-	return "progid:DXImageTransform.Microsoft.%s(%s) " % (trname, properties)
-	
-def transIris(dur=1, style='circle', motion='out'):
-	return "progid:DXImageTransform.Microsoft.Iris(irisStyle=%s, motion=%s, duration=%.1f) " % (style, motion, dur)
+#defaultTrans = ('Iris', 'irisStyle=circle, motion=out')
 
-def transBarn(dur=1, orientation='vertical', motion='in'):
-	return "progid:DXImageTransform.Microsoft.Barn(orientation=%s, motion=%s, duration=%.1f) " % (orientation, motion, dur)
+#defaultTrans = ( 'Blinds', 'direction=up, bands=1')
 
-def transSlide(dur=1, direction='up', bands=1):
-	return "progid:DXImageTransform.Microsoft.Slide(direction=%s, bands=%d, duration=%.1f) " % (direction, bands, dur)
-	
-def transStrips(dur=1, motion='leftdown'):
-	return "progid:DXImageTransform.Microsoft.Strips(motion=%s, duration=%.1f) " % (motion, dur)
+#defaultTrans = ( 'Strips', 'motion=leftdown')
 
-def transBlinds(dur=1, direction='right'):
-	return "progid:DXImageTransform.Microsoft.Blinds(direction=%s, duration=%.1f) " % (direction, dur)
+#defaultTrans = ( 'Barn', 'orientation=vertical, motion=out')
 
-def transCheckerBoard(dur=1, direction='down'):
-	return "progid:DXImageTransform.Microsoft.CheckerBoard(direction=%s, duration=%.1f) " % (direction, dur)
+#defaultTrans = ( 'RandomBars', 'orientation=horizontal')
 
-def transRandomBars(dur=1, orientation='horizontal'):
-	return "progid:DXImageTransform.Microsoft.RandomBars(orientation=%s, duration=%.1f) " % (orientation, dur)
+#defaultTrans = ( 'CheckerBoard', 'direction=right')
 
-def transFade(dur=1):
-	return "progid:DXImageTransform.Microsoft.Fade(duration=%.1f)" % dur
+#defaultTrans = ( 'RandomDissolve', '')
 
-def transRandomDissolve(dur=1):
-	return "progid:DXImageTransform.Microsoft.RandomDissolve(duration=%.1f) " % dur
+#defaultTrans = ('CrStretch', 'stretchStyle=push')
 
-def filterAlpha(opacity=100, finishOpacity=0, style=3):
-	return "progid:DXImageTransform.Microsoft.Alpha(Opacity=%d, FinishOpacity=%d, Style=%d) " % (opacity, finishOpacity, style)
+defaultTrans = ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward', )
 
 
+TRANSITIONDICT = {
+	("barWipe", "leftToRight") : ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward'),
+	("barWipe", None) : ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward'),
+	("boxWipe", "topLeft") : defaultTrans,
+	("boxWipe", None) : defaultTrans,
+	("fourBoxWipe", "cornersIn") : defaultTrans,
+	("fourBoxWipe", None) : defaultTrans,
+	("barnDoorWipe", "vertical") : defaultTrans,
+	("barnDoorWipe", None) : defaultTrans,
+	("diagonalWipe", "topLeft") : defaultTrans,
+	("diagonalWipe", None) : defaultTrans,
+	("bowTieWipe", "vertical") : defaultTrans,
+	("bowTieWipe", None) : defaultTrans,
+	("miscDiagonalWipe", "doubleBarnDoor") : defaultTrans,
+	("miscDiagonalWipe", None) : defaultTrans,
+	("veeWipe", "down") : defaultTrans,
+	("veeWipe", None) : defaultTrans,
+	("barnVeeWipe", "down") : defaultTrans,
+	("barnVeeWipe", None) : defaultTrans,
+	("zigZagWipe", "leftToRight") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("zigZagWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("barnZigZagWipe", "vertical") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("barnZigZagWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("irisWipe", "rectangle") : ('Iris', 'irisStyle=rectangle, motion=out'),
+	("irisWipe", None) : ('Iris', 'irisStyle=circle, motion=out'),
+	("triangleWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
+	("triangleWipe", None) : ('Iris', 'irisStyle=diamond, motion=out'),
+	("arrowHeadWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
+	("arrowHeadWipe", None) : defaultTrans,
+	("pentagonWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
+	("pentagonWipe", None) : ('Iris', 'irisStyle=diamond, motion=out'),
+	("hexagonWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
+	("hexagonWipe", None) : ('Iris', 'irisStyle=diamond, motion=out'),
+	("ellipseWipe", "circle") : ('Iris', 'irisStyle=circle, motion=out'),
+	("ellipseWipe", None) : ('Iris', 'irisStyle=circle, motion=out'),
+	("eyeWipe", "horizontal") : ('Iris', 'irisStyle=circle, motion=out'),
+	("eyeWipe", None) : ('Iris', 'irisStyle=circle, motion=out'),
+	("roundRectWipe", "horizontal") : ('Iris', 'irisStyle=circle, motion=out'),
+	("roundRectWipe", None) : ('Iris', 'irisStyle=circle, motion=out'),
+	("starWipe", "fourPoint") : ('Iris', 'irisStyle=star, motion=out'),
+	("starWipe", None) : ('Iris', 'irisStyle=star, motion=out'),
+	("clockWipe", "clockwiseTwelve") : ('RadialWipe', 'wipeStyle=clock'),
+	("clockWipe", None) : ('RadialWipe', 'wipeStyle=clock'),
+	("pinWheelWipe", "twoBladeVertical") : ('RadialWipe', 'wipeStyle=wedge'),
+	("pinWheelWipe", None) : ('CrRadialWipe', 'wipeStyle=wedge'),
+	("singleSweepWipe", "clockwiseTop") : ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward') ,
+	("singleSweepWipe", None) : ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward') ,
+	("fanWipe", "centerTop") : ('CrWheel', 'spokes=4'),
+	("fanWipe", None) : ('CrWheel', 'spokes=8'),
+	("doubleFanWipe", "fanOutVertical") : ('CrWheel', 'spokes=4'),
+	("doubleFanWipe", None) : ('CrWheel', 'spokes=8'),
+	("doubleSweepWipe", "parallelVertical") : defaultTrans,
+	("doubleSweepWipe", None) : defaultTrans,
+	("saloonDoorWipe", "top") : ( 'Barn', 'orientation=horizontal, motion=out'),
+	("saloonDoorWipe", None) : ( 'Barn', 'orientation=vertical, motion=out'),
+	("windshieldWipe", "right") : ('RadialWipe', 'wipeStyle=wedge'),
+	("windshieldWipe", None) :  ('RadialWipe', 'wipeStyle=wedge'),
+	("snakeWipe", "topLeftHorizontal") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("snakeWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("spiralWipe", "topLeftClockwise") : ('CrSpiral', 'GridSizeX=8,GridSizeY=8'),
+	("spiralWipe", None) : ('CrSpiral', 'GridSizeX=8,GridSizeY=8'),
+	("parallelSnakesWipe", "verticalTopSame") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("parallelSnakesWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("boxSnakesWipe", "twoBoxTop") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("boxSnakesWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("waterfallWipe", "verticalLeft") : ('Strips','Motion=rightdown'),
+	("waterfallWipe", None) : ('Strips','Motion=rightdown'),
+	("pushWipe", "fromLeft") : ('Slide', 'slideStyle=push, bands=1'),
+	("pushWipe", None) : ('Slide', 'slideStyle=push, bands=1'),
+	("slideWipe", "fromLeft") : ('Slide', 'slideStyle=hide, bands=1'),
+	("slideWipe", None) : ('Slide', 'slideStyle=hide, bands=1'),
+	("fade", "crossFade") : ('Fade', ''),
+	("fade", None) : ('Fade', ''),
+}
+
+def TransitionFactory(trtype, subtype):
+	"""Return the class that implements this transition. """
+	if TRANSITIONDICT.has_key((trtype, subtype)):
+		return TRANSITIONDICT[(trtype, subtype)]
+	if TRANSITIONDICT.has_key((trtype, None)):
+		return TRANSITIONDICT[(trtype, None)]
+	return defaultTrans
 
 #
 #########################
