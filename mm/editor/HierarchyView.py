@@ -25,6 +25,7 @@ CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
 LEAFCOLOR = fix(208, 182, 160)		# Pale pinkish, match channel view
 ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
 BAGCOLOR = fix(152, 174, 200)		# Light blue
+ALTCOLOR = fix(152, 200, 174)		# Light green
 PARCOLOR = fix(150, 150, 150)		# Gray
 SEQCOLOR = fix(150, 150, 150)		# Gray
 TEXTCOLOR = fix(0, 0, 0)		# Black
@@ -661,6 +662,7 @@ class Object:
 					(None, 'Sequential', (self.createseqcall, ())),
 					(None, 'Parallel', (self.createparcall, ())),
 					(None, 'Bag', (self.createbagcall, ())),
+					(None, 'Alternate', (self.createaltcall, ())),
 					]),
 				]),
 			('d', 'Delete focus', (self.deletecall, ())),
@@ -734,6 +736,8 @@ class Object:
 			color = PARCOLOR
 		elif nt == 'bag':
 			color = BAGCOLOR
+		elif nt == 'alt':
+			color = ALTCOLOR
 		else:
 			color = 255, 0, 0 # Red -- error indicator
 		d.drawfbox(color, (l, t, r - l, b - t))
@@ -899,6 +903,9 @@ class Object:
 
 	def createbagcall(self):
 		self.mother.insertparent('bag')
+
+	def createaltcall(self):
+		self.mother.insertparent('alt')
 
 	def pastebeforecall(self):
 		self.mother.paste(-1)
