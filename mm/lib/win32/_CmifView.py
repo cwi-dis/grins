@@ -380,8 +380,6 @@ class _CmifStructView(_CmifView):
 	# Class contructor. initializes base classes
 	def __init__(self,doc):
 		_CmifView.__init__(self,doc)
-		self._button_down=0
-		self._drag_cmd_send=0
 
 		# shortcut for GRiNS private clipboard format
 		self.CF_NODE=self.getClipboardFormat('Node')
@@ -456,16 +454,6 @@ class _CmifStructView(_CmifView):
 		if callAttr:
 			self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.ATTRIBUTES_UI.id)
 
-	# Response to mouse move
-	def onMouseMove(self, params):
-		_CmifView.onMouseMove(self, params)
-		if not self._button_down or self._drag_cmd_send: return
-		import usercmd,usercmdui
-		for cmd in self._commandlist:
-			if cmd.__class__==usercmd.MOVE_CHANNEL:
-				self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.MOVE_CHANNEL_UI.id)
-				self._drag_cmd_send=1
-				break
 
 	# Response to left button down
 	def onLButtonDown(self, params):
@@ -516,15 +504,6 @@ class _CmifStructView(_CmifView):
 		else:
 			return usercmdui.PASTE_AFTER_UI
 							
-	# Response to left button up
-	def onLButtonUp(self, params):
-		_CmifView.onLButtonUp(self, params)
-		self._button_down=0
-		if self._drag_cmd_send:
-			msg=win32mu.Win32Msg(params)
-			self.onMouseEvent(msg.pos(),Mouse0Press)
-			self.onMouseEvent(msg.pos(),Mouse0Release)
-			self._drag_cmd_send=0
 
 				
 #################################################
