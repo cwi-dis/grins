@@ -21,10 +21,12 @@ class TopLevelDialog:
 			PAUSE(callback = (self.pause_callback, ())),
 			STOP(callback = (self.stop_callback, ())),
 			]
-		self.commandlist.append(SCHEDDUMP(callback = (self.__dump, ())))
+		if __debug__:
+			self.commandlist.append(SCHEDDUMP(callback = (self.__dump, ())))
 	
-	def __dump(self):
-		self.player.scheduler.dump()
+	if __debug__:
+		def __dump(self):
+			self.player.scheduler.dump()
 
 	def show(self):
 		if self.window is not None:
