@@ -520,6 +520,8 @@ class _Window:
 			self._closecallbacks.append(func)
 
 	def _input_callback(self, widget, client_data, call_data):
+		if self.is_closed():
+			return
 		if debug: print `self`+'._input_callback()'
 		event = call_data.event
 		if event.type == X.KeyPress:
@@ -575,6 +577,8 @@ class _Window:
 			print 'unknown event',`event.type`
 
 	def _expose_callback(self, widget, client_data, call_data):
+		if self.is_closed():
+			return
 		if debug: print `self`+'._expose_callback()'
 		if not self._form:
 			return		# why were we called anyway?
@@ -614,6 +618,8 @@ class _Window:
 		toplevel._win_lock.release()
 
 	def _resize_callback(self, *rest):
+		if self.is_closed():
+			return
 		if debug: print `self`+'._resize_callback()'
 		toplevel._win_lock.acquire()
 		val = self._form.GetValues(['width', 'height'])
@@ -2507,6 +2513,8 @@ class FileDialog:
 		return self._form is None
 
 	def _cancel_callback(self, *rest):
+		if self.is_closed():
+			return
 		must_close = TRUE
 		try:
 			if self.cb_cancel:
@@ -2521,6 +2529,8 @@ class FileDialog:
 				self.close()
 
 	def _ok_callback(self, widget, client_data, call_data):
+		if self.is_closed():
+			return
 		import os
 		text = self._dialog.FileSelectionBoxGetChild(
 						   Xmd.DIALOG_TEXT)
@@ -2571,6 +2581,8 @@ class InputDialog:
 		toplevel._subwindows.append(self)
 
 	def _ok(self, w, client_data, call_data):
+		if self.is_closed():
+			return
 		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
 		try:
 			value = text.TextFieldGetString()
@@ -2581,6 +2593,8 @@ class InputDialog:
 			client_data(value)
 
 	def _cancel(self, w, client_data, call_data):
+		if self.is_closed():
+			return
 		self.close()
 
 	def setcursor(self, cursor):
@@ -2734,15 +2748,23 @@ class AttrDialog:
 		return TRUE		# success
 
 	def _buttonhelp(self, widget, client_data, call_data):
+		if self.is_closed():
+			return
 		showmessage(client_data)
 
 	def _cancel(self, *rest):
+		if self.is_closed():
+			return
 		self.close()
 
 	def _apply(self, *rest):
+		if self.is_closed():
+			return
 		dummy = self.do_apply()
 
 	def _ok(self, *rest):
+		if self.is_closed():
+			return
 		if not self.do_apply():
 			return
 		self.close()
@@ -2768,6 +2790,8 @@ class _C:
 		self.close()
 
 	def _reset(self, w, client_data, call_data):
+		if self.is_closed():
+			return
 		self.reset()
 
 	def close(self):
@@ -2814,6 +2838,8 @@ class AttrOption(_C):
 		self.widget.ManageChild()
 
 	def _cb(self, widget, value, call_data):
+		if self.is_closed():
+			return
 		self.new_value = value
 
 	def _newmenu(self):
@@ -2902,6 +2928,8 @@ class AttrInt(AttrString):
 					None)
 
 	def _verify(self, w, client_data, call_data):
+		if self.is_closed():
+			return
 		import string
 		valid_chars = string.digits + '-'
 		if call_data.text is None:
@@ -2918,6 +2946,8 @@ class AttrFloat(AttrString):
 					None)
 
 	def _verify(self, w, client_data, call_data):
+		if self.is_closed():
+			return
 		import string
 		valid_chars = string.digits + '+-eE.'
 		if call_data.text is None:
@@ -2955,6 +2985,8 @@ class AttrFile(_C):
 		return self.widget.TextFieldGetString()
 
 	def browser(self, *rest):
+		if self.is_closed():
+			return
 		import os
 		file = self.getvalue()
 		if file == '' or file == '/dev/null':
@@ -3008,6 +3040,12 @@ class _MenuSupport:
 		self._menu = None
 		if menu:
 			menu.DestroyWidget()
+			try:
+				self._form.RemoveEventHandler(
+					X.ButtonPressMask, FALSE,
+					self._post_menu, None)
+			except AttributeError:
+				pass
 
 	# support methods, only used by derived classes
 	def _post_menu(self, w, client_data, event):
@@ -3070,6 +3108,8 @@ class _Widget(_MenuSupport):
 						  Xmd.ATTACH_FORM
 
 	def _destroy(self, widget, client_data, call_data):
+		if self.is_closed():
+			return
 		self.close()
 
 class Label(_Widget):
@@ -3156,6 +3196,8 @@ class OptionMenu(_Widget):
 		return menu, initbut
 
 	def _cb(self, widget, value, call_data):
+		if self.is_closed():
+			return
 		self._value = value
 		if self._callback:
 			f, a = self._callback
@@ -3276,9 +3318,13 @@ class _List:
 			
 
 	def _callback(self, w, (func, arg), call_data):
+		if self.is_closed():
+			return
 		apply(func, arg)
 
 	def _callback2(self, w, (func, arg), call_data):
+		if self.is_closed():
+			return
 		pos = self.getselected()
 		if pos is None:
 			pos = self._list.ListGetKbdItemPos()
@@ -3461,6 +3507,8 @@ class TextInput(_Widget):
 		self._text.value = text
 
 	def _callback(self, w, (func, arg), call_data):
+		if self.is_closed():
+			return
 		apply(func, arg)
 
 class TextEdit(_Widget):
@@ -3504,6 +3552,8 @@ class TextEdit(_Widget):
 		return text
 
 	def _callback(self, w, (func, arg), call_data):
+		if self.is_closed():
+			return
 		apply(func, arg)
 
 class Separator(_Widget):
@@ -3596,6 +3646,8 @@ class ButtonRow(_Widget):
 		self._buttons[button].ManageChild()
 
 	def _callback(self, widget, callback, call_data):
+		if self.is_closed():
+			return
 		if self._cb:
 			apply(self._cb[0], self._cb[1])
 		if callback:
@@ -3657,6 +3709,8 @@ class Slider(_Widget):
 		return self._minimum, self._maximum
 
 	def _callback(self, widget, callback, call_data):
+		if self.is_closed():
+			return
 		apply(callback[0], callback[1])
 
 	def _calcrange(self, minimum, initial, maximum):
