@@ -54,7 +54,7 @@ def istat(filename):
 	dummy = p.readline()
 	line = p.readline()
 	if not line:
-		raise RuntimeError, 'bad file for istat: ' + filename
+		raise IOError, 'bad file for istat: ' + filename
 	w = string.split(line)
 	# xsize, ysize, zsize, min, max, bpp, type, storage, name
 	statcache[filename] = retval = \
@@ -66,7 +66,7 @@ def istat(filename):
 def imgsize(filename):
 	return istat(filename)[:2]
 
-class _showimg():
+class _showimg:
 	def init(self, (filename, xy)):
 		tempname = cachefile(filename)
 		cmd = 'exec ' + SHOWPREP + ' ' + tempname

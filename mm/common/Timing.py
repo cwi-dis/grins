@@ -73,7 +73,7 @@ def getduration(node):
 		cattrs = node.context.channeldict[cname]
 		ctype = cattrs['type']
 		cclass = channelmap[ctype]
-	except:
+	except: # XXX be more specific!
 		# Fallback if the channel doesn't exists, etc.
 		return MMAttrdefs.getattr(node, 'duration')
 	# Get here only if the 'try' succeeded
@@ -91,14 +91,14 @@ def prep1(node):
 	node.counter = [0, 0]
 	node.deps = [], []
 	type = node.GetType()
-	if type = 'seq':
+	if type == 'seq':
 		xnode, xside = node, HD
 		for c in node.GetChildren():
 			prep1(c)
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type = 'par':
+	elif type == 'par':
 		for c in node.GetChildren():
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
@@ -138,19 +138,19 @@ def decrement(q, (delay, node, side)):
 		return
 	if x < 0:
 		raise CheckError, 'counter below zero!?!?'
-	if side = HD:
+	if side == HD:
 		node.t0 = q.timefunc()
-	elif side = TL:
+	elif side == TL:
 		node.t1 = q.timefunc()
 	if node.GetType() not in interiortypes:
-		if side = HD:
+		if side == HD:
 			dt = getduration(node)
 			id = q.enter(dt, 0, decrement, (q, (0, node, TL)))
 	for arg in node.deps[side]:
 		decrement(q, arg)
 
 
-class pseudotime():
+class pseudotime:
 	def init(self, t):
 		self.t = t
 		return self

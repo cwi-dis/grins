@@ -4,7 +4,7 @@
 
 import MMAttrdefs
 
-class ViewDialog():
+class ViewDialog:
 	#
 	def init(self, geom_name):
 		self.geom_name = geom_name
@@ -18,7 +18,7 @@ class ViewDialog():
 	#
 	def save_geometry(self):
 		self.get_geometry()
-		if self.last_geometry = None:
+		if self.last_geometry == None:
 			return
 		name = self.geom_name
 		h, v, width, height = self.last_geometry

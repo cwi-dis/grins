@@ -14,7 +14,7 @@ import AttrEdit
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 
-class StyleSheet() = ViewDialog(), BasicDialog():
+class StyleSheet(ViewDialog, BasicDialog):
 	#
 	def init(self, toplevel):
 		self = ViewDialog.init(self, 'style_')
@@ -145,7 +145,7 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 		# (Ignore the input box.)
 		i, name = self.getselected()
 		# (1) check that a style is indeed selected
-		if i = 0 or name = '':
+		if i == 0 or name == '':
 			fl.show_message( \
 				'No style selected to delete', '', '')
 			return
@@ -163,7 +163,7 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 		newname = self.nameinput.get_input()
 		# (1) fetch the old name
 		i, oldname = self.getselected()
-		if i = 0:
+		if i == 0:
 			fl.show_message( \
 				'No style selected to rename', '', '')
 			return
@@ -173,7 +173,7 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 				'Cannot rename to empty style name', '', '')
 			return
 		# (2a) check that the old and the new name differ
-		if oldname = newname:
+		if oldname == newname:
 			fl.show_message( \
 			  'Please edit the input box to the new name', '', '')
 			return
@@ -193,7 +193,7 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 	#
 	def edit_callback(self, (obj, arg)):
 		i, name = self.getselected()
-		if i = 0:
+		if i == 0:
 			fl.show_message( \
 				'No style selected to edit', '', '')
 			return
@@ -204,13 +204,13 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 		# search the browser for a matching name and select it.
 		name = self.nameinput.get_input()
 		for i in range(self.browser.get_browser_maxline()):
-			if self.browser.get_browser_line(i+1) = name:
+			if self.browser.get_browser_line(i+1) == name:
 				self.browser.select_browser_line(i+1)
 				break
 	#
 	def getselected(self):
 		i = self.browser.get_browser()
-		if i = 0: return 0, ''
+		if i == 0: return 0, ''
 		name = self.browser.get_browser_line(i)
 		return i, name
 	#

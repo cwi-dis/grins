@@ -172,7 +172,7 @@ class MMNode:
 	def IsAncestorOf(self, x):
 		_stat('IsAncestorOf')
 		while x <> None:
-			if self = x: return 1
+			if self == x: return 1
 			x = x.parent
 		return 0
 	#
@@ -182,8 +182,8 @@ class MMNode:
 		p2 = x.GetPath()
 		n = min(len(p1), len(p2))
 		i = 0
-		while i < n and p1[i] = p2[i]: i = i+1
-		if i = 0: return None
+		while i < n and p1[i] == p2[i]: i = i+1
+		if i == 0: return None
 		else: return p1[i-1]
 	#
 	def GetChildren(self):
@@ -300,7 +300,7 @@ class MMNode:
 			for name in summnames:
 				print name,
 			print
-		if self.type = 'imm' or self.values:
+		if self.type == 'imm' or self.values:
 			print 'Values:',
 			for value in self.values: print value,
 			print
@@ -341,7 +341,7 @@ class MMNode:
 	def SetType(self, type):
 		if type not in alltypes:
 			raise CheckError, 'SetType() bad type'
-		if type = self.type:
+		if type == self.type:
 			return
 		if self.type in interiortypes and type in interiortypes:
 			self.type = type
@@ -410,7 +410,7 @@ class MMNode:
 	def _fixsummaries(self, summaries):
 		tofix = summaries.keys()
 		for key in tofix[:]:
-			if summaries[key] = []:
+			if summaries[key] == []:
 				tofix.remove(key)
 		self._updsummaries(tofix)
 	#
@@ -422,7 +422,7 @@ class MMNode:
 					tofix.remove(key)
 				else:
 					s = x._summarize(key)
-					if s = x.summaries[key]:
+					if s == x.summaries[key]:
 						tofix.remove(key)
 					else:
 						x.summaries[key] = s
@@ -448,12 +448,12 @@ class MMNode:
 #
 def _valuedeepcopy(value):
 	_stat('_valuedeepcopy')
-	if type(value) = type({}):
+	if type(value) == type({}):
 		copy = {}
 		for key in value.keys():
 			copy[key] = _valuedeepcopy(value[key])
 		return copy
-	if type(value) = type([]):
+	if type(value) == type([]):
 		copy = value[:]
 		for i in range(len(copy)):
 			copy[i] = _valuedeepcopy(copy[i])

@@ -4,7 +4,7 @@ import gl
 
 from Dialog import GLDialog
 
-class ChannelWindow() = GLDialog():
+class ChannelWindow(GLDialog):
 	#
 	# Initialization function.
 	#

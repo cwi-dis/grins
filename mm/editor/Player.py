@@ -40,7 +40,7 @@ from ChannelMap import channelmap
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class Player() = ViewDialog(), scheduler(), BasicDialog():
+class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	# Initialization.
 	#
@@ -155,7 +155,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	def setrate(self, rate):
 		if rate < 0.0:
 			raise CheckError, 'setrate with negative rate'
-		if self.rate = rate:
+		if self.rate == rate:
 			return
 		msec = time.millitimer()
 		t = (msec - self.msec_origin) / 1000.0
@@ -176,7 +176,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		delay = min(when - now, 1.0 - now%1.0)
 		if delay <= 0:
 			delay = 0.001 # Immediate, but nonzero
-		if self.rate = 0.0:
+		if self.rate == 0.0:
 			delay = 0.0 # Infinite
 		else:
 			delay = delay / self.rate
@@ -255,7 +255,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	def pause_callback(self, (obj, arg)):
 		if obj.pushed:
-			if self.playing and self.rate = 0.0:
+			if self.playing and self.rate == 0.0:
 				self.play()
 			else:
 				self.pause()
@@ -281,7 +281,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	def ab_callback(self, (obj, arg)):
 		if self.abcontrol:
 			text = `self.abcontrol`
-			if text[:1] = '(' and text[-1:] = ')':
+			if text[:1] == '(' and text[-1:] == ')':
 				text = text[1:-1]
 		else:
 			text = ''
@@ -291,7 +291,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		else:
 			try:
 				ab = eval(text)
-				if ab = ():
+				if ab == ():
 					self.abcontrol = ()
 				else:
 					# Do a little type checking...
@@ -379,7 +379,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			if not self.start_playing(2.0):
 				return
 		else:
-			if self.rate = 0.0:
+			if self.rate == 0.0:
 				self.setrate(2.0)
 			else:
 				self.setrate(self.rate * 2.0)
@@ -395,13 +395,13 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			self.fastbutton.set_button(0)
 		else:
 			self.playbutton.set_button(0.0 < self.rate <= 1.0)
-			self.pausebutton.set_button(0.0 = self.rate)
+			self.pausebutton.set_button(0.0 == self.rate)
 			self.fastbutton.set_button(1.0 < self.rate)
 		if self.playroot is self.root:
 			self.partbutton.label = ''
 		else:
 			name = MMAttrdefs.getattr(self.playroot, 'name')
-			if name = 'none':
+			if name == 'none':
 				label = 'part play'
 			else:
 				label = 'part play:\n' + name
@@ -415,7 +415,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			self.statebutton.label = label
 		#
 		rate = self.rate
-		if int(rate) = rate: rate = int(rate)
+		if int(rate) == rate: rate = int(rate)
 		label = `rate`
 		if self.speedbutton.label <> label:
 			self.speedbutton.label = label
@@ -543,10 +543,10 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		if x < 0:
 			raise CheckError, 'counter below zero!?!?'
 		if node.GetType() not in interiortypes:
-			if side = HD:
+			if side == HD:
 				if doit:
 					chan = self.getchannel(node)
-					if chan = None:
+					if chan == None:
 						print 'Play node w/o channel'
 						doit = 0
 				if doit:
@@ -560,7 +560,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 						self.decrement, (0, node, TL))
 		for arg in node.deps[side]:
 			self.decrement(arg)
-		if node = self.playroot and side = TL:
+		if node == self.playroot and side == TL:
 			# The whole tree is finished -- stop playing.
 			if self.setcurrenttime_callback:
 				self.setcurrenttime_callback(node.t1)
