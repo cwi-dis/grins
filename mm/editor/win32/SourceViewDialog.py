@@ -12,6 +12,7 @@ class SourceViewDialog:
 		self._findText = ''
 		self._replaceText = None
 		self._findOptions = (0,0)
+		self.__selChanged = 1
 		
 	def __setCommonCommandList(self):
 		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ())),
@@ -124,6 +125,7 @@ class SourceViewDialog:
 	# this call back is called when the selection change
 	def onSelChanged(self):
 		self.__updateCommandList()
+		self.__selChanged = 1
 
 	# this call back is called when the content of the clipboard change (or may have changed)
 	def onClipboardChanged(self):
@@ -175,11 +177,13 @@ class SourceViewDialog:
 		self._findReplaceDlg = win32dialog.ReplaceDialog(self.doFindNext, self.doReplace, self.doReplaceAll, \
 														self._findText, self._replaceText, self._findOptions, self.window)
 		self._findReplaceDlg.show()
-
+		if not self.__selChanged:
+			self._findReplaceDlg.enableReplace(1)
+		
 	def doFindNext(self, text, options):
 		if not self.__textwindow:
 			return
-		
+
 		# save the text and options for the next time
 		self._findText = text
 		self._findOptions = options
@@ -198,9 +202,27 @@ class SourceViewDialog:
 			found = 1
 
 		if self._findReplaceDlg != None:
-			self._findReplaceDlg.enableReplace(found)		
+			self._findReplaceDlg.enableReplace(found)
+		# raz the flag whitch allows to know if a replace if directly possible.
+		self.__selChanged = 0
 					
-	def doReplace(self, replaceText):
+	def doReplace(self, text, options, replaceText):
+		if not self.__textwindow:
+			return
+
+		# save the text and options for the next time
+		self._findOptions = options
+		
+		if self._findText != text:
+			# the findwhat value has changed since the last find
+			# in this special case, we jump to the next value without automatic replace
+			self._findText = text
+			self.onFindNext()
+			return
+		
+		# save the text and options for the next time
+		self._findText = text
+
 		# save the text for the next time
 		self._replaceText = replaceText
 		if self.__textwindow:
@@ -227,6 +249,6 @@ class SourceViewDialog:
 			nocc = nocc + 1
 			pos = self.__textwindow.findNext(begin, self._findText, self._findOptions)
 
-		windowinterface.showmessage("replaced "+`nocc`+' occurrences')
+		windowinterface.showmessage("Replaced "+`nocc`+' occurrences')
 		
 	
