@@ -1,3 +1,20 @@
+-------------- NEW ---------------
+
+channel view: node focus not redrawn on commit
+
+text channel: after a while the font manager fails with
+"ValidateFont: fmfntread failed."
+(suspect a file isn't closed...)
+Not much we can do about this -- seems to be a font mgr bug...
+
+text channel: join lines, but use blank lines to separate paragraphs...
+    
+block view: open/close must be done different; opening something that
+had a red button before zooming should open all of it, not keep it
+closed... 
+
+-------------- old ---------------
+
 channel view: crashes if a leaf node has no valid channel
 
 channel view: if root is selected, focus isn't shown
@@ -15,23 +32,15 @@ channel view: resize behavior is weird
 
 ------------------------------ FEATURES ---------------------------
 
-quit dialog if there are unsaved changes
+need quit dialog if there are unsaved changes
 
 player: "keep" attribute (default 1)
-
-player: color used for clearing various windows (text, image, movie)
-
-text channel: font spec should be a node attribute (as well as colors)
-
-block view: needs Copy command as well
 
 channel view: needs command structure like block view
 
 channel view: need commands to add/delete channels
 
 block & channel view: want to show other view's focus
-
-need global clipboard module
 
 ------------------------------ NITS -------------------------------
 
@@ -62,3 +71,11 @@ toplevel: hierarchy button light stays on when view is closed by restore
 info window: should be smaller
 
 movie channel: crash when a "2.0" movie is presented
+
+player: color used for clearing various windows (text, image, movie)
+
+need global clipboard module
+
+block view: needs Copy command as well
+
+text channel: font spec should be a node attribute (as well as colors)
