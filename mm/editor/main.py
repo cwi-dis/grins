@@ -1,6 +1,9 @@
 # Main program for the CMIF editor
 
 import sys
+sys.path.append('/ufs/guido/mm/demo/mm4')
+sys.path.append('/ufs/guido/mm/demo/lib')
+
 import MMExc
 import TopLevel
 import SoundChannel
