@@ -4144,9 +4144,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			msg = ''
 		if lineno is None:
-			message = 'fatal error: %s' % message
+			message = 'unrecoverable error: %s' % message
 		else:
-			message = 'fatal error, line %d: %s' % (lineno, message)
+			message = 'unrecoverable error, line %d: %s' % (lineno, message)
 		line = lineno
 		if line != None:
 			line = lineno-1
@@ -4156,7 +4156,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def fatalerror(self):
 		type, value, traceback = sys.exc_info()
 		if self.__printfunc is not None:
-			msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
+			msg = 'unrecoverable error while parsing at line %d: %s' % (self.lineno, str(value))
 			if self.__printdata:
 				data = '\n'.join(self.__printdata)
 				# first 30 lines should be enough
@@ -4269,6 +4269,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass
 			else:
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
+		elif tagname != 'smil' and len(nstag) == 2 and nstag[1] == 'smil':
+			# SMIL in unrecognized namespace
+			self.error("element `smil' in unrecognized namespace `%s'" % nstag[0])
 		elif tagname != 'smil':
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
