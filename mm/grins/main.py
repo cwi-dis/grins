@@ -10,7 +10,7 @@ try:
 except:
 	pass
 
-if os.name != 'mac' or __file__ != '<frozen>':
+if os.name != 'mac' and __file__ != '<frozen>':
 	import fastimp
 	fastimp.install()
 
