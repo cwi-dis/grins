@@ -6,6 +6,7 @@ Priority top-to-bottom.
 Fix the RealChannel (waiting to look up Real API documentation).
 Temporal view - make it work.
 Reload button on the player.
+Make the structure view faster.
 
 //Player - learn the scheduling algorithm (difficult)
 //Interop tests (related to Player).
@@ -20,7 +21,7 @@ Nodes should not overlap
 The width should be calculated from the duration.
 
 * Indefinite durations in the temporal view.
-
+* Look into durations more,
 
 
 Incoming

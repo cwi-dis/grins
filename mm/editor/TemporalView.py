@@ -18,8 +18,8 @@ class TemporalView(TemporalViewDialog):
 		
 		# Oooh yes, let's do some really cool selection code.
 		# Of course, I'll write it _later_.
-		self.selected_channels = [] # Alain: catch me if you caaaan!! :-)
-		self.selected_nodes = [] # This is a must!
+		self.selected_channels = []
+		self.selected_nodes = []
 		
 		self.time = 0		# Currently selected "time" - in seconds.
 		self.zoomfactorx = 0	# Scale everything to this! Done in the Widgets for this
