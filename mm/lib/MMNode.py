@@ -3031,6 +3031,14 @@ class MMNode(MMTreeElement):
 							values.append('%d' % v)
 						c.attrdict['atag'] = 'animate'
 					c.attrdict['values'] = ';'.join(values)
+
+					# synthesize a name for the channel
+					chname = 'animate%s' % c.GetUID()
+					c.attrdict['channel'] = chname
+
+					# add to context an internal channel for this node
+					context.addinternalchannels( [(chname, 'animate', c.attrdict), ] )
+					
 				# cleanup
 				for t, v in animvals:
 					if v.has_key('pos'):
