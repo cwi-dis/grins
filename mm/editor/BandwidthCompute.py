@@ -241,7 +241,11 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 		if t0 > 0 or t1 > 0:
 			break
 		if bits:
-			prerolltime = prerolltime + (bits/float(maxbandwidth))
+			prerolldur = bits/float(maxbandwidth)
+			prerollbox = (-prerolltime-prerolldur, -prerolltime, 0, 
+				maxbandwidth, 'preroll')
+			node.add_bandwidthboxes([prerollbox])
+			prerolltime = prerolltime + prerolldur
 			allbandwidthdata[i] = tp, t0, t1, node, 0, minbps, maxbps
 		i = i + 1
 	#
@@ -252,47 +256,21 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 	for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
 		if bits:
 			overflow, boxes = accum.reserve(t0, t1, bits, minbps, maxbps)
-			node.set_bandwidthboxes(boxes)
-##			print 'BW', node, overflow, dummy
+			node.add_bandwidthboxes(boxes)
 			if overflow and seticons:
-				if overflow > 1000000:
-					overflow = '%d Mbps'%(overflow/1000000)
-				elif overflow > 1000:
-					overflow = '%d Kbps'%(overflow/1000)
+				if tp == STREAM:
+					if overflow > 1000000:
+						overflow = '%d Mbps'%(overflow/1000000)
+					elif overflow > 1000:
+						overflow = '%d Kbps'%(overflow/1000)
+					else:
+						overflow = '%d bps'%overflow
+					msg = 'Uses %s more bandwidth than available'%overflow
 				else:
-					overflow = '%d bps'%overflow
-				msg = 'Uses %s more bandwidth than available'%overflow
+					msg = 'Needs %d seconds longer to load'%int((overflow/maxbps)+0.999)
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
 				delaycount = delaycount + 1
-##				print 'continuous overflow', overflow, node
-##				errorseconds = errorseconds + (overflow/maxbandwidth)
-##	#
-##	# Compute preroll bandwidth and internal RealPix bandwidth usage
-##	#
-##	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
-##		if prearm:
-##			overflow, dummyt0, dummyt1, dummyboxes = accum.prearmreserve(0, t0, prearm)
-##			if overflow:
-####				print 'preroll overflow', overflow, node
-##				errorseconds = errorseconds + (overflow/maxbandwidth)
-##				if seticons and not errornodes.has_key(node):
-##					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
-##					node.set_infoicon('bandwidthbad', msg)
-##					errornodes[node] = 1
-##					delaycount = delaycount + 1
-##				if storetiming:
-##					timeobj = node.GetTimesObject(storetiming)
-##					timeobj.downloadlag = errorseconds
-##		if node.GetType() == 'ext' and \
-##		   node.GetChannelType() == 'RealPix':
-##			# Create the SlideShow if it somehow doesn't exist yet
-##			if not hasattr(node, 'slideshow'):
-##				import realnode
-##				node.slideshow = realnode.SlideShow(node)
-##			slack, errors = node.slideshow.computebandwidth()
-##			errorseconds = errorseconds + slack
-##			delaycount = delaycount + errors
 
 	#
 	# Finally show "bandwidth fine" icon on all nodes that deserve it
@@ -307,6 +285,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 def _getallbandwidthdata(datalist, node):
 	"""Recursively get all bandwidth usage info. Modifies first argument"""
 	errorcount = 0
+	node.set_bandwidthboxes([])
 	try:
 		_getbandwidthdatainto(datalist, node)
 	except Bandwidth.Error, arg:
@@ -323,9 +302,7 @@ def _getbandwidthdatainto(datalist, node):
 	if not node.WillPlay():
 		return
 	t0, t1, dummy, dummy, dummy = node.GetTimes()
-##	prearm, bandwidth = Bandwidth.get(node, target=1)
 	prerollbits, prerollseconds, prerollbps, streambps = Bandwidth.getstreamdata(node, target=1)
-##	print 'DBG BWdata', node, t0, t1, prerollbits, prerollseconds, prerollbps, streambps
 	rv = []
 	if prerollbits:
 		datalist.append((PREROLL, 0, t0, node, prerollbits, 0, prerollbps))
