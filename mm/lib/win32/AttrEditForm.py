@@ -1579,7 +1579,7 @@ class EventCtrl(AttrCtrl):
 		#return (self._node, self._value)
 
 	def settooltips(self,tooltipctrl):
-		for (idc, desc) in self.__tooltips:
+		for (idc, desc) in self._tooltips:
 			tooltipctrl.AddTool(self._wnd.GetDlgItem(idc), desc, None, 0)
 
 	def clear_radiobuttons(self):
@@ -1847,7 +1847,7 @@ class EventCtrl(AttrCtrl):
 		self.enableApply()
 
 class BeginEventCtrl(EventCtrl):
-	__tooltips = [
+	_tooltips = [
 		(grinsRC.IDC_EVENTLIST, 'If specified, playback of the object is delayed until any of these events fire'),
 		(grinsRC.IDC_NEWBUTTON, 'Add a new begin event'), 
 		(grinsRC.IDC_DELETEBUTTON, 'Remove the selected begin event'),
@@ -1867,7 +1867,7 @@ class BeginEventCtrl(EventCtrl):
 		]
 
 class EndEventCtrl(EventCtrl):
-	__tooltips = [
+	_tooltips = [
 		(grinsRC.IDC_EVENTLIST, 'If specified, playback of the object is terminated when any of these events fire'),
 		(grinsRC.IDC_NEWBUTTON, 'Add a new end event'), 
 		(grinsRC.IDC_DELETEBUTTON, 'Remove the selected end event'),
