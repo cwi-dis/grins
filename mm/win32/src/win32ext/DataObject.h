@@ -14,7 +14,6 @@ public:
 	static CLIPFORMAT GetClipboardFormat(LPCTSTR pszFmt);
 
 	BOOL m_deleteDO;
-	static CMap<CString, LPCTSTR, CLIPFORMAT, CLIPFORMAT> fmtMap;
 	};
 
 #endif
