@@ -92,7 +92,8 @@ color = re.compile('(?:'
 			   ' *(?P<bp>[0-9]+) *% *)\))$')
 
 smil_node_attrs = [
-	'region', 'clip-begin', 'clip-end', 'endsync', 'bag-index', 'type',
+	'region', 'clip-begin', 'clip-end', 'endsync', 'choice-index',
+	'bag-index', 'type',
 	]
 
 class SMILParser(SMIL, xmllib.XMLParser):
@@ -112,7 +113,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'par': (self.start_par, self.end_par),
 			'seq': (self.start_seq, self.end_seq),
 			'switch': (self.start_switch, self.end_switch),
-			GRiNSns+' '+'bag': (self.start_bag, self.end_bag),
+			GRiNSns+' '+'choice': (self.start_choice, self.end_choice),
+			GRiNSns+' '+'bag': (self.start_choice, self.end_choice),
 			'ref': (self.start_ref, self.end_ref),
 			'text': (self.start_text, self.end_text),
 			'audio': (self.start_audio, self.end_audio),
@@ -1359,7 +1361,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	end_seq = EndContainer
 
-	def start_bag(self, attributes):
+	def start_choice(self, attributes):
 		for key, val in attributes.items():
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
@@ -1370,18 +1372,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
 		self.NewContainer('bag', attributes)
-		self.__container.__bag_index = attributes.get('bag-index')
+		self.__container.__choice_index = attributes.get('choice-index')
+		if self.__container.__choice_index ==is None:
+			self.__container.__choice_index = attributes.get('bag-index')
 
-	def end_bag(self):
+	def end_choice(self):
 		node = self.__container
 		self.EndContainer()
-		bag_index = node.__bag_index
-		del node.__bag_index
-		if bag_index is None:
+		choice_index = node.__choice_index
+		del node.__choice_index
+		if choice_index is None:
 			return
-		res = idref.match(bag_index)
+		res = idref.match(choice_index)
 		if res is None:
-			self.syntax_error('bad bag-index attribute')
+			self.syntax_error('bad choice-index attribute')
 			return
 		id = res.group('id')
 		if self.__nodemap.has_key(id):
@@ -1390,7 +1394,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				node.attrdict['bag_index'] = child.GetRawAttr('name')
 				return
 		# id not found among the children
-		self.warning('unknown idref in bag-index attribute', self.lineno)
+		self.warning('unknown idref in choice-index attribute', self.lineno)
 
 	def start_switch(self, attributes):
 		for key, val in attributes.items():
