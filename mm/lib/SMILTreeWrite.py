@@ -145,6 +145,13 @@ def getmimetype(writer, node):
 	if chtype in ('label', 'text'):
 		return 'text/plain'
 
+def getdescr(writer, node, attr):
+	if node.GetType() not in leaftypes:
+		return
+	val = MMAttrdefs.getattr(node, attr)
+	if val:
+		return val
+
 def getchname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
@@ -344,6 +351,8 @@ smil_attrs=[
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
 	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
+	("alt", lambda writer, node: getdescr(writer, node, 'alt')),
+	("longdesc", lambda writer, node: getdescr(writer, node, 'longdesc')),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
@@ -368,7 +377,8 @@ cmif_node_attrs_ignore = [
 	'system_language', 'system_overdub_or_captions', 'system_required',
 	'system_screen_size', 'system_screen_depth', 'layout',
 	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
-	'author', 'copyright', 'abstract', 'mimetype', 'terminator',
+	'author', 'copyright', 'abstract', 'alt', 'longdesc', 'title',
+	'mimetype', 'terminator',
 	]
 cmif_node_realpix_attrs_ignore = [
 	'bitrate', 'size', 'duration', 'aspect', 'author', 'copyright',
