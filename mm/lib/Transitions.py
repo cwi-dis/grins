@@ -51,6 +51,7 @@ class NullTransition(TransitionClass, BlitterClass):
 	pass
 			
 class BarWipeTransition(TransitionClass, R1R2BlitterClass):
+	# Reveal the new image by sweeping a divider line from left to right
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -60,6 +61,7 @@ class BarWipeTransition(TransitionClass, R1R2BlitterClass):
 		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1))
 			
 class BoxWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+	# Reveal the new image by an expanding box
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -71,6 +73,7 @@ class BoxWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		return ((x0, y0, xcur, ycur), (x0, y0, x1, y1))
 			
 class FourBoxWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
+	# Reveal the new image by 4 boxes growing from the corners to the center
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -86,6 +89,7 @@ class FourBoxWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
 		return (boxes, (x0, y0, x1, y1))
 			
 class BarnDoorWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+	# Reveal the new image by sweeping two divier lines from the center outward
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -94,6 +98,7 @@ class BarnDoorWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		return ((xmid-xpixels, y0, xmid+xpixels, y1), (x0, y0, x1, y1))
 		
 class DiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by sweeping a diagonal divider line
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -108,6 +113,7 @@ class DiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		return poly, self.ltrb
 
 class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by a triangle growing from the center outward
 	
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
@@ -139,6 +145,7 @@ class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		return points, self.ltrb
 	
 class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+	# Reveal the new image by a square growing from the center outward
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -151,6 +158,7 @@ class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
 	
 class _MatrixTransitionClass(TransitionClass, RlistR2OverlapBlitterClass):
+	# Generic subclass for all the matrix transitions
 
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
@@ -179,6 +187,7 @@ class _MatrixTransitionClass(TransitionClass, RlistR2OverlapBlitterClass):
 		self._recomputeboundaries()
 				
 class SingleSweepWipeTransition(_MatrixTransitionClass):
+	# Reveal the new images by sweeping over the matrix left-to-right, top-to-botton
 		
 	def computeparameters(self, value):
 		index = int(value*self.hsteps*self.vsteps)
@@ -197,9 +206,10 @@ class SingleSweepWipeTransition(_MatrixTransitionClass):
 		return rectlist, self.ltrb
 		
 class SnakeWipeTransition(_MatrixTransitionClass):
+	# Reveal the new image by sweeping left-to-right, then on the next line right-to-left, etc
 		
 	def computeparameters(self, value):
-		index = int(value*self.hsteps*self.vsteps)
+		index = int(value*self.hsteps*self.vsteps+0.5)
 		hindex = index % self.hsteps
 		vindex = index / self.hsteps
 		x0, y0, x1, y1 = self.ltrb
@@ -217,8 +227,53 @@ class SnakeWipeTransition(_MatrixTransitionClass):
 			rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
 			rectlist.append(rect)
 		return rectlist, self.ltrb
-				
+		
+class SpiralWipeTransition(_MatrixTransitionClass):
+	# Reveal the new image by spiralling over the matrix
+	
+	def _recomputeboundaries(self):
+		_MatrixTransitionClass._recomputeboundaries(self)
+		self._xy_to_step = []
+		xmax = self.hsteps-1
+		ymax = self.vsteps-1
+		ymax = 7
+		xinc = 1
+		yinc = 1
+		x = 0
+		y = 0
+		skipfirstxmaxdecrement = 1
+		while xmax >= 0 or ymax >= 0:
+			for i in range(xmax):
+				self._xy_to_step.append((x, y))
+				x = x + xinc
+			xinc = -xinc
+			if skipfirstxmaxdecrement:
+				skipfirstxmaxdecrement = 0
+			else:
+				xmax = xmax - 1
+			for i in range(ymax):
+				self._xy_to_step.append((x, y))
+				y = y + yinc
+			yinc = -yinc
+			ymax = ymax - 1
+		x = x - 1
+		self._xy_to_step.append((x, y))
+		self._xy_to_step.append((x, y))
+		for i in range(len(self._xy_to_step)):
+			print i, self._xy_to_step[i]
+		
+	def computeparameters(self, value):
+		index = int(value*self.hsteps*self.vsteps+0.5)
+		rectlist = []
+		for i in range(index):
+			x, y = self._xy_to_step[i]
+			rect = (self.hboundaries[x], self.vboundaries[y], 
+					self.hboundaries[x+1], self.vboundaries[y+1])
+			rectlist.append(rect)
+		return rectlist, self.ltrb
+		
 class PushWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
+	# Push in the new image, pushing out the old one
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -228,6 +283,7 @@ class PushWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
 				(x0, y0, x1-xpixels, y1), (x0+xpixels, y0, x1, y1) )
 			
 class SlideWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
+	# Slide the new image over the old one
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
@@ -237,6 +293,7 @@ class SlideWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
 				(x0+xpixels, y0, x1, y1), (x0+xpixels, y0, x1, y1))
 		
 class FadeTransition(TransitionClass, FadeBlitterClass):
+	# Fade the old image to the new one
 
 	def computeparameters(self, value):
 		return value
@@ -269,7 +326,7 @@ TRANSITIONDICT = {
 #	"saloonDoorWipe" : SaloonDoorWipeTransition,
 #	"windshieldWipe" : WindShieldWipeTransition,
 	"snakeWipe" : SnakeWipeTransition,
-#	"spiralWipe" : SpiralWipeTransition,
+	"spiralWipe" : SpiralWipeTransition,
 #	"parallelSnakesWipe" : ParallelSnakesWipeTransition,
 #	"boxSnakesWipe" : BoxSnakesWipeTransition,
 #	"waterfallWipe" : WaterfallWipeTransition,
