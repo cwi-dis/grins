@@ -198,7 +198,12 @@ class RPParser(xmllib.XMLParser):
 			   'srcy':'0',
 			   'start':None,
 			   'target':None,
-			   'url':None,},
+			   'url':None,
+			   'fadeout':None,
+			   'fadeouttime':'0',
+			   'fadeoutduration':'0',
+			   'fadeoutcolor':'black',
+			   },
 		'fadeout': {'color':None,
 			    'grins_image_caption':'',
 			    'dsth':'0',
@@ -407,7 +412,7 @@ class RPParser(xmllib.XMLParser):
 
 	def start_fill(self, attributes):
 		destrect = self.__rect('dst', attributes)
-		color = self.__color(attributes)
+		color = self.__color('color', attributes)
 		start = self.__time('start', attributes)
 		self.tags.append({'tag': 'fill',
 				  'caption': attributes.get('grins_image_caption', ''),
@@ -423,7 +428,7 @@ class RPParser(xmllib.XMLParser):
 
 	def start_fadeout(self, attributes):
 		destrect = self.__rect('dst', attributes)
-		color = self.__color(attributes)
+		color = self.__color('color', attributes)
 		start = self.__time('start', attributes)
 		duration = self.__time('duration', attributes)
 		maxfps = self.__maxfps(attributes)
@@ -512,6 +517,11 @@ class RPParser(xmllib.XMLParser):
 			if direction is None: # provide default
 				direction = 'left'
 			attrs['direction'] = direction
+		elif tag == 'fadein' and attributes.get('fadeout', 'false') == 'true':
+			attrs['fadeout'] = 1
+			attrs['fadeouttime'] = self.__time('fadeouttime', attributes)
+			attrs['fadeoutduration'] = self.__time('fadeoutduration', attributes)
+			attrs['fadeoutcolor'] = self.__color('fadeoutcolor', attributes)
 		self.tags.append(attrs)
 
 	def __rect(self, str, attributes):
@@ -543,8 +553,8 @@ class RPParser(xmllib.XMLParser):
 
 	# see SMILTreeRead.SMILParser.__convert_color for a more
 	# elaborate version
-	def __color(self, attributes):
-		val = attributes.get('color')
+	def __color(self, attr, attributes):
+		val = attributes.get(attr)
 		if val is None:
 			return
 		val = string.lower(val)
@@ -806,8 +816,20 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None):
 			caption = attrs.get('caption', '')
 			if caption:
 				f.write(' grins_image_caption=%s'%nameencode(caption))
+		if tostring and tag == 'fadein' and attrs.get('fadeout',0):
+			f.write(' fadeout="true"')
+			f.write(' fadeouttime="%g"' % attrs.get('fadeouttime',0))
+			f.write(' fadeoutduration="%g"' % attrs.get('fadeoutduration',0))
+			color = attrs.get('fadeoutcolor', bgcolor)
+			for name, val in colors.items():
+				if color == val:
+					color = name
+					break
+			else:
+				color = '#%02x%02x%02x' % color
+			f.write(' fadeoutcolor="%s"' % color)
 		f.write('/>\n')
-		if tag == 'fadein' and attrs.get('fadeout',0):
+		if not tostring and tag == 'fadein' and attrs.get('fadeout',0):
 			t = start+duration+attrs.get('fadeouttime',0)
 			for i in range(len(fadeouts)):
 				if t < fadeouts[i][0]:
