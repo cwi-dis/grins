@@ -9,6 +9,7 @@ implements the actual view.
 
 import windowinterface
 from usercmd import *
+IMPL_AS_FORM=1
 
 class LayoutViewDialog:
 	def __init__(self):
@@ -56,13 +57,18 @@ class LayoutViewDialog:
 			f=self.toplevel.window
 			f.set_toggle(LAYOUTVIEW,0)
 
+
 	def assertwndcreated(self):
 		if self.__window is None or not hasattr(self.__window,'GetSafeHwnd'):
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
-			self.__window.create(f)
-			f.set_toggle(LAYOUTVIEW,1)
+			if IMPL_AS_FORM: # form
+				f.showview(self.__window,'lview_')
+				self.__window.show()
+			else:# dlgbar
+				self.__window.create(f)
+				f.set_toggle(LAYOUTVIEW,1)
 
 	def setlayoutlist(self, layouts, cur):
 		# the core should be corected but 
