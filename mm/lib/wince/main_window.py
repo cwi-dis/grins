@@ -119,6 +119,13 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			for cmd in 	commandlist:
 				self._activecmds[context][cmd.__class__] = cmd
 
+		# enable/disable 'app' commands
+		if context == 'app':
+			entries = [usercmd.OPEN, usercmd.EXIT, usercmd.CHOOSESKIN]
+			for cmdcl in entries:
+				id = usercmdui.usercmd2id(cmdcl)
+				self.EnableMenuItem(0, id, self._activecmds[context].has_key(cmdcl))
+
 		# enable/disable 'document' commands
 		if context == 'document':
 			entries = [usercmd.CLOSE,]
