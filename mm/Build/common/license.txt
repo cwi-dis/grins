@@ -1,77 +1,40 @@
 Oratrix Development
 Electronic End-User Software License Agreement
 
-THIS AGREEMENT IS A LEGAL DOCUMENT. READ IT CAREFULLY BEFORE
-COMPLETING THE INSTALLATION PROCESS AND USING THE SOFTWARE. IT
-PROVIDES A LICENSE TO USE THE SOFTWARE AND CONTAINS WARRANTY
-INFORMATION AND LIABILITY DISCLAIMERS. BY INSTALLING AND USING THE
-SOFTWARE, YOU ARE CONFIRMING ACCEPTANCE OF THE SOFTWARE AND AGREEING
-TO BECOME BOUND BY THE TERMS OF THIS AGREEMENT.  IF YOU DO NOT WISH TO
-DO SO, DO NOT COMPLETE THE INSTALLATION PROCESS.
+THIS AGREEMENT IS A LEGAL DOCUMENT. READ IT CAREFULLY BEFORE COMPLETING THE INSTALLATION PROCESS AND USING THE SOFTWARE. IT PROVIDES A LICENSE TO USE THE SOFTWARE AND CONTAINS WARRANTY INFORMATION AND LIABILITY DISCLAIMERS. BY INSTALLING AND USING THE SOFTWARE, YOU ARE CONFIRMING ACCEPTANCE OF THE SOFTWARE AND AGREEING TO BECOME BOUND BY THE TERMS OF THIS AGREEMENT.  IF YOU DO NOT WISH TO DO SO, DO NOT COMPLETE THE INSTALLATION PROCESS.
 
 1. Definitions
-(a) "Authoring Product" means Software, such as Oratrix Development's
-    GRiNS Editor for SMIL.
-(b) "Player Product" means Software, such as Oratrix Development's
-    GRiNS Player for SMIL.
-(c) "Evaluation Version" means a version of the Authoring or
-    Player Product only to be used for review and evaluation purposes.
-(d) "Evaluation Period" means the period of validity of a license key
-    that will be distributed with the Evaluation Version of our
-    products.
-(e) "Software" means the programs supplied by Oratrix Development
-    herewith, and any and all updates thereto.
+(a) "Authoring Product" means Software, such as Oratrix Development's GRiNS Editor for SMIL.
+(b) "Player Product" means Software, such as Oratrix Development's GRiNS Player for SMIL.
+(c) "Evaluation Version" means a version of the Authoring or Player Product only to be used for review and evaluation purposes.
+(d) "Evaluation Period" means the period of validity of a license key that will be distributed with the Evaluation Version of our products.
+(e) "Software" means the programs supplied by Oratrix Development herewith, and any and all updates thereto.
 
 2. License
 This Agreement allows you to:
-(a) Install and use an Evaluation Version of the Software on
-    a single computer solely for purposes of evaluating the Software.
-(b) Make one copy of the Software in machine-readable form solely for
-    backup purposes.
+(a) Install and use an Evaluation Version of the Software on a single computer solely for purposes of evaluating the Software.
+(b) Make one copy of the Software in machine-readable form solely for backup purposes.
 
 3. License Restrictions
 Other than as set forth in Section 2:
-(a) You may not make or distribute copies of the Software, or
-    electronically transfer the Software from one computer to another
-    or over a network.
-(b) You may not decompile, reverse engineer, disassemble, or otherwise
-    reduce the Software to a human-perceivable form.
+(a) You may not make or distribute copies of the Software, or electronically transfer the Software from one computer to another or over a network.
+(b) You may not decompile, reverse engineer, disassemble, or otherwise reduce the Software to a human-perceivable form.
 (c) You may not rent, lease or sublicense the Software.
-(d) You may not modify the Software or create derivative works based
-    upon the Software.
-(e) You may not decrypt, share or tamper with any license keys provided
-    with this software.
+(d) You may not modify the Software or create derivative works based upon the Software.
+(e) You may not decrypt, share or tamper with any license keys provided with this software.
 
 4. Ownership
-(a) The foregoing license gives you limited rights to use the
-    Software, but you do not become the owner of, and Oratrix
-    Development retains title to, the Software and all copies thereof.
-(b) All rights not specifically granted in this Agreement, including
-    National and International Copyrights, are reserved by Oratrix
-    Development.
+(a) The foregoing license gives you limited rights to use the Software, but you do not become the owner of, and Oratrix Development retains title to, the Software and all copies thereof.
+(b) All rights not specifically granted in this Agreement, including National and International Copyrights, are reserved by Oratrix Development.
 
 5. Limited Warranties
-Oratrix Development provides the following warranties for an
-Evaluation Version of its Authoring and Player products:
-(a) In recognition that the Evaluation Version is for evaluation
-    purposes, Oratrix Development warrants only that the distribution
-    created by us is complete and consistent with the delivered
-    documentation for the period of the evaluation.
-(b) Upon your request, a new Evalutation Version will be issued
-    during the Evaluation Period containing any updates or upgrades to
-    our Software.
-(c) Except as set forth in the foregoing limited warranty, Oratrix
-    Development disclaims all other warranties or conditions, either
-    expressed or implied, including merchantability, fitness for any
-    purpose, or non-infringement.
+Oratrix Development provides the following warranties for an Evaluation Version of its Authoring and Player products:
+(a) In recognition that the Evaluation Version is for evaluation purposes, Oratrix Development warrants only that the distribution created by us is complete and consistent with the delivered documentation for the period of the evaluation.
+(b) Upon your request, a new Evalutation Version will be issued during the Evaluation Period containing any updates or upgrades to our Software.
+(c) Except as set forth in the foregoing limited warranty, Oratrix Development disclaims all other warranties or conditions, either expressed or implied, including merchantability, fitness for any purpose, or non-infringement.
 
 6. Exclusive Remedy
-Your exclusive remedy under Section 5 is to return the Software us,
-and to accept a new version (if available). This Software will be made
-available only for use during the initial Evaluation Period unless
-Oratrix Development, at its sole discretion, decides to extend the
-Evaluation Period.
+Your exclusive remedy under Section 5 is to return the Software us, and to accept a new version (if available). This Software will be made available only for use during the initial Evaluation Period unless Oratrix Development, at its sole discretion, decides to extend the Evaluation Period.
 
 7. Limitations of Damages
-Oratrix Development will not be liable for any damages resulting from
-the use of this Evaluation Version of our Software.
+Oratrix Development will not be liable for any damages resulting from the use of this Evaluation Version of our Software.

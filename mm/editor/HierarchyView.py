@@ -238,6 +238,10 @@ class HierarchyView(HierarchyViewDialog):
 		x, y = params[0:2]
 		self.select(x, y)
 
+	def dropfile(self, dummy, window, event, params):
+		print 'HVIEW DROP', window, event, params
+		x, y, filename = params
+
 	#################################################
 	# Edit manager interface (as dependent client)  #
 	#################################################

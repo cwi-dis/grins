@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=2026680264
+  File Checksum=774876982
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1132,6 +1132,11 @@ item: Display Graphic
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
+  Destination=%MAINDIR%\rma.pyd
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\win32\relnotes.html
