@@ -559,7 +559,7 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._next_xpos = 16
-		self._next_ypos = 44
+		self._next_ypos = 24
 		self._command_handler = None
 		self._cursor_is_default = 1
 		self._cur_cursor = None		# The currently active cursor
@@ -842,7 +842,7 @@ class _Toplevel(_Event):
 		else:
 			self._next_xpos = 16
 		if y < 100:
-			self._next_ypos = self._next_ypos + 20
+			self._next_ypos = self._next_ypos + 40
 		else:
 			self._next_ypos = 44
 		return x, y
