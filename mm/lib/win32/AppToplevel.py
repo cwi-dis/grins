@@ -126,8 +126,11 @@ class _Toplevel:
 		import Font
 		Font.delfonts()
 
-		win32ui.GetMainFrame().PostMessage(win32con.WM_CLOSE)
-
+		try:
+			win32ui.GetMainFrame().PostMessage(win32con.WM_CLOSE)
+		except:
+			# main frame already gone
+			pass
 
 	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
@@ -298,13 +301,14 @@ class _Toplevel:
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
 		win32ui.GetApp().AddIdleHandler(self.monitor)
-	
+
 		wnd=self.genericwnd()
 		wnd.create()
 		wnd.HookMessage(self.serve_events,win32con.WM_USER)
 		win32ui.GetApp().RunLoop(wnd)
 		
 		wnd.DestroyWindow()
+		
 
 	# Set un event system timer
 	def setsystemtimer(self, sec):
