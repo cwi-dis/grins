@@ -2043,6 +2043,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			layout['bgcolor'] = bg
 		else:
 			layout['bgcolor'] = 0,0,0
+		layout['transparent'] = 0
+			
 		if isroot:
 			top = None
 		else:
@@ -2203,8 +2205,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['transparent'] = 0
 				ch['bgcolor'] = bg
 			else:
-				# for inherit value, we assume there is no transparent and bgcolor attribute
-				pass
+				# for inherit value, there is no transparent and bgcolor attribute
+				if ch.has_key('transparent'):
+					del ch['transparent']
+				if ch.has_key('bgcolor'):
+					del ch['bgcolor']
 		elif bg == 'transparent':
 			ch['transparent'] = 1
 		else:
