@@ -15,6 +15,7 @@ that use them.
 
 # views types
 from _LayoutView import _LayoutView
+from _UsergroupView import _UsergroupView
 from _LinkView import _LinkView
 from _CmifView import _CmifView
 from _SourceView import _SourceView
@@ -42,14 +43,17 @@ if appcon.IsPlayer:
 	CHANNELVIEW=None
 	LINKVIEW=None
 	LAYOUTVIEW=None
+	USERGROUPVIEW=None
+
 appview={
 	0:{'cmd':PLAYERVIEW,'hosted':0,'title':'Player','id':'pview_','class':_PlayerView,'maximize':1},
 	1:{'cmd':HIERARCHYVIEW,'hosted':0,'title':'Hierarchy view','id':'hview_','class':_HierarchyView,'maximize':1},
 	2:{'cmd':CHANNELVIEW,'hosted':0,'title':'Channel view','id':'cview_','class':_ChannelView,'maximize':1},
 	3:{'cmd':LINKVIEW,'hosted':0,'title':'Link view','id':'leview_','class':_LinkView,'maximize':1},
 	4:{'cmd':LAYOUTVIEW,'hosted':1,'title':'Layout view','id':'lview_','class':_LayoutView},
-	5:{'cmd':SOURCE,'hosted':0,'title':'Source','id':'sview_','class':_SourceView,'maximize':1},
-	6:{'cmd':-1,'hosted':0,'title':'','id':'cmifview_','class':_CmifView},
+	5:{'cmd':USERGROUPVIEW,'hosted':1,'title':'User group view','id':'ugview_','class':_UsergroupView},
+	6:{'cmd':SOURCE,'hosted':0,'title':'Source','id':'sview_','class':_SourceView,'maximize':1},
+	7:{'cmd':-1,'hosted':0,'title':'','id':'cmifview_','class':_CmifView},
 }
 
 
