@@ -1,0 +1,1869 @@
+// Created by Microsoft (R) C/C++ Compiler Version 12.00.8472.0 (1c976c1a).
+//
+//
+// C++ source equivalent of Win32 type library C:\winnt\system32\msdxm.ocx
+// compiler-generated file created 03/20/00 at 15:12:27 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace MediaPlayer {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("39a2c2a7-4778-11d2-9bdb-204c4f4f5020"))
+/* dispinterface */ _IDirectControlEvents;
+struct /* coclass */ DirectControl;
+struct __declspec(uuid("39a2c2a5-4778-11d2-9bdb-204c4f4f5020"))
+/* dual interface */ IDirectControl;
+struct __declspec(uuid("39a2c2aa-4778-11d2-9bdb-204c4f4f5020"))
+/* dispinterface */ _IDirectContainerEvents;
+struct /* coclass */ DirectContainer;
+struct __declspec(uuid("39a2c2a8-4778-11d2-9bdb-204c4f4f5020"))
+/* interface */ IDirectContainer;
+struct __declspec(uuid("6d5140c1-7436-11ce-8034-00aa006009fa"))
+/* interface */ IServiceProvider;
+struct __declspec(uuid("847b4df6-4b61-11d2-9bdb-204c4f4f5020"))
+/* dispinterface */ _IRadioViewEvents;
+struct /* coclass */ RadioView;
+struct __declspec(uuid("847b4df4-4b61-11d2-9bdb-204c4f4f5020"))
+/* dual interface */ IRadioView;
+struct __declspec(uuid("2d3a4c40-e711-11d0-94ab-0080c74c7e95"))
+/* dispinterface */ _MediaPlayerEvents;
+struct /* coclass */ MediaPlayer;
+struct __declspec(uuid("20d4f5e0-5475-11d2-9774-0000f80855e6"))
+/* dual interface */ IMediaPlayer2;
+struct __declspec(uuid("22d6f311-b0f6-11d0-94ab-0080c74c7e95"))
+/* dual interface */ IMediaPlayer;
+typedef unsigned long VB_OLE_COLOR;
+struct __declspec(uuid("746eb440-3835-11d2-9774-0000f80855e6"))
+/* dual interface */ IMediaPlayerDvd;
+struct __declspec(uuid("920f0de3-91c5-11d2-828f-00c04fc99d4e"))
+/* dual interface */ IMediaBindStream;
+struct /* coclass */ ppDShowNet;
+struct /* coclass */ ppDShowPlay;
+struct /* coclass */ ppDSMeta;
+struct /* coclass */ ppDSCnnl;
+struct /* coclass */ ppDSClip;
+struct /* coclass */ ppDSDetl;
+struct /* coclass */ ppDSApp;
+struct /* coclass */ ppDSPropAdv;
+struct /* coclass */ ppDSView;
+struct /* coclass */ ppDSOAdv;
+struct __declspec(uuid("3da2aa3c-3d96-11d2-9bd2-204c4f4f5020"))
+/* dispinterface */ _IAsyncPProtEvents;
+struct /* coclass */ AsyncPProt;
+struct __declspec(uuid("3da2aa3a-3d96-11d2-9bd2-204c4f4f5020"))
+/* dual interface */ IAsyncPProt;
+struct /* coclass */ AsyncMHandler;
+struct __declspec(uuid("3da2aa3d-3d96-11d2-9bd2-204c4f4f5020"))
+/* dual interface */ IAsyncMHandler;
+struct __declspec(uuid("9c2263b1-3e3c-11d2-9bd3-204c4f4f5020"))
+/* dispinterface */ _IRadioPlayerEvents;
+struct /* coclass */ RadioPlayer;
+struct __declspec(uuid("9c2263af-3e3c-11d2-9bd3-204c4f4f5020"))
+/* dual interface */ IRadioPlayer;
+struct __declspec(uuid("9c2263a0-3e3c-11d2-9bd3-204c4f4f5020"))
+/* dual interface */ IRadioServer;
+struct /* coclass */ RadioServer;
+struct __declspec(uuid("8e718889-423f-11d2-876e-00a0c9082467"))
+/* dual interface */ IRadioServerControl;
+struct __declspec(uuid("33222211-5e5e-11d2-9e8e-0000f8085981"))
+/* interface */ IMediaPlayerListener;
+struct /* coclass */ RadioBand;
+struct __declspec(uuid("8e718881-423f-11d2-876e-00a0c9082467"))
+/* dual interface */ IRadioBand;
+struct /* coclass */ ppDSFile;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(_IDirectControlEvents, __uuidof(IDispatch));
+_COM_SMARTPTR_TYPEDEF(IDirectControl, __uuidof(IDirectControl));
+_COM_SMARTPTR_TYPEDEF(_IDirectContainerEvents, __uuidof(IDispatch));
+_COM_SMARTPTR_TYPEDEF(IDirectContainer, __uuidof(IDirectContainer));
+_COM_SMARTPTR_TYPEDEF(IServiceProvider, __uuidof(IServiceProvider));
+_COM_SMARTPTR_TYPEDEF(_IRadioViewEvents, __uuidof(IDispatch));
+_COM_SMARTPTR_TYPEDEF(IRadioView, __uuidof(IRadioView));
+_COM_SMARTPTR_TYPEDEF(_MediaPlayerEvents, __uuidof(IDispatch));
+_COM_SMARTPTR_TYPEDEF(IMediaPlayer, __uuidof(IMediaPlayer));
+_COM_SMARTPTR_TYPEDEF(IMediaPlayer2, __uuidof(IMediaPlayer2));
+_COM_SMARTPTR_TYPEDEF(IMediaPlayerDvd, __uuidof(IMediaPlayerDvd));
+_COM_SMARTPTR_TYPEDEF(IMediaBindStream, __uuidof(IMediaBindStream));
+_COM_SMARTPTR_TYPEDEF(_IAsyncPProtEvents, __uuidof(IDispatch));
+_COM_SMARTPTR_TYPEDEF(IAsyncPProt, __uuidof(IAsyncPProt));
+_COM_SMARTPTR_TYPEDEF(IAsyncMHandler, __uuidof(IAsyncMHandler));
+_COM_SMARTPTR_TYPEDEF(_IRadioPlayerEvents, __uuidof(IDispatch));
+_COM_SMARTPTR_TYPEDEF(IRadioPlayer, __uuidof(IRadioPlayer));
+_COM_SMARTPTR_TYPEDEF(IRadioServer, __uuidof(IRadioServer));
+_COM_SMARTPTR_TYPEDEF(IRadioServerControl, __uuidof(IRadioServerControl));
+_COM_SMARTPTR_TYPEDEF(IMediaPlayerListener, __uuidof(IMediaPlayerListener));
+_COM_SMARTPTR_TYPEDEF(IRadioBand, __uuidof(IRadioBand));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("39a2c2a7-4778-11d2-9bdb-204c4f4f5020"))
+_IDirectControlEvents : IDispatch
+{};
+
+struct __declspec(uuid("39a2c2a6-4778-11d2-9bdb-204c4f4f5020"))
+DirectControl;
+    // [ default ] interface IDirectControl
+    // [ default, source ] dispinterface _IDirectControlEvents
+
+struct __declspec(uuid("39a2c2a5-4778-11d2-9bdb-204c4f4f5020"))
+IDirectControl : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT CreateView (
+        _bstr_t bszClsid );
+    HRESULT DestroyAllViews ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_CreateView (
+        BSTR bszClsid ) = 0;
+    virtual HRESULT __stdcall raw_DestroyAllViews ( ) = 0;
+};
+
+struct __declspec(uuid("39a2c2aa-4778-11d2-9bdb-204c4f4f5020"))
+_IDirectContainerEvents : IDispatch
+{};
+
+struct __declspec(uuid("39a2c2a9-4778-11d2-9bdb-204c4f4f5020"))
+DirectContainer;
+    // [ default ] interface IDirectContainer
+    // [ default, source ] dispinterface _IDirectContainerEvents
+
+struct __declspec(uuid("39a2c2a8-4778-11d2-9bdb-204c4f4f5020"))
+IDirectContainer : IUnknown
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT CreateControl (
+        _bstr_t bszClsid,
+        unsigned long dwClsContext,
+        IUnknown * * ppunk,
+        unsigned long dwWindowStyle );
+    HRESULT SetServiceProvider (
+        struct IServiceProvider * pspSet );
+    HRESULT SetIInputObjectSite (
+        IUnknown * pios );
+    HRESULT ShowControl ( );
+    HRESULT HideControl ( );
+    HRESULT IsControlCreated ( );
+    HRESULT DestroyControl ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_CreateControl (
+        BSTR bszClsid,
+        unsigned long dwClsContext,
+        IUnknown * * ppunk,
+        unsigned long dwWindowStyle ) = 0;
+    virtual HRESULT __stdcall raw_SetServiceProvider (
+        struct IServiceProvider * pspSet ) = 0;
+    virtual HRESULT __stdcall raw_SetIInputObjectSite (
+        IUnknown * pios ) = 0;
+    virtual HRESULT __stdcall raw_ShowControl ( ) = 0;
+    virtual HRESULT __stdcall raw_HideControl ( ) = 0;
+    virtual HRESULT __stdcall raw_IsControlCreated ( ) = 0;
+    virtual HRESULT __stdcall raw_DestroyControl ( ) = 0;
+};
+
+struct __declspec(uuid("6d5140c1-7436-11ce-8034-00aa006009fa"))
+IServiceProvider : IUnknown
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT RemoteQueryService (
+        GUID * guidService,
+        GUID * riid,
+        IUnknown * * ppvObject );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_RemoteQueryService (
+        GUID * guidService,
+        GUID * riid,
+        IUnknown * * ppvObject ) = 0;
+};
+
+struct __declspec(uuid("847b4df6-4b61-11d2-9bdb-204c4f4f5020"))
+_IRadioViewEvents : IDispatch
+{};
+
+struct __declspec(uuid("847b4df5-4b61-11d2-9bdb-204c4f4f5020"))
+RadioView;
+    // [ default ] interface IRadioView
+    // [ default, source ] dispinterface _IRadioViewEvents
+
+struct __declspec(uuid("847b4df4-4b61-11d2-9bdb-204c4f4f5020"))
+IRadioView : IDispatch
+{};
+
+struct __declspec(uuid("2d3a4c40-e711-11d0-94ab-0080c74c7e95"))
+_MediaPlayerEvents : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    // Methods:
+    HRESULT DVDNotify (
+        long EventCode,
+        long EventParam1,
+        long EventParam2 );
+    HRESULT EndOfStream (
+        long Result );
+    HRESULT KeyDown (
+        short KeyCode,
+        short ShiftState );
+    HRESULT KeyUp (
+        short KeyCode,
+        short ShiftState );
+    HRESULT KeyPress (
+        short CharacterCode );
+    HRESULT MouseMove (
+        short Button,
+        short ShiftState,
+        OLE_XPOS_PIXELS x,
+        OLE_YPOS_PIXELS y );
+    HRESULT MouseDown (
+        short Button,
+        short ShiftState,
+        OLE_XPOS_PIXELS x,
+        OLE_YPOS_PIXELS y );
+    HRESULT MouseUp (
+        short Button,
+        short ShiftState,
+        OLE_XPOS_PIXELS x,
+        OLE_YPOS_PIXELS y );
+    HRESULT Click (
+        short Button,
+        short ShiftState,
+        OLE_XPOS_PIXELS x,
+        OLE_YPOS_PIXELS y );
+    HRESULT DblClick (
+        short Button,
+        short ShiftState,
+        OLE_XPOS_PIXELS x,
+        OLE_YPOS_PIXELS y );
+    HRESULT OpenStateChange (
+        long OldState,
+        long NewState );
+    HRESULT PlayStateChange (
+        long OldState,
+        long NewState );
+    HRESULT ScriptCommand (
+        _bstr_t scType,
+        _bstr_t Param );
+    HRESULT Buffering (
+        VARIANT_BOOL Start );
+    HRESULT Error ( );
+    HRESULT MarkerHit (
+        long MarkerNum );
+    HRESULT Warning (
+        long WarningType,
+        long Param,
+        _bstr_t Description );
+    HRESULT NewStream ( );
+    HRESULT Disconnect (
+        long Result );
+    HRESULT PositionChange (
+        double oldPosition,
+        double newPosition );
+    HRESULT DisplayModeChange ( );
+    HRESULT ReadyStateChange (
+        enum ReadyStateConstants ReadyState );
+};
+
+enum ReadyStateConstants
+{
+    amvUninitialized = 0,
+    amvLoading = 1,
+    amvInteractive = 3,
+    amvComplete = 4
+};
+
+struct __declspec(uuid("22d6f312-b0f6-11d0-94ab-0080c74c7e95"))
+MediaPlayer;
+    // [ default ] interface IMediaPlayer2
+    // [ default, source ] dispinterface _MediaPlayerEvents
+    // interface IMediaBindStream
+
+struct __declspec(uuid("22d6f311-b0f6-11d0-94ab-0080c74c7e95"))
+IMediaPlayer : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetCreationDate))
+    DATE CreationDate;
+    __declspec(property(get=GetBandwidth))
+    long Bandwidth;
+    __declspec(property(get=GetErrorCorrection))
+    _bstr_t ErrorCorrection;
+    __declspec(property(get=GetReceivedPackets))
+    long ReceivedPackets;
+    __declspec(property(get=GetRecoveredPackets))
+    long RecoveredPackets;
+    __declspec(property(get=GetLostPackets))
+    long LostPackets;
+    __declspec(property(get=GetReceptionQuality))
+    long ReceptionQuality;
+    __declspec(property(get=GetBufferingCount))
+    long BufferingCount;
+    __declspec(property(get=GetCursorType,put=PutCursorType))
+    long CursorType;
+    __declspec(property(get=GetAnimationAtStart,put=PutAnimationAtStart))
+    VARIANT_BOOL AnimationAtStart;
+    __declspec(property(get=GetCanSeekToMarkers))
+    VARIANT_BOOL CanSeekToMarkers;
+    __declspec(property(get=GetChannelName))
+    _bstr_t ChannelName;
+    __declspec(property(get=GetSelectionStart,put=PutSelectionStart))
+    double SelectionStart;
+    __declspec(property(get=GetSelectionEnd,put=PutSelectionEnd))
+    double SelectionEnd;
+    __declspec(property(get=GetChannelDescription))
+    _bstr_t ChannelDescription;
+    __declspec(property(get=GetChannelURL))
+    _bstr_t ChannelURL;
+    __declspec(property(get=GetVolume,put=PutVolume))
+    long Volume;
+    __declspec(property(get=GetBalance,put=PutBalance))
+    long Balance;
+    __declspec(property(get=GetContactAddress))
+    _bstr_t ContactAddress;
+    __declspec(property(get=GetShowDisplay,put=PutShowDisplay))
+    VARIANT_BOOL ShowDisplay;
+    __declspec(property(get=GetShowControls,put=PutShowControls))
+    VARIANT_BOOL ShowControls;
+    __declspec(property(get=GetShowPositionControls,put=PutShowPositionControls))
+    VARIANT_BOOL ShowPositionControls;
+    __declspec(property(get=GetContactPhone))
+    _bstr_t ContactPhone;
+    __declspec(property(get=GetShowTracker,put=PutShowTracker))
+    VARIANT_BOOL ShowTracker;
+    __declspec(property(get=GetEnablePositionControls,put=PutEnablePositionControls))
+    VARIANT_BOOL EnablePositionControls;
+    __declspec(property(get=GetContactEmail))
+    _bstr_t ContactEmail;
+    __declspec(property(get=GetEnableTracker,put=PutEnableTracker))
+    VARIANT_BOOL EnableTracker;
+    __declspec(property(get=GetAllowChangeDisplaySize,put=PutAllowChangeDisplaySize))
+    VARIANT_BOOL AllowChangeDisplaySize;
+    __declspec(property(get=GetCodecCount))
+    long CodecCount;
+    __declspec(property(get=GetIsBroadcast))
+    VARIANT_BOOL IsBroadcast;
+    __declspec(property(get=GetIsDurationValid))
+    VARIANT_BOOL IsDurationValid;
+    __declspec(property(get=GetSourceProtocol))
+    long SourceProtocol;
+    __declspec(property(get=GetOpenState))
+    long OpenState;
+    __declspec(property(get=GetDisplayForeColor,put=PutDisplayForeColor))
+    VB_OLE_COLOR DisplayForeColor;
+    __declspec(property(get=GetDisplayBackColor,put=PutDisplayBackColor))
+    VB_OLE_COLOR DisplayBackColor;
+    __declspec(property(get=GetSendOpenStateChangeEvents,put=PutSendOpenStateChangeEvents))
+    VARIANT_BOOL SendOpenStateChangeEvents;
+    __declspec(property(get=GetReadyState))
+    enum MPReadyStateConstants ReadyState;
+    __declspec(property(get=GetSendWarningEvents,put=PutSendWarningEvents))
+    VARIANT_BOOL SendWarningEvents;
+    __declspec(property(get=GetSendErrorEvents,put=PutSendErrorEvents))
+    VARIANT_BOOL SendErrorEvents;
+    __declspec(property(get=GetHasError))
+    VARIANT_BOOL HasError;
+    __declspec(property(get=GetErrorDescription))
+    _bstr_t ErrorDescription;
+    __declspec(property(get=GetErrorCode))
+    long ErrorCode;
+    __declspec(property(get=GetPlayState))
+    enum MPPlayStateConstants PlayState;
+    __declspec(property(get=GetSendPlayStateChangeEvents,put=PutSendPlayStateChangeEvents))
+    VARIANT_BOOL SendPlayStateChangeEvents;
+    __declspec(property(get=GetBufferingTime,put=PutBufferingTime))
+    double BufferingTime;
+    __declspec(property(get=GetDisplayMode,put=PutDisplayMode))
+    enum MPDisplayModeConstants DisplayMode;
+    __declspec(property(get=GetBufferingProgress))
+    long BufferingProgress;
+    __declspec(property(get=GetEnabled,put=PutEnabled))
+    VARIANT_BOOL Enabled;
+    __declspec(property(get=GetBaseURL,put=PutBaseURL))
+    _bstr_t BaseURL;
+    __declspec(property(get=GetDefaultFrame,put=PutDefaultFrame))
+    _bstr_t DefaultFrame;
+    __declspec(property(get=GetShowGotoBar,put=PutShowGotoBar))
+    VARIANT_BOOL ShowGotoBar;
+    __declspec(property(get=GetShowStatusBar,put=PutShowStatusBar))
+    VARIANT_BOOL ShowStatusBar;
+    __declspec(property(get=GetShowCaptioning,put=PutShowCaptioning))
+    VARIANT_BOOL ShowCaptioning;
+    __declspec(property(get=GetCaptioningID,put=PutCaptioningID))
+    _bstr_t CaptioningID;
+    __declspec(property(get=GetMute,put=PutMute))
+    VARIANT_BOOL Mute;
+    __declspec(property(get=GetCanPreview))
+    VARIANT_BOOL CanPreview;
+    __declspec(property(get=GetPreviewMode,put=PutPreviewMode))
+    VARIANT_BOOL PreviewMode;
+    __declspec(property(get=GetHasMultipleItems))
+    VARIANT_BOOL HasMultipleItems;
+    __declspec(property(get=GetLanguage,put=PutLanguage))
+    long Language;
+    __declspec(property(get=GetAudioStream,put=PutAudioStream))
+    long AudioStream;
+    __declspec(property(get=GetSAMIStyle,put=PutSAMIStyle))
+    _bstr_t SAMIStyle;
+    __declspec(property(get=GetSAMILang,put=PutSAMILang))
+    _bstr_t SAMILang;
+    __declspec(property(get=GetVideoBorderWidth,put=PutVideoBorderWidth))
+    long VideoBorderWidth;
+    __declspec(property(get=GetVideoBorderColor,put=PutVideoBorderColor))
+    VB_OLE_COLOR VideoBorderColor;
+    __declspec(property(get=GetVideoBorder3D,put=PutVideoBorder3D))
+    VARIANT_BOOL VideoBorder3D;
+    __declspec(property(get=GetSAMIFileName,put=PutSAMIFileName))
+    _bstr_t SAMIFileName;
+    __declspec(property(get=GetStreamCount))
+    long StreamCount;
+    __declspec(property(get=GetClientId))
+    _bstr_t ClientId;
+    __declspec(property(get=GetShowAudioControls,put=PutShowAudioControls))
+    VARIANT_BOOL ShowAudioControls;
+    __declspec(property(get=GetAutoSize,put=PutAutoSize))
+    VARIANT_BOOL AutoSize;
+    __declspec(property(get=GetEnableFullScreenControls,put=PutEnableFullScreenControls))
+    VARIANT_BOOL EnableFullScreenControls;
+    __declspec(property(get=GetActiveMovie))
+    IDispatchPtr ActiveMovie;
+    __declspec(property(get=GetNSPlay))
+    IDispatchPtr NSPlay;
+    __declspec(property(get=GetWindowlessVideo,put=PutWindowlessVideo))
+    VARIANT_BOOL WindowlessVideo;
+    __declspec(property(get=GetConnectionSpeed))
+    long ConnectionSpeed;
+    __declspec(property(get=GetImageSourceWidth))
+    long ImageSourceWidth;
+    __declspec(property(get=GetImageSourceHeight))
+    long ImageSourceHeight;
+    __declspec(property(get=GetDuration))
+    double Duration;
+    __declspec(property(get=GetSourceLink))
+    _bstr_t SourceLink;
+    __declspec(property(get=GetMarkerCount))
+    long MarkerCount;
+    __declspec(property(get=GetCanScan))
+    VARIANT_BOOL CanScan;
+    __declspec(property(get=GetCanSeek))
+    VARIANT_BOOL CanSeek;
+    __declspec(property(get=GetSendKeyboardEvents,put=PutSendKeyboardEvents))
+    VARIANT_BOOL SendKeyboardEvents;
+    __declspec(property(get=GetSendMouseClickEvents,put=PutSendMouseClickEvents))
+    VARIANT_BOOL SendMouseClickEvents;
+    __declspec(property(get=GetSendMouseMoveEvents,put=PutSendMouseMoveEvents))
+    VARIANT_BOOL SendMouseMoveEvents;
+    __declspec(property(get=GetAutoStart,put=PutAutoStart))
+    VARIANT_BOOL AutoStart;
+    __declspec(property(get=GetAutoRewind,put=PutAutoRewind))
+    VARIANT_BOOL AutoRewind;
+    __declspec(property(get=GetInvokeURLs,put=PutInvokeURLs))
+    VARIANT_BOOL InvokeURLs;
+    __declspec(property(get=GetEnableContextMenu,put=PutEnableContextMenu))
+    VARIANT_BOOL EnableContextMenu;
+    __declspec(property(get=GetTransparentAtStart,put=PutTransparentAtStart))
+    VARIANT_BOOL TransparentAtStart;
+    __declspec(property(get=GetClickToPlay,put=PutClickToPlay))
+    VARIANT_BOOL ClickToPlay;
+    __declspec(property(get=GetFileName,put=PutFileName))
+    _bstr_t FileName;
+    __declspec(property(get=GetCurrentPosition,put=PutCurrentPosition))
+    double CurrentPosition;
+    __declspec(property(get=GetRate,put=PutRate))
+    double Rate;
+    __declspec(property(get=GetCurrentMarker,put=PutCurrentMarker))
+    long CurrentMarker;
+    __declspec(property(get=GetPlayCount,put=PutPlayCount))
+    long PlayCount;
+    __declspec(property(get=GetDisplaySize,put=PutDisplaySize))
+    enum MPDisplaySizeConstants DisplaySize;
+    __declspec(property(get=GetAllowScan,put=PutAllowScan))
+    VARIANT_BOOL AllowScan;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    double GetCurrentPosition ( );
+    void PutCurrentPosition (
+        double pCurrentPosition );
+    double GetDuration ( );
+    long GetImageSourceWidth ( );
+    long GetImageSourceHeight ( );
+    long GetMarkerCount ( );
+    VARIANT_BOOL GetCanScan ( );
+    VARIANT_BOOL GetCanSeek ( );
+    VARIANT_BOOL GetCanSeekToMarkers ( );
+    long GetCurrentMarker ( );
+    void PutCurrentMarker (
+        long pCurrentMarker );
+    _bstr_t GetFileName ( );
+    void PutFileName (
+        _bstr_t pbstrFileName );
+    _bstr_t GetSourceLink ( );
+    DATE GetCreationDate ( );
+    _bstr_t GetErrorCorrection ( );
+    long GetBandwidth ( );
+    long GetSourceProtocol ( );
+    long GetReceivedPackets ( );
+    long GetRecoveredPackets ( );
+    long GetLostPackets ( );
+    long GetReceptionQuality ( );
+    long GetBufferingCount ( );
+    VARIANT_BOOL GetIsBroadcast ( );
+    long GetBufferingProgress ( );
+    _bstr_t GetChannelName ( );
+    _bstr_t GetChannelDescription ( );
+    _bstr_t GetChannelURL ( );
+    _bstr_t GetContactAddress ( );
+    _bstr_t GetContactPhone ( );
+    _bstr_t GetContactEmail ( );
+    double GetBufferingTime ( );
+    void PutBufferingTime (
+        double pBufferingTime );
+    VARIANT_BOOL GetAutoStart ( );
+    void PutAutoStart (
+        VARIANT_BOOL pAutoStart );
+    VARIANT_BOOL GetAutoRewind ( );
+    void PutAutoRewind (
+        VARIANT_BOOL pAutoRewind );
+    double GetRate ( );
+    void PutRate (
+        double pRate );
+    VARIANT_BOOL GetSendKeyboardEvents ( );
+    void PutSendKeyboardEvents (
+        VARIANT_BOOL pSendKeyboardEvents );
+    VARIANT_BOOL GetSendMouseClickEvents ( );
+    void PutSendMouseClickEvents (
+        VARIANT_BOOL pSendMouseClickEvents );
+    VARIANT_BOOL GetSendMouseMoveEvents ( );
+    void PutSendMouseMoveEvents (
+        VARIANT_BOOL pSendMouseMoveEvents );
+    long GetPlayCount ( );
+    void PutPlayCount (
+        long pPlayCount );
+    VARIANT_BOOL GetClickToPlay ( );
+    void PutClickToPlay (
+        VARIANT_BOOL pClickToPlay );
+    VARIANT_BOOL GetAllowScan ( );
+    void PutAllowScan (
+        VARIANT_BOOL pAllowScan );
+    VARIANT_BOOL GetEnableContextMenu ( );
+    void PutEnableContextMenu (
+        VARIANT_BOOL pEnableContextMenu );
+    long GetCursorType ( );
+    void PutCursorType (
+        long pCursorType );
+    long GetCodecCount ( );
+    VARIANT_BOOL GetAllowChangeDisplaySize ( );
+    void PutAllowChangeDisplaySize (
+        VARIANT_BOOL pAllowChangeDisplaySize );
+    VARIANT_BOOL GetIsDurationValid ( );
+    long GetOpenState ( );
+    VARIANT_BOOL GetSendOpenStateChangeEvents ( );
+    void PutSendOpenStateChangeEvents (
+        VARIANT_BOOL pSendOpenStateChangeEvents );
+    VARIANT_BOOL GetSendWarningEvents ( );
+    void PutSendWarningEvents (
+        VARIANT_BOOL pSendWarningEvents );
+    VARIANT_BOOL GetSendErrorEvents ( );
+    void PutSendErrorEvents (
+        VARIANT_BOOL pSendErrorEvents );
+    enum MPPlayStateConstants GetPlayState ( );
+    VARIANT_BOOL GetSendPlayStateChangeEvents ( );
+    void PutSendPlayStateChangeEvents (
+        VARIANT_BOOL pSendPlayStateChangeEvents );
+    enum MPDisplaySizeConstants GetDisplaySize ( );
+    void PutDisplaySize (
+        enum MPDisplaySizeConstants pDisplaySize );
+    VARIANT_BOOL GetInvokeURLs ( );
+    void PutInvokeURLs (
+        VARIANT_BOOL pInvokeURLs );
+    _bstr_t GetBaseURL ( );
+    void PutBaseURL (
+        _bstr_t pbstrBaseURL );
+    _bstr_t GetDefaultFrame ( );
+    void PutDefaultFrame (
+        _bstr_t pbstrDefaultFrame );
+    VARIANT_BOOL GetHasError ( );
+    _bstr_t GetErrorDescription ( );
+    long GetErrorCode ( );
+    VARIANT_BOOL GetAnimationAtStart ( );
+    void PutAnimationAtStart (
+        VARIANT_BOOL pAnimationAtStart );
+    VARIANT_BOOL GetTransparentAtStart ( );
+    void PutTransparentAtStart (
+        VARIANT_BOOL pTransparentAtStart );
+    long GetVolume ( );
+    void PutVolume (
+        long pVolume );
+    long GetBalance ( );
+    void PutBalance (
+        long pBalance );
+    enum MPReadyStateConstants GetReadyState ( );
+    double GetSelectionStart ( );
+    void PutSelectionStart (
+        double pValue );
+    double GetSelectionEnd ( );
+    void PutSelectionEnd (
+        double pValue );
+    VARIANT_BOOL GetShowDisplay ( );
+    void PutShowDisplay (
+        VARIANT_BOOL Show );
+    VARIANT_BOOL GetShowControls ( );
+    void PutShowControls (
+        VARIANT_BOOL Show );
+    VARIANT_BOOL GetShowPositionControls ( );
+    void PutShowPositionControls (
+        VARIANT_BOOL Show );
+    VARIANT_BOOL GetShowTracker ( );
+    void PutShowTracker (
+        VARIANT_BOOL Show );
+    VARIANT_BOOL GetEnablePositionControls ( );
+    void PutEnablePositionControls (
+        VARIANT_BOOL Enable );
+    VARIANT_BOOL GetEnableTracker ( );
+    void PutEnableTracker (
+        VARIANT_BOOL Enable );
+    VARIANT_BOOL GetEnabled ( );
+    void PutEnabled (
+        VARIANT_BOOL pEnabled );
+    VB_OLE_COLOR GetDisplayForeColor ( );
+    void PutDisplayForeColor (
+        VB_OLE_COLOR ForeColor );
+    VB_OLE_COLOR GetDisplayBackColor ( );
+    void PutDisplayBackColor (
+        VB_OLE_COLOR BackColor );
+    enum MPDisplayModeConstants GetDisplayMode ( );
+    void PutDisplayMode (
+        enum MPDisplayModeConstants pValue );
+    VARIANT_BOOL GetVideoBorder3D ( );
+    void PutVideoBorder3D (
+        VARIANT_BOOL pVideoBorderWidth );
+    long GetVideoBorderWidth ( );
+    void PutVideoBorderWidth (
+        long pVideoBorderWidth );
+    VB_OLE_COLOR GetVideoBorderColor ( );
+    void PutVideoBorderColor (
+        VB_OLE_COLOR pVideoBorderWidth );
+    VARIANT_BOOL GetShowGotoBar ( );
+    void PutShowGotoBar (
+        VARIANT_BOOL pbool );
+    VARIANT_BOOL GetShowStatusBar ( );
+    void PutShowStatusBar (
+        VARIANT_BOOL pbool );
+    VARIANT_BOOL GetShowCaptioning ( );
+    void PutShowCaptioning (
+        VARIANT_BOOL pbool );
+    VARIANT_BOOL GetShowAudioControls ( );
+    void PutShowAudioControls (
+        VARIANT_BOOL pbool );
+    _bstr_t GetCaptioningID ( );
+    void PutCaptioningID (
+        _bstr_t pstrText );
+    VARIANT_BOOL GetMute ( );
+    void PutMute (
+        VARIANT_BOOL vbool );
+    VARIANT_BOOL GetCanPreview ( );
+    VARIANT_BOOL GetPreviewMode ( );
+    void PutPreviewMode (
+        VARIANT_BOOL pPreviewMode );
+    VARIANT_BOOL GetHasMultipleItems ( );
+    long GetLanguage ( );
+    void PutLanguage (
+        long pLanguage );
+    long GetAudioStream ( );
+    void PutAudioStream (
+        long pStream );
+    _bstr_t GetSAMIStyle ( );
+    void PutSAMIStyle (
+        _bstr_t pbstrStyle );
+    _bstr_t GetSAMILang ( );
+    void PutSAMILang (
+        _bstr_t pbstrLang );
+    _bstr_t GetSAMIFileName ( );
+    void PutSAMIFileName (
+        _bstr_t pbstrFileName );
+    long GetStreamCount ( );
+    _bstr_t GetClientId ( );
+    long GetConnectionSpeed ( );
+    VARIANT_BOOL GetAutoSize ( );
+    void PutAutoSize (
+        VARIANT_BOOL pbool );
+    VARIANT_BOOL GetEnableFullScreenControls ( );
+    void PutEnableFullScreenControls (
+        VARIANT_BOOL pbVal );
+    IDispatchPtr GetActiveMovie ( );
+    IDispatchPtr GetNSPlay ( );
+    VARIANT_BOOL GetWindowlessVideo ( );
+    void PutWindowlessVideo (
+        VARIANT_BOOL pbool );
+    HRESULT Play ( );
+    HRESULT Stop ( );
+    HRESULT Pause ( );
+    double GetMarkerTime (
+        long MarkerNum );
+    _bstr_t GetMarkerName (
+        long MarkerNum );
+    HRESULT AboutBox ( );
+    VARIANT_BOOL GetCodecInstalled (
+        long CodecNum );
+    _bstr_t GetCodecDescription (
+        long CodecNum );
+    _bstr_t GetCodecURL (
+        long CodecNum );
+    _bstr_t GetMoreInfoURL (
+        enum MPMoreInfoType MoreInfoType );
+    _bstr_t GetMediaInfoString (
+        enum MPMediaInfoType MediaInfoType );
+    HRESULT Cancel ( );
+    HRESULT Open (
+        _bstr_t bstrFileName );
+    VARIANT_BOOL IsSoundCardEnabled ( );
+    HRESULT Next ( );
+    HRESULT Previous ( );
+    HRESULT StreamSelect (
+        long StreamNum );
+    HRESULT FastForward ( );
+    HRESULT FastReverse ( );
+    _bstr_t GetStreamName (
+        long StreamNum );
+    long GetStreamGroup (
+        long StreamNum );
+    VARIANT_BOOL GetStreamSelected (
+        long StreamNum );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall get_CurrentPosition (
+        double * pCurrentPosition ) = 0;
+    virtual HRESULT __stdcall put_CurrentPosition (
+        double pCurrentPosition ) = 0;
+    virtual HRESULT __stdcall get_Duration (
+        double * pDuration ) = 0;
+    virtual HRESULT __stdcall get_ImageSourceWidth (
+        long * pWidth ) = 0;
+    virtual HRESULT __stdcall get_ImageSourceHeight (
+        long * pHeight ) = 0;
+    virtual HRESULT __stdcall get_MarkerCount (
+        long * pMarkerCount ) = 0;
+    virtual HRESULT __stdcall get_CanScan (
+        VARIANT_BOOL * pCanScan ) = 0;
+    virtual HRESULT __stdcall get_CanSeek (
+        VARIANT_BOOL * pCanSeek ) = 0;
+    virtual HRESULT __stdcall get_CanSeekToMarkers (
+        VARIANT_BOOL * pCanSeekToMarkers ) = 0;
+    virtual HRESULT __stdcall get_CurrentMarker (
+        long * pCurrentMarker ) = 0;
+    virtual HRESULT __stdcall put_CurrentMarker (
+        long pCurrentMarker ) = 0;
+    virtual HRESULT __stdcall get_FileName (
+        BSTR * pbstrFileName ) = 0;
+    virtual HRESULT __stdcall put_FileName (
+        BSTR pbstrFileName ) = 0;
+    virtual HRESULT __stdcall get_SourceLink (
+        BSTR * pbstrSourceLink ) = 0;
+    virtual HRESULT __stdcall get_CreationDate (
+        DATE * pCreationDate ) = 0;
+    virtual HRESULT __stdcall get_ErrorCorrection (
+        BSTR * pbstrErrorCorrection ) = 0;
+    virtual HRESULT __stdcall get_Bandwidth (
+        long * pBandwidth ) = 0;
+    virtual HRESULT __stdcall get_SourceProtocol (
+        long * pSourceProtocol ) = 0;
+    virtual HRESULT __stdcall get_ReceivedPackets (
+        long * pReceivedPackets ) = 0;
+    virtual HRESULT __stdcall get_RecoveredPackets (
+        long * pRecoveredPackets ) = 0;
+    virtual HRESULT __stdcall get_LostPackets (
+        long * pLostPackets ) = 0;
+    virtual HRESULT __stdcall get_ReceptionQuality (
+        long * pReceptionQuality ) = 0;
+    virtual HRESULT __stdcall get_BufferingCount (
+        long * pBufferingCount ) = 0;
+    virtual HRESULT __stdcall get_IsBroadcast (
+        VARIANT_BOOL * pIsBroadcast ) = 0;
+    virtual HRESULT __stdcall get_BufferingProgress (
+        long * pBufferingProgress ) = 0;
+    virtual HRESULT __stdcall get_ChannelName (
+        BSTR * pbstrChannelName ) = 0;
+    virtual HRESULT __stdcall get_ChannelDescription (
+        BSTR * pbstrChannelDescription ) = 0;
+    virtual HRESULT __stdcall get_ChannelURL (
+        BSTR * pbstrChannelURL ) = 0;
+    virtual HRESULT __stdcall get_ContactAddress (
+        BSTR * pbstrContactAddress ) = 0;
+    virtual HRESULT __stdcall get_ContactPhone (
+        BSTR * pbstrContactPhone ) = 0;
+    virtual HRESULT __stdcall get_ContactEmail (
+        BSTR * pbstrContactEmail ) = 0;
+    virtual HRESULT __stdcall get_BufferingTime (
+        double * pBufferingTime ) = 0;
+    virtual HRESULT __stdcall put_BufferingTime (
+        double pBufferingTime ) = 0;
+    virtual HRESULT __stdcall get_AutoStart (
+        VARIANT_BOOL * pAutoStart ) = 0;
+    virtual HRESULT __stdcall put_AutoStart (
+        VARIANT_BOOL pAutoStart ) = 0;
+    virtual HRESULT __stdcall get_AutoRewind (
+        VARIANT_BOOL * pAutoRewind ) = 0;
+    virtual HRESULT __stdcall put_AutoRewind (
+        VARIANT_BOOL pAutoRewind ) = 0;
+    virtual HRESULT __stdcall get_Rate (
+        double * pRate ) = 0;
+    virtual HRESULT __stdcall put_Rate (
+        double pRate ) = 0;
+    virtual HRESULT __stdcall get_SendKeyboardEvents (
+        VARIANT_BOOL * pSendKeyboardEvents ) = 0;
+    virtual HRESULT __stdcall put_SendKeyboardEvents (
+        VARIANT_BOOL pSendKeyboardEvents ) = 0;
+    virtual HRESULT __stdcall get_SendMouseClickEvents (
+        VARIANT_BOOL * pSendMouseClickEvents ) = 0;
+    virtual HRESULT __stdcall put_SendMouseClickEvents (
+        VARIANT_BOOL pSendMouseClickEvents ) = 0;
+    virtual HRESULT __stdcall get_SendMouseMoveEvents (
+        VARIANT_BOOL * pSendMouseMoveEvents ) = 0;
+    virtual HRESULT __stdcall put_SendMouseMoveEvents (
+        VARIANT_BOOL pSendMouseMoveEvents ) = 0;
+    virtual HRESULT __stdcall get_PlayCount (
+        long * pPlayCount ) = 0;
+    virtual HRESULT __stdcall put_PlayCount (
+        long pPlayCount ) = 0;
+    virtual HRESULT __stdcall get_ClickToPlay (
+        VARIANT_BOOL * pClickToPlay ) = 0;
+    virtual HRESULT __stdcall put_ClickToPlay (
+        VARIANT_BOOL pClickToPlay ) = 0;
+    virtual HRESULT __stdcall get_AllowScan (
+        VARIANT_BOOL * pAllowScan ) = 0;
+    virtual HRESULT __stdcall put_AllowScan (
+        VARIANT_BOOL pAllowScan ) = 0;
+    virtual HRESULT __stdcall get_EnableContextMenu (
+        VARIANT_BOOL * pEnableContextMenu ) = 0;
+    virtual HRESULT __stdcall put_EnableContextMenu (
+        VARIANT_BOOL pEnableContextMenu ) = 0;
+    virtual HRESULT __stdcall get_CursorType (
+        long * pCursorType ) = 0;
+    virtual HRESULT __stdcall put_CursorType (
+        long pCursorType ) = 0;
+    virtual HRESULT __stdcall get_CodecCount (
+        long * pCodecCount ) = 0;
+    virtual HRESULT __stdcall get_AllowChangeDisplaySize (
+        VARIANT_BOOL * pAllowChangeDisplaySize ) = 0;
+    virtual HRESULT __stdcall put_AllowChangeDisplaySize (
+        VARIANT_BOOL pAllowChangeDisplaySize ) = 0;
+    virtual HRESULT __stdcall get_IsDurationValid (
+        VARIANT_BOOL * pIsDurationValid ) = 0;
+    virtual HRESULT __stdcall get_OpenState (
+        long * pOpenState ) = 0;
+    virtual HRESULT __stdcall get_SendOpenStateChangeEvents (
+        VARIANT_BOOL * pSendOpenStateChangeEvents ) = 0;
+    virtual HRESULT __stdcall put_SendOpenStateChangeEvents (
+        VARIANT_BOOL pSendOpenStateChangeEvents ) = 0;
+    virtual HRESULT __stdcall get_SendWarningEvents (
+        VARIANT_BOOL * pSendWarningEvents ) = 0;
+    virtual HRESULT __stdcall put_SendWarningEvents (
+        VARIANT_BOOL pSendWarningEvents ) = 0;
+    virtual HRESULT __stdcall get_SendErrorEvents (
+        VARIANT_BOOL * pSendErrorEvents ) = 0;
+    virtual HRESULT __stdcall put_SendErrorEvents (
+        VARIANT_BOOL pSendErrorEvents ) = 0;
+    virtual HRESULT __stdcall get_PlayState (
+        enum MPPlayStateConstants * pPlayState ) = 0;
+    virtual HRESULT __stdcall get_SendPlayStateChangeEvents (
+        VARIANT_BOOL * pSendPlayStateChangeEvents ) = 0;
+    virtual HRESULT __stdcall put_SendPlayStateChangeEvents (
+        VARIANT_BOOL pSendPlayStateChangeEvents ) = 0;
+    virtual HRESULT __stdcall get_DisplaySize (
+        enum MPDisplaySizeConstants * pDisplaySize ) = 0;
+    virtual HRESULT __stdcall put_DisplaySize (
+        enum MPDisplaySizeConstants pDisplaySize ) = 0;
+    virtual HRESULT __stdcall get_InvokeURLs (
+        VARIANT_BOOL * pInvokeURLs ) = 0;
+    virtual HRESULT __stdcall put_InvokeURLs (
+        VARIANT_BOOL pInvokeURLs ) = 0;
+    virtual HRESULT __stdcall get_BaseURL (
+        BSTR * pbstrBaseURL ) = 0;
+    virtual HRESULT __stdcall put_BaseURL (
+        BSTR pbstrBaseURL ) = 0;
+    virtual HRESULT __stdcall get_DefaultFrame (
+        BSTR * pbstrDefaultFrame ) = 0;
+    virtual HRESULT __stdcall put_DefaultFrame (
+        BSTR pbstrDefaultFrame ) = 0;
+    virtual HRESULT __stdcall get_HasError (
+        VARIANT_BOOL * pHasError ) = 0;
+    virtual HRESULT __stdcall get_ErrorDescription (
+        BSTR * pbstrErrorDescription ) = 0;
+    virtual HRESULT __stdcall get_ErrorCode (
+        long * pErrorCode ) = 0;
+    virtual HRESULT __stdcall get_AnimationAtStart (
+        VARIANT_BOOL * pAnimationAtStart ) = 0;
+    virtual HRESULT __stdcall put_AnimationAtStart (
+        VARIANT_BOOL pAnimationAtStart ) = 0;
+    virtual HRESULT __stdcall get_TransparentAtStart (
+        VARIANT_BOOL * pTransparentAtStart ) = 0;
+    virtual HRESULT __stdcall put_TransparentAtStart (
+        VARIANT_BOOL pTransparentAtStart ) = 0;
+    virtual HRESULT __stdcall get_Volume (
+        long * pVolume ) = 0;
+    virtual HRESULT __stdcall put_Volume (
+        long pVolume ) = 0;
+    virtual HRESULT __stdcall get_Balance (
+        long * pBalance ) = 0;
+    virtual HRESULT __stdcall put_Balance (
+        long pBalance ) = 0;
+    virtual HRESULT __stdcall get_ReadyState (
+        enum MPReadyStateConstants * pValue ) = 0;
+    virtual HRESULT __stdcall get_SelectionStart (
+        double * pValue ) = 0;
+    virtual HRESULT __stdcall put_SelectionStart (
+        double pValue ) = 0;
+    virtual HRESULT __stdcall get_SelectionEnd (
+        double * pValue ) = 0;
+    virtual HRESULT __stdcall put_SelectionEnd (
+        double pValue ) = 0;
+    virtual HRESULT __stdcall get_ShowDisplay (
+        VARIANT_BOOL * Show ) = 0;
+    virtual HRESULT __stdcall put_ShowDisplay (
+        VARIANT_BOOL Show ) = 0;
+    virtual HRESULT __stdcall get_ShowControls (
+        VARIANT_BOOL * Show ) = 0;
+    virtual HRESULT __stdcall put_ShowControls (
+        VARIANT_BOOL Show ) = 0;
+    virtual HRESULT __stdcall get_ShowPositionControls (
+        VARIANT_BOOL * Show ) = 0;
+    virtual HRESULT __stdcall put_ShowPositionControls (
+        VARIANT_BOOL Show ) = 0;
+    virtual HRESULT __stdcall get_ShowTracker (
+        VARIANT_BOOL * Show ) = 0;
+    virtual HRESULT __stdcall put_ShowTracker (
+        VARIANT_BOOL Show ) = 0;
+    virtual HRESULT __stdcall get_EnablePositionControls (
+        VARIANT_BOOL * Enable ) = 0;
+    virtual HRESULT __stdcall put_EnablePositionControls (
+        VARIANT_BOOL Enable ) = 0;
+    virtual HRESULT __stdcall get_EnableTracker (
+        VARIANT_BOOL * Enable ) = 0;
+    virtual HRESULT __stdcall put_EnableTracker (
+        VARIANT_BOOL Enable ) = 0;
+    virtual HRESULT __stdcall get_Enabled (
+        VARIANT_BOOL * pEnabled ) = 0;
+    virtual HRESULT __stdcall put_Enabled (
+        VARIANT_BOOL pEnabled ) = 0;
+    virtual HRESULT __stdcall get_DisplayForeColor (
+        VB_OLE_COLOR * ForeColor ) = 0;
+    virtual HRESULT __stdcall put_DisplayForeColor (
+        VB_OLE_COLOR ForeColor ) = 0;
+    virtual HRESULT __stdcall get_DisplayBackColor (
+        VB_OLE_COLOR * BackColor ) = 0;
+    virtual HRESULT __stdcall put_DisplayBackColor (
+        VB_OLE_COLOR BackColor ) = 0;
+    virtual HRESULT __stdcall get_DisplayMode (
+        enum MPDisplayModeConstants * pValue ) = 0;
+    virtual HRESULT __stdcall put_DisplayMode (
+        enum MPDisplayModeConstants pValue ) = 0;
+    virtual HRESULT __stdcall get_VideoBorder3D (
+        VARIANT_BOOL * pVideoBorderWidth ) = 0;
+    virtual HRESULT __stdcall put_VideoBorder3D (
+        VARIANT_BOOL pVideoBorderWidth ) = 0;
+    virtual HRESULT __stdcall get_VideoBorderWidth (
+        long * pVideoBorderWidth ) = 0;
+    virtual HRESULT __stdcall put_VideoBorderWidth (
+        long pVideoBorderWidth ) = 0;
+    virtual HRESULT __stdcall get_VideoBorderColor (
+        VB_OLE_COLOR * pVideoBorderWidth ) = 0;
+    virtual HRESULT __stdcall put_VideoBorderColor (
+        VB_OLE_COLOR pVideoBorderWidth ) = 0;
+    virtual HRESULT __stdcall get_ShowGotoBar (
+        VARIANT_BOOL * pbool ) = 0;
+    virtual HRESULT __stdcall put_ShowGotoBar (
+        VARIANT_BOOL pbool ) = 0;
+    virtual HRESULT __stdcall get_ShowStatusBar (
+        VARIANT_BOOL * pbool ) = 0;
+    virtual HRESULT __stdcall put_ShowStatusBar (
+        VARIANT_BOOL pbool ) = 0;
+    virtual HRESULT __stdcall get_ShowCaptioning (
+        VARIANT_BOOL * pbool ) = 0;
+    virtual HRESULT __stdcall put_ShowCaptioning (
+        VARIANT_BOOL pbool ) = 0;
+    virtual HRESULT __stdcall get_ShowAudioControls (
+        VARIANT_BOOL * pbool ) = 0;
+    virtual HRESULT __stdcall put_ShowAudioControls (
+        VARIANT_BOOL pbool ) = 0;
+    virtual HRESULT __stdcall get_CaptioningID (
+        BSTR * pstrText ) = 0;
+    virtual HRESULT __stdcall put_CaptioningID (
+        BSTR pstrText ) = 0;
+    virtual HRESULT __stdcall get_Mute (
+        VARIANT_BOOL * vbool ) = 0;
+    virtual HRESULT __stdcall put_Mute (
+        VARIANT_BOOL vbool ) = 0;
+    virtual HRESULT __stdcall get_CanPreview (
+        VARIANT_BOOL * pCanPreview ) = 0;
+    virtual HRESULT __stdcall get_PreviewMode (
+        VARIANT_BOOL * pPreviewMode ) = 0;
+    virtual HRESULT __stdcall put_PreviewMode (
+        VARIANT_BOOL pPreviewMode ) = 0;
+    virtual HRESULT __stdcall get_HasMultipleItems (
+        VARIANT_BOOL * pHasMuliItems ) = 0;
+    virtual HRESULT __stdcall get_Language (
+        long * pLanguage ) = 0;
+    virtual HRESULT __stdcall put_Language (
+        long pLanguage ) = 0;
+    virtual HRESULT __stdcall get_AudioStream (
+        long * pStream ) = 0;
+    virtual HRESULT __stdcall put_AudioStream (
+        long pStream ) = 0;
+    virtual HRESULT __stdcall get_SAMIStyle (
+        BSTR * pbstrStyle ) = 0;
+    virtual HRESULT __stdcall put_SAMIStyle (
+        BSTR pbstrStyle ) = 0;
+    virtual HRESULT __stdcall get_SAMILang (
+        BSTR * pbstrLang ) = 0;
+    virtual HRESULT __stdcall put_SAMILang (
+        BSTR pbstrLang ) = 0;
+    virtual HRESULT __stdcall get_SAMIFileName (
+        BSTR * pbstrFileName ) = 0;
+    virtual HRESULT __stdcall put_SAMIFileName (
+        BSTR pbstrFileName ) = 0;
+    virtual HRESULT __stdcall get_StreamCount (
+        long * pStreamCount ) = 0;
+    virtual HRESULT __stdcall get_ClientId (
+        BSTR * pbstrClientId ) = 0;
+    virtual HRESULT __stdcall get_ConnectionSpeed (
+        long * plConnectionSpeed ) = 0;
+    virtual HRESULT __stdcall get_AutoSize (
+        VARIANT_BOOL * pbool ) = 0;
+    virtual HRESULT __stdcall put_AutoSize (
+        VARIANT_BOOL pbool ) = 0;
+    virtual HRESULT __stdcall get_EnableFullScreenControls (
+        VARIANT_BOOL * pbVal ) = 0;
+    virtual HRESULT __stdcall put_EnableFullScreenControls (
+        VARIANT_BOOL pbVal ) = 0;
+    virtual HRESULT __stdcall get_ActiveMovie (
+        IDispatch * * ppdispatch ) = 0;
+    virtual HRESULT __stdcall get_NSPlay (
+        IDispatch * * ppdispatch ) = 0;
+    virtual HRESULT __stdcall get_WindowlessVideo (
+        VARIANT_BOOL * pbool ) = 0;
+    virtual HRESULT __stdcall put_WindowlessVideo (
+        VARIANT_BOOL pbool ) = 0;
+    virtual HRESULT __stdcall raw_Play ( ) = 0;
+    virtual HRESULT __stdcall raw_Stop ( ) = 0;
+    virtual HRESULT __stdcall raw_Pause ( ) = 0;
+    virtual HRESULT __stdcall raw_GetMarkerTime (
+        long MarkerNum,
+        double * pMarkerTime ) = 0;
+    virtual HRESULT __stdcall raw_GetMarkerName (
+        long MarkerNum,
+        BSTR * pbstrMarkerName ) = 0;
+    virtual HRESULT __stdcall raw_AboutBox ( ) = 0;
+    virtual HRESULT __stdcall raw_GetCodecInstalled (
+        long CodecNum,
+        VARIANT_BOOL * pCodecInstalled ) = 0;
+    virtual HRESULT __stdcall raw_GetCodecDescription (
+        long CodecNum,
+        BSTR * pbstrCodecDescription ) = 0;
+    virtual HRESULT __stdcall raw_GetCodecURL (
+        long CodecNum,
+        BSTR * pbstrCodecURL ) = 0;
+    virtual HRESULT __stdcall raw_GetMoreInfoURL (
+        enum MPMoreInfoType MoreInfoType,
+        BSTR * pbstrMoreInfoURL ) = 0;
+    virtual HRESULT __stdcall raw_GetMediaInfoString (
+        enum MPMediaInfoType MediaInfoType,
+        BSTR * pbstrMediaInfo ) = 0;
+    virtual HRESULT __stdcall raw_Cancel ( ) = 0;
+    virtual HRESULT __stdcall raw_Open (
+        BSTR bstrFileName ) = 0;
+    virtual HRESULT __stdcall raw_IsSoundCardEnabled (
+        VARIANT_BOOL * pbSoundCard ) = 0;
+    virtual HRESULT __stdcall raw_Next ( ) = 0;
+    virtual HRESULT __stdcall raw_Previous ( ) = 0;
+    virtual HRESULT __stdcall raw_StreamSelect (
+        long StreamNum ) = 0;
+    virtual HRESULT __stdcall raw_FastForward ( ) = 0;
+    virtual HRESULT __stdcall raw_FastReverse ( ) = 0;
+    virtual HRESULT __stdcall raw_GetStreamName (
+        long StreamNum,
+        BSTR * pbstrStreamName ) = 0;
+    virtual HRESULT __stdcall raw_GetStreamGroup (
+        long StreamNum,
+        long * pStreamGroup ) = 0;
+    virtual HRESULT __stdcall raw_GetStreamSelected (
+        long StreamNum,
+        VARIANT_BOOL * pStreamSelected ) = 0;
+};
+
+struct __declspec(uuid("20d4f5e0-5475-11d2-9774-0000f80855e6"))
+IMediaPlayer2 : IMediaPlayer
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetEntryCount))
+    long EntryCount;
+    __declspec(property(get=GetDVD))
+    IMediaPlayerDvdPtr DVD;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    IMediaPlayerDvdPtr GetDVD ( );
+    _bstr_t GetMediaParameter (
+        long EntryNum,
+        _bstr_t bstrParameterName );
+    _bstr_t GetMediaParameterName (
+        long EntryNum,
+        long Index );
+    long GetEntryCount ( );
+    long GetCurrentEntry ( );
+    HRESULT SetCurrentEntry (
+        long EntryNumber );
+    HRESULT ShowDialog (
+        enum MPShowDialogConstants mpDialogIndex );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall get_DVD (
+        struct IMediaPlayerDvd * * ppdispatch ) = 0;
+    virtual HRESULT __stdcall raw_GetMediaParameter (
+        long EntryNum,
+        BSTR bstrParameterName,
+        BSTR * pbstrParameterValue ) = 0;
+    virtual HRESULT __stdcall raw_GetMediaParameterName (
+        long EntryNum,
+        long Index,
+        BSTR * pbstrParameterName ) = 0;
+    virtual HRESULT __stdcall get_EntryCount (
+        long * pNumberEntries ) = 0;
+    virtual HRESULT __stdcall raw_GetCurrentEntry (
+        long * pEntryNumber ) = 0;
+    virtual HRESULT __stdcall raw_SetCurrentEntry (
+        long EntryNumber ) = 0;
+    virtual HRESULT __stdcall raw_ShowDialog (
+        enum MPShowDialogConstants mpDialogIndex ) = 0;
+};
+
+enum MPPlayStateConstants
+{
+    mpStopped = 0,
+    mpPaused = 1,
+    mpPlaying = 2,
+    mpWaiting = 3,
+    mpScanForward = 4,
+    mpScanReverse = 5,
+    mpClosed = 6
+};
+
+enum MPDisplaySizeConstants
+{
+    mpDefaultSize = 0,
+    mpHalfSize = 1,
+    mpDoubleSize = 2,
+    mpFullScreen = 3,
+    mpFitToSize = 4,
+    mpOneSixteenthScreen = 5,
+    mpOneFourthScreen = 6,
+    mpOneHalfScreen = 7
+};
+
+enum MPReadyStateConstants
+{
+    mpReadyStateUninitialized = 0,
+    mpReadyStateLoading = 1,
+    mpReadyStateInteractive = 3,
+    mpReadyStateComplete = 4
+};
+
+enum MPDisplayModeConstants
+{
+    mpTime = 0,
+    mpFrames = 1
+};
+
+enum MPMoreInfoType
+{
+    mpShowURL = 0,
+    mpClipURL = 1,
+    mpBannerURL = 2
+};
+
+enum MPMediaInfoType
+{
+    mpShowFilename = 0,
+    mpShowTitle = 1,
+    mpShowAuthor = 2,
+    mpShowCopyright = 3,
+    mpShowRating = 4,
+    mpShowDescription = 5,
+    mpShowLogoIcon = 6,
+    mpClipFilename = 7,
+    mpClipTitle = 8,
+    mpClipAuthor = 9,
+    mpClipCopyright = 10,
+    mpClipRating = 11,
+    mpClipDescription = 12,
+    mpClipLogoIcon = 13,
+    mpBannerImage = 14,
+    mpBannerMoreInfo = 15,
+    mpWatermark = 16
+};
+
+struct __declspec(uuid("746eb440-3835-11d2-9774-0000f80855e6"))
+IMediaPlayerDvd : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetUniqueID))
+    _bstr_t UniqueID;
+    __declspec(property(get=GetColorKey,put=PutColorKey))
+    unsigned long ColorKey;
+    __declspec(property(get=GetAudioStreamsAvailable))
+    unsigned long AudioStreamsAvailable;
+    __declspec(property(get=GetCurrentAudioStream,put=PutCurrentAudioStream))
+    unsigned long CurrentAudioStream;
+    __declspec(property(get=GetCurrentSubpictureStream,put=PutCurrentSubpictureStream))
+    unsigned long CurrentSubpictureStream;
+    __declspec(property(get=GetSubpictureStreamsAvailable))
+    unsigned long SubpictureStreamsAvailable;
+    __declspec(property(get=GetSubpictureOn,put=PutSubpictureOn))
+    VARIANT_BOOL SubpictureOn;
+    __declspec(property(get=GetCurrentAngle,put=PutCurrentAngle))
+    unsigned long CurrentAngle;
+    __declspec(property(get=GetAnglesAvailable))
+    unsigned long AnglesAvailable;
+    __declspec(property(get=GetCurrentTitle))
+    unsigned long CurrentTitle;
+    __declspec(property(get=GetCurrentChapter))
+    unsigned long CurrentChapter;
+    __declspec(property(get=GetCurrentTime))
+    _bstr_t CurrentTime;
+    __declspec(property(get=GetCurrentButton))
+    unsigned long CurrentButton;
+    __declspec(property(get=GetButtonsAvailable))
+    unsigned long ButtonsAvailable;
+    __declspec(property(get=GetFramesPerSecond))
+    unsigned long FramesPerSecond;
+    __declspec(property(get=GetCurrentDomain))
+    unsigned long CurrentDomain;
+    __declspec(property(get=GetTitlesAvailable))
+    unsigned long TitlesAvailable;
+    __declspec(property(get=GetVolumesAvailable))
+    unsigned long VolumesAvailable;
+    __declspec(property(get=GetCurrentVolume))
+    unsigned long CurrentVolume;
+    __declspec(property(get=GetCurrentDiscSide))
+    unsigned long CurrentDiscSide;
+    __declspec(property(get=GetCurrentCCService,put=PutCurrentCCService))
+    unsigned long CurrentCCService;
+    __declspec(property(get=GetCCActive,put=PutCCActive))
+    VARIANT_BOOL CCActive;
+    __declspec(property(get=GetRoot,put=PutRoot))
+    _bstr_t Root;
+    __declspec(property(get=GetTotalTitleTime))
+    _bstr_t TotalTitleTime;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT ButtonSelectAndActivate (
+        unsigned long uiButton );
+    HRESULT UpperButtonSelect ( );
+    HRESULT LowerButtonSelect ( );
+    HRESULT LeftButtonSelect ( );
+    HRESULT RightButtonSelect ( );
+    HRESULT ButtonActivate ( );
+    HRESULT ForwardScan (
+        double dwSpeed );
+    HRESULT BackwardScan (
+        double dwSpeed );
+    HRESULT PrevPGSearch ( );
+    HRESULT TopPGSearch ( );
+    HRESULT NextPGSearch ( );
+    HRESULT TitlePlay (
+        unsigned long uiTitle );
+    HRESULT ChapterPlay (
+        unsigned long uiTitle,
+        unsigned long uiChapter );
+    HRESULT ChapterSearch (
+        unsigned long Chapter );
+    HRESULT MenuCall (
+        enum DVDMenuIDConstants MenuID );
+    HRESULT ResumeFromMenu ( );
+    HRESULT TimePlay (
+        unsigned long uiTitle,
+        _bstr_t bstrTime );
+    HRESULT TimeSearch (
+        _bstr_t bstrTime );
+    HRESULT ChapterPlayAutoStop (
+        unsigned long ulTitle,
+        unsigned long ulChapter,
+        unsigned long ulChaptersToPlay );
+    HRESULT StillOff ( );
+    HRESULT GoUp ( );
+    _bstr_t GetTotalTitleTime ( );
+    unsigned long GetNumberOfChapters (
+        unsigned long ulTitle );
+    _bstr_t GetAudioLanguage (
+        unsigned long ulStream );
+    _bstr_t GetSubpictureLanguage (
+        unsigned long ulStream );
+    _variant_t GetAllGPRMs ( );
+    _variant_t GetAllSPRMs ( );
+    VARIANT_BOOL UOPValid (
+        unsigned long ulUOP );
+    unsigned long GetButtonsAvailable ( );
+    unsigned long GetCurrentButton ( );
+    unsigned long GetAudioStreamsAvailable ( );
+    unsigned long GetCurrentAudioStream ( );
+    void PutCurrentAudioStream (
+        unsigned long ulAudioStream );
+    unsigned long GetCurrentSubpictureStream ( );
+    void PutCurrentSubpictureStream (
+        unsigned long ulSubpictureStream );
+    unsigned long GetSubpictureStreamsAvailable ( );
+    VARIANT_BOOL GetSubpictureOn ( );
+    void PutSubpictureOn (
+        VARIANT_BOOL bSubpictureON );
+    unsigned long GetAnglesAvailable ( );
+    unsigned long GetCurrentAngle ( );
+    void PutCurrentAngle (
+        unsigned long ulAngle );
+    unsigned long GetCurrentTitle ( );
+    unsigned long GetCurrentChapter ( );
+    _bstr_t GetCurrentTime ( );
+    void PutRoot (
+        _bstr_t pbstrPath );
+    _bstr_t GetRoot ( );
+    unsigned long GetFramesPerSecond ( );
+    unsigned long GetCurrentDomain ( );
+    unsigned long GetTitlesAvailable ( );
+    unsigned long GetVolumesAvailable ( );
+    unsigned long GetCurrentVolume ( );
+    unsigned long GetCurrentDiscSide ( );
+    VARIANT_BOOL GetCCActive ( );
+    void PutCCActive (
+        VARIANT_BOOL bCCActive );
+    unsigned long GetCurrentCCService ( );
+    void PutCurrentCCService (
+        unsigned long pulService );
+    _bstr_t GetUniqueID ( );
+    unsigned long GetColorKey ( );
+    void PutColorKey (
+        unsigned long pClr );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_ButtonSelectAndActivate (
+        unsigned long uiButton ) = 0;
+    virtual HRESULT __stdcall raw_UpperButtonSelect ( ) = 0;
+    virtual HRESULT __stdcall raw_LowerButtonSelect ( ) = 0;
+    virtual HRESULT __stdcall raw_LeftButtonSelect ( ) = 0;
+    virtual HRESULT __stdcall raw_RightButtonSelect ( ) = 0;
+    virtual HRESULT __stdcall raw_ButtonActivate ( ) = 0;
+    virtual HRESULT __stdcall raw_ForwardScan (
+        double dwSpeed ) = 0;
+    virtual HRESULT __stdcall raw_BackwardScan (
+        double dwSpeed ) = 0;
+    virtual HRESULT __stdcall raw_PrevPGSearch ( ) = 0;
+    virtual HRESULT __stdcall raw_TopPGSearch ( ) = 0;
+    virtual HRESULT __stdcall raw_NextPGSearch ( ) = 0;
+    virtual HRESULT __stdcall raw_TitlePlay (
+        unsigned long uiTitle ) = 0;
+    virtual HRESULT __stdcall raw_ChapterPlay (
+        unsigned long uiTitle,
+        unsigned long uiChapter ) = 0;
+    virtual HRESULT __stdcall raw_ChapterSearch (
+        unsigned long Chapter ) = 0;
+    virtual HRESULT __stdcall raw_MenuCall (
+        enum DVDMenuIDConstants MenuID ) = 0;
+    virtual HRESULT __stdcall raw_ResumeFromMenu ( ) = 0;
+    virtual HRESULT __stdcall raw_TimePlay (
+        unsigned long uiTitle,
+        BSTR bstrTime ) = 0;
+    virtual HRESULT __stdcall raw_TimeSearch (
+        BSTR bstrTime ) = 0;
+    virtual HRESULT __stdcall raw_ChapterPlayAutoStop (
+        unsigned long ulTitle,
+        unsigned long ulChapter,
+        unsigned long ulChaptersToPlay ) = 0;
+    virtual HRESULT __stdcall raw_StillOff ( ) = 0;
+    virtual HRESULT __stdcall raw_GoUp ( ) = 0;
+    virtual HRESULT __stdcall get_TotalTitleTime (
+        BSTR * bstrTime ) = 0;
+    virtual HRESULT __stdcall raw_GetNumberOfChapters (
+        unsigned long ulTitle,
+        unsigned long * ulNumChapters ) = 0;
+    virtual HRESULT __stdcall raw_GetAudioLanguage (
+        unsigned long ulStream,
+        BSTR * bstrAudioLang ) = 0;
+    virtual HRESULT __stdcall raw_GetSubpictureLanguage (
+        unsigned long ulStream,
+        BSTR * bstrSubpictureLang ) = 0;
+    virtual HRESULT __stdcall raw_GetAllGPRMs (
+        VARIANT * vtGPRM ) = 0;
+    virtual HRESULT __stdcall raw_GetAllSPRMs (
+        VARIANT * vtSPRM ) = 0;
+    virtual HRESULT __stdcall raw_UOPValid (
+        unsigned long ulUOP,
+        VARIANT_BOOL * bValid ) = 0;
+    virtual HRESULT __stdcall get_ButtonsAvailable (
+        unsigned long * ulButtonsAvailable ) = 0;
+    virtual HRESULT __stdcall get_CurrentButton (
+        unsigned long * ulCurrentButton ) = 0;
+    virtual HRESULT __stdcall get_AudioStreamsAvailable (
+        unsigned long * ulAudioStreamsAvailable ) = 0;
+    virtual HRESULT __stdcall get_CurrentAudioStream (
+        unsigned long * ulAudioStream ) = 0;
+    virtual HRESULT __stdcall put_CurrentAudioStream (
+        unsigned long ulAudioStream ) = 0;
+    virtual HRESULT __stdcall get_CurrentSubpictureStream (
+        unsigned long * ulSubpictureStream ) = 0;
+    virtual HRESULT __stdcall put_CurrentSubpictureStream (
+        unsigned long ulSubpictureStream ) = 0;
+    virtual HRESULT __stdcall get_SubpictureStreamsAvailable (
+        unsigned long * ulNumSubpictureStreams ) = 0;
+    virtual HRESULT __stdcall get_SubpictureOn (
+        VARIANT_BOOL * bSubpictureON ) = 0;
+    virtual HRESULT __stdcall put_SubpictureOn (
+        VARIANT_BOOL bSubpictureON ) = 0;
+    virtual HRESULT __stdcall get_AnglesAvailable (
+        unsigned long * ulAnglesAvailable ) = 0;
+    virtual HRESULT __stdcall get_CurrentAngle (
+        unsigned long * ulAngle ) = 0;
+    virtual HRESULT __stdcall put_CurrentAngle (
+        unsigned long ulAngle ) = 0;
+    virtual HRESULT __stdcall get_CurrentTitle (
+        unsigned long * ulTitle ) = 0;
+    virtual HRESULT __stdcall get_CurrentChapter (
+        unsigned long * ulChapter ) = 0;
+    virtual HRESULT __stdcall get_CurrentTime (
+        BSTR * bstrTime ) = 0;
+    virtual HRESULT __stdcall put_Root (
+        BSTR pbstrPath ) = 0;
+    virtual HRESULT __stdcall get_Root (
+        BSTR * pbstrPath ) = 0;
+    virtual HRESULT __stdcall get_FramesPerSecond (
+        unsigned long * ulFps ) = 0;
+    virtual HRESULT __stdcall get_CurrentDomain (
+        unsigned long * ulDomain ) = 0;
+    virtual HRESULT __stdcall get_TitlesAvailable (
+        unsigned long * ulTitles ) = 0;
+    virtual HRESULT __stdcall get_VolumesAvailable (
+        unsigned long * pulVolumes ) = 0;
+    virtual HRESULT __stdcall get_CurrentVolume (
+        unsigned long * pulVolume ) = 0;
+    virtual HRESULT __stdcall get_CurrentDiscSide (
+        unsigned long * pulDiscSide ) = 0;
+    virtual HRESULT __stdcall get_CCActive (
+        VARIANT_BOOL * bCCActive ) = 0;
+    virtual HRESULT __stdcall put_CCActive (
+        VARIANT_BOOL bCCActive ) = 0;
+    virtual HRESULT __stdcall get_CurrentCCService (
+        unsigned long * pulService ) = 0;
+    virtual HRESULT __stdcall put_CurrentCCService (
+        unsigned long pulService ) = 0;
+    virtual HRESULT __stdcall get_UniqueID (
+        BSTR * pvtUniqueID ) = 0;
+    virtual HRESULT __stdcall get_ColorKey (
+        unsigned long * pClr ) = 0;
+    virtual HRESULT __stdcall put_ColorKey (
+        unsigned long pClr ) = 0;
+};
+
+enum DVDMenuIDConstants
+{
+    dvdMenu_Title = 2,
+    dvdMenu_Root = 3,
+    dvdMenu_Subpicture = 4,
+    dvdMenu_Audio = 5,
+    dvdMenu_Angle = 6,
+    dvdMenu_Chapter = 7
+};
+
+enum MPShowDialogConstants
+{
+    mpShowDialogHelp = 0,
+    mpShowDialogStatistics = 1,
+    mpShowDialogOptions = 2,
+    mpShowDialogContextMenu = 3
+};
+
+struct __declspec(uuid("920f0de3-91c5-11d2-828f-00c04fc99d4e"))
+IMediaBindStream : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT LoadMoniker (
+        _bstr_t bszTransferContext,
+        _bstr_t bszUrl );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_LoadMoniker (
+        BSTR bszTransferContext,
+        BSTR bszUrl ) = 0;
+};
+
+struct __declspec(uuid("5c85dcb0-f967-11d0-81ed-00c04fc99d4c"))
+ppDShowNet;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("c0cd59ae-020d-11d1-81f2-00c04fc99d4c"))
+ppDShowPlay;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("2feb9591-50cf-11d1-a6df-006097c4e476"))
+ppDSMeta;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("bb314f91-a010-11d1-a75a-006097c4e476"))
+ppDSCnnl;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("31c48c31-70b0-11d1-a708-006097c4e476"))
+ppDSClip;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("31c48c32-70b0-11d1-a708-006097c4e476"))
+ppDSDetl;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("2afa62e2-5548-11d1-a6e1-006097c4e476"))
+ppDSApp;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("8c4eb103-516f-11d1-a6df-006097c4e476"))
+ppDSPropAdv;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("ae1a5812-5230-11d1-a6e0-006097c4e476"))
+ppDSView;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("ae1a5813-5230-11d1-a6e0-006097c4e476"))
+ppDSOAdv;
+    // [ default ] interface IUnknown
+
+struct __declspec(uuid("3da2aa3c-3d96-11d2-9bd2-204c4f4f5020"))
+_IAsyncPProtEvents : IDispatch
+{};
+
+struct __declspec(uuid("3da2aa3b-3d96-11d2-9bd2-204c4f4f5020"))
+AsyncPProt;
+    // [ default ] interface IAsyncPProt
+    // [ default, source ] dispinterface _IAsyncPProtEvents
+
+struct __declspec(uuid("3da2aa3a-3d96-11d2-9bd2-204c4f4f5020"))
+IAsyncPProt : IDispatch
+{};
+
+struct __declspec(uuid("3da2aa3e-3d96-11d2-9bd2-204c4f4f5020"))
+AsyncMHandler;
+    // [ default ] interface IAsyncMHandler
+
+struct __declspec(uuid("3da2aa3d-3d96-11d2-9bd2-204c4f4f5020"))
+IAsyncMHandler : IDispatch
+{};
+
+struct __declspec(uuid("9c2263b1-3e3c-11d2-9bd3-204c4f4f5020"))
+_IRadioPlayerEvents : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    // Methods:
+    HRESULT StateChange (
+        _bstr_t bszUrl,
+        VARIANT_BOOL fPlay,
+        long lVolume,
+        VARIANT_BOOL fMute );
+};
+
+struct __declspec(uuid("9c2263b0-3e3c-11d2-9bd3-204c4f4f5020"))
+RadioPlayer;
+    // [ default ] interface IRadioPlayer
+    // interface IRadioServer
+    // [ default, source ] dispinterface _IRadioPlayerEvents
+
+struct __declspec(uuid("9c2263af-3e3c-11d2-9bd3-204c4f4f5020"))
+IRadioPlayer : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(put=PutUrl))
+    _bstr_t Url;
+    __declspec(property(put=PutVolume))
+    long Volume;
+    __declspec(property(put=PutMute))
+    VARIANT_BOOL Mute;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT BindRadioMemory ( );
+    HRESULT ReleaseRadio ( );
+    long RegisterEvent (
+        _bstr_t bszEvent );
+    long RegisterWindow (
+        long __MIDL_0012,
+        unsigned long dwMessage,
+        unsigned long dwCodeSet );
+    _bstr_t GetSection ( );
+    HRESULT Unregister (
+        long lRegister );
+    long GetInstanceCount ( );
+    HRESULT Play ( );
+    HRESULT Stop ( );
+    void PutUrl (
+        _bstr_t _arg1 );
+    void PutVolume (
+        long _arg1 );
+    void PutMute (
+        VARIANT_BOOL _arg1 );
+    HRESULT GetStatus (
+        long * plVolume,
+        long * pfMute,
+        long * pfPlay,
+        BSTR * __MIDL_0013,
+        BSTR * __MIDL_0014,
+        BSTR * __MIDL_0015,
+        BSTR * __MIDL_0016,
+        BSTR * __MIDL_0017,
+        BSTR * __MIDL_0018,
+        BSTR * __MIDL_0019 );
+    HRESULT GetState (
+        long * plOpenState,
+        long * pfBuffering,
+        long * plBufferingPercent,
+        long * plQuality );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_BindRadioMemory ( ) = 0;
+    virtual HRESULT __stdcall raw_ReleaseRadio ( ) = 0;
+    virtual HRESULT __stdcall raw_RegisterEvent (
+        BSTR bszEvent,
+        long * plRegister ) = 0;
+    virtual HRESULT __stdcall raw_RegisterWindow (
+        long __MIDL_0012,
+        unsigned long dwMessage,
+        unsigned long dwCodeSet,
+        long * plRegister ) = 0;
+    virtual HRESULT __stdcall raw_GetSection (
+        BSTR * bszSection ) = 0;
+    virtual HRESULT __stdcall raw_Unregister (
+        long lRegister ) = 0;
+    virtual HRESULT __stdcall raw_GetInstanceCount (
+        long * plInstances ) = 0;
+    virtual HRESULT __stdcall raw_Play ( ) = 0;
+    virtual HRESULT __stdcall raw_Stop ( ) = 0;
+    virtual HRESULT __stdcall put_Url (
+        BSTR _arg1 ) = 0;
+    virtual HRESULT __stdcall put_Volume (
+        long _arg1 ) = 0;
+    virtual HRESULT __stdcall put_Mute (
+        VARIANT_BOOL _arg1 ) = 0;
+    virtual HRESULT __stdcall raw_GetStatus (
+        long * plVolume,
+        long * pfMute,
+        long * pfPlay,
+        BSTR * __MIDL_0013,
+        BSTR * __MIDL_0014,
+        BSTR * __MIDL_0015,
+        BSTR * __MIDL_0016,
+        BSTR * __MIDL_0017,
+        BSTR * __MIDL_0018,
+        BSTR * __MIDL_0019 ) = 0;
+    virtual HRESULT __stdcall raw_GetState (
+        long * plOpenState,
+        long * pfBuffering,
+        long * plBufferingPercent,
+        long * plQuality ) = 0;
+};
+
+struct __declspec(uuid("9c2263a0-3e3c-11d2-9bd3-204c4f4f5020"))
+IRadioServer : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    IRadioPlayerPtr BindToRadio (
+        _bstr_t wszRadio );
+    HRESULT IsRadioExists (
+        _bstr_t wszRadio );
+    HRESULT LaunchStandardUrl (
+        _bstr_t bszUrl,
+        IUnknown * pBrowser );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_BindToRadio (
+        BSTR wszRadio,
+        struct IRadioPlayer * * ppServer ) = 0;
+    virtual HRESULT __stdcall raw_IsRadioExists (
+        BSTR wszRadio ) = 0;
+    virtual HRESULT __stdcall raw_LaunchStandardUrl (
+        BSTR bszUrl,
+        IUnknown * pBrowser ) = 0;
+};
+
+struct __declspec(uuid("8e71888a-423f-11d2-876e-00a0c9082467"))
+RadioServer;
+    // [ default ] interface IRadioPlayer
+    // interface IRadioServerControl
+    // interface IMediaPlayerListener
+    // [ default, source ] dispinterface _IRadioPlayerEvents
+
+struct __declspec(uuid("8e718889-423f-11d2-876e-00a0c9082467"))
+IRadioServerControl : IDispatch
+{};
+
+struct __declspec(uuid("33222211-5e5e-11d2-9e8e-0000f8085981"))
+IMediaPlayerListener : IUnknown
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT PlayStateChanged (
+        long lNewState );
+    HRESULT Buffering (
+        VARIANT_BOOL fStart );
+    HRESULT BufferPercent (
+        long lBufferPercent );
+    HRESULT OpenStateChanged (
+        long lOpenState );
+    HRESULT MediaInfoChanged (
+        _bstr_t bstrShowTitle,
+        _bstr_t bstrClipTitle,
+        _bstr_t bstrClipAuthor,
+        _bstr_t bstrClipCopyright,
+        _bstr_t bstrStationURL );
+    HRESULT QualityChanged (
+        long lQuality );
+    HRESULT Error (
+        _bstr_t bstrError );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_PlayStateChanged (
+        long lNewState ) = 0;
+    virtual HRESULT __stdcall raw_Buffering (
+        VARIANT_BOOL fStart ) = 0;
+    virtual HRESULT __stdcall raw_BufferPercent (
+        long lBufferPercent ) = 0;
+    virtual HRESULT __stdcall raw_OpenStateChanged (
+        long lOpenState ) = 0;
+    virtual HRESULT __stdcall raw_MediaInfoChanged (
+        BSTR bstrShowTitle,
+        BSTR bstrClipTitle,
+        BSTR bstrClipAuthor,
+        BSTR bstrClipCopyright,
+        BSTR bstrStationURL ) = 0;
+    virtual HRESULT __stdcall raw_QualityChanged (
+        long lQuality ) = 0;
+    virtual HRESULT __stdcall raw_Error (
+        BSTR bstrError ) = 0;
+};
+
+struct __declspec(uuid("8e718888-423f-11d2-876e-00a0c9082467"))
+RadioBand;
+    // dispinterface _IRadioPlayerEvents
+    // [ default ] interface IRadioBand
+
+struct __declspec(uuid("8e718881-423f-11d2-876e-00a0c9082467"))
+IRadioBand : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT Create (
+        long * phwnd,
+        long hwndParent );
+
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall raw_Create (
+        long * phwnd,
+        long hwndParent ) = 0;
+};
+
+struct __declspec(uuid("1d1237a0-6cd6-11d2-96ba-00104b242e64"))
+ppDSFile;
+    // [ default ] interface IUnknown
+
+//
+// Wrapper method implementations
+//
+
+#include "msdxm.tli"
+
+} // namespace MediaPlayer
+
+#pragma pack(pop)

@@ -1,0 +1,1935 @@
+// Created by Microsoft (R) C/C++ Compiler Version 12.00.8472.0 (1c976c1a).
+//
+//
+// Wrapper implementations for Win32 type library C:\winnt\system32\msdxm.ocx
+// compiler-generated file created 03/20/00 at 15:12:27 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface IDirectControl wrapper method implementations
+//
+
+inline HRESULT IDirectControl::CreateView ( _bstr_t bszClsid ) {
+    HRESULT _hr = raw_CreateView(bszClsid);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectControl::DestroyAllViews ( ) {
+    HRESULT _hr = raw_DestroyAllViews();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IDirectContainer wrapper method implementations
+//
+
+inline HRESULT IDirectContainer::CreateControl ( _bstr_t bszClsid, unsigned long dwClsContext, IUnknown * * ppunk, unsigned long dwWindowStyle ) {
+    HRESULT _hr = raw_CreateControl(bszClsid, dwClsContext, ppunk, dwWindowStyle);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectContainer::SetServiceProvider ( struct IServiceProvider * pspSet ) {
+    HRESULT _hr = raw_SetServiceProvider(pspSet);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectContainer::SetIInputObjectSite ( IUnknown * pios ) {
+    HRESULT _hr = raw_SetIInputObjectSite(pios);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectContainer::ShowControl ( ) {
+    HRESULT _hr = raw_ShowControl();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectContainer::HideControl ( ) {
+    HRESULT _hr = raw_HideControl();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectContainer::IsControlCreated ( ) {
+    HRESULT _hr = raw_IsControlCreated();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDirectContainer::DestroyControl ( ) {
+    HRESULT _hr = raw_DestroyControl();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IServiceProvider wrapper method implementations
+//
+
+inline HRESULT IServiceProvider::RemoteQueryService ( GUID * guidService, GUID * riid, IUnknown * * ppvObject ) {
+    HRESULT _hr = raw_RemoteQueryService(guidService, riid, ppvObject);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// dispinterface _MediaPlayerEvents wrapper method implementations
+//
+
+inline HRESULT _MediaPlayerEvents::DVDNotify ( long EventCode, long EventParam1, long EventParam2 ) {
+    return _com_dispatch_method(this, 0x5e1, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003\x0003\x0003", EventCode, EventParam1, EventParam2);
+}
+
+inline HRESULT _MediaPlayerEvents::EndOfStream ( long Result ) {
+    return _com_dispatch_method(this, 0xbba, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003", Result);
+}
+
+inline HRESULT _MediaPlayerEvents::KeyDown ( short KeyCode, short ShiftState ) {
+    return _com_dispatch_method(this, DISPID_KEYDOWN, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002", KeyCode, ShiftState);
+}
+
+inline HRESULT _MediaPlayerEvents::KeyUp ( short KeyCode, short ShiftState ) {
+    return _com_dispatch_method(this, DISPID_KEYUP, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002", KeyCode, ShiftState);
+}
+
+inline HRESULT _MediaPlayerEvents::KeyPress ( short CharacterCode ) {
+    return _com_dispatch_method(this, DISPID_KEYPRESS, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002", CharacterCode);
+}
+
+inline HRESULT _MediaPlayerEvents::MouseMove ( short Button, short ShiftState, OLE_XPOS_PIXELS x, OLE_YPOS_PIXELS y ) {
+    return _com_dispatch_method(this, DISPID_MOUSEMOVE, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002\x0003\x0003", Button, ShiftState, x, y);
+}
+
+inline HRESULT _MediaPlayerEvents::MouseDown ( short Button, short ShiftState, OLE_XPOS_PIXELS x, OLE_YPOS_PIXELS y ) {
+    return _com_dispatch_method(this, DISPID_MOUSEDOWN, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002\x0003\x0003", Button, ShiftState, x, y);
+}
+
+inline HRESULT _MediaPlayerEvents::MouseUp ( short Button, short ShiftState, OLE_XPOS_PIXELS x, OLE_YPOS_PIXELS y ) {
+    return _com_dispatch_method(this, DISPID_MOUSEUP, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002\x0003\x0003", Button, ShiftState, x, y);
+}
+
+inline HRESULT _MediaPlayerEvents::Click ( short Button, short ShiftState, OLE_XPOS_PIXELS x, OLE_YPOS_PIXELS y ) {
+    return _com_dispatch_method(this, DISPID_CLICK, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002\x0003\x0003", Button, ShiftState, x, y);
+}
+
+inline HRESULT _MediaPlayerEvents::DblClick ( short Button, short ShiftState, OLE_XPOS_PIXELS x, OLE_YPOS_PIXELS y ) {
+    return _com_dispatch_method(this, DISPID_DBLCLICK, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0002\x0002\x0003\x0003", Button, ShiftState, x, y);
+}
+
+inline HRESULT _MediaPlayerEvents::OpenStateChange ( long OldState, long NewState ) {
+    return _com_dispatch_method(this, 0xbc3, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003\x0003", OldState, NewState);
+}
+
+inline HRESULT _MediaPlayerEvents::PlayStateChange ( long OldState, long NewState ) {
+    return _com_dispatch_method(this, 0xbc4, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003\x0003", OldState, NewState);
+}
+
+inline HRESULT _MediaPlayerEvents::ScriptCommand ( _bstr_t scType, _bstr_t Param ) {
+    return _com_dispatch_method(this, 0xbb9, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0008\x0008", (BSTR)scType, (BSTR)Param);
+}
+
+inline HRESULT _MediaPlayerEvents::Buffering ( VARIANT_BOOL Start ) {
+    return _com_dispatch_method(this, 0xbbb, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x000b", Start);
+}
+
+inline HRESULT _MediaPlayerEvents::Error ( ) {
+    return _com_dispatch_method(this, 0xbc2, DISPATCH_METHOD, VT_EMPTY, NULL, NULL);
+}
+
+inline HRESULT _MediaPlayerEvents::MarkerHit ( long MarkerNum ) {
+    return _com_dispatch_method(this, 0xbbe, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003", MarkerNum);
+}
+
+inline HRESULT _MediaPlayerEvents::Warning ( long WarningType, long Param, _bstr_t Description ) {
+    return _com_dispatch_method(this, 0xbc1, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003\x0003\x0008", WarningType, Param, (BSTR)Description);
+}
+
+inline HRESULT _MediaPlayerEvents::NewStream ( ) {
+    return _com_dispatch_method(this, 0xbc0, DISPATCH_METHOD, VT_EMPTY, NULL, NULL);
+}
+
+inline HRESULT _MediaPlayerEvents::Disconnect ( long Result ) {
+    return _com_dispatch_method(this, 0xbbc, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003", Result);
+}
+
+inline HRESULT _MediaPlayerEvents::PositionChange ( double oldPosition, double newPosition ) {
+    return _com_dispatch_method(this, 0x2, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0005\x0005", oldPosition, newPosition);
+}
+
+inline HRESULT _MediaPlayerEvents::DisplayModeChange ( ) {
+    return _com_dispatch_method(this, 0x33, DISPATCH_METHOD, VT_EMPTY, NULL, NULL);
+}
+
+inline HRESULT _MediaPlayerEvents::ReadyStateChange ( enum ReadyStateConstants ReadyState ) {
+    return _com_dispatch_method(this, DISPID_READYSTATECHANGE, DISPATCH_METHOD, VT_EMPTY, NULL, 
+        L"\x0003", ReadyState);
+}
+
+//
+// interface IMediaPlayer wrapper method implementations
+//
+
+inline double IMediaPlayer::GetCurrentPosition ( ) {
+    double _result;
+    HRESULT _hr = get_CurrentPosition(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutCurrentPosition ( double pCurrentPosition ) {
+    HRESULT _hr = put_CurrentPosition(pCurrentPosition);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double IMediaPlayer::GetDuration ( ) {
+    double _result;
+    HRESULT _hr = get_Duration(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetImageSourceWidth ( ) {
+    long _result;
+    HRESULT _hr = get_ImageSourceWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetImageSourceHeight ( ) {
+    long _result;
+    HRESULT _hr = get_ImageSourceHeight(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetMarkerCount ( ) {
+    long _result;
+    HRESULT _hr = get_MarkerCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetCanScan ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_CanScan(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetCanSeek ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_CanSeek(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetCanSeekToMarkers ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_CanSeekToMarkers(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetCurrentMarker ( ) {
+    long _result;
+    HRESULT _hr = get_CurrentMarker(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutCurrentMarker ( long pCurrentMarker ) {
+    HRESULT _hr = put_CurrentMarker(pCurrentMarker);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetFileName ( ) {
+    BSTR _result;
+    HRESULT _hr = get_FileName(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutFileName ( _bstr_t pbstrFileName ) {
+    HRESULT _hr = put_FileName(pbstrFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetSourceLink ( ) {
+    BSTR _result;
+    HRESULT _hr = get_SourceLink(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline DATE IMediaPlayer::GetCreationDate ( ) {
+    DATE _result;
+    HRESULT _hr = get_CreationDate(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayer::GetErrorCorrection ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ErrorCorrection(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline long IMediaPlayer::GetBandwidth ( ) {
+    long _result;
+    HRESULT _hr = get_Bandwidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetSourceProtocol ( ) {
+    long _result;
+    HRESULT _hr = get_SourceProtocol(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetReceivedPackets ( ) {
+    long _result;
+    HRESULT _hr = get_ReceivedPackets(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetRecoveredPackets ( ) {
+    long _result;
+    HRESULT _hr = get_RecoveredPackets(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetLostPackets ( ) {
+    long _result;
+    HRESULT _hr = get_LostPackets(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetReceptionQuality ( ) {
+    long _result;
+    HRESULT _hr = get_ReceptionQuality(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetBufferingCount ( ) {
+    long _result;
+    HRESULT _hr = get_BufferingCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetIsBroadcast ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_IsBroadcast(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetBufferingProgress ( ) {
+    long _result;
+    HRESULT _hr = get_BufferingProgress(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayer::GetChannelName ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ChannelName(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetChannelDescription ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ChannelDescription(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetChannelURL ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ChannelURL(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetContactAddress ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ContactAddress(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetContactPhone ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ContactPhone(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetContactEmail ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ContactEmail(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline double IMediaPlayer::GetBufferingTime ( ) {
+    double _result;
+    HRESULT _hr = get_BufferingTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutBufferingTime ( double pBufferingTime ) {
+    HRESULT _hr = put_BufferingTime(pBufferingTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetAutoStart ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_AutoStart(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAutoStart ( VARIANT_BOOL pAutoStart ) {
+    HRESULT _hr = put_AutoStart(pAutoStart);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetAutoRewind ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_AutoRewind(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAutoRewind ( VARIANT_BOOL pAutoRewind ) {
+    HRESULT _hr = put_AutoRewind(pAutoRewind);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double IMediaPlayer::GetRate ( ) {
+    double _result;
+    HRESULT _hr = get_Rate(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutRate ( double pRate ) {
+    HRESULT _hr = put_Rate(pRate);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendKeyboardEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendKeyboardEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendKeyboardEvents ( VARIANT_BOOL pSendKeyboardEvents ) {
+    HRESULT _hr = put_SendKeyboardEvents(pSendKeyboardEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendMouseClickEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendMouseClickEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendMouseClickEvents ( VARIANT_BOOL pSendMouseClickEvents ) {
+    HRESULT _hr = put_SendMouseClickEvents(pSendMouseClickEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendMouseMoveEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendMouseMoveEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendMouseMoveEvents ( VARIANT_BOOL pSendMouseMoveEvents ) {
+    HRESULT _hr = put_SendMouseMoveEvents(pSendMouseMoveEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetPlayCount ( ) {
+    long _result;
+    HRESULT _hr = get_PlayCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutPlayCount ( long pPlayCount ) {
+    HRESULT _hr = put_PlayCount(pPlayCount);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetClickToPlay ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ClickToPlay(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutClickToPlay ( VARIANT_BOOL pClickToPlay ) {
+    HRESULT _hr = put_ClickToPlay(pClickToPlay);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetAllowScan ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_AllowScan(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAllowScan ( VARIANT_BOOL pAllowScan ) {
+    HRESULT _hr = put_AllowScan(pAllowScan);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetEnableContextMenu ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_EnableContextMenu(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutEnableContextMenu ( VARIANT_BOOL pEnableContextMenu ) {
+    HRESULT _hr = put_EnableContextMenu(pEnableContextMenu);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetCursorType ( ) {
+    long _result;
+    HRESULT _hr = get_CursorType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutCursorType ( long pCursorType ) {
+    HRESULT _hr = put_CursorType(pCursorType);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetCodecCount ( ) {
+    long _result;
+    HRESULT _hr = get_CodecCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetAllowChangeDisplaySize ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_AllowChangeDisplaySize(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAllowChangeDisplaySize ( VARIANT_BOOL pAllowChangeDisplaySize ) {
+    HRESULT _hr = put_AllowChangeDisplaySize(pAllowChangeDisplaySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetIsDurationValid ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_IsDurationValid(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetOpenState ( ) {
+    long _result;
+    HRESULT _hr = get_OpenState(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendOpenStateChangeEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendOpenStateChangeEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendOpenStateChangeEvents ( VARIANT_BOOL pSendOpenStateChangeEvents ) {
+    HRESULT _hr = put_SendOpenStateChangeEvents(pSendOpenStateChangeEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendWarningEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendWarningEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendWarningEvents ( VARIANT_BOOL pSendWarningEvents ) {
+    HRESULT _hr = put_SendWarningEvents(pSendWarningEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendErrorEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendErrorEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendErrorEvents ( VARIANT_BOOL pSendErrorEvents ) {
+    HRESULT _hr = put_SendErrorEvents(pSendErrorEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline enum MPPlayStateConstants IMediaPlayer::GetPlayState ( ) {
+    enum MPPlayStateConstants _result;
+    HRESULT _hr = get_PlayState(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetSendPlayStateChangeEvents ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SendPlayStateChangeEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSendPlayStateChangeEvents ( VARIANT_BOOL pSendPlayStateChangeEvents ) {
+    HRESULT _hr = put_SendPlayStateChangeEvents(pSendPlayStateChangeEvents);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline enum MPDisplaySizeConstants IMediaPlayer::GetDisplaySize ( ) {
+    enum MPDisplaySizeConstants _result;
+    HRESULT _hr = get_DisplaySize(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutDisplaySize ( enum MPDisplaySizeConstants pDisplaySize ) {
+    HRESULT _hr = put_DisplaySize(pDisplaySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetInvokeURLs ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_InvokeURLs(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutInvokeURLs ( VARIANT_BOOL pInvokeURLs ) {
+    HRESULT _hr = put_InvokeURLs(pInvokeURLs);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetBaseURL ( ) {
+    BSTR _result;
+    HRESULT _hr = get_BaseURL(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutBaseURL ( _bstr_t pbstrBaseURL ) {
+    HRESULT _hr = put_BaseURL(pbstrBaseURL);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetDefaultFrame ( ) {
+    BSTR _result;
+    HRESULT _hr = get_DefaultFrame(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutDefaultFrame ( _bstr_t pbstrDefaultFrame ) {
+    HRESULT _hr = put_DefaultFrame(pbstrDefaultFrame);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetHasError ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_HasError(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayer::GetErrorDescription ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ErrorDescription(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline long IMediaPlayer::GetErrorCode ( ) {
+    long _result;
+    HRESULT _hr = get_ErrorCode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetAnimationAtStart ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_AnimationAtStart(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAnimationAtStart ( VARIANT_BOOL pAnimationAtStart ) {
+    HRESULT _hr = put_AnimationAtStart(pAnimationAtStart);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetTransparentAtStart ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_TransparentAtStart(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutTransparentAtStart ( VARIANT_BOOL pTransparentAtStart ) {
+    HRESULT _hr = put_TransparentAtStart(pTransparentAtStart);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetVolume ( ) {
+    long _result;
+    HRESULT _hr = get_Volume(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutVolume ( long pVolume ) {
+    HRESULT _hr = put_Volume(pVolume);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetBalance ( ) {
+    long _result;
+    HRESULT _hr = get_Balance(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutBalance ( long pBalance ) {
+    HRESULT _hr = put_Balance(pBalance);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline enum MPReadyStateConstants IMediaPlayer::GetReadyState ( ) {
+    enum MPReadyStateConstants _result;
+    HRESULT _hr = get_ReadyState(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double IMediaPlayer::GetSelectionStart ( ) {
+    double _result;
+    HRESULT _hr = get_SelectionStart(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSelectionStart ( double pValue ) {
+    HRESULT _hr = put_SelectionStart(pValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double IMediaPlayer::GetSelectionEnd ( ) {
+    double _result;
+    HRESULT _hr = get_SelectionEnd(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutSelectionEnd ( double pValue ) {
+    HRESULT _hr = put_SelectionEnd(pValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowDisplay ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowDisplay(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowDisplay ( VARIANT_BOOL Show ) {
+    HRESULT _hr = put_ShowDisplay(Show);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowControls ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowControls(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowControls ( VARIANT_BOOL Show ) {
+    HRESULT _hr = put_ShowControls(Show);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowPositionControls ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowPositionControls(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowPositionControls ( VARIANT_BOOL Show ) {
+    HRESULT _hr = put_ShowPositionControls(Show);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowTracker ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowTracker(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowTracker ( VARIANT_BOOL Show ) {
+    HRESULT _hr = put_ShowTracker(Show);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetEnablePositionControls ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_EnablePositionControls(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutEnablePositionControls ( VARIANT_BOOL Enable ) {
+    HRESULT _hr = put_EnablePositionControls(Enable);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetEnableTracker ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_EnableTracker(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutEnableTracker ( VARIANT_BOOL Enable ) {
+    HRESULT _hr = put_EnableTracker(Enable);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetEnabled ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_Enabled(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutEnabled ( VARIANT_BOOL pEnabled ) {
+    HRESULT _hr = put_Enabled(pEnabled);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VB_OLE_COLOR IMediaPlayer::GetDisplayForeColor ( ) {
+    VB_OLE_COLOR _result;
+    HRESULT _hr = get_DisplayForeColor(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutDisplayForeColor ( VB_OLE_COLOR ForeColor ) {
+    HRESULT _hr = put_DisplayForeColor(ForeColor);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VB_OLE_COLOR IMediaPlayer::GetDisplayBackColor ( ) {
+    VB_OLE_COLOR _result;
+    HRESULT _hr = get_DisplayBackColor(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutDisplayBackColor ( VB_OLE_COLOR BackColor ) {
+    HRESULT _hr = put_DisplayBackColor(BackColor);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline enum MPDisplayModeConstants IMediaPlayer::GetDisplayMode ( ) {
+    enum MPDisplayModeConstants _result;
+    HRESULT _hr = get_DisplayMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutDisplayMode ( enum MPDisplayModeConstants pValue ) {
+    HRESULT _hr = put_DisplayMode(pValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetVideoBorder3D ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_VideoBorder3D(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutVideoBorder3D ( VARIANT_BOOL pVideoBorderWidth ) {
+    HRESULT _hr = put_VideoBorder3D(pVideoBorderWidth);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetVideoBorderWidth ( ) {
+    long _result;
+    HRESULT _hr = get_VideoBorderWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutVideoBorderWidth ( long pVideoBorderWidth ) {
+    HRESULT _hr = put_VideoBorderWidth(pVideoBorderWidth);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VB_OLE_COLOR IMediaPlayer::GetVideoBorderColor ( ) {
+    VB_OLE_COLOR _result;
+    HRESULT _hr = get_VideoBorderColor(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutVideoBorderColor ( VB_OLE_COLOR pVideoBorderWidth ) {
+    HRESULT _hr = put_VideoBorderColor(pVideoBorderWidth);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowGotoBar ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowGotoBar(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowGotoBar ( VARIANT_BOOL pbool ) {
+    HRESULT _hr = put_ShowGotoBar(pbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowStatusBar ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowStatusBar(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowStatusBar ( VARIANT_BOOL pbool ) {
+    HRESULT _hr = put_ShowStatusBar(pbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowCaptioning ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowCaptioning(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowCaptioning ( VARIANT_BOOL pbool ) {
+    HRESULT _hr = put_ShowCaptioning(pbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetShowAudioControls ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_ShowAudioControls(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutShowAudioControls ( VARIANT_BOOL pbool ) {
+    HRESULT _hr = put_ShowAudioControls(pbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetCaptioningID ( ) {
+    BSTR _result;
+    HRESULT _hr = get_CaptioningID(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutCaptioningID ( _bstr_t pstrText ) {
+    HRESULT _hr = put_CaptioningID(pstrText);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetMute ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_Mute(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutMute ( VARIANT_BOOL vbool ) {
+    HRESULT _hr = put_Mute(vbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetCanPreview ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_CanPreview(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetPreviewMode ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_PreviewMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutPreviewMode ( VARIANT_BOOL pPreviewMode ) {
+    HRESULT _hr = put_PreviewMode(pPreviewMode);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetHasMultipleItems ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_HasMultipleItems(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer::GetLanguage ( ) {
+    long _result;
+    HRESULT _hr = get_Language(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutLanguage ( long pLanguage ) {
+    HRESULT _hr = put_Language(pLanguage);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetAudioStream ( ) {
+    long _result;
+    HRESULT _hr = get_AudioStream(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAudioStream ( long pStream ) {
+    HRESULT _hr = put_AudioStream(pStream);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetSAMIStyle ( ) {
+    BSTR _result;
+    HRESULT _hr = get_SAMIStyle(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutSAMIStyle ( _bstr_t pbstrStyle ) {
+    HRESULT _hr = put_SAMIStyle(pbstrStyle);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetSAMILang ( ) {
+    BSTR _result;
+    HRESULT _hr = get_SAMILang(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutSAMILang ( _bstr_t pbstrLang ) {
+    HRESULT _hr = put_SAMILang(pbstrLang);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayer::GetSAMIFileName ( ) {
+    BSTR _result;
+    HRESULT _hr = get_SAMIFileName(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayer::PutSAMIFileName ( _bstr_t pbstrFileName ) {
+    HRESULT _hr = put_SAMIFileName(pbstrFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long IMediaPlayer::GetStreamCount ( ) {
+    long _result;
+    HRESULT _hr = get_StreamCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayer::GetClientId ( ) {
+    BSTR _result;
+    HRESULT _hr = get_ClientId(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline long IMediaPlayer::GetConnectionSpeed ( ) {
+    long _result;
+    HRESULT _hr = get_ConnectionSpeed(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetAutoSize ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_AutoSize(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutAutoSize ( VARIANT_BOOL pbool ) {
+    HRESULT _hr = put_AutoSize(pbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetEnableFullScreenControls ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_EnableFullScreenControls(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutEnableFullScreenControls ( VARIANT_BOOL pbVal ) {
+    HRESULT _hr = put_EnableFullScreenControls(pbVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline IDispatchPtr IMediaPlayer::GetActiveMovie ( ) {
+    IDispatch * _result;
+    HRESULT _hr = get_ActiveMovie(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IDispatchPtr(_result, false);
+}
+
+inline IDispatchPtr IMediaPlayer::GetNSPlay ( ) {
+    IDispatch * _result;
+    HRESULT _hr = get_NSPlay(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IDispatchPtr(_result, false);
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetWindowlessVideo ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_WindowlessVideo(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayer::PutWindowlessVideo ( VARIANT_BOOL pbool ) {
+    HRESULT _hr = put_WindowlessVideo(pbool);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT IMediaPlayer::Play ( ) {
+    HRESULT _hr = raw_Play();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::Stop ( ) {
+    HRESULT _hr = raw_Stop();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::Pause ( ) {
+    HRESULT _hr = raw_Pause();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline double IMediaPlayer::GetMarkerTime ( long MarkerNum ) {
+    double _result;
+    HRESULT _hr = raw_GetMarkerTime(MarkerNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayer::GetMarkerName ( long MarkerNum ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetMarkerName(MarkerNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline HRESULT IMediaPlayer::AboutBox ( ) {
+    HRESULT _hr = raw_AboutBox();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetCodecInstalled ( long CodecNum ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = raw_GetCodecInstalled(CodecNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayer::GetCodecDescription ( long CodecNum ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetCodecDescription(CodecNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetCodecURL ( long CodecNum ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetCodecURL(CodecNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetMoreInfoURL ( enum MPMoreInfoType MoreInfoType ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetMoreInfoURL(MoreInfoType, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer::GetMediaInfoString ( enum MPMediaInfoType MediaInfoType ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetMediaInfoString(MediaInfoType, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline HRESULT IMediaPlayer::Cancel ( ) {
+    HRESULT _hr = raw_Cancel();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::Open ( _bstr_t bstrFileName ) {
+    HRESULT _hr = raw_Open(bstrFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline VARIANT_BOOL IMediaPlayer::IsSoundCardEnabled ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = raw_IsSoundCardEnabled(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline HRESULT IMediaPlayer::Next ( ) {
+    HRESULT _hr = raw_Next();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::Previous ( ) {
+    HRESULT _hr = raw_Previous();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::StreamSelect ( long StreamNum ) {
+    HRESULT _hr = raw_StreamSelect(StreamNum);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::FastForward ( ) {
+    HRESULT _hr = raw_FastForward();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer::FastReverse ( ) {
+    HRESULT _hr = raw_FastReverse();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline _bstr_t IMediaPlayer::GetStreamName ( long StreamNum ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetStreamName(StreamNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline long IMediaPlayer::GetStreamGroup ( long StreamNum ) {
+    long _result;
+    HRESULT _hr = raw_GetStreamGroup(StreamNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayer::GetStreamSelected ( long StreamNum ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = raw_GetStreamSelected(StreamNum, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+//
+// interface IMediaPlayer2 wrapper method implementations
+//
+
+inline IMediaPlayerDvdPtr IMediaPlayer2::GetDVD ( ) {
+    struct IMediaPlayerDvd * _result;
+    HRESULT _hr = get_DVD(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IMediaPlayerDvdPtr(_result, false);
+}
+
+inline _bstr_t IMediaPlayer2::GetMediaParameter ( long EntryNum, _bstr_t bstrParameterName ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetMediaParameter(EntryNum, bstrParameterName, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayer2::GetMediaParameterName ( long EntryNum, long Index ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetMediaParameterName(EntryNum, Index, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline long IMediaPlayer2::GetEntryCount ( ) {
+    long _result;
+    HRESULT _hr = get_EntryCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IMediaPlayer2::GetCurrentEntry ( ) {
+    long _result;
+    HRESULT _hr = raw_GetCurrentEntry(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline HRESULT IMediaPlayer2::SetCurrentEntry ( long EntryNumber ) {
+    HRESULT _hr = raw_SetCurrentEntry(EntryNumber);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayer2::ShowDialog ( enum MPShowDialogConstants mpDialogIndex ) {
+    HRESULT _hr = raw_ShowDialog(mpDialogIndex);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IMediaPlayerDvd wrapper method implementations
+//
+
+inline HRESULT IMediaPlayerDvd::ButtonSelectAndActivate ( unsigned long uiButton ) {
+    HRESULT _hr = raw_ButtonSelectAndActivate(uiButton);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::UpperButtonSelect ( ) {
+    HRESULT _hr = raw_UpperButtonSelect();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::LowerButtonSelect ( ) {
+    HRESULT _hr = raw_LowerButtonSelect();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::LeftButtonSelect ( ) {
+    HRESULT _hr = raw_LeftButtonSelect();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::RightButtonSelect ( ) {
+    HRESULT _hr = raw_RightButtonSelect();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::ButtonActivate ( ) {
+    HRESULT _hr = raw_ButtonActivate();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::ForwardScan ( double dwSpeed ) {
+    HRESULT _hr = raw_ForwardScan(dwSpeed);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::BackwardScan ( double dwSpeed ) {
+    HRESULT _hr = raw_BackwardScan(dwSpeed);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::PrevPGSearch ( ) {
+    HRESULT _hr = raw_PrevPGSearch();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::TopPGSearch ( ) {
+    HRESULT _hr = raw_TopPGSearch();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::NextPGSearch ( ) {
+    HRESULT _hr = raw_NextPGSearch();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::TitlePlay ( unsigned long uiTitle ) {
+    HRESULT _hr = raw_TitlePlay(uiTitle);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::ChapterPlay ( unsigned long uiTitle, unsigned long uiChapter ) {
+    HRESULT _hr = raw_ChapterPlay(uiTitle, uiChapter);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::ChapterSearch ( unsigned long Chapter ) {
+    HRESULT _hr = raw_ChapterSearch(Chapter);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::MenuCall ( enum DVDMenuIDConstants MenuID ) {
+    HRESULT _hr = raw_MenuCall(MenuID);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::ResumeFromMenu ( ) {
+    HRESULT _hr = raw_ResumeFromMenu();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::TimePlay ( unsigned long uiTitle, _bstr_t bstrTime ) {
+    HRESULT _hr = raw_TimePlay(uiTitle, bstrTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::TimeSearch ( _bstr_t bstrTime ) {
+    HRESULT _hr = raw_TimeSearch(bstrTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::ChapterPlayAutoStop ( unsigned long ulTitle, unsigned long ulChapter, unsigned long ulChaptersToPlay ) {
+    HRESULT _hr = raw_ChapterPlayAutoStop(ulTitle, ulChapter, ulChaptersToPlay);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::StillOff ( ) {
+    HRESULT _hr = raw_StillOff();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerDvd::GoUp ( ) {
+    HRESULT _hr = raw_GoUp();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline _bstr_t IMediaPlayerDvd::GetTotalTitleTime ( ) {
+    BSTR _result;
+    HRESULT _hr = get_TotalTitleTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline unsigned long IMediaPlayerDvd::GetNumberOfChapters ( unsigned long ulTitle ) {
+    unsigned long _result;
+    HRESULT _hr = raw_GetNumberOfChapters(ulTitle, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayerDvd::GetAudioLanguage ( unsigned long ulStream ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetAudioLanguage(ulStream, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t IMediaPlayerDvd::GetSubpictureLanguage ( unsigned long ulStream ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetSubpictureLanguage(ulStream, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _variant_t IMediaPlayerDvd::GetAllGPRMs ( ) {
+    VARIANT _result;
+    VariantInit(&_result);
+    HRESULT _hr = raw_GetAllGPRMs(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _variant_t(_result, false);
+}
+
+inline _variant_t IMediaPlayerDvd::GetAllSPRMs ( ) {
+    VARIANT _result;
+    VariantInit(&_result);
+    HRESULT _hr = raw_GetAllSPRMs(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _variant_t(_result, false);
+}
+
+inline VARIANT_BOOL IMediaPlayerDvd::UOPValid ( unsigned long ulUOP ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = raw_UOPValid(ulUOP, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetButtonsAvailable ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_ButtonsAvailable(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentButton ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentButton(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetAudioStreamsAvailable ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_AudioStreamsAvailable(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentAudioStream ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentAudioStream(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutCurrentAudioStream ( unsigned long ulAudioStream ) {
+    HRESULT _hr = put_CurrentAudioStream(ulAudioStream);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentSubpictureStream ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentSubpictureStream(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutCurrentSubpictureStream ( unsigned long ulSubpictureStream ) {
+    HRESULT _hr = put_CurrentSubpictureStream(ulSubpictureStream);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline unsigned long IMediaPlayerDvd::GetSubpictureStreamsAvailable ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_SubpictureStreamsAvailable(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayerDvd::GetSubpictureOn ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_SubpictureOn(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutSubpictureOn ( VARIANT_BOOL bSubpictureON ) {
+    HRESULT _hr = put_SubpictureOn(bSubpictureON);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline unsigned long IMediaPlayerDvd::GetAnglesAvailable ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_AnglesAvailable(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentAngle ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentAngle(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutCurrentAngle ( unsigned long ulAngle ) {
+    HRESULT _hr = put_CurrentAngle(ulAngle);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentTitle ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentTitle(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentChapter ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentChapter(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IMediaPlayerDvd::GetCurrentTime ( ) {
+    BSTR _result;
+    HRESULT _hr = get_CurrentTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void IMediaPlayerDvd::PutRoot ( _bstr_t pbstrPath ) {
+    HRESULT _hr = put_Root(pbstrPath);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayerDvd::GetRoot ( ) {
+    BSTR _result;
+    HRESULT _hr = get_Root(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline unsigned long IMediaPlayerDvd::GetFramesPerSecond ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_FramesPerSecond(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentDomain ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentDomain(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetTitlesAvailable ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_TitlesAvailable(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetVolumesAvailable ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_VolumesAvailable(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentVolume ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentVolume(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentDiscSide ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentDiscSide(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline VARIANT_BOOL IMediaPlayerDvd::GetCCActive ( ) {
+    VARIANT_BOOL _result;
+    HRESULT _hr = get_CCActive(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutCCActive ( VARIANT_BOOL bCCActive ) {
+    HRESULT _hr = put_CCActive(bCCActive);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline unsigned long IMediaPlayerDvd::GetCurrentCCService ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_CurrentCCService(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutCurrentCCService ( unsigned long pulService ) {
+    HRESULT _hr = put_CurrentCCService(pulService);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t IMediaPlayerDvd::GetUniqueID ( ) {
+    BSTR _result;
+    HRESULT _hr = get_UniqueID(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline unsigned long IMediaPlayerDvd::GetColorKey ( ) {
+    unsigned long _result;
+    HRESULT _hr = get_ColorKey(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void IMediaPlayerDvd::PutColorKey ( unsigned long pClr ) {
+    HRESULT _hr = put_ColorKey(pClr);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+//
+// interface IMediaBindStream wrapper method implementations
+//
+
+inline HRESULT IMediaBindStream::LoadMoniker ( _bstr_t bszTransferContext, _bstr_t bszUrl ) {
+    HRESULT _hr = raw_LoadMoniker(bszTransferContext, bszUrl);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// dispinterface _IRadioPlayerEvents wrapper method implementations
+//
+
+inline HRESULT _IRadioPlayerEvents::StateChange ( _bstr_t bszUrl, VARIANT_BOOL fPlay, long lVolume, VARIANT_BOOL fMute ) {
+    HRESULT _result;
+    _com_dispatch_method(this, 0xc, DISPATCH_METHOD, VT_ERROR, (void*)&_result, 
+        L"\x0008\x000b\x0003\x000b", (BSTR)bszUrl, fPlay, lVolume, fMute);
+    return _result;
+}
+
+//
+// interface IRadioPlayer wrapper method implementations
+//
+
+inline HRESULT IRadioPlayer::BindRadioMemory ( ) {
+    HRESULT _hr = raw_BindRadioMemory();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IRadioPlayer::ReleaseRadio ( ) {
+    HRESULT _hr = raw_ReleaseRadio();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline long IRadioPlayer::RegisterEvent ( _bstr_t bszEvent ) {
+    long _result;
+    HRESULT _hr = raw_RegisterEvent(bszEvent, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long IRadioPlayer::RegisterWindow ( long __MIDL_0012, unsigned long dwMessage, unsigned long dwCodeSet ) {
+    long _result;
+    HRESULT _hr = raw_RegisterWindow(__MIDL_0012, dwMessage, dwCodeSet, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t IRadioPlayer::GetSection ( ) {
+    BSTR _result;
+    HRESULT _hr = raw_GetSection(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline HRESULT IRadioPlayer::Unregister ( long lRegister ) {
+    HRESULT _hr = raw_Unregister(lRegister);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline long IRadioPlayer::GetInstanceCount ( ) {
+    long _result;
+    HRESULT _hr = raw_GetInstanceCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline HRESULT IRadioPlayer::Play ( ) {
+    HRESULT _hr = raw_Play();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IRadioPlayer::Stop ( ) {
+    HRESULT _hr = raw_Stop();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline void IRadioPlayer::PutUrl ( _bstr_t _arg1 ) {
+    HRESULT _hr = put_Url(_arg1);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline void IRadioPlayer::PutVolume ( long _arg1 ) {
+    HRESULT _hr = put_Volume(_arg1);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline void IRadioPlayer::PutMute ( VARIANT_BOOL _arg1 ) {
+    HRESULT _hr = put_Mute(_arg1);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT IRadioPlayer::GetStatus ( long * plVolume, long * pfMute, long * pfPlay, BSTR * __MIDL_0013, BSTR * __MIDL_0014, BSTR * __MIDL_0015, BSTR * __MIDL_0016, BSTR * __MIDL_0017, BSTR * __MIDL_0018, BSTR * __MIDL_0019 ) {
+    HRESULT _hr = raw_GetStatus(plVolume, pfMute, pfPlay, __MIDL_0013, __MIDL_0014, __MIDL_0015, __MIDL_0016, __MIDL_0017, __MIDL_0018, __MIDL_0019);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IRadioPlayer::GetState ( long * plOpenState, long * pfBuffering, long * plBufferingPercent, long * plQuality ) {
+    HRESULT _hr = raw_GetState(plOpenState, pfBuffering, plBufferingPercent, plQuality);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IRadioServer wrapper method implementations
+//
+
+inline IRadioPlayerPtr IRadioServer::BindToRadio ( _bstr_t wszRadio ) {
+    struct IRadioPlayer * _result;
+    HRESULT _hr = raw_BindToRadio(wszRadio, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return IRadioPlayerPtr(_result, false);
+}
+
+inline HRESULT IRadioServer::IsRadioExists ( _bstr_t wszRadio ) {
+    HRESULT _hr = raw_IsRadioExists(wszRadio);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IRadioServer::LaunchStandardUrl ( _bstr_t bszUrl, IUnknown * pBrowser ) {
+    HRESULT _hr = raw_LaunchStandardUrl(bszUrl, pBrowser);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IMediaPlayerListener wrapper method implementations
+//
+
+inline HRESULT IMediaPlayerListener::PlayStateChanged ( long lNewState ) {
+    HRESULT _hr = raw_PlayStateChanged(lNewState);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerListener::Buffering ( VARIANT_BOOL fStart ) {
+    HRESULT _hr = raw_Buffering(fStart);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerListener::BufferPercent ( long lBufferPercent ) {
+    HRESULT _hr = raw_BufferPercent(lBufferPercent);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerListener::OpenStateChanged ( long lOpenState ) {
+    HRESULT _hr = raw_OpenStateChanged(lOpenState);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerListener::MediaInfoChanged ( _bstr_t bstrShowTitle, _bstr_t bstrClipTitle, _bstr_t bstrClipAuthor, _bstr_t bstrClipCopyright, _bstr_t bstrStationURL ) {
+    HRESULT _hr = raw_MediaInfoChanged(bstrShowTitle, bstrClipTitle, bstrClipAuthor, bstrClipCopyright, bstrStationURL);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerListener::QualityChanged ( long lQuality ) {
+    HRESULT _hr = raw_QualityChanged(lQuality);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IMediaPlayerListener::Error ( _bstr_t bstrError ) {
+    HRESULT _hr = raw_Error(bstrError);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IRadioBand wrapper method implementations
+//
+
+inline HRESULT IRadioBand::Create ( long * phwnd, long hwndParent ) {
+    HRESULT _hr = raw_Create(phwnd, hwndParent);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}

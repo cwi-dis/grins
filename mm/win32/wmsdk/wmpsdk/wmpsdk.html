@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE>Microsoft Windows Media Player Control</TITLE>
+
+<!-- START_META_INFORMATION -->
+<META NAME="MS-HAID" CONTENT="wmplayer_SDK">
+ <META NAME="DESCRIPTION" CONTENT="Microsoft(r) Windows(r) Media Player control enables you to add playback to applications and Web pages.">
+ <META NAME="KEYWORDS" CONTENT="Windows Media Player control">
+ <META NAME="PRODUCT" CONTENT="Windows Media Player control">
+ <META NAME="CATEGORY" CONTENT="Technical documentation; download.">
+ <META HTTP-EQUIV="Content-Type" CONTENT="text/html; CHARSET=iso8859-1">
+ <META NAME="MS.LOCALE" CONTENT="EN-US">
+ <META NAME="ROBOTS" CONTENT="all">
+ <META HTTP-EQUIV="Content-Type" CONTENT="text/html; CHARSET=iso8859-1">
+ <META NAME="MS.LOCALE" CONTENT="EN-US">
+ <META NAME="ROBOTS" CONTENT="all">
+
+<!-- END_META_INFORMATION -->
+
+<!-- START_COMMON_SCRIPT -->
+    <SCRIPT LANGUAGE="JSCRIPT">
+	  sRelPath	= "";
+	  var g_isIE 	= false;
+	  g_isNav 	= false;
+	  g_iMaj 	= 0;
+	  g_sPlat 	= "";
+
+	  function window_load(){
+		  
+		  
+		  
+	  }
+	  window.onload = window_load;
+    </SCRIPT>
+    <SCRIPT LANGUAGE="JAVASCRIPT" SRC="ver.js"></SCRIPT>
+
+    
+    <SCRIPT LANGUAGE="JSCRIPT" DEFER SRC="common.js"></SCRIPT>
+<!-- END_COMMON_SCRIPT -->
+<SCRIPT DEFER>
+//<!--
+function InitPage()
+{
+	if (g_isIE && g_iMaj >= 4)	
+	{
+
+		SetTOC();
+	}
+}
+//-->
+</SCRIPT>
+
+<!-- STYLE_START -->
+<SCRIPT LANGUAGE="JAVASCRIPT">
+//<!--
+   var sVR = ''	// Set root for the style sheet
+   var sCSS = '<LINK REL="stylesheet" HREF="' + sVR;
+
+   if(g_isIE)
+   {
+	   if (g_iMaj >= 4) // For MSIE 4.0 or later
+	   {
+		   sCSS += 'dxm_basicSDKIE4';
+		   if (g_sPlat == "Win") // Windows only for now
+		   {
+			   document.createStyleSheet(sVR + 'dxm_advSDKIE4.css');
+		   }
+	   }
+	   else // For MSIE 3.0 or earlier
+	   {
+		   sCSS += 'dxm_basicSDKIE3';
+	   }
+   }
+   else if (g_isNav) // For all Nav versions
+   {
+	   sCSS += 'dxm_basicSDKNAV';
+   }
+   else
+   {
+	   sCSS += 'dxm_basicSDKIE3'; // default to IE3 sheet
+   }
+
+   sCSS += (sCSS == '' ? '' : '.css" TYPE="text/css">');
+
+   document.write(sCSS);
+//-->
+</SCRIPT>
+<!-- STYLE_END -->
+
+<SCRIPT DEFER>
+//<!--
+function InitPage()
+{
+	if (g_isIE && g_iMaj >= 4)	
+	{
+
+		SetTOC();
+	}
+}
+//-->
+</SCRIPT>
+
+<!-- STYLE_START -->
+<SCRIPT LANGUAGE="JAVASCRIPT">
+//<!--
+   var sVR = ''	// Set root for the style sheet
+   var sCSS = '<LINK REL="stylesheet" HREF="' + sVR;
+
+   if(g_isIE)
+   {
+	   if (g_iMaj >= 4) // For MSIE 4.0 or later
+	   {
+		   sCSS += 'dxm_basicSDKIE4';
+		   if (g_sPlat == "Win") // Windows only for now
+		   {
+			   document.createStyleSheet(sVR + 'dxm_advSDKIE4.css');
+		   }
+	   }
+	   else // For MSIE 3.0 or earlier
+	   {
+		   sCSS += 'dxm_basicSDKIE3';
+	   }
+   }
+   else if (g_isNav) // For all Nav versions
+   {
+	   sCSS += 'dxm_basicSDKNAV';
+   }
+   else
+   {
+	   sCSS += 'dxm_basicSDKIE3'; // default to IE3 sheet
+   }
+
+   sCSS += (sCSS == '' ? '' : '.css" TYPE="text/css">');
+
+   document.write(sCSS);
+//-->
+</SCRIPT>
+<!-- STYLE_END -->
+<!-- START_CLIENT_SCRIPT -->
+
+<SCRIPT LANGUAGE="JavaScript">
+	function New_Window(href, width, height) {
+		new_window = window.open(href, "NEW_WINDOW", "scrollbars=1,status=1,resizable=1,width=" + width + ",height=" + height + ",top=20,left=20");
+		setTimeout("new_window.focus()", 200);
+	}
+</SCRIPT>
+
+<!-- END_CLIENT_SCRIPT -->
+
+<!-- START_CLIENT_STYLE -->
+
+<!-- END_CLIENT_STYLE -->
+
+</HEAD>
+
+
+<BODY onload="InitPage()" BGCOLOR="#FFFFFF">
+
+<A NAME="pagetop"></A>
+<!-- START_TOOLBAR -->
+ 
+<!-- END_TOOLBAR -->
+
+
+<!--HEADGRAPH_START-->
+<TABLE CLASS="main" BORDER=0 CELLSPACING="0" CELLPADDING="0" WIDTH="*">
+<TR>
+<TD ROWSPAN="1" ALIGN="LEFT" VALIGN="TOP" WIDTH="*">
+<IMG SRC="art/wmedia.gif" width="486" height="65" border="0" ALT="Windows Media Player Control SDK Banner Art"></TD></TR>
+<!--HEADGRAPH_END-->
+
+<!-- START_NAV_LINKS -->
+
+
+
+
+  
+<TR><TD VALIGN="TOP"><PRE><IMG ID="TOC_" SRC="art/yelbtn.gif" WIDTH="11" HEIGHT="11" ALIGN="MIDDLE" BORDER=0 ALT="*"><A STYLE="color:black;font-weight:bold" ID="TOC" HREF="../contents.htm">Contents</A> <IMG SRC="art/yelbtn.gif" WIDTH="11" HEIGHT="11" ALIGN="MIDDLE" BORDER=0 ALT="*"><A STYLE="color:black;font-weight:bold" HREF="index.htm">Index</A>  </PRE></TD></TR>
+<tr><td colspan="2" valign="top"><pre>
+<IMG SRC="art/yelbtn.gif" WIDTH="11" HEIGHT="11" ALIGN="MIDDLE" BORDER=0 ALT="*"><b>Next Topic:</b> <a style="color:black" href="overview/gettingstarted.htm">Getting Started</a></pre></td></tr></TABLE>
+
+<!-- END_NAV_LINKS -->
+
+
+    <A NAME="Microsoft_Windows_Media_Player_Control"></A>
+    <BLOCKQUOTE CLASS="clsDocContents">
+
+    <!-- START_CONTENTS -->
+        
+<H1>Microsoft Windows Media Player Control SDK</H1>
+
+
+<P>The Microsoft&reg; Windows Media&trade; Player control (Msdxm.ocx) is a Microsoft&reg; ActiveX&reg; control used for adding multimedia playback capabilities to COM-based documents and applications, as well as Web pages. It provides a programming interface for rendering a variety of network streaming and nonstreaming multimedia formats. The Windows Media Player control incorporates many of the features of the Microsoft&reg; ActiveMovie&#153; control and the Microsoft&reg; NetShow&#153; Player version 2.0 control, as well as many new features.</P>
+
+
+
+
+<TABLE CLASS="main" BORDER=0>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/GettingStarted.htm">Getting Started</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Introduces the basics of the Windows Media Player control.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/Architecture.htm">Architecture</A> 
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Describes the architecture of the Windows Media Player control and its underlying technology.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/Using_Control.htm">Using the Windows Media Player Control</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Describes how to use and program the control.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/Using_DVD.htm">Using DVD with the Windows Media Player Control</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Describes how to use and program the control to play digital video discs (DVD).
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/ASX_intro.htm">Using ASX Metafiles</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Describes how to use and understand Advanced Stream Redirector (ASX) metafiles.
+</TD>
+</TR>
+<TR></TR><TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/faceplate_authoring.htm">Faceplate Authoring Guide</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Discusses how to construct HTML Application (HTA) files that use the Windows Media Player control.
+</TD>
+</TR>
+<TR></TR>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="reference/mediaplayercontrolreference.htm">Scripting Reference</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Provides a reference for each method, property, and event exposed by the Windows Media Player control.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="reference/asx/ASX_ElementsIntro.htm">ASX Elements Reference</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Reference to the ASX elements tags and attributes.
+</TD>
+</TR>
+<TR></TR>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/playercontrolsamples.htm">Samples</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Provides sample code and demonstrations that show you how you can use the Windows Media Player control.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/navplugin.htm">Windows Media Player Plug-in for Netscape Navigator</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Discusses the plug-in and its operational and programmable features.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/ClientDetect.htm">Detecting a Player on a Consumer’s Computer</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Shows how to make your Web site detect whether a consumer's computer has a compatible player and how to customize the process of downloading a player.
+</TD>
+</TR>
+<tr></tr>
+<tr></tr>
+<TR><TD ALIGN=LEFT VALIGN=TOP><A HREF="overview/WMPCPK.htm">Windows Media Player Custom Player Kit</A>
+</TD>
+</TR>
+<TR><TD ALIGN=LEFT VALIGN=TOP>Describes the Windows Media Player Custom Player Kit and where to get it.
+</TD>
+</TR>
+</TABLE>
+
+<P><B>Note</B>  The icon <IMG SRC="art/ext_ani.gif" WIDTH="16" HEIGHT="8" ALT="external link"> indicates that the link takes you to a URL that is outside the microsoft.com site; you can return to the Windows Media Player control site by using the <B>Back</B> button. Most of these external links point to servers that are not under Microsoft's control. Please read Microsoft's <A HREF="http://www.microsoft.com/misc/nonms.htm">official statement</A> regarding other servers.
+
+    <!-- END_CONTENTS -->
+
+    <!-- START_COPYRIGHT -->  
+	<HR SIZE=1>
+	<P><A CLASS="copyright" HREF="#pagetop"><IMG SRC="art/arrowup1.gif" WIDTH="11" HEIGHT="11" ALIGN="MIDDLE" BORDER=0 ALT="Top of Page">&nbsp;Top of Page</A>
+	<BR><A CLASS="copyright" HREF="cpyright.htm">&#169; 1999 Microsoft and/or its suppliers. All rights reserved. Terms of Use.</A>
+    <!-- END_COPYRIGHT -->
+
+    </BLOCKQUOTE>
+	
+<!-- END_DOCUMENT_CONTENT -->
+
+
+</BODY>
+</HTML>
