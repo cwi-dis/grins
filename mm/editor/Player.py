@@ -1,8 +1,5 @@
 # Player module -- mostly defines the Player class.
 
-# XXX Need to play 'bag' nodes differently
-# XXX I've broken the handling of measure_armtimes --Guido
-
 
 import time
 import gl
