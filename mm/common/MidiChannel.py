@@ -95,7 +95,7 @@ class MidiChannel(Channel):
 			tc = tc + tc_lost
 			tc_lost = 0
 			total_time = total_time + tc
-			list.append(total_time, ev, args)
+			list.append((total_time, ev, args))
 		self.arm_data = list
 		self.armed_duration = total_time
 		return 1
