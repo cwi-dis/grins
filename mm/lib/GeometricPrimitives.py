@@ -103,8 +103,19 @@ class GeoClientWidget(Widget):
 		self.parent.change_objects.append(self)
 
 class Image(GeoClientWidget):
+	filename = None
 	def redraw(self):
-		print "TODO: Image geoprim"
+		if self.filename:
+			self.displist.display_image_from_file(
+				self.filename,
+				center = 1,
+				coordinates = self.get_box(),
+				scale = -2
+				)
+		else:
+			self.displist.drawfbox((128,128,128), self.get_box())
+	def set_file(self, filename):
+		self.filename = filename
 
 class Line(GeoClientWidget):
 	color=(0,0,0)
