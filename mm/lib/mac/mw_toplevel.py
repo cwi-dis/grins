@@ -360,7 +360,7 @@ class _Event(AEServer):
 					self._mouseregionschanged()
 					return
 				# Frontmost. Handle click.
-				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.shiftKey))
+				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.controlKey))
 			else:
 				if self._grabbed_wids and not wid in self._grabbed_wids:
 					beep()
@@ -400,7 +400,7 @@ class _Event(AEServer):
 		if partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
-				self._handle_contentclick(wid, 0, where, event, (modifiers & Events.shiftKey))
+				self._handle_contentclick(wid, 0, where, event, (modifiers & Events.controlKey))
 
 	def _handle_keydown(self, event):
 		"""Handle a MacOS keyDown event"""
