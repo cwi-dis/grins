@@ -1,5 +1,4 @@
 __version__ = "$Id$"
 
-IDLE = 0
-PLAYING = 1
-PLAYED = 2
+IDLE, PLAYING, PAUSED, FROZEN, PLAYED = range(5)
+states = ['IDLE', 'PLAYING', 'PAUSED', 'FROZEN', 'PLAYED']
