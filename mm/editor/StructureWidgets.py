@@ -97,7 +97,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.node.views['struct_view'] = self
 		self.old_pos = None	# used for recalc optimisations.
 		self.dont_draw_children = 0
-		self.__image_size = None
 		self.__has_cause_event = 0
 
 		self.timemapper = None
@@ -502,8 +501,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					imxsize, imysize = Sizes.GetImageSize(icon)
 				except:
 					pass
-				if imxsize > 0 and imysize > 0:
-					self.__image_size = imxsize, imysize
 
 		if text:
 			txxsize, txysize = f_title.strsizePXL(text)
@@ -658,7 +655,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		displist.drawfbox((0,0,0), (l,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
 		displist.drawfbox((0,0,0), (r-DRAGHANDLESIZE,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
 
-	def drawnodecontent(self, displist, (x,y,w,h), node):
+	def drawnodecontent(self, displist, (x,y,w,h), node, drawbox = 1):
 		icon = self.node.GetAttrDef('thumbnail_icon', None)
 		if icon is not None:
 			icon = self.node.context.findurl(icon)
@@ -670,7 +667,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		elif node.GetChannelType() == 'brush':
 			displist.drawfbox(MMAttrdefs.getattr(node, 'fgcolor'), (x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 			displist.fgcolor(TEXTCOLOR)
-			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
+			if drawbox:
+				displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 		elif w > 0 and h > 0:
 			self.do_draw_image(self.__get_image_filename(node), self.name, (x,y,w,h), displist)
 
@@ -693,18 +691,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	# used by MediaWidget and CommentWidget
-	def do_draw_image(self, image_filename, name, (x,y,w,h), displist, forcetext = 0, image_size = None):
+	def do_draw_image(self, image_filename, name, (x,y,w,h), displist, forcetext = 0, drawbox = 1, align = 'bottomleft'):
 		if w <= 0 or h <= 0:
 			return
 		r = x + w
 		b = y + h
-		imw = w
-		imh = h
-		if image_size is not None:
-			imw, imh = image_size
-		elif self.__image_size is not None:
-			imw, imh = self.__image_size
-		coordinates = (x, y, imw, imh)
+		coordinates = (x, y, w, h)
 		displist.fgcolor(TEXTCOLOR)
 		box = x, y, 0, h	# default if no image
 		if image_filename and coordinates[2] > 4 and coordinates[3] > 4:
@@ -713,12 +705,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					image_filename,
 					coordinates = coordinates,
 					fit = 'icon',
-					align = 'bottomleft')
+					align = align)
 			except windowinterface.error:
 				# some error displaying image
 				box = x, y, 0, h
 			else:
-				displist.drawbox(box)
+				if drawbox:
+					displist.drawbox(box)
 		box2 = (0,0,0,0)
 		if forcetext or (self.iconbox is not None and self.iconbox.vertical):
 			# draw name next to image
@@ -747,16 +740,17 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			x = x + distance
 			# draw line between copies
 			displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
-			coordinates = (x, y, imw, imh)
+			coordinates = (x, y, w, h)
 			if image_filename:
 				box = displist.display_image_from_file(
 					image_filename,
 					coordinates = coordinates,
 					fit = 'icon',
-					align = 'bottomleft')
-				displist.drawbox(box)
+					align = align)
+				if drawbox:
+					displist.drawbox(box)
 			else:
-				box = (x, y, 0, imh)
+				box = (x, y, 0, h)
 			if forcetext or (self.iconbox is not None and self.iconbox.vertical):
 				nx = box[0] + box[2] + 2
 ##				ny = box[1] + box[3] - 2
@@ -3203,6 +3197,7 @@ class ImageBoxWidget(MMWidgetDecoration):
 	# Common baseclass for dropbox and channelbox
 	# This is only for images shown as part of the sequence views. This
 	# is not used for any image on screen.
+	drawbox = 1
 
 	def recalc_minsize(self):
 		self.boxsize = MINSIZE, MINSIZE
@@ -3232,8 +3227,9 @@ class ImageBoxWidget(MMWidgetDecoration):
 			except windowinterface.error:
 				pass
 			else:
-				displist.fgcolor(TEXTCOLOR)
-				displist.drawbox(box)
+				if self.drawbox:
+					displist.fgcolor(TEXTCOLOR)
+					displist.drawbox(box)
 
 
 class DropBoxWidget(ImageBoxWidget):
@@ -3244,7 +3240,7 @@ class DropBoxWidget(ImageBoxWidget):
 		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
 		return f
 
-class NonEmptyWidget(ImageBoxWidget):
+class NonEmptyWidget(MMWidgetDecoration):
 	def recalc_minsize(self):
 		node = self.mmwidget.node
 		icon = node.GetAttrDef('non_empty_icon', None)
@@ -3257,7 +3253,6 @@ class NonEmptyWidget(ImageBoxWidget):
 				imxsize, imysize = Sizes.GetImageSize(icon)
 			except:
 				pass
-		self.__image_size = imxsize, imysize
 
 		text = node.GetAttrDef('non_empty_text', None)
 		if text:
@@ -3289,9 +3284,9 @@ class NonEmptyWidget(ImageBoxWidget):
 		if color is not None:
 			displist.drawfbox(color, (l,t,r-l,b-t))
 		if icon or text:
-			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, 1, self.__image_size)
+			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, forcetext=1, drawbox=0, align='centerleft')
 
-class DropIconWidget(ImageBoxWidget):
+class DropIconWidget(MMWidgetDecoration):
 	def recalc_minsize(self):
 		node = self.mmwidget.node
 		import Sizes
