@@ -3856,6 +3856,9 @@ class MMNode:
 			duration = self.fullduration
 		else:
 			maybecached = 1
+			pnode = self.GetSchedParent()
+			if pnode is not None and pnode.type == 'excl':
+				maybecached = 0
 			duration = self.attrdict.get('duration')
 			if duration == -2:
 				if self.type in interiortypes:
