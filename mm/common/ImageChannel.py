@@ -160,12 +160,7 @@ class ImageChannel(ChannelWindow):
 			# special case: full image
 			return args
 		xsize, ysize = self.window._image_size(file)
-		x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
-## 		y0 = ysize - y0
-## 		y1 = ysize - y1
-		if x0 > x1:
-			x0, x1 = x1, x0
-		if y0 > y1:
-			y0, y1 = y1, y0
-		return float(x0)/float(xsize), float(y0)/float(ysize), \
-			  float(x1-x0)/float(xsize), float(y1-y0)/float(ysize)
+		return float(args[0]) / float(xsize), \
+		       float(args[1]) / float(ysize), \
+		       float(args[2]) / float(xsize), \
+		       float(args[3]) / float(ysize)
