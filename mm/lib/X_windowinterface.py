@@ -1,4 +1,4 @@
-import Xlib, Xt, Xm, X, Xmd, XEvent, Xtdefs, Xcursorfont
+import Xt, Xm, X, Xmd, Xtdefs, Xcursorfont
 from EVENTS import *
 from types import *
 import time
@@ -519,15 +519,13 @@ class _Window:
 		if not func in self._closecallbacks:
 			self._closecallbacks.append(func)
 
-	def _input_callback(self, widget, client_data, call_data, *rest):
+	def _input_callback(self, widget, client_data, call_data):
 		if debug: print `self`+'._input_callback()'
-		import struct
-		ev = struct.unpack('i', call_data[4:8])[0]
-		ev = Xlib.getevent(ev)	# KLUDGE!
-		decoded_event = XEvent.mkevent(ev)
-		if decoded_event.type == X.KeyPress:
+		event = call_data.event
+		if event.type == X.KeyPress:
+			import Xlib
 			toplevel._win_lock.acquire()
-			string = Xlib.LookupString(ev)[0]
+			string = Xlib.LookupString(event)[0]
 			toplevel._win_lock.release()
 			if self._accelerators.has_key(string):
 				f, a = self._accelerators[string]
@@ -535,28 +533,28 @@ class _Window:
 				return
 			for i in range(len(string)):
 				enterevent(self, KeyboardInput, string[i])
-		elif decoded_event.type == X.KeyRelease:
+		elif event.type == X.KeyRelease:
 			pass
-		elif decoded_event.type in (X.ButtonPress, X.ButtonRelease):
-			if decoded_event.type == X.ButtonPress:
-				if decoded_event.button == X.Button1:
+		elif event.type in (X.ButtonPress, X.ButtonRelease):
+			if event.type == X.ButtonPress:
+				if event.button == X.Button1:
 					ev = Mouse0Press
-				elif decoded_event.button == X.Button2:
+				elif event.button == X.Button2:
 					ev = Mouse1Press
-				elif decoded_event.button == X.Button3:
+				elif event.button == X.Button3:
 					if self._menu:
-						self._menu.MenuPosition(ev)
+						self._menu.MenuPosition(event)
 						self._menu.ManageChild()
 						return
 					ev = Mouse2Press
 				else:
 					return	# unsupported mouse button
 			else:
-				if decoded_event.button == X.Button1:
+				if event.button == X.Button1:
 					ev = Mouse0Release
-				elif decoded_event.button == X.Button2:
+				elif event.button == X.Button2:
 					ev = Mouse1Release
-				elif decoded_event.button == X.Button3:
+				elif event.button == X.Button3:
 					if self._menu:
 						# ignore buttonrelease
 						# when we have a menu
@@ -564,8 +562,8 @@ class _Window:
 					ev = Mouse2Release
 				else:
 					return	# unsupported mouse button
-			x = float(decoded_event.x) / self._width
-			y = float(decoded_event.y) / self._height
+			x = float(event.x) / self._width
+			y = float(event.y) / self._height
 			buttons = []
 			adl = self._active_display_list
 			if adl:
@@ -574,18 +572,15 @@ class _Window:
 						buttons.append(but)
 			enterevent(self, ev, (x, y, buttons))
 		else:
-			print 'unknown event',`decoded_event.type`
+			print 'unknown event',`event.type`
 
-	def _expose_callback(self, widget, client_data, call_data, *rest):
+	def _expose_callback(self, widget, client_data, call_data):
 		if debug: print `self`+'._expose_callback()'
 		if not self._form:
 			return		# why were we called anyway?
 		if call_data:
-			import struct
-			event = struct.unpack('i', call_data[4:8])[0]
-			event = Xlib.getevent(event)
-			decoded_event = XEvent.mkevent(event)
-			if decoded_event.count > 0:
+			event = call_data.event
+			if event.count > 0:
 				if debug: print `self`+'._expose_callback() -- count > 0'
 				return
 		if self._subwindows_closed:
@@ -1017,10 +1012,9 @@ class _Window:
 		except _rb_done:
 			pass
 
-	def _start_rb(self, w, data, event):
+	def _start_rb(self, w, data, e):
 		self._rb_display.render()
 		self._rb_curdisp.close()
-		e = XEvent.mkevent(event)
 		if self._rb_box:
 			x = self._rb_start_x
 			y = self._rb_start_y
@@ -1084,13 +1078,11 @@ class _Window:
 		self._rb_box = 1
 
 	def _do_rb(self, w, data, event):
-		e = XEvent.mkevent(event)
-		self._rb_common(e)
+		self._rb_common(event)
 		self._rb_draw()
 
 	def _end_rb(self, w, data, event):
-		e = XEvent.mkevent(event)
-		self._rb_common(e)
+		self._rb_common(event)
 		self._rb_curdisp = self._rb_display.clone()
 		self._rb_curdisp.fgcolor(255, 0, 0)
 		self._rb_curdisp.drawbox(self._rb_cvbox())
@@ -1779,7 +1771,7 @@ class _Button:
 		   self._hicolor == dispobj._bgcolor:
 			return
 		toplevel._win_lock.acquire()
-		dispobj._gc.DrawRectangle(self._coordinates)
+		apply(dispobj._gc.DrawRectangle, self._coordinates)
 		toplevel._win_lock.release()
 
 	def close(self):
@@ -1836,7 +1828,7 @@ class _Button:
 		gc.background = dispobj._xbgcolor
 		gc.foreground = self._xhicolor
 		gc.line_width = self._hiwidth
-		gc.DrawRectangle(self._coordinates)
+		apply(gc.DrawRectangle, self._coordinates)
 		gc.background = window._xbgcolor
 		gc.foreground = window._xbgcolor
 		toplevel._win_lock.release()
@@ -2532,15 +2524,15 @@ class FileDialog:
 		import os
 		text = self._dialog.FileSelectionBoxGetChild(
 						   Xmd.DIALOG_TEXT)
-		if hasattr(text, 'TextFieldGetString'):
+		try:
 			filename = text.TextFieldGetString()
-		else:
+		except AttributeError:
 			filename = text.TextGetString()
 		text = self._dialog.FileSelectionBoxGetChild(
 						   Xmd.DIALOG_FILTER_TEXT)
-		if hasattr(text, 'TextFieldGetString'):
+		try:
 			filter = text.TextFieldGetString()
-		else:
+		except AttributeError:
 			filter = text.TextGetString()
 		dir, filter = os.path.split(filter)
 		filename = os.path.join(dir, filename)
@@ -2580,9 +2572,9 @@ class InputDialog:
 
 	def _ok(self, w, client_data, call_data):
 		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		if hasattr(text, 'TextFieldGetString'):
+		try:
 			value = text.TextFieldGetString()
-		else:
+		except AttributeError:
 			value = text.TextGetString()
 		self.close()
 		if client_data:
@@ -2906,10 +2898,34 @@ class AttrString(_C):
 class AttrInt(AttrString):
 	def __init__(self, name, label, parent, item, dummy):
 		AttrString.__init__(self, name, label, parent, item, dummy)
+		self.widget.AddCallback('modifyVerifyCallback', self._verify,
+					None)
+
+	def _verify(self, w, client_data, call_data):
+		import string
+		valid_chars = string.digits + '-'
+		if call_data.text is None:
+			return
+		for c in call_data.text:
+			if c not in valid_chars:
+				call_data.doit = 0
+				return
 
 class AttrFloat(AttrString):
 	def __init__(self, name, label, parent, item, dummy):
 		AttrString.__init__(self, name, label, parent, item, dummy)
+		self.widget.AddCallback('modifyVerifyCallback', self._verify,
+					None)
+
+	def _verify(self, w, client_data, call_data):
+		import string
+		valid_chars = string.digits + '+-eE.'
+		if call_data.text is None:
+			return
+		for c in call_data.text:
+			if c not in valid_chars:
+				call_data.doit = 0
+				return
 
 class AttrFile(_C):
 	def __init__(self, name, label, parent, item, dummy):
@@ -2994,12 +3010,11 @@ class _MenuSupport:
 			menu.DestroyWidget()
 
 	# support methods, only used by derived classes
-	def _post_menu(self, w, client_data, call_data):
+	def _post_menu(self, w, client_data, event):
 		if not self._menu:
 			return
-		decoded_event = XEvent.mkevent(call_data)
-		if decoded_event.button == X.Button3:
-			self._menu.MenuPosition(call_data)
+		if event.button == X.Button3:
+			self._menu.MenuPosition(event)
 			self._menu.ManageChild()
 
 class _Widget(_MenuSupport):
@@ -3315,9 +3330,9 @@ class Selection(_Widget, _List):
 
 	def getselection(self):
 		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		if hasattr(text, 'TextFieldGetString'):
+		try:
 			return text.TextFieldGetString()
-		else:
+		except AttributeError:
 			return text.TextGetString()
 
 class List(_Widget, _List):
