@@ -6,10 +6,9 @@ This module encapsulates a sufficient part
 of the DirectShow infrastructure to
 implement win32 audio and video media channels.
 
-Any media type supported by Windows Media Player
-is also supported by this module:
-(.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa, 
-.mpe,.mid,.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
+Any media type supported by Windows Media Player is also supported by
+this module: (.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa,.mpe,.mid,
+.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
 
 Note that DirectShow builds a graph of filters
 appropriate to parse-render each media type from those filters
@@ -125,6 +124,7 @@ class MediaChannel:
 			return 0
 		self.__playFileHasBeenRendered=1
 		self.play_loop = self.__channel.getloop(node)
+		self.__iteration = 0
 
 		# get duration in secs (float)
 		duration = node.GetAttrDef('duration', None)
@@ -134,13 +134,7 @@ class MediaChannel:
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBegin = clip_begin
-		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time and not self.__channel._exporter:
-			print 'skipping',node.start_time,t0,t0-node.start_time
-			clip_begin = clip_begin + t0 - node.start_time
-			if repeatdur:
-				repeatdur = repeatdur - t0 + node.start_time
-		self.__playBuilder.SetPosition(clip_begin)
+
 		if duration is not None and duration >= 0:
 			if not clip_end:
 				clip_end = self.__playBegin + duration
@@ -151,6 +145,27 @@ class MediaChannel:
 			self.__playEnd = clip_end
 		else:
 			self.__playEnd = self.__playBuilder.GetDuration()
+
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > node.start_time and not self.__channel._exporter:
+##			print 'skipping',node.start_time,t0,t0-node.start_time
+			mediadur = self.__playEnd - self.__playBegin
+			late = t0 - node.start_time
+			skiprep = int(late / mediadur) # nr. of whole iterations skipped
+			self.__iteration = self.__iteration + skiprep
+			if self.play_loop > 0:
+				self.play_loop = self.play_loop - skiprep
+				if self.play_loop <= 0:
+					self.__channel.playdone(0)
+					return 1
+			if repeatdur > 0:
+				repeatdur = repeatdur - t0 + node.start_time
+				if repeatdur <= 0:
+					self.__channel.playdone(0)
+					return 1
+			skip = late - skiprep * mediadur
+			clip_begin = clip_begin + skip
+		self.__playBuilder.SetPosition(clip_begin)
 
 		if window:
 			self.adjustMediaWnd(node,window, self.__playBuilder)
@@ -225,7 +240,13 @@ class MediaChannel:
 			return		
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
-			if self.play_loop: # more loops ?
+			if self.play_loop > 0: # more loops ?
+				self.__iteration = self.__iteration + 1
+				if self.play_loop < 1:
+					# incomplete last iteration
+					clip_end = self.__playBegin + (self.__playEnd - self.__playBegin) * self.play_loop
+					self.__playBuilder.SetStopTime(clip_end)
+				self.__channel.event('repeat(%d)' % self.__iteration)
 				self.__playBuilder.SetPosition(self.__playBegin)
 				self.__playBuilder.Run()
 				return
@@ -299,6 +320,7 @@ class VideoStream:
 		if not self.__mmstream: return 0
 
 		self.play_loop = self.__channel.getloop(node)
+		self.__iteration = 0
 		duration = node.GetAttrDef('duration', None)
 		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
 		if repeatdur and self.play_loop == 1:
@@ -307,14 +329,6 @@ class VideoStream:
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBegin = clip_begin
 
-		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time and not self.__channel._exporter:
-			print 'skipping',node.start_time,t0,t0-node.start_time
-			clip_begin = clip_begin + t0 - node.start_time
-			if repeatdur:
-				repeatdur = repeatdur - t0 + node.start_time
-		self.__mmstream.seek(clip_begin)
-		
 		if duration is not None and duration >= 0:
 			if not clip_end:
 				clip_end = clip_begin + duration
@@ -325,6 +339,27 @@ class VideoStream:
 		else:
 			self.__playEnd = self.__mmstream.getDuration()
 
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > node.start_time and not self.__channel._exporter:
+##			print 'skipping',node.start_time,t0,t0-node.start_time
+			mediadur = self.__playEnd - self.__playBegin
+			late = t0 - node.start_time
+			skiprep = int(late / mediadur) # nr. of whole iterations skipped
+			self.__iteration = self.__iteration + skiprep
+			if self.play_loop > 0:
+				self.play_loop = self.play_loop - skiprep
+				if self.play_loop <= 0:
+					self.__channel.playdone(0)
+					return 1
+			if repeatdur > 0:
+				repeatdur = repeatdur - t0 + node.start_time
+				if repeatdur <= 0:
+					self.__channel.playdone(0)
+					return 1
+			skip = late - skiprep * mediadur
+			clip_begin = clip_begin + skip
+		self.__mmstream.seek(clip_begin)
+		
 		self.__playdone=0
 		self.__paused=0
 
@@ -370,7 +405,12 @@ class VideoStream:
 			return		
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
-			if self.play_loop: # more loops ?
+			if self.play_loop > 0: # more loops ?
+				self.__iteration = self.__iteration + 1
+				if self.play_loop < 1:
+					# incomplete last iteration
+					self.__playEnd = self.__playBegin + (self.__playEnd - self.__playBegin) * self.play_loop
+				self.__channel.event('repeat(%d)' % self.__iteration)
 				self.__mmstream.seek(self.__playBegin)
 				return
 			# no more loops
