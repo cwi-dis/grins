@@ -106,21 +106,23 @@ class SoundChannel(Channel):
 		self.armed_node = node
 		
 	def play(self, (node, callback, arg)):
+		self.node = node
+		self.cb = (callback, arg)
+
+		node.setarmedmode(ARM_PLAYING)
+
 		if not self.is_showing():
 			# Don't play it, but still let the duration pass
-			dummy = \
-			  self.player.enter(node.t1-node.t0, 0,  callback, arg)
+			dummy = self.player.enter(node.t1-node.t0, 0, \
+				self.done, None)
 			return
 		if self.armed_node <> node:
 			print 'SoundChannel: not the armed node'
 			self.arm(node)
 			
 		if not self.armed_info:		# If the arm failed...
-			callback(arg)
+			self.done(None)
 			return
-
-		self.node = node
-		node.setarmedmode(ARM_PLAYING)
 		
 		self.old_info = self.info
 		self.info = self.armed_info
@@ -139,7 +141,7 @@ class SoundChannel(Channel):
 			  self.player.enter(node.t1-node.t0, 0,  callback, arg)
 			return
 	        dummy = \
-		   self.player.enter(0.001, 0, self._poll, (callback, arg))
+		   self.player.enter(0.001, 0, self._poll, ())
 		dummy = \
 		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
 	#
@@ -156,8 +158,7 @@ class SoundChannel(Channel):
 			data = ndata
 		return data		
 			
-	def _poll(self, cb_arg):
-		self.cb_arg = cb_arg
+	def _poll(self):
 		self.qid = None
 		f, nchannels, nsampframes, sampwidth, samprate, format = \
 			self.info
@@ -175,10 +176,10 @@ class SoundChannel(Channel):
 		duration = max(duration, 0.2)
 		if self.framestodo + self.port.getfilled() > 0:
 			self.qid = self.player.enter(duration, 0, \
-				  self._poll, cb_arg)
+				  self._poll, ())
 		else:
 			self.stop()
-			callback, arg = cb_arg
+			callback, arg = self.cb
 			callback(arg)
 
 	def unfill(self):
@@ -208,7 +209,7 @@ class SoundChannel(Channel):
 			self.cancelled_qid = 1
 		self.rate = rate
 		if self.rate and self.cancelled_qid:
-			self.qid = self.player.enter(0, 0, self._poll, self.cb_arg)
+			self.qid = self.player.enter(0, 0, self._poll, ())
 			self.cancelled_qid = 0
 	#
 	def stop(self):
