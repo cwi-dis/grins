@@ -380,7 +380,7 @@ class Scheduler(scheduler):
 		if node.GetType() == 'bag':
 			raise error, 'Cannot play choice node'
 		# XXXX This statement should move to an intermedeate level.
-		if self.ui.sync_cv:
+		if self.ui.sync_cv and self.toplevel.channelview is not None:
 			self.toplevel.channelview.globalsetfocus(node)
 		sctx = SchedulerContext(self, node, seek_node)
 		self.sctx_list.append(sctx)
