@@ -115,9 +115,6 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
 
-	def kill(self):
-		self.hide()
-
 	def show(self):
 		if not self.is_showing():
 			self.toplevel.showstate(self, 1)
@@ -715,6 +712,9 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 
 	def commit(self):
 		self.updateform()
+
+	def kill(self):
+		self.hide()
 
 
 	
