@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Template file for the application toolbars.
 # The template is a list of toolbars. Each toolbar
