@@ -153,6 +153,14 @@ SOURCE=.\RES\ico00009.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\ico00010.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00011.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\icon1.ico
 # End Source File
 # Begin Source File
@@ -165,7 +173,15 @@ SOURCE=.\RES\icon_ope.ico
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\Build\products\g2-15\pro\intransition.ICO"
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Nodrop.cur
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\g2-15\pro\outtransition.ICO"
 # End Source File
 # Begin Source File
 
