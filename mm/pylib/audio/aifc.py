@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from audio import Error
+import audio
 from format import *
 
 _skiplist = ('COMT', 'INST', 'MIDI', 'AESD',
@@ -178,10 +178,10 @@ class reader:
 		# start parsing
 		form = file.read(4)
 		if form != 'FORM':
-			raise Error, 'file does not start with FORM id'
+			raise audio.Error, 'file does not start with FORM id'
 		formlength = _read_long(file)
 		if formlength <= 4:
-			raise Error, 'invalid FORM chunk data size'
+			raise audio.Error, 'invalid FORM chunk data size'
 		formdata = file.read(4)
 		formlength = formlength - 4
 		if formdata == 'AIFF':
@@ -189,7 +189,7 @@ class reader:
 		elif formdata == 'AIFC':
 			self.__aifc = 1
 		else:
-			raise Error, 'not an AIFF or AIFF-C file'
+			raise audio.Error, 'not an AIFF or AIFF-C file'
 		comm_chunk_read = 0
 		while formlength > 0:
 			ssnd_seek_needed = 1
@@ -220,14 +220,14 @@ class reader:
 			elif chunkname in _skiplist:
 				pass
 			else:
-				raise Error, 'unrecognized chunk type '+chunkname
+				raise audio.Error, 'unrecognized chunk type '+chunkname
 			formlength = formlength - 8 - chunk.chunksize
 			if chunk.chunksize & 1:
 				formlength = formlength - 1
 			if formlength > 0:
 				chunk.skip()
 		if not comm_chunk_read or not self.__ssnd_chunk:
-			raise Error, 'COMM chunk and/or SSND chunk missing'
+			raise audio.Error, 'COMM chunk and/or SSND chunk missing'
 		if ssnd_seek_needed:
 			chunk = self.__ssnd_chunk
 			chunk.rewind()
@@ -263,10 +263,10 @@ class reader:
 			self.__comptype = 'NONE'
 			self.__compname = 'not compressed'
 		if nchannels > 2:
-			raise Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format'
 		if self.__comptype == 'NONE':
 			if bps > 16:
-				raise Error, 'Unsupported format'
+				raise audio.Error, 'Unsupported format'
 			if nchannels == 1:
 				if bps <= 8:
 					self.__format = linear_8_mono_signed
@@ -283,7 +283,7 @@ class reader:
 			elif nchannels == 2:
 				self.__format = ulaw_stereo
 		else:
-			raise Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format'
 
 	def __readmark(self, chunk):
 		nmarkers = _read_short(chunk)
@@ -382,7 +382,7 @@ class writer:
 
 	def setformat(self, fmt):
 		if fmt not in self.__formats:
-			raise Error, 'bad format'
+			raise audio.Error, 'bad format'
 		self.__format = fmt
 		self.__blocksize = fmt.getblocksize()
 
@@ -394,14 +394,14 @@ class writer:
 
 	def setframerate(self, rate):
 		if self.__rates and rate not in self.__rates:
-			raise Error, 'bad frame rate'
+			raise audio.Error, 'bad frame rate'
 		self.__framerate = rate
 
 	def writeframes(self, data):
 		if not self.__initialized:
 			self.__init()
 		if len(data) % self.__blocksize != 0:
-			raise Error, 'not a whole number of frames'
+			raise audio.Error, 'not a whole number of frames'
 		self.__length = self.__length + len(data)
 		self.__file.write(data)
 
@@ -426,7 +426,7 @@ class writer:
 
 	def __init(self):
 		if not self.__format or not self.__framerate:
-			raise Error, 'no format or frame rate specified'
+			raise audio.Error, 'no format or frame rate specified'
 		import StringIO
 		file = self.__file
 		fmt = self.__format
@@ -461,7 +461,7 @@ class writer:
 				comm.write('ULAW')
 				_write_string(comm, 'u-law compressed')
 			else:
-				raise Error, 'internal error'
+				raise audio.Error, 'internal error'
 		data = comm.getvalue()
 		comm.close()
 		_write_long(file, len(data) + 6)
