@@ -62,7 +62,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie = self.played_movie
 			self.played_movie = None
 			movie.Stop()
-			d = float(movie.GetMovieDuration(1000)) / 1000
+			if self.played_flag:
+				d = movie.GetEstMovieDuration(1000)
+			else:
+				d = movie.GetMovieDuration(1000)
+			d = float(d) / 1000
 			if hasattr(movie, 'GetCurrentTime'):
 				t = float(movie.GetCurrentTime(1000)) / 1000
 			else:
@@ -106,6 +110,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			flag = 0
 		else:
 			flag = mv.MV_MPEG1_PRESCAN_OFF
+		self.armed_flag = flag
 		try:
 			self.armed_movie = movie = mv.OpenFile(f, flag)
 		except mv.error, msg:
@@ -177,6 +182,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.played_scale = self.armed_scale
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
+		self.played_flag = self.armed_flag
 		window.setredrawfunc(self.redraw)
 		try:
 			movie.BindOpenGLWindow(self.window._form, self.__context)
