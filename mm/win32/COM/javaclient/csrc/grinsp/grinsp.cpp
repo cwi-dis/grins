@@ -148,6 +148,28 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_ndisconnect(JNIEnv *env, jobject p
 	}
 
 /*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetPermission
+ * Signature: (ILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetPermission(JNIEnv *env, jobject player, jint hgrins, jstring license)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int permission = 0;
+	if(pIGRiNSPlayer)
+		{
+		const char *psz = env->GetStringUTFChars(license, NULL);
+		WCHAR wlicense[128];
+		MultiByteToWideChar(CP_ACP,0,LPCTSTR(psz),-1,wlicense,128);	
+		HRESULT hr = pIGRiNSPlayer->getPermission(wlicense, &permission);
+		env->ReleaseStringUTFChars(license, psz);
+		if(FAILED(hr))
+			ThrowCOMException(env, "getPermission", hr);
+		}	
+	return jint(permission);
+	}
+
+/*
  * Class:     GRiNSPlayer
  * Method:    open
  * Signature: (Ljava/lang/String;)V
