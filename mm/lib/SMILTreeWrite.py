@@ -379,6 +379,7 @@ smil_mediatype={
 	'RealPix':'img',
 	'RealText':'text',
 	'RealVideo':'video',
+	'unknown': 'ref',
 }
 
 def mediatype(chtype, error=0):
