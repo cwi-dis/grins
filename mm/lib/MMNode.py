@@ -127,13 +127,12 @@ class MMNodeContext:
 		del self.uidmap[uid]
 
 	def newanimatenode(self, tagname='animate'):
-		node = self.newnodeuid('imm', self.newuid())
-		node.attrdict['type'] = 'animate'
+		node = self.newnodeuid('animate', self.newuid())
 		node.attrdict['tag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
 		chname = 'animate%s' % node.GetUID()
 		node.attrdict['channel'] = chname
-		self.addinternalchannels( [(chname, node.attrdict), ] )
+		self.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 		return node
 
 	#
@@ -172,6 +171,47 @@ class MMNodeContext:
 	def changedtimes(self):
 		for node in self.uidmap.values():
 			node.ClearTimesObjects()
+
+	# compute the mime type according to the specified user mime type,
+	# and the url if no specified
+	def computeMimeType(self, nodeType, url = None, specifiedMimeType = None):
+		if specifiedMimeType != None:
+			computedMimeType = specifiedMimeType
+		else:
+			if nodeType == 'imm':
+				computedMimeType = 'text/plain'
+			elif nodeType == 'ext':
+				computedMimeType = None	
+				# not allowed to look at extension...
+				if url is not None and settings.get('checkext'):
+					import MMmimetypes
+					# guess the type from the file extension
+					computedMimeType = MMmimetypes.guess_type(url)[0]
+				if url is not None and computedMimeType is None:
+					# last resort: get file and see what type it is
+					try:
+						u = MMurl.urlopen(url)
+					except:
+						pass
+						# we have no idea what type the file is
+					else:
+						computedMimeType = u.headers.type
+						u.close()
+			else:
+				# no mime type
+				computedMimeType = None	
+
+			# special case			
+			if computedMimeType == 'application/vnd.rn-realmedia':
+				# for RealMedia look inside the file
+				import realsupport
+				info = realsupport.getinfo(self.findurl(url))
+				if info and not info.has_key('width'):
+					computedMimeType = 'audio/vnd.rn-realaudio'
+				else:
+					computedMimeType = 'video/vnd.rn-realvideo'
+
+		return computedMimeType
 
 	#
 	# Channel administration
@@ -353,9 +393,10 @@ class MMNodeContext:
 		self.getchannelbynode = func
 
 	def addinternalchannels(self, list):
-		for name, dict in list:
-			c = MMChannel(self, name, dict.get('type'))
+		for name, type, dict in list:
+			c = MMChannel(self, name, type)
 			c.attrdict = dict
+			c.attrdict['type'] = type
 			self._ichanneldict[name] = c
 			self._ichannelnames.append(name)
 			self._ichannels.append(c)
@@ -1620,6 +1661,9 @@ class MMNode:
 			self._subRegCssId = self.newSubRegCssId()
 			self._mediaCssId = self.newMediaCssId()
 
+		self.computedMimeType = None
+		self.channelType = None
+		
 	def destroy(self):
 		self.__unlinkCssId()
 		self._mediaCssId = None
@@ -2525,15 +2569,55 @@ class MMNode:
 		if c: return c.name
 		else: return 'undefined'
 
-	def GetChannelType(self):
-		if self.attrdict.get('type')=='animate':
-			return 'animate'
-		c = self.GetChannel()
-		if c and c.has_key('type'):
-			return c['type']
-		else:
-			return ''
+	def SetChannelType(self, channelType):
+		self.channelType = channelType
 
+	def GetChannelType(self):
+		if self.channelType == None:
+			self.channelType = self.guessChannelType()
+		return self.channelType
+	
+	# this method return the channel type according to the node type and mime type
+	# defined for this node.
+	# Note: for now, the channel type is useful to determinate either:
+	# - the renderer class (ChannelXXX classes)
+	# - select the properties to edit from the dialog box
+	def guessChannelType(self):
+		if self.type in ('brush', 'animate', 'prefetch'):
+			# for now, direct mapping
+			return self.type
+		else:
+			computedMimeType = self.GetComputedMimeType()
+			# find the channel type according to the computed mime type
+			if computedMimeType == None:
+				return 'null'
+			else:
+				import ChannelMime, ChannelMap
+				chtypes = ChannelMime.MimeChannel.get(computedMimeType, [])
+				nchtypes = []
+				valid = ChannelMap.getvalidchanneltypes(self.context)
+				for chtype in chtypes:
+					while chtype not in valid:
+						if chtype == 'RealVideo':
+							chtype = 'video'
+						elif chtype == 'RealPix':
+							chtype = 'RealVideo'
+						elif chtype == 'RealAudio':
+							chtype = 'sound'
+						elif chtype == 'RealText':
+							chtype = 'video'
+						elif chtype == 'html':
+							chtype = 'text'
+					if chtype not in nchtypes:
+						nchtypes.append(chtype)
+				if len(nchtypes) > 0:
+					# for now keep the first
+					chtype = nchtypes[0]
+				else:
+					chtype = 'null'
+					
+			return chtype
+	
 	def SetChannel(self, c):
 		if c is None:
 			self.DelAttr('channel')
@@ -2554,7 +2638,7 @@ class MMNode:
 				list.append(captionchannel)
 			# add any animate elements
 			for node in self.children:
-				if MMAttrdefs.getattr(node, 'type')=='animate':
+				if node.GetType() == 'animate':
 					list.append(MMAttrdefs.getattr(node, 'channel'))
 			return list, None
 		errnode = None
@@ -2570,6 +2654,23 @@ class MMNode:
 		if overlap and self.type == 'par':
 			errnode = (self, overlap)
 		return list, errnode
+
+	#
+	# set and get the computed mimetype value
+	# the computed mimetype is either:
+	# - the mime type specified by the user (in priority)
+	# - the guessed mime type according to the url
+	#
+	
+	def GetComputedMimeType(self):
+		if self.computedMimeType == None:
+			import MMTypes
+			if self.type in ('imm', 'ext'):
+				self.computedMimeType = self.context.computeMimeType(self.type, self.attrdict.get('file'), self.attrdict.get('mimetype'))
+		return self.computedMimeType
+
+	def SetComputedMimeType(self, computedMimeType):
+		self.computedMimeType = computedMimeType
 
 	#
 	# Make a "deep copy" of a subtree
@@ -2666,6 +2767,13 @@ class MMNode:
 			raise CheckError, 'SetType() bad type'
 		if type == self.type:
 			return
+		# invalidate the current channel and the computed mime type. The next call to GetChannelType will re compute this value
+		self.channelType = None
+		self.computedMimeType = None
+		# raz the user mime type if you change the type
+		if self.attrdict.has_key('mimetype'):
+			del self.attrdict['mimetype']
+		
 		if self.type in interiortypes and type in interiortypes:
 			self.type = type
 			self.setgensr()
@@ -2697,6 +2805,11 @@ class MMNode:
 		if name == 'file' and value and not MMAttrdefs.getattr(self, 'name'):
 			shortname = os.path.splitext(os.path.basename(value))[0]
 			self.SetAttr('name', shortname)
+
+		if name in ('file', 'mimetype'):
+			# invalidate the current channel type. The next call to GetChannelType will re compute this value
+			self.computedMimeType = None
+			self.channelType = None
 
 	def DelAttr(self, name):
 		if not self.attrdict.has_key(name):
@@ -2895,7 +3008,7 @@ class MMNode:
 	# Set the correct method for generating scheduler records.
 	def setgensr(self):
 		type = self.type
-		if type in ('imm', 'ext'):
+		if type in ('imm', 'ext', 'brush', 'animate', 'prefetch'):
 			self.gensr = self.gensr_leaf
 ##		elif type == 'bag':
 ##			self.gensr = self.gensr_bag
@@ -3102,7 +3215,7 @@ class MMNode:
 		# XXX: ignoring animate elements timing for now,
 		# just kick animate children in a parallel envelope
 		for child in self.GetSchedChildren():
-			if MMAttrdefs.getattr(child, 'type')!='animate':
+			if child.GetType() != 'animate':
 				continue
 			srlist.append(( [(SCHED, self),],
 				[(SCHED,child),(PLAY,self)]  ))
