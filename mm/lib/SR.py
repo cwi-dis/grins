@@ -13,14 +13,14 @@ __version__ = "$Id$"
 #
 [NO_EVENT, SCHED, SCHED_DONE, PLAY, PLAY_DONE, SCHED_STOP, PLAY_STOP,\
 	  SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, SCHED_FINISH, BAG_START, \
-	  BAG_STOP, BAG_DONE] = range(15)
+	  BAG_STOP, BAG_DONE, TERMINATE] = range(16)
 
 ## side_effects = (PLAY, PLAY_STOP, PLAY_ARM)
 
 op_names = [ 'NO_EVENT', 'SCHED', 'SCHED_DONE', 'PLAY', 'PLAY_DONE', \
 	  'SCHED_STOP', 'PLAY_STOP', 'SYNC', 'SYNC_DONE', \
 	  'PLAY_ARM', 'ARM_DONE', 'SCHED_FINISH', 'BAG_START', \
-	  'BAG_STOP', 'BAG_DONE']
+	  'BAG_STOP', 'BAG_DONE', 'TERMINATE']
 
 def ev2string(ev):
 	try:
