@@ -387,7 +387,9 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	def getpixgeometry(self):
 		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
 			self.GetWindowPlacement()
-		rc=win32mu.Rect(rcNormalPosition)
+		# compensate for size increase in ViewServer.ChildFrame.Create
+		l,t,r,b = rcNormalPosition
+		rc=win32mu.Rect((l,t,r-4,b-4))
 		ptList=[(0,0),]
 		townd=self._parent.GetMDIClient()
 		x,y= self.MapWindowPoints(townd,ptList)[0]
