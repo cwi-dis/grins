@@ -496,7 +496,7 @@ class Channel:
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
 		durationattr = MMAttrdefs.getattr(node, 'duration')
-		self._has_pause = (durationattr < 0)
+		self._has_pause = durationattr < 0 or (durationattr == 0 and MMAttrdefs.getattr(node, 'endlist'))
 		for (name, type, button, times) in self._played_anchors:
 			if name is None and type is None:
 				f = self.onclick
