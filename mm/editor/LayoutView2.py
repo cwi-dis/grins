@@ -887,6 +887,7 @@ class LayoutView2(LayoutViewDialog2):
 			if mediaRegion.getNodeRef() in self.currentMediaRefListT:
 				removeList.append(ind)
 				parentRegion.removeNode(mediaRegion)
+			ind = ind+1
 		removeList.reverse()
 		for ind in removeList:
 			del self.currentMediaNodeListShowed[ind]
