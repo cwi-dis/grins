@@ -99,7 +99,11 @@ class EditMgr:
 			self.playerstate_registry.insert(0, x)
 
 	def unregister(self, x):
-		self.registry.remove(x)
+		for i in range(len(self.registry)):
+			if self.registry[i] is x:
+				del self.registry[i]
+				break
+##		self.registry.remove(x)
 		if x in self.focus_registry:
 			self.focus_registry.remove(x)
 		if x in self.playerstate_registry:
