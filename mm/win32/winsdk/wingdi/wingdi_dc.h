@@ -5,6 +5,10 @@
 #include "Python.h"
 #endif
 
+#ifndef _WINDOWS_
+#include <windows.h>
+#endif
+
 PyObject* Wingdi_CreateDCFromHandle(PyObject *self, PyObject *args);
 
 inline HDC GetHandleFromPyDC(PyObject *self)

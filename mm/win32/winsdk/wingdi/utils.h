@@ -5,6 +5,10 @@
 #include "Python.h"
 #endif
 
+#ifndef _WINDOWS_
+#include <windows.h>
+#endif
+
 extern PyObject *ErrorObject;
 
 inline PyObject* none() { Py_INCREF(Py_None); return Py_None;}

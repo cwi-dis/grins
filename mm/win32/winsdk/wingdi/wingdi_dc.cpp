@@ -6,14 +6,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
-
 #include "wingdi_dc.h"
 
 #include "utils.h"
-
 #include "wingdi_rgn.h"
 
 struct PyDC
@@ -838,6 +833,19 @@ PyDC_PaintRgn(PyDC *self, PyObject *args)
 	return none();
 }
 
+static PyObject* 
+PyDC_PathToRegion(PyDC *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRGN hRgn = PathToRegion(self->m_hDC);
+	if(hRgn==0){
+		seterror("PathToRegion", GetLastError());
+		return NULL;
+		}
+	return CreatePyRgnFromHandle(hRgn);
+}
+
 static PyObject* PyDC_Detach(PyDC *self, PyObject *args)
 	{
 	if(!PyArg_ParseTuple(args, ""))
@@ -909,6 +917,7 @@ PyMethodDef PyDC::methods[] = {
 	
 	{"SelectClipRgn", (PyCFunction)PyDC_SelectClipRgn, METH_VARARGS, ""},
 	{"PaintRgn", (PyCFunction)PyDC_PaintRgn, METH_VARARGS, ""},
+	{"PathToRegion", (PyCFunction)PyDC_PathToRegion, METH_VARARGS, ""},
 
 	{"Detach", (PyCFunction)PyDC_Detach, METH_VARARGS, ""},
 	{"GetSafeHdc", (PyCFunction)PyDC_GetSafeHdc, METH_VARARGS, ""},
