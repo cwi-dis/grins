@@ -887,7 +887,7 @@ class BandwidthComputeDialog(ResDialog):
 			delaycount = '1 item'
 		else:
 			delaycount = '%d items'%delaycount
-		self._preroll.settext('%d s'%prerolltime)
+		self._preroll.settext(prerolltime)
 		self._stalltime.settext(errorseconds)
 		self._stallcount.settext(delaycount)
 		self._errorcount.settext(errorcount)
