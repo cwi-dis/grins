@@ -129,6 +129,11 @@ class LightWeightControl:
 		Sdk.SetWindowLong(self._hwnd,win32con.GWL_STYLE,style)
 	def settext(self,str):
 		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
+	def gettextlength(self):
+		return self.sendmessage(win32con.WM_GETTEXTLENGTH)
+	def gettext(self):
+		n=self.gettextlength()+1
+		return self.sendmessage_rs(win32con.WM_GETTEXT,n,n)	
 	def seticon(self,icon):
 		return self.sendmessage(win32con.BM_SETIMAGE,win32con.IMAGE_ICON,icon)
 	# mimic mfc wnd method
