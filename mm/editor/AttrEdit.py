@@ -194,8 +194,8 @@ class NodeWrapper(Wrapper):
 			('terminator',),
 			('duration',), 'loop',		# Time stuff
 			('clipbegin',), ('clipend',),	# More time stuff
-			'title', 'abstract', 'author', 'copyright',
-			'comment',
+			'title', 'abstract', ('alt',), ('longdesc',), 'author',
+			'copyright', 'comment',
 			'layout', ('u_group',),
 			('mimetype',),	# XXXX Or should this be with file?
 			'system_bitrate', 'system_captions',
@@ -210,6 +210,9 @@ class NodeWrapper(Wrapper):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq'):
 			namelist.append('duration')
+		if ntype in ('ext', 'imm'):
+			namelist.append('alt')
+			namelist.append('longdesc')
 		# Get the channel class (should be a subroutine!)
 		ctype = self.node.GetChannelType()
 		if channelmap.has_key(ctype):
