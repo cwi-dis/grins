@@ -2180,7 +2180,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		res = color.match(val)
 		if res is None:
 			self.syntax_error('bad color specification')
-			return
+			return 'transparent'
 		else:
 			hex = res.group('hex')
 			if hex is not None:
