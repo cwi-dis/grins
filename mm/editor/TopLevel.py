@@ -89,25 +89,42 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		bheight = height/9
 		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
+		# The top four buttons in the menu open/close views.
+		# They show a light which indicates whether the view
+		# is open or closed.
+		#
 		x, y, w, h = 0, height, width, bheight
 		#
 		y = y - h
 		self.bvbutton = \
-			form.add_button(PUSH_BUTTON,x,y,w,h, 'Hierarchy')
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Hierarchy')
 		#
 		y = y - h
 		self.cvbutton = \
-			form.add_button(PUSH_BUTTON,x,y,w,h, 'Time chart')
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Time chart')
 		#
 		y = y - h
 		self.pvbutton = \
-			form.add_button(PUSH_BUTTON,x,y,w,h, 'Player')
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Player')
 		#
 		y = y - h
 		self.svbutton = \
-			form.add_button(PUSH_BUTTON,x,y,w,h, 'Style sheet')
+		    form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Style sheet')
 		#
-		y = 4*bheight
+		# The fifth button in the top row is labeled "Help".
+		# This behaves almost like a view but has a different
+		# callback since its init function is costly;
+		# also it is not closed by Restore.
+		#
+		y = y - h
+		self.helpbutton = \
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Help')
+		self.helpbutton.set_call_back(self.help_callback, None)
+		#
+		# The bottom three buttons are document-related commands.
+		# They remain pressed while the command is executing.
+		#
+		y = 3*bheight
 		#
 		y = y - h
 		self.savebutton = \
@@ -118,11 +135,6 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		self.restorebutton = \
 			form.add_button(INOUT_BUTTON,x,y,w,h, 'Restore')
 		self.restorebutton.set_call_back(self.restore_callback, None)
-		#
-		y = y - h
-		self.helpbutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Help')
-		self.helpbutton.set_call_back(self.help_callback, None)
 		#
 		y = y - h
 		self.quitbutton = \
@@ -145,8 +157,8 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		setcurrenttime = self.channelview.setcurrenttime
 		self.player.set_setcurrenttime_callback(setcurrenttime)
 		#
-		import StyleEdit
-		self.styleview = StyleEdit.StyleEditor().init(self)
+		import StyleSheet
+		self.styleview = StyleSheet.StyleSheet().init(self)
 		#
 		self.views = [self.blockview, self.channelview, \
 				self.player, self.styleview]
@@ -158,11 +170,16 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		self.svbutton.set_call_back(self.view_callback, self.styleview)
 	#
 	def hideviews(self):
-		self.bvbutton.set_button(0)
-		self.cvbutton.set_button(0)
-		self.pvbutton.set_button(0)
-		self.svbutton.set_button(0)
 		for v in self.views: v.hide()
+	#
+	def checkviews(self):
+		# Check that the button states are still correct
+		self.bvbutton.set_button(self.blockview.is_showing())
+		self.cvbutton.set_button(self.channelview.is_showing())
+		self.pvbutton.set_button(self.player.is_showing())
+		self.svbutton.set_button(self.styleview.is_showing())
+		if self.help <> None:
+			self.helpbutton.set_button(self.help.is_showing())
 	#
 	def destroyviews(self):
 		self.hideviews()
@@ -186,7 +203,6 @@ class TopLevel() = ViewDialog(), BasicDialog():
 			v.save_geometry()
 		# The help window too!
 		if self.help <> None:
-			self.help.get_geometry()
 			self.help.save_geometry()
 		# Make a back-up of the original file...
 		try:
@@ -200,12 +216,12 @@ class TopLevel() = ViewDialog(), BasicDialog():
 	#
 	def restore_callback(self, (obj, arg)):
 		if not obj.pushed: return
-		AttrEdit.closeall(self.root)
 		if not self.editmgr.transaction():
 			obj.set_button(0)
 			return
 		self.editmgr.rollback()
 		self.destroyviews()
+		AttrEdit.hideall(self.root)
 		self.editmgr.unregister(self)
 		self.context.seteditmgr(None)
 		self.root.Destroy()
@@ -242,9 +258,14 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		raise MMExc.ExitException, 0
 	#
 	def help_callback(self, (obj, arg)):
+		if not obj.get_button():
+			if self.help <> None:
+				self.help.hide()
+			return
 		if self.help = None:
 			import help
-			self.help = help.HelpWindow().init(HELPDIR, self.root)
+			self.help = \
+				help.HelpWindow().init(HELPDIR, self)
 		self.help.show()
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
