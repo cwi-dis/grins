@@ -90,8 +90,7 @@ class Channel:
 		self._hide_pending = 0
 		self._exporter = None
 		self.cssResolver = self._player.cssResolver
-		if debug:
-			print 'Channel() -> '+`self`
+		if debug: print 'Channel() -> '+`self`
 		channels.append(self)
 		if hasattr(ui, 'editmgr'):
 			self.editmgr = ui.editmgr
@@ -106,8 +105,7 @@ class Channel:
 		# will stop playing and arming on this channel and
 		# release all used resources.  After this, none of the
 		# methods of this instance may be called anymore.
-		if debug:
-			print 'Channel.destroy('+`self`+')'
+		if debug: print 'Channel.destroy('+`self`+')'
 		if self._is_shown:
 			self.hide()
 		if hasattr(self._player, 'editmgr'):
@@ -364,8 +362,7 @@ class Channel:
 
 	def hide(self, force=1):
 		# Indicate that the channel must enter the HIDDEN state.
-		if debug:
-			print 'Channel.hide('+`self`+')'
+		if debug: print 'Channel.hide('+`self`+')'
 
 		# force equal 0 is used only in internal. By default the channel is hide
 		# only when showBackground attribute equal whenActive
@@ -467,8 +464,7 @@ class Channel:
 		# This does the initial part of arming a node.  This
 		# method should be called by superclasses when they
 		# start arming.
-		if debug:
-			print 'Channel.arm_0('+`self`+','+`node`+')'
+		if debug: print 'Channel.arm_0('+`self`+','+`node`+')'
 		if self._armstate != AIDLE:
 			raise error, 'arm not idle'
 		if not self._armcontext:
@@ -492,8 +488,7 @@ class Channel:
 		# This does the final part of arming a node.  This
 		# method should be called by superclasses when they
 		# are finished with arming.
-		if debug:
-			print 'Channel.arm_1('+`self`+')'
+		if debug: print 'Channel.arm_1('+`self`+')'
 		if self._armstate != ARMING:
 			raise error, 'not arming'
 		self._armstate = ARMED
@@ -505,8 +500,7 @@ class Channel:
 		# This method should be called by superclasses to
 		# indicate that the armed information is not needed
 		# anymore and that a new arm may be done.
-		if debug:
-			print 'Channel.armdone('+`self`+')'
+		if debug: print 'Channel.armdone('+`self`+')'
 		if self._armstate != ARMED:
 			raise error, 'not arming'
 		self._armstate = AIDLE
@@ -533,8 +527,7 @@ class Channel:
 		# starting to play a node.
 		# If callback is `None', make sure we don't do any
 		# callbacks.
-		if debug:
-			print 'Channel.play_0('+`self`+','+`node`+')'
+		if debug: print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._played_node is not None:
 ##			print 'stopping playing node first',`self._played_node`
 			self.stopplay(self._played_node, curtime)
@@ -589,8 +582,7 @@ class Channel:
 		# should just call armdone to indicate that the armed
 		# information is not needed anymore, and call playdone
 		# when they are finished playing the node.
-		if debug:
-			print 'Channel.play_1('+`self`+')'
+		if debug: print 'Channel.play_1('+`self`+')'
 		# armdone must come before playdone, since playdone
 		# may trigger an autofiring anchor that terminates
 		# this node
@@ -611,8 +603,7 @@ class Channel:
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
-		if debug:
-			print 'Channel.playdone('+`self`+')'
+		if debug: print 'Channel.playdone('+`self`+')'
 		if self._playstate != PLAYING:
 			if not outside_induced and not self._qid:
 				# timer callback couldn't be cancelled
@@ -628,8 +619,7 @@ class Channel:
 	def freeze(self, node, curtime):
 		# Called by the Scheduler to stop playing and start freezing.
 		# The node is passed for consistency checking.
-		if debug:
-			print 'Channel.freeze'+`self,node`
+		if debug: print 'Channel.freeze'+`self,node`
 		if node.GetType() == 'anchor':
 			return
 		if self._played_node is not node or self._playstate != PLAYING:
@@ -638,8 +628,7 @@ class Channel:
 
 	def playstop(self, curtime):
 		# Internal method to stop playing.
-		if debug:
-			print 'Channel.playstop('+`self`+')'
+		if debug: print 'Channel.playstop('+`self`+')'
 		if self._playstate != PLAYING:
 			raise error, 'playstop called when not playing'
 		# there may be a done event scheduled; cancel it
@@ -745,16 +734,13 @@ class Channel:
 		self.seekargs = (node, args)
 
 	def play_anchor(self, anchor, curtime):
-		print 'play anchor',anchor,curtime
 		actuate = MMAttrdefs.getattr(anchor, 'actuate')
-		print 'actuate',actuate
 		if actuate == 'onLoad':
 			self.onclick(anchor)
 			return
 
 		b = self._played_anchor2button.get(anchor)
 		if b is None:
-			print 'no button'
 			return
 
 		# make button sensitive if there is a listener
@@ -763,7 +749,6 @@ class Channel:
 			if arc.event == ACTIVATEEVENT:
 				b.setsensitive(1)
 				return
-		print 'no events'
 
 		ctx = self._player.context
 		root = anchor.GetRoot()
@@ -771,10 +756,8 @@ class Channel:
 			if ctx.isgoodlink(link, root):
 				b.setsensitive(1)
 				return
-		print 'no links'
 
 	def stop_anchor(self, anchor, curtime):
-		print 'stop anchor',anchor,curtime
 		actuate = MMAttrdefs.getattr(anchor, 'actuate')
 		if actuate == 'onLoad':
 			return
@@ -799,8 +782,7 @@ class Channel:
 		# call playdone when playing is finished.  It should call
 		# armdone when the armed information is not needed
 		# anymore.
-		if debug:
-			print 'Channel.play('+`self`+','+`node`+')'
+		if debug: print 'Channel.play('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
 			self.play_anchor(node, curtime)
 			return
@@ -817,8 +799,7 @@ class Channel:
 		# Indicate that the channel can revert from the
 		# PLAYING or PLAYED state to PIDLE.
 		# Node is only passed to do consistency checking.
-		if debug:
-			print 'Channel.stopplay('+`self`+','+`node`+')'
+		if debug: print 'Channel.stopplay('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
 			self.stop_anchor(node, curtime)
 			return
@@ -838,8 +819,7 @@ class Channel:
 	def stoparm(self):
 		# Indicate that the channel can revert from the
 		# ARMING or ARMED state to AIDLE.
-		if debug:
-			print 'Channel.stoparm('+`self`+')'
+		if debug: print 'Channel.stoparm('+`self`+')'
 		if self._armstate == ARMING:
 			self.armstop()
 			self._armed_node = None
@@ -852,8 +832,7 @@ class Channel:
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The
 		# following arm is done in the new context.
-		if debug:
-			print 'Channel.startcontext'+`(self, ctx)`
+		if debug: print 'Channel.startcontext'+`(self, ctx)`
 		if self._armcontext and not self._playcontext:
 			# New startcontext without having played in
 			# the old context.  Save the old context for
@@ -874,8 +853,7 @@ class Channel:
 	def stopcontext(self, ctx, curtime):
 		# Called by the scheduler to force the channel to the
 		# complete idle state.
-		if debug:
-			print 'Channel.stopcontext'+`(self, ctx)`
+		if debug: print 'Channel.stopcontext'+`(self, ctx)`
 		if ctx is not self._playcontext and \
 		   ctx is not self._armcontext:
 			raise error, 'stopcontext with unknown context'
@@ -889,8 +867,7 @@ class Channel:
 			self._armcontext = None
 
 	def setpaused(self, paused):
-		if debug:
-			print 'Channel.setpaused('+`self`+','+`paused`+')'
+		if debug: print 'Channel.setpaused('+`self`+','+`paused`+')'
 		if paused and self._qid:
 			try:
 				self._scheduler.cancel(self._qid)
@@ -1377,8 +1354,7 @@ class ChannelWindow(Channel):
 ##		self.highlight()
 
 	def do_show(self, pchan):
-		if debug:
-			print 'ChannelWindow.do_show('+`self`+')'
+		if debug: print 'ChannelWindow.do_show('+`self`+')'
 			
 		if self._wingeom == None:
 			# shouldn't happen
@@ -1466,8 +1442,7 @@ class ChannelWindow(Channel):
 ##		self.after_show()
 
 	def do_hide(self):
-		if debug:
-			print 'ChannelWindow.do_hide('+`self`+')'
+		if debug: print 'ChannelWindow.do_hide('+`self`+')'
 		if self.window:
 			self.window.unregister(WMEVENTS.ResizeWindow)
 			self.window.close()
@@ -1478,8 +1453,7 @@ class ChannelWindow(Channel):
 				self.event((self._attrdict, 'topLayoutCloseEvent'))
 
 	def resize(self, arg, window, event, value):
-		if debug:
-			print 'ChannelWindow.resize'+`self,arg,window,event,value`
+		if debug: print 'ChannelWindow.resize'+`self,arg,window,event,value`
 		self._player.toplevel.setwaiting()
 		self.replaynode()
 ##		if not self._player.playing and \
@@ -1580,7 +1554,6 @@ class ChannelWindow(Channel):
 			self.setanchor(b, a)
 
 	def add_arc(self, node, arc):
-		print 'add_arc',node,arc
 		if node.GetType() == 'anchor':
 			node = node.GetParent()
 		if node is not self._played_node or \
@@ -1615,8 +1588,7 @@ class ChannelWindow(Channel):
 		return self._winabsgeom
 	
 	def play(self, node, curtime):
-		if debug:
-			print 'ChannelWindow.play('+`self`+','+`node`+')'
+		if debug: print 'ChannelWindow.play('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
 			self.play_anchor(node, curtime)
 			return
@@ -1641,8 +1613,7 @@ class ChannelWindow(Channel):
 		self.play_1(curtime)
 
 	def stopplay(self, node, curtime):
-		if debug:
-			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
+		if debug: print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
 			self.stop_anchor(node, curtime)
 			return
@@ -1658,8 +1629,7 @@ class ChannelWindow(Channel):
 
 
 	def setpaused(self, paused):
-		if debug:
-			print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
+		if debug: print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
 		if paused == 'hide' and self.played_display:
 			# we need an unrender() method here...
 			d = self.played_display.clone()
@@ -1915,8 +1885,7 @@ class ChannelWindow(Channel):
 class ChannelAsync(Channel):
 
 	def play(self, node, curtime):
-		if debug:
-			print 'ChannelAsync.play('+`self`+','+`node`+')'
+		if debug: print 'ChannelAsync.play('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
 			self.play_anchor(node, curtime)
 			return
@@ -1933,8 +1902,7 @@ class ChannelAsync(Channel):
 
 class ChannelWindowAsync(ChannelWindow):
 	def play(self, node, curtime):
-		if debug:
-			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
+		if debug: print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
 			self.play_anchor(node, curtime)
 			return
