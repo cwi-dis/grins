@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
 # compatibility values
-CMIF = 'cmif'
+CMIF = 'CMIF'
 SMIL10 = 'SMIL 1.0'
-G2 = 'g2'
+G2 = 'RealSystem G2'
