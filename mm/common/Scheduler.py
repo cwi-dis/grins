@@ -531,9 +531,9 @@ class SchedulerContext:
 				else:
 					self.do_terminate(node, timestamp, fill = node.GetFill())
 					self.flushqueue()
-				for a in node.FilterArcList(node.GetBeginList()):
-					if a.isresolved(self) and a.resolvedtime(self) >= timestamp:
-						self.sched_arc(node, arc, event='begin', timestamp=timestamp)
+##				for a in node.FilterArcList(node.GetBeginList()):
+##					if a.isresolved(self) and a.resolvedtime(self) >= timestamp:
+##						self.sched_arc(node, arc, event='begin', timestamp=timestamp)
 				parent.updatetimer()
 				return
 		# the node should start, but we need to do some more checks
