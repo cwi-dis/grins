@@ -203,8 +203,10 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 					ch.showimg()
 					if channel is not None and \
 					   channel == chname:
-						ch.highlight(RED)
+						##ch.highlight(RED)
+						ch.modeless_resize_window()
 					else:
+						ch.cancel_modeless_resize()
 						ch.highlight(BLACK)
 					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
