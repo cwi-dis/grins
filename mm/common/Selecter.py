@@ -27,6 +27,8 @@ class Selecter:
 			raise 'Already playing'
 		self.reset()
 		list = self.mkbaglist(self.userplayroot)
+		if not list:
+			return 0
 		list = self.killconflictingbags(list)
 		if not self.startbaglist(list):
 			return 0
