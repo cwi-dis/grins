@@ -33,11 +33,13 @@ EVENTS_NODE = [				# What the event actually is.
 	]
 
 EVENTS_REGION = [			# no offsets at all!
-	'activateEvent',
-	'focusInEvent',		# I'm not sure about these.
-	'focusOutEvent',
-	'inBoundsEvent',
-	'outOfBoundsEvent',
+	#'activateEvent',
+	#'focusInEvent',		# I'm not sure about these.
+	#'focusOutEvent',
+	#'inBoundsEvent',
+	#'outOfBoundsEvent',
+	'topLayoutOpenEvent',
+	'topLayoutCloseEvent',
 	]
 
 
@@ -89,7 +91,9 @@ class EventStruct:
 			s.__init__(self._node, action, srcnode = s.srcnode, event=e,
 				   delay=self.get_offset())
 		elif c == 'region' and self._setregion:
-			print "TODO: don't know how to set region."
+			ch = self.get_region()
+			channel = self._node.context.channeldict[ch]
+			s.__init__(self._node, action, channel=channel, event=self.get_event(), delay = self.get_offset())
 		elif c == 'accesskey' and self._setkey:
 			s.__init__(self._node, action, accesskey=self._setkey, delay=self.get_offset())
 		elif c == 'marker' and self._setmarker:
@@ -126,7 +130,7 @@ class EventStruct:
 			self.thing = x.marker
 		elif x.channel is not None:
 			self.cause = 'region'
-			self.thing = x.channel
+			self.thing = x.channel.name
 		else:
 			# TODO: more work needed here.
 			self.cause = 'node'
@@ -209,15 +213,7 @@ class EventStruct:
 ##			else:
 ##				r = 'unknown'
 		elif c == 'region':
-			_, r, _, _ = self.get_thing_string()
-			if r: r = r + '.' + self.get_event()
-			else: r = self.get_event()
-##			if self._setregion:
-##				r = self._setregion
-##			elif isinstance(s, MMNode.MMSyncArc):
-##				r = s.channel
-##			else:
-##				r = 'unknown'
+			r = self.get_region() + '.' + self.get_event()
 		elif c == 'accesskey':
 			if self._setkey:
 				r = 'accesskey(' + self._setkey + ')'
@@ -231,7 +227,7 @@ class EventStruct:
 		else:
 			print "ERROR: Unknown cause: ", c
 		d = self.get_offset()
-		if d == 0:
+		if d == None:
 			return r
 		else:
 			if d < 0:
@@ -250,10 +246,15 @@ class EventStruct:
 		if newcause in ['node', 'marker'] and not isinstance(self._syncarc.srcnode, MMNode.MMNode):
 			# Then a node is required
 			return
-		if newcause in ['node', 'delay', 'accesskey']:
+		elif newcause in ['node', 'delay', 'accesskey']:
 			# Then time information is required.
+			self.clear_vars()
 			self.set_offset(0)
-		self.clear_vars()
+		elif newcause == 'region':
+			self.clear_vars()
+			self.set_region(None)
+			self.set_event('topLayoutOpenEvent')
+			self.set_offset(0)
 		self._setcause = newcause
 	def get_event(self):
 		# Only return the element which is in EVENTS_whatever list.
@@ -307,15 +308,14 @@ class EventStruct:
 			else:
 				thing = "SomeNode"
 		elif c == 'region':
-			print "TODO: display a region properly."
-			name = "Region:"
+			name = "Top Level:"
 			readonly = 1
 			if self._setregion:
 				thing = self._setregion
 			elif isinstance(self._syncarc, MMNode.MMSyncArc):
-				thing = self._syncarc.channel
+				thing = self._syncarc.channel.name
 			else:
-				thing = "SomeRegion"
+				thing = "Unknown toplevel"
 			#return ("Region:", repr(self._syncarc.channel), 0, 0)
 		elif c == 'accesskey':
 			name = "Key:"
@@ -335,6 +335,8 @@ class EventStruct:
 			else:
 				thing = ""
 			#return ("Clock time:", self._syncarc.wallclock, 0, 0)
+		elif c == 'region':
+			return self.get_region()
 		else:
 			readonly = 1
 			thing = ""
@@ -345,24 +347,28 @@ class EventStruct:
 	def set_thing_string(self, newthing):
 		# TODO: do some sanity checking here.
 		c = self.get_cause()
-		if c == 'node':
-			self._setnode = newthing
-		elif c == 'region':
-			self._setregion = newthing
-		elif c == 'accesskey':
+		#if c == 'node':
+		#	self._setnode = newthing
+		#elif c == 'region':
+		#	self._setregion = newthing
+		if c == 'accesskey':
 			self._setkey = newthing
 		elif c in CAUSES:
 			pass
 		else:
 			print "DEBUG: Unknown cause: ", c
+			assert 0
 		return None		# return an error otherwise.
 	def get_offset(self):
 		if self._setoffset:
 			return self._setoffset
-		if self._syncarc and self._syncarc.delay and self.get_cause() in ['node', 'accesskey', 'delay']: # TODO: check these.
-			return self._syncarc.delay
+		if self._syncarc and self.get_cause() in ['node', 'accesskey', 'delay', 'region']: # TODO: check these.
+			if self._syncarc.delay:
+				return self_syncarc.delay
+			else:
+				return 0
 		else:
-			return 0
+			return None
 	def set_offset(self, newoffset):
 		self._setoffset = newoffset
 	def get_repeat(self):
@@ -387,3 +393,28 @@ class EventStruct:
 			return (None, None, None, 12, 0, 0.0, None, None, None)
 	def set_wallclock(self, value):
 		self._setwallclock = value
+	def get_region(self):
+		if self._setregion:
+			return self._setregion
+		elif self._syncarc and self._syncarc.channel:
+			return self._syncarc.channel.name
+		else:
+			return 'No viewports available'
+	def set_region(self, newregion):
+		if newregion is None:
+			# Find the first toplevel.
+			self._setregion = self.get_viewports()[0]
+			return
+		assert isinstance(newregion, type(""))
+		self._setregion = newregion
+
+	def get_viewports(self):
+		if not self._node:
+			# then we have a problem.
+			assert 0
+		viewports = self._node.context.getviewports()
+		assert len(viewports) > 0
+		names = []
+		for i in viewports:
+			names.append(i.name)
+		return names

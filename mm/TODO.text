@@ -2,7 +2,9 @@ TODO for Michael :-)
 ---------------------------------------------
 
 * Optimise the structure view.
-* Disable the 'thing' field when it's a wallclock.
+
+* Make a marker - think about this.
+* two events for toplevels - open() and close
 
 * Editing a wallclock attribute.
 * Get rid of all the debug messages.
