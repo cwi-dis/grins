@@ -51,13 +51,25 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.root = self.toplevel.root
 		self.scene_graph = None
+
+		# Drawing optimisations
 		self.drawing = 0	# A lock to prevent recursion in the draw() method of self.
 		self.redrawing = 0	# A lock to prevent recursion in redraw()
 		self.need_resize = 1	# Whether the tree needs to be resized.
-		self.dirty = 1		# Whether the scene graph needs redrawing.
+		self.need_redraw = 1	# Whether the scene graph needs redrawing.
+		self.only_redraw_selection = 0 # Whether we only need to redraw one node.
+
+		self.old_display_list = None # A display list that may be cloned and appended to.
+
+		# Selections
+		# Note that these should probably be done in a common class, e.g. the EditManager
 		self.selected_widget = None
+		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
+
+		# These two variables should be removed at some stage.
 		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
+
 		self.editmgr = self.root.context.editmgr
 
 		self.destroynode = None	# node to be destroyed later
@@ -188,7 +200,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.transitioncommands = [
 			TRANSITION(callback = self.transition_callback),
 			]
-
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
@@ -355,7 +366,7 @@ class HierarchyView(HierarchyViewDialog):
 		# XXX Very expensive...
 		if self.timescale in ('focus', 'cfocus'):
 			self.need_resize = 1
-			self.dirty = 1
+			self.need_redraw = 1
 ##			self.draw()
 		
 
@@ -372,7 +383,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.selected_widget = None
 		self.focusobj = None
 		self.scene_graph = StructureWidgets.create_MMNode_widget(self.root, self)
-		self.dirty = 1
+		self.need_redraw = 1
 		self.need_resize = 1
 		if self.window and self.focusnode:
 			self.select_node(self.focusnode)
@@ -403,84 +414,121 @@ class HierarchyView(HierarchyViewDialog):
 		# Recalculates the node structure from the MMNode structure.
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
+		self.old_display_list = None
 		self.create_scene_graph()
 
+	######################################################################
+		# Redrawing the Structure View.
+	# If you want a redraw, set flags and just call this function!!
+	#
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
 		if self.drawing == 1:
 			return
 		self.drawing = 1
 
-		self.resize_scene()	# will cause a redraw() event anyway.
-		
+		if self.need_resize:
+			self.resize_scene()	# will cause a redraw() event anyway.
+			# When you resize the canvas, a callback will make it redraw itself.
+		else:
+			# This doesn't make a callback.
+			self.draw_scene()
 		self.drawing = 0
 
 	def resize_scene(self):
 		# Set the size of the first widget.
-		if self.need_resize:
-			self.need_resize = 0
-			# Easiest to create the timemapper always
-			x,y = self.scene_graph.get_minsize()
-			self.mcanvassize = x,y
+		self.need_resize = 0
+		# Easiest to create the timemapper always
+		x,y = self.scene_graph.get_minsize()
+		self.mcanvassize = x,y
 
-			if x < 1.0 or y < 1.0:
-				print "Error: unconverted relative coordinates found. HierarchyView:497"
-			if self.timescale:
-				self.timemapper = TimeMapper.TimeMapper(self.timescale=='cfocus')
-				if self.timescale == 'global':
-					timeroot = self.scene_graph
-				else:
-					timeroot = self.focusnode.views['struct_view']
-				# Remove old timing info
-				self.scene_graph.removedependencies()
-				# Collect the minimal pixel distance for pairs of time values,
-				# and the minimum number of pixels needed to represent single time
-				# values
-				timeroot.adddependencies()
-				timeroot.addcollisions(None, None)
-				# Now put in an extra dependency so the node for which we are going to
-				# display time has enough room to the left of it to cater for the non-timed
-				# nodes to be displayed there
-				timeroot_minpos = timeroot.get_minpos()
-				t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
-				if t0 == 0:
-					self.timemapper.addcollision(0, timeroot_minpos)
-				else:
-					self.timemapper.adddependency(0, t0, timeroot_minpos)
-				print 'Minpos', t0, timeroot_minpos
-				# Work out the equations
-				self.timemapper.calculate()
-				# Calculate how many extra pixels this has cost us
-				tr_width = self.timemapper.time2pixel(t2, align='right') - \
-						self.timemapper.time2pixel(t0)
-				tr_extrawidth = tr_width - timeroot.get_minsize()[0]
-				print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
-				if tr_extrawidth > 0:
-					x = x + tr_extrawidth
-				#x = tr_width #DBG
+		if x < 1.0 or y < 1.0:
+			print "Error: unconverted relative coordinates found. HierarchyView:497"
+		if self.timescale:
+			self.timemapper = TimeMapper.TimeMapper(self.timescale=='cfocus')
+			if self.timescale == 'global':
+				timeroot = self.scene_graph
 			else:
-				self.timemapper = None
-
-			self.scene_graph.moveto((0,0,x,y))
-			self.scene_graph.recalc()
-			self.mcanvassize = x,y
-			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
-
-			self.timemapper = None
+				timeroot = self.focusnode.views['struct_view']
+			# Remove old timing info
+			self.scene_graph.removedependencies()
+			# Collect the minimal pixel distance for pairs of time values,
+			# and the minimum number of pixels needed to represent single time
+			# values
+			timeroot.adddependencies()
+			timeroot.addcollisions(None, None)
+			# Now put in an extra dependency so the node for which we are going to
+			# display time has enough room to the left of it to cater for the non-timed
+			# nodes to be displayed there
+			timeroot_minpos = timeroot.get_minpos()
+			t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
+			if t0 == 0:
+				self.timemapper.addcollision(0, timeroot_minpos)
+			else:
+				self.timemapper.adddependency(0, t0, timeroot_minpos)
+			print 'Minpos', t0, timeroot_minpos
+			# Work out the equations
+			self.timemapper.calculate()
+			# Calculate how many extra pixels this has cost us
+			tr_width = self.timemapper.time2pixel(t2, align='right') - \
+					self.timemapper.time2pixel(t0)
+			tr_extrawidth = tr_width - timeroot.get_minsize()[0]
+			print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
+			if tr_extrawidth > 0:
+				x = x + tr_extrawidth
+			#x = tr_width #DBG
 		else:
-			self.draw_scene()
-		
+			self.timemapper = None
+
+		self.scene_graph.moveto((0,0,x,y))
+		self.scene_graph.recalc()
+		self.mcanvassize = x,y
+		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
+
+		self.timemapper = None
+
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
+		# This method uses several flags for optimisations.
+		# By setting these flags, you can control which parts of the scene
+		# need to be recalculated or redrawn.
 		if self.redrawing:
 			print "Error: recursive redraws."
 			return
 		self.redrawing = 1
-		if self.dirty:
+
+		if self.need_redraw:
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
+			self.old_display_list = d
 			self.scene_graph.draw(d)
 			d.render()
-			self.dirty = 0
+			self.need_redraw = 0
+		elif self.only_redraw_selection and self.old_display_list:
+			d = self.old_display_list.clone()
+			if self.selected_widget and not self.old_selected_widget:
+				self.selected_widget.draw(d)
+			elif not self.selected_widget and self.old_selected_widget:
+				self.old_selected_widget.draw(d)
+			elif not (self.selected_widget and self.old_selected_widget):
+				pass
+			# else, draw the parent node:
+			# We now know that both are widgets, and either one or the other needs redrawing.
+			else:
+				n1 = self.old_selected_widget.node
+				n2 = self.selected_widget.node
+				if n1.IsAncestorOf(n2):
+					self.old_selected_widget.draw(d)
+				elif n2.IsAncestorOf(n1):
+					self.selected_widget.draw(d)
+				else:
+					self.selected_widget.draw(d)
+					self.old_selected_widget.draw(d)
+			
+			self.only_redraw_selection = 0
+			self.old_display_list = d
+			d.render()
+		else:
+			pass
 		self.redrawing = 0
 
 	def hide(self, *rest):
@@ -538,7 +586,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.select_node(focusobject, 1)
 				self.aftersetfocus()
 				self.need_resize = 1
-				self.dirty = 1
+				self.need_redraw = 1
 				self.draw()
 ##		else:
 ##			print "DEBUG: globalfocuschanged called but not used: ", focustype, focusobject
@@ -546,6 +594,10 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 	# Event handlers                                #
 	#################################################
+	# Note that any interactive event should probably call self.draw().
+	# Self.draw() uses a flag mechanism, and is smart enough not to waste
+	# time redrawing things that it doesn't need.
+	
 	def redraw(self, *rest):
 		# Handles redraw events, for example when the canvas is resized.
 		self.draw_scene()
@@ -562,10 +614,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.mousehity = y
 		self.click(x, y)
 
-		if self.need_resize:
-			self.draw()
-		else:
-			self.draw_scene()
+		# This is a small hack. Self.draw causes a callback which calls draw_scene,
+		# but that won't happen without the callback. Well.. -mjvdg
+		self.draw()
 
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
@@ -690,7 +741,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.refresh_scene_graph()
 		self.need_resize = 1
-		self.dirty = 1
+		self.need_redraw = 1
 		self.draw()
 
 	def kill(self):
@@ -1137,6 +1188,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
+		self.old_selected_widget = self.selected_widget
 		self.selected_widget = widget
 		self.focusobj = widget	# Used for callbacks.
 		self.prevfocusnode = self.focusnode
@@ -1148,7 +1200,7 @@ class HierarchyView(HierarchyViewDialog):
 			if scroll:
 				self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
-		self.dirty = 1
+		self.only_redraw_selection = 1
 		if not external:
 			# avoid recursive setglobalfocus
 			self.editmgr.setglobalfocus("MMNode", self.focusnode)
@@ -1189,7 +1241,7 @@ class HierarchyView(HierarchyViewDialog):
 #		else:
 #			self.select_widget(widget)
 ###			self.aftersetfocus()
-#			self.dirty = 1
+#			self.need_redraw = 1
 #		assert isinstance(widget.node, MMNode.MMNode)
 #		print "DEBUG: Hierarchyview recieved select(x,y)"
 
@@ -1231,14 +1283,14 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		self.thumbnails = not self.thumbnails
 		self.settoggle(THUMBNAIL, self.thumbnails)
-		self.dirty = 1
+		self.need_redraw = 1
 		self.draw()
 
 	def playablecall(self):
 		self.toplevel.setwaiting()
 		self.showplayability = not self.showplayability
 		self.settoggle(PLAYABLE, self.showplayability)
-		self.dirty = 1
+		self.need_redraw = 1
 		self.draw()
 
 	def timescalecall(self, which):
@@ -1265,7 +1317,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.settoggle(CORRECTLOCALTIMESCALE, 1)
 		self.refresh_scene_graph()
 		self.need_resize = 1
-		self.dirty = 1
+		self.need_redraw = 1
 		self.draw()
 
 	def bandwidthcall(self):

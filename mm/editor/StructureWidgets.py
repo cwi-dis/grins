@@ -154,7 +154,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		# XXX This is fiendishly expensive.
-##		self.mother.dirty = 1 # The root needs redrawing
+##		self.mother.need_redraw = 1 # The root needs redrawing
 ##		self.mother.draw_scene()
 
 	def getlinkicon(self):
@@ -179,12 +179,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def expandcall(self):
 		# 'Expand' the view of this node.
 		# Also, if this node is expanded, collapse it!
+		# Doesn't appear to be called.
 		if isinstance(self, StructureObjWidget):
 			if self.iscollapsed():
 				self.uncollapse()
 			else:
 				self.collapse()
-			self.mother.dirty = 1
+			self.mother.need_redraw = 1
 
 	def expandallcall(self, expand):
 		# Expand the view of this node and all kids.
@@ -194,7 +195,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.uncollapse_all()
 			else:
 				self.collapse_all()
-			self.mother.dirty = 1
+			self.mother.need_redraw = 1
 
 	def playcall(self):
 		top = self.mother.toplevel
@@ -355,20 +356,20 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapse()
 		for i in self.children:
 			i.collapse_levels(levels-1)
-		self.mother.dirty = 1
+		self.mother.need_redraw = 1
 
 	def collapse(self):
 		self.node.collapsed = 1
 		if self.collapsebutton:
 			self.collapsebutton.icon = 'closed'
-		self.mother.dirty = 1
+		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 
 	def uncollapse(self):
 		self.node.collapsed = 0
 		if self.collapsebutton:
 			self.collapsebutton.icon = 'open'
-		self.mother.dirty = 1
+		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 
 	def toggle_collapsed(self):
@@ -1449,7 +1450,7 @@ class TransitionWidget(MMWidgetDecoration):
 		# XXXX Note: this code assumes the select() is done on mousedown, and
 		# that we can still post a menu at this time.
 		self.parent.select()
-		self.mother.dirty = 1
+		self.mother.need_redraw = 1
 
 	def unselect(self):
 		self.parent.unselect()
@@ -1570,6 +1571,7 @@ class Icon(MMWidgetDecoration):
 	def draw(self, displist):
 		if self.icon is not None:
 			displist.drawicon(self.get_box(), self.icon)
+
 
 class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
