@@ -11,7 +11,7 @@ Use left mouse button to draw a box.
 Click `OK' when ready or `Cancel' to cancel."""
 _rb_done = '_rb_done' # exception to stop create_box loop
 
-import components
+import win32dialog
 import DrawTk
 from win32mu import Point,Rect
 import win32ui,win32con,win32api
@@ -105,7 +105,7 @@ class _rbtk:
 		if not modeless:
 			# display dlg (bar) with OK and CANCEL
 			f=self._topwindow._parent
-			components.CreateBoxBar(f,msg,
+			win32dialog.CreateBoxBar(f,msg,
 				callback = (self.EndModalLoop, (win32con.IDOK,)),
 				cancelCallback = (self.EndModalLoop, (win32con.IDCANCEL,)))	
 			# loop here dispatching messages until the user or the system
