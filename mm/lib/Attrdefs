@@ -528,3 +528,17 @@
 (origin (string) '' 'Origin' default
 	'Coordinates origin' normal (all))
 
+
+# time manipulations
+
+(speed (float) 1.0 'Playback speed' default
+	'Playback speed of element time' normal (all))
+
+(accelerate (float) 0.0 'Accelerate' default
+	'Proportion of the simple duration to accelerate' normal (all))
+
+(decelerate (float) 0.0 'Decelerate' default
+	'Proportion of the simple duration to decelerate' normal (all))
+
+(autoReverse (enum true false) false 'Auto reverse' default
+	'Play forwards then backwards' normal (all))
