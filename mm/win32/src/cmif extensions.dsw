@@ -207,7 +207,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libjpeg"="..\..\..\lib-src\jpeg\libjpeg.dsp" - Package Owner=<4>
+Project: "libjpeg"="..\..\..\lib-src\jpeg\win32\libjpeg.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
