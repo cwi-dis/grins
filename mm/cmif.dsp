@@ -956,6 +956,10 @@ SOURCE=.\lib\FileCache.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\FtpWriter.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\GL_window.py
 # End Source File
 # Begin Source File
