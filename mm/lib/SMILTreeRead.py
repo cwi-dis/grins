@@ -2298,7 +2298,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def FixRegpoints(self):
 		for name, dict in self.__regpoints.items():
 			self.__context.addRegpoint(name, dict)
-		del self.__regpoints
+		self.__regpoints = {}
 
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
@@ -2539,6 +2539,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__context.addRegpoint('bottomRight', {'top':1.0,'left':1.0}, 1)
 
 	def start_layout(self, attributes):
+		self.__regpoints = {}
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_head:
