@@ -48,7 +48,7 @@ class PlayerDialog:
 		it on the screen).
 
 		Arguments (no defaults):
-		coords -- the coordinates (x, y, width, height) of the 
+		coords -- the coordinates (x, y, width, height) of the
 			control panel in mm
 		title -- string to be displayed as window title
 		"""
@@ -181,7 +181,7 @@ class PlayerDialog:
 		self.__window = None
 		self.__subwins = []
 		self.__displist = None
-		
+
 	def show(self, subwindowof=None):
 		"""Show the control panel."""
 
@@ -225,7 +225,6 @@ class PlayerDialog:
 			return self.__window.setcursor(cursor)
 
 	def __resize_callback(self, dummy, window, event, val):
-		import StringStuff
 		window = self.__window
 		for w in self.__subwins:
 			w.close()
@@ -247,11 +246,11 @@ class PlayerDialog:
 			t = _titles[i]
 			d = w.newdisplaylist()
 			dummy = d.usefont(font)
-			StringStuff.centerstring(d, 0, 0, 1, 1, t)
+			d.centerstring(0, 0, 1, 1, t)
 			d.render()
 		self.setchannels(self.__channels)
 		self.setoptions(self.__options)
-		
+
 	def __determine_layout(self, d, _titles):
 		"""Determine which layout to use, horizontal or normal"""
 		w, h = d.strsize('M')
