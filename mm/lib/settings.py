@@ -4,6 +4,14 @@ __version__ = "$Id$"
 import os
 ##import windowinterface
 
+# Minimal EditMgr-like registry
+# XXXX This interface is a bit silly. Transactions are
+# optional, if you call transaction() you must also
+# call commit(), but if you leave them both out the
+# set() and friends will call them for you.
+_registry=[]
+_in_transaction = 0
+
 # some constants
 
 # enable or disable language extensions
@@ -171,7 +179,10 @@ restore()
 
 def factory_defaults():
 	global user_settings
+	if not transaction(auto=1):
+		return
 	user_settings = {}
+	commit(auto=1)
 
 def get(name):
 	real_value = user_settings.get(name)
@@ -255,14 +266,20 @@ _warned_already = 0
 def set(setting, value):
 	global _warned_already
 	import windowinterface
+	if not transaction(auto=1):
+		return
 	if setting in NEEDS_RESTART and value != get(setting) and not _warned_already:
 		_warned_already = 1
 		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect')
 	user_settings[setting] = value
+	commit(auto=1)
 
 def delete(setting):
+	if not transaction(auto=1):
+		return
 	if user_settings.has_key(setting):
 		del user_settings[setting]
+	commit(auto=1)
 
 def save():
 	try:
@@ -274,3 +291,34 @@ def save():
 			fp.write('%s = %s\n'%(name, `value`))
 	fp.close()
 	return 1
+
+def register(listener):
+	if not listener in _registry:
+		_registry.append(listener)
+
+def unregister(listener):
+	while listener in _registry:
+		_registry.remove(listener)
+
+def transaction(auto=0):
+	global _in_transaction
+	if auto and _in_transaction:
+		return
+	if not auto:
+		if _in_transaction:
+			raise 'recursive preference transaction'
+		_in_transaction = 1
+	for listener in _registry:
+		if not listener.transaction('preference'):
+			return 0
+	return 1
+
+def commit(auto=0):
+	global _in_transaction
+	if auto and _in_transaction:
+		return
+	if not auto and not _in_transaction:
+		raise 'Not in preference transaction'
+	_in_transaction = 0
+	for listener in _registry:
+		listener.commit('preference')
