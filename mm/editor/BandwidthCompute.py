@@ -75,6 +75,7 @@ class BandwidthAccumulator:
 	def reserve(self, t0, t1, bits, minbps, maxbps):
 		boxes = []
 		overflow = 0
+		nonfitbits = 0
 		count = 0
 		while 1:
 			count = count + 1
@@ -118,6 +119,7 @@ class BandwidthAccumulator:
 				tp = 'overflow'
 				if newusedbps - maxusedbps > overflow:
 					overflow = newusedbps - maxusedbps
+				nonfitbits = nonfitbits + (newusedbps - maxusedbps)*(cur_t1-t0)
 			else:
 				tp = None
 			# Note that the boxes are for drawing only. Hence we clamp them
@@ -149,10 +151,11 @@ class BandwidthAccumulator:
 			t0 = cur_t1
 			if bits <= 0:
 				break
-		return overflow, boxes
+		if nonfitbits < 0x7ffffffe:
+			nonfitbits = int(nonfitbits+1)
+		return overflow, nonfitbits, boxes
 
 	def overflowdelay(self, t0, bits, minbps, maxbps):
-		##import pdb ; pdb.set_trace() #DBG
 		count = 0
 		t1 = t0
 		while bits > 0:
@@ -167,14 +170,12 @@ class BandwidthAccumulator:
 			t0_0, oldusedbps, maxusedbps = self.used[i]
 			availbps = maxusedbps - oldusedbps
 			# See how much bandwidth we're going to use here
-			if availbps < minbps:
-				usedbps = minbps
-			elif availbps < maxbps:
+			if availbps < maxbps:
 				usedbps = availbps
 			else:
 				usedbps = maxbps
 			# See if this is sufficient
-			bits_thisslot = (next_t1-t1) * usedbps + 0.99
+			bits_thisslot = (next_t1-t1) * usedbps
 			if bits_thisslot > bits:
 				t1 = t1 + (bits / usedbps)
 				break
@@ -231,7 +232,7 @@ class BandwidthAccumulator:
 ##			# so the picture makes sense.
 ##			if t1 == t0:
 ##				t1 = t0 + 0.1
-##			dummy, boxes = self.reserve(t0, t1, size/(t1-t0), bwtype=2)
+##			dummy, dummy, boxes = self.reserve(t0, t1, size/(t1-t0), bwtype=2)
 ##			return sizeremain, t0, t1, boxes
 ##		# It did fit. Do the reservations.
 ##		boxes = []
@@ -307,7 +308,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 ##	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
 	for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
 		if bits:
-			overflow, boxes = accum.reserve(t0, t1, bits, minbps, maxbps)
+			overflow, nonfitbits, boxes = accum.reserve(t0, t1, bits, minbps, maxbps)
 			node.add_bandwidthboxes(boxes)
 			if overflow and seticons:
 				if tp == STREAM:
@@ -321,7 +322,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 					node.set_infoicon('bandwidthbad', msg)
 				else:
 					from fmtfloat import fmtfloat
-					bwdelay = accum.overflowdelay(t1, overflow, minbps, maxbps)
+					bwdelay = accum.overflowdelay(t1, nonfitbits, minbps, maxbps)
 					if bwdelay < 2:
 						ss = ""
 					else:
