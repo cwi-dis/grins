@@ -522,8 +522,7 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk, DrawTk.DrawLayer):
 		else:
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
-
-		self.SetWndCursor(cursor)
+		Sdk.SetCursor(cursor)
 		self._curcursor = strid
 
 	# return true if the cursor can change on move
