@@ -815,10 +815,6 @@ SOURCE=.\lib\win32\NTVideoDuration.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\rbtk.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\SoundDuration.py
 # End Source File
 # Begin Source File
