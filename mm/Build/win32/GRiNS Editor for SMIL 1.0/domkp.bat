@@ -121,6 +121,7 @@ echo -x Evt >> FreezeOpts
 echo -x MacOS >> FreezeOpts
 echo -x macostools >> FreezeOpts
 echo -x EasyDialogs >> FreezeOpts
+echo -x videoreader >> FreezeOpts
 echo -x mm >> FreezeOpts
 echo -x mv >> FreezeOpts
 echo -x SOCKS >> FreezeOpts
