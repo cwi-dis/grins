@@ -187,16 +187,17 @@ class _Reader:
 ##			flags = flags | QuickTime.nextTimeEdgeOK
 			self.audiocurtime = 0
 		tv = self.audiomedia.GetMediaNextInterestingTimeOnly(flags, self.audiocurtime, 1.0)
-		if tv < 0 or (self.audiocurtime and tv <= self.audiocurtime):
+##		print 'time', self.audiocurtime, 'tv', tv
+		if tv < 0 or (self.audiocurtime and tv < self.audiocurtime):
 			return self._audiotime_to_ms(self.audiocurtime), None
 ##		self.audiocurtime = tv
 		h = Res.Handle('')
 		desc_h = Res.Handle('')
 		size, actualtime, sampleduration, desc_index, actualcount, flags = \
 			self.audiomedia.GetMediaSample(h, 0, tv, desc_h, nframes)
-		print 'au', size, actualtime, sampleduration, desc_index, actualcount, flags, len(h.data)
+##		print 'au', size, actualtime, sampleduration, desc_index, actualcount, flags, len(h.data)
 		self.audiocurtime = actualtime + actualcount*sampleduration
-		print 'after in ms', self._audiotime_to_ms(self.audiocurtime)
+##		print 'after in ms', self._audiotime_to_ms(self.audiocurtime)
 ##		moviecurtime = self._videotime_to_movietime(self.audiocurtime)
 ##		self.movie.SetMovieTimeValue(moviecurtime)
 ##		self.movie.MoviesTask(0)
