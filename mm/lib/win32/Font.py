@@ -68,6 +68,10 @@ def findfont(fontname, pointsize):
 	_fontcache[key] = fontobj
 	return fontobj	
 
+def delfonts():
+	for key in _fontcache.keys():
+		_fontcache[key].close()
+
 
 # The methods of the font_object are:
 #	close()
@@ -254,7 +258,7 @@ user_charset=DEFAULT_CHARSET
 def set_win32_charset(strid):
 	global user_charset
 	if strid in win32_charsets.keys():
-		print 'setting charset to:',strid		
+		#print 'windows charset:',strid		
 		user_charset=win32_charsets[strid]
 		_fontcache.clear()
 		
