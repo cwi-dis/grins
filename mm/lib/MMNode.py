@@ -1272,12 +1272,11 @@ class MMNode:
 		self.caption_body = None
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
-		arg = self
 		if settings.noprearm:
-			srlist = [([(SCHED, arg)] + in0, [(PLAY, arg)] + out0)]
+			srlist = [([(SCHED, self)] + in0, [(PLAY, self)] + out0)]
 		else:
-			srlist = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
-				   [(PLAY, arg)] + out0)]
+			srlist = [([(SCHED, self), (ARM_DONE, self)] + in0,
+				   [(PLAY, self)] + out0)]
 		fill = self.attrdict.get('fill')
 		if fill is None:
 			if not self.attrdict.has_key('duration') and \
@@ -1287,18 +1286,18 @@ class MMNode:
 				fill = 'freeze'
 			else:
 				fill = 'remove'
-		sched_done = [(SCHED_DONE,arg)] + out1
+		sched_done = [(SCHED_DONE,self)] + out1
 		sched_stop = []
 		if fill == 'remove':
-			sched_done.append((PLAY_STOP, arg))
+			sched_done.append((PLAY_STOP, self))
 		else:
 			# XXX should be refined
-			sched_stop.append((PLAY_STOP, arg))
+			sched_stop.append((PLAY_STOP, self))
 		srlist.append(
-			([(PLAY_DONE, arg)] + in1,
-			 [(SCHED_STOPPING,arg)]))
-		srlist.append(([(SCHED_STOPPING,arg)], sched_done))
-		srlist.append(([(SCHED_STOP, arg)], sched_stop))
+			([(PLAY_DONE, self)] + in1,
+			 [(SCHED_STOPPING,self)]))
+		srlist.append(([(SCHED_STOPPING,self)], sched_done))
+		srlist.append(([(SCHED_STOP, self)], sched_stop))
 		srdict = {}
 		for events, actions in srlist:
 			action = [len(events), actions]
@@ -1651,7 +1650,8 @@ class MMNode:
 		# but the other way around it does
 ##		srlist.append( ([(TERMINATE, self.looping_body_self)],
 ##				body_terminate_actions) )
-		terminate_actions = [(TERMINATE, self.looping_body_self)]
+		terminate_actions = [(TERMINATE, self.looping_body_self),
+				     (SCHED_STOPPING, self)]
 
 		# When the body is done we stop it, and we end/restart the loop
 		srlist.append( ([(SCHED_STOPPING, self.looping_body_self)],
