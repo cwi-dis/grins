@@ -1624,7 +1624,7 @@ class LayoutView2(LayoutViewDialog2):
 		if len(nodeList) == 0 or not self.editmgr.transaction():
 			return
 		
-		self.editmgr.setclip(nodeList, owned = 1)
+		self.editmgr.setclip(nodeList)
 		
 		self.editmgr.commit()
 		
