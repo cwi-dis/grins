@@ -1410,7 +1410,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		t0 = time.time()
 		mtype = urlcache.mimetype(filename)
 		if mtype not in ('application/x-grins-project', 'application/smil'):
-			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen anyway?'):
+			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?'):
 				mtype = 'application/smil'
 		if mtype in ('application/smil', 'application/x-grins-project'):
 			import SMILTreeRead
@@ -1458,22 +1458,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					self.__import_asx(filename)
 					return
 			windowinterface.showmessage('%s is a media item.\nCreating new SMIL file around it.'%filename)
-			import SMILTreeRead
-			if mtype is None or \
-			   (mtype[:6] != 'audio/' and \
-			    mtype[:6] != 'video/'):
-				dur = ' dur="indefinite"'
-			else:
-				dur = ''
+			from MediaRead import MediaRead
+			self.root = MediaRead(self.filename, mtype, self.printfunc)
 			self.new_file = 1
-			from nameencode import nameencode
-			self.root = SMILTreeRead.ReadString('''\
-<smil>
-  <body>
-    <ref%s src=%s/>
-  </body>
-</smil>
-''' % (dur, nameencode(filename)), filename, self.printfunc)
 
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
