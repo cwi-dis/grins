@@ -129,54 +129,7 @@ canceltimer = toplevel.canceltimer
 setready=toplevel.setready
 setwaiting=toplevel.setwaiting
 
-
-# TEMPORARY HERE
-import win32con
-from pywin.mfc import dialog
-import grinsRC
-
-class OpenLocationDlg(dialog.Dialog):
-	def __init__(self,callbacks):
-		dialog.Dialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION)
-		self._callbacks=callbacks
-	def OnInitDialog(self):
-		self.HookCommand(self.OnBrowse,grinsRC.IDC_BUTTON_BROWSE)
-		self.HookCommand(self.OnEditChange,grinsRC.IDC_EDIT_LOCATION)
-		item=self.GetDlgItem(win32con.IDOK)
-		item.EnableWindow(0)
-		item=self.GetDlgItem(grinsRC.IDC_EDIT_LOCATION)
-		item.SetFocus()
-		dialog.Dialog.OnInitDialog(self)
-		return 0
-	def OnOK(self):
-		if len(self.gettext())==0:return
-		self.onEvent('Open')
-		self._obj_.OnOK()
-	def OnCancel(self):
-		self.onEvent('Cancel')
-		self._obj_.OnCancel()
-	def OnBrowse(self,id,code):
-		self.onEvent('Browse')
-	def OnEditChange(self,id,code):
-		if id==grinsRC.IDC_EDIT_LOCATION and code==win32con.EN_CHANGE:
-			if len(self.gettext()):
-				item=self.GetDlgItem(win32con.IDOK)
-				item.EnableWindow(1)
-			else:
-				item=self.GetDlgItem(win32con.IDOK)
-				item.EnableWindow(0)				
-	def settext(self,str):
-		item=self.GetDlgItem(grinsRC.IDC_EDIT_LOCATION)
-		item.SetWindowText(str)
-	def gettext(self):
-		item=self.GetDlgItem(grinsRC.IDC_EDIT_LOCATION)
-		return item.GetWindowText()
-	def onEvent(self,event):
-		try:
-			func, arg = self._callbacks[event]			
-		except KeyError:
-			pass
-		else:
-			apply(func,arg)
+genericwnd=toplevel.genericwnd
 
 
+from components import *
