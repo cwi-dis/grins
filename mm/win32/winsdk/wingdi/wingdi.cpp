@@ -10,6 +10,7 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "wingdi_dc.h"
 #include "wingdi_rgn.h"
 #include "wingdi_bmp.h"
+#include "wingdi_surf.h"
 
 PyObject *ErrorObject;
 
@@ -32,6 +33,10 @@ static struct PyMethodDef wingdi_methods[] = {
 
 	{"CreateCompatibleBitmap", (PyCFunction)Wingdi_CreateCompatibleBitmap, METH_VARARGS, ""},
 	{"CreateBitmapFromHandle", (PyCFunction)Wingdi_CreateBitmapFromHandle, METH_VARARGS, ""},
+	{"LoadImage", (PyCFunction)Wingdi_LoadImage, METH_VARARGS, ""},
+
+	{"CreateDIBSurface", (PyCFunction)Wingdi_CreateDIBSurface, METH_VARARGS, ""},
+	{"CreateDIBSurfaceFromFile", (PyCFunction)Wingdi_CreateDIBSurfaceFromFile, METH_VARARGS, ""},
 
 #ifndef _WIN32_WCE
 	{"CreatePolygonRgn", (PyCFunction)Wingdi_CreatePolygonRgn, METH_VARARGS, ""},

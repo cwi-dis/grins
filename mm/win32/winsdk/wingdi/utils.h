@@ -9,13 +9,9 @@
 #include <windows.h>
 #endif
 
-inline char* toMB(char *p) {return p;}
-inline char* toMB(WCHAR *p)
-	{
-	static char buf[512];
-	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
-	return buf;
-	}
+#ifndef INC_CHARCONV
+#include "../common/charconv.h"
+#endif
 
 extern PyObject *ErrorObject;
 
@@ -33,17 +29,18 @@ inline void seterror(const char *funcname, const char *msg)
 
 inline void seterror(const char *funcname, DWORD err)
 	{
-	TCHAR *pszmsg;
+	TCHAR* pszmsg;
 	FormatMessage( 
 		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		 NULL,
 		 err,
 		 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		 (TCHAR *) &pszmsg,
+		 (TCHAR*) &pszmsg,
 		 0,
 		 NULL 
 		);
-	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, toMB(pszmsg));
+	TextPtr tmsg(pszmsg);
+	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, tmsg.str());
 	LocalFree(pszmsg);
 	}
 
@@ -187,38 +184,13 @@ inline HGDIOBJ GetGdiObjHandle(PyObject *obj)
 	return ((GdiObj*)obj)->m_hGdiObj;
 	}
 
-// For use from a single thread
-
-#ifdef UNICODE
-inline WCHAR* toTEXT(char *p)
+inline int GetObjHandle(PyObject *obj)
 	{
-	static WCHAR wsz[512];
-	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, 512);
-	return wsz;
+	if(PyInt_Check(obj))
+		return PyInt_AsLong(obj);
+	struct WrapperObj { PyObject_HEAD; int m_h;};
+	return ((WrapperObj*)obj)->m_h;
 	}
-inline WCHAR* toTEXT(WCHAR *p)
-	{
-	return p;
-	}
-#define textchr wcschr
 
-
-#else
-
-inline char* toTEXT(char *p)
-	{
-	return p;
-	}
-inline char* toTEXT(WCHAR *p)
-	{
-	static char buf[512];
-	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
-	return buf;
-	}
-#define textchr strchr
-
-#endif
-
-
-#endif
+#endif // INC_UTILS
 
