@@ -11,9 +11,9 @@ else:
 ##################### Main Script
 import os
 import sys
-orgpath = repr(sys.path)
 
 GRINSDIR = r'\Program Files\GRiNS'
+#PYTHONDIR = r'\Program Files\Python'
 
 specificPath = "grins"
 
@@ -27,7 +27,7 @@ GRINSPATH = [
 	os.path.join(GRINSDIR, '%s\\win32' % specificPath),
 	os.path.join(GRINSDIR, '%s' % specificPath),
 
-#	os.path.join(GRINSDIR, 'common\\win32'),
+	os.path.join(GRINSDIR, 'common\\wince'),
 
 	os.path.join(GRINSDIR, 'common'),
 	os.path.join(GRINSDIR, 'lib'),
@@ -35,7 +35,6 @@ GRINSPATH = [
 ]
 
 sys.path[0:0] = GRINSPATH
-
 
 import grinsNL_CE	
 
