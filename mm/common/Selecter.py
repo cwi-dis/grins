@@ -28,14 +28,13 @@ class Selecter:
 		self.reset()
 		list = self.mkbaglist(self.userplayroot)
 		if not list:
-			return # 0 -- doesn't seem to be used -- sjoerd
+			return
 		list = self.killconflictingbags(list)
 		if not self.startbaglist(list):
-			return # 0 -- doesn't seem to be used -- sjoerd
+			return
 		self.playing = 1
 		self.updateuibaglist()
 		self.showstate()
-
 	#
 	def stop(self):
 		if self.playing:
@@ -217,6 +216,9 @@ class Selecter:
 			self.toplevel.setready()
 			dialogs.showmessage('Dangling hyperlink selected')
 			return 0
+		return self.gotonode(seek_node, dest_aid)
+
+	def gotonode(self, seek_node, dest_aid):
 		while seek_node.GetType() == 'bag':
 			dest_aid = None
 			seek_node = choosebagitem(seek_node, 1)
