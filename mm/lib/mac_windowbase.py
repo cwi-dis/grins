@@ -55,7 +55,7 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 #
 # Height of menu bar and height of window title
 #
-_screen_top_offset = 21	# XXXX Should be gotten from GetMBarHeight()
+_screen_top_offset = 26	# XXXX Should be gotten from GetMBarHeight()
 _window_top_offset=18	# XXXX Is this always correct?
 
 #
@@ -346,6 +346,7 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
+		self.defaultwinpos = 10	# 1 cm from topleft we open the first window
 
 		self._initmenu()		
 		MacOS.EnableAppswitch(0)
@@ -424,6 +425,9 @@ class _Toplevel(_Event):
 ##		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		if w <= 0 or h <= 0:
 			raise 'Illegal window size'
+		if x is None or y is None:
+			x = y = self.defaultwinpos
+			self.defaultwinpos = self.defaultwinpos + 5
 		if units == UNIT_MM:
 			x = int(x*_x_pixel_per_mm)
 			y = int(y*_y_pixel_per_mm) + _screen_top_offset
@@ -497,6 +501,7 @@ class _Toplevel(_Event):
 		"""User asked to close a window. Dispatch to correct window"""
 		window = self._find_wid(wid)
 		if not window:
+##			print 'No window for', wid #DBG
 			return 0
 		window._goaway()
 		return 1
@@ -538,7 +543,7 @@ class _CommonWindow:
 		self._eventhandlers = {}
 		self._redrawfunc = None
 		self._clickfunc = None
-
+		
 	def close(self):
 		"""Close window and all subwindows"""
 		if self._parent is None:
@@ -548,12 +553,20 @@ class _CommonWindow:
 		Win.InvalRect(self.qdrect())
 		self._parent._close_wid(self._wid)
 		self._parent = None
-		self._wid = None
 
 		for win in self._subwindows[:]:
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
+		
+		del self._subwindows
+		del self._displists
+		del self._parent
+		del self._active_displist
+		del self._eventhandlers
+		del self._redrawfunc
+		del self._clickfunc
+		del self._wid
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
@@ -760,6 +773,7 @@ class _CommonWindow:
 			func, arg = self._eventhandlers[WindowExit]
 		except KeyError:
 			sys.exc_traceback = None
+##			print 'No WindowExit handler for', self #DBG
 			return
 		func(arg, self, WindowExit, (0, 0, 0))
 		
@@ -867,6 +881,7 @@ class _Window(_CommonWindow):
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			transparent = 0):
 		
+		self._istoplevel = 1
 		_CommonWindow.__init__(self, parent, wid)
 		
 		if transparent:
@@ -943,7 +958,6 @@ class _Window(_CommonWindow):
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
-##			w._mkclip()
 
 	def _redraw(self):
 		_CommonWindow._redraw(self)
@@ -955,6 +969,7 @@ class _SubWindow(_CommonWindow):
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
 			transparent = 0, z = 0):
 		
+		self._istoplevel = 0
 		_CommonWindow.__init__(self, parent, wid, z)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates)
@@ -1039,7 +1054,6 @@ class _SubWindow(_CommonWindow):
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
-##			w._mkclip() # XXXX Needed??
 		# subtract our higher-stacked siblings
 		for w in self._parent._subwindows:
 			if w == self:
@@ -1104,6 +1118,7 @@ class _DisplayList:
 		self._window._active_displist = self
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
+		Qd.EraseRect(self._window.qdrect())
 		for i in self._list:
 			self._render_one(i)
 			
@@ -1112,7 +1127,7 @@ class _DisplayList:
 		window = self._window
 		wid = window._wid
 		
-##		print 'RENDER', cmd, entry[1:]
+##		print '  ', cmd, entry[1:] #DBG
 		if cmd == 'clear':
 			Qd.EraseRect(window.qdrect())
 ##			print 'Erased', window.qdrect(),'to', wid.GetWindowPort().rgbBkColor
