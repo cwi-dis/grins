@@ -13,7 +13,7 @@ import os
 debug = os.environ.has_key('CHANNELDEBUG')
 
 # This should be a channel option
-SECONDS_TO_BUFFER=2
+SECONDS_TO_BUFFER=4
 
 class SoundChannel(ChannelAsync):
 	node_attrs = ChannelAsync.node_attrs + ['duration', 'loop']
