@@ -13,6 +13,25 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -25,6 +44,135 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 // Dialog
 //
+
+IDD_DIALOG_OPENLOCATION DIALOG DISCARDABLE  0, 0, 273, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Open"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_LOCATION,32,22,232,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON_BROWSE,214,41,50,14
+    PUSHBUTTON      "&Open",IDOK,105,41,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,159,41,50,14
+    LTEXT           "Enter the Internet location (URL) or browse to the local file you would like to open",
+                    IDC_STATIC,7,7,259,11
+    LTEXT           "Open:",IDC_STATIC,7,24,23,8
+END
+
+IDD_LAYOUT DIALOG DISCARDABLE  0, 0, 368, 140
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,9,18,23,14
+    PUSHBUTTON      "Rename...",IDCMD_RENAME,37,18,37,14
+    PUSHBUTTON      "Delete",IDCMD_DELETE,78,18,32,14
+    LISTBOX         IDC_LAYOUTS,7,32,102,96,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "Layouts",IDC_STATIC,8,5,102,11,0,WS_EX_TRANSPARENT | 
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,124,18,26,14
+    PUSHBUTTON      "-->",IDCMD_REMOVE_CHANNEL,234,32,17,14
+    PUSHBUTTON      "Attrs...",IDCMD_ATTRIBUTES,155,18,27,14
+    LISTBOX         IDC_LAYOUT_CHANNELS,124,32,102,96,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "Layout channels",IDC_STATIC,123,5,102,11,0,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "<--",IDCMD_ADD_CHANNEL,234,51,17,14
+    LISTBOX         IDC_OTHER_CHANNELS,258,32,102,96,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "Other channels",IDC_STATIC,259,5,102,11,0,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "<close>",IDUC_CLOSE_WINDOW,330,18,29,14,NOT WS_VISIBLE
+END
+
+IDD_NEW_CHANNEL DIALOG DISCARDABLE  0, 0, 186, 76
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New channel"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Channel name:",IDC_STATIC,8,9,48,8
+    EDITTEXT        IDC_CHANNEL_NAME,67,7,112,14,ES_AUTOHSCROLL
+    LTEXT           "Choose type:",IDC_STATIC,7,30,42,8
+    COMBOBOX        IDC_CHANNEL_TYPE,68,29,112,48,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,69,55,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,55,50,14
+END
+
+IDD_LAYOUT_NAME DIALOG DISCARDABLE  0, 0, 186, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New layout"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Layout name:",IDC_STATIC,7,8,44,8
+    EDITTEXT        IDC_EDIT1,51,7,128,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,59,34,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,34,50,14
+END
+
+IDD_FORM DIALOG DISCARDABLE  0, 0, 126, 9
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_LAYOUT1 DIALOGEX 0, 0, 114, 228
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,8,27,25,13
+    PUSHBUTTON      "Rename...",IDCMD_RENAME,35,27,35,13
+    PUSHBUTTON      "Delete",IDCMD_DELETE,74,27,34,13
+    LISTBOX         IDC_LAYOUTS,6,41,102,33,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Layouts",IDC_STATIC,6,16,102,10,SS_SUNKEN
+    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,6,88,25,13
+    PUSHBUTTON      "Remove",IDCMD_REMOVE_CHANNEL,74,88,34,13
+    PUSHBUTTON      "Attrs...",IDCMD_ATTRIBUTES,35,88,35,13
+    LISTBOX         IDC_LAYOUT_CHANNELS,6,102,102,48,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Layout channels",IDC_STATIC,6,77,102,10,SS_SUNKEN
+    PUSHBUTTON      "Add to layout",IDCMD_ADD_CHANNEL,52,165,56,13
+    LISTBOX         IDC_OTHER_CHANNELS,6,178,102,41,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Other channels",IDC_STATIC,6,151,102,10,SS_SUNKEN
+    PUSHBUTTON      "X",IDCMD_CLOSE_WINDOW,98,3,10,12,NOT WS_TABSTOP
+    CTEXT           "Layout View",IDC_STATIC1,6,3,92,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME | SS_NOTIFY | 
+                    SS_SUNKEN,0,0,111,2
+END
+
+IDD_SELECT_ONE DIALOG DISCARDABLE  0, 0, 186, 47
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Select:",IDC_STATIC1,9,9,111,8
+    COMBOBOX        IDC_COMBO1,9,23,115,57,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,129,23,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,7,50,14
+END
+
+IDD_PREFERENCES DIALOG DISCARDABLE  0, 0, 222, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GRiNS Preferences"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Internet connection speed (bps)",IDC_STATIC,11,10,101,8
+    EDITTEXT        IDC_EDIT1,129,7,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Preferred language (2-char abbrev)",IDC_STATIC,11,27,
+                    111,8
+    EDITTEXT        IDC_EDIT2,129,24,40,14,ES_AUTOHSCROLL
+    CONTROL         "Closed-captions preferred over overdub",IDC_CHECK1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,43,140,10
+    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
+    DEFPUSHBUTTON   "OK",IDOK,163,73,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,73,50,14
+    PUSHBUTTON      "Restore settings",IDC_RESET,64,73,95,14
+END
 
 IDD_CREATE_BOX DIALOG DISCARDABLE  0, 0, 227, 40
 STYLE WS_CHILD
@@ -124,19 +272,19 @@ BEGIN
     PUSHBUTTON      "Export...",IDUC_EXPORT,4,73,50,14
 END
 
-IDD_NODE_INFO_CMDBAR DIALOG DISCARDABLE  0, 0, 270, 24
+IDD_NODE_INFO_CMDBAR DIALOG DISCARDABLE  0, 0, 280, 24
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     PUSHBUTTON      "Restore",IDUC_RESTORE,43,6,32,14
-    PUSHBUTTON      "Apply",IDUC_APPLY,192,6,32,14
+    PUSHBUTTON      "Apply",IDUC_APPLY,201,6,32,14
     PUSHBUTTON      "Cancel",IDUC_CANCEL,7,6,32,14
-    PUSHBUTTON      "OK",IDUC_OK,230,6,32,14
-    PUSHBUTTON      "Attributes...",IDUC_ATTRIBUTES,83,6,46,14
-    PUSHBUTTON      "Anchors...",IDUC_ANCHORS,133,6,46,14
+    PUSHBUTTON      "OK",IDUC_OK,240,6,32,14
+    PUSHBUTTON      "Attributes...",IDUC_ATTRIBUTES,90,6,46,14
+    PUSHBUTTON      "Anchors...",IDUC_ANCHORS,140,6,46,14
 END
 
-IDD_NODE_INFO_BAR DIALOG DISCARDABLE  0, 0, 281, 22
+IDD_NODE_INFO_BAR DIALOG DISCARDABLE  0, 0, 280, 24
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -179,7 +327,7 @@ BEGIN
     PUSHBUTTON      "Apply",IDUC_APPLY,171,32,35,14,NOT WS_TABSTOP
 END
 
-IDD_EXT_GROUP DIALOG DISCARDABLE  0, 0, 281, 22
+IDD_EXT_GROUP DIALOG DISCARDABLE  0, 0, 280, 22
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -189,7 +337,7 @@ BEGIN
     PUSHBUTTON      "Browse...",IDUC_BROWSE,192,3,38,14
 END
 
-IDD_INT_GROUP DIALOG DISCARDABLE  0, 0, 270, 109
+IDD_INT_GROUP DIALOG DISCARDABLE  0, 0, 280, 109
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -199,7 +347,7 @@ BEGIN
     PUSHBUTTON      "Open",IDC_OPENCHILD,0,19,33,14
 END
 
-IDD_IMM_GROUP DIALOG DISCARDABLE  0, 0, 270, 109
+IDD_IMM_GROUP DIALOG DISCARDABLE  0, 0, 280, 109
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -208,10 +356,10 @@ BEGIN
                     WS_VSCROLL
 END
 
-IDD_MESSAGE_BOX DIALOGEX 0, 0, 177, 69
+IDD_MESSAGE_BOX DIALOG DISCARDABLE  0, 0, 177, 69
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Message"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,73,50,31,14
     CONTROL         "",-1,"Static",SS_BLACKFRAME,4,2,169,44,
@@ -228,10 +376,10 @@ BEGIN
     PUSHBUTTON      "OK",IDOK,122,4,50,14
 END
 
-IDD_CREATE_BOX1 DIALOGEX 0, 0, 196, 71
+IDD_CREATE_BOX1 DIALOG DISCARDABLE  0, 0, 196, 71
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Create Box"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,96,52,31,14
     PUSHBUTTON      "Cancel",IDCANCEL,49,52,31,14
@@ -265,6 +413,297 @@ BEGIN
     PUSHBUTTON      "OK",IDOK,180,153,38,14
     LTEXT           "GRiNS",IDC_VERSION_MSG,4,156,171,8
 END
+
+IDD_EDIT_USERGROUP DIALOG DISCARDABLE  0, 0, 243, 85
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit User Group"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "User group name:",IDC_STATIC,7,9,57,8
+    EDITTEXT        IDC_EDIT1,68,7,112,14,ES_AUTOHSCROLL
+    LTEXT           "User group title:",IDC_STATIC,7,28,50,8
+    EDITTEXT        IDC_EDIT2,68,25,112,14,ES_AUTOHSCROLL
+    LTEXT           "Initial state:",IDC_STATIC,7,50,36,8
+    COMBOBOX        IDC_COMBO1,68,47,81,37,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "User override:",IDC_STATIC,7,67,45,8
+    COMBOBOX        IDC_COMBO2,68,64,81,37,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,186,62,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,186,7,50,14
+    PUSHBUTTON      "Restore",IDC_RESTORE,186,26,50,14
+    PUSHBUTTON      "Apply",IDC_APPLY,186,44,50,14
+END
+
+IDD_LINKS DIALOG DISCARDABLE  0, 0, 350, 199
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "Anchors",IDC_STATIC,7,5,102,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    LISTBOX         IDC_LIST1,7,32,102,96,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
+    CTEXT           "Links",IDC_STATIC,126,5,61,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    CTEXT           "Anchors",IDC_STATIC,200,5,102,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    LISTBOX         IDC_LIST2,200,32,102,96,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Push focus",IDC_PUSH_FOCUS1,7,132,102,14
+    PUSHBUTTON      "Anchor editor...",IDC_ANCHOR_EDITOR1,7,148,102,14
+    PUSHBUTTON      "Add...",IDC_ADD_LINK,125,116,62,14
+    PUSHBUTTON      "Edit...",IDC_EDIT_LINK,125,132,62,14
+    PUSHBUTTON      "Delete",IDC_DELETE_LINK,125,148,61,14
+    PUSHBUTTON      "Push focus",IDC_PUSH_FOCUS2,200,132,102,14
+    PUSHBUTTON      "Anchor editor...",IDC_ANCHOR_EDITOR2,200,148,102,14
+    GROUPBOX        "Current/new link Direction",IDC_LINK_D,45,170,108,24,
+                    WS_GROUP
+    CONTROL         "-->",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,51,180,24,10
+    CONTROL         "<--",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,87,180,24,
+                    10
+    CONTROL         "<-->",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,119,180,28,
+                    10
+    GROUPBOX        "Current/new link Type",IDC_LINK_T,159,170,108,24,
+                    WS_GROUP
+    CONTROL         "Jump",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,165,179,33,
+                    10
+    CONTROL         "Call",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,201,179,27,
+                    10
+    CONTROL         "Fork",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON,233,179,30,
+                    10
+    PUSHBUTTON      ">",IDC_LEFT_MENU,93,17,16,12
+    PUSHBUTTON      ">",IDC_RIGHT_MENU,286,17,16,12
+    LTEXT           "All",IDC_STATIC_LEFT,7,17,86,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    LTEXT           "All",IDC_STATIC_RIGHT,200,17,86,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    PUSHBUTTON      "Cancel",IDCANCEL,311,132,35,14,NOT WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,311,148,35,14
+    LISTBOX         IDC_LIST_LINKS,126,32,61,80,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_USERGROUP DIALOGEX 0, 0, 114, 216
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "New...",IDCMD_NEW_GROUP,6,27,29,13
+    PUSHBUTTON      "Edit...",IDCMD_EDIT_GROUP,37,27,35,13
+    PUSHBUTTON      "Delete",IDCMD_DELETE_GROUP,74,27,34,13
+    LISTBOX         IDC_GROUPS,6,41,102,169,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Groups",-1,6,16,102,10,SS_SUNKEN
+    PUSHBUTTON      "X",IDCMD_CLOSE_USERGROUPVIEW,98,3,10,12,NOT WS_TABSTOP
+    CTEXT           "User Groups",IDC_STATIC1,6,3,92,12,SS_SUNKEN,
+                    WS_EX_DLGMODALFRAME
+    CONTROL         "",-1,"Static",SS_ETCHEDFRAME | SS_NOTIFY | SS_SUNKEN,0,
+                    0,111,2
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG_OPENLOCATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 266
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 59
+    END
+
+    IDD_LAYOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 361
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 71
+    END
+
+    IDD_NEW_CHANNEL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 69
+    END
+
+    IDD_LAYOUT_NAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_FORM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 119
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 2
+    END
+
+    IDD_LAYOUT1, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        BOTTOMMARGIN, 222
+    END
+
+    IDD_SELECT_ONE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
+    END
+
+    IDD_PREFERENCES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 87
+    END
+
+    IDD_CREATE_BOX, DIALOG
+    BEGIN
+        RIGHTMARGIN, 224
+    END
+
+    IDD_GRINSEDBAR, DIALOG
+    BEGIN
+        RIGHTMARGIN, 167
+    END
+
+    IDD_EDITSTRINGATTR, DIALOG
+    BEGIN
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 18
+    END
+
+    IDD_EDITOPTIONSATTR, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 18
+    END
+
+    IDD_EDITFILEATTR, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 18
+    END
+
+    IDD_STDDLGBAR, DIALOG
+    BEGIN
+        RIGHTMARGIN, 260
+        BOTTOMMARGIN, 22
+    END
+
+    IDD_EDIT_ANCHOR_BAR, DIALOG
+    BEGIN
+        RIGHTMARGIN, 246
+        BOTTOMMARGIN, 26
+    END
+
+    IDD_ANCHOR_BAR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 54
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_NODE_INFO_CMDBAR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 272
+        BOTTOMMARGIN, 22
+    END
+
+    IDD_NODE_INFO_BAR, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 20
+    END
+
+    IDD_OKCANCELBARV, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 61
+        BOTTOMMARGIN, 66
+    END
+
+    IDD_ARC_INFO_BAR, DIALOG
+    BEGIN
+        RIGHTMARGIN, 253
+        BOTTOMMARGIN, 47
+    END
+
+    IDD_EXT_GROUP, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 18
+    END
+
+    IDD_INT_GROUP, DIALOG
+    BEGIN
+        RIGHTMARGIN, 270
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_IMM_GROUP, DIALOG
+    BEGIN
+        RIGHTMARGIN, 270
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_MESSAGE_BOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        BOTTOMMARGIN, 58
+    END
+
+    IDD_OKCANCELBARH, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 222
+        BOTTOMMARGIN, 21
+    END
+
+    IDD_CREATE_BOX1, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        BOTTOMMARGIN, 67
+    END
+
+    IDD_SPLASH, DIALOG
+    BEGIN
+        RIGHTMARGIN, 216
+    END
+
+    IDD_ABOUT, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 172
+    END
+
+    IDD_EDIT_USERGROUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 78
+    END
+
+    IDD_USERGROUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        BOTTOMMARGIN, 210
+    END
+END
+#endif    // APSTUDIO_INVOKED
 
 
 #ifndef _MAC
@@ -329,19 +768,27 @@ IDR_GRINSED             ICON    DISCARDABLE     "res\\GRiNSed.ico"
 
 IDR_GRINSED ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    "C",            ID_EDIT_COPY_GRINS,     VIRTKEY, CONTROL, NOINVERT
-    "N",            ID_FILE_NEW_GRINS,      VIRTKEY, CONTROL, NOINVERT
-    "O",            ID_FILE_OPEN_GRINS,     VIRTKEY, CONTROL, NOINVERT
-    "S",            ID_FILE_SAVE_GRINS,     VIRTKEY, CONTROL, NOINVERT
-    "V",            ID_EDIT_PASTE_GRINS,    VIRTKEY, CONTROL, NOINVERT
-    VK_BACK,        ID_EDIT_UNDO_GRINS,     VIRTKEY, ALT, NOINVERT
-    VK_DELETE,      ID_EDIT_CUT_GRINS,      VIRTKEY, SHIFT, NOINVERT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
-    VK_INSERT,      ID_EDIT_COPY_GRINS,     VIRTKEY, CONTROL, NOINVERT
-    VK_INSERT,      ID_EDIT_PASTE_GRINS,    VIRTKEY, SHIFT, NOINVERT
-    "X",            ID_EDIT_CUT_GRINS,      VIRTKEY, CONTROL, NOINVERT
-    "Z",            ID_EDIT_UNDO_GRINS,     VIRTKEY, CONTROL, NOINVERT
+    "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
+    "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
+    "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
+    "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
+    "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
+    "S",            IDUC_SAVE,              VIRTKEY, CONTROL, NOINVERT
+    "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
+    "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      IDUC_DELETE,            VIRTKEY, NOINVERT
+    VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
+    "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
+    "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_GRINS ACCELERATORS DISCARDABLE 
+BEGIN
+    "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
+    "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
+    "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
+    "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
+    VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, NOINVERT
 END
 
 
@@ -422,132 +869,6 @@ IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_CREATE_BOX, DIALOG
-    BEGIN
-        RIGHTMARGIN, 224
-    END
-
-    IDD_GRINSEDBAR, DIALOG
-    BEGIN
-        RIGHTMARGIN, 167
-    END
-
-    IDD_EDITSTRINGATTR, DIALOG
-    BEGIN
-        TOPMARGIN, 4
-        BOTTOMMARGIN, 18
-    END
-
-    IDD_EDITOPTIONSATTR, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 18
-    END
-
-    IDD_EDITFILEATTR, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 18
-    END
-
-    IDD_STDDLGBAR, DIALOG
-    BEGIN
-        RIGHTMARGIN, 260
-        BOTTOMMARGIN, 22
-    END
-
-    IDD_EDIT_ANCHOR_BAR, DIALOG
-    BEGIN
-        RIGHTMARGIN, 246
-        BOTTOMMARGIN, 26
-    END
-
-    IDD_ANCHOR_BAR, DIALOG
-    BEGIN
-        LEFTMARGIN, 4
-        RIGHTMARGIN, 54
-        TOPMARGIN, 4
-        BOTTOMMARGIN, 98
-    END
-
-    IDD_NODE_INFO_CMDBAR, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 262
-        BOTTOMMARGIN, 22
-    END
-
-    IDD_NODE_INFO_BAR, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 18
-    END
-
-    IDD_OKCANCELBARV, DIALOG
-    BEGIN
-        LEFTMARGIN, 4
-        RIGHTMARGIN, 61
-        BOTTOMMARGIN, 66
-    END
-
-    IDD_ARC_INFO_BAR, DIALOG
-    BEGIN
-        RIGHTMARGIN, 253
-        BOTTOMMARGIN, 47
-    END
-
-    IDD_EXT_GROUP, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 18
-    END
-
-    IDD_INT_GROUP, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 105
-    END
-
-    IDD_IMM_GROUP, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 105
-    END
-
-    IDD_MESSAGE_BOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 4
-        BOTTOMMARGIN, 58
-    END
-
-    IDD_OKCANCELBARH, DIALOG
-    BEGIN
-        LEFTMARGIN, 4
-        RIGHTMARGIN, 222
-        BOTTOMMARGIN, 21
-    END
-
-    IDD_CREATE_BOX1, DIALOG
-    BEGIN
-        LEFTMARGIN, 4
-        BOTTOMMARGIN, 67
-    END
-
-    IDD_SPLASH, DIALOG
-    BEGIN
-        RIGHTMARGIN, 216
-    END
-
-    IDD_ABOUT, DIALOG
-    BEGIN
-        BOTTOMMARGIN, 172
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // String Table
 //
 
@@ -587,25 +908,6 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1253)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-#endif    // Neutral (Default) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // Greek resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ELL)
@@ -613,184 +915,6 @@ IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 #pragma code_page(1253)
 #endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_DIALOG_OPENLOCATION DIALOG DISCARDABLE  0, 0, 275, 53
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Open Location"
-FONT 8, "MS Sans Serif"
-BEGIN
-    PUSHBUTTON      "Open",IDOK,108,31,50,14
-    LTEXT           "Open Location:",IDC_STATIC,10,9,50,8
-    EDITTEXT        IDC_EDIT_LOCATION,63,7,205,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Cancel",IDCANCEL,162,31,50,14
-    PUSHBUTTON      "Browse...",IDC_BUTTON_BROWSE,217,31,50,14
-END
-
-IDD_LAYOUT DIALOGEX 0, 0, 368, 140
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
-BEGIN
-    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,9,18,23,14
-    PUSHBUTTON      "Rename...",IDCMD_RENAME,37,18,37,14
-    PUSHBUTTON      "Delete",IDCMD_DELETE,78,18,32,14
-    LISTBOX         IDC_LAYOUTS,7,32,102,96,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    CTEXT           "Layouts",IDC_STATIC,8,5,102,11,0,WS_EX_TRANSPARENT | 
-                    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,124,18,26,14
-    PUSHBUTTON      "-->",IDCMD_REMOVE_CHANNEL,234,32,17,14
-    PUSHBUTTON      "Attrs...",IDCMD_ATTRIBUTES,155,18,27,14
-    LISTBOX         IDC_LAYOUT_CHANNELS,124,32,102,96,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    CTEXT           "Layout channels",IDC_STATIC,123,5,102,11,0,
-                    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "<--",IDCMD_ADD_CHANNEL,234,51,17,14
-    LISTBOX         IDC_OTHER_CHANNELS,258,32,102,96,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    CTEXT           "Other channels",IDC_STATIC,259,5,102,11,0,
-                    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "<close>",IDUC_CLOSE_WINDOW,330,18,29,14,NOT WS_VISIBLE
-END
-
-IDD_NEW_CHANNEL DIALOG DISCARDABLE  0, 0, 186, 76
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "New channel"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Name for channel:",IDC_STATIC,8,9,59,8
-    EDITTEXT        IDC_CHANNEL_NAME,67,7,112,14,ES_AUTOHSCROLL
-    LTEXT           "Choose type:",IDC_STATIC,7,30,42,8
-    COMBOBOX        IDC_CHANNEL_TYPE,68,29,112,48,CBS_DROPDOWN | CBS_SORT | 
-                    WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,69,55,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,55,50,14
-END
-
-IDD_LAYOUT_NAME DIALOG DISCARDABLE  0, 0, 186, 55
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Name for layout"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Name for layout",IDC_STATIC,7,8,50,8
-    EDITTEXT        IDC_EDIT1,59,7,120,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,59,34,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,34,50,14
-END
-
-IDD_FORM DIALOG DISCARDABLE  0, 0, 126, 9
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-END
-
-IDD_LAYOUT1 DIALOGEX 0, 0, 114, 228
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
-BEGIN
-    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,8,27,23,13
-    PUSHBUTTON      "Rename...",IDCMD_RENAME,35,27,35,13
-    PUSHBUTTON      "Delete",IDCMD_DELETE,74,27,34,13
-    LISTBOX         IDC_LAYOUTS,6,41,102,33,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Layouts",IDC_STATIC,6,16,102,10,SS_SUNKEN
-    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,6,88,23,13
-    PUSHBUTTON      "Remove",IDCMD_REMOVE_CHANNEL,74,88,34,13
-    PUSHBUTTON      "Attrs...",IDCMD_ATTRIBUTES,35,88,35,13
-    LISTBOX         IDC_LAYOUT_CHANNELS,6,102,102,48,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Layout channels",IDC_STATIC,6,77,102,10,SS_SUNKEN
-    PUSHBUTTON      "Add to layout",IDCMD_ADD_CHANNEL,52,165,56,13
-    LISTBOX         IDC_OTHER_CHANNELS,6,178,102,41,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Other channels",IDC_STATIC,6,151,102,10,SS_SUNKEN
-    PUSHBUTTON      "X",IDCMD_CLOSE_WINDOW,98,3,10,12,NOT WS_TABSTOP
-    CTEXT           "Layout View",IDC_STATIC1,6,3,92,12,SS_SUNKEN,
-                    WS_EX_DLGMODALFRAME
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME | SS_NOTIFY | 
-                    SS_SUNKEN,0,0,111,2
-END
-
-IDD_LINKS DIALOGEX 0, 0, 353, 199
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
-BEGIN
-    CTEXT           "Anchors",IDC_STATIC,7,5,102,12,0,WS_EX_DLGMODALFRAME
-    LISTBOX         IDC_LIST1,7,32,102,96,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
-                    WS_TABSTOP
-    CTEXT           "Links",IDC_STATIC,126,5,61,12,0,WS_EX_DLGMODALFRAME
-    CTEXT           "Anchors",IDC_STATIC,200,5,102,12,0,WS_EX_DLGMODALFRAME
-    LISTBOX         IDC_LIST2,200,32,102,96,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Push focus",IDC_PUSH_FOCUS1,7,132,102,14
-    PUSHBUTTON      "Anchor editor...",IDC_ANCHOR_EDITOR1,7,148,102,14
-    PUSHBUTTON      "Add...",IDC_ADD_LINK,125,116,62,14
-    PUSHBUTTON      "Edit...",IDC_EDIT_LINK,125,132,62,14
-    PUSHBUTTON      "Delete",IDC_DELETE_LINK,125,148,61,14
-    PUSHBUTTON      "Push focus",IDC_PUSH_FOCUS2,200,132,102,14
-    PUSHBUTTON      "Anchor editor...",IDC_ANCHOR_EDITOR2,200,148,102,14
-    GROUPBOX        "Current/new link Direction",IDC_STATIC,45,170,108,24,
-                    WS_GROUP
-    CONTROL         "-->",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_TABSTOP,51,180,24,10
-    CONTROL         "<--",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,87,180,24,
-                    10
-    CONTROL         "<-->",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,119,180,28,
-                    10
-    GROUPBOX        "Current/new link Type",IDC_STATIC,159,170,108,24,
-                    WS_GROUP
-    CONTROL         "Jump",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,165,179,33,
-                    10
-    CONTROL         "Call",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,201,179,27,
-                    10
-    CONTROL         "Fork",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON,233,179,30,
-                    10
-    PUSHBUTTON      ">",IDC_LEFT_MENU,93,17,16,12
-    PUSHBUTTON      ">",IDC_RIGHT_MENU,286,17,16,12
-    LTEXT           "All",IDC_STATIC_LEFT,7,17,86,12,0,WS_EX_DLGMODALFRAME
-    LTEXT           "All",IDC_STATIC_RIGHT,200,17,86,12,0,
-                    WS_EX_DLGMODALFRAME
-    PUSHBUTTON      "Cancel",IDCANCEL,311,132,35,14,NOT WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,311,148,35,14
-    LISTBOX         IDC_LIST_LINKS,126,32,61,80,LBS_SORT | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-END
-
-IDD_SELECT_ONE DIALOG DISCARDABLE  0, 0, 186, 47
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Select:",IDC_STATIC1,9,9,111,8
-    COMBOBOX        IDC_COMBO1,9,23,115,57,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,129,23,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,7,50,14
-END
-
-IDD_PREFERENCES DIALOG DISCARDABLE  0, 0, 222, 94
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GRiNS Preferences"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Internet connection speed (bps)",IDC_STATIC,11,10,101,8
-    EDITTEXT        IDC_EDIT1,129,7,40,14,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Preferred language (2-char abbrev)",IDC_STATIC,11,27,
-                    111,8
-    EDITTEXT        IDC_EDIT2,129,24,40,14,ES_AUTOHSCROLL
-    CONTROL         "Closed-captions preferred over overdub",IDC_CHECK1,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,43,140,10
-    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
-    DEFPUSHBUTTON   "OK",IDOK,163,73,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,7,73,50,14
-    PUSHBUTTON      "Restore settings",IDC_RESET,64,73,95,14
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -808,87 +932,6 @@ IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
 //
 
 IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_DIALOG_OPENLOCATION, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 268
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 46
-    END
-
-    IDD_LAYOUT, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 361
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 71
-    END
-
-    IDD_NEW_CHANNEL, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 69
-    END
-
-    IDD_LAYOUT_NAME, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 48
-    END
-
-    IDD_FORM, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 119
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 2
-    END
-
-    IDD_LAYOUT1, DIALOG
-    BEGIN
-        LEFTMARGIN, 6
-        BOTTOMMARGIN, 222
-    END
-
-    IDD_LINKS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 346
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 196
-    END
-
-    IDD_SELECT_ONE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 40
-    END
-
-    IDD_PREFERENCES, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 215
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 87
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
