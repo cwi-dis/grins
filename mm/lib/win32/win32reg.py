@@ -1,6 +1,7 @@
 
 import win32con
 import win32api
+import string
 
 class RegKey:
 	def __init__(self, key, strSubKey, accessMask = win32con.KEY_READ):
@@ -83,7 +84,45 @@ def createKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
 	else:
 		win32api.RegCloseKey(key)
 
-
+# Parse and register a registry file like formated string
+# Registry files can be created by hand or using export utility of regedit tool
+# Currently we support only strings and dwords values
+def register(regstr):
+	L = string.split(regstr, '\n')
+	rootkey = win32con.HKEY_CURRENT_USER
+	keyName = ''
+	for e in L:
+		if e and (e[0]=='[' or e[0]=='"'):
+			if e[0] == '[':
+				e = e[1:]
+				e = e[:-1]
+				path = e.split('\\')
+				if path:
+					rootkey = eval('win32con.'+path[0])
+					keyName = string.join(path[1:],'\\')
+				else:
+					keyName = ''
+				if keyName and not hasKey(keyName, rootkey): 
+					createKey(keyName, rootkey)
+			else:
+				name, info = e.split('=')
+				name = name[1:]
+				name = name[:-1]
+				if not keyName or not name or not info: 
+					continue
+				if info[0] != '"':
+					etype, val = info.split(':')
+					if etype == 'dword':
+						val = '0x' + val
+						val = eval(val)
+						setDwordKeyValue(keyName, name, val, rootkey)
+					elif etype == 'hex':
+						print 'Can not register binary values'
+					else:
+						print 'Unknown registry type', etype
+				else:
+					# string value
+					setStrKeyValue(keyName, name, info, rootkey)
 
 # if the file ext exists in the registry db and has an entry 'Content Type'
 # then this function returns content type registry value as a string 

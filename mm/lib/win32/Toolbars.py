@@ -19,6 +19,7 @@ import DropTarget
 import ToolbarTemplate
 import settings
 
+import win32reg
 import ToolbarState
 
 # temporary:
@@ -131,7 +132,7 @@ class ToolbarMixin(PanelMixin):
 
 	def _restoreToolbarState(self, usedefault = 0):
 		if self.IsFirstTime() or usedefault:
-			self.RegisterBarState(ToolbarState.DefaultState)
+			win32reg.register(ToolbarState.DefaultState)
 ##			self.PositionForFirstTime()
 ##			if self._pbar:
 ##				self._pbar.show()
@@ -346,29 +347,6 @@ class ToolbarMixin(PanelMixin):
 				apply(cb[0], (cb[1], tbcb.getvalue()))
 			else:
 				cb(tbcb.getvalue())
-
-	def RegisterBarState(self, regstr):
-		import string
-		import win32reg
-		L = string.split(regstr, '\n')
-		keyName = ''
-		for e in L:
-			if e and (e[0]=='[' or e[0]=='"'):
-				if e[0] == '[':
-					e = e[1:]
-					e = e[:-1]
-					path = e.split('\\')
-					keyName = string.join(path[1:],'\\')
-					if not win32reg.hasKey(keyName): win32reg.createKey(keyName)
-				else:
-					name, info = e.split('=')
-					name = name[1:]
-					name = name[:-1]
-					etype, eval = info.split(':')
-					if eval == 'fffffffe': val = -2
-					elif eval == '80000000': val = 0x80000000
-					else: val = string.atoi(eval, 16)
-					win32reg.setDwordKeyValue(keyName, name, int(val))
 
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent, name, barid, resid, enabledrag):
