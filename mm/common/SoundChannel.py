@@ -132,14 +132,15 @@ class SoundChannel(Channel):
 		self.armed_node = node
 		
 	def play(self, (node, callback, arg)):
+		self.node = node
+		self.cb = (callback, arg)
+		self.dummy_event_id = None
+
 		if not self.is_showing():
 			# Don't play it, but still let the duration pass
 			dummy = self.player.enter(node.t1-node.t0, 0, \
 				self.done, None)
 			return
-
-		self.node = node
-		self.cb = (callback, arg)
 
 		node.setarmedmode(ARM_PLAYING)
 
