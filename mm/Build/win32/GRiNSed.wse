@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.041
-  Title=Oratrix GRiNS 1.5 beta Installation
+  Title=Oratrix GRiNS Editor for G2, 1.5 beta Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=2460289814
+  File Checksum=1430596278
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS 1.5 beta
+  Value=Oratrix GRiNS Editor for G2, 1.5 beta
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS for G2, 1.5 beta
+  Value=GRiNS Editor for G2
   Flags=10000000
 end
 item: Set Variable
@@ -1941,30 +1941,6 @@ item: Create Shortcut
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\readme.lnk
   Icon Number=0
 end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNSed Light.exe
-  Destination=%GROUP%\GRiNSed Lite for G2.lnk
-  Icon Number=0
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNSed Light.exe
-  Destination=%DESKTOPDIR%\GRiNSed Lite for G2.lnk
-  Icon Number=0
-end
-item: End Block
-end
 item: Else Statement
 end
 item: If/While Statement
@@ -1998,9 +1974,56 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNSed Lite for G2
-  Command Line="%MAINDIR%\GRiNSed Light.exe"
-  Flags=01000000
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
 end
 item: End Block
 end
@@ -2071,9 +2094,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNSed Lite for G2
-  Command Line="%MAINDIR%\GRiNSed Light.exe"
-  Flags=01000000
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
 end
 item: End Block
 end
@@ -2096,9 +2118,32 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNSed Lite for G2
-  Command Line="%MAINDIR%\GRiNSed Light.exe"
-  Flags=01000000
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
 end
 item: End Block
 end
