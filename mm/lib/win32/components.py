@@ -93,6 +93,8 @@ class LightWeightControl:
 		style = Sdk.GetWindowLong(self._hwnd,win32con.GWL_STYLE)
 		style = style | flag
 		Sdk.SetWindowLong(self._hwnd,win32con.GWL_STYLE,style)
+	def settext(self,str):
+		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
 
 	def setcb(self,cb):
 		self._cb=cb
@@ -142,8 +144,6 @@ class CheckButton(Control):
 class Static(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
-	def settext(self,str):
-		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
 
 # Edit control class 				
 class Edit(Control):
