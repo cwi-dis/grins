@@ -1,0 +1,127 @@
+
+A simple step-by-step SMIL example with GRiNS
+
+Here is a simple example presentation that we will build step by step. We
+have a couple of images of Amsterdam canal houses from various eras and we
+want to make a small walk-through with these.
+
+These examples are of interest mainly if you want to know what SMIL
+code looks like, if you will be doing all your editing with the GRiNS
+Editor the tutorials (which can be found on www.oratrix.com) are a
+better starting place. More (and better) examples will also be put on
+the website once they become available.
+
+Of each of the examples we have made three versions:
+
+   * A black and white version, with small images, for quick download over
+     the net.
+   * A color version, with nice color images, for local viewing or for use
+     when you have a high-quality internet connection.
+   * A switched version, which uses the nifty SMIL switch and system-bitrate
+     features to dynamically switch between big color and small black and
+     white images: it uses color images if you have a connection better than
+     28.8Kbps. See the document on customizing system attribute settins for
+     details.
+
+Step one - a simple slideshow
+
+Our first version is a simple slideshow which plays all images in sequence,
+showing every image a couple of seconds. After the last image we show the
+copyright notice. We call this stroll1.smil. You can examine the SMIL source
+code too.
+
+  Black and white: stroll1.smil
+  Color: stroll1c.smil
+  Dynamic: stroll1sw.smil
+
+The top bit, the xml and doctype bits, are just boilerplate, ignore them but
+copy them to your documents.
+
+You can see that the code is very simple: the body of the presentation just
+specifies that the items should be played in <seq>uential order, and for
+each item we tell how long it should remain visible. We keep the last item
+on screen indefinite. One trick you may not have seen before the the data
+URL in the text item. This is a standard way to give the actual data in a
+place where a URL is expected, but SMIL seems to be the first to actually
+make good use of this.
+
+The third version, which switches between big and small images, basically
+has the bodies of the other two combined, with a <switch> around them and a
+system-bitrate attribute on the first item. You can add more of these items,
+for instance if you have three levels of throughput requirements (video for
+LAN usage, color for fast modems, black and white for slow modems).
+
+If you are using the online version you will notice that each document also
+contains a <base> item at the very top. This is a workaround for a problem
+with starting applications through web-browsers: the browser will save the
+SMIL document to a local file and pass that file to the GRiNS application.
+However, in this process the original URL is lost, so GRiNS does not know
+where to look for the images and other media items anymore, so we have to
+add a meta tag to explain where the base of the document is.
+
+Step two - use regions
+
+One of the things you will have noticed with the last presentation is that
+all items are shown in the top-left corner of the window, and the size of
+the window is pretty much random too. Usually, this is not what you want.
+SMIL provides <region>s with which you can control how objects are placed.
+The regions are declared in the <layout> section in the header, and the
+media objects specify in which region that are going to be displayed.
+
+Since we have had to add a <head> section for the layout we also took the
+time to add a title, which is always a good idea.
+
+  Black and white: stroll2.smil
+  Color: stroll2c.smil
+  Dynamic: stroll2sw.smil
+
+Step three - add a title
+
+For the next version we would like a title to appear over the top of the
+images, and we would also like the copyright notice to be visible during the
+whole presentation. For this we have to add two more regions to display the
+title and copyright notice.
+
+The body is also changed: the main bit is a <seq> similar to that of the
+last example, but around that there is a <par>allel construct that tells to
+play the header and copyright notice in parallel to the slideshow.
+
+  Black and white: stroll3.smil
+  Color: stroll3c.smil
+  Dynamic: stroll3sw.smil
+
+Step four - Add audio
+
+Time to add our description, and at the same time do something about the
+multi bit in our multimedia presentation. We add some audio descriptions of
+the various canal houses, describing the style they are in. This is done by
+bracketing each image with a <par> node which also contains the audio
+fragment.
+
+  Black and white: stroll4.smil
+  Color: stroll4c.smil
+  Dynamic: stroll4sw.smil
+
+Step five - synchronisation
+
+Time to get fancy: we will now use the begin and dur attributes to fine-tune
+the timing of the elements. We will show text items that give the address of
+each house that is presented, and we will have various keywords pop up in
+sync with the audio.
+
+  Black and white: stroll5.smil
+  Color: stroll5c.smil
+  Dynamic: stroll5sw.smil
+
+Step six - hyperlinks
+
+Time for the last step: adding hyperlinks. We have added a couple of red
+dots to the map, on the places where the houses displayed are located.
+Clicking on the dots will take you to the relevant section of the
+presentation, and start playing the presentation from there. If you wait
+longer than 10 seconds, however, the presentation will start automatically.
+When the presentation is finished you are shown the map again.
+
+  Black and white: stroll6.smil
+  Color: stroll6c.smil
+  Dynamic: stroll6sw.smil
