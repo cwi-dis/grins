@@ -42,6 +42,17 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 	void SetOsWindowPosSize(PNxPoint p, PNxSize s) {
 		m_positionInWindow = p;
 		m_sizeInWindow = s;
+		// Try by Jack
+		m_PNxWindow.x = p.x;
+		m_PNxWindow.y = p.y;
+		m_PNxWindow.width = s.cx;
+		m_PNxWindow.height = s.cy;
+		m_PNxWindow.clipRect.left = p.x;
+		m_PNxWindow.clipRect.top = p.y;
+		m_PNxWindow.clipRect.right = p.x+s.cx;
+		m_PNxWindow.clipRect.bottom = p.y+s.cy;
+		// End try
+		
 		m_posSizeValid = 1;
 	}
 
