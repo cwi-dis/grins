@@ -296,11 +296,21 @@ class SvgSvg(SvgElement):
 		pass
 							
 	def getSize(self):
-		return self.get('width'), self.get('height')
-
-	def getViewBox(self):
-		return self.get('viewBox')
-
+		w, h = self.get('width'), self.get('height')
+		if not w or not h:
+			if self != self.getRoot():
+				return self.getParent().getSize()
+			else:
+				# suppose a viewport meet in screen
+				viewBox = self.get('viewBox')
+				if viewBox is not None:
+					vx, vy, vw, vh = viewBox
+					xs, ys = 640.0/float(vw), 480.0/float(vh)
+					scale = min(xs, ys)
+					w, h = int(scale*vw+0.5), int(scale*vh+0.5)
+				else:
+					w, h = 640, 480
+		return w, h
 
 class SvgStyle(SvgElement):
 	def parseAttributes(self):
@@ -1388,10 +1398,7 @@ def GetSvgDocSize(svgdoc):
 	root =  svgdoc.getRoot()
 	if not root or root.getType()!='svg':
 		return 0, 0
-	width, height = root.getSize()
-	if not width or not height:
-		width, height = 0, 0
-	return width, height
+	return root.getSize()
 
 def GetSvgSizeFromSrc(source):
 	svgdoc = SvgDocument(source)
