@@ -210,7 +210,7 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'channel', 'closed']
+		namelist = ['name', 'channel', 'closed', 'comment']
 		if self.node.GetType() == 'bag':
 			namelist.append('bag_index')
 		try:
@@ -293,7 +293,7 @@ class ChannelWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['.cname', 'type']
+		namelist = ['.cname', 'type', 'comment']
 		try:
 			ctype = self.attrdict['type']
 			cclass = channelmap[ctype]
@@ -384,7 +384,7 @@ class StyleWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['type', 'channel']
+		namelist = ['type', 'channel', 'comment']
 		try:
 			# Get the channel class (should be a subroutine!)
 			ctype = self.attrdict['type']
