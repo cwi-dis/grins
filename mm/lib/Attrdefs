@@ -123,10 +123,10 @@
 
 # valid values: freeze, remove, hold, transition
 # default depends on other attributes
-(fill (enum default remove freeze transition hold) default 'Fill' fill
+(fill (enum default auto remove freeze transition hold) default 'Fill' fill
 	'Whether data should be retained on screen after playing (default depends on type of node)' normal (smil2 cmif))
 
-(fillDefault (enum default remove freeze transition hold) default 'Fill default' fill
+(fillDefault (enum inherit auto remove freeze transition hold) inherit 'Fill default' fill
 	'Default value for the fill property on the children of this node (default depends on type of node)' inherited (smil2 cmif))
 
 (font (string) 'Times-Roman' 'Font' font
@@ -269,7 +269,7 @@
 (restart (enum default always whenNotActive never) default 'Restart node' restart
 	'When can the node be restarted' raw (cmif smil2))
 
-(restartDefault (enum default always whenNotActive never) default 'Restart default' restart
+(restartDefault (enum inherit always whenNotActive never) inherit 'Restart default' restart
 	'Default value for the restart property on the children of this node' raw (cmif smil2))
 
 (scale (float) 1.0 'Scale factor' scale
@@ -293,7 +293,7 @@
 (syncBehavior (enum default canSlip locked independent) default 'Sync behavior' syncBehavior
 	'Defines the runtime synchronization behavior for an element' normal (smil2 cmif))
 
-(syncBehaviorDefault (enum default canSlip locked independent) default 'Sync behavior default' syncBehavior
+(syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' syncBehavior
 	'Default value for the syncBehavior property on the children of this node' inherited (smil2 cmif))
 
 # This is the real sync arc data structure, on the destination!!!

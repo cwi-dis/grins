@@ -1583,10 +1583,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 	def __init__(self, mother, channel):
 		GO.__init__(self, mother, channel.name)
 		self.channel = channel
-		try:
-			self.ctype = channel['type']
-		except KeyError:
-			self.ctype = '???'
+		self.ctype = channel.get('type', '???')
 		
 		self.menutitle = 'Channel %s ops' % self.name
 		ChannelBoxCommand.__init__(self)
@@ -1616,10 +1613,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 		if player.is_showing():
 			player.channel_callback(ch.name)
 			return
-		try:
-			isvis = ch.attrdict['visible']
-		except KeyError:
-			isvis = 1
+		isvis = ch.attrdict.get('visible', 1)
 		ch.attrdict['visible'] = not isvis
 		self.mother.channels_changed()
 
@@ -1661,10 +1655,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 
 		# Draw a diamond
 		cd = self.mother.context.channeldict[self.name]
-		try:
-			visible = cd['visible']
-		except KeyError:
-			visible = 1
+		visible = cd.get('visible', 1)
 		if visible:
 			color = CHANNELCOLOR
 		else:
@@ -1986,10 +1977,7 @@ class NodeBox(GO, NodeBoxCommand):
 		if self.locked:
 			color = LOCKEDCOLOR
 		else:
-			try:
-				color = armcolors[self.node.armedmode]
-			except KeyError:
-				color = nodecolor
+			color = armcolors.get(self.node.armedmode, nodecolor)
 		d.drawfbox(color, (l, t, r - l, b - t))
 
 		# If the end time was inherited, make the bottom-right
