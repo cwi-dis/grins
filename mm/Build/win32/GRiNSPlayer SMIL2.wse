@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.43.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.45.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -38,7 +38,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\Wise
+  Variable Default2=C:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1272,7 +1272,7 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=C:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
+  Source=D:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
