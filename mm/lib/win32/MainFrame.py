@@ -682,7 +682,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 
 	####=========dynamic menu
-	#	('fond', (<method Player.channel_callback of Player instance at 1c68510>, ('fond',)), 't', 1)
 	# Set the dynamic commands associated with the command class
 	def set_dynamiclist(self, command, list):
 		self._dynamiclists[command]=list
@@ -709,7 +708,15 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self._mainmenu.clear_cascade(command)
 			win32menu._create_menu(submenu,menuspec,idstart,self._dyncmds[command])
 			self.set_dyncbd(self._dyncmds[command],submenu)
-	# Helper function to return the dynamic submenu 
+		
+		# update popupmenu
+		if self._popupmenu:
+			submenu=self._popupmenu.get_cascade_menu(command)
+			if submenu:
+				self._popupmenu.clear_cascade(command)
+				win32menu._create_menu(submenu,menuspec,idstart,self._dyncmds[command])
+		
+	# Helper function to return the dynamic submenu
 	def get_cascade_menu(self,id):
 		cl=usercmdui.get_cascade(id)
 		return self._mainmenu.get_cascade_menu(cl)
