@@ -64,6 +64,15 @@ else:
 # macfreeze: path :::pylib
 # xxxx macfreeze: path :::mmpython:producer:mac:bin
 #
+# And we need to manually include the unicode codec:
+# macfreeze: include encodings
+# macfreeze: include encodings.ascii
+# macfreeze: include encodings.latin_1
+# macfreeze: include encodings.utf_16
+# macfreeze: include encodings.utf_16_be
+# macfreeze: include encodings.utf_16_le
+# macfreeze: include encodings.utf_8
+#
 # and some modules we don't want:
 # macfreeze: exclude X_window
 # macfreeze: exclude X_windowbase
