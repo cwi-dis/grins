@@ -24,7 +24,7 @@ from ArcInfoDialog import ArcInfoDialog
 
 class ArcInfo(ArcInfoDialog):
 
-	def __init__(self, root, snode, sside, delay, dnode, dside, new = 0):
+	def __init__(self, cview, root, snode, sside, delay, dnode, dside, new = 0):
 		self.new = new
 		self.root = root
 		self.context = root.context
@@ -33,6 +33,7 @@ class ArcInfo(ArcInfoDialog):
 		self.delay = delay
 		self.dnode = dnode
 		self.dside = dside
+		self.cview = cview
 		self.setchoices()
 		if self.sside: src_init = len(self.src_markers) + 1
 		else: src_init = 0
@@ -169,5 +170,19 @@ class ArcInfo(ArcInfoDialog):
 					   self.dnode, self.dside)
 			editmgr.commit()
 		self.delay_setvalue(self.delay)
+
+	def pushsrcfocus_callback(self):
+		top = self.cview.toplevel
+		top.setwaiting()
+		top.channelview.globalsetfocus(self.snode)
+		top.hierarchyview.globalsetfocus(self.snode)
+		top.setready()
+
+	def pushdstfocus_callback(self):
+		top = self.cview.toplevel
+		top.setwaiting()
+		top.channelview.globalsetfocus(self.dnode)
+		top.hierarchyview.globalsetfocus(self.dnode)
+		top.setready()
 
 showarcinfo = ArcInfo

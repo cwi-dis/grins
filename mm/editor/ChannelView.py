@@ -1229,8 +1229,8 @@ class NodeBox(GO, NodeBoxCommand):
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import ArcInfo
-		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dside,
-				    new = new)
+		ArcInfo.showarcinfo(self.mother, root, snode, sside, delay,
+				    dnode, dside, new = new)
 
 	def select(self):
 		self.unlock()
@@ -1272,10 +1272,10 @@ class NodeBox(GO, NodeBoxCommand):
 
 		# Keep space for at least one line of text
 		# bottom = max(bottom, top+f_fontheight-2)
-		if left + self.mother.new_displist.strsize('x')[0] * 1.2 > right:
-		    right = left + self.mother.new_displist.strsize('x')[0] * 1.2
-		    self.mother.discontinuities.append(
-			(self.node.t0+self.node.t1)/2)
+## 		if left + self.mother.new_displist.strsize('x')[0] * 1.2 > right:
+## 		    right = left + self.mother.new_displist.strsize('x')[0] * 1.2
+## 		    self.mother.discontinuities.append(
+## 			(self.node.t0+self.node.t1)/2)
 
 		# Update channel's lowest node
 		channel.lowest = right
@@ -1474,9 +1474,9 @@ class ArcBox(GO, ArcBoxCommand):
 	def infocall(self):
 		self.mother.toplevel.setwaiting()
 		import ArcInfo
-		ArcInfo.showarcinfo(self.mother.root, \
-			self.snode, self.sside, self.delay, \
-			self.dnode, self.dside)
+		ArcInfo.showarcinfo(self.mother, self.mother.root,
+				    self.snode, self.sside, self.delay,
+				    self.dnode, self.dside)
 		self.mother.toplevel.setready()
 
 	def delcall(self):
@@ -1490,3 +1490,9 @@ class ArcBox(GO, ArcBoxCommand):
 		mother.cleanup()
 		editmgr.commit()
 		mother.toplevel.setready()
+
+	def selnode(self, node):
+		top = self.mother.toplevel
+		top.setwaiting()
+		self.mother.globalsetfocus(node)
+		top.setready()

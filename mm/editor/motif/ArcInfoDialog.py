@@ -47,13 +47,23 @@ class ArcInfoDialog:
 
 		self.__window = windowinterface.Window(title, resizable = 1,
 					deleteCallback = (self.cancel_callback, ()))
-		self.__src_choice = self.__window.OptionMenu('From:',
+		s = self.__window.SubWindow(top = None, left = None, right = None)
+		s1 = s.SubWindow(top = None, left = None)
+		self.__src_choice = s1.OptionMenu('From:',
 					srclist, srcinit,
-					None, top = None, left = None)
-		self.__dst_choice = self.__window.OptionMenu('To:',
+					None, top = None, left = None,
+						  right = None)
+		b1 = s1.Button('Push focus', (self.pushsrcfocus_callback, ()),
+			       top = self.__src_choice, left = None,
+			       right = None, bottom = None)
+		s2 = s.SubWindow(top = None, left = s1, right = None)
+		self.__dst_choice = s2.OptionMenu('To:',
 					dstlist, dstinit,
 					None, top = None,
-					left = self.__src_choice, right = None)
+					left = None, right = None)
+		b2 = s2.Button('Push focus', (self.pushdstfocus_callback, ()),
+			       top = self.__dst_choice, left = None,
+			       right = None, bottom = None)
 		if delay > 10.0:
 			rangeinit = 2
 		elif delay > 1.0:
@@ -61,20 +71,22 @@ class ArcInfoDialog:
 		else:
 			rangeinit = 0
 		range = float(10 ** rangeinit)
-		self.__delay_slider = self.__window.Slider(None, 0, delay, range,
+		ss = self.__window.SubWindow(top = s, left = None, right = None)
+		self.__delay_slider = ss.Slider(None, 0, delay, range,
 					None,
-					top = self.__src_choice, left = None)
-		self.__range_choice = self.__window.OptionMenu(None,
+					top = None, left = None, bottom = None)
+		self.__range_choice = ss.OptionMenu(None,
 					self.__rangelist,
 					rangeinit, (self.__range_callback, ()),
-					top = self.__dst_choice,
-					left = self.__delay_slider, right = None)
+					top = None,
+					left = self.__delay_slider, right = None, bottom = None)
 		buttons = self.__window.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
 			 ('OK', (self.ok_callback, ()))],
-			left = None, top = self.__delay_slider, vertical = 0)
+			left = None, top = ss, right = None, bottom = None,
+			vertical = 0)
 		self.__window.show()
 
 	def __range_callback(self):
