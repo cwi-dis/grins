@@ -60,6 +60,8 @@ MENUBAR=(
 			(ENTRY, 'Choice parent', None, NEW_CHOICE),
 			(ENTRY, 'Alt parent', None, NEW_ALT))),
 		(ENTRY, 'New channel', 'M', NEW_CHANNEL),
+		(ENTRY, 'New layout', None, NEW_LAYOUT),
+		(SEP,),
 		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
 		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF))),
