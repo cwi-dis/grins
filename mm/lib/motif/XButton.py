@@ -5,11 +5,12 @@ from XConstants import error, TRUE, FALSE
 from XTopLevel import toplevel
 
 class _Button:
-	def __init__(self, dispobj, coordinates, z=0, times=None):
+	def __init__(self, dispobj, coordinates, z, times, sensitive):
 		self._coordinates = coordinates
 		self._dispobj = dispobj
 		self._z = z
 		self._times = times
+		self._sensitive = sensitive
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -37,6 +38,9 @@ class _Button:
 	def is_closed(self):
 		return self._dispobj is None
 
+	def setsensitive(self, sensitive):
+		self._sensitive = sensitive
+
 	def hiwidth(self, width):
 		self._hiwidth = width
 
@@ -56,6 +60,8 @@ class _Button:
 
 	# Returns true if the time is inside the temporal space
 	def _inside(self):
+		if not self._sensitive:
+			return 0
 		if self._times:
 			import time
 			curtime = time.time() - self._dispobj.starttime
@@ -76,8 +82,8 @@ class _Button:
 	##########################################
 
 class _ButtonRect(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z, times)
+	def __init__(self, dispobj, coordinates, z, times, sensitive):
+		_Button.__init__(self, dispobj, coordinates, z, times, sensitive)
 		x, y = coordinates[1:3]
 		w = coordinates[3] - x
 		h = coordinates[4] - y
@@ -157,6 +163,8 @@ class _ButtonRect(_Button):
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
 		# for now
+		if not self._sensitive:
+			return 0
 		import CheckInsideArea
 		type, bx1, by1, bx2, by2 = self._coordinates
 		if CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2) and \
@@ -165,8 +173,8 @@ class _ButtonRect(_Button):
 		return 0
 
 class _ButtonPoly(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z, times)
+	def __init__(self, dispobj, coordinates, z, times, sensitive):
+		_Button.__init__(self, dispobj, coordinates, z, times, sensitive)
 		
 	# Returns true if the point is inside the box	
 	# Warning: this method is called by the window core management every time that you move the mouse
@@ -175,6 +183,8 @@ class _ButtonPoly(_Button):
 	# For now, a not very efficient algo is implemented, but it should be better to use a system
 	# call later if possible
 	def _inside(self, x, y):
+		if not self._sensitive:
+			return 0
 		import CheckInsideArea
 		if CheckInsideArea.insidePoly(x, y, self._coordinates[1:]) and \
 			_Button._inside(self):
@@ -183,11 +193,13 @@ class _ButtonPoly(_Button):
 
 
 class _ButtonCircle(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z, times)
+	def __init__(self, dispobj, coordinates, z, times, sensitive):
+		_Button.__init__(self, dispobj, coordinates, z, times, sensitive)
 		
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
+		if not self._sensitive:
+			return 0
 		# for now
 		import CheckInsideArea
 		type, cx, cy, rd = self._coordinates
@@ -198,8 +210,8 @@ class _ButtonCircle(_Button):
 		return 0
 
 class _ButtonElipse(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z, times)
+	def __init__(self, dispobj, coordinates, z, times, sensitive):
+		_Button.__init__(self, dispobj, coordinates, z, times, sensitive)
 		
 	# Warning: this method is called by the window core management every time that you move the mouse
 	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
@@ -208,6 +220,8 @@ class _ButtonElipse(_Button):
 	# call later if possible
 	# Returns true if the point is inside the elipse	
 	def _inside(self, x, y):
+		if not self._sensitive:
+			return 0
 		# for now
 		import CheckInsideArea
 		type, cx, cy, rdx, rdy = self._coordinates
