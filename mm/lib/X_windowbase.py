@@ -238,12 +238,18 @@ class _Toplevel:
 		else:
 			# too many locals to use map()
 			for n in range(256):
-				r = (n >> xrs) & xgm
+				r = (n >> xrs) & xrm
 				g = (n >> xgs) & xgm
 				b = (n >> xbs) & xbm
 				c.append((r << rs) | (g << gs) | (b << bs))
 			lossy = 0
-		myxrgb8 = imgformat.new('myxrgb8', 'X 3:3:2 RGB top-to-bottom')
+		myxrgb8 = imgformat.new('myxrgb8', 'X 3:3:2 RGB top-to-bottom',
+					{'type':'rgb', 'b2t':0, 'size':8,
+					 'align':8,
+					 # the 3,3,2 below are not
+					 # necessarily correct, but they
+					 # are not used anyway
+					 'comp':((rs,3),(gs,3),(bs,2))})
 		cmap = imgcolormap.new(reduce(lambda x, y: x + '000' + chr(y),
 					      c, ''))
 		imgconvert.addconverter(imgformat.xrgb8, imgformat.myxrgb8,
