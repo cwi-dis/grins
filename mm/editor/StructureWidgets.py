@@ -113,12 +113,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			othernode = b.refnode()
 			if othernode:
 				# Known bug: TODO: I'm not worrying if the node is collapsed.
+				# TODO: Add end events also.
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
-					icon = self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu)
+					icon = self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu_dest)
 				else:
 					icon.add_arrow(otherwidget)
-				print "DEBUG: icon is: ", icon
 				otherwidget.add_arrow(icon)
 
 	def collapse_levels(self, level):
@@ -209,7 +209,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def set_infoicon(self, icon, msg=None):
 		# Sets the information icon to this icon.
 		# icon is a string, msg is a string.
-		# print "DEBUG: set_infoicon called!"
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		self.iconbox.add_icon(icon, callback = self.show_mesg)
@@ -217,7 +216,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
 		if not self.cause_event_icon:
-			self.cause_event_icon = self.iconbox.add_icon('happyface').set_properties(arrowable = 1, arrowdirection=1)
+			self.cause_event_icon = self.iconbox.add_icon('happyface').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
 
 	def getlinkicon(self):
@@ -537,12 +536,9 @@ class StructureObjWidget(MMNodeWidget):
 			p.need_resize = 1
 			p = p.parent_widget
 
-	def draw_border(self, display_list):
+	def draw_selected(self, displist):
 		# Called from self.draw or from the mother when selection is changed.
-		if self.selected:
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
+		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 
 	def draw(self, displist):
 		# This is a base class for other classes.. this code only gets
@@ -570,8 +566,7 @@ class StructureObjWidget(MMNodeWidget):
 		if self.timeline:
 			self.timeline.draw(displist)
 			
-		# And finally..
-		self.draw_border(displist)
+		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
 
 	def adddependencies(self):
 		MMNodeWidget.adddependencies(self)
@@ -594,7 +589,7 @@ class StructureObjWidget(MMNodeWidget):
 #
 class HorizontalWidget(StructureObjWidget):
 	# All widgets drawn horizontally; e.g. sequences.
-	def draw(self, display_list):
+	def draw(self, displist):
 		# Draw those funny vertical lines.
 		if self.iscollapsed():
 			l,t,r,b = self.pos_abs
@@ -604,9 +599,9 @@ class HorizontalWidget(StructureObjWidget):
 			step = 8
 			if r > l:
 				while i < r:
-					display_list.drawline(TEXTCOLOR, [(i, t),(i, b)])
+					displist.drawline(TEXTCOLOR, [(i, t),(i, b)])
 					i = i + step
-		StructureObjWidget.draw(self, display_list)
+		StructureObjWidget.draw(self, displist)
 
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
@@ -627,7 +622,6 @@ class HorizontalWidget(StructureObjWidget):
 		# Everything here calculated in pixels.
 		if self.iscollapsed():
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-			# print "Seq: collapsed; returning ", boxsize, boxsize
 			return boxsize, boxsize
 		
 		xgap = sizes_notime.GAPSIZE
@@ -684,18 +678,10 @@ class HorizontalWidget(StructureObjWidget):
 			StructureObjWidget.recalc(self)
 			return
 
-		# Umm. recalc isn't even being called now!
-		#if self.need_recalc == 0 and self.old_pos == self.pos_abs:
-		#	print "DEBUG: 'Ha! I don't need to recalc my size', says the ", self
-		#	return
-		#else:
-		#	print "DEBUG: ", self.need_recalc, self.old_pos, self.pos_abs
-		
 		l, t, r, b = self.pos_abs
 		if self.timeline and not TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
 			b = b - tl_h
-		# print "SeqWidget.recalc: l,t,r,b = ", l,t,r,b
 		min_width, min_height = self.get_minsize()
 		
 		free_width = ((r-l) - min_width)
@@ -712,12 +698,6 @@ class HorizontalWidget(StructureObjWidget):
 			t = t + tl_h
 			min_height = min_height - tl_h
 			
-##		if self.is_timed:
-##			free_width = 0
-##		elif free_width < 0:
-##
-##			print "Warning! free_width is less than 0.0!:", free_width
-##			free_width = 0
 		# Always set free_width to zero. No way we can do this if a node halfway can
 		# suddenly be timed and therefore take up lots of space.
 		free_width = 0
@@ -871,7 +851,6 @@ class VerticalWidget(StructureObjWidget):
 		free_height = (b-t) - min_height
 		
 		if free_height < 0: #or free_height > 1.0:
-#		   print "Warning! free_height is wrong: ", free_height, self
 			free_height = 0
 		
 		l_par = float(l) + sizes_notime.HEDGSIZE
@@ -919,9 +898,7 @@ class VerticalWidget(StructureObjWidget):
 
 		StructureObjWidget.recalc(self)
 
-	def draw(self, display_list):
-		# print "Draw: Verticle widget ", self.get_box()
-		# Draw those stupid horizontal lines.
+	def draw(self, displist):
 		if self.iscollapsed():
 			l,t,r,b = self.pos_abs
 			i = t + sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE
@@ -930,9 +907,9 @@ class VerticalWidget(StructureObjWidget):
 			step = 8
 			if r > l:
 				while i < b:
-					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
+					displist.drawline(TEXTCOLOR, [(l, i),(r, i)])
 					i = i + step
-		StructureObjWidget.draw(self, display_list)
+		StructureObjWidget.draw(self, displist)
 
 	def addcollisions(self, mastert0, mastertend):
 		self.is_timed = 1
@@ -998,34 +975,26 @@ class SeqWidget(HorizontalWidget):
 			return self.channelbox
 		return HorizontalWidget.get_obj_at(self, pos)
 
-	def draw(self, display_list):
-		# print "DEBUG: seq drawing ", self.get_box()
+	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = SEQCOLOR
 		else:
 			color = SEQCOLOR_NOPLAY
 
-		display_list.drawfbox(color, self.get_box())
-
-##		if self.selected: 
-##			#display_list.drawfbox(self.highlight(color), self.get_box())
-##			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-##		else:
-##			#display_list.drawfbox(color, self.get_box())
-##			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+		displist.drawfbox(color, self.get_box())
 
 		if self.channelbox and not self.iscollapsed():
-			self.channelbox.draw(display_list)
+			self.channelbox.draw(displist)
 
 		# Uncomment to redraw pushback bars.
 		#for i in self.children:
 		#	if isinstance(i, MediaWidget) and i.pushbackbar:
-		#		i.pushbackbar.draw(display_list)
+		#		i.pushbackbar.draw(displist)
 
 		if self.dropbox and not self.iscollapsed():
-			self.dropbox.draw(display_list)
-		HorizontalWidget.draw(self, display_list)
+			self.dropbox.draw(displist)
+		HorizontalWidget.draw(self, displist)
 
 	def adddependencies(self):
 		# Sequence widgets need a special adddependencies, because we want to calculate the
@@ -1128,13 +1097,11 @@ class UnseenVerticalWidget(StructureObjWidget):
 		return -1
 
 	def recalc(self):
-		# Untested.
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
 		
-		# print "DEBUG: UnseenVerticleWidget: position is: ", self.pos_abs
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self)
 			return
@@ -1192,14 +1159,14 @@ class UnseenVerticalWidget(StructureObjWidget):
 			self.timeline.moveto((l, t, r, my_b))
 		StructureObjWidget.recalc(self)
 
-	def draw(self, display_list):
+	def draw(self, displist):
 		# We want to draw this even if pushback bars are disabled.
 		for i in self.children:
 			#if isinstance(i, MediaWidget):
-			#	i.pushbackbar.draw(display_list)
-			i.draw(display_list)
+			#	i.pushbackbar.draw(displist)
+			i.draw(displist)
 		if self.timeline:
-			self.timeline.draw(display_list)
+			self.timeline.draw(displist)
 
 	def adddependencies(self):
 		for ch in self.children:
@@ -1214,62 +1181,62 @@ class UnseenVerticalWidget(StructureObjWidget):
 #
 class ParWidget(VerticalWidget):
 	# Parallel node
-	def draw(self, display_list):
+	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = PARCOLOR
 		else:
 			color = PARCOLOR_NOPLAY
-		display_list.drawfbox(color, self.get_box())
-		VerticalWidget.draw(self, display_list)
+		displist.drawfbox(color, self.get_box())
+		VerticalWidget.draw(self, displist)
 
 # and so forth..
 class ExclWidget(SeqWidget):
 	# Exclusive node.
-	def draw(self, display_list):
+	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = EXCLCOLOR
 		else:
 			color = EXCLCOLOR_NOPLAY
-		display_list.drawfbox(color, self.get_box())
-		StructureObjWidget.draw(self, display_list)
+		displist.drawfbox(color, self.get_box())
+		StructureObjWidget.draw(self, displist)
 
 
 class PrioWidget(SeqWidget):
 	# Prio node (?!) - I don't know what they are, but here is the code I wrote! :-)
-	def draw(self, display_list):
+	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = PRIOCOLOR
 		else:
 			color = PRIOCOLOR_NOPLAY
-		display_list.drawfbox(color, self.get_box())
+		displist.drawfbox(color, self.get_box())
 ##		if self.selected:
-##			#display_list.drawfbox(self.highlight(color), self.get_box())
-##			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+##			#displist.drawfbox(self.highlight(color), self.get_box())
+##			displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 ##		else:
-##			#display_list.drawfbox(color, self.get_box())
-##			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-		StructureObjWidget.draw(self, display_list)
+##			#displist.drawfbox(color, self.get_box())
+##			displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+		StructureObjWidget.draw(self, displist)
 
 
 class SwitchWidget(VerticalWidget):
 	# Switch Node
-	def draw(self, display_list):
+	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = ALTCOLOR
 		else:
 			color = ALTCOLOR_NOPLAY
-		display_list.drawfbox(color, self.get_box())
+		displist.drawfbox(color, self.get_box())
 ##		if self.selected:
-##			#display_list.drawfbox(self.highlight(color), self.get_box())
-##			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+##			#displist.drawfbox(self.highlight(color), self.get_box())
+##			displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 ##		else:
-##			#display_list.drawfbox(color, self.get_box())
-##			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-		VerticalWidget.draw(self, display_list)
+##			#displist.drawfbox(color, self.get_box())
+##			displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+		VerticalWidget.draw(self, displist)
 
 
 ##############################################################################
@@ -1338,8 +1305,6 @@ class MediaWidget(MMNodeWidget):
 	def show_mesg(self):
 		if self.node.errormessage:
 			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
-		#else:
-		#	print "DEBUG: No message."
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
@@ -1376,26 +1341,28 @@ class MediaWidget(MMNodeWidget):
 	def get_maxsize(self):
 		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
 
-	def draw(self, displist):
-		# print "DEBUG: MediaWidget.draw:", self.get_box()
-		x,y,w,h = self.get_box()	 
-		y = y + sizes_notime.TITLESIZE
-		h = h - sizes_notime.TITLESIZE
-		
-		willplay = not self.mother.showplayability or self.node.WillPlay()
-		ntype = self.node.GetType()
+	def draw_selected(self, displist):
+		displist.drawfbox((255,255,255), self.get_box())
+		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+		self.__draw(displist)
 
+	def draw(self, displist):
+		# Only draw unselected.
+		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = LEAFCOLOR
 		else:
 			color = LEAFCOLOR_NOPLAY
-						
-		if self.selected:
-			displist.drawfbox(self.highlight(color), self.get_box())
-			displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			displist.drawfbox(color, self.get_box())
-			displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
+		displist.drawfbox(color, self.get_box())
+		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+		self.__draw(displist)
+
+	def __draw(self, displist):
+		x,y,w,h = self.get_box()	 
+		y = y + sizes_notime.TITLESIZE
+		h = h - sizes_notime.TITLESIZE
+		
+		ntype = self.node.GetType()
 
 		# Draw the image.
 		if self.node.GetChannelType() == 'brush':
@@ -1442,7 +1409,6 @@ class MediaWidget(MMNodeWidget):
 		if self.mother.transboxes:
 			self.transition_in.draw(displist)
 			self.transition_out.draw(displist)
-	draw_border = draw
 
 	def __get_image_filename(self):
 		# I just copied this.. I don't know what it does. -mjvdg.
@@ -1452,7 +1418,6 @@ class MediaWidget(MMNodeWidget):
 		if url:
 			media_type = MMmimetypes.guess_type(url)[0]
 		else:
-			#print "DEBUG: get_image_filename : url is None."
 			return None
 		
 		channel_type = self.node.GetChannelType()
@@ -1575,7 +1540,7 @@ class PushBackBarWidget(MMWidgetDecoration):
 		displist.drawfbox(LEAFCOLOR, (x+w*redfraction, y, w*(1-redfraction), h))
 		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, COLCOLOR, FOCUSBOTTOM, self.get_box())
 
-	def drawselected(self, displist):
+	def draw_selected(self, displist):
 		redfraction = self.parent.downloadtime_lag_errorfraction
 		x, y, w, h = self.get_box()
 		displist.fgcolor(TEXTCOLOR)
@@ -1617,7 +1582,7 @@ class TimelineWidget(MMWidgetDecoration):
 			tick_x = self.mother.timemapper.interptime2pixel(time)
 			self.ticks.append((time, tick_x))
 		
-	def draw(self, display_list):
+	def draw(self, displist):
 		x, y, w, h = self.get_box()
 		if TIMELINE_AT_TOP:
 			line_y = y + (h/2)
@@ -1642,26 +1607,26 @@ class TimelineWidget(MMWidgetDecoration):
 		starttime, dummy, oldright = self.time_segments[0]
 		stoptime, dummy, dummy = self.time_segments[-1]
 		for time, left, right in self.time_segments[1:]:
-			display_list.drawline(TEXTCOLOR, [(oldright, line_y), (left, line_y)])
+			displist.drawline(TEXTCOLOR, [(oldright, line_y), (left, line_y)])
 			if time != stoptime:
-				display_list.drawline(COLCOLOR, [(left, line_y), (right, line_y)])
+				displist.drawline(COLCOLOR, [(left, line_y), (right, line_y)])
 			oldright = right
-		halflabelwidth = display_list.strsize('000:00 ')[0]/2
+		halflabelwidth = displist.strsize('000:00 ')[0]/2
 		lastlabelpos = x
-		display_list.usefont(f_timescale)
+		displist.usefont(f_timescale)
 		for time, tick_x in self.ticks:
 			# Check whether it is time for a tick
 			if int(time) % 10 in (0, 5) and tick_x > lastlabelpos + halflabelwidth:
 				lastlabelpos = tick_x + halflabelwidth
 				cur_tick_top = longtick_top
 				cur_tick_bot = longtick_bot
-				display_list.centerstring(tick_x-halflabelwidth, label_top,
+				displist.centerstring(tick_x-halflabelwidth, label_top,
 					tick_x+halflabelwidth, label_bot, '%02d:%02.2d'%(int(time)/60, int(time)%60))
 			else:
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
-			display_list.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])			
-
+			displist.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])			
+	draw_selected = draw
 
 # A box with icons in it.
 # Comes before the node's name.
@@ -1723,20 +1688,14 @@ class IconBox(MMWidgetDecoration):
 		else:
 			return 0
 
-	def draw(self, display_list):
+	def draw(self, displist):
 		l,t,r,b = self.pos_abs
-		#if self.selected_iconname:
-		#	i = self.iconlist.index(self.selected_iconname)
-		#	display_list.drawfbox((0,0,0), (l+i*ICONSIZE,t,ICONSIZE,ICONSIZE))
 		for iconname in self.iconlist:
 			i = self._icons[iconname]
 			i.moveto((l,t,r,b))
-			i.draw(display_list)
-			#display_list.drawicon((l,t,0,0),icon)
-			#arrowto = self._icons[icon][2]
-			#if arrowto is not None:
-			#	self.displaylist.drawarrow(arrowto['color'],(l,t),arrowto['dest'])
+			i.draw(displist)
 			l = l + ICONSIZE
+	draw_selected = draw
 
 	def __get_icon_name(self, x):
 		l,t,r,b = self.pos_abs
@@ -1756,31 +1715,11 @@ class IconBox(MMWidgetDecoration):
 		icon = self.__get_icon(x)
 		if icon:
 			icon.mouse0release(coords)
-			#callback = icon[0]
-			#if callback:
-			#	# Call the callback.
-			#	apply(callback)
-			#else:
-			#	pass # Maybe select the widget here?
 		else:
 			return
 		
 		#if self.callback:
 		#	apply(apply, self.callback)
-
-#	def select(self):
-#		x,y = self.remember_click
-#		self.selected_iconname = self.__get_icon_name(x)
-#		print "DEBUG: self.selected_icon is: ", self.selected_iconname
-#		self.mother.need_redraw = 1
-#		print "TODO: optimise redraws here."
-#		if self.selected_iconname:
-	#		self._icons[self.selected_iconname].select()
-
-#	def unselect(self):
-#		if self.selected_iconname:
-#			self._icons[self.selected_iconname].unselect()
-#		self.selected_iconname = None
 
 
 class Icon(MMWidgetDecoration):
@@ -1812,29 +1751,19 @@ class Icon(MMWidgetDecoration):
 		return self
 
 	def select(self):
-		print "DEBUG: Icon selected.", self
 		if self.selectable:
-			self.mother.need_redraw = 1 # TODO: optimise.
 			MMWidgetDecoration.select(self)
 	def unselect(self):
-		print "DEBUG: Icon unselected.", self
 		if self.selectable:
-			self.mother.need_redraw = 1
 			MMWidgetDecoration.unselect(self)
 
 	def set_callback(self, callback, args=()):
-##		print "DEBUG: callback set."
 		self.callback = callback, args
 		return self
 
 	def mouse0release(self, coords):
-##		print "DEBUG: doing the callback."
-##		print "DEBUG: ", self.callback, self.icon
 		if self.callback and self.icon:
-			# Freaky code that Sjoerd showed me: -mjvdg
 			apply(apply, self.callback)
-##		else:
-##			print "DEBUG: no callback."
 
 	def moveto(self, pos):
 		l,t,r,b = pos
@@ -1843,27 +1772,30 @@ class Icon(MMWidgetDecoration):
 		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
 		return self
 
+	def draw_selected(self, displist):
+		if not self.selectable:
+			self.draw(displist)
+			return
+		displist.drawfbox((0,0,0),self.get_box())
+		self.draw(displist)
+		if self.arrowable:	# The arrows get drawn by the Hierarchyview at a later stage.
+			for arrow in self.arrowto:
+				l,t,r,b = arrow.pos_abs
+				if l == 0:
+					return
+				xd = (l+r)/2
+				yd = (t+b)/2
+				l,t,r,b = self.pos_abs
+				xs = (l+r)/2
+				ys = (t+b)/2
+				if self.arrowdirection:
+					self.mother.add_arrow(ARROWCOLOR, (xs,ys),(xd,yd))
+				else:
+					self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
+
 	def draw(self, displist):
 		if self.icon is not None:
-			if self.selected:
-				displist.drawfbox((0,0,0),self.get_box())
 			displist.drawicon(self.get_box(), self.icon)
-
-			if self.arrowable and self.selected:
-				for arrow in self.arrowto:
-					l,t,r,b = arrow.pos_abs
-					if l == 0:
-						return
-					xd = (l+r)/2
-					yd = (t+b)/2
-					l,t,r,b = self.pos_abs
-					xs = (l+r)/2
-					ys = (t+b)/2
-					if self.arrowdirection:
-						self.mother.add_arrow(ARROWCOLOR, (xs,ys),(xd,yd))
-					else:
-						self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
-					#displist.drawarrow(ARROWCOLOR,(xd,yd),(xs,ys))
 
 	def set_contextmenu(self, foobar):
 		self.contextmenu = foobar			# TODO.
@@ -1876,6 +1808,9 @@ class Icon(MMWidgetDecoration):
 		if dest and dest not in self.arrowto:
 			self.arrowto.append(dest)
 		return self
+
+	def is_selectable(self):
+		return self.selectable
 
 class CollapseIcon(Icon):
 	# For collapsing and uncollapsing nodes
@@ -1932,7 +1867,6 @@ class ImageBoxWidget(MMWidgetDecoration):
 
 	def draw(self, displist):
 		x,y,w,h = self.get_box()	 
-		# print "DEBUG: ImageBoxWidget drawing at: ", x,y,w,h
 		
 		# Draw the image.
 		image_filename = self._get_image_filename()

@@ -57,9 +57,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.redrawing = 0	# A lock to prevent recursion in redraw()
 		self.need_resize = 1	# Whether the tree needs to be resized.
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
-		self.only_redraw_selection = 0 # Whether we only need to redraw one node.
 
-		self.old_display_list = None # A display list that may be cloned and appended to.
+		self.base_display_list = None # A display list that may be cloned and appended to.
 
 		# Selections
 		self.selected_widget = None # Is a MMWidget, which could resemble a node or a widget.
@@ -67,8 +66,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.selected_icon = None
 		self.begin_event_source = None
 
-		# These two variables should be removed at some stage.
-		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
+		# Remove sometime.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
 
 		self.editmgr = self.root.context.editmgr
@@ -357,15 +355,12 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Forcidably change the pop-up menu if we have selected an Icon.
 		if self.selected_icon is not None:
-			print "DEBUG: after set focus: elected icon!"
 			a = self.selected_icon.get_contextmenu()
 			if a is not None:
 				self.setpopup(a)
 			else:
-				print "DEBUG: after set focus: icon has no popup menu."
 				self.setpopup(popupmenu)
 		else:
-			print "DEBUG: after set focus: No selected icon."
 			self.setpopup(popupmenu)
 
 		self.setstate()
@@ -393,7 +388,6 @@ class HierarchyView(HierarchyViewDialog):
 		# and create a scene graph from it.
 		# As such, any old references into the old scene graph need to be reinitialised.
 		self.selected_widget = None
-		self.focusobj = None
 		self.scene_graph = StructureWidgets.create_MMNode_widget(self.root, self)
 		self.need_redraw = 1
 		self.need_resize = 1
@@ -427,7 +421,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Recalculates the node structure from the MMNode structure.
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
-		self.old_display_list = None
+		self.base_display_list = None
 		self.create_scene_graph()
 
 	######################################################################
@@ -527,54 +521,21 @@ class HierarchyView(HierarchyViewDialog):
 
 ##		import time
 
-		if self.need_redraw:
-			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
-			self.old_display_list = d
-##			print "DEBUG: scene_graph.draw()" , time.time()
-			self.scene_graph.draw(d)
-##			print "DEBUG: done drawing. Rendering..", time.time()
-			self.draw_arrows(d)
-			d.render()
-##			print "DEBUG: Done rendering. ", time.time()
+		if self.need_redraw or not self.base_display_list:
+			# Make a new display list.
+			self.base_display_list = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
+			self.scene_graph.draw(self.base_display_list) # Keep it for later!
 			self.need_redraw = 0
-		elif self.only_redraw_selection and self.old_display_list:
-##			print "DEBUG: using old display list."
-			d = self.old_display_list.clone()
 
-## Damn, and this was really cool code:
-## So cool, that maybe I'd better document this.
-## This redraws the unselected and selected node; if one is a child of another then
-## it only redraws the parent.
-##			if self.selected_widget and not self.old_selected_widget:
-##				self.selected_widget.draw(d)
-##			elif not self.selected_widget and self.old_selected_widget:
-##				self.old_selected_widget.draw(d)
-##			elif not (self.selected_widget and self.old_selected_widget):
-##				pass
-##			# else, draw the parent node:
-##			# We now know that both are widgets, and either one or the other needs redrawing.
-##			else:
-##				n1 = self.old_selected_widget.node
-##				n2 = self.selected_widget.node
-##				if n1.IsAncestorOf(n2):
-##					self.old_selected_widget.draw(d)
-##				elif n2.IsAncestorOf(n1):
-##					self.selected_widget.draw(d)
-##				else:
-##					self.selected_widget.draw(d)
-##					self.old_selected_widget.draw(d)
+		d = self.base_display_list.clone()
+		if self.selected_widget:
+			self.selected_widget.draw_selected(d)
+		if self.selected_icon:
+			self.selected_icon.draw_selected(d)
 
-			if self.selected_widget:
-				self.selected_widget.draw_border(d)
-			if self.old_selected_widget:
-				self.old_selected_widget.draw_border(d)
-
-			self.only_redraw_selection = 0
-			self.old_display_list = d
-			self.draw_arrows(d)
-			d.render()
-		else:
-			pass
+		# Draw the arrows on top.
+		self.draw_arrows(d)
+		d.render()
 		self.redrawing = 0
 
 	def add_arrow(self, color, source, dest):
@@ -644,10 +605,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.aftersetfocus()
 				self.need_resize = 0
 				self.need_redraw = 0
-				self.only_redraw_selection = 1
 				self.draw()
-##		else:
-##			print "DEBUG: globalfocuschanged called but not used: ", focustype, focusobject
 
 	#################################################
 	# Event handlers                                #
@@ -684,7 +642,6 @@ class HierarchyView(HierarchyViewDialog):
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_clicked_obj_at((x,y))
-##		print "DEBUG: mouse0release, object is: ", obj
 		if obj:
 ##			import time
 ##			print "DEBUG: releasing mouse.." , time.time()
@@ -799,7 +756,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.destroynode.Destroy()
 		self.destroynode = None
 		self.selected_widget = None
-		self.focusobj = None
+		self.selected_widget = None
 		self.focusnode = None
 
 		self.refresh_scene_graph()
@@ -1184,7 +1141,7 @@ class HierarchyView(HierarchyViewDialog):
 	def cleanup(self):
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
-		self.focusobj = None
+		self.selected_widget = None
 		self.selected_widget = None
 
 	# Navigation functions
@@ -1251,9 +1208,9 @@ class HierarchyView(HierarchyViewDialog):
 			self.selected_widget.unselect()
 		if isinstance(self.selected_icon, StructureWidgets.Icon):
 			self.selected_icon.unselect()
+			self.selected_icon = None
 
 		# Remove these two lines of code at some stage.
-		self.focusobj = widget	# Used for callbacks.
 		self.prevfocusnode = self.focusnode
 
 		# Now select the widget.
@@ -1261,8 +1218,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusnode = None
 		else:			# All cases where the widget is not None follow here:
 			if isinstance(widget, StructureWidgets.MMWidgetDecoration):
-				if isinstance(widget, StructureWidgets.Icon):
-					print "DEBUG: Clicked on an icon!"
+				if isinstance(widget, StructureWidgets.Icon) and widget.is_selectable():
 					if self.selected_icon is not widget:
 						self.selected_icon = widget # keep it so we can unselect it later.
 						self.selected_icon.select()
@@ -1275,9 +1231,9 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.old_selected_widget = self.selected_widget
 		self.selected_widget = widget
+		self.selected_widget = widget	# Used for callbacks.
 
 		self.aftersetfocus()
-		self.only_redraw_selection = 1
 		if not external:
 			# avoid recursive setglobalfocus
 			self.editmgr.setglobalfocus("MMNode", self.focusnode)
@@ -1290,37 +1246,12 @@ class HierarchyView(HierarchyViewDialog):
 			widget = node.views['struct_view']
 			self.select_widget(widget, external)
 		
-#	def setfocusnode(self, node, external = 0):
-#		# Try not to call this function
-#		print "DEBUG: Please don't call HierarchyView.setfocusnode!"
-#		import traceback; traceback.print_stack()
-#		print "and don't complain about the traceback. It's your fault."
-#		self.select_node(node, external)
-
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.select_widget(clicked_widget, scroll=0)
 		# The calling method will cause a re-draw.
-
-	# Handle a selection click at (x, y)
-#	def select(self, x, y):
-#		import traceback; traceback.print_stack()
-#		widget = self.scene_graph.get_obj_at((x,y))
-#		print "DEBUG: Clicked object is: ", widget
-#		if widget == None:
-#			#print "DEBUG: No widget under the mouse."
-#			pass
-#		if widget==None or widget==self.selected_widget:
-#			return
-#		else:
-#			self.select_widget(widget)
-###			self.aftersetfocus()
-#			self.need_redraw = 1
-#		assert isinstance(widget.node, MMNode.MMNode)
-#		print "DEBUG: Hierarchyview recieved select(x,y)"
-
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):
@@ -1345,14 +1276,14 @@ class HierarchyView(HierarchyViewDialog):
 	##############################################################################
 
 	def helpcall(self):
-		if self.focusobj: self.focusobj.helpcall()
+		if self.selected_widget: self.selected_widget.helpcall()
 
 	def expandcall(self):
-		if self.focusobj: self.focusobj.expandcall()
+		if self.selected_widget: self.selected_widget.expandcall()
 		self.draw()
 
 	def expandallcall(self, expand):
-		if self.focusobj: self.focusobj.expandallcall(expand)
+		if self.selected_widget: self.selected_widget.expandallcall(expand)
 		self.draw()
 
 	def thumbnailcall(self):
@@ -1413,88 +1344,88 @@ class HierarchyView(HierarchyViewDialog):
 		dialog.done()
 
 	def transition_callback(self, which, transition):
-		if self.focusobj: self.focusobj.transition_callback(which, transition)
+		if self.selected_widget: self.selected_widget.transition_callback(which, transition)
 
 	def playcall(self):
-		if self.focusobj: self.focusobj.playcall()
+		if self.selected_widget: self.selected_widget.playcall()
 
 	def playfromcall(self):
-		if self.focusobj: self.focusobj.playfromcall()
+		if self.selected_widget: self.selected_widget.playfromcall()
 
 	def attrcall(self):
-		if self.focusobj: self.focusobj.attrcall()
+		if self.selected_widget: self.selected_widget.attrcall()
 
 	def infocall(self):
-		if self.focusobj: self.focusobj.infocall()
+		if self.selected_widget: self.selected_widget.infocall()
 
 	def editcall(self):
-		if self.focusobj: self.focusobj.editcall()
+		if self.selected_widget: self.selected_widget.editcall()
 
 	# win32++
 	def _editcall(self):
-		if self.focusobj: self.focusobj._editcall()
+		if self.selected_widget: self.selected_widget._editcall()
 	def _opencall(self):
-		if self.focusobj: self.focusobj._opencall()
+		if self.selected_widget: self.selected_widget._opencall()
 
 	def anchorcall(self):
-		if self.focusobj: self.focusobj.anchorcall()
+		if self.selected_widget: self.selected_widget.anchorcall()
 
 	def createanchorcall(self):
-		if self.focusobj: self.focusobj.createanchorcall()
+		if self.selected_widget: self.selected_widget.createanchorcall()
 
 	def hyperlinkcall(self):
-		if self.focusobj: self.focusobj.hyperlinkcall()
+		if self.selected_widget: self.selected_widget.hyperlinkcall()
 
 	def rpconvertcall(self):
-		if self.focusobj: self.focusobj.rpconvertcall()
+		if self.selected_widget: self.selected_widget.rpconvertcall()
 
 	def deletecall(self):
-		if self.focusobj: self.focusobj.deletecall()
+		if self.selected_widget: self.selected_widget.deletecall()
 
 	def cutcall(self):
-		if self.focusobj: self.focusobj.cutcall()
+		if self.selected_widget: self.selected_widget.cutcall()
 
 	def copycall(self):
-		if self.focusobj: self.focusobj.copycall()
+		if self.selected_widget: self.selected_widget.copycall()
 
 	def createbeforecall(self, chtype=None):
-		if self.focusobj: self.focusobj.createbeforecall(chtype)
+		if self.selected_widget: self.selected_widget.createbeforecall(chtype)
 
 	def createbeforeintcall(self, ntype):
-		if self.focusobj: self.focusobj.createbeforeintcall(ntype)
+		if self.selected_widget: self.selected_widget.createbeforeintcall(ntype)
 
 	def createaftercall(self, chtype=None):
-		if self.focusobj: self.focusobj.createaftercall(chtype)
+		if self.selected_widget: self.selected_widget.createaftercall(chtype)
 
 	def createafterintcall(self, ntype):
-		if self.focusobj: self.focusobj.createafterintcall(ntype)
+		if self.selected_widget: self.selected_widget.createafterintcall(ntype)
 
 	def createundercall(self, chtype=None):
-		if self.focusobj: self.focusobj.createundercall(chtype)
+		if self.selected_widget: self.selected_widget.createundercall(chtype)
 
 	def createunderintcall(self, ntype=None):
-		if self.focusobj: self.focusobj.createunderintcall(ntype)
+		if self.selected_widget: self.selected_widget.createunderintcall(ntype)
 
 	def createseqcall(self):
-		if self.focusobj: self.focusobj.createseqcall()
+		if self.selected_widget: self.selected_widget.createseqcall()
 
 	def createparcall(self):
-		if self.focusobj: self.focusobj.createparcall()
+		if self.selected_widget: self.selected_widget.createparcall()
 
 	def createexclcall(self):
-		if self.focusobj: self.focusobj.createexclcall()
+		if self.selected_widget: self.selected_widget.createexclcall()
 
 	def createaltcall(self):
-		if self.focusobj: self.focusobj.createaltcall()
+		if self.selected_widget: self.selected_widget.createaltcall()
 
 	def pastebeforecall(self):
-		if self.focusobj: self.focusobj.pastebeforecall()
+		if self.selected_widget: self.selected_widget.pastebeforecall()
 
 	def pasteaftercall(self):
-		if self.focusobj: self.focusobj.pasteaftercall()
+		if self.selected_widget: self.selected_widget.pasteaftercall()
 
 	def pasteundercall(self):
-		if self.focusobj: self.focusobj.pasteundercall()
+		if self.selected_widget: self.selected_widget.pasteundercall()
 
 	def create_begin_event_source(self):
 		if self.selected_widget:
