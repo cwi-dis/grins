@@ -76,6 +76,7 @@ class Main(MainDialog):
 			EXIT(callback = (self.close_callback, ())),
 			NEW_DOCUMENT(callback = (self.new_callback, ())),
 			OPEN(callback = (self.open_callback, ())),
+			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
 			PREFERENCES(callback=(self.preferences_callback, ())),
 			]
 		import Help
@@ -92,6 +93,7 @@ class Main(MainDialog):
 
 		for file in files:
 			self.openURL_callback(MMurl.guessurl(file))
+		self._update_recent(None)
 
 		if ENABLE_FNORB_SUPPORT:
 			import CORBA.services
@@ -151,6 +153,30 @@ class Main(MainDialog):
 			windowinterface.showmessage('parsing document %s failed' % url)
 		else:
 			self.new_top(top)
+			self._update_recent(url)
+			
+	def open_recent_callback(self, url):
+		self.openURL_callback(url)
+		
+	def _update_recent(self, url):
+		if not hasattr(self, 'set_recent_list'):
+			return
+		import settings
+		import posixpath
+		recent = settings.get('recent_documents')
+		if url:
+			if url in recent:
+				recent.remove(url)
+			recent.insert(0, url)
+			if len(recent) > 5:
+				recent = recent[:5]
+			settings.set('recent_documents', recent)
+			settings.save()
+		doclist = []
+		for url in recent:
+			base = posixpath.basename(url)
+			doclist.append( (base, (url,)))
+		self.set_recent_list(doclist)
 
 	def close_callback(self):
 		import windowinterface

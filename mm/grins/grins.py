@@ -50,6 +50,7 @@ class Main(MainDialog):
 		from usercmd import *
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
+			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
 			PREFERENCES(callback = (self.preferences_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
@@ -63,6 +64,7 @@ class Main(MainDialog):
 		# first open all files
 		for file in files:
 			self.openURL_callback(MMurl.guessurl(file))
+		self._update_recent(None)
 		# then play them
 		for top in self.tops:
 			top.player.playsubtree(top.root)
@@ -85,6 +87,30 @@ class Main(MainDialog):
 			self.tops.append(top)
 			top.show()
 			top.player.show()
+			self._update_recent(url)
+
+	def open_recent_callback(self, url):
+		self.openURL_callback(url)
+		
+	def _update_recent(self, url):
+		if not hasattr(self, 'set_recent_list'):
+			return
+		import settings
+		import posixpath
+		recent = settings.get('recent_documents')
+		if url:
+			if url in recent:
+				recent.remove(url)
+			recent.insert(0, url)
+			if len(recent) > 5:
+				recent = recent[:5]
+			settings.set('recent_documents', recent)
+			settings.save()
+		doclist = []
+		for url in recent:
+			base = posixpath.basename(url)
+			doclist.append( (base, (url,)))
+		self.set_recent_list(doclist)
 
 	def close_callback(self):
 		raise SystemExit, 0

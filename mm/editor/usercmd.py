@@ -41,6 +41,8 @@ class NEW_DOCUMENT(_CommandBase):
 	help = 'Create new document'
 class OPEN(_CommandBase):
 	help = 'Open existing document'
+class OPEN_RECENT(_DynamicCascade):
+	help = 'Open a recently used document'
 class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
