@@ -10,6 +10,7 @@ import glwindow
 from MMExc import *
 import MMAttrdefs
 from Dialog import BasicDialog
+from ViewDialog import ViewDialog
 import Timing
 
 
@@ -37,11 +38,12 @@ from ChannelMap import channelmap
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class Player() = BasicDialog(), scheduler():
+class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	# Initialization.
 	#
 	def init(self, root):
+		self = ViewDialog.init(self, 'player_')
 		self.queue = []
 		self.resettimer()
 		self.root = root
@@ -55,7 +57,9 @@ class Player() = BasicDialog(), scheduler():
 	def transaction(self):
 		# Disallow changes while we are playing.
 		if self.playing:
-			fl.show_message('Document is playing', '', '')
+			m1 = 'You can\'t do that right now'
+			m3 = 'The document is still playing!'
+			fl.show_message(m1, '--', m3)
 			return 0
 		self.locked = 1
 		return 1
@@ -75,9 +79,6 @@ class Player() = BasicDialog(), scheduler():
 		self.abcontrol = ()
 		self.makechannels()
 		self.reset()
-		h, v = MMAttrdefs.getattr(self.root, 'player_winpos')
-		width, height = MMAttrdefs.getattr(self.root, 'player_winsize')
-		self.last_geometry = h, v, width, height
 		BasicDialog.show(self)
 		self.showchannels()
 		self.showstate()
@@ -86,19 +87,13 @@ class Player() = BasicDialog(), scheduler():
 		if not self.showing: return
 		self.stop()
 		self.reset()
-		self.save_geometry()
 		BasicDialog.hide(self)
 		self.destroychannels()
 	#
 	def save_geometry(self):
-		if self.showing:
-			gl.winset(self.form.window)
-			self.last_geometry = glwindow.getgeometry()
-		if self.last_geometry:
-			h, v, width, height = self.last_geometry
-			# XXX need transaction here!
-			self.root.SetAttr('player_winpos', (h, v))
-			self.root.SetAttr('player_winsize', (width, height))
+		ViewDialog.save_geometry(self)
+		for name in self.channelnames:
+			self.channels[name].save_geometry()
 	#
 	def set_setcurrenttime_callback(self, setcurrenttime):
 		self.setcurrenttime_callback = setcurrenttime
