@@ -129,18 +129,18 @@ class Region(Node):
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 
-		editBackground = None
-		if self.isShowEditBackground():
-			editBackground = self._defattrdict.get('editBackground')
+		if self._ctx.asOutLine:
+			self._curattrdict['transparent'] = 1
+		else:			
+			editBackground = None
+			if self.isShowEditBackground():
+				editBackground = self._defattrdict.get('editBackground')
 			
-		if editBackground != None:				
-				self._curattrdict['bgcolor'] = editBackground
-				self._curattrdict['transparent'] = 0
-		else:
-			self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-			if self._ctx.asOutLine:
-				self._curattrdict['transparent'] = 1
+			if editBackground != None:				
+					self._curattrdict['bgcolor'] = editBackground
+					self._curattrdict['transparent'] = 0
 			else:
+				self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
 				self._curattrdict['transparent'] = self._defattrdict.get('transparent')
 		
 		self._curattrdict['wingeom'] = self._defattrdict.get('base_winoff')
