@@ -92,6 +92,7 @@ class Channel:
 		self._armed_anchor2button = {}
 		self._played_anchor2button = {}
 		self._hide_pending = 0
+		self._exporter = None
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
@@ -128,6 +129,7 @@ class Channel:
 		del self._playstate
 		del self._qid
 		del self._scheduler
+		del self._exporter
 		channels.remove(self)
 
 	def commit(self):
@@ -184,7 +186,11 @@ class Channel:
 			self.hide()
 
 	def register_exporter(self, exporter):
-		pass
+		self._exporter = exporter
+
+	def unregister_exporter(self, exporter):
+		if self._exporter==exporter:
+			self._exporter = None
 
 	def replaynode(self):
 		self.wait_for_arm()
@@ -1264,7 +1270,6 @@ class ChannelWindow(Channel):
 		self._wingeom = None
 		self.__transparent = 1
 		self.__bgcolor = None
-		self._exporter = None
 
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
@@ -1284,7 +1289,6 @@ class ChannelWindow(Channel):
 		del self.armed_display
 		del self.played_display
 		del self.update_display
-		self._exporter = None
 
 	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
@@ -1480,6 +1484,11 @@ class ChannelWindow(Channel):
 		if self.window:
 			self.window.register(WMEVENTS.WindowContentChanged, exporter.changed, 
 				self.find_layout_channel())
+
+	def unregister_exporter(self, exporter):
+		self._exporter = None
+		if self.window:
+			self.window.unregister(WMEVENTS.WindowContentChanged)
 				
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
