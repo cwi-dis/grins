@@ -1626,7 +1626,8 @@ class MMChannel(MMTreeElement):
 		
 	def isDefault(self):
 		return self.attrdict.get('isDefault')
-	
+
+		
 class MMViewport(MMChannel):
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document
@@ -5028,6 +5029,24 @@ class MMNode(MMTreeElement):
 ##			if 'bgcolor' in retlist: retlist.remove('bgcolor')
 ##			if 'transparent' in retlist: retlist.remove('transparent')
 		return retlist
+
+	#
+	# animation editor support
+	#
+
+	def computeAnimationData(self):
+		# XXX to do: update animation data according to animation nodes
+		animationData = self._animationData
+		return animationData
+
+	def getAnimationData(self):
+		return self._animationData
+	
+	def applyAnimationData(self, editmgr):
+		animationData = self._animationData
+		# XXX to do: destroy the current animation nodes (if exist) for this instance 
+		# XXX and create the new animation nodes according to animationData
+		
 
 class FakeRootNode(MMNode):
 	def __init__(self, root):
