@@ -1544,11 +1544,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 def ReadFile(url):
 	if os.name == 'mac':
-		import MacOS
-		MacOS.splash(514)	# Show "loading document" splash screen
+		import splash
+		splash.splash('loaddoc')	# Show "loading document" splash screen
 	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode))
 	if os.name == 'mac':
-		MacOS.splash(515)	# and "Initializing document" (to be removed in mainloop)
+		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
 
 def ReadFileContext(url, context):
