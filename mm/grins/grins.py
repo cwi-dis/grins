@@ -16,6 +16,8 @@ except:
 
 import getopt
 
+NUM_RECENT_FILES = 10
+
 def usage(msg):
 	sys.stdout = sys.stderr
 	print msg
@@ -134,8 +136,8 @@ class Main(MainDialog):
 			if url in recent:
 				recent.remove(url)
 			recent.insert(0, url)
-			if len(recent) > 5:
-				recent = recent[:5]
+			if len(recent) > NUM_RECENT_FILES:
+				recent = recent[:NUM_RECENT_FILES]
 			settings.set('recent_documents', recent)
 			settings.save()
 		doclist = []
