@@ -27,6 +27,9 @@ import grinsRC
 # and other services
 import win32window
 
+#
+from SMILTreeWrite import fmtfloat
+
 # units
 from appcon import *
 
@@ -171,6 +174,11 @@ class _LayoutView2(GenFormView):
 		if cmd is not None and cmd.callback is not None:
 			apply(apply,cmd.callback)
 
+	def showScale(self, scale):
+		t=components.Static(self,grinsRC.IDC_LAYOUT_SCALE)
+		t.attach_to_parent()
+		str = fmtfloat(scale, prec=1)
+		t.settext('scale 1 : %s' % str)
 
 	#
 	# User input response from dialog controls
@@ -313,6 +321,8 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.__viewports = {}
 		self._viewport = None
 		
+		self._device2logical = 1
+
 		fd = {'name':'Arial','height':10,'weight':700}
 		self.__hsmallfont = Sdk.CreateFontIndirect(fd)		
 
@@ -342,21 +352,25 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		point = self.DPtoLP(point)
 		win32window.DrawContext.onLButtonDown(self, flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		point = self.DPtoLP(point)
 		win32window.DrawContext.onLButtonUp(self, flags, point)
 	
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		point = self.DPtoLP(point)
 		win32window.DrawContext.onMouseMove(self, flags, point)
 
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		point = self.DPtoLP(point)
 		win32window.DrawContext.onLButtonDblClk(self, flags, point)
 
 	def onNCLButton(self, params):
@@ -404,9 +418,22 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def getChannel(self, name):
 		return self._context.channeldict[name]
 
+	def findDeviceToLogicalScale(self, wl, hl):
+		wd, hd = self.GetClientRect()[2:]
+		md = 32 # device margin
+		xsc = wl/float(wd-md)
+		ysc = hl/float(hd-md)
+		if xsc>ysc: sc = xsc
+		else: sc = ysc
+		if sc<1.0: sc = 1
+		return sc
+
 	def setViewport(self, name):
 		mmchan = self.getChannel(name)
-		self._viewport = Viewport(name, self, mmchan.attrdict)
+		w, h = mmchan.attrdict.get('winsize')
+		self._device2logical = self.findDeviceToLogicalScale(w,h)
+		self._parent.showScale(self._device2logical)
+		self._viewport = Viewport(name, self, mmchan.attrdict, self._device2logical)
 		win32window.DrawContext.reset(self)
 		self.InvalidateRect(self.GetClientRect())
 
@@ -431,23 +458,21 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 	def paintOn(self, dc, rc=None):
 		rc = l, t, r, b = self.GetClientRect()
+		w, h = r - l, b - t
 
 		# draw to offscreen bitmap for fast looking repaints
 		dcc=dc.CreateCompatibleDC()
 
 		bmp=win32ui.CreateBitmap()
-		bmp.CreateCompatibleBitmap(dc, r-l, b-t)
+		bmp.CreateCompatibleBitmap(dc, w, h)
 				
-		# offset origin more because bitmap is just piece of the whole drawing
 		dcc.OffsetViewportOrg((-l, -t))
 		oldBitmap = dcc.SelectObject(bmp)
-		dcc.SetBrushOrg((l % 8, t % 8))
-		dcc.IntersectClipRect(rc)
 
 		rgn = self.getClipRgn()
 
 		# background decoration on dcc
-		dcc.FillSolidRect(rc,win32mu.RGB(self._bgcolor or (255,255,255)))
+		dcc.FillSolidRect((0,0,w,h),win32mu.RGB(self._bgcolor or (255,255,255)))
 
 		# draw objects on dcc
 		if self._viewport:
@@ -460,10 +485,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		dc.SetViewportOrg((0, 0))
 		dc.SetWindowOrg((0,0))
 		dc.SetMapMode(win32con.MM_TEXT)
-		dcc.SetViewportOrg((0, 0))
-		dcc.SetWindowOrg((0,0))
-		dcc.SetMapMode(win32con.MM_TEXT)
-		dc.BitBlt((l, t),(r-l, b-t),dcc,(0, 0), win32con.SRCCOPY)
+		dc.BitBlt((l, t),(w, h),dcc,(0, 0), win32con.SRCCOPY)
 
 		# clean up (revisit this)
 		dcc.SelectObject(oldBitmap)
@@ -507,13 +529,38 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 			dc.SelectObjectFromHandle(self._hfont_org)
 
 
+	#
+	# Scaling support
+	#
+	def DPtoLP(self, pt):
+		x, y = pt
+		sc = self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5)
+
+	def DRtoLR(self, rc):
+		x, y, w, h = rc
+		sc = self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+
+	def LPtoDP(self, pt):
+		x, y = pt
+		sc = 1.0/self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5)
+
+	def LRtoDR(self, rc):
+		x, y, w, h = rc
+		sc = 1.0/self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+
+
 ###########################
 
 class Viewport(win32window.Window):
-	def __init__(self, name, ctx, dict):
+	def __init__(self, name, ctx, dict, scale):
 		self._name = name
 		self._ctx = ctx
 		win32window.Window.__init__(self)
+		self.setDeviceToLogicalScale(scale)
 
 		w, h = dict.get('winsize')
 		rc = (8, 8, w, h)
@@ -529,7 +576,7 @@ class Viewport(win32window.Window):
 		self._showname = 1
 
 		self._regions = {}
-		self.__createRegions(name, ctx._context)
+		self.__createRegions(name, ctx._context, scale)
 
 	def getRegion(self, name):
 		return self._regions.get(name)
@@ -554,13 +601,13 @@ class Viewport(win32window.Window):
 		return None
 	
 	def getClipRgn(self, rel=None):
-		x, y, w, h = self._rectb
+		x, y, w, h = self.LRtoDR(self.getwindowpos())
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		return rgn
 		
 	def paintOn(self, dc, rc=None):
-		x, y, w, h = self.getwindowpos()
+		x, y, w, h = self.LRtoDR(self.getwindowpos())
 		ltrb = l, t, r, b = x, y, x+w, y+h
 
 		rgn = self.getClipRgn()
@@ -574,7 +621,7 @@ class Viewport(win32window.Window):
 			w.paintOn(dc, rc)
 
 	def _draw3drect(self, dc):
-		x, y, w, h = self.getwindowpos()
+		x, y, w, h = self.LRtoDR(self.getwindowpos())
 		l, t, r, b = x, y, x+w, y+h
 		l, t, r, b = l-3, t-3, r+2, b+2
 		c1, c2 = 220, 150
@@ -591,9 +638,9 @@ class Viewport(win32window.Window):
 			elif rgnName==vpName: return 1
 	
 	# brude force, will be improved
-	def __createRegions(self, name, ctx):
+	def __createRegions(self, name, mmctx, scale=1):
 		d = {}
-		for chan in ctx.channels:
+		for chan in mmctx.channels:
 			if chan.attrdict.get('type')=='layout':
 				if chan.attrdict.has_key('base_window'):
 					d[chan.name] = chan.attrdict['base_window']
@@ -601,9 +648,9 @@ class Viewport(win32window.Window):
 					d[chan.name] = None
 		
 		dr = self._regions
-		for chan in ctx.channels:
+		for chan in mmctx.channels:
 			if chan.attrdict.get('type')=='layout' and self.__isViewportRegion(chan.name, name, d):
-				dr[chan.name] =  Region(chan.name, ctx, chan.attrdict)
+				dr[chan.name] =  Region(chan.name, mmctx, chan.attrdict, scale)
 		
 		# do init with parents
 		for rgnName, region in dr.items():
@@ -614,17 +661,17 @@ class Viewport(win32window.Window):
 				parRegion = dr[parRgnName]
 			region._do_init(parRegion)
 
-		
 
 ###########################
 
 class Region(win32window.Window):
-	def __init__(self, name, ctx, dict):
+	def __init__(self, name, ctx, dict, scale):
 		self._name = name
 		self._ctx = ctx
 		self._dict = dict
 		self._showname = 1
 		win32window.Window.__init__(self)
+		self.setDeviceToLogicalScale(scale)
 
 	def _do_init(self, parent):
 		dict = self._dict
@@ -636,7 +683,7 @@ class Region(win32window.Window):
 		self.create(parent, rc, units, z, transparent, bgcolor)
 
 	def paintOn(self, dc, rc=None):
-		ltrb = self.ltrb(self.getwindowpos())
+		ltrb = self.ltrb(self.LRtoDR(self.getwindowpos()))
 
 		rgn = self.getClipRgn()
 
@@ -658,7 +705,7 @@ class Region(win32window.Window):
 		Sdk.DeleteObject(br)
 
 	def getClipRgn(self, rel=None):
-		x, y, w, h = self.getwindowpos(rel);
+		x, y, w, h = self.LRtoDR(self.getwindowpos())
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		if rel==self: return rgn

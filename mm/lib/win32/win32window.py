@@ -55,6 +55,9 @@ class Window:
 		self._drawsurf = None
 		self._frozen = 0
 
+		# scaling support
+		self._device2logical = 1
+
 	def create(self, parent, coordinates, units, z=0, transparent=0, bgcolor=None):
 		self.__setparent(parent)
 		self.__setcoordinates(coordinates, units)
@@ -426,7 +429,7 @@ class Window:
 		return px+rx, py+ry, pw, ph
 
 	# convert pixel coordinates to relative coordinates
-	def _pxl2rel(self,coordinates,ref_rect=None):
+	def _pxl2rel(self, coordinates, ref_rect=None):
 		px, py = coordinates[:2]
 
 		if ref_rect:
@@ -882,6 +885,33 @@ class Window:
 
 
 	#
+	# Scaling support
+	#
+	def setDeviceToLogicalScale(self, scale):
+		self._device2logical = scale
+
+	def DPtoLP(self, pt):
+		x, y = pt
+		sc = self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5)
+
+	def DRtoLR(self, rc):
+		x, y, w, h = rc
+		sc = self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+
+	def LPtoDP(self, pt):
+		x, y = pt
+		sc = 1.0/self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5)
+
+	def LRtoDR(self, rc):
+		x, y, w, h = rc
+		sc = 1.0/self._device2logical
+		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+
+
+	#
 	# Drag & Resize interface
 	#
 	def getDragHandle(self, ix):
@@ -914,8 +944,9 @@ class Window:
 			y = yc
 		return x, y
 
+	# return drag handle rectangle in device coordinates
 	def getDragHandleRect(self, ix):
-		x, y = self.getDragHandle(ix)
+		x, y = self.LPtoDP(self.getDragHandle(ix))
 		return x-3, y-3, 6, 6
 
 	def getDragHandleCount(self):
@@ -974,7 +1005,7 @@ class Window:
 		self.updatecoordinates((xr+dx, yr+dy, w, h), units=UNIT_PXL)
 		
 	def invalidateDragHandles(self):
-		x, y, w, h  = self.getwindowpos()
+		x, y, w, h  = self.LRtoDR(self.getwindowpos())
 		delta = 4
 		x = x-delta
 		y = y-delta
