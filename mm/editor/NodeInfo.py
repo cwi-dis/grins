@@ -46,7 +46,7 @@ class NodeInfo:
 
 		self.channel_select = top.OptionMenu('Channel:', ['undefined'],
 					0, (self.channel_callback, ()),
-					right = None, top = None, right = None)
+					right = None, top = None)
 		self.type_select = top.OptionMenu('Type:', alltypes, 0,
 						  (self.type_callback, ()),
 						  right = self.channel_select,
