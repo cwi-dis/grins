@@ -36,7 +36,7 @@
         <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq id="Background_Images">
-        <img id="Image_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
+        <img id="Image_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg" fill="freeze"/>
 	  </seq>
     </par>
   </body>
