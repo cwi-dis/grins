@@ -92,7 +92,7 @@ class _DisplayList:
 	# Clones this display list
 	def clone(self):
 		w = self._window
-		new = _DisplayList(w, self._bgcolor)
+		new = _DisplayList(w, self._bgcolor, units=self.__units)
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
