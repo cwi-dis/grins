@@ -84,7 +84,7 @@ class RealChannel:
 
 	def __init__(self, channel):
 		if not self.__has_rma_support:
-			raise error, "No RealPlayer G2 playback support in this version"
+			raise error, "No RealPlayer playback support in this version"
 		self.__channel = channel
 		self.__rmaplayer = None
 		self.__qid = None
@@ -96,7 +96,7 @@ class RealChannel:
 				RealChannel.__engine = RealEngine()
 			except:
 				RealChannel.__has_rma_support = 0
-				raise error, "Cannot initialize RealPlayer G2 playback. G2 installation problem?"
+				raise error, "Cannot initialize RealPlayer playback. RealPlayer installation problem?"
 		
 	def destroy(self):
 		if self.__qid:
@@ -120,7 +120,7 @@ class RealChannel:
 			try:
 				self.__rmaplayer = apply(self.__engine.CreatePlayer, self.__winpos)
 			except:
-				self.__channel.errormsg(node, 'Cannot initialize RealPlayer G2 playback.')
+				self.__channel.errormsg(node, 'Cannot initialize RealPlayer playback.')
 				return 0
 		return 1
 
