@@ -46,3 +46,7 @@ PLAYER_TEMPLATE = (
 		)
 	)
 )
+
+TOOLBARS=[
+	PLAYER_TEMPLATE,
+]

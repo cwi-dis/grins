@@ -41,16 +41,12 @@ GENERAL_TEMPLATE = (
 		Button(usercmd.RESTORE, 6),
 		Button(usercmd.CLOSE, 7),
 		Separator(6),
-		Button(usercmd.PLAY, 9),
-		Button(usercmd.PAUSE, 10),
-		Button(usercmd.STOP, 11),
+		Button(wndusercmd.CLOSE_ACTIVE_WINDOW, 11),
 		Separator(12),
-		Button(wndusercmd.CLOSE_ACTIVE_WINDOW, 14),
+		Button(usercmd.CANVAS_ZOOM_IN, 12),
+		Button(usercmd.CANVAS_ZOOM_OUT, 13),
 		Separator(12),
-		Button(usercmd.CANVAS_ZOOM_IN, 15),
-		Button(usercmd.CANVAS_ZOOM_OUT, 16),
-		Separator(12),
-		Button(usercmd.HELP, 12),
+		Button(usercmd.HELP, 9),
 		Pulldown(),
 		)
 	)
@@ -65,7 +61,16 @@ FRAME_TEMPLATE = (
 		)
 	)
 )
+XXPLAYER_TEMPLATE = (
+	('Player Controls', wndusercmd.TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
+		Button(usercmd.PLAY, 0),
+		Button(usercmd.PAUSE, 1),
+		Button(usercmd.STOP, 2),
+		)
+	)
+)
 
 TOOLBARS=[
 	GENERAL_TEMPLATE,
+	XXPLAYER_TEMPLATE
 ]
