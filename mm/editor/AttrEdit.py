@@ -1309,7 +1309,8 @@ class AttrEditor(AttrEditorDialog):
 #				if name == 'file' and not self.checkurl(value):
 #					self.showmessage('URL not compatible with channel', mtype = 'error')
 #					return 1
-				if name == 'href' and value not in self.wrapper.getcontext().externalanchors:
+				if (name == 'href' or (name == '.href' and type(value) is type(''))) and \
+				   value not in self.wrapper.getcontext().externalanchors:
 					self.wrapper.getcontext().externalanchors.append(value)
 				dict[name] = value
 		if not dict and not newchannel:
