@@ -187,29 +187,36 @@ def HasVideo(url):
 # Returns the size of a video	
 def GetVideoSize(url):
 	import urlcache
-	mtype = urlcache.mimetype(url)
-	if mtype and mtype.find('quicktime') >= 0:
-		import winqt
-		if winqt.HasQtSupport():
-			import MMurl
+	cache = urlcache.urlcache[url]
+	width, height = cache.get('width'), cache.get('height')
+	if width is None or height is None:
+		mtype = urlcache.mimetype(url)
+		if mtype and mtype.find('quicktime') >= 0:
+			import winqt
+			if winqt.HasQtSupport():
+				import MMurl
+				try:
+					filename = MMurl.urlretrieve(url)[0]
+				except IOError:
+					return 100, 100
+				player = winqt.QtPlayer()
+				player.open(url)
+				width, height = player.getMovieRect()[2:]
+		if width is None or height is None:
 			try:
-				filename = MMurl.urlretrieve(url)[0]
-			except IOError:
+				builder = GraphBuilder()
+			except:
+				if __debug__:
+					print 'Missing DirectShow infrasrucrure'
 				return 100, 100
-			player = winqt.QtPlayer()
-			player.open(url)
-			return player.getMovieRect()[2:]
-	try:
-		builder = GraphBuilder()
-	except:
-		if __debug__:
-			print 'Missing DirectShow infrasrucrure'
-		return 100, 100
 
-	if not builder.RenderFile(url):
-		return 100, 100
+			if not builder.RenderFile(url):
+				return 100, 100
 
-	return builder.GetWindowPosition()[2:]
+			width, height = builder.GetWindowPosition()[2:]
+		cache['width'] = width
+		cache['height'] = height
+	return width, height
 
 
 # Returns the duration of the media file in secs	
