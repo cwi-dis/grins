@@ -1,5 +1,22 @@
+
+/************************************************************************
+Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
+
+                        All Rights Reserved
+
+*************************************************************************/
+
 #ifndef INC_EXTRA_TYPES
 #define INC_EXTRA_TYPES
+
+#ifndef INC_STDENV
+#include "stdenv.h"
+#endif
+
+typedef void (*v_callback_v)();
+
+typedef std::pair<std::string, std::string> raw_attr_t;
+typedef std::list<raw_attr_t> raw_attr_list_t;
 
 typedef unsigned char uchar_t;
 typedef unsigned char* uchar_ptr;
@@ -68,5 +85,7 @@ struct trible
 	};
 
 } // namespace be (big-endian color representation)
+
+
 
 #endif // INC_EXTRA_TYPES

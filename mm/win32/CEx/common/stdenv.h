@@ -1,8 +1,12 @@
 #ifndef INC_STDENV
+#define INC_STDENV
 
 // long names trunc
 #pragma warning(disable: 4786)
 
+// signed/unsigned mismatch
+#pragma warning(disable: 4018)
+ 
 // std c++ library
 #include <iterator>
 #include <memory>
@@ -24,8 +28,11 @@
 // end stdc
 
 // strsteam replacement
-template <class T> std::string& operator<<(std::string& s, T c) 
-	{ s+=c; return s;}
+inline std::string& operator<<(std::string& s, const char *psz) 
+	{ s += psz; return s;}
+
+inline std::string& operator<<(std::string& s, const std::string& o) 
+	{ s+=o; return s;}
 
 inline std::string& operator<<(std::string& s, int c) 
 	{char sz[16];sprintf(sz,"%d",c); s+=sz; return s;}	

@@ -1,8 +1,20 @@
+
+/************************************************************************
+Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
+
+                        All Rights Reserved
+
+*************************************************************************/
+
 #ifndef INC_TREE_NODE
 #define INC_TREE_NODE
 
+#ifndef INC_EXTRA_TYPES
+#include "extra_types.h"
+#endif
+
 template <class Node>
-class TreeIterator 
+class tree_iterator 
 	{
 	public:
 
@@ -10,16 +22,16 @@ class TreeIterator
 
 	typedef std::pair<treeiter, bool> value_type;
 	
-	TreeIterator()
-		: currit(0), move(&TreeIterator::down) {}
+	tree_iterator()
+		: currit(0), move(&tree_iterator::down) {}
 	
-	TreeIterator(treeiter it)
-		: currit(it), move(&TreeIterator::down) {}
+	tree_iterator(treeiter it)
+		: currit(it), move(&tree_iterator::down) {}
 
-	TreeIterator(const TreeIterator& other)
+	tree_iterator(const tree_iterator& other)
 		:	currit(other.currit), move(other.move) {}
 
-	const TreeIterator& operator=(const TreeIterator& other){
+	const tree_iterator& operator=(const tree_iterator& other){
 		if(&other!=this){
 			currit = other.currit; 
 			move = other.move;
@@ -27,15 +39,15 @@ class TreeIterator
 		return *this;
 		}
 
-	friend bool operator==(const TreeIterator& lhs, const TreeIterator& rhs)
+	friend bool operator==(const tree_iterator& lhs, const tree_iterator& rhs)
 		{return lhs.currit==rhs.currit;}
-	friend bool operator!=(const TreeIterator& lhs, const TreeIterator& rhs)
+	friend bool operator!=(const tree_iterator& lhs, const tree_iterator& rhs)
 		{return lhs.currit!=rhs.currit;}
 
 	void operator++() {if(move)(this->*move)();}
 	void operator++(int) {if(move)(this->*move)();}
 
-	value_type operator*() {return value_type(currit, (move==&TreeIterator::down));}
+	value_type operator*() {return value_type(currit, (move==&tree_iterator::down));}
 	
 	operator int() {return move?1:0;}
 
@@ -43,17 +55,17 @@ class TreeIterator
 	void down() {
 		treeiter it = currit->down();
 		if(it) currit = it;
-		else move = &TreeIterator::next;
+		else move = &tree_iterator::next;
 		}
 
 	void next() {
 		treeiter it = currit->next();
 		if(it){
 			currit = it;
-			move = &TreeIterator::down;
+			move = &tree_iterator::down;
 			}
 		else {
-			move = &TreeIterator::up;
+			move = &tree_iterator::up;
 			(this->*move)();
 			}
 		}
@@ -62,7 +74,7 @@ class TreeIterator
 		treeiter it = currit->up();
 		if(it) {
 			currit = it;
-			move = &TreeIterator::next;
+			move = &tree_iterator::next;
 			}
 		else {
 			currit = it;
@@ -71,46 +83,57 @@ class TreeIterator
 		}
 
 	treeiter currit;
-	void (TreeIterator::*move)();
+	void (tree_iterator::*move)();
 	};
 
-class TreeNode
+class tree_node
 	{
 	public:
-	typedef const TreeNode iterator_arg;
-	typedef TreeIterator<iterator_arg> iterator;
-	typedef const TreeIterator<iterator_arg> const_iterator;
+	typedef const tree_node iterator_arg;
+	typedef tree_iterator<iterator_arg> iterator;
+	typedef const tree_iterator<iterator_arg> const_iterator;
 
-	typedef std::pair<std::string, std::string> attribute;
-
-	TreeNode(const char *name=NULL, const char **attrs=NULL)
+	tree_node(const char *name=NULL, const char **attrs=NULL)
 	:	m_name(name?name:""),
 		m_parent(NULL),
 		m_child(NULL),												   
-		m_next(NULL)
+		m_next(NULL),
+		m_attrs(NULL)
 		{
 		m_beginit = iterator(this);
 		if(attrs) {
+			m_attrs = new raw_attr_list_t();
 			for(int i=0;attrs[i];i+=2)
-				m_attrs.push_back(std::pair<std::string, std::string>(attrs[i], attrs[i+1]));
+				m_attrs->push_back(raw_attr_t(attrs[i], attrs[i+1]));
 			}
 		}
-	
-	~TreeNode()
+
+	tree_node(const char *name, raw_attr_list_t *attrs)
+	:	m_name(name?name:""),
+		m_parent(NULL),
+		m_child(NULL),												   
+		m_next(NULL),
+		m_attrs(attrs)
 		{
-		TreeNode *e = m_child;
+		m_beginit = iterator(this);
+		}
+	
+	virtual ~tree_node()
+		{
+		tree_node *e = m_child;
 		if(e)
 			{
-			TreeNode *tmp = e;
+			tree_node *tmp = e;
 			e = e->m_next;
 			delete tmp;
 			while(e)
 				{
-				TreeNode *tmp = e;
+				tree_node *tmp = e;
 				e = e->m_next;
 				delete tmp;
 				}
 			}
+		if(m_attrs != 0) delete m_attrs;
 		}
 	int appendCharData(const char *data, int len)
 		{
@@ -119,18 +142,18 @@ class TreeNode
 		}
 	
 	// tree builder method
-	void appendChild(TreeNode* child);
+	void appendChild(tree_node* child);
 		
 	const char *getName() const {return m_name.c_str();}
 	const char *getData() const {return m_data.c_str();}
 
 	int getDataSize() const {return m_data.size();}
 	const char *getAttribute(const char *name) const;
-	const std::list<attribute>& getAttributes() const {return m_attrs;}
-	void getChildren(std::list<const TreeNode*>& l) const;
-	void getChildren(std::list<const TreeNode*>& l, const char *name) const;
-	const TreeNode *getFirstChild(const char *name) const;
-	TreeNode *getFirstChild(const char *name);
+	const raw_attr_list_t& getAttributes() const {return *m_attrs;}
+	void getChildren(std::list<const tree_node*>& l) const;
+	void getChildren(std::list<const tree_node*>& l, const char *name) const;
+	const tree_node *getFirstChild(const char *name) const;
+	tree_node *getFirstChild(const char *name);
 	std::string xmlrepr() const;
 
 	iterator begin() {return m_beginit;}
@@ -139,39 +162,39 @@ class TreeNode
 	iterator end() {return m_endit;}
 	const_iterator end() const {return (const_iterator)m_endit;}
 
-	const TreeNode *down() const {return m_child;}
-	const TreeNode *up() const {return m_parent;}
-	const TreeNode *next() const {return m_next;}
+	const tree_node *down() const {return m_child;}
+	const tree_node *up() const {return m_parent;}
+	const tree_node *next() const {return m_next;}
 
-	TreeNode *down()  {return m_child;}
-	TreeNode *up()  {return m_parent;}
-	TreeNode *next()  {return m_next;}
+	tree_node *down()  {return m_child;}
+	tree_node *up()  {return m_parent;}
+	tree_node *next()  {return m_next;}
 
 	private:
-	const TreeNode *getChild() const {return m_child;}
-	const TreeNode *getNext() const {return m_next;}			
-	void setChild(TreeNode *e){m_child=e;}
-	void setNext(TreeNode *e){m_next=e;}
+	const tree_node *getChild() const {return m_child;}
+	const tree_node *getNext() const {return m_next;}			
+	void setChild(tree_node *e){m_child=e;}
+	void setNext(tree_node *e){m_next=e;}
 	
 	std::string m_name;
-	TreeNode *m_child;												   
-	TreeNode *m_next;
-	TreeNode *m_parent;
+	tree_node *m_child;												   
+	tree_node *m_next;
+	tree_node *m_parent;
 
 	iterator m_beginit;
 	iterator m_endit;
 
 	std::string m_data;
-	std::list<attribute> m_attrs;
+	raw_attr_list_t *m_attrs;
 	};
 
-inline void TreeNode::appendChild(TreeNode* child)
+inline void tree_node::appendChild(tree_node* child)
 	{
 	if(!m_child) 
 		m_child = child;
 	else
 		{
-		TreeNode *e = m_child;
+		tree_node *e = m_child;
 		while(e->m_next) e = e->m_next;
 		e->m_next = child;
 		}
@@ -179,44 +202,44 @@ inline void TreeNode::appendChild(TreeNode* child)
 	child->m_endit = iterator(this);
 	}
 
-inline const char *TreeNode::getAttribute(const char *name) const 
+inline const char *tree_node::getAttribute(const char *name) const 
 	{
-	std::list< std::pair<std::string, std::string> >::const_iterator it = m_attrs.begin();
-	while(it!=m_attrs.end()) {
+	std::list< std::pair<std::string, std::string> >::const_iterator it = m_attrs->begin();
+	while(it!=m_attrs->end()) {
 		if((*it).first == name)
 			return (*it).second.c_str();
 		}
 	return "";
 	}
 
-inline void TreeNode::getChildren(std::list<const TreeNode*>& l) const
+inline void tree_node::getChildren(std::list<const tree_node*>& l) const
 	{
-	const TreeNode *e = getChild();
+	const tree_node *e = getChild();
 	if(!e) return;
 	l.push_back(e);
 	while((e=e->getNext())) l.push_back(e);
 	}
 
-inline void TreeNode::getChildren(std::list<const TreeNode*>& l, const char *name) const
+inline void tree_node::getChildren(std::list<const tree_node*>& l, const char *name) const
 	{
-	const TreeNode *e = getChild();
+	const tree_node *e = getChild();
 	if(!e) return;
 	if(e->m_name==name)l.push_back(e);
 	while((e=e->getNext())) if(e->m_name==name) l.push_back(e);
 	}
 
-inline const TreeNode *TreeNode::getFirstChild(const char *name) const
+inline const tree_node *tree_node::getFirstChild(const char *name) const
 	{
-	const TreeNode *e = getChild();
+	const tree_node *e = getChild();
 	if(!e) return NULL;
 	if(e->m_name==name)return e;
 	while((e=e->getNext())) if(e->m_name==name) return e;
 	return NULL;
 	}
 
-inline TreeNode *TreeNode::getFirstChild(const char *name)
+inline tree_node *tree_node::getFirstChild(const char *name)
 	{
-	TreeNode *e = m_child;
+	tree_node *e = m_child;
 	if(!e) return NULL;
 	if(e->m_name==name) return e;
 	while((e=e->m_next)) if(e->m_name==name) return e;
@@ -224,10 +247,10 @@ inline TreeNode *TreeNode::getFirstChild(const char *name)
 	}
 
 
-inline std::string TreeNode::xmlrepr() const {
+inline std::string tree_node::xmlrepr() const {
 	std::string s(m_name);
-	std::list< std::pair<std::string, std::string> >::const_iterator it = m_attrs.begin();
-	while(it!=m_attrs.end()) {
+	std::list< std::pair<std::string, std::string> >::const_iterator it = m_attrs->begin();
+	while(it!=m_attrs->end()) {
 		s += " ";
 		s += (*it).first;
 		s += "=\"";
