@@ -686,8 +686,9 @@ class ChannelWrapper(Wrapper):
 
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base']
+	__publishnamesext = [
+			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir']
 	__publishnames = [
-			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
 			'project_smil_url']
 	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
@@ -747,9 +748,13 @@ class DocumentWrapper(Wrapper):
 		pass
 
 	def attrnames(self):
+		#################################### WARNING #####################################
+		# It should be clear to used Attrdefs for exclure properties since attr management
+		# has been extended
+		##################################################################################
 		attrs = self.context.attributes
 		names = attrs.keys()
-		for name in self.__stdnames + self.__publishnames + self.__qtnames:
+		for name in self.__stdnames + self.__publishnames + self.__publishnamesext + self.__qtnames:
 			if attrs.has_key(name):
 				names.remove(name)
 		if not features.lightweight and \
@@ -764,9 +769,12 @@ class DocumentWrapper(Wrapper):
 		if features.compatibility in (features.G2, features.QT):
 			if features.compatibility == features.QT:
 				names = self.__qtnames + names
+			names = self.__publishnames + self.__publishnamesext + names
+		elif features.compatibility in (features.SMIL10, ):
 			names = self.__publishnames + names
 		return self.__stdnames + names
-		
+		################################################################################
+
 	def valuerepr(self, name, value):
 		if name in ('title', 'base'):
 			return MMAttrdefs.valuerepr(name, value)
