@@ -242,7 +242,13 @@ class NodeInfo(NodeInfoDialog):
 		em.addchannel(channelname, index, self.guesstype())
 		ch = context.channeldict[channelname]
 		if root:
+			from windowinterface import UNIT_PXL, UNIT_SCREEN
 			ch['base_window'] = root
+			units = ch.get('units', UNIT_SCREEN)
+			if units == UNIT_PXL:
+				ch['base_winoff'] = 0,0,100,100
+			elif units == UNIT_SCREEN:
+				ch['base_winoff'] = 0,0,.2,.2
 		# if the node belongs to a layout, add the new channel
 		# to that layouf
 		layout = MMAttrdefs.getattr(self.node, 'layout')
