@@ -133,15 +133,98 @@ class Trace:
 			str = str + sep + name + '=' + val
 			sep = ','
 		return str
+		
+try:
+	import windowinterface
+	TraceDialog = windowinterface.TraceDialog
+except:
+	TraceClass = Trace
+else:
+	import os
+	prunemodules = ['xmllib.py', 're.py']
+	
+	class DialogTrace(Trace):
+		"""A trace variant that shows whatever is traced in a dialog"""
+		def __init__(self):
+			Trace.__init__(self)
+			self.dialog = TraceDialog()
+			self.pruneframe = None
+##			self.__printargs = 0
+			
+		def trace_dispatch_call(self, frame, arg, None = None, time = time.time):
+			if self.pruneframe:
+				return
+			pframe = frame.f_back
+			code = frame.f_code
+			funcname = code.co_name
+			if not funcname:
+				funcname = '<lambda>'
+			filename = code.co_filename
+			lineno = frame.f_lineno
+			if lineno == -1:
+				code = code.co_code
+				if code[0] == '\177': # SET_LINENO
+					lineno = ord(code[1]) | ord(code[2]) << 8
+##			if self.__printargs:
+##				args = self.__args(frame)
+##			else:
+##				args = ''
+##			if pframe is not None:
+				plineno = ' (from %d)' % pframe.f_lineno
+			else:
+				plineno = ''
+			filename = os.path.split(filename)[-1]
+			if not self.pruneframe and filename in prunemodules:
+				self.pruneframe = frame
+			msg = '> %s:%d %s %s'%(filename, lineno, funcname, plineno)
+			self.dialog.setitem(self.depth, msg, clear=1)
+			# XXXX self.dialog.draw
+##			frame.f_locals['__start_time'] = time()
+	
+		def trace_dispatch_return(self, frame, arg, time = time.time):
+##			t = frame.f_locals.get('__start_time', '')
+##			if t != '':
+##				t = ' [%.4f]' % (time() - t)
+			if self.pruneframe == frame:
+				self.pruneframe = None
+			if not self.pruneframe:		
+				code = frame.f_code
+				funcname = code.co_name
+				if not funcname:
+					funcname = '<lambda>'
+				filename = code.co_filename
+				filename = os.path.split(filename)[-1]
+				msg = '< %s:%d %s'%(filename, frame.f_lineno, funcname)
+				self.dialog.setitem(self.depth, msg)
+				# XXXX self.dialog.draw
+			self.curframe = frame.f_back
+			self.depth = self.depth - 1
+	
+		def trace_dispatch_exception(self, frame, arg, time = time.time):
+##			t = frame.f_locals.get('__start_time', '')
+##			if t != '':
+##				t = ' [%.4f]' % (time() - t)
+			if self.pruneframe and self.pruneframe != frame:
+				return
+			code = frame.f_code
+			funcname = code.co_name
+			if not funcname:
+				funcname = '<lambda>'
+			filename = code.co_filename
+			filename = os.path.split(filename)[-1]
+			msg = '< %s:%d %s'%(filename, frame.f_lineno, funcname)
+			self.dialog.setitem(self.depth, msg)
+			# XXXX self.dialog.draw
+	TraceClass = DialogTrace
 
 def run(cmd, globals = None, locals = None):
-	Trace().run(cmd, globals, locals)
+	TraceClass().run(cmd, globals, locals)
 
 def runcall(*func_args):
-	apply(Trace().runcall, funcargs)
+	apply(TraceClass().runcall, funcargs)
 
 def set_trace():
-	Trace().set_trace()
+	TraceClass().set_trace()
 
 def unset_trace():
 	sys.setprofile(None)
