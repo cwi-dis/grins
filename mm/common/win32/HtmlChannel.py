@@ -110,6 +110,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.SetImmHtml(self.armed_str)
 		else:
 			url=self.getfileurl(node)
+			url=urllib.unquote(url)
 			self.window.RetrieveUrl(url)	
 		self.window.setredrawfunc(self.redraw)
 
@@ -122,8 +123,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.DestroyHtmlCtrl()
 			self.window.setredrawfunc(None)
 		Channel.ChannelWindow.stopplay(self, node)
-
-	
+		
 
 #################################
 	def updatefixedanchors(self, node):
