@@ -23,7 +23,7 @@ error = 'windowinterface.error'
 
 import os
 GRiNSApp=os.environ['GRiNSApp']
-IsEditor = (GRiNSApp=='GRiNSed')
+IsEditor = (GRiNSApp=='CMIFed')
 IsPlayer = (GRiNSApp=='GRiNS')
 AppDispName = GRiNSApp
 
