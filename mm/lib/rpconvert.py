@@ -131,11 +131,8 @@ def rpconvert(node):
 				em.setnodeattr(newnode, 'scale', 0)
 			else:
 				em.setnodeattr(newnode, 'scale', -3)
-		chname = '%s %d' % (regionname, i)
-		while ctx.channeldict.has_key(chname):
-			i = i + 1
-			chname = '%s %d' % (regionname, i)
-		em.addchannel(chname, len(ctx.channelnames), chtype)
+		chname = ctx.newChannelName(regionname)
+		em.addchannel(chname, -1, chtype)
 		em.setchannelattr(chname, 'base_window', regionname)
 		# XXX are these two correct?
 		em.setchannelattr(chname, 'transparent', region.get('transparent', 0))
@@ -156,6 +153,10 @@ def rpconvert(node):
 		em.setnodeattr(newnode, 'top', y)
 		em.setnodeattr(newnode, 'width', w)
 		em.setnodeattr(newnode, 'height', h)
+		em.setnodeattr(newnode, 'regPoint', 'center')
+		em.setnodeattr(newnode, 'regAlign', 'center')
+		em.setnodeattr(newnode, 'bgcolor', (0,0,0))
+		em.setnodeattr(newnode, 'transparent', 0)
 		em.setnodeattr(newnode, 'channel', chname)
 		em.setnodeattr(newnode, 'beginlist', [MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start)])
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
