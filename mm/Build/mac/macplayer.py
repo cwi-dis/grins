@@ -119,6 +119,7 @@ else:
 # macfreeze: exclude dshow
 # macfreeze: exclude producer
 # macfreeze: exclude SMILTreeWrite
+# macfreeze: exclude linuxaudiodev
 #
 # And here's the code for non-standalone version of the editor:
 
