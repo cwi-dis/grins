@@ -111,6 +111,9 @@ class Node:
 		self.updateAttrdict()
 		for child in self._children:
 			child.updateAllAttrdict()
+
+	def getGeom(self):
+		return self._curattrdict['wingeom']
 					
 class Region(Node):
 	def __init__(self, name, dict, ctx):
@@ -219,14 +222,14 @@ class MediaRegion(Region):
 		# it avoid a unexepected effet during the edition when you resize. don't change the semantic
 		right =	self.mmnode.GetAttrDef('right', None) 
 		bottom = self.mmnode.GetAttrDef('bottom', None) 
-		media_width, media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
+		self.media_width, self.media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
 		if fit == 'hidden':
 			if right == None:
 				x,y,w,h = wingeom
-				wingeom = x,y,media_width,h
+				wingeom = x,y,self.media_width,h
 			if bottom == None:
 				x,y,w,h = wingeom
-				wingeom = x,y,w,media_height
+				wingeom = x,y,w,self.media_height
 				
 		self._curattrdict['wingeom'] = wingeom
 		
@@ -236,9 +239,6 @@ class MediaRegion(Region):
 		# no name showed
 		pass
 
-	def getGeom(self):
-		return self._curattrdict['wingeom']
-	
 	def onSelected(self):
 		self._ctx.onPreviousSelectMedia(self)
 
@@ -274,7 +274,6 @@ class MediaRegion(Region):
 		print 'media unselected : ',self._name
 		
 	def onGeomChanging(self, geom):
-		# update only the geom field on dialog box
 		self._ctx.updateMediaGeomOnDialogBox(geom)
 		
 	def onGeomChanged(self, geom):
@@ -698,10 +697,31 @@ class LayoutView2(LayoutViewDialog2):
 	def applyGeomOnMedia(self, media, value):
 		attrdict = media.mmnode.attrdict
 		if self.editmgr.transaction():
+			fit = media.fit
+			if fit =='hidden':
+				scale = 1
+			elif fit == 'meet':
+				scale = 0
+			elif fit == 'slice':
+				scale = -1
+			else:
+				scale = -3
+			
 			x,y,w,h = value
+			self.editmgr.setnodeattr(media.mmnode, 'scale', scale)			
 			if x != 0: self.editmgr.setnodeattr(media.mmnode, 'left', x)
 			if y != 0: self.editmgr.setnodeattr(media.mmnode, 'top' , y)
 
+			mw = media.media_width
+			mh = media.media_height
+			# parent region size
+			parent = media.getParent()
+			px, py, pw, ph = parent.getGeom()
+			right = pw-(x+w)
+			if right != 0: self.editmgr.setnodeattr(media.mmnode, 'right', right)
+			bottom = ph-(y+h)
+			if bottom != 0: self.editmgr.setnodeattr(media.mmnode, 'bottom' , bottom)
+			
 			# todo: some ajustements for take into account all fit values
 			self.editmgr.commit()
 		
@@ -809,6 +829,7 @@ class LayoutView2(LayoutViewDialog2):
 	def disableMediaListOnDialogBox(self):
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)		
 		self.dialogCtrl.enable('MediaSel',0)
+		self.currentMediaNameList = None
 
 	def enableMediaListOnDialogBox(self):
 		self.dialogCtrl.enable('MediaSel',1)
@@ -818,13 +839,16 @@ class LayoutView2(LayoutViewDialog2):
 		mediaName = mmnode.attrdict.get('name')
 		# update the selecter
 		if self.currentMediaNameList != None:
-			index = self.currentMediaNameList.index(mediaName)
-			if index >= 0:
-				self.dialogCtrl.setSelecterCtrl('MediaSel',index)
+			try:
+				index = self.currentMediaNameList.index(mediaName)
+				if index >= 0:
+					self.dialogCtrl.setSelecterCtrl('MediaSel',index)
+			except:
+				pass
 		
 		# get the current geom value: todo
 		geom = media.getGeom()
-
+		
 		# clear and disable not valid fields
 		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
 		self.dialogCtrl.enable('SendBack',0)
