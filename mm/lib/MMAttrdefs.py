@@ -173,7 +173,7 @@ def getattr(node, attrname):
 			except:
 				return defaultvalue
 	else:
-		raise RuntimeError, 'bad inheritance ' +`inheritance` + \
+		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
 
 
@@ -207,7 +207,7 @@ def getdefattr(node, attrname):
 			except:
 				return defaultvalue
 	else:
-		raise RuntimeError, 'bad inheritance ' +`inheritance` + \
+		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
 
 def valuerepr(name, value):
