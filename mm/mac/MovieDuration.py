@@ -17,11 +17,15 @@ def getduration(filename):
 	except (ValueError, Qt.Error), arg:
 		print 'Cannot open QT movie:',filename, arg
 		return 0
-	movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
-		QuickTime.newMovieDontResolveDataRefs)
-	duration = movie.GetMovieDuration()
-	scale = movie.GetMovieTimeScale()
-	duration = duration/float(scale)
+	try:
+		movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
+			QuickTime.newMovieDontResolveDataRefs)
+		duration = movie.GetMovieDuration()
+		scale = movie.GetMovieTimeScale()
+		duration = duration/float(scale)
+	except Qt.Error:
+		print 'Cannot obtain movie duration for', filename
+		duration = 0
 	return duration
 
 duration_cache = FileCache.FileCache(getduration)
