@@ -1849,6 +1849,7 @@ class MMNode(MMTreeElement):
 		self.delayed_end = 0
 		self.delayed_play_done = 0
 		self.__calcendtimecalled = 0
+		self.set_armedmode(ARM_NONE)
 		for arc in self.attrdict.get('beginlist', []) + self.attrdict.get('endlist', []):
 			arc.reinit()
 		if recurse:
