@@ -5,13 +5,6 @@ import htmlwidget
 import MMurl
 import sys
 
-X=0.1
-Y=0.1
-W=0.5
-H=0.7
-UNITS=mw_globals.UNIT_SCREEN
-TITLE="Source"
-
 class _common_window:
 	# The subclasses provide X,Y,W,H,TITLE and __init__
 	def __init__(self):
@@ -20,7 +13,7 @@ class _common_window:
 	def _do_show(self):
 		self.window = wd = mw_globals.toplevel.newwindow(
 			self.X, self.Y, self.W, self.H, self.TITLE, 
-			units=UNITS, commandlist=self.commandlist)
+			units=self.UNITS, commandlist=self.commandlist)
 		self.create_widget()
 		if self.is_html:
 			self.widget.insert_html(self.data, self.url)
@@ -80,14 +73,19 @@ class _common_window:
 		print "Anchor callback from non-html window?"
 
 class textwindow(_common_window):
-	X=0
-	Y=0
-	W=0.5
-	H=0.7
-	UNITS=mw_globals.UNIT_SCREEN
+	X=20
+	Y=20
+	W=100
+	H=150
+	UNITS=mw_globals.UNIT_MM
 	TITLE="Source"
 
 	def __init__(self, data):
+		import settings
+		if settings.has_key('textwindowpos'):
+			old = self.X, self.Y, self.W, self.H
+			self.X, self.Y, self.W, self.H = settings.get('textwindowpos')
+			settings.set('textwindowpos', old)
 		_common_window.__init__(self)
 		self.data = data
 		self.is_html = 0
@@ -98,6 +96,13 @@ class textwindow(_common_window):
 		self.adornments = None
 		self.show()
 
+	def hide(self):
+		import settings
+		pos = self.window.getgeometry()
+		settings.set('textwindowpos', pos)
+		settings.save()
+		_common_window.hide(self)
+		
 	def settext(self, data):
 		self.show()
 		self.data = data
