@@ -749,6 +749,7 @@ class GO:
 
 	def cleanup(self):
 		# Called just before forgetting the object
+		self.commandlist = []
 		self.mother = None
 
 	def reshape(self):
