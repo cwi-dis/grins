@@ -119,16 +119,16 @@ class TopLevel:
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		windowinterface.FileDialog('Open CMIF file:', cwd, '*.cmif',
+		windowinterface.FileDialog('Open SMIL file:', cwd, '*.smil',
 					   '', self.open_okcallback, None,
-					   existing=1)
+					   existing = 1)
 
 	def read_it(self):
 ## 		import time
 		import mimetypes
 		self.changed = 0
-## 		print 'parsing', self.filename, '...'
-## 		t0 = time.time()
+##		print 'parsing', self.filename, '...'
+##		t0 = time.time()
 		mtype = mimetypes.guess_type(self.filename)[0]
 		if mtype == 'application/smil':
 			import SMILTree
@@ -145,8 +145,8 @@ class TopLevel:
   </body>
 </smil>
 ''' % self.filename, self.filename)
-## 		t1 = time.time()
-## 		print 'done in', round(t1-t0, 3), 'sec.'
+##		t1 = time.time()
+##		print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
 
