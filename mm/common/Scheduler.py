@@ -160,7 +160,7 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0, external = 0):
+	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0, external = 0, propagate = 1):
 		# Schedules a single SyncArc for a node.
 		
 		# node is the node for the start of the arc.
@@ -169,7 +169,7 @@ class SchedulerContext:
 		# marker is ?
 		# timestamp is the time.. now.
 
-		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,timestamp,self.parent.timefunc()
+		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,propagate,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self)-arc.delay
 		elif arc.marker is not None and '#' in arc.marker:
@@ -226,7 +226,7 @@ class SchedulerContext:
 				else:
 					if debugevents: print 'scheduled_children-1 b',`a.dstnode`,`a`,event,a.dstnode.scheduled_children,self.parent.timefunc()
 					a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
-		if arc.qid is None:
+		if arc.qid is None and (not arc.isstart or arc.dstnode.playing != MMStates.PLAYING or timestamp + arc.delay != arc.dstnode.start_time):
 			if arc.isstart:
 				pnode = arc.dstnode.GetSchedParent()
 				if pnode is not None:
@@ -241,6 +241,7 @@ class SchedulerContext:
 			else:
 				if debugevents: print 'scheduled_children+1 d',`arc.dstnode`,`arc`,event,arc.dstnode.scheduled_children,self.parent.timefunc()
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
+##			print 'set timestamp a',arc,timestamp + arc.delay
 			arc.timestamp = timestamp + arc.delay
 ##			if not arc.isstart and not arc.ismin and arc.srcnode is arc.dstnode and arc.event == 'begin':
 ##				# end arcs have lower priority than begin arcs
@@ -261,7 +262,8 @@ class SchedulerContext:
 			else:
 				arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,None,None,arc.timestamp))
 			if arc.isstart:
-				arc.dstnode.set_start_time(arc.timestamp, 0)
+				if arc.dstnode.start_time is None or arc.dstnode.start_time > arc.timestamp:
+					arc.dstnode.set_start_time(arc.timestamp, 0)
 				arc.dstnode.depends['begin'].append(arc)
 			else:
 				arc.dstnode.depends['end'].append(arc)
@@ -270,7 +272,7 @@ class SchedulerContext:
 			if node.deparcs.has_key(event) and arc not in node.deparcs[event]:
 				node.deparcs[event].append(arc)
 				arc.depends.append((node, event))
-		if not arc.ismin and (arc.dstnode is not node or dev != event) and depth < SCHEDULE_DEPTH:
+		if propagate and not arc.ismin and (arc.dstnode is not node or dev != event) and depth < SCHEDULE_DEPTH:
 			ts = timestamp+arc.delay
 			if arc.dstnode.has_min and dev == 'end':
 				# maybe delay dependent sync arcs
@@ -331,6 +333,15 @@ class SchedulerContext:
 			if depth > 0 and arc.srcnode == 'syncbase' and arc.dstnode in node.GetSchedChildren():
 				if debugevents: print 'continue too'
 				continue
+			propagate = 1
+			if arc.isstart:
+				blist = arc.dstnode.FilterArcList(arc.dstnode.GetBeginList())
+				for a in blist:
+					if a.isresolved(self):
+						t = a.resolvedtime(self)
+						if t < arc.timestamp and t >= self.parent.timefunc():
+							propagate = 0
+							break
 			if debugevents: print 'do it'
 			do_continue = 0	# on old Python we can't continue from inside try/except
 			try:
@@ -353,9 +364,9 @@ class SchedulerContext:
 						else:
 							atime = a.atimes[0]
 						break
-			self.sched_arc(node, arc, event, marker, timestamp+atime, depth)
+			self.sched_arc(node, arc, event, marker, timestamp+atime, depth, propagate = propagate)
 			arc.__in_sched_arcs = 0
-		if event == 'begin':
+		if depth == 0 and event == 'begin':
 			# also do children that are runnable
 			for child in node.GetSchedChildren():
 				for arc in child.FilterArcList(child.GetBeginList()):
@@ -594,7 +605,11 @@ class SchedulerContext:
 			if not parent.playing:
 				return
 			self.flushqueue()
-			self.sched_arcs(node, 'begin', timestamp=timestamp)
+			if arc is not None and arc.event is not None and arc.event not in ('begin','end'):
+				# node starting because of event: clear old time stamp
+				if debugevents: print 'clear timestamp',node
+				node.set_start_time(None)
+			self.sched_arcs(node, 'begin', timestamp=timestamp, depth=1)
 			pnode.scheduled_children = pnode.scheduled_children - 1
 ##		node.cleanup_sched(parent)
 		for c in node.GetSchedChildren():
@@ -1082,6 +1097,7 @@ class SchedulerContext:
 			for arc in node.durarcs:
 				if arc.qid is None and hasattr(arc, 'paused'):
 					arc.qid = parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,None,None,timestamp + arc.paused))
+##					print 'set timestamp b',arc,timestamp + arc.paused
 					arc.timestamp = timestamp + arc.paused
 					del arc.paused
 		getchannelfunc = node.context.getchannelbynode
@@ -1461,6 +1477,7 @@ class Scheduler(scheduler):
 			sctx.event((action, arg), timestamp)
 		elif action == SR.SCHED_START:
 			if arg.isresolved(sctx) is not None:
+				arg.set_start_time(timestamp)
 				if arg.type in leaftypes and arg.looping_body_self is None:
 					self.do_play(sctx, arg, timestamp)
 				else:
