@@ -110,6 +110,8 @@ class EXPORT_XMT(_CommandBase):
 	help = 'Save document in new file for Wireless'
 class EXPORT_PRUNE(_CommandBase):
 	help = 'Save document in new file as pure SMIL, pruning unused parts'
+class EXPORT_SMIL1(_CommandBase):
+	help = 'Save document in new file as pure SMIL 1.0'
 class UPLOAD_SMIL(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
 class UPLOAD_XMT(_CommandBase):

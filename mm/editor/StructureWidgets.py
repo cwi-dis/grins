@@ -1537,13 +1537,12 @@ class StructureObjWidget(MMNodeWidget):
 				while t < b:
 					displist.drawline(TEXTCOLOR, [(l, t),(r, t)])
 					t = t + self.VSTEP
+		elif self.children:
+			for i in self.children:
+				i.draw(displist)
+				l = i.pos_abs[2] + GAPSIZE
 		else:
-			if self.children:
-				for i in self.children:
-					i.draw(displist)
-					l = i.pos_abs[2] + GAPSIZE
-			else:
-				self.draw_empty(displist, l, t, r, b)
+			self.draw_empty(displist, l, t, r, b)
 
 		MMNodeWidget.draw(self, displist)
 

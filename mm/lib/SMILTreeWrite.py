@@ -103,10 +103,10 @@ cancel = 'cancel'
 
 def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
 	      rpExt = features.EXPORT_REAL in features.feature_set, copyFiles = 0, convertfiles = 1, convertURLs = 0,
-	      evallicense = 0, progress = None, prune = 0):
+	      evallicense = 0, progress = None, prune = 0, smil_one = 0):
 	fp = open(filename, 'w')
 	try:
-		writer = SMILWriter(root, fp, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune)
+		writer = SMILWriter(root, fp, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -130,13 +130,13 @@ def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in featur
 import FtpWriter
 def WriteFTP(root, filename, ftpparams, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
 	     rpExt = features.EXPORT_REAL in features.feature_set, copyFiles = 0, convertfiles = 1, convertURLs = 0,
-	     evallicense = 0, progress = None, prune = 0):
+	     evallicense = 0, progress = None, prune = 0, smil_one = 0):
 	host, user, passwd, dir = ftpparams
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
 		try:
-			writer = SMILWriter(root, ftp, filename, tmpcopy = 1, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune)
+			writer = SMILWriter(root, ftp, filename, tmpcopy = 1, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
@@ -193,18 +193,18 @@ class MyStringIO(StringIO.StringIO):
 	def close(self):
 		pass
 
-def WriteString(root, grinsExt = 1, evallicense = 0, set_char_pos = 0, prune = 0):
+def WriteString(root, grinsExt = 1, evallicense = 0, set_char_pos = 0, prune = 0, smil_one = 0):
 	fp = MyStringIO()
-	writer = SMILWriter(root, fp, '<string>', grinsExt = grinsExt, evallicense = evallicense, set_char_pos = set_char_pos, prune = prune)
+	writer = SMILWriter(root, fp, '<string>', grinsExt = grinsExt, evallicense = evallicense, set_char_pos = set_char_pos, prune = prune, smil_one = smil_one)
 	try:
 		writer.write()
 	except cancel:
 		return ''
 	return fp.getvalue()
 
-def WriteBareString(node, grinsExt = 1, prune = 0):
+def WriteBareString(node, grinsExt = 1, prune = 0, smil_one = 0):
 	fp = MyStringIO()
-	writer = SMILWriter(node, fp, '<string>', grinsExt = grinsExt, prune = prune)
+	writer = SMILWriter(node, fp, '<string>', grinsExt = grinsExt, prune = prune, smil_one = smil_one)
 	try:
 		writer.writebare()
 	except cancel:
@@ -1119,7 +1119,8 @@ class SMILWriter(SMIL):
 		     rpExt = features.EXPORT_REAL in features.feature_set,
 		     qtExt = features.EXPORT_QT in features.feature_set,
 		     copyFiles = 0, evallicense = 0, tmpcopy = 0, progress = None,
-		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0):
+		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
+		     smil_one = 0):
 		# remember params
 		self.set_char_pos = set_char_pos
 		self.grinsExt = grinsExt
@@ -1184,7 +1185,10 @@ class SMILWriter(SMIL):
 		self.uses_grins_namespace = grinsExt
 		self.uses_qt_namespace = self.qtExt and self.checkQTattrs()
 		self.uses_rp_namespace = self.rpExt
-		self.smilboston = ctx.attributes.get('project_boston', 0)
+		if smil_one:
+			self.smilboston = 0
+		else:
+			self.smilboston = ctx.attributes.get('project_boston', 0)
 
 		self.fp = IndentedFile(fp)
 		self.__title = ctx.gettitle()

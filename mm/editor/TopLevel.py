@@ -59,6 +59,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		ViewDialog.__init__(self, 'toplevel_')
 		self.prune = 0
+		self.smil_one = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -286,6 +287,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL_callback,))),
 					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL_callback,))),
 					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
+					]
+			if features.EXPORT_SMIL1 in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
+					EXPORT_SMIL1(callback = (self.saveas_callback, (0, 1,))),
 					]
 ##			if features.EXPORT_XMT in features.feature_set:
 ##				self.publishcommandlist = self.publishcommandlist + [
@@ -641,7 +646,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			return 1
 
-	def saveas_callback(self, prune = 0):
+	def saveas_callback(self, prune = 0, smil_one = 0):
 		if self.new_file:
 			cwd = settings.get('savedir')
 		else:
@@ -653,12 +658,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			else:
 				cwd = os.getcwd()
 		title = 'Save GRiNS project:'
+		filetypes = ['application/x-grins-project', 'application/smil']
 		if prune:
 			filetypes = ['application/smil']
 			title = 'Save SMIL file:'
 			self.prune = 1
-		else:
-			filetypes = ['application/x-grins-project', 'application/smil']
+		if smil_one:
+			filetypes = ['application/smil']
+			title = 'Save SMIL 1.0 file'
+			self.smil_one = 1
 		dftfilename = ''
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
@@ -1140,9 +1148,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 							convertURLs = 1,
 							evallicense = evallicense,
 							progress = progress,
-							prune = self.prune)
+							prune = self.prune,
+							smil_one = self.smil_one)
 			finally:
 				self.prune = 0
+				self.smil_one = 0
 		except IOError, msg:
 			if exporting:
 				operation = 'Publish'
@@ -1202,17 +1212,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import SMILTreeWrite
 			try:
 				SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
-							grinsExt = 0,
-							qtExt = qtExt,
-							rpExt = rpExt,
-							copyFiles = 1,
-							convertfiles = convertfiles,
-							convertURLs = 1,
-							evallicense = evallicense,
-							progress = progress.set,
-							prune = self.prune)
+						       grinsExt = 0,
+						       qtExt = qtExt,
+						       rpExt = rpExt,
+						       copyFiles = 1,
+						       convertfiles = convertfiles,
+						       convertURLs = 1,
+						       evallicense = evallicense,
+						       progress = progress.set,
+						       prune = self.prune,
+						       smil_one = self.smil_one)
 			finally:
 				self.prune = 0
+				self.smil_one = 0
 		except IOError, msg:
 			windowinterface.showmessage('Media upload failed:\n%s'%(msg,))
 			return 0
