@@ -1581,45 +1581,9 @@ class AttrEditor(AttrEditorDialog):
 					# multiple root windows
 					root = ''
 		index = len(context.channelnames)
-		# experimental SMIL Boston layout code
 		em.addchannel(channelname, index, 'layout')
-		# end experimental
-		# else
-		# em.addchannel(channelname, index, self.guesstype(url))
-		#
-#		ch = context.channeldict[channelname]
 		if root:
 			em.setchannelattr(channelname, 'base_window', key)
-#			ch['base_window'] = root
-#		if ChannelMap.isvisiblechannel(ch['type']):
-#			units = ch.get('units', windowinterface.UNIT_SCREEN)
-#			if units == windowinterface.UNIT_PXL:
-#				if url:
-#					import Sizes
-#					w, h = Sizes.GetSize(context.findurl(url))
-#				else:
-#					w = h = 0
-#				if w == 0 or h == 0:
-#					if root:
-#						if root.has_key('base_winoff'):
-#							x, y, w, h = root['base_winoff']
-#						elif root.has_key('winsize'):
-#							w, h = root['winsize']
-#						else:
-#							w, h = 100, 100
-#					else:
-#						w = h = 100
-#				ch['base_winoff'] = 0,0,w,h
-#			elif units == windowinterface.UNIT_SCREEN:
-#				ch['base_winoff'] = 0,0,.2,.2
-		# create typed channel for this node
-		# must come after setting base_winoff in LayoutChannel
-#		em.defnewchannel(self.wrapper.node, ch)
-		# if the node belongs to a layout, add the new channel
-		# to that layouf
-#		layout = MMAttrdefs.getattr(self.wrapper.node, 'layout')
-#		if layout != 'undefined' and context.layouts.has_key(layout):
-#			em.addlayoutchannel(layout, ch)
 
 	def guesstype(self, url):
 		# guess channel type from URL
