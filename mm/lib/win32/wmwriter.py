@@ -76,15 +76,18 @@ class WMWriter:
 	# Update on viewport change
 	# 
 	def update(self, now):
+		if not self._writer: return
 		now = int(1000.0*now+0.5)
 		now = 100*(now/100)
-		if not self._writer: return
 		t = self._lasttm
-		while t <= now:
-			self._writer.WriteVideoSample(t, self._sample)
+		while t < now:
+			try:
+				self._writer.WriteVideoSample(t, self._sample)
+			except wmfapi.error, arg:
+				print arg
 			t = t + 100
 		self._sample = self._writer.AllocateDDSample(self._dds)
-		self._lasttm = now
+		self._lasttm = t
 
 	#
 	# Audio IRendererAdviceSink
@@ -92,8 +95,10 @@ class WMWriter:
 	def OnRenderSample(self, ms):
 		if self._writing:
 			self._exporter.audiofragment(ms)
-			self._writer.WriteDSAudioSample(ms, self._audiooffset)
-
+			try:
+				self._writer.WriteDSAudioSample(ms, self._audiooffset)
+			except wmfapi.error, arg:
+				print arg
 	def OnActive(self):
 		self._audiooffset = self._lasttm
 		self._writingaudio = 1
