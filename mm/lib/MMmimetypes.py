@@ -109,7 +109,7 @@ def _longestfirst(s1, s2):
 	return ret
 
 def get_extensions(type):
-	"""Get all extensions mapping to this mimetype"""
+	# Get all extensions mapping to this mimetype
 	global inited
 	import string
 	if not mimetypes.inited:
