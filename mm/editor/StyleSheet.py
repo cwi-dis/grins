@@ -1,4 +1,4 @@
-# Style list editor
+# Style sheet editor
 
 # This displays the list of defined style names.
 # It is possible to add, delete and rename styles,
@@ -14,7 +14,7 @@ import AttrEdit
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 
-class StyleEditor() = ViewDialog(), BasicDialog():
+class StyleSheet() = ViewDialog(), BasicDialog():
 	#
 	def init(self, toplevel):
 		self = ViewDialog.init(self, 'style_')
@@ -38,12 +38,14 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		if not self.showing:
 			self.load_styles()
 			BasicDialog.show(self)
+			self.toplevel.checkviews()
 			self.editmgr.register(self)
 	#
 	def hide(self):
 		if self.showing:
 			self.editmgr.unregister(self)
 			BasicDialog.hide(self)
+			self.toplevel.checkviews()
 	#
 	def make_form(self):
 		self.width, self.height = 300, 320
@@ -164,6 +166,11 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		if not newname:
 			fl.show_message( \
 				'Cannot rename to empty style name', '', '')
+			return
+		# (2a) check that the old and the new name differ
+		if oldname = newname:
+			fl.show_message( \
+			  'Please edit the input box to the new name', '', '')
 			return
 		# (3) check that the new name doesn't already exist
 		if self.context.styledict.has_key(newname):
