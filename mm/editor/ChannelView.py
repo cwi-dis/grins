@@ -2060,10 +2060,14 @@ class NodeBox(GO, NodeBoxCommand):
 			except IOError:
 				pass
 			else:
-				box = d.display_image_from_file(f, center = 0, coordinates = (l, t, haboxsize * 6, vaboxsize * 9))
-				l = box[0] + box[2]
-				d.fgcolor((0,0,0))
-				d.drawbox(box)
+				try:
+					box = d.display_image_from_file(f, center = 0, coordinates = (l, t, haboxsize * 6, vaboxsize * 9))
+				except windowinterface.error:
+					pass
+				else:
+					l = box[0] + box[2]
+					d.fgcolor((0,0,0))
+					d.drawbox(box)
 
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)
