@@ -448,6 +448,31 @@ then
 else
 	:
 fi &&
+case $ARCH in
+linux)	{ [ -d $depth/mm/mmpython/rmasdk/build.$ARCH ] || mkdir $depth/mm/mmpython/rmasdk/build.$ARCH; } &&
+	cd $depth/mm/mmpython/rmasdk/build.$ARCH &&
+	if [ ! -f Setup ]
+	then
+		cat > Setup <<\EOF
+CCC=cc
+*shared*
+rma -D_UNIX -I$(srcdir)/unix -I$(srcdir)/include Engine.cpp InitGUID.cpp Player.cpp PyCppApi.cpp rma.cpp Std.cpp exadvsnk.cpp exaumgr.cpp excontxt.cpp exerror.cpp exsitsup.cpp fivemlist.cpp fivemmap.cpp
+EOF
+	else
+		:
+	fi
+	if [ ! -f Makefile ]
+	then
+		$make -f ../Makefile.pre.in srcdir=.. VPATH=.. \
+			VERSION=$VERSION \
+			installdir=../../../../python/build.$ARCH/install \
+			Makefile
+	else
+		$make ${1+"$@"} Makefile
+	fi &&
+	$make
+	;;
+esac &&
 cd $depth &&
 CMIF=$CHAMELEON/mm PYTHONPATH=$CHAMELEON/mm/lib:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH $python -c 'import MMAttrdefs'
 ) &&
