@@ -3,8 +3,7 @@
 from Channel import ChannelAsync
 import windowinterface
 import time
-import audiodev
-import audiofile
+import audio, audioconvert, audiodev
 import urllib
 import os
 
@@ -25,7 +24,6 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self._timer_id = None
-		self.maxbytes = 0
 		self.play_data = ''
 
 	def _openport(self):
@@ -42,9 +40,9 @@ class SoundChannel(ChannelAsync):
 			SoundChannel.__port = 'no-audio'
 			return 0
 		# initialize to known state to find out queuesize in bytes
-		self.__port.setsampwidth(2)
-		self.__port.setnchannels(2)
-		SoundChannel.__maxbytes = self.__port.getfillable() * 4
+## 		self.__port.setsampwidth(2)
+## 		self.__port.setnchannels(2)
+## 		SoundChannel.__maxbytes = self.__port.getfillable() * 4
 		return 1
 
 	def do_arm(self, node, same=0):
@@ -58,38 +56,43 @@ class SoundChannel(ChannelAsync):
 		fn = urllib.urlretrieve(fn)[0]
 
 		try:
-			self.arm_fp = audiofile.open(fn, 'r')
+			self.arm_fp = audio.reader(fn)
 		except IOError:
 			print 'Cannot open audio file', fn
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		except audiofile.Error:
+		except audio.Error:
 			print 'Unknown audio file type', fn
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
+		try:
+			self.arm_fp = audioconvert.convert(
+				self.arm_fp,
+				self.__port.getformats(),
+				self.__port.getframerates())
+		except audio.Error:
+			print "Can't convert to usable format", fn
+			self.arm_fp = None
+			self.armed_duration = 0
+			return 1
 		self.arm_framerate = self.arm_fp.getframerate()
-		self.arm_sampwidth = self.arm_fp.getsampwidth()
-		self.arm_nchannels = self.arm_fp.getnchannels()
-		self.arm_bps = self.arm_nchannels*self.arm_sampwidth
+		self.arm_format = self.arm_fp.getformat()
 		self.arm_readsize = self.arm_framerate	# XXXX 1 second, tied to timer!!
-		if self.arm_readsize*self.arm_bps*2 > self.__maxbytes:
-			# The audio output queue is too small to fit
-			# our readsize. Lower it.
-			self.arm_readsize = self.__maxbytes / self.arm_bps / 2
-			print 'AudioChannel: Warning: reading', \
-			      self.arm_readsize, 'samples per cycle'
-		self.arm_time = float(self.arm_readsize/self.arm_bps)/self.arm_framerate/2
+## 		if self.arm_readsize*self.arm_bps*2 > self.__maxbytes:
+## 			# The audio output queue is too small to fit
+## 			# our readsize. Lower it.
+## 			self.arm_readsize = self.__maxbytes / self.arm_bps / 2
+## 			print 'AudioChannel: Warning: reading', \
+## 			      self.arm_readsize, 'samples per cycle'
+## 		self.arm_time = float(self.arm_readsize/self.arm_bps)/self.arm_framerate/2
 		self.arm_data = self.arm_fp.readframes(self.arm_readsize)
 		if debug:
 			print 'Audio arm: framerate', self.arm_framerate
-			print 'Audio arm: sampwidth', self.arm_sampwidth
-			print 'Audio arm: nchannels', self.arm_nchannels
-			print 'Audio arm: bps', self.arm_bps
+			print 'Audio arm: format', self.arm_format
 			print 'Audio arm: readsize', self.arm_readsize
 			print 'Audio arm: len(data)', len(self.arm_data)
-			print 'Audio arm: timer', self.arm_time
 		return 1
 		
 	def _playsome(self, *dummy):
@@ -98,16 +101,17 @@ class SoundChannel(ChannelAsync):
 				print 'not playing some...', self._paused, \
 				      self.play_fp, self.__port
 			return
-		in_buffer = len(self.play_data)/self.play_bps
+		in_buffer = len(self.play_data)
 		if debug:
 			print 'SoundChannel: playsome', in_buffer, \
 			      self.__port.getfillable()
-		while self.__port.getfillable() >= in_buffer and \
-		      self.play_data:
-			self.__port.writeframes(self.play_data)
+## 		while self.__port.getfillable() >= in_buffer and \
+## 		      self.play_data:
+		if self.play_data:
+			self.__port.writeframes(self.play_data)	# may hang :-(
 			self.play_data = self.play_fp.readframes(self.play_readsize)
 		if self.play_data:
-			self._timer_id = windowinterface.settimer(self.arm_time, (self._playsome, ()))
+			self._timer_id = windowinterface.settimer(self.play_time, (self._playsome, ()))
 		else:
 			samples_left = self.__port.getfilled()
 			time_left = samples_left/float(self.play_framerate)
@@ -132,13 +136,13 @@ class SoundChannel(ChannelAsync):
 		self.play_fp = self.arm_fp
 		self.play_readsize = self.arm_readsize
 		self.play_framerate = self.arm_framerate
-		self.play_bps = self.arm_bps
+		self.play_format = self.arm_format
 		self.play_data = self.arm_data
+		self.play_time = float(self.play_readsize)/self.play_framerate/2
 		self.arm_fp = None
 		self.arm_data = None
-		self.__port.setoutrate(self.arm_framerate)
-		self.__port.setsampwidth(self.arm_sampwidth)
-		self.__port.setnchannels(self.arm_nchannels)
+		self.__port.setformat(self.play_format)
+		self.__port.setframerate(self.play_framerate)
 		self._playsome()
 		
 	def playstop(self):
