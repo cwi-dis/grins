@@ -12,22 +12,19 @@ import settings
 
 import domcore
 
-def convertAttribute(name, value) :
+conversion_attributes = [ "duaration", "winsize", "base_winoff",
+		       "anchorlist", "from", "to" ]
+
+		      
+def convertAttribute(name, value):
 	"converts certain attributevalues to other-than string values"
-	print 'converting attribute ... ',
-	if name=="duration" :		# convert to float
-		nwValue = float(value)
-	elif name=="winsize" or name=="base_winoff" :		# covert to tuple
-		import string
-		nwValue = tuple(map(int,string.split(filter(lambda x: x not in ['(',')'], value),',')))
-	elif name=='anchorlist' or name=="from" or name=="to":
+	if name in conversion_attributes:
 		nwValue = eval(value)
+		print 'converting attribute ... ',
+		print name, "=", nwValue
+		return nwValue
 	else:
-		nwValue = value
-
-	print name, "=", nwValue
-
-	return nwValue
+		return value
 
 
 class MMNodeContext(domcore.Element):
