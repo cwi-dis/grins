@@ -354,7 +354,7 @@ class SvgUse(SvgElement):
 
 class AnimateElement(SvgElement, svgtime.TimeElement):
 	def parseAttributes(self):
-		svgtime.TimeElement.__init__(self, self.getType(), self.document)
+		svgtime.TimeElement.__init__(self, self.getType(), self.document.getTimeRoot())
 		self.document.appendTimeElement(self)
 
 		self.animator = None
@@ -464,14 +464,22 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 		return None
 
 	def beginElement(self):
+		if self.isActive():
+			return 0
 		svgtime.TimeElement.beginElement(self)
-		if self.animator and self._targetAttr:
+		if self.animator:
 			self._targetAttr.appendAnimator(self.animator)	
 
-	def endElement(self):
-		svgtime.TimeElement.endElement(self)
-		if self.animator and self._targetAttr:
+	def removeElement(self):
+		if not self.isAlive():
+			return
+		svgtime.TimeElement.removeElement(self)
+		if self.animator:
 			self._targetAttr.removeAnimator(self.animator)
+
+	def resetElement(self):
+		svgtime.TimeElement.resetElement(self)
+		if self.animator:
 			self.animator.reset()
 
 	def createSyncArcs(self):
@@ -892,7 +900,7 @@ class SvgDocument(SvgNode):
 		self.entitydefs = None
 		self.styles = []
 		self.ids = {}
-		self.timeRoot = svgtime.SvgTimeRoot('par', self)
+		self.timeRoot = svgtime.SvgPar('#timeroot', None)
 
 		# create DOM
 		p = SvgDOMBuilder(self)
@@ -957,12 +965,12 @@ class SvgDocument(SvgNode):
 	def createDOMIterator(self, root, listener, filter=None):
 		return DOMIterator(root, listener, filter)
 
-	def createDOMNavigator(self, root, navigator, startnodecb, endnodecb=None, filter=None):
-		return DOMNavigator(root, navigator, startnodecb, endnodecb, filter)
+	def createDOMParamIterator(self, root, navigator, startnodecb, endnodecb=None, filter=None):
+		return DOMParamIterator(root, navigator, startnodecb, endnodecb, filter)
 
 	def setready(self):
 		SvgNode.setready(self)
-		self.timeRoot.onDocLoad()
+		self.buildTimeGraph()
 
 	#
 	# document repository
@@ -1007,6 +1015,41 @@ class SvgDocument(SvgNode):
 
 	def hasTiming(self):
 		return self.timeRoot.getFirstTimeChild() is not None
+
+	#
+	#  build directed time graph
+	#
+	def buildTimeGraph(self):
+		iter = self.createDOMParamIterator(self.timeRoot, self, self.buildTimeGraphCallback)
+		while iter.advance(): pass
+		iter = self.createDOMParamIterator(self.timeRoot, self, self.resolveTimeGraphRefs)
+		while iter.advance(): pass
+
+	def buildTimeGraphCallback(self, node):
+		node.calcBasicTiming()
+		node.createSyncArcs()
+		if isinstance(node, AnimateElement):
+			node.createAnimator()
+
+	def resolveTimeGraphRefs(self, node):
+		bt = node.get('begin') or 0
+		if svgtime.isdefinite(bt):
+			for arc in node.beginSyncArcs:
+				arc.updateDependant(bt)
+		et = node.get('end')
+		if svgtime.isdefinite(et):
+			for arc in node.endSyncArcs:
+				arc.updateDependant(et)
+
+	#  navigator interface
+	def getNavFirstChild(self, node):
+		return node.getFirstTimeChild()
+
+	def getNavNextSibling(self, node):
+		return node.getNextTimeSibling()
+
+	def getNavParent(self, node):
+		return node.getTimeParent()
 
 	# 
 	# write svg tree (print for now)
@@ -1194,7 +1237,7 @@ class DOMIterator:
 #	def getNavFirstChild(self, node): return None
 #	def getNavNextSibling(self, node): return None
 #	def getNavParent(self, node): return None
-class DOMNavigator:
+class DOMParamIterator:
 	def __init__(self, root, navigator, startnodecb, endnodecb=None, filter=None, trace=0):
 		self.root = root
 		self.navigator = navigator
@@ -1286,6 +1329,7 @@ class SVGPlayer:
 	# extenal calls
 	# 
 	def play(self):
+		self._timeroot.resetElement()
 		self._timeroot.setOsTimer(self._ostimer)
 		self._timeroot.seekElement(0.0)
 		self._timeroot.beginElement()
@@ -1293,6 +1337,7 @@ class SVGPlayer:
 
 	def stop(self):
 		self._timeroot.endElement()
+		self._timeroot.removeElement()
 		if self._timerid is not None:
 			self._ostimer.canceltimer(self._timerid)
 			self._timerid = None

@@ -148,7 +148,7 @@ class Animator:
 
 	def getCurrValue(self):
 		iter, t = self._timenode.getDurInstanceTime()
-		if self._timenode._frozen and t == self._dur:
+		if self._timenode.isFrozen() and t == self._dur:
 			self.setToEnd()	
 		else:
 			self.getValue(t)
