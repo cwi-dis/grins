@@ -114,8 +114,18 @@ def convertaudiofilex(u, dstdir, file, node):
 
 	mc = b.QueryIMediaControl()
 	mc.Run()
-	b.WaitForCompletion()
-	mc.Stop()
+	import sys
+	if sys.platform=='win32':
+		# remove messages in queue
+		# dispatch only paint message
+		import win32ui
+		while b.WaitForCompletion(0)==0:
+			win32ui.PumpWaitingMessages()
+		mc.Stop()
+		win32ui.PumpWaitingMessages()
+	else:
+		b.WaitForCompletion()
+		mc.Stop()
 
 inputfile='D:\\ufs\\mm\\cmif\\Build\\common\\testdoc\\testdata.aiff'
 outputdir='d:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin'
