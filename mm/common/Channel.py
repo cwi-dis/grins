@@ -305,9 +305,18 @@ class Channel:
 			self._has_pause = 0
 			self.playdone(None)
 
+	# XXXX This is a temporary routine to allow testing of arg-anchors
+	#
 	def arganchor_triggered(self, node, anchorlist, arg):
 		print 'ARG ANCHOR TRIGGERED'
-		arg = dialogs.multchoice('Give anchor value:', ['0', '1', '2'], 0)
+		import sys
+		if 'fl' in sys.modules.keys():
+			import fl
+			# We are in the editor. Use fl for question
+			arg = fl.show_input('Give anchor args:', '')
+		else:
+			# We are in the player. Use dialog getstring.
+			arg = dialogs.getstring('Give anchor args: ')
 		print 'VALUE=', arg
 		self.pause_triggered(node, anchorlist, arg)
 

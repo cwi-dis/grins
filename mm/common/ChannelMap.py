@@ -12,6 +12,7 @@ from VcrChannel import VcrChannel
 from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
+from HtmlChannel import HtmlChannel
 
 channelmap = { \
 	'null': 	NullChannel, \
@@ -25,6 +26,7 @@ channelmap = { \
 	'socket':	SocketChannel, \
 	'mpeg':		MpegChannel, \
 	'cmif':		CmifChannel, \
+	'html':		HtmlChannel, \
 	}
 
 channeltypes = ['null', 'text', 'image']
