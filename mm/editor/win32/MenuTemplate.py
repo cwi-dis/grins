@@ -166,7 +166,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Play &node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
 		(FLAG_CMIF, SEP,),
-		(FLAG_SMIL, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(FLAG_BOSTON, DYNAMICCASCADE, 'User &groups', USERGROUPS),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
@@ -226,7 +226,7 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
-		(FLAG_SMIL, ENTRY, 'User &groups', '6', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Sourc&e', '7', SOURCE),
 		)),

@@ -27,14 +27,14 @@ FLAG_QT_LIGHT = 0x0004
 FLAG_QT_PRO = 0x0008
 FLAG_CMIF = 0x0010
 FLAG_SMIL_1_0 = 0x0020
-FLAG_SMIL_2 = 0x0040
+FLAG_BOSTON = 0x0040
 FLAG_DBG = 0x8000
 
 # some abbreviations
 FLAG_G2 = FLAG_G2_LIGHT | FLAG_G2_PRO
 FLAG_QT = FLAG_QT_LIGHT | FLAG_QT_PRO
-FLAG_PRO = FLAG_G2_PRO | FLAG_QT_PRO | FLAG_SMIL_1_0 | FLAG_SMIL_2
-FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0 | FLAG_SMIL_2
+FLAG_PRO = FLAG_G2_PRO | FLAG_QT_PRO | FLAG_SMIL_1_0 | FLAG_BOSTON
+FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0 | FLAG_BOSTON
 
 _curflags = None
 
@@ -56,6 +56,8 @@ def curflags():
 				flags = flags | FLAG_QT_PRO 
 		elif features.compatibility == features.SMIL10:
 			flags = flags | FLAG_SMIL_1_0
+		elif features.compatibility == features.Boston:
+			flags = flags | FLAG_BOSTON
 		if settings.get('cmif'):
 			flags = flags | FLAG_CMIF
 		if settings.get('debug'):
