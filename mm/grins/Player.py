@@ -137,6 +137,7 @@ class Player(PlayerCore, PlayerDialog):
 		elif not self.playing:
 			# Case 2: starting to play from stopped mode
 			self.play(self.userstarttime)
+			self.userstarttime = 0
 		else:
 			# nothing, restore state.
 			self.showstate()
@@ -243,6 +244,7 @@ class Player(PlayerCore, PlayerDialog):
 			path.reverse()
 			sctx.gototime(path[0], gototime, timestamp, path)
 			self.scheduler.setpaused(0)
+			self.userstarttime = 0
 
 	def makemenu(self):
 		channels = []
