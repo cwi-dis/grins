@@ -382,6 +382,41 @@ def getfill(writer, node):
 		return 'freeze'
 
 def getsyncarc(writer, node, isend):
+	if isend:
+		attr = 'endlist'
+	else:
+		attr = 'beginlist'
+	list = []
+	nomultiple = 0
+	for arc in node.GetRawAttrDef(attr, []):
+		if arc.srcnode is None and arc.event is None and arc.marker is None and arc.delay is None:
+			nomultiple = 1
+			list.append('indefinite')
+		elif arc.srcnode is None and arc.event is None and arc.marker is None:
+			list.append('%gs' % arc.delay)
+		elif arc.marker is None:
+			if arc.srcnode is None:
+				# huh?
+				pass
+			elif arc.srcnode == 'prev':
+				name = 'prev.'
+			elif arc.srcnode is node:
+				name = ''
+			else:
+				name = writer.uid2name(arc.srcnode.GetUID()) + '.'
+			if arc.event is not None:
+				name = name + arc.event
+			if arc.delay is not None:
+				if arc.delay > 0:
+					name = '%s+%g' % (name, arc.delay)
+				elif arc.delay < 0:
+					name = name + '%g' % arc.delay
+			list.append(name)
+		else:
+			list.append('%s.marker(%s)' % (writer.uid2name(arc.srcnode.GetUID()), arc.marker))
+	if not list:
+		return
+	return string.join(list, ';')
 	allarcs = node.GetRawAttrDef('synctolist', [])
 	arc = None
 	for srcuid, srcside, delay, dstside in allarcs:
@@ -608,6 +643,7 @@ cmif_node_attrs_ignore = {
 	'clipbegin':0, 'clipend':0, 'u_group':0, 'loop':0, 'synctolist':0,
 	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
+	'repeatdur':0, 'beginlist':0, 'endlist':0,
 	}
 cmif_node_realpix_attrs_ignore = {
 	'bitrate':0, 'size':0, 'duration':0, 'aspect':0, 'author':0,
