@@ -2271,11 +2271,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil2real\REFM.html
-  Destination=%MAINDIR%\REFM.html
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil2real\QuickStart.pdf
   Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
@@ -2322,18 +2317,6 @@ item: If/While Statement
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\REFM.html
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Reference Manual.lnk
-  Icon Number=0
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Create Shortcut
   Source=%MAINDIR%\TDG.html
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\Template Design Guide.lnk
   Icon Number=0
@@ -2353,18 +2336,6 @@ end
 item: End Block
 end
 item: Else Statement
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Reference Manual
-  Command Line=%MAINDIR%\REFM.html
-end
-item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
