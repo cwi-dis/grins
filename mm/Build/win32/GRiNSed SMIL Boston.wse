@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-80.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-81.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -57,6 +57,17 @@ item: Search for File
   Pathname List=GRiNS_SV2.exe
   Description=Checking for previously installed components...
   Flags=00000001
+end
+item: If/While Statement
+  Variable=FIND_DIRECTORY
+  Value=BACKUP
+  Flags=00000010
+end
+item: Set Variable
+  Variable=FIND_DIRECTORY
+  Value=""
+end
+item: End Block
 end
 item: End Block
 end
