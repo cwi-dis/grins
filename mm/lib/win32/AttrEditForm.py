@@ -1796,6 +1796,11 @@ class MediaserverGroup(StringGroup):
 	def __init__(self):
 		StringGroup.__init__(self,MediaserverGroup.data)
 
+class DurationGroup(StringGroup):
+	data=attrgrsdict['duration_and_loop']
+	def __init__(self):
+		StringGroup.__init__(self,DurationGroup.data)
+
 
 # base_winoff
 class LayoutGroup(AttrGroup):
@@ -1916,24 +1921,6 @@ class CNameGroup(AttrGroup):
 		return AttrPage
 		
 
-class DurationGroup(AttrGroup):
-	data=attrgrsdict['duration_and_loop']
-
-	def __init__(self,data=None):
-		AttrGroup.__init__(self,DurationGroup.data)
-
-	def getctrlids(self,ix):
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
-
-	def getpageresid(self):
-		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
-	
-	def oninitdialog(self,wnd):
-		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
-		ctrl.attach_to_parent()
-		ctrl.settext(self._data['title'])
 		
 
 class FileGroup(AttrGroup):
