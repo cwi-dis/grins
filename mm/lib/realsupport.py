@@ -78,11 +78,13 @@ class RTParser(xmllib.XMLParser):
 		'ul': __all,
 		}
 
-	def __init__(self, file = None):
+	def __init__(self, file = None, printfunc = None):
 		self.elements = {
 			'window': (self.start_window, None),
 			}
 		self.__file = file or '<unknown file>'
+		self.__printdata = []
+		self.__printfunc = printfunc
 		xmllib.XMLParser.__init__(self, accept_unquoted_attributes = 1,
 					  accept_utf8 = 1, map_case = 1)
 
@@ -126,7 +128,22 @@ class RTParser(xmllib.XMLParser):
 		self.height = height
 
 	def syntax_error(self, msg):
-		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
+		if self.__printfunc is None:
+			print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
+		else:
+			self.__printdata.append('Warning: syntax error on line %d: %s' % (self.lineno, msg))
+
+	def close(self):
+		xmllib.XMLParser.close(self)
+		if self.__printfunc is not None and self.__printdata:
+			data = string.join(self.__printdata, '\n')
+			# first 30 lines should be enough
+			data = string.split(data, '\n')
+			if len(data) > 30:
+				data = data[:30]
+				data.append('. . .')
+			self.__printfunc(string.join(data, '\n'))
+			self.__printdata = []
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
@@ -877,7 +894,7 @@ def rmff(file, fp):
 cache = {}
 import MMurl
 
-def getinfo(file, fp = None):
+def getinfo(file, fp = None, printfunc = None):
 	if cache.has_key(file):
 		return cache[file]
 	if fp is None:
@@ -889,7 +906,7 @@ def getinfo(file, fp = None):
 	head = fp.read(4)
 	if head == '<imf':
 		# RealPix
-		rp = RPParser(file)
+		rp = RPParser(file, printfunc = printfunc)
 		rp.feed(head)
 		rp.feed(fp.read())
 		rp.close()
@@ -899,7 +916,7 @@ def getinfo(file, fp = None):
 			'bitrate': rp.bitrate,}
 	elif string.lower(head) == '<win':
 		# RealText
-		rp = RTParser(file)
+		rp = RTParser(file, printfunc = printfunc)
 		rp.feed(head)
 		rp.feed(fp.read())
 		rp.close()
