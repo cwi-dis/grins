@@ -98,20 +98,31 @@ def textwindow(text):
 	w.show()
 	return w
 
-class htmlwindow:
-	def __init__(self, url):
-		w = Window('Help', resizable = 1, deleteCallback = 'hide')
-		b = w.ButtonRow([('Close', (w.hide, ()))],
-				top = None, left = None, right = None,
-				vertical = 0)
-		h = w.Html(url, top = b, left = None, right = None, bottom = None)
-		w.show()
-		self.__window = w
-		self.__htmlw = h
+##class htmlwindow:
+##	def __init__(self, url):
+##		w = Window('Help', resizable = 1, deleteCallback = 'hide')
+##		b = w.ButtonRow([('Close', (w.hide, ()))],
+##				top = None, left = None, right = None,
+##				vertical = 0)
+##		h = w.Html(url, top = b, left = None, right = None, bottom = None)
+##		w.show()
+##		self.__window = w
+##		self.__htmlw = h
 
-	def goto_url(self, url):
-		self.__htmlw.goto_url(url)
-		self.__window.pop()
+##	def goto_url(self, url):
+##		self.__htmlw.goto_url(url)
+##		self.__window.pop()
 
-	def is_closed(self):
-		return self.__window.is_closed()
+##	def is_closed(self):
+##		return self.__window.is_closed()
+
+def htmlwindow(url):
+	import os
+	browser = os.environ.get('WEBBROWSER', 'netscape')
+	if browser == 'netscape':
+		# special case code for netscape
+		cmd = 'netscape -remote "openURL(%s)" 2>/dev/null || netscape %s &' % (url, url)
+	else:
+		cmd = '%s %s &' % (browser, url)
+	os.system(cmd)
+	# don't return a value!
