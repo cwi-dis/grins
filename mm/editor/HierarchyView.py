@@ -1212,7 +1212,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
-		if isinstance(self.selected_icon, StructureWidgets.IconBox):
+		if isinstance(self.selected_icon, StructureWidgets.Icon):
 			self.selected_icon.unselect()
 		self.old_selected_widget = self.selected_widget
 		self.selected_widget = widget
@@ -1254,7 +1254,11 @@ class HierarchyView(HierarchyViewDialog):
 		elif isinstance(clicked_widget, StructureWidgets.MMWidgetDecoration):
 			select_me = clicked_widget.get_mmwidget()
 			self.select_widget(select_me, scroll=0)
-			if isinstance(clicked_widget, StructureWidgets.IconBox):
+			if isinstance(clicked_widget, StructureWidgets.Icon):
+				if self.selected_icon == clicked_widget:
+					return
+				if self.selected_icon:
+					self.selected_icon.unselect()
 				self.selected_icon = clicked_widget # keep it so we can unselect it later.
 				clicked_widget.select()
 		else:

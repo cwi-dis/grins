@@ -18,7 +18,9 @@ Priority top-to-bottom.
 --> Source editor view.
 	- Handle import errors well.
 	- Selections - go to a specific line.
-	- SMILTree r/w - calculate line numbers for nodes.
+	- Sjoerd is diong the cahr positions of the nodes.
+	- Global selection management.
+	- Remove the menu entry that I added (edit in source view)
 
 Results:
 * Structure view - add small icon capability, arrows and events.
