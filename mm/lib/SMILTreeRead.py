@@ -798,6 +798,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('no namespace declaration for %s in effect' % v)
 					else:
 						attrdict['system_required'].append(nsuri)
+			elif attr == 'systemComponent':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['system_component'] = string.split(val)
 			elif attr == 'customTest':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
