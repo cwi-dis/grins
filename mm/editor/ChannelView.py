@@ -495,7 +495,7 @@ def lastminidocument(node):
 		return node
 	res = None
 	for child in node.GetChildren():
-		mini = firstminidocument(child)
+		mini = lastminidocument(child)
 		if mini <> None:
 			res = mini
 	return res
