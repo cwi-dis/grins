@@ -22,21 +22,19 @@ def imgsize(filename):
 
 class _showimg():
 	def init(self, (filename, xy)):
-		self.pid = posix.fork()
-		if self.pid: return self # Parent
-		# Child
-		args = ['showimg', filename]
+		cmd = 'exec showimg ' + filename
 		if xy:
 			x, y = xy
-			args = args + [`x`, `y`]
-		try:
-			posix.exec(SHOWIMG, args)
-		except:
-			sys.stderr.write('exec failed')
-			posix._exit(-1)
+			cmd = cmd + ' ' + `x` + ' ' + `y`
+		self.pipe = posix.popen(cmd, 'r')
+		line = self.pipe.readline()
+		line = string.strip(line)
+		self.pid = string.atoi(line)
+		return self
 	def kill(self):
 		posix.kill(self.pid, 15)
-		del self.pid
+		dummy = self.pipe.close()
+		del self.pid, self.pipe
 
 def showimg(filename, xy):
 	return _showimg().init(filename, xy)
@@ -48,6 +46,10 @@ def test(filename):
 	x = (scrwidth - xsize) / 2
 	y = (scrheight - ysize) / 2
 	#
+	print 'Starting...'
 	a = showimg(filename, (x, y))
+	print 'Started; sleep 3 sec...'
 	time.sleep(3)
+	print 'Killing...'
 	a.kill()
+	print 'Done.'
