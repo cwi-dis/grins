@@ -56,7 +56,7 @@ def readattrdefs(fp, filename):
 	try:
 		fpc = open(filename_com, 'rb')
 		sf = os.stat(filename)
-		sfc = os.stat(filename_com)
+		sfc = os.fstat(fpc.fileno())
 		if sf[ST_MTIME] < sfc[ST_MTIME]:
 		    if verbose:
 			print 'Using compiled attributes file', filename_com
@@ -121,7 +121,7 @@ def readattrdefs(fp, filename):
 		fpc.close()
 	except IOError, msg:
 		print 'Can\'t write compiled attributes to', filename_com
-		print msg
+		print msg[1]
 	if verbose:
 	    print 'Done.'
 	return dict
@@ -231,7 +231,7 @@ def getattr(node, attrname):
 			ch = node.GetChannel()
 			try:
 				attrvalue = ch[attrname]
-			except (TypeError, KeyError), msg:
+			except (TypeError, KeyError):
 				attrvalue = defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
