@@ -63,7 +63,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
 		self.translist = []	# dynamic transition menu
 		self.show_links = 1	# Show HTML links??? I think.. -mjvdg.
-		self.sizes = sizes_notime
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
 		
@@ -484,7 +483,7 @@ class HierarchyView(HierarchyViewDialog):
 			print "Error: unconverted relative coordinates found. HierarchyView:497"
 		self.scene_graph.moveto((0,0,x,y))
 		self.scene_graph.recalc()
-		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
+		self.window.setcanvassize((SIZEUNIT, x, y)) # Causes a redraw() event.
 
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
@@ -712,12 +711,14 @@ class HierarchyView(HierarchyViewDialog):
 				apply(self.window.drawxorline, self.__line)
 				self.__line = None
 			if obj.timeline is not None:
-				l,t,r,b = obj.timeline.get_pos_abs()
-				if t <= py <= b:
-					obj.timeline.setminwidth(max(px-l, 1))
-					self.need_resize = 1
-					self.draw()
+				if side == 'left':
+					# can't drag left side of timeline
 					return
+				l,t,r,b = obj.timeline.get_pos_abs()
+				obj.timeline.setminwidth(max(px-l, 1))
+				self.need_resize = 1
+				self.draw()
+				return
 			t = obj.pixel2time(px, side, timemapper)
 			em = self.editmgr
 			if not em.transaction():
