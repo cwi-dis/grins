@@ -194,6 +194,9 @@ class Dialog:
 			windowinterface.beep()
 		elif event in (EVENTS.Mouse1Press, EVENTS.Mouse2Press):
 			windowinterface.beep()
+		elif event in (EVENTS.Mouse1Release, EVENTS.Mouse2Release):
+			# ignore these
+			pass
 		elif event == EVENTS.ResizeWindow:
 			self.draw_window()
 		else:
