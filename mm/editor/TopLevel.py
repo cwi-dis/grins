@@ -498,6 +498,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	
 	def export_HTML_TIME_okcallback(self, pathname):
 		self.export_to_html_time(pathname)
+		if sys.platform=='win32':
+			windowinterface.shell_execute(pathname,'open')
+
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
@@ -930,7 +933,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Publish to HTML (*.htm or *.html) files only')
 			return
 		self.pre_save()
-		print 'saving to', filename, '...'
 		try:
 			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 			progress.set('Publishing document...')
@@ -955,7 +957,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				pass
 			windowinterface.showmessage('Publish interrupted.')
 			return 0
-		print 'done saving.'
 		return 1
 
 	def restore_callback(self):
@@ -1281,3 +1282,4 @@ if os.name == 'posix':
 else:
 	def make_backup_filename(filename):
 		return filename + '.BAK'
+ 
