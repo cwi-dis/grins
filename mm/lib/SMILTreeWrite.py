@@ -1349,7 +1349,7 @@ class SMILWriter(SMIL):
 		if interior:
 			if type == 'seq' and self.copydir and not x.GetChildren():
 				# Warn the user for a bug in G2
-				if feature.compatibility == compatibility.G2:
+				if features.compatibility == compatibility.G2:
 					import windowinterface
 					windowinterface.showmessage('Warning: some G2 versions crash on empty sequence nodes')
 					x.set_infoicon('error', 'Warning: some G2 versions crash on empty sequence nodes')
