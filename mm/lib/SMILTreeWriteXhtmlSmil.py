@@ -1220,6 +1220,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		target = None
 		targetElement = None
 		attributeName = None
+		hasid = 0
+		hasfill = 0
 
 		if tag == 'animateMotion':
 			from Animators import AnimateElementParser
@@ -1236,7 +1238,6 @@ class SMILXhtmlSmilWriter(SMIL):
 			tocr = aparser.convertColorValue(node.attrdict.get('to'))
 			bycr = aparser.convertColorValue(node.attrdict.get('by'))
 			valuescr = aparser.convertColorValues(node.attrdict.get('values'))
-		hasid = 0
 		attributes = self.attributes.get(tag, {})
 		for name, func, gname in smil_attrs:
 			if attributes.has_key(name):
@@ -1268,6 +1269,8 @@ class SMILXhtmlSmilWriter(SMIL):
 							value = value + ' '.join(l) + ';'
 					elif name == 'id':
 						hasid = 1
+					elif name == 'fill':
+						hasfill = 1
 					elif name == 'attributeName':
 						attributeName = value
 					elif name in animvalattrs and tag == 'animateMotion' and not isAdditive:
@@ -1284,6 +1287,11 @@ class SMILXhtmlSmilWriter(SMIL):
 		if not hasid:
 			id = 'm' + node.GetUID()
 			attrlist.insert(0, ('id', id))
+		if not hasfill:
+			# no fill attr, be explicit about fillDefault value
+			fillDefault = MMAttrdefs.getattr(node, 'fillDefault')
+			if fillDefault != 'inherit':
+				attrlist.append(('fill', fillDefault))
 
 		# write it
 		if target is None or target.getClassName() not in ('Region', 'Viewport'):
