@@ -21,17 +21,17 @@
   </head>
   <body GRiNS:hidden="true">
     <par id="AdaptivePresentation" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/adapt_1_1A.bmp" GRiNS:project_default_region_image="Video1" GRiNS:project_default_region_video="Video1" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Video1" GRiNS:showtime="cfocus">
-      <seq id="AdaptiveSet" GRiNS:emptyShow="false" GRiNS:emptyDur="10s" GRiNS:emptyText="Place MediaSelector object from Asset View here." GRiNS:emptyColor="#c0c0c0">
+      <seq id="AdaptiveSet" GRiNS:emptyDur="10s" GRiNS:emptyText="Place MediaSelector object from Asset View here." GRiNS:emptyColor="#c0c0c0">
       </seq>
       <img id="Image" region="bkgd_image" src="media/Back3.gif"  fill="freeze"/>
     </par>
     <GRiNS:assets skip-content="true">
      <switch id="mediaSelector" >
-         <seq GRiNS:emptyShow="false" GRiNS:emptyDur="10s" GRiNS:emptyText="Place 320x240 video object here." GRiNS:emptyColor="#c0c0c0" systemBitrate="112000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place 320x240 video object here." GRiNS:emptyColor="#c0c0c0" systemBitrate="112000">
          </seq>
-         <seq GRiNS:emptyShow="false" GRiNS:emptyDur="10s" GRiNS:emptyText="Place 240x1800 video object here." GRiNS:emptyColor="#c0c0c0" systemBitrate="56000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place 240x1800 video object here." GRiNS:emptyColor="#c0c0c0" systemBitrate="56000">
          </seq>
-         <seq GRiNS:emptyShow="false" GRiNS:emptyDur="10s" GRiNS:emptyText="Place Image Set here." GRiNS:emptyColor="#c0c0c0">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place Image Set here." GRiNS:emptyColor="#c0c0c0">
          </seq>
       </switch>
      </GRiNS:assets>

@@ -22,9 +22,9 @@
   <body GRiNS:hidden="true">
     <par id="AdaptivePresentation" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/BBC-BP.bmp" GRiNS:project_default_region_image="realpixRegion" GRiNS:project_default_region_sound="audioRegion_1" GRiNS:project_default_region_video="captionRegion" GRiNS:showtime="cfocus">
      <switch id="mediaSelector" >
-         <seq GRiNS:emptyShow="true" GRiNS:emptyDur="10s" GRiNS:emptyText="Place 512x288 Images here." GRiNS:emptyColor="#c0c0c0" systemBitrate="112000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place 512x288 Images here." GRiNS:emptyColor="#c0c0c0" GRiNS:nonEmptyText="Place 512x288 Images here." GRiNS:nonEmptyColor="#c0c0c0" systemBitrate="112000">
          </seq>
-         <seq GRiNS:emptyShow="true" GRiNS:emptyDur="10s" GRiNS:emptyText="Place 256x144 Images here." GRiNS:emptyColor="#c0c0c0">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place 256x144 Images here." GRiNS:emptyColor="#c0c0c0" GRiNS:nonEmptyText="Place 256x144 Images here." GRiNS:nonEmptyColor="#c0c0c0">
          </seq>
       </switch>
       <audio id="AudioTrack" region="audioRegion_1" src="#"/>
