@@ -988,15 +988,16 @@ HRESULT ScanSurface32(IDirectDrawSurface *surf,
 	return hr;
 	}
 
-static char DirectDrawSurface_ApplyTransform__doc__[] =
+static char DirectDrawSurface_BltBlend__doc__[] =
 ""
 ;
 static PyObject *
-DirectDrawSurface_ApplyTransform(DirectDrawSurfaceObject *self, PyObject *args)
+DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	{
 	float prop;
 	DirectDrawSurfaceObject *ddsFrom, *ddsTo;
-	if (!PyArg_ParseTuple(args, "fO!O!",&prop,&DirectDrawSurfaceType,&ddsFrom,&DirectDrawSurfaceType,&ddsTo))
+	if (!PyArg_ParseTuple(args, "O!O!f",&DirectDrawSurfaceType,&ddsFrom,
+			&DirectDrawSurfaceType,&ddsTo, &prop))
 		return NULL;
 
 	DDSURFACEDESC desc;
@@ -1039,7 +1040,7 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"SetColorKey", (PyCFunction)DirectDrawSurface_SetColorKey, METH_VARARGS, DirectDrawSurface_SetColorKey__doc__},
 	{"GetColorMatch", (PyCFunction)DirectDrawSurface_GetColorMatch, METH_VARARGS, DirectDrawSurface_GetColorMatch__doc__},
 	{"GetPixelFormat", (PyCFunction)DirectDrawSurface_GetPixelFormat, METH_VARARGS, DirectDrawSurface_GetPixelFormat__doc__},
-	{"ApplyTransform", (PyCFunction)DirectDrawSurface_ApplyTransform, METH_VARARGS, DirectDrawSurface_ApplyTransform__doc__},
+	{"BltBlend", (PyCFunction)DirectDrawSurface_BltBlend, METH_VARARGS, DirectDrawSurface_BltBlend__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
