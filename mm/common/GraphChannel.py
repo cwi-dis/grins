@@ -76,7 +76,7 @@ class GraphChannel(ChannelWindow):
 		else:
 			self.armed_display.fgcolor(bgcolor)
 		for a in node.GetRawAttrDef('anchorlist', []):
-			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
+			b = self.armed_display.newbutton((0,0,1,1))
 			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
 
 		return 1
@@ -154,8 +154,8 @@ class GraphChannel(ChannelWindow):
 			d2 = []
 			for i in range(len(d)):
 				if d[i] is not None:
-					d2.append(XOFF+x,
-						  YOFF+(maxy-d[i])*ystepsize)
+					d2.append((XOFF+x,
+						   YOFF+(maxy-d[i])*ystepsize))
 				x = x + xstepsize
 			c = colorlist[0]
 			del colorlist[0]
@@ -211,8 +211,8 @@ class GraphChannel(ChannelWindow):
 			for i in range(len(d)):
 				if d[i] is not None:
 					y = YOFF+(maxy-d[i])*ystepsize
-					d2.append(XOFF+x, y)
-					d2.append(XOFF+x+xstepsize, y)
+					d2.append((XOFF+x, y))
+					d2.append((XOFF+x+xstepsize, y))
 				x = x + xstepsize
 			c = colorlist[0]
 			del colorlist[0]
