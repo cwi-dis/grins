@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import windowinterface
 import MMAttrdefs
 import ChannelMap
+import ChannelMime
 from MMExc import *			# exceptions
 import MMNode
 from MMTypes import *
@@ -1147,8 +1148,21 @@ class FileAttrEditorField(StringAttrEditorField):
 					dir, file = file, ''
 				else:
 					dir, file = os.path.split(file)
+		if self.wrapper.__class__ is SlideWrapper:
+			chtype = 'image'
+		else:
+			chtype = None
+			for b in self.attreditor.attrlist:
+				if b.getname() == 'channel':
+					ch = self.wrapper.context.getchannel(b.getvalue())
+					if ch:
+						chtype = ch['type']
+					break
+		mtypes = ChannelMime.ChannelMime.get(chtype, [])
+		if chtype:
+			mtypes = ['/%s file' % string.capitalize(chtype)] + mtypes
 		windowinterface.FileDialog('Choose File for ' + self.label,
-					   dir, '*', file, self.__ok_cb, None,
+					   dir, mtypes, file, self.__ok_cb, None,
 					   existing=1)
 
 	def __ok_cb(self, pathname):
