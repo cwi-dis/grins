@@ -1241,17 +1241,25 @@ class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
 	def reset_callback(self):
 		self.recalcoptions()
 
+class PopupAttrEditorFieldNoDefault(PopupAttrEditorField):
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.getdefault()
+		return self.valuerepr(val)
+
 class BoolAttrEditorField(PopupAttrEditorField):
 	__offon = ['off', 'on']
+	default = 'Not set'
 
 	def parsevalue(self, str):
-		if str == 'Not set':
+		if str == self.default:
 			return None
 		return self.__offon.index(str)
 
 	def valuerepr(self, value):
 		if value is None:
-			return 'Not set'
+			return self.default
 		return self.__offon[value]
 
 	def getoptions(self):
@@ -1265,28 +1273,24 @@ class BoolAttrEditorField(PopupAttrEditorField):
 
 class Bool3AttrEditorField(BoolAttrEditorField):
 	def getoptions(self):
-		return ['Not set'] + BoolAttrEditorField.getoptions(self)
+		return [self.default] + BoolAttrEditorField.getoptions(self)
 
-class UnitsAttrEditorField(PopupAttrEditorField):
+class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['mm', 'relative', 'pixels']
 	__valuesmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
 		       windowinterface.UNIT_PXL]
 
 	# Choose from a list of unit types
 	def getoptions(self):
-		return ['Default'] + self.__values
+		return self.__values
 
 	def parsevalue(self, str):
-		if str == 'Default':
-			return None
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
-		if value is None:
-			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
 
-class CaptionOverdubAttrEditorField(PopupAttrEditorField):
+class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['caption', 'overdub']
 
 	def getoptions(self):
@@ -1363,7 +1367,7 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 
 class Bitrate3AttrEditorField(BitrateAttrEditorField):
 	def getoptions(self):
-		return ['Not set'] + BitrateAttrEditorField.getoptions(self)
+		return [self.default] + BitrateAttrEditorField.getoptions(self)
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
@@ -1371,48 +1375,44 @@ class Bitrate3AttrEditorField(BitrateAttrEditorField):
 			return self.default
 		return self.valuerepr(val)
 
-class TransitionAttrEditorField(PopupAttrEditorField):
+class TransitionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
 
 	def getoptions(self):
-		return ['Default'] + self.__values
+		return self.__values
 
-class WipeDirectionAttrEditorField(PopupAttrEditorField):
+class WipeDirectionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['left', 'right', 'up', 'down']
 
 	def getoptions(self):
-		return ['Default'] + self.__values
+		return self.__values
 
-class WipeTypeAttrEditorField(PopupAttrEditorField):
+class WipeTypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['normal', 'push']
 
 	def getoptions(self):
-		return ['Default'] + self.__values
+		return self.__values
 
-class AnchorTypeAttrEditorField(PopupAttrEditorField):
+class AnchorTypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['top-left', 'top-center', 'top-right',
 		    'center-left', 'center', 'center-right',
 		    'bottom-left', 'bottom-center', 'bottom-right']
 
 	def getoptions(self):
-		return ['Default'] + self.__values
+		return self.__values
 
-class TransparencyAttrEditorField(PopupAttrEditorField):
+class TransparencyAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['never', 'when empty', 'always']
 	__valuesmap = [0, -1, 1]
 
 	# Choose from a list of unit types
 	def getoptions(self):
-		return ['Default'] + self.__values
+		return self.__values
 
 	def parsevalue(self, str):
-		if str == 'Default':
-			return None
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
-		if value is None:
-			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
 
 class RMTargetsAttrEditorField(PopupAttrEditorField):
@@ -1447,42 +1447,32 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 		str = string.join(strs, ',')
 		return str
 
-class RMAudioAttrEditorField(PopupAttrEditorField):
+class RMAudioAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['Voice', 'Voice and background music', 'Music (mono)', 'Music (stereo)']
 	__valuesmap = [0, 1, 2, 3]
 
 	# Choose from a list of unit types
 	def getoptions(self):
-##		return ['Default'] + self.__values
 		return self.__values
 
 	def parsevalue(self, str):
-		if str == 'Default':
-			return None
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
-		if value is None:
-			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
 
-class RMVideoAttrEditorField(PopupAttrEditorField):
+class RMVideoAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['Normal quality', 'Smoother motion', 'Sharper pictures', 'Slideshow']
 	__valuesmap = [0, 1, 2, 3]
 
 	# Choose from a list of unit types
 	def getoptions(self):
-##		return ['Default'] + self.__values
 		return self.__values
 
 	def parsevalue(self, str):
-		if str == 'Default':
-			return None
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
-		if value is None:
-			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
 
 class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
@@ -1587,7 +1577,13 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			except NoSuchAttrError:
 				pass
 		list.sort()
-		return ['Default', 'LAST', 'FIRST'] + list
+		return ['LAST', 'FIRST'] + list
+
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.getdefault()
+		return self.valuerepr(val)
 
 class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types
