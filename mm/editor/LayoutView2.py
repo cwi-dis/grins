@@ -394,6 +394,9 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_REGION(callback = (self.onNewRegion, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				DELETE(callback = (self.onDelNode, ())),
+				COPY(callback = (self.onCopy, ())),
+				PASTE(callback = (self.onPaste, ())),
+				CUT(callback = (self.onCut, ())),
 				]
 		else:
 			self.commandRegionList = [
@@ -1491,6 +1494,49 @@ class LayoutView2(LayoutViewDialog2):
 		self.flushChangement()
 		
 		self.newViewport()
+
+	def onCopy(self):
+		self.__cleanClipboard()
+		
+		# for now, support only single selection
+		if self.currentSelectedNodeList != None:
+			exportedNode = self.currentSelectedNodeList[0].deepExport()
+			Clipboard.setclip('region', exportedNode)
+
+	def onCut(self):
+		self.__cleanClipboard()
+		
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
+		# for now, support only simple selection
+		if self.currentSelectedNodeList != None:
+			selectedNode = self.currentSelectedNodeList[0]
+			exportedNode = selectedNode.deepExport()
+			Clipboard.setclip('region', exportedNode)
+
+			self.delRegion(selectedNode)			
+		
+	def	onPaste(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashes
+		self.flushChangement()
+
+		if self.currentSelectedNodeList != None:
+			selectedNode = self.currentSelectedNodeList[0]
+			type, node = Clipboard.getclip()
+			if type =='region':
+				if self.editmgr.transaction():
+					cNode = node.CopyIntoContext(self.context, selectedNode)
+					self.editmgr.commit()
+					self.setglobalfocus([cNode])
+					self.updateFocus()
+
+
+	def __cleanClipboard(self):
+		# XXX to do something
+		pass
 
 	def newRegion(self, parentRef):
 		# choice a default name which doesn't exist		
