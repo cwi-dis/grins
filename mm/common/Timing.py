@@ -145,7 +145,7 @@ def prep1(node):
 			else:
 				adddep(c, TL, 0, node, TL)
 	else:
-		adddep(node, HD, -1, node, TL)
+		adddep(node, HD, None, node, TL)
 
 
 def prep2(node, root):
@@ -306,12 +306,12 @@ def propdown2(root, node, stoptime, dftstarttime=0):
 
 def adddep(xnode, xside, delay, ynode, yside, terminating = None):
 	ynode.counter[yside] = ynode.counter[yside] + 1
-	if delay >= 0 and xside in (HD, TL):
+	if delay is not None and xside in (HD, TL):
 		xnode.deps[xside].append((delay, ynode, yside, terminating))
 
 
 def decrement(q, delay, node, side, term = None):
-	if delay > 0:
+	if delay != 0:
 		id = q.enter(delay, 0, decrement, (q, 0, node, side, term))
 		return
 	x = node.counter[side] - 1
