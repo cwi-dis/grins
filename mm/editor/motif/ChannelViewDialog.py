@@ -30,33 +30,37 @@ class ChannelViewDialog(ViewDialog):
 				('Close', CLOSE_WINDOW),
 				]),
 			('Edit', [
-				('Undo', UNDO),
 				('Delete', DELETE),
 				('New channel...', NEW_CHANNEL),
 				('Move channel', MOVE_CHANNEL),
 				('Copy channel', COPY_CHANNEL),
 				None,
-				('Toggle on/off', TOGGLE_ONOFF),
+				('Toggle channel state', TOGGLE_ONOFF),
 				]),
-			('Focus', [
-				('Synchronize', PUSHFOCUS),
-				None,
+			('Play', [
 				('Play node', PLAYNODE),
 				('Play from node', PLAYFROM),
-				None,
-				('Show info...', INFO),
-				('Show properties...', ATTRIBUTES),
-				('Show anchors...', ANCHORS),
+				]),
+			('Tools', [
+				('Info...', INFO),
+				('Properties...', ATTRIBUTES),
+				('Anchors...', ANCHORS),
 				('Edit content...', CONTENT),
 				None,
 				('Create simple anchor', CREATEANCHOR),
 				('Finish hyperlink to focus', FINISH_LINK),
-				('Finish sync arc from focus...', FINISH_ARC),
-				None,
-				('Select sync arc', SYNCARCS),
+				('Create sync arc from focus...', FINISH_ARC),
 				]),
-			('Layouts', LAYOUTS),
-			('View', [
+			('Navigate', [
+				('Level of detail', [
+					('More horizontal detail', CANVAS_HEIGHT),
+					('More vertical detail', CANVAS_WIDTH),
+					('Fit in window', CANVAS_RESET),
+					]),
+				None,
+				('Send focus to other views', PUSHFOCUS),
+				('Select sync arc', SYNCARCS),
+				None,
 				(('Show unused channels',
 				  'Hide unused channels'),
 				 TOGGLE_UNUSED, 't'),
@@ -65,20 +69,16 @@ class ChannelViewDialog(ViewDialog):
 				(('Show thumbnails', 'Hide thumbnails'),
 				 THUMBNAIL, 't'),
 				None,
-				('Minidocument', [
+				('Highlight in player', HIGHLIGHT),
+				('Unhighlight in player', UNHIGHLIGHT),
+				('Minidocument navigation', [
 					('Next', NEXT_MINIDOC),
 					('Previous', PREV_MINIDOC),
 					('Ancestors', ANCESTORS),
 					('Siblings', SIBLINGS),
 					('Descendants', DESCENDANTS),
 					]),
-				None,
-				('Highlight', HIGHLIGHT),
-				('Unhighlight', UNHIGHLIGHT),
-				None,
-				('Double height of canvas', CANVAS_HEIGHT),
-				('Double width of canvas', CANVAS_WIDTH),
-				('Reset canvas size', CANVAS_RESET),
+				('Layout navigation', LAYOUTS),
 				]),
 			('Help', [
 				('Help...', HELP),
@@ -123,7 +123,7 @@ class ChannelViewDialog(ViewDialog):
 
 class GOCommand:
 	POPUP_NONE = (
-		('New channel...', NEW_CHANNEL),
+		('Create new channel', NEW_CHANNEL),
 		)
 
 	def __init__(self):
@@ -135,11 +135,13 @@ class GOCommand:
 
 class ChannelBoxCommand:
 	POPUP_CHANNEL = (
-		('Move channel', MOVE_CHANNEL),
-		('Copy channel', COPY_CHANNEL),
-		('Toggle on/off', TOGGLE_ONOFF),
+		('Toggle channel state', TOGGLE_ONOFF),
+		('Properties...', ATTRIBUTES),
 		None,
 		('Delete', DELETE),
+		None,
+		('Move channel', MOVE_CHANNEL),
+		('Copy channel', COPY_CHANNEL),
 		)
 
 	def __init__(self):
@@ -147,16 +149,16 @@ class ChannelBoxCommand:
 
 class NodeBoxCommand:
 	POPUP_NODE = (
-		('Create simple anchor', CREATEANCHOR),
-		('Finish hyperlink to focus', FINISH_LINK),
-		('Finish sync arc from focus...', FINISH_ARC),
-		None,
 		('Play node', PLAYNODE),
 		('Play from node', PLAYFROM),
 		None,
-		('Show info...', INFO),
-		('Show properties...', ATTRIBUTES),
-		('Show anchors...', ANCHORS),
+		('Create simple anchor', CREATEANCHOR),
+		('Finish hyperlink to focus', FINISH_LINK),
+		('Create sync arc from focus...', FINISH_ARC),
+		None,
+		('Info...', INFO),
+		('Properties...', ATTRIBUTES),
+		('Anchors...', ANCHORS),
 		('Edit content...', CONTENT),
 		)
 
@@ -165,7 +167,7 @@ class NodeBoxCommand:
 
 class ArcBoxCommand:
 	POPUP_SYNCARC = (
-		('Show info...', INFO),
+		('Info...', INFO),
 		None,
 		('Delete', DELETE),
 		)
