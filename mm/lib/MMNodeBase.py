@@ -110,20 +110,15 @@ class MMChannel:
 	# Emulate the dictionary interface
 	#
 	def __getitem__(self, key):
-		try:
+		if self.attrdict.has_key(key):
 			return self.attrdict[key]
-		except KeyError, msg:
-			import sys
-			if hasattr(sys, 'exc_info'):
-				tb = sys.exc_info()[2]
-			else:
-				tb = sys.exc_traceback
+		else:
 			# special case for background color
 			if key == 'bgcolor' and self.attrdict.has_key('base_window'):
 				pname = self.attrdict['base_window']
 				pchan = self.context.channeldict[pname]
 				return pchan['bgcolor']
-			raise KeyError, msg, tb
+			raise KeyError, key
 
 	def __setitem__(self, key, value):
 		self.attrdict[key] = value
@@ -133,6 +128,16 @@ class MMChannel:
 
 	def keys(self):
 		return self.attrdict.keys()
+
+	def get(self, key, default = None):
+		if self.attrdict.has_key(key):
+			return self.attrdict[key]
+		if key == 'bgcolor' and self.attrdict.has_key('base_window'):
+			pname = self.attrdict['base_window']
+			pchan = self.context.channeldict.get(pname)
+			if pchan:
+				return pchan.get('bgcolor', default)
+		return default
 
 
 # The Sync Arc class
