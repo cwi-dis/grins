@@ -308,6 +308,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			timemapper.addcollision(t0, edge)
 			t0 = t0 - (download)
 		ledge = redge = edge
+		if hasattr(self, 'redge'):
+			redge = redge + self.redge
 		if isinstance(self, MediaWidget):
 			dur = Duration.get(self.node, ignoreloop = 1, wanterror = 0)	# what gets repeated
 			ad = Duration.get(self.node, wanterror = 0)
@@ -555,12 +557,26 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if w > xsize:
 				xsize = w
 			ysize = ysize + h
-		if timemapper is not None and (self.timemapper is None or self.iconbox is None or not self.iconbox.vertical):
+		self.redge = 0
+		del self.redge
+		if timemapper is not None and self.iscollapsed():
 			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
-			if t2 > t0 and self.iscollapsed():
-				if xsize / float(t2 - t0) < timemapper.min_pxl_per_sec:
-					xsize = int(timemapper.min_pxl_per_sec * (t2 - t0) + .5)
-				timemapper.adddependency(t0, t2, xsize, self.node)
+			if t2 > t0:
+				width = xsize
+				extra = 0
+				if (self.timemapper is None or self.iconbox is None or not self.iconbox.vertical):
+					extra = self.iconbox.get_minsize()[0] + 2 * HEDGSIZE
+					width = xsize - extra
+				if 0 < timemapper.min_pxl_per_sec < width / float(t2 - t0):
+					# min size more than what's allowed for duration
+					nwidth = int(timemapper.min_pxl_per_sec * (t2 - t0) + .5)
+					self.redge = width - nwidth
+					width = nwidth
+				elif width / float(t2 - t0) < timemapper.min_pxl_per_sec:
+					# min size less than what's needed for duration
+					width = int(timemapper.min_pxl_per_sec * (t2 - t0) + .5)
+					xsize = width + extra
+				timemapper.adddependency(t0, t2, width, self.node)
 ##		if timemapper is not None and not text:
 ##			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
 ##			if t0 == t2:
@@ -807,7 +823,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.mother.extra_displist = d
 
 	def set_infoicon_invisible(self, icon, msg=None):
-		print 'set_infoicon_invisible',self.node,icon,self.mother.calculating
+##		print 'set_infoicon_invisible',self.node,icon,self.mother.calculating
 		node = self.node
 		if node.infoicon == icon and node.errormessage == msg:
 			# nothing to do
@@ -2576,7 +2592,8 @@ class TimelineWidget(MMWidgetDecoration):
 		return self.boxsize
 
 	def setminwidth(self, width):
-		self.minwidth = width
+##		self.minwidth = width
+		pass
 
 	def moveto(self, coords, timemapper):
 		MMWidgetDecoration.moveto(self, coords)

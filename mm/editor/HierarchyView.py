@@ -566,6 +566,13 @@ class HierarchyView(HierarchyViewDialog):
 		self.mcanvassize = w,h
 		self.scene_graph.moveto((0,0,w,h))
 		self.scene_graph.recalc()
+		if w > 0x7fff and hasattr(self.root, 'min_pxl_per_sec'):
+			# too wide, do it again with smaller min_pxl_per_sec
+			self.root.min_pxl_per_sec = 20000 * self.root.min_pxl_per_sec / w
+			w,h = self.scene_graph.recalc_minsize()
+			self.mcanvassize = w,h
+			self.scene_graph.moveto((0,0,w,h))
+			self.scene_graph.recalc()
 		self.calculating = 0
 		self.window.setcanvassize((SIZEUNIT, w, h)) # Causes a redraw() event.
 
@@ -2034,7 +2041,7 @@ class HierarchyView(HierarchyViewDialog):
 	def timescalecall(self, which):
 		self.toplevel.setwaiting()
 		if which == 'global':
-			which = 'focus'
+			which = 'cfocus'
 			node = self.root
 		elif which == 'bwstrip':
 			which = 'bwstrip'
@@ -2073,8 +2080,8 @@ class HierarchyView(HierarchyViewDialog):
 		
 	def clear_showtime(self, node):
 		node.showtime = 0
-		for c in node.children:
-			self.clear_showtime(c)
+##		for c in node.children:
+##			self.clear_showtime(c)
 
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()

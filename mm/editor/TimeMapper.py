@@ -51,7 +51,7 @@ class TimeMapper:
 		self.collisiondict[time] = 0
 
 	def calculate(self, realtime=0):
-		min_pixels_per_second =  self.min_pxl_per_sec
+		min_pixels_per_second = self.min_pxl_per_sec
 		if not self.collecting:
 			raise Error, 'Calculate called while not collecting data'
 		if __debug__ and DEBUG: print 'calculate',realtime,min_pixels_per_second
