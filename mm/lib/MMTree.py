@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # MMTree -- Multimedia tree interface
 
 from MMExc import *		# Exceptions
