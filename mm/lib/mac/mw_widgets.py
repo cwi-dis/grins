@@ -77,7 +77,7 @@ class _ListWidget(_Widget):
 	def getitem(self, item):
 		return self._data[item]
 		
-	def insert(self, where=-1, content):
+	def insert(self, where=-1, content=[]):
 		Qd.SetPort(self.wid)
 		self.list.LSetDrawingMode(0)
 		where = self._insert(where, len(content))
