@@ -6,4 +6,4 @@ format <platform> patchlevel <number>
 """
 
 ##patchlevel = 'win32 build 7'
-patchlevel = 'alpha win32 build 0'
+patchlevel = 'alpha win32 build 2'
