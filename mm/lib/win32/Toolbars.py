@@ -23,16 +23,25 @@ ID_TOOLBAR_COMBO = grinsRC._APS_NEXT_COMMAND_VALUE + 1000
 TOOLBAR_COMBO_WIDTH = 144
 TOOLBAR_COMBO_HEIGHT = 10*18 # drop down height
 
+# Debug
+from wndusercmd import TOOLBAR_GENERAL
+
 class ToolbarMixin:
 
 	def __init__(self):
-		pass
-		
-	def CreateToolbars(self, template):
+		self.__bars = {}
+		for template in ToolbarTemplate.TOOLBARS:
+			name, command, resid, buttonlist = template
+			barid = usercmdui.class2ui[command].id
+			self.__bars[barid] = None
+
+	def CreateToolbars(self):
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
-		self._wndToolBar=GRiNSToolbar(self)
-		self.DockControlBar(self._wndToolBar)
-		if template == 'player':
+		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
+
+		self.__bars[barid]=GRiNSToolbar(self)
+		self.DockControlBar(self.__bars[barid])
+		if 0:
 			self.setPlayerToolbar()
 			self.LoadAccelTable(grinsRC.IDR_GRINS)
 		else:
@@ -40,53 +49,61 @@ class ToolbarMixin:
 			self.LoadAccelTable(grinsRC.IDR_GRINSED)
 
 	def DestroyToolbars(self):
-		if self._wndToolBar:
-			self._wndToolBar.DestroyWindow()
-			del self._wndToolBar
+		for bar in self.__bars.values():
+			bar.DestroyWindow()
+		self.__bars = {}
 
 	def ShowToolbars(self, flag):
 		# Show/hide all toolbars. Jack thinks this isn't needed
 		# anymore.
 		if flag:
-			#self.SetMenu(self._mainmenu)
-			self._wndToolBar.ShowWindow(win32con.SW_SHOW)
-			self.ShowControlBar(self._wndToolBar,1,0)
-			self._wndToolBar.RedrawWindow()
+			# XXX This is wrong, it shows *all* bars!
+			for bar in self.__bars.values():
+				bar.ShowWindow(win32con.SW_SHOW)
+				self.ShowControlBar(bar,1,0)
+				bar.RedrawWindow()
 		else:
-			self._wndToolBar.ShowWindow(win32con.SW_HIDE)
+			for bar in self.__bars.values():
+				bar.ShowWindow(win32con.SW_HIDE)
 
 	def OnCreate(self, createStruct):
-		id = usercmdui.class2ui[wndusercmd.TOOLBAR_GENERAL].id
-		self.HookCommand(self.OnShowToolbarGeneral, id)
-		self.HookCommandUpdate(self.OnUpdateToolbarGeneral, id)
+		for id in self.__bars.keys():
+			self.HookCommand(self.OnShowToolbarCommand, id)
+			self.HookCommandUpdate(self.OnUpdateToolbarCommand, id)
 
-	def OnShowToolbarGeneral(self, id, code):
-		flag = not self._wndToolBar.IsWindowVisible()
+	def OnShowToolbarCommand(self, id, code):
+		barid = id
+		bar = self.__bars[barid]
+		flag = not bar.IsWindowVisible()
 		if flag:
-			self.ShowControlBar(self._wndToolBar,1,0)
-			self._wndToolBar.RedrawWindow()
+			self.ShowControlBar(bar,1,0)
+			bar.RedrawWindow()
 		else:
-			self.ShowControlBar(self._wndToolBar,0,0)
+			self.ShowControlBar(bar,0,0)
 
-	def OnUpdateToolbarGeneral(self, cmdui):
+	def OnUpdateToolbarCommand(self, cmdui):
+		barid = cmdui.m_nID
+		bar = self.__bars[barid]
 		cmdui.Enable(1)
-		cmdui.SetCheck(self._wndToolBar.IsWindowVisible())
+		cmdui.SetCheck(bar.IsWindowVisible())
 
 	def _setToolbarFromTemplate(self, template):
 		# First count number of buttons
 		name, command, resid, buttonlist = template
+		barid = usercmdui.class2ui[command].id
+		bar = self.__bars[barid]
 		nbuttons = len(buttonlist)
 		if buttonlist and buttonlist[-1].type == 'pulldown':
 			nbuttons = nbuttons - 1
-		self._wndToolBar.SetButtons(nbuttons)
+		bar.SetButtons(nbuttons)
 		buttonindex = 0
 		for button in buttonlist:
 			if button.type == 'button':
 				id = usercmdui.class2ui[button.cmdid].id
-				self._wndToolBar.SetButtonInfo(buttonindex, id,
+				bar.SetButtonInfo(buttonindex, id,
 					afxexttb.TBBS_BUTTON, button.arg)
 			elif button.type == 'separator':
-				self._wndToolBar.SetButtonInfo(buttonindex, afxexttb.ID_SEPARATOR,
+				bar.SetButtonInfo(buttonindex, afxexttb.ID_SEPARATOR,
 					afxexttb.TBBS_SEPARATOR, button.width)
 			elif button.type == 'pulldown':
 				pass
@@ -99,85 +116,24 @@ class ToolbarMixin:
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
 		self._setToolbarFromTemplate(ToolbarTemplate.FRAME_TEMPLATE)
-##		self._wndToolBar.SetButtons(4)
-##
-##		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
-##		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
-##
-##		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
-##
-##		id=usercmdui.class2ui[usercmd.OPENFILE].id
-##		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
-##
-##		id=usercmdui.class2ui[usercmd.SAVE].id
-##		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
-##				
-		self.ShowControlBar(self._wndToolBar,1,0)
-		self._wndToolBar.RedrawWindow()
+		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
+		self.ShowControlBar(self.__bars[barid],1,0)
+		self.__bars[barid].RedrawWindow()
 
 
 	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self, adornments):
 		num_buttons = self._setToolbarFromTemplate(ToolbarTemplate.GENERAL_TEMPLATE)
-##		num_buttons = 18
-##		self._wndToolBar.SetButtons(num_buttons)
-##
-##		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
-##		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
-##
-##		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
-##
-##		id=usercmdui.class2ui[usercmd.OPENFILE].id
-##		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
-##
-##		id=usercmdui.class2ui[usercmd.SAVE].id
-##		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
-##	
-##		# Play Toolbar
-##		self._wndToolBar.SetButtonInfo(4,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
-##
-##		id=usercmdui.class2ui[usercmd.RESTORE].id
-##		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 6)
-##
-##		id=usercmdui.class2ui[usercmd.CLOSE].id
-##		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 7)
-##
-##		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-##
-##		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
-##		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 9)
-##
-##		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
-##		self._wndToolBar.SetButtonInfo(9,id,afxexttb.TBBS_BUTTON, 10)
-##
-##		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
-##		self._wndToolBar.SetButtonInfo(10,id,afxexttb.TBBS_BUTTON, 11)
-##
-##		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-##	
-##		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
-##		self._wndToolBar.SetButtonInfo(12,id,afxexttb.TBBS_BUTTON, 14)
-##
-##		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-##
-##		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_IN].id
-##		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON,15)
-##		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_OUT].id
-##		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,16)
-##
-##		self._wndToolBar.SetButtonInfo(16,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-##
-##		id=usercmdui.class2ui[usercmd.HELP].id
-##		self._wndToolBar.SetButtonInfo(17,id,afxexttb.TBBS_BUTTON, 12)
-
+		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
+		bar = self.__bars[barid]
 		if adornments.has_key('pulldown'):
 			index = num_buttons
 			for list, cb, init in adornments['pulldown']:
-				self._wndToolBar.SetButtonInfo(index,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+				bar.SetButtonInfo(index,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 				index = index + 1
 				# the return object is a components.ComboBox
 				global ID_TOOLBAR_COMBO
-				tbcb = self.createToolBarCombo(index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
+				tbcb = self.createToolBarCombo(bar, index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
 				ID_TOOLBAR_COMBO = ID_TOOLBAR_COMBO + 1
 				index = index + 1
 				self._toolbarCombo.append((tbcb, cb))
@@ -185,49 +141,23 @@ class ToolbarMixin:
 					tbcb.addstring(str)
 				tbcb.setcursel(list.index(init))
 
-		self.ShowControlBar(self._wndToolBar,1,0)
+		self.ShowControlBar(bar,1,0)
 
 
 	# Set the player toolbar
 	def setPlayerToolbar(self):
 		self._setToolbarFromTemplate(ToolbarTemplate.PLAYER_TEMPLATE)
-##		self._wndToolBar.SetButtons(9)
-##
-##		id=usercmdui.class2ui[usercmd.OPENFILE].id
-##		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON, 1)
-##
-##		# Play Toolbar
-##		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-##
-##		id=usercmdui.class2ui[usercmd.CLOSE].id
-##		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 7)
-##
-##		self._wndToolBar.SetButtonInfo(3,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-##
-##		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
-##		self._wndToolBar.SetButtonInfo(4,id,afxexttb.TBBS_BUTTON, 9)
-##
-##		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
-##		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 10)
-##
-##		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
-##		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 11)
-##	
-##		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-##
-##		id=usercmdui.class2ui[usercmd.HELP].id
-##		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 12)
-##	
-		self.ShowControlBar(self._wndToolBar,1,0)
+		barid = usercmdui.class2ui[TOOLBAR_GENERAL].id
+		self.ShowControlBar(self.__bars[barid],1,0)
 
 
-	def createToolBarCombo(self, index, ctrlid, width, ddheight, responseCb=None):
-		self._wndToolBar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
-		l, t, r, b = self._wndToolBar.GetItemRect(index)
+	def createToolBarCombo(self, bar, index, ctrlid, width, ddheight, responseCb=None):
+		bar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
+		l, t, r, b = bar.GetItemRect(index)
 		b = b + ddheight
 		rc = l, t, r-l, b-t
 		import components
-		ctrl = components.ComboBox(self._wndToolBar,ctrlid)
+		ctrl = components.ComboBox(bar,ctrlid)
 		ctrl.create(components.COMBOBOX(), rc)
 		if responseCb:
 			self.HookCommand(responseCb,ctrlid)

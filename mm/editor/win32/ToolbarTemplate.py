@@ -65,3 +65,7 @@ FRAME_TEMPLATE = (
 		)
 	)
 )
+
+TOOLBARS=[
+	GENERAL_TEMPLATE,
+]
