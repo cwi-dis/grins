@@ -61,26 +61,23 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			USERGROUPS(callback = self.usergroup_callback),
 			CHANNELS(callback = self.channel_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
-			SYNCCV(callbac = (self.synccv_callback, ())),
+			SYNCCV(callback = (self.synccv_callback, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
 		play = PLAY(callback = (self.play_callback, ()))
 		pause = PAUSE(callback = (self.pause_callback, ()))
 		stop = STOP(callback = (self.stop_callback, ()))
-		self.stoplist = self.commandlist
 		self.stoplist = self.commandlist + [
 			# when stopped, we can play and pause
 			play,
 			pause,
 			stop,
 			]
-		self.playlist = self.commandlist
 		self.playlist = self.commandlist + [
 			# when playing, we can pause and stop
 			pause,
 			stop,
 			]
-		self.pauselist = self.commandlist
 		self.pauselist = self.commandlist + [
 			# when pausing, we can continue (play or
 			# pause) and stop
