@@ -208,7 +208,7 @@ class _ButtonCircle(_Button):
 				return 1
 		return 0
 
-class _ButtonElipse(_Button):
+class _ButtonEllipse(_Button):
 	def __init__(self, dispobj, coordinates, z, times, sensitive):
 		_Button.__init__(self, dispobj, coordinates, z, times, sensitive)
 		
@@ -217,7 +217,7 @@ class _ButtonElipse(_Button):
 	# area that you have defined in window.
 	# For now, a not very efficient algo is implemented, but it should be better to use a system
 	# call later if possible
-	# Returns true if the point is inside the elipse	
+	# Returns true if the point is inside the ellipse	
 	def _inside(self, x, y):
 		if not self._sensitive:
 			return 0
@@ -225,7 +225,7 @@ class _ButtonElipse(_Button):
 		import CheckInsideArea
 		type, cx, cy, rdx, rdy = self._coordinates
 		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
-		if CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh) and \
+		if CheckInsideArea.insideEllipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh) and \
 			_Button._inside(self):
 				return 1
 		return 0

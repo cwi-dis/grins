@@ -482,8 +482,8 @@ class _DisplayList:
 			return _ButtonPoly(self, coordinates, z, times, sensitive)
 		elif coordinates[0] == 'circle':
 			return _ButtonCircle(self, coordinates, z, times, sensitive)
-		elif coordinates[0] == 'elipse':
-			return _ButtonElipse(self, coordinates, z, times, sensitive)
+		elif coordinates[0] == 'ellipse':
+			return _ButtonEllipse(self, coordinates, z, times, sensitive)
 		else:
 			print 'Internal error: invalid shape type'			
 			return _ButtonRect(self, ['rect', 0.0, 0.0, 1.0, 1.0], z, times, sensitive)

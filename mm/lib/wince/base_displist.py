@@ -685,8 +685,8 @@ class _Button:
 		elif shape == 'circle':
 			self._insideshape = self._insideCircle
 			self._bbox = coordinates[0]-coordinates[2],coordinates[1]-coordinates[2],2*coordinates[2],2*coordinates[2]
-		elif shape == 'elipse':
-			self._insideshape = self._insideElipse
+		elif shape == 'ellipse':
+			self._insideshape = self._insideEllipse
 			self._bbox = coordinates[0]-coordinates[2],coordinates[1]-coordinates[3],2*coordinates[2],2*coordinates[3]
 		else:
 			print 'Internal error: invalid shape type'			
@@ -767,12 +767,12 @@ class _Button:
 		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
 		return CheckInsideArea.insideCircle(x*ww, y*wh, cx*ww, cy*wh, rd*ww)
 
-	# Returns true if the point is inside the elipse	
-	def _insideElipse(self, x, y):
+	# Returns true if the point is inside the ellipse	
+	def _insideEllipse(self, x, y):
 		# for now
 		cx, cy, rdx, rdy = self._coordinates
 		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
-		return CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh)
+		return CheckInsideArea.insideEllipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh)
 
 	def updatecoordinates(self, coords):
 		if self.is_closed(): return		
