@@ -375,7 +375,7 @@ class SMIL:
 
 	__animate_elements = ['animate', 'animateMotion',
 			      'animateColor', 'set']
-	__animate_attrs_core = {'attributeName':'',
+	__animate_attrs_core = {'attributeName':None,
 				'attributeType':None,
 ##				'autoReverse':'false',
 				'customTest':None,

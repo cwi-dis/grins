@@ -814,6 +814,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							break
 					else:
 						attrdict['keyTimes'] = val
+			elif attr == 'attributeName':
+				attrdict['attributeName'] = val
+			elif attr == 'attributeType':
+				if val in ('CSS', 'XML', 'auto'):
+					attrdict['attributeType'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
+			elif attr == 'targetElement':
+				attrdict['targetElement'] = val
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
@@ -1487,11 +1496,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('the target element of "%s" is unspecified' % tagname)
 			return
 
-		# keep most common attr version
-		aname = attributes.get('attribute')
-		if aname:
-			attributes['attributeName']	= aname
-			del attributes['attribute']
+		if tagname != 'animateMotion' and \
+		   not attributes.has_key('attributeName'):
+			self.syntax_error('required attribute attributeName missing in %s element' % tagname)
+			attributes['attributeName'] = ''
 
 		# create the node
 		node = self.__context.newnode('imm')
@@ -2976,9 +2984,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not attrdict.has_key('system_bitrate'):
 							attrdict['system_bitrate'] = bitrate
 				elif attr == 'systemBitrate':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					try:
 						bitrate = string.atoi(val)
 					except string.atoi_error:
@@ -2993,9 +2998,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not attrdict.has_key('system_screen_size'):
 							attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
 				elif attr == 'systemScreenSize':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					res = screen_size.match(val)
 					if res is None:
 						self.syntax_error('bad screen-size attribute')
@@ -3010,9 +3012,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not attrdict.has_key('system_screen_depth'):
 							attrdict['system_screen_depth'] = depth
 				elif attr == 'systemScreenDepth':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					try:
 						depth = string.atoi(val)
 					except string.atoi_error:
@@ -3029,9 +3028,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						self.syntax_error('bad system-captions attribute')
 				elif attr == 'systemCaptions':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					if val == 'on':
 						attrdict['system_captions'] = 1
 					elif val == 'off':
@@ -3039,9 +3035,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						self.syntax_error('bad system-captions attribute')
 				elif attr == 'systemAudioDesc':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					if val == 'on':
 						attrdict['system_audiodesc'] = 1
 					elif val == 'off':
@@ -3052,19 +3045,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if not attrdict.has_key('system_language'):
 						attrdict['system_language'] = val
 				elif attr == 'systemLanguage':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					attrdict['system_language'] = val
 				elif attr == 'systemCPU':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					attrdict['system_cpu'] = string.lower(val)
 				elif attr == 'systemOperatingSystem':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					attrdict['system_operating_system'] = string.lower(val)
 				elif attr == 'system-overdub-or-caption':
 					if val in ('caption', 'overdub'):
@@ -3073,9 +3057,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						self.syntax_error('bad system-overdub-or-caption attribute')
 				elif attr == 'systemOverdubOrSubtitle':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					if val in ('subtitle', 'overdub'):
 						if val == 'subtitle':
 							val = 'overdub'
@@ -3091,9 +3072,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						else:
 							attrdict['system_required'] = nsuri
 				elif attr == 'systemRequired':
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					self.__context.attributes['project_boston'] = 1
 					nsdict = self.getnamespace()
 					nsuri = nsdict.get(val)
 					if not nsuri:
@@ -3139,6 +3117,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('regPoint not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
 
 		# default values
 		attrdict = {'regAlign': 'topLeft'}
