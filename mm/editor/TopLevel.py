@@ -539,16 +539,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return 0
 		evallicense= (license < 0)
+		if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
+			import settings
+			if settings.get('lightweight'):
+				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
+				return 0
 		self.pre_save()
 		# Make a back-up of the original file...
 		try:
 			os.rename(filename, make_backup_filename(filename))
 		except os.error:
 			pass
-		print 'saving to', filename, '...'
+##		print 'saving to', filename, '...'
 		try:
-			import realnode
-			realnode.writenodes(self.root, evallicense=evallicense)
 			if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
 				if cleanSMIL:
 					windowinterface.showmessage('Saving to CMIF file instead of SMIL file', mtype = 'warning')
@@ -565,7 +568,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						    'File: '+filename+'\n'+
 						    'Error: '+msg[1])
 			return 0
-		print 'done saving.'
+##		print 'done saving.'
 		self.main._update_recent(MMurl.pathname2url(filename))
 		self.changed = 0
 		self.new_file = 0
@@ -588,8 +591,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# First save and upload the SMIL file (and the data items)
 		#
 		try:
-			import realnode
-			realnode.writenodes(self.root, evallicense=evallicense)
 			import SMILTreeWrite
 			SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
 						cleanSMIL = 1,
