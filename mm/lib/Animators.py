@@ -6,6 +6,8 @@ import string
 import math
 import svgpath
 
+debug = 1
+
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
 # account the calc mode, the 'accumulate' attr and 
@@ -39,6 +41,7 @@ class Animator:
 
 		# return value convertion (for example int())
 		self._convert = None
+		self._range = None
 
 		# construct boundaries of time intervals
 		self._efftimes = []
@@ -114,10 +117,6 @@ class Animator:
 		if self._accumulate=='sum' and self.__accValue:
 			v = self._accValue + v
 
-		# convertion
-		if self._convert:
-			v = self._convert(v)
-		
 		self._curvalue = v
 		return v
 
@@ -182,16 +181,23 @@ class Animator:
 	# set legal attr values range
 	def setRange(self, range):
 		self._range = range
-	def hasRange(self):
-		return hasattr(self, '_range')
 
 	# the following method will be called by the EffectiveAnimator
 	# to clamp the results at the top of the animation stack to the legal range 
 	# before applying them to the presentation value
 	def clamp(self, v):
+		if not self._range:
+			return v
 		if v < self._range[0]: return self._range[0]
 		elif v > self._range[1]:return self._range[1]
 		else: return v
+
+	# the following method will be called by the EffectiveAnimator
+	# to convert final value
+	def convert(self, v):
+		if self._convert:
+			v = self._convert(v)
+		return v
 
 	def _setAccumulate(self, acc):
 		if acc not in ('none', 'sum'):
@@ -395,9 +401,13 @@ class ColorAnimator(TupleAnimator):
 		banim = Animator(attr, bdomval, bvalues, dur, mode, 
 			times, splines, accumulate, additive)
 		self.setComponentAnimators((ranim, ganim, banim))
-		self.setRetunedValuesConverter(_round)
 		self.setRange((0, 255))
 
+	# the following method will be called by the EffectiveAnimator
+	# to convert final value
+	def convert(self, v):
+		r, g, b = v
+		return _round(r), _round(g), _round(b)
 
 ###########################
 # 'animateMotion' element animator
@@ -430,6 +440,9 @@ class MotionAnimator(Animator):
 	def _spline(self, t):
 		return self._path.getPointAt(t*self._time2length)
 
+	def convert(self, v):
+		x, y = v.real, v.imag
+		return _round(x), _round(y)
 
 ###########################
 # An EffectiveAnimator is responsible to combine properly
@@ -502,13 +515,18 @@ class EffectiveAnimator:
 				cv = a.addCurrValue(cv)
 			else:
 				cv = a.getCurrValue()
-		if self.__chan:
-			displayValue = cv
-			for a in self.__animators:
-				if a.hasRange():
-					displayValue = a.clamp(cv)
-					break
+		
+		displayValue = cv
+		if self.__animators:
+			a = self.__animators[0]
+			displayValue = a.convert(displayValue)
+			displayValue = a.clamp(displayValue)
+		if self.__chan and self.__chan.canupdateattr(self.__node, self.__attr):
 			self.__chan.updateattr(self.__node, self.__attr, displayValue)
+			if debug:
+				print self.__attr,'is',displayValue, '(visible)'
+		elif debug:
+			print self.__attr,'is',displayValue
 		self.__currvalue = cv
 	
 	def getcurrentbasevalue(self, animator=None):
@@ -541,9 +559,6 @@ class AnimateContext:
 			ea = EffectiveAnimator(targattr, domval)
 			self._effAnimators[key] = ea
 			return ea
-
-# rem: should be defined at doc level
-animateContext = AnimateContext()
 
 
 ###########################
@@ -763,7 +778,7 @@ class AnimateElementParser:
 			d = self.__target.GetChannel().attrdict
 			if d.has_key('base_winoff'):
 				base_winoff = d['base_winoff']
-				self.__attrname == 'region.position'
+				self.__attrname = 'region.position'
 				self.__domval = complex(base_winoff[0], base_winoff[1])
 				return 1
 
