@@ -875,6 +875,13 @@ class MMNode:
 	def GetChild(self, i):
 		return self.children[i]
 
+	def GetChildByName(self, name):
+		if self.attrdict.has_key('name') and  self.attrdict['name']==name:
+			return self
+		for child in self.children:
+			return child.GetChildByName(name)
+		return None
+
 	def GetValues(self):
 		return self.values
 
