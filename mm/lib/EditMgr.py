@@ -141,9 +141,14 @@ class EditMgr:
 
 	def transaction(self, type=None):
 		if self.busy: raise MMExc.AssertError, 'recursive transaction'
+		
+		if self.context == None:
+			# the document is probably not open
+			return 0
+		
 		self.__delete(self.future)
 		self.future = []
-
+		
 		# allow transaction only the document is valid, or if the transaction come from the source view
 		# note: this test can't be done from the source view which may be closed
 		if type != 'source' and not self.context.isValidDocument():
