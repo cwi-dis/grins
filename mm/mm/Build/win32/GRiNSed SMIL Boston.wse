@@ -76,7 +76,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=..\products\smil-20\lllicense.txt
+  Source=c:\documents and settings\sjoerd\my documents\src\cmif22\build\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -594,6 +594,23 @@ item: Custom Dialog Set
       Text Norwegian=%COMPANY%
       Text Swedish=%COMPANY%
     end
+    item: Static
+      Rectangle=90 145 251 154
+      Enabled Color=00000000000000001111111111111111
+      Create Flags=01010000000000000000000000000000
+      Flags=0000000000000001
+      Name=Arial
+      Font Style=-11 0 0 0 700 0 0 0 0 3 2 1 34
+      Text=License Key:
+    end
+    item: Editbox
+      Rectangle=90 155 260 167
+      Variable=LICENSE
+      Help Context=16711681
+      Enabled Color=00000000000000001111111111111111
+      Create Flags=01010000100000010000000010000000
+      Text=%LICENSE%
+    end
     item: Push Button
       Rectangle=172 185 214 199
       Variable=DIRECTION
@@ -646,23 +663,6 @@ item: Custom Dialog Set
       Rectangle=9 177 263 178
       Action=3
       Create Flags=01010000000000000000000000000111
-    end
-    item: Static
-      Rectangle=90 145 251 154
-      Enabled Color=00000000000000001111111111111111
-      Create Flags=01010000000000000000000000000000
-      Flags=0000000000000001
-      Name=Arial
-      Font Style=-11 0 0 0 700 0 0 0 0 3 2 1 34
-      Text=License Key:
-    end
-    item: Editbox
-      Rectangle=90 155 260 167
-      Variable=LICENSE
-      Help Context=16711681
-      Enabled Color=00000000000000001111111111111111
-      Create Flags=01010000100000010000000010000000
-      Text=%LICENSE%
     end
   end
 end
@@ -1759,22 +1759,28 @@ end
 item: Install File
   Source=..\..\editor\grprefs.txt
   Destination=%MAINDIR%\grprefs.txt
-  Flags=0000000010000010
+  Flags=0000000010001010
 end
 item: Insert Line into Text File
   Pathname=%MAINDIR%\grprefs.txt
   New Text=license = '%LICENSE%'
+  Search Text=license 
   Line Number=0
+  Flags=00001001
 end
 item: Insert Line into Text File
   Pathname=%MAINDIR%\grprefs.txt
   New Text=license_user = '%NAME%'
+  Search Text=license_user
   Line Number=0
+  Flags=00001001
 end
 item: Insert Line into Text File
   Pathname=%MAINDIR%\grprefs.txt
   New Text=license_organization = '%COMPANY%'
+  Search Text=license_organization
   Line Number=0
+  Flags=00001001
 end
 item: Install File
   Source=..\..\Templates\T-icons\video_2_1A.bmp

@@ -76,7 +76,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=..\products\smil2real\lllicense.txt
+  Source=c:\documents and settings\sjoerd\my documents\src\cmif22\build\products\smil2real\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1755,7 +1755,7 @@ end
 item: Install File
   Source=..\..\editor\grprefs.txt
   Destination=%MAINDIR%\grprefs.txt
-  Flags=0000000010000010
+  Flags=0000000010001010
 end
 item: Insert Line into Text File
   Pathname=%MAINDIR%\grprefs.txt
