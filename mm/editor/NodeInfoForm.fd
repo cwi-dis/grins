@@ -165,7 +165,7 @@ argument: 0
 Name: imm
 Width: 690.000000
 Height: 320.000000
-Number of Objects: 7
+Number of Objects: 8
 
 --------------------
 class: 1
@@ -187,7 +187,7 @@ class: 10000
 type: 0
 box: 0.000000 0.000000 0.000000 0.000000
 boxtype: 0
-colors: 0 0
+colors: 540084852 2037409082
 alignment: 4
 style: 0
 size: 11.000000
@@ -200,14 +200,14 @@ argument:
 --------------------
 class: 71
 type: 2
-box: 10.000000 120.000000 330.000000 70.000000
+box: 10.000000 90.000000 330.000000 100.000000
 boxtype: 2
 colors: 47 3
-alignment: 0
+alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Text
+label: 
 name: text_browser
 callback: text_browser_callback
 argument: 0
@@ -215,7 +215,7 @@ argument: 0
 --------------------
 class: 11
 type: 0
-box: 10.000000 80.000000 100.000000 30.000000
+box: 10.000000 70.000000 100.000000 20.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
@@ -230,7 +230,7 @@ argument: 0
 --------------------
 class: 11
 type: 0
-box: 230.000000 80.000000 110.000000 30.000000
+box: 240.000000 70.000000 100.000000 20.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
@@ -258,11 +258,26 @@ callback: text_input_callback
 argument: 0
 
 --------------------
+class: 11
+type: 0
+box: 120.000000 70.000000 110.000008 20.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: Add line
+name: text_add_button
+callback: text_add_callback
+argument: 0
+
+--------------------
 class: 20000
 type: 0
 box: 0.000000 0.000000 0.000000 0.000000
 boxtype: 0
-colors: 1 65537
+colors: 808460338 842018352
 alignment: 4
 style: 0
 size: 11.000000
