@@ -1847,8 +1847,7 @@ class ChannelWindow(Channel):
 		subreg_top = node.GetAttrDef('top', 0)
 		subreg_bottom = node.GetAttrDef('bottom', 0)
 
-		reg_left, reg_top, reg_width, reg_height =  \
-			self._get_parent_channel()._attrdict['base_winoff']
+		reg_left, reg_top, reg_width, reg_height =  self._get_parent_channel()._getWingeomInPixel()
 
 		# translate in pixel
 		if type(subreg_left) == type(0.0):

@@ -10,6 +10,34 @@ class LayoutChannel(ChannelWindow):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.is_layout_channel = 1
 		self._activeMediaNumber = 0
+                self._wingeomInPixel = None
+                
+	# for now
+	# get the parent window geometry in pixel
+	# need for sub-region, registration point,...
+	def _getWingeomInPixel(self):
+	        parentChannel = self._get_parent_channel()
+	        # top window
+	        if parentChannel == None:
+	                size = self._attrdict.get('winsize', (50, 50))
+	                w,h = size
+	                return 0,0,w,h
+	                
+		units = self._attrdict['units']
+		if units != windowinterface.UNIT_SCREEN:
+			return self._attrdict['base_winoff']
+		if self._wingeomInPixel != None:
+			return self._wingeomInPixel
+		
+		parentChannel = self._get_parent_channel()
+		parentGeomInPixel = parentChannel._getWingeomInPixel()
+		
+		x,y,w,h = self._attrdict['base_winoff']
+		px,py,pw,ph = parentGeomInPixel
+		
+		self._wingeomInPixel = x*pw, y*ph, w*pw, h*ph
+		
+		return self._wingeomInPixel
 
 	def do_arm(self, node, same=0):
 		print 'LayoutChannel: cannot play nodes on a layout channel'
@@ -136,9 +164,9 @@ class LayoutChannel(ChannelWindow):
 		units = self._attrdict.get('units',
 					   windowinterface.UNIT_SCREEN)
 		self.create_window(self._get_parent_channel(), self._wingeom, units)
-
+		
 		return 1
-
+		
 	def play(self, node):
 		print 'can''t play LayoutChannel'
 
