@@ -4,6 +4,7 @@ import QuickDraw
 import Dlg
 import Ctl
 import Controls
+import Events
 import MacOS
 import mac_image
 import imgformat
@@ -503,12 +504,8 @@ class _CommonWindow:
 		#
 		# If we are rubberbanding handle that first.
 		#
-		if self._rb_dialog:
-			if down:
+		if self._rb_dialog and down:
 				if self._rb_mousedown(where, shifted):
-					return
-			else:
-				if self._rb_mouseup(where, shifted):
 					return
 		#
 		# First see whether the click is in any of our children
@@ -661,7 +658,7 @@ class _CommonWindow:
 		for child in still_to_do:
 					child._redraw(rgn)
 					
-		# Last, do the rubber box
+		# Last, do the rubber box, if rubberboxing
 		if self._rb_dialog:
 			self._rb_redraw()
 					
@@ -714,7 +711,9 @@ class _CommonWindow:
 		d.render()
 		self._rb_display = d
 		if box:
-			self._rb_box = self._convert_coordinates(box)
+			x0, y0, w, h = self._convert_coordinates(box)
+			self._rb_box = (x0, y0, x0+w, y0+h)
+			print 'NEW BOX', self._rb_box
 		else:
 			self._rb_box = None
 		self._rb_dragpoint = None
@@ -750,17 +749,23 @@ class _CommonWindow:
 			self._rb_dl.render()
 		self._rb_display.close()
 		del self._rb_callback
+		self._rb_dialog.close()
 		self._rb_dialog = None
 		del self._rb_dl
 		del self._rb_display
 
 	def _rb_cvbox(self):
-		wx, wy, ww, wh = self._rect
+		wx0, wy0, wx1, wy1 = self.qdrect()
+		ww = wx1-wx0
+		wh = wy1-wy0
 		x0, y0, x1, y1 = self._rb_box
-		x0 = float(x0-wx)/ww
-		y0 = float(y0-wy)/wh
-		x1 = float(x1-wx)/ww
-		y1 = float(y1-wy)/wh
+		print 'WIN', wx0, wy0, wx1, wy1, ww, wh
+		print 'BOX', x0, y0, x1, y1
+		x0 = float(x0-wx0)/ww
+		y0 = float(y0-wy0)/wh
+		x1 = float(x1-wx0)/ww
+		y1 = float(y1-wy0)/wh
+		print 'RES', x0, y0, (x1-x0), (y1-y0)
 		return x0, y0, (x1-x0), (y1-y0)
 
 		raise 'not yet implemented'
@@ -814,7 +819,13 @@ class _CommonWindow:
 			self.mkclip()
 		Qd.SetClip(self._clip)
 		Qd.RGBForeColor((0xffff, 0, 0))
+		if not self._rb_dragpoint is None:
+			port = self._wid.GetWindowPort()
+			oldmode = port.pnMode
+			Qd.PenMode(QuickDraw.patXor)
 		self._rb_doredraw()
+		if not self._rb_dragpoint is None:
+			Qd.PenMode(oldmode)
 		
 	def _rb_movebox(self, where, final=0):
 		x, y = where
@@ -869,7 +880,11 @@ class _CommonWindow:
 		Qd.PenMode(oldmode)
 		
 	def _rb_doredraw(self):
-		Qd.FrameRect(self._rb_box)
+		x0, y0, x1, y1 = self._rb_box
+		if x0 > x1: x0, x1 = x1, x0
+		if y0 > y1: y0, y1 = y1, y0
+		if x0 != x1 or y0 != y1:
+			Qd.FrameRect((x0, y0, x1, y1))
 		smallboxes = self._rb_smallboxes()
 		for box in smallboxes:
 			Qd.PaintRect(box)
@@ -920,30 +935,30 @@ class _CommonWindow:
 			dragpoint = 3
 		self._rb_dragpoint = dragpoint
 		print 'RB_MOUSEDOWN', self._rb_box, self._rb_dragpoint
-		if not self._clip:
-			self.mkclip()
-		Qd.SetClip(self._clip)
-		port = self._wid.GetWindowPort()
-		oldmode = port.pnMode
-		Qd.RGBForeColor((0xffff, 0, 0))
-		Qd.PenMode(QuickDraw.patXor)
-		self._do_redraw()
-		Qd.PenMode(oldmode)
+#### Not needed: the render() above has scheduled a redraw anyway
+##		if not self._clip:
+##			self.mkclip()
+##		Qd.SetClip(self._clip)
+##		port = self._wid.GetWindowPort()
+##		oldmode = port.pnMode
+##		Qd.RGBForeColor((0xffff, 0, 0))
+##		Qd.PenMode(QuickDraw.patXor)
+##		self._do_redraw()
+##		Qd.PenMode(oldmode)
 		mw_globals.toplevel.setmousetracker(self._rb_mousemove)
 
 	def _rb_mousemove(self, event):
+		"""Called on mouse moved with button down and final mouseup"""
 		what, message, when, where, modifiers = event
 		Qd.SetPort(self._wid)
 		where = Qd.GlobalToLocal(where)
-		self._rb_movebox(where, 0)
-		
-	def _rb_mouseup(self, where, shifted):
-		mw_globals.toplevel.setmousetracker(None)
-		if self._rb_dragpoint is None:
-			# Mouse-up without previous mousedown
-			return
-		self._rb_movebox(where, 1)
-		self._rb_dragpoint = None
+		if what == Events.mouseUp:
+			self._rb_movebox(where, 1)
+			self._rb_dragpoint = None
+			mw_globals.toplevel.setmousetracker(None)
+			Win.InvalRect(self.qdrect())
+		else:
+			self._rb_movebox(where, 0)
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
