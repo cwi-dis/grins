@@ -39,11 +39,14 @@ class ImageWindow() = ChannelWindow():
 	def setimage(self, (filename, scale)):
 		self.parray = None
 		self.xsize, self.ysize = image.imgsize(filename)
+		#print 'xsize =', self.xsize, 'ysize =', self.ysize
 		self.scale = scale
 		tempfile = image.cachefile(filename)
 		f = open(tempfile, 'r')
 		f.seek(8192)
 		self.parray = f.read()
+		#print 'len =', len(self.parray),
+		#print 'expected =', self.xsize*self.ysize*4
 		if self.wid:
 			gl.winset(self.wid)
 			self.render()
@@ -53,8 +56,8 @@ class ImageWindow() = ChannelWindow():
 		gl.clear()
 		if self.parray:
 			width, height = gl.getsize()
-			x = (width - self.xsize*self.scale) / 2
-			y = (height - self.ysize*self.scale) / 2
+			x = int(width - self.xsize*self.scale) / 2
+			y = int(height - self.ysize*self.scale) / 2
 			gl.rectzoom(self.scale, self.scale)
 			gl.lrectwrite(x, y, x+self.xsize-1, y+self.ysize-1, \
 					self.parray)
