@@ -135,6 +135,10 @@ class MainDialog:
 		self.__lasturl = MMurl.pathname2url(filename)
 		self.__text.settext(self.__lasturl)
 
+	def openfile_callback(self):
+		"""On Unix we only have to "open url" dialog"""
+		self.open_callback()
+		
 	def setbutton(self, button, value):
 		pass			# for now...
 
