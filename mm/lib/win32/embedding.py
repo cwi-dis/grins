@@ -83,12 +83,18 @@ class ListenerWnd(GenWnd.GenWnd):
 		try:
 			func, arg = self._toplevel.get_embedded(event)
 			func(arg, self, event, filename)
-			self._docmap[params[2]] = self._toplevel.get_most_recent_docframe()
-		except: pass
+			frame = self._toplevel.get_most_recent_docframe()
+			if frame is not None:
+				self._docmap[params[2]] = frame
+		except: 
+			pass
 		self._toplevel._peerdocid = 0
-		frame = self._docmap[params[2]] 
-		self._slidermap[params[2]] = SliderPeer(frame._cmifdoc, params[2])
-	
+		frame = self._docmap.get(params[2]) 
+		if frame:
+			cmifdoc = frame._cmifdoc
+			if cmifdoc:
+				self._slidermap[params[2]] = SliderPeer(cmifdoc, params[2])
+			
 	def OnClose(self, params):
 		id = params[2]
 		frame = self._docmap.get(id)
@@ -499,12 +505,27 @@ class showmessage:
 		elif cancelCallback and self._res==win32con.IDCANCEL:
 			apply(apply,cancelCallback)
 
+# Shows a question to the user and returns the response
+def showquestion(text, parent = None):
+	return 0
+
 class ProgressDialog:
 	def __init__(self, *args):
 		pass
 	def set(self, *args):
 		pass
 
+# Displays a message and requests from the user to select Yes or No or Cancel
+def GetYesNoCancel(prompt,parent=None,title='GRiNS'):
+	return 1
+	
+# Displays a message and requests from the user to select OK or Cancel
+def GetOKCancel(prompt,parent=None,title='GRiNS'):
+	return 0
+
+# Displays a message and requests from the user to select Yes or Cancel
+def GetYesNo(prompt,parent=None,title='GRiNS'):
+	return 0
 
 
 
