@@ -83,14 +83,8 @@ extern void initimgppm();
 #ifndef initmath
 extern void initmath();
 #endif
-#ifndef initimgtiff
-extern void initimgtiff();
-#endif
 #ifndef initmacfs
 extern void initmacfs();
-#endif
-#ifndef initimgjpeg
-extern void initimgjpeg();
 #endif
 #ifndef initApp
 extern void initApp();
@@ -143,6 +137,9 @@ extern void initMenu();
 #ifndef initScrap
 extern void initScrap();
 #endif
+#ifndef initimgtiff
+extern void initimgtiff();
+#endif
 #ifndef initNav
 extern void initNav();
 #endif
@@ -175,6 +172,9 @@ extern void initQd();
 #endif
 #ifndef initCtl
 extern void initCtl();
+#endif
+#ifndef initimgjpeg
+extern void initimgjpeg();
 #endif
 #ifndef initicglue
 extern void initicglue();
@@ -215,9 +215,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"rma", initrma},
 	{"imgppm", initimgppm},
 	{"math", initmath},
-	{"imgtiff", initimgtiff},
 	{"macfs", initmacfs},
-	{"imgjpeg", initimgjpeg},
 	{"App", initApp},
 	{"Icn", initIcn},
 	{"_sre", init_sre},
@@ -235,6 +233,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"Evt", initEvt},
 	{"Menu", initMenu},
 	{"Scrap", initScrap},
+	{"imgtiff", initimgtiff},
 	{"Nav", initNav},
 	{"Snd", initSnd},
 	{"strop", initstrop},
@@ -246,6 +245,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"mac", initmac},
 	{"Qd", initQd},
 	{"Ctl", initCtl},
+	{"imgjpeg", initimgjpeg},
 	{"icglue", initicglue},
 	{"Win", initWin},
 	{"imgcolormap", initimgcolormap},
