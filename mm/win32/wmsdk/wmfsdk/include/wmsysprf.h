@@ -201,7 +201,7 @@ EXTERN_GUID( WMProfile_V40_3MBVideo,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 5B16E74B-4068-45b5-B80E-7BF8C80D2C2F */
-EXTERN_GUID( WMProfile_V45_DialUpMBR, 
+EXTERN_GUID( WMProfile_V70_DialUpMBR, 
              0x5b16e74b,
              0x4068,
              0x45b5,
@@ -210,7 +210,7 @@ EXTERN_GUID( WMProfile_V45_DialUpMBR,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 045880DC-34B6-4ca9-A326-73557ED143F3 */
-EXTERN_GUID( WMProfile_V45_IntranetMBR, 
+EXTERN_GUID( WMProfile_V70_IntranetMBR, 
              0x45880dc,
              0x34b6,
              0x4ca9,
@@ -219,7 +219,7 @@ EXTERN_GUID( WMProfile_V45_IntranetMBR,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 07DF7A25-3FE2-4a5b-8B1E-348B0721CA70 */
-EXTERN_GUID( WMProfile_V45_2856100MBR, 
+EXTERN_GUID( WMProfile_V70_2856100MBR, 
              0x7df7a25,
              0x3fe2,
              0x4a5b,
@@ -228,7 +228,7 @@ EXTERN_GUID( WMProfile_V45_2856100MBR,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* B952F38E-7DBC-4533-A9CA-B00B1C6E9800 */
-EXTERN_GUID( WMProfile_V45_288VideoVoice, 
+EXTERN_GUID( WMProfile_V70_288VideoVoice, 
              0xb952f38e,
              0x7dbc,
              0x4533,
@@ -237,7 +237,7 @@ EXTERN_GUID( WMProfile_V45_288VideoVoice,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 58BBA0EE-896A-4948-9953-85B736F83947 */
-EXTERN_GUID( WMProfile_V45_288VideoAudio, 
+EXTERN_GUID( WMProfile_V70_288VideoAudio, 
              0x58bba0ee,
              0x896a,
              0x4948,
@@ -246,7 +246,7 @@ EXTERN_GUID( WMProfile_V45_288VideoAudio,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 70A32E2B-E2DF-4ebd-9105-D9CA194A2D50 */
-EXTERN_GUID( WMProfile_V45_288VideoWebServer, 
+EXTERN_GUID( WMProfile_V70_288VideoWebServer, 
              0x70a32e2b,
              0xe2df,
              0x4ebd,
@@ -255,7 +255,7 @@ EXTERN_GUID( WMProfile_V45_288VideoWebServer,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* DEF99E40-57BC-4ab3-B2D1-B6E3CAF64257 */
-EXTERN_GUID( WMProfile_V45_56VideoWebServer, 
+EXTERN_GUID( WMProfile_V70_56VideoWebServer, 
              0xdef99e40,
              0x57bc,
              0x4ab3,
@@ -264,7 +264,7 @@ EXTERN_GUID( WMProfile_V45_56VideoWebServer,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* C2B7A7E9-7B8E-4992-A1A1-068217A3B311 */
-EXTERN_GUID( WMProfile_V45_64VideoISDN,
+EXTERN_GUID( WMProfile_V70_64VideoISDN,
              0xc2b7a7e9,
              0x7b8e,
              0x4992,
@@ -273,7 +273,7 @@ EXTERN_GUID( WMProfile_V45_64VideoISDN,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* D9F3C932-5EA9-4c6d-89B4-2686E515426E */
-EXTERN_GUID( WMProfile_V45_100Video, 
+EXTERN_GUID( WMProfile_V70_100Video, 
              0xd9f3c932,
              0x5ea9,
              0x4c6d,
@@ -282,7 +282,7 @@ EXTERN_GUID( WMProfile_V45_100Video,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* AFE69B3A-403F-4a1b-8007-0E21CFB3DF84 */
-EXTERN_GUID( WMProfile_V45_256Video,
+EXTERN_GUID( WMProfile_V70_256Video,
              0xafe69b3a,
              0x403f,
              0x4a1b,
@@ -291,7 +291,7 @@ EXTERN_GUID( WMProfile_V45_256Video,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* F3D45FBB-8782-44df-97C6-8678E2F9B13D */
-EXTERN_GUID( WMProfile_V45_384Video,
+EXTERN_GUID( WMProfile_V70_384Video,
              0xf3d45fbb,
              0x8782,
              0x44df,
@@ -300,7 +300,7 @@ EXTERN_GUID( WMProfile_V45_384Video,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 0326EBB6-F76E-4964-B0DB-E729978D35EE */
-EXTERN_GUID( WMProfile_V45_768Video, 
+EXTERN_GUID( WMProfile_V70_768Video, 
              0x326ebb6,
              0xf76e,
              0x4964,
@@ -309,7 +309,7 @@ EXTERN_GUID( WMProfile_V45_768Video,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 0B89164A-5490-4686-9E37-5A80884E5146 */
-EXTERN_GUID( WMProfile_V45_1500Video, 
+EXTERN_GUID( WMProfile_V70_1500Video, 
              0xb89164a,
              0x5490,
              0x4686,
@@ -318,7 +318,7 @@ EXTERN_GUID( WMProfile_V45_1500Video,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* AA980124-BF10-4e4f-9AFD-4329A7395CFF */
-EXTERN_GUID( WMProfile_V45_2000Video,
+EXTERN_GUID( WMProfile_V70_2000Video,
              0xaa980124,
              0xbf10,
              0x4e4f, 
@@ -327,7 +327,7 @@ EXTERN_GUID( WMProfile_V45_2000Video,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 7A747920-2449-4d76-99CB-FDB0C90484D4 */
-EXTERN_GUID( WMProfile_V45_700FilmContentVideo,
+EXTERN_GUID( WMProfile_V70_700FilmContentVideo,
              0x7a747920,
              0x2449,
              0x4d76,
@@ -336,7 +336,7 @@ EXTERN_GUID( WMProfile_V45_700FilmContentVideo,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* F6A5F6DF-EE3F-434c-A433-523CE55F516B */
-EXTERN_GUID( WMProfile_V45_1500FilmContentVideo,
+EXTERN_GUID( WMProfile_V70_1500FilmContentVideo,
              0xf6a5f6df,
              0xee3f,
              0x434c,
@@ -345,7 +345,7 @@ EXTERN_GUID( WMProfile_V45_1500FilmContentVideo,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* EABA9FBF-B64F-49b3-AA0C-73FBDD150AD0 */
-EXTERN_GUID( WMProfile_V45_6VoiceAudio, 
+EXTERN_GUID( WMProfile_V70_6VoiceAudio, 
              0xeaba9fbf,
              0xb64f,
              0x49b3,
@@ -354,7 +354,7 @@ EXTERN_GUID( WMProfile_V45_6VoiceAudio,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* C012A833-A03B-44a5-96DC-ED95CC65582D */
-EXTERN_GUID( WMProfile_V45_288FMRadioMono, 
+EXTERN_GUID( WMProfile_V70_288FMRadioMono, 
              0xc012a833,
              0xa03b,
              0x44a5,
@@ -363,7 +363,7 @@ EXTERN_GUID( WMProfile_V45_288FMRadioMono,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* E96D67C9-1A39-4dc4-B900-B1184DC83620 */
-EXTERN_GUID( WMProfile_V45_288FMRadioStereo, 
+EXTERN_GUID( WMProfile_V70_288FMRadioStereo, 
              0xe96d67c9,
              0x1a39,
              0x4dc4,
@@ -372,7 +372,7 @@ EXTERN_GUID( WMProfile_V45_288FMRadioStereo,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 674EE767-0949-4fac-875E-F4C9C292013B */
-EXTERN_GUID( WMProfile_V45_56DialUpStereo,
+EXTERN_GUID( WMProfile_V70_56DialUpStereo,
              0x674ee767,
              0x949,
              0x4fac,
@@ -381,7 +381,7 @@ EXTERN_GUID( WMProfile_V45_56DialUpStereo,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* 91DEA458-9D60-4212-9C59-D40919C939E4 */
-EXTERN_GUID( WMProfile_V45_64AudioISDN,
+EXTERN_GUID( WMProfile_V70_64AudioISDN,
              0x91dea458,
              0x9d60,
              0x4212,
@@ -390,7 +390,7 @@ EXTERN_GUID( WMProfile_V45_64AudioISDN,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* B29CFFC6-F131-41db-B5E8-99D8B0B945F4 */
-EXTERN_GUID( WMProfile_V45_64Audio, 
+EXTERN_GUID( WMProfile_V70_64Audio, 
              0xb29cffc6,
              0xf131,
              0x41db,
@@ -399,7 +399,7 @@ EXTERN_GUID( WMProfile_V45_64Audio,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* A9D4B819-16CC-4a59-9F37-693DBB0302D6 */
-EXTERN_GUID( WMProfile_V45_96Audio, 
+EXTERN_GUID( WMProfile_V70_96Audio, 
              0xa9d4b819,
              0x16cc,
              0x4a59,
@@ -408,7 +408,7 @@ EXTERN_GUID( WMProfile_V45_96Audio,
 ///////////////////////////////////////////////////////////////////////////////
 
 /* C64CF5DA-DF45-40d3-8027-DE698D68DC66 */
-EXTERN_GUID( WMProfile_V45_128Audio, 
+EXTERN_GUID( WMProfile_V70_128Audio, 
              0xc64cf5da,
              0xdf45,
              0x40d3,

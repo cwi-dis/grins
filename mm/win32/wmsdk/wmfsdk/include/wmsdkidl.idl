@@ -75,6 +75,7 @@ interface IWMLicenseRestore;
 interface IWMBackupRestoreProps;
 
 interface IWMCodecInfo;
+interface IWMCodecInfo2;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -214,6 +215,16 @@ enum
 {
     WM_SF_CLEANPOINT = 0x1,
     WM_SF_DISCONTINUITY = 0x2,
+    WM_SF_DATALOSS = 0x4,
+};
+
+//
+// These flags might be set for a call to the IWMReaderAllocatorEx methods.
+//
+enum
+{
+    WM_SFEX_NOTASYNCPOINT = 0x2,
+    WM_SFEX_DATALOSS = 0x4,
 };
 
 //
@@ -313,7 +324,7 @@ typedef enum WMT_ATTR_IMAGETYPE
 typedef enum WMT_VERSION
 {
     WMT_VER_4_0 = 0x00040000,
-    WMT_VER_4_5 = 0x00040005,
+    WMT_VER_7_0 = 0x00070000,
 } WMT_VERSION;
 
 //
@@ -390,6 +401,7 @@ enum
     WM_DM_DEINTERLACE_HALFSIZE           = 2,
     WM_DM_DEINTERLACE_HALFSIZEDOUBLERATE = 3,
     WM_DM_DEINTERLACE_INVERSETELECINE    = 4,
+    WM_DM_DEINTERLACE_VERTICALHALFSIZEDOUBLERATE = 5,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -643,6 +655,13 @@ cpp_quote( "// 00000009-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_DR
 cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_DRM, " )
 cpp_quote( "0x00000009, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
 
+//
+// WM Audio v2 and v7 are actually compatible bitstreams.
+//
+cpp_quote( "// 00000161-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_WMAudioV7 " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_WMAudioV7, " )
+cpp_quote( "0x00000161, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
+
 cpp_quote( "// 00000161-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_WMAudioV2 " )
 cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_WMAudioV2, " )
 cpp_quote( "0x00000161, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
@@ -724,7 +743,7 @@ cpp_quote( "EXTERN_GUID( IID_IWMRegisterCallback,   0xcf4b1f99,0x4de2,0x4e49,0xa
 cpp_quote( "EXTERN_GUID( IID_IWMWriterPostView,     0x81e20ce4,0x75ef,0x491a,0x80,0x04,0xfc,0x53,0xc4,0x5b,0xdc,0x3e);")
 cpp_quote( "EXTERN_GUID( IID_IWMWriterPostViewCallback, 0xd9d6549d,0xa193,0x4f24,0xb3,0x08,0x03,0x12,0x3d,0x9b,0x7f,0x8d);")
 cpp_quote( "EXTERN_GUID( IID_IWMCodecInfo,          0xa970f41e,0x34de,0x4a98,0xb3,0xba,0xe4,0xb3,0xca,0x75,0x28,0xf0);")
-
+cpp_quote( "EXTERN_GUID( IID_IWMCodecInfo2,         0xaa65e273,0xb686,0x4056,0x91,0xec,0xdd,0x76,0x8d,0x4d,0xf7,0x10);")
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -734,6 +753,15 @@ cpp_quote( "EXTERN_GUID( IID_IWMCodecInfo,          0xa970f41e,0x34de,0x4a98,0xb
 ///////////////////////////////////////////////////////////////////////////////
 
 cpp_quote( "EXTERN_GUID( CLSID_WMMUTEX_Bitrate, 0xD6E22A01,0x35DA,0x11D1,0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE );" )
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Max Video Streams / Bands 
+//
+///////////////////////////////////////////////////////////////////////////////
+
+cpp_quote( "#define WM_MAX_VIDEO_STREAMS            0x00c" )
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2111,6 +2139,14 @@ interface IWMReaderAdvanced2 : IWMReaderAdvanced
     // corresponding WMT_BUFFERING_STOP.
     //
     HRESULT StopBuffering( );
+
+    //
+    // Same as IWMReader::Open but takes an IStream interface pointer instead
+    // of an URL to be opened
+    //
+    HRESULT OpenStream( [in] IStream *pStream,
+                        [in] IWMReaderCallback *pCallback,
+                        [in] void *pvContext );
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2525,5 +2561,25 @@ interface IWMCodecInfo : IUnknown
                                  [out]     IWMStreamConfig **ppIStreamConfig );
 };
 
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( AA65E273-B686-4056-91EC-DD768D4DF710 ),
+    helpstring( "IWMCodecInfo2 Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMCodecInfo2 : IWMCodecInfo
+{
+    HRESULT GetCodecName( [in]  REFGUID guidType,
+                          [in]  DWORD dwCodecIndex,
+                          [out] WCHAR *wszName,
+                          [out] DWORD *pcchName );
 
-
+    HRESULT GetCodecFormatDesc( [in]       REFGUID guidType,
+                                [in]       DWORD dwCodecIndex,
+                                [in]       DWORD dwFormatIndex,
+                                [out]      IWMStreamConfig **ppIStreamConfig,
+                                [out]      WCHAR *wszDesc,
+                                [in, out]  DWORD *pcchDesc );
+};
