@@ -5,7 +5,7 @@ import mw_globals
 import Transitions
 	
 class TransitionEngine:
-	def __init__(self, window, inout, runit, dict):
+	def __init__(self, window, inout, runit, dict, cb):
 		dur = dict.get('dur', 1)
 		self.exclude_first_window = 0
 		# if this is a multieElt transition with clipChildren we should not
@@ -20,6 +20,7 @@ class TransitionEngine:
 		self.value = 0
 		trtype = dict['trtype']
 		subtype = dict.get('subtype')
+		self.__callback = cb
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.transitiontype = klass(self, dict)
 		self.dstrgn = None
@@ -60,6 +61,9 @@ class TransitionEngine:
 			mw_globals.toplevel.cancelidleproc(self.__idleid)
 			self.windows = None
 			self.transitiontype = None
+			if self.__callback:
+				apply(apply, self.__callback)
+				self.__callback = None
 		
 	def need_tmp_wid(self):
 		return self.transitiontype.needtmpbitmap()
