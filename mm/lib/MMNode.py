@@ -3564,7 +3564,11 @@ class MMNode(MMTreeElement):
 								parent.start_time = val
 								parent = parent.parent
 						return val
-					e, MBcached = c.__calcendtime(val, sctx)
+					if c.time_list and c.time_list[-1][1] is not None and c.time_list[-1][1] >= val:
+						e = c.time_list[-1][1] - val
+						MBcached = 0
+					else:
+						e, MBcached = c.__calcendtime(val, sctx)
 					if e is None or e < 0:
 						# some previous sibling doesn't have a resolved end
 						return None
