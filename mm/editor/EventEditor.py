@@ -67,7 +67,11 @@ class EventStruct:
 			
 	# we need this method so that the Apply button gets enabled and disabled properly
 	def __cmp__(self, other):
-		return cmp(self.as_string(), other.as_string())
+		return cmp(self.__get_values(), other.__get_values())
+
+	def __get_values(self):
+		arc = self._syncarc
+		return self._setnode or arc.srcnode, self._setcause or self.cause, self._setevent or self.event, self._setoffset or arc.delay, self._setrepeat or arc.get_repeat(), self._setwallclock or arc.wallclock, self._setregion or arc.channel, self._setmarker or arc.marker
 
 	def get_value(self):
 		# Returns the result of editing this syncarc.
@@ -347,10 +351,12 @@ class EventStruct:
 			readonly = 1
 			name = "Node:"
 			if self._setnode:
-				thing = self._setnode
-			elif isinstance(self._syncarc, MMNode.MMSyncArc) and isinstance(self._syncarc.srcnode, MMNode.MMNode):
-				thing = self._syncarc.srcnode.GetName()
-			elif type(self._syncarc.srcnode) is type('') and self._syncarc.srcnode not in ('prev','syncbase'):
+				node = self._setnode
+			else:
+				node = self._syncarc.srcnode
+			if isinstance(node, MMNode.MMNode):
+				thing = node.GetName()
+			elif type(node) is type('') and node not in ('prev','syncbase'):
 				refnode = self._syncarc.refnode()
 				if refnode is None:
 					thing = 'Dangling node'
