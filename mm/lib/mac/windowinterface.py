@@ -69,6 +69,7 @@ SelectionDialog = mw_dialogs.SelectionDialog
 SingleSelectionDialog = mw_dialogs.SingleSelectionDialog
 InputDialog = mw_dialogs.InputDialog
 InputURLDialog = mw_dialogs.InputURLDialog
+NewChannelDialog = mw_dialogs.NewChannelDialog
 Dialog = mw_dialogs.Dialog
 multchoice = mw_dialogs.multchoice
 showmessage = mw_dialogs.showmessage
