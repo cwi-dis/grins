@@ -438,11 +438,11 @@ class TopLevel(ViewDialog):
 <smil>
   <head>
     <layout>
-      <channel id="html"/>
+      <region id="html"/>
     </layout>
   </head>
   <body>
-    <text src="%s" channel="html"/>
+    <text src="%s" region="html"/>
   </body>
 </smil>
 ''' % self.filename, self.filename)
