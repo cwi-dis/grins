@@ -8,7 +8,9 @@ mimetypes = {
 
 	'.ra': 'audio/vnd.rn-realaudio',
 	'.ram': 'audio/vnd.rn-realaudio',
+	'.rmm': 'audio/vnd.rn-realaudio',
 	'.rp': 'image/vnd.rn-realpix',
 	'.rt': 'text/vnd.rn-realtext',
 	'.rv': 'video/vnd.rn-realvideo',
+	'.rf': 'image/vnd.rn-realflash',
 	}
