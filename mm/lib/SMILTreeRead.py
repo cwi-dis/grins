@@ -1,7 +1,6 @@
 __version__ = "$Id$"
 
 import xmllib
-import mimetypes
 import MMNode, MMAttrdefs
 from MMExc import *
 from MMTypes import *
@@ -289,14 +288,18 @@ class SMILParser(xmllib.XMLParser):
 			nodetype = 'imm'
 			self.__nodedata = []
 			self.__data = []
+			if not attributes.has_key('type'):
+				self.syntax_error('neither src nor type attribute')
 		self.__is_ext = is_ext
 
 		# find out type of file
 		subtype = None
 		mtype = attributes.get('type')
-		if mtype is None and is_ext:
-			# guess the type from the file extension
-			mtype = mimetypes.guess_type(url)[0]
+# not allowed to look at extension...
+## 		if mtype is None and is_ext:
+## 			import mimetypes
+## 			# guess the type from the file extension
+## 			mtype = mimetypes.guess_type(url)[0]
 		if mtype is None and mediatype is None and is_ext:
 			# last resort: get file and see what type it is
 			try:
