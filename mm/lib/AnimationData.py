@@ -6,6 +6,8 @@ import MMAttrdefs
 
 from fmtfloat import fmtfloat
 
+import colors
+
 # AnimationData pattern:
 # <ref ...>
 #   <animateMotion targetElement="xxx" values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
@@ -65,17 +67,18 @@ class AnimationData:
 		animateColorValues = []
 		for anim in children:
 			tag = anim.attrdict.get('atag')
-			if tag == 'animateMotion':
-				str = MMAttrdefs.getattr(anim, 'values')
-				animateMotionValues = self._strToPosList(str)
-			elif tag == 'animate':
-				attributeName = MMAttrdefs.getattr(anim, 'attributeName')
-				if attributeName == 'width':
-					animateWidthValues = self._strToIntList(str)
-				elif attributeName == 'height':
-					animateHeightValues = self._strToIntList(str)
-			elif tag == 'animateColor':
-				animateColorValues = self._strToColorList(str)
+			str = MMAttrdefs.getattr(anim, 'values')
+			if str:
+				if tag == 'animateMotion':
+					animateMotionValues = self._strToPosList(str)
+				elif tag == 'animate':
+					attributeName = MMAttrdefs.getattr(anim, 'attributeName')
+					if attributeName == 'width':
+						animateWidthValues = self._strToIntList(str)
+					elif attributeName == 'height':
+						animateHeightValues = self._strToIntList(str)
+				elif tag == 'animateColor':
+					animateColorValues = self._strToColorList(str)
 		n = len(self.times)
 		assert len(animateMotionValues) == n, ''
 		assert len(animateWidthValues) == n, ''
@@ -88,7 +91,8 @@ class AnimationData:
 			rect = x, y, w, h
 			color = animateColorValues[i]
 			self.data.append((rect, color))
-	
+		#print self.data
+
 	# create animate nodes from self data
 	def applyData(self, editmgr):
 		animateMotionValues, animateWidthValues,\
@@ -272,10 +276,10 @@ class AnimationData:
 # should go normally to parse utilities
 # copy/paste form SMILTreeRead
 
-import SystemColors
-import colors
-
 def convert_color(val):
+	from colors import colors
+	from SMILTreeRead import color
+	import SystemColors
 	val = val.lower()
 	if colors.has_key(val):
 		return colors[val]
