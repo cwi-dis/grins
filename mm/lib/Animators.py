@@ -950,6 +950,10 @@ class AnimateContext:
 		self._id2key = {}
 		self._mmtree = MMNode.MMChannelTree(player.context)
 		self._cssResolver = self._mmtree.newCssResolver()
+		self._loopcount = {}
+	
+	def __del__(self):
+		print '~AnimateContext'
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
