@@ -60,7 +60,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
-		self.window.DestroyOSWindow()
+		if self.window:
+			self.window.DestroyOSWindow()
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):

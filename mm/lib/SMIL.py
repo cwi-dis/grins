@@ -92,6 +92,7 @@ class SMIL:
 			     },
 		'region': {'background-color':'transparent',
 			   'backgroundColor':None,
+			   'showBackground':'always',
 			   'bottom':None,
 			   'fit':'hidden',
 			   'height':None,

@@ -9,6 +9,7 @@ class LayoutChannel(ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.is_layout_channel = 1
+		self._activeMediaNumber = 0
 
 	def do_arm(self, node, same=0):
 		print 'LayoutChannel: cannot play nodes on a layout channel'
@@ -86,13 +87,8 @@ class LayoutChannel(ChannelWindow):
 ##		if menu:
 ##			self.window.create_menu(menu, title = self._name)
 
+
 	def do_show(self, pchan):
-		if debug:
-			print 'LayoutChannel.do_show('+`self`+')'
-		try:
-			del self.winoff
-		except AttributeError:
-			pass
 		# create a window for this channel
 		pgeom = None
 		units = self._attrdict.get('units',
@@ -107,9 +103,9 @@ class LayoutChannel(ChannelWindow):
 				except KeyError:
 					pass
 			if pgeom:
-				self.winoff = pgeom
+				self._wingeom = pgeom
 			elif self._attrdict.has_key('base_winoff'):
-				self.winoff = pgeom = self._attrdict['base_winoff']
+				self._wingeom = pgeom = self._attrdict['base_winoff']
 			elif self._player.playing:
 				windowinterface.showmessage(
 					'No geometry for subchannel %s known' % self._name,
@@ -129,13 +125,80 @@ class LayoutChannel(ChannelWindow):
 				# without using the edit mgr).
 				# Or should I skip the curvals stuff below, to do this correctly?
 				#
-				self.winoff = pgeom = (0.0, 0.0, 1.0, 1.0)
+				self._wingeom = pgeom = (0.0, 0.0, 1.0, 1.0)
 				units = windowinterface.UNIT_SCREEN
 				self._attrdict['base_winoff'] = pgeom
 				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
-		self.create_window(pchan, pgeom, units)
+		
+		# we have to render visible the channel at start according to the 
+		# showBackground attribute
+		if self._hasBackgroundAtStart():
+			self._setVisible(1)
 		return 1
 
 	def play(self, node):
 		print 'can''t play LayoutChannel'
+
+	# A channel pass active (when one more media play inside).
+	# We have to render visible all channel which are at least one media playing inside
+	def updateToActiveState(self):
+		ch = self
+		chToVisible = None
+		while ch != None:
+			if not ch._hasBackgroundAtStart():
+				if ch._activeMediaNumber <= 0:
+						chToVisible = ch
+				ch._activeMediaNumber = ch._activeMediaNumber+1
+				ch = ch._get_parent_channel()
+			else:
+				break
+
+		# if found, render it visible
+		if chToVisible:
+			chToVisible._setVisible(1)
+			
+	# A channel pass inactive (when no media play inside anymore).
+	# We have to rendered unvisible all channel according to the showBackground attribute
+	def updateToInactiveState(self):
+		ch = self
+		# looking for the first channel (in hierarchy) which pass inactive
+		chToUnvisible = None
+		while ch != None:
+			if not ch._hasBackgroundAtStart():
+				ch._activeMediaNumber = ch._activeMediaNumber-1
+				if ch._activeMediaNumber <= 0:
+					if self._attrdict['showBackground'] == 'whenActive':
+						chToUnvisible = ch
+				ch = ch._get_parent_channel()
+			else:
+				break
+
+		# if found, render it invisible (and all channels inside)
+		if chToUnvisible:
+			chToUnvisible._setVisible(0)
+			
+	# Set this channel visible/unvisible according to the showBackground attribute
+	
+	###################################### WARNING ###################################
+	# for now, we destroy the window when the channel pass inactive (only method which
+	# actually work). We also destroy all windows inside
+	# we can't use hide/show because they modify a lot of things (structure of channel,
+	# state in some case, ...). Otherwise you have a crash in a lot of cases.
+	# The best method whould be call hide/show without destroy and rebuild the window, 
+	# but it doesn't work actually
+	##################################################################################
+	def _setVisible(self, fl):
+		if self.window == None and fl:
+			ChannelWindow._setVisible(self,fl)
+			for subch in self._subchannels:
+			        if subch._attrdict['showBackground'] != 'whenActive' or \
+			                subch._activeMediaNumber > 0:
+					subch._setVisible(fl)
+			
+		elif self.window != None and not fl:
+			for subch in self._subchannels:
+				subch._setVisible(fl)
+			ChannelWindow._setVisible(self,fl)
+		
+			

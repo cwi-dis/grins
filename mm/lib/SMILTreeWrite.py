@@ -1028,6 +1028,7 @@ cmif_chan_attrs_ignore = {
 	# the channel type is determinate according to the node type
 	'type':0,
 	# end new
+	'showBackground':0,	
 	}
 
 qt_node_attrs = {
@@ -1734,7 +1735,12 @@ class SMILWriter(SMIL):
 				attrlist.append(('%s:center' % NSGRiNSprefix, '1'))
 			if ch.get('drawbox', 1):
 				attrlist.append(('%s:drawbox' % NSGRiNSprefix, '1'))
-
+			
+			# we save the showBackground attribute only if it's not the default value
+			showBackground = ch.get('showBackground')
+			if showBackground != 'always':
+				attrlist.append(('showBackground', showBackground))
+			
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))

@@ -716,7 +716,8 @@ class SubWindow(Window):
 		return x, y, x+w, y+h
 
 	def update(self):
-		self._topwindow.update()
+		if hasattr(self,'_topwindow'):
+			self._topwindow.update()
 
 	def HookMessage(self, f, m):
 		if self._oswnd: wnd = self._oswnd
