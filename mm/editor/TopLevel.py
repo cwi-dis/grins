@@ -12,7 +12,9 @@ from EditMgr import EditMgr
 import glwindow
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
+
 import AttrEdit
+import NodeInfo
 
 import Timing
 
@@ -57,6 +59,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		BasicDialog.destroy(self)
 		self.destroyviews()
 		AttrEdit.closeall(self.root)
+		NodeInfo.closeall(self.root)
 	#
 	# Main interface.
 	#
