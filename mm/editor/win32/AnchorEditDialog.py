@@ -28,9 +28,6 @@ visually separate.  There are callbacks for all these buttons.
 
 __version__ = "$Id$"
 
-# kk_note: this module contains only the interface to the AnchorEditDialog (no actual code)
-
-import windowinterface
 
 class AnchorEditorDialog:
 	def __init__(self, title, typelabels, list, initial):
@@ -74,7 +71,8 @@ class AnchorEditorDialog:
 		}
 		
 		formid=adornments['form_id']
-		fs=windowinterface.getformserver()
+		toplevel_window=self.toplevel.window
+		fs=toplevel_window.getformserver()
 		w=fs.newformobj(formid)
 		w.do_init(title, typelabels, list, initial,adornments)
 		fs.showform(w,formid)

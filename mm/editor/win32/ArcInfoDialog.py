@@ -21,7 +21,6 @@ For these buttons there are callbacks.
 
 __version__ = "$Id$"
 
-import windowinterface
 
 class ArcInfoDialog:
 	def __init__(self, title, srclist, srcinit, dstlist, dstinit, delay):
@@ -44,7 +43,6 @@ class ArcInfoDialog:
 		"""
 		adornments = {
 			'form_id':'arc_info',
-			'host_id':'cview_',
 			'callbacks':{
 				'Cancel':(self.cancel_callback, ()),
 				'Restore':(self.restore_callback, ()),
@@ -52,14 +50,12 @@ class ArcInfoDialog:
 				'OK':(self.ok_callback, ()),
 			},
 		}
-
+		view=self.cview.window
 		formid=adornments['form_id']
-		hostid=adornments['host_id']
-
-		fs=windowinterface.getformserver()
+		fs=view.getformserver()
 		w=fs.newformobj(formid)
 		w.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
-		frame=windowinterface.getviewframe(hostid)
+		frame=view.getframe()
 		w.create(frame)
 		self.__window=w
 
@@ -71,6 +67,9 @@ class ArcInfoDialog:
 		"""Close the dialog and free resources."""
 		self.__window.close()
 		del self.__window
+
+	def is_closed(self):
+		return not hasattr(self,'__window')
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.

@@ -3,6 +3,14 @@ __version__ = "$Id$"
 import windowinterface, WMEVENTS
 from usercmd import *
 
+""" @win32doc|TopLevelDialog
+There is one to one corespondance between a TopLevelDialog
+instance and a document, and a TopLevelDialog
+instance with an MDIFrameWnd. The document level commands
+are enabled. This class has acces to the document and
+can display its various views and its source
+"""
+
 class TopLevelDialog:
 	adornments = {
 		'toolbar': [
@@ -26,14 +34,16 @@ class TopLevelDialog:
 		pass
 
 	def show(self):
+		print 'show document',self.filename
 		if self.window is not None:
 			return
-		self.window = w = windowinterface.newdocument(self.basename, 
+		self.window = windowinterface.newdocument(self, 
 			adornments = self.adornments,commandlist = self.commandlist)
 
 	def hide(self):
 		if self.window is None:
 			return
+		print 'close document',self.filename
 		self.window.close()
 		self.window = None
 
@@ -44,17 +54,10 @@ class TopLevelDialog:
 		if self.source:
 			self.source.close()
 			self.source=None
-			windowinterface.getmainwnd().set_toggle(SOURCE,0)
+			self.window.set_toggle(SOURCE,0)
 		else:
-			self.source = windowinterface.textwindow(self.root.source)
-			windowinterface.getmainwnd().set_toggle(SOURCE,1)
-	def mayclose_X(self):
-		prompt = 'You haven\'t saved your changes yet;\n' + \
-			 'do you want to save them before closing?'
-		b1 = 'Save'
-		b2 = "Don't save"
-		b3 = 'Cancel'
-		return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+			self.source = self.window.textwindow(self.root.source)
+			self.window.set_toggle(SOURCE,1)
 
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \

@@ -8,7 +8,8 @@ class LayoutViewDialog:
 		self.__window=None
 
 	def createviewobj(self):
-		f=windowinterface.getmainwnd()
+		f=self.toplevel.window
+
 		w=f.newviewobj('lview_')
 
 		self.__layoutlist=w['LayoutList']
@@ -43,18 +44,18 @@ class LayoutViewDialog:
 
 	def hide(self):
 		if self.__window is not None:
-			#self.__window.hide()
 			self.__window.close()
 			self.__window = None
-			windowinterface.getmainwnd().set_toggle(LAYOUTVIEW,0)
+			f=self.toplevel.window
+			f.set_toggle(LAYOUTVIEW,0)
 
 	def assertwndcreated(self):
 		if self.__window is None or not hasattr(self.__window,'GetSafeHwnd'):
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
-			f=windowinterface.getmainwnd()
+			f=self.toplevel.window
 			self.__window.create(f)
-			windowinterface.getmainwnd().set_toggle(LAYOUTVIEW,1)
+			f.set_toggle(LAYOUTVIEW,1)
 
 	def setlayoutlist(self, layouts, cur):
 		# the core should be corected but 
@@ -130,7 +131,7 @@ class LayoutViewDialog:
 
 
 	def askchannelnameandtype(self, default, types):
-		w=windowinterface.NewChannelDlg('newchanneldialog', grab = 1,
+		w=windowinterface.NewChannelDlg('newchanneldialog',default,grab = 1,
 					   parent = self.__window)
 		self.__chanwin = w
 		self.__chantext=w._chantext
@@ -150,11 +151,11 @@ class LayoutViewDialog:
 		del self.__chantext
 		del self.__chantype
 		del self.__chanwin
-
-		# We can't call this directly since we're still in
-		# grab mode.  We must first return from this callback
-		# before we're out of that mode, so we must schedule a
-		# callback in the very near future.
-		#windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
-		print 'calling newchannel_callback'
 		apply(apply,(self.newchannel_callback, (name, type)))
+
+		# if in grab mode:
+		#	We can't call this directly since we're still in
+		#	grab mode.  We must first return from this callback
+		#	before we're out of that mode, so we must schedule a
+		#	callback in the very near future.
+		#	windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))

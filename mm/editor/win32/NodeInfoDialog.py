@@ -47,7 +47,6 @@ button, whatever) at which time a callback is called.
 
 __version__ = "$Id$"
 
-import windowinterface
 
 class NodeInfoDialog:
 	def __init__(self, title, channelnames, initchannel, types, inittype,
@@ -97,12 +96,16 @@ class NodeInfoDialog:
 				}
 			}
 		formid=adornments['form_id']
-		fs=windowinterface.getformserver()
+		toplevel_window=self.toplevel.window
+		fs=toplevel_window.getformserver()
 		w=fs.newformobj(formid)
 		w.do_init(title, channelnames, initchannel, types, inittype,
 		     name, filename, children, immtext,adornments)
 		fs.showform(w,formid)
 		self.__window=w
+
+		w.setdata()
+		w.enable_cbs()
 
 	def close(self):
 		"""Close the dialog and free resources."""
@@ -141,6 +144,7 @@ class NodeInfoDialog:
 		return self.__window.getchannelname()
 
 	def askchannelname(self, default):
+		import windowinterface
 		windowinterface.InputDialog('Name for new channel',
 					    default,
 					    self.newchan_callback,
@@ -222,7 +226,7 @@ class NodeInfoDialog:
 
 	def getfilename(self):
 		"""Return the value of the filename text field."""
-		return self.__window.getfilename
+		return self.__window.getfilename()
 
 	# Interface to the interior part.  This part consists of a
 	# list of strings and an interface to select one item in the

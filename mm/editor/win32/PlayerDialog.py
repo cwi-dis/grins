@@ -6,7 +6,14 @@ an interface to turn options on and off.
 
 """
 
+""" @win32doc|PlayerDialog
+A PlayerDialog instance manages commands related
+to play. This instance indirectly passes information to
+the windows interface through the get_adornments method
+called by the channel module.
+"""
 __version__ = "$Id$"
+
 
 import windowinterface
 from usercmd import *
@@ -31,8 +38,7 @@ class PlayerDialog:
 				]),
 			('Channels', CHANNELS),
 			('Options', [
-				#('Calculate timing', CALCTIMING),
-				('Keep Channel View in sync', SYNCCV),
+				('Keep Channel View in sync', SYNCCV, 't'),
 				('Dump scheduler data', SCHEDDUMP),
 				]),
 			],
@@ -55,18 +61,21 @@ class PlayerDialog:
 		title -- string to be displayed as window title
 		"""
 
-		self.__window = None
+		self.__window = None 
 		self.__title = title
 		self.__coords = coords
 		self.__state = -1
 		self.__channels = []
 		self.__channeldict = {}
+		self.__strid='player'
+		self.__cmdtgt='pview_'
 
 	def close(self):
 		"""Close the dialog and free resources."""
 		if self.__window is not None:
 			# must be corrected together with show
-			self.__window.close()
+			#self.__window.close()
+			self.__window.set_commandlist(None,self.__cmdtgt)
 			self.__window = None
 		del self.__channels
 		del self.__channeldict
@@ -74,18 +83,19 @@ class PlayerDialog:
 	def show(self, subwindowof=None):
 		"""Show the control panel."""
 
+		
 		if self.__window is not None:
 			self.__window.pop()
 			return
 		x, y, w, h = self.__coords
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
-		self.__window = windowinterface.newview(
-			x, y, w, h, self.__title,
-			adornments = self.adornments,
-			commandlist = self.stoplist,context='pview_')
+
+		self.__window = self.toplevel.window
+		self.__window.set_commandlist(self.stoplist,self.__cmdtgt)
 		if self.__channels:
 			self.setchannels(self.__channels)
+		self.__window.set_toggle(SYNCCV, self.sync_cv)
 
 	def hide(self):
 		"""Hide the control panel."""
@@ -93,7 +103,8 @@ class PlayerDialog:
 		if self.__window is None:
 			return
 
-		self.__window.close()
+		#self.__window.close()
+		self.__window.set_commandlist(None,self.__cmdtgt)
 		self.__window = None
 
 	def settitle(self, title):
@@ -159,11 +170,11 @@ class PlayerDialog:
 		w = self.__window
 		if w is not None:
 			if state == STOPPED:
-				w.set_commandlist(self.stoplist)
+				w.set_commandlist(self.stoplist,self.__cmdtgt)
 			if state == PLAYING:
-				w.set_commandlist(self.playlist)
+				w.set_commandlist(self.playlist,self.__cmdtgt)
 			if state == PAUSING:
-				w.set_commandlist(self.pauselist)
+				w.set_commandlist(self.pauselist,self.__cmdtgt)
 			self.setchannels(self.__channels)
 			if state != ostate:
 				w.set_toggle(PLAY, state != STOPPED)
@@ -180,14 +191,12 @@ class PlayerDialog:
 
 		pass
 
-	def setcursor(self, cursor):
-		"""Set the cursor to a named shape.
-
-		Arguments (no defaults):
-		cursor -- string giving the name of the desired cursor shape
-		"""
-		if self.__window is not None:
-			return self.__window.setcursor(cursor)
-
 	def get_adornments(self, channel):
-		return self.adornments2
+		self.inst_adornments = {
+			'close': [ CLOSE_WINDOW, ],
+			'frame':self.toplevel.window,
+			'view':self.__cmdtgt,
+			}
+		return self.inst_adornments
+
+

@@ -3,7 +3,6 @@
 # that really belong here...
 
 from ViewDialog import ViewDialog
-import windowinterface
 import WMEVENTS
 from usercmd import *
 
@@ -89,7 +88,7 @@ class HierarchyViewDialog(ViewDialog):
 	# transf from HierarchyView
 	def helpcall(self):
 		import Help
-		Help.givehelp(self.window._hWnd,'Hierarchy_view')
+		Help.givehelp(self.window,'Hierarchy_view')
 
 	def show(self):
 		if self.is_showing():
@@ -98,10 +97,12 @@ class HierarchyViewDialog(ViewDialog):
 		title = 'Hierarchy View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newview(x, y, w, h, title,
+		toplevel_window=self.toplevel.window
+		self.window = toplevel_window.newview(x, y, w, h, title,
 				adornments = self.adornments,
 				canvassize = (w, h),
-				commandlist = self.commands,context='hview_')
+				commandlist = self.commands,strid='hview_')
+
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)

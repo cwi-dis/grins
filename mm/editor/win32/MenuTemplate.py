@@ -1,5 +1,5 @@
 #
-# Command/menu mapping for the win32, editor version
+# Command/menu mapping for the win32 GRiNS Editor
 #
 # (adapted from mac original)
 #
@@ -10,24 +10,11 @@ from usercmd import *
 from wndusercmd import *
 
 # Types of menu entries
-[ENTRY, TOGGLE, SEP, CASCADE] = range(4)
+[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
 
-#
-# missing commands from menubar
-UNUSED_COMMANDS=(
-	ANCESTORS,
-	DESCENDANTS,
-	SIBLINGS,
-	SYNCARCS,
-	MAGIC_PLAY,
-)
-
-#
-# Menu structure
-#
 
 MENUBAR=(
-	('File', (
+	('&File', (
 		(ENTRY, 'New', 'N', NEW_DOCUMENT),
 		(ENTRY, 'Open...', 'O', OPEN),
 		(ENTRY, 'Close document', None, CLOSE),
@@ -37,16 +24,20 @@ MENUBAR=(
 		(ENTRY, 'Restore', None, RESTORE),
 		(SEP,),
 		(ENTRY, 'Preferences...', None, PREFERENCES),
+		(ENTRY, 'Charset...', 'C', SELECT_CHARSET),
 		(SEP,),
 		(CASCADE, 'Debug', (
+			(ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(TOGGLE, 'Enable call tracing', None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),
 			(ENTRY, 'Abort', None, CRASH),
-			(ENTRY, 'Show log/debug window', None, CONSOLE))),
+			(TOGGLE, 'Show log/debug window', None, CONSOLE),
+			)),
 		(SEP,),
-		(ENTRY, 'Exit', 'Q', EXIT))),
+		(ENTRY, 'Exit', 'Q', EXIT),
+		)),
 
-	('Edit', (
+	('&Edit', (
 		(ENTRY, 'Undo', 'Z', UNDO),
 		(SEP,),
 		(ENTRY, 'Cut', 'X', CUT),
@@ -55,7 +46,8 @@ MENUBAR=(
 		(CASCADE, 'Paste node', (
 			(ENTRY, 'Before', None, PASTE_BEFORE),
 			(ENTRY, 'After', None, PASTE_AFTER),
-			(ENTRY, 'Under', None, PASTE_UNDER))),
+			(ENTRY, 'Under', None, PASTE_UNDER),
+			)),
 		(ENTRY, 'Delete', None, DELETE),
 		(SEP,),
 		(CASCADE, 'New node', (
@@ -65,65 +57,84 @@ MENUBAR=(
 			(ENTRY, 'Par parent', None, NEW_PAR),
 			(ENTRY, 'Seq parent', None, NEW_SEQ),
 			(ENTRY, 'Choice parent', None, NEW_CHOICE),
-			(ENTRY, 'Alt parent', None, NEW_ALT))),
+			(ENTRY, 'Alt parent', None, NEW_ALT)
+			)),
 		(ENTRY, 'New channel', 'M', NEW_CHANNEL),
+		(ENTRY, 'New layout', None, NEW_LAYOUT),
+		(SEP,),
 		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
 		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
-		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF))),
+		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF),
+		)),
 
-	('View', (
+	('&View', (
 		(TOGGLE, 'Player', '1', PLAYERVIEW),
-		(TOGGLE, 'Layout', '2', LAYOUTVIEW),
-		(TOGGLE, 'Hierarchy', '3', HIERARCHYVIEW),
-		(TOGGLE, 'Channel/timeline', '4', CHANNELVIEW),
-		(TOGGLE, 'Hyperlinks', '5', LINKVIEW),
+		(TOGGLE, 'Layout view', '2', LAYOUTVIEW),
+		(TOGGLE, 'Hierarchy view', '3', HIERARCHYVIEW),
+		(TOGGLE, 'Timeline view', '4', CHANNELVIEW),
+		(TOGGLE, 'Hyperlink view', '5', LINKVIEW),
 		(TOGGLE, 'Source', '6', SOURCE),
+		(SEP,),
+		(ENTRY, 'More horizontal detail', None, CANVAS_WIDTH),
+		(ENTRY, 'More vertical detail', None, CANVAS_HEIGHT),
+		(ENTRY, 'Reset to document', None, CANVAS_RESET),
+		(ENTRY, 'Fit in window', None, CANVAS_FIT),
 		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
-		(CASCADE, 'Canvas size', (
-			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
-			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
-			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(SEP,),
-		(TOGGLE, 'Show unused channels', 'T', TOGGLE_UNUSED),
-		(TOGGLE, 'Show sync arcs', None, TOGGLE_ARCS),
-		(TOGGLE, 'Show image thumbnails', None, THUMBNAIL),
+		(ENTRY, 'Send focus to other views', 'F', PUSHFOCUS),
+		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
 		(SEP,),
-		(CASCADE, 'Mini-document', (
+		(TOGGLE, 'Display unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
+		(TOGGLE, 'Display image thumbnails', None, THUMBNAIL),
+		(SEP,),
+		(TOGGLE, 'Timeline view follows player', None, SYNCCV),
+		(CASCADE, 'Minidoc navigation', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
-			(ENTRY, 'Previous', None, PREV_MINIDOC))))),
-		
-	('Play', (
+			(ENTRY, 'Previous', None, PREV_MINIDOC),
+			(DYNAMICCASCADE, 'Ancestors', ANCESTORS),
+			(DYNAMICCASCADE, 'Descendants', DESCENDANTS),
+			(DYNAMICCASCADE, 'Siblings', SIBLINGS),
+			)),
+		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS),
+		)),
+
+	('&Play', (
 		(ENTRY, 'Play document', 'P', PLAY),
 		(ENTRY, 'Pause', None, PAUSE),
 		(ENTRY, 'Stop', None, STOP),
 		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
-		(ENTRY, 'Play from node', None, PLAYFROM))),
-
-	('Focus', (
-		(ENTRY, 'Synchronize', 'F', PUSHFOCUS),
+		(ENTRY, 'Play from node', None, PLAYFROM),
 		(SEP,),
-		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show attributes', 'A', ATTRIBUTES),
-		(ENTRY, 'Show anchors', 'T', ANCHORS),
-		(ENTRY, 'Edit content', 'E', CONTENT),
+		(DYNAMICCASCADE, 'Visible channels', CHANNELS),
+		)),
+
+
+	('&Tools', (
+		(ENTRY, 'Show info...', 'I', INFO),
+		(ENTRY, 'Show attributes...', 'A', ATTRIBUTES),
+		(ENTRY, 'Show anchors...', 'T', ANCHORS),
+		(ENTRY, 'Edit content...', 'E', CONTENT),
 		(SEP,),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
+		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
+		)),
 
-	('Window', (
-		(ENTRY, 'Close', 'W', CLOSE_WINDOW),
+	('&Window', (
+		(ENTRY, 'Close', 'X', CLOSE_ACTIVE_WINDOW),
 		(SEP,),
 		(ENTRY, '&Cascade', 'C', CASCADE_WNDS),
 		(ENTRY, 'Tile &Horizontally', 'H', TILE_HORZ),
-		(ENTRY, '&Tile Vertically', 'T', TILE_VERT),)),
+		(ENTRY, '&Tile Vertically', 'T', TILE_VERT),
+		)),
 
-	('Help', (
+	('&Help', (
 		(ENTRY, 'Help...', None, HELP),
 		(SEP,),
-		(ENTRY, 'About...', None, ABOUT_CMIF))))
+		(ENTRY, 'About...', None, ABOUT_GRINS))))
 		
 		
