@@ -27,10 +27,13 @@ import GL
 
 import VFile
 
+# Errors that VFile operations may raise
+VerrorList = VFile.Error, posix.error, IOError, RuntimeError, EOFError
+
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
-class MovieWindow() = ChannelWindow():
+class MovieWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
@@ -45,7 +48,7 @@ class MovieWindow() = ChannelWindow():
 		self.clear()
 	#
 	def redraw(self):
-		if self.wid = 0: return
+		if self.wid == 0: return
 		gl.reshapeviewport()
 		self.erase()
 	#
@@ -85,10 +88,7 @@ class MovieWindow() = ChannelWindow():
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
-		except (VFile.Errror, posix.error, RuntimeError), msg:
-			print 'Cannot open movie file', `filename`, ':', msg
-			return
-		except IOError, msg:
+		except VerrorList, msg:
 			print 'Cannot open movie file', `filename`, ':', msg
 			return
 		self.node = node
@@ -97,7 +97,7 @@ class MovieWindow() = ChannelWindow():
 		if dummy <> None and self.wid <> None:
 			gl.winset(self.wid)
 			self.vfile.initcolormap()
-			self.rgbmode = (self.vfile.format = 'rgb')
+			self.rgbmode = (self.vfile.format == 'rgb')
 			self.erase()
 	#
 	def centerimage(self):
@@ -110,21 +110,21 @@ class MovieWindow() = ChannelWindow():
 		try:
 			self.lookahead = self.vfile.getnextframeheader()
 			return self.lookahead[0] * 0.001
-		except (EOFError, VFile.Error):
+		except VerrorList:
 			self.lookahead = None
 			return 0.0
 	#
 	def done(self):
-		return self.lookahead = None
+		return self.lookahead == None
 	#
 	def nextframe(self):
-		if self.lookahead = None:
+		if self.lookahead == None:
 			return 0.0
 		time, size, chromsize = self.lookahead
-		if self.wid = 0:
+		if self.wid == 0:
 			try:
 				self.vfile.skipnextframedata(size, chromsize)
-			except (VFile.Error, EOFError):
+			except VerrorList:
 				return 0.0
 		else:
 			gl.winset(self.wid)
@@ -132,14 +132,14 @@ class MovieWindow() = ChannelWindow():
 				data, chromdata = \
 				  self.vfile.getnextframedata(size, chromsize)
 				self.vfile.showframe(data, chromdata)
-			except (VFile.Error, EOFError):
+			except VerrorList:
 				return 0.0
 		return self.peekaboo()
 
 
 # XXX Make the movie channel class a derived class from MovieWindow?!
 
-class MovieChannel() = Channel():
+class MovieChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
@@ -196,7 +196,7 @@ class MovieChannel() = Channel():
 		totalsize = getfilesize(filename)
 		try:
 			vfile = VFile.VinFile().init(filename)
-		except:
+		except VerrorList:
 			print 'Cannot open movie file',
 			print `filename`, 'to get duration'
 			return 0.0
@@ -211,11 +211,7 @@ class MovieChannel() = Channel():
 		return 0.001 * time * imagecount
 	#
 	def getfilename(self, node):
-		# XXX Doesn't use self...
-		if node.type = 'ext':
-			return MMAttrdefs.getattr(node, 'file')
-		else:
-			return None
+		return MMAttrdefs.getattr(node, 'file')
 	#
 
 
@@ -224,5 +220,5 @@ def getfilesize(filename):
 	try:
 		st = posix.stat(filename)
 		return st[ST_SIZE]
-	except:
+	except posix.error:
 		return -1
