@@ -49,16 +49,9 @@ class MMNodeContext:
 		if urltype or filename[:1] == '/':
 			return filename
 		if self.dirname:
-			altfilename = urllib.basejoin(self.dirname, filename)
-			altfilename = urllib.url2pathname(altfilename)
-			if os.path.exists(altfilename):
-				return urllib.pathname2url(altfilename)
-		# As a last resort, search along the cmif search path
-		import cmif
-		filename = urllib.url2pathname(filename)
-		filename = cmif.findfile(filename)
-		return urllib.pathname2url(filename)
-
+			filename = urllib.basejoin(self.dirname, filename)
+		return filename
+		
 	def newnodeuid(self, type, uid):
 		node = self.nodeclass(type, self, uid)
 		self.knownode(uid, node)
