@@ -245,6 +245,10 @@ SOURCE=.\M_bdb.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_bitrates.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_BrushChannel.c
 # End Source File
 # Begin Source File
@@ -446,6 +450,10 @@ SOURCE=.\M_imgsgi.c
 # Begin Source File
 
 SOURCE=.\M_imgxbm.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_languages.c
 # End Source File
 # Begin Source File
 
