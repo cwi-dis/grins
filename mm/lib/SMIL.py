@@ -106,6 +106,7 @@ class SMIL:
 			   'top':None,
 			   'width':None,
 			   'z-index':'0',
+			   'soundLevel':None,
 			   GRiNSns+' ' 'border':None,
 			   GRiNSns+' ' 'bucolor':None,
 			   GRiNSns+' ' 'center':None,

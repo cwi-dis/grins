@@ -1048,6 +1048,7 @@ cmif_chan_attrs_ignore = {
 	'type':0,
 	# end new
 	'showBackground':0,	
+	'soundLevel':0,
 	}
 
 qt_node_attrs = {
@@ -1771,6 +1772,13 @@ class SMILWriter(SMIL):
 			if showBackground != 'always':
 				attrlist.append(('showBackground', showBackground))
 			
+			if self.smilboston:
+				soundLevel = ch.get('soundLevel')
+			# we save only the soundLevel attribute if it exists and different of default value
+				if soundLevel != None and soundLevel != 1.0:
+					value = '%d%%' % int(soundLevel*100)
+					attrlist.append(('soundLevel', value))
+
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
