@@ -7,6 +7,7 @@ __version__ = "$Id$"
 import string
 
 import svgdtd
+import svgtypes
 
 class SvgNode:
 	def __init__(self, type, document):
@@ -47,7 +48,131 @@ class SvgNode:
 		else:
 			self.data = self.data + data
 
+class SvgElement(SvgNode):
+	def __init__(self, type, document):
+		SvgNode.__init__(self, type, document)
+		self.attrdict = {}	# Attributes of this Element
+		self.errorstr = None
+
+	def __repr__(self):
+		if self.data is not None:
+			data = string.strip(self.data)
+			return '<%s instance, type=%s, attributes=%s, data=%s>' % (self.__class__.__name__, self.type, `self.attrdict`, `data`)
+		else:
+			return '<%s instance, type=%s, attributes=%s>' % (self.__class__.__name__, self.type, `self.attrdict`)
+
+	def seterror(self, str):
+		self.errorstr = str
+
+	def poperror(self):
+		str = self.errorstr
+		self.errorstr = None
+		return str
+
+	def setAttributes(self, attrdict):
+		self.attrdict = attrdict.copy()
+		self.parseAttributes()
+
+	def getAttribute(self, attr):
+		return self.attrdict.get(attr)
+
+	def parseAttributes(self):
+		pass
+
+	def getCoordinate(self, name):
+		val = self.attrdict.get(name)
+		return svgtypes.SVGLength(val).getLength()
+	
+	def parseStyleAttrs(self):
+		pass
+
+	def parseFillStrokeAttrs(self):
+		pass
+
+	def parseGraphicsAttrs(self):
+		pass
+
+
+class SvgRect(SvgElement):
+	def parseAttributes(self):
+		x = self.getCoordinate('x')
+		y = self.getCoordinate('y')
+		w = self.getCoordinate('width')
+		h = self.getCoordinate('height')
+		if x is None: x = 0
+		if y is None: y = 0
+		if x is not None and y is not None and w is not None and h is not None:
+			self._rect = x, y, w, h
+		else:
+			self._rect = None
+			self.seterror('invalid coordinates')	
+
+class SvgCircle(SvgElement):
+	def parseAttributes(self):
+		cx = self.getCoordinate('cx')
+		cy = self.getCoordinate('cy')
+		r = self.getCoordinate('r')
+		if cx is not None and cy is not None and r is not None:
+			self._rect = cx-r, cy-r, 2*r, 2*r
+		else:
+			self._rect = None
+			self.seterror('invalid coordinates')	
+
+class SvgEllipse(SvgElement):
+	def parseAttributes(self):
+		cx = self.getCoordinate('cx')
+		cy = self.getCoordinate('cy')
+		rx = self.getCoordinate('rx')
+		ry = self.getCoordinate('ry')
+		if cx is not None and cy is not None and rx is not None and ry is not None:
+			self._rect = cx-rx, cy-ry, 2*rx, 2*ry
+			print 'ellipse', cx, cy, rx, ry
+		else:
+			self._rect = None
+			self.seterror('invalid coordinates')	
+
+class SvgLine(SvgElement):
+	def parseAttributes(self):
+		pass
+
+class SvgPolyline(SvgElement):
+	def parseAttributes(self):
+		pass
+
+class SvgPolygon(SvgElement):
+	def parseAttributes(self):
+		pass
+
+class SvgPath(SvgElement):
+	def parseAttributes(self):
+		pass
+		
+class SvgText(SvgElement):
+	def parseAttributes(self):
+		pass
+
+class SvgTransform(SvgElement):
+	def parseAttributes(self):
+		pass
+
+class SvgG(SvgElement):
+	def parseAttributes(self):
+		pass
+
+####################################
+
 class SvgDocument(SvgNode):
+	elclasses = {'rect': SvgRect,
+		'circle': SvgCircle,
+		'ellipse': SvgEllipse,
+		'line': SvgLine,
+		'polyline': SvgPolyline,
+		'polygon': SvgPolygon,
+		'path': SvgPath,
+		'text': SvgText,
+		'transform': SvgTransform,
+		'g': SvgG,
+		}
 	def __init__(self, source):
 		SvgNode.__init__(self, '#document', self)
 			
@@ -70,7 +195,7 @@ class SvgDocument(SvgNode):
 			# then convert Macintosh CR to LF
 			source = string.join(string.split(source, '\r'), '\n')
 			self.source = source
-
+		
 		# create DOM
 		p = SvgDOMBuilder(self)
 		p.feed(self.source)
@@ -95,25 +220,11 @@ class SvgDocument(SvgNode):
 		return self.getFirstChildByType('svg')
 			
 	def createElement(self, type):
-		return SvgElement(type, self)
-
-class SvgElement(SvgNode):
-	def __init__(self, type, document):
-		SvgNode.__init__(self, type, document)
-		self.attrdict = {}	# Attributes of this Element
-
-	def __repr__(self):
-		if self.data is not None:
-			data = string.strip(self.data)
-			return '<%s instance, type=%s, attributes=%s, data=%s>' % (self.__class__.__name__, self.type, `self.attrdict`, `data`)
+		elclass = SvgDocument.elclasses.get(type)
+		if elclass is None:
+			return SvgElement(type, self)
 		else:
-			return '<%s instance, type=%s, attributes=%s>' % (self.__class__.__name__, self.type, `self.attrdict`)
-
-	def setAttributes(self, attrdict):
-		self.attrdict = attrdict.copy()
-
-	def getAttribute(self, attr):
-		return self.attrdict.get(attr)
+			return elclass(type, self)
 
 ####################################
 # SVG DOM Builder using xmllib.XMLParser
@@ -147,6 +258,9 @@ class SvgDOMBuilder(svgdtd.SVG, xmllib.XMLParser):
 		el.setParent(self.__node)
 		el.setAttributes(attrs)
 		self.__node = el
+		msg = el.poperror()
+		if msg:
+			self.syntax_error(msg)
 
 	def unknown_endtag(self, tag):
 		self.__node = self.__node.getParent()
@@ -203,6 +317,7 @@ svgSource = """<?xml version="1.0" standalone="no"?>
     <circle cx="300" cy="30" r="20" transform="rotate(70)"/>
     <circle cx="300" cy="30" r="20" transform="rotate(80)"/>
     <circle cx="300" cy="30" r="20" transform="rotate(90)"/>
+    <rect x="300" y="30" width="20" height="20" transform="rotate(90)"/>
   </g>
 </svg>"""
 
