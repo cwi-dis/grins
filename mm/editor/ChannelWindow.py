@@ -267,7 +267,7 @@ def do_node_anchors(cwin):
 	AnchorEdit.showanchoreditor(cwin.channel.player.toplevel, cwin.node)
 
 def do_node_focus(cwin):
-	cwin.channel.player.toplevel.blockview.globalsetfocus(cwin.node)
+	cwin.channel.player.toplevel.hierarchyview.globalsetfocus(cwin.node)
 	cwin.channel.player.toplevel.channelview.globalsetfocus(cwin.node)
 
 # XXX should add "Hide channel"?

@@ -198,8 +198,8 @@ class TopLevel(ViewDialog, BasicDialog):
 	# View manipulation.
 	#
 	def makeviews(self):
-		import BlockView
-		self.blockview = BlockView.BlockView().init(self)
+		import HierarchyView
+		self.hierarchyview = HierarchyView.HierarchyView().init(self)
 		#
 		import ChannelView
 		self.channelview = \
@@ -215,10 +215,11 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.links = LinkEdit.LinkEdit().init(self)
 		#
 		# Views that are destroyed by restore (currently all)
-		self.views = [self.blockview, self.channelview, self.player, \
-			  self.styleview, self.links]
+		self.views = [self.hierarchyview, self.channelview, \
+			  self.player, self.styleview, self.links]
 		#
-		self.bvbutton.set_call_back(self.view_callback, self.blockview)
+		self.bvbutton.set_call_back(self.view_callback, \
+			  			self.hierarchyview)
 		self.cvbutton.set_call_back(self.view_callback, \
 						self.channelview)
 		self.pvbutton.set_call_back(self.view_callback, self.player)
@@ -231,7 +232,7 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def checkviews(self):
 		# Check that the button states are still correct
-		self.bvbutton.set_button(self.blockview.is_showing())
+		self.bvbutton.set_button(self.hierarchyview.is_showing())
 		self.cvbutton.set_button(self.channelview.is_showing())
 		self.pvbutton.set_button(self.player.is_showing())
 		self.svbutton.set_button(self.styleview.is_showing())

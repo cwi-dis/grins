@@ -1,4 +1,4 @@
-# Time chart window (for historic reasons called "Channel View")
+# Channel view window.
 # Beware: this module uses X11-like world coordinates:
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
@@ -14,8 +14,8 @@
 
 from math import sin, cos, atan2, pi
 import gl, GL, DEVICE
-import fm
 import fl
+import FontStuff
 from Dialog import GLDialog
 from ViewDialog import ViewDialog
 
@@ -75,47 +75,8 @@ ARR_LENGTH = 18
 ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
-
-# Font stuff, used by 'centerstring'
-# XXX These should be data members of the ChannelView class,
-# XXX and centerstring should be a method...
-
-# Tuning constants (set to match FORMS default)
-FONTNAME = 'Helvetica'
-FONTSIZE = 11
-
-# Some technical terms
-#.......................+.............+.............+..................#
-#                       |             |             |leading           #
-#......ff...............|.............|.............+..................#
-#     f                 |             |                                #
-#....ffff..pppp.........|baseline.....|fontheight...+..................#
-#     f    p   p        |             | ==          |                  #
-#     f    p   p        |             |ysize        |(x-height)        #
-#     f    p   p        |             |             |                  #
-#.....f....pppp........ +..+..........|.............+..................#
-#          p               |yorig     |                                #
-#..........p...............+..........+................................#
-
-# Create a font object
-f_font = fm.findfont(FONTNAME)		# The font at point size 1
-f_font = f_font.scalefont(FONTSIZE)	# Scale it to the desired size
-
-# Extract the font parameters from it
-(f_printermatched, f_fixed_width, f_xorig, f_yorig, f_xsize, f_ysize, \
-	f_fontheight, f_nglyphs) = f_font.getfontinfo()
-
-# Calculate the baseline
-f_baseline = f_fontheight - f_yorig
-
-# In theory 'ysize' should exclude the leading, but in practice it is
-# usually the same as 'fontheight'; we guess that the leading is the
-# same as 'yorig'.
-f_leading = f_yorig # Hack -- there's no parameter specifying this!
-
-# Print some essential parameters
-##print 'yorig =', f_yorig, 'ysize =', f_ysize, 'fontheight =', f_fontheight,
-##print 'baseline =', f_baseline
+# Font parameter we use
+from FontStuff import f_fontheight
 
 
 # Channel view class
@@ -133,7 +94,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.editmgr = self.context.editmgr
 		self.focus = None
 		self.future_focus = None
-		title = 'Time Chart (' + self.toplevel.basename + ')'
+		title = 'Channel View (' + self.toplevel.basename + ')'
 		self = ViewDialog.init(self, 'cview_')
 		return GLDialog.init(self, title)
 
@@ -161,7 +122,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def setwin(self):
 		GLDialog.setwin(self)
-		f_font.setfont()
+		FontStuff.setfont()
 
 	def show(self):
 		if self.is_showing():
@@ -395,7 +356,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.draw()
 
 	def fixtitle(self):
-		title = 'Time Chart (' + self.toplevel.basename + ')'
+		title = 'Channel View (' + self.toplevel.basename + ')'
 		if None <> self.viewroot <> self.root:
 			name = MMAttrdefs.getattr(self.viewroot, 'name')
 			title = title + ': ' + name
@@ -610,7 +571,7 @@ class GO:
 
 	def helpcall(self):
 		import Help
-		Help.givehelp('Time_chart')
+		Help.givehelp('Channel_view')
 
 	def newchannelcall(self):
 		editmgr = self.mother.editmgr
@@ -787,8 +748,8 @@ class ChannelBox(GO):
 
 		# Draw the name
 		gl.RGBcolor(TEXTCOLOR)
-		centerstring(self.left, self.top, self.right, self.bottom, \
-			     self.name)
+		FontStuff.centerstring(self.left, self.top, \
+			  self.right, self.bottom, self.name)
 
 	def drawline(self):
 		# Draw a gray and a white vertical line
@@ -1017,7 +978,7 @@ class NodeBox(GO):
 
 		# Draw the name, centered in the box
 		gl.RGBcolor(TEXTCOLOR)
-		centerstring(l, t, r, b, self.name)
+		FontStuff.centerstring(l, t, r, b, self.name)
 
 	# Menu stuff beyond what GO offers
 
@@ -1067,7 +1028,7 @@ class NodeBox(GO):
 		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
 
 	def focuscall(self):
-		self.mother.toplevel.blockview.globalsetfocus(self.node)
+		self.mother.toplevel.hierarchyview.globalsetfocus(self.node)
 
 	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
@@ -1176,42 +1137,3 @@ class ArcBox(GO):
 	c.append('d', 'Delete sync arc',  delcall)
 	menu, menuprocs, keymap = \
 		GO.makemenu('Sync arc ops', commandlist)
-
-	
-
-# Subroutine to draw a string centered in a box
-
-def centerstring(left, top, right, bottom, str):
-	# This assumes f_font.setfont() has been called already
-	x = (left + right) * 0.5	# x center of box
-	y = (top + bottom) * 0.5	# y center of box
-	width = right - left
-	# Get font parameters:
-	w = f_font.getstrwidth(str)	# Width of string
-	while str and w > width:
-		str = str[:-1]
-		w = f_font.getstrwidth(str)
-	x = x - 0.5*w
-	y = y + 0.5*(f_fontheight - f_leading) - f_yorig
-	gl.cmov2(x, y)
-	fm.prstr(str)
-
-##	# This is for debugging only:
-##	# - draw a green box around the string
-##	gl.RGBcolor(0, 255, 0)
-##	gl.bgnclosedline()
-##	gl.v2f(x, y-f_baseline)
-##	gl.v2f(x+w, y-f_baseline)
-##	gl.v2f(x+w, y+f_yorig)
-##	gl.v2f(x, y+f_yorig)
-##	gl.endclosedline()
-##	# - draw a red cross at the starting point
-##	gl.RGBcolor(255, 0, 0)
-##	gl.bgnline()
-##	gl.v2f(x-5, y)
-##	gl.v2f(x+5, y)
-##	gl.endline()
-##	gl.bgnline()
-##	gl.v2f(x, y-5)
-##	gl.v2f(x, y+5)
-##	gl.endline()

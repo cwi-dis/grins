@@ -79,7 +79,7 @@ def main():
 			if opt == '-T':
 				top.channelview.show()
 			elif opt == '-H':
-				top.blockview.show()
+				top.hierarchyview.show()
 			elif opt in ('-P', '-p'):
 				top.player.show()
 				if opt == '-p':
