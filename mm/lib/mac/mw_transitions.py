@@ -65,13 +65,58 @@ class IrisWipeTransition(TransitionClass):
 	def _needtmpbitmap(self):
 		return 1
 		
-		
 class RadialWipeTransition(NullTransition):
 	UNIMPLEMENTED=1
 	
-class MatrixWipeTransition(NullTransition):
-	UNIMPLEMENTED=1
-	
+class MatrixWipeTransition(TransitionClass):
+	def __init__(self, engine, ltrb, dict):
+		TransitionClass.__init__(self, engine, ltrb, dict)
+		x0, y0, x1, y1 = self.ltrb
+		hr = dict.get('horzRepeat', 0)+1
+		vr = dict.get('vertRepeat', 0)+1
+		self.hsteps = hr
+		self.nsteps = hr*vr
+		self.hboundaries = []
+		self.vboundaries = []
+		for i in range(hr+1):
+			self.hboundaries.append(x0+int((x1-x0)*float(i)/(hr+1)+0.5))
+		for i in range(vr+1):
+			self.vboundaries.append(y0+int((y1-y0)*float(i)/(vr+1)+0.5))
+		
+	def _computeparameters(self, value, oldparameters):
+		index = int(value*self.nsteps)
+		hindex = index % self.hsteps
+		vindex = index / self.hsteps
+		return (hindex, vindex)
+		
+	def _updatebitmap(self, parameters, src1, src2, tmp, dst):
+		hindex, vindex = parameters
+		Qd.CopyBits(src2, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
+		x0, y0, x1, y1 = self.ltrb
+		rgn = Qd.NewRgn()
+		for i in range(vindex):
+			rgn2 = Qd.NewRgn()
+			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
+			print 'vi', i, rect
+			Qd.RectRgn(rgn2, rect)
+			Qd.UnionRgn(rgn, rgn2, rgn)
+			Qd.DisposeRgn(rgn2)
+		ylasttop = self.vboundaries[vindex]
+		ylastbottom = self.vboundaries[vindex+1]
+		for i in range(hindex):
+			rgn2 = Qd.NewRgn()
+			rect = (self.hboundaries[i], ylasttop, self.hboundaries[i+1], ylastbottom)
+			print 'hi', i, rect
+			Qd.RectRgn(rgn2, rect)
+			Qd.UnionRgn(rgn, rgn2, rgn)
+			Qd.DisposeRgn(rgn2)
+		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, rgn)
+		Qd.DisposeRgn(rgn)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
+		
+	def _needtmpbitmap(self):
+		return 1
+				
 class PushWipeTransition(TransitionClass):
 	# Parameters are src1-ltrb, dst1-ltrb, src2-ltrb, dst2-ltrb
 	def _computeparameters(self, value, oldparameters):
