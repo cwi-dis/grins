@@ -5,7 +5,7 @@ import win32ui,win32api,win32con
 afx=win32ui.GetAfx()
 sdk=win32ui.GetWin32Sdk()
 
-[UNIT_MM, UNIT_SCREEN, UNIT_PXL] = 0, 1, 2
+from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 def GetSystemMetrics():
 	cxframe=win32api.GetSystemMetrics(win32con.SM_CXFRAME)
