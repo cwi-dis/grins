@@ -91,6 +91,8 @@ class GrinsApp(app.CApp):
 			self.frame.DestroyWindow()
 		self.frame = None
 		self.SetMainFrame(None)
+		import __main__
+		del __main__.resdll
 		return 0
 
 	def BootGrins(self):
