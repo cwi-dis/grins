@@ -404,7 +404,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.ids_used[name] = 1
 
 		####
-		attributes = self.attributes.get(xtype, {})
+		attributes = self._attributes.get(xtype, {})
 		if type == 'prio':
 			attrs = prio_attrs
 		elif type == 'foreign':
@@ -1262,7 +1262,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			tocr = aparser.convertColorValue(node.attrdict.get('to'))
 			bycr = aparser.convertColorValue(node.attrdict.get('by'))
 			valuescr = aparser.convertColorValues(node.attrdict.get('values'))
-		attributes = self.attributes.get(tag, {})
+		attributes = self._attributes.get(tag, {})
 		for name, func, gname in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
