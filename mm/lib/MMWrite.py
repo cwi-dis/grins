@@ -31,7 +31,7 @@ def WriteOpenFile(root, fp):
 
 def fixroot(root):
 	root.attrdict['styledict'] = root.context.styledict
-	root.attrdict['hyperlinks'] = root.context.hyperlinks.getall()
+	root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
 	clist = []
 	for cname in root.context.channelnames:
 		clist.append(cname, root.context.channeldict[cname])

@@ -395,7 +395,7 @@ class Scheduler(scheduler):
 			if i[A_TYPE] == ATYPE_PAUSE:
 				pause_anchor = 1
 			aid = (node.GetUID(), i[A_ID])
-			rv = self.context.hyperlinks.findsrclink(aid)
+			rv = self.context.hyperlinks.findsrclinks(aid)
 			destlist = destlist + rv
 ##		print 'Player: Destinations:', destlist
 		if not destlist:
@@ -408,11 +408,13 @@ class Scheduler(scheduler):
 			fl.show_message( \
 				'Sorry, multiple links not supported', '', '')
 			return 0
-		dest = destlist[0][1]
-		if destlist[0][0] <> 0:
+		# XXX This assumes all links have this lay-out!
+		anchor1, anchor2, dir, type = destlist[0]
+		if type <> 0:
 			fl.show_message('Sorry, will JUMP anyway', '', '')
+		dest_uid, dest_aid = anchor2
 		try:
-			seek_node = self.context.mapuid(dest[0])
+			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:
 			fl.show_message('Dangling hyperlink selected', '', '')
 			return 0
@@ -432,7 +434,8 @@ class Scheduler(scheduler):
 			dummy = self.resume_1_playing(1.0)
 			self.resume_2_playing()
 		else:
-			self.start_2_playing(1.0)   # Which *does* do prearms
+			dummy = self.start_2_playing(1.0)
+			# Which *does* do prearms
 		return 1
 
 

@@ -237,6 +237,15 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def save_callback(self, (obj, arg)):
 		if not obj.pushed: return
+		# Get rid of hyperlinks outside the current tree and clipboard
+		# (XXX We shouldn't *save* the links to/from the clipboard,
+		# but we don't want to throw them away either...)
+		roots = [self.root]
+		import Clipboard
+		type, data = Clipboard.getclip()
+		if type == 'node' and data != None:
+			roots.append(data)
+		self.context.sanitize_hyperlinks(roots)
 		# Get all windows to save their current geometry.
 		self.get_geometry()
 		self.save_geometry()
