@@ -811,7 +811,7 @@ smil_attrs=[
 	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
 	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
-	("attributeName", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
+	("attributeName", lambda writer, node: node.GetRawAttrDef("attributeName", None)),
 	("attributeType", getattributetype),
 	("speed", lambda writer, node:getspeed(writer, node, "speed")),
 	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
@@ -2045,7 +2045,7 @@ class SMILWriter(SMIL):
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
-					value = node.GetRawAttrDef('trtype', None)
+					value = node.GetRwaAttrDef('trtype', None)
 				else:
 					value = func(self, node)
 				if value and value != attributes[name]:
