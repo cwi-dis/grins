@@ -207,8 +207,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import TransitionView
 		self.transitionview = TransitionView.TransitionView(self)
 
-		import LayoutView2
-		self.layoutview2 = LayoutView2.LayoutView2(self)
+		try:
+			import LayoutView2
+		except ImportError:
+			self.layoutview2 = None
+		else:
+			self.layoutview2 = LayoutView2.LayoutView2(self)
 		
 		if not features.lightweight:
 			import ChannelView
