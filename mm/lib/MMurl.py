@@ -102,3 +102,7 @@ def urlretrieve(url, filename=None):
 def urlcleanup():
 	if _urlopener:
 		_urlopener.cleanup()
+
+import urlparse
+basejoin = urlparse.urljoin # urljoin works better...
+del urlparse
