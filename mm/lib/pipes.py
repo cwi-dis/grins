@@ -91,6 +91,10 @@ class Template:
 		self.reset()
 		return self
 
+	# t.__repr__() implements `t`
+	def __repr__(self):
+		return '<Template instance, steps=' + `self.steps` + '>'
+
 	# t.reset() restores a pipeline template to its initial state
 	def reset(self):
 		self.steps = []
