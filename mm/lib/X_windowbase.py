@@ -1387,10 +1387,10 @@ class _DisplayList:
 		self._list.append('linewidth', width)
 		self._linewidth = width
 
-	def newbutton(self, coordinates):
+	def newbutton(self, coordinates, z = 0):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates)
+		return _Button(self, coordinates, z)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
 		if self._rendered:
@@ -1528,9 +1528,16 @@ class _DisplayList:
 		self._optimdict[x] = len(self._list) - 1
 
 class _Button:
-	def __init__(self, dispobj, coordinates):
+	def __init__(self, dispobj, coordinates, z = 0):
 		self._dispobj = dispobj
-		dispobj._buttons.append(self)
+		self._z = z
+		buttons = dispobj._buttons
+		for i in range(len(buttons)):
+			if buttons[i]._z <= z:
+				buttons.insert(i, self)
+				break
+		else:
+			buttons.append(self)
 		window = dispobj._window
 		self._coordinates = coordinates
 		x, y, w, h = coordinates
