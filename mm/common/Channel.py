@@ -695,6 +695,48 @@ class ChannelWindow(Channel):
 	def mouserelease(self, arg, window, event, value):
 		self.unhighlight()
 
+	def create_window(self, pchan, pgeom):
+		menu = [
+			('', 'highlight', (self.highlight, ())),
+			('', 'unhighlight', (self.unhighlight, ()))
+			]
+		if pchan:
+			if self.want_default_colormap:
+				self.window = pchan.window.newcmwindow(pgeom)
+			else:
+				self.window = pchan.window.newwindow(pgeom)
+			menu.append(None)
+			menu.append('', 'resize', (self.resize_window, (pchan,)))
+		else:
+			# no basewindow, create a top-level window
+			if self._attrdict.has_key('winsize'):
+				width, height = self._attrdict['winsize']
+			else:
+				# provide defaults
+				width, height = 20, 20
+			if self._attrdict.has_key('winpos'):
+				x, y = self._attrdict['winpos']
+			else:
+				# provide defaults
+				x, y = 20, 20
+			if self.want_default_colormap:
+				self.window = windowinterface.newcmwindow(x, y,
+						width, height, self._name)
+			else:
+				self.window = windowinterface.newwindow(x, y,
+						width, height, self._name)
+		if self._is_waiting:
+			self.window.setcursor('watch')
+		if self._attrdict.has_key('bgcolor'):
+			self.window.bgcolor(self._attrdict['bgcolor'])
+		if self._attrdict.has_key('fgcolor'):
+			self.window.fgcolor(self._attrdict['fgcolor'])
+		self.window.register(EVENTS.ResizeWindow, self.resize, None)
+		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
+		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
+				     None)
+		self.window.create_menu('', menu)
+
 	def resize_window(self, pchan):
 		import boxes
 		if self._player.playing:
@@ -707,10 +749,7 @@ class ChannelWindow(Channel):
 		if pgeom:
 			self._attrdict['base_winoff'] = pgeom
 			self.window.close()
-			if self.want_default_colormap:
-				self.window = pchan.window.newcmwindow(pgeom)
-			else:
-				self.window = pchan.window.newwindow(pgeom)
+			self.create_window(pchan, pgeom)
 
 	def do_show(self):
 		if debug:
@@ -721,10 +760,6 @@ class ChannelWindow(Channel):
 				chan._subchannels.remove(self)
 		pgeom = None
 		pchan = None
-		menu = [
-			('', 'highlight', (self.highlight, ())),
-			('', 'unhighlight', (self.unhighlight, ()))
-			]
 		#
 		# First, check that there is a base_window attribute and
 		# that it isn't "undefined".
@@ -779,42 +814,7 @@ class ChannelWindow(Channel):
 					# draw top-level window.
 					pchan._subchannels.remove(self)
 					pchan = None
-		if pchan:
-			if self.want_default_colormap:
-				self.window = pchan.window.newcmwindow(pgeom)
-			else:
-				self.window = pchan.window.newwindow(pgeom)
-			menu.append(None)
-			menu.append('', 'resize', (self.resize_window, (pchan,)))
-		else:
-			# no basewindow, create a top-level window
-			if self._attrdict.has_key('winsize'):
-				width, height = self._attrdict['winsize']
-			else:
-				# provide defaults
-				width, height = 20, 20
-			if self._attrdict.has_key('winpos'):
-				x, y = self._attrdict['winpos']
-			else:
-				# provide defaults
-				x, y = 20, 20
-			if self.want_default_colormap:
-				self.window = windowinterface.newcmwindow(x, y,
-						width, height, self._name)
-			else:
-				self.window = windowinterface.newwindow(x, y,
-						width, height, self._name)
-		if self._is_waiting:
-			self.window.setcursor('watch')
-		if self._attrdict.has_key('bgcolor'):
-			self.window.bgcolor(self._attrdict['bgcolor'])
-		if self._attrdict.has_key('fgcolor'):
-			self.window.fgcolor(self._attrdict['fgcolor'])
-		self.window.register(EVENTS.ResizeWindow, self.resize, None)
-		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
-		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
-				     None)
-		self.window.create_menu('', menu)
+		self.create_window(pchan, pgeom)
 		return 1
 
 	def do_hide(self):
