@@ -264,7 +264,7 @@ class SchedulerContext:
 			playroot.realpix_body.start_time = timestamp
 		if playroot.caption_body:
 			playroot.caption_body.start_time = timestamp
-		
+
 		self.parent.event(self, (SR.SCHED, self.playroot), timestamp)
 ##		self.parent.updatetimer()
 		return 1
@@ -513,7 +513,7 @@ class Scheduler(scheduler):
 
 	def stop_all(self):
 		self.muststop = 1
-		
+
 	def do_stop_all(self):
 ##		print 'STOP_ALL', self.sctx_list
 		to_stop = self.sctx_list[:]
