@@ -15,24 +15,16 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.need_armdone = 0
 		self.__rc = None
+		self.__rc_error = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_arm(self, node, same = 0):
 		if realwindowchanneldebug:
 			print 'do_arm', self, node
 		if self.__rc is None or not self.__rc.prepare_player(node):
-			import MMAttrdefs
-			name = MMAttrdefs.getattr(node, 'name')
-			if not name:
-				name = '<unnamed node>'
-			chtype = self.__class__.__name__[:-7] # minus "Channel"
-			msg = 'Warning:\nNo playback support for %s\n' \
-			      'node %s on channel %s' % (chtype, name, self._name)
-			parms = self.armed_display.fitfont('Times-Roman', msg)
-			w, h = self.armed_display.strsize(msg)
-			self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-			self.armed_display.fgcolor((255, 0, 0))		# red
-			box = self.armed_display.writestr(msg)
+			if self.__rc_error:
+				self.errormsg(node, self.__rc_error)
+				self.__rc_error = ''
 		return 1
 		
 	def do_show(self, pchan):
@@ -40,7 +32,11 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			return 0
 		try:
 			self.__rc = RealChannel.RealChannel(self)
-		except:
+		except RealChannel.error, msg:
+			# can't do RealMedia
+##			self.__rc = 0 # don't try again
+			if self.__rc_error is None:
+				self.__rc_error = msg
 			self.__rc = None
 		return 1
 			
