@@ -132,6 +132,7 @@ class _CommonWindow:
 		self._clickfunc = None
 		self._accelerators = {}
 		self._active_movie = 0
+		self._popupmenu = None
 		
 	def close(self):
 		"""Close window and all subwindows"""
