@@ -147,15 +147,15 @@ class _Toplevel:
 		self._closecallbacks.remove((func, args))
 
 	# Called by the core to create a window
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+	def newwindow(self, x, y, w, h, title,
+		      pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1, bgcolor = None):
 		frame = adornments.get('frame')
 		if frame is None:
 			raise error, 'newwindow without frame specification'
-		wnd = frame.newwindow(x, y, w, h, title, visible_channel,
-		      type_channel, pixmap, units,
+		wnd = frame.newwindow(x, y, w, h, title,
+		      pixmap, units,
 		      adornments, canvassize,
 		      commandlist, resizable, bgcolor)
 		if hasattr(wnd, '_viewport'):

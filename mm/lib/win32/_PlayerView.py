@@ -44,8 +44,8 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		mainframe = self.GetParent().GetMDIFrame()
 		mainframe.assertPanelVisible()
 			
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
-		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
+		return self._viewport.newwindow(coordinates, pixmap, transparent, z, units, bgcolor)
 
 	def closeViewport(self, viewport):
 		self.GetParent().GetMDIFrame().registerPos(self)

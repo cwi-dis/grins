@@ -382,13 +382,12 @@ class Window:
 	def updateMouseCursor(self):
 		self._topwindow.updateMouseCursor()
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		wnd = Window()
 		wnd.create(self, coordinates, units, z, transparent, bgcolor)
 		return wnd
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
-		return self.newwindow(coordinates, pixmap, transparent, z, type_channel, units)
+	newcmwindow = newwindow
 
 	def ltrb(self, xywh):
 		x,y,w,h = xywh
@@ -1226,7 +1225,7 @@ class Region(Window):
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
 		
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
 
 	def close(self):
@@ -2037,11 +2036,10 @@ class Viewport(Region):
 		self._ctx.closeViewport(self)
 		self._ctx = None
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
 	
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
-		return newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)	
+	newcmwindow = newwindow
 
 	# 
 	# Query section

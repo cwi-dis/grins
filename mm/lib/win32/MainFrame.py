@@ -463,8 +463,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return self._cmifdoc
 
 	# Called by the core system to create a view
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+	def newwindow(self, x, y, w, h, title,
+		      pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1, bgcolor = None):
 		if adornments.has_key('view'): strid = adornments['view']

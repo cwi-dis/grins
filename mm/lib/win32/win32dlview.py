@@ -233,12 +233,11 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		return rgn
 
 	# It is called by the core system when it wants to create a child window
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return win32window.Region(parent, coordinates, transparent, z, units, bgcolor)
 
 	# It is called by the core system when it wants to create a child window
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
-		return newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)	
+	newcmwindow = newwindow
 
 	# Sets the dynamic commands by delegating to its parent
 	def set_dynamiclist(self, cmd, list):
