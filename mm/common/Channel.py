@@ -101,11 +101,16 @@ class Channel:
 			self.hide()
 
 	def flip_visible(self):
+		self.set_visible(not self.get_visible())
+
+	def get_visible(self):
 		if self._attrdict.has_key('visible'):
 			visible = self._attrdict['visible']
 		else:
 			visible = 1
-		visible = (not visible)
+		return visible
+
+	def set_visible(self, visible):
 		self._attrdict['visible'] = visible
 		if visible:
 			self.show()
