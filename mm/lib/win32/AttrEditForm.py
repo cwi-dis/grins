@@ -1298,7 +1298,7 @@ class FloatTupleCtrl(TupleCtrl):
 from fmtfloat import fmtfloat
 import parseutil
 
-RADIO,EVENT,TEXT,OFFSET,RESULT,REPEAT,RELATIVE = 0x01,0x02,0x04,0x08,0x10,0x20,0x40
+RADIO,EVENT,TEXT,OFFSET,RESULT,REPEAT,RELATIVE,THINGBUTTON = 0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80
 
 class EventCtrl(AttrCtrl):
 	# This is an editor for the 'begin' and 'end'tabs.
@@ -1375,6 +1375,7 @@ class EventCtrl(AttrCtrl):
 		self._eventwidget.attach_to_parent()
 		self._textwidget.attach_to_parent()
 		self._thingnamewidget.attach_to_parent()
+		self._thingbutton.attach_to_parent()
 		self._resultwidget.attach_to_parent()
 		self._offsetwidget.attach_to_parent()
 		self._repeatwidget.attach_to_parent()
@@ -1403,7 +1404,7 @@ class EventCtrl(AttrCtrl):
 		self._thingbutton.hookcommand(self._wnd, self._thingbuttoncallback)
 		self._relative.hookcommand(self._wnd, self._relativecallback)
 
-	def update(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE):
+	def update(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE|THINGBUTTON):
 		# Updates all the widgets.
 		if self.dont_update:
 			return		# If I don't do this, the widgets refresh themselves ad inifinitium.
@@ -1412,7 +1413,7 @@ class EventCtrl(AttrCtrl):
 		self.initevent(flags)
 		self.dont_update = 0
 
-	def initevent(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE):
+	def initevent(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE|THINGBUTTON):
 		if flags & RADIO:
 			self.set_radiobuttons()
 		if flags & EVENT:
@@ -1427,6 +1428,8 @@ class EventCtrl(AttrCtrl):
 			self.set_repeatwidget()
 		if flags & RELATIVE:
 			self.set_relative()
+		if flags & THINGBUTTON:
+			self.set_thingbutton()
 
 	def sethelp(self):
 		print "TODO: sethelp."
@@ -1499,8 +1502,8 @@ class EventCtrl(AttrCtrl):
 			cause = self._eventstruct.get_cause()
 			self.clear_radiobuttons() # fix a stupid bug by brute force.
 			self._radiobuttonwidgets[cause].setcheck(1)
-			if not self._eventstruct.has_node():
-				self._radiobuttonwidgets['node'].enable(0)
+##			if not self._eventstruct.has_node() and cause == 'node':
+##				self._thingbuttoncallback(None, win32con.BN_CLICKED)
 
 	def set_relative(self):
 		if not self._eventstruct:
@@ -1515,6 +1518,13 @@ class EventCtrl(AttrCtrl):
 				self._relative.setcheck(relative)
 				if relative and self._eventstruct._setnode is None and self._eventstruct._syncarc.refnode() is None:
 					self._relative.enable(0)
+
+	def set_thingbutton(self):
+		if not self._eventstruct:
+			self._thingbutton.enable(0)
+		else:
+			cause = self._eventstruct.get_cause()
+			self._thingbutton.enable(cause in ('wallclock', 'region', 'node'))
 
 	def set_eventwidget(self):
 		# Sets the value of the event widget.
@@ -1643,7 +1653,7 @@ class EventCtrl(AttrCtrl):
 		if error:
 			print "ERROR:", error
 		self.enableApply()
-		self.update(RADIO|EVENT|OFFSET|RESULT|REPEAT)
+		self.update(RADIO|EVENT|OFFSET|RESULT|REPEAT|THINGBUTTON)
 
 	def _offsetwidgetcallback(self, id, code):
 		if not self._eventstruct:
@@ -1660,11 +1670,16 @@ class EventCtrl(AttrCtrl):
 		else:
 			self._eventstruct.set_offset(None)
 		self.enableApply()
-		self.update(RADIO|EVENT|TEXT|RESULT|REPEAT)
+		self.update(RADIO|EVENT|TEXT|RESULT|REPEAT|THINGBUTTON)
 
 	def _radiobuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:
 			newcause = self.__radiobuttons[id]
+			if newcause == 'node' and not self._eventstruct.has_node():
+				nodename = self._eventstruct.get_thing_string()[1]
+				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node, nodename, filter = 'node')
+				if dlg.show():
+					self._eventstruct.set_node(dlg.getmmobject())
 			self._eventstruct.set_cause(newcause)
 			self.enableApply()
 			self.update()
@@ -1686,7 +1701,7 @@ class EventCtrl(AttrCtrl):
 			elif e=='marker':
 				self._eventstruct.set_marker(self._repeatwidget.gettext())
 			self.enableApply()	
-			self.update(RADIO|EVENT|TEXT|OFFSET|RESULT)
+			self.update(RADIO|EVENT|TEXT|OFFSET|RESULT|THINGBUTTON)
 
 	def _thingbuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:

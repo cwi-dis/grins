@@ -244,20 +244,19 @@ class EventStruct:
 		if newcause == 'node' and not self.has_node():
 			# Then a node is required
 			return
-		elif newcause in ['node', 'delay', 'accesskey']:
-			# Then time information is required.
-			self.clear_vars()
-			self.set_offset(0)
-			if newcause == 'node':
-				self.set_event('activateEvent')
-			elif newcause == 'accesskey':
-				self._setkey = 'a'
-		elif newcause == 'region':
-			self.clear_vars()
-			self.set_region(None)
-			self.set_event('topLayoutOpenEvent')
-			self.set_offset(0)
 		self._setcause = newcause
+		if newcause in ('node', 'delay', 'accesskey'):
+			# Then time information is required.
+			self.check_offset()
+			if newcause == 'node':
+				self.check_event()
+			elif newcause == 'accesskey':
+				self.check_key()
+		elif newcause == 'region':
+			self.check_region()
+			self.check_offset()
+			self.check_event()
+			self.set_offset(0)
 
 	def has_node(self):
 		if self._setnode is not None:
@@ -268,6 +267,20 @@ class EventStruct:
 			return 1
 		else:
 			return 0
+
+	def get_node(self):
+		if self._setnode is not None:
+			return self._setnode
+		return self._syncarc.srcnode
+
+	def set_node(self, newnode):
+		if self.get_node() == newnode:
+			return
+		if newnode is None:
+			# Find the first topLayout.
+			self._setnode = None
+			return
+		self._setnode = newnode
 
 	def get_relative(self):
 		if not self.has_node():
@@ -325,6 +338,16 @@ class EventStruct:
 				return self.get_possible_events().index(e)
 			except Exception:
 				return None
+
+	def check_event(self):
+		cause = self.get_cause()
+		event = self.get_event()
+		if cause == 'region':
+			if event not in EVENTS_REGION:
+				self._setevent = EVENTS_REGION[0]
+		elif cause == 'node':
+			if event not in EVENTS_NODE:
+				self._setevent = EVENTS_NODE[0]
 
 	def set_event(self, newevent):
 		assert newevent in EVENTS_NODE or newevent in EVENTS_REGION
@@ -429,6 +452,10 @@ class EventStruct:
 		else:
 			return None
 
+	def check_offset(self):
+		if self._setoffset is None and self._syncarc.delay is None:
+			self._setoffset = 0
+
 	def set_offset(self, newoffset):
 		if self.get_offset() != newoffset:
 			self._setoffset = newoffset
@@ -469,6 +496,10 @@ class EventStruct:
 		else:
 			return 'No viewports available'
 
+	def check_region(self):
+		if self._setregion is None and self._syncarc.channel is None:
+			self._setregion = self.get_viewports()[0]
+
 	def set_region(self, newregion):
 		if self.get_region() == newregion:
 			return
@@ -502,3 +533,7 @@ class EventStruct:
 	def set_marker(self, value):
 		if self.get_marker() != value:
 			self._setmarker = value
+
+	def check_key(self):
+		if self._setkey is None and self._syncarc.accesskey is None:
+			self._setkey = 'a'
