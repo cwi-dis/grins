@@ -136,7 +136,7 @@ default_settings = {
 	'temporal_priocolor': (166,61,126),
 	'temporal_switchcolor': (148,117,166),
 	'temporal_timescale': 5,	# pixels per second.
-	'temporal_fillcolor': (200,100,100), # The color a node is for it's fill segment.
+	'temporal_fillcolor': (150,150,150), # The color a node is for it's fill segment.
 }
 
 user_settings = {}
