@@ -1444,27 +1444,38 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.destroy()
 
 	def close_ok(self):
-		# special case for the source view: check first if it contains some datas not changed		
-		if not self.closeSourceView():
-			# in this case, there was some changement from the source view not applied,
-			# and the user has cancelled
-			return 0
+		sourceModified = self.sourceview != None and self.sourceview.is_changed()
 
-		if not self.changed:
+		# if no changement, and source not modified, can close
+		if not self.changed and not sourceModified:
+			return 1
+		
+		# the things to do depend of the case
+		if sourceModified:
+			message = 'Are you sure you want to close the document?\n'+\
+					'(This will destroy the changes you have made)\n' +\
+					'Click OK to close, Cancel to keep your changes.'
+			ret = windowinterface.GetOKCancel(message, self.window)
+			if ret == 0:
+				# yes, the user is agree to discard the modifications
+				return 1
+			else:
+				# cancel, do nothing
+				return 0
+
+		# the source has been modified			
+		message = 'You haven\'t saved your changes yet.\n' + \
+			 'Do you want to save them before closing?'			
+		ret = windowinterface.GetYesNoCancel(message, self.window)
+		
+		if ret == 2:
+			# cancel, do nothing
+			return 0
+		elif ret == 1:
+			# no, don't save, and close
 			return 1
 
-		reply = self.mayclose()
-
-		if reply == 2:
-			return 0
-		if reply == 1:
-			return 1
-
-		# check if the document is valid (it may contain some errors from the last parse)		
-		if not self.context.isValidDocument():
-			windowinterface.showmessage("You're saving a source document which contains some errors",
-						    mtype = 'warning')
-
+		# the user want to save the document, before to close
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		if (utype and utype != 'file') or (host and host != 'localhost'):
 			windowinterface.showmessage('Cannot save to URL',
