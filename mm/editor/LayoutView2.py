@@ -844,16 +844,17 @@ class LayoutView2(LayoutViewDialog2):
 		return parent1 is not None and parent2 is not None and \
 			   parent1 is parent2
 		
-	# XXX to optimize, get info from tree helper
 	def getViewportRef(self, nodeRef, nodeType = None):
-		if nodeType == None:
-			nodeType = self.getNodeType(nodeRef)
-		if nodeType == TYPE_MEDIA:
-			region = self.getParentNodeRef(nodeRef, TYPE_MEDIA)
+		className = nodeRef.getClassName()
+		if className == 'MMNode':
+			region = nodeRef.GetChannel()
 		else:
 			region = nodeRef
 
-		return self.__channelTreeRef.getviewport(region)
+		if region != None:
+			return self.__channelTreeRef.getviewport(region)
+		
+		return None
 	
 	# XXX to optimize, get info from tree helper
 	# get the parent spatial node
