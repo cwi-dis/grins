@@ -35,8 +35,9 @@ def GetSize(url, maintype = None, subtype = None):
 		width, height = GetVideoSize(file)
 	else:
 		width = height = 0
-	cache['width'] = width
-	cache['height'] = height
+	if width != 0 and height != 0:
+		cache['width'] = width
+		cache['height'] = height
 	return width, height
 
 def GetImageSize(file):
@@ -46,8 +47,12 @@ def GetImageSize(file):
 		import windowinterface
 		width, height = windowinterface.GetImageSize(file)
 	else:
-		rdr = img.reader(None, file)
-		width, height = rdr.width, rdr.height
+		try:
+			rdr = img.reader(None, file)
+		except img.error:
+			width = height = 0
+		else:
+			width, height = rdr.width, rdr.height
 	return width, height
 
 def GetVideoSize(file):
@@ -57,8 +62,11 @@ def GetVideoSize(file):
 		import windowinterface
 		width, height = windowinterface.GetVideoSize(file)
 	else:
-		movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
-		track = movie.FindTrackByMedium(mv.DM_IMAGE)
-		width = track.GetImageWidth()
-		height = track.GetImageHeight()
+		try:
+			movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
+			track = movie.FindTrackByMedium(mv.DM_IMAGE)
+			width = track.GetImageWidth()
+			height = track.GetImageHeight()
+		except:
+			width = height = 0
 	return width, height
