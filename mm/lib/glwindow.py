@@ -127,11 +127,44 @@ def dispatch(dev, val):
 		if val = 0:
 			pass
 		else:
-			state.focuswindow = windowmap[`val`]
-			state.focuswindow.enter()
+			try:
+				state.focuswindow = windowmap[`val`]
+			except RuntimeError:
+				# Catch bug in FORMS library!
+				print 'Bad INPUTCHANGE for window id', val,
+				print '; valid values :', windowmap.keys()
+			if state.focuswindow:
+				state.focuswindow.enter()
 	elif dev = WINSHUT:
 		window = windowmap[`val`]
 		window.winshut()
 	elif dev = WINQUIT:
 		window = windowmap[`val`]
 		window.winquit()
+
+
+# Useful subroutine to call prefposition/prefsize.
+# The input arguments (h, v) are in X screen coordinates (origin top left);
+# prefposition uses GL screen coordinates (origin bottom left).
+# Negative (h, v) values or zero (width, height) values are assumed
+# to be defaults.
+# XXX Should use 0 for (h, v) defaults and negative values for offsets
+# XXX from right/top end!
+
+def setgeometry(h, v, width, height):
+	if h < 0 and v < 0 and width = 0 and height = 0:
+		return # Everything default
+	if width = 0 and height = 0:
+		height = 300
+		width = 400
+	else:
+		# Default aspect ratio (height/width) is 3/4
+		if width = 0: width = int(height / 0.75)
+		elif height = 0: height = int(width * 0.75)
+	if h < 0 and v < 0:
+		gl.prefsize(width, height)
+	else:
+		scrwidth = gl.getgdesc(GD_XPMAX)
+		scrheight = gl.getgdesc(GD_YPMAX)
+		x, y = h, scrheight-v-height
+		gl.prefposition(x, x+width-1, y, y+height-1)
