@@ -490,6 +490,7 @@ attrgrs=(
 		'left', 'width', 'right',
 		'top', 'height', 'bottom',
 		'fit','z',
+		'soundLevel',
 		]},
 
 	{'name':'CssBackgroundColor',
