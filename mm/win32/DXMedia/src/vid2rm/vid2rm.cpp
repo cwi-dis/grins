@@ -16,6 +16,8 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include <stdio.h>
 
+#define PREVIEW_VIDEO
+
 namespace RProducer {
 void SetDllCategoryPaths();
 bool Init();
@@ -355,7 +357,7 @@ void CVideoRenderer::SlowRender(IMediaSample *pMediaSample)
 	RProducer::EncodeSample(pVideoImage,ix++,false);
 	delete[] pVideoImage;
 
-#ifdef PREVIEW
+#ifdef PREVIEW_VIDEO
 	// Preview video
 	HDC hdc=GetDC(NULL);
     SetDIBitsToDevice(
