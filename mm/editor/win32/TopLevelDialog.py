@@ -40,7 +40,7 @@ class TopLevelDialog:
 		max = 0
 		length = 0
 		for item in buttons:
-			if type item is type(()):
+			if type(item) is type(()):
 				label = item[0]
 				length = cmifex2.GetStringLength(w._hWnd, label)
 				if length>max:
