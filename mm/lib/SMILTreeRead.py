@@ -3869,7 +3869,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if id is not None:
 			self.__nodemap[id] = node
 			self.__idmap[id] = node.GetUID()
-			node.attrdict['name'] = id
+			val = id
+			res = namedecode.match(val)
+			if res is not None:
+				val = res.group('name')
+			node.attrdict['name'] = val
 
 		self.AddTestAttrs(node.attrdict, attributes)
 
