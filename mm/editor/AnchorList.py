@@ -124,10 +124,10 @@ class AnchorList:
 			a = self.__anchorlinks[self.__curanchor]
 			i = self.__anchors.index(self.__curanchor)
 			self._list.setcursel(i)
-			atype, aargs, times = a[:3]
+			atype, aargs, times, access = a[:4]
 			self._rename.enable(1)
 			self._delete.enable(1)
-			self._link.enable(len(a) == 4)
+			self._link.enable(len(a) == 5)
 			self._type.enable(1)
 			if (atype not in AnchorDefs.WholeAnchors) and aargs[0] == AnchorDefs.A_SHAPETYPE_RECT:
 				# Warning: this statement work for now only for rect shape.
@@ -222,7 +222,7 @@ class AnchorList:
 			atype = AnchorDefs.ATYPE_NORMAL
 		else:
 			atype = AnchorDefs.ATYPE_WHOLE
-		self.__anchorlinks[name] = atype, [], (0,0), [], ''
+		self.__anchorlinks[name] = atype, [], (0,0), None, [], ''
 		self.__curanchor = name
 		self.fill()
 		if partial:
@@ -242,7 +242,7 @@ class AnchorList:
 			self.showmessage('Name should be unique', mtype = 'error')
 			return
 		a = self.__anchorlinks[self.__curanchor]
-		if len(a) == 4:
+		if len(a) == 5:
 			# remember original name
 			a = a + (self.__curanchor,)
 		self.__anchorlinks[name] = a
