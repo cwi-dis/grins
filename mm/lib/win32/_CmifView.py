@@ -60,7 +60,10 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		if not self._parent:
 			self._parent=(self.GetParent()).GetMDIFrame()
 		self._do_init(self._parent)
+
 		self._is_active = 0
+		self._cmd_state={}
+
 		self._canscroll = 0
 		# init dims
 		l,t,r,b=self.GetClientRect()
@@ -168,16 +171,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Sets the adornments by delegating to its parent
 	def set_adornments(self, adornments):
-		self._parent.set_adornments(adornments)
-
-	# Toggles menu entries by delegating to its parent
-	def set_toggle(self, command, onoff):
-		self._parent.set_toggle(command,onoff)
-		
-	# Sets the acceptable command list by delegating to its parent keeping a copy.
-	def set_commandlist(self, list):
-		self._commandlist=list
-		self._parent.set_commandlist(list,self._strid)
+		self._parent.set_adornments(adornments)		
 
 	# Set the title of this window
 	def settitle(self,title):
@@ -186,13 +180,33 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._title=title
 		self.GetParent().SetWindowText(title)
 
+	# Sets the acceptable command list by delegating to its parent keeping a copy.
+	def set_commandlist(self, list):
+		self._commandlist=list
+		if self._is_active:
+			self._parent.set_commandlist(list,self._strid)
+		# else wait until activate is called
+
 	# Called when the view is activated 
 	def activate(self):
-		pass
+		self._is_active=1
+		self._parent.set_commandlist(self._commandlist,self._strid)
+		self.set_menu_state()
 
 	# Called when the view is deactivated 
 	def deactivate(self):
-		pass
+		self._is_active=0
+		self._parent.set_commandlist(None,self._strid)
+
+	# Toggles menu entries by delegating to its parent
+	def set_toggle(self, command, onoff):
+		self._cmd_state[command]=onoff
+		if self._is_active:
+			self._parent.set_toggle(command,onoff)
+	def set_menu_state(self):
+		for command in self._cmd_state.keys():
+			onoff=self._cmd_state[command]
+			self._parent.set_toggle(command,onoff)
 
 	# Initialize the view using the arguments passed by the core system 
 	def init(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None):
@@ -215,7 +229,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			self.SetScaleToFitSize((r-l,b-t))
 		if canvassize==None:
 			self.ResizeParentToFit()		
-		self._is_active=1
 		return self
 	
 	# Sets the scroll mode. Enables or dissables scrolling
