@@ -2139,7 +2139,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			if not w._form.IsSubclass(Xm.Gadget):
 				w._form.UnmapWidget()
 		elif w in self._shown:
-			self._show.remove(w)
+			self._shown.remove(w)
 		elif w not in self._not_shown:
 			self._not_shown.append(w)
 
