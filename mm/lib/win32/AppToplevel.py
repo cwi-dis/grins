@@ -385,6 +385,7 @@ class _Toplevel:
 		if not self._waiting:
 			win32ui.GetApp().BeginWaitCursor()
 			self._waiting = 1
+			self.StartTimer()
 
 	# Called by the core sustem to remove the waiting cursor
 	def setready(self):
