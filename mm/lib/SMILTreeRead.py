@@ -1014,26 +1014,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del attributes['attribute']
 
 		# create the node
-		nodetype = 'imm'
-		chtype = 'animate'
-
-		node = self.__context.newnode(nodetype)
+		node = self.__context.newnode('imm')
 		self.AddAttrs(node, attributes)
 
 		# + what AddAttrs has not translated to grins conventions
 		attributeName = attributes.get('attributeName')
 		if attributeName and attributeName == 'src':
 			node.attrdict['attributeName'] = 'file'
-
-		node.type = nodetype
-		node.subtype = 'animate'
-		node.attrdict['channel'] = chtype
+			
+		node.attrdict['type'] = 'animate'
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
+	
+		# synthesize a name for the channel
+		# intrenal for now so no conflicts
+		chname = 'animate%s' % node.GetUID()
+		node.attrdict['channel'] = chname
 
-		node.__mediatype = chtype,tagname
-		node.__chantype = chtype
-		
 
+		# add this node to the tree if it is possible 
+		# else keep it for later fix
 		if targetnode:
 			targetnode.__chanlist = {}
 			targetnode._addchild(node)
@@ -1041,6 +1040,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif targetid:
 			node.__targetid = targetid
 			self.__animatenodes.append(node)
+		
+		# add to context an internal channel for this node
+		chname = node.attrdict['channel']
+		self.__context.addinternalchannels( [(chname, node.attrdict), ] )
+
 
 	def EndAnimateNode(self):
 		pass
@@ -1427,6 +1431,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
+			return
+		if MMAttrdefs.getattr(node, 'type') == 'animate':
 			return
 		mediatype, subtype = node.__mediatype
 		del node.__mediatype
