@@ -41,5 +41,5 @@ www.real.com for details.
 For more information see:
     http://www.oratrix.com/
 or send e-mail to
-    grins-smil2.0-support@oratrix.com (technical support)
+    grins-smil2.0@oratrix.com (technical support)
     info@oratrix.com (non-technical questions)
