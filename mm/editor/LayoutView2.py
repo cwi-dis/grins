@@ -1063,7 +1063,7 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
 
-		z = dict.get('z')
+		z = dict.get('z', 0)
 		self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
 								  
 		self.updateRegionGeomOnDialogBox(geom)
@@ -1486,7 +1486,3 @@ class LayoutView2(LayoutViewDialog2):
 
 		# print subreg_left, subreg_top, subreg_width, subreg_height
 		return subreg_left, subreg_top, subreg_width, subreg_height
-
-# ################################################################################################
-			
-					 
