@@ -882,6 +882,7 @@ class ControlsDict:
 
 ##############################
 class KeyTimesSlider(window.Wnd):
+	TICKS_OFFSET = 9
 	def __init__(self, dlg, id):
 		self._parent = dlg
 		hwnd = Sdk.GetDlgItem(dlg.GetSafeHwnd(),id)
@@ -894,19 +895,27 @@ class KeyTimesSlider(window.Wnd):
 
 		self._keyTimes = [0.0, 0.25, 0.5, 1.0]
 		self._markerColor = 0, 0, 0
+		self._selectedMarkerColor = 255, 0, 0
 
 		dlg.HookNotify(self.OnReleaseCapture, commctrl.NM_RELEASEDCAPTURE)
+		
+		self._selected = -1
+		self._prevSelectedRect = None
 
 	def drawOn(self, dc):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		rc = l + 100, b - 8, l + 104, b+8
-		x0 = l + 9 # first tick in pixels or pos zero 
-		w = r-l-19 # last tick in pixels or pos 100
+		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
+		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
+		index = 0
 		for p in self._keyTimes:
 			x = int(p*w + 0.5)
 			pts = [(x0+x-3, b+8), (x0+x, b), (x0+x+3, b+8)]
-			win32mu.FillPolygon(dc, pts, self._markerColor)
+			if index == self._selected: color = self._selectedMarkerColor
+			else: color = self._markerColor
+			win32mu.FillPolygon(dc, pts, color)
+			index = index + 1
 
 	def OnReleaseCapture(self, std, extra):
 		pos = self.GetPos()
@@ -920,4 +929,38 @@ class KeyTimesSlider(window.Wnd):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		self._parent.InvalidateRect( (l, b, r, b+8) )
+
+	def getKeyTime(self, point):
+		l, t, r, b = self.GetWindowRect()
+		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
+		rc = l + 100, b - 8, l + 104, b+8
+		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
+		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
+		index = 0
+		point = win32mu.Point(point)
+		for p in self._keyTimes:
+			x = int(p*w + 0.5)
+			rect = win32mu.Rect((x0+x-3, b, x0+x+3, b+8))
+			if rect.isPtInRect(point):
+				return index, rect.tuple()
+			index = index + 1
+		return -1, None
+				
+	def onSelect(self, point, flags):
+		# test hit on a key time
+		index, rect = self.getKeyTime(point)
+		if index >= 0:
+			self._selected = index
+			self._parent.InvalidateRect(rect)
+			if self._prevSelectedRect:
+				self._parent.InvalidateRect(self._prevSelectedRect)
+			self._prevSelectedRect = rect
+
+	def onDeselect(self, point, flags):
+		pass
+
+	def onDrag(self, point, flags):
+		pass
+
+
 
