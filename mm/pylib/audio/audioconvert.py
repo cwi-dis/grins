@@ -194,6 +194,7 @@ class cvrate(audio_filter):
 	def __init__(self, rdr, rate):
 		audio_filter.__init__(self, rdr, rdr,getformat())
 		self.__width = (self._srcfmt.getbps() + 7) / 8
+		self.__nchannels = self._srcfmt.getnchannels()
 		self.__inrate = rdr.getframerate()
 		self.__outrate = rate
 		self.__state = None
@@ -202,7 +203,8 @@ class cvrate(audio_filter):
 		import audioop
 		data = self._rdr.readframes(nframes)
 		data, self.__state = audioop.ratecv(date, self.__width,
-				self.__inrate, self.__outrate, self.__state)
+					self.__nchannels, self.__inrate,
+					self.__outrate, self.__state)
 
 	def rewind(self):
 		self._rdr.rewind()
@@ -391,12 +393,13 @@ _converters = [
 	 swap,
 	 SHUFFLE)]
 
-def convert(rdr, dstfmts, rates = None):
-	try:
-		dummy = dstfmts[0]
-	except:
-		# can't index, so make into tuple
-		dstfmts = (dstfmts,)
+def convert(rdr, dstfmts = None, rates = None):
+	if dstfmts is not None:
+		try:
+			dummy = dstfmts[0]
+		except:
+			# can't index, so make into tuple
+			dstfmts = (dstfmts,)
 
 	if rates is not None:
 		try:
@@ -424,11 +427,15 @@ def convert(rdr, dstfmts, rates = None):
 
 	# do the rate conversion
 	if rates is not None:
-		rdr = _convert(rdr, (linear_8_mono_signed, linear_16_mono))
+		rdr = _convert(rdr, (linear_8_mono_signed, linear_8_stereo_signed, linear_16_mono, linear_16_stereo))
 		rdr = cvrate(rdr, best)
 
 	# do the format conversion
-	return _convert(rdr, dstfmts)
+	if dstfmts is not None:
+		rdr = _convert(rdr, dstfmts)
+
+	# return the result of our efforts
+	return rdr
 
 def _convert(rdr, dstfmts):
 	srcfmt = rdr.getformat()
