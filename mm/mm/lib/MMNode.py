@@ -12,8 +12,9 @@ import settings
 
 import grinsDOM.dom.core
 
-class MMNodeContext:
+class MMNodeContext(grinsDOM.dom.core.Element):
 	def __init__(self, nodeclass):
+		grinsDOM.dom.core.Element.__init__(self, "context")
 		self.nodeclass = nodeclass
 		self.uidmap = {}
 		self.channelnames = []
@@ -28,21 +29,24 @@ class MMNodeContext:
 		self.armedmode = None
 		self.getchannelbynode = None
 
-	# Act like an XML DOM Core Element node
-	def _get_nodeName(self):
-		return "context"
-	
+	# Act like an XML DOM Core Node
+	# def _get_nodeName(self): return "context"
 	def _get_attributes(self):
-		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
-		return namedNodeMap
+		return grinsDOM.dom.core.NamedNodeMap()
 	def _get_childNodes(self):
-		nodeList =  grinsDOM.dom.core.NodeList(self.channels)
-		return nodeList
-	
+		# DOM 'children' of a context inlcude channels and
+		# hyperlinks
+		l = []
+		l.append(self.hyperlinks)
+		l = l + self.channels
+		return grinsDOM.dom.core.NodeList(l)
+
+
+
+
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` \
-			+ `self.channels` \
 			+ '>'
 
 	def setbaseurl(self, baseurl):
@@ -329,8 +333,9 @@ class MMNodeContext:
 	def geteditmgr(self):
 		return self.editmgr
 
-class MMChannel:
+class MMChannel(grinsDOM.dom.core.Element):
 	def __init__(self, context, name):
+		grinsDOM.dom.core.Element.__init__(self, 'channel')
 		self.context = context
 		self.name = name
 		self.attrdict = {}
@@ -339,12 +344,14 @@ class MMChannel:
 	def _get_nodeName(self):
 		return "channel"
 	def _get_attributes(self):
-		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
+		nnm = grinsDOM.dom.core.NamedNodeMap()
 		for a in self.attrdict.items() :
 			if a[1]: # skip empty attributes
-				newAttribute = grinsDOM.dom.core.Attr(a[0],str(a[1]))
-				namedNodeMap.setNamedItem(newAttribute)
-		return namedNodeMap
+				attr = grinsDOM.dom.core.Attr(a[0],str(a[1]))
+				nnm.setNamedItem(attr)
+		attr = grinsDOM.dom.core.Attr('name', self.name)
+		nnm.setNamedItem(attr)
+		return nnm
 	def _get_childNodes(self):
 		nodeList =  grinsDOM.dom.core.NodeList([])
 		return nodeList
@@ -453,8 +460,9 @@ class MMNode_body:
 	def stoplooping(self):
 		pass
 
-class MMNode:
+class MMNode(grinsDOM.dom.core.Element):
 	def __init__(self, type, context, uid):
+		grinsDOM.dom.core.Element.__init__(self)
 		# ASSERT type in alltypes
 		self.type = type
 		self.context = context
@@ -471,20 +479,23 @@ class MMNode:
 		self.looping_body_self = None
 		self.curloopcount = 0
 
-	#
 	# XML DOM Core
-	# Node/Element implementation
-	#
-	# jst
+	# Element implementation - jrvosse:
+	def getAttribute(self, name):
+		if self.attrdict.has_key(name):
+			return str(self.attrdict[name])
+		else:
+			return None
 
+	# Node implementation - jst:
 	def _get_nodeName(self) :
 		return self.type 
 					
 	def _get_nodeValue(self) :
 		raise grinsDOM.dom.core.DOMException('reading nodeValue is illegal')
 
-	def _get_nodeType(self) :
-		return grinsDOM.dom.core.ELEMENT_NODE
+	# def _get_nodeType(self) :
+	#	return grinsDOM.dom.core.ELEMENT_NODE
 
 	def _get_parentNode(self) :
 		return self.parent
@@ -500,9 +511,10 @@ class MMNode:
 			return grinsDOM.dom.core.NodeList(self.children)
 
 	def _get_firstChild(self):
-		if len(self.children) > 0:
-			child = self.children[0] 
-			return child 
+		if not self.parent:
+			return self.context # context is first kid of root element
+		elif len(self.children) > 0:
+			return self.children[0] 
 		else:
 			return None
 
@@ -512,13 +524,13 @@ class MMNode:
 		else:
 			return None
 
-# 	def _get_previousSibling(self):
-# 		print 'not implemented (yet)' 
-# 		return None 
+	# 	def _get_previousSibling(self):
+	# 		print 'not implemented (yet)' 
+	# 		return None 
 	
-# 	def _get_get_nextSibling(self): 
-# 		print 'not implemented (yet)'
-# 		return None
+	# 	def _get_get_nextSibling(self): 
+	# 		print 'not implemented (yet)'
+	# 		return None
 
 	def _get_attributes(self):
 		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
@@ -527,14 +539,14 @@ class MMNode:
 				newAttribute = grinsDOM.dom.core.Attr(a[0],str(a[1]))
 				namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
-
+	
 	# not in XML-DOM terms!
-	def toxml(self, level=0, tab="  ", nl="\n") :
+	def toxml2(self, level=0, tab="  ", nl="\n") :
 		s = ""
 		s = level*tab + "<" + self.type
 		for name,value in self.attrdict.items():
 			if value :
-				s = s +  " %s='%s'" %(name,value)
+				s = s +  ' %s="%s"' %(name,value)
 		if len(self.children) == 0:
 			return s + " />" + nl
 		s = s + '>' + nl	
