@@ -899,7 +899,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			else: round_coord=1
 			box_pxl=self._convert_coordinates(box,units=units,round=round_coord)
 			l,t,w,h=box_pxl
-			rectObj=DrawRect(Rect((l,t,l+w,t+h)),units=units)
+			rectObj=DrawRect(self, Rect((l,t,l+w,t+h)), units=units)
 			self.Add(rectObj)
 			
 			# select tool 'select' and select obj
@@ -909,8 +909,8 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			drawTool = self.GetCurrentTool()
 			point=Point((l+w/2,t+h/2))
 			if not self._coolmode:
-				drawTool.onLButtonDown(self,0,point)
-				drawTool.onLButtonUp(self,0,point)
+				drawTool.onLButtonDown(0,point)
+				drawTool.onLButtonUp(0,point)
 		else:
 			self.SelectTool('rect', units = units)
 			self.LimitRects(1)
