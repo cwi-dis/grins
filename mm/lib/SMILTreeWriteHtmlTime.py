@@ -379,7 +379,7 @@ class SMILHtmlTimeWriter(SMIL):
 						extensions[ans] = 'x%s' % len(extensions)
 						attrlist.append(('xmlns:%s' % extensions[ans], ans))
 					attr = '%s:%s' % (extensions[ans], attr)
-				attrlist.append((attr, val))
+				attrlist.append((attr, val, None))
 		else:
 			attrs = smil_attrs
 			# special case for systemRequired
@@ -387,7 +387,9 @@ class SMILHtmlTimeWriter(SMIL):
 			for i in range(len(sysreq)):
 				attrlist.append(('ext%d' % i, sysreq[i]))
 
-		for name, func in attrs:
+		for name, func, keyToCheck in attrs:
+			if keyToCheck is not None and not x.attrdict.has_key(keyToCheck):
+				continue
 			value = func(self, x)
 			if value and attributes.has_key(name) and value != attributes[name]:				
 
