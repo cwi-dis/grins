@@ -66,6 +66,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.root = self.toplevel.root
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
+		self.focus = None
 		self = ViewDialog.init(self, 'cview_')
 		return GLDialog.init(self, 'Time chart')
 
@@ -312,6 +313,23 @@ class ChannelView(ViewDialog, GLDialog):
 		obj = hits[-1] # Last object (usually drawn on top)
 		obj.select()
 
+	# Global focus stuff
+	def getfocus(self):
+		if self.focus:
+			return self.focus.getnode()
+		else:
+			return None
+
+	def globalsetfocus(self, node):
+		if self.is_showing():
+			try:
+				obj = node.cv_obj
+			except:
+				return
+			GLDialog.show(self)
+			self.deselect()
+			obj.select()
+
 
 # Base class for Graphical Objects.
 # These live in close symbiosis with their "mother", the ChannelView!
@@ -325,6 +343,9 @@ class GO:
 		self.selected = 0
 		self.ok = 0
 		return self
+
+	def getnode(self):
+		return None
 
 	def cleanup(self):
 		# Called just before forgetting the object
@@ -565,6 +586,9 @@ class NodeBox(GO):
 		self.armedmode = ARM_NONE
 		return GO.init(self, mother, name)
 
+	def getnode(self):
+		return self.node
+
 	def cleanup(self):
 		del self.node.cv_obj
 		GO.cleanup(self)
@@ -647,11 +671,15 @@ class NodeBox(GO):
 
 	def infocall(self):
 		import NodeInfo
-		NodeInfo.shownodeinfo(self.node)
+		NodeInfo.shownodeinfo(self.toplevel, self.node)
 
 	def editcall(self):
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
+	
+	def anchorcall(self):
+		import AnchorEdit
+		AnchorEdit.showanchoreditor(self.toplevel, self.node)
 
 	def lockcall(self):
 		self.lock()
@@ -684,6 +712,7 @@ class NodeBox(GO):
 	c.append('p', 'Play node...', playcall)
 	c.append('i', 'Node info...', infocall)
 	c.append('a', 'Node attr...', attrcall)
+	c.append('t', 'Anchor edit...', anchorcall)
 	c.append('e', 'Edit contents...%l', editcall)
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
