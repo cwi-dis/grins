@@ -52,7 +52,7 @@
 	'Determines transparency of window' raw)
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
-	'Color used for text/images in window' channel)
+	'Color used for background of window' channel)
 
 (bgimg (string) '' 'Background image' file
 	'Background image for window' channel)
@@ -99,7 +99,7 @@
 	'Duration of a node/subtree (in seconds)' normal)
 
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
-	'Color used for background of window' channel)
+	'Color used for text/images in window' channel)
 
 (file (string) '/dev/null' 'File' file
 	'File name for external node' channel)
