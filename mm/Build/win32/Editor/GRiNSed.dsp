@@ -257,6 +257,10 @@ SOURCE=.\M_Bandwidth.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_BandwidthCompute.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_base64.c
 # End Source File
 # Begin Source File
