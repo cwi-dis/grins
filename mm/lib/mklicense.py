@@ -64,9 +64,11 @@ def _codelicense(uniqid, date, features, user):
 	return string.join(all, '-')
 
 		
-if __name__ == '__main__':
+def computelicense():
 	print 'Unique id (numeric): ',
 	uniqid = input()
+	if uniqid < 0:
+		sys.exit(0)
 	print 'Year (YYYY, zero for indefinite): ',
 	yyyy = input()
 	if yyyy:
@@ -91,4 +93,7 @@ if __name__ == '__main__':
 		features = features+license.FEATURES[fname]
 	print 'License:', _codelicense(uniqid, date, features, user)
 	
+if __name__ == '__main__':
+	while 1:
+		computelicense()
 	
