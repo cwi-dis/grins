@@ -955,11 +955,6 @@ class SchedulerContext:
 		if debugevents: print 'pause',node,timestamp,self.parent.timefunc()
 		if node in pnode.pausestack:
 			pnode.pausestack.remove(node)
-		for arc in node.durarcs:
-			if arc.qid is not None:
-				arc.paused = arc.qid[0] - timestamp
-				self.cancelarc(arc, timestamp)
-				if debugevents: print 'pause_play',`arc`,arc.paused,self.parent.timefunc()
 		if node.playing in (MMStates.IDLE, MMStates.PLAYED):
 			for i in range(len(pnode.pausestack)):
 				pcmp, p1, p2 = pnode.pausestack[i].PrioCompare(node)
@@ -981,6 +976,11 @@ class SchedulerContext:
 	def pause_play(self, node, action, timestamp):
 		if node.playing not in (MMStates.PLAYING, MMStates.FROZEN):
 			return
+		for arc in node.durarcs:
+			if arc.qid is not None:
+				arc.paused = arc.qid[0] - timestamp
+				self.cancelarc(arc, timestamp)
+				if debugevents: print 'pause_play',`arc`,arc.paused,self.parent.timefunc()
 		getchannelfunc = node.context.getchannelbynode
 		if node.type in leaftypes and getchannelfunc:
 			xnode = node
@@ -1003,17 +1003,18 @@ class SchedulerContext:
 			self.sched_arcs(node, 'begin', timestamp=timestamp)
 			self.parent.event(self, ev, timestamp)
 		else:
-			if node.playing != MMStates.FROZEN:
-				for arc in node.durarcs:
-					if arc.qid is None:
-						arc.qid = self.parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,None,None,timestamp + arc.paused))
-						arc.timestamp = timestamp + arc.paused
-						del arc.paused
 			self.resume_play(node, timestamp)
 
 	def resume_play(self, node, timestamp):
 		if node.playing != MMStates.PAUSED:
 			return
+		parent = self.parent
+		if node.playing != MMStates.FROZEN:
+			for arc in node.durarcs:
+				if arc.qid is None and hasattr(arc, 'paused'):
+					arc.qid = parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,None,None,timestamp + arc.paused))
+					arc.timestamp = timestamp + arc.paused
+					del arc.paused
 		getchannelfunc = node.context.getchannelbynode
 		if node.type in leaftypes and getchannelfunc:
 			xnode = node
@@ -1021,7 +1022,7 @@ class SchedulerContext:
 				xnode = xnode.parent
 			chan = getchannelfunc(xnode)
 			if chan:
-				if debugevents: print 'freeze',`node`,self.parent.timefunc()
+				if debugevents: print 'resume play',`node`,parent.timefunc()
 				chan.resume(xnode)
 		if node.type == 'excl':
 			for c in node.GetSchedChildren():
