@@ -53,7 +53,7 @@ _icon_ids = {
 	'error': mw_resources.ID_ICON_ERROR,
 	'linksrc': mw_resources.ID_ICON_LINKSRC,
 	'linkdst': mw_resources.ID_ICON_LINKDST,
-	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
+##	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
 	'transin': mw_resources.ID_ICON_TRANSIN,
 	'transout': mw_resources.ID_ICON_TRANSOUT,
 	'beginevent' : mw_resources.ID_ICON_EVENTIN,

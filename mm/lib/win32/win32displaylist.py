@@ -36,7 +36,7 @@ _icon_ids = {
 	'linkdst': grinsRC.IDI_ICON_LINKDST,
 	'danglingevent': grinsRC.IDI_DANGLINGEVENT,
 	'danglinganchor': grinsRC.IDI_DANGLINGANCHOR,
-	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
+##	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
 	'transin': grinsRC.IDI_ICON_TRANSIN,
 	'transout': grinsRC.IDI_ICON_TRANSOUT,
 	'beginevent' : grinsRC.IDI_EVENTIN,

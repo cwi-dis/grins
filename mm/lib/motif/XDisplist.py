@@ -25,7 +25,7 @@ _iconmap = {
 	'idle': 'idleicon',
 	'linkdst': 'linkdst',
 	'linksrc': 'linksrc',
-	'linksrcdst': 'linksrcdst',
+##	'linksrcdst': 'linksrcdst',
 	'open': 'folderopen',
 	'parclosed': 'parclosed',
 	'paropen': 'paropen',
