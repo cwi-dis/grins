@@ -137,7 +137,27 @@ class RealChannel:
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
+		self._playargs = (node, window, winpossize, url)
 		return 1
+
+
+	def replay(self):
+		if not self._playargs:
+			return
+		node, window, winpossize, url = self._playargs
+		self.__rmaplayer = None
+		self.prepare_player(node)
+		self.__rmaplayer.SetStatusListener(self)
+		if window is not None:
+			self.__rmaplayer.SetOsWindow(window)
+		if winpossize is not None:
+			pos, size = winpossize
+			self.__rmaplayer.SetPositionAndSize(pos, size)
+		self.__rmaplayer.OpenURL(url)
+		self.__rmaplayer.Begin()
+		self.__engine.startusing()
+		self.__using_engine = 1
+
 
 	def __stop(self):
 		self.__qid = None
@@ -165,7 +185,8 @@ class RealChannel:
 						self.__playdone_called = 1
 				return
 ##		print 'looping'
-		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+#		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+		windowinterface.settimer(0.1,(self.replay,()))
 #		self.__rmaplayer.Stop()
 #		self.__rmaplayer.Begin()
 
