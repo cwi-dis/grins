@@ -199,4 +199,15 @@ inline char* toTEXT(WCHAR *p)
 
 #endif
 
+#ifdef _WIN32_WCE
+	#define CAST_IF_WCE(fctn) wce_##fctn
+#else
+	#define CAST_IF_WCE(fctn) fctn
+#endif
+
+
+#ifdef _WIN32_WCE
+#include "wce_support.h"
+#endif
+
 #endif  // INC_UTILS

@@ -197,10 +197,21 @@ PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "iszi(ii)(ii)|O!i", &dwExStyle, &pstrWndClass, &szWindowName, &dwStyle,
 		&pt.x, &pt.y, &size.cx, &size.cy, &PyWnd::type, &parent, &nID))
 		return NULL;
+#ifdef _WIN32_WCE
+	HWND hWnd = CreateWindow(toTEXT(pstrWndClass), toTEXT(szWindowName), WS_VISIBLE,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetAppHinstance(), NULL);
+	if(hWnd){
+		RECT rc;
+		GetWindowRect(hWnd, &rc);
+		rc.bottom -= 26;
+		MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, FALSE);
+		}
+#else
 	HWND hWnd = ::CreateWindowEx(dwExStyle, toTEXT(pstrWndClass), toTEXT(szWindowName),
 			dwStyle, pt.x,pt.y, size.cx,
 			size.cx, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
 			GetAppHinstance(), lpCreateParam);
+#endif
 	std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(hWnd);
 	if(wit == PyWnd::wnds.end())
 		{
@@ -554,7 +565,7 @@ static PyObject* PyWnd_DrawMenuBar(PyWnd *self, PyObject *args)
 	ASSERT_ISWINDOW(self->m_hWnd)
 	BOOL res = DrawMenuBar(self->m_hWnd);
 	if(!res){
-		seterror("PostMessage", GetLastError());
+		seterror("DrawMenuBar", GetLastError());
 		return NULL;
 		}
 	return none();
@@ -682,6 +693,33 @@ static PyObject* PyWnd_ClientToScreen(PyWnd *self, PyObject *args)
 	return Py_BuildValue("(ii)",pt.x, pt.y);
 }
 
+#ifdef _WIN32_WCE
+#include <Aygshell.h>
+#include <commctrl.h>
+#pragma comment(lib, "aygshell.lib")
+static PyObject* PyWnd_SHCreateMenuBar(PyWnd *self, PyObject *args)
+	{
+	UINT id;
+	if(!PyArg_ParseTuple(args,"i", &id))
+		return NULL;
+	SHMENUBARINFO mbi;
+	memset(&mbi, 0, sizeof(SHMENUBARINFO));
+	mbi.cbSize     = sizeof(SHMENUBARINFO);
+	mbi.hwndParent = self->m_hWnd;
+	mbi.nToolBarId = id;
+	mbi.hInstRes   = NULL; //GetAppHinstance();
+	mbi.nBmpId     = 0;
+	mbi.cBmpImages = 0;	
+	BOOL res = SHCreateMenuBar(&mbi);
+	if(!res)
+		{
+		seterror("SHCreateMenuBar", GetLastError());
+		return NULL;
+		}
+ 	return Py_BuildValue("i", mbi.hwndMB);
+	}
+#endif
+
 PyMethodDef PyWnd::methods[] = {
 	{"ShowWindow", (PyCFunction)PyWnd_ShowWindow, METH_VARARGS, ""},
 	{"UpdateWindow", (PyCFunction)PyWnd_UpdateWindow, METH_VARARGS, ""},
@@ -710,6 +748,10 @@ PyMethodDef PyWnd::methods[] = {
 	{"SetTimer", (PyCFunction)PyWnd_SetTimer, METH_VARARGS, ""},
 	{"KillTimer", (PyCFunction)PyWnd_KillTimer, METH_VARARGS, ""},
 	{"ClientToScreen", (PyCFunction)PyWnd_ClientToScreen, METH_VARARGS, ""},
+
+#ifdef _WIN32_WCE
+	{"SHCreateMenuBar", (PyCFunction)PyWnd_SHCreateMenuBar, METH_VARARGS, ""},
+#endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
