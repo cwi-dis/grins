@@ -448,38 +448,42 @@ class HierarchyView(HierarchyViewDialog):
 		if x < 1.0 or y < 1.0:
 			print "Error: unconverted relative coordinates found. HierarchyView:497"
 		if self.timescale:
-			self.timemapper = TimeMapper.TimeMapper(self.timescale=='cfocus')
 			if self.timescale == 'global':
 				timeroot = self.scene_graph
-			else:
+			elif self.focusnode is not None:
 				timeroot = self.focusnode.views['struct_view']
+			else:
+				timeroot = None
+				self.timemapper = None
 			# Remove old timing info
 			self.scene_graph.removedependencies()
-			# Collect the minimal pixel distance for pairs of time values,
-			# and the minimum number of pixels needed to represent single time
-			# values
-			timeroot.adddependencies()
-			timeroot.addcollisions(None, None)
-			# Now put in an extra dependency so the node for which we are going to
-			# display time has enough room to the left of it to cater for the non-timed
-			# nodes to be displayed there
-			timeroot_minpos = timeroot.get_minpos()
-			t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
-			if t0 == 0:
-				self.timemapper.addcollision(0, timeroot_minpos)
-			else:
-				self.timemapper.adddependency(0, t0, timeroot_minpos)
-			print 'Minpos', t0, timeroot_minpos
-			# Work out the equations
-			self.timemapper.calculate()
-			# Calculate how many extra pixels this has cost us
-			tr_width = self.timemapper.time2pixel(t2, align='right') - \
-					self.timemapper.time2pixel(t0)
-			tr_extrawidth = tr_width - timeroot.get_minsize()[0]
-			print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
-			if tr_extrawidth > 0:
-				x = x + tr_extrawidth
-			#x = tr_width #DBG
+			if timeroot is not None:
+				self.timemapper = TimeMapper.TimeMapper(self.timescale=='cfocus')
+				# Collect the minimal pixel distance for pairs of time values,
+				# and the minimum number of pixels needed to represent single time
+				# values
+				timeroot.adddependencies()
+				timeroot.addcollisions(None, None)
+				# Now put in an extra dependency so the node for which we are going to
+				# display time has enough room to the left of it to cater for the non-timed
+				# nodes to be displayed there
+				timeroot_minpos = timeroot.get_minpos()
+				t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
+				if t0 == 0:
+					self.timemapper.addcollision(0, timeroot_minpos)
+				else:
+					self.timemapper.adddependency(0, t0, timeroot_minpos)
+				print 'Minpos', t0, timeroot_minpos
+				# Work out the equations
+				self.timemapper.calculate()
+				# Calculate how many extra pixels this has cost us
+				tr_width = self.timemapper.time2pixel(t2, align='right') - \
+						self.timemapper.time2pixel(t0)
+				tr_extrawidth = tr_width - timeroot.get_minsize()[0]
+				print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
+				if tr_extrawidth > 0:
+					x = x + tr_extrawidth
+				#x = tr_width #DBG
 		else:
 			self.timemapper = None
 
