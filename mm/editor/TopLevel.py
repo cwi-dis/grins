@@ -74,11 +74,11 @@ class TopLevel(ViewDialog):
 			 # The numbers below correspond with the
 			 # positions in the `self.views' list (see
 			 # `makeviews' below).
-			 ('Player', (self.view_callback, (2,))),
-			 ('Hierarchy view', (self.view_callback, (0,))),
-			 ('Channel view', (self.view_callback, (1,))),
-##			 ('Style sheet', (self.view_callback, (4,))),
-			 ('Hyperlinks', (self.view_callback, (3,))),
+			 ('Player', (self.view_callback, (0,)), 't'),
+			 ('Hierarchy view', (self.view_callback, (1,)), 't'),
+			 ('Channel view', (self.view_callback, (2,)), 't'),
+##			 ('Style sheet', (self.view_callback, (4,)), 't'),
+			 ('Hyperlinks', (self.view_callback, (3,)), 't'),
 			 None,
 			 ('Open...', (self.open_callback, ())),
 			 ('Save', (self.save_callback, ())),
@@ -87,7 +87,7 @@ class TopLevel(ViewDialog):
 			 ('Close', (self.close_callback, ())),
 			 None,
 			 ('Debug', (self.debug_callback, ())),
-			 ('Trace', (self.trace_callback, ()))])
+			 ('Trace', (self.trace_callback, ()), 't')])
 ##			 ('Help', (self.help_callback, ()))])
 		self.showing = 1
 
@@ -141,8 +141,8 @@ class TopLevel(ViewDialog):
 		self.links = LinkEdit.LinkEdit().init(self)
 
 		# Views that are destroyed by restore (currently all)
-		self.views = [self.hierarchyview, self.channelview,
-			      self.player, self.links]
+		self.views = [self.player, self.hierarchyview,
+			      self.channelview, self.links]
 
 	def hideviews(self):
 		for v in self.views:
@@ -161,6 +161,7 @@ class TopLevel(ViewDialog):
 	#
 	def play_callback(self):
 		self.setwaiting()
+		self.window.buttons.setbutton(1, 1)
 		self.player.show()
 		self.player.playsubtree(self.root)
 		self.setready()
