@@ -226,6 +226,7 @@ class _Toplevel:
 		xbs, xbm = b[0], (1 << b[1]) - 1
 		c = []
 		if (rm, gm, bm) != (xrm, xgm, xbm):
+			# too many locals to use map()
 			for n in range(256):
 				r = roundi(((n>>xrs) & xrm) / float(xrm) * rm)
 				g = roundi(((n>>xgs) & xgm) / float(xgm) * gm)
@@ -237,6 +238,7 @@ class _Toplevel:
 			myxrgb8 = imgformat.xrgb8
 			return
 		else:
+			# too many locals to use map()
 			for n in range(256):
 				r = (n >> xrs) & xgm
 				g = (n >> xgs) & xgm
@@ -244,9 +246,11 @@ class _Toplevel:
 				c.append((r << rs) | (g << gs) | (b << bs))
 			lossy = 0
 		myxrgb8 = imgformat.new('myxrgb8', 'X 3:3:2 RGB top-to-bottom')
-		cmap = imgcolormap.new(reduce(lambda x, y: x + '000' + chr(y), c, ''))
+		cmap = imgcolormap.new(reduce(lambda x, y: x + '000' + chr(y),
+					      c, ''))
 		imgconvert.addconverter(imgformat.xrgb8, imgformat.myxrgb8,
-					lambda d, r, m=cmap: m.map8(d), lossy)
+				lambda d, r, src, dst, m=cmap: m.map8(d),
+				lossy)
 
 	def _convert_color(self, color, defcm):
 		r, g, b = color
@@ -461,6 +465,10 @@ class _Window:
 	def bgcolor(self, color):
 		r, g, b = color
 		self._bgcolor = r, g, b
+		# set window background if nothing displayed on it
+		if self._topwindow is self and not self._active_displist and \
+		   not self._subwindows:
+			self._form.background = self._convert_color(color)
 		if not self._active_displist and not self._transparent:
 			self._gc.SetRegion(self._clip)
 			self._gc.foreground = self._convert_color(color)

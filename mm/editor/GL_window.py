@@ -495,15 +495,6 @@ class _Window(GL_windowbase._Window):
 
 	newcmwindow = newwindow
 
-	def showwindow(self):
-		self._drawbox = 1
-		self._redraw()
-
-	def dontshowwindow(self):
-		if self._drawbox:
-			self._drawbox = 0
-			self._redraw()
-
 	def _close_subwins(self):
 		for win in self._subwindows:
 			win._close_win()
