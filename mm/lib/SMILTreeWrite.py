@@ -693,7 +693,7 @@ class SMILWriter(SMIL):
 			self.writetag('root-layout', attrlist)
 		for ch in channels:
 			mtype, xtype = mediatype(ch['type'], error=1)
-			isvisual = mtype in ('image', 'video', 'text')
+			isvisual = mtype in ('img', 'video', 'text')
 			if len(self.top_levels) == 1 and \
 			   ch['type'] == 'layout' and \
 			   not ch.has_key('base_window'):
@@ -749,12 +749,31 @@ class SMILWriter(SMIL):
 				# SMIL says: either background-color
 				# or transparent; if different, set
 				# GRiNS attributes
+			# We have the following possibilities:
+			#		no bgcolor	bgcolor set
+			#transp -1	no attr		b-g="bg"
+			#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
+			#transp  1	b-g="trans"	b-g="trans" (ignore bg)
 				transparent = ch.get('transparent', 0)
 				bgcolor = ch.get('bgcolor')
-				if transparent == (bgcolor is not None):
-					attrlist.append(('%s:transparent' % NSprefix, `transparent`))
-				if bgcolor is not None and not transparent:
-					attrlist.append(('background-color', "#%02x%02x%02x" % bgcolor))
+				if transparent == 0:
+					# non-SMIL extension:
+					# permanently visible region
+					attrlist.append(('%s:transparent' % NSprefix,
+							 '0'))
+				if bgcolor is not None:
+					attrlist.append(('background-color',
+							 "#%02x%02x%02x" % bgcolor))
+				# Since background-color="transparent" is the
+				# default, we don't need to actually write that
+##				if transparent == 1:
+##					attrlist.append(('background-color',
+##							 'transparent'))
+##					# having a bg color on a transparent
+##					# region is nonsense...
+####					if bgcolor is not None:
+####						attrlist.append(('%s:bgcolor' % NSprefix,
+####								 "#%02x%02x%02x" % bgcolor))
 				if ch.get('center', 1):
 					attrlist.append(('%s:center' % NSprefix, '1'))
 				if ch.get('drawbox', 1):
