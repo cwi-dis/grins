@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_win_2.0-131.exe
+  EXE Filename=..\..\bin\win32\grins_win_2.0-132.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -30,7 +30,7 @@ item: Global
   Dialogs Version=7
   Version File=2.1
   Version Description=GRiNS/SMIL 2.0
-  Version Copyright=Copyright 2001 Oratrix
+  Version Copyright=Copyright © 2001,2002 Oratrix
   Version Company=Oratrix
   Crystal Format=10111100101100000010001001001001
   Distribute Type=2
@@ -39,7 +39,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~2
+  Variable Default2=E:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
