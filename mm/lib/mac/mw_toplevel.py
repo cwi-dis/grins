@@ -6,18 +6,21 @@ import Events
 import Windows
 import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
-from FrameWork import MenuBar
+from FrameWork import MenuBar, AppleMenu
+import MacOS
 import sys
 import MenuTemplate
 import Qt
 
-FALSE, TRUE = 0, 1
-
 #
 # Stuff we need from other mw_ modules
 #
+import mw_globals
 from mw_globals import error
 from mw_globals import UNIT_MM, UNIT_PXL, UNIT_SCREEN
+from mw_globals import ReadMask, WriteMask
+from mw_globals import FALSE, TRUE
+import mw_resources
 import mw_menucmd
 import mw_windows
 
@@ -474,11 +477,11 @@ class _Toplevel(_Event):
 		self._cur_cursor = None
 		self._menubar = None
 		
-	def initcommands(self):
+	def _initcommands(self):
 		for cmd in MenuTemplate.UNUSED_COMMANDS:
-			_all_commands[cmd] = 1
+			mw_globals._all_commands[cmd] = 1
 		self._command_handler = \
-			  wm_menucmd.CommandHandler(MenuTemplate.MENUBAR)
+			  mw_menucmd.CommandHandler(MenuTemplate.MENUBAR)
 		
 	def close(self):
 		for func, args in self._closecallbacks:
@@ -511,20 +514,20 @@ class _Toplevel(_Event):
 		
 	def _addmenu(self, title):
 		"""Add a menu to the menubar. Used by mw_menucmd"""
-		m = wm_menucmd.MyMenu(self._menubar, title)
+		m = mw_menucmd.MyMenu(self._menubar, title)
 		self._menus.append(m)
 		return m
 		
 	def _addpopup(self):
-		m = wm_menucmd.MyPopupMenu(self._menubar)
+		m = mw_menucmd.MyPopupMenu(self._menubar)
 		return m
 
 	def _mselect_about(self, *args):
-		d = Dlg.GetNewDialog(ABOUT_ID, -1)
+		d = Dlg.GetNewDialog(mw_resources.ABOUT_ID, -1)
 		if not d:
 			return
 		w = d.GetDialogWindow()
-		tp, h, rect = d.GetDialogItem(ABOUT_VERSION_ITEM)
+		tp, h, rect = d.GetDialogItem(mw_resources.ABOUT_VERSION_ITEM)
 		import version
 		Dlg.SetDialogItemText(h, 'GRiNS ' + version.version)
 		w.ShowWindow()
@@ -623,7 +626,7 @@ class _Toplevel(_Event):
 	#
 	
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units=UNIT_MM,
+		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[]):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
@@ -633,7 +636,7 @@ class _Toplevel(_Event):
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-			type_channel = SINGLE, pixmap = 0, units=UNIT_MM,
+			type_channel = None, pixmap = 0, units=UNIT_MM,
 			adornments=None, canvassize=None, commandlist=[]):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,

@@ -5,15 +5,14 @@ import string
 import sys
 from types import *
 import MMurl
-#
-# Constants
-#
-FALSE, TRUE = 0, 1
+import macfs
+import os
 
 #
 # Stuff used from other mw_ modules
 #
 import WMEVENTS
+from mw_globals import FALSE, TRUE
 from mw_resources import *
 from mw_windows import DialogWindow
 
