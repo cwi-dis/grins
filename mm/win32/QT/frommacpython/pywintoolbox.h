@@ -43,6 +43,7 @@ typedef struct {
 } DirectDrawSurfaceObject;
 
 void UrlConvert(char *pszUrl);
+PyObject* OSType_FromLong(long t);
 
 #endif
 
