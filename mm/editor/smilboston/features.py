@@ -21,4 +21,4 @@ cmif = 0
 lightweight = 0
 editor = 1
 # XXX do we require sys.platform?
-license_features_needed = ('editor', sys.platform)
+license_features_needed = ('smil2pro', sys.platform)
