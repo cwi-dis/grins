@@ -1041,8 +1041,8 @@ class AnimateContext:
 		self._id2key = {}
 		if player: ctx=player.context
 		elif node: ctx=node.GetContext()
-		self._mmtree = MMNode.MMChannelTree(ctx)
-		self._cssResolver = self._mmtree.newCssResolver()
+		self._ctx = ctx
+		self._cssResolver = ctx.newCssResolver()
 		self._cssDomResolver = None # will be created if needed
 	
 	def reset(self):
@@ -1073,12 +1073,12 @@ class AnimateContext:
 	
 	def getCssResolver(self):
 		if not self._cssResolver:
-			self._cssResolver = self._mmtree.newCssResolver()
+			self._cssResolver = self._ctx.newCssResolver()
 		return self._cssResolver
 
 	def getDOMCssResolver(self):
 		if not self._cssDomResolver:
-			self._cssDomResolver = self._mmtree.newCssResolver()
+			self._cssDomResolver = self._ctx.newCssResolver()
 		return self._cssDomResolver
 
 	def getAbsPos(self, mmobj):
@@ -2280,4 +2280,3 @@ class AnimateElementParser:
 				i = i+1
 		l.append(str[end:])
 		return l
- 
