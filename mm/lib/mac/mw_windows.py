@@ -1,4 +1,5 @@
 import Win
+import Windows
 import Qd
 import QuickDraw
 import Qdoffs
@@ -1534,6 +1535,7 @@ class _CommonWindow:
 			Qd.RectRgn(updrgn, rect)
 			winupdrgn = Qd.NewRgn()
 			self._onscreen_wid.GetWindowUpdateRgn(winupdrgn)
+##			self._onscreen_wid.GetWindowRegion(Windows.kWindowUpdateRgn, winupdrgn)
 			Qd.SectRgn(updrgn, winupdrgn, updrgn)
 			if not Qd.EmptyRgn(updrgn):
 				self._redraw_now(updrgn)
@@ -1789,6 +1791,7 @@ class _ScrollMixin:
 		# See whether we can use scrollrect. Only possible if no updates pending.
 		updrgn = Qd.NewRgn()
 		self._onscreen_wid.GetWindowUpdateRgn(updrgn)
+##		self._onscreen_wid.GetWindowRegion(Windows.kWindowUpdateRgn, updrgn)
 		if Qd.EmptyRgn(updrgn):
 			# Scroll, and get the new vacated region back
 			Qd.ScrollRect(self.qdrect(), old_x-new_x, old_y-new_y, updrgn)
@@ -2699,7 +2702,9 @@ class _SubWindow(_CommonWindow):
 class DialogWindow(_Window):
 	def __init__(self, resid, title='', default=None, cancel=None,
 				cmdbuttons=None):
-		wid = Dlg.GetNewDialog(resid, -1)
+		dlg = Dlg.GetNewDialog(resid, -1)
+		wid = dlg.GetDialogWindow()
+		self._dlg = dlg
 		if cmdbuttons:
 			self._item_to_cmd = cmdbuttons
 		else:
@@ -2708,15 +2713,15 @@ class DialogWindow(_Window):
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
 		cmdlist = [
-			usercmd.COPY(callback=(wid.DialogCopy, ())),
-			usercmd.PASTE(callback=(wid.DialogPaste, ())),
-			usercmd.CUT(callback=(wid.DialogCut, ())),
-			usercmd.DELETE(callback=(wid.DialogDelete, ())),
+			usercmd.COPY(callback=(dlg.DialogCopy, ())),
+			usercmd.PASTE(callback=(dlg.DialogPaste, ())),
+			usercmd.CUT(callback=(dlg.DialogCut, ())),
+			usercmd.DELETE(callback=(dlg.DialogDelete, ())),
 		]
 		if not default is None:
 			self._do_defaulthit = self._optional_defaulthit
 			self.__default = default
-			wid.SetDialogDefaultItem(default)
+			dlg.SetDialogDefaultItem(default)
 		if callable(cancel):
 			cmdlist.append(
 				usercmd.CLOSE_WINDOW(callback=(cancel, ())))
@@ -2725,7 +2730,7 @@ class DialogWindow(_Window):
 			self.__cancel = cancel
 			cmdlist.append(
 				usercmd.CLOSE_WINDOW(callback=(self._do_cancelhit, ())))
-			wid.SetDialogCancelItem(cancel)
+			dlg.SetDialogCancelItem(cancel)
 		_Window.__init__(self, mw_globals.toplevel, wid, 0, 0, w, h, 
 				commandlist=cmdlist, resizable=0)
 		mw_globals.toplevel._register_wid(wid, self)
@@ -2740,7 +2745,7 @@ class DialogWindow(_Window):
 	def show(self):
 		if self.title:
 			self.settitle(self.title)
-		self._onscreen_wid.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
+		self._dlg.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
 		self._onscreen_wid.ShowWindow()
 		self._onscreen_wid.SelectWindow() # test
 		self._is_shown = 1
@@ -2780,6 +2785,9 @@ class DialogWindow(_Window):
 		self.__cancel = None
 		_Window.close(self)
 
+	def getdialogwindowdialog(self):
+		return self._dlg
+		
 	def grabdone(self):
 		self.__grab_done = 1
 
@@ -2811,14 +2819,14 @@ class DialogWindow(_Window):
 	# The event handling will then call this when return is pressed.
 	#
 	def _optional_defaulthit(self):
-		ctl = self._onscreen_wid.GetDialogItemAsControl(self.__default)
+		ctl = self._dlg.GetDialogItemAsControl(self.__default)
 		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__default, None)
 	#
 	# Similarly for cancel, which is bound to close window (not to cmd-dot yet)
 	#
 	def _optional_cancelhit(self):
-		ctl = self._onscreen_wid.GetDialogItemAsControl(self.__cancel)
+		ctl = self._dlg.GetDialogItemAsControl(self.__cancel)
 		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__cancel, None)
 		
@@ -2838,22 +2846,22 @@ class DialogWindow(_Window):
 			w._activate(onoff)
 			
 	def ListWidget(self, item, content=[]):
-		widget = mw_widgets._ListWidget(self._onscreen_wid, item, content)
+		widget = mw_widgets._ListWidget(self._dlg, item, content)
 ##		self.addwidget(item, widget)
 		return widget
 
 	def ImageWidget(self, item, image=None):
-		widget = mw_widgets._ImageWidget(self._onscreen_wid, item, image)
+		widget = mw_widgets._ImageWidget(self._dlg, item, image)
 		self.addwidget(item, widget)
 		return widget
 		
 	def SelectWidget(self, item, items=[], default=None, callback=None):
-		widget = mw_widgets._SelectWidget(self._onscreen_wid, item, items, default, callback)
+		widget = mw_widgets._SelectWidget(self._dlg, item, items, default, callback)
 		self.addwidget(item, widget)
 		return widget
 		
 	def AreaWidget(self, item, callback=None, scaleitem=None):
-		widget = mw_widgets._AreaWidget(self._onscreen_wid, item, callback, scaleitem)
+		widget = mw_widgets._AreaWidget(self._dlg, item, callback, scaleitem)
 		self.addwidget(item, widget)
 		return widget
 	
@@ -2867,12 +2875,12 @@ class DialogWindow(_Window):
 			cmd = item.__class__
 			if cmd_to_item.has_key(cmd):
 				item = cmd_to_item[cmd]
-				cntl = self._onscreen_wid.GetDialogItemAsControl(item)
+				cntl = self._dlg.GetDialogItemAsControl(item)
 				cntl.ActivateControl()
 				del cmd_to_item[cmd]
 		# Second pass: disable the others
 		for item in cmd_to_item.values():
-			cntl = self._onscreen_wid.GetDialogItemAsControl(item)
+			cntl = self._dlg.GetDialogItemAsControl(item)
 			cntl.DeactivateControl()
 		# And pass the command list on to the Window/Menu stuff
 		_Window.set_commandlist(self, cmdlist)

@@ -41,7 +41,7 @@ class MACDialog:
 		self._itemlist_shown = allitems[:]
 		self._window = DialogWindow(resid, title=title, default=default, 
 			cancel=cancel, cmdbuttons=cmdbuttons)
-		self._dialog = self._window._mac_getoswindow()
+		self._dialog = self._window.getdialogwindowdialog()
 		# Override event handler:
 		self._window.set_itemhandler(self.do_itemhit)
 
