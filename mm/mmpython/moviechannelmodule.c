@@ -34,6 +34,11 @@ static int moviechannel_debug = 0;
 #define dprintf(args)
 #endif
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
+#define ERROR(func, errortype, msg)	{				\
+		dprintf((# func "(%lx): " msg "\n", (long) self));	\
+		err_setstr(errortype, msg);				\
+		}
+
 
 #define MAXMAP		(4096 - 256) /* max nr. of colormap entries to use */
 
@@ -121,7 +126,7 @@ movie_init(self)
 		return 0;
 	}
 	if (pipe(PRIV->m_pipefd) < 0) {
-		err_setstr(RuntimeError, "cannot create pipe");
+		ERROR(movie_init, RuntimeError, "cannot create pipe");
 		goto error_return_no_close;
 	}
 	PRIV->m_play.m_index = NULL;
@@ -144,8 +149,8 @@ movie_init(self)
 	v = dictlookup(self->mm_attrdict, "wid");
 	if (v && is_intobject(v)) {
 		if (windowsystem != 0 && windowsystem != WIN_GL) {
-			err_setstr(RuntimeError,
-				   "cannot use two window systems simultaneously");
+			ERROR(movie_init, RuntimeError,
+			      "cannot use two window systems simultaneously");
 			goto error_return;
 		}
 		if (windowsystem == 0) {
@@ -165,7 +170,8 @@ movie_init(self)
 #ifndef sun_xyzzy
 		v = dictlookup(self->mm_attrdict, "gl_lock");
 		if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
-			err_setstr(RuntimeError, "no graphics lock specified");
+			ERROR(movie_init, RuntimeError,
+			      "no graphics lock specified\n");
 			return 0;
 		}
 		dprintf(("movie_init(%lx): gl_lock = %lx\n",
@@ -177,8 +183,8 @@ movie_init(self)
 	v = dictlookup(self->mm_attrdict, "widget");
 	if (v && is_widgetobject(v)) {
 		if (windowsystem != 0 && windowsystem != WIN_X) {
-			err_setstr(RuntimeError,
-				   "cannot use two window systems simultaneously");
+			ERROR(movie_init, RuntimeError,
+			      "cannot use two window systems simultaneously");
 			goto error_return;
 		}
 		windowsystem = WIN_X;
@@ -187,14 +193,14 @@ movie_init(self)
 		if (v && is_gcobject(v))
 			PRIV->m_gc = PyGC_GetGC(v);
 		else {
-			err_setstr(RuntimeError, "no gc specified");
+			ERROR(movie_init, RuntimeError, "no gc specified");
 			goto error_return;
 		}
 		v = dictlookup(self->mm_attrdict, "visual");
 		if (v && is_visualobject(v))
 			PRIV->m_visual = getvisualinfovalue(v)->visual;
 		else {
-			err_setstr(RuntimeError, "no visual specified");
+			ERROR(movie_init, RuntimeError, "no visual specified");
 			goto error_return;
 		}
 	}
@@ -207,7 +213,7 @@ movie_init(self)
 	    && PRIV->m_widget == NULL
 #endif
 	    ) {
-		err_setstr(RuntimeError, "no window specified");
+		ERROR(movie_init, RuntimeError, "no window specified");
 		goto error_return;
 	}
 #ifdef USE_CL
@@ -389,14 +395,14 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_width = getintvalue(v);
 	else {
-		err_setstr(RuntimeError, "no width specified");
+		ERROR(movie_arm, RuntimeError, "no width specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "height");
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_height = getintvalue(v);
 	else {
-		err_setstr(RuntimeError, "no height specified");
+		ERROR(movie_arm, RuntimeError, "no height specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "format");
@@ -412,18 +418,18 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 				PRIV->m_arm.m_comphdr = v;
 				INCREF(v);
 			} else {
-				err_setstr(RuntimeError,
-					   "no compressheader specified");
+				ERROR(movie_arm, RuntimeError,
+				      "no compressheader specified");
 				return 0;
 			}
 		}
 #endif /* USE_CL */
 		else {
-			err_setstr(RuntimeError, "unrecognized format");
+			ERROR(movie_arm, RuntimeError, "unrecognized format");
 			return 0;
 		}
 	} else {
-		err_setstr(RuntimeError, "no format specified");
+		ERROR(movie_arm, RuntimeError, "no format specified");
 		return 0;
 	}
 #ifdef USE_XM
@@ -440,7 +446,7 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 		PRIV->m_arm.m_size = PRIV->m_arm.m_width * PRIV->m_arm.m_height;
 		PRIV->m_arm.m_bframe = malloc(PRIV->m_arm.m_size);
 		if (PRIV->m_arm.m_bframe == NULL) {
-			err_setstr(RuntimeError, "malloc failed");
+			ERROR(movie_arm, RuntimeError, "malloc failed");
 			return 0;
 		}
 		PRIV->m_arm.m_image = XCreateImage(XtDisplay(PRIV->m_widget),
@@ -456,42 +462,42 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 		PRIV->m_arm.m_index = v;
 		INCREF(v);
 	} else {
-		err_setstr(RuntimeError, "no index specified");
+		ERROR(movie_arm, RuntimeError, "no index specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "c0bits");
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_c0bits = getintvalue(v);
 	else {
-		err_setstr(RuntimeError, "c0bits not specified");
+		ERROR(movie_arm, RuntimeError, "c0bits not specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "c1bits");
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_c1bits = getintvalue(v);
 	else {
-		err_setstr(RuntimeError, "c1bits not specified");
+		ERROR(movie_arm, RuntimeError, "c1bits not specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "c2bits");
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_c2bits = getintvalue(v);
 	else {
-		err_setstr(RuntimeError, "c2bits not specified");
+		ERROR(movie_arm, RuntimeError, "c2bits not specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "offset");
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_moffset = getintvalue(v);
 	else {
-		err_setstr(RuntimeError, "offset not specified");
+		ERROR(movie_arm, RuntimeError, "offset not specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "scale");
 	if (v && is_floatobject(v))
 		PRIV->m_arm.m_scale = getfloatvalue(v);
 	else {
-		err_setstr(RuntimeError, "scale not specified");
+		ERROR(movie_arm, RuntimeError, "scale not specified");
 		return 0;
 	}
 	v = dictlookup(attrdict, "bgcolor");
@@ -503,20 +509,21 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 		for (i = 0; i < 3; i++) {
 			t = gettupleitem(v, i);
 			if (!is_intobject(t)) {
-				err_setstr(RuntimeError,
-					   "bad color specification");
+				ERROR(movie_arm, RuntimeError,
+				      "bad color specification");
 				return 0;
 			}
 			c = getintvalue(t);
 			if (c < 0 || c > 255) {
-				err_setstr(RuntimeError,
-					   "bad color specification");
+				ERROR(movie_arm, RuntimeError,
+				      "bad color specification");
 				return 0;
 			}
 			PRIV->m_arm.m_bgcolor = (PRIV->m_arm.m_bgcolor << 8) | c;
 		}
 	} else {
-		err_setstr(RuntimeError, "no background color specified");
+		ERROR(movie_arm, RuntimeError,
+		      "no background color specified");
 		return 0;
 	}
 #ifdef USE_GL
@@ -751,9 +758,7 @@ movie_play(self)
 #endif
 	if (PRIV->m_play.m_frame == NULL && PRIV->m_play.m_bframe == NULL) {
 		/* apparently the arm failed */
-		dprintf(("movie_play(%lx): not playing because arm failed\n",
-			 (long) self));
-		err_setstr(RuntimeError, "asynchronous arm failed");
+		ERROR(movie_play, RuntimeError, "asynchronous arm failed");
 		return 0;
 	}
 	/* empty the pipe */
@@ -1249,7 +1254,8 @@ movie_finished(self)
 		break;
 #endif
 	default:
-		abort();
+		/* let it pass--initialization may have failed */
+		break;
 	}
 	XDECREF(PRIV->m_play.m_index);
 	PRIV->m_play.m_index = NULL;

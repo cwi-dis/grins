@@ -18,6 +18,11 @@ static soundchannel_debug = 0;
 #define dprintf(args)
 #endif
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
+#define ERROR(func, errortype, msg)	{				\
+		dprintf((# func "(%lx): " msg "\n", (long) self));	\
+		err_setstr(errortype, msg);				\
+		}
+
 
 struct sound_data {
 	FILE *f;		/* file from which to read samples */
@@ -77,7 +82,7 @@ sound_init(self)
 	PRIV->s_play.file = NULL;
 	PRIV->s_sema = allocate_sema(1);
 	if (PRIV->s_sema == NULL) {
-		err_setstr(RuntimeError, "cannot allocate semaphore");
+		ERROR(sound_init, RuntimeError, "cannot allocate semaphore");
 		free(self->mm_private);
 		self->mm_private = NULL;
 		return 0;
@@ -85,7 +90,7 @@ sound_init(self)
 	PRIV->s_flag = 0;
 	PRIV->s_port = NULL;
 	if (pipe(PRIV->s_pipefd) < 0) {
-		err_setstr(RuntimeError, "cannot create pipe");
+		ERROR(sound_init, RuntimeError, "cannot create pipe");
 		free_sema(PRIV->s_sema);
 		free(self->mm_private);
 		self->mm_private = NULL;
@@ -127,7 +132,7 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 
 	denter(sound_arm);
 	if (!is_dictobject(attrlist)) {
-		err_setstr(RuntimeError, "attributes not a dictionary");
+		ERROR(sound_arm, RuntimeError, "attributes not a dictionary");
 		return 0;
 	}
 	PRIV->s_arm.nchannels = 1;
