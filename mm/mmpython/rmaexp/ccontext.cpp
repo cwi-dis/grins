@@ -41,8 +41,14 @@ class ClientContext : public IPyClientContext
     STDMETHOD_(UINT32, AddRef ) (THIS);
     STDMETHOD_(UINT32, Release) (THIS);
 
+	// ++ IPyClientContext
+    STDMETHOD (AddInterface) (THIS_ IUnknown* pIUnknown);
+
 	private:
     LONG m_cRef;
+
+	IUnknown *m_aInterfaces[8];
+	int m_nInterfaces;
 	};
 
 HRESULT STDMETHODCALLTYPE CreateClientContext(
@@ -54,7 +60,8 @@ HRESULT STDMETHODCALLTYPE CreateClientContext(
 
 
 ClientContext::ClientContext()
-:	m_cRef(1)
+:	m_cRef(1),
+	m_nInterfaces(0)
 	{
 	}
 
@@ -67,6 +74,17 @@ ClientContext::QueryInterface(
     REFIID riid,
     void **ppvObject)
 	{
+    if (IsEqualIID(riid,IID_IUnknown))
+		{
+		AddRef();
+		*ppvObject = this;
+		return PNR_OK;
+		}
+	for(int i=0;i<m_nInterfaces;i++)
+		{
+		if(m_aInterfaces[i]->QueryInterface(riid, ppvObject) == PNR_OK)
+			return PNR_OK;
+		}
 	return E_NOINTERFACE;
 	}
 
@@ -85,4 +103,16 @@ ClientContext::Release()
 		delete this;
 		}
     return uRet;
+	}
+STDMETHODIMP
+ClientContext::AddInterface(
+    IUnknown* pIUnknown)
+	{
+	if(m_nInterfaces<8)
+		{
+		m_aInterfaces[m_nInterfaces++]=pIUnknown;
+		pIUnknown->AddRef();
+		return PNR_OK;
+		}
+	return PNR_OUTOFMEMORY;
 	}
