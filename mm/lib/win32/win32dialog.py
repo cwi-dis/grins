@@ -239,6 +239,59 @@ class AboutDlg(ResDialog):
 		import splashbmp
 		self._bmp = loadBitmapFromResId(splashbmp.getResId())
 
+# Implementation of a dialog with buttons dialog.
+# To create dialogs that are similar to the YesNoCancel
+# variety but more interesting:
+# 1. Create the dialog resource
+# 2. Add a subclass of _ModalButtonDlg
+# 3. Add the _DIALOGID, _BUTTONLIST and _CANCEL
+# 4. Add a boilerplate function calling show() and
+#    returning the index of the button in _BUTTONLIST.
+#
+class _ButtonDlg(ResDialog):
+	#_DIALOGID provided by subclass
+	#_BUTTONLIST provided by subclass
+	#_CANCEL provided by subclass
+	def __init__(self,parent=None):
+		ResDialog.__init__(self,self._DIALOGID,parent)
+		self._buttons = []
+		for b_id in self._BUTTONLIST:
+			self._buttons.append(Button(self, b_id))
+##		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
+		
+	def OnInitDialog(self):	
+		self.attach_handles_to_subwindows()
+		for b in self._buttons:
+			b.hookcommand(self, self.OnButtonPressed)
+		return ResDialog.OnInitDialog(self)
+
+	# def OnButtonPressed provided by subclass
+
+class _ModalButtonDlg(_ButtonDlg):
+	def show(self):
+		b_id = self.DoModal()
+		if b_id == win32con.IDCANCEL:
+			b_id = self._CANCEL
+		return self._BUTTONLIST.index(b_id)
+
+	def OnButtonPressed(self, id, code):
+		self.EndDialog(id)
+
+# class ModelessButtonDialog not implemented/needed yet
+
+class _RegisterDialog(_ModalButtonDlg):
+	_DIALOGID = grinsRC.IDD_REGISTER
+	_BUTTONLIST = [
+		grinsRC.IDC_REGISTER, 
+		grinsRC.IDC_DONTREGISTER,
+		grinsRC.IDC_LATER,
+		]
+	_CANCEL = grinsRC.IDC_LATER
+
+def RegisterDialog():
+	d = _RegisterDialog()
+	return d.show()
+
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
 	def __init__(self,callbacks=None,parent=None, default='', recent_files = []):
