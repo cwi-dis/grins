@@ -65,8 +65,8 @@ class view () :
 		self.chanboxes = []
 		self.thermleft = w - THERMW
 		w = w / 2
-		self.unitwidth = (w - THERMW) / self.nrchannels
-		self.unitheight = (h - HDR_SIZE) / root.t1
+		self.unitwidth = (w - THERMW) / max(1, self.nrchannels)
+		self.unitheight = (h - HDR_SIZE) / max(1.0, root.t1)
 		self.thermo = thermo().new(self.thermleft + XMARG, \
 			YMARG, THERMW - XMARG * 2, h - HDR_SIZE - YMARG * 2)
 		self.currenttime = 0
@@ -90,13 +90,14 @@ class view () :
 	def transaction(self):
 		return 1 # always allow transactions
 	def commit(self):
-		return # we can do a full redraw here
+#XXX how long takes a redraw?
+		self.redrawfunc()
 	def rollback(self):
 		return # can we do something useful?
 
 	def recalc(self):
 #		Timing.calctimes(self.root)
-		self.unitheight = (self.h - HDR_SIZE) / self.root.t1
+		self.unitheight = (self.h - HDR_SIZE) / max(1.0, self.root.t1)
 		for i in range(self.nrchannels):
 			self.chanboxes[i].label = self.channellist[i]
 		self.re_mkView((0,0,self.w / 2,self.h,self.h-HDR_SIZE),\
@@ -254,7 +255,13 @@ class view () :
 		type = node.GetType()
 		name = node.GetAttrDef('name', 'NoName')
 		kids = node.GetChildren()
-		blobj = node.ch_blockobj
+		try:
+			blobj = node.ch_blockobj
+		except NameError:	# a newly created node!
+			blobj = box().new(FOCUS_BOX,x,y,w,h,'')
+			blobj.boxtype = FG_BOX
+			blobj.hidden = 1 - self.debug
+			node.ch_blockobj = blobj
 		blobj.label = name
 		if type in ('seq','par','grp'):
 			left = self.dividor
@@ -268,7 +275,17 @@ class view () :
 		bottom = top - self.unitheight * duration + YMARG * 2
 		if bottom > top:
 			bottom = top
-		chobj = node.ch_channelobj
+		try:
+			chobj = node.ch_channelobj
+		except NameError:	# a newly created node!
+			chobj = box().new(FOCUS_BOX,left,bottom,right-left,top-bottom,'')
+			if type in ('seq','par','grp'):
+				chobj.hidden = 1
+				kind = BG_BOX
+			else:
+				kind = FG_BOX
+			chobj.boxtype = kind
+			node.ch_channelobj = chobj
 		chobj.label = name
 		chobj.x = left
 		chobj.w = right - left
@@ -522,6 +539,8 @@ class view () :
 		dstuid = dst.GetUID()
 		self.editmgr.setsyncarcdelay(src, f, d, dst, t)
 		self.editmgr.commit()
+#XXX how long takes a redraw?
+		self.redrawfunc()
 	def deletearc(self):
 		if self.focus = None:
 			return
