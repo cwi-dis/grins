@@ -43,14 +43,13 @@ attrfind = re.compile(
 
 # XML parser base class -- find tags and call handler functions.
 # Usage: p = XMLParser(); p.feed(data); ...; p.close().
-# The dtd is defined by deriving a class which defines methods
-# with special names to handle tags: start_foo and end_foo to handle
-# <foo> and </foo>, respectively, or do_foo to handle <foo> by itself.
-# (Tags are converted to lower case for this purpose.)  The data
-# between tags is passed to the parser by calling self.handle_data()
-# with some data as argument (the data may be split up in arbutrary
-# chunks).  Entity references are passed by calling
-# self.handle_entityref() with the entity reference as argument.
+# The dtd is defined by deriving a class which defines methods with
+# special names to handle tags: start_foo and end_foo to handle <foo>
+# and </foo>, respectively.  The data between tags is passed to the
+# parser by calling self.handle_data() with some data as argument (the
+# data may be split up in arbutrary chunks).  Entity references are
+# passed by calling self.handle_entityref() with the entity reference
+# as argument.
 
 class XMLParser:
 
@@ -312,8 +311,6 @@ class XMLParser:
 		attrvalue = attrvalue[1:-1]
 	    else:
 		self.syntax_error(self.lineno, 'attribute value not quoted')
-	    # XXXX are attribute names case sensitive?
-	    attrname = string.lower(attrname)
 	    if attrlist is not None and attrname not in attrlist:
 		self.syntax_error(self.lineno,
 				  'unknown attribute %s of element %s' %
