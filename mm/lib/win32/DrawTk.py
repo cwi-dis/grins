@@ -444,9 +444,23 @@ class DrawRect(DrawObj):
 		oldpen=dc.SelectObjectFromHandle(pen)
 
 		if not tk.InLayoutMode():
-			clr=(0xC0, 0xC0, 0xC0)
-			dc.FillSolidRect(self._position.tuple(),win32mu.RGB(clr))
+			if tk._bkimg<0:
+				clr=(0xC0, 0xC0, 0xC0)
+				dc.FillSolidRect(self._position.tuple(),win32mu.RGB(clr))
+			else:
+				l,t,r,b = tk._crect.tuple()
+				li,ti,ri,bi = self._position.tuple()
+				dc.FillSolidRect((l,t,li,b),win32mu.RGB((0,0,0)))
+				dc.FillSolidRect((l,t,r,ti),win32mu.RGB((0,0,0)))
+				dc.FillSolidRect((ri,t,r,b),win32mu.RGB((0,0,0)))
+				dc.FillSolidRect((l,bi,r,b),win32mu.RGB((0,0,0)))
+
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
+		
+		if not tk.InLayoutMode() and tk._bkimg>=0:
+			dc.SelectObjectFromHandle(oldpen)
+			Sdk.DeleteObject(pen)
+			return
 
 		# write dimensions
 		s=''
@@ -515,12 +529,13 @@ class DrawTk:
 		self._hfont_org=0
 		self._limit_rect=1 # number of rect allowed
 		self._capture=None
-
+	
 		# layout page support
 		self._layoutmode=1
 		self._brect=None
 		self._crect=None
 		self._scale=None
+		self._bkimg=-1
 
 	def __del__(self):
 		if self._hsmallfont:
@@ -581,6 +596,7 @@ class DrawTk:
 	# layout page support
 	def SetLayoutMode(self,v):
 		self._layoutmode=v
+
 	def InLayoutMode(self):
 		return self._layoutmode
 
@@ -596,6 +612,8 @@ class DrawTk:
 		self._brect=Rect(rc)
 	def	SetCRect(self,rc):
 		self._crect=Rect(rc)
+	def SetBkImg(self,img):
+		self._bkimg=img
 
 	def InDrawArea(self,point):
 		if self.InLayoutMode():
@@ -621,7 +639,8 @@ class DrawTk:
 		self._scale=None
 		self._layoutmode=1
 		self._has_scale=0
-	
+		self._bkimg=-1
+
 
 #########################	
 # MFC View or Layer for other views
@@ -850,12 +869,18 @@ class DrawLayer:
 
 		# show draw area
 		if not self.drawTk.InLayoutMode():
-			l,t,w,h=self._canvas
-			dcc.FillSolidRect((l,t,l+w,t+h),win32mu.RGB((0,0,0)))
-			dcc.FillSolidRect(self.drawTk._crect.tuple(),win32mu.RGB((200,200,0)))
-			dcc.FillSolidRect(self.drawTk._brect.tuple(),win32mu.RGB((255,255,255)))
-			win32mu.FrameRect(dcc,self.drawTk._crect.tuple(),(0,0,0))
-			win32mu.FrameRect(dcc,self.drawTk._brect.tuple(),(0,0,0))
+			if self.drawTk._bkimg<0:
+				l,t,w,h=self._canvas
+				dcc.FillSolidRect((l,t,l+w,t+h),win32mu.RGB((0,0,0)))
+				dcc.FillSolidRect(self.drawTk._crect.tuple(),win32mu.RGB((200,200,0)))
+				dcc.FillSolidRect(self.drawTk._brect.tuple(),win32mu.RGB((255,255,255)))
+				win32mu.FrameRect(dcc,self.drawTk._crect.tuple(),(0,0,0))
+				win32mu.FrameRect(dcc,self.drawTk._brect.tuple(),(0,0,0))
+			else:
+				ig = win32ui.Getig()
+				img = self.drawTk._bkimg
+				ig.display_desktop_pattern_set(img,0)
+				ig.display_image(img,dcc.GetSafeHdc())
 
 		# draw objects on dcc
 		if self._active_displist:
