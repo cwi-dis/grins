@@ -146,14 +146,14 @@ textdecl = re.compile('<\?xml'
 pidecl = re.compile('<\\?(?![xX][mM][lL][ \t\r\n?])(?P<name>'+_Name+')(?:'+_S+'(?P<data>(?:[^?]|\\?(?!>))*))?\\?>')
 
 # XML NAMESPACES
-_NCName = '[a-zA-Z_][-a-zA-Z0-9._]*'    # XML Name, minus the ":"
+_NCName = '['+_Letter+'_]['+'-' + _Letter + _Digit + '._' + _CombiningChar + _Extender+']*'    # XML Name, minus the ":"
 ncname = re.compile(_NCName + '$')
 qname = re.compile('(?:(?P<prefix>' + _NCName + '):)?' # optional prefix
                    '(?P<local>' + _NCName + ')$')
 xmlns = re.compile('xmlns(?::(?P<ncname>' + _NCName + '))?$')
 
 # DOCTYPE
-_Nmtoken = '[-a-zA-Z0-9._:]+'
+_Nmtoken = '['+_NameChar+']+'
 nmtoken = re.compile('^'+_Nmtoken+'$')
 nmtokens = re.compile('^'+_Nmtoken+'(?:'+_S+_Nmtoken+')*$')
 element = re.compile('<!ELEMENT'+_S+'(?P<name>'+_Name+')'+_S+r'(?P<content>EMPTY|ANY|\()')
