@@ -17,6 +17,7 @@ import string
 import sys
 import MMurl
 import version
+import features
 
 def hashelp():
 	import windowinterface
@@ -50,13 +51,16 @@ def fixhelpdir():
 def givehelp(topic, web=0):
 	global helpwindow
 	import windowinterface
-	fixhelpdir()
-	helpfile = '%s.html'%topic
-	if web:
-		base = helpbase_web
+	if topic == 'buy' and hasattr(features, buyurl):
+		helpurl = features.buyurl
 	else:
-		base = helpbase
-	helpurl = MMurl.basejoin(base, helpfile)
+		fixhelpdir()
+		helpfile = '%s.html'%topic
+		if web:
+			base = helpbase_web
+		else:
+			base = helpbase
+		helpurl = MMurl.basejoin(base, helpfile)
 	if helpwindow is not None and not helpwindow.is_closed():
 		helpwindow.goto_url(helpurl)
 	else:
