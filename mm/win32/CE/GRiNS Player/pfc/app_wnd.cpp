@@ -17,6 +17,30 @@ std::map<HWND, PyWnd*> PyWnd::wnds;
 
 #define ASSERT_ISWINDOW(wnd) if((wnd) == NULL || !IsWindow(wnd)) {seterror("Not a window"); return NULL;}
 
+static PyObject* PyWnd_Detach(PyWnd *self, PyObject *args)
+	{
+	HWND hWnd = NULL;
+	std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(self->m_hWnd);
+	if(wit != PyWnd::wnds.end())
+		{
+		PyWnd *pywnd = (*wit).second;
+		PyWnd::wnds.erase(wit);
+		hWnd = pywnd->m_hWnd;
+		pywnd->m_hWnd = NULL;
+		// remove hooks since the object will not be deallocated
+		if(pywnd->m_phooks != NULL)
+			{
+			std::map<UINT, PyObject*>::iterator it;
+			for(it = pywnd->m_phooks->begin();it!=pywnd->m_phooks->end();it++)
+				Py_XDECREF((*it).second);
+			delete pywnd->m_phooks;
+			pywnd->m_phooks = NULL;
+			}
+		Py_DECREF(pywnd); 
+		}
+	return Py_BuildValue("i", hWnd);
+	}
+
 static PyObject* PyWnd_ShowWindow(PyWnd *self, PyObject *args)
 	{
 	int nCmdShow = SW_SHOW;
@@ -481,6 +505,7 @@ static PyObject* PyWnd_SHCreateMenuBar(PyWnd *self, PyObject *args)
 #endif
 
 PyMethodDef PyWnd::methods[] = {
+	{"Detach", (PyCFunction)PyWnd_Detach, METH_VARARGS, ""},
 	{"ShowWindow", (PyCFunction)PyWnd_ShowWindow, METH_VARARGS, ""},
 	{"UpdateWindow", (PyCFunction)PyWnd_UpdateWindow, METH_VARARGS, ""},
 	{"DestroyWindow", (PyCFunction)PyWnd_DestroyWindow, METH_VARARGS, ""},
