@@ -36,6 +36,7 @@ class mpeg_video;
 class mpeg_video_display;
 struct display_info;
 class video_thread;
+class wave_out_device;
 
 class mpeg_player : public VideoPlayer
 	{
@@ -58,12 +59,15 @@ class mpeg_player : public VideoPlayer
 	virtual double get_bit_rate() const;
 
 	private:
+	bool set_audio_input_stream(mpeg_input_stream *in_stream);
+
 	mpeg_input_stream *pinstream;
 	mpeg_video_bitstream *pvbitstream;
 	mpeg_video *decoder;
 	mpeg_video_display *display;
 	display_info *di;
 	video_thread *pVideoThread;
+	wave_out_device *pwavout;
 	};
 
 #endif // INC_MPEGPLAYER

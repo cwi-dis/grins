@@ -129,4 +129,8 @@ mpeg2_atrack_t* mpeg2_new_atrack(mpeg2_t *file, int stream_id, int format, mpeg2
 
 int mpeg2audio_replace_buffer(mpeg2audio_t *audio, long new_allocation);
 
+bool mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_i, 
+		int channel, long start_position, long out_len, long *pwritelen);
+
+
 #endif

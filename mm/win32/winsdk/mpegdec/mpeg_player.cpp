@@ -15,6 +15,11 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "mpegdisplay.h"
 
+// begin_audio
+#include "mpeg_container.h"
+#include "wave_out_device.h"
+// end_audio
+
 #include "../common/thread.h"
 
 #include <math.h>
@@ -98,7 +103,8 @@ mpeg_player::mpeg_player()
 	decoder(0), 
 	display(0), 
 	di(0), 
-	pVideoThread(0)
+	pVideoThread(0),
+	pwavout(0)
 	{
 	di = new display_info;
 	memset(di, 0, sizeof(display_info));
@@ -131,8 +137,34 @@ bool mpeg_player::set_input_stream(mpeg_input_stream *in_stream)
 		return false;
 		}
 	pinstream = in_stream; // become owner
+	set_audio_input_stream(pinstream);
 	decoder->initialize_sequence();
 	decoder->get_display_info(*di);
+	return true;
+	}
+
+bool mpeg_player::set_audio_input_stream(mpeg_input_stream *in_stream)
+	{
+	mpeg_container mpeg2;
+	if(!mpeg2.open(in_stream->get_pathname()))
+		return false;
+	if(mpeg2.has_audio())
+		{
+		pwavout = new wave_out_device();
+		if(!pwavout->open(mpeg2.get_sample_rate()))
+			{
+			delete pwavout;
+			pwavout = 0;
+			return false;
+			}
+		mpeg2.read_audio(pwavout->get_data_ref());
+		if(!pwavout->prepare_playback())
+			{
+			delete pwavout;
+			pwavout = 0;
+			return false;
+			}
+		}
 	return true;
 	}
 
@@ -183,6 +215,8 @@ void mpeg_player::close()
 		delete display;
 		display = 0;
 		}
+	if(pwavout != 0)
+		delete pwavout;
 	}
 
 int mpeg_player::get_width() const
@@ -227,12 +261,16 @@ void mpeg_player::suspend_playback()
 	{
 	if(pVideoThread != 0)
 		pVideoThread->suspend_playback();
+	if(pwavout != 0) 
+		pwavout->suspend();
 	}
 
 void mpeg_player::resume_playback()
 	{
 	if(pVideoThread != 0)
 		pVideoThread->resume_playback();
+	if(pwavout != 0) 
+		pwavout->resume();
 	}
 
 bool mpeg_player::finished_playback()

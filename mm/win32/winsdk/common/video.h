@@ -1,15 +1,29 @@
 #ifndef INC_VIDEO
 #define INC_VIDEO
 
+#ifdef _WIN32_WCE
+
+// _WIN32_WCE defined
 #ifndef INC_SURFACE
-#include "surface.h"
+#include "../common/surface.h"
 #endif
+
+#else 
+
+// _WIN32
+#ifndef INC_XG
+#include "../common/xg.h"
+#endif
+
+#endif // _WIN32_WCE
+
+class mpeg_input_stream;
 
 class VideoPlayer
 	{
 	public:
 	virtual ~VideoPlayer() {}
-	virtual bool can_decode(int handle) = 0;
+	virtual bool set_input_stream(mpeg_input_stream *in_stream) = 0;
 	virtual void close() = 0;
 	virtual int get_width() const = 0;
 	virtual int get_height() const = 0;

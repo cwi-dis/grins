@@ -3,7 +3,7 @@
 #include "streams/mpeg2demux.h"
 #include "streams/mpeg2io.h"
 #include "audio/mpeg2audio.h"
-#include "video/mpeg2video.h"
+//#include "video/mpeg2video.h"
 
 
 #include <stdlib.h>
@@ -37,12 +37,12 @@ mpeg_container::~mpeg_container()
 	close();
 	}
 
-bool mpeg_container::open(TCHAR *path)
+bool mpeg_container::open(const TCHAR *path)
 	{
 	// Initialize the file structure
 	m_pmpeg2 = new mpeg2_t;
 	memset(m_pmpeg2, 0, sizeof(mpeg2_t));
-	m_pmpeg2->fs = mpeg2_new_fs(path);
+	m_pmpeg2->fs = mpeg2_new_fs((TCHAR *)path);
 	m_pmpeg2->demuxer = mpeg2_new_demuxer(m_pmpeg2, 0, 0, -1);
 	m_pmpeg2->cpus = 1;
 
@@ -72,14 +72,14 @@ bool mpeg_container::open(TCHAR *path)
 	else if(((bits >> 24) & 0xff) == MPEG2_SYNC_BYTE)
 		{
 		// Transport stream
-		printf("Transport stream\n");
+		//printf("Transport stream\n");
 		m_pmpeg2->packet_size = MPEG2_TS_PACKET_SIZE;
 		m_pmpeg2->is_transport_stream = 1;
 		}
 	else if(bits == MPEG2_PACK_START_CODE)
 		{
 		// *** Program stream
-		printf("Program stream\n");
+		//printf("Program stream\n");
 		m_pmpeg2->packet_size = MPEG2_DVD_PACKET_SIZE;
 		m_pmpeg2->is_program_stream = 1;
 		}
@@ -88,7 +88,7 @@ bool mpeg_container::open(TCHAR *path)
 		(bits == MPEG2_RIFF_CODE))
 		{
 		// MPEG Audio only
-		printf("MPEG Audio only\n");
+		//printf("MPEG Audio only\n");
 		m_pmpeg2->packet_size = MPEG2_DVD_PACKET_SIZE;
 		m_pmpeg2->has_audio = 1;
 		m_pmpeg2->is_audio_stream = 1;
@@ -97,14 +97,14 @@ bool mpeg_container::open(TCHAR *path)
 		bits == MPEG2_PICTURE_START_CODE)
 		{
 		// Video only
-		printf("Video only\n");
+		//printf("Video only\n");
 		m_pmpeg2->packet_size = MPEG2_DVD_PACKET_SIZE;
 		m_pmpeg2->is_video_stream = 1;
 		}
 	else if(((bits & 0xffff0000) >> 16) == MPEG2_AC3_START_CODE)
 		{
 		// AC3 Audio only
-		printf("AC3 Audio only\n");
+		//printf("AC3 Audio only\n");
 		m_pmpeg2->packet_size = MPEG2_DVD_PACKET_SIZE;
 		m_pmpeg2->has_audio = 1;
 		m_pmpeg2->is_audio_stream = 1;
@@ -126,7 +126,8 @@ bool mpeg_container::open(TCHAR *path)
 	
 	if(m_pmpeg2->is_transport_stream || m_pmpeg2->is_program_stream)
 		{
-		printf("Create audio and video tracks\n");
+		//printf("Create audio and video tracks\n");
+		/*
 		// Create video tracks
 		// Video must be created before audio because audio uses the video timecode to get its length
 		for(int i = 0; i < MPEG2_MAX_STREAMS; i++)
@@ -138,13 +139,13 @@ bool mpeg_container::open(TCHAR *path)
 				if(m_pmpeg2->vtrack[m_pmpeg2->total_vstreams]) m_pmpeg2->total_vstreams++;
 				}
 			}
-
+		*/
 		// Create audio tracks
-		for(i = 0; i < MPEG2_MAX_STREAMS; i++)
+		for(int i = 0; i < MPEG2_MAX_STREAMS; i++)
 			{
 			if(m_pmpeg2->demuxer->astream_table[i])
 				{
-				printf("Create audio track %d\n", i);
+				//printf("Create audio track %d\n", i);
 				m_pmpeg2->atrack[m_pmpeg2->total_astreams] = 
 					mpeg2_new_atrack(m_pmpeg2, i, m_pmpeg2->demuxer->astream_table[i], m_pmpeg2->demuxer);
 				if(m_pmpeg2->atrack[m_pmpeg2->total_astreams]) m_pmpeg2->total_astreams++;
@@ -153,14 +154,14 @@ bool mpeg_container::open(TCHAR *path)
 		}
 	else if(m_pmpeg2->is_video_stream)
 		{
-		printf("Create video track\n");
+		//printf("Create video track\n");
 		// Create video tracks
-		m_pmpeg2->vtrack[0] = mpeg2_new_vtrack(m_pmpeg2, -1, m_pmpeg2->demuxer);
-		if(m_pmpeg2->vtrack[0]) m_pmpeg2->total_vstreams++;
+		//m_pmpeg2->vtrack[0] = mpeg2_new_vtrack(m_pmpeg2, -1, m_pmpeg2->demuxer);
+		//if(m_pmpeg2->vtrack[0]) m_pmpeg2->total_vstreams++;
 		}
 	else if(m_pmpeg2->is_audio_stream)
 		{
-		printf("Create audio track\n");
+		//printf("Create audio track\n");
 		// Create audio tracks
 		m_pmpeg2->atrack[0] = mpeg2_new_atrack(m_pmpeg2, -1, AUDIO_UNKNOWN, m_pmpeg2->demuxer);
 		if(m_pmpeg2->atrack[0]) m_pmpeg2->total_astreams++;
@@ -178,10 +179,10 @@ void mpeg_container::close()
 	{
 	if(m_pmpeg2 != 0) 
 		{
-		for(int i = 0; i < m_pmpeg2->total_vstreams; i++)
-			mpeg2_delete_vtrack(m_pmpeg2, m_pmpeg2->vtrack[i]);
+		//for(int i = 0; i < m_pmpeg2->total_vstreams; i++)
+		//	mpeg2_delete_vtrack(m_pmpeg2, m_pmpeg2->vtrack[i]);
 
-		for(i = 0; i < m_pmpeg2->total_astreams; i++)
+		for(int i = 0; i < m_pmpeg2->total_astreams; i++)
 			mpeg2_delete_atrack(m_pmpeg2, m_pmpeg2->atrack[i]);
 
 		mpeg2_delete_fs(m_pmpeg2->fs);
@@ -196,5 +197,34 @@ bool mpeg_container::read_toc()
 	return true;
 	}
 
+long mpeg_container::read_audio(short *output, long samples, int stream, int channel)
+	{
+	if(!m_pmpeg2->has_audio) return 0;
+	long writelen = 0;
+	bool res = mpeg2audio_decode_audio(m_pmpeg2->atrack[stream]->audio, 
+		NULL, output, channel, 
+		m_pmpeg2->atrack[stream]->current_position, samples, &writelen);
+	if(!res) return 0;
+	m_pmpeg2->last_type_read = 1;
+	m_pmpeg2->last_stream_read = stream;
+	m_pmpeg2->atrack[stream]->current_position += writelen;
+	return writelen;
+	}
 
-
+void mpeg_container::read_audio(std::basic_string<char>& audio_data, int stream, int channel)
+	{
+	if(!m_pmpeg2->has_audio) return;
+	audio_data.reserve(m_pmpeg2->atrack[stream]->total_samples+8*1024);
+	int samples = 8*1024;
+	short *output = new short[samples];
+	while(true)
+		{
+		long n = read_audio(output, samples, stream, channel);
+		if(n == 0) break;
+		audio_data.append((char*)output, (char*)(output + n));
+#ifdef _WIN32_WCE
+		if(audio_data.length()>512000) break;
+#endif
+		}
+	delete[] output;
+	}
