@@ -446,8 +446,6 @@ class HierarchyView(HierarchyViewDialog):
 		return self.mcanvassize;
 
 	def show(self):
-		import traceback; traceback.print_stack()
-		print "----------------------------------------------------------------------"
 		if self.is_showing():
 			HierarchyViewDialog.show(self)
 			return
