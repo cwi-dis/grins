@@ -1,11 +1,5 @@
 __version__ = "$Id$"
-
-# XXXX Movie disposal
-# XXXX Resizing
-# XXXX Stop play
-# XXXX Pause play
-# XXXX ExitMovies?
-#
+# XXXX clip_begin and clip_end not yet implemented
 from Channel import ChannelWindow
 import windowinterface
 import time
@@ -22,6 +16,8 @@ class VideoChannel(ChannelWindow):
 		if debug: print 'VideoChannel: init', name
 		self.arm_movie = None
 		self.play_movie = None
+		self.arm_loop = -1
+		self.play_loop = -1
 		self.has_callback = 0
 		self.idleprocactive = 0
 		self._paused = 0
@@ -73,6 +69,9 @@ class VideoChannel(ChannelWindow):
 				arg = arg[-1]
 			self.errormsg(node, 'QuickTime cannot parse %s: %s'%(fn, arg))
 			return 1
+##		self.__begin = self.getclipbegin(node, units)
+##		self.__end = self.getclipend(node, units)
+		self.arm_loop = self.getloop(node)
 		self.place_movie(self.arm_movie)
 		self.make_ready(self.arm_movie)
 		return 1
@@ -99,6 +98,13 @@ class VideoChannel(ChannelWindow):
 			return
 		
 		if self.play_movie.IsMovieDone():
+			if self.play_loop == 0 or self.play_loop > 1:
+				# Either looping infinitely, or more loops to be done
+				if self.play_loop != 0:
+					self.play_loop = self.play_loop - 1
+				self.play_movie.GoToBeginningOfMovie()
+				return
+			self.play_loop = -1	# Truly finished
 			self.play_movie.StopMovie()
 			self.play_movie = None
 			if self.window:
@@ -116,7 +122,9 @@ class VideoChannel(ChannelWindow):
 			
 		if debug: print 'VideoChannel: play', node
 		self.play_movie = self.arm_movie
+		self.play_loop = self.arm_loop
 		self.arm_movie = None
+		self.arm_loop = -1
 
 		self.play_movie.SetMovieActive(1)
 		self.play_movie.MoviesTask(0)
