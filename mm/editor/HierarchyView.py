@@ -1362,6 +1362,7 @@ class HierarchyView(HierarchyViewDialog):
 	def cleanup(self):
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
+			self.scene_graph = None
 		self.selected_widget = None
 
 	# Navigation functions
