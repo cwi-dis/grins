@@ -70,6 +70,8 @@ class PlayerDlgBar(window.Wnd):
 		self._resitems = []
 		self._ctrls = {}
 		self._miniframetype = None
+		self._lessAttributes = None
+		self._moreAttributes = None
 
 	def createWindow(self, parent, attributes):
 		self._parent = parent
@@ -91,7 +93,12 @@ class PlayerDlgBar(window.Wnd):
 		self.hookCommands()
 		self.hide()
 	
-	def setAttributes(self, attributes):
+	def setAttributes(self, attributes, moreAttributes=None):
+		attrscpy = attributes[:]
+		if moreAttributes is not None:
+			self._lessAttributes = attributes
+			self._moreAttributes = moreAttributes
+			attrscpy.append(('button', 'More'))
 		parent = self._parent
 		visible = self.IsWindowVisible()
 		miniframe = None
@@ -250,6 +257,8 @@ class PlayerDlgBar(window.Wnd):
 				self._parent.HookCommand(self.onCombo, ctrl.getId())
 			elif isinstance(ctrl, components.CheckButton):
 				self._parent.HookCommand(self.onCheck, ctrl.getId())
+			elif isinstance(ctrl, components.Button):
+				self._parent.HookCommand(self.onButton, ctrl.getId())
 
 	def onCombo(self, id, code):
 		if code == win32con.CBN_SELCHANGE:
@@ -279,14 +288,13 @@ class PlayerDlgBar(window.Wnd):
 				if ctrl._id == id:
 					button = ctrl.gettext()
 					if button == 'Less':
-						ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),('button', 'More')]
-						self.setAttributes(ATTRIBUTES)
+						attributes = self._lessAttributes[:]
+						attributes.append(('button', 'More')) 
+						self.setAttributes(attributes)
 					elif button == 'More':
-						ATTRIBUTES = [ ('option','Bitrate'),
-							('option', 'Language'),
-							('boolean', 'boolean attribute 1'),
-							('boolean', 'boolean attribute 2'), ('button', 'Less')]
-						self.setAttributes(ATTRIBUTES)
+						attributes = self._lessAttributes[:] + self._moreAttributes[:]
+						attributes.append(('button', 'Less')) 
+						self.setAttributes(attributes)
 					break
 
 
