@@ -315,7 +315,7 @@ class ChannelWrapper(Wrapper):
 	def getdef(self, name):
 		if name == '.cname':
 			# Channelname -- special case
-			return (('name', None), 'none', \
+			return (('name', ''), 'none', \
 				'Channel name', 'default', \
 				'Channel name (not a real attribute)', 'raw')
 		return MMAttrdefs.getdef(name)
