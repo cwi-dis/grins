@@ -41,8 +41,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		w, h = rc[2:]
 		self.createDDLayer(w, h)
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
-		self.setClientRect(w, h)
-
 		mainframe = self.GetParent().GetMDIFrame()
 		mainframe.assertPanelVisible()
 			
@@ -236,16 +234,4 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 		return 1
 
-	def setClientRect(self, w, h):
-		w1, h1 = self.GetClientRect()[2:]
-		dw = w - w1
-		dh = h - h1
-		if dw!=0 or dh!=0:
-			frame = self.GetParent()
-			l, t, r, b = frame.GetWindowRect()
-			flags=win32con.SWP_NOMOVE | win32con.SWP_NOZORDER 		
-			frame.SetWindowPos(0, (0,0,r-l+dw,b-t+dh), flags)
-			w1, h1 = self.GetClientRect()[2:]
-			if w1 != w or h1 != h:
-				self.setClientRect(w, h)
 
