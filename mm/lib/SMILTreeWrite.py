@@ -552,6 +552,7 @@ def getpercentage(writer, node, attr, default=100):
 
 def escape_name(name, quote_initial = 1):
 	name = string.join(string.split(name, '.'), '\\.')
+	name = string.join(string.split(name, '-'), '\\-')
 	if quote_initial and name in ['prev', 'wallclock', ]:
 		name = '\\' + name
 	return name
