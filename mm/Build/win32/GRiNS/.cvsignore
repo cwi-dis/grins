@@ -1,1 +1,9 @@
 *.c
+FreezeOpts
+GRiNS.exe
+GRiNS.exp
+GRiNS.lib
+GRiNS.plg
+log.txt
+Makefile
+Release
