@@ -44,7 +44,7 @@ class ChannelViewDialog(ViewDialog):
 				('Play from node', PLAYFROM),
 				None,
 				('Show info...', INFO),
-				('Show attributes...', ATTRIBUTES),
+				('Show properties...', ATTRIBUTES),
 				('Show anchors...', ANCHORS),
 				('Edit content...', CONTENT),
 				None,
