@@ -143,9 +143,9 @@ static typeobject Nullchanneltype = {
 	sizeof(channelobject),	/*tp_size*/
 	0,			/*tp_itemsize*/
 	/* methods */
-	nullchannel_dealloc,	/*tp_dealloc*/
+	(destructor)nullchannel_dealloc, /*tp_dealloc*/
 	0,			/*tp_print*/
-	nullchannel_getattr,	/*tp_getattr*/
+	(getattrfunc)nullchannel_getattr, /*tp_getattr*/
 	0,			/*tp_setattr*/
 	0,			/*tp_compare*/
 	0,			/*tp_repr*/
@@ -172,7 +172,7 @@ nullchannel_init(self, args)
 }
 
 static struct methodlist nullchannel_methods[] = {
-	{"init",		nullchannel_init},
+	{"init",		(method)nullchannel_init},
 	{NULL,			NULL}
 };
 

@@ -472,15 +472,15 @@ mm_do_display(self, args)
 }
 
 static struct methodlist channel_methods[] = {
-	{"arm",			mm_arm},
-	{"armstop",		mm_armstop},
-	{"close",		mm_close},
-	{"play",		mm_play},
-	{"playstop",		mm_playstop},
-	{"resized",		mm_resized},
-	{"setrate",		mm_setrate},
-	{"finished",		mm_finished},
-	{"do_display",		mm_do_display},
+	{"arm",			(method)mm_arm},
+	{"armstop",		(method)mm_armstop},
+	{"close",		(method)mm_close},
+	{"play",		(method)mm_play},
+	{"playstop",		(method)mm_playstop},
+	{"resized",		(method)mm_resized},
+	{"setrate",		(method)mm_setrate},
+	{"finished",		(method)mm_finished},
+	{"do_display",		(method)mm_do_display},
 	{NULL,			NULL}		/* sentinel */
 };
 
@@ -513,9 +513,9 @@ static typeobject Mmtype = {
 	sizeof(mmobject),	/*tp_size*/
 	0,			/*tp_itemsize*/
 	/* methods */
-	mm_dealloc,	/*tp_dealloc*/
+	(destructor)mm_dealloc,	/*tp_dealloc*/
 	0,		/*tp_print*/
-	mm_getattr,	/*tp_getattr*/
+	(getattrfunc)mm_getattr, /*tp_getattr*/
 	0,		/*tp_setattr*/
 	0,		/*tp_compare*/
 	0,		/*tp_repr*/
@@ -664,8 +664,8 @@ mm_setsyncfd(self, args)
 }
 
 static struct methodlist mm_methods[] = {
-	{"init",		mm_init},
-	{"setsyncfd",		mm_setsyncfd},
+	{"init",		(method)mm_init},
+	{"setsyncfd",		(method)mm_setsyncfd},
 	{NULL,		NULL}		/* sentinel */
 };
 

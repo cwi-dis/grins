@@ -592,9 +592,9 @@ static typeobject Soundchanneltype = {
 	sizeof(channelobject),	/*tp_size*/
 	0,			/*tp_itemsize*/
 	/* methods */
-	soundchannel_dealloc,	/*tp_dealloc*/
+	(destructor)soundchannel_dealloc, /*tp_dealloc*/
 	0,			/*tp_print*/
-	soundchannel_getattr,	/*tp_getattr*/
+	(getattrfunc)soundchannel_getattr, /*tp_getattr*/
 	0,			/*tp_setattr*/
 	0,			/*tp_compare*/
 	0,			/*tp_repr*/
@@ -624,7 +624,7 @@ soundchannel_init(self, args)
 }
 
 static struct methodlist soundchannel_methods[] = {
-	{"init",		soundchannel_init},
+	{"init",		(method)soundchannel_init},
 	{NULL,			NULL}
 };
 

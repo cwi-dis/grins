@@ -1349,9 +1349,9 @@ static typeobject Moviechanneltype = {
 	sizeof(channelobject),	/*tp_size*/
 	0,			/*tp_itemsize*/
 	/* methods */
-	moviechannel_dealloc,	/*tp_dealloc*/
+	(destructor)moviechannel_dealloc, /*tp_dealloc*/
 	0,			/*tp_print*/
-	moviechannel_getattr,	/*tp_getattr*/
+	(getattrfunc)moviechannel_getattr, /*tp_getattr*/
 	0,			/*tp_setattr*/
 	0,			/*tp_compare*/
 	0,			/*tp_repr*/
@@ -1378,7 +1378,7 @@ moviechannel_init(self, args)
 }
 
 static struct methodlist moviechannel_methods[] = {
-	{"init",		moviechannel_init},
+	{"init",		(method)moviechannel_init},
 	{NULL,			NULL}
 };
 
