@@ -15,6 +15,7 @@
 
 from math import sin, cos, atan2, pi
 import gl, GL, DEVICE
+import fm
 import fl
 from Dialog import GLDialog
 from ViewDialog import ViewDialog
@@ -44,7 +45,7 @@ NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match block view nodes
 ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
 ARROWCOLOR = fix(0, 0, 255)		# Blue
 TEXTCOLOR = fix(0, 0, 0)		# Black
-FOCUSCOLOR = fix(255, 0, 0)		# Red
+FOCUSCOLOR = fix(255, 0, 0)		# Red (for sync arcs only now)
 LOCKEDCOLOR = fix(200, 255, 0)		# Yellowish green
 ANCHORCOLOR = fix(255, 127, 0)		# Orange/pinkish
 
@@ -73,6 +74,46 @@ armcolors = { \
 ARR_LENGTH = 18
 ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
+
+
+# Font stuff, used by 'centerstring'
+
+# Tuning constants (set to match FORMS default)
+FONTNAME = 'Helvetica'
+FONTSIZE = 11
+
+# Some technical terms
+#.......................+.............+.............+..................#
+#                       |             |             |leading           #
+#......ff...............|.............|.............+..................#
+#     f                 |             |                                #
+#....ffff..pppp.........|baseline.....|fontheight...+..................#
+#     f    p   p        |             | ==          |                  #
+#     f    p   p        |             |ysize        |(x-height)        #
+#     f    p   p        |             |             |                  #
+#.....f....pppp........ +..+..........|.............+..................#
+#          p               |yorig     |                                #
+#..........p...............+..........+................................#
+
+# Create a font object
+f_font = fm.findfont(FONTNAME)		# The font at point size 1
+f_font = f_font.scalefont(FONTSIZE)	# Scale it to the desired size
+
+# Extract the font parameters from it
+(f_printermatched, f_fixed_width, f_xorig, f_yorig, f_xsize, f_ysize, \
+	f_fontheight, f_nglyphs) = f_font.getfontinfo()
+
+# Calculate the baseline
+f_baseline = f_fontheight - f_yorig
+
+# In theory 'ysize' should exclude the leading, but in practice it is
+# usually the same as 'fontheight'; we guess that the leading is the
+# same as 'yorig'.
+f_leading = f_yorig # Hack -- there's no parameter specifying this!
+
+# Print some essential parameters
+##print 'yorig =', f_yorig, 'ysize =', f_ysize, 'fontheight =', f_fontheight,
+##print 'baseline =', f_baseline
 
 
 # Channel view class
@@ -262,8 +303,8 @@ class ChannelView(ViewDialog, GLDialog):
 		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
 			  height+MASK-0.5, -MASK-0.5)
 		self.width, self.height = width, height
-		self.channelbottom = 4 * gl.getheight()
-		self.nodetop = 5 * gl.getheight()
+		self.channelbottom = 4 * f_fontheight
+		self.nodetop = 5 * f_fontheight
 
 	# Recompute the locations where the objects should be drawn
 
@@ -277,6 +318,7 @@ class ChannelView(ViewDialog, GLDialog):
 	def draw(self):
 		gl.RGBcolor(BGCOLOR)
 		gl.clear()
+		f_font.setfont()
 		for obj in self.objects:
 			obj.draw()
 	
@@ -549,7 +591,7 @@ class GO:
 		# Calculate our position in relative time
 		totaltop = self.mother.nodetop
 		totalbottom = self.mother.height
-		totalheight = totalbottom - totaltop - gl.getheight()
+		totalheight = totalbottom - totaltop - f_fontheight
 		totaltime = self.mother.viewroot.t1 - self.mother.viewroot.t0
 		if totaltime <= 0: totaltime = 1
 		starttime = node.t0 - self.mother.viewroot.t0
@@ -563,7 +605,7 @@ class GO:
 		# 1 pixel margin above/below, but at the same time
 		# set a minimal size (to fit the label in and so we can
 		# be selected with the mouse)
-		bottom = max(bottom-1, top+gl.getheight())
+		bottom = max(bottom-1, top+f_fontheight)
 		top = top + 1
 
 		#print top, ':', bottom, '(', margin, ')', top, ':', bottom,
@@ -690,12 +732,12 @@ class ChannelBox(GO):
 		# Outline the diamond; 'engraved' normally,
 		# 'sticking out' if selected
 		if self.selected:
-			factor = float(r-l) / float(b-t)
-			n = int(3 * factor + 0.5)
+			n = int(3.0 * (r-l) / (b-t) + 0.5)
 			ll = l + n
 			tt = t + 3
 			rr = r - n
 			bb = b - 3
+
 			gl.RGBcolor(FOCUSLEFT)
 			gl.bgnpolygon()
 			gl.v2i(l, y)
@@ -703,6 +745,7 @@ class ChannelBox(GO):
 			gl.v2i(x, tt)
 			gl.v2i(ll, y)
 			gl.endpolygon()
+
 			gl.RGBcolor(FOCUSTOP)
 			gl.bgnpolygon()
 			gl.v2i(x, t)
@@ -710,6 +753,7 @@ class ChannelBox(GO):
 			gl.v2i(rr, y)
 			gl.v2i(x, tt)
 			gl.endpolygon()
+
 			gl.RGBcolor(FOCUSRIGHT)
 			gl.bgnpolygon()
 			gl.v2i(r, y)
@@ -717,6 +761,7 @@ class ChannelBox(GO):
 			gl.v2i(x, bb)
 			gl.v2i(rr, y)
 			gl.endpolygon()
+
 			gl.RGBcolor(FOCUSBOTTOM)
 			gl.bgnpolygon()
 			gl.v2i(l, y)
@@ -724,7 +769,7 @@ class ChannelBox(GO):
 			gl.v2i(x, bb)
 			gl.v2i(x, b)
 			gl.endpolygon()
-			gl.linewidth(1)
+
 			gl.RGBcolor(FOCUSBORDER)
 			gl.linewidth(1)
 			gl.bgnclosedline()
@@ -742,7 +787,7 @@ class ChannelBox(GO):
 			gl.v2i(r, y)
 			gl.v2i(x, b)
 			gl.endclosedline()
-			# And another one to make it look engraved
+
 			gl.RGBcolor(BORDERLIGHT)
 			gl.bgnclosedline()
 			gl.v2i(l+1, y+1)
@@ -910,8 +955,8 @@ class NodeBox(GO):
 
 		# Draw a "3D" border if selected, else an "engraved" outline
 		if self.selected:
-			l1 = l
-			t1 = t
+			l1 = l - 1
+			t1 = t - 1
 			r1 = r
 			b1 = b
 			ll = l + 3
@@ -949,10 +994,10 @@ class NodeBox(GO):
 			gl.RGBcolor(FOCUSBORDER)
 			gl.linewidth(1)
 			gl.bgnclosedline()
-			gl.v2i(l, t)
+			gl.v2i(l1, t)
 			gl.v2i(r, t)
 			gl.v2i(r, b)
-			gl.v2i(l, b)
+			gl.v2i(l1, b)
 			gl.endclosedline()
 		else:
 			# Outline the box in 'engraved' look
@@ -1131,19 +1176,44 @@ class ArcBox(GO):
 
 	
 
-
-# Subroutine to draw a string centered at a given point
+# Subroutine to draw a string centered in a box
 
 def centerstring(left, top, right, bottom, str):
-	x = (left + right) * 0.5
-	y = (top + bottom) * 0.5
+	# This assumes f_font.setfont() has been called already
+	x = (left + right) * 0.5	# x center of box
+	y = (top + bottom) * 0.5	# y center of box
 	width = right - left
 	# Get font parameters:
-	d = gl.getdescender() # Max descender size
-	h = gl.getheight()    # Line height
-	w = gl.strwidth(str)  # Width of string
+	w = f_font.getstrwidth(str)	# Width of string
+	flip = 0
 	while str and w > width:
-		str = str[:-1]
-		w = gl.strwidth(str)
-	gl.cmov2(x-w*0.5, y+h*0.5-d)
-	gl.charstr(str)
+		flip = (not flip)
+		if flip:
+			str = str[:-1]
+		else:
+			str = str[1:]
+		w = f_font.getstrwidth(str)
+	x = x - 0.5*w
+	y = y + 0.5*(f_fontheight - f_leading) - f_yorig
+	gl.cmov2(x, y)
+	fm.prstr(str)
+
+##	# This is for debugging only:
+##	# - draw a green box around the string
+##	gl.RGBcolor(0, 255, 0)
+##	gl.bgnclosedline()
+##	gl.v2f(x, y-f_baseline)
+##	gl.v2f(x+w, y-f_baseline)
+##	gl.v2f(x+w, y+f_yorig)
+##	gl.v2f(x, y+f_yorig)
+##	gl.endclosedline()
+##	# - draw a red cross at the starting point
+##	gl.RGBcolor(255, 0, 0)
+##	gl.bgnline()
+##	gl.v2f(x-5, y)
+##	gl.v2f(x+5, y)
+##	gl.endline()
+##	gl.bgnline()
+##	gl.v2f(x, y-5)
+##	gl.v2f(x, y+5)
+##	gl.endline()
