@@ -265,6 +265,7 @@
 #define IDUC_BUY                        1119
 #define IDUC_EVALLICENSE                1120
 #define IDUC_ENTERKEY                   1121
+#define IDUC_OPENFILE                   1122
 #define IDC_LEAVE_UNDEF                 1124
 #define IDC_STATIC_ICON                 1127
 #define IDC_KEY                         1129
