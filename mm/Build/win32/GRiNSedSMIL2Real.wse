@@ -57,7 +57,7 @@ end
 item: Search for File
   Variable=FIND_DIRECTORY
   Pathname List=GRiNS_RV2.exe
-  Description=Checking for previously installed components...
+  Description=Checking for previously installed components.  This may take several minutes...
   Flags=00000001
 end
 item: If/While Statement
@@ -1466,6 +1466,31 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=..\..\GRiNS-Icons\video-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\video-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\text-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\text-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\sound-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\sound-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\image-empty.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\image-empty.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\GRiNS-Icons\anchor.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\anchor.tiff
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\RealOneTemplates\T-icons\video_2_1A.bmp
   Destination=%MAINDIR%\Templates\T-icons\video_2_1A.bmp
   Flags=0000000010000010
@@ -1963,19 +1988,19 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32trace.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32trace.pyd
   Destination=%MAINDIR%\win32trace.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32api.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\Scintilla.DLL
+  Source=..\..\..\python\Extensions\Pythonwin\Build\Scintilla.DLL
   Destination=%MAINDIR%\Scintilla.DLL
   Flags=0000000010000010
   Extra Flags=00000010
@@ -1999,25 +2024,25 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgop.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgop.pyd
   Destination=%MAINDIR%\imgop.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgjpeg.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgjpeg.pyd
   Destination=%MAINDIR%\imgjpeg.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgformat.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgformat.pyd
   Destination=%MAINDIR%\imgformat.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgcolormap.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgcolormap.pyd
   Destination=%MAINDIR%\imgcolormap.pyd
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2062,19 +2087,19 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\_socket.pyd
+  Source=..\..\..\python\PCbuild\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\PyWinTypes.dll
+  Source=..\..\..\python\Extensions\win32\Build\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\python16.dll
+  Source=..\..\..\python\PCbuild\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2141,7 +2166,7 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32ui.pyd
+  Source=..\..\..\python\Extensions\Pythonwin\Build\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2153,7 +2178,7 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\Gear32sd.dll
+  Source=..\..\win32\ACCUSOFT\Gear\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2271,6 +2296,51 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=..\products\smil2real\template_files\TopLeftLogo.gif
+  Destination=%MAINDIR%\template_files\TopLeftLogo.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\TempTut.gif
+  Destination=%MAINDIR%\template_files\TempTut.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\RepeatPage.gif
+  Destination=%MAINDIR%\template_files\RepeatPage.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\RepeatMenuDark.gif
+  Destination=%MAINDIR%\template_files\RepeatMenuDark.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\RepeatMenu.gif
+  Destination=%MAINDIR%\template_files\RepeatMenu.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\Msie.css
+  Destination=%MAINDIR%\template_files\Msie.css
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\HouseBarRepeat.gif
+  Destination=%MAINDIR%\template_files\HouseBarRepeat.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\Development.gif
+  Destination=%MAINDIR%\template_files\Development.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil2real\template_files\Demonstrations.gif
+  Destination=%MAINDIR%\template_files\Demonstrations.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\products\smil2real\HowTo-Basic.pdf
   Destination=%MAINDIR%\HowTo-Basic.pdf
   Flags=0000000010000010
@@ -2283,76 +2353,6 @@ end
 item: Install File
   Source=..\products\smil2real\TDG.html
   Destination=%MAINDIR%\TDG.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Back3.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Back3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Pict-3.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Pict-2.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Pict-1.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Grachten.ra
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Grachten.ra
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.data\Fiets.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Fiets.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Pict-3.jpg
-  Destination=%MAINDIR%\DocCommon\Assets\Pict-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Pict-2.jpg
-  Destination=%MAINDIR%\DocCommon\Assets\Pict-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Pict-1.jpg
-  Destination=%MAINDIR%\DocCommon\Assets\Pict-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Grachten.mp3
-  Destination=%MAINDIR%\DocCommon\Assets\Grachten.mp3
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\Assets\Fiets.gif
-  Destination=%MAINDIR%\DocCommon\Assets\Fiets.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.smil
-  Destination=%MAINDIR%\DocCommon\QSG-T1.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.html
-  Destination=%MAINDIR%\DocCommon\QSG-T1.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\DocCommon\QSG-T1.grins
-  Destination=%MAINDIR%\DocCommon\QSG-T1.grins
   Flags=0000000010000010
 end
 item: Install File
