@@ -99,9 +99,8 @@ class _LayoutView2(GenFormView):
 			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
 			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLMEDIAS); i=i+1
 			
-		if not treeVersion:
-			# Initialize control objects whose command are activable as well from menu bar
-			self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
+		# Initialize control objects whose command are activable as well from menu bar
+		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
 		
 		self._activecmds={}
 
@@ -208,8 +207,33 @@ class _LayoutView2(GenFormView):
 		if self._layout.hasCapture():
 			self._layout.onNCLButton(params)
 
+	# Sets the acceptable command list by delegating to its parent keeping a copy.
+	def set_commandlist(self, list):
+		self._commandlist=list
+		if self._is_active:
+			self.activate()
+		self.set_localcommandlist(list)
+		
+	def close(self):
+		self.deactivate()
+		GenFormView.close(self)
+		
+	# Called when the view is activated 
+	def activate(self):
+		# menu, menubar, ...
+		self._is_active=1
+		self._parent.getMDIFrame().set_commandlist(self._commandlist,self._strid)
+#		self._parent.getMDIFrame().LoadAccelTable(grinsRC.IDR_STRUCT_EDIT)
+
+	# Called when the view is deactivated 
+	def deactivate(self):
+		# menu, menubar, ...
+		self._is_active=0
+		self._parent.getMDIFrame().set_commandlist(None,self._strid)
+#		self._parent.getMDIFrame().LoadAccelTable(grinsRC.IDR_GRINSED)
+
 	# Sets the acceptable commands. 
-	def set_commandlist(self,commandlist):
+	def set_localcommandlist(self,commandlist):
 		frame=self.GetParent()
 		contextcmds=self._activecmds
 		for cl in self.keys():
