@@ -2,64 +2,28 @@
 
 import string
 
-import gl, fm
-from GL import *
-from DEVICE import *
-
-import glwindow
-
 from MMExc import *
 import MMAttrdefs
 
-from Channel import Channel # the base class
+import gl
+import fm
 
-class TextWindow() = (glwindow.glwindow)():
+from Channel import Channel
+from ChannelWindow import ChannelWindow
+
+class TextWindow() = ChannelWindow():
 	#
-	def init(self, (name, attrdict)):
-		self.name = name
-		self.attrdict = attrdict
+	def init(self, (title, attrdict)):
 		self.text = '' # Initially, display no text
-		self.wid = 0
-		return self
+		return ChannelWindow.init(self, (title, attrdict))
 	#
 	def show(self):
 		if self.wid <> 0: return
 		self.resetfont()
-		# Get the window size (given in lines and characters!)
-		if self.attrdict.has_key('winsize'):
-			width, height = self.attrdict['winsize']
-			width = width * self.avgcharwidth
-			height = height * self.fontheight
-		else:
-			width, height = 0, 0
-		# Get the preferred position (in pixels, "hv" coordinates)
-		if self.attrdict.has_key('winpos'):
-			h, v = self.attrdict['winpos']
-		else:
-			h, v = 0, 0
-		glwindow.setgeometry(h, v, width, height)
-		# Actually create the window
-		self.wid = gl.winopen(self.name)
-		# Immediately register it with the main loop
-		self.register(self.wid)
-		# Let the user resize it
-		gl.winconstraints()
-		# Use RGB mode; in colormap mode FORMS sometimes
-		# messes up our colormap ?!?
-		gl.RGBmode()
-		gl.gconfig()
+		ChannelWindow.show(self)
 		# Clear it immediately (looks better)
 		gl.RGBcolor(255, 255, 255)
 		gl.clear()
-	#
-	def hide(self):
-		if self.wid <> 0:
-			self.unregister()
-			gl.winclose(self.wid)
-			self.wid = 0
-	#
-	def destroy(self):
-		self.hide()
 	#
 	def resetfont(self):
 		# Get the default font and point size for the window
@@ -102,14 +66,16 @@ class TextWindow() = (glwindow.glwindow)():
 		fm.prstr(self.text)
 	#
 
+
+# XXX Make the text channel class a derived class from TextWindow?!
+
 class TextChannel() = Channel():
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = Channel.chan_attrs + \
-		['winsize', 'winpos', 'font', 'pointsize']
-	node_attrs = Channel.node_attrs + ['file', 'wait_for_close']
+	chan_attrs = ['winsize', 'winpos']
+	node_attrs = ['font', 'pointsize', 'file', 'wait_for_close']
 	#
 	# Initialization function.
 	#
@@ -126,6 +92,9 @@ class TextChannel() = Channel():
 	#
 	def destroy(self):
 		self.window.destroy()
+	#
+	def save_geometry(self):
+		self.window.save_geometry()
 	#
 	def getduration(self, node):
 		wait = MMAttrdefs.getattr(node, 'wait_for_close')
