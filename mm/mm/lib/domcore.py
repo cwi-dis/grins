@@ -15,8 +15,8 @@ DOCUMENT_TYPE          = DOCUMENT_TYPE_NODE          = 10
 DOCUMENT_FRAGMENT      = DOCUMENT_FRAGMENT_NODE      = 11
 NOTATION               = NOTATION_NODE               = 12                      
 
-
 class Node: pass
+
 class Document(Node):
 
 	def __init__(self, root):
