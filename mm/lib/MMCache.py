@@ -5,6 +5,7 @@ import marshal
 import os
 from stat import ST_MTIME, ST_SIZE
 import string
+import MMAttrdefs
 
 # Load the cached version of filename, if valid, else None
 
@@ -62,6 +63,10 @@ def cachename(filename):
 def load(f, context):
 	type, uid, attrdict, extra = marshal.load(f)
 	node = context.newnodeuid(type, uid)
+	for k in attrdict.keys():
+	    if not MMAttrdefs.exists(k):
+		print 'Warning: deleted unknown attribute', k
+		del attrdict[k]
 	node.attrdict = attrdict
 	if type in interiortypes:
 		for i in range(extra):
