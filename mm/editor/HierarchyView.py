@@ -1255,11 +1255,12 @@ class HierarchyView(HierarchyViewDialog):
 		newnode = node.GetContext().newnode(type)
 		em.addnode(parent, i, newnode)
 		em.addnode(newnode, 0, node)
-		self.prevfocusnode = self.focusnode
-		self.focusnode = newnode
+		em.setglobalfocus('MMNode', newnode)
 		expandnode(newnode)
 		self.aftersetfocus()
 		em.commit()
+		if not features.lightweight:
+			AttrEdit.showattreditor(self.toplevel, newnode, 'name')
 
 	def paste(self, where):
 		type, node = self.editmgr.getclip()
@@ -1338,9 +1339,7 @@ class HierarchyView(HierarchyViewDialog):
 			else:		# Insert before
 				em.addnode(parent, i, node)
 
-
-		self.prevfocusnode = self.focusnode
-		self.focusnode = node
+		em.setglobalfocus('MMNode', node)
 		self.aftersetfocus()
 		if end_transaction:
 			em.commit()
