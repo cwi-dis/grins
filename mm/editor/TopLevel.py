@@ -83,6 +83,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def showstate(self, view, showing):
 		self.setbuttonstate(view.__command, showing)
+		if showing:
+			if view is self.views[4]:
+				# if opening layout, also open player
+				self.views[0].show()
+		else:
+			if view is self.views[0]:
+				# if closing player, also close layout
+				self.views[4].hide()
 
 	def destroy(self):
 		self.editmgr.unregister(self)
