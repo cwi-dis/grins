@@ -35,7 +35,7 @@ class MMNodeContext:
 		##_stat('newnode')
 		return self.newnodeuid(type, self.newuid())
 	#
-	def newnodeuid(self, (type, uid)):
+	def newnodeuid(self, type, uid):
 		##_stat('newnodeuid')
 		node = self.nodeclass().Init(type, self, uid)
 		self.knownode(uid, node)
@@ -55,7 +55,7 @@ class MMNodeContext:
 			raise NoSuchUIDError, 'in mapuid()'
 		return self.uidmap[uid]
 	#
-	def knownode(self, (uid, node)):
+	def knownode(self, uid, node):
 		##_stat('knownode')
 		if self.uidmap.has_key(uid):
 			raise DuplicateUIDError, 'in knownode()'
@@ -100,7 +100,7 @@ class MMNodeContext:
 	# XXX The recursion may be optimized out by expanding definitions;
 	# XXX this should also fix the stack overflows...
 	#
-	def lookinstyles(self, (name, styles)):
+	def lookinstyles(self, name, styles):
 		##_stat('lookinstyles')
 		for style in styles:
 			attrdict = self.styledict[style]
@@ -139,9 +139,8 @@ class MMNodeContext:
 	def _isbadlink(self, link):
 		return not self._isgoodlink(link)
 	#
-	def _isgoodlink(self, (a1, a2, dir, type)):
-		uid1, aid1 = a1
-		uid2, aid2 = a2
+	def _isgoodlink(self, link):
+		(uid1, aid1), (uid2, aid2), dir, type = link
 		return self.uidmap.has_key(uid1) \
 		   and self.uidmap.has_key(uid2) \
 		   and self.uidmap[uid1].GetRoot() in self._roots \
@@ -154,7 +153,7 @@ class MMNode:
 	#
 	# Create a new node.
 	#
-	def Init(self, (type, context, uid)):
+	def Init(self, type, context, uid):
 		# ASSERT type in alltypes
 		self.type = type
 		self.context = context
@@ -207,7 +206,7 @@ class MMNode:
 		# ASSERT self.type = 'imm'
 		self.values.append(value)
 	#
-	def _setattr(self, (name, value)):
+	def _setattr(self, name, value):
 		# ASSERT not self.attrdict.has_key(name)
 		self.attrdict[name] = value
 	#
@@ -289,7 +288,7 @@ class MMNode:
 		except KeyError:
 			raise NoSuchAttrError, 'in GetRawAttr()'
 	#
-	def GetRawAttrDef(self, (name, default)):
+	def GetRawAttrDef(self, name, default):
 		##_stat('GetRawAttrDef' + '.' + name)
 		try:
 			return self.GetRawAttr(name)
@@ -315,7 +314,7 @@ class MMNode:
 			raise NoSuchAttrError, 'in GetDefAttr()'
 		return self.context.lookinstyles(name, styles)
 	#
-	def GetAttrDef(self, (name, default)):
+	def GetAttrDef(self, name, default):
 		##_stat('GetAttrDef' + '.' + name)
 		try:
 			return self.GetAttr(name)
@@ -349,7 +348,7 @@ class MMNode:
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 	#
-	def GetInherAttrDef(self, (name, default)):
+	def GetInherAttrDef(self, name, default):
 		##_stat('GetInherAttrDef' + '.' + name)
 		try:
 			return self.GetInherAttr(name)
@@ -460,7 +459,7 @@ class MMNode:
 			raise CheckError, 'SetValues() bad node type'
 		self.values = values
 	#
-	def SetAttr(self, (name, value)):
+	def SetAttr(self, name, value):
 		##_stat('SetAttr')
 		self.attrdict[name] = value
 		self._updsummaries([name])
@@ -497,7 +496,7 @@ class MMNode:
 		parent.children.remove(self)
 		parent._fixsummaries(self.summaries)
 	#
-	def AddToTree(self, (parent, i)):
+	def AddToTree(self, parent, i):
 		##_stat('AddToTree')
 		if self.parent: raise CheckError, 'AddToTree() non-root node'
 		if self.context is not parent.context:

@@ -226,20 +226,20 @@ class AnchorEditor(Dialog):
 	#
 	# Standard callbacks (from Dialog())
 	#
-	def cancel_callback(self, dummy):
+	def cancel_callback(self, *dummy):
 		self.close()
 
-	def restore_callback(self, (obj, arg)):
+	def restore_callback(self, obj, arg):
 		self.getvalues(TRUE)
 		self.updateform()
 
-	def apply_callback(self, (obj, arg)):
+	def apply_callback(self, obj, arg):
 		obj.set_button(1)
 		if self.changed:
 			dummy = self.setvalues()
 		obj.set_button(0)
 
-	def ok_callback(self, (obj, arg)):
+	def ok_callback(self, obj, arg):
 		obj.set_button(1)
 		if not self.changed or self.setvalues():
 			self.close()
@@ -247,13 +247,13 @@ class AnchorEditor(Dialog):
 	#
 	# Private callbacks
 	#
-	def anchor_callback(self, dummy):
+	def anchor_callback(self, *dummy):
 		self.focus = self.anchor_browser.get_browser() - 1
 		if not 0 <= self.focus < len(self.anchorlist):
 			self.focus = None
 		self.show_focus()
 
-	def add_callback(self, dummy):
+	def add_callback(self, *dummy):
 		self.changed = 1
 		maxid = 0
 		for id, atype, args in self.anchorlist:
@@ -266,7 +266,7 @@ class AnchorEditor(Dialog):
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
 
-	def delete_callback(self, dummy):
+	def delete_callback(self, *dummy):
 		if self.focus != self.anchor_browser.get_browser() - 1:
 			print 'AnchorEdit: wrong focus in delete!'
 			self.focus = None
@@ -285,14 +285,14 @@ class AnchorEditor(Dialog):
 				self.focus = None
 		self.show_focus()
 
-	def setloc_callback(self, (obj, value)):
+	def setloc_callback(self, obj, value):
 		# value can be '0', '1', '2' or '3' (a string!)
 		if self.focus == None:
 			print 'AnchorEdit: no focus in setloc!'
 			return
 		self.set_type(eval(value))
 
-	def edit_callback(self, dummy):
+	def edit_callback(self, *dummy):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in edit_callback'
 		self.set_type(None)

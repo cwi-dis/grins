@@ -144,13 +144,13 @@ class ColorSelector(glwindow.glwindow):
 		self.box.setwin()
 		self.box.render()
 
-	def set_hsv(self, (h, s, v)):
+	def set_hsv(self, h, s, v):
 		self.h_b.set_input(`fix(h, 3)`)
 		self.s_b.set_input(`fix(s, 3)`)
 		self.v_b.set_input(`fix(v, 3)`)
 		self.slider.set_slider_value(v)
 
-	def set_rgb(self, (r, g, b)):
+	def set_rgb(self, r, g, b):
 		self.r_b.set_input(`r`)
 		self.g_b.set_input(`g`)
 		self.b_b.set_input(`b`)
@@ -186,7 +186,7 @@ class Wheel(glwindow.glwindow):
 		glwindow.unregister(self)
 		gl.winclose(self.wid)
 
-	def mouse(self, (dev, val)):
+	def mouse(self, dev, val):
 		width, height = gl.getsize()
 		h, s, v = self.parent.get_hsv()
 		wh, hh = width*0.49, height*0.49

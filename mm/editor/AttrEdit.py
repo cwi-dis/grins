@@ -173,9 +173,9 @@ class Wrapper: # Base class -- common operations
 	#
 	def getdef(self, name):
 		return MMAttrdefs.getdef(name)
-	def valuerepr(self, (name, value)):
+	def valuerepr(self, name, value):
 		return MMAttrdefs.valuerepr(name, value)
-	def parsevalue(self, (name, string)):
+	def parsevalue(self, name, string):
 		return MMAttrdefs.parsevalue(name, string, self.context)
 
 class NodeWrapper(Wrapper):
@@ -206,7 +206,7 @@ class NodeWrapper(Wrapper):
 	def getdefault(self, name): # Return the default or None
 		return MMAttrdefs.getdefattr(self.node, name)
 	#
-	def setattr(self, (name, value)):
+	def setattr(self, name, value):
 		self.editmgr.setnodeattr(self.node, name, value)
 	#
 	def delattr(self, name):
@@ -283,7 +283,7 @@ class ChannelWrapper(Wrapper):
 	def getdefault(self, name): # Return the default or None
 		return MMAttrdefs.getdef(name)[1]
 	#
-	def setattr(self, (name, value)):
+	def setattr(self, name, value):
 		if name == '.cname':
 			self.editmgr.setchannelname(self.name, value)
 			self.change_channel_name(self.editmgr.root, \
@@ -334,15 +334,15 @@ class ChannelWrapper(Wrapper):
 				'Channel name (not a real attribute)', 'raw')
 		return MMAttrdefs.getdef(name)
 	#
-	def valuerepr(self, (name, value)):
+	def valuerepr(self, name, value):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.valuerepr(name, value)
 	#
-	def parsevalue(self, (name, string)):
+	def parsevalue(self, name, string):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, string, self.context)
 	#
-	def change_channel_name(self, (node, oldname, newname)):
+	def change_channel_name(self, node, oldname, newname):
 		try:
 			cname = node.GetRawAttr('channel')
 		except MMExc.NoSuchAttrError:
@@ -388,7 +388,7 @@ class StyleWrapper(Wrapper):
 	def getdefault(self, name): # Return the default or None
 		return MMAttrdefs.getdef(name)[1]
 	#
-	def setattr(self, (name, value)):
+	def setattr(self, name, value):
 		self.editmgr.setstyleattr(self.name, name, value)
 	#
 	def delattr(self, name):
@@ -583,22 +583,22 @@ class AttrEditor(Dialog):
 			b.fixvalue()
 		self.form.unfreeze_form()
 	#
-	def cancel_callback(self, dummy):
+	def cancel_callback(self, *dummy):
 		self.hide()
 	#
-	def restore_callback(self, (obj, arg)):
+	def restore_callback(self, obj, arg):
 		obj.set_button(1)
 		self.getvalues()
 		obj.set_button(0)
 	#
-	def apply_callback(self, (obj, arg)):
+	def apply_callback(self, obj, arg):
 		obj.set_button(1)
 		self.fixfocus()
 		if self.changed:
 			self.setvalues(1)
 		obj.set_button(0)
 	#
-	def ok_callback(self, (obj, arg)):
+	def ok_callback(self, obj, arg):
 		obj.set_button(1)
 		self.fixfocus()
 		if not self.changed:
@@ -618,76 +618,76 @@ class AttrEditor(Dialog):
 
 class ButtonRow:
 	#
-	def init(b, attreditor, name):
-		b.attreditor = attreditor
-		b.name = name
-		b.wrapper = attreditor.wrapper
-		b.form = attreditor.form
-		return b
+	def init(self, attreditor, name):
+		self.attreditor = attreditor
+		self.name = name
+		self.wrapper = attreditor.wrapper
+		self.form = attreditor.form
+		return self
 	#
 	def __repr__(self):
 		return '<ButtonRow instance, name=' + `self.name` + '>'
 	#
-	def makelabeltext(b, (x, y, w, h)):
-		attrdef = b.wrapper.getdef(b.name)
+	def makelabeltext(self, x, y, w, h):
+		attrdef = self.wrapper.getdef(self.name)
 		labeltext = attrdef[2]
-		if labeltext == '': labeltext = b.name
-		b.label = b.form.add_text(NORMAL_TEXT, x, y, w-1, h, labeltext)
+		if labeltext == '': labeltext = self.name
+		self.label = self.form.add_text(NORMAL_TEXT, x, y, w-1, h, labeltext)
 	#
-	def makehelpbutton(b, (x, y, w, h)):
-		b.help = b.form.add_button(HIDDEN_BUTTON, x, y, w-1, h, '')
-		b.help.set_call_back(b.helpcallback, None)
+	def makehelpbutton(self, x, y, w, h):
+		self.help = self.form.add_button(HIDDEN_BUTTON, x, y, w-1, h, '')
+		self.help.set_call_back(self.helpcallback, None)
 	#
-	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_input(NORMAL_INPUT, x, y, w-1, h, '')
-		b.value.lstyle = FIXED_STYLE
-		b.value.set_call_back(b.valuecallback, None)
+	def makevalueinput(self, x, y, w, h):
+		self.value = self.form.add_input(NORMAL_INPUT, x, y, w-1, h, '')
+		self.value.lstyle = FIXED_STYLE
+		self.value.set_call_back(self.valuecallback, None)
 	#
-	def makeresetbutton(b, (x, y, w, h)):
-		b.reset = b.form.add_button(PUSH_BUTTON, x, y, w-1, h, 'reset')
-		b.reset.set_call_back(b.resetcallback, None)
+	def makeresetbutton(self, x, y, w, h):
+		self.reset = self.form.add_button(PUSH_BUTTON, x, y, w-1, h, 'reset')
+		self.reset.set_call_back(self.resetcallback, None)
 	#
-	def getvalue(b):
-		value = b.wrapper.getvalue(b.name)
-		default = b.wrapper.getdefault(b.name)
-		b.defaultvalue = default
+	def getvalue(self):
+		value = self.wrapper.getvalue(self.name)
+		default = self.wrapper.getdefault(self.name)
+		self.defaultvalue = default
 		if value == None:
-			b.currentvalue = default
-			b.isdefault = 1
+			self.currentvalue = default
+			self.isdefault = 1
 		else:
-			b.currentvalue = value
-			b.isdefault = 0
-		b.lastvalue = b.currentvalue
-		b.changed = 0
-		b.update()
+			self.currentvalue = value
+			self.isdefault = 0
+		self.lastvalue = self.currentvalue
+		self.changed = 0
+		self.update()
 	#
-	def setvalue(b):
-		if b.changed:
-			if b.isdefault:
-				b.wrapper.delattr(b.name)
+	def setvalue(self):
+		if self.changed:
+			if self.isdefault:
+				self.wrapper.delattr(self.name)
 			else:
-				b.wrapper.setattr(b.name, b.currentvalue)
-		b.changed = 0
-		# Don't call b.update() -- commit will call it
+				self.wrapper.setattr(self.name, self.currentvalue)
+		self.changed = 0
+		# Don't call self.update() -- commit will call it
 	#
-	def fixvalue(b):
-		if not b.changed:
-			b.getvalue()
-		elif b.isdefault:
-			b.currentvalue = b.wrapper.getdefault(b.name)
-			b.update()
+	def fixvalue(self):
+		if not self.changed:
+			self.getvalue()
+		elif self.isdefault:
+			self.currentvalue = self.wrapper.getdefault(self.name)
+			self.update()
 	#
-	def helpcallback(b, dummy):
-		attrdef = b.wrapper.getdef(b.name)
-		fl.show_message('attribute: ' + b.name, \
-			'default: ' + b.valuerepr(b.defaultvalue), attrdef[4])
+	def helpcallback(self, *dummy):
+		attrdef = self.wrapper.getdef(self.name)
+		fl.show_message('attribute: ' + self.name, \
+			'default: ' + self.valuerepr(self.defaultvalue), attrdef[4])
 	#
-	def valuecallback(b, dummy):
-		newtext = b.value.get_input()[:INPUT_MAX-1]
-		if newtext == b.currenttext[:INPUT_MAX-1]:
+	def valuecallback(self, *dummy):
+		newtext = self.value.get_input()[:INPUT_MAX-1]
+		if newtext == self.currenttext[:INPUT_MAX-1]:
 			return # No change
 		try:
-			value = b.parsevalue(newtext)
+			value = self.parsevalue(newtext)
 		except (EOFError, MMExc.SyntaxError, MMExc.TypeError), msg:
 			if type(msg) <> type(''):
 				found, expected = msg
@@ -695,87 +695,87 @@ class ButtonRow:
 					expected = ') or EOF'
 				msg = 'found ' + `found` + \
 					', expected ' + expected
-			msg2 = 'for attribute ' + b.name
+			msg2 = 'for attribute ' + self.name
 			fl.show_message('Syntax error', msg2, msg)
-			b.update()
+			self.update()
 			return
-		b.currentvalue = value
-		b.isdefault = 0
-		b.changed = 1
-		b.attreditor.setchanged(1)
-		b.update()
+		self.currentvalue = value
+		self.isdefault = 0
+		self.changed = 1
+		self.attreditor.setchanged(1)
+		self.update()
 	#
-	def resetcallback(b, dummy):
-		b.isdefault = b.reset.get_button()
-		if b.isdefault:
-			b.lastvalue = b.currentvalue
-			b.currentvalue = b.defaultvalue
+	def resetcallback(self, *dummy):
+		self.isdefault = self.reset.get_button()
+		if self.isdefault:
+			self.lastvalue = self.currentvalue
+			self.currentvalue = self.defaultvalue
 		else:
-			b.currentvalue = b.lastvalue
-		b.changed = 1
-		b.attreditor.setchanged(1)
-		b.update()
+			self.currentvalue = self.lastvalue
+		self.changed = 1
+		self.attreditor.setchanged(1)
+		self.update()
 	#
-	def update_specific(b):
-		b.currenttext = b.valuerepr(b.currentvalue)
-		b.value.set_input(b.currenttext[:INPUT_MAX-1])
+	def update_specific(self):
+		self.currenttext = self.valuerepr(self.currentvalue)
+		self.value.set_input(self.currenttext[:INPUT_MAX-1])
 	#
-	def update(b):
-		b.update_specific()
-		b.reset.set_button(b.isdefault)
-		if b.isdefault and not b.changed:
-			b.reset.hide_object()
+	def update(self):
+		self.update_specific()
+		self.reset.set_button(self.isdefault)
+		if self.isdefault and not self.changed:
+			self.reset.hide_object()
 		else:
-			b.reset.freeze_object()
-			if b.changed:
-				b.reset.boxtype = UP_BOX
+			self.reset.freeze_object()
+			if self.changed:
+				self.reset.boxtype = UP_BOX
 			else:
-				b.reset.boxtype = FRAME_BOX
-			b.reset.show_object()
-			b.reset.unfreeze_object()
+				self.reset.boxtype = FRAME_BOX
+			self.reset.show_object()
+			self.reset.unfreeze_object()
 	#
-	def valuerepr(b, value):
-		return b.wrapper.valuerepr(b.name, value)
+	def valuerepr(self, value):
+		return self.wrapper.valuerepr(self.name, value)
 	#
-	def parsevalue(b, string):
-		return b.wrapper.parsevalue(b.name, string)
+	def parsevalue(self, string):
+		return self.wrapper.parsevalue(self.name, string)
 	#
 
 
 class BoolButtonRow(ButtonRow):
 	#
-	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_button(PUSH_BUTTON, x, y, w-1, h, '')
-		b.value.set_call_back(b.valuecallback, None)
+	def makevalueinput(self, x, y, w, h):
+		self.value = self.form.add_button(PUSH_BUTTON, x, y, w-1, h, '')
+		self.value.set_call_back(self.valuecallback, None)
 	#
 	def __repr__(self):
 		return '<BoolButtonRow instance, name=' + `self.name` + '>'
 	#
-	def valuecallback(b, dummy):
-		value = b.value.get_button()
-		if value <> b.currentvalue:
-			b.currentvalue = value
-			b.isdefault = 0
-			b.changed = 1
-			b.attreditor.setchanged(1)
-			b.update()
+	def valuecallback(self, *dummy):
+		value = self.value.get_button()
+		if value <> self.currentvalue:
+			self.currentvalue = value
+			self.isdefault = 0
+			self.changed = 1
+			self.attreditor.setchanged(1)
+			self.update()
 	#
-	def update_specific(b):
-		if b.currentvalue:
+	def update_specific(self):
+		if self.currentvalue:
 			label = 'on'
 		else:
 			label = 'off'
-		b.value.label = label
-		b.value.set_button(b.currentvalue)
+		self.value.label = label
+		self.value.set_button(self.currentvalue)
 	#
 
 
 class IntButtonRow(ButtonRow):
 	#
-	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_input(INT_INPUT, x, y, w-1, h, '')
-		b.value.lstyle = FIXED_STYLE
-		b.value.set_call_back(b.valuecallback, None)
+	def makevalueinput(self, x, y, w, h):
+		self.value = self.form.add_input(INT_INPUT, x, y, w-1, h, '')
+		self.value.lstyle = FIXED_STYLE
+		self.value.set_call_back(self.valuecallback, None)
 	#
 	def __repr__(self):
 		return '<IntButtonRow instance, name=' + `self.name` + '>'
@@ -795,10 +795,10 @@ class IntButtonRow(ButtonRow):
 
 class FloatButtonRow(ButtonRow):
 	#
-	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_input(FLOAT_INPUT, x, y, w-1, h, '')
-		b.value.lstyle = FIXED_STYLE
-		b.value.set_call_back(b.valuecallback, None)
+	def makevalueinput(self, x, y, w, h):
+		self.value = self.form.add_input(FLOAT_INPUT, x, y, w-1, h, '')
+		self.value.lstyle = FIXED_STYLE
+		self.value.set_call_back(self.valuecallback, None)
 	#
 	def __repr__(self):
 		return '<FloatButtonRow instance, name=' + `self.name` + '>'
@@ -839,22 +839,22 @@ class FileButtonRow(StringButtonRow):
 	def __repr__(self):
 		return '<FileButtonRow instance, name=' + `self.name` + '>'
 	#
-	def makevalueinput(b, (x, y, w, h)):
+	def makevalueinput(self, x, y, w, h):
 		bw = 2*h
-		StringButtonRow.makevalueinput(b, (x, y, w-bw, h))
-		b.selectorbutton = b.form.add_button(NORMAL_BUTTON, \
+		StringButtonRow.makevalueinput(self, x, y, w-bw, h)
+		self.selectorbutton = self.form.add_button(NORMAL_BUTTON, \
 			x + w-bw, y, bw-1, h, 'Brwsr')
-		b.selectorbutton.set_call_back(b.selectorcallback, None)
+		self.selectorbutton.set_call_back(self.selectorcallback, None)
 	#
-	def selectorcallback(b, dummy):
+	def selectorcallback(self, *dummy):
 		import selector
-		pathname = selector.selector(b.currentvalue)
+		pathname = selector.selector(self.currentvalue)
 		if pathname <> None:
-			b.currentvalue = pathname
-			b.isdefault = 0
-			b.changed = 1
-			b.attreditor.setchanged(1)
-			b.update()
+			self.currentvalue = pathname
+			self.isdefault = 0
+			self.changed = 1
+			self.attreditor.setchanged(1)
+			self.update()
 	#
 
 
@@ -864,22 +864,22 @@ class ColorButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<ColorButtonRow instance, name=' + `self.name` + '>'
 	#
-	def makevalueinput(b, (x, y, w, h)):
+	def makevalueinput(self, x, y, w, h):
 		bw = 2*h
-		StringButtonRow.makevalueinput(b, (x, y, w-bw, h))
-		b.selectorbutton = b.form.add_button(NORMAL_BUTTON, \
+		StringButtonRow.makevalueinput(self, x, y, w-bw, h)
+		self.selectorbutton = self.form.add_button(NORMAL_BUTTON, \
 			x + w-bw, y, bw-1, h, 'Edit')
-		b.selectorbutton.set_call_back(b.selectorcallback, None)
+		self.selectorbutton.set_call_back(self.selectorcallback, None)
 	#
-	def selectorcallback(b, dummy):
+	def selectorcallback(self, *dummy):
 		import ColorSelector
-		newcolors = ColorSelector.run(b.currentvalue)
-		if newcolors <> b.currentvalue:
-			b.currentvalue = newcolors
-			b.isdefault = 0
-			b.changed = 1
-			b.attreditor.setchanged(1)
-			b.update()
+		newcolors = ColorSelector.run(self.currentvalue)
+		if newcolors <> self.currentvalue:
+			self.currentvalue = newcolors
+			self.isdefault = 0
+			self.changed = 1
+			self.attreditor.setchanged(1)
+			self.update()
 	#
 
 
@@ -889,45 +889,45 @@ class PopupButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<PopupButtonRow instance, name=' + `self.name` + '>'
 	#
-	def choices(b):
+	def choices(self):
 		# derived class overrides this to defince the choices
 		return []
 	#
-	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_choice(NORMAL_CHOICE, x, y, w-3, h-2, '')
-		b.value.boxtype = SHADOW_BOX
-##		b.value.col1 = GL.WHITE
-		for choice in b.choices():
-			b.value.addto_choice(choice)
-		b.value.set_call_back(b.valuecallback, None)
+	def makevalueinput(self, x, y, w, h):
+		self.value = self.form.add_choice(NORMAL_CHOICE, x, y, w-3, h-2, '')
+		self.value.boxtype = SHADOW_BOX
+##		self.value.col1 = GL.WHITE
+		for choice in self.choices():
+			self.value.addto_choice(choice)
+		self.value.set_call_back(self.valuecallback, None)
 	#
-	def valuecallback(b, dummy):
-		i = b.value.get_choice()
-		choices = b.choices()
+	def valuecallback(self, *dummy):
+		i = self.value.get_choice()
+		choices = self.choices()
 		if 1 <= i <= len(choices):
 			value = choices[i-1]
 		else:
 			value = ''
-		if value <> b.currentvalue:
-			b.currentvalue = value
-			b.isdefault = 0
-			b.changed = 1
-			b.attreditor.setchanged(1)
-			b.update()
+		if value <> self.currentvalue:
+			self.currentvalue = value
+			self.isdefault = 0
+			self.changed = 1
+			self.attreditor.setchanged(1)
+			self.update()
 	#
-	def update_specific(b):
-		choices = b.choices()
-		if b.currentvalue in choices:
-			i = choices.index(b.currentvalue) + 1
+	def update_specific(self):
+		choices = self.choices()
+		if self.currentvalue in choices:
+			i = choices.index(self.currentvalue) + 1
 		else:
 			i = 0
-		b.value.set_choice(i)
+		self.value.set_choice(i)
 	#
-	def fixvalue(b):
-		b.value.clear_choice()
-		for choice in b.choices():
-			b.value.addto_choice(choice)
-		ButtonRow.fixvalue(b)
+	def fixvalue(self):
+		self.value.clear_choice()
+		for choice in self.choices():
+			self.value.addto_choice(choice)
+		ButtonRow.fixvalue(self)
 	#
 
 
@@ -938,8 +938,8 @@ class ChannelnameButtonRow(PopupButtonRow):
 		return '<ChannelnameButtonRow instance, name=' \
 			+ `self.name` + '>'
 	#
-	def choices(b):
-		return ['undefined'] + b.wrapper.context.channelnames
+	def choices(self):
+		return ['undefined'] + self.wrapper.context.channelnames
 	#
 
 
@@ -950,7 +950,7 @@ class ChanneltypeButtonRow(PopupButtonRow):
 		return '<ChanneltypeButtonRow instance, name=' \
 			+ `self.name` + '>'
 	#
-	def choices(b):
+	def choices(self):
 		from ChannelMap import channeltypes
 		return channeltypes
 	#
@@ -962,25 +962,25 @@ class FontButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<FontButtonRow instance, name=' + `self.name` + '>'
 	#
-	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_button(INOUT_BUTTON, x, y, w-3, h-2, '')
-		b.value.boxtype = SHADOW_BOX
-##		b.value.col1 = GL.WHITE
-##		b.value.col2 = GL.WHITE
-		b.value.set_call_back(b.valuecallback, None)
+	def makevalueinput(self, x, y, w, h):
+		self.value = self.form.add_button(INOUT_BUTTON, x, y, w-3, h-2, '')
+		self.value.boxtype = SHADOW_BOX
+##		self.value.col1 = GL.WHITE
+##		self.value.col2 = GL.WHITE
+		self.value.set_call_back(self.valuecallback, None)
 	#
-	def valuecallback(b, dummy):
+	def valuecallback(self, *dummy):
 		value = dofontmenu()
-		b.value.set_button(0)
-		if value <> None and value <> b.currentvalue:
-			b.currentvalue = value
-			b.isdefault = 0
-			b.changed = 1
-			b.attreditor.setchanged(1)
-			b.update()
+		self.value.set_button(0)
+		if value <> None and value <> self.currentvalue:
+			self.currentvalue = value
+			self.isdefault = 0
+			self.changed = 1
+			self.attreditor.setchanged(1)
+			self.update()
 	#
-	def update_specific(b):
-		b.value.label = b.currentvalue
+	def update_specific(self):
+		self.value.label = self.currentvalue
 	#
 
 
