@@ -33,7 +33,10 @@ class EditMgr:
 	#
 	def register(self, x):
 		self.registry.append(x)
-	#
+
+	def registerfirst(self, x):
+		self.registry.insert(0, x)
+
 	def unregister(self, x):
 		self.registry.remove(x)
 	#
@@ -333,7 +336,7 @@ class EditMgr:
 			      'name already in use in setusergroupname'
 		self.addstep('setusergroupname', name, newname)
 		self.context.setusergroupname(name, newname)
-		
+
 ##	#
 ##	# Style operations
 ##	#
