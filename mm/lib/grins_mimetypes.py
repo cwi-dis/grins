@@ -19,6 +19,7 @@ mimetypes = {
 
 	'.mp3': 'audio/mpeg',
 	'.bmp': 'image/bmp',
+	'.asf': 'video/x-ms-asf',
 	}
 
 descriptions = {
