@@ -256,7 +256,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		stroke = self.getStyleAttr('stroke', style)
 
 		# whats the default?
-		if fill is None and strok is None:
+		if fill is None and stroke is None:
 			# text will be invisible
 			# make it visible as black
 			fill = 0, 0, 0
