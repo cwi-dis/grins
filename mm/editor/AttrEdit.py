@@ -600,6 +600,7 @@ class NodeWrapper(Wrapper):
 					namelist.append('sensitivity')
 					namelist.append('regPoint')
 					namelist.append('regAlign')
+					namelist.append('z')
 					
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
