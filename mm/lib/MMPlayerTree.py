@@ -33,8 +33,8 @@ def ReadFile(filename):
 	except IOError:
 		raise error, 'cannot open ' + cache
 	if os.name == 'mac':
-		import MacOS
-		MacOS.splash(514)	# Show "Loading document" splash screen
+		import splash
+		splash.splash('loaddoc')	# Show "Loading document" splash screen
 	header = marshal.load(f)
 	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]) and \
 	   header != (OldVersion, base, stf[ST_MTIME], stf[ST_SIZE]) and \
@@ -54,8 +54,8 @@ def ReadFile(filename):
 	root.sroffs = marshal.load(f)
 	root.fildes = f
 	if os.name == 'mac':
-		import MacOS
-		MacOS.splash(515)	# "Initializing document...", to be removed in event mainloop
+		import splash
+		splash.splash('initdoc')	# "Initializing document...", to be removed in event mainloop
 	context.addhyperlinks(root.attrdict['hyperlinks'])
 	context.addchannels(root.attrdict['channellist'])
 	del root.attrdict['hyperlinks']
