@@ -868,17 +868,17 @@ class HierarchyView(HierarchyViewDialog):
 
 # Recursive procedure to calculate geometry of boxes.
 def sizeboxes(node):
+	if structure_name_size:
+		name = MMAttrdefs.getattr(node, 'name')
+		namewidth = (name and f_title.strsize(name)[0]) or 0
+		minwidth = min(MAXSIZE, max(MINSIZE, namewidth)) + HOREXTRASIZE
+	else:
+		minwidth = MINSIZE + HOREXTRASIZE
 	children = node.GetChildren()
 	if not hasattr(node, 'expanded') or not children:
 ##		if node.__class__ is SlideMMNode:
 ##			return 2*MINSIZE, MINSIZE + LABSIZE
-		if structure_name_size:
-			name = MMAttrdefs.getattr(node, 'name')
-			namewidth = (name and f_title.strsize(name)[0]) or 0
-			minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
-		else:
-			minwidth = MINSIZE
-		node.boxsize = minwidth + HOREXTRASIZE, MINSIZE + LABSIZE
+		node.boxsize = minwidth, MINSIZE + LABSIZE
 		return node.boxsize
 	nchildren = len(children)
 	width = height = 0
@@ -899,7 +899,7 @@ def sizeboxes(node):
 		width = width - GAPSIZE
 	else:
 		height = height - GAPSIZE
-	width = width + 2 * EDGSIZE
+	width = max(width + 2 * EDGSIZE, minwidth)
 	height = height + EDGSIZE + LABSIZE
 	node.boxsize = width, height
 	return node.boxsize
