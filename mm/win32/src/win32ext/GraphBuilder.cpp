@@ -70,8 +70,14 @@ static PyObject* py_render_file(PyObject *self, PyObject *args)
 	if(!pGraphBuilder)return NULL;
 	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
+	// reform canonURL
+	CString str(pszFileName);
+	CString strp(pszFileName);
+	if(str.Left(8)=="file:///" && str[9]=='|')
+		strp=CString(str[8]) + ":" + str.Mid(10);
+
     WCHAR wPath[MAX_PATH];
-    MultiByteToWideChar(CP_ACP,0,pszFileName,-1, wPath, MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,strp,-1, wPath, MAX_PATH);
  
 	GUI_BGN_SAVE;
 	HRESULT hr=pGraph->RenderFile(wPath, NULL);
@@ -347,6 +353,7 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
     if(SUCCEEDED(hr) )
 		{
         pimex->SetNotifyWindow((OAHWND)pWnd->GetSafeHwnd(),WM_GRAPHNOTIFY,0);
+		//pimex->CancelDefaultHandling(EC_COMPLETE);
 		pimex->Release();
 		}
 	RETURN_NONE;
