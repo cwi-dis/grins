@@ -101,7 +101,7 @@ class LayoutChannel(ChannelWindow):
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(('', 'select in timeline view',
 ##					     (self.focuscall, ())))
- 		if self._attrdict.has_key('fgcolor'):
+		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
 		self._curvals['fgcolor'] = self._attrdict.get('fgcolor'), None
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
