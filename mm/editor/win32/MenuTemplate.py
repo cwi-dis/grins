@@ -299,7 +299,7 @@ MENUBAR=(
 
 	('&Help', (
 		(FLAG_ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
-		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
+##		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, SEP,),
