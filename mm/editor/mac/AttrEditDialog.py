@@ -96,7 +96,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			browser_values.append(label)
 		self._attrbrowser = self._window.ListWidget(ITEM_SELECT, browser_values)
 		self._selectattr(0)
-		
+
 		self.show()
 ##		w = windowinterface.Window(title, resizable = 1,
 ##				deleteCallback = (self.cancel_callback, ()))
@@ -142,7 +142,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			Qd.SetPort(self._dialog)
 			where = Qd.GlobalToLocal(where)
 			item, is_double = self._attrbrowser.click(where, modifiers)
-			self._selectattr(item)		
+			self._selectattr(item)
 		elif item == ITEM_RESET:
 			if self._cur_attrfield:
 				self._cur_attrfield.reset_callback()
@@ -182,10 +182,13 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		if item != None:
 			self._cur_attrfield = self._attrfields[item] # XXXX?
 			self._cur_attrfield._show()
-			
+
 	def _is_current(self, attrfield):
 		return (attrfield is self._cur_attrfield)
-		
+
+	def showmessage(self, *args, **kw):
+		apply(windowinterface.showmessage, args, kw)
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
@@ -266,7 +269,7 @@ class AttrEditorDialogField:
 			self.__value = self.__parent._option.getselect()
 		else:
 			self.__value =  self.__parent._getlabel(ITEM_STRING)
-		
+
 	def _show(self):
 		t = self.gettype()
 		value = self.__value
@@ -298,7 +301,7 @@ class AttrEditorDialogField:
 		self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
 		self.__parent._setlabel(ITEM_INFO_HELP, help)
 		self.__parent._showitemlist(toshow)
-		
+
 	def close(self):
 		"""Close the instance and free all resources."""
 		del self.__parent
@@ -307,7 +310,7 @@ class AttrEditorDialogField:
 
 	def _option_click(self):
 		pass
-		
+
 	def _select_color(self):
 		import ColorPicker
 		value = self.__parent._getlabel(ITEM_STRING)
@@ -335,7 +338,7 @@ class AttrEditorDialogField:
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
 			self.__parent._setlabel(ITEM_STRING, value)
 			self.__parent._selectinputfield(ITEM_STRING)
-			
+
 ##	def __option_callback(self):
 ##		"""Callback called when a new option is to be selected."""
 ##		_MySelectionDialog(self.getlabel(), self.__label,

@@ -197,7 +197,7 @@ class NodeWrapper(Wrapper):
 				'title', 'abstract', 'author', 'copyright',
 			    'comment',
 			    'layout', ('u_group',),
-			    ('mimetype',), 			# XXXX Or should this be with file?
+			    ('mimetype',),			# XXXX Or should this be with file?
 			    'system_bitrate', 'system_captions',
 			    'system_language', 'system_overdub_or_caption',
 			    'system_required', 'system_screen_size',
@@ -316,7 +316,7 @@ class ChannelWrapper(Wrapper):
 
 	def setattr(self, name, value):
 		if name == '.cname':
-		        if self.channel.name != value and \
+			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
 			    windowinterface.showmessage('Duplicate channel name (not changed)')
 			    return
@@ -378,9 +378,9 @@ class ChannelWrapper(Wrapper):
 			if 'base_winoff' in rv: rv.remove('base_winoff')
 			if 'units' in rv: rv.remove('units')
 			if 'transparent' in rv: rv.remove('transparent')
-## 		if not cmifmode():
-## 			if 'file' in rv: rv.remove('file')
-## 			if 'scale' in rv: rv.remove('scale')
+##		if not cmifmode():
+##			if 'file' in rv: rv.remove('file')
+##			if 'scale' in rv: rv.remove('scale')
 		if ctype == 'layout' and not cmifmode():
 			rv.remove('type')
 		return rv
@@ -479,7 +479,7 @@ class DocumentWrapper(Wrapper):
 			return MMAttrdefs.parsevalue(name, str, self.context)
 		else:
 			return str
-	
+
 
 # Attribute editor class.
 
@@ -592,9 +592,19 @@ class AttrEditor(AttrEditorDialog):
 				try:
 					value = b.parsevalue(str)
 				except:
-					windowinterface.showmessage(
-						'%s: parsing value failed' % \
-							name)
+					typedef = self.wrapper.getdef(name)[0]
+					exp = typedef[0]
+					if exp == 'tuple':
+						exp = 'tuple of'
+						for e in typedef[1]:
+							exp = exp + ' ' + e[0]
+					if exp[0] in 'aeiou':
+						n = 'n'
+					else:
+						n = ''
+					if name == 'duration' or name == 'loop':
+						exp = exp + " or `indefinite'"
+					self.showmessage('%s: value should be a%s %s' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
 				dict[name] = value
 		if not dict:
@@ -699,8 +709,28 @@ class AttrEditorField(AttrEditorDialogField):
 class IntAttrEditorField(AttrEditorField):
 	type = 'int'
 
+	def valuerepr(self, value):
+		if value == 0 and self.getname() == 'loop':
+			return 'indefinite'
+		return AttrEditorField.valuerepr(self, value)
+
+	def parsevalue(self, str):
+		if str == 'indefinite' and self.getname() == 'loop':
+			return 0
+		return AttrEditorField.parsevalue(self, str)
+
 class FloatAttrEditorField(AttrEditorField):
 	type = 'float'
+
+	def valuerepr(self, value):
+		if value == -1 and self.getname() == 'duration':
+			return 'indefinite'
+		return AttrEditorField.valuerepr(self, value)
+
+	def parsevalue(self, str):
+		if str == 'indefinite' and self.getname() == 'duration':
+			return -1.0
+		return AttrEditorField.parsevalue(self, str)
 
 class StringAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
@@ -737,14 +767,14 @@ class FileAttrEditorField(StringAttrEditorField):
 			utype, host, path, params, query, fragment = urlparse.urlparse(url)
 			if (utype and utype != 'file') or \
 			   (host and host != 'localhost'):
-				windowinterface.showmessage('Cannot browse URLs')
-				return
-			file = MMurl.url2pathname(path)
-			file = os.path.join(cwd, file)
-			if os.path.isdir(file):
-				dir, file = file, ''
+				dir, file = cwd, ''
 			else:
-				dir, file = os.path.split(file)
+				file = MMurl.url2pathname(path)
+				file = os.path.join(cwd, file)
+				if os.path.isdir(file):
+					dir, file = file, ''
+				else:
+					dir, file = os.path.split(file)
 		windowinterface.FileDialog('Choose File for ' + self.label,
 					   dir, '*', file, self.__ok_cb, None,
 					   existing=1)
@@ -905,7 +935,7 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		list = self.wrapper.context.layouts.keys()
 		list.sort()
 		return ['Default', 'undefined'] + list
-		
+
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
 	def getoptions(self):
