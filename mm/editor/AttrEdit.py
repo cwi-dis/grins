@@ -181,17 +181,28 @@ class NodeWrapper(Wrapper):
 			return # Not possible at this time
 		editmgr.delnode(self.node)
 		editmgr.commit()
+
 	#
 	# Return a list of attribute names that make sense for this node,
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'title', 'abstract', 'author', 'copyright',
-			    'comment', 'layout', 'channel', 'u_group', 'loop',
+		# Tuples are optional names and will be removed if they
+		# aren't set
+		namelist = [
+				'name', 'channel', ('file',),	# From nodeinfo window
+				('terminator',),
+			    ('duration',), 'loop',			# Time stuff
+			    ('clipbegin',), ('clipend',),	# More time stuff
+				'title', 'abstract', 'author', 'copyright',
+			    'comment',
+			    'layout', ('u_group',),
+			    ('mimetype',), 			# XXXX Or should this be with file?
 			    'system_bitrate', 'system_captions',
 			    'system_language', 'system_overdub_or_caption',
 			    'system_required', 'system_screen_size',
-			    'system_screen_depth']
+			    'system_screen_depth',
+			    ]
 		ntype = self.node.GetType()
 		if ntype == 'bag':
 			namelist.append('bag_index')
@@ -221,7 +232,21 @@ class NodeWrapper(Wrapper):
 				     MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
-		return namelist + extras
+		namelist = namelist + extras
+		retlist = []
+		for name in namelist:
+			if name in retlist:
+				continue
+			if type(name) == type(()):
+				if name[0] in namelist:
+					# It is in the list, insert it here
+					retlist.append(name[0])
+				else:
+					# Not in the list for this node, skip
+					pass
+			else:
+				retlist.append(name)
+		return retlist
 
 class SlideWrapper(NodeWrapper):
 	def attrnames(self):
