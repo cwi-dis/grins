@@ -226,7 +226,7 @@ class Channel:
 			# Remove us from all subchannel lists.
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
-		pchan = self._get_parent_channel(creating=1)
+		self.pchan = pchan = self._get_parent_channel(creating=1)
 		if pchan:
 			# Finally, check that the base window is being shown.
 			pchan._subchannels.append(self)
@@ -244,7 +244,7 @@ class Channel:
 				self._player.after_chan_show(self)
 			return
 		self.after_show()
-		
+
 	def _get_parent_channel(self, creating=0):
 		"""Return the parent (basewindow) channel, if it exists"""
 		# First, check that there is a base_window attribute
@@ -310,6 +310,7 @@ class Channel:
 			chan.hide()
 			chan._want_shown = want_shown
 		self.do_hide()
+		del self.pchan
 		self._curvals = {}
 		self.hideimg()
 		for chan in channels:
@@ -333,10 +334,10 @@ class Channel:
 	def modeless_resize_window(self):
 		# Set a channel in modeless resize mode
 		pass
-		
+
 	def cancel_modeless_resize(self):
 		pass
-		
+
 	def sensitive(self, callback = None):
 		pass
 
@@ -1115,8 +1116,8 @@ class ChannelWindow(Channel):
 		if len(buttons) == 0:
 			if self._attrdict.get('transparent', 0):
 				raise windowinterface.Continue
-## 			if hasattr(self._player, 'editmgr'):
-## 				self.highlight()
+##			if hasattr(self._player, 'editmgr'):
+##				self.highlight()
 		else:
 			button = buttons[0]
 			button.highlight()
@@ -1124,8 +1125,8 @@ class ChannelWindow(Channel):
 
 	def mouserelease(self, arg, window, event, value):
 		global _button
-## 		if hasattr(self._player, 'editmgr'):
-## 			self.unhighlight()
+##		if hasattr(self._player, 'editmgr'):
+##			self.unhighlight()
 		buttons = value[2]
 		if len(buttons) == 0:
 			if self._attrdict.get('transparent', 0):
@@ -1246,7 +1247,7 @@ class ChannelWindow(Channel):
 		self.highlight()
 
 	def modeless_resize_window(self):
-		pchan = self._get_parent_channel()
+		pchan = self.pchan
 		if not pchan:
 			return
 ##		self._player.toplevel.setwaiting()
@@ -1259,11 +1260,11 @@ class ChannelWindow(Channel):
 			self._attrdict['base_winoff'],
 			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN),
 			modeless=1)
-			
+
 	def cancel_modeless_resize(self):
 		if not self._in_modeless_resize:
 			return
-		pchan = self._get_parent_channel()
+		pchan = self.pchan
 		if not pchan or not pchan.window:
 			return
 		pchan.window.cancel_create_box()
