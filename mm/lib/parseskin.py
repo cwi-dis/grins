@@ -57,6 +57,7 @@ def parsegskin(file):
 		else:
 			if cmd == 'key':
 				quote = None
+				backslash = 0
 				key = None
 				rest = list(rest) # easier to manipiulate list
 				while rest:
@@ -65,6 +66,25 @@ def parsegskin(file):
 					if quote is not None:
 						if c == quote:
 							quote = None
+						elif backslash:
+							if key is None:
+								if c == '\\':
+									key = '\\'
+								elif c == 'r':
+									key = '\r'
+								elif c == 't':
+									key = '\t'
+								elif c == 'n':
+									key = '\n'
+								elif c == 'b':
+									key = '\b'
+								else:
+									key = c
+							else:
+								raise error, 'syntax error in skin: only single character allowed for key'
+							backslash = 0
+						elif c == '\\':
+							backslash = 1
 						elif key is None:
 							key = c
 						else:
@@ -74,6 +94,25 @@ def parsegskin(file):
 					elif c in string.whitespace:
 						if key is not None:
 							break
+					elif backslash:
+						if key is None:
+							if c == '\\':
+								key = '\\'
+							elif c == 'r':
+								key = '\r'
+							elif c == 't':
+								key = '\t'
+							elif c == 'n':
+								key = '\n'
+							elif c == 'b':
+								key = '\b'
+							else:
+								key = c
+						else:
+							raise error, 'syntax error in skin: only single character allowed for key'
+						backslash = 0
+					elif c == '\\':
+						backslash = 1
 					elif key is None:
 						key = c
 					else:
