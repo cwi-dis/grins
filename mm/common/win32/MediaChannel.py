@@ -150,7 +150,7 @@ class MediaChannel:
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - start_time
 			if late > mediadur:
-				self.__channel.playdone(0, curtime, start_time + mediadur)
+				self.__channel.playdone(0, start_time + mediadur)
 				return 1
 			clip_begin = clip_begin + late
 		self.__playBuilder.SetPosition(clip_begin)
