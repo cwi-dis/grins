@@ -13,7 +13,6 @@ debug = os.environ.has_key('CHANNELDEBUG')
 
 class SoundChannel(ChannelAsync):
 	# shared between all instances
-	__maxbytes = 0			# queue size in bytes
 	__playing = 0			# # of active channels
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -93,7 +92,7 @@ class Player:
 		# __merger, __converter, __tid, and __data are all None/'',
 		# or none of them are.
 		self.__pausing = 0	# whether we're pausing
-		self.__port = audiodev.writer(qsize = 400000)
+		self.__port = audiodev.writer(qsize = 100000)
 		self.__merger = None	# merged readers
 		self.__converter = None	# merged readers, converted to port
 		self.__tid = None	# timer id
