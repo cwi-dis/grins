@@ -147,7 +147,6 @@ sdk_enum_font_families_ex(PyObject *self, PyObject *args)
 	HDC hdc = GetDC(NULL);
 
 	PyObject *d = PyDict_New();
-
 	EnumFontFamiliesEx(
 		hdc,              // handle to DC
 		&lf,              // font information
@@ -155,10 +154,37 @@ sdk_enum_font_families_ex(PyObject *self, PyObject *args)
 		LPARAM(d),        // additional data
 		DWORD(0)          // not used; must be 0
 		);
+	ReleaseDC(NULL,hdc);
 	
 	return d;
 	}
 
+// @pymethod <o PyWin32Sdk>|GetTextFace|Retrieves the typeface name of the font that is selected into the specified device contextPyObject *
+PyObject *
+sdk_get_text_face(PyObject *self, PyObject *args)
+	{
+	HDC hdc = 0;
+	if (!PyArg_ParseTuple(args,"|i",&hdc)) return NULL;
+	
+	// screen dc
+	bool releaseDC=false;
+	if(!hdc)
+		{
+		hdc = GetDC(NULL);
+		releaseDC=true;
+		}
+	char faceName[LF_FACESIZE];
+	GetTextFace(
+		hdc,            // handle to DC
+		LF_FACESIZE,    // length of typeface name buffer
+		faceName		// typeface name buffer
+		);
+	if(releaseDC)
+		ReleaseDC(NULL,hdc);
+	return Py_BuildValue("s",faceName);
+	}
+
+  
 // @pymethod |PyWin32Sdk|CreateDC|Creates a DC
 // Return Values: A handle to the created DC 
 PyObject *
@@ -1057,6 +1083,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreateBrush",sdk_create_brush,	1}, // @pymeth CreateBrush|Creates a brush and returns its handle.
 	{"CreateFontIndirect",sdk_create_font_indirect,	1}, // @pymeth|CreateFontIndirect|Creates a font from a dict of font properties and returns its handle.
 	{"EnumFontFamiliesEx",sdk_enum_font_families_ex,	1}, // @pymeth|EnumFontFamiliesEx|Enumerates all fonts in the system that match the font characteristics specified by the LOGFONT structure.
+	{"GetTextFace",sdk_get_text_face,	1}, // @pymeth|GetTextFace|Retrieves the typeface name of the font that is selected into the specified device contextPyObject *
 	{"CreateDC",sdk_create_dc,	1}, // @pymeth|CreateDC|Creates a DC.
 	{"DeleteObject",sdk_delete_object,	1}, // @pymeth DeleteObject|Deletes a GDI object from its handle
 	{"GetDesktopWindow",sdk_get_desktop_window,	1}, // @pymeth GetDesktopWindow|Returns the DesktopWindow
