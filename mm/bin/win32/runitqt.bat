@@ -1,0 +1,1 @@
+Pythonwin /run iGRiNSQT.py
