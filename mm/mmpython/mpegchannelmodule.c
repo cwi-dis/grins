@@ -817,7 +817,7 @@ mpeg_finished(self)
 	*/
 	need_clear = (PRIV->m_arm.m_decHdl == NULL);
 	/* XXXX 405 CL bug workaround: see MpegChannel for details */
-	need_clear = 0;
+	/*need_clear = 0;*/
 	if (need_clear) {
 	    switch (windowsystem) {
 #ifdef USE_GL
@@ -834,6 +834,13 @@ mpeg_finished(self)
 		}
 		break;
 #endif /* USE_GL */
+#ifdef USE_XM
+	    case WIN_X:
+		XFillRectangle(XtDisplay(PRIV->m_widget),
+			       XtWindow(PRIV->m_widget), PRIV->m_gc, 0, 0,
+			       PRIV->m_width, PRIV->m_height);
+		break;
+#endif /* USE_XM */
 	    }
 	}
 	mpeg_free_old(&PRIV->m_play, 0);
