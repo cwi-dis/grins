@@ -335,10 +335,6 @@ SOURCE=.\mpglib\mpeg_video_recon.cpp
 
 SOURCE=.\mpglib\mpeg_video_spatscal.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\mpglib\stdio_mpeg_input_stream.h
-# End Source File
 # End Group
 # Begin Group "common"
 
@@ -386,90 +382,6 @@ SOURCE=..\common\video.h
 # Begin Source File
 
 SOURCE=..\common\xg.h
-# End Source File
-# End Group
-# Begin Group "testaudio"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\bit.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\bit.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\config.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\fixed.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\fixed.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\frame.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\frame.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\global.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\huffman.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\huffman.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\layer3.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\layer3.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\mp3lib.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\mp3lib.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\resample.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\resample.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\stream.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\stream.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\synth.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\CE\mp3lib\synth.h
 # End Source File
 # End Group
 # End Target
