@@ -72,11 +72,16 @@ class ChildFrame(window.MDIChildWnd):
 	# Create the OS window and hook messages
 	def Create(self, title, rect = None, parent = None, maximize=0):
 		self._title=title
+		if rect:
+			l,t,r,b=rect
+			r=r+4;b=b+4
+			rect=(l,t,r,b)
 		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
 		self.CreateWindow(None, title, style, rect, parent)
 		if maximize and parent:parent.maximize(self)
 		#self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
 		self.ShowWindow(win32con.SW_SHOW)
+
 
 	# Change window style before creation
 	def PreCreateWindow(self, csd):
@@ -161,7 +166,6 @@ class ViewServer:
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = appcon.UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
 		if strid=='pview_' and self._player:
-			print 'channel module call: new player view on resize'
 			return self._player
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
