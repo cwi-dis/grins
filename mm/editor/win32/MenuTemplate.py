@@ -605,3 +605,16 @@ MAIN_FRAME_POPUP = (
 		(FLAG_ALL, ENTRY, '&Close', None, CLOSE),
 		(FLAG_ALL, ENTRY, 'E&xit', None, EXIT),
 )
+
+POPUP_SOURCEVIEW = (
+		(FLAG_ALL, ENTRY, 'Cu&t\tCtrl+X', 'X', CUT),
+		(FLAG_ALL, ENTRY, '&Copy\tCtrl+C', 'C', COPY),
+		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE_AFTER),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Find...', None, FIND),
+		(FLAG_ALL, ENTRY, 'Find Next', None, FINDNEXT),
+		(FLAG_ALL, ENTRY, 'Replace...', None, REPLACE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&Select node from source', 'S', SELECTNODE_FROM_SOURCE),
+		
+)
