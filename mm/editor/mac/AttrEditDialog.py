@@ -142,7 +142,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			num = self._attr_to_pageindex[attr]
 		except KeyError:
 			pass
-		self._selectpage(num)
+		else:
+			self._selectpage(num)
 		
 	def _enable_ok(self):
 		if self._ok_enabled:
@@ -1476,7 +1477,7 @@ class ChannelAreaTabPage(AreaTabPage):
 		return rv
 		
 	def do_itemhit(self, item, event):
-		if item-self.item0 == ITEM_UNITS:
+		if item-self.item0 == self.ITEM_UNITS:
 			self.call_optional_cb(self._attr_to_field['units'])
 			return 1
 		return AreaTabPage.do_itemhit(self, item, event)
