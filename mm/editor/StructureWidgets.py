@@ -25,13 +25,15 @@ def create_MMNode_widget(node, mother):
 	if mother.usetimestripview:
 		# We handle toplevel, second-level and third-level nodes differently
 		# in snap
-		if node.parent == None and ntype == 'seq':
+		pnode = node.GetParent()
+		if pnode is None and ntype == 'seq':
 			# Don't show toplevel root (actually the <body> in SMIL)
  			return UnseenVerticalWidget(node, mother)
-		if node.parent and node.parent.parent == None and ntype == 'par':
+		gpnode = pnode.GetParent() # grand parent node
+		if pnode is not None and gpnode is None and ntype == 'par':
 			# Don't show second-level par either
 			return UnseenVerticalWidget(node, mother)
-		if node.parent and node.parent.parent and node.parent.parent.parent == None and ntype == 'seq':
+		if pnode is not None and gpnode is not None and gpnode.GetParent() is None and ntype == 'seq':
 			# And show secondlevel seq as a timestrip
 			return TimeStripSeqWidget(node, mother)
 	if ntype == 'seq':
@@ -90,23 +92,35 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.iconbox = IconBox(self, self.mother)
 		self.has_event_icons = 0
 		self.cause_event_icon = None
-# disabled for now, but it does actually work.
-##		node.set_armedmode = self.set_armedmode
-##		self.set_armedmode('idle', redraw = 0)
+		if node.GetType() == 'comment':
+			self.playicon = None
+		else:
+			self.playicon = Icon(self, self.mother)
+			self.playicon.set_properties(selectable=0, callbackable=0)
+			node.set_armedmode = self.set_armedmode
+			self.set_armedmode(node.armedmode, redraw = 0)
 
 	def __repr__(self):
 		return '<%s instance, name="%s", id=%X>' % (self.__class__.__name__, self.name, id(self))
 
 	def set_armedmode(self, mode, redraw = 1):
-		if mode != self.node.armedmode:
-			iconbox = self.iconbox
-			if iconbox.get_icon(self.node.armedmode or 'idle'):
-				iconbox.del_icon(self.node.armedmode or 'idle')
-			self.node.armedmode = mode
-			iconbox.add_icon(mode or 'idle')
-			if redraw:
-				self.mother.need_redraw = 1
-				self.mother.draw()
+		self.playicon.set_icon(mode or 'idle')
+		if redraw:
+			if self.mother.extra_displist is not None:
+				d = self.mother.extra_displist.clone()
+			else:
+				d = self.mother.base_display_list.clone()
+			self.playicon.draw(d)
+			d.render()
+			if self.mother.extra_displist is not None:
+				self.mother.extra_displist.close()
+			self.mother.extra_displist = d
+
+	def remove_set_armedmode(self):
+		pass
+
+	def add_set_armedmode(self):
+		pass
 
 	def get_node(self):
 		return self.node
@@ -148,13 +162,16 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def destroy(self):
 		# Prevent cyclic dependancies.
 		Widgets.Widget.destroy(self)
-		if self.iconbox:
+		if self.playicon is not None:
+			self.playicon.destroy()
+			self.playicon = None
+			del self.node.set_armedmode
+		if self.iconbox is not None:
 			self.iconbox.destroy()
 			self.iconbox = None
-		if self.node:
+		if self.node is not None:
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
-			del self.set_armedmode
 			self.node = None
 		self.set_infoicon = None
 
@@ -199,8 +216,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		
 	def get_minpos(self):
 		# Returns the leftmost position where this node can be placed
-		pnode = self.node.parent
-		if not pnode: return 0
+		pnode = self.node.GetParent()
+		if pnode is None:
+			return 0
 		pwidget = pnode.views['struct_view']
 		return pwidget.get_minpos() + pwidget.get_child_relminpos(self)
 
@@ -233,7 +251,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
-		if not self.cause_event_icon:
+		if self.cause_event_icon is None:
 			self.cause_event_icon = self.iconbox.add_icon('causeevent').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
 
@@ -419,7 +437,7 @@ class StructureObjWidget(MMNodeWidget):
 		self.parent_widget = None # This is the parent node. Used for recalcing optimisations.
 		for i in self.node.children:
 			bob = create_MMNode_widget(i, mother)
-			if bob == None:
+			if bob is None:
 				pass
 			else:
 				bob.parent_widget = self
@@ -441,11 +459,14 @@ class StructureObjWidget(MMNodeWidget):
 			for i in self.children:
 				i.destroy()
 		self.children = None
-		if self.collapsebutton: self.collapsebutton.destroy()
-		self.collapsebutton = None
-		if self.parent_widget: self.parent_widget = None
-		if self.timeline: self.timeline.destroy()
-		self.timeline = None
+		if self.collapsebutton is not None:
+			self.collapsebutton.destroy()
+			self.collapsebutton = None
+		if self.parent_widget is not None:
+			self.parent_widget = None
+		if self.timeline is not None:
+			self.timeline.destroy()
+			self.timeline = None
 		MMNodeWidget.destroy(self)
 
 	def select(self):
@@ -468,19 +489,36 @@ class StructureObjWidget(MMNodeWidget):
 
 	def collapse(self):
 		self.node.collapsed = 1
-		if self.collapsebutton:
+		if self.collapsebutton is not None:
 			self.collapsebutton.icon = 'closed'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 		self.set_need_resize()
+		for c in self.children:
+			c.remove_set_armedmode()
+
+	def remove_set_armedmode(self):
+		del self.node.set_armedmode
+		for c in self.children:
+			c.remove_set_armedmode()
 
 	def uncollapse(self):
 		self.node.collapsed = 0
-		if self.collapsebutton:
+		if self.collapsebutton is not None:
 			self.collapsebutton.icon = 'open'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 		self.set_need_resize()
+		for c in self.children:
+			c.add_set_armedmode()
+
+	def add_set_armedmode(self):
+		if self.playicon is not None:
+			self.node.set_armedmode = self.set_armedmode
+			self.set_armedmode(self.node.armedmode, redraw = 0)
+		if not self.iscollapsed():
+			for c in self.children:
+				c.add_set_armedmode()
 
 	def toggle_collapsed(self):
 		if self.iscollapsed():
@@ -512,7 +550,7 @@ class StructureObjWidget(MMNodeWidget):
 				return self
 			for i in self.children:
 				ob = i.get_obj_at(pos)
-				if ob != None:
+				if ob is not None:
 					return ob
 			return self
 		else:
@@ -521,7 +559,7 @@ class StructureObjWidget(MMNodeWidget):
 	def get_clicked_obj_at(self, pos):
 		# Returns an object which reacts to a click() event.
 		# This is duplicated code, so it's getting a bit hacky again.
-		if self.collapsebutton and self.collapsebutton.is_hit(pos):
+		if self.collapsebutton is not None and self.collapsebutton.is_hit(pos):
 			return self.collapsebutton
 		if self.is_hit(pos):
 			if self.iconbox.is_hit(pos):
@@ -530,7 +568,7 @@ class StructureObjWidget(MMNodeWidget):
 				return self
 			for i in self.children:
 				ob = i.get_clicked_obj_at(pos)
-				if ob != None:
+				if ob is not None:
 					return ob
 			return self
 		else:
@@ -546,17 +584,21 @@ class StructureObjWidget(MMNodeWidget):
 		# change them.
 		# For the meanwhile, this is too difficult. 
 		self.add_event_icons()
-		if self.collapsebutton:
-			l,t,r,b = self.pos_abs
+		l,t,r,b = self.pos_abs
+		if self.collapsebutton is not None:
 			#l = l + self.get_relx(1)
 			#t = t + self.get_rely(2)
 			self.collapsebutton.moveto((l+1,t+2,0,0))
+			l = l + ICONSIZE
+		if self.playicon is not None:
+			self.playicon.moveto((l+1,t+2,0,0))
+			l = l + ICONSIZE
 		self.need_resize = 0
 
 	def set_need_resize(self):
-		# Sets the need_recalc attribute.
+		# Sets the need_resize attribute.
 		p = self
-		while(p is not None):
+		while p is not None:
 			p.need_resize = 1
 			p = p.parent_widget
 
@@ -584,18 +626,23 @@ class StructureObjWidget(MMNodeWidget):
 		displist.usefont(f_title)
 		l,t,r,b = self.pos_abs
 		b = t + sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
-		l = l + 16	# move it past the icon.
+		if self.collapsebutton is not None:
+			l = l + ICONSIZE # move it past the icon.
+		if self.playicon is not None:
+			l = l + ICONSIZE # move it past the icon.
 
-		if self.iconbox:
+		if self.iconbox is not None:
 			self.iconbox.moveto((l,t+2,r,b))
 			self.iconbox.draw(displist)
 			l = l + self.iconbox.get_minsize()[0]
 		
 		#displist.centerstring(l,t,r,b, self.name)
 		displist.centerstring(l,t,r,b, self.name)
-		if self.collapsebutton:
+		if self.collapsebutton is not None:
 			self.collapsebutton.draw(displist)
-		if self.timeline:
+		if self.playicon is not None:
+			self.playicon.draw(displist)
+		if self.timeline is not None:
 			self.timeline.draw(displist)
 			
 		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
@@ -658,16 +705,16 @@ class HorizontalWidget(StructureObjWidget):
 		
 		xgap = sizes_notime.GAPSIZE
 		
-		if not self.children and not self.channelbox:
+		if not self.children and self.channelbox is None:
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 			min_width, min_height = boxsize, boxsize
-			if self.dropbox and not ignoreboxes:
+			if self.dropbox is not None and not ignoreboxes:
 				min_width = min_width  + xgap + self.dropbox.get_minsize()[0]
 			return min_width, min_height
 		
 		mw=0
 		mh=0
-		if self.channelbox and not ignoreboxes:
+		if self.channelbox is not None and not ignoreboxes:
 			mw, mh = self.channelbox.get_minsize()
 			mw = mw + sizes_notime.GAPSIZE
 			
@@ -679,13 +726,13 @@ class HorizontalWidget(StructureObjWidget):
 			
 		mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
 		
-		if self.dropbox and not ignoreboxes:
+		if self.dropbox is not None and not ignoreboxes:
 			mw = mw + self.dropbox.get_minsize()[0] + sizes_notime.GAPSIZE
 			
 		mh = mh + 2*sizes_notime.VEDGSIZE
 		# Add the title box.
 		mh = mh + sizes_notime.TITLESIZE
-		if self.timeline:
+		if self.timeline is not None:
 			w, h = self.timeline.get_minsize()
 			if w > mw:
 				mw = w
@@ -695,7 +742,7 @@ class HorizontalWidget(StructureObjWidget):
 	def get_child_relminpos(self, child):
 		minpos = sizes_notime.HEDGSIZE
 		for ch in self.children:
-			if ch == child:
+			if ch is child:
 				return minpos
 			minpos = minpos + ch.get_minsize()[0] + sizes_notime.GAPSIZE
 		raise 'Unknown child node'
@@ -711,7 +758,7 @@ class HorizontalWidget(StructureObjWidget):
 			return
 
 		l, t, r, b = self.pos_abs
-		if self.timeline and not TIMELINE_AT_TOP:
+		if self.timeline is not None and not TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
 			b = b - tl_h
 		min_width, min_height = self.get_minsize()
@@ -724,7 +771,7 @@ class HorizontalWidget(StructureObjWidget):
 		min_height = min_height - sizes_notime.TITLESIZE
 		
 		# Add the timeline, if it is at the top
-		if self.timeline and TIMELINE_AT_TOP:
+		if self.timeline is not None and TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
 			self.timeline.moveto((l, t, r, t+tl_h))
 			t = t + tl_h
@@ -741,7 +788,7 @@ class HorizontalWidget(StructureObjWidget):
 		t = t + sizes_notime.VEDGSIZE
 		b = b - sizes_notime.VEDGSIZE
 		
-		if self.channelbox:
+		if self.channelbox is not None:
 			w, h = self.channelbox.get_minsize()
 			self.channelbox.moveto((l, t, l+w, b))
 			l = l + w + sizes_notime.GAPSIZE
@@ -791,14 +838,14 @@ class HorizontalWidget(StructureObjWidget):
 			medianode.recalc()
 			l = r + sizes_notime.GAPSIZE
 
-		if self.dropbox:
+		if self.dropbox is not None:
 			w,h = self.dropbox.get_minsize()
 			# The dropbox takes up the rest of the free width.
 			r = self.pos_abs[2]-sizes_notime.HEDGSIZE
 			
 			self.dropbox.moveto((l,t,r,b))
 		
-		if self.timeline and not TIMELINE_AT_TOP:
+		if self.timeline is not None and not TIMELINE_AT_TOP:
 			l, t, r, b = self.pos_abs
 			tl_w, tl_h = self.timeline.get_minsize()
 			self.timeline.moveto((l, b-tl_h, r, b))
@@ -831,7 +878,7 @@ class VerticalWidget(StructureObjWidget):
 
 		mh = mh + sizes_notime.TITLESIZE
 		mw = mw + 2*sizes_notime.HEDGSIZE
-		if self.timeline:
+		if self.timeline is not None:
 			w, h = self.timeline.get_minsize()
 			if w > mw:
 				mw = w
@@ -871,7 +918,7 @@ class VerticalWidget(StructureObjWidget):
 		t = t + sizes_notime.TITLESIZE
 
 		# Add the timeline, if it is at the top
-		if self.timeline and TIMELINE_AT_TOP:
+		if self.timeline is not None and TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
 			self.timeline.moveto((l, t, r, t+tl_h))
 			t = t + tl_h
@@ -923,7 +970,7 @@ class VerticalWidget(StructureObjWidget):
 			medianode.moveto((this_l,t,this_r,b))
 			medianode.recalc()
 			t = b + sizes_notime.GAPSIZE
-		if self.timeline and not TIMELINE_AT_TOP:
+		if self.timeline is not None and not TIMELINE_AT_TOP:
 			l, t, r, b = self.pos_abs
 			tl_w, tl_h = self.timeline.get_minsize()
 			self.timeline.moveto((l, b-tl_h, r, b))
@@ -997,10 +1044,12 @@ class SeqWidget(HorizontalWidget):
 
 	def destroy(self):
 		HorizontalWidget.destroy(self)
-		if self.dropbox: self.dropbox.destroy()
-		self.dropbox = None
-		if self.channelbox: self.channelbox.destroy()
-		self.channelbox = None
+		if self.dropbox is not None:
+			self.dropbox.destroy()
+			self.dropbox = None
+		if self.channelbox is not None:
+			self.channelbox.destroy()
+			self.channelbox = None
 
 	def get_obj_at(self, pos):
 		if self.channelbox is not None and self.channelbox.is_hit(pos):
@@ -1016,7 +1065,7 @@ class SeqWidget(HorizontalWidget):
 
 		displist.drawfbox(color, self.get_box())
 
-		if self.channelbox and not self.iscollapsed():
+		if self.channelbox is not None and not self.iscollapsed():
 			self.channelbox.draw(displist)
 
 		# Uncomment to redraw pushback bars.
@@ -1024,7 +1073,7 @@ class SeqWidget(HorizontalWidget):
 		#	if isinstance(i, MediaWidget) and i.pushbackbar:
 		#		i.pushbackbar.draw(displist)
 
-		if self.dropbox and not self.iscollapsed():
+		if self.dropbox is not None and not self.iscollapsed():
 			self.dropbox.draw(displist)
 		HorizontalWidget.draw(self, displist)
 
@@ -1047,10 +1096,10 @@ class SeqWidget(HorizontalWidget):
 		tend = t1
 		maxneededpixel0 = sizes_notime.HEDGSIZE
 		maxneededpixel1 = sizes_notime.HEDGSIZE
-		if self.channelbox:
+		if self.channelbox is not None:
 			mw, mh = self.channelbox.get_minsize()
 			maxneededpixel0 = maxneededpixel0 + mw + sizes_notime.GAPSIZE
-		if self.dropbox:
+		if self.dropbox is not None:
 			mw, mw =self.dropbox.get_minsize()
 			maxneededpixel1 = maxneededpixel1 + mw + sizes_notime.GAPSIZE
 		time_to_collision = {t0: maxneededpixel0}
@@ -1104,7 +1153,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 			w,h = i.get_minsize()
 			if w > mw: mw=w
 			mh=mh+h
-		if self.timeline:
+		if self.timeline is not None:
 			w, h = self.timeline.get_minsize()
 			if w > mw:
 				mw = w
@@ -1187,7 +1236,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 			medianode.moveto((this_l,t,this_r,b))
 			medianode.recalc()
 			t = b #  + self.get_rely(sizes_notime.GAPSIZE)
-		if self.timeline and not TIMELINE_AT_TOP:
+		if self.timeline is not None and not TIMELINE_AT_TOP:
 			self.timeline.moveto((l, t, r, my_b))
 		StructureObjWidget.recalc(self)
 
@@ -1197,7 +1246,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 			#if isinstance(i, MediaWidget):
 			#	i.pushbackbar.draw(displist)
 			i.draw(displist)
-		if self.timeline:
+		if self.timeline is not None:
 			self.timeline.draw(displist)
 
 	def adddependencies(self):
@@ -1319,10 +1368,20 @@ class MediaWidget(MMNodeWidget):
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
 		MMNodeWidget.destroy(self)
-		if self.transition_in: self.transition_in.destroy()
-		self.transistion_in = None
-		if self.transition_out: self.transition_out.destroy()
-		self.transition_out = None
+		if self.transition_in is not None:
+			self.transition_in.destroy()
+			self.transistion_in = None
+		if self.transition_out is not None:
+			self.transition_out.destroy()
+			self.transition_out = None
+
+	def remove_set_armedmode(self):
+		del self.node.set_armedmode
+
+	def add_set_armedmode(self):
+		if self.playicon is not None:
+			self.node.set_armedmode = self.set_armedmode
+			self.set_armedmode(self.node.armedmode, redraw = 0)
 
 	def is_hit(self, pos):
 		hit = self.transition_in.is_hit(pos) or \
@@ -1334,11 +1393,15 @@ class MediaWidget(MMNodeWidget):
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
+		w = 0
+		if self.playicon is not None:
+			self.playicon.moveto((l+1, t+2,0,0))
+			w = ICONSIZE
 
 		self.add_event_icons()
-		self.iconbox.moveto((l+1, t+2,0,0))
+		self.iconbox.moveto((l+w+1, t+2,0,0))
 		# First compute pushback bar position
-		if self.pushbackbar:
+		if self.pushbackbar is not None:
 			if not self.is_timed:
 				raise "Should not happen"
 			t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
@@ -1424,6 +1487,8 @@ class MediaWidget(MMNodeWidget):
 		displist.fgcolor(CTEXTCOLOR)
 		displist.usefont(f_title)
 		l,t,r,b = self.pos_abs
+		if self.playicon is not None:
+			l = l + ICONSIZE
 		b = t+sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
 		#if self.node.infoicon:
 		#	l = l + iconsizex	  # Maybe have an icon there soon.
@@ -1433,6 +1498,9 @@ class MediaWidget(MMNodeWidget):
 		# Draw the icon before the name.
 		#self.infoicon.icon = self.node.infoicon
 		#self.infoicon.draw(displist)
+
+		if self.playicon is not None:
+			self.playicon.draw(displist)
 
 		# Draw the icon box.
 		self.iconbox.draw(displist)
@@ -1616,10 +1684,10 @@ class ForeignWidget(HorizontalWidget):
 		tend = t1
 		maxneededpixel0 = sizes_notime.HEDGSIZE
 		maxneededpixel1 = sizes_notime.HEDGSIZE
-		if self.channelbox:
+		if self.channelbox is not None:
 			mw, mh = self.channelbox.get_minsize()
 			maxneededpixel0 = maxneededpixel0 + mw + sizes_notime.GAPSIZE
-		if self.dropbox:
+		if self.dropbox is not None:
 			mw, mw =self.dropbox.get_minsize()
 			maxneededpixel1 = maxneededpixel1 + mw + sizes_notime.GAPSIZE
 		time_to_collision = {t0: maxneededpixel0}
@@ -1864,10 +1932,7 @@ class IconBox(MMWidgetDecoration):
 		return i
 
 	def get_icon(self, iconname):
-		if self._icons.has_key(iconname):
-			return self._icons[iconname]
-		else:
-			return None
+		return self._icons.get(iconname)
 
 	def del_icon(self, iconname):
 		del self._icons[iconname]
@@ -1964,7 +2029,7 @@ class Icon(MMWidgetDecoration):
 		return self
 
 	def mouse0release(self, coords):
-		if self.callback and self.icon:
+		if self.callback is not None and self.icon:
 			apply(apply, self.callback)
 
 	def moveto(self, pos):
