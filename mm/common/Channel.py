@@ -414,6 +414,9 @@ class Channel:
 				s = ''
 			print 'Channel.playdone('+`self`+')' + s
 		if self._playstate != PLAYING:
+			if not outside_induced and not self._qid:
+				# timer callback couldn't be cancelled
+				return
 			raise error, 'not playing'
 		self._qid = None
 		# If this node has a pausing anchor, don't call the
