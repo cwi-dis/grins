@@ -77,7 +77,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Drawing optimisations
 		self.drawing = 0	# A lock to prevent recursion in the draw() method of self.
 		self.redrawing = 0	# A lock to prevent recursion in redraw()
-		self.need_resize = 1	# Whether the tree needs to be resized.
+		self.need_resize = 1	# Whether the tree needs to be resized. Implies need_redraw
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
 
 		self.base_display_list = None # A display list that may be cloned and appended to.
@@ -100,7 +100,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Remove sometime.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
-##		self.destroynode = None	# node to be destroyed later
 
 		self.arrow_list = []	# A list of arrows to be drawn after everything else.
 		self.__select_arrow_list = [] # Used for working out the selected arrows.
@@ -431,7 +430,6 @@ class HierarchyView(HierarchyViewDialog):
 		
 		self.refresh_scene_graph()
 		self.need_resize = 1
-		self.need_redraw = 1
 		focustype, focusobject = self.editmgr.getglobalfocus()
 		if focustype is None and focusobject is None:
 			self.editmgr.setglobalfocus('MMNode', self.root)
@@ -478,6 +476,7 @@ class HierarchyView(HierarchyViewDialog):
 	def resize_scene(self):
 		# Set the size of the first widget.
 		self.need_resize = 0
+		self.need_redraw = 1
 		x,y = self.scene_graph.recalc_minsize()
 		self.mcanvassize = x,y
 
@@ -714,6 +713,13 @@ class HierarchyView(HierarchyViewDialog):
 			if timeline is not None:
 				apply(self.window.drawxorline, self.__line)
 				self.__line = None
+			if obj.timeline is not None:
+				l,t,r,b = obj.timeline.get_pos_abs()
+				if t <= py <= b:
+					obj.timeline.setminwidth(max(px-l, 1))
+					self.need_resize = 1
+					self.draw()
+					return
 			t = obj.pixel2time(px, side, timemapper)
 			em = self.editmgr
 			if not em.transaction():
@@ -992,9 +998,6 @@ class HierarchyView(HierarchyViewDialog):
 		# 'interior' is true if the type of node is in ['seq', 'par', 'excl'...]
 		# in other words, interior is false if this is a leaf node (TODO: confirm -mjvdg)
 		if interior:
-			# If the node is in ('par'...) then it is vertical
-			horizontal = (t not in ('par', 'switch', 'excl', 'prio'))
-			i = -1
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
 			i = obj.get_nearest_node_index((x,y))
@@ -1068,7 +1071,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.refresh_scene_graph()
 		self.need_resize = 1
-		self.need_redraw = 1
 		focustype, focusobject = self.editmgr.getglobalfocus()
 		if focustype is None and focusobject is None:
 			self.editmgr.setglobalfocus('MMNode', self.root)
@@ -1631,10 +1633,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.showtime = 0
 		else:
 			node.showtime = which
-##		self.refresh_scene_graph()
 		self.need_resize = 1
-		self.need_redraw = 1
-##		import trace; trace.set_trace('StructureWidgets')
 		self.draw()
 
 	def bandwidthcall(self):

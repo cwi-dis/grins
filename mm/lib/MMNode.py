@@ -161,24 +161,30 @@ class MMNodeContext:
 	#
 	# Timing computation
 	#
-	def needtimes(self, which):
+	def needtimes(self, which, node = None):
 		if not which in ('virtual', 'bandwidth'):
 			raise 'Unknown time-type %s'%which
 		if which != 'virtual':
 			# For the bandwidth-dependent times we need the virtual times first
-			self.needtimes('virtual')
-		if not self.root:
+			self.needtimes('virtual', node)
+		if node is None and not self.root:
 			uid = self.uidmap.keys()[0]
 			self.root = self.uidmap[uid].GetRoot()
 			if not self.root:
 				raise 'Cannot find root for this document'
+		if node is None:
+			node = self.root
+		else:
+			node.fakeparent = None
 		if which == 'bandwidth':
 			import BandwidthCompute
-			BandwidthCompute.compute_bandwidth(self.root, storetiming='bandwidth')
+			BandwidthCompute.compute_bandwidth(node, storetiming='bandwidth')
 		import Timing
-		Timing.computetimes(self.root, which)
+		Timing.computetimes(node, which)
 		# XXX Temp
-		self._movetimestoobj(self.root, which)
+		self._movetimestoobj(node, which)
+		if hasattr(node, 'fakeparent'):
+			del node.fakeparent
 
 	def _movetimestoobj(self, node, which):
 		timeobj = node.GetTimesObject(which)
@@ -2761,7 +2767,7 @@ class MMNode(MMTreeElement):
 
 	def GetTimes(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
-			self.context.needtimes(which)
+			self.context.needtimes(which, self)
 		t0, t1, t2, downloadlag = self.timing_info_dict[which].GetTimes()
 		return t0, t1, t2, downloadlag, self.GetBeginDelay()
 
@@ -4464,7 +4470,8 @@ class FakeRootNode(MMNode):
 		return None
 
 	def resetall(self, sched):
-		MMNode.resetall(self, sched)
+		if sched is not None:
+			MMNode.resetall(self, sched)
 		del self.__root.fakeparent
 		del self.__root
 		self.Destroy(fakeroot = 1)

@@ -11,6 +11,7 @@ import os, windowinterface
 import settings
 import TimeMapper
 from AppDefaults import *
+from fmtfloat import fmtfloat
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
@@ -254,7 +255,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if timemapper is None and (hasattr(self, 'showtime') or self.node.showtime):
 			timemapper = TimeMapper.TimeMapper()
 			if self.node.GetType() not in ('excl', 'prio', 'switch'):
-				self.timeline = TimelineWidget(self, self.mother)
+				if self.timeline is None:
+					self.timeline = TimelineWidget(self, self.mother)
 				self.timemapper = timemapper
 		else:
 			if self.timeline is not None:
@@ -1553,6 +1555,7 @@ class MediaWidget(MMNodeWidget):
 		if self.pushbackbar is not None:
 			self.pushbackbar.destroy()
 			self.pushbackbar = None
+		self.durwidth = r-l
 		if timemapper is not None:
 			t0, t1, t2, download, begindelay = self.node.GetTimes('virtual')
 			if download > 0:
@@ -1561,6 +1564,8 @@ class MediaWidget(MMNodeWidget):
 					self.pushbackbar = PushBackBarWidget(self, self.mother)
 				pbb_left = timemapper.time2pixel(t0-download, align='right')
 				self.pushbackbar.moveto((pbb_left, t, l, t+12))
+			if t2 != t0:
+				self.durwidth = int((t1-t0)*float(r-l)/(t2-t0) +.5)
 
 		t = t + sizes_notime.TITLESIZE
 
@@ -1585,7 +1590,17 @@ class MediaWidget(MMNodeWidget):
 		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
 
 	def draw_selected(self, displist):
-		displist.drawfbox((255,255,255), self.get_box())
+		x,y,w,h = self.get_box()
+		if self.durwidth != w:
+			if self.durwidth == w:
+				displist.drawfbox((255,255,255), (x,y,w,h))
+			else:
+				displist.drawfbox((255,255,255), (x,y,w,16))
+				displist.drawfbox(COLCOLOR, (x+self.durwidth,y+16,w-self.durwidth,h-16))
+			if self.durwidth != 0:
+				displist.drawfbox((255,255,255), (x,y,self.durwidth,h))
+		else:
+			displist.drawfbox((255,255,255), (x,y,w,h))
 		self.__draw(displist)
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 
@@ -1602,7 +1617,17 @@ class MediaWidget(MMNodeWidget):
 			color = LEAFCOLOR
 		else:
 			color = LEAFCOLOR_NOPLAY
-		displist.drawfbox(color, self.get_box())
+		x,y,w,h = self.get_box()
+		if self.durwidth != w:
+			if self.durwidth == w:
+				displist.drawfbox(color, (x,y,w,h))
+			else:
+				displist.drawfbox(color, (x,y,w,16))
+				displist.drawfbox(COLCOLOR, (x+self.durwidth,y+16,w-self.durwidth,h-16))
+			if self.durwidth != 0:
+				displist.drawfbox(color, (x,y,self.durwidth,h))
+		else:
+			displist.drawfbox(color, (x,y,w,h))
 		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		self.__draw(displist)
 		if self.pushbackbar is not None:
@@ -1947,23 +1972,28 @@ class PushBackBarWidget(MMWidgetDecoration):
 
 class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
+	def __init__(self, mmwidget, mother):
+		MMWidgetDecoration.__init__(self, mmwidget, mother)
+		self.minwidth = 0
 
 	def recalc_minsize(self):
-		self.boxsize = f_timescale.strsizePXL(' 000:00 000:00 000:00 ')[0], 2*sizes_notime.TITLESIZE
+		minheight = 2*sizes_notime.TITLESIZE
+		if self.minwidth:
+			self.boxsize = self.minwidth, minheight
+		else:
+			self.boxsize = f_timescale.strsizePXL(' 000:00 000:00 000:00 ')[0], minheight
 		return self.boxsize
+
+	def setminwidth(self, width):
+		self.minwidth = width
 
 	def moveto(self, coords, timemapper):
 		MMWidgetDecoration.moveto(self, coords)
-		t0, t1, t2, download, begindelay = self.get_mmwidget().node.GetTimes('virtual')
-		self.time_segments = timemapper.gettimesegments(range=(t0, t2))
-		starttime, dummy, oldright = self.time_segments[0]
-		stoptime, dummy, dummy = self.time_segments[-1]
-		self.ticks = [(starttime, timemapper.time2pixel(starttime, align='right'))]
-		for time in range(int(starttime+1), int(stoptime)+1):
-			tick_x = timemapper.interptime2pixel(time)
-			self.ticks.append((time, tick_x))
+		self.timemapper = timemapper
 
 	def draw(self, displist):
+		# this method is way too complex.
+		timemapper = self.timemapper
 		x, y, w, h = self.get_box()
 		if TIMELINE_AT_TOP:
 			line_y = y + (h/2)
@@ -1971,6 +2001,8 @@ class TimelineWidget(MMWidgetDecoration):
 			tick_bot = y+h-(h/3)
 			longtick_top = line_y
 			longtick_bot = y + h - (h/6)
+			midtick_top = line_y
+			midtick_bot = (tick_bot+longtick_bot)/2
 			endtick_top = line_y - (h/3)
 			endtick_bot = longtick_bot
 			label_top = y 
@@ -1981,44 +2013,100 @@ class TimelineWidget(MMWidgetDecoration):
 			tick_bot = line_y
 			longtick_top = y + (h/6)
 			longtick_bot = line_y
+			midtick_top = (tick_top+longtick_top)/2
+			midtick_bot = line_y
 			endtick_top = longtick_top
 			endtick_bot = line_y + (h/6)
 			label_top = y + (h/2)
 			label_bot = y + h
-		starttime, left, oldright = self.time_segments[0]
-		if left != oldright:
-			displist.drawline(COLCOLOR, [(left, line_y), (oldright, line_y)])
-		stoptime, dummy, dummy = self.time_segments[-1]
-		for time, left, right in self.time_segments[1:]:
-			displist.drawline(TEXTCOLOR, [(oldright, line_y), (left, line_y)])
+		t0, t1, t2, download, begindelay = self.get_mmwidget().node.GetTimes('virtual')
+		min = timemapper.time2pixel(t0, 'left')
+		max = timemapper.time2pixel(t2, 'right')
+		displist.drawline(TEXTCOLOR, [(min, line_y), (max, line_y)])
+		length = max - min	# length of real timeline
+		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
 			if left != right:
 				displist.drawline(COLCOLOR, [(left, line_y), (right, line_y)])
-			oldright = right
+				length = length - (right - left)
 		displist.usefont(f_timescale)
-		halflabelwidth = displist.strsize('000:00 ')[0] / 2
+		labelwidth = displist.strsize('000:00 ')[0]
+		halflabelwidth = labelwidth / 2
 		lastlabelpos = x - halflabelwidth - 1
-		for time, tick_x in self.ticks:
+		lb, ub, quantum, factor = setlim(t0, t2)
+		length = length * (ub-lb) / (t2-t0)
+		maxnlabel = length / labelwidth
+		qf = qr = 1
+		while quantum > 10:
+			qf = qf * 10
+			quantum = quantum / 10
+		prev = qf, qr, quantum
+		while qf * quantum >= 3 * qr * (ub-lb) / length:
+			prev = qf, qr, quantum
+			if quantum == 5:
+				quantum = 2
+			elif quantum == 2:
+				quantum = 1
+			else: # quantum == 1
+				quantum = 5
+				if qf == 1:
+					qr = qr * 10
+				else:
+					qf = qf / 10
+		qf, qr, quantum = prev
+		quantum = qf * quantum
+		factor = factor * qr
+		lb = lb * qr
+		ub = ub * qr
+		nticks = (int(ub+.5) - int(lb+.5)) / quantum
+		mod = nticks / maxnlabel
+		i = 1
+		while i < mod:
+			i = i * 10
+		if i / 2 <= mod:
+			mod = i / 2
+		elif i / 5 <= mod:
+			mod = i / 5
+		else:
+			mod = i / 10
+		mod = mod * quantum
+		for t in range(int(lb+.5), int(ub+.5), quantum):
+			time = float(t) / factor
+			if time < t0:
+				continue
+			if time > t2:
+				break
+			tick_x = timemapper.interptime2pixel(time)
+			tick_x2 = timemapper.interptime2pixel(time, align='right')
+			tick_x_mid = (tick_x + tick_x2) / 2
 			# Check whether it is time for a tick
-			if int(time) % 10 in (0, 5) and tick_x > lastlabelpos + halflabelwidth:
-				lastlabelpos = tick_x + halflabelwidth
+			if t % mod == 0: # and tick_x > lastlabelpos + halflabelwidth:
+				lastlabelpos = tick_x_mid + halflabelwidth
 				cur_tick_top = longtick_top
 				cur_tick_bot = longtick_bot
-				label = '%02d:%02.2d'%(int(time)/60, int(time)%60)
-				if tick_x-halflabelwidth < x + sizes_notime.HEDGSIZE:
+				if time < 60:
+					label = fmtfloat(time)
+				else:
+					label = '%02d:%02.2d'%(int(time)/60, int(time)%60)
+				if tick_x_mid-halflabelwidth < x + sizes_notime.HEDGSIZE:
 					width = displist.strsizePXL(label)[0]
 					displist.setpos(x + sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
-				elif tick_x+halflabelwidth > x + w - sizes_notime.HEDGSIZE:
+				elif tick_x_mid+halflabelwidth > x + w - sizes_notime.HEDGSIZE:
 					width = displist.strsizePXL(label)[0]
 					displist.setpos(x + w - width - sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
 				else:
-					displist.centerstring(tick_x-halflabelwidth, label_top,
-							      tick_x+halflabelwidth, label_bot, label)
+					displist.centerstring(tick_x_mid-halflabelwidth, label_top,
+							      tick_x_mid+halflabelwidth, label_bot, label)
+			elif t % 10 == 0:
+				cur_tick_top = midtick_top
+				cur_tick_bot = midtick_bot
 			else:
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
 			displist.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])
+			if tick_x != tick_x2:
+				displist.drawline(COLCOLOR, [(tick_x2, cur_tick_top), (tick_x2, cur_tick_bot)])
 	draw_selected = draw
 
 # A box with icons in it.
@@ -2359,3 +2447,31 @@ class ChannelBoxWidget(ImageBoxWidget):
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.mother.toplevel, channel)
 
+def setlim(lb, ub):
+	from math import ceil, floor
+	while 1:
+		delta = ub - lb
+		# scale up by r, a power of 10, so range (delta) exceeds 1
+		# find power of 10 quantum, s, such that delta/10 <= s < delta
+		r = s = 1
+		while delta * r < 10:
+			r = r * 10
+		delta = delta * r
+		while s * 10 < delta:
+			s = s * 10
+		lb = lb * r
+		ub = ub * r
+		# set s = (1,2,5)*10**n so that 3-5 quanta cover range
+		if s >= delta / 2:
+## 		if s >= delta / 3:
+			s = s / 2
+		elif s < delta / 5:
+			s = s * 2
+		ub = abs(s) * ceil(float(ub) / abs(s))
+		lb = abs(s) * floor(float(lb) / abs(s))
+		if 0 < lb <= s:
+			lb = 0
+		elif -s <= ub < 0:
+			ub = 0
+		else:
+			return (lb, ub, s, r)

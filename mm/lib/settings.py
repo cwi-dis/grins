@@ -155,8 +155,6 @@ ALL=['system_bitrate', 'system_captions', 'system_language',
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
-from SMIL import extensions
-
 # Where is the preferences file:
 if os.name == 'posix':
 	PREFSFILENAME=os.environ['HOME']+'/.grins'
@@ -227,6 +225,7 @@ def match(name, wanted_value):
 		wanted_value = string.upper(wanted_value)
 		return opsys.cpu.has_key(wanted_value) and opsys.cpu[wanted_value]
 	if name == 'system_required':
+		from SMIL import extensions
 		for v in wanted_value:
 			if not extensions.get(v, 0):
 				return 0
