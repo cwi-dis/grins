@@ -21,6 +21,8 @@ ChannelMime = {
 	'sound': [
 		'audio/basic',
 		'audio/vnd.rn-realaudio',
+		'audio/x-pn-realaudio',
+		'audio/x-realaudio',
 		'audio/x-aiff',
 		'audio/x-wav',
 		],

@@ -1513,17 +1513,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				import MMmimetypes
 				# guess the type from the file extension
 				mtype = MMmimetypes.guess_type(url)[0]
-			if url is not None and mtype is None and \
-			   (tagname is None or tagname == 'text'):
-				# last resort: get file and see what type it is
-				try:
-					u = MMurl.urlopen(url)
-				except:
-					self.warning('cannot open file %s' % url, self.lineno)
+			if url is not None and mtype is None:
+				import urlcache
+				mtype = urlcache.mimetype(url)
+				if mtype is None:
 					# we have no idea what type the file is
-				else:
-					mtype = u.headers.type
-					u.close()
+					self.warning('cannot open file %s' % url, self.lineno)
 
 			mediatype = tagname
 			if mtype is not None:

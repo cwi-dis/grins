@@ -2023,7 +2023,6 @@ class AttrSheet(dialog.PropertySheet):
 		h = b-t
 		if self._form._has_showAll:
 			ctrl = components.CheckButton(self,101)
-			import settings
 			if settings.get('enable_template'):
 				name = 'Builder/Advanced'
 			else:
@@ -2944,8 +2943,13 @@ class SvgRenderer(Renderer):
 			self._svgplayer = None
 		if rurl:
 			url = self.urlqual(rurl)
-			import MMmimetypes
-			mtype = MMmimetypes.guess_type(url)[0]
+			mtype = None
+			if settings.get('checkext'):
+				import MMmimetypes
+				mtype = MMmimetypes.guess_type(url)[0]
+			if not mtype:
+				import urlcache
+				mtype = urlcache.mimetype(url)
 			if mtype is not None: 
 				mtype, subtype = string.split(mtype, '/')
 				if mtype == 'image' and subtype == 'svg-xml':
@@ -3054,7 +3058,6 @@ class HtmlRenderer(Renderer):
 		self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
 		self._htmlwnd.CreateWindow(self._strclass,'untitled',self._style,
 			self._rc,self._wnd,0)
-		import settings
 		which =  settings.get('html_control')
 		if not which: which = 0
 		self._htmlwnd.UseHtmlCtrl(which)
@@ -4492,8 +4495,13 @@ class FileGroup(AttrGroup):
 		a=self.getattr('file')
 		f=a.getcurrent()
 		from winversion import osversion
-		import MMmimetypes
-		mtype = MMmimetypes.guess_type(f)[0]
+		mtype = None
+		if settings.get('checkext'):
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(f)[0]
+		if not mtype:
+			import urlcache
+			mtype = urlcache.mimetype(f)
 		if mtype is None: 
 			return 0
 		mtype, subtype = string.split(mtype, '/')

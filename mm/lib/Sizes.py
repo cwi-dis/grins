@@ -10,17 +10,10 @@ def GetSize(url, maintype = None, subtype = None):
 		return width, height
 	u = None
 	if maintype is None:
-		if cache.has_key('mimetype'):
-			maintype, subtype = cache['mimetype']
-		else:
-			try:
-				u = MMurl.urlopen(url)
-			except IOError:
-				# don't cache non-existing file
-				return 0, 0
-			maintype = u.headers.getmaintype()
-			subtype = u.headers.getsubtype()
-			cache['mimetype'] = maintype, subtype
+		mtype = urlcache.mimetype(url)
+		if not mtype:
+			return 0, 0
+		maintype, subtype = mtype.split('/')
 	if string.find(string.lower(subtype), 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
 		# any RealMedia type
 		import realsupport

@@ -9,11 +9,17 @@ __version__ = "$Id$"
 import MMurl
 import MMmimetypes
 import urllib
+import settings
 
 import win32dxm
 
 def get(url):
-	mtype = MMmimetypes.guess_type(url)[0]
+	mtype = None
+	if settings.get('checkext'):
+		mtype = MMmimetypes.guess_type(url)[0]
+	if not mtype:
+		import urlcache
+		mtype = urlcache.mimetype(url)
 	if mtype and mtype.find('quicktime') >= 0:
 		import winqt
 		if winqt.HasQtSupport():

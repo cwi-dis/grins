@@ -7,6 +7,7 @@ from urlparse import urlparse, urlunparse
 from MMExc import *
 from Hlinks import *
 from usercmd import *
+import settings
 
 from TopLevelDialog import TopLevelDialog
 
@@ -88,7 +89,6 @@ class TopLevel(TopLevelDialog):
 		TopLevelDialog.show(self)
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'textwindow'):
-			import settings
 			if settings.get('showsource'):
 				self.source_callback()
 
@@ -174,11 +174,16 @@ class TopLevel(TopLevelDialog):
 
 	def read_it(self):
 ##		import time
-		import MMmimetypes
 		self.changed = 0
 ##		print 'parsing', self.filename, '...'
 ##		t0 = time.time()
-		mtype = MMmimetypes.guess_type(self.filename)[0]
+		mtype = None
+		if settings.get('checkext'):
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(self.filename)[0]
+		if not mtype:
+			import urlcache
+			mtype = urlcache.mimetype(self.filename)
 		if mtype == None and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
 			# get creator and type, and if they are us we assume we're looking
@@ -329,9 +334,14 @@ class TopLevel(TopLevelDialog):
 			try:
 				# if the destination document is not a smil/grins document,
 				# it's handle by an external application
-				import MMmimetypes
+				mtype = None
+				if settings.get('checkext'):
+					import MMmimetypes
+					mtype = MMmimetypes.guess_type(url)[0]
+				if not mtype:
+					import urlcache
+					mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
-				mtype = MMmimetypes.guess_type(url)[0]
 				if mtype in ('application/smil',
 					     'application/x-grins-project',
 ##					     'application/x-grins-cmif',

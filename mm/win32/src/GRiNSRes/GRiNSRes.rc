@@ -4052,7 +4052,7 @@ BEGIN
                             "Distribute horizontal space\nDistribute horizontal space"
     IDUC_DISTRIBUTE_VERTICALLY 
                             "Distribute vertical space\nDistribute vertical space"
-    IDUC_CREATE_ANCHOR      "Create hyperlink source\nCreate hyperlink source"
+    IDUC_CREATE_ANCHOR      "Create simple hyperlink source\nCreate simple hyperlink source"
     IDUC_FINISH_LINK        "Finish hyperlink\nFinish hyperlink"
 END
 
@@ -4086,7 +4086,7 @@ BEGIN
     IDUC_ZOOMIN             "Zoom in\nZoom in"
     IDUC_ZOOMOUT            "Zoom out\nZoom out"
     IDUC_CREATE_ANCHOREXTENDED 
-                            "Create hyperlink source and edit\nCreate hyperlink source and edit"
+                            "Create full hyperlink source and edit...\nCreate full hyperlink source and edit..."
 END
 
 #endif    // English (U.S.) resources
