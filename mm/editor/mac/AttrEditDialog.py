@@ -31,7 +31,7 @@ import WMEVENTS
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
 from mw_resources import ID_DIALOG_NODEATTR
-if 0:
+if 1:
 	# Use the old dialog with the list on the left
 	DIALOG_USES_LIST=1
 else:
