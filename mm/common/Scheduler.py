@@ -306,7 +306,7 @@ class SchedulerContext:
 			if debugevents: print 'terminating node'
 			self.parent.do_terminate(self, node, timestamp)
 			return
-		pnode = node.GetParent()
+		pnode = node.GetSchedParent()
 		if not pnode or pnode.playing != MMStates.PLAYING:
 			# ignore event when node can't play
 			if debugevents: print 'parent not playing'
@@ -346,7 +346,7 @@ class SchedulerContext:
 			# XXX must implement pause
 			# XXX musr implement priority class
 			if debugevents: print 'terminating siblings'
-			for c in pnode.children:
+			for c in pnode.GetSchedChildren():
 				# don't have to terminate it again
 				if c is not node and c.playing != MMStates.IDLE:
 					self.parent.do_terminate(self, c, timestamp)
@@ -726,8 +726,8 @@ class Scheduler(scheduler):
 			    arc.marker is None and
 			    marker is None and
 			    arc.delay is not None and
-			    ((arc.dstnode in node.children and event == 'begin') or
-			     (arc.dstnode not in node.children and event == 'end'))):
+			    ((arc.dstnode in node.GetSchedChildren() and event == 'begin') or
+			     (arc.dstnode not in node.GetSchedChildren() and event == 'end'))):
 				if arc.wallclock is not None:
 					timestamp = arc.resolvedtime(self.timefunc)-arc.delay
 				if arc.isstart:
@@ -800,7 +800,7 @@ class Scheduler(scheduler):
 ##				   arg.realpix_body or arg.caption_body:
 ##					self.remove_terminate(sctx, arg)
 				arg.freeze_play()
-				for ch in arg.children:
+				for ch in arg.GetSchedChildren():
 					ch.reset()
 				if arg.fullduration is None:
 					self.sched_arcs(sctx, arg, 'end', timestamp=timestamp)
