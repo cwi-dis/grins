@@ -22,6 +22,16 @@ attrgrs=(
 		'project_quality',
 		]},
 
+	{'name':'subregion1',
+	'title':'Destination rendering',
+	'attrs':[
+		'subregionxy',
+		'subregionwh',
+		'displayfull',
+		'aspect',
+		'project_quality',
+		]},
+
 	{'name':'base_winoff_and_units',
 	'title':'Position and size',
 	'attrs':[
@@ -110,7 +120,7 @@ attrgrs=(
 		]},
 
 	{'name':'timingfadeout',
-	'title':'Timing',
+	'title':'Transition',
 	'attrs':[
 		'tduration',
 		'start',
@@ -118,12 +128,21 @@ attrgrs=(
 		'fadeoutcolor',
 		'fadeouttime',
 		'fadeoutduration',
+		'tag',
+		]},
+
+	{'name':'timing3',
+	'title':'Transition',
+	'attrs':[
+		'tag',
+		'start',
+		'tduration',
 		]},
 
 	{'name':'timing2',
-	'title':'Timing',
+	'title':'Transition',
 	'attrs':[
-		'tduration',
+		'tag',
 		'start',
 		]},
 
@@ -157,6 +176,14 @@ attrgrs=(
 		'imgcropwh',
 		'fullimage',
 		'imgcropanchor',
+		]},
+
+	{'name':'imgregion1',
+	'title':'Source area',
+	'attrs':[
+		'imgcropxy',
+		'imgcropwh',
+		'fullimage',
 		]},
 
 	{'name':'fadeout',
