@@ -249,9 +249,9 @@ def getsrc(writer, node):
 		else:
 			mime = ''
 		data = '\n'.join(node.GetValues())
-		if data and data[-1] != '\n':
-			# end with newline if not empty
-			data = data + '\n'
+##		if data and data[-1] != '\n':
+##			# end with newline if not empty
+##			data = data + '\n'
 		if nonascii.search(data):
 			mime = mime + ';charset=ISO-8859-1'
 		val = 'data:%s,%s' % (mime, MMurl.quote(data))
@@ -2158,20 +2158,21 @@ class SMILWriter(SMIL):
 				else:
 					mtype = 'body'
 			self.writetag(mtype, attrlist, x)
-			self.push()
-			for child in x.GetChildren():
-				self.writenode(child)
-			if root:
-				assets = x.context.getassets()
-				if assets:
-					if type != 'seq' or (not self.smilboston and attrlist):
+			if type != 'foreign' or root or x.GetChildren():
+				self.push()
+				for child in x.GetChildren():
+					self.writenode(child)
+				if root:
+					assets = x.context.getassets()
+					if assets:
+						if type != 'seq' or (not self.smilboston and attrlist):
+							self.pop()
+						self.writetag(NSGRiNSprefix + ':assets', [('skip-content', 'true')])
+						self.push()
+						for child in assets:
+							self.writenode(child)
 						self.pop()
-					self.writetag(NSGRiNSprefix + ':assets', [('skip-content', 'true')])
-					self.push()
-					for child in assets:
-						self.writenode(child)
-					self.pop()
-			self.pop()
+				self.pop()
 		elif is_realpix and self.copydir:
 			# If we are exporting handle RealPix specially: we might want
 			# to convert it into a <par> containing a realpix node and a
