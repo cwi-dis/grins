@@ -26,25 +26,25 @@
 ##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
 ##	'Bounding box for embedded PostScript image' channel)
 
-(anchorid (int) 1 'Next anchor UID' default
+(anchorid (int) 1 'Next anchor UID' hidden
 	'Next anchor UID to use' raw)
 
-(anchorlist (list (enclosed (tuple (int) (int) (enclosed (list (int)))))) () 'Anchors' default
+(anchorlist (list (enclosed (tuple (int) (int) (enclosed (list (int)))))) () 'Anchors' hidden
 	'List of anchors on this node' raw)
 
-(arm_duration (float) -1.0 'Arm duration' default
+(arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
 
 (bag_index (name) '' 'Bag index' default
 	'Name of child used as index' normal)
 
-(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' default
+(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for text/images in window' channel)
 
-(blockview_winpos (tuple (int) (int)) (-1 -1) 'Hierarchy winpos' default
+(blockview_winpos (tuple (int) (int)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw)
 
-(blockview_winsize (tuple (int) (int)) (400 400) 'Hierarchy winsize' default
+(blockview_winsize (tuple (int) (int)) (400 400) 'Hierarchy winsize' hidden
 	 'Window size for hierarchy view' raw)
 
 (border (int) 1 'Channel border' default
@@ -53,20 +53,20 @@
 ##(center (bool) 0 'Center' default
 ##	'If on, text is centered within the margins' channel)
 
-(channel (name) undefined 'Channel' default
+(channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node/subtree' inherited)
 
-(cview_winpos  (tuple (int) (int)) (-1 -1) 'Time chart winpos' default
+(cview_winpos  (tuple (int) (int)) (-1 -1) 'Time chart winpos' hidden
 	 'Window position for Time chart view' raw)
 
-(cview_winsize  (tuple (int) (int)) (400 400) 'Time chart winsize' default
+(cview_winsize  (tuple (int) (int)) (400 400) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
-	'Channel List' default
+	'Channel List' hidden
 	'Channels used in this document (root node only)')
 
-(closed (bool) 0 'Closed' default
+(closed (bool) 0 'Closed' hidden
 	'If on, the node is closed in the hierarchy view' raw)
 
 (comment (string) '' 'Comment' default
@@ -78,31 +78,31 @@
 ##(extraspaceafter (float) 0.0 'Extra space after' default
 ##	'Extra space following last word (in characters)')
 
-(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' default
+(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
 	'Color used for background of window' channel)
 
-(file (string) '/dev/null' 'File' default
+(file (string) '/dev/null' 'File' file
 	'File name for external node' channel)
 
-(font (string) 'default' 'Font' default
+(font (string) 'default' 'Font' font
 	'Font used to display text' channel)
 
 ##(format (enum ASCII PostScript) ASCII 'Format' default
 ##	'Format used by external text file (ASCII or PostScript)' channel)
 
-(help_winpos  (tuple (int) (int)) (-1 -1) 'Help window position' default
+(help_winpos  (tuple (int) (int)) (-1 -1) 'Help window position' hidden
 	 'Position of help window' raw)
 
-(help_winsize  (tuple (int) (int)) (400 600) 'Help window size' default
+(help_winsize  (tuple (int) (int)) (400 600) 'Help window size' hidden
 	 'Size of help window' raw)
 
-(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' default
+(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)
 
 (hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (int)))
                                    (enclosed (tuple (string) (int)))
 				   (int) (int)))) ()
-	'Hyperlink list' default
+	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
 
 ##(indent (float) 0 'Indent' default
@@ -114,14 +114,13 @@
 ##(keep (bool) 0 'Keep' default
 ##	'If on, text in window is kept until explicitly replaced' channel)
 
-(links_winpos  (tuple (int) (int)) (-1 -1) 'Link edit window position' default
+(links_winpos  (tuple (int) (int)) (-1 -1) 'Link edit window position' hidden
 	 'Position of link edit window' raw)
 
-(links_winsize  (tuple (int) (int)) (510 460) 'Link edit window size' default
+(links_winsize  (tuple (int) (int)) (510 460) 'Link edit window size' hidden
 	 'Size of link edit window' raw)
 
-
-(name (name) '' 'Name' default
+(name (name) '' 'Node name' default
 	'Name given to a node' raw)
 
 ##(needGS (bool) 0 'Need Ghostscript' default
@@ -136,10 +135,10 @@
 ##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
 ##	'Select the presence of horizontal/vertical scroll bars' channel)
 
-(player_winpos (tuple (int) (int)) (-1 -1) 'Player winpos' default
+(player_winpos (tuple (int) (int)) (-1 -1) 'Player winpos' hidden
 	 'Window position for player control panel' raw)
 
-(player_winsize (tuple (int) (int)) (290 160) 'Player winsize' default
+(player_winsize (tuple (int) (int)) (290 160) 'Player winsize' hidden
 	 'Window size for player control panel' raw)
 
 (pointsize (float) 0 'Point size' default
@@ -148,13 +147,13 @@
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw)
 
-(style_winpos (tuple (int) (int)) (-1 -1) 'Style editor winpos' default
+(style_winpos (tuple (int) (int)) (-1 -1) 'Style editor winpos' hidden
 	 'Window position for style editor' raw)
 
-(style_winsize (tuple (int) (int)) (300 320) 'Style editor winsize' default
+(style_winsize (tuple (int) (int)) (300 320) 'Style editor winsize' hidden
 	 'Window size for style editor' raw)
 
-(styledict (namedict (attrdict)) () 'Style Dictionary' default
+(styledict (namedict (attrdict)) () 'Style Dictionary' hidden
 	'Styles used in this document (root node only)')
 
 # This is an obsoleve attribute type!
@@ -171,16 +170,16 @@
 
 # This is the real sync arc data structure, on the destination!!!
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
-	() 'SyncTo list' default
+	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)
 
-(toplevel_winpos (tuple (int) (int)) (-1 -1) 'Top level winpos' default
+(toplevel_winpos (tuple (int) (int)) (-1 -1) 'Top level winpos' hidden
 	 'Window position for top level menu' raw)
 
-(toplevel_winsize (tuple (int) (int)) (110 250) 'Top level winsize' default
+(toplevel_winsize (tuple (int) (int)) (110 250) 'Top level winsize' hidden
 	 'Window size for top level menu' raw)
 
-(type (name) undefined 'Channel type' default
+(type (name) null 'Channel type' channeltype
 	'Channel type (channel dictionary only)' raw)
 
 ##(volume (float) 1.0 'Volume' default
@@ -189,14 +188,14 @@
 ##(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
 ##	'Vertical space before/after text (in lines)')
 
-(visible (int) 1 'Channel visibility' default
-	'Determines visibility of channel (1=visible)' raw)
+(visible (bool) 1 'Channel visibility' hidden
+	'Determines visibility of channel' raw)
 
 ##(wait_for_close (bool) 0 'Wait for close' default
 ##	'Wait for "close window" action to proceed' channel)
 
-(winpos (tuple (int) (int)) (-1 -1) 'Window position' default
+(winpos (tuple (int) (int)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y) (x axis pointing down!)' raw)
 
-(winsize (tuple (int) (int)) (0 0) 'Window size' default
+(winsize (tuple (int) (int)) (0 0) 'Window size' hidden
 	'Initial window size (width, height)' raw)
