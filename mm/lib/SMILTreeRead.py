@@ -250,6 +250,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__regpoints = {}
 		self.__new_file = new_file
 		self.__check_compatibility = check_compatibility
+		self.__generator = ''
 		self.__regionno = 0
 		self.__defleft = 0
 		self.__deftop = 0
@@ -2124,7 +2125,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				for v in vals:
 					if v and not fppairre.match(v):
 						if fppairre_bad.match(v):
-							self.syntax_error("missing parentheses on animateMotion values")
+							if self.__generator.find('grins') < 0:
+								self.syntax_error("missing parentheses on animateMotion values")
 							v = '('+v+')'
 						else:
 							self.syntax_error("invalid motion values")
@@ -2162,7 +2164,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					continue
 				if tagname == 'animateMotion' and not fppairre.match(val):
 					if fppairre_bad.match(val):
-						self.syntax_error("missing parentheses in %s value" % attr)
+						if self.__generator.find('grins') < 0:
+							self.syntax_error("missing parentheses in %s value" % attr)
 						# fix up value since we know how
 						attributes[attr] = '(' + val + ')'
 					else:
@@ -3165,6 +3168,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if windowinterface.GetOKCancel('This document was created by "'+content+'"\n\n'+'GRiNS '+version.version+' may be able to read the document, but some features may be lost\n\nDo you wish to continue?',parent=None):
 						raise UserCancel
 					self.__context.enableSave = 1
+			self.__generator = content.lower()
 		elif name == 'project_boston':
 			content = content == 'on'
 			boston = self.__context.attributes.get('project_boston')
@@ -4997,7 +5001,12 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 	# then convert Macintosh CR to LF
 	data = '\n'.join(data.split('\r'))
 ##	import profile
-##	pr = profile.Profile()
+##	if sys.platform == 'wince':
+##		import winkernel
+##		timer = winkernel.GetTickCount
+##	else:
+##		timer = None
+##	pr = profile.Profile(timer)
 ##	root = pr.runcall(__doParse, p, data)
 ##	pr.dump_stats('profile.stats')
 	root = __doParse(p, data)
