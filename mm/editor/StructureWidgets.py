@@ -88,7 +88,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		# Holds little icons..
 		self.iconbox = IconBox(self, self.mother)
-		self.iconbox.setup()
 		self.has_event_icons = 0
 		self.cause_event_icon = None
 # disabled for now, but it does actually work.
@@ -412,7 +411,6 @@ class StructureObjWidget(MMNodeWidget):
 			else:
 				icon = 'open'
 			self.collapsebutton = Icon(self, self.mother)
-			self.collapsebutton.setup()
 			self.collapsebutton.set_properties(callbackable=1, selectable=0)
 			self.collapsebutton.set_icon(icon)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
@@ -1834,7 +1832,8 @@ class TimelineWidget(MMWidgetDecoration):
 # A box with icons in it.
 # Comes before the node's name.
 class IconBox(MMWidgetDecoration):
-	def setup(self):
+	def __init__(self, mmwidget, mother):
+		MMWidgetDecoration.__init__(self, mmwidget, mother)
 		self._icons = {}
 		self.iconlist = []	# a list of icon names, the order is kept.
 		self.remember_click = (0,0)
@@ -1852,7 +1851,6 @@ class IconBox(MMWidgetDecoration):
 		# contextmenu - pop-up menu to use.
 		# arrowto - Draw an arrow to another icon on the screen.
 		i = Icon(self.mmwidget, self.mother)
-		i.setup()
 		i.set_icon(iconname)
 		if callback:
 			i.set_callback(callback)
@@ -1929,7 +1927,8 @@ class Icon(MMWidgetDecoration):
 	# Display an icon which can be clicked on. This can be used for
 	# any icon on screen.
 
-	def setup(self):
+	def __init__(self, mmwidget, mother):
+		MMWidgetDecoration.__init__(self, mmwidget, mother)
 		self.callback = None
 		self.arrowto = []	# a list of other MMWidgets.
 		self.icon = ""
@@ -2026,8 +2025,8 @@ class Icon(MMWidgetDecoration):
 # Maybe one day.
 ##class CollapseIcon(Icon):
 ##	# For collapsing and uncollapsing nodes
-##	def setup(self):
-##		Icon.setup(self)
+##	def __init__(self, mmwidget, mother):
+##		Icon.__init__(self, mmwidget, mother)
 ##		self.selectable = 0
 ##		self.callbackable = 1
 ##		self.arrowable = 0
@@ -2035,8 +2034,8 @@ class Icon(MMWidgetDecoration):
 
 ##class EventSourceIcon(Icon):
 ##	# Is the source of an event
-##	def setup(self):
-##		Icon.setup(self)
+##	def __init__(self, mmwidget, mother):
+##		Icon.__init__(self, mmwidget, mother)
 ##		self.selectable = 1
 ##		self.callbackable = 1
 ##		self.arrowable = 1
