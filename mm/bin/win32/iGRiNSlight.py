@@ -126,7 +126,7 @@ def GuessCMIFRoot():
 			break
 		dir=dir+'\\'
 	if found:return dir
-	return 'd:\\ufs\\mm\\cmif'
+	return r'd:\ufs\mm\cmif'
 
 #import settings
 #settings.default_settings['lightweight'] = 1

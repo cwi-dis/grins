@@ -33,11 +33,16 @@ else:
 	os.environ['GRiNSApp']='GRiNSed'
 
 
+# The order here is extremeley important.
+# Modules in earlier folders override modules in later folders.
+# OS-specific folders should always come before the corresponding
+# generic folder, and product-specific folders should come before
+# generic folders.
 CMIFPATH = [
+	os.path.join(CMIFDIR, '%s\\snap\\win32' % specificPath),
+	os.path.join(CMIFDIR, '%s\\snap' % specificPath),
 	os.path.join(CMIFDIR, 'bin\\win32'),
 	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smil10' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smil10\\win32' % specificPath),
 	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
@@ -77,8 +82,6 @@ def SafeCallbackCaller(fn, args):
 			rc = int(rc[0])
 		except (ValueError, TypeError):
 			rc = 0
-		# use afx to unload com/ole lib
-		#(win32ui.GetAfx()).PostQuitMessage(rc)
 		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
 	except:
 		# We trap all other errors, ensure the main window is shown, then
@@ -107,12 +110,16 @@ def Boot(what = 0):
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
 		# For now just continue!?!?!
 	# run the given cmif file
-	if what==PLAYER:
-		import grins
-	elif what==SUBSYSTEM:
-		exec 'import %s\n' % subsystemModuleName
-	else:
-		import cmifed
+	try:
+		if what==PLAYER:
+			import grins
+		elif what==SUBSYSTEM:
+			exec 'import %s\n' % subsystemModuleName
+		else:
+			import cmifed
+	except SystemExit, rc:
+		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
+
 
 
 def GuessCMIFRoot():

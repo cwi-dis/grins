@@ -7,7 +7,7 @@
 
 ##################### Settings
 
-WHAT=EDITOR  # <-- What to run
+WHAT=PLAYER  # <-- What to run
 what=WHAT
 
 # if WHAT is SUBSYSTEM specify subsystemModuleName
@@ -35,17 +35,17 @@ else:
 
 CMIFPATH = [
 	os.path.join(CMIFDIR, 'bin\\win32'),
+	os.path.join(CMIFDIR, '%s\\smil20\\win32' % specificPath),
+	os.path.join(CMIFDIR, '%s\\smil20' % specificPath),
 	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smil10' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smil10\\win32' % specificPath),
-	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
+##	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
 	os.path.join(CMIFDIR, '%s' % specificPath),
 	os.path.join(CMIFDIR, 'common'),
 	os.path.join(CMIFDIR, 'lib'),
 	os.path.join(CMIFDIR, 'pylib'),
-#	os.path.join(CMIFDIR, 'pylib\\audio'),
+##	os.path.join(CMIFDIR, 'pylib\\audio'),
 	os.path.join(CMIFDIR, 'win32\\src\\Build'),
 	os.path.join(os.path.split(CMIFDIR)[0], 'python\\Lib')
 ]
@@ -107,12 +107,15 @@ def Boot(what = 0):
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
 		# For now just continue!?!?!
 	# run the given cmif file
-	if what==PLAYER:
-		import grins
-	elif what==SUBSYSTEM:
-		exec 'import %s\n' % subsystemModuleName
-	else:
-		import cmifed
+	try:
+		if what==PLAYER:
+			import grins
+		elif what==SUBSYSTEM:
+			exec 'import %s\n' % subsystemModuleName
+		else:
+			import cmifed
+	except SystemExit, rc:
+		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
 
 
 def GuessCMIFRoot():
