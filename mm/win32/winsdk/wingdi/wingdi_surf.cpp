@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-#include "surface.h"
+#include "../common/surface.h"
 
 #include "../common/memfile.h"
 
