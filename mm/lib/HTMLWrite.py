@@ -223,7 +223,9 @@ class HTMLWriter:
 		out = '<!-- START-GRINS-GENERATED-CODE singleregion -->\n'
 
 		if self.top_levels:
-			if len(self.top_levels) > 1:
+			import features
+			if len(self.top_levels) > 1 and (features.MULTIPLE_TOPLAYOUT not in features.feature_set or \
+				   (template_data is not None and template_data.find('singleregion') >=0)):
 				raise Error, "Multiple toplevel windows"
 			w, h = self.top_channel_size(self.top_levels[0])
 			if not w or not h:
