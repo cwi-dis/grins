@@ -2,6 +2,7 @@
 #include <mmsystem.h>
 #include "mcidll.h"
 
+
 BOOL MidiOpen(MCI_MIDI_STRUCT *mciMidiInfo)
 {
     DWORD dwResult;
@@ -10,18 +11,17 @@ BOOL MidiOpen(MCI_MIDI_STRUCT *mciMidiInfo)
 
     if (mciMidiInfo->wMIDIDeviceID != 0) {
         MidiClose(mciMidiInfo);
-    }
+	}
     
     m_OpenParams.dwCallback = 0;
     m_OpenParams.wDeviceID = 0;
     m_OpenParams.lpstrDeviceType = NULL;    
     m_OpenParams.lpstrAlias = NULL;
-    m_OpenParams.lpstrDeviceType = NULL;
     m_OpenParams.lpstrElementName = mciMidiInfo->szFileName;
 
-    dwResult = mciSendCommand(0,
+	dwResult = mciSendCommand(0,
                               MCI_OPEN,
-                              MCI_OPEN_ELEMENT , 
+                              MCI_OPEN_ELEMENT, 
                               (DWORD)(LPVOID)&m_OpenParams);
     if (dwResult != 0) {
         MCIError("MCI_OPEN", dwResult);
@@ -72,7 +72,7 @@ BOOL MidiClose(MCI_MIDI_STRUCT *mciMidiInfo)
     MidiStop(mciMidiInfo); // Just in case.
     dwResult = mciSendCommand(mciMidiInfo->wMIDIDeviceID,
                               MCI_CLOSE,
-                              MCI_WAIT,
+                              MCI_NOTIFY,
                               (DWORD)(LPVOID)&gp);
     if (dwResult != 0) {
         MCIError("MCI_CLOSE", dwResult);
@@ -91,14 +91,29 @@ BOOL MidiPlay(MCI_MIDI_STRUCT *mciMidiInfo)
     MCI_PLAY_PARMS play;
     DWORD dwResult;
     DWORD dwFlags;
+	long lduration;
 
     if (mciMidiInfo->fOpened == FALSE) 
         return FALSE; // Not open
 
+	lduration = mciMidiInfo->lMIDIduration;
+	play.dwFrom = 0;
+	if (lduration<0)
+		play.dwTo = (DWORD)-lduration;
+	else
+		play.dwTo = (DWORD)lduration;
     play.dwCallback = MAKELONG(mciMidiInfo->hWndParent,0);
 
     if (mciMidiInfo->fNotify)
 	    dwFlags = MCI_NOTIFY;
+
+	if (lduration != 0)
+	{
+		if (lduration <0)
+			dwFlags = dwFlags|MCI_TO;
+		else
+			dwFlags = dwFlags|MCI_FROM|MCI_TO;
+	}
 
     dwResult = mciSendCommand(mciMidiInfo->wMIDIDeviceID,
                               MCI_PLAY,
