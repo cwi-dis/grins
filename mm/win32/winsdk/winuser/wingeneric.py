@@ -30,7 +30,7 @@ class GenericWnd:
 		self.__dict__['_obj_'] = wnd
 
 		menu = self.createMenu()
-		self.SetMenu(menu.GetHandle())
+		self.SetMenu(menu)
 		self.DrawMenuBar()
 
 		self.HookMessages()
