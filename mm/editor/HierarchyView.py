@@ -156,6 +156,10 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
+		self.singlechildcommands = [
+			MERGE_PARENT(callback=(self.merge_parent, ())),
+			]
+
 		self.pasteinteriorcommands = [
 				PASTE_UNDER(callback = (self.pasteundercall, ())),
 				]
@@ -322,7 +326,6 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_SVG(callback = (self.createaftercall, ('svg',))))
 		rv.append(NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))))
 		rv.append(NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))))
-		rv.append(MERGE_PARENT(callback=(self.merge_parent, ())))
 		return rv
 
 	def _getanimatecommands(self, ctx):
@@ -363,7 +366,10 @@ class HierarchyView(HierarchyViewDialog):
 			# can't do certain things to the root
 			#if fnode.__class__ is not SlideMMNode:
 			commands = commands + self.notatrootcommands + self.mediacommands
-			#
+
+			if len(fnode.GetParent().GetChildren()) == 1:
+				commands = commands + self.singlechildcommands
+
 			commands = commands + self.navigatecommands[0:1]
 			pchildren = fnode.GetParent().GetChildren()
 
@@ -1028,7 +1034,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		node = self.get_selected_node()
-		context = node.context
+		context = node.GetContext()
 		attrlist = node.getattrnames()
 		defattrlist = attrlist[:]
 		# Remove ones we don't normally copy
@@ -1303,7 +1309,7 @@ class HierarchyView(HierarchyViewDialog):
 			pnode = parent
 		else:
 			pnode = node
-		if parent is None and where <> 0:
+		if parent is None and where != 0:
 			self.draw()
 			windowinterface.showmessage(
 				"Can't insert before/after the root",
@@ -1335,7 +1341,7 @@ class HierarchyView(HierarchyViewDialog):
 			type = 'ext'
 
 		self.toplevel.setwaiting()
-		if where <> 0:
+		if where != 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
@@ -1501,15 +1507,22 @@ class HierarchyView(HierarchyViewDialog):
 		if not em.transaction():
 			return
 		self.toplevel.setwaiting()
+		ctx = node.GetContext()
 
 		# This is one way of doing this.
 		siblings = parent.GetChildren()
 		i = siblings.index(node)
 		em.delnode(node)
-		newnode = node.GetContext().newnode(type)
+		newnode = ctx.newnode(type)
 		em.addnode(parent, i, newnode)
 		em.addnode(newnode, 0, node)
 		self._copyattrdict(node, newnode, copylist, editmgr=em)
+
+		# move hyperlinks to node to the new parent
+		for n1,n2,dir,ltype,stype,dtype in ctx.hyperlinks.finddstlinks(node):
+			# we know that n2 is node
+			em.dellink((n1,n2,dir,ltype,stype,dtype))
+			em.addlink((n1,newnode,dir,ltype,stype,dtype))
 
 ##		# This is another.
 ##		url = MMAttrdefs.getattr(node, 'file')
@@ -1575,7 +1588,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		if focus is None:
 			focus = self.get_selected_node()
-		if where <> 0:
+		if where != 0:
 			# Get the parent
 			parent = focus.GetParent()
 			if parent is None:
@@ -2172,19 +2185,20 @@ class HierarchyView(HierarchyViewDialog):
 		# - special types of nodes (comment nodes, priority classes)
 
 		# first check if this can happen.
-		if not self.get_selected_widget():
+		widget = self.get_selected_widget()
+		if widget is None:
 			self.popup_error("No selected node!")
 			return
-		if not isinstance(self.get_selected_widget(), StructureWidgets.MMNodeWidget):
+		if not isinstance(widget, StructureWidgets.MMNodeWidget):
 			self.popup_error("You can only merge nodes!")
 			return
-		child = self.get_selected_widget().node
+		child = widget.node
 		if not child.parent:
 			self.popup_error("The root node has no parent to merge with!")
 			return
-		parent = child.parent
+		parent = child.GetParent()
 		# Now, check that this node is an only child.
-		if len(parent.children) <> 1:
+		if len(parent.GetChildren()) != 1:
 			self.popup_error("You can only merge a node with it's parents if it has no siblings.")
 			return
 		# also check that the child is not an immediate node
@@ -2237,26 +2251,14 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Hyperlinks..
 		#--------------
-		links = []
-		# Copy the list..
-		for l in self.root.context.hyperlinks.links:
-			links.append(l)
-
-		# Re-align them to the parent node
-		for l in links:
-			# l is a tuple that points to my anchors.
-			((suid, said), (duid, daid), d, t, s, p) = l
-			changed = 0
-			if suid == child_uid:
-				suid = parent_uid
-				changed = 1
-			if duid == child_uid:
-				duid = parent_uid
-				changed = 1
-			if changed:
-				# We need to use a copy of the list; otherwise this won't work here:
-				em.dellink(l)
-				em.addlink(((suid, said), (duid, daid), d, t, s, p))
+		for n1,n2,dir,ltype,stype,dtype in self.root.context.hyperlinks.findalllinks(child, None):
+			if n1 is child:
+				em.dellink((n1,n2,dir,ltype,stype,dtype))
+				em.addlink((parent,n2,dir,ltype,stype,dtype))
+				n1 = parent
+			if n2 is child:
+				em.dellink((n1,n2,dir,ltype,stype,dtype))
+				em.addlink((n1,parent,dir,ltype,stype,dtype))
 
 		child_type=child.type
 		child_children = child.children
@@ -2324,7 +2326,6 @@ class HierarchyView(HierarchyViewDialog):
 				newnode.attrdict[attrname] = attrvalue
 
 	def popup_error(self, message):
-		# I should have done this a long time ago.
 		windowinterface.showmessage(message, mtype="error", parent=self.window)
 
 def expandnode(node):
