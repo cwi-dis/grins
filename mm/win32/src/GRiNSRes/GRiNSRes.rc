@@ -397,6 +397,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDUC_CANCEL,8,53,32,14
 END
 
+IDD_EDITCOLORATTR DIALOG DISCARDABLE  0, 0, 285, 22
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT2,105,4,83,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Reset",IDUC_RESET,244,4,33,14,NOT WS_TABSTOP
+    LTEXT           "Property:",IDC_STATIC,1,6,29,12
+    EDITTEXT        IDC_EDIT1,31,4,71,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
+                    WS_TABSTOP
+    PUSHBUTTON      "Pick color...",IDUC_BROWSE,193,4,46,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -556,6 +568,13 @@ BEGIN
         LEFTMARGIN, 6
         RIGHTMARGIN, 307
         TOPMARGIN, 1
+    END
+
+    IDD_EDITCOLORATTR, DIALOG
+    BEGIN
+        RIGHTMARGIN, 277
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 18
     END
 END
 #endif    // APSTUDIO_INVOKED
