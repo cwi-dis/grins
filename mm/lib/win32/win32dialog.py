@@ -303,6 +303,50 @@ class OpenLocationDlg(ResDialog):
 
 ##############################
 
+class SelectElementDlg(ResDialog):
+	def __init__(self, parent=None, elements = None, selection=''):
+		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
+		self._elements = elements
+		self._selection = selection
+		self.__isoswnd = 0
+
+		self._bselect = Button(self,win32con.IDOK)
+		self._bcancel = Button(self,win32con.IDCANCEL)
+		self._editsel = Edit(self, grinsRC.IDC_EDIT1)
+
+	def OnInitDialog(self):	
+		self.__isoswnd = 1
+		self.attach_handles_to_subwindows()
+		self._editsel.settext(self._selection)
+		return ResDialog.OnInitDialog(self)
+
+	def OnOK(self):
+		self._selection = self._editsel.gettext()
+		self.__isoswnd = 0
+		return self._obj_.OnOK()
+
+	def OnCancel(self):
+		self.__isoswnd = 0
+		return self._obj_.OnCancel()
+
+	def close(self):
+		self.EndDialog(win32con.IDOK)
+
+	def show(self):
+		return self.DoModal()
+
+	def OnEditChange(self, id, code):
+		pass
+
+	def gettext(self):
+		if self.__isoswnd:
+			return self._editsel.gettext()
+		return self._selection
+			
+	def settext(self, text):
+		if self.__isoswnd:
+			self._editsel.settext(text)
+
 # Implementation of the Layout name dialog
 class LayoutNameDlg(ResDialog):
 	resource = grinsRC.IDD_LAYOUT_NAME
