@@ -14,6 +14,8 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <mmsystem.h>
 #include <assert.h>
 
+#include "wmpyrcb.h"
+
 #pragma comment (lib,"winmm.lib")
 
 
@@ -39,8 +41,10 @@ seterror(const char *funcname, HRESULT hr)
 	PyErr_Format(ErrorObject, "%s failed, error = %s", funcname, pszmsg);
 	LocalFree(pszmsg);
 }
-
-
+void seterror(const char *msg)
+{
+	PyErr_SetString(ErrorObject, msg);
+}
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // Objects declarations
@@ -248,20 +252,20 @@ newWMHeaderInfoObject()
 	return self;
 }
 
-//
+//++ our py callback interface object
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
-    IWMReaderCallback *pI;	
-} WMReaderCallbackObject;
+    IWMPyReaderCallback *pI;	
+} WMPyReaderCallbackObject;
 
-staticforward PyTypeObject WMReaderCallbackType;
+staticforward PyTypeObject WMPyReaderCallbackType;
 
-static WMReaderCallbackObject *
-newWMReaderCallbackObject()
+static WMPyReaderCallbackObject *
+newWMPyReaderCallbackObject()
 {
-	WMReaderCallbackObject *self;
-	self = PyObject_NEW(WMReaderCallbackObject, &WMReaderCallbackType);
+	WMPyReaderCallbackObject *self;
+	self = PyObject_NEW(WMPyReaderCallbackObject, &WMPyReaderCallbackType);
 	if (self == NULL)
 		return NULL;
 	self->pI=NULL;
@@ -305,8 +309,8 @@ static PyObject *
 WMReader_Open(WMReaderObject *self, PyObject *args)
 {
 	char *pszURL;
-	WMReaderCallbackObject *obj;
-	if (!PyArg_ParseTuple(args, "sO!",&pszURL,&WMReaderCallbackType,&obj))
+	WMPyReaderCallbackObject *obj;
+	if (!PyArg_ParseTuple(args, "sO!",&pszURL,&WMPyReaderCallbackType,&obj))
 		return NULL;	
 	HRESULT hr;
 	WCHAR pwszURL[MAX_PATH];
@@ -1712,14 +1716,79 @@ static PyTypeObject WMHeaderInfoType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
-// WMReaderCallback object 
+// WMPyReaderCallback object 
 
-static struct PyMethodDef WMReaderCallback_methods[] = {
+static char WMPyReaderCallback_SetListener__doc__[] =
+""
+;
+static PyObject *
+WMPyReaderCallback_SetListener(WMPyReaderCallbackObject *self, PyObject *args)
+{
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args, "O",&obj))
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->SetListener(obj);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMPyReaderCallback_SetListener", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+static char WMPyReaderCallback_WaitOpen__doc__[] =
+""
+;
+static PyObject *
+WMPyReaderCallback_WaitOpen(WMPyReaderCallbackObject *self, PyObject *args)
+{
+	DWORD msTimeout=INFINITE;
+	if (!PyArg_ParseTuple(args, "|l",&msTimeout))
+		return NULL;
+	HRESULT hr;
+	DWORD res;
+	Py_BEGIN_ALLOW_THREADS
+	hr=self->pI->WaitOpen(msTimeout,&res);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMPyReaderCallback_WaitOpen", hr);
+		return NULL;
+	}		
+	return Py_BuildValue("i", res);
+}
+
+static char WMPyReaderCallback_WaitForCompletion__doc__[] =
+""
+;
+static PyObject *
+WMPyReaderCallback_WaitForCompletion(WMPyReaderCallbackObject *self, PyObject *args)
+{
+	DWORD msTimeout=INFINITE;
+	if (!PyArg_ParseTuple(args, "|l",&msTimeout))
+		return NULL;
+	HRESULT hr;
+	DWORD res;
+	Py_BEGIN_ALLOW_THREADS
+	hr=self->pI->WaitForCompletion(msTimeout,&res);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMPyReaderCallback_WaitForCompletion", hr);
+		return NULL;
+	}		
+	return Py_BuildValue("i", res);
+}
+
+static struct PyMethodDef WMPyReaderCallback_methods[] = {
+	{"SetListener", (PyCFunction)WMPyReaderCallback_SetListener, METH_VARARGS, WMPyReaderCallback_SetListener__doc__},
+	{"WaitOpen", (PyCFunction)WMPyReaderCallback_WaitOpen, METH_VARARGS, WMPyReaderCallback_WaitOpen__doc__},
+	{"WaitForCompletion", (PyCFunction)WMPyReaderCallback_WaitForCompletion, METH_VARARGS, WMPyReaderCallback_WaitForCompletion__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
 static void
-WMReaderCallback_dealloc(WMReaderCallbackObject *self)
+WMPyReaderCallback_dealloc(WMPyReaderCallbackObject *self)
 {
 	/* XXXX Add your own cleanup code here */
 	RELEASE(self->pI);
@@ -1727,26 +1796,26 @@ WMReaderCallback_dealloc(WMReaderCallbackObject *self)
 }
 
 static PyObject *
-WMReaderCallback_getattr(WMReaderCallbackObject *self, char *name)
+WMPyReaderCallback_getattr(WMPyReaderCallbackObject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
-	return Py_FindMethod(WMReaderCallback_methods, (PyObject *)self, name);
+	return Py_FindMethod(WMPyReaderCallback_methods, (PyObject *)self, name);
 }
 
-static char WMReaderCallbackType__doc__[] =
+static char WMPyReaderCallbackType__doc__[] =
 ""
 ;
 
-static PyTypeObject WMReaderCallbackType = {
+static PyTypeObject WMPyReaderCallbackType = {
 	PyObject_HEAD_INIT(&PyType_Type)
 	0,				/*ob_size*/
-	"WMReaderCallback",			/*tp_name*/
-	sizeof(WMReaderCallbackObject),		/*tp_basicsize*/
+	"WMPyReaderCallback",			/*tp_name*/
+	sizeof(WMPyReaderCallbackObject),		/*tp_basicsize*/
 	0,				/*tp_itemsize*/
 	/* methods */
-	(destructor)WMReaderCallback_dealloc,	/*tp_dealloc*/
+	(destructor)WMPyReaderCallback_dealloc,	/*tp_dealloc*/
 	(printfunc)0,		/*tp_print*/
-	(getattrfunc)WMReaderCallback_getattr,	/*tp_getattr*/
+	(getattrfunc)WMPyReaderCallback_getattr,	/*tp_getattr*/
 	(setattrfunc)0,	/*tp_setattr*/
 	(cmpfunc)0,		/*tp_compare*/
 	(reprfunc)0,		/*tp_repr*/
@@ -1759,10 +1828,11 @@ static PyTypeObject WMReaderCallbackType = {
 
 	/* Space for future expansion */
 	0L,0L,0L,0L,
-	WMReaderCallbackType__doc__ /* Documentation string */
+	WMPyReaderCallbackType__doc__ /* Documentation string */
 };
-// End of code for WMReaderCallback object 
+// End of code for WMPyReaderCallback object 
 ////////////////////////////////////////////
+
 
 ////////////////////////////////////////////
 // GUID object (general but defined here for indepentance) 
@@ -1835,8 +1905,8 @@ static char CreateReader__doc__[] =
 static PyObject *
 CreateReader(PyObject *self, PyObject *args)
 {
-	DWORD dwRights;
-	if (!PyArg_ParseTuple(args,"i",&dwRights))
+	DWORD dwRights=0;
+	if (!PyArg_ParseTuple(args,"|i",&dwRights))
 		return NULL;
 	
 	WMReaderObject *obj = newWMReaderObject();
@@ -1908,6 +1978,31 @@ CreateProfileManager(PyObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+static char CreatePyReaderCallback__doc__[] =
+""
+;
+static PyObject *
+CreatePyReaderCallback(PyObject *self, PyObject *args)
+{
+	PyObject *pycbobj;
+	if (!PyArg_ParseTuple(args,"O",&pycbobj))
+		return NULL;
+	
+	WMPyReaderCallbackObject *obj = newWMPyReaderCallbackObject();
+	if (obj == NULL)
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = WMCreatePyReaderCallback(pycbobj,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("CreatePyReaderCallback", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 // std com stuff for independance
 static char CoInitialize__doc__[] =
 ""
@@ -1940,6 +2035,7 @@ static struct PyMethodDef wmfapi_methods[] = {
 	{"CreateReader", (PyCFunction)CreateReader, METH_VARARGS, CreateReader__doc__},
 	{"CreateWriter", (PyCFunction)CreateWriter, METH_VARARGS, CreateWriter__doc__},
 	{"CreateProfileManager", (PyCFunction)CreateProfileManager, METH_VARARGS, CreateProfileManager__doc__},
+	{"CreatePyReaderCallback", (PyCFunction)CreatePyReaderCallback, METH_VARARGS, CreatePyReaderCallback__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -1973,6 +2069,7 @@ static struct {const GUID *p;char* s;} wmguids[] ={
 };
 
 static struct {int n;char* s;} wmcon[] ={
+//enum WMT_ATTR_DATATYPE
 	{0, "WMT_TYPE_DWORD"},
 	{1, "WMT_TYPE_STRING"},
 	{2, "WMT_TYPE_BINARY"},
@@ -1980,6 +2077,25 @@ static struct {int n;char* s;} wmcon[] ={
 	{4, "WMT_TYPE_QWORD"},
 	{5, "WMT_TYPE_WORD"},
 	{6, "WMT_TYPE_GUID"},
+//enum WMT_STATUS
+    {0,"WMT_ERROR"},
+    {1,"WMT_OPENED"},
+    {2,	"WMT_BUFFERING_START"},
+    {3,	"WMT_BUFFERING_STOP"},
+    {4,	"WMT_EOF"},
+    {4,	"WMT_END_OF_FILE"},
+	{5,	"WMT_END_OF_SEGMENT"},
+    {6,	"WMT_END_OF_STREAMING"},
+    {7,	"WMT_LOCATING"},
+    {8,	"WMT_CONNECTING"},
+	{9,	"WMT_NO_RIGHTS"},
+    {10,"WMT_MISSING_CODEC"},
+    {11,"WMT_STARTED"},
+    {12,"WMT_STOPPED"},
+    {13,"WMT_CLOSED"},
+    {14,"WMT_STRIDING"},
+    {15,"WMT_TIMER"},
+    {16,"WMT_INDEX_PROGRESS"},
 	{0,NULL}
 	};
 
