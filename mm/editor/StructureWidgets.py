@@ -216,7 +216,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			nodes = []
 		for x in [node] + nodes:
 			links = hlinks.findsrclinks(x)
-			if x is not node and dangling is None and not links:
+			if x.GetType() == 'anchor' and dangling is None and not links:
 				dangling = self.iconbox.add_icon('danglinganchor')
 				dangling.set_icon('danglinganchor')
 				dangling.set_properties(initattr = '.href')
