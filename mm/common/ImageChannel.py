@@ -296,7 +296,10 @@ def makergbfile(filename):
 	uncompressed = None
 	if filename[-2:] == '.Z':
 		filename = uncompressed = conv('zcat <$1 >$2', filename)
-	type = imghdr.what(filename)
+	try:
+		type = imghdr.what(filename)
+	except IOError:
+		type = None
 	if type == 'pnm':
 		res = conv('fromppm $1 $2', filename)
 	elif type == 'gif':
