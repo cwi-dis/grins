@@ -14,6 +14,7 @@ import win32mu
 import usercmd
 
 from pywinlib.mfc import window,object,docview
+import windowinterface
 import afxres,commctrl
 
 class _SourceView(docview.EditView):
@@ -32,11 +33,15 @@ class _SourceView(docview.EditView):
 	def OnInitialUpdate(self):
 		edit=self.GetEditCtrl()
 		edit.SetWindowText(self._text)
-		edit.SetReadOnly(1)
+		#edit.SetReadOnly(1)
 		self._mdiframe=(self.GetParent()).GetMDIFrame()
 
 	# Called by the framework before this window is closed
 	def OnClose(self):
+		print "DEBUG: Warning! Saving source is not implemented yet."
+		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.GetParent())
+		if saveme==0:
+			windowinterface.showmessage("Sorry, saving changes is not implemented yet.")
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
