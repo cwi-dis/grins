@@ -516,6 +516,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def __get_image_filename(self, node, image = 1):
 		# return a file name for a thumbnail image
+		ntype = node.GetType()
+		if ntype not in ('ext', 'imm'):
+			return os.path.join(self.mother.datadir, '%s.tiff' % ntype)
+
 		url = node.GetAttrDef('file', None)
 		if not url:
 			# no file attr, so no thumbnail
