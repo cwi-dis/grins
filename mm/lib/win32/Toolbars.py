@@ -96,6 +96,8 @@ class NullPanelMixin:
 		pass
 	def update(self):
 		pass
+	def assertPanelVisible(self):
+		pass
 
 # do not use player panel for player yet
 if not appcon.IsEditor:
@@ -128,7 +130,8 @@ class ToolbarMixin(PanelMixin):
 	def _restoreToolbarState(self):
 		if self.IsFirstTime():
 			self.PositionForFirstTime()
-			PanelMixin.update(self)
+			if self._pbar:
+				self._pbar.show()
 			return
 		try:
 			self.LoadBarState("GRiNSToolBars")
@@ -187,6 +190,7 @@ class ToolbarMixin(PanelMixin):
 				bar.ShowWindow(win32con.SW_SHOW)
 				self.ShowControlBar(bar,1,0)
 				bar.RedrawWindow()
+			PanelMixin.assertPanelVisible(self)
 		else:
 			for bar in self._bars.values():
 				bar.ShowWindow(win32con.SW_HIDE)
