@@ -1460,12 +1460,12 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,8,138,261,18,SS_SUNKEN
     CONTROL         "Auto play",IDC_AUTOPLAY,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,12,20,56,10
-    LTEXT           "Next presentation:",IDC_GROUP1,15,93,59,10
+    LTEXT           "Next presentation:",IDC_QTNEXTLABEL,15,93,59,10
     PUSHBUTTON      "Browse...",IDC_BUTTON_QTNEXT,215,91,38,12
     CONTROL         "Time slider",IDC_QTTIMESLIDER,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,12,53,53,10
-    LTEXT           "Chapter mode:",-1,143,35,48,10,NOT WS_GROUP | 
-                    WS_TABSTOP
+    LTEXT           "Chapter mode:",IDC_QTCHAPTERLABEL,143,35,48,10,NOT 
+                    WS_GROUP | WS_TABSTOP
     CONTROL         "all",IDC_QTCHAPTERMODE1,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,204,35,29,10
     CONTROL         "clip",IDC_QTCHAPTERMODE2,"Button",BS_AUTORADIOBUTTON | 
@@ -1488,12 +1488,12 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,7,5,261,72
     COMBOBOX        IDC_BITRATENECESSARY,58,37,103,109,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Bitrate:",ID_STATIC,15,39,32,9
+    LTEXT           "Bitrate:",IDC_BITRATELABEL,15,39,32,9
     EDITTEXT        IDC_SYSTEMMIMETYPE,97,123,157,13,ES_AUTOHSCROLL
-    LTEXT           "Mime type supported:",ID_STATIC2,15,124,74,9
+    LTEXT           "Mime type supported:",IDC_SYSTEMMIMELABEL,15,124,74,9
     EDITTEXT        IDC_QTCHAPTER,58,57,197,13,ES_AUTOHSCROLL
-    LTEXT           "Chapter:",ID_STATIC3,15,58,32,9
-    LTEXT           "Immediate instantiation:",IDC_STATIC,14,17,75,13
+    LTEXT           "Chapter:",IDC_QTCHAPTERLABEL,15,58,32,9
+    LTEXT           "Immediate instantiation:",IDC_IMMINSTLABEL,14,17,75,13
     GROUPBOX        "",IDC_STATIC,99,11,155,18
     CONTROL         "Not set",IDC_IMMINSTMEDIA1,"Button",BS_AUTORADIOBUTTON,
                     114,18,37,8
@@ -1503,7 +1503,7 @@ BEGIN
                     18,24,8
     GROUPBOX        "graphic property",IDC_FRAME2,7,80,262,30
     EDITTEXT        IDC_QTCOMPOSITEMODE,97,91,157,13,ES_AUTOHSCROLL
-    LTEXT           "Composite mode:",ID_STATIC4,15,93,74,9
+    LTEXT           "Composite mode:",IDC_QTCOMPOSITELABEL,15,93,74,9
 END
 
 IDD_EDITATTR_O1S2 DIALOG DISCARDABLE  0, 0, 300, 164
