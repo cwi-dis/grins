@@ -14,6 +14,7 @@ from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from usercmd import *
 import MMmimetypes
+import features
 
 # an empty document
 EMPTY = """
@@ -74,7 +75,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
 			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
 			]
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			self.commandlist = self.commandlist + [
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
@@ -161,7 +162,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import Player
 		self.player = Player.Player(self)
 
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			import ChannelView
 			self.channelview = ChannelView.ChannelView(self)
 
@@ -263,7 +264,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		filetypes = ['application/x-grins-project', 'application/smil']
 		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		dftfilename = ''
 		if self.filename:
@@ -285,7 +286,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return		# Error, don't save HTML file
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
-			if settings.get('lightweight'):
+			if features.lightweight:
 				attrs['project_html_page'] = 'external_player.html'
 			# In the full version we continue, and the user gets a warning later (in HTMLWrite)
 		#
@@ -373,7 +374,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			missing = missing + '\n- Mediaserver SMILfile URL'
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
-			if settings.get('lightweight'):
+			if features.lightweight:
 				attrs['project_html_page'] = 'external_player.html'
 			else:
 				if not attr: attr = 'project_html_page'
@@ -566,7 +567,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		if mimetype == 'application/x-grins-cmif':
 			import settings
-			if settings.get('lightweight'):
+			if features.lightweight:
 				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
 				return 0
 		elif mimetype == 'application/smil':
@@ -758,7 +759,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##				self.new_file = 1
 		elif mtype == 'application/x-grins-cmif':
 			import settings
-			if settings.get('lightweight'):
+			if features.lightweight:
 				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
 				raise Error, filename
 			import MMRead

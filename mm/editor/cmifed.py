@@ -4,6 +4,7 @@ __version__ = "$Id$"
 
 import sys
 import os
+import features
 
 # The next line enables/disables the CORBA interface to GRiNS
 
@@ -35,10 +36,9 @@ class Main(MainDialog):
 	def __init__(self, opts, files):
 		import windowinterface
 		import license
-		import settings
 		self.tmpopts = opts
 		self.tmpfiles = files
-		if settings.get('lightweight'):
+		if features.lightweight:
 			whichversion = 'light'
 		else:
 			whichversion = 'pro'
@@ -53,8 +53,7 @@ class Main(MainDialog):
 ##		del self.tmplicensedialog
 		import MMurl
 		import windowinterface
-		import settings
-		if settings.get('lightweight') and len(files) > 1:
+		if features.lightweight and len(files) > 1:
 			windowinterface.showmessage('Cannot open multiple files in this version')
 			files = files[:1]
 		self._license = license
@@ -197,8 +196,7 @@ class Main(MainDialog):
 		
 	def canopennewtop(self):
 		# Return true if a new top can be opened (only one top in the light version)
-		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			return 1
 		for top in self.tops:
 			top.close()
