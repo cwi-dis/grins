@@ -1,0 +1,290 @@
+Introduction
+============
+A CMIF channel is an abstraction for a multimedia data stream.  A
+channel is used to play data nodes of a particular type.  A channel
+can play one node at the time, but while a node is being played, the
+following node may be prepared for playing.  This process is called
+"arming" a node.  In this document, method calls are specified by
+using dummy instance variables.  The variables used are "chan" for a
+channel instance, "sched" for the scheduler instance that was passed
+to the channel's init() method, and "sctx" for a scheduler context.
+Scheduler context are the contexts passed to chan.startcontext() and
+chan.stopcontext().
+
+In this document two interfaces are described.  The first interface is
+the interface between the CMIF player module and the channel.  The
+player creates and destroys channels and interfaces with the CMIF
+scheduler which, in turn, calls channel methods.  The other interface
+is the interface between the channel base classes and the classes that
+may be derived from these base classes.  This interface is used by
+programmers of new media-specific channels.
+
+Creation and Destruction
+------------------------
+A channel object is created by its init() method.  This method has
+four arguments: the channel's name (CMIFed demands that the name be
+unique, the channels don't care), an instance of an MMChannel object,
+an instance of the Scheduler, and an instance of the Player.  The
+author of a new channel should not need to use these instances.  They
+are used internally.
+
+A channel object is destroyed by calling chan.destroy().  This method
+frees all resources that the channel instance uses.  After having
+called chan.destroy(), none of the other methods may be called
+anymore.  Chan.destroy() may be called at any time during the life of
+the channel.
+
+States of a Channel
+-------------------
+A channel maintains internal state.  These states are more fully
+described in the "states.doc" document.  The SHOWN/HIDDEN state can be
+manipulated by the channel methods chan.show() and chan.hide().  The
+PAUSING/BUSY state can be manipulated by the channel method
+setpaused().
+
+Interface Between Channel and Scheduler
+---------------------------------------
+When a document is being played, the scheduler makes calls to the
+channels.  The scheduler can call the following methods:
+	chan.startcontext(opaque_context)
+	chan.seekanchor(node, anchor_id)
+	chan.arm(node)
+	chan.play(node)
+	chan.stopcontext(opaque_context)
+	chan.setpaused(paused)
+	chan.stopplay(node)
+The channel can also make calls to the scheduler.  These calls are
+made through the context object instances that the scheduler passes to
+the channel in chan.startcontext().  The scheduler methods that the
+channel can call are the following:
+	sctx.arm_ready(chan)
+	sctx.arm_done(node)
+	sctx.play_done(node)
+	did_fire = sctx.anchorfired(node, anchorlist)
+	queue_id = sched.enter(secs, callback, arg)
+	sched.cancel(queue_id)
+
+Before any of the other methods can be called, the scheduler must
+first call chan.startcontext().  Chan.startcontext() sets up a
+"context" in which the other methods execute.  Chan.play() can only be
+called after chan.arm() was called in the same context and after the
+channel called sctx.arm_done().  When a node is to be played on a
+channel, the scheduler must do the following.  First a context must be
+set up by using chan.startcontext().  After this, the node must be
+armed by calling chan.arm().  When the channel has finished arming the
+node, it calls sctx.arm_done(), supplying it with the node that was
+armed as argument.  The scheduler can then call chan.play().  When the
+channel can accept a new arm request, it should call
+sctx.arm_ready(), passing it the channel as argument.  This indicates
+to the scheduler that it can arm a following node on the same channel.
+When the channel is finished playing the node, it calls
+sctx.play_done(), giving it the node that was played as argument.
+The channel keeps any images on the screen until the scheduler calls
+chan.stopplay().  The node that is passed to chan.stopplay() should be
+the same node that was passed to chan.arm() and chan.play().  This
+node is only used for consistency checking.  Chan.stopplay() indicates
+to the channel that the window (if any) should be cleared and that the
+channel should ready itself for playing a following node.
+Chan.stopplay() may be called when the channel is still playing a
+node.  If this is the case, the channel stops playing the node (by
+calling chan.playstop(), see below).
+
+When a node is to be played because of a hyperjump, the scheduler may
+call chan.seekanchor before it calls chan.arm() to indicate to the
+channel which anchor triggered playing the node.  The channel may use
+the information for instance to highlight the anchor.
+Chan.seekanchor() must be called in the same context as chan.arm().
+
+If a channel stops playing a node, be it because the channel is
+finished playing the node, or because the channel was told to stop
+playing the node, it calls sctx.play_done().  Similarly, if a channel
+stops arming a node, be it because the channel is finished arming the
+node, or because the channel was told to stop arming the node, it
+calls sctx.arm_done().
+
+At any one time there may be two active contexts.  One context is the
+one being used to play a node, the other is the one being used to arm
+a following node.  The scheduler can start a new context when the old
+context is still playing.  It is not allowed to call
+chan.startcontext() and then call chan.play() to play a node that was
+armed before the chan.startcontext(), since chan.play() can only be
+called after chan.arm() was called in the same context.
+
+The scheduler can call chan.stopcontext() at any time after a
+chan.startcontext().  When chan.stopcontext() is called, the channel
+stops arming and playing immediately.  This is done by calling
+chan.stopplay() and chan.stoparm().  If there are two active contexts,
+chan.stopcontext() can be called for either context.  The activities
+in the context for which chan.stopcontext() was called are stopped,
+but the activities in the other context continue.  It may also be that
+there is only one context active, in which case the chan.stopcontext()
+should be for this context and both arming and playing activities are
+stopped.
+
+After chan.startcontext(), chan.arm() and chan.play() calls are in the
+new context.  This means that the next method the scheduler can call
+is either chan.stopcontext() on the old context (if that hadn't been
+done yet), chan.stopcontext() on the new context, or chan.arm() of a
+new node.
+
+When a node with anchors is being played and the user presses on a
+button, sctx.anchorfired() is called.  The return value indicates to
+the channel whether the anchor actually fired.  When the anchor is a
+pausing anchor without a hyperlink attached to it, the anchor doesn't
+fire.
+
+Two other scheduler methods that are called by the channel are
+sched.enter() and sched.cancel().  They are used to schedule a
+callback at some time in the future and to cancel this.  These methods
+are used by internal methods in the channel.
+
+User Interface Aspects
+----------------------
+A channel may either be shown or hidden.  If a channel is hidden,
+playing a node on the channel has no other effect than that the
+channel waits until the time it takes to play the node is up before it
+calls sctx.play_done().  A channel is made visible by calling
+chan.show() and a channel is made invisible by calling chan.hide().
+Neither chan.show() nor chan.hide() take arguments.  Chan.show() and
+chan.hide() may be called when the channel is already shown or hidden
+respectively.  In this case, these calls have no effect.
+
+When a channel is created, it is in the hidden state.
+
+A channel may either be busy or pausing.  If a channel is pausing,
+nothing that can be perceived by the user happens.  A channel can be
+paused by calling chan.setpaused(1), it can be set busy by calling
+chan.setpaused(0).
+
+When a channel is created, it is in the paused state.
+
+Interface Between Base Class and Derived Class
+----------------------------------------------
+The Channel.py module provides four base classes that can be used for
+the author of a CMIFed channel.  The four base classes are
+	Channel
+	ChannelWindow
+	ChannelThread
+	ChannelWindowThread
+These base classes provide common code for channels.  The Channel
+class is the most basic class.  The ChannelWindow class can be used by
+channels that have a window.  The ChannelThread class can be used by
+channels that have asynchronous threads using the mm module.  The
+ChannelWindowThread can be used by channels that have both a window
+and use asynchronous threads.  In all cases, the interfaces between
+the base class and the derived class is the same.
+
+The core of a channel is contained within the base class.  The
+scheduler calls methods of the class, and these methods call methods
+that a channel writer is expected to redefine.  A channel writer does
+not have to redefine all methods mentioned here.  Often it suffices to
+redefine do_arm() and use the defaults provided by the base class.
+
+In the following paragraphs, the following methods are used.  Their
+arguments are shown here, as is an indication whether a method can be
+overridden or extended.  A method that can be extended is shown with
+an asterisk (*), a method that can be overridden is shown with a
+percent (%).  Method without either indication should not be
+overridden or extended.  None of the methods need be overridden or
+extended, except when as described below.
+	chan.init(name, attrdict, scheduler, ui) *
+	chan.destroy() *
+	success = chan.do_show() %
+	chan.do_hide() %
+	chan.seekanchor(node, anchor_id) %
+	chan.do_arm(node) %
+	chan.setanchor(anchor_id, anchor_type, button)
+	chan.do_play(node) %
+	chan.playstop() *
+	chan.armstop() *
+	filename = chan.getfilename(node)
+	duration = chan.getduration(node)
+	hi_red, hi_blue, hi_green = chan.gethicolor(node)
+	fg_red, fg_blue, fg_green = chan.getfgcolor(node)
+	bg_red, bg_blue, bg_green = chan.getbgcolor(node)
+	chan.threadstart() %
+
+A channel instance is created by the init() method.  If a channel
+needs extra initialization code, it can redefine init().  The init()
+method of the base class should then be called as well, probably at
+the start of the redefined init() method.  The redefined init() method
+must have the same arguments as the init() in the base class.  A
+channel instance is destroyed by calling the destroy() method.  Again,
+a derived class may redefine this method but should call the destroy()
+method of the base class as well after doing its own destructions.
+
+When a channel is made visible by calling chan.show(), the base class
+calls chan.do_show() to do the actual work of making the channel
+visible.  If this method is redefined, the do_show() method of the
+base class should be called at the start of the redefined method.
+Chan.do_show() returns 1 if it succeeds in making the channel visible,
+otherwise it returns 0.  When a channel is made invisible by calling
+chan.hide(), the base class calls chan.do_hide() to do the actual work
+of hiding the channel.  If this method is redefined, the do_hide()
+method of the base class should be called at the end of the redefined
+method.  Chan.do_hide() does not return a value.  When chan.show() or
+chan.hide() are called when the channel is already visible or
+invisible, chan.do_show() and chan.do_hide() will not be called.
+
+When a node is to be armed, the scheduler calls chan.arm().  The base
+class provides an arm() method that calls chan.do_arm(node) to do the
+actual arming.  Chan.do_arm() should return 1 if the arm is completed
+when chan.do_arm() returns, 0 otherwise.  If the variable chan.syncarm
+is set, the arm must be synchronous, that is to say, when
+chan.do_arm() returns, the arm must be finished.  chan.do_arm() does
+all the channel-specific work to arm a node.  Chan.do_arm() is
+provided for a derived class to override.  The do_arm() method of the
+base class need not be called.
+
+When there are anchors on the node, chan.do_arm() must call
+chan.setanchor() to inform the base class about this.
+Chan.setanchor() sets things up so that when the node is played and
+the user presses the button, sctx.anchorfired() is called
+automatically.  The arguments of setanchor are the anchor ID, the
+anchor type and a button object (see windowinterface.doc).  The
+arguments to sctx.anchorfired() are the node and a list of tuples.
+The tuples in the list consist of the same anchor ID and the anchor
+type that were passed to chan.setanchor().
+
+If the channel is a channel with a window (base class is either
+ChannelWindow or ChannelWindowThread), the channel may use the
+armed_display object.  This is a display object (see the description
+of the windowinterface module).  If the channel is a channel with
+threads (base class is either ChannelThread or ChannelWindowThread),
+the channel may use the threads object.  This is an mm object.  In
+channels with threads, one method must be redefined.  This method is
+threadstart().  Threadstart() does not take an argument.  The body of
+threadstart() is expected to be something like
+	import xxxchannel
+	return xxxchannel.init()
+where xxxchannel is an mm channel module.
+
+When a channel is to be played, the scheduler calls chan.play().  The
+base class provides a play() method that calls chan.do_play(node) to
+do the actual playing.  Before chan.do_play() is called, the base
+class has already done the common work.  If the channel has a window
+and chan.do_arm() filled in the window using the chan.armed_display
+object, this object has already been rendered.  If the channel has
+asynchronous threads, the threads have already been told to start
+playing.
+
+When a channel is playing a node, chan.playstop() may be called to
+stop playing the node.  When a derived class overrides the playstop()
+method, it should also call the playstop() method of its base class.
+Playstop() should not be confused with stopplay().  The former is
+called only when a node is actually playing and it is called by the
+base class; the latter is called by the scheduler to indicate to the
+base class that playing should stop.
+
+When a channel is arming a node, chan.armstop() may be called to stop
+arming the node.  When a derived class redefines the armstop() method,
+it should also call the armstop() method of the base class.
+
+There are a number of convenience methods that are defined by the base
+class that the derived class may use.  These are chan.getfgcolor(),
+chan.getbgcolor(), chan.gethicolor(), chan.getduration(), and
+chan.getfilename().  The first three return a color attribute of the
+node passed as argument.  The colors are the background color,
+foreground color and highlight color respectively.  Chan.getduration()
+returns the duration of a node.  Chan.getfilename() returns the name
+of the file from which the external data for the node comes.
