@@ -4948,6 +4948,7 @@ class FakeRootNode(MMNode):
 	def resetall(self, sched):
 		if sched is not None:
 			MMNode.resetall(self, sched)
+		self.__root.fakeparent = None
 		del self.__root.fakeparent
 		del self.__root
 		self.Destroy(fakeroot = 1)
