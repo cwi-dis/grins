@@ -12,7 +12,7 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 import features
-import string, os
+import os
 import MMStates
 ##import Bandwidth
 import Duration
@@ -106,7 +106,7 @@ class MMNodeContext:
 			# this fixes a problem if the base url is
 			# something like http://www.example.org
 			baseurl = MMurl.basejoin(baseurl, 'index.html')
-			i = string.rfind(baseurl, '/')
+			i = baseurl.rfind('/')
 			if i >= 0:
 				baseurl = baseurl[:i+1]
 		self.baseurl = baseurl
@@ -2341,7 +2341,7 @@ class MMNode(MMTreeElement):
 			if url:
 				mimetype = self.GetComputedMimeType()
 				if mimetype:
-					mimetype = string.split(mimetype, '/')[0]
+					mimetype = mimetype.split('/')[0]
 				if mimetype:
 					return mimetype
 		if self.type == 'animpar':
@@ -2836,14 +2836,14 @@ class MMNode(MMTreeElement):
 				if file:
 					self.SetAttr('file', file)
 				return 'data:image/vnd.rn-realpix;base64,' + \
-				       string.join(string.split(base64.encodestring(data), '\n'), '')
+				       ''.join(base64.encodestring(data).split('\n'))
 		if self.type == 'imm':
 			chtype = self.GetChannelType()
 			if chtype == 'html':
 				mime = 'text/html'
 			else:
 				mime = ''
-			data = string.join(self.GetValues(), '\n')
+			data = '\n'.join(self.GetValues())
 			if nonascii is None:
 				nonascii = re.compile('[\200-\377]')
 			if nonascii.search(data):
@@ -3133,7 +3133,7 @@ class MMNode(MMTreeElement):
 		mtype = self.GetAttrDef('mimetype', None)
 		maintype = subtype = None
 		if mtype and '/' in mtype:
-			maintype, subtype = string.split(mtype, '/', 1)
+			maintype, subtype = mtype.split('/', 1)
 		try:
 			media_width, media_height = Sizes.GetSize(url, maintype, subtype)
 		except:
@@ -5105,24 +5105,24 @@ def _parsemarkerfile(url):
 	u = MMurl.urlopen(url)		# can raise IOError
 	if required:
 		line = u.readline()
-		if not line or string.rstrip(line) != required[0]:
+		if not line or line.rstrip() != required[0]:
 			return {}
 		line = u.readline()
-		if not line or string.rstrip(line) != required[1]:
+		if not line or line.rstrip() != required[1]:
 			return {}
 	markers = {}
 	while 1:
 		line = u.readline()
 		if not line:
 			break
-		line = string.strip(line)
+		line = line.strip()
 		if not line:
 			# empty line
 			continue
 		if line[:2] == '//':
 			# comment line
 			continue
-		vals = string.split(line, None, 3)
+		vals = line.split(None, 3)
 		id = vals[0]
 		start = dur = 0
 		title = ''
