@@ -334,8 +334,8 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
         pivw->put_Owner((OAHWND)pWnd->GetSafeHwnd());
 		pivw->put_MessageDrain((OAHWND)pWnd->GetSafeHwnd());
         pivw->put_WindowStyle(WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
-		CRect rc;pWnd->GetClientRect(&rc);
-		pivw->SetWindowPosition(rc.left, rc.top, rc.right, rc.bottom);
+		//CRect rc;pWnd->GetClientRect(&rc);
+		//pivw->SetWindowPosition(rc.left, rc.top, rc.right, rc.bottom);
 		pivw->put_AutoShow(OATRUE);
 		pivw->SetWindowForeground(OATRUE);
 		pivw->Release();
@@ -357,8 +357,8 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
 // Return Values: None
 static PyObject* py_set_window_position(PyObject *self, PyObject *args)
 	{
-	CRect rc;
-	if (!PyArg_ParseTuple(args,"(iiii):SetWindowPosition", &rc.left, &rc.top, &rc.right, &rc.bottom))
+	long x,y,w,h;
+	if (!PyArg_ParseTuple(args,"(llll):SetWindowPosition", &x,&y,&w,&h))
 		return NULL;
 
 	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
@@ -370,7 +370,7 @@ static PyObject* py_set_window_position(PyObject *self, PyObject *args)
     if(SUCCEEDED(hr) )
 		{
 		GUI_BGN_SAVE;
-		pivw->SetWindowPosition(rc.left, rc.top, rc.right, rc.bottom);
+		pivw->SetWindowPosition(x,y,w,h);
 		pivw->Release();
 		GUI_END_SAVE;
 		}
@@ -392,16 +392,16 @@ static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 
 	IVideoWindow  *pivw  = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IVideoWindow,(void **)&pivw);
-	CRect rc;
+	long x,y,w,h;
     if(SUCCEEDED(hr) )
 		{
 		GUI_BGN_SAVE;
-		pivw->GetWindowPosition(&rc.left, &rc.top, &rc.right, &rc.bottom);
+		pivw->GetWindowPosition(&x, &y, &w, &h);
 		pivw->Release();
 		GUI_END_SAVE;
 		}
 
-	return Py_BuildValue("(iiii)",rc.left, rc.top, rc.right, rc.bottom); 
+	return Py_BuildValue("(llll)",x,y,w,h); 
 	}
 
 
