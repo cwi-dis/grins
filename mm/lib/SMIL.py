@@ -48,57 +48,94 @@ ATTRIBUTES = {
 	'abstract': ['MediaDescription'],
 	'accelerate': ['TimeManipulations'],
 	'accesskey': ['LinkingAttributes'],
+	'accumulate': ['BasicAnimation'],
 	'actuate': ['LinkingAttributes'],
-	'alt': ['MediaAccessibility', 'LinkingAttributes'],
+	'additive': ['BasicAnimation'],
+	'alt': ['MediaAccessibility'],
+	'attributeName': ['BasicAnimation'],
+	'attributeType': ['BasicAnimation'],
 	'author': ['MediaDescription'],
 	'autoReverse': ['TimeManipulations'],
-	'backgroundColor': ['HierarchicalLayout'],
-	'begin': ['AccessKeyTiming', 'EventTiming', 'MediaMarkerTiming', 'MultiArcTiming', 'RepeatValueTiming', 'BasicInlineTiming', 'SyncbaseTiming', 'WallclockTiming'],
+	'background-color': ['BasicLayout'],
+	'backgroundColor': {'BasicLayout': ['region', 'root-layout'], 'MultiWindowLayout': ['topLayout'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream']},
+	'bandwidth': ['PrefetchControl'],
+	'begin': {'AccessKeyTiming': None, 'EventTiming': None, 'MediaMarkerTiming': None, 'MultiArcTiming': None, 'RepeatValueTiming': None, 'BasicInlineTiming': None, 'SyncbaseTiming': None, 'WallclockTiming': None, 'InlineTransitions': ['transitionFilter']},
 	'borderColor': ['TransitionModifiers'],
 	'borderWidth': ['TransitionModifiers'],
-	'bottom': ['HierarchicalLayout'],
+	'bottom': {'BasicLayout': ['region'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
+	'by': {'BasicAnimation': None, 'InlineTransitions': ['transitionFilter']},
+	'calcMode': {'BasicAnimation': None, 'SplineAnimation': None, 'InlineTransitions': ['transitionFilter']},
+	'class': ['Structure'],
 	'clip-begin': ['MediaClipping', 'MediaClipMarkers'],
 	'clip-end': ['MediaClipping', 'MediaClipMarkers'],
 	'clipBegin': ['MediaClipping', 'MediaClipMarkers'],
 	'clipEnd': ['MediaClipping', 'MediaClipMarkers'],
+	'close': ['MultiWindowLayout'],
+	'color': ['BrushMedia'],
+	'content': ['Metainformation'],
+	'coords': ['BasicLinking'],
 	'copyright': ['MediaDescription'],
 	'customTest': ['CustomTestAttributes'],
 	'decelerate': ['TimeManipulations'],
+	'defaultState': ['CustomTestAttributes'],
 	'destinationLevel': ['LinkingAttributes'],
 	'destinationPlaystate': ['LinkingAttributes'],
-	'dur': ['BasicInlineTiming'],
-	'end': ['AccessKeyTiming', 'EventTiming', 'MediaMarkerTiming', 'MultiArcTiming', 'RepeatValueTiming', 'BasicInlineTiming', 'SyncbaseTiming', 'WallclockTiming'],
-	'endsync': ['TimeContainerAttributes', 'BasicTimeContainers'],
+	'direction': ['BasicTransitions'],
+	'dur': {'BasicInlineTiming': ['a','animate','set','animateMotion','animateColor','area','anchor','transitionFilter','text','img','audio', 'animation', 'video', 'ref', 'textstream', 'brush', 'body', 'par', 'seq', 'excl', 'prefetch'], 'BasicTransitions': ['transition'], 'InlineTransitions': ['transitionFilter']},
+	'end': {'AccessKeyTiming': None, 'EventTiming': None, 'MediaMarkerTiming': None, 'MultiArcTiming': None, 'RepeatValueTiming': None, 'BasicInlineTiming': None, 'SyncbaseTiming': None, 'WallclockTiming': None, 'InlineTransitions': ['transitionFilter']},
+	'endProgress': ['BasicTransitions'],
+	'endsync': {'ExclTimeContainers': ['excl'], 'TimeContainerAttributes': None, 'BasicTimeContainers': None},
 	'erase': ['MediaParam'],
 	'external': ['LinkingAttributes'],
-	'fill': ['TimeContainerAttributes', 'BasicTimeContainers'],
+	'fadeColor': {'BasicTransitions': None, 'InlineTransitions': ['transitionFilter']},
+	'fill': {'ExclTimeContainers': ['excl'], 'TimeContainerAttributes': None, 'BasicTimeContainers': None},
 	'fillDefault': ['FillDefault'],
-	'fit': ['HierarchicalLayout'],
+	'fit': {'BasicLayout': ['region'], 'HierarchicalLayout': ['ref','audio','video','img','text','animation','textstream','brush']},
 	'fragment': ['ObjectLinking'],
-	'height': ['HierarchicalLayout'],
+	'from': {'BasicAnimation': None, 'InlineTransitions': ['transitionFilter']},
+	'height': {'BasicLayout': ['region', 'root-layout'], 'MultiWindowLayout': ['topLayout'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
 	'horzRepeat': ['TransitionModifiers'],
-	'left': ['HierarchicalLayout'],
+	'href': ['BasicLinking'],
+	'id': ['Structure'],
+	'keySplines': ['SplineAnimation'],
+	'keyTimes': ['SplineAnimation'],
+	'left': {'BasicLayout': ['region'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
 	'longdesc': ['MediaAccessibility'],
 	'max': ['MinMaxTiming'],
 	'mediaRepeat': ['MediaParam'],
+	'mediaSize': ['PrefetchControl'],
+	'mediaTime': ['PrefetchControl'],
 	'min': ['MinMaxTiming'],
+	'mode': ['InlineTransitions'],
+	'name': {'MediaParam': ['param'], 'Metainformation': ['meta']},
+	'nohref': ['BasicLinking'],
+	'open': ['MultiWindowLayout'],
+	'origin': ['BasicAnimation'],
+	'override': ['CustomTestAttributes'],
+	'path': ['SplineAnimation'],
 	'readIndex': ['MediaAccessibility'],
 	'regAlign': ['HierarchicalLayout'],
 	'regPoint': ['HierarchicalLayout'],
 	'region': ['BasicLayout'],
+	'regionName': ['BasicLayout'],
 	'repeat': ['RepeatTiming'],
-	'repeatCount': ['RepeatTiming'],
-	'repeatDur': ['RepeatTiming'],
+	'repeatCount': {'RepeatTiming': None, 'InlineTransitions': ['inlineTransition']},
+	'repeatDur': {'RepeatTiming': None, 'InlineTransitions': ['inlineTransition']},
 	'restart': ['RestartTiming'],
 	'restartDefault': ['RestartDefault'],
-	'right': ['HierarchicalLayout'],
+	'right': {'BasicLayout': ['region'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
 	'sensitivity': ['MediaParam'],
+	'shape': ['BasicLinking'],
 	'show': ['LinkingAttributes'],
+	'showBackground': ['BasicLayout'],
 	'skip-content': ['SkipContentControl'],
 	'soundLevel': ['AudioLayout'],
 	'sourceLevel': ['LinkingAttributes'],
 	'sourcePlaystate': ['LinkingAttributes'],
 	'speed': ['TimeManipulations'],
+	'src': ['BasicMedia'],
+	'startProgress': ['BasicTransitions'],
+	'subtype': {'BasicTransitions': None, 'InlineTransitions': ['inlineTransition']},
 	'syncBehavior': ['SyncBehavior'],
 	'syncBehaviorDefault': ['SyncBehaviorDefault'],
 	'syncMaster': ['SyncMaster'],
@@ -124,294 +161,64 @@ ATTRIBUTES = {
 	'systemScreenSize': ['BasicContentControl'],
 	'tabindex': ['LinkingAttributes'],
 	'target': ['LinkingAttributes'],
+	'targetElement': {'BasicAnimation': None, 'InlineTransitions': ['inlineTransition']},
 	'timeAction': ['TimeContainerAttributes'],
 	'timeContainer': ['TimeContainerAttributes'],
-	'title': ['MediaDescription'],
-	'top': ['HierarchicalLayout'],
+	'title': ['Structure', 'MediaDescription'],
+	'to': {'BasicAnimation': None, 'InlineTransitions': ['inlineTransition']},
+	'top': {'BasicLayout': ['region'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
 	'transIn': ['BasicTransitions'],
 	'transOut': ['BasicTransitions'],
+	'type': {'BasicLayout': ['layout'], 'BasicMedia': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream'], 'MediaParam': ['param'], 'BasicTransitions': ['transition'], 'InlineTransitions': ['transitionFilter']},
+	'uid': ['CustomTestAttributes'],
+	'value': ['MediaParam'],
+	'values': {'BasicAnimation': None, 'InlineTransitions': ['transitionFilter']},
+	'valuetype': ['MediaParam'],
 	'vertRepeat': ['TransitionModifiers'],
-	'width': ['HierarchicalLayout'],
-	'xml:lang': ['MediaDescription'],
-	'z-index': ['HierarchicalLayout'],
+	'width': {'BasicLayout': ['region', 'root-layout'], 'MultiWindowLayout': ['topLayout'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
+	'xml:lang': ['Structure', 'MediaDescription'],
+	'xmlns': ['Structure'],
+	'z-index': {'BasicLayout': ['region'], 'HierarchicalLayout': ['ref', 'audio', 'video', 'img', 'text', 'animation', 'textstream', 'brush']},
 	}
+
 ELEMENTS = {
-	'BasicAnimation': {
-		'animate': [
-			'attributeName',
-			'attributeType',
-			'targetElement',
-			'values',
-			'calcMode',
-			'accumulate',
-			'additive',
-			'from',
-			'to',
-			'by',
-			'origin',
-		],
-		'set': [
-			'attributeName',
-			'attributeType',
-			'targetElement',
-			'values',
-			'calcMode',
-			'accumulate',
-			'additive',
-			'from',
-			'to',
-			'by',
-			'origin',
-		],
-		'animateMotion': [
-			'targetElement',
-			'values',
-			'calcMode',
-			'accumulate',
-			'additive',
-			'from',
-			'to',
-			'by',
-			'origin',
-		],
-		'animateColor': [
-			'attributeName',
-			'attributeType',
-			'targetElement',
-			'values',
-			'calcMode',
-			'accumulate',
-			'additive',
-			'from',
-			'to',
-			'by',
-			'origin',
-		],
-	},
-	'SplineAnimation': {
-		'animate': [
-			'calcMode',
-			'keyTimes',
-			'keySplines',
-			'path',
-		],
-		'animateMotion': [
-			'calcMode',
-			'keyTimes',
-			'keySplines',
-			'path',
-		],
-		'animateColor': [
-			'calcMode',
-			'keyTimes',
-			'keySplines',
-			'path',
-		],
-	},
-	'BasicContentControl': {
-		'switch': [
-		],
-	},
-	'CustomTestAttributes': {
-		'customAttributes': [
-		],
-		'customTest': [
-			'defaultState',
-			'override',
-			'uid',
-		],
-	},
-	'PrefetchControl': {
-		'prefetch': [
-			'mediaSize',
-			'mediaTime',
-			'bandwidth',
-		],
-	},
-	'BasicLayout': {
-		'layout': [
-			'type',
-		],
-		'region': [
-			'backgroundColor',
-			'background-color',
-			'bottom',
-			'fit',
-			'height',
-			'left',
-			'regionName',
-			'right',
-			'showBackground',
-			'top',
-			'width',
-			'z-index',
-		],
-		'root-layout': [
-			'backgroundColor',
-			'background-color',
-			'height',
-			'width',
-		],
-	},
-	'MultiWindowLayout': {
-		'topLayout': [
-			'backgroundColor',
-			'close',
-			'height',
-			'open',
-			'width',
-		],
-		'layout': [
-		],
-	},
-	'HierarchicalLayout': {
-		'layout': [
-		],
-		'region': [
-		],
-		'regPoint': [
-			'top',
-			'bottom',
-			'left',
-			'right',
-			'regAlign',
-		],
-	},
-	'BasicLinking': {
-		'a': [
-			'href',
-		],
-		'area': [
-			'href',
-			'nohref',
-			'shape',
-			'coords',
-		],
-		'anchor': [
-			'href',
-			'nohref',
-			'shape',
-			'coords',
-		],
-	},
-	'BasicMedia': {
-		'ref': [
-			'src',
-			'type',
-		],
-		'audio': [
-			'src',
-			'type',
-		],
-		'video': [
-			'src',
-			'type',
-		],
-		'img': [
-			'src',
-			'type',
-		],
-		'text': [
-			'src',
-			'type',
-		],
-		'animation': [
-			'src',
-			'type',
-		],
-		'textstream': [
-			'src',
-			'type',
-		],
-	},
-	'MediaParam': {
-		'param': [
-			'name',
-			'value',
-			'valuetype',
-			'type',
-		],
-	},
-	'BrushMedia': {
-		'brush': [
-			'color',
-		],
-	},
-	'Metainformation': {
-		'meta': [
-			'content',
-			'name',
-		],
-		'metadata': [
-		],
-	},
-	'Structure': {
-		'smil': [
-			'id',
-			'class',
-##			'xml:lang',
-			'title',
-			'xmlns',
-		],
-		'head': [
-			'id',
-			'class',
-##			'xml:lang',
-			'title',
-		],
-		'body': [
-			'id',
-			'class',
-##			'xml:lang',
-			'title',
-		],
-	},
-	'BasicTimeContainers': {
-		'par': [
-		],
-		'seq': [
-		],
-	},
-	'ExclTimeContainers': {
-		'excl': [
-			'fill',
-			'endsync',
-		],
-		'priorityClass': [
-		],
-	},
-	'BasicTransitions': {
-		'transition': [
-			'type',
-			'subtype',
-			'dur',
-			'startProgress',
-			'endProgress',
-			'direction',
-			'fadeColor',
-		],
-	},
-	'InlineTransitions': {
-		'transitionFilter': [
-			'type',
-			'subtype',
-			'mode',
-			'fadeColor',
-			'begin',
-			'dur',
-			'end',
-			'repeatCount',
-			'repeatDur',
-			'from',
-			'to',
-			'by',
-			'values',
-			'calcMode',
-			'targetElement',
-			'href',
-		],
-	},
-}
+	'a': ['BasicLinking'],
+	'anchor': ['BasicLinking'],
+	'animate': ['BasicAnimation'],
+	'animateColor': ['BasicAnimation'],
+	'animateMotion': ['BasicAnimation'],
+	'animation': ['BasicMedia'],
+	'area': ['BasicLinking'],
+	'audio': ['BasicMedia'],
+	'body': ['Structure'],
+	'brush': ['BrushMedia'],
+	'customAttributes': ['CustomTestAttributes'],
+	'customTest': ['CustomTestAttributes'],
+	'excl': ['ExclTimeContainers'],
+	'head': ['Structure'],
+	'img': ['BasicMedia'],
+	'layout': ['BasicLayout'],
+	'meta': ['Metainformation'],
+	'metadata': ['Metainformation'],
+	'par': ['BasicTimeContainers'],
+	'param': ['MediaParam'],
+	'prefetch': ['PrefetchControl'],
+	'priorityClass': ['ExclTimeContainers'],
+	'ref': ['BasicMedia'],
+	'regPoint': ['HierarchicalLayout'],
+	'region': ['BasicLayout'],
+	'root-layout': ['BasicLayout'],
+	'seq': ['BasicTimeContainers'],
+	'set': ['BasicAnimation'],
+	'smil': ['Structure'],
+	'switch': ['BasicContentControl'],
+	'text': ['BasicMedia'],
+	'textstream': ['BasicMedia'],
+	'topLayout': ['MultiWindowLayout'],
+	'transition': ['BasicTransitions'],
+	'transitionFilter': ['InlineTransitions'],
+	'video': ['BasicMedia'],
+	}
 
 class SMIL:
 	# some abbreviations
@@ -1077,46 +884,37 @@ class SMIL:
 
 	# fix up SMIL 2.0 namespace
 	for __el, __atd in attributes.items():
-		if ' ' not in __el and ':' not in __el:
-			# SMIL 1.0 element, make a SMIL 2.0 copy
-			__atd = __atd.copy()
+		if ' ' in __el or ':' in __el:
+			# element already has a namespace, so don't add more
+			continue
+
+		__atd = __atd.copy()
+
+		for __ns in SMIL2ns:
+			attributes[__ns+' '+__el] = __atd
+
+		for __at, __vl in __atd.items():
+			if ' ' in __at or ':' in __at:
+				# attribute already has a namespace, so don't add more
+				continue
+
 			for __ns in SMIL2ns:
-				attributes[__ns+' '+__el] = __atd
-			for __at, __vl in __atd.items():
-				if ' ' not in __at and ':' not in __at:
-					for __ns in SMIL2ns:
-						__atd[__ns+' '+__at] = __vl
-##					del __atd[__at]
-					if ATTRIBUTES.has_key(__at):
-						for __sns in SMIL2ns:
-							if __sns[-1:] != '/':
-								continue
-							for __ns in ATTRIBUTES[__at]:
+				__atd[__ns+' '+__at] = __vl
+
+			if ATTRIBUTES.has_key(__at):
+				for __sns in SMIL2ns:
+					if __sns[-1:] != '/':
+						continue
+					if type(ATTRIBUTES[__at]) is type({}):
+						for __ns, __ell in ATTRIBUTES[__at].items():
+							if __ell is None or __el in __ell:
 								__atd[__sns + __ns+' '+__at] = __vl
 					else:
-						# make sure all attributes are represented in ATTRIBUTES
-						ATTRIBUTES[__at] = []
-					for __ns in ELEMENTS.keys():
-						if ELEMENTS[__ns].has_key(__el) and __at in ELEMENTS[__ns][__el]:
-							for __sns in SMIL2ns:
-								if __sns[-1:] != '/':
-									continue
-								__atd[__sns + __ns+' '+__at] = __vl
-
-	for __ns in ELEMENTS.keys():
-		for __el in ELEMENTS[__ns].keys():
-			if not attributes.has_key(__el):
-				continue
-			for __sns in SMIL2ns:
-				if __sns[-1:] != '/':
-					continue
-				__atd = attributes[__el].copy()
-				attributes[__sns + __ns+' '+__el] = __atd
-				for __at in ELEMENTS[__ns][__el]:
-					if __atd.has_key(__at):
-						__atd[__sns + __ns + ' ' + __at] = __atd[__at]
-			
-	del __el, __atd, __at, __vl, __key, __val, __ns, __sns
+						for __ns in ATTRIBUTES[__at]:
+							__atd[__sns + __ns+' '+__at] = __vl
+			else:
+				# make sure all attributes are represented in ATTRIBUTES
+				ATTRIBUTES[__at] = []
 
 	# all entities with their allowed content
 	# no allowed content is default, so we don't specify empty ones here
@@ -1175,6 +973,8 @@ class SMIL:
 	entities['viewport'] = entities['topLayout'][:]
 
 	# cleanup
+	__el = __atd = __at = __vl = __key = __val = __ns = __sns = None
+	del __el, __atd, __at, __vl, __key, __val, __ns, __sns
 	del __null
 	del __media_object, __schedule, __container_content,
 	del __media_content
