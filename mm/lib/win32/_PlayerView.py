@@ -38,9 +38,9 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
 			commandlist=commandlist, bgcolor=bgcolor)
 		w, h = rc[2:]
-		self.setClientRect(w, h)
 		self.createDDLayer(w, h)
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
+		self.setClientRect(w, h)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
@@ -227,6 +227,9 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			l, t, r, b = frame.GetWindowRect()
 			flags=win32con.SWP_NOMOVE | win32con.SWP_NOZORDER 		
 			frame.SetWindowPos(0, (0,0,r-l+dw,b-t+dh), flags)
+			w1, h1 = self.GetClientRect()[2:]
+			if w1 != w or h1 != h:
+				self.setClientRect(w, h)
 
 	# XXX: UI Test Code
 	def testReBar(self):
