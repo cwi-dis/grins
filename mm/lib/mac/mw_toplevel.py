@@ -119,6 +119,7 @@ class _Event(AEServer):
 					
 	def mainloop(self):
 		"""The event mainloop"""
+		self._initcommands()
 		while 1:
 			while self._timers:
 				t = Evt.TickCount()/TICKS_PER_SECOND
