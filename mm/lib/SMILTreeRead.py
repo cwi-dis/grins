@@ -1340,9 +1340,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['skip_content'] = val == 'true'
 				else:
 					self.syntax_error('bad %s attribute' % attr)
-			elif attr == 'thumbnail-icon':
+			elif attr == 'thumbnailIcon':
 				attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
-			elif attr == 'thumbnail-scale':
+			elif attr == 'thumbnailScale':
 				attrdict['thumbnail_scale'] = val == 'true'
 			elif attr not in smil_node_attrs:
 				# catch all
