@@ -256,7 +256,7 @@ class ChannelView(ViewDialog, GLDialog):
 			self.setwin()
 			self.redraw()
 
-	def mouse(self, (dev, val)):
+	def mouse(self, dev, val):
 		# MOUSE[123] event.
 		# 'dev' is MOUSE[123].  'val' is 1 for down, 0 for up.
 		# First translate (x, y) to world coordinates

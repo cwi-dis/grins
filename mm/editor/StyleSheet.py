@@ -116,13 +116,13 @@ class StyleSheet(ViewDialog, BasicDialog):
 		#
 		self.form.unfreeze_form()
 	#
-	def browser_callback(self, (obj, arg)):
+	def browser_callback(self, obj, arg):
 		# When an item is selected in the browser,
 		# copy its name to the input box.
 		i, name = self.getselected()
 		self.nameinput.set_input(name)
 	#
-	def new_callback(self, (obj, arg)):
+	def new_callback(self, obj, arg):
 		# Add a new style whose name is taken from the input box.
 		newname = self.nameinput.get_input()
 		# (1) check that the name isn't empty
@@ -151,7 +151,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 		import AttrEdit
 		AttrEdit.showstyleattreditor(self.context, newname)
 	#
-	def delete_callback(self, (obj, arg)):
+	def delete_callback(self, obj, arg):
 		# Delete the currently selected style in the browser.
 		# (Ignore the input box.)
 		i, name = self.getselected()
@@ -168,7 +168,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 		self.editmgr.commit()
 		# Rely on our commit callback to fix the browser
 	#
-	def rename_callback(self, (obj, arg)):
+	def rename_callback(self, obj, arg):
 		# Rename the style selected in the browser.
 		# The new name is taken from the input box.
 		newname = self.nameinput.get_input()
@@ -202,7 +202,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 		# (4b) Commit the transaction
 		self.editmgr.commit()
 	#
-	def edit_callback(self, (obj, arg)):
+	def edit_callback(self, obj, arg):
 		i, name = self.getselected()
 		if i == 0:
 			fl.show_message( \
@@ -211,7 +211,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 		import AttrEdit
 		AttrEdit.showstyleattreditor(self.context, name)
 	#
-	def name_callback(self, (obj, arg)):
+	def name_callback(self, obj, arg):
 		# When the user presses TAB or RETURN,
 		# search the browser for a matching name and select it.
 		name = self.nameinput.get_input()

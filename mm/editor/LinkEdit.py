@@ -289,7 +289,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 	#
 	# Callback functions
 	#
-	def anchor_browser_callback(self, (br, str)):
+	def anchor_browser_callback(self, br, str):
 		str = getattr(self, str)
 		ind = br.get_browser()
 		if ind:
@@ -299,7 +299,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.linkedit = 0
 		self.updateform()
 	#
-	def show_callback(self, (but, str)):
+	def show_callback(self, but, str):
 		str = getattr(self, str)
 		if str.focus == None:
 			print 'LinkEdit: show without a focus!'
@@ -314,7 +314,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.toplevel.blockview.globalsetfocus(node)
 		self.toplevel.channelview.globalsetfocus(node)
 	#
-	def menu_callback(self, (menu, str)):
+	def menu_callback(self, menu, str):
 		str = getattr(self, str)
 		ind = menu.get_menu()
 		str.hidden = 0
@@ -344,7 +344,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 			print 'Unknown menu selection'
 			return
 		self.updateform()
-	def link_browser_callback(self, dummy):
+	def link_browser_callback(self, *dummy):
 		self.linkedit = 0
 		f = self.link_browser.get_browser()
 		if f <= 0:
@@ -352,32 +352,32 @@ class LinkEdit(ViewDialog, BasicDialog):
 		else:
 			self.linkfocus = f-1
 		self.updateform()
-	def link_add_callback(self, dummy):
+	def link_add_callback(self, *dummy):
 		self.linkfocus = None
 		self.startlinkedit(0)
 		self.updateform()
-	def link_delete_callback(self, dummy):
+	def link_delete_callback(self, *dummy):
 		if self.linkfocus == None:
 			print 'LinkEdit: delete link w/o focus!'
 			return
 		l = self.links[self.linkfocus]
 		self.context.hyperlinks.dellink(l)
 		self.updateform()
-	def link_edit_callback(self, dummy):
+	def link_edit_callback(self, *dummy):
 		if self.linkfocus == None:
 			print 'LinkEdit: edit w/o focus!'
 			return
 		self.startlinkedit(1)
 		self.updateform()
-	def linkdir_callback(self, (obj, value)):
+	def linkdir_callback(self, obj, value):
 		l = self.editlink
 		self.editlink = l[ANCHOR1], l[ANCHOR2], eval(value), l[TYPE]
 		self.set_radio_buttons()
-	def linktype_callback(self, (obj, value)):
+	def linktype_callback(self, obj, value):
 		l = self.editlink
 		self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], eval(value)
 		self.set_radio_buttons()
-	def ok_callback(self, dummy):
+	def ok_callback(self, *dummy):
 		# XXX Focus isn't correct after an add.
 		if not self.linkedit:
 			print 'LinkEdit: OK while not editing!'
@@ -388,10 +388,10 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.context.hyperlinks.addlink(self.editlink)
 		self.linkedit = 0
 		self.updateform()
-	def cancel_callback(self, dummy):
+	def cancel_callback(self, *dummy):
 		self.linkedit = 0
 		self.updateform()
-	def anchoredit_callback(self, (but, str)):
+	def anchoredit_callback(self, but, str):
 		str = getattr(self, str)
 		if str.focus == None:
 			print 'LinkEdit: anchoredit without a focus!'

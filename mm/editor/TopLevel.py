@@ -243,14 +243,14 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	# Callbacks.
 	#
-	def play_callback(self, (obj, arg)):
+	def play_callback(self, obj, arg):
 		if obj.get_button():
 			self.setwaiting()
 			self.player.show()
 			self.player.playsubtree(self.root)
 			self.setready()
 	#
-	def view_callback(self, (obj, view)):
+	def view_callback(self, obj, view):
 		if obj.get_button():
 			self.setwaiting()
 			view.show()
@@ -258,7 +258,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		else:
 			view.hide()
 	#
-	def open_callback(self, (obj, arg)):
+	def open_callback(self, obj, arg):
 		if not obj.pushed: return
 		prompt = 'Open CMIF file:'
 		dir = self.dirname
@@ -280,12 +280,12 @@ class TopLevel(ViewDialog, BasicDialog):
 		top.show()
 		obj.set_button(0)
 	#
-	def save_callback(self, (obj, arg)):
+	def save_callback(self, obj, arg):
 		if not obj.pushed: return
 		ok = self.save_to_file(self.filename)
 		obj.set_button(0)
 	#
-	def saveas_callback(self, (obj, arg)):
+	def saveas_callback(self, obj, arg):
 		if not obj.pushed: return
 		prompt = 'Save CMIF file:'
 		dir = self.dirname
@@ -342,7 +342,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.changed = 0
 		return 1
 	#
-	def restore_callback(self, (obj, arg)):
+	def restore_callback(self, obj, arg):
 		if not obj.pushed:
 			return
 		if not self.editmgr.transaction():
@@ -393,7 +393,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
 	#
-	def close_callback(self, (obj, arg)):
+	def close_callback(self, obj, arg):
 		if not obj.pushed:
 			return
 		self.close()
@@ -423,7 +423,7 @@ class TopLevel(ViewDialog, BasicDialog):
 			return 1
 		return self.save_to_file(self.filename)
 	#
-	def help_callback(self, (obj, arg)):
+	def help_callback(self, obj, arg):
 		import Help
 		Help.showhelpwindow()
 	#

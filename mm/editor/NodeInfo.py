@@ -94,7 +94,7 @@ class NodeInfo(Dialog):
     def getdefault(self, name): # Return the default or None
 	return MMAttrdefs.getdefattr(self.node, name)
 
-    def setattr(self, (name, value)):
+    def setattr(self, name, value):
 	if self.editmgr <> None:   # DEBUG
 	    self.editmgr.setnodeattr(self.node, name, value)
 
@@ -278,21 +278,21 @@ class NodeInfo(Dialog):
     #
     # Standard callbacks (from Dialog())
     #
-    def cancel_callback(self, dummy):
+    def cancel_callback(self, obj, arg):
 	self.close()
 
-    def restore_callback(self, (obj, arg)):
+    def restore_callback(self, obj, arg):
 	self.getvalues(TRUE)
 	self.updateform()
 
-    def apply_callback(self, (obj, arg)):
+    def apply_callback(self, obj, arg):
 	obj.set_button(1)
 	self.fixfocus()
 	if self.changed:
 	    dummy = self.setvalues()
 	obj.set_button(0)
 
-    def ok_callback(self, (obj, arg)):
+    def ok_callback(self, obj, arg):
 	obj.set_button(1)
 	self.fixfocus()
 	if not self.changed or self.setvalues():
@@ -310,17 +310,17 @@ class NodeInfo(Dialog):
     #
     # Callbacks that are valid for all types
     #
-    def dummy_callback(self, (obj, dummy)):
+    def dummy_callback(self, obj, dummy):
 	pass
 
-    def name_callback(self, (obj, dummy)):
+    def name_callback(self, obj, dummy):
 	name = obj.get_input()
 	if name <> self.name:
 	    self.ch_name = 1
 	    self.changed = 1
 	    self.name = name
 
-    def type_callback(self, (obj, dummy)):
+    def type_callback(self, obj, dummy):
 	newtype = obj.get_choice_text()
 	self.fixfocus()
 	if newtype == self.type:
@@ -343,13 +343,13 @@ class NodeInfo(Dialog):
 	self.type = newtype
 	self.show_correct_group()
 
-    def channel_callback(self, (obj, dummy)):
+    def channel_callback(self, obj, dummy):
 	self.channelname = obj.get_choice_text()
 	if self.origchannelname <> self.channelname:
 	    self.ch_channelname = 1
 	    self.changed = 1
 
-    def styles_add_callback(self, (obj, dummy)):
+    def styles_add_callback(self, obj, dummy):
 	i = self.styles_select.get_choice()
 	if i == 0: return
 	self.ch_styles_list = 1
@@ -361,7 +361,7 @@ class NodeInfo(Dialog):
 	    self.styles_browser.deselect_browser()
 	    self.styles_browser.select_browser_line(len(self.styles_list))
 
-    def styles_delete_callback(self, (obj, dummy)):
+    def styles_delete_callback(self, obj, dummy):
 	i = self.styles_browser.get_browser()
 	if i:
 	    self.ch_styles_list = 1
@@ -370,11 +370,11 @@ class NodeInfo(Dialog):
 	    del self.styles_list[i-1]
 	    self.styles_browser.select_browser_line(1)
 
-    def attributes_callback(self, (obj, dummy)):
+    def attributes_callback(self, obj, dummy):
 	import AttrEdit
 	AttrEdit.showattreditor(self.node)
 
-    def anchors_callback(self, (obj, dummy)):
+    def anchors_callback(self, obj, dummy):
 	import AnchorEdit
 	AnchorEdit.showanchoreditor(self.toplevel, self.node)
     #
@@ -426,27 +426,27 @@ class NodeInfo(Dialog):
 
     # Now, define the callbacks:
 
-    def text_browser_callback(self, (obj, dummy)):
+    def text_browser_callback(self, obj, dummy):
 	# Mouse click on a browser line
 	self.browser_to_input()
 
-    def text_input_callback(self, (obj, dummy)):
+    def text_input_callback(self, obj, dummy):
 	# Keypress in the text input field
 	self.input_to_browser()
 
-    def text_insert_callback(self, (obj, dummy)):
+    def text_insert_callback(self, obj, dummy):
 	# 'Insert line' button
 	i = self.text_browser.get_browser()
 	if i:
 	    self.new_line(i)
 
-    def text_add_callback(self, (obj, dummy)):
+    def text_add_callback(self, obj, dummy):
 	# 'Add line' button
 	i = self.text_browser.get_browser()
 	if i:
 	    self.new_line(i+1)
 
-    def text_delete_callback(self, (obj, dummy)):
+    def text_delete_callback(self, obj, dummy):
 	# 'Delete line' button
 	i = self.text_browser.get_browser()
 	if i:
@@ -463,7 +463,7 @@ class NodeInfo(Dialog):
     #
     # Callbacks for 'ext' type nodes
     #
-    def file_callback(self, (obj, dummy)):
+    def file_callback(self, obj, dummy):
 	filename = obj.get_input()
 	if filename <> self.filename:
 	    self.ch_filename = 1
@@ -477,7 +477,7 @@ class NodeInfo(Dialog):
     # directory as last time, and we try to remove the current
     # dir from the resulting pathname.
     #
-    def browser_callback(self, (obj, dummy)):
+    def browser_callback(self, obj, dummy):
 	import selector
 	pathname = selector.selector(self.filename)
 	if pathname <> None:
@@ -486,13 +486,13 @@ class NodeInfo(Dialog):
 	    self.filename = pathname
 	    self.file_input.set_input(pathname)
 
-    def conteditor_callback(self, (obj, dummy)):
+    def conteditor_callback(self, obj, dummy):
 	import NodeEdit
 	NodeEdit.showeditor(self.node)
     #
     # Callbacks for interior type nodes
     #
-    def openchild_callback(self, (obj, dummy)):
+    def openchild_callback(self, obj, dummy):
 	i = self.children_browser.get_browser()
 	if i == 0: return
 	shownodeinfo(self.toplevel, self.children_nodes[i-1])
