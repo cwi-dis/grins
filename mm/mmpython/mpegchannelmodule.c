@@ -4,7 +4,7 @@
 #include <poll.h>
 #include "Python.h"
 #include "modsupport.h"
-#include "thread.h"
+#include "pythread.h"
 #include "mmmodule.h"
 #include <sys/time.h>
 

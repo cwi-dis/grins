@@ -31,7 +31,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "Python.h"
 #include "modsupport.h"
-#include "thread.h"
+#include "pythread.h"
 #include "mmmodule.h"
 #include <sys/time.h>
 
