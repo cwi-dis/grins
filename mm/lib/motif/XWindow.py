@@ -1555,15 +1555,15 @@ class _SubWindow(_Window):
 		else:
 			raise error, 'invalid value for coordinates arg'
 
-		if (x, y, w, h) == self._rect:
-			# nothing to do
-			return
-
 		px, py, pw, ph = parent._rect
 		if x + w > px + pw:
 			w = px + pw - x
 		if y + h > py + ph:
 			h = py + ph - y
+
+		if (x, y, w, h) == self._rect:
+			# nothing to do
+			return
 
 		r = Xlib.CreateRegion()
 		r.UnionRegion(self._region)
