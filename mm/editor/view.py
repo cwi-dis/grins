@@ -279,13 +279,13 @@ class view () :
 			chobj = node.ch_channelobj
 		except NameError:	# a newly created node!
 			chobj = box().new(FOCUS_BOX,left,bottom,right-left,top-bottom,'')
-			if type in ('seq','par','grp'):
-				chobj.hidden = 1
-				kind = BG_BOX
-			else:
-				kind = FG_BOX
-			chobj.boxtype = kind
 			node.ch_channelobj = chobj
+		if type in ('seq','par','grp'):
+			chobj.hidden = 1
+			kind = BG_BOX
+		else:
+			kind = FG_BOX
+		chobj.boxtype = kind
 		chobj.label = name
 		chobj.x = left
 		chobj.w = right - left
