@@ -887,8 +887,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	def set_toggle(self, cmdcl, onoff):
 		id=usercmdui.class2ui[cmdcl].id
 		flags = win32con.MF_BYCOMMAND
-		if onoff==0:flags = flags | win32con.MF_UNCHECKED
-		else:flags = flags | win32con.MF_CHECKED
+		if onoff==0:
+			flags = flags | win32con.MF_UNCHECKED
+		else:
+			flags = flags | win32con.MF_CHECKED
 		(self.GetMenu()).CheckMenuItem(id,flags)
 		self.PostMessage(WM_KICKIDLE)
 
@@ -941,16 +943,15 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):
-		cmdui.SetCheck(0)
+		cmdui.Enable(1)
+
+	def OnUpdateCmdEnableAndCheck(self,cmdui):
+		cmdui.SetCheck(1)
 		cmdui.Enable(1)
 
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.SetCheck(0)
 		cmdui.Enable(0)
-
-	def OnUpdateCmdEnableAndCheck(self,cmdui):
-		cmdui.SetCheck(1)
-		cmdui.Enable(1)
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
@@ -1577,6 +1578,7 @@ class ChildFrame(window.MDIChildWnd):
 	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
+
 
 	# Called by the framework before destroying the window
 	# Used to keep instance counting for player
