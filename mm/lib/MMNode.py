@@ -868,7 +868,20 @@ class MMChannel:
 		else:
 			print 'setPxGeom unsupported on no layout channel'
 
-
+	def GetInherAttrDef(self, name, default, animated=0):
+		if animated:
+			x = self
+			while x is not None:
+				if x.d_attrdict and x.d_attrdict.has_key(name):
+					return x.d_attrdict[name]
+				x = x.parent
+		
+		x = self
+		while x is not None:
+			if x.attrdict and x.attrdict.has_key(name):
+				return x.attrdict[name]
+			x = x.parent
+		return default
 
 # representation of anchors
 class MMAnchor:
