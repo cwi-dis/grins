@@ -35,12 +35,11 @@ class Clipboard:
 
 	def __init__(self):
 		self.__data = []
-		self.__owned = 0
 
 	def __repr__(self):
 		return '<Clipboard instance, type=' + `self.type` + '>'
 
-	def setclip(self, data, owned=0):
+	def setclip(self, data):
 		if not type(data) in (type(()), type([])):
 			print 'Clipboard.setclip : data is not a list ',data
 			return
@@ -50,14 +49,10 @@ class Clipboard:
 			node.addOwner(OWNER_CLIPBOARD)
 		
 		self.__data = data
-		self.__owned = owned
 
 	def getclip(self):
 		return self.__data
 
-	def getowned(self):
-		return self.__owned
-		
 	def getclipcopy(self):
 		data = self.getclip()
 		new_data = []
@@ -70,14 +65,8 @@ class Clipboard:
 					# Don't have DeepCopy method. So we guess we don't need to copy
 					# the object in this case
 					new_data.append(node)
-#		self.__owned = 0 # So setclip doesn't destroy what we are going to return
-		self.restoreclip(new_data, owned=1)
+		self.restoreclip(new_data)
 		return data
 
 	def clearclip(self):
-		if not self.__owned:
-			# we don't need to clear the references if it's a copy of the original (because no reference)
-			for node in self.__data:
-				self.clearRefs(node)
-			self.__owned = 0
-		self.__data = []
+		Clipboard.setclip(self, [])
