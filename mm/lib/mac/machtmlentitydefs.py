@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Proposed entity definitions for HTML, taken from
 # http://www.w3.org/hypertext/WWW/MarkUp/html-spec/html-spec_14.html
 #

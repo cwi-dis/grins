@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import xmllib, parseutil
 
 class XMMFParser(xmllib.XMLParser):

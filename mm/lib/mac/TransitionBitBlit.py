@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # BitBlitter base classes for machine-independent transition classes.
 # See comment at the beginning of Transitions for an explanation of the overall
 # architecture.
