@@ -1418,14 +1418,10 @@ class Renderer:
 		self._bgcolor=(0,0,0)
 
 	def urlqual(self,rurl):
-		if not rurl:return rurl
-		if len(rurl)>5 and rurl[:6]=='file:/': 
-			url=rurl
-		elif self._baseURL:
-			url = self._baseURL + '/' + rurl
-		else:
-			url=rurl
-		return url
+		if not rurl:
+			return rurl
+		import MMurl
+		return MMurl.canonURL(MMurl.basejoin(self._baseURL, rurl))
 
 	def urlretrieve(self,url):
 		if not url:return None
@@ -1433,7 +1429,7 @@ class Renderer:
 		try:
 			f = MMurl.urlretrieve(url)[0]
 		except IOError, arg:
-			f=None 
+			f=None
 		return f
 	
 	def isfile(self,f):
@@ -1592,9 +1588,8 @@ class VideoRenderer(Renderer):
 			self.update()
 			return
 		url=self.urlqual(rurl)
-		import MMurl,urllib
-		url = MMurl.canonURL(url)
-		url=urllib.unquote(url)
+		import MMurl
+		url = MMurl.unquote(url)
 		if not self._builder.RenderFile(url):
 			self.update()
 			return
@@ -2117,7 +2112,7 @@ class AttrEditFormNew(GenFormView):
 		
 		a=self._attriblist[0]
 		channels = a.wrapper.toplevel.root.context.channels
-		self._baseURL=a.wrapper.toplevel.dirname
+		self._baseURL=a.wrapper.context.baseurl
 		for ch in channels:
 			self._channels[ch.name]=ch
 			units=self.getunits(ch)
