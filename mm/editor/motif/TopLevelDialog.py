@@ -16,6 +16,7 @@ class TopLevelDialog:
 			('Source...', SOURCE),
 			('Save', SAVE),
 			('Save as...', SAVE_AS),
+			('Export...', EXPORT_SMIL),
 			('Restore', RESTORE),
 			('Close', CLOSE),
 			('Help', HELP),

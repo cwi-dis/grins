@@ -64,6 +64,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
+				EXPORT_SMIL(callback = (self.export_callback, ())),
 				]
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
@@ -221,6 +222,27 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.saveas_okcallback, None)
 
+	def export_okcallback(self, filename):
+		if not filename:
+			return 'no file specified'
+		self.setwaiting()
+		if self.save_to_file(filename, cleanSMIL = 1):
+			self.filename = MMurl.pathname2url(filename)
+			self.fixtitle()
+		else:
+			return 1
+
+	def export_callback(self):
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
+					   '', self.export_okcallback, None)
+
 	def fixtitle(self):
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		dir, base = posixpath.split(path)
@@ -243,7 +265,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		for v in self.views:
 			v.fixtitle()
 
-	def save_to_file(self, filename):
+	def save_to_file(self, filename, cleanSMIL = 0):
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
@@ -269,11 +291,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		print 'saving to', filename, '...'
 		try:
 			if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
+				if cleanSMIL:
+					windowinterface.showmessage('Saving to CMIF file instead of SMIL file', mtype = 'warning')
 				import MMWrite
 				MMWrite.WriteFile(self.root, filename)
 			else:
 				import SMILTreeWrite
-				SMILTreeWrite.WriteFile(self.root, filename)
+				SMILTreeWrite.WriteFile(self.root, filename,
+							cleanSMIL = cleanSMIL)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+

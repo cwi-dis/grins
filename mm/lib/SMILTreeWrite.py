@@ -92,9 +92,9 @@ class IndentedFile:
 
 # Write a node to a CMF file, given by filename
 
-def WriteFile(root, filename):
+def WriteFile(root, filename, cleanSMIL = 0):
 	fp = IndentedFile(open(filename, 'w'))
-	writer = SMILWriter(root, fp, filename)
+	writer = SMILWriter(root, fp, filename, cleanSMIL)
 	writer.write()
 	if os.name == 'mac':
 		import macfs
@@ -390,7 +390,9 @@ def mediatype(chtype, error=0):
 	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename):
+	def __init__(self, node, fp, filename, cleanSMIL = 0):
+		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
+
 		self.__isopen = 0
 		self.__stack = []
 
@@ -466,12 +468,11 @@ class SMILWriter(SMIL):
 			write('/>\n')
 			self.__isopen = 0
 			del self.__stack[-1]
-		write('<' + tag)
 		if self.__stack and self.__stack[-1][1]:
 			hasprefix = 1
 		else:
 			hasprefix = 0
-		if not hasprefix:
+		if not hasprefix and not self.__cleanSMIL:
 			for attr, val in attrs:
 				if attr == xmlns:
 					hasprefix = 1
@@ -482,10 +483,18 @@ class SMILWriter(SMIL):
 					break
 		if not hasprefix:
 			if tag[:len(NSprefix)] == NSprefix:
+				if self.__cleanSMIL:
+					# ignore this tag
+					# XXX is this correct?
+					return
 				attrs.insert(0, (xmlns, GRiNSns))
 				hasprefix = 1
+		write('<' + tag)
 		for attr, val in attrs:
-			write(' %s=%s' % (attr, nameencode(val)))
+			if not self.__cleanSMIL or \
+			   (attr[:len(NSprefix)] != NSprefix and
+			    attr != xmlns):
+				write(' %s=%s' % (attr, nameencode(val)))
 		self.__isopen = 1
 		self.__stack.append((tag, hasprefix))
 
