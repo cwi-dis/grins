@@ -144,7 +144,7 @@ class HierarchyView(ViewDialog, GLDialog):
 		self.draw()
 
 	def mouse(self, dev, val):
-		# MOUSE[123] event.
+		# MOUSE[123] event (1 is right!)
 		# 'dev' is MOUSE[123].  'val' is 1 for down, 0 for up.
 		# First translate (x, y) to world coordinates
 		# (This assumes world coord's are X-like)
@@ -196,44 +196,46 @@ class HierarchyView(ViewDialog, GLDialog):
 	#################################################
 
 	def deletefocus(self, cut):
-		if not self.focusnode or self.focusnode is self.root:
+		node = self.focusnode
+		if not node or node is self.root:
 			gl.ringbell()
 			return
 		em = self.editmgr
 		if not em.transaction():
 			return
-		parent = self.focusnode.GetParent()
+		parent = node.GetParent()
 		siblings = parent.GetChildren()
-		nf = siblings.index(self.focusnode)
-		if nf < len(siblings)-1: newfocus = siblings[nf+1]
-		elif nf > 0: newfocus = siblings[nf-1]
-		else: newfocus = parent
+		nf = siblings.index(node)
+		if nf < len(siblings)-1: self.focusnode = siblings[nf+1]
+		elif nf > 0: self.focusnode = siblings[nf-1]
+		else: self.focusnode = parent
+		em.delnode(node)
 		if cut:
 			import Clipboard
-			Clipboard.setclip('node', self.focusnode)
-		em.delnode(self.focusnode)
-		self.focusnode = newfocus
+			Clipboard.setclip('node', node)
 		em.commit()
 
 	def copyfocus(self):
-		if not self.focusnode:
+		node = self.focusnode
+		if not node:
 			gl.ringbell()
 			return
 		import Clipboard
-		Clipboard.setclip('node', self.focusnode.DeepCopy())
+		Clipboard.setclip('node', node.DeepCopy())
 
 	def create(self, where):
-		if self.focusnode is None:
+		node = self.focusnode
+		if node is None:
 			fl.show_message('There is no focus to insert to','','')
 			return
-		parent = self.focusnode.GetParent()
+		parent = node.GetParent()
 		if parent is None and where <> 0:
 			fl.show_message( \
 			  'Can\'t insert before/after the root','','')
 			return
-		type = self.focusnode.GetType()
+		type = node.GetType()
 		if where == 0:
-			children = self.focusnode.GetChildren()
+			children = node.GetChildren()
 			if children:
 				type = children[0].GetType()
 		node = self.root.context.newnode(type)
@@ -310,8 +312,8 @@ class HierarchyView(ViewDialog, GLDialog):
 		rbits = gl.getgdesc(GL.GD_BITS_NORM_DBL_RED)
 		gbits = gl.getgdesc(GL.GD_BITS_NORM_DBL_GREEN)
 		bbits = gl.getgdesc(GL.GD_BITS_NORM_DBL_BLUE)
-##		if rbits + gbits + bbits >= 12:
-##			gl.doublebuffer()
+		if rbits + gbits + bbits >= 12:
+			gl.doublebuffer()
 		gl.gconfig()
 		# Clear the window right now (looks better)
 		gl.RGBcolor(BGCOLOR)
@@ -328,19 +330,13 @@ class HierarchyView(ViewDialog, GLDialog):
 		fl.qdevice(DEVICE.RIGHTMOUSE)
 		fl.qdevice(DEVICE.KEYBD)
 
-	# Make sure the view root makes sense (after a tree update)
+	# Make sure the view root and focus make sense (after a tree update)
 	def fixviewroot(self):
-		if self.viewroot.GetRoot() <> self.root:
+		if self.viewroot.GetRoot() is not self.root:
 			self.viewroot = self.root
-		self.fixfocus()
-
-	# Make sure the focus is under the viewroot (called by fixviewroot)
-	def fixfocus(self):
-		if self.focusnode:
-			if not self.viewroot.IsAncestorOf(self.focusnode):
-				self.focusnode = None
-		if not self.focusnode:
-			self.focusnode = self.viewroot
+		if self.focusnode and \
+			  not self.root.IsAncestorOf(self.focusnode):
+			self.focusnode = None
 
 	# Clear the list of objects
 	def cleanup(self):
@@ -350,27 +346,27 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	# Select the object at (x, y)
 	def select(self, x, y):
-		if self.focusobj:
-			self.focusobj.deselect()
-			self.focusobj = None
-		self.focus = None
+		hitobj = None
 		for obj in self.objects:
 			if obj.ishit(x, y):
-				self.focusnode = obj.node
-				self.focusobj = obj
-		if not self.focusnode:
-			self.focusnode = self.viewroot
-			for obj in self.objects:
-				if obj.node is self.focusnode:
-					self.focusobj = obj
-					break
+				hitobj = obj
+		if not hitobj:
+			gl.ringbell()
+			return
+		if hitobj.node is self.focusnode:
+			# Double click -- zoom in or out
+			if self.viewroot is not self.focusnode:
+				self.viewroot = self.focusnode
+				self.recalc()
+				self.draw()
+			return
+		gl.frontbuffer(1)
 		if self.focusobj:
-			self.focusobj.select()
-		if self.focusnode.IsAncestorOf(self.viewroot) \
-			  and self.focusnode is not self.viewroot:
-			self.viewroot = self.focusnode
-			self.recalc()
-			self.draw()
+			self.focusobj.deselect()
+		self.focusnode = hitobj.node
+		self.focusobj = hitobj
+		self.focusobj.select()
+		gl.frontbuffer(0)
 
 	# Recalculate the set of objects
 	def recalc(self):
@@ -432,8 +428,7 @@ class HierarchyView(ViewDialog, GLDialog):
 		MASK = 20
 		gl.viewport(x0-MASK, x1+MASK, y0-MASK, y1+MASK)
 		gl.scrmask(x0, x1, y0, y1)
-		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
-			  height+MASK-0.5, -MASK-0.5)
+		gl.ortho2(-MASK, width+MASK, height+MASK, -MASK)
 
 
 # Recursive procedure to calculate geometry of boxes.
@@ -500,7 +495,7 @@ def makesubmenu(commandlist, menuprocs, keymap):
 		text = char + ' ' + text
 		if proc is None:
 			gl.addtopup(menu, text, 0)
-		elif type(proc) == type([]):
+		elif type(proc) is type([]):
 			submenu = makesubmenu(proc, menuprocs, keymap)
 			gl.addtopup(menu, text + '%m', submenu)
 		else:
@@ -585,9 +580,34 @@ class Object:
 		if self.boxtype == INNERBOX or \
 			  self.boxtype == LEAFBOX and \
 			    self.node.GetType() in MMNode.interiortypes:
-			b = min(b, t + TITLEHEIGHT + MARGIN)
+			b1 = min(b, t + TITLEHEIGHT + MARGIN)
+		else:
+			b1 = b
 		gl.RGBcolor(TEXTCOLOR)
-		FontStuff.centerstring(l+3, t+3, r-3, b-3, self.name)
+		FontStuff.centerstring(l+3, t+3, r-3, b1-3, self.name)
+		# If this is a node with suppressed detail,
+		# draw some lines
+		if self.boxtype == LEAFBOX and \
+			  self.node.GetType() in MMNode.interiortypes and \
+			  len(self.node.GetChildren()) > 0:
+			l1 = l + 10
+			t1 = t + TITLEHEIGHT + MARGIN
+			r1 = r - 10
+			b1 = b - 10
+			if l1 < r1 and t1 < b1:
+				gl.RGBcolor(TEXTCOLOR)
+				if self.node.GetType() == 'par':
+					for x in range(l1, r1, 4):
+						gl.bgnline()
+						gl.v2i(x, t1)
+						gl.v2i(x, b1)
+						gl.endline()
+				else:
+					for y in range(t1, b1, 3):
+						gl.bgnline()
+						gl.v2i(l1, y)
+						gl.v2i(r1, y)
+						gl.endline()
 
 	def drawfocus(self):
 		l, t, r, b = self.box
