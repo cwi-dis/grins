@@ -145,15 +145,18 @@ class MediaChannel:
 
 		t0 = self.__channel._scheduler.timefunc()
 		syncBehavior, syncTolerance, syncMaster = self.__sync
-		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter and not settings.get('noskip'):
-			if __debug__:
-				print 'skipping',start_time,t0,t0-start_time
-			mediadur = self.__playEnd - self.__playBegin
-			late = t0 - start_time
-			if late > mediadur:
-				self.__channel.playdone(0, start_time + mediadur)
-				return 1
-			clip_begin = clip_begin + late
+		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter:
+			if syncMaster:
+				self.__channel._scheduler.settime(self.__start_time)
+			elif not settings.get('noskip'):
+				if __debug__:
+					print 'skipping',start_time,t0,t0-start_time
+				mediadur = self.__playEnd - self.__playBegin
+				late = t0 - start_time
+				if late > mediadur:
+					self.__channel.playdone(0, start_time + mediadur)
+					return 1
+				clip_begin = clip_begin + late
 		self.__playBuilder.SetPosition(clip_begin)
 
 		if window:
@@ -321,14 +324,17 @@ class VideoStream:
 
 		t0 = self.__channel._scheduler.timefunc()
 		syncBehavior, syncTolerance, syncMaster = self.__sync
-		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter and not settings.get('noskip'):
-			if __debug__: print 'skipping',start_time,t0,t0-start_time
-			mediadur = self.__playEnd - self.__playBegin
-			late = t0 - start_time
-			if late > mediadur:
-				self.__channel.playdone(0, start_time + mediadur)
-				return 1
-			clip_begin = clip_begin + late
+		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter:
+			if syncMaster:
+				self.__channel._scheduler.settime(self.__start_time)
+			elif not settings.get('noskip'):
+				if __debug__: print 'skipping',start_time,t0,t0-start_time
+				mediadur = self.__playEnd - self.__playBegin
+				late = t0 - start_time
+				if late > mediadur:
+					self.__channel.playdone(0, start_time + mediadur)
+					return 1
+				clip_begin = clip_begin + late
 		self.__mmstream.seek(clip_begin)
 		
 		self.__playdone=0
@@ -494,14 +500,17 @@ class QtChannel:
 
 		t0 = self.__channel._scheduler.timefunc()
 		syncBehavior, syncTolerance, syncMaster = self.__sync
-		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter and not settings.get('noskip'):
-			if __debug__: print 'skipping',start_time,t0,t0-start_time
-			mediadur = self.__playEnd - self.__playBegin
-			late = t0 - start_time
-			if late > mediadur:
-				self.__channel.playdone(0, start_time + mediadur)
-				return 1
-			clip_begin = clip_begin + late
+		if syncBehavior == 'locked' and t0 > start_time + syncTolerance and not self.__channel._exporter:
+			if syncMaster:
+				self.__channel._scheduler.settime(self.__start_time)
+			elif not settings.get('noskip'):
+				if __debug__: print 'skipping',start_time,t0,t0-start_time
+				mediadur = self.__playEnd - self.__playBegin
+				late = t0 - start_time
+				if late > mediadur:
+					self.__channel.playdone(0, start_time + mediadur)
+					return 1
+				clip_begin = clip_begin + late
 		self.__qtplayer.seek(clip_begin)
 		
 		self.__playdone=0
