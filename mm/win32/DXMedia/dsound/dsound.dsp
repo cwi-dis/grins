@@ -57,11 +57,10 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release/dsound.pyd" /libpath:"..\..\..\..\python\PCbuild"
 # Begin Custom Build
 TargetPath=.\Release\dsound.pyd
-TargetName=dsound
 InputPath=.\Release\dsound.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\dsound.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\bin\win32
 
 # End Custom Build
@@ -94,11 +93,10 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/dsound_d.pyd" /pdbtype:sept /libpath:"..\\"
 # Begin Custom Build
 TargetPath=.\Debug\dsound_d.pyd
-TargetName=dsound_d
 InputPath=.\Debug\dsound_d.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\dsound_d.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\bin\win32
 
 # End Custom Build

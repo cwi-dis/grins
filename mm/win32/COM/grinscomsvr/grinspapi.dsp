@@ -57,11 +57,10 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release/grinspapi.pyd" /libpath:"..\..\..\..\python\PCbuild"
 # Begin Custom Build
 TargetPath=.\Release\grinspapi.pyd
-TargetName=grinspapi
 InputPath=.\Release\grinspapi.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\grinspapi.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\bin\win32
 
 # End Custom Build
@@ -94,11 +93,10 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/grinspapi_d.pyd" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild"
 # Begin Custom Build
 TargetPath=.\Debug\grinspapi_d.pyd
-TargetName=grinspapi_d
 InputPath=.\Debug\grinspapi_d.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\grinspapi_d.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\bin\win32
 
 # End Custom Build
