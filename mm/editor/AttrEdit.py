@@ -766,8 +766,8 @@ class AnchorWrapper(NodeWrapper):
 			# the error will be found again
 			return 1
 		if shape == 'rect':
-			if len(coords) != 4:
-				attreditor.showmessage('There should be 4 coordinates for rect', mtype = 'error')
+			if len(coords) != 4 and len(coords) != 0:
+				attreditor.showmessage('There should be 0 or 4 coordinates for rect', mtype = 'error')
 				return 0
 		elif shape == 'circle':
 			if len(coords) != 3:
