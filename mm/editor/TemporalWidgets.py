@@ -768,6 +768,8 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.name = self.node.GetAttrDef('name', '')
 		self.w_text = self.graph.AddWidget(Text(self.mother))
 		self.w_text.set_text(self.name)
+		self.w_icon = self.graph.AddWidget(Image(self.mother))
+		self.w_icon.set_file(self.node.GetTypeIconFile())
 
 	def destroy(self):
 		# TODO: remove me from the list of MMNode Views.
@@ -795,11 +797,17 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		except ZeroDivisionError:
 			f = 0
 		middle = f * (r-l) + l
+		if middle-l < CHANNELHEIGHT:
+			middle = CHANNELHEIGHT+l
+			if r < middle:
+				r = middle
 		self.w_outerbox.moveto((l,t,middle, b))
 		self.w_fbox.moveto((l,t,middle,b))
 		# This overlaps the borders a bit to make the fill part and the play part merge a bit.
 		self.w_filltimebox.moveto((middle-1, t+(1.0/5*float(b-t))+1,r,(b-(1.0/5*float(b-t)))-1))
 		self.w_filltimeouterbox.moveto((middle, t+(1.0/5*float(b-t)),r,(b-(1.0/5*float(b-t)))))
+		self.w_icon.moveto((l-2,t+1,l+CHANNELHEIGHT+2,t+CHANNELHEIGHT-2)) # counters off-by-one errors.
+
 
 	def hide(self):
 		print "TODO: hide a node."
@@ -824,6 +832,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_filltimeouterbox.set_color((255,255,255))
 		self.w_filltimebox.need_redraw()
 		self.w_text.need_redraw()
+		self.w_icon.need_redraw()
 		# Also select my superiors.
 		self.select_parents()
 	def unselect(self):
@@ -833,6 +842,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_filltimeouterbox.set_color((0,0,0))
 		self.w_filltimebox.need_redraw()
 		self.w_text.need_redraw()
+		self.w_icon.need_redraw()
 		self.unselect_parents()
 
 #	def select(self):

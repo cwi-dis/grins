@@ -117,17 +117,21 @@ class EditableMMNode(MMNode.MMNode):
 			return POPUP_HVIEW_LEAF
 
 	# Viewing this node. Helper routines for widgets only.
-	def GetThumbnail(self, coords):	# returns an icon.
+	def GetThumbnailFile(self):	# returns a thumbnail.
 		pass
+		
+	def GetTypeIconFile(self):	# returns a filename for an icon representing the type of node that this is.
+		channel_type = self.GetChannelType()
+		import os, cmif
+		f = os.path.join(cmif.findfile('GRiNS-Icons'), '%s.tiff'%channel_type)
+		return f
+		
 	def GetColor(self):		# returns a default "color" for this type of node.
 		pass
 
-	def SetChild(self, newchild, index):
-		assert 0
-
 	def _insertnode(self, node, index):
 		# insert a node at position index.
-		em = self.context.editmgr # note: the em
+		em = self.context.editmgr
 		if len(self.children) < 1:
 			em.addnode(self, 0, node)
 			return
