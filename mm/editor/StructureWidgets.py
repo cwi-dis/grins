@@ -2375,11 +2375,24 @@ class TimelineWidget(MMWidgetDecoration):
 		max = timemapper.time2pixel(t2, 'right')
 		displist.drawline(TEXTCOLOR, [(min, line_y), (max, line_y)])
 		length = max - min	# length of real timeline
+		displist.usefont(f_timescale)
+		displist.fgcolor(COLCOLOR)
 		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
 			if left != right:
-				displist.drawline(COLCOLOR, [(left, line_y), (right, line_y)])
+				stalltime = timemapper.getstall(time)
+				if stalltime:
+					color = TRUNCCOLOR # Does this make sense?
+					label = '%ds stall'%stalltime
+					lw = displist.strsizePXL(label)[0]
+					if lw < right-left:
+##						displist.setpos(left, (label_top + label_bot + displist.fontheightPXL()) / 2)
+						displist.centerstring(left, label_top, right, label_bot, label)
+					# Should also draw tickmarks.
+				else:
+					color = COLCOLOR
+				displist.drawline(color, [(left, line_y), (right, line_y)])
 				length = length - (right - left)
-		displist.usefont(f_timescale)
+		displist.fgcolor(TEXTCOLOR)
 		if t0 == t2:
 			if t0 < 60:
 				label = fmtfloat(t0)
@@ -2454,7 +2467,7 @@ class TimelineWidget(MMWidgetDecoration):
 				lw = displist.strsizePXL(label)[0]
 				if tick_x_mid-lw/2 < x + HEDGSIZE:
 					displist.setpos(x + HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
-					displist.writestr(label)
+					displist.centerstring(label)
 				elif tick_x_mid+lw/2 > x + w - HEDGSIZE:
 					displist.setpos(x + w - lw - HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)

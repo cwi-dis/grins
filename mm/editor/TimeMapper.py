@@ -12,6 +12,7 @@ class TimeMapper:
 		self.dependencies = []
 		self.collisions = []
 		self.collisiondict = {}
+		self.stalldict = {}
 		self.minpos = {}
 		self.offset = 0
 		self.width = 0
@@ -32,6 +33,12 @@ class TimeMapper:
 		if not self.collecting:
 			raise Error, 'Adding collision while not collecting data anymore'
 		self.collisions.append((time, minpixeldistance))
+		self.collisiondict[time] = 0
+		
+	def addstalltime(self, time, stalltime):
+		if not self.collecting:
+			raise Error, 'Adding stilltime while not collecting data anymore'
+		self.stalldict[time] = stalltime + self.stalldict.get(time, 0)
 		self.collisiondict[time] = 0
 		
 	def calculate(self, realtime=0, min_pixels_per_second = 0):
@@ -60,6 +67,10 @@ class TimeMapper:
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		else:
 			min_pixels_per_second = 2
+		for time, stalltime in self.stalldict.items():
+			stallpixels = stalltime * min_pixels_per_second
+			if stallpixels > self.collisiondict[time]:
+				self.collisiondict[time] = stallpixels
 		minpos = 0
 		prev_t = self.times[0]
 		for t in self.times:
@@ -223,3 +234,6 @@ class TimeMapper:
 				continue
 			rv.append((t, self.__pixel2pixel(self.minpos[t]), self.__pixel2pixel(self.minpos[t] + self.collisiondict[t])))
 		return rv
+
+	def getstall(self, time):
+		return self.stalldict.get(time, 0)
