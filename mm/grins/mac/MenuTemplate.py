@@ -49,7 +49,8 @@ MENUBAR=(
 		(SEP,),
 		(DYNAMICCASCADE, 'Channel visibility', CHANNELS),
 		(SEP,),
-		(ENTRY, 'View source', None, SOURCE))))
+		(ENTRY, 'View source', None, SOURCE),
+		(ENTRY, 'View help window', '?', HELP))))
 		
 			
 #

@@ -39,6 +39,10 @@ class ChannelViewDialog(ViewDialog):
 	def settoggle(self, command, onoff):
 		self.window.set_toggle(command, onoff)
 
+	def helpcall(self):
+		import Help
+		Help.givehelp('timeline')
+		
 class GOCommand:
 	def __init__(self):
 		pass

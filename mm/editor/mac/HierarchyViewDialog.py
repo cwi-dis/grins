@@ -42,3 +42,7 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
+		
+	def helpcall(self):
+		import Help
+		Help.givehelp('hierarchy')
