@@ -5,4 +5,4 @@ Contains the subversion of the application in the
 format <platform> patchlevel <number>
 """
 
-patchlevel = 'win32 build 51'
+patchlevel = 'win32 build 53'
