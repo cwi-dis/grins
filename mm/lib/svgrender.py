@@ -78,13 +78,24 @@ class SVGRenderer:
 	def svg(self, node):
 		self.saveGraphics()
 		viewbox = node.getViewBox()
-		if 0 and viewbox is not None:
+		if viewbox is not None:
 			vw, vh = node.getSize()
+			print 'size is', vw, vh, 
 			x, y, w, h = viewbox
 			tflist = []
 			if x or y:
 				tflist.append(('translate', [-x, -y]))
-			tflist.append(('scale', [vw/float(w), vh/float(h)]))
+			ar = node.get('preserveAspectRatio')
+			if ar is None:
+				scale = min(vw/float(w), vh/float(h))
+				xscale, yscale = scale, scale
+			elif ar == 'none':
+				xscale, yscale = vw/float(w), vh/float(h)
+			else:
+				# XXX: not correct (fit)
+				scale = min(vw/float(w), vh/float(h))
+				xscale, yscale = scale, scale
+			tflist.append(('scale', [xscale, yscale]))
 			self.graphics.applyTfList(tflist)
 		self.graphics.applyStyle(node.getStyle())
 		self.graphics.applyTfList(node.getTransform())
@@ -230,7 +241,6 @@ svgSource = """<?xml version="1.0" standalone="no"?>
            a25,100 -30 0,1 50,-25 l 50,-25"
         style="fill:none; stroke:red; stroke-width:5" />
 </svg>
-
 """
 
 #################
