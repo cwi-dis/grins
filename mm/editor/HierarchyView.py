@@ -1732,6 +1732,7 @@ class HierarchyView(HierarchyViewDialog):
 				other_icon = self.selected_icon.arrowto[0]
 				self.select_widget(other_icon)
 				self.draw()
+
 def expandnode(node):
 	# Bad hack. I shouldn't refer to private attrs of a node.
 	node.collapsed = 0

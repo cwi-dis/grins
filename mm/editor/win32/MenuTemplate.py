@@ -533,7 +533,7 @@ POPUP_CVIEW_SYNCARC = (
 
 POPUP_EVENT_DEST = (
 	(FLAG_ALL, ENTRY, 'Find event source', None, FIND_EVENT_SOURCE),
-	(FLAG_ALL, ENTRY, 'Remove event', None, CRASH),
+#	(FLAG_ALL, ENTRY, 'Remove event', None, REMOVE_EVENT), # This points to many events..
 	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 	)
 
