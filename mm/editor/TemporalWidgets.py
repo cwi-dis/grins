@@ -796,7 +796,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_outerbox.moveto((l,t,middle, b))
 		self.w_fbox.moveto((l,t,middle,b))
 		# This overlaps the borders a bit to make the fill part and the play part merge a bit.
-		self.w_filltimebox.moveto((middle-1, t+(1.0/5*float(b-t))+1,r,(b-(1.0/5*float(b-t)))))
+		self.w_filltimebox.moveto((middle-1, t+(1.0/5*float(b-t))+1,r,(b-(1.0/5*float(b-t)))-1))
 		self.w_filltimeouterbox.moveto((middle, t+(1.0/5*float(b-t)),r,(b-(1.0/5*float(b-t)))))
 
 	def hide(self):
