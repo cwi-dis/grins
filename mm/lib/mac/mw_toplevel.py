@@ -126,7 +126,11 @@ class _Event:
 			import splash
 			splash.splash()
 			self.removed_splash = 1
-		gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
+		# XXXX Is there a better way to get the option key state?
+		keys = Evt.GetKeys()
+		option_pressed = (ord(keys[7]) & 4)
+		region = self._fixcursor(option_pressed, Evt.GetMouse())
+		gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout, region)
 		
 		if gotone:
 			while gotone:
@@ -145,7 +149,6 @@ class _Event:
 			if self.needmenubarrecalc and self._command_handler:
 				self._command_handler.update_menus()
 				self.needmenubarrecalc = 0
-			self._fixcursor(event) # Should return a region
 		return 0		
 				
 	def _handle_event(self, event):
@@ -425,6 +428,8 @@ class _Event:
 # accessed directly by any user code.
 class _Toplevel(_Event):
 	def __init__(self):
+		self._button_region = None
+		self._no_button_region = None
 		_Event.__init__(self)
 		self._init_cursors()
 		self._clearall()
@@ -438,6 +443,7 @@ class _Toplevel(_Event):
 
 	def _clearall(self):
 		"""Code common to init and close"""
+		self._buttonschanged()
 		self._closecallbacks = []
 		self._subwindows = []
 		self._windowgroups = []
@@ -603,7 +609,8 @@ class _Toplevel(_Event):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[]):
-		wid, w, h = self._openwindow(x, y, w, h, title, units)
+		extraw, extrah = mw_windows.calc_extra_size(adornments, canvassize)
+		wid, w, h = self._openwindow(x, y, w, h, title, units, extraw, extrah)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
 					title, adornments, canvassize,
 					commandlist)
@@ -613,40 +620,59 @@ class _Toplevel(_Event):
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
 			type_channel = None, pixmap = 0, units=UNIT_MM,
 			adornments=None, canvassize=None, commandlist=[]):
-		wid, w, h = self._openwindow(x, y, w, h, title, units)
+		extraw, extrah = mw_windows.calc_extra_size(adornments, canvassize)
+		wid, w, h = self._openwindow(x, y, w, h, title, units, extraw, extrah)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,
 					title, adornments, canvassize,
 					commandlist)
 		self._register_wid(wid, rv)
 		return rv
 		
-	def _openwindow(self, x, y, w, h, title, units):
+	def _openwindow(self, x, y, w, h, title, units, extraw=0, extrah=0):
 		"""Internal - Open window given xywh, title.
 		Returns window-id"""
 		if w <= 0 or h <= 0:
 			raise 'Illegal window size'
+		#
+		# First determine x, y position
+		#
 		if x is None or y is None:
 			x = y = self.defaultwinpos
 			self.defaultwinpos = self.defaultwinpos + 5
-		if units == UNIT_MM:
+		elif units == UNIT_MM:
 			x = int(x*_x_pixel_per_mm)
-			y = int(y*_y_pixel_per_mm) + _screen_top_offset
-			w = int(w*_x_pixel_per_mm)
-			h = int(h*_y_pixel_per_mm)
+			y = int(y*_y_pixel_per_mm)
 		elif units == UNIT_PXL:
-			# Keep room for the menubar
-			y = y + _screen_top_offset
+			pass
 		elif units == UNIT_SCREEN:
 			l, t, r, b = Qd.qd.screenBits.bounds
 			t = t + _screen_top_offset
 			scrw = r-l
 			scrh = b-t
 			x = int(x*scrw+0.5)
-			y = int(y*scrh+0.5)+_screen_top_offset
+			y = int(y*scrh+0.5)
+		else:
+			raise error, 'bad units specified'
+		y = y + _screen_top_offset
+		#
+		# Next determine width, height
+		#
+		if units == UNIT_MM:
+			w = int(w*_x_pixel_per_mm)
+			h = int(h*_y_pixel_per_mm)
+		elif units == UNIT_PXL:
+			pass
+		elif units == UNIT_SCREEN:
+			l, t, r, b = Qd.qd.screenBits.bounds
+			t = t + _screen_top_offset
+			scrw = r-l
+			scrh = b-t
 			w = int(w*scrw)
 			h = int(h*scrh)
 		else:
 			raise error, 'bad units specified'
+		w = w + extraw
+		h = h + extrah
 			
 		x1, y1 = x+w, y+h
 		#
@@ -778,39 +804,74 @@ class _Toplevel(_Event):
 			data = self._cursor_dict[cursor]
 			Qd.SetCursor(data)
 			self._cursor_is_default = 0
+			self._cur_cursor = data
 		else:
 			self._cursor_is_default = 1
 			self._cur_cursor = None
-##			self._fixcursor()
 			
-	def _fixcursor(self, event):
+	def _fixcursor(self, option_pressed, lwhere):
 		"""Select watch or hand cursor"""
-		if event:
-			what, message, when, where, modifiers = event
-			option_pressed = modifiers&Events.optionKey
-		else:
-			# XXXX Needed?
-			raise 'kaboo kaboo'
+		where = Qd.LocalToGlobal(lwhere)
+		#
+		# First check whether we need the resize cursor
+		#
+		if not option_pressed:
+			wid = Win.FrontWindow()
+			if self._wid_to_window.has_key(wid):
+				win = self._wid_to_window[wid]
+				Qd.SetPort(wid)
+				partcode, mwid = Win.FindWindow(where)
+				if wid == mwid and partcode == Windows.inGrow:
+					Qd.SetCursor(self._resize_cursor)
+					return None
+		#
+		# Then check for non-default cursors
+		#
 		if not self._cursor_is_default:
+			return None
+		#
+		# Next check whether we're inside a button or not
+		#
+		self._mk_button_region()
+		if Qd.PtInRgn(where, self._button_region):
+			wtd_cursor = self._hand_cursor
+			rv = self._button_region
+		else:
+			wtd_cursor = self._arrow_cursor
+			rv = self._no_button_region
+		if wtd_cursor != self._cur_cursor:
+			print 'DBG cursor change'
+			Qd.SetCursor(wtd_cursor)
+			self._cur_cursor = wtd_cursor
+		return rv
+
+	def _buttonschanged(self):
+		"""Buttons have changed. Remove our cached regions and recompute next time"""
+		print "DBG buttons changed"
+		if self._button_region:
+			Qd.DisposeRgn(self._button_region)
+			self._button_region = None
+		if self._no_button_region:
+			Qd.DisposeRgn(self._no_button_region)
+			self._no_button_region = None
+			
+	def _mk_button_region(self):
+		"""Create the button and no-button regions if they don't exist yet"""
+		if self._button_region:
 			return
-		wtd_cursor = self._arrow_cursor
 		wid = Win.FrontWindow()
 		if self._wid_to_window.has_key(wid):
 			win = self._wid_to_window[wid]
 			Qd.SetPort(wid)
-			lwhere = Qd.GlobalToLocal(where)
-			# Change the cursor when we're over the resize area,
-			# unless option is pressed
-			partcode, mwid = Win.FindWindow(where)
-			if not option_pressed and wid == mwid and \
-			   partcode == Windows.inGrow:
-				wtd_cursor = self._resize_cursor
-			elif win._mouse_over_button(lwhere):
-				wtd_cursor = self._hand_cursor
-		if wtd_cursor != self._cur_cursor: 
-			Qd.SetCursor(wtd_cursor)
-			self._cur_cursor = wtd_cursor
-
+			self._button_region = win._get_button_region()
+		else:
+			# Foreign window, no buttons
+			self._button_region = Qd.NewRgn()
+			
+		self._no_button_region = Qd.NewRgn()
+		Qd.RectRgn(self._no_button_region, (-32766, -32766, 32766, 32766))
+		Qd.DiffRgn(self._no_button_region, self._button_region, 
+				self._no_button_region)
 
 	#
 	# Miscellaneous methods.

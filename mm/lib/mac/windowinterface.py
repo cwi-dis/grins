@@ -23,7 +23,7 @@ toplevel._initcommands()
 
 #
 # Import a few other constants and such from mw_globals
-from mw_globals import error
+from mw_globals import error, Continue
 from mw_globals import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 from mw_globals import ReadMask, WriteMask
 from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
