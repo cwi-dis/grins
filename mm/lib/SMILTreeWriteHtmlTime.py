@@ -19,6 +19,7 @@ class SMILHtmlTimeWriter(SMILWriter):
 	def writeAsHtmlTime(self):
 		write = self.fp.write
 		writetag = SMILWriter.writetag
+		self._viewportClass = ''
 
 		write('<html xmlns:t =\"urn:schemas-microsoft-com:time\">\n')
 
@@ -39,8 +40,15 @@ class SMILHtmlTimeWriter(SMILWriter):
 
 		writetag(self,'body')
 		self.push()
-		
+
+		if self._viewportClass:
+			SMILWriter.writetag(self, "div", [('class', self._viewportClass),])
+			self.push()
+
 		self.writenode(self.root, root = 1)
+
+		if self._viewportClass:
+			self.pop()
 
 		self.pop()
 		write('</html>\n')
@@ -51,7 +59,12 @@ class SMILHtmlTimeWriter(SMILWriter):
 	def writetag(self, tag, attrs = None):
 		# layout
 		if tag == 'layout': return
-		elif tag == 'viewport': return
+		elif tag == 'viewport':
+			attrs.append(('left','40'))
+			attrs.append(('top','40'))
+			self._viewportClass = self.writeRegionClass(attrs)
+			print 'viewportClass', self._viewportClass
+			return	
 		elif tag == 'region':
 			self.writeRegionClass(attrs)
 			return;
@@ -70,17 +83,24 @@ class SMILHtmlTimeWriter(SMILWriter):
 
 		# media items in div
 		attrscpy = attrs[:]
-		attrs = []
 		classval = None
 		idval = None
+		styleval = ''
+		attrs = []
+		attrs.append(('class', 'time'))
 		for attr, val in attrscpy:
 			if attr == 'region':
 				classval = val
 			elif attr == 'id':
 				idval = val
+			elif attr in ('top','left','width','height','right','bottom'):
+				if not styleval:
+					styleval = 'position=absolute; '
+				styleval = styleval + attr + "=" + val + "; "
 			else:
 				attrs.append((attr, val))
-		attrs.append(('class', 'time'))
+		if styleval:
+			attrs.append(('style', styleval))
 
 		if idval:
 			SMILWriter.writetag(self, "div", [('class', classval),('id', idval),])
@@ -146,12 +166,19 @@ class SMILHtmlTimeWriter(SMILWriter):
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
 
+			if self.smilboston:
+				for key, val in ch.items():
+					if not cmif_chan_attrs_ignore.has_key(key):
+						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
+				self.writetag('viewport', attrlist)
 			for ch in self.top_levels:
 				self.writeregion(ch)
 
 	def writeRegionClass(self, attrs):
+		idval = None
 		for attr, val in attrs:
 			if attr=='id':
+				idval = val
 				self.fp.write('.'+val + ' {position:absolute;' )	
 				break
 		for attr, val in attrs:
@@ -161,6 +188,6 @@ class SMILHtmlTimeWriter(SMILWriter):
 			else:
 				self.fp.write('%s:\"%s\"; ' % (attr, val))	
 		self.fp.write(' }\n')	
-				
+		return idval		
 
 		
