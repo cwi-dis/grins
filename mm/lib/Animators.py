@@ -117,6 +117,10 @@ class Animator:
 	def isAdditive(self):
 		return self._additive=='sum'
 
+	# redefine this method to override addition
+	def addCurrValue(self, v):
+		return v + self._curvalue
+
 	# t in [0, dur]
 	def _getinterval(self, t):
 		tl = self._efftimes
@@ -187,7 +191,7 @@ class Animator:
 			last = self._values[n-1]
 			self._accValue = self._repeatCounter*last
 
-	def setRetunedValuesConvert(self, cvt):
+	def setRetunedValuesConverter(self, cvt):
 		self._convert = cvt
 
 	#
@@ -282,24 +286,98 @@ class FeatureNotImplementedException:
         return self.__msg
 
 ###########################
-# A special animator to manage to-only additive animate elements
-class EffValueAnimator(Animator):
-	pass
-
-
-###########################
 # 'set' element animator
 class SetAnimator(Animator):
 	def __init__(self, attr, domval, value, dur):
 		Animator.__init__(self, attr, domval, (value, ), dur, mode ='discrete') 
 
 ###########################
-# 'animateColor'  element animator
-class ColorAnimator(Animator):
+# A special animator to manage to-only additive animate elements
+class EffValueAnimator(Animator):
+	pass
+	
+###########################
+class TupleAnimator(Animator):
 	def __init__(self, attr, domval, values, dur, mode='linear', 
-			times=None, splines=None, accumulate='none', additive='replace'): 
+			times=None, splines=None, accumulate='none', additive='replace'):
 		Animator.__init__(self, attr, domval, values, dur, mode, 
 			times, splines, accumulate, additive)
+		self._animators = ()
+
+	def setComponentAnimators(self, animators):
+		self._animators = animators
+
+	def getValue(self, t):
+		v = []
+		for a in self._animators:
+			v.append(a.getValue(t))
+		self._curvalue = tuple(v)
+		return self._curvalue
+
+	def _setAutoReverse(self,f=0):
+		Animator._setAutoReverse(self,f)
+		for a in self._animators:
+			a._setAutoReverse(f)
+
+	def _setAccelerateDecelerate(self, a, b):
+		Animator._setAccelerateDecelerate(self, a, b)
+		for a in self._animators:
+			a._setAccelerateDecelerate(a, b)
+
+	def _setSpeed(self,s):
+		Animator._setSpeed(self,s)
+		for a in self._animators:
+			a._setSpeed(s)
+
+	def setRetunedValuesConverter(self, cvt):
+		Animator.setRetunedValuesConverter(self,cvt)
+		for a in self._animators:
+			a.setRetunedValuesConverter(cvt)
+
+	def setRange(self, range):
+		Animator.setRange(self,range)
+		for a in self._animators:
+			a.setRange(range)
+
+	def addCurrValue(self, v):
+		nv = []
+		for i in range(len(self._animators)):
+			a = self._animators[i]
+			nv.append(a.addCurrValue(v[i]))
+		return tuple(nv)
+
+	def clamp(self, v):
+		nv = []
+		for i in range(len(self._animators)):
+			a = self._animators[i]
+			nv.append(a.clamp(v[i]))
+		return tuple(nv)
+
+###########################
+# 'animateColor'  element animator
+class ColorAnimator(TupleAnimator):
+	def __init__(self, attr, domval, values, dur, mode='linear', 
+			times=None, splines=None, accumulate='none', additive='replace'):
+		TupleAnimator.__init__(self, attr, domval, values, dur, mode, 
+			times, splines, accumulate, additive)
+		rvalues = []
+		gvalues = []
+		bvalues = []
+		for r, g, b in values:
+			rvalues.append(r)
+			gvalues.append(g)
+			bvalues.append(b)
+		rdomval, gdomval, bdomval = domval
+		ranim = Animator(attr, rdomval, rvalues, dur, mode, 
+			times, splines, accumulate, additive)
+		ganim = Animator(attr, gdomval, gvalues, dur, mode, 
+			times, splines, accumulate, additive)
+		banim = Animator(attr, bdomval, bvalues, dur, mode, 
+			times, splines, accumulate, additive)
+		self.setComponentAnimators((ranim, ganim, banim))
+		self.setRetunedValuesConverter(_round)
+		self.setRange((0, 255))
+
 
 ###########################
 # 'animateMotion' element animator
@@ -399,11 +477,16 @@ class EffectiveAnimator:
 		cv = self.__domval
 		for a in self.__animators:
 			if a.isAdditive():
-				cv = cv + a.getCurrValue()
+				cv = a.addCurrValue(cv)
 			else:
 				cv = a.getCurrValue()
 		if self.__chan:
-			self.__chan.updateattr(self.__node, self.__attr, cv)
+			displayValue = cv
+			for a in self.__animators:
+				if a.hasRange():
+					displayValue = a.clamp(cv)
+					break
+			self.__chan.updateattr(self.__node, self.__attr, displayValue)
 		self.__currvalue = cv
 	
 
@@ -439,14 +522,12 @@ animateContext = AnimateContext()
 #    Yes, we can interpreat this as meaning: like media elements + ?
 #    For me the ? mark exists and should be filled otherwise we 'll have 
 #    multiple interpretations and thus implementations of animation for smil.
-# * implement specializations for elements: set, animateColor, animatePosition
-# * support additive and accumulate attributes
 # * restart doc removes all anim effects including frozen val
 # * big remaining: smil-boston timing for animate elements
 # * on syntax error: we can ignore animation effects but not timing
 # * use f(0) if duration is undefined
 # * ignore keyTimes if dur indefinite
-# * attrdefs specs: additive
+# * attrdefs specs: additive, legal_range 
 # * an animation can effect indirectly more than one attributes (for example anim 'region')
 # * if 'by' and not 'from': additive='sum'
 # * if 'to' and not 'from': additive= <mixed> (start from base but reach to)
@@ -542,6 +623,11 @@ class AnimateElementParser:
 		if self.__isToOnly() and self.__canBeAdditive() and mode!='discrete':
 			pass # manage special case: return EffValueAnimator(...)
 
+		if self.__elementTag=='animateColor':
+			values = self.__getColorValues()
+			return ColorAnimator(attr, domval, values, dur, mode, times, splines,
+				accumulate, additive)
+
 		## Begin temp grins extensions
 		# position animation
 		if self.__grinsext:
@@ -553,18 +639,10 @@ class AnimateElementParser:
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 					accumulate, additive)
-			anim.setRetunedValuesConvert(_round)
+			anim.setRetunedValuesConverter(_round)
 			self.__setTimeManipulators(anim)
 			return anim
 		## End temp grins extensions
-
-		if self.__elementTag=='animateColor':
-			# we don't support animateColor yet
-			# just return a discrete animator
-			mode = 'discrete' # override calc mode
-			values = self.__getAlphaInterpolationValues()
-			return ColorAnimator(attr, domval, values, dur, mode, times, splines,
-				accumulate, additive)
 
 		# 4. Return an animator based on the attr type
 		print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
@@ -573,7 +651,7 @@ class AnimateElementParser:
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 				accumulate, additive)
-			anim.setRetunedValuesConvert(_round)
+			anim.setRetunedValuesConverter(_round)
 		elif self.__attrtype == 'float':
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines,
@@ -608,7 +686,7 @@ class AnimateElementParser:
 		if self.__attrtype == 'int':
 			value = string.atoi(value)
 			anim = SetAnimator(attr, domval, value, dur)
-			anim.setRetunedValuesConvert(_round)
+			anim.setRetunedValuesConverter(_round)
 		elif self.__attrtype == 'float':
 			value = string.atof(value)
 			anim = SetAnimator(attr, domval, value, dur)
@@ -742,6 +820,75 @@ class AnimateElementParser:
 		if not v2:
 			return ()
 		return v1, v2
+
+
+	# copy from SMILTreeRead
+	def __convert_color(self, val):
+		from colors import colors
+		from SMILTreeRead import color
+		val = string.lower(val)
+		if colors.has_key(val):
+			return colors[val]
+		if val in ('transparent', 'inherit'):
+			return val
+		res = color.match(val)
+		if res is None:
+			self.syntax_error('bad color specification')
+			return 'transparent'
+		else:
+			hex = res.group('hex')
+			if hex is not None:
+				if len(hex) == 3:
+					r = string.atoi(hex[0]*2, 16)
+					g = string.atoi(hex[1]*2, 16)
+					b = string.atoi(hex[2]*2, 16)
+				else:
+					r = string.atoi(hex[0:2], 16)
+					g = string.atoi(hex[2:4], 16)
+					b = string.atoi(hex[4:6], 16)
+			else:
+				r = res.group('ri')
+				if r is not None:
+					r = string.atoi(r)
+					g = string.atoi(res.group('gi'))
+					b = string.atoi(res.group('bi'))
+				else:
+					r = int(string.atof(res.group('rp')) * 255 / 100.0 + 0.5)
+					g = int(string.atof(res.group('gp')) * 255 / 100.0 + 0.5)
+					b = int(string.atof(res.group('bp')) * 255 / 100.0 + 0.5)
+		if r > 255: r = 255
+		if g > 255: g = 255
+		if b > 255: b = 255
+		return r, g, b
+
+	def __getColorValues(self):
+		values =  self.getValues()
+		if values:
+			try:
+				return tuple(map(self.__convert_color, string.split(values,';')))
+			except ValueError:
+				return ()
+
+		# 'from' is optional
+		# use dom value if missing
+		v1 = self.getFrom()
+		if not v1:
+			v1 = self.__domval
+		if type(v1) == type(''): 
+			v1 = self.__convert_color(v1)
+
+		# we must have a 'to' value (expl or through 'by')
+		v2 = self.getTo()
+		dv = self.getBy()
+		if v2:
+			v2 = self.__convert_color(v2)
+		elif dv:
+			dv = self.__convert_color(dv)
+			v2 = v1 + dv
+		else:
+			return ()
+		return v1, v2
+
 
 	# len of interpolation list values
 	# len == 0 is a syntax error
