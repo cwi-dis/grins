@@ -661,6 +661,7 @@ class Scheduler(scheduler):
 			   (arc.event is None and
 			    arc.marker is None and
 			    marker is None and
+			    arc.delay is not None and
 			    ((arc.dstnode in node.children and event == 'begin') or
 			     (arc.dstnode not in node.children and event == 'end'))):
 				arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
