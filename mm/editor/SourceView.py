@@ -164,7 +164,7 @@ class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 				if not autoFixErrors:
 					message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors : \n\n" + \
 							  parseErrors.getFormatedErrorsMessage(5) + \
-							  "\nDo you wish to accept GRiNS' automatic fixes?"
+							  "\nShall I try to fix these for you?"
 					ret = windowinterface.GetYesNoCancel(message, self.toplevel.window)
 				else:
 					ret = 0
@@ -209,7 +209,7 @@ class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 			parseErrors = self.context.getParseErrors()
 			if parseErrors == None:
 				# the source contains some datas not applied, and the original source contains mo error
-				saveme = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.toplevel.window)
+				saveme = windowinterface.GetYesNoCancel("There are unsaved changes in the source view.\nApply these to the document?", self.toplevel.window)
 				if saveme == 0:
 					# Which means "YES"
 					self.__applySource(1) # Which will close all windows.
@@ -251,12 +251,14 @@ class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 
 	def onRetrieveNode(self):
 		if self.is_changed():
-			windowinterface.showmessage("You must apply or revert the last modifications before to be able to use this function.", mtype = 'error')
+			# Should not happen
+			windowinterface.showmessage("There are unapplied changes.", mtype = 'error')
 			return
 			
 		parseErrors = self.context.getParseErrors()
 		if parseErrors != None:
-			windowinterface.showmessage("The source document contains some errors. \n You must fix them before to be able to use this function.", mtype = 'error')
+			# Should not happen
+			windowinterface.showmessage("Please fix the parse errors first.", mtype = 'error')
 			return
 		
 		charIndex = self.getCurrentCharIndex()
@@ -292,7 +294,7 @@ class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 			self.editmgr.setglobalfocus([objectToSelect])
 		else:
 			# if no object, show a warning
-			windowinterface.showmessage("Node not found", mtype = 'error')
+			windowinterface.showmessage("Node not found.", mtype = 'error')
 
 	#
 	# methods called from the errorsview to update the error
