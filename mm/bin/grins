@@ -1,0 +1,132 @@
+#!/bin/sh
+# Common code for cmifed, grins and cmifplay.
+#
+# Set $function to "editor", "grins" or "player"
+#
+
+prog="$0"
+main=`basename $prog`
+
+case $prog in
+*grins)	function=grins;;
+*play)	function=player;;
+*)	function=editor;;
+esac
+
+case `uname -sr` in
+IRIX\ 6.2)	ARCH=irix62;;
+IRIX\ 6.5)	ARCH=irix65;;
+IRIX\ 6.*)	ARCH=irix6;;
+IRIX64\ 6.*)	ARCH=irix6;;
+IRIX\ 5.*)	ARCH=irix5;;
+SunOS\ 5.*)	ARCH=sunos5;;
+Linux\ *)	ARCH=linux;;
+*)		echo "$0: unknown architecture" >&2; exit 1;;
+esac
+
+case "$prog" in
+*/*)	dir=`dirname "$prog"`; prog=`basename "$prog"`;;
+*)	IFS=:
+	for dir in $PATH
+	do
+		[ -x "${dir:-.}/$prog" ] && break
+	done
+	dir="${dir:-.}"
+	;;
+esac
+IFS=' 	
+'
+case "$dir" in
+/*)	;;
+*)	dir=`pwd`/$dir;;
+esac
+
+while [ -h "$dir/$prog" ]
+do
+	ls=`ls -ld "$dir/$prog"`
+	link=`expr "$ls" : '.* -> \(.*\)'`
+	case "$link" in
+	/*)	dir=`dirname "$link"`;;
+	*)	dir=`dirname "$dir/$link"`;;
+	esac
+	prog=`basename "$link"`
+done
+	
+while :
+do
+	case "$dir" in
+	*/.)	dir=`dirname "$dir"`;;
+	*)	break;;
+	esac
+done
+
+case "$dir" in
+*/bin)	dir=`dirname "$dir"`;;
+esac
+
+for sub in $function common python lib mmpython
+do
+	if [ ! -d "$dir/$sub" ]
+	then
+		echo "$0: directory \"$dir/$sub\" missing" >&2
+		exit 1
+	fi
+done
+
+python="$dir/mmpython/$ARCH/python"
+pythonsrc="$dir/python"
+pythonlib="$pythonsrc/Lib"
+
+CMIF="$dir"
+export CMIF
+
+PYTHONPATH=$CMIF/$function/motif
+PYTHONPATH=$PYTHONPATH:$CMIF/$function
+PYTHONPATH=$PYTHONPATH:$CMIF/common/motif
+PYTHONPATH=$PYTHONPATH:$CMIF/common
+PYTHONPATH=$PYTHONPATH:$CMIF/lib/motif
+PYTHONPATH=$PYTHONPATH:$CMIF/lib
+#PYTHONPATH=$PYTHONPATH:$CMIF/video
+if [ -d $CMIF/pylib ]
+then
+	for dir in `find $CMIF/pylib -type d ! -name CVS -print`
+	do
+		[ -f $dir/__init__.py ] ||
+		PYTHONPATH=$PYTHONPATH:$dir
+	done
+fi
+if [ -d $CMIF/mmpython/rmasdk/build.$ARCH -a -d $HOME/Real -a -d /usr/lib/RealPlayer7 ]
+then
+	PYTHONPATH=$PYTHONPATH:$CMIF/mmpython/rmasdk/build.$ARCH
+	LD_LIBRARY_PATH=/usr/lib/RealPlayer7/Common${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH}
+	export LD_LIBRARY_PATH
+fi
+
+# PYTHONPATH=$PYTHONPATH:$pythonlib
+# PYTHONPATH=$PYTHONPATH:$pythonlib/test
+# PYTHONPATH=$PYTHONPATH:$pythonlib/plat-$ARCH
+# PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/X11/Lib
+# PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/img/Lib
+# PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/midi/Lib
+
+export PYTHONPATH
+
+# Is this still needed?
+
+CMIF_USE_X=1
+export CMIF_USE_X
+
+PATH="$PATH:$dir/demo/amsterdam"
+export PATH
+
+options=
+while :
+do
+	[ $# -lt 1 ] && break
+	case "$1" in
+	-*)	options="$options $1"; shift;;
+	*)	break;;
+	esac
+done
+    
+exec python $options -c "import $main" ${1+"$@"}

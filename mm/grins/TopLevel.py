@@ -342,8 +342,6 @@ class TopLevel(TopLevelDialog):
 	def usergroup_callback(self, name):
 		self.setwaiting()
 		title, u_state, override, uid = self.context.usergroups[name]
-		if not em.transaction():
-			return
 		if u_state == 'RENDERED':
 			u_state = 'NOT_RENDERED'
 		else:
