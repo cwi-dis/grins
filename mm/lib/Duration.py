@@ -81,5 +81,5 @@ def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
 			return 0
 		if ignoredur and dur is not None:
 			cache['duration'] = dur
-			return loop * dur
+		return loop * dur
 	return duration
