@@ -217,7 +217,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n')
 		if ctx.comment:
 			write('<!--%s-->\n' % ctx.comment)
-		self.writetag('html')
+
+		self.writetag('html', [('xmlns:t', 'urn:schemas-microsoft-com:time'),])
 		self.push()
 
 		# head
@@ -225,28 +226,21 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.push()
 		
 		# head contents
-		self.writetag('meta', [('http-equiv', 'content-type'), 
-			('content', 'text/html; charset=ISO-8859-1')])
 		if self.__title:
 			self.writetag('meta', [('name', 'title'),
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
 
-		#
-		self.writetag('XML:namespace', [('prefix','t'),])
-
 		# style
-		self.writetag('style', [('type', 'text/css'),])
+		self.writetag('style')
 		self.push()
+		write(".time {behavior: url(#default#time2)}\n");
+		self.pop() # style
 
 		# style contents
-
 		# Internet explorer style conventions for XHTML+SMIL support
-		write('.time {behavior: url(#default#time2); }\n')
-		write('t\:*  {behavior: url(#default#time2); }\n') # or part 2 below
-		
-		self.pop() # style
+		write("<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n")
 
 		self.pop() # head
 
