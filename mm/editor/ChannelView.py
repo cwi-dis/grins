@@ -782,7 +782,12 @@ class TimeScaleBox(GO):
 				div = div/5*10
 			i = i+1
 		# Draw division boxes and numeric indicators
-		for i in range(n):
+		# This gives MemoryError: for i in range(n):
+		# This code should be looked into.
+		i = -1
+		while i < n:
+			i = i + 1
+			#
 			it0 = t0 + i*10
 			it1 = it0 + 5
 			t, b = self.mother.maptimes(it0, it1)
