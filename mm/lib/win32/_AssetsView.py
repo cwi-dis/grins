@@ -74,6 +74,7 @@ class _AssetsView(GenView.GenView,
 		
 		self.rebuildList()
 		self.registerDropTargetFor(self.listCtrl)
+		self.listCtrl.addSelListener(self)
 		# XXXX There is no cleanup method!
 
 	def OnCmd(self, params):
@@ -142,6 +143,12 @@ class _AssetsView(GenView.GenView,
 		if not self.listCtrl:
 			return -1
 		return self.listCtrl.getSelected()
+
+	def OnSelChanged(self):
+		cursel = self.listCtrl.getSelected()
+		cb = self._cmddict.get('select')
+		if cb:
+			cb(cursel)
 
 	# Called by the listCtrl code when it wants to start
 	# a drag. If the current focus is draggable start the

@@ -24,6 +24,7 @@ class ListCtrl(window.Wnd, DropTarget.DropTargetProxy, IconMixin.CtrlMixin):
 		self.hookMessages()
 		self.popup = None
 		self.selected = -1
+		self._selListeners = []
 
 		# drag support
 		self._down = 0
@@ -31,6 +32,13 @@ class ListCtrl(window.Wnd, DropTarget.DropTargetProxy, IconMixin.CtrlMixin):
 
 		# drag and drop callbacks map
 		DropTarget.DropTargetProxy.__init__(self)
+
+	def addSelListener(self, listener):
+		self._selListeners.append(listener)
+
+	# remove a listener
+	def removeMultiSelListener(self, listener):
+		self._selListeners.remove(listener)
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD\
@@ -121,6 +129,8 @@ class ListCtrl(window.Wnd, DropTarget.DropTargetProxy, IconMixin.CtrlMixin):
 			self.selected = nmsg.row
 		else:
 			self.selected = -1
+		for listener in self._selListeners:
+			listener.OnSelChanged()
 
 	#
 	#  command responses
