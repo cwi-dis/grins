@@ -4,7 +4,7 @@ import FileCache
 import urllib
 
 def getduration(filename):
-	filename = urllib.url2pathname(filename)
+	filename = urllib.urlretrieve(filename)[0]
 	fp = open(filename, 'rb')
 	import VFile
 	import os
