@@ -1138,10 +1138,14 @@ SOURCE=.\pylib\xmllib.py
 # Begin Group "bin"
 
 # PROP Default_Filter ""
+# Begin Group "win32"
+
+# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\bin\iGRiNS.py
+SOURCE=.\bin\win32\iGRiNS.py
 # End Source File
+# End Group
 # End Group
 # End Target
 # End Project
