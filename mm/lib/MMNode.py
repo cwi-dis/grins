@@ -1419,23 +1419,29 @@ class MMNode:
 		srlist.append(([(SCHED_STOPPING,self)], sched_done))
 		srlist.append(([(SCHED_STOP, self)], sched_stop))
 
-		# XXX: ignoring everything for now, 
-		# just kick childs	
+		# XXX: ignoring animate elements timing for now, 
+		# just kick animate childs in a parallel envelope	
 		for child in self.children:
 			srlist.append(( [(SCHED, self),], 
 				[(SCHED,child),(PLAY,self)]  ))
+
+			srlist.append((  [(SCHED_STOPPING,self),], 
+				[(SCHED_DONE,self), (PLAY_STOP, self), (SCHED_STOPPING,child),]  ))
+
 			srlist.append((  [(SCHED,child),], 
 				[(PLAY,child)]  ))
-			srlist.append((  [(SCHED_STOPPING,child)], 
-				[(SCHED_DONE,child),(PLAY_STOP,child),]  ))
-			srlist.append((  [(SCHED_STOP,child)], 
-				[]  ))
+
 			srlist.append((  [(PLAY_DONE,child),], 
 				[(SCHED_STOPPING,child),]  ))
+
+			srlist.append((  [(SCHED_STOPPING,child)], 
+				[(SCHED_DONE,child), (PLAY_STOP,child),]  ))
+
+			srlist.append((  [(SCHED_STOP,self),], 
+				[(PLAY_STOP,self),(PLAY_STOP,child)]  ))
+
 			srlist.append((  [(SCHED_DONE,child),], 
 				[]  ))
-			srlist.append((  [(TERMINATE,self),], 
-				[(TERMINATE,child),]  ))
 
 		srdict = {}
 		for events, actions in srlist:
