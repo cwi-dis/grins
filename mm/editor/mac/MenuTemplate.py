@@ -210,7 +210,7 @@ POPUP_CVIEW_NODE = (
 		(ENTRY, 'Play from node', None, PLAYFROM),
 		(SEP,),
 		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
-		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
+		(ENTRY, 'Finish hyperlink to focus', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
 		(SEP,),
 		(ENTRY, 'Info...', 'I', INFO),
