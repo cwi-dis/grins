@@ -52,7 +52,8 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "_AFXDLL" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_AFXDLL" /Yu"stdafx.h" /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /Yu"stdafx.h" /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /Zp8 /W3 /Ob2 /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /Oxs /M$(CECrtMT) /c
+# SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -154,7 +155,8 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /d "_AFXDLL" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_AFXDLL" /Yu"stdafx.h" /Gz /c
-# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /FR /Yu"stdafx.h" /Gz /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /FR /Gz /c
+# SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -189,6 +191,7 @@ DEP_CPP_ABOUT=\
 	".\AboutDlg.h"\
 	".\StdAfx.h"\
 	
+# ADD CPP /Yu"stdafx.h"
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -228,6 +231,7 @@ DEP_CPP_GRINS=\
 	".\MainFrm.h"\
 	".\StdAfx.h"\
 	
+# ADD CPP /Yu"stdafx.h"
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -289,6 +293,7 @@ DEP_CPP_MAINF=\
 	".\MainFrm.h"\
 	".\StdAfx.h"\
 	
+# ADD CPP /Yu"stdafx.h"
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -361,9 +366,11 @@ SOURCE=.\windowinterface.cpp
 
 DEP_CPP_WINDO=\
 	"..\common\extra_types.h"\
+	"..\common\stdenv.h"\
 	".\StdAfx.h"\
 	".\windowinterface.h"\
 	
+# ADD CPP /Yu"stdafx.h"
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -457,10 +464,6 @@ SOURCE=.\tb_player.bmp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\xml\attribute_def.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\xml\sax_handler.h
 # End Source File
 # End Group
@@ -469,19 +472,20 @@ SOURCE=..\common\xml\sax_handler.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\smil\attrdef.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\smil\smil_parser.cpp
 
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_SMIL_=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
+	".\windowinterface.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -496,6 +500,8 @@ DEP_CPP_SMIL_=\
 DEP_CPP_SMIL_=\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\smil\smil_elements.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
@@ -508,6 +514,8 @@ DEP_CPP_SMIL_=\
 DEP_CPP_SMIL_=\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\smil\smil_elements.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
@@ -529,6 +537,10 @@ SOURCE=..\common\smil\smil_parser.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\common\expat\expat.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\expat\winconfig.h
 # End Source File
 # Begin Source File
@@ -543,6 +555,7 @@ DEP_CPP_XMLPA=\
 	"..\common\expat\xmlrole.h"\
 	"..\common\expat\xmltok.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -587,6 +600,7 @@ DEP_CPP_XMLRO=\
 	"..\common\expat\xmlrole.h"\
 	"..\common\expat\xmltok.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -638,6 +652,7 @@ DEP_CPP_XMLTO=\
 	"..\common\expat\xmltok_impl.h"\
 	"..\common\expat\xmltok_ns.c"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -712,6 +727,7 @@ DEP_CPP_REGCO=\
 	"..\common\regex\regcomp.h"\
 	"..\common\regex\regex2.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -761,6 +777,7 @@ DEP_CPP_REGER=\
 	"..\common\regex\hsregex.h"\
 	"..\common\regex\regerror.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -807,6 +824,7 @@ DEP_CPP_REGEX=\
 	"..\common\regex\hsregex.h"\
 	"..\common\regex\regex2.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -849,6 +867,7 @@ DEP_CPP_REGFR=\
 	"..\common\regex\hsregex.h"\
 	"..\common\regex\regex2.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -949,7 +968,9 @@ SOURCE=..\grins\grins_main.cpp
 DEP_CPP_GRINS_=\
 	"..\common\stdenv.h"\
 	"..\grins\grins_main.h"\
+	"..\grins\grins_toplevel.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -995,12 +1016,14 @@ DEP_CPP_GRINS_T=\
 	"..\common\memfile.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
 	"..\common\xml_parsers.h"\
 	"..\grins\grins_main.h"\
 	"..\grins\grins_toplevel.h"\
 	".\windowinterface.h"\
 	
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
@@ -1059,84 +1082,6 @@ DEP_CPP_GRINS_T=\
 # Begin Source File
 
 SOURCE=..\grins\grins_toplevel.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\grins\test.cpp
-
-!IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
-
-DEP_CPP_TEST_=\
-	"..\common\charconv.h"\
-	"..\common\expat\expat.h"\
-	"..\common\extra_types.h"\
-	"..\common\img\surface.h"\
-	"..\common\memfile.h"\
-	"..\common\re.h"\
-	"..\common\regex\hsregex.h"\
-	"..\common\smil\attrdef.h"\
-	"..\common\stdenv.h"\
-	"..\common\tree_node.h"\
-	"..\common\xml\attribute_def.h"\
-	"..\common\xml_parsers.h"\
-	
-
-!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
-
-DEP_CPP_TEST_=\
-	"..\common\charconv.h"\
-	"..\common\expat\expat.h"\
-	"..\common\extra_types.h"\
-	"..\common\img\surface.h"\
-	"..\common\memfile.h"\
-	"..\common\re.h"\
-	"..\common\regex\hsregex.h"\
-	"..\common\smil\attrdef.h"\
-	"..\common\stdenv.h"\
-	"..\common\tree_node.h"\
-	"..\common\xml\attribute_def.h"\
-	"..\common\xml_parsers.h"\
-	
-
-!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
-
-DEP_CPP_TEST_=\
-	"..\common\charconv.h"\
-	"..\common\expat\expat.h"\
-	"..\common\extra_types.h"\
-	"..\common\img\surface.h"\
-	"..\common\memfile.h"\
-	"..\common\re.h"\
-	"..\common\regex\hsregex.h"\
-	"..\common\smil\attrdef.h"\
-	"..\common\smil\smil_parser.h"\
-	"..\common\stdenv.h"\
-	"..\common\xml\attribute_def.h"\
-	"..\common\xml\sax_handler.h"\
-	"..\common\xml_parsers.h"\
-	
-
-!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
-
-DEP_CPP_TEST_=\
-	"..\common\charconv.h"\
-	"..\common\expat\expat.h"\
-	"..\common\extra_types.h"\
-	"..\common\img\surface.h"\
-	"..\common\memfile.h"\
-	"..\common\re.h"\
-	"..\common\regex\hsregex.h"\
-	"..\common\smil\attrdef.h"\
-	"..\common\smil\smil_parser.h"\
-	"..\common\stdenv.h"\
-	"..\common\xml\attribute_def.h"\
-	"..\common\xml\sax_handler.h"\
-	"..\common\xml_parsers.h"\
-	
-# SUBTRACT CPP /YX /Yc /Yu
-
-!ENDIF 
-
 # End Source File
 # End Group
 # End Target
