@@ -191,7 +191,7 @@ class HTMLWriter:
 		#
 		outdict = {}
 
-		outdict['title'] = self.__title
+		outdict['title'] = nameencode(self.__title)
 		outdict['generator'] = '<meta name="generator" content="GRiNS %s">'%version.version
 		outdict['generatorname'] = 'GRiNS %s'%version.version
 		if self.evallicense:
@@ -200,8 +200,8 @@ class HTMLWriter:
 		outdict['ramurl'] = self.ramurl
 		outdict['unquotedramurl'] = MMurl.unquote(self.ramurl)
 		outdict['templatedir'] = self.templatedir_url
-		outdict['author'] = ctxa.get('author', '')
-		outdict['copyright'] = ctxa.get('copyright', '')
+		outdict['author'] = nameencode(ctxa.get('author', ''))
+		outdict['copyright'] = nameencode(ctxa.get('copyright', ''))
 		
 		playername = 'clip_1'
 		
