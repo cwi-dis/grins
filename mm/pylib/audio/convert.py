@@ -34,6 +34,9 @@ class audio_filter:
 	def setpos(self, pos):
 		self._rdr.setpos(pos)
 
+	def getmarkers(self):
+		return eself._rdr.getmarkers()
+
 class linear2linear(audio_filter):
 	def __init__(self, rdr, fmt):
 		audio_filter.__init__(self, rdr, fmt)
@@ -245,6 +248,12 @@ class cvrate(audio_filter):
 			return nframes
 		return (nframes * self.__outrate + self.__inrate - 1) / self.__inrate
 
+	def getmarkers(self):
+		markers = []
+		for id, pos, name in self._rdr.getmarkers():
+			markers.append((id, (pos * self.__outrate + self.__inrate - 1) / self.__inrate, name))
+		return markers
+		
 class looper(audio_filter):
 	def __init__(self, rdr, count):
 		audio_filter.__init__(self, rdr, rdr.getformat())
@@ -259,6 +268,17 @@ class looper(audio_filter):
 				self._rdr.rewind()
 				data, gotframes = self._rdr.readframes(nframes)
 		return data, gotframes
+
+	def getmarkers(self):
+		omarkers = self._rdr.getmarkers()
+		nframes = self._rdr.getnframes()
+		if nframes < 0:
+			return omarkers
+		markers = []
+		for i in range(self.__count):
+			for id, pos, name in omarkers:
+				markers.append((id, pos + i*nframes, name))
+		return markers
 
 ## This one is incorrect, really:
 ##	def getnframes(self):
