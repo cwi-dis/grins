@@ -1,6 +1,8 @@
 __version__ = "$Id$"
 
 
+import MMAttrdefs
+
 class Animator:
 	def __init__(self, attr, domval):
 		self.__attr = attr
@@ -23,7 +25,6 @@ class ConstAnimator(Animator):
 	def getValue(self, t):
 		return self.__val
 
-
 class LinearAnimator(Animator):
 	def __init__(self, domval, attr, fromval, toval, dur):
 		Animator.__init__(self, attr, domval)
@@ -32,8 +33,9 @@ class LinearAnimator(Animator):
 		self.__dur = dur
 
 	def getValue(self, t):
-		return self.__from + (self.__to - self.__from)*t/dur
-
+		if dur>0:
+			return self.__from + (self.__to - self.__from)*t/dur
+		return self.getDOMValue()
 
 class URLPairAnimator(LinearAnimator):
 	def getValue(self, t):
@@ -49,11 +51,6 @@ class CompositeAnimator:
 		self.__animators = animlist
 
 
-# map: attr -> (MMNode_AttrName, enable)
-animAttrs = {'src': ('file', 1),
-		}
-
-
 class AnimateElementParser:
 	# args anim and target are MMNode objects
 	# anim  represents the animate element node
@@ -66,6 +63,7 @@ class AnimateElementParser:
 		self.__enable = 0
 
 		self.__hasValidTarget = self.__checkTarget()
+		self._dump()
 
 	def getAnimator(self):
 		if self.__hasValidTarget:
@@ -76,26 +74,25 @@ class AnimateElementParser:
 		return self.__attrname
 
 	def __checkTarget(self):
-		anim = self.__anim
-		target = self.__target
-		self.__attrname = targetAttr  = anim.GetAttrDef('attributeName','')
-		if not targetAttr:
-			print 'failed to get targetAttr', anim
+		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
+		if not self.__attrname:
+			print 'failed to get targetAttr', self.__anim
 			return 0
 
-		descr = animAttrs.get(targetAttr)
-		if not descr:
-			print 'failed to get attribute description',targetAttr
-			return 0
-
-		mmattrname, self.__enable = descr
-		if not self.__enable:
-			print 'animations are dissabled for attribute',targetAttr 
-			return 0
-
-		self.__domval = target.GetAttrDef(mmattrname, None)
+		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
 		if self.__domval==None:
-			print 'Failed to get original DOM value for attr',mmattrname,'from node',target
+			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
 			return 0
 		return 1
 							
+	def ___getEnumAttrs(self):
+		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
+		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
+		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
+
+	def _dump(self):
+		print 'animate attr:', self.__attrname
+		for name, value in self.__anim.attrdict.items():
+			print `name`, '=', `value`
+
+		
