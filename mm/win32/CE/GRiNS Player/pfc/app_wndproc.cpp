@@ -32,8 +32,7 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 			PyWnd *pywnd = (*wit).second;
 			PyWnd::wnds.erase(wit);
 			pywnd->m_hWnd = NULL;
-			//PyCallbackBlock cbblock;
-			AcquireThread at(PyInterface::getPyThreadState());
+			PyCallbackBlock cbblock;
 			Py_DECREF(pywnd);
 			}
 		PostQuitMessage(0);
@@ -49,8 +48,7 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 		std::map<UINT, PyObject*>::iterator hit = hooks.find(uMsg);
 		if(hit != hooks.end())
 			{
-			//PyCallbackBlock cbblock;
-			AcquireThread at(PyInterface::getPyThreadState());
+			PyCallbackBlock cbblock;
 			PyObject *method = (*hit).second;
 			PyObject *arglst = Py_BuildValue("((iiiii(ii)))",
 				msg.hwnd,msg.message,msg.wParam,msg.lParam,msg.time,msg.pt.x,msg.pt.y);
