@@ -2618,38 +2618,37 @@ class MMNode:
 		if type in ('brush', 'animate', 'prefetch'):
 			# for now, direct mapping
 			return type
+		if type in interiortypes:
+			return None
+		if computedMimeType == None:
+			computedMimeType = self.GetComputedMimeType()
+		# find the channel type according to the computed mime type
+		if computedMimeType == None:
+			return 'null'
+		import ChannelMime, ChannelMap
+		chtypes = ChannelMime.MimeChannel.get(computedMimeType, [])
+		nchtypes = []
+		valid = ChannelMap.getvalidchanneltypes(self.context)
+		for chtype in chtypes:
+			while chtype not in valid:
+				if chtype == 'RealVideo':
+					chtype = 'video'
+				elif chtype == 'RealPix':
+					chtype = 'RealVideo'
+				elif chtype == 'RealAudio':
+					chtype = 'sound'
+				elif chtype == 'RealText':
+					chtype = 'video'
+				elif chtype == 'html':
+					chtype = 'text'
+			if chtype not in nchtypes:
+				nchtypes.append(chtype)
+		if len(nchtypes) > 0:
+			# for now keep the first
+			chtype = nchtypes[0]
 		else:
-			if computedMimeType == None:
-				computedMimeType = self.GetComputedMimeType()
-			# find the channel type according to the computed mime type
-			if computedMimeType == None:
-				return 'null'
-			else:
-				import ChannelMime, ChannelMap
-				chtypes = ChannelMime.MimeChannel.get(computedMimeType, [])
-				nchtypes = []
-				valid = ChannelMap.getvalidchanneltypes(self.context)
-				for chtype in chtypes:
-					while chtype not in valid:
-						if chtype == 'RealVideo':
-							chtype = 'video'
-						elif chtype == 'RealPix':
-							chtype = 'RealVideo'
-						elif chtype == 'RealAudio':
-							chtype = 'sound'
-						elif chtype == 'RealText':
-							chtype = 'video'
-						elif chtype == 'html':
-							chtype = 'text'
-					if chtype not in nchtypes:
-						nchtypes.append(chtype)
-				if len(nchtypes) > 0:
-					# for now keep the first
-					chtype = nchtypes[0]
-				else:
-					chtype = 'null'
-					
-			return chtype
+			chtype = 'null'
+		return chtype
 	
 	def SetChannel(self, c):
 		if c is None:
@@ -2711,10 +2710,8 @@ class MMNode:
 	#
 	
 	def GetComputedMimeType(self):
-		if self.computedMimeType == None:
-			import MMTypes
-			if self.type in ('imm', 'ext'):
-				self.computedMimeType = self.context.computeMimeType(self.type, self.attrdict.get('file'), self.attrdict.get('mimetype'))
+		if self.computedMimeType == None and self.type in ('imm', 'ext'):
+			self.computedMimeType = self.context.computeMimeType(self.type, self.attrdict.get('file'), self.attrdict.get('mimetype'))
 		return self.computedMimeType
 
 	def SetComputedMimeType(self, computedMimeType):
