@@ -63,8 +63,15 @@ class MainDialog:
 			commandlist = self.commandlist)
 		import settings
 		if not settings.get('no_initial_dialog'):
-			windowinterface.OpenAppDialog(self.new_callback, self.open_callback, self.never_again)
+			f = windowinterface.getmainwnd()
+			windowinterface.OpenAppDialog(self.new_callback, self.open_callback, self.never_again, parent=f)
 		
+	def getparentwindow(self):
+		# Used by machine-independent code to pass as parent
+		# parameter to dialogs
+		import windowinterface
+		return windowinterface.getmainwnd()
+
 	def open_callback(self):
 		if not self.canopennewtop():
 			return
