@@ -1320,7 +1320,6 @@ class MMSyncArc:
 		#    'dur' means that self determines the duration of the node.
 		#    'end' means that self determines when the node ends.
 		# -mjvdg
-		self.__isresolvedcalled = 0
 		if __debug__:
 			assert event is None or marker is None
 			if wallclock is not None:
@@ -1374,15 +1373,19 @@ class MMSyncArc:
 		self.accesskey = accesskey
 		self.wallclock = wallclock
 		self.delay = delay
-		self.qid = None
-		self.timestamp = None
-		self.depends = []	# node/event combos this arc depends on
-		self.path = None	# used in hyperjumps
+		self.reinit()
 		if debug: print 'MMSyncArc.__init__', `self`
 
 	if debug:
 		def __del__(self):
 			print 'MMSyncArc.__del__',`self`
+
+	def reinit(self):
+		self.__isresolvedcalled = 0
+		self.qid = None
+		self.timestamp = None
+		self.depends = []	# node/event combos this arc depends on
+		self.path = None	# used in hyperjumps
 
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document
@@ -1846,6 +1849,8 @@ class MMNode(MMTreeElement):
 		self.delayed_end = 0
 		self.delayed_play_done = 0
 		self.__calcendtimecalled = 0
+		for arc in self.attrdict.get('beginlist', []) + self.attrdict.get('endlist', []):
+			arc.reinit()
 		if recurse:
 			for c in self.children:
 				c.reinit(recurse)
@@ -3119,6 +3124,27 @@ class MMNode(MMTreeElement):
 ##				c.EndPruneTree()
 ##			del self.wtd_children
 
+	def checkendlist(self, sctx, timestamp, endlist = None):
+		if endlist is None:
+			endlist = self.GetEndList()
+			endlist = self.FilterArcList(endlist)
+		if endlist:
+			for a in endlist:
+				if a.event is not None and a.event not in ('begin', 'end'):
+					# events can happen again and again
+					break
+				elif not a.isresolved(sctx):
+					# any unresolved time is after any resolved time
+					break
+				else:
+					ats = a.resolvedtime(sctx)
+					if ats >= timestamp:
+						break
+			else:
+				# we didn't find a time interval
+				return 0 # timestamp unusable
+		return 1		# timestamp usable
+
 	def isresolved(self, sctx):
 		if self.start_time is not None:
 			return self.start_time
@@ -3136,6 +3162,7 @@ class MMNode(MMTreeElement):
 				return None
 		beginlist = self.GetBeginList()
 		beginlist = self.FilterArcList(beginlist)
+		endlist = self.FilterArcList(self.GetEndList())
 		if not beginlist:
 			# unless parent is excl, we're resolved if parent is
 			if pnode is None:
@@ -3162,7 +3189,9 @@ class MMNode(MMTreeElement):
 							while parent and parent.type in ('switch', 'foreign'):
 								parent.start_time = val
 								parent = parent.parent
-						return val
+						if self.checkendlist(sctx, val, endlist):
+							return val
+						return None
 					e, MBcached = c.__calcendtime(val, sctx)
 					if e is None or e < 0:
 						return None
@@ -3176,13 +3205,15 @@ class MMNode(MMTreeElement):
 				while parent and parent.type in ('switch', 'foreign'):
 					parent.start_time = presolved
 					parent = parent.parent
-			return presolved
+			if self.checkendlist(sctx, presolved, endlist):
+				return presolved
+			return None
 		min = None
 		maybecached = 1
 		for arc in beginlist:
 			if arc.isresolved(sctx):
 				v = arc.resolvedtime(sctx)
-				if min is None or v < min:
+				if self.checkendlist(sctx, v, endlist) and (min is None or v < min):
 					min = v
 			if arc.timestamp is None:
 				maybecached = 0
@@ -3788,6 +3819,8 @@ class MMNode(MMTreeElement):
 		else:
 			self.__calcendtimecalled = 1
 			maybecached = 1
+			endlist = self.GetEndList()
+			endlist = self.FilterArcList(endlist)
 			for a in beginlist:
 				t = None
 				aevent = a.getevent()
@@ -3828,6 +3861,10 @@ class MMNode(MMTreeElement):
 					continue
 				elif a.delay is not None:
 					t = a.delay
+				if t is not None and endlist:
+					if not self.checkendlist(sctx, t + syncbase, endlist):
+						# we didn't find a time interval
+						t = None
 				if t is None:
 					continue
 				if start is None or t < start:

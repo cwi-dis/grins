@@ -180,8 +180,14 @@ class SchedulerContext:
 			list = []
 		elif arc.isstart:
 			dev = 'begin'
-			list = arc.dstnode.GetBeginList()
+##			list = arc.dstnode.GetBeginList()
 			list = []
+			if not node.checkendlist(self, timestamp):
+				# we didn't find a time interval
+				if debugevents: print 'sched_arc: not allowed to start',arc,self.parent.timefunc()
+				if external:
+					self.parent.updatetimer()
+				return
 		else:
 			if event is not None and event not in ('begin', 'end'):
 				# a real event, only does something when node is active
@@ -527,6 +533,7 @@ class SchedulerContext:
 			parent.updatetimer()
 			return
 		endlist = node.GetEndList()
+		endlist = node.FilterArcList(endlist)
 		equal = 0
 		if endlist:
 			found = 0
