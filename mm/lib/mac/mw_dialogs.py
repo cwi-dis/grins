@@ -48,7 +48,7 @@ class MACDialog:
 		return 0
 
 	def _showitemlist(self, itemlist):
-		"""Make sure the items in itemlist are visible and active"""
+		"""Make sure the items in itemlist are visible and active. NOTE: obsolete"""
 		for item in itemlist:
 			if item in self._itemlist_shown:
 				continue
@@ -59,7 +59,7 @@ class MACDialog:
 			self._itemlist_shown.append(item)
 		
 	def _hideitemlist(self, itemlist):
-		"""Make items in itemlist inactive and invisible"""
+		"""Make items in itemlist inactive and invisible. NOTE: obsolete"""
 		for item in itemlist:
 			if item not in self._itemlist_shown:
 				continue
@@ -67,6 +67,24 @@ class MACDialog:
 			tp, h, rect = self._dialog.GetDialogItem(item)
 			if tp == 7:		# User control
 				h.as_Control().HideControl()
+			self._itemlist_shown.remove(item)
+			
+	def _showitemcontrols(self, itemlist):
+		"""Make sure item controls (plus any control embedded) are visible and active"""
+		for item in itemlist:
+			if item in self._itemlist_shown:
+				continue
+			ctl = self._dialog.GetDialogItemAsControl(item)
+			ctl.ShowControl()
+			self._itemlist_shown.append(item)
+			
+	def _hideitemcontrols(self, itemlist):
+		"""Make item controls (plus anything embedded) are invisible"""
+		for item in itemlist:
+			if item not in self._itemlist_shown:
+				continue
+			ctl = self._dialog.GetDialogItemAsControl(item)
+			ctl.HideControl()
 			self._itemlist_shown.remove(item)
 			
 	def _setsensitive(self, itemlist, sensitive):
