@@ -65,7 +65,7 @@ class AttrEditorDialog:
 					      top = wdg, bottom = bottom)
 		w.show()
 
-	def close(self):
+	def close(self, willreopen = 0):
 		"""Close the dialog and free resources."""
 		self.__window.close()
 		del self.__window
