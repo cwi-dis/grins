@@ -2,7 +2,13 @@
 # Common code for cmifed and cmifplay. Set
 # $function set to "editor" or "player"
 #
-function=player
+
+prog="$0"
+
+case $prog in
+*play)	function=player;;
+*)	function=editor;;
+esac
 
 case `uname -sr` in
 IRIX\ 6.3)	ARCH=irix6;;
@@ -11,7 +17,6 @@ SunOS\ 5.*)	ARCH=sunos5;;
 *)		echo "$0: unknown architecture" >&2; exit 1;;
 esac
 
-prog="$0"
 case "$prog" in
 */*)	dir=`dirname "$prog"`;;
 *)	IFS=:
@@ -86,4 +91,14 @@ export CMIF_USE_X
 PATH="$PATH:$dir/demo/amsterdam"
 export PATH
 
-exec $python -c "import main" ${1+"$@"}
+options=
+while :
+do
+	[ $# -lt 1 ] && break
+	case "$1" in
+	-*)	options="$options $1"; shift;;
+	*)	break;;
+	esac
+done
+    
+exec $python $options -c "import main" ${1+"$@"}
