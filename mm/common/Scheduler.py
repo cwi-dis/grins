@@ -396,7 +396,7 @@ class SchedulerContext:
 			self.sched_arc(node, arc, event, marker, deparc, timestamp+atime)
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
-	def trigger(self, arc, node = None, timestamp = None):
+	def trigger(self, arc, node = None, path = None, timestamp = None):
 		# if arc == None, arc is not used, but node and timestamp are
 		# if arc != None, arc is used, and node and timestamp are not
 		parent = self.parent
@@ -464,7 +464,14 @@ class SchedulerContext:
 						op, nd = ac
 						if op == SR.SCHED_STOPPING and nd == node:
 							return
-			if not arc.isstart:
+			if arc.isstart:
+				if arc.path:
+					path = arc.path
+					arc.path = None
+					# zap all other paths
+					for a in MMAttrdefs.getattr(arc.dstnode, 'beginlist'):
+						a.path = None
+			else:
 				if node.has_min:
 					# must delay this arc
 					node.delayed_arcs.append(arc)
@@ -641,7 +648,7 @@ class SchedulerContext:
 			runchild = 0
 		else:
 			runchild = 1
-		srdict = pnode.gensr_child(node, runchild, curtime = parent.timefunc())
+		srdict = pnode.gensr_child(node, runchild, path = path, curtime = parent.timefunc())
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
 		node.start_time = timestamp
@@ -719,7 +726,7 @@ class SchedulerContext:
 						return
 				# start interior node not yet playing or
 				# start any leaf node
-				self.trigger(None, node, start)
+				self.trigger(None, node, path, start)
 				self.sched_arcs(node, 'begin', timestamp = start)
 				return
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
@@ -733,7 +740,7 @@ class SchedulerContext:
 			if path is not None and resolved is None:
 				resolved = gototime
 			if resolved is not None:
-				self.trigger(None, node, resolved)
+				self.trigger(None, node, path, resolved)
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 

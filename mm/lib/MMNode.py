@@ -778,6 +778,7 @@ class MMSyncArc:
 		self.timestamp = None
 		self.deparcs = []	# arcs dependent on this one
 		self.depends = None	# arc this one depends on
+		self.path = None	# used in hyperjumps
 		if debug: print 'MMSyncArc.__init__', `self`
 
 	if debug:
@@ -1005,7 +1006,10 @@ class MMSyncArc:
 		return refnode.happenings[('marker', self.marker)] + atimes[0] + self.delay
 
 	def cancel(self, sched):
-		sched.cancel(self.qid)
+		try:
+			sched.cancel(self.qid)
+		except ValueError:
+			pass
 		self.qid = None
 		for a in self.deparcs:
 			a.cancel(sched)
@@ -2194,7 +2198,7 @@ class MMNode:
 	# The looping parmeter is only for pseudo-par-nodes implementing RealPix with
 	# captions.
 	#
-	def gensr_leaf(self, looping=0, overrideself=None, curtime=None):
+	def gensr_leaf(self, looping=0, overrideself=None, path=None, curtime=None):
 		if overrideself:
 			# overrideself is passed for the interior
 			self = overrideself
@@ -2277,7 +2281,7 @@ class MMNode:
 	# - actions to be taken upon SCHED_STOP
 	# - a list of all (event, action) tuples to be generated
 	# 
-	def gensr_interior(self, looping=0, curtime=None):
+	def gensr_interior(self, looping=0, path=None, curtime=None):
 		#
 		# If the node is empty there is very little to do.
 		#
@@ -2336,6 +2340,7 @@ class MMNode:
 			       srdict = gensr_envelope(gensr_body, repeatCount,
 						       sched_actions_arg,
 						       scheddone_actions_arg,
+						       path,
 						       curtime)
 		if not looping:
 			#
@@ -2368,20 +2373,20 @@ class MMNode:
 		return srdict
 
 	def gensr_envelope_nonloop(self, gensr_body, repeatCount, sched_actions,
-				   scheddone_actions, curtime):
+				   scheddone_actions, path, curtime):
 		if repeatCount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
 		sched_actions, schedstop_actions, srdict = \
-			       gensr_body(sched_actions, scheddone_actions, curtime=curtime)
+			       gensr_body(sched_actions, scheddone_actions, path=path, curtime=curtime)
 		if debuggensr: 
 			self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_envelope_firstloop(self, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions,
-				     curtime):
+				     path, curtime):
 		srlist = []
 		terminate_actions = []
 		#
@@ -2415,6 +2420,7 @@ class MMNode:
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
 					       self.looping_body_self,
+					       path=path,
 					       curtime=curtime)
 
 		# When the loop has started we start the body
@@ -2448,7 +2454,7 @@ class MMNode:
 
 	def gensr_envelope_laterloop(self, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions,
-				     curtime):
+				     path, curtime):
 		srlist = []
 
 		body_sched_actions = []
@@ -2457,6 +2463,7 @@ class MMNode:
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
 					       self.looping_body_self,
+					       path=path,
 					       curtime=curtime)
 
 		# When the loop has started we start the body
@@ -2535,7 +2542,7 @@ class MMNode:
 ##				arc.timestamp = None
 
 	def gensr_body_interior(self, sched_actions, scheddone_actions,
-				self_body=None, curtime=None):
+				self_body=None, path=None, curtime=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -2558,6 +2565,9 @@ class MMNode:
 				wtd_children = []
 		else:
 			wtd_children = self.wtd_children
+		if path and self.type == 'seq' and path[0] in wtd_children:
+			wtd_children = wtd_children[wtd_children.index(path[0]):]
+			print self, wtd_children
 
 		if termtype == 'FIRST':
 			terminating_children = wtd_children[:]
@@ -2620,6 +2630,8 @@ class MMNode:
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc)
 				schedule = defbegin is not None
+				if path and path[0] is child:
+					arc.path = path[1:]
 			else:
 				schedule = 0
 				for arc in beginlist:
@@ -2630,6 +2642,8 @@ class MMNode:
 					   arc.marker is None and \
 					   arc.delay is not None:
 						schedule = 1
+					if path and path[0] is child:
+						arc.path = path[1:]
 			if self.type == 'seq':
 				pass
 			elif termtype in ('FIRST', chname): ## or
@@ -2702,7 +2716,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
-			       self_body=None, curtime=None):
+			       self_body=None, path=None, curtime=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -2741,10 +2755,10 @@ class MMNode:
 			self.__dump_srdict('gensr_body_realpix', srdict)
 		return sched_actions, schedstop_actions, srdict
 			
-	def gensr_child(self, child, runchild = 1, curtime = None):
+	def gensr_child(self, child, runchild = 1, path = None, curtime = None):
 		if debug: print 'gensr_child',`self`,`child`,runchild
 		if runchild:
-			srdict = child.gensr(curtime=curtime)
+			srdict = child.gensr(path=path, curtime=curtime)
 		else:
 			srdict = {}
 		body = self.looping_body_self or self
