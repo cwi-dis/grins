@@ -848,6 +848,7 @@ class SMILParser(xmllib.XMLParser):
 			self.__in_layout = LAYOUT_UNKNOWN
 			if self.__seen_layout != LAYOUT_SMIL:
 				self.__seen_layout = LAYOUT_UNKNOWN
+			self.setliteral()
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
@@ -1235,9 +1236,10 @@ class SMILParser(xmllib.XMLParser):
 	__whitespace = re.compile(xmllib._opS + '$')
 	def handle_data(self, data):
 		if self.__node is None or self.__is_ext:
-			res = self.__whitespace.match(data)
-			if not res:
-				self.syntax_error('non-white space content')
+			if self.__in_layout != LAYOUT_UNKNOWN:
+				res = self.__whitespace.match(data)
+				if not res:
+					self.syntax_error('non-white space content')
 			return
 		self.__nodedata.append(data)
 		
@@ -1255,7 +1257,8 @@ class SMILParser(xmllib.XMLParser):
 	# Example -- handle cdata, could be overridden
 	def handle_cdata(self, cdata):
 		if self.__node is None or self.__is_ext:
-			self.warning('ignoring CDATA')
+			if self.__in_layout != LAYOUT_UNKNOWN:
+				self.warning('ignoring CDATA')
 			return
 		data = string.split(string.join(self.__nodedata, ''), '\n')
 		for i in range(len(data)-1, -1, -1):
