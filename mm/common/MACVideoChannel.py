@@ -17,7 +17,7 @@ if not QT_AVAILABLE:
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindowAsync):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['scale', 'center']
 	node_attrs = ChannelWindowAsync.node_attrs + \
 		     ['clipbegin', 'clipend', 'project_audiotype', 'project_videotype', 'project_targets',
 		     'project_perfect', 'project_mobile']
@@ -300,11 +300,7 @@ class VideoChannel(ChannelWindowAsync):
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+		self.armed_display.fgcolor(self.getbgcolor(node))
 
 		# by default armbox is all the window
 		armbox=(0.0,0.0,1.0,1.0)

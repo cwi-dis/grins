@@ -23,7 +23,7 @@ windowinterface.select_setcallback(mv.GetEventFD(), _selcb, ())
 mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['scale', 'center']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -169,11 +169,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
 
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+		self.armed_display.fgcolor(self.getbgcolor(node))
 
 		self.setArmBox(imbox)
 		return 1

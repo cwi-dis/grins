@@ -10,11 +10,11 @@ import re
 
 class TextChannel(ChannelWindow):
 	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+		node_attrs = ChannelWindow.node_attrs + [
 						 'fgcolor', 'font',
 						 'pointsize', 'noanchors']
 	else:
-		chan_attrs = ChannelWindow.chan_attrs + ['bucolor', 'hicolor',
+		chan_attrs = ChannelWindow.chan_attrs + [
 						 'fgcolor', 'font',
 						 'pointsize', 'noanchors']
 
@@ -33,8 +33,6 @@ class TextChannel(ChannelWindow):
 		if same and self.armed_display:
 			return 1
 		fgcolor = self.getfgcolor(node)
-		bucolor = self.getbucolor(node)
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		try:
 			str = self.getstring(node)
 		except error, arg:
@@ -73,8 +71,6 @@ class TextChannel(ChannelWindow):
 			   par1 == len(parlist)-1 and chr1 == len(parlist[-1]):
 				taglist = []
 				buttons.append((name, (0.0,0.0,1.0,1.0), type, times))
-				if not drawbox:
-					self.armed_display.fgcolor(bucolor)
 		pline, pchar = 0, 0
 		for (par0, chr0, par1, chr1, name, type, times, access) in taglist:
 			# first convert paragraph # and character #
@@ -95,8 +91,6 @@ class TextChannel(ChannelWindow):
 			# write the anchor text and remember its
 			# position (note: the anchor may span several
 			# lines)
-			if not drawbox:
-				self.armed_display.fgcolor(bucolor)
 			for line in range(pline, line1):
 				box = self.armed_display.writestr(curlines[line][pchar:])
 				buttons.append((name, box, type, times))
@@ -112,16 +106,9 @@ class TextChannel(ChannelWindow):
 			dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
 			pchar = 0
 ##			print 'buttons:',`buttons`
-		hicolor = self.gethicolor(node)
-		if drawbox:
-			self.armed_display.fgcolor(bucolor)
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+		self.armed_display.fgcolor(self.getbgcolor(node))
 		for (name, box, type, times) in buttons:
 			button = self.armed_display.newbutton(box, times = times)
-			if drawbox:
-				button.hicolor(hicolor)
-				button.hiwidth(3)
 			self.setanchor(name, type, button, times)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.

@@ -39,8 +39,7 @@ import Xt, Xm
 Xt.AddActionHook(actionhook, None)
 
 class HtmlChannel(Channel.ChannelWindow):
-	_our_attrs = ['bucolor', 'hicolor',
-							 'fgcolor', 'font']
+	_our_attrs = ['fgcolor', 'font']
 	if Channel.CMIF_MODE:
 		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
 	else:
@@ -223,7 +222,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		htmlw.ChangeColor(bg)
 		attrs['background'] = bg
 		attrs['foreground'] = fg
-		attrs['anchorColor'] = self.window._convert_color(self.getbucolor(node))
+		attrs['anchorColor'] = self.window._convert_color(self.gethicolor(node))
 		attrs['activeAnchorFG'] = self.window._convert_color(self.gethicolor(node))
 		attrs['activeAnchorBG'] = bg
 		htmlw.SetValues(attrs)

@@ -26,7 +26,7 @@ import rma
 import ddraw
 	
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['scale', 'center']
 	node_attrs = Channel.ChannelWindow.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -267,11 +267,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+		self.armed_display.fgcolor(self.getbgcolor(node))
 		armbox = self.prepare_anchors(node, self.window, self.getmediageom(node))
 		self.setArmBox(armbox)
 		self.armed_display.setMediaBox(armbox)

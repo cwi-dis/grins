@@ -1048,11 +1048,11 @@ class Channel:
 		else:
 			return 255,255,255
 
-	def getbucolor(self, node, animated=0):
-		return MMAttrdefs.getattr(node, 'bucolor', animated)
-
 	def gethicolor(self, node, animated=0):
-		return MMAttrdefs.getattr(node, 'hicolor', animated)
+		# The hicolor property doesn't exist anymore, but the HTML channels still use
+		# it to set hyperlink color. For that reason this method still exists, and returns
+		# red.
+		return (255, 0, 0)
 
 	def getloop(self, node):
 		return MMAttrdefs.getattr(node, 'loop')
@@ -1138,9 +1138,7 @@ _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z', 'editBackground', 'showEditBackground']
-	node_attrs = Channel.node_attrs + ['drawbox']
 	if CMIF_MODE:
-		node_attrs.append('bgcolor')
 		node_attrs.append('transparent')
 		chan_attrs.append('bgcolor')
 		chan_attrs.append('transparent')
@@ -1592,16 +1590,11 @@ class ChannelWindow(Channel):
 	# Activate a sensitive area in display list according to the anchors.
 	# Warning: this method has to be called after do_arm
 	def _prepareAnchors(self, node):
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
+		if MMAttrdefs.getattr(node, 'transparent'):
+			bgcolor = None
 		else:
-			if MMAttrdefs.getattr(node, 'transparent'):
-				bgcolor = None
-			else:
-				bgcolor = self.getbgcolor(node)
-			self.armed_display.fgcolor(bgcolor)
-		hicolor = self.gethicolor(node)
+			bgcolor = self.getbgcolor(node)
+		self.armed_display.fgcolor(bgcolor)
 
 		# create a button that covers the whole region, just
 		# in case we need one later on
@@ -1630,8 +1623,6 @@ class ChannelWindow(Channel):
 
 			b = self.armed_display.newbutton(windowCoordinates, times = a.atimes, sensitive = sensitive)
 			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
 			self.setanchor(a.aid, atype, b, a.atimes)
 
 		# make buttons sensitive for which there is already a

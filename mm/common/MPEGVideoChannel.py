@@ -7,7 +7,7 @@ from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
-	attrs = ['bucolor', 'hicolor', 'scale', 'project_videotype', 'project_targets']
+	attrs = ['scale', 'project_videotype', 'project_targets']
 	node_attrs = ChannelWindowThread.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -51,11 +51,7 @@ class VideoChannel(ChannelWindowThread):
 			print 'Bad mpeg file', `url`, msg
 			return 1
 
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+		self.armed_display.fgcolor(self.getbgcolor(node))
 		return self.syncarm
 
 	#
