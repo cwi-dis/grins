@@ -1,15 +1,5 @@
 __version__ = "$Id$"
 
-import os
-if os.environ.has_key('CMIF_USE_DUMMY'):
-	raise ImportError('No module named splash')
-elif os.name == 'mac':
-	raise ImportError('No module named splash')
-elif os.name == 'nt':
-	raise ImportError('No module named splash')
-elif os.environ.has_key('CMIF_USE_GL'):
-	raise ImportError('No module named splash')
-
 import Xt, Xm, Xmd, sys, X, Xcursorfont
 
 error = 'windowinterface.error'
