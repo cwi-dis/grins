@@ -178,6 +178,8 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
 			(FLAG_ALL, ENTRY, 'Vertically', 'V', DISTRIBUTE_VERTICALLY),
 			)),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
 		)),
 		
 	(FLAG_ALL, CASCADE, 'View', (
