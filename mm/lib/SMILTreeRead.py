@@ -2847,7 +2847,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
 				continue
-			# key in ['open','play','pause','stop','exit','skin','tab','rocker','key']
+			# key in ['open','play','pause','stop','exit','skin','tab','key']
 			for val in val:
 				a = ctx.newnode('anchor')
 				a.attrdict['tabindex'] = -1 # keep out of tabbing order
