@@ -43,8 +43,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel = toplevel
 
 		self.window = None
-		self.displist = None
-		self.new_displist = None
+#		self.displist = None
+#		self.new_displist = None
 		self.last_geometry = None
 
 		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
@@ -52,6 +52,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.scene_graph = None # The next generation list of objects that are displayed on the screen
 					# of type EditWindow.
 		self.drawing = 0	# A lock to prevent recursion in the draw() method of self.
+		self.redrawing = 0	# A lock to prevent recursion in redraw()
+		self.need_resize = 1	# Whether the tree needs to be resized.
 		self.dirty = 1		# Whether the scene graph needs redrawing.
 		self.selected_widget = None
 		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
@@ -427,6 +429,7 @@ class HierarchyView(HierarchyViewDialog):
 	##############################################################################
 
 	def create_scene_graph(self):
+		print "Creating new scene graph.."
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
 		# As such, any old references into the old scene graph need to be reinitialised.
@@ -435,14 +438,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusobj = None
 		self.scene_graph = create_MMNode_widget(self.root, self)
 		self.dirty = 1
+		self.need_resize = 1
 		if self.window and self.focusnode:
 			self.select_node(self.focusnode)
-
-	def refresh_scene_graph(self):
-		if self.scene_graph is not None:
-			self.scene_graph.destroy();
-		self.create_scene_graph();
-		self.draw();
 
 	# Callbacks for the Widget classes.
 	def get_window_size_abs(self):
@@ -467,37 +465,55 @@ class HierarchyView(HierarchyViewDialog):
 #			do_expand(self.root, 1, levels)
 		#expandnode(self.root)
 		
-		#self.scene_graph.uncollapse()
+		self.scene_graph.uncollapse()
 		self.refresh_scene_graph()
 		self.draw()
 
+	def refresh_scene_graph(self):
+		# Recalculates the node structure from the MMNode structure.
+		if self.scene_graph is not None:
+			self.scene_graph.destroy();
+		self.create_scene_graph();
+
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
-		#self.toplevel.setwaiting()
-		#import traceback
-		#traceback.print_stack()
-		#print "-------------------- Don't panic, it's just a traceback."
+		print "Drawing..."
 		if self.drawing == 1:
 			return
 		self.drawing = 1
+
+		self.resize_scene()	# will cause a redraw() event anyway.
 		
-		# if not self.dirty: return;
-		self.dirty = 0
-		# while(self.dirty)...?
-		#print "DEBUG: drawing"
-		x,y = self.scene_graph.get_minsize_abs()
-		self.mcanvassize = x,y
-		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
-		
-		# Known bug: this will actually cause a Hierarchyview.redraw() event.
-		self.displist = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
-		
-		self.scene_graph.moveto((0,0,x,y))
-		self.scene_graph.recalc()
-		self.scene_graph.draw(self.displist)
-		
-		self.displist.render()
 		self.drawing = 0
+
+	def resize_scene(self):
+		# Set the size of the first widget.
+		if self.need_resize:
+			self.need_resize = 0
+			x,y = self.scene_graph.get_minsize_abs()
+			self.mcanvassize = x,y
+			if x < 1.0 or y < 1.0:
+				print "Error: unconverted relative coordinates found. HierarchyView:497"
+			self.scene_graph.moveto((0,0,x,y))
+			self.scene_graph.recalc()
+			x,y = self.mcanvassize
+			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
+
+	def draw_scene(self):
+		# Only draw the scene, nothing else.
+		if self.redrawing:
+			print "Error: recursive redraws."
+			return
+		self.redrawing = 1
+		if self.dirty:
+			print "DEBUG: drawing scene."
+			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
+			self.scene_graph.draw(d)
+			d.render()
+			self.dirty = 0
+		else:
+			print "DEBUG: don't need to draw scene."
+		self.redrawing = 0
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -580,17 +596,8 @@ class HierarchyView(HierarchyViewDialog):
 	# Event handlers                                #
 	#################################################
 	def redraw(self, *rest):
-		# React to the redraw request / event thingy. (Don't resize the canvas here!)
-		# This should not be called explicitely from widgets.
-
-		# Er.. Now I am thoughrally confused. The program works fine without this
-		# function...!!!!?????
-
-		return
-	        # This is wrong anyway:
-		##if self.displist:
-##			bob = self.displist.clone()
-##			bob.render()
+		# Handles redraw events, for example when the canvas is resized.
+		self.draw_scene()
 
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
@@ -601,7 +608,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.mousehitx = x
 		self.mousehity = y
 		self.select(x, y)
-		self.draw()
+
+		# The mouse is only ever used for selecting, so this will not change the
+		# size of the scene.
+		self.draw_scene()
 
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
@@ -610,8 +620,9 @@ class HierarchyView(HierarchyViewDialog):
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_obj_at((x,y))
-		obj.mouse0release()
-		self.draw()
+		if obj:
+			obj.mouse0release()
+			self.draw()
 
 	def cvdrop(self, node, window, event, params):
 		em = self.editmgr
@@ -721,8 +732,6 @@ class HierarchyView(HierarchyViewDialog):
 			y = y * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
 
-		print "DEBUG: Dragged to: ", obj
-
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
 		elif obj.node.GetType() in MMNode.interiortypes:
@@ -748,6 +757,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusobj = None
 
 		self.refresh_scene_graph()
+		self.need_resize = 1
+		self.dirty = 1
+		self.draw()
 
 	def kill(self):
 		self.destroy()
@@ -1256,7 +1268,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
-		print "Selecting whatever is at ", x, y
 		widget = self.scene_graph.get_obj_at((x,y))
 		if widget == None:
 			print "No widget under the mouse."
@@ -1265,7 +1276,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			self.select_widget(widget)
 			self.aftersetfocus()
-			self.draw()
+			self.dirty = 1
 
 ##		obj = self.whichhit(x, y)
 ##		if not obj:
@@ -1656,32 +1667,34 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		self.thumbnails = not self.thumbnails
 		self.settoggle(THUMBNAIL, self.thumbnails)
-		if self.new_displist:
-			self.new_displist.close()
-		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		#f self.new_displist:
+		#	self.new_displist.close()
+		#self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		print "TODO: enable/disable thumbnails."
 		self.draw()
 
 	def playablecall(self):
 		self.toplevel.setwaiting()
 		self.showplayability = not self.showplayability
 		self.settoggle(PLAYABLE, self.showplayability)
-		if self.new_displist:
-			self.new_displist.close()
-		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		#if self.new_displist:
+		#	self.new_displist.close()
+		#self.new_displist = self.window.newdisplaylist(BGCOLOR)
 		self.draw()
 
 	def timescalecall(self):
-		self.toplevel.setwaiting()
-		self.timescale = not self.timescale
-		if self.timescale:
-			self.sizes = sizes_time
-		else:
-			self.sizes = sizes_notime
-		self.settoggle(TIMESCALE, self.timescale)
-		if self.new_displist:
-			self.new_displist.close()
-		self.new_displist = self.window.newdisplaylist(BGCOLOR)
-		self.recalc()
+		assert 0
+##		self.toplevel.setwaiting()
+##		self.timescale = not self.timescale
+##		if self.timescale:
+##			self.sizes = sizes_time
+##		else:
+##			self.sizes = sizes_notime
+##		self.settoggle(TIMESCALE, self.timescale)
+##		if self.new_displist:
+##			self.new_displist.close()
+##		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+##		self.recalc()
 		
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()
@@ -1790,10 +1803,10 @@ class HierarchyView(HierarchyViewDialog):
 
 
 	# Recursive procedure to calculate geometry of boxes.
-	def sizeboxes(self, node):
+#	def sizeboxes(self, node):
 		# Helper for first step in size recomputation: compute minimum sizes of
 		# all node boxes.
-		assert 0
+#		assert 0
 ##		ntype = node.GetType()
 ##		minsize = self.sizes.MINSIZE
 ##		if self.timescale:

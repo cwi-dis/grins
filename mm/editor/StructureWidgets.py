@@ -1,7 +1,5 @@
 # These are the standard views for a structure.
 
-# TODO: rename everything to "widgets"
-
 import Widgets
 import Bandwidth
 import MMurl, MMAttrdefs, MMmimetypes, MMNode
@@ -108,7 +106,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		self.root.dirty = 1 # The root needs redrawing
-		self.root.draw()	# Draw anyway. TODO: bad hack here.
+		self.root.draw_scene()
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -245,8 +243,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.root.paste(-1)
 
 	def pasteaftercall(self):
-		import traceback
-		traceback.print_stack()
 		self.root.paste(1)
 
 	def pasteundercall(self):
@@ -293,18 +289,21 @@ class StructureObjWidget(MMNodeWidget):
 		if self.collapsebutton:
 			self.collapsebutton.icon = 'closed'
 		self.root.dirty = 1
+		self.root.need_resize = 1
 
 	def uncollapse(self):
 		self.node.collapsed = 0;
 		if self.collapsebutton:
 			self.collapsebutton.icon = 'open'
 		self.root.dirty = 1
+		self.root.need_resize = 1
 
 	def toggle_collapsed(self):
 		if self.iscollapsed():
 			self.uncollapse()
 		else:
 			self.collapse()
+			
 	def iscollapsed(self):
 		return self.node.collapsed
 
@@ -487,7 +486,6 @@ class SeqWidget(StructureObjWidget):
 
 	def get_minsize_abs(self):
 		# Everything here calculated in pixels.
-		
 		if self.iscollapsed():
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 			# print "Seq: collapsed; returning ", boxsize, boxsize
@@ -1236,7 +1234,6 @@ class MediaWidget(MMNodeWidget):
 				self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
 		else:
 			f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
-#	   print "DEBUG: f is ", f
 		return f
 
 	def get_obj_at(self, pos):
@@ -1354,33 +1351,6 @@ class PushBackBarWidget(Widgets.Widget):
 		import AttrEdit
 		AttrEdit.showattreditor(self.root.toplevel, self.node, '.begin1')
 
-# there was a cvs conflict here, explaining the two classes. They should really be deleted.
-#class CollapseButtonWidget(Widgets.Widget):
-#	# This is the "expand/collapse" button at the right hand corner of the nodes.
-#	def __init__(self, parent, root):
-#		Widgets.Widget.__init__(self, root);
-#		self.parent=parent;
-
-##class CollapseButtonWidget(Widgets.Widget):
-##	# This is the "expand/collapse" button at the right hand corner of the nodes.
-##	def __init__(self, parent, root):
-##		Widgets.Widget.__init__(self, root);
-##		self.parent=parent;
-
-##	def recalc(self):
-##		l,t,w,h = self.parent.get_box();
-##		l=l+self.get_relx(1)			# Trial-and-error numbers.
-##		t = t+self.get_rely(2)
-##		r = l + self.get_relx(16);	# This is pretty bad code..
-##		b = t+self.get_rely(16);
-##		self.moveto((l,t,r,b));
-			
-##	def draw(self, displist):
-##		if self.parent and self.parent.iscollapsed():
-##			displist.drawicon(self.get_box(), 'open')
-##		else:
-##			displist.drawicon(self.get_box(), 'closed')
-		
 
 class Icon(MMNodeWidget):
 	# Display an icon which can be clicked on. This can be used for

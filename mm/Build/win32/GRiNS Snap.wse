@@ -32,12 +32,12 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=3859211371
+  File Checksum=1512501791
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Default2=C:\PROGRA~1\Wise
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -2216,6 +2216,9 @@ item: Self-Register OCXs/DLLs
 end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
+end
+item: Add Text to INSTALL.LOG
+  Text=File Tree: Destination Computer\*.EXE
 end
 item: Wizard Block
   Direction Variable=DIRECTION
