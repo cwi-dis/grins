@@ -101,7 +101,6 @@ class AttrEditorDialog:
 
 
 	def setcustomcolors_callback(self, color_list):
-		print self.wrapper.context.color_list,color_list
 		self.wrapper.context.color_list = color_list
 
 	def close(self, willreopen=0):
