@@ -453,10 +453,47 @@ class TimeNode:
 				
 ###################
 # mixin for svg time elements
+# common behavior (leaf time nodes)?
+
+# states : 'None', 'waitinterval', 'waitbegin', 'active'
+# active conceptual substates: 'playing', 'paused'
+# life states: 'waitinterval', 'waitbegin', 'active'
+# all life states can be transit (zero dur)
+
+# element's life-cycle:
+# waitinterval (waitbegin active waitinterval)*
+
+# Implementation note:
+# spec states mapping to ours:
+# specStartup : transition from None to waitbegin on a startup event, compute first interval
+# specWaitingToBeginCurrentInterval: waitbegin
+# specActiveTime: active 
+# specEndOfAnInterval: waitinterval, enter state and compute the next one and notify dependents 
+# specPostActive: waitinterval, perform any fill and wait for any next interval 
+
+
+# state transition external events:
+# startup, syncUpdate, parentRepeat, parentEnd, documentEnd
+
+# state transition time completion events:
+# begin, dur, end
+
+# state transition attrs beyond state variables
+# calcIntervalResult
+
+# implrem: take into account time sampling
+
+
+timestates = ['None', 'waitbegin', 'active', 'postactive']
+IDLE, WAITINTERVAL, WAITBEGIN, ACTIVE = None, 1, 2, 3
 
 class TimeElement(TimeNode, Timer):
-	states = [None, 'waitbegin', 'active', 'postactive']
-	WAITBEGIN, ACTIVE, POSTACTIVE = range(1,4)
+
+	# conceptual substates
+	None_substates = ['none', 'startup']
+	active_substates = ['playing', 'paused']
+	postactive_substates = ['endofinterval', 'nointervals']
+
 	def __init__(self, ttype, timeroot):
 		TimeNode.__init__(self, ttype, timeroot)
 		Timer.__init__(self)
@@ -502,6 +539,7 @@ class TimeElement(TimeNode, Timer):
 	# while in none state make possibly a transition to waiting
 	def startupTransition(self, complete=1):
 		assert self._state is None, 'invalid transition'
+		self._state = WAITINTERVAL
 		self._dur = self.calcDur()
 		self._interval = self.getNextInterval()
 		if complete: self.completeStartupState()
@@ -510,8 +548,8 @@ class TimeElement(TimeNode, Timer):
 			self.enterWaitBeginState()
 
 	def enterWaitBeginState(self):
-		assert self._state is None and self._interval is not None, 'invalid transition'
-		self._state = self.WAITBEGIN
+		assert self._state == WAITINTERVAL and self._interval is not None, 'invalid transition'
+		self._state = WAITBEGIN
 		bt, et = self._interval
 		self._ad = timesub(et,bt)
 		if bt <= 0:
@@ -521,8 +559,8 @@ class TimeElement(TimeNode, Timer):
 			self.schedule(bt, self.enterActiveState)
 			
 	def enterActiveState(self):
-		assert self._state == self.WAITBEGIN and self._interval is not None, 'invalid transition'
-		self._state = self.ACTIVE
+		assert self._state == WAITBEGIN and self._interval is not None, 'invalid transition'
+		self._state = ACTIVE
 		self._isfilled = 1
 		self._begincount = self._begincount + 1
 		bt, et = self._interval
@@ -554,7 +592,7 @@ class TimeElement(TimeNode, Timer):
 		if parent: parent.onChildBegin(self)
 
 	def onCheckRepeat(self):
-		if self._state != self.ACTIVE:
+		if self._state != ACTIVE:
 			return
 		t = self.getTime()
 		if timeGE(t, self._ad):
@@ -583,8 +621,8 @@ class TimeElement(TimeNode, Timer):
 	# while executing this the element is postactive 
 	# can transition to waiting or remain in postactive
 	def endOfIntervalTransition(self):
-		assert self._state == self.ACTIVE, 'invalid transition'
-		self._state = self.POSTACTIVE
+		assert self._state == ACTIVE, 'invalid transition'
+		self._state = WAITINTERVAL
 		self.stopTimer()
 		self.resetSchedule()
 
@@ -606,14 +644,17 @@ class TimeElement(TimeNode, Timer):
 		else:
 			self.enterPostActiveState()
 
+	# on parent repeat
 	def forceEndOfIntervalTransition(self):
-		assert self._state == self.ACTIVE, 'invalid transition'
+		assert self._state == ACTIVE, 'invalid transition'
+		self._state = None
 		self.stopTimer()
 		self.resetSchedule()
 		self.removeElement()
 		for arc in self.endSyncArcs:
 			arc.addInstanceTime(self.getParentTime())
 
+	# optimization: enter postactive state when nothing will happen
 	def freezeTransition(self):
 		for el in self.getTimeChildren():
 			el.freezeTransition()
@@ -623,7 +664,7 @@ class TimeElement(TimeNode, Timer):
 			self.enterPostActiveState()
 
 	def enterPostActiveState(self):
-		self._state = self.POSTACTIVE
+		self._state = WAITINTERVAL
 									
 	# same as resetElement
 	def enterNoneState(self):
@@ -642,9 +683,13 @@ class TimeElement(TimeNode, Timer):
 	def endElement(self):
 		self.stopTimer()
 		self.resetSchedule()
+		for el in self.getTimeChildren():
+			el.endElement()
 		return 1
 
 	def pauseElement(self):
+		for el in self.getTimeChildren():
+			el.pauseElement()
 		if self.isTicking():
 			self.stopTimer()
 			self.pauseSchedule()
@@ -653,9 +698,13 @@ class TimeElement(TimeNode, Timer):
 		if not self.isTicking() and self.isActive():
 			self.startTimer()
 			self.resumeSchedule()
+		for el in self.getTimeChildren():
+			el.resumeElement()
 
 	def seekElement(self, seekTo):
 		self.setTime(seekTo)
+		# seek children
+		# ...
 
 	def removeElement(self):
 		if not self.isFilled():
@@ -665,6 +714,8 @@ class TimeElement(TimeNode, Timer):
 		self._isfilled = 0
 
 	def resetElement(self):
+		for el in self.getTimeChildren():
+			el.resetElement()
 		if self.isActive():
 			self.forceEndOfIntervalTransition()
 		if self.isFilled():
@@ -696,19 +747,19 @@ class TimeElement(TimeNode, Timer):
 		return self._state
 
 	def isActive(self):
-		return self._state == self.ACTIVE
+		return self._state == ACTIVE
 
 	def isPostActive(self):
-		return self._state == self.POSTACTIVE
+		return self._state == WAITINTERVAL
 
 	def isWaiting(self):
-		return self._state == self.WAITBEGIN
+		return self._state == WAITBEGIN
 
 	def isFilled(self):
 		return self._isfilled
 
 	def isFrozen(self):
-		return self._begincount > 0 and self._state in (self.WAITBEGIN, self.POSTACTIVE) and self._isfilled
+		return self._begincount > 0 and self._state in (WAITBEGIN, WAITINTERVAL) and self._isfilled
 
 	def getDur(self):
 		return self._dur
@@ -726,7 +777,7 @@ class TimeElement(TimeNode, Timer):
 		tb, te = self._interval
 		ad = timesub(te,tb)
 		if timeLT(ad, t):
-			if self._state == self.ACTIVE:
+			if self._state == ACTIVE:
 				self.endOfIntervalTransition()
 			self.setTime(ad)
 			return self.getSimpleTime()
@@ -994,6 +1045,21 @@ class TimeContainer(TimeElement):
 	def __init__(self, ttype, timeroot):
 		TimeElement.__init__(self, ttype, timeroot)
 
+	#
+	#  child notifications
+	#
+	def onChildBegin(self, node):
+		pass
+
+	def onChildEnd(self, node):
+		pass
+
+	def onChildRepeat(self, node, index):
+		pass
+	
+	def onChildEvent(self, node, params):
+		pass
+
 ####################
 # par container
 
@@ -1023,10 +1089,6 @@ class Par(TimeContainer):
 				dur = timemax(dur, et)
 		return dur
 
-	#
-	#  DOM interface implementation
-	#  typical scenario: reset, seek? , begin, (pause, resume)*, seek*, end,	remove
-	#
 	def beginElement(self):
 		self.resetElement()
 		beginList = self.getXMLAttr('begin')
@@ -1034,37 +1096,6 @@ class Par(TimeContainer):
 		arc.addInstanceTime(0)
 		self.startupTransition()
 		return 1
-
-	def endElement(self):
-		TimeElement.endElement(self)
-		for el in self.getTimeChildren():
-			el.endElement()
-		return 1
-
-	def pauseElement(self):
-		for el in self.getTimeChildren():
-			el.pauseElement()
-		TimeElement.pauseElement(self)
-
-	def resumeElement(self):
-		TimeElement.resumeElement(self)
-		for el in self.getTimeChildren():
-			el.resumeElement()
-
-	def seekElement(self, seekTo):
-		TimeElement.seekElement(self, seekTo)
-		# seek children
-		# ...
-
-	def removeElement(self):
-		for el in self.getTimeChildren():
-			el.removeElement()
-		TimeElement.removeElement(self)
-
-	def resetElement(self):
-		for el in self.getTimeChildren():
-			el.resetElement()
-		TimeElement.resetElement(self)
 
 	def matchesEndSyncRule(self, rule, id=None):
 		now = self.getTime()
@@ -1090,12 +1121,6 @@ class Par(TimeContainer):
 					return 0
 		return result
 
-	#
-	#  event interface
-	#
-	def onChildBegin(self, node):
-		pass
-
 	def onChildEnd(self, node):
 		matches = self.matchesEndSyncRule('last')
 		if self.getTimeRoot() == self and matches:
@@ -1103,11 +1128,6 @@ class Par(TimeContainer):
 		elif self.get('dur') is None and matches:
 			self.endOfIntervalTransition()
 
-	def onChildRepeat(self, node, index):
-		pass
-	
-	def onChildEvent(self, node, params):
-		pass
 
 
 
