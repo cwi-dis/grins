@@ -42,7 +42,7 @@ DEFANSWER = '\r', '\n'			# keys that trigger default answer
 
 import windowinterface, EVENTS, string
 
-class Dialog():
+class Dialog:
 	def init(self, text):
 		if len(text) <= 1:
 			raise TypeError, 'arg count mismatch'
