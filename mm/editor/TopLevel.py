@@ -841,7 +841,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._in_prefschanged = 1
 		if not self.editmgr.transaction():
 			return
-		self.root.ResetPlayability()
 		self.editmgr.commit()
 		self._in_prefschanged = 0
 	#
