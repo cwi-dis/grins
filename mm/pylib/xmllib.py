@@ -115,16 +115,6 @@ class XMLParser:
 		    newdata.append('&' + str + ';')
 	    i = res.end(0)
 
-    # Interface -- add an entity
-    def add_entitydef(self, name, value):
-	if self.entitydefs is XMLParser.entitydefs:
-	    # copy class variable entitydefs to instance variable
-	    entitydefs = {}
-	    for k, v in self.entitydefs.items():
-		entitydefs[k] = v
-	    self.entitydefs = entitydefs
-	self.entitydefs[name] = value
-	
     # Internal -- handle data as far as reasonable.  May leave state
     # and data to be processed by a subsequent call.  If 'end' is
     # true, force handling all data as if followed by EOF marker.
@@ -412,12 +402,6 @@ class XMLParser:
     def handle_endtag(self, tag, method):
 	method()
 
-    # Example -- report an unbalanced </...> tag.
-    def report_unbalanced(self, tag):
-	if self.verbose:
-	    print '*** Unbalanced </' + tag + '>'
-	    print '*** Stack:', self.stack
-
     # Example -- handle character reference, no need to override
     def handle_charref(self, name):
 	try:
@@ -557,7 +541,7 @@ def test(args = None):
     if args:
 	file = args[0]
     else:
-	file = 'test.html'
+	file = 'test.xml'
 
     if file == '-':
 	f = sys.stdin
