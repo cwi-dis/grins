@@ -149,6 +149,7 @@ POPUP_HVIEW_LEAF = (
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Edit content', 'E', CONTENT),
 )
 
 POPUP_HVIEW_STRUCTURE = (
@@ -174,7 +175,6 @@ POPUP_HVIEW_STRUCTURE = (
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
-		(ENTRY, 'Edit content', 'E', CONTENT),
 )
 
 POPUP_CVIEW_NONE = (
