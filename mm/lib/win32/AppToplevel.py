@@ -126,12 +126,7 @@ class _Toplevel:
 
 		import Font
 		Font.delfonts()
-
-		try:
-			win32ui.GetMainFrame().PostMessage(win32con.WM_CLOSE)
-		except:
-			# main frame already gone
-			pass
+		
 
 	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
