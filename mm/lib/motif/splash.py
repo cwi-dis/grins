@@ -50,6 +50,8 @@ resources = [
 'GRiNS*background: #999999',
 	]
 
+splashfont = '-*-univers-medium-r-condensed-*-*-90-100-*-*-*-*-*'
+
 def roundi(x):
 	if x < 0:
 		return roundi(x + 1024) - 1024
@@ -112,22 +114,28 @@ class _Splash:
 					       'x': (swidth-width)/2,
 					       'y': (sheight-height)/2})
 		self.shell = shell
-		form = shell.CreateManagedWidget('form', Xm.Form,
-						 {'allowOverlap': 0})
-		w = form.CreateManagedWidget('image', Xm.DrawingArea,
-					     {'width': width,
-					      'height': height,
-					      'leftAttachment': Xmd.ATTACH_FORM,
-					      'rightAttachment': Xmd.ATTACH_FORM,
-					      'topAttachment': Xmd.ATTACH_FORM})
+##		form = shell.CreateManagedWidget('form', Xm.Form,
+##						 {'allowOverlap': 1})
+		w = shell.CreateManagedWidget('image', Xm.DrawingArea,
+					      {'width': width,
+					       'height': height,
+					       'x': 0, 'y': 0})
 		if version is not None:
-			l = form.CreateManagedWidget(
-				'version', Xm.Label,
-				{'labelString': version,
-				 'leftAttachment': Xmd.ATTACH_FORM,
-				 'rightAttachment': Xmd.ATTACH_FORM,
-				 'topAttachment': Xmd.ATTACH_WIDGET,
-				 'topWidget': w})
+			attrs = {'labelString': version,
+				 'alignment': Xmd.ALIGNMENT_CENTER,
+				 'x': 5,
+				 'y': 260,
+				 'width': width-10,
+				 'background': 0xffffff,
+				 'foreground': 0x061440}
+			try:
+				w.LoadQueryFont(splashfont)
+			except:
+				# can't find the font, so don't use it
+				pass
+			else:
+				attrs['fontList'] = splashfont
+			l = w.CreateManagedWidget('version', Xm.Label, attrs)
 		shell.Popup(0)
 		gc = w.CreateGC({})
 		image = self.visual.CreateImage(self.visual.depth, X.ZPixmap,
