@@ -16,7 +16,7 @@ import whrandom
 def create_MMNode_widget(node, root):
     #assert root != None
     ntype = node.GetType()
-    if features.H_TIMESTRIP in features.feature_set:
+    if root.usetimestripview:
         # We handle toplevel, second-level and third-level nodes differently
         # in snap
         if node.parent == None and ntype == 'seq':
