@@ -3,7 +3,7 @@
 __version__ = "$Id$"
 
 import imgformat
-import Qd
+from Carbon import Qd
 import time
 import struct
 import MacOS
