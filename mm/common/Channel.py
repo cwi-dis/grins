@@ -1052,6 +1052,10 @@ class _ChannelThread:
 				print 'can\' work with this windowinterface'
 				return 0
 		try:
+			attrdict['queuesize'] = self._attrdict['queuesize']
+		except KeyError:
+			pass
+		try:
 			import mm
 			self.threads = mm.init(self.threadstart(), 0,
 				  self._deviceno, attrdict)
