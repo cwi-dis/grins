@@ -178,43 +178,6 @@ class Main(MainDialog):
 def main():
 	m = Main()
 	m.run()
-
-# A copy of cmif.findfile().  It is copied here rather than imported
-# because the result is needed to extend the Python search path to
-# find the cmif module!
-
-# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-# *********  If you change this, also change ../lib/cmif.py   ***********
-# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-
-cmifpath = None
-
-def findfile(name):
-	global cmifpath
-	if os.path.isabs(name):
-		return name
-	if cmifpath is None:
-		if os.environ.has_key('CMIFPATH'):
-			var = os.environ['CMIFPATH']
-			cmifpath = var.split(':')
-		elif os.environ.has_key('CMIF'):
-			cmifpath = [os.environ['CMIF']]
-		else:
-			import sys
-			cmifpath = [os.path.split(sys.executable)[0]]
-			try:
-				link = os.readlink(sys.executable)
-			except (os.error, AttributeError):
-				pass
-			else:
-				cmifpath.append(os.path.dirname(os.path.join(os.path.dirname(sys.executable), link)))
-	for dir in cmifpath:
-		fullname = os.path.join(dir, name)
-		if os.path.exists(fullname):
-			return fullname
-	return name
-
-
 # Call the main program
 
 main()
