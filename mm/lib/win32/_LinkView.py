@@ -105,8 +105,14 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		for ck in self.keys():
 			self[ck].attach_to_parent()
 			self.HookMessage(self.onCmd,win32con.WM_COMMAND)
-			frame.HookCommandUpdate(frame.OnUpdateCmdEnable,self[ck]._id)
+			self.EnableCmd(ck,0)
 		
+		self.EnableCmd('LeftMenu',1)
+		self.EnableCmd('RightMenu',1)
+		self.EnableCmd('Cancel',1)
+		self.EnableCmd('LeftLabel',1)
+		self.EnableCmd('RightLabel',1)
+
 		# temp patch
 		#closecmd=usercmd.CLOSE_WINDOW(callback = (self.close_window_callback,()))
 		#self._close_cmd_list.append(closecmd)
@@ -121,7 +127,6 @@ class _LinkView(docview.FormView,components.ControlsDict):
 	# Called by the frame work before closing this View
 	def OnClose(self):
 		if self._closecmdid>0:
-			print 'posting command ',self._closecmdid
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
 			self.GetParent().DestroyWindow()
