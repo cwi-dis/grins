@@ -26,6 +26,10 @@ N_PRIO = 5
 error = 'Scheduler.error'
 
 class SchedulerContext:
+	# There is n Scheduler Context instances for each Scheduler instance.
+	# The current implementation only has one Scheduler instance and, when playing, one SchedulerContext
+	# instance
+
 	def __init__(self, parent, node, seeknode):
 		self.queue = []
 		self.active = 1
@@ -289,6 +293,15 @@ class SchedulerContext:
 		self.queuesrlist(srlist, timestamp)
 
 	def sched_arc(self, node, arc, event = None, marker = None, deparc = None, timestamp = None):
+		# Schedules a single SyncArc for a node.
+		
+		# node is the node for the start of the arc.
+		# arc is the SyncArc
+		# event is the event 
+		# marker is ?
+		# deparc is the dependant arcs on this SyncArc
+		# timestamp is the time.. now.
+
 		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,`deparc`,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self.parent.timefunc)-arc.delay
@@ -378,33 +391,47 @@ class SchedulerContext:
 			self.sched_arcs(arc.dstnode, dev, deparc = arc, timestamp=ts)
 
 	def sched_arcs(self, node, event = None, marker = None, deparc = None, timestamp = None):
+		# Schedules all event-based syncarcs for a single node.
+		# Note that syncarcs that can be derived from the node structure (i.e. start and end of nodes)
+		# are made already in SMILTreeRead and are accessable in MMNode via the 'beginlist' and 'endlist'
+		# attrs.
+
+		# node is the node.
+		# event is a tuple of (event, ?, ((channel, event)|accessKey))
+		# marker is (?)
+		# deparc are the dependand arcs
+		# timestamp is the time "now".
+
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
-		if timestamp is None:
+		if timestamp is None:	# Retrieve the timestamp if it was not supplied.
 			timestamp = self.parent.timefunc()
 		channel = accesskey = None
-		if event is not None:
+		if event is not None:	# Retrieve the event if it was not supplied.
 			node.event(timestamp, event)
-			if type(event) is type(()):
-				if event[1] == 'accessKey':
+			if type(event) is type(()): # If the event is an empty tuple.
+				if event[1] == 'accessKey': # If the event was from a keypress
 					accesskey = event[2]
 					event = None
 				else:
 					channel, event = event[:2]
 		if marker is not None:
 			node.marker(timestamp, marker)
-		for arc in node.sched_children:
-			if (arc.channel != channel or
+
+		# Iterate through the scheduled syncarcs for this node
+		for arc in node.sched_children:	# for all the scheduled children of that node.
+					# for a node, the scheduled children is a list of MMSyncArcs
+			if (arc.channel != channel or # If none of these conditions match, try the next node.
 			    arc.getevent() != event or
 			    arc.marker != marker or
 			    arc.accesskey != accesskey or
 			    arc.delay is None) and \
-			   (arc.getevent() is not None or
-			    arc.marker is not None or
-			    marker is not None or
-			    arc.accesskey is not None or
-			    arc.delay is None or
-			    ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
-			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
+			      (arc.getevent() is not None or
+			       arc.marker is not None or
+			       marker is not None or
+			       arc.accesskey is not None or
+			       arc.delay is None or
+			       ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
+			       (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
 				continue
 			atime = 0
 			if arc.srcanchor is not None:
@@ -419,6 +446,8 @@ class SchedulerContext:
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
 	def trigger(self, arc, node = None, path = None, timestamp = None):
+		# Triggers a single syncarc.
+
 		# if arc == None, arc is not used, but node and timestamp are
 		# if arc != None, arc is used, and node and timestamp are not
 		parent = self.parent
