@@ -1812,7 +1812,9 @@ class SMILWriter(SMIL):
 			attrlist = []
 			attrlist.append(('id', self.transition2name[key]))
 			for akey, aval in val.items():
-				if akey in ('fadeColor', 'borderColor'):
+				if akey == 'borderColor' and aval == (-1,-1,-1):
+					aval = 'blend'
+				elif akey in ('fadeColor', 'borderColor'):
 					aval = translatecolor(aval)
 				elif akey[:1] == '_':
 					continue
@@ -1913,7 +1915,7 @@ class SMILWriter(SMIL):
 						extensions[ans] = 'x%s' % len(extensions)
 						attrlist.append(('xmlns:%s' % extensions[ans], ans))
 					attr = '%s:%s' % (extensions[ans], attr)
-				attrlist.append((attr, val, None))
+				attrlist.append((attr, val))
 		else:
 			attrs = smil_attrs
 			if xtype != 'body':
