@@ -23,16 +23,19 @@ def usage(msg):
 
 class Main:
 	def __init__(self, opts, files):
-		import TopLevel
+		import TopLevel, windowinterface, EVENTS
 		self.tops = []
 		self._mm_callbacks = {}
-		import mm, posix
-		pipe_r, pipe_w = posix.pipe()
-		mm.setsyncfd(pipe_w)
-		self._mmfd = pipe_r
-		import windowinterface, EVENTS
-		windowinterface.select_setcallback(pipe_r,
-						   self._mmcallback, ())
+		try:
+			import mm, posix
+		except ImportError:
+			pass
+		else:
+			pipe_r, pipe_w = posix.pipe()
+			mm.setsyncfd(pipe_w)
+			self._mmfd = pipe_r
+			windowinterface.select_setcallback(pipe_r,
+						self._mmcallback, ())
 		windowinterface.setcallback(EVENTS.TimerEvent, self.timeout,
 					    None)
 		new_file = 0
@@ -145,7 +148,6 @@ def main():
 
 	# patch the module search path
 	# so we are less dependent on where we are called
-	sys.path.append(findfile('mm4'))
 	sys.path.append(findfile('lib'))
 	sys.path.append(findfile('video'))
 
