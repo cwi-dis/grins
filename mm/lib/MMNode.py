@@ -1531,38 +1531,25 @@ class MMSyncArc:
 			t1 = sctx.parent.timefunc()
 			localtime = time.localtime(t0)
 			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.wallclock
+			if yr is None:
+				# use current day to find seconds since the epoch
+				tm = time.mktime((localtime[0],localtime[1],localtime[2],hr,mn,sc,0,0,-1))
+			else:
+				# use specified day to find seconds since the epoch
+				tm = time.mktime((yr,mt,dy,hr,mn,sc,0,0,-1))
 			if tzhr is not None:
 				# we want the time in our local time zone
-				sc = 3600*hr + 60*mn + sc
 				# first convert to UTC
 				tzsc = 3600*tzhr + 60*tzmn
 				if tzsg == '-':
 					tzsc = -tzsc
-				sc = sc - tzsc
+				tm = tm - tzsc
 				# then convert to our own time zone
-				sc = sc - time.timezone + localtime[8]*3600
-				while sc < 0:
-					sc = sc + 86400
-					if dy is not None:
-						dy = dy - 1
-				while dy is not None and dy < 1:
-					mn = mn - 1
-					while mn < 1:
-						yr = yr - 1
-						mn = mn + 12
-					dy = dy + calendar.monthrange(yr, mn)[1]
-				hr,sc = divmod(sc, 3600)
-				mn,sc = divmod(sc, 60)
-			if yr is None:
-				tm = time.mktime((localtime[0],localtime[1],localtime[2],hr,mn,sc,0,0,-1))
-				sc = 3600*hr + 60*mn + sc
-				t = localtime[3]*3600+localtime[4]*60+localtime[5]
-				while sc < t:
-					sc = sc + 86400
-					tm = tm + 86400
-				return tm + t1 - t0 + self.delay
-			t = time.mktime((yr,mt,dy,hr,mn,sc,0,0,-1))
-			return t + t1 - t0 + self.delay
+				tm = tm - time.timezone + localtime[8]*3600
+			# finally convert seconds since the (system)
+			# epoch to our own time (and add in delay
+			# which is always 0 for wallclock times)
+			return tm + t1 - t0 + self.delay
 
 		if self.channel is not None:
 			return self.dstnode.GetSchedRoot().happenings[(self.channel._name, self.event)]
