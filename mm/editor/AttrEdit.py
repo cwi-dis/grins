@@ -958,7 +958,7 @@ class DocumentWrapper(Wrapper):
 class TransitionWrapper(Wrapper):
 	# XXXX Should we have the name in here too?
 	__stdnames = ['trname', 'trtype', 'subtype', 'dur', 'startProgress', 'endProgress', 'direction',
-		'horzRepeat', 'vertRepeat', 'borderWidth', 'color', 'multiElement', 'childrenClip']
+		      'horzRepeat', 'vertRepeat', 'borderWidth', 'color', 'coordinated', 'clipBoundary']
 
 	def __init__(self, toplevel, trname):
 		Wrapper.__init__(self, toplevel, toplevel.context)
