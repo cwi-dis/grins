@@ -59,11 +59,11 @@ class MidiChannel(Channel):
 		if same and self.arm_data:
 		    return 1
 		fn = self.getfileurl(node)
-		fn = MMurl.urlretrieve(fn)[0]
 		#
 		# Read the midifile, mixing all tracks
 		#
 		try:
+		    fn = MMurl.urlretrieve(fn)[0]
 		    fp = open(fn, 'rb')
 		except IOError:
 		    print 'Cannot open midi file', fn
