@@ -44,14 +44,9 @@ def SafeCallbackCaller(fn, args):
 win32ui.InstallCallbackCaller(SafeCallbackCaller)
 
 def Boot( bEditor = 0 ):
-	print 'Running CMIF Multimedia presentation'
-	if len(sys.argv)>1:
-		print sys.argv[1]
-	
 	#CMIFDIR = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
 	
 	# TEMP TEST FOLDER
-	print "Main GRiNS directory is", CMIFDIR
 	if bEditor:
 		specificPath = "editor"
 	else:
@@ -82,12 +77,10 @@ def Boot( bEditor = 0 ):
 	# the extensionmodules, or if frozen, in the main directory
 	# This call allows Pythonwin to automatically find resources in it.
 	import win32ui
-	print "win32ui loaded from:",win32ui.__file__
 	dllPath = os.path.split(win32ui.__file__)[0]
 	try:
 		global dll
 		dll = win32ui.LoadLibrary(os.path.join(dllPath, "GRiNSRes.dll"))
-		print "Loaded", dll, "from", dllPath
 		dll.AttachToMFC()
 	except win32ui.error:
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
