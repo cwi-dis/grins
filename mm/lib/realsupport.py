@@ -515,13 +515,13 @@ def writeRP(file, rp):
 	f.write('<imfl>\n')
 	f.write('  <head')
 	sep = ' '
-	if rp.title is not None:
+	if rp.title:
 		f.write(sep+'title=%s' % nameencode(rp.title))
 		sep = '\n        '
-	if rp.author is not None:
+	if rp.author:
 		f.write(sep+'author=%s' % nameencode(rp.author))
 		sep = '\n        '
-	if rp.copyright is not None:
+	if rp.copyright:
 		f.write(sep+'copyright=%s' % nameencode(rp.copyright))
 		sep = '\n        '
 	f.write(sep+'timeformat="dd:hh:mm:ss.xyz"')
