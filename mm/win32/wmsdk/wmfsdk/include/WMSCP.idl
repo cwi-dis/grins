@@ -1,20 +1,7 @@
-//============================================================================
 //
-//  Microsoft Windows Media Technology
-//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//  Microsoft Windows Media Technologies
+//  Copyright (C) Microsoft Corporation, 1999 - 2001. All rights reserved.
 //
-//  File:        wmscp.idl
-//
-//  Description: 
-//
-//============================================================================
-
-cpp_quote( "//=========================================================================" )
-cpp_quote( "//" )
-cpp_quote( "// Microsoft Windows Media Technologies" )
-cpp_quote( "// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved." )
-cpp_quote( "//" )
-cpp_quote( "//=========================================================================" )
 
 cpp_quote("// SCP Data Flags")
 cpp_quote("#define WMDM_SCP_EXAMINE_EXTENSION                 0x00000001L")
