@@ -200,13 +200,15 @@ class Player(ViewDialog, PlayerCore):
 			self.last_geometry = self.window.getgeometry()
 
 	def _mouse(self, dummy, window, ev, val):
+		if window is not self.window:
+			return
 		x, y = val[:2]
-		if 0 < y < .5:
-			if 0 < x < .5 * self.width:
+		if .01 < y < .49:
+			if .01 * self.width < x < .49 * self.width:
 				self.play_callback()
-			elif .5 * self.width < x < self.width:
+			elif .51 * self.width < x < .99 * self.width:
 				self.pause_callback()
-		elif 0 < x < self.width:
+		elif .51 < y < .99 and .01 * self.width < x < .99 * self.width:
 			self.stop_callback()
 	#
 	# FORMS callbacks.
