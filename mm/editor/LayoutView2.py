@@ -1030,33 +1030,10 @@ class LayoutView2(LayoutViewDialog2):
 		
 	# have to be called from inside a transaction	
 	def insertKeyTime(self, nodeRef, tp, duplicateKey=None):
-		index = 0
+		index = -1
 		animateNode = self.getAnimateNode(nodeRef)
-		if animateNode is not None and animateNode.GetType() == 'animpar':
-			animvals = animateNode.GetAttrDef('animvals', None)
-			if animvals is not None:
-				for time, vals in animvals:
-					if time > tp:
-						break
-					index = index+1
-				if index > 0 and index < len(animvals):
-					# can only insert a key between the first and the end
-					if duplicateKey is not None and duplicateKey >= 0:
-						# duplicate a key value
-						time, vals = animvals[duplicateKey]
-						newvals = vals.copy()
-					else:
-						# interpolate values at this time
-						left, top, width, height = animateNode._animateEditWrapper.getRectAt(tp)
-#						bgcolor = self.animationWrapper.getColorAt(tp)
-						newvals = {'left':left, 'top':top, 'width':width, 'height':height}
-					animateNode._currentTime = tp
-					canimvals = [] # don't modify the original to make undo/redo working
-					for t, v in animvals:
-						canimvals.append((t, v.copy()))
-						
-					canimvals.insert(index, (tp, newvals))
-					self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
+		if animateNode is not None:
+			index = animateNode._animateEditWrapper.insertKeyTime(self.editmgr, tp, duplicateKey)
 
 		if index > 0:
 			self.animateControlWidget.insertKey(tp)
@@ -1066,17 +1043,9 @@ class LayoutView2(LayoutViewDialog2):
 	# have to be called from inside a transaction	
 	def removeKeyTime(self, nodeRef, index):
 		animateNode = self.getAnimateNode(nodeRef)
-		animvals = animateNode.GetAttrDef('animvals', [])
-		if index > 0 and index < len(animvals)-1:
-			
-			canimvals = [] # don't modify the original to make undo/redo working
-			for t, v in animvals:
-				canimvals.append((t, v.copy()))
-			
-			# can only remove a key between the first and the end
-			del canimvals[index]
-			self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
-			self.animateControlWidget.removeKey(index)
+		if animateNode is not None:
+			if animateNode._animateEditWrapper.removeKeyTime(self.editmgr, index):
+				self.animateControlWidget.removeKey(index)
 		
 	def getKeyForThisTime(self, list, time, round=0):
 		# first, search for the same value
@@ -1366,34 +1335,26 @@ class LayoutView2(LayoutViewDialog2):
 			list.append(nodeRef.name)
 
 	def applyAttrList(self, nodeRefAndValueList):
-		if not self.editmgr.transaction():
+		editmgr = self.editmgr
+		if not editmgr.transaction():
 			return
 							
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
 			nodeType = self.getNodeType(nodeRef)
 			animateNode = self.getAnimateNode(nodeRef)
 			animated = 0
-			if animateNode is not None and attrName in ('left', 'top', 'width', 'height'):
-				animated = 1
-			if animated:
-				animvals = animateNode.GetAttrDef('animvals', [])
-				canimvals = [] # don't modify the original to make undo/redo working
-				for t, v in animvals:
-					canimvals.append((t, v.copy()))
-
-				editWrapper = animateNode._animateEditWrapper
+			if animateNode is not None:
 				currentTimeValue = animateNode._currentTime
-				keyTimeList = editWrapper.getKeyTimeList()
-				keyTimeIndex = self.getKeyForThisTime(keyTimeList, currentTimeValue, round=1)
-				if keyTimeIndex is None:
-					keyTimeIndex = self.insertKeyTime(nodeRef, currentTimeValue)
-					canimvals = animateNode.attrdict.get('animvals')
-					
-				time, vals = canimvals[keyTimeIndex]
-				vals[attrName] = attrValue
-				self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
-
-			if not animated or (keyTimeIndex == 0 and nodeType != TYPE_ANIMATE):
+				editWrapper = animateNode._animateEditWrapper
+				
+				if editWrapper.isAnimatedAttribute(attrName):
+					animated = 1
+					if not editWrapper.changeAttributeValue(editmgr, attrName, attrValue, currentTimeValue, self):
+						# we can't edit the attribute at this time: cancel the transaction
+						editmgr.rollback()
+						return
+											
+			if not animated or (currentTimeValue == 0 and nodeType != TYPE_ANIMATE):
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
@@ -2268,7 +2229,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.geomFieldWidget.updateViewportGeom(geom)
 		elif nodeType == TYPE_REGION:
 			self.geomFieldWidget.updateRegionGeom(geom)
-		elif nodeType == TYPE_MEDIA:
+		elif nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
 			self.geomFieldWidget.updateMediaGeom(geom)
 
 	# called from any widget belong to this view
@@ -2838,15 +2799,8 @@ class AnimateControlWidget(LightWidget):
 				return
 
 			animateNode = self._context.getAnimateNode(nodeRef)
-			animvals = animateNode.GetAttrDef('animvals', [])
-
-			canimvals = [] # don't modify the original to make undo/redo working
-			for t, v in animvals:
-				canimvals.append((t, v.copy()))
-			
-			oldtime, vals = canimvals[index]
-			canimvals[index] = (time, vals)
-			editmgr.setnodeattr(animateNode, 'animvals', canimvals)
+			if animateNode is not None:
+				animateNode._animateEditWrapper.changeKeyTime(editmgr, index, time)
 				
 			animateNode._currentTime = time
 			editmgr.commit()
@@ -3217,10 +3171,10 @@ class PreviousWidget(Widget):
 	# update animation wrapper to be able to get interpolation values
 	def updateAnimationWrapper(self, animateNode):
 		import AnimationWrappers
-		animateNode._animateEditWrapper = AnimationWrappers.getAnimationWrapper(animateNode)
+		animateNode._animateEditWrapper = AnimationWrappers.makeAnimationWrapper(animateNode)
 		if not hasattr(animateNode, '_currentTime'):
 			animateNode._currentTime = 0
-		animateNode._animateEditWrapper.updateAnimators(animateNode)
+		animateNode._animateEditWrapper.updateAnimators()
 		self.__mustBeUpdated = 1
 		
 	def update(self):
