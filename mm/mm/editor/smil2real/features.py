@@ -36,4 +36,4 @@ license_features_needed = ('smil2real', sys.platform)
 ##auto_evaluate_period = 7	# 7 days auto-evaluate
 
 # URL to be used for buying the product
-buyurl = 'http://www.realnetworks.com/special/partners/upsell.html?act=orx' # via Real
+##buyurl = 'http://www.realnetworks.com/special/partners/upsell.html?act=orx' # via Real
