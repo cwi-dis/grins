@@ -410,7 +410,6 @@ def _DeleteNode (bv,cb) :
 	#
 	# And zap the node and move to the clipboard
 	#
-	print 'nf=', nf
 	bv.form.freeze_form()
 	bv.rmBlockview(node)
 	em.delnode(node)
@@ -419,7 +418,7 @@ def _DeleteNode (bv,cb) :
 	else:
 	    node.Destroy()
 	#
-	if nf:
+	if nf >= 0:
 		bv.focus = children[nf]
 	else:
 		bv.focus = parent
@@ -495,6 +494,7 @@ def _InsertChildNode (bv,cb) :
 	em.addnode(parent, 0, newnode)
 
 	bv.changing_node = parent
+	bv.focus = newnode
 	parent.context.editmgr.commit()
 	bv.changing_node = None
 def InsertChildNode(bv):
