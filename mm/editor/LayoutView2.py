@@ -117,7 +117,7 @@ class Node:
 
 	def isShowEditBackground(self):
 		showEditBackground = self._defattrdict.get('showEditBackground')
-		if showEditBackground != None and showEditBackground == "on":
+		if showEditBackground != None and showEditBackground == 1:
 			return 1
 		return 0		
 					
@@ -397,7 +397,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentViewport = None
 		self.currentRegionNameList = None
 		self.currentNodeSelected = None
-		self.currentMediaRegionList = []		
+		self.currentExcludeRegionNameList = None
+		
+		self.currentMediaRegionList = []
+		self.currentExcludeRegionList = []
 
 		# init state of differents dialog controls
 		self.showName = 1
@@ -491,15 +494,16 @@ class LayoutView2(LayoutViewDialog2):
 		id2parentid = {}
 		for chan in mmctx.channels:
 			if chan.attrdict.get('type')=='layout':
-				if chan.attrdict.has_key('base_window'):
-					# region
-					id2parentid[chan.name] = chan.attrdict['base_window']
-				else:
-					# no parent --> it's a viewport
-					self._viewportsRegions[chan.name] = []
-					self._viewports[chan.name] = Viewport(chan.name,chan.attrdict, self)
-					# temporarly
-					self._first = chan.name
+				if chan.attrdict.get('subtype') != 'sound':
+					if chan.attrdict.has_key('base_window'):
+						# region
+						id2parentid[chan.name] = chan.attrdict['base_window']
+					else:
+						# no parent --> it's a viewport
+						self._viewportsRegions[chan.name] = []
+						self._viewports[chan.name] = Viewport(chan.name,chan.attrdict, self)
+						# temporarly
+						self._first = chan.name
 
 		nodes = self._viewports.copy()
 		for id in id2parentid.keys():
@@ -790,7 +794,8 @@ class LayoutView2(LayoutViewDialog2):
 		# update region list
 		self.currentRegionNameList = self.getRegionNameList(viewport.getName())		
 		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
-		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentRegionNameList)
+		self.currentExcludeRegionNameList = self.currentRegionNameList
+		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentExcludeRegionNameList)
 
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 			
@@ -800,7 +805,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		self.dialogCtrl.enable('ShowRbg',1)
 		showEditBackground = dict.get('showEditBackground')
-		if showEditBackground == 'on':
+		if showEditBackground == 1:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
 		else:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
@@ -855,7 +860,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		self.dialogCtrl.enable('ShowRbg',1)
 		showEditBackground = dict.get('showEditBackground')
-		if showEditBackground == 'on':
+		if showEditBackground == 1:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
 		else:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
@@ -925,6 +930,12 @@ class LayoutView2(LayoutViewDialog2):
 	def updateMediaGeomOnDialogBox(self, geom):
 		self.updateRegionGeomOnDialogBox(geom)
 
+	def excludeRegionList(self, regionListIndex):
+		pass
+#		for index in regionListIndex:
+#			if currentExcludeRegionNameList != None:
+#				break
+		
 	#
 	# internal methods
 	#
@@ -1009,7 +1020,7 @@ class LayoutView2(LayoutViewDialog2):
 			if not value:
 				dict = node.getDocDict()
 				if not dict.has_key('showEditBackground'):
-					list.append(('showEditBackground','on'))
+					list.append(('showEditBackground',1))
 				if not dict.has_key('editBackground'):	
 					list.append(('editBackground',dict.get('bgcolor')))
 			else:
@@ -1048,8 +1059,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def onMultiSelCtrl(self, ctrlName, itemList):
 		if ctrlName == 'RegionList':
-			# not implemented yet
-			pass
+			self.excludeRegionList(itemList)
 			
 	def onCheckCtrl(self, ctrlName, value):
 		if ctrlName == 'ShowNames':
