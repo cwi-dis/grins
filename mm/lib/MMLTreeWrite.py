@@ -64,7 +64,7 @@ class IndentedFile:
 
 def WriteFile(root, filename):
 	fp = IndentedFile(open(filename, 'w'))
-	writer = SMILEWriter(root, fp, filename)
+	writer = SMILWriter(root, fp, filename)
 	writer.write()
 	fp.close()
 
@@ -107,10 +107,7 @@ def encodeduration(duration):
 		duration = -duration
 	else:
 		sign = '+'
-	secs = duration % 60
-	rest = int(secs/60)
-	hrs, mins = rest / 60, rest % 60
-	return sign, '%02d:%02d:%06.03f'%(hrs, mins, secs)
+	return sign, '%.3fs' % duration
 
 def getsyncarc(writer, node, isend):
 	allarcs = node.GetRawAttrDef('synctolist', [])
@@ -151,10 +148,10 @@ def getterm(writer, node):
 	      node.GetUID()
 
 #
-# Mapping from SMILE attrs to functions to get them. Strings can be
+# Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
 #
-smile_attrs=[
+smil_attrs=[
 	("id", getid),
 	("loc", getchname),
 	("href", lambda writer, node:getcmifattr(writer, node, "file")),
@@ -165,8 +162,8 @@ smile_attrs=[
 	("repeat", lambda writer, node:getcmifattr(writer, node, "loop")),
 ]
 
-# Mapping from CMIF channel types to smile media types
-smile_mediatype={
+# Mapping from CMIF channel types to smil media types
+smil_mediatype={
 	'text':'text',
 	'sound':'audio',
 	'image':'img',
@@ -179,13 +176,13 @@ smile_mediatype={
 }
 
 def mediatype(chtype, error=0):
-	if smile_mediatype.has_key(chtype):
-		return smile_mediatype[chtype]
+	if smil_mediatype.has_key(chtype):
+		return smil_mediatype[chtype]
 	if error and chtype != 'layout':
 		print '** Unimplemented channel type', chtype
 	return 'cmif_'+chtype
 
-class SMILEWriter:
+class SMILWriter:
 	def __init__(self, node, fp, filename):
 		self.root = node
 		self.fp = fp
@@ -204,7 +201,7 @@ class SMILEWriter:
 		self.tmpdirname = filename + '.data'
 
 	def write(self):
-		self.fp.write('<smile lipsync="false">\n')
+		self.fp.write('<smil lipsync="false">\n')
 		self.fp.push()
 		self.fp.write('<head>\n')
 		self.fp.push()
@@ -218,7 +215,7 @@ class SMILEWriter:
 		self.fp.pop()
 		self.fp.write('</body>\n')
 		self.fp.pop()
-		self.fp.write('</smile>\n')
+		self.fp.write('</smil>\n')
 
 	def calcnames(self, node):
 		"""Calculate unique names for nodes"""
@@ -259,7 +256,7 @@ class SMILEWriter:
 
 	def writelayout(self):
 		"""Write the layout section"""
-		self.fp.write('<layout type="text/smile-basic">\n')
+		self.fp.write('<layout type="text/smil-basic">\n')
 		self.fp.push()
 		channels = self.root.GetContext().channels
 		self.channels_defined = {}
@@ -279,7 +276,7 @@ class SMILEWriter:
 						attrlist.append('%s="%d%%"'%
 								(name, value))
 			if ch.has_key('z'):
-				# CMIF default is 0, SMILE default is 1
+				# CMIF default is 0, SMIL default is 1
 				attrlist.append('z="%d"' % (ch['z'] + 1))
 ## 			if len(attrlist) == 1:
 ## 				# Nothing to define
@@ -316,7 +313,7 @@ class SMILEWriter:
 				sep = '</p>\n<p>'
 			else:
 				sep = '\n'
-			fname = self.smiletempfile(x)
+			fname = self.smiltempfile(x)
 			fp = open(fname, 'w')
 			data = string.join(x.GetValues(), sep)
 			if data[-1] != '\n':
@@ -340,7 +337,7 @@ class SMILEWriter:
 					fp.close()
 					if data and data[-1] == '':
 						del data[-1]
-					fname = self.smiletempfile(x)
+					fname = self.smiltempfile(x)
 					fp = open(fname, 'w')
 					fp.write('<p>')
 					fp.write(string.join(data, '</p>\n<p>'))
@@ -357,14 +354,14 @@ class SMILEWriter:
 					data = string.join(string.split(data,
 									'\n\n'),
 							   '</p>\n<p>')
-					fname = self.smiletempfile(x)
+					fname = self.smiltempfile(x)
 					fp = open(fname, 'w')
 					fp.write('<p>')
 					fp.write(data)
 					fp.write('</p>\n')
 					imm_href = urllib.pathname2url(fname)
 		attrlist = ['<%s'%mtype]
-		for name, func in smile_attrs:
+		for name, func in smil_attrs:
 			if name == 'href' and imm_href:
 				value = imm_href
 			else:
@@ -480,7 +477,7 @@ class SMILEWriter:
 		print '** undefined anchor', href, aid
 		return AnchorDefs.ATYPE_DEST, []
 
-	def smiletempfile(self, node):
+	def smiltempfile(self, node):
 		"""Return temporary file name for node"""
 		nodename = self.uid2name[node.GetUID()]
 		if not os.path.exists(self.tmpdirname):
@@ -513,5 +510,8 @@ def identify(name):
 		else:
 			if rv and rv[-1] != '_':
 				rv = rv + '_'
+	# the first character must not be a digit
+	if rv[:1] in string.digits:
+		rv = '_' + rv
 	return rv
 
