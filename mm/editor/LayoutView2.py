@@ -536,7 +536,7 @@ class LayoutView2(LayoutViewDialog2):
 		# self.stopSelectedRegionList = []
 		# self.stopSelectedMediaList = []
 
-		self.showName = 1
+		self.showName = 0
 		self.asOutLine = 0
 		self.showAllRegions = 1
 		
