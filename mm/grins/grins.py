@@ -102,12 +102,14 @@ class Main(MainDialog):
 		# first open all files
 		for file in files:
 			self.openURL_callback(MMurl.guessurl(file), 0)
+		if not files and settings.get('skin'):
+			self.openURL_callback('data:application/smil,<smil/>', 0, 0)
 		self._update_recent(None)
 		# then play them
 		for top in self.tops:
 			top.player.playsubtree(top.root)
 
-	def openURL_callback(self, url, startplay = 1):
+	def openURL_callback(self, url, startplay = 1, update_recent = 1):
 		import windowinterface
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
@@ -125,7 +127,8 @@ class Main(MainDialog):
 			self.tops.append(top)
 			top.show()
 			top.player.show()
-			self._update_recent(url)
+			if update_recent:
+				self._update_recent(url)
 			if startplay:
 				top.player.playsubtree(top.root)
 
