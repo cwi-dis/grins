@@ -158,7 +158,7 @@ MENUBAR=(
 		)),
 
 	('&Window', (
-		(ENTRY, 'Cl&ose\Ctrl+X', 'X', CLOSE_ACTIVE_WINDOW),
+		(ENTRY, 'Cl&ose\tCtrl+X', 'X', CLOSE_ACTIVE_WINDOW),
 		(SEP,),
 		(ENTRY, '&Cascade', 'C', CASCADE_WNDS),
 		(ENTRY, 'Tile &Horizontally', 'H', TILE_HORZ),
