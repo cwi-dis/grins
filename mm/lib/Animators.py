@@ -2098,54 +2098,18 @@ class AnimateElementParser:
 		return ()	
 
 
-	# copy from SMILTreeRead
 	def __convert_color(self, val):
-		from colors import colors
-		from colorsex import colorsx11
-		from SMILTreeRead import color
-		val = string.lower(val)
-		val = string.strip(val)
-		if colors.has_key(val):
-			return colors[val]
-		elif colorsx11.has_key(val):
-			return colorsx11[val]
-		if val in ('transparent', 'inherit'):
-			return 0, 0, 0 # XXX: val
-		res = color.match(val)
-		if res is None:
-			print 'syntax error: bad color specification', val
-			return  0, 0, 0 #XXX: 'transparent'
-		else:
-			hex = res.group('hex')
-			if hex is not None:
-				if len(hex) == 3:
-					r = string.atoi(hex[0]*2, 16)
-					g = string.atoi(hex[1]*2, 16)
-					b = string.atoi(hex[2]*2, 16)
-				else:
-					r = string.atoi(hex[0:2], 16)
-					g = string.atoi(hex[2:4], 16)
-					b = string.atoi(hex[4:6], 16)
-			else:
-				r = res.group('ri')
-				if r is not None:
-					r = string.atoi(r)
-					g = string.atoi(res.group('gi'))
-					b = string.atoi(res.group('bi'))
-				else:
-					r = int(string.atof(res.group('rp')) * 255 / 100.0 + 0.5)
-					g = int(string.atof(res.group('gp')) * 255 / 100.0 + 0.5)
-					b = int(string.atof(res.group('bp')) * 255 / 100.0 + 0.5)
-		if r > 255: r = 255
-		if g > 255: g = 255
-		if b > 255: b = 255
-		return r, g, b
+		from colors import convert_color, error
+		try:
+			return convert_color(val, system = 0, extend = 1)
+		except error, msg:
+			return 0, 0, 0
 
 	def __convert_color_rs(self, val):
-		import colors
+		from colors import rcolors
 		val = self.__convert_color(val)
-		if colors.rcolors.has_key(val):
-			return colors.rcolors[val]
+		if rcolors.has_key(val):
+			return rcolors[val]
 		else:
 			return '#%02x%02x%02x' % val
 
