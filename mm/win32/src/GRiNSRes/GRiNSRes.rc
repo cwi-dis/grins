@@ -1399,12 +1399,12 @@ BEGIN
                     WS_TABSTOP,178,37,66,10
     CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
                     52,66,10
-    COMBOBOX        IDC_22,50,76,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_22,50,76,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
     LTEXT           "Video type:",IDC_21,6,78,35,8
     LTEXT           "Audio type:",IDC_31,6,101,35,8
-    COMBOBOX        IDC_32,50,99,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_32,50,99,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_EDITATTR_CONV2 DIALOG DISCARDABLE  0, 0, 300, 172
@@ -1426,8 +1426,8 @@ BEGIN
     CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
                     52,66,10
     LTEXT           "Audio type:",IDC_31,6,83,35,8
-    COMBOBOX        IDC_32,50,81,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_32,50,81,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_EDITATTR_CONV4 DIALOG DISCARDABLE  0, 0, 300, 172
@@ -1449,8 +1449,8 @@ BEGIN
     CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
                     52,66,10
     LTEXT           "Audio type:",IDC_31,6,79,35,8
-    COMBOBOX        IDC_32,50,77,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_32,50,77,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
     CONTROL         "Perfect play",IDC_41,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,6,97,52,10
     CONTROL         "Mobile play",IDC_51,"Button",BS_AUTOCHECKBOX | 
@@ -1475,12 +1475,12 @@ BEGIN
                     WS_TABSTOP,178,37,66,10
     CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
                     52,66,10
-    COMBOBOX        IDC_22,50,71,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_22,50,71,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
     LTEXT           "Video type:",IDC_21,6,73,35,8
     LTEXT           "Audio type:",IDC_31,6,89,35,8
-    COMBOBOX        IDC_32,50,87,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_32,50,87,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
     CONTROL         "Perfect play",IDC_41,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,6,104,52,10
     CONTROL         "Mobile play",IDC_51,"Button",BS_AUTOCHECKBOX | 
@@ -1492,10 +1492,10 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_GROUP1,6,10,287,39
-    LTEXT           "Clip begin:",IDC_11,16,27,41,8
-    EDITTEXT        IDC_12,61,25,46,12,ES_AUTOHSCROLL
-    LTEXT           "Clip end:",IDC_21,143,27,41,8
-    EDITTEXT        IDC_22,188,25,46,12,ES_AUTOHSCROLL
+    LTEXT           "Clip begin:",IDC_11,16,27,38,8
+    EDITTEXT        IDC_12,56,25,65,12,ES_AUTOHSCROLL
+    LTEXT           "Clip end:",IDC_21,137,27,38,8
+    EDITTEXT        IDC_22,179,25,65,12,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
