@@ -65,10 +65,12 @@ def lostkey(file, filename):
 		return
 	list = dbase.search('email', email)
 	if not list:
+		dbase.close()
 		mailnotok(email)
 	else:
 		obj = dbase.open(list[0])
 		passwd = obj['password']
+		dbase.close()
 		mailok(email, passwd)
 	while file.read(10000):
 		pass
