@@ -47,9 +47,6 @@ class AnimateChannel(Channel.ChannelAsync):
 	# Channel overrides
 	#
 
-	def do_hide(self):
-		Channel.ChannelAsync.do_hide(self)
-		
 	def do_play(self, node, curtime):
 		Channel.ChannelAsync.do_play(self, node, curtime)
 
@@ -145,7 +142,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				self.__targetChannel = self._player.getRenderer(targnode)
 		return self.__targetChannel
-		
+
 	def __startAnimate(self):
 		self.__start = self.__animating.get_start_time()
 		if self.__start is None:
@@ -215,7 +212,7 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__lastvalue = val
 		self.playdone(0, self.__start+self.__duration)
 
-	def onIdle(self):
+	def __onIdle(self):
 		if not USE_IDLE_PROC:
 			self.__fiber_id = None
 		if self.__animating:
@@ -232,9 +229,9 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
 			if USE_IDLE_PROC:
-				self.__fiber_id = windowinterface.setidleproc(self.onIdle)
+				self.__fiber_id = windowinterface.setidleproc(self.__onIdle)
 			else:
-				self.__fiber_id = windowinterface.settimer(0.05, (self.onIdle,()))
+				self.__fiber_id = windowinterface.settimer(0.05, (self.__onIdle,()))
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id is not None:
