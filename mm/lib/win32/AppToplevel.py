@@ -24,46 +24,10 @@ from win32ig import win32ig
 import string
 import MMmimetypes
 import grins_mimetypes
+import GenWnd
 
 def beep():
 	win32api.MessageBeep()
-
-################
-# temporary test
-ENABLE_CML_AUTOMATION = 0
-
-import usercmd, usercmdui
-
-class AutomationCmdListener:
-	def __init__(self, toplevel):
-		self._toplevel = toplevel
-		self._callbacks = {}
-
-	def __message(self, msg):
-		win32api.MessageBeep()
-		print msg
-
-	def Open(self, fileOrUrl):
-		self.__message('Open: ' + fileOrUrl)
-
-	def Close(self):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
-
-	def Play(self):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
-
-	def Stop(self):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
-
-	def Pause(self):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
-
-	def OnClick(self, x, y):
-		self.__message('OnClick at %d %d' % (x, y) )
 
 ################
 		 
@@ -100,7 +64,6 @@ class _Toplevel:
 		self._idles = {}
 
 		# generic wnd class
-		import GenWnd
 		self.genericwnd=GenWnd.GenWnd
 		
 		self._in_create_box=None
@@ -130,14 +93,16 @@ class _Toplevel:
 		self.__idleid = 0
 		self._time = float(Sdk.GetTickCount())/TICKS_PER_SECOND
 
-		# fibers serving
-
 		self._apptitle=None
 		self._appadornments=None
 		self._appcommandlist=None
 
 		self._activeDocFrame=None
 		self._register_entries=[]
+
+		self._embedded = 0
+		self._embeddedcallbacks = {}
+		self._embeddedHwnd = 0
 
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
@@ -194,9 +159,6 @@ class _Toplevel:
 	############ SDI/MDI Model Support
 	# Called by win32 modules to create the main frame
 	def createmainwnd(self,title = None, adornments = None, commandlist = None):
-#		if title:
-#			self._apptitle=title
-		# ignore title from core under Martin sugestion
 		self._apptitle=AppDisplayName
 		if adornments:
 			self._appadornments=adornments
@@ -211,6 +173,9 @@ class _Toplevel:
 			for r in self._register_entries:
 				ev,cb,arg=r
 				frame.register(ev,cb,arg)
+			if self.is_embedded():
+				print 'running embedded'
+				frame.ShowWindow(win32con.SW_HIDE)
 		return self._subwindows[0]
 
 	# Called by win32 modules for every open document
@@ -227,6 +192,9 @@ class _Toplevel:
 		for r in self._register_entries:
 			ev,cb,arg=r
 			frame.register(ev,cb,arg)
+		if self.is_embedded():
+			print 'running embedded'
+			frame.ShowWindow(win32con.SW_HIDE)
 		return frame
 	
 	# Returns the active mainwnd
@@ -238,9 +206,48 @@ class _Toplevel:
 	# register events for all main frames (top level wnds)
 	def register_event(self,ev,cb,arg):
 		self._register_entries.append((ev,cb,arg))
-		
+	
 	############ /SDI-MDI Model Support	
 
+	#
+	# Embedding Support	
+	#
+	def register_embedded(self, event, func, arg):
+		self._embeddedcallbacks[event] = func, arg
+
+	def unregister_embedded(self, event):
+		try:
+			del self._embeddedcallbacks[event]
+		except KeyError:
+			pass
+
+	def get_embedded(self, event):
+		return self._embeddedcallbacks.get(event)
+
+	def is_embedded(self):
+		import __main__
+		return hasattr(__main__,'embedded') and __main__.embedded
+	
+	def enableCOMAutomation(self):
+		import __main__
+		if hasattr(__main__,'grinspapi'):
+			import embedding
+			listenerWnd = embedding.ListenerWnd(self)
+			self.addclosecallback(listenerWnd.DestroyWindow, ())
+			commodule = __main__.grinspapi.commodule
+			commodule.SetListener(listenerWnd.GetSafeHwnd())
+			commodule.RegisterClassObjects()
+	
+	def set_embedded_hwnd(self, hwnd):
+		self._embeddedHwnd = hwnd
+
+	def get_embedded_hwnd(self):
+		return self._embeddedHwnd
+
+			
+	#
+	# Std interface
+	#
 	# Displays a text viewer
 	def textwindow(self,text):
 		print 'you must request textwindow from a frame'
@@ -345,31 +352,10 @@ class _Toplevel:
 		id=wnd.SetTimer(1,50)
 		
 		# com automation support
-		grinspapi = None
-		import __main__
-		if hasattr(__main__,'grinspapi'):
-			grinspapi = __main__.grinspapi
-			if grinspapi:
-				grinspapi.commodule.RegisterClassObjects()
-
-		# CML automation support
-		if ENABLE_CML_AUTOMATION:
-			import cmld
-			server = cmld.CreateCMLServer(5001)
-			server.SetCmdListener(AutomationCmdListener(self))
-			server.Start()
+		self.enableCOMAutomation()
 
 		# enter application loop
 		win32ui.GetApp().RunLoop()
-
-		# revoke CML automation support
-		if ENABLE_CML_AUTOMATION:
-			server.Stop()
-			del server
-
-		# revoke com automation
-		if grinspapi:
-			grinspapi.commodule.RevokeClassObjects()
 		
 		# cleanup
 		wnd.KillTimer(id)
