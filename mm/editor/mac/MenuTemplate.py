@@ -198,6 +198,7 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'Layout View', '8', LAYOUTVIEW),
 		(FLAG_PRO, ENTRY, 'Hyperlinks', '9', LINKVIEW),
 		(FLAG_BOSTON, ENTRY, 'User Groups', '0', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'Transitions', None, TRANSITIONVIEW),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Source', None, SOURCE),
 		(FLAG_ALL, ENTRY, 'View Help Window', None, HELP),

@@ -98,6 +98,8 @@ class LAYOUTVIEW(_CommandBase):
 	help = 'Show Layout View'
 class USERGROUPVIEW(_CommandBase):
 	help = 'Show User Group Editor'
+class TRANSITIONVIEW(_CommandBase):
+	help = 'Show Transition view'
 
 # These are to hide the various views. They are basically
 # a workaround for Windows, where the "close" command is
@@ -110,7 +112,7 @@ class HIDE_LINKVIEW(_CommandBase): pass
 class HIDE_LAYOUTVIEW(_CommandBase): pass
 class HIDE_USERGROUPVIEW(_CommandBase): pass
 class HIDE_SOURCE(_CommandBase): pass
-
+class HIDE_TRANSITIONVIEW(_CommandBase): pass
 
 #
 # Player view commands
