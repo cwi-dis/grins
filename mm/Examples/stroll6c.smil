@@ -1,64 +1,61 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
-                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
   <head>
     <meta name="title" content="    A'DAM FACADES - HERENGRACHT   "/>
     <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
     <layout>
-      <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="    A'DAM FACADES - HERENGRACHT   " width="600" height="400"/>
-      <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
-      <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
-      <region id="image2" title="image2" left="43%" top="10%" width="46%" height="80%"/>
-      <region id="image3" title="image3" left="40%" top="10%" width="38%" height="80%"/>
-      <region id="image4" title="image4" left="75" top="1%" width="450" height="25"/>
-      <region id="adress" title="adress" left="5%" top="80%" width="50%" height="5%" z-index="3"/>
-      <region id="year" title="year" left="77%" top="80%" width="25%" height="5%" z-index="3"/>
-      <region id="style" title="style" left="5%" top="88%" width="95%" height="10%" z-index="3"/>
-      <region id="style1" title="style1" left="5%" top="88%" width="96%" height="10%" z-index="3"/>
-      <region id="sound" title="sound"/>
+      <root-layout title="    A'DAM FACADES - HERENGRACHT   " id="A-DAM-FACADES--HERENGRACHT-" width="600" height="400"/>
+      <region title="Acknowledgements1" id="Acknowledgements1" z-index="3" top="95%" left="5%"/>
+      <region title="image1" height="80%" id="image1" top="13%" width="65%" left="24%"/>
+      <region title="image2" height="80%" id="image2" top="10%" width="46%" left="43%"/>
+      <region title="image3" height="80%" id="image3" top="10%" width="38%" left="40%"/>
+      <region title="image4" height="25" id="image4" top="1%" width="450" left="75"/>
+      <region height="5%" id="adress" top="80%" title="adress" z-index="3" width="50%" left="5%"/>
+      <region height="5%" id="year" top="80%" title="year" z-index="3" width="25%" left="77%"/>
+      <region height="10%" id="style" top="88%" title="style" z-index="3" width="95%" left="5%"/>
+      <region height="10%" id="style1" top="88%" title="style1" z-index="3" width="96%" left="5%"/>
+      <region title="sound" id="sound"/>
     </layout>
-  </head>
+  <meta name="generator" content="GRiNS fixcoords 1.0"/></head>
   <body>
     <par id="HERENGRACHT">
-      <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
-      <img id="stroll" region="image4" src="stroll.gif"/>
+      <text id="Credits" type="text/plain" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
+      <img region="image4" id="stroll" src="stroll.gif"/>
       <seq id="HERENGRACHT_map">
         <img id="map" region="image1" src="1map1.gif" dur="10s">
-          <anchor id="map-168" href="#herengracht_168" coords="16%,46%,5%,6%"/>
-          <anchor id="map-218" href="#herengracht_218" coords="15%,53%,6%,5%"/>
-          <anchor id="map-284" href="#herengracht_284" coords="14%,60%,5%,6%"/>
+          <anchor id="map-168" coords="16%,46%,21%,52%" href="#herengracht_168"/>
+          <anchor id="map-218" coords="15%,53%,21%,58%" href="#herengracht_218"/>
+          <anchor id="map-284" coords="14%,60%,19%,66%" href="#herengracht_284"/>
         </img>
         <seq id="HERENGRACHT_stroll">
           <par id="herengracht_168">
-            <img id="herengracht_168-image" region="image2" src="1h168.gif"/>
-            <text type="text/plain" id="herengracht_168-adress" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
-            <text type="text/plain" id="herengracht_168-year" region="year" src="data:,ANNO%201638" dur="5.521s"/>
-            <audio id="herengracht_168-sound" region="sound" src="168.au"/>
-            <text type="text/plain" id="herengracht_168-style" region="style" src="data:,AN%20EXAMPLE%20OF%20DUTCH%20CLASSICISM" dur="2.816s" begin="id(herengracht_168-sound)(2.800s)"/>
+            <img region="image2" id="herengracht_168-image" src="1h168.gif"/>
+            <text id="herengracht_168-adress" type="text/plain" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
+            <text id="herengracht_168-year" type="text/plain" region="year" src="data:,ANNO%201638" dur="5.521s"/>
+            <audio region="sound" id="herengracht_168-sound" src="168.au"/>
+            <text begin="id(herengracht_168-sound)(2.800s)" id="herengracht_168-style" type="text/plain" region="style" src="data:,AN%20EXAMPLE%20OF%20DUTCH%20CLASSICISM" dur="2.816s"/>
           </par>
           <par id="herengracht_218">
-            <img id="herengracht_218-image" region="image3" src="1h218.gif"/>
-            <text type="text/plain" id="herengracht_218-adress" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
-            <text type="text/plain" id="herengracht_218-year" region="year" src="data:,ANNO%201616" dur="8.613s"/>
-            <audio id="herengracht_218-sound" region="sound" src="218.au"/>
-            <text type="text/plain" id="herengracht_218-style" region="style1" src="data:,THE%20BAROQUE%20AND%20THE%20SOBER%20AMSTERDAM%20RENAISSANCE" dur="5.113s" begin="id(herengracht_218-sound)(3.500s)"/>
+            <img region="image3" id="herengracht_218-image" src="1h218.gif"/>
+            <text id="herengracht_218-adress" type="text/plain" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
+            <text id="herengracht_218-year" type="text/plain" region="year" src="data:,ANNO%201616" dur="8.613s"/>
+            <audio region="sound" id="herengracht_218-sound" src="218.au"/>
+            <text begin="id(herengracht_218-sound)(3.500s)" id="herengracht_218-style" type="text/plain" region="style1" src="data:,THE%20BAROQUE%20AND%20THE%20SOBER%20AMSTERDAM%20RENAISSANCE" dur="5.113s"/>
           </par>
           <par id="herengracht_284">
-            <img id="herengracht_284-image" region="image2" src="1h284.gif"/>
-            <text type="text/plain" id="herengracht_284-adress" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
-            <text type="text/plain" id="herengracht_284-year" region="year" src="data:,ANNO%201728" dur="5.604s"/>
-            <audio id="herengracht_284-sound" region="sound" src="284.au"/>
-            <text type="text/plain" id="herengracht_284-style" region="style" src="data:,AN%20EXAMPLE%20OF%20THE%20REGENCE%20STYLE" dur="2.804s" begin="id(herengracht_284-sound)(2.800s)"/>
+            <img region="image2" id="herengracht_284-image" src="1h284.gif"/>
+            <text id="herengracht_284-adress" type="text/plain" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
+            <text id="herengracht_284-year" type="text/plain" region="year" src="data:,ANNO%201728" dur="5.604s"/>
+            <audio region="sound" id="herengracht_284-sound" src="284.au"/>
+            <text begin="id(herengracht_284-sound)(2.800s)" id="herengracht_284-style" type="text/plain" region="style" src="data:,AN%20EXAMPLE%20OF%20THE%20REGENCE%20STYLE" dur="2.804s"/>
         </par>
          <img id="map1" region="image1" src="1map1.gif" dur="10s">
-          <anchor id="map-168-1" href="#herengracht_168" coords="16%,46%,5%,6%"/>
-          <anchor id="map-218-1" href="#herengracht_218" coords="15%,53%,6%,5%"/>
-          <anchor id="map-284-1" href="#herengracht_284" coords="14%,60%,5%,6%"/>
+          <anchor id="map-168-1" coords="16%,46%,21%,52%" href="#herengracht_168"/>
+          <anchor id="map-218-1" coords="15%,53%,21%,58%" href="#herengracht_218"/>
+          <anchor id="map-284-1" coords="14%,60%,19%,66%" href="#herengracht_284"/>
         </img>
         </seq>
       </seq>
     </par>
-      <text type="text/plain" id="Credits1" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="10s"/>
+      <text id="Credits1" type="text/plain" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="10s"/>
   </body>
 </smil>
