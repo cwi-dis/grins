@@ -706,6 +706,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		   bg != 'transparent' and \
 		   bg != 'inherit':
 			layout['bgcolor'] = bg
+		else:
+			layout['bgcolor'] = 0,0,0
 		if self.__width == 0:
 			self.__width = 640
 		if self.__height == 0:
@@ -739,7 +741,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				del attrdict['title']
 			bg = attrdict['background-color']
 			del attrdict['background-color']
-			if bg == 'transparent':
+			if settings.get('lightweight'):
+				ch['transparent'] = -1
+				if mtype == 'text':
+					# stupid G2 player...
+					ch['bgcolor'] = 255,255,255
+				elif bg != 'transparent':
+					ch['bgcolor'] = bg
+				else:
+					ch['bgcolor'] = 0,0,0
+			elif bg == 'transparent':
 				ch['transparent'] = 1
 			else:
 				ch['transparent'] = -1
