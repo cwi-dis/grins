@@ -3,6 +3,7 @@
 
 import time
 import gl
+import GL
 import fl
 from FL import *
 import flp
@@ -56,6 +57,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.setcurrenttime_callback = None
 		self.playing = self.locked = 0
 		self.channelnames = []
+		self.measure_armtimes = 0
 		self.channels = {}
 		self.channeltypes = {}
 		self.timing_changed = 0
@@ -82,6 +84,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if self.playroot.GetRoot() <> self.root:
 				self.playroot = self.root
 		self.locked = 0
+		self.measure_armtimes = 1
 		self.showstate()
 	#
 	def rollback(self):
@@ -261,10 +264,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.channels[name].flip_visible()
 			self.makemenu()
 	#
-	def deltiming_callback(self, (obj, arg)):
+	def calctiming_callback(self, (obj, arg)):
 		# XXX should use the real root???
-		del_timing(self.playroot)
-		Timing.calctimes(self.playroot)
+		if obj.get_button():
+			del_timing(self.playroot)
+			Timing.calctimes(self.playroot)
+		self.measure_armtimes = obj.get_button()
 		obj.set_button(0)
 	#
 	def ff_callback(self, (obj, arg)):
@@ -285,13 +290,11 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			now = self.timefunc()
 			delay = when - now
 			if delay < -0.1:
-			    self.late_ind.lcol, self.late_ind.col2 = \
-				      self.late_ind.col2, self.late_ind.lcol
+			    self.late_ind.lcol = GL.RED
 			    self.latecount = self.latecount - delay
 			    self.late_ind.label = `int(self.latecount)`
 			else:
-			    self.late_ind.lcol, self.late_ind.col2 = \
-				      self.late_ind.col2, self.late_ind.lcol
+			    self.late_ind.lcol = self.late_ind.col2
 			if delay > 0.0:
 				break
 			del self.queue[0]
@@ -396,6 +399,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.savelabel.lcol = self.savelabel.col2
 		else:
 			self.savelabel.lcol = self.savelabel.col1
+		self.calctimingbutton.set_button(self.measure_armtimes)
 		self.showtime()
 	#
 	def showtime(self):
@@ -508,8 +512,15 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
 			self.setarmedmode(pn, ARM_SCHEDULED)
-			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
+			# XXX Attempted fix by Jack: get rid of
+			# multiple-arms of first few events
+			if pn.t0 > 0:
+				print 'Schedule prearm for ', pn.t0
+				pn.prearm_event = self.rtpool.enter(pn.t0, d, \
 				  c.arm_only, pn)
+			else:
+				print 'Pre-arm now'
+				c.arm_only(pn)
 		self.resume_2_playing()
 		return 1
 	#
@@ -525,9 +536,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.showstate() # Give the anxious user a clue...
 		Timing.optcalctimes(self.playroot)
 		arm_events = Timing.getinitial(self.playroot)
+		Timing.prepare(self.playroot)	# XXX Attempt by Jack
 		return arm_events
 	def resume_2_playing(self):
-		Timing.prepare(self.playroot)
 		d = int(self.playroot.t1 - self.playroot.t0)
 		label = `d/60` + ':' + `d/10%6` + `d % 10`
 		self.duration_ind.label = label
@@ -546,6 +557,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		chv.unarm_all()
 	def stop_playing(self):
 		self.playing = 0
+		self.measure_armtimes = 0
 		self.suspend_playing()
 #XXX why was this here?
 ###		if self.timing_changed:
@@ -561,8 +573,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		    if ch == skipchannel: continue
 		    node = ch.playerseek_lastnode
 		    if node:
-			dummy = self.enter(0.0, -1, \
-				  ch.arm_and_measure, node)
+			if self.measure_armtimes:
+				dummy = self.enter(0.0, -1, \
+					  ch.arm_and_measure, node)
+			else:
+				dummy = self.enter(0.0, -1, \
+					  ch.arm_only, node)
 			self.setarmedmode(node, ARM_PLAYING)
 			dummy = self.enter(0.0, 0, ch.play, \
 				  (node, self.decrement, (0, node, TL)))
@@ -644,8 +660,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    if must_arm:
 				print 'Player: Node not pre-armed on', \
 				    MMAttrdefs.getattr(node, 'channel')
-				dummy = self.enter(0.0, -1, \
-				    chan.arm_and_measure, node)
+				if self.measure_armtimes:
+					dummy = self.enter(0.0, -1, \
+						  chan.arm_and_measure, node)
+				else:
+					dummy = self.enter(0.0, -1, \
+						  chan.arm_only, node)
 			    self.setarmedmode(node, ARM_PLAYING)
 			    dummy = self.enter(0.0, 0, chan.play, \
 				(node, self.decrement, (0, node, TL)))
