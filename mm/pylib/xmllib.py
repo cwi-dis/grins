@@ -531,7 +531,6 @@ class XMLParser:
 
     # Internal -- finish processing of end tag
     def finish_endtag(self, tag):
-        methodname = 'end_' + tag
         if not tag:
             self.syntax_error('name-less end tag')
             found = len(self.stack) - 1
@@ -541,6 +540,7 @@ class XMLParser:
         else:
             if tag not in self.stack:
                 self.syntax_error('unopened end tag')
+                methodname = 'end_' + tag
                 if hasattr(self, methodname):
                     method = getattr(self, methodname)
                     self.handle_endtag(tag, method)
@@ -555,6 +555,7 @@ class XMLParser:
             if found < len(self.stack) - 1:
                 self.syntax_error('missing close tag for %s' % self.stack[-1])
             tag = self.stack[-1]
+            methodname = 'end_' + tag
             if hasattr(self, methodname):
                 method = getattr(self, methodname)
                 self.handle_endtag(tag, method)
