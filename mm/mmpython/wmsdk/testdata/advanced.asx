@@ -1,0 +1,53 @@
+<ASX version = "3.0">
+<TITLE>Advanced ASX Demo</TITLE>
+
+<!-- This links the "Show" label to a web page -->
+<MOREINFO HREF="http://www.microsoft.com/windows/windowsmedia" />
+
+<!-- This image is associated with the "Show" label, the title of the ASX (16x16 pixels) -->
+<Logo href = "icon0.gif" Style = "ICON" />
+
+<!-- This image is displayed if the users presses "Stop" (80x32 pixels) -->
+<Logo href = "watermark.jpg" Style = "mark" />
+
+    <!-- This is the first Entry clip.  Setting ClientSkip to "no" means that the user cannot fast forward or jump to the next clip -->
+    <Entry ClientSkip="no">
+
+	<!-- This creates an Advertising Banner in the player.  The HREF is the banner image itself (194x32 pixels) -->
+	<BANNER HREF = "moreinfo.jpg">
+		<!-- The Tooltip for the banner -->		
+    		<Abstract>Visit the SoftImage Web site</abstract>
+		<!-- The URL for the banner -->
+    		<MoreInfo href = "http://www.softimage.com" />
+	</BANNER>
+
+	<!-- This image is associated with the "Clip" label, the title of the current Entry (16x16 pixels)-->
+	<Logo href = "icon1.gif" Style = "ICON" />
+
+	<!-- This is the URL associated with the Title/Author/Copyright text -->
+	<MoreInfo href = "http://www.softimage.com" />
+
+	<!-- This is the Tooltip text for the Title/Author/Copyright text -->
+	<Abstract>Visit the SoftImage Web site</abstract>
+
+	<TITLE>The first entry in an advanced ASX</TITLE>
+	<AUTHOR>SoftImage</AUTHOR>
+	<COPYRIGHT>(c)1998 SoftImage</COPYRIGHT>
+
+<!-- This is a comment.  Change the following path to point to your ASF -->
+    <Ref href = "D:\ufs\mm\cmif\mmpython\wmsdk\testdata\usa.asf" />
+    </Entry>
+
+    <Entry>
+	<TITLE>The second entry in an advanced ASX</TITLE>
+	<AUTHOR>Microsoft Corporation</AUTHOR>
+	<COPYRIGHT>(c)1999 Microsoft Corporation</COPYRIGHT>
+
+	<!-- This is the Tooltip text for the Title/Author/Copyright text -->
+	<ABSTRACT>This is where you can include your tool tips</ABSTRACT>
+
+<!-- This is a comment.  Change the following path to point to your ASF -->
+         <Ref href = "D:\ufs\mm\cmif\mmpython\wmsdk\testdata\kstr100.asf" />
+    </Entry>
+</ASX>
+
