@@ -91,15 +91,13 @@ sdk_create_font_indirect(PyObject *self, PyObject *args)
 	// (Last known address is brennan@hal.com, but I hear he is now at Microsoft)
 	// args contains a dict of font properties 
 	PyObject *font_props; 
-	int charset=DEFAULT_CHARSET;
                   // properties.  Valid dictionary keys are:<nl> 
                   // name<nl> 
                   // size<nl> 
                   // weight<nl> 
                   // italic<nl> 
                   // underline 
-	if (!PyArg_ParseTuple (args, "O|i",
-                 &font_props,&charset) ||
+	if (!PyArg_ParseTuple (args, "O", &font_props) ||
 		!PyDict_Check (font_props))
 		{
 		PyErr_Clear();
@@ -110,11 +108,7 @@ sdk_create_font_indirect(PyObject *self, PyObject *args)
 	LOGFONT lf;
 	if (!DictToLogFont(font_props, &lf))
 		return NULL;
-	lf.lfOutPrecision=OUT_DEFAULT_PRECIS;
-	lf.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-	lf.lfQuality=DEFAULT_QUALITY;
-	lf.lfPitchAndFamily=DEFAULT_PITCH; //VARIABLE_PITCH; 
-	lf.lfCharSet= (BYTE)charset;//DEFAULT_CHARSET; // GREEK_CHARSET
+
 	HFONT hfont;
     if (!(hfont=::CreateFontIndirect(&lf))) 
 		RETURN_ERR ("CreateFontIndirect call failed");
@@ -122,6 +116,75 @@ sdk_create_font_indirect(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",hfont);
 	}
 
+int CALLBACK EnumFontFamiliesExProc(ENUMLOGFONTEX *lpelfe, NEWTEXTMETRICEX *lpntme, int FontType, LPARAM lParam)
+	{
+	PyObject *d = (PyObject*)lParam;
+	PyObject *lfdict = LogFontToDict(lpelfe->elfLogFont);
+	PyDict_SetItemString(d, (char*)lpelfe->elfFullName, lfdict);
+	Py_XDECREF(lfdict);
+    return 1;
+	}
+
+// @pymethod <o PyWin32Sdk>|EnumFontFamiliesEx|Enumerates all fonts in the system that match the font characteristics specified by the LOGFONT structure. 
+PyObject *
+sdk_enum_font_families_ex(PyObject *self, PyObject *args)
+	{
+	// args contains a dict of font properties 
+	PyObject *font_props; 
+	if (!PyArg_ParseTuple (args, "O", &font_props) ||
+		!PyDict_Check (font_props))
+		{
+		PyErr_Clear();
+		RETURN_ERR ("Expected dictionary of font properties.");
+		}
+	
+	// populate LOGFONT struct with values from dictionary
+	LOGFONT lf;
+	if (!DictToLogFont(font_props, &lf))
+		return NULL;
+
+	// screen dc
+	HDC hdc = GetDC(NULL);
+
+	PyObject *d = PyDict_New();
+	EnumFontFamiliesEx(
+		hdc,              // handle to DC
+		&lf,              // font information
+		(FONTENUMPROC)EnumFontFamiliesExProc, // callback function
+		LPARAM(d),        // additional data
+		DWORD(0)          // not used; must be 0
+		);
+	ReleaseDC(NULL,hdc);
+	
+	return d;
+	}
+
+// @pymethod <o PyWin32Sdk>|GetTextFace|Retrieves the typeface name of the font that is selected into the specified device contextPyObject *
+PyObject *
+sdk_get_text_face(PyObject *self, PyObject *args)
+	{
+	HDC hdc = 0;
+	if (!PyArg_ParseTuple(args,"|i",&hdc)) return NULL;
+	
+	// screen dc
+	bool releaseDC=false;
+	if(!hdc)
+		{
+		hdc = GetDC(NULL);
+		releaseDC=true;
+		}
+	char faceName[LF_FACESIZE];
+	GetTextFace(
+		hdc,            // handle to DC
+		LF_FACESIZE,    // length of typeface name buffer
+		faceName		// typeface name buffer
+		);
+	if(releaseDC)
+		ReleaseDC(NULL,hdc);
+	return Py_BuildValue("s",faceName);
+	}
+
+  
 // @pymethod |PyWin32Sdk|CreateDC|Creates a DC
 // Return Values: A handle to the created DC 
 PyObject *
@@ -457,6 +520,54 @@ sdk_send_message_get_rect(PyObject *self, PyObject *args)
 	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
 	}
 
+// @pymethod |PyWin32Sdk|SendMessageSetRect|A special version of send message for Python with LPARAM a rect 
+static PyObject *
+sdk_send_message_set_rect(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam;
+	RECT rc;
+	if (!PyArg_ParseTuple(args, "iii(iiii):SendMessageSetRect",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &rc.left, &rc.top, &rc.right, &rc.bottom)) 
+		return NULL;
+	GUI_BGN_SAVE;
+	LPARAM ret = SendMessage(hwnd,message,wParam,(LPARAM)&rc);
+	GUI_END_SAVE;
+	return Py_BuildValue("i", ret);
+	}
+
+// @pymethod |PyWin32Sdk|SendMessageMS|A special version of send message for Python 
+// LPARAM is a tuple representing win32 MSG structure
+static PyObject *
+sdk_send_message_ms(PyObject *self, PyObject *args)
+	{
+	// message params
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam;
+	
+	// LPARAM is a tuple equivalent to a win32 MSG struct
+	MSG msg;
+	LPARAM lParam;
+	if (!PyArg_ParseTuple(args, "iii(iiiiii):SendMessageMS",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &msg.hwnd, &msg.message, &msg.wParam, &msg.lParam, &msg.time, &lParam)) 
+		return NULL;
+	msg.pt.x= LOWORD(lParam);
+	msg.pt.y= HIWORD(lParam);
+	lParam = SendMessage(hwnd, message, 0, (LPARAM)&msg);
+	GUI_BGN_SAVE;
+	LPARAM ret = SendMessage(hwnd, message, wParam, (LPARAM)&msg);
+	GUI_END_SAVE;
+	return Py_BuildValue("i", lParam);
+	}
+
 
 // @pymethod |PyWin32Sdk|SetCursor|The SetCursor function establishes the cursor shape
 // Return Values: A handle to the previous cursor
@@ -595,6 +706,19 @@ sdk_show_window(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+ // @pymethod |PyWin32Sdk|DestroyWindow|Destroy window
+static PyObject *
+sdk_destroy_window(PyObject *self, PyObject *args)
+	{
+	HWND hWnd;
+	if (!PyArg_ParseTuple (args, "i",&hWnd))
+		return NULL;
+	GUI_BGN_SAVE;
+	BOOL res = DestroyWindow(hWnd);  
+	GUI_END_SAVE;
+	return Py_BuildValue("i",res);
+	}
+
 // @sdkproto HWND GetDlgItem(HWND hDlg,int nIDDlgItem);     
 // @pymethod |PyWin32Sdk|GetDlgItem|Returns the window handle of the given control
 // Return Values: The integer identifier of the control
@@ -707,6 +831,27 @@ sdk_set_window_pos(PyObject *self, PyObject *args)
 	RETURN_NONE;
 }
 
+// @sdkproto     
+// @pymethod |PyWin32Sdk|MoveWindow|Moves the windows
+static PyObject *
+sdk_move_window(PyObject *self, PyObject *args)
+{
+	HWND hWnd;
+	int x,y,cx,cy;
+	BOOL bRepaint = TRUE;
+    // @pyparm int|hWnd||The hwnd to set its position
+	// @pyparm (x,y,cx,cy)|position||The new position of the window.
+	// @pyparm int|bRepaint||Repaint flag
+	if (!PyArg_ParseTuple(args,"i(iiii)|i:MoveWindow",&hWnd,
+		        &x, &y, &cx, &cy, &bRepaint ))
+		return NULL;
+	GUI_BGN_SAVE;
+	// @pyseesdk MoveWindow
+	MoveWindow(hWnd, x, y, cx, cy, bRepaint);
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
+
 // @sdkproto BOOL IntersectRect(LPRECT lprcDst,CONST RECT *lprcSrc1,CONST RECT *lprcSrc2)  
 // @pymethod |PyWin32Sdk|IntersectRect|Calculates the intersection of two source rectangles 
 static PyObject *
@@ -722,6 +867,23 @@ sdk_intersect_rect(PyObject *self, PyObject *args)
 	BOOL inrersect=::IntersectRect(&rcDst,&rcSrc1,&rcSrc2);
 	return Py_BuildValue("(iiii)i",rcDst.left,rcDst.top,rcDst.right,rcDst.bottom,inrersect);
 	}
+
+// @sdkproto BOOL UnionRect(LPRECT lprcDst,CONST RECT *lprcSrc1,CONST RECT *lprcSrc2)  
+// @pymethod |PyWin32Sdk|UnionRect|Calculates the intersection of two source rectangles 
+static PyObject *
+sdk_union_rect(PyObject *self, PyObject *args)
+	{
+	RECT rcSrc1,rcSrc2;
+	if (!PyArg_ParseTuple(args,"(iiii)(iiii):IntersectRect",
+		        &rcSrc1.left, &rcSrc1.top, &rcSrc1.right,&rcSrc1.bottom,
+				&rcSrc2.left, &rcSrc2.top, &rcSrc2.right,&rcSrc2.bottom
+				))
+		return NULL;
+	RECT rcDst;
+	BOOL notempty = ::UnionRect(&rcDst,&rcSrc1,&rcSrc2);
+	return Py_BuildValue("(iiii)i",rcDst.left,rcDst.top,rcDst.right,rcDst.bottom, notempty);
+	}
+
 // @sdkproto DWORD GetTickCount(VOID)
 // @pymethod |PyWin32Sdk|GetTickCount|Retrieves the number of milliseconds that have elapsed since the system was started
 static PyObject *
@@ -1013,12 +1175,165 @@ sdk_map_virtual_key(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",ret);
 	}
 
+static PyObject*
+GetWMString(PyObject *self, PyObject *args)
+	{
+	int pval;
+	if (!PyArg_ParseTuple(args, "i", &pval))
+		return NULL;
+	char *buf = (char*)pval;
+	PyObject *obj = Py_BuildValue("s",buf);
+	delete[] buf;
+	return obj;
+	}
+
+// InitCommonControlsEx
+static PyObject*
+sdk_init_common_controls_ex(PyObject *self, PyObject *args) 
+	{
+ 	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+    INITCOMMONCONTROLSEX which; 
+    which.dwICC = ICC_WIN95_CLASSES;
+    which.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitCommonControlsEx(&which);
+	RETURN_NONE;
+	}
+
+///////////////////////////
+// Tooltip support 
+// (normally should be PyObject, but...)
+
+static TOOLINFO*
+fillToolInfo(TOOLINFO *pti, HWND hwnd, WPARAM uId, RECT *prc=NULL, LPTSTR lpszText=NULL, UINT uFlags=0)
+	{
+    TOOLINFO& ti = *pti;
+	memset(&ti, 0, sizeof(TOOLINFO));
+	ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = uFlags;
+    ti.hwnd = hwnd;
+    ti.hinst = 0;
+    ti.uId = uId;
+    ti.lpszText = lpszText;
+	if(prc){
+		ti.rect.left = prc->left;    
+		ti.rect.top = prc->top;
+		ti.rect.right = prc->right;
+		ti.rect.bottom = prc->bottom;
+		}
+	return pti;
+	}
+
+// NewToolInfo (intil we make TOOLINFO a PyObject)
+static PyObject*
+sdk_new_tool_info(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	int id;
+	RECT rc = {0, 0, 0, 0};
+	if (!PyArg_ParseTuple(args,"ii|(iiii):NewToolInfo", &hwnd, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom))
+		return NULL;
+	TOOLINFO *pti = new TOOLINFO;
+	if(rc.left == rc.right &&  rc.top==rc.bottom && rc.left==0 && rc.top==0)
+		fillToolInfo(pti, hwnd, id);
+	else
+		fillToolInfo(pti, hwnd, id, &rc);
+	return Py_BuildValue("i", int(pti));
+	}
+
+// DelToolInfo (intil we make TOOLINFO a PyObject)
+static PyObject*
+sdk_del_tool_info(PyObject *self, PyObject *args)
+	{
+	int pti;
+	if (!PyArg_ParseTuple(args,"i:DelToolInfo", &pti))
+		return NULL;
+	delete ((TOOLINFO*)pti);
+	RETURN_NONE;
+	}
+
+// AddTool
+static PyObject*
+sdk_add_tool(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	RECT rc;
+	char *pszText=NULL;
+	if (!PyArg_ParseTuple(args,"iii(iiii)|s:AddTool", &hwnd, &hwndParent, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom, &pszText))
+		return NULL;
+	char *buf = pszText;
+	if(pszText!=NULL)
+		{
+		buf = new char[256]; // assert big enough for reuse
+		strncpy(buf, pszText, min(256, strlen(pszText)+1));
+		buf[255]='\0';
+		}
+	TOOLINFO ti;
+	SendMessage(hwnd, TTM_ADDTOOL, 0, (LPARAM)fillToolInfo(&ti, hwndParent, id, &rc, buf));	
+	return Py_BuildValue("i", int(buf));
+	}
+
+// DeleteTool
+static PyObject*
+sdk_del_tool(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	char *pszText=NULL;
+	if (!PyArg_ParseTuple(args,"iii:DeleteTool", &hwnd, &hwndParent, &id))
+		return NULL;
+	TOOLINFO ti;
+ 	SendMessage(hwnd, TTM_DELTOOL, 0, (LPARAM)fillToolInfo(&ti, hwndParent, id));	
+	RETURN_NONE;
+	}
+
+// NewToolRect
+static PyObject*
+sdk_new_tool_rect(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	RECT rc;
+	if (!PyArg_ParseTuple(args,"iii(iiii):NewToolInfo", &hwnd, &hwndParent, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom))
+		return NULL;
+	TOOLINFO ti;
+	SendMessage(hwnd, TTM_NEWTOOLRECT,0 , (LPARAM)fillToolInfo(&ti, hwndParent, id, &rc));	
+	RETURN_NONE;
+	}
+
+// UpdateTipText
+static PyObject*
+sdk_update_tip_text(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	char *pszText;
+	int pval;
+	if (!PyArg_ParseTuple(args,"iiisi:UpdateTipText", &hwnd, &hwndParent, &id,
+		        &pszText, &pval))
+		return NULL;
+	
+	char *buf = (char*)pval;
+	strncpy(buf, pszText, min(256, strlen(pszText)+1));
+	buf[255]='\0';
+
+	TOOLINFO ti;
+	SendMessage(hwnd, TTM_UPDATETIPTEXT,0 , (LPARAM)fillToolInfo(&ti, hwndParent, id, NULL, buf));	
+	return Py_BuildValue("i", int(buf));
+	}
+
 
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
 	{"CreateBrush",sdk_create_brush,	1}, // @pymeth CreateBrush|Creates a brush and returns its handle.
 	{"CreateFontIndirect",sdk_create_font_indirect,	1}, // @pymeth|CreateFontIndirect|Creates a font from a dict of font properties and returns its handle.
+	{"EnumFontFamiliesEx",sdk_enum_font_families_ex,	1}, // @pymeth|EnumFontFamiliesEx|Enumerates all fonts in the system that match the font characteristics specified by the LOGFONT structure.
+	{"GetTextFace",sdk_get_text_face,	1}, // @pymeth|GetTextFace|Retrieves the typeface name of the font that is selected into the specified device contextPyObject *
 	{"CreateDC",sdk_create_dc,	1}, // @pymeth|CreateDC|Creates a DC.
 	{"DeleteObject",sdk_delete_object,	1}, // @pymeth DeleteObject|Deletes a GDI object from its handle
 	{"GetDesktopWindow",sdk_get_desktop_window,	1}, // @pymeth GetDesktopWindow|Returns the DesktopWindow
@@ -1028,6 +1343,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"EndDeferWindowPos",sdk_end_defer_window_pos,	1}, // @pymeth EndDeferWindowPos|Simultaneously updates the position and size of one or more windows in a single screen-refreshing cycle.
 	{"DeferWindowPos",sdk_defer_window_pos,	1}, // @pymeth DeferWindowPos|Updates the specified multiple-window position structure for the specified window	
 	{"PostMessage",sdk_post_message,1}, // @pymeth PostMessage|Posts a message to a window.	
+	
 	{"SendMessage",sdk_send_message,1}, // @pymeth SendMessage|Sends a message to a window.	
 	{"SendMessageLS",sdk_send_message_ls,1}, // @pymeth SendMessage|Sends a message to a window. The LPARAM is a string	
 	{"SendMessageRS",sdk_send_message_rs,1}, // @pymeth SendMessage|Sends a message to a window. The return value is a string	
@@ -1035,6 +1351,9 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"SendMessageGL",sdk_send_message_gl,1}, // @pymeth SendMessageGL|Sends a message to an edit control. The return value is a string	
 	{"SendMessageGT",sdk_send_message_gt,1}, // @pymeth SendMessageGT|	
 	{"SendMessageGetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageGetRect|A special version of send message for Python that returns a rectangle 
+	{"SendMessageSetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageSetRect|A special version of send message for Python that sets a rectangle 
+	{"SendMessageMS",sdk_send_message_ms,1}, // @pymeth SendMessageMS|A special version of send message for Python. LPARAM is a tuple equivalent to a win32 MSG struct
+	
 	{"SetCursor",sdk_set_cursor,1}, // @pymeth SetCursor|Establishes a cursor shape.	
 	{"LoadStandardCursor",sdk_load_standard_cursor,1}, // @pymeth LoadStdCursor|Loads the specified predefined cursor resource.	
 	{"ShowCursor",sdk_show_cursor,1}, // @pymeth ShowCursor|Specifies whether the internal display counter is to be incremented or decremented
@@ -1044,8 +1363,10 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"EnableWindow",sdk_enable_window,1}, // @pymeth GetDlgItem|enables or disables mouse and keyboard input to the specified window or control
 	{"CreateWindowEx",sdk_create_window_ex,1}, // @pymeth CreateWindowEx|Creates an overlapped, pop-up, or child window with an extended style
 	{"SetWindowPos",sdk_set_window_pos,1}, // @pymeth SetWindowPos|Sets the windows position information.
+	{"MoveWindow",sdk_move_window,1}, // @pymeth MoveWindow|Move window.
 	{"GetWindowRect",sdk_get_window_rect,1}, // @pymeth GetWindowRect|Get the windows rectangle.
 	{"ShowWindow",sdk_show_window,1}, // @pymeth ShowWindow|sets the specified window's show state
+	{"DestroyWindow",sdk_destroy_window,1}, // @pymeth DestroyWindow|Destroy the specified window
 	{"SetClassLong",sdk_set_class_long,1}, // @pymeth SetClassLong|
 	{"SetWindowLong",sdk_set_window_long,1}, 
 	{"GetWindowLong",sdk_get_window_long,1}, 
@@ -1053,6 +1374,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"GetTickCount",sdk_get_tick_count,1}, // @pymeth GetTickCount|Retrieves the number of milliseconds that have elapsed since the system was started
 
 	{"IntersectRect",sdk_intersect_rect,1}, // @pymeth IntersectRect|Calculates the intersection of two source rectangles
+	{"UnionRect",sdk_union_rect,1}, // @pymeth UnionRect|Calculates the union of two rectangles
 
 	{"GetCurrentDirectory",sdk_get_current_directory,1}, 
 	{"SetCurrentDirectory",sdk_set_current_directory,1}, 
@@ -1071,12 +1393,22 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CoUninitialize",sdk_co_uninitialize,1}, 
 	{"MapVirtualKey",sdk_map_virtual_key,1},
 	
+	{"InitCommonControlsEx",sdk_init_common_controls_ex,1},
+
+	// Tooltips support
+	{"NewToolInfo",sdk_new_tool_info,1},
+	{"DelToolInfo",sdk_del_tool_info,1},
+	{"AddTool",sdk_add_tool,1},
+	{"DelTool",sdk_del_tool,1},
+	{"NewToolRect",sdk_new_tool_rect,1},
+	{"UpdateTipText",sdk_update_tip_text,1},
 	
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
 	{"New",sdk_new,1}, // undocumented!
 	{"Delete",sdk_delete,1}, // undocumented!
+	{"GetWMString",GetWMString,1}, // undocumented!
 
 END_PYMETHODDEF()
 
