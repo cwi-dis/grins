@@ -90,7 +90,7 @@ struct movie {
 	Widget m_widget;	/* the window widget */
 	Visual *m_visual;	/* the visual to use */
 #endif
-	type_sema m_dispsema;	/* semaphore for display synchronization */
+	PyThread_type_sema m_dispsema;	/* semaphore for display synchronization */
 };
 #define X	0
 #define Y	1
@@ -106,8 +106,8 @@ static int maxbits;		/* max # of bitplanes for color index */
 static short colors[256][3];	/* saved color map entries */
 static int colors_saved;	/* whether we've already saved the colors */
 static int first_index;		/* used for restoring the colormap */
-static type_lock gl_lock;	/* interlock of window system */
-extern type_lock getlocklock Py_PROTO((PyObject *));
+static PyThread_type_lock gl_lock;	/* interlock of window system */
+extern PyThread_type_lock getlocklock Py_PROTO((PyObject *));
 #endif /* USE_GL */
 
 static unsigned long cv_8_to_32[256];
