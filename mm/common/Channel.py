@@ -387,6 +387,13 @@ class Channel(ChannelWM):
 			return
 		self.arm_1()
 
+	def seekanchor(self, node, aid):
+		# Called before arm on the node. Signifies that the node
+		# is played because a hyperjump to the specified anchor
+		# was executed. The channels can override this method, for
+		# instance to highlight the anchor.
+		pass
+
 	def play(self, node):
 		# Play the node that was last armed.  This will change
 		# the playing state from PIDLE to PLAYING.  This can

@@ -1,5 +1,5 @@
 from debug import debug
-from Channel import Channel
+from Channel import *
 import string
 import sys
 import VCR
@@ -17,6 +17,7 @@ class VcrChannel(Channel):
 		toplevel = self._player.toplevel
 		toplevel.select_setcallback(self.vcr, self.vcr.poll, ())
 		self.vcrstate = V_NONE
+		self.seekinfo = None
 		return self
 
 	def __repr__(self):
@@ -39,24 +40,8 @@ class VcrChannel(Channel):
 			self.vcrstate = V_NONE
 		else:
 			raise 'vcr_ready callback with state==', self.vcrstate
-			
-	def do_arm(self, node):	# Override default method
-		if self.vcrstate <> V_NONE:
-			raise 'do_arm with vcrstate<>V_NONE'
-		while 1:
-			try:
-				self.vcr.initvcr(5)
-				break
-			except VCR.error, arg:
-				pass   # Fall thru
-			i = dialogs.multchoice('VCR not ready:\n' + arg, \
-				  ['Hide channel', 'try again'], 0)
-			if i == 0:
-				self.hide()
-				return 0
-		dummy = self.vcr.fmmode('dnr')
-		summy = self.vcr.mute('audio', 1)
-		dummy = self.vcr.mute('video', 1)
+
+	def getstartstop(self, node):
 		ntype = node.GetType()
 		start = None
 		stop = None
@@ -84,9 +69,34 @@ class VcrChannel(Channel):
 					stop = None
 		elif ntype == 'ext':
 			start, stop = self.getstartstopindex(node)
-
 		if not start:
 			start = (0,0,5,0)    # Pretty arbitrary
+		return start, stop
+
+	def do_arm(self, node):	# Override default method
+		if self.vcrstate <> V_NONE:
+			raise 'do_arm with vcrstate<>V_NONE'
+		while 1:
+			try:
+				self.vcr.initvcr(5)
+				break
+			except VCR.error, arg:
+				pass   # Fall thru
+			i = dialogs.multchoice('VCR not ready:\n' + arg, \
+				  ['Hide channel', 'try again'], 0)
+			if i == 0:
+				self.hide()
+				return 0
+		dummy = self.vcr.fmmode('dnr')
+		summy = self.vcr.mute('audio', 1)
+		dummy = self.vcr.mute('video', 1)
+		start, stop = self.getstartstop(node)
+		if self.seekinfo:
+			if self.seekinfo[0] == node:
+				start = self.seekinfo[1]
+			else:
+				print 'VcrChannel: seek info for wrong node'
+			self.seekinfo = None
 		start = self.vcr.tc2addr(start)
 		start = start + 3*25 - 5     # Preroll point
 		start = self.vcr.addr2tc(start)
@@ -101,6 +111,48 @@ class VcrChannel(Channel):
 			return 1
 		self.vcrstate = V_SPR
 		return 0
+
+	def seekanchor(self, node, aid):
+		try:
+			alist = node.GetRawAttr('anchorlist')
+		except NoSuchAttrError:
+			print 'vcrchannel: no anchors on this node?'
+			return
+		for a in alist:
+			if a[A_ID] == aid:
+				break
+		else:
+			print 'vcrchannel: no such anchor on node:', aid
+			return
+		if a[A_TYPE] == ATYPE_WHOLE:
+			return
+		pos = a[A_ARGS]
+		if type(pos) <> type(()) or len(pos) <> 4:
+			print 'vcrchannel: ill-formatted anchor:', aid
+			return
+		self.seekinfo = (node, pos)
+
+	def defanchor(self, node, anchor):
+		if self._armstate != AIDLE:
+			raise error, 'Arm state must be idle when defining an anchor'
+		if self._playstate != PIDLE:
+			raise error, 'Play state must be idle when defining an anchor'
+		context = AnchorContext().init()
+		self.startcontext(context)
+		self.vcr.setasync(0)
+		start, stop = self.getstartstop(node)
+		if anchor[2]:
+			start = anchor[2]
+		self.vcr.goto(start)
+		self.vcr.setasync(1)
+		self.stopcontext(context)
+		if not dialogs.multchoice(\
+			  'Position video at position wanted for anchor.', \
+			  ['Cancel', 'Done'], 1):
+			return None
+		return (anchor[0], anchor[1], self.vcr.where())
+		
+		
 
 	def play(self, node):	# XXX Override Channel method.
 		self.play_0(node)
