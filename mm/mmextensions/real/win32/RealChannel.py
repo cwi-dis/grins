@@ -22,28 +22,24 @@ class RealChannel:
 	def release_player(self):
 		self.__rmaplayer = None
 
-	def prepare_player(self):
+	def prepare_player(self, node = None):
 		if not self.__has_rma_support:
 			return 0
 		if not self.__rmaplayer:
 			try:
 				self.__rmaplayer = self.__engine.CreatePlayer()
 			except:
-				self.errormsg(None, 'No playback support for RealMedia on this system')
+				self.errormsg(node, 'No playback support for RealMedia on this system')
 				return 0
 		return 1
 
 	def playit(self, node, window = None):
-		if not self.__rmaplayer and not self.prepare_player():
-			return 0
+		if not self.__rmaplayer:
+			return
 		self.__loop = self.getloop(node)
-		print 'RealChannel.playit',self.getfileurl(node)
 		url = MMurl.canonURL(self.getfileurl(node))
-		print 'url',url
 		self.__url = url
 		self.__window = window
-		if not self.__rmaplayer:
-			self.__rmaplayer=rma.CreatePlayer()
 		self.__rmaplayer.SetStatusListener(self)
 		if window is not None:
 			self.__rmaplayer.SetOsWindow(window)
