@@ -74,13 +74,14 @@ class SoundChannel(Channel):
 	chan_attrs = []
 	node_attrs = ['file']
 	#
-	def init(self, name, attrdict, player):
-		self = Channel.init(self, name, attrdict, player)
+	def init(self, name, attrdict, scheduler, ui):
+		self = Channel.init(self, name, attrdict, scheduler, ui)
 		self.info = self.port = None
 		self.rate = 0.0
 		self.cancelled_qid = 0
 		self.armed_node = None
 		self.armed_info = None
+		self.skipped_arm = 0
 		self.node = None
 		import mm, soundchannel
 		self.threads = mm.init(soundchannel.init(), \
@@ -104,6 +105,7 @@ class SoundChannel(Channel):
 	def arm(self, node):
 		import SoundDuration
 		if not self.is_showing():
+			self.skipped_arm = 1
 			return
 		filename = self.getfilename(node)
 		try:
@@ -131,11 +133,12 @@ class SoundChannel(Channel):
 		self.armed_node = node
 
 	def did_prearm(self):
-		return (self.armed_node <> None)
+		return (self.armed_node <> None) or self.skipped_arm
 		
 	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
+		self.skipped_arm = 0
 
 		if not self.is_showing():
 			# Don't play it, but still let the duration pass
@@ -144,7 +147,7 @@ class SoundChannel(Channel):
 			self.armed_node = None
 			self.armed_info = None
 			duration = Duration.get(node)
-			dummy = self.player.enter(duration, 0, \
+			dummy = self.scheduler.enter(duration, 0, \
 				self.done, None)
 			return
 
@@ -170,7 +173,7 @@ class SoundChannel(Channel):
 		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
 			  stopped, 0)
 		self.threads.play()
-		self.player.arm_ready(self.name)
+		self.scheduler.arm_ready(self.name)
 	#
 	#DEBUG: remove dummy entry from queue and call proper done method
 	def done(self, arg):

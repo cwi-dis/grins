@@ -120,7 +120,7 @@ class TextWindow(ChannelWindow):
 		for a in self.anchors:
 			if a[A_ID] == name:
 				al2.append(a)
-		rv = self.channel.player.anchorfired(self.node, al2)
+		rv = self.channel.scheduler.anchorfired(self.node, al2)
 		#
 		# If this was a paused anchor and it didn't fire,
 		# we're done playing the node
@@ -492,8 +492,8 @@ class TextChannel(Channel):
 	#
 	# Initialize the instance
 	#
-	def init(self, name, attrdict, player):
-		self = Channel.init(self, name, attrdict, player)
+	def init(self, name, attrdict, scheduler, ui):
+		self = Channel.init(self, name, attrdict, scheduler, ui)
 		self.window = TextWindow().init(name, attrdict, self)
 		self.arm_node = None
 		return self
@@ -613,7 +613,8 @@ class TextChannel(Channel):
 		if node.type == 'imm':
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
-			filename = self.player.toplevel.getattr(node, 'file')
+			filename = self.scheduler.toplevel.getattr(node, \
+				  'file')
 			try:
 				fp = open(filename, 'r')
 			except IOError:

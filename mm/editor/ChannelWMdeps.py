@@ -44,11 +44,12 @@ class Channel:
 	# parameters out of the attribute dictionary each time it
 	# is reset, so changes made while it was dormant are noted.
 
-	def init(self, name, attrdict, player):
+	def init(self, name, attrdict, scheduler, ui):
 		global channel_device
 		self.name = name
 		self.attrdict = attrdict
-		self.player = player
+		self.scheduler = scheduler
+		self.ui = ui
 		self.qid = None
 		self.showing = 0
 		self.autoanchor = None
@@ -159,28 +160,33 @@ class Channel:
 		secs = self.getduration(node)
 		self.cb = (callback, arg)
 		self.node = node
-		self.qid = self.player.enter(secs, 0, self.done, 0)
+		self.qid = self.scheduler.enter(secs, 0, self.done, 0)
 
 	# Function called when an even't time is up.
 
 	def done(self, dummy):
 		self.qid = None
 		if not self.did_prearm():
-			self.player.arm_ready(self.name)
-		if self.haspauseanchor and not self.player.ui.ignore_pauses:
+			#XXXX This is wrong. did_prearm checks wether the
+			# next arm has been *executed* and we want to know
+			# whether it has been *scheduled*. Too much work to fix
+			# it, though.
+			self.scheduler.arm_ready(self.name)
+		if self.haspauseanchor and not self.ui.ignore_pauses:
 			return
 		if self.cb:
 			callback, arg = self.cb
 			apply(callback, arg)
 			self.cb = None
 		if self.autoanchor:
-			rv = self.player.anchorfired(self.node, [self.autoanchor])
+			rv = self.scheduler.anchorfired(self.node, \
+				  [self.autoanchor])
 		self.autoanchor = None
 	# Pauseanchor_done is similar to done, but should also cancel the
 	# possible outstanding 'done' event.
 	def pauseanchor_done(self, dummy):
 		if self.qid:
-			self.player.cancel(self.qid)
+			self.scheduler.cancel(self.qid)
 			self.qid = 0
 		self.done(dummy)
 
@@ -196,7 +202,7 @@ class Channel:
 	def stop(self):
 		if self.qid <> None:
 			print 'cancel', self.name, self.qid
-			self.player.cancel(self.qid)
+			self.scheduler.cancel(self.qid)
 			self.qid = None
 
 	# Reset the channel's state.

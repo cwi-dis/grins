@@ -114,8 +114,8 @@ class MovieChannel(Channel):
 	chan_attrs = ['base_window', 'base_winoff']
 	node_attrs = ['file', 'scale', 'bgcolor']
 	#
-	def init(self, name, attrdict, player):
-		self = Channel.init(self, name, attrdict, player)
+	def init(self, name, attrdict, scheduler, ui):
+		self = Channel.init(self, name, attrdict, scheduler, ui)
 		self.window = MovieWindow().init(name, attrdict, self)
 		self.armed_node = None
 		import mm, moviechannel
@@ -201,7 +201,7 @@ class MovieChannel(Channel):
 		if not self.is_showing() or not self.window.vfile:
 			import Duration
 			duration = Duration.get(node)
-			dummy = self.player.enter(duration, 0, \
+			dummy = self.scheduler.enter(duration, 0, \
 				self.done, None)
 			return
 	        if node <> self.armed_node:
@@ -218,7 +218,7 @@ class MovieChannel(Channel):
 			  stopped, 0)
 		self.window.cleared = 0
 		self.threads.play()
-		self.player.arm_ready(self.name)
+		self.scheduler.arm_ready(self.name)
 	#
 	#DEBUG: remove dummy entry from queue and call proper done method
 	def done(self, arg):

@@ -194,6 +194,7 @@ class SchedulerContext():
 			self.parent.add_runqueue(self, PRIO_RUN, srlist)
 
 	def arm_ready(self, cname):
+		if cname == 'Scottish': print 'Scottish ready' #DBG
 		pev = self.getnextprearm(cname)
 		if pev:
 			self.parent.add_lopriqueue(self, pev[1].t0, pev)

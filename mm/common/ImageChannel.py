@@ -60,7 +60,7 @@ class ImageWindow(ChannelWindow):
 		self.nonode_ninfo = ImageNodeInfo().init()
 		self.nonode_ninfo.setdefcolors(attrdict)
 		self.clear()
-		self.player = channel.player
+		self.scheduler = channel.scheduler
 		return self
 	#
 	def __repr__(self):
@@ -135,7 +135,7 @@ class ImageWindow(ChannelWindow):
 			return
 		for a in al2:
 			self.drawanchor(a[A_ARGS], 1)
-		rv = self.player.anchorfired(self.ninfo.node, al2)
+		rv = self.scheduler.anchorfired(self.ninfo.node, al2)
 		# If this was a paused anchor and it didn't fire
 		# stop showing the node. We also clear the haspauseanchor
 		# field, so we won't execute this code again.
@@ -320,8 +320,8 @@ class ImageChannel(Channel):
 		 'bgcolor', 'hicolor']
 ##		 'bgcolor', 'fgcolor', 'hicolor']
 	#
-	def init(self, name, attrdict, player):
-		self = Channel.init(self, name, attrdict, player)
+	def init(self, name, attrdict, scheduler, ui):
+		self = Channel.init(self, name, attrdict, scheduler, ui)
 		self.window = ImageWindow().init(name, attrdict, self)
 		self.armed_node = None
 		return self
