@@ -15,7 +15,7 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 	writer.writeAsHtmlTime()
 
 
-not_xhtml_time_elements = ('switch', 'brush', 'prefetch', 'text', 'textstream', )
+not_xhtml_time_elements = ('brush', 'prefetch', 'text', 'textstream', )
 
 not_xhtml_time_attrs = ('min', 'max', 'endsync', 'customTest', 'fillDefault', 
 	'restartDefault', 'syncBehaviorDefault','syncToleranceDefault', 'repeat',
@@ -364,7 +364,7 @@ class SMILHtmlTimeWriter(SMIL):
 		if interior:
 			if mtype in not_xhtml_time_elements:
 				self.showunsupported(mtype)
-				return
+				#return
 
 			if not root:
 				if self.__currRegion!=None:
