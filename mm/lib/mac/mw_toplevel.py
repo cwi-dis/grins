@@ -881,6 +881,12 @@ class _Toplevel(_Event):
 				return 0	# Someone else
 		return 1
 		
+	def _call_optional_command(self, cmd):
+		if self._command_handler.find_command(cmd):
+			self._command_handler.normal_callback(cmd)
+			return 1
+		return 0
+		
 	def _find_wid(self, wid):
 		"""Map a MacOS window to our window object, or None"""
 		if self._wid_to_window.has_key(wid):

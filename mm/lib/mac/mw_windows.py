@@ -159,6 +159,10 @@ class _WindowGroup:
 		return None
 			
 	def close_window_command(self):
+		# If this is the last window promote to close document
+		if self._parent and self._parent._is_last_in_group(self._wid):
+			if self._parent._call_optional_command(MenuTemplate.CLOSE):
+				return 1
 		# First see whether there's a WindowExit handler
 		if self.has_command(MenuTemplate.CLOSE_WINDOW):
 			self.call_command(MenuTemplate.CLOSE_WINDOW)
@@ -278,6 +282,9 @@ class _CommonWindow:
 	def is_closed(self):
 		"""Return true if window is closed"""
 		return self._parent is None
+		
+	def is_showing(self):
+		return not self.is_closed()
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
 		      type_channel = None, units = None):
@@ -1618,20 +1625,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		return '<Window %s>'%self._title
 	
 	def close(self):
-		self._close_document_test()
 		self._enable_drop(0)
 		_ScrollMixin.close(self)
 		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
 		self.arrowcache = {}
 		# XXXX Not WindowGroup?
-		
-	def _close_document_test(self):
-		"""Test whether we should close the whole document (if we are the
-		last window open)"""
-		if self._parent and self._parent._is_last_in_group(self._wid):
-			print "LAST IN GROUP"
-		
+				
 	def settitle(self, title):
 		"""Set window title"""
 		if not self._wid:
@@ -2095,7 +2095,6 @@ class DialogWindow(_Window):
 		self.grabdone()
 		self.settitle(None)
 		self._is_shown = 0
-		self._close_document_test()
 		
 	def is_showing(self):
 		return self._is_shown
