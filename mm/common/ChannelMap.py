@@ -9,7 +9,7 @@ def _freeze_dummy_func():
 	import CmifChannel
 	import ExternalChannel
 	import GraphChannel
-	import HtmlChannel 
+	import HtmlChannel
 	import ImageChannel
 	import LabelChannel
 	import LayoutChannel
@@ -48,7 +48,7 @@ class ChannelMap:
 		'word':		'WordChannel',
 		'external':	'ExternalChannel',
 		}
-	
+
 	if platform == 'mac':
 		channelmap['movie'] = 'VideoChannel'
 
