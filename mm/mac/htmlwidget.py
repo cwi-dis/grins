@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # A minimal text editor.
 #
 # To be done:
