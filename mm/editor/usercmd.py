@@ -195,6 +195,8 @@ class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
 class NEW_BEFORE_IMAGE(_CommandBase):
 	help = 'Create new image node before selected node'
+class NEW_BEFORE_SVG(_CommandBase):
+	help = 'Create new SVG node before selected node'
 class NEW_BEFORE_TEXT(_CommandBase):
 	help = 'Create new text node before selected node'
 class NEW_BEFORE_HTML(_CommandBase):
@@ -219,6 +221,8 @@ class NEW_AFTER(_CommandBase):
 	help = 'Create new node after selected node'
 class NEW_AFTER_IMAGE(_CommandBase):
 	help = 'Create new image node after selected node'
+class NEW_AFTER_SVG(_CommandBase):
+	help = 'Create new SVG node after selected node'
 class NEW_AFTER_TEXT(_CommandBase):
 	help = 'Create new text node after selected node'
 class NEW_AFTER_HTML(_CommandBase):
@@ -243,6 +247,8 @@ class NEW_UNDER(_CommandBase):
 	help = 'Create new node under selected node'
 class NEW_UNDER_IMAGE(_CommandBase):
 	help = 'Create new image under selected node'
+class NEW_UNDER_SVG(_CommandBase):
+	help = 'Create new SVG under selected node'
 class NEW_UNDER_TEXT(_CommandBase):
 	help = 'Create new text node under selected node'
 class NEW_UNDER_HTML(_CommandBase):
