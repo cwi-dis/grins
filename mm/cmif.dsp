@@ -779,6 +779,10 @@ SOURCE=.\editor\ViewDialog.py
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\lib\win32\_AssetsView.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\_FSPlayerView.py
 # End Source File
 # Begin Source File
