@@ -399,10 +399,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							self.syntax_error('invalid name')
 							continue
 					xnode = self.__nodemap.get(name)
+					xanchor = None
 					if xnode is None:
-						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
-						continue
-				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=offset or 0))
+						xanchor = self.__anchormap.get(name)
+						if xanchor is None:
+							self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+							continue
+						xnode, xanchor = xanchor
+				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,srcanchor=xanchor,event=event,delay=offset or 0))
 				continue
 		if boston:
 			if self.__context.attributes.get('project_boston') == 0:
@@ -2252,6 +2256,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__anchormap.has_key(tag):
 					# link directly to an anchor
 					dst = self.__anchormap[tag]
+					dst = dst[0].GetUID(), dst[1]
 				else:
 					# link to a normal node.
 					# If there isn't dest anchor yet on this node,
@@ -3373,7 +3378,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			val = string.strip(val)
 			if attr == 'id':
 				self.__nodemap[val] = node
-				self.__idmap[val] = node.GetUID()
+				self.__idmap[val] = node.GetSchedParent().GetUID()
 				res = namedecode.match(val)
 				if res is not None:
 					val = res.group('name')
@@ -3665,9 +3670,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
 			return
-		if id is not None:
-			self.__idmap[id] = self.__node.GetUID()
-		href = attributes.get('href') # None is dest only anchor
+		nohref = attributes.get('nohref')
+		if nohref is not None:
+			if nohref != 'nohref':
+				self.syntax_error("illegal value for `nohref` attribute")
+				nohref = None
+		if not nohref:
+			href = attributes.get('href') # None is dest only anchor
+		else:
+			href = None
 ##		if href is None:
 ##			#XXXX is this a document error?
 ##			self.warning('required attribute href missing', self.lineno)
@@ -3700,7 +3711,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ashapetype = A_SHAPETYPE_CIRCLE
 		else:
 			ashapetype = A_SHAPETYPE_ALLREGION
-			self.syntax_error('Unknow shape type '+shape)
+			self.syntax_error('Unknown shape type '+shape)
 
 		# coords attribute
 		coords = attributes.get('coords')
@@ -3804,7 +3815,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		atype = self.__link_atype(attributes, atype)
 				
 		if id is not None:
-			self.__anchormap[id] = (uid, aid)
+			self.__anchormap[id] = self.__node, aid
+			self.__idmap[id] = uid, aid
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0)))
 		if href is not None:
 			self.__links.append((uid, (aid, atype, aargs),
