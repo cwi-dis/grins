@@ -541,7 +541,7 @@ class SMILWriter(SMIL):
 		if not self.ids_used[name]:
 			alist = x.GetAttrDef('anchorlist', [])
 			hlinks = x.GetContext().hyperlinks
-			for id, type, args in alist:
+			for id, atype, args in alist:
 				if hlinks.finddstlinks((uid, id)):
 					self.ids_used[name] = 1
 					break

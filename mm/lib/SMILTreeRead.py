@@ -287,6 +287,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		url = attributes.get('src')
 		self.__is_ext = url is not None
 		data = None
+		mtype = None
 		if url is not None:
 			url = MMurl.basejoin(self.__base, url)
 			url = self.__context.findurl(url)
