@@ -55,8 +55,8 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		self.playdone(0, curtime)
 
 	# toggles between pause and run
-	def setpaused(self, paused):
-		Channel.ChannelWindowAsync.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.ChannelWindowAsync.setpaused(self, paused, timestamp)
 		if self.__rc is not None:
 			self.__rc.pauseit(paused)
 
