@@ -25,7 +25,7 @@ __version__ = "$Id$"
 import windowinterface
 
 class AttrEditorDialog:
-	def __init__(self, title, attriblist, toplevel=None):
+	def __init__(self, title, attriblist, toplevel=None, initattr = None):
 		"""Create the AttrEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -144,6 +144,10 @@ class AttrEditorDialogField:
 					  top = None, bottom = None,
 					  left = None, right = brwsr)
 			self.__text = txt
+		elif t == 'text':
+			w = form.TextEdit(self.getcurrent(), None,
+					  top = top, bottom = bottom,
+					   left = left, right = right)
 		else:
 			w = form.TextInput(None, self.getcurrent(), None, None,
 					   top = top, bottom = bottom,
