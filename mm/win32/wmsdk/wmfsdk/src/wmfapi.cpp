@@ -2077,6 +2077,42 @@ DDWMWriter_AllocateDDSample(DDWMWriterObject *self, PyObject *args)
 	return (PyObject*)bufobj;
 }
 
+static char DDWMWriter_SetDDSample__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_SetDDSample(DDWMWriterObject *self, PyObject *args)
+{
+	PyObject *obj;
+	NSSBufferObject *bufobj;
+	if (!PyArg_ParseTuple(args, "OO!", &obj,&NSSBufferType,&bufobj))
+		return NULL;
+
+	IDirectDrawSurface *surf = (IDirectDrawSurface *)((UnknownObject*)obj)->pI;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr;
+	hr = surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_SetDDSample:Lock", hr);
+		return NULL;
+	}	
+
+	BYTE *pBuffer=(BYTE*)desc.lpSurface;
+	int nrows = int(desc.dwHeight);
+	int pitch = int(desc.lPitch);
+	BYTE *pbsBuffer;
+	bufobj->pI->GetBuffer(&pbsBuffer);
+	for(int row=nrows-1;row>=0;row--){
+		CopyMemory(pbsBuffer, pBuffer + row*pitch, pitch);
+		pbsBuffer += pitch;
+	}
+	surf->Unlock(0);
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 static char DDWMWriter_WriteVideoSample__doc__[] =
 ""
 ;
@@ -2120,6 +2156,7 @@ static struct PyMethodDef DDWMWriter_methods[] = {
 	{"SetAudioFormat", (PyCFunction)DDWMWriter_SetAudioFormat, METH_VARARGS, DDWMWriter_SetAudioFormat__doc__},
 	{"SetDSAudioFormat", (PyCFunction)DDWMWriter_SetDSAudioFormat, METH_VARARGS, DDWMWriter_SetDSAudioFormat__doc__},
 	{"AllocateDDSample", (PyCFunction)DDWMWriter_AllocateDDSample, METH_VARARGS, DDWMWriter_AllocateDDSample__doc__},
+	{"SetDDSample", (PyCFunction)DDWMWriter_SetDDSample, METH_VARARGS, DDWMWriter_SetDDSample__doc__},
 	{"WriteVideoSample", (PyCFunction)DDWMWriter_WriteVideoSample, METH_VARARGS, DDWMWriter_WriteVideoSample__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -5696,7 +5733,8 @@ static PyObject *
 CreateDDVideoWMType(PyObject *self, PyObject *args)
 {
 	PyObject *ddsobj;
-	if (!PyArg_ParseTuple(args,"O",&ddsobj))
+	int avgTimePerFrame = 100; // in msecs
+	if (!PyArg_ParseTuple(args,"O|i",&ddsobj,&avgTimePerFrame))
 		return NULL;
 	IDirectDrawSurface *surf = (IDirectDrawSurface *)((UnknownObject*)ddsobj)->pI;
 
@@ -5749,8 +5787,9 @@ CreateDDVideoWMType(PyObject *self, PyObject *args)
 	WM_MEDIA_TYPE& mt = *obj->pMediaType;
 
 	DWORD dwSampleSize=width*height*(depth/8);
-	DWORD rate = 10*dwSampleSize*8;
-	LONGLONG atpf=LONGLONG(100)*10000;
+	LONGLONG atpf=LONGLONG(avgTimePerFrame)*10000;
+	double fps = 1000.0/double(avgTimePerFrame);
+	DWORD rate = DWORD(fps*dwSampleSize*8.0);
 
 	
 	WMVIDEOINFOHEADER* pVideoInfo = (WMVIDEOINFOHEADER*) new BYTE[cbFormat];
@@ -5763,7 +5802,7 @@ CreateDDVideoWMType(PyObject *self, PyObject *args)
 	pbmih->biHeight   = height;
 	pbmih->biPlanes   = 1;
 	pbmih->biBitCount = depth;
-	pbmih->biCompression=BI_RGB;
+	pbmih->biCompression = BI_RGB;
 	pbmih->biSizeImage = 0;
 	pbmih->biClrUsed = 0;
 	pbmih->biClrImportant = 0;
