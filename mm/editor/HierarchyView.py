@@ -194,6 +194,9 @@ class HierarchyView(HierarchyViewDialog):
 			node = node.GetParent()
 
 	def show(self):
+		if self.is_showing():
+			HierarchyViewDialog.show(self)
+			return
 		HierarchyViewDialog.show(self)
 		self.aftersetfocus()
 		self.window.bgcolor(BGCOLOR)

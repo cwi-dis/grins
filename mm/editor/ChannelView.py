@@ -142,6 +142,7 @@ class ChannelView(ChannelViewDialog):
 
 	def show(self):
 		if self.is_showing():
+			ChannelViewDialog.show(self, None)
 			return
 		self.toplevel.showstate(self, 1)
 		title = 'Timeline View (' + self.toplevel.basename + ')'

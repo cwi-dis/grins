@@ -25,6 +25,7 @@ class UsergroupView(UsergroupViewDialog):
 
 	def show(self):
 		if self.is_showing():
+			UsergroupViewDialog.show(self)
 			return
 		self.commit()
 		UsergroupViewDialog.show(self)

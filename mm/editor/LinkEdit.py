@@ -115,7 +115,9 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
 
 	def show(self):
-		if not self.is_showing():
+		if self.is_showing():
+			LinkBrowserDialog.show(self)
+		else:
 			self.toplevel.showstate(self, 1)
 			self.updateform()
 			LinkBrowserDialog.show(self)
