@@ -111,16 +111,16 @@ def showeditor(node):
 		return
 	if node.GetType() <> 'ext':
 		windowinterface.showmessage(
-			'NodeEdit.showeditor: Only extern nodes can be edited',
+			'Only extern nodes can be edited',
 			mtype = 'error')
 		return
 	import MMAttrdefs, MMurl
 	url = MMAttrdefs.getattr(node,'file')
 	url = node.context.findurl(url)
 	utype, url = MMurl.splittype(url)
-	if utype:
+	if utype and utype != 'file':
 		windowinterface.showmessage(
-			'NodeEdit.showeditor: cannot edit URL',
+			'Can only edit local files',
 			mtype = 'warning')
 		return
 	filename = MMurl.url2pathname(url)
@@ -130,7 +130,7 @@ def showeditor(node):
 	    chtype = 'text'
 	if not channeleditors.has_key(chtype):
 		windowinterface.showmessage(
-			'NodeEdit.showeditor: no editors for chtype ' + chtype,
+			'No editor for %s nodes' % chtype,
 			mtype = 'warning')
 		return
 	editor = channeleditors[chtype]
