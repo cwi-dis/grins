@@ -554,9 +554,11 @@ class HierarchyView(HierarchyViewDialog):
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
-		if x < 1.0 and y < 1.0:
-			x = x * self.mcanvassize[0]
-			y = y * self.mcanvassize[1]
+		if x >= 1 or y >= 1:
+			windowinterface.beep()
+			return
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 		self.mousehitx = x
 		self.mousehity = y
 		self.select(x, y)
