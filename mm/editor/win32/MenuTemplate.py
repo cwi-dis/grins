@@ -543,6 +543,30 @@ POPUP_EVENT_SOURCE = (
 #	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 	)
 
+POPUP_REGIONTREE_REGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+)
+POPUP_REGIONTREE_SUBREGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'C&reate anchor', None, CREATEANCHOR),
+)
+
+POPUP_REGIONPREVIEW_REGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+)
+POPUP_REGIONPREVIEW_SUBREGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'C&reate anchor', None, CREATEANCHOR),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+)
+
 MAIN_FRAME_POPUP = (
 		(FLAG_ALL, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
 		(FLAG_ALL, SEP,),
