@@ -2,6 +2,14 @@ __version__ = "$Id$"
 
 import Xt, Xm, sys, X, Xcursorfont
 
+error = 'windowinterface.error'
+
+# try these visuals in this order
+tryvisuals = [(X.TrueColor, 24),
+	      (X.TrueColor, 32),
+	      (X.TrueColor, 8),
+	      (X.PseudoColor, 8)]
+
 def _roundi(x):
 	if x < 0:
 		return _roundi(x + 1024) - 1024
@@ -33,7 +41,7 @@ class _Splash:
 
 	def splash(self, file):
 		self.wininit()
-		if self.visual.depth != 24:
+		if self.visual.depth < 24:
 			return 0
 		import img
 		try:
@@ -90,17 +98,13 @@ class _Splash:
 						   glXconst.GLX_BLUE_SIZE, 1])
 			visuals = [visual]
 		except:
-			visuals = dpy.GetVisualInfo({'class': X.TrueColor,
-						     'depth': 24})
-		if not visuals:
-			visuals = dpy.GetVisualInfo({'class': X.TrueColor,
-						     'depth': 8})
-			if not visuals:
-				visuals = dpy.GetVisualInfo(
-					{'class': X.PseudoColor,
-					 'depth': 8})
-				if not visuals:
-					raise error, 'no proper visuals available'
+			for cl, dp in tryvisuals:
+				visuals = dpy.GetVisualInfo({'class': cl,
+							     'depth': dp})
+				if visuals:
+					break
+			else:
+				raise error, 'no proper visuals available'
 		self.visual = visual = visuals[0]
 		self.colormap = cmap = visual.CreateColormap(X.AllocNone)
 		if visual.c_class == X.PseudoColor:
