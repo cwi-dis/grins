@@ -715,7 +715,7 @@ class MMSyncArc:
 		self.dstnode = dstnode
 		self.isstart = action == 'begin'
 		self.ismin = action == 'min'
-		self.srcnode = srcnode	# None if parent; "prev" if previous; else MMNode instance
+		self.srcnode = srcnode	# None if syncbase; "prev" if previous; else MMNode instance
 		self.event = event
 		self.marker = marker
 		self.wallclock = wallclock
