@@ -20,6 +20,7 @@ Like all resources these templates can be found in cmif\win32\src\GRiNSRes\GRiNS
 
 """
 
+import string
 # std win32 modules
 import win32ui,win32con,win32api
 
@@ -173,6 +174,46 @@ class FileAttrDlgBar(AttrDlgBar):
 		wnd.SetWindowPos(self.GetSafeHwnd(),(0,0,cx,cy),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 
+# Dialog bar to edit color attributes
+class ColorAttrDlgBar(AttrDlgBar):
+	# Class constructor. Calls base constructor and associates controlst with ids
+	def __init__(self,parent,change_cb,reset_cb):
+		AttrDlgBar.__init__(self,parent,grinsRC.IDD_EDITCOLORATTR,change_cb,reset_cb)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
+		self._attrval.attach_to_parent()
+		parent.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+		parent.HookCommand(self.OnBrowse,grinsRC.IDUC_BROWSE)
+		self._browsecb=None
+	# Response to edit box change
+	def OnEdit(self,id,code):
+		if code==win32con.EN_CHANGE:
+			apply(self._change_cb,(self._attrval.gettext(),))
+		elif code==win32con.EN_KILLFOCUS:
+			self.PassFocus()
+	# Response to button browse
+	def OnBrowse(self,id,code):
+		oldcolorstring = self._attrval.gettext()
+		list = string.split(string.strip(oldcolorstring))
+		r = g = b = 0
+		if len(list) == 3:
+			try:
+				r = string.atoi(list[0])
+				g = string.atoi(list[1])
+				b = string.atoi(list[2])
+			except ValueError:
+				pass
+		rv = self.ColorSelect(r, g, b)
+		if rv != None:
+			colorstring = "%d %d %d"%rv
+			self._attrval.settext(colorstring)
+	
+	def ColorSelect(self, r, g, b):
+		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR)
+		if dlg.DoModal() == win32con.IDOK:
+			newcol = dlg.GetColor()
+			r, g, b = win32ui.GetWin32Sdk().GetRGBValues(newcol)
+			return r, g, b
+		return None
 
 # Dialog bar with the buttons Restore,Apply,Cancel,OK
 class StdDlgBar(window.Wnd):
@@ -326,6 +367,7 @@ class AttrEditForm(docview.ListView):
 
 		if t == 'option':EditDlgBar=OptionsAttrDlgBar
 		elif t == 'file':EditDlgBar=FileAttrDlgBar
+		elif t == 'color':EditDlgBar=ColorAttrDlgBar
 		else:EditDlgBar=StringAttrDlgBar # all other types
 		self._dlgBar=EditDlgBar(frame,self.UpdateValue,self.OnReset)
 		self._attr_type=t
