@@ -21,7 +21,8 @@ For these buttons there are callbacks.
 
 __version__ = "$Id$"
 
-import windowinterface, cmifex2, win32api, win32con
+import windowinterface, win32api, win32con
+from win32modules import cmifex2
 
 class ArcInfoDialog:
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
