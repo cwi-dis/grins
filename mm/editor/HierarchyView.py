@@ -1147,7 +1147,7 @@ class HierarchyView(HierarchyViewDialog):
 			newnode.targetnode = node
 			if self.insertnode(newnode, where, index):
 				if not lightweight:
-					AttrEdit.showattreditor(self.toplevel, newnode, chtype = chtype)
+					AttrEdit.showattreditor(self.toplevel, newnode)
 			return 
 
 		type = node.GetType()
@@ -1162,69 +1162,13 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			type = 'ext'
 
-		ctx = node.GetContext()
-		mimetype = ctx.computeMimeType(type, url)
-		if chtype == None:
-			chtype = pnode.guessChannelType(type, mimetype)
-
 		dftchannel = None
-		if type == 'ext' or type == 'imm':
-			# See whether the current node specifies a default channel.
-			# XXXX Because this is actually a regionname we have a bit of work
-			# to do to find the two possible channel names. This code also needs
-			# a bit of cleanup, as the channelname<->regionname mapping may be
-			# different.
-			dftchannel = MMAttrdefs.getattr(pnode, 'project_default_region')
-			if dftchannel == 'undefined':
-				dftchannel = None
-			dftchtype = MMAttrdefs.getattr(pnode, 'project_default_type')
-			if dftchtype != 'undefined':
-				if chtype is None:
-					chtype = dftchtype
-				elif chtype != dftchtype:
-					self.opt_render()
-					windowinterface.showmessage('Incompatible file', mtype = 'error', parent = self.window)
-					return
-#			if dftchannel is not None and dftchtype != 'undefined':
-#				em = self.editmgr
-#				if not em.transaction():
-#					return
-#				start_transaction = 0
-#				chlist = [chname]
-#			else:
-#				chlist = ctx.compatchannels(url, chtype)
-#				if dftchannel:
-#					nchlist = []
-#					for chname in chlist:
-#						if ctx.getchannel(chname).GetLayoutChannel().name == dftchannel:
-#							nchlist.append(chname)
-#					chlist = nchlist
-#			if chlist:
-#				if len(chlist) > 1:
-#					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)
-#					if i < 0:
-#						self.opt_render()
-#						# Cancel
-#						return
-#					chname = chlist[i]
-#				else:
-#					chname = chlist[0]
-#				chtype = None
-#			elif lightweight and \
-#			     (url is not None or chtype is not None):
-#				self.opt_render()
-#				windowinterface.showmessage(
-#					'There are no channels for this mediatype in the presentation',
-#					mtype = 'error', parent = self.window)
-#				return
-#		else:
-#			chtype = None
 		self.toplevel.setwaiting()
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
-		node = ctx.newnode(type) # Create a new node
+		node = node.GetContext().newnode(type) # Create a new node
 
 		if url is not None:
 			node.SetAttr('file', url)
@@ -1241,7 +1185,7 @@ class HierarchyView(HierarchyViewDialog):
 ##				self.editmgr.addsyncarc(node, 'beginlist', arc)
 			self.editmgr.commit()
 			if not lightweight:
-				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)
+				AttrEdit.showattreditor(self.toplevel, node)
 
 	def insertparent(self, type):
 		node = self.focusnode
