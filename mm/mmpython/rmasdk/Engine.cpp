@@ -8,6 +8,11 @@
 
 #include "StdApp.h"
 
+#ifdef _MACINTOSH
+#include <Events.h>
+#include "macglue.h"
+#endif
+
 class EngineObject : public Object
 	{
 	public:
@@ -18,6 +23,7 @@ class EngineObject : public Object
 
 	// PyMethods
 	static PyObject *CreatePlayer(PyObject *self, PyObject *args);
+	static PyObject *EventOccurred(PyObject *self, PyObject *args);
 
 
 	static IRMAClientEngine* pEngine;
@@ -76,10 +82,38 @@ PyObject* EngineObject::CreatePlayer(PyObject *self, PyObject *args)
 	extern PyObject *PlayerObject_CreateInstance(PyObject *self, PyObject *args);
 	return PlayerObject_CreateInstance(self,args);
 	}
+	
+PyObject* EngineObject::EventOccurred(PyObject *self, PyObject *args)
+	{
+	PNxEvent pn_event;
+	PN_RESULT res;
+#ifdef _MACINTOSH
+	EventRecord ev;
+#endif
+	
+	/* Event = PyArg_ParseTuple(blabla) */
+#ifdef _MACINTOSH
+	if( !PyArg_ParseTuple(args, "O&", PyMac_GetEventRecord, &ev) )
+		return NULL;
+	pn_event.event = ev.what;
+	pn_event.param1 = &ev;
+#else
+	/* What _may_ work on unix is passing a zeroed struct. See the main program of
+	** the minimal playback engine for details.
+	** On Windows this magically seems to be unneeded at all.
+	*/
+	PyErr_SetString(PyExc_SystemError, 
+		"rma PNxEvent mapping not implemented on this platform yet");
+	return NULL;
+#endif
+	res = pEngine->EventOccurred(&pn_event);
+	return Py_BuildValue("i", res);
+	}
 
 static struct PyMethodDef PyRMEngine_methods[] =
 	{
 	{"CreatePlayer",EngineObject::CreatePlayer,1},
+	{"EventOccurred", EngineObject::EventOccurred,1},
 	{NULL, 	NULL}
 	};
 
