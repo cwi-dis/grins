@@ -10,9 +10,6 @@ class LabelChannel(ChannelWindow):
 		     ['bucolor', 'hicolor', 'fgcolor', 'font', 'pointsize',
 		      'textalign', 'bgimg', 'scale', 'noanchors']
 
-	def __repr__(self):
-		return '<LabelChannel instance, name=' + `self._name` + '>'
-
 	def do_arm(self, node, same = 0):
 		if same and self.armed_display:
 			return 1

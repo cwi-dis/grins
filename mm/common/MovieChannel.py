@@ -2,9 +2,6 @@ from Channel import ChannelWindowThread
 import urllib
 
 class MovieChannel(ChannelWindowThread):
-	def __repr__(self):
-		return '<MovieChannel instance, name=' + `self._name` + '>'
-
 	def threadstart(self):
 		import moviechannel
 		return moviechannel.init()
