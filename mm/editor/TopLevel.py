@@ -7,7 +7,6 @@ import windowinterface
 import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
 from MMExc import *
-from AnchorDefs import *
 from EditMgr import EditMgr
 from ViewDialog import ViewDialog
 from Hlinks import *
@@ -73,6 +72,23 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			# remote file
 			self.dirname = ''
+			# RTIPA start
+			# add a query string with width/height/class parameters to URL
+			if hasattr(features, 'RTIPA') and features.RTIPA and settings.get('RTIPA_add_params'):
+				import socket
+				width, height = windowinterface.getscreensize()
+				query = 'width=%d&height=%d' % (width, height)
+				try:
+					ip = socket.gethostbyname(host)
+				except socket.error:
+					# host unknown
+					pass
+				else:
+					ip = socket.inet_aton(ip)
+					qos = settings.get('RTIPA_QoS').get(ip)
+					if qos is not None:
+						query = query + '&class=' + qos
+			# RTIPA end
 		mtype = MMmimetypes.guess_type(base)[0]
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
