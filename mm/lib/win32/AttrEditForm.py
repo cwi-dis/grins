@@ -426,7 +426,7 @@ class TupleCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
-		self._nedit=len(resid)-2
+		self._nedit=len(resid)-1
 		self._attrval=[]
 		for i in range(self._nedit):
 			self._attrval.append(components.Edit(wnd,resid[i+1]))
