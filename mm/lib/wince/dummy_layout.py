@@ -62,7 +62,8 @@ class Viewport(Region):
 		pass
 
 	def setcursor(self, strid):
-		print 'Viewport.setcursor', strid
+		pass
+##		print 'Viewport.setcursor', strid
 
 	def close(self):
 		if self._ctx is None:
@@ -97,7 +98,8 @@ class Viewport(Region):
 	# Mouse section
 	# 
 	def updateMouseCursor(self):
-		print 'Viewport.updateMouseCursor'
+		pass
+##		print 'Viewport.updateMouseCursor'
 
 	def onMouseEvent(self, point, event, params=None):
 		for w in self._subwindows:
