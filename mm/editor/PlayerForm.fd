@@ -37,8 +37,8 @@ style: 0
 size: 8.000000
 lcol: 0
 label: Channels
-name: menubutton
-callback: menu_callback
+name: cmenubutton
+callback: cmenu_callback
 argument: 0
 
 --------------------
@@ -177,18 +177,18 @@ callback:
 argument: 
 
 --------------------
-class: 11
+class: 41
 type: 1
-box: 10.000000 10.000000 50.000004 30.000000
-boxtype: 1
-colors: 47 47
+box: 10.000000 10.000000 40.000000 30.000000
+boxtype: 5
+colors: 55 37
 alignment: 4
 style: 0
 size: 8.000000
 lcol: 0
-label: ReTime
-name: calctimingbutton
-callback: calctiming_callback
+label: Options
+name: omenubutton
+callback: omenu_callback
 argument: 0
 
 ==============================
