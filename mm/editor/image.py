@@ -9,29 +9,21 @@
 # TO CONVERVE SPACE IN /usr/tmp, THE MAIN PROGRAM MUST CALL
 # zapcache() when it is done!
 
-import sys, posix, path, string
+import sys, posix, path, string, tempfile
 
 ISTAT = '/usr/sbin/istat'
-SHOWIMG = './showimg'
-PREPIMG = './prepimg'
-SHOWPREP = './showprep'
+HERE = '/ufs/guido/mm/demo/mm4/'
+SHOWIMG = HERE + 'showimg'
+PREPIMG = HERE + 'prepimg'
+SHOWPREP = HERE + 'showprep'
 TMPDIR = '/usr/tmp'
 
 cache = {}
 
-def tmpnam():
-	i = len(cache)
-	head = path.join(TMPDIR, 'img.' + `posix.getpid()` + '.')
-	file = head + `i`
-	while path.exists(file):
-		i = i+1
-		file = head + `i`
-	return file
-
 def cachefile(file):
 	if cache.has_key(file) and path.exists(cache[file]):
 		return cache[file]
-	tmpfile = tmpnam()
+	tmpfile = tempfile.mktemp()
 	# Put the entry in the cache before running the command,
 	# so zapcache will remove halfway-finined entries
 	cache[file] = tmpfile
@@ -108,3 +100,4 @@ def test(filename):
 	print 'Killing...'
 	a.kill()
 	print 'Done.'
+	zapcache()
