@@ -2261,33 +2261,72 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx = self.__context
 		for top in self.__tops.keys():
 			self.CreateLayout(self.__tops[top]['attrs'], top is None)
-		for region in self.__regionlist:
-			attrdict = self.__regions[region]
-			# old 03-07-2000 --> now, all region are 'layout channel'
-			#chtype = attrdict.get('type')
-			#if chtype is None or not ChannelMap.channelmap.has_key(chtype):
-			#	continue
-			#end
-			name = attrdict.get('id')
-			if ctx.channeldict.has_key(name):
-				name = name + ' %d'
-				i = 0
-				while ctx.channeldict.has_key(name % i):
-					i = i + 1
-				name = name % i
-			chtype = 'layout'
-			ch = MMNode.MMChannel(ctx, name, chtype)
-			ctx.channeldict[name] = ch
-			ctx.channelnames.append(name)
-			ctx.channels.append(ch)
+		if not settings.activeFullSmilCss:
+			for region in self.__regionlist:
+				attrdict = self.__regions[region]
+				# old 03-07-2000 --> now, all region are 'layout channel'
+				#chtype = attrdict.get('type')
+				#if chtype is None or not ChannelMap.channelmap.has_key(chtype):
+				#	continue
+				#end
+				name = attrdict.get('id')
+				if ctx.channeldict.has_key(name):
+					name = name + ' %d'
+					i = 0
+					while ctx.channeldict.has_key(name % i):
+						i = i + 1
+					name = name % i
+				chtype = 'layout'
+				ch = MMNode.MMChannel(ctx, name, chtype)
+				ctx.channeldict[name] = ch
+				ctx.channelnames.append(name)
+				ctx.channels.append(ch)
 
-			# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
-			# by default a layout channel may contain different types of sub-channels.
-			chsubtype = attrdict.get('type')
+				# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
+				# by default a layout channel may contain different types of sub-channels.
+				chsubtype = attrdict.get('type')
 			
-			ch['type'] = chtype
-			ch['subtype'] = chsubtype
-			self.__fillchannel(ch, attrdict, chtype)
+				ch['type'] = chtype
+				ch['subtype'] = chsubtype
+				self.__fillchannel(ch, attrdict, chtype)
+		else:
+			# create first the MMChannel instances
+			list = []
+			for region in self.__regionlist:
+				attrdict = self.__regions[region]
+				# old 03-07-2000 --> now, all region are 'layout channel'
+				#chtype = attrdict.get('type')
+				#if chtype is None or not ChannelMap.channelmap.has_key(chtype):
+				#	continue
+				#end
+				name = attrdict.get('id')
+				if ctx.channeldict.has_key(name):
+					name = name + ' %d'
+					i = 0
+					while ctx.channeldict.has_key(name % i):
+						i = i + 1
+					name = name % i
+				chtype = 'layout'
+				ch = MMNode.MMChannel(ctx, name, chtype)
+				ctx.channeldict[name] = ch
+				ctx.channelnames.append(name)
+				ctx.channels.append(ch)
+				list.append((region, ch))
+					
+			# Then fill the instances with the right attributes
+			# Note: before to affect a parent region with the attribute 'base_window', the
+			# parent instance have to be already created (done in the previous stape)
+			for region,ch in list:
+				# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
+				# by default a layout channel may contain different types of sub-channels.
+				attrdict = self.__regions[region]
+				chsubtype = attrdict.get('type')
+			
+				chtype = 'layout'
+				ch['type'] = chtype
+				ch['subtype'] = chsubtype
+				self.__fillchannel(ch, attrdict, chtype)
+				
 
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
@@ -3099,7 +3138,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__childregions[self.__viewport].append(id)
 		else:
 			if settings.activeFullSmilCss:
-				attrdict['base_window'] = layout_name
+				if not self.__tops.has_key(None):
+					attrdict['base_window'] = layout_name
 #			if not self.__tops.has_key(None):
 #				attrs = {}
 #				for key, val in self.attributes['root-layout'].items():
