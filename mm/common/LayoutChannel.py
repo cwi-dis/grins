@@ -118,10 +118,11 @@ class LayoutChannel(ChannelWindow):
 				adornments['exporting'] = 1
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
-			width, height = self._attrdict.get('winsize', (50, 50))
+#			width, height = self._attrdict.get('winsize', (50, 50))
 			
 			if settings.activeFullSmilCss:
 				self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
+				width, height = self.cssResolver.getPxGeom(self._attrdict._cssId)
 				units = windowinterface.UNIT_PXL
 				
 			self._curvals['winsize'] = ((width, height), (50,50))
