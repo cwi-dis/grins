@@ -719,6 +719,7 @@ class MMNode:
 		self.context = context
 		self.uid = uid
 		self.attrdict = {}
+		self.d_attrdict = {}
 		self.values = []
 		self.willplay = None
 		self.shouldplay = None
@@ -947,6 +948,14 @@ class MMNode:
 			x = x.parent
 		return v
 
+	def GetAttrDefProduct(self, name, default):
+		v = 1.0
+		x = self
+		while x is not None:
+			v = v * x.GetAttrDef(name, default)
+			x = x.parent
+		return v
+
 ##	def GetSummary(self, name):
 ##		if not self.summaries.has_key(name):
 ##			self.summaries[name] = self._summarize(name)
@@ -974,6 +983,34 @@ class MMNode:
 			for child in self.children: print child.GetType(),
 			print
 
+	#
+	# Presentation values management
+	#
+	def SetPresentationAttr(self, name, value):
+		if self.attrdict.has_key(name):
+			self.d_attrdict[name] = value
+		elif self.attrdict.has_key('base_winoff'):
+			# virtual node representing a region
+			d = self.d_attrdict
+			n = 'base_winoff'
+			x, y, w, h = self.attrdict['base_winoff']
+			if name == 'left':    d[n] = value, y, w, h
+			elif name == 'top':	  d[n] = x, value, w, h
+			elif name == 'width': d[n] = x, y, value, h
+			elif name == 'height':d[n] = x, y, w, value
+			elif name == 'right':
+				x = value - w
+				d[n] = x, y, w, h
+			elif name == 'bottom':
+				y = value - h
+				d[n] = x, y, w, h
+			elif name == 'position':
+				x, y = value
+				d[n] = x, y, w, h
+			elif name == 'size':
+				w, h = value
+				d[n] = x, y, w, h
+			
 	#
 	# Channel management
 	#
