@@ -193,6 +193,40 @@ class OptionsCtrl(AttrCtrl):
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 
+class TransitionCtrl(OptionsCtrl):	
+	def OnInitCtrl(self):
+		OptionsCtrl.OnInitCtrl(self)
+		self._wnd.HookCommand(self.OnTransition,self._resid[2])
+		self._properties = components.Button(self._wnd,self._resid[2])
+		self._properties.attach_to_parent()
+		self.updateproperties()
+
+	def OnTransition(self,id,code):
+		if self._attr:
+			self._attr.transitionprops()
+	
+	def OnCombo(self,id,code):
+		OptionsCtrl.OnCombo(self,id,code)
+		if code==win32con.CBN_SELCHANGE:
+			self.updateproperties()
+			if hasattr(self._attr, 'optioncb'):
+				self._attr.optioncb()
+
+	def updateproperties(self):
+		if self._attr and self.hastransitionprops():
+			self._properties.enable(1)
+		else:
+			self._properties.enable(0)
+
+	def hastransitionprops(self):
+		if self._attr: 
+			return self._attr.wrapper.context.transitions.has_key(self._attr.getvalue())
+		return None
+
+	def settooltips(self,tooltipctrl):
+		OptionsCtrl.settooltips(self,tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Properties of transition',None,0)
+
 class ChannelCtrl(OptionsCtrl):	
 	def OnInitCtrl(self):
 		OptionsCtrl.OnInitCtrl(self)
@@ -3977,9 +4011,9 @@ class TransitionGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('transIn')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		cd[a] = TransitionCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12, grinsRC.IDC_13))
 		a = self.getattr('transOut')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
+		cd[a] = TransitionCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22, grinsRC.IDC_23))
 		return cd
 
 	def getpageclass(self):
