@@ -122,6 +122,19 @@ class PathSeg:
 		else:
 			return ''
 
+	def topxl(self):
+		self._x = int(self._x+0.5)
+		self._y = int(self._y+0.5)
+		self._x1 = int(self._x1+0.5)
+		self._y1 = int(self._y1+0.5)
+		self._x2 = int(self._x2+0.5)
+		self._y2 = int(self._y2+0.5)
+		self._r1 = int(self._r1+0.5)
+		self._r2 = int(self._r2+0.5)
+		#self._angle 
+		#self._largeArcFlag 
+		#self._sweepFlag 
+
 	def translate(self, dx, dy):
 		t = self._type
 		if t == PathSeg.SVG_PATHSEG_MOVETO_ABS: 
@@ -138,7 +151,7 @@ class PathSeg:
 			self._y = self._y+dy
 
 class SVGPath:
-	def __init__(self,  pathstr):
+	def __init__(self,  pathstr=None):
 		self._pathSegList = []
 		self.__constructors = {'z':self.__addClosePath,
 			'm':self.__addMoveTo,
@@ -151,18 +164,37 @@ class SVGPath:
 			's':self.__addSmoothCurveTo,
 			't':self.__addTruetypeQuadraticBezierCurveTo,
 			}
-		self.constructPathSegList(pathstr)
+		if pathstr:
+			self.constructPathSegList(pathstr)
 
 	def __repr__(self):
 		s = ''
 		first = 1
-		for seq in self._pathSegList:
+		lasttype = None
+		for seg in self._pathSegList:
 			if first:
-				s = repr(seq)
+				s = repr(seg)
 				first = 0
 			else:
-				s = s + ' ' + repr(seq)
+				if lasttype and seg._type == lasttype:
+					s = s + ' ' + repr(seg)[2:]
+				else:		
+					s = s + ' ' + repr(seg)
+					lasttype = seg._type
 		return s
+
+	def clone(self):
+		new = SVGPath()
+		new._pathSegList = self._pathSegList[:]
+		return new
+
+	# required by all svgtypes
+	def getValue(self):
+		return self
+
+	# required by all svgtypes
+	def isDefault(self):
+		return self._pathSegList is None or len(self._pathSegList)==0
 
 	# main method
 	# create a path from a string description
@@ -430,16 +462,12 @@ class SVGPath:
 		lastC = None
 		startP = None
 		isstart = 1
-		i = 0
-		n = len(self._pathSegList)
-		while i < n:
-			seg = self._pathSegList[i]
+		for seg in self._pathSegList:
 			if isstart:
 				badCmds = 'HhVvZz'
 				while badCmds.find(seg.getTypeAsLetter())>=0 and i<n:
 					print 'ignoring cmd ', seg.getTypeAsLetter()
-					i = i + 1
-					seg = self._pathSegList[i]
+					continue
 				if badCmds.find(seg.getTypeAsLetter())<0:
 					if seg._type != PathSeg.SVG_PATHSEG_MOVETO_ABS and \
 						seg._type != PathSeg.SVG_PATHSEG_MOVETO_REL:
@@ -514,36 +542,97 @@ class SVGPath:
 					path.lineTo((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS:
-					path.curveTo((seg._x1,seg._y1),(seg._x2,seg._y2),(seg._x,seg._y))
-					lastC = seg._x2,seg._y2
+					path.curveTo((seg._x1, seg._y1), (seg._x2, seg._y2), (seg._x, seg._y))
+					lastC = seg._x2, seg._y2
 					lastX, lastY = seg._x, seg._y
 					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL:
-					path.curveTo((lastX + seg._x1,lastY + seg._y1),(lastX + seg._x2,lastY + seg._y2),(lastX + seg._x,lastY + seg._y))
+					path.curveTo((lastX + seg._x1, lastY + seg._y1),(lastX + seg._x2,lastY + seg._y2),(lastX + seg._x,lastY + seg._y))
 					lastC = lastX + seg._x2,lastY + seg._y2
 					lastX, lastY = lastX + seg._x,lastY + seg._y
 					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
-					pass
+					if lastC is None:
+						lastC = lastX, lastY
+					x1, y1 = 2*lastX - lastC[0], 2*lastY - lastC[2]
+					path.curveTo((x1, y1),(seg._x2, seg._y2),(seg._x, seg._y))
+					lastC = seg._x2, seg._y2
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
-					pass
+					if lastC is None:
+						lastC = lastX, lastY
+					x1, y1 = 2*lastX - lastC[0], 2*lastY - lastC[2]
+					path.curveTo((x1, y1),(lastX + seg._x2, lastY + seg._y2),(lastX + seg._x, lastY + seg._y))
+					lastC = lastX + seg._x2, lastY + seg._y2
+					lastX, lastY = lastX + seg._x, lastY + seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS:
-					pass
+					path.quadTo((seg._x1, seg._y1), (seg._x, seg._y))
+					lastC = seg._x1, seg._y1
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL:
-					pass
+					path.quadTo((lastX + seg._x1, lastY + seg._y1), (lastX + seg._x, lastY + seg._y))
+					lastC = lastX + seg._x1, lastY + seg._y1
+					lastX, lastY = lastX + seg._x, lastY + seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
-					pass
+					if lastC is None:
+						lastC = lastX, lastY
+					nextC = 2*lastX - lastC[0], 2*lastY - lastC[1]
+					path.quadTo(nextC, (seg._x, seg._y))
+					lastC = nextC
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
-					pass
+					if lastC is None:
+						lastC = lastX, lastY
+					nextC = 2*lastX - lastC[0], 2*lastY - lastC[1]
+					path.quadTo(nextC, (lastX+seg._x, lastY+seg._y))
+					lastC = nextC
+					lastX, lastY = lastX+seg._x, lastY+seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_ARC_ABS:
-					pass
+					angle = ((int(seg._angle)/360)/180.0)*math.pi
+					arcFlag = seg._largeArcFlag
+					sweepFlag = seg._sweepFlag
+					r1, r2 = seg._r1, seg._r2
+					if r1<0: r1 = -r1
+					if r2<0: r2 = -r2
+					if r1 == 0 or r2 == 0:
+						path.lineTo(seg._x, seg._y)
+					else:
+						path.arcTo((lastX, lastY), (seg._x, seg._y), r1, r2, angle, arcFlag, sweepFlag)
+					lastC = None
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_ARC_REL:
-					pass
-			i = i + 1
+					angle = ((int(seg._angle)/360)/180.0)*math.pi
+					arcFlag = seg._largeArcFlag
+					sweepFlag = seg._sweepFlag
+					r1, r2 = seg._r1, seg._r2
+					if r1<0: r1 = -r1
+					if r2<0: r2 = -r2
+					if r1 == 0 or r2 == 0:
+						path.lineTo(lastX + seg._x, lastY + seg._y)
+					else:
+						path.arcTo((lastX, lastY), (lastX + seg._x, lastY + seg._y), r1, r2, angle, arcFlag, sweepFlag)
+					lastC = None
+					lastX, lastY = lastX + seg._x, lastY + seg._y
+					points.append((lastX, lastY))
 		return points
-										
+
+     										
 class StringTokenizer:
 	def __init__(self, str, delim=' \t\n\r\f'):
 		self.__str = str
@@ -756,11 +845,17 @@ class Path:
 		self.__segCoords.append(pt)						
 		self.__lenValues.append(self.__length)
 
-	def quadTo(self, pt1, pt2, pt):
-		pass
+	def quadTo(self, pt1, pt):
+		n =  len(self.__ptCoords)
+		if n == 0: xp, yp = 0, 0
+		else: xp, yp = 	self.__ptCoords[n-1]
+		self.curveTo((xp, yp), pt1, pt)
 
-	def appendArc(self, arc):
-		pass
+	def arcTo(self, pt1, pt, r1, r2, angle, arcFlag, sweepFlag):
+		# XXX: not implemented here (see svgwin.py for an implementation)
+		# draw a line instead
+		self.moveTo(pt1)
+		self.lineTo(pt)
 
 	def closePath(self):
 		if len(self.__ptCoords)>0:
@@ -827,5 +922,11 @@ class Path:
 		z1234 = 0.5*(z123 + z234)
 		return (z1, z12, z123,z1234),z1234,(z1234,z234,z34,z4)
 
+	def copy(self):
+		# XXX: need implementation
+		# newpath = Path(), init, etc
+		return self
 
+
+ 
  
