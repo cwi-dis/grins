@@ -1,6 +1,8 @@
 # experimental layout view
 
 import windowinterface
+import win32ui, win32api, win32con
+
 from usercmd import *
 IMPL_AS_FORM=1
 
@@ -78,4 +80,16 @@ class LayoutViewDialog2:
 	def setcommandlist(self, commandlist):
 		if self.__window:
 			self.__window.set_commandlist(commandlist)
+
+	# specific win32 dialog box
+	
+	def chooseBgColor(self, currentBg):
+		r, g, b = currentBg
+		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self.__window)
+		if dlg.DoModal() == win32con.IDOK:
+			newcol = dlg.GetColor()
+			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
+			return rgb
+		
+		return None
 
