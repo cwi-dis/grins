@@ -611,12 +611,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad systemOverdubOrSubtitle attribute')
 			elif attr == 'system-required':
 				if not attrdict.has_key('system_required'):
-					attrdict['system_required'] = val
+					nsdict = self.getnamespace()
+					nsuri = nsdict.get(val)
+					if not nsuri:
+						self.syntax_error('no namespace declaration for %s in effect' % val)
+					else:
+						attrdict['system_required'] = nsuri
 			elif attr == 'systemRequired':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				attrdict['system_required'] = val
+				nsdict = self.getnamespace()
+				nsuri = nsdict.get(val)
+				if not nsuri:
+					self.syntax_error('no namespace declaration for %s in effect' % val)
+				else:
+					attrdict['system_required'] = nsuri
 			elif attr == 'customTest':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)

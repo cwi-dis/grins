@@ -798,6 +798,11 @@ def getboolean(writer, node, attr):
 		else:
 			return 'off'
 
+def getsysreq(writer, node, attr):
+	if getrawcmifattr(writer, node, "system_required"):
+		return 'extension'
+	return None
+
 def getscreensize(writer, node):
 	value = node.GetRawAttrDef('system_screen_size', None)
 	if value is not None:
@@ -960,7 +965,8 @@ smil_attrs=[
 	("systemLanguage", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
 	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_operating_system")) or None),
 	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
-	("systemRequired", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("xmlns:extension", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None),
 	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
 	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
 	("choice-index", getbagindex),
@@ -1937,8 +1943,9 @@ class SMILWriter(SMIL):
 			# only write attributes that have a value and are
 			# legal for the type of node
 			# other attributes are caught below
-			if value and attributes.has_key(gname) and \
-			   value != attributes[gname]:
+			if value and ((attributes.has_key(gname) and
+				       value != attributes[gname]) or
+				      name[:6] == 'xmlns:'):
 				attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		is_brush = x.GetChannelType() == 'brush'
