@@ -896,6 +896,8 @@ class StructureObjWidget(MMNodeWidget):
 		if parent is None:
 			self.add_event_icons()
 		self.previewchild = None
+		self.subiconnames = []
+		self.subicons = []
 		if MMAttrdefs.getattr(self.node, 'project_autoroute'):
 			self._setpreviewandsubicons()
 		if self.node.children and self.node.GetAttrDef('empty_nonempty', 0):
@@ -940,7 +942,22 @@ class StructureObjWidget(MMNodeWidget):
 			# If we get here this node has information and it
 			# isn't used as the preview node. We post an icon.
 			iconname = ch.getIconName(wantmedia=1)
-			self.iconbox.add_icon(iconname)
+			self.subiconnames.append(iconname)
+
+	def recalc_subicons(self):
+		# Called on resize, (un)collapse to recalculate
+		# whether we show the child node icons
+		if self.iscollapsed():
+			# We should show them
+			if len(self.subiconnames) != len(self.subicons):
+				for n in self.subiconnames:
+					self.subicons.append(self.iconbox.add_icon(n))
+		else:
+			# We should remove them
+			for icon in self.subicons:
+				self.iconbox.del_icon(icon)
+			self.subicons = []
+
 
 	def add_event_icons(self):
 		MMNodeWidget.add_event_icons(self)
@@ -1345,6 +1362,7 @@ class HorizontalWidget(StructureObjWidget):
 		return -1
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
+		self.recalc_subicons()
 		if self.iscollapsed():
 			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
 
@@ -1506,6 +1524,7 @@ class VerticalWidget(StructureObjWidget):
 	# Any node which is drawn vertically
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
+		self.recalc_subicons()
 		if not self.children or self.iscollapsed():
 			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
 
