@@ -88,7 +88,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				SAVE(callback = (self.save_callback, ())),
 				EXPORT_SMIL(callback = (self.export_callback, ())),
 				UPLOAD_SMIL(callback = (self.upload_callback, ())),
-				EXPORT_HTML(callback = (self.export_html_callback, ())),
 				]
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
@@ -262,13 +261,39 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
-		if self.save_to_file(filename, cleanSMIL = 1):
-## XXXX should we set the document filename and title???
-##			self.filename = MMurl.pathname2url(filename)
-##			self.fixtitle()
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
+		evallicense= (license < 0)
+		if not self.save_to_file(filename, cleanSMIL = 1):
+			return 0 # Error, don't save HTML file
+		#
+		# Invent HTML file name and SMIL file url, and generate webpage
+		#
+		if filename[-4:] == '.smi':
+			htmlfilename = filename[:-4] + '.html'
+		elif filename[-5:] == '.smil':
+			htmlfilename = filename[:-5] + '.html'
+		smilurl = MMurl.pathname2url(filename)
+
+		# Make a back-up of the original file...
+		oldhtmlfilename = ''
+		try:
+			oldhtmlfilename = make_backup_filename(htmlfilename)
+			os.rename(htmlfilename, oldhtmlfilename)
+		except os.error:
 			pass
-		else:
-			return 1
+		try:
+			import HTMLWrite
+			HTMLWrite.WriteFile(self.root, htmlfilename, smilurl, oldhtmlfilename,
+						evallicense=evallicense)
+		except IOError, msg:
+			windowinterface.showmessage('HTML write failed.\n'+
+						    'File: '+htmlfilename+'\n'+
+						    'Error: '+msg[1])
+			return 0
+		return 1
 
 	def export_callback(self):
 		cwd = self.dirname
@@ -281,55 +306,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.export_okcallback, None)
 					   
-	def export_html_callback(self):
-		# XXXX We could sort-of override the meaning of the document base attribute
-		# here. Is this correct?
-		attrs = self.context.attributes
-		if not attrs.has_key('smil_url'):
-			if windowinterface.showquestion('Please set SMIL URL first, then try again'):
-				self.prop_callback()
-			return
-		cwd = self.dirname
-		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
-		else:
-			cwd = os.getcwd()
-		windowinterface.FileDialog('Save HTML file:', cwd, '*.html',
-					   '', self.export_html_okcallback, None)
 
-	def export_html_okcallback(self, filename):
-		smilurl = "unknown.smil" # Will be overridden
-		if not filename:
-			return 'no file specified'
-		self.setwaiting()
-		attrs = self.context.attributes
-		if attrs.has_key('smil_url'):
-			smilurl = attrs['smil_url']
-
-		license = self.main.wanttosave()
-		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-			return 0
-		evallicense= (license < 0)
-		# Make a back-up of the original file...
-		oldfilename = ''
-		try:
-			oldfilename = make_backup_filename(filename)
-			os.rename(filename, oldfilename)
-		except os.error:
-			pass
-		try:
-			import HTMLWrite
-			HTMLWrite.WriteFile(self.root, filename, smilurl, oldfilename,
-						evallicense=evallicense)
-		except IOError, msg:
-			windowinterface.showmessage('Write failed.\n'+
-						    'File: '+filename+'\n'+
-						    'Error: '+msg[1])
-			return 0
-		return 1
 					   
 	def upload_callback(self):
 		# XXXX The filename business confuses project file name and resulting SMIL file
