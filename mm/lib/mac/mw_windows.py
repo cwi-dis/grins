@@ -140,12 +140,12 @@ class _WindowGroup:
 			
 	def close_window_command(self):
 		# First see whether there's a WindowExit handler
+		if self.has_command(MenuTemplate.CLOSE_WINDOW):
+			self.call_command(MenuTemplate.CLOSE_WINDOW)
+			return 1
 		if self._eventhandlers.has_key(WindowExit):
 			func, arg = self._eventhandlers[WindowExit]
 			func(arg, self, WindowExit, (0, 0, 0))
-			return 1
-		if self.has_command(MenuTemplate.CLOSE_WINDOW):
-			self.call_command(MenuTemplate.CLOSE_WINDOW)
 			return 1
 		return 0
 
