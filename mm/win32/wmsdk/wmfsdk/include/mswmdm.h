@@ -2,7 +2,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Tue Feb 01 17:43:26 2000
+/* at Fri Apr 28 09:15:52 2000
  */
 /* Compiler settings for .\mswmdm.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -263,6 +263,18 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 /* interface __MIDL_itf_mswmdm_0000 */
 /* [local] */ 
 
+//=========================================================================
+//
+// Microsoft Windows Media Technologies
+// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//=========================================================================
+//=========================================================================
+//
+// Microsoft Windows Media Technologies
+// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//=========================================================================
 typedef struct  _tWAVEFORMATEX
     {
     WORD wFormatTag;
@@ -332,6 +344,8 @@ typedef struct __WMDMRIGHTS __RPC_FAR *PWMDMRIGHTS;
 #define WMDM_E_MOREDATA                         0x80045009L
 #define WMDM_E_MAC_CHECK_FAILED                 0x8004500AL
 #define WMDM_E_USER_CANCELLED                   0x8004500BL
+#define WMDM_E_SDMI_TRIGGER                     0x8004500CL
+#define WMDM_E_SDMI_NOMORECOPIES                0x8004500DL
 // MDMRIGHTS Flags
 #define WMDM_RIGHTS_PLAYBACKCOUNT               0x00000001
 #define WMDM_RIGHTS_EXPIRATIONDATE              0x00000002
@@ -2873,6 +2887,12 @@ void __RPC_STUB IWMDMObjectInfo_GetLongestPlayPosition_Stub(
 /* interface __MIDL_itf_mswmdm_0222 */
 /* [local] */ 
 
+//=========================================================================
+//
+// Microsoft Windows Media Technologies
+// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//=========================================================================
 // Open Mode Flags
 #define MDSP_READ                               0x00000001
 #define MDSP_WRITE                              0x00000002
@@ -4982,6 +5002,12 @@ void __RPC_STUB IMDSPObject_Close_Stub(
 /* interface __MIDL_itf_mswmdm_0231 */
 /* [local] */ 
 
+//=========================================================================
+//
+// Microsoft Windows Media Technologies
+// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//=========================================================================
 // SCP Data Flags
 #define WMDM_SCP_EXAMINE_EXTENSION                 0x00000001L
 #define WMDM_SCP_EXAMINE_DATA                      0x00000002L
@@ -4991,6 +5017,7 @@ void __RPC_STUB IMDSPObject_Close_Stub(
 #define WMDM_SCP_RIGHTS_DATA                       0x00000040L
 // SCP Transfer Flags
 #define WMDM_SCP_TRANSFER_OBJECTDATA               0x00000020L
+#define WMDM_SCP_NO_MORE_CHANGES                   0x00000040L
 
 
 
@@ -5462,6 +5489,12 @@ void __RPC_STUB ISCPSecureExchange_TransferComplete_Stub(
 /* interface __MIDL_itf_mswmdm_0234 */
 /* [local] */ 
 
+//=========================================================================
+//
+// Microsoft Windows Media Technologies
+// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//=========================================================================
 #define SAC_MAC_LEN 8
 
 

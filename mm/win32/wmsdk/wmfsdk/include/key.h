@@ -1,6 +1,6 @@
 //
 //  Microsoft Windows Media Technologies
-//  Copyright (C) Microsoft Corporation, 1999 - 1999  All rights reserved.
+//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
 //
 // You have a royalty-free right to use, modify, reproduce and distribute
 // the Sample Application Files (including modified versions) in any way 

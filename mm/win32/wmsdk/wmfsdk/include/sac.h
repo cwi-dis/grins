@@ -1,3 +1,8 @@
+//
+//  Microsoft Windows Media Technology
+//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+
 #ifndef __SAC_H__
 #define __SAC_H__
 

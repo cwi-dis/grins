@@ -3,7 +3,7 @@
 // File:   des.h
 //
 // Microsoft Digital Rights Management
-// Copyright (C) Microsoft Corporation, 1998 - 1999, All Rights Reserved
+// Copyright (C) Microsoft Corporation, 1998 - 2001.  All Rights Reserved.
 //
 // Description:
 //
@@ -12,20 +12,8 @@
 #ifndef __DES_H__
 #define __DES_H__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef RSA32API
-
-#if defined WIN32
 #define RSA32API __stdcall
-#elif defined _WIN32_WCE
-#define RSA32API __stdcall
-#else
-#define RSA32API 
-#endif
-
 #endif
 
 #ifdef __cplusplus
