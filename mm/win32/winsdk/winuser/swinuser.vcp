@@ -1230,8 +1230,10 @@ DEP_CPP_WINUSER_W=\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_WINUSER_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "swinuser - Win32 (WCE ARM) Debug"
@@ -1334,8 +1336,10 @@ DEP_CPP_WINUSER_W=\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_WINUSER_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "swinuser - Win32 (WCE x86em) Debug"
