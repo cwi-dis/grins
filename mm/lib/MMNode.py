@@ -992,6 +992,7 @@ class MMChannel(MMTreeElement):
 		cRegion = self.__copyIntoContext(context)
 		if parentRegion != None:
 			context.editmgr.setchannelattr(cRegion.name, 'base_window', parentRegion.name)
+			self.__attrsImport(context, cRegion)
 		return cRegion
 
 	def __copyIntoContext(self, context):
@@ -1001,13 +1002,13 @@ class MMChannel(MMTreeElement):
 		for child in self.GetChildren():
 			cChild = child.__copyIntoContext(context)
 			context.editmgr.setchannelattr(cChild.name, 'base_window', cName)
-		self.__attrsImport(context, cRegion)
+			child.__attrsImport(context, cChild)
 		
 		return cRegion
 
 	def __attrsImport(self, context, channelTarget):
 		# copy attributes on this node
-		for attrName, attrValue in self.items():
+		for attrName, attrValue in self.attrdict.items():
 			cssName = None
 			# special action for positioning attributes. See also deepexport method
 			for attr in _CssAttrs:
@@ -1151,7 +1152,7 @@ class MMChannel(MMTreeElement):
 				return self.getPxGeom()
 			elif self.isCssAttr(key):
 				# keep the compatibility with old version
-				return self.getCssAttr(key)
+				return self.getCssRawAttr(key)
 
 			raise KeyError, key
 
@@ -1213,6 +1214,7 @@ class MMChannel(MMTreeElement):
 			return
 		elif self.isCssAttr(key):
 			self.setCssAttr(key, value)
+			return
 			
 		self.attrdict[key] = value
 
@@ -1227,22 +1229,37 @@ class MMChannel(MMTreeElement):
 			del self.attrdict[key]
 		
 	def has_key(self, key):
+		# XXX css attributes: to clean and optimize
+		if key in _CssAttrs:
+			value = self.getCssRawAttr(key, None)
+			return value != None
 		if key == 'base_window':
 			return self.GetParent() is not None
 		return self.attrdict.has_key(key)
 
 	def keys(self):
 		keys = self.attrdict.keys()
+		# XXX css attributes: to clean and optimize
+		for attr in _CssAttrs:
+			value = self.getCssRawAttr(attr, None)
+			if value != None:
+				keys.append(attr)
 		if self.GetParent() is not None:
 			keys.append('base_window')
 		return keys
 
 	def items(self):
 		items = self.attrdict.items()
+		# XXX css attributes: to clean and optimize
+		cssItems = []
+		for attr in _CssAttrs:
+			value = self.getCssRawAttr(attr, None)
+			if value != None:
+				cssItems.append((attr,value))
 		parent = self.GetParent()
 		if parent is not None:
 			items.append(('base_window', parent.name))
-		return items
+		return items+cssItems
 
 	def get(self, key, default = None):
 		if key == 'base_window':
