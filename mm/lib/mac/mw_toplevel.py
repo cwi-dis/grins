@@ -471,20 +471,21 @@ class _Event(AEServer):
 					self._mouseregionschanged()
 					return
 				# Frontmost. Handle click.
+				rightclick = (modifiers & Events.controlKey)
 				double = 0
-				if when - self._last_mouse_when < DOUBLECLICK_TIME:
+				if when - self._last_mouse_when < DOUBLECLICK_TIME and not rightclick:
 					x1, y1 = self._last_mouse_where
 					x2, y2 = where
 					if abs(x2-x1) < 5 and abs(y2-y1) < 5:
 						double = 1
-				if double:
+				if rightclick or double:
+					# Reset the double-click timer
 					self._last_mouse_where = -100, -100
 					self._last_mouse_when = -100
 				else:
 					self._last_mouse_where = where
 					self._last_mouse_when = when
-				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.controlKey),
-						double)
+				self._handle_contentclick(wid, 1, where, event, rightclick, double)
 			else:
 				if self._grabbed_wids and not wid in self._grabbed_wids:
 					beep()
@@ -1019,13 +1020,13 @@ class _Toplevel(_Event):
 	# Handling of events that are forwarded to windows
 	#
 	
-	def _handle_contentclick(self, wid, down, where, event, shifted, double):
+	def _handle_contentclick(self, wid, down, where, event, rightclick, double):
 		"""A mouse-click inside a window, dispatch to the
 		correct window"""
 		window = self._find_wid(wid)
 		if not window:
 			return
-		window._contentclick(down, where, event, shifted, double)
+		window._contentclick(down, where, event, rightclick, double)
 		
 	def _handle_keyboardinput(self, wid, char, where, event):
 		window = self._find_wid(wid)
