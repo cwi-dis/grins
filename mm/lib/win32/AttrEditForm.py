@@ -2171,6 +2171,15 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_F1,
 			 ElementSelCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2, grinsRC.IDC_3)),
+		'additive':		# Two radio buttons
+			(grinsRC.IDD_EDITATTR_R2,
+			 OptionsRadioNocolonCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'accumulate':		# Two radio buttons
+			(grinsRC.IDD_EDITATTR_R2,
+			 OptionsRadioNocolonCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)
