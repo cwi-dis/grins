@@ -1,5 +1,6 @@
 #include "Std.h"
 #include "PyCppApi.h"
+#include "mtpycall.h"
 
 // consts
 #include "StdRma.h"
@@ -7,6 +8,10 @@
 static char moduleName[] = "rma";
 static char errorName[] =  "rma error";
 PyObject *module_error;
+
+#ifdef _WIN32
+PyInterpreterState* PyCallbackBlock::s_interpreterState;
+#endif
 
 // Objects served by this module
 extern PyObject* EngineObject_CreateInstance(PyObject *self, PyObject *args);
@@ -256,6 +261,7 @@ void seterror(const char *funcname, PN_RESULT res)
 		}
 	PyErr_Format(module_error, "%s failed, error = %s (0x%x)", funcname, "PNR_UNKNOWN", res);
 }
+void seterror(const char *msg){PyErr_SetString(module_error, msg);}
 
 char *geterrorstring(PN_RESULT res, char *pszBuffer){
 	for(error *p = errorlist; p->name; p++)
@@ -323,6 +329,10 @@ void initrma()
 	PyObject *copyright = PyString_FromString("Copyright 1999-2000 Oratrix");
 	PyDict_SetItemString(dict,"copyright",copyright);
 	Py_XDECREF(copyright);
+
+#ifdef _WIN32
+	PyCallbackBlock::init();
+#endif
 	
 	FATAL_ERROR_IF(SetItemEnum(dict,_rma_const)<0)
 
