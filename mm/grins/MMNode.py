@@ -764,21 +764,32 @@ class MMNode(MMNodeBase.MMNode):
 			sr_list.append(([(SYNC_DONE, self)],
 					[(TERMINATE, self)]))
 		for i in range(n_sr):
+			no_action = 0
 			if i == 0:
 				prereq = [(SCHED, self)] + in0
 				actions = out0
 			else:
-				prereq = [(SCHED_DONE, self.wtd_children[i-1])]
-				actions = [(SCHED_STOP, self.wtd_children[i-1])]
+				# we went through the loop at least
+				# once, so arg points already to
+				# self.wtd_children[i-1]
+				# arg = self.wtd_children[i-1]
+				prereq = [(SCHED_DONE, arg)]
+				actions = [(SCHED_STOP, arg)]
+				if arg.type in ('imm', 'ext') and \
+				   not arg.sync_from[1] and \
+				   Duration.get(arg) == 0:
+					# if child is leaf node with
+					# default duration, it doesn't
+					# terminate
+					no_action = 1
 			if i == n_sr-1:
 				last_actions = actions
 				actions = [(SCHED_DONE, self)] + out1
 			else:
-				actions.append((SCHED, self.wtd_children[i]))
+				arg = self.wtd_children[i]
+				actions.append((SCHED, arg))
+				t_list.append((TERMINATE, arg))
 			sr_list.append((prereq, actions))
-			if i < n_sr-1:
-				t_list.append((TERMINATE,
-					       self.wtd_children[i]))
 		sr_list.append( ([(SCHED_STOP, self)], last_actions) )
 		for ev in in1:
 			sr_list.append(([ev], [(TERMINATE, self)]))
@@ -793,6 +804,7 @@ class MMNode(MMNodeBase.MMNode):
 		termtype = MMAttrdefs.getattr(self, 'terminator')
 		alist = out0[:]
 		plist = []
+		nlist = []		# children with 0 duration
 		slist = []
 		tlist = []
 		result = [([(SCHED, self)] + in0, alist),
@@ -805,7 +817,13 @@ class MMNode(MMNodeBase.MMNode):
 			alist.append((SCHED, arg))
 			slist.append((SCHED_STOP, arg))
 			tlist.append((TERMINATE, arg))
-			if termtype == 'FIRST':
+			if arg.type in ('imm', 'ext') and \
+			   not arg.sync_from[1] and \
+			   Duration.get(arg) == 0:
+				# if child is leaf node with default
+				# duration, ignore it
+				nlist.append((SCHED_DONE, arg))
+			elif termtype == 'FIRST':
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self)]))
@@ -817,6 +835,11 @@ class MMNode(MMNodeBase.MMNode):
 					       [(TERMINATE, self)]))
 			else:
 				plist.append((SCHED_DONE, arg))
+		if plist:
+			plist[0:0] = nlist
+		else:
+			for ev in nlist:
+				result.append(([ev], []))
 		if plist:
 			# come here only when there were children, and
 			# termtype != 'FIRST' and (if termtype refers to
