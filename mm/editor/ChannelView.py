@@ -119,6 +119,7 @@ class ChannelView(ChannelViewDialog):
 		self.placing_channel = 0
 		self.thumbnails = 0
 		self.showbandwidthstrip = 0
+		self._ignore_resize = 0
 ##		self.layouts = [('All channels', ())]
 ##		for name in self.context.layouts.keys():
 ##			self.layouts.append((name, (name,)))
@@ -212,6 +213,8 @@ class ChannelView(ChannelViewDialog):
 	# Event interface
 
 	def resize(self, *rest):
+		if self._ignore_resize:
+			return
 		if self.focus is None:
 			focus = '', None
 		elif type(self.focus) is type(()):
@@ -242,10 +245,13 @@ class ChannelView(ChannelViewDialog):
 		from windowinterface import UNIT_MM
 		width, height = self.window.getcanvassize(UNIT_MM)
 		if code == windowinterface.RESET_CANVAS:
-			width = 1.0
+			self._ignore_resize = 1
+			self.window.setcanvassize(windowinterface.RESET_CANVAS)
+			self._ignore_resize = 0
+			self.reshape()
 		elif code == windowinterface.DOUBLE_WIDTH:
 			width = 2 * width
-		self.window.setcanvassize((UNIT_MM, width, height))
+			self.window.setcanvassize((UNIT_MM, width, height))
 
 ##	def layoutcall(self, name = None):
 ##		curlayout = self.curlayout
@@ -505,6 +511,8 @@ class ChannelView(ChannelViewDialog):
 		nlines = 0
 		for ch in visiblechannels:
 			nlines = nlines + (channellines.get(ch.name, 0) or 1)
+##		if hasattr(windowinterface, 'RESET_HEIGHT'):
+##			self.window.setcanvassize(windowinterface.RESET_HEIGHT)
 		width, height = self.window.getcanvassize(UNIT_MM)
 		height = len(visiblechannels) * CHANGAP + nlines * CHANHEIGHT + TSHEIGHT
 		if self.showbandwidthstrip:
