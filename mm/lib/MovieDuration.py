@@ -3,7 +3,7 @@
 import FileCache
 
 def getduration(filename):
-	fp = open(filename, 'r')
+	fp = open(filename, 'rb')
 	import VFile
 	import os
 	VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError

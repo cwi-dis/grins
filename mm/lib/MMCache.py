@@ -18,7 +18,7 @@ def loadcache(filename, context):
 	base = os.path.basename(filename)
 	cache = cachename(filename)
 	try:
-		f = open(cache, 'r')
+		f = open(cache, 'rb')
 	except IOError:
 		print 'Can\'t open CMIF cache file', cache
 		return None
@@ -41,7 +41,7 @@ def dumpcache(root, filename):
 	cache = cachename(filename)
 	print 'Writing CMIF cache', cache
 	try:
-		f = open(cache, 'w')
+		f = open(cache, 'wb')
 	except IOError, msg:
 		print cache, ': failed to write CMIF cache:', msg
 		return
