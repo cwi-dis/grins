@@ -1569,7 +1569,7 @@ class Region(Window):
 
 			if self._active_displist._issimple:
 				try:
-					self._active_displist._ddsrender(dds, dst, clear=0)
+					self._active_displist._ddsrender(dds, dst, rgn, clear=0)
 				except:
 					pass
 
