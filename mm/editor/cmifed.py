@@ -39,6 +39,7 @@ from MainDialog import MainDialog
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
+		import MMurl
 		self._tracing = 0
 		self.tops = []
 		self._mm_callbacks = {}
@@ -56,7 +57,7 @@ class Main(MainDialog):
 						(posix.read, fcntl.fcntl, FCNTL))
 		MainDialog.__init__(self, 'CMIFed')
 		for file in files:
-			self.open_callback(file)
+			self.open_callback(MMurl.guessurl(file))
 
 	def new_callback(self):
 		import TopLevel
