@@ -38,6 +38,7 @@ HTML_SIZE={
 class HTMLWidget:
 	def __init__(self, window, rect, name):
 		init_waste()
+		self.last_mouse_was_down = 0
 		self.url = ''
 		self.bary = None
 		self.anchor_offsets = []
@@ -231,6 +232,10 @@ class HTMLWidget:
 		(what, message, when, where, modifiers) = evt
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
+		if down == self.last_mouse_was_down:
+			# Two downs or ups in a row, probably due to window-raise or something
+			return
+		self.last_mouse_was_down = down
 		if down:
 			# Check for control
 			ptype, ctl = Ctl.FindControl(local, self.wid)
@@ -410,6 +415,10 @@ class MyHTMLParser(htmllib.HTMLParser):
 	def end_p(self):
 		# It seems most browsers treat </p> as <p>...
 		self.do_p(())
+	
+	def start_p(self, attrs):
+		# It seems most browsers treat </p> as <p>...
+		self.do_p(attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
 		url = urllib.basejoin(self.url, src)
