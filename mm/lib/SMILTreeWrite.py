@@ -1435,11 +1435,11 @@ class SMILWriter(SMIL):
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
 			else:
 				progress = None
-			file = convertaudiofile(u, dstdir, file, node,
+			cfile = convertaudiofile(u, dstdir, file, node,
 						progress = progress)
-			if file:
-				self.files_generated[file] = 'b'
-				return file
+			if cfile:
+				self.files_generated[cfile] = 'b'
+				return cfile
 		if u.headers.maintype == 'video' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertvideofile
@@ -1450,10 +1450,10 @@ class SMILWriter(SMIL):
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
 			else:
 				progress = None
-			file = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
-			if file:
-				self.files_generated[file] = 'b'
-				return file
+			cfile = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
+			if cfile:
+				self.files_generated[cfile] = 'b'
+				return cfile
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
