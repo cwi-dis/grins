@@ -4273,6 +4273,9 @@ class NameGroup(AttrGroup):
 class CNameGroup(StringGroup):
 	data=attrgrsdict['.cname']
 
+class CNameGroup2(StringGroup):
+	data=attrgrsdict['.cname2']
+
 class INameGroup(NameGroup):
 	data=attrgrsdict['intname']
 	def getpageresid(self):
@@ -5160,6 +5163,7 @@ groupsui={
 	'preferences2':Preferences2Group,
 	'name':NameGroup,
 	'.cname':CNameGroup,
+	'.cname2':CNameGroup2,
 	'intname':INameGroup,
 
 	'beginlist':BeginListGroup,

@@ -157,6 +157,15 @@ attrgrs=(
 		'regionName',
 		]},
 
+	{'name':'.cname2',
+	'title':'General',
+	'attrs':[
+		'.cname',
+		'title',
+		'alt',
+		'longdesc',
+		]},
+
 	{'name':'name',
 	'title':'General',
 	'attrs':[
