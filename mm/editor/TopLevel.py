@@ -812,6 +812,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import MMRead
 			self.root = MMRead.ReadFile(filename)
 		else:
+			if sys.platform == 'win32':
+				# XXX: experimental code
+				lf = filename.lower()
+				if lf.find('.asx')>=0:
+					self.__import_asx(filename)
+					return
 			windowinterface.showmessage('%s is a media item.\nCreating new SMIL file around it.'%filename)
 			import SMILTreeRead
 			if mtype is None or \
@@ -986,6 +992,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				rv = rv + top._getlocalexternalanchors()
 		return rv
 
+	def __import_asx(self, filename):
+		windowinterface.showmessage('%s is an ASX file.\nCreating its SMIL representation.'%filename)
+		import ASXParser
+		strAsxSmil = ASXParser.asx2smil(filename)
+		import SMILTreeRead
+		self.root = SMILTreeRead.ReadString(strAsxSmil, filename, self.printfunc)
 
 if os.name == 'posix':
 	def make_backup_filename(filename):
