@@ -381,6 +381,7 @@ class NodeWrapper(Wrapper):
 		if name == '.anchorlist':
 			self.__setanchors(value)
 			return
+			
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
@@ -1346,18 +1347,23 @@ class AttrEditor(AttrEditorDialog):
 		# first collect all changes
 		dict = {}
 		newchannel = None
+		mustChangeChannel = 0
+		ctx = self.wrapper.getcontext()		
+		regionName = None
 		for b in self.attrlist:
 			name = b.getname()
 			str = b.getvalue()
 			if str != b.getcurrent():
 				if hasattr(b, 'newchannels') and \
-				   str not in self.wrapper.getcontext().channelnames:
-					newchannel = str
+					str not in self.wrapper.getcontext().channelnames:
+					newchannel = b.parsevalue(str)
 					try:
 						b.newchannels.remove(str)
 					except ValueError:
 						# probably shouldn't happen...
 						pass
+					mustChangeChannel = 1
+					regionName = newchannel
 					continue
 				try:
 					value = b.parsevalue(str)
@@ -1378,9 +1384,25 @@ class AttrEditor(AttrEditorDialog):
 						exp = exp + " or `indefinite'"
 					self.showmessage('%s: value should be a%s %s' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
-				if name == 'file' and not self.checkurl(value):
-					self.showmessage('URL not compatible with channel', mtype = 'error')
-					return 1
+				# if the mime type change, we have to change the channel as well
+				if name == 'file': 
+					compatChannelTypeList = ctx.compatchtypes(value)
+					currentChannelType = self.wrapper.node.GetChannelType()
+					if currentChannelType not in compatChannelTypeList:
+						mustChangeChannel = 1						
+				# if we change the region, we have to determinate (and create) the channel
+				# WARNING: 'channel' attribute is now a region name (chosen by the user)
+				elif name == 'channel': 
+					mustChangeChannel = 1
+					regionName = value
+					# we don't save this value which is a region name
+					continue
+				# for now, assume that url is all the time value
+				# Anyway, to filter the valid url according the GRiNS version, you'll have
+				# to modify this code
+#				if name == 'file' and not self.checkurl(value):
+#					self.showmessage('URL not compatible with channel', mtype = 'error')
+#					return 1
 				if name == 'href' and value not in self.wrapper.getcontext().externalanchors:
 					self.wrapper.getcontext().externalanchors.append(value)
 				dict[name] = value
@@ -1404,8 +1426,57 @@ class AttrEditor(AttrEditorDialog):
 				self.wrapper.delattr(name)
 			else:
 				self.wrapper.setattr(name, value)
+		if mustChangeChannel:
+			self.changeChannel(self.wrapper.node, regionName)
 		self.wrapper.commit()
 
+	def changeChannel(self, node, newRegionName):
+		# get the current region name
+		em = self.wrapper.editmgr
+		regionName = None
+		if newRegionName == None:
+			# the region name hasn't changed. We have to get the old one
+			channel = self.wrapper.node.GetChannel()
+			if channel != None:
+				region = channel.GetLayoutChannel()
+				if region != None:
+					regionName = region.name
+		else:
+			regionName = newRegionName
+
+		if regionName != None:
+			ctx = self.wrapper.getcontext()
+			# guess the channel type
+			url = self.wrapper.getattr('file')
+			compatChannelTypeList = ctx.compatchtypes(url)
+			if len(compatChannelTypeList) == 0:
+				# if not valid URL yet, the channel have to be cleared
+				channelName = None
+			else:
+				channelName = ctx.newChannelName(regionName)
+				# if not exist, create the channel
+				chtype = compatChannelTypeList[0]
+				print 'type=',chtype
+				em.addchannel(channelName, 0, chtype)
+				em.setchannelattr(channelName, 'base_window', regionName)
+				# get old channel name
+				oldChannelName = node.GetRawAttrDef('channel', None)
+				
+			# at last, associate the channel to the node
+			em.setnodeattr(node, 'channel', channelName)
+
+			# remove old channel if no media node associated anymore
+			if oldChannelName != None:
+				found = 0
+				for uid in ctx.uidmap.keys():
+					n = ctx.uidmap[uid]
+					channelName = n.GetRawAttrDef('channel', None)
+					if oldChannelName == channelName:
+						found = 1
+						break
+				if not found:
+					em.delchannel(oldChannelName)
+		
 	def checkurl(self, url):
 		import settings
 		if not features.lightweight:
@@ -1445,6 +1516,7 @@ class AttrEditor(AttrEditorDialog):
 				if root is None:
 					# first one
 					root = key
+					break
 				else:
 					# multiple root windows
 					root = ''
@@ -1455,38 +1527,39 @@ class AttrEditor(AttrEditorDialog):
 		# else
 		# em.addchannel(channelname, index, self.guesstype(url))
 		#
-		ch = context.channeldict[channelname]
+#		ch = context.channeldict[channelname]
 		if root:
-			ch['base_window'] = root
-		if ChannelMap.isvisiblechannel(ch['type']):
-			units = ch.get('units', windowinterface.UNIT_SCREEN)
-			if units == windowinterface.UNIT_PXL:
-				if url:
-					import Sizes
-					w, h = Sizes.GetSize(context.findurl(url))
-				else:
-					w = h = 0
-				if w == 0 or h == 0:
-					if root:
-						if root.has_key('base_winoff'):
-							x, y, w, h = root['base_winoff']
-						elif root.has_key('winsize'):
-							w, h = root['winsize']
-						else:
-							w, h = 100, 100
-					else:
-						w = h = 100
-				ch['base_winoff'] = 0,0,w,h
-			elif units == windowinterface.UNIT_SCREEN:
-				ch['base_winoff'] = 0,0,.2,.2
+			em.setchannelattr(channelname, 'base_window', key)
+#			ch['base_window'] = root
+#		if ChannelMap.isvisiblechannel(ch['type']):
+#			units = ch.get('units', windowinterface.UNIT_SCREEN)
+#			if units == windowinterface.UNIT_PXL:
+#				if url:
+#					import Sizes
+#					w, h = Sizes.GetSize(context.findurl(url))
+#				else:
+#					w = h = 0
+#				if w == 0 or h == 0:
+#					if root:
+#						if root.has_key('base_winoff'):
+#							x, y, w, h = root['base_winoff']
+#						elif root.has_key('winsize'):
+#							w, h = root['winsize']
+#						else:
+#							w, h = 100, 100
+#					else:
+#						w = h = 100
+#				ch['base_winoff'] = 0,0,w,h
+#			elif units == windowinterface.UNIT_SCREEN:
+#				ch['base_winoff'] = 0,0,.2,.2
 		# create typed channel for this node
 		# must come after setting base_winoff in LayoutChannel
-		em.defnewchannel(self.wrapper.node, ch)
+#		em.defnewchannel(self.wrapper.node, ch)
 		# if the node belongs to a layout, add the new channel
 		# to that layouf
-		layout = MMAttrdefs.getattr(self.wrapper.node, 'layout')
-		if layout != 'undefined' and context.layouts.has_key(layout):
-			em.addlayoutchannel(layout, ch)
+#		layout = MMAttrdefs.getattr(self.wrapper.node, 'layout')
+#		if layout != 'undefined' and context.layouts.has_key(layout):
+#			em.addlayoutchannel(layout, ch)
 
 	def guesstype(self, url):
 		# guess channel type from URL
@@ -2195,6 +2268,31 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 	def getoptions(self):
 		import settings
+
+		# experimental code:
+		# for the full version, any region may be selected: for now, it's the only case supported
+		# (for other version, we have to test the new 'subtype' channel attribute)
+		ctx = self.wrapper.context
+		node = self.wrapper.node
+		
+		regionList = []
+		if self.getcurrent() == UNDEFINED:
+			regionList.append(UNDEFINED)
+			
+		for ch in ctx.channels:
+			if ch.get('type') == 'layout':
+				if ch.get('base_window') != None:
+					regionList.append(ch.name)
+
+		if hasattr(self, 'newchannels'):
+			regionList = regionList + self.newchannels
+
+			# add the special key which allow to add a new regions
+			regionList.append(NEW_CHANNEL)
+					
+		return regionList
+		# end experimental code
+		
 		# channelnames1 -- compatible channels in node's layout
 		# channelnames2 -- new channel
 		# channelnames3 -- incompatible channels in node's layout
@@ -2287,7 +2385,11 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		return all
 
 	def parsevalue(self, str):
-		if str == UNDEFINED:
+		if str == UNDEFINED: 
+			return None
+		# XXXX: Hack: on windows plateform, this value correspond to the separator
+		# in this case, if the user select this value, we assume it's a undefined value
+		elif str == '---':
 			return None
 		return str
 
@@ -2296,6 +2398,13 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			if self.nodefault:
 				return self.getdefault()
 			return UNDEFINED
+
+		# XXXX: HACK:
+		# value is either a channel name or a region name (if new)
+		if hasattr(self, 'newchannels'):
+			if len(self.newchannels) > 0:
+				if value == self.newchannels[0]:
+					return value
 			
 		# experimental SMIL Boston layout code
 		ch = self.wrapper.context.getchannel(value)
@@ -2338,7 +2447,9 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			self.setvalue(self.getcurrent())
 			return
 		if name != UNDEFINED and name not in self.wrapper.context.channelnames:
-			self.newchannels.append(name)
+			if name not in self.newchannels:
+#				self.newchannels.append(name)
+				self.newchannels = [name]
 		self.__current = name
 		self.recalcoptions()
 		self.setvalue(name)
