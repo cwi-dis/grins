@@ -646,28 +646,47 @@ class ChannelWindow(Channel):
 				chan._subchannels.remove(self)
 		pgeom = None
 		pchan = None
+		#
+		# First, check that there is a base_window attribute and
+		# that it isn't "undefined".
+		#
 		if self._attrdict.has_key('base_window'):
 			pname = self._attrdict['base_window']
 		else:
 			pname = 'undefined'
 		if pname <> 'undefined':
-			# there is a base window, create a subwindow
-
-			print 'LOOK FOR', pname, 'IN', ChannelWinDict
+			#
+			# Next, check that the base window channel exists.
+			#
 			if ChannelWinDict.has_key(pname):
 				pchan = ChannelWinDict[pname]
 			else:
-				raise error, \
-					  'base window '+`pname`+' for '+\
-					  `self._name`+' not found'
-			if self in pchan._subchannels:
-				raise error, 'internal error'
-			pchan._subchannels.append(self)
+				pchan = None
+				windowinterface.showmessage(
+					'Base window '+`pname`+' for '+\
+					`self._name`+' not found')
+				
+			if pchan and self in pchan._subchannels:
+				windowinterface.showmessage(
+					'Channel '+`self._name`+' is part of'+
+					' a base-window loop')
+				pchan = None
+		if pchan:
+			#
+			# Next, check that it is visible already
+			#
 			if not pchan._is_shown:
+				print 'Warning: '+self._name+' not shown (parent hidden)'
 				return 0
 			if not pchan.window:
-				raise error, 'parent window for ' + \
-					  `self._name` + ' not shown'
+				windowinterface.showmessage(
+					'parent window for ' + `self._name`+
+					' not shown (channel order problem?)')
+				pchan = None
+		if pchan:
+			#
+			# Find the base window offsets, or ask for them.
+			#
 			if self._attrdict.has_key('base_winoff'):
 				pgeom = self._attrdict['base_winoff']
 			else:
@@ -676,7 +695,9 @@ class ChannelWindow(Channel):
 				if pgeom:
 					self._attrdict['base_winoff'] = pgeom
 				else:
-					raise error, 'no geometry for '+`self._name`
+					pchan = None
+		if pchan:
+			pchan._subchannels.append(self)
 			self.window = pchan.window.newwindow(pgeom)
 		else:
 			# no basewindow, create a top-level window
@@ -690,7 +711,6 @@ class ChannelWindow(Channel):
 			else:
 				# provide defaults
 				x, y = 20, 20
-			import windowinterface
 			self.window = windowinterface.newwindow(x, y, \
 				  width, height, self._name)
 		if self._is_waiting:
