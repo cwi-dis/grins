@@ -225,8 +225,8 @@ class _LayoutView2(GenFormView):
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
 			
-			if id == self['ShowAllMedias']._id:
-				ctrlName = 'ShowAllMedias'
+#			if id == self['ShowAllMedias']._id:
+#				ctrlName = 'ShowAllMedias'
 						
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
@@ -364,22 +364,12 @@ class TreeManager:
 		self._handler = handler
 		
 	def onInitialUpdate(self, parent):
-		# get the tree control form the dialog box ressource
-		#import win32con, win32ui
-		#Sdk=win32ui.GetWin32Sdk()
-		#parentHwnd = parent.GetSafeHwnd()
-		#self.treeCtrl = parent.GetDlgItem(grinsRC.IDC_TREE1)
-
 		import TreeCtrl
-		self.treeCtrl = TreeCtrl.TreeCtrl()
-		self.treeCtrl.createAsDlgItem(parent, grinsRC.IDC_TREE1)
+		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1)
 		self.treeCtrl.addMultiSelListener(self)
 
 		# init the image list used in the tree
 		self.__initImageList()
-
-		# hook messages
-		parent.HookNotify(self._onSelect,commctrl.TVN_SELCHANGED)
 
 	def _loadbmp(self, idRes):
 		import win32dialog
@@ -457,15 +447,16 @@ class TreeManager:
 	def selectNode(self, item):
 		self.treeCtrl.SelectItem(item)
 		
-	def _onSelect(self, std, extra):
-		action, itemOld, itemNew, ptDrag = extra
-		# XXX the field number doesn't correspond with API documention ???
-		item, field2, field3, field4, field5, field6, field7, field8 = itemNew
-		if self._handler != None:
-			self._handler.onSelectTreeNodeCtrl(item)
+#	def _onSelect(self, std, extra):
+#		action, itemOld, itemNew, ptDrag = extra
+#		# XXX the field number doesn't correspond with API documention ???
+#		item, field2, field3, field4, field5, field6, field7, field8 = itemNew
+#		if self._handler != None:
+#			self._handler.onSelectTreeNodeCtrl(item)
 	
 	def OnMultiSelChanged(self):
-		print self.treeCtrl.getSelectedItems()
+		if self._handler != None:
+			self._handler.onSelectTreeNodeCtrl(self.treeCtrl.getSelectedItems())
 
 ###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
