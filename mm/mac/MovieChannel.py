@@ -12,7 +12,7 @@ import os
 import Qt
 import QuickTime
 
-debug = 1 # os.environ.has_key('CHANNELDEBUG')
+debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class MovieChannel(ChannelWindow):
 	def __repr__(self):
@@ -38,7 +38,7 @@ class MovieChannel(ChannelWindow):
 		
 		try:
 			movieResRef = Qt.OpenMovieFile(fn, 1)
-		except Qt.Error, arg:
+		except (ValueError, Qt.Error), arg:
 			self.errormsg(node, 'Cannot open: '+`arg`)
 			return 1
 		self.arm_movie, dummy = Qt.NewMovieFromFile(movieResRef, QuickTime.newMovieActive)
@@ -53,13 +53,13 @@ class MovieChannel(ChannelWindow):
 		
 		if self.play_movie.IsMovieDone():
 			self.play_movie = None
-			# XXXX done callback
 			windowinterface.cancelidleproc(self._playsome)
-			return
+			self.playdone(0)
 			
 	def do_play(self, node):
 		if not self.arm_movie:
 			self.play_movie = None
+			self.playdone(0)
 			return
 			
 		if debug: print 'MovieChannel: play', node
@@ -120,7 +120,11 @@ class MovieChannel(ChannelWindow):
 		
 	def playstop(self):
 		if debug: print 'MovieChannel: playstop'
-		pass # XXXX Stop playing
+		if not self.play_movie:
+			return
+		self.play_movie.StopMovie()
+		self.playdone(1)
+		windowinterface.cancelidleproc(self._playsome)
 
 	def setpaused(self, paused):
 		pass # XXXX pause!
