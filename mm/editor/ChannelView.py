@@ -29,7 +29,7 @@ from AnchorEdit import A_TYPE, ATYPE_PAUSE
 
 
 # Round an 8-bit RGB color triple to 4-bit (as used by doublebuffer)
-# Currently disabled
+# Currently disabled -- doesn't seem to work as expected
 
 def fix(r, g, b):
 	return r, g, b
@@ -77,6 +77,8 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 
 # Font stuff, used by 'centerstring'
+# XXX These should be data members of the ChannelView class,
+# XXX and centerstring should be a method...
 
 # Tuning constants (set to match FORMS default)
 FONTNAME = 'Helvetica'
@@ -151,7 +153,11 @@ class ChannelView(ViewDialog, GLDialog):
 		for child in node.GetChildren():
 			self.unarm_node(child)
 
-	# Dialog interface (extends GLDiallog.{show,hide})
+	# Dialog interface (extends GLDiallog.{setwin,show,hide})
+
+	def setwin(self):
+		GLDialog.setwin(self)
+		f_font.setfont()
 
 	def show(self):
 		if self.is_showing():
@@ -318,7 +324,6 @@ class ChannelView(ViewDialog, GLDialog):
 	def draw(self):
 		gl.RGBcolor(BGCOLOR)
 		gl.clear()
-		f_font.setfont()
 		for obj in self.objects:
 			obj.draw()
 	
