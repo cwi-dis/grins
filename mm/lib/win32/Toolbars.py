@@ -271,7 +271,7 @@ class ToolbarMixin(PanelMixin):
 
 	def setToolbarPulldowns(self, pulldowndict):
 		if pulldowndict == self._pulldowndict:
-			print 'It is the same!'
+#			print 'It is the same!'
 			return
 		self._pulldowndict = pulldowndict
 		PanelMixin.setOptions(self, pulldowndict)
