@@ -1148,6 +1148,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			if self.__warnmeta:
 				self.warning('unrecognized meta property', self.lineno)
+			# XXXX <meta> document attributes are always stored as strings, in stead
+			# of passing through the Attrdefs mechanism. Too much work to fix, for now.
 			self.__context.attributes[name] = content
 
 	def end_meta(self):
