@@ -6,11 +6,6 @@ import os
 
 # some constants
 
-### compatibility values
-##CMIF = 'cmif'
-##SMIL10 = 'SMIL 1.0'
-##G2 = 'g2'
-
 # Defaults:
 default_settings = {
 ##	'lightweight': 0,		# Lightweight version
