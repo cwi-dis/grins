@@ -581,6 +581,8 @@ class AnimationWrapper(NodeWrapper):
 			namelist.remove('keySplines')
 			namelist.remove('from')
 			namelist.remove('by')
+			namelist.remove('additive')
+			namelist.remove('accumulate')
 		parent = self.node.GetParent()
 		if parent.GetType() in leaftypes:
 			namelist.remove('targetElement')
