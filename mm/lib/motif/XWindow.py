@@ -565,6 +565,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if forceevent:
 			self._resize_callback(self._form, 1, None)
 
+	def getscrollposition(self, units=UNIT_PXL):
+		assert units == UNIT_PXL
+		return 0, 0, 0, 0 # XXXX To be implemented
+
 	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
 		if self._scrwin is None:
 			raise error, 'no scrollable window'
