@@ -51,10 +51,10 @@ class ChannelMap:
 		'midi':		[ 'MidiChannel', 'SoundChannel' ],
 		'word':		'WordChannel',
 		'external':	'ExternalChannel',
-		'raudio':	'RealAudioChannel',
-		'rpix':		'RealPixChannel',
-		'rtext':	'RealTextChannel',
-		'rvideo':	'RealVideoChannel',
+		'RealAudio':	'RealAudioChannel',
+		'RealPix':	'RealPixChannel',
+		'RealText':	'RealTextChannel',
+		'RealVideo':	'RealVideoChannel',
 		}
 
 	if platform == 'mac':
@@ -108,7 +108,8 @@ channelhierarchy = {
 		'null'],
     'ole': ['word'],
     }
-SMILchanneltypes = ['null', 'text', 'html', 'image', 'sound', 'video', 'layout']
+SMILchanneltypes = ['null', 'text', 'html', 'image', 'sound', 'video',
+		    'layout', 'RealAudio', 'RealVideo', 'RealPix', 'RealText']
 
 ct = channelmap.keys()
 ct.sort()
