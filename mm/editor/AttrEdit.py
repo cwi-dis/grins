@@ -625,7 +625,7 @@ class SlideWrapper(NodeWrapper):
 		else:
 			return NodeWrapper.getdefault(self, name)
 
-	def commit(self):
+	def commit(self, type):
 		node = self.node
 		attrdict = node.GetAttrDict()
 		if (attrdict.get('displayfull', 1) or
@@ -1070,7 +1070,7 @@ class PreferenceWrapper(Wrapper):
 	def transaction(self):
 		return 1
 
-	def commit(self):
+	def commit(self, type):
 		attr = None
 		if prefseditor:
 			attr = prefseditor.getcurattr()
@@ -1526,10 +1526,10 @@ class AttrEditor(AttrEditorDialog):
 	#
 	# EditMgr interface
 	#
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
-	def commit(self):
+	def commit(self, type):
 		if not self.wrapper.stillvalid():
 			self.close()
 		else:
