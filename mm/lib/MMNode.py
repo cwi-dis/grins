@@ -3050,7 +3050,6 @@ class MMNode:
 			wtd_children = self.wtd_children
 		if path and self.type == 'seq' and path[0] in wtd_children:
 			wtd_children = wtd_children[wtd_children.index(path[0]):]
-			print self, wtd_children
 
 		if termtype == 'FIRST':
 			terminating_children = wtd_children[:]
@@ -3470,7 +3469,6 @@ class MMNode:
 					duration = -1
 				else:
 					duration = Duration.get(self, ignoreloop=1)
-				print 'dur media',self,duration
 			repeatDur = self.attrdict.get('repeatdur')
 			repeatCount = self.attrdict.get('loop')
 			endlist = self.attrdict.get('endlist', [])
