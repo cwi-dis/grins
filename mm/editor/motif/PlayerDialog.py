@@ -11,6 +11,7 @@ __version__ = "$Id$"
 from usercmd import *
 
 from PlayerDialogBase import PlayerDialogBase, STOPPED, PAUSING, PLAYING
+from flags import *
 
 class PlayerDialog(PlayerDialogBase):
 	adornments = {
@@ -20,23 +21,24 @@ class PlayerDialog(PlayerDialogBase):
 			's': STOP,
 			},
 		'menubar': [
-			('Close', [
-				('Close', CLOSE_WINDOW),
+			(ALL, 'Close', [
+				(ALL, 'Close', CLOSE_WINDOW),
 				]),
-			('Play', [
-				('Play', PLAY, 't'),
-				('Pause', PAUSE, 't'),
-				('Stop', STOP, 't'),
+			(ALL, 'Play', [
+				(ALL, 'Play', PLAY, 't'),
+				(ALL, 'Pause', PAUSE, 't'),
+				(ALL, 'Stop', STOP, 't'),
 				]),
-			('User groups', USERGROUPS),
-			('Channels', CHANNELS),
-			('Options', [
-				('Timeline view follows player', SYNCCV, 't'),
-##				('Dump scheduler data', SCHEDDUMP),
+			(CMIF, 'User Groups', USERGROUPS),
+			(CMIF, 'Channels', CHANNELS),
+			(CMIF, 'View', [
+				(CMIF, 'Timeline view follows player', SYNCCV, 't'),
+##				(CMIF, 'Dump scheduler data', SCHEDDUMP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
 		'close': [ CLOSE_WINDOW, ],
+		'flags': SMIL,
 		}
 	adornments2 = {
 		'close': [ CLOSE_WINDOW, ],
@@ -47,4 +49,5 @@ class PlayerDialog(PlayerDialogBase):
 		self._window.set_toggle(SYNCCV, self.sync_cv)
 
 	def get_adornments(self, channel):
+		self.adornments2['flags'] = curflags()
 		return self.adornments2

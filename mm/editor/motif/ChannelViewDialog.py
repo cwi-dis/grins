@@ -3,6 +3,7 @@ import windowinterface
 import WMEVENTS
 import MMAttrdefs
 from usercmd import *
+from flags import *
 
 class ChannelViewDialog(ViewDialog):
 	adornments = {
@@ -27,58 +28,56 @@ class ChannelViewDialog(ViewDialog):
 			'b': TOGGLE_BWSTRIP,
 			},
 		'menubar': [
-			('Close', [
-				('Close', CLOSE_WINDOW),
+			(ALL, 'Close', [
+				(ALL, 'Close', CLOSE_WINDOW),
 				]),
-			('Edit', [
-				('Delete', DELETE),
-				None,
-				('New Channel...', NEW_CHANNEL),
-				None,
-				('Move Channel', MOVE_CHANNEL),
-				('Copy Channel', COPY_CHANNEL),
-				('Toggle Channel State', TOGGLE_ONOFF),
-				None,
-				('Info...', INFO),
-				('Properties...', ATTRIBUTES),
-				('Edit Content...', CONTENT),
+			(ALL, 'Edit', [
+				(ALL, 'Delete', DELETE),
+				(ALL, None),
+				(ALL, 'New Channel...', NEW_CHANNEL),
+				(ALL, None),
+				(ALL, 'Move Channel', MOVE_CHANNEL),
+				(ALL, 'Copy Channel', COPY_CHANNEL),
+				(CMIF, 'Toggle Channel State', TOGGLE_ONOFF),
+				(ALL, None),
+				(ALL, 'Info...', INFO),
+				(ALL, 'Properties...', ATTRIBUTES),
+				(ALL, 'Edit Content...', CONTENT),
 				]),
-			('Play', [
-				('Play Node', PLAYNODE),
-				('Play from Node', PLAYFROM),
+			(ALL, 'Play', [
+				(ALL, 'Play Node', PLAYNODE),
+				(ALL, 'Play from Node', PLAYFROM),
 				]),
-			('Linking', [
-				('Create Simple Anchor', CREATEANCHOR),
-				('Finish Hyperlink to Selection', FINISH_LINK),
-				('Anchors...', ANCHORS),
-				None,
-				('Create Sync Arc from Selection...', FINISH_ARC),
-				('Select Sync Arc', SYNCARCS),
+			(ALL, 'Linking', [
+				(ALL, 'Create Simple Anchor', CREATEANCHOR),
+				(ALL, 'Finish Hyperlink to Selection', FINISH_LINK),
+				(ALL, 'Anchors...', ANCHORS),
+				(ALL, None),
+				(ALL, 'Create Sync Arc from Selection...', FINISH_ARC),
+				(ALL, 'Select Sync Arc', SYNCARCS),
 				]),
-			('View', [
-				('Zoom In', CANVAS_WIDTH),
-				('Fit in Window', CANVAS_RESET),
-				None,
-				('Synchronize Selection', PUSHFOCUS),
-				None,
-				('Unused Channels', TOGGLE_UNUSED, 't'),
-				('Sync Arcs', TOGGLE_ARCS, 't'),
-				('Image Thumbnails', THUMBNAIL, 't'),
-				('Bandwidth Usage', TOGGLE_BWSTRIP, 't'),
-				None,
-				('Highlight in Player', HIGHLIGHT),
-				('Unhighlight in Player', UNHIGHLIGHT),
-				('Minidocument Navigation', [
-					('Next', NEXT_MINIDOC),
-					('Previous', PREV_MINIDOC),
-					('Ancestors', ANCESTORS),
-					('Siblings', SIBLINGS),
-					('Descendants', DESCENDANTS),
+			(ALL, 'View', [
+				(ALL, 'Zoom In', CANVAS_WIDTH),
+				(ALL, 'Fit in Window', CANVAS_RESET),
+				(ALL, None),
+				(ALL, 'Synchronize Selection', PUSHFOCUS),
+				(ALL, None),
+				(ALL, 'Unused Channels', TOGGLE_UNUSED, 't'),
+				(ALL, 'Sync Arcs', TOGGLE_ARCS, 't'),
+				(ALL, 'Image Thumbnails', THUMBNAIL, 't'),
+				(ALL, 'Bandwidth Usage', TOGGLE_BWSTRIP, 't'),
+				(CMIF, None),
+				(CMIF, 'Minidocument Navigation', [
+					(CMIF, 'Next', NEXT_MINIDOC),
+					(CMIF, 'Previous', PREV_MINIDOC),
+					(CMIF, 'Ancestors', ANCESTORS),
+					(CMIF, 'Siblings', SIBLINGS),
+					(CMIF, 'Descendants', DESCENDANTS),
 					]),
-##				('Layout navigation', LAYOUTS),
+##				(ALL, 'Layout navigation', LAYOUTS),
 				]),
-			('Help', [
-				('Help...', HELP),
+			(ALL, 'Help', [
+				(ALL, 'Help...', HELP),
 				]),
 			],
 		'toolbar': None, # no images yet...
@@ -89,9 +88,15 @@ class ChannelViewDialog(ViewDialog):
 		ViewDialog.__init__(self, 'cview_')
 
 	def show(self, title):
+		if self.is_showing():
+			self.window.pop(poptop = 1)
+			return
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, adornments = self.adornments, canvassize = (w, h))
+		self.adornments['flags'] = curflags()
+		self.window = windowinterface.newcmwindow(x, y, w, h, title,
+				pixmap = 1, adornments = self.adornments,
+				canvassize = (w, h))
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
@@ -115,14 +120,14 @@ class ChannelViewDialog(ViewDialog):
 ##		self.window.set_dynamiclist(LAYOUTS, self.layouts)
 
 	def setpopup(self, menutemplate):
-		self.window.setpopupmenu(menutemplate)
+		self.window.setpopupmenu(menutemplate, SMIL)
 
 	def settoggle(self, command, onoff):
 		self.window.set_toggle(command, onoff)
 
 class GOCommand:
 	POPUP_NONE = (
-		('New Channel...', NEW_CHANNEL),
+		(ALL, 'New Channel...', NEW_CHANNEL),
 		)
 
 	def __init__(self):
@@ -133,13 +138,13 @@ class GOCommand:
 
 class BandwidthStripBoxCommand:
 	POPUP_BWSTRIP = (
-		("14k4", BANDWIDTH_14K4),
-		("28k8", BANDWIDTH_28K8),
-		("ISDN", BANDWIDTH_ISDN),
-		("T1 (1 Mbps)", BANDWIDTH_T1),
-		("LAN (10 Mbps)", BANDWIDTH_LAN),
-		None,
-		("Other...", BANDWIDTH_OTHER),
+		(ALL, "14k4", BANDWIDTH_14K4),
+		(ALL, "28k8", BANDWIDTH_28K8),
+		(ALL, "ISDN", BANDWIDTH_ISDN),
+		(ALL, "T1 (1 Mbps)", BANDWIDTH_T1),
+		(ALL, "LAN (10 Mbps)", BANDWIDTH_LAN),
+		(ALL, None),
+		(ALL, "Other...", BANDWIDTH_OTHER),
 		)
 
 	def __init__(self):
@@ -147,13 +152,13 @@ class BandwidthStripBoxCommand:
 
 class ChannelBoxCommand:
 	POPUP_CHANNEL = (
-##		('Toggle Channel State', TOGGLE_ONOFF),
-		('Properties...', ATTRIBUTES),
-		None,
-		('Delete', DELETE),
-		None,
-		('Move Channel', MOVE_CHANNEL),
-		('Copy Channel', COPY_CHANNEL),
+##		(ALL, 'Toggle Channel State', TOGGLE_ONOFF),
+		(ALL, 'Properties...', ATTRIBUTES),
+		(ALL, None),
+		(ALL, 'Delete', DELETE),
+		(ALL, None),
+		(ALL, 'Move Channel', MOVE_CHANNEL),
+		(ALL, 'Copy Channel', COPY_CHANNEL),
 		)
 
 	def __init__(self):
@@ -161,17 +166,17 @@ class ChannelBoxCommand:
 
 class NodeBoxCommand:
 	POPUP_NODE = (
-		('Play Node', PLAYNODE),
-		('Play from Node', PLAYFROM),
-		None,
-		('Create Simple Anchor', CREATEANCHOR),
-		('Finish Hyperlink to Selection', FINISH_LINK),
-		('Create Sync Arc from Selection...', FINISH_ARC),
-		None,
-		('Info...', INFO),
-		('Properties...', ATTRIBUTES),
-		('Anchors...', ANCHORS),
-		('Edit Content...', CONTENT),
+		(ALL, 'Play Node', PLAYNODE),
+		(ALL, 'Play from Node', PLAYFROM),
+		(ALL, None),
+		(ALL, 'Create Simple Anchor', CREATEANCHOR),
+		(ALL, 'Finish Hyperlink to Selection', FINISH_LINK),
+		(ALL, 'Create Sync Arc from Selection...', FINISH_ARC),
+		(ALL, None),
+		(ALL, 'Info...', INFO),
+		(ALL, 'Properties...', ATTRIBUTES),
+		(ALL, 'Anchors...', ANCHORS),
+		(ALL, 'Edit Content...', CONTENT),
 		)
 
 	def __init__(self, mother, node):
@@ -179,9 +184,9 @@ class NodeBoxCommand:
 
 class ArcBoxCommand:
 	POPUP_SYNCARC = (
-		('Info...', INFO),
-		None,
-		('Delete', DELETE),
+		(ALL, 'Info...', INFO),
+		(ALL, None),
+		(ALL, 'Delete', DELETE),
 		)
 
 	def __init__(self):

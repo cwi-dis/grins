@@ -6,6 +6,7 @@ from ViewDialog import ViewDialog
 import windowinterface
 import WMEVENTS
 from usercmd import *
+from flags import *
 
 class HierarchyViewDialog(ViewDialog):
 	adornments = {
@@ -23,54 +24,54 @@ class HierarchyViewDialog(ViewDialog):
 			      'f': PUSHFOCUS,
 			      },
 		'menubar': [
-			('Close', [
-				('Close', CLOSE_WINDOW),
+			(ALL, 'Close', [
+				(ALL, 'Close', CLOSE_WINDOW),
 				]),
-			('Edit', [
-				('Cut', CUT),
-				('Copy', COPY),
-				('Paste', [
-					('Before', PASTE_BEFORE),
-					('After', PASTE_AFTER),
-					('Within', PASTE_UNDER),
+			(ALL, 'Edit', [
+				(ALL, 'Cut', CUT),
+				(ALL, 'Copy', COPY),
+				(ALL, 'Paste', [
+					(ALL, 'Before', PASTE_BEFORE),
+					(ALL, 'After', PASTE_AFTER),
+					(ALL, 'Within', PASTE_UNDER),
 					]),
-				('Delete', DELETE),
-				None,
-				('New Node', [
-					('Before', NEW_BEFORE),
-					('After', NEW_AFTER),
-					('Within', NEW_UNDER),
-					None,
-					('Seq Parent', NEW_SEQ),
-					('Par Parent', NEW_PAR),
-					('Switch Parent', NEW_ALT),
-					('Choice Parent', NEW_CHOICE),
+				(ALL, 'Delete', DELETE),
+				(ALL, None),
+				(ALL, 'New Node', [
+					(ALL, 'Before', NEW_BEFORE),
+					(ALL, 'After', NEW_AFTER),
+					(ALL, 'Within', NEW_UNDER),
+					(ALL, None),
+					(ALL, 'Seq Parent', NEW_SEQ),
+					(ALL, 'Par Parent', NEW_PAR),
+					(ALL, 'Switch Parent', NEW_ALT),
+					(CMIF, 'Choice Parent', NEW_CHOICE),
 					]),
-				None,
-				('Info...', INFO),
-				('Properties...', ATTRIBUTES),
-				('Edit Content...', CONTENT),
+				(ALL, None),
+				(ALL, 'Info...', INFO),
+				(ALL, 'Properties...', ATTRIBUTES),
+				(ALL, 'Edit Content...', CONTENT),
 				]),
-			('Play', [
-				('Play Node', PLAYNODE),
-				('Play from Node', PLAYFROM),
+			(ALL, 'Play', [
+				(ALL, 'Play Node', PLAYNODE),
+				(ALL, 'Play from Node', PLAYFROM),
 				]),
-			('Linking', [
-				('Create Simple Anchor', CREATEANCHOR),
-				('Finish Hyperlink to Selection', FINISH_LINK),
-				('Anchors...', ANCHORS),
+			(ALL, 'Linking', [
+				(ALL, 'Create Simple Anchor', CREATEANCHOR),
+				(ALL, 'Finish Hyperlink to Selection', FINISH_LINK),
+				(ALL, 'Anchors...', ANCHORS),
 				]),
-			('View', [
-				('Expand/Collapse', EXPAND),
-				('Expand All', EXPANDALL),
-				('Collapse All', COLLAPSEALL),
-				None,
-				('Synchronize Selection', PUSHFOCUS),
-				None,
-				('Image Thumbnails', THUMBNAIL, 't'),
+			(ALL, 'View', [
+				(ALL, 'Expand/Collapse', EXPAND),
+				(ALL, 'Expand All', EXPANDALL),
+				(ALL, 'Collapse All', COLLAPSEALL),
+				(ALL, None),
+				(ALL, 'Synchronize Selection', PUSHFOCUS),
+				(ALL, None),
+				(ALL, 'Image Thumbnails', THUMBNAIL, 't'),
 				]),
-			('Help', [
-				('Help...', HELP),
+			(ALL, 'Help', [
+				(ALL, 'Help...', HELP),
 				]),
 			],
 		'toolbar': None, # no images yet...
@@ -78,54 +79,54 @@ class HierarchyViewDialog(ViewDialog):
 		}
 
 	interior_popupmenu = (
-		('New Node Before', NEW_BEFORE),
-		('New Node After', NEW_AFTER),
-		('New Node Within', NEW_UNDER),
-		None,
-		('Cut', CUT),
-		('Copy', COPY),
-		('Delete', DELETE),
-		None,
-		('Paste Before', PASTE_BEFORE),
-		('Paste After', PASTE_AFTER),
-		('Paste Within', PASTE_UNDER),
-		None,
-		('Play Node', PLAYNODE),
-		('Play from Node', PLAYFROM),
-		None,
-		('Expand/Collapse', EXPAND),
-		('Expand All', EXPANDALL),
-		('Collapse All', COLLAPSEALL),
-		None,
-		('Create Simple Anchor', CREATEANCHOR),
-		('Finish Hyperlink', FINISH_LINK),
-		None,
-		('Info...', INFO),
-		('Properties...', ATTRIBUTES),
-		('Anchors...', ANCHORS),
+		(ALL, 'New Node Before', NEW_BEFORE),
+		(ALL, 'New Node After', NEW_AFTER),
+		(ALL, 'New Node Within', NEW_UNDER),
+		(ALL, None),
+		(ALL, 'Cut', CUT),
+		(ALL, 'Copy', COPY),
+		(ALL, 'Delete', DELETE),
+		(ALL, None),
+		(ALL, 'Paste Before', PASTE_BEFORE),
+		(ALL, 'Paste After', PASTE_AFTER),
+		(ALL, 'Paste Within', PASTE_UNDER),
+		(ALL, None),
+		(ALL, 'Play Node', PLAYNODE),
+		(ALL, 'Play from Node', PLAYFROM),
+		(ALL, None),
+		(ALL, 'Expand/Collapse', EXPAND),
+		(ALL, 'Expand All', EXPANDALL),
+		(ALL, 'Collapse All', COLLAPSEALL),
+		(ALL, None),
+		(ALL, 'Create Simple Anchor', CREATEANCHOR),
+		(ALL, 'Finish Hyperlink', FINISH_LINK),
+		(ALL, None),
+		(ALL, 'Info...', INFO),
+		(ALL, 'Properties...', ATTRIBUTES),
+		(ALL, 'Anchors...', ANCHORS),
 		)
 
 	leaf_popupmenu = (
-		('New Node Before', NEW_BEFORE),
-		('New Node After', NEW_AFTER),
-		None,
-		('Cut', CUT),
-		('Copy', COPY),
-		('Delete', DELETE),
-		None,
-		('Paste Before', PASTE_BEFORE),
-		('Paste After', PASTE_AFTER),
-		None,
-		('Play Node', PLAYNODE),
-		('Play from Node', PLAYFROM),
-		None,
-		('Create Simple Anchor', CREATEANCHOR),
-		('Finish Hyperlink', FINISH_LINK),
-		None,
-		('Info...', INFO),
-		('Properties...', ATTRIBUTES),
-		('Anchors...', ANCHORS),
-		('Edit Content...', CONTENT),
+		(ALL, 'New Node Before', NEW_BEFORE),
+		(ALL, 'New Node After', NEW_AFTER),
+		(ALL, None),
+		(ALL, 'Cut', CUT),
+		(ALL, 'Copy', COPY),
+		(ALL, 'Delete', DELETE),
+		(ALL, None),
+		(ALL, 'Paste Before', PASTE_BEFORE),
+		(ALL, 'Paste After', PASTE_AFTER),
+		(ALL, None),
+		(ALL, 'Play Node', PLAYNODE),
+		(ALL, 'Play from Node', PLAYFROM),
+		(ALL, None),
+		(ALL, 'Create Simple Anchor', CREATEANCHOR),
+		(ALL, 'Finish Hyperlink', FINISH_LINK),
+		(ALL, None),
+		(ALL, 'Info...', INFO),
+		(ALL, 'Properties...', ATTRIBUTES),
+		(ALL, 'Anchors...', ANCHORS),
+		(ALL, 'Edit Content...', CONTENT),
 		)
 
 	def __init__(self):
@@ -138,11 +139,12 @@ class HierarchyViewDialog(ViewDialog):
 
 	def show(self):
 		if self.is_showing():
+			self.window.pop(poptop = 1)
 			return
-		self.toplevel.showstate(self, 1)
 		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
+		self.adornments['flags'] = curflags()
 		self.window = windowinterface.newcmwindow(x, y, w, h, title,
 				pixmap = 1, adornments = self.adornments,
 				canvassize = (w, h),
@@ -172,4 +174,4 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.set_commandlist(commandlist)
 
 	def setpopup(self, template):
-		self.window.setpopupmenu(template)
+		self.window.setpopupmenu(template, SMIL)
