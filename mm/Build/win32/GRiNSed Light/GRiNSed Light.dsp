@@ -317,6 +317,10 @@ SOURCE=.\M_copy.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_DefCompatibilityCheck.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_DisplayList.c
 # End Source File
 # Begin Source File
