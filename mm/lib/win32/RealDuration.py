@@ -30,9 +30,20 @@ class RMDuration:
 
 	def getDur(self):
 		return self.dur 
-	
-def get(url):
-	rmadur = RMDuration(url)
-	rmadur.calcDur()
-	return rmadur.getDur()
 
+# policy:
+# if realsupport fails try get dur from Real Player
+# if we are embedded use always Real Player to get dur
+def get(url):
+	import __main__
+	if hasattr(__main__,'embedded') and __main__.embedded:
+		dur = 0
+	else:
+		import realsupport
+		info = realsupport.getinfo(url)
+		dur = info.get('duration', 0)
+	if not dur:
+		rmadur = RMDuration(url)
+		rmadur.calcDur()
+		dur = rmadur.getDur()
+	return dur

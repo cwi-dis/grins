@@ -50,10 +50,7 @@ def getintrinsicduration(node, wanterror):
 		del u
 	# now figure out duration depending on type
 	if string.find(subtype, 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
-		import realsupport
-		info = realsupport.getinfo(url)
-		dur = info.get('duration', 0)
-		if not dur and platform == 'win32':
+		if platform == 'win32':
 			import RealDuration
 			try:
 				dur = RealDuration.get(url)
@@ -62,6 +59,10 @@ def getintrinsicduration(node, wanterror):
 					raise IOError, msg
 				print url, msg
 				return 0
+		else:
+			import realsupport
+			info = realsupport.getinfo(url)
+			dur = info.get('duration', 0)
 	elif maintype == 'video':
 		import VideoDuration
 		try:
