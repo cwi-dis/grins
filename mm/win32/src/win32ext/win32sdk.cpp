@@ -520,6 +520,26 @@ sdk_send_message_get_rect(PyObject *self, PyObject *args)
 	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
 	}
 
+// @pymethod |PyWin32Sdk|SendMessageSetRect|A special version of send message for Python with LPARAM a rect 
+static PyObject *
+sdk_send_message_set_rect(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam;
+	RECT rc;
+	if (!PyArg_ParseTuple(args, "iii(iiii):SendMessageSetRect",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &rc.left, &rc.top, &rc.right, &rc.bottom)) 
+		return NULL;
+	GUI_BGN_SAVE;
+	LPARAM ret = SendMessage(hwnd,message,wParam,(LPARAM)&rc);
+	GUI_END_SAVE;
+	return Py_BuildValue("i", ret);
+	}
+
 // @pymethod |PyWin32Sdk|SendMessageMS|A special version of send message for Python 
 // LPARAM is a tuple representing win32 MSG structure
 static PyObject *
@@ -1181,7 +1201,57 @@ sdk_init_common_controls_ex(PyObject *self, PyObject *args)
 	}
 
 ///////////////////////////
-// Tooltip
+// Tooltip support 
+// (normally should be PyObject, but...)
+
+static TOOLINFO*
+fillToolInfo(TOOLINFO *pti, HWND hwnd, WPARAM uId, RECT *prc=NULL, LPTSTR lpszText=NULL, UINT uFlags=0)
+	{
+    TOOLINFO& ti = *pti;
+	memset(&ti, 0, sizeof(TOOLINFO));
+	ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = uFlags;
+    ti.hwnd = hwnd;
+    ti.hinst = 0;
+    ti.uId = uId;
+    ti.lpszText = lpszText;
+	if(prc){
+		ti.rect.left = prc->left;    
+		ti.rect.top = prc->top;
+		ti.rect.right = prc->right;
+		ti.rect.bottom = prc->bottom;
+		}
+	return pti;
+	}
+
+// NewToolInfo (intil we make TOOLINFO a PyObject)
+static PyObject*
+sdk_new_tool_info(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	int id;
+	RECT rc = {0, 0, 0, 0};
+	if (!PyArg_ParseTuple(args,"ii|(iiii):NewToolInfo", &hwnd, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom))
+		return NULL;
+	TOOLINFO *pti = new TOOLINFO;
+	if(rc.left == rc.right &&  rc.top==rc.bottom && rc.left==0 && rc.top==0)
+		fillToolInfo(pti, hwnd, id);
+	else
+		fillToolInfo(pti, hwnd, id, &rc);
+	return Py_BuildValue("i", int(pti));
+	}
+
+// DelToolInfo (intil we make TOOLINFO a PyObject)
+static PyObject*
+sdk_del_tool_info(PyObject *self, PyObject *args)
+	{
+	int pti;
+	if (!PyArg_ParseTuple(args,"i:DelToolInfo", &pti))
+		return NULL;
+	delete ((TOOLINFO*)pti);
+	RETURN_NONE;
+	}
 
 // AddTool
 static PyObject*
@@ -1201,18 +1271,8 @@ sdk_add_tool(PyObject *self, PyObject *args)
 		strncpy(buf, pszText, min(256, strlen(pszText)+1));
 		buf[255]='\0';
 		}
-    TOOLINFO ti;
-	ti.cbSize = sizeof(TOOLINFO);
-    ti.uFlags = 0; // TTF_SUBCLASS;
-    ti.hwnd = hwndParent;
-    ti.hinst = 0;
-    ti.uId = id;
-    ti.lpszText = buf?buf:LPSTR_TEXTCALLBACK;
-    ti.rect.left = rc.left;    
-    ti.rect.top = rc.top;
-    ti.rect.right = rc.right;
-    ti.rect.bottom = rc.bottom;
-    SendMessage(hwnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	TOOLINFO ti;
+	SendMessage(hwnd, TTM_ADDTOOL, 0, (LPARAM)fillToolInfo(&ti, hwndParent, id, &rc, buf));	
 	return Py_BuildValue("i", int(buf));
 	}
 
@@ -1225,12 +1285,8 @@ sdk_del_tool(PyObject *self, PyObject *args)
 	char *pszText=NULL;
 	if (!PyArg_ParseTuple(args,"iii:DeleteTool", &hwnd, &hwndParent, &id))
 		return NULL;
-    TOOLINFO ti;
-	memset(&ti, 0, sizeof(TOOLINFO));
-	ti.cbSize = sizeof(TOOLINFO);
-    ti.hwnd = hwndParent;
-    ti.uId = id;
-    SendMessage(hwnd, TTM_DELTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	TOOLINFO ti;
+ 	SendMessage(hwnd, TTM_DELTOOL, 0, (LPARAM)fillToolInfo(&ti, hwndParent, id));	
 	RETURN_NONE;
 	}
 
@@ -1244,19 +1300,8 @@ sdk_new_tool_rect(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args,"iii(iiii):NewToolInfo", &hwnd, &hwndParent, &id,
 		        &rc.left, &rc.top, &rc.right,&rc.bottom))
 		return NULL;
-    TOOLINFO ti;
-	memset(&ti, 0, sizeof(TOOLINFO));
-	ti.cbSize = sizeof(TOOLINFO);
-    ti.uFlags = 0;
-    ti.hwnd = hwndParent;
-    ti.hinst = 0;
-    ti.uId = id;
-    ti.lpszText = NULL;
-    ti.rect.left = rc.left;    
-    ti.rect.top = rc.top;
-    ti.rect.right = rc.right;
-    ti.rect.bottom = rc.bottom;
-    SendMessage(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	TOOLINFO ti;
+	SendMessage(hwnd, TTM_NEWTOOLRECT,0 , (LPARAM)fillToolInfo(&ti, hwndParent, id, &rc));	
 	RETURN_NONE;
 	}
 
@@ -1277,14 +1322,7 @@ sdk_update_tip_text(PyObject *self, PyObject *args)
 	buf[255]='\0';
 
 	TOOLINFO ti;
-	memset(&ti, 0, sizeof(TOOLINFO));
-	ti.cbSize = sizeof(TOOLINFO);
-    ti.uFlags = 0;
-    ti.hwnd = hwndParent;
-    ti.hinst = 0;
-    ti.uId = id;
-    ti.lpszText = buf;
-    SendMessage(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	SendMessage(hwnd, TTM_UPDATETIPTEXT,0 , (LPARAM)fillToolInfo(&ti, hwndParent, id, NULL, buf));	
 	return Py_BuildValue("i", int(buf));
 	}
 
@@ -1313,6 +1351,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"SendMessageGL",sdk_send_message_gl,1}, // @pymeth SendMessageGL|Sends a message to an edit control. The return value is a string	
 	{"SendMessageGT",sdk_send_message_gt,1}, // @pymeth SendMessageGT|	
 	{"SendMessageGetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageGetRect|A special version of send message for Python that returns a rectangle 
+	{"SendMessageSetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageSetRect|A special version of send message for Python that sets a rectangle 
 	{"SendMessageMS",sdk_send_message_ms,1}, // @pymeth SendMessageMS|A special version of send message for Python. LPARAM is a tuple equivalent to a win32 MSG struct
 	
 	{"SetCursor",sdk_set_cursor,1}, // @pymeth SetCursor|Establishes a cursor shape.	
@@ -1356,7 +1395,9 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	
 	{"InitCommonControlsEx",sdk_init_common_controls_ex,1},
 
-	// Tooltps support
+	// Tooltips support
+	{"NewToolInfo",sdk_new_tool_info,1},
+	{"DelToolInfo",sdk_del_tool_info,1},
 	{"AddTool",sdk_add_tool,1},
 	{"DelTool",sdk_del_tool,1},
 	{"NewToolRect",sdk_new_tool_rect,1},
