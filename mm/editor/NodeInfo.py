@@ -396,6 +396,9 @@ class NodeInfo(Dialog):
 	def attributes_callback(self, (obj,dummy)):
 		import AttrEdit
 		AttrEdit.showattreditor(self.node)
+	def anchors_callback(self, (obj, dummy)):
+		import AnchorEdit
+		AnchorEdit.showanchoreditor(self.node)
 	#
 	# Callbacks for 'imm' type nodes
 	#
