@@ -20,9 +20,6 @@ from usercmd import *
 
 STOPPED, PAUSING, PLAYING = range(3)
 
-# WMP_EXPORT experimental flag
-WMP_WXPORT = 0
-
 class PlayerDialog:
 	adornments = {}
 	def __init__(self, coords, title):
@@ -48,10 +45,6 @@ class PlayerDialog:
 		self.__channeldict = {}
 		self.__strid='player'
 		self.__cmdtgt='pview_'
-
-		# WMP_EXPORT experimental vars
-		self.__viewports = []
-		self.__playing = 0
 
 	def close(self):
 		"""Close the dialog and free resources."""
@@ -181,19 +174,6 @@ class PlayerDialog:
 		self.__state = state
 
 		
-		# WMP_EXPORT experimental section
-		if WMP_WXPORT and self.__viewports:
-			if state == PLAYING:
-				for v in self.__viewports:
-					v.beginExport()
-				self.__playing = 1
-			elif state == STOPPED:
-				if self.__playing:
-					for v in self.__viewports:
-						v.endExport()
-				self.__playing = 0
-		# /WMP_EXPORT experimental section
-
 #		w = self.__window
 #		if w is not None:
 #			if state == STOPPED:
@@ -218,16 +198,11 @@ class PlayerDialog:
 
 		pass
 
-	# WMP_EXPORT experimental method
-	def _setviewport(self, viewport):
-		self.__viewports.append(viewport)
-
 	def get_adornments(self, channel):
 		self.inst_adornments = {
 			'close': [ CLOSE_WINDOW, ],
 			'frame':self.toplevel.window,
 			'view':self.__cmdtgt,
-			'register':self._setviewport,
 			}
 		return self.inst_adornments
 
