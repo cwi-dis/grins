@@ -74,6 +74,7 @@ class Channel:
 		self._subchannels = []
 		self._want_shown = 0
 		self._highlighted = None
+		self._in_modeless_resize = 0
 		self.nopop = 0
 		self.syncarm = 0
 		self.syncplay = 0
@@ -123,6 +124,7 @@ class Channel:
 			for key, (val, default) in self._curvals.items():
 				if self._attrdict.get(key, default) != val:
 					highlighted = self._highlighted
+					self.cancel_modeless_resize()
 					self.hide()
 					self.show()
 					if highlighted:
@@ -213,30 +215,7 @@ class Channel:
 			# Remove us from all subchannel lists.
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
-		# First, check that there is a base_window attribute
-		# and that it isn't "undefined".
-		pname = self._attrdict.get('base_window', 'undefined')
-		self._curvals['base_window'] = (pname, 'undefined')
-		if pname == self._name:
-			pname = 'undefined'
-		pchan = None
-		if pname != 'undefined':
-			# Next, check that the base window channel exists.
-			try:
-				pchan = self._player.ChannelWinDict[pname]
-			except (AttributeError, KeyError):
-				pchan = None
-				windowinterface.showmessage(
-					'Base window '+`pname`+' for '+
-					`self._name`+' not found',
-					mtype = 'error')
-			if pchan and self in pchan._subchannels:
-				windowinterface.showmessage(
-					'Channel '+`self._name`+' is part of'+
-					' a base-window loop',
-					mtype = 'error')
-				pchan = None
-				pname = 'undefined'
+		pchan = self._get_parent_channel(creating=1)
 		if pchan:
 			# Finally, check that the base window is being shown.
 			pchan._subchannels.append(self)
@@ -254,6 +233,38 @@ class Channel:
 				self._player.after_chan_show(self)
 			return
 		self.after_show()
+		
+	def _get_parent_channel(self, creating=0):
+		"""Return the parent (basewindow) channel, if it exists"""
+		# First, check that there is a base_window attribute
+		# and that it isn't "undefined".
+		pname = self._attrdict.get('base_window', 'undefined')
+		self._curvals['base_window'] = (pname, 'undefined')
+		if pname == self._name:
+			pname = 'undefined'
+		pchan = None
+		if pname != 'undefined':
+			# Next, check that the base window channel exists.
+			try:
+				pchan = self._player.ChannelWinDict[pname]
+			except (AttributeError, KeyError):
+				pchan = None
+				windowinterface.showmessage(
+					'Base window '+`pname`+' for '+
+					`self._name`+' not found',
+					mtype = 'error')
+			if pchan:
+				if creating and self in pchan._subchannels:
+					windowinterface.showmessage(
+						'Channel '+`self._name`+' is part of'+
+						' a base-window loop',
+						mtype = 'error')
+					pchan = None
+					pname = 'undefined'
+##				Can't do this: during close the info is gone.
+##				elif not creating and not self in pchan._subchannels:
+##					raise 'Parent window does not contain child', (self, pchan)
+		return pchan
 
 	def after_show(self):
 		# Since the calls to arm() and play() lied to the
@@ -276,6 +287,7 @@ class Channel:
 			print 'Channel.hide('+`self`+')'
 		self._want_shown = 0
 		self._highlighted = None
+		self.cancel_modeless_resize()
 		self.sensitive()
 		if not self._is_shown:
 			return
@@ -307,6 +319,13 @@ class Channel:
 		# stop highlighting the channel instance
 		pass
 
+	def modeless_resize_window(self):
+		# Set a channel in modeless resize mode
+		pass
+		
+	def cancel_modeless_resize(self):
+		pass
+		
 	def sensitive(self, callback = None):
 		pass
 
@@ -1003,6 +1022,7 @@ class ChannelWindow(Channel):
 	def unhighlight(self):
 		if self._is_shown and self.window:
 			self._highlighted = None
+			self.cancel_modeless_resize()
 			self.window.dontshowwindow()
 
 	def sensitive(self, callback = None):
@@ -1198,8 +1218,7 @@ class ChannelWindow(Channel):
 			'Resize window for channel ' + self._name,
 			self._resize_callback,
 			self._attrdict['base_winoff'],
-			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN),
-			modeless=1)
+			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN))
 
 	def _resize_callback(self, *box):
 		if box:
@@ -1210,6 +1229,40 @@ class ChannelWindow(Channel):
 		else:
 			self._player.editmgr.rollback()
 		self.highlight()
+
+	def modeless_resize_window(self):
+		pchan = self._get_parent_channel()
+		if not pchan:
+			return
+##		self._player.toplevel.setwaiting()
+##		self.unhighlight()
+		self._in_modeless_resize = 1
+		# we now know for sure we're not playing
+		pchan.window.create_box(
+			None,
+			self._modeless_resize_callback,
+			self._attrdict['base_winoff'],
+			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN),
+			modeless=1)
+			
+	def cancel_modeless_resize(self):
+		if not self._in_modeless_resize:
+			return
+		pchan = self._get_parent_channel()
+		if not pchan:
+			return
+		pchan.window.cancel_create_box()
+
+	def _modeless_resize_callback(self, *box):
+		self._in_modeless_resize = 0
+		if box:
+			if not self._player.editmgr.transaction():
+				return
+			self._attrdict['base_winoff'] = box
+			self.hide()
+			self.show()
+			self._player.editmgr.commit()
+##		self.highlight()
 
 	def do_show(self, pchan):
 		if debug:
