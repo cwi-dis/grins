@@ -119,11 +119,17 @@ class AttrEditorDialog(windowinterface.MACDialog):
 ##		self._selectpage(initpagenum)
 
 	def close(self):
+##		print 'editclose', self
 		for p in self._pages:
 			p.close()
 		del self._pagebrowser
 		del self._pages
+		del self._attr_to_pageindex
+		del self._cur_page
 		windowinterface.MACDialog.close(self)
+		
+##	def __del__(self):
+##		print 'del', self
 
 	def getcurattr(self):
 		if not self._cur_page:
@@ -224,9 +230,13 @@ class TabPage:
 		return self.item0 + self.N_ITEMS
 		
 	def close(self):
+##		print 'close', self
 		del self.fieldlist
 		del self.attreditor
 		
+##	def __del__(self):
+##		print 'del', self
+
 	def createwidget(self):
 		return self.fieldlist[0]._widgetcreated()
 		
