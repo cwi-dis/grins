@@ -13,7 +13,6 @@ import MMurl
 import re
 from cmif import findfile
 import windowinterface
-import compatibility
 from fmtfloat import round
 from nameencode import nameencode
 
@@ -38,10 +37,10 @@ isidre = re.compile('^[a-zA-Z_][-A-Za-z0-9._]*$')
 
 Error = 'Error'
 
-def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exporttype = compatibility.G2):
-	if exporttype == compatibility.G2:
+def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exporttype = 'REAL'):
+	if exporttype == 'REAL':
 		__WriteFileG2(root, filename, smilurl, oldfilename, evallicense)
-	elif exporttype == compatibility.QT:
+	elif exporttype == 'QuickTime':
 		__WriteFileQT(root, filename, smilurl, oldfilename, evallicense)
 	else:
 		windowinterface.showmessage('Unsupported export type in this product: %s'%exporttype)
@@ -75,7 +74,7 @@ def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 		macostools.touched(fss)
 	ramurl = MMurl.pathname2url(ramfile)
 	try:
-		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir, compatibility.G2)
+		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir, 'REAL')
 		writer.write()
 		fp.close()
 	except Error, msg:
@@ -97,7 +96,7 @@ def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
 	fp = open(filename, 'w')
 	
 	try:
-		writer = HTMLWriter(root, fp, filename, smilurl, oldfilename, evallicense, templatedir, compatibility.QT)
+		writer = HTMLWriter(root, fp, filename, smilurl, oldfilename, evallicense, templatedir, 'QuickTime')
 		writer.write()
 		fp.close()
 	except Error, msg:
@@ -166,9 +165,9 @@ class HTMLWriter:
 		self.top_levels = []
 		self.calcViewportName(node)
 
-		if exporttype == compatibility.G2:
+		if exporttype == 'REAL':
 			self.objectgenerator = self.outobjectG2
-		elif exporttype == compatibility.QT:
+		elif exporttype == 'QuickTime':
 			self.objectgenerator = self.outobjectQT
 		else:
 			raise 'unknown export type'

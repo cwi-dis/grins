@@ -104,9 +104,8 @@ cancel = 'cancel'
 def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
 	      rpExt = features.EXPORT_REAL in features.feature_set, copyFiles = 0, convertfiles = 1, convertURLs = 0,
 	      evallicense = 0, progress = None, prune = 0, smil_one = 0):
-	fp = open(filename, 'w')
 	try:
-		writer = SMILWriter(root, fp, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one)
+		writer = SMILWriter(root, None, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -128,15 +127,15 @@ def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in featur
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, ftpparams, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
+def WriteFTP(root, filename, ftpparams, wftpparams, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
 	     rpExt = features.EXPORT_REAL in features.feature_set, copyFiles = 0, convertfiles = 1, convertURLs = 0,
-	     evallicense = 0, progress = None, prune = 0, smil_one = 0):
+	     evallicense = 0, progress = None, prune = 0, smil_one = 0, weburl = None):
 	host, user, passwd, dir = ftpparams
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
 		try:
-			writer = SMILWriter(root, ftp, filename, tmpcopy = 1, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one)
+			writer = SMILWriter(root, ftp, filename, tmpcopy = 1, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one, weburl = weburl)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
@@ -148,7 +147,7 @@ def WriteFTP(root, filename, ftpparams, grinsExt = 1, qtExt = features.EXPORT_QT
 		#
 		# Upload generated media items
 		#
-		srcdir, dstdir, filedict = writer.getcopyinfo()
+		srcdir, dstdir, filedict, webfiledict = writer.getcopyinfo()
 		del writer
 		del ftp
 		if copyFiles and filedict:
@@ -158,6 +157,39 @@ def WriteFTP(root, filename, ftpparams, grinsExt = 1, qtExt = features.EXPORT_QT
 			for filename in filedict.keys():
 				num = num + 1
 				binary = filedict[filename] # Either 'b' or '', or None for dummies
+				if binary is None:
+					continue
+				ascii = not binary
+				localfilename = os.path.join(srcdir, filename)
+				remotefilename = os.path.split(filename)[1] # Remove the : for mac filenames
+				ifp = open(localfilename, 'r'+binary)
+				if progress:
+					ifp.seek(0, 2)
+					totsize = ifp.tell()
+					ifp.seek(0, 0)
+					progress("Uploading %s"%remotefilename, num, totfiles, 0, totsize)
+				ofp = conn.Writer(remotefilename, ascii=ascii)
+				while 1:
+					data = ifp.read(16*1024)
+					if not data:
+						break
+					ofp.write(data)
+					if progress:
+						progress("Uploading %s"%remotefilename, num, totfiles, ifp.tell(), totsize)
+				ifp.close()
+				ofp.close()
+		if copyFiles and webfiledict:
+			whost, wuser, wpasswd, wdir = wftpparams
+			if host != whost or user != wuser:
+				conn = FtpWriter.FtpConnection(whost, user=wuser, passwd=wpasswd, dir=wdir)
+			else:
+				conn.chmkdir(wdir)
+			conn.chmkdir(dstdir)
+			totfiles = len(webfiledict.keys())
+			num = 0
+			for filename in webfiledict.keys():
+				num = num + 1
+				binary = webfiledict[filename] # Either 'b' or '', or None for dummies
 				if binary is None:
 					continue
 				ascii = not binary
@@ -236,12 +268,7 @@ def geturl(writer, node, attr):
 	val = node.GetAttrDef(attr, None)
 	if not val:
 		return val
-	ctx = writer.context
-	if writer.convertURLs:
-		val = MMurl.canonURL(ctx.findurl(val))
-		if val[:len(writer.convertURLs)] == writer.convertURLs:
-			val = val[len(writer.convertURLs):]
-	return val
+	return writer.fixurl(val)
 
 def getsrc(writer, node):
 	ntype = node.GetType()
@@ -312,18 +339,14 @@ def getsrc(writer, node):
 			val = '#'
 		return val
 	if not writer.copydir:
-		if writer.convertURLs:
-			val = MMurl.canonURL(writer.context.findurl(val))
-			if val[:len(writer.convertURLs)] == writer.convertURLs:
-				val = val[len(writer.convertURLs):]
-		return val
+		return writer.fixurl(val)
 	url = writer.context.findurl(val)
-	return copysrc(writer, node, url)
+	return copysrc(writer, node, url, writer.copycache, writer.files_generated, writer.copydirurl)
 
-def copysrc(writer, node, url):
-	if writer.copycache.has_key(url):
+def copysrc(writer, node, url, copycache, files_generated, copydirurl):
+	if copycache.has_key(url):
 		# already seen and copied
-		nurl = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
+		nurl = MMurl.basejoin(copydirurl, MMurl.pathname2url(copycache[url]))
 		if writer.rpExt and not writer.grinsExt:
 			nurl = MMurl.unquote(nurl)
 		return nurl
@@ -368,15 +391,15 @@ def copysrc(writer, node, url):
 						node.set_infoicon('error', msg)
 				continue
 			iurl = writer.context.findurl(iurl)
-			if writer.copycache.has_key(iurl):
-				nfile = writer.copycache[iurl]
+			if copycache.has_key(iurl):
+				nfile = copycache[iurl]
 			else:
-				nfile = writer.copyfile(iurl, attrs)
-				writer.copycache[iurl] = nfile
-			attrs['file'] = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(nfile))
+				nfile = writer.copyfile(iurl, attrs, files_generated)
+				copycache[iurl] = nfile
+			attrs['file'] = MMurl.basejoin(copydirurl, MMurl.pathname2url(nfile))
 		rp.tags = ntags
-		file = writer.newfile(url)
-		nurl = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+		file = writer.newfile(url, files_generated)
+		nurl = MMurl.basejoin(copydirurl, MMurl.pathname2url(file))
 		if node:
 			ofile = node.GetRawAttrDef('file', None)
 			node.SetAttr('file', nurl)
@@ -386,19 +409,19 @@ def copysrc(writer, node, url):
 				node.SetAttr('file', ofile)
 			else:
 				node.DelAttr('file')
-		writer.files_generated[file] = ''
+		files_generated[file] = ''
 		rp.tags = otags
 	else:
 		try:
-			file = writer.copyfile(url, node)
+			file = writer.copyfile(url, node, files_generated)
 		except IOError, msg:
 			import windowinterface
 			windowinterface.showmessage('Cannot copy %s: %s\n'%(url, msg)+'The URL is left unchanged; the document may not be playable.', cancelCallback = (writer.cancelwrite, ()))
 			if node:
 				node.set_infoicon('error', msg)
 			return url
-	writer.copycache[url] = file
-	nurl = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+	copycache[url] = file
+	nurl = MMurl.basejoin(copydirurl, MMurl.pathname2url(file))
 	if writer.rpExt and not writer.grinsExt:
 		nurl = MMurl.unquote(nurl)
 	return nurl
@@ -598,20 +621,30 @@ def getsyncarc(writer, node, isend):
 	else:
 		attr = 'beginlist'
 	list = []
-	nomultiple = 0
 	for arc in node.GetRawAttrDef(attr, []):
 		if arc.srcnode is None and arc.event is None and arc.marker is None and arc.delay is None and arc.wallclock is None:
-			nomultiple = 1
-			list.append('indefinite')
+			if writer.smilboston:
+				list.append('indefinite')
+			else:
+				writer.warning('Lost information about indefinite time')
 		elif arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
-			list.append(fmtfloat(arc.delay, 's'))
+			if not writer.smilboston and arc.delay < 0:
+				writer.warning('Lost information about negative delay')
+			else:
+				list.append(fmtfloat(arc.delay, 's'))
 		elif arc.wallclock is not None:
-			list.append(wallclock2string(arc.wallclock))
+			if writer.smilboston:
+				list.append(wallclock2string(arc.wallclock))
+			else:
+				writer.warning('Lost information about wallclock time')
 		elif arc.accesskey is not None:
-			key = 'accesskey(%s)' % arc.accesskey
-			if arc.delay:
-				key = key + fmtfloat(arc.delay, withsign = 1)
-			list.append(key)
+			if writer.smilboston:
+				key = 'accesskey(%s)' % arc.accesskey
+				if arc.delay:
+					key = key + fmtfloat(arc.delay, withsign = 1)
+				list.append(key)
+			else:
+				writer.warning('Lost information about accesskey time')
 		elif arc.marker is None:
 			srcnode = arc.srcnode
 			if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase') and not writer.grinsExt:
@@ -620,10 +653,16 @@ def getsyncarc(writer, node, isend):
 				if srcnode is None:
 					continue
 			if arc.channel is not None:
+				if not writer.smilboston:
+					writer.warning('Lost information about event timing')
+					continue
 				name = writer.ch2name[arc.channel]
 			elif srcnode == 'syncbase':
 				name = ''
 			elif srcnode == 'prev':
+				if not writer.smilboston:
+					writer.warning('Lost information about prev time')
+					continue
 				name = 'prev'
 			elif type(srcnode) is type(''):
 				name = 'xpath(%s)' % srcnode
@@ -638,21 +677,66 @@ def getsyncarc(writer, node, isend):
 			elif srcnode is node:
 				name = ''
 			else:
-				name = escape_name(writer.uid2name[srcnode.GetUID()])
+				if not writer.smilboston:
+					if srcnode.GetSchedParent() is not node.GetSchedParent():
+						writer.warning('Lost information about out-of-scope syncarc')
+						continue
+					cont = 0
+					for n in srcnode.GetPath():
+						if n.GetType() in ('animate','animpar','prefetch','brush','excl','prio'):
+							writer.warning('Lost informatio about syncarc from non-included object')
+							cont = 1
+							break
+					if cont:
+						continue
+					name = writer.uid2name[srcnode.GetUID()]
+				else:
+					name = escape_name(writer.uid2name[srcnode.GetUID()])
 			if arc.event is not None:
-				if name:
-					name = name + '.'
-				name = name + escape_name(arc.event, 0)
+				if not writer.smilboston and arc.event not in ('begin', 'end'):
+					writer.warning('Lost information about event timing')
+					continue
+				if writer.smilboston:
+					if name:
+						name = name + '.'
+					name = name + escape_name(arc.event, 0)
+				else:
+					if arc.event == 'end':
+						if arc.delay != 0:
+							writer.warning('Lost information about delay')
+							continue
+						name = 'id(%s)(end)' % name
+					elif arc.event == 'begin':
+						if arc.delay < 0:
+							writer.warning('Lost information about negative delay')
+							continue
+						if arc.delay == 0:
+							name = 'id(%s)(begin)' % name
+						else:
+							name = 'id(%s)(%s)' % (name, fmtfloat(arc.delay))
+					else:
+						writer.warning('Lost information about event timing')
+						continue
 			if arc.delay or not name:
 				if name:
-					name = name + fmtfloat(arc.delay, withsign = 1)
+					if writer.smilboston:
+						name = name + fmtfloat(arc.delay, withsign = 1)
 				else:
+					if not writer.smilboston and arc.delay < 0:
+						writer.warning('Lost information about negative delay')
+						continue
 					name = fmtfloat(arc.delay, withsign = 0)
 			list.append(name)
 		else:
-			list.append('%s.marker(%s)' % (escape_name(writer.uid2name[arc.srcnode.GetUID()]), arc.marker))
+			if not writer.smilboston:
+				writer.warning('Lost information about marker timing')
+			else:
+				list.append('%s.marker(%s)' % (escape_name(writer.uid2name[arc.srcnode.GetUID()]), arc.marker))
 	if not list:
 		return
+	if not writer.smilboston and len(list) > 1:
+		writer.warning('Lost information about multiple %s times' % ['begin','end'][isend])
+		return list[0]		# just return the first
 	return string.join(list, ';')
 
 def getterm(writer, node):
@@ -980,8 +1064,8 @@ smil_attrs=[
 	("calcMode", getcalcmode, None),
 	("keyTimes", getKeyTimes, "keyTimes"),
 	("keySplines", lambda writer, node: (writer.smilboston and node.GetRawAttrDef("keySplines", None)) or None, "keySplines"),
-	("transIn", lambda writer, node:gettransition(writer, node, "transIn"), "transIn"),
-	("transOut", lambda writer, node:gettransition(writer, node, "transOut"), "transOut"),
+	("transIn", lambda writer, node: (writer.smilboston and gettransition(writer, node, "transIn")) or None, "transIn"),
+	("transOut", lambda writer, node: (writer.smilboston and gettransition(writer, node, "transOut")) or None, "transOut"),
 	("mode", getinlinetrmode, "mode"),
 	("subtype", lambda writer, node: (writer.smilboston and node.GetRawAttrDef("subtype", None)) or None, "subtype"),
 
@@ -1124,8 +1208,9 @@ class SMILWriter(SMIL):
 		     qtExt = features.EXPORT_QT in features.feature_set,
 		     copyFiles = 0, evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
-		     smil_one = 0):
+		     smil_one = 0, weburl = None):
 		self.messages = []
+
 		# remember params
 		self.set_char_pos = set_char_pos
 		self.grinsExt = grinsExt
@@ -1136,6 +1221,7 @@ class SMILWriter(SMIL):
 		self.progress = progress
 		self.convert = convertfiles # we only convert if we have to copy
 		self.root = node
+
 		self.__ignoring = 0	# whether we're ignoring a tag (see writetag())
 
 		# some abbreviations
@@ -1157,13 +1243,11 @@ class SMILWriter(SMIL):
 		else:
 			self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
 		self.files_generated = {}
+		self.webfiles_generated = {}
 		self.bases_used = {}
 		if copyFiles:
 			dir, base = os.path.split(filename)
 			base, ext = os.path.splitext(base)
-##			if not ext:
-##				base = base + '.dir'
-##			newdir = self.newfile(base, dir)
 			if tmpcopy:
 				newdir = base + '.tmpdata'
 				self.copydir = os.path.join(dir, newdir)
@@ -1174,7 +1258,9 @@ class SMILWriter(SMIL):
 				self.copydir = os.path.join(dir, newdir)
 				self.copydirurl = MMurl.pathname2url(newdir) + '/'
 				self.copydirname = newdir
+			self.webcopydirurl = MMurl.basejoin(weburl or '', self.copydirurl)
 			self.copycache = {}
+			self.webcopycache = {}
 			try:
 				os.mkdir(self.copydir)
 			except:
@@ -1195,23 +1281,22 @@ class SMILWriter(SMIL):
 		else:
 			self.smilboston = ctx.attributes.get('project_boston', 0)
 
-		self.fp = IndentedFile(fp)
 		self.__title = ctx.gettitle()
 		assets = ctx.getassets()
 
 		self.ids_used = {}
 
 		self.ugr2name = {}
-		self.calcugrnames(node)
+		self.calcugrnames()
 
 		self.layout2name = {}
-		self.calclayoutnames(node)
+		self.calclayoutnames()
 
 		self.transition2name = {}
-		self.calctransitionnames(node)
+		self.calctransitionnames()
 
 		self.ch2name = {}
-		self.calcchnames1(node)
+		self.calcchnames1()
 
 		self.uid2name = {}
 		self.calcnames1(node)
@@ -1224,15 +1309,13 @@ class SMILWriter(SMIL):
 		if assets:
 			for anode in assets:
 				self.calcnames2(anode)
-		self.calcchnames2(node)
-		if assets:
-			for anode in assets:
-				self.calcchnames2(anode)
+		self.calcchnames2()
 
 		self.syncidscheck(node)
-		if assets:
-			for anode in assets:
-				self.calcnames1(anode)
+
+		if fp is None:
+			fp = open(filename, 'w')
+		self.fp = IndentedFile(fp)
 
 	def warning(self, msg):
 		self.messages.append(msg)
@@ -1520,7 +1603,7 @@ class SMILWriter(SMIL):
 		self.writenode(self.root, root = 1)
 		self.close()
 
-	def calcugrnames(self, node):
+	def calcugrnames(self):
 		# Calculate unique names for usergroups
 		usergroups = self.context.usergroups
 		if not usergroups:
@@ -1541,7 +1624,7 @@ class SMILWriter(SMIL):
 			self.ids_used[name] = 1
 			self.ugr2name[ugroup] = name
 
-	def calctransitionnames(self, node):
+	def calctransitionnames(self):
 		# Calculate unique names for transitions
 		transitions = self.context.transitions
 		if not transitions:
@@ -1562,7 +1645,7 @@ class SMILWriter(SMIL):
 			self.ids_used[name] = 1
 			self.transition2name[transition] = name
 
-	def calclayoutnames(self, node):
+	def calclayoutnames(self):
 		# Calculate unique names for layouts
 		layouts = self.context.layouts
 		if not layouts:
@@ -1625,7 +1708,7 @@ class SMILWriter(SMIL):
 		for child in node.children:
 			self.calcnames2(child)
 
-	def calcchnames1(self, node):
+	def calcchnames1(self):
 		# Calculate unique names for channels; first pass
 		channels = self.context.channels
 		for ch in channels:
@@ -1647,7 +1730,7 @@ class SMILWriter(SMIL):
 			# no channels with windows, so take very first channel
 			self.__title = channels[0].name
 
-	def calcchnames2(self, node):
+	def calcchnames2(self):
 		# Calculate unique names for channels; second pass
 		top0 = None
 		for ch in self.context.getviewports():
@@ -1658,7 +1741,7 @@ class SMILWriter(SMIL):
 				else:
 					# second top-level, must be SMIL 2.0
 					if self.force_smil_1:
-						self.warning('Lost information about multiple topLevel windows')
+						raise Error, 'Multiple topLevel windows'
 					else:
 						self.smilboston = 1
 					break
@@ -1679,7 +1762,7 @@ class SMILWriter(SMIL):
 				for sch in ch.GetChildren():
 					if sch['type'] == 'layout':
 						if self.force_smil_1:
-							self.warning('Lost information about hierarchical regions')
+							raise Error, 'Lost information about hierarchical regions'
 						else:
 							self.smilboston = 1
 						break
@@ -1776,7 +1859,7 @@ class SMILWriter(SMIL):
 				attrlist.append(('background-color', bgcolor))
 
 			if self.smilboston:
-				# write only not default value
+				# write only non default value
 				if ch.has_key('open'):
 					val = ch['open']
 					if val != 'onStart':
@@ -1857,7 +1940,7 @@ class SMILWriter(SMIL):
 			# write only no auto values
 			if value != None:
 				if type(value) is type(0.0):
-					value = '%s%%' %fmtfloat(value*100, prec=2)
+					value = fmtfloat(value*100, '%', prec=2)
 				elif type(value) is type(0):
 					value = '%d' % value
 				attrlist.append((name, value))
@@ -1888,37 +1971,9 @@ class SMILWriter(SMIL):
 			if not self.smilboston:
 				transparent = ch.get('transparent', 0)
 				bgcolor = ch.get('bgcolor')
-				if transparent == 0:
-					if features.compatibility == features.G2:
-						# in G2, setting a
-						# background-color implies
-						# transparent==never, so set
-						# background-color if not
-						# transparent
-						bgcolor = translatecolor(bgcolor)
-						attrlist.append(('background-color',
-								 bgcolor))
-						bgcolor = None # skip below
-					# non-SMIL extension:
-					# permanently visible region
-					attrlist.append(('%s:transparent' % NSGRiNSprefix,
-								 '0'))
-				#
-				# We write the background color only if it is not None.
-				# We also refrain from writing it if we're in G2 compatability mode and
-				# the color is the default (g2-compatible) color: white for text channels
-				# and black for others.
-				if bgcolor is not None and \
-				   (features.compatibility != features.G2 or
-				    ((ch['type'] not in ('text', 'RealText') or
-				      bgcolor != (255,255,255)) and
-				     bgcolor != (0,0,0))) and \
-				     (self.grinsExt or ch['type'] != 'RealText'):
+				if not transparent and bgcolor is not None:
 					bgcolor = translatecolor(bgcolor)
-					attrlist.append(('background-color',
-							 bgcolor))
-			# Since background-color="transparent" is the
-			# default, we don't need to actually write that
+					attrlist.append(('background-color', bgcolor))
 
 		#
 		# Background color for SMIL version 2:
@@ -1927,17 +1982,17 @@ class SMILWriter(SMIL):
 			# transparent != 0 : transparent (default value)
 			# otherwise : bgcolor
 			else:
-				transparent = ch.get('transparent', None)
-				bgcolor = ch.get('bgcolor', None)
-				if transparent == None:
+				transparent = ch.get('transparent')
+				bgcolor = ch.get('bgcolor')
+				if transparent is None:
 					bgcolor = 'inherit'
-				elif transparent != 0:
+				elif transparent:
 					# default value
 					bgcolor = None
-				elif bgcolor != None:
+				elif bgcolor is not None:
 					bgcolor = translatecolor(bgcolor)
 
-				if bgcolor != None:
+				if bgcolor is not None:
 					attrlist.append(('backgroundColor', bgcolor))
 
 			# we save the showBackground attribute only if it's not the default value
@@ -2061,6 +2116,8 @@ class SMILWriter(SMIL):
 			self.writetag('transition', attrlist)
 
 	def writegrinslayout(self):
+		if not self.grinsExt:
+			return
 		layouts = self.context.layouts
 		if not layouts:
 			return
@@ -2076,6 +2133,8 @@ class SMILWriter(SMIL):
 		self.pop()
 
 	def writeviewinfo(self):
+		if not self.grinsExt:
+			return
 		viewinfo = self.context.getviewinfo()
 		if not viewinfo:
 			return
@@ -2094,30 +2153,25 @@ class SMILWriter(SMIL):
 			# skip unplayable nodes when pruning
 			return
 		type = x.GetType()
+		if not self.smilboston:
+			if type in ('animate','animpar','prefetch','brush','excl','prio'):
+				self.warning('Lost %s object' % type)
+				return
 		# XXX I don't like this special casing here --sjoerd
 		if type=='animate':
 			if root:
 				self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 				self.push()
-			if self.smilboston:
-				self.writeanimatenode(x)
-			else:
-				self.warning('Lost animate object')
+			self.writeanimatenode(x)
 			return
 		elif type == 'animpar':
-			if self.smilboston:
-				self.writeanimpar(x)
-			else:
-				self.warning('Lost animate object')
+			self.writeanimpar(x)
 			return
 		elif type=='prefetch':
 			if root:
 				self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 				self.push()
-			if self.smilboston:
-				self.writeprefetchnode(x)
-			else:
-				self.warning('Lost prefetch object')
+			self.writeprefetchnode(x)
 			return
 		elif type == 'anchor':
 			self.writeanchor(x)
@@ -2219,8 +2273,7 @@ class SMILWriter(SMIL):
 			if type == 'seq' and self.copydir and not self.smilboston \
 						and not x.GetChildren():
 				# Warn the user for a bug in G2
-				import windowinterface
-				windowinterface.showmessage('Warning: some G2 versions crash on empty sequence nodes')
+				self.warning('Warning: some G2 versions crash on empty sequence nodes')
 				x.set_infoicon('error', 'Warning: some G2 versions crash on empty sequence nodes')
 			if root:
 				if type != 'seq' or (not self.smilboston and attrlist):
@@ -2233,7 +2286,7 @@ class SMILWriter(SMIL):
 				self.push()
 				for child in x.GetChildren():
 					self.writenode(child)
-				if root:
+				if root and self.grinsExt:
 					assets = x.context.getassets()
 					if assets:
 						if type != 'seq' or (not self.smilboston and attrlist):
@@ -2521,14 +2574,12 @@ class SMILWriter(SMIL):
 				      x.GetUID()
 			a1, a2, dir = links[0]
 			if type(a2) is type(''):
+				href = self.fixurl(a2)
 				import urlparse
 				utype, host, path, params, query, fragment = urlparse.urlparse(a2)
-				if (not utype or utype == 'file') and (not host or host == 'localhost'):
+				if (not utype or utype == 'file') and (not host or host == 'localhost') and self.copydir:
 					# link to local file
-					srcurl = urlparse.urlunparse((utype, host, path, params, query, ''))
-					href = copysrc(self, a1, srcurl)
-				else:
-					href = a2
+					href = copysrc(self, a1, self.context.findurl(a2), self.webcopycache, self.webfiles_generated, self.webcopydirurl)
 			else:
 				href = '#' + self.uid2name[a2.GetUID()]
 			attrlist.append(('href', href))
@@ -2609,7 +2660,15 @@ class SMILWriter(SMIL):
 		else:
 			self.writetag('anchor', attrlist, anchor)
 
-	def newfile(self, srcurl):
+	def fixurl(self, url):
+		ctx = self.context
+		if self.convertURLs:
+			url = MMurl.canonURL(ctx.findurl(url))
+			if url[:len(self.convertURLs)] == self.convertURLs:
+				url = url[len(self.convertURLs):]
+		return url
+
+	def newfile(self, srcurl, files_generated):
 		import posixpath, urlparse
 		utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
 		if utype == 'data':
@@ -2628,12 +2687,12 @@ class SMILWriter(SMIL):
 				i = i + 1
 			base = base + `i`
 		self.bases_used[base] = None
-		self.files_generated[base + ext] = None
+		files_generated[base + ext] = None
 		return base + ext
 
-	def copyfile(self, srcurl, node = None):
+	def copyfile(self, srcurl, node, files_generated):
 		dstdir = self.copydir
-		file = self.newfile(srcurl)
+		file = self.newfile(srcurl, files_generated)
 		u = MMurl.urlopen(srcurl)
 		if not self.convert:
 			convert = 0
@@ -2658,7 +2717,7 @@ class SMILWriter(SMIL):
 			cfile = convertaudiofile(u, srcurl, dstdir, file, node,
 						progress = progress)
 			if cfile:
-				self.files_generated[cfile] = 'b'
+				files_generated[cfile] = 'b'
 				return cfile
 			msg = "Cannot convert to RealAudio: %s\n\nUsing source material unconverted."%srcurl
 			if node:
@@ -2678,7 +2737,7 @@ class SMILWriter(SMIL):
 				progress = None
 			cfile = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
 			if cfile:
-				self.files_generated[cfile] = 'b'
+				files_generated[cfile] = 'b'
 				return cfile
 			msg = "Cannot convert to RealVideo: %s\n\nUsing source material unconverted."%srcurl
 			if node:
@@ -2701,7 +2760,7 @@ class SMILWriter(SMIL):
 				# I/O errors, image file errors, etc.
 				cfile = None
 			if cfile:
-				self.files_generated[cfile] = 'b'
+				files_generated[cfile] = 'b'
 				return cfile
 			msg = "Cannot convert to Real JPEG: %s\n\nUsing source material unconverted."%srcurl
 			if node:
@@ -2718,13 +2777,13 @@ class SMILWriter(SMIL):
 ##			if self.progress:
 ##				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 ##			file = converttextfile(u, dstdir, file, node)
-##			self.files_generated[file] = ''
+##			files_generated[file] = ''
 ##			return file
 		if u.headers.maintype == 'text' or string.find(u.headers.subtype, 'xml') >= 0:
 			binary = ''
 		else:
 			binary = 'b'
-		self.files_generated[file] = binary
+		files_generated[file] = binary
 		if self.progress:
 			self.progress("Copying %s"%os.path.split(file)[1], None, None, None, None)
 		dstfile = os.path.join(dstdir, file)
@@ -2758,7 +2817,7 @@ class SMILWriter(SMIL):
 		return file
 
 	def getcopyinfo(self):
-		return self.copydir, self.copydirname, self.files_generated
+		return self.copydir, self.copydirname, self.files_generated, self.webfiles_generated
 
 	def gen_rpfile(self):
 		i = self.__generate_number

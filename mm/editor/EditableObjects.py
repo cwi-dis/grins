@@ -368,6 +368,14 @@ class EditableMMNode(MMNode.MMNode):
 ##		return retlist
 		return namelist
 
+	def getanchors(self, recursive):
+		anchors = []
+		if self.type == 'anchor':
+			anchors.append(self)
+		elif recursive or (features.SHOW_MEDIA_CHILDREN not in features.feature_set and self.type in mediatypes):
+			for c in self.children:
+				anchors.extend(c.getanchors(recursive))
+		return anchors
 
 ######################################################################
 	# Commands from the menus.

@@ -291,6 +291,9 @@
 (project_ftp_dir_media (string) '' 'Mediaserver Directory' default
 	'Directory on FTP server where media files will be stored' raw (smil2 g2 qt smil10 smil2 cmif snap))
 
+(project_web_url (string) '' 'Webpage URL' default
+	'URL of directory where webpages are accessible, as seen from uploaded SMIL document' raw (smil2))
+
 (project_html_page (string) '' 'HTML template' default
 	'Template used to generate web page for this presentation' raw (template smil2 g2 qt snap))
 
