@@ -972,9 +972,15 @@ class LayoutView2(LayoutViewDialog2):
 		self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)		
 
+	def applyGeomList(self, applyList):
+		list = []
+		for nodeRef, geom in applyList:
+			self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
+		self.applyAttrList(list)
+
 	def __makeAttrListToApplyFromGeom(self, nodeRef, geom, list):
 		if self.getNodeType(nodeRef) == TYPE_VIEWPORT:
-			w,h = geom
+			x,y,w,h = geom
 			list.append((nodeRef, 'width', w))
 			list.append((nodeRef, 'height', h))
 		else:
@@ -1683,13 +1689,14 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.setFieldCtrl('RegionX',"")		
 		self.dialogCtrl.setFieldCtrl('RegionY',"")		
 		
-		geom = nodeRef.getPxGeom()
+		w,h = nodeRef.getPxGeom()
+		geom = 0,0,w,h
 		self.updateViewportGeom(geom)				
 
 	def updateViewportGeom(self, geom):
 		# update the fields dialog box
-		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[0])		
-		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[1])
+		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[2])		
+		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
 		
 	def __updateRegion(self, nodeRef):
 		self.dialogCtrl.enable('RegionX',1)
@@ -1747,7 +1754,7 @@ class GeomFieldWidget(LightWidget):
 				w = value
 			elif ctrlName == 'RegionH':
 				h = value
-			self._context.applyGeom(nodeRef, (w,h))
+			self._context.applyGeom(nodeRef, (0,0,w,h))
 
 	def __onGeomOnRegionChanged(self, ctrlName, value):
 		if self._context.currentSelectedNodeList != None:		
@@ -2176,7 +2183,30 @@ class PreviousWidget(Widget):
 				if nodeTree._graphicCtrl is obj:
 					list.append(nodeRef)
 		self.onSelect(list)
-								
+
+	def onGeomChanging(self, objectList):
+		# update only if one object is moving
+		if len(objectList) != 1: return
+		
+		# xxx to optimize
+		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			for obj in objectList:
+				if nodeTree._graphicCtrl is obj:
+					self._context.onFastGeomUpdate(nodeRef, obj.getGeom())
+					break
+		
+	def onGeomChanged(self, objectList):		
+		applyList = []
+		# xxx to optimize
+		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			for obj in objectList:
+				if nodeTree._graphicCtrl is obj:
+					applyList.append((nodeRef, obj.getGeom()))
+
+		# update only the geom field on dialog box
+		self.localSelect = 1 # temporare			
+		self._context.applyGeomList(applyList)
+						
 class Node:
 	def __init__(self, name, nodeRef, ctx):
 		self._name = name
@@ -2327,7 +2357,7 @@ class Node:
 		if not self._selecting:
 			if debug: print 'PreviousWidget.Node.onSelected : ',self.getName()
 			self._ctx.onSelect([self._nodeRef])
-		
+
 class Region(Node):
 	def __init__(self, name, nodeRef, ctx):
 		Node.__init__(self, name, nodeRef, ctx)
