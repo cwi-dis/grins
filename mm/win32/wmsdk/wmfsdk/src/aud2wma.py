@@ -8,136 +8,120 @@ import dshow
 # not needed if run from pythonwin
 wmfapi.CoInitialize()
 
-class RenderingReader:
+class WMAudioConverter:
 	def __init__(self):
-		print 'RenderingReader'
-		self._start = None
-	def __del__(self):
-		print '~RenderingReader'
+		self._writing = 0
 
-	def OnSetMediaType(self):
-		print 'OnSetMediaType'
+	def convert(self, input, dstdir, filename, profilenum=10):
+		if self._writing: return
+		file = os.path.splitext(filename)[0] + '.wma'
+		output = os.path.join(dstdir, file)
 
-	def OnActive(self):
-		print 'OnActive'
+		self._peer = dshow.CreatePyRenderingListener(self)
+		self._writer = self.createWMWriter(profilenum)
+		self._writer.SetOutputFilename(output)
+		self._audiopinix, self._audiopinprops = self.getAudioPin(self._writer)
 
-	def OnInactive(self):
-		print 'OnInactive'
+		# this call will set indirectly self._writer format
+		fg = self.createFilterGraph(input)
+		if not fg:
+			return None
+	
+		mc = fg.QueryIMediaControl()
+		mc.Run()
+		import win32ui
+		while fg.WaitForCompletion(0)==0:
+			win32ui.PumpWaitingMessages()
+		mc.Stop()
+		win32ui.PumpWaitingMessages()
 
-	def OnRenderSample(self):
-		import time
-		if self._start is None:
-			self._start	 = time.time()
-			print 'OnRenderSample', 0
-		else:
-			print 'OnRenderSample', time.time()-self._start
+		return output
+		
+	def createWMWriter(self, profilenum):
+		profman = wmfapi.CreateProfileManager()
+		profile = profman.LoadSystemProfile(profilenum)
+		writer = wmfapi.CreateWriter()
+		writer.SetProfile(profile)
+		return writer
 
+	def getAudioPin(self, writer):
+		npins = writer.GetInputCount()
+		audiopinix = -1
+		audiopinprops = None
+		for i in range(npins):
+			pinprop = writer.GetInputProps(i)
+			pintype = pinprop.GetType()
+			if pintype == wmfapi.WMMEDIATYPE_Audio:
+				audiopinix = i
+				audiopinprops = pinprop
+				break
+		return audiopinix, audiopinprops
 
-renderingReader = dshow.CreatePyRenderingListener(RenderingReader())
-
-# convert any audio file to windows media format (asf or wma)
-def convertaudiofile(infile, dstdir, file, node):
-	# ignore suggested extension and make our own
-	file = os.path.splitext(file)[0] + '.wma'
-	fullpath = os.path.join(dstdir, file)
-
-	profman = wmfapi.CreateProfileManager()
-
-	# set an apropriate system profile
-	# or a create a new one
-	profile = profman.LoadSystemProfile(10)
-
-	# find audio pin
-	writer = wmfapi.CreateWriter()
-	writer.SetProfile(profile)
-	npins = writer.GetInputCount()
-	audiopinix = -1
-	audiopinmt = None
-	audiopinprops = None
-	print 'profile pins:'
-	for i in range(npins):
-		pinprop = writer.GetInputProps(i)
-		pintype = pinprop.GetType()
-		if pintype == wmfapi.WMMEDIATYPE_Audio:
-			audiopinix = i
-			audiopinprops = pinprop
-			audiopinmt = pinprop.GetMediaType()
-	if audiopinix>=0:
-		print 'audiopin is pin ',audiopinix
-	else:
-		print 'no audio pin'
-		return None
-
-	writer.SetOutputFilename(fullpath);
-
-	b = dshow.CreateGraphBuilder()
-	b.RenderFile(infile)
-	# find renderer
-	try:
-		aurenderer=b.FindFilterByName('Default DirectSound Device')
-	except:
-		aurenderer=None
-	if not aurenderer:
+	def createFilterGraph(self, filename):
+		fg = dshow.CreateGraphBuilder()
+		fg.RenderFile(filename)
+		
+		# find renderer
 		try:
-			aurenderer=b.FindFilterByName('Default WaveOut Device')
+			aurenderer=fg.FindFilterByName('Default DirectSound Device')
 		except:
 			aurenderer=None
-	if not aurenderer:
-		print 'Audio renderer not found'
-		return None
+		if not aurenderer:
+			try:
+				aurenderer=fg.FindFilterByName('Default WaveOut Device')
+			except:
+				aurenderer=None
+		if not aurenderer:
+			print 'Audio renderer not found'
+			return None
 
-	# if is asf stream remove script 
-	try:
-		scriptrenderer=b.FindFilterByName('Internal Script Command Renderer')
-	except:
-		scriptrenderer=None
-	else:
-		b.RemoveFilter(scriptrenderer)
+		enumpins=aurenderer.EnumPins()
+		pin=enumpins.Next()
+		aulastpin=pin.ConnectedTo()
+		fg.RemoveFilter(aurenderer)
+		try:
+			f = dshow.CreateFilter('Audio Windows Media Converter')
+		except:
+			print 'Audio windows media converter filter is not installed'
+			return None
 
-	enumpins=aurenderer.EnumPins()
-	pin=enumpins.Next()
-	aulastpin=pin.ConnectedTo()
-	b.RemoveFilter(aurenderer)
-	try:
-		f = dshow.CreateFilter('Audio Windows Media Converter')
-	except:
-		print 'Audio windows media converter filter is not installed'
-		return None
-	try:
-		wmconv=f.QueryIWMConverter()
-	except:
-		print 'Filter does not support interface IWMConverter'
-		return
-	wmconv.SetAdviceSink(renderingReader)	
-	try:
-		uk=writer.QueryIUnknown()
-	except:
-		print 'WMWriter QueryIUnknown failed'
-		return
-	wmconv.SetWMWriter(uk)
+		try:
+			wmconv=f.QueryIWMConverter()
+		except:
+			print 'Filter does not support interface IWMConverter'
+			return
+		wmconv.SetAdviceSink(self._peer)
 
-	b.AddFilter(f,'AWMC')
-	b.Render(aulastpin)
+		fg.AddFilter(f,'AWMC')
+		
+		fg.Render(aulastpin)
 
-	# media properties and converting is 
-	# managed by our dshow filter
-	mc = b.QueryIMediaControl()
-	mc.Run()
-	import win32ui
-	while b.WaitForCompletion(0)==0:
-		win32ui.PumpWaitingMessages()
-	mc.Stop()
-	win32ui.PumpWaitingMessages()
-	del mc
-	del b
+		return fg
+
+	def OnSetMediaType(self, mt):
+		self._audiopinprops.SetDSMediaType(mt)
+		self._writer.SetInputProps(self._audiopinix, self._audiopinprops)
+
+	def OnActive(self):
+		self._writer.BeginWriting()
+		self._writing = 1
+
+	def OnInactive(self):
+		self._writer.Flush()
+		self._writer.EndWriting()
+		self._writing = 0
+
+	def OnRenderSample(self, ms):
+		if self._writing:
+			self._writer.WriteDSSample(self._audiopinix, ms)
 
 
-infile = r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\test.au'
-outdir = r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata'
+input = r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\test.au'
+outputdir = r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata'
 
-convertaudiofile(infile,outdir,'test.wma',None)
-
-del renderingReader
+converter = WMAudioConverter()
+converter.convert(input,outputdir,'testwmaconv.wma')
+del converter
 
 # on exit: release COM libs
 # not needed if run from pythonwin
