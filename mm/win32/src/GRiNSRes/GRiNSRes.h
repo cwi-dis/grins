@@ -62,6 +62,10 @@
 #define IDD_CREATE_BOX1                 224
 #define IDD_ABOUT                       225
 #define IDB_SPLASH                      226
+#define IDD_DIALOG2                     227
+#define IDD_EDIT_USERGROUP              227
+#define IDD_USERGROUP                   228
+#define IDR_GRINS                       228
 #define IDC_STOP                        1000
 #define IDC_PLAY                        1001
 #define IDC_PAUSE                       1002
@@ -138,6 +142,7 @@
 #define IDC_STATIC_RIGHT                1077
 #define IDC_BUTTON1                     1078
 #define IDC_OPENCHILD                   1078
+#define IDC_RESTORE                     1078
 #define IDC_LIST_LINKS                  1080
 #define IDC_RESET                       1081
 #define IDC_CHECK1                      1082
@@ -153,6 +158,14 @@
 #define IDC_OK                          1095
 #define IDC_MESSAGE                     1097
 #define IDC_VERSION_MSG                 1098
+#define IDC_LINK_D                      1099
+#define IDC_LINK_T                      1100
+#define IDCMD_NEW_GROUP                 1101
+#define IDCMD_EDIT_GROUP                1102
+#define IDC_GROUPS                      1103
+#define IDC_APPLY                       1104
+#define IDCMD_DELETE_GROUP              1105
+#define IDCMD_CLOSE_USERGROUPVIEW       1106
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -181,14 +194,19 @@
 #define IDUC_STOP                       32807
 #define IDUC_HELP                       32808
 #define IDUC_CLOSE_WINDOW               32811
+#define IDUC_PASTE                      32812
+#define IDUC_UNDO                       32813
+#define IDUC_CUT                        32814
+#define IDUC_COPY                       32815
+#define IDUC_MAGIC_PLAY                 32818
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        227
-#define _APS_NEXT_COMMAND_VALUE         32813
-#define _APS_NEXT_CONTROL_VALUE         1099
+#define _APS_NEXT_RESOURCE_VALUE        229
+#define _APS_NEXT_COMMAND_VALUE         32819
+#define _APS_NEXT_CONTROL_VALUE         1107
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -57,10 +57,11 @@ InputPath=\cmif\win32\src\Build\GRiNSRes.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	e:\cmif\bin\python e:\python\tools\scripts\h2py.py  GRiNSRes.h 
+	d:\cmif\bin\python d:\python\tools\scripts\h2py.py  GRiNSRes.h 
 	copy GRiNSRes.py $(OutDir)\grinsRC.py 
 	del GRiNSRes.py 
-	copy $(OutDir)\GRiNSRes.dll e:\cmif\bin 
+	del d:\cmif\bin\GRiNSRes.dll 
+	copy $(OutDir)\GRiNSRes.dll d:\cmif\bin 
 	
 # End Custom Build
 # Begin Target
@@ -73,6 +74,10 @@ SOURCE="$(InputPath)"
 # Begin Source File
 
 SOURCE=.\RES\grins_ed.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\grinsbar.bmp
 # End Source File
 # Begin Source File
 
