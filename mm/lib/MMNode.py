@@ -1469,7 +1469,6 @@ class MMNode:
 			media_height = defHeight
 
 		return media_width, media_height
-	
 
 ##	def GetSummary(self, name):
 ##		if not self.summaries.has_key(name):
@@ -1763,6 +1762,43 @@ class MMNode:
 ##		parent._fixsummaries(self.summaries)
 ##		parent._rmsummaries(self.summaries.keys())
 
+
+	def GetPrevious(self):		# mjvdg 27-sept-2000
+		# Return the previous node to this one.
+		# Don't search out of the local seq of this node.
+		# return None if there is no previous node.
+
+		if self.GetParent()==None:
+			return None;
+		selfsiblings = self.GetParent().GetChildren()
+		selfindex = selfsiblings.index(self);
+
+		if selfindex > 0:	# Assuming a few things..
+			return selfsiblings[selfindex-1];
+		else:
+			return None;
+
+	def GetNext(self):
+		# Return the next node to this one.
+		# Don't search out of the local seq of this node.
+		# Return None if this is the last node.
+
+		if self.GetParent() == None:
+			return None;
+		selfsiblings = self.GetParent().GetChildren();
+		selfindex = selfsiblings.index(self);
+
+		if selfindex == len(selfsiblings)-1:
+			# Then this is at the end of the list.
+			return None;
+		else:
+			try:		# Don't crash.. keep going.
+				return selfsiblings[selfindex+1];
+			except IndexError:
+				print "ERROR: List index out of range."
+				print "MMNode.GetNext().";
+				return None;
+				 
 	#
 	# Methods for mini-document management
 	#

@@ -219,6 +219,7 @@ def showstats(a):
 # Get an attribute of a node according to the rules.
 #
 def getattr(node, attrname, animated=0):
+
 	if animated:
 		return getdirattr(node, attrname, animated)
 
