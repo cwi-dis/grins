@@ -17,7 +17,7 @@ default_settings = {
 
 	'system_bitrate': 14400,	# Slow modem
 	'system_captions': 0,		# Don't show captions
-	'system_language': '',		# No language preference
+	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
