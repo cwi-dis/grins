@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import Channel

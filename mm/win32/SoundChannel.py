@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import ChannelWindow, FALSE
 import urllib
 import midiex, win32con
