@@ -21,4 +21,9 @@ class ABOUT_GRINS(_CommandBase):
 	help = 'Displays program copyright'
 class SELECT_CHARSET(_CommandBase):
 	help = 'Select a charset'
+class HELP_CONTENTS(_CommandBase):
+	help = 'Display help contents'
+
+class GRINS_WEB(_CommandBase):
+	help = 'GRiNS on the Web'
 
