@@ -1230,8 +1230,8 @@ class MMChannel(MMTreeElement):
 		self._cssId = None
 
 		if type == 'layout':
-			# by default it's a viewport
-			self._cssId = self.newCssId(1)
+			isRoot = self.getClassName() == 'Viewport'
+			self._cssId = self.newCssId(isRoot)
 			# allow to maintains the compatibility with old version
 			# this flag shouldn't be accessible in the future
 			self.attrdict['base_winoff'] = (0, 0, 100, 100)
@@ -1481,24 +1481,7 @@ class MMChannel(MMTreeElement):
 			parent = self.GetParent()
 			if parent is not None:
 				self.Extract()
-			if self.attrdict.get('type') == 'layout':
-				# if it's the first parent which is set, we assume it's the new region
-				# the default edit background is determinated according to its parent
-				wantNewEditBg = parent is None
-
-				# Base_window is set. So, it's not a viewport
-				# XXX reset css node with the right type, only is base_window wasn't set yet
-				# XXX don't re-intialize css id if base_window was already set
-				# XXX NOTE: This part needs to be improved
-				if parent is None:
-					oldId = self._cssId
-					self.newCssId(0)
-					# the css id has changed, reset the values
-					for attr in _CssAttrs:
-						val = self.GetAttrDef(attr, None)
-						if val is not None:
-							self.setCssAttr(attr, val)
-										
+			if self.attrdict.get('type') == 'layout':										
 				pchan = self.context.channeldict.get(value)
 				if pchan is None:
 					print 'Error: The parent channel '+self.name+' should be created before setting base_window'
