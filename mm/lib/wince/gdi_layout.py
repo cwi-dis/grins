@@ -85,8 +85,7 @@ class Region(base_window.Window):
 
 	def _paintOnSurf(self, surf, wnd_dc = None):
 		if wnd_dc is None:
-			wnd = self._topwindow.getContext()
-			wnd_dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+			wnd_dc = wingdi.GetDesktopDC()
 			release_wnd_dc = 1
 		else:
 			release_wnd_dc = 0
@@ -121,7 +120,7 @@ class Region(base_window.Window):
 		dc.SelectObject(oldsurf)
 		dc.DeleteDC()
 		if release_wnd_dc:
-			wnd.ReleaseDC(wnd_dc.Detach())
+			wnd_dc.DeleteDC()
 		
 	# dc origin is viewport origin
 	def _paintOnDC(self, dc):
@@ -146,33 +145,6 @@ class Region(base_window.Window):
 				dc.FrameRect(ltrb, brush)
 				wingdi.DeleteObject(brush)
 
-		elif self._transparent == 0 and self._bgcolor:
-			x, y, w, h = xywh_dst
-			rgb = winstruct.RGB(self._bgcolor)
-			dc.FillSolidRect((x, y, x+w, y+h), rgb)
-
-	# using surfaces
-	def _paintOnDC_2(self, dc):
-		x, y, w, h = xywh_dst = self.getDR()
-		if self._active_displist:
-			if self._disp_surf is None:
-				self._disp_surf = self._topwindow.createSurface(w, h, self._bgcolor or (0, 0, 0))
-			if not self._active_displist._rendered:
-				if self._bgcolor:
-					self._disp_surf.Fill(self._bgcolor)
-				self._paintOnSurf(self._disp_surf, dc)
-				self._active_displist._rendered = 1 # assert
-			assert 	self._disp_surf is not None, 'logical error'					
-			dcc = dc.CreateCompatibleDC()
-			bmp = dcc.SelectObject(self._disp_surf)
-			ws, hs = self._disp_surf.GetSize()
-			if ws == w and h == hs:
-				dc.BitBlt((x, y), (w, h), dcc, (0, 0), wincon.SRCCOPY)
-			else:
-				# for size animations
-				dc.StretchBlt((x, y, w, h), dcc, (0, 0, ws, hs), wincon.SRCCOPY)
-			dcc.SelectObject(bmp)
-			dcc.DeleteDC()
 		elif self._transparent == 0 and self._bgcolor:
 			x, y, w, h = xywh_dst
 			rgb = winstruct.RGB(self._bgcolor)
@@ -229,7 +201,6 @@ class Region(base_window.Window):
 			return
 
 		self._paint_0(dc, exclwnd)
-
 
 	#
 	# Transitions helpers
@@ -371,7 +342,7 @@ class Viewport(Region):
 		wnd = self._ctx
 
 		if dc is None:
-			dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+			dc = wingdi.GetDesktopDC()
 			relese_wnd_dc = 1
 		else:
 			relese_wnd_dc = 0
@@ -381,7 +352,7 @@ class Viewport(Region):
 		else:
 			surf = wingdi.CreateDIBSurface(dc, w, h)
 		if relese_wnd_dc:
-			wnd.ReleaseDC(dc.Detach())
+			dc.DeleteDC()
 		return surf
 	
 	def getBackBuffer(self):
@@ -424,7 +395,7 @@ class Viewport(Region):
 		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos(), round = 1)
 
 		wnd = self._ctx
-		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		dc = wingdi.GetDesktopDC()
 		
 		dcBack = dc.CreateCompatibleDC()
 		oldBack = dcBack.SelectObject(self._backBuffer)
@@ -448,7 +419,7 @@ class Viewport(Region):
 		dcReg.DeleteDC()
 		dcBack.SelectObject(oldBack)
 		dcBack.DeleteDC()
-		wnd.ReleaseDC(dc.Detach())
+		dc.DeleteDC()
 		
 		# return region clone
 		return regSurf
@@ -458,7 +429,7 @@ class Viewport(Region):
 		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos(), round = 1)
 
 		wnd = self._ctx
-		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		dc = wingdi.GetDesktopDC()
 		
 		dcBack = dc.CreateCompatibleDC()
 		oldBack = dcBack.SelectObject(self._backBuffer)
@@ -480,7 +451,7 @@ class Viewport(Region):
 		dcReg.DeleteDC()
 		dcBack.SelectObject(oldBack)
 		dcBack.DeleteDC()
-		wnd.ReleaseDC(dc.Detach())
+		dc.DeleteDC()
 
 	def blitSurfaceOn(self, dc, surf, rc):
 		# where to blit
