@@ -1021,6 +1021,38 @@ CreateFontIndirect(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hfont);
 }
 
+static char CreateRectRgn__doc__[] =
+"creates a rectangular region"
+;
+static PyObject*
+CreateRectRgn(PyObject *self, PyObject *args)
+{
+	RECT rc;
+	if (!PyArg_ParseTuple(args, "(iiii)", &rc.left, &rc.top, &rc.right, &rc.bottom))
+		return NULL;
+	HRGN hrgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+	if(hrgn==0){
+		seterror("CreateRectRgn", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hrgn);
+}
+
+static char SelectClipRgn__doc__[] =
+"selects a region as the current clipping region"
+;
+static PyObject*
+SelectClipRgn(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	HRGN hrgn;
+	if (!PyArg_ParseTuple(args, "ii", &hdc, &hrgn))
+		return NULL;
+	int res = SelectClipRgn(hdc, hrgn);
+	return Py_BuildValue("i", res);
+}
+
+
 static struct PyMethodDef wingdi_methods[] = {
 	{"SetWorldTransform", (PyCFunction)SetWorldTransform, METH_VARARGS, SetWorldTransform__doc__},
 	{"GetWorldTransform", (PyCFunction)GetWorldTransform, METH_VARARGS, GetWorldTransform__doc__},
@@ -1075,6 +1107,10 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"CreateSolidBrush", (PyCFunction)CreateSolidBrush, METH_VARARGS, CreateSolidBrush__doc__},
 	{"CreateBrushIndirect", (PyCFunction)CreateBrushIndirect, METH_VARARGS, CreateBrushIndirect__doc__},
 	{"CreateFontIndirect", (PyCFunction)CreateFontIndirect, METH_VARARGS, CreateFontIndirect__doc__},
+
+	{"CreateRectRgn", (PyCFunction)CreateRectRgn, METH_VARARGS, CreateRectRgn__doc__},
+	{"SelectClipRgn", (PyCFunction)SelectClipRgn, METH_VARARGS, SelectClipRgn__doc__},
+
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
