@@ -44,14 +44,14 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef initQdoffs
 extern void initQdoffs();
 #endif
+#ifndef inittime
+extern void inittime();
+#endif
 #ifndef initimgsgi
 extern void initimgsgi();
 #endif
 #ifndef initimgjpeg
 extern void initimgjpeg();
-#endif
-#ifndef initimageop
-extern void initimageop();
 #endif
 #ifndef initWin
 extern void initWin();
@@ -86,9 +86,6 @@ extern void initstrop();
 #ifndef initSnd
 extern void initSnd();
 #endif
-#ifndef initmacfs
-extern void initmacfs();
-#endif
 #ifndef initNav
 extern void initNav();
 #endif
@@ -97,9 +94,6 @@ extern void initScrap();
 #endif
 #ifndef initMenu
 extern void initMenu();
-#endif
-#ifndef initIcn
-extern void initIcn();
 #endif
 #ifndef initEvt
 extern void initEvt();
@@ -125,6 +119,9 @@ extern void initDrag();
 #ifndef initbinascii
 extern void initbinascii();
 #endif
+#ifndef init_socket
+extern void init_socket();
+#endif
 #ifndef initpcre
 extern void initpcre();
 #endif
@@ -137,14 +134,14 @@ extern void initarray();
 #ifndef initimgpbm
 extern void initimgpbm();
 #endif
-#ifndef inittime
-extern void inittime();
+#ifndef init_sre
+extern void init_sre();
 #endif
 #ifndef initApp
 extern void initApp();
 #endif
-#ifndef initsocket
-extern void initsocket();
+#ifndef initmacfs
+extern void initmacfs();
 #endif
 #ifndef initmath
 extern void initmath();
@@ -167,6 +164,9 @@ extern void initDlg();
 #ifndef initcStringIO
 extern void initcStringIO();
 #endif
+#ifndef initimageop
+extern void initimageop();
+#endif
 #ifndef initimgtiff
 extern void initimgtiff();
 #endif
@@ -182,6 +182,9 @@ extern void initimgcolormap();
 #ifndef initstruct
 extern void initstruct();
 #endif
+#ifndef initIcn
+extern void initIcn();
+#endif
 #ifndef initaudioop
 extern void initaudioop();
 #endif
@@ -196,9 +199,9 @@ struct _inittab _PyImport_Inittab[] = {
 
 /* -- ADDMODULE MARKER 2 -- */
 	{"Qdoffs", initQdoffs},
+	{"time", inittime},
 	{"imgsgi", initimgsgi},
 	{"imgjpeg", initimgjpeg},
-	{"imageop", initimageop},
 	{"Win", initWin},
 	{"icglue", initicglue},
 	{"Ctl", initCtl},
@@ -210,11 +213,9 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imggif", initimggif},
 	{"strop", initstrop},
 	{"Snd", initSnd},
-	{"macfs", initmacfs},
 	{"Nav", initNav},
 	{"Scrap", initScrap},
 	{"Menu", initMenu},
-	{"Icn", initIcn},
 	{"Evt", initEvt},
 	{"Fm", initFm},
 	{"waste", initwaste},
@@ -223,13 +224,14 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgop", initimgop},
 	{"Drag", initDrag},
 	{"binascii", initbinascii},
+	{"_socket", init_socket},
 	{"pcre", initpcre},
 	{"regex", initregex},
 	{"array", initarray},
 	{"imgpbm", initimgpbm},
-	{"time", inittime},
+	{"_sre", init_sre},
 	{"App", initApp},
-	{"socket", initsocket},
+	{"macfs", initmacfs},
 	{"math", initmath},
 	{"imgppm", initimgppm},
 	{"rma", initrma},
@@ -237,11 +239,13 @@ struct _inittab _PyImport_Inittab[] = {
 	{"AE", initAE},
 	{"Dlg", initDlg},
 	{"cStringIO", initcStringIO},
+	{"imageop", initimageop},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
 	{"imgpng", initimgpng},
 	{"imgcolormap", initimgcolormap},
 	{"struct", initstruct},
+	{"Icn", initIcn},
 	{"audioop", initaudioop},
 	{"MacOS", initMacOS},
 
