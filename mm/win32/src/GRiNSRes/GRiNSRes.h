@@ -456,6 +456,8 @@
 #define ID_C                            32857
 #define ID_E                            32858
 #define ID_M                            32859
+#define ID_BUTTON32860                  32860
+#define ID_BUTTON32862                  32862
 #define IDC_GROUP1                      65535
 #define ID_GROUP1                       65535
 
@@ -464,7 +466,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        295
-#define _APS_NEXT_COMMAND_VALUE         32860
+#define _APS_NEXT_COMMAND_VALUE         32863
 #define _APS_NEXT_CONTROL_VALUE         1268
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

@@ -1251,6 +1251,13 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 
+		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_IN].id
+		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,15)
+		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_OUT].id
+		self._wndToolBar.SetButtonInfo(16,id,afxexttb.TBBS_BUTTON,16)
+
+		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+
 		id=usercmdui.class2ui[usercmd.HELP].id
 		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON, 12)
 
