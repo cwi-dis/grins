@@ -19,6 +19,8 @@ import EditableObjects
 import parseutil
 import colors
 import urlcache
+from Owner import OWNER_DOCUMENT
+import time
 
 if __debug__:
 	parsedebug = 0
@@ -115,11 +117,6 @@ smil_node_attrs = [
 class SMILParser(SMIL, xmllib.XMLParser):
 	__warnmeta = 0		# whether to warn for unknown meta properties
 
-	__alignvals = {'topLeft':0, 'topMid':0, 'topRight':0,
-		       'midLeft':0, 'center':0, 'midRight':0,
-		       'bottomLeft':0, 'bottomMid':0, 'bottomRight':0,
-		       }
-
 	# enumeration values for parseEnumValue
 	__truefalse = {'false': 0, 'true': 1}
 	__onoff = {'off': 0, 'on': 1}
@@ -133,6 +130,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'autoplay': __truefalse,
 		'chapter-mode': {'all':0,'clip':1},
 		'clipBoundary': ['parent', 'children'],
+		'close': ['onRequest', 'whenNotActive'],
 		'collapsed': __truefalse,
 		'coordinated': __truefalse,
 		'defaultState': __truefalse,
@@ -146,6 +144,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'immediate-instantiation': __truefalse,
 		'immediate-instantiation': __truefalse,
 		'mode': ['in', 'out'],
+		'open': ['onStart', 'whenActive'],
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
 		'previewShowOption': ['always', 'onSelected'],
@@ -224,22 +223,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_layout = LAYOUT_NONE
 		self.__seen_layout = 0
 		self.__has_layout = 0
+		self.__seen_root_layout = 0
 		self.__in_a = None
 		self.__context = context
 		self.__root = None
-		self.__root_layout = None
+		self.__rootLayout = None
 		self.__viewport = None
-		self.__tops = {}
-		self.__toplayouts = []	# used to remember the order of topLayout elements
-		self.__topchans = []
 		self.__container = None
 		self.__node = None	# the media object we're in
-		self.__regions = {}	# mapping from region id to chan. attrs
 		self.__regionnames = {}	# mapping from regionName to list of id
 		self.__region = None	# keep track of nested regions
-		self.__regionlist = []
-		self.__childregions = {}
-		self.__topregion = {}
 		self.__elementindex = 0
 		self.__ids = {}		# collect all id's here
 		self.__nodemap = {}	# mapping from ID to MMNode instance
@@ -252,7 +245,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__layouts = {}
 		self.__transitions = {}
 		self.__animatenodes = []
-		self.__regpoints = {}
 		self.__new_file = new_file
 		self.__check_compatibility = check_compatibility
 		self.__generator = ''
@@ -267,11 +259,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__progressTimeToUpdate = 0	# next time to update the progress bar (if progresscallback is not none
 		self.__nlines = 0		# number of lines. Useful to determine the progress value
 		self.__animateParSet = {}
-		
-		# experimental code for switch layout
-		self.__alreadymatch = 0
-		self.__switchstack = []
-		# end experimental code for switch layout
+
 		if new_file and type(new_file) is type(''):
 			self.__base = new_file
 		self.__validchannels = {'undefined':0}
@@ -313,7 +301,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mayexist and self.__root:
 			return self.__root
 		self.__root = self.__context.newnodeuid(type, '1')
-		from Owner import OWNER_DOCUMENT
 		self.__root.addOwner(OWNER_DOCUMENT)
 		self.__root.SMILidmap = self.__idmap
 		return self.__root
@@ -782,7 +769,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# we've already warned about the element, so no need to warn about the attributes
 				return
 			if attributes.has_key('fadeColor'):
-				fc = self.__convert_color(attributes['fadeColor'])
+				fc = self.__convert_color(attributes['fadeColor'], 'fadeColor')
 				if fc is None:
 					pass # error already given
 				elif type(fc) is not type(()):
@@ -874,7 +861,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val == 'blend':
 					attrdict['borderColor'] = (-1,-1,-1)
 				else:
-					val = self.__convert_color(val)
+					val = self.__convert_color(val, 'borderColor')
 					if type(val) is type(''):
 						self.syntax_error('bad borderColor attribute value')
 					elif val is not None:
@@ -1194,7 +1181,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __do_color(self, node, attr, val, attrdict):
 		if node.__chantype != 'brush':
 			return
-		fg = self.__convert_color(val)
+		fg = self.__convert_color(val, attr)
 		if fg is None:
 			pass # error already given
 		elif type(fg) is not type(()):
@@ -1233,7 +1220,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not features.editor:
 				return
 		self.__context.attributes['project_boston'] = 1
-		bg = self.__convert_color(val)
+		bg = self.__convert_color(val, attr)
 		if bg is None:
 			pass
 		elif bg == 'transparent':
@@ -1269,7 +1256,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not features.editor:
 				return
 		self.__context.attributes['project_boston'] = 1
-		attrdict['regPoint'] = val
+		if not self.__context.regpoints.has_key(val):
+			self.syntax_error("the registration point %s doesn't exist" % val)
+		else:
+			attrdict['regPoint'] = val
 
 	def __do_speed(self, node, attr, val, attrdict):
 		if self.__context.attributes.get('project_boston') == 0:
@@ -1400,7 +1390,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict['empty_text'] = val
 
 	def __do_emptyColor(self, node, attr, val, attrdict):
-		val = self.__convert_color(val)
+		val = self.__convert_color(val, attr)
 		if val is not None:
 			attrdict['empty_color'] = val
 
@@ -1417,7 +1407,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict['non_empty_text'] = val
 
 	def __do_nonEmptyColor(self, node, attr, val, attrdict):
-		val = self.__convert_color(val)
+		val = self.__convert_color(val, attr)
 		if val is not None:
 			attrdict['non_empty_color'] = val
 
@@ -1441,7 +1431,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict[attr] = val
 
 	def __do_chromaKey(self, node, attr, val, attrdict):
-		ck = self.__convert_color(val)
+		ck = self.__convert_color(val, attr)
 		if ck is None:
 			pass # error already given
 		elif type(ck) is not type(()):
@@ -1566,9 +1556,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return default
 
 	def NewNode(self, tagname, attributes):
-		# update progress bar if needed
-		self.__updateProgressHandler()
-		
 		# mimetype -- the MIME type of the node as specified in attr
 		# mtype -- the MIME type of the node as calculated
 		# mediatype, subtype -- mtype split into parts
@@ -1737,23 +1724,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					urlcache.urlcache[url]['duration'] = height
 
-		# connect to the register point
-		if attributes.has_key('regPoint'):
-			if not self.__context.regpoints.has_key(attributes['regPoint']):
-				self.syntax_error('the registration point '+attributes['regPoint']+" doesn't exist")
-				del attributes['regPoint']
-		if attributes.has_key('regAlign'):
-			if not self.__alignvals.has_key(attributes['regAlign']):
-				self.syntax_error('invalid regAlign attribute value')
-				del attributes['regAlign']
-
-		if attributes.has_key('fit'):
-			val = attributes['fit']
-			del attributes['fit']
-			val = self.parseEnumValue('fit', val)
-			if val is not None:
-				attributes['fit'] = val
-
 		# create the node
 		if not self.__root:
 			# "can't happen"
@@ -1852,13 +1822,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if node.attrdict.has_key('bgcolor'):
 				del node.attrdict['bgcolor']
 
-	def __newTopRegion(self):
-		attrs = {}
-
-		self.__tops[None] = {'attrs':attrs}
-		self.__toplayouts.append(None)
-
-		self.__childregions[None] = []
+	def __newTopRegion(self, id = None):
+		if self.__rootLayout is None:
+			if features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set and len(self.__context.getviewports()) > 0:
+				self.unsupportedfeature_error("multiple top layouts")
+			if id is None:
+				id = self.__mkid('viewport')
+			self.__rootLayout = self.__context.newviewport(id, -1, 'layout')
+			self.__rootLayout.addOwner(OWNER_DOCUMENT)
 
 	def __selectregion(self, region):
 		# Select the region to play on.
@@ -1876,9 +1847,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for regId in regionIdList:
 			# get the first found
 
-			reg = self.__regions.get(regId)
+			preg = self.__context.channeldict.get(regId)
 			all = settings.getsettings()
-			preg = reg
 			allmatch = 1
 			while preg is not None:
 				notmatch = 0
@@ -1894,27 +1864,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					break
 
 				# also check parent region/viewport
-				pid = preg.get('base_window')
-				if pid is not None:
-					if self.__tops.has_key(pid):
-						preg = self.__tops[pid]
-					else:
-						preg = self.__regions[pid]
-				else:
-					preg = None
+				preg = preg.GetParent()
 			# if all parent match with system attribute, keep this region
 			if allmatch:
 				return regId
 
 		# end experimental code for switch layout
 
-		if not self.__regions.has_key(region):
-			self.syntax_error('unknown region')
-			region = 'unnamed region'
-		# this two lines allow to avoid a crash if region name = top level window name !!!
-		# I tried to resolve this problem clearly --> but I had too many new problems !.
-		# After I day full time spended, i gived up
-		elif self.__tops.has_key(region):
+		if not self.__context.channeldict.has_key(region):
 			self.syntax_error('unknown region')
 			region = 'unnamed region'
 		return region
@@ -1946,30 +1903,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__region = region
 		node.attrdict['channel'] = region
 		
-		ch = self.__regions.get(region)
+		ch = self.__context.channeldict.get(region)
 		if ch is None:
 			# create a region for this node
-			self.__in_layout = self.__seen_layout
-			ch = {}
-			ch['id'] = region
-			ch['left'] = '%dpx' % self.__defleft
-			ch['top'] = '%dpx' % self.__deftop
+			ch = self.__context.newchannel(region, -1, 'layout')
+			ch['left'] = self.__defleft
+			ch['top'] = self.__deftop
+			self.__context.cssResolver.setRawAttrs(ch.getCssId(), [('left', self.__defleft), ('top', self.__deftop)])
 			if CASCADE and not self.__has_layout:
 				self.__defleft = self.__defleft + 20
 				self.__deftop = self.__deftop + 10
-			self.__in_layout = LAYOUT_SMIL
-			self.start_region(ch, checkid = 0)
-			self.end_region()
-			self.__in_layout = LAYOUT_NONE
-			ch = self.__regions[region]
-
-		top = self.__topregion.get(region)
-		# if top doesn't exist (and visible media, we create have to default top window)
-		if top is None: #and ChannelMap.isvisiblechannel(mtype):
-			if not self.__tops.has_key(None):
-				self.__newTopRegion()
-			if region not in self.__childregions[None]:
-				self.__childregions[None].append(region)
+			# make it a child of the root-layout
+			self.__newTopRegion()
+			self.__rootLayout._addchild(ch)
+			self.__context.cssResolver.link(ch.getCssId(), self.__rootLayout.getCssId())
 
 		if ChannelMap.isvisiblechannel(mtype):
 			# create here all positioning nodes and initialize them
@@ -2159,7 +2106,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attributes['values'] = ';'.join(nvals)
 			elif tagname == 'animateColor':
 				for v in vals:
-					if v and not self.__convert_color(v):
+					if v and not self.__convert_color(v, 'values'):
 						self.syntax_error("invalid color values")
 						del attributes['values']
 						break
@@ -2193,7 +2140,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						self.syntax_error("invalid %s value" % attr)
 						del attributes[attr]
-				elif tagname == 'animateColor' and not self.__convert_color(val):
+				elif tagname == 'animateColor' and not self.__convert_color(val, attr):
 					self.syntax_error("invalid %s value" % attr)
 					del attributes[attr]
 				elif attrtype == 'coord' and not coordre.match(val):
@@ -2538,292 +2485,29 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		del self.__animateParSet
 
-	def CreateLayout(self, attrs, isroot = 1):
-		bg = None
-		name = None
-		collapsed = None
-		traceImage = None
-		previewShowOption = None
-		if attrs is not None:
-			bg = attrs.get('backgroundColor')
-			if bg is None:
-				bg = attrs.get('background-color','transparent')
-			bg = self.__convert_color(bg)
-			name = attrs.get('id')
-
-			collapsed = attrs.get('collapsed')
-			traceImage = attrs.get('traceImage')
-			previewShowOption = self.parseEnumValue('previewShowOption', attrs.get('previewShowOption'))
-
-		top = name
-		if not name:
-			name = layout_name # only for anonymous root-layout
-		ctx = self.__context
-		layout = ctx.newviewport(name, -1, 'layout')
-		
-		from Owner import OWNER_DOCUMENT
-		layout.addOwner(OWNER_DOCUMENT)
-			
-		self.__topchans.append(layout)
-		if isroot:
-			self.__base_win = name
-		if bg is not None and \
-		   bg != 'transparent' and \
-		   bg != 'inherit':
-			layout['bgcolor'] = bg
-		else:
-			layout['bgcolor'] = 0,0,0
-		layout['transparent'] = 0
-
-		if collapsed == 'true':
-			layout.collapsed = 1
-		elif collapsed == 'false':
-			layout.collapsed = 0
-		else:
-			# not defined: default behavior which depend of node
-			layout.collapsed = None
-			
-		if previewShowOption is not None:
-			layout['previewShowOption'] = previewShowOption
-
-		if isroot:
-			top = None
-		else:
-			top = name
-		if self.__tops[top].get('width') == 0:
-			self.__tops[top]['width'] = None
-		if self.__tops[top].get('height') == 0:
-			self.__tops[top]['height'] = None
-
-		# default values
-		open = 'onStart'
-		close = 'onRequest'
-		for attr,val in self.__tops[top].items():
-			if attr == 'width':
-				width = val
-			elif attr == 'height':
-				height = val
-			elif attr == 'close':
-				close = val
-			elif attr == 'open':
-				open = val
-			elif attr in ('attrs','declwidth','declheight','skip-content'):
-				# special key
-				pass
-			elif attr in ('showEditBackground', 'editBackground', 'resizeBehavior'):
-				layout[attr] = val
-			else:
-				# parse all other attributes
-				try:
-					layout[attr] = parseattrval(attr, val, self.__context)
-				except:
-					self.syntax_error("couldn't parse `%s' value" % attr)
-					pass
-
-		if layout.has_key('collapsed'):
-			# special case: collapsed is not stored as a GRiNS attribute
-			del layout['collapsed']
-
-		layout['width'] = self.__tops[top].get('width')
-		layout['height'] = self.__tops[top].get('height')
-			
-		layout['close'] = close
-		layout['open'] = open
-		if traceImage is not None:
-			layout['traceImage'] = traceImage
-		
 	def FixBaseWindow(self):
-		if not self.__topchans:
-			return
 		xCurrent = 0
 		yCurrent = 0
-		for ch in self.__context.channels:
-			if ch in self.__topchans:
-				ch['winpos'] = (xCurrent, yCurrent)
-				xCurrent = xCurrent+20
-				yCurrent = yCurrent+20
+		for ch in self.__context.getviewports():
+			ch['winpos'] = (xCurrent, yCurrent)
+			xCurrent = xCurrent+20
+			yCurrent = yCurrent+20
 
-				cssId = ch.getCssId()
-				self.__context.cssResolver.setRawAttrs(cssId, [('width', ch.get('width')),
-									       ('height',ch.get('height'))])
-				# if not width or height specified, guess it
-				width, height = self.__context.cssResolver.getPxGeom(ch.getCssId())
-				# fix all the time a pixel geom value for viewport.
-				self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
-									       ('height', height)])
-				ch['width'] = width
-				ch['height'] = height
-				continue
-
-			if not ch.has_key('base_window'):
-				ch['base_window'] = self.__base_win
+			cssId = ch.getCssId()
+			self.__context.cssResolver.setRawAttrs(cssId, [('width', ch.get('width')),
+								       ('height',ch.get('height'))])
+			# if not width or height specified, guess it
+			width, height = self.__context.cssResolver.getPxGeom(ch.getCssId())
+			# fix all the time a pixel geom value for viewport.
+			self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
+								       ('height', height)])
+			ch['width'] = width
+			ch['height'] = height
 
 		# cleanup
 		for cssId in self.__cssIdTmpList:
 			self.__context.cssResolver.unlink(cssId)
 		self.__cssIdTmpList = None
-
-	#  fill channel according to its type. To the layout type
-	def __fillchannel(self, ch, attrdict, mtype):
-		attrdict = attrdict.copy() # we're going to change this...
-		if attrdict.has_key('type'):
-			del attrdict['type']
-		if attrdict.has_key('base_window'):
-			ch['base_window'] = attrdict['base_window']
-			del attrdict['base_window']
-		if attrdict.has_key('showBackground'):
-			ch['showBackground'] = attrdict['showBackground']
-			del attrdict['showBackground']
-
-		if attrdict.has_key('soundLevel'):
-			ch['soundLevel'] = attrdict['soundLevel']
-			del attrdict['soundLevel']
-			
-		if attrdict.has_key('regionName'):
-			ch['regionName'] = attrdict['regionName']
-			del attrdict['regionName']
-
-		# special case: the collapse information is GRiNS specific and
-		# not stored as attribute
-		if attrdict.has_key('collapsed'):
-			ch.collapsed = attrdict['collapsed']
-			del attrdict['collapsed']
-		else:
-			# if no attribute, default behavior. (the collapsed is not yet defined). In this case
-			# it depends of the node
-			ch.collapsed = None
-			
-		# deal with channel with window
-		if attrdict.has_key('id'):
-			del attrdict['id']
-
-		title = attrdict.get('title')
-		if title is not None:
-			if title != ch.name:
-				ch['title'] = title
-			del attrdict['title']
-
-		bg = attrdict['backgroundColor']
-		del attrdict['backgroundColor']
-		if features.compatibility == features.G2:
-			ch['transparent'] = 1
-			if bg != 'transparent':
-				ch['bgcolor'] = bg
-				ch['transparent'] = 0
-			elif mtype in ('text', 'RealText'):
-				ch['bgcolor'] = 255,255,255
-			else:
-				ch['bgcolor'] = 0,0,0
-		elif compatibility.QT == features.compatibility:
-			ch['transparent'] = 1
-			ch['fgcolor'] = 255,255,255
-		elif self.__context.attributes.get('project_boston'):
-			if bg == 'transparent':
-				ch['transparent'] = 1
-				ch['bgcolor'] = 0,0,0
-			elif bg != 'inherit':
-				ch['transparent'] = 0
-				ch['bgcolor'] = bg
-			else:
-				# for inherit value, there is no transparent and bgcolor attribute
-				if ch.has_key('transparent'):
-					del ch['transparent']
-				if ch.has_key('bgcolor'):
-					del ch['bgcolor']
-		elif bg == 'transparent':
-			ch['transparent'] = 1
-		else:
-			# since we have suppressed the behavior transparent when empty
-			# it's not possible any more to set transparent to -1
-			ch['transparent'] = 0
-#			ch['transparent'] = -1
-			ch['bgcolor'] = bg
-
-		ch['z'] = attrdict['z']
-		del attrdict['z']
-		
-		if attrdict.has_key('showEditBackground'):
-			ch['showEditBackground'] = attrdict['showEditBackground']
-			del attrdict['showEditBackground']
-
-		if attrdict.has_key('editBackground'):
-			ch['editBackground'] = attrdict['editBackground']
-			del attrdict['editBackground']
-
-		# keep all original constraints
-		# if a value is not specified,  it's a CSS auto value
-		if mtype == 'layout':
-			cssId = ch.getCssId()
-			cssResolver = self.__context.cssResolver
-			attrList = []
-			for attr in ['left', 'width', 'right', 'top', 'height', 'bottom', 'fit']:
-				if attrdict.has_key(attr):
-					val = attrdict[attr]
-					attrList.append((attr, val))
-					# store the value also in ch
-					ch[attr] = val
-					# last, del the value from the original object
-					del attrdict[attr]
-			cssResolver.setRawAttrs(cssId,attrList)
-
-		# keep all attributes that we didn't use
-		for attr, val in attrdict.items():
-			# experimental code for switch layout: 'elementindex'
-			# and 'attr not in settings.ALL' and line'
-			if attr not in ('minwidth', 'minheight', 'units',
-					'skip-content','elementindex') and \
-			   attr not in settings.ALL and \
-			   not self._attributes['region'].has_key(attr):
-				try:
-					ch[attr] = parseattrval(attr, val, self.__context)
-				except:
-					self.syntax_error("couldn't parse `%s' value" % attr)
-					pass
-
-	def __makeLayoutChannels(self):
-		ctx = self.__context
-
-		if len(self.__toplayouts) > 1 and features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set:
-			self.unsupportedfeature_error("multiple top layouts")
-		
-		for top in self.__toplayouts:
-			self.CreateLayout(self.__tops[top]['attrs'], top is None)
-		del self.__toplayouts
-			
-		# create first the MMChannel instances
-		list = []
-		for region in self.__regionlist:
-			attrdict = self.__regions[region]
-			# old 03-07-2000 --> now, all region are 'layout channel'
-			#chtype = attrdict.get('type')
-			#if chtype is None or not ChannelMap.channelmap.has_key(chtype):
-			#	continue
-			#end
-			name = attrdict.get('id')
-			if ctx.channeldict.has_key(name):
-				name = name + ' %d'
-				i = 0
-				while ctx.channeldict.has_key(name % i):
-					i = i + 1
-				name = name % i
-			ch = ctx.newchannel(name, -1, 'layout')
-			list.append((region, ch))
-					
-		# Then fill the instances with the right attributes
-		# Note: before to affect a parent region with the attribute 'base_window', the
-		# parent instance have to be already created (done in the previous stape)
-		for region,ch in list:
-			# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
-			# by default a layout channel may contain different types of sub-channels.
-			attrdict = self.__regions[region]
-			chsubtype = attrdict.get('type')
-			
-			ch['type'] = chtype = 'layout'
-			ch['chsubtype'] = chsubtype
-			self.__fillchannel(ch, attrdict, chtype)
-			if attrdict.get('isDefault'):
-				ctx.setDefaultRegion(ch)
-				
 
 	def FixLayouts(self):
 		if not self.__layouts:
@@ -2853,16 +2537,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mmobj = None
 			if self.__nodemap.has_key(targetid):
 				node.targetnode =  self.__nodemap.get(targetid)
-			elif self.__regions.has_key(targetid):
+			elif self.__context.channeldict.has_key(targetid):
 				node.targetnode = self.__context.channeldict.get(targetid)
 			else:
 				self.warning("unknown targetElement `%s'" % targetid, lineno)
 		del self.__animatenodes
-
-	def FixRegpoints(self):
-		for name, dict in self.__regpoints.items():
-			self.__context.addRegpoint(name, dict)
-		self.__regpoints = {}
 
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
@@ -3070,7 +2749,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.parseQTAttributeOnSmilElement(attributes)
 		self.NewContainer('seq', attributes)
 		self.__set_defaultregpoints()
-		self.__rootLayoutId = None
 		
 	def end_smil(self):
 		if __debug__:
@@ -3078,14 +2756,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
-		if not self.__tops.has_key(None) and \
-		   not self.__context.attributes.get('project_boston'):
-			attrs = {}
-			self.__tops[None] = {'attrs':attrs}
-			self.__toplayouts.append(None)
-			if not self.__childregions.has_key(None):
-				self.__childregions[None] = []
-		self.__makeLayoutChannels()
+		if not self.__context.attributes.get('project_boston') and \
+		   not self.__context.getviewports():
+			self.__newTopRegion()
 		self.Recurse(self.__root, self.FixSyncArcs)
 		self.FixLayouts()
 		self.FixSizes()
@@ -3213,7 +2886,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if color == '':
 					color_list.append(None)
 				else:
-					color = self.__convert_color(color)
+					color = self.__convert_color(color, 'customcolors')
 					if color is None:
 						break
 					color_list.append(color)
@@ -3262,7 +2935,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_layout(self, attributes):
 		if __debug__:
 			if parsedebug: print 'start layout', attributes
-		self.__regpoints = {}
 		id = self.__checkid(attributes)
 		if not self.__in_head:
 			self.syntax_error('layout not in head')
@@ -3288,9 +2960,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if __debug__:
 			if parsedebug: print 'end layout'
 		self.__in_layout = LAYOUT_NONE
-		# add regpoints defined inside the layout tag
-		# notice: the default regpoint are already defined (from start_smil)
-		self.FixRegpoints()
 
 	def __parsePercent(self, val, attr):
 		try:
@@ -3310,9 +2979,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_region(self, attributes, checkid = 1):
 		if __debug__:
 			if parsedebug: print 'start region', attributes
-		# update progress bar if needed
-		self.__updateProgressHandler()
-			
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
@@ -3332,26 +2998,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# end experimental code for switch layout
 
-		attrdict = {'z': 0,
-			    'minwidth': 0,
-			    'minheight': 0,
-			    'id': id,
-			    'elementindex': self.__elementindex,
-			    }
+		ch = self.__context.newchannel(id, -1, 'layout')
+		cssAttrs = []
 
-		self.__regions[id] = attrdict
-			
-		if not attributes.has_key('background-color'):
-			# provide default
-			attributes['background-color'] = 'transparent'
+		self.AddCoreAttrs(ch, attributes)
+		self.AddTestAttrs(ch, attributes)
 
-		self.AddCoreAttrs(attrdict, attributes)
-		self.AddTestAttrs(attrdict, attributes)
+		bg = None		# backgroundColor needs some special handling
 
 		for attr, val in attributes.items():
-			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
-				attr = attr[len(GRiNSns)+1:]
-			val = val.strip()
 			if attr == 'id':
 				# already dealt with
 				pass
@@ -3359,39 +3014,39 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				res = xmllib.tagfind.match(val)
 				if res is None or res.end(0) != len(val):
 					self.syntax_error("illegal regionName value `%s'" % val)
-				regions = self.__regionnames.get(val,[])
-				regions.append(id)
-				self.__regionnames[val] = regions
-				attrdict['regionName'] = val
+				else:
+					if not self.__regionnames.has_key(val):
+						self.__regionnames[val] = []
+					self.__regionnames[val].append(id)
+					ch['regionName'] = val
 			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
-				self.__do_subposition(None, attr, val, attrdict)
+				self.__do_subposition(None, attr, val, ch)
+				if ch.has_key(attr):
+					cssAttrs.append((attr, ch[attr]))
 			elif attr == 'z-index':
-				self.__do_z_index(None, attr, val, attrdict)
+				self.__do_z_index(None, attr, val, ch)
 			elif attr == 'fit':
-				self.__do_enum(None, attr, val, attrdict)
+				self.__do_enum(None, attr, val, ch)
 			elif attr == 'backgroundColor':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
-				val = self.__convert_color(val)
-				if val is not None:
-					attrdict['backgroundColor'] = val
+				bg = self.__convert_color(val, attr)
 			elif attr == 'background-color':
 				# backgroundColor overrides background-color
-				if not attrdict.has_key('backgroundColor'):
-					val = self.__convert_color(val)
-					if val is not None:
-						attrdict['backgroundColor'] = val
+				val = self.__convert_color(val, attr)
+				if val is not None and bg is None:
+					bg = val
 			elif attr == 'editBackground':
-				res = re.match('(?P<r>[0-9]+) +(?P<g>[0-9]+) +(?P<b>[0-9]+)', val) # backward compatibility hack
+				res = re.match(' *(?P<r>[0-9]+) +(?P<g>[0-9]+) +(?P<b>[0-9]+)', val) # backward compatibility hack
 				if res is not None:
 					val = int(res.group('r')), int(res.group('g')), int(res.group('b'))
 				else:
-					val = self.__convert_color(val)
+					val = self.__convert_color(val, attr)
 				if val is not None:
-					attrdict['editBackground'] = val
+					ch['editBackground'] = val
 			elif attr == 'showEditBackground':
 				if val in ('0','off'): # backward compatibility hack
 					val = 0
@@ -3400,7 +3055,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					val = self.parseEnumValue('showEditBackground', val)
 				if val is not None:
-					attrdict['showEditBackground'] = val
+					ch['showEditBackground'] = val
 			elif attr == 'showBackground':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -3409,7 +3064,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 				val = self.parseEnumValue('showBackground', val)
 				if val is not None:
-					attrdict['showBackground'] = val
+					ch['showBackground'] = val
 			elif attr == 'soundLevel':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -3418,7 +3073,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 				val = self.__parsePercent(val, attr)
 				if val is not None:
-					attrdict[attr] = val
+					ch[attr] = val
 				self.__context.updateSoundLevelInfo('minmax', val)
 			elif attr == 'type':
 				# map channel type to something we can deal with
@@ -3434,38 +3089,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						val = 'video'
 					elif val == 'html':
 						val = 'text'
-				attrdict[attr] = val
-			elif attr == 'regAlign':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				if not self.__alignvals.has_key(val):
-					self.syntax_error('invalid regAlign attribute value')
-				else:
-					attrdict[attr] = val
-			elif attr == 'regPoint':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-			        # catch the value. We can't check if registration point exist at this point,
-			        # because, it may be defined after in layout section. So currently, the checking
-			        # is done whithin __fillchannel
-				attrdict[attr] = val
+				ch['chsubtype'] = val
 			elif attr == 'collapsed':
-				if val == 'true':
-					attrdict[attr] = 1
-				elif val == 'false':
-					attrdict[attr] = 0
-				else:
-					self.syntax_error('bad %s attribute' % attr)
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					ch.collapsed = val
 			elif attr == 'previewShowOption':
 				val = self.parseEnumValue(attr, val)
 				if val is not None:
-					attrdict[attr] = val
+					ch[attr] = val
 			elif attr == 'xml:lang':
-				attrdict['xmllang'] = val
+				ch['xmllang'] = val
 			elif attr == 'opacity':
 				try:
 					if val[-1] == '%':
@@ -3480,36 +3114,39 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('invalid %s attribute value' % attr)
 					val = None
 				if val is not None:
-					attrdict[attr] = val
+					ch[attr] = val
 			else:
 				# catch all
-				attrdict[attr] = val
+				ch[attr] = val
 		
+		self.__context.cssResolver.setRawAttrs(ch.getCssId(), cssAttrs)
+
+		if bg is not None:
+			if bg == 'transparent':
+				ch['transparent'] = 1
+				ch['bgcolor'] = 0,0,0
+			elif bg != 'inherit':
+				ch['transparent'] = 0
+				ch['bgcolor'] = bg
+			else:
+				# for inherit value, there is no transparent and bgcolor attribute
+				if ch.has_key('transparent'):
+					del ch['transparent']
+				if ch.has_key('bgcolor'):
+					del ch['bgcolor']
+
 		if self.__region is not None:
-##			if self.__viewport is None:
-##				self.syntax_error('no nested regions allowed in root-layout windows')
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('nested regions not compatible with SMIL 1.0')
 			self.__context.attributes['project_boston'] = 1
-			pregion = self.__region[0]
-			attrdict['base_window'] = pregion
-			self.__childregions[pregion].append(id)
+			self.__region._addchild(ch)
 		elif self.__viewport is not None:
-			attrdict['base_window'] = self.__viewport
-			self.__childregions[self.__viewport].append(id)
+			self.__viewport._addchild(ch)
 		else:
-			if self.__rootLayoutId is None:
-				attrdict['base_window'] = layout_name
-			else:
-				attrdict['base_window'] = self.__rootLayoutId					
-			if not self.__tops.has_key(None):
-				self.__newTopRegion()
-			self.__childregions[None].append(id)
-
-		self.__region = id, self.__region
-		self.__regionlist.append(id)
-		self.__childregions[id] = []
-		self.__topregion[id] = self.__viewport # None if not in viewport
+			self.__newTopRegion(id)
+			self.__rootLayout._addchild(ch)
+		self.__context.cssResolver.link(ch.getCssId(), ch.GetParent().getCssId())
+		self.__region = ch
 
 	def end_region(self):
 		if __debug__:
@@ -3518,7 +3155,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# </region> without <region>
 			# error message will be taken care of by XMLparser.
 			return
-		self.__region = self.__region[1]
+		self.__region = self.__region.GetParent()
+		if self.__region.getClassName() == 'Viewport':
+			self.__region = None
 
 	def start_root_layout(self, attributes):
 		if __debug__:
@@ -3526,55 +3165,29 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		self.__rootLayoutId = id = self.__checkid(attributes)
-		self.__root_layout = attributes
-		width = attributes.get('width')
-		if width is None:
-			width = 0
-		elif width[-2:] == 'px':
-			width = width[:-2]
-		try:
-			width = int(width)
-		except ValueError:
-			self.syntax_error('root-layout width not a pixel value')
-			width = 0
+
+		if self.__seen_root_layout:
+			self.syntax_error('multiple root-layout elements')
+			return
+		self.__seen_root_layout = 1
+
+		id = self.__checkid(attributes,'viewport')
+		if id is None:
+			id = self.__mkid('viewport')
+
+		if self.__rootLayout is not None:
+			topLayout = self.__rootLayout
 		else:
-			if width < 0:
-				self.syntax_error('root-layout width not a positive value')
-				width = 0
-		height = attributes.get('height')
-		if height is None:
-			height = 0
-		elif height[-2:] == 'px':
-			height = height[:-2]
-		try:
-			height = int(height)
-		except ValueError:
-			self.syntax_error('root-layout height not a pixel value')
-			height = 0
-		else:
-			if height < 0:
-				self.syntax_error('root-layout height not a positive value')
-				height = 0
-		self.__tops[None] = {'width':width,
-				     'height':height,
-				     'declwidth':width,
-				     'declheight':height,
-				     'attrs':attributes}
-		self.__toplayouts.append(None)
-		self.AddTestAttrs(self.__tops[None], attributes)
-		self.AddCoreAttrs(self.__tops[None], attributes)
-		if attributes.has_key('resizeBehavior'):
-			val = self.parseEnumValue('resizeBehavior', attributes['resizeBehavior'])
-			if val is not None:
-				self.__tops[None]['resizeBehavior'] = val
-		if not self.__childregions.has_key(None):
-			self.__childregions[None] = []
+			if features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set and len(self.__context.getviewports()) > 0:
+				self.unsupportedfeature_error("multiple top layouts")
+			topLayout = self.__context.newviewport(id, -1, 'layout')
+			topLayout.addOwner(OWNER_DOCUMENT)
+			self.__rootLayout = topLayout
+		self.__do_viewport(topLayout, attributes)
 
 	def end_root_layout(self):
 		if __debug__:
 			if parsedebug: print 'end root_layout'
-		pass
 
 	def start_viewport(self, attributes):
 		if __debug__:
@@ -3591,36 +3204,28 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = self.__checkid(attributes,'viewport')
 		if id is None:
 			id = self.__mkid('viewport')
-			
-		attributes['id'] = id
-						
-		self.__viewport = id
-		self.__childregions[id] = []
 
-		# define some default values,
-		# and keep the original attributes for background value !!!. These two attributes are
-		# used in CreateLayout method
-		attrdict = {'close':'onRequest',
-			    'open':'onStart',
-			    'attrs':attributes}
+		if features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set and (len(self.__context.getviewports()) > 0 or self.__rootLayout is not None):
+			self.unsupportedfeature_error("multiple top layouts")
 
-		self.AddTestAttrs(attrdict, attributes)
-		self.AddCoreAttrs(attrdict, attributes)
+		topLayout = self.__context.newviewport(id, -1, 'layout')
+		topLayout.addOwner(OWNER_DOCUMENT)
+		self.__viewport = topLayout
+		self.__do_viewport(topLayout, attributes)
+
+	def __do_viewport(self, topLayout, attributes):
+		topLayout['transparent'] = 0
+
+		self.AddTestAttrs(topLayout, attributes)
+		self.AddCoreAttrs(topLayout, attributes)
+
+		cssAttrs = []
 
 		for attr,val in attributes.items():
-			if attr == 'id':
-				self.__tops[val] = attrdict
-				self.__toplayouts.append(val)
-			elif attr == 'open':
-				if val not in ('onStart', 'whenActive'):
-					self.syntax_error('illegal open attribute value')
-					val = 'onStart'
-				attrdict[attr] = val
-			elif attr == 'close':
-				if val not in ('onRequest', 'whenNotActive'):
-					self.syntax_error('illegal close attribute value')
-					val = 'onRequest'					
-				attrdict[attr] = val
+			if attr in ('open', 'close'):
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					topLayout[attr] = val
 			elif attr in ('height', 'width'):
 				if val[-2:] == 'px':
 					val = val[:-2]
@@ -3628,64 +3233,60 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = int(val)
 				except ValueError:
 					self.syntax_error('viewport %s not a pixel value'%attr)
-					val = 0
+					val = None
 				else:
 					if val < 0:
 						self.syntax_error('viewport %s not a positive value'%attr)
-						val = 0
-				attrdict[attr] = val
+						val = None
+				if val is not None:
+					topLayout[attr] = val
+					cssAttrs.append((attr, val))
 			elif attr in ('background-color', 'backgroundColor'):
-				# these two attribute are parsed in CreateLayout method
-				pass
+				val = self.__convert_color(val, attr)
+				if attr == 'backgroundColor' or not topLayout.has_key('bgcolor'):
+					if val is not None and \
+					   val != 'transparent' and \
+					   val != 'inherit':
+						topLayout['bgcolor'] = val
+					else:
+						topLayout['bgcolor'] = 0,0,0
 			elif attr == 'resizeBehavior':
 				val = self.parseEnumValue(attr, val)
 				if val is not None:
-					attrdict[attr] = val
+					topLayout[attr] = val
 			elif attr == 'editBackground':
-				res = re.match('(?P<r>[0-9]+) +(?P<g>[0-9]+) +(?P<b>[0-9]+)', val) # backward compatibility hack
+				res = re.match(' *(?P<r>[0-9]+) +(?P<g>[0-9]+) +(?P<b>[0-9]+)', val) # backward compatibility hack
 				if res is not None:
 					val = int(res.group('r')), int(res.group('g')), int(res.group('b'))
 				else:
-					val = self.__convert_color(val)
+					val = self.__convert_color(val, attr)
 				if val is not None:
-					attrdict['editBackground'] = val
+					topLayout[attr] = val
 			elif attr == 'showEditBackground':
 				if val in ('0','off'): # backward compatibility hack
 					val = 0
 				elif val in ('1', 'on'): # backward compatibility hack
 					val = 1
 				else:
-					val = self.parseEnumValue('showEditBackground', val)
+					val = self.parseEnumValue(attr, val)
 				if val is not None:
-					attrdict['showEditBackground'] = val
-			else:
-				# catch all
-				attrdict[attr] = val
+					topLayout[attr] = val
+			elif attr == 'collapsed':
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					topLayout.collapsed = val
+			elif attr == 'traceImage':
+				if val:
+					topLayout['traceImage'] = MMurl.basejoin(self.__base, val)
+			elif attr == 'previewShowOption':
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					topLayout[attr] = val
+##			else:
+##				# catch all
+##				attrdict[attr] = val
+		self.__context.cssResolver.setRawAttrs(topLayout.getCssId(), cssAttrs)
 
-		# experimental code for switch layout
-		if len(self.__switchstack) > 0:			
-			self.__elementindex = self.__elementindex+1
-			self.__tops[id]['elementindex'] = self.__elementindex
-				
-			notmatch = 0
-			if self.__alreadymatch:
-				notmatch = 1
-			else:
-				all = settings.getsettings()
-				for setting in all:		
-					settingvalue = self.__tops[id].get(setting)					
-					if settingvalue is not None:
-						ok = settings.match(setting,settingvalue)
-						if not ok:
-							notmatch = 1
-							break
-			if notmatch:
-				# if not match, set open to when active. Like this, the view port won't be never showed
-				self.__tops[id]['open'] = 'whenActive'
-			else:
-				self.__alreadymatch = 1
-		# end experimental code for switch
-		
 	def end_viewport(self):
 		if __debug__:
 			if parsedebug: print 'end viewport'
@@ -3703,34 +3304,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
-
 		# default values
 		attrdict = {'regAlign': 'topLeft'}
 
-		for attr, val in attributes.items():
-			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
-				attr = attr[len(GRiNSns)+1:]
-			val = val.strip()
-			if attr == 'id':
-				attrdict[attr] = id = val
+		id = self.__checkid(attributes)
+		if id is None:
+			self.warning("no id specified for regPoint element")
 
-				res = xmllib.tagfind.match(id)
-				if res is None or res.end(0) != len(id):
-					self.syntax_error("illegal ID value `%s'" % id)
-				if self.__ids.has_key(id):
-					self.syntax_error('non-unique id %s' % id)
-				self.__ids[id] = 0
-				self.__regpoints[id] = attrdict
-			elif attr == 'top' or attr == 'bottom' or attr == 'left' or attr == 'right':
+		for attr, val in attributes.items():
+			if attr == 'id':
+				pass	# dealt with already
+			elif attr in ('top', 'bottom', 'left', 'right'):
 				# for instance, we assume that we can't specify in the same time
 				# a top and bottom, a left and right attribute. The SMIL Boston specication
 				# is not clear yet about this
 				if (attrdict.has_key('top') and attr == 'bottom') or \
-					(attrdict.has_key('bottom') and attr == 'top'):
-					self.syntax_error("you can't specify both top and bottom attribute")
+				   (attrdict.has_key('bottom') and attr == 'top'):
+					self.syntax_error("you can't specify both top and bottom attributes")
 				elif (attrdict.has_key('left') and attr == 'right') or \
-					(attrdict.has_key('right') and attr == 'left'):
-					self.syntax_error("you can't specify both left and right attribute")
+				     (attrdict.has_key('right') and attr == 'left'):
+					self.syntax_error("you can't specify both left and right attributes")
 				else:
 					try:
 						if val[-1] == '%':
@@ -3741,13 +3334,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							val = int(val)
 						attrdict[attr] = val
 					except ValueError:
-						self.syntax_error('invalid region attribute value')
+						self.syntax_error('invalid regPoint attribute value')
 			elif attr == 'regAlign':
-				if self.__alignvals.has_key(val):
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
 					attrdict[attr] = val
-				else:
-					self.syntax_error('invalid regAlign attribute value')
-
+		if id is not None:
+			self.__context.addRegpoint(id, attrdict)
 
 	def end_regpoint(self):
 		if __debug__:
@@ -3819,7 +3412,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif name == 'borderColor' and value == 'blend':
 				value = (-1,-1,-1)
 			elif name in ('borderColor', 'fadeColor'):
-				value = self.__convert_color(value)
+				value = self.__convert_color(value, name)
 				if value is None:
 					continue
 			elif name == 'skip-content':
@@ -4109,13 +3702,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if __debug__:
 			if parsedebug: print 'start switch', attributes
 		id = self.__checkid(attributes)
-		# experimental code for switch layout
-		self.__switchstack.append(attributes)
-		if self.__in_layout:
-			# nothing for now
-			pass
-		# end experimental code
-		elif self.__in_head:
+		if self.__in_head:
 			if self.__in_head_switch:
 				self.syntax_error('switch within switch in head')
 			if self.__in_meta:
@@ -4128,13 +3715,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if __debug__:
 			if parsedebug: print 'end switch'
 		self.__in_head_switch = 0
-		# experimental code for switch layout
-		del self.__switchstack[-1]
-		if self.__in_layout:
-			# nothinbg for now
-			pass
-		# end experimental code
-		elif not self.__in_head:
+		if not self.__in_head:
 			self.EndContainer('switch')
 
 	# media items
@@ -4615,7 +4196,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if vtype != 'data':
 			return
 		if name == 'fgcolor':
-			fg = self.__convert_color(value)
+			fg = self.__convert_color(value, name)
 			if fg is not None:
 				self.__node.attrdict[name] = fg
 		# Real extensions
@@ -4714,6 +4295,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		msg = 'syntax error on line %d: %s' % (line, msg)
 		if self.__printfunc is not None:
 			self.__printdata.append(msg)
+			if __debug__:
+				if parsedebug: print msg
 		else:
 			print msg
 		if line is not None:
@@ -4784,10 +4367,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# helper methods
 
-	def __convert_color(self, val):
+	def __convert_color(self, val, attr = None):
 		try:
 			return colors.convert_color(val)
 		except colors.error, msg:
+			if attr:
+				msg = msg + " for attribute `%s'" % attr
 			self.syntax_error(msg)
 			return None
 
@@ -4826,6 +4411,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 	def finish_starttag(self, tagname, attrdict, method):
+		self.__updateProgressHandler()
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
 		   (nstag[0] in [SMIL1]+SMIL2ns or extensions.has_key(nstag[0])):
@@ -4875,6 +4461,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 	def unknown_endtag(self, tagname):
+		self.__updateProgressHandler()
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
 		   (nstag[0] in [SMIL1]+SMIL2ns or extensions.has_key(nstag[0])):
@@ -4898,16 +4485,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# update progress bar if needed
 	def __updateProgressHandler(self):
-		import time
 		if self.__progressCallback is not None:
 			callback, intervalTime = self.__progressCallback
 			if time.time() > self.__progressTimeToUpdate:
-				# determinate the next time to update
+				# determine the next time to update
 				self.__progressTimeToUpdate = time.time()+intervalTime
 				if self.__nlines:
 					# update the handler. 
 					callback(float(self.lineno)/self.__nlines)
-				
+
 class SMILMetaCollector(xmllib.XMLParser):
 	# Collect the meta attributes from a smil file
 
