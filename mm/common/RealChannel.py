@@ -30,7 +30,7 @@ class RealEngine:
 		
 	def close(self):
 		self.engine = None
-		if self.usagecount:
+		if self.usagecount and NEEDTICKER:
 			windowinterface.cancelidleproc(self._tick)
 		
 	def __del__(self):
