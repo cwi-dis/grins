@@ -103,6 +103,15 @@ attrgrs=(
 		'file',
 		]},
 
+	{'name':'imgregion',
+	'title':'Image region',
+	'attrs':[
+		'imgcropxy',
+		'imgcropwh',
+		'fullimage',
+		'imgcropanchor',
+		]},
+
 	)
 
 
