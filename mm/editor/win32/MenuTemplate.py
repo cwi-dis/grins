@@ -449,8 +449,8 @@ POPUP_CVIEW_NODE = (
 )
 
 POPUP_CVIEW_SYNCARC = (
-##		(SMIL, ENTRY, '&Info...', None, INFO),
-##		(SMIL, SEP,),
+		(SMIL, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(SMIL, SEP,),
 		(LIGHT, ENTRY, '&Delete', None, DELETE),
 )
 
