@@ -208,7 +208,10 @@ class MMStream:
 		mmstream = dshow.CreateMultiMediaStream()
 		mmstream.Initialize()
 		mmstream.AddPrimaryVideoMediaStream(ddobj)
-		mmstream.AddPrimaryAudioMediaStream()
+		try:
+			mmstream.AddPrimaryAudioMediaStream()
+		except dshow.error, arg:
+			print arg
 		self._mmstream = mmstream
 		self._mstream = None
 		self._ddstream = None
