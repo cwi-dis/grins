@@ -67,6 +67,9 @@ from Font import findfont,fonts
 from AppToplevel import FileDialog
 from components import *
 
+# Auxiliary functions
+from AppToplevel import beep
+
 # needed directly?
 GetImageSize=toplevel.GetImageSize
 GetVideoSize=toplevel.GetVideoSize
@@ -74,10 +77,6 @@ GetMediaDuration=toplevel.GetMediaDuration
 from _PreferencesDialog import PreferencesDialog
 from _UsergroupView import UsergroupEditDialog
 from _LinkView import LinkPropDlg
-
-def beep():
-	import sys
-	sys.stderr.write('\7')
 
 def lopristarting():
 	pass

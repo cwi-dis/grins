@@ -22,6 +22,8 @@ import MainFrame
 from appcon import *
 from win32ig import win32ig
 
+def beep():
+	win32api.MessageBeep()
 
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
