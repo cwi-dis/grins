@@ -1883,6 +1883,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			except error, msg:
 				self.syntax_error(msg)
 				begin = None
+			else:
+				atype = ATYPE_NORMAL
 		end = attributes.get('end')
 		if end is not None:
 			try:
@@ -1890,6 +1892,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			except error, msg:
 				self.syntax_error(msg)
 				end = None
+			else:
+				atype = ATYPE_NORMAL
 		# extension: accept z-index attribute
 		z = attributes.get('z-index', '0')
 		try:
