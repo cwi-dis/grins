@@ -973,7 +973,99 @@ class CssColorCtrl(ColorCtrl):
 		self.enable(0)
 		self.currentValue = 'inherit'
 		self.enableApply()
-		
+
+# Ctrl representing a css pos value
+class CssPosCtrl(AttrCtrl):
+	def __init__(self,wnd,attr,resid):
+		AttrCtrl.__init__(self, wnd, attr, resid)
+		self._ctrlValue = components.Edit(wnd,resid[1])
+		self._ctrlUnit = components.ComboBox(wnd,resid[2])
+		self.currentValue = self._attr.getcurrent()
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._ctrlValue.attach_to_parent()
+		self._ctrlUnit.attach_to_parent()
+
+		self._ctrlUnit.resetcontent()
+		self._ctrlUnit.setoptions(['auto', 'pixel','percent'])
+		self.setvalue(self._attr.getcurrent())
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		self._wnd.HookCommand(self.OnCombo,self._resid[2])
+	
+	def enable(self, enable):
+		self._ctrlValue.enable(enable)
+		self._ctrlUnit.enable(enable)
+
+	# put value into the field. val is the representation of the value
+	def setvalue(self, val):
+		if not self._initctrl: return
+		if val =='':
+			# auto value
+			self._ctrlUnit.setcursel(0)
+		elif '%' not in val:
+			# pixel value
+			self._ctrlUnit.setcursel(1)
+		else:
+			val = val[:-1]
+			# percent value
+			self._ctrlUnit.setcursel(2)
+			
+		self._ctrlValue.settext(val)
+
+	# get value from the field. return a string representation of the value
+	def getvalue(self):
+		if self._initctrl:
+			val = self._ctrlValue.gettext()
+			unit = self._ctrlUnit.getvalue()
+			if val != '' and (unit == 'percent' or val[-1] == '%'):
+				if val[-1] != '%':
+					val = val+'%'
+			return string.join(string.split(val, '\r\n'), '\n')
+				
+		return self._attr.getcurrent()
+
+	def OnCombo(self,id,code):
+		self.sethelp()
+		if code==win32con.CBN_SELCHANGE:
+			self.enableApply()
+			unit = self._ctrlUnit.getvalue()
+			if unit == 'auto':
+				self._ctrlValue.settext('')
+			elif unit == 'pixel':
+				val = self._ctrlValue.gettext()
+				try:
+					# convert to integer
+					val = int(float(val))
+				except:
+					val = 0
+				self._ctrlValue.settext(`val`)
+			elif unit == 'percent':
+				val = self._ctrlValue.gettext()
+				try:
+					# convert to float
+					val = float(val)
+				except:
+					val = 0
+				self._ctrlValue.settext(`val`)
+
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			val = self._ctrlValue.gettext()
+			unit = self._ctrlUnit.getvalue()
+			if val == '':
+				# force auto value
+				self._ctrlUnit.setcursel(0)			
+			elif unit == 'auto' and val != '':
+				# force to pixel value
+				self._ctrlUnit.setcursel(1)
+			elif unit == 'pixel' and val[-1] == '%':
+				# force to percent value
+				self._ctrlUnit.setcursel(2)
+			self.enableApply()
+	
 ##################################
 class StringCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -4031,7 +4123,58 @@ class CssBackgroundColorGroup(AttrGroup):
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		return cd
-	
+
+class Layout2Group(AttrGroup):
+	def __init__(self):
+		self.data=attrgrsdict['Layout2']
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LAYOUT2
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		a = self.getattr('left')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_LEFTL, grinsRC.IDC_LEFTV, grinsRC.IDC_LEFTU))
+		a = self.getattr('width')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU))
+		a = self.getattr('right')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_RIGHTL, grinsRC.IDC_RIGHTV, grinsRC.IDC_RIGHTU))
+		a = self.getattr('top')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_TOPL, grinsRC.IDC_TOPV, grinsRC.IDC_TOPU))
+		a = self.getattr('height')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_HEIGHTL, grinsRC.IDC_HEIGHTV, grinsRC.IDC_HEIGHTU))
+		a = self.getattr('bottom')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_BOTTOML, grinsRC.IDC_BOTTOMV, grinsRC.IDC_BOTTOMU))
+
+		a = self.getattr('regPoint')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
+		a = self.getattr('regAlign')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
+
+		a = self.getattr('fit')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
+						   
+		return cd
+
+class Layout1Group(Layout2Group):
+	data=attrgrsdict['Layout1']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LAYOUT1
+	def createctrls(self,wnd):
+		cd = Layout2Group.createctrls(self, wnd)
+		
+		a = self.getattr('regPoint')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
+		a = self.getattr('regAlign')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
+						   
+		return cd
+
 #
 class TransitionTypeGroup(NameGroup):
 	data=attrgrsdict['transitionType']
@@ -4066,6 +4209,8 @@ groupsui={
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
 	'CssBackgroundColor':CssBackgroundColorGroup,
+	'Layout1':Layout1Group,
+	'Layout2':Layout2Group,
 	'subregion':SubregionGroup,
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
