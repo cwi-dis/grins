@@ -81,8 +81,8 @@ def readattrdefs(fp, filename):
 				        MMParser.MMParser.basicparsers))
 			parser.close()
 			if dict.has_key(attrname):
-			    if verbose:
-				print 'Warning: duplicate attr def', attrname
+				if verbose:
+					print 'Warning: duplicate attr def', attrname
 		  
 			# WARNING: HACK
 			# for instance, the conversion is turn off for QuickTime docucment.
@@ -142,7 +142,7 @@ def readattrdefs(fp, filename):
 		fpc = open(filename_py, 'w')
 		import pprint
 		if verbose:
-		    print 'Writing compiled attributes to', filename_py
+			print 'Writing compiled attributes to', filename_py
 		fpc.write('mtime = %s\nAttrdefs = ' % sf[ST_MTIME])
 		fpc.write(pprint.pformat(dict))
 		fpc.write('\n')
@@ -151,7 +151,7 @@ def readattrdefs(fp, filename):
 		print 'Can\'t write compiled attributes to', filename_py
 		print msg[1]
 	if verbose:
-	    print 'Done.'
+		print 'Done.'
 	return dict
 
 
@@ -193,7 +193,7 @@ def getnames():
 	return names
 
 def exists(attrname):
-        return attrdefs.has_key(attrname)
+	return attrdefs.has_key(attrname)
 
 
 # Hooks to gather statistics about attribute use via getattr()
