@@ -122,7 +122,12 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__targetChannel:
 			return self.__targetChannel
 		targnode = self.__effAnimator.getTargetNode()
-		chname = MMAttrdefs.getattr(targnode, 'channel') 
+
+		chname = MMAttrdefs.getattr(targnode, 'channel')
+		if targnode.GetChannelType()!='layout':
+			# XXX: not always correct
+			# whats the method to  find node's channel (name %d)?	
+			chname = chname + ' 0' 
 		self.__targetChannel = self._player.getchannelbyname(chname)
 		return self.__targetChannel
 		
