@@ -1323,6 +1323,21 @@ class MMNode:
 		
 		return regpoint.getregalign()
 
+	# get default media size in pixel
+	# if not defined, return width and height
+	def GetDefaultMediaSize(self, defWidth, defHeight):
+		try:
+			file = self.GetAttr('file')
+			url = self.context.findurl(file)
+			import Sizes
+			media_width, media_height = Sizes.GetSize(url)
+		except:
+			media_width = defWidth 
+			media_height = defHeight
+
+		return media_width, media_height
+	
+
 ##	def GetSummary(self, name):
 ##		if not self.summaries.has_key(name):
 ##			self.summaries[name] = self._summarize(name)

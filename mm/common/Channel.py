@@ -706,8 +706,15 @@ class Channel:
 		if not self._armcontext:
 			# The player has aborted
 			return
-		self.arm_1()
-
+		# this method
+		self._prepareAnchors(node)
+		self.arm_1()	
+		
+	# this method have to be override by visible channels
+	# Warning: it can't be called by the arm_1 because arm_1 may called from others locations
+	def _prepareAnchors(self, node):
+		pass
+		
 	# Called by the scheduler when it is not sure whether this
 	# node is armed or not.
 	def optional_arm(self, node):
@@ -1148,7 +1155,6 @@ class ChannelWindow(Channel):
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
 		self.__wingeom = None		
-		self.__mediageom = None		
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
@@ -1290,6 +1296,15 @@ class ChannelWindow(Channel):
 		# through the hyperjump (default: None)
 		return (node, nametypelist, args)
 
+	# set the display size of media after arming according to the size of media, fit attribute, ...
+	# this method is called by descendant
+	def setArmBox(self, armBox):
+		self.armBox = armBox
+		
+	# return the display size of media after arming according to the size of media, fit attribute, ...
+	def getArmBox(self):
+		return self.armBox
+	
 	def create_window(self, pchan, pgeom, units = None):
 ##		menu = []
 		if pchan:
@@ -1512,37 +1527,80 @@ class ChannelWindow(Channel):
 		for arc in node.sched_children:
 			if arc.event == 'click':
 				self.armed_display.fgcolor(bgcolor)
-				b = self.armed_display.newbutton((0,0,1,1), z = -1)
+				# Warning: This line select all the region
+				b = self.armed_display.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
 				self.setanchor(None, None, b, None)
 				break
+
+		# by default all window area
+		self.armBox = (0.0, 0.0, 1.0, 1.0)
+		
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
 		alist = node.GetRawAttrDef('anchorlist', [])
 		armed_anchor = None
-		for i in range(len(alist)-1,-1,-1):
-			a = alist[i]
-			atype = a[A_TYPE]
-			if atype == ATYPE_WHOLE:
-				anchor = node.GetUID(), a[A_ID]
-				if not self._player.context.hyperlinks.findsrclinks(anchor):
-					continue
-				if armed_anchor:
-					print 'multiple whole-node anchors on node'
-				armed_anchor = a
-		if armed_anchor:
-			if MMAttrdefs.getattr(node, 'drawbox'):
-				self.armed_display.fgcolor(self.getbucolor(node))
-			else:
-				self.armed_display.fgcolor(bgcolor)
-			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0), times = armed_anchor[A_TIMES])
-			b.hiwidth(3)
-			b.hicolor(self.gethicolor(node))
-			self.armed_display.fgcolor(fgcolor)
-			self.setanchor(armed_anchor[A_ID],
-				       armed_anchor[A_TYPE], b,
-				       armed_anchor[A_TIMES])
+		
+		# WARNING: Can't be done here: we don't know at this point the real display area size of 
+		# media. So we can't create the sensitive button here. Otherwise we have to select all region, and 
+		# not just the media area !. Instead, this code is done is _prepareAnchors method
+		
+#		for i in range(len(alist)-1,-1,-1):
+#			a = alist[i]
+#			atype = a[A_TYPE]
+#			if atype == ATYPE_WHOLE:
+#				anchor = node.GetUID(), a[A_ID]
+#				if not self._player.context.hyperlinks.findsrclinks(anchor):
+#					continue
+#				if armed_anchor:
+#					print 'multiple whole-node anchors on node'
+#				armed_anchor = a
+#		if armed_anchor:
+#			if MMAttrdefs.getattr(node, 'drawbox'):
+#				self.armed_display.fgcolor(self.getbucolor(node))
+#			else:
+#				self.armed_display.fgcolor(bgcolor)
+#			b = self.armed_display.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], times = armed_anchor[A_TIMES])
+#			b.hiwidth(3)
+#			b.hicolor(self.gethicolor(node))
+#			self.armed_display.fgcolor(fgcolor)
+#			self.setanchor(armed_anchor[A_ID],
+#				       armed_anchor[A_TYPE], b,
+#				       armed_anchor[A_TIMES])
 				       
 		return 0
+
+	# Active an sensitive area in display list according to the anchors.
+	# Warning: this method have to be called after do_arm
+	def _prepareAnchors(self, node):
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')			
+		if drawbox:
+			self.armed_display.fgcolor(self.getbucolor(node))
+		else:
+			self.armed_display.fgcolor(self.getbgcolor(node))
+		hicolor = self.gethicolor(node)
+		for a in node.GetRawAttrDef('anchorlist', []):
+			coordinates = a[A_ARGS]
+			atype = a[A_TYPE]
+			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ):
+#			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
+				continue
+#			if atype == ATYPE_WHOLE:
+				# whole node already done
+#				continue
+			anchor = node.GetUID(), a[A_ID]
+			if not self._player.context.hyperlinks.findsrclinks(anchor):
+				continue
+				
+			# convert coordinates to relative image size
+			relativeCoordinates = self.convertShapeToRelImage(node, coordinates)
+			# convert coordinates from relative image to relative window size
+			windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
+			
+			b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES])
+			b.hiwidth(3)
+			if drawbox:
+				b.hicolor(hicolor)
+			self.setanchor(a[A_ID], atype, b, a[A_TIMES])		
 
 	def add_arc(self, node, arc):
 		if node is self._played_node and arc.event == 'click':
@@ -1566,15 +1624,7 @@ class ChannelWindow(Channel):
 		subreg_left = node.__subreg_left
 
 		# determinate media size
-		try:
-			file = node.GetAttr('file')
-			url = node.context.findurl(file)
-			import Sizes
-			media_width, media_height = Sizes.GetSize(url)
-		except:
-			# want to make them at least visible...
-			media_width = subreg_width
-			media_height = subreg_height
+		media_width, media_height = node.GetDefaultMediaSize(subreg_width, subreg_height)
 
 		# print 'media width =',media_width
 		# print 'media height =',media_height
@@ -1906,6 +1956,103 @@ class ChannelWindow(Channel):
 					    mtype = 'warning', grab = 1,
 					    parent = self.window)
 		apply(cb, (anchor,))
+
+
+	# convert relative image offsets to relative window offsets
+	# For this, we need to know the real size of media which fit inside the region 
+	# --> method getArmBox (channel dependent)
+	# This box is known only after the call of do_arm method
+	def convertShapeRelImageToRelWindow(self, args):
+		shapeType = args[0]
+		
+		armBox = self.getArmBox()
+		if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT or \
+						shapeType == A_SHAPETYPE_ELIPSE:
+			rArgs = [shapeType,]
+			n=0
+			for a in args[1:]:
+				# test if xCoordinates or yCoordinates
+				if n%2 == 0:
+					# convert coordinates from image to window size
+					rArgs = rArgs + [a*armBox[2] + armBox[0]]
+				else:
+					rArgs = rArgs + [a*armBox[3] + armBox[1]]
+				n = n+1
+
+		# in this case the circle may be translate to an elipse
+		elif shapeType == A_SHAPETYPE_CIRCLE:
+			xCenter, yCenter, radius = args[1:]
+			rArgs = [A_SHAPETYPE_ELIPSE, xCenter*armBox[2] + armBox[0],
+						yCenter*armBox[3] + armBox[1],
+						radius*armBox[2] + armBox[0],
+						radius*armBox[3] + armBox[1]]
+												
+		return rArgs
+	
+	# Convert relative window offsets to relative image offsets
+	def convertShapeRelWindowToRelImage(self, args):
+		shapeType = arg[0]
+		
+		if shapeType == A_SHAPETYPE_ALLREGION:
+			return args
+
+		if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT or \
+						shapeType == A_SHAPETYPE_ELIPSE:
+			rArgs = [shapeType,]
+			n=0
+			for a in args[1:]:
+				# test if xCoordinates or yCoordinates
+				if n%2 == 0:
+					# convert coordinates from image to window size
+					rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
+				else:
+					rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]	
+				n = n+1
+
+		# in this case the circle may be translate to an elipse
+		elif shapeType == A_SHAPETYPE_CIRCLE:
+			xCenter, yCenter, radius = args[1:]
+			rArgs = [A_SHAPETYPE_ELIPSE, (xCenter - self._arm_imbox[0]) / self._arm_imbox[2],
+					(yCenter - self._arm_imbox[1]) / self._arm_imbox[3],
+					(radius - self._arm_imbox[0]) / self._arm_imbox[2],
+					(radius - self._arm_imbox[1]) / self._arm_imbox[3]]
+												
+		return rArgs
+		
+	# Convert pixel offsets/relative image offset to relative image offset 
+	# according to the image size 
+	def convertShapeToRelImage(self, node, args):
+		# in this case we assume it's a rectangle area
+		if args[0] == A_SHAPETYPE_ALLREGION:
+			args =  [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0]
+
+		shapeType = args[0]
+		
+		rArgs = [shapeType,]
+		n=0
+		xsize = -1
+		for a in args[1:]:
+			# if integer, it's a pixel value, we need to convert in pourcent 
+			if type(a) == type(0):	# any floating point number
+				# for optimization
+				if xsize == -1:
+					xsize, ysize = node.GetDefaultMediaSize(100, 100)
+				if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT:
+					# test if xCoordinates or yCoordinates
+					if n%2 == 0:
+						rArgs = rArgs+[float(a)/xsize]
+					else:
+						rArgs = rArgs+[float(a)/ysize]
+				elif shapeType == A_SHAPETYPE_CIRCLE:
+					if xSize > ySize:
+						rArgs = rArgs+[float(a)/ysize]
+					else:
+						rArgs = rArgs+[float(a)/xsize]
+			else:
+				rArgs = rArgs+[a]
+				
+			n = n+1
+		return rArgs			
 
 class ChannelAsync(Channel):
 

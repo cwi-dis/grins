@@ -1,5 +1,28 @@
 __version__ = "$Id$"
 
+""" @win32doc|DisplayList
+The DisplayList contains an execution list of drawing commands
+The DisplayList implements the basic drawing mechanism of the application.
+It provides a standard interface to core modules that want something to be
+painted in a window. A module that wants something to be painted in a window
+follows the protocol:
+1) Request a new display list from the window (specifing bgd)
+2) Insert drawing objects (draw commands) using the std interface provided by the DisplayList
+3) Call render() method of the newly created list in order to be painted
+
+Most parts of this class are platform independent,
+but the crusial mechanism is platform depended.
+To do the actual painting is platform dependent but it is
+easy to implement.
+The important platform dependencie here is the update mechanism.
+While the display list is active and when any part of the drawing region
+has been erased for any reason a context sensitive update mechanism must be fired
+to redraw the region.
+
+
+class _Button:
+
+"""
 
 # Public Objects:
 # class DisplayList
@@ -68,14 +91,15 @@ class _DisplayList:
 		self._canvas = window._canvas
 		self._linewidth = 1
 		self._list = []
-		if window._transparent <= 0:
-			self._list.append(('clear', self._canvas))
 		self._optimdict = {}
 		self._rendered = 0
 		self._font = None
 		self._curpos = 0, 0
 		self._xpos = 0
 		self._win32rgn=None
+		if self._canvas[2]==0 or self._canvas[3]==0:
+			print 'invalid canvas for wnd',window
+			self._canvas=(0,0,10,10)
 
 		#cloning support
 		self._cloneof = None
@@ -116,13 +140,22 @@ class _DisplayList:
 
 
 #====================================== Rendering
+	# Called by any client that wants to activate the display list
 	def render(self):
 		import time
 		self.starttime = time.time()
 		wnd = self._window
+		if not wnd or not hasattr(wnd,'_obj_') or not hasattr(wnd,'RedrawWindow'):
+			return
 		for b in self._buttons:
 			b._highlighted = 0 
 		wnd._active_displist = self
+
+		# we set to not transparent in order to 
+		# accomodate win32 bug
+		# and preserve z-order
+		if wnd._transparent in (1,-1):
+			wnd.setWndNotTransparent()
 		wnd.pop()
 		wnd.update()
 
@@ -140,30 +173,44 @@ class _DisplayList:
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
 
+	# Close this display list and destroy its resources
 	def close(self):
-		wnd = self._window
-		if wnd is None:
+		#print 'closing dl',self
+		if self._window is None:
 			return
+		win = self._window
 		for b in self._buttons[:]:
 			b.close()
-		wnd._displists.remove(self)
-		self._window = None
-		for d in wnd._displists:
+		if self in win._displists:
+			win._displists.remove(self)
+		for d in win._displists:
 			if d._cloneof is self:
 				d._cloneof = None
-		if wnd._active_displist is self:
-			wnd._active_displist = None
-			wnd.update()
+		if win._active_displist is self:
+			win._active_displist = None
+			if win._transparent in (1,-1):
+				win.setWndTransparent()
+			# win.update()
+			win.push()
+		self._window = None
 		if self._win32rgn:
 			self._win32rgn.DeleteObject()
 			del self._win32rgn
 			self._win32rgn=None
 		del self._cloneof
+		try:
+			del self._clonedata
+		except AttributeError:
+			pass
 		del self._optimdict
 		del self._list
 		del self._buttons
 		del self._font
-				
+		
+		# HACK : allow to update all windows
+		win.updateall()
+		#end HACK
+		
 	# Render the entry draw command
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
@@ -330,7 +377,15 @@ class _DisplayList:
 		elif cmd == 'icon':
 			if entry[2] != None:
 				x, y, w, h = entry[1]
+##				fgcolor = wid.GetWindowPort().rgbFgColor
+##				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+##				Qd.RGBForeColor((0xffff, 0, 0))
+##				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
 				dc.DrawIcon((x, y), entry[2])
+##				Qd.RGBBackColor(self._bgcolor)
+##				Qd.RGBForeColor(fgcolor)
+
+
 
 	# Returns true if this is closed
 	def is_closed(self):
@@ -344,6 +399,7 @@ class _DisplayList:
 	def fgcolor(self, color):
 		self._list.append(('fg', color))
 		self._fgcolor = color
+
 
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, times = None):
