@@ -8,13 +8,43 @@ __version__ = "$Id$"
 Associates identifiers to commands.
 For commands that have toolbar icons the identifiers
 are predefined. For the rest are assigned identifiers
-continously starting from the first available value.
+continously starting from the first avalaible value.
 This value is taken from grinsRC and is automatically
 updated by the resource editor.
-This module creates and exports a
-map from cmd classes to CommandUI instances that 
-contain the identifier and the cascade commands ranges.
+This module creates and exports a map from cmd classes 
+to CommandUI instances that contain the identifier and 
+the cascade commands ranges.
 """
+
+#
+# public interface
+#
+
+def usercmd2id(cmdcl):
+	if class2ui.has_key(cmdcl):
+		return class2ui[cmdcl].id
+	else: 
+		return 0
+
+def getusercmds():
+	return class2ui.keys()
+
+def id2usercmd(id):
+	for cmd, cmdui in class2ui.items():
+		if cmdui.id == id:
+			return cmd
+	return None
+
+def getcmdids():
+	L = []
+	for cmdui in class2ui.values():
+		L.append(cmdui.id)
+	return L
+
+
+################################
+# Private implementation
+
 
 from usercmd import *
 
@@ -67,50 +97,32 @@ class CommandUI:
 # Global commands
 #
 
-CommandUI(CLOSE_WINDOW)
 CommandUI(HELP,IDUC_HELP)
-CommandUI(PREFERENCES)
 
 # win32++
-CommandUI(HELP_CONTENTS)
-CommandUI(GRINS_WEB)
 CommandUI(PASTE_DOCUMENT,IDUC_PASTEFILE)
 
-CommandUI(ABOUT_GRINS)
 CommandUI(CLOSE_ACTIVE_WINDOW,IDUC_CLOSE_WINDOW)
-CommandUI(SELECT_CHARSET)
 
-CommandUI(TOOLBAR_GENERAL)
 #
 # MainDialog commands
 #
 CommandUI(OPEN,IDUC_OPENURL)
 CommandUI(OPENFILE, IDUC_OPEN)
 CommandUI(OPEN_RECENT,casc2ui[OPEN_RECENT])
-CommandUI(TRACE)
-CommandUI(DEBUG)
-CommandUI(CONSOLE)
-CommandUI(SOURCEVIEW)
 CommandUI(CLOSE,IDUC_CLOSE)
-CommandUI(EXIT)
 
 
 
 #
 # Player view commands
 #
-CommandUI(TB_PLAY,IDUC_PLAY)
-CommandUI(TB_PAUSE,IDUC_PAUSE)
-CommandUI(TB_STOP,IDUC_STOP)
 CommandUI(PLAY,IDUC_PLAY)
 CommandUI(PAUSE,IDUC_PAUSE)
 CommandUI(STOP,IDUC_STOP)
 CommandUI(MAGIC_PLAY,IDUC_MAGIC_PLAY)
-CommandUI(USERGROUPS,casc2ui[USERGROUPS])
-CommandUI(CHANNELS,casc2ui[CHANNELS])
-#CommandUI(CALCTIMING)
-CommandUI(CRASH)
-CommandUI(SCHEDDUMP)
+CommandUI(USERGROUPS, casc2ui[USERGROUPS])
+CommandUI(CHANNELS, casc2ui[CHANNELS])
 
 
 #
