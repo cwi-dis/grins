@@ -22,8 +22,8 @@ LAYOUT_UNKNOWN = -1
 
 layout_name = ' SMIL '			# name of layout channel
 
-coordre = re.compile(r'^(?P<x>\d+%?),(?P<y>\d+%?),'
-		     r'(?P<w>\d+%?),(?P<h>\d+%?)$')
+coordre = re.compile(r'^(?P<x0>\d+%?),(?P<y0>\d+%?),'
+		     r'(?P<x1>\d+%?),(?P<y1>\d+%?)$')
 idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
 clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
 		       r'(?:(?P<hours>\d{2}):)?'
@@ -1273,26 +1273,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not res:
 				self.syntax_error('syntax error in coords attribute', self.lineno)
 				return
-			x, y, w, h = res.group('x', 'y', 'w', 'h')
-			if x[-1] == '%':
-				x = string.atoi(x[:-1]) / 100.0
+			x0, y0, x1, y1 = res.group('x0', 'y0', 'x1', 'y1')
+			if (x0[-1]=='%') != (x1[-1]=='%') or\
+			   (y0[-1]=='%') != (y1[-1]=='%'):
+				self.warning('Cannot mix pixels and percentages in anchor',
+					self.lineno)
+			if x0[-1] == '%':
+				x0 = string.atoi(x0[:-1]) / 100.0
 			else:
-				x = string.atoi(x)
-			if y[-1] == '%':
-				y = string.atoi(y[:-1]) / 100.0
+				x0 = string.atoi(x0)
+			if y0[-1] == '%':
+				y0 = string.atoi(y0[:-1]) / 100.0
 			else:
-				y = string.atoi(y)
-			if w[-1] == '%':
-				w = string.atoi(w[:-1]) / 100.0
+				y0 = string.atoi(y0)
+			if x1[-1] == '%':
+				x1 = string.atoi(x1[:-1]) / 100.0
 			else:
-				w = string.atoi(w)
-			if h[-1] == '%':
-				h = string.atoi(h[:-1]) / 100.0
+				x1 = string.atoi(x1)
+			if y1[-1] == '%':
+				y1 = string.atoi(y1[:-1]) / 100.0
 			else:
-				h = string.atoi(h)
+				y1 = string.atoi(h)
+			if x1 <= x0 or y1 <= y0:
+				self.warning('Anchor coordinates incorrect. XYWH-style?.',
+					self.lineno)
+##					x1 = x1 + x0
+##					y1 = y1 + y0
 			# x,y,w,h are now floating point if they were
 			# percentages, otherwise they are ints.
-			aargs = [x, y, w, h]
+			aargs = [x0, y0, x1-x0, y1-y0]
 		try:
 			anchorlist = self.__node.__anchorlist
 		except AttributeError:
