@@ -3435,9 +3435,9 @@ class MMNode(MMTreeElement):
 		# or, for looping nodes, the first or subsequent times through
 		# the loop.
 		#
-		repeatCount = self.attrdict.get('loop', None)
+		repeatCount = self.attrdict.get('loop')
 		repeatDur = MMAttrdefs.getattr(self, 'repeatdur')
-		duration = self.calcfullduration(sctx, ignoremin = 1)
+		duration = self.calcfullduration(sctx, ignoremin = 1, ignoreloop = 1)
 		if duration is not None:
 			if duration == 0:
 				repeatDur = 0
@@ -4138,8 +4138,8 @@ class MMNode(MMTreeElement):
 			return c.__calcduration(sctx)
 		return 0, 0
 
-	def calcfullduration(self, sctx, ignoremin = 0):
-		if self.fullduration is not None:
+	def calcfullduration(self, sctx, ignoremin = 0, ignoreloop = 0):
+		if not ignoreloop and self.fullduration is not None:
 			duration = self.fullduration
 		else:
 			if self.playing in (MMStates.FROZEN, MMStates.PLAYED):
@@ -4156,8 +4156,11 @@ class MMNode(MMTreeElement):
 					duration = None	# shouldn't happen
 				else:
 					duration = Duration.get(self, ignoreloop=1, ignoredur=1)
-			repeatDur = self.attrdict.get('repeatdur')
-			repeatCount = self.attrdict.get('loop')
+			if ignoreloop:
+				repeatDur = repeatCount = None
+			else:
+				repeatDur = self.attrdict.get('repeatdur')
+				repeatCount = self.attrdict.get('loop')
 			endlist = self.GetEndList()
 			endlist = self.FilterArcList(endlist)
 			beginlist = self.GetBeginList()
@@ -4204,10 +4207,11 @@ class MMNode(MMTreeElement):
 					else:
 						duration = -1
 
-			if maybecached:
-				self.fullduration = duration
-			else:
-				self.fullduration = None
+			if not ignoreloop:
+				if maybecached:
+					self.fullduration = duration
+				else:
+					self.fullduration = None
 
 		# adjust duration when we have time manipulations
 		if duration is not None and duration > 0:
