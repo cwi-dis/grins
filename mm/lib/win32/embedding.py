@@ -106,7 +106,7 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 	def OnCreate(self, params):
 		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
-		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
+		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)				
 
 	def OnDestroy(self, msg):
 		self.destroyDDLayer()		
@@ -260,7 +260,7 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		strclass=Afx.RegisterWndClass(clstyle,cursor,brush,icon)
 		self.CreateWindowEx(exstyle,strclass,title,style,
 			self.ltrb(rect), None, 0)		
-		self.ShowWindow(win32con.SW_SHOW)
+		#self.ShowWindow(win32con.SW_SHOW)
 
 
 
