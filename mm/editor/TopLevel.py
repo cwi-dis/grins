@@ -97,12 +97,17 @@ class TopLevel(ViewDialog):
 		if self in opentops:
 			opentops.remove(self)
 
+	def timer_callback(self):
+		self._last_timer_id = None
+		self.player.timer_callback()
+
 	def set_timer(self, delay):
 		if self._last_timer_id is not None:
 			windowinterface.canceltimer(self._last_timer_id)
+			self._last_timer_id = None
 		if delay:
 			self._last_timer_id = windowinterface.settimer(delay,
-				  (self.player.timer_callback, ()))
+				  (self.timer_callback, ()))
 
 	#
 	# View manipulation.
