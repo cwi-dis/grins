@@ -5,10 +5,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
                         All Rights Reserved
 
 /*************************************************************************/
+#include <windows.h>
 
 #include "Python.h"
-
-#include <windows.h>
 
 #include "utils.h"
 

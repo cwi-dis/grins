@@ -57,6 +57,7 @@ PyObject* Wingdi_CreateDCFromHandle(PyObject *self, PyObject *args)
 ///////////////////////////////
 // module
 
+#ifndef _WIN32_WCE
 static PyObject* PyDC_SetWorldTransform(PyDC *self, PyObject *args)
 {
 	float tf[6];
@@ -69,7 +70,9 @@ static PyObject* PyDC_SetWorldTransform(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject* PyDC_GetWorldTransform(PyDC *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
@@ -82,6 +85,7 @@ static PyObject* PyDC_GetWorldTransform(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("ffffff", tf[0], tf[1], tf[2], tf[3], tf[4], tf[5]);
 }
+#endif
 
 
 static PyObject* PyDC_SaveDC(PyDC *self, PyObject *args)
@@ -110,6 +114,7 @@ static PyObject* PyDC_RestoreDC(PyDC *self, PyObject *args)
 	return none();
 }
 
+#ifndef _WIN32_WCE
 static PyObject* PyDC_SetGraphicsMode(PyDC *self, PyObject *args)
 {
 	int imode;
@@ -122,7 +127,9 @@ static PyObject* PyDC_SetGraphicsMode(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("i", oldmode);
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject* PyDC_SetMapMode(PyDC *self, PyObject *args)
 {
 	int fnMapMode;
@@ -135,7 +142,9 @@ static PyObject* PyDC_SetMapMode(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("i", fnOldMapMode);
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject* PyDC_SetWindowExtEx(PyDC *self, PyObject *args)
 {
 	SIZE s;
@@ -192,6 +201,7 @@ PyDC_GetViewportExtEx(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("ii", s.cx, s.cy);
 }
+#endif //_WIN32_WCE
 
 
 static PyObject*
@@ -224,6 +234,7 @@ PyDC_SetROP2(PyDC *self, PyObject *args)
 	return Py_BuildValue("i", fnOldDrawMode);
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_GetROP2(PyDC *self, PyObject *args)
 {
@@ -236,6 +247,7 @@ PyDC_GetROP2(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("i", fnDrawMode);
 }
+#endif
 
 static PyObject*
 PyDC_SetBkMode(PyDC *self, PyObject *args)
@@ -264,6 +276,7 @@ PyDC_GetBkMode(PyDC *self, PyObject *args)
 	return Py_BuildValue("i", iBkMode);
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_SetTextAlign(PyDC *self, PyObject *args)
 {
@@ -277,6 +290,7 @@ PyDC_SetTextAlign(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("i", fOldMode);
 }
+#endif
 
 static PyObject*
 PyDC_SetTextColor(PyDC *self, PyObject *args)
@@ -293,6 +307,7 @@ PyDC_SetTextColor(PyDC *self, PyObject *args)
 	return Py_BuildValue("iii", GetRValue(crOldColor),GetGValue(crOldColor),GetBValue(crOldColor));
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_SetPolyFillMode(PyDC *self, PyObject *args)
 {
@@ -306,7 +321,9 @@ PyDC_SetPolyFillMode(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("i", fOldMode);
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_SetArcDirection(PyDC *self, PyObject *args)
 {
@@ -320,6 +337,7 @@ PyDC_SetArcDirection(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("i", oldDirection);
 }
+#endif
 
 static PyObject*
 PyDC_GetDeviceCaps(PyDC *self, PyObject *args)
@@ -331,6 +349,7 @@ PyDC_GetDeviceCaps(PyDC *self, PyObject *args)
 	return Py_BuildValue("i", caps);
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_SetMiterLimit(PyDC *self, PyObject *args)
 {
@@ -345,6 +364,7 @@ PyDC_SetMiterLimit(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("f", eOldLimit);
 }
+#endif
 
 static PyObject* PyDC_GetTextMetrics(PyDC *self, PyObject *args)
 {
@@ -403,6 +423,8 @@ static PyObject* PyDC_GetTextExtent(PyDC *self, PyObject *args)
 
 ////////////////////////////////////////
 // Path
+
+#ifndef _WIN32_WCE
 
 static PyObject*
 PyDC_BeginPath(PyDC *self, PyObject *args)
@@ -529,9 +551,12 @@ PyDC_GetPath(PyDC *self, PyObject *args)
 	return Py_BuildValue("i", npoints);
 }
 
+#endif // _WIN32_WCE
+
 ////////////////////////////////////////
 // Draw
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_MoveToEx(PyDC *self, PyObject *args)
 {
@@ -546,6 +571,7 @@ PyDC_MoveToEx(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("ii", pt.x, pt.y);
 }
+#endif
 
 static PyObject*
 PyDC_Rectangle(PyDC *self, PyObject *args)
@@ -589,6 +615,7 @@ PyDC_Ellipse(PyDC *self, PyObject *args)
 	return none();
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_ArcTo(PyDC *self, PyObject *args)
 {
@@ -620,7 +647,9 @@ PyDC_Arc(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_LineTo(PyDC *self, PyObject *args)
 {
@@ -634,6 +663,7 @@ PyDC_LineTo(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
 static PyObject*
 PyDC_Polyline(PyDC *self, PyObject *args)
@@ -655,6 +685,7 @@ PyDC_Polyline(PyDC *self, PyObject *args)
 	return none();
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_PolylineTo(PyDC *self, PyObject *args)
 {
@@ -674,6 +705,7 @@ PyDC_PolylineTo(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
 
 static PyObject*
@@ -696,6 +728,7 @@ PyDC_Polygon(PyDC *self, PyObject *args)
 }
 
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_PolyBezier(PyDC *self, PyObject *args)
 {
@@ -714,7 +747,9 @@ PyDC_PolyBezier(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_PolyBezierTo(PyDC *self, PyObject *args)
 {
@@ -735,7 +770,9 @@ PyDC_PolyBezierTo(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_PolyDraw(PyDC *self, PyObject *args)
 {
@@ -761,7 +798,9 @@ PyDC_PolyDraw(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_TextOut(PyDC *self, PyObject *args)
 {
@@ -778,6 +817,7 @@ PyDC_TextOut(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
 static PyObject*
 PyDC_DrawText(PyDC *self, PyObject *args)
@@ -819,6 +859,7 @@ PyDC_SelectClipRgn(PyDC *self, PyObject *args)
 	return Py_BuildValue("i", res);
 }
 
+#ifndef _WIN32_WCE
 static PyObject*
 PyDC_PaintRgn(PyDC *self, PyObject *args)
 {
@@ -832,7 +873,9 @@ PyDC_PaintRgn(PyDC *self, PyObject *args)
 		}
 	return none();
 }
+#endif
 
+#ifndef _WIN32_WCE
 static PyObject* 
 PyDC_PathToRegion(PyDC *self, PyObject *args)
 {
@@ -845,6 +888,7 @@ PyDC_PathToRegion(PyDC *self, PyObject *args)
 		}
 	return CreatePyRgnFromHandle(hRgn);
 }
+#endif
 
 static PyObject* PyDC_Detach(PyDC *self, PyObject *args)
 	{
@@ -863,10 +907,9 @@ static PyObject* PyDC_GetSafeHdc(PyDC *self, PyObject *args)
 	}
 
 PyMethodDef PyDC::methods[] = {
+#ifndef _WIN32_WCE
 	{"SetWorldTransform", (PyCFunction)PyDC_SetWorldTransform, METH_VARARGS, ""},
 	{"GetWorldTransform", (PyCFunction)PyDC_GetWorldTransform, METH_VARARGS, ""},
-	{"SaveDC", (PyCFunction)PyDC_SaveDC, METH_VARARGS, ""},
-	{"RestoreDC", (PyCFunction)PyDC_RestoreDC, METH_VARARGS, ""},
 	{"SetGraphicsMode", (PyCFunction)PyDC_SetGraphicsMode, METH_VARARGS, ""},
 	{"SetMapMode", (PyCFunction)PyDC_SetMapMode, METH_VARARGS, ""},
 	{"SetWindowExtEx", (PyCFunction)PyDC_SetWindowExtEx, METH_VARARGS, ""},
@@ -874,18 +917,11 @@ PyMethodDef PyDC::methods[] = {
 	{"SetViewportExtEx", (PyCFunction)PyDC_SetViewportExtEx, METH_VARARGS, ""},
 	{"GetViewportExtEx", (PyCFunction)PyDC_GetViewportExtEx, METH_VARARGS, ""},
 	{"SetViewportOrgEx", (PyCFunction)PyDC_SetViewportOrgEx, METH_VARARGS, ""},
-	{"SetROP2", (PyCFunction)PyDC_SetROP2, METH_VARARGS, ""},
 	{"GetROP2", (PyCFunction)PyDC_GetROP2, METH_VARARGS, ""},
-	{"SetBkMode", (PyCFunction)PyDC_SetBkMode, METH_VARARGS, ""},
-	{"GetBkMode", (PyCFunction)PyDC_GetBkMode, METH_VARARGS, ""},
 	{"SetTextAlign", (PyCFunction)PyDC_SetTextAlign, METH_VARARGS, ""},
-	{"SetTextColor", (PyCFunction)PyDC_SetTextColor, METH_VARARGS, ""},
 	{"SetPolyFillMode", (PyCFunction)PyDC_SetPolyFillMode, METH_VARARGS, ""},
 	{"SetArcDirection", (PyCFunction)PyDC_SetArcDirection, METH_VARARGS, ""},
-	{"GetDeviceCaps", (PyCFunction)PyDC_GetDeviceCaps, METH_VARARGS, ""},
 	{"SetMiterLimit", (PyCFunction)PyDC_SetMiterLimit, METH_VARARGS, ""},
-	{"GetTextMetrics", (PyCFunction)PyDC_GetTextMetrics, METH_VARARGS, ""},
-	{"GetTextExtent", (PyCFunction)PyDC_GetTextExtent, METH_VARARGS, ""},
 
 	{"BeginPath", (PyCFunction)PyDC_BeginPath, METH_VARARGS, ""},
 	{"EndPath", (PyCFunction)PyDC_EndPath, METH_VARARGS, ""},
@@ -898,26 +934,39 @@ PyMethodDef PyDC::methods[] = {
 	{"GetPath", (PyCFunction)PyDC_GetPath, METH_VARARGS, ""},
 
 	{"MoveToEx", (PyCFunction)PyDC_MoveToEx, METH_VARARGS, ""},
-	{"Rectangle", (PyCFunction)PyDC_Rectangle, METH_VARARGS, ""},
-	{"RoundRect", (PyCFunction)PyDC_RoundRect, METH_VARARGS, ""},
-	{"Ellipse", (PyCFunction)PyDC_Ellipse, METH_VARARGS, ""},
 	{"ArcTo", (PyCFunction)PyDC_ArcTo, METH_VARARGS, ""},
 	{"Arc", (PyCFunction)PyDC_Arc, METH_VARARGS, ""},
 	{"LineTo", (PyCFunction)PyDC_LineTo, METH_VARARGS, ""},
-	{"Polyline", (PyCFunction)PyDC_Polyline, METH_VARARGS, ""},
 	{"PolylineTo", (PyCFunction)PyDC_PolylineTo, METH_VARARGS, ""},
-	{"Polygon", (PyCFunction)PyDC_Polygon, METH_VARARGS, ""},
 	{"PolyBezier", (PyCFunction)PyDC_PolyBezier, METH_VARARGS, ""},
 	{"PolyBezierTo", (PyCFunction)PyDC_PolyBezierTo, METH_VARARGS, ""},
 	{"PolyDraw", (PyCFunction)PyDC_PolyDraw, METH_VARARGS, ""},
 	{"TextOut", (PyCFunction)PyDC_TextOut, METH_VARARGS, ""},
+
+	{"PaintRgn", (PyCFunction)PyDC_PaintRgn, METH_VARARGS, ""},
+	{"PathToRegion", (PyCFunction)PyDC_PathToRegion, METH_VARARGS, ""},
+#endif
+	{"SaveDC", (PyCFunction)PyDC_SaveDC, METH_VARARGS, ""},
+	{"RestoreDC", (PyCFunction)PyDC_RestoreDC, METH_VARARGS, ""},
+	{"SetROP2", (PyCFunction)PyDC_SetROP2, METH_VARARGS, ""},
+	{"SetBkMode", (PyCFunction)PyDC_SetBkMode, METH_VARARGS, ""},
+	{"GetBkMode", (PyCFunction)PyDC_GetBkMode, METH_VARARGS, ""},
+	{"SetTextColor", (PyCFunction)PyDC_SetTextColor, METH_VARARGS, ""},
+	{"GetDeviceCaps", (PyCFunction)PyDC_GetDeviceCaps, METH_VARARGS, ""},
+	{"GetTextMetrics", (PyCFunction)PyDC_GetTextMetrics, METH_VARARGS, ""},
+	{"GetTextExtent", (PyCFunction)PyDC_GetTextExtent, METH_VARARGS, ""},
+
+
+	{"Rectangle", (PyCFunction)PyDC_Rectangle, METH_VARARGS, ""},
+	{"RoundRect", (PyCFunction)PyDC_RoundRect, METH_VARARGS, ""},
+	{"Ellipse", (PyCFunction)PyDC_Ellipse, METH_VARARGS, ""},
+	{"Polyline", (PyCFunction)PyDC_Polyline, METH_VARARGS, ""},
+	{"Polygon", (PyCFunction)PyDC_Polygon, METH_VARARGS, ""},
 	{"DrawText", (PyCFunction)PyDC_DrawText, METH_VARARGS, ""},
 
 	{"SelectObject", (PyCFunction)PyDC_SelectObject, METH_VARARGS, ""},
 	
 	{"SelectClipRgn", (PyCFunction)PyDC_SelectClipRgn, METH_VARARGS, ""},
-	{"PaintRgn", (PyCFunction)PyDC_PaintRgn, METH_VARARGS, ""},
-	{"PathToRegion", (PyCFunction)PyDC_PathToRegion, METH_VARARGS, ""},
 
 	{"Detach", (PyCFunction)PyDC_Detach, METH_VARARGS, ""},
 	{"GetSafeHdc", (PyCFunction)PyDC_GetSafeHdc, METH_VARARGS, ""},
