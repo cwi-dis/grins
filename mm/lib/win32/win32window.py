@@ -141,6 +141,7 @@ class Window:
 			return
 		self._parent._subwindows.remove(self)
 		self.updateMouseCursor()
+		self._parent.update()
 		self._parent = None
 		for win in self._subwindows[:]:
 			win.close()
@@ -987,7 +988,7 @@ class SubWindow(Window):
 		elif self._freeze and self._passive:
 			self.bltDDS(self._passive)
 			return
-					
+			
 		# first paint self
 		self.__paintOnDDS(self._topwindow._backBuffer)
 
