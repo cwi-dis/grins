@@ -1835,7 +1835,7 @@ BEGIN
     RTEXT           "100",IDC_MAX,283,2,13,8
 END
 
-IDD_LAYOUT_T1 DIALOG DISCARDABLE  0, 0, 399, 84
+IDD_LAYOUT_T1 DIALOG DISCARDABLE  0, 0, 385, 84
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -1845,7 +1845,7 @@ BEGIN
                     TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
                     WS_BORDER | WS_TABSTOP,10,18,118,34
     LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,138,4,42,8
-    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,136,18,250,34,BS_FLAT | 
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,136,18,244,34,BS_FLAT | 
                     NOT WS_VISIBLE | NOT WS_TABSTOP
     LTEXT           "x",IDC_X,133,65,8,8
     EDITTEXT        IDC_LAYOUT_REGION_X,140,60,23,14,ES_AUTOHSCROLL | 
@@ -1862,7 +1862,11 @@ BEGIN
     LTEXT           "z",IDC_Z,288,65,8,8
     EDITTEXT        IDC_LAYOUT_REGION_Z,296,60,23,14,ES_AUTOHSCROLL | 
                     ES_WANTRETURN | ES_NUMBER
-    PUSHBUTTON      "&Properties...",IDCMD_ATTRIBUTES,335,61,51,13
+    PUSHBUTTON      "&Properties...",IDCMD_ATTRIBUTES,331,61,51,13
+    PUSHBUTTON      "",IDC_ZOOMIN,189,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+    PUSHBUTTON      "",IDC_ZOOMOUT,207,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
 END
 
 IDD_SOURCEEDIT DIALOG DISCARDABLE  0, 0, 402, 235
@@ -2263,7 +2267,6 @@ BEGIN
 
     IDD_LAYOUT_T1, DIALOG
     BEGIN
-        RIGHTMARGIN, 391
         BOTTOMMARGIN, 81
     END
 
@@ -2331,6 +2334,8 @@ IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
 IDI_PLAYING             ICON    DISCARDABLE     "res\\playing.ico"
 IDI_WAITSTOP            ICON    DISCARDABLE     "res\\waitstop.ico"
 IDI_IDLE                ICON    DISCARDABLE     "res\\idle.ico"
+IDI_ZOOMIN              ICON    DISCARDABLE     "res\\ico00011.ico"
+IDI_ZOOMOUT             ICON    DISCARDABLE     "res\\icon_zoo.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

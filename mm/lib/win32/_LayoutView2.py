@@ -119,10 +119,10 @@ class _LayoutView2(GenFormView):
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
 
-		# set normal size from frame to be 640x480
+		# set normal size from frame to be 680x480
 		flags, sw, minpos, maxpos, rcnorm = self.GetParent().GetWindowPlacement()
 		l, t = rcnorm[:2]
-		self.GetParent().SetWindowPlacement(flags, sw, minpos, maxpos, (l,t,640,480))
+		self.GetParent().SetWindowPlacement(flags, sw, minpos, maxpos, (l,t,680,480))
 
 		# enable all lists
 		for name in self.__ctrlNames:	
@@ -148,6 +148,8 @@ class _LayoutView2(GenFormView):
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouse,win32con.WM_MOUSEMOVE)
+
+		self.addZoomButtons()
 
 	#
 	# setup the dialog control values
@@ -316,6 +318,32 @@ class _LayoutView2(GenFormView):
 		str = fmtfloat(scale, prec=1)
 		t.settext('scale 1 : %s' % str)
 
+	#
+	# Zoom in/out
+	#
+	def addZoomButtons(self):
+		self._iconzoomin = win32ui.GetApp().LoadIcon(grinsRC.IDI_ZOOMIN)
+		self._iconzoomout = win32ui.GetApp().LoadIcon(grinsRC.IDI_ZOOMOUT)
+		self._bzoomin = components.Button(self, grinsRC.IDC_ZOOMIN)
+		self._bzoomout = components.Button(self, grinsRC.IDC_ZOOMOUT)
+		self._bzoomin.attach_to_parent()
+		self._bzoomout.attach_to_parent()
+		self._bzoomin.seticon(self._iconzoomin)
+		self._bzoomout.seticon(self._iconzoomout)
+		self._bzoomin.show()
+		self._bzoomout.show()
+		self._bzoomin.hookcommand(self, self.OnZoomIn)
+		self._bzoomout.hookcommand(self, self.OnZoomOut)
+
+	def OnZoomIn(self, id, code):
+		scale = self._layout.getDeviceToLogicalScale()
+		if scale>0.5: scale = scale - 0.1
+		self._layout.setDeviceToLogicalScale(scale)
+
+	def OnZoomOut(self, id, code):
+		scale = self._layout.getDeviceToLogicalScale()
+		if scale<4: scale = scale + 0.1
+		self._layout.setDeviceToLogicalScale(scale)
 	#
 	# Reposition controls on size
 	#
@@ -646,6 +674,16 @@ class LayoutManager(LayoutManagerBase, win32window.MSDrawContext):
 	def removeListener(self):
 		self._listener = None
 		
+	def setDeviceToLogicalScale(self, device2logical):
+		self._device2logical = device2logical
+		if self._viewport:
+			self._viewport.setDeviceToLogicalScale(device2logical)
+		self._parent.showScale(self._device2logical)
+		self.InvalidateRect(self.GetClientRect())
+
+	def getDeviceToLogicalScale(self):
+		return self._device2logical
+
 	# create a new viewport
 	def newViewport(self, attrdict, name):
 		x,y,w, h = attrdict.get('wingeom')
