@@ -224,8 +224,10 @@ DEP_CPP_NGRIN=\
 DEP_CPP_NGRIN=\
 	".\nGRiNS Player.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_NGRIN=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -705,11 +707,19 @@ SOURCE=..\common\charconv.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\extra_types.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\memfile.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\re.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\stdenv.h
 # End Source File
 # Begin Source File
 
@@ -719,6 +729,65 @@ SOURCE=..\common\strutil.h
 # Begin Group "grins"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\grins\test.cpp
+
+!IF  "$(CFG)" == "nGRiNS Player - Win32 (WCE ARM) Release"
+
+DEP_CPP_TEST_=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\img\surface.h"\
+	"..\common\re.h"\
+	"..\common\regex\hsregex.h"\
+	"..\common\smil\attrdef.h"\
+	"..\common\stdenv.h"\
+	"..\common\xml\attribute_def.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nGRiNS Player - Win32 (WCE ARM) Debug"
+
+DEP_CPP_TEST_=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\img\surface.h"\
+	"..\common\re.h"\
+	"..\common\regex\hsregex.h"\
+	"..\common\smil\attrdef.h"\
+	"..\common\stdenv.h"\
+	"..\common\xml\attribute_def.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nGRiNS Player - Win32 (WCE x86em) Release"
+
+DEP_CPP_TEST_=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\img\surface.h"\
+	"..\common\re.h"\
+	"..\common\regex\hsregex.h"\
+	"..\common\smil\attrdef.h"\
+	"..\common\stdenv.h"\
+	"..\common\xml\attribute_def.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nGRiNS Player - Win32 (WCE x86em) Debug"
+
+DEP_CPP_TEST_=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\img\surface.h"\
+	"..\common\re.h"\
+	"..\common\regex\hsregex.h"\
+	"..\common\smil\attrdef.h"\
+	"..\common\stdenv.h"\
+	"..\common\xml\attribute_def.h"\
+	
+
+!ENDIF 
+
+# End Source File
 # End Group
 # End Target
 # End Project

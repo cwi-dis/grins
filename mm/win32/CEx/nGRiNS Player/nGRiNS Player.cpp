@@ -156,6 +156,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	TCHAR szHello[MAX_LOADSTRING];
+	extern void main_test();
 
 	switch (message) 
 	{
@@ -174,6 +175,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					break;
 				case IDM_EXIT:
 					DestroyWindow(hWnd);
+					break;
+				case IDM_PLAY:
+					main_test();
 					break;
 				default:
 				   return DefWindowProc(hWnd, message, wParam, lParam);
