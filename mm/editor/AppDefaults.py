@@ -96,6 +96,8 @@ DROPAREASIZE = 32		# size of the decoration at the end of a "roll of film"
 FLATBOX = 0
 TIMEBARHEIGHT = 0
 DROPAREA = MINSIZE + HOREXTRASIZE
+MINTHUMBX = 24
+MINTHUMBY = 24
 
 #
 # We expand a number of hierarchy levels on first open. The number
