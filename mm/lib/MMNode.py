@@ -138,14 +138,18 @@ class MMNodeContext:
 		import Timing
 		Timing.computetimes(self.root, which)
 		# XXX Temp
-		for node in self.uidmap.values():
-			timeobj = node.GetTimesObject(which)
-			timeobj.t0 = node.t0
-			timeobj.t1 = node.t1
-			timeobj.t2 = node.t2
-			del node.t0
-			del node.t1
-			del node.t2
+		self._movetimestoobj(self.root, which)
+		
+	def _movetimestoobj(self, node, which):
+		timeobj = node.GetTimesObject(which)
+		timeobj.t0 = node.t0
+		timeobj.t1 = node.t1
+		timeobj.t2 = node.t2
+		del node.t0
+		del node.t1
+		del node.t2
+		for child in node.children:
+			self._movetimestoobj(child, which)
 		
 	def changedtimes(self):
 		for node in self.uidmap.values():
