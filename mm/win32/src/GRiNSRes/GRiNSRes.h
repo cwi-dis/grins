@@ -44,6 +44,7 @@
 #define IDI_GRINS_INFO                  247
 #define IDI_GRINS_STOP                  248
 #define IDD_ENTER_KEY                   249
+#define IDD_INTERNAL                    250
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -127,6 +128,7 @@
 #define IDC_KEY                         1129
 #define IDC_NAME                        1130
 #define IDC_ORGANIZATION                1131
+#define IDC_NULL                        1132
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -171,9 +173,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        250
+#define _APS_NEXT_RESOURCE_VALUE        251
 #define _APS_NEXT_COMMAND_VALUE         32829
-#define _APS_NEXT_CONTROL_VALUE         1132
+#define _APS_NEXT_CONTROL_VALUE         1133
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
