@@ -132,7 +132,12 @@ class Channel:
 		del self._exporter
 		channels.remove(self)
 
-	def commit(self):
+	def commit(self, type):
+		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
+			# for now we can't change the geom during pausing
+			if self._player.playing or self._player.pausing:
+				return
+			
 		self._armed_node = None
 		if self._is_shown:
 			reshow = 0
@@ -148,7 +153,7 @@ class Channel:
 				if highlighted:
 					self.highlight(highlighted)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
 	def rollback(self):

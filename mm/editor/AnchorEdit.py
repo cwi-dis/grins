@@ -79,10 +79,10 @@ class AnchorEditor(AnchorEditorDialog):
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
-	def commit(self):
+	def commit(self, type):
 		if not self.stillvalid():
 			self.close()
 		else:
