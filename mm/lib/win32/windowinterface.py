@@ -76,6 +76,10 @@ if hasattr(__main__,'embedded') and __main__.embedded:
 	import embedding
 	showmessage = embedding.showmessage
 	ProgressDialog = embedding.ProgressDialog
+	showquestion = embedding.showquestion
+	GetYesNoCancel = embedding.GetYesNoCancel
+	GetOKCancel = embedding.GetOKCancel
+	GetYesNo = embedding.GetYesNo
 
 # Auxiliary functions
 from AppToplevel import beep
