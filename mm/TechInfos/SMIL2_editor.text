@@ -15,7 +15,7 @@ then there is no point in discussing it.
   - SMiL 1.0
   - obvously SMiL 2.0
 
-* Workflow aids
+* General issues.
   - Wizards?
   - Screen layouts?
   - General zoom in / zoom out? There are buttons on the toolbar, 
@@ -27,7 +27,10 @@ then there is no point in discussing it.
       - in the layout view and player, make the window bigger. 
       - in the source view.. er.. hm. :-).
   - Full-screen support?
-	
+  - Should the editor be a specific SMIL 2.0 editor with import and export
+    capabilities, or should it be a modal editor for different multimedia
+    formats?
+
 * Should the temporal view stay? 
   - It does two jobs poorly that the structure + timeline view do well.
   - It's not finished / there is a lot more work to do on it.
