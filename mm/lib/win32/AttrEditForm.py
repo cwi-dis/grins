@@ -43,15 +43,21 @@ class DlgBar(window.Wnd):
 		wndDlgBar.CreateWindow(parent,resid,
 			afxres.CBRS_ALIGN_BOTTOM,AFX_IDW_DIALOGBAR)
 
+# This is called by toplevel's DeltaTimer component. 
+# It is global, since instances may have been deleted
+# when this is called.
+def setFocus():
+	if AttrEditForm.instance:
+		AttrEditForm.instance.SetFocus()
+
 # Base class for attribute edit bars
 class AttrDlgBar(DlgBar):
 	# Class constructor. Calls base constructor and associates controlst with ids
 	def __init__(self,parent,resid,change_cb,reset_cb):
 		DlgBar.__init__(self,parent,resid)
-
+		self._reset=components.Button(self,grinsRC.IDUC_RESET)
 		self._attrname=components.Edit(self,grinsRC.IDC_EDIT1)
 		self._attrname.attach_to_parent()
-
 		parent.HookCommand(self.OnReset,grinsRC.IDUC_RESET)
 		self._change_cb=change_cb
 		self._reset_cb=reset_cb
@@ -61,11 +67,14 @@ class AttrDlgBar(DlgBar):
 	def OnReset(self,id,code):
 		apply(self._reset_cb,())
 
-	# callback to pass focus
-	def SetFocusCb(self,cb):
-		self._focus_cb=cb;
+	# Pass indirectly focus to the list
 	def PassFocus(self):
-		if self._focus_cb:self._focus_cb()
+		# Do not call directly SetFocus.
+		# A direct call has site effects when the editor has the focus 
+		# and we press a button. The first button press transfers the focus to the list 
+		# and a second press is needed to activate the associated action.
+		from __main__ import toplevel
+		toplevel.settimer(0.1,(setFocus,()))
 
 	def resize(self,cx):
 		rc=win32mu.Rect(self.GetWindowRect())
@@ -215,6 +224,7 @@ class AttrEditForm(docview.ListView):
 	last_cx=None
 	last_cy=None
 	colWidthList=(132, 96, 82, 400)
+	instance=None
 
 	# Class constructor. Calls base constructor and nullify members
 	def __init__(self,doc):
@@ -235,6 +245,7 @@ class AttrEditForm(docview.ListView):
 	def createWindow(self,parent):
 		self._parent=parent
 		self.CreateWindow(parent)
+		AttrEditForm.instance=self
 
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
@@ -320,8 +331,6 @@ class AttrEditForm(docview.ListView):
 		self._attr_type=t
 		frame.RecalcLayout()
 		self.doResize()
-		# use tab to set focus
-		self._dlgBar.SetFocusCb(self.SetFocus) 
 	
 	# Date tranfer from the list to the edit area
 	def ItemToEditor(self):
@@ -416,6 +425,7 @@ class AttrEditForm(docview.ListView):
 	# cmif general interface
 	# Called by the core system to close this window
 	def close(self):
+		AttrEditForm.instance=None
 		self.savegeometry()
 		if hasattr(self,'GetParent'):
 			self.GetParent().DestroyWindow()
