@@ -560,8 +560,8 @@ class NodeWrapper(Wrapper):
 				namelist.append('syncBehaviorDefault')
 				namelist.append('min')
 				namelist.append('max')
-				namelist.append('readIndex')
 				if ntype in leaftypes:
+					namelist.append('readIndex')
 					namelist.append('erase')
 		else:
 			# Snap!
