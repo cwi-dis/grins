@@ -706,7 +706,6 @@ class EffectiveAnimator:
 		
 		mmregion = self.__region._attrdict
 		coordinates = mmregion.GetPresentationAttr('base_winoff')
-		print 'coordinates',coordinates
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
 			units = ch.get('units')
