@@ -766,8 +766,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			except IOError, arg:
 				self.set_infoicon('error', 'Cannot open image: %s'%url)
 		# either not an image, or image couldn't be found.
-		# Make a special case for empty URLs on ext nodes
-		if not url and ntype == 'ext':
+		# Make a special case for empty nodes
+		if (ntype == 'ext' and not url) or (ntype == 'imm' and not node.GetValues()):
 			emptyimage = os.path.join(self.mother.datadir, '%s-empty.tiff'%channel_type)
 			if os.path.exists(emptyimage):
 				return emptyimage
