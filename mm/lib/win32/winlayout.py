@@ -695,7 +695,10 @@ class LayoutWnd:
 		self._curcursor = 'arrow'
 
 		fd = {'name':'Arial','height':10,'weight':700}
-		self._hsmallfont = Sdk.CreateFontIndirect(fd)		
+		self._hsmallfont = Sdk.CreateFontIndirect(fd)
+				
+		self._tipwnd = None
+		self._lbuttondown = None
 					
 	def setAutoScale(self, autoscale):
 		self._autoscale = autoscale
@@ -749,6 +752,11 @@ class LayoutWnd:
 			self.ShowWindow(win32con.SW_SHOW)
 			self.UpdateWindow()		
 	
+		from components import TipWindow
+		self._tipwnd = TipWindow(self)
+		self._tipwnd.create()
+		self._lbuttondown = None
+
 	def OnCreate(self, params):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
@@ -769,7 +777,8 @@ class LayoutWnd:
 	def OnDestroy(self, params):
 		if self._hsmallfont:
 			Sdk.DeleteObject(self._hsmallfont)
-
+		if self._tipwnd:
+			self._tipwnd.DestroyWindow()
 	#
 	#  DrawContext listener interface
 	#
@@ -824,18 +833,24 @@ class LayoutWnd:
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		self._lbuttondown = point
 		point = self.DPtoLP(point)
 		self._drawContext.onLButtonDown(flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		self._lbuttondown = None
 		point = self.DPtoLP(point)
 		self._drawContext.onLButtonUp(flags, point)
-	
+		if self._tipwnd:
+			self._tipwnd.hide()
+
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		if self._lbuttondown is not None:
+			self._lbuttondown = point
 		point = self.DPtoLP(point)
 		self._drawContext.onMouseMove(flags, point)
 
@@ -868,12 +883,16 @@ class LayoutWnd:
 			Sdk.DeleteObject(br)
 
 		self.EndPaint(paintStruct)
+		if self._tipwnd:
+			self._tipwnd.RedrawWindow()
 
 	def OnDraw(self, dc):
 		hf = dc.SelectObjectFromHandle(self._hsmallfont)
 		dc.SetBkMode(win32con.TRANSPARENT)
 		self.OffscreenPaintOn(dc)
 		dc.SelectObjectFromHandle(hf)
+		if self._tipwnd:
+			self._tipwnd.RedrawWindow()
 	
 	def getClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
@@ -1187,11 +1206,17 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
-			
+		if self._lbuttondown is not None:
+			xs, ys = self.ClientToScreen(self._lbuttondown)
+			self._tipwnd.moveTo((xs+8, ys), '%d, %d, %d, %d' % (x, y, w, h))
+
 	def onDSelResize(self, selection):
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
+		if self._lbuttondown is not None:
+			xs, ys = self.ClientToScreen(self._lbuttondown)
+			self._tipwnd.moveTo((xs, ys), '%d, %d, %d, %d' % (x, y, w, h))
 				 
 	#
 	#  Called by hosting environment to set an object 
