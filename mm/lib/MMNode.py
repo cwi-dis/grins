@@ -127,9 +127,11 @@ class MMNodeContext:
 		if name not in self.channelnames:
 			raise CheckError, 'delchannel: non-existing name'
 		i = self.channelnames.index(name)
+		c = self.channels[i]
 		del self.channels[i]
 		del self.channelnames[i]
 		del self.channeldict[name]
+		c._destroy()
 	#
 	def setchannelname(self, oldname, newname):
 		##_stat('setchannelname')
@@ -236,12 +238,19 @@ class MMNodeContext:
 class MMChannel:
 	#
 	def init(self, context, name):
+		self.context = context
 		self.name = name
 		self.attrdict = {}
 		return self
 	#
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
+	#
+	def _destroy(self):
+		self.context = None
+	#
+	def stillvalid(self):
+		return self.context is not None
 	#
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
@@ -538,7 +547,10 @@ class MMNode:
 			return None
 		if cname == '':
 			return None
-		return self.context.channeldict[cname]
+		if self.context.channeldict.has_key(cname):
+			return self.context.channeldict[cname]
+		else:
+			return None
 	#
 	def GetChannelName(self):
 		##_stat('GetChannelName')
