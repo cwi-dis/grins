@@ -106,10 +106,13 @@ class HierarchyViewDialog(ViewDialog):
 		self.dropfile(maybenode, window, event, params)
 
 	def dragnode(self, dummy, window, event, params):
-		x, y, cmd = params
+		x, y, cmd, xf, yf = params
 		obj = self.whichhit(x, y)
+		objSrc = self.whichhit(xf, yf)
 		if obj and obj.node.GetType() in MMNode.interiortypes:
 			if cmd=='move':
+				if objSrc.node.IsAncestorOf(obj.node):
+					return windowinterface.DROPEFFECT_NONE
 				return windowinterface.DROPEFFECT_MOVE
 			else: 
 				return windowinterface.DROPEFFECT_COPY
@@ -121,6 +124,8 @@ class HierarchyViewDialog(ViewDialog):
 		objDst = self.whichhit(x, y)
 		if objSrc and objDst and objDst.node.GetType() in MMNode.interiortypes:
 			if cmd=='move':
+				if objSrc.node.IsAncestorOf(objDst.node):
+					return 0
 				self.movenode((x, y), (xf, yf))
 			else:
 				self.copynode((x, y), (xf, yf))
