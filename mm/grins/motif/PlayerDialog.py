@@ -72,6 +72,8 @@ class PlayerDialog(PlayerDialogBase):
 		if self.menu_created is None:
 			self.__has_window = 1
 			PlayerDialogBase.show(self)
+		else:
+			self.setchannels()
 
 	def setstate(self, state = None):
 		commandlist = self.__topcommandlist + \

@@ -78,7 +78,7 @@ class PlayerDialogBase:
 			adornments = self.adornments,
 			commandlist = self.stoplist)
 		if self.__channels:
-			self.setchannels(self.__channels)
+			self.setchannels()
 
 	def hide(self):
 		"""Hide the control panel."""
@@ -98,7 +98,7 @@ class PlayerDialogBase:
 		if self._window is not None:
 			self._window.settitle(title)
 
-	def setchannels(self, channels):
+	def setchannels(self, channels = None):
 		"""Set the list of channels.
 
 		Arguments (no defaults):
@@ -108,7 +108,10 @@ class PlayerDialogBase:
 			channel is on or off (1 if on, 0 if off)
 		"""
 
-		self.__channels = channels
+		if channels is None:
+			channels = self.__channels
+		else:
+			self.__channels = channels
 		self.__channeldict = {}
 		menu = []
 		for i in range(len(channels)):
@@ -118,7 +121,10 @@ class PlayerDialogBase:
 			   channel == self.menu_created._name:
 				continue
 			menu.append((channel, (channel,), 't', onoff))
-		w = self._window
+		if self.menu_created is not None:
+			w = self.menu_created.window
+		else:
+			w = self._window
 		if w is not None:
 			w.set_dynamiclist(CHANNELS, menu)
 
@@ -137,7 +143,7 @@ class PlayerDialogBase:
 		if self.__channels[i][1] == onoff:
 			return
 		self.__channels[i] = channel, onoff
-		self.setchannels(self.__channels)
+		self.setchannels()
 
 	def setstate(self, state = None):
 		"""Set the playing state of the control panel.
@@ -164,7 +170,7 @@ class PlayerDialogBase:
 				w.set_commandlist(self.playlist)
 			if state == PAUSING:
 				w.set_commandlist(self.pauselist)
-			self.setchannels(self.__channels)
+			self.setchannels()
 			if state != ostate:
 				w.set_toggle(PLAY, state != STOPPED)
 				w.set_toggle(PAUSE, state == PAUSING)
