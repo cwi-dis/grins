@@ -13,6 +13,7 @@ SIZE_3DBORDER = 2
 import math,string
 
 import win32ui, win32con, win32api
+Sdk = win32ui.GetWin32Sdk()
 from win32ig import win32ig
 import grinsRC
 import ddraw
@@ -303,9 +304,11 @@ class _DisplayList:
 			if not self._overlap(region, entry[2]):
 				return
 			oldmode = dc.SetBkMode(win32con.TRANSPARENT)
+			oldpen = dc.SelectObjectFromHandle(Sdk.GetStockObject(win32con.NULL_PEN))
 			oldbrush = dc.SelectObject(entry[1])
 			dc.Rectangle(entry[2])
 			dc.SelectObject(oldbrush)
+			dc.SelectObjectFromHandle(oldpen)
 			dc.SetBkMode(oldmode)
 		elif cmd == 'font':
 			#dc.SetFont(entry[1])
