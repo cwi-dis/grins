@@ -184,7 +184,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
 		(FLAG_BOSTON|FLAG_CMIF|FLAG_SNAP, SEP,),
 		(FLAG_BOSTON|FLAG_SNAP, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
-		(FLAG_ALL, ENTRY, 'Previer properties...', None, PREFERENCES),
+		(FLAG_ALL, ENTRY, 'GRiNS previewer properties...', None, PREFERENCES),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
