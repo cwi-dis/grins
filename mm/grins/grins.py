@@ -346,11 +346,6 @@ def main():
 ##	mimetypes.types_map.update(grins_mimetypes.mimetypes)
 
 	import Channel
-	import GLLock
-
-	GLLock.init()
-	import windowinterface
-	windowinterface.usewindowlock(GLLock.gl_lock)
 
 	m = Main(opts, files)
 

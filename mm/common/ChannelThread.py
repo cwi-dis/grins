@@ -3,7 +3,6 @@ __version__ = '$Id$'
 import mm
 from Channel import *
 import windowinterface
-import GLLock
 
 class _ChannelThread:
 	def __init__(self):
@@ -28,7 +27,6 @@ class _ChannelThread:
 			if hasattr(self.window, '_window_id'):
 				# GL window interface
 				attrdict['wid'] = self.window._window_id
-				attrdict['gl_lock'] = GLLock.gl_rawlock
 			elif hasattr(self.window, '_form'):
 				# Motif windowinterface
 				attrdict['widget'] = self.window._form
@@ -159,7 +157,6 @@ class ChannelThread(_ChannelThread, Channel):
 
 class ChannelWindowThread(_ChannelThread, ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
-		windowinterface.usewindowlock(GLLock.gl_lock)
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		_ChannelThread.__init__(self)
 
@@ -189,19 +186,11 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		return
 
 	def playstop(self, curtime):
-		if GLLock.gl_lock and GLLock.gl_lock.count:
-			GLLock.gl_lock.lock.release()
 		_ChannelThread.playstop(self, curtime)
-		if GLLock.gl_lock and GLLock.gl_lock.count:
-			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.playstop(self, curtime)
 
 	def armstop(self):
-		if GLLock.gl_lock and GLLock.gl_lock.count:
-			GLLock.gl_lock.lock.release()
 		_ChannelThread.armstop(self)
-		if GLLock.gl_lock and GLLock.gl_lock.count:
-			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.armstop(self)
 
 	def stopplay(self, node, curtime):

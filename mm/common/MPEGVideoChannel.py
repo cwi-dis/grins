@@ -34,7 +34,7 @@ class VideoChannel(ChannelWindowThread):
 			self.errormsg(node, url + ':\n' + msg[1])
 			return 1
 		try:
-			import MMAttrdefs, GLLock
+			import MMAttrdefs
 			fit = MMAttrdefs.getattr(node, 'fit')
 			if fit == 'hidden':
 				scale = 1.0

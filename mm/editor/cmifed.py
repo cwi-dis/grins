@@ -482,7 +482,6 @@ def main():
 ##	mimetypes.types_map.update(grins_mimetypes.mimetypes)
 
 	import Channel
-	import GLLock
 	#
 	stats = 0
 	#
@@ -502,9 +501,6 @@ def main():
 			import Help
 			Help.sethelpdir(arg)
 	#
-	GLLock.init()
-	import windowinterface
-	windowinterface.usewindowlock(GLLock.gl_lock)
 
 	m = Main(opts, files)
 
