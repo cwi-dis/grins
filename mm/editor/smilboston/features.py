@@ -3,7 +3,10 @@ __version__ = "$Id$"
 # Features for GRiNS for G2, pro version
 
 from compatibility import *
+from FeatureSet import *
 import sys
+
+feature_set = [];                       # TODO: add to this.
 
 #
 version = 'pro'                         # I'm not sure here.. mjvdg
