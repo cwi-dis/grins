@@ -665,7 +665,6 @@ class FilePage(AttrPage):
 			return self._attr.getcurrent()
 		return self._attrval.gettext()
 
-	# Response to button browse
 	def OnBrowse(self,id,code):
 		self._attr.browser_callback()
 
@@ -720,9 +719,6 @@ class StringPage(AttrPage):
 		AttrPage.__init__(self,grinsRC.IDD_EDITSTRINGATTR1,form,attr)
 		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 
-	def OnSetActiveX(self):
-		return AttrPage.OnSetActive(self)
-
 	def OnInitDialog(self):
 		self._attrval.attach_to_parent()
 		self._attrval.settext(self._attr.getcurrent())
@@ -737,6 +733,38 @@ class StringPage(AttrPage):
 			return self._attr.getcurrent()
 		return self._attrval.gettext()
 
+
+import cmifwnd
+import _CmifView
+class LayoutPage(AttrPage,cmifwnd._CmifWnd):
+	def __init__(self,form,attr):
+		AttrPage.__init__(self,grinsRC.IDD_FORM1,form,attr)
+		cmifwnd._CmifWnd.__init__(self)
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
+		v.createWindow(self)
+		v.init((10,10,190,150))
+		v.SetWindowPos(self.GetSafeHwnd(),(10,10,190,150),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+		v.OnInitialUpdate()
+		v.ShowWindow(win32con.SW_SHOW)
+		v.UpdateWindow()
+		import appcon
+		box=(10,10,40,40)
+		d=v.newdisplaylist()
+		d.render()
+		v.create_box('',self.onBox,box,appcon.UNIT_PXL,1,1)
+
+	def onBox(self,*b):
+		print b
+
+	def onMouse(self,params):
+		print 'onMouse'
+
+
+###########################3
 from  GenFormView import GenFormView
 
 class AttrEditFormNew(GenFormView):
@@ -757,7 +785,8 @@ class AttrEditFormNew(GenFormView):
 		import __main__
 		dll=__main__.resdll
 		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
-		dimpage=AttrPage(grinsRC.IDD_FORM1,self,None)
+		#dimpage=AttrPage(grinsRC.IDD_FORM1,self,None)
+		dimpage=LayoutPage(self,None)
 		prsht.AddPage(dimpage)
 		prsht.EnableStackedTabs(1)
 		l=self._attriblist
@@ -784,19 +813,17 @@ class AttrEditFormNew(GenFormView):
 		prsht.SetWindowPos(0,(0,0,0,0),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 		self._prsht=prsht
-		prsht.RemovePage(dimpage)
+		#prsht.RemovePage(dimpage)
 		tabctrl=prsht.GetTabCtrl()
-		for i in range(len(l)):
+		for i in range(1,len(l)):
 			tabctrl.SetItemText(i,l[i].getlabel())
+		tabctrl.SetItemText(0,'Layout test')
 		prsht.SetActivePage(firstpage)
 		prsht.RedrawWindow()
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
 		
-	def OnEraseBkgndX(self,dc):
-		print 'OnEraseBkgnd'
-
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
@@ -865,7 +892,7 @@ class AttrEditFormNew(GenFormView):
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
 		if self._pages[attrobj]._attr!=attrobj:
-			print 'wrong attribute'
+			raise error, 'wrong redirection'
 		return self._pages[attrobj].getvalue()
 
 	# Called by the core system to set a value on the list
@@ -882,7 +909,7 @@ class AttrEditFormNew(GenFormView):
 			raise error, 'item not in list'
 		t = attrobj.gettype()
 		if t != 'option':
-			raise error, 'item not in list'
+			raise error, 'item not an option'
 		self._pages[attrobj].setoptions(list,val)
 
 
