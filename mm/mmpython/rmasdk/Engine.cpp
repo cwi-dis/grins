@@ -161,7 +161,6 @@ CreateEngine()
 		return cleanup();
 	}
 
-	fprintf(stdout, "Loaded rmacore\n");
 
 	// retrieve the proc addresses from the module
 	EngineObject::fpCreateEngine = (FPRMCREATEENGINE) GetProcAddress(EngineObject::hDll, "CreateEngine");
