@@ -941,7 +941,11 @@ class _Window(_AdornmentSupport, _RubberBand):
 		format = toplevel._imgformat
 		depth = format.descr['align'] / 8
 		reader = None
-		if toplevel._image_size_cache.has_key(file):
+		if type(file) is not type(''):
+			reader = file()
+			xsize = reader.width
+			ysize = reader.height
+		elif toplevel._image_size_cache.has_key(file):
 			xsize, ysize = toplevel._image_size_cache[file]
 		else:
 			try:
@@ -978,8 +982,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 		bottom = int(bottom * scale + .5)
 		left = int(left * scale + .5)
 		right = int(right * scale + .5)
-		key = '%s@%f' % (`file`, scale)
 		try:
+			if type(file) is not type(''):
+				raise 'x'
+			key = '%s@%f' % (`file`, scale)
 			cfile, w, h, mask = toplevel._image_cache[key]
 			image = open(cfile, 'rb').read()
 		except:			# reading from cache failed
@@ -989,7 +995,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 				del toplevel._image_size_cache[file]
 				return self._prepare_image(file, crop, oscale, center, coordinates)
 			if hasattr(reader, 'transparent'):
-				r = img.reader(imgformat.xrgb8, file)
+				if type(file) is type(''):
+					r = img.reader(imgformat.xrgb8, file)
+				else:
+					r = imgconvert.stackreader(imgformat.xrgb8, file())
 				for i in range(len(r.colormap)):
 					r.colormap[i] = 255, 255, 255
 				r.colormap[r.transparent] = 0, 0, 0
@@ -1046,17 +1055,18 @@ class _Window(_AdornmentSupport, _RubberBand):
 				image = reader.read()
 			except:
 				raise error, sys.exc_value
-			try:
-				import tempfile
-				cfile = tempfile.mktemp()
-				open(cfile, 'wb').write(image)
-				toplevel._image_cache[key] = cfile, w, h, mask
-			except:
-				print 'Warning: caching image failed'
+			if type(file) is type(''):
 				try:
-					os.unlink(cfile)
+					import tempfile
+					cfile = tempfile.mktemp()
+					open(cfile, 'wb').write(image)
+					toplevel._image_cache[key] = cfile, w, h, mask
 				except:
-					pass
+					print 'Warning: caching image failed'
+					try:
+						os.unlink(cfile)
+					except:
+						pass
 		# x -- left edge of window
 		# y -- top edge of window
 		# width -- width of window
