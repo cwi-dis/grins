@@ -1572,7 +1572,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if units == UNIT_PXL:
 						t = height-b-mh
 					else:
-						l = 1.0-b-mh
+						t = 1.0-b-mh
 					h = mh
 					#h = b
 					b = None
@@ -1581,9 +1581,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					t = 0
 				else:
 					if units == UNIT_PXL:
-						l = height-b-h
+						t = height-b-h
 					else:
-						l = 1.0 - b - h
+						t = 1.0 - b - h
 					# t = b - h
 					b = None
 		else:
