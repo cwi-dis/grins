@@ -24,7 +24,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=C:\Documents and Settings\sjoerd\My Documents\src\cmif\win32\CE\GRiNS Player\grins_ipaq.exe
+  EXE Filename=grins_ipaq.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -46,7 +46,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=C:\PROGRA~1\WISEIN~2
+  Variable Default3=E:\Program Files\Wise Installation System
   Variable Flags3=00001000
   Variable Name4=_WINCE_MACROS_
   Variable Default4=1
@@ -1093,7 +1093,7 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\win32\GRiNS Player for SMIL 2.0\Player.ico
+  Source=..\..\..\Build\win32\GRiNS Player for SMIL 2.0\Player.ico
   Destination=%MAINDIR%\Player.ico
   Flags=0000000010000010
 end
