@@ -1074,7 +1074,8 @@ class ChannelWrapper(Wrapper):
 		return MMAttrdefs.parsevalue(name, str, self.context)
 
 class DocumentWrapper(Wrapper):
-	__stdnames = ['title', 'author', 'comment', 'copyright', 'base', 'project_boston']
+	# XXX disable temporarly 'project_boston'
+	__stdnames = ['title', 'author', 'comment', 'copyright', 'base']
 	__publishnames = [
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
@@ -1147,6 +1148,9 @@ class DocumentWrapper(Wrapper):
 	def attrnames(self):
 		attrs = self.context.attributes
 		names = attrs.keys()
+		# XXX disable temporarly 'project_boston'
+		if 'project_boston' in names:
+			names.remove('project_boston')
 		for name in self.__stdnames + self.__publishnames + self.__qtnames:
 			if attrs.has_key(name):
 				names.remove(name)
