@@ -540,7 +540,7 @@ class HierarchyView(HierarchyViewDialog):
 				"Can't insert before/after the root",
 				mtype = 'error')
 			return
-		self.toplevel.setwaiting()
+		ctx = node.GetContext()
 		type = node.GetType()
 		if (where == 0 and type == 'ext' and
 		    node.GetChannelType() == 'RealPix') or \
@@ -554,12 +554,22 @@ class HierarchyView(HierarchyViewDialog):
 					type = children[0].GetType()
 		else:
 			type = 'ext'
+		chname = None
+		if url is not None and type != 'slide':
+			chlist = ctx.compatchannels(url, None)
+			if chlist:
+				chname = chlist[0]
+			elif settings.get('lightweight'):
+				windowinterface.showmessage(
+					'No compatible channels for this file',
+					mtype = 'error')
+				return
+		self.toplevel.setwaiting()
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
 		if type == 'slide':
-			ctx = node.GetContext()
 			node = SlideMMNode('slide', ctx, ctx.newuid())
 			ctx.knownode(node.GetUID(), node)
 			# provide a default for tag attribute
@@ -586,6 +596,8 @@ class HierarchyView(HierarchyViewDialog):
 			node = self.root.context.newnode(type)
 		if url is not None:
 			node.SetAttr('file', url)
+		if chname:
+			node.SetAttr('channel', chname)
 		if type != 'slide' and layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:

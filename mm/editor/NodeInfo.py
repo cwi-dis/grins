@@ -111,6 +111,11 @@ class NodeInfo(NodeInfoDialog):
 		self.close()
 
 	def calcchannelnames(self):
+		chtype = self.node.GetChannelType()
+		chlist = self.context.compatchannels(self.url, chtype)
+		if not chlist and not chtype:
+			chlist = self.context.channelnames
+		lightweight = settings.get('lightweight')
 		layout = MMAttrdefs.getattr(self.node, 'layout')
 		if layout == 'undefined':
 			layoutchannels = []
@@ -119,13 +124,15 @@ class NodeInfo(NodeInfoDialog):
 		channelnames1 = []
 		for ch in layoutchannels:
 			if ch.get('type','') != 'layout':
-				channelnames1.append(ch.name)
+				if not lightweight or ch.name in chlist:
+					channelnames1.append(ch.name)
 		channelnames1.sort()
 		channelnames2 = self.newchannels
 		channelnames3 = []
 		for ch in self.context.channels:
 			if ch.name not in channelnames1 and \
-			   ch.get('type','') != 'layout':
+			   ch.get('type','') != 'layout' and \
+			   (not lightweight or ch.name in chlist):
 				channelnames3.append(ch.name)
 		channelnames3.sort()
 		all = channelnames1
@@ -139,20 +146,29 @@ class NodeInfo(NodeInfoDialog):
 			if all:
 				all.append(None)
 			all = all + channelnames3
-		if not self.newchannels and not settings.get('lightweight'):
+		if not self.newchannels and not lightweight:
 			if all:
 				all.append(None)
 			all = all + [NEW_CHANNEL]
-		self.allchannelnames = [UNDEFINED, None] + all
+		if lightweight:
+			if all:
+				self.allchannelnames = all
+			else:
+				self.allchannelnames = [UNDEFINED]
+		else:
+			self.allchannelnames = [UNDEFINED, None] + all
 
 	def getvalues(self, always):
 		#
 		# First get all values (except those changed, if
 		# always is true)
 		#
-		self.calcchannelnames()
 		if always:
 			self.changed = 0
+		if always or not self.ch_url:
+			self.url = MMAttrdefs.getattr(self.node, 'file')
+			self.ch_url = 0
+		self.calcchannelnames()
 		if always or not self.ch_name():
 			self.name = MMAttrdefs.getattr(self.node, 'name')
 		if always or not self.ch_channelname:
@@ -163,9 +179,6 @@ class NodeInfo(NodeInfoDialog):
 			self.type = self.node.GetType()
 			self.oldtype = self.type
 			self.ch_type = 0
-		if always or not self.ch_url:
-			self.url = MMAttrdefs.getattr(self.node, 'file')
-			self.ch_url = 0
 		if always or not self.ch_immtext():
 			self.immtext = self.node.GetValues()[:]
 		self.children_nodes = self.node.GetChildren()
@@ -292,16 +305,12 @@ class NodeInfo(NodeInfoDialog):
 			return 'html'
 		mtype, subtype = string.split(mtype, '/')
 		if mtype == 'audio':
-			if subtype == 'vnd.rn-realaudio':
-				return 'RealAudio'
 			return 'sound'
 		if mtype == 'image':
 			if subtype == 'vnd.rn-realpix':
 				return 'RealPix'
 			return 'image'
 		if mtype == 'video':
-			if subtype == 'vnd.rn-realvideo':
-				return 'RealVideo'
 			return 'video'
 		if mtype == 'text':
 			if subtype == 'html':
