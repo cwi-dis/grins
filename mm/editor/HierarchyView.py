@@ -738,6 +738,19 @@ class HierarchyView(HierarchyViewDialog):
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
 				px, py = point
+				t = obj.pixel2time(px, side, timemapper)
+				if t < 0:
+					if side == 'right':
+						# no negative durations
+						px1 = obj.time2pixel(0, side, timemapper, 'left')
+						if px < px1:
+							px = px1
+					else:
+						pnode = obj.node.GetParent()
+						if pnode is None or pnode.GetType() == 'seq':
+							px1 = obj.time2pixel(0, side, timemapper, 'left')
+							if px < px1:
+								px = px1
 				apply(self.window.drawxorline, self.__line)
 				self.__line = (px,py),(px, y+h/2)
 				apply(self.window.drawxorline, self.__line)
@@ -795,6 +808,14 @@ class HierarchyView(HierarchyViewDialog):
 				self.draw()
 				return
 			t = obj.pixel2time(px, side, timemapper)
+			if t < 0:
+				if side == 'right':
+					# no negative durations
+					t = 0
+				else:
+					pnode = obj.node.GetParent()
+					if pnode is None or pnode.GetType() == 'seq':
+						t = 0
 			em = self.editmgr
 			if not em.transaction():
 				return
