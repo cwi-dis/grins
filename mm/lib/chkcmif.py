@@ -1,10 +1,13 @@
 import os, sys
 
+verbose = 0
+
 if not os.environ.has_key('CMIF'):
 	os.environ['CMIF'] = '/ufs/sjoerd/src/mm'
 CMIF = os.environ['CMIF']
 if (CMIF + '/lib') not in sys.path:
 	sys.path.append(CMIF + '/lib')
+	sys.path.append(CMIF + '/editor')
 
 def getviewroot(node):
 	parent = node.parent
@@ -26,6 +29,8 @@ def chkattr(node, attr):
 	except:
 		return
 	if not val:
+		if verbose:
+			print 'deleting attribute',attr,'from node',node
 		node.DelAttr(attr)
 
 # remove sync arcs of which the other end doesn't exist or is in a
@@ -56,6 +61,8 @@ def cleansyncarcs(node, attr):
 	# actually remove them, start at the end
 	dellist.reverse()
 	for i in dellist:
+		if verbose:
+			print 'deleting syncarc'
 		del val[i]
 	if val:
 		# there are sync arcs left
@@ -79,5 +86,10 @@ def cleanup(file):
 		MMTree.WriteFile(root, os.path.join('/usr/tmp', 'new.' + base))
 
 if __name__ == '__main__'  or sys.argv[0] == __name__:
-	for arg in sys.argv[1:]:
+	import getopt
+	global verbose
+	opts, args = getopt.getopt(sys.argv[1:], 'v')
+	if ('-v', '') in opts:
+		verbose = 1
+	for arg in args:
 		cleanup(arg)
