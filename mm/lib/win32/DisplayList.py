@@ -425,10 +425,6 @@ class DisplayList:
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, scale, center, coordinates, clip)
 		self._list[index] = ('image', mask, image, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
-		dc = self._window.GetDC()
-		win32ig.render(dc.GetSafeHdc(),self._bgcolor,
-				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep)
-		self._window.ReleaseDC(dc)
 		self._window.InvalidateRect()
 
 	# Resize image buttons
