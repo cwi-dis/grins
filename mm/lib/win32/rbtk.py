@@ -172,8 +172,8 @@ class _rbtk:
 		if self._rb_modeless:
 			mw._rb_finish(win32con.IDCANCEL)
 		else:
-			mw.PostMessage(appcon.WM_USER_CREATE_BOX_CANCEL)	
-			
+			mw.PostMessage(appcon.WM_USER_CREATE_BOX_CANCEL)
+		
 		
 	def return_create_box(self):
 		"""Return create_box"""
@@ -187,6 +187,8 @@ class _rbtk:
 
 	def _rb_dirty(self,box):
 		if not self._rb_box and box: return 1
+		if self._rb_box and not box: return 1
+		if not self._rb_box and not box: return 0
 		for i in range(4):
 			if self._rb_box[i]!=box[i]:
 				return 1
@@ -215,8 +217,11 @@ class _rbtk:
 				if self._objects:
 					drawObj=self._objects[0]
 					rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = self._rb_units)
-					if self._rb_dirty(rb) and not self._coolmode:
-						self._rb_finish(win32con.IDOK)
+					if self._rb_dirty(rb):
+						if not self._coolmode:
+							self._rb_finish(win32con.IDOK)
+						else:
+							apply(self._rb_callback, rb)
 		return 1
 
 	# returns true if we are in create box mode 
