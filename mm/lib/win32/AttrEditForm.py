@@ -4238,6 +4238,33 @@ class Layout2Group(AttrGroup):
 		AttrGroup.__init__(self,self.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LAYOUT2
+	
+	def createcommonctrls(self, wnd):
+		cd = {}
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		a = self.getattr('left')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_LEFTL, grinsRC.IDC_LEFTV, grinsRC.IDC_LEFTU))
+		a = self.getattr('width')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU))
+		a = self.getattr('right')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_RIGHTL, grinsRC.IDC_RIGHTV, grinsRC.IDC_RIGHTU))
+		a = self.getattr('top')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_TOPL, grinsRC.IDC_TOPV, grinsRC.IDC_TOPU))
+		a = self.getattr('height')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_HEIGHTL, grinsRC.IDC_HEIGHTV, grinsRC.IDC_HEIGHTU))
+		a = self.getattr('bottom')
+		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_BOTTOML, grinsRC.IDC_BOTTOMV, grinsRC.IDC_BOTTOMU))
+
+		a = self.getattr('fit')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
+		a = self.getattr('z')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
+						   
+		return cd
+	
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('cssbgcolor')
@@ -4264,6 +4291,14 @@ class Layout2Group(AttrGroup):
 						   
 		return cd
 
+	def createctrls(self,wnd):
+		cd = self.createcommonctrls(wnd)
+		
+		a = self.getattr('soundLevel')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SOUNDLEVELL, grinsRC.IDC_SOUNDLEVELV))
+						   
+		return cd
+
 class Layout1Group(Layout2Group):
 	data=attrgrsdict['Layout1']
 	def __init__(self):
@@ -4271,7 +4306,7 @@ class Layout1Group(Layout2Group):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LAYOUT1
 	def createctrls(self,wnd):
-		cd = Layout2Group.createctrls(self, wnd)
+		cd = Layout2Group.createcommonctrls(self, wnd)
 		
 		a = self.getattr('regPoint')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
