@@ -4,6 +4,7 @@ import MMExc
 import MMAttrdefs
 
 import gl
+import GL
 import DEVICE
 import fl
 
@@ -26,7 +27,6 @@ class ImageWindow(ChannelWindow):
 	def init(self, (name, attrdict, channel)):
 		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.clear()
-		self.setanchor = 0
 		self.player = channel.player
 		return self
 	#
@@ -35,15 +35,17 @@ class ImageWindow(ChannelWindow):
 			self.pop()
 			return
 		ChannelWindow.show(self)
-		fl.qdevice(DEVICE.MOUSE3)
+		fl.qdevice(DEVICE.LEFTMOUSE)
 		self.render()
 	#
 	def redraw(self):
 		if not self.is_showing():
 			return
 		gl.reshapeviewport()
-		width, height = gl.getsize()
-		gl.ortho2(-0.5, width-0.5, -0.5, height-0.5)
+		winwidth, winheight = gl.getsize()
+		self.xcorner = int(winwidth - self.xsize*self.effscale) / 2
+		self.ycorner = int(winheight - self.ysize*self.effscale) / 2
+		gl.ortho2(-0.5, winwidth-0.5, -0.5, winheight-0.5)
 		self.render()
 	#
 	def clear(self):
@@ -51,7 +53,11 @@ class ImageWindow(ChannelWindow):
 		self.parray = None
 		self.error = None
 		self.anchors = []
+		self.newanchor = None
 		self.xsize = self.ysize = 0
+		self.xcorner = self.ycorner = 0
+		self.effscale = 1.0
+		self.mousescale = 1.0
 		self.setcolors()
 		if self.is_showing():
 			self.setwin()
@@ -77,6 +83,12 @@ class ImageWindow(ChannelWindow):
 		else:
 			self.hicolor = 255, 0, 0
 	#
+	def getmouse(self):
+		mx, my = fl.get_mouse()
+		mx = int((mx - self.xcorner) / self.mousescale)
+		my = int((my - self.ycorner) / self.mousescale)
+		return mx, my
+	#
 	def mouse(self, (dev, val)):
 		if dev == DEVICE.RIGHTMOUSE:
 			ChannelWindow.mouse(self, (dev, val))
@@ -84,25 +96,25 @@ class ImageWindow(ChannelWindow):
 		if not self.node:
 			gl.ringbell()
 			return
-		mx, my = fl.get_mouse()
-		width, height = gl.getsize()
-		x = int(width - self.xsize*self.scale) / 2
-		y = int(height - self.ysize*self.scale) / 2
-		mx, my = int(mx-x), int(my-y)
-		if self.setanchor:
+		mx, my = self.getmouse()
+		if self.newanchor:
 			# We're not playing, we're defining anchors
-			if dev <> DEVICE.MOUSE3:
+			if dev <> DEVICE.LEFTMOUSE:
 				gl.ringbell()
 				return
 			if val == 1:
 				self.pm = (mx, my)
+				fl.qdevice(DEVICE.MOUSEX)
+				fl.qdevice(DEVICE.MOUSEY)
 			else:
-				a = self.anchors[0]
-				self.anchors[0] = (a[0], a[1], \
+				fl.unqdevice(DEVICE.MOUSEX)
+				fl.unqdevice(DEVICE.MOUSEY)
+				a = self.newanchor
+				self.newanchor = (a[0], a[1], \
 					  [self.pm[0], self.pm[1], mx, my])
-				self.redraw()
+				self.drawnewanchor()
 			return
-		if (dev, val) <> (DEVICE.MOUSE3, 1):
+		if (dev, val) <> (DEVICE.LEFTMOUSE, 1):
 			return
 		if not self.anchors:
 			print 'mouse: no anchors on this node'
@@ -126,6 +138,24 @@ class ImageWindow(ChannelWindow):
 			self.channel.haspauseanchor = 0
 			self.channel.done(0)
 	#
+	def mousex(self, val):
+		if not self.newanchor:
+			print '*** Huh? MOUSEX but not defining anchors ***'
+			return
+		self.newxy()
+	#
+	def mousey(self, val):
+		if not self.newanchor:
+			print '*** Huh? MOUSEY but not defining anchors ***'
+			return
+		self.newxy()
+	#
+	def newxy(self):
+		mx, my = self.getmouse()
+		a = self.newanchor
+		self.newanchor = (a[0], a[1], [self.pm[0], self.pm[1], mx, my])
+		self.drawnewanchor()
+	#
 	def armimage(self, (filename_arg, node)):
 		# (Import imgfile here so if it doesn't exist we can
 		# still play documents that don't contain images...)
@@ -134,36 +164,48 @@ class ImageWindow(ChannelWindow):
 		self.node = node
 		self.setcolors()
 		self.parray = None
+		self.effscale = 1.0 # Scale for lrectwrite
+		self.mousescale = 1.0 # Scale for mouse and anchors
+		self.xcorner = 0
+		self.ycorner = 0
 		self.error = None
 		try:
-			self.xsize, self.ysize, dummy = imgfile.getsizes(filename)
+			self.xsize, self.ysize, dummy = \
+				imgfile.getsizes(filename)
 		except imgfile.error, msg:
 			print 'Cannot get size of image file', filename_arg, \
 				  ':', msg
 			self.error = 'Bad or missing file ' + `filename_arg`
 			return
-		self.scale = MMAttrdefs.getattr(node, 'scale')
-		if self.scale <= 0.0:
+		if self.is_showing():
+			self.setwin()
+			winwidth, winheight = gl.getsize()
+		else:
+			winwidth, winheight = 0, 0
+		self.effscale = MMAttrdefs.getattr(node, 'scale')
+		if self.effscale <= 0.0:
 			if not self.is_showing():
-				self.scale = 1.0
+				self.effscale = 1.0
 			else:
-				self.setwin()
-				width, height = gl.getsize()
-				self.scale = min(float(width)/self.xsize, \
-					         float(height)/self.ysize)
+				self.effscale = \
+					min(float(winwidth)/self.xsize, \
+					    float(winheight)/self.ysize)
+		self.mousescale = self.effscale
 		try:
-			if self.scale == int(self.scale):
+			if self.effscale == int(self.effscale):
 				self.parray = imgfile.read(filename)
 			else:
-				width = int(self.xsize * self.scale)
-				height = int(self.ysize * self.scale)
+				width = int(self.xsize * self.effscale)
+				height = int(self.ysize * self.effscale)
 				self.parray = imgfile.readscaled(filename, \
 					                         width, height)
-				self.scale = 1.0
+				self.effscale = 1.0
 				self.xsize, self.ysize = width, height
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename_arg, ':', msg
 			self.error = 'Cannot read file ' + `filename_arg`
+		self.xcorner = int(winwidth - self.xsize*self.effscale) / 2
+		self.ycorner = int(winheight - self.ysize*self.effscale) / 2
 	#
 	def showimage(self):
 		if self.is_showing():
@@ -176,56 +218,92 @@ class ImageWindow(ChannelWindow):
 	#
 	# Start defining an anchor
 	def setdefanchor(self, anchor):
-		self.anchors = [anchor]
-		self.setanchor = 1
+		if anchor in self.anchors:
+			self.saveanchor = anchor
+			self.anchors.remove(anchor)
+		else:
+			self.saveanchor = None
+		self.newanchor = anchor
 		self.redraw()
 	#
 	# Stop defining an anchor
 	def getdefanchor(self):
-		self.setanchor = 0
-		return self.anchors[0]
+		res = self.newanchor
+		self.anchors.append(res)
+		self.saveanchor = None
+		self.newanchor = None
+		self.redraw()
+		return res
 	#
 	# Abort defining an anchor
 	def enddefanchor(self, anchor):
-		self.anchors = [anchor]
-		self.setanchor = 0
+		if self.saveanchor <> None:
+			self.anchors.append(self.saveanchor)
+			self.saveanchor = None
+		self.newanchor = None
 		self.redraw()
 	#
 	def render(self):
 		gl.RGBcolor(self.bgcolor)
 		gl.clear()
+		width, height = gl.getsize()
 		if self.parray:
-			width, height = gl.getsize()
-			x = int(width - self.xsize*self.scale) / 2
-			y = int(height - self.ysize*self.scale) / 2
-			gl.rectzoom(self.scale, self.scale)
-			gl.lrectwrite(x, y, x+self.xsize-1, y+self.ysize-1, \
-					self.parray)
+			gl.rectzoom(self.effscale, self.effscale)
+			gl.lrectwrite(self.xcorner, self.ycorner, \
+				self.xcorner+self.xsize-1, \
+				self.ycorner+self.ysize-1, \
+				self.parray)
+		else:
+			if self.error:
+				gl.RGBcolor(self.fgcolor)
+				width, height = gl.getsize()
+				x, y = width/2, height/2
+				sw = gl.strwidth(self.error)
+				sh = gl.getheight()
+				x = max(0, x - sw/2)
+				y = y + sh/2
+				gl.cmov2(x, y)
+				gl.charstr(self.error)
+		# Draw anchors even if the image can't be drawn
+		if self.anchors:
 			gl.RGBcolor(self.hicolor)
 			for dummy, tp, a in self.anchors:
-				if len(a) <> 4: continue
-				x0, y0, x1, y1 = a[0], a[1], a[2], a[3]
-				x0 = int(x0 * self.scale + x)
-				x1 = int(x1 * self.scale + x)
-				y0 = int(y0 * self.scale + y)
-				y1 = int(y1 * self.scale + y)
-				gl.bgnclosedline()
-				gl.v2i(x0, y0)
-				gl.v2i(x0, y1)
-				gl.v2i(x1, y1)
-				gl.v2i(x1, y0)
-				gl.endclosedline()
-		elif self.error:
-			gl.RGBcolor(self.fgcolor)
-			width, height = gl.getsize()
-			x, y = width/2, height/2
-			sw = gl.strwidth(self.error)
-			sh = gl.getheight()
-			x = max(0, x - sw/2)
-			y = y + sh/2
-			gl.cmov2(x, y)
-			gl.charstr(self.error)
+				self.drawanchor(a)
+		self.drawnewanchor()
 	#
+	# Subroutine to render just the new anchor in the pop-up planes.
+	# In all cases the pop-up planes are first cleared.
+	#
+	def drawnewanchor(self):
+		# XXX I'm using PUPDRAW because it's the only
+		# mode that works on a basic Indigo; on the
+		# other hand SGI says that pop-up planes are
+		# maintained for compatibility only...
+		gl.drawmode(GL.PUPDRAW)
+		gl.color(0)
+		gl.clear()
+		if self.newanchor:
+			gl.mapcolor((1,) + self.fgcolor)
+			gl.color(1)
+			self.drawanchor(self.newanchor[2])
+		gl.drawmode(GL.NORMALDRAW)
+	#
+	# Subroutine to draw an anchor
+	#
+	def drawanchor(self, a):
+		if len(a) <> 4:
+			return
+		x0, y0, x1, y1 = a[0], a[1], a[2], a[3]
+		x0 = int(x0 * self.mousescale + self.xcorner)
+		x1 = int(x1 * self.mousescale + self.xcorner)
+		y0 = int(y0 * self.mousescale + self.ycorner)
+		y1 = int(y1 * self.mousescale + self.ycorner)
+		gl.bgnclosedline()
+		gl.v2i(x0, y0)
+		gl.v2i(x0, y1)
+		gl.v2i(x1, y1)
+		gl.v2i(x1, y0)
+		gl.endclosedline()
 
 
 # XXX Make the image channel class a derived class from ImageWindow?!
@@ -283,6 +361,7 @@ class ImageChannel(Channel):
 	#
 	def defanchor(self, node, anchor):
 		self.arm(node)
+		self.showanchors(node)
 		self.window.setdefanchor(anchor)
 		self.window.showimage()
 
