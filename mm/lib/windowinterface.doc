@@ -5,6 +5,11 @@ All sizes and coordinates are in fractions of the width and height of
 the containing window.  On the top level, sizes and coordinates are in
 mm.  The origin is always at the top-left corner.
 
+** The window interface has changed slightly (15-Nov-2000) - now,
+** there is an extra argument in the constructer which determines
+** whether coordinates will be in relative 0.0 -> 1.0 coordinates or
+** pixel numbers.
+
 Colors are always given as a tuple consisting of three values in the
 range 0-255.  The values are respectively the red, green, and blue
 components.
