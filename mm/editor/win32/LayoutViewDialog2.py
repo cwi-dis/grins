@@ -68,6 +68,7 @@ class LayoutViewDialog2(ViewDialog.ViewDialog):
 	def get_geometry(self):
 		if self.__window:
 			self.last_geometry = self.__window.getgeometry()
+			return self.last_geometry
 			 
 	def setcommands(self, commandlist, title):
 		self.__window.set_commandlist(commandlist)
