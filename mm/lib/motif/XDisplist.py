@@ -18,6 +18,9 @@ _iconmap = {
 	'bandwidthbad': 'bandwidthbad',
 	'open': 'folderopen',
 	'closed': 'folderclosed',
+	'linksrc': 'emptyicon', # XXXX
+	'linkdst': 'emptyicon', # XXXX
+	'linksrcdst': 'emptyicon', # XXXX
 	}
 
 class _DisplayList:
