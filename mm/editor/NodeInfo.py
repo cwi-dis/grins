@@ -358,12 +358,25 @@ class NodeInfo(NodeInfoDialog):
 			dummy = self.setvalues()
 
 	def ok_callback(self):
+		if self.new and self.channelname == UNDEFINED and self.type in leaftypes and hasattr(self, 'chanundef'):
+			self.chanundef(self.newchannelname())
+			return
 		self.new = 0
 		ok = 1
 		if self.changed or self.ch_name() or self.ch_immtext():
 			ok = self.setvalues()
 		if ok:
 			self.close()
+
+	# callbacks for chanundef call
+	def undefined_ok_callback(self):
+		self.new = 0
+		# now try again
+		self.ok_callback()
+
+	def newchan_ok_callback(self, name):
+		self.newchan_callback(name)
+		self.ok_callback()
 
 	#
 	# Callbacks that are valid for all types
@@ -393,16 +406,19 @@ class NodeInfo(NodeInfoDialog):
 		self.type = newtype
 		self.show_correct_group()
 
+	def newchannelname(self):
+		base = 'NEW'
+		i = 1
+		name = base + `i`
+		while self.context.channeldict.has_key(name):
+			i = i+1
+			name = base + `i`
+		return name
+
 	def channel_callback(self):
 		self.channelname = self.getchannelname()
 		if self.channelname == NEW_CHANNEL:
-			base = 'NEW'
-			i = 1
-			name = base + `i`
-			while self.context.channeldict.has_key(name):
-				i = i+1
-				name = base + `i`
-			self.askchannelname(name)
+			self.askchannelname(self.newchannelname())
 		elif self.origchannelname <> self.channelname:
 			self.ch_channelname = 1
 			self.changed = 1
