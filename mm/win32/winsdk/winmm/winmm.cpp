@@ -14,7 +14,10 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "utils.h"
 
 #include "winmm_waveout.h"
+
+#ifdef LINK_MP3LIB
 #include "winmm_mp3dec.h"
+#endif
 
 PyObject *ErrorObject;
 
@@ -75,7 +78,9 @@ static struct PyMethodDef winmm_methods[] = {
 	{"WaveOutGetNumDevs", (PyCFunction)WaveOutGetNumDevs, METH_VARARGS, ""},
 	{"WaveOutGetDevCaps", (PyCFunction)WaveOutGetDevCaps, METH_VARARGS, ""},
 	{"WaveOutQuery", (PyCFunction)Winmm_WaveOutQuery, METH_VARARGS, ""},
+#ifdef LINK_MP3LIB
 	{"CreateMp3Decoder", (PyCFunction)Winmm_CreateMp3Decoder, METH_VARARGS, ""},
+#endif
 	{"WaveOutOpen", (PyCFunction)Winmm_WaveOutOpen, METH_VARARGS, ""},
 	{"SndPlaySound", (PyCFunction)SndPlaySound, METH_VARARGS, ""},
 	{"SndStopSound", (PyCFunction)SndStopSound, METH_VARARGS, ""},
