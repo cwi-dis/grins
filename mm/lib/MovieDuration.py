@@ -18,7 +18,9 @@ def getduration(filename):
 		vfile = VFile.RandomVinFile(fp)
 		vfile.filename = filename
 	except VerrorList, msg:
+		fp.close()
 		return 1.0
+	fp.close()
 	vfile.readcache()
 	t, ds, cs = vfile.getrandomframeheader(len(vfile.index)-1)
 	if t == 0: t = 1000
