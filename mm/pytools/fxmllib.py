@@ -376,6 +376,22 @@ class XMLParser:
             nstates = seenstates.keys()
         states[:] = nstates # change in-line
 
+    def __check_dfa(self, dfa, initstate, tagname, data, i):
+        states = [initstate]
+        possibles = {}
+        seenstates = {}
+        while states:
+            s = states[0]
+            seenstates[s] = 1
+            del states[0]
+            for tag in dfa[s].keys():
+                if possibles.has_key(tag):
+                    self.__error("non-deterministic content model for `%s'" % tagname, data, i, fatal = 0)
+                possibles[tag] = 1
+            for s in dfa[s].get('', []):
+                if not seenstates.has_key(s):
+                    states.append(s)
+
     def __parse_content(self, data, i, ptagname, namespaces, states = None):
         # parse the content of an element (i.e. the string between
         # start tag and end tag)
@@ -825,6 +841,8 @@ class XMLParser:
                 if content[0] == '(':
                     i = res.start('content')
                     j, content, start, end = self.__dfa(data, i)
+                    if type(content) is type([]) and content and type(content[0]) is type({}):
+                        self.__check_dfa(content, start, name, data, i)
                     contentstr = data[i:j]
                     i = j
                 else:
