@@ -54,6 +54,12 @@ class HierarchyViewDialog(ViewDialog):
 	def setpopup(self, template):
 		self.window.setpopupmenu(template)
 
+	def setstate(self):
+		w = self.window
+		w.set_toggle(THUMBNAIL, self.thumbnails)
+		w.set_toggle(PLAYABLE, self.showplayability)
+		w.set_toggle(TIMESCALE, self.timescale)
+
 	def helpcall(self):
 		import Help
 		Help.givehelp('hierarchy')
