@@ -6,7 +6,6 @@ __version__ = "$Id$"
 
 import windowinterface
 from usercmd import *
-IMPL_AS_FORM=1
 
 class AssetsViewDialog:
 	def __init__(self):
@@ -59,12 +58,8 @@ class AssetsViewDialog:
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
-			if IMPL_AS_FORM: # form
-				f.showview(self.__window,'trview_')
-				self.__window.show()
-			else: # dlgbar
-				f=self.toplevel.window
-				self.__window.create(f)
+			f.showview(self.__window,'aview_')
+			self.__window.show()
 
 	def getwindow(self):
 		return self.__window
