@@ -58,7 +58,6 @@ class TransitionEngine:
 	def endtransition(self):
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
-		self.settransitionvalue(1.0)
 		if self.__callback:
 			apply(apply, self.__callback)
 			self.__callback = None
@@ -67,7 +66,10 @@ class TransitionEngine:
 		wnd = self.windows[0]
 		if wnd.is_closed():
 			return
-		topwindow = wnd._topwindow
+		else:
+			# XXX: patch
+			if self.__outtrans and wnd._active_displist:
+				wnd._active_displist.close()
 		for win in self.windows:
 			win._transition = None
 			win._drawsurf = None
