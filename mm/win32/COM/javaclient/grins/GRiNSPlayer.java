@@ -70,7 +70,7 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
              
     public double getDuration() {return dur;}
     
-    public void setTime(double t) {push(new Cmd("setTime", t));}
+    public void setTime(double t) {pos=t;push(new Cmd("setTime", t));}
     
     public double getTime() {return pos;}
     
