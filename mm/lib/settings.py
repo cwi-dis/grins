@@ -98,6 +98,9 @@ default_settings = {
 	'structure_bandwidthnotok': (100, 0, 0),
 	'structure_bandwidthokfocus': (0, 200, 0),
 	'structure_bandwidthnotokfocus': (200, 0, 0),
+	'structure_bwprerollcolor': (255, 160, 0),
+	'structure_bwmaystallcolor': (255, 160, 0),
+	'structure_bwstallcolor': (255, 0, 0),
 	
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
