@@ -626,7 +626,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			# clean image cache
 			from win32ig import win32ig
 			win32ig.deltemp()
-			__main__.toplevel._image_size_cache = {}
 			__main__.toplevel._image_cache = {}
 
 	# Response to resizing		
@@ -738,17 +737,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	#
 	# Returns the size of the image
 	def _image_size(self, file):
-		toplevel=__main__.toplevel
-		try:
-			xsize, ysize = toplevel._image_size_cache[file]
-		except KeyError:
-			img = win32ig.load(file)
-			xsize, ysize, depth = win32ig.size(img)
-			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
-		return xsize, ysize
+		return __main__.toplevel._image_size(file, self.getgrinsdoc())
 
 	def _image_handle(self, file):
-		return __main__.toplevel._image_cache[file]
+		return __main__.toplevel._image_handle(file, self.getgrinsdoc())
 
 
 	###############################################
