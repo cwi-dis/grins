@@ -101,6 +101,12 @@ def getcmifattr(writer, node, attr):
 		val = str(val)
 	return val
 
+def geturlattr(writer, node, attr):
+	val = getcmifattr(writer, node, attr)
+	if val is not None:
+		val = MMurl.quote(val)
+	return val
+
 def getchname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
@@ -290,7 +296,7 @@ def getugroup(writer, node):
 smil_attrs=[
 	("id", getid),
 	("region", getchname),
-	("src", lambda writer, node:getcmifattr(writer, node, "file")),
+	("src", lambda writer, node:geturlattr(writer, node, "file")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
@@ -789,7 +795,7 @@ class SMILWriter(SMIL):
 					href = '%s#%s' % (base, tag)
 		else:
 			href = '#' + self.uid2name[uid2]
-		attrs.append('href=%s' % nameencode(href))
+		attrs.append('href=%s' % nameencode(MMurl.quote(href)))
 		return string.join(attrs)
 
 	def writelink(self, x, id, atype, args):
