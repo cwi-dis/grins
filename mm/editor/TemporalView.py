@@ -369,7 +369,9 @@ class TemporalView(TemporalViewDialog):
 		x,y,mode,xf,yf = params[0:5]
 		x,y = self.rel2abs((x,y))
 		xf,yf = self.rel2abs((xf,yf))
+		self.ev_mouse0press(dummy,window,event,params)
 		self.scene.dropnode((xf,yf), (x, y))
+
 
 ######################################################################
 	# Commands from the menus.
