@@ -130,10 +130,11 @@ class SVGChannel(Channel.ChannelWindow):
 		svggraphics.tkStartup(ddshdc)
 		if self.svgrenderer is None:
 			self.svgrenderer = svgrender.SVGRenderer(svgdoc, svggraphics)
+		else:
+			self.svgrenderer.reset(svgdoc, svggraphics)
 		self.svgrenderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
-		#dds.AntialiasRGB32()
 		if update:
 			self.window.update(self.window.getwindowpos())
 
