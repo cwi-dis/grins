@@ -79,16 +79,20 @@ from _LayoutView import _LayoutView
 from _UsergroupView import _UsergroupView
 from _TransitionView import _TransitionView
 from _LinkView import _LinkView
-from _CmifView import _CmifView,_CmifStructView,_CmifPlayerView
+from _CmifView import _CmifView, _CmifStructView
 from _SourceView import _SourceView
 
+#  Player views
+# from _CmifView import _CmifPlayerView
+# _PlayerView= _CmifPlayerView
+from _PlayerView import _PlayerView  
+_SourceView=_SourceView
+
 # editor document views
-_PlayerView= _CmifPlayerView
 _HierarchyView=_CmifStructView
 _ChannelView=_CmifStructView
 _LinkView=_LinkView
 _LayoutView=_LayoutView
-_SourceView=_SourceView
 
 # player document views
 if IsPlayer:
@@ -168,6 +172,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		cmifwnd._CmifWnd.__init__(self)
 		self._do_init(__main__.toplevel)
 		self.__playerstate = wndusercmd.TB_STOP
+		self.__fsPlayer = None
 	
 	# Create the OS window and set the toolbar	
 	def create(self,title):
@@ -518,7 +523,27 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		      commandlist = None, resizable = 1):
 		if adornments.has_key('view'):strid=adornments['view']
 		else:  raise "undefined view request"
+		if strid=='pview_':
+			if adornments.has_key('show') and adornments['show']=='fullscreen':
+				if not self.__fsPlayer:
+					self.__fsPlayer = self.newFSPlayer(self)
+				return self.__fsPlayer.newviewport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
 		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
+
+	def newFSPlayer(self, frame):
+		from _FSPlayerView import _FSPlayerView
+		fsp = _FSPlayerView(frame)
+		desktop = Sdk.GetDesktopWindow()
+		dc = desktop.GetDC();
+		width = dc.GetDeviceCaps(win32con.HORZRES)
+		height = dc.GetDeviceCaps(win32con.VERTRES)
+		fsp.create('GRiNS Player',0,0,width,height)
+		fsp.ShowWindow(win32con.SW_SHOW)
+		fsp.UpdateWindow()
+		return fsp
+
+	def delFSPlayer(self):
+		self.__fsPlayer = None
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):
