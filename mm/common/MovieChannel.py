@@ -71,15 +71,14 @@ class MovieWindow(ChannelWindow):
 		#
 		gl.clear()
 	#
-	def setfile(self, filename, node, do_warm):
+	def setfile(self, filename, node):
 		self.node = self.vfile = None
 		try:
 			self.vfile = VFile.RandomVinFile().init(filename)
-			if do_warm:
-				try:
-					self.vfile.readcache()
-				except VFile.Error:
-					print filename, ': no cached index'
+			try:
+				self.vfile.readcache()
+			except VFile.Error:
+				print filename, ': no cached index'
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
@@ -190,15 +189,10 @@ class MovieChannel(Channel):
 		if not self.is_showing():
 			return
 		filename = self.getfilename(node)
-		self.window.setfile(filename, node, 1)
+		self.window.setfile(filename, node)
 		self.do_arm(node)
 	#
-	def late_arm(self, node):
-		filename = self.getfilename(node)
-		self.window.setfile(filename, node, 0)
-		self.do_arm(node)
-	#
-	def did_arm(self):
+	def did_prearm(self):
 		return (self.armed_node <> None)
 	#
 	def play(self, node, callback, arg):
@@ -213,7 +207,7 @@ class MovieChannel(Channel):
 	        if node <> self.armed_node:
 			print 'MovieChannel: node not armed'
 			self.window.popup() # was: .pop(); --Guido
-			self.late_arm(node)
+			self.arm(node)
 		else:
 			self.window.popup()
 		self.armed_node = None
