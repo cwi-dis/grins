@@ -88,6 +88,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				SAVE(callback = (self.save_callback, ())),
 				EXPORT_SMIL(callback = (self.export_callback, ())),
 				UPLOAD_SMIL(callback = (self.upload_callback, ())),
+				EXPORT_HTML(callback = (self.export_html_callback, ())),
 				]
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
@@ -279,6 +280,63 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.export_okcallback, None)
+					   
+	def export_html_callback(self):
+		ttype = 0
+		attrs = self.context.attributes
+		if attrs.has_key('html_template_type'):
+			ttype = attrs['html_template_type']
+		if not ttype:
+			if windowinterface.showquestion('Please set webpage type first, then try again'):
+				self.prop_callback()
+			return
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		windowinterface.FileDialog('Save HTML file:', cwd, '*.html',
+					   '', self.export_html_okcallback, None)
+
+	def export_html_okcallback(self, filename):
+		if not filename:
+			return 'no file specified'
+		self.setwaiting()
+		ttype = 0
+		attrs = self.context.attributes
+		if attrs.has_key('html_template_type'):
+			ttype = attrs['html_template_type']
+		mkram = embed = embedlayout = 0
+		if ttype == 2:
+			mkram = 1
+		if ttype >= 3:
+			embed = 1
+		if ttype >= 4:
+			embedlayout = 1
+
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
+		evallicense= (license < 0)
+		# Make a back-up of the original file...
+		try:
+			os.rename(filename, make_backup_filename(filename))
+		except os.error:
+			pass
+		try:
+			import HTMLWrite
+			HTMLWrite.WriteFile(self.root, filename,
+						embed=embed, embedlayout=embedlayout,
+						evallicense=evallicense)
+		except IOError, msg:
+			windowinterface.showmessage('Write failed.\n'+
+						    'File: '+filename+'\n'+
+						    'Error: '+msg[1])
+			return 0
+		return 1
 					   
 	def upload_callback(self):
 		# XXXX The filename business confuses project file name and resulting SMIL file
