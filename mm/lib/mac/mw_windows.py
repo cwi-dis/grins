@@ -64,6 +64,7 @@ class _WindowGroup:
 		self._title = title
 		self._cmds_toggled = {}
 		self._dict = {}
+		self._dynamic_list_dict = {}
 		self.set_commandlist(cmdlist)
 		
 	def __repr__(self):
@@ -85,7 +86,8 @@ class _WindowGroup:
 		pass
 		
 	def set_dynamiclist(self, cmd, list):
-		pass  # XXXX Not implemented yet.
+		self._dynamic_list_dict[cmd] = list
+		mw_globals.toplevel._changed_group_commands()
 		
 	def set_toggle(self, cmd, onoff):
 		self._cmds_toggled[cmd] = onoff
@@ -130,6 +132,11 @@ class _WindowGroup:
 		else:
 			func, arglist = callback
 			apply(func, arglist)
+			
+	def get_command_dynamic_list(self, cmd):
+		if self._dynamic_list_dict.has_key(cmd):
+			return self._dynamic_list_dict[cmd]
+		return None
 			
 	def close_window_command(self):
 		# First see whether there's a WindowExit handler
@@ -1194,6 +1201,7 @@ class _AdornmentsMixin:
 		if not self._cmd_to_cntl:
 			return
 		x, y, w, h = self._rect
+		resid, height = MenuTemplate.TOOLBAR
 		self._rect = x, y+height, w, h-height
 			
 	def _iscontrolclick(self, down, local, event):

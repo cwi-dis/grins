@@ -106,18 +106,18 @@ class SelectPopupMenu(PopupMenu):
 	def getpopupinfo(self):
 		return self.menu, self.id
 
-class _SpecialMenu:
-	"""_SpecialMenu - Helper class for CommandHandler Window and Document menus"""
+class _DynamicMenu:
+	"""_DynamicMenu - Helper class for dynamic menus"""
 	
-	def __init__(self, title, callbackfunc):
+	def __init__(self, menu, callbackfunc, args=()):
 		self.items = []
 		self.menus = []
-		self.cur = None
-		self.title = title
 		self.callback = callbackfunc
-		self.menu = mw_globals.toplevel._addmenu(self.title)
+		self.args = args
+		self.menu = menu
+		self.menu.enable(0)
 		
-	def set(self, list, cur):
+	def set(self, list):
 		if list != self.items:
 			# If the list isn't the same we have to modify it
 			if list[:len(self.items)] != self.items:
@@ -130,15 +130,34 @@ class _SpecialMenu:
 				self.cur = None
 			list = list[len(self.items):]
 			for item in list:
-				self.menus.append(MenuItem(self.menu, item, None, (self.callback, (item,))))
+				name, value, rest = item[0], item[1], item[2:]
+				arglist = self.args + (value,)
+				self.menus.append(MenuItem(self.menu, name, None, (self.callback, arglist)))
 				self.items.append(item)
+				if len(rest) > 0 and rest[0] == 't':
+					if len(rest) > 1 and rest[1]:
+						self.menus[-1].check(1)
+					else:
+						self.menus[-1].check(0)
+		self.menu.enable(not not self.items)
+		
+class _SpecialMenu(_DynamicMenu):
+	"""_SpecialMenu - Helper class for CommandHandler Window and Document menus"""
+
+	def __init__(self, menu, callbackfunc):
+		_DynamicMenu.__init__(self, menu, callbackfunc)
+		self.cur = None
+		
+	def set(self, list, cur):
+		dynlist = map(lambda x: (x,x), list)
+		_DynamicMenu.set(self, dynlist)
 		if cur != self.cur:
 			if self.cur != None:
 				self.menus[self.cur].check(0)
 			if cur != None:
 				self.menus[cur].check(1)
 			self.cur = cur
-		self.menu.enable(not not self.items)
+	
 
 class CommandHandler:
 	def __init__(self, menubartemplate):
@@ -149,16 +168,23 @@ class CommandHandler:
 		self.all_cmd_groups = [None, None, None]
 		self.menubartraversal = []
 		for menutemplate in menubartemplate:
-			title, content = menutemplate
+			entrytype, title, content = menutemplate
 			menu = mw_globals.toplevel._addmenu(title)
-			itemlist = self.makemenu(menu, content)
-			self.menubartraversal.append(MenuTemplate.CASCADE,
-						     menu, itemlist)
+			if entrytype == MenuTemplate.CASCADE:
+				itemlist = self.makemenu(menu, content)
+				self.menubartraversal.append(entrytype, menu, itemlist)
+			elif entrytype == MenuTemplate.DYNAMICCASCADE:
+				dynamicmenu = _DynamicMenu(menu, self.dynamic_callback, (cmd,))
+				self.menubartraversal.append(entrytype, cmd, dynamicmenu)
+			else:
+				raise 'Incorrect menubar item type', entrytype
 		# Create special menus
-		self.document_menu = _SpecialMenu(
-			'Documents', mw_globals.toplevel._pop_group)
-		self.window_menu = _SpecialMenu(
-			'Windows', mw_globals.toplevel._pop_window)
+		menu = mw_globals.toplevel._addmenu('Documents')
+		self.document_menu = _SpecialMenu(menu,
+			mw_globals.toplevel._pop_group)
+		menu = mw_globals.toplevel._addmenu('Windows')
+		self.window_menu = _SpecialMenu(menu,
+			mw_globals.toplevel._pop_window)
 			
 	def install_cmd(self, number, group):
 		if self.all_cmd_groups[number] == group:
@@ -210,6 +236,13 @@ class CommandHandler:
 							    subcontent)
 				itemlist.append(entry_type, submenu,
 						subitemlist)
+			elif entry_type == MenuTemplate.DYNAMICCASCADE:
+				dummy, name, cmd = entry
+				submenu = SubMenu(menu, name, name)
+				dynamicmenu = _DynamicMenu(submenu, self.dynamic_callback, (cmd,))
+				self.cmd_to_menu[cmd] = dynamicmenu
+				self.cmd_enabled[cmd] = 1
+				itemlist.append(entry_type, cmd, dynamicmenu)
 			else:
 				raise 'Unknown menu entry type', entry_type
 		return itemlist
@@ -224,12 +257,19 @@ class CommandHandler:
 		self.normal_callback(cmd)
 		
 	def normal_callback(self, cmd):
-		cmd = self.find_command(cmd, mustfind=1)
+		callback = self.find_command(cmd, mustfind=1)
 		if cmd:
-			func, arglist = cmd
+			func, arglist = callback
 			apply(func, arglist)
 		else: # debug
 			print 'CommandHandler: unknown command', cmd #debug
+			
+	def dynamic_callback(self, cmd, arg):
+		callbackfunc = self.find_command(cmd, mustfind=1)
+		if callbackfunc:
+			apply(callbackfunc, arg)
+		else:
+			print 'CommandHandler: unknown dynamic command', cmd
 		
 	def find_command(self, cmd, mustfind=0):
 		for group in self.all_cmd_groups:
@@ -240,6 +280,14 @@ class CommandHandler:
 						print 'CommandHandler: disabled command selected:', cmd # debug
 					return callback
 		return None
+		
+	def find_command_dynamic_list(self, cmd):
+		for group in self.all_cmd_groups:
+			if group:
+				dynamiclist = group.get_command_dynamic_list(cmd)
+				if not dynamiclist is None:
+					return dynamiclist
+		return []
 		
 	def find_toggle_group(self, cmd):
 		for group in self.all_cmd_groups:
@@ -255,6 +303,10 @@ class CommandHandler:
 				itemtype, submenu, subitems = item
 				must_be_enabled = self._update_one(subitems)
 				submenu.enable(must_be_enabled)
+			elif itemtype == MenuTemplate.DYNAMICCASCADE:
+				itemtype, cmd, dynamicmenu = item
+				dynamiclist = self.find_command_dynamic_list(cmd)
+				dynamicmenu.set(dynamiclist)
 			else:
 				itemtype, cmd = item
 				must_be_enabled = (not not self.find_command(cmd))
