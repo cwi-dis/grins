@@ -105,6 +105,12 @@
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)
 
+(hview_winpos (tuple (int) (int)) (-1 -1) 'Hierarchy winpos' hidden
+	 'Window position for hierarchy view' raw)
+
+(hview_winsize (tuple (int) (int)) (400 400) 'Hierarchy winsize' hidden
+	 'Window size for hierarchy view' raw)
+
 (hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
                                    (enclosed (tuple (string) (any)))
 				   (int) (int)))) ()
