@@ -40,33 +40,34 @@ class _Splash:
 			rdr = img.reader(self.imgformat, file)
 		except IOError:
 			return 0
+		main = self.main
 		data = rdr.read()
 		width = rdr.width
 		height = rdr.height
-		shell = self.main.CreatePopupShell('splash', Xt.TopLevelShell,
-						   {'visual': self.visual,
-						   'depth': self.visual.depth,
-						   'colormap': self.colormap,
-						   'mwmDecorations': 0,
-						    'x': 300, 'y': 200})
+		swidth = main.WidthOfScreen()
+		sheight = main.HeightOfScreen()
+		shell = main.CreatePopupShell('splash', Xt.TopLevelShell,
+					      {'visual': self.visual,
+					       'depth': self.visual.depth,
+					       'colormap': self.colormap,
+					       'mwmDecorations': 0,
+					       'x': (swidth-width)/2,
+					       'y': (sheight-height)/2})
 		self.shell = shell
 		w = shell.CreateManagedWidget('image', Xm.DrawingArea,
 					      {'width': width,
 					       'height': height})
-		self.main.RealizeWidget()
+		main.RealizeWidget()
 		shell.Popup(0)
 		gc = w.CreateGC({})
 		image = self.visual.CreateImage(self.visual.depth, X.ZPixmap,
 						0, data, width, height, 32, 0)
 		w.AddCallback('exposeCallback', self.expose,
 			      (gc.PutImage, (image, 0, 0, 0, 0, width, height)))
-		self.dpy.Synchronize(1)
 		gc.PutImage(image, 0, 0, 0, 0, width, height)
-		self.dpy.Synchronize(0)
+		self.dpy.Flush()
 		import Xtdefs, time
-		while Xt.Pending():
-			Xt.ProcessEvent(Xtdefs.XtIMAll)
-		time.sleep(0.5)
+		time.sleep(0.1)
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
 		return 1
