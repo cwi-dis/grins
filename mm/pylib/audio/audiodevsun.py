@@ -70,7 +70,7 @@ class AudioDevSUN:
 		if not self.__format or not self.__framerate:
 			raise Error, 'params not specified'
 		if not self.__port:
-			fmt = self.__fmt
+			fmt = self.__format
 			self.__port = sunaudiodev.open('w')
 			info = self.__port.getinfo()
 			info.o_sample_rate = self.__framerate
