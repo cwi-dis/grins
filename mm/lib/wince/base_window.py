@@ -395,6 +395,21 @@ class Window:
 		l,t,r,b = ltrb
 		return l, t, r-l, b-t
 
+	def rectAnd(self, rc1, rc2):
+		l1, t1, r1, b1 = self.ltrb(rc1)	
+		l2, t2, r2, b2 = self.ltrb(rc2)
+		l, r = max(l1, l2), min(r1, r2)
+		if l >= r: return None
+		t, b = max(t1, t2), min(b1, b2)
+		if t >= b: return None
+		return l, t, r-l, b-t
+
+	def rectOr(self, rc1, rc2):
+		l1, t1, r1, b1 = self.ltrb(rc1)	
+		l2, t2, r2, b2 = self.ltrb(rc2)
+		l, t, r, b = min(l1, l2), min(t1, t2), max(r1, r2), max(b1, b2)
+		return l, t, r-l, b-t
+
 	# return the coordinates of this window in units
 	def getgeometry(self, units = UNIT_MM):
 		if units == UNIT_PXL:
@@ -642,7 +657,7 @@ class Window:
 		
 		# get image size. If it can't be found in the cash read it.
 		image = mediainterface.get_image(file)
-		xsize, ysize = image.get_size()
+		xsize, ysize = image.GetSize()
 		
 		# check for valid crop proportions
 		top, bottom, left, right = crop
@@ -904,8 +919,8 @@ class Window:
 			x, y, w, h = coordinates
 			units = UNIT_PXL
 		self._rect = 0, 0, w, h # client area in pixels
-		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
+		self._canvas = 0, 0, w, h # client canvas in pixels
 		if self._parent:
 			try:
 				self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
@@ -934,7 +949,7 @@ class Window:
 
 	# redraw this window and its childs
 	def update(self, rc = None):
-		print 'update', self.getwindowpos()
+		pass
 
 	# return all ancestors of self including topwindow
 	def getAncestors(self):
@@ -956,17 +971,25 @@ class Window:
 			coordinates = self._convert_coordinates(coordinates, units=units)
 		
 		# keep old pos
-		x1, y1, w1, h1 = self.getwindowpos()
+		rc1 = self.getwindowpos()
 
 		x, y, w, h = coordinates
 		self.setmediadisplayrect(mediacoords)
 
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
-		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
+		self._canvas = self._topwindow.LRtoDR(self._rect) # client canvas in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
 		
+		# find rc = rc1 union rc2
+		rc2 = self.getwindowpos()
+		l1, t1, r1, b1 = rc1[0], rc1[1], rc1[0] + rc1[2], rc1[1] + rc1[3]
+		l2, t2, r2, b2 = rc2[0], rc2[1], rc2[0] + rc2[2], rc2[1] + rc2[3]
+		l, t, r, b = min(l1, l2), min(t1, t2), max(r1, r2), max(b1, b2)
+		rc = l, t, r-l, b-t
+		self.update(rc)
+
 	def updatezindex(self, z):
 		self._z = z
 		parent = self._parent

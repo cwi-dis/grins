@@ -85,5 +85,5 @@ newcmwindow = newwindow
 def GetImageSize(filename):
 	import mediainterface
 	image = mediainterface.get_image(filename)
-	return image.get_size()
+	return image.GetSize()
 

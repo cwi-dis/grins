@@ -18,6 +18,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._timer = 0
 
 		self._viewport = None
+		self._curcursor = 'arrow'
 
 		# scaling
 		self._xd_org, self._yd_org = 0, 0
@@ -25,6 +26,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 
 		# wince menubar height
 		self._menu_height = 26
+		self._splash = None
 
 	def __getattr__(self, attr):
 		try:	
@@ -43,7 +45,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			winuser.MessageBox('failed to attach to main wnd')
 			return
 		self.__dict__['_obj_'] = wnd
-		self._timer = self.SetTimer(1, 100)
+		self._timer = self.SetTimer(1, 20)
 		self.HookMessage(self.OnClose, wincon.WM_CLOSE)
 		self.HookMessage(self.OnPaint, wincon.WM_PAINT)
 		self.HookMessage(self.OnTimer, wincon.WM_TIMER)
@@ -114,6 +116,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		pt = msg.pos()
 		lpt = self.DPtoLP(pt)
 		print 'OnLButtonDblClk %d %d' % lpt
+		#winuser.MessageBox('OnLButtonDblClk %d %d' % lpt)
 
 	# rem: we want to reuse this window
 	def close(self):
@@ -121,6 +124,12 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			viewport = self._viewport
 			self._viewport = None
 			viewport.close()
+		self.update()
+
+	def set_toggle(self, cmdcl, onoff):
+		print 'set_toggle',  cmdcl, onoff
+		if cmdcl == usercmd.PLAY and onoff == 0:
+			self.InvalidateRect()
 
 	def newViewport(self, width, height, units, bgcolor):
 		l, t, r, b = self.GetClientRect()
@@ -135,7 +144,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._d2l = max(1.0, scale)
 
 		# center scaled viewport
-		sw, sh = self.LPtoDP((width, height), round=1)
+		sw, sh = self.LStoDS((width, height), round = 1)
 		sx = max(0, (w - sw)/2)
 		sy = max(0, (h - sh)/2)
 		if 1: sx = max(sx, 2); sy = 2 # bias to top for now
@@ -185,6 +194,12 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			return self._xd_org + int(sc*xl+0.5), self._yd_org + int(sc*yl+0.5), int(sc*wl+0.5), int(sc*hl+0.5)
 		return self._xd_org + sc*xl, self._yd_org + sc*yl, sc*wl, sc*hl
 
+	def LStoDS(self, sz, round = 0):
+		wl, hl = sz
+		sc = 1.0/self._d2l
+		if round:
+			return int(sc*wl+0.5), int(sc*hl+0.5)
+		return sc*wl, sc*hl
 	#
 	# Offscreen painting
 	# 
@@ -196,33 +211,56 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		dc = wingdi.CreateDCFromHandle(hdc)
 		if self._viewport is None:
 			# show splash when no document is open
-			l, t, r, b = self.GetClientRect()
-			rc = l, t, r, b - self._menu_height
-			dc.DrawText('Oratrix GRiNS Player', rc)
+			self.paintSplash(dc)
+			#l, t, r, b = self.GetClientRect()
+			#rc = l, t, r, b - self._menu_height
+			#dc.DrawText('Oratrix GRiNS Player', rc)
 		else:
 			# blit offscreen bmp
-			dcc = dc.CreateCompatibleDC()
-			bmp = self._viewport.getBmp()
-			if bmp:
-				oldbmp = dcc.SelectObject(bmp)
-				rc = self._viewport.getwindowpos()
-				dc.StretchBlt(self.LRtoDR(rc, round=1), dcc, rc, wincon.SRCCOPY)
-				dcc.SelectObject(oldbmp)
-			dcc.DeleteDC()
+			buf = self._viewport.getBackBuffer()
+			if buf:
+				device_org = self._xd_org, self._yd_org
+				dc.SetViewportOrg(device_org)
+				ltrb1 = dc.GetClipBox()
+				bsize = w, h = buf.GetSize()
+				ltrb2 = 0, 0, w, h
+				ltrb = winstruct.rectAnd(ltrb1, ltrb2)
+				if ltrb:
+					ltrb = winstruct.inflate(ltrb, 2, 2)
+					dcc = dc.CreateCompatibleDC()
+					oldbuf = dcc.SelectObject(buf)
+					rgn = wingdi.CreateRectRgn(ltrb)
+					dcc.SelectClipRgn(rgn)
+					rgn.DeleteObject()
+					self._viewport.paint(dcc)
+					dc.BitBlt((0, 0), bsize, dcc, (0, 0), wincon.SRCCOPY)
+					dcc.SelectObject(oldbuf)
+					dcc.DeleteDC()
+				dc.SetViewportOrg((0, 0))
 
 		dc.Detach()
 		self.EndPaint(ps)
 
-	def createBmp(self, w, h):
-		hdc = self.GetDC()
-		dc = wingdi.CreateDCFromHandle(hdc)
-		bmp = dc.CreateCompatibleBitmap(w, h)
-		self.ReleaseDC(dc.Detach())
-		return bmp
-
-	def update(self):
+	def update(self, rc = None):
 		if self._viewport:
-			rc = self._viewport.getwindowpos()
-			self.InvalidateRect(self.LRtoDR(rc))
+			if rc is None:
+				rc = self._viewport.getwindowpos()
+			rc = self.LRtoDR(rc, round = 1)
+			self.InvalidateRect(winstruct.ltrb(rc), 0)
 		else:
 			self.InvalidateRect()
+
+	def paintSplash(self, dc):
+		if self._splash is None:
+			filename = r'\Program Files\GRiNS\bin\wince\cesplash.bmp'
+			import mediainterface
+			self._splash = mediainterface.get_image(filename, dc)
+			ws, hs = self._splash.GetSize()
+			l, t, r, b = self.GetClientRect()
+			w, h = r-l, b - t - self._menu_height
+			self._splash_pos = (w-ws)/2, (h-hs)/2 - 24
+		dcc = dc.CreateCompatibleDC()
+		bmp = dcc.SelectObject(self._splash)
+		dc.BitBlt(self._splash_pos, self._splash.GetSize(), dcc, (0, 0), wincon.SRCCOPY)
+		dcc.SelectObject(bmp)
+		dcc.DeleteDC()

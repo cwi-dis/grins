@@ -1,14 +1,28 @@
 __version__ = "$Id$"
 
+
+is_dummy = 0
+
 class Image:
 	def __init__(self):
 		pass
 
-	def get_size(self):
+	def GetSize(self):
 		return 100, 100
 
-	def getbpp(self):
+	def GetDepth(self):
 		return 24
 
-def get_image(filename):
-	return Image()
+# this method should return an object with at least the above Image interface
+def get_image(filename, params = None):
+	if is_dummy: return Image()
+	if params: dc = params
+	else: dc = 0
+	import wingdi
+	try:
+		img = wingdi.CreateDIBSurfaceFromFile(dc, filename)
+	except wingdi.error, arg:
+		print arg
+		return Image()
+	else:
+		return img

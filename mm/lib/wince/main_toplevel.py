@@ -26,14 +26,14 @@ class Toplevel:
 		if self._mainwnd is None:
 			self._mainwnd = main_window.MainWnd(self)
 			self._mainwnd.create()
-			self._mainwnd.set_commandlist(commandlist, 'document')
+		self._mainwnd.set_commandlist(commandlist, 'document')
 		return self._mainwnd
 
 	def createmainwnd(self, title = None, adornments = None, commandlist = None):
 		if self._mainwnd is None:
 			self._mainwnd = main_window.MainWnd(self)
 			self._mainwnd.create()
-			self._mainwnd.set_commandlist(commandlist, 'app')
+		self._mainwnd.set_commandlist(commandlist, 'app')
 		return self._mainwnd
 
 	def getactivedocframe(self):

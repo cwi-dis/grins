@@ -9,11 +9,16 @@ from types import *
 from appcon import *
 from winfont import findfont
 
+import wincon
+import wingdi
+
+is_dummy = 0
+
 class DisplayList:
 	def __init__(self, window, bgcolor, units):
 		self._window = window
 		self._bgcolor = bgcolor
-		self.__units = units
+		self._units = units
 		window._displists.append(self)
 
 		self._fgcolor = window._fgcolor
@@ -75,6 +80,56 @@ class DisplayList:
 
 	def _do_render(self, entry, dc, ltrb):
 		cmd = entry[0]
+		wnd = self._window
+
+		rc = x, y, w, h = wnd.getDR()
+		rcc = xc, yc, wc, hc = wnd.xywh(ltrb)
+
+		if cmd == 'clear':
+			brush = wingdi.CreateSolidBrush(bgcolor)
+			old_brush = dc.SelectObject(brush)
+			dc.Rectangle(wnd.ltrb(rcc))
+			dc.SelectObject(old_brush)
+			wingdi.DeleteObject(brush)
+
+		elif cmd == 'image':
+			mediadisplayrect = wnd._mediadisplayrect
+			fit = wnd._fit
+
+			mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep = entry[1:]
+			if mediadisplayrect:
+				dest_x, dest_y, width, height = mediadisplayrect
+			
+			# src rect taking into account fit
+			rcSrc = wnd._getmediacliprect(rcKeep[2:], (dest_x, dest_y, width, height), fit=fit)
+
+			# split rects
+			ls, ts, rs, bs = wnd.ltrb(rcSrc)
+				
+			xd, yd, wd, hd = dest_x, dest_y, width, height
+			ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
+				
+			# destination clip
+			ldc, tdc, rdc, bdc = wnd.ltrb(wnd.rectAnd(rcc, (ld, td, rd-ld, bd-td)) )
+				
+			# find src clip ltrb given the destination clip
+			lsc, tsc, rsc, bsc =  wnd._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
+			
+			if wnd._canscroll: 	
+				dx, dy = wnd._scrollpos
+				lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
+
+			rc_dest = ldc, tdc, rdc - ldc - 1, bdc - tdc - 1
+			rc_src = lsc, tsc, rsc - lsc - 1, bsc - tsc - 1
+			if not is_dummy:
+				dcc = dc.CreateCompatibleDC()
+				bmp = dcc.SelectObject(image)
+				try:
+					dc.StretchBlt(rc_dest, dcc, rc_src, wincon.SRCCOPY)
+				except wingdi.error, arg:
+					print arg
+				dcc.SelectObject(bmp)
+				dcc.DeleteDC()
 
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, sensitive = 1):
@@ -90,8 +145,36 @@ class DisplayList:
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None, clip = None, align = None,
 				    units = None):
-		self._list.append(('image', file, coordinates, fit))
-		return 0, 0, 100, 100
+		if units is None:
+			units = self._units
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if is_dummy:
+			self._list.append(('image', file, coordinates, fit))
+			return 0, 0, 100, 100
+		
+		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
+		       self._window._prepare_image(file, crop, fit, center, coordinates, clip, align, units)
+		
+		flags = 0
+		self._list.append(('image', mask, image, flags, src_x, src_y,
+				   dest_x, dest_y, width, height, rcKeep))
+		self._optimize((2,))
+		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
+		x, y, w, h = self._canvas
+		
+		mediaBox = float(dest_x - x) / w, float(dest_y - y) / h, \
+		       float(width) / w, float(height) / h
+		
+		# preset media display rect and scale for animation
+		self._window.setmediadisplayrect( (dest_x, dest_y, width, height) )
+		self._window.setmediafit(fit)
+		self.__mediaBox = mediaBox
+
+		if units == UNIT_PXL:
+			return dest_x - x, dest_y - y, width, height
+		else:
+			return mediaBox
 
 	def isTransparent(self, point):
 		return 0
@@ -112,7 +195,7 @@ class DisplayList:
 	# Insert a command to drawline
 	def drawline(self, color, points, units = None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
@@ -131,7 +214,7 @@ class DisplayList:
 	# Draw a horizontal gutter
 	def draw3dhline(self, color1, color2, x0, x1, y, units = None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
@@ -145,7 +228,7 @@ class DisplayList:
 	# Insert a command to drawbox
 	def drawbox(self,coordinates, clip = None, units = None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
@@ -155,7 +238,7 @@ class DisplayList:
 
 	def drawboxanchor(self, coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
@@ -167,7 +250,7 @@ class DisplayList:
 	# Insert a command to draw a filled box
 	def drawfbox(self, color, coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
@@ -184,7 +267,7 @@ class DisplayList:
 	# Insert a command to clear box
 	def clear(self,coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		raise AssertionError, 'obsolete call'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -196,7 +279,7 @@ class DisplayList:
 	# Insert a command to draw a filled polygon
 	def drawfpolygon(self, color, points, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
@@ -210,7 +293,7 @@ class DisplayList:
 	# Insert a command to draw a 3d box
 	def draw3dbox(self, cl, ct, cr, cb, coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -227,7 +310,7 @@ class DisplayList:
 	# Insert a command to draw a diamond
 	def drawdiamond(self, coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		coordinates = self._convert_coordinates(coordinates,units=units)
@@ -239,7 +322,7 @@ class DisplayList:
 	# Insert a command to draw a filled diamond
 	def drawfdiamond(self, color, coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -259,7 +342,7 @@ class DisplayList:
 	# Insert a command to draw a 3d diamond
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -275,7 +358,7 @@ class DisplayList:
 
 	def drawicon(self, coordinates, icon, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -295,7 +378,7 @@ class DisplayList:
 	# Insert a command to draw an arrow
 	def drawarrow(self, color, src, dst, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -391,7 +474,7 @@ class DisplayList:
 
 	def strsize(self, str, units = None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		width, height = self._font.strsizePXL(str)
 		if units == UNIT_PXL:
 			return width, height
@@ -401,7 +484,7 @@ class DisplayList:
 	# Set the current position
 	def setpos(self, x, y, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		x, y = self._convert_coordinates((x, y), units=units)
 		self._curpos = x, y
 		self._xpos = x
@@ -411,7 +494,7 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if units is None:
-			units = self.__units
+			units = self._units
 		w = self._window
 		list = self._list
 		f = self._font
@@ -445,7 +528,7 @@ class DisplayList:
 	# Insert a draw string centered command in a box, breaking lines if necessary
 	def centerstring(self, left, top, right, bottom, str, units=None):
 		if units is None:
-			units = self.__units
+			units = self._units
 		fontheight = self.fontheightPXL()
 		baseline = self.baselinePXL()
 		width = right - left

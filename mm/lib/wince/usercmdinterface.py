@@ -34,6 +34,7 @@ class UserCmdInterface:
 				if cmd is not None and cmd.callback:
 					apply(apply, cmd.callback)
 					return
+		print cmdclass, 'not active'
 
 	def get_cmd_instance(self, cmdclass):
 		for ctx in ('pview_', 'document', 'app'):

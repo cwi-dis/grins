@@ -90,7 +90,7 @@ class Viewport(Region):
 	# 
 	# Painting section
 	#
-	def getBmp(self):
+	def getBackBuffer(self):
 		return None
 
 	# 
