@@ -45,7 +45,7 @@ PyObject* Winuser_CreateMenu(PyObject *self, PyObject *args)
 		return NULL;
 	PyMenu *pymenu = PyMenu::createInstance();
 	if(pymenu==NULL) return NULL;
-	pymenu->m_hMenu = ::CreateMenu(); 
+	pymenu->m_hMenu = CreateMenu(); 
 	return (PyObject*)pymenu;
 	}
 
@@ -55,7 +55,7 @@ PyObject* Winuser_CreatePopupMenu(PyObject *self, PyObject *args)
 		return NULL;
 	PyMenu *pymenu = PyMenu::createInstance();
 	if(pymenu==NULL) return NULL;
-	pymenu->m_hMenu = ::CreatePopupMenu(); 
+	pymenu->m_hMenu = CreatePopupMenu(); 
 	return (PyObject*)pymenu;
 	}
 
@@ -173,18 +173,13 @@ static PyObject* PyMenu_GetMenuItemCount(PyMenu *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args,""))
 		return NULL;
-#ifdef _WIN32_WCE
-	seterror("GetMenuItemCount", "Unsupported");
-	return NULL;
-#else
-	int count = GetMenuItemCount(self->m_hMenu);
+	int count = CAST_IF_WCE(GetMenuItemCount)(self->m_hMenu);
 	if(count < 0)
 		{
 		seterror("GetMenuItemCount", GetLastError());
 		return NULL;
 		}
 	return Py_BuildValue("i", count);
-#endif
 }
 
 static PyObject* PyMenu_Detach(PyMenu *self, PyObject *args)

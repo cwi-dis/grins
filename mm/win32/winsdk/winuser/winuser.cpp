@@ -8,6 +8,7 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#define USE_DL_EXPORT
 #include "Python.h"
 
 PyObject *ErrorObject;
@@ -18,7 +19,6 @@ PyObject *ErrorObject;
 #include "winuser_ofn.h"
 
 #include "mtpycall.h"
-
 
 PyInterpreterState*
 PyCallbackBlock::s_interpreterState = NULL;
@@ -53,23 +53,18 @@ static struct PyMethodDef winuser_methods[] = {
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 	};
 
-extern "C" __declspec(dllimport) 
-void testDLLExport();
 
-extern "C" __declspec(dllexport) 
+extern "C" __declspec( dllexport )
 void initwinuser()
 	{
 	PyObject *m, *d;
-	bool bPyErrOccurred = false;
-	
-
 
 	PyCallbackBlock::init();	
 
 	// Create the module and add the functions
 	m = Py_InitModule4("winuser", winuser_methods,
 		"winuser module",
-		(PyObject*)NULL,PYTHON_API_VERSION);
+		(PyObject*)NULL, PYTHON_API_VERSION);
 
 	// add 'error'
 	d = PyModule_GetDict(m);
@@ -80,3 +75,5 @@ void initwinuser()
 	if (PyErr_Occurred())
 		Py_FatalError("can't initialize module winuser");
 	}
+
+
