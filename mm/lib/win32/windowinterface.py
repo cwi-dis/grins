@@ -2,7 +2,7 @@ import WIN32_windowbase
 from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors
 
 import win32con, win32api, win32ui, cmifex, cmifex2
-import CloseDialogRC, WMEVENTS
+import grinsRC, WMEVENTS
 from pywin.mfc import dialog
 
 WM_MAINLOOP = 200
@@ -168,11 +168,11 @@ class _Window(WIN32_windowbase._Window):
 		#	cancelCallback = (self._rb_cancel, ()))
 
 
-		self._rb_dialog = dialog.Dialog(CloseDialogRC.IDD_CREATE_BOX)
+		self._rb_dialog = dialog.Dialog(grinsRC.IDD_CREATE_BOX)
 		self._rb_dialog.HookCommand(self._rb_cancel, win32con.IDCANCEL)
 		self._rb_dialog.HookCommand(self._rb_done, win32con.IDOK)
 		self._rb_dialog.CreateWindow()
-		label = self._rb_dialog.GetDlgItem(CloseDialogRC.IDC_BOX_LABEL)
+		label = self._rb_dialog.GetDlgItem(grinsRC.IDC_BOX_LABEL)
 		label.SetWindowText(msg)
 
 		wind = self
