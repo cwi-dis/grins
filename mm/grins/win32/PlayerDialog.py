@@ -26,7 +26,7 @@ class PlayerDialog:
 		self.__window = None
 		self.__title = title
 		self.__coords = coords
-		self.__state = -1
+		self.__state = 0
 		self.__menu_created = None
 		self.__topcommandlist = []
 		self.__commandlist = []
@@ -231,6 +231,9 @@ class PlayerDialog:
 				w.set_toggle(PLAY, state != STOPPED)
 				w.set_toggle(PAUSE, state == PAUSING)
 				w.set_toggle(STOP, state == STOPPED)
+
+	def getstate(self):
+		return self.__state
 
 	def getgeometry(self):
 		pass
