@@ -1344,30 +1344,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if self._curcursor != cursor:
 			self.setcursor(cursor)
 
-	# Experimental animation interface
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
-		# first convert any coordinates to pixel
-		coordinates = self._convert_coordinates(coordinates,units=units)
-		print 'window.updatecoordinates',coordinates, units
-		
-		x, y = coordinates[:2]
-
-		# move or/and resize window
-		if len(coordinates)==2:
-			w, h = 0, 0
-		elif len(coordinates)==4:
-			w, h = coordinates[2:]
-		else:
-			raise AssertionError
-
-		# do move/resize
-		# ...
-
-	def updatezindex(self, z):
-		self._z = z
-		# do reorder subwindows
-		print 'window.updatezindex',z
-
 	def updatebgcolor(self, color):
 		r, g, b = color
 		self._bgcolor = r, g, b
@@ -1397,8 +1373,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 
 class _SubWindow(_Window):
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
-##		if z < 0:
-##			raise error, 'invalid z argument'
 		self._z = z
 		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1, units = units)
 		self._rect = x, y, w, h
@@ -1409,7 +1383,7 @@ class _SubWindow(_Window):
 
 		self._convert_color = parent._convert_color
 		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
+			if z >= parent._subwindows[i]._z:
 				parent._subwindows.insert(i, self)
 				break
 		else:
@@ -1558,6 +1532,9 @@ class _SubWindow(_Window):
 		self._pixmap = parent._pixmap
 		self._gc = parent._gc
 		x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
+		if (x, y, w, h) == self._rect:
+			# no change
+			return
 		self._rect = x, y, w, h
 		w, h = self._sizes[2:]
 		if w == 0:
@@ -1571,3 +1548,63 @@ class _SubWindow(_Window):
 			d.close()
 		for w in self._subwindows:
 			w._do_resize1()
+
+	# Experimental animation interface
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+		parent = self._parent
+
+		# first convert any coordinates to pixel
+		coordinates = parent._convert_coordinates(coordinates,units=units)
+		print 'window.updatecoordinates',coordinates, units
+
+		x, y = coordinates[:2]
+
+		# move or/and resize window
+		if len(coordinates)==2:
+			w, h = self._rect[2:]
+		elif len(coordinates)==4:
+			w, h = coordinates[2:]
+		else:
+			raise error, 'invalid value for coordinates arg'
+
+		if (x, y, w, h) == self._rect:
+			# nothing to do
+			return
+
+		# do move/resize
+		r = Xlib.CreateRegion()
+		r.UnionRegion(self._region)
+		resize = 0
+		if (w,h) != self._rect[2:]:
+			# change size
+			for d in self._displists[:]:
+				d.close()
+			for win in self._subwindows:
+				win._do_resize1()
+			resize = 1
+		self._rect = x, y, w, h
+		self._sizes = parent._pxl2rel(self._rect)
+		self._region = Xlib.CreateRegion()
+		apply(self._region.UnionRectWithRegion, self._rect)
+		parent._mkclip()
+		r.UnionRegion(self._region)
+		parent._do_expose(r)
+		if resize:
+			# call callback functions
+			self._do_resize2()
+
+	def updatezindex(self, z):
+		self._z = z
+		# do reorder subwindows
+		print 'window.updatezindex',z
+
+		parent = self._parent
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)):
+			if z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.append(self)
+		parent._mkclip()
+		parent._do_expose(self._region)
