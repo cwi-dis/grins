@@ -79,7 +79,8 @@ MENUBAR=(
 			(ENTRY, 'C&hoice parent', None, NEW_CHOICE),
 			)),
 		(ENTRY, 'New &channel', None, NEW_CHANNEL),
-		(ENTRY, 'New &layout', None, NEW_LAYOUT),
+## Windows dialogs apparently don't use usercmd commands.
+##		(ENTRY, 'New &layout', None, NEW_LAYOUT),
 		(SEP,),
 		(ENTRY, '&Move channel', None, MOVE_CHANNEL),
 		(ENTRY, 'C&opy channel', None, COPY_CHANNEL),
