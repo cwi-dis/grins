@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content="Empty Presentation"/>
+    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 140"/>
+    <meta name="customColors" content=""/>
+    <meta name="author" content="Jack Jansen"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="presentation" backgroundColor="black" GRiNS:collapsed="false" GRiNS:showEditBackground="true" GRiNS:editBackground="silver"/>
+      <region id="top" width="100%" height="45%" z-index="1" backgroundColor="#80ff80" GRiNS:collapsed="false"/>
+      <region id="bottom" width="100%" top="50%" height="45%" z-index="2" backgroundColor="#ff8040" GRiNS:collapsed="false"/>
+    </layout>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="fade" type="fade"/>
+    <transition id="push" type="pushWipe"/>
+    <GRiNS:viewinfo view="structure" top="0" left="0" width="512" height="384"/>
+    <GRiNS:viewinfo view="layout" top="109" left="356" width="624" height="445"/>
+  </head>
+  <body GRiNS:emptyDur="10s" GRiNS:showtime="cfocus" GRiNS:timezoom="0">
+    <par dur="indefinite">
+      <switch>
+        <text id="rocker" region="top" src="data:,Press%20keys%20on%20the%20rocker%20panel%0d%0a%0a" systemComponent="http://www.oratrix.com/GRiNS/examplecomponent/hasrocker"/>
+        <text id="no-rocker" region="top" src="data:,Sorry,%20no%20rocker%20panel%20on%20this%20device%0d%0a%0a"/>
+      </switch>
+      <excl dur="indefinite" systemComponent="http://www.oratrix.com/GRiNS/examplecomponent/hasrocker">
+        <text id="up-press" region="bottom" begin="accesskey(u)" src="data:,You%20pressed%20UP%0d%0a%0a" GRiNS:showtime="cfocus"/>
+        <text id="down-press" region="bottom" begin="accesskey(d)" src="data:,You%20pressed%20DOWN%0d%0a%0a" GRiNS:showtime="cfocus"/>
+        <text id="left-press" region="bottom" begin="accesskey(l)" src="data:,You%20pressed%20LEFT%0d%0a%0a" GRiNS:showtime="cfocus"/>
+        <text id="right-press" region="bottom" begin="accesskey(r)" src="data:,You%20pressed%20RIGHT%0d%0a%0a" GRiNS:showtime="cfocus"/>
+        <text id="centre-press" region="bottom" begin="accesskey(c)" src="data:,You%20pressed%20CENTRE%0d%0a%0a" GRiNS:showtime="cfocus"/>
+      </excl>
+    </par>
+  </body>
+</smil>
