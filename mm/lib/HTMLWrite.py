@@ -68,7 +68,6 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exportty
 		__WriteFileQT(root, filename, smilurl, oldfilename, evallicense)
 	else:
 		windowinterface.showmessage('don''t support export type %s'%exporttype)
-	        return
 	
 def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
