@@ -43,12 +43,14 @@ class InputValidator:
 			return 1
 		return 0
 
+
 class IntTupleValidator(InputValidator):
-	def __init__(self,sep='',sm=None):
+	def __init__(self, limit=0, sep='' , sm=None):
 		InputValidator.__init__(self)
 		self._sep=sep
+		self._limit=limit
 		if not sm:
-			tl=[(1,2,'d'),(2,2,'d'),(2,3,'s'),(3,2,'d')]
+			tl=[(1,2,'d'),(2,2,'d'),(2,3,'s',self.checklimit),(3,2,'d')]
 			self._fsm=fsm.FSM(tl,1)
 		else:
 			self._fsm=sm
@@ -63,21 +65,83 @@ class IntTupleValidator(InputValidator):
 
 	def isIntTuple(self, val):
 		self._fsm.reset(1)
+		self._count=0
 		for ch in val:
 			if not self._fsm.advance(self.inttuplefilter(ch),ch):
 				return 0
 		return 1
+
+	def checklimit(self,str):
+		if self._limit==0: # no limit
+			return 1 
+		self._count=self._count+1
+		if self._count<self._limit:
+			return 1
+		return 0
 
 	def onKey(self, vk, val, pos):
 		charcode = Sdk.MapVirtualKey(vk,2)
 		# accept control chars
 		if charcode<32:return 1
 		
-		# accept anything if not at the end
+		# accept anything if not at the end for now
 		if pos!=len(val): return 1
 		
 		nval=val+chr(charcode)
 		if self.isIntTuple(nval):
+			return 1
+		else:
+			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
+			return 0
+
+class FloatTupleValidator(InputValidator):
+	def __init__(self, limit=0, sep='', sm=None):
+		InputValidator.__init__(self)
+		self._sep=sep
+		self._limit=limit
+		if not sm:
+			tl=[(1,2,'d'),(2,2,'d'),(2,3,'.'),(2,4,'s',self.checklimit),
+			(3,3,'d'),(3,4,'s',self.checklimit),(4,2,'d')]
+			self._fsm=fsm.FSM(tl,1)
+		else:
+			self._fsm=sm
+
+	def floattuplefilter(self,ch):
+		code=ord(ch[0])
+		if code in range(ord('0'),ord('9')+1):
+			return 'd'
+		elif ch==' ':
+			return 's'
+		elif ch=='.':
+			return '.'
+		return 'null'
+
+	def isFloatTuple(self, val):
+		self._fsm.reset(1)
+		self._count=0
+		for ch in val:
+			if not self._fsm.advance(self.floattuplefilter(ch),ch):
+				return 0
+		return 1
+
+	def checklimit(self,str):
+		if self._limit==0: # no limit
+			return 1 
+		self._count=self._count+1
+		if self._count<self._limit:
+			return 1
+		return 0
+
+	def onKey(self, vk, val, pos):
+		charcode = Sdk.MapVirtualKey(vk,2)
+		# accept control chars
+		if charcode<32:return 1
+		
+		# accept anything if not at the end for now
+		if pos!=len(val): return 1
+		
+		nval=val+chr(charcode)
+		if self.isFloatTuple(nval):
 			return 1
 		else:
 			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
@@ -90,14 +154,14 @@ class ColorValidator(IntTupleValidator):
 		tl=[ (1,2,'d'), (2,2,'d',ch), (2,3,'s',cl), (3,4,'d'), (4,4,'d',ch), 
 			(4,5,'s',cl), (5,5,'d',ch) ]
 		sm=fsm.FSM(tl,1)
-		IntTupleValidator.__init__(self,sep,sm)
+		IntTupleValidator.__init__(self,3,sep,sm)
 
 	def onKey(self, vk, val, pos):
 		charcode = Sdk.MapVirtualKey(vk,2)
 		# accept control chars
 		if charcode<32:return 1
 		
-		# accept anything if not at the end
+		# accept anything if not at the end for now
 		if pos!=len(val): return 1
 		
 		nval=val+chr(charcode)
