@@ -15,6 +15,7 @@ PyObject* Winuser_LoadStandardCursor(PyObject *self, PyObject *args);
 PyObject* Winuser_LoadCursor(PyObject *self, PyObject *args);
 PyObject* Winuser_SetCursor(PyObject *self, PyObject *args);
 PyObject* Winuser_ShellExecute(PyObject *self, PyObject *args);
+PyObject* Winuser_GetFileSize(PyObject *self, PyObject *args);
 
 
 #endif

@@ -152,3 +152,24 @@ PyObject* Winuser_ShellExecute(PyObject *self, PyObject *args)
 	return Py_BuildValue("is",rc, szMsg);
 #endif
 	}
+
+PyObject* Winuser_GetFileSize(PyObject *self, PyObject *args)
+	{
+	char *szFileName;
+	if (!PyArg_ParseTuple(args, "s", &szFileName))
+		return NULL;
+	HANDLE hf = CreateFile(TextPtr(szFileName),  
+		GENERIC_READ,  
+		FILE_SHARE_READ,  // 0 = not shared or FILE_SHARE_READ  
+		0,  // lpSecurityAttributes 
+		OPEN_EXISTING,  
+		FILE_ATTRIBUTE_READONLY,  
+		NULL); 
+	if(hf == INVALID_HANDLE_VALUE){
+		seterror("CreateFile", GetLastError());
+		return NULL;
+		}
+	DWORD dwSize =::GetFileSize(hf, NULL);
+	CloseHandle(hf);
+	return Py_BuildValue("i", dwSize);
+	}
