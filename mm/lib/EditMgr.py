@@ -134,7 +134,7 @@ class EditMgr:
 		self.addstep('setnodeattr', node, name, oldvalue, value)
 		if value is not None:
 			node.SetAttr(name, value)
-		elif oldvalue is not None:
+		else:
 			node.DelAttr(name)
 	#
 	def setnodevalues(self, node, values):
