@@ -10,6 +10,7 @@ import re
 
 # units, messages
 import windowinterface
+from windowinterface import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 # conditional behaviors
 import settings
@@ -697,6 +698,7 @@ class EffectiveAnimator:
 			else:
 				print 'update',self.__attr,'of node',name,'to',displayValue		
 	
+
 	# update region attributes display value
 	def __updateregion(self, value):
 		attr = self.__attr
@@ -714,46 +716,19 @@ class EffectiveAnimator:
 					base_window = chan._attrdict.get('base_window')
 					if base_window == regionname:
 						self.__regionContents.append(chan)
-		
-		mmregion = self.__region._attrdict
+		mmlchan = self.__region._attrdict
 
-		# implemented fit='meet' (0) and fit='hidden' (1)
-		scale = mmregion.get('scale', 1)
-		coordinates = mmregion.GetPresentationAttr('base_winoff')
-
-		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
-			x, y, w, h = coordinates
-			units = ch.get('units')
-			if attr=='position':
-				x, y = value
-				newcoordinates = x, y, w, h
-			elif attr=='left':
-				if scale==0:
-					newcoordinates = value, y, w-value, h
-				else:
-					newcoordinates = value, y, w, h
-			elif attr=='top':
-				if scale==0:
-					newcoordinates = x, value, w, h-value
-				else:
-					newcoordinates = x, value, w, h
-			elif attr=='right': 
-				if scale==0:
-					newcoordinates = x, y, w-value, h
-				else:
-					newcoordinates = value-w, y, w, h
-			elif attr=='bottom': 
-				if scale==0:
-					newcoordinates = x, y, w, h-value
-				else:
-					newcoordinates = x, value-h, w, h
-			elif attr=='width': 
-				newcoordinates = x, y, value, h
-			elif attr=='height': 
-				newcoordinates = x, y, w, value
-			self.__updatecoordinates(newcoordinates, units, scale)
-			mmregion.SetPresentationAttr('base_winoff', newcoordinates)
-
+		if attr in ('position','left','top','width','height','right','bottom'):
+			region = mmlchan.getCssId()
+			# update coordinates
+			if self.__attr == 'position':
+				left, top = value
+				region.changeRawAttr('left', left)
+				region.changeRawAttr('top', top)
+			else:
+				region.changeRawAttr(attr, value)
+			coords = region.getPxGeom()
+			self.__updatecoordinates(coords)
 		else:
 			if attr=='z':
 				self.__updatezindex(value)
@@ -766,15 +741,14 @@ class EffectiveAnimator:
 
 			else:
 				print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
-			mmregion.SetPresentationAttr(attr, value)
+			mmlchan.SetPresentationAttr(attr, value)
 
 		if debug: 
 			print 'update',attr,'of region',regionname,'to',value
 
-
-	def __updatecoordinates(self, coordinates, units, scale):
+	def __updatecoordinates(self, coords, units = UNIT_PXL, mediacoords=None):
 		if self.__region and self.__region.window:
-			self.__region.window.updatecoordinates(coordinates, units, scale)
+			self.__region.window.updatecoordinates(coords, units, mediacoords)
 
 	def __updatezindex(self, z):
 		if self.__region and self.__region.window:
@@ -807,52 +781,46 @@ class EffectiveAnimator:
 			print 'update area',self.__attr,'of node',name,'to',value		
 	
 
-	# rem: scales = {-1:'slice', 0:'meet',1:'hidden', }
 	def __updatesubregion(self, value):
 		if not self.__chan:
-			return # channel not ready yet
-		attr = self.__attr
-		chan = self.__chan
-		mmchan = chan._attrdict
-		layout = mmchan.GetLayoutChannel()
-		
-		# implemented fit='meet' (0) and fit='hidden' (1)
-		scale = self.__node.getCssAttr('scale', 1)
-		coordinates = mmchan.GetPresentationAttr('base_winoff', self.__node)
+			return
 
-		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
-			x, y, w, h = coordinates
-			units = mmchan.get('units')
-			if attr=='position':
-				x, y = value
-				newcoordinates = x, y, w, h
-			elif attr=='left':
-				if scale==0:
-					newcoordinates = value, y, w-value, h
-				else:
-					newcoordinates = value, y, w, h
-			elif attr=='top':
-				if scale==0:
-					newcoordinates = x, value, w, h-value
-				else:
-					newcoordinates = x, value, w, h
-			elif attr=='right': 
-				if scale==0:
-					newcoordinates = x, y, w-value, h
-				else:
-					newcoordinates = value-w, y, w, h
-			elif attr=='bottom': 
-				if scale==0:
-					newcoordinates = x, y, w, h-value
-				else:
-					newcoordinates = x, value-h, w, h
-			elif attr=='width': 
-				newcoordinates = x, y, value, h
-			elif attr=='height': 
-				newcoordinates = x, y, w, value
+		chan = self.__chan
+		mmchan = self.__node.GetChannel()
+		mmlchan = mmchan.GetLayoutChannel()
+
+		if self.__attr in ('position','left','top','width','height','right','bottom'):
+
+			resolver = self.__node.GetContext().cssResolver
+
+			# subregion coordinates
+			region = self.__node.getSubRegCssId()
+			resolver.link(region, mmlchan.getCssId())
+
+
+			# update coordinates
+			if self.__attr == 'position':
+				left, top = value
+				region.changeRawAttr('left', left)
+				region.changeRawAttr('top', top)
+			else:
+				region.changeRawAttr(self.__attr, value)
+			
+			coords = region.getPxGeom()
+
+			# nedia coordinates
+			media = self.__node.getMediaCssId()
+			resolver.link(media, region)
+			mediacoords = media.getPxGeom()
+			resolver.unlink(media)
+			resolver.unlink(region)
 			if chan.window:
-				chan.window.updatecoordinates(newcoordinates, units, scale)
-			mmchan.SetPresentationAttr('base_winoff', newcoordinates)
+				chan.window.updatecoordinates(coords, UNIT_PXL, mediacoords)
+		
+		elif attr=='bgcolor':
+			if chan.window:
+				chan.window.updatebgcolor(color)
+
 		if debug:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
 			
@@ -1334,6 +1302,8 @@ class AnimateElementParser:
 			if self.__target._type == 'region':
 				ch = self.__target._region
 				self.__domval = ch.get('bgcolor')
+				if not self.__domval:
+					self.__domval = 0, 0, 0
 				return 1
 			return 0
 
