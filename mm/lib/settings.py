@@ -393,12 +393,21 @@ def factory_defaults():
 	user_settings = {}
 	commit(auto=1)
 
+_screensize = None
+def setScreenSize(width, height):
+	# used if we have a skin
+	global _screensize
+	_screensize = width, height
+
 def get(name):
 	real_value = user_settings.get(name)
 	if real_value is None:
 		if name == 'system_screen_size':
-			import windowinterface
-			return windowinterface.getscreensize() # Size of screen
+			if _screensize is None:
+				import windowinterface
+				return windowinterface.getscreensize() # Size of screen
+			else:
+				return _screensize
 		if name == 'system_screen_depth':
 			import windowinterface
 			return windowinterface.getscreendepth() # Depth of screen
