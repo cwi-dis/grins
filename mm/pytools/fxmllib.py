@@ -1385,7 +1385,7 @@ class CanonXMLParser(XMLParser):
         sys.stdout.write(self.encode(data))
 
     def handle_proc(self, name, data):
-        sys.stdout.write('<?%s %s?>' % (name.encode('utf-8'), data.strip().encode('utf-8')))
+        sys.stdout.write('<?%s %s?>' % (name.encode('utf-8'), data.encode('utf-8')))
 
     def unknown_starttag(self, tag, attrs):
         sys.stdout.write('<%s' % tag.encode('utf-8'))
