@@ -683,21 +683,22 @@ class PreferenceWrapper(Wrapper):
 		pass
 
 	def getdef(self, name):
+		defs = MMAttrdefs.getdef(name)
 		if self.__strprefs.has_key(name):
 			return (('string', None), self.getdefault(name),
-				name, 'default',
+				defs[2] or name, 'language',
 				self.__strprefs[name], 'raw', 'light')
 		elif self.__intprefs.has_key(name):
 			return (('int', None), self.getdefault(name),
-				name, 'default',
+				defs[2] or name, 'default',
 				self.__intprefs[name], 'raw', 'light')
 		elif self.__boolprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
-				name, 'default',
+				defs[2] or name, 'default',
 				self.__boolprefs[name], 'raw', 'light')
 		elif self.__specprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
-				name, 'captionoverdub',
+				defs[2] or name, 'captionoverdub',
 				self.__specprefs[name], 'raw', 'light')
 
 	def stillvalid(self):
@@ -847,6 +848,10 @@ class AttrEditor(AttrEditorDialog):
 				C = CaptionOverdubAttrEditorField
 			elif displayername == 'captionoverdub3':
 				C = CaptionOverdub3AttrEditorField
+			elif displayername == 'language':
+				C = LanguageAttrEditorField
+			elif displayername == 'language3':
+				C = Language3AttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1307,6 +1312,30 @@ class CaptionOverdub3AttrEditorField(PopupAttrEditorField):
 
 	def getoptions(self):
 		return [self.default] + self.__values
+
+class LanguageAttrEditorField(PopupAttrEditorField):
+	from languages import *
+	default = 'Not set'
+
+	def getoptions(self):
+		options = self.l2a.keys()
+		options.sort()
+		return options
+
+	def parsevalue(self, str):
+		if str == self.default:
+			return None
+		return self.l2a[str]
+
+	def valuerepr(self, value):
+		if not value:
+			return self.default
+		return self.a2l[value]
+
+class Language3AttrEditorField(LanguageAttrEditorField):
+	def getoptions(self):
+		options = LanguageAttrEditorField.getoptions(self)
+		return [self.default] + options
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
