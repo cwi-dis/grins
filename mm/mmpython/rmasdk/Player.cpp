@@ -29,6 +29,8 @@ class PlayerObject : public Object
 	static PyObject* GetCurrentPlayTime(PyObject *self, PyObject *args);
   	static PyObject* Seek(PyObject *self, PyObject *args);
 
+	static PyObject* SetPyAdviceSink(PyObject *self, PyObject *args);
+
 
 	protected:
 	PlayerObject();
@@ -43,6 +45,7 @@ class PlayerObject : public Object
 	IRMAErrorSink* pErrorSink;
 	IRMAErrorSinkControl* pErrorSinkControl;
 	PN_RESULT theErr;
+	ExampleClientContext *pContext;
 	};
 
 
@@ -54,12 +57,15 @@ PyObject *PlayerObject_CreateInstance(PyObject *self, PyObject *args)
 PlayerObject::PlayerObject()
 :	pPlayer(NULL),
 	pErrorSink(NULL),pErrorSinkControl(NULL),
-	theErr(PNR_OK)
+	theErr(PNR_OK),
+	pContext(NULL)
 	{
 	}
 
 PlayerObject::~PlayerObject()
 	{
+	if(pContext)
+		pContext->m_pClientSink->SetPyAdviceSink(NULL);
 	if(pPlayer)pPlayer->Stop();
 	ReleaseObjects();
 	EngineObject_Release();
@@ -99,52 +105,77 @@ PyObject* PlayerObject::OpenURL(PyObject *self, PyObject *args)
 	PlayerObject* obj = (PlayerObject*)self;
 	char *psz;
 	if(!PyArg_ParseTuple(args,"s",&psz))return NULL;
+	BGN_SAVE;
 	PN_RESULT res=obj->pPlayer->OpenURL(psz);
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::Begin(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
+	BGN_SAVE;
 	PN_RESULT res=((PlayerObject*)self)->pPlayer->Begin();
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::Stop(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
+	BGN_SAVE;
 	PN_RESULT res=((PlayerObject*)self)->pPlayer->Stop();
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::Pause(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
-	PN_RESULT res=((PlayerObject*)self)->pPlayer->Begin();
+	BGN_SAVE;
+	PN_RESULT res=((PlayerObject*)self)->pPlayer->Pause();
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::IsDone(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
+	BGN_SAVE;
 	BOOL res=((PlayerObject*)self)->pPlayer->IsDone();
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::IsLive(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
+	BGN_SAVE;
 	BOOL res=((PlayerObject*)self)->pPlayer->IsLive();
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::GetCurrentPlayTime(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS(args);
+	BGN_SAVE;
 	ULONG32 res=((PlayerObject*)self)->pPlayer->GetCurrentPlayTime();
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
 PyObject* PlayerObject::Seek(PyObject *self, PyObject *args)
 	{
 	ULONG32 val;
 	if(!PyArg_ParseTuple(args,"i",&val))return NULL;
+	BGN_SAVE;
 	PN_RESULT res=((PlayerObject*)self)->pPlayer->Seek(val);
+	END_SAVE;
 	return Py_BuildValue("i",res);
 	}
+PyObject* PlayerObject::SetPyAdviceSink(PyObject *self, PyObject *args)
+	{
+	PyObject *obj;
+	if(!PyArg_ParseTuple(args,"O",&obj))return NULL;
+	ExampleClientContext *pCC=((PlayerObject*)self)->pContext;
+	if(pCC)pCC->m_pClientSink->SetPyAdviceSink(obj);
+	RETURN_NONE;
+	}
+
 
 static struct PyMethodDef PyRMPlayer_methods[] =
 	{
@@ -156,6 +187,8 @@ static struct PyMethodDef PyRMPlayer_methods[] =
 	{"IsLive",PlayerObject::IsLive,1},
 	{"GetCurrentPlayTime",PlayerObject::GetCurrentPlayTime,1},
 	{"Seek",PlayerObject::Seek,1},
+	{"SetPyAdviceSink",PlayerObject::SetPyAdviceSink,1},   // formal name
+	{"SetStatusListener",PlayerObject::SetPyAdviceSink,1}, // alias
 	{NULL, 	NULL}
 	};
 
@@ -172,7 +205,13 @@ TypeObject PlayerObject::type("PyRMPlayer",
 
 bool PlayerObject::SetContext()
 	{
-	ExampleClientContext *pContext = GetContext();
+    if(!(pContext = new ExampleClientContext()))
+		{
+		theErr = PNR_UNEXPECTED;
+		return false;
+		}
+	pContext->AddRef();
+
     pContext->Init(pPlayer);
     pPlayer->SetClientContext(pContext);
 
@@ -199,6 +238,11 @@ void PlayerObject::ReleaseObjects()
 		pErrorSinkControl->RemoveErrorSink(pErrorSink);
 		pErrorSinkControl->Release();
 		pErrorSinkControl = NULL;
+		}
+    if (pContext)
+		{
+		pContext->Release();
+		pContext = NULL;
 		}
     if (pPlayer)
 		{
