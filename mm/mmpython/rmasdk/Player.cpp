@@ -1,16 +1,16 @@
-#include "std.h"
+#include "Std.h"
 #include "PyCppApi.h"
 #include "StdRma.h"
 #include "Engine.h"
 #include "os.h"
 #include "StdApp.h"
 
-class PlayerObject : public Object {
+class PlayerObject : public RMAObject {
 public:
 	MAKE_PY_CTOR(PlayerObject)
 	static TypeObject type;
 	static PyObject *CreateInstance(PyObject *self, PyObject *args);
-	static TypeObject *GetBaseType(){return &Object::type;}
+	static TypeObject *GetBaseType(){return &RMAObject::type;}
 
 	// PyMethods
 	static PyObject *OpenURL(PyObject *self, PyObject *args);
@@ -70,7 +70,7 @@ PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 {
 	CHECK_NO_ARGS(args);
 	IRMAClientEngine *pClientEngine = GetEngine(engine);
-	PlayerObject *obj = (PlayerObject*) Object::make(PlayerObject::type);
+	PlayerObject *obj = (PlayerObject*) RMAObject::make(PlayerObject::type);
 	obj->pEngine = engine;
 	Py_INCREF(engine);
 	if (pClientEngine->CreatePlayer(obj->pPlayer) != PNR_OK) {
@@ -91,7 +91,7 @@ string PlayerObject::repr()
 {
 	char buf[256];
 	sprintf(buf, " instance 0x%X", this);
-	return Object::repr() + buf;
+	return RMAObject::repr() + buf;
 }
 
 PyObject *

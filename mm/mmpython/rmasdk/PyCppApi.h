@@ -13,24 +13,25 @@
 // If the need arises, reimplement them in a cleaner not intrusive way
 
 
-#ifndef Py_PYTHON_H
 #include "Python.h"
-#endif
 
 // class SyncObject and CEnterLeavePython
-#ifndef INC_MT
 #include "mt.h"
-#endif
 
+#include "string"
 
 inline void Trace(const char*, ...){}
 #define TRACE Trace
 #define ASSERT(f) ((void)0)
 
+#ifdef _WINDOWS
 #ifdef PY_EXPORTS
 #define DLL_API __declspec(dllexport)
 #else
 #define DLL_API __declspec(dllimport)
+#endif
+#else
+#define DLL_API
 #endif
 #define PY_API extern "C" DLL_API
 
@@ -39,8 +40,8 @@ inline void Trace(const char*, ...){}
 ////////////////////////////////////////////////
 // Helper Macros
 
-#define MAKE_PY_CTOR(classname) static Object * PyObConstruct()\
-	{Object* ret = new classname;return ret;}
+#define MAKE_PY_CTOR(classname) static RMAObject * PyObConstruct()\
+	{RMAObject* ret = new classname;return ret;}
 #define GET_PY_CTOR(classname) classname::PyObConstruct
 
 #define BGN_SAVE PyThreadState *_save = PyEval_SaveThread()
@@ -71,28 +72,28 @@ extern DLL_API PyObject *module_error;
 ////////////////////////////////////////////////
 // TypeObject
 
-class Object;
+class RMAObject;
 class DLL_API TypeObject : public PyTypeObject 
 	{
 	public:
 	TypeObject(const char *name,TypeObject *pBaseType,int typeSize,
-		struct PyMethodDef* methodList,Object *(*thector)());
+		struct PyMethodDef* methodList,RMAObject *(*thector)());
 	~TypeObject();
 	public:
 	TypeObject *base;
 	struct PyMethodDef* methods;
-	Object *(*ctor)();
+	RMAObject *(*ctor)();
 	};
 
 
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////
-// Object
+// RMAObject
 
-class DLL_API Object : public PyObject 
+class DLL_API RMAObject : public PyObject 
 	{
 	public:
-	static Object* make(TypeObject &type);
+	static RMAObject* make(TypeObject &type);
 
 	// virtuals for Python support
 	virtual string repr();
@@ -103,8 +104,8 @@ class DLL_API Object : public PyObject
 	static TypeObject type;	
 
 	protected:
-	Object();
-	virtual ~Object();
+	RMAObject();
+	virtual ~RMAObject();
 
 	public:
 	static BOOL is_object(PyObject*&,TypeObject *which);
