@@ -1983,8 +1983,10 @@ class FileGroup(AttrGroup):
 		if mtype=='image':can=1
 		# we can preview videos but what about big videos? 
 		# we should let the user select using a preview button.
-		elif mtype=='video':can=1 
-		else: can=0
+		elif mtype=='video' and string.find(subtype,'realvideo')<0:
+			can=1
+		else: 
+			can=0
 		self._mtype=mtype
 		return can
 
