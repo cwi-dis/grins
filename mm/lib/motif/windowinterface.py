@@ -110,6 +110,8 @@ class _Window(X_windowbase._Window):
 			cancelCallback = (self._rb_cancel, ()))
 		self._rb_callback = callback
 		form = self._form
+		form.RemoveEventHandler(X.PointerMotionMask, FALSE,
+					self._motion_handler, None)
 		form.AddEventHandler(X.ButtonPressMask, FALSE,
 				     self._start_rb, None)
 		form.AddEventHandler(X.ButtonMotionMask, FALSE,
@@ -237,6 +239,8 @@ class _Window(X_windowbase._Window):
 		form.RemoveEventHandler(X.ButtonReleaseMask, FALSE,
 					self._end_rb, None)
 		form.UngrabButton(X.AnyButton, X.AnyModifier)
+		form.AddEventHandler(X.PointerMotionMask, FALSE,
+					self._motion_handler, None)
 		self._rb_dialog.close()
 		if self._rb_dl and not self._rb_dl.is_closed():
 			self._rb_dl.render()
