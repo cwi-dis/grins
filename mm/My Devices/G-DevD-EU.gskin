@@ -1,0 +1,32 @@
+# GRiNS G-SKIN file Definition
+# v2.1
+
+# See gskin-spec.txt for details.
+
+#image file for skin:
+
+image G-DevD.gif
+
+#display area for skin:
+
+display 83 39 540 340
+centerskin 1
+
+#basic control buttons:
+
+play rect 655 250 18 20			# Play Icon
+pause rect 700 261 18 18		# Pause Icon
+stop rect 707 316 18 20			# Stop
+exit rect 31 31 25 25			# Exit Button
+open rect 660 329 18 20			# Open File Button
+
+
+#SMIL profile supported by this device:
+
+profile 3GPP PSS5 Profile
+component BigScreen
+component NiceVideo
+component EUmarket
+
+
+
