@@ -177,11 +177,19 @@ SOURCE="..\..\..\Build\products\g2-15\pro\intransition.ICO"
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\intransition.ICO
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Nodrop.cur
 # End Source File
 # Begin Source File
 
 SOURCE="..\..\..\Build\products\g2-15\pro\outtransition.ICO"
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\outtransition.ICO
 # End Source File
 # Begin Source File
 
@@ -217,6 +225,14 @@ SOURCE="..\..\..\Build\products\smil-20\player\splash8bit.bmp"
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Build\products\snap\splash8bit.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Build\products\snap\win32\splash8bit.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\splashimg.bmp
 # End Source File
 # Begin Source File
@@ -230,6 +246,10 @@ SOURCE="..\..\..\Build\products\g2-15\pro\splashqt.bmp"
 # Begin Source File
 
 SOURCE="..\..\..\Build\products\g2-15\pro\splashsm.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Build\products\snap\splashsn.bmp
 # End Source File
 # Begin Source File
 
