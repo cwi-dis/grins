@@ -978,6 +978,7 @@ class ListEdit(_Widget):
 		self.__list = list
 		self.__itemlist = itemlist
 		self.__popup = popup
+		self.__cursor = None
 
 	def _destroy(self, widget, client_data, call_data):
 		del self.__arrow
@@ -987,6 +988,7 @@ class ListEdit(_Widget):
 		self.__popup.DestroyWidget()
 		del self.__popup
 		_Widget._destroy(self, widget, client_data, call_data)
+		del self.__cursor
 
 	def __arrowcb(self, widget, client_data, call_data):
 		if self.__popped:
@@ -997,10 +999,14 @@ class ListEdit(_Widget):
 		self.__arrow.arrowDirection = Xmd.ARROW_LEFT
 		x, y = widget.TranslateCoords(0, 0)
 		width = self.__popup.width or self.__list.width
-		self.__popup.SetValues({'x': x - width,
-				 'y': y - 10})
+		self.__popup.SetValues({'x': x - width, 'y': y - 10})
 		self.__list.ManageChild()
 		self.__popup.Popup(Xtdefs.XtGrabExclusive)
+		if self.__cursor is None:
+			# default cursor is an X which is not very convenient
+			import Xcursorfont
+			self.__cursor = self.__popup.Display().CreateFontCursor(Xcursorfont.arrow)
+			self.__popup.DefineCursor(self.__cursor)
 		self.__arrow.AddGrab(0, 0)
 		self.__popped = 1
 
@@ -1345,7 +1351,7 @@ class ScrolledWindow(_Widget, _WindowHelpers):
 		attrs = {'resizePolicy': parent.resizePolicy}
 		self.resizePolicy = parent.resizePolicy
 		self._attachments(attrs, options)
-		self._attrs(attrs, options, 
+		self._attrs(attrs, options,
 			    ['clipWindow', 'horizontalScrollBar', 'scrollBarDisplayPolicy',
 			     'scrollBarPlacement', 'scrolledWindowMarginHeight',
 			     'scrolledWindowMarginWidth', 'scrollingPolicy',
@@ -1357,7 +1363,7 @@ class ScrolledWindow(_Widget, _WindowHelpers):
 			attrs['visualPolicy'] = Xmd.CONSTANT
 		if not attrs.has_key('scrollingpolicy'):
 			attrs['scrollingPolicy'] = Xmd.AUTOMATIC
-		form = parent._form.CreateManagedWidget(name, 
+		form = parent._form.CreateManagedWidget(name,
 							Xm.ScrolledWindow,
 							attrs)
 		_Widget.__init__(self, parent, form)
@@ -1388,7 +1394,7 @@ class ScrolledWindow(_Widget, _WindowHelpers):
 					w.hide()
 			self._fixkids = []
 
-        def _attrs(self, attr, options, lst):
+	def _attrs(self, attr, options, lst):
 		for name in lst:
 			if options.has_key(name):
 				attr[name] = options[name]
