@@ -168,6 +168,7 @@ class Region(Node):
 	
 	def show(self):
 		if self.canShow and self._parent._graphicCtrl != None:
+			print self._curattrdict
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 			self._graphicCtrl.showName(self.getShowName())		
 			self._graphicCtrl.addListener(self)
@@ -636,22 +637,22 @@ class LayoutView2(LayoutViewDialog2):
 		self._viewports = {}
 		id2parentid = {}
 		for chan in mmctx.channels:
-			if chan.attrdict.get('type')=='layout':
-				if chan.attrdict.get('subtype') != 'sound':
-					if chan.attrdict.has_key('base_window'):
+			if chan.get('type')=='layout':
+				if chan.get('subtype') != 'sound':
+					if chan.has_key('base_window'):
 						# region
-						id2parentid[chan.name] = chan.attrdict['base_window']
+						id2parentid[chan.name] = chan['base_window']
 					else:
 						# no parent --> it's a viewport
 						self._viewportsRegions[chan.name] = []
-						self._viewports[chan.name] = Viewport(chan.name,chan.attrdict, self)
+						self._viewports[chan.name] = Viewport(chan.name,chan, self)
 						# temporarly
 						self._first = chan.name
 
 		nodes = self._viewports.copy()
 		for id in id2parentid.keys():
 			chan = mmctx.channeldict[id]
-			nodes[id] = Region(id, chan.attrdict, self)
+			nodes[id] = Region(id, chan, self)
 
 		for id, parentid in id2parentid.items():
 			idit = id
