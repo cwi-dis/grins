@@ -46,7 +46,6 @@ class _Toplevel:
 		if _Toplevel.__initialized:
 			raise error, 'can only initialize once'
 		_Toplevel.__initialized = 1
-		self._in_create_box = None
 		self._closecallbacks = []
 		self._subwindows = []
 		self._bgcolor = 255, 255, 255 # white

@@ -69,7 +69,7 @@ class _MenuSupport:
 
 	# support methods, only used by derived classes
 	def __post_menu(self, w, client_data, call_data):
-		if toplevel._in_create_box or not self.__menu:
+		if not self.__menu:
 			return
 		if call_data.button == X.Button3:
 			self.__menu.MenuPosition(call_data)
@@ -160,7 +160,7 @@ class _Widget(_MenuSupport):
 	def _callback(self, widget, callback, call_data):
 		'''Generic callback.'''
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		apply(apply, callback)
 		toplevel.setready()
@@ -386,7 +386,7 @@ class OptionMenu(_Widget):
 
 	def _cb(self, widget, value, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		self._value = value
 		if self._callback:
@@ -821,8 +821,6 @@ class TextInput(_Widget):
 		self._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
 
 	def _modifyCB(self, w, func, call_data):
-		if toplevel._in_create_box:
-			return
 		text = func(call_data.text)
 		if text is not None:
 			call_data.text = text
@@ -1008,6 +1006,7 @@ class ListEdit(_Widget):
 
 	def __listcb(self, widget, client_data, call_data):
 		self.__popup.Popdown()
+		self.__arrow.arrowDirection = Xmd.ARROW_DOWN
 		pos = self.__list.ListGetSelectedPos()
 		if not pos:
 			return

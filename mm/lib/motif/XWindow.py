@@ -8,6 +8,7 @@ from XTopLevel import toplevel
 from XConstants import *
 from XConstants import _WAITING_CURSOR, _READY_CURSOR, _WIDTH, _HEIGHT
 from XAdornment import _AdornmentSupport, _CommandSupport
+from XRubber import _RubberBand
 from XDisplist import _DisplayList
 from XDialog import showmessage
 from XHelpers import _create_menu, _setcursor
@@ -16,11 +17,7 @@ from WMEVENTS import *
 import settings
 no_canvas_resize = settings.get('no_canvas_resize')
 
-_rb_message = """\
-Use left mouse button to draw a box.
-Click `OK' when ready or `Cancel' to cancel."""
-
-class _Window(_AdornmentSupport):
+class _Window(_AdornmentSupport, _RubberBand):
 	# Instances of this class represent top-level windows.  This
 	# class is also used as base class for subwindows, but then
 	# some of the methods are overridden.
@@ -368,7 +365,6 @@ class _Window(_AdornmentSupport):
 		self._redrawfunc = None
 		self._scrwin = None	# Xm.ScrolledWindow widget if any
 		self._arrowcache = {}
-		self._next_create_box = []
 
 	def close(self):
 		if self._parent is None:
@@ -401,7 +397,7 @@ class _Window(_AdornmentSupport):
 		x, y, w, h = self._rect
 		# -2 because we want the bottom and right lines just
 		# inside the window
-		gc.DrawRectangle(x, y, w-2, h-2)
+		gc.DrawRectangle(x, y, w-1, h-1)
 		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._pixmap.CopyArea(self._form, gc,
@@ -763,109 +759,6 @@ class _Window(_AdornmentSupport):
 					self._menuaccel.append(key)
 		self._menu = menu
 		
-	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
-		import Xcursorfont
-		if modeless:
-			return # To be implemented
-		if toplevel._in_create_box:
-			toplevel._in_create_box._next_create_box.append((self, msg, callback, box, units))
-			return
-		if self.is_closed():
-			apply(callback, ())
-			return
-		toplevel.setcursor('stop')
-		self._topwindow.setcursor('')
-		toplevel._in_create_box = self
-		if box:
-			# convert box to relative sizes if necessary
-			box = self._pxl2rel(self._convert_coordinates(box, units = units))
-		self.pop()
-		if msg:
-			msg = msg + '\n\n' + _rb_message
-		else:
-			msg = _rb_message
-		self._rb_dl = self._active_displist
-		if self._rb_dl:
-			d = self._rb_dl.clone()
-		else:
-			d = self.newdisplaylist()
-		self._rb_transparent = []
-		sw = self._subwindows[:]
-		sw.reverse()
-		r = Xlib.CreateRegion()
-		for win in sw:
-			if not win._transparent:
-				# should do this recursively...
-				self._rb_transparent.append(win)
-				win._transparent = 1
-				d.drawfbox(win._bgcolor, win._sizes)
-				apply(r.UnionRectWithRegion, win._rect)
-		for win in sw:
-			b = win._sizes
-			if b != (0, 0, 1, 1):
-				d.drawbox(b)
-		self._rb_display = d.clone()
-		d.fgcolor((255, 0, 0))
-		if box:
-			d.drawbox(box)
-		if self._rb_transparent:
-			self._mkclip()
-			self._do_expose(r)
-			self._rb_reg = r
-		d.render()
-		self._rb_curdisp = d
-		self._rb_dialog = showmessage(
-			msg, mtype = 'message', grab = 0,
-			callback = (self._rb_done, ()),
-			cancelCallback = (self._rb_cancel, ()))
-		self._rb_dialog._main.AddGrab(1, 0)
-		self._rb_callback = callback
-		self._rb_units = units
-		form = self._form
-		form.AddGrab(0, 0)
-		form.RemoveEventHandler(X.PointerMotionMask, FALSE,
-					self._motion_handler, None)
-		form.AddEventHandler(X.ButtonPressMask, FALSE,
-				     self._start_rb, None)
-		form.AddEventHandler(X.ButtonMotionMask, FALSE,
-				     self._do_rb, None)
-		form.AddEventHandler(X.ButtonReleaseMask, FALSE,
-				     self._end_rb, None)
-		cursor = form.Display().CreateFontCursor(Xcursorfont.crosshair)
-		form.GrabButton(X.AnyButton, X.AnyModifier, TRUE,
-				X.ButtonPressMask | X.ButtonMotionMask
-					| X.ButtonReleaseMask,
-				X.GrabModeAsync, X.GrabModeAsync, form, cursor)
-		v = form.GetValues(['foreground', 'background'])
-		v['foreground'] = v['foreground'] ^ v['background']
-		v['function'] = X.GXxor
-		v['line_style'] = X.LineOnOffDash
-		self._gc_rb = form.GetGC(v)
-		self._rb_box = box
-		if box:
-			x, y, w, h = self._convert_coordinates(box)
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			self._rb_box = x, y, w, h
-			self._rb_start_x = x
-			self._rb_start_y = y
-			self._rb_width = w
-			self._rb_height = h
-		else:
-			self._rb_start_x, self._rb_start_y, self._rb_width, \
-					  self._rb_height = self._rect
-		self._rb_dialog.setcursor('')
-		self._rb_looping = 1
-		toplevel.setready()
-		while self._rb_looping:
-			Xt.DispatchEvent(Xt.NextEvent())
-
-	def cancel_create_box(self):
-		"""Cancel a modeless create_box call"""
-		pass
-		
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)
@@ -1133,12 +1026,6 @@ class _Window(_AdornmentSupport):
 	def _delete_callback(self, form, client_data, call_data):
 		ToolTip.rmtt()
 		self._arrowcache = {}
-		w = toplevel._in_create_box
-		if w:
-			next_create_box = w._next_create_box
-			w._next_create_box = []
-			w._rb_cancel()
-			w._next_create_box[0:0] = next_create_box
 		if not _CommandSupport._delete_callback(self, form,
 							client_data, call_data):
 			try:
@@ -1147,17 +1034,17 @@ class _Window(_AdornmentSupport):
 				pass
 			else:
 				func(arg, self, WindowExit, None)
-		if w:
-			w._rb_end()
-			self._rb_looping = 0
 		toplevel.setready()
 
 	def _input_callback(self, form, client_data, call_data):
+		if self._in_create_box and \
+		   not self._in_create_box.is_closed() and \
+		   self._topwindow is self._in_create_box._topwindow and \
+		   not self._in_create_box._ignore_rb:
+			return
 		ToolTip.rmtt()
 		if self._parent is None:
 			return		# already closed
-		if toplevel._in_create_box:
-			return
 		try:
 			self._do_input_callback(form, client_data, call_data)
 		except Continue:
@@ -1249,7 +1136,6 @@ class _Window(_AdornmentSupport):
 		if self._parent is None:
 			return		# already closed
 		e = call_data.event
-## 		print 'expose',`self`,e.x,e.y,e.width,e.height,e.count
 		# collect redraw regions
 		self._exp_reg.UnionRectWithRegion(e.x, e.y, e.width, e.height)
 		if e.count == 0:
@@ -1323,12 +1209,6 @@ class _Window(_AdornmentSupport):
 		if self._rect == (x, y, width, height) and client_data is None:
 			return
 		self._arrowcache = {}
-		__w = toplevel._in_create_box
-		if __w:
-			next_create_box = __w._next_create_box
-			__w._next_create_box = []
-			__w._rb_cancel()
-			__w._next_create_box[0:0] = next_create_box
 		self._rect = x, y, width, height
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
@@ -1357,9 +1237,6 @@ class _Window(_AdornmentSupport):
 			pixmap.CopyArea(form, gc, 0, 0, width, height, 0, 0)
 		# call resize callbacks
 		self._do_resize2()
-		if __w:
-			__w._rb_end()
-			self._rb_looping = 0
 		toplevel.setready()
 
 	def _do_resize2(self):
@@ -1380,205 +1257,6 @@ class _Window(_AdornmentSupport):
 			cursor = self._cursor
 		if self._curcursor != cursor:
 			self.setcursor(cursor)
-
-	# supporting methods for create_box
-	def _rb_finish(self):
-		toplevel._in_create_box = None
-		if self._rb_transparent:
-			for win in self._rb_transparent:
-				win._transparent = 0
-			self._mkclip()
-			self._do_expose(self._rb_reg)
-			del self._rb_reg
-		del self._rb_transparent
-		form = self._form
-		form.RemoveEventHandler(X.ButtonPressMask, FALSE,
-					self._start_rb, None)
-		form.RemoveEventHandler(X.ButtonMotionMask, FALSE,
-					self._do_rb, None)
-		form.RemoveEventHandler(X.ButtonReleaseMask, FALSE,
-					self._end_rb, None)
-		form.UngrabButton(X.AnyButton, X.AnyModifier)
-		form.AddEventHandler(X.PointerMotionMask, FALSE,
-					self._motion_handler, None)
-		self._rb_dialog.close()
-		if self._rb_dl and not self._rb_dl.is_closed():
-			self._rb_dl.render()
-		self._rb_display.close()
-		self._rb_curdisp.close()
-		toplevel.setcursor('')
-		del self._rb_callback
-		del self._rb_dialog
-		del self._rb_dl
-		del self._rb_display
-		del self._gc_rb
-
-	def _rb_cvbox(self, units = UNIT_SCREEN):
-		x0 = self._rb_start_x
-		y0 = self._rb_start_y
-		x1 = x0 + self._rb_width
-		y1 = y0 + self._rb_height
-		if x1 < x0:
-			x0, x1 = x1, x0
-		if y1 < y0:
-			y0, y1 = y1, y0
-		x, y, width, height = self._rect
-		if x0 < x: x0 = x
-		if x0 >= x + width: x0 = x + width - 1
-		if x1 < x: x1 = x
-		if x1 >= x + width: x1 = x + width - 1
-		if y0 < y: y0 = y
-		if y0 >= y + height: y0 = y + height - 1
-		if y1 < y: y1 = y
-		if y1 >= y + height: y1 = y + height - 1
-		if units == UNIT_SCREEN:
-			return float(x0 - x) / width, \
-			       float(y0 - y) / height, \
-			       float(x1 - x0) / width, \
-			       float(y1 - y0) / height
-		elif units == UNIT_PXL:
-			return x0 - x, y0 - y, x1 - x0, y1 - y0
-		elif units == UNIT_MM:
-			return float(x0 - x) / toplevel._hmm2pxl, \
-			       float(y0 - y) / toplevel._vmm2pxl, \
-			       float(x1 - x0) / toplevel._hmm2pxl, \
-			       float(y1 - y0) / topevel._vmm2pxl
-		else:
-			raise error, 'bad units specified'
-
-	def _rb_done(self):
-		callback = self._rb_callback
-		units = self._rb_units
-		self._rb_finish()
-		apply(callback, self._rb_cvbox(units))
-		self._rb_end()
-		self._rb_looping = 0
-
-	def _rb_cancel(self):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, ())
-		self._rb_end()
-		self._rb_looping = 0
-
-	def _rb_end(self):
-		# execute pending create_box calls
-		next_create_box = self._next_create_box
-		self._next_create_box = []
-		for win, msg, cb, box, units in next_create_box:
-			win.create_box(msg, cb, box, units)
-
-	def _rb_draw(self):
-		x = self._rb_start_x
-		y = self._rb_start_y
-		w = self._rb_width
-		h = self._rb_height
-		if w < 0:
-			x, w = x + w, -w
-		if h < 0:
-			y, h = y + h, -h
-		self._gc_rb.DrawRectangle(x, y, w, h)
-
-	def _rb_constrain(self, event):
-		x, y, w, h = self._rect
-		if event.x < x:
-			event.x = x
-		if event.x >= x + w:
-			event.x = x + w - 1
-		if event.y < y:
-			event.y = y
-		if event.y >= y + h:
-			event.y = y + h - 1
-
-	def _rb_common(self, event):
-		if not hasattr(self, '_rb_cx'):
-			self._start_rb(None, None, event)
-		self._rb_draw()
-		self._rb_constrain(event)
-		if self._rb_cx and self._rb_cy:
-			x, y, w, h = self._rect
-			dx = event.x - self._rb_last_x
-			dy = event.y - self._rb_last_y
-			self._rb_last_x = event.x
-			self._rb_last_y = event.y
-			self._rb_start_x = self._rb_start_x + dx
-			if self._rb_start_x + self._rb_width > x + w:
-				self._rb_start_x = x + w - self._rb_width
-			if self._rb_start_x < x:
-				self._rb_start_x = x
-			self._rb_start_y = self._rb_start_y + dy
-			if self._rb_start_y + self._rb_height > y + h:
-				self._rb_start_y = y + h - self._rb_height
-			if self._rb_start_y < y:
-				self._rb_start_y = y
-		else:
-			if not self._rb_cx:
-				self._rb_width = event.x - self._rb_start_x
-			if not self._rb_cy:
-				self._rb_height = event.y - self._rb_start_y
-		self._rb_box = 1
-
-	def _start_rb(self, w, data, event):
-		# called on mouse press
-		self._rb_display.render()
-		self._rb_curdisp.close()
-		self._rb_constrain(event)
-		if self._rb_box:
-			x = self._rb_start_x
-			y = self._rb_start_y
-			w = self._rb_width
-			h = self._rb_height
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			if x + w/4 < event.x < x + w*3/4:
-				self._rb_cx = 1
-			else:
-				self._rb_cx = 0
-				if event.x >= x + w*3/4:
-					x, w = x + w, -w
-			if y + h/4 < event.y < y + h*3/4:
-				self._rb_cy = 1
-			else:
-				self._rb_cy = 0
-				if event.y >= y + h*3/4:
-					y, h = y + h, -h
-			if self._rb_cx and self._rb_cy:
-				self._rb_last_x = event.x
-				self._rb_last_y = event.y
-				self._rb_start_x = x
-				self._rb_start_y = y
-				self._rb_width = w
-				self._rb_height = h
-			else:
-				if not self._rb_cx:
-					self._rb_start_x = x + w
-					self._rb_width = event.x - self._rb_start_x
-				if not self._rb_cy:
-					self._rb_start_y = y + h
-					self._rb_height = event.y - self._rb_start_y
-		else:
-			self._rb_start_x = event.x
-			self._rb_start_y = event.y
-			self._rb_width = self._rb_height = 0
-			self._rb_cx = self._rb_cy = 0
-		self._rb_draw()
-
-	def _do_rb(self, w, data, event):
-		# called on mouse drag
-		self._rb_common(event)
-		self._rb_draw()
-
-	def _end_rb(self, w, data, event):
-		# called on mouse release
-		self._rb_common(event)
-		self._rb_curdisp = self._rb_display.clone()
-		self._rb_curdisp.fgcolor((255, 0, 0))
-		self._rb_curdisp.drawbox(self._rb_cvbox())
-		self._rb_curdisp.render()
-		del self._rb_cx
-		del self._rb_cy
 
 class _SubWindow(_Window):
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
