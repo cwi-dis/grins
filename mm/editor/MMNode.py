@@ -674,13 +674,6 @@ class MMNode(MMNodeBase.MMNode):
 	#
 	# Generate schedrecords for leaf nodes.
 	#
-	# We distinguish 3 cases for when to stop displaying a node:
-	# 1. If there's a sync arc to the tail of the node we stop playing
-	#    when the sync arc fired
-	# 2. If we have inherited timing we stop playing when the parent node
-	#    sends us a SCHED_DONE
-	# 3. If we have implicit timing we just stop playing immedeately.
-	#
 	def gensr_leaf(self):
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
@@ -688,12 +681,29 @@ class MMNode(MMNodeBase.MMNode):
 		result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
 			   [(PLAY, arg)] + out0)]
 		if not Duration.get(self):
+			# there is no (intrinsic or explicit) duration
+			# PLAY_DONE comes immediately, so in effect
+			# only wait for sync arcs
 			result.append(
 				([(PLAY_DONE, arg)] + in1,
 				 [(SCHED_DONE,arg)] + out1))
 			result.append(([(SCHED_STOP, arg)],
 				       [(PLAY_STOP, arg)]))
+		elif not MMAttrdefs.getattr(self, 'duration'):
+			# there is an intrinsic but no explicit duration
+			# keep active until told to stop
+			# terminate on sync arcs
+			for ev in in1:
+				result.append(([ev], [(TERMINATE, self)]))
+			result.append(
+				([(PLAY_DONE, arg)],
+				 [(SCHED_DONE,arg)] + out1))
+			result.append(([(SCHED_STOP, arg)],
+				       [(PLAY_STOP, arg)]))
 		else:
+			# there is an explicit duration
+			# stop when done playing
+			# terminate on sync arc
 			for ev in in1:
 				result.append(([ev], [(TERMINATE, self)]))
 			result.append(
