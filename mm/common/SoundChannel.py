@@ -90,8 +90,7 @@ class SoundChannel() = Channel():
 			self.qid = \
 				self.player.enter(0.1, 0, self._poll, cb_arg)
 		else:
-			port.closeport()
-			self.info = self.prep = None
+			self.stop()
 			callback, arg = cb_arg
 			callback(arg)
 	#
@@ -102,6 +101,7 @@ class SoundChannel() = Channel():
 		if self.prep <> None:
 			port, offset, blocksize = self.prep
 			port.closeport()
+			restore()
 			self.info = self.prep = None
 		if self.qid <> None:
 			self.player.cancel(self.qid)
@@ -174,6 +174,8 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 	else:
 		offset, blocksize = 0, 0
 	# Set sampling rate (can't be done at the port level)
+	# First get the new old sampling rate for restore()
+	al.getparams(AL.DEFAULT_DEVICE, sound_params)
 	pv = [AL.OUTPUT_RATE, int(samprate)]
 	al.setparams(AL.DEFAULT_DEVICE, pv)
 	# Compute queue size such that it can contain QSECS seconds of sound.
@@ -191,3 +193,15 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 	# The file is positioned at the start of the sample,
 	# but the first 'offset' bytes must be skipped.
 	return port, offset, blocksize
+
+
+# Save sound channel parameters for restore()
+#
+sound_params = [AL.OUTPUT_RATE, 0]
+al.getparams(AL.DEFAULT_DEVICE, sound_params)
+
+
+# Restore sound channel parameters
+#
+def restore():
+	al.setparams(AL.DEFAULT_DEVICE, sound_params)
