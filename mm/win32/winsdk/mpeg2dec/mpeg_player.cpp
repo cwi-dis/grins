@@ -55,6 +55,7 @@ DWORD VideoThread::Run()
 	DWORD wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if(wres == WAIT_OBJECT_0) return 0;
 
+	Sleep(20);
 	m_decoder.decode_picture();
 	wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if(wres == WAIT_OBJECT_0) return 0;
@@ -62,6 +63,7 @@ DWORD VideoThread::Run()
 
 	while(m_decoder.parse_picture_header())
 		{
+		Sleep(20);
 		m_decoder.decode_picture();
 		wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if(wres == WAIT_OBJECT_0) return 0;
@@ -152,6 +154,7 @@ void MpegPlayer::prepare_playback(surface<color_repr_t> *psurf)
 	{
 	if(decoder != 0 && display != 0)
 		{
+		display->set_surface(psurf);
 		pVideoThread = new VideoThread(*decoder);
 		pVideoThread->Start();
 		}
