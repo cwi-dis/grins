@@ -133,7 +133,12 @@ static PyObject* ig_image_dimensions_get(PyObject *self, PyObject *args)
 
 	AT_DIMENSION Width=0,Height=0;
 	UINT BitsPerPixel;
-	IG_image_dimensions_get(img,&Width,&Height,&BitsPerPixel);
+	AT_ERRCOUNT nError = IG_image_dimensions_get(img,&Width,&Height,&BitsPerPixel);
+	if(nError!=0)
+		{
+		seterror("ig_image_dimensions_get","IG_image_dimensions_get failed");
+		return NULL;
+		}
 
 	return Py_BuildValue("lll",Width,Height,BitsPerPixel);
 	}
@@ -213,7 +218,12 @@ static PyObject* ig_device_rect_set(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
-	IG_device_rect_set(img,&rect);
+	AT_ERRCOUNT nError = IG_device_rect_set(img,&rect);
+	if(nError!=0)
+		{
+		seterror("IG_device_rect_set","");
+		return NULL;		
+		}
 
 	Py_INCREF(Py_None);
 	return Py_None;	
@@ -240,7 +250,12 @@ static PyObject* ig_display_adjust_aspect(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
-	IG_display_adjust_aspect(img,&rect,aspect);
+	AT_ERRCOUNT nError = IG_display_adjust_aspect(img,&rect,aspect);
+	if(nError!=0)
+		{
+		seterror("IG_display_adjust_aspect","");
+		return NULL;		
+		}
 	
 	return Py_BuildValue("(iiii)", rect.left, rect.top,
 			     rect.right, rect.bottom);	
@@ -265,10 +280,16 @@ static PyObject* ig_display_desktop_pattern_set(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
+	AT_ERRCOUNT nError = 0;
 	Py_BEGIN_ALLOW_THREADS
-	IG_display_desktop_pattern_set(img,NULL,(fg.r>=0)?&fg:NULL,(bg.r>=0)?&bg:NULL,bEnabled!=0?TRUE:FALSE);
+	nError = IG_display_desktop_pattern_set(img,NULL,(fg.r>=0)?&fg:NULL,(bg.r>=0)?&bg:NULL,bEnabled!=0?TRUE:FALSE);
 	Py_END_ALLOW_THREADS
-
+	if(nError!=0)
+		{
+		seterror("ig_display_desktop_pattern_set","");
+		return NULL;		
+		}
+		
 	Py_INCREF(Py_None);
 	return Py_None;	
 	}
@@ -342,9 +363,16 @@ static PyObject* ig_display_image(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
+	AT_ERRCOUNT nError = 0;
 	Py_BEGIN_ALLOW_THREADS
-	IG_display_image(img,hdc);
+	nError = IG_display_image(img,hdc);
 	Py_END_ALLOW_THREADS
+		
+	if(nError!=0)
+		{
+		seterror("IG_display_image","failed");
+		return NULL;		
+		}
 
 	Py_INCREF(Py_None);
 	return Py_None;	
