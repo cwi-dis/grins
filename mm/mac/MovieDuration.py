@@ -3,13 +3,13 @@ __version__ = "$Id$"
 # Cache durations of movie files
 
 import FileCache
-import urllib
+import MMurl
 import Qt
 import QuickTime
 
 def getduration(filename):
 	try:
-		filename = urllib.urlretrieve(filename)[0]
+		filename = MMurl.urlretrieve(filename)[0]
 	except IOError:
 		return 0
 	try:
