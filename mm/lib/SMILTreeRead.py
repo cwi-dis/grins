@@ -1469,7 +1469,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		
 		# at least for now
 		if self.__node:
-			self.error('%s elements can not be in the content model of media elements' % tagname)
+			# message already given
+			#self.error('%s elements can not be in the content model of media elements' % tagname)
 			return
 			
 		# find target node (explicit or implicit)
