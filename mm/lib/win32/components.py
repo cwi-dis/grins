@@ -36,6 +36,8 @@ class LightWeightControl:
 	def __del__(self):
 		if self._hfont:
 			Sdk.DeleteObject(self._hfont)
+	def getId(self):
+		return self._id
 	def sendmessage(self,msg,wparam=0,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessage(self._hwnd,msg,wparam,lparam)
