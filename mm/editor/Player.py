@@ -90,6 +90,21 @@ class Player(ViewDialog, PlayerCore):
 		window.bgcolor(BGCOLOR)
 		if self.waiting:
 			window.setcursor('watch')
+		self.subwin = []
+		self.resize()
+		self.showing = 1
+		window.register(EVENTS.Mouse0Release, self._mouse, None)
+		window.register(EVENTS.ResizeWindow, self.resize, None)
+		self.toplevel.setwaiting()
+		self.toplevel.checkviews()
+		self.showchannels()
+		self.showstate()
+		self.toplevel.setready()
+
+	def resize(self, *rest):
+		window = self.window
+		for w in self.subwin:
+			w.close()
 		font = windowinterface.findfont('Helvetica', 10)
 		d = window.newdisplaylist()
 		dummy = d.usefont(font)
@@ -107,14 +122,6 @@ class Player(ViewDialog, PlayerCore):
 			self.subwin.append(window.newcmwindow(1.0 - mw,
 					i / float(n), mw, 1.0 / float(n)))
 		self.redraw()
-		self.showing = 1
-		window.register(EVENTS.Mouse0Release, self._mouse, None)
-		window.register(EVENTS.ResizeWindow, self.redraw, None)
-		self.toplevel.setwaiting()
-		self.toplevel.checkviews()
-		self.showchannels()
-		self.showstate()
-		self.toplevel.setready()
 
 	def drawplaybutton(self, active, d):
 		if active:
