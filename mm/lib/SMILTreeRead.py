@@ -50,9 +50,10 @@ clock = re.compile(r'(?P<name>local|remote):'
 		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
 screen_size = re.compile(r'(?P<x>\d+)X(?P<y>\d+)$')
 clip = re.compile('^(?:'
-		   '(?:(?P<npt>npt)=(?P<nptclip>[^-]*))|'
-		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>[^-]*))'
-		   ')$')
+		  '(?:(?P<npt>npt)=(?P<nptclip>[^-]*))|'
+		  '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>[^-]*))|'
+		  '(?P<clock>'+clock_val.pattern+')'
+		  ')$')
 smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
 namedecode = re.compile(r'(?P<name>.*)-\d+$')
 _token = '[^][\001-\040()<>@,;:\\"/?=\177-\377]+' # \000 also not valid
@@ -663,14 +664,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# clip-* attributes for video
 		clip_begin = attributes.get('clip-begin')
 		if clip_begin:
-			if clip.match(clip_begin):
+			res = clip.match(clip_begin)
+			if res:
 				node.attrdict['clipbegin'] = clip_begin
+				if res.group('clock'):
+					self.syntax_error('invalid clip-begin attribute; should be "npt=<time>"')
 			else:
 				self.syntax_error('invalid clip-begin attribute')
 		clip_end = attributes.get('clip-end')
 		if clip_end:
-			if clip.match(clip_end):
+			res = clip.match(clip_end)
+			if res:
 				node.attrdict['clipend'] = clip_end
+				if res.group('clock'):
+					self.syntax_error('invalid clip-end attribute; should be "npt=<time>"')
 			else:
 				self.syntax_error('invalid clip-end attribute')
 
@@ -715,37 +722,37 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for node in root.GetChildren():
 			apply(self.Recurse, (node,) + funcs)
 
-	def FixRoot(self):
-		root = self.__root
-		if len(root.children) != 1 or root.attrdict or \
-		   root.__syncarcs or root.__anchorlist or \
-		   root.children[0].GetType() in leaftypes:
-			return
-		child = root.children[0]
-		# copy stuff over from child to root
-		root.type = child.type
-		root.attrdict = child.attrdict.copy()
-		root.children[:] = child.children # deletes root.children[0]
-		child.children[:] = []
-		for c in root.children:
-			c.parent = root
-		root.__syncarcs = child.__syncarcs
-		root.values = child.values
-		try:
-			root.__mediatype = child.__mediatype
-			root.__region = child.__region
-		except AttributeError:
-			pass
-		try:
-			root.__size = child.__size
-		except AttributeError:
-			pass
-		try:
-			root.__chantype = child.__chantype
-		except AttributeError:
-			pass
-		root.__anchorlist = child.__anchorlist
-		root.setgensr()
+##	def FixRoot(self):
+##		root = self.__root
+##		if len(root.children) != 1 or root.attrdict or \
+##		   root.__syncarcs or root.__anchorlist or \
+##		   root.children[0].GetType() in leaftypes:
+##			return
+##		child = root.children[0]
+##		# copy stuff over from child to root
+##		root.type = child.type
+##		root.attrdict = child.attrdict.copy()
+##		root.children[:] = child.children # deletes root.children[0]
+##		child.children[:] = []
+##		for c in root.children:
+##			c.parent = root
+##		root.__syncarcs = child.__syncarcs
+##		root.values = child.values
+##		try:
+##			root.__mediatype = child.__mediatype
+##			root.__region = child.__region
+##		except AttributeError:
+##			pass
+##		try:
+##			root.__size = child.__size
+##		except AttributeError:
+##			pass
+##		try:
+##			root.__chantype = child.__chantype
+##		except AttributeError:
+##			pass
+##		root.__anchorlist = child.__anchorlist
+##		root.setgensr()
 
 	def FixSizes(self):
 		# calculate minimum required size of top-level window
@@ -1185,7 +1192,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
-		self.FixRoot()
+##		self.FixRoot()
 		self.FixSizes()
 		self.MakeChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
@@ -2118,6 +2125,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			raise error, 'bogus clip parameter'
 		if res.group('npt'):
 			val = res.group('nptclip')
+			if val:
+				val = float(self.__parsecounter(val, 0))
+			else:
+				start = None
+		elif res.group('clock'):
+			val = res.group('clock')
 			if val:
 				val = float(self.__parsecounter(val, 0))
 			else:
