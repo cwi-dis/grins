@@ -145,7 +145,7 @@ class ChannelThread(_ChannelThread, Channel):
 
 	def stopplay(self, node):
 		if node and self._played_node is not node:
-			print 'node was not the playing node '+`self,node,self._played_node`
+##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		Channel.stopplay(self, node)
 		_ChannelThread.stopplay(self, node)
@@ -203,7 +203,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 
 	def stopplay(self, node):
 		if node and self._played_node is not node:
-			print 'node was not the playing node '+`self,node,self._played_node`
+##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		w = self.window
 		if w:

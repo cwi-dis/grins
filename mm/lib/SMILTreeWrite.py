@@ -917,6 +917,17 @@ smil_attrs=[
 	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
 
 ]
+prio_attrs = [
+	("id", getid),
+	("title", lambda writer, node:getcmifattr(writer, node, "title")),
+	("author", lambda writer, node:getcmifattr(writer, node, "author")),
+	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
+	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
+	('lower', lambda writer, node: getcmifattr(writer, node, 'lower')),
+	('peers', lambda writer, node: getcmifattr(writer, node, 'peers')),
+	('higher', lambda writer, node: getcmifattr(writer, node, 'higher')),
+	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay')),
+	]
 
 # attributes that we know about and so don't write into the SMIL file using
 # our namespace extension
@@ -940,6 +951,10 @@ cmif_node_attrs_ignore = {
 cmif_node_realpix_attrs_ignore = {
 	'bitrate':0, 'size':0, 'duration':0, 'aspect':0, 'author':0,
 	'copyright':0, 'maxfps':0, 'preroll':0, 'title':0, 'href':0,
+	}
+cmif_node_prio_attrs_ignore = {
+	'lower':0, 'peers':0, 'higher':0, 'pauseDisplay':0,
+	'name':0, 'title':0, 'abstract':0, 'copyright':0, 'author':0,
 	}
 cmif_chan_attrs_ignore = {
 	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'scale':0,
@@ -1768,6 +1783,8 @@ class SMILWriter(SMIL):
 				xtype = '%s choice' % GRiNSns
 			elif type == 'alt':
 				xtype = mtype = 'switch'
+			elif type == 'prio':
+				xtype = mtype = 'priorityClass'
 			else:
 				xtype = mtype = type
 		else:
@@ -1790,7 +1807,11 @@ class SMILWriter(SMIL):
 					break
 
 		attributes = self.attributes.get(xtype, {})
-		for name, func in smil_attrs:
+		if type == 'prio':
+			attrs = prio_attrs
+		else:
+			attrs = smil_attrs
+		for name, func in attrs:
 			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
 			# name is the attribute name as recorded in SMIL file
@@ -1813,13 +1834,16 @@ class SMILWriter(SMIL):
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		is_brush = x.GetChannelType() == 'brush'
 		for key, val in x.GetAttrDict().items():
-			if key[-7:] != '_winpos' and \
-			   key[-8:] != '_winsize' and \
-			   not qt_node_attrs.has_key(key) and \
-			   not cmif_node_attrs_ignore.has_key(key) and \
-			   (not is_brush or key != 'fgcolor') and \
-			   (not is_realpix or
-			    not cmif_node_realpix_attrs_ignore.has_key(key)):
+			if type == 'prio' and cmif_node_prio_attrs_ignore.has_key(key):
+				continue
+			if key[-7:] == '_winpos' or key[-8:] == '_winsize':
+				continue
+			if type == 'prio' or \
+			   (not qt_node_attrs.has_key(key) and
+			    not cmif_node_attrs_ignore.has_key(key) and
+			    (not is_brush or key != 'fgcolor') and
+			    (not is_realpix or
+			     not cmif_node_realpix_attrs_ignore.has_key(key))):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),
 						 MMAttrdefs.valuerepr(key, val)))
 		if interior:

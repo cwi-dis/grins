@@ -251,7 +251,7 @@ class SMIL:
 				  'higher':'pause',
 				  'id':None,
 				  'lower':'defer',
-				  'pauseDisplay':'show',
+				  'pauseDisplay':None,
 				  'peers':'stop',
 				  'title':None,
 				  },

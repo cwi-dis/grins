@@ -561,10 +561,10 @@ class Channel:
 		if not self.syncplay:
 			if not self.armed_duration:
 				self.playdone(0)
-			elif self.armed_duration > 0:
-				self._qid = self._scheduler.enterabs(
-					self._played_node.start_time+self.armed_duration, 0,
-					self.playdone, (0, self._played_node.start_time+self.armed_duration))
+##			elif self.armed_duration > 0:
+##				self._qid = self._scheduler.enterabs(
+##					self._played_node.start_time+self.armed_duration, 0,
+##					self.playdone, (0, self._played_node.start_time+self.armed_duration))
 		else:
 			self.playdone(0)
 
@@ -758,7 +758,7 @@ class Channel:
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
-			print 'node was not the playing node '+`self,node,self._played_node`
+##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		if self._playstate == PLAYING:
 			self._has_pause = 0
@@ -844,11 +844,29 @@ class Channel:
 	def setpaused(self, paused):
 		if debug:
 			print 'Channel.setpaused('+`self`+','+`paused`+')'
+		if paused and self._qid:
+			try:
+				self._scheduler.cancel(self._qid)
+			except RuntimeError:
+				# XXX
+				# It may be that the done
+				# event was removed from the
+				# queue and is now somewhere
+				# in the internals of the
+				# scheduler where we can't
+				# remove it.  We ought to do
+				# something about that.
+				pass
+			self._qid = None
 		self._paused = paused
 
 	def pause(self, node, action):
+		if action == 'hide':
+			arg = -1
+		else:
+			arg = 1
 		if node is self._played_node:
-			self.setpaused(1)
+			self.setpaused(arg)
 
 	def resume(self, node):
 		if node is self._played_node:
@@ -1721,7 +1739,7 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
-			print 'node was not the playing node '+`self,node,self._played_node`
+##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		self.cleanup_transitions()
 		Channel.stopplay(self, node)
@@ -1729,7 +1747,19 @@ class ChannelWindow(Channel):
 		if self.played_display:
 			self.played_display.close()
 			self.played_display = None
-			
+
+	def setpaused(self, paused):
+		if debug:
+			print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
+		if paused < 0 and self.played_display:
+			# we need a unrender() method
+			d = self.played_display.clone()
+			self.played_display.close()
+			self.played_display = d
+		elif not paused and self._paused < 0 and self.played_display:
+			self.played_display.render()
+		Channel.setpaused(self, paused)
+
 	def extended_fill(self, node):
 		# Handle fill=transition and (in the future) fill=hold
 		fill = MMAttrdefs.getattr(node, 'fill')
