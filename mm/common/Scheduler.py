@@ -400,10 +400,10 @@ class SchedulerContext:
 				node.delayed_arcs.append(arc)
 				fill = node.GetFill()
 				if fill == 'remove':
-					for c in node.children:
+					for c in node.GetSchedChildren():
 						self.do_terminate(c, timestamp)
 				else:
-					for c in node.children:
+					for c in node.GetSchedChildren():
 						self.freeze_play(c)
 				return
 			if debugevents: print 'scheduled_children-1',`node`
@@ -524,7 +524,7 @@ class SchedulerContext:
 ##		if debugevents: self.dump()
 		if node.fullduration is None:
 			node.calcfullduration()
-		if equal or (node.fullduration == 0 and MMAttrdefs.getattr(node, 'fill') == 'remove'):
+		if equal or (node.fullduration == 0 and node.GetFill() == 'remove'):
 			runchild = 0
 		else:
 			runchild = 1
@@ -1037,7 +1037,8 @@ class Scheduler(scheduler):
 		elif action == SR.PLAY_OPTIONAL_ARM:
 			self.do_play_arm(sctx, arg, timestamp, optional=1)
 		elif action in (SR.BAG_START, SR.BAG_STOP):
-			self.ui.bag_event(sctx, todo)
+			raise RuntimeError('BAG')
+##			self.ui.bag_event(sctx, todo)
 		elif action == SR.TERMINATE:
 			sctx.do_terminate(arg, timestamp)
 		elif action == SR.LOOPSTART:
@@ -1428,6 +1429,6 @@ def unarmallnodes(node):
 	except AttributeError:
 		return
 	for child in children:
-		if child.GetType() not in bagtypes:
+##		if child.GetType() not in bagtypes:
 			unarmallnodes(child)
 
