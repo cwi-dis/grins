@@ -1192,7 +1192,7 @@ class HierarchyView(HierarchyViewDialog):
 			if not em.transaction():
 				self.draw()
 				return
-			obj.node.SetAttr('file', url)
+			em.setnodeattr(obj.node, 'file', url)
 			em.commit()
 
 	def dragfile(self, dummy, window, event, params):
