@@ -113,7 +113,7 @@ class PlayerCore(Selecter):
 			return None
 		if not ch.is_showing():
 			ch.set_visible(1)
-			self.setchannel(ch.name, 1)
+			self.setchannel(ch._name, 1)
 		return ch
 	#
 	def defanchor(self, node, anchor, cb):
