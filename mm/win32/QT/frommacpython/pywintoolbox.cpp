@@ -63,3 +63,11 @@ void UrlConvert(char *pszUrl)
 		}
 	//else no change
 	}
+
+PyObject* OSType_FromLong(long t) 
+	{
+	BYTE *p = (BYTE*)&t;
+	t = MAKEFOURCC(p[3], p[2], p[1], p[0]);
+	return PyString_FromStringAndSize((char*)&t, 4);
+	}
+

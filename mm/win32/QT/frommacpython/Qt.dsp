@@ -166,18 +166,6 @@ SOURCE=.\qt.inc
 
 SOURCE=.\DdTestQt.py
 # End Source File
-# Begin Source File
-
-SOURCE=.\qtmovie2rm.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\testqt.py
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\lib\win32\winqtcon.py
-# End Source File
 # End Group
 # End Target
 # End Project
