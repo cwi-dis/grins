@@ -183,9 +183,13 @@ class TransitionEngine:
 
 
 class InlineTransitionEngine:
-	def __init__(self, window, trtype, subtype, trmode='in'):
+	def __init__(self, window, dict, cb):
 		self.window = window
-		self.dict = {'trtype':trtype, 'subtype':subtype, 'mode':trmode}
+		self.dict = dict
+		self.cb = cb
+
+		trtype = dict.get('trtype')
+		subtype = dict.get('subtype')
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.__transitiontype = klass(self, self.dict)
 
