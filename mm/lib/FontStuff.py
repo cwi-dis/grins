@@ -1,6 +1,6 @@
 # Font stuff.
 # Interface:
-#  f = FontOject().init(fontname, fontsize)
+#  f = FontOject(fontname, fontsize)
 #  f.setfont()
 #  f.centerstring(left, top, right, bottom, str)
 # This writes in the current GL window
@@ -28,7 +28,7 @@ import fm
 class FontObject:
 
 	# Create a new font object
-	def init(self, fontname, fontsize):
+	def __init__(self, fontname, fontsize):
 		self.fontname = fontname
 		self.fontsize = fontsize
 
@@ -58,8 +58,6 @@ class FontObject:
 		##print 'baseline =', self.baseline
 		##expected output:
 		##yorig = 4 ysize = 20 fontheight = 20 baseline = 16
-
-		return self
 
 	# Select our font
 	def setfont(self):
@@ -160,7 +158,7 @@ def fitwords(s, sizefunc, limit):
 
 # --- Backward compatibility ---
 
-f_forms = FontObject().init('Helvetica', 10)
+f_forms = FontObject('Helvetica', 10)
 f_fontheight = f_forms.fontheight
 setfont = f_forms.setfont
 centerstring = f_forms.centerstring
