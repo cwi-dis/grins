@@ -509,7 +509,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		### Create the real OS window
 		if type_channel==HTM:self.CreateHtmlWnd()
 		else:self.CreatePlainWindow()		
-		
+
 		# rearange subwindows in the correct relative z-position
 		self.z_order_subwindows()
 			
@@ -638,13 +638,12 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	# Part of our mechanism for correctly updatinh overlapping transparent windows					
 	# returns 1 to indicate 'done'	
 	def OnEraseBkgnd(self,dc):
-		
 		# while in create box mode special handling
 		if self.in_create_box_mode() and self.get_box_modal_wnd()==self:
 			return
 
-		# do not erase bkgnd for video channel when active
-		if self._active_displist and (self._window_type==MPEG or self._window_type==HTM): 
+		# do not erase bkgnd for video channel when active 
+		if self._active_displist and (self._window_type==HTM): #self._window_type==MPEG or 
 			return 1
 
 		# default is:
@@ -677,6 +676,12 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 #		dc.SetWindowOrg(ptOldOrg)
 
 		p=self._parent;ws=p._subwindows;n=len(ws)
+		##### REM: REVISIT THIS PART!!!!!
+		if n==1 and self._active_displist:
+			# we are the only subwindow
+			dc.FillSolidRect(rc,win32mu.RGB(self._active_displist._bgcolor))
+			return 1
+
 		ix=ws.index(self)
 		for i in range(n-1,ix,-1):
 			if ws[i]._transparent in (1,-1) and ws[i]._active_displist==None:
