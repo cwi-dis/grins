@@ -193,21 +193,20 @@ def main():
 			sys.exit(sts)
 		except:
 			sys.stdout = sys.stderr
+			if hasattr(sys, 'exc_info'):
+				exc_type, exc_value, exc_traceback = sys.exc_info()
+			else:
+				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
+			import traceback, pdb
 			print
 			print '\t--------------------------------------------'
 			print '\t| Entering debugger -- call Sjoerd or Jack |'
 			print '\t--------------------------------------------'
 			print
-			print '\t' + str(sys.exc_type) + ':', `sys.exc_value`
+			traceback.print_exception(exc_type, exc_value, None)
 			print
-##			import os
-##			sts = os.system('/ufs/guido/bin/playaudio /ufs/guido/lib/woowoo &')
-			import pdb
-			pdb.post_mortem(sys.exc_traceback)
+			pdb.post_mortem(exc_traceback)
 	finally:
-##		SoundChannel.restore()
-##		ImageChannel.cleanup()
-		#
 		import windowinterface
 		windowinterface.close()
 		if stats:
