@@ -6,24 +6,28 @@ public class GRiNSPlayer implements Renderer {
     public GRiNSPlayer() {
     }
     
-    public Component getComponent() {
+    public Component getComponent() 
+    {
         if(component==null)
             component = new GPCanvas();
         return component;
     }
     
-    public void setComponent(Component c) {
+    public void setComponent(Component c) 
+    {
         component = c;
         if(c!=null && c instanceof Renderable) {
             ((Renderable)c).setRenderer(this);
         }
     }
     
-    public void update() {
+    public void update()
+    {
         if(hgrins!=0) nupdate(hgrins);
     }
     
-    public void open(String fn) {
+    public void open(String fn) throws GRiNSInterfaceException
+    {
         if(component!=null && component.isDisplayable())
             hgrins = nconnect(component);
         else
@@ -34,7 +38,8 @@ public class GRiNSPlayer implements Renderer {
         }
     }
     
-    public void close() {
+    public void close() throws GRiNSInterfaceException
+        {
         if(hgrins!=0) {
             nclose(hgrins);
             ndisconnect(hgrins);
@@ -48,44 +53,54 @@ public class GRiNSPlayer implements Renderer {
             component.repaint();
     }
     
-    public void play() {
+    public void play() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) nplay(hgrins);
     }
-    public void stop() {
+    public void stop() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) nstop(hgrins);
     }
-    public void pause() {
+    public void pause() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) npause(hgrins);
     }
     
-    public int getState() {
+    public int getState() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) return ngetState(hgrins);
         return -1;
     }
         
-    public Dimension getPreferredSize() {
+    public Dimension getPreferredSize() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) return ngetPreferredSize(hgrins);
         return null;
     }
      
-    public double getDuration() {
+    public double getDuration() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) return ngetDuration(hgrins);
         return -1;
     }
-    public void setTime(double t) {
+    public void setTime(double t) throws GRiNSInterfaceException
+    {
         if(hgrins!=0) nsetTime(hgrins, t);
     }
     
-    public double getTime() {
+    public double getTime() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) return ngetTime(hgrins);
         return -1.0;
     }
      
-    public void setSpeed(double v) {
+    public void setSpeed(double v) throws GRiNSInterfaceException
+    {
         if(hgrins!=0) nsetSpeed(hgrins, v);
     }
     
-    public double getSpeed() {
+    public double getSpeed() throws GRiNSInterfaceException
+    {
         if(hgrins!=0) return ngetSpeed(hgrins);
         return 1.0;
     }

@@ -97,7 +97,12 @@ public class DemoApplet extends Applet
 	public void start() {
 	    }
 	public void stop() {
-	    if(player!=null) player.close();
+	    try {
+	        if(player!=null) player.close();
+	        }
+	    catch(GRiNSInterfaceException e){
+	        System.out.println(""+e);
+	        }
 	    }
     public void destroy() {
         }
@@ -158,42 +163,57 @@ public class DemoApplet extends Applet
 	void buttonOpen_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null)player.open(textFieldURL.getText());
+		if(player!=null){
+		    try {player.open(textFieldURL.getText());}
+		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
+	    }
 		
 	}
 
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null)player.play();	 
-			 
+		if(player!=null){
+		    try {player.play();}
+		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
+	    }
 	}
 
 	void buttonPause_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null)player.pause();	 
-			 
+		if(player!=null){
+		    try {player.pause();}
+		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
+	    }
 	}
 
 	void buttonStop_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null) player.stop();	 
-			 
+		if(player!=null){
+		    try {player.stop();}
+		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
+	    }
 	}
 
 	void buttonClose_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null)player.close();	 
+		if(player!=null){
+		    try {player.close();}
+		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
+	    }
 			 
 	}
 
 	void buttonGetSize_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		Dimension d  = null;
-		if(player!=null) player.getPreferredSize();	
+		if(player!=null){
+		    try {d=player.getPreferredSize();}
+		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
+	    }
 		if(d!=null)
 		    textFieldSize.setText("" + d.width + " " + d.height);
 		else
