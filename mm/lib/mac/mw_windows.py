@@ -1711,6 +1711,7 @@ class DialogWindow(_Window):
 		
 	def hide(self):
 		self._wid.HideWindow()
+		self.grabdone()
 		self.settitle(None)
 		self._is_shown = 0
 		
@@ -1725,6 +1726,16 @@ class DialogWindow(_Window):
 		del self._item_to_cmd
 		del self._itemhandler
 		_Window.close(self)
+
+	def grabdone(self):
+		self.__grab_done = 1
+
+	def rungrabbed(self):
+		self.__grab_done = 0
+		mw_globals.toplevel.grab(self)
+		while not self.__grab_done:
+			mw_globals.toplevel._eventloop(100)
+		mw_globals.toplevel.grab(None)
 		
 	def addwidget(self, num, widget):
 		self._widgetdict[num] = widget
