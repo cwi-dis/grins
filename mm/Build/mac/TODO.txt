@@ -1,0 +1,18 @@
+DONE	NodeEdit/AttrEdit close box sends window to grey limbo. Cmd-W?
+DONE	NodeEdit crashes
+DONE	Dynamiccascade windows don't grey out their entry
+DONE	Window placement is silly
+DONE	Open Location: OK->Open15-10	Test HTML scrollbars
+DONE	Put Windows and Documents under Views, move Views to the right
+DONE	Include default license
+DONE	Player control panel in editor should be replaced
+15-10	Appleevents for open doc
+15-10	CR/LF probleem? Alleen in CMIF documents?
+15-10	View source
+15-10	Help window
+15-10	Balloon help for popup menus
+15-10	Audio doesn't pause at beginning of webnews
+15-10	Focus in lists disappears with window in the back, should be outlined
+15-10	Attribute help messages should contain SMIL-compatability
+15-10	Change temp license code to be less obnoxious
+15-10	Change splash code to contain license info
