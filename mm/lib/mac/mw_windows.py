@@ -2759,9 +2759,6 @@ class DialogWindow(_Window):
 		dlg = Dlg.GetNewDialog(resid, -1)
 		wid = dlg.GetDialogWindow()
 		wid2 = dlg.GetDialogWindow() #DBG
-		print 'DIALOG', dlg, hex(id(dlg)), hex(hash(dlg)) #DBG
-		print 'WINDOW', wid, hex(id(wid)), hex(hash(wid)) #DBG
-		print 'AGAIN', wid2, hex(id(wid2)), hex(hash(wid2)) #DBG
 		self._dlg = dlg
 		if cmdbuttons:
 			self._item_to_cmd = cmdbuttons
