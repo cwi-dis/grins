@@ -9,6 +9,8 @@ import MMAttrdefs
 from Scheduler import Scheduler
 from AnchorDefs import *
 from MMTypes import *
+from MMExc import *			# exceptions
+from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 import windowinterface
 import SR
 
@@ -218,13 +220,9 @@ class Selecter:
 		return 1
 
 	def gotoanchor(self, (anchor1, anchor2, dir, type), arg):
-		if type <> 0:
-			windowinterface.showmessage('Sorry, will JUMP anyway')
 		dest_uid, dest_aid = anchor2
-		if '/' in dest_uid:
-			if dest_uid[-2:] == '/1':
-				dest_uid = dest_uid[:-2]
-			return self.toplevel.jumptoexternal(dest_uid, dest_aid)
+		if type != TYPE_JUMP or '/' in dest_uid:
+			return self.toplevel.jumptoexternal(dest_uid, dest_aid, type)
 		try:
 			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:

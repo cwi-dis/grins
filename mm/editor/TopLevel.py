@@ -6,6 +6,7 @@ import MMExc, MMAttrdefs, MMTree
 from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
+from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 
 # an empty document
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
@@ -439,14 +440,29 @@ class TopLevel(ViewDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, filename, aid):
+	def jumptoexternal(self, uid, aid, type):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
+		import urllib
+		if '/' not in uid:
+			filename = self.filename
+		elif uid[-2:] == '/1':
+			filename = uid[:-2]
+		else:
+			filename = uid
+		try:
+			filename = urllib.urlretrieve(filename)[0]
+		except:
+			windowinterface.showmessage(
+				'Open operation failed.\n'+
+				'File: '+filename+'\n'+
+				'Error: '+`msg`)
+			return 0
+		if not os.path.isabs(filename) and self.dirname:
+			filename = os.path.join(self.dirname, filename)
 		for top in opentops:
-			if not os.path.isabs(filename) and self.dirname:
-				filename = os.path.join(self.dirname, filename)
-			if top.is_document(filename):
+			if top is not self and top.is_document(filename):
 				break
 		else:
 			try:
@@ -463,7 +479,17 @@ class TopLevel(ViewDialog):
 					'Error: '+`msg`)
 				return 0
 		top.show()
-		top.player.show((top.player.playfromanchor, (top.root, aid)))
+		node = top.root
+		if '/' not in uid:
+			try:
+				node = top.root.context.mapuid(uid)
+			except NoSuchUIDError:
+				print 'uid not found in document'
+		top.player.show((top.player.playfromanchor, (node, aid)))
+		if type == TYPE_CALL:
+			self.player.pause(1)
+		elif type == TYPE_JUMP:
+			self.close()
 		return 1
 
 	def is_document(self, filename):
