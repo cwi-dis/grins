@@ -1,0 +1,3 @@
+LIBRARY        winmm_d.pyd
+EXPORTS
+                initwinmm   @1	PRIVATE
