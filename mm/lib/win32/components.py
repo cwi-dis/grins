@@ -998,6 +998,8 @@ class _MultChoice:
 				break
 
 def multchoice(prompt, list, defindex, parent = None):
+	if len(list) == 3 and list == ['Yes', 'No', 'Cancel']:
+		return GetYesNoCancel(prompt, parent)
 	mc=_MultChoice(prompt, list, defindex, parent = parent)
 	if mc.dialog._result==win32con.IDOK:
 		return mc.answer
