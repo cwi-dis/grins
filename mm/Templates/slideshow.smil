@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content="pictures"/>
+    <layout>
+      <region id="pictures" title="pictures" height="83%" fit="meet"/>
+      <region id="audio" title="audio" fit="meet"/>
+    </layout>
+  </head>
+  <body>
+    <par>
+      <audio id="audio-0" region="audio" src="put-voiceover-here.aiff"/>
+      <seq>
+        <img id="picture_1" region="pictures" src="put-picture-1-here.tiff" dur="5s"/>
+        <img id="picture_2" region="pictures" src="put-picture-2-here.tiff" dur="5s"/>
+        <img id="picture_3" region="pictures" src="put-picture-3-here.tiff" dur="5s"/>
+      </seq>
+    </par>
+  </body>
+</smil>
