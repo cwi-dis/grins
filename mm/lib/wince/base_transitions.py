@@ -54,8 +54,30 @@ class TransitionEngine:
 		if self.__duration<=0.0:
 			self.settransitionvalue(self.__endprogress)
 		else:	
-			self.__register_for_timeslices()
+			#self.__register_for_timeslices()
+			self.thread_proc()
 
+	def thread_proc(self):
+		if self.windows[0].is_closed():
+			self.endtransition()
+			return
+		while 1:
+			t_sec = time.time() - self.__start
+			if t_sec>=self.__duration:
+				try:
+					self.settransitionvalue(self.__endprogress)
+					self.endtransition()
+				except wingdi.error, arg:
+					print arg
+				break			
+			else:
+				try:
+					value = self.__startprogress + self.__transperiod * t_sec
+					self.settransitionvalue(value)
+				except wingdi.error, arg:
+					print arg
+					break			
+			
 	def endtransition(self):
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
@@ -102,9 +124,9 @@ class TransitionEngine:
 		else:
 			if self.outtrans:
 				wnd._paintOnSurf(wnd._fromsurf)
-				wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
+				#wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
 			else:
-				wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
+				#wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
 				wnd._paintOnSurf(self._tosurf)
 	
 		fromsurf = 	wnd._fromsurf
@@ -162,7 +184,7 @@ class TransitionEngine:
 			try:
 				self.settransitionvalue(self.__endprogress)
 				self.endtransition()
-			except ddraw.error, arg:
+			except wingdi.error, arg:
 				print arg			
 		else:
 			try:
