@@ -51,9 +51,10 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		docview.ListView.__init__(self, doc)
 		DropTarget.DropTargetListener.__init__(self)
 		self._dropmap = {
-			'FileName': (self.dragfile, self.dropfile),
-			'URL': (self.dragurl, self.dropurl),
-		##	'NodeUID': (self.dragnode, self.dropnode),
+			'FileName': (self.dragitem, self.dropitem),
+			'URL': (self.dragitem, self.dropitem),
+			'NodeUID': (self.dragitem, self.dropitem),
+			'Region': (self.dragitem, self.dropitem),
 		}
 
 		# view decor
@@ -193,60 +194,21 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 	# drag/drop destination code
 	#
 
-	def dragfile(self,dataobj,kbdstate,x,y):
-		cb = self._cmddict.get('dragurl')
+	def dragitem(self,dataobj,kbdstate,x,y):
+		cb = self._cmddict.get('dragitem')
 		if not cb:
 			return 0
-		flavor, filename = DropTarget.DecodeDragData(dataobj)
-		assert flavor == 'FileName'
-		if not filename:
+		flavor, object = DropTarget.DecodeDragData(dataobj)
+		if not flavor:
 			return 0
-		url = MMurl.pathname2url(filename)
-		rv = cb(x, y, url)
-		rrv = self._string2drageffect(rv)
-		return rrv
+		rv = cb(x, y, flavor, object)
+		return DropTarget.Name2DragEffect(rv)
 
-	def dropfile(self,dataobj,effect,x,y):
-		cb = self._cmddict.get('dropurl')
+	def dropitem(self,dataobj,effect,x,y):
+		cb = self._cmddict.get('dropitem')
 		if not cb:
 			return 0
-		flavor, filename = DropTarget.DecodeDragData(dataobj)
-		assert flavor == 'FileName'
-		if not filename:
-			return 0
-		url = MMurl.pathname2url(filename)
-		rv = cb(x, y, url)
-		return self._string2drageffect(rv)
+		flavor, object = DropTarget.DecodeDragData(dataobj)
+		rv = cb(x, y, flavor, object)
+		return DropTarget.Name2DragEffect(rv)
 
-	def dragurl(self,dataobj,kbdstate,x,y):
-		cb = self._cmddict.get('dragurl')
-		if not cb:
-			return 0
-		flavor, url = DropTarget.DecodeDragData(dataobj)
-		assert flavor == 'URL'
-		if not url:
-			return 0
-		rv = cb(x, y, url)
-		return self._string2drageffect(rv)
-
-	def dropurl(self,dataobj,effect,x,y):
-		cb = self._cmddict.get('dropurl')
-		if not cb:
-			return 0
-		flavor, url = DropTarget.DecodeDragData(dataobj)
-		assert flavor == 'URL'
-		if not url:
-			return 0
-		rv = cb(x, y, url)
-		return self._string2drageffect(rv)
-
-	def _string2drageffect(self, str):
-		if str == 'move':
-			return DropTarget.DROPEFFECT_MOVE
-		elif str == 'copy':
-			return DropTarget.DROPEFFECT_COPY
-		elif str == 'link':
-			return DropTarget.DROPEFFECT_LINK
-		if str != None:
-			print 'Unknown drageffect', str
-		return 0

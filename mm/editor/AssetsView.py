@@ -293,21 +293,41 @@ class AssetsView(AssetsViewDialog):
 		print 'sort', column
 
 	# drag/drop destination callbacks
-	def dragurl(self, x, y, url):
+	def dragitem(self, x, y, flavor, object):
 		if self.whichview != 'template':
 			return None
-		return 'link'
+		if flavor in ('FileName', 'URL'):
+			return 'link'
+		if flavor == 'NodeUID':
+			contextid, nodeuid = object
+			if contextid != id(self.context):
+				return None
+			return 'copy'
+##		if flavor == 'Region':
+##			return 'copy'
+		return None
 
-	def dropurl(self, x, y, url):
+	def dropitem(self, x, y, flavor, object):
 		if self.whichview != 'template':
 			return None
-		url = self.context.relativeurl(url)
-		node = self.context.newnode('ext')
-		node.SetAttr('file', url)
+		if flavor == 'FileName':
+			object = MMurl.filename2url(object)
+			flavor = 'URL'
+		if flavor == 'URL':
+			url = self.context.relativeurl(url)
+			node = self.context.newnode('ext')
+			node.SetAttr('file', url)
+		if flavor == 'NodeUID':
+			contextid, nodeuid = object
+			if contextid != id(self.context):
+				return None
+			node = self.context.mapuid(nodeuid)
+			node = node.DeepCopy()
+		# Put it in the asset container
 		if not self.editmgr.transaction():
 			print 'No transaction'
 			node.Destroy()
 			return None
 		self.editmgr.addasset(node)
 		self.editmgr.commit()
-		return 'link'
+		return 'copy'

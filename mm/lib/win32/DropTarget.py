@@ -106,6 +106,18 @@ def EncodeDragData(name, args):
 		return CF_MEDIA, args
 	assert 0
 
+# Turn GRiNS dragefect names into windows constants
+def Name2DragEffect(str):
+	if str == 'move':
+		return DROPEFFECT_MOVE
+	elif str == 'copy':
+		return DROPEFFECT_COPY
+	elif str == 'link':
+		return DROPEFFECT_LINK
+	if str != None:
+		print 'Unknown drageffect', str
+	return 0
+
 class CoreDropTarget:
 	cfmap = {}
 	def __init__(self):
