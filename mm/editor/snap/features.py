@@ -29,6 +29,6 @@ cmif = 0
 lightweight = 0                         # er.. so why can I still edit structure?
 editor = 1
 level = 'lite'
-license_features_needed = ('light', sys.platform)
+license_features_needed = ('smil2light', sys.platform)
 
 grins_snap = 1
