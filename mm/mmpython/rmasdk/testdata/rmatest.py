@@ -34,16 +34,16 @@ class PrintRMListener:
 
 # real audio
 cwd = os.getcwd()
-url1="file://" + urllib.pathname2url(os.path.join(cwd, "thanks3.ra"))
+url1="file:" + urllib.pathname2url(os.path.join(cwd, "thanks3.ra"))
 
 # real video
-url2="file://" + urllib.pathname2url(os.path.join(cwd,"test.rv"))
+url2="file:" + urllib.pathname2url(os.path.join(cwd,"test.rv"))
 
 # real text
-url3="file://" + urllib.pathname2url(os.path.join(cwd,"news.rt"))
+url3="file:" + urllib.pathname2url(os.path.join(cwd,"news.rt"))
 
 # real pixel
-url4="file://" + urllib.pathname2url(os.path.join(cwd,"fadein.rp"))
+url4="file:" + urllib.pathname2url(os.path.join(cwd,"fadein.rp"))
 
 url = url2
 
