@@ -153,7 +153,8 @@ class SourceViewDialog:
 		self.findDlg.show()
 	
 	def onFindNext(self):
-		self.doFindNext(self._findText, self._findOptions)
+		if self._findText != None:
+			self.doFindNext(self._findText, self._findOptions)
 
 	def onReplace(self):
 		pass
