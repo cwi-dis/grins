@@ -129,6 +129,8 @@ class HtmlChannel(ChannelWindow):
 		# defanchor() method.
 		apply(cb, (anchor,))
 
+PseudoHtmlChannel = HtmlChannel
+
 # Convert an anchor to a set of boxes.
 def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 	# This works only if parno and charno are valid
