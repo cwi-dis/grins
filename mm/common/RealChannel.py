@@ -11,6 +11,8 @@ import os
 if os.name == 'mac':
 	import Evt
 	NEEDTICKER = 1
+elif os.name == 'posix':
+	NEEDTICKER = 1
 else:
 	NEEDTICKER = 0
 
@@ -32,6 +34,7 @@ class RealEngine:
 	def __init__(self):
 		self.usagecount = 0
 		self.engine = rma.CreateEngine()
+		self.__tid = None
 		windowinterface.addclosecallback(self.close, ())
 		
 	def close(self):
@@ -42,9 +45,9 @@ class RealEngine:
 	def __del__(self):
 		self.close()
 		
-	def CreatePlayer(self):
+	def CreatePlayer(self, window, winpossize):
 		if HAS_PRECONFIGURED_PLAYER:
-			return self.engine.CreatePlayer()
+			return self.engine.CreatePlayer(window, winpossize)
 		else:
 			return RealPlayer(self.engine)
 
@@ -61,15 +64,22 @@ class RealEngine:
 			self._stopticker()
 			
 	def _startticker(self):
-		windowinterface.setidleproc(self._tick)
+		self.__tid = windowinterface.setidleproc(self._tick)
 		
 	def _stopticker(self):
-		windowinterface.cancelidleproc(self._tick)
+		if self.__tid is None:
+			windowinterface.cancelidleproc(self._tick)
+		else:
+			windowinterface.cancelidleproc(self.__tid)
 		
-	def _tick(self):
-		# XXXX Mac-specific
-		self.engine.EventOccurred((0, 0, Evt.TickCount(), (0, 0), 0))
-
+	def _tick(self, *dummy):
+		if os.name == 'mac':
+			# XXXX Mac-specific
+			self.engine.EventOccurred((0, 0, Evt.TickCount(), (0, 0), 0))
+		elif os.name == 'posix':
+			self.engine.EventOccurred((0, 0, 0, (0, 0), 0))
+		else:
+			raise error, 'Unknown environment (_tick)'
 
 class RealPlayer:
 	# This class is for use with the new rma pyd. 
@@ -170,17 +180,15 @@ class RealChannel:
 	def prepare_player(self, node = None):
 		if not self.__has_rma_support:
 			return 0
-		if not self.__rmaplayer:
-			try:
-				self.__rmaplayer = self.__engine.CreatePlayer()
-			except:
-				self.__channel.errormsg(node, 'Cannot initialize RealPlayer G2 playback.')
-				return 0
 		return 1
 
 	def playit(self, node, window = None, winpossize=None, url=None):
 		if not self.__rmaplayer:
-			return 0
+			try:
+				self.__rmaplayer = self.__engine.CreatePlayer(window, winpossize)
+			except:
+				self.__channel.errormsg(node, 'Cannot initialize RealPlayer G2 playback.')
+				return 0
 		self.__loop = self.__channel.getloop(node)
 		duration = self.__channel.getduration(node)
 		if url is None:
@@ -198,13 +206,7 @@ class RealChannel:
 ##			u.close()
 ##			del u
 		self.__url = url
-##		self.__window = window
 		self.__rmaplayer.SetStatusListener(self)
-		if window is not None:
-			self.__rmaplayer.SetOsWindow(window)
-		if winpossize is not None:
-			pos, size = winpossize
-			self.__rmaplayer.SetPositionAndSize(pos, size)
 		if duration > 0:
 			self.__qid = self.__channel._scheduler.enter(duration, 0,
 							   self.__stop, ())
