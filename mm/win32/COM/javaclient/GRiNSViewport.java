@@ -2,7 +2,8 @@
 import java.awt.*;
 
 public class GRiNSViewport extends Canvas {
-	private int hgrins;
+	private int hgrins = 0;
+    private boolean hasSource = false;
     private native int connect(Graphics g);
     private native void disconnect(int hgrins);
     private native void open(int hgrins, String str);
@@ -11,45 +12,68 @@ public class GRiNSViewport extends Canvas {
     private native void stop(int hgrins);
     private native void pause(int hgrins);
     private native void update(int hgrins);
+    private native Dimension getSizeAdvice(int hgrins);
+    
     static {
          System.loadLibrary("grinsp");
      }
 
-    public boolean connect() {
-		hgrins = connect(getGraphics());
+    public boolean gpConnect() {
+        if(hgrins==0)
+		    hgrins = connect(getGraphics());
 		return hgrins!=0;
 		}
 
-    public void disconnect() {
-		if(hgrins!=0) disconnect(hgrins);
+    public void gpDisconnect() {
+		if(hgrins!=0) {
+		    if(hasSource) close(hgrins);
+		    hasSource = false;
+		    disconnect(hgrins);
+		    }
 		hgrins = 0;
+		invalidate();
 		}
 
-    public void open(String str) {
-		if(hgrins!=0) open(hgrins, str);
+    public void gpOpen(String str) {
+		if(hgrins!=0){
+		    if(hasSource) close(hgrins);
+		    open(hgrins, str);
+		    update(hgrins);
+		    hasSource = true;
+		    }
 		}
 
-	public void close() {
-		if(hgrins!=0) close(hgrins);
+	public void gpClose() {
+		if(hgrins!=0){
+		    close(hgrins);
+		    hasSource = false;
+		    invalidate();
+		    }
 		}
 
-	public void play() {
-		if(hgrins!=0) play(hgrins);
+	public void gpPlay() {
+		if(hgrins!=0 && hasSource) play(hgrins);
 		}
 
-	public void stop() {
-		if(hgrins!=0) stop(hgrins);
+	public void gpStop() {
+		if(hgrins!=0 && hasSource) stop(hgrins);
 		}
 
-	public void pause() {
-		if(hgrins!=0) pause(hgrins);
+	public void gpPause() {
+		if(hgrins!=0 && hasSource) pause(hgrins);
 		}
 
-	public void update() {
-		if(hgrins!=0) update(hgrins);
+	public void gpUpdate() {
+		if(hgrins!=0 && hasSource) update(hgrins);
+		}
+		
+	public Dimension gpGetSizeAdvice() {
+		if(hgrins!=0 && hasSource) return getSizeAdvice(hgrins);
+		return null;
 		}
 
 	public void paint(Graphics g){
-		if(hgrins!=0) update(hgrins);
+		if(hgrins!=0 && hasSource) update(hgrins);
+		else super.paint(g);
 	}
 }

@@ -15,7 +15,7 @@ public class GRiNSApplet extends Applet
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setSize(480,400);
+		setSize(480,422);
 		add(grinsViewport);
 		grinsViewport.setBackground(java.awt.Color.pink);
 		grinsViewport.setBounds(25,25,300,300);
@@ -49,6 +49,17 @@ public class GRiNSApplet extends Applet
 		add(buttonStop);
 		buttonStop.setBackground(java.awt.Color.lightGray);
 		buttonStop.setBounds(360,128,104,28);
+		buttonClose.setLabel("Close");
+		add(buttonClose);
+		buttonClose.setBackground(java.awt.Color.lightGray);
+		buttonClose.setBounds(360,176,104,28);
+		buttonGetSize.setLabel("Get size");
+		add(buttonGetSize);
+		buttonGetSize.setBackground(java.awt.Color.lightGray);
+		buttonGetSize.setBounds(56,384,60,28);
+		textFieldSize.setEditable(false);
+		add(textFieldSize);
+		textFieldSize.setBounds(132,384,92,28);
 		//}}
 	
 		//{{REGISTER_LISTENERS
@@ -59,12 +70,15 @@ public class GRiNSApplet extends Applet
 		buttonPlay.addActionListener(lSymAction);
 		buttonPause.addActionListener(lSymAction);
 		buttonStop.addActionListener(lSymAction);
+		buttonClose.addActionListener(lSymAction);
+		buttonGetSize.addActionListener(lSymAction);
 		//}}
 	}
+	//GRiNSViewport grinsViewport = new GRiNSViewport();
+	//java.awt.Canvas grinsViewport = new java.awt.Canvas();
 	
 	//{{DECLARE_CONTROLS
 	GRiNSViewport grinsViewport = new GRiNSViewport();
-	//java.awt.Canvas grinsViewport = new java.awt.Canvas();
 	java.awt.Button buttonConnect = new java.awt.Button();
 	java.awt.Button buttonDisconnect = new java.awt.Button();
 	java.awt.Button buttonOpen = new java.awt.Button();
@@ -73,6 +87,9 @@ public class GRiNSApplet extends Applet
 	java.awt.Button buttonPlay = new java.awt.Button();
 	java.awt.Button buttonPause = new java.awt.Button();
 	java.awt.Button buttonStop = new java.awt.Button();
+	java.awt.Button buttonClose = new java.awt.Button();
+	java.awt.Button buttonGetSize = new java.awt.Button();
+	java.awt.TextField textFieldSize = new java.awt.TextField();
 	//}}
 	
 	private void message(String str) {
@@ -82,7 +99,7 @@ public class GRiNSApplet extends Applet
 	public void start() {
 	    }
 	public void stop() {
-	    grinsViewport.disconnect();
+	    grinsViewport.gpDisconnect();
 	    }
     public void destroy() {
         }
@@ -135,47 +152,68 @@ public class GRiNSApplet extends Applet
 				buttonPause_ActionPerformed(event);
 			else if (object == buttonStop)
 				buttonStop_ActionPerformed(event);
+			else if (object == buttonClose)
+				buttonClose_ActionPerformed(event);
+			else if (object == buttonGetSize)
+				buttonGetSize_ActionPerformed(event);
 		}
 	}
 
 	void buttonConnect_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsViewport.connect();	 
+		grinsViewport.gpConnect();	 
 	}
 
 	void buttonDisconnect_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsViewport.disconnect();	 
+		grinsViewport.gpDisconnect();	 
 			 
 	}
 
 	void buttonOpen_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsViewport.open(textFieldURL.getText());	 
-			 
+		grinsViewport.gpOpen(textFieldURL.getText());
+		
 	}
 
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsViewport.play();	 
+		grinsViewport.gpPlay();	 
 			 
 	}
 
 	void buttonPause_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsViewport.pause();	 
+		grinsViewport.gpPause();	 
 			 
 	}
 
 	void buttonStop_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsViewport.stop();	 
+		grinsViewport.gpStop();	 
+			 
+	}
+
+	void buttonClose_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsViewport.gpClose();	 
+			 
+	}
+
+	void buttonGetSize_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		Dimension d  = grinsViewport.gpGetSizeAdvice();	
+		if(d!=null)
+		    textFieldSize.setText("" + d.width + " " + d.height);
+		else
+		    textFieldSize.setText("");
 			 
 	}
 }
