@@ -279,8 +279,9 @@ class _Event:
 					MacOS.HandleEvent(event)
 					return
 				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
-				newh, neww = (rv>>16) & 0xffff, rv & 0xffff
-				window._resize_callback(neww, newh)
+				if rv:
+					newh, neww = (rv>>16) & 0xffff, rv & 0xffff
+					window._resize_callback(neww, newh)
 			else:
 				partcode = Windows.inContent
 		if partcode == Windows.inContent:
