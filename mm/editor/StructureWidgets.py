@@ -747,11 +747,16 @@ class VerticalWidget(StructureObjWidget):
         min_width = 0; min_height = 0
 
         if len(self.children) == 0 or self.iscollapsed():
-            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
-            return self.get_relx(boxsize), self.get_rely(boxsize);
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
+            return self.get_relx(boxsize), self.get_rely(boxsize)
 
         for i in self.children:
             w, h = i.get_minsize()
+            if self.root.pushbackbars and isinstance(i, MediaWidget):
+                pushover = self.get_relx(i.downloadtime_lag)
+                w = w + pushover
+            else:
+                pushover = 0.0
 #            print "VerticalWidget: w and h are: ", w, h
 #            #assert w < 1.0 and w > 0.0
             #assert h < 1.0 and h > 0.0
@@ -800,6 +805,11 @@ class VerticalWidget(StructureObjWidget):
 
         for i in self.children:
             w,h = i.get_minsize_abs()
+            if self.root.pushbackbars and isinstance(i, MediaWidget):
+                pushover = i.downloadtime_lag
+                w = w + pushover
+            else:
+                pushover = 0.0
             if w > mw: mw=w
             mh=mh+h
         mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
@@ -836,13 +846,18 @@ class VerticalWidget(StructureObjWidget):
 #            print "Warning! free_height is wrong: ", free_height, self;
             free_height = 0.0
 
-        l = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
+        l_par = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
         r = float(r) - self.get_relx(sizes_notime.HEDGSIZE)
         t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
         
 
         for medianode in self.children:    # for each MMNode:
             w,h = medianode.get_minsize()
+            if self.root.pushbackbars and isinstance(medianode, MediaWidget):
+                pushover = self.get_relx(medianode.downloadtime_lag)
+            else:
+                pushover = 0.0
+            l = l_par + pushover
             if h > (b-t):               # If the node needs to be bigger than the available space...
                 pass                   # TODO!!!!!
 #                print "Error: Node is too big!"
@@ -983,7 +998,6 @@ class MediaWidget(MMNodeWidget):
         # divide the available bandwidth, for other structure nodes each child has the whole bandwidth
         # available.
         availbw  = settings.get('system_bitrate')
-        division = 1
         ancestor = self.node.parent
         bwfraction = MMAttrdefs.getattr(self.node, 'project_bandwidth_fraction')
         while ancestor:
@@ -992,7 +1006,7 @@ class MediaWidget(MMNodeWidget):
                 # we use that, otherwise we divide evenly
                 if bwfraction < 0:
                     bwfraction = 1.0 / len(ancestor.children)
-                    availbw = availbw * bwfraction
+                availbw = availbw * bwfraction
             bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
             ancestor = ancestor.parent
         
