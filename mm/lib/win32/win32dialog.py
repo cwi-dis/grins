@@ -598,10 +598,11 @@ class ProgressDialog:
 class _ProgressDialog(ResDialog):
 	# Placeholder
 	
-	def __init__(self, title, cancelcallback=None, parent=None, delaycancel=1):
+	def __init__(self, title, cancelcallback=None, parent=None, delaycancel=1, percent=0):
 		self.cancelcallback = cancelcallback
 		self._title = title
 		self.delaycancel = delaycancel
+		self._percent = percent
 		ResDialog.__init__(self,grinsRC.IDD_PROGRESS,parent)
 		self._parent=parent
 		self._progress = ProgressControl(self,grinsRC.IDC_PROGRESS1)
@@ -637,7 +638,10 @@ class _ProgressDialog(ResDialog):
 		if self._cancel_pressed and self.cancelcallback:
 			self.cancelcallback()
 		if cur1 != None:
-			label = label + " (%d of %d)"%(cur1, max1)
+			if self._percent:
+				label = label + "    %.0f%s" % (cur1, '%')
+			else:
+				label = label + " (%d of %d)" % (cur1, max1)
 		self._message.settext(label)
 		if max2 == None:
 			cur2 = None
