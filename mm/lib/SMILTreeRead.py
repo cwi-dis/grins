@@ -841,24 +841,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict = self.__regions.get(region, {})
 		if mediatype == 'audio':
 			if subtype in ('vnd.rn-realaudio', 'x-pn-realaudio'):
-				mtype = 'raudio'
+				mtype = 'RealAudio'
 			else:
 				mtype = 'sound'
 		elif mediatype == 'image':
 			if subtype == 'vnd.rn-realpix':
-				mtype = 'rpix'
+				mtype = 'RealPix'
 			else:
 				mtype = 'image'
 		elif mediatype == 'video':
 			if subtype == 'vnd.rn-realvideo':
-				mtype = 'rvideo'
+				mtype = 'RealVideo'
 			else:
 				mtype = 'video'
 		elif mediatype == 'text':
 			if subtype == 'plain':
 				mtype = 'text'
 			elif subtype == 'vnd.rn-realtext':
-				mtype = 'rtext'
+				mtype = 'RealText'
 			else:
 				mtype = 'html'
 		elif mediatype == 'cmif_cmif':
