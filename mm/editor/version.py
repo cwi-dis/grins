@@ -5,11 +5,11 @@ import features
 
 shortversion = 'grins2pro-%s-2.2'%sys.platform
 version = 'Pro for %s, v2.2 %s' % (features.compatibility, patchlevel)
-macpreffilename = 'GRiNS-pro-%s-2.0 Prefs' % features.compatibility_short
+macpreffilename = 'GRiNS-pro-%s-2.2 Prefs' % features.compatibility_short
 
-title = 'GRiNS Editor'
+title = 'GRiNS Pro Editor'
 registrykey = 'Oratrix GRiNS'
-registryname = 'Editor 2.0'
+registryname = 'Editor 2.2'
 
 # Note: this GUID *must* be different for each version
 # and each product!
