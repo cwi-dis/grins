@@ -136,6 +136,7 @@ void AppPyInterface::restore_pysys_stdout(PyObject *pystdout)
 
 bool InitializePythonInterface(HWND hWnd)
 	{	
+	Py_OptimizeFlag = 2;
 	PyInterface::setPythonHome(python_home);
 	if(!PyInterface::initialize(GetApplicationName()))
 		{
