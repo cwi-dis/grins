@@ -341,7 +341,7 @@ class StructureObjWidget(MMNodeWidget):
 
 	def select(self):
 		if self.mother.timescale in ('focus', 'cfocus'):
-			self.timeline = TimelineWidget(self.node, self.mother)
+			self.timeline = TimelineWidget(self, self.mother)
 		MMNodeWidget.select(self)
 		
 	def unselect(self):
