@@ -45,7 +45,7 @@ def dumpcache(root, filename):
 	try:
 		f = open(cache, 'wb')
 	except IOError, msg:
-		print cache, ': failed to write CMIF cache:', msg
+		print cache, ': failed to write CMIF cache:', msg[1]
 		return
 	header = ('MMCache 1.0', base, stf[ST_MTIME], stf[ST_SIZE])
 	marshal.dump(header, f)
