@@ -22,3 +22,5 @@ class TopLevelDialog:
 			return
 		self.source = windowinterface.textwindow(self.root.source)
 
+	def setusergroupsmenu(self, menu):
+		self.player.setusergroupsmenu(menu)
