@@ -2505,10 +2505,6 @@ class MMNode:
 				refnode = child.__find_refnode(arc)
 				refnode.add_arc(arc)
 			cdur = child.calcfullduration()
-			if cdur == 0 and \
-			   child.GetType() in interiortypes and \
-			   child.GetFill() != 'remove':
-				cdur = None
 			if cdur is not None and child.fullduration is not None:
 				if cdur < 0:
 					delay = None
@@ -2850,6 +2846,7 @@ class MMNode:
 			self.fullduration = duration
 		else:
 			self.fullduration = None
+		if debug: print 'calcfullduration:',`self`,`duration`,`maybecached`
 		return duration
 
 	def _is_realpix_with_captions(self):
