@@ -433,21 +433,28 @@ class _Toplevel:
 			except:
 				print 'GetVideoSize failed'
 			builder.Release()
-		del builder
+			del builder
 		return (width, height)
 
 	# Returns the duration of the media file in secs	
 	def GetMediaDuration(self,file):
 		DirectShowSdk=win32ui.GetDS()
 		builder=DirectShowSdk.CreateGraphBuilder()
-		duration=1.0
-		if builder:
-			try:
-				builder.RenderFile(file)
-				duration=builder.GetDuration()
-			except:
-				print 'GetMediaDuration failed'
-			builder.Release()
+
+		if not builder:
+			print 'Missing DirectShow infrasrucrure'
+			return 1.0
+
+		if not builder.RenderFile(file):
+			print 'failed to render file',file
+			del builder
+			return 1.0
+
+		duration=builder.GetDuration()
+		if duration<0:
+			print 'failed to get duration for file',file
+			duration=1.0
+		builder.Release()
 		del builder
 		return duration
 	
