@@ -2227,6 +2227,95 @@ DirectDrawSurface_Blt_YUV420_On_RGB8(DirectDrawSurfaceObject *self, PyObject *ar
 	return Py_None;	
 	}
 
+static char DirectDrawSurface_GetDataAsRGB24__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_GetDataAsRGB24(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	HRESULT hr;
+	if(IsRectEmpty(&self->rc)){
+		hr = GetSurfaceRect(self->pI, &self->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_GetDataAsRGB24:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+	int width = self->rc.right - self->rc.left;
+	int height = self->rc.bottom - self->rc.top;
+	int npixels = width*height;
+	int nbytes = npixels*3;
+
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	hr=self->pI->Lock(0,&desc, DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_GetDataAsRGB24::Lock", hr);
+		return NULL;
+	}	
+	
+	PyObject *obj = NULL;
+	RGBTRIPLE *pb = new RGBTRIPLE[npixels];
+	RGBTRIPLE *p = pb;
+
+	// 32 -> 24
+	if(dwRGBBitCount==32) {
+		for(int row=height-1;row>=0;row--)
+			{
+			RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+			for(int col=0;col<width;col++)
+				{
+				p->rgbtRed = surfpixel->rgbRed;
+				p->rgbtGreen = surfpixel->rgbGreen;
+				p->rgbtBlue = surfpixel->rgbBlue;
+				surfpixel++; p++;
+				}
+			}
+		}
+
+	else if(dwRGBBitCount==24) {
+		for(int row=height-1;row>=0;row--)
+			{
+			RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+			for(int col=0;col<width;col++)
+				{
+				p->rgbtRed = surfpixel->rgbtRed;
+				p->rgbtGreen = surfpixel->rgbtGreen;
+				p->rgbtBlue = surfpixel->rgbtBlue;
+				surfpixel++; p++;
+				}
+			}
+		}
+	else if(dwRGBBitCount==16) {
+		for(int row=height-1;row>=0;row--)
+			{
+			WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+			for(int col=0;col<width;col++)
+				{
+				WORD r = (*surfpixel & (WORD)desc.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+				WORD g = (*surfpixel & (WORD)desc.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+				WORD b = (*surfpixel++ & (WORD)desc.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+				p->rgbtRed = BYTE(r);
+				p->rgbtGreen = BYTE(g);
+				p->rgbtBlue = BYTE(b);
+				surfpixel++; p++;
+				}
+			}
+		}
+	else 
+		{
+		seterror("GetDataAsRGB24: not supported bit depth");
+		}
+	obj = PyString_FromStringAndSize((char*)pb, nbytes);
+	delete[] pb;
+	self->pI->Unlock(0);
+	return obj;
+	}
+
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
 	{"GetAttachedSurface", (PyCFunction)DirectDrawSurface_GetAttachedSurface, METH_VARARGS, DirectDrawSurface_GetAttachedSurface__doc__},
@@ -2261,6 +2350,7 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"Blt_YUV420_On_RGB16", (PyCFunction)DirectDrawSurface_Blt_YUV420_On_RGB16, METH_VARARGS, DirectDrawSurface_Blt_YUV420_On_RGB16__doc__},
 	{"Blt_YUV420_On_RGB8", (PyCFunction)DirectDrawSurface_Blt_YUV420_On_RGB8, METH_VARARGS, DirectDrawSurface_Blt_YUV420_On_RGB8__doc__},
 
+	{"GetDataAsRGB24", (PyCFunction)DirectDrawSurface_GetDataAsRGB24, METH_VARARGS, DirectDrawSurface_GetDataAsRGB24__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
