@@ -379,7 +379,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if self._active_child and\
 			hasattr(self._active_child._view,'_commandlist') and\
 			self._active_child._view._commandlist:
-			id=usercmdui.class2ui[usercmd.CLOSE_WINDOW]
+			id=usercmdui.class2ui[usercmd.CLOSE_WINDOW].id
 			self.PostMessage(win32con.WM_COMMAND,id)
 		else:
 			f.PostMessage(win32con.WM_CLOSE)
