@@ -40,8 +40,8 @@ def setuserinfo(user, org, license):
 	setitem(ITEM_LICENSE, license)
 	
 def setitem(item, value):
-	tp, h, rect = _dialog.GetDialogItem(item)
-	Dlg.SetDialogItemText(h, value)
+	htext = _dialog.GetDialogItemAsControl(item)
+	Dlg.SetDialogItemText(htext, value)
 
 def unsplash():
 	pass
