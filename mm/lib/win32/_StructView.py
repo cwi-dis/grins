@@ -185,7 +185,6 @@ class _StructView(DisplayListView):
 		#print "DEBUG: dragging."
 		#import traceback
 		#traceback.print_stack()
-		print 'DBG dragnode kbdstate', kbdstate
 		node=dataobj.GetGlobalData(self.CF_NODE)
 		if node and self._dragging:
 			x, y = self._DPtoLP((x,y))
@@ -205,7 +204,6 @@ class _StructView(DisplayListView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		#print "DEBUG: dropped."
-		print 'DBG dropnode effect', effect
 		node = dataobj.GetGlobalData(self.CF_NODE) 
 		if node and self._dragging:
 			
