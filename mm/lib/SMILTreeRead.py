@@ -82,7 +82,7 @@ smil_node_attrs = [
 class SMILParser(SMIL, xmllib.XMLParser):
 	__warnmeta = 0		# whether to warn for unknown meta properties
 
-	def __init__(self, context, printfunc = None, new_file = 0):
+	def __init__(self, context, printfunc = None, new_file = 0, check_compatibility = 0):
 		self.elements = {
 			'smil': (self.start_smil, self.end_smil),
 			'head': (self.start_head, self.end_head),
@@ -146,6 +146,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__layouts = {}
 		self.__realpixnodes = []
 		self.__new_file = new_file
+		self.__check_compatibility = check_compatibility
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
 		self.__validchannels = {}
@@ -1284,7 +1285,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif name == 'base':
 			self.__context.setbaseurl(content)
 ##			self.__base = content
-		elif name in ('pics-label', 'PICS-label', 'generator'):
+		elif name in ('pics-label', 'PICS-label'):
 			pass
 		elif name[:9] == 'template_':
 			# We use these meta names for storing information such as snapshot
@@ -1293,6 +1294,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif name == 'project_links':
 			# space-separated list of external anchors
 			self.__context.externalanchors = string.split(content)
+		elif name == 'generator':
+			if self.__check_compatibility:
+				import DefCompatibilityCheck, windowinterface, version
+				if not DefCompatibilityCheck.isCompatibleVersion(content):
+					if windowinterface.GetOKCancel('This document was created by '+content+'\n'+'GRiNS '+version.version+' may be able to read the document, but some features may be lost\n\nDo you wish to continue?',parent=None):
+						raise UserCancel
 		else:
 			if self.__warnmeta:
 				self.warning('unrecognized meta property', self.lineno)
@@ -2008,26 +2015,32 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			message = 'error, line %d: %s' % (lineno, message)
 		raise MSyntaxError, msg + message
 
+	def fatalerror(self):
+		type, value, traceback = sys.exc_info()
+		if self.__printfunc is not None:
+			msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
+			if self.__printdata:
+				data = string.join(self.__printdata, '\n')
+				# first 30 lines should be enough
+				data = string.split(data, '\n')
+				if len(data) > 30:
+					data = data[:30]
+					data.append('. . .')
+			else:
+				data = []
+			data.insert(0, msg)
+			self.__printfunc(string.join(data, '\n'))
+			self.__printdata = []
+		raise MSyntaxError # re-raise
+	
 	def goahead(self, end):
 		try:
 			xmllib.XMLParser.goahead(self, end)
-		except:
-			type, value, traceback = sys.exc_info()
-			if self.__printfunc is not None:
-				msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
-				if self.__printdata:
-					data = string.join(self.__printdata, '\n')
-					# first 30 lines should be enough
-					data = string.split(data, '\n')
-					if len(data) > 30:
-						data = data[:30]
-						data.append('. . .')
-				else:
-					data = []
-				data.insert(0, msg)
-				self.__printfunc(string.join(data, '\n'))
-				self.__printdata = []
-			raise		# re-raise
+		# we should catch only parsing error
+		# there is an other type of except --> Abort
+		# this last except haven't be catched in this module
+		except (error, RuntimeError, MSyntaxError):
+			self.fatalerror()
 			
 	# helper methods
 
@@ -2216,17 +2229,17 @@ def ReadMetaData(file):
 	p.close()
 	return p.meta_data
 	
-def ReadFile(url, printfunc = None, new_file = 0):
+def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0):
 	if os.name == 'mac':
 		import splash
 		splash.splash('loaddoc')	# Show "loading document" splash screen
-	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file)
+	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file, check_compatibility)
 	if os.name == 'mac':
 		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
 
-def ReadFileContext(url, context, printfunc = None, new_file = 0):
-	p = SMILParser(context, printfunc, new_file)
+def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatibility = 0):
+	p = SMILParser(context, printfunc, new_file, check_compatibility)
 	u = MMurl.urlopen(url)
 	if not new_file:
 		baseurl = u.geturl()
@@ -2244,13 +2257,13 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0):
 	root.source = data
 	return root
 
-def ReadString(string, name, printfunc = None):
+def ReadString(string, name, printfunc = None, check_compatibility = 0):
 	return ReadStringContext(string, name,
 				 MMNode.MMNodeContext(MMNode.MMNode),
-				 printfunc)
+				 printfunc, check_compatibility)
 
-def ReadStringContext(string, name, context, printfunc = None):
-	p = SMILParser(context, printfunc)
+def ReadStringContext(string, name, context, printfunc = None, check_compatibility = 0):
+	p = SMILParser(context, printfunc, check_compatibility)
 	p.feed(string)
 	p.close()
 	root = p.GetRoot()
