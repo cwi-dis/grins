@@ -1691,13 +1691,6 @@ class _Window:
 			func, arg = self._accelerators[val]
 			apply(func, arg)
 
-	def create_menu(self, list, title = None):
-		self.destroy_menu()
-		self._menu = self._create_menu(title, list)
-		self.register(Mouse2Press, self._popup_menu, None)
-		if self._accelerators:
-			self.register(_Accelerator, self._accelerators, None)
-
 	def _create_menu(self, title, list):
 		menu = self._menu = gl.newpup()
 		self._menuids.append(menu)
@@ -2132,10 +2125,6 @@ class Dialog(_DummyButtons):
 					callback = self._convert_menu_list(callback)
 				newlist.append('', label, callback)
 		return newlist
-
-	def create_menu(self, list, title = None):
-		self.window.create_menu(self._convert_menu_list(list),
-					title = title)
 
 	def close(self):
 		self.window.close()
