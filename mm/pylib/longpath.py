@@ -12,8 +12,6 @@ import win32api
 
 def short2longpath(pathname):
 	"""Convert DOS pathname to full NT pathname."""
-	if pathIsUNC(pathname):
-		return pathname
 	dir, file = os.path.split(pathname)
 	if not file:
 		return dir
@@ -22,11 +20,13 @@ def short2longpath(pathname):
 	return os.path.join(longdir, longfile)
 	
 def _short2longfile(pathname):
-	list = win32api.FindFiles(pathname)
-	if not list:
-		raise IOError, "No files match %s"%pathname
-	if len(list) > 1:
-		raise IOError, "Multiple files match %s"%pathname
+	# if we can't figure out the long name, just return the short
+	try:
+		list = win32api.FindFiles(pathname)
+	except:
+		list = []
+	if not list or len(list) > 1:
+		return pathname
 	return list[0][8]
 
 
@@ -44,4 +44,3 @@ if __name__ == '__main__':
 	while 1:
 		x = raw_input()
 		print short2longpath(x)
-		
