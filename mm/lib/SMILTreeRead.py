@@ -156,9 +156,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'animation': (self.start_animation, self.end_animation),
 			'textstream': (self.start_textstream, self.end_textstream),
 			'brush': (self.start_brush, self.end_brush),
-			GRiNSns+' '+'socket': (self.start_socket, self.end_socket),
-			GRiNSns+' '+'shell': (self.start_shell, self.end_shell),
-			GRiNSns+' '+'cmif': (self.start_cmif, self.end_cmif),
 			'a': (self.start_a, self.end_a),
 			'anchor': (self.start_anchor, self.end_anchor),
 			'area': (self.start_area, self.end_area),
@@ -1187,12 +1184,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif mediatype == 'application' and \
 			     subtype == 'x-shockwave-flash':
 				chtype = 'RealVideo'
-			elif mediatype == 'cmif_cmif':
-				chtype = 'cmif'
-			elif mediatype == 'cmif_socket':
-				chtype = 'socket'
-			elif mediatype == 'cmif_shell':
-				chtype = 'shell'
 			elif mediatype is None:
 				chtype = 'undefined'
 			else:
@@ -3769,24 +3760,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewNode('brush', attributes)
 
 	def end_brush(self):
-		self.EndNode()
-
-	def start_cmif(self, attributes):
-		self.NewNode('cmif_cmif', attributes)
-
-	def end_cmif(self):
-		self.EndNode()
-
-	def start_socket(self, attributes):
-		self.NewNode('cmif_socket', attributes)
-
-	def end_socket(self):
-		self.EndNode()
-
-	def start_shell(self, attributes):
-		self.NewNode('cmif_shell', attributes)
-
-	def end_shell(self):
 		self.EndNode()
 
 	# linking
