@@ -613,9 +613,17 @@ class Window:
 		pass
 
 ########################################
+import win32ui, win32con, win32api
+Afx=win32ui.GetAfx()
+Sdk=win32ui.GetWin32Sdk()
+
+# import window core stuff
+from pywin.mfc import window
+
 class SubWindow(Window):
 	def __init__(self, parent, coordinates, transparent, z, units):
 		Window.__init__(self, parent, coordinates, units, z, transparent)
+		self._oswnd = None
 
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
@@ -666,4 +674,17 @@ class SubWindow(Window):
 		rc = (x, y, x+w, y+h)
 		win32mu.FrameRect(dc,rc,self._showing)
 
+	def GetSafeHwnd(self):
+		if self._oswnd: wnd = self._oswnd
+		else: wnd = self._topwindow
+		return wnd.GetSafeHwnd()
+	
+	def GetClientRect(self):
+		return self._rect
+
+	def HookMessage(self, f, m):
+		if self._oswnd: wnd = self._oswnd
+		else: wnd = self._topwindow
+		wnd.HookMessage(f,m)
+		
 
