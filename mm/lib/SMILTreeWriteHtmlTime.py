@@ -19,7 +19,7 @@ not_xhtml_time_elements = ('brush', 'prefetch', )
 
 not_xhtml_time_attrs = ('min', 'max',  'customTest', 'fillDefault', 
 	'restartDefault', 'syncBehaviorDefault','syncToleranceDefault', 'repeat',
-	'regPoint', 'regAlign',
+	#'regPoint', 'regAlign', # we take them into account indirectly
 	'close', 'open', 'pauseDisplay',
 	'showBackground',
 	)
@@ -119,6 +119,7 @@ class XHTML_TIME:
 #	SMILHtmlTimeWriter
 # 
 from SMILTreeWrite import *
+import math
 
 class SMILHtmlTimeWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
@@ -378,6 +379,8 @@ class SMILHtmlTimeWriter(SMIL):
 						transOut = value
 					elif name == 'backgroundColor':
 						pass
+					elif name in ('regPoint', 'regAlign'):
+						pass # taken into account indirectly
 					elif not name in ('top','left','width','height','right','bottom'):
 						attrlist.append((name, value))
 		
@@ -592,12 +595,25 @@ class SMILHtmlTimeWriter(SMIL):
 		attrlist = []
 		targetElement = None
 		tag = node.GetAttrDict().get('tag')
+
+		if tag == 'animateMotion':
+			from Animators import AnimateElementParser
+			aparser = AnimateElementParser(node)
+			fromxy = aparser.translatePosAttr('from')
+			toxy = aparser.translatePosAttr('to')
+			values = aparser.translatePosValues()
+			path = aparser.translatePath()
+
 		attributes = self.attributes.get(tag, {})
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
 				value = func(self, node)
 				if name == 'targetElement':
 					targetElement = value
+				if name == 'from':value = fromxy
+				elif name == 'to':value = toxy
+				elif name == 'values':value = values
+				elif name == 'path': value = path
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
 
