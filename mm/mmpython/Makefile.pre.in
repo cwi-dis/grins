@@ -82,11 +82,17 @@ MODLIBS=	@MODLIBS@
 
 # === Variables from configure (through sedscript) ===
 
+CC=		@CC@
 DEFS=		@DEFS@
 LIBS=		@LIBS@
 LIBM=		@LIBM@
 LIBC=		@LIBC@
 RANLIB=		@RANLIB@
+MACHDEP=	@MACHDEP@
+SO=		@SO@
+LDSHARED=	@LDSHARED@
+CCSHARED=	@CCSHARED@
+LINKFORSHARED=	@LINKFORSHARED@
 
 # Install prefix for architecture-independent files
 prefix=		/usr/local
@@ -116,6 +122,8 @@ SYSLIBS=	$(LIBM) $(LIBC)
 # === Fixed rules ===
 
 all:		python
+
+sharedmods:	$(SHAREDMODS)
 
 python:		config.o lib.a $(PYTHONLIBS) Makefile
 		$(CC) config.o lib.a $(PYTHONLIBS) \
@@ -155,11 +163,17 @@ sedscript:	$(MAKEFILE)
 		sed -n \
 		  -e '1s/.*/1i\\/p' \
 		  -e '2s%.*%# $H%p' \
+		  -e '/^CC=/s/^CC=[ 	]*\(.*\)/s%@CC[@]%\1%/p' \
 		  -e '/^DEFS=/s/^DEFS=[ 	]*\(.*\)/s%@DEFS[@]%\1%/p' \
 		  -e '/^LIBS=/s/^LIBS=[ 	]*\(.*\)/s%@LIBS[@]%\1%/p' \
 		  -e '/^LIBM=/s/^LIBM=[ 	]*\(.*\)/s%@LIBM[@]%\1%/p' \
 		  -e '/^LIBC=/s/^LIBC=[ 	]*\(.*\)/s%@LIBC[@]%\1%/p' \
 		  -e '/^RANLIB=/s/^RANLIB=[ 	]*\(.*\)/s%@RANLIB[@]%\1%/p' \
+		  -e '/^MACHDEP=/s/^MACHDEP=[ 	]*\(.*\)/s%@MACHDEP[@]%\1%/p' \
+		  -e '/^SO=/s/^SO=[ 	]*\(.*\)/s%@SO[@]%\1%/p' \
+		  -e '/^LDSHARED=/s/^LDSHARED=[ 	]*\(.*\)/s%@LDSHARED[@]%\1%/p' \
+		  -e '/^CCSHARED=/s/^CCSHARED=[ 	]*\(.*\)/s%@CCSHARED[@]%\1%/p' \
+		  -e '/^LINKFORSHARED=/s/^LINKFORSHARED=[ 	]*\(.*\)/s%@LINKFORSHARED[@]%\1%/p' \
 		  -e '/^$P=/s/^$P=\(.*\)/s%^$P=.*%$P=\1%/p' \
 		  -e '/^$E=/s/^$E=\(.*\)/s%^$E=.*%$E=\1%/p' \
 		  $(MAKEFILE) >sedscript
@@ -182,9 +196,3 @@ clobber:	clean
 
 distclean:	clobber
 		-rm -f Makefile Setup
-
-# === Rules added by makesetup ===
-
-# DO NOT DELETE THIS LINE -- mkdep uses it.
-# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
-# IF YOU PUT ANYTHING HERE IT WILL GO AWAY
