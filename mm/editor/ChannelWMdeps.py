@@ -165,11 +165,11 @@ class Channel:
 
 	def done(self, dummy):
 		self.qid = None
+		if not self.did_prearm():
+			self.player.arm_ready(self.name)
 		if self.haspauseanchor and not self.player.ui.ignore_pauses:
 			return
 		callback, arg = self.cb
-		if not self.did_prearm():
-			self.player.arm_ready(self.name)
 		apply(callback, arg)
 		if self.autoanchor:
 			rv = self.player.anchorfired(self.node, [self.autoanchor])
