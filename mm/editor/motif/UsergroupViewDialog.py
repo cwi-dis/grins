@@ -18,7 +18,7 @@ class UsergroupViewDialog:
 		the cursor) but don't pop it up.
 		"""
 		w = windowinterface.Window('UsergroupDialog', resizable = 1,
-					   deleteCallback = [CLOSE_WINDOW])
+					   deleteCallback = (self.hide, ()))
 		self.__window = w
 		self.__buttons = w.ButtonRow(
 			[('New...', (self.new_callback, ())),
