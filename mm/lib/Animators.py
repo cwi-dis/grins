@@ -5,6 +5,7 @@ import MMAttrdefs
 import string
 import math
 import svgpath
+import re
 
 debug = 1
 
@@ -831,7 +832,7 @@ class AnimateElementParser:
 
 
 		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
-		if not dur or (type(dur)==type('') and dur=='indefinite'): dur=0
+		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
 
 
 		# 2. return None on syntax or logic error
@@ -1069,13 +1070,11 @@ class AnimateElementParser:
 		if type(v)==type(complex(0,0)):
 			return v.real, v.imag
 		v = v.strip()
-		try:
-			if v.find(',')>=0:
-				x, y = string.split(v,',')
-			else:
-				x, y = string.split(v,' ')
+		vl = self.__split(v)
+		if len(vl)==2:
+			x, y = vl
 			return string.atof(x), string.atof(y)
-		except:
+		else:
 			return None
 
 	# return list of interpolation numeric pairs
@@ -1279,20 +1278,16 @@ class AnimateElementParser:
 		if not tt and len(sl) != 1:
 			print 'intervals vs splines mismatch'
 			return []
-
-		rl = []
 		for e in sl:
-			try:
-				x1, y1, x2, y2 = map(string.atof, string.split(e))
-			except:
-				print 'splines parsing error'
-				return []
+			vl = self.__split(e)
+			if len(vl)==4:
+				x1, y1, x2, y2 = map(string.atof, vl)
+			else:
+				print 'splines syntax error'
 			if x1<0.0 or x1>1.0 or x2<0.0 or x2>1.0 or y1<0.0 or y1>1.0 or y2<0.0 or y2>1.0:
-				print 'splines range error'
-				return []
+				print 'splines syntax error'
 			rl.append((x1, y1, x2, y2))
 		return rl
-
 
 	# temp
 	def __checkExtensions(self):
@@ -1313,19 +1308,22 @@ class AnimateElementParser:
 			self.__grinsattrname = self.__attrname
 			self.__attrtype = 'int'
 
-	# temp
-	def _dump(self):
-		print '----------------------'
-		print 'animate attr:', self.__attrname
-		for name, value in self.__anim.attrdict.items():
-			print name, '=', `value`
-		print '----------------------'
-		print 'target element',self.__target		
-		for name, value in self.__target.attrdict.items():
-			print name, '=', `value`
-		print 'target element channel'		
-		for name, value in self.__target.GetChannel().attrdict.items():
-			print name, '=', `value`
-		print '----------------------'
+	sep = re.compile('[ \t\r\n,]')
+	def __split(self, str):
+		l = []
+		end = len(str)
+		i = 0
+		while i<len(str):
+			m = AnimateElementParser.sep.search(str, i)
+			if m:
+				begin, end = m.regs[0]
+				if i != begin:
+					l.append(str[i:begin])
+				i = end
+			else:
+				i = i+1
+		l.append(str[end:])
+		return l
+
 
 
