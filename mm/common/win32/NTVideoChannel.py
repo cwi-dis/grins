@@ -92,7 +92,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					self.__ready = 1
 		else:
 			if self.__mc is None:
-				self.__mc = MediaChannel.MediaChannel(self)
+				self.__mc = MediaChannel.VideoStream(self)
 			try:
 				self.__mc.prepare_player(node, self.window)
 				self.__ready = 1
@@ -111,6 +111,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.playdone(0)
 			return
 		if node.__type == 'real':
+			# real needs an os window yet
 			self.window.CreateOSWindow()
 			if not self.__rc:
 				self.playdone(0)
@@ -124,7 +125,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0)
 		else:
-			self.window.CreateOSWindow()
 			if not self.__mc:
 				self.playdone(0)	
 			elif not self.__mc.playit(node, self.window):
