@@ -255,7 +255,7 @@ class SchedulerContext:
 ##				prio = 1
 ##			else:
 ##				prio = 0
-			prio = 0
+			prio = arc.srcnode != 'syncbase'
 			if arc.isstart and arc.dstnode.playing in (MMStates.PLAYING, MMStates.FROZEN) and arc.dstnode.start_time == arc.timestamp:
 				pass
 			else:
