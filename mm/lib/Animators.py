@@ -1250,8 +1250,9 @@ class AnimateElementParser:
 		dt =  self.__accelerate + self.__decelerate
 		if dt>1.0:
 			# accelerate is clamped to 1 and decelerate=1-accelerate
-			self.__accelerate = min(self.__accelerate, 1.0)
-			self.__decelerate = 1.0 - self.__accelerate
+##			self.__accelerate = min(self.__accelerate, 1.0)
+##			self.__decelerate = 1.0 - self.__accelerate
+			self.__accelerate = self.__decelerate = 0
 		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
 		
 		if not timeManipulations and \
