@@ -82,9 +82,9 @@ MENUBAR=(
 
 	(FLAG_ALL, CASCADE, 'Insert', (
 		(FLAG_ALL, CASCADE, 'Media', (
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
+			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_MEDIA),
+			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_MEDIA),
+			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_MEDIA),
 		)),
 		(FLAG_G2, CASCADE, 'Slideshow node', (
 			(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
@@ -239,8 +239,8 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, 'Insert', (
 			(FLAG_ALL, CASCADE, 'Media', (
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
+				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_MEDIA),
+				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_MEDIA),
 			)),
 			(FLAG_G2, CASCADE, 'Slideshow node', (
 				(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
@@ -333,9 +333,9 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, 'Insert', (
 			(FLAG_ALL, CASCADE, 'Media', (
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
-				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
+				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_MEDIA),
+				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_MEDIA),
+				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_MEDIA),
 			)),
 			(FLAG_G2, CASCADE, 'Slideshow node', (
 				(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
