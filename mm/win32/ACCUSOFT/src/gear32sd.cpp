@@ -43,6 +43,30 @@ static PyObject* ig_load_file(PyObject *self, PyObject *args)
 	return Py_BuildValue("l",img);
 	}
 
+static char ig_save_file__doc__[] =
+""
+;
+static PyObject* ig_save_file(PyObject *self, PyObject *args)
+	{
+	HIGEAR img;
+	char *filename;
+	AT_LMODE lFormatType = IG_SAVE_UNKNOWN; // use filename extension
+	if(!PyArg_ParseTuple(args,"ls|l", &img, &filename, &lFormatType))
+		return NULL;
+	AT_ERRCOUNT nError;
+	Py_BEGIN_ALLOW_THREADS
+	nError = IG_save_file(img, filename, lFormatType);
+	Py_END_ALLOW_THREADS
+	if(nError>0)
+		{
+		seterror("ig_save_file","IG_save_file failed");
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;	
+	}
+
+
 static char ig_error_check__doc__[] =
 ""
 ;
@@ -536,6 +560,7 @@ static PyObject *ig_ip_rotate_multiple_90(PyObject *self, PyObject *args)
 
 static struct PyMethodDef gear32sd_methods[] = {
 	{"load_file", (PyCFunction)ig_load_file, METH_VARARGS, ig_load_file__doc__},
+	{"save_file", (PyCFunction)ig_save_file, METH_VARARGS, ig_save_file__doc__},
 #ifdef INCLUDE_GIF
 	{ "load_gif", ig_load_gif, METH_VARARGS,ig_load_gif__doc__},
 #endif
