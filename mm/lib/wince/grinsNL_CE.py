@@ -54,6 +54,7 @@ class Main(MainDialog):
 ##			RELOAD(callback = (self.reload_callback, ())), 
 ##			PREFERENCES(callback = (self.preferences_callback, ())),
 ##			CHECKVERSION(callback=(self.checkversion_callback, ())),
+			CHOOSESKIN(callback = (self.skin_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
 		import settings
@@ -63,6 +64,12 @@ class Main(MainDialog):
 		if settings.get('skin'):
 			self.openURL_callback('data:application/smil,<smil/>')
 ##		self._update_recent(None)
+
+	def skin_callback(self):
+		MainDialog.skin_callback(self)
+		import settings
+		if settings.get('skin'):
+			self.openURL_callback('data:application/smil,<smil/>')
 
 	def openURL_callback(self, url):
 		import windowinterface
