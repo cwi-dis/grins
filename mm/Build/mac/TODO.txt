@@ -6,16 +6,29 @@ DONE	Open Location: OK->Open15-10	Test HTML scrollbars
 DONE	Put Windows and Documents under Views, move Views to the right
 DONE	Include default license
 DONE	Player control panel in editor should be replaced
-15-10	Appleevents for open doc
+DONE	Appleevents for open doc
+DONE	Focus->Tools
+DONE	Rename canvas size naar iets anders.
+DONE	Browse on channel attr doesn't work
+DONE	Double sep in navigate menu
+DONE	Audio doesn't pause at beginning of webnews
+DONE	Large color (fgcolor) gives crash. (Actual reason: InvalRect without setport)
+19-10	New channels sometimes show up as main window (->Sjoerd, appears problem with SMIL reading)
+19-10	Anchor editor: "edit" always enabled (->Sjoerd)
+19-10	Timeline: syncarc focus is lost on canvas resize (->Sjoerd)
+19-10	Layout view: show "all channels" by default, enable "new channel" (->Sjoerd)
+19-10	timeline: next/prev minidocument should be disabled if inappropriate (->Sjoerd)
+19-10	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
 15-10	CR/LF probleem? Alleen in CMIF documents?
 15-10	View source
 15-10	Help window
 15-10	Balloon help for popup menus
-15-10	Audio doesn't pause at beginning of webnews
 15-10	Focus in lists disappears with window in the back, should be outlined
 15-10	Attribute help messages should contain SMIL-compatability
 15-10	Change temp license code to be less obnoxious
 15-10	Change splash code to contain license info
 16-10	Video doesn't loop
-16-10	Focus->Tools
-16-10	Rename canvas size naar iets anders.
+19-10	Better handling of quit AE (so shutdown works)
+19-10	Select channel in layout view doesn't highlight it
+19-10	Hyperlinks: close box doesn't work
+19-10	Allow defaults for which views to open on document open
