@@ -459,14 +459,15 @@ class ChannelView(ChannelViewDialog):
 		self.initbwstrip()
 
 		# enable Next and Prev Minidoc commands if there are minidocs
-		if self.baseobject.descendants or \
-		   self.baseobject.ancestors or \
-		   self.baseobject.siblings:
-			for obj in self.objects:
-				obj.commandlist = obj.commandlist + [
-					NEXT_MINIDOC(callback = (obj.nextminicall, ())),
-					PREV_MINIDOC(callback = (obj.prevminicall, ())),
-					]
+## XXXX Needs to be fixed for dynamically generated commandlists!x
+##		if self.baseobject.descendants or \
+##		   self.baseobject.ancestors or \
+##		   self.baseobject.siblings:
+##			for obj in self.objects:
+##				obj.commandlist = obj.commandlist + [
+##					NEXT_MINIDOC(callback = (obj.nextminicall, ())),
+##					PREV_MINIDOC(callback = (obj.prevminicall, ())),
+##					]
 
 		focus = self.focus
 		self.baseobject.select()
@@ -844,7 +845,7 @@ class ChannelView(ChannelViewDialog):
 			obj = self.focus
 		else:
 			obj = self.baseobject
-		self.setcommands(obj.commandlist, title = obj.menutitle)
+		self.setcommands(obj.getcommandlist(), title = obj.menutitle)
 		self.setpopup(obj.popupmenu)
 
 	def whichhit(self, x, y):
@@ -1081,11 +1082,19 @@ class GO(GOCommand):
 		self.descendants = []
 		self.siblings = []
 		self.arcmenu = []
+		self.commandlist = None
 
 		# Menu and shortcut definitions are stored as data in
 		# the class
 
 		self.menutitle = 'Base ops'
+		GOCommand.__init__(self)
+		
+	def mkcommandlist(self):
+		if self.commandlist:
+			return
+		# First create common-common-commandlist
+		mother = self.mother
 		if not mother._common_commandlist:
 			mother._common_commandlist = [
 				CLOSE_WINDOW(callback = (mother.hide, ())),
@@ -1109,7 +1118,10 @@ class GO(GOCommand):
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(HELP(callback=(self.helpcall,())))
-		GOCommand.__init__(self)
+			
+	def getcommandlist(self):
+		self.mkcommandlist()
+		return self.commandlist
 
 	def __repr__(self):
 		if hasattr(self, 'name'):
@@ -1155,7 +1167,7 @@ class GO(GOCommand):
 		self.mother.deselect()
 		self.selected = 1
 		self.mother.focus = self
-		self.mother.setcommands(self.commandlist,
+		self.mother.setcommands(self.getcommandlist(),
 					       title = self.menutitle)
 		self.mother.setpopup(self.popupmenu)
 		if self.ok:
@@ -1172,7 +1184,7 @@ class GO(GOCommand):
 		mother.focus = None
 		if self.ok:
 			baseobject = mother.baseobject
-			mother.setcommands(baseobject.commandlist,
+			mother.setcommands(baseobject.getcommandlist(),
 						  title = baseobject.menutitle)
 			mother.setpopup(baseobject.popupmenu)
 			self.drawfocus()
@@ -1192,15 +1204,15 @@ class GO(GOCommand):
 ##	def newchannelcall(self, chtype = None):
 ##		self.mother.newchannel(self.newchannelindex(), chtype)
 
-	def nextminicall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.nextviewroot()
+##	def nextminicall(self):
+##		mother = self.mother
+##		mother.toplevel.setwaiting()
+##		mother.nextviewroot()
 
-	def prevminicall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.prevviewroot()
+##	def prevminicall(self):
+##		mother = self.mother
+##		mother.toplevel.setwaiting()
+##		mother.prevviewroot()
 
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!
@@ -1210,8 +1222,13 @@ class GO(GOCommand):
 class BaseBox(GO):
 	def __init__(self, mother, name):
 		GO.__init__(self, mother, name)
+		
+	def mkcommandlist(self):
+		if self.commandlist:
+			return
+		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
-			PUSHFOCUS(callback = (mother.focuscall, ())),
+			PUSHFOCUS(callback = (self.mother.focuscall, ())),
 			]
 
 # Class for the time scale object
@@ -1499,6 +1516,12 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		self.time_to_panodes = []
 		self.focussed_bwnodes = []
 		self.focussed_panodes = []
+		BandwidthStripBoxCommand.__init__(self)
+		
+	def mkcommandlist(self):
+		if self.commandlist:
+			return
+		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
 			BANDWIDTH_14K4(callback = (self.bwcall, (14400,))),
 			BANDWIDTH_28K8(callback = (self.bwcall, (28800,))),
@@ -1507,7 +1530,6 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 			BANDWIDTH_LAN(callback = (self.bwcall, (10000000,))),
 			BANDWIDTH_OTHER(callback = (self.otherbwcall, ())),
 			]
-		BandwidthStripBoxCommand.__init__(self)
 
 	def _bwstr(self, bandwidth):
 		# Convert bandwidth number to string
@@ -1671,6 +1693,13 @@ class ChannelBox(GO, ChannelBoxCommand):
 		except KeyError:
 			self.ctype = '???'
 
+		self.menutitle = 'Channel %s ops' % self.name
+		ChannelBoxCommand.__init__(self)
+
+	def mkcommandlist(self):
+		if self.commandlist:
+			return
+		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			DELETE(callback = (self.delcall, ())),
@@ -1680,8 +1709,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 			HIGHLIGHT(callback = (self.highlight, ())),
 			UNHIGHLIGHT(callback = (self.unhighlight, ())),
 			]
-		self.menutitle = 'Channel %s ops' % self.name
-		ChannelBoxCommand.__init__(self)
 
 	def channel_onoff(self):
 		self.mother.toplevel.setwaiting()
@@ -1880,19 +1907,6 @@ class NodeBox(GO, NodeBoxCommand):
 		self.locked = 0
 		GO.__init__(self, mother, name)
 		self.is_node_object = 1
-		self.commandlist = self.commandlist + [
-			PLAYNODE(callback = (self.playcall, ())),
-			PLAYFROM(callback = (self.playfromcall, ())),
-			PUSHFOCUS(callback = (self.focuscall, ())),
-			FINISH_ARC(callback = (self.newsyncarccall, ())),
-			CREATEANCHOR(callback = (self.createanchorcall, ())),
-			FINISH_LINK(callback = (self.hyperlinkcall, ())),
-			INFO(callback = (self.infocall, ())),
-			ATTRIBUTES(callback = (self.attrcall, ())),
-			CONTENT(callback = (self.editcall, ())),
-			ANCHORS(callback = (self.anchorcall, ())),
-			SYNCARCS(callback = self.selsyncarc),
-			]
 
 		self.arcmenu = arcmenu = []
 		if mother.showarcs:
@@ -1910,6 +1924,24 @@ class NodeBox(GO, NodeBoxCommand):
 					arcmenu.append(('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside)))
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
+
+	def mkcommandlist(self):
+		if self.commandlist:
+			return
+		GO.mkcommandlist(self)
+		self.commandlist = self.commandlist + [
+			PLAYNODE(callback = (self.playcall, ())),
+			PLAYFROM(callback = (self.playfromcall, ())),
+			PUSHFOCUS(callback = (self.focuscall, ())),
+			FINISH_ARC(callback = (self.newsyncarccall, ())),
+			CREATEANCHOR(callback = (self.createanchorcall, ())),
+			FINISH_LINK(callback = (self.hyperlinkcall, ())),
+			INFO(callback = (self.infocall, ())),
+			ATTRIBUTES(callback = (self.attrcall, ())),
+			CONTENT(callback = (self.editcall, ())),
+			ANCHORS(callback = (self.anchorcall, ())),
+			SYNCARCS(callback = self.selsyncarc),
+			]
 
 	def selsyncarc(self, xnode, xside, delay, yside):
 		ynode = self.node
@@ -2225,13 +2257,17 @@ class ArcBox(GO, ArcBoxCommand):
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
 			snode, sside, delay, dnode, dside
 		GO.__init__(self, mother, 'arc')
+		self.menutitle = 'Sync arc ops'
+		ArcBoxCommand.__init__(self)
+
+	def mkcommandlist(self):
+		if self.commandlist:
+			return
+		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
 			INFO(callback = (self.infocall, ())),
 			DELETE(callback = (self.delcall, ())),
 			]
-		self.meutitle = 'Sync arc ops'
-		ArcBoxCommand.__init__(self)
-
 
 	def reshape(self):
 		try:
