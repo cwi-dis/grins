@@ -541,10 +541,10 @@ class SMILXhtmlSmilWriter(SMIL):
 			raise CheckError, 'bad node type in writenode'
 
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
-		pushed, inpar, pardur, regionid = 0, 0, None, ''
+		pushed, regionid = 0, nodeid
 		
 		# write media node layout
-		pushed, inpar, pardur, regionid  = \
+		pushed, regionid  = \
 			self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
 
 		# apply media style
@@ -606,37 +606,38 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# write transition(s)
 		if transIn or transOut:
-			if not regionid:
-				regionid = nodeid
+			targetid = nodeid
+			syncid = regionid or nodeid
 			if transIn and not transOut:
-				self.writeTransition(transIn, None, nodeid, regionid)
+				self.writeTransition(transIn, None, targetid, syncid)
 			elif transOut and not transIn:
-				self.writeTransition(None, transOut, nodeid, regionid)
+				self.writeTransition(None, transOut, targetid, syncid)
 			else:
-				self.writeTransition(transIn, None, nodeid, regionid)
+				self.writeTransition(transIn, None, targetid, syncid)
 				freezeSync = None
 				if fill == 'freeze':
 					freezeSync = self.locateFreezeSyncNode(node)
 				if freezeSync is None:
-					self.writeTransition(None, transOut, nodeid, regionid)
+					self.writeTransition(None, transOut, targetid, syncid)
 				else:
-					self.freezeSyncDict[freezeSync] = transOut, nodeid, regionid
+					self.freezeSyncDict[freezeSync] = transOut, targetid, syncid
 
 		# restore stack
 		while pushed:
 			self.pop()
 			pushed = pushed - 1
 
+	# translate and write a media node's SMIL layout to XHTML+SMIL
 	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
-		pushed, inpar, pardur, regionid = 0, 0, None, ''
+		pushed, regionid = 0, nodeid
 		
 		nodeRegion = node.GetChannel().GetLayoutChannel()
 		path = self.getRegionPath(nodeRegion)
 		if not path:
 			print 'error: failed to get region path for', regionName
-			pushed, inpar, pardur, regionid, subregionid
+			return pushed, regionid
 		if len(path) == 1:
-			pushed, inpar, pardur, regionid
+			return pushed, regionid
 
 		# outmost div attr list
 		divlist = []
@@ -682,69 +683,17 @@ class SMILXhtmlSmilWriter(SMIL):
 		# apply fill
 		if fill:
 			divlist.append(('fill', fill))
-				
-		# transfer timing from media to div
-		# the composite is the item for xhtml+smil
-		timing_spec = 0 				
-		has_end = 0 				
-		i = 0
-		while i < len(attrlist):
-			attr, val = attrlist[i]
-			if attr in ('begin', 'dur', 'end', 'repeatDur'): 
-				timing_spec = timing_spec + 1
-				divlist.append((attr, val))
-				del attrlist[i]
-				if attr == 'dur' or  attr == 'repeatDur':
-					pardur = val
-				if attr == 'end':
-					has_end = 1
-			elif attr == 'repeatCount': 
-				divlist.append((attr, val))
-				del attrlist[i]
-			else:
-				i = i + 1
-
-		# IE scheduler hints 
-		# Plus transfer intrinsic media duration to div/par container 
-		parent = node.GetParent()
-		if pardur is None and timing_spec < 2:
-			parentDur = parent.GetRawAttrDef('duration', None)
-			if parent.GetType() == 'par' and parentDur is not None and fill is None and mtype!='audio':
-				# force smil default behavior in such cases
-				divlist.append(('fill', 'freeze'))
-
-			elif parent.GetType() == 'par' and has_end:
-				# equivalent to timing_spec == 2
-				timing_spec = 2
-
-			elif mtype in ('audio', 'video'):
-				try:
-					dur = Duration.getintrinsicduration(node, 1)
-				except:
-					dur = 2.0
-				pardur = fmtfloat(dur, prec = 2)
-				divlist.append(('dur', pardur))
-				timing_spec = timing_spec + 1
-
-			else:
-				# XXX: overspecification
-				dur = self.getDurHint(node)
-		 		pardur = fmtfloat(dur, prec = 2)
-				divlist.append(('dur', pardur))
-				if dur != 0.0:
-					timing_spec = timing_spec + 1
-
-		# when div has timing extent it to a time container
-		if timing_spec > 0 or self.hasTimeChildren(node):
-			divlist.append( ('timeContainer', 'par'))
-			inpar = 1
+		
+		# transfer timing attributes to container div and 
+		# traslate SMIL timing rules to IE implementation
+		self.resolveMediaNodeTiming(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill, divlist)
 			
 		# write outmost div
 		self.writetag('div', divlist)
 		self.push()
 		pushed = pushed + 1
 
-		# write inner hierarchy
+		# write inner hierarchy if it exists
 		ix = path.index(currMediaRegion)
 		for region in path[ix+1:]:
 			divlist = []
@@ -792,8 +741,66 @@ class SMILXhtmlSmilWriter(SMIL):
 			
 		# save current layout and return
 		self.currLayout = path
-		return pushed, inpar, pardur, regionid
+		return pushed, regionid
 		
+	# transfer timing attributes to container div and 
+	# traslate SMIL timing rules to IE implementation
+	def resolveMediaNodeTiming(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill, divlist):
+		# first, transfer direct timing attributes to container div 
+		pardur = None
+		timing_spec = 0 				
+		has_end = 0 				
+		i = 0
+		while i < len(attrlist):
+			attr, val = attrlist[i]
+			if attr in ('begin', 'dur', 'end', 'repeatDur'): 
+				timing_spec = timing_spec + 1
+				divlist.append((attr, val))
+				del attrlist[i]
+				if attr == 'dur' or  attr == 'repeatDur':
+					pardur = val
+				if attr == 'end':
+					has_end = 1
+			elif attr == 'repeatCount': 
+				divlist.append((attr, val))
+				del attrlist[i]
+			else:
+				i = i + 1
+
+		# and second, traslate SMIL timing rules to IE implementation
+		# XXX: this is far from complete yet
+		parent = node.GetParent()
+		if pardur is None and timing_spec < 2:
+			parentDur = parent.GetRawAttrDef('duration', None)
+			if parent.GetType() == 'par' and parentDur is not None and fill is None and mtype!='audio':
+				# force smil default behavior in such cases
+				divlist.append(('fill', 'freeze'))
+
+			elif parent.GetType() == 'par' and has_end:
+				# equivalent to timing_spec == 2
+				timing_spec = 2
+
+			elif mtype in ('audio', 'video'):
+				try:
+					dur = Duration.getintrinsicduration(node, 1)
+				except:
+					dur = 2.0
+				pardur = fmtfloat(dur, prec = 2)
+				divlist.append(('dur', pardur))
+				timing_spec = timing_spec + 1
+
+			else:
+				# XXX: overspecification
+				dur = self.getDurHint(node)
+		 		pardur = fmtfloat(dur, prec = 2)
+				divlist.append(('dur', pardur))
+				if dur != 0.0:
+					timing_spec = timing_spec + 1
+
+		# when div has timing extent it to a time container
+		if timing_spec > 0 or self.hasTimeChildren(node) or transIn or transOut:
+			divlist.append( ('timeContainer', 'par'))
+
 	def applyMediaStyle(self, node, nodeid, attrlist, mtype):
 		subRegGeom, mediaGeom = None, None
 		try:
@@ -809,6 +816,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				if color is not None:
 					style = style + 'background-color:%s;' % color
 			attrlist.append( ('style', style) )
+
 
 	def rc2style_relative(self, rc, rcref):
 		x, y, w, h = rc
@@ -872,15 +880,6 @@ class SMILXhtmlSmilWriter(SMIL):
 			trattrlist.append( ('from', sv1) )
 			trattrlist.append( ('to', sv2) )
 		self.writetag('t:transitionFilter', trattrlist)
-
-	def writeChildren(self, node):
-		pushed = 0
-		for child in node.GetChildren():
-			type = child.GetType()
-			if type != 'anchor':
-				self.writenode(child)
-		if pushed:
-			self.pop()
 
 	def hasTimeChildren(self, node):
 		for child in node.GetChildren():
@@ -1543,8 +1542,8 @@ def replacePrevShortcut(value, node):
 	
 #
 #  IE inline transitions 
-#  implemented types, subtypes
-#  simulations for non implemented types, subtypes
+#  implemented types, subtypes by IE
+#  explicit mapping of non implemented to implemented
 #
 TRANSITIONDICT = {
 	##################################
