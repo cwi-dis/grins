@@ -14,16 +14,17 @@ class LicenseDialog:
 		tryb.ManageChild()
 		tryb.AddCallback('activateCallback', self.__callback, (self.cb_try, ()))
 		self.__try = tryb
-		buy = w.CreatePushButton('buy', {'labelString': 'Buy now...', 'foreground': fg, 'background': bg})
-		buy.ManageChild()
-		buy.AddCallback('activateCallback', self.__callback, (self.cb_buy, ()))
-		eval = w.CreatePushButton('eval', {'labelString': 'Get evaluation license...', 'foreground': fg, 'background': bg})
+		eval = w.CreatePushButton('eval', {'labelString': 'Evaluate...', 'foreground': fg, 'background': bg})
 		eval.ManageChild()
 		eval.AddCallback('activateCallback', self.__callback, (self.cb_eval, ()))
 		self.__eval = eval
+		buy = w.CreatePushButton('buy', {'labelString': 'Buy now...', 'foreground': fg, 'background': bg})
+		buy.ManageChild()
+		buy.AddCallback('activateCallback', self.__callback, (self.cb_buy, ()))
 		key = w.CreatePushButton('key', {'labelString': 'Enter key...', 'foreground': fg, 'background': bg})
 		key.ManageChild()
 		key.AddCallback('activateCallback', self.__callback, (self.cb_enterkey, ()))
+		self.__key = key
 		quit = w.CreatePushButton('quit', {'labelString': 'Quit', 'foreground': fg, 'background': bg})
 		quit.ManageChild()
 		quit.AddCallback('activateCallback', self.__callback, (self.cb_quit, ()))
@@ -59,6 +60,7 @@ class LicenseDialog:
 		self.__window = None
 		del self.__window
 		del self.__try
+		del self.__key
 		del self.__eval
 		del self.__img
 		del self.__msg
@@ -66,8 +68,10 @@ class LicenseDialog:
 	def setdialoginfo(self):
 		if self.can_try:
 			self.__try.ManageChild()
+			self.__window.defaultButton = self.__try
 		else:
 			self.__try.UnmanageChild()
+			self.__window.defaultButton = self.__key
 		if self.can_eval:
 			self.__eval.ManageChild()
 		else:
@@ -93,7 +97,6 @@ class LicenseDialog:
 			attrs['fontList'] = splash.splashfont
 		self.__msg = self.__img.CreateManagedWidget('message',
 							    Xm.Label, attrs)
-		self.__window.defaultButton = self.__try
 
 	def __callback(self, w, callback, call_data):
 		apply(apply, callback)
