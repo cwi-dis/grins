@@ -542,7 +542,7 @@ def process(input, output, script, ramprefix, switched):
 	else:
 		converter = G2UserConverter()
 	if switched:
-		transformer = G2SwitchedTransformer(converter)
+		transformer = G2SwitchTransformer(converter)
 	else:
 		transformer = G2OnlyTransformer(converter)
 
