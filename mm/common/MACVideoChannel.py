@@ -1,10 +1,11 @@
 __version__ = "$Id$"
 # XXXX clip_begin and clip_end not yet implemented
-from Channel import ChannelWindow, CMIF_MODE
+from Channel import ChannelWindow, CMIF_MODE, SourceAnchors
 import windowinterface
 import time
 import MMurl
 import MMAttrdefs
+from AnchorDefs import *
 import os
 import Qt
 import QuickTime
@@ -64,6 +65,8 @@ class VideoChannel(ChannelWindow):
 		mtype = MMmimetypes.guess_type(fn)[0]
 		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
 			node.__type = 'real'
+		self.prepare_armed_display(node)
+		if node.__type == 'real':
 			if self.__rc is None:
 				import RealChannel
 				try:
@@ -234,6 +237,34 @@ class VideoChannel(ChannelWindow):
 			movleft = movtop = 0
 		return sl+movleft, st+movtop, sl+movleft+movwidth, st+movtop+movheight
 					
+	# interface for anchor creation
+	def defanchor(self, node, anchor, cb):
+		windowinterface.showmessage('The whole window will be hot.')
+		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
+
+	def prepare_armed_display(self,node):
+		self.armed_display._bgcolor=self.getbgcolor(node)
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')
+		if drawbox:
+			self.armed_display.fgcolor(self.getbucolor(node))
+		else:
+			self.armed_display.fgcolor(self.getbgcolor(node))
+		hicolor = self.gethicolor(node)
+		for a in node.GetRawAttrDef('anchorlist', []):
+			atype = a[A_TYPE]
+			if atype not in SourceAnchors or atype == ATYPE_AUTO:
+				continue
+			anchor = node.GetUID(), a[A_ID]
+			if not self._player.context.hyperlinks.findsrclinks(anchor):
+				continue
+			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
+			b.hiwidth(3)
+			if drawbox:
+				b.hicolor(hicolor)
+			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+##		if node.__type != 'real':
+##			self.armed_display.drawvideo(self.__mc.update)
+
 	# We override 'play', since we handle our own duration
 	def play(self, node):
 		if debug:
