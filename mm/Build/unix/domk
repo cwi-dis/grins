@@ -540,20 +540,29 @@ no)	;;
 		rm -f $dist.rawidb &&
 		install -m 0444 -idb $dist.help.documentation -src mm/Build/common/QuickStart.pdf -F /usr/local/grins -O QuickStart.pdf &&
 		install -m 0555 -idb $dist.sw.$help -src frozen.$freeze.$ARCH/$main -F /usr/local/grins -O $dist &&
-		install -m 0444 -idb $dist.help.base -src mm/Help/unix/index.html -F /usr/local/grins/Help -O index.html &&
+		install -m 0444 -idb $dist.help.html -src mm/Help/unix/index.html -F /usr/local/grins/Help -O index.html &&
 		for f in mm/Help/unix/$help/*
 		do
 			case "${f##*/}" in
 			CVS|\*)	;;
 			*)
-				install -m 0444 -idb $dist.help.$help -src $f -F /usr/local/grins/Help/unix/$help ${f##*/}
+				install -m 0444 -idb $dist.help.html -src $f -F /usr/local/grins/Help/unix/$help ${f##*/}
 				;;
 			esac
 		done &&
 		install -m 0444 -idb $dist.relnotes.relnotes -src mm/Build/unix/relnotes.html -F /usr/local/grins -O relnotes.html &&
+		for f in www-GRiNS/examples/*
+		do
+			case "${f##*/}" in
+			CVS|\*|*.txt)	;;
+			*)
+				install -m 0444 -idb $dist.help.examples -src $f -F /usr/local/grins/Examples ${f##*/}
+				;;
+			esac
+		done &&
 		case $dist in
 		grinsed)
-			install -m 0444 -idb $dist.help.documentation -src mm/Build/common/tutorials.pdf -F /usr/local/grins -O tutorials.pdf &&
+#			install -m 0444 -idb $dist.help.documentation -src mm/Build/common/tutorials.pdf -F /usr/local/grins -O tutorials.pdf &&
 			install -m 0444 -idb $dist.sw.$help -src mm/.cmif_editors -F /usr/local/grins -O .cmif_editors &&
 			for f in mm/GRiNS-Icons/*
 			do
@@ -567,6 +576,15 @@ no)	;;
 			do
 				case "${f##*/}" in
 				*.smil)
+					install -m 0444 -idb $dist.sw.templates -src $f -F /usr/local/grins/Templates ${f##*/}
+					;;
+				esac
+			done &&
+			for f in mm/Data/*
+			do
+				case "${f##*/}" in
+				CVS|\*)	;;
+				*)
 					install -m 0444 -idb $dist.sw.templates -src $f -F /usr/local/grins/Templates ${f##*/}
 					;;
 				esac
