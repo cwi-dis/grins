@@ -1,7 +1,7 @@
 #ifndef INC_ENGINE
 #define INC_ENGINE
 
-interface IRMAClientEngine;
+struct IRMAClientEngine;
 
 IRMAClientEngine* GetEngine();
 void CloseEngine();
