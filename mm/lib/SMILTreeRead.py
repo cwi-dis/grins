@@ -1693,7 +1693,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			targetnode = self.__node
 		else:
 			self.syntax_error('the target element of "%s" is unspecified' % tagname)
-			return
 
 		if tagname != 'animateMotion' and \
 		   not attributes.has_key('attributeName'):
@@ -4488,6 +4487,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__saved_attrdict = attrdict
 		if self.__skipping:
 			self.setliteral()
+
+	def handle_endtag(self, tag, method):
+		if self.__skipping:
+			self.__skipping = 0
+		else:
+			method()
 
 class SMILMetaCollector(xmllib.XMLParser):
 	"""Collect the meta attributes from a smil file"""
