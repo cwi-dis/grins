@@ -27,6 +27,7 @@ _watchcursor = 0
 _channelcursor = 0
 _linkcursor = 0
 _delete_window = 0
+_stopcursor = 0
 
 _image_cache = {}		# cache of prepared images
 _cache_full = FALSE		# TRUE if we shouldn't cache more images
@@ -104,6 +105,8 @@ def _setcursor(form, cursor):
 			form.DefineCursor(_channelcursor)
 		elif cursor == 'link':
 			form.DefineCursor(_linkcursor)
+		elif cursor == 'stop':
+			form.DefineCursor(_stopcursor)
 		elif cursor == '':
 			form.UndefineCursor()
 		else:
@@ -170,6 +173,7 @@ class _Toplevel:
 		global _watchcursor
 		global _channelcursor
 		global _linkcursor
+		global _stopcursor
 		global _delete_window
 		if debug: print '_TopLevel.__init__() --> '+`self`
 		self._win_lock = _DummyLock()
@@ -206,6 +210,7 @@ class _Toplevel:
 		_watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
 		_channelcursor = dpy.CreateFontCursor(Xcursorfont.draped_box)
 		_linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
+		_stopcursor = dpy.CreateFontCursor(Xcursorfont.pirate)
 		self._main.RealizeWidget()
 		self._timer_callback_func = None
 		self._fdmap = {}
@@ -356,7 +361,7 @@ class _Toplevel:
 
 class _Window:
 	def __init__(self, parent, x, y, w, h, title, defcmap, **options):
-		if debug: print '_Window.init() --> '+`self`
+		if debug: print '_Window.__init__() --> '+`self`
 		try:
 			pixmap = options['pixmap']
 		except KeyError:
@@ -1287,7 +1292,7 @@ class _Window:
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
-		if debug: print '_DisplayList.init('+`window`+') --> '+`self`
+		if debug: print '_DisplayList.__init__('+`window`+') --> '+`self`
 		self._window = window
 		self._rendered = FALSE
 		# color support
@@ -2058,9 +2063,9 @@ class _Button:
 			self._highlighted = FALSE
 			self._dispobj.render()
 
-class _Font:
+class findfont:
 	def __init__(self, fontname, size):
-		if debug: print '_Font.init'+`fontname,size`+' --> '+`self`
+		if debug: print 'findfont.init'+`fontname,size`+' --> '+`self`
 		self._fontname = fontname
 		self._xfont, self._size, self._font = _findfont(fontname, size)
 
@@ -2178,47 +2183,32 @@ fonts = _fontmap.keys()
 
 toplevel = _Toplevel()
 
-def newwindow(x, y, w, h, title, **options):
-	return apply(toplevel.newwindow, (x, y, w, h, title), options)
+newwindow = toplevel.newwindow
 
-def newcmwindow(x, y, w, h, title, **options):
-	return apply(toplevel.newcmwindow, (x, y, w, h, title), options)
+newcmwindow = toplevel.newcmwindow
 
-def close():
-	toplevel.close()
+close = toplevel.close
 
-def setcursor(cursor):
-	toplevel.setcursor(cursor)
+setcursor = toplevel.setcursor
 
-def getsize():
-	return toplevel.getsize()
+getsize = toplevel.getsize
 
-def usewindowlock(lock):
-	toplevel.usewindowlock(lock)
+usewindowlock = toplevel.usewindowlock
 
-def getmouse():
-	return toplevel.getmouse()
-
-def findfont(fontname, pointsize):
-	return _Font(fontname, pointsize)
+getmouse = toplevel.getmouse
 
 def beep():
 	pass				# for now...
 
-def settimer(sec, arg):
-	return toplevel.settimer(sec, arg)
+settimer = toplevel.settimer
 
-def settimerfunc(func, arg):
-	toplevel.settimerfunc(func, arg)
+settimerfunc = toplevel.settimerfunc
 
-def select_setcallback(fd, cb, arg, mask = ReadMask):
-	toplevel.select_setcallback(fd, cb, arg, mask)
+select_setcallback = toplevel.select_setcallback
 
-def mainloop():
-	toplevel.mainloop()
+mainloop = toplevel.mainloop
 
-def canceltimer(id):
-	toplevel.canceltimer(id)
+canceltimer = toplevel.canceltimer
 
 _end_loop = '_end_loop'			# exception for ending a loop
 

@@ -37,7 +37,7 @@ def getallinfo(filename):
 		raise IOError, (0, 'bad sound file')
 	return nchannels, nsampframes, sampwidth, samprate, format, markers
 
-allinfo_cache = FileCache.FileCache().init(getallinfo)
+allinfo_cache = FileCache.FileCache(getallinfo)
 
 def get(filename):
 	nchannels, nsampframes, sampwidth, samprate, format, markers = \

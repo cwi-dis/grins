@@ -59,12 +59,11 @@ class glwindow:
 	#
 	# Basic administrative functions.
 	#
-	def init(self, wid):
+	def__ init__(self, wid):
 		# Initialize the instance.  Derived classes may extend
 		# or override this to their liking (e.g. use a
 		# different way to store the window id).
 		self.wid = wid
-		return self
 	#
 	def __repr__(self):
 		return '<glwindow instance, wid=' + `self.wid` + '>'

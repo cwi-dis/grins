@@ -15,6 +15,6 @@ def getduration(filename):
 ##	print 'mpeg: rate', pbuf[1], 'nframe', pbuf[3]
 	return pbuf[3]/pbuf[1]
 	
-duration_cache = FileCache.FileCache().init(getduration)
+duration_cache = FileCache.FileCache(getduration)
 
 get = duration_cache.get
