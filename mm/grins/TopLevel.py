@@ -340,9 +340,7 @@ class TopLevel(TopLevelDialog):
 			if not title:
 				title = name
 			menu.append((title, (name,), 't', u_state == 'RENDERED'))
-		w = self.window
-		if w is not None:
-			w.set_dynamiclist(USERGROUPS, menu)
+		self.setusergroupsmenu(menu)
 
 	def help_callback(self, params=None):
 		import Help
