@@ -83,7 +83,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
 				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
-				TEMPORALVIEW(callback = (self.view_callback, (8, ))),
+				#TEMPORALVIEW(callback = (self.view_callback, (8, ))),
 				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, ))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
@@ -215,7 +215,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.links = None
 		self.layoutview2 = None
 		self.transitionview = None
-		self.temporalview = None
+		#self.temporalview = None
 		
 		if features.STRUCTURE_VIEW in features.feature_set:
 			import HierarchyView
@@ -264,16 +264,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import LinkEditLight
 			self.links = LinkEditLight.LinkEditLight(self)
 
-		if features.TEMPORAL_VIEW in features.feature_set:
-			import TemporalView
-			self.temporalview = TemporalView.TemporalView(self)
+		#if features.TEMPORAL_VIEW in features.feature_set:
+		#	import TemporalView
+		#	self.temporalview = TemporalView.TemporalView(self)
 
 		# Views that are destroyed by restore (currently all)
 		# Notice that these must follow a certain order.
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
-			      self.temporalview]
+			      ]#self.temporalview]
 
 	def hideviews(self):
 		for v in self.views:
