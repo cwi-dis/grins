@@ -722,4 +722,16 @@ attrgrs=(
 		  'namespace',
 		  ],
 	 },
+
+	{'name':'anchor',
+	 'title':'Anchor settings',
+	 'attrs':['acoords',
+		  'ashape',
+		  'fragment',
+		  'actuate',
+		  'accesskey',
+		  'tabindex',
+		  'sendTo',
+		  ],
+	 },
 	)

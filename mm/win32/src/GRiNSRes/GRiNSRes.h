@@ -277,6 +277,7 @@
 #define IDD_EDITATTR_ANIMATETARGETSET   477
 #define IDD_EDITATTR_ANIMATEVALUES      478
 #define IDD_EDITATTR_ACTIVEDUR          479
+#define IDD_EDITATTR_ANCHOR             480
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -400,6 +401,7 @@
 #define IDC_EDIT4                       1139
 #define IDC_DY                          1139
 #define IDC_VALUESV                     1139
+#define IDC_TABINDEXV                   1139
 #define IDC_EDIT6                       1140
 #define IDC_HR                          1140
 #define IDC_EDIT8                       1141
@@ -800,6 +802,19 @@
 #define IDC_ADDITIVEV2                  1534
 #define IDC_ACCUMULATEV1                1535
 #define IDC_ACCUMULATEV2                1536
+#define IDC_SENDTOV                     1537
+#define IDC_ACOORDSL                    1538
+#define IDC_ACOORDSV                    1539
+#define IDC_FRAGMENTL                   1540
+#define IDC_FRAGMENTV                   1541
+#define IDC_ACCESSL                     1542
+#define IDC_ACCESSV                     1543
+#define IDC_TABINDEXL                   1544
+#define IDC_ASHAPEL                     1545
+#define IDC_ASHAPEV                     1546
+#define IDC_ACTUATEV                    1547
+#define IDC_SENDTOL                     1548
+#define IDC_ACTUATEL                    1549
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -909,7 +924,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        465
 #define _APS_NEXT_COMMAND_VALUE         32902
-#define _APS_NEXT_CONTROL_VALUE         1537
+#define _APS_NEXT_CONTROL_VALUE         1550
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

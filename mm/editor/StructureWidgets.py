@@ -209,7 +209,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		node = self.node
 		dangling = None
 		hlinks = node.GetContext().hyperlinks
-		nodes = filter(lambda x: x.GetType() == 'anchor', node.GetChildren())
+## since we now show the anchor nodes, we don't need to show the anchors on the media element anymore
+##		nodes = filter(lambda x: x.GetType() == 'anchor', node.GetChildren())
+		nodes = []
 		for x in [node] + nodes:
 			links = hlinks.findsrclinks(x)
 			if x is not node and dangling is None and not links:
