@@ -480,7 +480,10 @@ class SMILHtmlTimeWriter(SMIL):
 			subregid = nodeid + '_subReg'
 
 		subRegGeom, mediaGeom = None, None
-		geoms = x.getPxGeomMedia()
+		try:
+			geoms = x.getPxGeomMedia()
+		except:
+			geoms = None
 		if geoms:
 			subRegGeom, mediaGeom = geoms
 
@@ -798,9 +801,6 @@ class SMILHtmlTimeWriter(SMIL):
 
 	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
 		attrs = []
-		# deprecated
-#		if ltype == Hlinks.TYPE_CALL:
-#			attrs.append(('show', "pause"))
 		if ltype == Hlinks.TYPE_JUMP:
 			# default value, so we don't need to write it
 			pass
