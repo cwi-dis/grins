@@ -7,7 +7,14 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
+#ifndef WITH_RMA_SUPPORT
+/*
+** If the realmedia playback engine is included in this same binary/dll
+** the InitGUID.cpp file in that module will take care of defining the
+** GUIDs.
+*/
 #define INITGUID
+#endif
 
 #include "pntypes.h"
 #include "pnwintyp.h"
