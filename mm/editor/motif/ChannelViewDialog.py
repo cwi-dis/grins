@@ -9,8 +9,6 @@ class ChannelViewDialog(ViewDialog):
 	adornments = {
 		'shortcuts': {
 			'n': NEW_CHANNEL,
-			'N': NEXT_MINIDOC,
-			'P': PREV_MINIDOC,
 			'T': TOGGLE_UNUSED,
 ##			'i': INFO,
 			'a': ATTRIBUTES,
