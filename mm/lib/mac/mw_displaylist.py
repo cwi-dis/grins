@@ -542,7 +542,7 @@ class _DisplayList:
 
 			Qd.MoveTo(x0, y0)
 			Qd.LineTo(x1, y1)
-			polyhandle = self._polyhandle(entry[3])
+			polyhandle = self._polyhandle(points)
 			if polyhandle: Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		else:
@@ -722,7 +722,7 @@ class _DisplayList:
 		
 	def _arrowdata(self, src, dst):
 		try:
-			nsx, nsy, ndx, ndy, points = window.arrowcache[(src,dst)]
+			nsx, nsy, ndx, ndy, points = self._window.arrowcache[(src,dst)]
 		except KeyError:
 			sx, sy = src
 			dx, dy = dst
@@ -752,7 +752,7 @@ class _DisplayList:
 				       _roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos)))
 			points.append((_roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				       _roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
-			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
+			self._window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		return nsx, nsy, ndx, ndy, points
 	
 	def _polyhandle(self, pointlist, conv=1, cliprgn=None):
