@@ -129,7 +129,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		       'bottomLeft':0, 'bottomMid':0, 'bottomRight':0,
 		       }
 
-	def __init__(self, context, printfunc = None, new_file = 0, check_compatibility = 0):
+	def __init__(self, context, printfunc = None, new_file = 0, check_compatibility = 0, progressCallback=None):
 		self.elements = {
 			'smil': (self.start_smil, self.end_smil),
 			'head': (self.start_head, self.end_head),
@@ -224,6 +224,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_metadata = 0
 		self.__metadata = []
 		self.__errorList = []
+		self.__progressCallback = progressCallback # tuple of (callback fnc, interval of time updated (max))
+		self.__progressTimeToUpdate = 0  # next time to update the progress bar (if progresscallback is not none
+		self.linenumber = 1 # number of lines. Useful to determinate the progress value
 		
 		# experimental code for switch layout
 		self.__alreadymatch = 0
@@ -1129,6 +1132,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return default
 
 	def NewNode(self, tagname, attributes):
+		# update progress bar if needed
+		self.__udpateProgressHandler()
+		
 		# mimetype -- the MIME type of the node as specified in attr
 		# mtype -- the MIME type of the node as calculated
 		# mediatype, subtype -- mtype split into parts
@@ -1843,7 +1849,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		layout['open'] = open
 		if traceImage != None:
 			layout['traceImage'] = traceImage
-
+		
 	def FixBaseWindow(self):
 		if not self.__topchans:
 			return
@@ -2401,6 +2407,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixRegpoints()
 
 	def start_region(self, attributes, checkid = 1):
+		# update progress bar if needed
+		self.__udpateProgressHandler()
+			
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
@@ -4080,6 +4089,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 		self.__saved_attrdict = attrdict
 
+	# update progress bar if needed
+	def __udpateProgressHandler(self):
+		import windowinterface
+		if self.__progressCallback != None:
+			callback, intervalTime = self.__progressCallback
+			if windowinterface.getcurtime() > self.__progressTimeToUpdate:
+				# determinate the next time to update
+				self.__progressTimeToUpdate = windowinterface.getcurtime()+intervalTime
+				# update the handler. 
+				callback(float(self.lineno)/self.linenumber)
+				
 class SMILMetaCollector(xmllib.XMLParser):
 	"""Collect the meta attributes from a smil file"""
 
@@ -4135,19 +4155,19 @@ def ReadMetaData(file):
 	p.close()
 	return p.meta_data
 
-def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0):
+def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0, progressCallback=None):
 	if os.name == 'mac':
 		import splash
 		splash.splash('loaddoc')	# Show "loading document" splash screen
 	# by mjvdg:
-	rv = ReadFileContext(url, MMNode.MMNodeContext(EditableObjects.EditableMMNode), printfunc, new_file, check_compatibility)
+	rv = ReadFileContext(url, MMNode.MMNodeContext(EditableObjects.EditableMMNode), printfunc, new_file, check_compatibility, progressCallback)
 	# rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file, check_compatibility)
 	if os.name == 'mac':
 		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
 
-def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatibility = 0):
-	p = SMILParser(context, printfunc, new_file, check_compatibility)
+def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatibility = 0, progressCallback=None):
+	p = SMILParser(context, printfunc, new_file, check_compatibility, progressCallback = progressCallback)
 	u = MMurl.urlopen(url)
 	if not new_file:
 		baseurl = u.geturl()
@@ -4180,6 +4200,7 @@ def __doParse(parser, data):
 	try:
 ##		from time import time
 ##		t0 = time()
+		parser.linenumber = data.count('\n')
 		parser.feed(data)
 		parser.close()
 ##		t1 = time()
@@ -4213,13 +4234,13 @@ def __doParse(parser, data):
 
 	return root		
 	
-def ReadString(string, name, printfunc = None, check_compatibility = 0):
+def ReadString(string, name, printfunc = None, check_compatibility = 0, progressCallback=None):
 	return ReadStringContext(string, name,
 				 MMNode.MMNodeContext(EditableObjects.EditableMMNode),
-				 printfunc, check_compatibility)
+				 printfunc, check_compatibility, progressCallback)
 
-def ReadStringContext(string, name, context, printfunc = None, check_compatibility = 0):
-	p = SMILParser(context, printfunc = printfunc, check_compatibility = check_compatibility)
+def ReadStringContext(string, name, context, printfunc = None, check_compatibility = 0, progressCallback=None):
+	p = SMILParser(context, printfunc = printfunc, check_compatibility = check_compatibility, progressCallback = progressCallback)
 	root = __doParse(p, string)
 	return root
 
