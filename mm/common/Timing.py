@@ -211,7 +211,11 @@ def prep2(node, root):
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
 	for arc in arcs:
 		xuid, xside, delay, yside = arc
-		xnode = node.MapUID(xuid)
+		try:
+			xnode = node.MapUID(xuid)
+		except NoSuchUIDError:
+			# Skip sync arc from non-existing node
+			continue
 		if root.IsAncestorOf(xnode):
 			adddep(xnode, xside, delay, node, yside)
 	#
