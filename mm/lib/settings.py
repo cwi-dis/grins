@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 # Module to handle various system attributes
 import os
+import sys
 ##import windowinterface
 
 # Minimal EditMgr-like registry
@@ -37,8 +38,8 @@ default_settings = {
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
-	'system_required': [],		# Needs special handling in match...
-	'system_component': [],		# Needs special handling in match...
+	'system_required': (),		# Needs special handling in match...
+	'system_component': (),		# Needs special handling in match...
 	'system_audiodesc': 0,		# No audio description
 	'system_operating_system': 'UNKNOWN',
 	'system_cpu': 'UNKNOWN',
@@ -136,6 +137,15 @@ default_settings = {
 	# Attribute editor prefs
 	'show_all_attributes' : 1,
 }
+
+# Set cpu/os type
+if sys.platform == 'win32':
+	default_settings['system_cpu'] = 'x86'
+	default_settings['system_operating_system'] = 'win32'
+elif sys.platform == 'mac':
+	default_settings['system_cpu'] = 'ppc'
+	default_settings['system_operating_system'] = 'macos'
+# Don't set for other platforms (yet)
 
 user_settings = {}
 
