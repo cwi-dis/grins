@@ -529,6 +529,10 @@ SOURCE=.\M_imgxbm.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_Interactive.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_keyword.c
 # End Source File
 # Begin Source File

@@ -16,8 +16,8 @@ feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
 # These can be deprecated when I've multilated most of the source code.
 #
 version = 'Snap!'
-compatibility = G2
-compatibility_short = 'G2'
+compatibility = Boston
+compatibility_short = 'SMIL2'
 cmif = 0
 lightweight = 1                         # er.. so why can I still edit structure?
 editor = 1

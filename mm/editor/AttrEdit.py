@@ -1181,8 +1181,8 @@ class AttrEditor(AttrEditorDialog):
 				C = TransparencyAttrEditorField
 			elif displayername == 'usergroup':
 				C = UsergroupAttrEditorField
-##			elif displayername == 'transition':
-##				C = TransitionAttrEditorField
+			elif displayername == 'transition':
+				C = TransitionAttrEditorField
 ##			elif displayername == 'direction':
 ##				C = WipeDirectionAttrEditorField
 ##			elif displayername == 'wipetype':
@@ -2010,11 +2010,13 @@ class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def valuerepr(self, value):
 		return self.__values[self.__valuesmap.index(value)]
 
-class TransitionAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
+class TransitionAttrEditorField(PopupAttrEditorField):
+	default = 'None'
 
 	def getoptions(self):
-		return self.__values
+		list = self.wrapper.context.transitions.keys()
+		list.sort()
+		return [self.default] + list
 
 class WipeDirectionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['left', 'right', 'up', 'down']
