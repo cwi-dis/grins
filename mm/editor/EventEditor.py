@@ -4,6 +4,7 @@
 # TODO: how do I reference other nodes?
 
 import MMNode, windowinterface, SMILTreeWrite
+from fmtfloat import fmtfloat
 
 CAUSES = [				# What causes the event
 	# This list is incomplete
@@ -234,9 +235,9 @@ class EventStruct:
 			return r
 		else:
 			if d < 0:
-				d = SMILTreeWrite.fmtfloat(d)
+				d = fmtfloat(d)
 			else:
-				d = "+"+SMILTreeWrite.fmtfloat(d)
+				d = "+"+fmtfloat(d)
 		return r+d
 		
 	def get_cause(self):
