@@ -1214,7 +1214,7 @@ class Region(Window):
 
 		# resizing
 		self._resizing = 0
-		self._scale = 1
+		self._mediacoords = None
 		self._orgrect = self._rect
 						
 	def __repr__(self):
@@ -1748,7 +1748,7 @@ class Region(Window):
 		if not self._fromsurf.IsLost():
 			self.bltDDS(self._fromsurf)
 
-	# painting while resizing for fit=='meet' (scale==0)
+	# painting while resizing
 	def _paint_5(self, rc=None, exclwnd=None):
 		if exclwnd==self: return
 		# lie for a moment 
@@ -1784,7 +1784,7 @@ class Region(Window):
 		if not self._isvisible or exclwnd==self:
 			return
 
-		if self._resizing and self._scale==0:
+		if self._resizing and self._mediacoords:
 			self._paint_5(rc, exclwnd)
 			return
 
@@ -1833,7 +1833,7 @@ class Region(Window):
 		if not self._resizing:
 			if w!=w0 or h!=h0:
 				self._resizing = 1
-				self._scale = 1
+				self._mediacoords = mediacoords
 				self._orgrect = self._rect
 		elif w==w0 and h==h0:	
 			self._resizing = 0
