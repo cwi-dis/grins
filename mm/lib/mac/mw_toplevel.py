@@ -51,7 +51,8 @@ _window_top_offset=18	# XXXX Is this always correct?
 # Event loop parameters
 #
 
-EVENTMASK=0xffff
+NO_AE_EVENTMASK=Events.everyEvent & ~Events.highLevelEventMask
+AE_EVENTMASK=Events.everyEvent
 MINIMAL_TIMEOUT=0	# How long we yield at the very least
 TICKS_PER_SECOND=60.0	# Standard mac thing
 
@@ -73,6 +74,7 @@ class _Event(AEServer):
 		self._active_movies = 0
 		self._mouse_tracker = None
 		self._mouse_timer = None
+		self._eventmask = NO_AE_EVENTMASK
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
@@ -116,7 +118,15 @@ class _Event(AEServer):
 			
 	def clearmousetimer(self):
 		self._mouse_timer = None
-					
+		
+	def _enable_ae(self):
+		"""Enable AppleEvent processing."""
+		self._eventmask = AE_EVENTMASK
+	
+	def installaehandler(self, klass, type, callback):
+		self._enable_ae()
+		AEServer.installaehandler(self, klass, type, callback)
+		
 	def mainloop(self):
 		"""The event mainloop"""
 		self._initcommands()
@@ -164,7 +174,7 @@ class _Event(AEServer):
 			self.removed_splash = 1
 		self.setready()
 		region = self._fixcursor()
-		gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout, region)
+		gotone, event = Evt.WaitNextEvent(self._eventmask, timeout, region)
 		
 		if gotone:
 			while gotone:
@@ -173,7 +183,7 @@ class _Event(AEServer):
 				self._handle_event(event)
 				if self._active_movies:
 					Qt.MoviesTask(0)
-				gotone, event = Evt.WaitNextEvent(EVENTMASK, 0)
+				gotone, event = Evt.WaitNextEvent(self._eventmask, 0)
 			if self._active_movies:
 				Qt.MoviesTask(0)
 			return 1
