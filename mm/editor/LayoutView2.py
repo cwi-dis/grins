@@ -1002,6 +1002,7 @@ class LayoutView2(LayoutViewDialog2):
 
 			# select the node in layout area
 			node = self.getNode(nodeRef)
+			if node == None: return
 			if debug: print 'LayoutView.select: node =',node
 			node.toShowedState()
 			node.select()
@@ -1103,12 +1104,15 @@ class LayoutView2(LayoutViewDialog2):
 		return None			
 
 	def getNodeType(self, nodeRef):
-		# XXX to do: find the node type directly from the document
-		if nodeRef != None:
-			node = self.getNode(nodeRef)
-			if node == None:
-				return None
-			return node.getNodeType()
+		import MMNode
+		if isinstance(nodeRef, MMNode.MMChannel):
+			if self.__channelTreeRef.getviewport(nodeRef) is nodeRef:
+				return TYPE_VIEWPORT
+			else:
+				return TYPE_REGION
+		elif isinstance(nodeRef, MMNode.MMNode):
+			return TYPE_MEDIA
+		
 		return None
 
 	def getViewportRef(self, nodeRef, nodeType = None):
@@ -1983,7 +1987,9 @@ class LayoutView2(LayoutViewDialog2):
 		self.lastViewportRefSelected = nodeRef
 		self.lastRegionRefSelected = None
 		self.lastMediaRefSelected = None
-		
+		if treeVersion:
+			self.selectNodeInTreeCtrl(nodeRef)
+			
 	def onPreviousSelectRegion(self, regionNode):
 		nodeRef = regionNode.getNodeRef()
 		self.currentNodeRefSelected  = nodeRef
@@ -1993,6 +1999,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus('MMChannel',nodeRef)
 		self.lastRegionRefSelected = nodeRef
 		self.lastMediaRefSelected = None
+		if treeVersion:
+			self.selectNodeInTreeCtrl(nodeRef)
 				
 	def onPreviousSelectMedia(self, mediaNode):
 		nodeRef = mediaNode.getNodeRef()
@@ -2002,6 +2010,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateMediaOnDialogBox(nodeRef)
 		self.setglobalfocus('MMNode',nodeRef)
 		self.lastMediaRefSelected = nodeRef
+		if treeVersion:
+			self.selectNodeInTreeCtrl(nodeRef)
 
 	def onPreviousUnselect(self):
 		self.setglobalfocus(None,None)
@@ -2088,7 +2098,10 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __appendMediaInTreeCtrl(self, nodeRef, pNodeRef):
 		mediaType = nodeRef.GetChannelType()
-		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], nodeRef.attrdict.get('name'), mediaType, mediaType)
+		name = nodeRef.attrdict.get('name')
+		if name == None:
+			name=''
+		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, mediaType, mediaType)
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
 				
