@@ -23,6 +23,7 @@ def hashelp():
 	return hasattr(windowinterface, 'htmlwindow')
 
 helpbase = None				# directory where the help files live
+helpbase_web = None			# web location where the help files live
 helpwindow = None
 
 def sethelpprogram(program):
@@ -34,6 +35,9 @@ def sethelpdir(dirname):
 
 def fixhelpdir():
 	global helpbase
+	global helpbase_web
+	if helpbase_web is None:
+			helpbase_web = 'http://www.oratrix.com/indir/%s/help/index.html'%version.shortversion
 	if helpbase is None:
 		import cmif
 		helpdir = cmif.findfile('Help')
@@ -41,14 +45,18 @@ def fixhelpdir():
 		if os.path.exists(basefile):
 			helpbase = MMurl.pathname2url(basefile)
 		else:
-			helpbase = 'http://www.oratrix.com/indir/%s/help/index.html'%version.shortversion
+			helpbase = helpbase_web
 
-def givehelp(topic):
+def givehelp(topic, web=0):
 	global helpwindow
 	import windowinterface
 	fixhelpdir()
 	helpfile = '%s.html'%topic
-	helpurl = MMurl.basejoin(helpbase, helpfile)
+	if web:
+		base = helpbase_web
+	else:
+		base = helpbase
+	helpurl = MMurl.basejoin(base, helpfile)
 	if helpwindow is not None and not helpwindow.is_closed():
 		helpwindow.goto_url(helpurl)
 	else:
