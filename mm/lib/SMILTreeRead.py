@@ -1510,6 +1510,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_a = href, ltype, id, self.__in_a
 
 	def end_a(self):
+		if self.__in_a is None:
+			# </a> without <a>
+			# error message will be taken care of by XMLparser.
+			return
 		self.__in_a = self.__in_a[3]
 
 	def start_anchor(self, attributes):
