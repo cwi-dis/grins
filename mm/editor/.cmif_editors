@@ -56,6 +56,7 @@ shell:emacsclient:/usr/local/emacs/bin/emacsclient $file
 image:imp:/ufs/guido/bin/sgi/imp $file
 image:imged:imged $file
 image:ipaste:ipaste $file
+image:xv:xv $file
 
 sound:sounded:/ufs/sjoerd/bin.sgi5/sounded $file
 sound:soundeditor:soundeditor $file
@@ -68,3 +69,13 @@ null:emacsclient:emacsclient $file
 movie:Vplay:/ufs/guido/bin/sgi/Vplay $file
 movie:Vinfo:/ufs/guido/bin/sgi/Vinfo $file
 movie:Vedit:/ufs/guido/bin/sgi/Vedit $file
+
+html:vi-xterm:xterm -e vi $file
+html:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
+html:emacs:emacs $file
+html:gnuclient:/usr/local/bin/gnuclient $file
+html:emacsclient:/usr/local/emacs/bin/emacsclient $file
+html:netscape:netscape $file
+html:netscape-remote:netscape -remote "openFile($file)"
+html:Mosaic:xmosaic $file
+html:webmagic:webmagic $file
