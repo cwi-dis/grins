@@ -798,7 +798,6 @@ class DDWndLayer:
 		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
 
-
 	def destroyDDLayer(self):
 		if self._ddraw:
 			del self._frontBuffer
@@ -824,7 +823,8 @@ class DDWndLayer:
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
 		ddsd.SetSize(w,h)
 		dds = self._ddraw.CreateSurface(ddsd)
-		dds.BltFill((0, 0, w, h), 0)
+		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
+		dds.BltFill((0, 0, w, h), ddcolor)
 		return dds
 
 	def flip(self):
@@ -1682,6 +1682,9 @@ class Viewport(Region):
 			if not self.__drawBuffer.Restore():
 				return None
 		return self.__drawBuffer
+
+	def getDirectDraw(self):
+		return self._ctx.getDirectDraw()
 
 	def paint(self):
 		dds = self.getDrawBuffer()
