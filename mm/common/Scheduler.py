@@ -24,9 +24,6 @@ N_PRIO = 6
 
 error = 'Scheduler.error'
 
-# temp
-from AnimateChannel import AnimateChannel
-
 class SchedulerContext:
 	def __init__(self, parent, node, seeknode):
 		self.active = 1
@@ -423,50 +420,6 @@ class SchedulerContext:
 				return 1
 		return 0
 
-	##########################
-	#
-	# begin temporary code for testing animations
-	#
-	def is_animate_node(self, node):
-		return hasattr(node,'subtype') and node.subtype=='animate'
-
-	def create_animate_channel(self, sched, node):
-		node.chan = AnimateChannel('animate%s' % node.GetUID() ,node.attrdict, sched, self)
-		chan = node.chan
-		self.channels.append(chan)
-		self.parent.channels_in_use.append(chan)
-		chan.setpaused(0)
-		chan.startcontext(self)
-		chan.show()
-		chan.arm(node)
-		return chan
-
-	def destroy_animate_channel(self, sched, node):
-		chan = node.chan
-		node.set_armedmode(ARM_DONE)
-		chan.stopplay(node)
-		chan.stopcontext(self)
-		self.channels.remove(chan)
-		self.parent.channels_in_use.remove(chan)
-		chan.destroy()
-		del node.chan
-
-	def before_chan_show(self, ch):
-		pass
-
-	def after_chan_show(self, ch):
-		pass
-
-	def getchannelbyname(self, name):
-		for ch in self.channels:
-			if ch._name == name:
-				return ch
-		return None
-
-	# end temporary code for testing animations
-	#
-	##########################
-
 
 class Scheduler(scheduler):
 	def __init__(self, ui):
@@ -842,15 +795,7 @@ class Scheduler(scheduler):
 	def do_play(self, sctx, node):
 		if self.starting_to_play:
 			self.starting_to_play = 0
-
-		# begin temporary code for testing animations
-		if sctx.is_animate_node(node):
-			chan = sctx.create_animate_channel(self, node)
-		else:
-			chan = self.ui.getchannelbynode(node)
-		# end temporary code for testing animations
-
-		#chan = self.ui.getchannelbynode(node)
+		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_PLAYING)
 		node.startplay(sctx)
 		self.sched_arcs(sctx, node, 'begin')
@@ -860,17 +805,10 @@ class Scheduler(scheduler):
 	# Execute a PLAY_STOP SR.
 	#
 	def do_play_stop(self, sctx, node):
-
-		# begin temporary code for testing animations
-		if sctx.is_animate_node(node):
-			sctx.destroy_animate_channel(sctx, node)
-			return
-		# end temporary code for testing animations
-
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_DONE)
 		chan.stopplay(node)
-			
+
 	#
 	# Execute a TERMINATE SR.
 	#
