@@ -137,18 +137,26 @@ class TextChannel(ChannelWindow):
 # Convert an anchor to a set of boxes.
 def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 	# This works only if parno and charno are valid
-	sublist = partoline[parno]
-	for lineno, char0, char1 in sublist:
-		if charno <= char1:
-			i = max(0, charno-char0)
-			if last:
-				return lineno, i
-			curline = curlines[lineno]
-			n = len(curline)
-			while i < n and curline[i] == ' ': i = i+1
-			if i < n:
-				return lineno, charno-char0
-			charno = char1
+	while parno < len(partoline):
+		sublist = partoline[parno]
+		for lineno, char0, char1 in sublist:
+			if charno <= char1:
+				i = max(0, charno-char0)
+				if last:
+					return lineno, i
+				curline = curlines[lineno]
+				n = len(curline)
+				while i < n and curline[i] == ' ': i = i+1
+				if i < n:
+					return lineno, charno-char0
+				charno = char1
+		charno = 0
+		parno = parno + 1
+	if partoline:
+		sublist = partoline[-1]
+		lineno, char0, char1 = sublist[-1]
+		return lineno, char1
+	return 0, 0
 
 def getfont(node):
 	import MMAttrdefs
