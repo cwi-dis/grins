@@ -686,16 +686,17 @@ class MMChannel:
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
 
-	# new 03-07-2000
-	# up in the channel tree until find a layoutchannel.
-	# a layout channel can be translated directly in SMIL region
+	# return the layout channel
 	def GetLayoutChannel(self):
 		# actualy the layout channel is directly the parent channel
+		return self.getParent()
+
+	# return the parent channel
+	def getParent(self):
 		cname = self.attrdict.get('base_window')
 		if not cname:
 			return None
 		return self.context.channeldict.get(cname)
-	# end new
 
 	def getCssId(self):
 		return self._cssId
@@ -774,12 +775,12 @@ class MMChannel:
 			return self.attrdict[key]
 		else:
 			# special case for background color
-			if key == 'bgcolor' and \
-			   self.attrdict.has_key('base_window') and \
-			   self.attrdict.get('transparent', 0) <= 0:
-				pname = self.attrdict['base_window']
-				pchan = self.context.channeldict[pname]
-				return pchan['bgcolor']
+#			if key == 'bgcolor' and \
+#			   self.attrdict.has_key('base_window') and \
+#			   self.attrdict.get('transparent', 0) <= 0:
+#				pname = self.attrdict['base_window']
+#				pchan = self.context.channeldict[pname]
+#				return pchan['bgcolor']
 			if settings.activeFullSmilCss:
 				if key == 'base_winoff':
 					# keep the compatibility with old version
@@ -835,18 +836,18 @@ class MMChannel:
 				return self.getPxGeom()
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
-		if key == 'bgcolor' and \
-		   self.attrdict.has_key('base_window') and \
-		   self.attrdict.get('transparent', 0) <= 0:
-			pname = self.attrdict['base_window']
-			pchan = self.context.channeldict.get(pname)
-			if pchan:
-				return pchan.get('bgcolor', default)
-		elif key == 'regPoint' and self.attrdict.has_key('base_window'):
-			pname = self.attrdict['base_window']
-			pchan = self.context.channeldict.get(pname)
-			if pchan:
-				return pchan.get(key, default)
+#		if key == 'bgcolor' and \
+#		   self.attrdict.has_key('base_window') and \
+#		   self.attrdict.get('transparent', 0) <= 0:
+#			pname = self.attrdict['base_window']
+#			pchan = self.context.channeldict.get(pname)
+#			if pchan:
+#				return pchan.get('bgcolor', default)
+#		elif key == 'regPoint' and self.attrdict.has_key('base_window'):
+#			pname = self.attrdict['base_window']
+#			pchan = self.context.channeldict.get(pname)
+#			if pchan:
+#				return pchan.get(key, default)
 		return default
 
 	def getPxGeom(self):
@@ -874,13 +875,13 @@ class MMChannel:
 			while x is not None:
 				if x.d_attrdict and x.d_attrdict.has_key(name):
 					return x.d_attrdict[name]
-				x = x.parent
+				x = x.getParent()
 		
 		x = self
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
 				return x.attrdict[name]
-			x = x.parent
+			x = x.getParent()
 		return default
 
 # representation of anchors
