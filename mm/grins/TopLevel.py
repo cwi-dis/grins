@@ -198,7 +198,7 @@ class TopLevel(TopLevelDialog):
 				self.progressMessage = "Loading SMIL document..."
 			else:
 				self.progress = windowinterface.ProgressDialog("Loading")
-				self.progressMessage = "Loading GRiNS document..."				
+				self.progressMessage = "Loading GRiNS document..."
 
 			try:			
 				import SMILTreeRead
@@ -213,14 +213,20 @@ class TopLevel(TopLevelDialog):
 
 			# just update that the loading is finished
 			self.progressCallback(1.0)
-			# the progress dialog will desapear
+			# the progress dialog will disappear
 			if sys.platform == 'wince':
 				self.progress.close()
 			self.progress = None
 			
 		elif mtype == 'application/x-grins-binary-project':
+			self.progress = windowinterface.ProgressDialog("Loading")
+			self.progressMessage = "Loading GRiNS document..."
 			import QuickRead
-			self.root = QuickRead.ReadFile(self.filename)
+			self.root = QuickRead.ReadFile(self.filename, progressCallback = (self.progressCallback, 0.5))
+			self.progressCallback(1.0)
+			if sys.platform == 'wince':
+				self.progress.close()
+			self.progress = None
 ##		elif mtype == 'application/x-grins-cmif':
 ##			import MMRead
 ##			self.root = MMRead.ReadFile(self.filename)

@@ -10,19 +10,37 @@ _alignattrs = ['regAlign', 'regPoint', 'fit']
 _subregattrs = _posattrs + ['fit']
 
 class QuickRead:
-	def __init__(self, fp, baseurl):
+	def __init__(self, fp, baseurl, progress):
 		self.__fp = fp
 		self.__ctx = MMNode.MMNodeContext(EditableObjects.EditableMMNode)
 		self.__ctx.setbaseurl(baseurl)
+		self.__progress = progress
+		if progress is not None:
+			pos = fp.tell()
+			fp.seek(0, 2)
+			self.__size = fp.tell()
+			fp.seek(pos, 0)
+		self.__updateProgress()
 		self.readusergroups()
+		self.__updateProgress()
 		self.readregpoints()
+		self.__updateProgress()
 		self.readlayout()
+		self.__updateProgress()
 		self.readtransitions()
 		root = self.readnode()
+		self.__updateProgress()
 		root.addOwner(OWNER_DOCUMENT)
 		self.fixarcs(root)
 		self.readlinks()
+		self.__updateProgress()
 		self.root = root
+
+	def __updateProgress(self):
+		if self.__progress is None:
+			return
+		callback, interval = self.__progress
+		callback(float(self.__fp.tell())/self.__size)
 
 	def getdata(self):
 		return self.__ctx, self.root
@@ -54,6 +72,7 @@ class QuickRead:
 						 ('height',v['height'])])
 
 	def readregions(self, parent):
+		self.__updateProgress()
 		ctx = self.__ctx
 		nregions = marshal.load(self.__fp)
 		cssResolver = ctx.cssResolver
@@ -76,6 +95,7 @@ class QuickRead:
 		self.__ctx.transitions = marshal.load(self.__fp)
 
 	def readnode(self):
+		self.__updateProgress()
 		ctx = self.__ctx
 		type, uid, values, collapsed, showtime, min_pxl_per_sec, nchildren = marshal.load(self.__fp)
 		node = ctx.newnodeuid(type, uid)
@@ -146,10 +166,10 @@ class QuickRead:
 			links.append((a1, a2, dir))
 		ctx.hyperlinks.addlinks(links)
 		
-def ReadFile(url):
+def ReadFile(url, progressCallback = None):
 	fn = MMurl.urlretrieve(url)[0]
 	fp = open(fn, 'rb')
-	q = QuickRead(fp, url)
+	q = QuickRead(fp, url, progressCallback)
 	fp.close()
 	context, root = q.getdata()
 	return root
