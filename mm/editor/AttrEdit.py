@@ -977,14 +977,18 @@ class ChannelWrapper(Wrapper):
 ##			else:
 ##				# XXXX hack to get bgcolor included
 ##				namelist.append('bgcolor')
+						
+		rv = namelist
 		# Merge in nonstandard attributes
-		extras = []
-		for name in self.channel.keys():
-			if name not in namelist and \
-				    MMAttrdefs.getdef(name)[3] <> 'hidden':
-				extras.append(name)
-		extras.sort()
-		rv = namelist + extras
+		# XXX uncomment these lines if you want to activate
+#		extras = []
+#		for name in self.channel.keys():
+#			if name not in namelist and \
+#				    MMAttrdefs.getdef(name)[3] <> 'hidden':
+#				extras.append(name)
+#		extras.sort()
+#		rv = namelist + extras
+
 		# Remove some attributes if we are a base window, or if
 		# we're in SMIL mode.
 		base = self.channel.get('base_window')
