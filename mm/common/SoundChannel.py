@@ -147,6 +147,8 @@ class SoundChannel(ChannelAsync):
 				nframes = 1
 			rate = self.play_fp.getframerate()
 			self.play_fp = None
+			if self.__qid or self.play_loop == 0:
+				return
 			self._qid = self._scheduler.enter(
 				float(nframes) / rate, 0,
 				self.playdone, (0,))
