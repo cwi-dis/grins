@@ -165,17 +165,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'set': (self.start_set, self.end_set),
 			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
-			SMIL2 + 'InlineTransitions transitionFilter': (self.start_transitionfilter, self.end_transitionfilter),
+			'transitionFilter': (self.start_transitionfilter, self.end_transitionfilter),
 			'param': (self.start_param, self.end_param),
 			'transition': (self.start_transition, self.end_transition),
 			'regPoint': (self.start_regpoint, self.end_regpoint),
 			'prefetch': (self.start_prefetch, self.end_prefetch),
 			GRiNSns + ' ' + 'assets': (self.start_assets, self.end_assets),
 			}
-		for key, val in self.elements.items():
-			if ' ' not in key:
-				for ns in SMIL2ns:
-					self.elements[ns+' '+key] = val
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
 		self.__in_smil = 0
@@ -4335,6 +4331,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 		elif ns and ns not in SMIL2ns and ns[-8:] != 'Language':
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
+		if method is None and self.elements.has_key(tagname):
+			method = self.elements[tagname][0]
+			if ns:
+				self.elements[ns + ' ' + tagname] = self.elements[tagname]
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 		self.__saved_attrdict = attrdict
 
