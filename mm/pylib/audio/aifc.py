@@ -155,6 +155,7 @@ class reader:
 	def __read_until(self, name):
 		if self.__chunk is not None:
 			self.__chunk.skip()
+			self.__chunk = None
 		while 1:
 			try:
 				chunk = Chunk(self.__file)
@@ -171,6 +172,7 @@ class reader:
 			if name == chunkname:
 				return
 			chunk.skip()
+			self.__chunk = None
 
 	def __read_comm_chunk(self, chunk):
 		nchannels = _read_short(chunk)
