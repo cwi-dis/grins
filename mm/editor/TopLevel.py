@@ -288,21 +288,22 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def quit_callback(self, (obj, arg)):
 		if self.changed:
-			l1 = 'Are you sure you want to quit without saving?'
-			l2 = '(This will destroy any changes you have made)'
-			l3 = 'Click Yes to quit without saving, No to continue'
-			reply = fl.show_question(l1, l2, l3)
-			if not reply:
+			l1 = 'You haven\'t saved your changes yet;'
+			l2 = 'do you want to save them before quitting?'
+			l3 = ''
+			b1 = 'Save'
+			b2 = 'Don\'t save'
+			b3 = 'Cancel'
+			reply = fl.show_choice(l1, l2, l3, b1, b2, b3)
+			if reply == 3:
 				obj.set_button(0)
 				return
+			if reply == 1:
+				self.save_callback(obj, arg)
 		self.destroy()
 		raise MMExc.ExitException, 0
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
 	def winshut(self):
-		if fl.show_question('Do you really want to quit?', '', ''):
-			self.quitbutton.set_button(1)
-			self.destroy()
-			raise MMExc.ExitException, 0
-	#
+		self.quit_callback(self.quit_button, 0)
