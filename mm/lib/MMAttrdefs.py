@@ -221,9 +221,9 @@ def getattr(node, attrname):
 			attrvalue = node.GetInherAttr(attrname)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
-			if ch and ch.has_key(attrname):
+			try:
 				attrvalue = ch[attrname]
-			else:
+			except (TypeError, KeyError):
 				attrvalue = defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
@@ -269,9 +269,9 @@ def getdefattr(node, attrname):
 			return node.GetDefInherAttr(attrname)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
-			if ch and ch.has_key(attrname):
+			try:
 				return ch[attrname]
-			else:
+			except KeyError:
 				return defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
