@@ -35,3 +35,17 @@ PyObject* Winuser_PostQuitMessage(PyObject *self, PyObject *args)
 	PostQuitMessage(nExitCode);
 	return none();
 }
+
+PyObject* Winuser_MessageBox(PyObject *self, PyObject *args)
+{
+	char *text;
+	char *caption;
+	UINT type = MB_OK;
+	if (!PyArg_ParseTuple(args, "ss|i", &text, &caption, &type))
+		return NULL;
+	int res;
+	Py_BEGIN_ALLOW_THREADS
+	res = MessageBox(NULL, text, caption, type);
+	Py_END_ALLOW_THREADS
+	return Py_BuildValue("i", res);
+}
