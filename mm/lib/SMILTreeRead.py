@@ -492,7 +492,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if val in ('always', 'whenNotActive', 'never'):
+				if val in ('always', 'whenNotActive', 'never', 'default'):
 					attrdict['restart'] = val
 				else:
 					self.syntax_error('bad %s attribute' % attr)
@@ -500,7 +500,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if val in ('always', 'whenNotActive', 'never'):
+				if val in ('always', 'whenNotActive', 'never', 'inherit'):
 					attrdict['restartDefault'] = val
 				else:
 					self.syntax_error('bad %s attribute' % attr)
@@ -679,11 +679,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['title'] = val
 			elif attr == 'fill':
 				if node.type in interiortypes or \
-				   val in ('hold', 'transition'):
+				   val in ('hold', 'transition', 'auto', 'default'):
 					if self.__context.attributes.get('project_boston') == 0:
 						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					self.__context.attributes['project_boston'] = 1
-				if val in ('freeze', 'remove', 'hold', 'transition'):
+				if val in ('freeze', 'remove', 'hold', 'transition', 'auto', 'default'):
 					attrdict['fill'] = val
 				else:
 					self.syntax_error("bad fill attribute")
@@ -691,7 +691,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if val in ('freeze', 'remove', 'hold', 'transition'):
+				if val in ('freeze', 'remove', 'hold', 'transition', 'auto', 'inherit'):
 					attrdict['fillDefault'] = val
 				else:
 					self.syntax_error("bad fillDefault attribute")
@@ -755,7 +755,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if val in ('canSlip', 'locked', 'independent'):
+				if val in ('canSlip', 'locked', 'independent', 'default'):
 					attrdict['syncBehavior'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
@@ -763,7 +763,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if val in ('canSlip', 'locked', 'independent'):
+				if val in ('canSlip', 'locked', 'independent', 'inherit'):
 					attrdict['syncBehaviorDefault'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
