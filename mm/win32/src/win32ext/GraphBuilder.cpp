@@ -70,14 +70,9 @@ static PyObject* py_render_file(PyObject *self, PyObject *args)
 	if(!pGraphBuilder)return NULL;
 	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
-	// reform canonURL
-	CString str(pszFileName);
-	CString strp(pszFileName);
-	if(str.Left(8)=="file:///" && str[9]=='|')
-		strp=CString(str[8]) + ":" + str.Mid(10);
-
+	CString strUrl(GetWindowsMediaUrl(pszFileName));
     WCHAR wPath[MAX_PATH];
-    MultiByteToWideChar(CP_ACP,0,strp,-1, wPath, MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,(LPCTSTR)strUrl,-1, wPath, MAX_PATH);
  
 	GUI_BGN_SAVE;
 	HRESULT hr=pGraph->RenderFile(wPath, NULL);
@@ -181,9 +176,9 @@ static PyObject* py_get_duration(PyObject *self, PyObject *args)
         hr = pGraphBuilder->m_pIMP->get_Duration(&tLength);
 		GUI_END_SAVE;
 		if (SUCCEEDED(hr))
-			return Py_BuildValue("i", int(tLength*1000)); // in msec
+			return Py_BuildValue("d",tLength); // in sec
         }
-	RETURN_ERR("GetDuration failed");
+	return Py_BuildValue("d",60.0);
 	}
 
 // Get the current sample position (in msec) within the stream
@@ -207,9 +202,10 @@ static PyObject* py_get_position(PyObject *self, PyObject *args)
         hr = pGraphBuilder->m_pIMP->get_CurrentPosition(&tCurrent);
 		GUI_END_SAVE;
 		if (SUCCEEDED(hr))
-			return Py_BuildValue("i", int(tCurrent*1000)); // in msec
+			return Py_BuildValue("d", tCurrent); // in msec
         }
-	RETURN_ERR("GetPosition failed");
+	//RETURN_ERR("GetPosition failed");
+	return Py_BuildValue("d", 0.0);
 	}
 
 // Set to sample position (in msec) within the stream
@@ -217,8 +213,8 @@ static PyObject* py_get_position(PyObject *self, PyObject *args)
 // Return Values: None
 static PyObject* py_set_position(PyObject *self, PyObject *args)
 	{
-	int pos; // in msec
-	if(!PyArg_ParseTuple(args,"i:SetPosition",&pos))
+	double pos; // in sec
+	if(!PyArg_ParseTuple(args,"d:SetPosition",&pos))
 		return NULL;
 
 	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
@@ -231,7 +227,7 @@ static PyObject* py_set_position(PyObject *self, PyObject *args)
     if(SUCCEEDED(hr))
 		{
 		GUI_BGN_SAVE;
-        REFTIME tPos=double(pos)/1000.0; // double in secs
+        REFTIME tPos=pos; // double in secs
         hr = pGraphBuilder->m_pIMP->put_CurrentPosition(tPos);
 		GUI_END_SAVE;
         }
@@ -258,9 +254,10 @@ static PyObject* py_get_stoptime(PyObject *self, PyObject *args)
         hr = pGraphBuilder->m_pIMP->get_StopTime(&tStop);
 		GUI_END_SAVE;
 		if (SUCCEEDED(hr))
-			return Py_BuildValue("i", int(tStop*1000)); // in msec
+			return Py_BuildValue("d",tStop); // in sec
         }
-	RETURN_ERR("GetStopTime failed");
+	//RETURN_ERR("GetStopTime failed");
+	return Py_BuildValue("d", 60.0);
 	}
 
 // Set end position (in msec) within the stream
@@ -268,8 +265,8 @@ static PyObject* py_get_stoptime(PyObject *self, PyObject *args)
 // Return Values: None
 static PyObject* py_set_stoptime(PyObject *self, PyObject *args)
 	{
-	int pos; // in msec
-	if(!PyArg_ParseTuple(args,"i:SetStopTime",&pos))
+	double pos; // in sec
+	if(!PyArg_ParseTuple(args,"d:SetStopTime",&pos))
 		return NULL;
 
 	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
@@ -282,7 +279,7 @@ static PyObject* py_set_stoptime(PyObject *self, PyObject *args)
     if(SUCCEEDED(hr))
 		{
 		GUI_BGN_SAVE;
-        REFTIME tPos=double(pos)/1000.0; // double in secs
+        REFTIME tPos=pos; // double in secs
         hr = pGraphBuilder->m_pIMP->put_StopTime(tPos);
 		GUI_END_SAVE;
         }
@@ -339,11 +336,11 @@ static PyObject* py_set_window(PyObject *self, PyObject *args)
 		GUI_BGN_SAVE;
         pivw->put_Owner((OAHWND)pWnd->GetSafeHwnd());
 		pivw->put_MessageDrain((OAHWND)pWnd->GetSafeHwnd());
-        pivw->put_WindowStyle(WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
+		pivw->put_WindowStyle(WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
 		//CRect rc;pWnd->GetClientRect(&rc);
 		//pivw->SetWindowPosition(rc.left, rc.top, rc.right, rc.bottom);
-		pivw->put_AutoShow(OATRUE);
-		pivw->SetWindowForeground(OATRUE);
+		pivw->put_AutoShow(OAFALSE);
+		pivw->SetWindowForeground(OAFALSE);
 		pivw->Release();
 		GUI_END_SAVE;
 		}
