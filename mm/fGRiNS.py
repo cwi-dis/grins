@@ -1,6 +1,10 @@
 import grins_app_core
 resdll = None
+
+runApp = 1
+
 embedded = 0
+commodule = None
 
 class PlayerApp(grins_app_core.GrinsApp):
 	def BootGrins(self):
@@ -12,11 +16,9 @@ try:
 except ImportError:
 	grinspapi = None
 
-runApp = 1
-
 if grinspapi:
-	import sys
 	grinspapi.OleInitialize()
+	import sys
 	for i in range(1, len(sys.argv)):
 		arg = sys.argv[i]
 		if arg[:1]=='/' or arg[:1]=='-':
@@ -29,15 +31,15 @@ if grinspapi:
 				runApp = 0
 			elif val == 'Embedding':
 				sys.argv = sys.argv[:1]
-				global embedded
 				embedded = 1
 				runApp = 1
+	if runApp:
+		commodule = grinspapi.CreateComModule()
+		if not embedded: commodule.Lock()
+	else:
+		grinspapi.OleUninitialize()
 
-if not runApp:
-	grinspapi.OleUninitialize()
-else:
-	if not embedded and grinspapi:
-		grinspapi.commodule.Lock()
+if runApp:
 	grins_app_core.fix_argv()
 	grins_app_core.BootApplication(PlayerApp)
 
