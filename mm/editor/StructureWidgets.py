@@ -216,7 +216,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
 		if not self.cause_event_icon:
-			self.cause_event_icon = self.iconbox.add_icon('happyface').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
+			self.cause_event_icon = self.iconbox.add_icon('causeevent').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
 
 	def getlinkicon(self):

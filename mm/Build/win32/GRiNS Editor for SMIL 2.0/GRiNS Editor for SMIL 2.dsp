@@ -1169,6 +1169,10 @@ SOURCE=.\M_TransitionViewDialog.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_TreeCtrl.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_types.c
 # End Source File
 # Begin Source File
