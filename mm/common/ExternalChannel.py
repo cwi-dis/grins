@@ -38,7 +38,12 @@ class ExternalChannel(Channel):
 		argument = self.getfileurl(node)
 		wanturl = MMAttrdefs.getattr(node, 'wanturl')
 		if not wanturl:
-			argument = MMurl.urlretrieve(argument)[0]
+			try:
+				argument = MMurl.urlretrieve(argument)[0]
+			except IOError, msg:
+				self.errormsg('reading file %s failed: %s' %
+					      (argument, msg[1]))
+				return
 		startprog(progname, argument, wanturl)
 
 if os.name == 'posix':
