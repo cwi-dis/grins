@@ -24,18 +24,18 @@ product grins
         id "GRiNS Player 0.5 Help Files"
         version 1
         order 9999
-	subsys base default
-	    id "GRiNS Player 0.5 Base Help Files"
+	subsys html default
+	    id "GRiNS Player 0.5 Help Files"
 	    replaces self
-	    exp grins.help.base
+	    exp grins.help.html
 	endsubsys
-        subsys base default
-            id "GRiNS Player 0.5 Help Files"
+        subsys examples default
+            id "GRiNS Player 0.5 SMIL Examples"
             replaces self
-	    prereq (
-		grins.sw.player 1 1
-	    )
-            exp grins.help.base
+            prereq (
+                grins.sw.player 1 1
+            )
+            exp grins.help.examples
         endsubsys
         subsys documentation default
             id "GRiNS Player 0.5 Documentation"
@@ -44,11 +44,11 @@ product grins
         endsubsys
     endimage
     image relnotes
-        id "GRiNS 0.5 Release Notes"
+        id "GRiNS Player 0.5 Release Notes"
         version 1
         order 9999
         subsys relnotes default
-            id "GRiNS 0.5 Release Notes"
+            id "GRiNS Player 0.5 Release Notes"
             replaces self
             exp grins.relnotes.relnotes
         endsubsys

@@ -47,28 +47,31 @@ product grinsed
         id "GRiNS 0.5 Help Files"
         version 1
         order 9999
-        subsys base default
-            id "GRiNS 0.5 Base Help Files"
+        subsys html default
+            id "GRiNS 0.5 Help Files"
             replaces self
             replaces grins.help.base 0 1
-            exp grinsed.help.base
+            exp grinsed.help.html
         endsubsys
-        subsys editor default
-            id "GRiNS Editor 0.5 Help Files"
+        subsys data default
+            id "GRiNS Editor 0.5 Tutorial Data"
             replaces self
             prereq (
-                grinsed.help.base 0 1
+                grinsed.sw.editor 1 1
             )
-            exp grinsed.help.editor
+            exp grinsed.help.data
         endsubsys
-        subsys player default
-            id "GRiNS Player 0.5 Help Files"
+        subsys examples default
+            id "GRiNS 0.5 SMIL Examples"
             replaces self
-            replaces grins.help.player 0 1
+	    replaces grins.help.examples 0 1
             prereq (
-                grinsed.help.base 0 1
+                grinsed.sw.editor 1 1
             )
-            exp grinsed.help.player
+            prereq (
+                grinsed.sw.player 1 1
+            )
+            exp grinsed.help.examples
         endsubsys
         subsys documentation default
             id "GRiNS Editor 0.5 Documentation"
