@@ -16,6 +16,8 @@ else:
 
 error = 'RealChannel.error'
 
+realenginedebug=1
+
 class RealEngine:
 	# This class holds the RMA engine and a useage counter. This counter is
 	# needed because on the mac (and maybe on unix) whenever any player is active
@@ -125,6 +127,8 @@ class RealChannel:
 		self.__playdone_called = 0
 		# WARNING: RealMedia player doesn't unquote, so we must do it
 		url = MMurl.unquote(url)
+		if realenginedebug:
+			print 'RealChannel.playit', self, `url`
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
@@ -134,6 +138,8 @@ class RealChannel:
 	def __stop(self):
 		self.__qid = None
 		if self.__rmaplayer:
+			if realenginedebug:
+				print 'RealChannel.__stop', self
 			self.__loop = 1
 			self.__rmaplayer.Stop()
 			# This may cause OnStop to be called, and it may not....
@@ -147,6 +153,8 @@ class RealChannel:
 		if self.__loop:
 			self.__loop = self.__loop - 1
 			if self.__loop == 0:
+				if realenginedebug:
+					print 'RealChannel.OnStop', self
 				if self.__qid is None:
 					if not self.__playdone_called:
 						self.__channel.playdone(0)
@@ -158,10 +166,14 @@ class RealChannel:
 #		self.__rmaplayer.Begin()
 
 	def ErrorOccurred(self,str):
+		if realenginedebug:
+			print 'RealChannel.ErrorOccurred', self
 		self.__channel.errormsg(None, str)
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
+			if realenginedebug:
+				print 'RealChannel.pauseit', self, paused
 			if paused:
 				self.__rmaplayer.Pause()
 			else:
@@ -169,6 +181,8 @@ class RealChannel:
 
 	def stopit(self):
 		if self.__rmaplayer:
+			if realenginedebug:
+				print 'RealChannel.stopit', self
 			self.__rmaplayer.Stop()
 			if self.__using_engine:
 				self.__engine.stopusing()
