@@ -33,8 +33,8 @@ def ITEMrange(fr, to): return range(fr, to+1)
 from mw_resources import ID_DIALOG_NODEATTR
 
 ITEM_SELECT=1
-ITEM_INFO_L2=2
-ITEM_INFO_L3=3
+ITEM_INFO_DEFAULT_LABEL=2
+ITEM_INFO_L2=3
 ITEM_INFO_DEFAULT=4
 ITEM_INFO_HELP=5
 ITEM_RESET=6
@@ -287,6 +287,10 @@ class AttrEditorDialogField:
 		else:
 			toshow=ITEMLIST_STRING
 			tohide=ITEMLISTNOT_STRING
+		if default is None:
+			tohide = tohide + [ITEM_INFO_DEFAULT, ITEM_INFO_DEFAULT_LABEL]
+		else:
+			toshow = toshow + [ITEM_INFO_DEFAULT, ITEM_INFO_DEFAULT_LABEL]
 		self.__parent._hideitemlist(tohide)
 		# It appears input fields have to be shown before
 		# values are inserted??!?
@@ -300,10 +304,10 @@ class AttrEditorDialogField:
 				value = None
 			self.__parent._option.setitems(list, value)
 		else:
-			print 'DBG show', `value`
 			self.__parent._setlabel(ITEM_STRING, value)
 			self.__parent._selectinputfield(ITEM_STRING)
-		self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
+		if not default is None:
+			self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
 		self.__parent._setlabel(ITEM_INFO_HELP, help)
 		self.__parent._showitemlist(toshow)
 
