@@ -162,6 +162,8 @@ class _AreaWidget(_ControlWidget):
 		self.control = wid.GetDialogItemAsControl(item)
 		self.rect = self.control.GetControlRect()
 		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
+		self.control.SetControlDataCallback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
+		self.control.SetControlDataCallback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
 		self.image = None
 		self.outerrect = (0, 0, 1, 1)
 		self.otherrects = []
@@ -188,6 +190,14 @@ class _AreaWidget(_ControlWidget):
 			traceback.print_exception(exc_type, exc_value, None)
 			traceback.print_tb(exc_traceback)
 
+	def hittest(self, *args):
+		print "hittest", args
+		return 0
+		
+	def tracking(self, *args):
+		print "tracking", args
+		return 0
+		
 	def _showrect(self, rect, color):
 		print rect, color, self.scale
 		x, y, w, h = rect
