@@ -396,7 +396,8 @@ class DisplayList:
 
 	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1, coordinates = None):
+				    center = 1, coordinates = None,
+				    clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
@@ -449,7 +450,7 @@ class DisplayList:
 		self._update_bbox(x0, y, x1, y+1)
 
 	# Insert a command to drawbox
-	def drawbox(self,coordinates):
+	def drawbox(self,coordinates, clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
