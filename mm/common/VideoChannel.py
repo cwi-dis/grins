@@ -2,8 +2,11 @@ __version__ = "$Id$"
 
 import Channel
 import MMAttrdefs
+from MMExc import *			# exceptions
+from AnchorDefs import *
 import windowinterface
 import urllib
+import Xlib
 
 class VideoChannel(Channel.ChannelWindowAsync):
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + ['scale']
@@ -11,8 +14,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__context = None
-		self.__widget = None
-		self.__gc = None
 		self.played_movie = self.armed_movie = None
 		self.__stopped = 0
 
@@ -20,39 +21,21 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not Channel.ChannelWindowAsync.do_show(self, pchan):
 			return 0
 		window = self.window
-		x, y, w, h = window._rect
-		widget = window._form.CreateMDrawingArea('video',
-						{'x': x, 'y': y,
-						 'width': w, 'height': h,
-						 'visualInfo': window._visual,
-						 'colormap': window._colormap,
-						 'mappedWhenManaged': 0})
-		self.__widget = widget
-		widget.AddCallback('ginitCallback', self.__ginitCB,
-				   window._visual)
-		widget.AddCallback('exposeCallback', self.__exposeCB, None)
-		widget.ManageChild()
-		self.__gc = widget.CreateGC({})
+		widget = window._form
+		if widget.IsRealized():
+			self.__ginitCB(widget, window._visual, None)
+		else:
+			widget.AddCallback('ginitCallback', self.__ginitCB,
+					   window._visual)
 		return 1
 
 	def __ginitCB(self, widget, visual, calldata):
 		self.__context = widget.CreateContext(visual, None, GL_TRUE)
 
-	def __exposeCB(self, widget, userdata, calldata):
-		if self.played_movie:
-			w, h = self.window._rect[2:4]
-			self.__gc.foreground = self.played_bg
-			self.__gc.FillRectangle(0, 0, w, h)
-			self.played_movie.ShowCurrentFrame()
-
 	def do_hide(self):
 		if self.__context:
 			self.__context.DestroyContext()
 			self.__context = None
-		if self.__widget:
-			self.__widget.DestroyWidget()
-			self.__widget = None
-			self.__gc = None
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
@@ -70,31 +53,55 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not mv.IsMovieFile(f):
 			self.errormsg(node, '%s: Not a movie' % file)
 			return 1
-		self.armed_movie = movie = mv.OpenFile(f, 0)
+		try:
+			self.armed_movie = movie = mv.OpenFile(f, 0)
+		except mv.error, msg:
+			self.errormsg(node, '%s: %s' % (file, msg))
+			return 1
 		_mvmap[movie] = self
 		movie.SetPlaySpeed(1)
 		scale = MMAttrdefs.getattr(node, 'scale')
 		self.armed_scale = scale
-		w, h = self.window._rect[2:]
+		x, y, w, h = self.window._rect
 		if scale > 0:
 			track = movie.FindTrackByMedium(mv.DM_IMAGE)
 			width = track.GetImageWidth()
 			height = track.GetImageHeight()
 			self.armed_size = width, height
-			movie.SetViewSize(width * scale, height * scale)
-			width, height = movie.QueryViewSize(width * scale,
-							    height * scale)
-			movie.SetViewOffset((w - width) / 2, (h - height) / 2,
+			width = min(width * scale, w)
+			height = min(height * scale, h)
+			movie.SetViewSize(width, height)
+			width, height = movie.QueryViewSize(width, height)
+			movie.SetViewOffset(x + (w - width) / 2,
+					    self.window._form.height - y - (h + height) / 2,
 					    mv.DM_TRUE)
 		else:
 			movie.SetViewSize(w, h)
+			# X coordinates don't work, so use GL coordinates
+			movie.SetViewOffset(x,
+					    self.window._form.height - y - h,
+					    mv.DM_TRUE)
 			self.armed_size = None
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
+		try:
+			alist = node.GetRawAttr('anchorlist')
+		except NoSuchAttrError:
+			alist = []
+		self.armed_display.fgcolor(self.getbucolor(node))
+		hicolor = self.gethicolor(node)
+		for a in alist:
+			if a[A_TYPE] in DestOnlyAnchors:
+				continue
+			b = self.armed_display.newbutton((0,0,1,1))
+			b.hiwidth(3)
+			b.hicolor(hicolor)
+			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return 1
 
 	def do_play(self, node):
+		window = self.window
 		self.played_movie = self.armed_movie
 		self.armed_movie = None
 		if self.played_movie is None:
@@ -103,14 +110,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.played_scale = self.armed_scale
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
-		self.__gc.foreground = self.played_bg
-		w, h = self.window._rect[2:4]
-		self.__gc.FillRectangle(0, 0, w, h)
-		self.__widget.MapWidget()
-		self.played_movie.BindOpenGLWindow(self.__widget,
+		window.setredrawfunc(self.redraw)
+		self.played_movie.BindOpenGLWindow(self.window._form,
 						   self.__context)
 		self.played_movie.Play()
 		self.__stopped = 0
+		r = Xlib.CreateRegion()
+		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
+		r.SubtractRegion(window._region)
+		window._topwindow._do_expose(r)
 
 	def playstop(self):
 		if self.played_movie:
@@ -123,30 +131,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.played_movie.UnbindOpenGLWindow()
 			del _mvmap[self.played_movie]
 			self.played_movie = None
-		if self.__widget:
-			self.__widget.UnmapWidget()
-
-	def resize(self, arg, window, event, value):
-		x, y, w, h = window._rect
-		if self.__widget:
-			self.__widget.SetValues({'x': x, 'y': y,
-						 'width': w, 'height': h})
-		movie = self.played_movie
-		if not movie:
-			return
-		scale = self.played_scale
-		if scale > 0:
-			width, height = self.played_size
-			movie.SetViewSize(width * scale, height * scale)
-			width, height = movie.QueryViewSize(width * scale,
-							    height * scale)
-			movie.SetViewOffset((w - width) / 2, (h - height) / 2,
-					    mv.DM_TRUE)
-		else:
-			movie.SetViewSize(w, h)
-		self.__gc.foreground = self.played_bg
-		self.__gc.FillRectangle(0, 0, w, h)
-		movie.ShowCurrentFrame()
+		window = self.window
+		if window:
+			window.setredrawfunc(None)
+			window._topwindow._do_expose(window._region)
 
 	def setpaused(self, paused):
 		if self.played_movie:
@@ -156,6 +144,33 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			else:
 				self.played_movie.Play()
 				self.__stopped = 0
+
+	def redraw(self):
+		if self.played_movie:
+			self.played_movie.ShowCurrentFrame()
+
+	def resize(self, arg, window, event, value):
+		x, y, w, h = window._rect
+		movie = self.played_movie
+		if not movie:
+			return
+		scale = self.played_scale
+		if scale > 0:
+			width, height = self.played_size
+			width = min(width * scale, w)
+			height = min(height * scale, h)
+			movie.SetViewSize(width, height)
+			width, height = movie.QueryViewSize(width, height)
+			movie.SetViewOffset(x + (w - width) / 2,
+					    self.window._form.height - y - (h + height) / 2,
+					    mv.DM_TRUE)
+		else:
+			movie.SetViewSize(w, h)
+			movie.SetViewOffset(x,
+					    self.window._form.height - y - h,
+					    mv.DM_TRUE)
+			self.armed_size = None
+		movie.ShowCurrentFrame()
 
 	def stopped(self):
 		if not self.__stopped:
