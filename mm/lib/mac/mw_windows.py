@@ -1575,6 +1575,23 @@ class _CommonWindow:
 		
 	def _mac_dispose_gworld(self, which):
 		self._parent._mac_dispose_gworld(which)
+		
+	def dumpwindow(self, indent=0):
+		if not self._subwindows and not self._active_displist and not self._redrawfunc:
+			return
+		print ' '*indent, self._onscreen_wid, self
+		if self._redrawfunc or self._active_displist:
+			print ' '*(indent+8), self.qdrect(), 'z=%d'%self._z
+			print ' '*(indent+8), self._bgcolor, ["", "transparent"][self._transparent]
+		if self._redrawfunc:
+			print ' '*(indent+8), 'redrawfunc', self._redrawfunc
+		if self._active_displist:
+			print ' '*(indent+8), 'active displist length', len(self._active_displist._list)
+		indent = indent + 2
+		if self._subwindows:
+			print ' '*(indent+8), len(self._subwindows), 'subwindows'
+		for w in self._subwindows:
+			w.dumpwindow(indent)
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""

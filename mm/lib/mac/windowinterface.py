@@ -65,6 +65,7 @@ cancelidleproc = toplevel.cancelidleproc
 installaehandler = toplevel.installaehandler
 getcurtime = toplevel.getcurtime
 settimevirtual = toplevel.settimevirtual
+dumpwindows = toplevel.dumpwindows
 
 #
 # Make various other items from other modules available
