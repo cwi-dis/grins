@@ -653,7 +653,10 @@ class Window:
 	def _prepare_image(self, file, crop, fit, center, coordinates, clip, align, units):
 		
 		# get image size. If it can't be found in the cash read it.
-		image = mediainterface.get_image(file)
+		if type(file) == type(''):
+			image = mediainterface.get_image(file)
+		else:
+			image = file
 		xsize, ysize = image.GetSize()
 		
 		# check for valid crop proportions
