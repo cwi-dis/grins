@@ -20,8 +20,8 @@ class LayoutViewDialog:
 		l1 = w1.List('Screens', [], (self.__layoutcb, ()),
 			     top = None, left = None, right = None, bottom = b1)
 		self.__layoutlist = l1
-		b2 = w2.ButtonRow([('New...', NEW_CHANNEL),
-				   ('Remove', REMOVE_CHANNEL),
+		b2 = w2.ButtonRow([('New...', NEW_REGION),
+				   ('Remove', REMOVE_REGION),
 				   ('Properties...', ATTRIBUTES),
 				   ],
 				  vertical = 0,
@@ -30,7 +30,7 @@ class LayoutViewDialog:
 ## 			     tooltip = 'List of channels used in selected screen',
 			     top = None, left = None, right = None, bottom = b2)
 		self.__channellist = l2
-		b3 = w3.ButtonRow([('Add', ADD_CHANNEL),
+		b3 = w3.ButtonRow([('Add', ADD_REGION),
 				   ],
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
