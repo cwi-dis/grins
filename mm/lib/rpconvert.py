@@ -175,8 +175,16 @@ def rpconvert(node):
 		em.setnodeattr(newnode, 'height', h)
 		em.setnodeattr(newnode, 'regPoint', 'center')
 		em.setnodeattr(newnode, 'regAlign', 'center')
-		em.setnodeattr(newnode, 'bgcolor', (0,0,0))
-		em.setnodeattr(newnode, 'transparent', 0)
+		# XXX to be compatible with RealPix, the background
+		# should not be transparent and be transitioned in
+		# together with the image.  However, that's not so
+		# easy in SMIL 2.0.  We'd need a coordinated
+		# transition of a brush to represent the background
+		# and the image.  For now, just use a transparent
+		# background so that it isn't too ugly.
+##		em.setnodeattr(newnode, 'bgcolor', (0,0,0))
+##		em.setnodeattr(newnode, 'transparent', 0)
+		em.setnodeattr(newnode, 'transparent', 1)
 		em.setnodeattr(newnode, 'channel', chname)
 		em.setnodeattr(newnode, 'beginlist', [MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start)])
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
