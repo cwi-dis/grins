@@ -43,7 +43,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=C:\Program Files\Wise InstallBuilder 8.1
+  Variable Default3=E:\Program Files\Wise InstallBuilder 8.1
   Variable Flags3=00001000
   Variable Name4=_ALIASNAME_
   Variable Flags4=00001000
