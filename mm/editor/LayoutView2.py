@@ -332,7 +332,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentFocus = None
 		self.currentFocusType = None
 		# allow to identify if the focus has been fixed by this view
-		self.myfocus = None
+		self.myfocus = 'unselected'
 		self.commitAlreadyUpdated = 0
 
 		# when you swap to the pause state, the current region showed list is saved
@@ -572,7 +572,7 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.rebuildAll()
 
-		self.updateFocus()
+		self.updateFocus(1)
 				
 	def isValidMMNode(self, node):
 		if node == None:
@@ -583,7 +583,7 @@ class LayoutView2(LayoutViewDialog2):
 		import ChannelMap
 		return ChannelMap.isvisiblechannel(node.GetChannelType())
 
-	def focusOnMMChannel(self, focusobject):		
+	def focusOnMMChannel(self, focusobject, keepShowedNodes=0):		
 		nodeType = self.getNodeType(focusobject)
 		if nodeType == None:
 			return
@@ -598,9 +598,9 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
-			widget.selectNodeList([focusobject])
+			widget.selectNodeList([focusobject], keepShowedNodes)
 						
-	def focusOnMMNode(self, focusobject):
+	def focusOnMMNode(self, focusobject, keepShowedNodes=0):
 		# update command list
 		self.setcommandlist(self.commandMediaList)
 					
@@ -608,9 +608,9 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
-			widget.selectNodeList([focusobject])
+			widget.selectNodeList([focusobject], keepShowedNodes)
 
-	def focusOnList(self, focusobject):
+	def focusOnList(self, focusobject, keepShowedNodes=0):
 		# update command list
 
 		areSibling = 1
@@ -635,15 +635,15 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
-			widget.selectNodeList(list)
+			widget.selectNodeList(list, keepShowedNodes)
 		
-	def focusOnUnknown(self, focusobject):
+	def focusOnUnknown(self, focusobject, keepShowedNodes=0):
 		# update command list
 		self.setcommandlist(self.commandNoSItemList)
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
-			widget.selectNodeList([])
+			widget.selectNodeList([], keepShowedNodes)
 							
 		# XXX to implement
 #	def toStopState(self):
@@ -687,28 +687,28 @@ class LayoutView2(LayoutViewDialog2):
 #		self.displayViewport(saveCurrentViewport.getNodeRef())
 #		self.updateFocus()
 
-	def updateFocus(self):
+	def updateFocus(self, keepShowedNodes=0):
 		if debug: print 'LayoutView.updateFocus:',self.currentFocusType,' focusobject=',self.currentFocus		
 		# check is the focus is still valid
 		# XXX this call should be exist. Normaly all view which are responsibled of delete a node
 		# should change the global focus as well if it points on the deleted node
 		if not self.isValidFocus():
 			if debug: print 'LayoutView.updateFocus: no valid focus'
-			self.focusOnUnknown(self.currentFocus)
+			self.focusOnUnknown(self.currentFocus, keepShowedNodes)
 			return
 		
 		if self.currentFocusType == 'MMNode':
 			if debug: print 'LayoutView.updateFocus: focus on MMNode'
-			self.focusOnMMNode(self.currentFocus)
+			self.focusOnMMNode(self.currentFocus, keepShowedNodes)
 		elif self.currentFocusType == 'MMChannel':
 			if debug: print 'LayoutView.updateFocus: focus on MMChannel'
-			self.focusOnMMChannel(self.currentFocus)
+			self.focusOnMMChannel(self.currentFocus, keepShowedNodes)
 		elif self.currentFocusType == 'List':
 			if debug: print 'LayoutView.updateFocus: focus on List'
-			self.focusOnList(self.currentFocus)
+			self.focusOnList(self.currentFocus, keepShowedNodes)
 		else:
 			if debug: print 'LayoutView.updateFocus: unknow focus type'
-			self.focusOnUnknown(self.currentFocus)
+			self.focusOnUnknown(self.currentFocus, keepShowedNodes)
 
 	def isValidFocus(self):
 		if self.currentFocusType == 'MMNode':
@@ -724,7 +724,7 @@ class LayoutView2(LayoutViewDialog2):
 		if debug: print 'LayoutView.globalfocuschanged focustype=',focustype,' focusobject=',focusobject
 		self.currentFocus = focusobject
 		self.currentFocusType = focustype
-		if self.myfocus is not None and focusobject is self.myfocus:
+		if self.myfocus != 'unselected' and focusobject is self.myfocus:
 			self.myfocus = None
 			return
 		self.myfocus = None
@@ -737,6 +737,7 @@ class LayoutView2(LayoutViewDialog2):
 		focusobject = None
 		if len(list) == 0:
 			# no item selected
+			self.myfocus = None
 			self.editmgr.setglobalfocus(None, None)
 		elif len(list) == 1:
 			# simple selection
@@ -1596,15 +1597,16 @@ class LayoutView2(LayoutViewDialog2):
 			self.geomFieldWidget.updateRegionGeom(geom)
 		elif nodeType == TYPE_MEDIA:
 			self.geomFieldWidget.updateMediaGeom(geom)
-	
-	def onSelect(self, nodeRefList):
+
+	# call from any widget belong to this view
+	def onSelect(self, nodeRefList, keepShowedNodes=1):
 		# XXX in the case, if the focus is change from the tree widget, the focus in the control field is not updated.
 		# So we have to force any apply.
 		self.flushChangement()
 		
 		self.setglobalfocus(nodeRefList)
 
-		self.updateFocus()	
+		self.updateFocus(keepShowedNodes)	
 #
 # common class for all widgets
 #
@@ -1617,7 +1619,7 @@ class Widget:
 	# overrided methods
 	#
 	
-	def selectNodeList(self, nodeRefList):
+	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		pass
 
 	def show(self):
@@ -1659,7 +1661,7 @@ class ZFieldWidget(LightWidget):
 	def destroy(self):
 		self.dialogCtrl.removeListener('RegionZ')
 		
-	def selectNodeList(self, nodeRefList):
+	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		if len(nodeRefList) != 1:
 			# if no node selected or several nodes are selected in the same time, disable the fields
 			self.__unselect()
@@ -1728,7 +1730,7 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.removeListener('RegionW')
 		self.dialogCtrl.removeListener('RegionZ')
 	
-	def selectNodeList(self, nodeRefList):
+	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		# if no node selected or several nodes are selected in the same time, disable the fields
 		if len(nodeRefList) != 1:
 			self.__unselect()
@@ -1963,7 +1965,7 @@ class TreeWidget(Widget):
 	#
 	#
 	
-	def selectNodeList(self, nodeRefList):
+	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		list = []
 		for nodeRef in nodeRefList:
 			nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
@@ -2000,7 +2002,8 @@ class TreeWidget(Widget):
 		for nodeTreeCtrlId in nodeTreeCtrlIdList:
 			nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 			nodeRefList.append(nodeRef)
-		self._context.onSelect(nodeRefList)
+		# update the selection, and raz the previous showed nodes (medias only)
+		self._context.onSelect(nodeRefList, 0)
 
 	def onExpandTreeNodeCtrl(self, nodeTreeCtrlId, isExpanded):
 		nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
@@ -2081,11 +2084,11 @@ class PreviousWidget(Widget):
 		self.currentRegionNodeListShowed = None
 		self.previousCtrl = None
 
-	def selectNodeList(self, nodeRefList):
+	def selectNodeList(self, nodeRefList, keepShowedNodes):
 		# to prevent against indefite loop
 		self.__selecting = 1
 
-		if not self.localSelect:
+		if not keepShowedNodes:
 			# remove previous medias which are not selected anymore
 			mediaToRemove = []
 			for nodeRef in self.currentMediaRefListM:
@@ -2283,7 +2286,8 @@ class PreviousWidget(Widget):
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
 					applyList.append((nodeRef, obj.getGeom()))
-
+					break
+				
 		# update only the geom field on dialog box
 		self.localSelect = 1 # temporare			
 		self._context.applyGeomList(applyList)
