@@ -30,6 +30,10 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 			box = self.armed_display.writestr(msg)
 		return 1
 
+	def do_hide(self):
+		self.stopit()
+		Channel.ChannelWindowAsync.do_hide(self)
+		
 	def do_play(self, node):
 		if not self.playit(node, self._getoswindow(), self._getoswinpos() ):
 			self.playdone(0)
