@@ -902,9 +902,12 @@ class KeyTimesSlider(window.Wnd):
 		self.SetPageSize(20)
 		self.SetRange(0, 100)
 
-		self._keyTimes = [0.0, 0.5, 1.0]
+		self._keyTimes = [0.0, 1.0]
 		self._markerColor = 0, 0, 0
 		self._selectedMarkerColor = 255, 0, 0
+
+		# 
+		self._keyTimesData = None # [(None, None), (None, None)]
 
 		dlg.HookNotify(self.OnReleaseCapture, commctrl.NM_RELEASEDCAPTURE)
 		
@@ -919,12 +922,16 @@ class KeyTimesSlider(window.Wnd):
 			index = index + 1
 		if tp > self._keyTimes[index-1]+self.DELTA and tp < self._keyTimes[index] - self.DELTA:
 			self._keyTimes.insert(index, tp)
+			if self._keyTimesData is not None:
+				self._keyTimesData.insert((None, None))
 			self._selected = -1
 			self.updateKeyTimes()
 
 	def insertKeyTimeFromPoint(self, index, prop):
 		tp = self._keyTimes[index-1] + prop*(self._keyTimes[index]-self._keyTimes[index-1])
 		self._keyTimes.insert(index, tp)
+		if self._keyTimesData is not None:
+			self._keyTimesData.insert((None, None))
 		self._selected = -1
 		self.updateKeyTimes()
 
@@ -939,6 +946,8 @@ class KeyTimesSlider(window.Wnd):
 
 	def removeKeyTimeAtIndex(self, index):
 		del self._keyTimes[index]
+		if self._keyTimesData is not None:
+			del self._keyTimesData[index]
 		if index == self._selected:
 			self._selected = -1
 		self.updateKeyTimes()
@@ -986,11 +995,18 @@ class KeyTimesSlider(window.Wnd):
 	def setTime(self, t):
 		self.SetPos(int(t*100+0.5))
 
-	def setKeyTimes(self, keyTimes):
+	def setKeyTimes(self, keyTimes, data=None):
 		self._keyTimes = keyTimes
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		self._parent.InvalidateRect( (l, b, r, b+8) )
+		if data is not None:
+			assert len(data)==len(keyTimes), ''
+			self._keyTimesData = data
+		elif self._keyTimesData is not None:
+			self._keyTimesData = []
+			for i in range(len(keyTimes)):
+				self._keyTimesData.append((None, None))
 
 	def getKeyTime(self, point):
 		l, t, r, b = self.GetWindowRect()
@@ -1053,3 +1069,19 @@ class KeyTimesSlider(window.Wnd):
 				self.removeKeyTimeAtIndex(index)	
 		else:	
 			self.insertKeyTimeAtDevicePoint(point)
+
+	def setSelectedKeyTimeData(self, rect, color):
+		if self._selected<0: return
+		self._keyTimesData[self._selected] = rect, color
+
+	def getKeyTimes(self):
+		return self._keyTimes
+
+	def getKeyTimesData(self):
+		return self._keyTimesData
+
+
+
+
+		
+
