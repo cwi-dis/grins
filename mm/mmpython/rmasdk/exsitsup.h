@@ -57,6 +57,7 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 			 void *dpy,
 #endif
 			 PyObject *pw) {
+		if(m_windowless) return;
 		m_PNxWindow.window = hwnd;
 #ifdef _UNIX
 		m_PNxWindow.display = dpy;
