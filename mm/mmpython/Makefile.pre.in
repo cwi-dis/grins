@@ -2,7 +2,7 @@
 #
 # Instructions:
 #
-# 0) Build and install the basic Python 1.2 distribution.  You must
+# 0) Build and install the basic Python 1.4 distribution.  You must
 # also install the headers ("make inclinstall") and the binary library
 # files ("make libainstall").
 #
@@ -102,8 +102,19 @@ exec_prefix=	$(prefix)
 
 # === Fixed definitions ===
 
-INCLUDEPY=	$(installdir)/include/Py
-LIBP=		$(exec_installdir)/lib/python
+# Expanded directories
+BINDIR=		$(exec_installdir)/bin
+LIBDIR=		$(exec_prefix)/lib
+MANDIR=		$(installdir)/man
+INCLUDEDIR=	$(installdir)/include
+SCRIPTDIR=	$(prefix)/lib
+
+# Detailed destination directories
+BINLIBDEST=	$(LIBDIR)/python$(VERSION)
+LIBDEST=	$(SCRIPTDIR)/python$(VERSION)
+INCLUDEPY=	$(INCLUDEDIR)/python$(VERSION)
+LIBP=		$(exec_installdir)/lib/python$(VERSION)
+
 LIBPL=		$(LIBP)/lib
 
 PYTHONLIBS=	$(LIBPL)/libModules.a \
@@ -147,7 +158,7 @@ do-it-again:
 		$(MAKESETUP) \
 		 -m Makefile.pre -c $(CONFIGCIN) Setup -n $(BASESETUP) $(SETUP)
 
-config.o:	config.c Makefile
+config.o:	config.c
 		$(CC) $(CFLAGS) -c config.c
 
 getpath.o:	$(LIBPL)/getpath.c Makefile
@@ -201,5 +212,3 @@ clobber:	clean
 
 distclean:	clobber
 		-rm -f Makefile Setup
-
-.PRECIOUS:	Makefile
