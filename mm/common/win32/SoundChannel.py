@@ -75,14 +75,15 @@ class SoundChannel(Channel.ChannelAsync):
 
 	def do_play(self, node):
 		self.__type = node.__type
+		start_time = node.get_start_time()
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
 		if node.__type == 'real':
 			if not self.__rc:
-				self.playdone(0)
-			elif not self.__rc.playit(node):
+				self.playdone(0, start_time)
+			elif not self.__rc.playit(node, start_time=start_time):
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
 				if not name:
@@ -90,10 +91,10 @@ class SoundChannel(Channel.ChannelAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0)
-		elif not self.__mc.playit(node):
+				self.playdone(0, start_time)
+		elif not self.__mc.playit(node, start_time=start_time):
 			self.errormsg(node,'Can not play')
-			self.playdone(0)
+			self.playdone(0, start_time)
 
 	def playstop(self):
 		self.__stopplayer()
