@@ -725,40 +725,26 @@ class MMChannel:
 	def SetPresentationAttr(self, name, value):
 		if self.attrdict.has_key(name):
 			self.d_attrdict[name] = value
-		elif name in ('position', 'left', 'top', 'width', 'height','right','bottom') and\
-			self.attrdict.has_key('base_winoff'):
-			d = self.d_attrdict
-			n = 'base_winoff'
-			if self.d_attrdict.has_key(n):
-				x, y, w, h = self.d_attrdict[n]
-			else:
-				if self.attrdict.get('type') == 'layout':
-					x, y, w, h = self.getPxGeom()
+		elif name == 'base_winoff':
+			self.d_attrdict['base_winoff'] = value
+
+	def GetPresentationAttr(self, name, node=None):
+		if settings.activeFullSmilCss:
+			if self.d_attrdict.has_key(name):
+				return self.d_attrdict[name]
+			elif name == 'base_winoff':
+				if node:
+					return node.getPxGeomMedia()[1]
 				else:
-					x, y, w, h = self.get(n)
-			if name == 'left':    d[n] = value, y, w, h
-			elif name == 'top':	  d[n] = x, value, w, h
-			elif name == 'width': d[n] = x, y, value, h
-			elif name == 'height':d[n] = x, y, w, value
-			elif name == 'right':
-				x = value - w
-				d[n] = x, y, w, h
-			elif name == 'bottom':
-				y = value - h
-				d[n] = x, y, w, h
-			elif name == 'position':
-				x, y = value
-				d[n] = x, y, w, h
-			elif name == 'size':
-				w, h = value
-				d[n] = x, y, w, h
-
-	def GetPresentationAttr(self, name):
-		if self.d_attrdict.has_key(name):
-			return self.d_attrdict[name]
+					return self.getPxGeom()
+			else:
+				return self.__getitem__(name)
 		else:
-			return self.__getitem__(name)
-
+			if self.d_attrdict.has_key(name):
+				return self.d_attrdict[name]
+			else:
+				return self.attrdict[name]
+				
 	def setvisiblechannelattrs(self, type):
 		from windowinterface import UNIT_PXL
 		if not settings.get('cmif'):
