@@ -24,6 +24,7 @@ default_settings = {
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
 	'license': '',
+##	'license': 'A-BMKA-Q4BCY-5H-T1SP',	# XXXX Mac beta only!!!
 	'license_user' : '',
 	'license_organization' : '',
 	'compatibility': G2,		# Try to be compatible with...
@@ -115,8 +116,7 @@ if os.name == 'posix':
 elif os.name == 'mac':
 	import macfs, MACFS
 	vrefnum, dirid = macfs.FindFolder(MACFS.kOnSystemDisk, 'pref', 1)
-	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS Preferences'))
-	default_settings['no_initial_dialog'] = 0
+	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS-lite-G2-1.5beta Prefs')) # XXXX
 	PREFSFILENAME=fss.as_pathname()
 else:
 	default_settings['html_control'] = 0	# which HTML control to use
