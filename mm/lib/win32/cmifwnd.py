@@ -250,7 +250,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Called by the core to close the window
 	def close(self):
-		#print 'closing...',self._title,self
 		if self._parent is None:
 			return		# already closed
 
@@ -718,7 +717,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 		self._scroll(how)
 		self._destroy_displists_tree()
-		self._create_displists_tree()
+		self._resize_tree()
 
 	# Set scroll range
 	def _scroll(self,how):
@@ -761,24 +760,22 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			for w,xf,yf in exec_list:
 				hdwp=w._resize_wnds_tree(hdwp,xf,yf)
 			Sdk.EndDeferWindowPos(hdwp)
-		
 
 	# destroy all display lists for this wnd and iteratively 
 	# for its childs, for the childs of its childs, etc	
 	def _destroy_displists_tree(self):
+		self._showing=None
 		for d in self._displists[:]:
 			d.close()
 		for w in self._subwindows:
 			w._destroy_displists_tree()
 
-	# create all display lists for this wnd and iteratively 
-	# for its childs, for the childs of its childs, etc
-	def _create_displists_tree(self):
+	# send ResizeWindow  for this and its subtree
+	def _resize_tree(self):
 		for w in self._subwindows:
-			w._create_displists_tree()
+			w._resize_tree()
 		self.onEvent(ResizeWindow)
 		
-
 	# resize self wnd and iteratively 
 	# all its childs, and for the childs all of their childs, etc
 	def _resize_wnds_tree(self,hdwp,xf,yf):

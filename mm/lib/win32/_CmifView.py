@@ -2,9 +2,10 @@ __version__ = "$Id$"
 
 
 """ @win32doc|_CmifView
-This module exports three important classes.
-The _CmifView or (_Window), _SubWindow.
-and _CmifStructView a specialization of _CmifView for smooth drawing
+This module exports the important classes:
+_CmifView or (_Window), _SubWindow.
+_CmifStructView a specialization of _CmifView for smooth drawing
+_CmifPlayerView a specialization of _CmifView for limiting 'if' programming
 
 The _CmifView is used for toplevel childs of
 the MainFrame that have a display list.
@@ -118,6 +119,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		if msg.minimized(): return
 		self._rect=0,0,msg.width(),msg.height()
 		self.fitCanvas(msg.width(),msg.height())
+		self._resize_tree()
 
 	def fitCanvas(self,width,height):		
 		x,y,w,h=self._canvas
@@ -125,7 +127,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		if height>h:h=height	
 		self._canvas = (x,y,w,h)
 		self._scroll(-1)
-		self._create_displists_tree()
 		
 	# Adjusts the scroll sizes of the scroll view. Part of the set canvas sequence. 
 	def _scroll(self,how):
@@ -310,17 +311,22 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 
 #################################################
-# Specialization of _CmifView for player		
+# Specialization of _CmifView for player
+# i.e Resizing/Closing		
 class _CmifPlayerView(_CmifView):
 	# Class contructor. initializes base classes
 	def __init__(self,doc):
 		_CmifView.__init__(self,doc)
 		self._canclose=1
+		self._tid=None
 
 	def OnInitialUpdate(self):
 		_CmifView.OnInitialUpdate(self)
-		self.HookMessage(self.onPostResize,win32con.WM_USER)
+		#self.HookMessage(self.onPostResize,win32con.WM_USER)
 
+	# Do not close and recreate topwindow, due to flushing screen
+	# and loose of focus. 
+	# Nobody would excpect to destroy a window by resizing it!
 	def close(self):
 		if self._canclose:
 			_CmifView.close(self)
@@ -329,23 +335,33 @@ class _CmifPlayerView(_CmifView):
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
-		self._do_resize(msg.width(),msg.height())
+
+		# This historic function does not need to be
+		# called since the channels are now destroyed
+		# and re-created. The effect of calling it is
+		# a flickering screen 
+#		self._do_resize(msg.width(),msg.height())
+
 		# after _do_resize because it uses old self._rect
 		self._rect=0,0,msg.width(),msg.height()
 		self.fitCanvas(msg.width(),msg.height())
-		self.PostMessage(win32con.WM_USER)
 
-	def fitCanvas(self,width,height):		
-		x,y,w,h=self._canvas
-		if width>w:w=width
-		if height>h:h=height	
-		self._canvas = (x,y,w,h)
-		self._scroll(-1)
+		# Do not use PostMessage. ChannelWindow.resize
+		# fails to save_geometry if the sys attribute
+		# 'Show Window Contents While Dragging' is set
+		# since then this function is called to often
+#		self.PostMessage(win32con.WM_USER)
+		from __main__ import toplevel
+		if self._tid:
+			toplevel.canceltimer(self._tid)
+		self._tid=toplevel.settimer(0.1,(self.onPostResize,()))
 
-	def onPostResize(self,params):
+	def onPostResize(self,params=None):
+		self._tid=None
 		self._canclose=0
-		self._create_displists_tree()
+		self._resize_tree()
 		self._canclose=1
+		
 
 #################################################
 # Specialization of _CmifView for smooth drawing		
