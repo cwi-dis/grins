@@ -117,6 +117,15 @@ class _WindowGroup:
 			return self._dict[cmd].callback
 		return None
 
+	def call_command(self, cmd):
+		callback = self.get_command_callback(cmd)
+		if not callback:
+			print 'No callback for command', cmd
+		else:
+			func, arglist = callback
+			apply(func, arglist)
+
+
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
 		
@@ -815,12 +824,7 @@ class _AdornmentsMixin:
 	def _toolbar_callback(self, ctl, part):
 ##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
 		cmd = self._cntl_to_cmd[ctl]
-		callback = self.get_command_callback(cmd)
-		if not callback:
-			print 'No callback for toolbar command', cmd
-		else:
-			func, arglist = callback
-			apply(func, arglist)
+		self.call_command(cmd)
 			
 	def set_commandlist(self, cmdlist):
 		enabled = {}
@@ -836,7 +840,7 @@ class _AdornmentsMixin:
 			if not enabled.has_key(cmd):
 				cntl = self._cmd_to_cntl[cmd]
 				cntl.HiliteControl(255)
-
+	
 	def set_toggle(self, cmd, onoff):
 		if self._cmd_to_cntl.has_key(cmd):
 			cntl = self._cmd_to_cntl[cmd]
