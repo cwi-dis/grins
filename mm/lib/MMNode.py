@@ -1522,6 +1522,8 @@ class MMNode:
 			# for which there is no SYNC action
 			in1 = in1[:] + [(SYNC_DONE, self)]
 
+		fill = self.attrdict.get('fill', 'remove')
+
 		#
 		# We are started when we get our SCHED and all our
 		# incoming head-syncarcs.
@@ -1568,12 +1570,16 @@ class MMNode:
 			#
 			# Tie the envelope/body done events to our done actions
 			#
+			sched_done = [(SCHED_DONE, self)]+out1
+			if fill == 'remove':
+				sched_done = sched_done + schedstop_actions
+				schedstop_actions = []
 			action = [len(schedstop_events), schedstop_actions]
 			for event in schedstop_events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
 			ev = (SCHED_STOPPING, self)
-			self.srdict[ev] = [1, [(SCHED_DONE, self)]+out1]
+			self.srdict[ev] = [1, sched_done]
 			srdict[ev] = self.srdict
 			#
 			# And, for our incoming tail syncarcs and a
@@ -1883,6 +1889,10 @@ class MMNode:
 		for ch in self.wtd_children:
 			# Link previous child to this one
 			if previous_done_events:
+				out0, out1 = ch.sync_to
+				out0 = out0 + previous_stop_actions
+				ch.sync_to = out0, out1
+				previous_stop_actions = []
 				srlist.append(
 					(previous_done_events,
 					 [(SCHED, ch)]+previous_stop_actions) )
