@@ -1166,15 +1166,24 @@ class NodeBox(GO):
 		if not editmgr.transaction():
 			return # Not possible at this time
 		root = self.mother.root
-		snode, sside, delay, dnode, dsize = \
-			self.mother.lockednode.node, 1, 0.0, self.node, 0
-		editmgr.addsyncarc(snode, sside, delay, dnode, dsize)
+		snode, sside, delay, dnode, dside, new = \
+			self.mother.lockednode.node, 1, 0.0, self.node, 0, 1
+		# find a sync arc between the two nodes and use that
+		list = dnode.GetRawAttrDef('synctolist', None)
+		if list == None:
+			list = []
+		suid = snode.GetUID()
+		for (xn, xs, de, ys) in list:
+			if xn == suid:
+				sside, delay, dside, new = xs, de, ys, 0
+				break
+		editmgr.addsyncarc(snode, sside, delay, dnode, dside)
 		self.mother.cleanup()
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import ArcInfo
-		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize,
-				    new = 1)
+		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dside,
+				    new = new)
 
 	def select(self):
 		self.unlock()
