@@ -65,6 +65,7 @@ class Chunk:
 
 class reader:
 	def __init__(self, filename):
+		self.__filename = filename # only needed for __repr__
 		self.__file = file = open(filename, 'rb')
 		self.__soundpos = 0
 		# start parsing
@@ -101,6 +102,9 @@ class reader:
 			raise Error, 'fmt chunk and/or data chunk missing'
 		if data_seek_needed:
 			self.__data_chunk.rewind()
+
+	def __repr__(self):
+		return '<WAVreader instance, file=%s, format=%s, framerate=%d>' % (self.__filename, `self.__format`, self.__framerate)
 
 	def __read_fmt_chunk(self, chunk):
 		wFormatTag = _read_short(chunk)

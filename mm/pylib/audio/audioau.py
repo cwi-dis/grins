@@ -38,6 +38,7 @@ def _read_long(file):
 
 class reader:
 	def __init__(self, filename):
+		self.__filename = filename # only needed for __repr__
 		self.__file = file = open(filename, 'rb')
 		magic = file.read(4)
 		if magic != '.snd':
@@ -77,6 +78,9 @@ class reader:
 			self.__nframes = -1
 		if self.__hdr_size > 24:
 			dummy = file.read(self.__hdr_size - 24)
+
+	def __repr__(self):
+		return '<AUreader instance, file=%s, format=%s, framerate=%d>' % (self.__filename, `self.__format`, self.__framerate)
 
 	def getformat(self):
 		return self.__format
