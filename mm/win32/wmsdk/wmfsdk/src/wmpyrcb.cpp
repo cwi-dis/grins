@@ -15,7 +15,7 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "wmpyrcb.h"
 
-#include "pycbapi.h"
+#include "mtpycall.h"
 
 ////////////////////////////////////////
 
