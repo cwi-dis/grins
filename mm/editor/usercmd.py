@@ -140,6 +140,8 @@ class LAYOUTVIEW2(_CommandBase):
 #	help = 'Show time-based view'
 class SOURCEVIEW(_CommandBase):
 	help = 'Show the SMiL source'
+class ERRORSVIEW(_CommandBase):
+	help = 'Show the list of the source errors'
 class ASSETSVIEW(_CommandBase):
 	help = 'Show Assets View'
 
@@ -158,6 +160,7 @@ class HIDE_TRANSITIONVIEW(_CommandBase): pass
 class HIDE_LAYOUTVIEW2(_CommandBase): pass
 #class HIDE_TEMPORALVIEW(_CommandBase):pass
 class HIDE_SOURCEVIEW(_CommandBase): pass
+class HIDE_ERRORSVIEW(_CommandBase): pass
 class HIDE_ASSETSVIEW(_CommandBase): pass
 #
 # Player view commands
