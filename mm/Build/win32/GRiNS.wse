@@ -19,11 +19,11 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\GRiNS_1.0beta_install.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-play-10beta.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=sjoerd
-  Upload Directory=/ufs/sjoerd/tmp
+  Upload Name=jack
+  Upload Directory=/var/www/OratrixWeb/downloaddir
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.0beta
