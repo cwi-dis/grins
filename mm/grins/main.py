@@ -3,14 +3,16 @@ __version__ = "$Id$"
 # Main program for the CMIF editor.
 
 import sys
+import os
 
 try:
 	sys.path.remove('')
 except:
 	pass
 
-import fastimp
-fastimp.install()
+if os.name != 'mac':
+	import fastimp
+	fastimp.install()
 
 import getopt
 
@@ -27,6 +29,8 @@ class Main:
 	def __init__(self, opts, files):
 		import TopLevel, windowinterface
 		from MMExc import MSyntaxError
+		self.nocontrol = 0	# For player compatability
+		self._closing = 0
 		self._mm_callbacks = {}
 		try:
 			import mm, posix
@@ -65,6 +69,17 @@ class Main:
 				top.player.playfromanchor(top.root, j_arg)
 			else:
 				top.player.playsubtree(top.root)
+
+	def closetop(self, top):
+		if self._closing:
+			return
+		self._closing = 1
+		self.tops.remove(top)
+		top.hide()
+		if len(self.tops) == 0:
+			# no TopLevels left: exit
+			sys.exit(0)
+		self._closing = 0
 
 	def run(self):
 		import windowinterface
