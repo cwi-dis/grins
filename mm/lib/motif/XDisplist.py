@@ -100,7 +100,7 @@ class _DisplayList:
 
 	def clone(self):
 		w = self._window
-		new = _DisplayList(w, self._bgcolor)
+		new = _DisplayList(w, self._bgcolor, self.__units)
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
@@ -295,7 +295,7 @@ class _DisplayList:
 		elif cmd == 'text':
 			gc.foreground = window._convert_color(entry[1])
 			gc.SetFont(entry[2])
-			x, y = window._convert_coordinates(entry[3])
+			x, y = entry[3]
 			gc.DrawString(x, y, entry[4])
 		elif cmd == 'fpolygon':
 			gc.foreground = window._convert_color(entry[1])
@@ -556,20 +556,25 @@ class _DisplayList:
 			return width, height
 		return self._window._pxl2rel((0,0,width,height))[2:4]
 
-	def setpos(self, x, y):
+	def setpos(self, x, y, units = None):
+		if units is None:
+			units = self.__units
+		x, y = self._window._convert_coordinates((x, y), units=units)
 		self._curpos = x, y
 		self._xpos = x
 
-	def writestr(self, str):
+	def writestr(self, str, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if self._fgcolor is None:
 			raise error, 'no fgcolor'
+		if units is None:
+			units = self.__units
 		w = self._window
 		list = self._list
 		f = self._font._font
-		base = self.baseline()
-		height = self.fontheight()
+		base = self.baseline(UNIT_PXL)
+		height = self.fontheight(UNIT_PXL)
 		strlist = string.splitfields(str, '\n')
 		oldx, oldy = x, y = self._curpos
 		if len(strlist) > 1 and oldx > self._xpos:
@@ -579,44 +584,50 @@ class _DisplayList:
 		for str in strlist:
 			list.append(('text', self._fgcolor, self._font._font, (x, y), str))
 			self._optimize((1,))
-			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
+			self._curpos = x + f.TextWidth(str), y
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-		return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		if units == UNIT_PXL:
+			return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		else:
+			return self._window._pxl2rel((oldx, oldy, maxx - oldx, newy - oldy + height - base))
 
 	# Draw a string centered in a box, breaking lines if necessary
-	def centerstring(self, left, top, right, bottom, str):
-		fontheight = self.fontheight()
-		baseline = self.baseline()
+	def centerstring(self, left, top, right, bottom, str, units = None):
+		if units is None:
+			units = self.__units
+		fontheight = self.fontheight(UNIT_PXL)
+		baseline = self.baseline(UNIT_PXL)
 		width = right - left
 		height = bottom - top
+		left, top, width, height = self._window._convert_coordinates((left, top, width, height), units=units)
 		curlines = [str]
 		if height >= 2*fontheight:
 			import StringStuff
-			curlines = StringStuff.calclines([str], self.strsize, width)[0]
+			curlines = StringStuff.calclines([str], self._font.strsizePXL, width)[0]
 		nlines = len(curlines)
 		needed = nlines * fontheight
 		if nlines > 1 and needed > height:
 			nlines = max(1, int(height / fontheight))
 			curlines = curlines[:nlines]
 			curlines[-1] = curlines[-1] + '...'
-		x0 = (left + right) * 0.5	# x center of box
-		y0 = (top + bottom) * 0.5	# y center of box
+		x0 = left + width / 2	# x center of box
+		y0 = top + height / 2	# y center of box
 		y = y0 - nlines * fontheight * 0.5
 		for i in range(nlines):
 			str = string.strip(curlines[i])
 			# Get font parameters:
-			w = self.strsize(str)[0]	# Width of string
+			w = self._font.strsizePXL(str)[0] # Width of string
 			while str and w > width:
 				str = str[:-1]
-				w = self.strsize(str)[0]
+				w = self._font.strsizePXL(str)[0]
 			x = x0 - 0.5*w
 			y = y + baseline
-			self.setpos(x, y)
-			self.writestr(str)
+			self.setpos(x, y, UNIT_PXL)
+			self.writestr(str, UNIT_PXL)
 
 	def drawfpolygon(self, color, points, units = None):
 		if self._rendered:
