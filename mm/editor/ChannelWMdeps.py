@@ -96,6 +96,12 @@ class Channel:
 	def save_geometry(self):
 		pass
 	#
+	def defanchor(self, node, anchor):
+		import fl
+		fl.show_message('Cannot set internal anchor', \
+			  '(this node\'s channel does not support them)', '')
+		return None
+	#
 	# Return the nominal duration of a node, in seconds.
 	# (This does not depend on the playback rate!)
 	#
