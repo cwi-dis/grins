@@ -614,7 +614,16 @@ class _CmifPlayerView(_CmifView):
 	def paint(self):
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
-				return 
+				return
+
+		# hack to avoid display of random bits 
+		# when the window has been resized
+		rc = self.GetClientRect()
+		if rc[2]!=self._canvas[2] or rc[3]!=self._canvas[3]:
+			if self._convbgcolor == None:
+				r, g, b = self._bgcolor
+				self._convbgcolor = dds.GetColorMatch((r,g,b))
+			self._backBuffer.BltFill(self.GetClientRect(), self._convbgcolor)
 			
 		# first paint self
 		self._paintOnDDS(self._backBuffer, self._canvas)
