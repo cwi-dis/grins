@@ -21,6 +21,9 @@ import EditableObjects
 import parseutil
 import colors
 
+if __debug__:
+	parsedebug = 0
+
 error = 'SMILTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
@@ -2777,6 +2780,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# smil contains everything
 	def start_smil(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start smil', attributes
 		ns = self.getnamespace().get('')
 		if ns is None or ns == SMIL1:
 			self.__context.attributes['project_boston'] = 0
@@ -2805,6 +2810,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__rootLayoutId = None
 		
 	def end_smil(self):
+		if __debug__:
+			if parsedebug: print 'end smil'
 		from realnode import SlideShow
 		self.__in_smil = 0
 		if not self.__root:
@@ -2837,6 +2844,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# head/body sections
 
 	def start_head(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start head', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_smil:
@@ -2844,11 +2853,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_head = 1
 
 	def end_head(self):
+		if __debug__:
+			if parsedebug: print 'end head'
 		self.__in_head = 0
 		if self.__transitions:
 			self.__context.addtransitions(self.__transitions.items())
 
 	def start_body(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start body', attributes
 		self.__has_layout = self.__seen_layout > 0
 		if not self.__seen_layout:
 			self.__seen_layout = LAYOUT_SMIL
@@ -2863,6 +2876,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.AddAttrs(self.__root, attributes)
 
 	def end_body(self):
+		if __debug__:
+			if parsedebug: print 'end body'
 		self.end_seq()
 		self.__in_body = 0
 		if self.__hidden_body:
@@ -2881,6 +2896,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					c.AddToTree(self.__root, -1)
 
 	def start_meta(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start meta', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_head:
@@ -2950,9 +2967,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__context.attributes[name] = content
 
 	def end_meta(self):
+		if __debug__:
+			if parsedebug: print 'end meta'
 		self.__in_meta = 0
 
 	def start_metadata(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start metadata', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('metadata element not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
@@ -2962,6 +2983,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_metadata = 1
 
 	def end_metadata(self):
+		if __debug__:
+			if parsedebug: print 'end metadata'
 		self.__in_metadata = 0
 
 	# layout section
@@ -2977,6 +3000,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__context.addRegpoint('bottomRight', {'top':1.0,'left':1.0}, 1)
 
 	def start_layout(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start layout', attributes
 		self.__regpoints = {}
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
@@ -3001,12 +3026,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.setliteral()
 
 	def end_layout(self):
+		if __debug__:
+			if parsedebug: print 'end layout'
 		self.__in_layout = LAYOUT_NONE
 		# add regpoints defined inside the layout tag
 		# notice: the default regpoint are already defined (from start_smil)
 		self.FixRegpoints()
 
 	def start_region(self, attributes, checkid = 1):
+		if __debug__:
+			if parsedebug: print 'start region', attributes
 		# update progress bar if needed
 		self.__updateProgressHandler()
 			
@@ -3241,6 +3270,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__topregion[id] = self.__viewport # None if not in viewport
 
 	def end_region(self):
+		if __debug__:
+			if parsedebug: print 'end region'
 		if self.__region is None:
 			# </region> without <region>
 			# error message will be taken care of by XMLparser.
@@ -3248,6 +3279,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__region = self.__region[1]
 
 	def start_root_layout(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start root_layout', attributes
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
@@ -3298,9 +3331,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__childregions[None] = []
 
 	def end_root_layout(self):
+		if __debug__:
+			if parsedebug: print 'end root_layout'
 		pass
 
 	def start_viewport(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start viewport', attributes
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
@@ -3393,9 +3430,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# end experimental code for switch
 		
 	def end_viewport(self):
+		if __debug__:
+			if parsedebug: print 'end viewport'
 		self.__viewport = None
 
 	def start_regpoint(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start regpoint', attributes
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
@@ -3453,9 +3494,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 
 	def end_regpoint(self):
+		if __debug__:
+			if parsedebug: print 'end regpoint'
 		pass
 
 	def start_custom_attributes(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start custom_attributes', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('customAttributes not compatible with SMIL 1.0')
 			if not features.editor:
@@ -3466,6 +3511,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = self.__checkid(attributes)
 
 	def end_custom_attributes(self):
+		if __debug__:
+			if parsedebug: print 'end custom_attributes'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		if not self.__custom_tests:
@@ -3473,6 +3520,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__context.addusergroups(self.__custom_tests.items())
 
 	def start_custom_test(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start custom_test', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
@@ -3486,9 +3535,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__custom_tests[id] = title, u_state is not None and u_state == 'true', override or 'hidden', uid
 
 	def end_custom_test(self):
+		if __debug__:
+			if parsedebug: print 'end custom_test'
 		pass
 
 	def start_transition(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start transition', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		dict = {}
@@ -3550,16 +3603,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__transitions[id] = dict
 
 	def end_transition(self):
+		if __debug__:
+			if parsedebug: print 'end transition'
 		pass
 
 	def start_layouts(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start layouts', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 
 	def end_layouts(self):
+		if __debug__:
+			if parsedebug: print 'end layouts'
 		pass
 
 	def start_Glayout(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start Glayout', attributes
 		self.__fix_attributes(attributes)
 		id = attributes.get('id')
 		if id is None:
@@ -3578,9 +3639,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__layouts[id] = regions.split()
 
 	def end_Glayout(self):
+		if __debug__:
+			if parsedebug: print 'end Glayout'
 		pass
 
 	def start_viewinfo(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start viewinfo', attributes
 		self.__fix_attributes(attributes)
 		viewname = attributes.get('view')
 		t = attributes.get('top')
@@ -3601,11 +3666,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__viewinfo.append((viewname, (l, t, w, h)))
 
 	def end_viewinfo(self):
+		if __debug__:
+			if parsedebug: print 'end viewinfo'
 		pass
 
 	# container nodes
 
 	def start_parexcl(self, ntype, attributes):
+		if __debug__:
+			if parsedebug: print 'start parexcl', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# XXXX we ignore sync for now
@@ -3616,6 +3685,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container.__lineno = self.lineno
 
 	def end_parexcl(self, ntype):
+		if __debug__:
+			if parsedebug: print 'end parexcl'
 		node = self.__container
 		self.EndContainer(ntype)
 		self.__fixendsync(node)
@@ -3671,20 +3742,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del node.__lineno
 
 	def start_par(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start par', attributes
 		self.start_parexcl('par', attributes)
 
 	def end_par(self):
+		if __debug__:
+			if parsedebug: print 'end par'
 		self.end_parexcl('par')
 
 	def start_seq(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start seq', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		self.NewContainer('seq', attributes)
 
 	def end_seq(self):
+		if __debug__:
+			if parsedebug: print 'end seq'
 		self.EndContainer('seq')
 
 	def start_assets(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start assets', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# Note that the "assets" nodetype is not known by the
@@ -3693,12 +3774,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewContainer('assets', attributes)
 
 	def end_assets(self):
+		if __debug__:
+			if parsedebug: print 'end assets'
 		self.EndContainer('assets')
 
 	def start_excl(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start excl', attributes
 		self.start_parexcl('excl', attributes)
 
 	def end_excl(self):
+		if __debug__:
+			if parsedebug: print 'end excl'
 		node = self.__container
 		self.end_parexcl('excl')
 		has_prio = has_nonprio = 0
@@ -3716,6 +3803,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		       'pauseDisplay': ('disable', 'hide', 'show'),
 		       }
 	def start_prio(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start prio', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_smil:
@@ -3750,9 +3839,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = val
 
 	def end_prio(self):
+		if __debug__:
+			if parsedebug: print 'end prio'
 		self.__container = self.__container.GetParent()
 
 	def start_switch(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start switch', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# experimental code for switch layout
@@ -3771,6 +3864,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.NewContainer('switch', attributes)
 
 	def end_switch(self):
+		if __debug__:
+			if parsedebug: print 'end switch'
 		self.__in_head_switch = 0
 		# experimental code for switch layout
 		del self.__switchstack[-1]
@@ -3784,48 +3879,78 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# media items
 
 	def start_ref(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start ref', attributes
 		self.NewNode(None, attributes)
 
 	def end_ref(self):
+		if __debug__:
+			if parsedebug: print 'end ref'
 		self.EndNode()
 
 	def start_text(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start text', attributes
 		self.NewNode('text', attributes)
 
 	def end_text(self):
+		if __debug__:
+			if parsedebug: print 'end text'
 		self.EndNode()
 
 	def start_audio(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start audio', attributes
 		self.NewNode('audio', attributes)
 
 	def end_audio(self):
+		if __debug__:
+			if parsedebug: print 'end audio'
 		self.EndNode()
 
 	def start_img(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start img', attributes
 		self.NewNode('image', attributes)
 
 	def end_img(self):
+		if __debug__:
+			if parsedebug: print 'end img'
 		self.EndNode()
 
 	def start_video(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start video', attributes
 		self.NewNode('video', attributes)
 
 	def end_video(self):
+		if __debug__:
+			if parsedebug: print 'end video'
 		self.EndNode()
 
 	def start_animation(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start animation', attributes
 		self.NewNode('animation', attributes)
 
 	def end_animation(self):
+		if __debug__:
+			if parsedebug: print 'end animation'
 		self.EndNode()
 
 	def start_textstream(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start textstream', attributes
 		self.NewNode('textstream', attributes)
 
 	def end_textstream(self):
+		if __debug__:
+			if parsedebug: print 'end textstream'
 		self.EndNode()
 
 	def start_brush(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start brush', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('brush element not compatible with SMIL 1.0')
 			if not features.editor:
@@ -3835,6 +3960,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewNode('brush', attributes)
 
 	def end_brush(self):
+		if __debug__:
+			if parsedebug: print 'end brush'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndNode()
@@ -3842,6 +3969,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# linking
 
 	def start_a(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start a', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__in_a:
@@ -3871,6 +4000,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_a = href, actuate, ltype, stype, dtype, id, access, self.__in_a
 
 	def end_a(self):
+		if __debug__:
+			if parsedebug: print 'end a'
 		if self.__in_a is None:
 			# </a> without <a>
 			# error message will be taken care of by XMLparser.
@@ -3943,6 +4074,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return ltype, stype, dtype, accesskey
 
 	def start_anchor(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start anchor', attributes
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__node is None:
@@ -4044,9 +4177,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__links.append((node, href, ltype, stype, dtype))
 
 	def end_anchor(self):
+		if __debug__:
+			if parsedebug: print 'end anchor'
 		self.__container = self.__container.GetParent()
 
 	def start_area(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start area', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('area not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4056,11 +4193,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.start_anchor(attributes)
 
 	def end_area(self):
+		if __debug__:
+			if parsedebug: print 'end area'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.end_anchor()
 
 	def start_animate(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start animate', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animate not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4070,11 +4211,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewAnimateNode('animate', attributes)
 
 	def end_animate(self):
+		if __debug__:
+			if parsedebug: print 'end animate'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndAnimateNode()
 
 	def start_prefetch(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start prefetch', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animate not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4084,11 +4229,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewNode('prefetch', attributes)
 
 	def end_prefetch(self):
+		if __debug__:
+			if parsedebug: print 'end prefetch'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndNode()
 
 	def start_set(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start set', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('set not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4098,11 +4247,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewAnimateNode('set', attributes)
 
 	def end_set(self):
+		if __debug__:
+			if parsedebug: print 'end set'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndAnimateNode()
 
 	def start_animatemotion(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start animatemotion', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateMotion not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4112,11 +4265,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewAnimateNode('animateMotion', attributes)
 
 	def end_animatemotion(self):
+		if __debug__:
+			if parsedebug: print 'end animatemotion'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndAnimateNode()
 
 	def start_transitionfilter(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start transitionfilter', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateMotion not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4139,11 +4296,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewAnimateNode('transitionFilter', attributes)
 
 	def end_transitionfilter(self):
+		if __debug__:
+			if parsedebug: print 'end transitionfilter'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndAnimateNode()
 
 	def start_animatecolor(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start animatecolor', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateColor not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4153,11 +4314,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewAnimateNode('animateColor', attributes)
 
 	def end_animatecolor(self):
+		if __debug__:
+			if parsedebug: print 'end animatecolor'
 		if self.__context.attributes.get('project_boston') == 0:
 			return
 		self.EndAnimateNode()
 
 	def start_param(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start param', attributes
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('param not compatible with SMIL 1.0')
 			if not features.editor:
@@ -4183,6 +4348,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		pass			# XXX needs to be implemented
 
 	def end_param(self):
+		if __debug__:
+			if parsedebug: print 'end param'
 		pass			# XXX needs to be implemented
 
 	# other callbacks
@@ -4475,6 +4642,8 @@ class SMILMetaCollector(xmllib.XMLParser):
 		self.elements = None
 
 	def start_meta(self, attributes):
+		if __debug__:
+			if parsedebug: print 'start meta', attributes
 		name = attributes.get('name')
 		content = attributes.get('content')
 		if name and content:

@@ -106,12 +106,12 @@ def prdtd(x, dtd):
 			print '\t%s %s %s' % (attr.encode('utf-8'), attype.encode('utf-8'), atvalue.encode('utf-8'))
 		print '>'
 
-def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd", func = prdtdtable):
+def main(dtd = "http://www.w3.org/2001/SMIL20/SMIL20.dtd", func = prdtdtable):
 	x = fxmllib.CheckXMLParser()
 	try:
-		x.parse('''<?xml version="1.0" encoding="latin-1" standalone="no"?>
+		x.parse('''<?xml version="1.0" standalone="no"?>
 <!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN" "%s">
-<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language"/>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language"/>
 ''' % dtd)
 	except fxmllib.Error, info:
 		print str(info)

@@ -24,6 +24,7 @@ feature_set = [
 	ADVANCED_PROPERTIES,
 	PREFERENCES,
 	ALIGNTOOL,
+	SHOW_MEDIA_CHILDREN,
 	]
 
 version = 'pro'
