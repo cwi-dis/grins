@@ -1994,7 +1994,7 @@ class ChannelWindow(Channel):
 		out_trans = self.gettransition(node, 'transOut')
 		if out_trans <> None:
 			outtransdur = out_trans.get('dur', 1.0)
-			outtranstime = node.calcendfreezetime()
+			outtranstime = node.calcendfreezetime(self._playcontext)
 			# don't schedule out transition if time unresolved
 			if outtranstime is not None and outtranstime >= 0:
 				outtranstime = outtranstime-outtransdur
