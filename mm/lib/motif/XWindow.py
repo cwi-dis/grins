@@ -1111,14 +1111,14 @@ class _Window(_AdornmentSupport):
 				elif event.button == X.Button2:
 					ev = Mouse1Press
 				elif event.button == X.Button3:
+					if self._callbacks.has_key(Mouse0Press):
+						func, arg = self._callbacks[Mouse0Press]
+						x, y, width, height = self._rect
+						x = float(event.x - x) / width
+						y = float(event.y - y) / height
+						func(arg, self, Mouse2Press, (x, y, []))
 					menu = self._menu or self._popupmenu
 					if menu:
-						if self._callbacks.has_key(Mouse0Press):
-							func, arg = self._callbacks[Mouse0Press]
-							x, y, width, height = self._rect
-							x = float(event.x - x) / width
-							y = float(event.y - y) / height
-							func(arg, self, Mouse2Press, (x, y, []))
 						menu.MenuPosition(event)
 						menu.ManageChild()
 						return
