@@ -16,6 +16,7 @@ default_settings = {
 	'system_required': (),		# Needs special handling in match...
 	'license': '',
 	'cmif': 0,			# Show cmif-only attributes
+	'checkext': 1,			# Guess Mime type based on extension
 }
 
 user_settings = {}
