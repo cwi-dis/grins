@@ -283,6 +283,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				else:
 					list.append(MMNode.MMSyncArc(node, attr, delay=offset))
+					if val[0] in '+-' and not boston:
+						boston = 'signed clock value'
 					continue
 				res = offsetvalue.search(val)
 				if res is not None:
@@ -327,6 +329,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						tzsg = '+'
 					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay=offset or 0))
 					continue
+				if not boston:
+					boston = 'SMIL-2.0 time value'
 				if val[:5] == 'prev.':
 					event = val[5:]
 					name = 'prev'
