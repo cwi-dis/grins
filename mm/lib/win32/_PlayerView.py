@@ -119,7 +119,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		else:
 			self.update()
 
-	def onMouseEvent(self, point, ev):
+	def onMouseEvent(self, point, ev, params=None):
 		cont, stop = 0, 1	
 		if not self._usesLightSubWindows:
 			if DisplayListView.onMouseEvent(self, point, ev):
