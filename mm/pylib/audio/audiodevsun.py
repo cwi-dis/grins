@@ -70,23 +70,7 @@ class AudioDevSUN:
 		if not self.__format or not self.__framerate:
 			raise Error, 'params not specified'
 		if not self.__port:
-			fmt = self.__format
-			self.__port = sunaudiodev.open('w')
-			info = self.__port.getinfo()
-			info.o_sample_rate = self.__framerate
-			info.o_channels = fmt.getnchannels()
-			if fmt.getencoding() == 'u-law':
-				info.o_encoding = SUNAUDIODEV.ENCODING_ULAW
-				info.o_precision = 8
-			else:
-				info.o_precision = (fmt.getbps() + 7) & ~7
-				info.o_encoding = SUNAUDIODEV.ENCODING_LINEAR
-			try:
-				self.__port.setinfo(info)
-			except sunaudiodev.error:
-				if fmt.getencoding() != 'u-law' or \
-				   self.__framerate != 8000:
-					raise Error, 'unsupported format'
+			self.__initport()
 		self.__port.write(data)
 
 	def wait(self):
@@ -109,5 +93,36 @@ class AudioDevSUN:
 			return 0
 
 	def getfillable(self):
-		return BUFFERSIZE - self.getfilled()
+		inited = 0
+		if not self.__port:
+			self.__initport()
+			inited = 1
+		port = self.__port
+		info = port.getinfo()
+		fact = info.o_precision * info.o_channels / 8
+		val = info.o_buffer_size / fact - port.obufcount()
+		if inited:
+			port.close()
+			self.__port = None
+		return val
 
+	def __initport(self):
+		fmt = self.__format
+		self.__port = sunaudiodev.open('w')
+		if not fmt or not self.__framerate:
+			return
+		info = self.__port.getinfo()
+		info.o_sample_rate = self.__framerate
+		info.o_channels = fmt.getnchannels()
+		if fmt.getencoding() == 'u-law':
+			info.o_encoding = SUNAUDIODEV.ENCODING_ULAW
+			info.o_precision = 8
+		else:
+			info.o_precision = (fmt.getbps() + 7) & ~7
+			info.o_encoding = SUNAUDIODEV.ENCODING_LINEAR
+		try:
+			self.__port.setinfo(info)
+		except sunaudiodev.error:
+			if fmt.getencoding() != 'u-law' or \
+			   self.__framerate != 8000:
+				raise Error, 'unsupported format'
