@@ -3214,6 +3214,8 @@ class MMNode(MMTreeElement):
 			return 'null'
 		import ChannelMime, ChannelMap
 		chtypes = ChannelMime.MimeChannel.get(computedMimeType, [])
+		nchtypes = []
+		valid = ChannelMap.getvalidchanneltypes(self.context)
 		if computedMimeType == 'image/gif':
 			import RealChannel
 			if RealChannel.rma is not None:
@@ -3227,10 +3229,27 @@ class MMNode(MMTreeElement):
 						chtypes = ['RealVideo']
 					u.close()
 		elif computedMimeType == 'image/svg-xml':
-			return 'svg'
-		if len(chtypes) > 0:
+			if 'svg' in valid:
+				return 'svg'
+			else:
+				return 'null'
+		for chtype in chtypes:
+			while chtype not in valid:
+				if chtype == 'RealVideo':
+					chtype = 'video'
+				elif chtype == 'RealPix':
+					chtype = 'RealVideo'
+				elif chtype == 'RealAudio':
+					chtype = 'sound'
+				elif chtype == 'RealText':
+					chtype = 'video'
+				elif chtype == 'html':
+					chtype = 'text'
+			if chtype not in nchtypes:
+				nchtypes.append(chtype)
+		if len(nchtypes) > 0:
 			# for now keep the first
-			chtype = chtypes[0]
+			chtype = nchtypes[0]
 		else:
 			chtype = 'null'
 		return chtype

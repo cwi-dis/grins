@@ -1475,8 +1475,12 @@ class Region(Window):
 	# OS windows simulation support
 	#
 	def GetSafeHwnd(self):
-		if self._oswnd: wnd = self._oswnd
-		else: wnd = self._topwindow
+		if self._oswnd:
+			wnd = self._oswnd
+			assert wnd is not self
+		else:
+			wnd = self._topwindow
+			assert wnd is not self
 		return wnd.GetSafeHwnd()
 	
 	def GetClientRect(self):
@@ -1534,6 +1538,7 @@ class Region(Window):
 			wnd.UseHtmlCtrl(not settings.get('html_control'))
 			wnd.HookMessage(self.onUserUrl,win32con.WM_USER)
 
+		print self,wnd
 		self._oswnd = wnd
 		if not html:
 			self.hookOsWndMessages()

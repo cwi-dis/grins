@@ -1641,10 +1641,10 @@ class HierarchyView(HierarchyViewDialog):
 			self.draw()
 			return None
 		if cmd == 'copy':
-			print 'DBG: was', cmd, srcnode
+			if __debug__: print 'DBG: was', cmd, srcnode
 			cmd = 'link'
 			srcnode = srcnode.DeepCopy()
-			print 'DBG: now', cmd, srcnode, srcnode.GetParent()
+			if __debug__: print 'DBG: now', cmd, srcnode, srcnode.GetParent()
 			mustdestroy = srcnode
 		if srcnode.context is not self.root.context:
 			# Node comes from another document.
@@ -1805,7 +1805,7 @@ class HierarchyView(HierarchyViewDialog):
 			widget = widget.get_mmwidget()
 
 		widget.select()
-		print 'DBG selectwidget', widget, 'scroll', scroll, widget.get_box()
+##		print 'DBG selectwidget', widget, 'scroll', scroll, widget.get_box()
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
@@ -1848,7 +1848,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.focus_lock = 1
 				self.editmgr.addglobalfocus([widget.get_node()])
 				self.focus_lock = 0
-		print 'DBG: alsoselect', widget, 'scroll', scroll, widget.get_box()
+##		print 'DBG: alsoselect', widget, 'scroll', scroll, widget.get_box()
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
