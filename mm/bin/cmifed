@@ -5,6 +5,7 @@
 #
 
 prog="$0"
+main=`basename $prog`
 
 case $prog in
 *grins)	function=grins;;
@@ -104,4 +105,4 @@ do
 	esac
 done
     
-exec $python $options -c "import main" ${1+"$@"}
+exec $python $options -c "import $main" ${1+"$@"}
