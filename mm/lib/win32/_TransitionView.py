@@ -1,22 +1,20 @@
 __version__ = "$Id$"
 
-""" @win32doc|_UsergroupView
-This module contains the ui implementation of the TransitionView.
-It is implemented as a Form view.
-The MFC CFormView is essentially a view that contains controls. 
-These controls are laid out based on a dialog-template resource
-similar to a dialog box.
-Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCFormView.
-The _UsergroupView extends the GenFormView which is an extension to PyCFormView.
+# @win32doc|_UsergroupView
+# This module contains the ui implementation of the TransitionView.
+# It is implemented as a Form view.
+# The MFC CFormView is essentially a view that contains controls. 
+# These controls are laid out based on a dialog-template resource
+# similar to a dialog box.
+# Objects of this class are exported to Python through the win32ui pyd
+# as objects of type PyCFormView.
+# The _UsergroupView extends the GenFormView which is an extension to PyCFormView.
 
-The _TransitionView is created using the resource dialog template with identifier IDD_USERGROUP.
-To edit this template, open it using the resource editor. 
-Like all resources it can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
-The resource project is cmif\win32\src\GRiNSRes\GRiNSRes.dsp which creates
-the run time GRiNSRes.dll
-
-"""
+# The _TransitionView is created using the resource dialog template with identifier IDD_USERGROUP.
+# To edit this template, open it using the resource editor. 
+# Like all resources it can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
+# The resource project is cmif\win32\src\GRiNSRes\GRiNSRes.dsp which creates
+# the run time GRiNSRes.dll
 
 # std win32 modules
 import win32ui,win32con,win32api
@@ -92,7 +90,7 @@ class _TransitionView(GenFormView):
 
 
 	def getgroup(self):
-		"""Return name of currently selected user group."""
+		# Return name of currently selected user group.
 		if self.is_oswindow():
 			ix=self['Groups'].getcursel()
 			if ix==None or ix<0: return None
@@ -102,13 +100,12 @@ class _TransitionView(GenFormView):
 			return self._init_ugroups[self._init_pos]
 
 	def setgroups(self, ugroups, pos):
-		"""Set the list of user groups.
+		# Set the list of user groups.
 
-		Arguments (no defaults):
-		ugroups -- list of strings giving the names of the user groups
-		pos -- None or index in ugroups list--the initially
-			selected element in the list
-		"""
+		# Arguments (no defaults):
+		# ugroups -- list of strings giving the names of the user groups
+		# pos -- None or index in ugroups list--the initially
+		# 	selected element in the list
 		if self.is_oswindow():
 			l=self['Groups']
 			l.delalllistitems()

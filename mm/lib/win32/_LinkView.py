@@ -1,21 +1,20 @@
 __version__ = "$Id$"
 
-""" @win32doc|_LinkView
-This module contains the ui implementation of the LinkView.
-It is implemented as a Form view with dialog bars.
-The MFC CFormView is essentially a view that contains controls. 
-These controls are laid out based on a dialog-template resource
-similar to a dialog box.
-Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCFormView.
-The _LayoutView extends the PyCFormView and uses a PyCDialogBar
-.
-The _LayoutView is created using the resource dialog template with identifier IDD_LINKS.
-To edit this template, open it using the resource editor. 
-Like all resources it can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
-The resource project is cmif\win32\src\GRiNSRes\GRiNSRes.dsp which creates
-the run time GRiNSRes.dll
-"""
+# @win32doc|_LinkView
+# This module contains the ui implementation of the LinkView.
+# It is implemented as a Form view with dialog bars.
+# The MFC CFormView is essentially a view that contains controls. 
+# These controls are laid out based on a dialog-template resource
+# similar to a dialog box.
+# Objects of this class are exported to Python through the win32ui pyd
+# as objects of type PyCFormView.
+# The _LayoutView extends the PyCFormView and uses a PyCDialogBar
+# .
+# The _LayoutView is created using the resource dialog template with identifier IDD_LINKS.
+# To edit this template, open it using the resource editor. 
+# Like all resources it can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
+# The resource project is cmif\win32\src\GRiNSRes\GRiNSRes.dsp which creates
+# the run time GRiNSRes.dll
 
 import win32ui,win32con
 Sdk=win32ui.GetWin32Sdk()
@@ -325,30 +324,28 @@ class _LinkView(docview.FormView,components.ControlsDict):
 
 	# Interface to the left list and associated buttons.
 	def lefthide(self):
-		"""Hide the left list with associated buttons."""
+		# Hide the left list with associated buttons.
 		self.EnableCmd('LeftList',0)
 		self.EnableCmd('LeftPushFocus',0)
 		self.EnableCmd('LeftAnchorEd',0) 
 
 	def leftshow(self):
-		"""Show the left list with associated buttons."""
+		# Show the left list with associated buttons.
 		self.EnableCmd('LeftList',1)
 
 	def leftsetlabel(self, label):
-		"""Set the label for the left list.
+		# Set the label for the left list.
 
-		Arguments (no defaults):
-		label -- string -- the label to be displayed
-		"""
+		# Arguments (no defaults):
+		# label -- string -- the label to be displayed
 		self['LeftLabel'].settext(label)
 
 	def leftdellistitems(self, poslist):
-		"""Delete items from left list.
+		# Delete items from left list.
 
-		Arguments (no defaults):
-		poslist -- list of integers -- the indices of the
-			items to be deleted
-		"""
+		# Arguments (no defaults):
+		# poslist -- list of integers -- the indices of the
+		# 	items to be deleted
 		poslist = poslist[:]
 		poslist.sort()
 		poslist.reverse()
@@ -358,92 +355,85 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		self['LeftList'].recalchorizontalextent()
 
 	def leftdelalllistitems(self):
-		"""Delete all items from the left list."""
+		# Delete all items from the left list.
 		self['LeftList'].resetcontent()
 		self['LeftList'].recalchorizontalextent()
 
 	def leftaddlistitems(self, items, pos):
-		"""Add items to the left list.
+		# Add items to the left list.
 
-		Arguments (no defaults):
-		items -- list of strings -- the items to be added
-		pos -- integer -- the index of the item before which
-			the items are to be added (-1: add at end)
-		"""
+		# Arguments (no defaults):
+		# items -- list of strings -- the items to be added
+		# pos -- integer -- the index of the item before which
+		# 	the items are to be added (-1: add at end)
 		self['LeftList'].addlistitems(items, pos)
 		self['LeftList'].recalchorizontalextent()
 
 	def leftreplacelistitem(self, pos, newitem):
-		"""Replace an item in the left list.
+		# Replace an item in the left list.
 
-		Arguments (no defaults):
-		pos -- the index of the item to be replaced
-		newitem -- string -- the new item
-		"""
+		# Arguments (no defaults):
+		# pos -- the index of the item to be replaced
+		# newitem -- string -- the new item
 		self['LeftList'].replace(pos, newitem)
 		self['LeftList'].recalchorizontalextent()
 	
 	def leftselectitem(self, pos):
-		"""Select an item in the left list.
+		# Select an item in the left list.
 
-		Arguments (no defaults):
-		pos -- integer -- the index of the item to be selected
-		"""
+		# Arguments (no defaults):
+		# pos -- integer -- the index of the item to be selected
 		self['LeftList'].setcursel(pos)
 
 	def leftgetselected(self):
-		"""Return the index of the currently selected item or None."""
+		# Return the index of the currently selected item or None.
 		return self['LeftList'].getcursel()
 
 	def leftgetlist(self):
-		"""Return the left list as a list of strings."""
+		# Return the left list as a list of strings.
 		return self['LeftList'].getlist()
 
 	def leftmakevisible(self, pos):
-		"""Maybe scroll list to make an item visible.
+		# Maybe scroll list to make an item visible.
 
-		Arguments (no defaults):
-		pos -- index of item to be made visible.
-		"""
+		# Arguments (no defaults):
+		# pos -- index of item to be made visible.
 		pass
 		
 	def leftbuttonssetsensitive(self, sensitive):
-		"""Make the left buttons (in)sensitive.
+		# Make the left buttons (in)sensitive.
 
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
+		# Arguments (no defaults):
+		# sensitive -- boolean indicating whether to make
+		# 	sensitive or insensitive
 		self.EnableCmd('LeftPushFocus',sensitive)
 		self.EnableCmd('LeftAnchorEd',sensitive)
 
 	# Interface to the right list and associated buttons.
 	def righthide(self):
-		"""Hide the right list with associated buttons."""
+		# Hide the right list with associated buttons.
 		self.EnableCmd('RightList',0)
 		self.EnableCmd('RightPushFocus',0)
 		self.EnableCmd('RightAnchorEd',0)
 		self.EnableCmd('AddExternal',0)
 
 	def rightshow(self):
-		"""Show the right list with associated buttons."""
+		# Show the right list with associated buttons.
 		self['RightList'].enable(1);self.EnableCmd('RightList',1)
 
 	def rightsetlabel(self, label):
-		"""Set the label for the right list.
+		# Set the label for the right list.
 
-		Arguments (no defaults):
-		label -- string -- the label to be displayed
-		"""
+		# Arguments (no defaults):
+		# label -- string -- the label to be displayed
 		self['RightLabel'].settext(label)
 
 	def rightdellistitems(self, poslist):
-		"""Delete items from right list.
+		# Delete items from right list.
 
-		Arguments (no defaults):
-		poslist -- list of integers -- the indices of the
-			items to be deleted
-		"""
+		# Arguments (no defaults):
+		# poslist -- list of integers -- the indices of the
+		# 	items to be deleted
 		poslist = poslist[:]
 		poslist.sort()
 		poslist.reverse()
@@ -452,62 +442,57 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		self['RightList'].recalchorizontalextent()
 
 	def rightdelalllistitems(self):
-		"""Delete all items from the right list."""
+		# Delete all items from the right list.
 		self['RightList'].resetcontent()
 		self['RightList'].recalchorizontalextent()
 
 	def rightaddlistitems(self, items, pos):
-		"""Add items to the right list.
+		# Add items to the right list.
 
-		Arguments (no defaults):
-		items -- list of strings -- the items to be added
-		pos -- integer -- the index of the item before which
-			the items are to be added (-1: add at end)
-		"""
+		# Arguments (no defaults):
+		# items -- list of strings -- the items to be added
+		# pos -- integer -- the index of the item before which
+		# 	the items are to be added (-1: add at end)
 		self['RightList'].addlistitems(items,pos)
 		self['RightList'].recalchorizontalextent()
 
 	def rightreplacelistitem(self, pos, newitem):
-		"""Replace an item in the right list.
+		# Replace an item in the right list.
 
-		Arguments (no defaults):
-		pos -- the index of the item to be replaced
-		newitem -- string -- the new item
-		"""
+		# Arguments (no defaults):
+		# pos -- the index of the item to be replaced
+		# newitem -- string -- the new item
 		self['RightList'].replace(pos, newitem)
 		self['RightList'].recalchorizontalextent()
 		
 	def rightselectitem(self, pos):
-		"""Select an item in the right list.
+		# Select an item in the right list.
 
-		Arguments (no defaults):
-		pos -- integer -- the index of the item to be selected
-		"""
+		# Arguments (no defaults):
+		# pos -- integer -- the index of the item to be selected
 		self['RightList'].setcursel(pos)
 
 	def rightgetselected(self):
-		"""Return the index of the currently selected item or None."""
+		# Return the index of the currently selected item or None.
 		return self['RightList'].getcursel()
 
 	def rightgetlist(self):
-		"""Return the right list as a list of strings."""
+		# Return the right list as a list of strings.
 		return self['RightList'].getlist()
 
 	def rightmakevisible(self, pos):
-		"""Maybe scroll list to make an item visible.
+		# Maybe scroll list to make an item visible.
 
-		Arguments (no defaults):
-		pos -- index of item to be made visible.
-		"""
+		# Arguments (no defaults):
+		# pos -- index of item to be made visible.
 		pass
 
 	def rightbuttonssetsensitive(self, sensitive):
-		"""Make the right buttons (in)sensitive.
+		# Make the right buttons (in)sensitive.
 
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
+		# Arguments (no defaults):
+		# sensitive -- boolean indicating whether to make
+		# 	sensitive or insensitive
 		self.EnableCmd('RightPushFocus',sensitive) 
 		self.EnableCmd('RightAnchorEd',sensitive) 
 
@@ -516,7 +501,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
-		"""Hide the middle list with associated buttons."""
+		# Hide the middle list with associated buttons.
 		self.EnableCmd('LinkList',0)
 		self.EnableCmd('AddLink',0)
 		self.EnableCmd('EditLink',0)
@@ -530,7 +515,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 
 
 	def middleshow(self):
-		"""Show the middle list with associated buttons."""
+		# Show the middle list with associated buttons.
 		self.EnableCmd('LinkList',1)
 		return
 
@@ -539,65 +524,59 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		self['DeleteLink'].show() ;self.EnableCmd('DeleteLink',0)
 
 	def middledelalllistitems(self):
-		"""Delete all items from the middle list."""
+		# Delete all items from the middle list.
 		self['LinkList'].resetcontent()
 
 	def middleaddlistitems(self, items, pos):
-		"""Add items to the middle list.
+		# Add items to the middle list.
 
-		Arguments (no defaults):
-		items -- list of strings -- the items to be added
-		pos -- integer -- the index of the item before which
-			the items are to be added (-1: add at end)
-		"""
+		# Arguments (no defaults):
+		# items -- list of strings -- the items to be added
+		# pos -- integer -- the index of the item before which
+		# 	the items are to be added (-1: add at end)
 		self['LinkList'].addlistitems(items,pos)
 
 	def middleselectitem(self, pos):
-		"""Select an item in the middle list.
+		# Select an item in the middle list.
 
-		Arguments (no defaults):
-		pos -- integer -- the index of the item to be selected
-		"""
+		# Arguments (no defaults):
+		# pos -- integer -- the index of the item to be selected
 		self['LinkList'].setcursel(pos)
 
 	def middlegetselected(self):
-		"""Return the index of the currently selected item or None."""
+		# Return the index of the currently selected item or None.
 		return self['LinkList'].getcursel()
 
 	def middlemakevisible(self, pos):
-		"""Maybe scroll list to make an item visible.
+		# Maybe scroll list to make an item visible.
 
-		Arguments (no defaults):
-		pos -- index of item to be made visible.
-		"""
+		# Arguments (no defaults):
+		# pos -- index of item to be made visible.
 		pass
 
 	def addsetsensitive(self, sensitive):
-		"""Make the Add button (in)sensitive.
+		# Make the Add button (in)sensitive.
 
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
+		# Arguments (no defaults):
+		# sensitive -- boolean indicating whether to make
+		# 	sensitive or insensitive
 		self.EnableCmd('AddLink',sensitive) 
 
 
 	def editsetsensitive(self, sensitive):
-		"""Make the Edit button (in)sensitive.
+		# Make the Edit button (in)sensitive.
 
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
+		# Arguments (no defaults):
+		# sensitive -- boolean indicating whether to make
+		# 	sensitive or insensitive
 		self.EnableCmd('EditLink',sensitive) 
 
 	def deletesetsensitive(self, sensitive):
-		"""Make the Delete button (in)sensitive.
+		# Make the Delete button (in)sensitive.
 
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
+		# Arguments (no defaults):
+		# sensitive -- boolean indicating whether to make
+		# 	sensitive or insensitive
 		self.EnableCmd('DeleteLink',sensitive) 
 
 

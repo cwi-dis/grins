@@ -1,8 +1,7 @@
-""" @win32doc|_PreferencesDialog
-This module contains the ui implementation of the PreferencesDialog
-The _LayoutView is created using the resource dialog template 
-with identifier IDD_PREFERENCES.
-"""
+# @win32doc|_PreferencesDialog
+# This module contains the ui implementation of the PreferencesDialog
+# The _LayoutView is created using the resource dialog template 
+# with identifier IDD_PREFERENCES.
 
 __version__ = "$Id$"
 
