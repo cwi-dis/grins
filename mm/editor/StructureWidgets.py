@@ -112,11 +112,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if self.isvisible(): # terribily inefficient
 				node.set_armedmode = self.set_armedmode
 			self.set_armedmode(node.armedmode, redraw = 0)
+		# these 5 are never set in this class but are provided for the benefit of subclasses
+		# this means we also don't destroy these
 		self.collapsebutton = None
 		self.transition_in = None
 		self.transition_out = None
 		self.dropbox = None
 		self.channelbox = None
+
 		linkicon = self.getlinkicon()
 		if linkicon:
 			self.iconbox.add_icon(linkicon)
@@ -126,7 +129,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def destroy(self):
 		# Prevent cyclic dependancies.
-		Widgets.Widget.destroy(self)
 		if self.playicon is not None:
 			self.playicon.destroy()
 			self.playicon = None
@@ -139,10 +141,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.timeline is not None:
 			self.timeline.destroy()
 			self.timeline = None
+		if self.timemapper is not None:
+			self.timemapper = None
 		if self.node is not None:
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
 			self.node = None
+		Widgets.Widget.destroy(self)
 
 	def set_armedmode(self, mode, redraw = 1):
 		if not mode:
@@ -1317,13 +1322,13 @@ class SeqWidget(HorizontalWidget):
 			self.channelbox = ChannelBoxWidget(self, node, mother)
 
 	def destroy(self):
-		HorizontalWidget.destroy(self)
 		if self.dropbox is not None:
 			self.dropbox.destroy()
 			self.dropbox = None
 		if self.channelbox is not None:
 			self.channelbox.destroy()
 			self.channelbox = None
+		HorizontalWidget.destroy(self)
 
 	def get_obj_at(self, pos):
 		if self.channelbox is not None and self.channelbox.is_hit(pos):
@@ -1565,7 +1570,6 @@ class MediaWidget(MMNodeWidget):
 
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
-		MMNodeWidget.destroy(self)
 		self.__timemapper = None
 		if self.transition_in is not None:
 			self.transition_in.destroy()
@@ -1573,6 +1577,10 @@ class MediaWidget(MMNodeWidget):
 		if self.transition_out is not None:
 			self.transition_out.destroy()
 			self.transition_out = None
+		if self.pushbackbar is not None:
+			self.pushbackbar.destroy()
+			self.pushbackbar = None
+		MMNodeWidget.destroy(self)
 
 	def init_timemapper(self, timemapper):
 		return timemapper
@@ -2312,9 +2320,11 @@ class Icon(MMWidgetDecoration):
 		return '<%s instance, icon="%s", node=%s, id=%X>' % (self.__class__.__name__, self.icon, `self.mmwidget`, id(self))
 
 	def destroy(self):
-		MMWidgetDecoration.destroy(self)
 		self.callback = None
 		self.arrowto = None
+		self.contextmenu = None
+		self.initattr = None
+		MMWidgetDecoration.destroy(self)
 
 	def recalc_minsize(self):
 		self.boxsize = ICONSIZE, ICONSIZE

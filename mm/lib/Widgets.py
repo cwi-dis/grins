@@ -256,18 +256,8 @@ class Widget:
 	def destroy(self):
 		# Python garbage collection is prone to circular references.
 		# Remove the self.esteem from this object.
-		todestroy = []
-		for name in dir(self):
-			w = getattr(self, name)
-			if isinstance(w, Widget) and w is not self:
-				todestroy.append(w)
-			elif type(w) is type([]):
-				for c in w:
-					if isinstance(c, Widget) and c is not self:
-						todestroy.append(c)
-			setattr(self, name, None)
-		for w in todestroy:
-			w.destroy()
+		del self.mother
+		del self.parent
 
 ##############################################################################
 
