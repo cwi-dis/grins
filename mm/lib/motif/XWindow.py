@@ -38,6 +38,20 @@ class _Reader:
 	def read(self):
 		return self.data
 
+# string.translate table for reversing bits in bytes
+revbits = '\000\200@\300 \240`\340\020\220P\3200\260p\360\010\210H\310(\250' \
+	  'h\350\030\230X\3308\270x\370\004\204D\304$\244d\344\024\224T\324' \
+	  '4\264t\364\014\214L\314,\254l\354\034\234\\\334<\274|\374\002\202' \
+	  'B\302"\242b\342\022\222R\3222\262r\362\012\212J\312*\252j\352\032' \
+	  '\232Z\332:\272z\372\006\206F\306&\246f\346\026\226V\3266\266v\366' \
+	  '\016\216N\316.\256n\356\036\236^\336>\276~\376\001\201A\301!\241a' \
+	  '\341\021\221Q\3211\261q\361\011\211I\311)\251i\351\031\231Y\3319' \
+	  '\271y\371\005\205E\305%\245e\345\025\225U\3255\265u\365\015\215M' \
+	  '\315-\255m\355\035\235]\335=\275}\375\003\203C\303#\243c\343\023' \
+	  '\223S\3233\263s\363\013\213K\313+\253k\353\033\233[\333;\273{\373' \
+	  '\007\207G\307\'\247g\347\027\227W\3277\267w\367\017\217O\317/\257' \
+	  'o\357\037\237_\337?\277\177\377'
+
 class _Window(_AdornmentSupport, _RubberBand):
 	# Instances of this class represent top-level windows.  This
 	# class is also used as base class for subwindows, but then
@@ -754,7 +768,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		drop_data.dragContext.DropTransferStart(args)
 
 	def __handle_transfer(self, w, (x,y), seltype, type, value, length, format):
-##		print type,value,length
 		if type == toplevel._compound_text and \
 		   self._callbacks.has_key(DropFile):
 			func, arg = self._callbacks[DropFile]
@@ -1019,6 +1032,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 					# grey2mono doesn't pad lines :-(
 					bitmap = bitmap + imageop.grey2mono(
 						image[i*w:(i+1)*w], w, 1, 128)
+				if tw._form.Display().BitmapBitOrder() == X.LSBFirst:
+					bitmap = string.translate(bitmap, revbits)
 				mask = tw._visual.CreateImage(1, X.XYPixmap, 0,
 							bitmap, w, h, 8, 0)
 				# mask.byte_order doesn't matter
