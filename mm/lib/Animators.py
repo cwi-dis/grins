@@ -866,6 +866,7 @@ class EffectiveAnimator:
 				cv = a.getCurrValue()
 		return cv
 
+
 ###########################
 # AnimateContext is an EffectiveAnimator repository
 # We need a well-known repository so that we can find EffectiveAnimators
@@ -896,150 +897,13 @@ class AnimateContext:
 			del self._effAnimators[key]
 			del self._id2key[eaid]
 
+
 ###########################
 # Gen impl. rem:
 # * restart doc removes all anim effects including frozen val
 # * on syntax error: we can ignore animation effects but not timing
 # * attrdefs specs: additive, legal_range 
 # * an animation can effect indirectly more than one attributes (for example anim 'region')
-
-###########################
-# Animation semantics parser helpers:
-# a set of functions that return a tuple 
-# (domval, grins_attrname, type)
-
-def getregionattr(node, attr):
-	v = None
-	if node._type == 'mmnode':
-		d = node.attrdict
-	else:
-		d = node._region.attrdict
-
-	if settings.activeFullSmilCss:
-		if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
-			if node._type == 'mmnode':
-				r = node.getPxGeom()
-			elif node._type == 'region':
-				r = node._region.getPxGeom()
-			else:
-				return None, attr, ''	
-			if attr == 'position':
-				return complex(r[0], r[1]), attr, 'position'
-			elif attr == 'size':
-				v = r[2], r[3]
-			elif attr == 'left':
-				v = r[0]
-			elif attr=='top':
-				v = r[1]
-			elif attr == 'right':
-				v = r[0] + r[2]
-			elif attr == 'bottom':
-				v = r[1] + r[3]
-			elif attr == 'width':
-				v = r[2]
-			elif attr == 'height':
-				v = r[3]
-			return v, attr, 'int'
-
-		elif attr == 'bgcolor':
-			if d.has_key('bgcolor'):
-				return d['bgcolor'], attr, 'color'
-			else:
-				return (0, 0, 0), attr, 'color'
-
-		elif attr == 'z':
-			if d.has_key('z'):
-				return d['z'], attr, 'int'
-			else:
-				return 0, attr, 'int'
-
-		elif attr == 'soundLevel':
-			if d.has_key('soundLevel'):
-				return d['soundLevel'], attr, 'float'
-			else:
-				return 0, attr, 'float'
-		return None, attr, ''
-
-
-	if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
-		if d.has_key('base_winoff'):
-			r = d['base_winoff']
-			if attr == 'position':
-				return complex(r[0], r[1]), attr, 'position'
-			elif attr == 'size':
-				v = r[2], r[3]
-			elif attr == 'left':
-				v = r[0]
-			elif attr=='top':
-				v = r[1]
-			elif attr == 'right':
-				v = r[0] + r[2]
-			elif attr == 'bottom':
-				v = r[1] + r[3]
-			elif attr == 'width':
-				v = r[2]
-			elif attr == 'height':
-				v = r[3]
-			return v, attr, 'int'
-		
-	elif attr == 'bgcolor':
-		if d.has_key('bgcolor'):
-			return d['bgcolor'], attr, 'color'
-		else:
-			return (0, 0, 0), attr, 'color'
-
-	elif attr == 'z':
-		if d.has_key('z'):
-			return d['z'], attr, 'int'
-		else:
-			return 0, attr, 'int'
-
-	elif attr == 'soundLevel':
-		if d.has_key('soundLevel'):
-			return d['soundLevel'], attr, 'float'
-		else:
-			return 0, attr, 'float'
-
-	return None, attr, ''
-
-def getareaattr(node, attr):
-	d = node.attrdict
-	if attr=='coords':
-		if d.has_key('coords'):
-			coords = d['coords']
-			# use grins convention
-			shape, coords = coords[0], coords[1:]
-			return coords, attr, 'inttuple'
-		else:
-			return (0,0,1,1), attr, 'inttuple' 
-	return None, attr, ''
-
-def gettransitionattr(node, attr):
-	return None, attr, ''
-
-def getrenamed(node, attr):
-	return MMAttrdefs.getattr(node, attr, 1), attr, MMAttrdefs.getattrtype(attr) 
-
-smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
-	'top':(lambda node:getregionattr(node,'top')),
-	'width':(lambda node:getregionattr(node,'width')),
-	'height':(lambda node:getregionattr(node,'height')),
-	'right':(lambda node:getregionattr(node,'right')),
-	'bottom':(lambda node:getregionattr(node,'bottom')),
-	'position':(lambda node:getregionattr(node,'position')),
-	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
-	'z-index':(lambda node:getregionattr(node,'z')),
-	'soundLevel':(lambda node:getregionattr(node,'soundLevel')),
-
-	'coords':(lambda node:getareaattr(node,'coords')),
-	'src': (lambda node:getrenamed(node,'file')),
-	}
-
-additivetypes = ['int', 'float', 'color', 'position', 'inttuple', 'floattuple']
-alltypes = ['string',] + additivetypes
-
-animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
-
 
 # implNote
 # main decision attrs:
@@ -1050,7 +914,13 @@ animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
 #				invalidEnumAttr, invalidTimeManipAttr,
 # notSMILBostonAnimTarget
 
-# Animation semantics parser
+
+additivetypes = ['int', 'float', 'color', 'position', 'inttuple', 'floattuple']
+alltypes = ['string',] + additivetypes
+
+animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
+
+# Animation syntax and semantics parser
 class AnimateElementParser:
 	def __init__(self, anim):
 		self.__anim = anim			# the animate element node
@@ -1181,6 +1051,8 @@ class AnimateElementParser:
 		import SMILTreeWrite
 		return SMILTreeWrite.WriteBareString(self.__anim)
 
+	# this is the main service method of this class
+	# returns an appropriate animator or None
 	def getAnimator(self):
 		if not self.__hasValidTarget:
 			return None
@@ -1188,25 +1060,31 @@ class AnimateElementParser:
 		if self.__animtype == 'invalid':
 			return None
 
-		# set elements
+		################
+		# set element
 		if self.__elementTag=='set':
 			return self.__getSetAnimator()
 
+
+		# shortcuts
 		attr = self.__grinsattrname
 		domval = self.__domval
+		accumulate = self.__accumulate
+		additive = self.__additive
+		mode = self.__calcMode
 		dur = self.getDuration()
 
+		################
 		# to-only animation for additive attributes
 		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
 			v = self.getTo()
 			v = string.atof(v)
 			anim = EffValueAnimator(attr, domval, v, dur)
-			if self.__attrtype=='int':
+			if self.__attrtype == 'int':
 				anim.setRetunedValuesConverter(_round)
 			return anim
 
-		# 1. Read animation attributes
-		mode = self.__calcMode
+		# check for keyTimes, keySplines
 		if mode == 'paced':
 			# ignore times and splines for 'paced' animation
 			times = splines = ()
@@ -1214,23 +1092,15 @@ class AnimateElementParser:
 			times = self.__getInterpolationKeyTimes() 
 			splines = self.__getInterpolationKeySplines()
 
-		accumulate = self.__accumulate
-		additive = self.__additive
-
-		# 2. return None on syntax or logic error
-
+		# check values
 		if self.__elementTag != 'animateMotion':
 			nvalues = self.__countInterpolationValues()
 			if nvalues==0 or (nvalues==1 and mode!='discrete'):
 				print 'values syntax error'
 				return None
 
-		# 3. Return explicitly animators for special attributes
-
-		# for 'by-only animation' force: additive = 'sum' 
-		if self.__animtype == 'by' and self.__isadditive:
-			additive = 'sum'
-
+		################
+		# animateColor or attrtype=='color'
 		if self.__elementTag == 'animateColor' or self.__attrtype=='color':
 			values = self.__getColorValues()
 			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines,
@@ -1238,6 +1108,8 @@ class AnimateElementParser:
 			self.__setTimeManipulators(anim)
 			return anim
 
+		################
+		# animateMotion  (or attrtype=='position')
 		if self.__elementTag=='animateMotion' or self.__attrtype=='position':
 			strpath = MMAttrdefs.getattr(self.__anim, 'path')
 			path = svgpath.Path()
@@ -1253,6 +1125,9 @@ class AnimateElementParser:
 				return anim
 			else:
 				return None
+
+		################
+		# animate
 
 		# 4. Return an animator based on the attr type
 		if debug: print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
@@ -1306,7 +1181,6 @@ class AnimateElementParser:
 			return None
 
 		dur = self.getDuration()
-		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
 
 		if self.__attrtype == 'int':
 			value = string.atoi(value)
@@ -1390,10 +1264,14 @@ class AnimateElementParser:
 
 	# check that we have a valid target attribute
 	# get its DOM value and type
+	# this method sets:
+	# self.__attrname and its grins alias self.__grinsattrname 
+	# self.__attrtype, self.__domval
+	# returns 1 on success and 0 on failure
 	def __checkTarget(self):
 
 		# Manage animateMotion first
-		# animateMotion has an implicit attributeName
+		# animateMotion has an implicit attributeName (position)
 
 		# for animate motion the implicit target attribute
 		# is region.position or node.position
@@ -1477,18 +1355,55 @@ class AnimateElementParser:
 					return 1
 			return 0
 
-		if smil_attrs.has_key(self.__attrname):
-			func = smil_attrs[self.__attrname]
-			self.__domval, self.__grinsattrname, self.__attrtype = func(self.__target)
-		else:
-			self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
-			self.__grinsattrname = self.__attrname
-			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
+		if self.__attrname == 'backgroundColor':
+			self.__grinsattrname = 'bgcolor'
+			self.__attrtype = 'color'
+			if self.__target._type == 'region':
+				ch = self.__target._region
+				self.__domval = ch.get('bgcolor')
+				return 1
+			return 0
+
+		if self.__attrname == 'z-index':
+			self.__grinsattrname = 'z'
+			self.__attrtype = 'int'
+			if self.__target._type == 'region':
+				ch = self.__target._region
+				self.__domval = ch.get('z')
+				return 1
+			return 0
+
+		if self.__attrname == 'soundLevel':
+			self.__grinsattrname = 'soundLevel'
+			self.__attrtype = 'float'
+			if self.__target._type == 'region':
+				ch = self.__target._region
+				self.__domval = ch.get('soundLevel')
+				return 1
+			return 0
+
+		if attr=='coords':
+			d = self.__target.attrdict
+			self.__grinsattrname = self.__attrname = 'coords'
+			self.__attrtype = 'inttuple' # SMIL20: should be 'string'
+			if d.has_key('coords'):
+				coords = d['coords']
+				# use grins convention
+				shape, coords = coords[0], coords[1:]
+				self.__domval = coords
+			else:
+				self.__domval = 0, 0, 0, 0	
+			return 1
+
+		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
+		self.__grinsattrname = self.__attrname # low probability to be true
+		self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
 			
 		if self.__domval==None:
 			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
 			print '\t',self
 			return 0
+
 		return 1
 
 	def getAnimationType(self):
