@@ -6,6 +6,7 @@ import string
 # Use DOM-CORE from 4DOM package
 from Ft.Dom.Element import Element
 from Ft.Dom.Document import Document
+from Ft.Dom.NodeList import NodeList
 
 
 # version = '0.0'
@@ -165,6 +166,11 @@ class TreeBuilder(xmllib.XMLParser):
 #############################################
 
 class Time:
+	def getResolved(self):
+		return 0
+	def getResolvedOffset(self):
+		return 0.0
+
 	# time types
 	SMIL_TIME_INDEFINITE = 0
 	SMIL_TIME_OFFSET = 1
@@ -173,12 +179,9 @@ class Time:
 	SMIL_TIME_WALLCLOCK = 4
 	SMIL_TIME_MEDIA_MARKER = 5
 
-	def getResolved(self):
-		return 0
-	def getResolvedOffset(self):
-		return 0.0
 	def getTimeType(self):
 		return Time.SMIL_TIME_INDEFINITE
+
 	def getOffset(self):
 		return 0
 	def setOffset(self, offset):
@@ -204,18 +207,15 @@ class Time:
 	def setMarker(self, marker):
 		pass
 
+#############################################
+class TimeList:
+	def item(self, index):
+		return Time()
+	def getLength(self):
+		return 0
 
 #############################################
 class ElementTime:
-	# restart types
-	RESTART_ALWAYS = 0
-	RESTART_NEVER = 1
-	RESTART_WHEN_NOT_ACTIVE = 2
-
-	# fill types
-	FILL_REMOVE = 0
-	FILL_FREEZE = 1
-
 	def getBegin(self):
 		return TimeList()
 	def setBegin(self, beginTimeList):
@@ -230,11 +230,18 @@ class ElementTime:
 	def setDur(self, dur):
 		pass
 
+	# restart types
+	RESTART_ALWAYS = 0
+	RESTART_NEVER = 1
+	RESTART_WHEN_NOT_ACTIVE = 2
 	def getRestart(self):
 		return ElementTime.RESTART_ALWAYS
 	def setRestart(self, restart):
 		pass
 	
+	# fill types
+	FILL_REMOVE = 0
+	FILL_FREEZE = 1
 	def getFill(self):
 		return ElementTime.FILL_REMOVE
 	def setFill(self, fill):
@@ -265,6 +272,7 @@ class ElementTime:
 class ElementTimeContainer(ElementTime):
 	def getTimeChildren(self):
 		return NodeList()
+
 	def getActiveChildrenAt(self, instant):
 		return NodeList()
 
@@ -276,10 +284,23 @@ class ElementSequentialTimeContainer(ElementTimeContainer):
 class ElementParallelTimeContainer(ElementTimeContainer):
 	def getEndSync(self):
 		return ''
+
 	def setEndSync(self, endSync):
 		pass
+
 	def getImplicitDuration(self):
 		return 0.0
+
+#############################################
+class ElementExclusiveTimeContainer(ElementTimeContainer):
+	def getEndSync(self):
+		return ''
+
+	def setEndSync(self, endSync):
+		pass
+
+	def getPausedElements(self):
+		return NodeList()
 
 #############################################
 class ElementTimeControl:
@@ -291,6 +312,46 @@ class ElementTimeControl:
 		return 1
 	def endElementAt(self, offset):
 		return 1
+
+#############################################
+class ElementTimeManipulation:
+	def getSpeed(self):
+		return 1.0
+	def setSpeed(self, speed):
+		pass
+
+	def getAccelerate(self):
+		return 1.0
+	def setAccelerate(self, accelerate):
+		pass
+
+	def getDecelerate(self):
+		return 1.0
+	def setDecelerate(self, decelerate):
+		pass
+
+	def getAutoReverse(self):
+		return (1==0)
+	def setAutoReverse(self, autoReverse):
+		pass
+
+#############################################
+class ElementSyncBehavior:
+	def getSyncBehavior(self):
+		return ''
+
+	def getSyncTolerance(self):
+		return 0.0
+
+	def getDefaultSyncBehavior(self):
+		return ""
+	
+	def getDefaultSyncTolerance(self):
+		return 0.0
+
+	def getSyncMaster(self):
+		return (1==1)
+
 
 #############################################
 class ElementTargetAttributes:
@@ -328,12 +389,53 @@ class ElementLayout:
 	def setWidth(self, width):
 		pass
 
+#############################################
+class ElementTest:
+	def getSystemBitrate(self):
+		return 0
+	def setSystemBitrate(self, systemBitrate):
+		pass
 
+	def getSystemCaptions(self):
+		return (1!=0)
+	def setSystemCaptions(self, systemCaptions):
+		pass
+
+	def getSystemLanguage(self):
+		return ''
+	def setSystemLanguage(self, systemLanguage):
+		pass
+
+	def getSystemRequired(self):
+		return (1!=0)
+
+	def getSystemScreenSize(self):
+		return (1!=0)
+
+	def getSystemScreenDepth(self):
+		return (1!=0)
+
+	def getSystemOverdubOrSubtitle(self):
+		return ''
+
+	def getSystemAudioDesc(self):
+		return (1!=0)
+	def setSystemAudioDesc(self, systemAudioDesc):
+		return (1!=0)
+
+
+#############################################
+class SMILRegionInterface:
+	def getRegion(self):
+		return None # SMILRegionElement()
+	def setRegion(self, region):
+		pass
 
 
 #############################################
 # SMIL-DOM
 #############################################
+
 class SMILElement(Element):
 	rwattrs = ('ID',)
 	def __init__(self, ownerDocument, tagName, nodeName):
@@ -379,12 +481,113 @@ class SMILLayoutElement(SMILElement):
 	def _set_Type(self,type):
 		self.setAttribute('TYPE',type)
 
-	def getResolved(self):
+	def _get_Resolved(self):
 		return 1
 
+#############################################
+class SMILRootLayoutElement(SMILElement, ElementLayout):
+	pass
+
+#############################################
+class SMILTopLayoutElement(SMILElement, ElementLayout):
+	pass
+
+#############################################
+class SMILRegionElement(SMILElement, ElementLayout):
+	def getFit(self):
+		return ''
+	def setFit(self, fit):
+		pass
+
+	def getTop(self):
+		return ''
+	def setTop(self, top):
+		pass
+
+	def getZIndex(self):
+		return 0
+	def setZIndex(self, zIndex):
+		pass
 
 #############################################
 class SMILMediaElement(SMILElement, ElementTime):
+	def getAbstractAttr(self):
+		return ''
+	def setAbstractAttr(self, abstractAttr):
+		pass
+
+	def getAlt(self):
+		return ''
+	def setAlt(self, alt):
+		pass
+
+	def getAuthor(self):
+		return ''
+	def setAuthor(self, author):
+		pass
+
+	def getClipBegin(self):
+		return ''
+	def setClipBegin(self, clipBegin):
+		pass
+
+	def getClipEnd(self):
+		return ''
+	def setClipEnd(self, clipEnd):
+		pass
+
+	def getCopyright(self):
+		return ''
+	def setCopyright(self, copyright):
+		pass
+
+	def getLongdesc(self):
+		return ''
+	def setLongdesc(self, longdesc):
+		pass
+
+	def getPort(self):
+		return ''
+	def setPort(self, port):
+		pass
+
+	def getReadIndex(self):
+		return ''
+	def setReadIndex(self, readIndex):
+		pass
+
+	def getRtpformat(self):
+		return ''
+	def setRtpformat(self, rtpformat):
+		pass
+
+	def getSrc(self):
+		return ''
+	def setSrc(self, src):
+		pass
+
+	def getStripRepeat(self):
+		return ''
+	def setStripRepeat(self, stripRepeat):
+		pass
+
+	def getTitle(self):
+		return ''
+	def setTitle(self, title):
+		pass
+
+	def getTransport(self):
+		return ''
+	def setTransport(self, transport):
+		pass
+
+	def getType(self):
+		return ''
+	def setType(self, stype):
+		pass
+
+#############################################
+class SMILRefElement(SMILMediaElement):
 	pass
 
 #############################################
@@ -394,14 +597,62 @@ class SMILSwitchElement(SMILElement):
 
 #############################################
 class SMILAnimation(SMILElement, ElementTargetAttributes, ElementTime, ElementTimeControl):
+	# additiveTypes
 	ADDITIVE_REPLACE = 0
 	ADDITIVE_SUM = 1
+	def getAdditive(self):
+		return SMILAnimation.ADDITIVE_REPLACE
+	def setAdditive(self, additive):
+		pass
+
+	# accumulateTypes
 	ACCUMULATE_NONE = 0
 	ACCUMULATE_SUM  = 1
 
-	def getAdditive(self):
-		return 0
-	def getAdditive(self, additive):
+	def getAccumulate(self):
+		return SMILAnimation.ACCUMULATE_NONE
+	def setAccumulate(self, accumulate):
+		pass
+
+	# calcModeTypes
+	CALCMODE_DISCRETE = 0
+	CALCMODE_LINEAR = 1
+	CALCMODE_PACED = 2
+	CALCMODE_SPLINE = 3
+
+	def getCalcMode(self):
+		return SMILAnimation.CALCMODE_LINEAR
+	def setCalcMode(self, calcMode):
+		pass
+
+	def getKeySplines(self):
+		return ''
+	def setKeySplines(self, keySplines):
+		pass
+
+	def getKeyTimes(self):
+		return TimeList()
+	def setKeyTimes(self, keyTimes):
+		pass
+
+	def getValues(self):
+		return ''
+	def setValues(self, values):
+		pass
+
+	def getFrom(self):
+		return ''
+	def setFrom(self, fromVal):
+		pass
+
+	def getTo(self):
+		return ''
+	def setTo(self, toVal):
+		pass
+
+	def getBy(self):
+		return ''
+	def setBy(self, byVal):
 		pass
 
 #############################################
@@ -411,11 +662,26 @@ class SMILAnimateElement(SMILAnimation):
 
 #############################################
 class SMILSetElement(SMILElement, ElementTimeControl, ElementTime, ElementTargetAttributes):
-	pass
+	def getTo(self):
+		return ''
+	def setTo(self, to):
+		pass
 
 #############################################
 class SMILAnimateColorElement(SMILAnimation):
 	pass
+
+#############################################
+class SMILAnimateMotionElement(SMILAnimateElement):
+	def getPath(self):
+		return ""
+	def setPath(self, path):
+		pass
+
+	def getOrigin(self):
+		return ""
+	def setOrigin(self, origin):
+		pass
 
 #############################################
 class SMILDocument(Document, ElementSequentialTimeContainer):
