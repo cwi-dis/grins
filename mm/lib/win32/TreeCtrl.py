@@ -1,9 +1,11 @@
 __version__ = "$Id$"
 
-import win32ui
+import win32ui, win32api
+Sdk = win32ui.GetWin32Sdk()
 
 import win32con
 import commctrl
+import appcon
 
 from win32mu import Win32Msg
 
@@ -16,6 +18,9 @@ EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 import MenuTemplate
 
 class TreeCtrl(window.Wnd):
+	CF_REGION = Sdk.RegisterClipboardFormat('Region')
+	CF_FILE = Sdk.RegisterClipboardFormat('FileName')
+
 	def __init__ (self, dlg=None, resId=None, ctrl=None):
 		# if the tree res is specified from a dialox box, we just create get the existing instance
 		# if try to re-create it, the focus doesn't work, and you get some very unexpected behavior
@@ -44,6 +49,9 @@ class TreeCtrl(window.Wnd):
 		# test
 		self.setpopup(MenuTemplate.POPUP_REGIONTREE_REGION, 'region')
 		self.setpopup(MenuTemplate.POPUP_REGIONTREE_SUBREGION, 'subregion')
+		
+		# register as a drop target
+		self.RegisterDropTarget()
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
@@ -63,18 +71,22 @@ class TreeCtrl(window.Wnd):
 	def _setEvents(self):
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
+		#self.HookMessage(self.OnMouseMove, win32con.WM_MOUSEMOVE)
 		self.HookMessage(self.OnKeyDown, win32con.WM_KEYDOWN)
 		self.GetParent().HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
 		self.GetParent().HookNotify(self.OnExpanded,commctrl.TVN_ITEMEXPANDED)
 		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
 		
+		self.GetParent().HookNotify(self.OnBeginDrag, commctrl.TVN_BEGINDRAG)
+
 		# debug 
 		self.HookMessage(self.OnDump, win32con.WM_USER+1)
 
 		# popup menu
 		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
 		self.GetParent().HookMessage(self.OnCommand,win32con.WM_COMMAND)
+
 
 	# simulate dialog tab
 	def OnKeyDown(self, params):
@@ -177,6 +189,35 @@ class TreeCtrl(window.Wnd):
 	def OnLButtonUp(self, params):
 		return 1
 
+	#
+	#  drag and drop support methods
+	#
+	def OnBeginDrag(self, std, extra):
+		pt = win32api.GetCursorPos()
+		pt = self.ScreenToClient(pt)
+		flags, item = self.HitTest(pt)
+		if flags & commctrl.TVHT_ONITEM:
+			print 'Drag Region'
+			self.DoDragDrop(self.CF_REGION, '%d' % item)
+
+	def OnDragOver(self, dataobj, kbdstate, x, y):
+		print 'OnDragOver'
+		return appcon.DROPEFFECT_NONE
+
+	def OnDragEnter(self, dataobj, kbdstate, x, y):
+		print 'OnDragEnter'
+		return self.OnDragOver(dataobj, kbdstate, x, y)
+				
+	def OnDrop(self, dataobj, effect, x, y):
+		print 'OnDrop'
+		return 0
+
+	def OnDragLeave(self):
+		print 'OnDragLeave'
+
+	#
+	#
+	#
 	def OnRButtonDown(self, params):
 		if len(self._selections) != 1: 
 			return
