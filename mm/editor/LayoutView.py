@@ -50,13 +50,13 @@ class LayoutView(LayoutViewDialog):
 		self.toplevel.player.setlayout()
 		LayoutViewDialog.hide(self)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		self.fill()
 
 	def kill(self):
@@ -83,9 +83,13 @@ class LayoutView(LayoutViewDialog):
 			else:
 				channels = self.context.layouts[self.curlayout]
 			for ch in channels:
-				chanlist.append(ch.name)
+				# experimental SMIL Boston layout code
+				if ch['type'] == 'layout':
+				# end experimental
+					chanlist.append(ch.name)
 				layout[ch.name] = 0
 			chanlist.sort()
+			
 		if self.curchannel is not None:
 			if self.curlayout is None or \
 			   not layout.has_key(self.curchannel):
@@ -107,14 +111,14 @@ class LayoutView(LayoutViewDialog):
 		if self.curlayout is not None and \
 		   self.curlayout != ALL_LAYOUTS:
 			commandlist.append(DELETE(callback = (self.delete_callback, ())))
-			commandlist.append(NEW_CHANNEL(callback = (self.new_channel_callback, ())))
+			commandlist.append(NEW_REGION(callback = (self.new_channel_callback, ())))
 			commandlist.append(RENAME(callback = (self.rename_callback, ())))
 			if self.curchannel is not None:
-				commandlist.append(REMOVE_CHANNEL(callback = (self.remove_callback, ())))
+				commandlist.append(REMOVE_REGION(callback = (self.remove_callback, ())))
 			if self.curother is not None:
-				commandlist.append(ADD_CHANNEL(callback = (self.add_callback, ())))
+				commandlist.append(ADD_REGION(callback = (self.add_callback, ())))
 		elif self.curlayout == ALL_LAYOUTS:
-			commandlist.append(NEW_CHANNEL(callback = (self.new_channel_callback, ())))
+			commandlist.append(NEW_REGION(callback = (self.new_channel_callback, ())))
 		if self.curchannel is not None:
 			commandlist.append(ATTRIBUTES(callback = (self.attr_callback, ())))
 		self.setcommandlist(commandlist)
@@ -170,7 +174,7 @@ class LayoutView(LayoutViewDialog):
 			i = i+1
 			name = base + `i`
 		self.askchannelnameandtype(name,
-					ChannelMap.getvalidchanneltypes())
+					ChannelMap.getvalidchanneltypes(self.context))
 
 	def newchannel_callback(self, name = None, type = None):
 		editmgr = self.editmgr
@@ -192,7 +196,12 @@ class LayoutView(LayoutViewDialog):
 				else:
 					# multiple top-level channels
 					root = ''
-		editmgr.addchannel(name, len(self.context.channels), type)
+		# experimental SMIL Boston layout code
+		editmgr.addchannel(name, len(self.context.channels), 'layout')
+		# end experimental
+		# else
+		# editmgr.addchannel(name, len(self.context.channels), type)
+		# end else
 		ch = context.channeldict[name]
 		if root:
 			from windowinterface import UNIT_PXL, UNIT_SCREEN
