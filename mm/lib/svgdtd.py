@@ -708,7 +708,7 @@ class SVG:
 	entities['feDistantLight'] = temp[:]
 	for name in __fe:
 		entities[name] = __feanim
-  	entities['feComponentTransfer'] = ['feFuncR','feFuncG','feFuncB','feFuncA',]
+	entities['feComponentTransfer'] = ['feFuncR','feFuncG','feFuncB','feFuncA',]
 	entities['feDiffuseLighting'] = __feanim + ['feDistantLight','fePointLight','feSpotLight', 'animateColor',]
 	entities['feFlood'] = __feanim + ['animateColor',]
 	entities['feImage'] = __feanim + ['animateTransform',]
