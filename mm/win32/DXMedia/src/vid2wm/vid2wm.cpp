@@ -25,7 +25,7 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <stdio.h>
 
 // options
-// #define LOG_ACTIVITY
+#define LOG_ACTIVITY
 
 
 // Setup data
@@ -79,12 +79,16 @@ int g_cTemplates = 1;
 #include <stdio.h>
 FILE *logFile;
 #ifdef LOG_ACTIVITY
+#include <mbstring.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <stdarg.h>
 void Log(LPCTSTR lpszFormat, ...)
 	{
 	char psz[512];
 	va_list argList;
 	va_start(argList,lpszFormat);
-	_vstprintf(s,lpszFormat,argList);
+	_vstprintf(psz,lpszFormat,argList);
 	if(logFile){
 		fwrite(psz,1,lstrlen(psz),logFile);
 		fflush(logFile);
@@ -125,7 +129,7 @@ CVideoRenderer::CVideoRenderer(TCHAR *pName,
 	m_lastTimestamp=0;
 	m_pWMWriter = new WMWriter();
 #ifdef LOG_ACTIVITY
-	logFile=fopen("log.txt","w");
+	logFile=fopen("wmvlog.txt","w");
 #endif
 } 
 
@@ -167,7 +171,6 @@ HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn)
     }
 
     // Check we can identify the media subtype
-
     const GUID *pSubType = pmtIn->Subtype();
     if (GetBitCount(pSubType) == USHRT_MAX) {
         NOTE("Invalid video media subtype");
@@ -203,7 +206,7 @@ CBasePin *CVideoRenderer::GetPin(int n)
 
 STDMETHODIMP CVideoRenderer::NonDelegatingQueryInterface(REFIID riid,void **ppv)
 {
-    CheckPointer(ppv,E_POINTER);
+    CheckPointer(ppv, E_POINTER);
 	if(riid == IID_IWMConverter)
         return GetInterface((IWMConverter *) this, ppv);	
     return CBaseVideoRenderer::NonDelegatingQueryInterface(riid,ppv);
@@ -220,6 +223,7 @@ HRESULT CVideoRenderer::SetMediaType(const CMediaType *pmt)
     VIDEOINFO *pVideoInfo = (VIDEOINFO *) m_mtIn.Format();
 	if(!pVideoInfo) return NOERROR;
     m_ImageAllocator.NotifyMediaType(&m_mtIn);
+	m_sampleSize = pmt->GetSampleSize();
     return NOERROR;
 }
 
@@ -271,19 +275,25 @@ void CVideoRenderer::PrepareRender()
 void CVideoRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
 
+	Log("BeginWriting\n");
 	m_pWMWriter->BeginWriting();
-    DoRenderSample(pMediaSample);
 
 } 
 
 HRESULT CVideoRenderer::DoRenderSample(IMediaSample *pMediaSample)
 {	
+#ifdef LOG_ACTIVITY	
 	if(logFile)
 		{
 		char sz[256];
-		sprintf(sz,"frame %d size=%d time=%d\n",m_ixframe,pMediaSample->GetActualDataLength(),m_lastTimestamp);
-		Log(sz);
+		CRefTime tStart,tStop;
+		if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))	
+			{
+			sprintf(sz,"frame %d size=%d tStart=%d tStop=%d\n",m_ixframe,pMediaSample->GetActualDataLength(),tStart.Millisecs(),tStop.Millisecs());
+			Log(sz);
+			}
 		}
+#endif
 	EncodeSample(pMediaSample);
     return NOERROR; 
 } 
@@ -297,6 +307,7 @@ void CVideoRenderer::EncodeSample(IMediaSample *pMediaSample)
     BYTE *pImage;
     HRESULT hr = pMediaSample->GetPointer(&pImage);
     if (FAILED(hr)) {
+		Log("Failed to get media sample data");
         return;
     }
 	
@@ -305,18 +316,15 @@ void CVideoRenderer::EncodeSample(IMediaSample *pMediaSample)
 	RECT rcSource={0,0,w,h};
 	hr=GetImageHeader(&bih,pVideoInfo,&rcSource);
     if (FAILED(hr)) {
-        return;
+ 		Log("Failed to get image header");
+       return;
     }
 	// or hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,&m_pVideoImage,&rcSource);
 
-	CRefTime rt(pVideoInfo->AvgTimePerFrame);
-	m_lastTimestamp=m_ixframe*rt.Millisecs();
 	CRefTime tStart,tStop;
 	if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
-		m_lastTimestamp=tStart.Millisecs();
+		m_pWMWriter->WriteVideoSample(pImage, pMediaSample->GetActualDataLength(), tStart.m_time);
 
-	bool isSync=(pMediaSample->IsSyncPoint()==S_OK);
-	m_pWMWriter->WriteVideoSample(pImage,pMediaSample->GetActualDataLength(),m_lastTimestamp);
 	m_ixframe++;
 
 }
@@ -325,18 +333,30 @@ void CVideoRenderer::EncodeSample(IMediaSample *pMediaSample)
 HRESULT CVideoRenderer::Active()
 {
 	Log("Active\n");
+
 	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
+
+	// fix rcSource
+	pVideoInfo->rcSource.left = pVideoInfo->rcTarget.left = 0;
+	pVideoInfo->rcSource.top = pVideoInfo->rcTarget.top = 0;
+	pVideoInfo->rcSource.right = pVideoInfo->rcTarget.right = m_VideoSize.cx;
+	pVideoInfo->rcSource.bottom = pVideoInfo->rcTarget.bottom = m_VideoSize.cy;
+
+	m_pWMWriter->SetVideoFormat(&m_mtIn);
+
+#ifdef LOG_ACTIVITY
 	CRefTime rt(pVideoInfo->AvgTimePerFrame);
 	float rate=1000/float(rt.Millisecs());
-
-	m_pWMWriter->SetVideoFormat((WMVIDEOINFOHEADER*)pVideoInfo);
-
 	char sz[128];
-	sprintf(sz,"Rate=%f fps  AvgTimePerFrame=%ld msec bpp=%d\n",rate,rt.Millisecs(),
+	Log("sampleSize=%ld\n",m_sampleSize);
+	sprintf(sz,"Rate=%ffps  AvgTimePerFrame=%ldmsec bpp=%d\n", rate, rt.Millisecs(),
 		pVideoInfo->bmiHeader.biBitCount);
 	Log(sz);
- 	sprintf(sz,"Size %d x %d\n",m_VideoSize.cx,m_VideoSize.cy);
+ 	sprintf(sz,"Size %d x %d\n", m_VideoSize.cx, m_VideoSize.cy);
 	Log(sz);
+	Log("SetVideoFormat\n");
+#endif
+	
    return CBaseVideoRenderer::Active();
 } 
 
@@ -348,8 +368,10 @@ HRESULT CVideoRenderer::Inactive()
 		m_pVideoImage=NULL;
 	}
 	m_ixframe=0;
-	m_pWMWriter->EndWriting();
 	Log("Inactive\n");
+	m_pWMWriter->Flush();
+	m_pWMWriter->EndWriting();
+	Log("EndWriting\n");
 	return CBaseVideoRenderer::Inactive();
 }
 
@@ -453,14 +475,6 @@ HRESULT CVideoRenderer::CopyImage(IMediaSample *pMediaSample,
 HRESULT CVideoRenderer::SetWMWriter(IUnknown *pI)
 	{
     return m_pWMWriter->SetWMWriter(pI);	
-	}
-HRESULT CVideoRenderer::SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)
-	{
-    return m_pWMWriter->SetAudioInputProps(dwInputNum,pI);	
-	}
-HRESULT CVideoRenderer::SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)
-	{
-    return m_pWMWriter->SetVideoInputProps(dwInputNum,pI);	
 	}
 
 ////////////////////////////////////////////////
