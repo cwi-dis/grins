@@ -108,13 +108,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.armed_bg = self.window._convert_color(bg)
 		self.armed_loop = self.getloop(node)
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
-		try:
-			alist = node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = []
 		self.armed_display.fgcolor(self.getbucolor(node))
 		hicolor = self.gethicolor(node)
-		for a in alist:
+		for a in node.GetRawAttrDef('anchorlist', []):
 			atype = a[A_TYPE]
 			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 				continue
