@@ -19,10 +19,10 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.70.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.71.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=sjoerd
+  Upload Name=mikevdg
   Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
@@ -38,7 +38,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Default2=C:\PROGRA~1\Wise
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
