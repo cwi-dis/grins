@@ -871,7 +871,7 @@ class Channel:
 				self.stoparm()
 			self._armcontext = None
 
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		if debug: print 'Channel.setpaused('+`self`+','+`paused`+')'
 		if paused and self._qid:
 			try:
@@ -889,25 +889,25 @@ class Channel:
 			self._qid = None
 		self._paused = paused
 
-	def pause(self, node, action):
+	def pause(self, node, action, timestamp):
 		if node.GetType() == 'anchor':
 			return
 		if node is self._played_node:
-			self.setpaused(action)
+			self.setpaused(action, timestamp)
 
-	def resume(self, node):
+	def resume(self, node, timestamp):
 		if node.GetType() == 'anchor':
 			return
 		if node is self._played_node:
-			self.setpaused(None)
+			self.setpaused(None, timestamp)
 
 	def uipaused(self, wantpause):
 		if wantpause:
 			if not self._paused:
-				self.setpaused('uipause')
+				self.setpaused('uipause', None)
 		else:
 			if self._paused == 'uipause':
-				self.setpaused(None)
+				self.setpaused(None, None)
 
 	#
 	# Methods used by derived classes.
@@ -1096,6 +1096,7 @@ class ChannelWindow(Channel):
 		self.want_default_colormap = 0
 		self.__callback = None
 		self.__out_trans_qid = None
+		self.__out_trans = None
 		self._active_multiregion_transition = None
 		self._wingeom = None
 		self._winabsgeom = None
@@ -1634,8 +1635,17 @@ class ChannelWindow(Channel):
 			self.played_display = None
 
 
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		if debug: print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
+		if self.__out_trans_qid and timestamp is not None:
+			if paused:
+				self.__pausetime = timestamp
+				self._scheduler.cancel(self.__out_trans_qid)
+			else:
+				out_trans, outtranstime, outtransdur, node = self.__out_trans
+				outtranstime = outtranstime + timestamp - self.__pausetime
+				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
+					self.schedule_out_trans, (out_trans, outtranstime, outtransdur, node))
 		if paused == 'hide' and self.played_display:
 			# we need an unrender() method here...
 			d = self.played_display.clone()
@@ -1643,7 +1653,7 @@ class ChannelWindow(Channel):
 			self.played_display = d
 		elif not paused and self._paused == 'hide' and self.played_display:
 			self.played_display.render()
-		Channel.setpaused(self, paused)
+		Channel.setpaused(self, paused, timestamp)
 
 	def playstop(self, curtime):
 		return Channel.playstop(self, curtime)
@@ -1659,6 +1669,7 @@ class ChannelWindow(Channel):
 				outtranstime = outtranstime-outtransdur
 				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
 					self.schedule_out_trans, (out_trans, outtranstime, outtransdur, node))
+				self.__out_trans = out_trans, outtranstime, outtransdur, node
 		if in_trans is not None and in_trans.get('dur', 1.0) > 0 and self.window:
 			start_time = node.get_start_time()
 			otherwindow = self._find_multiregion_transition(in_trans, start_time)
@@ -1669,6 +1680,7 @@ class ChannelWindow(Channel):
 
 	def schedule_out_trans(self, out_trans, outtranstime, outtransdur, node):
 		self.__out_trans_qid = None
+		self.__out_trans = None
 		if not self.window:
 			return
 		otherwindow = self._find_multiregion_transition(out_trans, outtranstime)
@@ -1686,8 +1698,13 @@ class ChannelWindow(Channel):
 
 	def cleanup_transitions(self):
 		if self.__out_trans_qid:
-			self._scheduler.cancel(self.__out_trans_qid)
+			try:
+				self._scheduler.cancel(self.__out_trans_qid)
+			except ValueError:
+				# maybe pausing, so don't worry about it
+				pass
 			self.__out_trans_qid = None
+			self.__out_trans = None
 		if self.window:
 			self.window.endtransition()
 		lchan = self.find_layout_channel()
