@@ -672,7 +672,6 @@ class LinkEditEditor(LinkEditorDialog):
 		self.parent = parent
 		a1, a2, dir, type = self.editlink = editlink
 		self.changed = isnew
-		self.oksetsensitive(self.changed)
 		ltype = parent.findanchor(a1)[A_TYPE]
 		rtype = parent.findanchor(a2)[A_TYPE]
 		hlinks = parent.context.hyperlinks
@@ -699,6 +698,7 @@ class LinkEditEditor(LinkEditorDialog):
 					   rtype in SourceAnchors and
 					   not rlinks and
 					   rtype in DestinationAnchors])
+		self.oksetsensitive(self.changed)
 
 	def run(self):
 		self.show()
