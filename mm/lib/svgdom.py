@@ -656,12 +656,13 @@ class SvgDocument(SvgNode):
 		
 		# other instance variables
 		self.defs = []
+		self.entitydefs = None
 
 		# create DOM
 		p = SvgDOMBuilder(self)
 		p.feed(self.source)
 		p.close()
-	
+
 	def svgrepr(self):
 		s = '<?xml version=\"' + self.xmlversion + '\" standalone=\"' + self.xmlstandalone + '\"?>\n'
 		s = s + '<!DOCTYPE svg PUBLIC \"' + self.doctypepubid + '\"\n' 
@@ -670,6 +671,12 @@ class SvgDocument(SvgNode):
 
 	def setDocType(self, tag, pubid, syslit, data):
 		self.doctypetag, self.doctypepubid, self.doctypesyslit, self.doctypedata = tag, pubid, syslit, data
+		if data:
+			# parse any entities def
+			self.entitydefs = SVGEntityDefs(self, data).getValue()
+
+	def getEntityDefs(self):
+		return self.entitydefs
 
 	def getDocType(self):
 		return self.doctypetag, self.doctypepubid, self.doctypesyslit, self.doctypedata
@@ -789,6 +796,9 @@ class SvgDOMBuilder(svgdtd.SVG, xmllib.XMLParser):
 
 	def handle_doctype(self, tag, pubid, syslit, data):
 		self.__document.setDocType(tag, pubid, syslit, data)
+		docentitydefs = self.__document.getEntityDefs()
+		if docentitydefs is not None:
+			xmllib.XMLParser.entitydefs.update(docentitydefs)
 
 	def handle_data(self, data):
 		tag = self.__node.getType()
