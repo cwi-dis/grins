@@ -3,6 +3,8 @@ import urllib
 
 
 class SoundChannel(ChannelThread):
+	chan_attrs = ChannelThread.chan_attrs + ['queuesize']
+
 	def __repr__(self):
 		return '<SoundChannel instance, name=' + `self._name` + '>'
 
