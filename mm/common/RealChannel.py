@@ -21,6 +21,7 @@ error = 'RealChannel.error'
 realenginedebug=0
 
 import settings
+import MMAttrdefs
 
 class RealEngine:
 	# This class holds the RMA engine and a useage counter. This counter is
@@ -112,7 +113,7 @@ class RealChannel:
 	def __createplayer(self, node):
 		if not self.__has_rma_support:
 			return 0
-		if not self.__rmaplayer:
+		if self.__rmaplayer is None:
 			try:
 				self.__rmaplayer = apply(self.__engine.CreatePlayer, self.__winpos)
 			except:
@@ -131,6 +132,11 @@ class RealChannel:
 			self.__channel.errormsg(node, 'No URL set on this node')
 			return 0
 		url = MMurl.canonURL(url)
+		mediarepeat = MMAttrdefs.getattr(node, 'mediaRepeat')
+		if '?' in url:
+			url = url + '&mediaRepeat=%s' % mediarepeat
+		else:
+			url = url + '?mediaRepeat=%s' % mediarepeat
 ##		try:
 ##			u = MMurl.urlopen(url)
 ##		except:
