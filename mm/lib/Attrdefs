@@ -23,11 +23,11 @@
 # blank lines and comments may be inserted freely.
 
 
-(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
-	'Bounding box for embedded PostScript image' channel)
+##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
+##	'Bounding box for embedded PostScript image' channel)
 
-(center (bool) 0 'Center' default
-	'If on, text is centered within the margins')
+##(center (bool) 0 'Center' default
+##	'If on, text is centered within the margins')
 
 (channel (name) undefined 'Channel' default
 	'Name of channel used to render this node/subtree' inherited)
@@ -39,8 +39,8 @@
 (duration (float) 2.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' channel)
 
-(extraspaceafter (float) 0.0 'Extra space after' default
-	'Extra space following last word (in characters)')
+##(extraspaceafter (float) 0.0 'Extra space after' default
+##	'Extra space following last word (in characters)')
 
 (file (string) '/dev/null' 'File' default
 	'File name for external node' channel)
@@ -48,29 +48,32 @@
 (font (string) 'default' 'Font' default
 	'Font used to display text' channel)
 
-(format (enum ASCII PostScript) ASCII 'Format' default
-	'Format used by external text file (ASCII or PostScript)' channel)
+##(format (enum ASCII PostScript) ASCII 'Format' default
+##	'Format used by external text file (ASCII or PostScript)' channel)
 
-(indent (float) 0 'Indent' default
-	'Extra indentation of left margin (in characters)')
+##(indent (float) 0 'Indent' default
+##	'Extra indentation of left margin (in characters)')
 
-(justify (bool) 0 'Justify' default
-	'If on, justify right margins' channel)
+##(justify (bool) 0 'Justify' default
+##	'If on, justify right margins' channel)
 
-(keep (bool) 0 'Keep' default
-	'If on, text in window is kept until explicitly replaced' channel)
+##(keep (bool) 0 'Keep' default
+##	'If on, text in window is kept until explicitly replaced' channel)
 
 (name (name) none 'Name' default
 	'Name given to a node' raw)
 
-(needGS (bool) 0 'Need Ghostscript' default
-	'Must be on for channel to support embedded Postscript' channel)
+##(needGS (bool) 0 'Need Ghostscript' default
+##	'Must be on for channel to support embedded Postscript' channel)
 
-(nospaceafter (bool) 0 'No space after' default
-	'If on, suppress space following last word')
+##(nospaceafter (bool) 0 'No space after' default
+##	'If on, suppress space following last word')
 
-(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
-	'Select the presence of horizontal/vertical scroll bars' channel)
+##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
+##	'Select the presence of horizontal/vertical scroll bars' channel)
+
+(player_winpos (tuple (int) (int)) (-1 -1) 'Player winpos' default
+	 'Window position for player control panel' raw)
 
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
@@ -81,34 +84,39 @@
 (styledict (namedict (attrdict)) () 'Style Dictionary' default
 	'Styles used in this document (root node only)')
 
-(synclist (list (enclosed (tuple 
-				(enum begin end)
-				(enclosed (list (name)))
-				(float)
-				(enclosed (list (name)))
-				(float)
-				(float)
-	)))
-	() 'Sync list' default
-	'List of sync arcs used in this subtree' raw)
+# This is an obsoleve attribute type!
+##(synclist (list (enclosed (tuple 
+##				(enum begin end)
+##				(enclosed (list (name)))
+##				(float)
+##				(enclosed (list (name)))
+##				(float)
+##				(float)
+##	)))
+##	() 'Sync list' default
+##	'List of sync arcs used in this subtree' raw)
 
+# This is the real sync arc data structure, on the destination!!!
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' default
 	'List of sync arcs ending at this node' raw)
 
+(toplevel_winpos (tuple (int) (int)) (-1 -1) 'Toplevel winpos' default
+	 'Window position for toplevel menu' raw)
+
 (type (name) undefined 'Channel type' default
 	'Channel type (channel dictionary only)' raw)
 
-(volume (float) 1.0 'Volume' default
-	'Volume of audio output (1.0 means standard)' channel)
+##(volume (float) 1.0 'Volume' default
+##	'Volume of audio output (1.0 means standard)' channel)
 
-(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
-	'Vertical space before/after text (in lines)')
+##(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
+##	'Vertical space before/after text (in lines)')
 
 (wait_for_close (bool) 0 'Wait for close' default
 	'Wait for "close window" action to proceed' channel)
 
-(winpos (tuple (int) (int)) (0 0) 'Window position' default
+(winpos (tuple (int) (int)) (-1 -1) 'Window position' default
 	'Initial window position (x, y) (x axis pointing down!)' channel)
 
 (winsize (tuple (int) (int)) (0 0) 'Window size' default
