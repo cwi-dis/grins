@@ -1,7 +1,6 @@
 /*
- * Superfast (I hope) way to write an image to a window,
- * once it is converted to the format needed for lrectwrite
- * by prepimg.
+ * Superfast way to write an image to a window, once it is converted
+ * to the format needed for lrectwrite by prepimg.
  */
 #include <stdio.h>
 #include <gl/gl.h>
@@ -16,23 +15,38 @@ int argc;
 char **argv;
 {
     FILE *fp;
+    int c;
     int dev;
     short val;
-    if( argc<2 ) {
+    if (argc < 2) {
 	printf("usage: showprep infile [x y]\n");
 	exit(1);
     } 
-    if( (fp = fopen(argv[1], "r")) == NULL ) {
+    if ((fp = fopen(argv[1], "r")) == NULL) {
 	printf("showprep: can't open input file %s\n",argv[1]);
 	exit(1);
     }
-    if (fscanf(fp, "prepimg xsize=%d ysize=%d", &xsize, &ysize) != 2) {
-	printf("showprep: bad input file %s\n", argv[1]);
-	exit(1);
+    if ((c = getc(fp)) == 'C') {
+	    char buf[256];
+	    int pf;
+	    fgets(buf, sizeof buf, fp);
+	    if (fscanf(fp, "(%d, %d, %d)\n", &xsize, &ysize, &pf) != 0) {
+		    printf("showprep: bad CMIF input file %s\n", argv[1]);
+		    exit(1);
+	    }
+	    if (pf != 0) {
+		    printf("showprep: cannot show packed CMIF file\n");
+		    exit(1);
+	    }
+	    fgets(buf, sizeof buf, fp);
     }
-    if( xsize > (XMAXSCREEN+1) || ysize > (YMAXSCREEN+1)) {
-	printf("showprep: input image is too big %d %d",xsize,ysize);
-	exit(1);
+    else {
+	ungetc(c, fp);
+        if (fscanf(fp, "prepimg xsize=%d ysize=%d", &xsize, &ysize) != 2) {
+	    printf("showprep: bad input file %s\n", argv[1]);
+	    exit(1);
+        }
+	fseek(fp, 8192L, 0);
     }
     readit(fp);
     foreground();
@@ -70,9 +84,7 @@ readit(fp)
 		fprintf(stderr, "showprep: cannot alloc %d bytes\n", n);
 		exit(1);
 	}
-	fflush(fp);
 	fd = fileno(fp);
-	lseek(fd, 8192L, 0);
 	if (read(fd, (char *)parray, n) != n) {
 		perror("showprep: read");
 		exit(1);
