@@ -3476,7 +3476,7 @@ class MMNode:
 				refnode = arc.refnode()
 				refnode.add_arc(arc, sctx)
 			cdur = child.calcfullduration(sctx, ignoremin = 1)
-			if cdur is not None: # and child.fullduration is not None:
+			if cdur is not None and (child.fullduration is not None or child.attrdict.has_key('duration') or child.type in leaftypes):
 				if cdur < 0:
 					delay = None
 				else:
