@@ -2711,7 +2711,11 @@ class AttrDialog:
 				{'title': title,
 				 'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
+				 'depth': toplevel._default_visual.depth,
+				 'deleteResponse': Xmd.DO_NOTHING})
+		self._shell.AddWMProtocolCallback(_delete_window, self._cancel,
+						  None)
+		
 		self._form = self._shell.CreateManagedWidget('attrForm',
 					Xm.Form, {'allowOverlap': FALSE})
 		attrs = {'leftAttachment': Xmd.ATTACH_FORM,
