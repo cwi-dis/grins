@@ -182,6 +182,12 @@ class Window:
 	def setcursor(self, cursor):
 		self._cursor = cursor
 
+	def setcurcursor(self, strid):
+		self._topwindow.setcursor(strid)
+	
+	def iscursor(self, strid):
+		return self._topwindow._curcursor == strid
+
 	def updateMouseCursor(self):
 		self._topwindow.updateMouseCursor()
 
@@ -951,21 +957,17 @@ class SubWindow(Window):
 			x, y = self._pxl2rel(point,self._canvas)
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
-					if self._cursor != 'hand':
-						self.setcurcursor('hand')
+					self.setcurcursor('hand')
 					return stop
-			if self._cursor != 'arrow':
-				self.setcurcursor('arrow')
+			
 			if self._transparent==0:
+				self.setcurcursor('arrow')
 				return stop
 			else:
 				return cont
 
 		return cont
 
-	def setcurcursor(self, strid):
-		self._curcursor = strid
-		self._topwindow.setcursor(strid)
 
 	#
 	# Rendering section
