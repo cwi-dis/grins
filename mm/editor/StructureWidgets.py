@@ -64,6 +64,12 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         # Place holder for a recursive function.
         return;
 
+    def uncollapse_all(self):
+        # Placeholder for a recursive function.
+        return;                         
+    def collapse_all(self):             # Is this doable using a higher-order function?
+        return;
+
     def destroy(self):
         # Prevent cyclic dependancies.
         Widgets.Widget.destroy(self)
@@ -93,8 +99,6 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         # icon is a string, msg is a string.
         self.node.infoicon = icon
         self.node.errormessage = msg
-        self.root.draw()                # Should this be here?
-
 
     def getlinkicon(self):
         # Returns the icon to show for incoming and outgiong hyperlinks.
@@ -123,22 +127,21 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
 
     def expandcall(self):
         # 'Expand' the view of this node.
-        #assert 0
-        self.root.toplevel.setwaiting()
-        if hasattr(self.node, 'expanded'):
-            collapsenode(self.node)
+        # Also, if this node is expanded, collapse it!
+        if self.iscollapsed():
+            self.uncollapse()
         else:
-            expandnode(self.node)
-        self.root.recalc()
+            self.collapse()
+        self.root.draw()
 
     def expandallcall(self, expand):
         # Expand the view of this node and all kids.
-        #assert 0
-        self.root.toplevel.setwaiting()
-        if do_expand(self.node, expand, None, 1):
-            # there were changes
-            # make sure root isn't collapsed
-            self.root.recalc()
+        # if expand is 1, expand. Else, collapse.
+        if expand:
+            self.uncollapse_all()
+        else:
+            self.collapse_all()
+        self.root.draw()
 
     def playcall(self):
         top = self.root.toplevel
@@ -278,6 +281,16 @@ class StructureObjWidget(MMNodeWidget):
         self.node.collapsed = not self.node.collapsed
     def iscollapsed(self):
         return self.node.collapsed
+
+    def uncollapse_all(self):
+        self.uncollapse()
+        for i in self.children:
+            i.uncollapse_all()
+
+    def collapse_all(self):
+        self.collapse()
+        for i in self.children:
+            i.collapse_all()
 
     def get_obj_at(self, pos):
         # Return the MMNode widget at position x,y
@@ -893,6 +906,9 @@ class MediaWidget(MMNodeWidget):
     def recalc(self):
         l,t,r,b = self.pos_rel
         lag = self.get_relx(self.downloadtime_lag)
+        if lag < 0:
+            print "ERROR! Lag is below 0 - node can play before it is loaded. Cool!"
+            lag = 0
         h = self.get_rely(12);          # 12 pixels high.
         self.pushbackbar.moveto((l-lag,t,l,t+h))
 #        l = l + self.get_relx(1);
@@ -945,13 +961,17 @@ class MediaWidget(MMNodeWidget):
         # Draw the image.
         image_filename = self.__get_image_filename()
         if image_filename != None:
-            box = displist.display_image_from_file(
-                self.__get_image_filename(),
-                center = 1,
-                # The coordinates should all be floating point numbers.
-                coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
-                scale = -2
-                )
+            try:
+                box = displist.display_image_from_file(
+                    self.__get_image_filename(),
+                    center = 1,
+                    # The coordinates should all be floating point numbers.
+                    coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
+                    scale = -2
+                    )
+            except windowinterface.error:
+                pass;                   # Shouldn't I use another icon or something?
+
             displist.fgcolor(TEXTCOLOR)
             displist.drawbox(box)
 
@@ -1000,9 +1020,7 @@ class MediaWidget(MMNodeWidget):
             try:
                 f = MMurl.urlretrieve(url)[0]
             except IOError, arg:
-#                print "DEBUG: Could not load image!"
-                assert 0;               # where is this being called from?
-                self.root.set_infoicon('error', 'Cannot load image: %s'%`arg`)
+                self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
         else:
             f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
 #        print "DEBUG: f is ", f
