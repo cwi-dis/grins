@@ -8,17 +8,10 @@ package grins;
 */   
 public interface SMILController {
     /**
-    *  Start playback, of the SMIL document controlled
+    *  Start playback from current position, of the SMIL document controlled
     *  by this SMILController.
     */    
     void play();
-    
-    
-    /**
-    *  Stop playback, of the SMIL document controlled
-    *  by this SMILController.
-    */    
-    void stop();
     
     
     /**
@@ -26,7 +19,15 @@ public interface SMILController {
     *  by this SMILController.
     */    
     void pause();
-     
+    
+    
+    /**
+    *  Stop playback, of the SMIL document controlled
+    *  by this SMILController and reset.
+    */    
+    void stop();
+    
+          
     /**
     *  Seek to time t in seconds within the SMIL document controlled
     *  by this SMILController.
@@ -38,6 +39,7 @@ public interface SMILController {
     /**
     *  Get current position in seconds of the SMIL document controlled
     *  by this SMILController.
+    *  A client receives playback notifications through the SMILListener interface.
     */       
     double getTime();
     

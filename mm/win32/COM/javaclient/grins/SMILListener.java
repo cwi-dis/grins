@@ -21,7 +21,7 @@ public interface SMILListener {
     public final int PLAYING = 2;
     
     /**
-    *  Current playback state notification.
+    *  Current playback state notification from the monitoring thread.
     *  If state == STOPPED then we are stopped
     *  If state == PAUSING then we are pausing
     *  If state == PLAYING then we are playing
@@ -29,12 +29,20 @@ public interface SMILListener {
     void setState(int state);
     
     /**
-    *  Notification for current playback pos in seconds
+    *  Notification for current playback position in seconds from the monitoring thread.
     */
     void setPos(double pos);
     
     /**
-    *  Notification for a top level windows change
+    *  Notification for a top level windows change from the monitoring thread.
+    *  This notification is send when a new top level window is needed
+    *  or a top level window has been closed.
+    *  Use SMILDocument.getViewportCount() to get the number of top level windows.
+    *  Having the number of document's top level window you get info for each viewport using the SMILDocument methods
+    *       Dimension getViewportSize(int index);
+    *       String getViewportTitle(int index);
+    *       boolean isViewportOpen(int index);
+    *  index is in [0, SMILDocument.getViewportCount())
     */
     void updateViewports();
 }
