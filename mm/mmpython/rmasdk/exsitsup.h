@@ -16,6 +16,10 @@
 // forward declares
 class ExampleWindowlessSite;
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
 
 /****************************************************************************
  *
@@ -29,6 +33,8 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
     /****** Public Class Methods ******************************************/
     ExampleSiteSupplier(IUnknown* pUnkPlayer);
     
+	void SetPyVideoSurface(PyObject *obj);
+	PyObject *m_pyVideoSurface;
 
     /************************************************************************
      *  IRMASiteSupplier Interface Methods                     ref:  rmawin.h
@@ -46,17 +52,17 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
     STDMETHOD_(UINT32, AddRef ) (THIS);
     STDMETHOD_(UINT32, Release) (THIS);
 
+ 
+    // our windowless site
+    ExampleWindowlessSite*  m_pWindowlessSite;
 
-    private:
+	private:
     /****** Private Class Variables ****************************************/
     INT32		    m_lRefCount;
     IRMASiteManager*	    m_pSiteManager;
     IRMACommonClassFactory* m_pCCF;
     IUnknown*		    m_pUnkPlayer;
     FiveMinuteMap	    m_CreatedSites;
-
-    // our windowless site
-    ExampleWindowlessSite*  m_pWindowlessSite;
 
     /****** Private Class Methods ******************************************/
     ~ExampleSiteSupplier();
