@@ -99,19 +99,19 @@ class AnimationDefaultWrapper:
 		# for use re-create animators
 		self.createAnimators(node)
 
-	def getRectAt(self, keyTime):
+	def getRectAt(self):
 		return self._domrect
 	
-	def getColorAt(self, keyTime):
+	def getColorAt(self):
 		self._domcolor
 		
-	def getPosAt(self, keyTime):
+	def getPosAt(self):
 		return self._domrect[:2]
 
-	def getWidthAt(self, keyTime):
+	def getWidthAt(self):
 		return self._domrect[2]
 
-	def getHeightAt(self, keyTime):
+	def getHeightAt(self):
 		return self._domrect[3]
 
 class AnimationParWrapper(AnimationDefaultWrapper):
