@@ -131,6 +131,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		TopLevelDialog.__init__(self)
 		self.makeviews()
+		self.setusergroups()
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
@@ -241,7 +242,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				HIDE_TRANSITIONVIEW(callback = (self.hide_view_callback, (6, ))),
 				]
 			if features.USER_GROUPS in features.feature_set:
-				self.__ugroup.append(USERGROUPVIEW(callback = (self.view_callback, (5,))))
+				self.__ugroup.extend([USERGROUPVIEW(callback = (self.view_callback, (5,))),
+						      USERGROUPS(callback = self.usergroup_callback)])
 		else:
 			self.__ugroup = []
 
@@ -356,6 +358,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.saveas_callback()
 
 		self.update_undocommandlist()
+		self.setusergroups()
 		
 	def showdefaultviews(self):
 		viewinfo = self.root.context.getviewinfo()
@@ -563,6 +566,37 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.changed = 1
 		self.update_undocommandlist()
 		
+	def usergroup_callback(self, name):
+		self.setwaiting()
+		title, u_state, override, uid = self.context.usergroups[name]
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		if u_state == 'RENDERED':
+			u_state = 'NOT_RENDERED'
+		else:
+			u_state = 'RENDERED'
+		em.delusergroup(name)
+		em.addusergroup(name, (title, u_state, override, uid))
+		em.commit()
+
+	def setusergroups(self):
+		if self.window is None:
+			# no sense doing anything now
+			return
+		menu = []
+		ugroups = self.context.usergroups.keys()
+		ugroups.sort()
+		showhidden = settings.get('showhidden')
+		for name in ugroups:
+			title, u_state, override, uid = self.context.usergroups[name]
+			if not showhidden and override != 'visible':
+				continue
+			if not title:
+				title = name
+			menu.append((title, (name,), 't', u_state == 'RENDERED'))
+		self.window.set_dynamiclist(USERGROUPS, menu)
+
 	def view_callback(self, viewno):
 		self.setwaiting()
 		view = self.views[viewno]
@@ -1711,6 +1745,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.changed = 1
 		self.update_undocommandlist()
 		self.update_toolbarpulldowns()
+		self.setusergroups()
 
 	def rollback(self):
 		# Nothing has happened.
