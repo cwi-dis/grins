@@ -1,7 +1,6 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, afxres
-import commctrl
 
 Sdk = win32ui.GetWin32Sdk()
 
@@ -16,35 +15,15 @@ import grinsRC
 from pywinlib.mfc import docview
 import GenView
 import DropTarget
+import IconMixin
 import string
 
 import MMurl
 
-ICONNAME_TO_RESID={
-	None: grinsRC.IDI_ICON_ASSET_BLANK,
-	'ref': grinsRC.IDI_ICON_ASSET_BLANK,
-	'text': grinsRC.IDI_ICON_ASSET_TEXT,
-	'image': grinsRC.IDI_ICON_ASSET_IMAGE,
-	'video': grinsRC.IDI_ICON_ASSET_VIDEO,
-	'audio': grinsRC.IDI_ICON_ASSET_AUDIO,
-	'html': grinsRC.IDI_ICON_ASSET_TEXT,
-##	'node': grinsRC.IDI_ICON_NODE,
-	'imm': grinsRC.IDI_ICON_NODE,
-	'ext': grinsRC.IDI_ICON_NODE,
-	'par': grinsRC.IDI_ICON_PAROPEN,
-	'seq': grinsRC.IDI_ICON_SEQOPEN,
-	'excl': grinsRC.IDI_ICON_EXCLOPEN,
-	'switch': grinsRC.IDI_ICON_SWITCHOPEN,
-	'prio': grinsRC.IDI_ICON_PRIOOPEN,
-	'properties': grinsRC.IDI_PROPERTIES,
-	'viewport': grinsRC.IDI_VIEWPORT,
-	'region': grinsRC.IDI_REGION,
-	'animation': grinsRC.IDI_ANIMATION,
-	'animate': grinsRC.IDI_ANIMATE,
-	'brush': grinsRC.IDI_BRUSH,
-}
-
-class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListener):
+class _AssetsView(GenView.GenView, 
+				docview.ListView, 
+				DropTarget.DropTargetListener,
+				IconMixin.ViewMixin):
 
 	def __init__(self, doc, bgcolor=None):
 		GenView.GenView.__init__(self, bgcolor)
@@ -71,17 +50,6 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		self.items = []
 
 		self._ignoredragdrop = 0
-
-	def initicons(self):
-		self.iconlist_small = []
-		self.iconname_to_index = {}
-		for k, v in ICONNAME_TO_RESID.items():
-			if v is None:
-				self.iconname_to_index[k] = None
-				continue
-			if not v in self.iconlist_small:
-				self.iconlist_small.append(v)
-			self.iconname_to_index[k] = self.iconlist_small.index(v)
 
 	# Sets the acceptable commands. 
 	def set_cmddict(self,cmddict):
@@ -144,7 +112,7 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		if not lc: return
 		
 		# set icons
-		lc.setIconLists(self.iconlist_small, self.iconlist_small)
+		self.seticonlist(lc)
 
 		# insert columns: (align, width, text) list
 		lc.deleteAllColumns()
@@ -155,7 +123,7 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		row = 0
 		for item in self.items:
 			imagename = item[0]
-			imageindex = self.iconname_to_index.get(imagename)
+			imageindex = self.geticonid(imagename)
 			if imageindex is None:
 				imageindex = -1 # XXXX
 				print '_AssetsView: no icon for', imagename

@@ -9,6 +9,7 @@ import appcon
 
 from win32mu import Win32Msg
 import DropTarget
+import IconMixin
 
 from pywinlib.mfc import window
 
@@ -18,7 +19,7 @@ EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 
 import MenuTemplate
 
-class TreeCtrl(window.Wnd):
+class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 ##	dropMap = {'Region': DropTarget.CF_REGION,
 ##		'Media': DropTarget.CF_MEDIA,
 ##		'FileName': DropTarget.CF_FILE,}
@@ -59,7 +60,7 @@ class TreeCtrl(window.Wnd):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
-				 | commctrl.TVS_LINESATROOT
+				 | commctrl.TVS_LINESATROOT | commctrl.LVS_SHAREIMAGELISTS
 		return style
 
 	# create a new instance of the tree ctrl.
@@ -88,7 +89,6 @@ class TreeCtrl(window.Wnd):
 		# popup menu
 		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
 		self.GetParent().HookMessage(self.OnCommand,win32con.WM_COMMAND)
-
 
 	# simulate dialog tab
 	def OnKeyDown(self, params):
