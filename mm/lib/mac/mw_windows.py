@@ -471,6 +471,9 @@ class _CommonWindow:
 				    float(height)/(ysize - top - bottom))
 			if scale > 1:
 				scale = 1
+		elif scale < 0:
+			# value not reconized. set scale to 1
+			scale = 1
 				    
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)

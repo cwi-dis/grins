@@ -1819,13 +1819,29 @@ class ChannelWindow(Channel):
 				area_height = area_height*2
 			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
 				area_height = regpoint_y
-
+				
 			media_ratio = float(media_width)/float(media_height)
 			# print 'ratio=',media_ratio
 			if area_height*media_ratio < area_width:
 				area_height = area_width/media_ratio
 			else:
 				area_width = area_height*media_ratio
+
+		elif scale == -3: # fill
+			if regalign in ('topLeft', 'topMid', 'topRight'):
+				area_height = subreg_height-regpoint_y
+			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
+				area_width = subreg_width-regpoint_x
+			if regalign in ('topMid', 'center', 'bottomMid'):
+				area_width = subreg_width-regpoint_x
+				area_width = area_width*2
+			if regalign in ('topRight', 'midRight', 'bottomRight'):
+				area_width = regpoint_x
+			if regalign in ('midLeft', 'midRight', 'center'):
+				area_height = subreg_height-regpoint_y
+				area_height = area_height*2
+			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
+				area_height = regpoint_y
 
 		if regalign in ('topLeft', 'topMid', 'topRight'):
 			area_top = regpoint_y
