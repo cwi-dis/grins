@@ -1515,6 +1515,9 @@ class EventCtrl(AttrCtrl):
 				self._relative.setcheck(relative)
 				if relative and self._eventstruct._setnode is None and self._eventstruct._syncarc.refnode() is None:
 					self._relative.enable(0)
+			else:
+				self._relative.enable(0)
+				self._relative.setcheck(0)
 
 	def set_thingbutton(self):
 		if not self._eventstruct:
