@@ -3,6 +3,9 @@ __version__ = "$Id$"
 # DirectShow support
 import dshow
 
+# DirectDraw support for MMStream
+import ddraw
+
 # we need const WM_USER
 import win32con
 
@@ -204,5 +207,83 @@ def GetMediaDuration(url):
 		return 0
 
 	return builder.GetDuration()
+
+
+class MMStream:
+	def __init__(self, ddobj):
+		mmstream = dshow.CreateMultiMediaStream()
+		mmstream.Initialize()
+		mmstream.AddPrimaryVideoMediaStream(ddobj)
+		mmstream.AddPrimaryAudioMediaStream()
+		self._mmstream = mmstream
+		self._mstream = None
+		self._ddstream = None
+		self._sample = None
+		self._dds = None
+		self._rect = None
+		self._parsed = 0
+
+	def open(self, url):
+		mmstream = 	self._mmstream
+		try:
+			mmstream.OpenFile(url)
+		except:
+			print 'failed to render', url
+			self._parsed = 0
+			return 0
+		else:
+			self._parsed = 1
+		self._mstream = mmstream.GetPrimaryVideoMediaStream()
+		self._ddstream = self._mstream.QueryIDirectDrawMediaStream()
+		self._sample = self._ddstream.CreateSample()
+		self._dds = ddraw.CreateSurfaceObject()
+		self._rect = self._sample.GetSurface(self._dds)
+		return 1
+
+	def __del__(self):
+		del self._mstream
+		del self._ddstream
+		del self._sample
+		del self._dds
+		del self._mmstream
+			
+	def run(self):
+		if self._parsed:
+			self._mmstream.SetState(1)
+
+	def stop(self):
+		if self._parsed:
+			self._mmstream.SetState(0)
+		
+	def update(self):
+		if not self._parsed: return 0
+		return self._sample.Update()
+
+	def seek(self, secs):
+		if not self._parsed: return
+		if secs==0.0:
+			v = dshow.large_int(0)
+		else:
+			msecs = dshow.large_int(int(secs*1000+0.5))
+			f = dshow.large_int('10000')
+			v = v * f
+		self._mmstream.Seek(v)
+
+	def getDuration(self):
+		if not self._parsed: return
+		d = self._mmstream.GetDuration()
+		f = dshow.large_int('10000')
+		v = d / f
+		secs = 0.001*float(v)
+		return secs
+
+	def getTime(self):
+		if not self._parsed: return
+		d = self._mmstream.GetTime()
+		f = dshow.large_int('10000')
+		v = d / f
+		secs = 0.001*float(v)
+		return secs
+
 
 
