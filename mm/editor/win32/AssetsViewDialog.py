@@ -39,6 +39,13 @@ class AssetsViewDialog:
 			self.__window = None
 			f=self.toplevel.window
 
+	def setlistheaders(self, headerlist):
+		self.__window.setColumns(headerlist)
+
+	def setlistdata(self, data):
+		self.__window.setItems(data)
+		self.__window.rebuildList()
+
 #### support win32 model
 	def createviewobj(self):
 		if self.__window: return

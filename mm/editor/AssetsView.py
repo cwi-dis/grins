@@ -2,8 +2,19 @@ __version__ = "$Id$"
 
 from AssetsViewDialog import AssetsViewDialog
 from usercmd import *
+import MMNode
+from MMTypes import *
+import urlparse
+import posixpath
+import string
 
 class AssetsView(AssetsViewDialog):
+	COLUMNLIST_ALL=[
+		('left', 50, 'Type'),
+		('left', 100, 'Name'),
+		('left', 200, 'URL'),
+		]
+
 	def __init__(self, toplevel):
 		self.toplevel = toplevel
 		self.root = toplevel.root
@@ -29,6 +40,8 @@ class AssetsView(AssetsViewDialog):
 ##		self.commit()
 		AssetsViewDialog.show(self)
 ##		self.editmgr.register(self)
+		self.setlistheaders(self.COLUMNLIST_ALL)
+		self.setlistdata(self.getallassets())
 
 	def hide(self):
 		if not self.is_showing():
@@ -57,3 +70,31 @@ class AssetsView(AssetsViewDialog):
 	def kill(self):
 		self.destroy()
 
+	def getallassets(self):
+		assetdict = {}
+		self._getallassetstree(self.root, assetdict)
+		assetlist = []
+		# For now we ignore the nodes
+		for url, v in assetdict.items():
+			mimetype, nodelist = v
+			pathname = urlparse.urlparse(url)[2]
+			shortname = posixpath.split(pathname)[1]
+			assetlist.append((mimetype, mimetype, shortname, url))
+		return assetlist
+
+	def _getallassetstree(self, node, dict):
+		rv = []
+		tp = node.GetType()
+		if tp == 'ext':
+			url = node.GetRawAttr('file')
+			if url:
+				mimetype = node.GetComputedMimeType()
+				mimetype = string.split(mimetype, '/')[0]
+				if dict.has_key(url):
+					mimetype, nodelist = dict[url]
+					nodelist.append(node)
+				else:
+					dict[url] = mimetype, [node]
+		if tp in interiortypes:
+			for ch in node.GetChildren():
+				self._getallassetstree(ch, dict)
