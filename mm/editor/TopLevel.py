@@ -806,6 +806,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						    mtype = 'warning')
 			return 0
 		file = MMurl.url2pathname(path)
+		# XXXX This is wrong, we should ask where to save if self.new_file is set.
+		# But we can't do that because we have to synchronously return...
 		return self.save_to_file(file)
 
 	def help_callback(self, params=None):
