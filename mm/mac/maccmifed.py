@@ -6,7 +6,11 @@ __version__ = "$Id$"
 
 # First, immedeately disable the console window
 import sys
-if len(sys.argv) > 1 and sys.argv[1] == '-v':
+DEBUG=1
+if DEBUG:
+	print '** Verbose **'
+	quietconsole=None
+elif len(sys.argv) > 1 and sys.argv[1] == '-v':
 	del sys.argv[1]
 	print '** Verbose **'
 	quietconsole=None
@@ -24,8 +28,8 @@ except:
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 
 # Next, show the splash screen
-import MacOS
-MacOS.splash(ID_SPLASH_DIALOG)
+import splash
+splash.splash('loadprog')
 
 # Now time for real work.
 import os
@@ -49,6 +53,7 @@ else:
 # macfreeze: path ::editor:mac
 # macfreeze: path ::editor
 # macfreeze: path ::common
+# macfreeze: path ::lib:mac
 # macfreeze: path ::lib
 # macfreeze: path ::pylib
 # macfreeze: path ::pylib:audio
@@ -117,6 +122,7 @@ if not STANDALONE:
 		CMIFDIR+":editor:mac",
 		CMIFDIR+":editor",
 		CMIFDIR+":common",
+		CMIFDIR+":lib:mac",
 		CMIFDIR+":lib",
 	# Overrides for Python distribution
 		CMIFDIR+":pylib",
@@ -138,17 +144,17 @@ else:
 ##import trace
 ##trace.set_trace()
 
-if len(sys.argv) < 2:
-	MacOS.splash()
-	fss, ok = macfs.PromptGetFile('CMIF/SMIL file (cancel for URL)', 'TEXT')
-	if ok:
-		sys.argv = ["macgrins", fss.as_pathname()]
-	else:
-		import EasyDialogs
-		url = EasyDialogs.AskString("CMIF/SMIL URL")
-		if url is None:
-			sys.exit(0)
-		sys.argv = ["maccmifed", url]
+##if len(sys.argv) < 2:
+##	MacOS.splash()
+##	fss, ok = macfs.PromptGetFile('CMIF/SMIL file (cancel for URL)', 'TEXT')
+##	if ok:
+##		sys.argv = ["macgrins", fss.as_pathname()]
+##	else:
+##		import EasyDialogs
+##		url = EasyDialogs.AskString("CMIF/SMIL URL")
+##		if url is None:
+##			sys.exit(0)
+##		sys.argv = ["maccmifed", url]
 		
 no_exception=0
 try:
@@ -167,6 +173,11 @@ finally:
 	if not no_exception:
 		if quietconsole:
 			quietconsole.revert()
-		print 'Type return to exit-',
-		sys.stdin.readline()
+##		if DEBUG:
+##			import pdb
+##			pdb.post_mortem(sys.exc_info()[2])
+##		elif quietconsole:
+##			quietconsole.revert()
+##			print 'Type return to exit-',
+##			sys.stdin.readline()
 	

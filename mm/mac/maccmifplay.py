@@ -14,8 +14,8 @@ else:
 	quietconsole.install()
 
 # Next, show the splash screen
-import MacOS
-MacOS.splash(513)
+import splash
+splash.splash('loadprog')
 
 # Now time for real work.
 import os
@@ -59,7 +59,7 @@ else:
 	profile = 0
 
 if len(sys.argv) < 2:
-	MacOS.splash()
+	splash.splash()
 	fss, ok = macfs.StandardGetFile('TEXT')
 	if not ok: sys.exit(0)
 	

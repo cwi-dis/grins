@@ -15,8 +15,8 @@ else:
 	quietconsole.install()
 	
 # Next, show the splash screen
-import MacOS
-MacOS.splash(513)
+import splash
+splash.splash('loadprog')
 
 # Now time for real work.
 import os
@@ -39,6 +39,7 @@ else:
 # macfreeze: path ::grins:mac
 # macfreeze: path ::grins
 # macfreeze: path ::common
+# macfreeze: path ::lib:mac
 # macfreeze: path ::lib
 # macfreeze: path ::pylib
 # macfreeze: path ::pylib:audio
@@ -107,6 +108,7 @@ if not STANDALONE:
 		CMIFDIR+":grins:mac",
 		CMIFDIR+":grins",
 		CMIFDIR+":common",
+		CMIFDIR+":lib:mac",
 		CMIFDIR+":lib",
 	# Overrides for Python distribution
 		CMIFDIR+":pylib",
@@ -129,7 +131,7 @@ else:
 ##trace.set_trace()
 
 if len(sys.argv) < 2:
-	MacOS.splash()
+	splash.splash()
 	fss, ok = macfs.PromptGetFile('SMIL file (cancel for URL)', 'TEXT')
 	if ok:
 		sys.argv = ["macgrins", fss.as_pathname()]
