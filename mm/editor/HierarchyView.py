@@ -99,7 +99,7 @@ class HierarchyView(ViewDialog, GLDialog):
 		self.fixviewroot()
 		self.getshape()
 		self.recalc()
-		self.draw()
+		# don't draw because we'll get a redraw event in a nanosecond
 
 	def hide(self):
 		if not self.is_showing():
