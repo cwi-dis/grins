@@ -5,6 +5,8 @@
 
 ------------------------------ BUGS -------------------------------
 
+TextChannel init() doesn't set arm_node to None.
+
 block view calculates geometry wrong after sequence of zoom in -
 enlarge window - zoom out
 
@@ -77,6 +79,9 @@ player: need "keep" attribute (default 0?) to keep a node on the
 screen after its time is up
 
 ------------------------------ NITS -------------------------------
+
+sync arc edit box needs an editable text box for the delay
+(and the message about "press shift" is misleading -- nothing happens)
 
 sync arcs whose source is lost are kept around for no good reason
 

@@ -41,5 +41,6 @@ sound:playaiff:playaiff $file
 null:emacs:emacs $file
 null:emacsclient:emacsclient $file
 
-movie:video:python /ufs/guido/src/video/video.py $file
-movie:vinfo:python /ufs/guido/src/video/vinfo.py $file
+movie:Vplay:/ufs/guido/bin/sgi/Vplay $file
+movie:Vinfo:/ufs/guido/bin/sgi/Vinfo $file
+movie:Vedit:/ufs/guido/bin/sgi/Vedit $file

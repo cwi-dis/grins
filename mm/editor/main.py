@@ -100,9 +100,7 @@ def main():
 			print '\t' + sys.exc_type + ':', `sys.exc_value`
 			print
 			import pdb
-			tb = sys.exc_traceback
-			f = None
-			pdb.Pdb().init().interaction(f, tb)
+			pdb.post_mortem(sys.exc_traceback)
 	finally:
 		SoundChannel.restore()
 		ImageChannel.cleanup()
