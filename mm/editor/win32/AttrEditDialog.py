@@ -76,6 +76,9 @@ class AttrEditorDialog:
 	def getcurattr(self):
 		return self.__window.getcurattr()
 
+	def setcurattr(self, attr):
+		self.__window.setcurattr(attr)
+
 	def pop(self):
 		"""Pop the dialog window to the foreground."""
 		if self.__window:

@@ -139,6 +139,9 @@ class AttrEditorDialog(windowinterface.MACDialog):
 	def getcurattr(self):
 		return None
 
+	def setcurattr(self, attr):
+		pass
+
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:
 			(what, message, when, where, modifiers) = event
