@@ -75,6 +75,9 @@ class BasicDialog() = (glwindow.glwindow)():
 		self.form.hide_form()
 		self.showing = 0
 	#
+	def is_showing(self):
+		return self.showing
+	#
 	def get_geometry(self):
 		if not self.showing: return
 		gl.winset(self.form.window)
@@ -198,6 +201,9 @@ class GLDialog() = (glwindow.glwindow)():
 		glwindow.unregister(self)
 		gl.winclose(self.wid)
 		self.wid = 0
+	#
+	def is_showing(self):
+		return self.wid <> 0
 	#
 	def get_geometry(self):
 		if self.wid = 0: return
