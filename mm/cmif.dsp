@@ -652,6 +652,10 @@ SOURCE=.\editor\AnchorList.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\AppDefaults.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\ArcInfo.py
 # End Source File
 # Begin Source File
