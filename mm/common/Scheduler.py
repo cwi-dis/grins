@@ -19,6 +19,8 @@ debugtimer = 0
 debugevents = 0
 debugdump = 0
 
+SCHEDULE_DEPTH = 1			# how deep we should go scheduling sync arcs
+
 # Priorities for the various events:
 N_PRIO = 5
 [PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
@@ -157,7 +159,7 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None):
+	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0):
 		# Schedules a single SyncArc for a node.
 		
 		# node is the node for the start of the arc.
@@ -248,57 +250,55 @@ class SchedulerContext:
 			if node.deparcs.has_key(event) and arc not in node.deparcs[event]:
 				node.deparcs[event].append(arc)
 				arc.depends.append((node, event))
-		if not arc.ismin and (arc.dstnode is not node or dev != event):
+		if not arc.ismin and (arc.dstnode is not node or dev != event) and depth < SCHEDULE_DEPTH:
 			ts = timestamp+arc.delay
 			if arc.dstnode.has_min and dev == 'end':
 				# maybe delay dependent sync arcs
 				mintime = arc.dstnode.has_min
 				ts = max(ts, arc.dstnode.start_time + mintime)
-			self.sched_arcs(arc.dstnode, dev, timestamp=ts)
+			self.sched_arcs(arc.dstnode, dev, timestamp=ts, depth = depth+1)
 
-	def sched_arcs(self, node, event = None, marker = None, timestamp = None):
-		# Schedules all event-based syncarcs for a single node.
-		# Note that syncarcs that can be derived from the node structure (i.e. start and end of nodes)
-		# are made already in SMILTreeRead and are accessable in MMNode via the 'beginlist' and 'endlist'
-		# attrs.
-
-		# node is the node.
-		# event is a tuple of (event, ?, ((channel, event)|accesskey))
-		# marker is (?)
-		# timestamp is the time "now".
-
-		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
+	def sched_arcs(self, node, event = None, marker = None, timestamp = None, depth = 0):
+		# Schedule all sync and event arcs that depend on
+		# event or marker happening on node.  Only one of
+		# event and marker is supplied (i.e. not None).
+		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc(),depth
 		if timestamp is None:	# Retrieve the timestamp if it was not supplied.
 			timestamp = self.parent.timefunc()
 		channel = accesskey = None
-		if event is not None:	# Retrieve the event if it was not supplied.
-			node.event(timestamp, event)
-			if type(event) is type(()): # If the event is an empty tuple.
-				if event[1] == 'accesskey': # If the event was from a keypress
+		if event is not None:
+			node.event(timestamp, event) # record that event happened
+			if type(event) is type(()):
+				# if tuple, it's either accesskey or
+				# event from channel (i.e. region or
+				# topLayout).
+				if event[1] == 'accesskey':
 					accesskey = event[2]
 					event = None
 				else:
 					channel, event = event[:2]
 		if marker is not None:
-			node.marker(timestamp, marker)
+			node.marker(timestamp, marker) # record that marker happened
 
-		# Iterate through the scheduled syncarcs for this node
-		for arc in node.sched_children:	# for all the scheduled children of that node.
-					# for a node, the scheduled children is a list of MMSyncArcs
-			if (arc.channel != channel or # If none of these conditions match, try the next node.
+		# Iterate through the dependant syncarcs of this node
+		for arc in node.sched_children:
+			# this tests wheter the dependant arc can be
+			# scheduled at this time (i.e. it should be of
+			# the right type with a definite delay etc.).
+			if (arc.channel != channel or
 			    arc.getevent() != event or
 			    arc.marker != marker or
 			    arc.accesskey != accesskey or
 			    arc.delay is None) and \
-			      (arc.getevent() is not None or
-			       arc.marker is not None or
-			       marker is not None or
-			       arc.accesskey is not None or
-			       arc.delay is None or
-			       ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
-			       (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
+			   (arc.getevent() is not None or
+			    arc.marker is not None or
+			    marker is not None or
+			    arc.accesskey is not None or
+			    arc.delay is None or
+			    ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
+			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
 				continue
-			do_continue = 0
+			do_continue = 0	# on old Python we can't continue from inside try/except
 			try:
 				if arc.__in_sched_arcs:
 					# loop in syncarcs
@@ -319,7 +319,7 @@ class SchedulerContext:
 						else:
 							atime = a.atimes[0]
 						break
-			self.sched_arc(node, arc, event, marker, timestamp+atime)
+			self.sched_arc(node, arc, event, marker, timestamp+atime, depth)
 			arc.__in_sched_arcs = 0
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
