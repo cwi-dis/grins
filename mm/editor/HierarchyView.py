@@ -1802,6 +1802,6 @@ def slidestart(pnode, url, index):
 		thissize = Bandwidth.GetSize(url)
 		filesize = filesize + thissize
 	except Bandwidth.Error, arg:
-		child.set_infoicon('error', arg)
+		pnode.set_infoicon('error', arg)
 	minstart = float(filesize) * 8 / MMAttrdefs.getattr(pnode, 'bitrate')
 	return start, minstart
