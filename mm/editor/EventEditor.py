@@ -3,7 +3,6 @@
 # TODO: the cancel button doesn't work yet.
 # TODO: how do I reference other nodes?
 
-import EventEditorDialog
 import MMNode, windowinterface, SMILTreeWrite
 
 CAUSES = [				# What causes the event
