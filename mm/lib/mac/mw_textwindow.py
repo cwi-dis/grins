@@ -81,22 +81,28 @@ class textwindow(_common_window):
 	UNITS=mw_globals.UNIT_MM
 	TITLE="Source"
 
-	def __init__(self, data):
+	def __init__(self, data, readonly=0):
 		import settings
 		if settings.has_key('textwindowpos'):
 			old = self.X, self.Y, self.W, self.H
 			self.X, self.Y, self.W, self.H = settings.get('textwindowpos')
 			settings.set('textwindowpos', old)
 		_common_window.__init__(self)
+		self.mother = None
+		self.readonly = readonly
 		self.data = data
 		self.is_html = 0
 		self.url = None
 		self.commandlist = [
-			usercmd.CLOSE_WINDOW(callback = (self.hide, ()))
+			usercmd.CLOSE_WINDOW(callback = (self.close_callback, ()))
 		]
 		self.adornments = None
 		self.show()
-
+		
+	def close(self):
+		self.hide()
+		self.mother = None
+		
 	def hide(self):
 		import settings
 		pos = self.window.getgeometry()
@@ -104,11 +110,32 @@ class textwindow(_common_window):
 		settings.save()
 		_common_window.hide(self)
 		
+	def set_mother(self, mother):
+		self.mother = mother
+		
+	def close_callback(self):
+		if self.mother:
+			self.mother.close_callback()
+		else:
+			self.close()
+		
 	def settext(self, data):
 		self.show()
 		self.data = data
 		self.widget.insert_plaintext(data)
 	
+	def gettext(self):
+		return self.data
+		
+	def set_readonly(self, readonly):
+		self.readonly = readonly
+
+	def is_changed(self):
+		return 0
+		
+	def select_lines(self, startline, endline):
+		pass
+		
 class htmlwindow(_common_window):
 	X=0
 	Y=0

@@ -91,7 +91,7 @@ class _SourceView(docview.RichEditView):
 			self.__editctrl.SetWindowText(self._text)
 		self.__editctrl.SetModify(0) # No, this document has not been modified yet.
 
-	def get_text(self):
+	def gettext(self):
 		return self.__editctrl.GetWindowText()
 
 	def select_lines(self, startline, endline):
@@ -105,7 +105,7 @@ class _SourceView(docview.RichEditView):
 		modified = self.__editctrl.GetModify()
 		return modified
 	
-	def setmother(self, mother):
+	def set_mother(self, mother):
 		self.mother = mother
 
 	# Convert the text from unix or mac to windows
@@ -126,6 +126,7 @@ class _SourceView(docview.RichEditView):
 		# 1. clean self contends
 		del self._text
 		self._text=None
+		self.mother = None
 
 		# 2. destroy OS window if it exists
 		if hasattr(self,'_obj_') and self._obj_:
