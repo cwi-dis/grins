@@ -81,6 +81,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
+	def show(self):
+		TopLevelDialog.show(self)
+		self.views[1].show()
+
 	def showstate(self, view, showing):
 		self.setbuttonstate(view.__command, showing)
 		if showing:
