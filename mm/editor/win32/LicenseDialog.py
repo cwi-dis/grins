@@ -8,6 +8,9 @@ class LicenseDialog:
 
 	def show(self):
 		pass
+		
+	def close(self):
+		pass
 			
 	def setdialoginfo(self):
 		if self.can_try:

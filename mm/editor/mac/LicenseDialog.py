@@ -20,6 +20,9 @@ class LicenseDialog(windowinterface.MACDialog):
 	def __init__(self):
 		windowinterface.MACDialog.__init__(self, "License", ID_DIALOG_LICENSE,
 				ITEMLIST_ALL, cancel=ITEM_QUIT)
+				
+	def close(self):
+		windowinterface.MACDialog.close(self)
 			
 	def setdialoginfo(self):
 			
