@@ -49,17 +49,13 @@ clock_val = (_opS +
 	     r'(?P<units>\.\d+)?'		# .fraction (optional)
 	     r'(?P<metric>h|min|s|ms)?)'	# metric (optional)
 	     r')' + _opS)
-syncbase = re.compile('id' + _opS + r'\(' + _opS + '(?P<name>' + xmllib._Name + ')' + _opS + r'\)' + # id(name)
+syncbase = re.compile(r'id\(' + _opS + '(?P<name>' + xmllib._Name + ')' + _opS + r'\)' + # id(name)
 		      _opS +
-		      r'\(' + _opS + r'(?P<event>[^)]*[^) \t\r\n])' + _opS + r'\)' + # (event)
+		      r'(?:\(' + _opS + r'(?P<event>[^)]*[^) \t\r\n])' + _opS + r'\))?' + # (event)
+		      _opS +
 		      '$')
 offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
-syncbase2 = re.compile(	# ((id-ref/prev ".")? event-ref/begin/end)? (offset)?
-	_opS +
-	r'(?P<event>' + xmllib._Name + r')' +			# ID-ref
-	_opS +
-	r'(?P<offset>(?:[-+])' + clock_val + r')?$'		# offset
-	)
+# SMIL 2.0 syncbase without the offset
 mediamarker = re.compile(		# id-ref ".marker(" name ")"
 	_opS +
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
@@ -244,7 +240,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if res is not None:
 			# SMIL 1.0 begin value
 			name = res.group('name')
-			delay = self.__parsecounter(res.group('event'), 1)
+			event = res.group('event')
+			if event:
+				delay = self.__parsecounter(event, 1)
+			else:
+				delay = 0
 			xnode = self.__nodemap.get(name)
 			if xnode is None:
 				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
@@ -261,64 +261,40 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				event = 'begin'
 			list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=delay))
-		elif val == 'indefinite':
-			boston = 'indefinite'
-			list.append(MMNode.MMSyncArc(node, attr))
 		else:
 			vals = string.split(val, ';')
 			if len(vals) > 1:
 				boston = 'multiple %s values' % attr
 			for val in vals:
 				val = string.strip(val)
+				if not val:
+					self.syntax_error('illegal empty value in %s attribute' % attr)
+					continue
+				if val == 'indefinite':
+					if not boston:
+						boston = 'indefinite'
+					list.append(MMNode.MMSyncArc(node, attr))
+					continue
 				try:
 					offset = self.__parsecounter(val, withsign = 1)
 				except error:
-					pass
+					if val[0] in '-+':
+						self.syntax_error('%s value starting with sign must be offset value' % attr)
+						continue
 				else:
 					list.append(MMNode.MMSyncArc(node, attr, delay=offset))
-##					node.attrdict['begin'] = offset
 					continue
-				res = syncbase2.match(val)
+				res = offsetvalue.search(val)
 				if res is not None:
-					if not boston:
-						boston = '%s-value' % attr
-					name = res.group('event')
-					if name[:5] == 'prev.':
-						event = name[5:]
-						name = 'prev'
-					elif name[-6:] == '.begin':
-						name = name[:-6]
-						event = 'begin'
-					elif name[-4:] == '.end':
-						name = name[:-4]
-						event = 'end'
-					elif '.' not in name:
-						event = name
-						name = None
-					else:
-						name = string.split(name, '.')
-						if len(name) != 2:
-							self.syntax_error("can't resolve name")
-							continue
-						name, event = name
-					offsetstr = res.group('offset')
-					if offsetstr:
-						offset = self.__parsecounter(offsetstr, withsign = 1)
-					else:
-						offset = 0
-					if name == 'prev':
-						xnode = 'prev'
-					elif name is None:
-						xnode = node
-					else:
-						xnode = self.__nodemap.get(name)
-						if xnode is None:
-							self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
-							continue
-					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=offset))
-					continue
+					offset = self.__parsecounter(res.group(0), withsign = 1)
+					val = string.strip(val[:res.start(0)])
+				else:
+					offset = None
 				res = mediamarker.match(val)
 				if res is not None:
+					if offset is not None:
+						self.syntax_error('no offset allowed with media marker')
+##						continue
 					if not boston:
 						boston = 'marker'
 					name = res.group('id')
@@ -327,10 +303,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 						continue
 					marker = res.group('markername')
-					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=0.0))
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
 					continue
 				res = wallclock.match(val)
 				if res is not None:
+					if offset is not None:
+						self.syntax_error('no offset allowed with media marker')
+##						continue
 					if not boston:
 						boston = 'wallclock time'
 					wc = string.strip(res.group('wallclock'))
@@ -346,9 +325,56 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						tzhr = tzmn = 0
 						tzsg = '+'
 					print 'wallclock',yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn
-##					list.append(MMNode.MMSyncArc(node, attr, wallclock = XXX))
+##					list.append(MMNode.MMSyncArc(node, attr, wallclock = XXX, delay=offset or 0))
 					continue
-				self.syntax_error('unrecognized %s value' % attr)
+				if val[:5] == 'prev.':
+					event = val[5:]
+					name = 'prev'
+				elif len(val) > 6 and \
+				     val[-6:] == '.begin' and \
+				     val[-7] != '\\':
+					name = val[:-6]
+					event = 'begin'
+				elif len(val) > 4 and \
+				     val[-4:] == '.end' and \
+				     val[-5] != '\\':
+					name = val[:-4]
+					event = 'end'
+				else:
+					tokens = string.split(val, '.')
+					for i in range(len(tokens)-2,-1,-1):
+						if tokens[i][-1:] == '\\':
+							tokens[i] = tokens[i][:-1] + '.' + tokens[i+1]
+							del tokens[i+1]
+					if len(tokens) == 1:
+						name = None
+						event = tokens[0]
+					elif len(tokens) == 2:
+						name = tokens[0]
+						event = tokens[1]
+					else:
+						nlist = []
+						for i in range(len(tokens)-1):
+							name = string.join(tokens[:i], '.')
+							event = string.join(tokens[i:], '.')
+							if self.__nodemap.has_key(name):
+								nlist.append((name, event))
+						if len(nlist) == 1:
+							name, event = nlist[0]
+						else:
+							self.syntax_error('ambiguous syncbase definition')
+							continue
+				if name == 'prev':
+					xnode = 'prev'
+				elif name is None:
+					xnode = node
+				else:
+					xnode = self.__nodemap.get(name)
+					if xnode is None:
+						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+						continue
+				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=offset or 0))
+				continue
 		if boston:
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('%s not compatible with SMIL 1.0' % boston)
