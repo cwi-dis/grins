@@ -396,17 +396,19 @@ class MMNode:
 		##_stat('GetParent')
 		return self.parent
 	#
-	def GetRoot(x):
+	def GetRoot(self):
 		##_stat('GetRoot')
 		root = None
+		x = self
 		while x:
 			root = x
 			x = x.parent
 		return root
 	#
-	def GetPath(x):
+	def GetPath(self):
 		##_stat('GetPath')
 		path = []
+		x = self
 		while x:
 			path.append(x)
 			x = x.parent
@@ -489,8 +491,9 @@ class MMNode:
 		except NoSuchAttrError:
 			return default
 	#
-	def GetInherAttr(x, name):
+	def GetInherAttr(self, name):
 		##_stat('GetInherAttr.' + name)
+		x = self
 		while x:
 			if x.attrdict:
 				try:
@@ -720,18 +723,18 @@ class MMNode:
 	#
 	# Check whether a node is the top of a mini-document
 
-	def IsMiniDocument(node):
-		if node.GetType() == 'bag':
+	def IsMiniDocument(self):
+		if self.GetType() == 'bag':
 			return 0
-		parent = node.GetParent()
+		parent = self.GetParent()
 		return parent == None or parent.GetType() == 'bag'
 
 	# Find the first mini-document in a tree
 
-	def FirstMiniDocument(node):
-		if node.GetType() <> 'bag':
-			return node
-		for child in node.GetChildren():
+	def FirstMiniDocument(self):
+		if self.GetType() <> 'bag':
+			return self
+		for child in self.GetChildren():
 			mini = child.FirstMiniDocument()
 			if mini <> None:
 				return mini
@@ -739,11 +742,11 @@ class MMNode:
 
 	# Find the last mini-document in a tree
 
-	def LastMiniDocument(node):
-		if node.GetType() <> 'bag':
-			return node
+	def LastMiniDocument(self):
+		if self.GetType() <> 'bag':
+			return self
 		res = None
-		for child in node.GetChildren():
+		for child in self.GetChildren():
 			mini = child.LastMiniDocument()
 			if mini <> None:
 				res = mini
@@ -752,7 +755,8 @@ class MMNode:
 	# Find the next mini-document in a tree after the given one
 	# Return None if this is the last one
 
-	def NextMiniDocument(node):
+	def NextMiniDocument(self):
+		node = self
 		while 1:
 			parent = node.GetParent()
 			if not parent:
@@ -770,7 +774,8 @@ class MMNode:
 	# Find the previous mini-document in a tree after the given one
 	# Return None if this is the first one
 
-	def PrevMiniDocument(node):
+	def PrevMiniDocument(self):
+		node = self
 		while 1:
 			parent = node.GetParent()
 			if not parent:
@@ -787,7 +792,8 @@ class MMNode:
 	#
 	# Private methods for summary management
 	#
-	def _rmsummaries(x, keep):
+	def _rmsummaries(self, keep):
+		x = self
 		while x:
 			changed = 0
 			for key in x.summaries.keys():
@@ -805,8 +811,9 @@ class MMNode:
 				tofix.remove(key)
 		self._updsummaries(tofix)
 	#
-	def _updsummaries(x, tofix):
+	def _updsummaries(self, tofix):
 		##_stat('_updsummaries')
+		x = self
 		while x and tofix:
 			for key in tofix[:]:
 				if not x.summaries.has_key(key):

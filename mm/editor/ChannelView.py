@@ -394,10 +394,10 @@ class ChannelView(ViewDialog, GLDialog):
 			return
 		self.cleanup()
 		self.viewroot = node
-		self.fixtitle()
 		self.recalc(('b', None))
 		self.setwin()
 		self.reshape()
+		self.fixtitle()
 		self.draw()
 
 	def fixtitle(self):
@@ -412,13 +412,18 @@ class ChannelView(ViewDialog, GLDialog):
 	def initnodes(self, focus):
 		Timing.needtimes(self.viewroot)
 		for c in self.context.channels: c.used = 0
+		self.baseobject.descendants[:] = []
 		self.scantree(self.viewroot, focus)
 		self.usedchannels = []
 		for c in self.context.channels:
 			if c.used: self.usedchannels.append(c)
+		self.addancestors()
+		self.addsiblings()
+		rebuild_menus()
 
 	def scantree(self, node, focus):
-		if node.GetType() in leaftypes:
+		t = node.GetType()
+		if t in leaftypes:
 			channel = node.GetChannel()
 			if channel:
 				channel.used = 1
@@ -426,9 +431,54 @@ class ChannelView(ViewDialog, GLDialog):
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
-		elif node.GetType() <> 'bag':
+		elif t == 'bag':
+			self.scandescendants(node)
+		else:
 			for c in node.GetChildren():
 				self.scantree(c, focus)
+
+	def scandescendants(self, node):
+		for c in node.GetChildren():
+			if c.IsMiniDocument():
+				name = c.GetRawAttrDef('name', '(NoName)')
+				func = make_closure(GO.setviewrootcall, c)
+				tuple = ('', name, func)
+				self.baseobject.descendants.append(tuple)
+			elif c.GetType() == 'bag':
+				self.scandescendants(c)
+			elif c.GetType() in interiortypes:
+				self.scandescendants(c)
+
+	def addancestors(self):
+		self.baseobject.ancestors[:] = []
+		path = self.viewroot.GetPath()
+		for node in path[:-1]:
+			if node.IsMiniDocument():
+				name = node.GetRawAttrDef('name', '(NoName)')
+				func = make_closure(GO.setviewrootcall, node)
+				tuple = ('', name, func)
+				self.baseobject.ancestors.append(tuple)
+
+	def addsiblings(self):
+		self.baseobject.siblings[:] = []
+		parent = self.viewroot.GetParent()
+		if parent:
+			while parent.parent and \
+				  parent.parent.GetType() == 'bag':
+				parent = parent.parent
+			self.scansiblings(parent)
+
+	def scansiblings(self, node):
+		for c in node.GetChildren():
+			if c.IsMiniDocument():
+				name = c.GetRawAttrDef('name', '(NoName)')
+				if c is self.viewroot:
+					name = name + ' (current)'
+				func = make_closure(GO.setviewrootcall, c)
+				tuple = ('', name, func)
+				self.baseobject.siblings.append(tuple)
+			elif c.GetType() == 'bag':
+				self.scansiblings(c)
 
 	# Arc stuff
 
@@ -641,10 +691,19 @@ class GO:
 
 	def toggleshowcall(self):
 		self.mother.toggleshow()
-	
+
+	def setviewrootcall(self, node):
+		self.mother.setviewroot(node)
+
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!
 		return len(self.mother.context.channelnames)
+
+	# Submenus listing related mini-documents
+
+	ancestors = []
+	descendants = []
+	siblings = []
 
 	# Menu and shortcut definitions are stored as data in the class,
 	# since they are the same for all objects of a class...
@@ -654,8 +713,12 @@ class GO:
 	c.append('c', 'New channel...',  newchannelcall)
 	c.append('N', 'Next mini-document', nextminicall)
 	c.append('P', 'Previous mini-document', prevminicall)
-	c.append('T', 'Toggle showing unused channels', toggleshowcall)
-	menu = MenuMaker.MenuObject().init('Base ops', commandlist)
+	c.append('',  'Ancestors', ancestors)
+	c.append('', 'Siblings', siblings)
+	c.append('', 'Descendants', descendants)
+	c.append('T', 'Toggle unused channels', toggleshowcall)
+	menutitle = 'Base ops'
+	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
 
 
 # Class for the time scale object
@@ -919,7 +982,8 @@ class ChannelBox(GO):
 	c.append('i', '', attrcall)
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
-	menu = MenuMaker.MenuObject().init('Channel ops', commandlist)
+	menutitle = 'Channel ops'
+	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
 
 
 class NodeBox(GO):
@@ -1193,7 +1257,8 @@ class NodeBox(GO):
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
 	c.append('s', 'New sync arc...', newsyncarccall)
-	menu = MenuMaker.MenuObject().init('Node ops', commandlist)
+	menutitle = 'Node ops'
+	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
 
 
 class ArcBox(GO):
@@ -1292,4 +1357,26 @@ class ArcBox(GO):
 	c[-1] = char, text + '%l', proc
 	c.append('i', 'Sync arc info...', infocall)
 	c.append('d', 'Delete sync arc',  delcall)
-	menu = MenuMaker.MenuObject().init('Sync arc ops', commandlist)
+	menutitle = 'Sync arc ops'
+	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
+
+# Rebuild all menus (to accomodate changes in entries)
+def rebuild_menus():
+	for cls in GO, ChannelBox, NodeBox, ArcBox:
+		cls.menu.close()
+		cls.menu = MenuMaker.MenuObject().init(cls.menutitle,
+						       cls.commandlist)
+
+# Wrap up a function and some arguments for later calling with fewer
+# arguments.  The arguments given here are passed *after* the
+# arguments given on the call.
+def make_closure(func, *args):
+	return Closure(func, args).call_it
+
+# helper class for make_closure
+class Closure:
+	def __init__(self, func, argstuple):
+		self.func = func
+		self.argstuple = argstuple
+	def call_it(self, *args):
+		return apply(self.func, args + self.argstuple)
