@@ -117,6 +117,13 @@ check = fl.check_forms
 
 # Event dispatcher, installed as FORMS' event callback
 
+dispmap = {}
+def devregister(devval, callback, arg):
+	dispmap[devval] = (callback, arg)
+def undevregister(devval):
+	if dispmap.has_key(devval):
+		dismap.remove(devval)
+
 from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
 from DEVICE import WINSHUT, WINQUIT, MOUSEX, MOUSEY
 
@@ -187,6 +194,9 @@ def dispatch(dev, val):
 			window.winquit()
 		else:
 			report('WINQUIT for unregistered window')
+	elif dispmap.has_key(`dev`+':'+`val`):
+		callback, arg = dispmap[`dev`+':'+`val`]
+		callback(arg)
 	else:
 		report('unrecognized event: ' + `dev, val`)
 
