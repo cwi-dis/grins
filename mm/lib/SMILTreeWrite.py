@@ -103,6 +103,17 @@ def WriteFile(root, filename, cleanSMIL = 0):
 		fss.SetCreatorType('GRIN', 'TEXT')
 		macostools.touched(fss)
 
+import StringIO
+class MyStringIO(StringIO.StringIO):
+	def close(self):
+		pass
+
+def WriteString(root, cleanSMIL = 0):
+	fp = IndentedFile(MyStringIO())
+	writer = SMILWriter(root, fp, '<string>', cleanSMIL)
+	writer.write()
+	return fp.fp.getvalue()
+
 #
 # Functions to encode data items
 #
