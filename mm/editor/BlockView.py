@@ -46,10 +46,13 @@ from ViewDialog import ViewDialog
 # some constants that can be used to expiriment with how the
 # blocks are placed on top of each other.
 #
-XMARG = 10 # left/right margin width
-YMARG = 5 # top/bottom margin width (half as wide)
-BW=6	# the width of the open/close button
-BH=12	# the height of the open/close button
+LMARG = 10 # left margin width
+RMARG = 10 # right margin width
+TMARG = 5 # top margin width (half as wide)
+BMARG = 5 # bottom margin width (half as wide)
+MMARG = 5 # margin between title button and real buttons
+BH=20	# the height of the open/close button and title
+BW=20   # width of open/close button
 
 class BlockView () = ViewDialog(), BasicDialog () :
 	#
@@ -88,7 +91,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.rootview = root
 		self._initcommanddict()
 		self.mkBlockview((0, 0, w,h), root)
-		self.fixlabels ()
 		self.presentlabels(root)
 		self.setfocus(root)
 
@@ -131,21 +133,32 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	
 		kids = node.GetChildren()
 		if type in ('seq','par','grp') and len(kids) > 0:
-			bx = x + (XMARG-BW)/2
-			by = y + h - YMARG - BH
+			# Create the open/close button:
+			bx = x + LMARG
+			by = y + h - TMARG - BH
 			o=self.form.add_button(NORMAL_BUTTON,bx,by,BW,BH,'')
-			o.boxtype = BORDER_BOX
+			o.boxtype = DOWN_BOX
 			o.set_call_back(self._openclose_callback, node)
-			o.col1, o.col2 = GL.GREEN, GL.RED
+			o.col2 = GL.RED
+			o.set_button(0)
 			node.bv_openclose	= o
-
+			# Create the title text:
+			bx = x + LMARG + BW
+			by = y + h - TMARG - BH
+			bw = w - LMARG - RMARG - BW
+			o = self.form.add_text(NORMAL_TEXT, bx, by, bw, BH, '')
+			o.align = ALIGN_CENTER
+			node.bv_labeltext = o
+			# Create childrens' boxes
+			h = h - MMARG - BH
 			if type in ('grp', 'seq') :
 				h = h / len(kids)
 				dx, dy = 0, h
 			else: 				 # parallel node
 				w = w / len(kids)
 				dx, dy = w, 0
-			x,y,w,h = x+XMARG,y+YMARG,w-2*XMARG,h-2*YMARG
+			x,y = x+LMARG,y+BMARG
+			w,h = w-LMARG-RMARG,h-TMARG-BMARG
 			num = 1
 			if node.GetType() = 'seq':
 				kids = kids[:]
@@ -162,36 +175,20 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		if node.GetType () in ('seq', 'par', 'grp'):
 			node.bv_openclose.hide_object ()	# rm_object()
 			del node.bv_openclose
+			node.bv_labeltext.hide_object()
+			del node.bv_labeltext
 		node.bv_obj.hide_object ()	# should be rm_object()
 		del node.bv_obj
 		for child in node.GetChildren () :
 			self.rmBlockview (child)
 	#
-	# fixlabels : sets the labels of the complete tree
-	# should be called after any structural mutation.
-	#
-	def fixlabels (self) :
-		self._fixlabels (self.root, '')
-	#
-	# _fixlabels : rucrsivley sets the labels
-	#
-	def _fixlabels (self, (node, label)) :
-		node.bv_label = label
-		num = 1
-		for child in node.GetChildren () :
-			if label = '' :
-				labelc = `num`
-			else :
-				labelc = label + '.' + `num`
-			num = num + 1
-			self._fixlabels (child, labelc)
-	#
 	# presentlabels : sets the appropiate labels in the FORMS object.
 	#
 	def presentlabels (self, node) :
-		if node.bv_OC = 0 or len(node.GetChildren ()) = 0 :
-			node.bv_obj.label = node.bv_label
+		if len(node.GetChildren ()) = 0 :
+			node.bv_obj.label = MMAttrdefs.getattr(node, 'name')
 			return
+		node.bv_labeltext.label = MMAttrdefs.getattr(node, 'name')
 		node.bv_obj.label = ''
 		num = 1
 		for child in node.GetChildren () :
@@ -259,6 +256,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self._openclose (node, node.bv_OC)	# recursive
 		node.bv_obj.show_object ()		# show this node
 		node.bv_openclose.show_object ()	# show roundbutton
+		node.bv_labeltext.show_object()
 		self.presentlabels (node)
 
 		node.bv_form.unfreeze_form ()		
@@ -268,11 +266,13 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			node.bv_obj.show_object ()
 			if node.GetType () in ('seq', 'par', 'grp') :
 				node.bv_openclose.show_object ()
+				node.bv_labeltext.show_object ()
 				if node.bv_OC = 0 : return
 		else :
 			node.bv_obj.hide_object ()
 			if node.GetType () in ('seq', 'par', 'grp') :
 				node.bv_openclose.hide_object ()
+				node.bv_labeltext.hide_object ()
 		
 		for child in node.GetChildren () :
 			self._openclose (child, toggle)
@@ -319,7 +319,6 @@ def deleteNode (bv) :
 	node.Destroy ()
 	#
 	bv.mkBlockview((x, y,w,h),parent)
-	bv.fixlabels ()
 	bv.presentlabels (parent)
 	bv.setfocus(parent)
 	#
@@ -371,7 +370,6 @@ def rotatefunc (bv) :
 	bv.rmBlockview (parent)		# get rid of all FORMS objects
 	#
 	bv.mkBlockview((x, y, w, h), parent)
-	bv.fixlabels ()
 	bv.presentlabels (parent)
 	bv.setfocus(node)
 	bv.form.unfreeze_form ()
@@ -404,7 +402,6 @@ def addSequential (bv) :
 		node.SetType('seq')
 		#
 		bv.mkBlockview((x, y, w, h), node)
-		bv.fixlabels ()
 		bv.presentlabels (node)
 		bv.setfocus(node)
 		bv.form.unfreeze_form ()
@@ -414,7 +411,6 @@ def addSequential (bv) :
 		child = addChild(node)
 		#
 		bv.mkBlockview((x, y, w, h),node)
-		bv.fixlabels ()
 		bv.presentlabels (node)
 		bv.setfocus(child)
 		bv.form.unfreeze_form ()
@@ -436,7 +432,6 @@ def addSequential (bv) :
 		child = addChild (seq)
 		#
 		bv.mkBlockview((x, y, w, h), seq)
-		bv.fixlabels ()
 		bv.presentlabels (seq)
 		bv.setfocus(child)
 		bv.form.unfreeze_form ()
@@ -479,7 +474,6 @@ def addParallel (bv) :
 		child = addChild(node)
 		#
 		bv.mkBlockview((x, y, w, h), node)
-		bv.fixlabels ()
 		bv.presentlabels (node)
 		bv.setfocus(child)
 		bv.form.unfreeze_form ()
@@ -501,7 +495,6 @@ def addParallel (bv) :
 		child = addChild (par)
 		#
 		bv.mkBlockview((x, y, w, h), par)
-		bv.fixlabels ()
 		bv.presentlabels (parent)
 		bv.setfocus(child)
 		bv.form.unfreeze_form ()
@@ -516,7 +509,6 @@ def unzoomfunc (bv) :
 	bv.rmBlockview (bv.rootview)		# get rid of all FORMS objects
 	#
 	bv.mkBlockview((0, 0, bv.w, bv.h), bv.rootview.GetParent())
-	bv.fixlabels ()
 	bv.presentlabels (bv.rootview.GetParent())
 	bv.setfocus(bv.focus)
 	bv.form.unfreeze_form ()
