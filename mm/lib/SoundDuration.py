@@ -9,7 +9,7 @@ def getfullinfo(filename):
 		a = audio.reader(filename)
 	except (audio.Error, IOError), msg:
 		print 'error in sound file', filename, ':', msg
-		return f, 1, 0, 1, 8000, 'error', []
+		return 0, 8000, []
 	return a.getnframes(), a.getframerate(), a.getmarkers()
 
 import FileCache
