@@ -60,11 +60,23 @@ class FullPopupMenu:
 		self._themenu = None
 		
 	def _fill_menu(self, menu, list, accelerators):
+		self.toggle_values = []
+		self.toggle_entries = []
 		for item in list:
 			if item is None:
 				menu.addseparator()
 			else:
-				if len(item) == 3:
+				is_toggle_item = 0
+				if len(item) > 3:
+					char, itemstring, callback, tp = item[:4]
+					if tp == 't':
+						is_toggle_item = 1
+						callback = (self.toggle_callback, (len(self.toggle_values), callback))
+						if len(item) > 4:
+							self.toggle_values.append(item[4])
+						else:
+							self.toggle_values.append(0)
+				elif len(item) == 3:
 					char, itemstring, callback = item
 				else:
 					itemstring, callback = item
@@ -79,6 +91,14 @@ class FullPopupMenu:
 						accelerators[char] = callback
 						# We abuse the mark position for the shortcut (sigh...)
 						m.setmark(ord(char))
+					if is_toggle_item:
+						self.toggle_entries.append(m)
+						m.check(self.toggle_values[-1])
+						
+	def toggle_callback(self, index, (cbfunc, cbargs)):
+		self.toggle_values[index] = not self.toggle_values[index]
+		self.toggle_entries[index].check(self.toggle_values[index])
+		apply(cbfunc, cbargs)
 						
 	def popup(self, x, y, event, window=None):
 		self._themenu.popup(x, y, event, window=window)
@@ -275,7 +295,7 @@ class _Event:
 	def _handle_activate_event(self, event):
 		what, message, when, where, modifiers = event
 		wid = Win.WhichWindow(message)
-		print 'DBG activate', wid, event
+##		print 'DBG activate', wid, event
 		if not wid:
 			self._install_window_commands(None)
 			MacOS.HandleEvent(event)
@@ -293,7 +313,7 @@ class _Event:
 		if not (modifiers &1):
 			wid = Win.FrontWindow()
 			ourwin = self._find_wid(wid)
-			print 'DBG extra activate', ourwin
+##			print 'DBG extra activate', ourwin
 			if ourwin:
 				self._activate_ours(ourwin, 1)
 				
@@ -540,7 +560,7 @@ class _Toplevel(_Event):
 		names = []
 		current = None
 		front_wid = Win.FrontWindow()
-		for win in self._subwindows:
+		for win in self._wid_to_window.values():
 			if win._title == None:
 				# These are dialogs which aren't open yet
 				continue
@@ -570,7 +590,7 @@ class _Toplevel(_Event):
 		for win in self._subwindows:
 			if win.window_group == group:
 				if win._title:
-					print 'pop', win
+##					print 'pop', win
 					win.pop()
 					any_popped = 1
 				else:
@@ -684,6 +704,7 @@ class _Toplevel(_Event):
 		window = self._wid_to_window[wid]
 		window.window_group = None
 		self.needmenubarrecalc = 1
+		self._command_handler.must_update_window_menu = 1
 		del self._wid_to_window[wid]
 		
 	def _find_wid(self, wid):
@@ -743,7 +764,7 @@ class _WindowGroup:
 		self._title = title
 		self._cmds_toggled = {}
 		self.set_commandlist(cmdlist)
-		print 'NEW WINDOWGROUP', self
+##		print 'NEW WINDOWGROUP', self
 		
 	def __repr__(self):
 		return '<WindowGroup %s>'%self._title
@@ -753,7 +774,7 @@ class _WindowGroup:
 		toplevel._changed_group_commands() # XXXX Is this good enough?
 		
 	def close(self):
-		print 'CLOSEGROUP', self
+##		print 'CLOSEGROUP', self
 		toplevel._close_windowgroup(self)
 		del self.cmd_callback_dict
 		del self._commandlist
@@ -762,6 +783,9 @@ class _WindowGroup:
 		cmd = self._commandlist[number]
 ##		print 'SETBUTTON', self, number, cmd, onoff
 		self.set_cmd_toggle(cmd, onoff)
+		
+	def create_menu(self, menu, title):
+		pass
 		
 	def set_cmd_toggle(self, cmd, onoff):
 		self._cmds_toggled[cmd] = onoff
@@ -2001,7 +2025,7 @@ class _SpecialMenu:
 			# If the list isn't the same we have to modify it
 			if list[:len(self.items)] != self.items:
 				# And if the old list isn't a prefix we start from scratch
-				print 'zap menu'
+##				print 'zap menu'
 				self.menus.reverse()
 				for m in self.menus:
 					m.delete()
@@ -2018,6 +2042,7 @@ class _SpecialMenu:
 			if cur != None:
 				self.menus[cur].check(1)
 			self.cur = cur
+		self.menu.enable(not not self.items)
 			
 ##	def callback(self, item):
 ##		print 'CALLBACK', self.title, item
@@ -2040,7 +2065,7 @@ class CommandHandler:
 		self.window_menu = _SpecialMenu('Windows', toplevel._pop_window)
 			
 	def install_cmd(self, number, group):
-		print 'INSTALL', number, group
+##		print 'INSTALL', number, group
 		if self.all_cmd_groups[number] == group:
 			return 0
 		self.all_cmd_groups[number] = group
@@ -2145,7 +2170,7 @@ class CommandHandler:
 		return any_active
 
 	def update_menus(self):
-		print "UPDATE MENUS:", self.all_cmd_groups
+##		print "UPDATE MENUS:", self.all_cmd_groups
 ##		for cmd, mentry in self.cmd_to_menu.items():
 ##			must_be_enabled = (not not self.find_command(cmd))
 ##			if must_be_enabled != self.cmd_enabled[cmd]:
@@ -2161,12 +2186,12 @@ class CommandHandler:
 				
 	def update_window_menu(self):
 		list, cur = toplevel._get_window_names()
-		print 'UPDATE WINDOW MENU', list, cur
+##		print 'UPDATE WINDOW MENU', list, cur
 		self.window_menu.set(list, cur)
 		
 	def update_document_menu(self):
 		list, cur = toplevel._get_group_names()
-		print 'UPDATE DOCUMENT MENU', list, cur
+##		print 'UPDATE DOCUMENT MENU', list, cur
 		self.document_menu.set(list, cur)
 		
 def multchoice(prompt, list, defindex):
