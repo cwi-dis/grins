@@ -39,7 +39,7 @@ seterror(const char *funcname, HRESULT hr)
 }
 
 
-/* Declarations for objects of type MMStream */
+/* Declarations for objects of type GraphBuilder */
 
 typedef struct {
 	PyObject_HEAD
@@ -62,6 +62,8 @@ newGraphBuilderObject()
 	return self;
 }
 
+
+
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
@@ -82,6 +84,8 @@ newBaseFilterObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
+
+
 
 typedef struct {
 	PyObject_HEAD
@@ -106,6 +110,27 @@ newPinObject()
 
 
 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IFileSinkFilter* pFilter;
+} FileSinkFilterObject;
+
+staticforward PyTypeObject FileSinkFilterType;
+
+
+static FileSinkFilterObject *
+newFileSinkFilterObject()
+{
+	FileSinkFilterObject *self;
+
+	self = PyObject_NEW(FileSinkFilterObject, &FileSinkFilterType);
+	if (self == NULL)
+		return NULL;
+	self->pFilter = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
 
 ////////////////////////////////////////////////////
 
@@ -159,10 +184,31 @@ GraphBuilder_AddFilter(GraphBuilderObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char GraphBuilder_Render__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_Render(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	PinObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
+		return NULL;
+	res = self->pGraphBuilder->Render(obj->pPin);
+	if (FAILED(res)) {
+		seterror("GraphBuilder_Render", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 
 static struct PyMethodDef GraphBuilder_methods[] = {
 	{"AddSourceFilter", (PyCFunction)GraphBuilder_AddSourceFilter, METH_VARARGS, GraphBuilder_AddSourceFilter__doc__},
 	{"AddFilter", (PyCFunction)GraphBuilder_AddFilter, METH_VARARGS, GraphBuilder_AddFilter__doc__},
+	{"Render", (PyCFunction)GraphBuilder_Render, METH_VARARGS, GraphBuilder_Render__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -239,8 +285,32 @@ BaseFilter_FindPin(BaseFilterObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+
+static char BaseFilter_QueryIFileSinkFilter__doc__[] =
+""
+;
+
+static PyObject *
+BaseFilter_QueryIFileSinkFilter(BaseFilterObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	FileSinkFilterObject *obj = newFileSinkFilterObject();
+	res = self->pFilter->QueryInterface(IID_IFileSinkFilter,(void**)&obj->pFilter);;
+	if (FAILED(res)) {
+		seterror("BaseFilter_QueryIFileSinkFilter", res);
+		Py_DECREF(obj);
+		obj->pFilter=NULL;
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 static struct PyMethodDef BaseFilter_methods[] = {
 	{"FindPin", (PyCFunction)BaseFilter_FindPin, METH_VARARGS, BaseFilter_FindPin__doc__},
+	{"QueryIFileSinkFilter", (PyCFunction)BaseFilter_QueryIFileSinkFilter, METH_VARARGS, BaseFilter_QueryIFileSinkFilter__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -340,6 +410,85 @@ static PyTypeObject PinType = {
 };
 
 // End of code for Pin object 
+////////////////////////////////////////////
+
+/////////////////////////////////////////////
+// FileSinkFilter
+
+
+static char FileSinkFilter_SetFileName__doc__[] =
+""
+;
+
+static PyObject *
+FileSinkFilter_SetFileName(FileSinkFilterObject *self, PyObject *args)
+{
+	HRESULT res;
+	char *psz;
+	AM_MEDIA_TYPE *pmt=NULL;
+	if (!PyArg_ParseTuple(args, "s", &psz))
+		return NULL;
+	WCHAR wsz[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	res = self->pFilter->SetFileName(wsz,pmt);
+	if (FAILED(res)) {
+		seterror("FileSinkFilter_SetFileName", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef FileSinkFilter_methods[] = {
+	{"SetFileName", (PyCFunction)FileSinkFilter_SetFileName, METH_VARARGS, FileSinkFilter_SetFileName__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+FileSinkFilter_dealloc(FileSinkFilterObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pFilter);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+FileSinkFilter_getattr(FileSinkFilterObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(FileSinkFilter_methods, (PyObject *)self, name);
+}
+
+static char FileSinkFilterType__doc__[] =
+""
+;
+
+static PyTypeObject FileSinkFilterType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"FileSinkFilter",			/*tp_name*/
+	sizeof(FileSinkFilterObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)FileSinkFilter_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)FileSinkFilter_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	FileSinkFilterType__doc__ /* Documentation string */
+};
+
+// End of FileSinkFilter
 ////////////////////////////////////////////
 
 //
