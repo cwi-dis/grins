@@ -782,11 +782,13 @@ class MMSyncArc:
 			refnode = self.srcnode
 		return refnode
 
-	def isresolved(self):
+	def isresolved(self, timefunc):
 		if self.delay is None:
 			return 0
 		if self.wallclock is not None:
-			return 1
+			if timefunc is not None:
+				return 1
+			return 0
 		refnode = self.refnode()
 		if self.event is None and self.marker is None:
 			return 1
@@ -845,6 +847,8 @@ class MMSyncArc:
 				
 		refnode = self.refnode()
 		if self.event == 'begin':
+			if refnode.start_time is None:
+				return refnode.isresolved() + self.delay
 			return refnode.start_time + self.delay
 		if self.event is not None:
 			return refnode.happenings[('event', self.event)] + self.delay
@@ -858,7 +862,8 @@ class MMSyncArc:
 		else:
 			# self is first child of seq, or child
 			# of par/excl, so event is begin
-			event = 'begin'
+			if refnode.start_time is None:
+				return refnode.isresolved() + self.delay
 			return refnode.start_time + self.delay
 		return refnode.happenings[('event', event)] + self.delay
 			
@@ -1858,16 +1863,20 @@ class MMNode:
 				for c in pnode.GetSchedChildren():
 					if c is self:
 						return val
-					e, maybecached = c.__calcendtime()
+					e, maybecached = c.__calcendtime(val)
 					if e is None or e < 0:
 						return None
 					val = val + e
 				raise RuntimeError('cannot happen')
 			return presolved
 		min = None
+		if self.sctx is not None:
+			timefunc = self.sctx.parent.timefunc
+		else:
+			timefunc = None
 		for arc in beginlist:
-			if arc.isresolved():
-				v = arc.resolvedtime()
+			if arc.isresolved(timefunc):
+				v = arc.resolvedtime(timefunc)
 				if min is None or v < min:
 					min = v
 		if min is None:
@@ -2267,7 +2276,7 @@ class MMNode:
 				delay = duration
 			arc = MMSyncArc(self_body, 'end', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
-			self_body.arcs.append((self_body, arc))
+##			self_body.arcs.append((self_body, arc))
 			self_body.add_arc(arc)
 
 		for child in wtd_children:
@@ -2312,7 +2321,7 @@ class MMNode:
 					delay = cdur
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
-				self_body.arcs.append((child, arc))
+##				self_body.arcs.append((child, arc))
 				child.add_arc(arc)
 			min = child.GetAttrDef('min', 0)
 			if min > 0:
@@ -2442,7 +2451,7 @@ class MMNode:
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
-	def __calcendtime(self, t0 = None):
+	def __calcendtime(self, syncbase, t0 = None):
 		# returns:
 		#	None - no resolved begin
 		#	-1 - resolved begin, no resolved end
@@ -2453,20 +2462,25 @@ class MMNode:
 			return None, 0	# break recursion
 		start = None
 		beginlist = MMAttrdefs.getattr(self, 'beginlist')
+		pnode = self.GetSchedParent()
 		if not beginlist:
-			if self.GetSchedParent().type == 'excl':
+			if pnode.type == 'excl':
 				return None, 1
 			start = 0
 			maybecached = 1
 		else:
 			self.__calcendtimecalled = 1
 			maybecached = 1
+			if self.sctx is not None:
+				timefunc = self.sctx.parent.timefunc
+			else:
+				timefunc = None
 			for a in beginlist:
 				t = None
 				if a.event is not None or a.marker is not None or a.wallclock is not None:
 					maybecached = 0
-				if a.isresolved() and self.start_time is not None:
-					t = a.resolvedtime() - self.start_time
+				if a.isresolved(timefunc) and self.start_time is not None:
+					t = a.resolvedtime(timefunc) - self.start_time
 				elif a.event == 'begin' or a.event == 'end':
 					n = a.refnode()
 					t0 = n.isresolved()
@@ -2480,12 +2494,12 @@ class MMNode:
 					else:
 						t = t0
 					if t is not None:
-						t = t + a.delay - self.start_time
-				elif a.event is not None or a.marker is not None:
+						if syncbase is not None:
+							t = t + a.delay - syncbase
+						else:
+							t = None
+				elif a.event is not None or a.marker is not None or a.wallclock is not None:
 					continue
-				elif a.wallclock is not None:
-					if self.start_time is not None:
-						t = a.resolvedtime(node.sctx.parent.timefunc) - self.start_time
 				elif a.delay is not None:
 					t = a.delay
 				if t is None:
@@ -2508,7 +2522,7 @@ class MMNode:
 		end = start + d
 		if end < 0:
 			# find next one
-			return self.__calcendtime(end)
+			return self.__calcendtime(syncbase, end)
 		return end, maybecached
 
 	def __calcduration(self):
@@ -2519,16 +2533,17 @@ class MMNode:
 			import Duration
 			return Duration.get(self, ignoreloop=1), maybecached
 		else:
+			syncbase = self.isresolved()
 			if self.type in ('par', 'excl'):
 				termtype = MMAttrdefs.getattr(self, 'terminator')
 				if termtype not in ('LAST', 'FIRST', 'ALL'):
 					for c in self.GetSchedChildren():
 						if MMAttrdefs.getattr(c, 'name') == termtype:
-							return c.__calcendtime()
+							return c.__calcendtime(syncbase)
 					termtype = 'LAST' # fallback
 				val = -1
 				for c in self.GetSchedChildren():
-					e, mc = c.__calcendtime()
+					e, mc = c.__calcendtime(syncbase)
 					if not mc:
 						maybecached = 0
 					if termtype == 'FIRST':
@@ -2554,12 +2569,14 @@ class MMNode:
 			if self.type == 'seq':
 				val = 0
 				for c in self.GetSchedChildren():
-					e, mc = c.__calcendtime()
+					e, mc = c.__calcendtime(syncbase)
 					if not mc:
 						maybecached = 0
 					if e is None or e < 0:
 						return -1, maybecached
 					val = val + e
+					if syncbase is not None:
+						syncbase = syncbase + e
 				return val, maybecached
 			if self.type == 'alt':
 				c = self.ChosenSwitchChild()
