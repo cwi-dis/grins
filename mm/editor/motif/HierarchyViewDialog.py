@@ -196,3 +196,9 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setpopup(self, template):
 		self.window.setpopupmenu(template, curflags())
+
+	def getparentwindow(self):
+		# Used by machine-independent code to pass as parent
+		# parameter to dialogs
+		##return self.window
+		return self.window

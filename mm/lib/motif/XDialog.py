@@ -548,8 +548,9 @@ class InputDialog:
 		return self._main is None
 
 class BandwidthComputeDialog:
-	def __init__(self, title):
+	def __init__(self, title, parent = None):
 		self.title = title
+		self.parent = parent
 
 	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
 		self.msg = "%s\nPreroll time: %d\nStall time: %d\nStalling node count: %d\n" % \
@@ -558,9 +559,9 @@ class BandwidthComputeDialog:
 	def done(self, callback=None, cancancel=0):
 		if cancancel:
 			from windowinterface import showquestion
-			rv = showquestion(self.msg+'\nDo you want to continue?')
+			rv = showquestion(self.msg+'\nDo you want to continue?', parent = self.parent)
 		else:
-			showmessage(self.msg)
+			showmessage(self.msg, parent = self.parent)
 			rv = 1
 		if rv and callback:
 			callback()
