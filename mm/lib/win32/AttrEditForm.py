@@ -1388,12 +1388,23 @@ class EventCtrl(AttrCtrl):
 		#return (self._node, self._value)
 
 	def settooltips(self,tooltipctrl):
-		pass
-		#help = self.gethelp()
-		#for i in [0,1,2,3]:
-		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i]), help, None, 0)
-		#for i in range(self._nedit):
-		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
+		g = grinsRC
+		tooltips = {
+			g.IDC_EVENTLIST: 'Lists the begin or end conditions for this node.',
+			g.IDC_NEWBUTTON: 'Add a new condition for this node to begin or end', # begin or end.. hmm.
+			g.IDC_DELETEBUTTON: 'Remove a condition for this node to begin or end',
+			g.IDC_EVENTTYPE: 'Sets the type of this event',
+			g.IDC_EDITOFFSET: 'Sets the delay on this node',
+			g.IDC_RDELAY: 'This event fires after the delay',
+			g.IDC_RNODE: 'This event fires relative to the start or end of another node',
+			g.IDC_RLAYOUT: 'This event fires to something which happens with a region',
+			g.IDC_RINDEFINITE: 'This event never fires.\nIf this is the only event, the node will either never start or never end',
+			g.IDC_RACCESSKEY: 'This event fires when the user presses the specified key on the keyboard.',
+			g.IDC_RWALLCLOCK: 'This event fires at a certain time of day.',
+			}
+
+		for idc, desc in tooltips.items():
+			tooltipctrl.AddTool(self._wnd.GetDlgItem(idc), desc, None, 0)
 
 	def clear_radiobuttons(self):
 		# Yes, this is a hack. The radio buttons wouldn't behave so I'm using brute force.
