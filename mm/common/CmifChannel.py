@@ -13,7 +13,7 @@ class CmifChannel(Channel):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.stopped = 0
-	
+
 	def do_arm(self, node, same = 0):
 		try:
 			cmds = self.getstring(node)
