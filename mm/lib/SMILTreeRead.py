@@ -408,9 +408,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if mtype is not None:
 			mtype = string.split(mtype, '/')
-			if mediatype is not None and mtype[0]!=mediatype and \
-			   (mediatype[:5]!='cmif_' or mtype!=['text','plain']):
-				self.warning("file type doesn't match element", self.lineno)
+##			if mediatype is not None and mtype[0]!=mediatype and \
+##			   (mediatype[:5]!='cmif_' or mtype!=['text','plain']):
+##				self.warning("file type doesn't match element", self.lineno)
 			if mediatype is None or mediatype[:5] != 'cmif_':
 				mediatype = mtype[0]
 				subtype = mtype[1]
@@ -647,6 +647,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 		try:
 			root.__size = child.__size
+		except AttributeError:
+			pass
+		try:
+			root.__chantype = child.__chantype
 		except AttributeError:
 			pass
 		root.__anchorlist = child.__anchorlist
