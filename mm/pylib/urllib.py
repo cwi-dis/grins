@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Open an arbitrary URL
 #
 # See the following document for a tentative description of URLs:
