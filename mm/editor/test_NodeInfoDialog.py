@@ -10,6 +10,7 @@ if os.name == 'posix':
 elif os.name == 'mac':
 	sys.path.append("::lib")
 # etc...
+import MMTypes
 
 
 from NodeInfoDialog import NodeInfoDialog
@@ -18,7 +19,7 @@ class NodeInfoTest(NodeInfoDialog):
 	__channels = ['channel 1', 'channel 2', 'channel 3',
 		      'channel with a long name',
 		      'channel with an even longer name']
-	__types = ['imm', 'ext', 'par', 'seq', 'bag']
+	__types = MMTypes.alltypes
 
 	def __init__(self):
 		NodeInfoDialog.__init__(self, 'NodeInfo test',
