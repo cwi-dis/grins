@@ -53,9 +53,8 @@ def between(v, x0, x1):
 
 class TextWindow(ChannelWindow):
 	#
-	def init(self, (title, attrdict, ch)):
-		self = ChannelWindow.init(self, title, attrdict)
-		self.channel = ch
+	def init(self, (name, attrdict, channel)):
+		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.text = [] # Initially, display no text
 		self.node = None
 		self.vobj = None
@@ -84,12 +83,15 @@ class TextWindow(ChannelWindow):
 			return
 		self.resetfont()
 		ChannelWindow.show(self)
-		fl.qdevice(DEVICE.MOUSE3)
+		fl.qdevice(DEVICE.LEFTMOUSE)
 		# Clear it immediately (looks better)
 		gl.RGBcolor(self.bgcolor)
 		gl.clear()
 	#
 	def mouse(self, (dev, val)):
+		if dev == DEVICE.RIGHTMOUSE:
+			ChannelWindow.mouse(self, (dev, val))
+			return
 		if self.node == None:
 			gl.ringbell()
 			return
@@ -98,7 +100,7 @@ class TextWindow(ChannelWindow):
 		mx, my = int(mx), int(my)
 		if self.setanchor:
 			# We're not playing, we're defining anchors
-			if dev <> DEVICE.MOUSE3:
+			if dev <> DEVICE.LEFTMOUSE:
 				gl.ringbell()
 				return
 			if val == 1:
@@ -109,7 +111,7 @@ class TextWindow(ChannelWindow):
 					  [self.pm[0], self.pm[1], mx, my])
 				self.redraw()
 			return
-		if (dev, val) <> (DEVICE.MOUSE3, 0):
+		if (dev, val) <> (DEVICE.LEFTMOUSE, 0):
 			return
 		if not self.anchors:
 			print 'mouse: no anchors on this node'

@@ -53,8 +53,7 @@ def _do_convert(node, fn):	# Convert imm node to ext
 
 #
 # This class handles the dialog that asks for the file name to convert
-# to. It needs a bit of work, since it is modal but doesn't lock out
-# events for other forms at the moemnt.
+# to.
 # Usage: call init() to create everything and work() to do the dialog.
 #
 class _convert_dialog:
@@ -72,6 +71,7 @@ class _convert_dialog:
 	self.input_filename.set_input_return(1)
 	return self
     def work(self):
+	fl.deactivate_all_forms()
 	self.form.show_form(PLACE_MOUSE,FALSE,'')
 	try:
 	    while 1:
@@ -79,6 +79,7 @@ class _convert_dialog:
 	except formdone:
 	    pass
 	self.form.hide_form()
+	fl.activate_all_forms()
 	return self.doconvert
     def callback_input(self,dummy):
 	if self.err_groupshown:
@@ -133,26 +134,15 @@ def _getchtype(node):	# Get channel type for given node
 	raise _LocalError
 
 def _showmenu(menu):	# Show (modal) editor choice dialog
-    nkeys = len(menu)+1
-    form = fl.make_form(NO_BOX,130,nkeys*30+10)
-    void = form.add_box(UP_BOX,0,0,130,nkeys*30+10,'')
-    cancel = form.add_button(RETURN_BUTTON,5,5,120,30,'Cancel')
-    cancel.boxtype = FRAME_BOX
-    pos = 35
     keys = menu.keys()
     keys.sort()
-    for i in keys:
-	obj = form.add_button(NORMAL_BUTTON,5,pos,120,30,i)
-	obj.boxtype = FRAME_BOX
-	pos = pos + 30
-    form.show_form(PLACE_MOUSE,0,'')
-    obj = fl.do_forms()
-    choice = obj.label
-    if menu.has_key(choice):
-	return menu[choice]
+    keys.append('Cancel')
+    import multchoice
+    i = multchoice.multchoice('', keys, len(keys)-1)
+    if 0 <= i < len(keys)-1:
+	return menu[keys[i]]
     else:
 	return None
-
 
 # InitEditors - Initialize the module.
 def InitEditors():

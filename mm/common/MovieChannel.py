@@ -36,8 +36,8 @@ class MovieWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
-	def init(self, (title, attrdict)):
-		self = ChannelWindow.init(self, title, attrdict)
+	def init(self, (name, attrdict, channel)):
+		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.clear()
 		return self
 	#
@@ -84,6 +84,7 @@ class MovieWindow(ChannelWindow):
 	#
 	def setfile(self, (filename, node)):
 		#self.clear()
+		self.vfile = None
 		try:
 			self.vfile = VFile.VinFile().init(filename)
 			self.vfile.warmcache()
@@ -105,7 +106,8 @@ class MovieWindow(ChannelWindow):
 	def popup(self):
 		if gl.windepth(self.wid) <> 1:
 			self.pop()
-			self.vfile.initcolormap()
+			if self.vfile:
+				self.vfile.initcolormap()
 	#
 	def centerimage(self):
 		w, h = self.vfile.width, self.vfile.height
@@ -156,7 +158,7 @@ class MovieChannel(Channel):
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)
-		self.window = MovieWindow().init(name, attrdict)
+		self.window = MovieWindow().init(name, attrdict, self)
 		self.armed_node = None
 		return self
 	#

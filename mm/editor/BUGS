@@ -5,15 +5,6 @@
 
 ------------------------------ BUGS -------------------------------
 
-player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
-playing node w/o channel (hard to reproduce?)
-
-channel view: the font still isn't set right when selecting an object
-
-block view: sometimes the outermost box size is calculated wrong and
-part of the window remains unused.  (Hard to reproduce; usually after
-heavy inserting / deleting of nodes and/or zooming in/out?)
-
 node/channel attr editors: when clicking OK, if the window size
 changes (because the list of defined attributes changes), the new
 window pops up for a nanosecond and then disappears again
@@ -22,14 +13,31 @@ Player: playing multiple nodes in parallel on the same channel causes
 crashes or generally weird behaviour (each channel should protect
 itself against this!)
 
+Do garbage collection of windows, esp. forms (or DGL runs out eventually...)
+
+--------------------- UNSOLVED MISTERIES --------------------------
+
+block view: sometimes the outermost box size is calculated wrong and
+part of the window remains unused.  (Hard to reproduce; usually after
+heavy inserting / deleting of nodes and/or zooming in/out?)
+
+player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
+playing node w/o channel (hard to reproduce?)
+
 FORMS: When one FORM is iconified, *after a while* all events are
-queued but not acted upon so the program hangs.  Is this a standard
+queued, but not acted upon, so the program hangs.  Is this a standard
 FORMS bug or do I do something wrong with handling GL events?  (Not
 reproducible in very simple prog?)
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
------------------------------- JAMMER MAAR HELAAS -----------------
+still occasional problems with the font manager?  (should slowly be
+fixed in 4.0.2+).
+
+toplevel: sometimes complaint about unknown command when clicking in
+toplevel menu while things are busy?
+
+------------------------------ TOO BAD ----------------------------
 
 block view: resize behavior is weird (menu bar height changes)
 
@@ -38,11 +46,55 @@ block view: resize behavior is weird (menu bar height changes)
 Timing: takes ages -- why?  [sped up ~30% by caching getduration in
 sound & movie channel]
 
-movie channel: loading colormap takes ages
+sound channel: arm seems slow?
 
------------------------------- PROJECT MANAGEMENT -----------------
+movie channel: loading colormap (& other things done at arm time)
+takes ages
 
-general: perhaps use CVS for project management
+------------------------------ FEATURES ---------------------------
+
+channel view: want to cut and paste channels
+
+channel view: need to warn if a channel with nodes is deleted
+
+player: need "keep" attribute (default 0?) to keep a node on the
+screen after its time is up
+
+channel view: use a modal pop-up menu when creating a new channel
+
+add an action menu to nodes (active only in stopped mode)
+
+------------------------------ NITS -------------------------------
+
+block & channel view: use channel colors instead of default (gray)?
+
+hyperjumps are confusing because of the long wait between the clearing
+of the windows and the appearance of new data
+
+attr edit: choose different ways of presenting/editing different types
+
+node info: could use a 'convert to ext' button for imm text nodes.
+
+block & channel views: show only 'info' in menu, but support shortcuts
+for attributes and anchors (?)
+
+Player: "late" display keeps old value during initialization.
+
+arc editor: need a text box to specify the delay as well
+
+channel view: settings of new sync arc can be copied from last created
+or edited one?
+
+general: need a template for a simple e-mail document
+
+player: when playing a subtree, should make sure that at least one
+ 	of the channels it uses is on?
+
+-------------------------- EXAMPLES -------------------------------
+
+VanGogh demo: move data to subdirectory.
+
+--------------------------- PROJECT MANAGEMENT --------------------
 
 -------------------------- LYNDA'S NOTES --------------------------
 
@@ -58,10 +110,11 @@ general: perhaps use CVS for project management
      which are always there.)
 
 *    It would be nice to see, in the Hierarchy window, which nodes have their
-     time explicitly defined.  However, there are perhaps more things which
+     time explicitly defined.  [first part is fixed --Guido]
+     However, there are perhaps more things which
      could be shown in the window, and a list of priorities could usfully be
      made. 
-     
+
 *    Some of the information in "Node Attribute" and "Node Information" is
      the same, but the format is different.  This is because the desired
      methods of editing the attributes haven't been implemented.
@@ -87,22 +140,14 @@ general: perhaps use CVS for project management
 *    Channels need a "Z" position, so that when channels overlap the author
      can define which should be on top.
 
-*    Background colour for a Channel could be transparent.
-
-*    Show in time chart "pause" anchors/nodes (for example a heavy line at
-     the end of the node).     
+*    Background colour for a Channel could be transparent.  [no -- too
+     difficult in GL/X --Guido]
 
 *    Give feedback when choosing/activating an anchor (or linked node), so
      the reader knows that the anchor has, or has not, been selected.
 
 ---
 13/5/92
-
-*    As a "real" author it would be extremely useful to have access to a
-     comments field for each node.  I would then be able to add details like:
-     "this is some filler text till I get round to drawing a picture";
-     "I'm not sure that the structure needs to be this deep, so maybe I
-     should delete this later".
 
 *    Showing the other anchors while drawing an anchor in a node would be
      very useful for lining up the boundaries of the anchor being edited.
@@ -134,48 +179,7 @@ general: perhaps use CVS for project management
 
 ---
 
------------------------------- FEATURES ---------------------------
-
-channel view: want to cut and paste channels
-
-channel view: need to warn if a channel with nodes is deleted
-
-player: "keep" attribute (default 1) [what's this?]
-
-block & channel view: use channel colors instead of default (gray)
-
------------------------------- NITS -------------------------------
-
-node info: could use a 'convert to ext' button for imm text nodes.
-
-block & channel views: show only 'info' in menu, but support shortcuts
-for attributes and anchors.
-
-Need uniform approach to configuration files/directories (help directory,
-Attrdefs, .cmif_editors -- what else?)
-
-VanGogh demo: move data to subdirectory.
-
-Player: "late" display keeps old value during initialization.
-
-channel view: need a text box to specify the delay as well
-
-channel view: settings of new sync arc can be copied from last created one?
-
-block view: get rid of dialog on wrong character
-
-general: need a template for a simple e-mail document
-
-block view: should beep instead of pop up a dialog offering help for
-wrong keyboard entry (a static help button in the menu bar is a better
-way to offer help)
-
-toplevel: sometimes complaint about unknown command when clicking in
-toplevel menu while things are busy?
-
-player: when playing a subtree, should make sure that at least one
- 	of the channels it uses is on?
-
+-------------------------------------------------------------------
 ------------------------------ FIXED ------------------------------
 
 player: crashes if a node has no valid channel
@@ -351,6 +355,23 @@ affects lay-out in channel view.  (May be a channel view bug?)
 [fixed by always calculating the timing for the root of the current
 mini document]
 
+general: perhaps use CVS for project management
+
+*    It would be nice to see, in the Hierarchy window, which nodes have their
+     time explicitly defined.
+
+*    Show in time chart "pause" anchors/nodes (for example a heavy line at
+     the end of the node).     
+
+Need uniform approach to configuration files/directories (help directory,
+Attrdefs, .cmif_editors -- what else?)
+
+block view: get rid of dialog on wrong character
+
+block view: should beep instead of pop up a dialog offering help for
+wrong keyboard entry (a static help button in the menu bar is a better
+way to offer help)
+
 --- 20 May 1992 ---
 
 block view: don't open info dialog for commands S, P, B
@@ -363,3 +384,20 @@ channel view: crash in Timing when 'N' command reaches a
 new empty par node (that hasn't got a "t1" yet)
 
 sound channel: crashes if openport fails (if there are too many ports open)
+
+*    As a "real" author it would be extremely useful to have access to a
+     comments field for each node.  I would then be able to add details like:
+     "this is some filler text till I get round to drawing a picture";
+     "I'm not sure that the structure needs to be this deep, so maybe I
+     should delete this later".
+
+--- 25 May 1992 ---
+
+channel view: the font still isn't set right when selecting an object
+[fixed by changing ../lib/{glwindow.py,Dialog.py} to call w.setwin()
+instead of gl.winset(...).
+
+player: should ask "do you want to stop playing" before denying a
+transaction
+
+channel view: should redraw arrows after updating a single node
