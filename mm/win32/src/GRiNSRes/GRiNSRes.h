@@ -54,6 +54,10 @@
 #define IDD_EDITOPTIONSATTR1            255
 #define IDD_EDITSTRINGATTR1             256
 #define IDD_EDITRECTATTR                257
+#define IDD_EDITRECTATTR1               257
+#define IDD_EDITSTRINGATTR2             327
+#define IDD_EDITSTRINGATTR3             328
+#define IDD_EDITSTRINGATTR4             329
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -78,11 +82,17 @@
 #define IDC_OTHER_CHANNELS              1037
 #define IDUC_RESET                      1043
 #define IDUC_BROWSE                     1044
+#define IDUC_RESET2                     1044
 #define IDC_STATIC1                     1045
+#define IDUC_RESET3                     1045
 #define IDUC_NEW                        1046
+#define IDUC_RESET4                     1046
 #define IDUC_EDIT                       1047
+#define IDUC_RESET5                     1047
 #define IDUC_DELETE                     1048
+#define IDUC_RESET6                     1048
 #define IDUC_EXPORT                     1049
+#define IDUC_RESET7                     1049
 #define IDUC_NODE_ATTRIBUTES            1051
 #define IDUC_CHANNEL_ATTRIBUTES         1052
 #define IDUC_ANCHORS                    1053
@@ -101,7 +111,12 @@
 #define IDC_RADIO4                      1067
 #define IDC_RADIO5                      1068
 #define IDC_RADIO6                      1069
+#define IDC_EDIT5                       1069
+#define IDC_EDIT7                       1070
+#define IDC_EDIT9                       1071
 #define IDC_LIST1                       1072
+#define IDC_EDIT11                      1072
+#define IDC_EDIT13                      1073
 #define IDC_LEFT_MENU                   1074
 #define IDC_RIGHT_MENU                  1075
 #define IDC_STATIC_LEFT                 1076
@@ -139,6 +154,15 @@
 #define IDC_ORGANIZATION                1131
 #define IDC_NULL                        1132
 #define IDC_ATTR_INFO                   1134
+#define IDUC_RESET1                     1136
+#define IDC_EDIT12                      1137
+#define IDC_EDIT3                       1138
+#define IDC_EDIT4                       1139
+#define IDC_EDIT6                       1140
+#define IDC_EDIT8                       1141
+#define IDC_EDIT10                      1142
+#define IDC_EDIT14                      1143
+#define IDC_EDIT15                      1144
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -189,7 +213,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        254
 #define _APS_NEXT_COMMAND_VALUE         32833
-#define _APS_NEXT_CONTROL_VALUE         1135
+#define _APS_NEXT_CONTROL_VALUE         1145
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
