@@ -137,6 +137,30 @@ def closepreferenceattreditor():
 		prefseditor.close()
 		prefseditor = None
 
+# those two method allow to merge the two 'bgcolor' and 'transparent' attributes into on attribute
+# it's useful for properties editor which request one attribute by 'unsplitable' graphic control
+# those method are used in ChannelWrapper and NodeWrapper
+def cmifToCssBgColor(transparent, bgcolor):
+	if transparent == 0 and bgcolor != None:
+		return 'color', bgcolor
+	if transparent == 1:
+		return 'transparent', (0, 0, 0)
+	
+	return 'inherit', (0, 0, 0)
+
+def cssToCmifBgColor(cssbgcolor):
+	ctype, color = cssbgcolor
+	if ctype == 'transparent':
+		transparent = 1
+		bgcolor = None
+	elif ctype == 'inherit':
+		transparent = None
+		bgcolor = None
+	else:		
+		transparent = 0
+		bgcolor = color
+
+	return transparent, bgcolor
 
 # This routine checks whether we are in CMIF or SMIL mode, and
 # whether the given attribute should be shown in the editor.
@@ -748,6 +772,7 @@ class ChannelWrapper(Wrapper):
 
 	def getattr(self, name):
 		if name == '.cname': return self.channel.name
+		if name == 'cssbgcolor': return self.getvalue(name)
 		if self.channel.has_key(name):
 			return self.channel[name]
 		else:
@@ -755,6 +780,10 @@ class ChannelWrapper(Wrapper):
 
 	def getvalue(self, name): # Return the raw attribute or None
 		if name == '.cname': return self.channel.name
+		if name == 'cssbgcolor':
+			transparent = self.channel.get('transparent')
+			bgcolor = self.channel.get('bgcolor')
+			return cmifToCssBgColor(transparent, bgcolor)
 		if self.channel.has_key(name):
 			return self.channel[name]
 		else:
@@ -762,6 +791,10 @@ class ChannelWrapper(Wrapper):
 
 	def getdefault(self, name): # Return the default or None
 		if name == '.cname': return ''
+		if name == 'cssbgcolor':
+			transparent = 1
+			bgcolor = None
+			return cmifToCssBgColor(transparent, bgcolor)
 		if name == 'bgcolor' and self.channel.has_key('base_window'):
 			# special case code for background color
 			ch = self.channel
@@ -774,6 +807,11 @@ class ChannelWrapper(Wrapper):
 		return MMAttrdefs.getdef(name)[1]
 
 	def setattr(self, name, value):
+		if name == 'cssbgcolor':
+			transparent, bgcolor = cssToCmifBgColor(value)
+			self.editmgr.setchannelattr(self.channel.name, 'transparent', transparent)
+			self.editmgr.setchannelattr(self.channel.name, 'bgcolor', bgcolor)
+			return
 		if name == '.cname':
 			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
@@ -785,7 +823,7 @@ class ChannelWrapper(Wrapper):
 				self.channel.name, name, value)
 
 	def delattr(self, name):
-		if name == '.cname':
+		if name == '.cname' or name == 'cssbgcolor':
 			pass
 			# Don't do this:
 			# self.editmgr.setchannelname(self.channel.name, '')
@@ -842,6 +880,10 @@ class ChannelWrapper(Wrapper):
 ##			if 'scale' in rv: rv.remove('scale')
 		if ctype == 'layout' and not cmifmode():
 			rv.remove('type')
+			if base is not None:
+				rv.append('cssbgcolor')
+				if 'bgcolor' in rv: rv.remove('bgcolor')
+				if 'transparent' in rv: rv.remove('transparent')
 		return rv
 	#
 	# Override three methods from Wrapper to fake channel name attribute
@@ -856,6 +898,7 @@ class ChannelWrapper(Wrapper):
 
 	def valuerepr(self, name, value):
 		if name == '.cname': name = 'name'
+		
 		return MMAttrdefs.valuerepr(name, value)
 
 	def parsevalue(self, name, str):
@@ -1220,6 +1263,8 @@ class AttrEditor(AttrEditorDialog):
 				C = FontAttrEditorField
 			elif displayername == 'color':
 				C = ColorAttrEditorField
+			elif displayername == 'csscolor':
+				C = CssColorAttrEditorField
 			elif displayername == 'layoutname':
 				C = LayoutnameAttrEditorField
 			elif displayername == 'channelname':
@@ -1875,6 +1920,38 @@ class ColorAttrEditorField(TupleAttrEditorField):
 		if colors.rcolors.has_key(value):
 			return colors.rcolors[value]
 		return TupleAttrEditorField.valuerepr(self, value)
+
+class CssColorAttrEditorField(AttrEditorField):
+	type = 'csscolor'
+	def parsevalue(self, str):
+		str = string.lower(string.strip(str))
+		if str == 'transparent' or str == '':
+			nstr = 'transparent 0 0 0'
+		elif str == 'inherit':
+			nstr = 'inherit 0 0 0'
+		else:
+			if colors.colors.has_key(str):
+				rgb = colors.colors[str]
+				nstr = ''
+				for c in rgb:
+					nstr = nstr + ' ' + `c`
+				nstr = 'color'+' '+nstr
+			else:
+				nstr = 'color'+' '+str
+		return AttrEditorField.parsevalue(self, nstr)
+
+	def valuerepr(self, value):
+		str = AttrEditorField.valuerepr(self, value)
+		import string
+		svalue = string.split(str)
+		type = svalue[0]
+		if type == 'transparent' or type == 'inherit':
+			return type
+
+		color = string.atoi(svalue[1]), string.atoi(svalue[2]), string.atoi(svalue[3])
+		if colors.rcolors.has_key(color):
+			return colors.rcolors[color]
+		return svalue[1]+' '+svalue[2]+' '+svalue[3]		
 
 class PopupAttrEditorField(AttrEditorField):
 	# A choice menu choosing from a list -- base class only
