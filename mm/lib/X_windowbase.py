@@ -105,11 +105,11 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM):
-		return _Window(self, x, y, w, h, title, 0, pixmap, units)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None):
+		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM):
-		return _Window(self, x, y, w, h, title, 1, pixmap, units)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None):
+		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -299,7 +299,7 @@ class _Window:
 	# _exp_reg: a region in which the exposed area is built up
 	#	(top-level window only)
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM):
+		     units = UNIT_MM, menubar = None):
 		self._title = title
 		parent._subwindows.insert(0, self)
 		self._do_init(parent)
@@ -348,7 +348,6 @@ class _Window:
 			title = ''
 		attrs = {'minWidth': min(w, 60),
 			 'minHeight': min(h, 60),
-			 'width': max(w, 60), 'height': max(h, 60),
 			 'colormap': self._colormap,
 			 'visual': self._visual,
 			 'depth': self._depth,
@@ -361,6 +360,8 @@ class _Window:
 			'toplevelShell', Xt.TopLevelShell, attrs)
 		shell.AddCallback('destroyCallback', self._destroy_callback, None)
 		self._shell = shell
+		form = shell.CreateManagedWidget('toplevelForm', Xm.Form,
+						 {'allowOverlap': 0})
 		fg = self._convert_color(self._fgcolor)
 		bg = self._convert_color(self._bgcolor)
 		attrs = {'height': max(h, 60),
@@ -373,9 +374,38 @@ class _Window:
 			 'marginHeight': 0,
 			 'marginTop': 0,
 			 'marginBottom': 0,
-			 'shadowThickness': 0}
-		form = shell.CreateManagedWidget('toplevel',
-						 Xm.DrawingArea, attrs)
+			 'shadowThickness': 0,
+			 'leftAttachment': Xmd.ATTACH_FORM,
+			 'rightAttachment': Xmd.ATTACH_FORM,
+			 'topAttachment': Xmd.ATTACH_FORM,
+			 'bottomAttachment': Xmd.ATTACH_FORM}
+		self._menubar = None
+		if menubar is not None:
+			mb = form.CreateMenuBar(
+				'toplevelMenuBar',
+				{'leftAttachment': Xmd.ATTACH_FORM,
+				 'rightAttachment': Xmd.ATTACH_FORM,
+				 'topAttachment': Xmd.ATTACH_FORM})
+			mb.ManageChild()
+			attrs['topAttachment'] = Xmd.ATTACH_WIDGET
+			attrs['topWidget'] = mb
+			cascade = Xm.CascadeButtonGadget
+			for item, list in menubar:
+				menu = mb.CreatePulldownMenu('toplevelMenu',
+					{'colormap': toplevel._default_colormap,
+					 'visual': toplevel._default_visual,
+					 'depth': toplevel._default_visual.depth})
+				button = mb.CreateManagedWidget(
+					'toplevelMenuButton', cascade,
+					{'labelString': item,
+					 'subMenuId': menu})
+				_create_menu(menu, list,
+					     toplevel._default_visual,
+					     toplevel._default_colormap,
+					     self._accelerators)
+			self._menubar = mb
+		form = form.CreateManagedWidget('toplevel',
+						Xm.DrawingArea, attrs)
 		self._form = form
 		shell.Popup(0)
 		shell.AddWMProtocolCallback(parent._delete_window,
@@ -490,7 +520,7 @@ class _Window:
 						      x, y, w, h, x, y)
 
 	def getgeometry(self, units = UNIT_MM):
-		x, y = self._form.TranslateCoords(0, 0)
+		x, y = self._shell.TranslateCoords(0, 0)
 		w, h = self._rect[2:]
 		if units == UNIT_MM:
 			return float(x) / toplevel._hmm2pxl, \
@@ -512,6 +542,27 @@ class _Window:
 
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 1, pixmap, transparent, z)
+
+# this works (at least for the menubar), but is it the right interface?
+## 	def menusetsensitive(self, path, sensitive):
+## 		if self._menubar:
+## 			w = self._menubar
+## 		elif self._menu:
+## 			w = self._menu
+## 		else:
+## 			return
+## 		first = 1
+## 		for p in path:
+## 			if not first:
+## 				w = w.subMenuId
+## 			first = 0
+## 			for c in w.children:
+## 				if c.labelString == p:
+## 					w = c
+## 					break
+## 			else:
+## 				return
+## 		w.sensitive = sensitive
 
 	def fgcolor(self, color):
 		r, g, b = color
@@ -585,8 +636,8 @@ class _Window:
 	def destroy_menu(self):
 		if self._menu:
 			self._menu.DestroyWidget()
+			self._accelerators = {}
 		self._menu = None
-		self._accelerators = {}
 
 	def create_menu(self, list, title = None):
 		self.destroy_menu()

@@ -67,6 +67,57 @@ class HierarchyView(ViewDialog):
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
 		ViewDialog.__init__(self, 'hview_')
+		self.menu = [
+			('Edit', [
+				(None, 'New node', [
+					(None, 'Before focus',
+					 (self.createbeforecall, ())),
+					(None, 'After focus',
+					 (self.createaftercall, ())),
+					(None, 'Under focus',
+					 (self.createundercall, ())),
+					(None, 'Above focus', [
+						(None, 'Sequential',
+						 (self.createseqcall, ())),
+						(None, 'Parallel',
+						 (self.createparcall, ())),
+						(None, 'Choice',
+						 (self.createbagcall, ())),
+						(None, 'Alternate',
+						 (self.createaltcall, ())),
+						]),
+					]),
+				('d', 'Delete focus', (self.deletecall, ())),
+				None,
+				('x', 'Cut focus', (self.cutcall, ())),
+				('c', 'Copy focus', (self.copycall, ())),
+				(None, 'Paste', [
+					(None, 'Before focus',
+					 (self.pastebeforecall, ())),
+					(None, 'After focus',
+					 (self.pasteaftercall, ())),
+					(None, 'Under focus',
+					 (self.pasteundercall, ())),
+					])
+				]),
+			('Node', [
+				('p', 'Play node', (self.playcall, ())),
+				('G', 'Play from node', (self.playfromcall, ())),
+				None,
+				('i', 'Node info...', (self.infocall, ())),
+				('a', 'Node attr...', (self.attrcall, ())),
+				('e', 'Edit contents...', (self.editcall, ())),
+				('t', 'Edit anchors...', (self.anchorcall, ())),
+				None,
+				('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
+				]),
+			('Focus', [
+				('f', 'Push focus', (self.focuscall, ())),
+				('z', 'Zoom out', (self.zoomoutcall, ())),
+				('.', 'Zoom here', (self.zoomherecall, ())),
+				('Z', 'Zoom in', (self.zoomincall, ()))
+				]),
+			]
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
@@ -78,7 +129,7 @@ class HierarchyView(ViewDialog):
 		title = 'Hierarchy View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1)
+		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, menubar=self.menu)
 		if self.waiting:
 			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
@@ -92,8 +143,6 @@ class HierarchyView(ViewDialog):
 		self.fixviewroot()
 		self.recalc()
 		self.draw()
-		self.window.create_menu(self.focusobj.menu,
-					title = self.focusobj.name)
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -537,8 +586,6 @@ class HierarchyView(ViewDialog):
 		if self.focusobj:
 			self.focusnode = self.focusobj.node
 			self.focusobj.selected = 1
-			self.window.create_menu(self.focusobj.menu,
-						title = self.focusobj.name)
 		else:
 			self.focusnode = None
 
@@ -579,6 +626,83 @@ class HierarchyView(ViewDialog):
 			self.displist.close()
 		self.displist = displist
 		self.new_displist = None
+
+	# Menu handling functions
+
+##  	def helpcall(self):
+## 		if self.focusobj: self.focusobj.helpcall()
+
+	def playcall(self):
+		if self.focusobj: self.focusobj.playcall()
+
+	def playfromcall(self):
+		if self.focusobj: self.focusobj.playfromcall()
+
+	def attrcall(self):
+		if self.focusobj: self.focusobj.attrcall()
+
+	def infocall(self):
+		if self.focusobj: self.focusobj.infocall()
+
+	def editcall(self):
+		if self.focusobj: self.focusobj.editcall()
+
+	def anchorcall(self):
+		if self.focusobj: self.focusobj.anchorcall()
+
+	def hyperlinkcall(self):
+		if self.focusobj: self.focusobj.hyperlinkcall()
+
+	def focuscall(self):
+		if self.focusobj: self.focusobj.focuscall()
+
+	def zoomoutcall(self):
+		if self.focusobj: self.focusobj.zoomoutcall()
+
+	def zoomincall(self):
+		if self.focusobj: self.focusobj.zoomincall()
+
+	def zoomherecall(self):
+		if self.focusobj: self.focusobj.zoomherecall()
+
+	def deletecall(self):
+		if self.focusobj: self.focusobj.deletecall()
+
+	def cutcall(self):
+		if self.focusobj: self.focusobj.cutcall()
+
+	def copycall(self):
+		if self.focusobj: self.focusobj.copycall()
+
+	def createbeforecall(self):
+		if self.focusobj: self.focusobj.createbeforecall()
+
+	def createaftercall(self):
+		if self.focusobj: self.focusobj.createaftercall()
+
+	def createundercall(self):
+		if self.focusobj: self.focusobj.createundercall()
+
+	def createseqcall(self):
+		if self.focusobj: self.focusobj.createseqcall()
+
+	def createparcall(self):
+		if self.focusobj: self.focusobj.createparcall()
+
+	def createbagcall(self):
+		if self.focusobj: self.focusobj.createbagcall()
+
+	def createaltcall(self):
+		if self.focusobj: self.focusobj.createaltcall()
+
+	def pastebeforecall(self):
+		if self.focusobj: self.focusobj.pastebeforecall()
+
+	def pasteaftercall(self):
+		if self.focusobj: self.focusobj.pasteaftercall()
+
+	def pasteundercall(self):
+		if self.focusobj: self.focusobj.pasteundercall()
 
 
 # Recursive procedure to calculate geometry of boxes.
@@ -653,44 +777,6 @@ class Object:
 		self.name = MMAttrdefs.getattr(self.node, 'name')
 		self.selected = 0
 		self.ok = 1
-		self.menu = [
-			(None, 'New node', [
-				(None, 'Before focus', (self.createbeforecall, ())),
-				(None, 'After focus', (self.createaftercall, ())),
-				(None, 'Under focus', (self.createundercall, ())),
-				(None, 'Above focus', [
-					(None, 'Sequential', (self.createseqcall, ())),
-					(None, 'Parallel', (self.createparcall, ())),
-					(None, 'Bag', (self.createbagcall, ())),
-					(None, 'Alternate', (self.createaltcall, ())),
-					]),
-				]),
-			('d', 'Delete focus', (self.deletecall, ())),
-			None,
-			('x', 'Cut focus', (self.cutcall, ())),
-			('c', 'Copy focus', (self.copycall, ())),
-			(None, 'Paste', [
-				(None, 'Before focus', (self.pastebeforecall, ())),
-				(None, 'After focus', (self.pasteaftercall, ())),
-				(None, 'Under focus', (self.pasteundercall, ())),
-				]),
-			None,
-			('p', 'Play node...', (self.playcall, ())),
-			('G', 'Play from here...', (self.playfromcall, ())),
-			None,
-			('i', 'Node info...', (self.infocall, ())),
-			('a', 'Node attr...', (self.attrcall, ())),
-			('e', 'Edit contents...', (self.editcall, ())),
-			('t', 'Edit anchors...', (self.anchorcall, ())),
-			('L', 'Finish hyperlink...', (self.hyperlinkcall, ())),
-			None,
-			('f', 'Push focus', (self.focuscall, ())),
-			('z', 'Zoom out', (self.zoomoutcall, ())),
-			('.', 'Zoom here', (self.zoomherecall, ())),
-			('Z', 'Zoom in', (self.zoomincall, ())),
-##			None,
-##			('h', 'Help...', (self.helpcall, ())),
-			]
 
 	# Make this object the focus
 	def select(self):
@@ -698,8 +784,6 @@ class Object:
 			return
 		self.selected = 1
 		if self.ok:
-			self.mother.window.create_menu(self.menu,
-						       title = self.name)
 			self.drawfocus()
 
 	# Remove this object from the focus
@@ -708,7 +792,6 @@ class Object:
 			return
 		self.selected = 0
 		if self.ok:
-			self.mother.window.destroy_menu()
 			self.drawfocus()
 
 	# Check for mouse hit inside this object
@@ -717,7 +800,6 @@ class Object:
 		return l <= x <= r and t <= y <= b
 
 	def cleanup(self):
-		self.menu = []
 		self.mother = None
 
 	def draw(self):
