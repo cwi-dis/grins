@@ -240,6 +240,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def close(self):
 		xmllib.XMLParser.close(self)
+		# XXX for now all documents are converted to SMIL 2.0 documents
+		self.__context.attributes['project_boston'] = 1
 		
 		# Show the parse errors to the user:
 		if self.__printfunc is not None and self.__printdata:
