@@ -279,8 +279,8 @@ class _DisplayList:
 				return r
 			if cmd == 'image':
 				xscrolloffset, yscrolloffset = window._scrolloffset()
-				mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-				dstrect = self._convert_coordinates((dstx, dsty, w, h))
+				mask, image, srcx, srcy, dstx, dsty, w, h, units = entry[1:]
+				dstrect = self._convert_coordinates((dstx, dsty, w, h), units=units)
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, dstrect)
 				return r
@@ -611,14 +611,16 @@ class _DisplayList:
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None,
-				    clip = None, align = None):
+				    clip = None, align = None, units = None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		win = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       win._prepare_image(file, crop, fit, center, coordinates, align, self.__units)
+		       win._prepare_image(file, crop, fit, center, coordinates, align, units)
 		self._list.append(('image', mask, image, src_x, src_y,
-				   dest_x, dest_y, width, height))
+				   dest_x, dest_y, width, height, units))
 		self._optimize(2)
 ##		x, y, w, h = win._rect
 ##		wf, hf = win._scrollsizefactors()
