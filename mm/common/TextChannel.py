@@ -225,7 +225,7 @@ class TextWindow(ChannelWindow):
 		self.arm_curwidth = width
 		width = width - 2*margin
 		self.arm_curlines, self.arm_partoline, self.arm_linetopar = \
-			FontStff.calclines( \
+			FontStuff.calclines( \
 			  self.arm_parlist, font.getstrwidth, width)
 	#
 	# like settext but use pre-arm results
