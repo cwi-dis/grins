@@ -565,7 +565,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
 		if self._scrwin is None:
 			raise error, 'no scrollable window'
-		box = self._convert_coordinates(coordinates, units)
+		box = self._convert_coordinates(coordinates, units=units)
 		x, y = box[:2]
 		if len(box) == 2:
 			w = h = 0

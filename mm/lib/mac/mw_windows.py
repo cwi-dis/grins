@@ -1881,7 +1881,7 @@ class _ScrollMixin:
 		at least the topleft corner visible"""
 		if not self._barx:
 			return
-		box = self._convert_coordinates(coordinates, units)
+		box = self._convert_coordinates(coordinates, units=units)
 		old_x, old_y = self._canvaspos
 		w, h = self._rect[2:]
 		x, y = box[:2]
