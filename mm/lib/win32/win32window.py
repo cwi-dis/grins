@@ -399,19 +399,9 @@ class Window:
 
 	# return the coordinates of this window in units
 	def getgeometry(self, units = UNIT_MM):
-		if units != UNIT_PXL:
-			print 'Warning: non-UNIT_PXL getgeometry() call'
-		placement = self.GetParent().GetWindowPlacement()
-		outerrect = placement[4]
-		out_l, out_t, out_r, out_b = outerrect
-		out_w = out_r - out_l
-		out_h = out_b - out_t
-		in_w = out_w - 16
-		in_h = out_h - 35
-##		print 'getgeom', (out_l, out_t, in_w, in_h), self._rectb
 		toplevel=__main__.toplevel
 		if units == UNIT_PXL:
-			return (out_l, out_t, in_w, in_h)
+			return self._rectb
 		elif units == UNIT_SCREEN:
 			return self._sizes
 		elif units == UNIT_MM:
