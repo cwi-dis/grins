@@ -106,8 +106,9 @@ class SoundChannel(Channel):
 
 	def release_res(self):
 		for b in self._builders.values():
-			b.Stop()
-			b.Release()
+			if b:
+				b.Stop()
+				b.Release()
 		del self._builders
 		self._builders={}
 		self._playBuilder=None
@@ -122,16 +123,17 @@ class SoundChannel(Channel):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		fn = self.getfileurl(node)
+		url = self.getfileurl(node)
 		try:
-			fn = MMurl.urlretrieve(fn)[0]
+			fn = MMurl.urlretrieve(url)[0]
 		except IOError, arg:
 			if type(arg) is type(self):
 				arg = arg.strerror
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (fn, arg))
 			return 1
-##		fn = self.toabs(fn)
 		fn = MMurl.canonURL(fn)
+		# we need the next call (idiosyncrasy of Media Player)
+		fn = self.urlorpathname(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
 			if not builder.RenderFile(fn):
@@ -270,3 +272,7 @@ class SoundChannel(Channel):
 		# no need to duplicate code...
 		import Help_
 		return Help_.toabs(url)
+	def urlorpathname(self,url):
+		import Help_
+		return Help_.urlorpathname(url)
+

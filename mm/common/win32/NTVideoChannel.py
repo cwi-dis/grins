@@ -142,14 +142,15 @@ class VideoChannel(ChannelWindow):
 
 		if node in self._builders.keys():		
 			return 1
-		fn = self.getfileurl(node)
+		url = self.getfileurl(node)
 		try:
-			fn = MMurl.urlretrieve(fn)[0]
+			fn = MMurl.urlretrieve(url)[0]
 		except IOError:
 			self._builders[node]=None
 			return 1	
-##		fn = self.toabs(fn)
 		fn = MMurl.canonURL(fn)
+		# we need the next call (idiosyncrasy of Media Player)
+		fn = self.urlorpathname(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
 			if not builder.RenderFile(fn):
@@ -392,3 +393,7 @@ class VideoChannel(ChannelWindow):
 	def toabs(self,url):
 		import Help_
 		return Help_.toabs(url)
+	def urlorpathname(self,url):
+		import Help_
+		return Help_.urlorpathname(url)
+		
