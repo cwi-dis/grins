@@ -7,9 +7,7 @@ __version__ = "$Id$"
 # font along with a standard query interface
 
 import string
-import win32ui
-Afx=win32ui.GetAfx()
-Sdk=win32ui.GetWin32Sdk()
+import wingdi
 
 from sysmetrics import *
 
@@ -98,17 +96,17 @@ class _Font:
 	def __init__(self, fontname, pointsize):
 		if type(pointsize)==type(''):
 			pointsize=string.atoi(pointsize)
-		pointsize=int(pointsize+_POINTSIZEOFFSET)	# correction because of tiny fonts on Windows
-		pointsize=(pointsize*dpi_y+36)/72 # screen correction
+		pointsize = int(pointsize+_POINTSIZEOFFSET)	# correction because of tiny fonts on Windows
+		pointsize = (pointsize*dpi_y+36)/72 # screen correction
 		global user_charset
-		self._fd={'name':fontname,'height':-pointsize,'weight':540, 'charset':user_charset}
-		self._hfont=Sdk.CreateFontIndirect(self._fd)		
-		self._tm=self.gettextmetrics()
+		self._fd = {'name':fontname,'height':-pointsize, 'weight':540, 'charset':user_charset}
+		self._hfont = wingdi.CreateFontIndirect(self._fd)		
+		self._tm = self.gettextmetrics()
 
 	# Delete the associated OS font
 	def __del__(self):
-		if self._hfont and Sdk:
-			Sdk.DeleteObject(self._hfont)
+		if self._hfont:
+			wingdi.DeleteObject(self._hfont)
 
 	# Returns the handle to this font
 	def handle(self):
@@ -117,7 +115,7 @@ class _Font:
 	# Close this object and release resources
 	def close(self):
 		if self._hfont and Sdk:
-			Sdk.DeleteObject(self._hfont)
+			wingdi.DeleteObject(self._hfont)
 			self._hfont = 0
 
 	# Returns true if this is closed
@@ -152,46 +150,42 @@ class _Font:
 	# Returns the string size in mm	
 	def strsizePXL(self,str):
 		strlist = string.splitfields(str, '\n')
-		wnd=Afx.GetMainWnd()
-		dc=wnd.GetDC()
-		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
+		hdc = winuser.GetDC()
+		dc = wingdi.CreateDCFromHandle(hdc)
+		self._hfont_org=dc.SelectObject(self._hfont)
 		maxwidth = 0
 		height = len(strlist) * self.fontheightPXL()
 		for str in strlist:
 			cx,cy=dc.GetTextExtent(str)
 			if cx > maxwidth:
 				maxwidth = cx
-		dc.SelectObjectFromHandle(self._hfont_org)
-		wnd.ReleaseDC(dc)
+		dc.SelectObject(self._hfont_org)
+		dc.Detach()
 		return maxwidth, height
+
 	def strsize(self,str):
 		maxwidth, maxheight = self.strsizePXL(str)
 		return pxl2mm_x(maxwidth),pxl2mm_y(maxheight)
 
 	# Returns the text metrics structure
 	def gettextmetrics(self):
-		wnd=Afx.GetMainWnd()
-		dc=wnd.GetDC()
-		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
-		
-		tm=dc.GetTextMetrics()
-
-		dc.SelectObjectFromHandle(self._hfont_org)
-		wnd.ReleaseDC(dc)
+		hdc = winuser.GetDC()
+		dc = wingdi.CreateDCFromHandle(hdc)
+		self._hfont_org = dc.SelectObject(self._hfont)
+		tm = dc.GetTextMetrics()
+		dc.SelectObject(self._hfont_org)
+		dc.Detach()
 		return tm
 	
 		
 	# Returns the string size in pixel	
 	def gettextextent(self,str):
-		wnd=Afx.GetMainWnd()
-		dc=wnd.GetDC()
-		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
-		
-		cx,cy=dc.GetTextExtent(str)
-
+		hdc = winuser.GetDC()
+		dc = wingdi.CreateDCFromHandle(hdc)
+		self._hfont_org = dc.SelectObject(self._hfont)
+		cx, cy = dc.GetTextExtent(str)
 		dc.SelectObjectFromHandle(self._hfont_org)
-		wnd.ReleaseDC(dc)
-		return (cx,cy)
+		dc.Detach()
 
 	# Returns the string width in pixel	
 	def TextWidth(self, str):
@@ -222,64 +216,10 @@ RUSSIAN_CHARSET         =204
 MAC_CHARSET             =77
 BALTIC_CHARSET          =186
 
-win32_charsets_list= [
-'ANSI',
-'DEFAULT',
-'OEM',
-'GREEK',
-'MAC',
-'RUSSIAN',
-'EASTEUROPE',
-'TURKISH',
-'ARABIC',
-'HEBREW',
-'BALTIC',
 
-'CHINESEBIG',
-'GB2312',
-'HANGUL',
-'SHIFTJIS',
-'SYMBOL',
-'JOHAB',
-'THAI',
-]
 
-win32_charsets= {
-'ANSI':ANSI_CHARSET,
-'DEFAULT':DEFAULT_CHARSET,
-'OEM':OEM_CHARSET,
-'EASTEUROPE':EASTEUROPE_CHARSET,
-'GREEK':GREEK_CHARSET,
-'MAC':MAC_CHARSET,
+user_charset = DEFAULT_CHARSET
 
-'BALTIC':BALTIC_CHARSET,
-'CHINESEBIG':CHINESEBIG5_CHARSET,
-'GB2312':GB2312_CHARSET,
-'HANGUL':HANGUL_CHARSET,
-'RUSSIAN':RUSSIAN_CHARSET,
-'SHIFTJIS':SHIFTJIS_CHARSET,
-'SYMBOL':SYMBOL_CHARSET,
-'TURKISH':TURKISH_CHARSET,
-'JOHAB':JOHAB_CHARSET,
-'HEBREW':HEBREW_CHARSET,
-'ARABIC':ARABIC_CHARSET,
-'THAI':THAI_CHARSET,
-}
-
-user_charset=DEFAULT_CHARSET
-
-# set current windows char set
-def set_win32_charset(strid):
-	global user_charset
-	if win32_charsets.has_key(strid):
-		#print 'windows charset:',strid		
-		user_charset=win32_charsets[strid]
-		_fontcache.clear()
-		
-# get current windows char set
-def get_win32_charset(strid):
-	global user_charset
-	return user_charset
 		
 # TextMetrics dict entries:
 # tmHeight
