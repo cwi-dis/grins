@@ -61,6 +61,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			CHANNELS(callback = self.channel_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			SYNCCV(callbac = (self.synccv_callback, ())),
+			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
 		play = PLAY(callback = (self.play_callback, ()))
 		pause = PAUSE(callback = (self.pause_callback, ()))
