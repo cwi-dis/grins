@@ -577,7 +577,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			self.setWndTransparent()
 		if self.isclient():self.SetClient(1)
 		import settings
-		self.UseHtmlCtrl(settings.get('html_control'))
+		self.UseHtmlCtrl(not settings.get('html_control'))
 
 	# Called by the Html channel. The request is delegated to the Html control
 	# Part of WebBrowsing support
