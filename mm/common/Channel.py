@@ -561,7 +561,7 @@ class Channel:
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._played_node is not None:
-			print 'stopping playing node first',`self._played_node`
+##			print 'stopping playing node first',`self._played_node`
 			self.stopplay(self._played_node)
 		if self._armed_node is not node:
 			if settings.noprearm:
