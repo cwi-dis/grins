@@ -75,7 +75,12 @@ class MainDialog:
 			if not type or type == 'file':
 				import os
 				dir, file = os.path.split(MMurl.url2pathname(MMurl.splithost(rest)[1]))
-		filetypes = ['application/x-grins-project', 'application/smil']
+		import features
+		from compatibility import Boston
+		if features.compatibility == Boston:
+			filetypes = ['application/smil', 'application/x-grins-project']
+		else:
+			filetypes = ['application/x-grins-project', 'application/smil']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
