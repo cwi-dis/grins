@@ -26,6 +26,9 @@ class ImageChannel(ChannelWindow):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		f = self.getfileurl(node)
+		if not f:
+			self.errormsg(node, 'No URL set on node')
+			return 1
 		try:
 			f = urlretrieve(f)[0]
 		except IOError, arg:
