@@ -147,11 +147,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
 			#MERGE_CHILD(callback = (self.merge_child, ())),
-		]
+			LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))),
+			CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))),
+			]
 
-		if not features.lightweight:
-			self.interiorcommands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
-			self.interiorcommands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
 		if features.H_PLAYABLE in features.feature_set:
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 		if features.H_THUMBNAILS in features.feature_set:
@@ -201,10 +200,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.convertrpcommands = [
 			CONVERTRP(callback = (self.convertrpcall, ())),
 			]
-		self.mediacommands = self.mediacommands + self.structure_commands
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
 			self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
+		self.mediacommands = self.mediacommands + self.structure_commands
 
 
 ##		else:			# TODO: clean this up. This should be later.
@@ -222,7 +221,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			]
-		self.noslidecommands = [
+		self.playcommands = [
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
@@ -263,83 +262,55 @@ class HierarchyView(HierarchyViewDialog):
 		return 1
 
 	def _getmediaundercommands(self, ctx):
-		heavy = not features.lightweight
 		rv = [
 			NEW_UNDER(callback = (self.createundercall, ())),
+			NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))),
+			NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))),
+			NEW_UNDER_SWITCH(callback = (self.createunderintcall, ('switch',))),
 			]
-		rv.append(NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))))
-		rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
-		rv.append(NEW_UNDER_SWITCH(callback = (self.createunderintcall, ('switch',))))
 		if ctx.attributes.get('project_boston', 0):
 			rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
-		if heavy:
-			rv.append(NEW_UNDER_MEDIA(callback = (self.createundercall, ('null',))))
-		if heavy or ctx.compatchannels(chtype='image'):
-			rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
-		if  heavy or ctx.compatchannels(chtype='sound'):
-			rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
-		if heavy or ctx.compatchannels(chtype='video'):
-			rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
-		if heavy or ctx.compatchannels(chtype='brush'):
-			rv.append(NEW_UNDER_BRUSH(callback = (self.createundercall, ('brush',))))
-		if heavy or ctx.compatchannels(chtype='text'):
-			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
-		if heavy or ctx.compatchannels(chtype='html'):
-			rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
-		if heavy or ctx.compatchannels(chtype='svg'):
-			rv.append(NEW_UNDER_SVG(callback = (self.createundercall, ('svg',))))
+		rv.append(NEW_UNDER_MEDIA(callback = (self.createundercall, ('null',))))
+		rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
+		rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
+		rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
+		rv.append(NEW_UNDER_BRUSH(callback = (self.createundercall, ('brush',))))
+		rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
+		rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
+		rv.append(NEW_UNDER_SVG(callback = (self.createundercall, ('svg',))))
 		rv.append(NEW_UNDER_ANIMATE(callback = (self.createundercall, ('animate',))))
 		return rv
-
 
 	def _getmediacommands(self, ctx):
 		# Enable commands to edit the media
 
-		heavy = not features.lightweight
-
-		rv = []
-		if heavy:
-			rv.append(NEW_BEFORE_MEDIA(callback = (self.createbeforecall, ('null',))))
-		if heavy or ctx.compatchannels(chtype='image'):
-			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
-		if heavy or ctx.compatchannels(chtype='sound'):
-			rv.append(NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))))
-		if heavy or ctx.compatchannels(chtype='video'):
-			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
-		if heavy or ctx.compatchannels(chtype='brush'):
-			rv.append(NEW_BEFORE_BRUSH(callback = (self.createbeforecall, ('brush',))))
-		if heavy or ctx.compatchannels(chtype='text'):
-			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
-		if heavy or ctx.compatchannels(chtype='html'):
-			rv.append(NEW_BEFORE_HTML(callback = (self.createbeforecall, ('html',))))
-		if heavy or ctx.compatchannels(chtype='svg'):
-			rv.append(NEW_BEFORE_SVG(callback = (self.createbeforecall, ('svg',))))
-		if heavy:
-			rv.append(NEW_AFTER_MEDIA(callback = (self.createaftercall, ('null',))))
-		if heavy or ctx.compatchannels(chtype='image'):
-			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
-		if heavy or ctx.compatchannels(chtype='sound'):
-			rv.append(NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))))
-		if heavy or ctx.compatchannels(chtype='video'):
-			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
-		if heavy or ctx.compatchannels(chtype='brush'):
-			rv.append(NEW_AFTER_BRUSH(callback = (self.createaftercall, ('brush',))))
-		if heavy or ctx.compatchannels(chtype='text'):
-			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
-		if heavy or ctx.compatchannels(chtype='html'):
-			rv.append(NEW_AFTER_HTML(callback = (self.createaftercall, ('html',))))
-		if heavy or ctx.compatchannels(chtype='svg'):
-			rv.append(NEW_AFTER_SVG(callback = (self.createaftercall, ('svg',))))
-		rv.append(NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))))
-		rv.append(NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))))
+		rv = [
+			NEW_BEFORE_MEDIA(callback = (self.createbeforecall, ('null',))),
+			NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))),
+			NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))),
+			NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))),
+			NEW_BEFORE_BRUSH(callback = (self.createbeforecall, ('brush',))),
+			NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))),
+			NEW_BEFORE_HTML(callback = (self.createbeforecall, ('html',))),
+			NEW_BEFORE_SVG(callback = (self.createbeforecall, ('svg',))),
+			NEW_AFTER_MEDIA(callback = (self.createaftercall, ('null',))),
+			NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))),
+			NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))),
+			NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))),
+			NEW_AFTER_BRUSH(callback = (self.createaftercall, ('brush',))),
+			NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))),
+			NEW_AFTER_HTML(callback = (self.createaftercall, ('html',))),
+			NEW_AFTER_SVG(callback = (self.createaftercall, ('svg',))),
+			NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))),
+			NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))),
+			]
 		return rv
 
 	def _getanimatecommands(self, ctx):
-		rv = []
-		rv.append(NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))))
-		rv.append(NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))))
-		rv.append(NEW_UNDER_ANIMATE(callback = (self.createundercall, ('animate',))))
-		return rv
+		return [NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))),
+			NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))),
+			NEW_UNDER_ANIMATE(callback = (self.createundercall, ('animate',))),
+			]
 
 	def __compute_commands(self, commands):
 		# Compute the commands for the current selected object.
@@ -356,10 +327,8 @@ class HierarchyView(HierarchyViewDialog):
 		if hasattr(self.get_selected_widget(), 'helpcall'):
 			commands = commands + self.helpcommands
 		if fnode.WillPlay():
-			commands = commands + self.noslidecommands
-		else:
-			commands = commands + self.noslidecommands[2:]
-		if self.toplevel.links and self.toplevel.links.has_interesting(): # ??!! -mjvdg
+			commands = commands + self.playcommands
+		if self.toplevel.links and self.toplevel.links.has_interesting():
 			commands = commands + self.finishlinkcommands
 		if len(self.event_sources) > 0:
 			commands = commands + self.finisheventcommands
@@ -376,13 +345,14 @@ class HierarchyView(HierarchyViewDialog):
 		if fnode is not self.root:
 			# can't do certain things to the root
 			#if fnode.__class__ is not SlideMMNode:
-			commands = commands + self.notatrootcommands + self.mediacommands
-
-			if len(fnode.GetParent().GetChildren()) == 1:
-				commands = commands + self.singlechildcommands
+			fparent = fnode.GetParent()
+			pchildren = fparent.GetChildren()
+			if fparent.GetType() in MMTypes.interiortypes:
+				commands = commands + self.notatrootcommands + self.mediacommands
+				if len(pchildren) == 1:
+					commands = commands + self.singlechildcommands
 
 			commands = commands + self.navigatecommands[0:1]
-			pchildren = fnode.GetParent().GetChildren()
 
 			findex = pchildren.index(fnode)
 			if findex > 0:
@@ -392,9 +362,8 @@ class HierarchyView(HierarchyViewDialog):
 
 		if fntype in MMTypes.playabletypes and fnode.GetChannelType() != 'animate':
 			commands = commands + self.animatecommands[2:3]
-		if fntype == 'ext':
-			if fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
-				commands = commands + self.rpconvertcommands
+		if fntype == 'ext' and fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
+			commands = commands + self.rpconvertcommands
 		if fntype == 'seq' and features.CONVERT2REALPIX in features.feature_set:
 			for c in fnode.GetChildren():
 				ctype = c.GetType()
@@ -1237,11 +1206,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.create(0, url, i, dropped=1)
 		else:
 			# check that URL compatible with node's channel
-			if features.lightweight and \
-			   obj.node.GetChannelName() not in ctx.compatchannels(url):
-				self.draw()
-				windowinterface.showmessage("File not compatible with channel type %s." % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
-				return
 			em = self.editmgr
 			if not em.transaction():
 				self.draw()
@@ -1323,7 +1287,6 @@ class HierarchyView(HierarchyViewDialog):
 		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
 
 		start_transaction = 1
-		lightweight = features.lightweight
 		node = self.get_selected_node()
 		if node is None:
 			# Should not happen.
@@ -1351,8 +1314,7 @@ class HierarchyView(HierarchyViewDialog):
 			newnode = self.root.context.newanimatenode('animate')
 			newnode.targetnode = node
 			if self.insertnode(newnode, where, index):
-				if not lightweight:
-					AttrEdit.showattreditor(self.toplevel, newnode)
+				AttrEdit.showattreditor(self.toplevel, newnode)
 			return
 
 		type = node.GetType()
@@ -1487,9 +1449,8 @@ class HierarchyView(HierarchyViewDialog):
 ##				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)
 ##				self.editmgr.addsyncarc(node, 'beginlist', arc)
 			self.editmgr.commit()
-			if not lightweight:
-				if not dftchannel:
-					AttrEdit.showattreditor(self.toplevel, node, 'channel')
+			if not dftchannel:
+				AttrEdit.showattreditor(self.toplevel, node, 'channel')
 
 	# search a default region in looking at the children of the parent,
 	# and recursivly until the root element
@@ -1597,8 +1558,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.aftersetfocus()
 		em.commit()
-##		if not features.lightweight:
-##			AttrEdit.showattreditor(self.toplevel, newnode, 'name')
 
 	def paste(self, where):
 		# where is -1 (before), 0 (under) or 1 (after)
