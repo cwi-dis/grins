@@ -826,7 +826,6 @@ def PrintDOMAttrs():
 	print '\t}',
 
 def PrintSelDOMAttrs():
-	svgelements = SVG.attributes.keys()
 	elements = ['svg',]
 	attrdict = {}
 	for tag in elements:
