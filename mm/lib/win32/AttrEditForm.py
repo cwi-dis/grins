@@ -1407,6 +1407,7 @@ class AttrGroup:
 
 	special_attrcl={
 		'system_captions':OptionsRadioCtrl,
+##		'system_language':OptionsCtrl,
 		'layout':OptionsRadioCtrl,
 		'visible':OptionsRadioCtrl,
 		'drawbox':OptionsRadioCtrl,
