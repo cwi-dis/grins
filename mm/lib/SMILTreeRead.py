@@ -3412,11 +3412,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if val is not None:
 						attrdict['backgroundColor'] = val
 			elif attr == 'editBackground':
-				val = self.__convert_color(val)
+				res = re.match('(?P<r>[0-9]+) +(?P<g>[0-9]+) +(?P<b>[0-9]+)', val) # backward compatibility hack
+				if res is not None:
+					val = int(res.group('r')), int(res.group('g')), int(res.group('b'))
+				else:
+					val = self.__convert_color(val)
 				if val is not None:
 					attrdict['editBackground'] = val
 			elif attr == 'showEditBackground':
-				val = self.parseEnumValue('showEditBackground', val)
+				if val in ('0','off'): # backward compatibility hack
+					val = 0
+				elif val in ('1', 'on'): # backward compatibility hack
+					val = 1
+				else:
+					val = self.parseEnumValue('showEditBackground', val)
 				if val is not None:
 					attrdict['showEditBackground'] = val
 			elif attr == 'showBackground':
