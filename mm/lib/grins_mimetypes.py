@@ -3,8 +3,8 @@
 mimetypes = {
 	'.smi': 'application/smil',
 	'.smil': 'application/smil',
-	'.cmi': 'application/x-cmif',
-	'.cmif': 'application/x-cmif',
+	'.cmi': 'application/x-grins-cmif',
+	'.cmif': 'application/x-grins-cmif',
 
 	'.ra': 'audio/vnd.rn-realaudio',
 	'.ram': 'audio/vnd.rn-realaudio',
