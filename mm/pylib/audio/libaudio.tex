@@ -2,7 +2,7 @@
 
 This chapter describes a set of modules that can be used to read audio
 files, convert them to some desired format, and play them on the
-system's audio device.  There are three main modules which are
+system's audio device.  There are four main modules which are
 described in more detail below.
 
 The philosophy of the package is that an audio file is represented by
@@ -212,6 +212,44 @@ The linear formats also have the following method:
 
 \begin{funcdesc}{getbps}{}
 Returns the number of bits per sample.
+\end{funcdesc}
+
+\section{Standard module audiomerge}
+\renewcommand{\indexsubitem}{(in module audiomerge)}
+
+This module defines a single function:
+
+\begin{funcdesc}{merge}{\optional{reader...}}
+Create a merge object that represents a set of merged audio streams.
+\code{merge} may be called with any number of arguments.  The
+arguments should either be a reader object instance, or a tuple
+consisting of a reader object instance and a callback as described
+below in the \code{add} method.  If any arguments are given, the
+\code{add} method is called for each of the arguments.
+\end{funcdesc}
+
+The merge object has all of the reader object methods, except that
+\code{getpos} and \code{setpos} currently raise an exception and
+should not be used.  The other methods should only be called when at
+least one stream is added.  In addition, a merge object has the
+following methods:
+\renewcommand{\indexsubitem}{(audiomerge object methods)}
+
+\begin{funcdesc}{add}{rdr\optional{\, callback}}
+Add the \var{rdr} object to the list of merged audio streams.  If
+\var{callback} is given, it is a callback that is called when the end
+of the audio stream is reached.  The callback is a tuple, of which the
+first element is a callable object, and the second a tuple giving the
+arguments with which the callable object should be called.
+
+The \var{rdr} may have any format, but conversion to some internal
+format may be added by \code{add}.
+
+The \code{add} method may be called at any time.
+\end{funcdesc}
+
+\begin{funcdesc}{delete}{rdr}
+Remove the given \var{rdr} from the list of merged readers.
 \end{funcdesc}
 
 \section{Reader object}
