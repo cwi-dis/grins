@@ -44,7 +44,7 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 	// Perform application initialization:
 	if (!InitInstance (hInstance, nCmdShow, &hWnd)) 
 	{
-		return FALSE;
+		return 0;
 	}
 
 	hAccelTable = LoadAccelerators(hInstance, (LPCTSTR)IDC_GRINSPLAYER);
@@ -55,6 +55,7 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 	if(!InitializePythonInterface(hWnd))
 		{
 		MessageBox(NULL, TEXT("Failed to initialize environmment"), GetApplicationName(), MB_OK);
+		return 0;
 		}
 // end_pfc
 /////////////////////////////////////
@@ -74,7 +75,8 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 	FinalizePythonInterface();
 // end_pfc
 /////////////////////////////////////
-
+	//MessageBox(NULL, TEXT("Exiting"), GetApplicationName(), MB_OK);
+	
 	return msg.wParam;
 }
 
@@ -140,7 +142,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND *phWnd)
 	RECT	rect;
 	GetClientRect(hWnd, &rect);
 	
-	*phWnd = hWnd = CreateWindow(szWindowClass, szTitle, WS_VISIBLE,
+	*phWnd = hWnd = CreateWindow(szWindowClass, szTitle, WS_VISIBLE | WS_CLIPCHILDREN ,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
 	if (!hWnd)
 	{	
@@ -182,7 +184,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//TCHAR szHello[MAX_LOADSTRING];
 
 	switch (message) 
-	{
+		{
 		case WM_COMMAND:
 			wmId    = LOWORD(wParam); 
 			wmEvent = HIWORD(wParam); 
@@ -198,29 +200,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					return 0;
 				default:
 					return PyWnd_WndProc(hWnd, message, wParam, lParam);
-					//return DefWindowProc(hWnd, message, wParam, lParam);
 				}
 			break;
+
 		case WM_CREATE:
-			hwndCB = CreateRpCommandBar(hWnd);
+			if(hwndCB == NULL)
+				hwndCB = CreateRpCommandBar(hWnd);
 			break;
+
 		case WM_PAINT:
 			return PyWnd_WndProc(hWnd, message, wParam, lParam);
+
 		case WM_SETFOCUS:
 		case WM_KILLFOCUS:
 			return DefWindowProc(hWnd, message, wParam, lParam);
+
 		case WM_DESTROY:
-			CommandBar_Destroy(hwndCB);
-			//PostQuitMessage(0);
+			if(hwndCB != NULL)
+				CommandBar_Destroy(hwndCB);
 			return PyWnd_WndProc(hWnd, message, wParam, lParam);
-			break;
+
 		case WM_SETTINGCHANGE:
 			SHHandleWMSettingChange(hWnd, wParam, lParam, &s_sai);
      		break;
+
 		default:
 			return PyWnd_WndProc(hWnd, message, wParam, lParam);
 			//return DefWindowProc(hWnd, message, wParam, lParam);
-   }
+		}
    return 0;
 }
 
