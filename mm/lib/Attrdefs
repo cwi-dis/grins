@@ -278,7 +278,7 @@
 	'Determines transparency of window. Overrides background color.' raw smil)
 
 (type (name) null 'Channel type' channeltype
-	'Type of media this channel will be used for' raw smil)
+	'Type of media this channel will be used for' raw light)
 
 (u_group (name) undefined 'User group' usergroup
 	'User group that controls rendering of this node' inherited cmif)
