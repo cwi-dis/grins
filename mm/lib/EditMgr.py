@@ -63,6 +63,8 @@ class EditMgr:
 	#
 	def commit(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
+		import MMAttrdefs
+		MMAttrdefs.flushcache(self.root)
 		self.root.clear_infoicon()
 		for x in self.registry[:]:
 			x.commit()
