@@ -144,9 +144,5 @@ SOURCE=..\..\..\..\..\python\PCbuild\python16.lib
 SOURCE=..\..\..\..\..\python\PCbuild\python16_d.lib
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=..\..\..\..\bin\win32\config.txt
-# End Source File
 # End Target
 # End Project
