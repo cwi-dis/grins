@@ -35,6 +35,8 @@ __version__ = "$Id$"
 from usercmd import *
 from wndusercmd import *
 
+import WMEVENTS
+
 class MainDialog:
 	def __init__(self, title):
 		"""Create the Main dialog.
@@ -56,7 +58,10 @@ class MainDialog:
 				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
 			self.commandlist.append(
 				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
-
+		# register events for all frame wnds
+		import windowinterface
+		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
+		windowinterface.register_event(WMEVENTS.PasteFile, self.dropfile, None)
 		import windowinterface
 		windowinterface.createmainwnd(title,
 			adornments = None,
@@ -73,6 +78,16 @@ class MainDialog:
 		self.__owindow=windowinterface.OpenLocationDlg(callbacks,f)
 		self.__text=self.__owindow._text
 		self.__owindow.show()
+
+	def dropfile(self, arg, window, event, value):
+		x,y,filename=value
+		url=self.__path2url(filename)
+		import mimetypes, windowinterface
+		mimetype = mimetypes.guess_type(url)[0]
+		if mimetype in ('application/smil', 'application/x-grins-cmif'):
+			self.openURL_callback(url)
+		else:
+			windowinterface.showmessage('Incorrect filetype for drop/paste')
 
 
 	def __ccallback(self):
@@ -94,6 +109,10 @@ class MainDialog:
 					   parent = f)
 
 	def __filecvt(self, filename):
+		text=self.__path2url(filename)
+		self.__text.settext(text)
+
+	def __path2url(self, filename):
 		import os, MMurl
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
@@ -107,8 +126,7 @@ class MainDialog:
 				file = os.path.join(f, file)
 			if dir == cwd:
 				filename = file
-		self.__text.settext(MMurl.pathname2url(filename))
-
+		return MMurl.pathname2url(filename)
 
 	def console_callback(self):
 		import win32ui,win32con
