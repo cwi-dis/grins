@@ -93,6 +93,7 @@ default_settings = {
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
 	'openviews' : [('structure', (-1, -1, -1, -1))],	# Default views to open
+	'saveopenviews': 0,
 	'showsource' : 0,	# Hidden preference to show source window in the player
 
 	# The temporal view
@@ -246,6 +247,10 @@ def set(setting, value):
 		_warned_already = 1
 		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect')
 	user_settings[setting] = value
+
+def delete(setting):
+	if user_settings.has_key(setting):
+		del user_settings[setting]
 
 def save():
 	try:
