@@ -1995,25 +1995,21 @@ class Region(Window):
 			if cb:
 				apply(apply, cb)
 			return
-		self._multiElement = dict.get('coordinated')
-		self._childrenClip = dict.get('clipBoundary', 'children') == 'children'
-		self._outtrans = outtrans
-		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
 		if runit:
-			# uncommend the next line to freeze things
+			self._multiElement = dict.get('coordinated')
+			self._childrenClip = dict.get('clipBoundary', 'children') == 'children'
+			self._outtrans = outtrans
+			self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
+			# uncomment the next line to freeze things
 			# at the moment begintransition is called
 			# win32ui.MessageBox('begintransition')
 			self._transition.begintransition()
 		else:
-			print 'begintransition runit=',runit
-
-	def begininlinetransition(self, trtype, trsubtype, trmode='in'):
-		#print 'begininlinetransition', self
-		self._multiElement = 0
-		self._childrenClip = 0
-		self._outtrans = 0
-		self._transition = win32transitions.InlineTransitionEngine(self, trtype, trsubtype, trmode)
-		self._transition.begintransition()
+			self._multiElement = 0
+			self._childrenClip = 0
+			self._outtrans = 0
+			self._transition = win32transitions.InlineTransitionEngine(self, dict, cb)
+			self._transition.begintransition()
 
 	def endtransition(self):
 		if self._transition:
