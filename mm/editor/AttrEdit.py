@@ -674,7 +674,7 @@ class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_html_page', 'project_smil_url']
+			'project_smil_url']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -735,6 +735,9 @@ class DocumentWrapper(Wrapper):
 		for name in self.__stdnames:
 			if attrs.has_key(name):
 				names.remove(name)
+		import settings
+		if not settings.get('lightweight'):
+			names.append('project_html_page')
 		names.sort()
 		return self.__stdnames + names
 
