@@ -168,6 +168,10 @@ class AnchorEditor:
 		self.name = self.node.GetRawAttrDef('name', self.uid)
 		hasfixed = self.toplevel.player.updatefixedanchors(self.node)
 		self.editable = (not hasfixed)
+		self.type_choice.setsensitive(1, self.editable)
+		self.type_choice.setsensitive(2, self.editable)
+		self.type_choice.setsensitive(4, self.editable)
+		self.type_choice.setsensitive(5, self.editable)
 		anchorlist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		modanchorlist(anchorlist)
 		if anchorlist <> self.anchorlist:
@@ -224,18 +228,18 @@ class AnchorEditor:
 	def show_focus(self):
 ##		self.anchor_browser.deselect_browser()
 		if self.focus and self.editable:
-			self.buttons.show(1)
+			self.buttons.setsensitive(1, 0)
 		else:
-			self.buttons.hide(1)
+			self.buttons.setsensitive(1, 0)
 		if self.focus is None:
-			self.buttons.hide(2)
+			self.buttons.setsensitive(2, 0)
 			self.type_choice.hide()
 ##			self.group.hide_object()
 			self.composite.hide()
 ##			self.id_input.hide_object()
 		else:
 			self.anchor_browser.selectitem(self.focus)
-			self.buttons.show(2)
+			self.buttons.setsensitive(2, 1)
 			self.type_choice.show()
 ##			self.group.show_object()
 			self.show_type()
@@ -250,7 +254,7 @@ class AnchorEditor:
 		if type == ATYPE_COMP:
 			self.composite.show()
 			self.type_choice.hide()
-			self.buttons.hide(1)
+			self.buttons.setsensitive(1, 0)
 			self.composite.setlabel('Composite: ' + `loc`)
 			return
 		self.type_choice.show()
@@ -260,9 +264,9 @@ class AnchorEditor:
 				self.type_choice.setpos(i)
 		if type in (ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_ARGS) \
 			  and self.editable:
-			self.buttons.show(1)
+			self.buttons.setsensitive(1, 1)
 		else:
-			self.buttons.hide(1)
+			self.buttons.setsensitive(1, 0)
 
 	def set_type(self, type):
 		if self.focus is None:
