@@ -654,11 +654,11 @@ class _CommonWindow:
 				Qd.DisposeRgn(rgn)
 		return self._button_region
 		
-	def _iscontrolclick(self, down, where, event):
+	def _iscontrolclick(self, down, where, event, double):
 		# Overriden for toplevel window
 		return 0
 				
-	def _contentclick(self, down, where, event, shifted):
+	def _contentclick(self, down, where, event, shifted, double):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate
 		transforms)"""
@@ -682,7 +682,7 @@ class _CommonWindow:
 			if Qd.PtInRect(where, ch.qdrect()):
 				try:
 					ch._contentclick(down, where, event,
-							 shifted)
+							 shifted, double)
 				except Continue:
 					pass
 				else:
@@ -690,7 +690,7 @@ class _CommonWindow:
 		#
 		# Then, check for a click in a control
 		#
-		if self._iscontrolclick(down, where, event):
+		if self._iscontrolclick(down, where, event, double):
 			return
 		#
 		# Next, check for popup menu, if we have one
@@ -1495,6 +1495,7 @@ class _AdornmentsMixin:
 		self._cntl_to_cmd = {}
 		self._cntl_handlers = {}
 		self._keyboard_shortcuts = {}
+		self._doubleclick = None
 		self._add_adornments(adornments)
 		
 	def _add_adornments(self, adornments):
@@ -1532,6 +1533,8 @@ class _AdornmentsMixin:
 			self._keyboard_shortcuts = adornments['shortcuts']
 			for k in self._keyboard_shortcuts.keys():
 				mw_globals._all_commands[k] = 1
+		if adornments.has_key('doubleclick'):
+			self._doubleclick = adornments['doubleclick']
 			
 	def close(self):
 		del self._cmd_to_cntl
@@ -1552,7 +1555,7 @@ class _AdornmentsMixin:
 		resid, width, height = MenuTemplate.TOOLBAR
 		self._rect = x, y+height, w, h-height
 			
-	def _iscontrolclick(self, down, local, event):
+	def _iscontrolclick(self, down, local, event, double):
 		if down:
 			# Check for control
 			ptype, ctl = Ctl.FindControl(local, self._wid)
@@ -1565,6 +1568,9 @@ class _AdornmentsMixin:
 					if part:
 						control_callback(ctl, part)
 				return 1
+			# Not a control. Check for double-click
+			if double and self._doubleclick_callback():
+				return 1
 		# Otherwise if the click is outside the real inner section we ignore it.
 		if not Qd.PtInRect(local, self.qdrect()):
 ##			if down:
@@ -1576,6 +1582,12 @@ class _AdornmentsMixin:
 ##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
 		cmd = self._cntl_to_cmd[ctl]
 		self.call_command(cmd)
+		
+	def _doubleclick_callback(self):
+		if self._doubleclick:
+			self.call_command(self._doubleclick)
+			return 1
+		return 0
 		
 	def _check_for_shortcut(self, key):
 		if self._keyboard_shortcuts.has_key(key):
@@ -1736,13 +1748,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if not self.close_window_command():
 			print 'No way to close this window!', self
 		
-	def _contentclick(self, down, where, event, shifted):
+	def _contentclick(self, down, where, event, shifted, double):
 		"""A mouse click in our data-region"""
 		if not self._wid or not self._parent:
 			return
 		Qd.SetPort(self._wid)
 		where = Qd.GlobalToLocal(where)
-		_CommonWindow._contentclick(self, down, where, event, shifted)
+		_CommonWindow._contentclick(self, down, where, event, shifted, double)
 
 	def _keyboardinput(self, char, where, event):
 		"""A character typed in our data-region"""
@@ -2121,7 +2133,7 @@ class _SubWindow(_CommonWindow):
 		raise 'Attempt to enable drop on subwindow'
 		
 class DialogWindow(_Window):
-	def __init__(self, resid, title='Dialog', default=None, cancel=None,
+	def __init__(self, resid, title='', default=None, cancel=None,
 				cmdbuttons=None):
 		wid = Dlg.GetNewDialog(resid, -1)
 		if cmdbuttons:
@@ -2162,7 +2174,8 @@ class DialogWindow(_Window):
 		return '<DialogWindow %s>'%self.title
 	
 	def show(self):
-		self.settitle(self.title)
+		if self.title:
+			self.settitle(self.title)
 		self._wid.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
 		self._wid.ShowWindow()
 		self._wid.SelectWindow() # test
