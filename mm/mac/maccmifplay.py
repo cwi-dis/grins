@@ -46,6 +46,12 @@ if not STANDALONE:
 	
 	os.environ["CMIF"] = CMIFDIR
 	#os.environ["CHANNELDEBUG"] = "1"
+	
+if len(sys.argv) > 1 and sys.argv[1] == '-p':
+	profile = 1
+	del sys.argv[1]
+else:
+	profile = 0
 
 if len(sys.argv) < 2:
 	MacOS.splash()
@@ -57,4 +63,10 @@ if len(sys.argv) < 2:
 ##print "ENVIRON:", os.environ
 ##print "PATH:", sys.path
 
-import main
+if profile:
+	import profile
+	fss, ok = macfs.StandardPutFile("Profile output:")
+	if not ok: sys.exit(1)
+	profile.run("import main", fss.as_pathname())
+else:
+	import main
