@@ -112,6 +112,8 @@ class _Toplevel:
 		# os timer
 		self._os_timer_id = 0
 		self._os_timer_wnd = None
+		self._hour_cursor = Sdk.LoadStandardCursor(win32con.IDC_WAIT)
+		self._std_cursor = Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
@@ -362,7 +364,7 @@ class _Toplevel:
 		
 	# It is actualy part of the main loop and part of a delta timer 
 	def serve_events(self,params=None):	
-		if self._waiting:self.setready()				
+		self.setready()				
 		while self._timers:
 			t = float(Sdk.GetTickCount())/TICKS_PER_SECOND
 			sec, cb, tid = self._timers[0]
@@ -376,23 +378,28 @@ class _Toplevel:
 				break
 		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		self.serve_timeslices()
-		if not self._timers and not self._idles:
+
+		# setwaiting may have been called by one of the cbs
+		if not self._timers and not self._idles and self._waiting>0:
 			self.StopTimer()
-		if self._waiting:self.setready()				
 
 	# Called by the core sustem to set the waiting cursor
 	def setwaiting(self):
 		if not self._waiting:
-			win32ui.GetApp().BeginWaitCursor()
+			self._prev_cursor = Sdk.SetCursor(self._hour_cursor)
 			self._waiting = 1
-			self.StartTimer()
+			self.StartTimer() # no effect if ticking
 
 	# Called by the core sustem to remove the waiting cursor
 	def setready(self):
 		if self._waiting:
-			# if you take one call, the end cursor doesn't hide
-			win32ui.GetApp().EndWaitCursor()
-			win32ui.GetApp().EndWaitCursor()
+			current = Sdk.GetCursor()
+			if current == self._hour_cursor:
+				if self._prev_cursor != self._hour_cursor:
+					Sdk.SetCursor(self._prev_cursor)
+				else:
+					Sdk.SetCursor(self._std_cursor)
+			# else restore elsewhere by a popup for example
 			self._waiting = 0
 
 	#
@@ -431,8 +438,6 @@ class _Toplevel:
 				if i < len(self._timers):
 					tt, cb, tid = self._timers[i]
 					self._timers[i] = (tt + t, cb, tid)
-				if not self._timers and not self._idles:
-					self.StopTimer()
 				return
 		raise 'unknown timer', id
 	
@@ -453,8 +458,6 @@ class _Toplevel:
 	# Register for receiving timeslices
 	def cancelidleproc(self, id):
 		del self._idles[id]
-		if not self._timers and not self._idles:
-			self.StopTimer()
 
 	# Dispatch timeslices
 	def serve_timeslices(self):
