@@ -889,8 +889,8 @@ class KeyTimesSlider(window.Wnd):
 	TICKS_OFFSET = 12
 
 	# marker triangle
-	MARKER_WIDTH = 6
-	MARKER_HEIGHT = 8
+	MARKER_WIDTH = 8
+	MARKER_HEIGHT = 10
 
 	def __init__(self, dlg, id):
 		self._parent = dlg
@@ -911,11 +911,30 @@ class KeyTimesSlider(window.Wnd):
 		self._selected = -1
 		self._dragging = None
 
+	def insertKeyTime(self, tp):
+		if tp <= self.DELTA or tp>1.0-self.DELTA: return
+		index = 0
+		for p in self._keyTimes:
+			if tp<p: break
+			index = index + 1
+		self._keyTimes.insert(index, tp)
+		self._selected = -1
+		self.updateKeyTimes()
+
 	def insertKeyTimeFromPoint(self, index, prop):
 		tp = self._keyTimes[index-1] + prop*(self._keyTimes[index]-self._keyTimes[index-1])
 		self._keyTimes.insert(index, tp)
 		self._selected = -1
 		self.updateKeyTimes()
+
+	def insertKeyTimeAtDevicePoint(self, point):
+		l, t, r, b = self.GetWindowRect()
+		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
+		x0 = l + self.TICKS_OFFSET
+		x, y = point
+		range = float(self.getDeviceRange())
+		tp = (x-x0)/range
+		self.insertKeyTime(tp)
 
 	def removeKeyTimeAtIndex(self, index):
 		del self._keyTimes[index]
@@ -932,6 +951,13 @@ class KeyTimesSlider(window.Wnd):
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		rc = l, b, r, b+self.MARKER_HEIGHT
 		self._parent.InvalidateRect(rc)
+	
+	def insideKeyTimes(self, point):
+		l, t, r, b = self.GetWindowRect()
+		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
+		rc = l+self.TICKS_OFFSET+self.DELTA, b, r-self.TICKS_OFFSET-self.DELTA, b+self.MARKER_HEIGHT
+		rect = win32mu.Rect(rc)
+		return rect.isPtInRect(win32mu.Point(point))
 
 	def getDeviceRange(self):
 		l, t, r, b = self.GetWindowRect()
@@ -983,6 +1009,8 @@ class KeyTimesSlider(window.Wnd):
 	
 	def isDraggable(self):
 		return self._selected>0 and self._selected<len(self._keyTimes)-1
+	def isRemovable(self, index):
+		return index>0 and index<len(self._keyTimes)-1
 					
 	def onSelect(self, point, flags):
 		# test hit on a key time
@@ -1014,4 +1042,13 @@ class KeyTimesSlider(window.Wnd):
 			self._keyTimes[self._selected] = v
 			self.updateKeyTimes()
 
-
+	def onActivate(self, point, flags):
+		if not self.insideKeyTimes(point):
+			return
+		# test hit on a key time
+		index, rect = self.getKeyTime(point)
+		if index >= 0:
+			if self.isRemovable(index):
+				self.removeKeyTimeAtIndex(index)	
+		else:	
+			self.insertKeyTimeAtDevicePoint(point)
