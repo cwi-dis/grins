@@ -1232,6 +1232,10 @@ SOURCE=.\lib\FileCache.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\fmtfloat.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\FtpWriter.py
 # End Source File
 # Begin Source File
