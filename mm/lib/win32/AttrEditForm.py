@@ -3998,7 +3998,7 @@ class AttrEditForm(GenFormView):
 
 	# Called when the view is activated 
 	def activate(self):
-		self._is_active=1
+		GenFormView.activate(self)
 		childframe=self.GetParent()
 		frame=childframe.GetMDIFrame()
 		frame.LoadAccelTable(grinsRC.IDR_ATTR_EDIT)
@@ -4006,7 +4006,7 @@ class AttrEditForm(GenFormView):
 		
 	# Called when the view is deactivated 
 	def deactivate(self):
-		self._is_active=0
+		GenFormView.deactivate(self)
 		childframe=self.GetParent()
 		frame=childframe.GetMDIFrame()
 		frame.LoadAccelTable(grinsRC.IDR_GRINSED)

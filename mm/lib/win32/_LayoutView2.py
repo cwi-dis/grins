@@ -209,29 +209,13 @@ class _LayoutView2(GenFormView):
 
 	# Sets the acceptable command list by delegating to its parent keeping a copy.
 	def set_commandlist(self, list):
-		self._commandlist=list
-		if self._is_active:
-			self.activate()
+		GenFormView.set_commandlist(self, list)
 		self.set_localcommandlist(list)
 		
 	def close(self):
 		self.deactivate()
 		GenFormView.close(self)
 		
-	# Called when the view is activated 
-	def activate(self):
-		# menu, menubar, ...
-		self._is_active=1
-		self._parent.getMDIFrame().set_commandlist(self._commandlist,self._strid)
-#		self._parent.getMDIFrame().LoadAccelTable(grinsRC.IDR_STRUCT_EDIT)
-
-	# Called when the view is deactivated 
-	def deactivate(self):
-		# menu, menubar, ...
-		self._is_active=0
-		self._parent.getMDIFrame().set_commandlist(None,self._strid)
-#		self._parent.getMDIFrame().LoadAccelTable(grinsRC.IDR_GRINSED)
-
 	# Sets the acceptable commands. 
 	def set_localcommandlist(self,commandlist):
 		frame=self.GetParent()
