@@ -1,0 +1,28 @@
+Things To Do, Bugs To Fix
+=========================
+
+On O2, when stopping an MPEG movie, the system freezes.  -sjoerd, 27/1/97
+
+In the CarCrash tutorial, crash.aiff is not audible. The parallel
+sounds are not played really in parallel.  -mariat
+
+Save for Player crashes.  -mariat
+
+in 6Amsterdam if you click several times on the link to replay it
+crashes (it happens in the old system too).  -mariat
+
+In 7html:
+The buttons Next and Back sometimes are not working when selected.
+I think this happens after I edit the attributes of the button and
+I don't turn on/off the channel.  -mariat
+
+Randomly, I don't have proper redraws of windows!!!  -mariat
+
+Change a text channel to label. If the player is not turned on/off,
+crash when play. It doesn't happen if label is changed to text.  -mariat
+
+Channels are created as soon as you define the type. Could it be after
+you give the attribute values and select OK? (There are problems with
+the windows).  -mariat
+
+
