@@ -58,6 +58,9 @@
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Position and size' default 'Position and size. See also "units"' channel)
 
+(begin (float) 0.0 'Start delay' default
+	'Start delay of node.' normal)
+
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for background of window. Overriden by "transparent".' channel)
 
@@ -213,6 +216,7 @@
 	'Styles used in this document (root node only)')
 
 # This is the real sync arc data structure, on the destination!!!
+# The items are (srcnode, srcside, delay, dstside).
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)

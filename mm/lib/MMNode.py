@@ -9,6 +9,7 @@ import Duration
 from Hlinks import Hlinks
 import MMurl
 import settings
+from HDTL import HD, TL
 
 class MMNodeContext:
 	def __init__(self, nodeclass):
@@ -732,13 +733,30 @@ class MMNode:
 			return
 		if not arcs:
 			self.DelAttr('synctolist')
+			return
 		newarcs = []
-		for xuid, xsize, delay, yside in arcs:
+		for xuid, xside, delay, yside in arcs:
 			if uidremap.has_key(xuid):
 				xuid = uidremap[xuid]
-			newarcs.append(xuid, xsize, delay, yside)
+			if yside == HD:
+				if self.parent.type == 'seq' and xside == TL:
+					prev = None
+					for n in self.parent.children:
+						if n is self:
+							break
+						prev = n
+					if prev is not None and prev.uid == xuid:
+						self.SetAttr('begin', delay)
+						continue
+				elif xside == HD and self.parent.uid == xuid:
+					self.SetAttr('begin', delay)
+					continue
+			newarcs.append((xuid, xside, delay, yside))
 		if newarcs <> arcs:
-			self.SetAttr('synctolist', newarcs)
+			if not newarcs:
+				self.DelAttr('synctolist')
+			else:
+				self.SetAttr('synctolist', newarcs)
 
 	#
 	# Public methods for modifying a tree
@@ -1626,6 +1644,23 @@ class MMNode:
 ##		if not self.GetSummary('synctolist'):
 ##			return []
 		synctolist = []
+		delay = self.GetAttrDef('begin', 0.0)
+		if delay > 0:
+			if self.parent.type == 'seq':
+				xnode = None
+				xside = TL
+				for n in self.parent.children:
+					if n is self:
+						break
+					xnode = n
+				else:
+					# first child in seq
+					xnode = self.parent
+					xside = HD
+			else:
+				xnode = self.parent
+				xside = HD
+			synctolist.append((xnode, xside, self, HD, delay))
 		arcs = self.GetAttrDef('synctolist', [])
 		for arc in arcs:
 			n1uid, s1, delay, s2 = arc

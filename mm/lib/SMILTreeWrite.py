@@ -256,6 +256,19 @@ def getsyncarc(writer, node, isend):
 				      node.GetUID()
 			else:
 				arc = srcuid, srcside, delay, dstside
+	if not isend:
+		delay = node.GetRawAttrDef('begin', None)
+		if delay:
+			if arc:
+				print '** Multiple syncarcs to', \
+				      node.GetRawAttrDef('name', '<unnamed>'),\
+				      node.GetUID()
+			elif delay < 0:
+				print '** Negative start delay to', \
+				      node.GetRawAttrDef('name', '<unnamed>'),\
+				      node.GetUID()
+			else:
+				return '%.3fs' % delay
 	if not arc:
 		return
 	if not writer.uid2name.has_key(srcuid):

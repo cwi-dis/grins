@@ -192,7 +192,7 @@ class NodeWrapper(Wrapper):
 		namelist = [
 			'name', 'channel', ('file',),	# From nodeinfo window
 			('terminator',),
-			('duration',), 'loop',		# Time stuff
+			'begin', ('duration',), 'loop',	# Time stuff
 			('clipbegin',), ('clipend',),	# More time stuff
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',

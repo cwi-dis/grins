@@ -165,8 +165,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def SyncArc(self, node, attr, val):
 		synctolist = node.attrdict.get('synctolist', [])
-		if not synctolist:
-			node.attrdict['synctolist'] = synctolist
 		if attr == 'begin':
 			yside = HD
 		else:
@@ -178,6 +176,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if name is None:
 			# relative to parent/previous/start
+			if yside == HD:
+				node.attrdict['begin'] = delay
+				return
 			parent = node.GetParent()
 			if parent is None:
 				self.syntax_error('sync arc to top-level node')
@@ -220,6 +221,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				xside = HD
 			synctolist.append((xnode.GetUID(), xside, delay + counter, yside))
+		node.attrdict['synctolist'] = synctolist
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
@@ -236,7 +238,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'src':
 				attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
-				node.__syncarcs.append(attr, val)
+				node.__syncarcs.append((attr, val))
 			elif attr == 'dur':
 				if val == 'indefinite':
 					attrdict['duration'] = -1

@@ -120,6 +120,7 @@ class ChannelView(ChannelViewDialog):
 		self.future_focus = None
 		self.showall = 1
 		self.showarcs = 1
+		self.arcs = []
 		self.placing_channel = 0
 		self.thumbnails = 0
 		self.chanheight = NOTHUMB_CHANHEIGHT
@@ -453,8 +454,9 @@ class ChannelView(ChannelViewDialog):
 		else:
 			self.bwstripobject = None
 		self.initchannels(focus)
-		self.initnodes(focus)
 		self.initarcs(focus)
+		self.initnodes(focus)
+		self.objects[len(self.objects):] = self.arcs
 		self.initbwstrip()
 
 		# enable Next and Prev Minidoc commands if there are minidocs
@@ -734,7 +736,7 @@ class ChannelView(ChannelViewDialog):
 			return
 		arcs = []
 		self.scanarcs(self.viewroot, focus, arcs)
-		self.objects[len(self.objects):] = self.arcs = arcs
+		self.arcs = arcs
 
 	def scanarcs(self, node, focus, arcs):
 		type = node.GetType()
@@ -745,7 +747,28 @@ class ChannelView(ChannelViewDialog):
 				self.scanarcs(c, focus, arcs)
 
 	def addarcs(self, ynode, arcs, focus):
-		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
+		synctolist = MMAttrdefs.getattr(ynode, 'synctolist')
+		delay = MMAttrdefs.getattr(ynode, 'begin')
+		if delay > 0:
+			from HDTL import HD, TL
+			parent = ynode.GetParent()
+			if parent.GetType() == 'seq':
+				xnode = None
+				xside = TL
+				for n in parent.GetChildren():
+					if n is ynode:
+						break
+					xnode = n
+				if xnode is None:
+					# first child in seq
+					xnode = parent
+					xside = HD
+			else:
+				xnode = parent
+				xside = HD
+			# don't append, make copy!
+			synctolist = synctolist + [(xnode.GetUID(), xside, delay, HD)]
+		for arc in synctolist:
 			xuid, xside, delay, yside = arc
 			try:
 				xnode = ynode.MapUID(xuid)
@@ -1910,19 +1933,14 @@ class NodeBox(GO, NodeBoxCommand):
 		self.is_node_object = 1
 
 		self.arcmenu = arcmenu = []
-		if mother.showarcs:
-			for arc in MMAttrdefs.getattr(node, 'synctolist'):
-				xuid, xside, delay, yside = arc
-				try:
-					xnode = node.MapUID(xuid)
-				except NoSuchUIDError:
-					# Skip sync arc from non-existing node
-					continue
-				if xnode.FindMiniDocument() is mother.viewroot:
-					xname = MMAttrdefs.getattr(xnode, 'name')
-					if not xname:
-						xname = '#' + xuid
-					arcmenu.append(('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside)))
+		for arc in mother.arcs:
+			xnode, xside, delay, ynode, yside = arc.arcid
+			if ynode is not node:
+				continue
+			xname = MMAttrdefs.getattr(xnode, 'name')
+			if not xname:
+				xname = '#' + xnode.GetUID()
+			arcmenu.append(('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside)))
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 

@@ -5,6 +5,7 @@ __version__ = "$Id$"
 
 import MMExc
 import MMAttrdefs
+from HDTL import HD, TL
 
 
 ##def showarcinfo(root, snode, sside, delay, dnode, dside, new = 0):
@@ -131,6 +132,17 @@ class ArcInfo(ArcInfoDialog):
 		self.close()
 
 	def stillvalid(self):
+		if self.dside == HD:
+			if self.dnode.GetParent().GetType() == 'seq' and self.sside == TL:
+				prev = None
+				for n in self.dnode.GetParent().GetChildren():
+					if n is self.dnode:
+						break
+					prev = n
+				if prev is not None and self.snode is prev and self.dnode.GetAttrDef('begin',None) == self.delay:
+					return 1
+			elif self.sside == HD and self.snode is self.dnode.GetParent() and self.dnode.GetAttrDef('begin',None) == self.delay:
+				return 1
 		if self.snode.GetRoot() is not self.root or \
 		   self.dnode.GetRoot() is not self.root:
 			return 0
