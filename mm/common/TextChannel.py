@@ -86,6 +86,16 @@ class TextChannel(ChannelWindow):
 ##			button.hicolor(self.getfgcolor(node))
 			self.setanchor(name, type, button)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
+		# Draw a little square if some text did not fit.
+		box = self.armed_display.writestr('')
+		fits = 1
+		for pos in box:
+			if pos > 1:
+				fits = 0
+		if not fits:
+			xywh = (1.0-margin, 1.0-margin, margin, margin)
+			self.armed_display.drawfbox(self.gethicolor(node),
+						    xywh)
 		return 1
 
 	def getstring(self, node):
