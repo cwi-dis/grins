@@ -4,7 +4,7 @@
 from AnchorDefs import *
 from debug import debug
 import MMAttrdefs
-import dialogs
+import windowinterface
 error = 'Channel.error'
 
 channel_device = 1
@@ -597,8 +597,8 @@ class Channel:
 	def defanchor(self, node, anchor):
 		# This method is called when the user defines a new anchor. It
 		# may be overridden by derived classes.
-		dialogs.showmessage('Channel '+self._name+' does not support\n'+ \
-			  'editing of anchors (yet)')
+		windowinterface.showmessage('Channel '+self._name+\
+			  ' does not support\nediting of anchors (yet)')
 		return anchor
 
 	def updatefixedanchors(self, node):
@@ -829,7 +829,7 @@ class _ChannelThread:
 				attrdict['widget'] = self.window._form
 				attrdict['gc'] = self.window._gc
 				attrdict['visual'] = \
-					  windowinterface._toplevel._visual
+					  windowinterface.toplevel._visual
 			else:
 				print 'can\' work with this windowinterface'
 				return 0

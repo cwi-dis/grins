@@ -7,7 +7,7 @@ import MMAttrdefs
 from Scheduler import Scheduler, END_PAUSE, END_STOP, END_KEEP
 from AnchorDefs import *
 from MMNode import leaftypes
-import dialogs
+import windowinterface
 import SR
 
 [RS_NODE, RS_SCTX, RS_BAG, RS_PARENT] = range(4)
@@ -198,7 +198,7 @@ class Selecter:
 		if not destlist:
 			self.toplevel.setready()
 			if not pause_anchor:
-				dialogs.showmessage( \
+				windowinterface.showmessage( \
 				'No hyperlink source at this anchor')
 			return 0
 		for dest in destlist:
@@ -210,7 +210,7 @@ class Selecter:
 
 	def gotoanchor(self, (anchor1, anchor2, dir, type), arg):
 		if type <> 0:
-			dialogs.showmessage('Sorry, will JUMP anyway')
+			windowinterface.showmessage('Sorry, will JUMP anyway')
 		dest_uid, dest_aid = anchor2
 		if '/' in dest_uid:
 			if dest_uid[-2:] == '/1':
@@ -220,7 +220,7 @@ class Selecter:
 			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:
 			self.toplevel.setready()
-			dialogs.showmessage('Dangling hyperlink selected')
+			windowinterface.showmessage('Dangling hyperlink selected')
 			return 0
 		return self.gotonode(seek_node, dest_aid, arg)
 
@@ -234,7 +234,7 @@ class Selecter:
 					node = self.context.mapuid(node_id)
 				except NoSuchUIDError:
 					self.toplevel.setready()
-					dialogs.showmessage('Dangling: \n'+\
+					windowinterface.showmessage('Dangling: \n'+\
 						  `(node_id, aid)`)
 					continue
 				if self.gotonode(node, aid, arg):
@@ -395,7 +395,7 @@ def choosebagitem(node, interactive):
 		return None
 	list.append('Cancel')
 	prompt = 'Please select an item\nfrom the bag:'
-	choice = dialogs.multchoice(prompt, list, len(list) - 1)
+	choice = windowinterface.multchoice(prompt, list, len(list) - 1)
 	if 0 <= choice < len(children):
 		return children[choice]
 	else:

@@ -12,7 +12,7 @@ from HDTL import HD, TL
 # Not needed? from AnchorDefs import *
 import SR
 
-import dialogs
+import windowinterface
 
 debugtimer = 0
 
@@ -81,7 +81,7 @@ class SchedulerContext:
 		if err:
 			enode, echan = err
 			ename = MMAttrdefs.getattr(enode, 'name')
-			dialogs.showmessage('Error: overlap in channels'+ \
+			windowinterface.showmessage('Error: overlap in channels'+ \
 				  '\nchannels:'+(`echan`[1:-1])+ \
 				  '\nparent node:'+ename)
 			return 0
@@ -89,7 +89,7 @@ class SchedulerContext:
 		for cn in self.channelnames:
 			ch = self.parent.ui.getchannelbyname(cn)
 			if ch in self.parent.channels_in_use:
-				dialogs.showmessage('Channel already in use: '\
+				windowinterface.showmessage('Channel already in use: '\
 					  + cn)
 				return 0
 			self.parent.channels_in_use.append(ch)

@@ -2,7 +2,6 @@ from debug import debug
 from Channel import *
 import string
 import sys
-import dialogs
 import MMAttrdefs
 from AnchorDefs import *
 

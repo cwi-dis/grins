@@ -10,7 +10,7 @@ import MMAttrdefs
 import AttrEdit
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
-import dialogs
+import windowinterface
 from AnchorDefs import A_TYPE, A_ID, ATYPE_WHOLE
 
 from MMNode import interiortypes
@@ -183,12 +183,13 @@ class LinkEdit(ViewDialog, BasicDialog):
 	def finish_link(self, node):
 		self.fixinteresting()
 		if not self.interesting:
-			dialogs.showmessage('No reasonable sources for link')
+			windowinterface.showmessage('No reasonable sources for link')
 			return
 		anchors = ['Cancel']
 		for a in self.interesting:
 			anchors.append(self.makename(a))
-		i = dialogs.multchoice('Choose source anchor', anchors, 0)
+		i = windowinterface.multchoice('Choose source anchor',
+			  anchors, 0)
 		if i == 0:
 			return
 		srcanchor = self.interesting[i-1]

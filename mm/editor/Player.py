@@ -14,7 +14,7 @@ import MMAttrdefs
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 import Timing
-import dialogs
+import windowinterface
 
 MYGREY=8
 MYRED=9
@@ -176,7 +176,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		try:
 			ch = self.channels[name]
 		except KeyError:
-			dialogs.showmessage('No such channel: '+name)
+			windowinterface.showmessage('No such channel: '+name)
 			return
 		ch.set_visible(onoff)
 		self.toplevel.channelview.channels_changed()
@@ -219,7 +219,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			if node:
 				self.toplevel.channelview.globalsetfocus(node)
 			else:
-				dialogs.showmessage('That slot is not active')
+				windowinterface.showmessage('That slot is not active')
 ##		self.after_call()
 		
 	def dummy_callback(self, *dummy):
