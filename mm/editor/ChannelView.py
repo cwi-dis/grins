@@ -1787,7 +1787,8 @@ class NodeBox(GO, NodeBoxCommand):
 		root = mother.root
 		snode, sside, delay, dnode, dside = \
 			mother.lockednode.node, 'end', 0.0, self.node, 'begin'
-		arc = MMNode.MMSyncArc(dnode, dside, srcnode=snode, event=sside, delay=0.0)
+		from MMNode import MMSyncArc
+		arc = MMSyncArc(dnode, dside, srcnode=snode, event=sside, delay=0.0)
 		editmgr.addsyncarc(dnode, dside, arc)
 		mother.cleanup()
 		editmgr.commit()
