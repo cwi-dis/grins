@@ -1135,12 +1135,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__childregions[None].append(region)
 		import ChannelMap
 
-		# not visible region
-		# if top region weight and height are already specify or
+		# we don't need of a min size if
+		# media is not visible or
 		# top region weight and height are already specify in pixels
+		# note: For now, it's optimize enough. If we want more optimization,
+		# we have to look in detail _calcmin1, _calcmin2 methods
 		if (not ChannelMap.isvisiblechannel(mtype)) or \
-			(self.__tops[top]['width'] > 0 and \
-			   self.__tops[top]['height'] > 0) or \
 			(w != None and type(w) is type(0) and \
 				h != None and type(h) is type(0)):
 
