@@ -10,7 +10,7 @@
       <topLayout id="Basic_GRiNS_Slideshow" width="330" height="270"  GRiNS:editBackground="192 192 0" GRiNS:showEditBackground="1">
         <region id="audio" GRiNS:type="sound"/>
         <region id="bkgd_image" width="330" height="270" GRiNS:type="image" z-index="0" GRiNS:editBackground="192 0 192" GRiNS:showEditBackground="1"/>
-        <region id="Images" fit="meet" top="7" left="7" width="320" height="240" z-index="1" backgroundColor="#FeFAc9" GRiNS:type="image" GRiNS:editBackground="0 192 192" GRiNS:showEditBackground="1"/>
+        <region id="Images" fit="meet" top="7" left="7" width="320" height="240" z-index="1" GRiNS:type="image" GRiNS:editBackground="0 192 192" GRiNS:showEditBackground="1"/>
       </topLayout>
     </layout>
     <transition id="fade" type="fade"/>
