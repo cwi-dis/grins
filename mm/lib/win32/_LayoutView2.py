@@ -91,6 +91,11 @@ class _LayoutView2(GenFormView):
 	def setListener(self, ctrlName, listener):
 		self.__listeners[ctrlName] = listener
 
+	# remove the handler for callback fnc
+	def removeListener(self, ctrlName):
+		if self.__listeners.has_key(ctrlName):
+			del self.__listeners[ctrlName]
+			
 	# tree component
 	def getTreeComponent(self):
 		return self._treeComponent
@@ -358,15 +363,27 @@ class TreeManager:
 	def __init__(self):
 		self.__imageList = win32ui.CreateImageList(16, 16, 0, 10, 5)
 		self.bitmapNameToId = {}
-		self._handler = None
+		self._listener = None
 
-	def setHandler(self, handler):
-		self._handler = handler
-		
+	def destroy(self):
+		self.treeCtrl.removeExpandListener(self)
+		self.treeCtrl.removeMultiSelListener(self)
+		self.treeCtrl = None
+		self.__imageList = None
+		self.bitmapNameToId = None
+		self._listener = None
+	
+	def setListener(self, listener):
+		self._listener = listener
+
+	def removeListener(self):
+		self._listener = None
+
 	def onInitialUpdate(self, parent):
 		import TreeCtrl
 		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1)
 		self.treeCtrl.addMultiSelListener(self)
+		self.treeCtrl.addExpandListener(self)
 
 		# init the image list used in the tree
 		self.__initImageList()
@@ -439,7 +456,11 @@ class TreeManager:
 					child = None
 
 	def expand(self, item):
-		self.treeCtrl.Expand(item, commctrl.TVE_EXPAND)
+		try:
+			self.treeCtrl.Expand(item, commctrl.TVE_EXPAND)
+		except:
+			# if the node has no child, it's an error in windows
+			pass
 		
 	def destroyAllNodes(self):								  		
 		self.treeCtrl.DeleteAllItems()
@@ -455,9 +476,13 @@ class TreeManager:
 #			self._handler.onSelectTreeNodeCtrl(item)
 	
 	def OnMultiSelChanged(self):
-		if self._handler != None:
-			self._handler.onSelectTreeNodeCtrl(self.treeCtrl.getSelectedItems())
+		if self._listener != None:
+			self._listener.onSelectTreeNodeCtrl(self.treeCtrl.getSelectedItems())
 
+	def OnExpandChanged(self, item, isExpanded):
+		if self._listener != None:
+			self._listener.onExpandTreeNodeCtrl(item, isExpanded)
+						 
 ###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
 	def __init__(self):
@@ -553,8 +578,8 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 
 	# define a handler for the layout component
-	def setHandler(self, handler):
-		self._Handler = handler
+	def setListener(self, listener):
+		self._listener = listener
 			
 	# create a new viewport
 	def newViewport(self, attrdict, name):
@@ -668,7 +693,8 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		try:
 			self.InvalidateRect(rc or self.GetClientRect())
 		except:
-			print '_LayoutView2: LayoutManager.update: unexpected error ?'
+			# XXX the winui may already destroyed !
+			pass
 
 	def getClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
@@ -764,7 +790,7 @@ class UserEventMng:
 	def __init__(self):
 		self.listener = None
 
-	def addListener(self, listener):
+	def setListener(self, listener):
 		self.listener = listener
 
 	def removeListener(self, listener):

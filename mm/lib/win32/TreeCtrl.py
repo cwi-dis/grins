@@ -25,6 +25,7 @@ class TreeCtrl(window.Wnd):
 		window.Wnd.__init__(self, ctrl)
 		self._selections = []
 		self._multiSelListeners = []
+		self._expandListeners = []
 		self._selEventSource = None
 
 		self.__selecting = 0
@@ -169,6 +170,10 @@ class TreeCtrl(window.Wnd):
 			except:
 				pass
 
+		# update the listener
+		for listener in self._expandListeners:
+			listener.OnExpandChanged(item, action != commctrl.TVE_COLLAPSE)
+
 		# if any changement, update the listeners			
 		if self.__changed:
 			self.OnMultiSelChanged()
@@ -308,6 +313,17 @@ class TreeCtrl(window.Wnd):
 			if debug:
 				self.scheduleDump()
 
+	# add an expand listener 
+	def addExpandListener(self, listener):
+		if hasattr(listener, 'OnExpandChanged') and\
+			listener not in self._expandListeners:
+			self._expandListeners.append(listener)
+
+	# remove an expand listener
+	def removeExpandListener(self, listener):
+		if listener in self._expandListeners:
+			self._expandListeners.remove(listener)
+		
 	# add a listener 
 	def addMultiSelListener(self, listener):
 		if hasattr(listener, 'OnMultiSelChanged') and\
