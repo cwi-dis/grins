@@ -117,8 +117,8 @@ class SMIL:
 				'height':'0',
 				'skip-content':'true',
 				'width':'0',
-				'close':'never',
-				'open':'always',
+				'close':'onRequest',
+				'open':'onStart',
 				# edit preferences of new layout view
 				GRiNSns+' ' 'showEditBackground':None,
 				GRiNSns+' ' 'editBackground':None,					 
