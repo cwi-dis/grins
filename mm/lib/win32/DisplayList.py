@@ -195,6 +195,10 @@ class DisplayList:
 			for x, y in points[1:]:
 				DrawLine(dc,(x0, y0, x, y),fg)
 				x0, y0 = x, y
+		elif cmd == '3dhline':
+			color1, color2, x0, x1, y = entry[1:]
+			DrawLine(dc, (x0, y, x1, y), color1)
+			DrawLine(dc, (x0, y+1, x1, y+1), color2)
 		elif cmd == 'box':
 			# XXXX should we subtract 1 from right and bottom edges
 			DrawRectangle(dc,entry[1],self._curfg)
@@ -394,6 +398,17 @@ class DisplayList:
 		self._list.append('line', color, p)
 		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
+	# Draw a horizontal gutter
+	def draw3dhline(self, color1, color2, x0, x1, y):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		w = self._window
+		color1 = self._convert_color(color1)
+		color2 = self._convert_color(color2)
+		x0, y = self._convert_coordinates((x0, y))
+		x1, dummy = self._convert_coordinates((x1, y))
+		self._list.append('3dhline', color1, color2, x0, x1, y)
+		self._update_bbox(x0, y, x1, y+1)
 
 	# Insert a command to drawbox
 	def drawbox(self,coordinates):
