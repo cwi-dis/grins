@@ -280,6 +280,9 @@ class Channel:
 			if not self._player.toplevel.waitevent():
 				return
 
+	def anchor_triggered(self, node, anchorlist, arg):
+		return self._playcontext.anchorfired(node, anchorlist, arg)
+
 	def pause_triggered(self, node, anchorlist, arg):
 		# Callback which is called when the button of a pause
 		# anchor is pressed.
@@ -304,21 +307,6 @@ class Channel:
 				self._qid = None
 			self._has_pause = 0
 			self.playdone(None)
-
-	# XXXX This is a temporary routine to allow testing of arg-anchors
-	#
-	def arganchor_triggered(self, node, anchorlist, arg):
-		print 'ARG ANCHOR TRIGGERED'
-		import sys
-		if 'fl' in sys.modules.keys():
-			import fl
-			# We are in the editor. Use fl for question
-			arg = fl.show_input('Give anchor args:', '')
-		else:
-			# We are in the player. Use dialog getstring.
-			arg = dialogs.getstring('Give anchor args: ')
-		print 'VALUE=', arg
-		self.pause_triggered(node, anchorlist, arg)
 
 	def play_0(self, node):
 		# This does the initial part of playing a node.
@@ -346,9 +334,6 @@ class Channel:
 			if type == ATYPE_PAUSE:
 ##				print 'found pause anchor'
 				f = self.pause_triggered
-				self._has_pause = 1
-			elif type == ATYPE_ARGS:
-				f = self.arganchor_triggered
 				self._has_pause = 1
 			else:
 				f = self._playcontext.anchorfired
@@ -711,6 +696,8 @@ class ChannelWindow(Channel):
 		import events, EVENTS
 		events.register(self.window, EVENTS.ResizeWindow, \
 			  self.resize, None)
+		if debug:
+			print 'registered Resize for', self
 		return 1
 
 	def do_hide(self):
