@@ -7,17 +7,24 @@ What am I doing:
 Priority top-to-bottom.
 ------------------------
 
-* Toolbar or asset box - D&D transitions
+Order the channels
+Make the channels display in a tree
+Bars should not collide
+Nodes should not overlap
+The width should be calculated from the duration.
 
-* Create templates for Snap! (slideshow)
+* The temporal view.
+
+* Indefinite durations in the temporal view.
+
+
 
 Incoming
 --------
+* Create templates for Snap! (slideshow)
 
 * Add a asset box for transitions.
 
 * Clean up the resource files
-
-* Pop up a list of transitions.
 
 * Show whether a node is empty or not.
