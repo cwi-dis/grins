@@ -587,16 +587,29 @@ class _LayoutView2(GenFormView):
 			)
 
 	def resizeCtrls(self, w, h):
-		# controls margin + posibly scrollbar
-		cm = 120
 
+		# move controls in their right position
+		ctrlIDsToMove = self.getCtrlIdsToMoveDown()
+		
+		# controls margin + posibly scrollbar
+		cm = 20
+		ctrlList = []
+		for id in ctrlIDsToMove:
+			ctrl = components.Control(self,id)
+			ctrl.attach_to_parent()
+			ctrlList.append((ctrl,id))
+			l,t,r,b = ctrl.getwindowrect()
+			h = b-t
+			if id in(grinsRC.IDC_LAYOUT_REGION_X, grinsRC.IDC_LAYOUT_REGION_W, grinsRC.IDC_LAYOUT_FITV):
+				cm = cm+h
+			elif id == grinsRC.IDC_LAYOUT_FITL:
+				cm = cm+h*3 # take into acounts three labels
+
+			
 		if  self.GetStyle() & win32con.WS_HSCROLL:
 			cm = cm+20
 			
 		lf, tf, rf, bf = self.GetWindowRect()
-
-		# move controls in their right position
-		ctrlIDsToMove = self.getCtrlIdsToMoveDown()
 
 		# resize preview pane
 		ll, tl, rl, bl = self._layout.GetWindowRect()
@@ -608,9 +621,7 @@ class _LayoutView2(GenFormView):
 				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 		
 		flags = win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE
-		for id in ctrlIDsToMove:
-			ctrl = components.Control(self,id)
-			ctrl.attach_to_parent()
+		for ctrl,id in ctrlList:
 			l1,t1,r1,b1 = ctrl.getwindowrect()
 			
 			offsetL, offsetR = self.__orgctrlpos[id]
