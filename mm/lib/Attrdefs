@@ -319,12 +319,6 @@
 (syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' syncBehavior
 	'Default value for the syncBehavior property on the children of this node' inherited (smil2 cmif))
 
-# This is the real sync arc data structure, on the destination!!!
-# The items are (srcnode, srcside, delay, dstside).
-(synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
-	() 'SyncTo list' hidden
-	'List of sync arcs ending at this node' raw (g2 qt smil10 smil2 cmif))
-
 # The items are (srcnode, event or marker, delay).
 # things causing the node to start
 (beginlist (list (enclosed (any))) ()

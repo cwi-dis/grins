@@ -1054,13 +1054,32 @@ class SMILHtmlTimeWriter(SMIL):
 			for child in node.children:
 				self.calcanames(child)
 
+	# copied from SMILTreeWrite.py
 	def syncidscheck(self, node):
 		# make sure all nodes referred to in sync arcs get their ID written
-		for srcuid, srcside, delay, dstside in node.GetRawAttrDef('synctolist', []):
-			self.ids_used[self.uid2name[srcuid]] = 1
-		if node.GetType() in interiortypes:
-			for child in node.children:
-				self.syncidscheck(child)
+		for arc in node.GetRawAttrDef('beginlist', []) + node.GetRawAttrDef('endlist', []):
+			# see also getsyncarc() for similar code
+			if arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
+				pass
+			elif arc.wallclock is not None:
+				pass
+			elif arc.accesskey is not None:
+				pass
+			elif arc.marker is None:
+				if arc.channel is not None:
+					pass
+				elif arc.srcanchor is not None:
+					aid = (arc.srcnode.GetUID(), arc.srcanchor)
+					self.ids_used[self.aid2name[aid]] = 1
+				elif arc.srcnode in ('syncbase', 'prev'):
+					pass
+				elif arc.srcnode is not node:
+					self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
+			else:
+				self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
+		for child in node.children:
+			self.syncidscheck(child)
+
 
 #
 #   Util

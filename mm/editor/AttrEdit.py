@@ -574,7 +574,7 @@ class NodeWrapper(Wrapper):
 					defn = MMAttrdefs.getdef(name)
 					if defn[5] == 'channel':
 						namelist.append(name)
-		# Merge in nonstandard attributes (except synctolist!)
+		# Merge in nonstandard attributes
 		extras = []
 		for name in self.node.GetAttrDict().keys():
 			if name not in namelist and \

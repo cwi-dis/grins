@@ -733,55 +733,6 @@ def getsyncarc(writer, node, isend):
 ##	      node.GetUID()
 ##	return fmtfloat(delay, 's')
 
-def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
-	if writer.smilboston:
-		return rv
-	if dstside != 0 or srcside != 0:
-		print '** Out of scope syncarc to',\
-		      node.GetRawAttrDef('name', '<unnamed>'),\
-		      node.GetUID()
-		return rv
-	srcnode = node.GetContext().mapuid(srcuid)
-	a = node.CommonAncestor(srcnode)
-	x = srcnode
-	while x is not a:
-		p = x.GetParent()
-		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
-			print '** Out of scope syncarc to',\
-			      node.GetRawAttrDef('name', '<unnamed>'),\
-			      node.GetUID()
-			return rv
-		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
-			if yside == 0 and xdelay != 0:
-				# too complicated
-				print '** Out of scope syncarc to',\
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-				return rv
-		x = p
-	x = node
-	while x is not a:
-		p = x.GetParent()
-		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
-			print '** Out of scope syncarc to',\
-			      node.GetRawAttrDef('name', '<unnamed>'),\
-			      node.GetUID()
-			return rv
-		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
-			if yside == 0 and xdelay != 0 and x is not node:
-				# too complicated
-				print '** Out of scope syncarc to',\
-				      node.GetRawAttrDef('name', '<unnamed>'),\
-				      node.GetUID()
-				return rv
-		x = p
-	print '*  Fixing out of scope syncarc to',\
-	      node.GetRawAttrDef('name', '<unnamed>'),\
-	      node.GetUID()
-	return fmtfloat(delay, 's')
-
 def getterm(writer, node):
 	if node.type in ('seq', 'prio', 'switch'):
 		return
@@ -1056,7 +1007,7 @@ cmif_node_attrs_ignore = {
 	'system_required':0, 'system_audiodesc':0, 'system_operating_system':0,
 	'system_cpu':0,
 	'system_screen_size':0, 'system_screen_depth':0, 'layout':0,
-	'clipbegin':0, 'clipend':0, 'u_group':0, 'loop':0, 'synctolist':0,
+	'clipbegin':0, 'clipend':0, 'u_group':0, 'loop':0,
 	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
 	'fillDefault':0, 'syncBehavior':0, 'syncBehaviorDefault':0,
@@ -1603,11 +1554,28 @@ class SMILWriter(SMIL):
 
 	def syncidscheck(self, node):
 		# make sure all nodes referred to in sync arcs get their ID written
-		for srcuid, srcside, delay, dstside in node.GetRawAttrDef('synctolist', []):
-			self.ids_used[self.uid2name[srcuid]] = 1
-		if node.GetType() in interiortypes:
-			for child in node.children:
-				self.syncidscheck(child)
+		for arc in node.GetRawAttrDef('beginlist', []) + node.GetRawAttrDef('endlist', []):
+			# see also getsyncarc() for similar code
+			if arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
+				pass
+			elif arc.wallclock is not None:
+				pass
+			elif arc.accesskey is not None:
+				pass
+			elif arc.marker is None:
+				if arc.channel is not None:
+					pass
+				elif arc.srcanchor is not None:
+					aid = (arc.srcnode.GetUID(), arc.srcanchor)
+					self.ids_used[self.aid2name[aid]] = 1
+				elif arc.srcnode in ('syncbase', 'prev'):
+					pass
+				elif arc.srcnode is not node:
+					self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
+			else:
+				self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
+		for child in node.children:
+			self.syncidscheck(child)
 
 	def __writeRegPoint(self):
 		regpoints = self.root.GetContext().regpoints
