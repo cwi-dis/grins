@@ -351,6 +351,12 @@ class SMILHtmlTimeWriter(SMIL):
 					if value[:3] == 'id(':
 						name = 'end'
 						value = value[3:-1] + '.end'
+
+				# 
+				if name == 'end' and value == 'activateEvent':
+					name = 'onClick'
+					value = 'endElement()'
+
 				if interior:
 					attrlist.append((name, value))
 				else:	
@@ -432,8 +438,8 @@ class SMILHtmlTimeWriter(SMIL):
 			lch = lch.__parent
 		
 		if viewport and self.__currViewport!=viewport:
-			if self.__currViewport:
-				self.pop()
+#			if self.__currViewport:
+#				self.pop()
 			name = self.ch2name[viewport]
 			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
 			self.push()
