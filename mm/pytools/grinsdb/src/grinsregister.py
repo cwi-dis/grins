@@ -27,6 +27,7 @@ PASSWD=os.path.join(DIR, ".htpasswd")
 RESPONSE_MESSAGE=os.path.join(grinsdb.DATABASE, ".mailresponse")
 RESPONSE_SENDER="grins-request@oratrix.com"
 RESPONSE_URL="http://www.oratrix.com/GRiNS/Download/down-sw1.html"
+LICENSE=os.path.join(grinsdb.DATABASE, ".evallicense")
 
 SENDMAIL="/usr/lib/sendmail -t"
 
@@ -84,12 +85,20 @@ def register(file, filename):
 		raise Error
 
 	grpasswd.addpasswd(obj)
+	if obj.has_key("want-editor") and obj["want-editor"] == "yes":
+		now = time.localtime(time.time())
+		elr = time.strftime("%d-%h-%Y", now)
+		obj['Eval-License-Req'] = elr
+		license = open(LICENSE).read()
+	else:
+		license = ""
+
 	dbase.save(obj)
 
 	clear = obj['password']
 	crypted = crypt_passwd(clear)
 	add_passwd(PASSWD, user, crypted)
-	mail(user, clear)
+	mail(user, clear, license)
 	print "%s: added (%s)"%(user, filename)
 
 def find_duplicate(dbase, obj):
@@ -120,7 +129,7 @@ def add_passwd(filename, user, passwd):
 		print "ADDPASSWD: Exit status", sts
 		raise Error
 
-def mail(user, passwd):
+def mail(user, passwd, license=""):
 	ofp = os.popen(SENDMAIL, 'w')
 	ifp = open(RESPONSE_MESSAGE, 'r')
 	data = ifp.read()
@@ -129,6 +138,7 @@ def mail(user, passwd):
 		"passwd": passwd,
 		"sender": RESPONSE_SENDER,
 		"url": RESPONSE_URL,
+		"license":license,
 		}
 	ofp.write(data%dict)
 	status = ofp.close()
