@@ -114,7 +114,7 @@ class AttrCtrl:
 		else:
 			# only give default if wanted and not already there
 			if hd[1] and self.want_default_help and hd[2].lower().find('default') < 0:
-				return "%s (leave empty for %s)"%(hd[2], hd[1])
+				return "%s (default: %s)"%(hd[2], hd[1])
 			else:
 				return hd[2]
 
