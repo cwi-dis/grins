@@ -21,6 +21,7 @@
 import grinsRC
 import usercmd
 import wndusercmd
+from ToolbarIcons import *
 
 #
 # This is a hack by Jack. We need fixed ID values
@@ -53,21 +54,18 @@ class Pulldown:
 		self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
-		Button(usercmd.NEW_DOCUMENT, 0),
+	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, (
+		Button(usercmd.NEW_DOCUMENT, TBICON_NEW),
 		Separator(6),
-		Button(usercmd.OPENFILE, 1),
-		Button(usercmd.SAVE, 2),
+		Button(usercmd.OPENFILE, TBICON_OPENFILE),
+		Button(usercmd.SAVE, TBICON_SAVE),
 		Separator(6),
-		Button(usercmd.RESTORE, 6),
-		Button(usercmd.CLOSE, 7),
+		Button(usercmd.RESTORE, TBICON_RESTORE),
+		Button(usercmd.CLOSE, TBICON_CLOSE),
 		Separator(6),
-		Button(wndusercmd.CLOSE_ACTIVE_WINDOW, 11),
+		Button(wndusercmd.CLOSE_ACTIVE_WINDOW, TBICON_CLOSE_WINDOW),
 		Separator(12),
-		Button(usercmd.CANVAS_ZOOM_IN, 12),
-		Button(usercmd.CANVAS_ZOOM_OUT, 13),
-		Separator(12),
-		Button(usercmd.HELP, 9),
+		Button(usercmd.HELP, TBICON_HELP),
 		Separator(12),
 		Pulldown('Bitrate'),
 		Pulldown('Language'),
@@ -76,35 +74,35 @@ GENERAL_TEMPLATE = (
 )
 
 FRAME_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
-		Button(usercmd.NEW_DOCUMENT, 0),
+	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, (
+		Button(usercmd.NEW_DOCUMENT, TBICON_NEW),
 		Separator(6),
-		Button(usercmd.OPENFILE, 1),
-		Button(usercmd.SAVE, 2),
+		Button(usercmd.OPENFILE, TBICON_OPENFILE),
+		Button(usercmd.SAVE, TBICON_SAVE),
 		)
 	)
 )
 PLAYER_TEMPLATE = (
-	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
-		Button(usercmd.PLAY, 0),
-		Button(usercmd.PAUSE, 1),
-		Button(usercmd.STOP, 2),
+	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, (
+		Button(usercmd.PLAY, TBICON_PLAY),
+		Button(usercmd.PAUSE, TBICON_PAUSE),
+		Button(usercmd.STOP, TBICON_STOP),
 		)
 	)
 )
 
 ALIGN_TEMPLATE = (
-	('Region alignment', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_ALIGNMENT, (
-		Button(usercmd.ALIGN_LEFT, 0),
-		Button(usercmd.ALIGN_CENTER, 1),
-		Button(usercmd.ALIGN_RIGHT, 2),
+	('Region alignment', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, (
+		Button(usercmd.ALIGN_LEFT, TBICON_ALIGN_LEFT),
+		Button(usercmd.ALIGN_CENTER, TBICON_ALIGN_VERTICAL),
+		Button(usercmd.ALIGN_RIGHT, TBICON_ALIGN_RIGHT),
 		Separator(6),
-		Button(usercmd.ALIGN_TOP, 3),
-		Button(usercmd.ALIGN_MIDDLE, 4),
-		Button(usercmd.ALIGN_BOTTOM, 5),
+		Button(usercmd.ALIGN_TOP, TBICON_ALIGN_TOP),
+		Button(usercmd.ALIGN_MIDDLE, TBICON_ALIGN_HORIZONTAL),
+		Button(usercmd.ALIGN_BOTTOM, TBICON_ALIGN_BOTTOM),
 		Separator(6),
-		Button(usercmd.DISTRIBUTE_HORIZONTALLY, 6),
-		Button(usercmd.DISTRIBUTE_VERTICALLY, 7),
+		Button(usercmd.DISTRIBUTE_HORIZONTALLY, TBICON_DISTRIBUTE_HORIZONTAL),
+		Button(usercmd.DISTRIBUTE_VERTICALLY, TBICON_DISTRIBUTE_VERTICAL),
 		)
 	)
 )
