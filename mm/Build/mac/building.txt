@@ -22,6 +22,7 @@ the project playercontrols.prj in the icons folder.
 Next you may have to rebuild the attrdefs.py file. To do this,
 run macgrins.py once.
 
+
 Next, running the macbuild.py script should do the complete build.
 In case it doesn't work, here are the steps it does:
 1. Freeze macplayer.py into the build.player folder. To do this by
