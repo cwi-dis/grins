@@ -576,16 +576,25 @@ class ChannelView(ViewDialog, GLDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		import dialogs
-		from ChannelMap import channeltypes
+		from ChannelMap import commonchanneltypes, otherchanneltypes
 		prompt = 'Channel type:'
-		list = channeltypes[:]
+		list = commonchanneltypes[:]
+		list.append('Other...')
 		list.append('Cancel')
-		default = list.index('text')
-		i = dialogs.multchoice(prompt, list, default)
-		if i+1 >= len(list):
-			editmgr.rollback()
-			return		# User doesn't want to choose a type
-		type = list[i]
+		olist = otherchanneltypes[:]
+		olist.append('Other...')
+		olist.append('Cancel')
+		while 1:
+			default = len(list)-1
+			i = dialogs.multchoice(prompt, list, default)
+			if i+1 >= len(list):
+				editmgr.rollback()
+				return		# User doesn't want to choose
+			elif list[i] == 'Other...':
+				list, olist = olist, list
+				continue
+			type = list[i]
+			break
 		i = 1
 		base = 'NEW'
 		name = base + `i`
