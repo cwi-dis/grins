@@ -4,6 +4,7 @@ __version__ = "$Id$"
 # This module knows which channel types need special treatment.
 
 import MMAttrdefs
+import ChannelMap
 
 def get(node):
 	# If node has "fduration" attribute, use that.  This attribute
@@ -46,4 +47,8 @@ def get(node):
 				return loop * SoundDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
+		elif ctype not in ChannelMap.channelhierarchy['text'] and \
+		     ctype not in ChannelMap.channelhierarchy['image']:
+			# give them a duration
+			return 5
 	return duration
