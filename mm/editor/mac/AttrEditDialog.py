@@ -386,6 +386,9 @@ class TextTabPage(SingleTabPage):
 		"""Update controls to self.__value"""
 		value = self.fieldlist[0]._getvalueforpage()
 		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
+		
+class CaptionTabPage(TextTabPage):
+	attrs_on_page=['caption']
 
 class FileTabPage(SingleTabPage):
 	attrs_on_page=None
@@ -1648,6 +1651,7 @@ MULTI_ATTR_CLASSES = [
 	UploadTabPage,
 	WipeTabPage,
 	FadeoutTabPage,
+	CaptionTabPage,
 ]
 #
 # List of classes handling a generic page for a single attribute.
