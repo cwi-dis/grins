@@ -296,6 +296,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		elif self.node.showtime and not ignore_time:
 			if self.timeline is None:
 				self.timeline = TimelineWidget(self, self.mother)
+			if self.timemapper is not None:
+				self.timemapper = None
 		else:
 			if self.timeline is not None:
 				self.timeline.destroy()
