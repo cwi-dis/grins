@@ -279,7 +279,7 @@ class TopLevel(ViewDialog):
 		if self.changed:
 			l1 = 'Are you sure you want to re-read the file?\n'
 			l2 = '(This will destroy the changes you have made)\n'
-			l3 = 'Click Yes to restore, No to keep your changes'
+			l3 = 'Click OK to restore, Cancel to keep your changes'
 			windowinterface.showmessage(
 				l1+l2+l3, type = 'question',
 				callback = (self.do_restore, ()),
