@@ -1,14 +1,23 @@
 # Attribute definitions
 # ---------------------
 #
-# Each definition is a 6-tuple enclosed in parenthes:
-# (attrname, typedef, defaultvalue, labeltext, displayername, helptext)
+# Each definition is a 7-tuple enclosed in parenthes:
+# (attrname, typedef, defaultvalue, labeltext, displayername, helptext,
+#  inheritance)
 #
 # The typedef is used to determine how to parse the default value,
 # with the provision that tuples, lists and dictionaries must
 # be surrounded by an extra pair of parentheses.
 #
 # The helptext should be one line explaining what the attribute is for.
+#
+# Inheritance can be one of four names: (raw, normal, inherited, channel).
+# Values 'raw', 'normal' and 'inherited' mean that node.GetRawAttr(),
+# node.GetAttr() or node.GetInherAttr(), respectively, should be used to
+# get this type of attribute.  The value 'channel' is the same as
+# 'inherited', but means that the default can also be gotten from
+# the channel attributes.  (For the time being, inheritance is optional,
+# defaulting to 'normal'.)
 #
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
@@ -23,9 +32,9 @@
 (channel (name) undefined 'Channel' default
 	'Name of channel used to render this node/subtree')
 
-(channeldict (namedict (attrdict)) () 'Channel Dictionary' default
-	'Channels used in this document (root node only)')
-	# Obsolete; use channelist!
+#(channeldict (namedict (attrdict)) () 'Channel Dictionary' default
+#	'Channels used in this document (root node only)')
+# Now really obsolete; use channelist!
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' default
