@@ -1337,6 +1337,12 @@ class _CommonWindow:
 			
 			self._mac_create_gworld(BM_PASSIVE, 1, rect)
 		self._mac_create_gworld(BM_DRAWING, 0, rect)
+		return 1
+	
+	def _transition_setup_after(self):
+##		if self._transition.need_tmp_wid():
+		if 1:
+			self._mac_create_gworld(BM_TEMP, 0, self.qdrect())
 		#
 		# Tell upper layers, if they are interested (VideoChannels and such may have to
 		# tell their underlying libraries)
@@ -1344,12 +1350,6 @@ class _CommonWindow:
 		if self._eventhandlers.has_key(OSWindowChanged):
 			func, arg = self._eventhandlers[OSWindowChanged]
 			func(arg, self, OSWindowChanged, (0, 0, 0))
-		return 1
-	
-	def _transition_setup_after(self):
-##		if self._transition.need_tmp_wid():
-		if 1:
-			self._mac_create_gworld(BM_TEMP, 0, self.qdrect())
 	
 	def _dump_bits(self, which):
 		srcbits = self._mac_getoswindowpixmap(which)
