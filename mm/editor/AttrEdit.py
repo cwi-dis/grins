@@ -1169,6 +1169,7 @@ class PreferenceWrapper(Wrapper):
 		'showhidden': 'Show hidden custom tests',
 		'saveopenviews': 'Save view placement in prefs file',
 		'initial_dialog': 'Show initial dialog on application start',
+		'vertical_icons': 'Show icons vertically in the Structure View',
 		}
 	__specprefs = {
 		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',

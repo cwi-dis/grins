@@ -686,3 +686,11 @@
 
 (soundLevel (float) 1 'Sound level' percent
 	'Specifies the relative volume in percent' raw (smil2))
+
+# settings
+(vertical_icons (bool) 1 'Vertical icons' default
+	'Show icons vertically in the Structure View' raw (cmif smil2))
+(initial_dialog (bool) 1 'Show initial dialog' default
+	'Show initial dialog on application start' raw (smil2))
+(saveopenviews (bool) 0 'Save open views' default
+	'Save view placement in prefs file' raw (smil2))
