@@ -221,8 +221,7 @@ class TopLevel(TopLevelDialog):
 			url = MMurl.pathname2url(filename)
 		else:
 			url = ''
-		settings.set('skin', url)
-		settings.save()
+		settings.set('skin', url, dontsave = 1)
 		self.read_it()
 
 	def read_it(self):
