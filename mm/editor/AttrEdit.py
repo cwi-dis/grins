@@ -1683,6 +1683,8 @@ class AttrEditor(AttrEditorDialog):
 				dict[name] = value
 		if not dict and not newchannel:
 			# nothing to change
+			if close:
+				self.close()
 			return
 		if not self.wrapper.transaction():
 			# can't do a transaction
