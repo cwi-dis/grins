@@ -126,6 +126,10 @@ class ImageLib:
 	# Accusoft gets grazy when it sees the following sig(s)
 	# (enters an infinite loop consuming all available sys memory)
 	def islibexcept(self,filename):
+		lfn = filename
+		lfn.lower()
+		if lfn.find('.mpeg')>=0 or lfn.find('.mpg')>=0:
+			return 1
 		try:
 			file = open(filename, 'rb')
 			formdata = file.read(4)
