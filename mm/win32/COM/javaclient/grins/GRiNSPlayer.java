@@ -100,7 +100,7 @@ implements SMILDocument, SMILController, SMILRenderer
     
     public boolean mouseMoved(int x, int y)
         {
-        if(hgrins!=0) nmouseMoved(hgrins, x, y);
+        if(hgrins!=0) return nmouseMoved(hgrins, x, y);
         return false;
         }
         
