@@ -558,6 +558,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusnode(node)
 
 	def globalfocuschanged(self, focustype, focusobject):
+		# for now, catch only MMNode focus
+		if focustype != 'MMNode':
+			return
+			
 		# Callback from the editmanager to set the focus to a specific node.
 		#print "DEBUG: HierarchyView received globalsetfocus with ", focustype, focusobject
 		if focusobject and focusobject is not self.focusnode:
@@ -1213,7 +1217,7 @@ class HierarchyView(HierarchyViewDialog):
 			widget.select()
 			self.window.scrollvisible(widget.get_box())
 		self.aftersetfocus()
-		self.editmgr.setglobalfocus("Exactly what am I meant to set the focus to?", widget.node); 
+		self.editmgr.setglobalfocus("MMNode", widget.node); 
 
 	def select_node(self, node):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
@@ -1226,7 +1230,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			widget = node.views['struct_view'];
 			self.select_widget(widget);
-		self.editmgr.setglobalfocus("I don't know what the focustype is meant to be", node);
+		self.editmgr.setglobalfocus("MMNode", node);
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
