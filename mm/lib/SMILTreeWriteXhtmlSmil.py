@@ -614,13 +614,27 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.pop()
 
 		elif mtype == 'text':
-			attrlist.append( ('align','center') )
-			attrlist.append( ('frameborder','0') )
-			attrlist.append( ('marginwidth','0') )
-			attrlist.append( ('marginheight','0') )
-			attrlist.append( ('scrolling','no') )		
-			self.writetag('iframe', attrlist)
-
+			if 1:
+				# convert to imm
+				text = self.getstring(node)
+				self.removeAttr(attrlist, 'src')
+				attrlist.append( ('class','time') )
+				self.writetag('div', attrlist)
+				self.push()
+				self.fp.write('<p>')
+				if text:
+					self.fp.write(text)
+				self.fp.write('</p>')
+				self.pop()
+			else:
+				# use iframe
+				attrlist.append( ('align','center') )
+				attrlist.append( ('frameborder','0') )
+				attrlist.append( ('marginwidth','0') )
+				attrlist.append( ('marginheight','0') )
+				attrlist.append( ('scrolling','no') )		
+				self.writetag('iframe', attrlist)
+					
 		else:
 			self.writetag('t:'+mtype, attrlist)
 					
@@ -1544,6 +1558,34 @@ class SMILXhtmlSmilWriter(SMIL):
 		if not id:
 			id = 'm' + node.GetUID()
 		return id
+
+	# XXX: copy from channel for now
+	def getstring(self, node):
+		import urlparse
+		if node.type == 'imm':
+			return string.join(node.GetValues(), '\n')
+		elif node.type == 'ext':
+			url = MMAttrdefs.getattr(node, 'file')
+			if not url:
+				return ''
+			url = node.context.findurl(url)
+			if not url:
+				return ''
+			utype, host, path, params, query, tag = urlparse.urlparse(url)
+			url = urlparse.urlunparse((utype, host, path, params, query, ''))
+			try:
+				# use urlretrieve so that data gets cached
+				fn, hdr = MMurl.urlretrieve(url)
+				if hdr.has_key('Content-Location'):
+					url = hdr['Content-Location']
+				fp = open(fn, 'r')
+				text = fp.read()
+				fp.close()
+			except IOError:
+				return ''
+			return text
+		else:
+			return ''
 
 	#
 	#
