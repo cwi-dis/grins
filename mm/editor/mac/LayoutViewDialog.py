@@ -36,43 +36,10 @@ ITEM_TO_COMMAND={
 class LayoutViewDialog(windowinterface.MACDialog):
 	
 	def __init__(self):
-##		w = windowinterface.Window('LayoutDialog', resizable = 1,
-##					   deleteCallback = [CLOSE_WINDOW])
-##		self.__window = w
 		windowinterface.MACDialog.__init__(self, 'Layout', ID_DIALOG_LAYOUT,
 				ITEMLIST_ALL, cmdbuttons=ITEM_TO_COMMAND)
-##		w1 = w.SubWindow(left = None, top = None, bottom = None, right = 0.33)
-##		w2 = w.SubWindow(left = w1, top = None, bottom = None, right = 0.67)
-##		w3 = w.SubWindow(left = w2, top = None, bottom = None, right = None)
-##		b1 = w1.ButtonRow([('New...', NEW_LAYOUT),
-##				   ('Rename...', RENAME),
-##				   ('Delete', DELETE),
-##				   ],
-##				  vertical = 0,
-##				  left = None, right = None, bottom = None)
-##		l1 = w1.List('Layouts', [], (self.__layoutcb, ()),
-##			     top = None, left = None, right = None, bottom = b1)
-##		self.__layoutlist = l1
 		self.__layoutlist = self._window.ListWidget(ITEM_LAYOUT_LIST)
-##		b2 = w2.ButtonRow([('New...', NEW_CHANNEL),
-##				   ('Remove', REMOVE_CHANNEL),
-##				   ('Attrs...', ATTRIBUTES),
-##				   ],
-##				  vertical = 0,
-##				  left = None, right = None, bottom = None)
-##		l2 = w2.List('Layout channels', [], (self.__channelcb, ()),
-#### 			     tooltip = 'List of channels in current layout',
-##			     top = None, left = None, right = None, bottom = b2)
-##		self.__channellist = l2
 		self.__channellist = self._window.ListWidget(ITEM_CHANNEL_LIST)
-##		b3 = w3.ButtonRow([('Add', ADD_CHANNEL),
-##				   ],
-##				  vertical = 0,
-##				  left = None, right = None, bottom = None)
-##		l3 = w3.List('Other channels', [], (self.__othercb, ()),
-#### 			     tooltip = 'List of channels not in current layout',
-##			     top = None, left = None, right = None, bottom = b3)
-##		self.__otherlist = l3
 		self.__otherlist = self._window.ListWidget(ITEM_OCHANNEL_LIST)
 
 	def destroy(self):
@@ -165,31 +132,18 @@ class LayoutViewDialog(windowinterface.MACDialog):
 					    cancelCallback = (self.newlayout_callback, ()))
 
 	def askchannelnameandtype(self, default, types):
-		w = windowinterface.Window('newchanneldialog', grab = 1,
-					   parent = self.__window)
-		self.__chanwin = w
-		t = w.TextInput('Name for channel', default, None, None, left = None, right = None, top = None)
-		self.__chantext = t
-		o = w.OptionMenu('Choose type', types, 0, None, top = t, left = None, right = None)
-		self.__chantype = o
-		b = w.ButtonRow([('Cancel', (self.__okchannel, (0,))),
-				 ('OK', (self.__okchannel, (1,)))],
-				vertical = 0,
-				top = o, left = None, right = None, bottom = None)
+		w = windowinterface.NewChannelDialog("New channel", default, types, 
+					self.__okchannel, self.__okchannel)
 		w.show()
+		w.rungrabbed()
 
-	def __okchannel(self, ok = 0):
-		if ok:
-			name = self.__chantext.gettext()
-			type = self.__chantype.getvalue()
-		else:
-			name = type = None
-		self.__chanwin.close()
-		del self.__chantext
-		del self.__chantype
-		del self.__chanwin
-		# We can't call this directly since we're still in
-		# grab mode.  We must first return from this callback
-		# before we're out of that mode, so we must schedule a
-		# callback in the very near future.
-		windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
+	def __okchannel(self, name=None, type=None):
+		print 'OKCHANNEL', name, type
+##		self.__chanwin.close()
+##		del self.__chanwin
+##		# We can't call this directly since we're still in
+##		# grab mode.  We must first return from this callback
+##		# before we're out of that mode, so we must schedule a
+##		# callback in the very near future.
+##		windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
+		self.newchannel_callback(name, type)
