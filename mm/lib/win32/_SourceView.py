@@ -336,7 +336,7 @@ class _SourceView(GenView, docview.EditView):
 	def gettext(self):
 		return self.GetWindowText()
 
-	def select_chars(self, startchar, endchar, scroll = 1, pop = 1):
+	def select_chars(self, startchar, endchar, scroll = 1, pop = 0):
 		# the text between startchar and endchar will be selected.
 		for p0, p1 in self.__map0:
 			if p0 <= startchar:
