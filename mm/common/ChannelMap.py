@@ -34,6 +34,7 @@ def _freeze_dummy_func():
 	import WordChannel
 	import AnimateChannel
 	import BrushChannel
+	import PrefetchChannel
 
 class ChannelMap:
 	channelmap = {
@@ -62,6 +63,7 @@ class ChannelMap:
 ##		'RealVideo':	'RealVideoChannel',
 		'animate':	'AnimateChannel',
 		'brush':	'BrushChannel',
+		'prefetch':	'PrefetchChannel',
 		}
 
 	if platform == 'mac':
@@ -124,14 +126,14 @@ channelhierarchy = {
     'sound': ['sound'],
     'movie': ['video', 'movie', 'mpeg', 'vcr'],
     'control': ['layout', 'cmif', 'socket', 'shell', 'python', 'external',
-		'null', 'animate'],
+		'null', 'animate', 'prefetch'],
     'ole': ['word'],
     }
 SMILchanneltypes = ['image', 'sound', 'video', 'text']
 if features.compatibility == compatibility.G2:
         SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
 SMILextendedchanneltypes = ['html']
-SMILBostonChanneltypes = ['brush']
+SMILBostonChanneltypes = ['brush', 'prefetch']
 
 ct = channelmap.keys()
 ct.sort()
