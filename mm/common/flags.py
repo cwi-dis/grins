@@ -28,18 +28,12 @@ FLAG_QT_PRO = 0x0008
 FLAG_CMIF = 0x0010
 FLAG_SMIL_1_0 = 0x0020
 FLAG_DBG = 0x8000
+
+# some abbreviations
 FLAG_G2 = FLAG_G2_LIGHT | FLAG_G2_PRO
 FLAG_QT = FLAG_QT_LIGHT | FLAG_QT_PRO
+FLAG_PRO = FLAG_G2_PRO | FLAG_QT_PRO | FLAG_SMIL_1_0
 FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0
-
-#LIGHT = 0x0001
-#SMIL = 0x0002
-#CMP_QT = 0x0004
-#CMP_G2 = 0x0008
-#SMIL_QT = 0x0010
-#SMIL_G2 = 0x0020
-#CMIF = 0x0040
-#DBG = 0x8000
 
 def curflags():
 	import settings
@@ -50,36 +44,17 @@ def curflags():
 		if features.lightweight:
 			flags = flags | FLAG_G2_LIGHT
 		else:
-			flags = flags | FLAG_G2_PRO 
-			if settings.get('cmif'):
-				flags = flags | FLAG_CMIF
+			flags = flags | FLAG_G2_PRO
 	elif features.compatibility == compatibility.QT:
-		flags = flags | FLAG_QT_PRO 
-		if settings.get('cmif'):
-			flags = flags | FLAG_CMIF
+		if features.lightweight:
+			flags = flags | FLAG_QT_LIGHT
+		else:
+			flags = flags | FLAG_QT_PRO 
+	elif features.compatibility == compatibility.SMIL10:
+		flags = flags | FLAG_SMIL_1_0
+	if settings.get('cmif'):
+		flags = flags | FLAG_CMIF
 
 	if settings.get('debug'):
 		flags = flags | FLAG_DBG
 	return flags
-
-#def curflags():
-#	import settings
-#	import features
-#	import compatibility
-#	flags = LIGHT			# always enabled
-#	if not features.lightweight:
-#		flags = flags | SMIL
-#		if settings.get('cmif'):
-#			flags = flags | CMIF
-
-#	if compatibility.G2 == features.compatibility:
-#		flags = flags | CMP_G2
-#		if not features.lightweight:
-#			flags = flags | SMIL_G2
-#	if compatibility.QT == features.compatibility:
-#		flags = flags | CMP_QT
-#		if not features.lightweight:
-#			flags = flags | SMIL_QT
-#	if settings.get('debug'):
-#		flags = flags | DBG
-#	return flags
