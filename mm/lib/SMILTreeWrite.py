@@ -394,10 +394,7 @@ def getcolor(writer, node):
 def getsubregionatt(writer, node, attr):
 	from windowinterface import UNIT_PXL, UNIT_SCREEN
 
-	if settings.activeFullSmilCss:
-		val = node.getCssRawAttr(attr)
-	else:
-		val = MMAttrdefs.getattr(node, attr)
+	val = node.getCssRawAttr(attr)
 	if val is not None:
 #		units = MMAttrdefs.getattr(node, 'units')
 #		if units is None:
@@ -415,10 +412,7 @@ def getsubregionatt(writer, node, attr):
 
 def getfitatt(writer, node, attr):
 	try:
-		if settings.activeFullSmilCss:
-			val = node.getCssRawAttr(attr)
-		else:
-			val = node.GetRawAttr(attr)
+		val = node.getCssRawAttr(attr)
 	except:
 		fit = None
 	else:
@@ -1107,17 +1101,8 @@ cmif_chan_attrs_ignore = {
 	'showBackground':0,	
 	'soundLevel':0,
 	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'chsubtype':0,
+	'left':0, 'top':0, 'width':0, 'height':0, 'right':0, 'bottom':0,
 	}
-
-if settings.activeFullSmilCss:
-	cmif_chan_attrs_ignore['left'] = 0
-	cmif_chan_attrs_ignore['top'] = 0
-	cmif_chan_attrs_ignore['width'] = 0
-	cmif_chan_attrs_ignore['height'] = 0
-	cmif_chan_attrs_ignore['right'] = 0
-	cmif_chan_attrs_ignore['bottom'] = 0
-	# to remove when no need in Channel.py
-	cmif_chan_attrs_ignore['cssId'] = 0
 		
 qt_node_attrs = {
 	'immediateinstantiationmedia':0,'bitratenecessary':0,'systemmimetypesupported':0,
@@ -1706,29 +1691,12 @@ class SMILWriter(SMIL):
 					if val != 'onRequest':
 						attrlist.append(('close', val))
 
-			if not settings.activeFullSmilCss:		
-				if ch.has_key('winsize'):
-					units = ch.get('units', 0)
-					w, h = ch['winsize']
-					if units == 0:
-						# convert mm to pixels
-						# (assuming 100 dpi)
-						w = int(w / 25.4 * 100.0 + .5)
-						h = int(h / 25.4 * 100.0 + .5)
-						units = 2
-					if units == 1:
-						attrlist.append(('width', '%d%%' % int(w * 100 + .5)))
-						attrlist.append(('height', '%d%%' % int(h * 100 + .5)))
-					else:
-						attrlist.append(('width', '%d' % int(w + .5)))
-						attrlist.append(('height', '%d' % int(h + .5)))
-			else:
-				for name in ['width', 'height']:
-					value = ch.getCssRawAttr(name)
-					if type(value) == type(0.0):
-						attrlist.append((name, '%d%%' % int(value * 100 + .5)))
-					elif type(value) == type(0):
-						attrlist.append((name, '%d' % value))
+			for name in ['width', 'height']:
+				value = ch.getCssRawAttr(name)
+				if type(value) == type(0.0):
+					attrlist.append((name, '%d%%' % int(value * 100 + .5)))
+				elif type(value) == type(0):
+					attrlist.append((name, '%d' % value))
 
 			if self.smilboston:
 				for key, val in ch.items():
@@ -1761,53 +1729,21 @@ class SMILWriter(SMIL):
 			attrlist.append(('title', title))
 		elif self.ch2name[ch] != ch.name:
 			attrlist.append(('title', ch.name))
-		# if toplevel window, define a region elt, but
-		# don't define coordinates (i.e., use defaults)
-		if not settings.activeFullSmilCss:
-			if ch.has_key('base_window') and \
-				ch.has_key('base_winoff'):
-				x, y, w, h = ch['base_winoff']
-				units = ch.get('units', 2)
-				if units == 0:		# UNIT_MM
-					# convert mm to pixels (assuming 100 dpi)
-					x = int(x / 25.4 * 100 + .5)
-					y = int(y / 25.4 * 100 + .5)
-					w = int(w / 25.4 * 100 + .5)
-					h = int(h / 25.4 * 100 + .5)
-				elif units == 1:	# UNIT_SCREEN
-					if x+w >= 1.0: w = 0
-					if y+h >= 1.0: h = 0
-				elif units == 2:	# UNIT_PXL
-					x = int(x)
-					y = int(y)
-					w = int(w)
-					h = int(h)
-				for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
-					if not value:
-						continue
-					if type(value) is type(0.0):
-						value = '%d%%' % int(value*100+0.5)
-					else:
-						value = '%d' % value
-					attrlist.append((name, value))
-		else:
-			for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
-				value = ch.getCssRawAttr(name)
-				# write only no auto values
-				if value != None:
-					if type(value) is type(0.0):
-						value = '%d%%' % int(value*100+0.5)
-					elif type(value) is type(0):
-						value = '%d' % value
-					attrlist.append((name, value))
+			
+		for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
+			value = ch.getCssRawAttr(name)
+			# write only no auto values
+			if value != None:
+				if type(value) is type(0.0):
+					value = '%d%%' % int(value*100+0.5)
+				elif type(value) is type(0):
+					value = '%d' % value
+				attrlist.append((name, value))
 		if ChannelMap.isvisiblechannel(ch['type']):
 			z = ch.get('z', 0)
 			if z > 0:
 				attrlist.append(('z-index', "%d" % z))
-			if not settings.activeFullSmilCss:
-				scale = ch.get('scale', 0)
-			else:
-				scale = ch.getCssRawAttr('scale',1)
+			scale = ch.getCssRawAttr('scale',1)
 			if scale == 0:
 				fit = 'meet'
 			elif scale == -1:
