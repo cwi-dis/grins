@@ -147,7 +147,7 @@ MENUBAR=(
 			(DYNAMICCASCADE, '&Descendants', DESCENDANTS),
 			(DYNAMICCASCADE, '&Siblings', SIBLINGS),
 			)),
-		(DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
+##		(DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
 		)),
 
 	('&View', (

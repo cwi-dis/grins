@@ -119,10 +119,10 @@ class ChannelView(ChannelViewDialog):
 		self.placing_channel = 0
 		self.thumbnails = 0
 		self.showbandwidthstrip = 0
-		self.layouts = [('All channels', ())]
-		for name in self.context.layouts.keys():
-			self.layouts.append((name, (name,)))
-		self.curlayout = None
+##		self.layouts = [('All channels', ())]
+##		for name in self.context.layouts.keys():
+##			self.layouts.append((name, (name,)))
+##		self.curlayout = None
 		title = 'Timeline View (' + self.toplevel.basename + ')'
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
@@ -186,12 +186,12 @@ class ChannelView(ChannelViewDialog):
 		pass
 
 	def commit(self):
-		self.layouts = [('All channels', ())]
-		for name in self.context.layouts.keys():
-			self.layouts.append((name, (name,)))
-		if self.curlayout is not None and \
-		   not self.context.layouts.has_key(self.curlayout):
-			self.curlayout = None
+##		self.layouts = [('All channels', ())]
+##		for name in self.context.layouts.keys():
+##			self.layouts.append((name, (name,)))
+##		if self.curlayout is not None and \
+##		   not self.context.layouts.has_key(self.curlayout):
+##			self.curlayout = None
 		if self.future_focus is not None:
 			focus = self.future_focus
 			self.future_focus = None
@@ -248,11 +248,11 @@ class ChannelView(ChannelViewDialog):
 	def canvascall(self, code):
 		self.window.setcanvassize(code)
 
-	def layoutcall(self, name = None):
-		curlayout = self.curlayout
-		self.curlayout = name
-		if curlayout != name:
-			self.resize()
+##	def layoutcall(self, name = None):
+##		curlayout = self.curlayout
+##		self.curlayout = name
+##		if curlayout != name:
+##			self.resize()
 
 	def redraw(self):
 		if self.new_displist:
@@ -403,18 +403,19 @@ class ChannelView(ChannelViewDialog):
 	# Return list of currently visible channels
 
 	def visiblechannels(self):
-		layout = {}
-		for ch in self.context.layouts.get(self.curlayout, self.context.channels):
-			layout[ch.name] = 0
+##		layout = {}
+##		for ch in self.context.layouts.get(self.curlayout, self.context.channels):
+##			layout[ch.name] = 0
 		if self.showall:
 			channels = self.context.channels
 		else:
 			channels = self.usedchannels
-		ret = []
-		for ch in channels:
-			if layout.has_key(ch.name):
-				ret.append(ch)
-		return ret
+##		ret = []
+##		for ch in channels:
+##			if layout.has_key(ch.name):
+##				ret.append(ch)
+##		return ret
+		return channels
 
 	# Recalculate the set of objects we should be drawing
 
@@ -769,7 +770,7 @@ class ChannelView(ChannelViewDialog):
 			t_arm = -self.prerolltime
 			for info in nodelist:
 				t0, t1, node, prearm, bandwidth = info
-				prearmlist.append(t_arm, t0, prearm, node)
+				prearmlist.append((t_arm, t0, prearm, node))
 				t_arm = t0
 		prearmlist.sort()
 		for t_arm, t0, prearm, node in prearmlist:
@@ -879,7 +880,7 @@ class ChannelView(ChannelViewDialog):
 		list = []
 		import ChannelMap
 		for name in ChannelMap.getvalidchanneltypes():
-			list.append(name, (self.select_cb, (name,)))
+			list.append((name, (self.select_cb, (name,))))
 		list.append(None)
 		list.append('Cancel')
 		windowinterface.Dialog(list, title = 'Select', prompt = prompt, grab = 1, vertical = 1, parent = self.window)
@@ -978,9 +979,9 @@ class ChannelView(ChannelViewDialog):
 				# multiple root windows
 				root_layout = ''
 		    editmgr.addchannel(name, index, self.placing_type)
-		    if self.curlayout and self.context.layouts.has_key(self.curlayout):
-			layoutchannels = self.context.layouts[self.curlayout]
-			layoutchannels.append(self.context.channeldict[name])
+##		    if self.curlayout and self.context.layouts.has_key(self.curlayout):
+##			layoutchannels = self.context.layouts[self.curlayout]
+##			layoutchannels.append(self.context.channeldict[name])
 		elif placement_type == PLACING_COPY:
 		    editmgr.copychannel(name, index, self.placing_orig)
 		else:
@@ -1057,7 +1058,7 @@ class GO(GOCommand):
 			TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
 			THUMBNAIL(callback = (mother.thumbnailcall, ())),
 			TOGGLE_ARCS(callback = (mother.togglearcs, ())),
-			LAYOUTS(callback = mother.layoutcall),
+##			LAYOUTS(callback = mother.layoutcall),
 			TOGGLE_BWSTRIP(callback = (mother.togglebwstrip, ())),
 			]
 		import Help
@@ -1584,7 +1585,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 ##		box = (t0, t1, 0, bandwidth, 1)
 		boxes = self.usedbandwidth.reserve(t0, t1, bandwidth)
 		self.boxes = self.boxes + boxes
-		self.time_to_bwnodes.append(t0, t1, node)
+		self.time_to_bwnodes.append((t0, t1, node))
 		return boxes
 
 	def pabox(self, t_arm, t0, prearmsize, node):
@@ -1595,7 +1596,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 			return []
 		self.boxes = self.boxes + boxes
 		if not (xt0 is None or xt1 is None):
-			self.time_to_panodes.append(xt0, xt1, node)
+			self.time_to_panodes.append((xt0, xt1, node))
 		return boxes
 
 	def bwcall(self, bandwidth):
@@ -1846,7 +1847,7 @@ class NodeBox(GO, NodeBoxCommand):
 					xname = MMAttrdefs.getattr(xnode, 'name')
 					if not xname:
 						xname = '#' + xuid
-					arcmenu.append('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside))
+					arcmenu.append(('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside)))
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 

@@ -81,7 +81,7 @@ class ChannelViewDialog(ViewDialog):
 					('Siblings', SIBLINGS),
 					('Descendants', DESCENDANTS),
 					]),
-				('Layout navigation', LAYOUTS),
+##				('Layout navigation', LAYOUTS),
 				]),
 			('Help', [
 				('Help...', HELP),
@@ -117,7 +117,7 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
 		self.window.set_dynamiclist(DESCENDANTS, self.baseobject.descendants)
 		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
-		self.window.set_dynamiclist(LAYOUTS, self.layouts)
+##		self.window.set_dynamiclist(LAYOUTS, self.layouts)
 
 	def setpopup(self, menutemplate):
 		self.window.setpopupmenu(menutemplate)
