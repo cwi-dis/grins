@@ -192,24 +192,17 @@ class Widget:
 
 	def moveto(self, newpos):
 		# Also handles resizing - new size is in newpos as well.
-		#l,t,r,b = newpos
-#		print "DEBUG: moveto Received sizes: ", l, t, r, b
-#		print "DEBUG: moveto self.get_minsize is: ", self.get_minsize()
-#		print "DEBUG: moveto self.get_maxsize is: ", self.get_maxsize()
-
-# TODO: put this back.
-#		lw, lh = self.get_minsize()
-#		mw, mh = self.get_maxsize()
-#		assert (r-l) > lw and (b-t) > lh
-#		assert (r-l) < mw and (b-t) < mh
-
-##		if r < l:
-##			print "Widget: Error: box is right-to-left", self
-##		if t > b:
-##			print "Widget: Error: box is upside down.", self
-
-#		assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
-		#assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
+		l,t,r,b = newpos
+		
+		if l > 0xefff:
+			l = 0xefff
+		if r > 0xefff:
+			r = 0xefff
+		if b > 0xefff:
+			b = 0xefff
+		if t > 0xefff:
+			t = 0xefff
+		
 		self.pos_abs = newpos
 
 	def set_append(self, otherobject, position):
