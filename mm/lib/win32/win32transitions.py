@@ -48,7 +48,7 @@ class TransitionEngine:
 			raise AssertionError
 
 		parameters = self.transitiontype.computeparameters(value)
-		self.window.paintOnDDS(self._active)
+		self.window.paintOnDDS(self._active, self.window)
 		src_active = self._active
 		src_passive = self.window._passive
 		tmp  = self._tmp
@@ -58,7 +58,6 @@ class TransitionEngine:
 			self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
 		else:
 			self.transitiontype.updatebitmap(parameters, src_passive, src_active, tmp, dst, dstrgn)
-		
 		self.window.update()
 
 	def __onDur(self):

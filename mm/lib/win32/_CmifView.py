@@ -517,7 +517,7 @@ class _CmifPlayerView(_CmifView):
 			return _CmifView.OnEraseBkgnd(self,dc)
 		return 1
 
-	def getwindowpos(self):
+	def getwindowpos(self, rel=None):
 		return self._rect
 
 	def getwindowrect(self):
