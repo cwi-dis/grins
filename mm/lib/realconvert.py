@@ -162,7 +162,7 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 
 
 def convertimagefile(u, srcurl, dstdir, file, node):
-	import MMAttrdefs, MMurl
+	import MMurl
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.jpg'
 	fullpath = os.path.join(dstdir, file)
@@ -243,8 +243,8 @@ def converttextfile(u, dstdir, file, node):
 		ch = node.GetChannel()
 		color = ch.get('bgcolor', (0,0,0))
 		if color != (255,255,255):
-			if colors.rcolors.has_key(val):
-				color = colors.rcolors[val]
+			if colors.rcolors.has_key(color):
+				color = colors.rcolors[color]
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' bgcolor="%s"' % color)
@@ -452,7 +452,6 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	except ImportError:
 		return
 	try:
-		fin = MMurl.urlretrieve(srcurl)[0]
 		reader = videoreader.reader(srcurl)
 		if not reader:
 			return
@@ -549,7 +548,6 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	
 			video_sample = engine.CreateMediaSample()
 			
-			video_frame_millisecs = int(1000.0 / reader.GetVideoFrameRate())
 			
 		if has_audio:
 			audio_fmt = reader.GetAudioFormat()
@@ -576,7 +574,6 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 				nbpf = audio_fmt.getblocksize() / audio_fmt.getfpb()
 				audio_inputsize_frames = nbytes / nbpf
 				
-				audio_frame_millisecs = int(1000.0 * audio_inputsize_frames / reader.GetAudioFrameRate())
 	
 			audio_done = video_done = 0
 			audio_flags = video_flags = 0

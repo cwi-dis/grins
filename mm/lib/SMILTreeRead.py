@@ -1228,7 +1228,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return default
 
 	def parseIntValue(self, val, smilattributename, default):
-		intvalue = 0
 		try:
 			return string.atoi(val)
 		except string.atoi_error:
@@ -1601,24 +1600,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__in_layout = LAYOUT_NONE
 			ch = self.__regions[region]
 
-		width = height = 0
-		l = ch.get('left')
-		w = ch.get('width')
-		r = ch.get('right')
-		t = ch.get('top')
-		h = ch.get('height')
-		b = ch.get('bottom')
-				
 		top = self.__topregion.get(region)
 		# if top doesn't exist (and visible media, we create have to default top window)
-#		import ChannelMap
 		if top is None: #and ChannelMap.isvisiblechannel(mtype):
 			if not self.__tops.has_key(None):
 				self.__newTopRegion()
 			if region not in self.__childregions[None]:
 				self.__childregions[None].append(region)
 
-		import ChannelMap
 		if ChannelMap.isvisiblechannel(mtype):
 			# create here all positioning nodes and initialize them
 			cssResolver = self.__context.cssResolver				
@@ -1850,7 +1839,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __fixMediaPos(self, node):
 		if node.GetType() not in leaftypes:
 			return
-		import ChannelMap
 		channel = node.GetChannel()
 		if channel == None: return
 		if not ChannelMap.isvisiblechannel(channel.get('type')):
@@ -1880,11 +1868,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del node.__syncarcs
 
 	def CreateLayout(self, attrs, isroot = 1):
-		from windowinterface import UNIT_PXL
 		bg = None
 		name = None
 		collapsed = None
-		editBackground = None
 		if attrs is not None:
 			bg = attrs.get('backgroundColor')
 			if bg is None:
@@ -1933,8 +1919,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# default values
 		open = 'onStart'
 		close = 'onRequest'
-		width = 640
-		height = 480
 		for attr,val in self.__tops[top].items():
 			if attr == 'width':
 				width = val
@@ -2541,7 +2525,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		from windowinterface import UNIT_PXL
 		id = self.__checkid(attributes, checkid = checkid)
 		self.__fix_attributes(attributes)
 		# experimental code for switch layout

@@ -532,7 +532,7 @@ class RPParser(xmllib.XMLParser):
 			convert = 1
 		attrs = {'tag': tag,
 			 'caption': attributes.get('grins_image_caption', ''),
-			 'project_convert': attributes.get('grins_convert', 1),
+			 'project_convert': convert,
 			 'file': self.__images.get(target),
 			 'imgcropxy': srcrect[:2],
 			 'imgcropwh': srcrect[2:],
@@ -919,22 +919,16 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 		macostools.touched(fss)
 
 def writeRT(file, rp, node):
-	from SMILTreeWrite import nameencode
-	import MMAttrdefs
-
 	# no size specified, initialize with channel size
 	# XXXX Note: incorrect if units are something else than pixels
 	ch = node.GetChannel(attrname='captionchannel')
 	width, height = ch.get('base_winoff',(0,0,320,180))[2:4]
 	
-	bgcolor = node.GetAttrDef('bgcolor', ch.get('bgcolor'))
-	ctx = node.GetContext()
+	color = node.GetAttrDef('bgcolor', ch.get('bgcolor', (0,0,0))
 	f = open(file, 'w')
 	f.write('<window width="%d" height="%d"' % (int(width), int(height)))
 	dur = rp.duration or _calcdur(rp.tags)
 	f.write(' duration="%g"' % dur)
-	ch = node.GetChannel(attrname='captionchannel')
-	color = ch.get('bgcolor', (0,0,0))
 	if color != (255,255,255):
 		if colors.rcolors.has_key(color):
 			color = colors.rcolors[color]
@@ -961,7 +955,6 @@ def writeRT(file, rp, node):
 		macostools.touched(fss)
 
 
-import re
 durre = re.compile(r'\s*(?:(?P<days>\d+):(?:(?P<hours>\d+):(?:(?P<minutes>\d+):)?)?)?(?P<seconds>\d+(\.\d+)?)\s*')
 
 def decode_time(str, fmt = 'dd:hh:mm:ss.xyz'):
@@ -993,7 +986,6 @@ def decode_time(str, fmt = 'dd:hh:mm:ss.xyz'):
 	return seconds + 60 * minutes
 
 def rmff(url, fp):
-	from StringIO import StringIO
 	from chunk import Chunk
 	import struct
 	info = {}
