@@ -301,29 +301,44 @@ class ListBox(Control):
 # ComboBox control class
 class ComboBox(Control):
 	def __init__(self,owner=None,id=-1):
+		self.__cancelindex = -1
 		Control.__init__(self,owner,id)
 		self.__icmif() 
 	def setcursel(self,index):
 		if index==None: index=-1
+		if self.__cancelindex >= 0 and index > self.__cancelindex:
+			index = index - 1
 		self.sendmessage(win32con.CB_SETCURSEL,index)
 	def getcursel(self):
-		return self.sendmessage(win32con.CB_GETCURSEL)
+		index = self.sendmessage(win32con.CB_GETCURSEL)
+		if self.__cancelindex >= 0 and index >= self.__cancelindex:
+			index = index + 1
+		return index
 	def getcount(self):
 		return self.sendmessage(win32con.CB_GETCOUNT)
 	def insertstring(self,ix,str):
 		if not str: str='---'
+		if self.__cancelindex >= 0 and ix > self.__cancelindex:
+			ix = ix - 1
 		self.sendmessage_ls(win32con.CB_INSERTSTRING,ix,str)
 	def addstring(self,str):
 		if not str: str='---'
 		return self.sendmessage_ls(win32con.CB_ADDSTRING,0,str)
 	def gettextlen(self,ix):
+		if self.__cancelindex >= 0 and ix > self.__cancelindex:
+			ix = ix - 1
 		return self.sendmessage(win32con.CB_GETLBTEXTLEN,ix)
 	def gettext(self,ix):
 		n = self.gettextlen(ix) + 1
+		if self.__cancelindex >= 0 and ix > self.__cancelindex:
+			ix = ix - 1
 		return self.sendmessage_rs(win32con.CB_GETLBTEXT,ix,n)
 	def resetcontent(self):
 		self.sendmessage(win32con.CB_RESETCONTENT)
+		self.__cancelindex = -1
 	def deletestring(self,index):
+		if self.__cancelindex >= 0 and index > self.__cancelindex:
+			index = index - 1
 		self.sendmessage(win32con.CB_DELETESTRING,index)
 	# edit box like interface
 	def setedittext(self,str):
@@ -358,24 +373,36 @@ class ComboBox(Control):
 
 	def setoptions(self, optionlist, startpos=0):
 		if not optionlist: return
+		n = 0
+		if self.__cancelindex >= 0 and startpos > self.__cancelindex:
+			startpos = startpos - 1
+			n = 1
 		for pos in range(startpos,len(optionlist)):
-			self.insertstring(pos,optionlist[pos])
-			self._optionlist.append(optionlist[pos])
+			self.insertstring(startpos+n+pos,optionlist[pos])
+			self._optionlist.insert(startpos+pos, optionlist[pos])
 	def initoptions(self, optionlist,seloption=None):
 		self.resetcontent()
 		if not optionlist: return
 		self.setoptions(optionlist)
 		self.setcursel(seloption)	
 	def setoptions_cb(self, optionlist):
-		for item in optionlist:
+		for i in range(len(optionlist)):
+			item = optionlist[i]
 			if type(item)==type(()):
-				if item[0]=='Cancel':continue
+				if item[0]=='Cancel':
+					self.__cancelindex = i
+					continue
 				self.addstring(item[0])
 				self._optionlist.append(item[0])
-		self.setcursel(0)
+		if self.__cancelindex == 0:
+			self.setcursel(1)
+		else:
+			self.setcursel(0)
 	def setsensitive(self,pos,f):
+		if self.__cancelindex >= 0 and pos > self.__cancelindex:
+			opos = pos - 1
 		seloption=self.getcursel()
-		str=self._optionlist[pos]
+		str=self._optionlist[opos]
 		if f:
 			self.deletestring(pos)
 			self.insertstring(pos,str) # add it
