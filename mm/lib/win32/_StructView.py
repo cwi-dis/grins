@@ -128,8 +128,8 @@ class _StructView(DisplayListView):
 				str='%d %d' % (xp, yp)
 				self.DoDragDrop(self.CF_NODE, str)
 
-	def OnDragLeave(self):
-		self._dragging = None
+##	def OnDragLeave(self):
+##		self._dragging = None
 
 	# we must return DROPEFFECT_NONE
 	# when paste at x, y is not allowed
@@ -138,11 +138,14 @@ class _StructView(DisplayListView):
 		if node:
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
+			xf, yf = self._dragging
+			xf, yf = self._DPtoLP((xf,yf))
+			xf, yf = self._pxl2rel((xf, yf),self._canvas)
 			if self.isShiftPressed(kbdstate):
 				cmd = 'move'
 			else:
 				cmd = 'copy'
-			return self.onEventEx(DragNode,(x, y, cmd))
+			return self.onEventEx(DragNode,(x, y, cmd, xf, yf))
 		return DropTarget.DROPEFFECT_NONE
 
 	def dropnode(self, dataobj, effect, x, y):
