@@ -475,13 +475,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		else:			# 'right'
 			return float(pxl - r) * factor + t1 - t0, 0
 
-	def time2pixel(self, t, side, timemapper, align):
+	def time2pixel(self, tm, side, timemapper, align):
 		t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 		if timemapper is not None:
 			if side == 'left':
-				return timemapper.interptime2pixel(t + t0 - begindelay, align = align)
+				return timemapper.interptime2pixel(tm + t0 - begindelay, align = align)
 			else:
-				return timemapper.interptime2pixel(t + t0, align = align)
+				return timemapper.interptime2pixel(tm + t0, align = align)
 		# else there is no timemapper, use pixel==second
 		l,t,r,b = self.pos_abs
 		if t1 > t0:
@@ -492,9 +492,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			factor = 1.0
 		if side == 'left':
 			begindelay = self.node.GetBeginDelay()
-			return int((t - begindelay) / factor + l + .5)
+			return int((tm - begindelay) / factor + l + .5)
 		else:
-			return int((t + t0 - t1) / factor + r + .5)
+			return int((tm + t0 - t1) / factor + r + .5)
 
 	def GetTimes(self, which='virtual'):
 		t0, t1, t2, downloadlag, begindelay = self.node.GetTimes(which)
