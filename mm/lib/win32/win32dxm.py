@@ -125,7 +125,7 @@ class GraphBuilder:
 	# get all filter names of GraphBuilder graph
 	# note: The file reader filter gets its name from the file
 	def GetFiltersNames(self):
-		if not self._builder or not self._rentered: return []
+		if not self._builder or not self._rendered: return []
 		enumobj = self._builder.EnumFilters()
 		f = enumobj.Next()
 		filters = []
@@ -135,8 +135,19 @@ class GraphBuilder:
 			f = enumobj.Next()
 		return filters
 
+	def IsASF(self):
+		if not self._builder or not self._rendered: return 0
+		enumobj = self._builder.EnumFilters()
+		f = enumobj.Next()
+		while f:		
+			fname = f.QueryFilterName()
+			if fname.find('ASF')>=0:
+				return 1
+			f = enumobj.Next()
+		return 0
+		
 	def HasVideo(self):
-		if not self._builder or not self._rentered: return None
+		if not self._builder or not self._rendered: return None
 		try:
 			return self._builder.FindFilterByName('Video Renderer')
 		except:
@@ -180,20 +191,17 @@ def GetVideoSize(url):
 # Returns the duration of the media file in secs	
 def GetMediaDuration(url):
 	try:
-		builder = dshow.CreateGraphBuilder()
+		builder = GraphBuilder()
 	except:
 		print 'Missing DirectShow infrasrucrure'
 		return 0
-	try:
-		builder.RenderFile(url)
-	except:
-		print 'failed to render',url
+	if not builder.RenderFile(url):
 		return 0
-	mp = builder.QueryIMediaPosition()
-	try:
-		duration = mp.GetDuration()
-	except:
-		duration = 1 # sometimes should be infinite
-	return duration
+
+	# avoid crash for ASF
+	if builder.IsASF():
+		return 0
+
+	return builder.GetDuration()
 
 
