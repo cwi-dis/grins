@@ -2588,7 +2588,7 @@ class _ResizeableDisplayList(_DisplayList):
 			raise error, 'displaylist already rendered'
 
 		if self._img is not None:
-			self._img.delete(self._img)	
+			self._img.delete()	
 			self._img = None
 
 		try:
