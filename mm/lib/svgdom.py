@@ -1324,11 +1324,12 @@ class DOMParamIterator:
 # Plays SVG animations
 
 class SVGPlayer:
-	def __init__(self, svgdoc, ostimer, rendercb):
+	def __init__(self, svgdoc, ostimer, rendercb, timeres=0.01):
 		self._timeroot = svgdoc.getTimeRoot()
 		self._ostimer = ostimer
 		self._rendercb = rendercb
 		self._timerid = None
+		self._timeresolution = timeres
 	#
 	# extenal calls
 	# 
@@ -1365,7 +1366,7 @@ class SVGPlayer:
 		apply(apply, self._rendercb)
 		self._timerid = None
 		if self._timeroot.isTicking():
-			self._timerid = self._ostimer.settimer(0.01, (self.timerCallback, ()))
+			self._timerid = self._ostimer.settimer(self._timeresolution, (self.timerCallback, ()))
 
 ####################################
 # utilities
