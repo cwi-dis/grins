@@ -79,7 +79,8 @@ class HierarchyViewDialog(ViewDialog):
 		else:
 			n = self.get_selected_node()
 			w.set_toggle(LOCALTIMESCALE, n.showtime == 'focus')
-			w.set_toggle(CORRECTLOCALTIMESCALE, n.showtime == 'cfocus')
+			w.set_toggle(CORRECTLOCALTIMESCALE, n.showtime in ('cfocus', 'bwstrip'))
+		w.set_toggle(TOGGLE_BWSTRIP, self.root.showtime == 'bwstrip')
 
 	def helpcall(self):
 		import Help
