@@ -83,9 +83,13 @@ class LayoutView(LayoutViewDialog):
 			else:
 				channels = self.context.layouts[self.curlayout]
 			for ch in channels:
-				chanlist.append(ch.name)
+				# experimental SMIL Boston layout code
+				if ch['type'] == 'layout':
+				# end experimental
+					chanlist.append(ch.name)
 				layout[ch.name] = 0
 			chanlist.sort()
+			
 		if self.curchannel is not None:
 			if self.curlayout is None or \
 			   not layout.has_key(self.curchannel):
@@ -192,7 +196,12 @@ class LayoutView(LayoutViewDialog):
 				else:
 					# multiple top-level channels
 					root = ''
-		editmgr.addchannel(name, len(self.context.channels), type)
+		# experimental SMIL Boston layout code
+		editmgr.addchannel(name, len(self.context.channels), 'layout')
+		# end experimental
+		# else
+		# editmgr.addchannel(name, len(self.context.channels), type)
+		# end else
 		ch = context.channeldict[name]
 		if root:
 			from windowinterface import UNIT_PXL, UNIT_SCREEN

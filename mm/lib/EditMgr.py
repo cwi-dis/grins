@@ -121,8 +121,33 @@ class EditMgr:
 		i = parent.GetChildren().index(node)
 		self.addstep('delnode', parent, i, node)
 		node.Extract()
-	#
+			
+	# experimental SMIL Boston layout code
+	def defnewchannel(self, node, layoutchannel):
+		type = node._internalchtype
+		lname = layoutchannel.name
+		name = lname + ' %d'
+		i = 0
+		while self.context.channeldict.has_key(name % i):
+			i = i + 1
+		name = name % i
+		self.context.addchannel(name, 0, type)
+		ch = self.context.channeldict[name]
+		ch['base_window'] = lname
+		if ch.has_key('base_winoff'):
+			x, y, w, h = layoutchannel['base_winoff']
+		elif ch.has_key('winsize'):
+			w, h = layoutchannel['winsize']
+		else:
+			w, h = 100, 100	
+		ch['base_winoff'] = 0, 0, w, h
+		node.SetChannel(ch)
+	
 	def addnode(self, parent, i, node):
+		# experimental SMIL Boston layout code
+		if node.GetChannelType() == 'layout':
+			self.defnewchannel(node, node.GetChannel())
+		# end experimental
 		self.addstep('addnode', parent, i, node)
 		node.AddToTree(parent, i)
 	#
@@ -431,3 +456,4 @@ class EditMgr:
 ##		else:
 ##			attrdict[attrname] = value
 ##	#
+

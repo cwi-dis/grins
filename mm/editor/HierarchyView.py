@@ -664,6 +664,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
+		# experimental SMIL Boston layout code
+		internalchtype = chtype
+		# end experimental
 		lightweight = features.lightweight
 		node = self.focusnode
 		if node is None:
@@ -762,6 +765,9 @@ class HierarchyView(HierarchyViewDialog):
 			node.SetAttr('caption', '<clear/>')
 		else:
 			node = self.root.context.newnode(type)
+		# experimental SMIL Boston layout code
+		node._internalchtype = internalchtype
+		# end experimental			
 		if url is not None:
 			node.SetAttr('file', url)
 		if chname:
