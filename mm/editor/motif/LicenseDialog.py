@@ -20,6 +20,9 @@ class LicenseDialog:
 			 'colormap': windowinterface.toplevel._colormap,
 			 'horizontalSpacing': 10,
 			 'verticalSpacing': 10})
+		w.Parent().AddWMProtocolCallback(
+			windowinterface.toplevel._delete_window,
+			self.__callback, (self.cb_quit, ()))
 		fmt = windowinterface.toplevel._imgformat
 		rdr = imgconvert.stackreader(fmt, splashimg.reader())
 		self.__imgsize = rdr.width, rdr.height
