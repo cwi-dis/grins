@@ -48,14 +48,14 @@
      1.BasicAnimation
 	Fully implemented
      2.SplineAnimation
-	Not implemented (not part of SMIL 2.0 Language)
+	Fully  implemented (but not part of SMIL 2.0 Language)
 4.Content Control
      1.BasicContentControl
 	Fully implemented
      2.CustomTestAttributes
 	Fully implemented
      3.PrefetchControl
-	Implemented XXX what is the status exactly?
+	Partially implemented (mediaSize, mediaTime and  bandwidth are implemented only for their default values i.e 100%)
      4.SkipContentControl
 	Recognized but ignored
 5.Layout
