@@ -962,13 +962,68 @@ class _ScrollMixin:
 		rect = horleft, hortop, vertleft+1, horbot
 		self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
 		self._barx.HiliteControl(255)
+		#
+		# And install callbacks
+		#
+		self._add_control(self._barx, self._xscrollcallback, self._xscrollcallback)
+		self._add_control(self._bary, self._yscrollcallback, self._yscrollcallback)
 		
 	def close(self):
-		pass
+		if self._barx:
+			self._del_control(self._barx)
+			self._del_control(self._bary)
+			del self._barx
+			del self._bary
+		
+	def _xscrollcallback(self, bar, part):
+		ten_percent = (self._rect[_WIDTH]/10)
+		page = self._rect[_WIDTH]-ten_percent
+		self._anyscrollcallback(bar, part, ten_percent, page)
+		
+	def _anyscrollcallback(self, bar, part, line, page):
+		if line < 1: line = 1
+		if page < 1: page = 1
+		old_x, old_y = self._canvaspos
+		value = bar.GetControlValue()
+		if part == Controls.inUpButton:
+			value = value - line
+		elif part == Controls.inPageUp:
+			value = value - page
+		elif part == Controls.inDownButton:
+			value = value + line
+		elif part == Controls.inPageDown:
+			value = value + page
+		bar.SetControlValue(value)
+		new_x = self._barx.GetControlValue()
+		new_y = self._bary.GetControlValue()
+		Qd.SetPort(self._wid)
+		# See whether we can use scrollrect. Only possible if no updates pending.
+		updrgn = Qd.NewRgn()
+		self._wid.GetWindowUpdateRgn(updrgn)
+		if Qd.EmptyRgn(updrgn):
+			# Scroll, and get the new vacated region back
+			Qd.ScrollRect(self.qdrect(), old_x-new_x, old_y-new_y, updrgn)
+		else:
+			# ok, update the whole window
+			Qd.RectRgn(updrgn, self.qdrect())
+		Win.InvalRgn(updrgn)
+		Qd.DisposeRgn(updrgn)
+		self._canvaspos = new_x, new_y
+		
+	def _yscrollcallback(self, bar, part):
+		ten_percent = (self._rect[_HEIGHT]/10)
+		page = self._rect[_HEIGHT]-ten_percent
+		self._anyscrollcallback(bar, part, ten_percent, page)
 		
 	def _canscroll(self):
 		"""Return true if this window may be scrolled"""
 		return not not self._canvassize
+		
+	def _scrolloffset(self):
+		if not self._canvassize:
+			return 0, 0
+		xoff, yoff = self._canvaspos
+		return -xoff, -yoff
 		
 	def _needs_grow_cursor(self):
 		if self._barx:
@@ -1037,12 +1092,51 @@ class _ScrollMixin:
 			h = h * 2
 		else:
 			w, h = 1.0, 1.0
-			self._canvaspos = (0, 0)
 		self._canvassize = (w, h)
-		print 'DBG: new canvassize', self._canvassize
-		# XXXX set _rect
-		# XXXX do the resize callback
+		self._adjust_scrollbar_max()
 		self._do_resize0()
+		
+	def _adjust_scrollbar_max(self):
+		"""Adjust scrollbar maximum for new window/canvassize. This may update
+		the canvassize, because scrollbars cannot go beyond 32767"""
+		# XXXX Keep x,y position
+		# XXXX Check that canvassizes >= 1.0
+		wwindow, hwindow = self._rect[2:]
+		wfactor, hfactor = self._canvassize
+		wcanvas, hcanvas = wfactor*wwindow, hfactor*hwindow
+		if wcanvas > 32766:
+			wcanvas = 32766
+			wfactor = 32766.0/wwindow
+		if hcanvas > 32766:
+			hcanvas = 32766
+			hfactor = 32766.0/hwindow
+		self._canvassize = wfactor, hfactor
+		self._adjustbar(self._barx, wwindow, wcanvas)
+		self._adjustbar(self._bary, hwindow, hcanvas)
+		self._canvaspos = self._barx.GetControlValue(), self._bary.GetControlValue()
+		
+	def _adjustbar(self, bar, windowsize, canvassize):
+		"""Adjust a scrollbar for a new maximum"""
+		if canvassize <= windowsize:
+			bar.SetControlValue(0)
+			bar.SetControlMaximum(0)
+			bar.HiliteControl(255)
+		else:
+			newmax = canvassize - windowsize
+			oldvalue = bar.GetControlValue()
+			if oldvalue:
+				# XXXX Should be done better
+				oldmax = bar.GetControlMaximum()
+				factor = float(newmax)/oldmax
+				hw = windowsize/2
+				newvalue = int(oldvalue*factor+hw*factor-hw)
+			else:
+				newvalue = 0
+			bar.SetControlValue(newvalue)
+			bar.SetControlMaximum(newmax)
+			bar.HiliteControl(0)
+			
+		
 
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
@@ -1115,6 +1209,11 @@ class _AdornmentsMixin:
 					if part:
 						control_callback(ctl, part)
 				return 1
+		# Otherwise if the click is outside the real inner section we ignore it.
+		if not Qd.PtInRect(local, self.qdrect()):
+##			if down:
+##				MacOS.SysBeep()
+			return 1
 		return 0
 		
 	def _toolbar_callback(self, ctl, part):
