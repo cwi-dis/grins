@@ -32,7 +32,6 @@ class PlayerCore(Selecter):
 	def fullreset(self):
 		self.reset()
 		self.playroot = self.userplayroot = self.root
-		self.measure_armtimes = 0
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
 	#
