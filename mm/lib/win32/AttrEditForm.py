@@ -39,9 +39,6 @@ else:
 	ENABLE_VALIDATORS = 0
 
 
-if ENABLE_VALIDATORS:
-	import InputValidator
-
 error = components.error
 
 ##################################################
@@ -769,8 +766,6 @@ class ColorCtrl(AttrCtrl):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
 		self._attrval=components.Edit(wnd,resid[1])
-		if ENABLE_VALIDATORS:
-			self._validator=InputValidator.ColorValidator()
 
 	def OnInitCtrl(self):
 		self._initctrl=self
