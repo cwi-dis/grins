@@ -1,3 +1,3 @@
 __version__ = "$Id$"
 
-patchlevel = 'Unix/motif patchlevel 2'
+patchlevel = 'Unix/motif patchlevel 3'
