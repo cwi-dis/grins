@@ -2161,7 +2161,7 @@ class ArcBox(GO, ArcBoxCommand):
 			return
 		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
-##			INFO(callback = (self.infocall, ())),
+			ATTRIBUTES(callback = (self.attrcall, ())),
 			DELETE(callback = (self.delcall, ())),
 			]
 
@@ -2205,7 +2205,7 @@ class ArcBox(GO, ArcBoxCommand):
 
 	# Menu stuff beyond what GO offers
 
-	def infocall(self):
+	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import ArcInfo
 		ArcBox.arc_info=ArcInfo.showarcinfo(self.mother, self.mother.root,
