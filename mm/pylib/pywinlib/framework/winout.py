@@ -21,7 +21,7 @@
 # other than the main thread attempts to print, it is always queued until next idle time
 
 import sys, string, regex, regsub
-from pywin.mfc import docview, window
+from pywinlib.mfc import docview, window
 import app
 import win32ui, win32api, win32con
 import Queue
