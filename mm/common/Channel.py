@@ -913,10 +913,6 @@ class Channel:
 		self._paused = paused
 
 	def pause(self, node, action):
-		if action == 'hide':
-			arg = -1
-		else:
-			arg = 1
 		if node is self._played_node:
 			self.setpaused(action)
 
