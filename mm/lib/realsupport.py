@@ -137,6 +137,9 @@ class RTParser(xmllib.XMLParser):
 		else:
 			self.__printdata.append('Warning: syntax error on line %d: %s' % (self.lineno, msg))
 
+	def unknown_entityref(self, name):
+		pass
+
 	def close(self):
 		xmllib.XMLParser.close(self)
 		if self.__printfunc is not None and self.__printdata:
@@ -649,6 +652,9 @@ class RPParser(xmllib.XMLParser):
 			print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
 		else:
 			self.__printdata.append('Warning: syntax error on line %d: %s' % (self.lineno, msg))
+
+	def unknown_entityref(self, name):
+		pass
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
