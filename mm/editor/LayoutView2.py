@@ -98,17 +98,20 @@ class TreeHelper:
 			# case for regions
 			tParentNode =  self.__nodeList.get(parentRef)
 			if tParentNode == None:
+				if debug2: print 'treeHelper.__checkMediaNodeList : the parent doesn''t exist, create a new parent tree node'
 				tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
 			if tNode == None:
+				if debug2: print 'treeHelper.__checkMediaNodeList : it''s a new region, create a new tree node'
 				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
 				tParentNode.addChild(tNode)
 			elif not tParentNode.hasChild(tNode):
+				if debug2: print 'treeHelper.__checkMediaNodeList : the parent has changed children=',tNode.children
 				oldNode = tNode
 				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
 				tNode.children = oldNode.children
-				tParentNode.addChild(tNode)				
+				tParentNode.addChild(tNode)
 			else:
-				tNode.checkMainUpdate()				
+				tNode.checkMainUpdate()
 				tNode.isUsed = 1
 		elif tNode == None:
 			# case for new viewport 
@@ -130,12 +133,15 @@ class TreeHelper:
 			self.__checkRegionNodeList(None, viewportRef)
 		
 	# this method is called when a node has to be deleted
-	def __onDelNode(self, parent, node):
+	def __onDelNode(self, parent, node, top=1):
 		if debug: print 'treeHelper.__onDelNode : ',node.nodeRef
 		for child in node.children.keys():
-			self.__onDelNode(node, child)
+			self.__onDelNode(node, child, 0)
 		if parent != None:
-			del parent.children[node]
+			if top:
+				# extract from the parent only if it's the top node to delete
+				# it allows to not affect the sub-nodes if this node has to be moved
+				del parent.children[node]
 			parentRef = parent.nodeRef
 		else:
 			parentRef = None
@@ -146,7 +152,7 @@ class TreeHelper:
 
 	# this method is called when a node has to be added	
 	def __onNewNode(self, parent, node):
-		if debug: print 'treeHelper.__onNewNode : ',node.nodeRef
+		if debug: print 'treeHelper.__onNewNode : ',node.nodeRef, 'child = ',node.children
 		if parent != None:
 			parentRef = parent.nodeRef
 		else:
@@ -1672,9 +1678,35 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateFocus()
 		self.applyDelRegion(regionRef)
 
-	def dropNode(self, sourceNodeRef, targetNodeRef):
+
+	# check if moving a source node into a target node is valid
+	def isValidMove(self, sourceNodeRef, targetNodeRef):
+		if sourceNodeRef == None or targetNodeRef == None:
+			return 0
+
+		if sourceNodeRef.IsAncestorOf(targetNodeRef) or sourceNodeRef is targetNodeRef:
+			return 0
+				
+		targetNodeType = self.getNodeType(targetNodeRef)
+		# for now, accept only moving if the target node is viewport or region
+		if targetNodeType not in (TYPE_VIEWPORT, TYPE_REGION):
+			return 0
+
+		sourceNodeType = self.getNodeType(sourceNodeRef)
+		# for now, moving a viewport is forbidden
+		if sourceNodeType == TYPE_VIEWPORT:
+			return 0
+		
+		return 1
+
+	# move the source node into a target node
+	def moveNode(self, sourceNodeRef, targetNodeRef):
+		if not self.isValidMove(sourceNodeRef, targetNodeRef):
+			return 0
+		
 		sourceNodeType = self.getNodeType(sourceNodeRef)
 		targetNodeType = self.getNodeType(sourceNodeRef)
+		
 		if sourceNodeType == TYPE_MEDIA:
 			# if this case, we just have to change the region attribute of the media
 			pass
@@ -1682,7 +1714,9 @@ class LayoutView2(LayoutViewDialog2):
 			if self.editmgr.transaction():
 				self.editmgr.setchannelattr(sourceNodeRef.name, 'base_window', targetNodeRef.name)
 				self.editmgr.commit('REGION_TREE')
-		
+
+		return 1
+	
 	# checking if the region/viewport node contains any sub-region or media
 	def isEmpty(self, nodeRef):
 		# checking if has sub-region
@@ -2213,21 +2247,11 @@ class TreeWidget(Widget):
 
 		return nodeRef			
 		
-	def __ifAcceptDrag(self, nodeTreeCtrlId, type, objectId):
+	def onDragOver(self, nodeTreeCtrlId, type, objectId):
 		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
-		if sourceNodeRef == None:
-			return 0
 		
-		targetNodeType = self._context.getNodeType(targetNodeRef)
-		# for now, accept only drop if the target node is viewport or region
-		if targetNodeType in (TYPE_VIEWPORT, TYPE_REGION):
-			return 1
-		
-		return 0		
-		
-	def onDragOver(self, nodeTreeCtrlId, type, objectId):
-		if self.__ifAcceptDrag(nodeTreeCtrlId, type, objectId):
+		if self._context.isValidMove(sourceNodeRef, targetNodeRef):
 			# XXX should change
 			return LayoutViewDialog2.DROPEFFECT_MOVE
 		else:
@@ -2235,15 +2259,10 @@ class TreeWidget(Widget):
 			return LayoutViewDialog2.DROPEFFECT_NONE
 
 	def onDrop(self, nodeTreeCtrlId, type, objectId):
-		if not self.__ifAcceptDrag(nodeTreeCtrlId, type, objectId):
-			return 0
-
 		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
-#		self._context.dropNode(sourceNodeRef, targetNodeRef)
-		
-		return 1
-				   
+		return self._context.moveNode(sourceNodeRef, targetNodeRef)
+						   
 class PreviousWidget(Widget):
 	def __init__(self, context):
 		self._viewports = {}
