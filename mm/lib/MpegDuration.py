@@ -4,7 +4,7 @@ import FileCache
 import cl
 
 def getduration(filename):
-	fp = open(filename, 'r')
+	fp = open(filename, 'rb')
 	hsize = cl.QueryMaxHeaderSize(cl.MPEG_VIDEO)
 	hdr = fp.read(hsize)
 	cmp = cl.OpenDecompressor(cl.MPEG_VIDEO)

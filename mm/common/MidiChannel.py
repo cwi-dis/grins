@@ -63,7 +63,7 @@ class MidiChannel(Channel):
 		# Read the midifile, mixing all tracks
 		#
 		try:
-		    fp = open(fn)
+		    fp = open(fn, 'rb')
 		except IOError:
 		    print 'Cannot open midi file', fn
 		    self.armed_data = []

@@ -6,7 +6,7 @@ from urllib import urlretrieve
 # Used to get full info
 def getfullinfo(filename):
 	filename = urlretrieve(filename)[0]
-	f = open(filename, 'r')
+	f = open(filename, 'rb')
 	import aifc
 	try:
 		a = aifc.openfp(f, 'r')

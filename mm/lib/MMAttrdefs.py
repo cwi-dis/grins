@@ -51,7 +51,7 @@ import marshal
 def readattrdefs(fp, filename):
 	filename_com = filename + '.atc'
 	try:
-		fpc = open(filename_com, 'r')
+		fpc = open(filename_com, 'rb')
 		sf = os.stat(filename)
 		sfc = os.stat(filename_com)
 		if sf[ST_MTIME] < sfc[ST_MTIME]:
@@ -108,7 +108,7 @@ def readattrdefs(fp, filename):
 		raise TypeError, msg
 	#
 	try:
-		fpc = open(filename_com, 'w')
+		fpc = open(filename_com, 'wb')
 		print 'Writing compiled attributes to', filename_com
 		marshal.dump(dict, fpc)
 		fpc.close()
@@ -299,7 +299,7 @@ def initattrdefs():
 		print '(Using local Attrdefs file)'
 	except IOError:
 		import cmif
-		filename = cmif.findfile('lib/Attrdefs')
+		filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
 		fp = open(filename, 'r')
 	attrdefs = readattrdefs(fp, filename)
 	fp.close()

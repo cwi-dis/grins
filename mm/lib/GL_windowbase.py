@@ -1452,7 +1452,7 @@ class _Window:
 			retval = _image_cache[cachekey]
 			filename = retval[-1]
 			try:
-				image = open(filename).read()
+				image = open(filename, 'rb').read()
 			except:		# any error...
 				del _image_cache[cachekey]
 				try:
