@@ -35,7 +35,7 @@ class audio_filter:
 		self._rdr.setpos(pos)
 
 	def getmarkers(self):
-		return eself._rdr.getmarkers()
+		return self._rdr.getmarkers()
 
 class linear2linear(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -164,21 +164,39 @@ class mono2stereo(audio_filter):
 		return audioop.tostereo(data, self.__width,
 					self.__fac1, self.__fac2), nframes
 
-class unsigned2linear(audio_filter):
+class unsigned2linear8(audio_filter):
 	__translation = None
 
 	def __init__(self, rdr, fmt):
 		audio_filter.__init__(self, rdr, fmt)
-		if not unsigned2linear.__translation:
+		if not unsigned2linear8.__translation:
 			# initialize class variable __translation
 			import string
-			unsigned2linear.__translation = string.joinfields(
+			unsigned2linear8.__translation = string.joinfields(
 				map(chr, range(128, 256) + range(0, 128)), '')
 
 	def readframes(self, nframes = -1):
 		import string
 		data, nframes = self._rdr.readframes(nframes)
 		return string.translate(data, self.__translation), nframes
+
+# not very efficient...
+class unsigned2linear16(audio_filter):
+	def __init__(self, rdr, fmt):
+		audio_filter.__init__(self, rdr, fmt)
+		self.__endian = fmt.getendian()
+
+	def readframes(self, nframes = -1):
+		import array
+		data, nframes = self._rdr.readframes(nframes)
+		a = array.array('h', data)
+		if self.__endian != endian:
+			a.byteswap()
+		for i in range(len(a)):
+			a[i] = (a[i] + 0x8000) & 0xffff
+		if self.__endian != endian:
+			a.byteswap()
+		return a.tostring(), nframes
 
 class swap(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -416,33 +434,94 @@ _converters = [
 
 	(linear_8_mono_excess,
 	 linear_8_mono_signed,
-	 unsigned2linear,
+	 unsigned2linear8,
 	 SHUFFLE),
 
 	(linear_8_mono_signed,
 	 linear_8_mono_excess,
-	 unsigned2linear,
+	 unsigned2linear8,
 	 SHUFFLE),
 
-	(linear_16_mono_big,
-	 linear_16_mono_little,
+	(linear_16_mono_big_excess,
+	 linear_16_mono_big_signed,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_mono_big_signed,
+	 linear_16_mono_big_excess,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_mono_little_excess,
+	 linear_16_mono_little_signed,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_mono_little_signed,
+	 linear_16_mono_little_excess,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_stereo_big_excess,
+	 linear_16_stereo_big_signed,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_stereo_big_signed,
+	 linear_16_stereo_big_excess,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_stereo_little_excess,
+	 linear_16_stereo_little_signed,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_stereo_little_signed,
+	 linear_16_stereo_little_excess,
+	 unsigned2linear16,
+	 SHUFFLE),
+
+	(linear_16_mono_big_excess,
+	 linear_16_mono_little_excess,
 	 swap,
 	 SHUFFLE),
 
-	(linear_16_mono_little,
-	 linear_16_mono_big,
+	(linear_16_mono_little_excess,
+	 linear_16_mono_big_excess,
 	 swap,
 	 SHUFFLE),
 
-	(linear_16_stereo_big,
-	 linear_16_stereo_little,
+	(linear_16_stereo_big_excess,
+	 linear_16_stereo_little_excess,
 	 swap,
 	 SHUFFLE),
 
-	(linear_16_stereo_little,
-	 linear_16_stereo_big,
+	(linear_16_stereo_little_excess,
+	 linear_16_stereo_big_excess,
 	 swap,
-	 SHUFFLE)]
+	 SHUFFLE),
+
+	(linear_16_mono_big_signed,
+	 linear_16_mono_little_signed,
+	 swap,
+	 SHUFFLE),
+
+	(linear_16_mono_little_signed,
+	 linear_16_mono_big_signed,
+	 swap,
+	 SHUFFLE),
+
+	(linear_16_stereo_big_signed,
+	 linear_16_stereo_little_signed,
+	 swap,
+	 SHUFFLE),
+
+	(linear_16_stereo_little_signed,
+	 linear_16_stereo_big_signed,
+	 swap,
+	 SHUFFLE),
+	]
 
 def convert(rdr, dstfmts = None, rates = None, loop=1):
 	if dstfmts is not None:
