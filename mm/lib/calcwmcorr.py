@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Calculate the difference between requested and assigned window
 # origin.  This differs per window manager, e.g., for twm it's (1,21)
 # but for 4Dwm  it's (0,0).  Apparently they disagree about whether
