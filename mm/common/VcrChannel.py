@@ -155,8 +155,8 @@ class VcrChannel(Channel):
 		self.startcontext(context)
 		self.vcr.setasync(0)
 		start, stop = self.getstartstop(node)
-		if anchor[2]:
-			start = anchor[2]
+		if anchor[A_ARGS]:
+			start = anchor[A_ARGS]
 		self.vcr.goto(start)
 		self.vcr.setasync(1)
 		self.stopcontext(context)
@@ -165,7 +165,7 @@ class VcrChannel(Channel):
 			  ['Cancel', 'Done'], 1):
 			apply(cb, (anchor,))
 		else:
-			apply(cb, ((anchor[0], anchor[1], self.vcr.where()),))
+			apply(cb, ((anchor[0], anchor[1], self.vcr.where(), anchor[3]),))
 
 	def play(self, node):	# XXX Override Channel method.
 		self.play_0(node)
