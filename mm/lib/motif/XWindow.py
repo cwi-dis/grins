@@ -426,7 +426,10 @@ class _Window(_AdornmentSupport):
 				h = val['height']
 				break
 		else:
-			w, h = self._rect[2:]
+			if self._rect is None:
+				w = h = 0
+			else:
+				w, h = self._rect[2:]
 		if units == UNIT_MM:
 			return float(x) / toplevel._hmm2pxl, \
 			       float(y) / toplevel._vmm2pxl, \
