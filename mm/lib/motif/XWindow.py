@@ -1426,7 +1426,7 @@ class _SubWindow(_Window):
 		self._z = z
 		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1, units = units)
 		self._rect = x, y, w, h
-		self._sizes = self._pxl2rel(self._rect)
+		self._sizes = parent._pxl2rel(self._rect)
 		if w == 0 or h == 0:
 			showmessage('Creating subwindow with zero dimension',
 				    mtype = 'warning', parent = parent)
