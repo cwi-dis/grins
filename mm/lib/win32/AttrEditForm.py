@@ -828,22 +828,30 @@ import appcon, sysmetrics
 import string
 import DrawTk
 
-DIALOG_WINDOW_WIDTH = 240
-DIALOG_WINDOW_HEIGHT = DIALOG_WINDOW_WIDTH * 3 / 4
 
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def __init__(self,form):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
-		self.createLayoutContext(self._form._winsize)
 		self._units=self._form.getunits()
 		self._layoutctrl=None
 		self._isintscale=1
 		self._boxoff = 0, 0
+		self._layoutctrl=None
+		self._units=0
 			
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
+
+		preview=components.Control(self,grinsRC.IDC_PREVIEW)
+		preview.attach_to_parent()
+		l1,t1,r1,b1=self.GetWindowRect()
+		l2,t2,r2,b2=preview.getwindowrect()
+		self._layoutpos =(l2-l1,t2-t1)
+		self._layoutsize = (r2-l1,b2-t1)
+		self.createLayoutContext(self._form._winsize)
 		self._layoutctrl=self.createLayoutCtrl()
+
 		t=components.Static(self,grinsRC.IDC_SCALE1)
 		t.attach_to_parent()
 		if self._isintscale:
@@ -853,18 +861,19 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self.create_box(self.getcurrentbox())
 
 	def OnSetActive(self):
-		if not self._layoutctrl.in_create_box_mode():
+		if self._layoutctrl and not self._layoutctrl.in_create_box_mode():
 			self.create_box(self.getcurrentbox())
 		return self._obj_.OnSetActive()
 
 	def OnDestroy(self,params):
-		self._layoutctrl.exit_create_box()
+		if self._layoutctrl:
+			self._layoutctrl.exit_create_box()
 
 	def createLayoutCtrl(self):
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
 		v.createWindow(self)
 		x,y,w,h=self.getboundingbox()
-		rc=(20,20,w,h)
+		rc=(self._layoutpos[0],self._layoutpos[1],w,h)
 		v.SetWindowPos(self.GetSafeHwnd(),rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
 		v.init(rc)
@@ -898,14 +907,14 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		
 		# try first an int scale
-		n = max(1, (sw+DIALOG_WINDOW_WIDTH-1)/DIALOG_WINDOW_WIDTH, (sh+DIALOG_WINDOW_HEIGHT-1)/DIALOG_WINDOW_HEIGHT)
+		n = max(1, (sw+self._layoutsize[0]-1)/self._layoutsize[0], (sh+self._layoutsize[1]-1)/self._layoutsize[1])
 		scale=float(n)
 		self._xmax=int(sw/scale+0.5)
 		self._ymax=int(sh/scale+0.5)
 		self._isintscale=1
-		if n!=1 and (self._xmax<3*DIALOG_WINDOW_WIDTH/4 or self._ymax<3*DIALOG_WINDOW_HEIGHT/4):
+		if n!=1 and (self._xmax<3*self._layoutsize[0]/4 or self._ymax<3*self._layoutsize[1]/4):
 			# try to find a better scale
-			scale = max(1, float(sw)/DIALOG_WINDOW_WIDTH, float(sh)/DIALOG_WINDOW_HEIGHT)
+			scale = max(1, float(sw)/self._layoutsize[0], float(sh)/self._layoutsize[1])
 			self._xmax=int(sw/scale+0.5)
 			self._ymax=int(sh/scale+0.5)
 			self._isintscale=0
@@ -1269,7 +1278,7 @@ class VideoRenderer(Renderer):
 class PreviewPage(AttrPage):
 	def __init__(self,form,mtype='image',aname='file'):
 		AttrPage.__init__(self,form)
-		self._prevrc=(20,20,DIALOG_WINDOW_WIDTH,DIALOG_WINDOW_HEIGHT)
+		self._prevrc=(20,20,100,100)
 		self._aname=aname
 		if mtype=='video':
 			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
@@ -1407,7 +1416,6 @@ class AttrGroup:
 
 	special_attrcl={
 		'system_captions':OptionsRadioCtrl,
-##		'system_language':OptionsCtrl,
 		'layout':OptionsRadioCtrl,
 		'visible':OptionsRadioCtrl,
 		'drawbox':OptionsRadioCtrl,
