@@ -130,6 +130,9 @@ class Channel:
 		del self._scheduler
 		del self._exporter
 		channels.remove(self)
+		for chan in channels:
+			if self in chan._subchannels:
+				chan._subchannels.remove(self)
 
 	def commit(self, type):
 		try:
