@@ -1,6 +1,13 @@
+# Qt module test
 
+# QuickTime module
 import Qt
 
+# QuickTime constants
+# placeholder -> replace with Mac equivalent
+import QuickTime
+
+# std windows/MFC stuff
 import win32ui, win32api, win32con
 Afx=win32ui.GetAfx()
 Sdk=win32ui.GetWin32Sdk()
@@ -34,7 +41,7 @@ class MfcOsWnd(window.Wnd):
 		self._icon=Afx.GetApp().LoadIcon(win32con.IDI_APPLICATION)
 
 	def setStandardCursor(self,cursor):
-		self._cursor=Afx.GetApp().LoadStandardCursor(cursor)
+		self._cursor = Afx.GetApp().LoadStandardCursor(cursor)
 
 	def setStockBrush(self,idbrush):
 		self._brush=Sdk.GetStockObject(idbrush)
@@ -70,73 +77,80 @@ class ToplevelWnd(MfcOsWnd):
 		flags=win32con.SWP_NOMOVE | win32con.SWP_NOZORDER 		
 		self.SetWindowPos(0, (0,0,wp,hp), flags)
 
+
 class QTWnd(MfcOsWnd):
 	def __init__ (self):
 		MfcOsWnd.__init__(self)
-		self._clstyle=win32con.CS_DBLCLKS
+		self._clstyle=win32con.CS_DBLCLKS | win32con.CS_HREDRAW | win32con.CS_VREDRAW
 		self._style = win32con.WS_CHILD |win32con.WS_CLIPSIBLINGS
-		self.port = None
+		self.port = 0
 		self.movie = None
 		self.ctrl = None
 
 	def OnCreate(self, params):
 		Qt.InitializeQTML()
 		Qt.EnterMovies()
-		self.port = Qt.CreatePortAssociation(self.GetSafeHwnd())
-		Qt.SetGWorld(self.GetSafeHwnd())
+		#self.port = Qt.CreatePortAssociation(self.GetSafeHwnd())
+		#Qt.SetGWorld(self.GetSafeHwnd())
 
 		fn = 'D:\\ufs\\mm\\cmif\\win32\\Qt\\media\\fashion.mov'
 		try:
 			movieResRef = Qt.OpenMovieFileWin(fn, 1)
 		except Exception, arg:
 			print arg
+			return
+
 		try:
 			self.movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0, 0)
 		except Exception, arg:
 			print arg
+		Qt.CloseMovieFile(movieResRef)
 
-		print dir(self.movie)
-		box = self.movie.GetMovieBox()
+		print 'dur =', 0.001*self.movie.GetMovieDuration(), 'sec'
+		print 'box =',  self.movie.GetMovieBox()
 
-		self.ctrl = self.movie.NewMovieControllerWin(box)
+		l, t, r, b = self.movie.GetMovieBox()
+		self.ctrl = self.movie.NewMovieController((40,40, r+40, b+40), QuickTime.mcTopLeftMovie | QuickTime.mcWithFrame) 
+
+		#self.movie.SetMovieGWorld((self.port,), None)
+		self.movie.SetMovieBox((40,40, r+40, b+40))
 		self.movie.SetMovieActive(1)
 		self.movie.StartMovie()
 
-		#self.port = Qt.CreatePortAssociation(self.GetSafeHwnd())
 		self.HookMessage(self.OnTimer,win32con.WM_TIMER)
 		self.__timer_id = self.SetTimer(1,20)
 	
 	def PreTranslateMessage(self, params):
-		if self.ctrl:
+		if params[1] == win32con.WM_DESTROY:
+			self.ctrl = None
+		elif self.ctrl:
 			self.ctrl.MCIsPlayerEventWin(params)
 		return 1
 	
 	def OnTimer(self, params):
-		#if self.movie:
-		#	self.movie.UpdateMovie()
-		if self.ctrl:
+		if self.ctrl and self.port:
 			self.ctrl.MCDrawWin(self.port)
-							
-	def OnDestroy(self, params):
-		self.KillTimer(self.__timer_id)
-		if self.movie:
-			self.movie.StopMovie()
-		del self.ctrl
-		del self.movie
-		if self.port:
-			Qt.DestroyPortAssociation(self.port)
-		Qt.ExitMovies()
-		Qt.TerminateQTML()
-
+	
+	def OnDestroy(self):
+		if self.__timer_id:
+			self.KillTimer(self.__timer_id)
+		self.releaseQt()
+				
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
-		#if self.movie:
-		#	self.movie.UpdateMovie()
 		if self.ctrl:
 			self.ctrl.MCDrawWin(self.port)
 		self.EndPaint(paintStruct)
 			
-
+	def releaseQt(self):
+		self.movie = None
+		self.ctrl = None
+		if self.port:
+			Qt.DestroyPortAssociation(self.port)
+		self.port = 0
+		Qt.ExitMovies()
+		Qt.TerminateQTML()
+			
 def __test():
 	wnd = ToplevelWnd()
 	wnd.setStockBrush(win32con.WHITE_BRUSH)

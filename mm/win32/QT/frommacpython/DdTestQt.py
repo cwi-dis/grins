@@ -164,7 +164,7 @@ class QTWnd(MfcOsWnd):
 	
 	def OnTimer(self, params):
 		if self.movie:
-			self.movie.MoviesTask(self.TIMER_TICK)
+			self.movie.MoviesTask(0)
 			self.movie.UpdateMovie()
 
 		# back buffer size
