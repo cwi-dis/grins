@@ -10,19 +10,86 @@ _rb_message = """\
 Use left mouse button to draw a box.
 Click `OK' when ready or `Cancel' to cancel."""
 
-import AppMessages
+import components
+import DrawTk
+from win32mu import Point,Rect
+import win32ui,win32con
 
+# !!!!! a temporal solution
 class _rbtk:
 	def __init__(self):
-		self.box_created = 0     # indicates wheather box has been created or not
-		self.box_started = 0     # indicates wheather create_box procedure has begun
 		self._next_create_box = []
 
 	def create_box(self, msg, callback, box = None):
-		showmessage("Channel coordinates unknown, set to full base window.\nChange in channel view")
-		if box == None:
-			box = (0, 0, 1, 1)
-		apply(callback, box)
+		print box
+		global _in_create_box
+		if _in_create_box:
+			_in_create_box._next_create_box.append((self, msg, callback, box))
+			return
+		self._rb_callback = callback
+		_in_create_box=self
+		components.CreateBoxDlg(msg,
+			callback = (self._rb_done, ()),
+			cancelCallback = (self._rb_cancel, ()))
+	
+		for w in self._subwindows:
+			w.ShowWindow(win32con.SW_HIDE)
+		if box:
+			print 'drawing in: ',self.__class__.__name__
+			box_pxl=self._convert_coordinates(box,self.GetClientRect())
+			DrawTk.drawTk.SelectTool('select')
+			drawObj=DrawTk.DrawRect(Rect(box_pxl))
+			self.GetContext().Add(drawObj)
+			self.Select(drawObj)
+			self.InvalidateRect()
+		else:
+			DrawTk.drawTk.SelectTool('rect')
+			
+	def _rb_cvbox(self):
+		rb=self._drawObj.GetRelCoord()
+		print 'new box',rb
+		return self._drawObj.GetRelCoord()
+
+	# callback
+	def _rb_done(self):
+		self._rb_finish()
+		apply(self._rb_callback, self._rb_cvbox())
+		self._rb_end()
+
+	# callback
+	def _rb_cancel(self):
+		callback = self._rb_callback
+		self._rb_finish()
+		apply(callback, ())
+		self._rb_end()
+
+	def _rb_finish(self):
+		global _in_create_box
+		_in_create_box = None
+		for w in self._subwindows:
+			w.ShowWindow(win32con.SW_SHOW)
+		DrawTk.drawTk.SelectTool('select')
+		self._drawObj=self.GetContext()._objects[0]
+	
+	# recursion 
+	def _rb_end(self):
+		# clean up
+		self.GetContext().DeleteContents()
+		self.InvalidateRect()
+
+		# execute pending create_box calls
+		next_create_box = self._next_create_box
+		self._next_create_box = []
+		for win, msg, cb, box in next_create_box:
+			win.create_box(msg, cb, box)
+
+#############################################################
+"""		
+#	def create_box(self, msg, callback, box = None):
+#		components.showmessage("Channel coordinates unknown, set to full base window.\nChange in channel view")
+#		if box == None:
+##			box = (0.25, 0.25,0.75, 0.75)
+#		apply(callback, box)
 ##		global _in_create_box
 ##		if _in_create_box:
 ##			_in_create_box._next_create_box.append((self, msg, callback, box))
@@ -108,7 +175,7 @@ class _rbtk:
 ##			Xt.MainLoop()
 ##		except _rb_done:
 ##			pass
-
+##
 	def _rb_finish(self):
 		global _in_create_box
 		_in_create_box = None
@@ -315,3 +382,4 @@ class _rbtk:
 	def _input_callback(self, form, client_data, call_data):
 		pass
 
+"""
