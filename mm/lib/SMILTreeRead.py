@@ -213,10 +213,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				delay = 0.0
 			else:
 				event = 'begin'
-			list.append(MMNode.MMSyncArc(srcnode=xnode,event=event,delay=delay))
+			list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=delay))
 		elif val == 'indefinite':
 			boston = 'indefinite'
-			list.append(MMNode.MMSyncArc())
+			list.append(MMNode.MMSyncArc(node, attr))
 		else:
 			vals = string.split(val, ';')
 			if len(vals) > 1:
@@ -265,7 +265,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if xnode is None:
 							self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 							continue
-					list.append(MMNode.MMSyncArc(srcnode=xnode,event=event,delay=offset))
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=offset))
 					continue
 				res = mediamarker.match(val)
 				if res is not None:
@@ -277,7 +277,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 						continue
 					marker = res.group('markername')
-					list.append(MMNode.MMSyncArc(srcnode=xnode, marker=marker, delay=0.0))
+					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=0.0))
 					continue
 				res = wallclock.match(val)
 				if res is not None:

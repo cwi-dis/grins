@@ -467,20 +467,35 @@ class MMChannel:
 
 # The Sync Arc class
 #
-# XXX This isn't used yet
-#
 class MMSyncArc:
-
-	def __init__(self, srcnode=None, event=None, marker=None, delay=None):
-		self.src = srcnode	# None if previous else MMNode instance
+	def __init__(self, dstnode, action, srcnode=None, event=None, marker=None, delay=None):
+		self.dstnode = dstnode
+		self.isstart = action == 'begin'
+		self.srcnode = srcnode	# None if previous else MMNode instance
 		self.event = event
 		self.marker = marker
 		self.delay = delay
 
 	def __repr__(self):
-		return '<MMSyncArc instance, from ' + \
-			  `self.src` + ' to ' + `self.dst` + \
-			  ', delay ' + `self.delay` + '>'
+		if self.srcnode is None:
+			src = 'prev'
+		else:
+			src = `self.srcnode`
+		if self.event is not None:
+			src = src + '.' + self.event
+		if self.marker is not None:
+			src = src + '.marker(%s)' % self.marker
+		if self.delay:
+			if self.delay > 0:
+				src = src + '+%g' % self.delay
+			else:
+				src = src + '%g' % self.delay
+		dst = `self.delay`
+		if self.isstart:
+			dst = dst + '.begin'
+		else:
+			dst = dst + '.end'
+		return '<MMSyncArc instance, from %s to %s>' % (src, dst)
 
 	def isscheduled(self):
 		return self.src is not None and \
@@ -1659,7 +1674,8 @@ class MMNode:
 					       body_scheddone_actions,
 					       body_terminate_events,
 					       wtd_children,
-					       self.looping_body_self)
+					       self.looping_body_self,
+					       1)
 
 		# When the loop has started we start the body
 		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
@@ -1686,7 +1702,8 @@ class MMNode:
 		return [], [], srdict
 
 	def gensr_body_par(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None):
+			   terminate_events, wtd_children, self_body=None,
+			   laterloop=0):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1700,26 +1717,31 @@ class MMNode:
 
 		for child in self.wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
-			schedule = 1
-			refnode = self_body
-			for arc in MMAttrdefs.getattr(child, 'beginlist'):
-				if arc.event in ('begin', 'end') and \
-				   arc.marker is None and \
-				   arc.delay is not None:
-					schedule = 1
-					if arc.src is None:
+			beginlist = MMAttrdefs.getattr(child, 'beginlist')
+			if not beginlist:
+				if not laterloop:
+					self_body.sched_children.append(MMSyncArc(child, 'begin', event = 'begin', delay = 0.0))
+				schedule = 1
+			else:
+				schedule = 0
+				for arc in beginlist:
+					if arc.srcnode is None or \
+					   arc.srcnode is self:
 						refnode = self_body
 					else:
-						refnode = arc.src
-					break
-				schedule = 0
-			if schedule:
-				refnode.sched_children.append(child)
-				if termtype == 'LAST':
-					scheddone_events.append((SCHED_DONE, child))
-			if termtype == 'ALL':
+						refnode = arc.srcnode
+					if not laterloop:
+						refnode.sched_children.append(arc)
+					if arc.event == 'begin' and \
+					   refnode is self_body and \
+					   arc.marker is None and \
+					   arc.delay is not None:
+						schedule = 1
+			if schedule and termtype == 'LAST':
 				scheddone_events.append((SCHED_DONE, child))
-			if termtype in ('FIRST', chname):
+			elif termtype == 'ALL':
+				scheddone_events.append((SCHED_DONE, child))
+			elif termtype in ('FIRST', chname):
 				terminating_children.append(child)
 				srlist.append(([(SCHED_DONE, child)],
 					       [(TERMINATE, self_body)]))
@@ -1754,7 +1776,8 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_seq(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None):
+			   terminate_events, wtd_children, self_body=None,
+			   laterloop=0):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1807,7 +1830,8 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None):
+			       terminate_events, wtd_children, self_body=None,
+			       laterloop=0):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1915,14 +1939,8 @@ class MMNode:
 		arcs = self.FilterArcList(arcs)
 		for i in range(len(arcs)):
 			n1, s1, n2, s2, delay = arcs[i]
-			if s1 in (HD, TL):
-				n1.SetArcSrc(s1, delay, i)
-				n2.SetArcDst(s2, i)
-			else:
-				if not n1.events.has_key(s1):
-					n1.events[s1] = []
-				n1.events[s1].append((delay, n2, i))
-				n2.SetEventDst(s2, i)
+			n1.SetArcSrc(s1, delay, i)
+			n2.SetArcDst(s2, i)
 				
 		#
 		# Now run through the tree

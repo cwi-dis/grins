@@ -498,7 +498,9 @@ class Channel:
 		durationattr = MMAttrdefs.getattr(node, 'duration')
 		self._has_pause = (durationattr < 0)
 		for (name, type, button, times) in self._played_anchors:
-			if type == ATYPE_PAUSE:
+			if name is None and type is None:
+				f = self.onclick
+			elif type == ATYPE_PAUSE:
 ##				print 'found pause anchor'
 				f = self.pause_triggered
 				self._has_pause = 1
@@ -506,6 +508,20 @@ class Channel:
 				f = self._playcontext.anchorfired
 			self._anchors[button] = f, (node, [(name, type)], None)
 		self._qid = None
+		for arc in node.sched_children:
+			if arc.marker is None and \
+			   arc.event == 'begin' and \
+			   arc.delay is not None:
+				qid = self._scheduler.enter(arc.delay, 0, self._playcontext.Event, (arc,))
+
+	def onclick(self, *unused):
+		for arc in self._played_node.sched_children:
+			if arc.event != 'click':
+				continue
+			if arc.delay <= 0:
+				self._playcontext.Event(arc)
+			else:
+				qid = self._scheduler.enter(arc.delay, 0, self._playcontext.Event, (arc,))
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -550,6 +566,11 @@ class Channel:
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
 			return
+		for arc in self._played_node.sched_children:
+			if arc.marker is None and \
+			   arc.event == 'end' and \
+			   arc.delay is not None:
+				qid = self._scheduler.enter(arc.delay, 0, self._playcontext.Event, (arc,))
 		if not self.syncplay:
 			if not outside_induced:
 				if self._try_auto_anchors():
@@ -1397,6 +1418,12 @@ class ChannelWindow(Channel):
 			self.armed_display.close()
 		bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
+		for arc in node.sched_children:
+			if arc.event == 'click':
+				self.armed_display.fgcolor(bgcolor)
+				b = self.armed_display.newbutton((0,0,1,1), z = -1)
+				self.setanchor(None, None, b, None)
+				break
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
 		alist = node.GetRawAttrDef('anchorlist', [])
