@@ -23,7 +23,7 @@ def Boot( bEditor = 0 ):
 	print "Main GRiNS directory is", CMIFDIR
 	if bEditor:
 		specificPath = "editor"
-		os.environ['GRiNSApp']='CMIFed'
+		os.environ['GRiNSApp']='GRiNSed'
 	else:
 		specificPath = "grins"
 		os.environ['GRiNSApp']='GRiNS'
@@ -47,13 +47,15 @@ def Boot( bEditor = 0 ):
 	os.environ["CMIF"] = CMIFDIR
 	#os.environ["CHANNELDEBUG"] = "ON"
 	os.environ["CMIF_USE_WIN32"] = "ON"
+	if not os.environ.has_key('HOME'):
+		os.environ['HOME']=CMIFDIR
 
 	# Locate the GRiNSRes.dll file.  This is presumably in the same directory as
 	# the extensionmodules, or if frozen, in the main directory
 	# This call allows Pythonwin to automatically find resources in it.
 	import win32ui
 	dllPath = os.path.split(win32ui.__file__)[0]
-
+	win32ui.GetWin32Sdk().SetCurrentDirectory(dllPath)
 	try:
 		global resdll
 		resdll = win32ui.LoadLibrary(os.path.join(dllPath, "GRiNSRes.dll"))
