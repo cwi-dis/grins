@@ -316,8 +316,17 @@
 (start (float) 0.0 'Relative start time' default
 	'Start time of transition effect relative to previous transition start (in seconds).' normal)
 
-(subregion (tuple (int) (int) (int) (int)) (0 0 0 0) 'Destination region' normal
-	'Destination area within channel (x,y,w,h) (see RealPix documentation).' normal)
+(subregionxy (tuple (int) (int)) (0 0) 'Destination region (x,y)' normal
+	'(x,y) coordinates of destination area within channel (see RealPix documentation).' normal)
+
+(subregionwh (tuple (int) (int)) (0 0) 'Destination region (w,h)' normal
+	'width and height of destination area within channel (see RealPix documentation).' normal)
+
+(subregionanchor (string) 'top-left' 'Destination region anchor' subregionanchor
+	'Anchor for subregion (x,y) coordinates' normal)
+
+(displayfull (bool) 1 'Use whole region' default
+	'Use whole region for transition effect' normal)
 
 (tag (string) 'fill' 'Transition type' transition
 	'Type of transition effect.' normal)
