@@ -289,6 +289,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Displays the about dialog
 	def OnAbout(self,id,code):
+		if self.in_create_box_mode():return
 		from version import version
 		dlg=AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
 		dlg.DoModal()
@@ -304,6 +305,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Response to windows arrangement commands
 	def OnWndUserCmd(self,id,code):
+		if self.in_create_box_mode():return
 		client=self.GetMDIClient()
 		if id==afxres.ID_WINDOW_TILE_HORZ:
 			client.SendMessage(win32con.WM_MDITILE,win32con.MDITILE_HORIZONTAL)			
@@ -395,7 +397,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1):
 		if 'view' in adornments.keys():strid=adornments['view']
-		else: strid='cmifview_'
+		else:  raise "undefined view request"
 		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
 
 	# Return the framework document object associated with this frame
@@ -549,7 +551,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			usercmd_ui = usercmdui.class2ui[cmd.__class__]
 			id=usercmd_ui.id
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
-			contextcmds[id]=cmd
+			contextcmds[id]=cmd			
 		self.PostMessage(WM_KICKIDLE)
 
 	def dissable_viewscmdlist(self):
@@ -571,8 +573,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		contextcmds=self._activecmds[context]
 		for id in contextcmds.keys():
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
-
-			
+		
 		
 	# Return the command ids of all the views
 	# but only those not included in a higher context (e.g PLAY,?)
@@ -584,12 +585,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			documentids=self._activecmds['document'].keys()
 		for context in self._activecmds.keys():
 			if context=='frame' or context=='document':continue
+			if context=='pview_':continue
 			contextcmds=self._activecmds[context]
 			for id in contextcmds.keys():
 				if (id not in frameids) and (id not in documentids):
 					l.append(id)
 		return l
-
+		
 	# Return the commandlist for the context
 	def get_commandlist(self,context='view'):
 		return self._activecmds[context].values()
@@ -619,9 +621,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	####=========dynamic menu
 	#	('fond', (<method Player.channel_callback of Player instance at 1c68510>, ('fond',)), 't', 1)
-	#	('smiley', (<method Player.channel_callback of Player instance at 1c68510>, ('smiley',)), 't', 1)
-	#	('text', (<method Player.channel_callback of Player instance at 1c68510>, ('text',)), 't', 1)
-
 	# Set the dynamic commands associated with the command class
 	def set_dynamiclist(self, command, list):
 		self._dynamiclists[command]=list
@@ -655,7 +654,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	
 	# Response to dynamic menus commands	
 	def OnUserDynCmd(self,id,code):
-		if __main__.toplevel._in_create_box: return
+		if self.in_create_box_mode():return
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
 				if not cbd[id]:return
@@ -700,7 +699,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
-		if __main__.toplevel._in_create_box: return
+		if self.in_create_box_mode():return
 		cmd=None
 
 		# special manipulation of exit to close first and release resources
@@ -908,6 +907,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	def isplayer(self,f):
 		if not hasattr(f,'_view'): return 0
 		return f._view._strid=='pview_'
+
 	# Show or hide all childs but the player
 	def showChilds(self,flag):
 		if flag:
