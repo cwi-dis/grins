@@ -302,7 +302,7 @@ class MediaRegion(Region):
 class Viewport(Node):
 	def __init__(self, name, dict, ctx):
 		self.currentX = 8
-		self.currentY = 8
+		self.currentY = 19*2 # shouldn't be here
 		
 		Node.__init__(self, name, dict, ctx)
 		self._nodeType = TYPE_VIEWPORT
