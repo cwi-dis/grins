@@ -12,7 +12,7 @@ def main():
 	#
 	if args:
 		if len(args) > 1:
-			sys.stderr.write('Warning: only one file used\n')
+			sys.stderr.write('Warning: only one filename used\n')
 		filename = args[0]
 	else:
 		filename = 'demo.cmif'
