@@ -47,3 +47,5 @@ TopLevel - Main window; creates child windows.
 Transaction -
 
 Transition - Visual effect when player finishes or starts a node.
+
+WMP - Windows Media player.
