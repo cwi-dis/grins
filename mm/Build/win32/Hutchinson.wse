@@ -1438,7 +1438,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=..\products\smil-20\editor\splash8bit.bmp
+  Pathname=..\products\mobile\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1484,18 +1484,8 @@ item: Install File
   Flags=0000000010000011
 end
 item: Install File
-  Source=..\..\Templates\T-icons\video_2_1A.bmp
-  Destination=%MAINDIR%\Templates\T-icons\video_2_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\Templates\T-icons\video_1_P1A.bmp
   Destination=%MAINDIR%\Templates\T-icons\video_1_P1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\video_1_1A.bmp
-  Destination=%MAINDIR%\Templates\T-icons\video_1_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1524,23 +1514,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\Templates\T-icons\slideshow_2AC.bmp
-  Destination=%MAINDIR%\Templates\T-icons\slideshow_2AC.bmp
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\Templates\T-icons\slideshow_2A.bmp
   Destination=%MAINDIR%\Templates\T-icons\slideshow_2A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\slideshow_1A.bmp
-  Destination=%MAINDIR%\Templates\T-icons\slideshow_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\empty_S2.bmp
-  Destination=%MAINDIR%\Templates\T-icons\empty_S2.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1564,38 +1539,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\Templates\T-icons\dropSVG.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropSVG.tif
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\Templates\T-icons\dropSound.tif
   Destination=%MAINDIR%\Templates\T-icons\dropSound.tif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\dropRealVideo.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealVideo.tif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\dropRealText.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealText.tif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\dropRealPix.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealPix.tif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\dropRealAudio.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealAudio.tif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\dropNull.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropNull.tif
   Flags=0000000010000010
 end
 item: Install File
@@ -1609,23 +1554,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\Templates\T-icons\dropHTML.tif
-  Destination=%MAINDIR%\Templates\T-icons\dropHTML.tif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\adapt_1_P1A.psd
-  Destination=%MAINDIR%\Templates\T-icons\adapt_1_P1A.psd
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\Templates\T-icons\adapt_1_P1A.bmp
   Destination=%MAINDIR%\Templates\T-icons\adapt_1_P1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\T-icons\adapt_1_1A.bmp
-  Destination=%MAINDIR%\Templates\T-icons\adapt_1_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1636,11 +1566,6 @@ end
 item: Install File
   Source=..\..\Templates\media\Back3P.gif
   Destination=%MAINDIR%\Templates\media\Back3P.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\media\Back2S.gif
-  Destination=%MAINDIR%\Templates\media\Back2S.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -1676,61 +1601,6 @@ end
 item: Install File
   Source=..\..\Templates\media\Back2P.gif
   Destination=%MAINDIR%\Templates\media\Back2P.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_49_empty.grins
-  Destination=%MAINDIR%\Templates\S2_49_empty.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_21_adapt1A.grins
-  Destination=%MAINDIR%\Templates\S2_21_adapt1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_12_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_12_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_11_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_11_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_03_slideshow2AC.grins
-  Destination=%MAINDIR%\Templates\S2_03_slideshow2AC.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_02M_slideshow2A.grins
-  Destination=%MAINDIR%\Templates\S2_02M_slideshow2A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_02A_slideshow2A.grins
-  Destination=%MAINDIR%\Templates\S2_02A_slideshow2A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_01_slideshow1A.grins
-  Destination=%MAINDIR%\Templates\S2_01_slideshow1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\realONE_logo_88x31_anim.gif
-  Destination=%MAINDIR%\Templates\realONE_logo_88x31_anim.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\GetGRiNS.gif
-  Destination=%MAINDIR%\Templates\GetGRiNS.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -2323,63 +2193,13 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=..\products\smil-20\template_files\TopLeftLogo.gif
-  Destination=%MAINDIR%\template_files\TopLeftLogo.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\TempTut.gif
-  Destination=%MAINDIR%\template_files\TempTut.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\RepeatPage.gif
-  Destination=%MAINDIR%\template_files\RepeatPage.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\RepeatMenuDark.gif
-  Destination=%MAINDIR%\template_files\RepeatMenuDark.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\RepeatMenu.gif
-  Destination=%MAINDIR%\template_files\RepeatMenu.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\Msie.css
-  Destination=%MAINDIR%\template_files\Msie.css
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\HouseBarRepeat.gif
-  Destination=%MAINDIR%\template_files\HouseBarRepeat.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\Development.gif
-  Destination=%MAINDIR%\template_files\Development.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\template_files\Demonstrations.gif
-  Destination=%MAINDIR%\template_files\Demonstrations.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\TDG.html
-  Destination=%MAINDIR%\TDG.html
+  Source=..\products\mobile\HowTo-Basic.pdf
+  Destination=%MAINDIR%\HowTo-Basic.pdf
   Flags=0000000010000010
 end
 item: Install File
   Source=..\products\smil-20\REFM.pdf
   Destination=%MAINDIR%\REFM.pdf
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\products\smil-20\HowTo-Basic.pdf
-  Destination=%MAINDIR%\HowTo-Basic.pdf
   Flags=0000000010000010
 end
 item: Install File
