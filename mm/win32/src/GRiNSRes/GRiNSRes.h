@@ -127,7 +127,11 @@
 #define IDD_EDITATTR_ANCHOR1            364
 #define IDD_ANCHOR_NAME                 365
 #define IDD_EDITATTR_CK1                366
-#define IDD_EDITATTR_S2a                367
+#define IDD_EDITATTR_CONV3              367
+#define IDD_EDITATTR_CONV2              368
+#define IDD_EDITATTR_CONV4              369
+#define IDD_EDITATTR_CONV5              370
+#define IDD_EDITATTR_S2a                371
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
