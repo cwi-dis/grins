@@ -44,7 +44,11 @@ class MpegDecoder
 
 	void set_display(MpegDisplay *display) { m_display = display;}
 	void get_display_info(display_info& di) const;
-
+	double get_frame_rate() const;
+	double get_bit_rate() const;
+	int get_bitstream_framenum() const { return m_bitstream_framenum;}
+	int get_sequence_framenum() const { return m_sequence_framenum;}
+	
 	private:
 	void write_frame(unsigned char *src[], int frame);
 	void frame_reorder(int bitstream_framenum, int sequence_framenum);
@@ -52,7 +56,6 @@ class MpegDecoder
 
 	int m_bitstream_framenum;
 	int m_sequence_framenum;	
-	int m_last_bitstream_framenumber;
 	layer_data *m_base_layer;
 	layer_data *m_enhan_layer;
 	MpegDisplay *m_display;
