@@ -181,10 +181,10 @@ implements SMILListener
 	    setSliderDur(smil.getDuration());
 	    SMILCanvas canvas = new SMILCanvas();
 	    viewport = new Viewport(canvas);
-	    viewport.update(smil.getViewportSize());
+	    viewport.update(smil.getViewportSize(0));
 	   
 	    // set SMIL canvas
-	    try {smil.getRenderer().setCanvas(canvas);}
+	    try {smil.getRenderer().setCanvas(0, canvas);}
 	    catch(Exception e){System.out.println(""+e);}
 	    
 	    // get controller
@@ -211,6 +211,8 @@ implements SMILListener
     }
     public void setState(int state){
     }
+	public void newViewport(int index){
+	}
     
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
