@@ -815,7 +815,7 @@ class ElementSelCtrl(AttrCtrl):
 		mmnode = self._wnd._form._node
 		selected = self._attrval.gettext()
 		dlg = win32dialog.SelectElementDlg(parent, mmnode, selected)
-		if dlg.DoModal() == win32con.IDOK:
+		if dlg.show():
 			if selected != dlg.gettext():
 				self._attrval.settext(dlg.gettext())
 
@@ -1700,8 +1700,8 @@ class EventCtrl(AttrCtrl):
 			elif c == 'region':
 				# Pop up a region select dialog.
 				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
-					self._eventstruct.get_region() or '', filter = 'region')
-				if dlg.DoModal() == win32con.IDOK:
+					self._eventstruct.get_region() or '', filter = 'topLayout')
+				if dlg.show():
 					self._eventstruct.set_region(dlg.gettext())
 				viewports = self._eventstruct.get_viewports()
 				#l = []
@@ -1712,10 +1712,12 @@ class EventCtrl(AttrCtrl):
 				#print "TODO: More than just editing the wallclock."
 			elif c == 'node':
 				# Pop up a node select dialog.
+				nodename = self._eventstruct.get_thing_string()[1]
 				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
-					'', filter = 'node')
-				if dlg.DoModal() == win32con.IDOK:
-					print dlg.gettext()
+					nodename, filter = 'node')
+				if dlg.show():
+					# XXX: supposing that this is the correct interface to change a sync node.
+					self._eventstruct._setnode = dlg.getmmobject()
 			self.enableApply()
 			self.update()
 
