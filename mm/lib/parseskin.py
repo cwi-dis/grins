@@ -12,12 +12,20 @@ error = 'parseskin.error'
 #
 # "image"	URL of image file (relative to skin definition file)
 # "display"	4 numbers giving x, y, width, height
+# "displayimage" URL of image file (relative to skin definition file)
+# "displaybgcolor" 3 numbers in range 0 - 255 giving red, green, and blue values
 # "key"		key shape coordinates
 # command	shape coordinates
 # component	URI
 # profile	profile name
 # SmilBaseSet	"SMIL-3GPP-R4" or "SMIL-3GPP-R5"
 # SmilModules	list of SMIL module names
+#
+# The "image" is the URL of the image that is used for the skin.  The
+# "displayimage" is the URL of an image that, if specified, is
+# displayed in the "display" area when the document is being played.
+# The "displaybgcolor" is the background color of the "display" area
+# when the document is being played.
 #
 # The key is a single, possibly quoted, character.  If either ", ', or
 # a space character needs to be specified, it must be surrounded with
@@ -105,11 +113,23 @@ def parsegskin(file):
 		if len(line) == 1:
 			raise error, 'syntax error in skin on line %d' % lineno
 		cmd, rest = line
-		if cmd =='image':
+		if cmd in ('image', 'displayimage'):
 			if dict.has_key(cmd):
 				# only one image allowed
-				raise error, 'syntax error in skin on line %d' % lineno
+				raise error, 'syntax error in skin on line %d: only one %s allowed' % (lineno, cmd)
 			dict[cmd] = rest.strip()
+			continue
+		if cmd == 'displaybgcolor':
+			try:
+				bgcolor = map(lambda v: int(v, 0), rest.split())
+			except ValueError:
+				raise error, 'syntax error in skin on line %d' % lineno
+			if len(bgcolor) != 3 or \
+			   not (0 <= bgcolor[0] <= 255) or \
+			   not (0 <= bgcolor[1] <= 255) or \
+			   not (0 <= bgcolor[2] <= 255):
+				raise error, 'syntax error in skin on line %d' % lineno
+			dict[cmd] = bgcolor
 			continue
 		if cmd == 'component':
 			v = rest.strip()

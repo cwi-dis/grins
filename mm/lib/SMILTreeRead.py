@@ -2802,6 +2802,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		skin = settings.get('skin')
 		ctx = self.__context
+		oldroot = self.__root
 		vp = ctx.getviewports()[0] # we already know there's exactly one
 		top = ctx.newviewport('The Skin', -1, 'layout')
 		top.addOwner(OWNER_DOCUMENT)
@@ -2822,11 +2823,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx.cssResolver.setRawAttrs(img.getMediaCssId(), [])
 		img.attrdict['duration'] = -1
 		img.attrdict['channel'] = 'Skin Image'
+		if dict.has_key('displayimage'):
+			import Sizes
+			image = MMurl.basejoin(skin, dict['displayimage'])
+			width, height = Sizes.GetSize(image)
+			if width == 0 or height == 0:
+				self.warning('error getting skin displayimage dimensions')
+			else:
+				r = ctx.newnode('par')
+				r.__forcechild = None, 0
+				r._addchild(oldroot)
+				i = ctx.newnode('ext')
+				r._addchild(i)
+				i.attrdict['file'] = MMurl.basejoin(skin, dict['displayimage'])
+				i.attrdict['regAlign'] = 'center'
+				i.attrdict['regPoint'] = 'center'
+				i.attrdict['channel'] = 'Skin Area'
+				coords = dict['display'][1]
+				i.attrdict['width'] = width
+				i.attrdict['left'] = (coords[2] - width) / 2
+				i.attrdict['height'] = height
+				i.attrdict['top'] = (coords[3] - height) / 2
+				cssattrs = [('left',(coords[2] - width) / 2), ('width', width), ('top', (coords[3] - height) / 2), ('height', height)]
+				ctx.cssResolver.setRawAttrs(i.getSubRegCssId(), cssattrs)
+				ctx.cssResolver.setRawAttrs(i.getMediaCssId(), cssattrs)
+				r.SMILidmap = oldroot.SMILidmap
+				del oldroot.SMILidmap
+				oldroot = r
 		beginlist = []
 		endlist = []
 		keys = []		# list of accesskey keys
 		for key, val in dict.items():
-			if key in ('image', 'width', 'height', 'component'):
+			if key in ('image', 'width', 'height', 'component', 'displaybgcolor', 'displayimage'):
 				continue
 			if key == 'display':
 				coords = val[1]
@@ -2837,7 +2865,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				lcd['width'] = coords[2]
 				lcd['height'] = coords[3]
 				lcd['showBackground'] = 'whenActive'
-				lcd['bgcolor'] = vp.attrdict.get('bgcolor') or (0,0,0)
+				lcd['bgcolor'] = dict.get('displaybgcolor', vp.attrdict.get('bgcolor') or (0,0,0))
 				lcd['transparent'] = 0
 				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
@@ -2876,33 +2904,33 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						a.attrdict['acoords'] = coords
 				img._addchild(a)
 				if key in ('play', 'toggle'):
-					arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = a, event = 'activateEvent', delay = 0)
+					arc = MMNode.MMSyncArc(oldroot, 'begin', srcnode = a, event = 'activateEvent', delay = 0)
 					beginlist.append(arc)
 				elif key in ('stop', 'toggle'):
-					arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = a, event = 'activateEvent', delay = 0)
+					arc = MMNode.MMSyncArc(oldroot, 'end', srcnode = a, event = 'activateEvent', delay = 0)
 					endlist.append(arc)
 				elif key in ('pause', 'open', 'exit', 'tab', 'activate', 'skin'):
 					self.__links.append((a, 'grins:%s()' % key))
 				elif key == 'key':
 					keys.append((val[2], a))
 		if keys:
-			self.__fix_accesskey(self.__root, keys)
-		arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = 'syncbase', delay = 0)
+			self.__fix_accesskey(oldroot, keys)
+		arc = MMNode.MMSyncArc(oldroot, 'begin', srcnode = 'syncbase', delay = 0)
 		beginlist.append(arc)
-		self.__root.attrdict['beginlist'] = beginlist
-		self.__root.attrdict['endlist'] = endlist
-		self.__root.attrdict['restart'] = 'whenNotActive'
-		self.__root.removeOwner(OWNER_DOCUMENT)
-		root._addchild(self.__root)
+		oldroot.attrdict['beginlist'] = beginlist
+		oldroot.attrdict['endlist'] = endlist
+		oldroot.attrdict['restart'] = 'whenNotActive'
+		oldroot.removeOwner(OWNER_DOCUMENT)
+		root._addchild(oldroot)
 		assets = []
-		for c in self.__root.children:
+		for c in oldroot.children:
 			if c.type == 'assets':
 				assets.append(c)
 			for c in assets:
 				c.Extract()
 				root._addchild(c)
-		root.SMILidmap = self.__root.SMILidmap
-		del self.__root.SMILidmap
+		root.SMILidmap = oldroot.SMILidmap
+		del oldroot.SMILidmap
 		self.__root = root
 		for r in vp.GetChildren()[:]:
 			r.Extract()
