@@ -138,8 +138,10 @@ class Player:
 		self.__timeout = 0
 		self.__callbacks = []
 		self.__data = ''	# data already read but not yet played
+		self.__nframes = 0	# # of frames in current __data
 		self.__oldpos = None	# start position of current __data
 		self.__prevpos = None	# previous value of __oldpos
+		self.__prevframes = 0	# # of frames in previous __data
 
 	def __callback(self, rdr, arg):
 		self.__callbacks.append((rdr, arg))
@@ -150,7 +152,15 @@ class Player:
 			first = 1
 			self.__merger = audiomerge.merge()
 		else:
-			self.__converter.setpos(self.__oldpos)
+			if self.__tid:
+				windowinterface.canceltimer(self.__tid)
+				self.__tid = None
+			filled = self.__port.getfilled()
+			self.__port.stop()
+			self.__converter.setpos(self.__prevpos)
+			n = self.__prevframes - filled
+			if n > 0:
+				dummy, nframes = self.__converter.readframes(n)
 		self.__merger.add(rdr, (self.__callback, (rdr, cb,)))
 		if first:
 			self.__converter = audioconvert.convert(self.__merger,
@@ -164,10 +174,14 @@ class Player:
 			if fillable < self.__readsize:
 				self.__readsize = fillable
 			self.__timeout = 0.5 * self.__readsize / self.__framerate
-		self.__oldpos = self.__converter.getpos()
-		self.__data = self.__converter.readframes(self.__readsize)
-		if first:
-			self.__playsome(1)
+			self.__oldpos = self.__converter.getpos()
+			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
+		else:
+			self.__oldpos = self.__converter.getpos()
+			self.__prevpos = None
+			self.__prevframes = 0
+			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
+		self.__playsome()
 
 	def stop(self, rdr):
 		for i in range(len(self.__callbacks)):
@@ -177,7 +191,7 @@ class Player:
 		if self.__merger:
 			self.__converter.setpos(self.__oldpos)
 			self.__merger.delete(rdr)
-			self.__data = self.__converter.readframes(self.__readsize)
+			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
 			if not self.__data:
 				# deleted the last one
 				self.__port.stop()
@@ -199,19 +213,20 @@ class Player:
 			filled = self.__port.getfilled()
 			self.__port.stop()
 			self.__converter.setpos(self.__prevpos)
-			n = self.__readsize - filled
+			n = self.__prevframes - filled
 			if n > 0:
-				dummy = self.__converter.readframes(n)
+				dummy, nframes = self.__converter.readframes(n)
 			self.__oldpos = self.__converter.getpos()
 			self.__prevpos = None
-			self.__data = self.__converter.readframes(self.__readsize)
+			self.__prevframes = 0
+			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
 			if self.__tid:
 				windowinterface.canceltimer(self.__tid)
 				self.__tid = None
 		else:
-			self.__playsome(1)
+			self.__playsome()
 
-	def __playsome(self, first = 0):
+	def __playsome(self):
 		self.__tid = None
 		port = self.__port
 		converter = self.__converter
@@ -226,10 +241,6 @@ class Player:
 					if cb:
 						apply(cb[0], cb[1])
 				return
-## 			fmt = converter.getformat()
-## 			print 'writing %d frames' % (len(self.__data)/
-## 						     fmt.getblocksize()*
-## 						     fmt.getfpb())
 			port.writeframes(self.__data)
 			callbacks = self.__callbacks
 			self.__callbacks = []
@@ -238,20 +249,21 @@ class Player:
 				if cb:
 					apply(cb[0], cb[1])
 			self.__prevpos = self.__oldpos
+			self.__prevframes = self.__nframes
 			self.__oldpos = converter.getpos()
-			self.__data = converter.readframes(self.__readsize)
-			
-			fillable = port.getfillable()
+			self.__data, self.__nframes = converter.readframes(self.__readsize)
 			if not self.__data:
 				timeout = float(port.getfilled())/self.__framerate - 0.1
 				if timeout > 0:
-					self.__tid = windowinterface.settimer(timeout, (self.__playsome, ()))
+					self.__tid = windowinterface.settimer(
+						timeout, (self.__playsome, ()))
 					return
-				# else we go back into the loop to stop playing immediately
-			elif fillable < self.__readsize:
-				timeout = float(self.__readsize - fillable)/self.__framerate
-				self.__tid = windowinterface.settimer(timeout, (self.__playsome, ()))
+				# else we go back into the loop to stop
+				# playing immediately
+			else:
+				timeout = float(port.getfilled()/2)/self.__framerate
+				self.__tid = windowinterface.settimer(timeout,
+							(self.__playsome, ()))
 				return
-			# else we go back into the loop to write more data
 
 player = Player()
