@@ -35,7 +35,7 @@ from svgcolors import svgcolors
 color = re.compile('(?:'
 		   '#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
 			    '[0-9a-fA-F]{6})|'		# #ff0000
-		   'rgb' + _opS + r'\(' +		# rgb(R,G,B)
+			   'rgb' + _opS + r'\(' +		# rgb(R,G,B)
 			   _opS + '(?:(?P<ri>[0-9]+)' + _opS + ',' + # rgb(255,0,0)
 			   _opS + '(?P<gi>[0-9]+)' + _opS + ',' +
 			   _opS + '(?P<bi>[0-9]+)|' +
@@ -47,6 +47,11 @@ color = re.compile('(?:'
 bracketsPat = r'(?P<arg>[{][^}]*[}])' # braces content
 classdefPat = r'[.](?P<cname>[a-zA-Z_:][-a-zA-Z0-9._]*)' + _opS + bracketsPat
 textcssPat = _opS + classdefPat + _opS
+
+# <!ENTITY parsing
+entityNamePat = r'(?P<name>[a-zA-Z_:][-a-zA-Z0-9._:]*)' # entity name
+quoteDef = r'(?P<arg>["][^"]*["])' # quote content
+entityPat = _opS + '<!ENTITY' + _S + entityNamePat + _S + quoteDef + _opS + '>'
 
 ################
 # utilities
@@ -512,6 +517,34 @@ class SVGTextCss:
 
 	def isDefault(self):
 		return self._textcssdefs is None or len(self._textcssdefs)==0
+
+class SVGEntityDefs:
+	classre = re.compile(entityPat)
+	def __init__(self, node, str, default=None):
+		self._node = node
+		self._units = None
+		self._entitydefs = {}
+		self._default = default
+		if str:
+			mo =  SVGEntityDefs.classre.match(str)
+			while mo is not None:
+				str = str[mo.end(0):]
+				entityName = mo.group('name')
+				entityDef = mo.group('arg')[1:-1]
+				self._entitydefs[entityName] = entityDef
+				mo =  SVGEntityDefs.classre.match(str)
+
+	def __repr__(self):
+		s = ''
+		for key, val in self._entitydefs.items():
+			s = s + '<!ENTITY ' + key + ' \"' + val + '\">\n'
+		return s
+
+	def getValue(self):
+		return self._entitydefs
+
+	def isDefault(self):
+		return self._entitydefs is None or len(self._entitydefs)==0
 
 class SVGPoints:
 	def __init__(self, node, str, default=None):
