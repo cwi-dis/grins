@@ -356,6 +356,7 @@ class VideoChannel(ChannelWindowAsync):
 		self.fixidleproc()
 
 	def _getoswindow(self):
+		# XXXX Or getoswindowport??
 		return self.window._mac_getoswindow()
 
 	def _getoswinpos(self):
