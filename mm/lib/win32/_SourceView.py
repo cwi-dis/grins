@@ -43,12 +43,13 @@ class _SourceView(docview.EditView):
 		else:
 			self.GetParent().DestroyWindow()
 
-	# Called by the framework when this view is activated or deactivated
-	def onActivate(self,f):
+	# Called when the view is activated 
+	def activate(self):
 		pass
-		#if f: self._mdiframe.set_commandlist(self._close_cmd_list)
-		#else: self._mdiframe.set_commandlist(None,self._strid)
 
+	# Called when the view is deactivated 
+	def deactivate(self):
+		pass
 
 	# cmif interface
 	# Set the text to be shown
@@ -75,7 +76,6 @@ class _SourceView(docview.EditView):
 		# 1. clean self contends
 		del self._text
 		self._text=None
-		self.onActivate(0)
 
 		# 2. destroy OS window if it exists
 		if hasattr(self,'_obj_') and self._obj_:
