@@ -395,3 +395,86 @@ class VideoStream:
 			self.__fiber_id = None
 
 
+##################################################
+import dsound
+import MMurl
+import math
+
+class DirectSound:
+	def __init__(self):
+		import win32ui
+		hwnd = win32ui.GetMainFrame().GetSafeHwnd()
+		self._dsound = dsound.CreateDirectSound()
+		self._dsound.SetCooperativeLevel(hwnd, dsound.DSSCL_NORMAL)
+		dsbdesc = dsound.CreateDSBufferDesc()
+		dsbdesc.SetFlags(dsound.DSBCAPS_PRIMARYBUFFER)
+		self._primarysb = self._dsound.CreateSoundBuffer(dsbdesc)
+		
+		# increase and restore volume on exit?
+		# ...
+
+	def __del__(self):
+		del self._primarysb
+		del self._dsound
+	
+	def createBufferFromFile(self, filename):
+		dsbdesc = dsound.CreateDSBufferDesc()
+		dsbdesc.SetFlags(dsound.DSBCAPS_CTRLDEFAULT)
+		return self._dsound.CreateSoundBufferFromFile(dsbdesc, filename)
+
+		
+directSound = DirectSound()
+
+class DSPlayer:
+	def __init__(self, channel):
+		self.__channel = channel
+		self._sound = None
+
+	def prepare_player(self, node):
+		url = self.__channel.getfileurl(node)
+		if not url:
+			raise error, 'No URL on node'
+		filename = MMurl.urlretrieve(url)[0]
+		self._sound = directSound.createBufferFromFile(filename)
+
+	def playit(self, node, start_time=0):
+		#print 'playit', node, start_time
+		if self._sound:
+			a = self.getAttenuation(self._soundLevel, self._soundLevelMax)
+			self._sound.SetVolume(a)
+			self._sound.SetCurrentPosition(0)
+			self._sound.Play()
+			return 1 # OK
+		return 0 # FAILED
+
+	def stopit(self):
+		if self._sound:
+			self._sound.Stop()
+		#print 'stopit'
+
+	def destroy(self):
+		del self._sound
+		self._sound = None
+		#print 'destroy'
+	
+	def pauseit(self, paused):
+		if self._sound:
+			if paused:
+				self._sound.Stop()
+			else:
+				self._sound.Play()
+
+	def setsoundlevel(self, lev, maxlev):
+		self._soundLevel = lev
+		self._soundLevelMax = maxlev
+
+	def getAttenuation(self, soundLevel, soundLevelMax):
+		soundLevelMax = max(soundLevel, soundLevelMax)
+		if soundLevel <= 0.0:
+			return dsound.DSBVOLUME_MIN
+		ratio = soundLevelMax/float(soundLevel)
+		return int(-1000.0*math.log10(ratio)/math.log10(2))
+
+
+
+
