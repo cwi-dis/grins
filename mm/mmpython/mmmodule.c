@@ -52,8 +52,9 @@ int qenter_sync_fd = -1;
 
 void
 my_qenter(ev, val)
-    long ev, val;
+	long ev, val;
 {
+	dprintf(("my_qenter(%d,%d) fd=%d\n", ev, val, qenter_sync_fd));
 	if (qenter_sync_fd >= 0) {
 		char c;
 

@@ -1,14 +1,32 @@
 #include <unistd.h>
 #include <fcntl.h>
-#include <gl.h>
 #include <stropts.h>
 #include <poll.h>
-#include "thread.h"
 #include "allobjects.h"
 #include "modsupport.h"
+#include "thread.h"
 #include "mmmodule.h"
 #include <sys/time.h>
+
+/* these are inherited from the Makefile */
+/* #define USE_GL			/* compile for use with GL */
+/* #define USE_CL			/* support for Compression Library */
+/* #define USE_XM			/* compile for use with X/Motif */
+
+#ifdef USE_XM
+#include "widgetobject.h"
+#include "GCobject.h"
+#include "XColor.h"
+#endif
+#ifdef USE_GL
+#define X_H
+#include <gl.h>			/* must come after the X include files */
+#endif
+#ifdef USE_CL
 #include <cl.h>
+#else
+#error USE_CL must be defined
+#endif
 
 #ifdef MM_DEBUG
 static int mpegchannel_debug = 0;
@@ -18,7 +36,15 @@ static int mpegchannel_debug = 0;
 #endif
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 
+#define ERROR(func, errortype, msg)	{				   \
+			dprintf((# func "(%lx): " msg "\n", (long) self)); \
+			err_setstr(errortype, msg);			   \
+		    }
 
+
+static int windowsystem;	/* which window system to use */
+#define WIN_GL		1	/* only supported when USE_GL is defined */
+#define WIN_X		2	/* only supported when USE_XM is defined */
 
 /*
 ** All this stuff isn't needed, really, so ignore the next comment. It is
@@ -43,7 +69,6 @@ extern type_lock getlocklock PROTO((object *));
 struct mpeg_data {
 	int m_width;		/* width of movie */
 	int m_height;		/* height of movie */
-	int m_wid;		/* window ID */
 	double m_scale;		/* movie scale (magnification) factor */
 	object *m_f;		/* file where movie comes from */
 	int m_feof;		/* True if end-of-file */
@@ -53,22 +78,36 @@ struct mpeg_data {
 	char *m_inbuf;		/* The input buffer */
 	CL_BufferHdl m_inbufHdl; /* Handle to the above */
 	long m_bgcolor;		/* background color for window */
-	int m_bgindex;		/* colormap index for background color */
 	CL_Handle m_decHdl;	/* decompressor for compressed movie */
+#ifdef USE_GL
+	int m_bgindex;		/* colormap index for background color */
+#endif
+#ifdef USE_XM
+	XImage *m_image;	/* X image to put image in */
+#endif
 };
 struct mpeg {
-	long m_width, m_height;	/* width and height of window */
+	int m_width, m_height;	/* width and height of window */
 	int initial_clear_done;  /* True after initial clear */
 	struct mpeg_data m_play; /* mpeg being played */
 	struct mpeg_data m_arm; /* movie being armed */
 	int m_pipefd[2];	/* pipe for synchronization with player */
+#ifdef USE_GL
+	int m_wid;		/* window ID */
+#endif
+#ifdef USE_XM
+	GC m_gc;		/* graphics context to write images */
+	Widget m_widget;	/* the window widget */
+	Visual *m_visual;	/* the visual to use */
+#endif
 };
 
 #define PRIV	((struct mpeg *) self->mm_private)
 
 /* Forward: */
-void mpeg_display_frame();
+static void mpeg_display_frame();
 
+#ifdef USE_GL
 static int
 init_colormap(bgcolor)
     long bgcolor;
@@ -101,6 +140,7 @@ init_colormap(bgcolor)
     gflush();	/* Send the updates to the X server */
     return best_index;
 }
+#endif /* USE_GL */
 
 /*
 ** mpeg_free_old - Free all used fields in an mpeg_data struct.
@@ -114,12 +154,17 @@ mpeg_free_old(p, keepfile)
     if ( p->m_frame )	{ free(p->m_frame); p->m_frame = NULL; }
     if ( p->m_inbufHdl ){ clDestroyBuf(p->m_inbufHdl); p->m_inbufHdl = NULL;}
     if ( p->m_decHdl )	{ clCloseDecompressor(p->m_decHdl); p->m_decHdl = NULL;}
+#ifdef USE_XM
+    if ( p->m_image )	{ XDestroyImage(p->m_image); p->m_image = NULL; }
+#endif
 }
 
 static int
 mpeg_init(self)
 	mmobject *self;
 {
+	object *v;
+
 	denter(mpeg_init);
 	self->mm_private = malloc(sizeof(struct mpeg));
 	if (self->mm_private == NULL) {
@@ -129,15 +174,78 @@ mpeg_init(self)
 	}
 	bzero((char *)self->mm_private, sizeof(struct mpeg));
 	if (pipe(PRIV->m_pipefd) < 0) {
-		dprintf(("mpeg_init(%lx): cannot create pipe\n", (long) self));
-		err_setstr(RuntimeError, "cannot create pipe");
-		free(self->mm_private);
-		self->mm_private = NULL;
-		return 0;
+		ERROR(mpeg_init, RuntimeError, "cannot create pipe");
+		goto error_return_no_close;
 	}
-	PRIV->m_play.m_wid = -1;
-	PRIV->m_arm.m_wid = -1;
-	return 1;
+#ifdef USE_GL
+	PRIV->m_wid = -1;
+	v = dictlookup(self->mm_attrdict, "wid");
+	if (v && is_intobject(v)) {
+		if (windowsystem != 0 && windowsystem != WIN_GL) {
+			ERROR(mpeg_init, RuntimeError,
+			      "cannot use two window systems simultaneously");
+			goto error_return;
+		}
+		windowsystem = WIN_GL;
+		PRIV->m_wid = getintvalue(v);
+#ifndef sun_xyzzy
+		v = dictlookup(self->mm_attrdict, "gl_lock");
+		if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
+			ERROR(mpeg_init, RuntimeError,
+			      "no graphics lock specified\n");
+			return 0;
+		}
+		dprintf(("mpeg_init(%lx): gl_lock = %lx\n",
+			 (long) self, (long) gl_lock));
+#endif
+	}
+#endif /* USE_GL */
+#ifdef USE_XM
+	v = dictlookup(self->mm_attrdict, "widget");
+	if (v && is_widgetobject(v)) {
+		if (windowsystem != 0 && windowsystem != WIN_X) {
+			ERROR(mpeg_init, RuntimeError,
+			      "cannot use two window systems simultaneously");
+			goto error_return;
+		}
+		windowsystem = WIN_X;
+		PRIV->m_widget = getwidgetvalue(v);
+		v = dictlookup(self->mm_attrdict, "gc");
+		if (v && is_gcobject(v))
+			PRIV->m_gc = PyGC_GetGC(v);
+		else {
+			ERROR(mpeg_init, RuntimeError, "no gc specified");
+			goto error_return;
+		}
+		v = dictlookup(self->mm_attrdict, "visual");
+		if (v && is_visualobject(v))
+			PRIV->m_visual = getvisualinfovalue(v)->visual;
+		else {
+			ERROR(mpeg_init, RuntimeError, "no visual specified");
+			goto error_return;
+		}
+	}
+#endif /* USE_XM */
+	if (1
+#ifdef USE_GL
+	    && PRIV->m_wid < 0
+#endif
+#ifdef USE_XM
+	    && PRIV->m_widget == NULL
+#endif
+	    ) {
+		ERROR(mpeg_init, RuntimeError, "no window specified");
+		goto error_return;
+	}
+	return 1;		/* normal return */
+
+ error_return:
+	(void) close(PRIV->m_pipefd[0]);
+	(void) close(PRIV->m_pipefd[1]);
+ error_return_no_close:
+	free(self->mm_private);
+	self->mm_private = NULL;
+	return 0;
 }
 
 static void
@@ -168,6 +276,11 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	int headersize;
 	int fd;
 	CL_Handle decHandle;
+	int cbufsize;
+	int framesize;
+	CL_BufferHdl bufHandle, frameHandle;
+	char *inbuf;
+	char *framebuf;
 
 
 	denter(mpeg_arm);
@@ -181,14 +294,6 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	if (v && is_stringobject(v))
 	  err_object = v;
 	
-	v = dictlookup(attrdict, "wid");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_wid = getintvalue(v);
-	else {
-		err_setstr(RuntimeError, "no wid specified");
-		return 0;
-	}
-
 	v = dictlookup(attrdict, "scale");
 	if (v && is_floatobject(v))
 		PRIV->m_arm.m_scale = getfloatvalue(v);
@@ -216,20 +321,15 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 			PRIV->m_arm.m_bgcolor = (PRIV->m_arm.m_bgcolor << 8) | c;
 		}
 	} else {
-		err_setstr(RuntimeError, "no background color specified");
+		ERROR(mpeg_arm, RuntimeError, "no background color specified");
 		return 0;
 	}
+#ifdef USE_GL
 	PRIV->m_arm.m_bgindex = -1;
-	v = dictlookup(attrdict, "gl_lock");
-	if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
-		err_setstr(RuntimeError, "no graphics lock specified");
-		return 0;
-	}
-	dprintf(("mpeg_arm(%lx): gl_lock = %lx\n", (long) self, (long) gl_lock));
+#endif
 
 	XINCREF(file);
 	PRIV->m_arm.m_f = file;
-	dprintf(("mpeg_arm(%lx): fd: %d\n", (long) self, fileno(getfilefile(PRIV->m_arm.m_f))));
 	/*
 	** Read the MPEG file header and initialize the decompressor.
 	** We do this here (in stead of in the armer thread) so we can
@@ -237,52 +337,28 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	** like unrecognized file type.
 	*/
 	fd = fileno(getfilefile(PRIV->m_arm.m_f));
+	dprintf(("mpeg_arm(%lx): fd: %d\n", (long) self, fd));
 	headersize = clQueryMaxHeaderSize(CL_MPEG_VIDEO);
 	if ( (header=malloc(headersize)) == NULL ) {
-	    err_setstr(err_object, "mpeg: not enough memory for header");
+	    ERROR(mpeg_arm, err_object, "not enough memory for header");
 	    return 0;
 	}
 	lseek(fd, 0, SEEK_SET);
 	headersize = read(fd, header, headersize);
 	if ( headersize <= 0 ) {
-	    err_setstr(err_object, "mpeg: cannot read header");
+	    ERROR(mpeg_arm, err_object, "cannot read header");
 	    return 0;
 	}
 	clOpenDecompressor(CL_MPEG_VIDEO, &decHandle); /* XXXX Error chk */
 	PRIV->m_arm.m_decHdl = decHandle;
 	headersize = clReadHeader(decHandle, headersize, header); /* XXXX */
 	if ( headersize <= 0 ) {
-	    err_setstr(err_object, "mpeg: Not an MPEG file");
+	    ERROR(mpeg_arm, err_object, "Not an MPEG file");
 	    return 0;
 	}
 	dprintf(("mpeg_armer: headersize %d\n", headersize));
 	free(header);
 	lseek(fd, 0, SEEK_SET);
-
-	return 1;
-}
-
-static void
-mpeg_armer(self)
-	mmobject *self;
-{
-	int cbufsize;
-	int framesize;
-	int fd;
-	CL_Handle decHandle;
-	CL_BufferHdl bufHandle, frameHandle;
-	char *inbuf;
-	char *framebuf;
-
-	denter(mpeg_armer);
-
-	fd = fileno(getfilefile(PRIV->m_arm.m_f));
-	decHandle = PRIV->m_arm.m_decHdl;
-#ifdef MM_DEBUG
-	if ( PRIV->m_arm.m_inbufHdl || PRIV->m_arm.m_inbuf ||
-	     PRIV->m_arm.m_frameHdl || PRIV->m_arm.m_frame )
-	  dprintf(("mpeg_armer: PRIV->m_arm contains garbage\n"));
-#endif
 
 	/*
 	** Get width/height/framerate, set rgb24 initialize buffering
@@ -305,17 +381,24 @@ mpeg_armer(self)
 		{ CL_ORIGINAL_FORMAT, CL_RGBX },
 		{ CL_ORIENTATION, CL_BOTTOM_UP }};
 
+	    framesize = PRIV->m_arm.m_width * PRIV->m_arm.m_height * sizeof(long);
+#ifdef USE_XM
+	    if (windowsystem == WIN_X) {
+		pbuf[0][1] = CL_RGB332;
+		pbuf[1][1] = CL_TOP_DOWN;
+		framesize /= sizeof(long);
+	    }
+#endif
 	    clSetParams(decHandle, (int *)pbuf, sizeof(pbuf)/sizeof(int));
 	}
 
-	framesize = PRIV->m_arm.m_width * PRIV->m_arm.m_height * sizeof(long);
 	dprintf(("mpeg_arm: cbufsize=%d, dbufsize=%d\n", cbufsize, framesize));
 	inbuf = malloc(cbufsize);
 	framebuf = malloc(framesize);
 	if ( inbuf == NULL || framebuf == NULL ) {
-	    printf("mpeg_armer: cannot allocate buffer\n");
+	    ERROR(mpeg_arm, err_object, "cannot allocate buffer");
 	    mpeg_free_old(&PRIV->m_arm, 0);
-	    return;
+	    return 0;
 	}
 	bufHandle = clCreateBuf(decHandle, CL_DATA, cbufsize, 1,
 				(void **)&inbuf);
@@ -326,10 +409,35 @@ mpeg_armer(self)
 	PRIV->m_arm.m_frameHdl = frameHandle;
 	PRIV->m_arm.m_frame = framebuf;
 	PRIV->m_arm.m_decHdl = decHandle;
-	
-	PRIV->m_arm.m_feof = mpeg_fill_inbuffer(bufHandle, fd);
+#ifdef USE_XM
+	if (windowsystem == WIN_X) {
+	    PRIV->m_arm.m_image = XCreateImage(XtDisplay(PRIV->m_widget),
+					       PRIV->m_visual,
+					       8, ZPixmap, 0,
+					       PRIV->m_arm.m_frame,
+					       PRIV->m_arm.m_width,
+					       PRIV->m_arm.m_height, 8, 0);
+	}
+#endif
+
+	return 1;
+}
+
+static void
+mpeg_armer(self)
+	mmobject *self;
+{
+	denter(mpeg_armer);
+#ifdef MM_DEBUG
+	if ( PRIV->m_arm.m_inbufHdl || PRIV->m_arm.m_inbuf ||
+	     PRIV->m_arm.m_frameHdl || PRIV->m_arm.m_frame )
+	  dprintf(("mpeg_armer: PRIV->m_arm contains garbage\n"));
+#endif
+
+	PRIV->m_arm.m_feof = mpeg_fill_inbuffer(PRIV->m_arm.m_inbufHdl,
+					fileno(getfilefile(PRIV->m_arm.m_f)));
 	if ( !PRIV->m_arm.m_feof ) {
-	    if ( clDecompress(decHandle, 1, 0, NULL, NULL) == FAILURE ) {
+	    if ( clDecompress(PRIV->m_arm.m_decHdl, 1, 0, NULL, NULL) == FAILURE ) {
 		printf("mpeg_armer: clDecompress failed\n");
 		mpeg_free_old(&PRIV->m_arm, 0);
 	    }
@@ -348,8 +456,7 @@ mpeg_play(self)
 	bzero((char *)&PRIV->m_arm, sizeof(PRIV->m_arm));
 	if (PRIV->m_play.m_frame == NULL) {
 		/* apparently the arm failed */
-		dprintf(("mpeg_play(%lx): not playing because arm failed\n", (long) self));
-		err_setstr(RuntimeError, "asynchronous arm failed");
+		ERROR(mpeg_play, RuntimeError, "asynchronous arm failed");
 		return 0;
 	}
 	/* empty the pipe */
@@ -358,41 +465,77 @@ mpeg_play(self)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
 
-	/* get the window size */
-	/* DEBUG: should call:
-	 * acquire_lock(gl_lock, WAIT_LOCK);
-	 */
-	winset(PRIV->m_play.m_wid);
-	getsize(&PRIV->m_width, &PRIV->m_height);
+	switch (windowsystem) {
+#ifdef USE_GL
+	case WIN_GL:
+		/* get the window size */
+		/* DEBUG: should call:
+		 * acquire_lock(gl_lock, WAIT_LOCK);
+		 */
+		winset(PRIV->m_wid);
+		{
+			long width, height;
 
-	/* initialize window */
-	winpop();		/* pop up the window */
-	if ( rgb_mode )
-	  RGBmode();
-	else {
-	    cmode();
-	    PRIV->m_play.m_bgindex = init_colormap(PRIV->m_play.m_bgcolor);
+			getsize(&width, &height);
+			PRIV->m_width = width;
+			PRIV->m_height = height;
+		}
+
+		/* initialize window */
+		winpop();		/* pop up the window */
+		if ( rgb_mode )
+			RGBmode();
+		else {
+			cmode();
+			PRIV->m_play.m_bgindex = init_colormap(PRIV->m_play.m_bgcolor);
+		}
+		gconfig();
+		if ( !PRIV->initial_clear_done ) {
+			if ( rgb_mode )
+				RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
+					 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
+					 (PRIV->m_play.m_bgcolor      ) & 0xff);
+			else
+				color(PRIV->m_play.m_bgindex);
+			clear();
+			/*
+			 ** Note: this is not correct in all cases. If a node
+			 ** overrides the background color we should reset this
+			 ** to 0 (but that's too much work for the moment).
+			 */
+			PRIV->initial_clear_done = 1;
+		}
+		pixmode(PM_SIZE, 32);
+		/* DEBUG: should call:
+		 * release_lock(gl_lock);
+		 */
+		break;
+#endif /* USE_GL */
+#ifdef USE_XM
+	case WIN_X:
+		/* get the window size */
+		{
+			Dimension width, height;
+
+			XtVaGetValues(PRIV->m_widget,
+				      "width", &width, "height", &height,
+				      NULL);
+			PRIV->m_width = width;
+			PRIV->m_height = height;
+		}
+		/* pop up the window */
+		XRaiseWindow(XtDisplay(PRIV->m_widget),
+			     XtWindow(PRIV->m_widget));
+		/* clear the window */
+		if ( !PRIV->initial_clear_done ) {
+		    XFillRectangle(XtDisplay(PRIV->m_widget),
+				   XtWindow(PRIV->m_widget), PRIV->m_gc, 0, 0,
+				   PRIV->m_width, PRIV->m_height);
+		    PRIV->initial_clear_done = 1;
+		}
+		break;
+#endif /* USE_XM */
 	}
-	gconfig();
-	if ( !PRIV->initial_clear_done ) {
-	    if ( rgb_mode )
-	      RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
-		       (PRIV->m_play.m_bgcolor >>  8) & 0xff,
-		       (PRIV->m_play.m_bgcolor      ) & 0xff);
-	    else
-	      color(PRIV->m_play.m_bgindex);
-	    clear();
-	    /*
-	    ** Note: this is not correct in all cases. If a node
-	    ** overrides the background color we should reset this
-	    ** to 0 (but that's too much work for the moment).
-	    */
-	    PRIV->initial_clear_done = 1;
-	}
-	pixmode(PM_SIZE, 32);
-	/* DEBUG: should call:
-	 * release_lock(gl_lock);
-	 */
 	return 1;
 }
 
@@ -419,23 +562,30 @@ mpeg_player(self)
 		*/
 	        if ( clQueryValid(PRIV->m_play.m_frameHdl, 1,
 				  (void **)&curdataptr, &wrap) != 1 ) {
-		    dprintf(("mpeg_play: clQueryValid has no frames\n"));
+		    printf("mpeg_play: clQueryValid has no frames\n");
 		    return;
 		}
 		if ( curdataptr != PRIV->m_play.m_frame ) {
-		    dprintf(("mpeg_play: clQueryValid returned wrong pointer\n"));
+		    printf("mpeg_play: clQueryValid returned wrong pointer\n");
 		    return;
 		}
 		gettimeofday(&tm0, NULL);
 		dprintf(("mpeg_player(%lx): writing image\n", (long) self));
-		acquire_lock(gl_lock, WAIT_LOCK);
-		winset(PRIV->m_play.m_wid);
-		pixmode(PM_SIZE, pixel_size);
-		mpeg_display_frame(&PRIV->m_play,
-				   PRIV->m_width, PRIV->m_height);
+		switch (windowsystem) {
+#ifdef USE_GL
+		case WIN_GL:
+			acquire_lock(gl_lock, WAIT_LOCK);
+			mpeg_display_frame(self);
+			release_lock(gl_lock);
+			break;
+#endif
+#ifdef USE_XM
+		case WIN_X:
+			my_qenter(self->mm_ev, 3);
+			break;
+#endif
+		}
 		clUpdateTail(PRIV->m_play.m_frameHdl, 1);
-		gflush();
-		release_lock(gl_lock);
 		dprintf(("mpeg_player: read/decode next\n"));
 
 		/*
@@ -504,29 +654,47 @@ mpeg_player(self)
 	}
 }
 
-void
-mpeg_display_frame(p, w, h)
-    struct mpeg_data *p;
+static void
+mpeg_display_frame(self)
+    mmobject *self;
 {
     int xorig, yorig;
     double scale;
     
-    scale = p->m_scale;
-    if (scale == 0) {
-	scale = w / p->m_width;
-	if (scale > h / p->m_height)
-	  scale = h / p->m_height;
-	if (scale < 1)
-	  scale = 1;
+    switch (windowsystem) {
+#ifdef USE_GL
+    case WIN_GL:
+	scale = PRIV->m_play.m_scale;
+	if (scale == 0) {
+	    scale = PRIV->m_width / PRIV->m_play.m_width;
+	    if (scale > PRIV->m_height / PRIV->m_play.m_height)
+		scale = PRIV->m_height / PRIV->m_play.m_height;
+	    if (scale < 1)
+		scale = 1;
+	}
+	xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
+	yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
+	winset(PRIV->m_wid);
+	pixmode(PM_SIZE, pixel_size);
+	rectzoom(scale, scale);
+	lrectwrite(xorig, yorig,
+		   xorig + PRIV->m_play.m_width - 1,
+		   yorig + PRIV->m_play.m_height - 1,
+		   (unsigned long *)PRIV->m_play.m_frame);
+	gflush();
+	break;
+#endif /* USE_GL */
+#ifdef USE_XM
+    case WIN_X:
+	if (PRIV->m_play.m_image)
+	    XPutImage(XtDisplay(PRIV->m_widget), XtWindow(PRIV->m_widget),
+		      PRIV->m_gc, PRIV->m_play.m_image, 0, 0,
+		      (PRIV->m_width - PRIV->m_play.m_width) / 2,
+		      (PRIV->m_height - PRIV->m_play.m_height) / 2,
+		      PRIV->m_play.m_width, PRIV->m_play.m_height);
+	break;
+#endif /* USE_XM */
     }
-    xorig = (w - p->m_width * scale) / 2;
-    yorig = (h - p->m_height * scale) / 2;
-    rectzoom(scale, scale);
-    lrectwrite(xorig, yorig,
-	       xorig + p->m_width - 1,
-	       yorig + p->m_height - 1,
-	       (unsigned long *)p->m_frame);
-
 }
 
 int
@@ -562,12 +730,12 @@ mpeg_resized(self)
 	long xorig, yorig;
 	double scale;
 
-	if (PRIV->m_play.m_wid < 0)
+	if (PRIV->m_wid < 0)
 		return 1;
 	denter(mpeg_resized);
 	getsize(&PRIV->m_width, &PRIV->m_height);
 	if (PRIV->m_play.m_frame) {
-		winset(PRIV->m_play.m_wid);
+		winset(PRIV->m_wid);
 		if (PRIV->m_play.m_bframe == NULL)
 			pixmode(PM_SIZE, 8);
 		if (PRIV->m_play.m_bgindex >= 0) {
@@ -640,15 +808,23 @@ mpeg_finished(self)
 	need_clear = (PRIV->m_arm.m_decHdl == NULL);
 	/* XXXX 405 CL bug workaround: see MpegChannel for details */
 	need_clear = 0;
-	if (need_clear && PRIV->m_play.m_wid >= 0) {
-		winset(PRIV->m_play.m_wid);
-		if (PRIV->m_play.m_bgindex >= 0)
+	if (need_clear) {
+	    switch (windowsystem) {
+#ifdef USE_GL
+	    case WIN_GL:
+		if (PRIV->m_wid >= 0) {
+		    winset(PRIV->m_wid);
+		    if (PRIV->m_play.m_bgindex >= 0)
 			color(PRIV->m_play.m_bgindex);
-		else
+		    else
 			RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
 				 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
 				 (PRIV->m_play.m_bgcolor      ) & 0xff);
-		clear();
+		    clear();
+		}
+		break;
+#endif /* USE_GL */
+	    }
 	}
 	mpeg_free_old(&PRIV->m_play, 0);
 	return 1;
@@ -689,6 +865,7 @@ static struct mmfuncs mpeg_channel_funcs = {
 	mpeg_setrate,
 	mpeg_init,
 	mpeg_dealloc,
+	mpeg_display_frame,
 };
 
 static channelobject *mpeg_chan_obj;
