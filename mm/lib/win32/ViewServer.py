@@ -16,6 +16,7 @@ that use them.
 # views types
 from _LayoutView import _LayoutView
 from _UsergroupView import _UsergroupView
+from _UsergroupView import _UsergroupView
 from _LinkView import _LinkView
 from _CmifView import _CmifView
 from _SourceView import _SourceView
@@ -46,14 +47,14 @@ if appcon.IsPlayer:
 	USERGROUPVIEW=None
 
 appview={
-	0:{'cmd':PLAYERVIEW,'hosted':0,'title':'Player','id':'pview_','class':_PlayerView,'maximize':1},
-	1:{'cmd':HIERARCHYVIEW,'hosted':0,'title':'Structure view','id':'hview_','class':_HierarchyView,'maximize':1},
-	2:{'cmd':CHANNELVIEW,'hosted':0,'title':'Timeline view','id':'cview_','class':_ChannelView,'maximize':1},
-	3:{'cmd':LINKVIEW,'hosted':0,'title':'Hyperlinks','id':'leview_','class':_LinkView,'maximize':1},
-	4:{'cmd':LAYOUTVIEW,'hosted':1,'title':'Layout view','id':'lview_','class':_LayoutView},
-	5:{'cmd':USERGROUPVIEW,'hosted':1,'title':'User groups','id':'ugview_','class':_UsergroupView},
-	6:{'cmd':SOURCE,'hosted':0,'title':'Source','id':'sview_','class':_SourceView,'maximize':1},
-	7:{'cmd':-1,'hosted':0,'title':'','id':'cmifview_','class':_CmifView},
+	0:{'cmd':PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,'hosted':0},
+	1:{'cmd':HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,'hosted':0},
+	2:{'cmd':CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,'hosted':0},
+	3:{'cmd':LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'hosted':0},
+	4:{'cmd':LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'hosted':1},
+	5:{'cmd':USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'hosted':0},
+	6:{'cmd':SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
+	7:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
 }
 
 
@@ -66,6 +67,7 @@ class ChildFrame(window.MDIChildWnd):
 		self._view=view
 		self._decor=decor
 		self._context=None
+		self._sizeFreeze=0
 
 	# Create the OS window and hook messages
 	def Create(self, title, rect = None, parent = None, maximize=0):
@@ -141,6 +143,14 @@ class ChildFrame(window.MDIChildWnd):
 	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
+
+	# Freeze window size
+	def freezeSize(self):
+		self._sizeFreeze=1
+		l,t,r,b=self.GetWindowRect()
+		self._rc_freeze=(0,0,r-l,b-t)
+		self.ModifyStyle(win32con.WS_MAXIMIZEBOX|win32con.WS_THICKFRAME,0,0)
+
 
 # This class implements a View Server. Any client can request
 # a view by identifing the view by its string id
