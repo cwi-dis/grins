@@ -1872,6 +1872,9 @@ class Dialog:
 		if not 0 <= button < len(self._buttons):
 			raise error, 'button number out of range'
 		self._buttons[button].set = onoff
+		
+class MainDialog(Dialog):
+	pass	# Same as Dialog, for X
 
 _end_loop = '_end_loop'			# exception for ending a loop
 class _MultChoice(Dialog):

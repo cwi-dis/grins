@@ -2043,6 +2043,9 @@ def showmessage(text, type = 'message', grab = 1, callback = None,
 	d._loop()
 	return d
 
+class MainDialog(Dialog):
+	pass	# The same, for gl
+	
 class _MultChoice(Dialog):
 	def __init__(self, prompt, msg_list, defindex):
 		self._finish = None
