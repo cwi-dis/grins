@@ -135,15 +135,23 @@ ATTRDEFS_OUTPUT=":::Lib:Attrdefs.py"
 #
 import aetools
 import AppleEvents
-from Metrowerks_Shell_Suite import Metrowerks_Shell_Suite
-from CodeWarrior_Standard_Suite import CodeWarrior_Standard_Suite
-from Required_Suite import Required_Suite
+OLDAESUPPORT = 0
 
-class MwShell(Metrowerks_Shell_Suite, CodeWarrior_Standard_Suite,
-				Required_Suite, aetools.TalkTo):
-	pass
+if OLDAESUPPORT:
+	from Metrowerks_Shell_Suite import Metrowerks_Shell_Suite
+	from CodeWarrior_suite import CodeWarrior_suite
+	from Metrowerks_Standard_Suite import Metrowerks_Standard_Suite
+	from Required_Suite import Required_Suite
+
+	class MwShell(Metrowerks_Shell_Suite, CodeWarrior_suite, Metrowerks_Standard_Suite,
+					Required_Suite, aetools.TalkTo):
+		pass
+else:
+	import CodeWarrior
+
+	MwShell = CodeWarrior.CodeWarrior
+
 MWERKS_CREATOR="CWIE"
-
 #
 #
 
