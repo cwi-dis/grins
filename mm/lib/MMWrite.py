@@ -68,7 +68,13 @@ def writefloat(value, dummy, fp):
 def writestring(value, dummy, fp):
 	fp.write(`value`)
 #
+import string
+namechars = string.letters + string.digits + '_'
 def writename(value, dummy, fp):
+	for c in value:
+		if c not in namechars:
+			value = `value`
+			break
 	fp.write(value)
 #
 def writeuid(value, dummy, fp):
@@ -81,15 +87,13 @@ def writebool(value, dummy, fp):
 		fp.write('off')
 #
 def writeenum(value, dummy, fp):
-	fp.write(value)
+	writename(value, None, fp)
 #
 def writetuple(value, funcarglist, fp):
 	if len(value) <> len(funcarglist):
 		raise CheckError, 'writetuple() with non-matching length'
-	sep = ''
 	for i in range(len(funcarglist)):
-		fp.write(sep)
-		sep = ' '
+		fp.write(' ')
 		func, arg = funcarglist[i]
 		func(value[i], arg, fp)
 #
@@ -112,7 +116,9 @@ def writenamedict(value, (func, arg), fp):
 	keys = value.keys()
 	keys.sort()
 	for key in keys:
-		fp.write('(' + key + ' ')
+		fp.write('(')
+		writename(key, None, fp)
+		fp.write(' ')
 		func(value[key], arg, fp)
 		fp.write(')\n')
 #
@@ -123,7 +129,9 @@ def writeattrdict(value, dummy, fp):
 		writeattr(key, value[key], fp)
 #
 def writeattr(name, value, fp): # Subroutine to write an attribute-value pair
-	fp.write('(' + name + ' ')
+	fp.write('(')
+	writename(name, None, fp)
+	fp.write(' ')
 	if attrwriters.has_key(name):
 		func, arg = attrwriters[name]
 	else:
