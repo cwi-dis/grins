@@ -1,6 +1,7 @@
 # Names that start with `_' are for internal use only.
 
 import gl, GL, DEVICE
+from fl_or_gl import fl_or_gl
 import fm
 import string
 from EVENTS import *
@@ -103,18 +104,14 @@ class _Event:
 		if debug: print 'Event.qdevice()'
 ##		if _toplevel._win_lock:
 ##			_toplevel._win_lock.acquire()
-		# the following should realy be gl.qdevice(), but as
-		# long this is used in a FORMS environment we need
-		# fl.qdevice().
-		import fl
-		fl.qdevice(DEVICE.REDRAW)
-		fl.qdevice(DEVICE.INPUTCHANGE)
-		fl.qdevice(DEVICE.WINQUIT)
-		fl.qdevice(DEVICE.WINSHUT)
-		fl.qdevice(DEVICE.KEYBD)
-		fl.qdevice(DEVICE.LEFTMOUSE)
-		fl.qdevice(DEVICE.MIDDLEMOUSE)
-		fl.qdevice(DEVICE.RIGHTMOUSE)
+		fl_or_gl.qdevice(DEVICE.REDRAW)
+		fl_or_gl.qdevice(DEVICE.INPUTCHANGE)
+		fl_or_gl.qdevice(DEVICE.WINQUIT)
+		fl_or_gl.qdevice(DEVICE.WINSHUT)
+		fl_or_gl.qdevice(DEVICE.KEYBD)
+		fl_or_gl.qdevice(DEVICE.LEFTMOUSE)
+		fl_or_gl.qdevice(DEVICE.MIDDLEMOUSE)
+		fl_or_gl.qdevice(DEVICE.RIGHTMOUSE)
 		gl.tie(DEVICE.LEFTMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
 		gl.tie(DEVICE.MIDDLEMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
 		gl.tie(DEVICE.RIGHTMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
