@@ -56,7 +56,7 @@ def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
 			cache['mimetype'] = maintype, subtype
 			u.close()
 			del u
-		if string.find(subtype, 'real') >= 0:
+		if string.find(subtype, 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
 			import realsupport
 			info = realsupport.getinfo(url)
 			dur = info.get('duration', 0)

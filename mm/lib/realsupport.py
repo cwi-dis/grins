@@ -1082,6 +1082,9 @@ def getinfo(url, fp = None, printfunc = None):
 			nbytes, bpm = struct.unpack('>ii', data[8:8+8])
 			info['duration'] = nbytes * 60. / bpm
 			info['bitrate'] = int(bpm / 60. * 8 + .5)
+	elif head[:3] == 'FWS':
+		import swfparser
+		info = swfparser.swfparser(url, fp)
 	else:
 		# unknown format
 		info = {}
