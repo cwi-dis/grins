@@ -18,6 +18,8 @@ self.close_callback is also called.
 """
 import usercmd
 import os
+import macfs
+import MMurl
 
 class MainDialog:
 	def __init__(self, title):
@@ -36,6 +38,9 @@ class MainDialog:
 			self.commandlist.append(
 					usercmd.CONSOLE(callback=(self.console_callback, ())))
 		self.__window = w = windowinterface.windowgroup(title, self.commandlist, globalgroup=1)
+		windowinterface.installaehandler('aevt', 'oapp', self._ae_openapp)
+		windowinterface.installaehandler('aevt', 'quit', self._ae_quit)
+		windowinterface.installaehandler('aevt', 'odoc', self._ae_opendoc)
 
 	def open_callback(self):
 		import windowinterface
@@ -60,3 +65,20 @@ class MainDialog:
 	def console_callback(self):
 		import quietconsole
 		quietconsole.revert()
+
+	def _ae_openapp(self, *args, **kwargs):
+		pass
+		
+	def _ae_opendoc(self, aliases, **kwargs):
+		for alias in aliases:
+			try:
+				fss, changed = alias.Resolve()
+			except macfs.error, arg:
+				windowinterface.message("Cannot resolve: %s"%str(arg))
+				return
+			pathname = fss.as_pathname()
+			url = MMurl.pathname2url(pathname)
+			self.openURL_callback(url)
+		
+	def _ae_quit(self, *args, **kwargs):
+		self.close_callback()
