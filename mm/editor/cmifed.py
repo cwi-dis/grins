@@ -66,8 +66,13 @@ class Main(MainDialog):
 
 	def open_callback(self, url):
 		import TopLevel
-		top = TopLevel.TopLevel(self, url, 0)
-		self.new_top(top)
+		try:
+			top = TopLevel.TopLevel(self, url, 0)
+		except IOError:
+			import windowinterface
+			windowinterface.showmessage('error opening URL %s' % url)
+		else:
+			self.new_top(top)
 		
 	def close_callback(self):
 		self.do_exit()
