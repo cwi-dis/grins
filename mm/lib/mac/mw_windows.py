@@ -1195,12 +1195,51 @@ class _ScrollMixin:
 			return 1, 1
 		return self._canvassize
 		
+	def getcanvassize(self, units = UNIT_MM):
+		if self._canvassize is None:
+			raise error, 'setcanvassize call for non-resizable window!'
+		w, h = self._canvassize
+		if units == UNIT_MM:
+			_x_pixel_per_mm, _y_pixel_per_mm = \
+					mw_globals.toplevel._getmmfactors()
+			w = float(w)/_x_pixel_per_mm
+			h = float(h)/_y_pixel_per_mm
+		elif units == UNIT_PXL:
+			pass
+		elif units == UNIT_SCREEN:
+			l, t, r, b = Qd.qd.screenBits.bounds
+			t = t + _screen_top_offset
+			scrw = r-l
+			scrh = b-t
+			w = float(w)/scrw
+			h = float(h)/scrh
+		else:
+			raise error, 'bad units specified'
+		return w, h
+
 	def setcanvassize(self, how):
 		if self._canvassize is None:
 			print 'setcanvassize call for non-resizable window!'
 			return
 		w, h = self._canvassize
-		if how == DOUBLE_WIDTH:
+		if type(how) is type(()):
+			units, width, height = how
+			if units == UNIT_MM:
+				_x_pixel_per_mm, _y_pixel_per_mm = \
+					mw_globals.toplevel._getmmfactors()
+				w = int(width*_x_pixel_per_mm)
+				h = int(height*_y_pixel_per_mm)
+			elif units == UNIT_PXL:
+				w = int(width)
+				h = int(height)
+			elif units == UNIT_SCREEN:
+				l, t, r, b = Qd.qd.screenBits.bounds
+				t = t + _screen_top_offset
+				scrw = r-l
+				scrh = b-t
+				w = int(width*scrw)
+				h = int(height*scrh)
+		elif how == DOUBLE_WIDTH:
 			w = w * 2
 		elif how == DOUBLE_HEIGHT:
 			h = h * 2

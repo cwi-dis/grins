@@ -754,9 +754,25 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self.ReleaseDC(dc)
 		
 	# Called by the core to set canvas size
+	def getcanvassize(self, units = UNIT_MM):
+		x,y,w,h=self._canvas
+		toplevel=__main__.toplevel
+		if units == UNIT_MM:
+			return float(w) / toplevel._pixel_per_mm_x, \
+			       float(h) / toplevel._pixel_per_mm_y
+		elif units == UNIT_SCREEN:
+			return float(w) / toplevel._scr_width_pxl, \
+			       float(h) / toplevel._scr_height_pxl
+		elif units == UNIT_PXL:
+			return w, h
+
 	def setcanvassize(self, how):
 		x,y,w,h=self._canvas
-		if how == DOUBLE_WIDTH:
+		if type(how) is type(()):
+			import sysmetrics
+			units, width, height = how
+			w, h = sysmetrics.to_pixels(0,0,w,h,units)[2:4]
+		elif how == DOUBLE_WIDTH:
 			w = w * 2
 		elif how == DOUBLE_HEIGHT:
 			h = h * 2
