@@ -121,7 +121,7 @@ class _Toplevel:
 	def canceltimer(self, id):
 		for i in range(len(self._timers)):
 			t, cb, tid = self._timers[i]
-			if tid == t:
+			if tid == id:
 				del self._timers[i]
 				if i < len(self._timers):
 					tt, cb, tid = self._timers[i]
