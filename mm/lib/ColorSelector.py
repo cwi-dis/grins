@@ -205,8 +205,8 @@ class Wheel(glwindow.glwindow):
 		self.render()
 
 	def render(self):
-		# Clear the background with the same gra used by the main form
-		c = 170
+		# Clear the background to the same gray used by the main form
+		c = 170 # XXX Empirically found value...
 		gl.RGBcolor(c, c, c)
 		gl.clear()
 		# Get current hsv setting
