@@ -1425,7 +1425,7 @@ class EventCtrl(AttrCtrl):
 		self._resultwidget = components.Edit(self._wnd, grinsRC.IDC_EVENTLASSOO)
 		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
 		self._repeatwidget = components.Edit(self._wnd, grinsRC.IDC_EDITREPEAT)
-		self._repeatlabel = components.Static(self._wnd, grinsRC.IDC_REPEATLABEL)
+		#self._repeatlabel = components.Static(self._wnd, grinsRC.IDC_REPEATLABEL)
 		self._relative = components.CheckButton(wnd, grinsRC.IDC_RELATIVE)
 		self._radiobuttonwidgets = {}
 		for k,v in self.__radiobuttons.items():
@@ -1449,11 +1449,11 @@ class EventCtrl(AttrCtrl):
 		self._resultwidget.attach_to_parent()
 		self._offsetwidget.attach_to_parent()
 		self._repeatwidget.attach_to_parent()
-		self._repeatlabel.attach_to_parent()
+		#self._repeatlabel.attach_to_parent()
 		self._relative.attach_to_parent()
 		for b in self._radiobuttonwidgets.values():
  			b.attach_to_parent()
-		b.hookcommand(self._wnd, self._radiobuttoncallback)
+			b.hookcommand(self._wnd, self._radiobuttoncallback)
 
 		# do this before setting the callback functions
 		bob = self._attr.getcurrent()
@@ -1670,6 +1670,7 @@ class EventCtrl(AttrCtrl):
 		self._thingnamewidget.settext(name)
 
 	def set_resultwidget(self):
+		return
 		if not self._eventstruct:
 			self._resultwidget.settext("")
 		else:
@@ -1697,7 +1698,7 @@ class EventCtrl(AttrCtrl):
 			if event.startswith('repeat') and event != 'repeatEvent':
 				i = self._eventstruct.get_repeat()
 				if i:
-					self._repeatlabel.settext("Repeat:")
+					#self._repeatlabel.settext("Repeat:")
 					self._repeatwidget.settext(`i`)
 					self._repeatwidget.enable(1)
 				else:
@@ -1705,7 +1706,7 @@ class EventCtrl(AttrCtrl):
 			elif event == 'marker':
 				i = self._eventstruct.get_marker()
 				if i:
-					self._repeatlabel.settext("Marker:")
+					#self._repeatlabel.settext("Marker:")
 					self._repeatwidget.settext(i)
 					self._repeatwidget.enable(1)				
 				else:
@@ -1714,7 +1715,7 @@ class EventCtrl(AttrCtrl):
 				self.__setrepeatwidget_clear()
 
 	def __setrepeatwidget_clear(self):
-		self._repeatlabel.settext("")
+		#self._repeatlabel.settext("")
 		self._repeatwidget.settext("")
 		self._repeatwidget.enable(0)
 
@@ -1856,7 +1857,7 @@ class BeginEventCtrl(EventCtrl):
 		(grinsRC.IDC_THINGVALUE, 'Source object and source event determine when the current event fires'),
 		(grinsRC.IDC_THINGBUTTON, 'Select source object'),
 		(grinsRC.IDC_EDITOFFSET, 'Delay event by this number of seconds (negative values allowed)'),
-		(grinsRC.IDC_EDITREPEAT, 'Event fires on this repeat iteration'),
+		(grinsRC.IDC_EDITREPEAT, 'Event fires on this repeat iteration or marker'),
 		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
 		(grinsRC.IDC_RNODE, 'This event fires relative tto an event on another node'),
 		(grinsRC.IDC_RLAYOUT, 'This event fires relative to an event on a region'),
@@ -1876,7 +1877,7 @@ class EndEventCtrl(EventCtrl):
 		(grinsRC.IDC_THINGVALUE, 'Source object and source event determine when the current event fires'),
 		(grinsRC.IDC_THINGBUTTON, 'Select source object'),
 		(grinsRC.IDC_EDITOFFSET, 'Delay event by this number of seconds (negative values allowed)'),
-		(grinsRC.IDC_EDITREPEAT, 'Event fires on this repeat iteration'),
+		(grinsRC.IDC_EDITREPEAT, 'Event fires on this repeat iteration or marker'),
 		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
 		(grinsRC.IDC_RNODE, 'This event fires relative tto an event on another node'),
 		(grinsRC.IDC_RLAYOUT, 'This event fires relative to an event on a region'),
