@@ -45,6 +45,9 @@ class _common_window:
 		self.widget = None
 		self.window = None
 		
+	def close(self):
+		self.hide()
+		
 	def is_closed(self):
 		return not self.window
 		
