@@ -357,6 +357,35 @@ class EditMgr:
 		self.addstep('setusergroupname', name, newname)
 		self.context.setusergroupname(name, newname)
 
+	#
+	# Transitions operations
+	#
+	def addtransition(self, name, value):
+		if self.context.transitions.has_key(name):
+			raise MMExc.AssertError, \
+			      'duplicate transition name in addtransition'
+		self.addstep('addtransition', name)
+		self.context.addtransition(name, value)
+
+	def deltransition(self, name):
+		transition = self.context.transitions.get(name)
+		if transition is None:
+			raise MMExc.AssertError, 'unknown transition in deltransition'
+		self.addstep('deltransition', name, transition)
+		self.context.deltransition(name)
+
+	def settransitionname(self, name, newname):
+		if newname == name:
+			return		# no change
+		if not self.context.transitions.has_key(name):
+			raise MMExc.AssertError, \
+			      'unknown transition name in settransitionname'
+		if self.context.transitions.has_key(newname):
+			raise MMExc.AssertError, \
+			      'name already in use in settransitionname'
+		self.addstep('settransitionname', name, newname)
+		self.context.settransitionname(name, newname)
+
 ##	#
 ##	# Style operations
 ##	#
