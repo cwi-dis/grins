@@ -2802,6 +2802,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					img._addchild(a)
 					if key == 'App1Button':
 						play = a
+					elif key == 'PowerButton':
+						self.__links.append((a, 'grins:exit()'))
 			arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = play, event = 'activateEvent', delay = 0)
 			self.__root.attrdict['beginlist'] = [arc]
 			arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = play, event = 'activateEvent', delay = 0)
