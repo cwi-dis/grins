@@ -53,8 +53,10 @@ _window_top_offset=18	# XXXX Is this always correct?
 
 NO_AE_EVENTMASK=Events.everyEvent & ~Events.highLevelEventMask
 AE_EVENTMASK=Events.everyEvent
-MINIMAL_TIMEOUT=0	# How long we yield at the very least
+#
 TICKS_PER_SECOND=60.0	# Standard mac thing
+MINIMAL_TIMEOUT=0	# How long we yield at the very least
+MAXIMAL_TIMEOUT=int(0.5*TICKS_PER_SECOND)	# Check at least every half second
 
 
 class _Event(AEServer):
@@ -150,7 +152,7 @@ class _Event(AEServer):
 			elif self._timers:
 				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
 			else:
-				timeout = 100000
+				timeout = MAXIMAL_TIMEOUT
 				
 			if self.needmenubarredraw:
 				MenuMODULE.DrawMenuBar()
