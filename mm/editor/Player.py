@@ -457,6 +457,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def start_playing(self, rate):
 		if not self.maystart():
 			return 0
+		MMAttrdefs.startstats()
 		self.playing = 1
 		self.reset()
 		self.setrate(rate)
@@ -479,7 +480,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		return 1
 	#
 	def stop_playing(self):
-		print 'Stop playuing'
+		print 'Stop playing'
 		self.playing = 0
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
@@ -494,6 +495,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			Timing.calctimes(self.playroot)
 			Timing.optcalctimes(self.playroot)
 		print 'all done'
+		a = MMAttrdefs.stopstats()
+		MMAttrdefs.showstats(a)
 	#
 	def decrement(self, (delay, node, side)):
 	        self.freeze()
