@@ -15,7 +15,6 @@ def _freeze_dummy_func():
 	import MidiChannel
 	import NullChannel
 	import PseudoHtmlChannel
-	import PythonChannel
 	import RealPixChannel
 	import RealTextChannel
 	import SoundChannel
