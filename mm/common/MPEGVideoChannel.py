@@ -125,3 +125,7 @@ class VideoChannel(ChannelWindowThread):
 		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
 		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
+
+	def stoparm(self):
+		self.need_armdone = 0
+		ChannelWindowThread.stoparm(self)
