@@ -28,7 +28,9 @@ M_NONE = 7
 M_EXTERNAL = 8
 M_KEEP = 9
 
-class LinkEdit(ViewDialog):
+from LinkEditDialog import LinkEditDialog
+
+class LinkEdit(ViewDialog, LinkEditDialog):
 	def __init__(self, toplevel):
 		ViewDialog.__init__(self, 'links_')
 		self.last_geometry = None
@@ -37,9 +39,6 @@ class LinkEdit(ViewDialog):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		title = self.__maketitle()
-		self.window = w = windowinterface.Window(title, resizable = 1,
-					deleteCallback = (self.hide, ()))
-		self.showing = w.is_showing()
 		self.left = Struct()
 		self.right = Struct()
 		self.left.fillfunc = self.fill_none
@@ -50,103 +49,68 @@ class LinkEdit(ViewDialog):
 		self.right.focus = None
 		self.left.hidden = 0
 		self.right.hidden = 0
-
-		self.edit_group = w.SubWindow(bottom = None, left = None,
-					      right = None)
-		self.link_dir = self.edit_group.OptionMenu('Link direction:',
-				dirstr, 0, (self.linkdir_callback, ()),
-				bottom = None, left = None, top = None)
-		self.ok_group = self.edit_group.ButtonRow(
-			[('OK', (self.ok_callback, ())),
-			 ('Cancel', (self.cancel_callback, ()))],
-			bottom = None, left = self.link_dir, right = None,
-			top = None, vertical = 0)
-
-		win1 = w.SubWindow(top = None, left = None,
-				bottom = self.edit_group, right = 0.333)
-		menu = win1.PulldownMenu([
-			('Set anchorlist',
-			 [('All', (self.menu_callback, (self.left, M_ALL))),
-			  ('Dangling', (self.menu_callback,
-					(self.left, M_DANGLING))),
-			  ('From Channel view focus', (self.menu_callback,
-						(self.left, M_TCFOCUS))),
-			  ('From Hierarchy view focus', (self.menu_callback,
-						(self.left, M_BVFOCUS)))]
-			 )],
-			top = None, left = None, right = None)
-		self.left.buttons = win1.ButtonRow(
-			[('Push focus', (self.show_callback, (self.left,))),
-			 ('Anchor editor...', (self.anchoredit_callback, (self.left,)))],
-			vertical = 1,
-			bottom = None, left = None, right = None)
-		list = win1.List('None', [],
-				 (self.anchor_browser_callback, (self.left,)),
-				 top = menu, bottom = self.left.buttons,
-				 left = None, right = None)
-		self.left.browser = list
-
-		win2 = w.SubWindow(top = None, left = win1,
-				bottom = self.edit_group, right = 0.667)
-		dummymenu = win2.PulldownMenu([('placeholder', [])],
-				top = None, left = None, right = None)
-		self.link_edit = win2.ButtonRow(
-			[('Add...', (self.link_new_callback, ())),
-			 ('Edit...', (self.link_edit_callback, ())),
-			 ('Delete', (self.link_delete_callback, ())),
-			 ],
-			bottom = None, left = None, right = None, vertical = 1)
-		self.link_browser = win2.List('links:', [],
-				(self.link_browser_callback, ()),
-				top = dummymenu, bottom = self.link_edit,
-				left = None, right = None)
-
-		win3 = w.SubWindow(top = None, left = win2,
-				bottom = self.edit_group, right = None)
-		menu = win3.PulldownMenu([
-			('Set anchorlist',
-			 [('All', (self.menu_callback, (self.right, M_ALL))),
-			  ('Dangling', (self.menu_callback,
-					(self.right, M_DANGLING))),
-			  ('From Channel view focus', (self.menu_callback,
-						     (self.right, M_TCFOCUS))),
-			  ('From Hierarchy view focus', (self.menu_callback,
-						     (self.right, M_BVFOCUS))),
-			  ('All related anchors', (self.menu_callback,
-						   (self.right, M_RELATION))),
-			  ('No anchors, links only', (self.menu_callback,
-						      (self.right, M_NONE))),
-			  ('External', (self.menu_callback,
-					(self.right, M_EXTERNAL))),
-			  ('Keep list', (self.menu_callback,
-					 (self.right, M_KEEP)))]
-			 )],
-			top = None, left = None, right = None)
-		self.right.buttons = win3.ButtonRow(
-			[('Push focus', (self.show_callback, (self.right,))),
-			 ('Anchor editor...', (self.anchoredit_callback, (self.right,)))],
-			vertical = 1,
-			bottom = None, left = None, right = None)
-		list = win3.List('None', [],
-				 (self.anchor_browser_callback, (self.right,)),
-				 top = menu, bottom = self.right.buttons,
-				 left = None, right = None)
-		self.right.browser = list
-
-		w.fix()
-
-		dummymenu.hide()
-
 		self.linkedit = 0
 		self.linkfocus = None
 		self.interesting = []
+
+		LinkEditDialog.__init__(self, self.__maketitle(), dirstr,
+			[('All', (self.menu_callback, (self.left, M_ALL))),
+			 ('Dangling',
+			  (self.menu_callback, (self.left, M_DANGLING))),
+			 ('From Channel view focus',
+			  (self.menu_callback, (self.left, M_TCFOCUS))),
+			 ('From Hierarchy view focus',
+			  (self.menu_callback, (self.left, M_BVFOCUS))),
+			 ], self.left,
+			[('All', (self.menu_callback, (self.right, M_ALL))),
+			  ('Dangling',
+			   (self.menu_callback, (self.right, M_DANGLING))),
+			  ('From Channel view focus',
+			   (self.menu_callback, (self.right, M_TCFOCUS))),
+			  ('From Hierarchy view focus',
+			   (self.menu_callback, (self.right, M_BVFOCUS))),
+			  ('All related anchors',
+			   (self.menu_callback, (self.right, M_RELATION))),
+			  ('No anchors, links only',
+			   (self.menu_callback, (self.right, M_NONE))),
+			  ('External',
+			   (self.menu_callback, (self.right, M_EXTERNAL))),
+			  ('Keep list',
+			   (self.menu_callback, (self.right, M_KEEP))),
+			 ], self.right)
+
+		# make some methods available through self.left and self.right
+		self.left.browser_setlabel = self.leftsetlabel
+		self.left.browser_show = self.leftshow
+		self.left.browser_hide = self.lefthide
+		self.left.browser_dellistitems = self.leftdellistitems
+		self.left.browser_delalllistitems = self.leftdelalllistitems
+		self.left.browser_addlistitems = self.leftaddlistitems
+		self.left.browser_replacelistitem = self.leftreplacelistitem
+		self.left.browser_selectitem = self.leftselectitem
+		self.left.browser_makevisible = self.leftmakevisible
+		self.left.buttons_setsensitive = self.leftbuttonssetsensitive
+		self.left.browser_getselected = self.leftgetselected
+		self.left.browser_getlist = self.leftgetlist
+
+		self.right.browser_setlabel = self.rightsetlabel
+		self.right.browser_show = self.rightshow
+		self.right.browser_hide = self.righthide
+		self.right.browser_dellistitems = self.rightdellistitems
+		self.right.browser_delalllistitems = self.rightdelalllistitems
+		self.right.browser_addlistitems = self.rightaddlistitems
+		self.right.browser_replacelistitem = self.rightreplacelistitem
+		self.right.browser_selectitem = self.rightselectitem
+		self.right.browser_makevisible = self.rightmakevisible
+		self.right.buttons_setsensitive = self.rightbuttonssetsensitive
+		self.right.browser_getselected = self.rightgetselected
+		self.right.browser_getlist = self.rightgetlist
 
 	def __maketitle(self):
 		return 'Hyperlinks (' + self.toplevel.basename + ')'
 
 	def fixtitle(self):
-		if self.is_showing():
-			self.window.settitle(self.__maketitle())
+		self.settitle(self.__maketitle())
 
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
@@ -155,36 +119,55 @@ class LinkEdit(ViewDialog):
 		self.hide()
 
 	def show(self):
-		if not self.window.is_showing():
+		if not self.is_showing():
 			self.toplevel.showstate(self, 1)
 			self.updateform()
-			self.window.show()
-			self.showing = self.window.is_showing()
+			LinkEditDialog.show(self)
 			self.toplevel.checkviews()
 			self.editmgr.register(self)
 
 	def hide(self):
-		if self.window.is_showing():
+		if self.is_showing():
 			self.toplevel.showstate(self, 0)
 			self.editmgr.unregister(self)
-			self.window.hide()
+			LinkEditDialog.hide(self)
 			self.toplevel.checkviews()
 
+	def delete_callback(self):
+		self.hide()
+
 	def destroy(self):
-		self.left = self.right = None
-		self.window.close()
-		self.window = None
+		LinkEditDialog.close(self)
+		del self.left.browser_setlabel
+		del self.left.browser_show
+		del self.left.browser_hide
+		del self.left.browser_dellistitems
+		del self.left.browser_delalllistitems
+		del self.left.browser_addlistitems
+		del self.left.browser_replacelistitem
+		del self.left.browser_selectitem
+		del self.left.browser_makevisible
+		del self.left.buttons_setsensitive
+		del self.left.browser_getselected
+		del self.right.browser_setlabel
+		del self.right.browser_show
+		del self.right.browser_hide
+		del self.right.browser_dellistitems
+		del self.right.browser_delalllistitems
+		del self.right.browser_addlistitems
+		del self.right.browser_replacelistitem
+		del self.right.browser_selectitem
+		del self.right.browser_makevisible
+		del self.right.buttons_setsensitive
+		del self.right.browser_getselected
+		del self.left
+		del self.right
 
 	def setwaiting(self):
-		if self.window:
-			self.window.setcursor('watch')
+		self.setcursor('watch')
 
 	def setready(self):
-		if self.window:
-			self.window.setcursor('')
-
-	def is_showing(self):
-		return self.window.is_showing()
+		self.setcursor('')
 
 	def get_geometry(self):
 		pass
@@ -223,21 +206,21 @@ class LinkEdit(ViewDialog):
 	# and used to fill the browsers.
 
 	def fill_none(self, str):
-		str.browser.setlabel('None')
+		str.browser_setlabel('None')
 		str.anchors = []
 
 	def fill_node(self, str):
-		str.browser.setlabel('Node:')
+		str.browser_setlabel('Node:')
 		str.anchors = getanchors(str.node, 0)
 
 	def fill_all(self, str):
-		str.browser.setlabel('All')
+		str.browser_setlabel('All')
 		str.anchors = getanchors(self.root, 1)
 
 	def fill_relation(self, str):
 		if str <> self.right:
 			print 'LinkEdit: left anchorlist cannot be related!'
-		str.browser.setlabel('Related')
+		str.browser_setlabel('Related')
 		str.anchors = []
 		if self.left.focus is None:
 			return
@@ -248,7 +231,7 @@ class LinkEdit(ViewDialog):
 				str.anchors.append(l[ANCHOR2])
 
 	def fill_dangling(self, str):
-		str.browser.setlabel('Dangling')
+		str.browser_setlabel('Dangling')
 		all = getanchors(self.root, 1)
 		nondangling = \
 			  self.context.hyperlinks.findnondanglinganchordict()
@@ -258,16 +241,16 @@ class LinkEdit(ViewDialog):
 				str.anchors.append(a)
 
 	def fill_interesting(self, str):
-		str.browser.setlabel('Interesting')
+		str.browser_setlabel('Interesting')
 		self.fixinteresting()
 		str.anchors = self.interesting[:]
 
 	def fill_external(self, str):
-		str.browser.setlabel('External')
+		str.browser_setlabel('External')
 		str.anchors = self.toplevel.getallexternalanchors()
 
 	def fill_keep(self, str):
-		str.browser.setlabel('Kept')
+		str.browser_setlabel('Kept')
 		# check that all anchors still exist
 		allanchors = getanchors(self.root, 1)
 		oldanchors = str.anchors
@@ -311,11 +294,9 @@ class LinkEdit(ViewDialog):
 
 	def reloadanchors(self, str, scroll):
 		if str.hidden:
-			str.browser.hide()
-			str.buttons.hide()
+			str.browser_hide()
 		else:
-			str.browser.show()
-			str.buttons.show()
+			str.browser_show()
 		# Try to keep focus correct
 		if str.focus is not None:
 			focusvalue = str.anchors[str.focus]
@@ -368,7 +349,7 @@ class LinkEdit(ViewDialog):
 					n = j
 			if ordered:
 				if delete:
-					str.browser.dellistitems(delete)
+					str.browser_dellistitems(delete)
 				names = []
 				for i, a in add:
 					name = self.makename(a)
@@ -377,25 +358,25 @@ class LinkEdit(ViewDialog):
 					if i == pos + len(names):
 						names.append(name)
 					else:
-						str.browser.addlistitems(names, pos)
+						str.browser_addlistitems(names, pos)
 						names = [name]
 						pos = i
 				if names:
-					str.browser.addlistitems(names, pos)
+					str.browser_addlistitems(names, pos)
 			else:
 				names = []
 				for a in str.anchors:
 					name = self.makename(a)
 					names.append(name)
-				str.browser.delalllistitems()
-				str.browser.addlistitems(names, -1)
+				str.browser_delalllistitems()
+				str.browser_addlistitems(names, -1)
 		# deal with possible node name changes
-		list = str.browser.getlist()
+		list = str.browser_getlist()
 		for i in range(len(str.anchors)):
 			a = str.anchors[i]
 			name = self.makename(a)
 			if name != list[i]:
-				str.browser.replacelistitem(i, name)
+				str.browser_replacelistitem(i, name)
 		if focusvalue:
 			try:
 				str.focus = str.anchors.index(focusvalue)
@@ -408,19 +389,15 @@ class LinkEdit(ViewDialog):
 			str.focus = 0
 			self.linkedit = 0
 		if str.focus is not None:
-			str.browser.selectitem(str.focus)
-			if scroll and not str.browser.is_visible(str.focus):
-				str.browser.scrolllist(str.focus,
-						       windowinterface.CENTER)
-			str.browser.show()
-			str.buttons.show()
-			str.buttons.setsensitive(0, 1)
-			str.buttons.setsensitive(1, 1)
+			str.browser_selectitem(str.focus)
+			if scroll:
+				str.browser_makevisible(str.focus)
+			str.browser_show()
+			str.buttons_setsensitive(1)
 		else:
-			str.buttons.setsensitive(0, 0)
-			str.buttons.setsensitive(1, 0)
+			str.buttons_setsensitive(0)
 		if str.node:
-			str.browser.setlabel('Node: ' +
+			str.browser_setlabel('Node: ' +
 					MMAttrdefs.getattr(str.node, 'name'))
 
 	# This function reloads the link browser or makes it invisible
@@ -429,9 +406,8 @@ class LinkEdit(ViewDialog):
 		srf = self.right.focus
 		if slf is None or (srf is None and not self.right.hidden):
 			# At least one unfocussed anchorlist. No browser
-			self.link_browser.hide()
-			self.link_edit.hide()
-			self.edit_group.hide()
+			self.middlehide()
+			self.editgrouphide()
 			self.linkfocus = None
 			self.linkedit = 0
 			return
@@ -451,8 +427,8 @@ class LinkEdit(ViewDialog):
 		for i in self.links:
 			line = typestr[i[TYPE]] + ' ' + dirstr[i[DIR]]
 			lines.append(line)
-		self.link_browser.delalllistitems()
-		self.link_browser.addlistitems(lines, -1)
+		self.middledelalllistitems()
+		self.middleaddlistitems(lines, -1)
 		if fvalue:
 			try:
 				self.linkfocus = self.links.index(fvalue)
@@ -461,21 +437,18 @@ class LinkEdit(ViewDialog):
 		if self.links and self.linkfocus is None and not self.linkedit:
 			self.linkfocus = 0
 		if self.linkfocus is None:
-			self.link_edit.setsensitive(1, 0)
-			self.link_edit.setsensitive(2, 0)
+			self.editsetsensitive(0)
+			self.deletesetsensitive(0)
 		else:
-			self.link_browser.selectitem(self.linkfocus)
-			if not self.link_browser.is_visible(self.linkfocus):
-				self.link_browser.scrolllist(self.linkfocus,
-							windowinterface.CENTER)
-			self.link_edit.setsensitive(1, 1)
-			self.link_edit.setsensitive(2, 1)
-		self.link_browser.show()
-		self.link_edit.show()
+			self.middleselectitem(self.linkfocus)
+			self.middlemakevisible(self.linkfocus)
+			self.editsetsensitive(1)
+			self.deletesetsensitive(1)
+		self.middleshow()
 		if self.right.hidden:
-			self.link_edit.setsensitive(0, 0)
+			self.addsetsensitive(0)
 		else:
-			self.link_edit.setsensitive(0, 1)
+			self.addsetsensitive(1)
 		if self.linkfocus:
 			link = self.links[self.linkfocus]
 			lfocus = link[ANCHOR1]
@@ -488,7 +461,7 @@ class LinkEdit(ViewDialog):
 		   (lanchor[A_TYPE] in DestOnlyAnchors and
 		    ranchor[A_TYPE] in DestOnlyAnchors):
 			# can't add a link between destination-only anchors
-			self.link_edit.setsensitive(0, 0)
+			self.addsetsensitive(0)
 		if self.linkedit:
 			self.set_radio_buttons()
 			if lanchor is None or ranchor is None:
@@ -496,21 +469,21 @@ class LinkEdit(ViewDialog):
 				return
 			if lanchor[A_TYPE] in DestOnlyAnchors:
 				# can only be a destination
-				self.link_dir.setsensitive(0, 0)
-				self.link_dir.setsensitive(1, 1)
-				self.link_dir.setsensitive(2, 0)
+				self.linkdirsetsensitive(0, 0)
+				self.linkdirsetsensitive(1, 1)
+				self.linkdirsetsensitive(2, 0)
 			elif ranchor[A_TYPE] in DestOnlyAnchors:
 				# can only be a destination
-				self.link_dir.setsensitive(0, 1)
-				self.link_dir.setsensitive(1, 0)
-				self.link_dir.setsensitive(2, 0)
+				self.linkdirsetsensitive(0, 1)
+				self.linkdirsetsensitive(1, 0)
+				self.linkdirsetsensitive(2, 0)
 			else:
 				# can be both source and destination
-				self.link_dir.setsensitive(0, 1)
-				self.link_dir.setsensitive(1, 1)
-				self.link_dir.setsensitive(2, 1)
+				self.linkdirsetsensitive(0, 1)
+				self.linkdirsetsensitive(1, 1)
+				self.linkdirsetsensitive(2, 1)
 		else:
-			self.edit_group.hide()
+			self.editgrouphide()
 
 	# Reload/redisplay all data
 	def updateform(self, str = None):
@@ -570,24 +543,24 @@ class LinkEdit(ViewDialog):
 	def set_radio_buttons(self):
 		linkdir = self.editlink[DIR]
 		linktype = self.editlink[TYPE]
-		self.link_dir.setpos(linkdir)
-		self.edit_group.show()
+		self.linkdirsetchoice(linkdir)
+		self.editgroupshow()
 		if self.linkfocus is None:
 			# We seem to be adding
-			self.ok_group.setsensitive(0, 1)
-			self.ok_group.setsensitive(1, 1)
+			self.oksetsensitive(1)
+			self.cancelsetsensitive(1)
 			return
 		link = self.links[self.linkfocus]
 		if linkdir == link[DIR] and linktype == link[TYPE]:
-			self.ok_group.setsensitive(0, 0)
-			self.ok_group.setsensitive(1, 1)
+			self.oksetsensitive(0)
+			self.cancelsetsensitive(1)
 		else:
-			self.ok_group.setsensitive(0, 1)
-			self.ok_group.setsensitive(1, 1)
+			self.oksetsensitive(1)
+			self.cancelsetsensitive(1)
 
 	# Callback functions
 	def anchor_browser_callback(self, str):
-		focus = str.browser.getselected()
+		focus = str.browser_getselected()
 		if focus != str.focus:
 			str.focus = focus
 			self.linkedit = 0
@@ -663,7 +636,7 @@ class LinkEdit(ViewDialog):
 		self.updateform(str)
 
 	def link_browser_callback(self):
-		focus = self.link_browser.getselected()
+		focus = self.middlegetselected()
 		if focus != self.linkfocus:
 			self.linkedit = 0
 			self.linkfocus = focus
@@ -690,7 +663,7 @@ class LinkEdit(ViewDialog):
 		self.updateform()
 
 	def linkdir_callback(self):
-		linkdir = self.link_dir.getpos()
+		linkdir = self.linkdirgetchoice()
 		l = self.editlink
 		if l[DIR] != linkdir:
 			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir, \
