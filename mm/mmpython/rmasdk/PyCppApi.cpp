@@ -166,7 +166,7 @@ int RMAObject::setattr(char *name, PyObject *v)
 PyObject* RMAObject::so_repr(PyObject *op)
 	{
 	RMAObject* w = (RMAObject *)op;
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	string ret = w->repr();
 	return Py_BuildValue("s",ret.c_str());
 #else
@@ -177,7 +177,7 @@ PyObject* RMAObject::so_repr(PyObject *op)
 #endif
 	}
 
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 string
 #else
 char *
@@ -186,7 +186,7 @@ RMAObject::repr()
 	{
 	char buf[50];
 	sprintf(buf, "object '%s'", ob_type->tp_name);
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	return string(buf);
 #else
 	return strdup(buf);
@@ -195,7 +195,7 @@ RMAObject::repr()
 
 void RMAObject::cleanup()
 	{
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	string rep = repr();
 	TRACE("cleanup detected %s, refcount = %d\n",rep.c_str(),ob_refcnt);
 #else
@@ -257,7 +257,7 @@ CallerHelper::CallerHelper(const char *methodname,PyObject *obj)
 	retVal(NULL)
 	{
 	if(!methodname || !obj) return;
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	csHandlerName = methodname;
 #endif
 	CEnterLeavePython elp;
@@ -321,7 +321,7 @@ BOOL CallerHelper::do_call(PyObject *args)
 		print_error();
 		PyObject *obRepr = PyObject_Repr(handler);
 		char *szRepr = PyString_AsString(obRepr);
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 		sprintf(msg, "%s() virtual handler (%s) raised an exception",csHandlerName.c_str(), szRepr);
 #else
 		sprintf(msg, "<unknown>() virtual handler (%s) raised an exception",szRepr);
@@ -502,7 +502,7 @@ BOOL CallerHelper::retval( char *&ret )
 	return TRUE;
 	}
 
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 BOOL CallerHelper::retval(string &ret)
 	{
 	ASSERT(retVal);
