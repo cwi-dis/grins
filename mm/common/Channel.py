@@ -1185,6 +1185,8 @@ class ChannelWindow(Channel):
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
 		self._wingeom = None		
+		self.__transparent = 1
+		self.__bgcolor = None		
 
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
@@ -1350,28 +1352,36 @@ class ChannelWindow(Channel):
 ##					     (self.highlight, ())))
 ##				menu.append(('', 'unhighlight',
 ##					     (self.unhighlight, ())))
-			# for now
-			# all the time transparent
-			transparent = -1
-			self._curvals['transparent'] = (transparent, 0)
-			z = self._attrdict.get('z', 0)
-			self._curvals['z'] = (z, 0)
+
+			self._curvals['transparent'] = (self.__transparent, 0)
+
+#			print self.__transparent
+#			print self.__bgcolor
+			# determinate the z-index
+			z = self._attrdict.get('z', -1)
+			self._curvals['z'] = (z, -1)
+			
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
-						transparent = transparent,
+						transparent = self.__transparent,
 						z = z,
 						type_channel = self._window_type,
 						units = units)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
-						transparent = transparent,
+						transparent = self.__transparent,
 						z = z,
 						type_channel = self._window_type,
 						units = units)
+		
+			# fix the background color
+			if self.__transparent == 0 and self.__bgcolor != None:
+				self.window.bgcolor(self.__bgcolor)
 		else:
 			# case not possible in internal channel
 			# only possible in LayoutChannel (look at LayoutChannel.py)
 			pass
+			
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
@@ -1485,15 +1495,46 @@ class ChannelWindow(Channel):
 		
 		return 1
 
-	# Updates channels to visible if according to the showBackground/open and close attributes
-	def updateToActiveState(self):
+	# Updates channels to visible if according to the showBackground/open and close attributes.
+	# Also: derterminate the background color before to show the channel
+	def updateToActiveState(self, node):
+	
+		# determinate the transparent and background color attribute
+		try:
+			transparent = node.GetAttr('transparent')
+		except NoSuchAttrError:
+			transparent = None
+		try:
+			bgcolor = node.GetAttr('bgcolor')
+		except NoSuchAttrError:
+			bgcolor = None					
+				
+		if transparent == None:
+			if bgcolor != None:
+				transparent = 0
+			else:
+				transparent = 1
+				
+		self.__transparent = transparent
+		self.__bgcolor = bgcolor
+
+		# force show of channel. Allow to show the background color
+		# associate to the node
 		self.show(1)
+		
 		pchan = self._get_parent_channel()
 		pchan.childToActiveState()
 						
 	# Updates channels to unvisible if according to the showBackground/open and close attributes
 	def updateToInactiveState(self):
-		self.hide(0)
+		
+		# force hide of channel. Allow to hide the background color
+		# associate to the node
+		self.hide(1)
+
+		self.__transparent = 1
+		self.__bgcolor = None
+		
 		pchan = self._get_parent_channel()
 		pchan.childToInactiveState()
 			
@@ -1539,7 +1580,7 @@ class ChannelWindow(Channel):
 ##				self.editmgr.commit()
 
 	def arm_0(self, node):
-		self.updateToActiveState()
+		self.updateToActiveState(node)
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
 		   not self.armed_display.is_closed():
