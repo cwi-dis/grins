@@ -97,7 +97,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		else:
 			self.playicon = Icon(self, self.mother)
 			self.playicon.set_properties(selectable=0, callbackable=0)
-			node.set_armedmode = self.set_armedmode
+			if self.isvisible(): # terribily inefficient
+				node.set_armedmode = self.set_armedmode
 			self.set_armedmode(node.armedmode, redraw = 0)
 
 	def __repr__(self):
@@ -158,6 +159,19 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return					  
 	def collapse_all(self):		  # Is this doable using a higher-order function?
 		return
+
+	def isvisible(self):
+		# a node is visible if none of its ancestors is collapsed
+		for node in self.node.GetPath()[:-1]:
+			if node.collapsed:
+				return 0
+		return 1
+
+	def makevisible(self):
+		for node in self.node.GetPath()[:-1]:
+			if node.collapsed:
+				node.views['struct_view'].uncollapse()
+		self.mother.draw()
 
 	def destroy(self):
 		# Prevent cyclic dependancies.
@@ -230,6 +244,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	#
 	def select(self):
 		self.dont_draw_children = 1 # I'm selected.
+		self.makevisible()
 		Widgets.Widget.select(self)
 
 	def deselect(self):
@@ -488,19 +503,21 @@ class StructureObjWidget(MMNodeWidget):
 		self.mother.need_redraw = 1
 
 	def collapse(self):
+		# remove_set_armedmode must be done before collapsed bit is set
+		for c in self.children:
+			c.remove_set_armedmode()
 		self.node.collapsed = 1
 		if self.collapsebutton is not None:
 			self.collapsebutton.icon = 'closed'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 		self.set_need_resize()
-		for c in self.children:
-			c.remove_set_armedmode()
 
 	def remove_set_armedmode(self):
 		del self.node.set_armedmode
-		for c in self.children:
-			c.remove_set_armedmode()
+		if not self.iscollapsed():
+			for c in self.children:
+				c.remove_set_armedmode()
 
 	def uncollapse(self):
 		self.node.collapsed = 0
