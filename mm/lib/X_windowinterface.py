@@ -193,7 +193,9 @@ class _Window:
 		self._redraw_func = None
 		self._parent_window._subwindows.append(self)
 		self._toplevel = self._parent_window._toplevel
-		self._gc = self._form.CreateGC({})
+		self._gc = self._form.CreateGC({
+			  'background': self._xbgcolor,
+			  'foreground': self._xbgcolor})
 		self._form.RealizeWidget()
 ##		self._form.SetWindowColormap(self._colormap)
 		self._form.AddCallback('exposeCallback', self._expose_callback, None)
@@ -328,8 +330,6 @@ class _Window:
 			# clear the window
 			if toplevel._win_lock:
 				toplevel._win_lock.acquire()
-			self._gc.background = self._xbgcolor
-			self._gc.foreground = self._xbgcolor
 			self._gc.FillRectangle(0, 0, self._width, self._height)
 			if toplevel._win_lock:
 				toplevel._win_lock.release()
@@ -409,6 +409,7 @@ class _Window:
 			raise TypeError, 'arg count mismatch'
 		self._bgcolor = color
 		self._xbgcolor = self._convert_color(self._bgcolor)
+		self._gc.background = self._gc.foreground = self._xbgcolor
 		if not self._active_display_list:
 			if toplevel._win_lock:
 				toplevel._win_lock.acquire()
@@ -672,7 +673,7 @@ class _DisplayList:
 			  window._height)
 		# reversed foreground and background for clearing
 		self._gc = self._pixmap.CreateGC({
-			  'background': self._xfgcolor,
+			  'background': self._xbgcolor,
 			  'foreground': self._xbgcolor,
 			  'line_width': 1})
 		# clear pixmap since it may contain garbage
@@ -1029,6 +1030,10 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		if debug: print `self`+'.drawbox'+`coordinates`
 		x, y, w, h = coordinates
+		if w < 0:
+			x, w = x + w, -w
+		if h < 0:
+			y, h = y + h, -h
 		x, y, w, h = window._convert_coordinates(x, y, w, h)
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
@@ -1102,14 +1107,17 @@ class _Button:
 			raise error, 'button already closed'
 		dispobj = self._dispobj
 		window = dispobj._window
+		gc = window._gc
 		if window._active_display_list != dispobj:
 			raise error, 'can only highlight rendered button'
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
-		window._gc.background = dispobj._xbgcolor
-		window._gc.foreground = self._xhicolor
-		window._gc.line_width = self._hiwidth
-		window._gc.DrawRectangle(self._coordinates)
+		gc.background = dispobj._xbgcolor
+		gc.foreground = self._xhicolor
+		gc.line_width = self._hiwidth
+		gc.DrawRectangle(self._coordinates)
+		gc.background = window._xbgcolor
+		gc.foreground = window._xbgcolor
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 		self._highlighted = 1
