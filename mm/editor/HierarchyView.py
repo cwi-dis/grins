@@ -58,11 +58,12 @@ LEAFBOX = 2
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 
-MINSIZE = settings.get('thumbnail_size')		# minimum size for a node
+SIZEUNIT = windowinterface.UNIT_MM # units for the following (don't change)
+MINSIZE = settings.get('thumbnail_size') # minimum size for a node
 MAXSIZE = 2 * MINSIZE
 TITLESIZE = f_title.fontheight()*1.2
 CHNAMESIZE = f_channel.fontheight()*1.2
-LABSIZE = TITLESIZE+CHNAMESIZE	# height of labels
+LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 HOREXTRASIZE = f_title.strsize('XX')[0]
 GAPSIZE = 1.0				# size of gap between nodes
 EDGSIZE = 1.0				# size of edges
@@ -152,17 +153,15 @@ class HierarchyView(HierarchyViewDialog):
 		commands = self.commands
 		fnode = self.focusnode
 		fntype = fnode.GetType()
-		if fntype in MMNode.interiortypes or \
-		   (fntype == 'ext' and
-		    fnode.GetChannelType() == 'RealPix'):
+		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
+		if fntype in MMNode.interiortypes or is_realpix:
 			popupmenu = self.interior_popupmenu
 		else:
 			popupmenu = self.leaf_popupmenu
 		if fnode.__class__ is not SlideMMNode:
 			commands = commands + self.noslidecommands
 			if fntype in MMNode.interiortypes or \
-			   (fntype == 'ext' and
-			    fnode.GetChannelType() == 'RealPix'):
+			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
 				commands = commands + self.interiorcommands
 		if fnode is not self.root:
 			# can't do certain things to the root
@@ -172,7 +171,7 @@ class HierarchyView(HierarchyViewDialog):
 			# can only paste if there's something to paste
 			if n.__class__ is SlideMMNode:
 				# Slide can only go in RealPix node
-				if fntype == 'ext' and fnode.GetChannelType() == 'RealPix':
+				if is_realpix and MMAttrdefs.getattr(fnode, 'file'):
 					commands = commands + self.pasteinteriorcommands
 				elif fntype == 'slide':
 					commands = commands + self.pastenotatrootcommands
@@ -296,8 +295,26 @@ class HierarchyView(HierarchyViewDialog):
 			from mimetypes import guess_type
 			mtype = guess_type(url)[0]
 			interior = (mtype != 'image/vnd.rn-realpix')
+			if interior and \
+			   not MMAttrdefs.getattr(obj.node, 'file'):
+				windowinterface.showmessage('can only edit a RealPix node if the URL has been filled in', mtype = 'error')
+				self.render()
+				return
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
+		if (interior and t == 'ext') or t == 'slide':
+			# new or changed node is a slide, check URL
+			if interior:
+				purl = MMAttrdefs.getattr(obj.node, 'file')
+			else:
+				purl = MMAttrdefs.getattr(obj.node.GetParent(),
+							  'file')
+			purl = obj.node.GetContext().findurl(purl)
+			url = cvslideurl(url, purl)
+			if not url:
+				# the error message has already been shown
+				self.render()
+				return
 		if interior:
 			horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
 			i = -1
@@ -730,7 +747,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusobj = None
 		prevfocusobj = None
 		rootobj = None
-		rw, rh = self.window.getcanvassize(windowinterface.UNIT_MM)
+		rw, rh = self.window.getcanvassize(SIZEUNIT)
 		self.canvassize = rw, rh
 		self.titleheight = float(TITLESIZE) / rh
 		self.chnameheight = float(CHNAMESIZE) / rh
@@ -766,13 +783,12 @@ class HierarchyView(HierarchyViewDialog):
 		self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
 
 	def recalc(self):
-		from windowinterface import UNIT_MM
 		window = self.window
 		self.cleanup()
 		if root_expanded:
 			expandnode(self.root) # root always expanded
 		width, height = sizeboxes(self.root)
-		cwidth, cheight = window.getcanvassize(UNIT_MM)
+		cwidth, cheight = window.getcanvassize(SIZEUNIT)
 		mwidth = mheight = 0 # until we have a way to get the min. size
 		if not hierarchy_minimum_sizes and \
 		   (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
@@ -781,7 +797,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.redraw()
 		else:
 			# this call causes a ResizeWindow event
-			window.setcanvassize((UNIT_MM, width, height))
+			window.setcanvassize((SIZEUNIT, width, height))
 
 	# Draw the window, assuming the object shapes are all right
 	def draw(self):
@@ -1325,18 +1341,26 @@ class SlideShow:
 		self.node = node
 		import realsupport
 		ctx = node.GetContext()
-		url = ctx.findurl(MMAttrdefs.getattr(node, 'file'))
-		self.url = url
-		utype, host, path, params, query, tag = urlparse.urlparse(url)
-		url = urlparse.urlunparse((utype, host, path, params, query, ''))
-		try:
-			fn, hdr = MMurl.urlretrieve(url)
-			fp = open(fn)
-			rp = realsupport.RPParser(fn)
-			rp.feed(fp.read())
-			rp.close()
-		except:
+		url = MMAttrdefs.getattr(node, 'file')
+		if not url:
+			name = MMAttrdefs.getattr(node, 'name') or '<unnamed>'
+			cname = node.GetChannelName()
+			windowinterface.showmessage('No URL specified for slideshow node %s on channel %s' % (name, cname), mtype = 'warning')
 			rp = DummyRP()
+		else:
+			url = ctx.findurl(url)
+			utype, host, path, params, query, tag = urlparse.urlparse(url)
+			url = urlparse.urlunparse((utype, host, path, params, query, ''))
+			try:
+				fn, hdr = MMurl.urlretrieve(url)
+				fp = open(fn)
+				rp = realsupport.RPParser(fn)
+				rp.feed(fp.read())
+				rp.close()
+			except:
+				windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+				rp = DummyRP()
+		self.url = url
 		self.rp = rp
 		attrdict = node.GetAttrDict()
 		attrdict['bitrate'] = rp.bitrate
@@ -1357,7 +1381,7 @@ class SlideShow:
 		if rp.url is not None:
 			attrdict['href'] = rp.url
 		self.editmgr = ctx.editmgr
-		ctx.editmgr.register(self)
+		ctx.editmgr.registerfirst(self) # *must* come first
 
 	def destroy(self):
 		del self.node
@@ -1375,6 +1399,7 @@ class SlideShow:
 
 	def update(self):
 		node = self.node
+		oldrp = self.rp
 		if node.GetType() != 'ext' or \
 		   node.GetChannelType() != 'RealPix':
 			# not a RealPix node anymore
@@ -1390,84 +1415,163 @@ class SlideShow:
 					pass
 				del node.tmpfile
 			return
-		if self.rp is None:
+		if oldrp is None:
 			return
 		ctx = node.GetContext()
-		url = ctx.findurl(MMAttrdefs.getattr(node, 'file'))
-		if url != self.url:
-			try:
-				fn, hdr = MMurl.urlretrieve(url)
-				fp = open(fn)
-				rp = realsupport.RPParser(fn)
-				rp.feed(fp.read())
-				rp.close()
-			except:
-				rp = DummyRP()
-			self.rp = rp
-			self.url = url
-			if hasattr(node, 'tmpfile'):
+		url = MMAttrdefs.getattr(node, 'file')
+		if not url:
+			# no URL specified, give warning and keep content
+			name = MMAttrdefs.getattr(node, 'name') or '<unnamed>'
+			cname = node.GetChannelName()
+			windowinterface.showmessage('No URL specified for slideshow node %s on channel %s' % (name, cname), mtype = 'warning')
+		else:
+			url = ctx.findurl(url)
+			utype, host, path, params, query, tag = urlparse.urlparse(url)
+			url = urlparse.urlunparse((utype, host, path, params, query, ''))
+			if url != self.url:
+				# different URL specified
 				try:
-					os.unlink(node.tmpfile)
-				except:
-					pass
-				del node.tmpfile
+					fn, hdr = MMurl.urlretrieve(url)
+				except IOError:
+					# new file does not exist
+					if self.url:
+						outype, ohost, opath, oparams, oquery, tag = urlparse.urlparse(self.url)
+						import posixpath
+						if (outype, ohost, oparams, oquery) != (utype, host, params, query) or posixpath.dirname(opath) != posixpath.dirname(path):
+							# different directory, new content
+							rp = DummyRP()
+						else:
+							# same directory, keep content
+							rp = self.rp
+					else:
+						# no original URL, keep content
+						rp = self.rp
+				else:
+					# new file exists, use it
+					import realsupport
+					fp = open(fn)
+					rp = realsupport.RPParser(fn)
+					try:
+						rp.feed(fp.read())
+						rp.close()
+					except:
+						windowinterface.showmessage('error while reading RealPix file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+						rp = DummyRP()
+				self.url = url
+				if rp is not self.rp and hasattr(node, 'tmpfile'):
+					# new content, delete temp file
+					windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+					try:
+						os.unlink(node.tmpfile)
+					except:
+						pass
+					del node.tmpfile
+				self.rp = rp
 		rp = self.rp
 		attrdict = node.GetAttrDict()
 		changed = 0
 		if attrdict['bitrate'] != rp.bitrate:
-			rp.bitrate = attrdict['bitrate']
+			if rp is oldrp:
+				rp.bitrate = attrdict['bitrate']
+			else:
+				attrdict['bitrate'] = rp.bitrate
 			changed = 1
 		if attrdict.get('size') != (rp.width, rp.height):
-			rp.width, rp.height = attrdict['size']
+			if rp is oldrp:
+				rp.width, rp.height = attrdict['size']
+			else:
+				attrdict['size'] = rp.width, rp.height
 			changed = 1
 		if attrdict['duration'] != rp.duration:
-			rp.duration = attrdict['duration']
+			if rp is oldrp:
+				rp.duration = attrdict['duration']
+			else:
+				attrdict['duration'] = rp.duration
 			changed = 1
 		aspect = attrdict.get('aspect', 1)
 		if (rp.aspect == 'true') != aspect:
-			rp.aspect = ['false','true'][aspect]
+			if rp is oldrp:
+				rp.aspect = ['false','true'][aspect]
+			else:
+				attrdict['aspect'] = rp.aspect == 'true'
 			changed = 1
 		if attrdict.get('author') != rp.author:
-			rp.author = attrdict.get('author')
+			if rp is oldrp:
+				rp.author = attrdict.get('author')
+			elif rp.author is not None:
+				attrdict['author'] = rp.author
+			else:
+				del attrdict['author']
 			changed = 1
 		if attrdict.get('copyright') != rp.copyright:
-			rp.copyright = attrdict.get('copyright')
+			if rp is oldrp:
+				rp.copyright = attrdict.get('copyright')
+			elif rp.copyright is not None:
+				attrdict['copyright'] = rp.copyright
+			else:
+				del attrdict['copyright']
 			changed = 1
 		if attrdict.get('title') != rp.title:
-			rp.title = attrdict.get('title')
+			if rp is oldrp:
+				rp.title = attrdict.get('title')
+			elif rp.title is not None:
+				attrdict['title'] = rp.title
+			else:
+				del attrdict['title']
 			changed = 1
 		if attrdict.get('href') != rp.url:
-			rp.url = attrdict.get('href')
+			if rp is oldrp:
+				rp.url = attrdict.get('href')
+			elif rp.url is not None:
+				attrdict['href'] = rp.url
+			else:
+				del attrdict['href']
 			changed = 1
 		if attrdict.get('maxfps') != rp.maxfps:
-			rp.maxfps = attrdict.get('maxfps')
+			if rp is oldrp:
+				rp.maxfps = attrdict.get('maxfps')
+			elif rp.maxfps is not None:
+				attrdict['maxfps'] = rp.maxfps
+			else:
+				del attrdict['maxfps']
 			changed = 1
 		if attrdict.get('preroll') != rp.preroll:
-			rp.preroll = attrdict.get('preroll')
+			if rp is oldrp:
+				rp.preroll = attrdict.get('preroll')
+			elif rp.preroll is not None:
+				attrdict['preroll'] = rp.preroll
+			else:
+				del attrdict['preroll']
 			changed = 1
 		if hasattr(node, 'expanded'):
-			i = 0
-			children = node.children
-			nchildren = len(children)
-			taglist = rp.tags
-			ntags = len(taglist)
-			rp.tags = []
-			nnodes = max(ntags, nchildren)
-			while i < nnodes:
-				if i < nchildren:
-					childattrs = children[i].attrdict
-					rp.tags.append(childattrs.copy())
-				else:
-					changed = 1
-					childattrs = None
-				if i < ntags:
-					attrs = taglist[i]
-				else:
-					changed = 1
-					attrs = None
-				if childattrs != attrs:
-					changed = 1
-				i = i + 1
+			if oldrp is rp:
+				i = 0
+				children = node.children
+				nchildren = len(children)
+				taglist = rp.tags
+				ntags = len(taglist)
+				rp.tags = []
+				nnodes = max(ntags, nchildren)
+				while i < nnodes:
+					if i < nchildren:
+						childattrs = children[i].attrdict
+						rp.tags.append(childattrs.copy())
+					else:
+						changed = 1
+						childattrs = None
+					if i < ntags:
+						attrs = taglist[i]
+					else:
+						changed = 1
+						attrs = None
+					if childattrs != attrs:
+						changed = 1
+					i = i + 1
+			else:
+				# re-create children
+				collapsenode(node)
+				expandnode(node)
+				changed = 1
 		if changed:
 			if not hasattr(node, 'tmpfile'):
 				url = MMAttrdefs.getattr(node, 'file')
@@ -1494,6 +1598,7 @@ class SlideShow:
 				node.tmpfile = file
 			import realsupport
 			realsupport.writeRP(node.tmpfile, rp)
+			MMAttrdefs.flushcache(node)
 
 	def kill(self):
 		pass
@@ -1552,3 +1657,28 @@ def writenodes(node, evallicense=0):
 		else:
 			# XXX complain
 			print 'cannot write file for node',node
+
+def cvslideurl(url, purl):
+	utype, host, path, params, query, tag = urlparse.urlparse(purl)
+	if (utype and utype != 'file') or (host and host != 'localhost'):
+		windowinterface.showmessage('Can only edit local RealPix files', mtype = 'warning')
+		return
+	sutype, shost, spath, sparams, squery, stag = urlparse.urlparse(url)
+	if (sutype and sutype != 'file') or (shost and shost != 'localhost'):
+		windowinterface.showmessage('Can only add local images to RealPix nodes', mtype = 'warning')
+		return
+	# both the RealPix URL and the slide URL are local files
+	import posixpath
+	if posixpath.isabs(spath):
+		if not posixpath.isabs(path):
+			# find absolute path of RealPix URL
+			path = urlparse.urlparse(MMurl.pathname2url(os.join(os.getcwd(), MMurl.url2pathname(path))))[2]
+		dir = posixpath.dirname(path)
+		if spath[:len(dir)] == dir:
+			# make relative
+			url = spath[len(dir)+1:]
+		else:
+			windowinterface.showmessage('Can only add slide images from the directory or a subdirectory of the RealPix file')
+			return
+	# nothing wrong with this URL that we can see
+	return url
