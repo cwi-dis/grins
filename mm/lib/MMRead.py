@@ -163,3 +163,8 @@ def _fixcontext(root):
 		root.DelAttr('layouts')
 	except NoSuchAttrError:
 		pass
+	try:
+		root.context.addusergroups(root.GetRawAttr('usergroups'))
+		root.DelAttr('usergroups')
+	except NoSuchAttrError:
+		pass

@@ -151,7 +151,7 @@ class SMIL:
 		__user_attributes: {CMIFns+' ' 'id':None,
 				    },
 		__u_group: {CMIFns+' ' 'id':None,
-			    CMIFns+' ' 'u_state':'RENDERED',
+			    CMIFns+' ' 'u-state':'RENDERED',
 			    CMIFns+' ' 'title':None,
 			    CMIFns+' ' 'override':'allowed',
 			    },

@@ -216,6 +216,9 @@ class _CommonWindow:
 		del self._wid
 		del self._accelerators
 		
+	def getrect(self):
+		return self._rect
+
 	def _set_movie_active(self, isactive):
 		if isactive == self._active_movie:
 			return

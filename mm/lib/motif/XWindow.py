@@ -393,6 +393,9 @@ class _Window(_AdornmentSupport):
 	def is_closed(self):
 		return self._parent is None
 
+	def getrect(self):
+		return self._rect
+
 	def showwindow(self, color = (255,0,0)):
 		self._showing = color
 		gc = self._gc

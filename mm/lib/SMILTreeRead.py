@@ -90,6 +90,10 @@ color = re.compile('(?:'
 			   ' *(?P<gp>[0-9]+) *% *,'
 			   ' *(?P<bp>[0-9]+) *% *)\))$')
 
+smil_node_attrs = [
+	'region', 'clip-begin', 'clip-end', 'endsync', 'bag-index',
+	]
+
 class SMILParser(SMIL, xmllib.XMLParser):
 	def __init__(self, context, printfunc = None):
 		self.elements = {
@@ -97,8 +101,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'head': (self.start_head, self.end_head),
 			'meta': (self.start_meta, self.end_meta),
 			'layout': (self.start_layout, self.end_layout),
-			CMIFns+' '+'user_attributes': (self.start_user_attributes, self.end_user_attributes),
-			CMIFns+' '+'u_group': (self.start_u_group, self.end_u_group),
+			CMIFns+' '+'user-attributes': (self.start_user_attributes, self.end_user_attributes),
+			CMIFns+' '+'u-group': (self.start_u_group, self.end_u_group),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
 			CMIFns+' '+'layouts': (self.start_layouts, self.end_layouts),
@@ -297,16 +301,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad system-overdub-or-caption attribute')
 			elif attr == 'system-required':
 				attrdict['system_required'] = val
-			elif attr == 'u_group':
+			elif attr == 'u-group':
 				if self.__u_groups.has_key(val):
 					attrdict['u_group'] = val
 				else:
-					self.syntax_error("unknown u_group `%s'" % val)
+					self.syntax_error("unknown u-group `%s'" % val)
 			elif attr == 'layout':
 				if self.__layouts.has_key(val):
 					attrdict['layout'] = val
 				else:
 					self.syntax_error("unknown layout `%s'" % val)
+			elif attr not in smil_node_attrs:
+				# catch all
+				attrdict[attr] = val
 
 	def NewNode(self, mediatype, attributes):
 		for key, val in attributes.items():
@@ -478,8 +485,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if w > 0 and h > 0 and \
 			   type(w) == type(h) == type(0) and \
 			   (x == y == 0 or type(x) == type(y) == type(0)):
-# fit="visible" not in REC
-## 			   and ch['fit'] != 'visible':
 				# size and position is given in pixels
 				pass
 			elif node.attrdict.has_key('file'):
@@ -503,14 +508,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						ch['minwidth'] = width
 					if ch['minheight'] < height:
 						ch['minheight'] = height
-# fit="visible" not in REC
-## 					if ch['fit'] == 'visible':
-## 						w = ch['width']
-## 						if type(w) is type(0) and w < width:
-## 							ch['width'] = width
-## 						h = ch['height']
-## 						if type(h) is type(0) and h < height:
-## 							ch['height'] = height
 		elif mediatype == 'text':
 			# want to make them at least visible...
 			if ch['width'] == 0:
@@ -665,7 +662,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del node.__region
 		except AttributeError:
 			region = '<unnamed>'
-		chattr = self.__regions.get(region, {})
+		attrdict = self.__regions.get(region, {})
 		if mediatype == 'audio':
 			mtype = 'sound'
 		elif mediatype == 'image':
@@ -687,11 +684,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mtype = mediatype
 			self.warning('unrecognized media type %s' % mtype)
 		ctx = self.__context
-		name = chattr.get('title')
+		name = attrdict.get('title')
 		if not name or \
 		   (ctx.channeldict.has_key(name) and
 		    ctx.channeldict[name]['type'] != mtype):
-			name = chattr.get('id')
+			name = attrdict.get('id')
 		if not name or \
 		   (ctx.channeldict.has_key(name) and
 		    ctx.channeldict[name]['type'] != mtype):
@@ -721,34 +718,36 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__in_layout = LAYOUT_SMIL
 					self.start_region({'id': region})
 					self.__in_layout = LAYOUT_NONE
-				attrdict = self.__regions[region]
+				# we're going to change this locally...
+				attrdict = self.__regions[region].copy()
+				del attrdict['id']
 				if self.__layout is None:
 					# create a layout channel
 					self.CreateLayout()
 				title = attrdict.get('title')
 				if title is not None:
 					ch['comment'] = title
+					del attrdict['title']
 				bg = attrdict['background-color']
+				del attrdict['background-color']
 				if bg == 'transparent':
 					ch['transparent'] = 1
 				else:
 					ch['transparent'] = -1
 					ch['bgcolor'] = bg
 				ch['z'] = attrdict['z-index']
-				x = attrdict['left']
-				y = attrdict['top']
-				w = attrdict['width']
-				h = attrdict['height']
-				fit = attrdict['fit']
+				del attrdict['z-index']
+				x = attrdict['left']; del attrdict['left']
+				y = attrdict['top']; del attrdict['top']
+				w = attrdict['width']; del attrdict['width']
+				h = attrdict['height']; del attrdict['height']
+				fit = attrdict['fit']; del attrdict['fit']
 				if fit == 'hidden':
 					ch['scale'] = 1
 				elif fit == 'meet':
 					ch['scale'] = 0
 				elif fit == 'slice':
 					ch['scale'] = -1
-# fit="visible" not in REC
-## 				elif fit == 'visible':
-## 					ch['scale'] = 1
 				ch['center'] = 0
 				# other fit options not implemented
 				if type(x) is type(0):
@@ -778,6 +777,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						h = float(h) / self.__height
 				ch['base_winoff'] = x, y, w, h
+			# keep all attributes that we didn't use
+			for attr, val in attrdict.items():
+				if attr not in ('minwidth', 'minheight',
+						'skip-content'):
+					ch[attr] = val
 		node.attrdict['channel'] = name
 
 	def FixLayouts(self):
@@ -980,21 +984,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_layout = LAYOUT_NONE
 
 	def start_region(self, attributes):
-		for key, val in attributes.items():
-			if key[:len(CMIFns)+1] == CMIFns + ' ':
-				del attributes[key]
-				attributes[key[len(CMIFns)+1:]] = val
-		id = attributes.get('id')
-		if id is not None:
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout
 			return
+
+		id = None
 		attrdict = {'left': 0,
 			    'top': 0,
 			    'z-index': 0,
@@ -1003,55 +1000,59 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			    'minwidth': 0,
 			    'minheight': 0,}
 
+		for attr, val in attributes.items():
+			if attr[:len(CMIFns)+1] == CMIFns + ' ':
+				attr = attr[len(CMIFns)+1:]
+			if attr == 'id':
+				attrdict[attr] = id = val
+				if self.__ids.has_key(id):
+					self.syntax_error('non-unique id %s' % id)
+				self.__ids[id] = 0
+				self.__regions[id] = attrdict
+			elif attr in ('left', 'top', 'width', 'height'):
+				try:
+					if val[-1] == '%':
+						val = string.atof(val[:-1]) / 100.0
+						if val < 0 or val > 1:
+							self.syntax_error('region with impossible size')
+							if val < 0: val = 0.0
+							else: val = 1.0
+					else:
+						if val[-2:] == 'px':
+							val = val[:-2]
+						val = string.atoi(val)
+						if val < 0:
+							self.syntax_error('region with impossible size')
+							val = 0
+				except (string.atoi_error, string.atof_error):
+					self.syntax_error('invalid region attribute value')
+					val = 0
+				attrdict[attr] = val
+			elif attr == 'z-index':
+				try:
+					val = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('invalid z-index value')
+					val = 0
+				if val < 0:
+					self.syntax_error('region with negative z-index')
+					val = 0
+				attrdict['z-index'] = val
+			elif attr == 'fit':
+				if val not in ('meet', 'slice', 'fill',
+					       'hidden', 'scroll'):
+					self.syntax_error('illegal fit attribute')
+				attrdict['fit'] = val
+			elif attr == 'background-color':
+				val = self.__convert_color(val)
+				if val is not None:
+					attrdict['background-color'] = val
+			else:
+				# catch all
+				attrdict[attr] = val
+
 		if id is None:
 			self.syntax_error('region without id attribute')
-			return
-		attrdict['id'] = id
-		self.__regions[id] = attrdict
-
-		for attr in ('left', 'top', 'width', 'height'):
-			val = attributes[attr]
-			try:
-				if val[-1] == '%':
-					val = string.atof(val[:-1]) / 100.0
-					if val < 0 or val > 1:
-						self.syntax_error('region with impossible size')
-						if val < 0: val = 0.0
-						else: val = 1.0
-				else:
-					if val[-2:] == 'px':
-						val = val[:-2]
-					val = string.atoi(val)
-					if val < 0:
-						self.syntax_error('region with impossible size')
-						val = 0
-			except (string.atoi_error, string.atof_error):
-				self.syntax_error('invalid region attribute value')
-				val = 0
-			attrdict[attr] = val
-
-		val = attributes['z-index']
-		try:
-			val = string.atoi(val)
-		except string.atoi_error:
-			self.syntax_error('invalid z-index value')
-			val = 0
-		if val < 0:
-			self.syntax_error('region with negative z-index')
-			val = 0
-		attrdict['z-index'] = val
-
-		val = attributes['fit']
-# fit="visible" not in REC
-		if val not in ['meet', 'slice', 'fill', 'hidden', 'scroll']:
-			self.syntax_error('illegal fit attribute')
-		attrdict['fit'] = val
-
-		val = self.__convert_color(attributes['background-color'])
-		if val is not None:
-			attrdict['background-color'] = val
-
-		attrdict['title'] = attributes.get('title')
 
 	def end_region(self):
 		pass
@@ -1107,7 +1108,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__ids[id] = 0
 
 	def end_user_attributes(self):
-		self.__context.addusergroups(self.__u_groups)
+		self.__context.addusergroups(self.__u_groups.items())
 
 	def start_u_group(self, attributes):
 		for key, val in attributes.items():
@@ -1120,9 +1121,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
 		title = attributes.get('title', '')
-		u_state = attributes['u_state']
+		u_state = attributes['u-state']
 		override = attributes['override']
-		self.__u_groups[id] = title, u_state, override
+		self.__u_groups[id] = title, u_state == 'RENDERED', override == 'allowed'
 
 	def end_u_group(self):
 		pass

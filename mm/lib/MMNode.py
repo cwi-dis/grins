@@ -264,8 +264,12 @@ class MMNodeContext:
 	#
 	# User group administration
 	#
-	def addusergroups(self, dict):
-		self.usergroups.update(dict)
+	def addusergroups(self, list):
+		for name, value in list:
+			title, rendered, allowed = value
+			rendered = ['NOT RENDERED', 'RENDERED'][rendered]
+			allowed = ['not allowed', 'allowed'][allowed]
+			self.usergroups[name] = title, rendered, allowed
 
 	def addusergroup(self, name, value):
 		if self.usergroups.has_key(name):
@@ -358,6 +362,9 @@ class MMChannel:
 
 	def keys(self):
 		return self.attrdict.keys()
+
+	def items(self):
+		return self.attrdict.items()
 
 	def get(self, key, default = None):
 		if self.attrdict.has_key(key):

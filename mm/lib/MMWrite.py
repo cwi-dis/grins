@@ -42,21 +42,26 @@ def fixroot(root):
 	root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
 	clist = []
 	for cname in root.context.channelnames:
-		clist.append(cname, root.context.channeldict[cname]._getdict())
+		clist.append((cname, root.context.channeldict[cname]._getdict()))
 	root.attrdict['channellist'] = clist
 	llist = []
 	for name, chans in root.context.layouts.items():
 		channels = []
 		for chan in chans:
-			channels.append(chan.name)
-		llist.append(name, channels)
+			channels.append((chan.name))
+		llist.append((name, channels))
 	root.attrdict['layouts'] = llist
+	ulist = []
+	for name, group in root.context.usergroups.items():
+		ulist.append((name, (group[0], group[1] == 'RENDERED', group[2] == 'allowed')))
+	root.attrdict['usergroups'] = ulist
 
 def unfixroot(root):
 ##	del root.attrdict['styledict']
 	del root.attrdict['hyperlinks']
 	del root.attrdict['channellist']
 	del root.attrdict['layouts']
+	del root.attrdict['usergroups']
 
 
 # Private functions to write nodes to a file.
