@@ -144,6 +144,8 @@ class _Event:
 		return self._dispatch(dev, val)
 
 	def _dispatch(self, dev, val):
+		if (dev, val) == (0, 0):
+			return None
 ##		print 'dispatch',
 ##		if _dev_map.has_key(dev):
 ##			print _dev_map[dev],
@@ -187,8 +189,10 @@ class _Event:
 			return self._curwin, KeyboardInput, chr(val)
 		elif dev in (DEVICE.LEFTMOUSE, DEVICE.MIDDLEMOUSE, DEVICE.RIGHTMOUSE):
 			self._savemouse = dev, val
+			return None
 		elif dev == DEVICE.MOUSEX:
 			self._savex = val
+			return None
 		elif dev == DEVICE.MOUSEY:
 			if not self._curwin or not self._savemouse:
 ##				print 'mouse event when not in known window'

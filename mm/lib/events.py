@@ -13,6 +13,7 @@ class _Events:
 		self._select_dict = {}
 		self._timenow = float(time.millitimer()) / 1000
 		self._timerid = 0
+		self._modal = 0
 		return self
 
 	def _checktime(self):
@@ -72,7 +73,9 @@ class _Events:
 		if not event:
 			raise error, 'internal error: event expected'
 		window, event, value = event
-		w = window
+		if self._modal:
+			if event != ResizeWindow:
+				return 0
 		if window and window.is_closed():
 			return 0
 		for w in [window, None]:
@@ -155,6 +158,12 @@ class _Events:
 			self._select_fdlist.append(fd)
 		self._select_dict[fd] = (cb, arg)
 
+	def startmodal(self):
+		self._modal = 1
+
+	def endmodal(self):
+		self._modal = 0
+
 	def mainloop(self):
 		while 1:
 			dummy = self.readevent()
@@ -193,6 +202,12 @@ def unregister(win, event):
 
 def select_setcallback(fd, cb, arg):
 	_event_instance.select_setcallback(fd, cb, arg)
+
+def startmodal():
+	_event_instance.startmodal()
+
+def endmodal():
+	_event_instance.endmodal()
 
 def mainloop():
 	_event_instance.mainloop()

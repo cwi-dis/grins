@@ -46,7 +46,7 @@ NOMSG = ' No '				# text of "No" answer of showquestion
 DEFBUTTON = '!'				# indicates this is default button
 DEFANSWER = '\r', '\n'			# keys that trigger default answer
 
-import windowinterface, EVENTS, string
+import windowinterface, events, EVENTS, string
 
 class Dialog:
 	def init(self, text):
@@ -205,9 +205,10 @@ class Dialog:
 
 	def eventloop(self):
 		windowinterface.startmonitormode()
+		events.startmodal()
 		self.events = []
 		while 1:
-			window, event, value = windowinterface.readevent()
+			window, event, value = events.readevent()
 			retval = self.checkevent(window, event, value)
 			if retval:
 				for (window, event, value) in self.events:
@@ -215,6 +216,7 @@ class Dialog:
 						  event, value)
 				self.events = []
 				windowinterface.endmonitormode()
+				events.endmodal()
 				return retval
 
 	def close(self):

@@ -39,11 +39,19 @@ def unregister(object):
 	del windowmap[`object.glwindow_wid`]
 
 
+callback_mode = 0
+
 def start_callback_mode():
+	global callback_mode
+	callback_mode = 1
+	fl.activate_all_forms()
 	fl.set_event_call_back(dispatch)
 
 def stop_callback_mode():
-	fl.set_event_call_back()
+	global callback_mode
+	callback_mode = 0
+	fl.deactivate_all_forms()
+	fl.set_event_call_back(None)
 
 # The base class for GL windows
 
@@ -167,7 +175,7 @@ def dispatch(dev, val):
 		GLLock.gl_lock.release()
 	# Use some undocumented internals of the windowinterface module.
 	windowinterface._event._doevent(dev, val)
-	while events.testevent():
+	while callback_mode and events.testevent():
 		window, event, value = events.readevent()
 ##		print 'dispatch now:', event #DBG
 ##		global highlight
@@ -208,6 +216,11 @@ def dispatch(dev, val):
 			window.redraw()
 ##		else:
 ##			report('REDRAW event for unregistered window')
+	elif dispmap.has_key(`dev`+':'+`val`):
+		callback, arg = dispmap[`dev`+':'+`val`]
+		callback(arg)
+	elif not callback_mode:
+		pass			# ignore event if not in callback mode
 	elif dev == KEYBD:
 		if focuswindow:
 			focuswindow.setwin()
@@ -270,9 +283,6 @@ def dispatch(dev, val):
 			focuswindow.rawkey(dev, val)
 ##		else:
 ##			report('raw key event with no focus window')
-	elif dispmap.has_key(`dev`+':'+`val`):
-		callback, arg = dispmap[`dev`+':'+`val`]
-		callback(arg)
 	else:
 		report('unrecognized event: ' + `dev, val`)
 
