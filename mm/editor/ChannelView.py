@@ -347,6 +347,7 @@ class ChannelView(ViewDialog, GLDialog):
 	# Recompute the locations where the objects should be drawn
 
 	def reshape(self):
+	        self.discontinuities = []
 		Timing.needtimes(self.viewroot)
 		for c in self.context.channels:
 			c.lowest = 0
@@ -843,6 +844,14 @@ class TimeScaleBox(GO):
 				  r, t-f_fontheight/2, \
 				  self.right, t+f_fontheight/2, \
 				  `i*10`)
+		for i in self.mother.discontinuities:
+		        t, b = self.mother.maptimes(i, i)
+			gl.RGBcolor(ANCHORCOLOR)
+			gl.bgnline()
+			gl.v2f(l-2, t)
+			gl.v2f(r+2, t)
+			gl.endline()
+			
 
 
 # Class for Channel Objects
@@ -1121,6 +1130,9 @@ class NodeBox(GO):
 		channel = self.node.GetChannel()
 		left, right = self.mother.mapchannel(channel)
 		top, bottom = self.mother.maptimes(self.node.t0, self.node.t1)
+		if self.node.timing_discont:
+		    self.mother.discontinuities.append(
+			self.node.t0+self.node.timing_discont)
 
 		# Move top/bottom inwards by one pixel
 		top = top+1
@@ -1131,7 +1143,11 @@ class NodeBox(GO):
 			top = channel.lowest
 
 		# Keep space for at least one line of text
-		bottom = max(bottom, top+f_fontheight-2)
+		# bottom = max(bottom, top+f_fontheight-2)
+		if top+f_fontheight-2 > bottom:
+		    bottom = top + f_fontheight-2
+		    self.mother.discontinuities.append(
+			(self.node.t0+self.node.t1)/2)
 
 		# Update channel's lowest node
 		channel.lowest = int(bottom)
