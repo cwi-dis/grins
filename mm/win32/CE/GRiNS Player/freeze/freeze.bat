@@ -120,6 +120,8 @@ echo -x voc >> FreezeOpts
 
 rem Other platform specific stuff
 echo -x ce >> FreezeOpts
+echo -x Carbon >> FreezeOpts
+echo -x RealDuration >> FreezeOpts
 echo -x Evt >> FreezeOpts
 echo -x MacOS >> FreezeOpts
 echo -x macostools >> FreezeOpts
@@ -134,6 +136,9 @@ echo -x X >> FreezeOpts
 echo -x Xm >> FreezeOpts
 echo -x Xrm >> FreezeOpts
 echo -x Xt >> FreezeOpts
+echo -x win32con >> FreezeOpts
+echo -x RealDuration >> FreezeOpts
+echo -x splash >> FreezeOpts
 
 rem Other to be checked
 echo -x FCNTL >> FreezeOpts
@@ -177,6 +182,10 @@ echo -x win32api >> FreezeOpts
 echo -x win32trace >> FreezeOpts
 echo -x win32ui >> FreezeOpts
 echo -x wmfapi >> FreezeOpts
+echo -x wingdi >> FreezeOpts
+echo -x winkernel >> FreezeOpts
+echo -x winmm >> FreezeOpts
+echo -x winuser >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
