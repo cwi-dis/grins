@@ -3,8 +3,8 @@
 // Used by Player.rc
 //
 #define IDI_PLAYER                      101
-#define IDI_CMIFDOC                     102
-#define IDI_SMILDOC                     103
+#define IDI_CMIFDOCCP                   102
+#define IDI_SMILDOCCP                   103
 
 // Next default values for new objects
 // 
