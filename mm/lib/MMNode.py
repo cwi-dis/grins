@@ -129,14 +129,21 @@ class MMNodeContext:
 		import Timing
 		if self.root:
 			Timing.needtimes(self.root)
+		# XXX Temp
+		for node in self.uidmap.values():
+			timeobj = node.GetTimesObject(which)
+			timeobj.t0 = node.t0
+			timeobj.t1 = node.t1
+			timeobj.t2 = node.t2
+			timeobj.downloadtime = 0
+			del node.t0
+			del node.t1
+			del node.t2
 		
 	def changedtimes(self):
-		import Timing
-		if not self.root:
-			uid = self.uidmap.keys()[0]
-			self.root = sekf.uidmap[uid].GetRoot()
-		if self.root:
-			Timing.changedtimes(self.root)
+		for node in self.uidmap.values():
+			node.ClearTimesObjects()
+			
 	#
 	# Channel administration
 	#
@@ -1116,7 +1123,16 @@ class MMNode_caption_body(MMNode_pseudopar_body):
 		if name == 'channel': name = 'captionchannel'
 		return self.parent.GetInherAttrDef(name, default)
 		
-
+class _TimingInfo:
+	def __init__(self):
+		self.t0 = 'error'
+		self.t1 = 'error'
+		self.t2 = 'error'
+		self.downloadtime = 0
+		
+	def GetTimes(self):
+		return self.t0, self.t1, self.t2, self.downloadtime
+	
 class MMNode:
 	# MMNode is the base class from which other Node classes are implemented.
 	# Each Node forms a doubly-linked n-tree - MMNode.children[] stores the
@@ -1166,6 +1182,7 @@ class MMNode:
 		self.views = {};	# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
 		self.collapsed = 0;	# Whether this node is collapsed in the structure view.
+		self.timing_info_dict = {}
 
 	#
 	# Return string representation of self
@@ -1641,16 +1658,24 @@ class MMNode:
 
 	# Timing interface
 	def GetTimes(self, which='virtual'):
-		# XXX For now
-		self.context.needtimes(which)
-		downloadtime = 0
+		if not self.timing_info_dict.has_key(which):
+			self.context.needtimes(which)
+		t0, t1, t2, downloadtime = self.timing_info_dict[which].GetTimes()
 		begindelay = 0.0
 		if self.attrdict.has_key('beginlist'):
 			arcs = self.attrdict['beginlist']
 			for arc in arcs:
 				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
-		return self.t0, self.t1, self.t2, downloadtime, begindelay
+		return t0, t1, t2, downloadtime, begindelay
+		
+	def GetTimesObject(self, which='virtual'):
+		if not self.timing_info_dict.has_key(which):
+			self.timing_info_dict[which] = _TimingInfo()
+		return self.timing_info_dict[which]
+		
+	def ClearTimesObjects(self):
+		self.timing_info_dict = {}
 	#
 	# Presentation values management
 	#
