@@ -46,10 +46,3 @@ class TOOLBAR_LINKING(_CommandBase):
 class TOOLBAR_CONTAINERS(_CommandBase):
 	help = 'Show the structure container toolbar'
 
-class ATTRIBUTES_ANCHORS(_CommandBase):
-	help = 'Create anchors'
-class ATTRIBUTES_BACKGROUND(_CommandBase):
-	help = 'Set background color'
-class ATTRIBUTES_ZORDER(_CommandBase):
-	help = 'Set z-order'
-
