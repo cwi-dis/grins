@@ -1371,7 +1371,7 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 		else:
 			wattrs['iconName'] = title
 			self._shell = toplevel._main.CreatePopupShell(Name,
-				Xt.AppllicationShell, wattrs)
+				Xt.ApplicationShell, wattrs)
 			self._form = self._shell.CreateManagedWidget(
 				'windowForm', Xm.Form, attrs)
 			if options.has_key('deleteCallback'):
