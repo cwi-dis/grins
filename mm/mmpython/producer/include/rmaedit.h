@@ -22,6 +22,7 @@
 struct	IRMAValues;
 struct	IRMAPacket;
 struct  IRMABuffer;
+struct IRMAProgressSink;
 
 /*
  * Forward declarations of some interfaces defined here-in.
@@ -556,6 +557,47 @@ DECLARE_INTERFACE_(IRMARMEdit, IUnknown)
 	 */	
 	STDMETHOD(Process) (THIS) PURE; 
 
+};
+
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMARMEdit3
+ *
+ *  Purpose:
+ *
+ *	Interface to G2 RMEditor module
+ *
+ *  {6D5DA0F0-ADBC-11d3-865F-5E9198000000}
+ *
+ */
+
+DEFINE_GUID(IID_IRMARMEdit3, 
+0x6d5da0f0, 0xadbc, 0x11d3, 0x86, 0x5f, 0x5e, 0x91, 0x98, 0x0, 0x0, 0x0);
+
+#define CLSID_IRMARMEdit3 IID_IRMARMEdit3
+
+#undef  INTERFACE
+#define INTERFACE   IRMARMEdit3
+
+DECLARE_INTERFACE_(IRMARMEdit3, IRMARMEdit)
+{
+	/************************************************************************
+     *	Method:
+     *	    IRMARMEdit3::AddSaveProgressSink
+     *	Purpose:
+     *		Add sink which receives callbacks with save progress
+	 */	
+    STDMETHOD(AddSaveProgressSink)(IRMAProgressSink* pProgressSink) PURE;
+    
+	/************************************************************************
+     *	Method:
+     *	    IRMARMEdit3::RemoveSaveProgressSink
+     *	Purpose:
+     *		Remove progress-during-save sink
+	 */	
+    STDMETHOD(RemoveSaveProgressSink)(IRMAProgressSink* pProgressSink) PURE;
 };
 
 #endif //_RMAEDIT_H_
