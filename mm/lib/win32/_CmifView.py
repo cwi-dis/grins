@@ -331,7 +331,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._parent._subwindows.remove(self)
 		self._parent = None
 		del self._topwindow
-		del self.arrowcache
 
 	# get the doc of this instance
 	def GetCmifDoc(self):
