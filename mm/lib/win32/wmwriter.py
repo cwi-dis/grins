@@ -43,6 +43,7 @@ class WMWriter:
 		self._filename = None
 		self._sample = None
 		self._lasttm = 0
+		self._tmstep = 100
 		self._writing = 0
 		if not wmfapi:
 			return
@@ -68,6 +69,7 @@ class WMWriter:
 
 	def endWriting(self):
 		if self._writer:
+			self._writer.WriteVideoSample(self._lasttm+self._tmstep, self._sample)
 			self._writer.Flush()
 			self._writer.EndWriting()
 			self._writing = 0
@@ -78,14 +80,14 @@ class WMWriter:
 	def update(self, now):
 		if not self._writer: return
 		now = int(1000.0*now+0.5)
-		now = 100*(now/100)
+		now = self._tmstep*(now/self._tmstep)
 		t = self._lasttm
 		while t < now:
 			try:
 				self._writer.WriteVideoSample(t, self._sample)
 			except wmfapi.error, arg:
 				print arg
-			t = t + 100
+			t = t + self._tmstep
 		self._sample = self._writer.AllocateDDSample(self._dds)
 		self._lasttm = t
 
