@@ -616,13 +616,17 @@ class ImageBoxWidget(Widgets.Widget):
 		image_filename = self._get_image_filename()
 		if image_filename != None:
 			try:
+				sx = sizes_notime.DROPAREASIZE
+				sy = sx
+				cx = x + w/2 # center 
+				cy = y + h/2
 				box = displist.display_image_from_file(
 					image_filename,
 					center = 1,
 					# The coordinates should all be floating point numbers.
 					# Wrong - now they are pixels -mjvdg.
 					#coordinates = (float(x+w)/12, float(y+h)/6, 5*(float(w)/6), 4*(float(h)/6)),
-					coordinates = (x, y, 32, 32),
+					coordinates = (cx - sx/2, cy - sy/2, sx, sy),
 					scale = -2
 					)
 #				print "TODO: fix those 32x32 hard-coded sizes."
