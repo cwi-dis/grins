@@ -75,6 +75,12 @@ class EditMgr(Clipboard.Clipboard):
 		self.playerstate = None, None
 		self.playerstate_busy = 0
 
+		# These variables are optimisations in the HierarchyView. When a node is changed
+		# here, the HierarchyView can decide whether to redraw itself.
+		# These are cascading variables - the higher variables override the lower variables.
+		self.structure_changed = 0 # Has the structure of the nodes changed?
+		self.attrs_changed = 0	# Or maybe only the structure of the nodes.
+		
 		self.clipboard_registry = []
 
 		# if the context is changed there are some special treatment to do during commit		
@@ -175,6 +181,13 @@ class EditMgr(Clipboard.Clipboard):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
 		import MMAttrdefs
 		# test if the root node has changed
+
+		if type==None:
+			if self.structure_changed:
+				type = 'STRUCTURE_CHANGED'
+			elif self.attrs_changed:
+				type = 'ATTRS_CHANGED'
+		
 		if not self.__newRoot:
 			# the root node hasn't changed (the document hasn't been reloaded)
 			# normal treatment
@@ -199,6 +212,8 @@ class EditMgr(Clipboard.Clipboard):
 		
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
+		self.structure_changed = 0
+		self.attrs_changed = 0
 		if self.save_focus != self.focus:
 			focustype, focusobject = self.focus
 			for client in self.focus_registry:
@@ -316,6 +331,7 @@ class EditMgr(Clipboard.Clipboard):
 	# Node operations
 	#
 	def delnode(self, node):
+		self.structure_changed = 1
 		parent = node.GetParent()
 		i = parent.GetChildren().index(node)
 		self.addstep('delnode', parent, i, node)
@@ -329,6 +345,7 @@ class EditMgr(Clipboard.Clipboard):
 			node.Destroy()
 
 	def addnode(self, parent, i, node):
+		self.structure_changed = 1
 		self.addstep('addnode', node)
 		node.AddToTree(parent, i)
 
@@ -339,6 +356,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def setnodetype(self, node, type):
+		self.attrs_changed = 1
 		oldtype = node.GetType()
 		self.addstep('setnodetype', node, oldtype)
 		node.SetType(type)
@@ -350,6 +368,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def setnodeattr(self, node, name, value):
+		self.attrs_changed = 1
 		oldvalue = node.GetRawAttrDef(name, None)
 		self.addstep('setnodeattr', node, name, oldvalue)
 		if value is not None:
@@ -380,6 +399,7 @@ class EditMgr(Clipboard.Clipboard):
 	# Sync arc operations
 	#
 	def addsyncarc(self, node, attr, arc, pos = -1):
+		self.attrs_changed = 1
 		list = node.GetRawAttrDef(attr, [])[:]
 		if arc in list:
 			return
@@ -397,6 +417,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def delsyncarc(self, node, attr, arc):
+		self.attrs_changed = 1
 		list = node.GetRawAttrDef(attr, [])[:]
 		for i in range(len(list)):
 			if list[i] == arc:
@@ -430,6 +451,7 @@ class EditMgr(Clipboard.Clipboard):
 		# The anchors (srcanchor, dstanchor) are tuples of (uid, aid)
 		# where uid is the unique node id
 		# and aid is the anchor id.
+		self.attrs_changed = 1
 		self.addstep('addlink', link)
 		self.context.hyperlinks.addlink(link)
 
@@ -440,6 +462,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def dellink(self, link):
+		self.attrs_changed = 1
 		self.addstep('dellink', link)
 		self.context.hyperlinks.dellink(link)
 
@@ -450,6 +473,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def addexternalanchor(self, url):
+		self.attrs_changed = 1
 		self.addstep('addexternalanchor', url)
 		# context.externalanchors is a list.
 		self.context.externalanchors.append(url)
@@ -461,6 +485,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def delexternalanchor(self, url):
+		self.attrs_changed = 1
 		self.addstep('delexternalanchor', url)
 		self.context.externalanchors.remove(url)
 
@@ -474,6 +499,7 @@ class EditMgr(Clipboard.Clipboard):
 	# Channel operations
 	#
 	def addchannel(self, name, i, type):
+		self.attrs_changed = 1
 		c = self.context.getchannel(name)
 		if c is not None:
 			raise MMExc.AssertError, \
@@ -488,6 +514,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def copychannel(self, name, i, orig):
+		self.attrs_changed = 1
 		c = self.context.getchannel(name)
 		if c is not None:
 			raise MMExc.AssertError, \
@@ -506,6 +533,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def movechannel(self, name, i):
+		self.attrs_changed = 1
 		old_i = self.context.channelnames.index(name)
 		self.addstep('movechannel', name, old_i)
 		self.context.movechannel(name, i)
@@ -517,6 +545,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def delchannel(self, name):
+		self.attrs_changed = 1
 		c = self.context.getchannel(name)
 		if c is None:
 			raise MMExc.AssertError, \
@@ -536,6 +565,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.context.delchannel(name)
 
 	def undo_delchannel(self, name, i, attrdict):
+		self.attrs_changed = 1
 		self.addchannel(name, i, attrdict['type'])
 		base_window = attrdict.get('base_window')
 		# IMPORTANT: base_window have to be created in first
@@ -550,6 +580,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def setchannelname(self, name, newname):
+		self.attrs_changed = 1
 		if newname == name:
 			return # No change
 		c = self.context.getchannel(name)
@@ -566,6 +597,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def setchannelattr(self, name, attrname, value):
+		self.attrs_changed = 1
 		c = self.context.getchannel(name)
 		if c is None:
 			raise MMExc.AssertError, \
@@ -722,6 +754,7 @@ class EditMgr(Clipboard.Clipboard):
 	# Transitions operations
 	#
 	def addtransition(self, name, value):
+		self.attrs_changed = 1
 		if self.context.transitions.has_key(name):
 			raise MMExc.AssertError, \
 			      'duplicate transition name in addtransition'
@@ -735,6 +768,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def deltransition(self, name):
+		self.attrs_changed = 1
 		transition = self.context.transitions.get(name)
 		if transition is None:
 			raise MMExc.AssertError, 'unknown transition in deltransition'
@@ -742,6 +776,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.context.deltransition(name)
 
 	def undo_deltransition(self, name, transition):
+		self.attrs_changed = 1
 		self.addtransition(name, transition)
 		for key, val in transition.items():
 			self.settransitionvalue(name, key, val)
@@ -750,6 +785,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def settransitionname(self, name, newname):
+		self.attrs_changed = 1
 		if newname == name:
 			return		# no change
 		if not self.context.transitions.has_key(name):
@@ -768,6 +804,7 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def settransitionvalue(self, name, key, value):
+		self.attrs_changed = 1
 		if not self.context.transitions.has_key(name):
 			raise MMExc.AssertError, \
 			      'unknown transition name in settransitionname'
