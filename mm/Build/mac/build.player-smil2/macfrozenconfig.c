@@ -122,6 +122,9 @@ extern void initbinascii();
 #ifndef init_socket
 extern void init_socket();
 #endif
+#ifndef initerrno
+extern void initerrno();
+#endif
 #ifndef initpcre
 extern void initpcre();
 #endif
@@ -225,6 +228,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"Drag", initDrag},
 	{"binascii", initbinascii},
 	{"_socket", init_socket},
+	{"errno", initerrno},
 	{"pcre", initpcre},
 	{"regex", initregex},
 	{"array", initarray},
