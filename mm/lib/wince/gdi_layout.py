@@ -85,6 +85,14 @@ class Region(base_window.Window):
 			return self.getwindowpos()
 		return self.rectAnd(self.getwindowpos(), self._parent.getclippedwindowpos())
 
+	def get_screen_windowpos(self):
+		x, y, w, h = self.getwindowpos()
+		oswnd = self._topwindow.getContext()
+		x = x + oswnd._xd_org
+		y = y + oswnd._yd_org
+		x, y = oswnd.ClientToScreen((x, y))
+		return x, y, w, h
+
 	# absolute paintable ltrb rectangle
 	def getClipDR(self, dc):
 		# dc box
@@ -370,6 +378,8 @@ class Viewport(Region):
 	def getContext(self):
 		return self._ctx
 
+	def EnableGAPI(self, flag):
+		self._ctx.EnableGAPI(flag)
 	# 
 	# Painting section
 	#
