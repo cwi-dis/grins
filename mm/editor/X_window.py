@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import X_windowbase
 from X_windowbase import TRUE, FALSE, SINGLE, UNIT_MM
 

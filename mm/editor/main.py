@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Main program for the CMIF editor.
 
 import sys
