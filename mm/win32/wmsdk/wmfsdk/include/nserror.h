@@ -1,6 +1,7 @@
 /*++
 
-Copyright (c) 1992  Microsoft Corporation
+  Microsoft Windows Media Technology
+  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
 
 Module Name:
 
@@ -27,7 +28,7 @@ Notes:
  LEGACY RANGES
 
      0  -  199 = General NetShow errors
-               
+
    200  -  399 = NetShow error events
 
    400  -  599 = NetShow monitor events
@@ -47,7 +48,7 @@ Notes:
 
   5000 -  5999 = Windows Media Server
 
-  6000 -  6999 = Windows Media Networking (defined in NETERROR.MC)
+  6000 -  6999 = Windows Media HTTP/RTSP result codes (defined in NETERROR.MC)
 
   7000 -  7999 = Windows Media Tools
 
@@ -56,6 +57,10 @@ Notes:
   9000 -  9999 = Windows Media Real Time Collaboration
 
  10000 - 10999 = Windows Media Digital Rights Management
+
+ 11000 - 11999 = Windows Media Setup
+
+ 12000 - 12999 = Windows Media Networking
 
 **************************** READ ME ******************************************
 
@@ -180,7 +185,7 @@ Notes:
 //
 // MessageText:
 //
-//  There is no connection established with the NetShow server. The operation failed.%0
+//  There is no connection established with the Windows Media server. The operation failed.%0
 //
 #define NS_E_NOCONNECTION                0xC00D0005L
 
@@ -306,7 +311,7 @@ Notes:
 //
 // MessageText:
 //
-//  There was no timely response from server.%0
+//  The server, a computer setup to offer multimedia content to other computers, is too busy to handle your request for multimedia content.  Please try again later.%0
 //
 #define NS_E_TIMEOUT                     0xC00D0013L
 
@@ -1166,7 +1171,7 @@ Notes:
 //
 // MessageText:
 //
-//  The logging operation failed. 
+//  The logging operation failed.
 //
 #define NS_I_LOGGING_FAILED              0x400D006EL
 
@@ -1188,6 +1193,24 @@ Notes:
 //
 #define NS_I_LIMIT_BANDWIDTH             0x400D0070L
 
+//
+// MessageId: NS_E_NO_DEVICE
+//
+// MessageText:
+//
+//  No device driver is present on the system.%0
+//
+#define NS_E_NO_DEVICE                   0xC00D0071L
+
+//
+// MessageId: NS_E_NO_SPECIFIED_DEVICE
+//
+// MessageText:
+//
+//  No specified device driver is present.%0
+//
+#define NS_E_NO_SPECIFIED_DEVICE         0xC00D0072L
+
 
 // NOTENOTE!!!
 //
@@ -1207,7 +1230,7 @@ Notes:
 //
 // MessageText:
 //
-//  NS_E_NO_MULTICAST
+//  Not receiving data from the server.%0
 //
 #define NS_E_NO_MULTICAST                0xC00D07F2L
 
@@ -1385,17 +1408,17 @@ Notes:
 // Alerts:
 //
 // Title Server:
-//	 %1 is the Title Server name
+//      %1 is the Title Server name
 //
 // Content Server:
-//	 %1 is the Content Server ID
-//	 %2 is the Content Server name
-//	 %3 is the Peer Content Server name (optional)
+//      %1 is the Content Server ID
+//      %2 is the Content Server name
+//      %3 is the Peer Content Server name (optional)
 //
 // Disks:
-//	 %1 is the Title Server disk ID
-//	 %2 is the device name
-//	 %3 is the Content Server ID
+//      %1 is the Title Server disk ID
+//      %2 is the device name
+//      %3 is the Content Server ID
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -1518,7 +1541,7 @@ Notes:
 
 /////////////////////////////////////////////////////////////////////////
 //
-// Windows Media Audio SDK Errors
+// Windows Media SDK Errors
 //
 // IdRange = 3000-3199
 //
@@ -1529,7 +1552,7 @@ Notes:
 //
 // MessageText:
 //
-//  The input audio format must be a valid, PCM audio format.%0
+//  The input media format is invalid.%0
 //
 #define NS_E_INVALID_INPUT_FORMAT        0xC00D0BB8L
 
@@ -1556,7 +1579,7 @@ Notes:
 //
 // MessageText:
 //
-//  The MSAudio codec does not support the specified output format.%0
+//  The output media format is invalid.%0
 //
 #define NS_E_INVALID_OUTPUT_FORMAT       0xC00D0BBBL
 
@@ -1574,7 +1597,7 @@ Notes:
 //
 // MessageText:
 //
-//  The content is protected and cannot be opened at this time.%0
+//  You need a license to perform the requested operation on this media file.%0
 //
 #define NS_E_PROTECTED_CONTENT           0xC00D0BBDL
 
@@ -1583,7 +1606,7 @@ Notes:
 //
 // MessageText:
 //
-//  A playback license is required to open this content.%0
+//  You need a license to perform the requested operation on this media file.%0
 //
 #define NS_E_LICENSE_REQUIRED            0xC00D0BBEL
 
@@ -1592,7 +1615,7 @@ Notes:
 //
 // MessageText:
 //
-//  This content has been tampered with and cannot be opened.%0
+//  This media file is corrupted or invalid. Contact the content provider for a new file.%0
 //
 #define NS_E_TAMPERED_CONTENT            0xC00D0BBFL
 
@@ -1601,7 +1624,7 @@ Notes:
 //
 // MessageText:
 //
-//  The license is to open this content has expired.%0
+//  The license for this media file has expired. Get a new license or contact the content provider for further assistance.%0
 //
 #define NS_E_LICENSE_OUTOFDATE           0xC00D0BC0L
 
@@ -1610,7 +1633,7 @@ Notes:
 //
 // MessageText:
 //
-//  The requested rights prevent the content from being opened.%0
+//  You are not allowed to open this file. Contact the content provider for further assistance.%0
 //
 #define NS_E_LICENSE_INCORRECT_RIGHTS    0xC00D0BC1L
 
@@ -1685,6 +1708,1639 @@ Notes:
 //  The requested operation has caused the source to degrade codec quality.%0
 //
 #define NS_S_DEGRADING_QUALITY           0x000D0BC9L
+
+//
+// MessageId: NS_E_OFFLINE_MODE
+//
+// MessageText:
+//
+//  The requested URL is not available in offline mode.%0
+//
+#define NS_E_OFFLINE_MODE                0xC00D0BCAL
+
+//
+// MessageId: NS_E_NOT_CONNECTED
+//
+// MessageText:
+//
+//  The requested URL cannot be accessed because there is no network connection.%0
+//
+#define NS_E_NOT_CONNECTED               0xC00D0BCBL
+
+//
+// MessageId: NS_E_TOO_MUCH_DATA
+//
+// MessageText:
+//
+//  The encoding process was unable to keep up with the amount of supplied data.%0
+//
+#define NS_E_TOO_MUCH_DATA               0xC00D0BCCL
+
+
+
+/////////////////////////////////////////////////////////////////////////
+//
+// Windows Media Player Errors
+//
+// IdRange = 4000 - 4999
+//
+/////////////////////////////////////////////////////////////////////////
+
+//
+// WMP CD Filter Error codes
+//
+//
+// MessageId: NS_E_NO_CD
+//
+// MessageText:
+//
+//  There is no compact disc in the drive.%0
+//
+#define NS_E_NO_CD                       0xC00D0FA0L
+
+//
+// MessageId: NS_E_CANT_READ_DIGITAL
+//
+// MessageText:
+//
+//  Unable to perform digital reads on this compact disc drive.  Please try analog playback via the Tools Options menu.%0
+//
+#define NS_E_CANT_READ_DIGITAL           0xC00D0FA1L
+
+//
+// MessageId: NS_E_DEVICE_DISCONNECTED
+//
+// MessageText:
+//
+//  The portable device appears to have been disconnected.%0
+//
+#define NS_E_DEVICE_DISCONNECTED         0xC00D0FA2L
+
+//
+// MessageId: NS_E_DEVICE_NOT_SUPPORT_FORMAT
+//
+// MessageText:
+//
+//  Your Music Player does not support this song's format.%0
+//
+#define NS_E_DEVICE_NOT_SUPPORT_FORMAT   0xC00D0FA3L
+
+//
+// MessageId: NS_E_SLOW_READ_DIGITAL
+//
+// MessageText:
+//
+//  Digital reads on this compact disc drive are too slow.  Please try analog playback via the Tools Options menu.%0
+//
+#define NS_E_SLOW_READ_DIGITAL           0xC00D0FA4L
+
+//
+// MessageId: NS_E_MIXER_INVALID_LINE
+//
+// MessageText:
+//
+//  An invalid line error occurred in the mixer.%0
+//
+#define NS_E_MIXER_INVALID_LINE          0xC00D0FA5L
+
+//
+// MessageId: NS_E_MIXER_INVALID_CONTROL
+//
+// MessageText:
+//
+//  An invalid control error occurred in the mixer.%0
+//
+#define NS_E_MIXER_INVALID_CONTROL       0xC00D0FA6L
+
+//
+// MessageId: NS_E_MIXER_INVALID_VALUE
+//
+// MessageText:
+//
+//  An invalid value error occurred in the mixer.%0
+//
+#define NS_E_MIXER_INVALID_VALUE         0xC00D0FA7L
+
+//
+// MessageId: NS_E_MIXER_UNKNOWN_MMRESULT
+//
+// MessageText:
+//
+//  An unrecognized MMRESULT occurred in the mixer.%0
+//
+#define NS_E_MIXER_UNKNOWN_MMRESULT      0xC00D0FA8L
+
+//
+// WMP IWMPXMLParser Error codes
+//
+//
+// MessageId: NS_E_WMPXML_NOERROR
+//
+// MessageText:
+//
+//  A call was made to GetParseError on the XML parser but there was no error to retrieve.%0
+//
+#define NS_E_WMPXML_NOERROR              0xC00D0FB4L
+
+//
+// MessageId: NS_E_WMPXML_ENDOFDATA
+//
+// MessageText:
+//
+//  The XML Parser ran out of data while parsing.%0
+//
+#define NS_E_WMPXML_ENDOFDATA            0xC00D0FB5L
+
+//
+// MessageId: NS_E_WMPXML_PARSEERROR
+//
+// MessageText:
+//
+//  A generic parse error occurred in the XML parser but no information is available.%0
+//
+#define NS_E_WMPXML_PARSEERROR           0xC00D0FB6L
+
+//
+// MessageId: NS_E_WMPXML_ATTRIBUTENOTFOUND
+//
+// MessageText:
+//
+//  A call get GetNamedAttribute or GetNamedAttributeIndex on the XML parser resulted in the index not being found.%0
+//
+#define NS_E_WMPXML_ATTRIBUTENOTFOUND    0xC00D0FB7L
+
+//
+// MessageId: NS_E_WMPXML_PINOTFOUND
+//
+// MessageText:
+//
+//  A call was made go GetNamedPI on the XML parser, but the requested Processing Instruction was not found.%0
+//
+#define NS_E_WMPXML_PINOTFOUND           0xC00D0FB8L
+
+//
+// MessageId: NS_E_WMPXML_EMPTYDOC
+//
+// MessageText:
+//
+//  Persist was called on the XML parser, but the parser has no data to persist.%0
+//
+#define NS_E_WMPXML_EMPTYDOC             0xC00D0FB9L
+
+//
+// Miscellaneous Media Player Error codes
+//
+//
+// MessageId: NS_E_WMP_WINDOWSAPIFAILURE
+//
+// MessageText:
+//
+//  A Windows API call failed but no error information was available.%0
+//
+#define NS_E_WMP_WINDOWSAPIFAILURE       0xC00D0FC8L
+
+//
+// MessageId: NS_E_WMP_RECORDING_NOT_ALLOWED
+//
+// MessageText:
+//
+//  Copying of this media item is not allowed.%0
+//
+#define NS_E_WMP_RECORDING_NOT_ALLOWED   0xC00D0FC9L
+
+//
+// MessageId: NS_E_DEVICE_NOT_READY
+//
+// MessageText:
+//
+//  The device is not ready, please check the drive and try again.%0
+//
+#define NS_E_DEVICE_NOT_READY            0xC00D0FCAL
+
+//
+// Generic Media PlayerUI error codes
+//
+//
+// MessageId: NS_E_WMP_UI_SUBCONTROLSNOTSUPPORTED
+//
+// MessageText:
+//
+//  The control (%s) does not support creation of sub-controls, yet (%d) sub-controls have been specified.%0
+//
+#define NS_E_WMP_UI_SUBCONTROLSNOTSUPPORTED 0xC00D0FDEL
+
+//
+// MessageId: NS_E_WMP_UI_VERSIONMISMATCH
+//
+// MessageText:
+//
+//  Version mismatch: (%.1f required, %.1f found).%0
+//
+#define NS_E_WMP_UI_VERSIONMISMATCH      0xC00D0FDFL
+
+//
+// MessageId: NS_E_WMP_UI_NOTATHEMEFILE
+//
+// MessageText:
+//
+//  The layout manager was given valid XML that wasn't a theme file.%0
+//
+#define NS_E_WMP_UI_NOTATHEMEFILE        0xC00D0FE0L
+
+//
+// MessageId: NS_E_WMP_UI_SUBELEMENTNOTFOUND
+//
+// MessageText:
+//
+//  The %s subelement could not be found on the %s object.%0
+//
+#define NS_E_WMP_UI_SUBELEMENTNOTFOUND   0xC00D0FE1L
+
+//
+// MessageId: NS_E_WMP_UI_VERSIONPARSE
+//
+// MessageText:
+//
+//  An error occurred parsing the version tag.\nValid version tags are of the form:\n\n\t<?wmp version='1.0'?>.%0
+//
+#define NS_E_WMP_UI_VERSIONPARSE         0xC00D0FE2L
+
+//
+// MessageId: NS_E_WMP_UI_VIEWIDNOTFOUND
+//
+// MessageText:
+//
+//  The view specified in for the 'currentViewID' property (%s) was not found in this theme file.%0
+//
+#define NS_E_WMP_UI_VIEWIDNOTFOUND       0xC00D0FE3L
+
+//
+// MessageId: NS_E_WMP_UI_PASSTHROUGH
+//
+// MessageText:
+//
+//  This error used internally for hit testing.%0
+//
+#define NS_E_WMP_UI_PASSTHROUGH          0xC00D0FE4L
+
+//
+// MessageId: NS_E_WMP_UI_OBJECTNOTFOUND
+//
+// MessageText:
+//
+//  Attributes were specified for the %s object, but the object was not available to send them to.%0
+//
+#define NS_E_WMP_UI_OBJECTNOTFOUND       0xC00D0FE5L
+
+//
+// MessageId: NS_E_WMP_UI_SECONDHANDLER
+//
+// MessageText:
+//
+//  The %s event already has a handler, the second handler was ignored.%0
+//
+#define NS_E_WMP_UI_SECONDHANDLER        0xC00D0FE6L
+
+//
+// MessageId: NS_E_WMP_UI_NOSKININZIP
+//
+// MessageText:
+//
+//  No .wms file found in skin archive.%0
+//
+#define NS_E_WMP_UI_NOSKININZIP          0xC00D0FE7L
+
+//
+// MessageId: NS_S_WMP_UI_VERSIONMISMATCH
+//
+// MessageText:
+//
+//  An upgrade may be needed for the theme manager to correctly show this skin. Skin reports version: %.1f.%0
+//
+#define NS_S_WMP_UI_VERSIONMISMATCH      0x000D0FE8L
+
+//
+// MessageId: NS_S_WMP_EXCEPTION
+//
+// MessageText:
+//
+//  An error occurred in one of the UI components.%0
+//
+#define NS_S_WMP_EXCEPTION               0x000D0FE9L
+
+//
+// WMP Regional button control
+//
+//
+// MessageId: NS_E_WMP_RBC_JPGMAPPINGIMAGE
+//
+// MessageText:
+//
+//  JPG Images are not recommended for use as a mappingImage.%0
+//
+#define NS_E_WMP_RBC_JPGMAPPINGIMAGE     0xC00D1004L
+
+//
+// MessageId: NS_E_WMP_JPGTRANSPARENCY
+//
+// MessageText:
+//
+//  JPG Images are not recommended when using a transparencyColor.%0
+//
+#define NS_E_WMP_JPGTRANSPARENCY         0xC00D1005L
+
+//
+// WMP CustomSlider control
+//
+//
+// MessageId: NS_E_WMP_CS_JPGPOSITIONIMAGE
+//
+// MessageText:
+//
+//  JPG Images are not recommended for use as a positionImage.%0
+//
+#define NS_E_WMP_CS_JPGPOSITIONIMAGE     0xC00D100EL
+
+//
+// MessageId: NS_E_WMP_CS_NOTEVENLYDIVISIBLE
+//
+// MessageText:
+//
+//  The (%s) image's size is not evenly divisible by the positionImage's size.%0
+//
+#define NS_E_WMP_CS_NOTEVENLYDIVISIBLE   0xC00D100FL
+
+//
+// WMP ZIP Decoder
+//
+//
+// MessageId: NS_E_WMPZIP_NOTAZIPFILE
+//
+// MessageText:
+//
+//  The ZIP reader opened a file and its signature didn't match that of ZIP files.%0
+//
+#define NS_E_WMPZIP_NOTAZIPFILE          0xC00D1018L
+
+//
+// MessageId: NS_E_WMPZIP_CORRUPT
+//
+// MessageText:
+//
+//  The ZIP reader has detected that the file is corrupt.%0
+//
+#define NS_E_WMPZIP_CORRUPT              0xC00D1019L
+
+//
+// MessageId: NS_E_WMPZIP_FILENOTFOUND
+//
+// MessageText:
+//
+//  GetFileStream, SaveToFile, or SaveTemp file was called on the ZIP reader with a filename that was not found in the zip file.%0
+//
+#define NS_E_WMPZIP_FILENOTFOUND         0xC00D101AL
+
+//
+// WMP Image Decoding Error codes
+//
+//
+// MessageId: NS_E_WMP_IMAGE_FILETYPE_UNSUPPORTED
+//
+// MessageText:
+//
+//  Image type not supported.%0
+//
+#define NS_E_WMP_IMAGE_FILETYPE_UNSUPPORTED 0xC00D1022L
+
+//
+// MessageId: NS_E_WMP_IMAGE_INVALID_FORMAT
+//
+// MessageText:
+//
+//  Image file may be corrupt.%0
+//
+#define NS_E_WMP_IMAGE_INVALID_FORMAT    0xC00D1023L
+
+//
+// MessageId: NS_E_WMP_GIF_UNEXPECTED_ENDOFFILE
+//
+// MessageText:
+//
+//  Unexpected end of file. GIF file may be corrupt.%0
+//
+#define NS_E_WMP_GIF_UNEXPECTED_ENDOFFILE 0xC00D1024L
+
+//
+// MessageId: NS_E_WMP_GIF_INVALID_FORMAT
+//
+// MessageText:
+//
+//  Invalid GIF file.%0
+//
+#define NS_E_WMP_GIF_INVALID_FORMAT      0xC00D1025L
+
+//
+// MessageId: NS_E_WMP_GIF_BAD_VERSION_NUMBER
+//
+// MessageText:
+//
+//  Invalid GIF version. Only 87a or 89a supported.%0
+//
+#define NS_E_WMP_GIF_BAD_VERSION_NUMBER  0xC00D1026L
+
+//
+// MessageId: NS_E_WMP_GIF_NO_IMAGE_IN_FILE
+//
+// MessageText:
+//
+//  No images found in GIF file.%0
+//
+#define NS_E_WMP_GIF_NO_IMAGE_IN_FILE    0xC00D1027L
+
+//
+// MessageId: NS_E_WMP_PNG_INVALIDFORMAT
+//
+// MessageText:
+//
+//  Invalid PNG image file format.%0
+//
+#define NS_E_WMP_PNG_INVALIDFORMAT       0xC00D1028L
+
+//
+// MessageId: NS_E_WMP_PNG_UNSUPPORTED_BITDEPTH
+//
+// MessageText:
+//
+//  PNG bitdepth not supported.%0
+//
+#define NS_E_WMP_PNG_UNSUPPORTED_BITDEPTH 0xC00D1029L
+
+//
+// MessageId: NS_E_WMP_PNG_UNSUPPORTED_COMPRESSION
+//
+// MessageText:
+//
+//  Compression format defined in PNG file not supported,%0
+//
+#define NS_E_WMP_PNG_UNSUPPORTED_COMPRESSION 0xC00D102AL
+
+//
+// MessageId: NS_E_WMP_PNG_UNSUPPORTED_FILTER
+//
+// MessageText:
+//
+//  Filter method defined in PNG file not supported.%0
+//
+#define NS_E_WMP_PNG_UNSUPPORTED_FILTER  0xC00D102BL
+
+//
+// MessageId: NS_E_WMP_PNG_UNSUPPORTED_INTERLACE
+//
+// MessageText:
+//
+//  Interlace method defined in PNG file not supported.%0
+//
+#define NS_E_WMP_PNG_UNSUPPORTED_INTERLACE 0xC00D102CL
+
+//
+// MessageId: NS_E_WMP_PNG_UNSUPPORTED_BAD_CRC
+//
+// MessageText:
+//
+//  Bad CRC in PNG file.%0
+//
+#define NS_E_WMP_PNG_UNSUPPORTED_BAD_CRC 0xC00D102DL
+
+//
+// MessageId: NS_E_WMP_BMP_INVALID_BITMASK
+//
+// MessageText:
+//
+//  Invalid bitmask in BMP file.%0
+//
+#define NS_E_WMP_BMP_INVALID_BITMASK     0xC00D102EL
+
+//
+// MessageId: NS_E_WMP_BMP_TOPDOWN_DIB_UNSUPPORTED
+//
+// MessageText:
+//
+//  Topdown DIB not supported.%0
+//
+#define NS_E_WMP_BMP_TOPDOWN_DIB_UNSUPPORTED 0xC00D102FL
+
+//
+// MessageId: NS_E_WMP_BMP_BITMAP_NOT_CREATED
+//
+// MessageText:
+//
+//  Bitmap could not be created.%0
+//
+#define NS_E_WMP_BMP_BITMAP_NOT_CREATED  0xC00D1030L
+
+//
+// MessageId: NS_E_WMP_BMP_COMPRESSION_UNSUPPORTED
+//
+// MessageText:
+//
+//  Compression format defined in BMP not supported.%0
+//
+#define NS_E_WMP_BMP_COMPRESSION_UNSUPPORTED 0xC00D1031L
+
+//
+// MessageId: NS_E_WMP_BMP_INVALID_FORMAT
+//
+// MessageText:
+//
+//  Invalid Bitmap format.%0
+//
+#define NS_E_WMP_BMP_INVALID_FORMAT      0xC00D1032L
+
+//
+// MessageId: NS_E_WMP_JPG_JERR_ARITHCODING_NOTIMPL
+//
+// MessageText:
+//
+//  JPEG Arithmetic coding not supported.%0
+//
+#define NS_E_WMP_JPG_JERR_ARITHCODING_NOTIMPL 0xC00D1033L
+
+//
+// MessageId: NS_E_WMP_JPG_INVALID_FORMAT
+//
+// MessageText:
+//
+//  Invalid JPEG format.%0
+//
+#define NS_E_WMP_JPG_INVALID_FORMAT      0xC00D1034L
+
+//
+// MessageId: NS_E_WMP_JPG_BAD_DCTSIZE
+//
+// MessageText:
+//
+//  Invalid JPEG format.%0
+//
+#define NS_E_WMP_JPG_BAD_DCTSIZE         0xC00D1035L
+
+//
+// MessageId: NS_E_WMP_JPG_BAD_VERSION_NUMBER
+//
+// MessageText:
+//
+//  Internal version error. Unexpected JPEG library version.%0
+//
+#define NS_E_WMP_JPG_BAD_VERSION_NUMBER  0xC00D1036L
+
+//
+// MessageId: NS_E_WMP_JPG_BAD_PRECISION
+//
+// MessageText:
+//
+//  Internal JPEG Library error. Unsupported JPEG data precision.%0
+//
+#define NS_E_WMP_JPG_BAD_PRECISION       0xC00D1037L
+
+//
+// MessageId: NS_E_WMP_JPG_CCIR601_NOTIMPL
+//
+// MessageText:
+//
+//  JPEG CCIR601 not supported.%0
+//
+#define NS_E_WMP_JPG_CCIR601_NOTIMPL     0xC00D1038L
+
+//
+// MessageId: NS_E_WMP_JPG_NO_IMAGE_IN_FILE
+//
+// MessageText:
+//
+//  No image found in JPEG file.%0
+//
+#define NS_E_WMP_JPG_NO_IMAGE_IN_FILE    0xC00D1039L
+
+//
+// MessageId: NS_E_WMP_JPG_READ_ERROR
+//
+// MessageText:
+//
+//  Could not read JPEG file.%0
+//
+#define NS_E_WMP_JPG_READ_ERROR          0xC00D103AL
+
+//
+// MessageId: NS_E_WMP_JPG_FRACT_SAMPLE_NOTIMPL
+//
+// MessageText:
+//
+//  JPEG Fractional sampling not supported.%0
+//
+#define NS_E_WMP_JPG_FRACT_SAMPLE_NOTIMPL 0xC00D103BL
+
+//
+// MessageId: NS_E_WMP_JPG_IMAGE_TOO_BIG
+//
+// MessageText:
+//
+//  JPEG image too large. Maximum image size supported is 65500 X 65500.%0
+//
+#define NS_E_WMP_JPG_IMAGE_TOO_BIG       0xC00D103CL
+
+//
+// MessageId: NS_E_WMP_JPG_UNEXPECTED_ENDOFFILE
+//
+// MessageText:
+//
+//  Unexpected end of file reached in JPEG file.%0
+//
+#define NS_E_WMP_JPG_UNEXPECTED_ENDOFFILE 0xC00D103DL
+
+//
+// MessageId: NS_E_WMP_JPG_SOF_UNSUPPORTED
+//
+// MessageText:
+//
+//  Unsupported JPEG SOF marker found.%0
+//
+#define NS_E_WMP_JPG_SOF_UNSUPPORTED     0xC00D103EL
+
+//
+// MessageId: NS_E_WMP_JPG_UNKNOWN_MARKER
+//
+// MessageText:
+//
+//  Unknown JPEG marker found.%0
+//
+#define NS_E_WMP_JPG_UNKNOWN_MARKER      0xC00D103FL
+
+//
+// MessageId: NS_S_WMP_LOADED_GIF_IMAGE
+//
+// MessageText:
+//
+//  Successfully loaded a GIF file.%0
+//
+#define NS_S_WMP_LOADED_GIF_IMAGE        0x000D1040L
+
+//
+// MessageId: NS_S_WMP_LOADED_PNG_IMAGE
+//
+// MessageText:
+//
+//  Successfully loaded a PNG file.%0
+//
+#define NS_S_WMP_LOADED_PNG_IMAGE        0x000D1041L
+
+//
+// MessageId: NS_S_WMP_LOADED_BMP_IMAGE
+//
+// MessageText:
+//
+//  Successfully loaded a BMP file.%0
+//
+#define NS_S_WMP_LOADED_BMP_IMAGE        0x000D1042L
+
+//
+// MessageId: NS_S_WMP_LOADED_JPG_IMAGE
+//
+// MessageText:
+//
+//  Successfully loaded a JPG file.%0
+//
+#define NS_S_WMP_LOADED_JPG_IMAGE        0x000D1043L
+
+//
+// WMP WM Runtime Error codes
+//
+//
+// MessageId: NS_E_WMG_INVALIDSTATE
+//
+// MessageText:
+//
+//  Operation attempted in an invalid graph state.%0
+//
+#define NS_E_WMG_INVALIDSTATE            0xC00D1054L
+
+//
+// MessageId: NS_E_WMG_SINKALREADYEXISTS
+//
+// MessageText:
+//
+//  A renderer cannot be inserted in a stream while one already exists.%0
+//
+#define NS_E_WMG_SINKALREADYEXISTS       0xC00D1055L
+
+//
+// MessageId: NS_E_WMG_NOSDKINTERFACE
+//
+// MessageText:
+//
+//  A necessary WM SDK interface to complete the operation doesn't exist at this time.%0
+//
+#define NS_E_WMG_NOSDKINTERFACE          0xC00D1056L
+
+//
+// MessageId: NS_E_WMG_NOTALLOUTPUTSRENDERED
+//
+// MessageText:
+//
+//  Some streams in the current media couldn't be rendered.%0
+//
+#define NS_E_WMG_NOTALLOUTPUTSRENDERED   0xC00D1057L
+
+//
+// MessageId: NS_E_WMR_RENDERFAILED
+//
+// MessageText:
+//
+//  Failed to render current media.%0
+//
+#define NS_E_WMR_RENDERFAILED            0xC00D1058L
+
+//
+// MessageId: NS_E_WMR_UNSUPPORTEDSTREAM
+//
+// MessageText:
+//
+//  The stream you are attempting to render is currently not supported.%0
+//
+#define NS_E_WMR_UNSUPPORTEDSTREAM       0xC00D1059L
+
+//
+// MessageId: NS_E_WMR_PINNOTFOUND
+//
+// MessageText:
+//
+//  An operation was attempted on a pin that doesn't exist in the DirectShow filter graph.%0
+//
+#define NS_E_WMR_PINNOTFOUND             0xC00D105AL
+
+//
+// MessageId: NS_E_WMR_WAITINGONFORMATSWITCH
+//
+// MessageText:
+//
+//  Specified operation cannot be completed while waiting for a media format change from the SDK.%0
+//
+#define NS_E_WMR_WAITINGONFORMATSWITCH   0xC00D105BL
+
+//
+// WMP Playlist Error codes
+//
+//
+// MessageId: NS_E_WMX_UNRECOGNIZED_PLAYLIST_FORMAT
+//
+// MessageText:
+//
+//  The format of this file was not recognized as a valid playlist format.%0
+//
+#define NS_E_WMX_UNRECOGNIZED_PLAYLIST_FORMAT 0xC00D1068L
+
+//
+// MessageId: NS_E_ASX_INVALIDFORMAT
+//
+// MessageText:
+//
+//  This file was believed to be an ASX playlist, but the format was not recognized.%0
+//
+#define NS_E_ASX_INVALIDFORMAT           0xC00D1069L
+
+//
+// MessageId: NS_E_ASX_INVALIDVERSION
+//
+// MessageText:
+//
+//  The version of this playlist is not supported.%0
+//
+#define NS_E_ASX_INVALIDVERSION          0xC00D106AL
+
+//
+// MessageId: NS_E_ASX_INVALID_REPEAT_BLOCK
+//
+// MessageText:
+//
+//  Format of a REPEAT loop within the current playlist file is invalid.%0
+//
+#define NS_E_ASX_INVALID_REPEAT_BLOCK    0xC00D106BL
+
+//
+// MessageId: NS_E_ASX_NOTHING_TO_WRITE
+//
+// MessageText:
+//
+//  You can not write an empty playlist.%0
+//
+#define NS_E_ASX_NOTHING_TO_WRITE        0xC00D106CL
+
+//
+// MessageId: NS_E_URLLIST_INVALIDFORMAT
+//
+// MessageText:
+//
+//  This playlist was believed to be a simple list of files, but the format was not recoginized.%0
+//
+#define NS_E_URLLIST_INVALIDFORMAT       0xC00D106DL
+
+//
+// MessageId: NS_E_WMX_ATTRIBUTE_DOES_NOT_EXIST
+//
+// MessageText:
+//
+//  The specified attribute does not exist.%0
+//
+#define NS_E_WMX_ATTRIBUTE_DOES_NOT_EXIST 0xC00D106EL
+
+//
+// MessageId: NS_E_WMX_ATTRIBUTE_ALREADY_EXISTS
+//
+// MessageText:
+//
+//  The specified attribute already exists.%0
+//
+#define NS_E_WMX_ATTRIBUTE_ALREADY_EXISTS 0xC00D106FL
+
+//
+// MessageId: NS_E_WMX_ATTRIBUTE_UNRETRIEVABLE
+//
+// MessageText:
+//
+//  Can not retrieve the specified attribute.%0
+//
+#define NS_E_WMX_ATTRIBUTE_UNRETRIEVABLE 0xC00D1070L
+
+//
+// MessageId: NS_E_WMX_ITEM_DOES_NOT_EXIST
+//
+// MessageText:
+//
+//  The specified item does not exist in the current playlist.%0
+//
+#define NS_E_WMX_ITEM_DOES_NOT_EXIST     0xC00D1071L
+
+//
+// MessageId: NS_E_WMX_ITEM_TYPE_ILLEGAL
+//
+// MessageText:
+//
+//  Items of the specified type can not be created within the current playlist.%0
+//
+#define NS_E_WMX_ITEM_TYPE_ILLEGAL       0xC00D1072L
+
+//
+// MessageId: NS_E_WMX_ITEM_UNSETTABLE
+//
+// MessageText:
+//
+//  The specified item can not be set in the current playlist.%0
+//
+#define NS_E_WMX_ITEM_UNSETTABLE         0xC00D1073L
+
+//
+// WMP Core  Error codes
+//
+//
+// MessageId: NS_E_WMPCORE_NOSOURCEURLSTRING
+//
+// MessageText:
+//
+//  Could not find the source URL for this media.%0
+//
+#define NS_E_WMPCORE_NOSOURCEURLSTRING   0xC00D107CL
+
+//
+// MessageId: NS_E_WMPCORE_COCREATEFAILEDFORGITOBJECT
+//
+// MessageText:
+//
+//  Failed to create the Global Interface Table.%0
+//
+#define NS_E_WMPCORE_COCREATEFAILEDFORGITOBJECT 0xC00D107DL
+
+//
+// MessageId: NS_E_WMPCORE_FAILEDTOGETMARSHALLEDEVENTHANDLERINTERFACE
+//
+// MessageText:
+//
+//  Failed to get the marshalled graph event handler interface.%0
+//
+#define NS_E_WMPCORE_FAILEDTOGETMARSHALLEDEVENTHANDLERINTERFACE 0xC00D107EL
+
+//
+// MessageId: NS_E_WMPCORE_BUFFERTOOSMALL
+//
+// MessageText:
+//
+//  Buffer is too small for copying media type.%0
+//
+#define NS_E_WMPCORE_BUFFERTOOSMALL      0xC00D107FL
+
+//
+// MessageId: NS_E_WMPCORE_UNAVAILABLE
+//
+// MessageText:
+//
+//  Current state of the player does not allow the operation.%0
+//
+#define NS_E_WMPCORE_UNAVAILABLE         0xC00D1080L
+
+//
+// MessageId: NS_E_WMPCORE_INVALIDPLAYLISTMODE
+//
+// MessageText:
+//
+//  Playlist manager does not understand the current play mode (shuffle, normal etc).%0
+//
+#define NS_E_WMPCORE_INVALIDPLAYLISTMODE 0xC00D1081L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLISTNOLISTENER
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_PLAYLISTNOLISTENER  0xC00D1082L
+
+//
+// MessageId: NS_E_WMPCORE_CYCLICPLAYLISTFOUND
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_CYCLICPLAYLISTFOUND 0xC00D1083L
+
+//
+// MessageId: NS_E_WMPCORE_INVALIDPLAYLISTITEMID
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_INVALIDPLAYLISTITEMID 0xC00D1084L
+
+//
+// MessageId: NS_E_WMPCORE_NESTEDPLAYLISTNOTALLOWED
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_NESTEDPLAYLISTNOTALLOWED 0xC00D1085L
+
+//
+// MessageId: NS_E_WMPCORE_ITEMNOTINPLAYLIST
+//
+// MessageText:
+//
+//  Operation failed because the media item is not in the playlist.%0
+//
+#define NS_E_WMPCORE_ITEMNOTINPLAYLIST   0xC00D1086L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLISTEMPTY
+//
+// MessageText:
+//
+//  Operation failed because there are no items in the playlist.%0
+//
+#define NS_E_WMPCORE_PLAYLISTEMPTY       0xC00D1087L
+
+//
+// MessageId: NS_E_WMPCORE_NOBROWSER
+//
+// MessageText:
+//
+//  URL could not be launched since WMP could not find a browser associated with it.%0
+//
+#define NS_E_WMPCORE_NOBROWSER           0xC00D1088L
+
+//
+// MessageId: NS_E_WMPCORE_UNRECOGNIZED_MEDIA_URL
+//
+// MessageText:
+//
+//  URL unrecognized by WMP runtime.%0
+//
+#define NS_E_WMPCORE_UNRECOGNIZED_MEDIA_URL 0xC00D1089L
+
+//
+// MessageId: NS_E_WMPCORE_GRAPH_NOT_IN_LIST
+//
+// MessageText:
+//
+//  Graph with the specified URL was not found in the prerolled graph list.%0
+//
+#define NS_E_WMPCORE_GRAPH_NOT_IN_LIST   0xC00D108AL
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_EMPTY_OR_SINGLE_MEDIA
+//
+// MessageText:
+//
+//  Operation could not be performed because the playlist does not have more than one item.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_EMPTY_OR_SINGLE_MEDIA 0xC00D108BL
+
+//
+// MessageId: NS_E_WMPCORE_ERRORSINKNOTREGISTERED
+//
+// MessageText:
+//
+//  An error sink was never registered for the calling object.%0
+//
+#define NS_E_WMPCORE_ERRORSINKNOTREGISTERED 0xC00D108CL
+
+//
+// MessageId: NS_E_WMPCORE_ERRORMANAGERNOTAVAILABLE
+//
+// MessageText:
+//
+//  The error manager is not available to respond to errors.%0
+//
+#define NS_E_WMPCORE_ERRORMANAGERNOTAVAILABLE 0xC00D108DL
+
+//
+// MessageId: NS_E_WMPCORE_WEBHELPFAILED
+//
+// MessageText:
+//
+//  Failed launching WebHelp URL.%0
+//
+#define NS_E_WMPCORE_WEBHELPFAILED       0xC00D108EL
+
+//
+// MessageId: NS_E_WMPCORE_MEDIA_ERROR_RESUME_FAILED
+//
+// MessageText:
+//
+//  Could not resume playing next item in playlist.%0
+//
+#define NS_E_WMPCORE_MEDIA_ERROR_RESUME_FAILED 0xC00D108FL
+
+//
+// MessageId: NS_E_WMPCORE_NO_REF_IN_ENTRY
+//
+// MessageText:
+//
+//  No URL specified in the Ref attribute in playlist file.%0
+//
+#define NS_E_WMPCORE_NO_REF_IN_ENTRY     0xC00D1090L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_NAME_EMPTY
+//
+// MessageText:
+//
+//  An empty string for playlist attribute name was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_NAME_EMPTY 0xC00D1091L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_NAME_ILLEGAL
+//
+// MessageText:
+//
+//  An invalid playlist attribute name was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_NAME_ILLEGAL 0xC00D1092L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_VALUE_EMPTY
+//
+// MessageText:
+//
+//  An empty string for a playlist attribute value was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_VALUE_EMPTY 0xC00D1093L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_VALUE_ILLEGAL
+//
+// MessageText:
+//
+//  An illegal value for a playlist attribute was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ATTRIBUTE_VALUE_ILLEGAL 0xC00D1094L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ITEM_ATTRIBUTE_NAME_EMPTY
+//
+// MessageText:
+//
+//  An empty string for a playlist item attribute name was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ITEM_ATTRIBUTE_NAME_EMPTY 0xC00D1095L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ITEM_ATTRIBUTE_NAME_ILLEGAL
+//
+// MessageText:
+//
+//  An illegal value for a playlist item attribute name was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ITEM_ATTRIBUTE_NAME_ILLEGAL 0xC00D1096L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_LIST_ITEM_ATTRIBUTE_VALUE_EMPTY
+//
+// MessageText:
+//
+//  An illegal value for a playlist item attribute was found.%0
+//
+#define NS_E_WMPCORE_WMX_LIST_ITEM_ATTRIBUTE_VALUE_EMPTY 0xC00D1097L
+
+//
+// MessageId: NS_E_WMPCORE_LIST_ENTRY_NO_REF
+//
+// MessageText:
+//
+//  No entries found in the playlist file.%0
+//
+#define NS_E_WMPCORE_LIST_ENTRY_NO_REF   0xC00D1098L
+
+//
+// MessageId: NS_E_WMPCORE_NONETWORKINTERFACEONGRAPH
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_NONETWORKINTERFACEONGRAPH 0xC00D1099L
+
+//
+// MessageId: NS_E_WMPCORE_CODEC_NOT_TRUSTED
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_CODEC_NOT_TRUSTED   0xC00D109AL
+
+//
+// MessageId: NS_E_WMPCORE_CODEC_NOT_FOUND
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_CODEC_NOT_FOUND     0xC00D109BL
+
+//
+// MessageId: NS_E_WMPCORE_CODEC_DOWNLOAD_NOT_ALLOWED
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_CODEC_DOWNLOAD_NOT_ALLOWED 0xC00D109CL
+
+//
+// MessageId: NS_E_WMPCORE_ERROR_DOWNLOADING_PLAYLIST
+//
+// MessageText:
+//
+//  Failed to download the playlist file.%0
+//
+#define NS_E_WMPCORE_ERROR_DOWNLOADING_PLAYLIST 0xC00D109DL
+
+//
+// MessageId: NS_E_WMPCORE_FAILED_TO_BUILD_PLAYLIST
+//
+// MessageText:
+//
+//  Failed to build the playlist.%0
+//
+#define NS_E_WMPCORE_FAILED_TO_BUILD_PLAYLIST 0xC00D109EL
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_NONE
+//
+// MessageText:
+//
+//  Playlist has no alternates to switch into.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_NONE 0xC00D109FL
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_EXHAUSTED
+//
+// MessageText:
+//
+//  No more playlist alternates available to switch to.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_EXHAUSTED 0xC00D10A0L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_NAME_NOT_FOUND
+//
+// MessageText:
+//
+//  Could not find the name of the alternate playlist to switch into.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_NAME_NOT_FOUND 0xC00D10A1L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_MORPH_FAILED
+//
+// MessageText:
+//
+//  Failed to switch to an alternate for this media.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_MORPH_FAILED 0xC00D10A2L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_INIT_FAILED
+//
+// MessageText:
+//
+//  Failed to initialize an alternate for the media.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_ITEM_ALTERNATE_INIT_FAILED 0xC00D10A3L
+
+//
+// MessageId: NS_E_WMPCORE_MEDIA_ALTERNATE_REF_EMPTY
+//
+// MessageText:
+//
+//  No URL specified for the roll over Refs in the playlist file.%0
+//
+#define NS_E_WMPCORE_MEDIA_ALTERNATE_REF_EMPTY 0xC00D10A4L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_NO_EVENT_NAME
+//
+// MessageText:
+//
+//  Encountered a playlist with no name.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_NO_EVENT_NAME 0xC00D10A5L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_EVENT_ATTRIBUTE_ABSENT
+//
+// MessageText:
+//
+//  A required attribute in the event block of the playlist was not found.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_EVENT_ATTRIBUTE_ABSENT 0xC00D10A6L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_EVENT_EMPTY
+//
+// MessageText:
+//
+//  No items were found in the event block of the playlist.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_EVENT_EMPTY 0xC00D10A7L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_STACK_EMPTY
+//
+// MessageText:
+//
+//  No playlist was found while returning from a nested playlist.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_STACK_EMPTY 0xC00D10A8L
+
+//
+// MessageId: NS_E_WMPCORE_CURRENT_MEDIA_NOT_ACTIVE
+//
+// MessageText:
+//
+//  The media item is not active currently.%0
+//
+#define NS_E_WMPCORE_CURRENT_MEDIA_NOT_ACTIVE 0xC00D10A9L
+
+//
+// MessageId: NS_E_WMPCORE_CURRENT_MEDIA_SKIP_NOT_ALLOWED
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_E_WMPCORE_CURRENT_MEDIA_SKIP_NOT_ALLOWED 0xC00D10AAL
+
+//
+// MessageId: NS_E_WMPCORE_USER_CANCEL
+//
+// MessageText:
+//
+//  Open was aborted by user.%0
+//
+#define NS_E_WMPCORE_USER_CANCEL         0xC00D10ABL
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_REPEAT_EMPTY
+//
+// MessageText:
+//
+//  No items were found inside the playlist repeat block.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_REPEAT_EMPTY 0xC00D10ACL
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_REPEAT_START_MEDIA_NONE
+//
+// MessageText:
+//
+//  Media object corresponding to start of a playlist repeat block was not found.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_REPEAT_START_MEDIA_NONE 0xC00D10ADL
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_REPEAT_END_MEDIA_NONE
+//
+// MessageText:
+//
+//  Media object corresponding to the end of a playlist repeat block was not found.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_REPEAT_END_MEDIA_NONE 0xC00D10AEL
+
+//
+// MessageId: NS_E_WMPCORE_INVALID_PLAYLIST_URL
+//
+// MessageText:
+//
+//  Playlist URL supplied to the playlist manager is invalid.%0
+//
+#define NS_E_WMPCORE_INVALID_PLAYLIST_URL 0xC00D10AFL
+
+//
+// MessageId: NS_E_WMPCORE_MISMATCHED_RUNTIME
+//
+// MessageText:
+//
+//  Player is selecting a runtime that is not valid for this media file type.%0
+//
+#define NS_E_WMPCORE_MISMATCHED_RUNTIME  0xC00D10B0L
+
+//
+// MessageId: NS_E_WMPCORE_PLAYLIST_IMPORT_FAILED_NO_ITEMS
+//
+// MessageText:
+//
+//  The import has failed because none of the items in the playlist could be imported.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_IMPORT_FAILED_NO_ITEMS 0xC00D10B1L
+
+//
+// MessageId: NS_E_WMPCORE_VIDEO_TRANSFORM_FILTER_INSERTION
+//
+// MessageText:
+//
+//  An error has occurred that could prevent the changing of the video contrast on this media.%0
+//
+#define NS_E_WMPCORE_VIDEO_TRANSFORM_FILTER_INSERTION 0xC00D10B2L
+
+//
+// MessageId: NS_E_WMPCORE_MEDIA_UNAVAILABLE
+//
+// MessageText:
+//
+//  Unable to acess this media, you may not be connected to the network.%0
+//
+#define NS_E_WMPCORE_MEDIA_UNAVAILABLE   0xC00D10B3L
+
+//
+// MessageId: NS_E_WMPCORE_WMX_ENTRYREF_NO_REF
+//
+// MessageText:
+//
+//  The playlist contains an ENTRYREF for which no href was parsed. Check the syntax of playlist file.%0
+//
+#define NS_E_WMPCORE_WMX_ENTRYREF_NO_REF 0xC00D10B4L
+
+//
+// MessageId: NS_E_WMPCORE_NO_PLAYABLE_MEDIA_IN_PLAYLIST
+//
+// MessageText:
+//
+//  Could not play any media in the playlist.%0
+//
+#define NS_E_WMPCORE_NO_PLAYABLE_MEDIA_IN_PLAYLIST 0xC00D10B5L
+
+//
+// WMP Core  Success codes
+//
+//
+// MessageId: NS_S_WMPCORE_PLAYLISTCLEARABORT
+//
+// MessageText:
+//
+//  Failed to clear playlist because it was aborted by user.%0
+//
+#define NS_S_WMPCORE_PLAYLISTCLEARABORT  0x000D10FEL
+
+//
+// MessageId: NS_S_WMPCORE_PLAYLISTREMOVEITEMABORT
+//
+// MessageText:
+//
+//  Failed to remove item in the playlist since it was aborted by user.%0
+//
+#define NS_S_WMPCORE_PLAYLISTREMOVEITEMABORT 0x000D10FFL
+
+//
+// MessageId: NS_S_WMPCORE_DISCONTINUEEVENTPROCESSING
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_S_WMPCORE_DISCONTINUEEVENTPROCESSING 0x000D1100L
+
+//
+// MessageId: NS_S_WMPCORE_SUPRESSEXTERNALEVENT
+//
+// MessageText:
+//
+//  No error description has been defined for this WMP error.%0
+//
+#define NS_S_WMPCORE_SUPRESSEXTERNALEVENT 0x000D1101L
+
+//
+// MessageId: NS_S_WMPCORE_PLAYLIST_CREATION_PENDING
+//
+// MessageText:
+//
+//  Playlist is being generated asynchronously.%0
+//
+#define NS_S_WMPCORE_PLAYLIST_CREATION_PENDING 0x000D1102L
+
+//
+// MessageId: NS_S_WMPCORE_MEDIA_VALIDATION_PENDING
+//
+// MessageText:
+//
+//  Validation of the media is pending...%0
+//
+#define NS_S_WMPCORE_MEDIA_VALIDATION_PENDING 0x000D1103L
+
+//
+// MessageId: NS_S_WMPCORE_PLAYLIST_REPEAT_SECONDARY_SEGMENTS_IGNORED
+//
+// MessageText:
+//
+//  Encountered more than one Repeat block during ASX processing.%0
+//
+#define NS_S_WMPCORE_PLAYLIST_REPEAT_SECONDARY_SEGMENTS_IGNORED 0x000D1104L
+
+//
+// MessageId: NS_S_WMPCORE_COMMAND_NOT_AVAILABLE
+//
+// MessageText:
+//
+//  Current state of WMP disallows calling this method or property.%0
+//
+#define NS_S_WMPCORE_COMMAND_NOT_AVAILABLE 0x000D1105L
+
+//
+// MessageId: NS_S_WMPCORE_PLAYLIST_NAME_AUTO_GENERATED
+//
+// MessageText:
+//
+//  Name for the playlist has been auto generated.%0
+//
+#define NS_S_WMPCORE_PLAYLIST_NAME_AUTO_GENERATED 0x000D1106L
+
+//
+// MessageId: NS_S_WMPCORE_PLAYLIST_IMPORT_MISSING_ITEMS
+//
+// MessageText:
+//
+//  The imported playlist does not contain all items from the original.%0
+//
+#define NS_S_WMPCORE_PLAYLIST_IMPORT_MISSING_ITEMS 0x000D1107L
+
+//
+// WMP Internet Manager error codes
+//
+//
+// MessageId: NS_E_WMPIM_USEROFFLINE
+//
+// MessageText:
+//
+//  System is not connected to the Internet.%0
+//
+#define NS_E_WMPIM_USEROFFLINE           0xC00D1126L
+
+//
+// MessageId: NS_E_WMPIM_USERCANCELED
+//
+// MessageText:
+//
+//  User cancelled attempt to connect to the Internet.%0
+//
+#define NS_E_WMPIM_USERCANCELED          0xC00D1127L
+
+//
+// MessageId: NS_E_WMPIM_DIALUPFAILED
+//
+// MessageText:
+//
+//  Attempt to dial connection to the Internet failed.%0
+//
+#define NS_E_WMPIM_DIALUPFAILED          0xC00D1128L
+
+//
+// WMP Backup and restore error and success codes
+//
+//
+// MessageId: NS_E_WMPBR_NOLISTENER
+//
+// MessageText:
+//
+//  No window is currently listening to Backup and Restore events.%0
+//
+#define NS_E_WMPBR_NOLISTENER            0xC00D1130L
+
+//
+// MessageId: NS_E_WMPBR_BACKUPCANCEL
+//
+// MessageText:
+//
+//  Backup of your licenses has been cancelled.  Please try again to ensure license backup.%0
+//
+#define NS_E_WMPBR_BACKUPCANCEL          0xC00D1131L
+
+//
+// MessageId: NS_E_WMPBR_RESTORECANCEL
+//
+// MessageText:
+//
+//  Restoration of your licenses has been cancelled.  Please try again to ensure license restoration.%0
+//
+#define NS_E_WMPBR_RESTORECANCEL         0xC00D1132L
+
+//
+// MessageId: NS_E_WMPBR_ERRORWITHURL
+//
+// MessageText:
+//
+//  An error occured during the backup or restore operation that requires a web page be displayed to the user.%0
+//
+#define NS_E_WMPBR_ERRORWITHURL          0xC00D1133L
+
+//
+// MessageId: NS_E_WMPBR_NAMECOLLISION
+//
+// MessageText:
+//
+//  Backup of your licenses was not successfully completed.  Please try again or click Details for additional assistance.%0
+//
+#define NS_E_WMPBR_NAMECOLLISION         0xC00D1134L
+
+//
+// MessageId: NS_S_WMPBR_SUCCESS
+//
+// MessageText:
+//
+//  Backup or Restore successful!.%0
+//
+#define NS_S_WMPBR_SUCCESS               0x000D1135L
+
+//
+// MessageId: NS_S_WMPBR_PARTIALSUCCESS
+//
+// MessageText:
+//
+//  Transfer complete with limitations.%0
+//
+#define NS_S_WMPBR_PARTIALSUCCESS        0x000D1136L
+
+//
+// WMP Effects Success codes
+//
+//
+// MessageId: NS_S_WMPEFFECT_TRANSPARENT
+//
+// MessageText:
+//
+//  Request to the effects control to change transparency status to transparent.%0
+//
+#define NS_S_WMPEFFECT_TRANSPARENT       0x000D1144L
+
+//
+// MessageId: NS_S_WMPEFFECT_OPAQUE
+//
+// MessageText:
+//
+//  Request to the effects control to change transparency status to opaque.%0
+//
+#define NS_S_WMPEFFECT_OPAQUE            0x000D1145L
+
+//
+// WMP Application Success codes
+//
+//
+// MessageId: NS_S_OPERATION_PENDING
+//
+// MessageText:
+//
+//  The requested application pane is performing an operation and will not be relased.%0
+//
+#define NS_S_OPERATION_PENDING           0x000D114EL
 
 
 
@@ -1836,6 +3492,15 @@ Notes:
 
 
  // Cache Errors
+
+//
+// MessageId: NS_E_CACHE_ARCHIVE_CONFLICT
+//
+// MessageText:
+//
+//  Archive request conflicts with other requests in progress.%0
+//
+#define NS_E_CACHE_ARCHIVE_CONFLICT      0xC00D1397L
 
 //
 // MessageId: NS_E_CACHE_ORIGIN_SERVER_NOT_FOUND
@@ -2029,6 +3694,267 @@ Notes:
 //
 #define NS_E_VIDEODEVICE_UNEXPECTED      0xC00D1B65L
 
+//
+// MessageId: NS_E_INVALIDCALL_WHILE_ENCODER_RUNNING
+//
+// MessageText:
+//
+//  This operation is not allowed while encoder is running.%0
+//
+#define NS_E_INVALIDCALL_WHILE_ENCODER_RUNNING 0xC00D1B66L
+
+//
+// MessageId: NS_E_NO_PROFILE_IN_SOURCEGROUP
+//
+// MessageText:
+//
+//  No profile is set in source group.%0
+//
+#define NS_E_NO_PROFILE_IN_SOURCEGROUP   0xC00D1B67L
+
+//
+// MessageId: NS_E_VIDEODRIVER_UNSTABLE
+//
+// MessageText:
+//
+//  The video capture driver returned an unrecoverable error.  It is now in an unstable state.%0
+//
+#define NS_E_VIDEODRIVER_UNSTABLE        0xC00D1B68L
+
+//
+// MessageId: NS_E_VIDCAPSTARTFAILED
+//
+// MessageText:
+//
+//  The video input device could not be started.%0
+//
+#define NS_E_VIDCAPSTARTFAILED           0xC00D1B69L
+
+//
+// MessageId: NS_E_VIDSOURCECOMPRESSION
+//
+// MessageText:
+//
+//  The video input source does not support the requested output format or color depth.%0
+//
+#define NS_E_VIDSOURCECOMPRESSION        0xC00D1B6AL
+
+//
+// MessageId: NS_E_VIDSOURCESIZE
+//
+// MessageText:
+//
+//  The video input source does not support the request capture size.%0
+//
+#define NS_E_VIDSOURCESIZE               0xC00D1B6BL
+
+//
+// MessageId: NS_E_ICMQUERYFORMAT
+//
+// MessageText:
+//
+//  Unable to obtain output information from video compressor.%0
+//
+#define NS_E_ICMQUERYFORMAT              0xC00D1B6CL
+
+//
+// MessageId: NS_E_VIDCAPCREATEWINDOW
+//
+// MessageText:
+//
+//  Unable to create video capture window.%0
+//
+#define NS_E_VIDCAPCREATEWINDOW          0xC00D1B6DL
+
+//
+// MessageId: NS_E_VIDCAPDRVINUSE
+//
+// MessageText:
+//
+//  There already is a running stream active on this video input device.%0
+//
+#define NS_E_VIDCAPDRVINUSE              0xC00D1B6EL
+
+//
+// MessageId: NS_E_NO_MEDIAFORMAT_IN_SOURCE
+//
+// MessageText:
+//
+//  No media format is set in source.%0
+//
+#define NS_E_NO_MEDIAFORMAT_IN_SOURCE    0xC00D1B6FL
+
+//
+// MessageId: NS_E_NO_VALID_OUTPUT_STREAM
+//
+// MessageText:
+//
+//  Cannot find valid output stream from source.%0
+//
+#define NS_E_NO_VALID_OUTPUT_STREAM      0xC00D1B70L
+
+//
+// MessageId: NS_E_NO_VALID_SOURCE_PLUGIN
+//
+// MessageText:
+//
+//  Cannot find valid source plugin to support specified source.%0
+//
+#define NS_E_NO_VALID_SOURCE_PLUGIN      0xC00D1B71L
+
+//
+// MessageId: NS_E_NO_ACTIVE_SOURCEGROUP
+//
+// MessageText:
+//
+//  No source group is currently active.%0
+//
+#define NS_E_NO_ACTIVE_SOURCEGROUP       0xC00D1B72L
+
+//
+// MessageId: NS_E_NO_SCRIPT_STREAM
+//
+// MessageText:
+//
+//  No script stream is set in current active source group.%0
+//
+#define NS_E_NO_SCRIPT_STREAM            0xC00D1B73L
+
+//
+// MessageId: NS_E_INVALIDCALL_WHILE_ARCHIVAL_RUNNING
+//
+// MessageText:
+//
+//  This operation is not allowed when file archival is started.%0
+//
+#define NS_E_INVALIDCALL_WHILE_ARCHIVAL_RUNNING 0xC00D1B74L
+
+//
+// MessageId: NS_E_INVALIDPACKETSIZE
+//
+// MessageText:
+//
+//  The MaxPacketSize value specified is invalid.%0
+//
+#define NS_E_INVALIDPACKETSIZE           0xC00D1B75L
+
+//
+// MessageId: NS_E_PLUGIN_CLSID_NOTINVALID
+//
+// MessageText:
+//
+//  The plugin CLSID specified is invalid.%0
+//
+#define NS_E_PLUGIN_CLSID_NOTINVALID     0xC00D1B76L
+
+//
+// MessageId: NS_E_UNSUPPORTED_ARCHIVETYPE
+//
+// MessageText:
+//
+//  This Archive type is not supported.%0
+//
+#define NS_E_UNSUPPORTED_ARCHIVETYPE     0xC00D1B77L
+
+//
+// MessageId: NS_E_UNSUPPORTED_ARCHIVEOPERATION
+//
+// MessageText:
+//
+//  This Archive operation is not supported.%0
+//
+#define NS_E_UNSUPPORTED_ARCHIVEOPERATION 0xC00D1B78L
+
+//
+// MessageId: NS_E_ARCHIVE_FILENAME_NOTSET
+//
+// MessageText:
+//
+//  The local archive filename was not set.%0
+//
+#define NS_E_ARCHIVE_FILENAME_NOTSET     0xC00D1B79L
+
+//
+// MessageId: NS_E_SOURCEGROUP_NOTPREPARED
+//
+// MessageText:
+//
+//  The SourceGroup is not yet prepared.%0
+//
+#define NS_E_SOURCEGROUP_NOTPREPARED     0xC00D1B7AL
+
+//
+// MessageId: NS_E_PROFILE_MISMATCH
+//
+// MessageText:
+//
+//  Profiles on the sourcegroups do not match.%0
+//
+#define NS_E_PROFILE_MISMATCH            0xC00D1B7BL
+
+//
+// MessageId: NS_E_INCORRECTCLIPSETTINGS
+//
+// MessageText:
+//
+//  The clip settings specified on the source are incorrect.%0
+//
+#define NS_E_INCORRECTCLIPSETTINGS       0xC00D1B7CL
+
+//
+// MessageId: NS_E_NOSTATSAVAILABLE
+//
+// MessageText:
+//
+//  No statistics are available at this time.%0
+//
+#define NS_E_NOSTATSAVAILABLE            0xC00D1B7DL
+
+//
+// MessageId: NS_E_NOTARCHIVING
+//
+// MessageText:
+//
+//  Encoder is not archiving.%0
+//
+#define NS_E_NOTARCHIVING                0xC00D1B7EL
+
+//
+// MessageId: NS_E_INVALIDCALL_WHILE_ENCODER_STOPPED
+//
+// MessageText:
+//
+//  This operation is not allowed while encoder is not running.%0
+//
+#define NS_E_INVALIDCALL_WHILE_ENCODER_STOPPED 0xC00D1B7FL
+
+//
+// MessageId: NE_E_NOSOURCEGROUPS
+//
+// MessageText:
+//
+//  This SourceGroupCollection doesnt contain any SourceGroups.%0
+//
+#define NE_E_NOSOURCEGROUPS              0xC00D1B80L
+
+//
+// MessageId: NS_E_INVALIDINPUTFPS
+//
+// MessageText:
+//
+//  The inverse telecine optimization requires the input source to have a framerate of 30 frames per second. Adjust the settings on the source group to use this option.%0
+//
+#define NS_E_INVALIDINPUTFPS             0xC00D1B81L
+
+//
+// MessageId: NS_E_NO_DATAVIEW_SUPPORT
+//
+// MessageText:
+//
+//  Internal problems are preventing the preview or postview of your content.%0
+//
+#define NS_E_NO_DATAVIEW_SUPPORT         0xC00D1B82L
+
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -2037,20 +3963,11 @@ Notes:
 // IdRange = 10000..10999
 /////////////////////////////////////////////////////////////////////////
 //
-// MessageId: NS_E_DRM_TOO_MANY_OPEN_CONNECTIONS
-//
-// MessageText:
-//
-//  There are too many concurrent connections to DRM.%0
-//
-#define NS_E_DRM_TOO_MANY_OPEN_CONNECTIONS 0xC00D2710L
-
-//
 // MessageId: NS_E_DRM_INVALID_APPLICATION
 //
 // MessageText:
 //
-//  The application calling DRM has an invalid data description.%0
+//  A problem has occurred in the Digital Rights Management component. Contact product support for this application.%0
 //
 #define NS_E_DRM_INVALID_APPLICATION     0xC00D2711L
 
@@ -2059,7 +3976,7 @@ Notes:
 //
 // MessageText:
 //
-//  Unable to initialize the DRM license store.%0
+//  License storage is not working. Contact Microsoft product support.%0
 //
 #define NS_E_DRM_LICENSE_STORE_ERROR     0xC00D2712L
 
@@ -2068,7 +3985,7 @@ Notes:
 //
 // MessageText:
 //
-//  Unable to initialize the DRM secure store.%0
+//  Secure storage is not working. Contact Microsoft product support.%0
 //
 #define NS_E_DRM_SECURE_STORE_ERROR      0xC00D2713L
 
@@ -2077,7 +3994,7 @@ Notes:
 //
 // MessageText:
 //
-//  Unable to save license to the DRM license store.%0
+//  License acquisition did not work. Acquire a new license or contact the content provider for further assistance.%0
 //
 #define NS_E_DRM_LICENSE_STORE_SAVE_ERROR 0xC00D2714L
 
@@ -2086,7 +4003,7 @@ Notes:
 //
 // MessageText:
 //
-//  Unable to unlock the DRM secure store.%0
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0
 //
 #define NS_E_DRM_SECURE_STORE_UNLOCK_ERROR 0xC00D2715L
 
@@ -2095,7 +4012,7 @@ Notes:
 //
 // MessageText:
 //
-//  Content type not supported by DRM.%0
+//  The media file is corrupted. Contact the content provider to get a new file.%0
 //
 #define NS_E_DRM_INVALID_CONTENT         0xC00D2716L
 
@@ -2104,7 +4021,7 @@ Notes:
 //
 // MessageText:
 //
-//  Unable to open license store item in DRM.%0
+//  The license is corrupted. Acquire a new license.%0
 //
 #define NS_E_DRM_UNABLE_TO_OPEN_LICENSE  0xC00D2717L
 
@@ -2113,7 +4030,7 @@ Notes:
 //
 // MessageText:
 //
-//  Invalid license in the DRM license store.%0
+//  The license is corrupted or invalid. Acquire a new license%0
 //
 #define NS_E_DRM_INVALID_LICENSE         0xC00D2718L
 
@@ -2122,7 +4039,7 @@ Notes:
 //
 // MessageText:
 //
-//  License is not intended to play on this machine.%0
+//  Licenses cannot be copied from one computer to another. Use License Management to transfer licenses, or get a new license for the media file.%0
 //
 #define NS_E_DRM_INVALID_MACHINE         0xC00D2719L
 
@@ -2131,7 +4048,7 @@ Notes:
 //
 // MessageText:
 //
-//  DRM failed to evaluate the license.%0
+//  The license is corrupted or invalid. Acquire a new license or reinstall the application.%0
 //
 #define NS_E_DRM_LICENSE_EVAL_FAILED     0xC00D271AL
 
@@ -2140,7 +4057,7 @@ Notes:
 //
 // MessageText:
 //
-//  DRM failed to enumerate licenses in the store.%0
+//  License storage is not working. Contact Microsoft product support.%0
 //
 #define NS_E_DRM_ENUM_LICENSE_FAILED     0xC00D271BL
 
@@ -2149,34 +4066,34 @@ Notes:
 //
 // MessageText:
 //
-//  The DRM content has invalid license request XML.%0
+//  The media file is corrupted. Contact the content provider to get a new file.%0
 //
 #define NS_E_DRM_INVALID_LICENSE_REQUEST 0xC00D271CL
 
 //
-// MessageId: NS_E_DRM_UNABLE_TO_INITIALZE
+// MessageId: NS_E_DRM_UNABLE_TO_INITIALIZE
 //
 // MessageText:
 //
-//  Unable to initialize DRM client.%0
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0
 //
-#define NS_E_DRM_UNABLE_TO_INITIALZE     0xC00D271DL
+#define NS_E_DRM_UNABLE_TO_INITIALIZE    0xC00D271DL
 
 //
-// MessageId: NS_E_DRM_UNABLE_TO_AQUIRE_LICENSE
+// MessageId: NS_E_DRM_UNABLE_TO_ACQUIRE_LICENSE
 //
 // MessageText:
 //
-//  Unable to aquire a license.%0
+//  The license could not be acquired. Try again later.%0
 //
-#define NS_E_DRM_UNABLE_TO_AQUIRE_LICENSE 0xC00D271EL
+#define NS_E_DRM_UNABLE_TO_ACQUIRE_LICENSE 0xC00D271EL
 
 //
 // MessageId: NS_E_DRM_INVALID_LICENSE_ACQUIRED
 //
 // MessageText:
 //
-//  Invalid license acquired.%0
+//  License acquisition did not work. Acquire a new license or contact the content provider for further assistance.%0
 //
 #define NS_E_DRM_INVALID_LICENSE_ACQUIRED 0xC00D271FL
 
@@ -2185,7 +4102,7 @@ Notes:
 //
 // MessageText:
 //
-//  You do not have the rights to unlock the content.%0
+//  The requested operation cannot be performed on this file.%0
 //
 #define NS_E_DRM_NO_RIGHTS               0xC00D2720L
 
@@ -2194,7 +4111,7 @@ Notes:
 //
 // MessageText:
 //
-//  DRM is unable to initialize the keys.%0
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
 //
 #define NS_E_DRM_KEY_ERROR               0xC00D2721L
 
@@ -2203,7 +4120,7 @@ Notes:
 //
 // MessageText:
 //
-//  DRM is unable to encrypt the content.%0
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0
 //
 #define NS_E_DRM_ENCRYPT_ERROR           0xC00D2722L
 
@@ -2212,7 +4129,7 @@ Notes:
 //
 // MessageText:
 //
-//  DRM is unable to decrypt the content.%0
+//  The media file is corrupted. Contact the content provider to get a new file.%0
 //
 #define NS_E_DRM_DECRYPT_ERROR           0xC00D2723L
 
@@ -2221,7 +4138,7 @@ Notes:
 //
 // MessageText:
 //
-//  The license does not allow saving.%0
+//  You cannot save this file.%0
 //
 #define NS_E_DRM_LICENSE_PREVENTS_STORING 0xC00D2724L
 
@@ -2230,9 +4147,645 @@ Notes:
 //
 // MessageText:
 //
-//  The license contains invalid XML.%0
+//  The license is corrupted. Acquire a new license.%0
 //
 #define NS_E_DRM_LICENSE_INVALID_XML     0xC00D2725L
+
+//
+// MessageId: NS_S_DRM_LICENSE_ACQUIRED
+//
+// MessageText:
+//
+//  Status message: The license was acquired.%0
+//
+#define NS_S_DRM_LICENSE_ACQUIRED        0x000D2726L
+
+//
+// MessageId: NS_S_DRM_INDIVIDUALIZED
+//
+// MessageText:
+//
+//  Status message: The security upgrade has been completed.%0
+//
+#define NS_S_DRM_INDIVIDUALIZED          0x000D2727L
+
+//
+// MessageId: NS_E_DRM_NEEDS_INDIVIDUALIZATION
+//
+// MessageText:
+//
+//  A security upgrade is required to perform the operation on this media file.%0
+//
+#define NS_E_DRM_NEEDS_INDIVIDUALIZATION 0xC00D2728L
+
+//
+// MessageId: NS_E_DRM_INDIVIDUALIZATION_FAILED
+//
+// MessageText:
+//
+//  The security upgrade failed. Try again later.%0
+//
+#define NS_E_DRM_INDIVIDUALIZATION_FAILED 0xC00D2729L
+
+//
+// MessageId: NS_E_DRM_ACTION_NOT_QUERIED
+//
+// MessageText:
+//
+//  The application cannot perform this action. Contact product support for this application.%0
+//
+#define NS_E_DRM_ACTION_NOT_QUERIED      0xC00D272AL
+
+//
+// MessageId: NS_E_DRM_ACQUIRING_LICENSE
+//
+// MessageText:
+//
+//  You cannot begin a new license acquisition process until the current one has been completed.%0
+//
+#define NS_E_DRM_ACQUIRING_LICENSE       0xC00D272BL
+
+//
+// MessageId: NS_E_DRM_INDIVIDUALIZING
+//
+// MessageText:
+//
+//  You cannot begin a new security upgrade until the current one has been completed.%0
+//
+#define NS_E_DRM_INDIVIDUALIZING         0xC00D272CL
+
+//
+// MessageId: NS_E_DRM_ENCRYPTING
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_ENCRYPTING              0xC00D272DL
+
+//
+// MessageId: NS_E_DRM_PARAMETERS_MISMATCHED
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_PARAMETERS_MISMATCHED   0xC00D272FL
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_CREATE_LICENSE_OBJECT
+//
+// MessageText:
+//
+//  A license cannot be created for this media file. Reinstall the application.%0
+//
+#define NS_E_DRM_UNABLE_TO_CREATE_LICENSE_OBJECT 0xC00D2730L
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_CREATE_INDI_OBJECT
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_UNABLE_TO_CREATE_INDI_OBJECT 0xC00D2731L
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_CREATE_ENCRYPT_OBJECT
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_UNABLE_TO_CREATE_ENCRYPT_OBJECT 0xC00D2732L
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_CREATE_DECRYPT_OBJECT
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_UNABLE_TO_CREATE_DECRYPT_OBJECT 0xC00D2733L
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_CREATE_PROPERTIES_OBJECT
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_UNABLE_TO_CREATE_PROPERTIES_OBJECT 0xC00D2734L
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_CREATE_BACKUP_OBJECT
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_UNABLE_TO_CREATE_BACKUP_OBJECT 0xC00D2735L
+
+//
+// MessageId: NS_E_DRM_INDIVIDUALIZE_ERROR
+//
+// MessageText:
+//
+//  The security upgrade failed. Try again later.%0
+//
+#define NS_E_DRM_INDIVIDUALIZE_ERROR     0xC00D2736L
+
+//
+// MessageId: NS_E_DRM_LICENSE_OPEN_ERROR
+//
+// MessageText:
+//
+//  License storage is not working. Contact Microsoft product support.%0
+//
+#define NS_E_DRM_LICENSE_OPEN_ERROR      0xC00D2737L
+
+//
+// MessageId: NS_E_DRM_LICENSE_CLOSE_ERROR
+//
+// MessageText:
+//
+//  License storage is not working. Contact Microsoft product support.%0
+//
+#define NS_E_DRM_LICENSE_CLOSE_ERROR     0xC00D2738L
+
+//
+// MessageId: NS_E_DRM_GET_LICENSE_ERROR
+//
+// MessageText:
+//
+//  License storage is not working. Contact Microsoft product support.%0
+//
+#define NS_E_DRM_GET_LICENSE_ERROR       0xC00D2739L
+
+//
+// MessageId: NS_E_DRM_QUERY_ERROR
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_QUERY_ERROR             0xC00D273AL
+
+//
+// MessageId: NS_E_DRM_REPORT_ERROR
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact product support for this application.%0
+//
+#define NS_E_DRM_REPORT_ERROR            0xC00D273BL
+
+//
+// MessageId: NS_E_DRM_GET_LICENSESTRING_ERROR
+//
+// MessageText:
+//
+//  License storage is not working. Contact Microsoft product support.%0
+//
+#define NS_E_DRM_GET_LICENSESTRING_ERROR 0xC00D273CL
+
+//
+// MessageId: NS_E_DRM_GET_CONTENTSTRING_ERROR
+//
+// MessageText:
+//
+//  The media file is corrupted. Contact the content provider to get a new file.%0
+//
+#define NS_E_DRM_GET_CONTENTSTRING_ERROR 0xC00D273DL
+
+//
+// MessageId: NS_E_DRM_MONITOR_ERROR
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Try again later.%0
+//
+#define NS_E_DRM_MONITOR_ERROR           0xC00D273EL
+
+//
+// MessageId: NS_E_DRM_UNABLE_TO_SET_PARAMETER
+//
+// MessageText:
+//
+//  The application has made an invalid call to the Digital Rights Management component. Contact product support for this application.%0
+//
+#define NS_E_DRM_UNABLE_TO_SET_PARAMETER 0xC00D273FL
+
+//
+// MessageId: NS_E_DRM_INVALID_APPDATA
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_INVALID_APPDATA         0xC00D2740L
+
+//
+// MessageId: NS_E_DRM_INVALID_APPDATA_VERSION
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact product support for this application.%0.
+//
+#define NS_E_DRM_INVALID_APPDATA_VERSION 0xC00D2741L
+
+//
+// MessageId: NS_E_DRM_BACKUP_EXISTS
+//
+// MessageText:
+//
+//  Licenses are already backed up in this location.%0
+//
+#define NS_E_DRM_BACKUP_EXISTS           0xC00D2742L
+
+//
+// MessageId: NS_E_DRM_BACKUP_CORRUPT
+//
+// MessageText:
+//
+//  One or more backed-up licenses are missing or corrupt.%0
+//
+#define NS_E_DRM_BACKUP_CORRUPT          0xC00D2743L
+
+//
+// MessageId: NS_E_DRM_BACKUPRESTORE_BUSY
+//
+// MessageText:
+//
+//  You cannot begin a new backup process until the current process has been completed.%0
+//
+#define NS_E_DRM_BACKUPRESTORE_BUSY      0xC00D2744L
+
+//
+// MessageId: NS_E_DRM_GET_ATTRIBUTE_ERROR
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact product support for this application.%0.
+//
+#define NS_E_DRM_GET_ATTRIBUTE_ERROR     0xC00D2745L
+
+//
+// MessageId: NS_S_DRM_MONITOR_CANCELLED
+//
+// MessageText:
+//
+//  Status message: License monitoring has been cancelled.%0
+//
+#define NS_S_DRM_MONITOR_CANCELLED       0x000D2746L
+
+//
+// MessageId: NS_S_DRM_ACQUIRE_CANCELLED
+//
+// MessageText:
+//
+//  Status message: License acquisition has been cancelled.%0
+//
+#define NS_S_DRM_ACQUIRE_CANCELLED       0x000D2747L
+
+//
+// MessageId: NS_E_DRM_LICENSE_UNUSABLE
+//
+// MessageText:
+//
+//  The license is invalid. Contact the content provider for further assistance.%0
+//
+#define NS_E_DRM_LICENSE_UNUSABLE        0xC00D2748L
+
+//
+// MessageId: NS_E_DRM_INVALID_PROPERTY
+//
+// MessageText:
+//
+//  A required property was not set by the application. Contact product support for this application.%0.
+//
+#define NS_E_DRM_INVALID_PROPERTY        0xC00D2749L
+
+//
+// MessageId: NS_E_DRM_SECURE_STORE_NOT_FOUND
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component of this application. Try to acquire a license again.%0
+//
+#define NS_E_DRM_SECURE_STORE_NOT_FOUND  0xC00D274AL
+
+//
+// MessageId: NS_E_DRM_CACHED_CONTENT_ERROR
+//
+// MessageText:
+//
+//  A license cannot be found for this media file. Use License Management to transfer a license for this file from the original computer, or acquire a new license.%0
+//
+#define NS_E_DRM_CACHED_CONTENT_ERROR    0xC00D274BL
+
+//
+// MessageId: NS_E_DRM_INDIVIDUALIZATION_INCOMPLETE
+//
+// MessageText:
+//
+//  A problem occurred during the security upgrade. Try again later.%0
+//
+#define NS_E_DRM_INDIVIDUALIZATION_INCOMPLETE 0xC00D274CL
+
+//
+// MessageId: NS_E_DRM_DRIVER_AUTH_FAILURE
+//
+// MessageText:
+//
+//  Certified driver components are required to play this media file. Contact Windows Update to see whether updated drivers are available for your hardware.%0
+//
+#define NS_E_DRM_DRIVER_AUTH_FAILURE     0xC00D274DL
+
+//
+// MessageId: NS_E_DRM_NEED_UPGRADE
+//
+// MessageText:
+//
+//  A new version of the Digital Rights Management component is required. Contact product support for this application to get the latest version.%0
+//
+#define NS_E_DRM_NEED_UPGRADE            0xC00D274EL
+
+//
+// MessageId: NS_E_DRM_REOPEN_CONTENT
+//
+// MessageText:
+//
+//  Status message: Reopen the file.%0
+//
+#define NS_E_DRM_REOPEN_CONTENT          0xC00D274FL
+
+//
+// MessageId: NS_E_DRM_DRIVER_DIGIOUT_FAILURE
+//
+// MessageText:
+//
+//  Certain driver functionality is required to play this media file. Contact Windows Update to see whether updated drivers are available for your hardware.%0
+//
+#define NS_E_DRM_DRIVER_DIGIOUT_FAILURE  0xC00D2750L
+
+//
+// MessageId: NS_E_DRM_INVALID_SECURESTORE_PASSWORD
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_INVALID_SECURESTORE_PASSWORD 0xC00D2751L
+
+//
+// MessageId: NS_E_DRM_APPCERT_REVOKED
+//
+// MessageText:
+//
+//  A problem has occurred in the Digital Rights Management component. Contact Microsoft product support.%0.
+//
+#define NS_E_DRM_APPCERT_REVOKED         0xC00D2752L
+
+//
+// MessageId: NS_E_DRM_RESTORE_FRAUD
+//
+// MessageText:
+//
+//  You cannot restore your license(s).%0
+//
+#define NS_E_DRM_RESTORE_FRAUD           0xC00D2753L
+
+//
+// MessageId: NS_E_DRM_HARDWARE_INCONSISTENT
+//
+// MessageText:
+//
+//  The licenses for your media files are corrupted. Contact Microsoft product support.%0
+//
+#define NS_E_DRM_HARDWARE_INCONSISTENT   0xC00D2754L
+
+//
+// MessageId: NS_E_DRM_SDMI_TRIGGER
+//
+// MessageText:
+//
+//  To transfer this media file, you must upgrade the application.%0
+//
+#define NS_E_DRM_SDMI_TRIGGER            0xC00D2755L
+
+//
+// MessageId: NS_E_DRM_SDMI_NOMORECOPIES
+//
+// MessageText:
+//
+//  You cannot make any more copies of this media file.%0
+//
+#define NS_E_DRM_SDMI_NOMORECOPIES       0xC00D2756L
+
+
+
+/////////////////////////////////////////////////////////////////////////
+//
+// Windows Media Setup Specific Errors
+//
+// IdRange = 11000..11999
+/////////////////////////////////////////////////////////////////////////
+//
+// MessageId: NS_S_REBOOT_RECOMMENDED
+//
+// MessageText:
+//
+//  The requested operation is successful.  Some cleanup will not be complete until the system is rebooted.%0
+//
+#define NS_S_REBOOT_RECOMMENDED          0x000D2AF8L
+
+//
+// MessageId: NS_S_REBOOT_REQUIRED
+//
+// MessageText:
+//
+//  The requested operation is successful.  The system will not function correctly until the system is rebooted.%0
+//
+#define NS_S_REBOOT_REQUIRED             0x000D2AF9L
+
+//
+// MessageId: NS_E_REBOOT_RECOMMENDED
+//
+// MessageText:
+//
+//  The requested operation failed.  Some cleanup will not be complete until the system is rebooted.%0
+//
+#define NS_E_REBOOT_RECOMMENDED          0xC00D2AFAL
+
+//
+// MessageId: NS_E_REBOOT_REQUIRED
+//
+// MessageText:
+//
+//  The requested operation failed.  The system will not function correctly until the system is rebooted.%0
+//
+#define NS_E_REBOOT_REQUIRED             0xC00D2AFBL
+
+
+/////////////////////////////////////////////////////////////////////////
+//
+// Windows Media Networking Errors
+//
+// IdRange = 12000..12999
+/////////////////////////////////////////////////////////////////////////
+//
+// MessageId: NS_E_UNKNOWN_PROTOCOL
+//
+// MessageText:
+//
+//  The specified protocol is not supported.%0
+//
+#define NS_E_UNKNOWN_PROTOCOL            0xC00D2EE0L
+
+//
+// MessageId: NS_E_REDIRECT_TO_PROXY
+//
+// MessageText:
+//
+//  The client is redirected to a proxy server.%0
+//
+#define NS_E_REDIRECT_TO_PROXY           0xC00D2EE1L
+
+//
+// MessageId: NS_E_INTERNAL_SERVER_ERROR
+//
+// MessageText:
+//
+//  The server encountered an unexpected condition which prevented it from fulfilling the request.%0
+//
+#define NS_E_INTERNAL_SERVER_ERROR       0xC00D2EE2L
+
+//
+// MessageId: NS_E_BAD_REQUEST
+//
+// MessageText:
+//
+//  The request could not be understood by the server.%0
+//
+#define NS_E_BAD_REQUEST                 0xC00D2EE3L
+
+//
+// MessageId: NS_E_ERROR_FROM_PROXY
+//
+// MessageText:
+//
+//  The proxy experienced an error while attempting to contact the media server.%0
+//
+#define NS_E_ERROR_FROM_PROXY            0xC00D2EE4L
+
+//
+// MessageId: NS_E_PROXY_TIMEOUT
+//
+// MessageText:
+//
+//  The proxy did not receive a timely response while attempting to contact the media server.%0
+//
+#define NS_E_PROXY_TIMEOUT               0xC00D2EE5L
+
+//
+// MessageId: NS_E_SERVER_UNAVAILABLE
+//
+// MessageText:
+//
+//  The server is currently unable to handle the request due to a temporary overloading or maintenance of the server.%0
+//
+#define NS_E_SERVER_UNAVAILABLE          0xC00D2EE6L
+
+//
+// MessageId: NS_E_REFUSED_BY_SERVER
+//
+// MessageText:
+//
+//  The server is refusing to fulfill the requested operation.%0
+//
+#define NS_E_REFUSED_BY_SERVER           0xC00D2EE7L
+
+//
+// MessageId: NS_E_INCOMPATIBLE_SERVER
+//
+// MessageText:
+//
+//  The server is not a compatible streaming media server.%0
+//
+#define NS_E_INCOMPATIBLE_SERVER         0xC00D2EE8L
+
+//
+// MessageId: NS_E_MULTICAST_DISABLED
+//
+// MessageText:
+//
+//  The content cannot be streamed because the Multicast protocol has been disabled.%0
+//
+#define NS_E_MULTICAST_DISABLED          0xC00D2EE9L
+
+//
+// MessageId: NS_E_INVALID_REDIRECT
+//
+// MessageText:
+//
+//  The server redirected the player to an invalid location.%0
+//
+#define NS_E_INVALID_REDIRECT            0xC00D2EEAL
+
+//
+// MessageId: NS_E_ALL_PROTOCOLS_DISABLED
+//
+// MessageText:
+//
+//  The content cannot be streamed because all protocols have been disabled.%0
+//
+#define NS_E_ALL_PROTOCOLS_DISABLED      0xC00D2EEBL
+
+//
+// MessageId: NS_E_MSBD_NO_LONGER_SUPPORTED
+//
+// MessageText:
+//
+//  The MSBD protocol is no longer supported. Please use HTTP to connect to the Windows Media stream.%0
+//
+#define NS_E_MSBD_NO_LONGER_SUPPORTED    0xC00D2EECL
+
+//
+// MessageId: NS_E_PROXY_NOT_FOUND
+//
+// MessageText:
+//
+//  The proxy server could not be located. Please check your proxy server configuration.%0
+//
+#define NS_E_PROXY_NOT_FOUND             0xC00D2EEDL
+
+//
+// MessageId: NS_E_CANNOT_CONNECT_TO_PROXY
+//
+// MessageText:
+//
+//  Unable to establish a connection to the proxy server. Please check your proxy server configuration.%0
+//
+#define NS_E_CANNOT_CONNECT_TO_PROXY     0xC00D2EEEL
+
+//
+// MessageId: NS_E_SERVER_DNS_TIMEOUT
+//
+// MessageText:
+//
+//  Unable to locate the media server. The operation timed out.%0
+//
+#define NS_E_SERVER_DNS_TIMEOUT          0xC00D2EEFL
+
+//
+// MessageId: NS_E_PROXY_DNS_TIMEOUT
+//
+// MessageText:
+//
+//  Unable to locate the proxy server. The operation timed out.%0
+//
+#define NS_E_PROXY_DNS_TIMEOUT           0xC00D2EF0L
 
 
 #endif _NSERROR_H
