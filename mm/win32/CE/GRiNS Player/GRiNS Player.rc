@@ -63,11 +63,13 @@ END
 
 IDM_MENU SHMENUBAR MOVEABLE PURE 
 BEGIN
-    IDM_MENU, 2,
+    IDM_MENU, 3,
     I_IMAGENONE, IDM_MAIN_COMMAND1, TBSTATE_ENABLED, 
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_HELP, 0, 0,
     I_IMAGENONE, IDM_MAIN_COMMAND2, TBSTATE_ENABLED, 
     TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MAIN_COMMAND2, 0, 1,
+    I_IMAGENONE, IDM_MAIN_COMMAND3, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_HELP, 0, 2,
 END
 
 
@@ -78,15 +80,20 @@ END
 
 IDM_MENU MENU DISCARDABLE 
 BEGIN
-    POPUP "Tools"
+    POPUP "File"
     BEGIN
-        MENUITEM "About",                       IDM_HELP_ABOUT
+        MENUITEM "Exit",                        IDM_EXIT
+        MENUITEM "Open",                        IDM_OPEN
     END
     POPUP "Play"
     BEGIN
         MENUITEM "Play",                        IDM_PLAY
         MENUITEM "Pause",                       IDM_PAUSE
         MENUITEM "Stop",                        IDM_STOP
+    END
+    POPUP "Help"
+    BEGIN
+        MENUITEM "About",                       IDM_HELP_ABOUT
     END
 END
 
@@ -170,7 +177,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_HELP                "Tools"
+    IDS_HELP                "File"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -181,6 +188,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_MAIN_COMMAND2       "Play"
+    IDS_CAP_HELP            "Help"
 END
 
 #endif    // English (U.S.) resources
