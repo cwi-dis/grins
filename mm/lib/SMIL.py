@@ -129,6 +129,7 @@ class SMIL:
 			      # edit preferences of new layout view
 			      GRiNSns+' ' 'showEditBackground':None,
 			      GRiNSns+' ' 'editBackground':None,					 
+			      GRiNSns+' ' 'traceImage':None,					 
 			      GRiNSns+' ' 'collapsed':None,
 			      },
 		'region': {'background-color':'transparent',

@@ -936,10 +936,12 @@ cmif_chan_attrs_ignore = {
 	# the channel type is determinate according to the node type
 	'type':0,
 	# end new
-	'showBackground':0,	
+	'showBackground':0,
+	'traceImage':0,
 	'soundLevel':0,
 	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'chsubtype':0,
 	'left':0, 'top':0, 'width':0, 'height':0, 'right':0, 'bottom':0,
+	'regionName':0
 	}
 		
 qt_node_attrs = {
@@ -1577,6 +1579,11 @@ class SMILWriter(SMIL):
 				# default behavior. depend of the node
 				pass
 
+			# trace image
+			traceImage = ch.get('traceImage')
+			if traceImage != None:
+				attrlist.append(('%s:traceImage' % NSGRiNSprefix, traceImage))
+							
 			if self.smilboston:
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
