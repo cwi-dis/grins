@@ -42,4 +42,10 @@ class TOOLBAR_PLAYER(_CommandBase):
 class TOOLBAR_ALIGNMENT(_CommandBase):
 	help = 'Show/Hide the region alignment toolbar'
 
+class ATTRIBUTES_ANCHORS(_CommandBase):
+	help = 'Create anchors'
+class ATTRIBUTES_BACKGROUND(_CommandBase):
+	help = 'Set background color'
+class ATTRIBUTES_ZORDER(_CommandBase):
+	help = 'Set z-order'
 

@@ -20,6 +20,7 @@ import afxres, commctrl
 
 # UserCmds
 from usercmd import *
+from wndusercmd import *
 
 from usercmdui import usercmd2id
 
@@ -91,7 +92,7 @@ class _LayoutView2(GenFormView):
 		self.__orgctrlpos = {}
 		
 		# flag to request anchors page
-		self._showAnchorsPage = 0
+		self._showAttributesPage = None
 								
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
@@ -318,10 +319,12 @@ class _LayoutView2(GenFormView):
 			self.OnZoomIn(id, code)
 		elif id == usercmd2id(CANVAS_ZOOM_OUT):
 			self.OnZoomOut(id, code)
-		elif id == usercmd2id(CREATEANCHOR):
-			self._parent.getMDIFrame().addViewCreationListener(self)
-			self._showAnchorsPage = 1
-			self.onUserCmd(usercmd2id(ATTRIBUTES))
+		elif id == usercmd2id(ATTRIBUTES_ANCHORS):
+			self.openAttributesPage('.anchorlist')
+		elif id == usercmd2id(ATTRIBUTES_BACKGROUND):
+			self.openAttributesPage('cssbgcolor')
+		elif id == usercmd2id(ATTRIBUTES_ZORDER):
+			self.openAttributesPage('z')
 		else:
 			cmd=None
 			contextcmds = self._activecmds
@@ -336,12 +339,17 @@ class _LayoutView2(GenFormView):
 		str = fmtfloat(d2lscale, prec=1)
 		t.settext('Scale 1 : %s' % str)
 
+	def openAttributesPage(self, attrname):
+		self._parent.getMDIFrame().addViewCreationListener(self)
+		self._showAttributesPage = attrname
+		self.onUserCmd(usercmd2id(ATTRIBUTES))
+		
 	def onViewCreated(self, frame, view, strid):
 		if strid == 'attr_edit':
-			if self._showAnchorsPage:
-				view.setcurattrbyname('.anchorlist')
+			if self._showAttributesPage is not None:
+				view.setcurattrbyname(self._showAttributesPage)
 			frame.removeViewCreationListener(self)
-			self._showAnchorsPage = 0
+			self._showAttributesPage = None
 
 	#
 	# Zoom in/out

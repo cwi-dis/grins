@@ -545,15 +545,22 @@ POPUP_EVENT_SOURCE = (
 
 POPUP_REGIONTREE_REGION = (
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+		(FLAG_ALL, ENTRY, 'Set z-order...', None, ATTRIBUTES_ZORDER),
 )
 POPUP_REGIONTREE_SUBREGION = (
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, 'C&reate anchor', None, CREATEANCHOR),
+		(FLAG_ALL, ENTRY, 'Create anchor...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
 )
 
 POPUP_REGIONPREVIEW_REGION = (
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+		(FLAG_ALL, ENTRY, 'Set z-order...', None, ATTRIBUTES_ZORDER),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
 		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
@@ -561,7 +568,8 @@ POPUP_REGIONPREVIEW_REGION = (
 POPUP_REGIONPREVIEW_SUBREGION = (
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, 'C&reate anchor', None, CREATEANCHOR),
+		(FLAG_ALL, ENTRY, 'Create anchor...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
 		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
