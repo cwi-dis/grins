@@ -82,10 +82,10 @@ class HierarchyView(HierarchyViewDialog):
 		
 		self.__add_commands()
 		HierarchyViewDialog.__init__(self)		
-
-		self.create_scene_graph() # A hierarchy of displayable objects for the screen.
-		if not self.usetimestripview:
-			self.scene_graph.collapse_levels(3) # Collapse all nodes less than 3 levels down.
+## Removed this, it is done in show() as well (Jack)
+##		self.create_scene_graph() # A hierarchy of displayable objects for the screen.
+##		if not self.usetimestripview:
+##			self.scene_graph.collapse_levels(3) # Collapse all nodes less than 3 levels down.
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
@@ -470,8 +470,8 @@ class HierarchyView(HierarchyViewDialog):
 	def refresh_scene_graph(self):
 		# Recalculates the node structure from the MMNode structure.
 		if self.scene_graph is not None:
-			self.scene_graph.destroy();
-		self.create_scene_graph();
+			self.scene_graph.destroy()
+		self.create_scene_graph()
 
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
@@ -1195,12 +1195,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.scene_graph.destroy()
 		self.focusobj = None
 		self.selected_widget = None
-		return
-	
-##		for obj in self.objects:
-##			obj.cleanup()
-##		self.objects = []
-##		self.focusobj = None
 
 	# Navigation functions
 
