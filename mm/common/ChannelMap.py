@@ -59,10 +59,8 @@ class ChannelMap:
 		self.channelmodules = {} # cache of imported channels
 
 	def __getitem__(self, key):
-		try:
+		if self.channelmodules.has_key(key):
 			return self.channelmodules[key]
-		except KeyError:
-			pass
 		item = self.channelmap[key]
 		if type(item) is type(''):
 			item = [item]
@@ -82,6 +80,11 @@ class ChannelMap:
 		exec 'from NullChannel import NullChannel'
 		self.channelmodules[key] = NullChannel
 		return NullChannel
+
+	def get(self, key, default = None):
+		if channelmap.has_key(key):
+			return self.__getitem__(key)
+		return default
 
 channelmap = ChannelMap()
 

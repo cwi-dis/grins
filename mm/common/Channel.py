@@ -34,21 +34,8 @@ def isin(elem, list):
 			return 1
 	return 0
 
-import re
-clipre = re.compile('^(?:'
-		    '(?:(?P<npt>npt)=(?P<nptclip>.+))|'
-		    '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))'
-		    ')$')
-clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
-		       r'(?:(?P<hours>\d{2}):)?'
-		       r'(?P<minutes>\d{2}):'
-		       r'(?P<seconds>\d{2})'
-		       r'(?P<fraction>\.\d+)?'
-		       r')|(?P<use_timecount>' # timecount[.fraction]unit
-		       r'(?P<timecount>\d+)'
-		       r'(?P<units>\.\d+)?'
-		       r'(?P<scale>h|min|s|ms)?)'
-		       r')$')
+clipre = None
+clock_val = None
 
 class Channel:
 	#
@@ -116,7 +103,6 @@ class Channel:
 		del self._armstate
 		del self._attrdict
 		del self._deviceno
-		del self._name
 		del self._anchors
 		del self._playcontext
 		del self._played_anchors
@@ -143,7 +129,7 @@ class Channel:
 		pass
 
 	def kill(self):
-		if hasattr(self, '_name'):
+		if hasattr(self, '_player'):
 			self.destroy()
 
 	def may_show(self):
@@ -815,6 +801,20 @@ class Channel:
 		return MMAttrdefs.getattr(node, 'loop')
 
 	def parsecount(self, val, node, attr):
+		global clock_val
+		if clock_val is None:
+			import re
+			clock_val = re.compile(
+				r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
+				r'(?:(?P<hours>\d{2}):)?'
+				r'(?P<minutes>\d{2}):'
+				r'(?P<seconds>\d{2})'
+				r'(?P<fraction>\.\d+)?'
+				r')|(?P<use_timecount>' # timecount[.fraction]unit
+				r'(?P<timecount>\d+)'
+				r'(?P<units>\.\d+)?'
+				r'(?P<scale>h|min|s|ms)?)'
+				r')$')
 		res = clock_val.match(val)
 		if res is None:
 			self.errormsg(node, 'bad clock value in %s' % attr)
@@ -852,9 +852,17 @@ class Channel:
 
 	def getclipval(self, node, attr, units):
 		import smpte
+		global clipre
 		val = MMAttrdefs.getattr(node, attr)
 		if not val:
 			return 0
+		if clipre is None:
+			import re
+			clipre = re.compile(
+				'^(?:'
+				'(?:(?P<npt>npt)=(?P<nptclip>.+))|'
+				'(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))'
+				')$')
 		res = clipre.match(val)
 		if res is None:
 			self.errormsg(node, 'invalid %s attribute' % attr)
@@ -947,7 +955,7 @@ class ChannelWindow(Channel):
 		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
-		self._is_waiting = 0
+		self._is_waiting = 1
 		self.want_default_colormap = 0
 
 	def destroy(self):
@@ -988,11 +996,7 @@ class ChannelWindow(Channel):
 			top.hierarchyview.globalsetfocus(node)
 			top.channelview.globalsetfocus(node)
 		else:
-			if self.window:
-				grab = self.window
-			else:
-				grab = 1
-			windowinterface.showmessage('Can only push focus when playing', mtype = 'warning', grab = grab)
+			windowinterface.showmessage('Can only push focus when playing', mtype = 'warning', grab = 1, parent = self.window)
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
@@ -1323,18 +1327,15 @@ class ChannelWindow(Channel):
 		windowinterface.showmessage(
 			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
-			mtype = 'warning', grab = self.window)
+			mtype = 'warning', grab = 1, parent = self.window)
 
 	def defanchor(self, node, anchor, cb):
 		# This method is called when the user defines a new anchor. It
 		# may be overridden by derived classes.
-		if self.window:
-			grab = self.window
-		else:
-			grab = 1
 		windowinterface.showmessage('Channel '+self._name+
 			  ' does not support\nediting of anchors (yet)',
-					    mtype = 'warning', grab = grab)
+					    mtype = 'warning', grab = 1,
+					    parent = self.window)
 		apply(cb, (anchor,))
 
 class ChannelAsync(Channel):
