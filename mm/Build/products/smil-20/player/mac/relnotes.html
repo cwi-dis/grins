@@ -1,0 +1,382 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>GRiNS Player beta for SMIL 2.0, Release Notes
+      for Macintosh</title>
+  </head>
+
+  <body>
+    <h1>GRiNS Player beta for SMIL 2.0, Release Notes
+      for Macintosh</h1>
+
+    <p>
+      These are the release notes for GRiNS Player beta for SMIL 2.0,
+      Release Notes for Macintosh, build 21. A more recent version of
+      these release notes, as well as more recent builds of the
+      player, may be available through <a
+      href="http://www.oratrix.com/GRiNS/SMIL-2.0/">
+	http://www.oratrix.com/GRiNS/SMIL-2.0/</a>.
+    </p>
+    
+	<h2>Changes since Build 17</h2>
+	<ul>
+      <li>fill=freeze for video did not always work. Fixed.
+	  <li>The problem with some audio formats crashing the player has now really
+	      fixed.
+	</ul>
+	
+	<h2>Changes since Build 15</h2>
+	<ul>
+	  <li>Some problems with the play/stop/pause buttons have been fixed.
+	  <li>A problem with some audio formats causing crashes has been fixed.
+      <li>fill="transition" is now implemented properly.</li>
+      <li>Out transitions (transOut attribute) is implemented properly.</li>
+      <li>Various improvements to the layout code.</li>
+      <li>All sorts of subtle bugs fixed in the scheduler.</li>
+      <li>Implemented support for min/max/dur = "media".</li>
+	  <li>Several problems with hyperjumps have been fixed.
+	  <li>All attributes that are valid according to the current SMIL
+	      2.0 Language Profile are now recognized, although not all
+	      attributes are implemented.
+      <li>The SMIL 2.0 default namespace is now
+          http://www.w3.org/2000/SMIL20/CR/Language older namespaces are
+          recognized but result in a warning message.</li>
+      <li>The fill="hold" attribute value has been implemented.</li>
+      <li>The fill="transition" attribute value has been implemented.</li>
+      <li>A problem was fixed when the presentation was paused while
+          there were children in an excl elements that were paused due to
+          excl/priorityClass semantics.</li>
+      <li>A problem was fixed with container elements that need to be
+          frozen from the start.</li>
+      <li>A problem was fixed when jumping to an element in a sequence
+          where one of the elements before the target element had
+          indefinite duration.</li>
+      <li>A problem was fixed with playing a video element in a region
+          that didn't fit in it's parent region (and was therefore clipped
+          to the size of the parent region).</li>
+      <li>A problem was fixed in the Preferences dialog.  The check
+          marks for the systemOverdubOrSubtitle and systemCaptions
+          attributes were exchanged.</li>
+      <li>The override="uid-only" attribute value on customTest
+          elements has been implemented.</li>
+      <li>The param element is now recognized.</li>
+      <li>The syntax for multiple values in the systemRequired and
+          customTest attributes has been implemented.</li>
+      <li>Support for viewportOpenEvent and viewportCloseEvent.</li>
+      <li>Support for synchronization to begin/end/activateEvent on
+          area and anchor element.</li>
+      <li>The delay in responding to mouse events has been fixed.</li>
+      <li>A number of problems were fixed having to do with multiple
+	      layout elements inside a switch inside the head section.</li>
+      <li>More fixes to the scheduler.</li>
+    </ul>
+    
+    <h2>Changes Since Build 10</h2>
+
+    <ul>
+      <li>You can now select audio descriptions in the preferences.
+      <li>The actuate="onLoad" attribute value for anchors is now
+	implemented.</li>
+      <li>When linking to a document that GRiNS cannot handle itself
+	(<i>i.e.</i> all documents except SMIL documents), the document
+	is handed off to the appropriate application.</li>
+      <li>RealVideo, RealText, and RealPix media elements can now be
+	used as the source of hyperlinks.</li>
+      <li>Various improvements in the scheduler.
+	In particular, an excl node with no resolved children and no
+	explicit duration will now not play.  Also, a node with 0
+	duration but with a min attribute greater than 0 will play and
+	end after the min time is up.</li>
+      <li>Improvements to the hyperlinking code.</li>
+      <li>Support for embedded HTML documents (<i>i.e.</i>, you can
+	use HTML documents as media objects).</li>
+      <li>The readIndex attribute is now recognized.</li>
+    </ul>
+
+    <h2>
+      SMIL 2.0 Compatibility
+    </h2>
+
+    This player supports the SMIL 2.0 Language Profile, with the
+    following notes:
+    <UL>
+      <LI>
+	Structure functionality
+	<UL>
+	  <LI>
+	    Structure Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  </LI>
+	</UL>
+      <LI>
+	Metainformation functionality
+	<UL>
+	  <LI>
+	    Metainformation Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  </LI>
+	</UL>
+      <LI>
+	Timing functionality
+	<UL>
+	  <LI>
+	    BasicInlineTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    SyncbaseTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    EventTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    MinMaxTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    WallclockTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    MultiArcTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    BasicTimeContainers Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    ExclTimeContainers Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    PrevTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    RestartTiming Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    SyncBehavior Module
+	    <UL>
+	      <LI>
+		Only syncBehavior="independent" is supported
+	    </UL>
+	  <LI>
+	    SyncBehaviorDefault Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    RestartDefault Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    FillDefault Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	</UL>
+      <LI>
+	Animation functionality
+	<UL>
+	  <LI>
+	    BasicAnimation Module
+	    <UL>
+	      <LI>
+		 The target attribute soundLevel is recognized but not implemented.
+	      <LI>
+		The attribute attributeType is recognized but ignored
+		(attributeType is always XML).
+	    </UL>
+	</UL>
+      <LI>
+	Content Control functionality
+	<UL>
+	  <LI>
+	    BasicContentControl Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    CustomTestAttributes Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    PrefetchControl Module
+	    <UL>
+	      <LI>
+		<EM>To be Supplied </EM>
+	    </UL>
+	  <LI>
+	    SkipContentControl Module
+	    <UL>
+	      <LI>
+		<EM>To be Supplied </EM>
+	    </UL>
+	</UL>
+      <LI>Layout functionality
+	<UL>
+	  <LI>
+	    BasicLayout Module
+	    <UL>
+	      <LI>
+		 The scroll value for fit attribute is recognized but not implemented.
+	    </UL>
+	  <LI>
+	    AudioLayout Module
+	    <UL>
+	      <LI>
+		 The soundLevel attribute is recognized but ignored.
+	    </UL>
+	  <LI>
+	    MultiWindowLayout Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    HierarchicalLayout Module
+	    <UL>
+	      <LI>
+		 For media with no intrinsic sizes (html, text, ...), the registration point attributes are recognized but ignored
+	      <LI>
+		 For Real medias (RealVideo, RealText, RealPix), the registration point attributes work only if the fit value is equal to hidden (default value)
+	    </UL>
+	</UL>
+      <LI>
+	Linking functionality
+	<UL>
+	  <LI>
+	    BasicLinking Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    LinkingAttributes Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    ObjectLinking Module
+	    <UL>
+	      <LI>
+		Fully supported, but only links in HTML documents can
+		be overridden using the fragment attribute.
+	    </UL>
+	</UL>
+      <LI>
+	Transition Effects functionality
+	<UL>
+	  <LI>
+	    BasicTransitions Module
+	    <UL>
+	      <LI>
+		Subtypes are recognized but not implemented, the
+		default subtype for the transition type is always
+		used.
+	      <LI>
+		Type miscShapeWipe is recognized but not implemented.
+	      <LI>
+		Timing for most of the iris wipes is incorrect.
+	      <LI>
+		The direction attribute is recognized but ignored
+		(direction is always forward).
+	      <LI>
+		Specifying multiple transitions in the transIn and
+		transOut attributes is not supported.
+	      <LI>
+		When both the from and the to source of a transition
+		are videos the from source will usually be frozen.
+	    </UL>
+	  <LI>
+	    CoordinatedTransitions Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    TransitionModifiers Module
+	    <UL>
+	      <LI>
+		The TransitionModifiers attributes are recognized but
+		ignored. 
+	    </UL>
+	</UL>
+      <LI>
+	Media functionality
+	<UL>
+	  <LI>
+	    BasicMedia Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    MediaClipping Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    MediaParam Module
+	    <UL>
+	      <LI>
+		Not yet supported
+	    </UL>
+	  <LI>
+	    BrushMedia Module
+	    <UL>
+	      <LI>
+		Fully supported
+	    </UL>
+	  <LI>
+	    MediaAccessibility Module
+	    <UL>
+	      <LI>
+		Fully supported in that the readIndex attribute is
+		parsed correctly.  There is no support for actually
+		reading out the alt, title, and longdesc attributes.
+	    </UL>
+	</UL>
+    </UL>
+  </body>
+</html>
