@@ -134,7 +134,7 @@ class Hlinks:
 		uid = node.GetUID()
 		for a1, a2, dir, tp in self.links:
 			if type(a1) == type(()) and a1[0] == uid:
-				interesting.append(a1, a2, dir, tp)
+				interesting.append((a1, a2, dir, tp))
 			if type(a2) == type(()) and a2[0] == uid:
 				interesting.append(self.revlink((a1, a2, dir, tp)))
 		is_src = 0
