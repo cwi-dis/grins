@@ -51,7 +51,7 @@ FOCUSBOTTOM = settings.get('structure_focusbottom')
 
 class sizes_time:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-	MINSIZE = 48 
+	MINSIZE = 64 
 	MAXSIZE = 128
 	TITLESIZE = int(f_title.fontheightPXL()*1.2)
 	if TITLESIZE < windowinterface.ICONSIZE_PXL:
@@ -70,7 +70,7 @@ class sizes_time:
 
 class sizes_notime:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-	MINSIZE = 48 
+	MINSIZE = 64
 	MAXSIZE = 128
 	TITLESIZE = int(f_title.fontheightPXL()*1.2)
 	if TITLESIZE < windowinterface.ICONSIZE_PXL:
@@ -81,11 +81,11 @@ class sizes_notime:
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 
-      	GAPSIZE = 16;
-	HEDGSIZE = 16;
-	VEDGSIZE = 12 #3						# size of edges		
+      	GAPSIZE = 8
+	HEDGSIZE = 8
+	VEDGSIZE = 8 #3						# size of edges		
 
-	DROPAREASIZE = 32;		# size of the decoration at the end of a "roll of film"
+	DROPAREASIZE = 64;		# size of the decoration at the end of a "roll of film"
 	FLATBOX = 0
 	TIMEBARHEIGHT = 0
 	DROPAREA = MINSIZE + HOREXTRASIZE
