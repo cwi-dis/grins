@@ -2801,7 +2801,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				a = ctx.newnode('anchor')
 				a.attrdict['ashape'] = val[0]
-				a.attrdict['acoords'] = val[1]
+				coords = val[1]
+				a.attrdict['acoords'] = [coords[0],coords[1],coords[0]+coords[2],coords[1]+coords[3]]
 				img._addchild(a)
 				if key in ('play', 'toggle'):
 					arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = a, event = 'activateEvent', delay = 0)
