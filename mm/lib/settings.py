@@ -22,10 +22,12 @@ default_settings = {
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
+	'system_overdub_or_subtitle':'subtitle', # Subtitles preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
+	'system_audiodesc': 0,		# No audio description
 	'license': '',
 ##	'license': 'A-BMKA-Q4BCY-5H-T1SP',	# XXXX Mac beta only!!!
 	'license_user' : '',
