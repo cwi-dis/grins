@@ -48,7 +48,7 @@ class MMNodeContext(domcore.Element):
 		self.element = self	# jst to do 
 
 	# Act like an XML DOM Core Node
-	# def _get_nodeName(self): return "context"
+	def _get_nodeName(self): return "context"
 	def _get_attributes(self):
 		return domcore.NamedNodeMap()
 	def _get_childNodes(self):
@@ -440,7 +440,7 @@ class MMChannel(domcore.Element):
 	def _get_attributes(self):
 		nnm = domcore.NamedNodeMap()
 		for a in self.attrdict.items() :
-			if a[1]: # skip empty attributes
+			 if a[1]: # skip empty attributes
 				attr = domcore.Attr(a[0],str(a[1]))
 				nnm.setNamedItem(attr)
 		attr = domcore.Attr('name', self.name)
@@ -450,7 +450,7 @@ class MMChannel(domcore.Element):
         def setAttribute(self, attrname, value):
                 em = self.context.editmgr
                 if not em.transaction():
-                        return None
+                         raise 'not ready'
 
                 if attrname=='name' :		# change channelname
 			em.setchannelname(self.name, value)
@@ -461,9 +461,18 @@ class MMChannel(domcore.Element):
                 em.commit()
                 return None
 
-	def _get_childNodes(self):
-		nodeList =  domcore.NodeList([])
-		return nodeList
+	def removeAttribute(self, name):
+                em = self.context.editmgr
+                if not em.transaction():
+                        raise 'not ready'
+		em.setchannelattr(self, self.name, attrname, None)	# remove attribute
+		em.commit()
+                return None
+	
+		
+	# def _get_childNodes(self):
+		# nodeList =  domcore.NodeList([])
+		# return nodeList
 	
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` \
@@ -624,20 +633,20 @@ class MMNode(domcore.Element):
 		# else:
 			# return None
 
-	def _get_previousSibling(self):
-		# fixme root has context as first child ...
-		if not self.parent: return None # the root has no siblings
-		siblings = self.parent.children
-		my_index = siblings.index(self)
-		if my_index  == 0: return None # I am the first child
-		else: return siblings[my_index-1]
+	# def _get_previousSibling(self):
+		# # fixme root has context as first child ...
+		# if not self.parent: return None # the root has no siblings
+		# siblings = self.parent.children
+		# my_index = siblings.index(self)
+		# if my_index  == 0: return None # I am the first child
+		# else: return siblings[my_index-1]
 
-	def _get_nextSibling(self): 
-		if not self.parent: return None # the root has no siblings
-		siblings = self.parent.children
-		my_index = siblings.index(self)
-		if my_index+1  == len(siblings): return None # I am the last child
-		else: return siblings[my_index+1]
+	# def _get_nextSibling(self): 
+		# if not self.parent: return None # the root has no siblings
+		# siblings = self.parent.children
+		# my_index = siblings.index(self)
+		# if my_index+1  == len(siblings): return None # I am the last child
+		# else: return siblings[my_index+1]
 
 	def _get_attributes(self):
 		namedNodeMap = domcore.NamedNodeMap()
@@ -680,14 +689,14 @@ class MMNode(domcore.Element):
 		em.delnode(oldChild)
 		em.commit()
 
-	def replaceChild(self, newChild, oldChild):
-		if oldChild in self.children:
-			i = self.children.index(oldChild)
-			self._editMgrRemoveNode(oldChild)
-			self._editMgrAddNode(i,  newChild)
-			return newChild
-		else:
-			return None
+	# def replaceChild(self, newChild, oldChild):
+		# if oldChild in self.children:
+			# i = self.children.index(oldChild)
+			# self._editMgrRemoveNode(oldChild)
+			# self._editMgrAddNode(i,  newChild)
+			# return newChild
+		# else:
+			# return None
 
 	def removeChild(self, oldChild):
 		if oldChild in self.children:
@@ -709,13 +718,13 @@ class MMNode(domcore.Element):
 		value = convertAttribute(name,value)
 		em = self.context.editmgr			
 		if not em.transaction():
-                	return None
+                	raise 'not ready'	
 		em.setnodeattr(self, name, value)
 		em.commit()
 		return None
 
-	def setAttributeNode(self, attr):
-		return self.setAttribute(attr._get_name(), attr._get_value())	
+	# def setAttributeNode(self, attr):
+		# return self.setAttribute(attr._get_name(), attr._get_value())	
 
 	# toxml2 is more efficient, but not using XML-DOM interface.
 	# To get all dom stuff, use toxml() defined in domcore.Element

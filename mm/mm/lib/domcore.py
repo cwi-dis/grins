@@ -118,25 +118,45 @@ class Node:
 		self.__type = type
 	def _get_nodeName(self): return self._get_name()
 	def _get_nodeValue(self): return self._get_value()
-	def _get_nodeType(self): return type
+	def _get_nodeType(self): return self.__type
         def _get_parentNode(self) : return None
 	def _get_childNodes(self): return NodeList()
 	def _get_firstChild(self) :
 		children = self._get_childNodes()
 		len = children._get_length()
+		print 'grinsdom: _get_firstChild : len : ',len
 		if len > 0:
-			return self._get_childNodes().item(0)
+			return children.item(0)
 		else:
 			return None
 	def _get_lastChild(self) :
 		children = self._get_childNodes()
 		len = children._get_length()
 		if len > 0:
-			return children.item(int(len)-1)
+			result = children.item(int(len-1))
+			return result
 		else:
 			return None
-	def _get_previousSibling(self): return None
-	def _get_nextSibling(self): return None
+
+	def _get_previousSibling(self): 
+		siblings = _get_parentNode()._get_childNodes()
+		len = siblings._get_length()
+		i = 0
+		while i < len:
+			if i > 1 and siblings.item(i)==self:	# found ourselves in parent.children
+				return sibling.item(i-1) 
+			i = i + 1
+		return None
+	
+	def _get_nextSibling(self): 
+		siblings = _get_parentNode()._get_childNodes()
+		len = siblings._get_length()
+		i = 0
+		while i < len:
+			if i < len-1 and siblings.item(i)==self:	# found ourselves in parent.children
+				return sibling.item(i+1) 
+			i = i + 1
+		return None
 	
 	def _get_attributes(self):
 		nnm = NamedNodeMap()
@@ -145,13 +165,21 @@ class Node:
 				attr = Attr(a[0],str(a[1]))
 				nnm.setNamedItem(attr)
 		return nnm
+
 	def _get_ownerDocument(self): return None	
-	def insertBefore(self, newChild, refChild): 
-		return None
-	def replaceChild(self, newChild, oldChild): return None
+
+	def insertBefore(self, newChild, refChild): return None
+
+	def replaceChild(self, newChild, oldChild): 
+		self.insertBefore(newChild, oldChild)	# insert before oldChild
+		self.removeChild(oldChild)		# remove oldChild
+		return newChild
+				
 	def removeChild(self, oldChild): return None
+
 	def appendChild(self, newChild):
 		return self.insertBefore(newChild, None)
+
         def hasChildNodes(self):
 		len = self._get_childNodes()._get_length()
                 if len:
@@ -172,10 +200,12 @@ class Element(Node):
 	def _get_tagName(self):
 		return self.__name or self._get_nodeName()
 	def getAttribute(self, name):
-		node = self.getAttributeNode(name)
-		return node._get_value()
+		print '....getAttribute..', name
+		result  = self.getAttributeNode(name)._get_value()
+		print 'in getAttribute2 ', result
+		return result 
 	def getAttributeNode(self, name):
-		print 'get attribute ', name, value
+		print 'get attribute ', name 
 		return self._get_attributes().getNamedItem(name)
 	def setAttribute(self,name,value):
 		print '---- set attribute ', name, value
@@ -183,7 +213,7 @@ class Element(Node):
 	def removeAttribute(self, name):
 		raise self.ex
 	def setAttributeNode(self, attr):
-		raise self.ex
+		return self.setAttribute(attr._get_name(), attr._get_value())
 	def removeAttributeNode(self, attr):
 		raise self.ex
 	def getElementsByTagName(self, name):
