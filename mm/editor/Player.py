@@ -49,6 +49,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.savecurlayout = None
 		self.curchannel = None
 		self.savecurchannel = None
+		self.savecallback = None
 		self.showing = 0
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
@@ -134,7 +135,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if self.curlayout is None:
 			self.showchannels()
 		else:
-			self.setlayout(self.curlayout, self.curchannel)
+			self.setlayout(self.curlayout, self.curchannel, self.savecallback)
 		self.makeugroups()
 		self.showstate()
 		self.after_chan_show()
@@ -149,6 +150,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		PlayerDialog.hide(self)
 		self.toplevel.checkviews()
 		self.hidechannels()
+		self.savecallback = None
 
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)
@@ -160,9 +162,11 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if geometry is not None:
 			self.last_geometry = geometry
 
-	def setlayout(self, layout, channel):
+	def setlayout(self, layout = None, channel = None, selectchannelcb = None):
 		self.curlayout = layout
 		self.curchannel = channel
+		if selectchannelcb is not None:
+			self.savecallback = selectchannelcb
 		if not self.showing or self.playing:
 			return
 		context = self.context
@@ -193,6 +197,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 					ch.check_visible()
 					ch.unhighlight()
 					ch.hideimg()
+					ch.sensitive()
 				else:
 					ch.show()
 					ch.showimg()
@@ -201,25 +206,28 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 						ch.highlight(RED)
 					else:
 						ch.highlight(BLACK)
+					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
 				ch.show()
 				ch.showimg()
+				ch.sensitive((selectchannelcb, (chname,)))
 			else:
 				ch.hide()
+				ch.sensitive()
 		self.makemenu()
 
 	def play(self):
 		self.savecurlayout = self.curlayout
 		self.savecurchannel = self.curchannel
-		self.setlayout(None, None)
+		self.setlayout()
 		PlayerCore.play(self)
 
 	def stopped(self):
 		PlayerCore.stopped(self)
 		if self.curlayout is None:
-			self.setlayout(self.savecurlayout, self.savecurchannel)
+			self.setlayout(self.savecurlayout, self.savecurchannel, self.savecallback)
 		else:
-			self.setlayout(self.curlayout, self.curchannel)
+			self.setlayout(self.curlayout, self.curchannel, self.savecallback)
 	#
 	# FORMS callbacks.
 	#

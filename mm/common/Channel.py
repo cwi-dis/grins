@@ -276,6 +276,7 @@ class Channel:
 			print 'Channel.hide('+`self`+')'
 		self._want_shown = 0
 		self._highlighted = None
+		self.sensitive()
 		if not self._is_shown:
 			return
 		self._is_shown = 0
@@ -304,6 +305,9 @@ class Channel:
 
 	def unhighlight(self):
 		# stop highlighting the channel instance
+		pass
+
+	def sensitive(self, callback = None):
 		pass
 
 	def showimg(self):
@@ -1000,6 +1004,11 @@ class ChannelWindow(Channel):
 			self._highlighted = None
 			self.window.dontshowwindow()
 
+	def sensitive(self, callback = None):
+		self.__callback = None
+		if self._is_shown and self.window:
+			self.__callback = callback
+
 	def showimg(self):
 		self._showimg = 1
 		img = self._attrdict.get('bgimg')
@@ -1063,6 +1072,9 @@ class ChannelWindow(Channel):
 			# probably doesn't occur...
 			_button.unhighlight()
 		_button = None
+		if self.__callback is not None:
+			apply(apply, self.__callback)
+			return
 		buttons = value[2]
 		if len(buttons) == 0:
 			if self._attrdict.get('transparent', 0):
