@@ -36,6 +36,20 @@ class Main(MainDialog):
 	def __init__(self, opts, files):
 		import windowinterface
 		import license
+		import features
+		if hasattr(features, 'expiry_date') and features.expiry_date:
+			import time
+			import version
+			tm = time.localtime(time.time())
+			yymmdd = tm[:3]
+			if yymmdd > features.expiry_date:
+				rv = windowinterface.GetOKCancel(
+				   "This beta copy of GRiNS has expired.\n\n"
+				   "Do you want to check www.oratrix.com for a newer version?")
+				if rv == 0:
+					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
+					windowinterface.htmlwindow(url)
+				sys.exit(0)
 		self.tmpopts = opts
 		self.tmpfiles = files
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
