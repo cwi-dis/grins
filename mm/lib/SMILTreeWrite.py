@@ -869,10 +869,10 @@ def gettransition(writer, node, which):
 	list = []
 	for tr in transition:
 		try:
-			list.append(writer.transition2name[transition])
+			list.append(writer.transition2name[tr])
 		except KeyError:
-			print '** Attempt to write unknown transition', transition
-			list.append(transition)
+			print '** Attempt to write unknown transition', tr
+			list.append(tr)
 	return string.join(list, ';')
 		
 	
