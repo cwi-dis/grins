@@ -18,7 +18,7 @@ from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
 typestr = ['JUMP', 'CALL', 'FORK']
 dirstr = ['->', '<-', '<->']
 
-class Struct(): pass
+class Struct: pass
 
 # The menus:
 LEFT_MENU = 'All|From Time Chart focus|From Block View focus'
