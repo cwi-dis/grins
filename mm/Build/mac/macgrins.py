@@ -37,13 +37,14 @@ else:
 # Mangle sys.path. Here are the directives for macfreeze:
 #
 # macfreeze: path :
-# macfreeze: path ::grins:mac
-# macfreeze: path ::grins
-# macfreeze: path ::common
-# macfreeze: path ::lib:mac
-# macfreeze: path ::lib
-# macfreeze: path ::pylib
-# macfreeze: path ::pylib:audio
+# macfreeze: path :::grins:mac
+# macfreeze: path :::grins
+# macfreeze: path :::common:mac
+# macfreeze: path :::common
+# macfreeze: path :::lib:mac
+# macfreeze: path :::lib
+# macfreeze: path :::pylib
+# macfreeze: path :::pylib:audio
 #
 # and some modules we don't want:
 # macfreeze: exclude X_window
@@ -112,6 +113,7 @@ if not STANDALONE:
 		CMIFDIR+":mac",
 		CMIFDIR+":grins:mac",
 		CMIFDIR+":grins",
+		CMIFDIR+":common:mac",
 		CMIFDIR+":common",
 		CMIFDIR+":lib:mac",
 		CMIFDIR+":lib",
