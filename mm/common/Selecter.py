@@ -104,7 +104,8 @@ class Selecter:
 
 	def gotonode(self, seek_node, arg):
 		# First check whether this is an indirect anchor
-		if Scheduler.debugevents: print 'gotonode',seek_node,arg
+		if __debug__:
+			if Scheduler.debugevents: print 'gotonode',seek_node,arg
 		self.scheduler.setpaused(1)
 		timestamp = self.scheduler.timefunc()
 		sctx = self.scheduler.sctx_list[0]
