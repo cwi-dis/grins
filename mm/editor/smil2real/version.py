@@ -13,5 +13,6 @@ registryname = 'RealONE'
 
 # Note: this GUID *must* be different for each version
 # and each product!
+# Generate with \Program Files\Microsoft Visual Studio\Common\Tools\uuidgen
 
-guid = '{C3469539-EB6C-4b3c-838D-B7AD6B0DEBCA}'
+guid = '{bc0e9a31-95cb-49aa-b90a-a6079763afbe}'
