@@ -565,7 +565,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				if height > self.__height:
 					self.__height = height
-		
+
 	def FixSyncArcs(self, node):
 		for attr, val in node.__syncarcs:
 			self.SyncArc(node, attr, val)
@@ -1315,7 +1315,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('non-white space content')
 			return
 		self.__nodedata.append(data)
-		
+
 	__doctype = re.compile('SYSTEM' + xmllib._S + '(?P<dtd>[^ \t\r\n]+)' +
 			       xmllib._opS + '$')
 	def handle_doctype(self, tag, pubid, syslit, data):
