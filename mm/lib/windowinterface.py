@@ -19,6 +19,7 @@ _DEF_FGCOLOR =   0,  0,  0		# black
 
 _window_list = {}			# mapping from window ID to object
 _image_cache = {}			# cache of prepared images
+_cache_full = 0				# 1 if we shouldn't cache more images
 
 gl.foreground()
 _screenwidth = gl.getgdesc(GL.GD_XPMAX)
@@ -920,6 +921,7 @@ class _Window:
 		self._cursor = cursor
 
 	def _prepare_image_from_file(self, file, top, bottom, left, right):
+		global _cache_full
 		cachekey = `file`+':'+`self._width`+'x'+`self._height`
 		if _image_cache.has_key(cachekey):
 			retval = _image_cache[cachekey]
@@ -958,21 +960,23 @@ class _Window:
 			if f != file:
 				import os
 				os.unlink(f)
-		import tempfile
-		filename = tempfile.mktemp()
-		try:
-			import imgfile
-			imgfile.write(filename, retval[10], retval[6], \
-				  retval[7], retval[8])
-		except:			# any error...
-			print 'Warning: caching image failed'
-			import posix
+		if not _cache_full:
+			import tempfile
+			filename = tempfile.mktemp()
 			try:
-				posix.unlink(filename)
-			except posix.error:
-				pass
-			return retval
-		_image_cache[cachekey] = retval[:-1] + (filename,)
+				import imgfile
+				imgfile.write(filename, retval[10], \
+					  retval[6], retval[7], retval[8])
+			except:			# any error...
+				print 'Warning: caching image failed'
+				import posix
+				try:
+					posix.unlink(filename)
+				except posix.error:
+					pass
+				_cache_full = 1
+				return retval
+			_image_cache[cachekey] = retval[:-1] + (filename,)
 		return retval
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
