@@ -19,15 +19,14 @@ HD, TL = 0, 1
 # This takes sync arcs within the subtree into account, but ignores
 # sync arcs with one end outside the given subtree.
 #
-# XXX For now, all sync arcs must actually point in the given subtree.
+# XXX For now, all sync arcs must actually start the given subtree,
+# XXX so you are really restricted to passing a root node...
 #
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
 #
 def calctimes(root):
 	prepare(root)
-	if root.counter[HD] <> 0:
-		raise RuntimeError, 'head of root has dependencies!?!'
 	pt = pseudotime().init(0.0)
 	q = sched.scheduler().init(pt.timefunc, pt.delayfunc)
 	root.counter[HD] = 1
@@ -37,22 +36,48 @@ def calctimes(root):
 
 
 # Interface to the prep1() and prep2() functions; these are also used
-# by the player.
+# by the player (which uses a different version of decrement()).
+# This adds instance variables 'counter' and 'deps' to each node,
+# with meanings that can be deduced from the code below. :-) :-) :-)
 #
 def prepare(root):
 	prep1(root)
 	prep2(root)
+	if root.counter[HD] <> 0:
+		raise RuntimeError, 'head of root has dependencies!?!'
 
 
-# Interface to clean up the mess left behind by prep1() and prep2().
+# Interface to clean up the mess left behind by prepare().
+# Calling this can never hurt.
+# It does *not* remove t0 and t1, by the way...
 #
 def cleanup(node):
+	node.counter = node.deps = None
 	del node.counter
 	del node.deps
 	type = node.GetType()
 	if type in ('seq', 'par'):
 		for c in node.GetChildren():
-			self.cleanup(c)
+			cleanup(c)
+
+
+# Return a node's nominal duration, in seconds, as a floating point value.
+# Should only be applied to leaf nodes.
+#
+def getduration(node):
+	if node.GetType() not in ('imm', 'ext', 'grp'):
+		raise RuntimeError, 'Timing.getduration() on non-leaf'
+	cname = MMAttrdefs.getattr(node, 'channel')
+	cattrs = node.context.channeldict[cname]
+	ctype = cattrs['type']
+	cclass = channelmap[ctype]
+	instance = cclass() # XXX Not initialized!  Walking on thin ice here...
+	return instance.getduration(node)
+
+
+###########################################################
+# The rest of the routines here are for internal use only #
+###########################################################
 
 
 def prep1(node):
@@ -80,7 +105,6 @@ def prep1(node):
 def prep2(node):
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
 	for arc in arcs:
-		print 'sync arc:', arc, 'to:', node.GetUID()
 		xuid, xside, delay, yside = arc
 		xnode = node.MapUID(xuid)
 		adddep(xnode, xside, delay, node, yside)
@@ -125,18 +149,3 @@ class pseudotime():
 		return self.t
 	def delayfunc(self, delay):
 		self.t = self.t + delay
-		print 'delay', delay, '-->', self.t
-
-
-# Return a node's nominal duration, in seconds, as a floating point value.
-# Should only be applied to leaf nodes.
-#
-def getduration(node):
-	if node.GetType() not in ('imm', 'ext', 'grp'):
-		raise RuntimeError, 'Timing.getduration() on non-leaf'
-	cname = MMAttrdefs.getattr(node, 'channel')
-	cattrs = node.context.channeldict[cname]
-	ctype = cattrs['type']
-	cclass = channelmap[ctype]
-	instance = cclass() # XXX Not initialized!  Walking on thin ice here...
-	return instance.getduration(node)
