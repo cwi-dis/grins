@@ -244,6 +244,14 @@ class _Window:
 	def is_closed(self):
 		return not hasattr(self, '_form')
 
+	def showwindow(self):
+		# dummy for now
+		pass
+
+	def dontshowwindow(self):
+		# dummy for now
+		pass
+
 	def _call_on_close(self, func):
 		if not func in self._closecallbacks:
 			self._closecallbacks.append(func)
