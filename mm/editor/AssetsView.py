@@ -9,7 +9,6 @@ import urlparse
 import posixpath
 import string
 import usercmd
-import Clipboard
 
 class AssetsView(AssetsViewDialog):
 	COLUMNLIST={
@@ -100,6 +99,7 @@ class AssetsView(AssetsViewDialog):
 				usercmd.CUT(callback=(self.callback_cut, ())),
 				usercmd.COPY(callback=(self.callback_copy, ())),
 				usercmd.PASTE(callback=(self.callback_paste, ())),
+				usercmd.DELETE(callback=(self.callback_delete, ())),
 			]
 		else:
 			cmdlist = []
@@ -113,6 +113,9 @@ class AssetsView(AssetsViewDialog):
 
 	def callback_copy(self):
 		print "copy"
+
+	def callback_delete(self):
+		print "delete"
 
 	def getunusedassets(self):
 		assetlist = []
@@ -177,7 +180,7 @@ class AssetsView(AssetsViewDialog):
 				self._getallassetstree(ch, dict)
 
 	def getclipboard(self):
-		tp, data = Clipboard.getclip()
+		tp, data = self.editmgr.getclip()
 		if tp == 'node':
 			data = [data]
 		if tp == 'node' or tp == 'multinode':

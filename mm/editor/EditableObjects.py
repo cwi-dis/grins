@@ -16,7 +16,7 @@ __version__ = "$Id:"
 # be called from is here.
 
 import MMNode, MMExc
-import windowinterface, Clipboard
+import windowinterface
 from usercmd import *
 
 ######################################################################
@@ -236,24 +236,25 @@ class EditableMMNode(MMNode.MMNode):
 
 	def cutcall(self):
 		print "TODO: fixsyncarcs (in HierarchyView.py)"		
-		#em = self.context.editmgr
+		em = self.context.editmgr
 		#if not em.transaction():
 		#	return
 		windowinterface.setwaiting()
-		t,n = Clipboard.getclip()
+		t,n = em.getclip()
 		if t == 'node' and n is not None:
 			n.Destroy()
-		Clipboard.setclip('node', self)
+		em.setclip('node', self)
 		#em.delnode(self)
 		#em.commit()
 
 	def copycall(self):
 		windowinterface.setwaiting()
-		t,n = Clipboard.getclip()
+		em = self.context.editmgr
+		t,n = em.getclip()
 		if t == 'node' and n is not None:
 			n.Destroy()	# Wha ha ha ha. <evil grin>
 		copyme = self.DeepCopy()
-		Clipboard.setclip('node', copyme)
+		em.setclip('node', copyme)
 
 	def createbeforecall(self, chtype=None):
 		assert 0
@@ -295,16 +296,16 @@ class EditableMMNode(MMNode.MMNode):
 		if self.parent is None:
 			windowinterface.showmessage("You can't paste before the root!")
 			return
+		em = self.context.editmgr
 		pasteme = None
 		i = self.parent.children.index(self) - 1
-		t,n = Clipboard.getclip()
+		t,n = em.getclip()
 		if t == 'node' and n is not None:
 			pasteme = n
 		else:
 			windowinterface.showmessage("There is nothing on the clipboard!")
 			return
 		
-		em = self.context.editmgr
 		if not em.transaction():
 			return
 		self.parent._insertnode(pasteme, i)
@@ -316,14 +317,14 @@ class EditableMMNode(MMNode.MMNode):
 			windowinterface.showmessage("You can't paste after the root!")
 			return
 		i = self.parent.children.index(self) + 1
-		t,n = Clipboard.getclip()
+		em = self.context.editmgr
+		t,n = em.getclip()
 		if t == 'node' and n is not None:
 			pasteme = n
 		else:
 			windowinterface.showmessage("There is not a node on the clipboard!")
 			return
 
-		em = self.context.editmgr
 		if not em.transaction():
 			return
 		self.parent._insertnode(pasteme, i)
@@ -335,13 +336,13 @@ class EditableMMNode(MMNode.MMNode):
 			windowinteface.beep()
 			return
 		else:
-			t,n = Clipboard.getclip()
+			em = self.context.editmgr
+			t,n = em.getclip()
 			if t == 'node' and n is not None:
 				pasteme = n
 			else:
 				windowinterface.showmessage("There is not a node on the clipboard!")
 				return
-			em = self.context.editmgr
 			if not em.transaction():
 				return
 			self._insertnode(pasteme, index)
