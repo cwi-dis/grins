@@ -10,6 +10,11 @@ import sys
 import windowinterface
 import urllib
 from TextChannel import getfont, mapfont
+try:
+	import Xrm
+	has_xrm = 1
+except ImportError:
+	has_xrm = 0
 
 if windowinterface.Version <> 'X':
 	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
@@ -185,6 +190,14 @@ class HtmlChannel(Channel.ChannelWindow):
 			w.foreground = fg
 			if w.Class() is Xm.ScrollBar:
 				w.troughColor = bg
+		if has_xrm:
+			db = htmlw.ScreenDatabase()
+			db.PutStringResource(
+				'*%s*background' % self.widget_name,
+				'#%02x%02x%02x' % self.getbgcolor(node))
+			db.PutStringResource(
+				'*%s*foreground' % self.widget_name,
+				'#%02x%02x%02x' % self.getfgcolor(node))
 		htmlw.SetText(self.armed_str, '', '')
 		htmlw.MapWidget()
 		htmlw.UpdateDisplay()
