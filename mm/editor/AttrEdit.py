@@ -359,9 +359,9 @@ class ChannelWrapper(Wrapper):
 					defn = MMAttrdefs.getdef(name)
 					if defn[5] == 'channel':
 						namelist.append(name)
-			else:
-				# XXXX hack to get bgcolor included
-				namelist.append('bgcolor')
+##			else:
+##				# XXXX hack to get bgcolor included
+##				namelist.append('bgcolor')
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.channel.keys():
