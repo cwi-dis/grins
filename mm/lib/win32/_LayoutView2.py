@@ -323,11 +323,11 @@ class _LayoutView2(GenFormView):
 			if cmd is not None and cmd.callback is not None:
 				apply(apply,cmd.callback)
 
-	def showScale(self, scale):
+	def showScale(self, d2lscale):
 		t=components.Static(self,grinsRC.IDC_LAYOUT_SCALE)
 		t.attach_to_parent()
-		str = fmtfloat(scale, prec=1)
-		t.settext('scale 1 : %s' % str)
+		str = fmtfloat(d2lscale, prec=1)
+		t.settext('Scale 1 : %s' % str)
 
 	#
 	# Zoom in/out
@@ -347,14 +347,16 @@ class _LayoutView2(GenFormView):
 		self._bzoomout.hookcommand(self, self.OnZoomOut)
 
 	def OnZoomIn(self, id, code):
-		scale = self._layout.getDeviceToLogicalScale()
-		if scale>0.5: scale = scale - 0.1
-		self._layout.setDeviceToLogicalScale(scale)
+		d2lscale = self._layout.getDeviceToLogicalScale()
+		d2lscale = d2lscale - 0.1
+		if d2lscale < 0.1 : d2lscale = 0.1
+		self._layout.setDeviceToLogicalScale(d2lscale)
 
 	def OnZoomOut(self, id, code):
-		scale = self._layout.getDeviceToLogicalScale()
-		if scale<4: scale = scale + 0.1
-		self._layout.setDeviceToLogicalScale(scale)
+		d2lscale = self._layout.getDeviceToLogicalScale()
+		d2lscale = d2lscale + 0.1
+		if d2lscale>10.0: d2lscale = 10.0
+		self._layout.setDeviceToLogicalScale(d2lscale)
 
 	#
 	# Focus adjustements
@@ -592,15 +594,21 @@ class LayoutManager(LayoutManagerBase):
 		self._regionpopup = None
 		self._subregionpopup = None
 
+		self._selectedList = []
+
 		# test
 		import MenuTemplate
 		self.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_REGION, 'region')
 		self.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_SUBREGION, 'subregion')
+		
+		# decor
+		self._blackBrush = Sdk.CreateBrush(win32con.BS_SOLID, 0, 0)
+		self._selPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
+		self._selPenDot = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,255))
 			
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
 		self.createWindow(parent, rc, bgcolor, (0, 0, 1280, 1024))
-		self.__initState()
 
 	def OnCreate(self, cs):
 		LayoutManagerBase.OnCreate(self, cs)
@@ -610,136 +618,103 @@ class LayoutManager(LayoutManagerBase):
 
 		# popup menu
 		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
-		
-	def __initState(self):
-		# allow to know the last state about shape (selected, moving, resizing)
-		self._selectedList = []
-		self._isGeomChanging = 0
-		self._wantDown = 0
-		self._oldSelected = None
 	
+	def OnDestroy(self, params):
+		LayoutManagerBase.OnDestroy(self, params)
+		Sdk.DeleteObject(self._blackBrush)
+		Sdk.DeleteObject(self._selPen)
+		Sdk.DeleteObject(self._selPenDot)
+					
 	#
 	# winlayout.MSDrawContext listener interface
 	#
-	
 	def onDSelChanged(self, selections):
 		self._selectedList = selections
 		if self._listener != None:
 			self._listener.onMultiSelChanged(selections)
 
 	def onDSelMove(self, selections):
-		self._isGeomChanging = 1
-		self.onGeomChanging(selections)
+		if self._listener != None:
+			self._listener.onGeomChanging(selections)		
 			
 	def onDSelResize(self, selection):
-		self._isGeomChanging = 1
-		self.onGeomChanging([selection])
+		if self._listener != None:
+			self._listener.onGeomChanging([selection, ])		
+
+ 	def onDSelMoved(self, selections):
+		if self._listener != None:
+			self._listener.onGeomChanged(selections)		
+
+ 	def onDSelResized(self, selection):
+		if self._listener != None:
+			self._listener.onGeomChanged([selection, ])		
 
 	def onDSelProperties(self, selection): 
 		if not selection: return
 		selection.onProperties()
 
+	#
+	# winlayout.MSDrawContext ShapeContainer interface
+	#
+	def getMouseTarget(self, point):
+		# point is in logical coordinates
+		# convert it to natural coordinates
+		point = self.LPtoNP(point)
+		if self._viewport:
+			return self._viewport.getMouseTarget(point)
+
 	# 
 	# interface implementation: function called from an external module
 	#
-
-	def onGeomChanged(self, shapeList):
-		if self._listener != None:
-			self._listener.onGeomChanged(shapeList)		
-
-	def onGeomChanging(self, shapeList):
-		if self._listener != None:
-			self._listener.onGeomChanging(shapeList)		
-
 	# define a handler for the layout component
 	def setListener(self, listener):
 		self._listener = listener
 
 	def removeListener(self):
 		self._listener = None
-		
-	def setDeviceToLogicalScale(self, device2logical):
-		self._device2logical = device2logical
-		if self._viewport:
-			self._viewport.setDeviceToLogicalScale(device2logical)
-		self._parent.showScale(self._device2logical)
-		self.InvalidateRect(self.GetClientRect())
-
-	def getDeviceToLogicalScale(self):
-		return self._device2logical
 
 	# create a new viewport
 	def newViewport(self, attrdict, name):
-		x,y,w, h = attrdict.get('wingeom')
+		x, y, w, h = attrdict.get('wingeom')
 		self._cycaption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-		if not self._cancroll or self._autoscale:
-			self._device2logical = self.findDeviceToLogicalScale(w, h + self._cycaption)
-		else:
-			self._device2logical = 1
-			#self.setCanvasSize(w+32, h+32)
-		self._parent.showScale(self._device2logical)
-		self.__initState()
+		if self._autoscale and not self._cancroll:
+			d2lscale = self.findDeviceToLogicalScale(w, h + self._cycaption)
+			self.setDeviceToLogicalScale(d2lscale)
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
 		self._drawContext.reset()
-
 		return self._viewport
 
 	# selection of a list of nodes
 	def selectNodeList(self, shapeList):
 		self._selectedList = shapeList
 		self._drawContext.selectShapes(shapeList)			
-	
+
 	#
-	# end implementation interface 
+	#  Scaling related
 	#
+	def setDeviceToLogicalScale(self, d2lscale):
+		self._device2logical = d2lscale
+		if self._viewport:
+			self._viewport.setDeviceToLogicalScale(d2lscale)
+		self._parent.showScale(d2lscale)
+		self.updateCanvasSize() 
+		self.InvalidateRect(self.GetClientRect())
 
-	def __isInsideShapeList(self, selectedList, point):
-		for selected in selectedList:
-			if selected.inside(point):
-				return 1
-		return 0
+	def getDeviceToLogicalScale(self):
+		return self._device2logical
 
-	def onLButtonDown(self, params):
-		msg=win32mu.Win32Msg(params)
-		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
-		self._wantDown = 1
-		self._sflags = flags
-		self._spoint = point
-		if not self.__isInsideShapeList(self._selectedList, point):
-			self._wantDown = 0
-			if debugPreview: print 'onLButtonDown: call MSDrawContext.onLButtonDown'
-			self._drawContext.onLButtonDown(flags, point)
-
-	def onLButtonUp(self, params):
-		msg=win32mu.Win32Msg(params)
-		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
-		if self._wantDown:
-			if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonDown'
-			self._drawContext.onLButtonDown(self._sflags, self._spoint)
-			self._wantDown = 0
-		if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonUp'
-		self._drawContext.onLButtonUp(flags, point)
-
-		# update user events
-		if self._isGeomChanging:
-			if debugPreview: print 'onLButtonUp: call onGeomChanged'
-			self.onGeomChanged(self._selectedList)
-					
-		self._isGeomChanging = 0
+	def findDeviceToLogicalScale(self, wl, hl):
+		wd, hd = self.GetClientRect()[2:]
+		md = 32 # device margin
+		xsc = wl/float(wd-md)
+		ysc = hl/float(hd-md)
+		if xsc>ysc: sc = xsc
+		else: sc = ysc
+		if sc<1.0: sc = 1
+		return sc
 	
-	def onMouseMove(self, params):
-		msg=win32mu.Win32Msg(params)
-		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
-		if self._wantDown:
-			if debugPreview: print 'onLButtonMove: call MSDrawContext.onLButtonDown'
-			self._isGeomChanging = 1
-			self._drawContext.onLButtonDown(self._sflags, self._spoint)
-			self._wantDown = 0
-		self._drawContext.onMouseMove(flags, point)
 
+	#  OnRButtonDown popup menu
 	def OnRButtonDown(self, params):
 		if len(self._selectedList) != 1: 
 			return
@@ -761,36 +736,9 @@ class LayoutManager(LayoutManagerBase):
 		if popup:
 			popup.TrackPopupMenu(point, flags, self.GetParent())
 
-	def findDeviceToLogicalScale(self, wl, hl):
-		wd, hd = self.GetClientRect()[2:]
-		md = 32 # device margin
-		xsc = wl/float(wd-md)
-		ysc = hl/float(hd-md)
-		if xsc>ysc: sc = xsc
-		else: sc = ysc
-		if sc<1.0: sc = 1
-		return sc
-
-	def getMouseTarget(self, point):
-		if self._viewport:
-			if not self._isGeomChanging:
-				return self._viewport.getMouseTarget(point)
-			else:
-				# The shapes move. In this case, if the mouse hit a previous target
-				# we have to keep the same, and not change of target (for a region/media child)
-				for selected in self._selectedList:
-					if selected.inside(point):
-						return selected
-
-				# Otherwise, choice another target according to the shape hierarchy.
-				# the priority is the shape which are on the front
-				return self._viewport.getMouseTarget(point)
-		return None
-
 	#
 	#  popup menu
 	#
-
 	# which in ('topLayout', 'region', 'subregion')
  	def setpopup(self, menutemplate, which):
 		import win32menu
@@ -819,11 +767,13 @@ class LayoutManager(LayoutManagerBase):
 	#
 
 	# win32window context update callback
+	# rc is in win32window coordinates (N)
 	def update(self, rc=None):
 		if rc:
 			x, y, w, h = rc
 			rc = x, y, x+w, y+h
-			rc = self.LRtoDR(rc)
+			# convert N (natural) coordinates to D (device)
+			rc = self.NRtoDR(rc)
 		try:
 			self.InvalidateRect(rc or self.GetClientRect())
 		except:
@@ -834,6 +784,7 @@ class LayoutManager(LayoutManagerBase):
 	def paintOn(self, dc):
 		l, t, w, h = self._canvas
 		r, b = l+w, t+h
+
 		rgn = self.getClipRgn()
 
 		# background decoration on dcc
@@ -850,14 +801,31 @@ class LayoutManager(LayoutManagerBase):
 
 	def drawTracker(self, dc):
 		for wnd in self._drawContext._selections:
-			if wnd != self._viewport:
-				rgn = self._viewport.getClipRgn()
-				dc.SelectClipRgn(rgn)
+			# frame selection with self._selPen
+			rc = wnd.LRtoDR(wnd.getwindowpos(), round=1)
+			l, t, r, b = wnd.ltrb(rc)
+			
+			rgn = self.getCanvasClipRgn()
+			dc.SelectClipRgn(rgn)	
+			oldpen = dc.SelectObjectFromHandle(self._selPenDot)
+			win32mu.DrawRectanglePath(dc, (l, t, r-1, b-1))
+			dc.SelectObjectFromHandle(oldpen)
+
+			rgn = self._viewport.getClipRgn()
+			dc.SelectClipRgn(rgn)
+			oldpen = dc.SelectObjectFromHandle(self._selPen)
+			win32mu.DrawRectanglePath(dc, (l, t, r-1, b-1))
+			dc.SelectObjectFromHandle(oldpen)
+
+			rgn = self.getCanvasClipRgn()
+			dc.SelectClipRgn(rgn)	
 			nHandles = wnd.getDragHandleCount()		
 			for ix in range(1,nHandles+1):
 				x, y, w, h = wnd.getDragHandleRect(ix)
-				dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
-	
+				dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
+				dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
+				#dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
+
 	def hilight(self, f):
 		self._hasfocus = f
 		self.InvalidateRect(self.GetClientRect())	
@@ -886,13 +854,13 @@ class UserEventMng:
 ###########################
 
 class Viewport(win32window.Window, UserEventMng):
-	def __init__(self, name, context, attrdict, scale):
+	def __init__(self, name, context, attrdict, d2lscale):
 		self._attrdict = attrdict
 		self._name = name
 		self._ctx = context
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
-		self.setDeviceToLogicalScale(scale)
+		self.setDeviceToLogicalScale(d2lscale)
 
 		self._cycaption = 0 #win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
 		self._cycaptionlog = 0 # int(self._device2logical*self._cycaption+0.5)
@@ -921,7 +889,6 @@ class Viewport(win32window.Window, UserEventMng):
 		#self.setImage(filename, fit='fill')
 
 		self._showname = 1
-		self._scale  = scale
 
 	# overide the default newdisplaylist method defined in win32window
 	def newdisplaylist(self, bgcolor = None):
@@ -936,11 +903,12 @@ class Viewport(win32window.Window, UserEventMng):
 
 	# return the current geometry
 	def getGeom(self):
-		return self._rectb
+		x, y, w, h = self._rectb
+		return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
 	
 	# add a sub region	
 	def addRegion(self, attrdict, name):
-		rgn = Region(self, name, self._ctx, attrdict, self._scale)
+		rgn = Region(self, name, self._ctx, attrdict, self._device2logical)
 		return rgn
 
 	# remove a sub region
@@ -996,10 +964,11 @@ class Viewport(win32window.Window, UserEventMng):
 #	def createRegions(self):
 		# create the regions of this viewport
 #		parentNode = self._ctx._viewports
-#		self.__createRegions(self, parentNode, self._scale)
+#		self.__createRegions(self, parentNode, self._device2logical)
 
 	def getwindowpos(self, rel=None):
-		return self._rectb
+		x, y, w, h = self._rectb
+		return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
 
 	def update(self, rc=None):
 		self._ctx.update(rc)
@@ -1025,13 +994,13 @@ class Viewport(win32window.Window, UserEventMng):
 		return None
 	
 	def getClipRgn(self, rel=None):
-		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		return rgn
 		
 	def paintOn(self, dc, rc=None):
-		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		ltrb = l, t, r, b = x, y, x+w, y+h
 
 		rgn = self.getClipRgn()
@@ -1048,7 +1017,7 @@ class Viewport(win32window.Window, UserEventMng):
 			w.paintOn(dc, rc)
 
 	def _draw3drect(self, dc, hilight=0):
-		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		l, t, r, b = x, y-self._cycaption, x+w, y+h
 		l, t, r, b = l-3, t-3, r+2, b+2
 		c1, c2 = 180, 100
@@ -1063,7 +1032,7 @@ class Viewport(win32window.Window, UserEventMng):
 			l, t, r, b = l+1, t+1, r-1, b-1
 
 	def _drawcaption(self, dc):
-		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		l, t, r, b = x, y, x+w, y+h
 		dc.FillSolidRect((l,t-self._cycaption,r, t) ,win32mu.RGB((128, 128, 255)))
 		dc.SetBkMode(win32con.TRANSPARENT)
@@ -1073,8 +1042,8 @@ class Viewport(win32window.Window, UserEventMng):
 		dc.SetTextColor(clr_org)
 
 	def invalidateDragHandles(self):
-		x, y, w, h  = self.LRtoDR(self.getwindowpos())
-		delta = 4
+		x, y, w, h  = self.LRtoDR(self.getwindowpos(), round=1)
+		delta = 5
 		x = x-delta
 		y = y-delta - self._cycaption
 		w = w+2*delta
@@ -1084,16 +1053,15 @@ class Viewport(win32window.Window, UserEventMng):
 ###########################
 
 class Region(win32window.Window, UserEventMng):
-	def __init__(self, parent, name, context, attrdict, scale):
+	def __init__(self, parent, name, context, attrdict, d2lscale):
 		self._name = name
 		self._attrdict = attrdict
 		self._showname = 1
 		self._ctx = context		
-		self._scale  = scale
 
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
-		self.setDeviceToLogicalScale(scale)
+		self.setDeviceToLogicalScale(d2lscale)
 
 		self._rc = x, y, w, h = attrdict.get('wingeom')
 		units = attrdict.get('units')
@@ -1125,7 +1093,7 @@ class Region(win32window.Window, UserEventMng):
 		return win32window._ResizeableDisplayList(self, bgcolor)
 	
 	def paintOn(self, dc, rc=None):
-		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos()))
+		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos(), round=1))
 
 		rgn = self.getClipRgn()
 
@@ -1147,11 +1115,11 @@ class Region(win32window.Window, UserEventMng):
 			dc.DrawText(self._name, ltrb, win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
 
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(ltrb,br)
+		dc.FrameRectFromHandle(ltrb, br)
 		Sdk.DeleteObject(br)
 
 	def getClipRgn(self, rel=None):
-		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		if rel==self: return rgn
@@ -1175,11 +1143,12 @@ class Region(win32window.Window, UserEventMng):
 
 	# return the current geometry
 	def getGeom(self):
-		return self._rectb
+		x, y, w, h = self._rectb
+		return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
 
 	# add a sub region
 	def addRegion(self, attrdict, name):
-		rgn = Region(self, name, self._ctx, attrdict, self._scale)
+		rgn = Region(self, name, self._ctx, attrdict, self._device2logical)
 		return rgn
 
 	# remove a sub region
