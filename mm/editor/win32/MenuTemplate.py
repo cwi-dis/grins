@@ -64,6 +64,7 @@ MENUBAR=(
 		)),
 		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2 | FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
+		((features.PREFERENCES,), ENTRY, 'Preferences...', None, PREFERENCES),
 		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'D&ebug', (
 			(FLAG_DBG, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
@@ -188,7 +189,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Preview &from object', None, PLAYFROM),
 		((features.USER_GROUPS, features.PREFERENCES,), SEP,),
 		((features.USER_GROUPS,), DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
-		((features.PREFERENCES,), ENTRY, 'GRiNS previewer properties...', None, PREFERENCES),
+#		((features.PREFERENCES,), ENTRY, 'GRiNS previewer properties...', None, PREFERENCES),
 		)),
 
 
