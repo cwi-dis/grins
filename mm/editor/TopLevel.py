@@ -13,11 +13,12 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 # an empty document
 EMPTY = "(seq '1' ((channellist ('root-layout' (type layout) (units 2) (winsize  640 480))) (hyperlinks)))"
 
-class TopLevel(ViewDialog):
+from TopLevelDialog import TopLevelDialog
+
+class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		self.waiting = 0
 		ViewDialog.__init__(self, 'toplevel_')
-		self.showing = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -45,6 +46,7 @@ class TopLevel(ViewDialog):
 			url = '%s:%s' % (utype, url)
 		self.filename = url
 		self.main = main
+		self.source = None
 		self.read_it()
 		self.makeviews()
 		self.window = None
@@ -52,60 +54,16 @@ class TopLevel(ViewDialog):
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
-	def show(self):
-		if self.showing:
-			return
-		self.load_geometry()
-		self.window = windowinterface.Window(self.basename,
-				deleteCallback = (self.close_callback, ()))
-		buttons = [('Play', (self.play_callback, ())),
-			   # The numbers below correspond with the
-			   # positions in the `self.views' list (see
-			   # `makeviews' below).
-			   ('Player', (self.view_callback, (0,)), 't'),
-			   ('Hierarchy view', (self.view_callback, (1,)), 't'),
-			   ('Channel view', (self.view_callback, (2,)), 't'),
-			   ('Hyperlinks', (self.view_callback, (3,)), 't'),
-			   None,
-			   ('Save', (self.save_callback, ())),
-## 			   ('Save for Player', (self.save_player_callback, ())),
-			   ('Save as...', (self.saveas_callback, ())),
-			   ('Restore', (self.restore_callback, ())),
-			   ('Close', (self.close_callback, ())),
-			   ]
-		if hasattr(self.root, 'source') and \
-		   hasattr(windowinterface, 'TextEdit'):
-			buttons.insert(5, ('View Source...', (self.source_callback, ())))
-		self.source = None
-		self.buttons = self.window.ButtonRow(
-			buttons,
-##			 ('Help', (self.help_callback, ()))],
-			top = None, bottom = None, left = None, right = None,
-			vertical = 1)
-		self.window.show()
-		self.showing = 1
-
-	def hide(self):
-		if not self.showing:
-			return
-		self.hideviews()
-		self.window.close()
-		self.window = None
-		self.showing = 0
-
 	def showstate(self, view, showing):
 		for i in range(len(self.views)):
 			if view is self.views[i]:
-				self.buttons.setbutton(i+1, showing)
+				self.setbuttonstate(i, showing)
 
 	def destroy(self):
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
 		self.destroyviews()
-		if self.window:
-			self.window.close()
-			self.window = None
-		self.showing = 0
+		self.hide()
 		self.root.Destroy()
 		import Clipboard
 		type, data = Clipboard.getclip()
@@ -174,19 +132,7 @@ class TopLevel(ViewDialog):
 		self.setready()
 
 	def source_callback(self):
-		if self.source is not None and not self.source.is_closed():
-			self.source.show()
-			return
-		w = windowinterface.Window('Source', resizable = 1,
-					   deleteCallback = 'hide')
-		b = w.ButtonRow([('Close', (w.hide, ()))],
-				top = None, left = None, right = None,
-				vertical = 0)
-		t = w.TextEdit(self.root.source, None, editable = 0,
-			       top = b, left = None, right = None,
-			       bottom = None, rows = 30, columns = 80)
-		w.show()
-		self.source = w
+		self.showsource(self.root.source)
 
 	def view_callback(self, viewno):
 		self.setwaiting()
@@ -234,9 +180,9 @@ class TopLevel(ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		windowinterface.FileDialog('Open CMIF file:', cwd, '*.cmif',
+		windowinterface.FileDialog('Open SMIL file:', cwd, '*.smil',
 					   '', self.open_okcallback, None,
-					   existing=1)
+					   existing = 1)
 
 	def save_callback(self):
 		if self.new_file:
@@ -291,7 +237,7 @@ class TopLevel(ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		windowinterface.FileDialog('Save CMIF file:', cwd, '*.cmif',
+		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.saveas_okcallback, None)
 
 	def fixtitle(self):
@@ -315,7 +261,6 @@ class TopLevel(ViewDialog):
 		self.window.settitle(self.basename)
 		for v in self.views:
 			v.fixtitle()
-
 
 	def save_to_file(self, filename):
 ## 		if os.path.isabs(filename):
@@ -344,8 +289,6 @@ class TopLevel(ViewDialog):
 			roots.append(data)
 		self.context.sanitize_hyperlinks(roots)
 		# Get all windows to save their current geometry.
-		self.get_geometry()
-		self.save_geometry()
 		for v in self.views:
 			v.get_geometry()
 			v.save_geometry()
@@ -394,20 +337,6 @@ class TopLevel(ViewDialog):
 		self.context.seteditmgr(None)
 		self.root.Destroy()
 		self.read_it()
-		#
-		# Move the menu window to where it's supposed to be
-		#
-		self.get_geometry() # From window
-		old_geometry = self.last_geometry
-		self.load_geometry() # From document
-		new_geometry = self.last_geometry
-		if new_geometry[:2]<>(-1,-1) and new_geometry <> old_geometry:
-			self.hide()
-			# Undo unwanted save_geometry()
-			self.last_geometry = new_geometry
-			self.save_geometry()
-			self.show()
-		#
 		self.makeviews()
 		self.setready()
 
@@ -461,12 +390,7 @@ class TopLevel(ViewDialog):
 	def close_ok(self):
 		if not self.changed:
 			return 1
-		prompt = 'You haven\'t saved your changes yet;\n' + \
-			 'do you want to save them before closing?'
-		b1 = 'Save'
-		b2 = "Don't save"
-		b3 = 'Cancel'
-		reply = windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+		reply = self.mayclose()
 		if reply == 2:
 			return 0
 		if reply == 1:
@@ -480,9 +404,9 @@ class TopLevel(ViewDialog):
 		file = MMurl.url2pathname(url)
 		return self.save_to_file(file)
 
-## 	def help_callback(self):
-## 		import Help
-## 		Help.showhelpwindow()
+	def help_callback(self, params=None):
+		import Help
+		Help.showhelpwindow()
 
 	def setwaiting(self):
 		if self.waiting: return
@@ -598,10 +522,3 @@ class TopLevel(ViewDialog):
 			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
-
-	#
-	# Geometry support.
-	#
-	def get_geometry(self):
-		if self.showing:
-			self.last_geometry = self.window.getgeometry()
