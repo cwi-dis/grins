@@ -365,22 +365,30 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		mtype = mimetypes.guess_type(filename)[0]
 		if mtype == 'application/smil':
 			import SMILTree
-			self.root = SMILTree.ReadFile(filename)
+			self.root = SMILTree.ReadFile(filename, self.printfunc)
 		elif mtype == 'application/x-cmif':
 			import MMTree
 			self.root = MMTree.ReadFile(filename)
 		else:
 			import SMILTree
+			if mtype[:6] != 'audio/' and \
+			   mtype[:6] != 'video/':
+				dur = ' dur="indefinite"'
+			else:
+				dur = ''
 			self.root = SMILTree.ReadString('''\
 <smil>
   <body>
-    <ref dur="indefinite" src="%s"/>
+    <ref%s src="%s"/>
   </body>
 </smil>
-''' % filename, filename)
+''' % (dur, filename), filename, self.printfunc)
 		t1 = time.time()
 		print 'done in', round(t1-t0, 3), 'sec.'
 
+
+	def printfunc(self, msg):
+		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
 
 	def close_callback(self):
 		self.setwaiting()
