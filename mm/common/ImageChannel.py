@@ -38,13 +38,9 @@ class ImageChannel(ChannelWindow):
 				msg = msg[1]
 			self.errormsg(node, f + ':\n' + msg)
 			return 1
-		try:
-			alist = node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = []
 		self.armed_display.fgcolor(self.getbucolor(node))
 		hicolor = self.gethicolor(node)
-		for a in alist:
+		for a in node.GetRawAttrDef('anchorlist', []):
 			args = a[A_ARGS]
 			atype = a[A_TYPE]
 			if atype not in SourceAnchors or atype == ATYPE_AUTO:

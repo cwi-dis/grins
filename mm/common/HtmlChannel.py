@@ -165,10 +165,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		self.armed_anchor = None
-		try:
-			alist = node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = []
+		alist = node.GetRawAttrDef('anchorlist', [])
 		for i in range(len(alist)-1,-1,-1):
 			a = alist[i]
 			atype = a[A_TYPE]

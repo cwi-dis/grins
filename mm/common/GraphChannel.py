@@ -72,11 +72,7 @@ class GraphChannel(ChannelWindow):
 			self.errormsg(node,
 				      'Unknown graphtype '+self.armed_type)
 
-		try:
-			alist = node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = []
-		for a in alist:
+		for a in node.GetRawAttrDef('anchorlist', []):
 			b = self.armed_display.newbutton((0,0,1,1))
 			self.setanchor(a[A_ID], a[A_TYPE], b)
 			
