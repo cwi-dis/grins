@@ -1675,6 +1675,9 @@ IDI_GRINS_STOP          ICON    DISCARDABLE     "res\\ico00003.ico"
 IDI_PLAY                ICON    DISCARDABLE     "RES\\play.ico"
 IDI_STOP                ICON    DISCARDABLE     "RES\\stop.ico"
 IDI_PAUSE               ICON    DISCARDABLE     "RES\\pause.ico"
+IDI_ICON_LINKSRC        ICON    DISCARDABLE     "res\\icon_lin.ico"
+IDI_ICON_LINKDST        ICON    DISCARDABLE     "res\\ico00008.ico"
+IDI_ICON_LINKSRCDST     ICON    DISCARDABLE     "res\\ico00009.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
