@@ -970,12 +970,10 @@ class Channel:
 		# anchor.
 		if arming:
 			self._armed_anchors.append((name, type, button, times))
-			if name is not None:
-				self._armed_anchor2button[name] = button
+			self._armed_anchor2button[name] = button
 		else:
 			self._played_anchors.append((name, type, button, times))
-			if name is not None:
-				self._played_anchor2button[name] = button
+			self._played_anchor2button[name] = button
 
 	def getfileurl(self, node, animated=0):
 		name = node.GetAttrDef('name', None)
@@ -1663,15 +1661,13 @@ class ChannelWindow(Channel):
 			self.armed_display.fgcolor(bgcolor)
 		hicolor = self.gethicolor(node)
 
-		b = None
-		for arc in node.sched_children:
-			if arc.event == ACTIVATEEVENT and \
-			   arc.srcanchor is None:
-				if b is None:
-					windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
-					b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = 1)
-				self.setanchor(None, None, b, None)
+		# create a button that covers the whole region, just
+		# in case we need one later on
+		windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
+		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = 0)
+		self.setanchor(None, None, b, None)
 
+		# create buttons for all anchors
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
 			coordinates = a.aargs
 			if coordinates and coordinates[0] == A_SHAPETYPE_FRAGMENT:
@@ -1696,9 +1692,10 @@ class ChannelWindow(Channel):
 				b.hicolor(hicolor)
 			self.setanchor(a.aid, atype, b, a.atimes)
 
+		# make buttons sensitive for which there is already a
+		# sync arc active
 		for arc in node.sched_children:
-			if arc.event == ACTIVATEEVENT and \
-			   arc.srcanchor is not None:
+			if arc.event == ACTIVATEEVENT:
 				b = self._armed_anchor2button.get(arc.srcanchor)
 				if b is None:
 					continue
@@ -1708,29 +1705,9 @@ class ChannelWindow(Channel):
 		if node is not self._played_node or \
 		   arc.event != ACTIVATEEVENT:
 			return
-		d = self.played_display.clone()
-		d.fgcolor(self.getbgcolor(node))
-		if arc.srcanchor is not None:
-			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a.aid != arc.srcanchor:
-					continue
-				relativeCoordinates = self.convertShapeToRelImage(node, a.aargs)
-				windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
-				b = d.newbutton(windowCoordinates, times = a.atimes)
-				break
-			else:
-				# no matching anchor found
-				d.close()
-				return
-		else:
-			b = d.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
-		self.setanchor(arc.srcanchor, None, b, None, arming = 0)
-		self._anchors[b] = self.onclick, (node, [(None, None)], arc)
-		if not self._paused or self._paused != 'hide':
-			# don't render when paused and hidden
-			d.render()
-		self.played_display.close()
-		self.played_display = d
+		b = self._played_anchor2button.get(arc.srcanchor)
+		if b is not None:
+			b.setsensitive(1)
 
 	# get the space display area of media according to registration points
 	# return pourcent values relative to the subregion or region
