@@ -69,7 +69,6 @@ class IndentedFile:
 		lines = string.split(data, '\n')
 		if not lines:
 			return self.charpos, self.charpos
-##		first = 1
 		start = self.charpos
 		for line in lines[:-1]:
 			if self.bol:
@@ -78,9 +77,6 @@ class IndentedFile:
 					self.charpos = self.charpos + self.level
 				self.bol = 0
 			if line:
-##				if first:
-##					start = self.charpos
-##					first = 0
 				self.fp.write(line)
 				self.charpos = self.charpos + len(line)
 			self.fp.write('\n')
@@ -94,9 +90,6 @@ class IndentedFile:
 					self.fp.write(' '*self.level)
 					self.charpos = self.charpos + self.level
 				self.bol = 0
-##			if first:
-##				start = self.charpos
-##				first = 0
 			self.fp.write(line)
 			self.charpos = self.charpos + len(line)
 		return start, self.charpos
@@ -1308,8 +1301,6 @@ class SMILWriter(SMIL):
 				continue
 			if key == 'project_boston':
 				# never save project_boston
-				continue
-			if self.__cleanSMIL and key[:8] == 'project_':
 				continue
 			if key == 'project_boston':
 				if val:
