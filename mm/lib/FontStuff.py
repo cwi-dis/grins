@@ -80,7 +80,7 @@ class FontObject:
 		nlines = len(curlines)
 		needed = nlines * self.fontheight
 		if nlines > 1 and needed > height:
-			nlines = max(1, height / self.fontheight)
+			nlines = max(1, int(height / self.fontheight))
 			curlines = curlines[:nlines]
 			curlines[-1] = curlines[-1] + '...'
 		x0 = (left + right) * 0.5	# x center of box
