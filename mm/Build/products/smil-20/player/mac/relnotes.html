@@ -1,16 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
-    <title>GRiNS Player 2.0.1 for SMIL 2.0, Release Notes
+    <title>GRiNS Player 2.1 for SMIL 2.0, Release Notes
       for Macintosh</title>
   </head>
 
   <body>
-    <h1>GRiNS Player 2.0.1 for SMIL 2.0, Release Notes
+    <h1>GRiNS Player 2.1 for SMIL 2.0, Release Notes
       for Macintosh</h1>
 
     <p>
-      These are the release notes for GRiNS Player 2.0.1 for SMIL 2.0,
+      These are the release notes for GRiNS Player 2.1 for SMIL 2.0,
       Release Notes for Macintosh, build 30. A more recent version of
       these release notes, as well as more recent builds of the
       player, may be available through <a
@@ -18,18 +18,43 @@
 	http://www.oratrix.com/GRiNS/SMIL-2.0/</a>.
     </p>
     
+    <p>
+      This release should be viewed as a maintainance release. The reason
+      for the jump in version number is to keep version numbers consistent
+      across the Oratrix GRiNS product family: the core SMIL execution engine
+      is the same in GRiNS Player 2.1, GRiNS Editor 2.1 for RealOne and GRiNS
+      Editor 2.1 for SMIL 2.0.
+    </p>
+
+    <p>
+      The player can play back RealMedia format files (RealVideo,
+      RealAudio, RealPix, RealText) if the RealPlayer is installed.
+    </p>
+    
+    <p>
+      The player can always playback a subset of QuickTime media
+      items. If you have QuickTime for Windows installed the player will
+      detect this and play back a richer set of QuickTime media items.
+    </p>
+    
+    <p>
+      Mimetype handling is more precise in this release.
+    </p>
+    
+    <p>
+      The SMIL execution engine has been brought up to spec with respect to
+      the final SMIL 2.0 standard. Moreover, many minor bugs have been fixed,
+      especially in the areas of pausing in excl nodes, hyperlinking and
+      transitions.
+    </p>
+
     <h2>Open Issues</h2>
     <ul>
       <li>Viewports (SMIL terminology, windows in Mac terminology) open
           overlapping, which is a bit of a nuisance.
       <li>If your SMIL document repeatedly opens and closes viewports you
           may end up without a player control panel. The Play menu still works, though.
-      <li>CSS2 system colors are not implemented.
-      <li>The SoundLevel attribute is ignored.
-      <li>fit="fill" and regAlign do not work together.
-      <li>showBackground="whenActive" does not work.
       <li>Positioning MPEG movies (with clipBegin, for instance) is very slow.
-      <li>Complex (overlapping) transitions may result in a lot of flashing.
     </ul>
     
 
