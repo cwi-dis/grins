@@ -57,12 +57,14 @@ class TransitionEngine:
 			#self.__register_for_timeslices()
 			self.thread_proc()
 
+
 	def thread_proc(self):
 		if self.windows[0].is_closed():
 			self.endtransition()
 			return
+		tbegin = winkernel.GetTickCount()
 		while 1:
-			t_sec = time.time() - self.__start
+			t_sec = 0.001*(winkernel.GetTickCount() - tbegin)
 			if t_sec>=self.__duration:
 				try:
 					self.settransitionvalue(self.__endprogress)
