@@ -676,17 +676,17 @@ class ElementSelCtrl(AttrCtrl):
 		target = self.locateTarget(mmnode, selected)
 		dlg = win32dialog.SelectElementDlg(parent, mmnode.GetRoot(), target)
 		if dlg.show():
-			id = self.getUID(dlg.getmmobject())
+			mmnode.targetnode = dlg.getmmobject()
+			id = self.getUID(mmnode.targetnode)
 			self.setvalue(id)
 
-	def locateTarget(self, node, te):
-		if hasattr(node, 'targetnode'):
-			return node.targetnode
-		ctx = node.GetContext()
-		if ctx.channeldict.has_key(te):
-			targchan = ctx.getchannel(te)
-			return targchan
-		return None
+	def locateTarget(self, node, name):
+		target = node.targetnode
+		if not target and name:
+			target = node.GetRoot().GetChildByName(name)
+			if not target:
+				target = node.GetContext().getchannel(name)
+		return target
 
 	def getUID(self, node):
 		if node is None:
@@ -2099,17 +2099,17 @@ class LayoutScale:
 		str_units=''
 		if units == UNIT_PXL:
 			scaledrc=self.scaleCoord(rc)
-			box = scaledrc.tuple_ps()
+			box = scaledrc.xywh_tuple()
 			box = box[0]-self._offset[0], \
 			      box[1]-self._offset[1], \
 			      box[2], box[3]
 			s='(%.0f,%.0f,%.0f,%.0f)' %  box
 		elif units == UNIT_SCREEN:
-			s='(%.2f,%.2f,%.2f,%.2f)' %  self._wnd.inverse_coordinates(rc.tuple_ps(),units=units)
+			s='(%.2f,%.2f,%.2f,%.2f)' %  self._wnd.inverse_coordinates(rc.xywh_tuple(),units=units)
 		else:
 			str_units='mm'
 			scaledrc=self.scaleCoord(rc)
-			s='(%.1f,%.1f,%.1f,%.1f)' % self._wnd.inverse_coordinates(scaledrc.tuple_ps(),units=units)
+			s='(%.1f,%.1f,%.1f,%.1f)' % self._wnd.inverse_coordinates(scaledrc.xywh_tuple(),units=units)
 		return s, str_units
 
 	# rc is a win32mu.Rect in pixels
@@ -2117,12 +2117,12 @@ class LayoutScale:
 	def orgrect(self, rc, units):
 		if units == UNIT_PXL:
 			scaledrc=self.scaleCoord(rc)
-			return scaledrc.tuple_ps()
+			return scaledrc.xywh_tuple()
 		elif units == UNIT_SCREEN:
-			return self._wnd.inverse_coordinates(rc.tuple_ps(),units=units)
+			return self._wnd.inverse_coordinates(rc.xywh_tuple(),units=units)
 		else:
 			scaledrc=self.scaleCoord(rc)
-			return self._wnd.inverse_coordinates(scaledrc.tuple_ps(),units=units)
+			return self._wnd.inverse_coordinates(scaledrc.xywh_tuple(),units=units)
 
 
 	# box is in units and scaled
@@ -2133,11 +2133,11 @@ class LayoutScale:
 		elif units == UNIT_PXL:
 			rc=Rect((box[0],box[1],box[0]+box[2],box[1]+box[3]))
 			scaledrc=self.scaleCoord(rc)
-			return scaledrc.tuple_ps()
+			return scaledrc.xywh_tuple()
 		else:
 			rc=Rect((box[0],box[1],box[0]+box[2],box[1]+box[3]))
 			scaledrc=self.scaleCoord(rc)
-			return scaledrc.tuple_ps()
+			return scaledrc.xywh_tuple()
 	
 
 	# box is in units and unscaled
