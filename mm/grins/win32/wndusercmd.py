@@ -39,3 +39,5 @@ class TB_STOP(_CommandBase):
 
 class TOOLBAR_GENERAL(_CommandBase):
 	help = 'Show the general toolbar'
+class TOOLBAR_PLAYER(_CommandBase):
+	help = 'Show/Hide the player controls'

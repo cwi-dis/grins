@@ -31,21 +31,27 @@ class Pulldown:
 		self.name = name
 		self.width = width
 
-PLAYER_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, grinsRC.IDR_GRINS, (
+GENERAL_TEMPLATE = (
+	('General', wndusercmd.TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
 		Button(usercmd.OPENFILE, 1),
-		Separator(6),
 		Button(usercmd.CLOSE, 7),
-		Separator(6),
-		Button(usercmd.PLAY, 9),
-		Button(usercmd.PAUSE, 10),
-		Button(usercmd.STOP, 11),
-		Separator(6),
-		Button(usercmd.HELP, 12),
+		Button(usercmd.HELP, 9),
+		)
+	)
+)
+
+PLAYER_TEMPLATE = (
+	('Player Controls', wndusercmd.TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
+		Button(usercmd.PLAY, 0),
+		Button(usercmd.PAUSE, 1),
+		Button(usercmd.STOP, 2),
 		)
 	)
 )
 
 TOOLBARS=[
+	GENERAL_TEMPLATE,
 	PLAYER_TEMPLATE,
 ]
+
+TOOLBARS.reverse()  # For now...
