@@ -41,6 +41,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._title = ''	
 		self._window_type = SINGLE
 		self._sizes = 0, 0, 1, 1
+		self._dc=None
 
 		self._topwindow = self # from the app's view this is a topwindow
 		self._parent._subwindows.insert(0, self)
@@ -56,52 +57,55 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		
 	def createWindow(self,parent):
 		self.CreateWindow(parent)
+		self._commandlist=None
 
 	def OnCreate(self,params):
 		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(0,0,r-l,b-t)
 		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
 		self.ResizeParentToFit()
+	
+	def PreCreateWindow(self, csd):
+		csd=self._obj_.PreCreateWindow(csd)
+		cs=win32mu.CreateStruct(csd)
+		# if WS_CLIPCHILDREN is set we must
+		# redraw the background of transparent children 
+		#cs.style=cs.style|win32con.WS_CLIPCHILDREN
+		return cs.to_csd()
 							
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
 		if not self._canscroll:
-			self._do_resize(msg.width(), msg.height())
+			self._do_resize(msg.width(),msg.height())
 		# after _do_resize because it uses old self._rect
 		self._rect=0,0,msg.width(),msg.height()
 
-	def onSizeScale(self, params):
-		msg=win32mu.Win32Msg(params)
-		if msg.minimized(): return
-		width,height=msg.width(), msg.height()
-		self._do_resize(width, height)
 
-	def onSizeScale_X(self, params):
-		msg=win32mu.Win32Msg(params)
-		if msg.minimized(): return
-		width,height=msg.width(), msg.height()
+	def onSizeScale_OLD(self, width,height):
 		self.arrowcache = {}
 		import rbtk
-		w = _in_create_box
+		w = rbtk._in_create_box
 		if w:
 			next_create_box = w._next_create_box
 			w._next_create_box = []
 			try:
 				w._rb_cancel()
-			except _rb_done:
+			except rbtk._rb_done:
 				pass
 			w._next_create_box[0:0] = next_create_box
 		self._do_resize(width, height)
 		if w:
 			w._rb_end()
-			raise _rb_done
+			raise rbtk._rb_done
 
 	def _scroll(self,how):
 		if self._canscroll==0: return
 		w,h=self._canvas[2:]
 		self.SetScrollSizes(win32con.MM_TEXT,(w,h))
-		if how==RESET_CANVAS:self.ResizeParentToFit()
+		if how==RESET_CANVAS:
+			self.ResizeParentToFit()
+		self.InvalidateRect()
 			
 	# convert from client (device) coordinates to canvas (logical)
 	def _DPtoLP(self,pt):
@@ -122,6 +126,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z)
 		return win
 	
+
 	# delegate to parent for cmds and adorment functionality
 	def set_dynamiclist(self, cmd, list):
 		self._parent.set_dynamiclist(cmd,list)
@@ -141,11 +146,11 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			self.settitle(self._title)
 			self.set_commandlist(self._commandlist)
 		else:
-			return
 			if IsEditor:
 				# remove view title and 
 				# disable view-context commands 
 				self.settitle(None)
+				self._commandlist=self._parent.get_commandlist('view')
 				self.set_commandlist(None)
 				self._is_active=0
 
@@ -166,7 +171,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 		if self._canscroll:
 			self.SetScrollSizes(win32con.MM_TEXT,(self._canvas[2],self._canvas[3]))
-			self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
 		else:
 			self.SetScaleToFitSize((r-l,b-t))
 		if canvassize==None:
@@ -175,6 +179,16 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return self
 	
 
+	def setScrollMode(self,f):
+		l,t,r,b=self.GetClientRect()
+		self._rect=self._canvas=(l,t,r-l,b-t)
+		self._canscroll=f
+		if f:
+			self.SetScrollSizes(win32con.MM_TEXT,(self._canvas[2],self._canvas[3]))
+		else:
+			self.SetScaleToFitSize((r-l,b-t))
+			self.ResizeParentToFit()
+		
 	# called directly from cmif-core
 	# to close window
 	def close(self):
@@ -207,20 +221,41 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return self._is_active==0
 	def pop(self):
 		self._parent.ActivateFrame()
+		self.InvalidateRect()
 	def push(self):
 		pass
 
-	# overwrites for DrawLayer
-	def OnEraseBkgnd(self,dc):
-		if self._transparent==0: 
-			return self._obj_.OnEraseBkgnd(dc)
 
 	def OnDraw(self,dc):
+		self.PaintOn(dc)
+
+	# separate from OnDraw because can be 
+	# called with different dc that is possible from the OnDraw
+	# due to clipping mechanism. The OnDraw is called by ws std mechanism
+	def PaintOn(self,dc):
+		if self.in_create_box():
+			self.notifyListener('OnDraw',dc)
+			return
 		rc=dc.GetClipBox()
 		if self._active_displist:
 			self._active_displist._render(dc,rc,1)
-		self.notifyListener('OnDraw',dc)
+		#self.notifyListener('OnDraw',dc)
+		#if self._showing: # i.e. we must draw a frame around as
+		#	self.showwindow_on(dc)
 
+	# return 1 to indicate 'done'
+	# overwrites  DrawLayer		
+	def OnEraseBkgnd(self,dc):
+		# default is:
+		# if self._transparent==0:return self._obj_.OnEraseBkgnd(dc)
+		if self.in_create_box():
+			return
+		rc=dc.GetClipBox()
+		if self._active_displist:color=self._active_displist._bgcolor
+		else: color=self._bgcolor
+		dc.FillSolidRect(rc,win32mu.RGB(color))
+		return 1
+		
 
 
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
@@ -230,8 +265,6 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		self._window_type = type_channel
 		self._topwindow = parent._topwindow
 
-		if z < 0:
-			raise error, 'invalid z argument'
 		self._z = z
 		self._align = ' '
 
@@ -256,17 +289,18 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 		# create an artificial name 
 		self._num = len(parent._subwindows)+1
-		self._title = "Child "+ `self._num`+" of " + parent._title 
+		self._title = 'c%d'%self._num
 
 		
 		# insert window in _subwindows list at correct z-order
 		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
+			if self._z > parent._subwindows[i]._z:
 				parent._subwindows.insert(i, self)
 				break
 		else:
 			parent._subwindows.append(self)
 			
+
 		# if a parent is transparent all of its childs must be transparent	
 		if parent._transparent:
 			self._transparent = parent._transparent
@@ -274,46 +308,42 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			if transparent not in (-1, 0, 1):
 				raise error, 'invalid value for transparent arg'
 			self._transparent = transparent
-
+		
 		### Create the real OS window
 		### taking into account the window type and transparency flag
 		x,y,w,h=self._rectb
-		if self._transparent==0:
+		if 1: # self._transparent==0:
 			window.Wnd.__init__(self,win32ui.CreateWnd())
 			self._brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
 			self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
 			self._icon=0
 			self._clstyle=win32con.CS_DBLCLKS
-			self._style=win32con.WS_CHILD #|win32con.WS_CLIPSIBLINGS
-			self._exstyle = win32con.WS_EX_CONTROLPARENT
+			self._style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS
+			self._exstyle = 0 
 			self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
 			self.CreateWindowEx(self._exstyle,self._strclass,self._title,self._style,
 				(x,y,x+w,y+h),self._parent,0)
-		else:
-			# self._transparent is in (1,-1)
-			# wnds with -1 are initially transparent
-			window.Wnd.__init__(self,win32ui.CreateWnd())
-			self._brush=Sdk.GetStockObject(win32con.NULL_BRUSH)
-			self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
-			self._icon=0
-			self._clstyle=win32con.CS_DBLCLKS
-			self._style=win32con.WS_CHILD 
-			self._exstyle = win32con.WS_EX_TRANSPARENT # | win32con.WS_EX_CONTROLPARENT
-			self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
-			self.CreateWindowEx(self._exstyle,self._strclass,self._title,self._style,
-				(x,y,x+w,y+h),self._parent,0)
+#		else:
+#			# self._transparent is in (1,-1)
+#			# wnds with -1 are when empty transparent
+#			window.Wnd.__init__(self,win32ui.CreateWnd())
+#			self._brush= Sdk.GetStockObject(win32con.NULL_BRUSH)
+#			self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+#			self._icon=0
+#			self._clstyle=win32con.CS_DBLCLKS
+#			self._style=win32con.WS_CHILD 
+#			self._exstyle = win32con.WS_EX_TRANSPARENT 
+#			self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+#			self.CreateWindowEx(self._exstyle,self._strclass,self._title,self._style,
+#				(x,y,x+w,y+h),self._parent,0)
 
 		self._wnd=self._obj_ # historic alias but useful to markup externals
 		self._hWnd=self.GetSafeHwnd()
 
-		# set the newly created OS window in the correct relative z-position
-		ix = parent._subwindows.index(self)
-		if ix != 0: 
-			self.SetWindowPos(parent._subwindows[ix-1].GetSafeHwnd(), 
-				(0,0,0,0),win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		else:
-			self.SetWindowPos(win32con.HWND_TOP ,(0,0,0,0),
-				win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		
+		# rearange subwindows in the correct relative z-position
+		self.z_order_subwindows()
+
 			
 		# do not enter WM_PAINT since we have provided the virtual OnPaint
 		# that will be automatically called by the framework
@@ -343,6 +373,17 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		raise error, 'can only settitle at top-level'
 
 
+	def z_order_subwindows(self):
+		# rearange subwindows in the correct relative z-order
+		if not self._parent._subwindows:return
+		parent=self._parent
+		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE|win32con.SWP_ASYNCWINDOWPOS		
+		n=len(parent._subwindows)
+		for i in range(1,n):
+			parent._subwindows[i].SetWindowPos(parent._subwindows[i-1].GetSafeHwnd(), 
+				(0,0,0,0),flags)
+		self.InvalidateParentRect()
+		
 	def pop(self):
 		parent = self._parent	
 		# put self in front of all siblings with equal or lower z
@@ -354,15 +395,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 					break
 			else:
 				parent._subwindows.append(self)
-		ix = parent._subwindows.index(self)
-		if ix != 0: 
-			self.SetWindowPos(parent._subwindows[ix-1]._wnd.GetSafeHwnd(), 
-				(0,0,0,0),win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		else:
-			self.SetWindowPos(win32con.HWND_TOP ,(0,0,0,0),
-				win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		#parent.pop()
-	
+		# rearange subwindows in the correct relative z-position
+		self.z_order_subwindows()
 
 	def push(self):
 		parent = self._parent
@@ -378,33 +412,96 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		else:
 			parent._subwindows.insert(0, self)
 		
-		ix = parent._subwindows.index(self)
-		if ix != 0: 
-			self.SetWindowPos(parent._subwindows[ix-1]._wnd.GetSafeHwnd(),
-				(0,0,0,0),win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		else:
-			self.SetWindowPos(win32con.HWND_TOP ,
-				(0,0,0,0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		# rearange subwindows in the correct relative z-position
+		self.z_order_subwindows()
 
+	# paint the ws visible part (not covered by ws with higher z-order)
+	# during BeginPaint the OnEraseBkgnd will be called
+	# to prepare self ws visible background
 	def OnPaint(self):
 		dc, paintStruct = self._obj_.BeginPaint()
-		if self._active_displist:
-			self._active_displist._render(dc,paintStruct[2],1)
-		self.notifyListener('OnDraw',dc)
+		self.PaintOn(dc)
 		self._obj_.EndPaint(paintStruct)
+	
+	# called from self.OnPaint method and for transparent ws 
+	# also from <wnd with higher z-order that ovelaps self>.OnEraseBkgnd
+	def PaintOn(self,dc):
+		rc=dc.GetClipBox()
+		if self._active_displist:
+			self._active_displist._render(dc,rc,1)
+		if self._showing: # i.e. we must draw a frame around as
+			self.showwindow_on(dc)
+		self.notifyListener('OnDraw',dc)
 
-
+	# paint under overlaping transparent siblings with higher z-order
+	# * applies to transparent wnds
+	# * should not be called by the std wnds paint mechanism
+	#   but from our update mechanism only
+	# * for the os our windows are all not trasparent so the std wnds paint mechanism
+	#   has no access in this area 
+	def PaintUnderTrasparentSiblings(self,rc):
+		p=self._parent;ws=p._subwindows
+		ix=ws.index(self)
+		for i in range(0,ix): # all z-higher
+			if ws[i]._transparent==1 or (ws[i]._transparent==-1 and ws[i]._active_displist==None):
+				# the ws[i] is trasparent
+				rc_self=self.MapCoordTo(rc,ws[i])
+				rc_other= ws[i].GetClientRect() #ws[i].MapCoordTo(ws[i].GetClientRect(),p)
+				rc_common,ans= Sdk.IntersectRect(rc_self,rc_other)
+				if ans: # they ovelap
+					ws[i].InvalidateRect(rc_common,1) # update common pixel map
+		
+	def InvalidateParentRect(self):
+		l,t,r,b=self.GetClientRect()
+		ptList=[(l,t),(r,b)]
+		[(l,t),(r,b)] = self.MapWindowPoints(self._parent,ptList)
+		self._parent.InvalidateRect((l,t,r,b))
+	
+	# return 1 to indicate 'done'	
 	def OnEraseBkgnd(self,dc):
-		if self._transparent==0: 
-			return self._obj_.OnEraseBkgnd(dc)
+		# default is:
+		# if self._transparent==0:return self._obj_.OnEraseBkgnd(dc)
+		rc=dc.GetClipBox()
+		if self._transparent==0:
+			if self._active_displist:color=self._active_displist._bgcolor
+			else: color=self._bgcolor
+			dc.FillSolidRect(rc,win32mu.RGB(color))
+			return 1
+		if self._transparent==-1 and self._active_displist:
+			dc.FillSolidRect(rc,win32mu.RGB(self._active_displist._bgcolor))
+			return 1
+
+		# the window is transparent 
+		# self._transparent==1 or (self._transparent==-1 and self._active_displist==None)
+		# we must draw everything in client rect that self is responsible
+		# i.e client area not covered by a window with higher z
+
+		# first draw everything with lower z-order
+		# use parent to erase background
 		parent = self.GetParent()
 		ptList=[(0,0),]
 		ptOffset = self.MapWindowPoints(parent,ptList)[0]
 		ptOldOrg=dc.OffsetWindowOrg(ptOffset)
 		parent.SendMessage(win32con.WM_ERASEBKGND,dc.GetSafeHdc())
 		dc.SetWindowOrg(ptOldOrg)
-		return 1
 
+		p=self._parent;ws=p._subwindows;n=len(ws)
+		ix=ws.index(self)
+		for i in range(n-1,ix,-1):
+			# we should check for overlap before we make we elaborate on
+			ptList=[(0,0),]
+			ptOffset = self.MapWindowPoints(ws[i],ptList)[0]
+			ptOldOrg=dc.OffsetWindowOrg(ptOffset)
+			ws[i].PaintOn(dc)
+			dc.SetWindowOrg(ptOldOrg)
+		return 1
+	
+	def MapCoordTo(self,rc,wnd):
+		l,t,r,b=rc
+		ptList=[(l,t),(r,b)]
+		[(l,t),(r,b)] = self.MapWindowPoints(wnd,ptList)
+		return (l,t,r,b)
+		
 	# Browsing support
 	def RetrieveUrl(self,url):
 		if not hasattr(self, '_browser'):
