@@ -509,14 +509,13 @@ The verb can be one of 'open','edit','print'
 """
 
 # url parsing
-import MMurl,ntpath, urllib
+import MMurl, ntpath, urlparse
 
 def shell_execute(url,verb='open'):
-	utype, _url = MMurl.splittype(url)
-	host, _url = MMurl.splithost(_url)
-	islocal = (not utype and not host)
+	utype, host, path, params, query, fragment = urlparse.urlparse(url)
+	islocal = (not utype or utype == 'file') and (not host or host == 'localhost')
 	if islocal:
-		filename=MMurl.url2pathname(MMurl.splithost(url)[1])
+		filename=MMurl.url2pathname(path)
 		if os.path.isfile(filename):
 			if not os.path.isabs(filename):
 				filename=os.path.join(os.getcwd(),filename)
