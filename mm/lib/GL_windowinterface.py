@@ -2491,7 +2491,7 @@ class _DummyButtons:
 		else:
 			raise error, 'button number out of range'
 
-class Dialog:
+class Dialog(_DummyButtons):
 	def __init__(self, title, prompt, grab, vertical, list, *coordinates):
 		if len(list) == 0:
 			raise TypeError, 'arg count mismatch'
@@ -2579,7 +2579,7 @@ class Dialog:
 					self.widest_button = txt
 			if len(butstrs) > mh:
 				mh = len(butstrs)
-		self.buttons = _DummyButtons(len(self._buttons))
+		_DummyButtons.__init__(self, len(self._buttons))
 		sw, sh = font.strsize(INTERBUTTONGAP)
 		font.close()
 		self.buttonlines = mh
