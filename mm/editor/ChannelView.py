@@ -20,13 +20,13 @@ from ChannelViewDialog import ChannelViewDialog, GOCommand, \
 	ChannelBoxCommand, NodeBoxCommand, ArcBoxCommand
 from usercmd import *
 
-from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
 import Timing
 from MMExc import *
 from AnchorDefs import *
 from ArmStates import *
 from MMTypes import *
+import os
 
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
@@ -109,6 +109,8 @@ class ChannelView(ChannelViewDialog):
 			self.layouts.append((name, (name,)))
 		self.curlayout = None
 		title = 'Channel View (' + self.toplevel.basename + ')'
+		from cmif import findfile
+		self.datadir = findfile('Data')
 		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
 
@@ -282,20 +284,41 @@ class ChannelView(ChannelViewDialog):
 		return top + (height * (t0 - vt0) / dt), \
 		       top + (height * (t1 - vt0) / dt)
 
-	def mapchannel(self, channel):
+	def mapchannel(self, channel, line = 0):
 		# Map channel to left and right coordinates
 		if channel.chview_map is not None:
-			return channel.chview_map
+			x, y, height = channel.chview_map
+			return x + line*height, y + line*height
 		list = self.visiblechannels()
-		nchannels = len(list)
-		try:
-			i = list.index(channel)
-		except ValueError:
+		channellines = self.channellines
+		nlines = 0
+		i = None
+		for ch in list:
+			if channel is ch:
+				i = nlines
+			nlines = nlines + (channellines.get(ch.name, 0) or 1)
+		if i is None:
+			# channel not visible
 			return 0, 0
-		height = float(self.timescaleborder) / nchannels
-		x, y = (i + 0.1) * height, (i + 0.9) * height
-		channel.chview_map = x, y
-		return x, y
+# original code: all channels and extra lines at same distance from each other
+##		height = float(self.timescaleborder) / nlines
+##		x, y = (i + 0.1) * height, (i + 0.9) * height
+##		channel.chview_map = x, y, height
+##		return x + line*height, y + line*height
+# new code: extra lines closer together
+		nchannels = len(list)
+		nextras = nlines - nchannels
+		dist = float(self.timescaleborder) / (nchannels + 0.9 * nextras)
+		height = 0.8 * dist
+		ldist = 0.9 * dist
+		x = 0.1 * dist
+		for ch in list:
+			if channel is ch:
+				y = x + height
+				channel.chview_map = x, y, ldist
+				return x + line * ldist, y + line * ldist
+			n = channellines.get(ch.name, 0) or 1
+			x = x + (n - 1) * ldist + dist
 
 	def channelgapindex(self, y):
 		list = self.visiblechannels()
@@ -363,7 +386,7 @@ class ChannelView(ChannelViewDialog):
 		self.new_displist = displist
 		bl, fh, ps = displist.usefont(f_title)
 		self.channelright = displist.strsize('999999')[0]
-		self.nodetop = self.channelright * 1.5
+		self.nodetop = min(self.channelright * 2, self.channelright + .05)
 		self.timescaleborder = 1.0 - 4 * fh
 
 		self.objects = []
@@ -393,11 +416,35 @@ class ChannelView(ChannelViewDialog):
 
 	# Recompute the locations where the objects should be drawn
 
+	def calculatechannellines(self):
+		channels = {}
+		for o in self.objects:
+			if o.__class__ is not NodeBox:
+				continue
+			ch = o.node.attrdict.get('channel')
+			if ch is None: continue
+			if not channels.has_key(ch): channels[ch] = []
+			channels[ch].append(o)
+		for list in channels.values():
+			list.sort(nodesort)
+		for ch, list in channels.items():
+			x = []
+			for o in list:
+				for i in range(len(x)):
+					if o.node.t0 >= x[i]:
+						x[i] = o.node.t1
+						o.channelline = i
+						break
+				else:
+					o.channelline = len(x)
+					x.append(o.node.t1)
+			channels[ch] = len(x)
+		self.channellines = channels
+
 	def reshape(self):
 	        self.discontinuities = []
 		Timing.needtimes(self.viewroot)
-		for c in self.context.channels:
-			c.lowest = 0
+		self.calculatechannellines()
 		for obj in self.objects:
 			obj.reshape()
 
@@ -516,7 +563,7 @@ class ChannelView(ChannelViewDialog):
 			if c.used:
 				self.usedchannels.append(c)
 			elif not self.showall:
-				c.chview_map = 0, 0
+				c.chview_map = 0, 0, 0
 		self.addancestors()
 		self.addsiblings()
 
@@ -1158,13 +1205,17 @@ class ChannelBox(GO, ChannelBoxCommand):
 		d.centerstring(l, t, r, b, self.name)
 
 ## 		# Draw the channel type
-		import ChannelMap
-		map = ChannelMap.shortcuts
-		if map.has_key(self.ctype):
-			C = map[self.ctype]
-		else:
-			C = '?'
-		d.centerstring(r, t, self.mother.nodetop, b, C)
+		f = os.path.join(self.mother.datadir, '%s.tiff' % self.ctype)
+		try:
+			d.display_image_from_file(f, center = 1, coordinates = (r, t, self.mother.nodetop-r, b-t))
+		except windowinterface.error:
+			import ChannelMap
+			map = ChannelMap.shortcuts
+			if map.has_key(self.ctype):
+				C = map[self.ctype]
+			else:
+				C = '?'
+			d.centerstring(r, t, self.mother.nodetop, b, C)
 
 	def drawline(self):
 		# Draw a gray and a white vertical line
@@ -1218,6 +1269,12 @@ class ChannelBox(GO, ChannelBoxCommand):
 			channels[self.name].unhighlight()
 
 
+
+def nodesort(o1, o2):
+	d = cmp(o1.node.t0, o2.node.t0)
+	if d == 0:
+		d = cmp(o1.node.t1, o2.node.t1)
+	return d
 
 class NodeBox(GO, NodeBoxCommand):
 
@@ -1387,7 +1444,7 @@ class NodeBox(GO, NodeBoxCommand):
 		else:
 			t1 = self.node.t1
 		left, right = self.mother.maptimes(self.node.t0, t1)
-		top, bottom = self.mother.mapchannel(channel)
+		top, bottom = self.mother.mapchannel(channel, self.channelline)
 		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
 		    self.mother.discontinuities.append(
 			self.node.t0+self.node.timing_discont)
@@ -1395,20 +1452,6 @@ class NodeBox(GO, NodeBoxCommand):
 		hmargin = self.mother.new_displist.strsize('x')[0] / 15
 		left = left + hmargin
 		right = right - hmargin
-
-		# Move top down below the previous node if necessary
-		if left < channel.lowest:
-			left = channel.lowest
-
-		# Keep space for at least one line of text
-		# bottom = max(bottom, top+f_fontheight-2)
-## 		if left + self.mother.new_displist.strsize('x')[0] * 1.2 > right:
-## 		    right = left + self.mother.new_displist.strsize('x')[0] * 1.2
-## 		    self.mother.discontinuities.append(
-## 			(self.node.t0+self.node.t1)/2)
-
-		# Update channel's lowest node
-		channel.lowest = right
 
 		self.left, self.top, self.right, self.bottom = \
 			left, top, right, bottom
