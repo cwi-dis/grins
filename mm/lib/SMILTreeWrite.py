@@ -356,7 +356,7 @@ cmif_node_attrs_ignore = [
 	'system_language', 'system_overdub_or_captions', 'system_required',
 	'system_screen_size', 'system_screen_depth', 'layout',
 	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
-	'author', 'copyright', 'abstract', 'mimetype',
+	'author', 'copyright', 'abstract', 'mimetype', 'terminator',
 	]
 cmif_chan_attrs_ignore = [
 	'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
