@@ -15,7 +15,7 @@ class XMLParser extends ApplicationAdapter {
  	private Stack stack=new Stack();
 	private Hashtable cmdHandlers = new Hashtable();
 	private String[] handlers = {
-	    "com.oratrix.client.ResponseCmdHandler",
+	    //"com.oratrix.client.ResponseCmdHandler",
 	};
 	
     XMLParser(CMLMediator mediator, Socket socket,URL url){
