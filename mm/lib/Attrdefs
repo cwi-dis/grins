@@ -81,7 +81,7 @@
 ##(keep (bool) 0 'Keep' default
 ##	'If on, text in window is kept until explicitly replaced' channel)
 
-(name (name) none 'Name' default
+(name (name) '' 'Name' default
 	'Name given to a node' raw)
 
 ##(needGS (bool) 0 'Need Ghostscript' default
