@@ -3,7 +3,7 @@ Microsoft eMbedded Visual Tools Workspace File, Format Version 3.00
 
 ###############################################################################
 
-Project: "GRiNS Player"="..\GRiNS Player\GRiNS Player.vcp" - Package Owner=<4>
+Project: "GRiNS Player"="..\GRINS PLAYER\GRiNS Player.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -38,18 +38,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name GRiNS Player
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wingdi
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name winkernel
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name winuser
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -66,19 +54,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python15"=..\..\..\..\python_ce\PCbuild\ce\python15.vcp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "wingdi"=..\..\winsdk\wingdi\wingdi.vcp - Package Owner=<4>
+Project: "wingdi"=..\..\WINSDK\WINGDI\wingdi.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -93,7 +69,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "winkernel"=..\..\winsdk\winkernel\winkernel.vcp - Package Owner=<4>
+Project: "winkernel"=..\..\WINSDK\WINKERNEL\winkernel.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -108,7 +84,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "winuser"=..\..\winsdk\winuser\winuser.vcp - Package Owner=<4>
+Project: "winuser"=..\..\WINSDK\WINUSER\winuser.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
