@@ -60,6 +60,10 @@ class Menu:
 		self.__dict__['_obj_'] = m
 		self._dynamic_cascade_dict={}	# dict holding dynamic menus, valid until next call
 		self._toggles={}
+		self._optional_dict = {'':1}
+		import settings
+		self._optional_dict['cmif'] = settings.get('cmif')
+		self._optional_dict['debug'] = settings.get('debug')
 
 	# Delete the underlying win32 object
 	def __del__(self):
@@ -135,6 +139,12 @@ class Menu:
 		flags=win32con.MF_STRING|win32con.MF_ENABLED
 		id=-1
 		for item in list:
+			if type(item[0]) == type(''):
+				# Optional entry
+				optional = item[0]
+				item = item[1:]
+				if not self._optional_dict[optional]:
+					continue
 			if item[0]==ENTRY:
 				if self._cb_obj2id:id=self._cb_obj2id(item[3])
 				else: id=item[3]
