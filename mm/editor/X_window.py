@@ -17,10 +17,10 @@ ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(X_windowbase._Toplevel):
-	def newwindow(self, x, y, w, h, title, pixmap = 1):
+	def newwindow(self, x, y, w, h, title, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 0, pixmap)
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = 1):
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 1, pixmap)
 
 	def getsize(self):
