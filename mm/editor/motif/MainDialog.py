@@ -37,7 +37,7 @@ class MainDialog:
 		'close': [ EXIT, ],
 		}
 
-	def __init__(self, title):
+	def __init__(self, title, hasarguments=1):
 		"""Create the Main dialog.
 
 		Create the dialog window (non-modal, so does not grab

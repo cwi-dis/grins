@@ -92,7 +92,7 @@ class Main(MainDialog):
 				DEBUG(callback = (self.debug_callback, ())),
 				CRASH(callback = (self.crash_callback, ())),
 				]
-		MainDialog.__init__(self, 'CMIFed')
+		MainDialog.__init__(self, 'CMIFed', (not not files))
 
 		for file in files:
 			self.openURL_callback(MMurl.guessurl(file))
@@ -127,6 +127,12 @@ class Main(MainDialog):
 			names.append(name)
 			descriptions.append(description, image, pathname)
 		self.template_info = (names, descriptions)
+
+	def never_again(self):
+		# Called when the user selects the "don't show again" in the initial dialog
+		import settings
+		settings.set('no_initial_dialog', 1)
+		settings.save()
 
 	def new_callback(self):
 		import TopLevel
