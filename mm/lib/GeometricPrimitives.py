@@ -4,6 +4,10 @@ __version__ = "$Id$"
 # aggregated editable geometric primitives rather than fixed
 # primitives.
 
+# Note: this is now badly designed. The optimisation self.change_objects breaks the working of
+# this class by appending directly to the underlying display list without regard for the
+# z-order of the widgets.
+
 import windowinterface, WMEVENTS
 from AppDefaults import *
 
@@ -19,7 +23,10 @@ class GeoWidget(Widget):
 		# Root is the root window.
 		Widget.__init__(self, mother)
 		self.canvassize = 800, 200
+		self.change_objects = []
+		self.dirty = 0
 		self.widgets = []
+		self.displist = None
 
 	def AddWidget(self, widget):
 		assert isinstance(widget, Widget)
@@ -42,6 +49,20 @@ class GeoWidget(Widget):
 	def redraw(self):
 		# Handle display lists and so forth.
 		# I may reuse the display list for small changes.
+
+		# << This is a hack: 
+		bob = len(self.change_objects)
+		if self.displist and bob != 0 and bob < 100:
+			self.displist, displist = self.displist.clone(), self.displist
+			for i in self.change_objects:
+				i.displist = self.displist
+				i.redraw()
+			self.displist.render()
+			displist.close()
+			self.change_objects = []
+			return
+		# >> end of hack.
+
 		x,y = self.canvassize
 		self.mother.window.setcanvassize((windowinterface.UNIT_PXL, x,y))
 		# Fixing the color of the background will break things. Sorry, but I'm lazy (-anonymous developer :-).
@@ -50,6 +71,8 @@ class GeoWidget(Widget):
 			i.displist = self.displist
 			i.redraw()
 		self.displist.render()
+		self.dirty = 0
+		self.change_objects = []
 
 	def notify_moveto(self, coords):
 		# This is the upcall from widgets when they are moved.
@@ -61,9 +84,11 @@ class GeoWidget(Widget):
 		if b > y:
 			y = b
 		self.canvassize = x,y
+		self.dirty = 1
 
 	def getgeometry(self):
 		return self.mother.window.getgeometry()
+
 
 class GeoClientWidget(Widget):
 	# Common routines for all widgets.
@@ -91,7 +116,9 @@ class Box(GeoClientWidget):
 		self.displist.drawbox(self.get_box())
 
 	def set_color(self, color):
-		self.color = color
+		if color != self.color:
+			self.color = color
+			self.parent.change_objects.append(self)
 
 class FBox(GeoClientWidget):
 	color = (0,0,0)
@@ -99,7 +126,9 @@ class FBox(GeoClientWidget):
 		self.displist.drawfbox(self.color, self.get_box())
 
 	def set_color(self, color):
-		self.color = color
+		if color != self.color:
+			self.color = color
+			self.parent.change_objects.append(self)
 #FBox=Box # Use this for debugging.
 
 class Marker(GeoClientWidget):
@@ -111,7 +140,9 @@ class Text(GeoClientWidget):
 		self.textalign = 'c'
 		self.text = "Error - no text set."
 	def set_text(self, text):
-		self.text = text
+		if text != self.text:
+			self.text = text
+			self.parent.change_objects.append(self)
 	# fonts??
 	def redraw(self):
 		l,t,w,h = self.get_box()
@@ -124,7 +155,9 @@ class Text(GeoClientWidget):
 			self.displist.writestr(self.text)
 
 	def align(self, bob):
-		self.textalign = bob
+		if bob != self.textalign:
+			self.textalign = bob
+			self.parent.change_objects.append(self)
 
 	def get_height(self):
 		print "TODO: Text.get_height()"

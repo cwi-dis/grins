@@ -20,7 +20,7 @@ class TemporalView(TemporalViewDialog):
 		# Of course, I'll write it _later_.
 		self.selected_channels = []
 		self.selected_nodes = []
-		self.just_selected = 0	# prevents the callback from the editmanager from doing too much work.
+		self.just_selected = None	# prevents the callback from the editmanager from doing too much work.
 		
 		self.time = 0		# Currently selected "time" - in seconds.
 		self.zoomfactorx = 0	# Scale everything to this! Done in the Widgets for this
@@ -140,6 +140,7 @@ class TemporalView(TemporalViewDialog):
 
 	def select_channel(self, channel):
 		self.selected_channels.append(channel)
+		self.just_selected = channel
 
 	def unselect_channels(self):
 		for i in self.selected_channels:
@@ -147,7 +148,7 @@ class TemporalView(TemporalViewDialog):
 
 	def select_node(self, node):
 		# Called back from the scene
-		self.just_selected = 1
+		self.just_selected = node
 		self.selected_nodes.append(node)
 		self.update_popupmenu()
 
@@ -200,9 +201,23 @@ class TemporalView(TemporalViewDialog):
 		return x,y
 
 	def ev_mouse0press(self, dummy, window, event, params):
+#		import time
 		coords = self.rel2abs(params[0:2])
+
+#		before = time.time()
 		self.scene.click(coords)
+#		print "DEBUG: Clicking..", time.time() - before
+
+#		before = time.time()
 		self.draw()
+#		print "DEBUG: Drawing..", time.time() - before
+
+#		before = time.time()
+		if isinstance(self.just_selected, MMWidget):
+			self.editmgr.setglobalfocus('MMNode', self.just_selected.node)
+		elif isinstance(self.just_selected, ChannelWidget):
+			self.editmgr.setglobalfocus('MMChannel', self.just_selected.get_channel())
+#		print "DEBUG: Calling edit manager..", time.time()-before
 
 	def ev_mouse0release(self, dummy, window, event, params):
 		print "mouse released! :-( "
