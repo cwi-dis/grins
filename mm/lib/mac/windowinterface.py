@@ -96,6 +96,9 @@ _qtavailable = mw_toplevel._qtavailable
 textwindow = mw_textwindow.textwindow
 # htmlwindow = mw_textwindow.htmlwindow
 def htmlwindow(url):
+	# Workaround (hack) for Explorer bug, which doesn't recognize file:/disk/...
+	if url[:6] == 'file:/' and url[6] != '/':
+		url = 'file:///' + url[6:]
 	try:
 		import ic
 		ic_instance = ic.IC()
