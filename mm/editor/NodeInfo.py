@@ -6,6 +6,7 @@ __version__ = "$Id$"
 import os
 import string
 import windowinterface
+import features
 
 import MMAttrdefs
 
@@ -114,7 +115,7 @@ class NodeInfo(NodeInfoDialog):
 	def calcchannelnames(self):
 		chtype = self.node.GetChannelType()
 		chlist = self.context.compatchannels(self.url, chtype)
-		lightweight = settings.get('lightweight')
+		lightweight = features.lightweight
 		layout = MMAttrdefs.getattr(self.node, 'layout')
 		if layout == 'undefined':
 			layoutchannels = []
@@ -478,7 +479,7 @@ class NodeInfo(NodeInfoDialog):
 		AttrEdit.showchannelattreditor(self.toplevel, channel)
 
 	def anchors_callback(self):
-		if settings.get('lightweight'):
+		if features.lightweight:
 			# you can push the button, but nothing happens...
 			return
 		import AnchorEdit
