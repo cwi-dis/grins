@@ -12,6 +12,8 @@ from win32displaylist import _DisplayList
 
 import ddraw
 
+import settings
+
 # for global toplevel 
 import __main__
 
@@ -603,6 +605,15 @@ class Window:
 		image = self._image_handle(file)
 		mask=None
 
+		if settings.get('no_image_cache'):
+			try:
+				del __main__.toplevel._image_cache[file]
+			except:
+				pass
+			try:
+				del __main__.toplevel._image_size_cache[file]
+			except:
+				pass
 
 		# scale image sizes
 		w=xsize
@@ -2643,4 +2654,3 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
- 
