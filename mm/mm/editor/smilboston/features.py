@@ -44,5 +44,3 @@ license_features_needed = ('smil2pro', sys.platform)
 # RTIPA start
 RTIPA = 0
 # RTIPA end
-
-buyurl = 'http://www.digitalriver.com/dr/v2/ec_main.entry17c?cid=0&sid=39552&sp=10007&pn=21&pid=885781'
