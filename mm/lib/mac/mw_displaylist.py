@@ -607,10 +607,12 @@ class _DisplayList:
 		return self._window._pxl2rel((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
 		
 	def usefont(self, fontobj):
-		self._font = fontobj
-		self._font._initparams(self._window._wid)
-		self._list.append('font', fontobj)
-		return self.baseline(), self.fontheight(), self.pointsize()
+		if fontobj != self._font:
+			self._font = fontobj
+			self._font._initparams(self._window._wid)
+			self._list.append('font', fontobj)
+			self.__font_size_cache = self.__baseline(), self.__fontheight(), self.__pointsize()
+		return self.__font_size_cache
 
 	def setfont(self, font, size):
 		return self.usefont(mw_fonts.findfont(font, size))
@@ -618,16 +620,25 @@ class _DisplayList:
 	def fitfont(self, fontname, str, margin = 0):
 		return self.usefont(mw_fonts.findfont(fontname, 10))
 
-	def baseline(self):
+	def __baseline(self):
 		baseline = self._font.baselinePXL()
 		return self._window._pxl2rel((0,0,0,baseline))[3]
 
-	def fontheight(self):
+	def __fontheight(self):
 		fontheight = self._font.fontheightPXL()
 		return self._window._pxl2rel((0,0,0,fontheight))[3]
 
-	def pointsize(self):
+	def __pointsize(self):
 		return self._font.pointsize()
+		
+	def baseline(self):
+		return self.__font_size_cache[0]
+
+	def fontheight(self):
+		return self.__font_size_cache[1]
+
+	def pointsize(self):
+		return self.__font_size_cache[2]
 
 	def strsize(self, str):
 		width, height = self._font.strsizePXL(self._window._wid, str)
@@ -666,8 +677,8 @@ class _DisplayList:
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-		if old_fontinfo:
-			mw_fonts._restorefontinfo(w._wid, old_fontinfo)
+##		if old_fontinfo:
+##			mw_fonts._restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 		
 	# Draw a string centered in a box, breaking lines if necessary
@@ -723,11 +734,13 @@ class _DisplayList:
 					z = tuple(z)
 				x.append(z)
 		x = tuple(x)
-		try:
+##		try:
+##			i = self._optimdict[x]
+##		except KeyError:
+##			pass
+##		else:
+		if self._optimdict.has_key(x):
 			i = self._optimdict[x]
-		except KeyError:
-			pass
-		else:
 			del self._list[i]
 			del self._optimdict[x]
 			if i < self._clonestart:
