@@ -1551,6 +1551,7 @@ class List(_Widget, _List):
 class TextInput(_Widget):
 	def __init__(self, parent, prompt, inittext, chcb, accb,
 		     useGadget = _def_useGadget, name = 'windowTextfield',
+		     modifyCB = None,
 		     **options):
 		attrs = {}
 		self._attachments(attrs, options)
@@ -1586,7 +1587,7 @@ class TextInput(_Widget):
 			attrs['editable'] = options['editable']
 		except KeyError:
 			pass
-		text = form.CreateTextField(name, attrs)
+		self._text = text = form.CreateTextField(name, attrs)
 		text.ManageChild()
 		if not widget:
 			widget = text
@@ -1596,7 +1597,9 @@ class TextInput(_Widget):
 		if accb:
 			text.AddCallback('activateCallback',
 					 self._callback, accb)
-		self._text = text
+		if modifyCB:
+			text.AddCallback('modifyVerifyCallback',
+					 self._modifyCB, modifyCB)
 		_Widget.__init__(self, parent, widget)
 
 	def __repr__(self):
@@ -1617,10 +1620,18 @@ class TextInput(_Widget):
 	def settext(self, text):
 		self._text.value = text
 
+	def setfocus(self):
+		self._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
+
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
 		apply(func, arg)
+
+	def _modifyCB(self, w, func, call_data):
+		text = func(call_data.text)
+		if text is not None:
+			call_data.text = text
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
