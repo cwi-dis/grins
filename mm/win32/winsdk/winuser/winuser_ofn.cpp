@@ -243,7 +243,7 @@ static PyObject* PyOfn_GetPathName(PyOfn *self, PyObject *args)
 		return NULL;
 	if(self->m_ofn.lpstrFile == NULL)
 		return Py_BuildValue("s", "");
-	return Py_BuildValue("s", self->m_ofn.lpstrFile);
+	return Py_BuildValue("s", toMB(self->m_ofn.lpstrFile));
 	}
 
 static PyObject* PyOfn_GetFileName(PyOfn *self, PyObject *args)
@@ -252,7 +252,7 @@ static PyObject* PyOfn_GetFileName(PyOfn *self, PyObject *args)
 		return NULL;
 	if(self->m_ofn.lpstrFileTitle == NULL)
 		return Py_BuildValue("s", "");
-	return Py_BuildValue("s", self->m_ofn.lpstrFileTitle);
+	return Py_BuildValue("s", toMB(self->m_ofn.lpstrFileTitle));
 	}
 
 PyMethodDef PyOfn::methods[] = {

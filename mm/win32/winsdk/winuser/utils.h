@@ -206,6 +206,14 @@ inline char* toTEXT(WCHAR *p)
 
 #endif
 
+inline char* toMB(char *p) {return p;}
+inline char* toMB(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
+
 #ifdef _WIN32_WCE
 	#define CAST_IF_WCE(fctn) wce_##fctn
 #else
