@@ -1414,7 +1414,7 @@ class SingleSelectionDialog(SelectionDialog):
 		toplevel.grab(None)
 			
 class InputDialog(DialogWindow):
-	def __init__(self, prompt, default, cb):
+	def __init__(self, prompt, default, cb, cancelCallback = None):
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, ID_INPUT_DIALOG)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
@@ -1424,9 +1424,12 @@ class InputDialog(DialogWindow):
 		self._wid.SetDialogDefaultItem(ITEM_INPUT_OK)
 		self._wid.SetDialogCancelItem(ITEM_INPUT_CANCEL)
 		self._cb = cb
+		self._cancel = cancelCallback
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_INPUT_CANCEL:
+			if self._cancel:
+				apply(apply, self._cancel)
 			self.close()
 		elif item == ITEM_INPUT_OK:
 			self._do_defaulthit()

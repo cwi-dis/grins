@@ -13,6 +13,11 @@ from MMTypes import alltypes, leaftypes, interiortypes
 Alltypes = alltypes[:]
 Alltypes[Alltypes.index('bag')] = 'choice'
 
+NEW_CHANNEL = 'New channel...'
+
+# this *must* be equal to default channel name in MMNode.GetChannelName
+UNDEFINED = 'undefined'
+
 def shownodeinfo(toplevel, node, new = 0):
 	try:
 		nodeinfo = node.nodeinfo
@@ -26,6 +31,8 @@ def shownodeinfo(toplevel, node, new = 0):
 from NodeInfoDialog import NodeInfoDialog
 
 class NodeInfo(NodeInfoDialog):
+
+	newchannels = []
 
 	def __init__(self, toplevel, node, new):
 		self.new = new
@@ -97,8 +104,10 @@ class NodeInfo(NodeInfoDialog):
 		# First get all values (except those changed, if
 		# always is true)
 		#
-		self.allchannelnames = ['undefined'] + \
-				       self.context.channelnames
+		self.allchannelnames = [UNDEFINED] + \
+				       self.context.channelnames + \
+				       self.newchannels + \
+				       [NEW_CHANNEL]
 		if always:
 			self.changed = 0
 		if always or not self.ch_name():
@@ -158,6 +167,9 @@ class NodeInfo(NodeInfoDialog):
 				name = None
 			em.setnodeattr(n, 'name', name)
 		if self.ch_channelname:
+			if self.channelname not in self.context.channelnames:
+				# new channel
+				self.newchannel()
 			em.setnodeattr(n, 'channel', self.channelname)
 			self.ch_channelname = 0
 		if self.ch_type:
@@ -177,6 +189,56 @@ class NodeInfo(NodeInfoDialog):
 		self.changed = 0
 		em.commit()
 		return 1
+
+	def newchannel(self):
+		em = self.editmgr
+		context = self.context
+		channelname = self.channelname
+		try:
+			self.newchannels.remove(channelname)
+		except ValueError:
+			# probably shouldn't happen...
+			pass
+		root = None
+		for key, val in context.channeldict.items():
+			if val.get('base_window') is None:
+				# we're looking at a top-level channel
+				if root is None:
+					# first one
+					root = key
+				else:
+					# multiple root windows
+					root = ''
+		index = len(context.channelnames)
+		em.addchannel(channelname, index, self.guesstype())
+		if root:
+			context.channeldict[channelname]['base_window'] = root
+
+	def guesstype(self):
+		# guess channel type from URL
+		if self.type == 'imm':
+			# assume all immediate nodes are text nodes
+			return 'text'
+		if self.type != 'ext':
+			# interior node, doesn't make much sense
+			return 'null'
+		import mimetypes, string
+		mtype = mimetypes.guess_type(self.url)[0]
+		if mtype is None:
+			# just guessing now...
+			return 'html'
+		mtype, subtype = string.split(mtype, '/')
+		if mtype == 'audio':
+			return 'sound'
+		if mtype == 'image':
+			return 'image'
+		if mtype == 'video':
+			return 'video'
+		if mtype == 'text':
+			if subtype == 'html':
+				return 'html'
+		# fallback
+		return 'text'
 	#
 	# Fill form from local data.  Clear the form beforehand.
 	#
@@ -277,10 +339,32 @@ class NodeInfo(NodeInfoDialog):
 
 	def channel_callback(self):
 		self.channelname = self.getchannelname()
-		if self.origchannelname <> self.channelname:
+		if self.channelname == NEW_CHANNEL:
+			base = 'NEW'
+			i = 1
+			name = base + `i`
+			while self.context.channeldict.has_key(name):
+				i = i+1
+				name = base + `i`
+			windowinterface.InputDialog('Name for new channel',
+						    name,
+						    self.newchan_cb,
+						    cancelCallback = (self.newchan_cb, ()))
+		elif self.origchannelname <> self.channelname:
 			self.ch_channelname = 1
 			self.changed = 1
 
+	def newchan_cb(self, name = None):
+		all = self.allchannelnames
+		self.channelname = name or UNDEFINED
+		if self.origchannelname <> self.channelname:
+			self.ch_channelname = 1
+			self.changed = 1
+			if self.channelname not in all:
+				self.newchannels.append(self.channelname)
+				all.insert(len(all) - 1, self.channelname)
+		self.setchannelnames(all, all.index(self.channelname))
+			
 	def attributes_callback(self):
 		import AttrEdit
 		AttrEdit.showattreditor(self.toplevel, self.node)

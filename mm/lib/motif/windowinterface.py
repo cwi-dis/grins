@@ -661,6 +661,9 @@ class FileDialog:
 		dialog.AddCallback('okCallback', self._ok_callback, existing)
 		dialog.AddCallback('cancelCallback', self._cancel_callback,
 				       None)
+		dialog.Parent().AddWMProtocolCallback(toplevel._delete_window,
+						      self._cancel_callback,
+						      None)
 		helpb = dialog.FileSelectionBoxGetChild(
 						    Xmd.DIALOG_HELP_BUTTON)
 		helpb.UnmanageChild()
@@ -832,7 +835,7 @@ class SelectionDialog:
 		self.close()
 
 class InputDialog:
-	def __init__(self, prompt, default, cb):
+	def __init__(self, prompt, default, cb, cancelCallback = None):
 		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 			 'colormap': toplevel._default_colormap,
 			 'visual': toplevel._default_visual,
@@ -840,7 +843,10 @@ class InputDialog:
 		self._form = toplevel._main.CreatePromptDialog(
 						   'inputDialog', attrs)
 		self._form.AddCallback('okCallback', self._ok, cb)
-		self._form.AddCallback('cancelCallback', self._cancel, None)
+		self._form.AddCallback('cancelCallback', self._cancel,
+				       cancelCallback)
+		self._form.Parent().AddWMProtocolCallback(
+			toplevel._delete_window, self._cancel, cancelCallback)
 		helpb = self._form.SelectionBoxGetChild(
 						Xmd.DIALOG_HELP_BUTTON)
 		helpb.UnmanageChild()
@@ -864,6 +870,8 @@ class InputDialog:
 		if _in_create_box or self.is_closed():
 			return
 		self.close()
+		if client_data:
+			apply(apply, client_data)
 
 	def setcursor(self, cursor):
 		X_windowbase._setcursor(self._form, cursor)
@@ -1209,7 +1217,7 @@ class OptionMenu(_Widget):
 			while len(self._buttons) > n:
 				self._buttons[n].DestroyWidget()
 				del self._buttons[n]
-			self._optionlist = optionlist
+			self._optionlist = optionlist[:]
 		# set the start position
 		self.setpos(startpos)
 
@@ -1223,7 +1231,7 @@ class OptionMenu(_Widget):
 				 'visual': toplevel._default_visual,
 				 'depth': toplevel._default_visual.depth})
 		self._omenu = menu
-		self._optionlist = optionlist
+		self._optionlist = optionlist[:]
 		self._value = startpos
 		self._buttons = []
 		if self._useGadget:
@@ -1246,8 +1254,7 @@ class OptionMenu(_Widget):
 			return
 		self._value = value
 		if self._callback:
-			f, a = self._callback
-			apply(f, a)
+			apply(apply, self._callback)
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
