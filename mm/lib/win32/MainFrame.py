@@ -683,7 +683,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	# Resize window
 	def setcoords(self,coords,units=UNIT_MM):
 		x, y, w, h = coords
-		x,y,w,h=to_pixels(x,y,w,h,units)
+		x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
 		rc=(x,y,x+w,y+h)
 		#l,t,r,b=self.CalcWindowRect(rc,0)
 		#w=r-l+2*cxframe+4
