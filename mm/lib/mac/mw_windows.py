@@ -1936,7 +1936,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 					print 'No DropFile handler!'
 					MacOS.SysBeep()
 					return
-				mw_globals.toplevel.settimer(5.0, (func, (arg, self, DropFile, (x, y, fname))))
+				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropFile, (x, y, fname))))
 			elif 'URLD' in flavors:
 				try:
 					fflags = dragref.GetFlavorFlags(refnum, 'URLD')
