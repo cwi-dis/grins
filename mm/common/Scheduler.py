@@ -441,6 +441,7 @@ class SchedulerContext:
 					pass
 			arc.depends = []
 			timestamp = arc.resolvedtime(self)
+			save_qid = arc.qid
 			arc.qid = None
 			try:
 				if arc.isstart:
@@ -525,6 +526,17 @@ class SchedulerContext:
 								if debugevents: print 'not stopping (playing children)'
 								parent.updatetimer(curtime)
 								return
+					elif node.starting_children > 0:
+						i = 0
+						while i < len(parent.queue) and parent.queue[i][:2] <= save_qid[:2]:
+							i = i+1
+						if i > 0:
+							if debugevents: print 'delay stop (scheduled children)'
+							node.scheduled_children = node.scheduled_children + 1
+							arc.qid = save_qid
+							parent.queue.insert(i, (arc.qid[0], arc.qid[1], self.trigger, (curtime,arc,None,None,timestamp)))
+							parent.updatetimer(curtime)
+							return
 				if debugevents: print 'terminating node',parent.timefunc()
 				if pnode is not None and \
 				   pnode.type == 'excl' and \
