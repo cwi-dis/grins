@@ -212,7 +212,7 @@ class _DisplayList:
 			gc.foreground = color1
 			gc.DrawLine(x0, y, x1, y)
 			gc.foreground = color2
-			gc.DrawLine(x0, y+1, x, y+1)
+			gc.DrawLine(x0, y+1, x1, y+1)
 		elif cmd == 'box':
 			gc.foreground = entry[1]
 			gc.line_width = entry[2]
