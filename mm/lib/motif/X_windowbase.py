@@ -2274,7 +2274,7 @@ class _MultChoice(Dialog):
 				return
 
 def multchoice(prompt, list, defindex, parent = None):
-	return _MultChoice(prompt, list, defindex, parent).run()
+	return _MultChoice(prompt, list, defindex, parent = parent).run()
 
 def beep():
 	dpy = toplevel._main.Display()
