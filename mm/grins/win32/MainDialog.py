@@ -131,6 +131,13 @@ class MainDialog:
 		self.__text.settext(text)
 
 	def __path2url(self, filename):
+		# this method is called also from the drop stuff
+		# so check for UNC names before calling pathname2url
+		# otherwise it will fail.
+		import longpath
+		if longpath.pathIsUNC(filename):
+			return filename
+
 		import os, MMurl
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
