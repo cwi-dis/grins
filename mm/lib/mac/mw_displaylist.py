@@ -1039,25 +1039,6 @@ class _Button:
 			return 0
 		return 1
 		
-	def _get_button_region(self):
-		"""Return our region, in global coordinates, if we are active"""
-##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
-		if self._times:
-			curtime = time.time() - self._dispobj.starttime
-			# Workaround for the fact that timers seem to fire early, some times:
-			curtime = curtime + 0.05
-			t0, t1 = self._times
-			if curtime < t0 or (t1 and curtime >= t1):
-				return None
-		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
-		x1, y1 = x0+w, y0+h
-		x0, y0 = Qd.LocalToGlobal((x0, y0))
-		x1, y1 = Qd.LocalToGlobal((x1, y1))
-		box = x0, y0, x1, y1
-		rgn = Qd.NewRgn()
-		Qd.RectRgn(rgn, box)
-		return rgn
-		
 	######################################
 	# Animation experimental methods
 
@@ -1072,7 +1053,9 @@ class _ButtonRect(_Button):
 		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
 		if self._color == dispobj._bgcolor:
 			return
-		self._dispobj.drawbox(coordinates)
+		self._dispobj.drawbox(self._coordinates[1],
+			self._coordinates[2], self._coordinates[3]-self._coordinates[1],
+			self._coordinates[4]-self._coordinates[2])
 
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
@@ -1084,6 +1067,27 @@ class _ButtonRect(_Button):
 				return 1
 		return 0
 
+	def _get_button_region(self):
+ 		"""Return our region, in global coordinates, if we are active"""
+##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
+		if self._times:
+			curtime = time.time() - self._dispobj.starttime
+			# Workaround for the fact that timers seem to fire early, some times:
+			curtime = curtime + 0.05
+			t0, t1 = self._times
+			if curtime < t0 or (t1 and curtime >= t1):
+				return None
+		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates[1],
+			self._coordinates[2], self._coordinates[3]-self._coordinates[1],
+			self._coordinates[4]-self._coordinates[2])
+		x1, y1 = x0+w, y0+h
+		x0, y0 = Qd.LocalToGlobal((x0, y0))
+		x1, y1 = Qd.LocalToGlobal((x1, y1))
+		box = x0, y0, x1, y1
+		rgn = Qd.NewRgn()
+		Qd.RectRgn(rgn, box)
+		return rgn
+		
 class _ButtonPoly(_Button):
 	def __init__(self, dispobj, coordinates, z=0, times=None):
 		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
