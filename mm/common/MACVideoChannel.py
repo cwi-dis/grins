@@ -6,6 +6,7 @@ import time
 import MMurl
 import MMAttrdefs
 from AnchorDefs import *
+import WMEVENTS
 import os
 import Qt
 import QuickTime
@@ -44,6 +45,7 @@ class VideoChannel(ChannelWindowAsync):
 	def do_show(self, pchan):
 		if not ChannelWindowAsync.do_show(self, pchan):
 			return 0
+		self.window.register(WMEVENTS.OSWindowChanged, self.oswindowchanged, None)
 		return 1
 
 	def redraw(self):
@@ -140,6 +142,8 @@ class VideoChannel(ChannelWindowAsync):
 		# XXXX This always scales or positions, but it should look at the scale
 		# attribute
 		self.window._mac_setwin()
+		grafport = self.window._mac_getoswindowport()
+		movie.SetMovieGWorld(grafport, None)
 		screenBox = self.window.qdrect()
 		l, t, r, b = movie.GetMovieBox()
 		if node:
@@ -169,6 +173,14 @@ class VideoChannel(ChannelWindowAsync):
 		nMovieBox = self._scalerect(screenBox, movieBox, center)
 		movie.SetMovieBox(nMovieBox)
 		
+	def oswindowchanged(self, *args):
+		self.window._mac_setwin()
+		grafport = self.window._mac_getoswindowport()
+		if self.arm_movie:
+			self.arm_movie.SetMovieGWorld(grafport, None)
+		if self.play_movie:
+			self.play_movie.SetMovieGWorld(grafport, None)
+			
 	def _playsome(self, *dummy):
 		if debug: print 'VideoChannel: playsome'
 		if not self.play_movie:
@@ -297,9 +309,9 @@ class VideoChannel(ChannelWindowAsync):
 	def resize(self, arg, window, event, value):
 		ChannelWindowAsync.resize(self, arg, window, event, value)
 		if self.arm_movie:
-			self.place_movie(self.arm_movie)
+			self.place_movie(None, self.arm_movie)
 		if self.play_movie:
-			self.place_movie(self.play_movie)
+			self.place_movie(None, self.play_movie)
 
 	def do_hide(self):
 		if self.window:
