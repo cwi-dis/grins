@@ -89,6 +89,8 @@ class RealChannel:
 		self.__rmaplayer = None
 		self.__qid = None
 		self.__using_engine = 0
+		self.__reporteddur = None
+
 		if self.__engine is None:
 			try:
 				RealChannel.__engine = RealEngine()
@@ -196,6 +198,9 @@ class RealChannel:
 		if self.__spark:
 			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
 			self.__spark = 0
+
+	def OnPosLength(self, posmsec, durmsec):
+		self.__reporteddur = 0.001*durmsec 
 
 	def replay(self):
 		if not self._playargs:
