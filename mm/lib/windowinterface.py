@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import os
 
 if os.environ.has_key('CMIF_USE_DUMMY'):
