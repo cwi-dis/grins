@@ -85,8 +85,7 @@ BEGIN
         MENUITEM "Open",                        IDM_OPEN
         MENUITEM "Close",                       IDM_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "Choose skin...",              IDM_SKIN
-        MENUITEM "Choose components file...",   IDM_COMPONENTS
+        MENUITEM "Choose device...",            IDM_SKIN
         MENUITEM SEPARATOR
         MENUITEM "Exit",                        IDM_EXIT
     END

@@ -58,7 +58,7 @@ class Main(MainDialog):
 ##			PREFERENCES(callback = (self.preferences_callback, ())),
 ##			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			CHOOSESKIN(callback = (self.skin_callback, ())),
-			CHOOSECOMPONENTS(callback = (self.components_callback, ())),
+##			CHOOSECOMPONENTS(callback = (self.components_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
 		import settings
