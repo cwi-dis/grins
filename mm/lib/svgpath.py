@@ -2,7 +2,7 @@ __version__ = '$Id$'
 
 import string
 import math
-from fmtfloat import fmtfloat, round, trunc
+from fmtfloat import fmtfloat, round, trunc, getprec
 
 class PathSeg:
 	SVG_PATHSEG_UNKNOWN                      = 0
@@ -139,6 +139,7 @@ class SVGPath:
 		self._node = node
 		self._attr = attr
 		self._pathSegList = []
+		self._prec = 0
 		self.__constructors = {'z':self.__addClosePath,
 			'm':self.__addMoveTo,
 			'l':self.__addLineTo,
@@ -182,6 +183,12 @@ class SVGPath:
 	def isDefault(self):
 		return self._pathSegList is None or len(self._pathSegList)==0
 
+	def evaluatePrec(self, token):
+		self._prec = max(self._prec, getprec(token))
+
+	def getPrecision(self):
+		return self._prec
+
 	# main method
 	# create a path from a string description
 	def constructPathSegList(self, pathstr):
@@ -221,8 +228,10 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x = x
 			seg._y = y
@@ -244,8 +253,10 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x = x
 			seg._y = y
@@ -262,16 +273,22 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x1 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y1 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			x2 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y2 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x1 = x1
 			seg._y1 = y1
@@ -292,12 +309,16 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x2 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y2 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x2 = x2
 			seg._y2 = y2
@@ -316,6 +337,7 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x = x
 			if absolute: seg.setType(PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS)
@@ -331,6 +353,7 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._y = y
 			if absolute: seg.setType(PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS)
@@ -347,8 +370,10 @@ class SVGPath:
 			# r1,r2,angle,largeArc,sweep,x,y
 			token = self.__getNextToken(st, delims, '0')
 			r1 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			r2 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			a = string.atof(token)
 			token = self.__getNextToken(st, delims, '0')
@@ -380,12 +405,16 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x1 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y1 = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x1 = x1
 			seg._y1 = y1
@@ -404,8 +433,10 @@ class SVGPath:
 		while st.hasMoreTokens():
 			token = self.__getNextToken(st, delims, '0')
 			x = string.atof(token)
+			self.evaluatePrec(token)
 			token = self.__getNextToken(st, delims, '0')
 			y = string.atof(token)
+			self.evaluatePrec(token)
 			seg = PathSeg()
 			seg._x = x
 			seg._y = y
