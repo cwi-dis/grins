@@ -638,6 +638,12 @@ class _Window:
 		# XXX--assume that images was displayed at least once
 		return _image_size_cache[file]
 
+	def register(self, ev, func, arg):
+		event.register(self, ev, func, arg)
+
+	def unregister(self, ev):
+		event.unregister(self, ev)
+
 class _DisplayList:
 	def __init__(self, window):
 		if debug: print '_DisplayList.init('+`window`+') --> '+`self`
