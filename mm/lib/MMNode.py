@@ -529,11 +529,14 @@ class MMChannel:
 	def SetPresentationAttr(self, name, value):
 		if self.attrdict.has_key(name):
 			self.d_attrdict[name] = value
-		elif self.attrdict.has_key('base_winoff'):
-			# virtual node representing a region
+		elif name in ('position', 'left', 'top', 'width', 'height','right','bottom') and\
+			self.attrdict.has_key('base_winoff'):
 			d = self.d_attrdict
 			n = 'base_winoff'
-			x, y, w, h = self.attrdict['base_winoff']
+			if self.d_attrdict.has_key(n):	
+				x, y, w, h = self.d_attrdict[n]
+			else:
+				x, y, w, h = self.attrdict[n]	
 			if name == 'left':    d[n] = value, y, w, h
 			elif name == 'top':	  d[n] = x, value, w, h
 			elif name == 'width': d[n] = x, y, value, h
@@ -550,6 +553,12 @@ class MMChannel:
 			elif name == 'size':
 				w, h = value
 				d[n] = x, y, w, h
+
+	def GetPresentationAttr(self, name):
+		if self.d_attrdict.has_key(name):
+			return self.d_attrdict[name]
+		elif self.attrdict.has_key(name):
+			return self.attrdict[name]
 
 	#
 	# Emulate the dictionary interface
@@ -607,7 +616,9 @@ class MMChannel:
 	def items(self):
 		return self.attrdict.items()
 
-	def get(self, key, default = None):
+	def get(self, key, default = None, animated=0):
+		if animated and self.d_attrdict.has_key(key):
+			return self.d_attrdict[key]
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		if key == 'bgcolor' and \
