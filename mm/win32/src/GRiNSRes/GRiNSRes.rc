@@ -3065,6 +3065,12 @@ BEGIN
     BUTTON      IDUC_DISTRIBUTE_VERTICALLY
     BUTTON      IDUC_CREATE_ANCHOR
     BUTTON      IDUC_FINISH_LINK
+    BUTTON      IDUC_PAR
+    BUTTON      IDUC_SEQ
+    SEPARATOR
+    BUTTON      IDUC_SWITCH
+    BUTTON      IDUC_EXCL
+    BUTTON      IDUC_PRIO
 END
 
 IDR_TB_COMMON TOOLBAR DISCARDABLE  16, 15
@@ -3184,6 +3190,15 @@ BEGIN
     ID_BUTTON32785          "Cut\nCut"
     ID_BUTTON32786          "Copy\nCopy"
     ID_BUTTON32787          "Paste\nPaste"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDUC_PAR                "Create par container\nCreate par container"
+    IDUC_SEQ                "Create seq container\nCreate seq container"
+    IDUC_SWITCH             "Create switch container\nCreate switch container"
+    IDUC_EXCL               "Create excl container\nCreate excl container"
+    IDUC_PRIO               "Create priority class\nCreate priority class"
 END
 
 #endif    // English (U.S.) resources
