@@ -18,7 +18,8 @@ from Dialog import Dialog
 # showattreditor(node) creates an attribute editor form for a node
 # and hideattreditor(node) hides it again.  Since the editor may also
 # hide itself, spurious hide calls are ignored; also, only one attribute
-# editor is allowed per node, and extra show calls are also ignored.
+# editor is allowed per node, and extra show calls are also ignored
+# (actually, these close and re-open the window to draw attention...).
 # Hiding the editor when the user has changed part of it may ask the
 # user what should be done about this -- this part of the interface
 # hasn't been completely thought out yet.
@@ -96,19 +97,34 @@ def haschannelattreditor(context, name):
 # it should probably be merged with the class attr editor, using
 # a common base class implementing most functions.)
 
-class NodeWrapper():
+class Wrapper(): # Base class -- common operations
+	def getcontext(self):
+		return self.context
+	def register(self, object):
+		self.context.geteditmgr().register(object)
+	def unregister(self, object):
+		self.context.geteditmgr().unregister(object)
+	def transaction(self):
+		return self.context.geteditmgr().transaction()
+	def commit(self):
+		self.context.geteditmgr().commit()
+	def rollback(self):
+		self.context.geteditmgr().rollback()
+
+class NodeWrapper() = Wrapper():
 	#
 	def init(self, node):
 		self.node = node
 		self.context = node.GetContext()
+		self.root = node.GetRoot()
 		return self
+	#
+	def stillvalid(self):
+		return node.GetRoot() is self.root
 	#
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Node attributes for ' + name
-	#
-	def getcontext(self):
-		return self.context
 	#
 	def getattr(self, name): # Return the attribute or a default
 		return MMAttrdefs.getattr(self.node, name)
@@ -162,7 +178,7 @@ class NodeWrapper():
 	#
 
 
-class ChannelWrapper():
+class ChannelWrapper() = Wrapper():
 	#
 	def init(self, (context, name)):
 		self.context = context
@@ -170,11 +186,12 @@ class ChannelWrapper():
 		self.attrdict = self.context.channeldict[name]
 		return self
 	#
+	def stillvalid(self):
+		return self.context.channeldict.has_key(self.name) and \
+			self.context.channeldict[name] = self.attrdict
+	#
 	def maketitle(self):
 		return 'Channel attributes for ' + self.name
-	#
-	def getcontext(self):
-		return self.context
 	#
 	def getattr(self, name):
 		if self.attrdict.has_key(name):
@@ -266,9 +283,20 @@ class AttrEditor() = Dialog():
 		#
 		return self
 	#
+	def transaction(self):
+		return 1
+	#
+	def commit(self):
+		if not wrapper.stillvalid():
+			self.close()
+	#
+	def rollback(self):
+		pass
+	#
 	def open(self):
 		self.close()
 		self.getvalues()
+		self.wrapper.register(self)
 		self.show()
 	#
 	def getvalues(self):
@@ -284,7 +312,9 @@ class AttrEditor() = Dialog():
 		self.changed = 0
 	#
 	def close(self):
-		self.hide()
+		if self.showing:
+			self.wrapper.unregister(self)
+			self.hide()
 	#
 	def cancel_callback(self, dummy):
 		self.close()
@@ -403,6 +433,24 @@ class ButtonRow():
 		return MMAttrdefs.parsevalue \
 			(b.name, string, b.wrapper.getcontext())
 	#
+
+
+# Routine to close all attribute editors in a node and its context.
+
+def closeall(root):
+	closenode(root)
+	context = root.GetContext()
+	for cname in root.GetContext().channelnames:
+		hidechannelattreditor(context, cname)
+
+
+# Recursively close the attribute editor for this node and its subtree.
+
+def closenode(node):
+	hideattreditor(node)
+	if node.GetType() in ('seq', 'par'):
+		for child in node.GetChildren():
+			closenode(child)
 
 
 # Test program -- edit the attributes of the root node.
