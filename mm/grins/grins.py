@@ -29,7 +29,19 @@ from version import version
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
-		import MMurl, TopLevel, windowinterface
+		import MMurl, TopLevel, windowinterface, features
+		if hasattr(features, 'expiry_date') and features.expiry_date:
+			import time
+			tm = time.localtime(time.time())
+			yymmdd = tm[:3]
+			if yymmdd > features.expiry_date:
+				rv = windowinterface.GetOKCancel(
+				   "This beta copy of GRiNS has expired.\n\n"
+				   "Do you want to check the website for a newer version?")
+				if rv == 0:
+					import Help
+					Help.givehelp("../update")
+				sys.exit(0)
 		self._tracing = 0
 		self.nocontrol = 0	# For player compatability
 		self._closing = 0
