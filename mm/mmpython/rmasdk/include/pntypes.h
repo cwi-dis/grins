@@ -78,7 +78,7 @@ typedef int     BOOL;                   /* signed int value (0 or 1) */
  * Instead of using __MWERKS__ you can  now use _MACINTOSH
  */
 #ifdef __MWERKS__
-    #if __dest_os==__macos
+    #if __dest_os==__mac_os
 	#ifndef _MACINTOSH
 	#define _MACINTOSH  1
 
@@ -221,7 +221,7 @@ typedef UINT16 PrefKey;
  * a c++ compiler is being used!
  */
 
-#if defined (__cplusplus) && !(defined(_WIN32) || defined(_WINDOWS) || defined(_MACINTOSH))
+#if defined (__cplusplus) && !(defined(_WIN32) || defined(_WINDOWS))
     /* inline function versions */
     inline int min(int a, int b) 
     {
