@@ -1410,6 +1410,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.sourceview.show()
 			if self.errorsview != None:
 				self.errorsview.show()
+				# pop up the errors view
+				self.errorsview.pop()
 		else:
 			# the document doesn't contains any error, force the error view to hide
 			if self.errorsview != None and self.errorsview.is_showing():
