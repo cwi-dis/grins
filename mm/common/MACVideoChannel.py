@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 # XXXX clip_begin and clip_end not yet implemented
-from Channel import ChannelWindow
+from Channel import ChannelWindow, CMIF_MODE
 import windowinterface
 import time
 import MMurl
@@ -12,9 +12,13 @@ import QuickTime
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindow):
+	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
 	node_attrs = ChannelWindow.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'center',
-		      'clipbegin', 'clipend']
+		     ['clipbegin', 'clipend']
+	if CMIF_MODE:
+		node_attrs = node_attrs + _our_attrs
+	else:
+		chan_attrs = ChannelWindow.chan_attrs + _our_attrs
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
