@@ -1,4 +1,6 @@
 # Text channel
+# XXXX This channel doesn't do anything on arm() yet. Maybe it
+# should.
 
 import string
 
@@ -201,7 +203,7 @@ class TextChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos']
+	chan_attrs = ['winsize', 'winpos', 'visible', 'border']
 	node_attrs = \
 		['font', 'pointsize', 'file', 'duration', 'fgcolor', 'bgcolor']
 	#
@@ -213,7 +215,11 @@ class TextChannel(Channel):
 		return self
 	#
 	def show(self):
-		self.window.show()
+		if self.may_show():
+			self.window.show()
+			if self.no_border():
+				gl.noborder()
+				gl.winconstraints()
 	#
 	def hide(self):
 		self.window.hide()
