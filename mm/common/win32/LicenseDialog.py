@@ -8,7 +8,6 @@ import grinsRC
 import win32con
 import win32ui
 import win32mu
-import features
 import compatibility
 
 class LicenseDialog(win32dialog.ResDialog):
@@ -79,18 +78,8 @@ class LicenseDialog(win32dialog.ResDialog):
 		dc.DeleteDC()
 
 	def loadbmp(self):
-#		import __main__, features
 		import splashbmp, win32dialog
 		self.__bmp = win32dialog.loadBitmapFromResId(splashbmp.getResId())
-#		resdll=__main__.resdll
-#		self.__bmp=win32ui.CreateBitmap()
-#		if compatibility.G2 == features.compatibility:
-#			if features.lightweight:
-#				self.__bmp.LoadBitmap(grinsRC.IDB_SPLASHLITE,resdll)
-#			else:
-#				self.__bmp.LoadBitmap(grinsRC.IDB_SPLASHPRO,resdll)
-#		else:
-#			self.__bmp.LoadBitmap(grinsRC.IDB_SPLASHSMIL,resdll)
 	
 	# Callback glue methods.
 
