@@ -839,7 +839,14 @@ class ColorCtrl(AttrCtrl):
 	
 	def ColorSelect(self, r, g, b):
 		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self._wnd)
+		color_list = self._wnd._form._color_list
+		print color_list
+		dlg.SetCustomColors(color_list)
 		if dlg.DoModal() == win32con.IDOK:
+			func = self._wnd._form._cbdict.get('SetCustomColors')
+			if func is not None:
+				colorlist = dlg.GetSavedCustomColors()
+				func(colorlist)
 			newcol = dlg.GetColor()
 			r, g, b = win32ui.GetWin32Sdk().GetRGBValues(newcol)
 			return r, g, b

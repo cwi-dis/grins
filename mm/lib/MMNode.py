@@ -49,6 +49,7 @@ class MMNodeContext:
 		self.getchannelbynode = None
 		self.title = None
 		self.attributes = {}	# unrecognized SMIL meta values
+		self.color_list = []	# custom colors (implemented in Windows only)
 		self.__registers = []
 		self.externalanchors = []
 		self._ichannelnames = []  # internal channels

@@ -72,7 +72,9 @@ class AttrEditorDialog:
 			'OK':(self.ok_callback, ()),
 			'Showall': (self.showall_callback, ()),
 			'Followselection': (self.followselection_callback, ()),
+			'SetCustomColors': self.setcustomcolors_callback,
 			}
+		w._color_list = self.wrapper.context.color_list
 		w._initattr = initattr
 		# Not sure that this is the right way to pass this info
 		# to AttrEditForm...
@@ -97,6 +99,10 @@ class AttrEditorDialog:
 		w._followSelection_initial = self.follow_selection
 		toplevel_window.showview(w,formid)
 
+
+	def setcustomcolors_callback(self, color_list):
+		print self.wrapper.context.color_list,color_list
+		self.wrapper.context.color_list = color_list
 
 	def close(self, willreopen=0):
 ##		"""Close the dialog and free resources."""
