@@ -29,8 +29,7 @@ class ImageLib:
 			for i in range(gear32sd.error_check()):
 				errcodes.append(`gear32sd.error_get(i)`)
 			from windowinterface import error
-			from string import join
-			raise error, 'failed to load image, errcode(s) = %s' % join(errcodes, ', ')
+			raise error, 'failed to load image, errcode(s) = %s' % ', '.join(errcodes)
 		return img
 
 	# Returns image size
@@ -78,8 +77,7 @@ class ImageLib:
 			for i in range(gear32sd.error_check()):
 				errcodes.append(`gear32sd.error_get(i)`)
 			from windowinterface import error
-			from string import join
-			raise error, 'failed to load image, errcode(s) = %s' % join(errcodes, ', ')
+			raise error, 'failed to load image, errcode(s) = %s' % ', '.join(errcodes)
 		if img.is_transparent():
 			trans_rgb = img.get_transparent_color()
 			img.display_transparent_set(trans_rgb, 1)
