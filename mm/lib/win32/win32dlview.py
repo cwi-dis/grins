@@ -104,12 +104,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		self.HookMessage(self.onRButtonDown, win32con.WM_RBUTTONDOWN)
 
 		self.HookMessage(self.onSize, win32con.WM_SIZE)
-		self.HookMessage(self.onChar, win32con.WM_KEYDOWN)
 
-	def onChar(self, params):
-		c = win32ui.TranslateVirtualKey(params[2])
-		self.onEvent(KeyboardInput, c)
-	
 	# create the real OS window	
 	def createWindow(self,parent):
 		self.CreateWindow(parent)
