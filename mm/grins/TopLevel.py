@@ -109,7 +109,7 @@ class TopLevel(TopLevelDialog):
 	#
 	def source_callback(self):
 		self.showsource(self.root.source)
-		self.source.set_mother(self)
+##		self.source.set_mother(self)
 
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
@@ -204,7 +204,7 @@ class TopLevel(TopLevelDialog):
 		
 	def close_callback(self):
 		self.setwaiting()
-		if self.source and not self.source.is_closed():
+		if self.source is not None:
 			self.source.close()
 		self.source = None
 		self.close()

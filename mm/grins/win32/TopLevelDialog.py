@@ -32,14 +32,20 @@ class TopLevelDialog:
 			top.__set_close_sensitive(sensitive)
 
 	def showsource(self, source):
-		if self.source:
+		if self.source is not None:
 			self.source.close()
 			self.source = None
 			self.window.set_toggle(SOURCEVIEW,0)
 		else:
-			self.source = self.window.textwindow(source, readonly = 1)
+			self.source = self.window.textwindow(source, readonly = 1, close_callback = (self.__close_source, ()))
 			self.window.set_toggle(SOURCEVIEW,1)
 			
+	def __close_source(self):
+		if self.source is not None:
+			self.source.close()
+			self.source = None
+			self.window.set_toggle(SOURCEVIEW,0)
+
 	def __set_close_sensitive(self, sensitive):
 		# CLOSE is the first entry in commandlist
 		if sensitive:

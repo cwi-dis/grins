@@ -32,6 +32,7 @@ class _SourceView(GenFormView):
 		self.__text=''
 		self.__mother = None
 		self.__readonly = 0
+		self.__closecallback = None
 		self.__map0 = []
 		self.__map1 = []
 		# call back dictionary, used ne GenFormView
@@ -46,12 +47,16 @@ class _SourceView(GenFormView):
 		GenFormView.OnInitialUpdate(self)
 		self.__showing = 1
 		self.__editctrl.settext(self.__text)
-		self.__editctrl.enable(not self.__readonly)
+		self.__editctrl.enable(1)
+		self.__editctrl.setreadonly(self.__readonly)
 		self.__ok.enable(1)
 		self.__apply.enable(0)
 		self.__revert.enable(0)
 
 	def OnCmd(self, params):
+		if self.__editctrl is None:
+			# aparently closed
+			return
 		msg=win32mu.Win32Msg(params)
 		id=msg.cmdid()
 		if id == self.__editctrl._id:
@@ -67,11 +72,13 @@ class _SourceView(GenFormView):
 			self.__revert_callback()
 
 	def __ok_callback(self):
-		if self.__mother:
+		if self.__closecallback is not None:
+			apply(apply, self.__closecallback)
+		elif self.__mother is not None:
 			self.__mother.close_callback()
 
 	def __apply_callback(self):
-		if self.__mother:
+		if self.__mother is not None:
 			self.__mother.apply_callback()
 
 	def __revert_callback(self):
@@ -85,11 +92,16 @@ class _SourceView(GenFormView):
 	def set_readonly(self, readonly):
 		self.__readonly = readonly
 		if self.__showing:
-			self.__editctrl.enable(not readonly)
+			self.__editctrl.setreadonly(readonly)
+
+	def set_closecallback(self, callback):
+		self.__closecallback = callback
 
 	# Called by the framework to close this window.
 	def OnClose(self):
-		if self.__mother:
+		if self.__closecallback is not None:
+			apply(apply, self.__closecallback)
+		elif self.__mother is not None:
 			self.__mother.close_callback()
 		else:
 			print "ERROR: You need to call _SourceView.setmother(self)"
@@ -97,13 +109,14 @@ class _SourceView(GenFormView):
 	# cmif interface
 	# Set the text to be shown
 	def settext(self,text):
-		f = win32ui.CreateFont({"name":"courier new", "width":12, "height":12,})
+##		f = win32ui.CreateFont({"name":"courier new", "width":12, "height":12,})
 ##		self.__editctrl.SetFont(f)
 ##		self.__editctrl.SetWordWrap(0) # helps if you are psycic.
 		self.__text=self.__convert2ws(text)
 		# if already visible, update text in window
 		if self.__showing:
 			self.__editctrl.settext(self.__text)
+			self.select_chars(0, 0)
 ##			self.__editctrl.setmodify(0) # No, this document has not been modified yet.
 
 	def gettext(self):
@@ -132,7 +145,7 @@ class _SourceView(GenFormView):
 			if p0 <= endchar:
 				endchar = p1 + (endchar - p0)
 				break
-		e.setsel(startchar,endchar)
+		e.setsel(startchar, endchar)
 		# magic number 23: number of lines in edit control
 		if endline > e.getfirstvisibleline() + 23:
 			# last line not visible, scroll down
@@ -187,7 +200,13 @@ class _SourceView(GenFormView):
 		# 1. clean self contents
 		self.__text=None
 		self.__mother = None
+		self.__closecallback = None
+		self.__editctrl = None
+		self.__ok = None
+		self.__apply = None
+		self.__revert = None
 
 		# 2. destroy OS window if it exists
 		if hasattr(self,'_obj_') and self._obj_:
 			self.GetParent().DestroyWindow()
+		self._cbdict = None
