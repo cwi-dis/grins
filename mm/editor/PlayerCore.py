@@ -146,11 +146,13 @@ class PlayerCore(Scheduler):
 		self.makemenu()
 	#
 	def checkchannels(self):
+		chchanged = 0
 		# XXX Ought to detect renamed channels...
 		# (1) Delete channels that have disappeared
 		# or whose type has changed
 		for name in self.channelnames[:]:
 			if name not in self.context.channelnames:
+				chchanged = 1
 				print 'Detected deleted channel'
 				self.killchannel(name)
 				flushchannelcache(self.root)
@@ -162,6 +164,7 @@ class PlayerCore(Scheduler):
 					print 'Detected retyped channel'
 					self.killchannel(name)
 					flushchannelcache(self.root)
+					chchanged = 1
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
 			if name not in self.channelnames:
@@ -171,11 +174,14 @@ class PlayerCore(Scheduler):
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
 				self.channels[name].show()
+				chchanged = 1
 		# (3) Update visibility of all channels
 		for name in self.channelnames:
 			self.channels[name].check_visible()
 		# (4) Update menu
 		self.makemenu()
+		if chchanged:
+			self.toplevel.channelview.channels_changed()
 	#
 	def showchannels(self):
 		for name in self.channelnames:

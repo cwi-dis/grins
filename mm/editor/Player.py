@@ -102,6 +102,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			#else:
 			#	self.channels[name].show()
 			self.channels[name].flip_visible()
+			self.toplevel.channelview.channels_changed()
 			self.makemenu()
 	#
 	#def calctiming_callback(self, (obj, arg)):

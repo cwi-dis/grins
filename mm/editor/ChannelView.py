@@ -40,6 +40,7 @@ BGCOLOR = fix(200, 200, 200)		# Light gray
 BORDERCOLOR = fix(75, 75, 75)		# Dark gray
 BORDERLIGHT = fix(255, 255, 255)	# White
 CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
+CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
 NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match block view nodes
 ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
 ARROWCOLOR = fix(0, 0, 255)		# Blue
@@ -248,6 +249,11 @@ class ChannelView(ViewDialog, GLDialog):
 			self.getshape()
 			self.reshape()
 		self.draw()
+
+	def channels_changed(self):
+		if self.is_showing():
+			self.setwin()
+			self.redraw()
 
 	def mouse(self, (dev, val)):
 		# MOUSE[123] event.
@@ -693,7 +699,15 @@ class ChannelBox(GO):
 		y = self.ycenter
 
 		# Draw a diamond
-		gl.RGBcolor(CHANNELCOLOR)
+		cd = self.mother.context.channeldict[self.name]
+		if cd.has_key('visible'):
+			visible = cd['visible']
+		else:
+			visible = 1
+		if visible:
+			gl.RGBcolor(CHANNELCOLOR)
+		else:
+			gl.RGBcolor(CHANNELOFFCOLOR)
 		gl.bgnpolygon()
 		gl.v2i(l, y)
 		gl.v2i(x, t)
