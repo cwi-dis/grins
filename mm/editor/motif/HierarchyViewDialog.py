@@ -195,9 +195,12 @@ class HierarchyViewDialog(ViewDialog):
 			x, y, w, h = self.last_geometry
 		else:
 			x, y, w, h = -1, -1, -1, -1
+		if w < 0: w = 300
+		if h < 0: h = 300
 		self.adornments['flags'] = curflags()
 		self.window = windowinterface.newcmwindow(x, y, w, h, title,
-				pixmap = 1, adornments = self.adornments,
+				pixmap = 1, units = windowinterface.UNIT_PXL,
+				adornments = self.adornments,
 				canvassize = (w, h),
 				commandlist = self.commands)
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
