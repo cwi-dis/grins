@@ -78,6 +78,24 @@ ui_dc_paint_rgn(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",r);
 }
 
+static PyObject *
+ui_dc_exclude_clip_rect(PyObject *self, PyObject *args)
+	{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC) return NULL;
+	RECT rect;
+	if (!PyArg_ParseTuple (args, "(iiii):ExcludeClipRect", 
+	          &rect.left, &rect.top, &rect.right, &rect.bottom
+			  // @pyparm (left, top, right, bottom|rect||Specifies the bounding rectangle, in logical units.
+	          ))
+		return NULL;
+	GUI_BGN_SAVE;
+	int r = pDC->ExcludeClipRect(&rect);
+	GUI_END_SAVE;
+	// @pyseemfc CDC|ExcludeClipRect
+	return Py_BuildValue("i",r);
+	}
+
 
 /*
 // @mfcproto virtual int IntersectClipRect( LPCRECT lpRect );
@@ -352,6 +370,7 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 	{"FrameRectFromHandle", ui_dc_framerect_from_handle, 1},\
 	{"SelectObjectFromHandle",	ui_dc_select_object_from_handle,1},\
 	{"PaintRgn",ui_dc_paint_rgn,1},\
+	{"ExcludeClipRect", ui_dc_exclude_clip_rect,1},\
 	{"Detach",	ui_dc_detach,1},
 
 /*	{"SetPolyFillMode",     ui_dc_set_poly_fill_mode, 1},\
