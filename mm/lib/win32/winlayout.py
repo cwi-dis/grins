@@ -29,6 +29,7 @@ from appcon import *
 #class ShapeContainer:
 #	def getMouseTarget(self, point): pass
 #	def update(self, rc=None): pass
+#   def setcursor(self, strid): pass
 
 # shape factories should implement the interface
 #class ShapeFactory:
@@ -84,11 +85,6 @@ class DrawContext:
 	def inSelectMode(self):
 		return self._curtool == self._seltool
 
-	def setcursor(self, strid):
-		cursor = win32window.getcursorhandle(strid)
-		Sdk.SetCursor(cursor)
-
-
 	#
 	#   shape container links
 	#
@@ -103,6 +99,13 @@ class DrawContext:
 		if self._shapeContainer:
 			return self._shapeContainer.update(rc)
 	
+	def setcursor(self, strid):
+		if self._shapeContainer:
+			self._shapeContainer.setcursor(strid)
+		else:
+			cursor = win32window.getcursorhandle(strid)
+			Sdk.SetCursor(cursor)
+
 	# the entity registered through this method 
 	# will be asked for the mouse target 
 	def setShapeContainer(self, entity):
@@ -689,6 +692,8 @@ class LayoutWnd:
 		self._autoscale = 0
 		self._cancroll = 0
 
+		self._curcursor = 'arrow'
+
 		fd = {'name':'Arial','height':10,'weight':700}
 		self._hsmallfont = Sdk.CreateFontIndirect(fd)		
 					
@@ -806,6 +811,12 @@ class LayoutWnd:
 	def getMouseTarget(self, point):
 		return None
 
+	def setcursor(self, strid):
+		if self._curcursor == strid:
+			return
+		self._curcursor = strid
+		cursor = win32window.getcursorhandle(strid)
+		Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 	#
 	# Mouse response
 	#
