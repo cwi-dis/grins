@@ -638,24 +638,14 @@ class SubWindow(Window):
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return SubWindow(self, coordinates, transparent, z, units)
 
+	# draw everything bottom up for now
+	# we don't use clipping yet
 	def paintOn(self, dc, offsetOrg=1):
-		
 		# avoid painting while frozen
 		if self._transition and self._passiveMemDC and offsetOrg:
 			self._passiveMemDC.drawOn(dc)
 			return
 
-		# first paint opaque subwindows
-		trsubwindows = []
-		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and
-			    w._active_displist):
-				w.paintOn(dc)
-			else:
-				trsubwindows.append(w)
-		
-		# then paint self
 		x, y, w, h = self.getwindowpos()
 		if offsetOrg:
 			x0, y0 = dc.SetWindowOrg((-x,-y))
@@ -666,16 +656,13 @@ class SubWindow(Window):
 		if offsetOrg:
 			dc.SetWindowOrg((x0,y0))
 
-		# then paint transparent children
-		trsubwindows.reverse()
-		for w in trsubwindows:
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
 			w.paintOn(dc)
 
 		if self._showing:
 			self.__showwindowOn(dc, self._showing)
-		
-		# debug:
-		#self.__showwindowOn(dc, (255,0,0))
 
 	def showwindow(self, color = (255,0,0)):
 		dc=self._topwindow.GetDC()
