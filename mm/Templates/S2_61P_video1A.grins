@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content="PocketPC 240x180 Video with background image"/>
+    <meta name="template_name" content="Basic GRiNS/PocketPC Videoshow"/>
+    <meta name="template_description" content="A 240x180 video show with audio and background image."/>
+    <meta name="template_snapshot" content="T-icons/video_1_P1A.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="Basic_PPC_Videoshow" backgroundColor="black" width="240" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
+      <region id="bkgd_image" width="240" height="270" GRiNS:type="image" GRiNS:editBackground=" 255 192 192" GRiNS:showEditBackground="off"/>
+      <region id="Video" left="0" width="240" top="7" height="180" z-index="1" GRiNS:type="video" GRiNS:editBackground=" 192 255 192" GRiNS:showEditBackground="off"/>
+    </layout>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="fade" type="fade"/>
+    <transition id="push" type="pushWipe"/>
+    <GRiNS:viewinfo view="structure" top="0" left="0" width="800" height="265"/>
+  </head>
+  <body GRiNS:hidden="true">
+    <par id="BasicPPCVideoshow" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_video="Video" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:thumbnailIcon="T-icons/video_1_P1A.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
+      <seq id="Videos" fillDefault="freeze" GRiNS:emptyIcon="T-icons/dropVideo.tif" GRiNS:emptyText="Drop 240x180 Video onto Icon" GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="8s" GRiNS:nonEmptyIcon="T-icons/dropVideo.tif">
+      </seq>
+      <img id="BkgdImg" region="bkgd_image" fill="freeze" src="media/Back2P.gif"/>
+    </par>
+  </body>
+</smil>
