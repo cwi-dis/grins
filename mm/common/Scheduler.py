@@ -850,7 +850,7 @@ class SchedulerContext:
 				self.cancelarc(arc, timestamp, not cancelarcs)
 ##				if debugevents: print 'scheduled_children-1 h',`arc.dstnode`,arc.dstnode.scheduled_children,parent.timefunc()
 ##				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
-		if fill == 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+		if fill == 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN, MMStates.PLAYED):
 			for arc in node.delayed_arcs:
 				if debugevents: print 'scheduled_children-1 i',`arc.dstnode`,arc.dstnode.scheduled_children,parent.timefunc()
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
@@ -862,14 +862,15 @@ class SchedulerContext:
 					if debugevents: print 'stopplay',`node`,parent.timefunc()
 					chan.stopplay(node)
 					node.set_armedmode(ARM_DONE)
-			for c in node.GetSchedChildren():
-				self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
-				if not parent.playing:
-					return
-			node.stopplay(timestamp)
-			node.cleanup_sched(parent)
-			for c in node.GetSchedChildren():
-				c.resetall(parent)
+			if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+				for c in node.GetSchedChildren():
+					self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
+					if not parent.playing:
+						return
+				node.stopplay(timestamp)
+				node.cleanup_sched(parent)
+				for c in node.GetSchedChildren():
+					c.resetall(parent)
 		elif fill != 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			self.freeze_play(node, timestamp)
 			if not parent.playing:
