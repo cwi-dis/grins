@@ -267,15 +267,3 @@ class AttrEditorDialogField:
 	def help_callback(self):
 		"""Callback called when help is requested."""
 		pass
-
-class _MySelectionDialog(windowinterface.SelectionDialog):
-	def __init__(self, label, current, options, callback):
-		self.OkCallback = callback
-		windowinterface.SelectionDialog.__init__(
-			self, 'Choose from', label, options, current)
-
-	def OkCallback(self, value):
-		pass
-
-	def NomatchCallback(self, value):
-		return '%s is not a valid choice' % value
