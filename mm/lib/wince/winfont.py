@@ -90,7 +90,7 @@ class _Font:
 		if type(pointsize)==type(''):
 			pointsize=string.atoi(pointsize)
 		pointsize = int(pointsize+_POINTSIZEOFFSET)	# correction because of tiny fonts on Windows
-		pointsize = (pointsize*dpi_y+36)/72 # screen correction
+		#pointsize = (pointsize*dpi_y+36)/72 # screen correction
 		global user_charset
 		self._fd = {'name':fontname,'height':-pointsize, 'weight':540, 'charset':user_charset}
 		self._hfont = wingdi.CreateFontIndirect(self._fd)		
