@@ -421,23 +421,23 @@ BEGIN
     PUSHBUTTON      "Cancel",IDUC_CANCEL,8,53,32,14
 END
 
-IDD_LICENSE DIALOGEX 0, 0, 331, 234
+IDD_LICENSE DIALOGEX 0, 0, 331, 250
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "License"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Try",IDOK,7,191,50,14
-    PUSHBUTTON      "Buy...",IDUC_BUY,106,191,50,14
-    PUSHBUTTON      "Get evaluation license...",IDUC_EVALLICENSE,161,191,107,
+    DEFPUSHBUTTON   "Try",IDOK,7,207,50,14
+    PUSHBUTTON      "Buy...",IDUC_BUY,106,207,50,14
+    PUSHBUTTON      "Get evaluation license...",IDUC_EVALLICENSE,161,207,107,
                     14
-    PUSHBUTTON      "Enter key...",IDUC_ENTERKEY,274,191,50,14
-    PUSHBUTTON      "Quit",IDCANCEL,7,212,50,14
-    LTEXT           "Static",IDC_MESSAGE,7,174,199,8
+    PUSHBUTTON      "Enter key...",IDUC_ENTERKEY,274,207,50,14
+    PUSHBUTTON      "Quit",IDCANCEL,7,228,50,14
+    LTEXT           "Static",IDC_MESSAGE,7,190,199,8
     LTEXT           "Or see http://www.oratrix.com/GRiNS for details",
-                    IDC_STATIC,164,215,154,8,0,0,HIDC_STATIC
+                    IDC_STATIC,164,231,154,8,0,0,HIDC_STATIC
     CONTROL         "",IDC_SPLASH,"Button",BS_OWNERDRAW | BS_FLAT | 
-                    WS_DISABLED,7,7,317,160
-    PUSHBUTTON      "Open license file...",IDUC_OPENFILE,59,212,97,14
+                    WS_DISABLED,7,7,317,176
+    PUSHBUTTON      "Open license file...",IDUC_OPENFILE,59,228,97,14
 END
 
 IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 227, 85
@@ -3310,7 +3310,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 324
         TOPMARGIN, 7
-        BOTTOMMARGIN, 227
+        BOTTOMMARGIN, 243
     END
 
     IDD_CHANNEL_UNDEF, DIALOG
