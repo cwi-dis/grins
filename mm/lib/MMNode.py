@@ -1353,14 +1353,14 @@ class MMNode:
 	def GetChildren(self):
 		return self.children
 
-	def GetSchedChildren(self):
+	def GetSchedChildren(self, check_playability = 1):
 		children = []
 		for c in self.children:
-			if not c._CanPlay():
+			if check_playability and not c._CanPlay():
 				continue
 			if c.type == 'prio':
-				children = children + c.GetSchedChildren()
-			elif c.type == 'alt':
+				children = children + c.GetSchedChildren(check_playability)
+			elif check_playability and c.type == 'alt':
 				c = c.ChosenSwitchChild()
 				if c is not None:
 					children.append(c)
@@ -1368,6 +1368,17 @@ class MMNode:
 				children.append(c)
 		return children
 
+	def IsTimeChild(self, x):
+		children = self.children[:]
+		while children:
+			c = children[0]
+			del children[0]
+			if c.type == 'prio' or c.type == 'alt':
+				children = children + c.children
+			elif c is x:
+				return 1
+		return 0
+				
 	def GetChild(self, i):
 		return self.children[i]
 
