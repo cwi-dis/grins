@@ -68,26 +68,30 @@ class TopLevel(ViewDialog):
 		self.load_geometry()
 		self.window = windowinterface.Window(self.basename,
 				deleteCallback = (self.close_callback, ()))
+		buttons = [('Play', (self.play_callback, ())),
+			   # The numbers below correspond with the
+			   # positions in the `self.views' list (see
+			   # `makeviews' below).
+			   ('Player', (self.view_callback, (0,)), 't'),
+			   ('Hierarchy view', (self.view_callback, (1,)), 't'),
+			   ('Channel view', (self.view_callback, (2,)), 't'),
+			   ('Hyperlinks', (self.view_callback, (3,)), 't'),
+			   None,
+			   ('Open...', (self.open_callback, ())),
+			   ('Save', (self.save_callback, ())),
+			   ('Save for Player', (self.save_player_callback, ())),
+			   ('Save as...', (self.saveas_callback, ())),
+			   ('Restore', (self.restore_callback, ())),
+			   ('Close', (self.close_callback, ())),
+			   None,
+			   ('Debug', (self.debug_callback, ())),
+			   ('Trace', (self.trace_callback, ()), 't')]
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'TextEdit'):
+			buttons.insert(1, ('View Source...', (self.source_callback, ())))
+		self.source = None
 		self.buttons = self.window.ButtonRow(
-			[('Play', (self.play_callback, ())),
-			 # The numbers below correspond with the
-			 # positions in the `self.views' list (see
-			 # `makeviews' below).
-			 ('Player', (self.view_callback, (0,)), 't'),
-			 ('Hierarchy view', (self.view_callback, (1,)), 't'),
-			 ('Channel view', (self.view_callback, (2,)), 't'),
-##			 ('Style sheet', (self.view_callback, (4,)), 't'),
-			 ('Hyperlinks', (self.view_callback, (3,)), 't'),
-			 None,
-			 ('Open...', (self.open_callback, ())),
-			 ('Save', (self.save_callback, ())),
-			 ('Save for Player', (self.save_player_callback, ())),
-			 ('Save as...', (self.saveas_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Close', (self.close_callback, ())),
-			 None,
-			 ('Debug', (self.debug_callback, ())),
-			 ('Trace', (self.trace_callback, ()), 't')],
+			buttons,
 ##			 ('Help', (self.help_callback, ()))],
 			top = None, bottom = None, left = None, right = None,
 			vertical = 1)
@@ -179,6 +183,21 @@ class TopLevel(ViewDialog):
 		self.setwaiting()
 		self.player.show((self.player.playsubtree, (self.root,)))
 		self.setready()
+
+	def source_callback(self):
+		if self.source is not None and not self.source.is_closed():
+			self.source.show()
+			return
+		w = windowinterface.Window('Source', resizable = 1,
+					   deleteCallback = 'hide')
+		b = w.ButtonRow([('Close', (w.hide, ()))],
+				top = None, left = None, right = None,
+				vertical = 0)
+		t = w.TextEdit(self.root.source, None, editable = 0,
+			       top = b, left = None, right = None,
+			       bottom = None, rows = 30, columns = 80)
+		w.show()
+		self.source = w
 
 	def view_callback(self, viewno):
 		self.setwaiting()
@@ -445,6 +464,9 @@ class TopLevel(ViewDialog):
 
 	def close_callback(self):
 		self.setwaiting()
+		if self.source and not self.source.is_closed():
+			self.source.close()
+		self.source = None
 		self.close()
 		self.setready()
 

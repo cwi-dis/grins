@@ -52,6 +52,7 @@ class TopLevel:
 		self.read_it()
 		self.makeplayer()
 		self.window = None
+		self.source = None
 		opentops.append(self)
 
 	def __repr__(self):
@@ -63,12 +64,16 @@ class TopLevel:
 		self.load_geometry()
 		self.window = windowinterface.Window(self.basename,
 				deleteCallback = (self.close_callback, ()))
+		buttons = [('Open...', (self.open_callback, ())),
+			   ('Close', (self.close_callback, ())),
+			   None,
+			   ('Debug', (self.debug_callback, ())),
+			   ('Trace', (self.trace_callback, ()), 't')]
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'TextEdit'):
+			buttons.insert(0, ('View Source...', (self.source_callback, ())))
 		self.buttons = self.window.ButtonRow(
-			[('Open...', (self.open_callback, ())),
-			 ('Close', (self.close_callback, ())),
-			 None,
-			 ('Debug', (self.debug_callback, ())),
-			 ('Trace', (self.trace_callback, ()), 't')],
+			buttons,
 			top = None, bottom = None, left = None, right = None,
 			vertical = 1)
 		self.window.show()
@@ -116,6 +121,21 @@ class TopLevel:
 	#
 	# Callbacks.
 	#
+	def source_callback(self):
+		if self.source is not None and not self.source.is_closed():
+			self.source.show()
+			return
+		w = windowinterface.Window('Source', resizable = 1,
+					   deleteCallback = 'hide')
+		b = w.ButtonRow([('Close', (w.hide, ()))],
+				top = None, left = None, right = None,
+				vertical = 0)
+		t = w.TextEdit(self.root.source, None, editable = 0,
+			       top = b, left = None, right = None,
+			       bottom = None, rows = 30, columns = 80)
+		w.show()
+		self.source = w
+
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
@@ -194,6 +214,9 @@ class TopLevel:
 
 	def close_callback(self):
 		self.setwaiting()
+		if self.source is not None and not self.source.is_closed():
+			self.source.close()
+		self.source = None
 		self.close()
 		self.setready()
 
