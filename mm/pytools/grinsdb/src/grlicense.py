@@ -36,6 +36,7 @@ PRODUCT_TO_FEATURE = {
 	"GRP": ["pro"],
 	
 	"smil2player": ["smil2player"],
+	"embeddedplayer": ["embeddedplayer"],
 	"SM2": ["smil2player"],
 	"G2P": ["smil2player"],
         "G2PT": ["smil2player"],
