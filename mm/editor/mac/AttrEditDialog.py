@@ -517,6 +517,18 @@ class OptionTabPage(SingleTabPage):
 
 	def _option_click(self):
 		self.call_optional_cb(self.fieldlist[0])
+		
+class HtmlTemplateTabPage(OptionTabPage):
+	# Special case (temporarily) for HTML template: use a fixed popup
+	attrs_on_page=['project_html_page']
+	
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		list = ['external_player.html','embedded_player.html']
+		if not value in list:
+			list.append(value)
+		self._option.setitems(list, value)
+	
 
 class ChannelTabPage(OptionTabPage):
 	attrs_on_page=['channel']
@@ -1676,6 +1688,7 @@ MULTI_ATTR_CLASSES = [
 	Destination1AreaTabPage,
 	TargetAudienceTabPage,
 	ClipTabPage,
+	HtmlTemplateTabPage,
 	UploadTabPage,
 	WipeTabPage,
 	FadeoutTabPage,
