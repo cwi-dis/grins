@@ -25,6 +25,7 @@
 
 ##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
 ##	'Bounding box for embedded PostScript image' channel)
+
 (arm_duration (float) -1.0 'Arm duration' default
 	'Time needed to arm this event before displaying' raw)
 
@@ -34,7 +35,7 @@
 (blockview_winpos (tuple (int) (int)) (-1 -1) 'Block view winpos' default
 	 'Window position for block view' raw)
 
-(blockview_winsize (tuple (int) (int)) (400 800) 'Block view winsize' default
+(blockview_winsize (tuple (int) (int)) (400 400) 'Block view winsize' default
 	 'Window size for block view' raw)
 
 (border (int) 1 'Channel border' default
@@ -49,7 +50,7 @@
 (cview_winpos  (tuple (int) (int)) (-1 -1) 'Channel view winpos' default
 	 'Window position for channel view' raw)
 
-(cview_winsize  (tuple (int) (int)) (400 800) 'Channel view winsize' default
+(cview_winsize  (tuple (int) (int)) (400 400) 'Channel view winsize' default
 	 'Window size for channel view' raw)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
@@ -110,7 +111,7 @@
 (player_winpos (tuple (int) (int)) (-1 -1) 'Player winpos' default
 	 'Window position for player control panel' raw)
 
-(player_winsize (tuple (int) (int)) (300 100) 'Player winsize' default
+(player_winsize (tuple (int) (int)) (290 160) 'Player winsize' default
 	 'Window size for player control panel' raw)
 
 (pointsize (float) 0 'Point size' default
@@ -148,7 +149,7 @@
 (toplevel_winpos (tuple (int) (int)) (-1 -1) 'Top level winpos' default
 	 'Window position for top level menu' raw)
 
-(toplevel_winsize (tuple (int) (int)) (120 280) 'Top level winsize' default
+(toplevel_winsize (tuple (int) (int)) (110 250) 'Top level winsize' default
 	 'Window size for top level menu' raw)
 
 (type (name) undefined 'Channel type' default
