@@ -162,9 +162,9 @@ class SoundChannel(ChannelAsync):
 				continue
 			t = self.play_markers[mark] / float(rate) + (arc.delay or 0)
 			if t <= 0:
-				self._playcontext.Event(arc)
+				self._playcontext.trigger(arc)
 			else:
-				qid = self._scheduler.enter(t, 0, self._playcontext.Event, (arc,))
+				qid = self._scheduler.enter(t, 0, self._playcontext.trigger, (arc,))
 				self.__evid.append(qid)
 		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(

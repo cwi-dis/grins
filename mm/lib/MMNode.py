@@ -1263,45 +1263,53 @@ class MMNode:
 		else:
 			result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
 				   [(PLAY, arg)] + out0)]
-		if not Duration.get(self):
-			# there is no (intrinsic or explicit) duration
-			# PLAY_DONE comes immediately, so in effect
-			# only wait for sync arcs
-			result.append(
-				([(PLAY_DONE, arg)] + in1,
-				 [(SCHED_STOPPING,arg)]))
-			result.append(
-				([(SCHED_STOPPING,arg)],
-				 [(SCHED_DONE,arg)] + out1))
-			result.append(([(SCHED_STOP, arg)],
-				       [(PLAY_STOP, arg)]))
-		elif not MMAttrdefs.getattr(self, 'duration'):
-			# there is an intrinsic but no explicit duration
-			# keep active until told to stop
-			# terminate on sync arcs
-			for ev in in1:
-				result.append(([ev], [(TERMINATE, self)]))
-			result.append(
-				([(PLAY_DONE, arg)],
-				 [(SCHED_STOPPING,arg)]))
-			result.append(
-				([(SCHED_STOPPING,arg)],
-				 [(SCHED_DONE,arg)] + out1))
-			result.append(([(SCHED_STOP, arg)],
-				       [(PLAY_STOP, arg)]))
-		else:
-			# there is an explicit duration
-			# stop when done playing
-			# terminate on sync arc
-			for ev in in1:
-				result.append(([ev], [(TERMINATE, self)]))
-			result.append(
-				([(PLAY_DONE, arg)],
-				 [(SCHED_STOPPING,arg)]))
-			result.append(
-				([(SCHED_STOPPING,arg)],
-				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
-			result.append(([(SCHED_STOP, arg)], []))
+		result.append(
+			([(PLAY_DONE, arg)] + in1,
+			 [(SCHED_STOPPING,arg)]))
+		result.append(
+			([(SCHED_STOPPING,arg)],
+			 [(SCHED_DONE,arg)] + out1))
+		result.append(([(SCHED_STOP, arg)],
+			       [(PLAY_STOP, arg)]))
+##		if not Duration.get(self):
+##			# there is no (intrinsic or explicit) duration
+##			# PLAY_DONE comes immediately, so in effect
+##			# only wait for sync arcs
+##			result.append(
+##				([(PLAY_DONE, arg)] + in1,
+##				 [(SCHED_STOPPING,arg)]))
+##			result.append(
+##				([(SCHED_STOPPING,arg)],
+##				 [(SCHED_DONE,arg)] + out1))
+##			result.append(([(SCHED_STOP, arg)],
+##				       [(PLAY_STOP, arg)]))
+##		elif not MMAttrdefs.getattr(self, 'duration'):
+##			# there is an intrinsic but no explicit duration
+##			# keep active until told to stop
+##			# terminate on sync arcs
+##			for ev in in1:
+##				result.append(([ev], [(TERMINATE, self)]))
+##			result.append(
+##				([(PLAY_DONE, arg)],
+##				 [(SCHED_STOPPING,arg)]))
+##			result.append(
+##				([(SCHED_STOPPING,arg)],
+##				 [(SCHED_DONE,arg)] + out1))
+##			result.append(([(SCHED_STOP, arg)],
+##				       [(PLAY_STOP, arg)]))
+##		else:
+##			# there is an explicit duration
+##			# stop when done playing
+##			# terminate on sync arc
+##			for ev in in1:
+##				result.append(([ev], [(TERMINATE, self)]))
+##			result.append(
+##				([(PLAY_DONE, arg)],
+##				 [(SCHED_STOPPING,arg)]))
+##			result.append(
+##				([(SCHED_STOPPING,arg)],
+##				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
+##			result.append(([(SCHED_STOP, arg)], []))
 		srdict = {}
 		for events, actions in result:
 			action = [len(events), actions]
@@ -1706,6 +1714,7 @@ class MMNode:
 		if body is None:
 			if self.looping_body_self:
 				return
+			body = self
 		for child in self.wtd_children:
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if not beginlist:
@@ -1760,14 +1769,12 @@ class MMNode:
 					   arc.marker is None and \
 					   arc.delay is not None:
 						schedule = 1
-			if schedule and termtype == 'LAST':
-				scheddone_events.append((SCHED_DONE, child))
-			elif termtype == 'ALL':
-				scheddone_events.append((SCHED_DONE, child))
-			elif termtype in ('FIRST', chname):
+			if termtype in ('FIRST', chname):
 				terminating_children.append(child)
 				srlist.append(([(SCHED_DONE, child)],
 					       [(TERMINATE, self_body)]))
+			elif schedule or termtype == 'ALL':
+				scheddone_events.append((SCHED_DONE, child))
 
 		#
 		# Trickery to handle dur and end correctly:

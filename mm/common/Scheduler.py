@@ -16,7 +16,7 @@ import settings
 import MMStates
 
 debugtimer = 0
-debugevents = 1
+debugevents = 0
 
 # Priorities for the various events:
 N_PRIO = 6
@@ -36,7 +36,7 @@ class SchedulerContext:
 		#self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode)
-##		if debugevents:self.dump()
+		if debugevents:self.dump()
 
 
 	#
@@ -215,9 +215,7 @@ class SchedulerContext:
 	# for the next time through the loop
 	#
 	def restartloop(self, node):
-##		if debugevents: self.dump()
-		# XXXX Not a good idea, this algorithm: a looping node
-		# will cause actions to grow without bound.
+		if debugevents: self.dump()
 		srdict = node.GenLoopSR()
 		for key, value in srdict.items():
 			if self.srdict.has_key(key):
@@ -274,9 +272,9 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist)
 
-	def Event(self, arc):
+	def trigger(self, arc):
 		node = arc.dstnode
-		if debugevents: print 'Event', `node`
+		if debugevents: print 'trigger', `node`
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
 				# ignore end event if not playing
@@ -304,7 +302,7 @@ class SchedulerContext:
 		srdict = pnode.gensr_child_par(node)
 		self.srdict.update(srdict)
 		self.parent.event(self, (SR.SCHED, node))
-##		if debugevents: self.dump()
+		if debugevents: self.dump()
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
@@ -653,7 +651,7 @@ class Scheduler(scheduler):
 			if arc.event == 'begin' and \
 			   arc.marker is None and \
 			   arc.delay is not None:
-				self.enter(self.delay, 0, sctx.Event, (arc,))
+				self.enter(self.delay, 0, sctx.trigger, (arc,))
 
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
@@ -877,7 +875,7 @@ class Scheduler(scheduler):
 	# There is no delayfunc() since we don't have a run() function.
 	#
 	def enterabs(self, time, priority, action, argument):
-		print 'enterabs',time,priority,action,argument
+		if debugevents: print 'enterabs',time,priority,action,argument
 		id = scheduler.enterabs(self, time, priority, action, argument)
 		self.updatetimer()
 		return id
