@@ -1606,7 +1606,7 @@ class ChannelWindow(Channel):
 		if node is self._played_node and arc.event == 'click':
 			d = self.played_display.clone()
 			d.fgcolor(self.getbgcolor(node))
-			b = d.newbutton((0,0,1,1), z = -1)
+			b = d.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
 			self._played_anchors.append((None, None, b, None))
 			self._anchors[b] = self.onclick, (node, [(None, None)], None)
 			if self._paused >= 0:
