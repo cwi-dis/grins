@@ -1,10 +1,9 @@
 __version__ = "$Id$"
 
-""" @win32doc|_SourceView
-This module contains the ui implementation of the source
-viewer. It is an MFC EditView with the read only attribute set.
-It is exposed to Python through the win32ui pyd as PyCEditView
-"""
+# @win32doc|_SourceView
+# This module contains the ui implementation of the source
+# viewer. It is an MFC EditView with the read only attribute set.
+# It is exposed to Python through the win32ui pyd as PyCEditView
 
 import win32ui,win32con
 Sdk=win32ui.GetWin32Sdk()
