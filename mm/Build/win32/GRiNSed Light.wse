@@ -26,13 +26,13 @@ item: Global
   Upload Directory=/ufs/sjoerd/tmp
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=1.5 beta
-  Version Description=GRiNS Lite for RealSystem G2
-  Version Copyright=Copyright 1999 Oratrix Development BV
-  Version Company=Oratrix Development BV
+  Version File=1.5
+  Version Description=GRiNS/G2 Lite
+  Version Copyright=Copyright 2000 Oratrix Holding B.V.
+  Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=260594745
+  File Checksum=2794357395
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -50,7 +50,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\common\lllicense.txt
+  Source=D:\ufs\mm\cmif\Build\products\g2-15\lite\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1121,7 +1121,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\common\splash\editor8bit.bmp
+  Pathname=D:\ufs\mm\cmif\Build\products\g2-15\lite\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1129,7 +1129,7 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\common\license.txt
+  Source=D:\ufs\mm\cmif\Build\products\g2-15\lite\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
@@ -1142,6 +1142,11 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=B
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\g2-15\QuickStart.pdf
+  Destination=%MAINDIR%\QuickStart.pdf
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Tutorials\Assets\h218.gif
@@ -1158,11 +1163,6 @@ item: Install File
   Destination=%MAINDIR%\Tutorials\Assets\map.gif
   Flags=0000000010000010
 end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\common\QSG-L4G2.pdf
-  Destination=%MAINDIR%\QSG-L4G2.pdf
-  Flags=0000000010000010
-end
 item: End Block
 end
 item: Install File
@@ -1174,6 +1174,11 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\realtext-template.rt
+  Destination=%MAINDIR%\Templates\media\realtext-template.rt
+  Flags=0000000010000010
 end
 item: Install File
   Source=c:\Winnt\system32\Oleaut32.dll
@@ -1293,11 +1298,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
   Destination=%MAINDIR%\Templates\media\realpix-template.rp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1774,6 +1774,19 @@ item: Add ProgMan Icon
 end
 item: End Block
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
 item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=Uninstall GRiNS Lite for G2
@@ -1934,21 +1947,6 @@ item: Self-Register OCXs/DLLs
 end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: SMILfile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=File Tree: %MAINDIR%\
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: MIME\Database\Content Type\application/smil
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
 end
 item: Wizard Block
   Direction Variable=DIRECTION
