@@ -684,8 +684,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 		_setcursor(self._shell, cursor)
 		self._curcursor = cursor
 
-	def newdisplaylist(self, bgcolor = None):
-		return _DisplayList(self, bgcolor)
+	def newdisplaylist(self, bgcolor = None, units=UNIT_SCREEN):
+		return _DisplayList(self, bgcolor, units)
 
 	def settitle(self, title):
 		self._shell.SetValues({'title': title, 'iconName': title})

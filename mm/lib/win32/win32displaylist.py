@@ -58,7 +58,8 @@ def _get_icon(which):
 
 
 class _DisplayList:
-	def __init__(self, window, bgcolor):
+	def __init__(self, window, bgcolor, units):
+		self.__units = units	# default for units arg in draw methods
 		self.starttime = 0
 		self._window = window			
 		window._displists.append(self)
@@ -363,11 +364,13 @@ class _DisplayList:
 
 	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1, coordinates = None, clip = None):
+				    center = 1, coordinates = None, clip = None, units = None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       self._window._prepare_image(file, crop, scale, center, coordinates, clip)
+		       self._window._prepare_image(file, crop, scale, center, coordinates, clip, units)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height,rcKeep))
 		self._optimize((2,))
@@ -378,8 +381,10 @@ class _DisplayList:
 		       float(width) / w, float(height) / h
 		       
 		self.setMediaBox(mediaBox)
-		
-		return mediaBox
+		if units == UNIT_PXL:
+			return dest_x - x, dest_y - y, width, height
+		else:
+			return mediaBox
 
 	# set the area where the media is visible
 	# mediaBox is a tuple of: 
@@ -405,7 +410,9 @@ class _DisplayList:
 	# draw primitives
 
 	# Insert a command to drawline
-	def drawline(self, color, points):
+	def drawline(self, color, points, units = None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
@@ -414,7 +421,7 @@ class _DisplayList:
 		xvalues = []
 		yvalues = []
 		for point in points:
-			x, y = self._convert_coordinates(point)
+			x, y = self._convert_coordinates(point, units=units)
 			p.append((x,y))
 			xvalues.append(x)
 			yvalues.append(y)
@@ -422,40 +429,48 @@ class _DisplayList:
 		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	# Draw a horizontal gutter
-	def draw3dhline(self, color1, color2, x0, x1, y):
+	def draw3dhline(self, color1, color2, x0, x1, y, units = None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		color1 = self._convert_color(color1)
 		color2 = self._convert_color(color2)
-		x0, y = self._convert_coordinates((x0, y))
-		x1, dummy = self._convert_coordinates((x1, y))
+		x0, y = self._convert_coordinates((x0, y), units=units)
+		x1, dummy = self._convert_coordinates((x1, y), units=units)
 		self._list.append(('3dhline', color1, color2, x0, x1, y))
 		self._update_bbox(x0, y, x1, y+1)
 
 	# Insert a command to drawbox
-	def drawbox(self,coordinates, clip = None):
+	def drawbox(self,coordinates, clip = None, units = None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._convert_coordinates(coordinates)
+		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('box',(x, y, x+w, y+h)))
 		self._optimize()
 		self._update_bbox(x, y, x+w, y+h)
 
-	def drawboxanchor(self, coordinates):
+	def drawboxanchor(self, coordinates, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._convert_coordinates(coordinates)
+		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('anchor',(x, y, x+w, y+h)))
 		self._optimize()
 		self._update_bbox(x, y, x+w, y+h)
 ##		return x, y, x+w, y+h
 
 	# Insert a command to draw a filled box
-	def drawfbox(self, color, coordinates):
+	def drawfbox(self, color, coordinates, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._convert_coordinates(coordinates)
+		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('fbox', self._convert_color(color),
 				   (x, y, x+w-1, y+h-1)))
 		self._optimize((1,))
@@ -463,33 +478,39 @@ class _DisplayList:
 ##		return x, y, x+w, y+h
 
 	# Insert a command to clear box
-	def clear(self,coordinates):
+	def clear(self,coordinates, units=None):
+		if units is None:
+			units = self.__units
 		raise AssertionError, 'obsolete call'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._convert_coordinates(coordinates)
+		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('clear',(x, y, x+w, y+h)))
 		self._optimize((1,))
 		self._update_bbox(x, y, x+w, y+h)
 
 	# Insert a command to draw a filled polygon
-	def drawfpolygon(self, color, points):
+	def drawfpolygon(self, color, points, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		color = self._convert_color(color)
 		p = []
 		for point in points:
-			p.append(self._convert_coordinates(point))
+			p.append(self._convert_coordinates(point, units=units))
 		self._list.append(('fpolygon', color, p))
 		self._optimize((1,))
 
 	# Insert a command to draw a 3d box
-	def draw3dbox(self, cl, ct, cr, cb, coordinates):
+	def draw3dbox(self, cl, ct, cr, cb, coordinates, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		coordinates = self._convert_coordinates(coordinates)
+		coordinates = self._convert_coordinates(coordinates, units=units)
 		cl = self._convert_color(cl)
 		ct = self._convert_color(ct)
 		cr = self._convert_color(cr)
@@ -500,17 +521,21 @@ class _DisplayList:
 		self._update_bbox(x, y, x+w, y+h)
 
 	# Insert a command to draw a diamond
-	def drawdiamond(self, coordinates):
+	def drawdiamond(self, coordinates, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		coordinates = self._convert_coordinates(coordinates)
+		coordinates = self._convert_coordinates(coordinates,units=units)
 		self._list.append(('diamond', coordinates))
 		self._optimize()
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
 
 	# Insert a command to draw a filled diamond
-	def drawfdiamond(self, color, coordinates):
+	def drawfdiamond(self, color, coordinates, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -519,7 +544,7 @@ class _DisplayList:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		coordinates = self._convert_coordinates((x, y, w, h))
+		coordinates = self._convert_coordinates((x, y, w, h), units=units)
 		color = self._convert_color(color)
 		self._list.append(('fdiamond', color, coordinates))
 		self._optimize((1,))
@@ -528,7 +553,9 @@ class _DisplayList:
 
 		
 	# Insert a command to draw a 3d diamond
-	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
+	def draw3ddiamond(self, cl, ct, cr, cb, coordinates, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -536,17 +563,19 @@ class _DisplayList:
 		ct = self._convert_color(ct)
 		cr = self._convert_color(cr)
 		cb = self._convert_color(cb)
-		coordinates = self._convert_coordinates(coordinates)
+		coordinates = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize((1,))
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
 
-	def drawicon(self, coordinates, icon):
+	def drawicon(self, coordinates, icon, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		x, y, w, h = self._convert_coordinates(coordinates)
+		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		# Keep it square, top it off, center it
 		size = min(w, h, ICONSIZE_PXL)
 		xextra = w-size
@@ -560,13 +589,15 @@ class _DisplayList:
 		self._optimize((2,))
 		
 	# Insert a command to draw an arrow
-	def drawarrow(self, color, src, dst):
+	def drawarrow(self, color, src, dst, units=None):
+		if units is None:
+			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
 		color = self._convert_color(color)
-		nsrc = self._convert_coordinates(src)
-		ndst = self._convert_coordinates(dst)
+		nsrc = self._convert_coordinates(src, units=units)
+		ndst = self._convert_coordinates(dst, units=units)
 		try:
 			nsx, nsy, ndx, ndy, points = window.arrowcache[(nsrc,ndst)]
 		except KeyError:
@@ -630,11 +661,17 @@ class _DisplayList:
 		return self.usefont(findfont(fontname, 10))
 
 	# Returns font's  baseline
+	def baselinePXL(self):
+		return self._font.baselinePXL()
+
 	def baseline(self):
 		baseline = self._font.baselinePXL()
 		return self._pxl2rel((0,0,0,baseline))[3]
 
 	# Returns font's  height
+	def fontheightPXL(self):
+		return self._font.fontheightPXL()
+
 	def fontheight(self):
 		fontheight = self._font.fontheightPXL()
 		return self._pxl2rel((0,0,0,fontheight))[3]
@@ -644,24 +681,37 @@ class _DisplayList:
 		return self._font.pointsize()
 
 	# Returns string's  size
-	def strsize(self, str):
+	def strsizePXL(self, str):
+		return self._font.strsizePXL(str)
+
+	def strsize(self, str, units = None):
+		if units is None:
+			units = self.__units
 		width, height = self._font.strsizePXL(str)
-		return self._pxl2rel((0,0,width,height))[2:4]
+		if units == UNIT_PXL:
+			return width, height
+		else:
+			return self._pxl2rel((0,0,width,height))[2:4]
 
 	# Set the current position
-	def setpos(self, x, y):
+	def setpos(self, x, y, units=None):
+		if units is None:
+			units = self.__units
+		x, y = self._convert_coordinates((x, y), units=units)
 		self._curpos = x, y
 		self._xpos = x
 
 	# Insert a write string command
-	def writestr(self, str):
+	def writestr(self, str, units=None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
 		list = self._list
 		f = self._font
-		base = self.baseline()
-		height = self.fontheight()
+		base = self.baselinePXL()
+		height = self.fontheightPXL()
 		strlist = string.splitfields(str, '\n')
 		oldx, oldy = x, y = self._curpos
 		if len(strlist) > 1 and oldx > self._xpos:
@@ -669,50 +719,56 @@ class _DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			x0, y0 = self._convert_coordinates((x, y))
+			x0, y0 = x, y
 			list.append(('text', self._convert_color(self._fgcolor),f, x0, y0, str))
 			self._optimize((1,))
 			width=self._canvas[2]-self._canvas[0]
 			if width==0:width=1 
 			twidth,theight=f.TextSize(str)
-			self._curpos = x + float(twidth) / width, y
+			self._curpos = x + twidth, y
 			self._update_bbox(x0,y0-theight, x0+twidth,y0)
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-		return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		if units == UNIT_PXL:
+			return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		else:
+			return self._pxl2rel((oldx, oldy, maxx - oldx, newy - oldy + height - base))
 
 	# Insert a draw string centered command in a box, breaking lines if necessary
-	def centerstring(self, left, top, right, bottom, str):
-		fontheight = self.fontheight()
-		baseline = self.baseline()
+	def centerstring(self, left, top, right, bottom, str, units=None):
+		if units is None:
+			units = self.__units
+		fontheight = self.fontheightPXL()
+		baseline = self.baselinePXL()
 		width = right - left
 		height = bottom - top
+		left, top, width, height = self._convert_coordinates((left, top, width, height), units=units)
 		curlines = [str]
 		if height >= 2*fontheight:
 			import StringStuff
-			curlines = StringStuff.calclines([str], self.strsize, width)[0]
+			curlines = StringStuff.calclines([str], self.strsizePXL, width)[0]
 		nlines = len(curlines)
 		needed = nlines * fontheight
 		if nlines > 1 and needed > height:
 			nlines = max(1, int(height / fontheight))
 			curlines = curlines[:nlines]
 			curlines[-1] = curlines[-1] + '...'
-		x0 = (left + right) * 0.5	# x center of box
-		y0 = (top + bottom) * 0.5	# y center of box
-		y = y0 - nlines * fontheight * 0.5
+		x0 = (left + right) / 2	# x center of box
+		y0 = (top + bottom) / 2	# y center of box
+		y = y0 - nlines * fontheight / 2
 		for i in range(nlines):
 			str = string.strip(curlines[i])
 			# Get font parameters:
-			w = self.strsize(str)[0]	# Width of string
+			w = self.strsizePXL(str)[0]	# Width of string
 			while str and w > width:
 				str = str[:-1]
-				w = self.strsize(str)[0]
+				w = self.strsizePXL(str)[0]
 			x = x0 - 0.5*w
 			y = y + baseline
-			self.setpos(x, y)
+			self.setpos(x, y, UNIT_PXL)
 			self.writestr(str)
 
 	# Update cloneboxes. 
