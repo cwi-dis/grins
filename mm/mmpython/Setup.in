@@ -15,9 +15,9 @@ soundchannel soundchannelmodule.o -DMM_DEBUG -laudio -lawareaudio
 #nullchannel nullchannelmodule.o -DMM_DEBUG
 #imagechannel imagechannelmodule.o -DMM_DEBUG
 
-# Solaris 2.3 (SunOS 5.X) version, with support both for GL and X
+# Solaris 2.4 version, with support for X
 # 
-# mm mmmodule.o -DMM_DEBUG
+# mm mmmodule.o -DMM_DEBUG -DSOLARIS -lposix4
 # 
-# moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_XM -DUSE_GL -I$(X11DIR) -I/opt/SUNWmotif/include -I/usr/openwin/include -I/opt/NPGL/include -I/opt/SUNWits/Graphics-sw/xgl-3.0/include -DSOLARIS
+# moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_XM -I$(X11DIR) -I/usr/dt/include -I/usr/openwin/include -DSOLARIS
 # soundchannel soundchannelmodule.o -DMM_DEBUG -I/usr/demo/SOUND/include -L/usr/demo/SOUND/lib -laudio
