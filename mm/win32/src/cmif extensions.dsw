@@ -38,6 +38,12 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name producer
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgformat
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name imgjpeg
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -112,6 +118,30 @@ Package=<4>
 ###############################################################################
 
 Project: "cmif"=..\..\cmif.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imgformat"=..\..\..\python\Extensions\img\win32\imgformat.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "imgjpeg"=..\..\..\python\Extensions\img\win32\imgjpeg.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
