@@ -1,10 +1,12 @@
 from Channel import ChannelWindow, FALSE
 import urllib, MMurl
-import win32con
-import win32ui, mmsystem
-import string
 import MMAttrdefs
-from win32modules import midiex, soundex
+
+import string
+import time, mmsystem
+
+import win32ui,win32con
+from win32modules import midiex
 
 error = 'Channel.error'
 
@@ -43,7 +45,7 @@ class SoundChannel(ChannelWindow):
 			win32ui.MessageBox("Window not Created yet!!", "Debug", win32con.MB_OK|win32con.MB_ICONSTOP)
 			return 1
 		else:
-			self._soundWindow = self.window._hWnd
+			self._soundWindow = self.window
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -91,10 +93,7 @@ class SoundChannel(ChannelWindow):
 			self.play_1()
 			return
 		self._play_filename = self._armed_filename
-		if self._tp == 'WAV':
-			self._armed_soundIndex = dsoundex.Create(self._soundWindow, self._play_filename)
-		else:
-			self._armed_soundIndex = midiex.prepare(self._soundWindow, self._play_filename)
+		self._armed_soundIndex = midiex.prepare(self._soundWindow, self._play_filename)
 		self._soundWindow.HookMessage(self._mmcallback, mmsystem.MM_MCINOTIFY)
 		if self._armed_soundIndex<0:
 			print 'MCI failed to open sound file-->', self._play_filename
@@ -104,11 +103,7 @@ class SoundChannel(ChannelWindow):
 		self._armed_soundIndex = None
 		self.play_duration = int(self.armed_duration*1000)
 		self.play_loop = self.armed_loop
-		if self._tp == 'WAV':
-			dsoundex.Play(self._play_soundIndex)
-			res = 1
-		else:
-			res = midiex.play(self._play_soundIndex, self.play_duration)
+		res = midiex.play(self._play_soundIndex, self.play_duration)
 		self.do_play(node)
 		self.need_armdone = 1
 		if res <> 1:
@@ -123,25 +118,15 @@ class SoundChannel(ChannelWindow):
 			if self.play_loop:
 				self.play_loop = self.play_loop - 1
 				if self.play_loop:
-					if self._tp != 'WAV':
-						midiex.stop(self._play_soundIndex)
-						midiex.seekstart(self._play_soundIndex)
-						midiex.play(self._play_soundIndex, self.play_duration)
-					else:
-						dsoundex.Pause(self._play_soundIndex)
-						dsoundex.SeekStart(self._play_soundIndex)
-						dsoundex.Play(self._play_soundIndex)
+					midiex.stop(self._play_soundIndex)
+					midiex.seekstart(self._play_soundIndex)
+					midiex.play(self._play_soundIndex, self.play_duration)
 					return
 				ChannelWindow.playdone(self, dummy)
 				return
-			if self._tp != 'WAV':
-				midiex.stop(self._play_soundIndex)
-				midiex.seekstart(self._play_soundIndex)
-				midiex.play(self._play_soundIndex, self.play_duration)
-			else:
-				dsoundex.Pause(self._play_soundIndex)
-				dsoundex.SeekStart(self._play_soundIndex)
-				dsoundex.Play(self._play_soundIndex)
+			midiex.stop(self._play_soundIndex)
+			midiex.seekstart(self._play_soundIndex)
+			midiex.play(self._play_soundIndex, self.play_duration)
 		else:
 			ChannelWindow.playdone(self, dummy)
 
@@ -171,35 +156,21 @@ class SoundChannel(ChannelWindow):
 		self._played_soundIndex = self._play_soundIndex
 		self._play_soundIndex = -1
 		if self._played_soundIndex >= 0:
-			if self._tp == 'WAV':
-				dsoundex.Pause(self._played_soundIndex)
-				dsoundex.SeekStart(self._played_soundIndex)
-				dsoundex.Close(self._played_soundIndex)
-			else:
-				midiex.seekstart(self._played_soundIndex)
-				res = midiex.finished(self._played_soundIndex)
+			midiex.seekstart(self._played_soundIndex)
+			res = midiex.finished(self._played_soundIndex)
 		self.play_loop = 1
 		self.need_armdone = 0
 		self.playdone(0)
 		ChannelWindow.stopplay(self, node)
-		#if res<0:         returned value is not designed to be either 0 or 1
-		#self._soundWindow.MessageBox("Already Destroyed!", "Debug",  win32con.MB_OK|win32con.MB_ICONSTOP)
-
 
 	def setpaused(self, paused):
 		ChannelWindow.setpaused(self, paused)
 		if self._paused:
 			if self._play_soundIndex >= 0:
-				if self._tp == 'WAV':
-					dsoundex.Pause(self._play_soundIndex)
-				else:
-					res = midiex.stop(self._play_soundIndex)
+				res = midiex.stop(self._play_soundIndex)
 		else:
 			if self._playstate == PLAYING and self._play_soundIndex >= 0:
-				if self._tp == 'WAV':
-					dsoundex.Play(self._play_soundIndex)
-				else:
-					res = midiex.play(self._play_soundIndex, -self.play_duration)
+				res = midiex.play(self._play_soundIndex, -self.play_duration)
 		return
 
 

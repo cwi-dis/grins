@@ -3,16 +3,15 @@
 #
 import Channel
 from AnchorDefs import *
-import string
 import MMAttrdefs
-import sys
 import windowinterface
 import urllib, MMurl
-import win32con, win32api
-from win32modules import Htmlex, cmifex
-import os
-#from TextChannel import getfont, mapfont
 
+
+import string
+import sys, os,time, mmsystem
+
+import win32ui,win32con
 
 
 WM_RETRIEVE			=		10000#win32con.WM_USER + 10
@@ -50,36 +49,28 @@ class HtmlChannel(Channel.ChannelWindow):
 	def do_show(self, pchan):
 		if not Channel.ChannelWindow.do_show(self, pchan):
 			return 0
-		self.window._hWnd.ShowWindow(0)
-		self.window._hWnd.HookMessage(self._catch, WM_RETRIEVE)
-		#self.window._hWnd.HookMessage(self._stop, WM_STOP_HTM)
-		import win32ui
-		#self._main_frame = win32ui.GetMainFrame()
-		#self._mainframe = self.window._hWnd.GetParent()
-		#if self._mainframe != None:
-		#	self._mainframe.HookMessage(self._stop, WM_STOP_HTM)
-		res = Htmlex.CreateViewer(self.window._hWnd)
+		self.window.ShowWindow(0)
+		self.window.HookMessage(self._catch, WM_RETRIEVE)
+		#self.window.HookMessage(self._stop, WM_STOP_HTM)
+		#self.window.CreateViewer(self.window._wnd)
+		self.window.ShowWindow(1)# viewer
 		self._stop(None)
-		Htmlex.CreateCallback(self.cbcmifanchor, self.window._hWnd)
-		Htmlex.BeginWaitCursor(self.window._hWnd)
-		windowinterface.setcursor('watch')
-		if not res :
-			print 'Failed to create viewer'
-			return 0
+		self.window.CreateCallback(self.cbcmifanchor)
+		#self.window.BeginWaitCursor()
+		#windowinterface.setcursor('watch')
 		return 1
 
 	def __repr__(self):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
 
 	def _stop(self, params):
-		print 'Entering stop handler..'
 		CMIFDIR = os.environ["CMIF"]
-		Htmlex.RetrieveUrl(self.window._hWnd, CMIFDIR+'\\tmp.htm')
+		if self.window.IsWindow():
+			self.window.RetrieveUrl(CMIFDIR+'\\empty.html')
 
 	def do_arm(self, node, same=0):
 		#if not same:
 		self.armed_str = self.getstring(node)
-		print 'url is: '
 		return 1
 
 	def play(self, node):
@@ -100,29 +91,22 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.need_armdone = 1
 
 	def do_play(self, node):
-		print 'Entering Html channel  do_play'
-		print self.armed_url
 		bg = self.played_display._bgcolor
 		fg = self.played_display._fgcolor
-		Htmlex.SetBkColor(self.window._hWnd, bg)
-		Htmlex.SetFgColor(self.window._hWnd, fg)
-		self.window._hWnd.ShowWindow(1)
+		self.window.SetBkColor(bg)
+		self.window.SetFgColor(fg)
+		self.window.ShowWindow(1)
 		if self.url != self.armed_url:
 			self.url = self.armed_url
 			self.played_str = self.armed_str
-			url = Htmlex.RetrieveUrl(self.window._hWnd, self.url)
+			url = self.window.RetrieveUrl(self.url)
 		self.play_node = node
 		self.play_1()
 
 
 	def stopplay(self, node):
-		import win32api
-		if self.window:
-			if self.window._hWnd:
-				self.window._hWnd.ShowWindow(0)
-		self._stop(None)
-		if self.node_type == 'imm':
-			win32api.DeleteFile(self.armed_url)
+		#if self.node_type == 'imm':
+		#	win32api.DeleteFile(self.armed_url)
 		self.played_str = None
 		Channel.ChannelWindow.stopplay(self, node)
 
@@ -188,8 +172,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		# have to edit the text to change the anchor.  We
 		# don't want a message, though, so we provide our own
 		# defanchor() method.
-		Htmlex.BeginWaitCursor(self.window._hWnd)
-		windowinterface.setcursor('watch')
+		#self.window.BeginWaitCursor()
+		#windowinterface.setcursor('watch')
 		apply(cb, (anchor,))
 
 	def cbanchor(self, widget, userdata, calldata):
@@ -203,18 +187,13 @@ class HtmlChannel(Channel.ChannelWindow):
 
 
 	def _catch(self, params):
-		print ' URL RE_RETRIEVED'
-		Htmlex.RetrieveUrl(self.window._hWnd, self.url)
+		self.window.RetrieveUrl(self.url)
 
 
-
-	#def cbcmifanchor(self, href, list):
-	def cbcmifanchor(self, string):
-		#self.window._hWnd.UpdateWindow()
+	def cbcmifanchor(self, href, list):
 		aname = string
-		print "-------- ", aname
 		list = []   #no arguments
-		self.window._hWnd.PostMessage(WM_RETRIEVE, 0, 0)
+		self.window.PostMessage(WM_RETRIEVE, 0, 0)
 		tp = self.findanchortype(aname)
 		if tp == None:
 			print "Unknown Type for CMIF Anchor, Html Channel ++++++++"
@@ -224,11 +203,11 @@ class HtmlChannel(Channel.ChannelWindow):
 		else:
 			f = self.anchor_triggered
 
-		Htmlex.BeginWaitCursor(self.window._hWnd)
-		windowinterface.setcursor('watch')
+		#self.window.BeginWaitCursor()
+		#windowinterface.setcursor('watch')
 		f(self.play_node, [(aname, tp)], list)
-		Htmlex.EndWaitCursor(self.window._hWnd)
-		windowinterface.setcursor('')
+		#self.window.EndWaitCursor()
+		#windowinterface.setcursor('')
 
 	def findanchortype(self, name):
 		alist = MMAttrdefs.getattr(self.play_node, 'anchorlist')
