@@ -2552,36 +2552,24 @@ class _ResizeableDisplayList(_DisplayList):
 			wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
 			wi, hi = wnd.LPtoDP((wi, hi))
 			if fit=='fill':
-				gear32sd.device_rect_set(imgid, (lm, tm, rm, bm))
+				gear32sd.device_rect_set(imgid, getValidRect(lm, tm, rm, bm))
 			elif fit=='meet':
-				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (lm, tm, rm, bm), gear32sd.IG_ASPECT_DEFAULT)
-				w=lm+rp-lp
-				# w is sometimes equal to zero, this line avoid a crash if w=0
-				if w <= 0: w=1
-				h=tm+bp-tp
-				# h is sometimes equal to zero, this line avoid a crash if h=0
-				if h <= 0: h=1
-				gear32sd.device_rect_set(imgid,(lm,tm,w,h))
+				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, getValidRect(lm, tm, rm, bm), gear32sd.IG_ASPECT_DEFAULT)
+				gear32sd.device_rect_set(imgid, getValidRect(lm,tm,lm+rp-lp,tm+bp-tp))
 			elif fit=='hidden':
-				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
+				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+wi,tm+hi))
 			elif fit=='slice':
 				wr = wm/float(wi)
 				hr = hm/float(hi)
 				if wr>hr: r = wr
 				else: r = hr
 				wp, hp = int(wi*r+0.5), int(hi*r+0.5)
-				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (lm,tm,lm+wp,tm+hp), gear32sd.IG_ASPECT_DEFAULT)
-				w = lm+rp-lp
-				# w is sometimes equal to zero, this line avoid a crash if w=0
-				if w<=0: w=1
-				h = tm+bp-tp
-				# h is sometimes equal to zero, this line avoid a crash if h=0
-				if h<=0: h=1
-				gear32sd.device_rect_set(imgid,(lm,tm,w,h))
+				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, getValidRect(lm,tm,lm+wp,tm+hp), gear32sd.IG_ASPECT_DEFAULT)
+				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+rp-lp,tm+bp-tp))
 			elif fit=='scroll':
-				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
+				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+wi,tm+hi))
 			else:
-				gear32sd.device_rect_set(imgid,(lm,tm,lm+wi,tm+hi))
+				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+wi,tm+hi))
 			gear32sd.display_desktop_pattern_set(imgid,0)
 			gear32sd.display_image(imgid,dc.GetSafeHdc())
 		elif cmd == 'label':
@@ -2648,3 +2636,10 @@ def getcursorhandle(strid):
 	else:
 		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_ARROW)
 	return cursor
+
+def getValidRect(left, top, right, bottom):
+	if right <= left:
+		right=left+1
+	if bottom <= top:
+		bottom = top+1
+	return left, top, right, bottom
