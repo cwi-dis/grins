@@ -30,10 +30,17 @@ def _do_convert(node, fn):	# Convert imm node to ext
 
 class _Convert:
 	def __init__(self, node):
+		import ChannelMime, string
 		self.node = node
+		chtype = node.GetChannelType()
+		types = ChannelMime.ChannelMime.get(chtype)
+		if types:
+			types = ['/%s files' % string.capitalize(chtype)] + types
+		else:
+			types = '*'
 		windowinterface.FileDialog(
 			'This is an internal node. Convert to external?',
-			os.curdir, '*', _inventname(node.GetChannelName()),
+			os.curdir, types, _inventname(node.GetChannelName()),
 			self.ok, None)
 
 	def ok(self, file):
