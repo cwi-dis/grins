@@ -1,4 +1,10 @@
 # Video file reader
+import sys
+import Qt
+import imgformat
+import os
+sys.path.append('swdev:jack:cmif:pylib:')
+import audio.format
 
 class VideoFormat:
 	def __init__(self, name, descr, width, height, format):
@@ -32,7 +38,6 @@ class _Reader:
 		return 1
 		
 	def GetAudioFormat(self):
-		import audio.format
 		return audio.format.AudioFormatLinear('dummy_format', 'Dummy Audio Format', 
 			['mono'], 'linear-signed', blocksize=2, fpb=1, bps=16)
 			
@@ -40,7 +45,6 @@ class _Reader:
 		return 44100
 		
 	def GetVideoFormat(self):
-		import imgformat
 		return VideoFormat('dummy_format', 'Dummy Video Format', 320, 240, imgformat.macrgb)
 		
 	def GetVideoFrameRate(self):
@@ -56,9 +60,11 @@ class _Reader:
 		if self._did_video:
 			return ''
 		self._did_video = 1
-		return '\0\0\0\0' * 320 * 240
+		return '\020\040\060\077' * 320 * 240
 
 def reader(url):
+	print 'No video conversion yet'
+	return None
 	try:
 		rdr = _Reader(url)
 	except IOError:
@@ -67,3 +73,44 @@ def reader(url):
 		print "DBG: No video in", url
 		return None
 	return rdr
+
+def _test():
+	import macfs
+	import urllib
+	import img
+	import os
+	import MacOS
+	fss, ok = macfs.PromptGetFile('Video to convert')
+	if not ok: sys.exit(0)
+	path = fss.as_pathname()
+	url = urllib.pathname2url(path)
+	rdr = reader(url)
+	if not rdr:
+		sys.exit(1)
+	dstfss, ok = macfs.StandardPutFile('Name for output folder')
+	if not ok: sys.exit(0)
+	dstdir = dstfss.as_pathname()
+	num = 0
+	os.mkdir(dstdir)
+	videofmt = rdr.GetVideoFormat()
+	imgfmt = videofmt.getformat()
+	imgw, imgh = videofmt.getsize()
+	data = rdr.ReadVideo()
+	while data:
+		fname = 'frame%04.4d.jpg'%num
+		num = num+1
+		pname = os.path.join(dstdir, fname)
+		print 'Writing', fname
+		wrt = img.writer(imgfmt, pname)
+		wrt.width = imgw
+		wrt.height = imgh
+		wrt.write(data)
+		data = rdr.ReadVideo()
+		del rdr
+		MacOS.SetCreatorAndType(pname, 'ogle', 'JPEG')
+	print 'Total frames:', num
+		
+if __name__ == '__main__':
+	_test()
+	sys.exit(1)
+		
