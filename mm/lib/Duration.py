@@ -32,7 +32,10 @@ def getintrinsicduration(node, wanterror):
 	# we hadn't cached the duration, do the hard work
 	# first figure out MIME type
 	if cache.has_key('mimetype'):
-		maintype, subtype = cache['mimetype']
+		mtype = cache['mimetype']
+		if not mtype:
+			return 0
+		maintype, subtype = mtype.split('/')
 	else:
 		# MIME type not cached, get it
 		import MMurl
