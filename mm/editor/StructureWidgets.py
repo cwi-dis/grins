@@ -79,8 +79,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
 			self.node = None
-#	   else:
-#		print "DEBUG: I don't have a node to clean up!: ", self
 
 	#   
 	# These a fillers to make this behave like the old 'Object' class.
@@ -126,14 +124,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def get_nearest_node_index(a):
 		# This is only for seqs and verticals.
 		return -1
-	#
-	# Menu handling functions, aka callbacks.
-	#
-
-##  def helpcall(self):
-##	import Help
-##	Help.givehelp('Hierarchy_view')
-
 
 	def expandcall(self):
 		# 'Expand' the view of this node.
@@ -248,7 +238,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def pasteundercall(self):
 		self.root.paste(0)
 
-		
+
 class StructureObjWidget(MMNodeWidget):
 	# A view of a seq, par, excl or any internal structure node.
 	HAS_COLLAPSE_BUTTON = 1
@@ -258,7 +248,11 @@ class StructureObjWidget(MMNodeWidget):
 		# Create more nodes under me if there are any.
 		self.children = []
 		if self.HAS_COLLAPSE_BUTTON:
-			self.collapsebutton = Icon('closed', self, self.node, self.root)
+			if self.node.collapsed:
+				icon = 'closed'
+			else:
+				icon = 'open'
+			self.collapsebutton = Icon(icon, self, self.node, self.root)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
 		else:
 			self.collapsebutton = None 
@@ -367,7 +361,7 @@ class SeqWidget(StructureObjWidget):
 		StructureObjWidget.__init__(self, node, root)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
 		if has_drop_box:
-			self.dropbox = DropBoxWidget(root)
+			self.dropbox = DropBoxWidget(node, root)
 		else:
 			self.dropbox = None
 		if self.HAS_CHANNEL_BOX:
@@ -597,7 +591,7 @@ class TimeStripSeqWidget(SeqWidget):
 		return "TimeStripSeqWidget"
 
 
-class ImageBoxWidget(Widgets.Widget):
+class ImageBoxWidget(MMNodeWidget):
 	# Common baseclass for dropbox and channelbox
 	def __repr__(self):
 		return "ImageBoxWidget"
@@ -1369,7 +1363,6 @@ class Icon(MMNodeWidget):
 		self.callback = callback, args
 
 	def mouse0release(self):
-		print "DEBUG: Icon: recieved event mouse0release."
 		if self.callback and self.icon and self.selected:
 			# Freaky code that Sjoerd showed me: -mjvdg
 			apply(apply, self.callback)

@@ -423,13 +423,12 @@ class HierarchyView(HierarchyViewDialog):
 ##			node = node.GetParent()
 
 	##############################################################################
-			
+	#
 	# Drawing code
-	
+	#
 	##############################################################################
 
 	def create_scene_graph(self):
-		print "Creating new scene graph.."
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
 		# As such, any old references into the old scene graph need to be reinitialised.
@@ -477,7 +476,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
-		print "Drawing..."
 		if self.drawing == 1:
 			return
 		self.drawing = 1
@@ -1308,16 +1306,10 @@ class HierarchyView(HierarchyViewDialog):
 		# Now a bad hack.
 		# Return the scene object which is at position x,y.
 		# Used for dragging and dropping objects.
-		if x < 1.0 or y < 1.0:
-			print "DEBUG: Warning! Either this was a click at the top-right corner or we have unconverted relative coords."
-			import traceback; traceback.print_stack()
+#		if x < 1.0 or y < 1.0:
+#			print "DEBUG: Warning! Either this was a click at the top-right corner or we have unconverted relative coords."
+#			import traceback; traceback.print_stack()
 		return self.scene_graph.get_obj_at((x,y))
-		
-##		hitobj = None
-##		for obj in self.objects:
-##			if obj.ishit(x, y):
-##				hitobj = obj
-##		return hitobj
 
 	# Find the object corresponding to the node
 	def whichobj(self, node):
@@ -1656,9 +1648,11 @@ class HierarchyView(HierarchyViewDialog):
 
 	def expandcall(self):
 		if self.focusobj: self.focusobj.expandcall()
+		self.draw()
 
 	def expandallcall(self, expand):
 		if self.focusobj: self.focusobj.expandallcall(expand)
+		self.draw()
 
 	def thumbnailcall(self):
 		self.toplevel.setwaiting()
