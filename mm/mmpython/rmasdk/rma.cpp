@@ -13,13 +13,26 @@ extern PyObject* EngineObject_CreateInstance(PyObject *self, PyObject *args);
 
 struct constentry {char* s;int n;};
 
+
 static struct constentry _rma_const[] ={
+
+	// RMA image formats
+	{"RMA_RGB",RMA_RGB}, // Windows-compatible RGB formats
+	{"RMA_RLE8",RMA_RLE8},
+	{"RMA_RLE4",RMA_RLE4},
+	{"RMA_BITFIELDS",RMA_BITFIELDS},
+	{"RMA_I420",RMA_I420}, // planar YCrCb
+	{"RMA_YV12",RMA_YV12}, // planar YVU420
+	{"RMA_YUY2",RMA_YUY2}, // packed YUV422
+	{"RMA_UYVY",RMA_UYVY}, // packed YUV422
+	{"RMA_YVU9",RMA_YVU9}, // Intel YVU9
+
+	// Non-standard FOURCC formats for backward compatibility only
 	{"RMA_RGB3",RMA_RGB3_ID},
 	{"RMA_RGB555",RMA_RGB555_ID},
 	{"RMA_RGB565",RMA_RGB565_ID},
 	{"RMA_RGB24",RMA_RGB24_ID},
 	{"RMA_8BIT",RMA_8BIT_ID},
-	{"RMA_RGB",RMA_RGB},
 	{"RMA_YUV420",RMA_YUV420_ID},
 	{NULL,0}
 	};
