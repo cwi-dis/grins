@@ -1,7 +1,7 @@
 GRiNS Player plug-in
 
 Requirements:
-	GRiNS Player 2 (Build 44 or later)
+	GRiNS Player 2 (Build 65 or later)
 	Java 2 Runtime Environment (1.3)
 	
 
