@@ -6,14 +6,12 @@ import audio
 class select:
 	def __init__(self, rdr, rangelist):
 		lastbegin = 0
-		lastend = 0
+		lastend = -1
 		for begin, end in rangelist:
 			if begin is None:
 				begin = 0
-			if end is None or end == 0:
-				end = rdr.getnframes()
-			if begin >= end or \
-			   begin < lastend:
+			if (not end and begin >= end) or \
+			   not lastend or begin < lastend:
 				raise audio.Error, 'rangelist must be non-overlapping and sorted'
 			lastbegin, lastend = begin, end
 		self.__rdr = rdr
