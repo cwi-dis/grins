@@ -10,7 +10,6 @@ import MMAttrdefs
 import Hlinks
 import ChannelMap
 import colors
-from AnchorDefs import *
 import features
 import compatibility
 import string
@@ -1888,10 +1887,9 @@ class SMILWriter(SMIL):
 
 			if self.smilboston:
 				soundLevel = ch.get('soundLevel')
-			# we save only the soundLevel attribute if it exists and different of default value
+				# we only save the soundLevel attribute if it exists and different from default value
 				if soundLevel != None and soundLevel != 1.0:
-					value = '%d%%' % int(soundLevel*100)
-					attrlist.append(('soundLevel', value))
+					attrlist.append(('soundLevel', fmtfloat(soundLevel * 100, '%', prec = 1)))
 
 				regPoint = ch.get('regPoint')
 				if regPoint != None:
@@ -2433,36 +2431,6 @@ class SMILWriter(SMIL):
 					attrlist.append((name, value))
 		self.writetag('prefetch', attrlist, node)
 
-	def linkattrs(self, a2, ltype, stype, dtype):
-		attrs = []
-		if ltype == Hlinks.TYPE_JUMP:
-			# default value, so we don't need to write it
-			pass
-		elif ltype == Hlinks.TYPE_FORK:
-			attrs.append(('show', 'new'))
-			if stype == Hlinks.A_SRC_PLAY:
-				# default sourcePlaystate value
-				pass
-			elif stype == Hlinks.A_SRC_PAUSE:
-				attrs.append(('sourcePlaystate', 'pause'))
-			elif stype == Hlinks.A_SRC_STOP:
-				attrs.append(('sourcePlaystate', 'stop'))
-
-		if dtype == Hlinks.A_DEST_PLAY:
-			# default value, so we don't need to write it
-			pass
-		elif dtype == Hlinks.A_DEST_PAUSE:
-			attrs.append(('destinationPlaystate', 'pause'))
-
-		# else show="replace" (default)
-		if type(a2) is type(''):
-			href = a2
-		else:
-			href = '#' + self.uid2name[a2.GetUID()]
-		attrs.append(('href', href))
-
-		return attrs
-
 	def writeanchor(self, anchor):
 		attrlist = []
 		id = getid(self, anchor)
@@ -2475,14 +2443,33 @@ class SMILWriter(SMIL):
 				print '** Multiple links on anchor', \
 				      x.GetRawAttrDef('name', '<unnamed>'), \
 				      x.GetUID()
-			a1, a2, dir, ltype, stype, dtype = links[0]
-			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype)
+			a1, a2, dir = links[0]
+			if type(a2) is type(''):
+				href = a2
+			else:
+				href = '#' + self.uid2name[a2.GetUID()]
+			attrlist.append(('href', href))
 		else:
 			attrlist.append(('nohref', 'nohref'))
 
+		show = MMAttrdefs.getattr(anchor, 'show')
+		if show != 'replace':
+			attrlist.append(('show', show))
+		sstate = MMAttrdefs.getattr(anchor, 'sourcePlaystate')
+		if show != 'new' or sstate != 'play':
+			# if show == 'replace' or show == 'pause', sourcePlaystate is ignored
+			# if show == 'new', sourcePlaystate == 'play' is default
+			attrlist.append(('sourcePlaystate', sstate))
+		dstate = MMAttrdefs.getattr(anchor, 'destinationPlaystate')
+		if dstate != 'play':
+			attrlist.append(('destinationPlaystate', dstate))
 		fragment = MMAttrdefs.getattr(anchor, 'fragment')
 		if fragment:
 			attrlist.append(('fragment', fragment))
+
+		target = MMAttrdefs.getattr(anchor, 'target')
+		if target:
+			attrlist.append(('target', target))
 
 		shape = MMAttrdefs.getattr(anchor, 'ashape')
 		if shape != 'rect':
@@ -2512,6 +2499,19 @@ class SMILWriter(SMIL):
 		accesskey = anchor.GetAttrDef('accesskey', None)
 		if accesskey is not None:
 			attrlist.append(('accesskey', accesskey))
+
+		external = anchor.GetAttrDef('external', 0)
+		if external:
+			attrlist.append(('external', 'true'))
+
+		tabindex = anchor.GetAttrDef('tabindex', None)
+		if tabindex is not None:
+			attrlist.append(('tabindex', '%d' % tabindex))
+
+		for attr in ('sourceLevel', 'destinationLevel'):
+			val = anchor.GetAttrDef(attr, 1.0)
+			if 0 <= val and val != 1:
+				attrlist.append((attr, fmtfloat(100*val, '%', prec = 1)))
 
 		if self.smilboston:
 			sendTo = anchor.GetAttrDef('sendTo', None)

@@ -1123,7 +1123,6 @@ class _DisplayList:
 	##########################################
 
 ####################################################
-from AnchorDefs import *
 import CheckInsideArea
 
 class _Button:
@@ -1144,13 +1143,13 @@ class _Button:
 		self._hicolor = self._color = dispobj._fgcolor
 		self._width = self._hiwidth = dispobj._linewidth
 		
-		if shape == A_SHAPETYPE_RECT:
+		if shape == 'rect':
 			self._insideshape = self._insideRect
-		elif shape == A_SHAPETYPE_POLY:
+		elif shape == 'poly':
 			self._insideshape = self._insidePoly
-		elif shape == A_SHAPETYPE_CIRCLE:
+		elif shape == 'circle':
 			self._insideshape = self._insideCircle
-		elif shape == A_SHAPETYPE_ELIPSE:
+		elif shape == 'elipse':
 			self._insideshape = self._insideElipse
 		else:
 			print 'Internal error: invalid shape type'			
@@ -1158,7 +1157,7 @@ class _Button:
 		
 		# for now, until draw works for circle and poly
 		# otherwise : crash
-##		if shape == A_SHAPETYPE_RECT:
+##		if shape == 'rect':
 ##			if self._color != dispobj._bgcolor:
 ##				self._dispobj.drawboxanchor((coordinates[0], \
 ##				coordinates[1],coordinates[2]-coordinates[0], \

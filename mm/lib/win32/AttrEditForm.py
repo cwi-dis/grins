@@ -396,8 +396,6 @@ class OptionsCheckCtrl(AttrCtrl):
 		self._check.attach_to_parent()
 		if self.want_label:
 			label = self._attr.getlabel()
-			if self.want_colon_after_label:
-				label = label + ':'
 			self._check.settext(label)			
 		self._check.hookcommand(self._wnd,self.OnCheck)
 		val = self._attr.getcurrent()
@@ -1789,6 +1787,125 @@ class EventCtrl(AttrCtrl):
 		if not self._eventstruct.set_relative(relative):
 			self._relative.setcheck(not relative)
 		self.enableApply()
+
+class HrefCtrl(AttrCtrl):
+	def __init__(self, wnd, attr, resid):
+		AttrCtrl.__init__(self, wnd, attr, resid)
+		self.__nohref = components.RadioButton(wnd,resid[1])
+		self.__internal = components.RadioButton(wnd,resid[2])
+		self.__external = components.RadioButton(wnd,resid[3])
+		self.__browse = components.Button(wnd,resid[4])
+		self.__url = components.Edit(wnd,resid[5])
+		self.__node = None
+		self.__string = ''
+		self.__curval = 0	# "impossible" value (important for first setvalue() call)
+		self.__OnRadioIgnore = 0
+
+	def OnInitCtrl(self):
+		val = self._attr.getcurrent()
+		self.__nohref.attach_to_parent()
+		self.__nohref.hookcommand(self._wnd,self.OnRadio)
+		self.__internal.attach_to_parent()
+		self.__internal.hookcommand(self._wnd,self.OnRadio)
+		self.__external.attach_to_parent()
+		self.__external.hookcommand(self._wnd,self.OnRadio)
+		self.__browse.attach_to_parent()
+		self._wnd.HookCommand(self.OnBrowse,self._resid[4])
+		self.__url.attach_to_parent()
+		self._wnd.HookCommand(self.OnEdit,self._resid[5])
+		if val is None:
+			self.__node = None
+			self.__string = ''
+		elif type(val) is type(''):
+			self.__node = None
+			self.__string = val
+		else:
+			self.__node = val
+			self.__string = ''
+		self._initctrl = self
+		self.setvalue(val)
+
+	def setvalue(self, val, settext = 1):
+		if val == self.__curval:
+			return
+		self.__curval = val
+		if not self._initctrl:
+			return
+		try:
+			self.__OnRadioIgnore = 1
+			if settext:
+				if type(val) is type(''):
+					self.__url.settext(val)
+				else:
+					self.__url.settext('')
+			if val is None:
+				self.__nohref.setcheck(1)
+				self.__internal.setcheck(0)
+				self.__external.setcheck(0)
+			elif type(val) is type(''):
+				self.__nohref.setcheck(0)
+				self.__internal.setcheck(0)
+				self.__external.setcheck(1)
+			else:
+				self.__nohref.setcheck(0)
+				self.__internal.setcheck(1)
+				self.__external.setcheck(0)
+		finally:
+			self.__OnRadioIgnore = 0
+
+	def getvalue(self):
+		if self.__curval == 0:
+			# not initialized
+			return self._attr.getcurrent()
+		return self.__curval
+
+	def OnRadio(self,id,code):
+		if self.__OnRadioIgnore:
+			return
+		self.sethelp()
+		if code==win32con.BN_CLICKED:
+			if self.__nohref.getcheck():
+				val = None
+			elif self.__internal.getcheck():
+				val = self.__node
+				if val is None:
+					self.OnBrowse(id,code)
+					val = self.__curval
+			else:
+				val = self.__string
+			self.setvalue(val)
+			self.enableApply()
+
+	def OnBrowse(self,id,code):
+		val = self.__curval
+		if val is type(''):
+			val = None
+		if val is None:
+			val = self.__node
+		parent = self._wnd._form
+		mmnode = self._wnd._form._node
+		dlg = win32dialog.SelectElementDlg(parent, mmnode.GetRoot(), val, 'node')
+		if dlg.show():
+			val = dlg.getmmobject()
+			self.__node = val
+			self.setvalue(val)
+			self.enableApply()
+
+	def OnEdit(self,id,code):
+		if self.__OnRadioIgnore:
+			return
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			self.setvalue(self.__url.gettext(), 0)
+			self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),'No hyperlink',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Internal hyperlink',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[3]),'External hyperlink',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),'Select destination of internal hyperlnk',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),'URL of external hyperlink',None,0)
 
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
@@ -5145,30 +5262,58 @@ class MachineGroup(StringGroupNoTitle):
 class ForeignGroup(StringGroup):
 	data = attrgrsdict['foreign']
 
-class AnchorGroup(AttrGroup):
-	data=attrgrsdict['anchor']
+class MiscAnchorGroup(AttrGroup):
+	data=attrgrsdict['specanchor']
 	def __init__(self):
 		AttrGroup.__init__(self, self.data)
 		
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ANCHOR
+		return grinsRC.IDD_EDITATTR_ANCHOR2
 	
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('acoords')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ACOORDSL,grinsRC.IDC_ACOORDSV))
-		a = self.getattr('tabindex')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_TABINDEXL,grinsRC.IDC_TABINDEXV))
-		a = self.getattr('fragment')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_FRAGMENTL,grinsRC.IDC_FRAGMENTV))
-		a = self.getattr('accesskey')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ACCESSL,grinsRC.IDC_ACCESSV))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC1,grinsRC.IDC_EDIT1))
 		a = self.getattr('ashape')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ASHAPEL, grinsRC.IDC_ASHAPEV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC2, grinsRC.IDC_COMBO1))
+		a = self.getattr('fragment')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC3,grinsRC.IDC_EDIT2))
+		a = self.getattr('tabindex')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC4,grinsRC.IDC_EDIT3))
 		a = self.getattr('actuate')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ACTUATEL, grinsRC.IDC_ACTUATEV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC5, grinsRC.IDC_COMBO2))
+		a = self.getattr('external')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_CHECK1,))
+		a = self.getattr('sourceLevel')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC7,grinsRC.IDC_EDIT4))
+		a = self.getattr('destinationLevel')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC8,grinsRC.IDC_EDIT5))
+		a = self.getattr('target')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC9,grinsRC.IDC_EDIT6))
+		return cd
+
+class GeneralAnchorGroup(AttrGroup):
+	data = attrgrsdict['genanchor']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+		
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ANCHOR1
+	
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('.href')
+		cd[a] = HrefCtrl(wnd,a,(grinsRC.IDC_STATIC0,grinsRC.IDC_RADIO1,grinsRC.IDC_RADIO2,grinsRC.IDC_RADIO3,grinsRC.IDC_BUTTON1,grinsRC.IDC_EDIT1))
+		a = self.getattr('show')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC1,grinsRC.IDC_COMBO1))
+		a = self.getattr('sourcePlaystate')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC2,grinsRC.IDC_COMBO2))
+		a = self.getattr('destinationPlaystate')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC3,grinsRC.IDC_COMBO3))
+		a = self.getattr('accesskey')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC4,grinsRC.IDC_EDIT3))
 		a = self.getattr('sendTo')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_SENDTOL, grinsRC.IDC_SENDTOV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC5,grinsRC.IDC_COMBO4))
 		return cd
 
 ############################
@@ -5264,7 +5409,8 @@ groupsui={
 
 	'foreign':ForeignGroup,
 
-	'anchor':AnchorGroup,
+	'genanchor':GeneralAnchorGroup,
+	'specanchor':MiscAnchorGroup,
 	}
 
 ###########################

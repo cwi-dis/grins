@@ -9,7 +9,6 @@ from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, UNIT_SCREE
 from XFont import findfont
 from XButton import _Button, _ButtonRect, _ButtonPoly, _ButtonCircle
 from splash import roundi
-from AnchorDefs import *
 
 # mapping from icon name to module
 _iconmap = {
@@ -442,17 +441,17 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		
 		# test of shape type
-		if coordinates[0] == A_SHAPETYPE_RECT:
+		if coordinates[0] == 'rect':
 			return _ButtonRect(self, coordinates, z, times, sensitive)
-		elif coordinates[0] == A_SHAPETYPE_POLY:
+		elif coordinates[0] == 'poly':
 			return _ButtonPoly(self, coordinates, z, times, sensitive)
-		elif coordinates[0] == A_SHAPETYPE_CIRCLE:
+		elif coordinates[0] == 'circle':
 			return _ButtonCircle(self, coordinates, z, times, sensitive)
-		elif coordinates[0] == A_SHAPETYPE_ELIPSE:
+		elif coordinates[0] == 'elipse':
 			return _ButtonElipse(self, coordinates, z, times, sensitive)
 		else:
 			print 'Internal error: invalid shape type'			
-			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times, sensitive)
+			return _ButtonRect(self, ['rect', 0.0, 0.0, 1.0, 1.0], z, times, sensitive)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None,

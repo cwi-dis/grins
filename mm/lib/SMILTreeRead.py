@@ -7,7 +7,6 @@ from MMTypes import *
 import MMurl
 from HDTL import HD, TL
 import string
-from AnchorDefs import *
 #from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from Hlinks import *
 import re
@@ -137,9 +136,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'collapsed': __truefalse,
 		'coordinated': __truefalse,
 		'defaultState': __truefalse,
-		'destinationPlaystate': {'play':A_DEST_PLAY, 'pause':A_DEST_PAUSE},
+		'destinationPlaystate': ['play', 'pause'],
 		'direction': ['forward', 'reverse'],
 		'erase': ['never', 'whenDone'],
+		'external': __truefalse,
 		'fill': ['freeze', 'remove', 'hold', 'transition', 'auto', 'default'],
 		'fillDefault': ['freeze', 'remove', 'hold', 'transition', 'auto', 'inherit'],
 		'immediate-instantiation': __truefalse,
@@ -148,9 +148,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
 		'resizeBehavior': ['percentOnly', 'zoom'],
+		'sendTo': ['rpcontextwin', 'rpbrowser', 'osdefaultbrowser'],
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
-		'sourcePlaystate': {'play':A_SRC_PLAY, 'pause':A_SRC_PAUSE, 'stop':A_SRC_STOP},
+		'sourcePlaystate': ['play', 'pause', 'stop'],
 		'syncMaster': __truefalse,
 		'system-captions': __onoff,
 		'systemAudioDesc': __onoff,
@@ -1891,18 +1892,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
 			# deal with hyperlink
-			href, actuate, ltype, stype, dtype, id, access = self.__in_a[:-1]
+			href, attrdict, id = self.__in_a[:-1]
 			if id is not None and not self.__idmap.has_key(id):
 				self.__idmap[id] = node.GetUID()
 			# create the anchor node
 			anchor = self.__context.newnode('anchor')
 			node._addchild(anchor)
+			anchor.attrdict.extend(attrdict)
 			anchor.__syncarcs = []
-			if access is not None:
-				anchor.attrdict['accesskey'] = access
-			if actuate is not None:
-				anchor.attrdict['actuate'] = actuate
-			self.__links.append((anchor, href, ltype, stype, dtype))
+			self.__links.append((anchor, href))
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
@@ -2085,12 +2083,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					values.append(s)
 			for s in values:
 				if s:
-					if s[-1]=='%':
-						val = 0.01*float(s[:-1])
-					else:
-						val = float(s)
-					minval = min(minval, val)
-					maxval = max(maxval, val)
+					val = self.__parsePercent(s, 'values')
+					if val is not None:
+						minval = min(minval, val)
+						maxval = max(maxval, val)
 			self.__context.updateSoundLevelInfo('anim', 1)
 			self.__context.updateSoundLevelInfo('min', minval)
 			self.__context.updateSoundLevelInfo('max', maxval)
@@ -2640,17 +2636,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixLinks(self):
 		hlinks = self.__context.hyperlinks
-		for node, url, ltype, stype, dtype in self.__links:
+		for node, url in self.__links:
 			href, tag = MMurl.splittag(url)
 			if not href:
 				# link intra document
 				if not self.__nodemap.has_key(tag):
 					self.warning("unknown node id `%s'" % tag)
 					continue
-				hlinks.addlink((node, self.__nodemap[tag], DIR_1TO2, ltype, stype, dtype))
+				hlinks.addlink((node, self.__nodemap[tag], DIR_1TO2))
 			else:
 				# external link
-				hlinks.addlink((node, url, DIR_1TO2, ltype, stype, dtype))
+				hlinks.addlink((node, url, DIR_1TO2))
 
 	def FixAnimateTargets(self):
 		for node, lineno in self.__animatenodes:
@@ -3045,6 +3041,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# notice: the default regpoint are already defined (from start_smil)
 		self.FixRegpoints()
 
+	def __parsePercent(self, val, attr):
+		try:
+			if val[-1] == '%':
+				val = float(val[:-1]) / 100.0
+				if val < 0:
+					self.syntax_error('volume with negative %s' % attr)
+					val = None
+			else:
+				self.syntax_error('only relative volume is allowed on %s attribute' % attr)
+				val = None
+		except ValueError:
+			self.syntax_error('invalid %s attribute value' % attr)
+			val = None
+		return val
+
 	def start_region(self, attributes, checkid = 1):
 		if __debug__:
 			if parsedebug: print 'start region', attributes
@@ -3180,19 +3191,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
-				try:
-					if val[-1] == '%':
-						val = float(val[:-1]) / 100.0
-						if val < 0:
-							self.syntax_error('volume with negative %s' % attr)
-							val = 1.0
-					else:
-						self.syntax_error('only relative volume is allowed on soundLevel attribute')
-						val = 1.0
-				except ValueError:
-					self.syntax_error('invalid soundLevel attribute value')
-					val = 1.0
-				attrdict[attr] = val
+				val = self.__parsePercent(val, attr)
+				if val is not None:
+					attrdict[attr] = val
 				self.__context.updateSoundLevelInfo('minmax', val)
 			elif attr == 'type':
 				# map channel type to something we can deal with
@@ -3998,18 +3999,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
 
-		ltype, stype, dtype, access = self.__link_attrs(attributes)
-
-		actuate = None
-		if attributes.has_key('actuate'):
-			if self.__context.attributes.get('project_boston') == 0:
-				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
-			if features.editor:
-				self.__context.attributes['project_boston'] = 1		
-			if self.__context.attributes.get('project_boston'):
-				actuate = self.parseEnumValue('actuate', attributes['actuate'])
-
-		self.__in_a = href, actuate, ltype, stype, dtype, id, access, self.__in_a
+		attrdict = {}
+		self.AddLinkAttrs(attrdict, attributes)
+		self.__in_a = href, attrdict, id, self.__in_a
 
 	def end_a(self):
 		if __debug__:
@@ -4044,46 +4036,78 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			l.append(value)
 		return l
 
-	def __link_attrs(self, attributes):
-		show = self.parseEnumValue('show', attributes.get('show'), 'replace')
-		# XXX SMIL 2.0 Linking says default of show is "replace", but that doesn't do what we want.
-		stype = self.parseEnumValue('sourcePlaystate', attributes.get('sourcePlaystate'))
-		dtype = self.parseEnumValue('destinationPlaystate', attributes.get('destinationPlaystate'), A_DEST_PLAY)
-
-		# the default sourcePlaystate value depends on the value of show
-		if stype is None:
-			if show == 'new':
-				stype = A_SRC_PLAY
-			else:
-				stype = A_SRC_PAUSE
-
-		if show == 'replace':
-			ltype = TYPE_JUMP
-			# this value overrides the sourcePlaystate value (in pause)
-			stype = A_SRC_PAUSE
-		elif show == 'pause':
-			ltype = TYPE_FORK
-			# this value overrides the sourcePlaystate value (in pause)
-			stype = A_SRC_PAUSE
-		elif show == 'new':
-			ltype = TYPE_FORK
-		else:
-			# no show attribute
-			# XXX this should behave as if show="replace"
-			if stype == A_SRC_STOP:
-				ltype = TYPE_JUMP
-			else:
-				# play or pause
-				# fork so that there is something to play/pause
-				ltype = TYPE_FORK
-
-
-		accesskey = attributes.get('accesskey')
-		if accesskey is not None and len(accesskey) != 1:
-			self.syntax_error('accesskey should be single character')
-			accesskey = None
-
-		return ltype, stype, dtype, accesskey
+	def AddLinkAttrs(self, attrdict, attributes):
+		attr = 'show'
+		if attributes.has_key(attr):
+			val = attributes[attr]
+			del attributes[attr]
+			val = self.parseEnumValue(attr, val)
+			if val is not None:
+				attrdict[attr] = val
+		for attr in ('sourcePlaystate', 'destinationPlaystate', 'external', 'actuate', 'sendTo'):
+			if attributes.has_key(attr):
+				val = attributes[attr]
+				del attributes[attr]
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				if features.editor:
+					self.__context.attributes['project_boston'] = 1		
+				if self.__context.attributes.get('project_boston'):
+					val = self.parseEnumValue(attr, val)
+					if val is not None:
+						attrdict[attr] = val
+		for attr in ('sourceLevel', 'destinationLevel'):
+			if attributes.has_key(attr):
+				val = attributes[attr]
+				del attributes[attr]
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				if features.editor:
+					self.__context.attributes['project_boston'] = 1		
+				if self.__context.attributes.get('project_boston'):
+					val = self.__parsePercent(val, attr)
+					if val is not None:
+						attrdict[attr] = val
+		attr = 'accesskey'
+		if attributes.has_key(attr):
+			val = attributes[attr]
+			del attributes[attr]
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if features.editor:
+				self.__context.attributes['project_boston'] = 1		
+			if self.__context.attributes.get('project_boston'):
+				if len(val) != 1:
+					self.syntax_error('accesskey should be single character')
+				else:
+					attrdict[attr] = val
+		attr = 'tabindex'
+		if attributes.has_key(attr):
+			val = attributes[attr]
+			del attributes[attr]
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if features.editor:
+				self.__context.attributes['project_boston'] = 1		
+			if self.__context.attributes.get('project_boston'):
+				try:
+					index = int(val)
+					if index < 0:
+						raise ValueError, 'negative value'
+				except ValueError:
+					self.syntax_error('bad %s attribute' % attr)
+				else:
+					attrdict[attr] = index
+		attr = 'target'
+		if attributes.has_key(attr):
+			val = attributes[attr]
+			del attributes[attr]
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+			if features.editor:
+				self.__context.attributes['project_boston'] = 1		
+			if self.__context.attributes.get('project_boston'):
+				attrdict[attr] = val
 
 	def start_anchor(self, attributes):
 		if __debug__:
@@ -4127,9 +4151,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.externalanchors.append(href)
 
 		# show, sourcePlaystate and destinationPlaystate parsing
-		ltype, stype, dtype, access = self.__link_attrs(attributes)
-		if access is not None:
-			node.attrdict['accesskey'] = access
+		self.AddLinkAttrs(node.attrdict, attributes)
 
 		# shape attribute
 		shape = None
@@ -4175,18 +4197,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key('fragment'):
 			node.attrdict['fragment'] = attributes['fragment']
 
-		if attributes.has_key('actuate'):
-			if self.__context.attributes.get('project_boston') == 0:
-				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
-			if features.editor:
-				self.__context.attributes['project_boston'] = 1		
-			if self.__context.attributes.get('project_boston'):
-				val = self.parseEnumValue('actuate', attributes['actuate'])
-				if val is not None:
-					node.attrdict['actuate'] = val
-
 		if href is not None:
-			self.__links.append((node, href, ltype, stype, dtype))
+			self.__links.append((node, href))
 
 	def end_anchor(self):
 		if __debug__:

@@ -884,6 +884,7 @@ class SMIL:
 			 'tabindex':None,
 			 'target':None,
 			 GRiNSns+' ' 'RTIPA-server':None,
+			 RP9ns+' ' 'sendTo':None,
 			 },
 		'customAttributes': {'skip-content':None,
 				     },
