@@ -418,10 +418,7 @@ class SchedulerContext:
 					if debugevents: print 'node not playing'
 					return
 				if debugevents: print 'terminating node'
-				if node.GetFill() == 'remove':
-					self.do_terminate(node, timestamp)
-				else:
-					self.freeze_play(node)
+				self.do_terminate(node, timestamp, fill = node.GetFill())
 				pnode = node.GetSchedParent()
 				if pnode.type == 'excl' and pnode.pausestack:
 					node = pnode.pausestack[0]
@@ -622,10 +619,10 @@ class SchedulerContext:
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 
-	def do_terminate(self, node, timestamp, cancelarcs = 0):
-		if debugevents: print 'do_terminate',node,timestamp
+	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0):
+		if debugevents: print 'do_terminate',node,timestamp,fill
 ##		if debugevents: self.parent.dump()
-		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+		if fill == 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
 				if arc.qid is not None:
 					if debugevents: print 'cancel',`arc`
@@ -644,6 +641,8 @@ class SchedulerContext:
 			for c in node.GetSchedChildren():
 				self.do_terminate(c, timestamp)
 			node.stopplay(timestamp)
+		elif fill != 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED):
+			self.freeze_play(node)
 		queue = self.parent.selectqueue()
 		if queue:
 			self.parent.toplevel.setwaiting()
@@ -664,13 +663,14 @@ class SchedulerContext:
 			else:
 				# not yet queued
 				self.parent.event(self, ev, timestamp)
-		ev = (SR.SCHED_STOP, node)
-		if self.srdict.has_key(ev):
-			self.parent.event(self, ev, timestamp)
-			for e, srdict in self.srdict.items():
-				srlist = srdict[e][1]
-				if ev in srlist:
-					srlist.remove(ev)
+		if fill == 'remove':
+			ev = (SR.SCHED_STOP, node)
+			if self.srdict.has_key(ev):
+				self.parent.event(self, ev, timestamp)
+				for e, srdict in self.srdict.items():
+					srlist = srdict[e][1]
+					if ev in srlist:
+						srlist.remove(ev)
 		if not cancelarcs:
 			return
 		for qid in self.parent.queue[:]:
@@ -1109,8 +1109,6 @@ class Scheduler(scheduler):
 			self.do_play(sctx, arg, timestamp)
 		elif action == SR.PLAY_STOP:
 			self.do_play_stop(sctx, arg, timestamp)
-		elif action == SR.SYNC:
-			self.do_sync(sctx, arg, timestamp)
 		elif action == SR.PLAY_ARM:
 			self.do_play_arm(sctx, arg, timestamp)
 		elif action == SR.PLAY_OPTIONAL_ARM:
@@ -1144,14 +1142,14 @@ class Scheduler(scheduler):
 				for ch in arg.GetSchedChildren():
 					ch.reset()
 				adur = arg.calcfullduration()
-				if adur is None or adur < 0:
+				if arg.fullduration is None or adur is None or adur < 0:
 					sctx.sched_arcs(arg, 'end', timestamp=timestamp)
 			elif action == SR.SCHED_START:
 				arg.startplay(sctx, timestamp)
 				sctx.sched_arcs(arg, 'begin', timestamp=timestamp)
-				adur = arg.calcfullduration()
-				if adur is not None and adur >= 0:
-					sctx.sched_arcs(arg, 'end', timestamp=timestamp+adur)
+##				adur = arg.calcfullduration()
+##				if arg.fullduration is not None and adur is not None and adur >= 0:
+##					sctx.sched_arcs(arg, 'end', timestamp=timestamp+adur)
 			elif action == SR.SCHED_STOP:
 				if debugevents: print 'cleanup',`arg`
 				arg.cleanup_sched(self)
@@ -1167,9 +1165,9 @@ class Scheduler(scheduler):
 		node.set_armedmode(ARM_PLAYING)
 		node.startplay(sctx, timestamp)
 ##		sctx.sched_arcs(node, 'begin', timestamp = timestamp)
-		ndur = node.calcfullduration()
-		if ndur is not None and ndur >= 0:
-			sctx.sched_arcs(node, 'end', timestamp = timestamp+ndur)
+##		ndur = node.calcfullduration()
+##		if ndur is not None and ndur >= 0:
+##			sctx.sched_arcs(node, 'end', timestamp = timestamp+ndur)
 		if debugevents: print 'do_play',`node`,node.start_time, timestamp
 		chan.play(node)
 
@@ -1232,12 +1230,6 @@ class Scheduler(scheduler):
 			sctx.arm_moreloops(node)
 		sctx.restartloop(node)
 		self.event(sctx, (SR.LOOPSTART_DONE, node), timestamp)
-	#
-	# Execute a SYNC SR
-	#
-	def do_sync(self, sctx, (delay, aid), timestamp):
-		ev = (sctx, (SR.SYNC_DONE, aid))
-		id = self.enterabs(timestamp+delay, 0, self.event, ev)
 	#
 	# Execute an ARM SR
 	#
