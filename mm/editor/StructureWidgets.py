@@ -222,6 +222,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if top.channelview is not None:
 			top.channelview.globalsetfocus(self.node)
 
+	def rpconvertcall(self):
+		import rpconvert
+		rpconvert.rpconvert(self.node)
+
 	def deletecall(self):
 		self.mother.deletefocus(0)
 

@@ -140,6 +140,9 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
 				]
+		self.rpconvertcommands = [
+			RPCONVERT(callback = (self.rpconvertcall, ())),
+			]
 		self.mediacommands = self.mediacommands + self.structure_commands
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
@@ -294,6 +297,8 @@ class HierarchyView(HierarchyViewDialog):
 
 		if fntype in MMNode.leaftypes and fnode.GetChannelType() != 'animate':
 			commands = commands + self.animatecommands[2:3]
+		if fntype == 'ext':
+			commands = commands + self.rpconvertcommands
 
 		# Enable "paste" commands depending on what is in the clipboard.
 		t, n = Clipboard.getclip()
@@ -1213,6 +1218,9 @@ class HierarchyView(HierarchyViewDialog):
 
 	def focuscall(self):
 		if self.focusobj: self.focusobj.focuscall()
+
+	def rpconvertcall(self):
+		if self.focusobj: self.focusobj.rpconvertcall()
 
 	def deletecall(self):
 		if self.focusobj: self.focusobj.deletecall()

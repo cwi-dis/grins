@@ -267,6 +267,8 @@ class COMPUTE_BANDWIDTH(_CommandBase):
 	help = 'Check bandwidth usage of presentation'
 class TRANSITION(_DynamicCascade):
 	help = 'Selection of available transitions'
+class RPCONVERT(_CommandBase):
+	help = 'Convert RealPix node to SMIL 2.0'
 
 #
 # Command to hierarchy/channel view
