@@ -363,8 +363,11 @@ def DrawLines(dc,ll,rgb):
 
 ################################## Print Screen to Bitmap
 
-from sysmetrics import scr_width_pxl,scr_height_pxl
-SCR=Rect((0,0,scr_width_pxl,scr_height_pxl))
+try:
+	from sysmetrics import scr_width_pxl,scr_height_pxl
+	SCR=Rect((0,0,scr_width_pxl,scr_height_pxl))
+except: 
+	SCR=Rect((0,0,640,480))
 
 # Limits rectangle in screen
 def GetVisible(rct):
@@ -449,3 +452,7 @@ class DlgTemplate:
 			return Rect(((l*cx+2)/4,(t*cy+4)/8,(r*cx+2)/4,(b*cy+4)/8))
 		else:
 			return None
+
+
+
+
