@@ -835,8 +835,6 @@ class HierarchyView(HierarchyViewDialog):
 		return 1		# succeeded
 
 	def deletecall(self, cut = 0):
-		if cut:
-			self.__clean_clipboard()
 		if len(self.multi_selected_widgets) > 0:
 			# Delete multiple nodes.
 			self.toplevel.setwaiting()
@@ -847,6 +845,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.fixsyncarcs(self.root, nodes)
 				self.editmgr.commit()
 				if cut:
+					self.__clean_clipboard()
 					self.editmgr.setclip('multinode', nodes)
 		else:
 			node = self.selected_widget.get_node()
@@ -856,6 +855,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.fixsyncarcs(self.root, [node]) #  TODO: shouldn't this be done in the editmanager? -mjvdg
 				self.editmgr.commit()
 				if cut:
+					self.__clean_clipboard()
 					self.editmgr.setclip('node', node)
 
 	######################################################################
@@ -882,17 +882,20 @@ class HierarchyView(HierarchyViewDialog):
 	# Copy a node.
 	def copycall(self):
 		windowinterface.setwaiting()
-		self.__clean_clipboard()
 		if len(self.multi_selected_widgets) > 0:
 			copyme = []
 			for i in self.get_multi_nodes():
 				copyme.append(i.DeepCopy())
+			self.__clean_clipboard()
 			self.editmgr.setclip('multinode', copyme)
 		else:
 			copyme = self.focusnode.DeepCopy()
+			self.__clean_clipboard()
 			self.editmgr.setclip('node', copyme)
 
 	def __clean_clipboard(self):
+		# Note: after this call you *MUST* set the clipboard to
+		# a new value
 		t,n = self.editmgr.getclip()
 		if t == 'node' and n is not None:
 			n.Destroy()
