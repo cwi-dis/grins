@@ -51,9 +51,9 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.Mouse0Release, self.mouse0release, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.PasteFile, self.pastefile, None)
-		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
+		self.window.register(WMEVENTS.DragFile, self.__dragfile, None)
 		self.window.register(WMEVENTS.DropFile, self.__dropfile, None)
-		self.window.register(WMEVENTS.DragURL, self.dropeffect, None)
+		self.window.register(WMEVENTS.DragURL, self.__dragfile, None)
 		self.window.register(WMEVENTS.DropURL, self.__dropfile, None)
 
 		self.window.register(WMEVENTS.DragNode, self.dragnode, None)
@@ -107,9 +107,10 @@ class HierarchyViewDialog(ViewDialog):
 		import Help
 		Help.givehelp('Hierarchy')
 
-	def dropeffect(self, dummy, window, event, params):
+	def __dragfile(self, dummy, window, event, params):
 		# event handler for mouse moves while dragging a file over the window.
 		self.droppable_widget = None
+		print 'dragfile', params #DBG
 		x, y, filename = params
 		if not (0 <= x < 1 and 0 <= y < 1):
 			self.draw()
@@ -121,7 +122,7 @@ class HierarchyViewDialog(ViewDialog):
 			rv = windowinterface.DROPEFFECT_NONE
 		elif obj.node.GetType() in MMNode.leaftypes:
 			self.droppable_widget = obj
-			rv = windowinterface.DROPEFFECT_MOVE
+			rv = windowinterface.DROPEFFECT_LINK
 		else:
 			self.droppable_widget = obj
 			rv = windowinterface.DROPEFFECT_COPY
@@ -137,6 +138,7 @@ class HierarchyViewDialog(ViewDialog):
 
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
+		print 'dragnode', params #DBG
 		dstx, dsty, cmd, ucmd, args = params
 		self.droppable_widget = None
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
@@ -163,7 +165,7 @@ class HierarchyViewDialog(ViewDialog):
 		dstwidget = self.whichhit(dstx, dsty)
 		dstnode = dstwidget.node
 		if dstwidget and dstwidget.node.GetType() in MMNode.interiortypes:
-			if srcwidget and cmd=='move':
+			if cmd=='move':
 				if srcnode.IsAncestorOf(dstnode):
 					rv = windowinterface.DROPEFFECT_NONE
 				else:
@@ -183,6 +185,7 @@ class HierarchyViewDialog(ViewDialog):
 			
 	def dropnode(self, dummy, window, event, params):
 		# event handler for dropping the node.
+		print 'dropnode', params #DBG
 		dstx, dsty, cmd, ucmd, args = params
 		self.droppable_widget = None
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
@@ -215,10 +218,13 @@ class HierarchyViewDialog(ViewDialog):
 				return windowinterface.DROPEFFECT_COPY
 			elif rv == 'move':
 				return windowinterface.DROPEFFECT_MOVE
+			elif rv == 'link':
+				return windowinterface.DROPEFFECT_LINK
 			else:
 				return windowinterface.DROPEFFECT_NONE
 
 	def __dropfile(self, maybenode, window, event, params):
+		print 'dropfile', params #DBG
 		self.droppable_widget = None
 		self.dropfile(maybenode, window, event, params)
 

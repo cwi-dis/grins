@@ -1606,7 +1606,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.draw()
 				return None
 			if cmd == 'copy':
-				cmd = 'copydone'
+				cmd = 'link'
 				srcnode = srcnode.DeepCopy()
 				mustdestroy = srcnode
 			else:
@@ -1615,7 +1615,7 @@ class HierarchyView(HierarchyViewDialog):
 			# Node comes from another document.
 			srcnode = srcnode.CopyIntoContext(self.root.context)
 			mustdestroy = srcnode
-			cmd = 'copydone'
+			cmd = 'link'
 		#
 		# Find destination node and check ancestry makes sense
 		#

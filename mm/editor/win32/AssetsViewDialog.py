@@ -64,6 +64,8 @@ class AssetsViewDialog:
 			return 'move'
 		elif rv == windowinterface.DROPEFFECT_COPY:
 			return 'copy'
+		elif rv == windowinterface.DROPEFFECT_LINK:
+			return 'link'
 		else:
 			return None
 

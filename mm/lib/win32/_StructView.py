@@ -185,6 +185,7 @@ class _StructView(DisplayListView):
 		#print "DEBUG: dragging."
 		#import traceback
 		#traceback.print_stack()
+		print 'DBG dragnode kbdstate', kbdstate
 		node=dataobj.GetGlobalData(self.CF_NODE)
 		if node and self._dragging:
 			x, y = self._DPtoLP((x,y))
@@ -192,10 +193,10 @@ class _StructView(DisplayListView):
 			xf, yf = self._dragging
 			xf, yf = self._DPtoLP((xf,yf))
 			xf, yf = self._pxl2rel((xf, yf),self._canvas)
-			if self.isShiftPressed(kbdstate):
-				cmd = 'move'
-			else:
+			if self.isControlPressed(kbdstate):
 				cmd = 'copy'
+			else:
+				cmd = 'move'
 			#print "DEBUG: dragging node doing a self.onEventEx", DragNode
 			return self.onEventEx(DragNode,
 					(x, y, cmd, usercmd.DRAG_NODE, (xf, yf)))
@@ -204,6 +205,7 @@ class _StructView(DisplayListView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		#print "DEBUG: dropped."
+		print 'DBG dropnode effect', effect
 		node = dataobj.GetGlobalData(self.CF_NODE) 
 		if node and self._dragging:
 			
@@ -221,9 +223,9 @@ class _StructView(DisplayListView):
 			self._dragging = None
 
 			if effect == DropTarget.DROPEFFECT_MOVE:
-				cmd = 'copy'
-			else:
 				cmd = 'move'
+			else:
+				cmd = 'copy'
 
 			return self.onEventEx(DropNode,
 					(x, y, cmd, usercmd.DRAG_NODE, (xf, yf)))
@@ -260,10 +262,10 @@ class _StructView(DisplayListView):
 			ucmd = usercmd.DRAG_NODEUID
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
-			if self.isShiftPressed(kbdstate):
-				cmd = 'move'
-			else:
+			if self.isControlPressed(kbdstate):
 				cmd = 'copy'
+			else:
+				cmd = 'move'
 			return self.onEventEx(DragNode,
 					(x, y, cmd, ucmd, (contextid, nodeuid)))
 		return DropTarget.DROPEFFECT_NONE
@@ -279,9 +281,9 @@ class _StructView(DisplayListView):
 			x, y = self._pxl2rel((x, y),self._canvas)
 
 			if effect == DropTarget.DROPEFFECT_MOVE:
-				cmd = 'copy'
-			else:
 				cmd = 'move'
+			else:
+				cmd = 'copy'
 
 			return self.onEventEx(DropNode,
 					(x, y, cmd, ucmd, (contextid, nodeuid)))
