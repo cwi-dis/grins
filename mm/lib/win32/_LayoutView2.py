@@ -980,9 +980,19 @@ class LayoutManager(LayoutManagerBase):
 
 	# selection of a list of nodes
 	def selectNodeList(self, shapeList):
+		for shape in self._selectedList:
+			shape.isSelected = 0
 		self._selectedList = shapeList
+		for shape in shapeList:
+			shape.isSelected = 1
 		self._drawContext.selectShapes(shapeList)			
 
+	def appendSelection(self, shapeList):
+		for shape in shapeList:
+			shape.isSelected = 1
+			self._selectedList.append(shape)
+		self._drawContext.selectShapes(self._selectedList)			
+		
 	#
 	#  Scaling related
 	#
@@ -1177,6 +1187,7 @@ class Viewport(win32window.Window, UserEventMng):
 		self._name = name
 		self._ctx = context
 		self._polyline = None
+		self.isSelected = 0
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
 		self._uidx, self._uidy = 8, 8
@@ -1250,7 +1261,7 @@ class Viewport(win32window.Window, UserEventMng):
 	def getGeom(self):
 		x, y, w, h = self._rectb
 		return 0, 0, int(w+0.5), int(h+0.5)
-	
+
 	# add a sub region	
 	def addRegion(self, attrdict, name):
 		rgn = Region(self, name, self._ctx, attrdict, self._device2logical)
@@ -1415,6 +1426,7 @@ class Region(win32window.Window, UserEventMng):
 		self._attrdict = attrdict
 		self._showname = 1
 		self._ctx = context		
+		self.isSelected = 0
 
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
