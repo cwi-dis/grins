@@ -232,6 +232,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
+		node.__anchorlist = []
 		attrdict = node.attrdict
 		for attr, val in attributes.items():
 			if attr == 'id':
@@ -534,19 +535,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
-			try:
-				anchorlist = node.__anchorlist
-			except AttributeError:
-				node.__anchorlist = anchorlist = []
+			anchorlist = node.__anchorlist
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
 			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, []))
 			self.__links.append((node.GetUID(), id, href, ltype))
 
-		try:
-			anchorlist = node.__anchorlist
-		except AttributeError:
-			pass
-		else:
+		anchorlist = node.__anchorlist
+		if anchorlist:
 			alist = []
 			anchorlist.sort()
 			for a in anchorlist:
@@ -581,17 +576,29 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixRoot(self):
 		root = self.__root
-		if len(root.children) != 1:
-			return
-		if root.attrdict:
+		if len(root.children) != 1 or root.attrdict or \
+		   root.__syncarcs or root.__anchorlist:
 			return
 		child = root.children[0]
+		# copy stuff over from child to root
 		root.type = child.type
 		root.attrdict = child.attrdict.copy()
 		root.children[:] = child.children # deletes root.children[0]
 		child.children[:] = []
 		for c in root.children:
 			c.parent = root
+		root.__syncarcs = child.__syncarcs
+		root.values = child.values
+		try:
+			root.__mediatype = child.__mediatype
+			root.__region = child.__region
+		except AttributeError:
+			pass
+		try:
+			root.__size = child.__size
+		except AttributeError:
+			pass
+		root.__anchorlist = child.__anchorlist
 		root.setgensr()
 
 	def FixSizes(self):
@@ -1540,10 +1547,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# x,y,w,h are now floating point if they were
 			# percentages, otherwise they are ints.
 			aargs = [x0, y0, x1-x0, y1-y0]
-		try:
-			anchorlist = self.__node.__anchorlist
-		except AttributeError:
-			self.__node.__anchorlist = anchorlist = []
+		anchorlist = self.__node.__anchorlist
 		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
 		if attributes.has_key('fragment-id'):
 			aid = attributes['fragment-id']
@@ -1750,10 +1754,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return val
 
 	def __wholenodeanchor(self, node):
-		try:
-			anchorlist = node.__anchorlist
-		except AttributeError:
-			node.__anchorlist = anchorlist = []
+		anchorlist = node.__anchorlist
 		for a in anchorlist:
 			if a[3] == ATYPE_DEST:
 				break
