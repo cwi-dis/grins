@@ -122,6 +122,9 @@
 (links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
 	 'Size of link edit window' raw)
 
+(loop (int) 1 'Loop' default
+	'Number of times the node should loop (0 is infinite)' raw)
+
 (macprog (string) '' 'Mac program signature' default
 	'4-byte application signature (mac only)' channel)
 
