@@ -5,13 +5,14 @@ import MMNode
 from TemporalViewDialog import TemporalViewDialog
 from usercmd import *
 from TemporalWidgets import *
+from GeometricPrimitives import *
 
 class TemporalView(TemporalViewDialog):
 	def __init__(self, toplevel):
 		TemporalViewDialog.__init__(self)
 		self.toplevel = toplevel
 		self.root = toplevel.root
-		self.scene_graph = None	# : TemporalWidget
+		self.scene_graph = None	# : TemporalWidget; This graph remains here the whole time.
 
 		# Oooh yes, let's do some really cool selection code.
 		# Of course, I'll write it _later_.
@@ -38,7 +39,17 @@ class TemporalView(TemporalViewDialog):
 		self.showing = 1
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		TemporalViewDialog.show(self)
-		print "Do I have a window? ", self.window
+
+		# DEBUG: Draw something on the window.	
+		dl = self.window.newdisplaylist((50,50,50), windowinterface.UNIT_PXL)
+		dl.drawbox((50,50,100,100))
+		dl.render()
 
 	def is_showing(self):
 		return self.showing
+
+	def init_scene(self):
+		f = TemporalWidgetFactory()
+		self.scene_graph = f.createNewTree(self.root)
+		geodl = GeoWidget(self)
+		self.scene_graph.set_display(geodl)

@@ -33,7 +33,9 @@ class GeoWidget(Widget):
 	append=AddWidget
 	def __setitem__(self, key, value):
 		self.AddWidget(value)
-	__getitem__ = widgets.__getitem__
+
+	def __getitem__(self, key):
+		return self.widgets[key]
 
 	def redraw(self):
 		# Handle display lists and so forth.
