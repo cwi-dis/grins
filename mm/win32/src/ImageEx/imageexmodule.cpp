@@ -221,7 +221,9 @@ static PyObject* py_ImageEx_PutImage(PyObject *self, PyObject *args)
 	obWnd = GetWndPtr(testOb);
 	hW = obWnd->m_hWnd;
 
+	GUI_BGN_SAVE;
 	paintdll(hW,bit,r,g,b,scale,center);
+	GUI_END_SAVE;
 	Py_INCREF(Py_None);
 	return Py_None;
 
@@ -249,7 +251,9 @@ static PyObject* py_ImageEx_Prepare(PyObject *self, PyObject *args)
 
 	obWnd = GetWndPtr(testOb);
 	hW = obWnd->m_hWnd;
+	GUI_BGN_SAVE;
 	bit=reader(hW,filename,scale,rect,center, transp);
+	GUI_END_SAVE;
 	
 	tmp = Py_BuildValue("lllll",bit,rect.left,rect.top,rect.right,rect.bottom);
 
@@ -265,7 +269,9 @@ static PyObject* py_ImageEx_Destroy(PyObject *self, PyObject *args)
 	if(!PyArg_ParseTuple(args, "l", &bit))
 		return NULL;
 
+	GUI_BGN_SAVE;
 	destroyimage(bit);
+	GUI_END_SAVE;
 	
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -283,22 +289,22 @@ static PyObject* py_ImageEx_SizeOfImage(PyObject *self, PyObject *args)
 	if(!PyArg_ParseTuple(args, "s", &filename))
 		return NULL;
 
+	BOOL ok = FALSE;
+	AT_DIMENSION Width=0,Height=0;
+	GUI_BGN_SAVE;
 	nError=IG_load_file(filename,&bit);
-   
-    if(nError!=0)
+  
+    if(nError==0)
     {
-	    Py_INCREF(Py_None);
-		return Py_None;
-    }
+		UINT BitsPerPixel;
 	
-	AT_DIMENSION Width,Height;
-	UINT BitsPerPixel;
+		IG_image_dimensions_get (bit, &Width, &Height,&BitsPerPixel);
 	
-	IG_image_dimensions_get (bit, &Width, &Height,&BitsPerPixel);
-	
-	if(IG_image_is_valid(bit))
-		  IG_image_delete(bit);
+		if(IG_image_is_valid(bit))
+			  IG_image_delete(bit);
 
+	}
+	GUI_END_SAVE;
 	tmp = Py_BuildValue("ii", Width, Height);
 
 	return tmp;
@@ -322,8 +328,10 @@ static PyObject* py_ImageEx_ImageRect(PyObject *self, PyObject *args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-	
+
+	GUI_BGN_SAVE;
 	IG_device_rect_get(bit,&rcImageRect);	
+	GUI_END_SAVE;
 
 	tmp = Py_BuildValue("llll", rcImageRect.left, rcImageRect.top, rcImageRect.right, rcImageRect.bottom);
 
@@ -344,6 +352,8 @@ static PyObject* py_ImageEx_CreateBitmap(PyObject *self, PyObject *args)
 		return Py_None;
 	}
 	hCWnd = GetWndPtr( ob );
+
+	GUI_BGN_SAVE;
 	hCWnd->GetClientRect(&cl);
 	
 	HDC dc = GetDC(hCWnd->m_hWnd), cdc;
@@ -362,6 +372,7 @@ static PyObject* py_ImageEx_CreateBitmap(PyObject *self, PyObject *args)
 
 	ReleaseDC(hCWnd->m_hWnd,dc);
 	DeleteDC(cdc);
+	GUI_END_SAVE;
 	
 	Py_INCREF(Py_None);
 	return Py_None;
