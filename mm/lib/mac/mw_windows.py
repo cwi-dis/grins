@@ -2036,6 +2036,8 @@ class _ScrollMixin:
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
 	def __init__(self, adornments):
+		self.__rootctl = None
+		self.__toolbarctl = None
 		self._cmd_to_cntl = {}
 		self._cntl_to_cmd = {}
 		self._cntl_handlers = {}
@@ -2047,6 +2049,23 @@ class _AdornmentsMixin:
 		if not adornments:
 			return
 		if adornments.has_key('toolbar'):
+			root = Ctl.CreateRootControl(self._onscreen_wid)
+			self.__rootctl = root
+			#
+			# Create the toolbar
+			#
+			resid, width, height = MenuTemplate.TOOLBAR
+			try:
+				x, y, w, h = self._rect
+				if width > w:
+					w = width
+				rect = (0, 0, w, height)
+				toolbar = Ctl.NewControl(self._onscreen_wid, rect, '', 1, 0, 0, 0,
+					Controls.kControlWindowHeaderProc, 0)
+			except Ctl.Error, arg:
+				print 'CNTL resource %d not found: %s'%(resid, arg)
+			toolbar.EmbedControl(self.__rootctl)
+			self.__toolbarctl = toolbar
 			#
 			# Create the buttons
 			#
@@ -2059,16 +2078,7 @@ class _AdornmentsMixin:
 					self._add_control(cntl, self._toolbar_callback)
 					self._cmd_to_cntl[cmd] = cntl
 					self._cntl_to_cmd[cntl] = cmd
-			#
-			# Create the toolbar
-			#
-			resid, width, height = MenuTemplate.TOOLBAR
-			try:
-				cntl = Ctl.GetNewControl(resid, self._onscreen_wid)
-			except Ctl.Error, arg:
-				print 'CNTL resource %d not found: %s'%(resid, arg)
-			cntl.HiliteControl(255) # XXXX HOW TO HANDLE THIS ONE?
-			self._cmd_to_cntl[None] = cntl
+				cntl.EmbedControl(toolbar)
 			#
 			# Adjust window bounds
 			#
