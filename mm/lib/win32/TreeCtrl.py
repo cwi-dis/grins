@@ -9,6 +9,8 @@ from win32mu import Win32Msg
 
 from pywin.mfc import window
 
+debug = 0
+
 class TreeCtrl(window.Wnd):
 	def __init__ (self):
 		window.Wnd.__init__(self, win32ui.CreateTreeCtrl())
@@ -22,6 +24,8 @@ class TreeCtrl(window.Wnd):
 		self.CreateWindow(style, rc, parent, id)
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
+		parent.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
+		self.HookMessage(self.OnDump, win32con.WM_USER+1)
 
 	def OnLButtonDown(self, params):
 		msg = Win32Msg(params)
@@ -34,6 +38,7 @@ class TreeCtrl(window.Wnd):
 
 		hitflags, hititem = self.HitTest(point)
 		if not (hitflags & commctrl.TVHT_ONITEM):
+			if debug: self.scheduleDump()
 			return 1
 
 		if not (flags & win32con.MK_CONTROL):
@@ -42,25 +47,43 @@ class TreeCtrl(window.Wnd):
 				self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
 			self._selections = []
 			# do a normal selection/deselection
+			if debug: self.scheduleDump()
 			return 1
 
+		# enter multi-select mode
+		if self._selections:
+			self.SelectItem(0)
+			
 		if selected and selected not in self._selections:
 			self._selections.append(selected)
-
+		
 		state = self.GetItemState(hititem, commctrl.TVIS_SELECTED)
 		if not (state & commctrl.TVIS_SELECTED):
 			# not selected, so do select it
 			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-			self._selections.append(hititem)
+			if hititem not in self._selections:
+				self._selections.append(hititem)
 		else:
 			# its selected, so deselect it
 			self.SetItemState(hititem, 0, commctrl.TVIS_SELECTED)
-			try: self._selections.remove(hititem)
-			except: print 'not in selections'
+			if hititem in self._selections:
+				self._selections.remove(hititem)
+		if debug: self.scheduleDump()
 		return 0
 
 	def OnLButtonUp(self, params):
 		return 1
+
+	def OnSelChanged(self, std, extra):
+		if debug:
+			print 'OnSelChanged'
+			self.scheduleDump()
+
+	def OnDump(self, params):
+		print self.GetSelectedItems()
+
+	def scheduleDump(self):
+		self.PostMessage(win32con.WM_USER+1)
 
 	def insertLabel(self, text, parent, after):
 		return self.InsertItem(commctrl.TVIF_TEXT, text, 0, 0, 0, 0, None, parent, after)
