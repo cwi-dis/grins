@@ -789,7 +789,7 @@ class SVGStyle:
 		return self._styleprops is None or len(self._styleprops)==0
 	
 	def update(self, other):
-		pass
+		self._styleprops.update(other.getValue())
 
 class SVGTextCss:
 	classre = re.compile(textcssPat)
