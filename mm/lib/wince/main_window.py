@@ -129,12 +129,12 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			viewport = self._viewport
 			self._viewport = None
 			viewport.close()
-		self.update()
+		self.redraw()
 
 	def set_toggle(self, cmdcl, onoff):
 ##		print 'set_toggle',  cmdcl, onoff
-		if cmdcl == usercmd.PLAY and onoff == 0:
-			self.InvalidateRect()
+		if cmdcl == usercmd.PLAY:
+			self.redraw()
 
 	def newViewport(self, width, height, units, bgcolor):
 		l, t, r, b = self.GetClientRect()
@@ -159,7 +159,6 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		bgcolor = bgcolor or (255, 255, 255)
 
 		# create and return viewport
-		
 		import gdi_layout
 		self._viewport = gdi_layout.Viewport(self, (0, 0, width, height), bgcolor)
 		
@@ -213,16 +212,12 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.EndPaint(ps)
 
 	def paintOn(self, dc):
-		if self._viewport is None or self._progress is not None:
+		if self._viewport is None or not self._ready:
 			# show splash when no document is open
 			self.paintSplash(dc)
-			#l, t, r, b = self.GetClientRect()
-			#rc = l, t, r, b - self._menu_height
-			#dc.DrawText('Oratrix GRiNS Player', rc)
 			if self._status_msg:
 				rc = self.getStatusRect()
 				dc.DrawText(self._status_msg, rc)
-				
 		else:
 			# blit offscreen bmp
 			buf = self._viewport.getBackBuffer()
@@ -257,6 +252,13 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		else:
 			self.InvalidateRect()
 
+	def redraw(self):
+		self.InvalidateRect()
+		self.UpdateWindow()
+
+	def show(self):
+		self.redraw()
+
 	def paintSplash(self, dc):
 		if self._splash is None:
 			filename = r'\Program Files\GRiNS\bin\wince\cesplash.bmp'
@@ -281,22 +283,28 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._status_msg = msg
 		rc = self.getStatusRect()
 		self.InvalidateRect(rc)
+		self.UpdateWindow()
 
 	def setReady(self):
 		self._ready = 1
 
 	def CreateProgressBar(self):
+		self._ready = 0
+		self.redraw()
 		wndclass = 'msctls_progress32'
 		height = 16
 		l, t, r, b = self.getStatusRect()
-		l, t, r, b = l+16, b+8, r-16, b
+		l, t, r, b = l+16, b+4, r-16, b
 		wnd = self.__dict__['_obj_']
 		self._progress = winuser.CreateWindowEx(0, wndclass, '', 
 			wincon.WS_VISIBLE | wincon.WS_BORDER , (l, t), (r-l, height), wnd, 0)
 		self._progress.ShowWindow(wincon.SW_SHOW)
+		self._progress.UpdateWindow()
 		return self._progress
 
 	def DestroyProgressBar(self):
 		self._progress.DestroyWindow()
 		self._progress = None
-		self.InvalidateRect()
+		self._status_msg = ''
+		self._ready = 1
+		self.redraw()
