@@ -22,7 +22,12 @@ class ShellChannel(Channel):
 		else:
 			import MMurl
 			prog = self.getfileurl(node)
-			prog = MMurl.urlretrieve(prog)[0]
+			try:
+				prog = MMurl.urlretrieve(prog)[0]
+			except IOError, msg:
+				self.errormsg('reading file %s failed: %s' %
+					      (prog, msg[1]))
+				return
 			argv = [prog]
 		self.pid = startprog(prog, argv)
 
