@@ -36,7 +36,8 @@ def beep():
 #
 # Conversion factors for mm->pixels
 #
-_x_pixel_per_inch, _y_pixel_per_inch = Qd.ScreenRes()
+##_x_pixel_per_inch, _y_pixel_per_inch = Qd.ScreenRes()
+_x_pixel_per_inch, _y_pixel_per_inch = 100.0, 100.0
 _x_pixel_per_mm = _x_pixel_per_inch / 25.4
 _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 
