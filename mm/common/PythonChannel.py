@@ -30,9 +30,15 @@ class PythonChannel(Channel):
 		except:
 			# XXXX Should be done in editor only, and after
 			# asking the user whether this is ok.
-			print "EXCEPTION IN PYTHONCHANNEL NODE"
-			import pdb
-			pdb.post_mortem(sys.exc_traceback)
+			print "EXCEPTION IN PYTHONCHANNEL NODE", \
+			      node.GetAttrDef('name', '<unnamed node>')
+			if __debug__:
+				import pdb
+				pdb.post_mortem(sys.exc_traceback)
+			else:
+				import traceback
+				apply(traceback.print_exception,
+				      sys.exc_info())
 
 
 	def play_1(self):
