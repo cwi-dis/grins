@@ -49,20 +49,47 @@ class SMILHtmlTimeWriter(SMILWriter):
 
 
 	def writetag(self, tag, attrs = None):
+		# layout
 		if tag == 'layout': return
 		elif tag == 'viewport': return
 		elif tag == 'region':
 			self.writeRegionClass(attrs)
 			return;
-		tag = 't:'+ tag
+
+		# containers
+		if tag in ('seq', 'par', 'excl', 'switch'):
+			tag = 't:'+ tag
+			SMILWriter.writetag(self, tag, attrs)
+			return
+		
+		# animate elements
+		if tag in ('animate', 'animateMotion', 'animateColor', 'set'):
+			tag = 't:'+ tag
+			SMILWriter.writetag(self, tag, attrs)
+			return
+
+		# media items in div
 		attrscpy = attrs[:]
 		attrs = []
+		classval = None
+		idval = None
 		for attr, val in attrscpy:
 			if attr == 'region':
-				attr = 'class'
-			attrs.append((attr, val))
+				classval = val
+			elif attr == 'id':
+				idval = val
+			else:
+				attrs.append((attr, val))
+		attrs.append(('class', 'time'))
 
+		if idval:
+			SMILWriter.writetag(self, "div", [('class', classval),('id', idval),])
+		else:
+			SMILWriter.writetag(self, "div", [('class', classval),])
+		self.push()
 		SMILWriter.writetag(self, tag, attrs)
+		self.pop()
+
 
 	def writelayout(self):
 		"""Write the layout section"""
@@ -125,7 +152,7 @@ class SMILHtmlTimeWriter(SMILWriter):
 	def writeRegionClass(self, attrs):
 		for attr, val in attrs:
 			if attr=='id':
-				self.fp.write('.'+val + ' {position: absolute;' )	
+				self.fp.write('.'+val + ' {position:absolute;' )	
 				break
 		for attr, val in attrs:
 			if attr=='id': continue
