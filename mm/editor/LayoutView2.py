@@ -16,8 +16,10 @@ debug2 = 0
 debugPreview = 0
 
 COPY_PASTE_MEDIAS = 1
+SHOW_ANIMATE_NODES = 0
 
-TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
+TYPE_UNKNOWN, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT, TYPE_ANIMATE = range(5)
+CHILD_TYPE = (TYPE_ANIMATE,)
 
 ###########################
 
@@ -54,39 +56,41 @@ class TreeHelper:
 	# End experimental code to manage a default region
 	#
 		
-	# return tree if node is a valid media nodes
-	def _isValidMMNode(self, node):
+	def _getMMNodeType(self, node):
 		if node == None:
-			return 0
+			return None
 		from MMTypes import playabletypes
 		if not node.type in playabletypes:
-			return 0
+			return None
 		chtype = node.GetChannelType()
-		if chtype == None or chtype == 'animate':
-			return 0
-		return 1
+		if chtype == None:
+			return None
+		if chtype == 'animate':
+			return TYPE_ANIMATE
+		return TYPE_MEDIA
 
 	# check the media node references and update the internal structure
 	def __checkMediaNodeList(self, nodeRef):
 		if debug2: print 'treeHelper.__checkMediaNodeList : start ',nodeRef
 		ctx = self._context.context
-		if self._isValidMMNode(nodeRef):
-			parentRef = self.getRegion(nodeRef)
-			
-			if not parentRef is None:			
-				tParentNode =  self.__nodeList.get(parentRef)
-				if tParentNode == None:
-					tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
-				tNode =  self.__nodeList.get(nodeRef)
-				if tNode == None or not tParentNode.hasChild(tNode):
-					tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_MEDIA)
-					tParentNode.addChild(tNode)
-				else:
-					tNode.checkMainUpdate()
-					tNode.isUsed = 1
-						
+		type = self._getMMNodeType(nodeRef)
+		
+		if type == TYPE_MEDIA:
+			parentRef = self.getParent(nodeRef, TYPE_MEDIA)
+			if not parentRef is None:
+				self.__checkNode(parentRef, nodeRef, TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA)
+		elif type == TYPE_ANIMATE:
+			if not SHOW_ANIMATE_NODES:
+				return
+			parentRef = self.getParent(nodeRef, TYPE_ANIMATE)
+			if not parentRef is None:
+				parentType = self._getMMNodeType(parentRef)
+				if parentType in (TYPE_MEDIA, TYPE_REGION):
+					self.__checkNode(parentRef, nodeRef, TYPE_VIEWPORT, parentType, TYPE_ANIMATE)
+				
 		for child in nodeRef.GetChildren():
 			self.__checkMediaNodeList(child)
+						
 		if debug2: print 'treeHelper.__checkMediaNodeList : end ',nodeRef
 
 	# check the media node references and update the internal structure
@@ -97,45 +101,11 @@ class TreeHelper:
 	def __checkRegionNodeList(self, parentRef, nodeRef):
 		if debug2: print 'treeHelper.__checkRegionNodeList : start ',nodeRef
 
-		# if no default region to show, exclude it	
-		if not self.hasDefaultRegion and nodeRef.isDefault():
-			return
+		self.__checkNode(parentRef, nodeRef, TYPE_VIEWPORT, TYPE_REGION, TYPE_REGION)
+		for subreg in nodeRef.GetChildren():
+			if subreg.GetType() == 'layout':
+				self.__checkRegionNodeList(nodeRef, subreg)
 			
-		tNode =  self.__nodeList.get(nodeRef)
-		if parentRef != None:
-			# case for regions
-			tParentNode =  self.__nodeList.get(parentRef)
-			if tParentNode == None:
-				if debug2: print 'treeHelper.__checkMediaNodeList : the parent doesn''t exist, create a new parent tree node'
-				tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
-			if tNode == None:
-				if debug2: print 'treeHelper.__checkMediaNodeList : it''s a new region, create a new tree node'
-				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
-				tParentNode.addChild(tNode)
-			elif not tParentNode.hasChild(tNode):
-				if debug2:
-					print 'treeHelper.__checkMediaNodeList : the parent has changed children:'
-					for child in tNode.children.keys():
-						print '* ',child.nodeRef
-				oldNode = tNode
-				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
-				tNode.children = oldNode.children
-				tParentNode.addChild(tNode)
-			else:
-				tNode.checkMainUpdate()
-				tNode.isUsed = 1
-		elif tNode == None:
-			# case for new viewport 
-			tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_VIEWPORT)
-			self.__rootList[nodeRef] = tNode
-		else:
-			# case for existing viewport
-			tNode.checkMainUpdate()							
-			tNode.isUsed = 1
-		
-		for subreg in self.__channelTreeRef.getsubregions(nodeRef):
-			self.__checkRegionNodeList(nodeRef, subreg)
-						
 		if debug2: print 'treeHelper.__checkRegionNodeList : end ',nodeRef
 
 	# check the region/viewport node references and update the internal structure
@@ -143,7 +113,44 @@ class TreeHelper:
 		viewportRefList = self.__channelTreeRef.getviewports()
 		for viewportRef in viewportRefList:
 			self.__checkRegionNodeList(None, viewportRef)
-		
+
+	def __checkNode(self, parentRef, nodeRef, typeRoot, typeParent, typeChild):
+		# if no default region to show, exclude it	
+		if not self.hasDefaultRegion and typeChild == TYPE_REGION and nodeRef.isDefault():
+			return
+
+		tNode =  self.__nodeList.get(nodeRef)
+		if parentRef is not None:
+			# case for no root nodes (regions, medias, ...)
+			tParentNode =  self.__nodeList.get(parentRef)
+			if tParentNode == None:
+				if debug2: print 'treeHelper.__checkNode : the parent doesn''t exist, create a new parent tree node'
+				tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, typeParent)
+			if tNode == None:
+				if debug2: print 'treeHelper.__checkNode : it''s a node, create a new tree node'
+				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, typeChild)
+				tParentNode.addChild(tNode)
+			elif not tParentNode.hasChild(tNode):
+				if debug2:
+					print 'treeHelper.__checkNode : the parent has changed children:'
+					for child in tNode.children.keys():
+						print '* ',child.nodeRef
+				oldNode = tNode
+				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, typeChild)
+				tNode.children = oldNode.children
+				tParentNode.addChild(tNode)
+			else:
+				tNode.checkMainUpdate()
+				tNode.isUsed = 1
+		elif tNode is None:
+			# case for root node (viewport)
+			tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, typeRoot)
+			self.__rootList[nodeRef] = tNode
+		else:
+			# case for existing root node (viewport)
+			tNode.checkMainUpdate()							
+			tNode.isUsed = 1
+										
 	# this method is called when a node has to be deleted
 	def __onDelNode(self, parent, node, top=1):
 		if debug: print 'treeHelper.__onDelNode : ',node.nodeRef
@@ -288,39 +295,48 @@ class TreeHelper:
 		if node != None:
 			return node.type
 
-	# return the region related to a media.
-	# Notes: 
+	# return the parent node reference in the layout view
+	# Notes for regions: 
 	# - that region may be differente that the defined region in the document
 	# because of the default region
 	# - don't move that method into mmnode, the behavior is specific to the layout view to edit purpose
 	# the player has for instance another behavior
-	def getRegion(self, mediaRef):
-		region = mediaRef.GetDefinedChannel()
-		if region is None:
-			# A association may be defined in the clipboard. In that case,
-			# we don't show the media in the default region
-			found = 0
-			clipList = self._context.editmgr.getclip()
-			for clipNode in clipList:
-				if clipNode.getClassName() == 'RegionAssociation':
-					if clipNode.getMediaNode() is mediaRef:
-						found = 1
-						break
-			if found:
-				# the node is in the clipboard. 
-				return None
+	def getParent(self, nodeRef, nodeType):
+		if nodeType == TYPE_MEDIA:
+			region = nodeRef.GetDefinedChannel()
+			if region is None:
+				# A association may be defined in the clipboard. In that case,
+				# we don't show the media in the default region
+				found = 0
+				clipList = self._context.editmgr.getclip()
+				for clipNode in clipList:
+					if clipNode.getClassName() == 'RegionAssociation':
+						if clipNode.getMediaNode() is nodeRef:
+							found = 1
+							break
+				if found:
+					# the node is in the clipboard. 
+					return None
+				else:
+					# No region defined, return the default region
+					self.hasDefaultRegion = 1
+					return self._context.context.getDefaultRegion()
 			else:
-				# No region defined, return the default region
-				self.hasDefaultRegion = 1
-				return self._context.context.getDefaultRegion()
-		else:
-			# the region may be moved from the document to the clipboard. In that case,
-			# we don't show the media in the default region
-			if not region.isInDocument():
-				return None
+				# the region may be moved from the document to the clipboard. In that case,
+				# we don't show the media in the default region
+				if not region.isInDocument():
+					return None
+	
+				return region
+		elif nodeType == TYPE_REGION:
+			return nodeRef.GetParent()
+		elif nodeType == TYPE_ANIMATE:
+			if hasattr(nodeRef, 'targetnode'):
+				return nodeRef.targetnode
 
-			return region
-				
+		# no layout parent			
+		return None
+							
 	def delNode(self, nodeRef):
 		if debug: print 'treeHelper.delNode ',nodeRef
 		node = self.__nodeList.get(nodeRef)
@@ -346,7 +362,7 @@ class TreeNodeHelper:
 		if type == TYPE_MEDIA:
 			self.name = nodeRef.attrdict.get('name')
 			self.mediatype = nodeRef.GetChannelType()
-		else:
+		elif type in (TYPE_VIEWPORT, TYPE_REGION):
 			name = nodeRef.attrdict.get('regionName')
 			if name == None:
 				self.name = nodeRef.name
@@ -370,7 +386,7 @@ class TreeNodeHelper:
 				self.isUpdated = 1
 				self.name = name
 				self.mediatype = mediatype
-		else:
+		elif self.type in (TYPE_VIEWPORT, TYPE_REGION):
 			name = nodeRef.attrdict.get('regionName')
 			if name == None:
 				name = nodeRef.name
@@ -591,26 +607,31 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def onNewNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
+
+		# update preview widget		
 		if nodeType == TYPE_VIEWPORT:
 			self.previousWidget.addViewport(nodeRef)			
-			self.treeWidget.appendViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
 			self.previousWidget.addRegion(parentRef, nodeRef)
-			self.treeWidget.appendRegion(parentRef, nodeRef)
 		elif nodeType == TYPE_MEDIA:
-			self.treeWidget.appendMedia(parentRef, nodeRef)
+			pass
+
+		# update tree widget		
+		self.treeWidget.appendNode(parentRef, nodeRef, nodeType)
 		
 	def onDelNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
+		
+		# update preview widget		
 		if nodeType == TYPE_VIEWPORT:
 			self.previousWidget.removeViewport(nodeRef)
-			self.treeWidget.removeNode(nodeRef)
 		elif nodeType == TYPE_REGION:
 			self.previousWidget.removeRegion(nodeRef)
-			self.treeWidget.removeNode(nodeRef)
 		elif nodeType == TYPE_MEDIA:
-			self.treeWidget.removeNode(nodeRef)
 			self.previousWidget.removeMedia(nodeRef)
+
+		# update tree widget		
+		self.treeWidget.removeNode(nodeRef)
 
 	def onMainUpdate(self, nodeRef):
 		self.treeWidget.updateNode(nodeRef)
@@ -865,15 +886,15 @@ class LayoutView2(LayoutViewDialog2):
 			   parent1 is parent2
 		
 	def getViewportRef(self, nodeRef, nodeType = None):
-		className = nodeRef.getClassName()
-		if className == 'MMNode':
-			# return the associated region
-			region = self.getParentNodeRef(nodeRef)
-		else:
-			region = nodeRef
-
-		if region != None:
-			return self.__channelTreeRef.getviewport(region)
+		if nodeType is None:
+			nodeType = self.getNodeType(nodeRef)
+		while nodeType != TYPE_REGION:
+			nodeRef = self.treeHelper.getParent(nodeRef, nodeType)
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType is None or nodeType == TYPE_UNKNOWN:
+				break
+		if nodeType == TYPE_REGION:
+			return self.__channelTreeRef.getviewport(nodeRef)
 		
 		return None
 	
@@ -883,7 +904,7 @@ class LayoutView2(LayoutViewDialog2):
 		if nodeType == None:
 			nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_MEDIA:
-			return self.treeHelper.getRegion(nodeRef)
+			return self.treeHelper.getParent(nodeRef, nodeType)
 		else:
 			region = self.__channelTreeRef.getparent(nodeRef)
 			return region
@@ -2495,7 +2516,7 @@ class TreeWidget(Widget):
 				if not expandMediaNode and children != None:
 					# expand only this node if there is a region inside
 					for child in children:
-						if self._context.getNodeType(child) != TYPE_MEDIA:
+						if not self._context.getNodeType(child) in CHILD_TYPE:
 							hasNotOnlyMedia = 1
 	
 				if not (hasNotOnlyMedia or expandMediaNode):
@@ -2521,19 +2542,13 @@ class TreeWidget(Widget):
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
 
-	def appendMedia(self, pNodeRef, nodeRef):
-		self._appendItem(pNodeRef, nodeRef, TYPE_MEDIA)
-
-	def appendViewport(self, nodeRef):
-		self._appendItem(None, nodeRef, TYPE_VIEWPORT)
-		# save the new node for expand. The expand operation can't be done here
-		self.__nodeRefListToExpand.append(nodeRef)
-			
-	def appendRegion(self, pNodeRef, nodeRef):
-		self._appendItem(pNodeRef, nodeRef, TYPE_REGION)
-		# save the new node for expand. The expand operation can't be done here
-		self.__nodeRefListToExpand.append(nodeRef)
-
+	def appendNode(self, pNodeRef, nodeRef, nodeType):
+		self._appendItem(pNodeRef, nodeRef, nodeType)
+		
+		if not nodeType in CHILD_TYPE:
+			# save the new node for expand. The expand operation can't be done here
+			self.__nodeRefListToExpand.append(nodeRef)
+					
 	def removeNode(self, nodeRef):
 		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
 		if nodeTreeCtrlId != None:
@@ -2661,6 +2676,9 @@ class TreeWidget(Widget):
 			type = 'Region'
 			# XXX the GetUID seems bugged, so we use directly the region Id as global id for now
 			objectId = nodeRef.name
+		elif nodeType == TYPE_ANIMATE:
+			type = 'Animate'
+			objectId = nodeRef.GetUID()
 		self.treeCtrl.beginDrag(type, objectId)
 
 	def __dragObjectIdToNodeRef(self, type, objectId):
@@ -2992,6 +3010,8 @@ class PreviousWidget(Widget):
 		if self.currentViewport == None:
 			# shouldn't pass here
 			print 'can''t show viewport ',viewportRef
+			import traceback
+			traceback.print_stack()
 			return
 		self.currentViewport.showAllNodes()
 
@@ -3030,7 +3050,7 @@ class Node:
 
 		# default attribute		
 		self.importAttrdict()
-		self._nodeType = TYPE_ABSTRACT
+		self._nodeType = TYPE_UNKNOWN
 
 		# avoid a recursive loop when selecting:
 		# currently, on windows, a selecting operation generate a selected event !
