@@ -917,9 +917,10 @@ class KeyTimesSlider(window.Wnd):
 		for p in self._keyTimes:
 			if tp<p: break
 			index = index + 1
-		self._keyTimes.insert(index, tp)
-		self._selected = -1
-		self.updateKeyTimes()
+		if tp > self._keyTimes[index-1]+self.DELTA and tp < self._keyTimes[index] - self.DELTA:
+			self._keyTimes.insert(index, tp)
+			self._selected = -1
+			self.updateKeyTimes()
 
 	def insertKeyTimeFromPoint(self, index, prop):
 		tp = self._keyTimes[index-1] + prop*(self._keyTimes[index]-self._keyTimes[index-1])
