@@ -443,7 +443,24 @@ def getregalignatt(writer, node, attr):
 		regalign = None
 
 	return regalign
+
+def getbgcoloratt(writer, node, attr):
+	try:
+		# if transparent, there is no backgroundColor attribute
+		transparent = node.GetRawAttr('transparent', 1)
+		if transparent != 0:
+			return None
 		
+		bgcolor = node.GetRawAttr('bgcolor')
+		if colors.rcolors.has_key(bgcolor or (0,0,0)):
+			bgcolor = colors.rcolors[bgcolor or (0,0,0)]
+		else:
+			bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
+		
+		return bgcolor 
+	except:
+		return None
+
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
 	if val is not None:
@@ -960,6 +977,7 @@ smil_attrs=[
 	("regPoint", lambda writer, node:getregpointatt(writer, node, "regPoint")),
 	("regAlign", lambda writer, node:getregalignatt(writer, node, "regAlign")),
 	
+	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
 	("to", lambda writer, node:getstringattr(writer, node, "to")),
 	("by", lambda writer, node:getstringattr(writer, node, "by")),
@@ -1009,6 +1027,7 @@ cmif_node_attrs_ignore = {
 	'repeatdur':0, 'beginlist':0, 'endlist':0, 'restart':0,
 	'left':0,'right':0,'top':0,'bottom':0,'scale':0,'units':0,
 	'regPoint':0, 'regAlign':0,
+	'bgcolor':0, 'transparent':0,
 	'transIn':0, 'transOut':0,
 	}
 cmif_node_realpix_attrs_ignore = {

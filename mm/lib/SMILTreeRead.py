@@ -688,7 +688,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('invalid subregion attribute value')
 					val = 0
 				attrdict[attr] = val
-
+			elif attr == 'backgroundColor':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+				self.__context.attributes['project_boston'] = 1
+				bg = self.__convert_color(val)
+				if bg != 'transparent' and bg != None:
+					attrdict['transparent'] = 0
+					attrdict['bgcolor'] = bg
+				else:
+					attrdict['transparent'] = 1
+ 					attrdict['bgcolor'] = 0,0,0						
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
@@ -937,7 +947,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attributes['scale'] = "0"
 				elif val == 'slice':
 					attributes['scale'] = "-1"
-								
+			
+		# if no background color defined on the node, or no region, we fix the background color
+		# to transparent
+		if not attributes.has_key('backgroundColor') or not attributes.has_key('region'):
+			attributes['backgroundColor'] = 'transparent'			
+	
 		# create the node
 		if not self.__root:
 			# "can't happen"
