@@ -20,39 +20,6 @@ class _MenuSupport:
 		'''Close the menu.'''
 		self.destroy_menu()
 
-	def create_menu(self, list, title = None):
-		'''Create a popup menu.
-
-		TITLE is the title of the menu.  If None or '', the
-		menu will not have a title.  LIST is a list with menu
-		entries.  Each entry is either None to get a
-		separator, a string to get a label, or a tuple of two
-		elements.  The first element is the label in the menu,
-		the second argument is either a callback which is
-		called when the menu entry is selected or a list which
-		defines a cascading submenu.  A callback is either a
-		callable object or a tuple consisting of a callable
-		object and a tuple.  If the callback is just a
-		callable object, it is called without arguments; if
-		the callback is a tuple consisting of a callable
-		object and a tuple, the object is called using apply
-		with the tuple as argument.'''
-
-		if self._form.IsSubclass(Xm.Gadget):
-			raise error, 'cannot create popup menus on gadgets'
-		self.destroy_menu()
-		menu = self._form.CreatePopupMenu('dialogMenu',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
-		if title:
-			list = [title, None] + list
-		_create_menu(menu, list, toplevel._default_visual,
-			     toplevel._default_colormap)
-		self.__menu = menu
-		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
-					   self.__post_menu, None)
-
 	def destroy_menu(self):
 		'''Destroy the pop up menu.
 
