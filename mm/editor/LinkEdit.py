@@ -14,7 +14,7 @@ from ViewDialog import ViewDialog
 from MMNode import interiortypes
 
 from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
-	           DIR_2WAY, TYPE_JUMP, TYPE_CALL, TYPE_FORK
+	           DIR_2WAY, TYPE_JUMP
 typestr = ['JUMP', 'CALL', 'FORK']
 dirstr = ['->', '<-', '<->']
 
@@ -186,7 +186,6 @@ class LinkEdit(ViewDialog, BasicDialog):
 			# At least one unfocussed anchorlist. No browser
 			self.link_group.hide_object()
 			self.link_dir_group.hide_object()
-			self.link_type_group.hide_object()
 			self.link_mod_group.hide_object()
 			self.ok_group.hide_object()
 			self.linkfocus = None
@@ -223,10 +222,8 @@ class LinkEdit(ViewDialog, BasicDialog):
 		if self.linkedit:
 			self.set_radio_buttons()
 			self.link_dir_group.show_object()
-			self.link_type_group.show_object()
 		else:
 			self.link_dir_group.hide_object()
-			self.link_type_group.hide_object()
 			self.ok_group.hide_object()
 		self.link_group.show_object()
 		if self.right.hidden:
@@ -275,9 +272,6 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.linkdir_but0.set_button(linkdir == 0)
 		self.linkdir_but1.set_button(linkdir == 1)
 		self.linkdir_but2.set_button(linkdir == 2)
-		self.linktype_but0.set_button(linktype == 0)
-		self.linktype_but1.set_button(linktype == 1)
-		self.linktype_but2.set_button(linktype == 2)
 		if self.linkfocus == None:
 			# We seem to be adding
 			self.ok_group.show_object()
@@ -373,10 +367,6 @@ class LinkEdit(ViewDialog, BasicDialog):
 	def linkdir_callback(self, obj, value):
 		l = self.editlink
 		self.editlink = l[ANCHOR1], l[ANCHOR2], eval(value), l[TYPE]
-		self.set_radio_buttons()
-	def linktype_callback(self, obj, value):
-		l = self.editlink
-		self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], eval(value)
 		self.set_radio_buttons()
 	def ok_callback(self, *dummy):
 		# XXX Focus isn't correct after an add.
