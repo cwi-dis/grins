@@ -161,21 +161,25 @@ class EditableMMNode(MMNode.MMNode):
 	def _newleafnode(self, url):
 		# returns a new node with this particular name, url and region
 		node = self.context.newnode('ext')
-		print "DEBUG: URL is: ", url
-		#if url:
-		#	node.SetAttr('file', url)
+		if url:
+			node.SetAttr('file', url)
 		#if region:
+		#	print "DEBUG: Region is: ", region
 		#	assert isinstance(region, type(""))
 		#	node.SetAttr('channel', region)
 		#if name:
 		# Set the name for this node. I don't know how.
 		return node
 
-	def NewLeafNode(self, name='', url='', index = -1, region = ''):
+#	def NewLeafNode(self, name='', url='', index = -1, region = ''):
+	def NewLeafNode(self, url, channel):
 		em = self.context.editmgr
 		if not em.transaction():
 			return
-		self._insertnode(self._newleafnode(url), index)
+		newnode = self._newleafnode(url)
+		self._insertnode(newnode, -1)
+		print "DEBUG: region is: ", channel
+		newnode.SetAttr('channel', channel)
 		em.commit()
 
 ######################################################################
