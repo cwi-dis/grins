@@ -564,6 +564,10 @@ class TreeManager:
 	def insertNode(self, parent, text, imageName, selectedImageName):
 		iImage = self.bitmapNameToId.get(imageName)
 		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
+		if iImage is None or iSelectedImage is None:
+			iImage = self.bitmapNameToId.get('image')
+			iSelectedImage = self.bitmapNameToId.get('image')
+			
 		mask = int(commctrl.TVIF_TEXT|commctrl.TVIF_IMAGE|commctrl.TVIF_SELECTEDIMAGE)
 		item = self.treeCtrl.InsertItem(mask,
 						text, # text
