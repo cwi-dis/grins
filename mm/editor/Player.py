@@ -53,10 +53,8 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.updateuibaglist = self.dummy_updateuibaglist
 
 	def destroy(self):
-		self.close()
-
-	def close(self):
 		self.hide()
+		self.close()
 
 	def fixtitle(self):
 		self.settitle('Player (' + self.toplevel.basename + ')')
@@ -144,7 +142,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.setready()
 
 	def close_callback(self):
-		self.close()
+		self.hide()
 
 	def channel_callback(self, name):
 		isvis = self.channels[name].may_show()
@@ -267,7 +265,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 
 	def setwaiting(self):
 		self.waiting = 1
-		PlayerDialog.setwaiting(self)
+		self.setcursor('watch')
 		for cname in self.channelnames:
 			self.channels[cname].setwaiting()
 
@@ -275,4 +273,4 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.waiting = 0
 		for cname in self.channelnames:
 			self.channels[cname].setready()
-		PlayerDialog.setready(self)
+		self.setcursor('')

@@ -1,3 +1,13 @@
+"""Dialog for the Player control panel.
+
+The PlayerDialog is a window that displays VCR-like controls to
+control the player plus an interface to turn channels on and off and
+an interface to turn options on and off.
+
+"""
+
+__version__ = "$Id"
+
 import windowinterface, WMEVENTS
 
 _BLACK = 0, 0, 0
@@ -16,6 +26,18 @@ STOPPED, PAUSING, PLAYING = range(3)
 
 class PlayerDialog:
 	def __init__(self, coords, title):
+		"""Create the Player dialog.
+
+		Create the dialog window (non-modal, so does not grab
+		the cursor) but do not pop it up (i.e. do not display
+		it on the screen).
+
+		Arguments (no defaults):
+		coords -- the coordinates (x, y, width, height) of the 
+			control panel in mm
+		title -- string to be displayed as window title
+		"""
+
 		self.__window = None
 		self.__displist = None
 		self.__title = title
@@ -25,12 +47,36 @@ class PlayerDialog:
 		self.__channels = []
 		self.__options = []
 
+	def close(self):
+		"""Close the dialog and free resources."""
+		if self.__window is not None:
+			self.__window.close()
+		del self.__window
+		del self.__displist
+		del self.__subwins
+		del self.__channels
+		del self.__options
+
 	def settitle(self, title):
+		"""Set (change) the title of the window.
+
+		Arguments (no defaults):
+		title -- string to be displayed as new window title.
+		"""
 		self.__title = title
 		if self.__window is not None:
 			self.__window.settitle(title)
 
 	def setchannels(self, channels):
+		"""Set the list of channels.
+
+		Arguments (no defaults):
+		channels -- a list of tuples (name, onoff) where name
+			is the channel name which is to be presented
+			to the user, and onoff indicates whether the
+			channel is on or off (1 if on, 0 if off)
+		"""
+
 		self.__channels = channels
 		self.__channeldict = {}
 		menu = []
@@ -48,6 +94,14 @@ class PlayerDialog:
 		self.channel_callback(channel)
 
 	def setchannel(self, channel, onoff):
+		"""Set the on/off status of a channel.
+
+		Arguments (no defaults):
+		channel -- the name of the channel whose status is to
+			be set
+		onoff -- the new status
+		"""
+
 		i = self.__channeldict.get(channel)
 		if i is None:
 			raise RuntimeError, 'unknown channel'
@@ -58,6 +112,16 @@ class PlayerDialog:
 			self.setchannels(self.__channels)
 
 	def setoptions(self, options):
+		"""Set the list of options.
+
+		Arguments (no defaults):
+		options -- a list of options.  An option is either a
+			tuple (name, onoff) or a string "name".  The
+			name is to be presented to the user.  If the
+			option is a tuple, the option is a toggle
+			and onoff is the initial value of the toggle
+		"""
+
 		self.__options = options
 		if self.__window is not None:
 			menu = []
@@ -73,6 +137,15 @@ class PlayerDialog:
 			self.__subwins[1].create_menu(menu, title = _titles[1])
 
 	def setstate(self, state):
+		"""Set the playing state of the control panel.
+
+		Arguments (no defaults):
+		state -- the new state:
+			STOPPED -- the player is in the stopped state
+			PLAYING -- the player is in the playing state
+			PAUSING -- the player is in the pausing state
+		"""
+
 		self.__state = state
 		if self.__window is not None:
 			d = self.__displist.clone()
@@ -85,6 +158,8 @@ class PlayerDialog:
 			self.__displist = d
 
 	def hide(self):
+		"""Hide the control panel."""
+
 		if self.__window is None:
 			return
 		self.__window.close()
@@ -93,6 +168,8 @@ class PlayerDialog:
 		self.__displist = None
 		
 	def show(self):
+		"""Show the control panel."""
+
 		if self.__window is not None:
 			self.__window.pop()
 			return
@@ -110,16 +187,24 @@ class PlayerDialog:
 		self.close_callback()
 
 	def getgeometry(self):
+		"""Get the coordinates of the control panel.
+
+		The return value is a tuple giving the coordinates
+		(x, y, width, height) in mm of the player control
+		panel.
+		"""
+
 		if self.__window is not None:
 			return self.__window.getgeometry()
 
-	def setwaiting(self):
-		if self.__window is not None:
-			return self.__window.setcursor('watch')
+	def setcursor(self, cursor):
+		"""Set the cursor to a named shape.
 
-	def setready(self):
+		Arguments (no defaults):
+		cursor -- string giving the name of the desired cursor shape
+		"""
 		if self.__window is not None:
-			return self.__window.setcursor('')
+			return self.__window.setcursor(cursor)
 
 	def __resize_callback(self, dummy, window, event, val):
 		import StringStuff
