@@ -1532,7 +1532,11 @@ class Region(win32window.Window, UserEventMng):
 	# return the current geometry
 	def getGeom(self):
 		x, y, w, h = self._rectb
-		return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
+		if x < 0: x = x-0.5
+		else: x = x+0.5
+		if y < 0: y = y-0.5
+		else: y = y+0.5
+		return int(x), int(y), int(w+0.5), int(h+0.5)
 
 	# add a sub region
 	def addRegion(self, attrdict, name):
