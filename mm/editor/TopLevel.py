@@ -11,7 +11,7 @@ from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 
 # an empty document
-EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
+EMPTY = "(seq '1' ((channellist ('root-layout' (type layout) (units 2) (winsize  640 480))) (hyperlinks)))"
 
 class TopLevel(ViewDialog):
 	def __init__(self, main, url, new_file):
