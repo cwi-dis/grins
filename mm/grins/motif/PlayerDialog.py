@@ -55,6 +55,12 @@ class PlayerDialog:
 		'close': [ CLOSE_WINDOW, CLOSE, EXIT, ],
 		}
 	adornments2 = {
+		'shortcuts': {
+			'p': PLAY,
+			'P': PAUSE,
+			's': STOP,
+			' ': MAGIC_PLAY,
+			},
 		'close': [ CLOSE_WINDOW, ],
 		}
 
@@ -91,7 +97,7 @@ class PlayerDialog:
 			self.__window = None
 		del self.__menu_created
 		del self.__topcommandlist
-		del self.__commanlist
+		del self.__commandlist
 		del self.__channels
 		del self.__channeldict
 

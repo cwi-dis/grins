@@ -14,7 +14,7 @@ from windowinterface import TRUE, FALSE
 import string
 import MMurl
 error = 'Channel.error'
-from usercmd import CLOSE_WINDOW
+from usercmd import *
 
 channel_device = 1
 channels = []				# list of channels
@@ -959,7 +959,11 @@ class ChannelWindow(Channel):
 		self._is_waiting = 1
 		self.want_default_colormap = 0
 		self.commandlist = [
-			CLOSE_WINDOW(callback = (self._player.channel_callback, (self._name,))),
+			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
+			PLAY(callback = (ui.play_callback, ())),
+			PAUSE(callback = (ui.pause_callback, ())),
+			STOP(callback = (ui.stop_callback, ())),
+			MAGIC_PLAY(callback = (ui.magic_play, ())),
 			]
 
 	def destroy(self):
