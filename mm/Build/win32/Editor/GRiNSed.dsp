@@ -505,6 +505,10 @@ SOURCE=.\M_LabelChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_languages.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_LayoutChannel.c
 # End Source File
 # Begin Source File
