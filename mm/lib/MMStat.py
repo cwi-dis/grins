@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Keep statistics -- a counter per key.
 # Just put calls to _stat() with a unique argument in your code and
 # call _prstats() when the program exits.
