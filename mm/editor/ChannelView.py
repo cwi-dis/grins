@@ -1210,6 +1210,9 @@ class NodeBox(GO):
 
 	def playcall(self):
 		self.mother.toplevel.player.playsubtree(self.node)
+		
+	def playfromcall(self):
+		self.mother.toplevel.player.playfrom(self.node)
 
 	def attrcall(self):
 		import AttrEdit
@@ -1263,11 +1266,12 @@ class NodeBox(GO):
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
 	c.append('p', 'Play node...', playcall)
+	c.append('G', 'Play from here...%l', playfromcall)
 	c.append('i', 'Node info...', infocall)
 	c.append('a', 'Node attr...', attrcall)
 	c.append('e', 'Edit contents...', editcall)
 	c.append('t', 'Edit anchors...', anchorcall)
-	c.append('L', 'Finish link%l', hyperlinkcall)
+	c.append('L', 'Finish hyperlink...%l', hyperlinkcall)
 	c.append('f', 'Push focus', focuscall)
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
