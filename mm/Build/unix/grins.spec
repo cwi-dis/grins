@@ -3,7 +3,7 @@ product grins
     cutpoint usr/local/grins
     image sw
         id "GRiNS Player for SMIL 1.0 Software"
-        version 10001
+        version 10000
         order 9999
         subsys player default
             id "GRiNS Player for SMIL 1.0 Base Software"
@@ -22,13 +22,13 @@ product grins
     endimage
     image help
         id "GRiNS Player for SMIL 1.0 Help Files"
-        version 10001
+        version 10000
         order 9999
         subsys examples default
             id "GRiNS Player for SMIL 1.0 SMIL Examples"
             replaces self
             prereq (
-                grins.sw.player 10001 10001
+                grins.sw.player 10000 10000
             )
             exp grins.help.examples
         endsubsys
@@ -40,7 +40,7 @@ product grins
     endimage
     image relnotes
         id "GRiNS Player for SMIL 1.0 Release Notes"
-        version 10001
+        version 10000
         order 9999
         subsys relnotes default
             id "GRiNS Player for SMIL 1.0 Release Notes"
