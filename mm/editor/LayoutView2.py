@@ -124,12 +124,12 @@ class Region(Node):
 		print 'region unselected : ',self._name
 		
 	def onGeomChanging(self, geom):
-		# update only the dialog box, without commit
-		self._ctx._updateRegionGeomOnDialogBox(geom)
+		# update only the geom field on dialog box
+		self._ctx.updateRegionGeomOnDialogBox(geom)
 		
 	def onGeomChanged(self, geom):
-		# commit, and update only the dialog box
-		self._ctx.updateGeomOnRegion(self, geom)
+		# apply the new value
+		self._ctx.applyGeomOnRegion(self, geom)
 
 	def onProperties(self):
 		print 'properties on region'
@@ -190,14 +190,14 @@ class Viewport(Node):
 		print 'viewport unselected',self._name
 		
 	def onGeomChanging(self, geom):
-		# update only the dialog box, without commit
-		self._ctx._updateViewportGeomOnDialogBox(geom[2:])
+		# update only the geom field on dialog box
+		self._ctx.updateViewportGeomOnDialogBox(geom[2:])
 
 	def onGeomChanged(self, geom):
-		# commit, and update only the dialog box
+		# apply the new value
 		self.currentX = geom[0]
 		self.currentY = geom[1]
-		self._ctx.updateGeomOnViewport(self, geom[2:])
+		self._ctx.applyGeomOnViewport(self, geom[2:])
 
 	def onProperties(self):
 		print 'properties on viewport'
@@ -332,17 +332,9 @@ class LayoutView2(LayoutViewDialog2):
 			self.currentViewport.hide()
 			
 		self.currentViewport = self._viewports[name]
-		# update region list in dialog box
-		self.currentRegionNameList = self.getRegionNameList(name)		
-		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
-		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentRegionNameList)
-
 		self.currentViewport.showAllNodes()
 		self.currentViewport.select()
-		# update the dialog box as well
-		dict = self.currentViewport.getDocDict()
-		geom = dict.get('winsize')
-		self._updateViewportGeomOnDialogBox(geom)
+		self.updateViewportOnDialogBox(self.currentViewport)
 		self.currentNodeSelected = self.currentViewport
 
 	def selectRegion(self, name):
@@ -354,20 +346,21 @@ class LayoutView2(LayoutViewDialog2):
 					region = self.getRegion(regionName)
 					if region != None:
 						region.select()
-						# update the dialog box as well
-						dict = region.getDocDict()
-						geom = dict.get('base_winoff')
-						self._updateRegionGeomOnDialogBox(geom)						
-						self.currentNodeSelected = region						
-
-						# update the selecter as well
-						if self.currentRegionNameList != None:
-							index = self.currentRegionNameList.index(region.getName())
-							if index >= 0:
-								self.dialogCtrl.setSelecterCtrl('RegionSel',index)
+						self.currentNodeSelected = region												
+						self.updateRegionOnDialogBox(region)
 						break
+
+	#
+	# dialog box update methods
+	#
+	
+	def initDialogBox(self):
+		self.currentViewportList = self.getViewportList()
+		self.dialogCtrl.fillSelecterCtrl('ViewportSel', self.currentViewportList)
+		self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
+		self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
 							
-	def updateGeomOnViewport(self, viewport, geom):
+	def applyGeomOnViewport(self, viewport, geom):
 		# apply new size
 		# pass by edit manager
 		
@@ -376,7 +369,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(viewport.getName(), 'winsize', geom)
 			self.editmgr.commit()
 
-	def updateGeomOnRegion(self, region, geom):
+	def applyGeomOnRegion(self, region, geom):
 		# apply new size
 		# pass by edit manager
 		
@@ -385,24 +378,62 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(region.getName(), 'base_winoff', geom)
 			self.editmgr.commit()
 
-	def _updateViewportGeomOnDialogBox(self, geom):
-		# dialog box
-		self.dialogCtrl.setFieldCtrl('RegionX',"")		
-		self.dialogCtrl.setFieldCtrl('RegionY',"")		
+	def updateViewportOnDialogBox(self, viewport):
+
+		# update region list
+		self.currentRegionNameList = self.getRegionNameList(viewport.getName())		
+		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
+		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentRegionNameList)
+		
+		# get the current geom value
+		dict = viewport.getDocDict()
+		geom = dict.get('winsize')		
+
+		# clear and disable not valid fields
+		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)			
+		
 		self.dialogCtrl.enable('RegionX',0)
 		self.dialogCtrl.enable('RegionY',0)
+		self.dialogCtrl.setFieldCtrl('RegionX',"")		
+		self.dialogCtrl.setFieldCtrl('RegionY',"")		
+		self.updateViewportGeomOnDialogBox(geom)
+		
+		# update the viewport selecter
+		index = self.currentViewportList.index(viewport.getName())
+		if index >= 0:
+			self.dialogCtrl.setSelecterCtrl('ViewportSel',index)
+
+	def updateViewportGeomOnDialogBox(self, geom):
+		# update the fields dialog box
 		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[0])		
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[1])
-
-	def _updateRegionGeomOnDialogBox(self, geom):
-		# dialog box
+		
+	def updateRegionOnDialogBox(self, region):
+		# update the selecter
+		if self.currentRegionNameList != None:
+			index = self.currentRegionNameList.index(region.getName())
+			if index >= 0:
+				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
+								
+		# enable valid fields
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
+
+		dict = region.getDocDict()
+		geom = dict.get('base_winoff')
+								  
+		self.updateRegionGeomOnDialogBox(geom)
+
+	def updateRegionGeomOnDialogBox(self, geom):
 		self.dialogCtrl.setFieldCtrl('RegionX',"%d"%geom[0])		
 		self.dialogCtrl.setFieldCtrl('RegionY',"%d"%geom[1])		
 		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[2])		
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
-		
+
+	#
+	# internal methods
+	#
+	
 	def __updateZOrder(self, value):
 		pass
 
@@ -435,14 +466,6 @@ class LayoutView2(LayoutViewDialog2):
 			else:
 				self.__updateGeomOnRegion(ctrlName, value)
 				
-	# init dialog box
-	
-	def initDialogBox(self):
-		self.currentViewportList = self.getViewportList()
-		self.dialogCtrl.fillSelecterCtrl('ViewportSel', self.currentViewportList)
-		self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
-		self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
-
 
 	#
 	# interface implementation of 'previous tree node' 
@@ -452,16 +475,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.selectRegion(region.getName())				
 
 	def onPreviousSelectViewport(self, viewport):
-		# retrieve element index
-		if self.currentViewportList != None:
-			index = self.currentViewportList.index(viewport.getName())
-			if index >= 0:
-				self.dialogCtrl.setSelecterCtrl('ViewportSel',index)
-				dict = viewport.getDocDict()
-				geom = dict.get('winsize')
-				self._updateViewportGeomOnDialogBox(geom)
-				
-		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)			
+		self.updateViewportOnDialogBox(viewport)
 		
 	#
 	# interface implementation of 'dialog controls callback' 
