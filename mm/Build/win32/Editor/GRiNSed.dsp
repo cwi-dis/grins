@@ -23,8 +23,6 @@ CFG=GRiNSed - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
 CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
@@ -326,6 +324,10 @@ SOURCE=.\M_FormServer.c
 # Begin Source File
 
 SOURCE=.\M_ftplib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_GenFormView.c
 # End Source File
 # Begin Source File
 
@@ -939,6 +941,14 @@ SOURCE=.\M_xmllib.c
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\Editor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Editor.rc
+# End Source File
 # End Group
 # Begin Group "Python Source files"
 
