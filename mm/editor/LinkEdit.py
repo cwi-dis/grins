@@ -319,6 +319,7 @@ class LinkEdit(ViewDialog):
 		return '#' + nodename + '.' + aid
 
 	# This functions re-loads one of the anchor browsers.
+
 	def reloadanchors(self, str):
 		if str.hidden:
 			str.browser.hide()
@@ -376,9 +377,8 @@ class LinkEdit(ViewDialog):
 						break
 					n = j
 			if ordered:
-				delete.reverse()
-				for i in delete:
-					str.browser.dellistitem(i)
+				if delete:
+					str.browser.dellistitems(delete)
 				names = []
 				for i, a in add:
 					name = self.makename(a)
@@ -388,7 +388,8 @@ class LinkEdit(ViewDialog):
 						names.append(name)
 					else:
 						str.browser.addlistitems(names, pos)
-						names = []
+						names = [name]
+						pos = i
 				if names:
 					str.browser.addlistitems(names, pos)
 			else:
