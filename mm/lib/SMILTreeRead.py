@@ -152,6 +152,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__root_width = self.__root_height = 0 # w,h in root-layout
 		self.__layout = None
 		self.__nodemap = {}
+		self.__idmap = {}
 		self.__anchormap = {}
 		self.__links = []
 		self.__title = None
@@ -180,6 +181,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def MakeRoot(self, type):
 		self.__root = self.__context.newnodeuid(type, '1')
+		self.__root.SMILidmap = self.__idmap
 		return self.__root
 
 	def SyncArc(self, node, attr, val):
@@ -247,6 +249,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for attr, val in attributes.items():
 			if attr == 'id':
 				self.__nodemap[val] = node
+				self.__idmap[val] = node.GetUID()
 				res = namedecode.match(val)
 				if res is not None:
 					val = res.group('name')
@@ -585,6 +588,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
+			if id is not None and not self.__idmap.has_key(id):
+				self.__idmap[id] = node.GetUID()
 			anchorlist = node.__anchorlist
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
 			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, []))
@@ -1642,6 +1647,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
 			return
+		if id is not None:
+			self.__idmap[id] = self.__node.GetUID()
 		href = attributes.get('href') # None is dest only anchor
 ## 		if href is None:
 ## 			#XXXX is this a document error?
