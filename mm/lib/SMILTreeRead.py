@@ -1225,7 +1225,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# note : don't make this before addattrs to avoid warnings
 		if self.__context.attributes.get('project_boston') == 0:
 			node.attrdict['transparent'] = 1
-			node.attrdict['bgcolor'] = None
+			if node.attrdict.has_key('bgcolor'):
+				del node.attrdict['bgcolor']
 					
 		# experimental SMIL Boston layout code
 		node._internalchtype = chtype
