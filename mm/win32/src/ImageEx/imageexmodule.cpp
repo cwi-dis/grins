@@ -36,7 +36,11 @@ long reader(HWND hWND,LPSTR fname, float scale, RECT& rect, int center)
    
    if(nError!=0)
    {
-	   TRACE("Error in Loading image %s\n", fname);
+	   TRACE("Error in Loading image %s - The AccuSoft error code was %ld\n", fname, nError);
+	   TRACE("  Gear reports last error as %ld\n", IG_error_check() );
+	   AT_ERRCODE code;
+	   IG_error_get(nError, NULL, 0, NULL, &code, NULL, NULL);
+	   TRACE("  IG_error_get reports last error as %ld\n", code );
 	   return 0;
    }
 
