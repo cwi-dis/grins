@@ -18,6 +18,8 @@ import Channel
 import MMAttrdefs
 import time
 
+import Animators
+
 debug=0
 	
 
@@ -34,6 +36,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__duration = 0
 		self.__fiber_id=0
 		self.__playdone = 0
+		self.__animator = None
 
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
@@ -49,17 +52,23 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
-		# read imm script
 		print 'AnimateChannel.do_arm',node.attrdict
-		print 'target node:',node.targetnode
+		print 'target node:',node.targetnode.attrdict
+		
+		parser = Animators.AnimateElementParser(node, node.targetnode)
+		self.__animator = parser.getAnimator()
+		if self.__animator:
+			print 'animate attr start value:',self.__animator.getValue(0)
+		
 		return 1
 
 	def do_play(self, node):
 		print 'AnimateChannel.do_play'
-		# get target node and attribute to animate
-		# ....
-		# get additive and accumulate attrs
-		# ....
+		
+		if not self.__animator:
+			# arming failed, so don't even try playing
+			self.playdone(0)
+			return
 
 		# get timing
 		self.__animating = node
@@ -86,7 +95,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		print 'start animation'
 
 	def __stopAnimate(self):
-		print 'stop animation'
+		if self.__animator:
+			print 'stop animation, restoring dom value', self.__animator.getDOMValue()
 		self.__unregister_for_timeslices()
 
 	def __pauseAnimate(self, paused):
@@ -99,7 +109,8 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __animate(self):
 		# animate target node.attribute
 		# taking into account additive, accumulate attrs
-		print 'animating'
+		dt = time.time()-self.__start
+		print 'animating:', self.__animator.getValue(dt)
 
 	def __onAnimateDur(self):
 		if not self.__animating:
