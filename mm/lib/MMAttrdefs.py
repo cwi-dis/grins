@@ -155,12 +155,47 @@ def getnames():
 	return names
 
 
+# Hooks to gather statistics about attribute use via getattr()
+#
+attrstats = None
+#
+def startstats():
+	global attrstats
+	attrstats = {}
+#
+def stopstats():
+	global attrstats
+	a = attrstats
+	attrstats = None
+	return a
+#
+def showstats(a):
+	import string
+	names = a.keys()
+	names.sort()
+	for name in names:
+		print string.ljust(name, 15), string.rjust(`a[name]`, 4)
+
+
 # Get an attribute of a node according to the rules.
 #
 toplevel = None
 #
 def getattr(node, attrname):
 	_stat('MMAttrdefs.getattr')
+	if attrstats != None:
+		if attrstats.has_key(attrname):
+			attrstats[attrname] = attrstats[attrname] + 1
+		else:
+			attrstats[attrname] = 1
+	# Check the cache
+	try:
+		rv = node.attrcache[attrname]
+		_stat('cache hit: ' + attrname)
+		return rv
+	except:
+		_stat('cache miss: ' + attrname)
+	#
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
@@ -186,7 +221,21 @@ def getattr(node, attrname):
 	if attrname == 'file' and toplevel:
 		# Incredible hack to patch filenames
 		attrvalue = toplevel.findfile(attrvalue)
+	# Update the cache
+	try:
+		node.attrcache[attrname] = attrvalue
+	except AttributeError:
+		node.attrcache = {attrname: attrvalue}
+	#
 	return attrvalue
+
+
+# Clear the attribute caches for an entire tree
+#
+def flushcache(node):
+	node.attrcache = {}
+	for c in node.GetChildren():
+		flushcache(c)
 
 
 # Get the default value for a node's attribute, *ignoring* its own value
