@@ -160,7 +160,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 		bg = self.played_display._bgcolor
 		fg = self.played_display._fgcolor
-		an = self.window._convert_color(self.getbucolor(node))
+		an = self.window._convert_color(self.gethicolor(node))
 		htmlw.setcolors(bg, fg, an)
 		
 		htmlw.insert_html(self.played_str, self.url, tag)

@@ -12,11 +12,11 @@ from StringStuff import calclines
 
 class HtmlChannel(ChannelWindow):
 	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+		node_attrs = ChannelWindow.node_attrs + [
 						 'fgcolor', 'font',
 						 'pointsize']
 	else:
-		chan_attrs = ChannelWindow.chan_attrs + ['bucolor', 'hicolor',
+		chan_attrs = ChannelWindow.chan_attrs + [
 						 'fgcolor', 'font',
 						 'pointsize']
 
@@ -102,7 +102,6 @@ class HtmlChannel(ChannelWindow):
 		for (name, box, type, times) in buttons:
 			button = self.armed_display.newbutton(box, times = times)
 			button.hiwidth(3)
-##			button.hicolor(self.getfgcolor(node))
 			self.setanchor(name, type, button, times)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.

@@ -8,7 +8,7 @@ from MMurl import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'scalefilter', 'center',
+	_our_attrs = ['scale', 'scalefilter', 'center',
 		      'crop']
 	node_attrs = ChannelWindow.node_attrs + ['project_quality']
 	if CMIF_MODE:
@@ -178,9 +178,5 @@ class ImageChannel(ChannelWindow):
 				msg = msg[1]
 			self.errormsg(node, f + ':\n' + msg)
 			return 1
-		if MMAttrdefs.getattr(node, 'drawbox', animated):
-			self.update_display.fgcolor(self.getbucolor(node, animated))
-		else:
-			self.update_display.fgcolor(self.getbgcolor(node, animated))
-		hicolor = self.gethicolor(node, animated)
+		self.update_display.fgcolor(self.getbgcolor(node, animated))
 
