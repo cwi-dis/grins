@@ -33,11 +33,6 @@ CPWIDTH = 300
 CPHEIGHT = 100
 
 
-# The channel map is in a separate module for easy editing.
-
-from ChannelMap import channelmap
-
-
 # The Player class normally has only a single instance.
 #
 # It implements a queue using "virtual time" using an invisible timer
@@ -92,6 +87,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def rollback(self):
 		# Nothing has changed after all.
 		self.locked = 0
+
+	def kill(self):
+		self.destroy()
 	#
 	# Extend BasicDialog show/hide/destroy methods.
 	#
@@ -243,7 +241,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 
 	#
 	def stop_callback(self, (obj, arg)):
-		print 'stop callback'
 		self.stop()
 
 	#
@@ -270,7 +267,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		obj.set_button(0)
 	#
 	def ff_callback(self, (obj, arg)):
-		print self.queue # DBG
+		#print self.queue # DBG
 		if not self.playing:
 			obj.set_button(not obj.get_button())
 			return
@@ -348,7 +345,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def stop(self):
 		self.ff = 0
 		self.seeking = 0
-		print 'self.stop, playing=', self.playing
 		if self.playing:
 			self.stop_playing()
 		else:
@@ -469,6 +465,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			raise TypeError, \
 				'channel ' +`name`+ ' has no type attribute'
 		type = attrdict['type']
+		from ChannelMap import channelmap
 		if not channelmap.has_key(type):
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
@@ -524,21 +521,19 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def suspend_playing(self):
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
-		print 'Flush rtpool'
+		# print 'Flush rtpool'
 		self.rtpool.flush()
 		self.setrate(0.0) # Stop the clock
 		self.showstate()
-		print 'unarm chview'
+		# print 'unarm chview'
 		chv = self.toplevel.channelview
 		chv.unarm_all()
 	def stop_playing(self):
-		print 'Stop playing'
 		self.playing = 0
 		self.suspend_playing()
 		if self.timing_changed:
 			Timing.calctimes(self.playroot)
 			Timing.optcalctimes(self.playroot)
-		print 'all done'
 		a = MMAttrdefs.stopstats()
 		MMAttrdefs.showstats(a)
 	#
@@ -561,7 +556,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def dummy(arg):
 		pass
 	def decrement(self, (delay, node, side)):
-		print 'DEC', delay, node, side, ' of ', node.counter[side]
+		# print 'DEC', delay, node, side, ' of ', node.counter[side]
 	        self.freeze()
 		if delay > 0: # Sync arc contains delay
 			id = self.enter(delay, 0, self.decrement, \
@@ -619,7 +614,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    # we do the arm before the play.
 			    #
 			    must_arm = 1
-			    print 'Node ', MMAttrdefs.getattr(node, 'name')
+			    # print 'Node ', MMAttrdefs.getattr(node, 'name')
 			    try:
 				if node.prearm_event == None:
 				    must_arm = 0
