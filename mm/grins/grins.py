@@ -26,6 +26,7 @@ def usage(msg):
 from MainDialog import MainDialog
 
 from version import version
+from usercmd import *
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
@@ -47,7 +48,6 @@ class Main(MainDialog):
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
-		from usercmd import *
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
