@@ -15,6 +15,7 @@ from SMIL import *
 import settings
 import features
 import compatibility
+import ChannelMap
 
 error = 'SMILTreeRead.error'
 
@@ -147,6 +148,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__new_file = new_file
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
+		self.__validchannels = {}
+		for chtype in ChannelMap.getvalidchanneltypes():
+			self.__validchannels[chtype] = 1
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -489,20 +493,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			string.find(string.lower(subtype), 'real') >= 0:
 				# if it's a RealMedia type, use tag to determine chtype
 				if tagname == 'audio':
-					chtype = 'sound'
+					chtype = 'RealAudio'
 				elif tagname == 'image':
 					chtype = 'RealPix'
 				elif tagname == 'text':
 					chtype = 'RealText'
 				else:
 					if mediatype == 'audio':
-						chtype = 'sound'
+						chtype = 'RealAudio'
 					elif mediatype == 'image':
 						chtype = 'RealPix'
 					elif mediatype == 'text':
 						chtype = 'RealText'
 					else:
-						chtype = 'video'
+						chtype = 'RealVideo'
 								
 		elif mediatype == 'audio':
 			chtype = 'sound'
@@ -517,7 +521,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				chtype = 'html'
 		elif mediatype == 'application' and \
 		     subtype == 'x-shockwave-flash':
-			chtype = 'video'
+			chtype = 'RealVideo'
 		elif mediatype == 'cmif_cmif':
 			chtype = 'cmif'
 		elif mediatype == 'cmif_socket':
@@ -530,6 +534,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if subtype:
 				prtype = prtype+'/'+subtype
 			self.warning('unrecognized media type %s' % prtype)
+
+		# map channel type to something we can deal with
+		# this should loop at most twice (RealPix->RealVideo->video)
+		while not self.__validchannels.has_key(chtype):
+			if chtype == 'RealVideo':
+				chtype = 'video'
+			elif chtype == 'RealPix':
+				chtype = 'RealVideo'
+			elif chtype == 'RealAudio':
+				chtype = 'sound'
+			elif chtype == 'RealText':
+				chtype = 'video'
+			elif chtype == 'html':
+				chtype = 'text'
+
 ## 		if attributes['encoding'] not in ('base64', 'UTF'):
 ## 			self.syntax_error('bad encoding parameter')
 
@@ -948,13 +967,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch[attr] = parseattrval(attr, val, self.__context)
 
 	def MakeChannels(self):
-		from ChannelMap import channelmap
 		ctx = self.__context
 		if self.__layout is None:
 			self.CreateLayout()
 		for region, attrdict in self.__regions.items():
 			chtype = attrdict.get('type')
-			if chtype is None or not channelmap.has_key(chtype):
+			if chtype is None or not ChannelMap.channelmap.has_key(chtype):
 				continue
 			name = attrdict.get('id')
 			if ctx.channeldict.has_key(name):
