@@ -308,11 +308,20 @@ class MMNodeContext:
 		return not self._isgoodlink(link)
 
 	def _isgoodlink(self, link):
-		(uid1, aid1), (uid2, aid2), dir, type = link
-		srcok = (self.uidmap.has_key(uid1) \
-		   and self.uidmap[uid1].GetRoot() in self._roots)
-		dstok = (('/' in uid2) or (self.uidmap.has_key(uid2) \
-		   and self.uidmap[uid2].GetRoot() in self._roots))
+		a1, a2, dir, type = link
+		if type(a1) is type(()):
+			uid1, aid1 = a1
+			srcok = (self.uidmap.has_key(uid1) and
+				 self.uidmap[uid1].GetRoot() in self._roots)
+		else:
+			srcok = 0
+		if type(a2) is type(()):
+			uid2, aid2 = a2
+			dstok = (('/' in uid2) or
+				 (self.uidmap.has_key(uid2) and
+				  self.uidmap[uid2].GetRoot() in self._roots))
+		else:
+			dstok = 1
 		return (srcok and dstok)
 
 	#
@@ -1797,6 +1806,8 @@ def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
 	links = src_hyperlinks.getall()
 	newlinks = []
 	for a1, a2, dir, type in links:
+		if type(a1) is not type(()) or type(a2) is not type(()):
+			continue
 		uid1, aid1 = a1
 		uid2, aid2 = a2
 		if uidremap.has_key(uid1) and uidremap.has_key(uid2):
@@ -1814,18 +1825,36 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 	links = hyperlinks.getall()
 	newlinks = []
 	for a1, a2, dir, type in links:
-		uid1, aid1 = a1
-		uid2, aid2 = a2
-		if uidremap.has_key(uid1) and dir in (DIR_1TO2, DIR_2WAY) or \
-			uidremap.has_key(uid2) and dir in (DIR_2TO1, DIR_2WAY):
-			if uidremap.has_key(uid1):
+		changed = 0
+		if type(a1) is type(()):
+			uid1, aid1 = a1
+			if uidremap.has_key(uid1) and \
+			   dir in (DIR_1TO2, DIR_2WAY):
 				uid1 = uidremap[uid1]
 				a1 = uid1, aid1
-			if uidremap.has_key(uid2):
+				changed = 1
+		if type(a2) is type(()):
+			uid2, aid2 = a2
+			if uidremap.has_key(uid2) and \
+			   dir in (DIR_2TO1, DIR_2WAY):
 				uid2 = uidremap[uid2]
 				a2 = uid2, aid2
+				changed = 1
+		if changed:
 			link = a1, a2, dir, type
 			newlinks.append(link)
+##		uid1, aid1 = a1
+##		uid2, aid2 = a2
+##		if uidremap.has_key(uid1) and dir in (DIR_1TO2, DIR_2WAY) or \
+##			uidremap.has_key(uid2) and dir in (DIR_2TO1, DIR_2WAY):
+##			if uidremap.has_key(uid1):
+##				uid1 = uidremap[uid1]
+##				a1 = uid1, aid1
+##			if uidremap.has_key(uid2):
+##				uid2 = uidremap[uid2]
+##				a2 = uid2, aid2
+##			link = a1, a2, dir, type
+##			newlinks.append(link)
 	if newlinks:
 		hyperlinks.addlinks(newlinks)
 

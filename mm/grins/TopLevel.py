@@ -38,7 +38,7 @@ class TopLevel(TopLevelDialog):
 			self.basename = base[:-5]
 		else:
 			self.basename = base
-		url = urlunparse((utype, host, path, params, query, fragment))
+		url = urlunparse((utype, host, path, params, query, None))
 		self.filename = url
 		self.source = None
 		self.read_it()
@@ -192,17 +192,20 @@ class TopLevel(TopLevelDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, uid, aid, atype):
+	def jumptoexternal(self, anchor, atype):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
 		import MMurl
-		if '/' not in uid:
-			url = self.filename
-		elif uid[-2:] == '/1':
-			url = uid[:-2]
+		if type(anchor) is type (()):
+			if '/' not in uid:
+				url = self.filename
+			elif uid[-2:] == '/1':
+				url = uid[:-2]
+			else:
+				url = uid
 		else:
-			url = uid
+			url, aid = MMurl.splittag(anchor)
 		url = MMurl.basejoin(self.filename, url)
 		for top in self.main.tops:
 			if top is not self and top.is_document(url):
@@ -224,7 +227,7 @@ class TopLevel(TopLevelDialog):
 				return 0
 		top.show()
 		node = top.root
-		if '/' not in uid:
+		if type(anchor) is type(()) and '/' not in uid:
 			try:
 				node = top.root.context.mapuid(uid)
 			except NoSuchUIDError:
