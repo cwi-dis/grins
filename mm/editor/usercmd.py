@@ -150,10 +150,9 @@ class PASTE_BEFORE(_CommandBase):
 	help = 'Paste copied/cut node before selected node'
 class PASTE_AFTER(_CommandBase):
 	help = 'Paste copied/cut node after selected node'
-#PASTE_AFTER=PASTE
+PASTE=PASTE_AFTER
 class PASTE_UNDER(_CommandBase):
 	help = 'Paste copied/cut node under selected node'
-PASTE = PASTE_UNDER			# mjvdg 27-oct-2000
 class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
 class NEW_BEFORE_IMAGE(_CommandBase):
