@@ -374,7 +374,7 @@ class SchedulerContext:
 				arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
 				if arc.depends is not None:
 					try:
-						arc.depends.remove(arc)
+						arc.deparcs.remove(arc)
 					except ValueError:
 						pass
 				arc.depends = deparc # can be None
