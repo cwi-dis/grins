@@ -723,7 +723,7 @@ class SMILParser(xmllib.XMLParser):
 
 	# container nodes
 
-	par_attributes = {'id':None, 'endsync':'last', 'sync':None,
+	par_attributes = {'id':None, 'endsync':None, 'sync':None,
 			  'dur':None, 'repeat':'1', 'fill':'remove',
 			  'channel':None, 'begin':None, 'end':None,
 			  'bitrate':None, 'language':None, 'screen-size':None,
@@ -731,14 +731,20 @@ class SMILParser(xmllib.XMLParser):
 	def start_par(self, attributes):
 		# XXXX we ignore sync for now
 		self.NewContainer('par', attributes)
-		self.__container.__endsync = attributes['endsync']
+		self.__container.__endsync = attributes.get('endsync')
+		if self.__container.__endsync is not None and \
+		   self.__container.attrdict.has_key('duration'):
+			self.warning('ignoring dur attribute')
+			del self.__container.attrdict['duration']
 
 	def end_par(self):
 		node = self.__container
 		self.EndContainer()
 		endsync = node.__endsync
 		del node.__endsync
-		if endsync == 'first':
+		if endsync is None:
+			pass
+		elif endsync == 'first':
 			node.attrdict['terminator'] = 'FIRST'
 		elif endsync == 'last':
 			node.attrdict['terminator'] = 'LAST'
