@@ -553,6 +553,7 @@ class Path:
 		self.moveTo(coords[0])
 		for i in range(1,n):
 			self.lineTo(coords[i])
+		self.__length = self.__getLength()
 		
 	# main query method
 	# get point at length t
