@@ -141,11 +141,13 @@ class TopLevel(ViewDialog, BasicDialog):
 		#
 		y = y - h
 		self.bvbutton = \
-			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Hierarchy')
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, \
+			'Hierarchy view')
 		#
 		y = y - h
 		self.cvbutton = \
-			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Time chart')
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, \
+			'Channel view')
 		#
 		y = y - h
 		self.svbutton = \

@@ -16,6 +16,7 @@ from math import sin, cos, atan2, pi
 import gl, GL, DEVICE
 import fl
 import FontStuff
+import MenuMaker
 from Dialog import GLDialog
 from ViewDialog import ViewDialog
 
@@ -538,22 +539,6 @@ class GO:
 
 		return int(left), int(top), int(right), int(bottom)
 
-	# Subroutine to make the menu, the list of menuprocs, and the keymap.
-	# Don't use it as a method!
-
-	def makemenu(title, commandlist):
-		menutext = title + '%t'
-		menuprocs = []
-		keymap = {}
-		for char, text, proc in commandlist:
-			keymap[char] = proc
-			if text:
-				menutext = menutext + '|' + char + ' ' + text
-				menuprocs.append(proc)
-		menu = gl.newpup()
-		gl.addtopup(menu, menutext, 0)
-		return menu, menuprocs, keymap
-
 	# Methods to handle interaction events
 
 	def popupmenu(self, x, y):
@@ -620,7 +605,7 @@ class GO:
 	c.append('c', 'New channel...',  newchannelcall)
 	c.append('N', 'Next mini-document', nextminicall)
 	c.append('P', 'Previous mini-document', prevminicall)
-	menu, menuprocs, keymap = makemenu('Base ops', commandlist)
+	menu, menuprocs, keymap = MenuMaker.makemenu('Base ops', commandlist)
 
 
 # Class for Channel Objects
@@ -789,7 +774,8 @@ class ChannelBox(GO):
 	c.append('i', '', attrcall)
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
-	menu, menuprocs, keymap = GO.makemenu('Channel ops', commandlist)
+	menu, menuprocs, keymap = \
+		  MenuMaker.makemenu('Channel ops', commandlist)
 
 
 class NodeBox(GO):
@@ -1042,7 +1028,7 @@ class NodeBox(GO):
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
 	c.append('s', 'New sync arc...', newsyncarccall)
-	menu, menuprocs, keymap = GO.makemenu('Node ops', commandlist)
+	menu, menuprocs, keymap = MenuMaker.makemenu('Node ops', commandlist)
 
 
 class ArcBox(GO):
@@ -1136,4 +1122,4 @@ class ArcBox(GO):
 	c.append('i', 'Sync arc info...', infocall)
 	c.append('d', 'Delete sync arc',  delcall)
 	menu, menuprocs, keymap = \
-		GO.makemenu('Sync arc ops', commandlist)
+		  MenuMaker.makemenu('Sync arc ops', commandlist)
