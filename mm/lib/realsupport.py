@@ -822,11 +822,11 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0):
 		f.close()
 		return data
 	f.close()
-	if os.name == 'mac' and not tostring:
+	if os.name == 'mac':
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(rpfile)
-		fss.SetCreatorType('PNst', 'PNRM')
+		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 
 def writeRT(file, rp, node):
@@ -871,7 +871,7 @@ def writeRT(file, rp, node):
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(file)
-		fss.SetCreatorType('PNst', 'PNRM')
+		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 
 
