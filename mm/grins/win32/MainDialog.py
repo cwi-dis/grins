@@ -108,7 +108,7 @@ class MainDialog:
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
-		windowinterface.FileDialog('Open file', '.', filetypes, '',
+		windowinterface.FileDialog('Open Document', '.', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
 
@@ -160,7 +160,7 @@ class MainDialog:
 				dir, file = os.path.split(file)
 		f=windowinterface.getmainwnd()
 		filetypes = ['/All presentations', 'application/smil', 'application/x-grins-project', 'application/x-grins-binary-project']
-		windowinterface.FileDialog('Open file', dir, filetypes, file,
+		windowinterface.FileDialog('Open Document', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = f)
 
