@@ -20,8 +20,8 @@ class RealEngine:
 	# we should periodically pass events to the engine to keep it ticking.
 	# XXXX Eventually we should probably also pass redraw events and such.
 	def __init__(self):
-		self.engine = rma.CreateEngine()
 		self.usagecount = 0
+		self.engine = rma.CreateEngine()
 		
 	def __del__(self):
 		if self.usagecount:
@@ -65,7 +65,7 @@ class RealChannel:
 			try:
 				RealChannel.__engine = RealEngine()
 			except:
-				self.errormsg(None, 'No playback support for RealMedia on this system')
+				windowinterface.showmessage('No playback support for RealMedia on this system')
 				RealChannel.__has_rma_support = 0
 		# release any resources on exit
 		windowinterface.addclosecallback(self.release_player,())
