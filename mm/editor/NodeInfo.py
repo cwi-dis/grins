@@ -69,7 +69,7 @@ class NodeInfo(NodeInfoDialog):
 		return self.node.GetRoot() is self.root
 
 	def maketitle(self):
-		return 'Info for node: ' + self.name
+		return 'Info for node ' + self.name
 
 	def getattr(self, name): # Return the attribute or a default
 		return MMAttrdefs.getattr(self.node, name)
