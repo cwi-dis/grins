@@ -1615,13 +1615,10 @@ class ChannelWindow(Channel):
 		self._winabsgeom, self._winabsmedia = node.getPxAbsGeomMedia()
 
 	# get the space display area of media
-	# return percent values relative to the subregion or region:
+	# return absolute values to the subregion or region:
 	# tuple of (left/top/width/height)
 	def getmediageom(self, node):
-		subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
-		area_left, area_top, area_width, area_height = self._mediageom
-		return float(area_left)/subreg_width, float(area_top)/subreg_height, \
-				 float(area_width)/subreg_width, float(area_height)/subreg_height
+		return self._mediageom
 
 	# get the channel geometry
 	# return pixel values relative to the parent region: tuple of (left/top/width/height)
