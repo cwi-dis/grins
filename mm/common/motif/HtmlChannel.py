@@ -4,7 +4,6 @@ __version__ = "$Id$"
 # XXXX This is an initial stab at a HTML channel.
 #
 import Channel
-from AnchorDefs import *
 import string
 import HTML
 import MMAttrdefs

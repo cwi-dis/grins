@@ -7,15 +7,11 @@ import MMAttrdefs
 import AttrEdit
 from ViewDialog import ViewDialog
 import windowinterface
-from AnchorDefs import *
 from MMTypes import *
 
 from MMNode import interiortypes
 
-from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
-		   DIR_2WAY, TYPE_JUMP, A_SRC_STOP, A_SRC_PLAY, A_DEST_PLAY
-##typestr = ['JUMP', 'CALL', 'FORK']
-typestr = ['Replace', 'Pause', 'New']
+from Hlinks import ANCHOR1, ANCHOR2, DIR, DIR_1TO2, DIR_2TO1, DIR_2WAY
 dirstr = ['->', '<-', '<->']
 
 class Struct: pass
@@ -376,7 +372,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		self.links = hlinks.findalllinks(lfocus, rfocus)
 		lines = []
 		for i in self.links:
-			line = typestr[i[TYPE]] + ' ' + dirstr[i[DIR]]
+			line = dirstr[i[DIR]]
 			lines.append(line)
 		self.middledelalllistitems()
 		self.middleaddlistitems(lines, -1)
@@ -450,7 +446,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 				dir = DIR_2TO1
 			else:
 				dir = DIR_1TO2
-			editlink = (n1, n2, dir, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY)
+			editlink = n1, n2, dir
 		self.editorshow(editlink, not fromfocus)
 
 	# Callback functions
@@ -648,7 +644,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
 		self.parent = parent
-		a1, a2, dir, ltype, stype, dtype = self.editlink = editlink
+		a1, a2, dir = self.editlink = editlink
 		self.changed = isnew
 		hlinks = parent.context.hyperlinks
 		llinks = rlinks = []
@@ -664,8 +660,8 @@ class LinkEditEditor(LinkEditorDialog):
 		# for now, keep the compatibility
 		leftsrc = type(a1) is not type('') and a1.GetType() == 'anchor' and not llinks
 		rightsrc = type(a2) is not type('') and a2.GetType() == 'anchor' and not rlinks
-		LinkEditorDialog.__init__(self, title, dirstr, typestr,
-					  dir, ltype,
+		LinkEditorDialog.__init__(self, title, dirstr,
+					  dir,
 					  [leftsrc,
 					   rightsrc,
 					   leftsrc and rightsrc])
@@ -681,20 +677,8 @@ class LinkEditEditor(LinkEditorDialog):
 		if l[DIR] != linkdir:
 			self.changed = 1
 			# XXX for now, ignore sourcePlaystate and destinationPlaystate
-			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir, \
-					l[TYPE], A_SRC_PLAY, A_DEST_PLAY
+			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir
 			self.linkdirsetchoice(linkdir)
-			self.oksetsensitive(self.changed)
-
-	def linktype_callback(self):
-		linktype = self.linktypegetchoice()
-		l = self.editlink
-		if l[TYPE] != linktype:
-			self.changed = 1
-			# XXX for now, ignore sourcePlaystate and destinationPlaystate
-			self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], \
-					linktype, A_SRC_PLAY, A_DEST_PLAY
-			self.linktypesetchoice(linktype)
 			self.oksetsensitive(self.changed)
 
 	def ok_callback(self):

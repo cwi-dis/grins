@@ -2,9 +2,7 @@ __version__ = "$Id$"
 
 import MMAttrdefs
 import windowinterface
-from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
-		   DIR_2WAY, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
-from AnchorDefs import *
+from Hlinks import ANCHOR1, ANCHOR2, DIR_1TO2
 
 class LinkEditLight:
 	def __init__(self, toplevel):
@@ -133,7 +131,7 @@ class LinkEditLight:
 		self.interesting.remove(srcanchor)
 		if node in self.interesting: # unlikely...
 			self.interesting.remove(node)
-		link = srcanchor, node, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
+		link = srcanchor, node, DIR_1TO2
 		em.addlink(link)
 		if not notransaction:
 			em.commit()

@@ -13,7 +13,6 @@ import RealChannel
 
 # node attributes
 import MMAttrdefs
-from AnchorDefs import *
 
 # channel types and message
 import windowinterface
@@ -301,7 +300,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
 		windowinterface.showmessage('The whole media item will be sensitive.')
-		cb((anchor[0], anchor[1], [A_SHAPETYPE_RECT,0.0,0.0,1.0,1.0], anchor[3]))
+		cb((anchor[0], anchor[1], ['rect',0.0,0.0,1.0,1.0], anchor[3]))
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)

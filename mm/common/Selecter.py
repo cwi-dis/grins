@@ -6,11 +6,10 @@ __version__ = "$Id$"
 
 import MMAttrdefs
 import Scheduler
-from AnchorDefs import *
 from MMTypes import *
 from MMExc import *			# exceptions
 import MMStates
-from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK, ANCHOR2, TYPE, STYPE, DTYPE
+import Hlinks
 import windowinterface
 import SR
 
@@ -71,10 +70,33 @@ class Selecter:
 		return 1
 
 	def gotoanchor(self, link, arg):
-		anchor2 = link[ANCHOR2]
-		ltype = link[TYPE]
-		if ltype != TYPE_JUMP or type(anchor2) is type(''):
-			return self.toplevel.jumptoexternal(anchor2, ltype, link[STYPE], link[DTYPE])
+		anchor1 = link[Hlinks.ANCHOR1]
+		show = MMAttrdefs.getattr(anchor1, 'show')
+		sstate = MMAttrdefs.getattr(anchor1, 'sourcePlaystate')
+		dstate = MMAttrdefs.getattr(anchor1, 'destinationPlaystate')
+		if show == 'replace':
+			# ignore sourcePlaystate
+			ltype = Hlinks.TYPE_JUMP
+			stype = Hlinks.A_SRC_PAUSE
+		elif show == 'pause':
+			# ignore sourcePlaystate
+			ltype = Hlinks.TYPE_FORK
+			stype = Hlinks.A_SRC_PAUSE
+		elif show == 'new':
+			ltype = Hlinks.TYPE_FORK
+			if sstate == 'play':
+				stype = Hlinks.A_SRC_PLAY
+			elif sstate == 'pause':
+				stype = Hlinks.A_SRC_PAUSE
+			else:
+				stype = Hlinks.A_SRC_STOP
+		if dstate == 'play':
+			dtype = Hlinks.A_DEST_PLAY
+		else:
+			dtype = Hlinks.A_DEST_PAUSE
+		anchor2 = link[Hlinks.ANCHOR2]
+		if MMAttrdefs.getattr(anchor1, 'external') or ltype != Hlinks.TYPE_JUMP or type(anchor2) is type(''):
+			return self.toplevel.jumptoexternal(anchor2, ltype, stype, dtype)
 		return self.gotonode(anchor2, arg)
 
 	def gotonode(self, seek_node, arg):
