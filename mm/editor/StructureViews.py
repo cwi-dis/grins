@@ -3,6 +3,7 @@
 # TODO: rename everything to "widgets"
 
 import Interactive
+import Bandwidth
 import MMurl, MMAttrdefs, MMmimetypes
 import features
 import os
@@ -386,10 +387,10 @@ class SeqWidget(StructureObjWidget):
         w,h = self.dropbox.get_minsize();
 #        print "DEBUG: dropbox coords are ", w, h
 #        print "Moving dropbox to", l,t,(float(w)/min_width)*free_width,b
-        if free_width == 0.0:
-            r = l+w;
-        else:
-            r = l+(w/min_width)*free_width;
+
+        # The dropbox takes up the rest of the free width.
+        r = self.pos_rel[2]-self.get_relx(sizes_notime.HEDGSIZE);
+        
         self.dropbox.moveto((l,t,r,b));
 
 
@@ -603,25 +604,38 @@ class MediaWidget(MMNodeWidget):
         # Compute the download time for this widget.
         # Values are in distances (self.downloadtime is a distance).
         # Jack will have to provide me with values here.
-        random = 2.0 * whrandom.random();
-        if random > 1.0:
-            downloadtime_lag = random - 1.0;
-            downloadtime = 1.0;
-        else:
-            downloadtime_lag = 0.0;
-            downloadtime = random;
 
-        self.downloadtime = downloadtime * self.get_minsize_abs()[0];
-        self.downloadtime_lag = downloadtime_lag * self.get_minsize_abs()[0];
+#        prearm, bw = Bandwidth.get(self.node, target=1)
+
+        
+            
+#
+#        print "prearm is:", prearm, "bw is: ", bw
+        
+#        if prearm: 
+#            prearm_t = prearm / (get the global bandwidth)
+            
+        
+        
+        random = 2.0 * whrandom.random()
+        if random > 1.0:
+            downloadtime_lag = random - 1.0
+            downloadtime = 1.0
+        else:
+            downloadtime_lag = 0.0
+            downloadtime = random
+
+        self.downloadtime = downloadtime * self.get_minsize_abs()[0]
+        self.downloadtime_lag = downloadtime_lag * self.get_minsize_abs()[0]
 
     def recalc(self):
         l,t,r,b = self.pos_rel
-        vsixth = (1.0 / 6.0)*(b-t);
+        vsixth = (1.0 / 6.0)*(b-t)
         self.transition_in.moveto((l,b-(1.0/6.0)*(b-t),l+(r-l)*(1.0/6.0),b))
         self.transition_out.moveto((l+(5.0/6.0)*(r-l),b-(1.0/6.0)*(b-t),r,b))
-        lag = self.get_relx(self.downloadtime_lag);
-        dt = self.get_relx(self.downloadtime);
-        self.pushbackbar.moveto((l-(lag+dt),t-vsixth,l,t));
+        lag = self.get_relx(self.downloadtime_lag)
+        dt = self.get_relx(self.downloadtime)
+        self.pushbackbar.moveto((l-(lag+dt),t-vsixth,l,t))
         MMNodeWidget.recalc(self) # This is probably not necessary.
 
     def get_minsize(self):
@@ -631,7 +645,7 @@ class MediaWidget(MMNodeWidget):
     def get_minsize_abs(self):
         # return the minimum size of this node, in pixels.
         # Calld to work out the size of the canvas.
-        xsize = sizes_notime.MINSIZE;
+        xsize = sizes_notime.MINSIZE
         return (xsize, sizes_notime.MINSIZE)
     
     def get_maxsize(self):
@@ -676,7 +690,7 @@ class MediaWidget(MMNodeWidget):
 
     def __get_image_filename(self):
         # I just copied this.. I don't know what it does. -mjvdg.
-        f = None;
+        f = None
         
         url = self.node.GetAttrDef('file', None)
         if url:
@@ -699,7 +713,7 @@ class MediaWidget(MMNodeWidget):
                 self.root.set_infoicon('error', 'Cannot load image: %s'%`arg`)
         else:
             f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
-#        print "DEBUG: f is ", f;
+#        print "DEBUG: f is ", f
         return f
 
     def get_obj_at(self, pos):
@@ -723,8 +737,13 @@ class PushBackBarWidget(Interactive.Interactive):
     def draw(self, displist):
         # TODO: draw color based on something??
         displist.fgcolor(TEXTCOLOR)
-        displist.drawfbox(COLCOLOR, self.get_box());
-        displist.drawbox(self.get_box());
+        displist.drawfbox(COLCOLOR, self.get_box())
+        displist.drawbox(self.get_box())
+
+    def drawselected(self, displist):
+        displist.fgcolor(TEXTCOLOR)
+        displist.drawfbox(COLCOLOR, self.get_box())
+        displist.drawbox(self.get_box())
 
     def select(self):
-        self.parent.select();
+        self.parent.select()

@@ -643,6 +643,11 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def deletefocus(self, cut):
+		# Deletes the node with focus.
+
+		import traceback;
+		traceback.print_stack()
+		
 		node = self.focusnode
 		if not node or node is self.root:
 			windowinterface.beep()
@@ -673,7 +678,7 @@ class HierarchyView(HierarchyViewDialog):
 		em.commit()
 
 	def copyfocus(self):
-		# Copies the focus to the clipboard.
+		# Copies the node with focus to the clipboard.
 		node = self.focusnode
 		if not node:
 			windowinterface.beep()

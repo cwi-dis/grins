@@ -1866,14 +1866,14 @@ class MMNode:
 		# return None if there is no previous node.
 
 		if self.GetParent()==None:
-			return None;
+			return None
 		selfsiblings = self.GetParent().GetChildren()
-		selfindex = selfsiblings.index(self);
+		selfindex = selfsiblings.index(self)
 
 		if selfindex > 0:	# Assuming a few things..
-			return selfsiblings[selfindex-1];
+			return selfsiblings[selfindex-1]
 		else:
-			return None;
+			return None
 
 	def GetNext(self):
 		# Return the next node to this one.
