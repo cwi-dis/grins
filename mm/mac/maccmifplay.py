@@ -8,7 +8,8 @@ import macfs
 import addpack
 
 # For now:
-CMIFDIR="Moes:Development:Jack:cmif"
+progdir=os.path.split(sys.argv[0])[0]
+CMIFDIR=os.path.split(progdir)[0]
 
 CMIFPATH = [
 	CMIFDIR+":mac",
@@ -21,10 +22,11 @@ sys.path[0:0] = CMIFPATH
 addpack.addpack('Tools')
 addpack.addpack('bgen')
 addpack.addpack('snd')
+addpack.addpack('evt')
+addpack.addpack('win')
 
 os.environ["CMIF"] = CMIFDIR
-os.environ["CMIF_USE_DUMMY"] = "1"
-os.environ["CHANNELDEBUG"] = "1"
+#os.environ["CHANNELDEBUG"] = "1"
 
 fss, ok = macfs.StandardGetFile('TEXT')
 if not ok: sys.exit(0)
