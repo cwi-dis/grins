@@ -5,3 +5,4 @@ VOID MyCascadeChildWindows(HWND hwndParent, int x, int y, int xClient, int yClie
 INT CountWindows(HWND hwndParent);
 void GetErrorMessage(void);
 
+#endif
