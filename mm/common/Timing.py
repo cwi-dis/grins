@@ -200,10 +200,8 @@ def prep1(node):
 	else:
 		# Special case -- delay -1 means execute leaf node
 		# of leaf node when playing
-		try:
+		if hasattr(node, 'prearm_event'):
 			del node.prearm_event
-		except:
-			pass
 		adddep(node, HD, -1, node, TL)
 
 

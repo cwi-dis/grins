@@ -12,7 +12,7 @@ from HDTL import HD, TL
 from AnchorDefs import *
 import SR
 
-import fl	# For fl.showmessage only
+import fl	# For fl.show_message only
 
 # Priorities for the various events:
 N_PRIO = 5

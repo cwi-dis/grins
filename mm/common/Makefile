@@ -1,4 +1,13 @@
-PYTHON = /ufs/guido/src/python
+GUIDO =	/ufs/guido
+GSRC = $(GUIDO)/src
+PYTHON = $(GSRC)/python
+BUILD = $(PYTHON)/build.sgi
+
+LIBPYTHON = $(BUILD)/libpython.a
+LIBFORMS = $(GSRC)/forms/FORMS/libforms.a
+LIBREADLINE = $(GSRC)/readline.sgi/libreadline.a
+LIBDL = $(GSRC)/dl/libdl.a
+
 DEFS =	\
 	-DUSE_SELECT \
 	-DUSE_GL \
@@ -16,16 +25,21 @@ DEFS =	\
 	-DUSE_STROP \
 	-DUSE_IMAGEOP \
 	-DMM_DEBUG \
-	-DPYTHONPATH='"/ufs/guido/lib/python"'
+	-DPYTHONPATH='"$(GUIDO)/lib/python"'
+
 CFLAGS = -g -G0 -xansi -D__STDC__ -I$(PYTHON)/src $(DEFS)
 
-BUILD = $(PYTHON)/build.sgi
-LIBS =	$(BUILD)/libpython.a \
+LIBS =	$(LIBPYTHON) \
 	-lcl \
-	/ufs/guido/src/forms/FORMS/libforms.a \
-	/ufs/guido/src/readline.sgi/libreadline.a \
+	$(LIBFORMS) \
+	$(LIBREADLINE) \
 	-lm -lsun -laudio -lsvideo -lXext -limage -lgutil -lm  \
-	/ufs/guido/src/dl/libdl.a -lmld -lmpc -lfm_s -lgl_s -lX11 -ltermcap
+	$(LIBDL) -lmld -lmpc -lfm_s -lgl_s -lX11 -ltermcap
+
+LIBDEPS = $(LIBPYTHON) \
+	$(LIBFORMS) \
+	$(LIBREADLINE) \
+	$(LIBDL)
 
 OBJS =	$(BUILD)/pythonmain.o config.o \
 	soundchannelmodule.o \
@@ -34,10 +48,17 @@ OBJS =	$(BUILD)/pythonmain.o config.o \
 
 all:	python
 
-python: $(OBJS)
+python: $(OBJS) $(LIBDEPS)
 	cc $(OBJS) $(LIBS) -o python
 
-clean:
-	rm -f *.o *.ld
+ldfiles:
+	$(GUIDO)/bin/sgi/python -c \
+		'import mmmodule, nullchannel, moviechannel, soundchannel'
 
-$(OBJS):	mmmodule.h
+clean:
+	rm -f *.o core
+
+clobber: clean
+	rm -f *.ld python
+
+$(OBJS): mmmodule.h

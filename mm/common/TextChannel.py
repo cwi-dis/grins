@@ -113,6 +113,7 @@ class TextWindow(ChannelWindow):
 			gl.ringbell()
 			return
 		#
+		gl.callobj(self.vobj)
 		self.draw_tag(hits[0], 1)  # Highlight the anchor
 		name = hits[0][4]
 		#
