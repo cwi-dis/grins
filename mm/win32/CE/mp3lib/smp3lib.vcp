@@ -1,0 +1,546 @@
+# Microsoft eMbedded Visual Tools Project File - Name="smp3lib" - Package Owner=<4>
+# Microsoft eMbedded Visual Tools Generated Build File, Format Version 6.02
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (WCE x86em) Static Library" 0x7f04
+# TARGTYPE "Win32 (WCE ARM) Static Library" 0x8504
+
+CFG=smp3lib - Win32 (WCE ARM) Debug
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
+!MESSAGE 
+!MESSAGE NMAKE /f "smp3lib.vcn".
+!MESSAGE 
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "smp3lib.vcn" CFG="smp3lib - Win32 (WCE ARM) Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "smp3lib - Win32 (WCE ARM) Release" (based on "Win32 (WCE ARM) Static Library")
+!MESSAGE "smp3lib - Win32 (WCE ARM) Debug" (based on "Win32 (WCE ARM) Static Library")
+!MESSAGE "smp3lib - Win32 (WCE x86em) Release" (based on "Win32 (WCE x86em) Static Library")
+!MESSAGE "smp3lib - Win32 (WCE x86em) Debug" (based on "Win32 (WCE x86em) Static Library")
+!MESSAGE 
+
+# Begin Project
+# PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
+# PROP ATL_Project 2
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMRel"
+# PROP BASE Intermediate_Dir "ARMRel"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMRelS"
+# PROP Intermediate_Dir "ARMRelS"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /GX- /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "NDEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /M$(CECrtMT)  /c
+# ADD CPP /nologo /W3 /GX- /D "NDEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D "FPM_DEFAULT" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /M$(CECrtMT)  /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "ARMDbg"
+# PROP BASE Intermediate_Dir "ARMDbg"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "ARMDbgS"
+# PROP Intermediate_Dir "ARMDbgS"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /GX- /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /M$(CECrtMTDebug)  /c
+# ADD CPP /nologo /W3 /GX- /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D "FPM_DEFAULT" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /M$(CECrtMTDebug)  /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "X86EMRel"
+# PROP BASE Intermediate_Dir "X86EMRel"
+# PROP BASE CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "X86EMRelS"
+# PROP Intermediate_Dir "X86EMRelS"
+# PROP CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /GX- /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_LIB" /YX /Oxs /Gz  /c
+# ADD CPP /nologo /W3 /GX- /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D "MS_NO_COREDLL" /D "FPM_DEFAULT" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /Gz  /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "X86EMDbg"
+# PROP BASE Intermediate_Dir "X86EMDbg"
+# PROP BASE CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "X86EMDbgS"
+# PROP Intermediate_Dir "X86EMDbgS"
+# PROP CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /GX- /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_LIB" /YX /Gz  /c
+# ADD CPP /nologo /W3 /GX- /Zi /Od /D "DEBUG" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "MS_NO_COREDLL" /D "FPM_DEFAULT" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Gz  /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ENDIF 
+
+# Begin Target
+
+# Name "smp3lib - Win32 (WCE ARM) Release"
+# Name "smp3lib - Win32 (WCE ARM) Debug"
+# Name "smp3lib - Win32 (WCE x86em) Release"
+# Name "smp3lib - Win32 (WCE x86em) Debug"
+# Begin Group "Source Files"
+
+# PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=.\bit.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_BIT_C=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_BIT_C=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_BIT_C=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_BIT_C=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\fixed.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_FIXED=\
+	".\fixed.h"\
+	".\global.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_FIXED=\
+	".\fixed.h"\
+	".\global.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_FIXED=\
+	".\fixed.h"\
+	".\global.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_FIXED=\
+	".\fixed.h"\
+	".\global.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\frame.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_FRAME=\
+	".\bit.h"\
+	".\config.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\layer3.h"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_FRAME=\
+	".\bit.h"\
+	".\config.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\layer3.h"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_FRAME=\
+	".\bit.h"\
+	".\config.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\layer3.h"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_FRAME=\
+	".\bit.h"\
+	".\config.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\layer3.h"\
+	".\stream.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\huffman.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_HUFFM=\
+	".\global.h"\
+	".\huffman.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_HUFFM=\
+	".\global.h"\
+	".\huffman.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_HUFFM=\
+	".\global.h"\
+	".\huffman.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_HUFFM=\
+	".\global.h"\
+	".\huffman.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\layer3.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_LAYER=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\huffman.h"\
+	".\imdct_s.dat"\
+	".\layer3.h"\
+	".\rq_table.dat"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_LAYER=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\huffman.h"\
+	".\imdct_s.dat"\
+	".\layer3.h"\
+	".\rq_table.dat"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_LAYER=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\huffman.h"\
+	".\imdct_s.dat"\
+	".\layer3.h"\
+	".\rq_table.dat"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_LAYER=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\huffman.h"\
+	".\imdct_s.dat"\
+	".\layer3.h"\
+	".\rq_table.dat"\
+	".\stream.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\mp3lib.cpp
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_MP3LI=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\mp3lib.h"\
+	".\resample.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MP3LI=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\mp3lib.h"\
+	".\resample.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_MP3LI=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\mp3lib.h"\
+	".\resample.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MP3LI=\
+	".\bit.h"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\mp3lib.h"\
+	".\resample.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\mp3lib.def
+# End Source File
+# Begin Source File
+
+SOURCE=.\stream.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_STREA=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_STREA=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_STREA=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	".\stream.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_STREA=\
+	".\bit.h"\
+	".\config.h"\
+	".\global.h"\
+	".\stream.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\synth.c
+
+!IF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Release"
+
+DEP_CPP_SYNTH=\
+	".\bit.h"\
+	".\config.h"\
+	".\D.dat"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SYNTH=\
+	".\bit.h"\
+	".\config.h"\
+	".\D.dat"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Release"
+
+DEP_CPP_SYNTH=\
+	".\bit.h"\
+	".\config.h"\
+	".\D.dat"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ELSEIF  "$(CFG)" == "smp3lib - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SYNTH=\
+	".\bit.h"\
+	".\config.h"\
+	".\D.dat"\
+	".\fixed.h"\
+	".\frame.h"\
+	".\global.h"\
+	".\stream.h"\
+	".\synth.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# End Group
+# Begin Group "Header Files"
+
+# PROP Default_Filter "h;hpp;hxx;hm;inl"
+# End Group
+# End Target
+# End Project
