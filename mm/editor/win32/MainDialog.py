@@ -98,9 +98,9 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if not settings.get('lightweight'):
-			filetypes.append('application/x-grins-cmif')
+##		import settings
+##		if not settings.get('lightweight'):
+##			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', '.', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
@@ -162,9 +162,9 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if not settings.get('lightweight'):
-			filetypes.append('application/x-grins-cmif')
+##		import settings
+##		if not settings.get('lightweight'):
+##			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', '.', filetypes, '',
 					   self.__filecvt, None, 1,
 					   parent = f)
