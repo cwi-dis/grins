@@ -53,9 +53,6 @@ class WMWriter:
 		writer.SetVideoFormat(wmtype)
 		self._writer = writer
 		self._audiopeer = dshow.CreatePyRenderingListener(self)
-		
-		#audiofile = r'D:\ufs\mm\cmif\bin\win32\examples\168.au'
-		#self.setAudioFormatFromFile(audiofile)
 
 	def setOutputFilename(self, filename):
 		self._filename = filename
@@ -90,19 +87,29 @@ class WMWriter:
 	#  Audio section
 	#
 
-	# implement method of IRendererAdviceSink for audio
+	#
+	# IRendererAdviceSink for audio
+	# 
 	def OnRenderSample(self, ms):
-		return # XXX: we need stream sync
 		if self._writing:
-			self._writer.WriteDSAudioSample(ms, self._audiotm)
+			self._writer.WriteDSAudioSample(ms, self._audiooffset)
 
-	# implement method of IRendererAdviceSink for audio
 	def OnActive(self):
-		self._audiotm = self._lasttm
+		self._audiooffset = self._lasttm
+		self._writingaudio = 1
+
+	def OnInactive(self):
+		self._writingaudio = 0
+
+	# this should be dissabled if setAudioFormatFromFile is used
+	def OnSetMediaType(self, mt):
+		self._writer.SetDSAudioFormat(mt)
+
 
 	# set the audio format to that of the audio/video file
 	def setAudioFormatFromFile(self, filename):
 		dummy  = AudioFormatSetter(self._writer, filename)
+
 
 	# alter filter graph so that audio samples are feeded to the writer
 	def redirectAudioFilter(self, fg, hint=None):
