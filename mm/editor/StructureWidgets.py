@@ -2176,9 +2176,9 @@ class Icon(MMWidgetDecoration):
 				xs = (l+r)/2
 				ys = (t+b)/2
 				if self.arrowdirection:
-					self.mother.add_arrow(ARROWCOLOR, (xs,ys),(xd,yd))
+					self.mother.add_arrow(self, ARROWCOLOR, (xs,ys),(xd,yd))
 				else:
-					self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
+					self.mother.add_arrow(self, ARROWCOLOR, (xd,yd),(xs,ys))
 
 	def draw_unselected(self, displist):
 		self.draw(displist)
