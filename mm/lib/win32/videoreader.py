@@ -71,7 +71,7 @@ class _Reader:
 			Qt.CloseMovieFile(movieResRef)
 		
 		if not self.movie:
-			return
+			raise IOError, "Cannot open: %s" % url
 
 		self.movietimescale = self.movie.GetMovieTimeScale()
 
@@ -100,7 +100,7 @@ class _Reader:
 			x0, y0, x1, y1 = self.movie.GetMovieBox()
 			self.videodescr = {'width':(x1-x0), 'height':(y1-y0)}
 			self._initddraw()
-		
+
 	def __del__(self):
 		self.audiomedia = None
 		self.audiotrack = None
