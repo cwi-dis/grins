@@ -268,7 +268,7 @@ def getattr(node, attrname, animated=0):
 			if ch is not None:
 				region = ch.GetLayoutChannel()
 				if region is not None:
-					attrvalue = region.get(attrname, defaultvalue)
+					attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
 				else:
 					attrvalue = defaultvalue
 			else:
@@ -311,7 +311,7 @@ def getdirattr(node, attrname, animated=0):
 			if ch is not None:
 				region = ch.GetLayoutChannel()
 				if region is not None:
-					attrvalue = region.get(attrname, defaultvalue)
+					attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
 				else:
 					attrvalue = defaultvalue
 			else:
@@ -360,7 +360,7 @@ def getdefattr(node, attrname):
 		if ch is not None:
 			region = ch.GetLayoutChannel()
 			if region is not None:
-				attrvalue = region.get(attrname, defaultvalue)
+				attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
 			else:
 				attrvalue = defaultvalue
 		else:
