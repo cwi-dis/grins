@@ -227,26 +227,25 @@ class Main(MainDialog):
 		import windowinterface
 		import settings
 		import string
-## For this verion we send the user to the web and let them check for themselves
-		url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
-##		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
-##		try:
-##			fp = MMurl.urlopen(url)
-##			data = fp.read()
-##			fp.close()
-##		except:
-##			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
-##			return
-##		if not data:
-##			windowinterface.showmessage('You are running the latest version of the software')
-##			return
-##		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
-##		if cancel:
-##			return
-##		data = string.strip(data)
-##		# Pass the version and the second item of the license along.
-##		id = string.split(settings.get('license'), '-')[1]
-##		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
+		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
+		try:
+			fp = MMurl.urlopen(url)
+			data = fp.read()
+			fp.close()
+		except:
+			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
+			print "Could not load URL", url
+			return
+		if not data:
+			windowinterface.showmessage('You are running the latest version of the software')
+			return
+		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
+		if cancel:
+			return
+		data = string.strip(data)
+		# Pass the version and the second item of the license along.
+		id = string.split(settings.get('license'), '-')[1]
+		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
 		windowinterface.htmlwindow(url)
 
 	def closetop(self, top):
