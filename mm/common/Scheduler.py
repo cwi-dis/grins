@@ -336,7 +336,7 @@ class SchedulerContext:
 				if debugevents: print 'scheduled_children+1',`arc`,`node`,event,self.parent.timefunc()
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 			arc.timestamp = timestamp+arc.delay
-			arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
+			arc.qid = self.parent.enterabs(arc.timestamp, not arc.isstart, self.trigger, (arc,))
 			if arc.depends is not None:
 				try:
 					arc.deparcs.remove(arc)
