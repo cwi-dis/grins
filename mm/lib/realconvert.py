@@ -536,174 +536,58 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		audio_sample = engine.CreateMediaSample()
 		
 	engine.PrepareToEncode()
-	
-	if has_audio:
-		nbytes = audiopin.GetSuggestedInputSize()
-		nbpf = audio_fmt.getblocksize() / audio_fmt.getfpb()
-		audio_inputsize_frames = nbytes / nbpf
-		
-		audio_frame_millisecs = int(1000.0 * audio_inputsize_frames / reader.GetAudioFrameRate())
+	# Put the rest inside a try/finally, so a KeyboardInterrupt will cleanup
+	# the engine.
+	try:
+		if has_audio:
+			nbytes = audiopin.GetSuggestedInputSize()
+			nbpf = audio_fmt.getblocksize() / audio_fmt.getfpb()
+			audio_inputsize_frames = nbytes / nbpf
+			
+			audio_frame_millisecs = int(1000.0 * audio_inputsize_frames / reader.GetAudioFrameRate())
 
-	audio_done = video_done = 0
-	audio_flags = video_flags = 0
-	audio_time = video_time = 0
-	audio_data = video_data = None
-	if has_audio:
-		audio_time, audio_data = reader.ReadAudio(audio_inputsize_frames)
-	if not audio_data:
-		audio_done = 1
-	if has_video:
-		video_time, video_data = reader.ReadVideo()
-	if not video_data:
-		video_done = 1
-	if progress:
-		dur = max(reader.GetVideoDuration(), reader.GetAudioDuration())
-		now = 0
-	while not audio_done or not video_done:
-		if not audio_done:
-			next_audio_time, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
-			if not next_audio_data:
-				audio_done = 1
-				audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
-			audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
-			audiopin.Encode(audio_sample)
-			audio_time = next_audio_time
-			audio_data = next_audio_data
-			if audio_time > now:
-				now = audio_time
-		if not video_done:
-			next_video_time, next_video_data = reader.ReadVideo()
-			if not next_video_data:
-				video_done = 1
-				video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
-			video_sample.SetBuffer(video_data, video_time, video_flags)
-			videopin.Encode(video_sample)
-			video_time = next_video_time
-			video_data = next_video_data
-			if video_time > now:
-				now = video_time
+		audio_done = video_done = 0
+		audio_flags = video_flags = 0
+		audio_time = video_time = 0
+		audio_data = video_data = None
+		if has_audio:
+			audio_time, audio_data = reader.ReadAudio(audio_inputsize_frames)
+		if not audio_data:
+			audio_done = 1
+		if has_video:
+			video_time, video_data = reader.ReadVideo()
+		if not video_data:
+			video_done = 1
 		if progress:
-			apply(progress[0], progress[1] + (now, dur))
-	engine.DoneEncoding()
-		
-	
-##	# prepare filter graph
-##	b = dshow.CreateGraphBuilder()
-##	b.RenderFile(fin)
-##	renderer=b.FindFilterByName('Video Renderer')
-##	enumpins=renderer.EnumPins()
-##	pin=enumpins.Next()
-##	lastpin=pin.ConnectedTo()
-##	b.RemoveFilter(renderer)
-##	try:
-##		vf = dshow.CreateFilter('Video Real Media Converter')
-##	except:
-##		print 'Video real media converter filter is not installed'
-##		return file
-##	b.AddFilter(vf,'VRMC')
-##	enumpins=vf.EnumPins()
-##	pin=enumpins.Next()
-##	b.Connect(lastpin,pin)
-##	#b.Render(lastpin)
-##
-##	try:
-##		rconv=vf.QueryIRealConverter()
-##	except:
-##		print 'Filter does not support interface IRealConverter'
-##		return file
-##	try:
-##		ukeng=engine.QueryInterfaceUnknown()
-##	except:
-##		print 'RMABuildEngine QueryInterfaceUnknown failed'
-##		return file
-##	rconv.SetInterface(ukeng,'IRMABuildEngine')
-##	try:
-##		uk=videopin.QueryInterfaceUnknown()
-##	except:
-##		print 'RMAInputPin QueryInterfaceUnknown failed'
-##		return file
-##	rconv.SetInterface(uk,'IRMAInputPin')
-##
-##	# we are ready for video, check for audio
-##	# find default audio renderer filter
-##	try:
-##		aurenderer=b.FindFilterByName('Default DirectSound Device')
-##	except:
-##		aurenderer=None
-##	if not aurenderer:
-##		try:
-##			aurenderer=b.FindFilterByName('Default WaveOut Device')
-##		except:
-##			aurenderer=None
-##	# replace audio renderer with aud2rm filter
-##	if aurenderer:
-##		enumpins=aurenderer.EnumPins()
-##		pin=enumpins.Next()
-##		lastpin=pin.ConnectedTo()
-##		b.RemoveFilter(aurenderer)
-##		try:
-##			af = dshow.CreateFilter('Audio Real Media Converter')
-##		except:
-##			aurenderer=None
-##		else:
-##			b.AddFilter(af,'ARMC')
-##			enumpins=af.EnumPins()
-##			pin=enumpins.Next()
-##			b.Connect(lastpin,pin)
-##			#b.Render(lastpin)
-##
-##	# set engine and audio pin
-##	if aurenderer:
-##		try:
-##			arconv=af.QueryIRealConverter()
-##		except:
-##			aurenderer=None
-##		else:
-##			arconv.SetInterface(ukeng,'IRMABuildEngine')
-##	if aurenderer:
-##		try:
-##			uk=audiopin.QueryInterfaceUnknown()
-##		except:
-##			aurenderer=None
-##		else:
-##			arconv.SetInterface(uk,'IRMAInputPin')
-##
-##	# enable audio
-##	if aurenderer:
-##		engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 1)
-##		ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
-##
-##	# PinProperties,MediaSample,PrepareToEncode,Encode, DoneEncoding
-##	# are all managed by our dshow filter
-##
-##	# do encoding
-##	mc = b.QueryIMediaControl()
-##	mp = b.QueryIMediaPosition()
-##	dur = int(1000*mp.GetDuration()+0.5) # dur in msec
-##	mc.Run()
-##	
-##	if sys.platform=='win32':
-##		# remove messages in queue
-##		# dispatch only paint message
-##		import win32ui
-##		import windowinterface
-##		win32ui.PumpWaitingMessages(0,0)
-##		windowinterface.setwaiting()
-##		while b.WaitForCompletion(0)==0:
-##			now=int(1000*mp.GetCurrentPosition()+0.5)
-##			if progress:
-##				apply(progress[0], progress[1] + (now, dur))
-##			win32ui.PumpWaitingMessages(0,0)
-##			windowinterface.setwaiting()
-##		mc.Stop()
-##		win32ui.PumpWaitingMessages(0,0)
-##		windowinterface.setready()
-##	else:
-##		b.WaitForCompletion()
-##		mc.Stop()
-##	
-##	del b
-##	return
+			dur = max(reader.GetVideoDuration(), reader.GetAudioDuration())
+			now = 0
+		while not audio_done or not video_done:
+			if not audio_done:
+				next_audio_time, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
+				if not next_audio_data:
+					audio_done = 1
+					audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
+				audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
+				audiopin.Encode(audio_sample)
+				audio_time = next_audio_time
+				audio_data = next_audio_data
+				if audio_time > now:
+					now = audio_time
+			if not video_done:
+				next_video_time, next_video_data = reader.ReadVideo()
+				if not next_video_data:
+					video_done = 1
+					video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
+				video_sample.SetBuffer(video_data, video_time, video_flags)
+				videopin.Encode(video_sample)
+				video_time = next_video_time
+				video_data = next_video_data
+				if video_time > now:
+					now = video_time
+			if progress:
+				apply(progress[0], progress[1] + (now, dur))
+	finally:
+		engine.DoneEncoding()
 	if os.name == 'mac':
 		import macfs
 		import macostools
