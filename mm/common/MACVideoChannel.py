@@ -14,7 +14,7 @@ QT_AVAILABLE = windowinterface._qtavailable()
 if not QT_AVAILABLE:
 	Qt = None
 
-debug = 0 # os.environ.has_key('CHANNELDEBUG')
+debug = 1 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindowAsync):
 	_our_attrs = ['fit']
@@ -169,6 +169,7 @@ class VideoChannel(ChannelWindowAsync):
 		else:
 			# This happens during a resize: we don't know scale/center anymore.
 			fit = 'hidden'
+		if debug: print 'fit=', fit
 		# Compute real scale for scale-to-fit
 		if fit is not None and fit != 'hidden':
 			sl, st, sr, sb = screenBox
@@ -184,12 +185,10 @@ class VideoChannel(ChannelWindowAsync):
 				maxyscale = float(sb-st)/(b-t)
 			scale = min(maxxscale, maxyscale)
 			if debug: print 'scale=', scale, maxxscale, maxyscale
-		else:
-			scale = 1
-				
-		movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
-		nMovieBox = self._scalerect(screenBox, movieBox, 0)
-		movie.SetMovieBox(nMovieBox)
+			movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
+			nMovieBox = self._scalerect(screenBox, movieBox, 0)
+			movie.SetMovieBox(nMovieBox)
+		
 		movie.SetMovieDisplayClipRgn(screenClip)
 		if debug: print 'placed movie'
 		
