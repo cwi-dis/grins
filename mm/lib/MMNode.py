@@ -995,7 +995,7 @@ class MMChannel(MMTreeElement):
 		return cRegion
 
 	def __copyIntoContext(self, context):
-		cName = self.__newName(context, self.name)
+		cName = self.__getName(context, self.name)
 		context.editmgr.addchannel(cName, -1, self.get('type'))
 		cRegion = context.getchannel(cName)
 		for child in self.GetChildren():
@@ -1019,9 +1019,13 @@ class MMChannel(MMTreeElement):
 				context.editmgr.setchannelattr(channelTarget.name, attrName, attrValue)
 					
 	# compute a region name according to a base name
-	def __newName(self, context, baseName):
-		# search a new channel name
-		name = baseName + ' %d'
+	def __getName(self, context, name):
+		# first, try the suggested name. It's important for cut operations
+		if not context.channeldict.has_key(name):
+			return name
+		
+		# the suggested name alreaduy exit, search a new channel name
+		name = name + ' %d'
 		i = 0
 		while context.channeldict.has_key(name % i):
 			i = i + 1
