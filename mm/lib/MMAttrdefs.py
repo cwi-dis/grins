@@ -74,7 +74,7 @@ def readattrdefs(fp, filename):
 			displayername = parser.getnamevalue(None)
 			helptext = parser.getstringvalue(None)
 			inheritance = parser.getenumvalue(
-				['raw', 'normal', 'inherited', 'channel'])
+				['raw', 'normal', 'inherited', 'channel', 'region'])
 			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10', 'smil2', 'cmif', 'snap', 'all']))
 			flags = parser.getgenericvalue(
 				usetypedef(xtypedef,
@@ -260,6 +260,19 @@ def getattr(node, attrname, animated=0):
 				attrvalue = ch.get(attrname, defaultvalue)
 			else:
 				attrvalue = defaultvalue
+	elif inheritance == 'region':
+		try:
+			attrvalue = node.GetAttr(attrname)
+		except NoSuchAttrError:
+			ch = node.GetChannel()
+			if ch is not None:
+				region = ch.GetLayoutChannel()
+				if region is not None:
+					attrvalue = region.get(attrname, defaultvalue)
+				else:
+					attrvalue = defaultvalue
+			else:
+				attrvalue = defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
@@ -288,6 +301,19 @@ def getdirattr(node, attrname, animated=0):
 			ch = node.GetChannel()
 			if ch is not None:
 				attrvalue = ch.get(attrname, defaultvalue)
+			else:
+				attrvalue = defaultvalue
+	elif inheritance == 'region':
+		try:
+			attrvalue = node.GetAttr(attrname, animated)
+		except NoSuchAttrError:
+			ch = node.GetChannel()
+			if ch is not None:
+				region = ch.GetLayoutChannel()
+				if region is not None:
+					attrvalue = region.get(attrname, defaultvalue)
+				else:
+					attrvalue = defaultvalue
 			else:
 				attrvalue = defaultvalue
 	else:
@@ -329,6 +355,17 @@ def getdefattr(node, attrname):
 			return ch.get(attrname, defaultvalue)
 		else:
 			return defaultvalue
+	elif inheritance == 'region':
+		ch = node.GetChannel()
+		if ch is not None:
+			region = ch.GetLayoutChannel()
+			if region is not None:
+				attrvalue = region.get(attrname, defaultvalue)
+			else:
+				attrvalue = defaultvalue
+		else:
+			attrvalue = defaultvalue					
+		return defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
