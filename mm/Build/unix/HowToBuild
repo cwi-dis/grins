@@ -98,12 +98,15 @@ gendist -sbase /hosts/multimedia/sjoerd/chameleon \
 	-dist /hosts/multimedia/sjoerd/chameleon/dist -all
 
 Creating Sun Files
-
+#
+# Again, read the note at the top about changing CVS/Root files or
+# becoming Sjoerd and setting CVS_RSH
+#
 On hera.cwi.nl:
 
-cd /ufs/multimedia/sjoerd/src/mm
+cd /hosts/multimedia/sjoerd/src/mm
 cvs update -d
-cd /ufs/multimedia/sjoerd/src/python
+cd /hosts/multimedia/sjoerd/src/python
 cvs update -d
 cd Extensions/X11
 cvs update -d
@@ -111,7 +114,7 @@ cd ../img
 cvs update -d
 
 # now the real work starts
-cd /ufs/multimedia/sjoerd/src
+cd /hosts/multimedia/sjoerd/src
 ./domk freeze && ./domk freeze editor
 
 That's it!
