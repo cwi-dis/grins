@@ -21,6 +21,8 @@ import MMAttrdefs
 import time
 import Animators
 
+import windowinterface
+
 debug = 1
 
 class AnimateChannel(Channel.ChannelAsync):
@@ -37,6 +39,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__fiber_id = 0
 		self.__playdone = 0
 		self.__animator = None
+		self.__effAnimator = None
 		self.__targetchan = None
 		self.__isattrsupported = 0
 		self.__lastvalue = None
@@ -50,8 +53,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_hide(self):
-		self.__animating = None
 		self.__stopAnimate()
+		self.__animating = None
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
@@ -65,6 +68,11 @@ class AnimateChannel(Channel.ChannelAsync):
 				print 'animating attribute %s is not supported.' % self.__animator.getAttrName()
 			self.__isattrsupported = 1 # support all for dev
 			self.__lastvalue = self.__animator.getDOMValue()
+			
+			context = Animators.animateContext
+			self.__effAnimator = context.getEffectiveAnimator(node.targetnode, 
+				self.__animator.getAttrName(), 
+				self.__animator.getDOMValue())
 
 		if debug:
 			print 'AnimateChannel.do_arm',node.attrdict
@@ -100,9 +108,13 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 
 	def __startAnimate(self):
-		if self.__animator:
+		if debug and self.__animator:
 			print 'start animation, initial value', self.__animator.getValue(0)
 		self.__start = time.time()
+
+		targnode = self.__animating.targetnode
+		self.__effAnimator.onAnimateBegin(self.__targetchan, targnode, self.__animator)
+
 		self.__animate()
 		self.__register_for_timeslices()
 
@@ -110,13 +122,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__unregister_for_timeslices()
 		if not self.__animating or not self.__animator:
 			return
-		# restore dom value
-		node = self.__animating.targetnode
-		attr = self.__animator.getAttrName()
-		val = self.__animator.getDOMValue()
-		if self.__targetchan:
-			self.__targetchan.updateattr(node, attr, val)
-		if debug: print 'stop animation, restoring dom value', self.__animator.getDOMValue()
+
+		self.__effAnimator.onAnimateEnd(self.__animator)
 
 	def __pauseAnimate(self, paused):
 		if self.__animating:
@@ -132,7 +139,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		val = self.__animator.getValue(dt)
 		if node and self.__targetchan:
 			if self.__lastvalue != val:
-				self.__targetchan.updateattr(node, attr, val)
+				self.__effAnimator.update()
 				self.__lastvalue = val
 		if debug:
 			msg = 'animating %s =' % self.__animator.getAttrName()
@@ -144,6 +151,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
 			if self.play_loop: # more loops ?
+				self.__animator.repeat()
 				self.__startAnimate()
 				return
 			self.__playdone = 1
@@ -152,7 +160,6 @@ class AnimateChannel(Channel.ChannelAsync):
 		# self.play_loop is 0 so repeat
 		self.__startAnimate()
 
-
 	def on_idle_callback(self):
 		if self.__animating and not self.__playdone:
 			t_sec=time.time() - self.__start
@@ -160,17 +167,13 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__onAnimateDur()
 			else:
 				self.__animate()
-
-	def is_callable(self):
-		return self.__animating
-
+		self.__fiber_id = windowinterface.settimer(0.05, (self.on_idle_callback,()))
+			
 	def __register_for_timeslices(self):
 		if self.__fiber_id: return
-		import windowinterface
-		self.__fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+		self.__fiber_id = windowinterface.settimer(0.05, (self.on_idle_callback,()))
 
 	def __unregister_for_timeslices(self):
 		if not self.__fiber_id: return
-		import windowinterface
-		windowinterface.unregister(self.__fiber_id)
-		self.__fiber_id=0
+		windowinterface.canceltimer(self.__fiber_id)
+		self.__fiber_id = 0
