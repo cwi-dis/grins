@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # machine generated bar state by regedit tool
 
 DefaultState = """
