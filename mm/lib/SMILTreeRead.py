@@ -3176,7 +3176,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('switch in meta')
 			self.__in_head_switch = 1
 		else:
-			self.NewContainer('alt', attributes)
+			self.NewContainer('switch', attributes)
 
 	def end_switch(self):
 		self.__in_head_switch = 0
@@ -3187,7 +3187,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 		# end experimental code
 		elif not self.__in_head:
-			self.EndContainer('alt')
+			self.EndContainer('switch')
 
 	# media items
 

@@ -1599,7 +1599,7 @@ class MMNode_body:
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
-		if self.parent and self.parent.type == 'alt':
+		if self.parent and self.parent.type == 'switch':
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
@@ -1609,7 +1609,7 @@ class MMNode_body:
 			return
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
-		if self.parent and self.parent.type == 'alt':
+		if self.parent and self.parent.type == 'switch':
 			self.parent.stopplay(timestamp)
 
 class MMNode_pseudopar_body(MMNode_body):
@@ -1803,7 +1803,7 @@ class MMNode:
 			self.playing = MMStates.IDLE
 		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
-		if self.parent and self.parent.type == 'alt':
+		if self.parent and self.parent.type == 'switch':
 			self.parent.reset()
 
 
@@ -1984,7 +1984,7 @@ class MMNode:
 	def set_start_time(self, timestamp, include_pseudo = 1):
 		self.start_time = timestamp
 		p = self.parent
-		while p and p.type == 'alt':
+		while p and p.type == 'switch':
 			p.start_time = timestamp
 			p = p.parent
 		if not include_pseudo:
@@ -2006,7 +2006,7 @@ class MMNode:
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
-		if self.parent and self.parent.type == 'alt':
+		if self.parent and self.parent.type == 'switch':
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
@@ -2016,7 +2016,7 @@ class MMNode:
 			return
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
-		if self.parent and self.parent.type == 'alt':
+		if self.parent and self.parent.type == 'switch':
 			self.parent.stopplay(timestamp)
 ##		for c in self.GetSchedChildren():
 ##			c.resetall(self.sctx.parent)
@@ -2306,7 +2306,7 @@ class MMNode:
 		if hasattr(self, 'fakeparent'):
 			return self.fakeparent
 		parent = self.parent
-		while parent is not None and (parent.type == 'prio' or (check_playability and parent.type == 'alt')):
+		while parent is not None and (parent.type == 'prio' or (check_playability and parent.type == 'switch')):
 			parent = parent.parent
 		return parent
 
@@ -2384,7 +2384,7 @@ class MMNode:
 				continue
 			if c.type == 'prio':
 				children = children + c.GetSchedChildren(check_playability)
-			elif check_playability and c.type == 'alt':
+			elif check_playability and c.type == 'switch':
 				c = c.ChosenSwitchChild()
 				if c is not None:
 					children.append(c)
@@ -2397,7 +2397,7 @@ class MMNode:
 		while children:
 			c = children[0]
 			del children[0]
-			if c.type == 'prio' or c.type == 'alt':
+			if c.type == 'prio' or c.type == 'switch':
 				children = children + c.children
 			elif c is x:
 				return 1
@@ -3045,7 +3045,7 @@ class MMNode:
 					c.PruneTree(seeknode)
 				else:
 					c._FastPruneTree()
-		elif self.type == 'alt':
+		elif self.type == 'switch':
 			for c in self.GetSchedChildren():
 				c.force_switch_choice = 0
 				if c.IsAncestorOf(seeknode):
@@ -3082,7 +3082,7 @@ class MMNode:
 	def isresolved(self, sctx):
 		if self.start_time is not None:
 			return self.start_time
-		if self.type == 'alt':
+		if self.type == 'switch':
 			child = self.ChosenSwitchChild()
 			if child:
 				return child.isresolved(sctx)
@@ -3101,7 +3101,7 @@ class MMNode:
 			if pnode is None:
 				self.start_time = 0
 				parent = self.parent
-				while parent and parent.type == 'alt':
+				while parent and parent.type == 'switch':
 					parent.start_time = 0
 					parent = parent.parent
 				return 0
@@ -3112,14 +3112,14 @@ class MMNode:
 				maybecached = pnode.start_time is not None
 				pchildren = pnode.GetSchedChildren()
 				if self not in pchildren:
-					# can happen when self.type=='alt'
+					# can happen when self.type=='switch'
 					pchildren = pnode.GetChildren()
 				for c in pchildren:
 					if c.IsAncestorOf(self):
 						if maybecached:
 							self.start_time = val
 							parent = self.parent
-							while parent and parent.type == 'alt':
+							while parent and parent.type == 'switch':
 								parent.start_time = val
 								parent = parent.parent
 						return val
@@ -3133,7 +3133,7 @@ class MMNode:
 			if pnode.start_time is not None:
 				self.start_time = presolved
 				parent = self.parent
-				while parent and parent.type == 'alt':
+				while parent and parent.type == 'switch':
 					parent.start_time = presolved
 					parent = parent.parent
 			return presolved
@@ -3152,7 +3152,7 @@ class MMNode:
 		if maybecached:
 			self.start_time = presolved + min
 			parent = self.parent
-			while parent and parent.type == 'alt':
+			while parent and parent.type == 'switch':
 				parent.start_time = presolved + min
 				parent = parent.parent
 		# return earliest resolved time
@@ -3450,7 +3450,7 @@ class MMNode:
 
 		termtype = self.GetTerminator()
 
-		if self.type == 'alt':
+		if self.type == 'switch':
 			chosen = self.ChosenSwitchChild(self.wtd_children)
 			if chosen:
 				wtd_children = [chosen]
@@ -3868,7 +3868,7 @@ class MMNode:
 				if syncbase is not None:
 					syncbase = syncbase + e
 			return val, maybecached
-		if self.type == 'alt':
+		if self.type == 'switch':
 			c = self.ChosenSwitchChild()
 			if c is None:
 				return 0, maybecached
@@ -4202,7 +4202,7 @@ class MMNode:
 			return 0
 		# And if our parent is a switch we have to check whether
 		# we're the Chosen One
-		if parent and parent.type == 'alt' and \
+		if parent and parent.type == 'switch' and \
 		   not parent.ChosenSwitchChild() is self:
 			self.willplay = 0
 			return 0
@@ -4231,12 +4231,12 @@ class MMNode:
 			childrentopickfrom = self.GetSchedChildren()
 		for ch in childrentopickfrom:
 			if ch.force_switch_choice:
-				if ch.type == 'alt':
+				if ch.type == 'switch':
 					return ch.ChosenSwitchChild()
 				return ch
 		for ch in childrentopickfrom:
 			if ch._CanPlay():
-				if ch.type == 'alt':
+				if ch.type == 'switch':
 					return ch.ChosenSwitchChild()
 				return ch
 		return None

@@ -315,8 +315,6 @@ class SMILHtmlTimeWriter(SMIL):
 
 		interior = (type in interiortypes)
 		if interior:
-			if type == 'alt':
-				xtype = mtype = 'switch'
 			elif type == 'prio':
 				xtype = mtype = 'priorityClass'
 			else:
