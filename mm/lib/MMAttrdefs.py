@@ -292,6 +292,7 @@ def getdirattr(node, attrname, animated=0):
 #
 def flushcache(node):
 	node.attrcache = {}
+	node.fullduration = None
 	for c in node.GetChildren():
 		flushcache(c)
 

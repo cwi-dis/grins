@@ -722,6 +722,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					attrdict['autoReverse'] = val == 'true'
 				
+			elif attr == 'syncBehavior':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('canSlip', 'locked', 'independent'):
+					attrdict['syncBehavior'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
+			elif attr == 'syncBehaviorDefault':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('canSlip', 'locked', 'independent'):
+					attrdict['syncBehaviorDefault'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass

@@ -249,18 +249,25 @@ class Selecter:
 		# It is not a composite anchor. Continue
 		self.scheduler.setpaused(1)
 		timestamp = self.scheduler.timefunc()
-		if seek_node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN, MMStates.PLAYED):
+		if seek_node.playing != MMStates.IDLE:
 			# case 1, the target element is or has been active
-			if seek_node.playing == MMStates.PLAYED:
-				gototime = seek_node.first_start_time
+			if seek_node.playing == MMStates.PLAYED: # XXX or FROZEN?
+				gototime = seek_node.time_list[0][0]
 			else:
 				gototime = seek_node.start_time
 			self.root.sctx.gototime(self.root, gototime, timestamp)
-			self.scheduler.setpaused(0, gototime)
+			self.scheduler.setpaused(0)
 			return 1	# succeeded
 
 		# XXX
 		# need to implement "fast forward"
+		x = seek_node
+		path = [x]
+		while x.playing == MMStates.IDLE:
+			x = x.GetSchedParent()
+			path.append(x)
+		path.reverse()
+		
 		return 0
 
 	def followcompanchors(self, node, aid):

@@ -869,10 +869,13 @@ class MMNode_body:
 	
 	def __init__(self, parent):
 		self.fullduration = None
+		self.scheduled_children = 0
 		self.parent = parent
 		self.sched_children = []
 		self.arcs = []
 		self.durarcs = []
+		self.time_list = []
+		self.has_min = 0
 		if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
@@ -954,10 +957,7 @@ class MMNode:
 		self.canplay = None
 		self.parent = None
 		self.children = []
-##		self.summaries = {}
 		self.setgensr()
-##		self.isloopnode = 0
-##		self.isinfiniteloopnode = 0
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
@@ -972,12 +972,13 @@ class MMNode:
 		self.arcs = []
 		self.durarcs = []
 		self.reset()
-		self.first_start_time = None
+		self.time_list = []
 		self.fullduration = None
 		self.pausestack = []	# used only by excl nodes
 		# stuff to do with the min attribute
 		self.has_min = 0
 		self.delayed_arcs = []
+		self.__calcendtimecalled = 0
 
 	#
 	# Return string representation of self
@@ -1022,12 +1023,14 @@ class MMNode:
 		self.arcs = []
 		self.durarcs = []
 
-	def startplay(self, sctx):
+	def startplay(self, sctx, timestamp):
 		self.playing = MMStates.PLAYING
 		self.sctx = sctx
+		self.time_list.append((timestamp, None))
 
-	def stopplay(self):
+	def stopplay(self, timestamp):
 		self.playing = MMStates.PLAYED
+		self.time_list[-1] = self.time_list[-1][0], timestamp
 
 	def add_arc(self, arc, body = None):
 		if body is None:
@@ -1116,6 +1119,14 @@ class MMNode:
 			else:
 				fill = 'remove'
 		return fill
+
+	def GetSyncBehavior(self):
+		syncBehavior = self.attrdict.get('syncBehavior')
+		if syncBehavior is None or syncBehavior == 'default':
+			syncBehavior = self.GetInherAttrDef('syncBehaviorDefault', None)
+		if syncBehavior is None or syncBehavior == 'default':
+			return None
+		return syncBehavior
 
 	def GetType(self):
 		return self.type
@@ -1826,13 +1837,51 @@ class MMNode:
 	def __find_refnode(self, arc):
 		return arc.refnode()
 
+	def isresolved(self):
+		if self.start_time is not None:
+			return self.start_time
+		pnode = self.GetSchedParent()
+		if pnode is None:
+			# XXX is this true with begin="indefinite"?
+			return 0	# root node is always resolved
+		presolved = pnode.isresolved()
+		if presolved is None:
+			# if parent not resolved, we're not resolved
+			return None
+		beginlist = self.attrdict.get('beginlist', [])
+		if not beginlist:
+			# unless parent is excl, we're resolved if parent is
+			if pnode.type == 'excl':
+				return None
+			if pnode.type == 'seq':
+				val = presolved
+				for c in pnode.GetSchedChildren():
+					if c is self:
+						return val
+					e, maybecached = c.__calcendtime()
+					if e is None or e < 0:
+						return None
+					val = val + e
+				raise RuntimeError('cannot happen')
+			return presolved
+		min = None
+		for arc in beginlist:
+			if arc.isresolved():
+				v = arc.resolvedtime()
+				if min is None or v < min:
+					min = v
+		if min is None:
+			# no resolved sync arcs
+			return None
+		# return earliest resolved time
+		return presolved + min
+
 	#
 	# Generate schedrecords for leaf nodes.
 	# The looping parmeter is only for pseudo-par-nodes implementing RealPix with
 	# captions.
 	#
 	def gensr_leaf(self, looping=0, overrideself=None):
-		self.calcfullduration()
 		if overrideself:
 			# overrideself is passed for the interior
 			self = overrideself
@@ -1916,7 +1965,6 @@ class MMNode:
 	# - a list of all (event, action) tuples to be generated
 	# 
 	def gensr_interior(self, looping=0):
-		self.calcfullduration()
 		#
 		# If the node is empty there is very little to do.
 		#
@@ -1947,23 +1995,6 @@ class MMNode:
 			gensr_envelope = self.gensr_envelope_firstloop
 		else:
 			gensr_envelope = self.gensr_envelope_laterloop
-
-		#
-		# If the node has a duration we add a syncarc from head
-		# to tail. This will terminate the node when needed.
-		#
-##		endlist = MMAttrdefs.getattr(self, 'endlist')
-##		for arc in endlist:
-##			refnode = self.__find_refnode(arc)
-##			refnode.add_arc(arc)
-##		if self.fullduration is not None:
-##			if self.fullduration < 0:
-##				delay = None
-##			else:
-##				delay = self.fullduration
-##			arc = MMSyncArc(self, 'end', srcnode=self, event='begin', delay=delay)
-##			self.arcs.append((self, arc))
-##			self.add_arc(arc)
 
 		fill = self.GetFill()
 
@@ -2082,19 +2113,6 @@ class MMNode:
 		srlist.append( ([(SCHED_STOP, self.looping_body_self)],
 				body_schedstop_actions) )
 
-		#
-		# Three cases for signalling the parent we're done:
-		# 1. Incoming tail sync arcs or an explicit duration:
-		#	When these fire we signal SCHED_DONE
-		#	ourselves. No special action on end-of-loop
-		# 2. We loop indefinite:
-		#	Immedeately tell our parents we are done. No special
-		#	actions on end-of-loop.
-		# 3. Other cases (fixed repeatCount and no duration/tailsync):
-		#	End-of-loop signals SCHED_DONE.
-		# In all cases a SCHED_STOP is translated to a terminate of
-		# ourselves.
-		#
 		if self.curloopcount < 0:
 ##			sched_actions = sched_actions + scheddone_actions
 			srlist.append( ([(LOOPEND_DONE, self)], []) )
@@ -2275,7 +2293,9 @@ class MMNode:
 					   arc.marker is None and \
 					   arc.delay is not None:
 						schedule = 1
-			if termtype in ('FIRST', chname):
+			if termtype in ('FIRST', chname): ## or
+##			   (len(wtd_children) == 1 and
+##			    (schedule or termtype == 'ALL')):
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((self_body, arc))
 				child.add_arc(arc)
@@ -2284,12 +2304,12 @@ class MMNode:
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
 				refnode = child.__find_refnode(arc)
 				refnode.add_arc(arc)
-			child.calcfullduration()
-			if child.fullduration is not None:
-				if child.fullduration < 0:
+			cdur = child.calcfullduration()
+			if cdur is not None and child.fullduration is not None:
+				if cdur < 0:
 					delay = None
 				else:
-					delay = child.fullduration
+					delay = cdur
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
 				self_body.arcs.append((child, arc))
@@ -2422,9 +2442,135 @@ class MMNode:
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
-	def calcfullduration(self):	
+	def __calcendtime(self, t0 = None):
+		# returns:
+		#	None - no resolved begin
+		#	-1 - resolved begin, no resolved end
+		#	>= 0 - end time
+		if self.__calcendtimecalled:
+			# recursive call
+			print '__calcendtime: breaking recursion'
+			return None, 0	# break recursion
+		start = None
+		beginlist = MMAttrdefs.getattr(self, 'beginlist')
+		if not beginlist:
+			if self.GetSchedParent().type == 'excl':
+				return None, 1
+			start = 0
+			maybecached = 1
+		else:
+			self.__calcendtimecalled = 1
+			maybecached = 1
+			for a in beginlist:
+				t = None
+				if a.event is not None or a.marker is not None or a.wallclock is not None:
+					maybecached = 0
+				if a.isresolved() and self.start_time is not None:
+					t = a.resolvedtime() - self.start_time
+				elif a.event == 'begin' or a.event == 'end':
+					n = a.refnode()
+					t0 = n.isresolved()
+					if t0 is None:
+						continue
+					if a.event == 'end':
+						d = n.calcfullduration()
+						if d is None or d < 0:
+							continue
+						t = t0 + d
+					else:
+						t = t0
+					if t is not None:
+						t = t + a.delay - self.start_time
+				elif a.event is not None or a.marker is not None:
+					continue
+				elif a.wallclock is not None:
+					if self.start_time is not None:
+						t = a.resolvedtime(node.sctx.parent.timefunc) - self.start_time
+				elif a.delay is not None:
+					t = a.delay
+				if t is None:
+					continue
+				if start is None or t < start:
+					if t0 is None or t >= t0:
+						start = t
+			self.__calcendtimecalled = 0
+		if start is None:
+			# no resolved begin time
+			return None, maybecached
+		self.__calcendtimecalled = 1
+		d = self.calcfullduration()
+		self.__calcendtimecalled = 0
+		if self.fullduration is None:
+			maybecached = 0
+		if d is None or d < 0:
+			# unknown or no resolved duration
+			return -1, maybecached
+		end = start + d
+		if end < 0:
+			# find next one
+			return self.__calcendtime(end)
+		return end, maybecached
+
+	def __calcduration(self):
+		# internal method to calculate the duration of a node
+		# not taking into account the duration/end/repeat* attrs
+		maybecached = 1
+		if self.type in leaftypes:
+			import Duration
+			return Duration.get(self, ignoreloop=1), maybecached
+		else:
+			if self.type in ('par', 'excl'):
+				termtype = MMAttrdefs.getattr(self, 'terminator')
+				if termtype not in ('LAST', 'FIRST', 'ALL'):
+					for c in self.GetSchedChildren():
+						if MMAttrdefs.getattr(c, 'name') == termtype:
+							return c.__calcendtime()
+					termtype = 'LAST' # fallback
+				val = -1
+				for c in self.GetSchedChildren():
+					e, mc = c.__calcendtime()
+					if not mc:
+						maybecached = 0
+					if termtype == 'FIRST':
+						if (e is None or e < 0) and val < 0:
+							pass
+						elif val < 0:
+							val = e
+						elif e >= 0 and e < val:
+							val = e
+					elif termtype == 'LAST':
+						if e is None:
+							continue
+						if e < 0:
+							return -1, maybecached
+						if val < 0 or e > val:
+							val = e
+					elif termtype == 'ALL':
+						if e is None or e < 0:
+							return -1, maybecached
+						if val < 0 or e > val:
+							val = e
+				return val, maybecached
+			if self.type == 'seq':
+				val = 0
+				for c in self.GetSchedChildren():
+					e, mc = c.__calcendtime()
+					if not mc:
+						maybecached = 0
+					if e is None or e < 0:
+						return -1, maybecached
+					val = val + e
+				return val, maybecached
+			if self.type == 'alt':
+				c = self.ChosenSwitchChild()
+				if c is None:
+					return 0, maybecached
+				return c.__calcduration()
+
+	def calcfullduration(self):
 		if self.fullduration is not None:
-			return
+			return self.fullduration
+		maybecached = 1
 		duration = self.attrdict.get('duration')
 		repeatDur = self.attrdict.get('repeatdur')
 		repeatCount = self.attrdict.get('loop')
@@ -2436,16 +2582,10 @@ class MMNode:
 			# specified, the simple duration is defined to
 			# be indefinite"
 			duration = -1
-		if duration is None and repeatCount is not None:
-			# if repeatCount is set, we need to know duration
-			if self.type in leaftypes:
-				import Duration
-				duration = Duration.get(self, ignoreloop=1)
-			else:
-				# XXX should find duration of interior node
-				pass
 		if repeatDur is not None and \
 		   repeatCount is not None:
+			if duration is None:
+				duration, maybecached = self.__calcduration()
 			if duration is not None and duration > 0 and \
 			   repeatCount > 0 and repeatDur >= 0:
 				duration = min(repeatCount * duration, repeatDur)
@@ -2460,21 +2600,29 @@ class MMNode:
 		elif repeatDur is not None: # repeatCount is None
 			duration = repeatDur
 		elif repeatCount is not None: # repeatDur is None
+			if duration is None:
+				duration, maybecached = self.__calcduration()
 			if duration is not None and duration > 0:
 				if repeatCount > 0:
 					duration = repeatCount * duration
 				else:
 					duration = -1
+		elif duration is None:
+			duration, maybecached = self.__calcduration()
 		
 		# adjust duration when we have time manipulations
-		if duration!=None and duration > 0:
+		if duration is not None and duration > 0:
 			speed = self.attrdict.get('speed')
 			if speed:
 				duration = duration / speed
 			if MMAttrdefs.getattr(self, 'autoReverse'):
 				duration = 2.0 * duration
 		
-		self.fullduration = duration
+		if maybecached:
+			self.fullduration = duration
+		else:
+			self.fullduration = None
+		return duration
 
 	def _is_realpix_with_captions(self):
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
