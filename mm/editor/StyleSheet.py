@@ -32,6 +32,7 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 	#
 	def commit(self):
 		pass
+		# XXX ought to check if all the styles still exist
 	#
 	def show(self):
 		if not self.showing:
@@ -110,7 +111,7 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		self.browser.select_browser_line(n)
 		# XXX Should sort it!
 		# (5) edit the style
-		# XXX later...
+		AttrEdit.showstyleattreditor(self.context, newname)
 	#
 	def delete_callback(self, (obj, arg)):
 		# Delete the style selected in the browser.
