@@ -2216,12 +2216,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					elif fit == 'fill':
 						scale = -3					
 					cssResolver.setRawAttrs(cssId, [('scale', scale)])
-					
+
+				# don't take into account the regAlign and regPoint on region since it's not allow anymore
+				# it allows to have an unexpected behavior if user specified a value
+				# currently, the parser show a warning but don't filter the value if specified
 				if attrdict.has_key('regAlign'):
-					cssResolver.setRawAttrs(cssId,[('regAlign', attrdict['regAlign'])])
+#					cssResolver.setRawAttrs(cssId,[('regAlign', attrdict['regAlign'])])
 					del attrdict['regAlign']
 				if attrdict.has_key('regPoint'):
-					cssResolver.setRawAttrs(cssId, [('regPoint', attrdict['regPoint'])])
+#					cssResolver.setRawAttrs(cssId, [('regPoint', attrdict['regPoint'])])
 					del attrdict['regPoint']
 					
 										
