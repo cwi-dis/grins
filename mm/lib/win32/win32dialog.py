@@ -900,17 +900,22 @@ class showmessage:
 		if grab==0:
 			self._wnd=ModelessMessageBox(text,title,parent)
 			return
+		if cancelCallback:
+			style = win32con.MB_OKCANCEL
+		else:
+			style = win32con.MB_OK
+
 		if mtype == 'error':
-			style = win32con.MB_OK |win32con.MB_ICONERROR
+			style = style |win32con.MB_ICONERROR
 				
 		elif mtype == 'warning':
-			style = win32con.MB_OK |win32con.MB_ICONWARNING
+			style = style |win32con.MB_ICONWARNING
 			
 		elif mtype == 'information':
-			style = win32con.MB_OK |win32con.MB_ICONINFORMATION
+			style = style |win32con.MB_ICONINFORMATION
 	
 		elif mtype == 'message':
-			style = win32con.MB_OK|win32con.MB_ICONINFORMATION
+			style = style|win32con.MB_ICONINFORMATION
 			
 		elif mtype == 'question':
 			style = win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION
@@ -1579,4 +1584,3 @@ class ReplaceDialog(FindDialog):
 	def enableReplace(self, f):
 		if self._isInit:
 			self._replaceBtn.enable(f)
-		
