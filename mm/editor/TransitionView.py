@@ -1,10 +1,11 @@
 __version__ = "$Id$"
 
 from TransitionViewDialog import TransitionViewDialog
+from ViewDialog import ViewDialog
 import AttrEdit
 from usercmd import *
 
-class TransitionView(TransitionViewDialog):
+class TransitionView(TransitionViewDialog, ViewDialog):
 	def __init__(self, toplevel):
 		self.toplevel = toplevel
 		self.root = toplevel.root
