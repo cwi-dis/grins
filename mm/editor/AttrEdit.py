@@ -632,7 +632,17 @@ class ChannelnameButtonRow(PopupButtonRow):
 			+ `self.name` + '>'
 
 	def choices(self):
-		return ['undefined'] + self.wrapper.context.channelnames
+		list = ['undefined']
+		ctx = self.wrapper.context
+		chname = self.wrapper.channel.name
+		for name in ctx.channelnames:
+			if name == chname:
+				continue
+			ch = ctx.channeldict[name]
+			if ch.attrdict['type'] == 'layout':
+				list.append(name)
+		return list
+##		return ['undefined'] + self.wrapper.context.channelnames
 
 	def parsevalue(self, value):
 		return value
