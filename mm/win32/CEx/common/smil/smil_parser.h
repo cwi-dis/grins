@@ -32,6 +32,10 @@ class parser : public xml::sax_handler
 	parser();
 	~parser();
 
+	void reset();
+	tree_node* detach();
+
+	//
 	void start_smil(raw_attr_list_t *pattrs);
 	void end_smil();
 
@@ -41,6 +45,106 @@ class parser : public xml::sax_handler
 	void start_meta(raw_attr_list_t *pattrs);
 	void end_meta();
 
+	void start_metadata(raw_attr_list_t *pattrs);
+	void end_metadata();
+
+	void start_layout(raw_attr_list_t *pattrs);
+	void end_layout();
+
+	void start_customAttributes(raw_attr_list_t *pattrs);
+	void end_customAttributes();
+
+	void start_customTest(raw_attr_list_t *pattrs);
+	void end_customTest();
+
+	void start_region(raw_attr_list_t *pattrs);
+	void end_region();
+
+	void start_root_layout(raw_attr_list_t *pattrs);
+	void end_root_layout();
+
+	void start_viewport(raw_attr_list_t *pattrs);
+	void end_viewport();
+
+	void start_body(raw_attr_list_t *pattrs);
+	void end_body();
+
+	void start_par(raw_attr_list_t *pattrs);
+	void end_par();
+
+	void start_seq(raw_attr_list_t *pattrs);
+	void end_seq();
+
+	void start_switch(raw_attr_list_t *pattrs);
+	void end_switch();
+
+	void start_excl(raw_attr_list_t *pattrs);
+	void end_excl();
+
+	void start_priorityClass(raw_attr_list_t *pattrs);
+	void end_priorityClass();
+
+	void start_ref(raw_attr_list_t *pattrs);
+	void end_ref();
+
+	void start_text(raw_attr_list_t *pattrs);
+	void end_text();
+
+	void start_audio(raw_attr_list_t *pattrs);
+	void end_audio();
+
+	void start_img(raw_attr_list_t *pattrs);
+	void end_img();
+
+	void start_video(raw_attr_list_t *pattrs);
+	void end_video();
+
+	void start_animation(raw_attr_list_t *pattrs);
+	void end_animation();
+
+	void start_textstream(raw_attr_list_t *pattrs);
+	void end_textstream();
+
+	void start_brush(raw_attr_list_t *pattrs);
+	void end_brush();
+
+	void start_a(raw_attr_list_t *pattrs);
+	void end_a();
+
+	void start_anchor(raw_attr_list_t *pattrs);
+	void end_anchor();
+
+	void start_area(raw_attr_list_t *pattrs);
+	void end_area();
+
+	void start_animate(raw_attr_list_t *pattrs);
+	void end_animate();
+
+	void start_set(raw_attr_list_t *pattrs);
+	void end_set();
+
+	void start_animateMotion(raw_attr_list_t *pattrs);
+	void end_animateMotion();
+
+	void start_animateColor(raw_attr_list_t *pattrs);
+	void end_animateColor();
+
+	void start_transitionFilter(raw_attr_list_t *pattrs);
+	void end_transitionFilter();
+
+	void start_param(raw_attr_list_t *pattrs);
+	void end_param();
+
+	void start_transition(raw_attr_list_t *pattrs);
+	void end_transition();
+
+	void start_regPoint(raw_attr_list_t *pattrs);
+	void end_regPoint();
+
+	void start_prefetch(raw_attr_list_t *pattrs);
+	void end_prefetch();
+
+	//
 	void unknown_starttag(const char *tag, raw_attr_list_t *pattrs);
 	void unknown_endtag();
 
