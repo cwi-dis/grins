@@ -1194,6 +1194,11 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Examples\index.txt
+  Destination=%MAINDIR%\Examples\index.txt
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Examples\stroll6sw.smil
   Destination=%MAINDIR%\Examples\stroll6sw.smil
   Flags=0000000010000010
@@ -1296,11 +1301,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Examples\map.jpg
   Destination=%MAINDIR%\Examples\map.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\index.html
-  Destination=%MAINDIR%\Examples\index.html
   Flags=0000000010000010
 end
 item: Install File
