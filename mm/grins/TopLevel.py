@@ -5,7 +5,6 @@ import windowinterface
 import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
 from MMExc import *
-import Timing
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from usercmd import *
 
