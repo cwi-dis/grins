@@ -1469,6 +1469,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=..\..\Templates\T-icons\slideshow_MMS.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_MMS.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_55P_slideshowMMS.grins
+  Destination=%MAINDIR%\Templates\S2_55P_slideshowMMS.grins
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\bin\win32\GRiNS_MS2.exe
   Destination=%MAINDIR%\GRiNS_MS2.exe
   Flags=0000000010000011
