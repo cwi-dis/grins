@@ -73,6 +73,7 @@ class PlayerDialog:
 			self.__window.close()
 		self.__window = None
 		self.__menu_created = None
+		self.__windowgroup.close() # XXXX test
 		self.__windowgroup = None
 		del self.__ugroups
 		del self.__ugroupdict
