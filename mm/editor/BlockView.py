@@ -75,6 +75,10 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	def show(self):
 		if self.showing: return
 		print 'self.show'
+		try:
+			self.form.doublebuf = 1
+		except:
+			pass # Old versions of Python don't accept this...
 		self.editmgr.register(self)
 		BasicDialog.show(self)
 	def hide(self):
@@ -151,14 +155,15 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		cmdmap = 'IAUD'
 		clipboard_menu.set_call_back(self._menu_callback,cmdmap);
 		operation_menu = f.add_menu(PUSH_MENU,x+2*w/3,y,w/3,h,'Operation')
-		operation_menu.set_menu('h Help|p Play|+ Zoom|- Unzoom%l|o Open info|e Open attr')
-		cmdmap = 'hp+-oe'
+		operation_menu.set_menu('h Help|p Play|+ Zoom|- Unzoom%l|o Open info|e Open attr|E Edit contents')
+		cmdmap = 'hp+-oeE'
 		operation_menu.set_call_back(self._menu_callback,cmdmap);
 	#
 	# submit a number to default commands.
 	#
 	def _initcommanddict(self) :
 		self.addtocommand('e', attreditfunc)
+		self.addtocommand('E', conteditfunc)
 		self.addtocommand('a', InsertAfterNode)
 		self.addtocommand('i', InsertBeforeNode)
 		self.addtocommand('u', InsertChildNode)
@@ -248,16 +253,17 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		if node.bv_OC = -1:
 		    node.bv_OC = node.GetParent().bv_OC
 		    return
-		if node.GetType () in ('seq', 'par', 'grp'):
-			node.bv_openclose.delete_object ()
-			del node.bv_openclose
-			node.bv_labeltext.delete_object()
-			del node.bv_labeltext
-		node.bv_obj.delete_object ()
-		del node.bv_obj
-		if node.bv_OC:
-		    for child in node.GetChildren () :
-			self.rmBlockview (child)
+		try:
+		    node.bv_obj.delete_object ()
+		    del node.bv_obj
+		    node.bv_openclose.delete_object ()
+		    del node.bv_openclose
+		    node.bv_labeltext.delete_object()
+		    del node.bv_labeltext
+		except NameError:
+		    pass
+		for child in node.GetChildren () :
+		    self.rmBlockview (child)
 	#
 	# presentlabels : sets the appropiate labels in the FORMS object.
 	#
@@ -383,6 +389,11 @@ import AttrEdit
 
 def attreditfunc (bv) :
 	AttrEdit.showattreditor (bv.focus)
+
+import NodeEdit
+
+def conteditfunc (bv) :
+	NodeEdit.showeditor (bv.focus)
 
 #
 # delete the focussed node.
