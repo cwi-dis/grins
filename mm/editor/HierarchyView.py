@@ -61,8 +61,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.editmgr = self.root.context.editmgr
 
 		self.destroynode = None	# node to be destroyed later
-		self.expand_on_show = 1
-		self.thumbnails = 1
+		self.thumbnails = settings.get('structure_thumbnails')
 		self.showplayability = 1
 		self.timescale = None
 		self.usetimestripview = 0
@@ -353,7 +352,7 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusnode.GetParent():
 			self.focusnode.GetParent().ExpandParents()
 
-		t0, t1, t2, download, begindelay = self.focusnode.GetTimes('bandwidth')
+##		t0, t1, t2, download, begindelay = self.focusnode.GetTimes('bandwidth')
 		# XXX Very expensive...
 		if self.timescale in ('focus', 'cfocus'):
 			self.need_resize = 1
@@ -1192,6 +1191,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		self.thumbnails = not self.thumbnails
 		self.settoggle(THUMBNAIL, self.thumbnails)
+		self.dirty = 1
 		self.draw()
 
 	def playablecall(self):
