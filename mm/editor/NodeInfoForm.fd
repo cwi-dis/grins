@@ -9,7 +9,7 @@ Number of forms: 4
 Name: main
 Width: 535.500000
 Height: 253.500000
-Number of Objects: 9
+Number of Objects: 10
 
 --------------------
 class: 1
@@ -134,16 +134,31 @@ argument: 0
 --------------------
 class: 11
 type: 0
-box: 173.000000 4.000002 170.000000 30.000000
+box: 170.000000 0.000000 80.000008 25.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Show attributes...
+label: Node attr...
 name: attributes_button
 callback: attributes_callback
+argument: 0
+
+--------------------
+class: 11
+type: 0
+box: 260.000000 0.000000 80.000000 25.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: Archors...
+name: anchors_button
+callback: anchors_callback
 argument: 0
 
 =============== FORM ===============
