@@ -9,7 +9,7 @@ from sys import platform
 import urlcache
 import string
 
-def get(node, ignoreloop=0):
+def get(node, ignoreloop=0, wanterror=0):
 	duration = MMAttrdefs.getattr(node, 'duration')
 	if hasattr(node, 'slideshow') and \
 	   node.slideshow.rp.duration == duration:
@@ -34,8 +34,10 @@ def get(node, ignoreloop=0):
 			import MMurl
 			try:
 				u = MMurl.urlopen(url)
-			except IOError:
+			except IOError, arg:
 				# don't cache non-existing file
+				if wanterror:
+					raise IOError, arg
 				return 0
 			maintype = u.headers.getmaintype()
 			subtype = u.headers.getsubtype()
@@ -51,12 +53,16 @@ def get(node, ignoreloop=0):
 			try:
 				dur = VideoDuration.get(url)
 			except IOError, msg:
+				if wanterror:
+					raise IOError, msg
 				print url, msg
 		elif maintype == 'audio':
 			import SoundDuration
 			try:
 				dur = SoundDuration.get(url)
 			except IOError, msg:
+				if wanterror:
+					raise IOError, msg
 				print url, msg
 		elif maintype in ('image', 'text'):
 			# give them a duration
