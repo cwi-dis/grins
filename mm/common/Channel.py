@@ -47,7 +47,7 @@ class Channel:
 	# The following methods can be called by higher levels.
 	#
 	chan_attrs = ['visible', 'base_window']
-	node_attrs = ['file', 'mimetype']
+	node_attrs = ['file', 'mimetype', 'project_convert']
 	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
