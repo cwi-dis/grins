@@ -136,7 +136,7 @@ implements SMILListener
 	        buttonStop.setEnabled(false);
             }
         }
-	public void newViewport(int index){
+	public void updateViewports(){
 	}
 	
     private void open(String filename){
