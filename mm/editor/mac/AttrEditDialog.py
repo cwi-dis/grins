@@ -1204,7 +1204,7 @@ class TransitionTabPage(MultiDictTabPage, ColorTabPage):
 		return rv
 
 	def do_itemhit(self, item, event):
-		if item-self.item0 == self.item0+self.ITEM_TYPE:
+		if item-self.item0 == self.ITEM_TYPE:
 			self.call_optional_cb(self._attr_to_field['tag'])
 			return 1
 		elif item-self.item0 in self._items_on_page:
@@ -1323,8 +1323,10 @@ class FadeoutTabPage(MultiTabPage, ColorTabPage):
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_FADEOUT:
 			self.attreditor._togglebutton(self.item0+self.ITEM_FADEOUT)
+			return 1
 		elif item == self.item0+self.ITEM_COLORPICK:
 			self._select_color(self.item0+self.ITEM_COLOR)
+			return 1
 		elif item-self.item0 in self._items_on_page:
 			return 1
 		return 0
