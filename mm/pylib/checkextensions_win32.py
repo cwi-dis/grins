@@ -55,7 +55,7 @@ class CExtension:
 		return self.linkerLibs
 
 def checkextensions(unknown, extra_inis):
-     # Create a table of frozen extensions
+	# Create a table of frozen extensions
 
 	defaultMapName = os.path.join( os.path.split(sys.argv[0])[0], "extensions_win32.ini")
 	if not os.path.isfile(defaultMapName):
