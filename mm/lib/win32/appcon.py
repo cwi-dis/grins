@@ -45,3 +45,5 @@ else:
 MLF_NOIDLEMSG      = 0x0001  # don't send WM_ENTERIDLE messages
 MLF_NOKICKIDLE     = 0x0002  # don't send WM_KICKIDLE messages
 MLF_SHOWONIDLE     = 0x0004  # show window if not visible at idle time
+
+WM_KICKIDLE        = 0x036A
