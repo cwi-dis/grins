@@ -98,7 +98,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		context = self.root.GetContext()
 		parseErrors = context.getParseErrors()
 		if parseErrors != None:
-			message = "The source document contains some errors.\nDo you wish to accept GRiNS' automatic fixes?"
+			message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors : \n\n" + \
+					  parseErrors.getFormatedErrorsMessage(5) + \
+					  "\nDo you wish to accept GRiNS' automatic fixes?"
 			if allowCancel:
 				ret = windowinterface.GetYesNoCancel(message, self.window)
 			else:
@@ -1467,10 +1469,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		self.root = self.checkParseErrors(self.root)
 		self.setRoot(self.root)
-		
-	def printfunc(self, msg):
-		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
 
+	# this method is called by the parser to print the error messages		
+	def printfunc(self, msg):
+		# in this version, the error messages aren't printed at this step, but later in order to reduce the dialog box number
+		# we just save here the formated message
+		pass
+	
 	def close_callback(self):
 		self.setwaiting()
 ##		if self.source and not self.source.is_closed():

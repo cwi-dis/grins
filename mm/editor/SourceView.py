@@ -152,7 +152,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			if parseErrors != None:
 				# XXX note: the choices may be different for 'fatal error'
 				if not autoFixErrors:
-					ret = windowinterface.GetYesNoCancel("The source document contains some errors\nDo you wish to accept GRiNS' automatic fixes?", self.toplevel.window)
+					message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors : \n\n" + \
+							  parseErrors.getFormatedErrorsMessage(5) + \
+							  "\nDo you wish to accept GRiNS' automatic fixes?"
+					ret = windowinterface.GetYesNoCancel(message, self.toplevel.window)
 				else:
 					ret = 0
 				if ret == 0: # yes
