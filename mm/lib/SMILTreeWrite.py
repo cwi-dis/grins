@@ -755,10 +755,10 @@ class SMILWriter(SMIL):
 			if len(args) == 4:
 				x, y, w, h = tuple(args)
 				try:
-					x = int(x*100)
-					y = int(y*100)
-					w = int(w*100)
-					h = int(h*100)
+					x = int(x*100 + 0.5)
+					y = int(y*100 + 0.5)
+					w = int(w*100 + 0.5)
+					h = int(h*100 + 0.5)
 				except TypeError:
 					pass
 				else:
