@@ -1032,12 +1032,20 @@ class _BareSubWindow:
 	def _do_resize1(self):
 		w, h = self._sizes[2:]
 		parent = self._parent
+		try:
+			del self._pixmap
+		except AttributeError:
+			pass
+		else:
+			self._pixmap = parent._pixmap
+		self._gc = parent._gc
 		self._hfactor = parent._hfactor / w
 		self._vfactor = parent._vfactor / h
 		self._rect = parent._convert_coordinates(self._sizes)
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
-		for d in self._displists:
+		self._active_displist = None
+		for d in self._displists[:]:
 			d.close()
 		for w in self._subwindows:
 			w._do_resize1()
@@ -1116,27 +1124,27 @@ class _DisplayList:
 		return new
 
 	def render(self):
-		w = self._window
+		window = self._window
 		for b in self._buttons:
 			b._highlighted = 0
-		region = w._clip
+		region = window._clip
 		# draw our bit
 		self._render(region)
 		# now draw transparent windows that lie on top of us
-		if w._topwindow is not w:
-			i = w._parent._subwindows.index(w)
-			windows = w._parent._subwindows[:i]
+		if window._topwindow is not window:
+			i = window._parent._subwindows.index(window)
+			windows = window._parent._subwindows[:i]
 			windows.reverse()
 			for w in windows:
 				if w._transparent:
 					w._do_expose(region, 1)
 		# finally, re-highlight window
-		if w._showing:
-			w.showwindow()
-		if hasattr(w, '_pixmap'):
-			x, y, width, height = w._rect
-			w._pixmap.CopyArea(w._form, w._gc,
-					   x, y, width, height, x, y)
+		if window._showing:
+			window.showwindow()
+		if hasattr(window, '_pixmap'):
+			x, y, width, height = window._rect
+			window._pixmap.CopyArea(window._form, window._gc,
+						x, y, width, height, x, y)
 		toplevel._main.UpdateDisplay()
 
 	def _render(self, region):
