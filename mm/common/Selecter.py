@@ -210,8 +210,8 @@ class Selecter:
 		for dest in destlist:
 			if not self.gotoanchor(dest, arg):
 				return 0
-		if arg:
-			windowinterface.showmessage('Args:'+`arg`)
+## 		if arg:
+## 			windowinterface.showmessage('Args:'+`arg`)
 		return 1
 
 	def gotoanchor(self, (anchor1, anchor2, dir, type), arg):
