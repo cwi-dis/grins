@@ -895,7 +895,7 @@ class ChannelWindow(Channel):
 				raise windowinterface.Continue
 ## 			if hasattr(self._player, 'editmgr'):
 ## 				self.highlight()
-		elif len(buttons) == 1:
+		else:
 			button = buttons[0]
 			button.highlight()
 			_button = button
@@ -912,7 +912,7 @@ class ChannelWindow(Channel):
 				transparent = 0
 			if transparent:
 				raise windowinterface.Continue
-		elif len(buttons) == 1:
+		else:
 			button = buttons[0]
 			if _button is button:
 				try:
@@ -1129,7 +1129,25 @@ class ChannelWindow(Channel):
 			self.armed_display.close()
 		bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
-		self.armed_display.fgcolor(self.getfgcolor(node))
+		fgcolor = self.getfgcolor(node)
+		self.armed_display.fgcolor(fgcolor)
+		alist = node.GetRawAttrDef('anchorlist', [])
+		armed_anchor = None
+		for i in range(len(alist)-1,-1,-1):
+			a = alist[i]
+			atype = a[A_TYPE]
+			if atype == ATYPE_WHOLE:
+				if armed_anchor:
+					print 'multiple whole-node anchors on node'
+				armed_anchor = a
+		if armed_anchor:
+			self.armed_display.fgcolor(self.getbucolor(node))
+			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0))
+			b.hiwidth(3)
+			b.hicolor(self.gethicolor(node))
+			self.armed_display.fgcolor(fgcolor)
+			self.setanchor(armed_anchor[A_ID],
+				       armed_anchor[A_TYPE], b)
 		return 0
 
 	def play(self, node):

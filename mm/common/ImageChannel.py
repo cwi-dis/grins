@@ -46,22 +46,21 @@ class ImageChannel(ChannelWindow):
 			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 				continue
 			if atype == ATYPE_WHOLE:
-				# whole node means whole node...
-				x, y, w, h = 0, 0, 1, 1
-			else:
-				if len(args) == 0:
-					args = [0,0,1,1]
-				elif len(args) == 4:
-					args = self.convert_args(f, args)
-				if len(args) != 4:
-					print 'ImageChannel: funny-sized anchor'
-					continue
-				x, y, w, h = args[0], args[1], args[2], args[3]
-				# convert coordinates from image to window size
-				x = x * self._arm_imbox[2] + self._arm_imbox[0]
-				y = y * self._arm_imbox[3] + self._arm_imbox[1]
-				w = w * self._arm_imbox[2]
-				h = h * self._arm_imbox[3]
+				# whole node already done
+				continue
+			if len(args) == 0:
+				args = [0,0,1,1]
+			elif len(args) == 4:
+				args = self.convert_args(f, args)
+			if len(args) != 4:
+				print 'ImageChannel: funny-sized anchor'
+				continue
+			x, y, w, h = args[0], args[1], args[2], args[3]
+			# convert coordinates from image to window size
+			x = x * self._arm_imbox[2] + self._arm_imbox[0]
+			y = y * self._arm_imbox[3] + self._arm_imbox[1]
+			w = w * self._arm_imbox[2]
+			h = h * self._arm_imbox[3]
 			b = self.armed_display.newbutton((x, y, w, h))
 			b.hiwidth(3)
 			b.hicolor(hicolor)
