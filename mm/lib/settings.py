@@ -42,6 +42,7 @@ default_settings = {
 	'time_scale_factor': 1.0,	# Scale factor for sec to mm
 	'show_links':1,			# Show hyperlink icons
 	'no_initial_dialog': 0,		# Don't show initial dialog if true
+	'RPthumbnails': 0,		# RealPix thumbnails in timeline view
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
