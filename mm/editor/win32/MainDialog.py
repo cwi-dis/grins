@@ -77,7 +77,12 @@ class MainDialog:
 	def dropfile(self, arg, window, event, value):
 		x,y,filename=value
 		url=self.__path2url(filename)
-		self.openURL_callback(url)
+		import mimetypes, windowinterface
+		mimetype = mimetypes.guess_type(url)[0]
+		if mimetype in ('application/smil', 'application/x-grins-cmif'):
+			self.openURL_callback(url)
+		else:
+			windowinterface.showmessage('Incorrect filetype for drop/paste')
 
 	def __ccallback(self):
 		self.__owindow.close()
