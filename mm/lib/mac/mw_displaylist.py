@@ -280,7 +280,8 @@ class _DisplayList:
 			if cmd == 'image':
 				xscrolloffset, yscrolloffset = window._scrolloffset()
 				mask, image, srcx, srcy, dstx, dsty, w, h, units = entry[1:]
-				dstrect = self._convert_coordinates((dstx, dsty, w, h), units=units)
+				# dstrect = self._convert_coordinates((dstx, dsty, w, h), units=units)
+				dstrect = self._convert_coordinates((dstx, dsty, w, h))
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, dstrect)
 				return r
@@ -355,7 +356,8 @@ class _DisplayList:
 			Icn.PlotCIcon((x0, y0, x1, y1), icon)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h, units = entry[1:]
-			dstrect = self._convert_coordinates((dstx, dsty, w, h), units)
+			#dstrect = self._convert_coordinates((dstx, dsty, w, h), units)
+			dstrect = self._convert_coordinates((dstx, dsty, w, h))
 			if not self._render_overlaprgn(dstrect):
 				return
 			w = dstrect[2]-dstrect[0]
@@ -614,6 +616,7 @@ class _DisplayList:
 				    clip = None, align = None, units = None):
 		if units is None:
 			units = self.__units
+		units = self.__units # HACK BY JACK - Quick fix for double-conversion problem
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		win = self._window
@@ -1032,7 +1035,7 @@ class _Button:
 		pass
 		
 	def _convert_point(self, point):
-		return self._dispobj._window._convert_coordinates(point)
+		return self._dispobj._convert_coordinates(point)
 
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
