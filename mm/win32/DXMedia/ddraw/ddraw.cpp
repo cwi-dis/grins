@@ -625,51 +625,7 @@ DirectDrawSurface_SetColorKey(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_None;
 }
 
-static char DirectDrawSurface_GetColorMatch__doc__[] =
-""
-;
-static PyObject *
-DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
-{
-	COLORREF rgb;
-	if (!PyArg_ParseTuple(args, "i",&rgb))
-		return NULL;
-	COLORREF rgbT;
-    HDC hdc;
-    DWORD dw = CLR_INVALID;
-    DDSURFACEDESC ddsd;
-    HRESULT hres;
 
-	Py_BEGIN_ALLOW_THREADS
-    ZeroMemory(&ddsd, sizeof(ddsd));
-    //  use GDI SetPixel to color match for us
-    if (rgb != CLR_INVALID && self->pI->GetDC(&hdc) == DD_OK)
-		{
-        rgbT = GetPixel(hdc, 0, 0);             // save current pixel value
-        SetPixel(hdc, 0, 0, rgb);               // set our value
-        self->pI->ReleaseDC(hdc);
-		}
-
-    // now lock the surface so we can read back the converted color
-	ddsd.dwSize = sizeof(ddsd);
-    while ((hres = self->pI->Lock(NULL, &ddsd, 0, NULL)) == DDERR_WASSTILLDRAWING);
-    if (hres == DD_OK)
-		{
-        dw  = *(DWORD *)ddsd.lpSurface;                     // get DWORD
-        dw &= (1 << ddsd.ddpfPixelFormat.dwRGBBitCount)-1;  // mask it to bpp
-        self->pI->Unlock(NULL);
-		}
-
-    //  now put the color that was there back.
-    if (rgb != CLR_INVALID && self->pI->GetDC(&hdc) == DD_OK)
-		{
-        SetPixel(hdc, 0, 0, rgbT);
-        self->pI->ReleaseDC(hdc);
-		}	
-	Py_END_ALLOW_THREADS
-
-	return Py_BuildValue("i",dw);
-}
 
 
 static WORD LowBitPos(DWORD dword)
@@ -1059,6 +1015,44 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
+
+
+static char DirectDrawSurface_GetColorMatch__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	int r,g,b;
+	if (!PyArg_ParseTuple(args, "(iii)",&r,&g,&b))
+		return NULL;
+	
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize = sizeof(desc);
+	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT;
+	HRESULT hr = self->pI->GetSurfaceDesc(&desc);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_GetColorMatch:GetSurfaceDesc", hr);
+		return NULL;
+	}		
+
+	DWORD depth  = desc.ddpfPixelFormat.dwRGBBitCount;
+
+	DWORD ck = 0;
+	if (depth==8){
+		ck = FindColour(r,g,b);
+		}
+	else if (depth==16 || depth==24 || depth==32){
+		DWORD rp = r << loREDbit;
+		DWORD gp = g << loGREENbit;
+		DWORD bp = b << loBLUEbit;
+		ck = rp|gp|bp;		
+		}
+	
+	return Py_BuildValue("i",ck);
+}
+
 
 static char DirectDrawSurface_BltFill__doc__[] =
 ""
