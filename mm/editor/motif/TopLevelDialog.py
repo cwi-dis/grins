@@ -2,26 +2,27 @@ __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
 from usercmd import *
+from flags import *
 
 class TopLevelDialog:
 	adornments = {
 		'toolbar': [
-			('Play', PLAY),
-			('Player', PLAYERVIEW, 't'),
-			('Structure view', HIERARCHYVIEW, 't'),
-			('Timeline view', CHANNELVIEW, 't'),
-			('Layout view', LAYOUTVIEW, 't'),
-			('Hyperlinks', LINKVIEW, 't'),
-			('User groups', USERGROUPVIEW, 't'),
-			('Properties...', PROPERTIES),
-			('Source...', SOURCE),
-			('Edit Source...', EDITSOURCE),
-			('Save', SAVE),
-			('Save as...', SAVE_AS),
-			('Export...', EXPORT_SMIL),
-			('Restore', RESTORE),
-			('Close', CLOSE),
-			('Help', HELP),
+			(ALL, 'Play', PLAY),
+			(ALL, 'Player', PLAYERVIEW),
+			(ALL, 'Structure View', HIERARCHYVIEW),
+			(ALL, 'Timeline View', CHANNELVIEW),
+			(ALL, 'Layout View', LAYOUTVIEW),
+			(ALL, 'Hyperlinks', LINKVIEW),
+			(CMIF, 'User Groups', USERGROUPVIEW),
+			(ALL, 'Properties...', PROPERTIES),
+			(ALL, 'Source...', SOURCE),
+			(ALL, 'Edit Source...', EDITSOURCE),
+			(ALL, 'Save', SAVE),
+			(ALL, 'Save as...', SAVE_AS),
+			(ALL, 'Export...', EXPORT_SMIL),
+			(ALL, 'Restore', RESTORE),
+			(ALL, 'Close', CLOSE),
+			(ALL, 'Help', HELP),
 			],
 		'toolbarvertical': 1,
 		'close': [ CLOSE, ],
@@ -33,6 +34,7 @@ class TopLevelDialog:
 	def show(self):
 		if self.window is not None:
 			return
+		self.adornments['flags'] = curflags()
 		self.window = w = windowinterface.newcmwindow(None, None, 0, 0,
 				self.basename, adornments = self.adornments,
 				commandlist = self.commandlist)
