@@ -25,9 +25,6 @@ __version__ = "$Id$"
 ANCHOR1 = 0
 ANCHOR2 = 1
 DIR     = 2
-TYPE    = 3
-STYPE   = 4
-DTYPE   = 5
 
 # Link directions
 DIR_1TO2 = 0
@@ -127,16 +124,16 @@ class Hlinks:
 
 	# Reverse representation of a link
 	def revlink(self, link):
-		a1, a2, dir, type, stype, dtype = link
+		a1, a2, dir = link
 		if dir == DIR_1TO2:
 			dir = DIR_2TO1
 		elif dir == DIR_2TO1:
 			dir = DIR_1TO2
-		return (a2, a1, dir, type, stype, dtype)
+		return (a2, a1, dir)
 
 	def findnondanglinganchordict(self):
 		dict = {}
-		for a1, a2, dir, type, stype, dtype in self.links:
+		for a1, a2, dir in self.links:
 			dict[a1] = 1
 			dict[a2] = 1
 		return dict
