@@ -13,7 +13,8 @@ import windowinterface
 ALL_LAYOUTS = '(All Channels)'
 
 debug = 0
-treeVersion = 0
+
+from _LayoutView2 import treeVersion
 
 ###########################
 # helper class to build tree from list
@@ -553,7 +554,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# init the tree control with the current datas
 		if treeVersion:
-			self.initTreeCtrl()
+			self.buildTreeCtrl()
 		
 		# show the first viewport in the list		
 		currentViewportList = self.getViewportRefList()
@@ -634,6 +635,10 @@ class LayoutView2(LayoutViewDialog2):
 
 		# rebuild the node ref list		
 		self.__makeMediaRefList()
+
+		# rebuild the tree control with the current datas
+		if treeVersion:
+			self.rebuildTreeCtrl()
 		
 		self.treeMutation()
 
@@ -738,6 +743,9 @@ class LayoutView2(LayoutViewDialog2):
 		elif type == 'REGION_TREE':
 			self.treeMutation()
 			self.updateRegionTree()
+			# rebuild the tree control with the current datas
+			if treeVersion:
+				self.rebuildTreeCtrl()			
 		else:
 			# by default rebuild all
 			self.rebuildAll()
@@ -998,6 +1006,10 @@ class LayoutView2(LayoutViewDialog2):
 			node.toShowedState()
 			node.select()
 
+			# select the right node in the tree control
+			if treeVersion:
+				self.selectNodeInTreeCtrl(nodeRef)
+			
 			self.fillViewportListOnDialogBox()
 			self.fillRegionListOnDialogBox(viewportRef)
 			# update dialog box as well
@@ -2070,8 +2082,70 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'HideMedia':
 			self.__hideMedia()
 
-	def initTreeCtrl(self):
-		ret = self.treeCtrl.insertNode(0, 'viewport1', 'viewport', 'viewport')
-		ret2 = self.treeCtrl.insertNode(ret, 'text', 'region', 'region')
-		self.treeCtrl.insertNode(ret2, 'text', 'video', 'video')
-		self.treeCtrl.insertNode(ret2, 'text', 'image', 'image')
+	#
+	# tree ctrl management 
+	#
+
+	def __appendMediaInTreeCtrl(self, nodeRef, pNodeRef):
+		mediaType = nodeRef.GetChannelType()
+		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], nodeRef.attrdict.get('name'), mediaType, mediaType)
+		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
+		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+				
+	def __appendViewportInTreeCtrl(self, nodeRef):
+		ret = self.treeCtrl.insertNode(0, nodeRef.name, 'viewport', 'viewport')
+		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
+		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+		for subreg in self.__channelTreeRef.getsubregions(nodeRef.name):
+			self.__appendRegionInTreeCtrl(subreg, nodeRef)
+			
+	def __appendRegionInTreeCtrl(self, nodeRef, pNodeRef):
+		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], nodeRef.name, 'region', 'region')
+		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
+		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+		for subreg in self.__channelTreeRef.getsubregions(nodeRef.name):
+			self.__appendRegionInTreeCtrl(subreg, nodeRef)
+		mediaList = self.getMediaRefList(nodeRef)
+		for media in mediaList:
+			self.__appendMediaInTreeCtrl(media, nodeRef)
+
+	def buildTreeCtrl(self):
+		# XXX move to init method
+		self.treeCtrl.setHandler(self)
+		
+		self.nodeRefToNodeTreeCtrlId = {}
+		self.nodeTreeCtrlIdToNodeRef = {}
+		viewportRefList = self.__channelTreeRef.getviewports()
+		for viewportRef in viewportRefList:
+			self.__appendViewportInTreeCtrl(viewportRef)
+			# expand by default
+			self.treeCtrl.expandBranch(self.nodeRefToNodeTreeCtrlId[viewportRef])
+		
+	def rebuildTreeCtrl(self):
+		self.treeCtrl.destroyAllNodes()
+		# XXX to check that the gc collect the old one
+		self.buildTreeCtrl()
+
+	# selected node handler method
+	def onSelectTreeNodeCtrl(self, nodeTreeCtrlId):
+		nodeRefSelected = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+		if nodeRefSelected == None:
+			return
+		
+		# update focus
+		nodeType = self.getNodeType(nodeRefSelected)
+		if nodeType == None:
+			return
+		if nodeType == TYPE_REGION or nodeType == TYPE_VIEWPORT:
+			self.setglobalfocus('MMChannel', nodeRefSelected)
+		elif nodeType == TYPE_MEDIA:
+			self.setglobalfocus('MMNode', nodeRefSelected)
+		self.updateFocus()
+
+	# select a node in the tree control
+	def selectNodeInTreeCtrl(self, nodeRef):
+		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
+		if nodeTreeCtrlId != None:
+			self.treeCtrl.selectNode(nodeTreeCtrlId)
+
+		
