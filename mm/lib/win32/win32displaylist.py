@@ -302,10 +302,11 @@ class _DisplayList:
 		elif cmd == 'stipplebox':
 			if not self._overlap(region, entry[2]):
 				return
-			dc.SetBkMode(win32con.TRANSPARENT)
-			old = dc.SelectObject(entry[1])
+			oldmode = dc.SetBkMode(win32con.TRANSPARENT)
+			oldbrush = dc.SelectObject(entry[1])
 			dc.Rectangle(entry[2])
-			dc.SelectObject(old)
+			dc.SelectObject(oldbrush)
+			dc.SetBkMode(oldmode)
 		elif cmd == 'font':
 			#dc.SetFont(entry[1])
 			pass
@@ -435,7 +436,7 @@ class _DisplayList:
 			DrawLine(dc,entry[2],fg)
 			FillPolygon(dc,entry[3], fg)
 		elif cmd == 'text':
-			dc.SetBkMode(win32con.TRANSPARENT)
+			modeorg = dc.SetBkMode(win32con.TRANSPARENT)
 			dc.SetTextAlign(win32con.TA_BOTTOM)
 			clr_org=dc.SetTextColor(RGB(entry[1]))
 			horg=dc.SelectObjectFromHandle(entry[2].handle())
@@ -443,6 +444,7 @@ class _DisplayList:
 			dc.TextOut(x,y,str)
 			dc.SetTextColor(clr_org)
 			dc.SelectObjectFromHandle(horg)
+			dc.SetBkMode(modeorg)
 		elif cmd == 'icon':
 			if entry[2] != None:
 				x, y, w, h = entry[1]
