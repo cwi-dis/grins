@@ -5,7 +5,8 @@ __version__ = "$Id$"
 import FileCache
 import MMurl
 import Qt
-if not Qt.available():
+import windowinterface
+if not windowinterface._qtavailable():
 	Qt = None
 import QuickTime
 
