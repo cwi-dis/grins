@@ -70,7 +70,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.show_links = 1	# Show HTML links??? I think.. -mjvdg.
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
-		
+
 		self.__add_commands()
 		self.__dragside = None
 		HierarchyViewDialog.__init__(self)
@@ -102,7 +102,7 @@ class HierarchyView(HierarchyViewDialog):
 					# These extra selected widgets are added on top of the currently selected widget.
 		self.old_multi_selected_widgets = [] # The old list of widgets that need to all be unselected.
 		self.need_redraw_select = 0
-		
+
 		self.event_sources = [] # This is the specially selected "I am the node from which a new begin event will be made to"
 		self.old_event_sources = []
 		self.droppable_widget = None # ahh.. something that sjoerd added. Assume that it's used for the fancy drop-notification.
@@ -128,7 +128,7 @@ class HierarchyView(HierarchyViewDialog):
 
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
-			
+
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
 			CREATE_EVENT_SOURCE(callback = (self.set_event_source, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
@@ -166,7 +166,7 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_SWITCH(callback = (self.createaltcall, ())),
 				DELETE(callback = (self.deletecall, ())),
 				CUT(callback = (self.cutcall, ())),
-				]			
+				]
 		self.structure_commands = [
 				NEW_BEFORE(callback = (self.createbeforecall, ())),
 				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
@@ -189,7 +189,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
 			self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 
-			
+
 ##		else:			# TODO: clean this up. This should be later.
 ##			self.interiorcommands = []
 ##			self.pasteinteriorcommands = []
@@ -247,7 +247,7 @@ class HierarchyView(HierarchyViewDialog):
 			if grandchild.GetType() != 'seq':
 				return 0
 		return 1
-		
+
 	def _getmediaundercommands(self, ctx):
 		heavy = not features.lightweight
 		rv = [
@@ -336,9 +336,9 @@ class HierarchyView(HierarchyViewDialog):
 		elif len(self.multi_selected_widgets) < 1:
 			# No node selected.
 			return self.commands # XXX or should I return an empty list??
-		
+
 		fnode = self.get_selected_node()
-		fntype = fnode.GetType()	
+		fntype = fnode.GetType()
 
 		if fnode.WillPlay():
 			commands = commands + self.noslidecommands
@@ -403,7 +403,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not self.scene_graph in widgets:
 			commands = commands + self.notatrootcommands
 		return commands
-		
+
 	def aftersetfocus(self):
 		# Called after the focus has been set to a specific node.
 		# This:
@@ -431,7 +431,7 @@ class HierarchyView(HierarchyViewDialog):
 			popupmenu = self.multi_popupmenu
 			#commands = commands + ??.. how to you treat a multiple selection like a single object?
 
-		commands = self.__compute_commands(commands) # Adds to the commands for the current focus node.		
+		commands = self.__compute_commands(commands) # Adds to the commands for the current focus node.
 		#commands = fnode.GetCommands() # The preferred way of doing things.
 		self.setcommands(commands)
 
@@ -492,7 +492,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Other administratrivia
 		self.editmgr.register(self,1) # 1 means we want to participate in global focus management.
 		self.toplevel.checkviews()
-		
+
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		focusobject = self.editmgr.getglobalfocus()
@@ -519,7 +519,7 @@ class HierarchyView(HierarchyViewDialog):
 	#   these flags. This is much more flexible and easier than state management.
 	# -mjvdg.
 
-		
+
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
 		if self.drawing:
@@ -593,7 +593,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		else:
 			d = self.base_display_list.clone()
-			
+
 		# 2. Undraw stuff.
 		if len(self.old_event_sources) > 0:
 			for b in self.old_event_sources:
@@ -684,7 +684,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def init_display(self):
 		self.draw()
-		
+
 	def opt_init_display(self):
 		self.draw()
 
@@ -713,7 +713,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Note that any interactive event should probably call self.draw().
 	# Self.draw() uses a flag mechanism, and is smart enough not to waste
 	# time redrawing things that it doesn't need.
-	
+
 	def redraw(self, *rest):
 		# Handles redraw events, for example when the canvas is resized.
 		self.draw_scene()
@@ -823,7 +823,7 @@ class HierarchyView(HierarchyViewDialog):
 	# 3. Do the editmanager operations.
 	# 4. em.commit.
 	#
-	# # # # # # # # # # # # # # # # # # 
+	# # # # # # # # # # # # # # # # # #
 	# Operations on nodes.
 	#
 	# Always: Add, delete(/remove), Edit.
@@ -899,7 +899,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def get_selected_widgets(self):
 		return self.multi_selected_widgets
-	
+
 	def get_selected_widget(self):
 		if len(self.multi_selected_widgets) == 1:
 			return self.multi_selected_widgets[0]	# we don't want to return the first widget.
@@ -915,7 +915,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Adding a node.
 	# This code is near the end of this class under various createbefore.. createafter.. callbacks.
 	# At some stage they need to be moved here; there is no need to yet.
-	
+
 	######################################################################
 	# Delete the selected node.
 	def migrate_focus(self, nodes):
@@ -1007,11 +1007,15 @@ class HierarchyView(HierarchyViewDialog):
 		# it is permissable to copy to the root node, so that does not need to be checked.
 
 		copyme = []
-		for i in self.get_selected_nodes():
+		for i in nodes:
 			copyme.append(i.DeepCopy())
-		# XXX so where is this method?
-		# self.__clean_clipboard()
-		self.editmgr.setclip('multinode', copyme, owned=1)
+
+		if len(copyme) == 0:
+			self.editmgr.setclip('', None)
+		elif len(copyme) == 1:
+			self.editmgr.setclip('node', copyme[0], owned = 1)
+		else:
+			self.editmgr.setclip('multinode', copyme, owned = 1)
 
 		self.aftersetfocus()
 
@@ -1056,7 +1060,7 @@ class HierarchyView(HierarchyViewDialog):
 					wanted.append(attrname)
 			prop = self._copyattrdict(clipnode, node, wanted, editmgr=em)
 		em.commit()
-		
+
 	######################################################################
 	# Cut a node.
 	def cutcall(self):
@@ -1089,8 +1093,8 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			self.editmgr.setclip('multinode', nodes)
 		self.editmgr.commit()
-	
-		
+
+
 	######################################################################
 	# Paste a node. (TODO: multiple selected nodes).
 	# see self.paste()
@@ -1107,7 +1111,7 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Drag and drop
 	# TODO: find this code.
-	
+
 
 	def cvdrop(self, node, window, event, params):
 		# Change to an external node and re-drop it.
@@ -1128,7 +1132,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			self.draw()
 			return
-		
+
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]
 
@@ -1145,7 +1149,7 @@ class HierarchyView(HierarchyViewDialog):
 				return
 			self.select_widget(obj)
 			#self.setfocusobj(obj) # give the focus to the object which was dropped on.
-			
+
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
 		else:
@@ -1217,7 +1221,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def commit(self, type):
 		self.refresh_scene_graph()
-		
+
 		focusobject = self.editmgr.getglobalfocus()
 		if not focusobject:
 			# Shouldn't the editmgr do this?
@@ -1227,7 +1231,7 @@ class HierarchyView(HierarchyViewDialog):
 		#if type == 'STRUCTURE_CHANGED':	# for example, something was deleted or added
 		#	self.need_resize = 1
 		#elif type == 'ATTRS_CHANGED': # for example, a new event was added.
-		#	self.need_redraw = 1 
+		#	self.need_redraw = 1
 		self.draw()
 
 	def kill(self):
@@ -1268,7 +1272,7 @@ class HierarchyView(HierarchyViewDialog):
 				'There is no selection to insert into',
 				mtype = 'error', parent = self.window)
 			return
-			
+
 		parent = node.GetParent()
 		# pnode -- prospective parent of new node
 		if where:
@@ -1288,7 +1292,7 @@ class HierarchyView(HierarchyViewDialog):
 			if self.insertnode(newnode, where, index):
 				if not lightweight:
 					AttrEdit.showattreditor(self.toplevel, newnode)
-			return 
+			return
 
 		type = node.GetType()
 		if ntype is not None:
@@ -1305,7 +1309,7 @@ class HierarchyView(HierarchyViewDialog):
 			type = 'imm'
 		else:
 			type = 'ext'
-					
+
 		self.toplevel.setwaiting()
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
@@ -1349,7 +1353,7 @@ class HierarchyView(HierarchyViewDialog):
 			attributeName = 'project_default_region_sound'
 		elif computedType in ('image','svg','html','brush'):
 			attributeName = 'project_default_region_image'
-			
+
 		# the default channel is stored in the container nodes
 		if attributeName and pnode:
 			dftchannel = pnode.GetInherAttrDef(attributeName, None)
@@ -1358,10 +1362,10 @@ class HierarchyView(HierarchyViewDialog):
 		# look at the region defined for the sibling nodes
 		if not dftchannel:
 			dftchannel = self.__searchRegion1(pnode, node)
-				
+
 		if dftchannel:
 			node.SetAttr('channel', dftchannel)
-			
+
 		if layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
@@ -1413,7 +1417,7 @@ class HierarchyView(HierarchyViewDialog):
 							return dftchannel
 		# no valid region found
 		return None
-	
+
 	def insertparent(self, type):
 		# Inserts a parent node before this one.
 		# XXX TODO: rewrite me.
@@ -1467,7 +1471,7 @@ class HierarchyView(HierarchyViewDialog):
 		em.addnode(node, 0, newnode)
 		em.setnodeattr(newnode, 'file', url)
 		em.setnodeattr(newnode, 'name', name)
-		
+
 		em.setglobalfocus([newnode])
 		expandnode(newnode)
 
@@ -1478,7 +1482,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def paste(self, where):
 		# where is -1 (before), 0 (under) or 1 (after)
-		
+
 		type, node = self.editmgr.getclip()
 		if node is None:
 			windowinterface.showmessage(
@@ -1503,21 +1507,27 @@ class HierarchyView(HierarchyViewDialog):
 		elif type == 'multinode':
 			if not self.editmgr.transaction():
 				return
-			for n in node:	# I can't use insertnode because I need to access the editmanager.
+			focus = self.get_selected_node()
+			for n in node:
 				if n.context is not self.root.context:
 					n = n.CopyIntoContext(self.root.context)
-				self.editmgr.addnode(fnode, -1, n)
+				self.insertnode(n, where, start_transaction = 0, end_transaction = 0, focus = focus)
+				# next node inserted should come after this one
+				focus = n
+				where = 1
 			self.editmgr.commit()
 
-	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
+	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1, focus = None):
 		# 'where' is coded as follows: -1: before 0: under 1: after
 		assert where in [-1,0,1] # asserts by MJVDG.. delete them if they
 		assert node is not None # catch too many bugs :-).
 		assert isinstance(node, MMNode.MMNode)
 
+		if focus is None:
+			focus = self.get_selected_node()
 		if where <> 0:
 			# Get the parent
-			parent = self.get_selected_node().parent
+			parent = focus.GetParent()
 			if parent is None:
 				windowinterface.showmessage(
 					"Can't insert before/after the root",
@@ -1529,7 +1539,7 @@ class HierarchyView(HierarchyViewDialog):
 			ntype = self.get_selected_widget().get_node().GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
-			    node.GetChannelType() != 'animate'): 
+			    node.GetChannelType() != 'animate'):
 				windowinterface.showmessage('Selection is a leaf node!',
 							    mtype = 'error', parent = self.window)
 				node.Destroy()
@@ -1543,16 +1553,16 @@ class HierarchyView(HierarchyViewDialog):
 			# Add (using editmgr) a child to the node with focus
 			# Index is the index in the list of children
 			# Node is the new node
-			em.addnode(self.get_selected_node(), index, node)
+			em.addnode(focus, index, node)
 		else:
 			children = parent.GetChildren()
-			i = children.index(self.get_selected_node())
+			i = children.index(focus)
 			if where > 0:	# Insert after
 				i = i+1
 				em.addnode(parent, i, node)
 				# This code is actually unreachable - I suspect this function is
 				# only ever called when the node being added has no URL. -mjvdg
-				
+
 			else:		# Insert before
 				em.addnode(parent, i, node)
 
@@ -1631,7 +1641,7 @@ class HierarchyView(HierarchyViewDialog):
 		dstnode = dstwidget.node
 		if cmd == 'move' and srcnode.IsAncestorOf(dstnode):
 			windowinterface.showmessage("You cannot move a node to its children")
-			if mustdestroy: 
+			if mustdestroy:
 				mustdestroy.Destroy()
 			self.draw()
 			return None
@@ -1792,7 +1802,7 @@ class HierarchyView(HierarchyViewDialog):
 		if len(self.multi_selected_widgets) == 0:
 			self.select_widget(widget)
 			return
-		
+
 		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
 			widget = widget.get_mmwidget()
 
@@ -2012,7 +2022,7 @@ class HierarchyView(HierarchyViewDialog):
 	def createseqcall(self):
 		if self.get_selected_widget(): #self.get_selected_widget().createseqcall()
 			self.insertparent('seq')
-			
+
 	def createparcall(self):
 		if self.get_selected_widget(): #self.get_selected_widget().createparcall()
 			self.insertparent('par')
@@ -2032,7 +2042,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			windowinterface.beep() # Should not happen
 		self.draw()
-			
+
 	def __clear_event_source(self):
 		# Resets the event source list.
 		# called only from set_event_source
@@ -2041,7 +2051,7 @@ class HierarchyView(HierarchyViewDialog):
 			widget = b.views['struct_view']
 			widget.clear_dangling_event()
 		self.event_sources = []
-			
+
 	def create_begin_event_dest(self):
 		widgets = self.get_selected_widgets()
 
@@ -2099,7 +2109,7 @@ class HierarchyView(HierarchyViewDialog):
 		# - repeats??
 		# - the root node (done)
 		# - special types of nodes (comment nodes, priority classes)
-		
+
 		# first check if this can happen.
 		if not self.get_selected_widget():
 			self.popup_error("No selected node!")
@@ -2170,7 +2180,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Copy the list..
 		for l in self.root.context.hyperlinks.links:
 			links.append(l)
-		
+
 		# Re-align them to the parent node
 		for l in links:
 			# l is a tuple that points to my anchors.
@@ -2226,7 +2236,7 @@ class HierarchyView(HierarchyViewDialog):
 		for c in current.children:
 			return_me = return_me + self.find_events_to_node(node, c)
 		return return_me
-		
+
 	def _copyattrdict(self, oldnode, newnode, attrnamelist=None, editmgr=None):
 		# Copy (part of) a nodes attrdict to another node
 		attrdict = oldnode.attrdict
