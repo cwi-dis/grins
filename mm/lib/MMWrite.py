@@ -41,7 +41,7 @@ def writenode(x, fp):
 			writenode(child, fp)
 	elif type = 'imm':
 		for value in x.GetValues():
-			fp.write(' ')
+			fp.write('\n')
 			writeany(value, None, fp)
 	elif type = 'ext':
 		pass
