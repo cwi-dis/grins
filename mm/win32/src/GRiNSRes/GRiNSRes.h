@@ -116,6 +116,7 @@
 #define IDI_IDLE                        319
 #define IDR_TB_ALIGNMENT                320
 #define IDD_EDITATTR_LIST               321
+#define IDB_SPLASHSMILBOSTON            321
 #define IDD_EVENT                       322
 #define IDD_EDITSTRINGATTR2             323
 #define IDD_EDITATTR_S7                 324

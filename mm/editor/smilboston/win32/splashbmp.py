@@ -2,4 +2,4 @@
 
 def getResId():
 	import grinsRC
-	return grinsRC.IDB_SPLASHSMIL
+	return grinsRC.IDB_SPLASHSMILBOSTON

@@ -353,6 +353,10 @@ SOURCE=.\GRiNSRes.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\Build\products\smil-20\editor\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\zoomin.ico
 # End Source File
 # Begin Source File
