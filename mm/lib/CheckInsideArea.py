@@ -28,7 +28,7 @@ def insideCircle(xSrc, ySrc, xCenter, yCenter, radius):
 	distance = math.sqrt(m1+m2)
 	return distance < radius
 
-def insideElipse(xSrc, ySrc, xCenter, yCenter, xRadius, yRadius):
+def insideEllipse(xSrc, ySrc, xCenter, yCenter, xRadius, yRadius):
 	import math
 	
 	if xRadius == 0 or yRadius == 0:		
