@@ -366,7 +366,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		# GetClientRect by def returns always: 0, 0, w, h
 		w_left,w_top,w_width,w_height = window.GetClientRect()
 
-		left,top,width,height = window._convert_coordinates(coordinates)
+		left,top,width,height = window._convert_coordinates(coordinates, units = windowinterface.UNIT_PXL)
 		if width==0 or height==0:
 			print 'warning: zero size media rect' 
 			width, height = w_width, w_height
