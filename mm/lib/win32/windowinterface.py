@@ -16,6 +16,7 @@ newcmwindow = toplevel.newwindow
 close = toplevel.close
 
 addclosecallback = toplevel.addclosecallback
+removeclosecallback = toplevel.removeclosecallback
 
 setcursor = toplevel.setcursor
 
