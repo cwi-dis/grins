@@ -92,6 +92,7 @@ MENUBAR=(
 			)),
 		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
 		(FLAG_ALL, ENTRY, '&Delete\tDel', None, DELETE),
+		(FLAG_ALL, ENTRY, '&Delete, but keep content', None, MERGE_CHILD),
 		(FLAG_ALL, SEP,),
 		((features.SOURCE_VIEW,), ENTRY, '&Find...\tCtrl+F', 'F', FIND),
 		((features.SOURCE_VIEW,), ENTRY, 'Find Next\tF3', None, FINDNEXT),
@@ -226,9 +227,7 @@ MENUBAR=(
 			((features.ALIGNTOOL,), ENTRY, '&Vertically', 'V', DISTRIBUTE_VERTICALLY),
 			)),
 		((features.ALIGNTOOL,), SEP,),
-		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
 		# XXX temporare
-		(FLAG_ALL, SEP,),
 		(FLAG_PRO, TOGGLE, 'Enable animation', None, ENABLE_ANIMATION),
 		)),
 
@@ -383,10 +382,7 @@ POPUP_HVIEW_LEAF = (
 			)),
 		)),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		#(FLAG_ALL, CASCADE, '&Merge', (
-		(FLAG_ALL, ENTRY, 'Merge with parent', None, MERGE_PARENT),
-		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
-		#	)),
+		(FLAG_ALL, ENTRY, 'Delete, but keep content', None, MERGE_CHILD),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&review single object', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Preview &from object', None, PLAYFROM),
@@ -516,10 +512,7 @@ POPUP_HVIEW_STRUCTURE = (
 			)),
 		)),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		#(FLAG_ALL, CASCADE, '&Merge', (
-		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
-		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
-		#	)),
+		(FLAG_ALL, ENTRY, 'Delete, but keep content', None, MERGE_CHILD),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&review single object', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Preview &from object', None, PLAYFROM),

@@ -149,9 +149,12 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
-			#MERGE_CHILD(callback = (self.merge_child, ())),
 			LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))),
 			CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))),
+			]
+
+		self.interiorsinglechildcommands = [
+			MERGE_CHILD(callback = (self.merge_child, ())),
 			]
 
 		if features.H_PLAYABLE in features.feature_set:
@@ -174,7 +177,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
 		self.singlechildcommands = [
-			MERGE_PARENT(callback=(self.merge_parent, ())),
+			#MERGE_PARENT(callback=(self.merge_parent, ())),
 			]
 
 		self.pasteinteriorcommands = [
@@ -360,6 +363,9 @@ class HierarchyView(HierarchyViewDialog):
 			else:
 				# parent not an interior node (but e.g. a media node)
 				commands = commands + self.notatrootcommands[:2] # DELETE & CUT are allowed
+			if fnode.GetType() in MMTypes.interiortypes and \
+					len(fnode.GetChildren()) == 1:
+				commands = commands + self.interiorsinglechildcommands
 
 			commands = commands + self.navigatecommands[0:1]
 
@@ -2312,7 +2318,7 @@ class HierarchyView(HierarchyViewDialog):
 					self.also_select_widget(icon)
 			self.draw()
 
-	def merge_parent(self):
+	def merge_child(self):
 		# This merges a child node with it's parent.
 		# Possible special cases:
 		# - child node event depends on parent
@@ -2334,17 +2340,16 @@ class HierarchyView(HierarchyViewDialog):
 			# Should not happen.
 			self.popup_error("You can only merge nodes.")
 			return
-		child = widget.node
-		if not child.parent:
-			# Should not happen.
-			self.popup_error("The root node has no parent to merge with.")
-			return
-		parent = child.GetParent()
+		parent = widget.node
 		# Now, check that this node is an only child.
+		if len(parent.GetChildren()) == 0:
+			self.deletecall()
+			return
 		if len(parent.GetChildren()) != 1:
 			# Should not happen
-			self.popup_error("You can only merge a node with its parent if it has no siblings.")
+			self.popup_error("You cannot delete a group with more than one child.")
 			return
+		child = parent.GetChildren()[0]
 		# also check that the child is not an immediate node
 		# After a brief discussion with Sjoerd, this shouldn't be a problem.
 
