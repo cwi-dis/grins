@@ -2040,10 +2040,10 @@ class TimelineWidget(MMWidgetDecoration):
 		halflabelwidth = labelwidth / 2
 		lastlabelpos = x - halflabelwidth - 1
 		lb, ub, quantum, factor = setlim(t0, t2)
-		length = length * (ub-lb) / (t2-t0)
+		length = length * (ub-lb) / (factor * (t2-t0))
 		maxnlabel = length / labelwidth
 		qf = qr = 1
-		while quantum > 10:
+		while quantum >= 10:
 			qf = qf * 10
 			quantum = quantum / 10
 		prev = qf, qr, quantum
@@ -2094,17 +2094,16 @@ class TimelineWidget(MMWidgetDecoration):
 					label = fmtfloat(time)
 				else:
 					label = '%02d:%02.2d'%(int(time)/60, int(time)%60)
-				if tick_x_mid-halflabelwidth < x + sizes_notime.HEDGSIZE:
-					width = displist.strsizePXL(label)[0]
+				lw = displist.strsizePXL(label)[0]
+				if tick_x_mid-lw/2 < x + sizes_notime.HEDGSIZE:
 					displist.setpos(x + sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
-				elif tick_x_mid+halflabelwidth > x + w - sizes_notime.HEDGSIZE:
-					width = displist.strsizePXL(label)[0]
-					displist.setpos(x + w - width - sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
+				elif tick_x_mid+lw/2 > x + w - sizes_notime.HEDGSIZE:
+					displist.setpos(x + w - lw - sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
 				else:
-					displist.centerstring(tick_x_mid-halflabelwidth, label_top,
-							      tick_x_mid+halflabelwidth, label_bot, label)
+					displist.centerstring(tick_x_mid-lw/2-1, label_top,
+							      tick_x_mid+lw/2+1, label_bot, label)
 			elif t % 10 == 0:
 				cur_tick_top = midtick_top
 				cur_tick_bot = midtick_bot
