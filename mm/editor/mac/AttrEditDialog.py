@@ -297,6 +297,7 @@ class AttrEditorDialogField:
 			self.__parent._option.setitems(list, value)
 		else:
 			self.__parent._setlabel(ITEM_STRING, value)
+			self.__parent._selectinputfield(ITEM_STRING)
 		self.__parent._setlabel(ITEM_INFO_ATTRNAME, attrname)
 		self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
 		self.__parent._setlabel(ITEM_INFO_HELP, help)
@@ -337,6 +338,7 @@ class AttrEditorDialogField:
 			r, g, b = color
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
 			self.__parent._setlabel(ITEM_STRING, value)
+			self.__parent._selectinputfield(ITEM_STRING)
 			
 ##	def __option_callback(self):
 ##		"""Callback called when a new option is to be selected."""
@@ -374,6 +376,7 @@ class AttrEditorDialogField:
 			self.__parent._option.select(value)
 		else:
 			self.__parent._setlabel(ITEM_STRING, value)
+			self.__parent._selectinputfield(ITEM_STRING)
 
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
