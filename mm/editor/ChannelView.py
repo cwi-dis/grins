@@ -42,6 +42,8 @@ CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
 CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
 NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match hierarchy view
 ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
+NODEOFFCOLOR = CHANNELOFFCOLOR
+ALTNODEOFFCOLOR = BGCOLOR
 ARROWCOLOR = fix(0, 0, 255)		# Blue
 TEXTCOLOR = fix(0, 0, 0)		# Black
 FOCUSCOLOR = fix(255, 0, 0)		# Red (for sync arcs only now)
@@ -712,9 +714,10 @@ class ChannelView(ChannelViewDialog):
 		for nodelist in self.channelnodes.values():
 			newnodelist = []
 			for node in nodelist:
-				prearm, bandwidth, t0, t1 = \
-					node.getbandwidthdata()
-				newnodelist.append(t0, t1, node, prearm, bandwidth)
+				bwdata = node.getbandwidthdata()
+				if not bwdata:
+					continue
+				newnodelist.append(bwdata)
 			nodematrix.append(newnodelist)
 		# loop over nodes and create continuous media bandwidth boxes
 		for nodelist in nodematrix:
@@ -734,6 +737,7 @@ class ChannelView(ChannelViewDialog):
 					break
 				prerolltime = prerolltime + \
 					      (float(prearm)/maxbandwidth)
+##				if prearm: print 'PREROLL', t0, t1, node, prearm, bandwidth, prerolltime #DBG
 		# Adjust timebar
 		self.prerolltime = prerolltime
 		# And the rest of the prearms
@@ -747,6 +751,7 @@ class ChannelView(ChannelViewDialog):
 		prearmlist.sort()
 		for t_arm, t0, prearm, node in prearmlist:
 			pabox = self.bwstripobject.pabox(t_arm, t0, prearm)
+##			print 'PREARM', t_arm, t0, prearm, '->', pabox
 			node.bandwidthboxes = node.bandwidthboxes + pabox
 		
 	# Focus stuff (see also recalc)
@@ -1807,6 +1812,13 @@ class NodeBox(GO, NodeBoxCommand):
 		haboxsize = w / 2
 		vaboxsize = h / 3
 
+		if self.node.WillPlay():
+			nodecolor = NODECOLOR
+			altnodecolor = ALTNODECOLOR
+		else:
+			nodecolor = NODEOFFCOLOR
+			altnodecolor = ALTNODEOFFCOLOR
+
 		# Draw a box
 		if self.locked:
 			color = LOCKEDCOLOR
@@ -1814,13 +1826,13 @@ class NodeBox(GO, NodeBoxCommand):
 			try:
 				color = armcolors[self.node.armedmode]
 			except KeyError:
-				color = NODECOLOR
+				color = nodecolor
 		d.drawfbox(color, (l, t, r - l, b - t))
 
 		# If the end time was inherited, make the bottom-right
 		# triangle of the box a lighter color
 		if self.node.t0t1_inherited:
-			d.drawfpolygon(ALTNODECOLOR, [(r, t), (r, b), (l, b)])
+			d.drawfpolygon(altnodecolor, [(r, t), (r, b), (l, b)])
 
 		# If there are anchors on this node,
 		# draw a small orange box in the top right corner
@@ -1869,10 +1881,12 @@ class NodeBox(GO, NodeBoxCommand):
 		d.centerstring(l, t, r, b, self.name)
 
 	def getbandwidthdata(self):
+		if not self.node.WillPlay():
+			return None
 		t0 = self.node.t0
 		t1 = self.node.t1
 		prearm, bandwidth = Bandwidth.get(self.node)
-		return prearm, bandwidth, t0, t1
+		return t0, t1, self, prearm, bandwidth
 
 	# Menu stuff beyond what GO offers
 
