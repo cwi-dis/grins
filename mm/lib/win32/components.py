@@ -836,9 +836,12 @@ class BandwidthComputeDialog(ResDialog):
 		self._preroll = Static(self, grinsRC.IDC_PREROLL)
 		self._stalltime = Static(self, grinsRC.IDC_STALLTIME)
 		self._stallcount = Static(self, grinsRC.IDC_STALLCOUNT)
+		self._errorcount = Static(self, grinsRC.IDC_ERRORCOUNT)
+		self._message2 = Static(self, grinsRC.IDC_MESSAGE2)
 		self._ok = Button(self, win32con.IDOK)
 		self._cancel = Button(self, win32con.IDCANCEL)
 		self._help = Button(self, win32con.IDHELP)
+		self.mustwait = 0
 		self.CreateWindow()
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
@@ -851,12 +854,39 @@ class BandwidthComputeDialog(ResDialog):
 		return ResDialog.OnInitDialog(self)
 
 	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
-		print 'setinfo called'
+		msg = ''
+		if prerolltime or errorseconds or errorcount or delaycount:
+			self.mustwait = 1
+			msg = 'This is a minor problem.'
+		if errorcount:
+			msg = 'You should probably fix this.'
+		if errorseconds == 0:
+			errorseconds = '0 seconds'
+		elif errorseconds < 1:
+			errorseconds = 'less than a second'
+		else:
+			errorseconds = '%d seconds'%errorseconds
+			msg = 'You should probably fix this.'
+		if errorcount == 1:
+			errorcount = '1 item'
+		else:
+			errorcount = '%d items'%errorcount
+		if delaycount == 1:
+			delaycount = '1 item'
+		else:
+			delaycount = '%d items'%delaycount
 		self._preroll.settext('%d s'%prerolltime)
-		self._stalltime.settext('%d s'%errorseconds)
-		self._stallcount.settext('%d items'%errorcount)
+		self._stalltime.settext(errorseconds)
+		self._stallcount.settext(delaycount)
+		self._errorcount.settext(errorcount)
+		self._message2.settext(msg)
 
 	def done(self, callback=None, cancancel=0):
+		if cancancel and self.mustwait == 0:
+			# Continue without waiting
+			self.close()
+			callback()
+			return
 		self.callback = callback
 		self._ok.enable(1)
 		if cancancel:
