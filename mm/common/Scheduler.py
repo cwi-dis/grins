@@ -260,6 +260,9 @@ class SchedulerContext:
 		if timestamp is None:
 			timestamp = self.parent.timefunc()
 		playroot.start_time = timestamp
+		if playroot.first_start_time is None or \
+		   playroot.first_start_time > playroot.start_time:
+			playroot.first_start_time = playroot.start_time
 		if playroot.looping_body_self:
 			playroot.looping_body_self.start_time = timestamp
 		if playroot.realpix_body:
@@ -352,7 +355,7 @@ class SchedulerContext:
 					break
 			if skip:
 				continue
-			if arc.timestamp != timestamp+arc.delay and arc.qid is None:
+			if arc.qid is None:
 				if arc.isstart:
 					if arc.dstnode.parent:
 						srdict = arc.dstnode.parent.gensr_child(arc.dstnode, runchild = 0)
@@ -369,24 +372,28 @@ class SchedulerContext:
 			if not arc.ismin and (arc.dstnode is not node or dev != event):
 				self.sched_arcs(arc.dstnode, dev, timestamp=timestamp+arc.delay)
 
-	def trigger(self, arc):
+	def trigger(self, arc, node = None, timestamp = None):
+		# if isjump==1, arc is not used
+		# if isjump==0, timestamp is not used
 		queue = self.parent.selectqueue()
 		if queue:
 			self.parent.toplevel.setwaiting()
 			for action in queue:
 				if not self.parent.playing:
 					break
-				timestamp = None
+				ts = None
 				if len(action) > 3:
-					timestamp = action[3]
+					ts = action[3]
 					action = action[:3]
-				self.parent.runone(action, timestamp)
+				self.parent.runone(action, ts)
 
-		timestamp = arc.resolvedtime(self.parent.timefunc)
-		node = arc.dstnode
-		arc.qid = None
-		if debugevents: print 'trigger', `arc`, timestamp
-		if arc.ismin:
+		if arc is not None:
+			timestamp = arc.resolvedtime(self.parent.timefunc)
+			node = arc.dstnode
+			arc.qid = None
+			if debugevents: print 'trigger', `arc`, timestamp
+		elif debugevents: print 'trigger', `node`, timestamp
+		if arc is not None and arc.ismin:
 			node.has_min = 0
 			node.scheduled_children = node.scheduled_children - 1
 			while node.delayed_arcs:
@@ -394,7 +401,7 @@ class SchedulerContext:
 				del node.delayed_arcs[0]
 				self.trigger(arc)
 			return
-		if not arc.isstart:
+		if arc is not None and not arc.isstart:
 			if node.has_min:
 				# must delay this arc
 				node.delayed_arcs.append(arc)
@@ -428,10 +435,12 @@ class SchedulerContext:
 			# ignore event when node can't play
 			if debugevents: print 'parent not playing'
 			return
-		if (node.playing in (MMStates.PLAYING, MMStates.PAUSED) and \
-		    MMAttrdefs.getattr(node, 'restart') != 'always') or \
-		   (node.playing in (MMStates.FROZEN, MMStates.PLAYED) and \
-		    MMAttrdefs.getattr(node, 'restart') == 'never'):
+		# ignore restart attribute on hyperjump (i.e. when arc is None)
+		if arc is not None and \
+		   ((node.playing in (MMStates.PLAYING, MMStates.PAUSED) and
+		     MMAttrdefs.getattr(node, 'restart') != 'always') or
+		    (node.playing in (MMStates.FROZEN, MMStates.PLAYED) and
+		     MMAttrdefs.getattr(node, 'restart') == 'never')):
 			# ignore event when node doesn't want to play
 			if debugevents: print "node won't restart"
 			return
@@ -442,9 +451,9 @@ class SchedulerContext:
 				if not a.isresolved():
 					# any unresolved time is after any resolved time
 					break
-				if a.resolvedtime(self.parent.timefunc) > arc.resolvedtime(self.parent.timefunc):
+				if a.resolvedtime(self.parent.timefunc) > timestamp:
 					break
-				elif a.resolvedtime(self.parent.timefunc) == arc.resolvedtime(self.parent.timefunc):
+				elif a.resolvedtime(self.parent.timefunc) == timestamp:
 					equal = 1
 					break
 			else:
@@ -485,7 +494,10 @@ class SchedulerContext:
 					elif action == 'defer':
 						srdict = pnode.gensr_child(node)
 						self.srdict.update(srdict)
-						node.start_time = arc.resolvedtime(self.parent.timefunc)
+						node.start_time = timestamp
+						if node.first_start_time is None or \
+						   node.first_start_time > node.start_time:
+							node.first_start_time = node.start_time
 						if node.looping_body_self:
 							node.looping_body_self.start_time = node.start_time
 						if node.realpix_body:
@@ -531,7 +543,10 @@ class SchedulerContext:
 		srdict = pnode.gensr_child(node, runchild)
 		self.srdict.update(srdict)
 ##		if debugevents: self.dump()
-		node.start_time = arc.resolvedtime(self.parent.timefunc)
+		node.start_time = timestamp
+		if node.first_start_time is None or \
+		   node.first_start_time > node.start_time:
+			node.first_start_time = node.start_time
 		if node.looping_body_self:
 			node.looping_body_self.start_time = node.start_time
 		if node.realpix_body:
@@ -546,6 +561,38 @@ class SchedulerContext:
 ##			self.sched_arcs(node, 'end', timestamp=timestamp)
 			self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
 
+	def gototime(self, node, gototime, timestamp):
+		# timestamp is "current" time
+		# gototime is time where we want to start
+		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+			if node.start_time > gototime:
+				# node must start later, so terminate
+				self.do_terminate(node, timestamp)
+			elif node.type in interiortypes:
+				# interior node that should still play
+				# recurse to children
+				for c in node.children:
+					self.gototime(c, gototime, timestamp)
+			else:
+				# restart node at gototime
+				# XXX
+				self.trigger(None, node, gototime)
+				self.sched_arcs(node, 'begin', timestamp = gototime)
+		elif node.playing == MMStates.PLAYED:
+			if node.start_time > gototime:
+				# do nothing
+				# most of all, do not recurse
+				pass
+			else:
+				# restart node at gototime
+				# we know that parent node is playing
+				# XXX
+				self.trigger(None, node, gototime)
+				self.sched_arcs(node, 'begin', timestamp = gototime)
+		else:
+			# node not yet played, don't know timestamp
+			pass
+		
 	def do_terminate(self, node, timestamp):
 		if debugevents: print 'do_terminate',node,timestamp
 ##		if debugevents: self.parent.dump()
@@ -649,6 +696,9 @@ class SchedulerContext:
 		ev = (SR.SCHED, node)
 		if self.srdict.has_key(ev):
 			node.start_time = timestamp
+			if node.first_start_time is None or \
+			   node.first_start_time > node.start_time:
+				node.first_start_time = node.start_time
 			self.parent.event(self, ev, timestamp)
 		else:
 			self.resume_play(node, timestamp)
@@ -1215,31 +1265,32 @@ class Scheduler(scheduler):
 		id = scheduler.enterabs(self, time, priority, action, argument)
 		self.updatetimer()
 		return id
-	#
+
 	def timefunc(self):
-	        #if self.frozen: return self.frozen_value
 		if self.paused:
 			return self.time_pause - self.time_origin
 		return time.time() - self.time_origin
-	#
+
 	def resettimer(self):
-		#self.rate = 0.0		# Initially the clock is frozen
-		#self.frozen = 0
-		#self.frozen_value = 0
 		self.time_origin = time.time()
 		self.time_pause = self.time_origin
-	#
+
 	def getpaused(self):
 		return self.paused
 
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp = None):
 		if self.paused == paused:
 			return
 
 		# Subtract time paused
 		if not paused:
-			self.time_origin = self.time_origin + \
-				  (time.time()-self.time_pause)
+			if timestamp is None:
+				# normal case
+				self.time_origin = self.time_origin + \
+						   (time.time()-self.time_pause)
+			else:
+				# unpause and set clock to timestamp
+				self.time_origin = time.time() - timestamp
 		else:
 			self.time_pause = time.time()
 		self.paused = paused

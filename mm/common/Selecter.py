@@ -10,6 +10,7 @@ from Scheduler import Scheduler
 from AnchorDefs import *
 from MMTypes import *
 from MMExc import *			# exceptions
+import MMStates
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 import windowinterface
 import SR
@@ -246,33 +247,22 @@ class Selecter:
 					rv = 1
 			return rv
 		# It is not a composite anchor. Continue
-		while seek_node.GetType() in bagtypes:
-			dest_aid = None
-			seek_node = choosebagitem(seek_node, 1)
-			if seek_node is None:
-				return 0
-##		print 'BEFORE KILL FOR', seek_node #DBG
-##		self.dumpbaglist() #DBG
-		baglist = self.findbaglist(seek_node)
-##		print 'BAGLIST', baglist #DBG
-		baglist = self.killconflictingbags(baglist)
-##		print 'AFTER KILL FOR', seek_node # DBG
-##		self.dumpbaglist() # DBG
-		if not self.startbaglist(baglist[1:], baglist[0]):
-			return 0
-##		print 'AFTER STARTBAGLIST' #DBG
-##		self.dumpbaglist() # DBG
-		mini, sctx, bag, parent = baglist[0]
-		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, arg)
-		if not new_sctx:
-			dummy = self.killconflictingbags(baglist)
-			return 0
-		self.runslots.append((mini, new_sctx, bag, parent))
-		self.updateuibaglist()
-##		print 'AFTER APPEND FOR', seek_node #DBG
-##		self.dumpbaglist() ##DBG
-		return 1
-	#
+		self.scheduler.setpaused(1)
+		timestamp = self.scheduler.timefunc()
+		if seek_node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN, MMStates.PLAYED):
+			# case 1, the target element is or has been active
+			if seek_node.playing == MMStates.PLAYED:
+				gototime = seek_node.first_start_time
+			else:
+				gototime = seek_node.start_time
+			self.root.sctx.gototime(self.root, gototime, timestamp)
+			self.scheduler.setpaused(0, gototime)
+			return 1	# succeeded
+
+		# XXX
+		# need to implement "fast forward"
+		return 0
+
 	def followcompanchors(self, node, aid):
 		if not aid:
 			return None
