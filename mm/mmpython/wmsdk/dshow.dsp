@@ -126,6 +126,10 @@ SOURCE=.\dshow.cpp
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\dshow.rc
+# End Source File
 # End Group
 # Begin Source File
 
