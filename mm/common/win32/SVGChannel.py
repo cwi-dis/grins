@@ -101,9 +101,10 @@ class SVGChannel(Channel.ChannelWindow):
 		import svgrender, svgwin
 		svggraphics = svgwin.SVGWinGraphics()
 		sw, sh = self.svgorgsize
-		dw, dh = self.svgdstrect[2:]
-		sx, sy = dw/float(sw), dh/float(sh)
-		svggraphics.applyTfList([('scale',[sx, sy]),])
+		if sw and sh:
+			dw, dh = self.svgdstrect[2:]
+			sx, sy = dw/float(sw), dh/float(sh)
+			svggraphics.applyTfList([('scale',[sx, sy]),])
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
 		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
