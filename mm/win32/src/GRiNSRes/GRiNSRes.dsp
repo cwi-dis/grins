@@ -53,15 +53,15 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /noentry
 # Begin Custom Build - Generating grinsRC.py
 OutDir=.\..\Build
-InputPath=\cmif\win32\src\Build\GRiNSRes.dll
+InputPath=\ufs\mm\cmif\win32\src\Build\GRiNSRes.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	d:\cmif\bin\python d:\python\tools\scripts\h2py.py  GRiNSRes.h 
+	d:\ufs\mm\python\PCbuild\python d:\ufs\mm\python\tools\scripts\h2py.py  GRiNSRes.h 
 	copy GRiNSRes.py $(OutDir)\grinsRC.py 
 	del GRiNSRes.py 
-	del d:\cmif\bin\GRiNSRes.dll 
-	copy $(OutDir)\GRiNSRes.dll d:\cmif\bin 
+	del d:\ufs\mm\cmif\bin\GRiNSRes.dll 
+	copy $(OutDir)\GRiNSRes.dll d:\ufs\mm\cmif\bin 
 	
 # End Custom Build
 # Begin Target
@@ -102,6 +102,10 @@ SOURCE=.\RES\hand.cur
 # Begin Source File
 
 SOURCE=.\RES\ico00001.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\splashimg.bmp
 # End Source File
 # End Target
 # End Project
