@@ -37,6 +37,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__rc = None
 		self.__type = None
 		self.need_armdone = 0
+		self.__playing = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -50,6 +51,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return 1
 
 	def do_hide(self):
+		self.__playing = None
 		self.__mc.unregister_for_timeslices()
 		self.__mc.release_res()
 		self.__mc.paint()
@@ -98,6 +100,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return 1
 
 	def do_play(self, node):
+		self.__playing = node
 		self.__type = node.__type
 		if not self.__ready:
 			# arming failed, so don't even try playing
@@ -117,17 +120,22 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__rc:
 			self.__rc.pauseit(paused)
 
-	# Part of stop sequence. Stop and remove last frame 
-	def stopplay(self, node):
-		if self.__type == 'real':
-			if self.__rc:
-				self.__rc.stopit()
-		else:
-			if self.__mc is not None:
+	def playstop(self):
+		self.__stopplayer()
+		self.playdone(1)		
+				
+	def __stopplayer(self):
+		if self.__playing:
+			if self.__type == 'real':
+				if self.__rc:
+					self.__rc.stopit()
+			else:
 				self.__mc.stopit()
-		if self.window:
-			self.window.RedrawWindow()
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		self.__playing = None
+
+	def endoftime(self):
+		self.__stopplayer()
+		self.playdone(0)
 
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
@@ -185,8 +193,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.need_armdone = 0 # play_1 calls armdone()
 			self.play_1()
 
-	def playdone(self, dummy):
+	def playdone(self, outside_induced):
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
-		Channel.ChannelWindowAsync.playdone(self, dummy)
+		Channel.ChannelWindowAsync.playdone(self, outside_induced)
+		if not outside_induced:
+			self.__playing = None

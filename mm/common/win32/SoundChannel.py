@@ -104,16 +104,22 @@ class SoundChannel(Channel.ChannelAsync):
 			self.errormsg(node,'Can not play')
 			self.playdone(0)
 
-	# part of stop sequence
-	def stopplay(self, node):
-		if self.__playing is node and node is not None:
+	def playstop(self):
+		self.__stopplayer()
+		self.playdone(1)		
+				
+	def __stopplayer(self):
+		if self.__playing:
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.stopit()
 			else:
 				self.__mc.stopit()
 		self.__playing = None
-		Channel.ChannelAsync.stopplay(self, node)
+
+	def endoftime(self):
+		self.__stopplayer()
+		self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -138,9 +144,9 @@ class SoundChannel(Channel.ChannelAsync):
 			self.armdone()
 
 	def playdone(self, outside_induced):
-		if not outside_induced:
-			self.__playing = None
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
 		Channel.ChannelAsync.playdone(self, outside_induced)
+		if not outside_induced:
+			self.__playing = None
