@@ -6,20 +6,17 @@ from MMExc import *			# exceptions
 import sys
 
 class PythonChannel(Channel):
-	def seekanchor(self, node, aid, args):
-		self.seekargs = args
-		
 	def do_play(self, node):
 		if node.GetType() <> 'imm':
 			print 'PythonChannel: imm nodes only'
 		cmds = node.GetValues()
 		cmds = string.join(cmds, '\n')
 
-		try:
-			args = self.seekargs
-			self.seekargs = ()
-		except AttributeError:
+		if self.seekargs and self.seekargs[0] is node:
+			args = self.seekargs[2]
+		else:
 			args = ()
+		self.seekargs = None
 
 		try:
 			alist = node.GetRawAttr('anchorlist')
