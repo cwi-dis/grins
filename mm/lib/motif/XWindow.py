@@ -317,6 +317,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
 		self._motionhandlerset = 0
+		if self._scrwin is not None:
+			self.setcanvassize(RESET_CANVAS)
 
 	def _setmotionhandler(self):
 		set = not self._buttonregion.EmptyRegion()
