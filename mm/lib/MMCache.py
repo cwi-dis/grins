@@ -64,6 +64,7 @@ def dumpcache(root, filename):
 def cachename(filename):
 	cache = filename
 	if string.lower(cache[-5:]) == '.cmif': cache = cache[:-5]
+	elif string.lower(cache[-4:]) == '.cmi': cache = cache[:-4]
 	return cache + '.cmc'
 
 # Load a node from a cache file -- recursive
