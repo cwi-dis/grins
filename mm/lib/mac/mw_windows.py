@@ -286,14 +286,15 @@ class _CommonWindow:
 				transparent, z, units)
 		self._clipchanged()
 		return rv
-
-	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-			type_channel = None, units = None):
-		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap,
-				transparent, z, units)
-		self._clipchanged()
-		return rv
+		
+	newcmwindow = newwindow
+##	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
+##			type_channel = None, units = None):
+##		"""Create a new subwindow"""
+##		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap,
+##				transparent, z, units)
+##		self._clipchanged()
+##		return rv
 
 	def fgcolor(self, color):
 		"""Set foregroundcolor to 3-tuple 0..255"""
