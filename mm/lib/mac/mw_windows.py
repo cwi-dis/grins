@@ -1219,28 +1219,33 @@ class _CommonWindow:
 	def begintransition(self, inout, runit, dict):
 		print 'Transition', dict['trtype']
 		if self._transition:
-			raise 'Multiple Transitions!'
+			print 'Multiple Transitions!'
+			return
 		self._drawing_gworld, self._drawing_wid = self._create_offscreen_wid()
 		self._extra_gworld, self._extra_wid = self._create_offscreen_wid(inout == 0)
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		
 	def endtransition(self):
 		if not self._transition:
-			raise 'No transition!'
+			print 'No transition!'
+			return
 		self._transition.endtransition()
 		self._transition = None
 		self._extra_wid = None
 		self._extra_gworld = None
-		# XXXX Should we copy the bits? I guess so...
+		# XXXX Should we copy the bits? I guess not, the invalwin takes care of it...
 		self._drawing_wid = self._onscreen_wid
 		self._drawing_gworld = None
+		self._mac_invalwin()
 		
 	def changed(self):
 		"""Called if upper layers have modified _drawing_wid"""
-		self._transition.changed()
+		if self._transition:
+			self._transition.changed()
 		
 	def settransitionvalue(self, value):
-		self._transition.settransitionvalue(value)
+		if self._transition:
+			self._transition.settransitionvalue(value)
 		
 	def _create_offscreen_wid(self, copybits=1):
 		cur_depth = 16 # XXXX
@@ -1258,9 +1263,9 @@ class _CommonWindow:
 		Qdoffs.LockPixels(pixmap)
 		Qdoffs.SetGWorld(gworld.as_GrafPtr(), None)
 		Qd.EraseRect(cur_rect)
-##		if copybits:
-##			portBits = self._onscreen_wid.GetWindowPort().portBits
-##			Qd.CopyBits(portBits, pixmap, cur_rect, cur_rect, QuickDraw.srcCopy, None)
+		if copybits:
+			portBits = self._onscreen_wid.GetWindowPort().portBits
+			Qd.CopyBits(portBits, pixmap.data, cur_rect, cur_rect, QuickDraw.srcCopy, None)
 		Qdoffs.SetGWorld(cur_port, cur_dev)
 		return gworld, grafptr
 		
