@@ -304,8 +304,22 @@ class _Toplevel:
 		wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
 		id=wnd.SetTimer(1,50)
 		
+		# com automation support
+		grinpapi = None
+		import __main__
+		if hasattr(__main__,'grinspapi'):
+			grinspapi = __main__.grinspapi
+			if grinspapi:
+				grinspapi.commodule.RegisterClassObjects()
+
+		# enter application loop
 		win32ui.GetApp().RunLoop()
 
+		# revoke com automation
+		if grinspapi:
+			grinspapi.commodule.RevokeClassObjects()
+		
+		# cleanup
 		wnd.KillTimer(id)
 		wnd.DestroyWindow()
 		
