@@ -14,7 +14,7 @@ import urllib
 
 CONTINUOUS_CHANNELS = ['video', 'mpeg', 'movie', 'sound',  'RealAudio',
 			     'RealVideo']
-
+REAL_CHANNELS = ['RealAudio', 'RealVideo', 'RealText', 'RealPix', 'RealFlash']
 
 def get(node):
 	if node.GetType() != 'ext':
@@ -37,6 +37,18 @@ def get(node):
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return 0, 0
 
+	if ctype in REAL_CHANNELS:
+		# For real channels we parse the header and such
+		# XXXX If we want to do real-compatible calculations
+		# we have to take preroll time and such into account.
+		import realsupport
+		info = realsupport.getinfo(url)
+		prearm = 0
+		bandwidth = 0
+		if info.has_key('bitrate'):
+			bandwidth = info['bitrate']
+		return prearm, bandwidth
+	
 	# Okay, get the filesize
 	filename = urllib.url2pathname(rest)
 	try:
