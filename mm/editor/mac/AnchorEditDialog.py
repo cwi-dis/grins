@@ -193,8 +193,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 		if not choice in range(ITEMNUM_TYPE):
 			print 'AnchorEditDialog: unexpected choice', choice
 		for i in range(ITEMNUM_TYPE):
-			tp, h, rect = self._dialog.GetDialogItem(ITEMFIRST_TYPE+i)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEMFIRST_TYPE+i)
 			if i == choice:
 				ctl.SetControlValue(1)
 			else:
@@ -203,8 +202,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 	def type_choice_getchoice(self):
 		"""Return the current choice (the index into the list)."""
 		for i in range(ITEMNUM_TYPE):
-			tp, h, rect = self._dialog.GetDialogItem(ITEMFIRST_TYPE+i)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEMFIRST_TYPE+i)
 			if ctl.GetControlValue():
 				return i
 		raise 'No type set?'
