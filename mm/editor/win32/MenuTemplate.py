@@ -300,10 +300,8 @@ if curflags() & FLAG_SNAP:
 POPUP_HVIEW_LEAF = (
 		# XXXX Need to add the "new xxx node" commands for the
 		# light version
-		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_PRO, ENTRY, 'New node &before...', None, NEW_BEFORE),
-		(FLAG_PRO, ENTRY, 'Con&vert to SMIL 2.0', None, RPCONVERT),
-		(FLAG_PRO, SEP,),
+#		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
+#		(FLAG_PRO, ENTRY, 'New node &before...', None, NEW_BEFORE),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
 ###		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
@@ -311,45 +309,29 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, 'Paste a&fter', None, PASTE_AFTER),
 		(FLAG_ALL, ENTRY, 'Pa&ste file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		#(FLAG_ALL, CASCADE, '&Merge', (
-		(FLAG_ALL, ENTRY, 'Merge with parent', None, MERGE_PARENT),
-		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
-		#	)),
 		(FLAG_ALL, CASCADE, '&Insert', (
-			(FLAG_ALL, CASCADE, '&Image node', (
+			(FLAG_ALL, CASCADE, '&Media', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_IMAGE),
-				)),
+			)),
 			(FLAG_G2, CASCADE, 'Sli&deshow node', (
 				(FLAG_G2, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
 				(FLAG_G2, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
-				)),
-			(FLAG_ALL, CASCADE, '&Text node', (
+			)),
+			(FLAG_ALL, CASCADE, '&Immediate Text', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_TEXT),
-				)),
-			(FLAG_SMIL_1_0, CASCADE, '&HTML node', (
-				(FLAG_SMIL_1_0, ENTRY, '&Before', None, NEW_BEFORE_HTML),
-				(FLAG_SMIL_1_0, ENTRY, '&After', None, NEW_AFTER_HTML),
-				)),
-			(FLAG_ALL, CASCADE, 'S&ound node', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SOUND),
-				)),
-			(FLAG_ALL, CASCADE, '&Video node', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
-				)),
-			(FLAG_ALL, CASCADE, 'SVG node', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
-				)),
-			(FLAG_ALL, CASCADE, 'Animation node', (
+			)),
+			(FLAG_ALL, CASCADE, '&Brush', (
+				(FLAG_BOSTON, ENTRY, '&Before', None, NEW_BEFORE_BRUSH),
+				(FLAG_BOSTON, ENTRY, '&After', None, NEW_AFTER_BRUSH),
+			)),
+			(FLAG_ALL, CASCADE, 'Animation', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
-				)),
+			)),
+			(FLAG_ALL, SEP,),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
 				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -365,8 +347,22 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SWITCH),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SWITCH),
 				)),
-			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+			(FLAG_ALL, CASCADE, 'E&xcl node', (
+				(FLAG_ALL, ENTRY, '&Parent', None, NEW_EXCL),
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_EXCL),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_EXCL),
 			)),
+			(FLAG_ALL, CASCADE, 'Priorit&y class node', (
+				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PRIO),
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PRIO),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_PRIO),
+			)),
+		)),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		#(FLAG_ALL, CASCADE, '&Merge', (
+		(FLAG_ALL, ENTRY, 'Merge with parent', None, MERGE_PARENT),
+		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
+		#	)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&lay node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
@@ -377,6 +373,8 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Create &whole node anchor', None, CREATEANCHOR),
 		(FLAG_ALL, ENTRY, 'Finish &hyperlink to selection', None, FINISH_LINK),
+		(FLAG_PRO, SEP,),
+		(FLAG_BOSTON, ENTRY, 'RealPix to S&MIL 2.0', None, RPCONVERT),
 		(FLAG_ALL, SEP,),
 ##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
@@ -412,13 +410,11 @@ POPUP_HVIEW_SLIDE = (
 )
 
 POPUP_HVIEW_STRUCTURE = (
-		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_PRO, CASCADE, 'Ne&w node special', (
-			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
-			(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
-			)),
-		(FLAG_PRO, ENTRY, 'Con&vert to RealPix', None, CONVERTRP),
-		(FLAG_PRO, SEP,),
+#		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
+#		(FLAG_PRO, CASCADE, 'Ne&w node special', (
+#			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+#			(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
+#			)),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
 		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
@@ -429,52 +425,33 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, 'Paste &file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
 #		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
-		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		#(FLAG_ALL, CASCADE, '&Merge', (
-		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
-		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
-		#	)),
 		(FLAG_ALL, CASCADE, '&Insert', (
-			(FLAG_ALL, CASCADE, '&Image node', (
+			(FLAG_ALL, CASCADE, '&Media', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_IMAGE),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_IMAGE),
-				)),
+			)),
 			(FLAG_G2, CASCADE, 'Sli&deshow node', (
 				(FLAG_G2, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
 				(FLAG_G2, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
 				(FLAG_G2, ENTRY, '&Within', None, NEW_UNDER_SLIDESHOW),
-				)),
-			(FLAG_ALL, CASCADE, '&Text node', (
+			)),
+			(FLAG_ALL, CASCADE, '&Immediate Text', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_TEXT),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_TEXT),
-				)),
-			(FLAG_SMIL_1_0, CASCADE, '&HTML node', (
-				(FLAG_SMIL_1_0, ENTRY, '&Before', None, NEW_BEFORE_HTML),
-				(FLAG_SMIL_1_0, ENTRY, '&After', None, NEW_AFTER_HTML),
-				(FLAG_SMIL_1_0, ENTRY, '&Within', None, NEW_UNDER_HTML),
-				)),
-			(FLAG_ALL, CASCADE, 'S&ound node', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SOUND),
-				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SOUND),
-				)),
-			(FLAG_ALL, CASCADE, '&Video node', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
-				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
-				)),
-			(FLAG_ALL, CASCADE, 'Animation node', (
+			)),
+			(FLAG_ALL, CASCADE, '&Brush', (
+				(FLAG_BOSTON, ENTRY, '&Before', None, NEW_BEFORE_BRUSH),
+				(FLAG_BOSTON, ENTRY, '&After', None, NEW_AFTER_BRUSH),
+				(FLAG_BOSTON, ENTRY, '&Within', None, NEW_UNDER_BRUSH),
+			)),
+			(FLAG_ALL, CASCADE, '&Animation', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
-				)),
-			(FLAG_ALL, CASCADE, 'SVG node', (
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
-				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SVG),
-				)),
+			)),
+			(FLAG_ALL, SEP,),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
 				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -493,9 +470,24 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SWITCH),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SWITCH),
 				)),
-			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
-			(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
+			(FLAG_ALL, CASCADE, 'E&xcl node', (
+				(FLAG_ALL, ENTRY, '&Parent', None, NEW_EXCL),
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_EXCL),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_EXCL),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_EXCL),
 			)),
+			(FLAG_ALL, CASCADE, 'Priorit&y class node', (
+				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PRIO),
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PRIO),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_PRIO),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_PRIO),
+			)),
+		)),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		#(FLAG_ALL, CASCADE, '&Merge', (
+		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
+		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
+		#	)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&lay node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Pla&y from node', None, PLAYFROM),
@@ -510,6 +502,8 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, 'Create &end event', None, CREATE_END_EVENT),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection', None, FINISH_LINK),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, 'SMIL 2.0 to RealPi&x', None, CONVERTRP),
 		(FLAG_ALL, SEP,),
 ##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
