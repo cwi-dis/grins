@@ -409,7 +409,7 @@ static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 	// Temp fix. We must find a better way
 	long dh=GetSystemMetrics(SM_CYCAPTION)+2*GetSystemMetrics(SM_CYFRAME);
 	long dw=2*GetSystemMetrics(SM_CXFRAME);
-	return Py_BuildValue("(llll)",x,y,(w>0?w-dw:0),(h>0?h-dh:0);
+	return Py_BuildValue("(llll)",x,y,(w>0?w-dw:0),(h>0?h-dh:0));
 	}
 
 
