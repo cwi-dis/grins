@@ -1401,9 +1401,10 @@ class Region(Window):
 	# using the std windows message mechanism
 	# Part of WebBrowsing support
 	def onUserUrl(self,params):
-		url=self.GetForeignUrl()
-		if hasattr(self,'_anchorcallback') and self._anchorcallback:
-			self._anchorcallback(url)
+		if self._oswnd:
+			url=self._oswnd.GetForeignUrl()
+			if hasattr(self,'_anchorcallback') and self._anchorcallback:
+				self._anchorcallback(url)
 
 	def show(self):
 		self._isvisible = 1
@@ -2701,4 +2702,3 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
- 
