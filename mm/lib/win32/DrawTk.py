@@ -19,40 +19,41 @@ from win32mu import Point,Size,Rect # shorcuts
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 
-# Global Context 
-drawTk = None 
-
 ################################# DrawTool
 # base class for drawing tools
 class DrawTool:
 	def __init__(self,toolType):
 		self._toolType=toolType
+		self._client_units = 0
 
 	def setunits(self, units):
-		self._units = units
+		self._client_units = units
 
 	def onLButtonDown(self,view,flags,point):
-		drawTk.SetCapture(view)
-		drawTk.down_flags = flags
-		drawTk.down = point
-		drawTk.last = point
+		tk=view.drawTk
+		tk.SetCapture(view)
+		tk.down_flags = flags
+		tk.down = point
+		tk.last = point
 
 	def onLButtonDblClk(self,view,flags,point):
 		pass
 
 	def onLButtonUp(self,view,flags,point):
-		drawTk.ReleaseCapture(view)
-		if point.iseq(drawTk.down):
-			drawTk.currentToolType = drawTk.TOOL_SELECT
+		tk=view.drawTk
+		tk.ReleaseCapture(view)
+		if point.iseq(tk.down):
+			tk.currentToolType = tk.TOOL_SELECT
 
 	def onMouseMove(self,view,flags,point):
-		drawTk.last = point
+		tk=view.drawTk
+		tk.last = point
 		cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-		drawTk.SetCursor(view,cursor)
+		tk.SetCursor(view,cursor)
 
 	# Cancel drawing
-	def onCancel(self):
-		drawTk.currentToolType = TOOL_SELECT
+	def onCancel(self,view):
+		view.drawTk.currentToolType = TOOL_SELECT
 
 
 
@@ -66,22 +67,23 @@ class SelectTool(DrawTool):
 		local = view.ClientToCanvas(point)
 
 		drawObj=None
-		drawTk.selectMode = drawTk.SM_NONE
+		tk=view.drawTk
+		tk.selectMode = tk.SM_NONE
 
 		# Check for resizing (only allowed on single selections)
 		if len(view._selection) == 1:
 			drawObj = view._selection[0]
-			drawTk.ixDragHandle = drawObj.hitTest(local,view,1)
-			if drawTk.ixDragHandle != 0:
-				drawTk.selectMode = drawTk.SM_SIZE
+			tk.ixDragHandle = drawObj.hitTest(local,view,1)
+			if tk.ixDragHandle != 0:
+				tk.selectMode = tk.SM_SIZE
 				# for smoother behavior set cursor here
-				drawTk.SetCursor(view,drawObj.getHandleCursor(drawTk.ixDragHandle))
+				tk.SetCursor(view,drawObj.getHandleCursor(tk.ixDragHandle))
 
 		# See if the click was on an object, select and start move if so
-		if drawTk.selectMode == drawTk.SM_NONE:
+		if tk.selectMode == tk.SM_NONE:
 			drawObj = view.ObjectAt(local);
 			if drawObj:
-				drawTk.selectMode = drawTk.SM_MOVE
+				tk.selectMode = tk.SM_MOVE
 				if not view.IsSelected(drawObj):
 					view.Select(drawObj, (flags & win32con.MK_SHIFT))
 				# Ctrl+Click clones the selection...
@@ -90,11 +92,11 @@ class SelectTool(DrawTool):
 
 
 		# Click on background, start a net-selection
-		if drawTk.selectMode == drawTk.SM_NONE:
+		if tk.selectMode == tk.SM_NONE:
 			if (flags & win32con.MK_SHIFT) == 0:
 				view.Select(None)
 
-			drawTk.selectMode = drawTk.SM_NET
+			tk.selectMode = tk.SM_NET
 
 			dc=view.GetDC()
 			rect=Rect((point.x, point.y, point.x, point.y))
@@ -102,7 +104,7 @@ class SelectTool(DrawTool):
 			dc.DrawFocusRect(rect.tuple())
 			view.ReleaseDC(dc)
 
-		drawTk.lastPoint = local
+		tk.lastPoint = local
 		DrawTool.onLButtonDown(self,view,flags, point)
 
 	def onLButtonDblClk(self,view,flags,point):
@@ -120,39 +122,41 @@ class SelectTool(DrawTool):
 
 
 	def onLButtonUp(self,view,flags,point):
-		if drawTk.MouseCaptured(view):
-			if drawTk.selectMode == drawTk.SM_NET:
+		tk=view.drawTk
+		if tk.MouseCaptured(view):
+			if tk.selectMode == tk.SM_NET:
 				dc=view.GetDC()
-				rect=Rect((drawTk.down.x, drawTk.down.y, drawTk.last.x, drawTk.last.y))
+				rect=Rect((tk.down.x, tk.down.y, tk.last.x, tk.last.y))
 				rect.normalizeRect();
 				dc.DrawFocusRect(rect.tuple())
 				view.ReleaseDC(dc)
 				view.SelectWithinRect(rect,1)
-			elif drawTk.selectMode != drawTk.SM_NONE:
+			elif tk.selectMode != tk.SM_NONE:
 				dc=view.GetDC()
 				view.InvalidateRect()
 				view.ReleaseDC(dc)
 		DrawTool.onLButtonUp(self,view,flags,point)
 
 	def onMouseMove(self,view,flags,point):
-		if not drawTk.MouseCaptured(view):
-			if drawTk.currentToolType == drawTk.TOOL_SELECT and len(view._selection) == 1:
+		tk=view.drawTk
+		if not tk.MouseCaptured(view):
+			if tk.currentToolType == tk.TOOL_SELECT and len(view._selection) == 1:
 				drawObj = view._selection[0]
 				local=view.ClientToCanvas(point)
 				nHandle = drawObj.hitTest(local,view, 1)
 				if nHandle != 0:
-					drawTk.SetCursor(view,drawObj.getHandleCursor(nHandle))
+					tk.SetCursor(view,drawObj.getHandleCursor(nHandle))
 					return # bypass DrawTool
-			if drawTk.currentToolType == drawTk.TOOL_SELECT:
+			if tk.currentToolType == tk.TOOL_SELECT:
 				DrawTool.onMouseMove(self,view,flags,point)
 			return
 
-		if drawTk.selectMode == drawTk.SM_NET:
+		if tk.selectMode == tk.SM_NET:
 			dc=view.GetDC()
-			rect=Rect((drawTk.down.x, drawTk.down.y, drawTk.last.x, drawTk.last.y))
+			rect=Rect((tk.down.x, tk.down.y, tk.last.x, tk.last.y))
 			rect.normalizeRect()
 			dc.DrawFocusRect(rect.tuple())
-			rect.setRect(drawTk.down.x, drawTk.down.y, point.x, point.y)
+			rect.setRect(tk.down.x, tk.down.y, point.x, point.y)
 			rect.normalizeRect()
 			dc.DrawFocusRect(rect.tuple())
 			view.ReleaseDC(dc)
@@ -160,28 +164,28 @@ class SelectTool(DrawTool):
 			return
 
 		local=view.ClientToCanvas(point)
-		delta = Point.subtr(local,drawTk.lastPoint)
+		delta = Point.subtr(local,tk.lastPoint)
 		for drawObj in view._selection:
 			position = Rect(drawObj._position.tuple())
-			if drawTk.selectMode == DrawTk.SM_MOVE:
+			if tk.selectMode == DrawTk.SM_MOVE:
 				position.moveByPt(delta)
 				drawObj.moveTo(position,view)
 				if delta.x+delta.y:view.SetDrawObjDirty(1)
-			elif drawTk.ixDragHandle != 0:
-				drawObj.moveHandleTo(drawTk.ixDragHandle,local,view)
+			elif tk.ixDragHandle != 0:
+				drawObj.moveHandleTo(tk.ixDragHandle,local,view)
 				view.SetDrawObjDirty(1)
 
-		drawTk.lastPoint = local
+		tk.lastPoint = local
 
-		if drawTk.selectMode == drawTk.SM_SIZE and drawTk.currentToolType == drawTk.TOOL_SELECT:
-			drawTk.last = point
-			cursor=view._selection[0].getHandleCursor(drawTk.ixDragHandle)
-			drawTk.SetCursor(view,cursor)
+		if tk.selectMode == tk.SM_SIZE and tk.currentToolType == tk.TOOL_SELECT:
+			tk.last = point
+			cursor=view._selection[0].getHandleCursor(tk.ixDragHandle)
+			tk.SetCursor(view,cursor)
 			return # bypass DrawTool
 
-		drawTk.last = point
+		tk.last = point
 
-		if drawTk.currentToolType == DrawTk.TOOL_SELECT:
+		if tk.currentToolType == DrawTk.TOOL_SELECT:
 			DrawTool.onMouseMove(self,view,flags,point)
 
 
@@ -191,42 +195,48 @@ class RectTool(DrawTool):
 
 	def onLButtonDown(self,view,flags,point):
 		DrawTool.onLButtonDown(self,view,flags,point)
-
+		tk=view.drawTk
 		local=view.ClientToCanvas(point)
-		drawObj = DrawRect(Rect((local.x,local.y,local.x,local.y)), units = self._units)
+		drawObj = DrawRect(Rect((local.x,local.y,local.x,local.y)), units = self._client_units)
 		view.Add(drawObj)
 		view.Select(drawObj)
 
-		drawTk.selectMode = DrawTk.SM_SIZE
-		drawTk.ixDragHandle = 5
-		drawTk.lastPoint = local
+		tk.selectMode = DrawTk.SM_SIZE
+		tk.ixDragHandle = 5
+		tk.lastPoint = local
 
 	def onLButtonDblClk(self,view,flags,point):
 		DrawTool.onLButtonDblClk(self,view,flags,point)
 
 	def onLButtonUp(self,view,flags,point):
-		if point.iseq(drawTk.down):
+		tk=view.drawTk
+		if point.iseq(tk.down):
 			# don't create empty objects...
 			if len(view._selection):
 				drawObj = view._selection[len(view._selection)-1]
 				view.Remove(drawObj);
 				del drawObj
-			drawTk.selectTool.onLButtonDown(view,flags,point) # try a select!
-		drawTk.selectTool.onLButtonUp(view,flags,point)
-		drawTk.OnNewRect(view)		
+			tk.selectTool.onLButtonDown(view,flags,point) # try a select!
+		tk.selectTool.onLButtonUp(view,flags,point)
+		tk.OnNewRect(view)		
 
 	def onMouseMove(self,view,flags,point):
+		tk=view.drawTk
 		cursor=Sdk.LoadStandardCursor(win32con.IDC_CROSS)
-		drawTk.SetCursor(view,cursor)
-		drawTk.selectTool.onMouseMove(view,flags,point)
+		tk.SetCursor(view,cursor)
+		tk.selectTool.onMouseMove(view,flags,point)
 
 #################################			
 class DrawObj:
-	def __init__(self,rc):
+	def __init__(self,rc,units=None):
 		self._position=Rect(rc.tuple())
 		self._shape=0
 		self._pen = win32mu.Pen(win32con.PS_INSIDEFRAME,Size((1,1)),(0,0,0))
 		self._brush=win32mu.Brush(win32con.BS_SOLID,(192, 192, 192),win32con.HS_HORIZONTAL)
+		self._client_units = units
+
+	def setunits(self, units):
+		self._client_units = units
 
 	def __del__(self):
 		# release resources
@@ -320,16 +330,18 @@ class DrawObj:
 				dc.PatBlt((handlept.x - 3, handlept.y - 3), (7, 7), win32con.DSTINVERT);
 		pass
 
-	def moveTo(self,position,view=None):
+	def moveTo(self,position,view):
+		tk=view.drawTk
 		if position.iseq(self._position):
 			return
-		if not drawTk._brect.isRectIn(position):
+		if not tk._brect.isRectIn(position):
 			return
 		if not view:
 			self.invalidate()
 			self._position.setToRect(position)
 			self.invalidate();
 		else:
+			if not tk._brect.isRectIn(position):return
 			view.InvalObj(self)
 			self._position.setToRect(position)
 			view.InvalObj(self)
@@ -397,6 +409,7 @@ class DrawObj:
 		clone = DrawObj(self._position)
 		clone._pen = self._pen
 		clone._brush = self._brush
+		clone._client_units= self._client_units
 		if context:
 			context.Add(clone);
 		return clone
@@ -408,8 +421,7 @@ class DrawObj:
 
 class DrawRect(DrawObj):
 	def __init__(self,pos,units=None):
-		self.__units = units
-		DrawObj.__init__(self,pos)
+		DrawObj.__init__(self,pos,units)
 	def getHandleCount(self):
 		return DrawObj.getHandleCount(self)
 	def getHandle(self,ix):
@@ -423,29 +435,30 @@ class DrawRect(DrawObj):
 	def clone(self,context=None):
 		return DrawObj.clone(self,context)
 
-	def draw(self,dc):
+	def draw(self,dc,view):
+		tk=view.drawTk
 		# create pen and brush and select them in dc
 		pen=Sdk.CreatePen(win32con.PS_SOLID,0,win32mu.RGB((255,0,0)))
 		oldpen=dc.SelectObjectFromHandle(pen)
-		#dc.Rectangle(self._position.tuple())
-		if not drawTk.InLayoutMode():
+		dc.Rectangle(self._position.tuple())
+		if not tk.InLayoutMode():
 			clr=(0xC0, 0xC0, 0xC0)
 			dc.FillSolidRect(self._position.tuple(),win32mu.RGB(clr))
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
 		# write dimensions
 		#s='(%d,%d,%d,%d)' % self._position.tuple() #pixels
-		if self.__units == UNIT_PXL:
-			if not drawTk.IsScaled():
+		if self._client_units == UNIT_PXL:
+			if not tk.IsScaled():
 				s='(%d,%d,%d,%d)' % self._position.tuple_ps()
 			else:
-				scaledpos=drawTk.ToScaledCoord(self._position)
+				scaledpos=tk.ToScaledCoord(self._position)
 				s='(%d,%d,%d,%d)' % scaledpos.tuple_ps()
-		elif self.__units == UNIT_SCREEN and drawTk._rel_coord_ref:
-			s='(%.2f,%.2f,%.2f,%.2f)' % drawTk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
+		elif self._client_units == UNIT_SCREEN and tk._rel_coord_ref:
+			s='(%.2f,%.2f,%.2f,%.2f)' % tk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
 		else:
 			s=''
 		if s:
-			drawTk.SetSmallFont(dc)
+			tk.SetSmallFont(dc)
 			dc.SetBkMode(win32con.TRANSPARENT)
 			dc.DrawText(s,self._position.tuple(),win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
 		
@@ -454,14 +467,10 @@ class DrawRect(DrawObj):
 		#	self.drawTracker(dc,DrawObj.selected)
 
 		# restore dc by selecting old pen and brush
-		drawTk.RestoreFont(dc)
+		tk.RestoreFont(dc)
 		dc.SelectObjectFromHandle(oldpen)
 		Sdk.DeleteObject(pen)
 
-	def GetRelCoord_X(self):
-		rc_client=Rect(self._context._views[0].GetClientRect())
-		x,y,w,h= drawTk.ToRelCoord(self._position,rc_client)
-		return float(x)/100.0,float(y)/100.0,float(w)/100.0,float(h)/100.0
 
 # Context class for draw toolkit
 import sysmetrics
@@ -498,13 +507,13 @@ class DrawTk:
 		self.ixDragHandle=0
 		self.lastPoint=Point()
 		self._hsmallfont=0
+		self._hfont_org=0
 		self._limit_rect=1 # for cmif app
 		self._capture=None
 		w,h=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		self._brect=Rect((0,0,w,h))
 		self._crect=Rect((0,0,w,h))
 		self._layoutmode=1
-
 	def __del__(self):
 		if self._hsmallfont:
 			Sdk.DeleteObject(self._hsmallfont)
@@ -530,14 +539,16 @@ class DrawTk:
 	def GetCurrentTool(self):
 		return self.tool.get(self.currentToolType)
 
-	def SelectTool(self,tool='select', units = None):
+	def SelectTool(self,tool='select', units = 0):
 		if tool=='select':
 			self.currentToolType=DrawTk.TOOL_SELECT
 		elif tool=='rect':
 			self.currentToolType=DrawTk.TOOL_RECT
 		else:
 			self.currentToolType=DrawTk.TOOL_SELECT
-		self.tool[self.currentToolType].setunits(units)
+		self.selectTool.setunits(units)
+		self.rectTool.setunits(units)
+
 	def LimitRects(self,num):
 		self._limit_rect=num
 	def OnNewRect(self,view):
@@ -551,7 +562,8 @@ class DrawTk:
 			self._hsmallfont=Sdk.CreateFontIndirect(fd)		
 		self._hfont_org=dc.SelectObjectFromHandle(self._hsmallfont)
 	def RestoreFont(self,dc):
-		dc.SelectObjectFromHandle(self._hfont_org)
+		if self._hfont_org:
+			dc.SelectObjectFromHandle(self._hfont_org)
 
 	def SetRelCoordRef(self,wnd):
 		self._rel_coord_ref=wnd
@@ -593,8 +605,6 @@ class DrawTk:
 		self._crect=Rect((0,0,w,h))
 		self._layoutmode=1
 
-# Global Context 
-drawTk=	DrawTk()
 
 #########################	
 # MFC View or Layer for other views
@@ -729,10 +739,10 @@ class DrawLayer:
 		"""
 		self.ReleaseCapture();
 
-		drawTool = drawTk.GetCurrentTool()
+		drawTool = self.drawTk.GetCurrentTool()
 		if drawTool:
 			drawTool.onCancel()
-		drawTk.currentToolType = drawTk.TOOL_SELECT
+		self.drawTk.currentToolType = self.drawTk.TOOL_SELECT
 
 	def onEditClear(self):
 		# update all the views before the selection goes away
@@ -747,22 +757,22 @@ class DrawLayer:
 		self._selection=[]
 
 	def OnInitialUpdate(self):
-		drawTk.currentToolType = drawTk.TOOL_SELECT
+		self.drawTk.currentToolType = self.drawTk.TOOL_SELECT
 
 
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point=Point(msg.pos());flags=msg._wParam
-		if not drawTk._brect.isPtInRect(point):
+		if not self.drawTk._brect.isPtInRect(point):
 			return
-		drawTool = drawTk.GetCurrentTool()
+		drawTool = self.drawTk.GetCurrentTool()
 		if drawTool:
 			drawTool.onLButtonDown(self,flags,point);
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point=Point(msg.pos());flags=msg._wParam
-		drawTool = drawTk.GetCurrentTool()
+		drawTool = self.drawTk.GetCurrentTool()
 		if drawTool:
 			drawTool.onLButtonUp(self,flags,point);
 
@@ -775,14 +785,14 @@ class DrawLayer:
 			s='rect: (%d,%d,%d,%d)' % drawObj._position.tuple()
 			win32ui.MessageBox(s)
 			return
-		drawTool = drawTk.GetCurrentTool()
+		drawTool = self.drawTk.GetCurrentTool()
 		if drawTool:
 			drawTool.onLButtonDblClk(self,flags,point);
 
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point=Point(msg.pos());flags=msg._wParam
-		drawTool = drawTk.GetCurrentTool()
+		drawTool = self.drawTk.GetCurrentTool()
 		if drawTool:
 			drawTool.onMouseMove(self,flags,point)
 
@@ -824,13 +834,13 @@ class DrawLayer:
 		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
 
 		# show draw area
-		if not drawTk.InLayoutMode():
+		if not self.drawTk.InLayoutMode():
 			l,t,w,h=self._canvas
 			dcc.FillSolidRect((l,t,l+w,t+h),win32mu.RGB((0,0,0)))
-			dcc.FillSolidRect(drawTk._crect.tuple(),win32mu.RGB((200,200,0)))
-			dcc.FillSolidRect(drawTk._brect.tuple(),win32mu.RGB((255,255,255)))
-			win32mu.FrameRect(dcc,drawTk._crect.tuple(),(0,0,0))
-			win32mu.FrameRect(dcc,drawTk._brect.tuple(),(0,0,0))
+			dcc.FillSolidRect(self.drawTk._crect.tuple(),win32mu.RGB((200,200,0)))
+			dcc.FillSolidRect(self.drawTk._brect.tuple(),win32mu.RGB((255,255,255)))
+			win32mu.FrameRect(dcc,self.drawTk._crect.tuple(),(0,0,0))
+			win32mu.FrameRect(dcc,self.drawTk._brect.tuple(),(0,0,0))
 
 		# draw objects on dcc
 		if self._active_displist:
@@ -871,7 +881,7 @@ class DrawLayer:
 
 	def DrawObjectsOn(self,dc):
 		for obj in self._objects:
-			obj.draw(dc)
+			obj.draw(dc,self)
 			if self.IsSelected(obj):
 				obj.drawTracker(dc,DrawObj.selected)
 
