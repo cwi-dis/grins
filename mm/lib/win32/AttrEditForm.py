@@ -309,7 +309,35 @@ class FileCtrl(AttrCtrl):
 				self._wnd.onAttrChange()
 				self.enableApply()
 
+# a file ctrl with icon buttons play and stop
+# indented for continous media preview
+class FileMediaCtrl(FileCtrl):
+	def __init__(self,wnd,attr,resid):
+		FileCtrl.__init__(self,wnd,attr,resid)
+		self._iconplay=win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
+		self._iconstop=win32ui.GetApp().LoadIcon(grinsRC.IDI_STOP)
+		self._bplay=components.Button(wnd,resid[3])
+		self._bstop=components.Button(wnd,resid[4])
 
+	def OnInitCtrl(self):
+		FileCtrl.OnInitCtrl(self)
+		self._bplay.attach_to_parent()
+		self._bstop.attach_to_parent()
+		self._bplay.seticon(self._iconplay)
+		self._bstop.seticon(self._iconstop)
+		self._wnd.HookCommand(self.OnPlay,self._resid[3])
+		self._wnd.HookCommand(self.OnStop,self._resid[4])
+
+	def OnPlay(self,id,code):
+		if hasattr(self._wnd,'OnPlay'):
+			self._wnd.OnPlay()
+
+	def OnStop(self,id,code):
+		if hasattr(self._wnd,'OnStop'):
+			self._wnd.OnStop()
+	
+
+	
 ##################################
 class ColorCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -1088,6 +1116,12 @@ class Renderer:
 		self._baseURL=baseURL
 		self._bgcolor=(0,0,0)
 
+	def isstatic(self):
+		return 0
+
+	def needswindow(self):
+		return 1
+
 	def urlqual(self,rurl):
 		if not rurl:
 			return rurl
@@ -1204,6 +1238,9 @@ class ImageRenderer(Renderer):
 		if self._ig>=0:
 			win32ig.delete(self._ig)
 	
+	def isstatic(self):
+		return 1
+
 	def load(self,rurl):
 		if self._ig>=0:
 			win32ig.delete(self._ig)
@@ -1241,13 +1278,19 @@ class ImageRenderer(Renderer):
 #################################
 DirectShowSdk=win32ui.GetDS()
 
-class VideoRenderer(Renderer):
+class MediaRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		Renderer.__init__(self,wnd,rc,baseURL)
 		self._builder=None
 	
 	def __del__(self):
 		self.release()
+		
+	def isstatic(self):
+		return 0
+
+	def needswindow(self):
+		return 1
 			
 	def release(self):
 		if self._builder:
@@ -1269,14 +1312,16 @@ class VideoRenderer(Renderer):
 		import MMurl
 		url = MMurl.unquote(url)
 		if not self._builder.RenderFile(url):
-			self.update()
+			if self.needswindow():
+				self.update()
 			return
-		left,top,width,height=self._builder.GetWindowPosition()
-		src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
-			self.adjustSize((width,height))
-		self._builder.SetWindowPosition((dest_x, dest_y, width, height))
-		self._builder.SetWindow(self._wnd,win32con.WM_USER+101)
-		self.update()
+		if self.needswindow():
+			left,top,width,height=self._builder.GetWindowPosition()
+			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
+				self.adjustSize((width,height))
+			self._builder.SetWindowPosition((dest_x, dest_y, width, height))
+			self._builder.SetWindow(self._wnd,win32con.WM_USER+101)
+			self.update()
 	
 
 	def play(self):
@@ -1295,24 +1340,128 @@ class VideoRenderer(Renderer):
 		self._builder.Stop()
 
 
+class VideoRenderer(MediaRenderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		MediaRenderer.__init__(self,wnd,rc,baseURL)
+	def needswindow(self):
+		return 1
+
+class AudioRenderer(MediaRenderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		MediaRenderer.__init__(self,wnd,rc,baseURL)
+	def needswindow(self):
+		return 0
+
+
+#################################
+try:
+	import rma
+except ImportError:
+	rma = None
+
+class RealRenderer(Renderer):
+	realengine=None
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._rmaplayer=None
+	
+	# postpone real loading so that the user pay a delay
+	# the first time he wants a real preview and only then
+	def do_init(self):
+		if rma and not RealRenderer.realengine:
+			try:
+				 RealRenderer.realengine = rma.CreateEngine()
+			except:
+				RealRenderer.realengine=None
+		if RealRenderer.realengine and not self._rmaplayer:
+			try:
+				self._rmaplayer = RealRenderer.realengine.CreatePlayer()
+			except:
+				self._rmaplayer=None
+	
+	def __del__(self):
+		self.release()
+			
+	def release(self):
+		if self._rmaplayer:
+			self.stop()
+			self._rmaplayer = None
+
+	def isstatic(self):
+		return 0
+
+	def load(self,rurl):
+		self.do_init()
+		if not self._rmaplayer:
+			if self.needswindow():
+				self.update()
+			return
+		if 0 and self.needswindow():
+			self._rmaplayer.SetOsWindow(self._wnd.GetSafeHwnd())
+			width,height = self._rc[2]-self._rc[0],self._rc[3]-self._rc[1]
+			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
+				self.adjustSize((width,height))
+			self._rmaplayer.SetPositionAndSize((dest_x, dest_y), (width, height))
+		url=self.urlqual(rurl)
+		import MMurl
+		url = MMurl.unquote(url)
+		self._rmaplayer.OpenURL(url)
+	
+
+	def play(self):
+		if self._rmaplayer:
+			self._rmaplayer.Begin()
+
+	def pause(self):
+		if self._rmaplayer:
+			self._rmaplayer.Pause()
+
+	def stop(self):
+		if self._rmaplayer:
+			self._rmaplayer.Stop()
+
+class RealWndRenderer(RealRenderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		RealRenderer.__init__(self,wnd,rc,baseURL)
+	def needswindow(self):
+		return 0
+
+class RealAudioRenderer(RealRenderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		RealRenderer.__init__(self,wnd,rc,baseURL)
+	def needswindow(self):
+		return 0
+
+
 #################################
 
 class PreviewPage(AttrPage):
-	def __init__(self,form,mtype='image',aname='file'):
+	def __init__(self,form,mrenderer='image',aname='file'):
 		AttrPage.__init__(self,form)
 		self._prevrc=(20,20,100,100)
 		self._aname=aname
-		if mtype=='video':
+		self._armed=0
+		self._playing=0
+		if mrenderer=='video':
 			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
+		elif mrenderer=='audio':
+			self._renderer=AudioRenderer(self,self._prevrc,self._form._baseURL)
+		elif mrenderer=='realwnd':
+			self._renderer=RealWndRenderer(self,self._prevrc,self._form._baseURL)
+		elif mrenderer=='realaudio':
+			self._renderer=RealAudioRenderer(self,self._prevrc,self._form._baseURL)
 		else:
 			self._renderer=ImageRenderer(self,self._prevrc,self._form._baseURL)
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		self.setRendererRc()
-		c=self.getctrl(self._aname)
-		rurl=string.strip(c.getvalue())
-		self._renderer.load(rurl)
+		if self._renderer.isstatic():
+			if self._renderer.needswindow():
+				self.setRendererRc()
+			c=self.getctrl(self._aname)
+			rurl=string.strip(c.getvalue())
+			self._renderer.load(rurl)
+			self._armed=1
 
 	def setRendererRc(self):
 		preview=components.Control(self,grinsRC.IDC_PREVIEW)
@@ -1325,11 +1474,13 @@ class PreviewPage(AttrPage):
 		del self._renderer
 
 	def OnSetActive(self):
-		self._renderer.play()
+		if self._playing:
+			self._renderer.play()
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self):
-		self._renderer.pause()
+		if self._playing:
+			self._renderer.pause()
 		return self._obj_.OnKillActive()
 
 	def drawOn(self,dc):
@@ -1347,6 +1498,22 @@ class PreviewPage(AttrPage):
 		c=self.getctrl(self._aname)
 		rurl=string.strip(c.getvalue())
 		self._renderer.load(rurl)
+	
+	def OnPlay(self):
+		if not self._armed:
+			if self._renderer.needswindow():
+				self.setRendererRc()
+			c=self.getctrl(self._aname)
+			rurl=string.strip(c.getvalue())
+			self._renderer.load(rurl)
+			self._armed=1
+		self._renderer.play()
+		self._playing=1
+
+	def OnStop(self):
+		if self._playing:
+			self._renderer.stop()
+			self._playing=0
 
 class ImagePreviewPage(PreviewPage):
 	def __init__(self,form):
@@ -1370,7 +1537,19 @@ class ImagePreviewPage(PreviewPage):
 class VideoPreviewPage(PreviewPage):
 	def __init__(self,form):
 		PreviewPage.__init__(self,form,'video')	
-	
+
+class AudioPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self,form,'audio')	
+
+class RealAudioPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self,form,'realaudio')	
+
+class RealWndPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self,form,'realwnd')	
+
 ############################
 
 from Attrgrs import attrgrs
@@ -1684,6 +1863,7 @@ class FileGroup(AttrGroup):
 	data=attrgrsdict['file']
 	def __init__(self):
 		AttrGroup.__init__(self,FileGroup.data)
+
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('file')
@@ -1697,31 +1877,70 @@ class FileGroup(AttrGroup):
 		mtype = mimetypes.guess_type(f)[0]
 		if mtype is None: return 0
 		mtype, subtype = string.split(mtype, '/')
-		if mtype=='image':can=1
-		# we can preview videos but what about big videos? 
-		# we should let the user select using a preview button.
-		elif mtype=='video' and string.find(subtype,'realvideo')<0:
+		# create media type sig for renderer
+		if mtype=='image':
+			if string.find(subtype,'realpix')>=0:
+				mtype='realwnd'
 			can=1
+		elif mtype=='video':
+			if string.find(subtype,'realvideo')>=0:
+				mtype='realwnd'
+			can=1
+		elif mtype=='audio':
+			if string.find(subtype,'realaudio')>=0:
+				mtype='realaudio'
+			can=1
+		elif mtype=='text' and string.find(subtype,'realtext')>=0:
+			can=1
+			mtype='realwnd'
 		else: 
 			can=0
-		self._mtype=mtype
+		self._mtypesig=mtype
 		return can
 
 	def getpageresid(self):
 		if self.canpreview():
-			return getattr(grinsRC, 'IDD_EDITATTR_PF1')
+			if self._mtypesig=='image': 
+				# static media
+				return getattr(grinsRC, 'IDD_EDITATTR_PF1')
+			else: 
+				# continous media i.e play,stop
+				return getattr(grinsRC, 'IDD_EDITATTR_MF1')	
 		else:
 			return getattr(grinsRC, 'IDD_EDITATTR_F1')
 
 	def getpageclass(self):
 		if not self.canpreview():
 			return AttrPage
-		if self._mtype=='image':
+		if self._mtypesig=='image':
 			return ImagePreviewPage
-		elif self._mtype=='video':
+		elif self._mtypesig=='video':
 			return VideoPreviewPage
+		elif self._mtypesig=='audio':
+			return AudioPreviewPage
+		elif self._mtypesig=='realwnd':
+			return RealWndPreviewPage
+		elif self._mtypesig=='realaudio':
+			return RealAudioPreviewPage
 		else:
-			raise error,'see AttrEditForm.FileGroup'
+			return AttrPage
+
+	def createctrls(self,wnd):
+		cd={}
+		a=self.getattr('file')
+		if not self.canpreview():
+			cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
+
+		elif self._mtypesig=='image':
+			# static media
+			cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
+
+		else:
+			# continous media
+			cd[a]=FileMediaCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,
+				grinsRC.IDC_4,grinsRC.IDC_5))
+		return	cd
+
 
 class FadeoutGroup(AttrGroup):
 	data=attrgrsdict['fadeout']
