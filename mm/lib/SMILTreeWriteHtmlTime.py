@@ -237,14 +237,14 @@ class SMILHtmlTimeWriter(SMIL):
 		if len(self.top_levels)==1:
 			self.__currViewport = ch = self.top_levels[0]
 			name = self.ch2name[ch]
-			self.writetag('div', [('id',scriptid(name)), ('class', 'reg'+name),])
+			self.writetag('div', [('id',scriptid(name)), ('class', 'reg'+ scriptid(name) ),])
 			self.push()
 			self.writenode(self.root, root = 1)
 			self.pop()
 		else:
 			for viewport in self.top_levels:
 				name = self.ch2name[viewport]
-				self.writetag('div', [('id',scriptid(name)), ('class', 'reg'+name),])
+				self.writetag('div', [('id',scriptid(name)), ('class', 'reg'+scriptid(name)),])
 				self.push()
 				self.pop()
 			self.writenode(self.root, root = 1)
