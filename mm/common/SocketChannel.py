@@ -19,7 +19,13 @@ class SocketChannel(Channel):
 			port = attrdict['port']
 		else:
 			port = 7000
-		self.socket.bind(('', port))
+		try:
+			self.socket.bind(('', port))
+		except socket.error, arg:
+			dialogs.showmessage('Cannot open socket '+`port`+': '+\
+				  `arg`)
+			self.socket = None
+			return self
 		toplevel = self._player.toplevel
 		toplevel.select_setcallback(self.socket, self.socket_ready, ())
 		self.anchorlist = None
@@ -38,8 +44,9 @@ class SocketChannel(Channel):
 
 	def destroy(self):
 		toplevel = self._player.toplevel
-		toplevel.select_setcallback(self.socket, None, ())
-		self.socket.close()
+		if self.socket:
+			toplevel.select_setcallback(self.socket, None, ())
+			self.socket.close()
 		del self.socket
 		Channel.destroy(self)
 
@@ -78,6 +85,8 @@ class SocketChannel(Channel):
 		return 1
 
 	def do_play(self, node):
+		if not self.socket:
+			return
 		if node.GetType() <> 'imm':
 			return
 		cmds = node.GetValues()
