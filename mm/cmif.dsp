@@ -423,6 +423,10 @@ SOURCE=.\editor\mac\LayoutViewDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\mac\LicenseDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\mac\LinkEditDialog.py
 # End Source File
 # Begin Source File
