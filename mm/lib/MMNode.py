@@ -723,7 +723,7 @@ class MMSyncArc:
 		if self.event is None and self.marker is None:
 			return 1
 		if self.event in ('begin', 'end'):
-			if refnode.playing in (MMStates.PLAYING, MMStates.PLAYED):
+			if refnode.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN, MMStates.PLAYED):
 				return 1
 			# XXX or maybe if refnode.isscheduled(): return 1
 			return 0
@@ -905,6 +905,7 @@ class MMNode:
 		self.durarcs = []
 		self.reset()
 		self.fullduration = None
+		self.pausestack = []	# used only by excl nodes
 
 	#
 	# Return string representation of self
@@ -958,7 +959,7 @@ class MMNode:
 
 	def freeze_play(self):
 		if debug: print 'freeze_play',`self`
-		if self.playing == MMStates.PLAYING:
+		if self.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			getchannelfunc = self.context.getchannelbynode
 			if self.type in leaftypes and getchannelfunc:
 				chan = getchannelfunc(self)
@@ -971,7 +972,7 @@ class MMNode:
 
 	def terminate_play(self):
 		if debug: print 'terminate_play',`self`
-		if self.playing in (MMStates.PLAYING, MMStates.FROZEN):
+		if self.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			getchannelfunc = self.context.getchannelbynode
 			if self.type in leaftypes and getchannelfunc:
 				chan = getchannelfunc(self)
@@ -1099,6 +1100,38 @@ class MMNode:
 		if i == 0: return None
 		else: return p1[i-1]
 
+	def GetPathsToCommonAncestor(self, x):
+		# Return the paths to the common ancestor of the nodes.
+		# Return values include the common ancestor and the
+		# nodes themselves.
+		p1 = self.GetPath()
+		p2 = x.GetPath()
+		n = min(len(p1), len(p2))
+		i = 0
+		while i < n and p1[i] == p2[i]:
+			i = i+1
+		if i == 0:
+			return None, None
+		else:
+			return p1[i-1:], p2[i-1:] # includes common ancestor
+
+	def PrioCompare(self, other):
+		if self is other:
+			return 0, [self], [other]
+		p1, p2 = self.GetPathsToCommonAncestor(other)
+		if p1 is None or p2 is None:
+			# "can't happen"
+			# this means the nodes are in different trees
+			return 0, None, None
+		if p1[1].type == 'prio' and p2[1].type == 'prio':
+			# nodes are in different priority classes
+			i1 = p1[0].children.index(p1[1])
+			i2 = p1[0].children.index(p2[1])
+			# i1 != i2
+			return cmp(i1, i2), p1, p2
+		# nodes are in the same priority class
+		return 0, p1, p2
+		
 	def GetChildren(self):
 		return self.children
 

@@ -61,8 +61,8 @@ default_settings = {
 	'structure_darkseq': (108,128,146),
 	'structure_exclcolor': (148,117,166), # for now equal to bag colors
 	'structure_darkexcl': (131,119,137),
-	'structure_priocolor': (148,117,166), # for now equal to excl colors
-	'structure_darkprio': (131,119,137),
+	'structure_priocolor': (166,61,126),
+	'structure_darkprio': (142,53,108),
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
