@@ -28,5 +28,4 @@ try:
 except ImportError:
 	from MpegVideoDuration import *
 else:
-	duration_cache = FileCache.FileCache(getduration)
 	get = _get
