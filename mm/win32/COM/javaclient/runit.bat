@@ -1,1 +1,1 @@
-java GRiNSApplet
+java DemoApplet

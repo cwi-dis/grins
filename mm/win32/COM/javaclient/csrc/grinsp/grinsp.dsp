@@ -112,7 +112,7 @@ SOURCE=.\StdAfx.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\GRiNSViewport.h
+SOURCE=..\..\GRiNSPlayer.h
 # End Source File
 # Begin Source File
 
@@ -139,10 +139,6 @@ SOURCE=..\lib\jvm.lib
 SOURCE=..\lib\jawt.lib
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=..\..\GRiNSViewport.java
-# End Source File
 # Begin Source File
 
 SOURCE=.\ReadMe.txt
