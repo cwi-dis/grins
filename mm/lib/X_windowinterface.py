@@ -432,7 +432,8 @@ class _Window:
 			string = Xlib.LookupString(ev)[0]
 			toplevel._win_lock.release()
 			if self._accelerators.has_key(string):
-				apply(self._accelerators[string])
+				f, a = self._accelerators[string]
+				apply(f, a)
 				return
 			for i in range(len(string)):
 				enterevent(self, KeyboardInput, string[i])
@@ -1038,8 +1039,8 @@ class _Window:
 		self._menu = menu
 
 # three menu utility functions
-def _menu_callback(widget, func_arg, call_data):
-	apply(func_arg)
+def _menu_callback(widget, (func, arg), call_data):
+	apply(func, arg)
 
 def _create_menu(menu, acc, list):
 	accelerator = None
@@ -2413,7 +2414,7 @@ class Dialog:
 		if self._grab:
 			self.close()
 		if callback:
-			apply(callback)
+			apply(callback[0], callback[1])
 
 	def create_menu(self, title, list):
 		menu = self._form.CreatePopupMenu('dialogMenu',
@@ -3081,7 +3082,8 @@ class OptionMenu(_Widget):
 	def _cb(self, widget, value, call_data):
 		self._value = value
 		if self._callback:
-			apply(self._callback)
+			f, a = self._callback
+			apply(f, a)
 
 	def getpos(self):
 		return self._value
@@ -3169,8 +3171,8 @@ class Selection(_Widget):
 					 self._callback, sel_cb)
 		_Widget.__init__(self, selection)
 
-	def _callback(self, w, client_data, call_data):
-		apply(client_data)
+	def _callback(self, w, (func, arg), call_data):
+		apply(func, arg)
 
 	def close(self):
 		if hasattr(self, '_form'):
@@ -3261,8 +3263,8 @@ class List(_Widget):
 					 self._callback, sel_cb)
 		_Widget.__init__(self, widget)
 
-	def _callback(self, w, client_data, call_data):
-		apply(client_data)
+	def _callback(self, w, (func, arg), call_data):
+		apply(func, arg)
 
 	def close(self):
 		if hasattr(self, '_form'):
@@ -3344,8 +3346,8 @@ class TextInput(_Widget):
 					 cb)
 		_Widget.__init__(self, widget)
 
-	def _callback(self, w, client_data, call_data):
-		apply(client_data)
+	def _callback(self, w, (func, arg), call_data):
+		apply(func, arg)
 
 	def setlabel(self, label):
 		if not hasattr(self, '_label'):
@@ -3371,8 +3373,8 @@ class TextEdit(_Widget):
 					 cb)
 		_Widget.__init__(self, text)
 
-	def _callback(self, w, client_data, call_data):
-		apply(client_data)
+	def _callback(self, w, (func, arg), call_data):
+		apply(func, arg)
 
 	def settext(self, text):
 		import string
@@ -3426,7 +3428,7 @@ class ButtonRow(_Widget):
 
 	def _callback(self, widget, callback, call_data):
 		if callback:
-			apply(callback)
+			apply(callback[0], callback[1])
 
 	def hide(self, *opt_button):
 		if len(opt_button) == 0:
@@ -3478,7 +3480,7 @@ class Slider(_Widget):
 
 	def _callback(self, widget, callback, call_data):
 		if callback:
-			apply(callback)
+			apply(callback[0], callback[1])
 
 	def _calcrange(self, minimum, initial, maximum):
 		self._minimum, self._maximum = minimum, maximum
