@@ -162,11 +162,6 @@ class SMILHtmlTimeWriter(SMIL):
 		self.calcnames2(node)
 		self.calcchnames2(node)
 
-		# must come after second pass
-		self.aid2name = {}
-		self.anchortype = {}
-		self.calcanames(node)
-
 		self.syncidscheck(node)
 
 		self.__isopen = 0
@@ -323,11 +318,11 @@ class SMILHtmlTimeWriter(SMIL):
 	def writenode(self, x, root = 0):
 		type = x.GetType()
 
-		if type=='animate':
+		if type == 'animate':
 			self.writeanimatenode(x, root)
 			return
 
-		if type=='comment':
+		if type == 'comment':
 			self.writecomment(x)
 			return
 
@@ -380,7 +375,7 @@ class SMILHtmlTimeWriter(SMIL):
 						extensions[ans] = 'x%s' % len(extensions)
 						attrlist.append(('xmlns:%s' % extensions[ans], ans))
 					attr = '%s:%s' % (extensions[ans], attr)
-				attrlist.append((attr, val, None))
+				attrlist.append((attr, val))
 		else:
 			attrs = smil_attrs
 			# special case for systemRequired
@@ -400,11 +395,7 @@ class SMILHtmlTimeWriter(SMIL):
 				# endsync translation
 				if name == 'endsync' and value not in ('first' , 'last'):
 					name = 'end'
-					if value[:3] == 'id(':
-						# XXX doesn't happen?
-						value = value[3:-1] + '.end'
-					else:
-						value = value + '.end'
+					value = value + '.end'
 
 				# activateEvent exception
 				elif name == 'end' and value == 'activateEvent':
@@ -417,8 +408,6 @@ class SMILHtmlTimeWriter(SMIL):
 					if value: value = event2xhtml(value)
 
 				if interior:
-					if name == 'id':
-						value = value
 					attrlist.append((name, value))
 				else:	
 					if name == 'region': 
@@ -428,7 +417,6 @@ class SMILHtmlTimeWriter(SMIL):
 					elif name == 'id':
 						self.ids_written[value] = 1
 						nodeid = value
-						value = value
 					elif name == 'transIn':
 						transIn = value
 					elif name == 'transOut':
@@ -464,20 +452,7 @@ class SMILHtmlTimeWriter(SMIL):
 		elif type in ('imm', 'ext', 'brush'):
 			if mtype in not_xhtml_time_elements:
 				self.showunsupported(mtype)
-
-			children = x.GetChildren()
-			if not children:				
-				self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
-			else:
-				if mtype=='brush':
-					attrlist.append( ('class','time') )
-					self.writetag('div', attrlist)
-				else:
-					self.writetag(mtype, attrlist)
-				self.push()
-				for child in x.GetChildren():
-					self.writenode(child)
-				self.pop()
+			self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
@@ -493,12 +468,6 @@ class SMILHtmlTimeWriter(SMIL):
 					src = src[len(self.convertURLs):]
 			attrlist.append(('src', src))
 					
-		if mtype == 'audio':
-			if nodeid:
-				attrlist.insert(0,('id', nodeid))
-			self.writetag('t:'+mtype, attrlist)
-			return	
-
 		parents = []
 		viewport = None
 		pushed = 0
@@ -515,7 +484,7 @@ class SMILHtmlTimeWriter(SMIL):
 			parents.insert(0, lch)
 			lch = pch
 	
-		if parents:
+		if parents and mtype != 'audio':
 			lch = parents[0]
 			name = self.ch2name[lch]
 			divlist = []
@@ -524,7 +493,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.writetag('div', divlist)
 			self.push()
 			self.ids_written[name] = 1
-			pushed = pushed + 1
+			pushed = 1
 	
 		transitions = self.root.GetContext().transitions
 		if not nodeid:
@@ -537,7 +506,7 @@ class SMILHtmlTimeWriter(SMIL):
 			geoms = node.getPxGeomMedia()
 		except:
 			geoms = None
-		if geoms:
+		if geoms and mtype != 'audio':
 			subRegGeom, mediaGeom = geoms
 			x, y, w, h = subRegGeom
 			xm, ym, wm, hm = mediaGeom
@@ -616,7 +585,6 @@ class SMILHtmlTimeWriter(SMIL):
 		if transOut:
 			self.writetag('t:par')
 			self.push()
-			pushed = pushed + 1
 
 		if mtype=='img':
 			attrlist.append( ('class','time') )
@@ -627,33 +595,85 @@ class SMILHtmlTimeWriter(SMIL):
 			self.closehtmltag()
 		else:
 			self.writetag('t:'+mtype, attrlist)
+		kids = 0
+		for child in node.GetChildren():
+			if child.GetType() != 'anchor':
+				if not kids:
+					self.push()
+					kids = 1
+				self.writenode(child)
+		if kids:
+			self.pop()
 
 		if transOut:
 			trans = 'transOut(%s, \'%s\')' % (nodeid, transOutName)
 			self.writetag('t:set', [ ('begin','%s.end-%.1f' % (nodeid,transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
 			self.pop()
-			pushed = pushed - 1
 		
-		for i in range(pushed):
+		if pushed:
 			self.pop()
 
 	def writeAnchors(self, x, name):
-		alist = x.GetRawAttrDef('anchorlist', [])
-		hassrc = 0		# 1 if has source anchors
-		for a in alist:
-			if a.atype in SourceAnchors:
+		hassrc = 0
+		for anchor in x.GetChildren():
+			if anchor.GetType() != 'anchor':
+				continue
+			links = self.hyperlinks.findsrclinks(anchor)
+			if not links:
+				continue
+			if len(links) > 1:
+				print '** Multiple links on anchor', \
+				      anchor.GetRawAttrDef('name', '<unnamed>'), \
+				      anchor.GetUID()
+			if not hassrc:
 				hassrc = 1
-				break
-		if hassrc:
-			self.writetag('map', [('id', name+'map'),])
-			self.push()
-			for a in alist:
-				if a.atype in SourceAnchors:
-					self.writelink(x, a)
-			self.pop()
-			return 1
-		return 0
+				self.writetag('map', [('id', name+'map')])
+				self.push()
+			a1, a2, dir, ltype, stype, dtype = links[0]
+			attrlist = []
+			id = getid(self, anchor)
+			if id is not None:
+				attrlist.append(('id', id))
+			attrlist.extend(self.linkattrs(a2, ltype, stype, dtype))
+			fragment = MMAttrdefs.getattr(anchor, 'fragment')
+			if fragment:
+				attrlist.append(('fragment', fragment))
 
+			shape = MMAttrdefs.getattr(anchor, 'ashape')
+			if shape != 'rect':
+				attrlist.append(('shape', shape))
+			coords = []
+			for c in MMAttrdefs.getattr(anchor, 'acoords'):
+				if type(c) is type(0):
+					# pixel coordinates
+					coords.append('%d' % c)
+				else:
+					# relative coordinates
+					coords.append(fmtfloat(c*100, '%', prec = 2))
+			if coords:
+				attrlist.append(('coords', ','.join(coords)))
+
+			begin = getsyncarc(self, anchor, 0)
+			if begin is not None:
+				attrlist.append(('begin', begin))
+			end = getsyncarc(self, anchor, 1)
+			if end is not None:
+				attrlist.append(('end', end))
+
+			actuate = MMAttrdefs.getattr(anchor, 'actuate')
+			if actuate != 'onRequest':
+				attrlist.append(('actuate', actuate))
+
+			accesskey = anchor.GetAttrDef('accesskey', None)
+			if accesskey is not None:
+				attrs.append(('accesskey', accesskey))
+
+			self.writetag('area', attrlist)
+			self.closehtmltag(0)
+
+		if hassrc:
+			self.pop()
+		return hassrc
 				
 	def writeEmptyRegion(self, regionName):
 		parents = []
@@ -783,75 +803,7 @@ class SMILHtmlTimeWriter(SMIL):
 		x, y, w, h = rc
 		return 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (x, y, w, h)
 
-	def writelink(self, x, a):
-		attrlist = []
-		aid = (x.GetUID(), a.aid)
-		attrlist.append(('id', self.aid2name[aid]))
-
-		links = x.GetContext().hyperlinks.findsrclinks(aid)
-		if links:
-			if len(links) > 1:
-				print '** Multiple links on anchor', \
-				      x.GetRawAttrDef('name', '<unnamed>'), \
-				      x.GetUID()
-			a1, a2, dir, ltype, stype, dtype = links[0]
-			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype, a.aaccess)
-		if a.atype == ATYPE_NORMAL:
-			ok = 0
-			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?
-			try:
-				shapeType = a.aargs[0]
-				if shapeType == A_SHAPETYPE_RECT or shapeType == A_SHAPETYPE_POLY or \
-						shapeType == A_SHAPETYPE_CIRCLE:
-					coords = []
-					for c in a.aargs[1:]:
-						if type(c) == type(0):
-							# pixel coordinates
-							coords.append('%d' % c)
-						else:
-							# relative coordinates
-							coords.append(fmtfloat(c*100, '%', prec = 2))
-					coords = string.join(coords, ',')
-					ok = 1
-				elif shapeType == A_SHAPETYPE_ALLREGION:
-					rc = x.getPxGeomMedia()[1]
-					for c in rc:
-						coords.append('%d' % c)
-					coords = string.join(coords, ',')
-					ok = 1
-			except:
-				pass						
-			if ok:
-				if shapeType == A_SHAPETYPE_POLY:
-					attrlist.append(('shape', 'poly'))
-				elif shapeType == A_SHAPETYPE_CIRCLE:
-					attrlist.append(('shape', 'circle'))
-				elif shapeType == A_SHAPETYPE_RECT:
-					attrlist.append(('shape', 'rect'))
-					
-				#if shapeType != A_SHAPETYPE_ALLREGION:
-				attrlist.append(('coords', coords))
-			else:
-				attrlist.append(('fragment', id))						
-		elif a.atype == ATYPE_AUTO:
-			attrlist.append(('actuate', 'onLoad'));
-		else:
-			coords = []
-			rc = x.getPxGeomMedia()[1]
-			for c in rc:
-				coords.append('%d' % c)
-			coords = string.join(coords, ',')
-			attrlist.append(('coords', coords))
-				
-		begin, end = a.atimes
-		if begin:
-			attrlist.append(('begin', fmtfloat(begin, 's')))
-		if end:
-			attrlist.append(('end', fmtfloat(end, 's')))
-		self.writetag('area', attrlist)
-		self.closehtmltag(0)
-
-	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
+	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
 		if ltype == Hlinks.TYPE_JUMP:
 			# default value, so we don't need to write it
@@ -870,40 +822,13 @@ class SMILHtmlTimeWriter(SMIL):
 			# default value, so we don't need to write it
 			pass
 		elif dtype == Hlinks.A_DEST_PAUSE:
-				attrs.append(('destinationPlaystate', 'pause'))
+			attrs.append(('destinationPlaystate', 'pause'))
 							
 		# else show="replace" (default)
-		if type(a2) is type(()):
-			uid2, aid2 = a2
-			if '/' in uid2:
-				if aid2:
-					href, tag = a2
-				else:
-					lastslash = string.rfind(uid2, '/')
-					href, tag = uid2[:lastslash], uid2[lastslash+1:]
-					if tag == '1':
-						tag = None
-			else:
-				href = ''
-				if self.anchortype.get(a2) == ATYPE_NORMAL and \
-				   self.aid2name.has_key(a2):
-					tag = self.aid2name[a2]
-				else:
-					tag = self.uid2name[uid2]
-			if tag:
-				href = href + '#' + tag
+		if type(a2) is type(''):
+			attrs.append(('href', a2))
 		else:
-			href = a2
-
-		if href[:1] == '#':
-			withinhref = href[1:]
-			attrs.append(('href', 'javascript:%s.beginElement()' % withinhref))
-			#attrs.append(('href', 'javascript:alert(\'%s.beginElement()\')' % withinhref))
-		else:
-			attrs.append(('href', href))
-
-		if accesskey is not None:
-			attrs.append(('accesskey', accesskey))
+			attrs.append(('href', 'javascript:%s.beginElement()' % self.uid2name[a2.GetUID()]))
 
 		return attrs
 
@@ -1046,32 +971,6 @@ class SMILHtmlTimeWriter(SMIL):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
 
-	def calcanames(self, node):
-		"""Calculate unique names for anchors"""
-		uid = node.GetUID()
-		for a in node.GetRawAttrDef('anchorlist', []):
-			aid = (uid, a.aid)
-			self.anchortype[aid] = a.atype
-			if a.atype in SourceAnchors:
-				if isidre.match(a.aid) is None or \
-				   self.ids_used.has_key(a.aid):
-					aname = '%s_%s' % (self.uid2name[uid], a.aid)
-					aname = identify(aname, html = 1)
-				else:
-					aname = identify(a.aid, html = 1)
-				if self.ids_used.has_key(aname):
-					i = 0
-					nn = '%s_%d' % (aname, i)
-					while self.ids_used.has_key(nn):
-						i = i+1
-						nn = '%s_%d' % (aname, i)
-					aname = nn
-				self.aid2name[aid] = aname
-				self.ids_used[aname] = 0
-		if node.GetType() in interiortypes:
-			for child in node.children:
-				self.calcanames(child)
-
 	# copied from SMILTreeWrite.py
 	def syncidscheck(self, node):
 		# make sure all nodes referred to in sync arcs get their ID written
@@ -1091,9 +990,6 @@ class SMILHtmlTimeWriter(SMIL):
 						continue
 				if arc.channel is not None:
 					pass
-				elif arc.srcanchor is not None:
-					aid = (srcnode.GetUID(), arc.srcanchor)
-					self.ids_used[self.aid2name[aid]] = 1
 				elif srcnode in ('syncbase', 'prev'):
 					pass
 				elif srcnode is not node:

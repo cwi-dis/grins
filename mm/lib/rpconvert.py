@@ -2,9 +2,9 @@ __version__ = "$Id$"
 
 import MMurl, realsupport
 import posixpath
-from MMNode import MMSyncArc, MMAnchor
+from MMNode import MMSyncArc
 from AnchorDefs import ATYPE_WHOLE
-from Hlinks import DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY
+from Hlinks import DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY, ANCHOR2
 
 def rpconvert(node, errorfunc = None):
 	# convert a RealPix node into a par node with children,
@@ -240,8 +240,9 @@ def rpconvert(node, errorfunc = None):
 				em.setnodeattr(newnode, 'transIn', [trname])
 
 		if tagdict.get('href'):
-			em.setnodeattr(newnode, 'anchorlist', [MMAnchor('0', ATYPE_WHOLE, [], (0, 0), None)])
-			em.addlink(((newnode.GetUID(), '0'), tagdict['href'], DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY))
+			anchor = ctx.newnode('anchor')
+			em.addnode(newnode, -1, anchor)
+			em.addlink((anchor, tagdict['href'], DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY))
 	em.commit()
 
 def convertrp(node, errorfunc = None):
@@ -252,6 +253,7 @@ def convertrp(node, errorfunc = None):
 	# syncarc which specifies a simple offset, and only zero or
 	# one end syncarc which specifies a simple offset.
 	ctx = node.GetContext()
+	hlinks = ctx.hyperlinks
 	if node.GetType() != 'seq':
 		if errorfunc is not None: errorfunc('not a seq node')
 		return
@@ -434,6 +436,21 @@ def convertrp(node, errorfunc = None):
 			tagdict['displayfull'] = 0
 			tagdict['subregionxy'] = effMediaGeom[:2]
 			tagdict['subregionwh'] = effMediaGeom[2:]
+
+		# deal with hyperlinks from this node
+		# we only do hyperlinks from whole-node anchors to external documents
+		for a in c.GetChildren():
+			if a.GetType() == 'anchor' and \
+			   MMAttrdefs.getattr(a, 'actuate') == 'onRequest' and \
+			   not MMAttrdefs.getattr(a, 'fragment') and \
+			   MMAttrdefs.getattr(a, 'ashape') == 'rect' and \
+			   not MMAttrdefs.getattr(a, 'acoords'):
+				links = hlinks.finddstlinks(a)
+				for l in links:
+					if type(l[ANCHOR2]) == type(''):
+						tagdict['href'] = l[ANCHOR2]
+						break
+
 	rp.duration = rp.duration + start
 	if rp.tags:
 		rp.duration = rp.duration + rp.tags[-1]['tduration']

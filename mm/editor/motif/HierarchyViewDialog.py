@@ -19,7 +19,6 @@ class HierarchyViewDialog(ViewDialog):
 			      'G': PLAYFROM,
 			      'a': ATTRIBUTES,
 			      'e': CONTENT,
-			      't': ANCHORS,
 			      'T': CREATEANCHOR,
 			      'L': FINISH_LINK,
 			      },
@@ -59,7 +58,6 @@ class HierarchyViewDialog(ViewDialog):
 			(FLAG_ALL, 'Linking', [
 				(FLAG_ALL, 'Create Simple Anchor', CREATEANCHOR),
 				(FLAG_ALL, 'Finish Hyperlink to Selection', FINISH_LINK),
-				(FLAG_PRO, 'Anchors...', ANCHORS),
 				]),
 			(FLAG_ALL, 'View', [
 				(FLAG_ALL, 'Expand/Collapse', EXPAND),
@@ -109,7 +107,6 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, 'Finish Hyperlink', FINISH_LINK),
 		(FLAG_ALL, None),
 		(FLAG_ALL, 'Properties...', ATTRIBUTES),
-		(FLAG_PRO, 'Anchors...', ANCHORS),
 		)
 
 	leaf_popupmenu = (
@@ -132,7 +129,6 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, 'Finish Hyperlink', FINISH_LINK),
 		(FLAG_ALL, None),
 		(FLAG_ALL, 'Properties...', ATTRIBUTES),
-		(FLAG_PRO, 'Anchors...', ANCHORS),
 		(FLAG_ALL, 'Edit Content...', CONTENT),
 		)
 

@@ -2005,29 +2005,31 @@ class SMILWriter(SMIL):
 					attrlist.append(('xmlns:ext%d' % i, sysreq[i]))
 				
 		for name, func, keyToCheck in attrs:
-			if keyToCheck is None or x.attrdict.has_key(keyToCheck):
-				value = func(self, x)
-				# gname is the attribute name as recorded in attributes
-				# name is the attribute name as recorded in SMIL file
-				if value is not None:
-					gname1 = '%s %s' % (GRiNSns, name)
-					gname2 = '%s %s' % (QTns, name)
-					if attributes.has_key(gname1):
-						name = '%s:%s' % (NSGRiNSprefix, name)
-						gname = gname1
-					elif attributes.has_key(gname2):
-						name = '%s:%s' % (NSQTprefix, name)
-						gname = gname2
-					else:
-						gname = name
-					
-					# only write attributes that have a value and are
-					# legal for the type of node
-					# other attributes are caught below
-					if ((attributes.has_key(gname) and
-						       value != attributes[gname]) or
-						      name[:6] == 'xmlns:'):
-						attrlist.append((name, value))
+			if keyToCheck is not None and not x.attrdict.has_key(keyToCheck):
+				continue
+			value = func(self, x)
+			# gname is the attribute name as recorded in attributes
+			# name is the attribute name as recorded in SMIL file
+			if value is None:
+				continue
+			gname1 = '%s %s' % (GRiNSns, name)
+			gname2 = '%s %s' % (QTns, name)
+			if attributes.has_key(gname1):
+				name = '%s:%s' % (NSGRiNSprefix, name)
+				gname = gname1
+			elif attributes.has_key(gname2):
+				name = '%s:%s' % (NSQTprefix, name)
+				gname = gname2
+			else:
+				gname = name
+
+			# only write attributes that have a value and are
+			# legal for the type of node
+			# other attributes are caught below
+			if ((attributes.has_key(gname) and
+				       value != attributes[gname]) or
+				      name[:6] == 'xmlns:'):
+				attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		if not interior and root:
 			self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
@@ -2175,9 +2177,6 @@ class SMILWriter(SMIL):
 
 	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
-		# deprecated
-#		if ltype == Hlinks.TYPE_CALL:
-#			attrs.append(('show', "pause"))
 		if ltype == Hlinks.TYPE_JUMP:
 			# default value, so we don't need to write it
 			pass
@@ -2195,7 +2194,7 @@ class SMILWriter(SMIL):
 			# default value, so we don't need to write it
 			pass
 		elif dtype == Hlinks.A_DEST_PAUSE:
-				attrs.append(('destinationPlaystate', 'pause'))
+			attrs.append(('destinationPlaystate', 'pause'))
 							
 		# else show="replace" (default)
 		if type(a2) is type(''):

@@ -217,10 +217,6 @@ class HierarchyView(HierarchyViewDialog):
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
-		if not lightweight:
-			self.noslidecommands = self.noslidecommands + [
-				ANCHORS(callback = (self.anchorcall, ())),
-				]
 
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
@@ -2055,9 +2051,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def playfromcall(self):
 		if self.get_selected_widget(): self.get_selected_widget().playfromcall()
-
-	def anchorcall(self):
-		if self.get_selected_widget(): self.get_selected_widget().anchorcall()
 
 	def createanchorcall(self):
 		if self.get_selected_widget(): self.get_selected_widget().createanchorcall()

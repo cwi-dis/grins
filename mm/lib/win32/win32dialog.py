@@ -337,24 +337,17 @@ class SelectElementDlg(ResDialog):
 	# wrapper for MMChannel and MMNode (EditableMMNode) objects
 	# each entry in the display tree is associated (1:1) with a wrapper object
 	class MMObjWrapper:
-		def __init__(self, mmobj, tag, xxxparent=None):
+		def __init__(self, mmobj, tag):
 			if tag == 'prio': tag = 'priority'
 			assert tag in SelectElementDlg.tag2imgid.keys(), 'invalid smil element %s' % tag
 			self._mmobj = mmobj
 			self._tag = tag
 			self._display_id = 0
-			# The xxxparent item is a temporary patch for anchors,
-			# which don't currently store a reference to the node
-			# they belong to. When anchors become first class citizens
-			# this should go
-			self.xxxparent = xxxparent
 
 		def getTag(self):
 			return self._tag
 
 		def getMMObj(self):
-			if self.xxxparent:
-				return self.xxxparent, self._mmobj.aid
 			return self._mmobj
 
 		def getDisplayId(self):
@@ -370,8 +363,6 @@ class SelectElementDlg(ResDialog):
 			if self._mmobj is None: return ''
 			if self._mmobj.getClassName() in ('Region', 'Viewport'):
 				return self._mmobj.GetUID()
-			elif self._mmobj.getClassName() == 'MMAnchor':
-				return self._mmobj.aid
 			else:
 				return self._mmobj.GetRawAttrDef('name', '')
 
@@ -662,10 +653,6 @@ class SelectElementDlg(ResDialog):
 				wrapper = self.MMObjWrapper(node, smiltype)
 				citemid = self.insertMMObjWrapper(wrapper, itemid)
 			self.__appendNodes(node, citemid)
-		alist = parent.GetRawAttrDef('anchorlist', [])
-		for anchor in alist:
-			wrapper = self.MMObjWrapper(anchor, 'anchor', xxxparent=parent)
-			citemid = self.insertMMObjWrapper(wrapper, itemid)
 	
 	# expand item branch helper
 	def __expand(self, item):
