@@ -428,8 +428,8 @@ class NodeWrapper(Wrapper):
 			('begin',), ('.begin1',), 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
-			('top',), ('height',), ('bottom'),
-			('left',), ('width',), ('right'),
+			('top',), ('height',), ('bottom',),
+			('left',), ('width',), ('right',),
 			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
 			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
@@ -493,7 +493,8 @@ class NodeWrapper(Wrapper):
 				namelist.append('longdesc')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
-			if self.context.attributes.get('project_boston', 0):
+			if not snap and \
+			   self.context.attributes.get('project_boston', 0):
 				namelist.append('left')
 				namelist.append('width')
 				namelist.append('right')
