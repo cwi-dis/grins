@@ -216,6 +216,19 @@ class TimeMapper:
 				pos = pos + self.collisiondict[time]
 			return self.__pixel2pixel(pos)
 		if time < self.times[0]:
+			# See whether this is the preload special case
+			stall_t0, dummy = self.stalldict.get(self.times[0], (0, None))
+			aftertime = self.times[0]
+			beforetime = aftertime - stall_t0
+			if time >= beforetime:
+				factor = (float(time)-beforetime) / (aftertime-beforetime)
+				beforepos = self.minpos[aftertime]
+				afterpos = self.minpos[aftertime]+self.collisiondict[aftertime]
+				width = afterpos - beforepos
+				print 'preroll', beforetime, time, aftertime
+				print 'pos', beforepos, beforepos + factor*width, afterpos
+				return self.__pixel2pixel(beforepos + factor*width + 0.5)
+		if time < self.times[0]:
 			return self.__pixel2pixel(self.minpos[self.times[0]])
 		if time > self.times[-1]:
 			return self.__pixel2pixel(self.minpos[self.times[-1]])
