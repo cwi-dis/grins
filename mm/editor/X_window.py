@@ -270,6 +270,8 @@ class _Window(X_windowbase._Window):
 			event.y = y + h - 1
 
 	def _rb_common(self, event):
+		if not hasattr(self, '_rb_cx'):
+			self._start_rb(None, None, event)
 		self._rb_draw()
 		self._rb_constrain(event)
 		if self._rb_cx and self._rb_cy:
@@ -354,6 +356,8 @@ class _Window(X_windowbase._Window):
 		self._rb_curdisp.fgcolor((255, 0, 0))
 		self._rb_curdisp.drawbox(self._rb_cvbox())
 		self._rb_curdisp.render()
+		del self._rb_cx
+		del self._rb_cy
 
 class _SubWindow(X_windowbase._BareSubWindow, _Window):
 	pass
