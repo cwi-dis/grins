@@ -834,7 +834,6 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._isintscale=1
 		self._boxoff = 0, 0
 		self._layoutctrl=None
-		self._units=0
 			
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
