@@ -90,7 +90,8 @@ class RTParser(xmllib.XMLParser):
 		self.__printdata = []
 		self.__printfunc = printfunc
 		xmllib.XMLParser.__init__(self, accept_unquoted_attributes = 1,
-					  accept_utf8 = 1, map_case = 1)
+					  accept_utf8 = 1, map_case = 1,
+					  translate_attribute_references = 0)
 
 	def start_window(self, attributes):
 		duration = attributes.get('duration') or attributes.get('endtime')
@@ -293,7 +294,8 @@ class RPParser(xmllib.XMLParser):
 		self.__printdata = []
 		self.__printfunc = printfunc
 		self.__headseen = 0
-		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
+		xmllib.XMLParser.__init__(self, accept_utf8 = 1,
+					  translate_attribute_references = 0)
 
 	def close(self):
 		xmllib.XMLParser.close(self)
