@@ -34,6 +34,7 @@ IDW_TOOLBAR_GENERAL=0xe800
 IDW_TOOLBAR_PLAYER=0xe801
 IDW_TOOLBAR_ALIGNMENT=0xe802
 IDW_TOOLBAR_LINKING=0xe803
+IDW_TOOLBAR_CONTAINERS=0xe804
 
 
 class Button:
@@ -55,7 +56,7 @@ class Pulldown:
 		self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, (
+	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.NEW_DOCUMENT, TBICON_NEW),
 		Separator(6),
 		Button(usercmd.OPENFILE, TBICON_OPENFILE),
@@ -75,7 +76,7 @@ GENERAL_TEMPLATE = (
 )
 
 FRAME_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, (
+	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.NEW_DOCUMENT, TBICON_NEW),
 		Separator(6),
 		Button(usercmd.OPENFILE, TBICON_OPENFILE),
@@ -84,7 +85,7 @@ FRAME_TEMPLATE = (
 	)
 )
 PLAYER_TEMPLATE = (
-	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, (
+	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.PLAY, TBICON_PLAY),
 		Button(usercmd.PAUSE, TBICON_PAUSE),
 		Button(usercmd.STOP, TBICON_STOP),
@@ -93,7 +94,7 @@ PLAYER_TEMPLATE = (
 )
 
 LINKING_TEMPLATE = (
-	('Region alignment', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, (
+	('Region alignment', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.CREATEANCHOR, TBICON_CREATE_ANCHOR),
 		Button(usercmd.FINISH_LINK, TBICON_FINISH_LINK),
 		)
@@ -101,7 +102,7 @@ LINKING_TEMPLATE = (
 )
 
 ALIGN_TEMPLATE = (
-	('Linking and Timing', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, (
+	('Linking and Timing', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.ALIGN_LEFT, TBICON_ALIGN_LEFT),
 		Button(usercmd.ALIGN_CENTER, TBICON_ALIGN_VERTICAL),
 		Button(usercmd.ALIGN_RIGHT, TBICON_ALIGN_RIGHT),
@@ -116,11 +117,23 @@ ALIGN_TEMPLATE = (
 	)
 )
 
+CONTAINERS_TEMPLATE = (
+	('Containers', wndusercmd.TOOLBAR_CONTAINERS, IDW_TOOLBAR_CONTAINERS, grinsRC.IDR_TB_EDITOR, 1, (
+		Button(usercmd.DRAG_PAR, TBICON_PAR),
+		Button(usercmd.DRAG_SEQ, TBICON_SEQ),
+		Button(usercmd.DRAG_SWITCH, TBICON_SWITCH),
+		Button(usercmd.DRAG_EXCL, TBICON_EXCL),
+		Button(usercmd.DRAG_PRIO, TBICON_PRIO),
+		)
+	)
+)
+
 TOOLBARS=[
 	GENERAL_TEMPLATE,
 	PLAYER_TEMPLATE,
+	CONTAINERS_TEMPLATE,
+	LINKING_TEMPLATE,
 	ALIGN_TEMPLATE,
-	LINKING_TEMPLATE
 ]
 
 TOOLBARS.reverse()  # For now...

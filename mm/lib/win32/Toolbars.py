@@ -44,8 +44,8 @@ class ToolbarMixin:
 		self._pulldowncallbackdict = {}
 		#
 		for template in ToolbarTemplate.TOOLBARS:
-			name, command, barid, resid, buttonlist = template
-			cmdid = usercmdui.class2ui[command].id
+			name, command, barid, resid, candrag, buttonlist = template
+			cmdid = usercmdui.usercmd2id(command)
 			self._bars[cmdid] = None
 
 	def _restoreToolbarState(self):
@@ -133,11 +133,11 @@ class ToolbarMixin:
 
 	def _setToolbarFromTemplate(self, template):
 		# First count number of buttons
-		name, command, barid, resid, buttonlist = template
+		name, command, barid, resid, candrag, buttonlist = template
 
 		# Create the toolbar
-		cmdid = usercmdui.class2ui[command].id
-		bar = GRiNSToolbar(self, name, barid, resid, 0)
+		cmdid = usercmdui.usercmd2id(command)
+		bar = GRiNSToolbar(self, name, barid, resid, candrag)
 		self._bars[cmdid] = bar
 		self.DockControlBar(bar)
 ##		self._DockControlBarNextPosition(bar)
@@ -148,7 +148,7 @@ class ToolbarMixin:
 		buttonindex = 0
 		for button in buttonlist:
 			if button.type == 'button':
-				id = usercmdui.class2ui[button.cmdid].id
+				id = usercmdui.usercmd2id(button.cmdid)
 				bar.SetButtonInfo(buttonindex, id,
 					afxexttb.TBBS_BUTTON, button.arg)
 			elif button.type == 'separator':
@@ -290,7 +290,8 @@ class GRiNSToolbar(window.Wnd):
 	def onLButtonDown(self, params):
 		if self._enableToolDrag:
 			msgpos=win32mu.Win32Msg(params).pos()
-			self._dragging = msgpos
+			self._dragging = self._findcommand(msgpos)
+			self._dragpos = msgpos
 		return 1 # continue normal processing
 
 	def onLButtonUp(self, params):
@@ -301,13 +302,28 @@ class GRiNSToolbar(window.Wnd):
 	
 	def onMouseMove(self, params):
 		if self._enableToolDrag and self._dragging:
-			xp, yp = self._dragging
 			x, y =win32mu.Win32Msg(params).pos()
+			xp, yp = self._dragpos
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
-				str='%d %d' % (xp, yp)
+				str=`self._dragging`
 				# start drag and drop
 				self.DoDragDrop(self.CF_TOOL, str)
 				self._dragging = None
 				self.ReleaseCapture()
 		return 1 # continue normal processing
 
+	def _findcommand(self, (x, y)):
+		# Find the usercmd for a given toolbar x/y position
+		i = 0
+		while 1:
+			# First find the item by looping over the rects
+			rect = self.GetItemRect(i)
+			if rect == (0, 0, 0, 0):
+				# Assume this is the last one
+				return None
+			l, t, r, b = rect
+			if l <= x < r and t <= y < b:
+				# Found it. Get the windows-command-id
+				id = self.GetItemID(i)
+				return id
+			i = i+1

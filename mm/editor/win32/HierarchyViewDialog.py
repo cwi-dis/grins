@@ -133,18 +133,22 @@ class HierarchyViewDialog(ViewDialog):
 
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
-		x, y, cmd, xf, yf = params
+		x, y, cmd, ucmd, args = params
 		if not (0 <= x < 1 and 0 <= y < 1):
 			return windowinterface.DROPEFFECT_NONE
+		if ucmd == DRAG_NODE:
+			xf, yf = args
+			xf = xf * self.mcanvassize[0]
+			yf = yf * self.mcanvassize[1]
+			objSrc = self.whichhit(xf, yf)
+		else:
+			objSrc = None
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]
-		xf = xf * self.mcanvassize[0]
-		yf = yf * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
-		objSrc = self.whichhit(xf, yf)
 		self.droppable_widget = None
 		if obj and obj.node.GetType() in MMNode.interiortypes:
-			if cmd=='move':
+			if objSrc and cmd=='move':
 				if objSrc.node.IsAncestorOf(obj.node):
 					rv = windowinterface.DROPEFFECT_NONE
 				else:
@@ -160,15 +164,22 @@ class HierarchyViewDialog(ViewDialog):
 			
 	def dropnode(self, dummy, window, event, params):
 		# event handler for dropping the node.
-		x, y, cmd, xf, yf = params
+		x, y, cmd, ucmd, args = params
 		if not (0 <= x < 1 and 0 <= y < 1):
-			return 0
+			return windowinterface.DROPEFFECT_NONE
+		if ucmd == DRAG_NODE:
+			xf, yf = args
+			xf = xf * self.mcanvassize[0]
+			yf = yf * self.mcanvassize[1]
+			objSrc = self.whichhit(xf, yf)
+		else:
+			objSrc = None
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]
-		xf = xf * self.mcanvassize[0]
-		yf = yf * self.mcanvassize[1]
-		objSrc = self.whichhit(xf, yf)
 		objDst = self.whichhit(x, y)
+		if ucmd in (DRAG_PAR, DRAG_SEQ, DRAG_SWITCH, DRAG_EXCL,
+				DRAG_PRIO):
+			return self.dropnewstructnode(ucmd, objDst, (x, y))
 		if objSrc and objDst and objDst.node.GetType() in MMNode.interiortypes:
 			if cmd=='move':
 				if objSrc.node.IsAncestorOf(objDst.node):
