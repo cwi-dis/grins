@@ -56,30 +56,32 @@ class VideoChannel(ChannelWindowThread):
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype == ATYPE_AUTO:
-				continue
-			args = a[A_ARGS]
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'VideoChannel: funny-sized anchor'
-				continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
+			
+#		hicolor = self.gethicolor(node)
+#		for a in node.GetRawAttrDef('anchorlist', []):
+#			atype = a[A_TYPE]
+#			if atype not in SourceAnchors or atype == ATYPE_AUTO:
+#				continue
+#			args = a[A_ARGS]
+#			if len(args) == 0:
+#				args = [0,0,1,1]
+#			elif len(args) == 4:
+#				args = self.convert_args(f, args)
+#			if len(args) != 4:
+#				print 'VideoChannel: funny-sized anchor'
+#				continue
+#			x, y, w, h = args[0], args[1], args[2], args[3]
 ##			# convert coordinates from image to window size
 ##			x = x * self._arm_imbox[2] + self._arm_imbox[0]
 ##			y = y * self._arm_imbox[3] + self._arm_imbox[1]
 ##			w = w * self._arm_imbox[2]
 ##			h = h * self._arm_imbox[3]
-			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
-			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+#			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
+#			b.hiwidth(3)
+#			if drawbox:
+#				b.hicolor(hicolor)
+#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+
 		return self.syncarm
 
 	#

@@ -79,7 +79,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		mtype = MMmimetypes.guess_type(url)[0]
 		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
 			node.__type = 'real'
-		self.prepare_armed_display(node)
 		if node.__type == 'real':
 			if self.__rc is None:
 				try:
@@ -97,6 +96,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.__ready = 1
 			except MediaChannel.error, msg:
 				self.errormsg(node, msg)
+
+		self.prepare_armed_display(node)
+		
 		return 1
 
 	def do_play(self, node):
@@ -109,7 +111,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if node.__type == 'real':
 			if not self.__rc:
 				self.playdone(0)
-			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), coordinates=self._mediageom):
+			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
 				if not name:
@@ -118,7 +120,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0)
-		elif not self.__mc.playit(node, self.window, coordinates=self.getmediageom(node)):
+		elif not self.__mc.playit(node, self.window):
 			self.errormsg(node,'Can not play')
 			self.playdone(0)
 
@@ -150,7 +152,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
+		cb((anchor[0], anchor[1], [A_SHAPETYPE_RECT,0.0,0.0,1.0,1.0], anchor[3]))
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)
@@ -159,22 +161,28 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[A_TYPE]
-			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
-				continue
-			anchor = node.GetUID(), a[A_ID]
-			if not self._player.context.hyperlinks.findsrclinks(anchor):
-				continue
-			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
-			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+		if self.__mc:
+			armbox = self.__mc.prepare_anchors(node, self.window, self.getmediageom(node))
+			self.setArmBox(armbox)
+		# WARNING: for real not implemented yet
+		
+
+#		hicolor = self.gethicolor(node)
+		
+#		for a in node.GetRawAttrDef('anchorlist', []):
+#			atype = a[A_TYPE]
+#			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
+#				continue
+#			anchor = node.GetUID(), a[A_ID]
+#			if not self._player.context.hyperlinks.findsrclinks(anchor):
+#				continue
+#			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
+#			b.hiwidth(3)
+#			if drawbox:
+#				b.hicolor(hicolor)
+#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
 		if node.__type != 'real':
 			self.armed_display.drawvideo(self.__mc.update)
-
 
 	def _getoswindow(self):
 		return self.window.GetSafeHwnd()

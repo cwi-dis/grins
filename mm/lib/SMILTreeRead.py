@@ -2877,9 +2877,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					
 			x = res.group('x')
 			
-			if (x[-1] == '%') != inPourcent:
-				self.warning('Cannot mix pixels and percentages in anchor',
-					self.lineno)
+#			if (x[-1] == '%') != inPourcent:
+#				self.warning('Cannot mix pixels and percentages in anchor',
+#					self.lineno)
 
 			if x[-1] == '%':
 				value = string.atoi(x[:-1]) / 100.0
@@ -2919,7 +2919,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('unknown show attribute value')
 			ltype = TYPE_JUMP
 		atype = ATYPE_WHOLE
-		aargs = []
+		aargs = [A_SHAPETYPE_ALLREGION]
 
 		# coord and shape parsing
 		
@@ -2932,7 +2932,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif shape == 'circle':
 			ashapetype = A_SHAPETYPE_CIRCLE
 		else:
-			ashapetype = A_SHAPETYPE_RECT
+			ashapetype = A_SHAPETYPE_ALLREGION
 			self.syntax_error('Unknow shape type '+shape)
 			
 		# coords attribute
@@ -2949,26 +2949,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
 				if not error:
-					x0, y0, x1, y1 = l[:]					
-					if x1 <= x0 or y1 <= y0:
-						self.warning('Anchor coordinates incorrect. XYWH-style?.',
-							self.lineno)
-						error = 1
+					x0, y0, x1, y1 = l[:]	
+					# can't test anymore since you can mix poucent and pixel values
+#					if x1 <= x0 or y1 <= y0:
+#						self.warning('Anchor coordinates incorrect. XYWH-style?.',
+#							self.lineno)
+#						error = 1
 				
 				if not error:
-					# x,y,w,h are now floating point if they were
-					# percentages, otherwise they are ints.
-
-					# for instance, keep the compatibility
-					aargs = [x0, y0, x1-x0, y1-y0]
-#					aargs = [ashapetype, x0, y0, x1-x0, y1-y0]
+#					aargs = [x0, y0, x1-x0, y1-y0]
+					aargs = [ashapetype, x0, y0, x1, y1]
 			elif ashapetype == A_SHAPETYPE_POLY:
 				error = 0
-				if (len(l) < 4) or (len(l) & 1):
+				if (len(l) < 6) or (len(l) & 1):
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1				
 				if not error:	
-					# if the last coordinate is equal than first coordinate, we supress the last						
+					# if the last coordinate is equal to the first coordinate, we supress the last						
 					if l[-2] == l[0] and l[-1] == l[1]:
 						l = l[:-2]
 						if len(l) < 4:
@@ -2984,7 +2981,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not error:
 					cx, cy, rd = l[:]					
 					aargs = [ashapetype, cx, cy, rd]
-											
+		
 		begin = attributes.get('begin')
 		if begin is not None:
 			try:

@@ -111,7 +111,7 @@ class MediaChannel:
 		return 1
 
 
-	def playit(self, node, window = None, coordinates = None):
+	def playit(self, node, window = None):
 		if not self.__armBuilder:
 			return 0
 
@@ -145,7 +145,7 @@ class MediaChannel:
 			self.__playEnd = self.__playBuilder.GetDuration()
 
 		if window:
-			self.adjustMediaWnd(node,window,self.__playBuilder, coordinates)
+			self.adjustMediaWnd(node,window, self.__playBuilder)
 			self.__playBuilder.SetWindow(window,WM_GRPAPHNOTIFY)
 			window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)			
 		elif not self.__notifyWindow:
@@ -179,15 +179,22 @@ class MediaChannel:
 		if self.__playBuilder: 
 			self.__playBuilder.SetVisible(1)
 
-	# Set Window Media window size from scale and center, and coordinates attributes
-	def adjustMediaWnd(self,node,window,builder, coordinates):
+	# Define the anchor area for visible medias
+	def prepare_anchors(self, node, window, coordinates):
 		if not window: return
-		left,top,width,height=builder.GetWindowPosition()
-		left,top,right,bottom = window.GetClientRect()
-		x,y,w,h=left,top,right-left,bottom-top
-		if coordinates is not None:
-			left,top,width,height = window._convert_coordinates(coordinates)
-			x,y,w,h = left,top,width,height
+	
+		# it should be nice to verify this calcul !!!
+		
+#	 	left,top,width,height=self.__armBuilder.GetWindowPosition()
+#	 	print left,top,width,height
+#		left,top,right,bottom = window.GetClientRect()
+		left,top,w_width,w_height = window.GetClientRect()
+#	 	print left,top,right,bottom
+#		x,y,w,h=left,top,right-left,bottom-top
+
+		left,top,width,height = window._convert_coordinates(coordinates)
+		x,y,w,h = left,top,width,height
+		
 		# node attributes
 		import MMAttrdefs
 		scale = MMAttrdefs.getattr(node, 'scale')
@@ -216,8 +223,48 @@ class MediaChannel:
 			x = x + (w - width) / 2
 			y = y + (h - height) / 2
 
-		rcMediaWnd=(x, y, width,height)
-		builder.SetWindowPosition(rcMediaWnd)
+		self._rcMediaWnd=(x, y, width,height)
+		return (x/float(w_width), y/float(w_height), width/float(w_width), height/float(w_height))
+		
+	# Set Window Media window size from scale and center, and coordinates attributes
+	def adjustMediaWnd(self,node,window,builder):
+		if not window: return
+#		left,top,width,height=builder.GetWindowPosition()
+#		left,top,right,bottom = window.GetClientRect()
+#		x,y,w,h=left,top,right-left,bottom-top
+#		if coordinates is not None:
+#			left,top,width,height = window._convert_coordinates(coordinates)
+#			x,y,w,h = left,top,width,height
+		# node attributes
+#		import MMAttrdefs
+#		scale = MMAttrdefs.getattr(node, 'scale')
+#		center = MMAttrdefs.getattr(node, 'center')
+
+#		if scale > 0:
+#			width = int(width * scale)
+#			height = int(height * scale)
+#			if width>w or height>h:
+#				wscale=float(w)/width
+#				hscale=float(h)/height
+#				scale=min(wscale,hscale)
+#				width = min(int(width * scale), w)
+#				height = min(int(height * scale), h)
+#				center=1	
+#			if center:
+#				x = x + (w - width) / 2
+#				y = y + (h - height) / 2
+#		else:
+			# fit in window
+#			wscale=float(w)/width
+#			hscale=float(h)/height
+#			scale=min(wscale,hscale)
+#			width = min(int(width * scale), w)
+#			height = min(int(height * scale), h)
+#			x = x + (w - width) / 2
+#			y = y + (h - height) / 2
+
+#		rcMediaWnd=(x, y, width,height)
+		builder.SetWindowPosition(self._rcMediaWnd)
 
 	# XXX: Is it needed?
 	def paint(self):

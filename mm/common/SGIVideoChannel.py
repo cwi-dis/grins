@@ -174,35 +174,41 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
+
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
-				continue
-			args = a[A_ARGS]
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'VideoChannel: funny-sized anchor'
-				continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
+
+		self.setArmBox(imbox)
+		
+# NOW this part is in ChannelWindow.arm_1
+			
+#		hicolor = self.gethicolor(node)
+#		for a in node.GetRawAttrDef('anchorlist', []):
+#			atype = a[A_TYPE]
+#			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
+#				continue
+#			args = a[A_ARGS]
+#			if len(args) == 0:
+#				args = [0,0,1,1]
+#			elif len(args) == 4:
+#				args = self.convert_args(f, args)
+#			if len(args) != 4:
+#				print 'VideoChannel: funny-sized anchor'
+#				continue
+#			x, y, w, h = args[0], args[1], args[2], args[3]
 			# convert coordinates from image to window size
-			x = x * imbox[2] + imbox[0]
-			y = y * imbox[3] + imbox[1]
-			w = w * imbox[2]
-			h = h * imbox[3]
-			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
-			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+#			x = x * imbox[2] + imbox[0]
+#			y = y * imbox[3] + imbox[1]
+#			w = w * imbox[2]
+#			h = h * imbox[3]
+#			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
+#			b.hiwidth(3)
+#			if drawbox:
+#				b.hicolor(hicolor)
+#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
 		return 1
 
 	def do_play(self, node):
@@ -360,20 +366,20 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	# If the offsets are in the range [0..1], we don't need to do
 	# the conversion since the offsets are already fractions of
 	# the image.
-	def convert_args(self, file, args):
-		need_conversion = 1
-		for a in args:
-			if a != int(a):	# any floating point number
-				need_conversion = 0
-				break
-		if not need_conversion:
-			return args
-		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
+#	def convert_args(self, file, args):
+#		need_conversion = 1
+#		for a in args:
+#			if a != int(a):	# any floating point number
+#				need_conversion = 0
+#				break
+#		if not need_conversion:
+#			return args
+#		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
 			# special case: full image
-			return args
-		import Sizes
-		xsize, ysize = Sizes.GetSize(file)
-		return float(args[0]) / float(xsize), \
-		       float(args[1]) / float(ysize), \
-		       float(args[2]) / float(xsize), \
-		       float(args[3]) / float(ysize)
+#			return args
+#		import Sizes
+#		xsize, ysize = Sizes.GetSize(file)
+#		return float(args[0]) / float(xsize), \
+#		       float(args[1]) / float(ysize), \
+#		       float(args[2]) / float(xsize), \
+#		       float(args[3]) / float(ysize)

@@ -470,10 +470,29 @@ class _DisplayList:
 		self._fgcolor = color
 
 
+#	def newbutton(self, coordinates, z = 0, times = None):
+#		if self._rendered:
+#			raise error, 'displaylist already rendered'
+#		return _Button(self, coordinates, z, times)
+
+	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z, times)
+		
+		# test of shape type
+		from AnchorDefs import *
+		if coordinates[0] == A_SHAPETYPE_RECT:
+			return _ButtonRect(self, coordinates, z, times)
+		elif coordinates[0] == A_SHAPETYPE_POLY:
+			return _ButtonPoly(self, coordinates, z, times)
+		elif coordinates[0] == A_SHAPETYPE_CIRCLE:
+			return _ButtonCircle(self, coordinates, z, times)
+		elif coordinates[0] == A_SHAPETYPE_ELIPSE:
+			return _ButtonElipse(self, coordinates, z, times)
+		else:
+			print 'Internal error: invalid shape type'			
+			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
@@ -881,6 +900,87 @@ class _DisplayList:
 	# End of animation experimental methods
 	##########################################
 
+#class _Button:
+#	def __init__(self, dispobj, coordinates, z=0, times=None):
+#		self._coordinates = coordinates
+#		self._dispobj = dispobj
+#		self._z = z
+#		self._times = times
+#		buttons = dispobj._buttons
+#		for i in range(len(buttons)):
+#			if buttons[i]._z <= z:
+#				buttons.insert(i, self)
+#				break
+#		else:
+#			buttons.append(self)
+#		self._hicolor = self._color = dispobj._fgcolor
+#		self._width = self._hiwidth = dispobj._linewidth
+#		if self._color == dispobj._bgcolor:
+#			return
+#		self._dispobj.drawbox(coordinates)
+
+#	def close(self):
+#		if self._dispobj is None:
+#			return
+#		self._dispobj._buttons.remove(self)
+#		self._dispobj = None
+
+#	def is_closed(self):
+#		return self._dispobj is None
+
+#	def hiwidth(self, width):
+#		pass
+
+#	def hicolor(self, color):
+#		self._hicolor = color
+
+#	def highlight(self):
+#		pass
+
+#	def unhighlight(self):
+#		pass
+		
+#	def _inside(self, x, y):
+#		bx, by, bw, bh = self._coordinates
+#		if bx <= x < bx+bw and by <= y < by+bh:
+#			if self._times:
+#				curtime = time.time() - self._dispobj.starttime
+#				t0, t1 = self._times
+#				if (not t0 or t0 <= curtime) and \
+#				   (not t1 or curtime < t1):
+#					return 1
+#				return 0
+#			return 1
+#		return 0
+		
+#	def _get_button_region(self):
+#		"""Return our region, in global coordinates, if we are active"""
+##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
+#		if self._times:
+#			curtime = time.time() - self._dispobj.starttime
+##			 Workaround for the fact that timers seem to fire early, some times:
+#			curtime = curtime + 0.05
+#			t0, t1 = self._times
+#			if curtime < t0 or (t1 and curtime >= t1):
+#				return None
+#		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
+#		x1, y1 = x0+w, y0+h
+#		x0, y0 = Qd.LocalToGlobal((x0, y0))
+#		x1, y1 = Qd.LocalToGlobal((x1, y1))
+#		box = x0, y0, x1, y1
+#		rgn = Qd.NewRgn()
+#		Qd.RectRgn(rgn, box)
+#		return rgn
+		
+#	######################################
+#	# Animation experimental methods
+
+#	def updatecoordinates(self, coords):
+#		print 'button.updatecoords',coords
+
+#	# End of animation experimental methods
+#	##########################################
+
 class _Button:
 	def __init__(self, dispobj, coordinates, z=0, times=None):
 		self._coordinates = coordinates
@@ -896,43 +996,48 @@ class _Button:
 			buttons.append(self)
 		self._hicolor = self._color = dispobj._fgcolor
 		self._width = self._hiwidth = dispobj._linewidth
-		if self._color == dispobj._bgcolor:
-			return
-		self._dispobj.drawbox(coordinates)
 
+	# Destroy button
 	def close(self):
 		if self._dispobj is None:
 			return
 		self._dispobj._buttons.remove(self)
 		self._dispobj = None
 
+	# Returns true if it is closed
 	def is_closed(self):
 		return self._dispobj is None
 
+	# Increment height
 	def hiwidth(self, width):
 		pass
 
+	# Set highlight color
 	def hicolor(self, color):
 		self._hicolor = color
 
+	# Highlight box
 	def highlight(self):
 		pass
 
+	# Unhighlight box
 	def unhighlight(self):
 		pass
 		
-	def _inside(self, x, y):
-		bx, by, bw, bh = self._coordinates
-		if bx <= x < bx+bw and by <= y < by+bh:
-			if self._times:
-				curtime = time.time() - self._dispobj.starttime
-				t0, t1 = self._times
-				if (not t0 or t0 <= curtime) and \
-				   (not t1 or curtime < t1):
-					return 1
-				return 0
-			return 1
-		return 0
+	def _do_highlight(self):
+		pass
+
+	# Returns true if the time is inside the temporal space
+	def _inside(self):
+		if self._times:
+			import time
+			curtime = time.time() - self._dispobj.starttime
+			t0, t1 = self._times
+			if (not t0 or t0 <= curtime) and \
+			   (not t1 or curtime < t1):
+				return 1
+			return 0
+		return 1
 		
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
@@ -961,3 +1066,74 @@ class _Button:
 
 	# End of animation experimental methods
 	##########################################
+
+class _ButtonRect(_Button):
+	def __init__(self, dispobj, coordinates, z=0, times=None):
+		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
+		if self._color == dispobj._bgcolor:
+			return
+		self._dispobj.drawbox(coordinates)
+
+	# Returns true if the point is inside the box	
+	def _inside(self, x, y):
+		# for now
+		import CheckInsideArea
+		type, bx1, by1, bx2, by2 = self._coordinates
+		if CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2) and \
+			_Button._inside(self):
+				return 1
+		return 0
+
+class _ButtonPoly(_Button):
+	def __init__(self, dispobj, coordinates, z=0, times=None):
+		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
+		
+	# Returns true if the point is inside the box	
+	# Warning: this method is called by the window core management every time that you move the mouse
+	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
+	# area that you have defined in window.
+	# For now, a not very efficient algo is implemented, but it should be better to use a system
+	# call later if possible
+	def _inside(self, x, y):
+		import CheckInsideArea
+		if CheckInsideArea.insidePoly(x, y, self._coordinates[1:]) and \
+			_Button._inside(self):
+				return 1
+		return 0
+
+
+class _ButtonCircle(_Button):
+	def __init__(self, dispobj, coordinates, z=0, times=None):
+		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
+		
+	# Returns true if the point is inside the box	
+	def _inside(self, x, y):
+		# for now
+		import CheckInsideArea
+		type, cx, cy, rd = self._coordinates
+		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
+		if CheckInsideArea.insideCircle(x*ww, y*wh, cx*ww, cy*wh, rd*ww) and \
+			_Button._inside(self):
+				return 1
+		return 0
+
+class _ButtonElipse(_Button):
+	def __init__(self, dispobj, coordinates, z=0, times=None):
+		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
+		
+	# Warning: this method is called by the window core management every time that you move the mouse
+	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
+	# area that you have defined in window.
+	# For now, a not very efficient algo is implemented, but it should be better to use a system
+	# call later if possible
+	# Returns true if the point is inside the elipse	
+	def _inside(self, x, y):
+		# for now
+		import CheckInsideArea
+		type, cx, cy, rdx, rdy = self._coordinates
+		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
+		if CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh) and \
+			_Button._inside(self):
+				return 1
+		return 0
+

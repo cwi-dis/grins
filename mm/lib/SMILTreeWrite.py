@@ -2017,38 +2017,39 @@ class SMILWriter(SMIL):
 			attrlist[len(attrlist):] = self.linkattrs(a2, ltype)
 		if atype == ATYPE_NORMAL:
 			ok = 0
-			if len(args) == 4:
-				x, y, w, h = tuple(args)
-				try:
-					if int(x) == x and \
-					   int(y) == y and \
-					   int(w) == w and \
-					   int(h) == h and \
-					   (x,y,w,h) != (0,0,1,1):
-						if x < 0:
-							x, w = 0, w + x
-						if y < 0:
-							y, h = 0, h + y
-						coords = '%d,%d,%d,%d' % (int(x),int(y),int(x+w),int(y+h))
-					else:
-						# restrain coordinates to [0,1]
-						if x < 0:
-							x, w = 0.0, w + x
-						if y < 0:
-							y, h = 0.0, h + y
-						if x + w > 1:
-							w = 1.0 - x
-						if y + h > 1:
-							h = 1.0 - y
-						coords = '%d%%,%d%%,%d%%,%d%%' % (int(x*100 + .5), int(y*100 + .5), int((x+w)*100 + .5), int((y+h)*100 + .5))
-				except TypeError:
-					pass
-				else:
+			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?
+			try:
+				shapeType = args[0]
+				if shapeType == A_SHAPETYPE_RECT or shapeType == A_SHAPETYPE_POLY or \
+						shapeType == A_SHAPETYPE_CIRCLE:
+					coords = ''
+					l = len(args)-1
+					n = 0
+					for c in args[1:]:
+						# pixel coordinates
+						if type(c) == type(0):
+							coords = coords+'%d' % c
+						# relative coordinates
+						else:
+							coords = coords+'%d%%' % int(c*100 + .5)
+						n = n + 1
+						if n < l:
+							coords = coords+','
 					ok = 1
+				elif shapeType == A_SHAPETYPE_ALLREGION:
+					ok = 1
+			except:
+				pass						
 			if ok:
-				attrlist.append(('coords', coords))
-			elif args:
-				print '** Unparseable args on', aid, args
+				if shapeType == A_SHAPETYPE_POLY:
+					attrlist.append(('shape', 'poly'))
+				elif shapeType == A_SHAPETYPE_CIRCLE:
+					attrlist.append(('shape', 'circle'))
+				elif shapeType == A_SHAPETYPE_RECT:
+					attrlist.append(('shape', 'rect'))
+					
+				if shapeType != A_SHAPETYPE_ALLREGION:
+					attrlist.append(('coords', coords))
 			else:
 				attrlist.append(('fragment', id))
 		begin, end = times
