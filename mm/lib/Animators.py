@@ -738,9 +738,10 @@ class AnimateElementParser:
 	# check that we have a valid target
 	def __checkTarget(self):
 		# for animate motion the implicit target attribute is region.position
-		if self.__elementTag!='animateMotion':
+		if self.__elementTag=='animateMotion':
 			d = self.__target.GetChannel().attrdict
 			if d.has_key('base_winoff'):
+				base_winoff = d['base_winoff']
 				self.__attrname == 'region.position'
 				self.__domval = complex(base_winoff[0], base_winoff[1])
 				return 1
@@ -813,6 +814,20 @@ class AnimateElementParser:
 			return ()
 		return v1, v2
 
+	def __getNumPair(self, v):
+		if not v: return None
+		if type(v)==type(complex(0,0)):
+			return v.real, v.imag
+		v = v.strip()
+		try:
+			if v.find(',')>=0:
+				x, y = string.split(v,',')
+			else:
+				x, y = string.split(v,' ')
+			return string.atof(x), string.atof(y)
+		except:
+			return None
+
 	# return list of interpolation numeric pairs
 	def __getNumPairInterpolationValues(self):	
 		# if 'values' are given ignore 'from/to/by'
@@ -820,10 +835,10 @@ class AnimateElementParser:
 		if values:
 			strcoord = string.split(values,';')
 			coords = []
-			for pair in strvalues:
-				x, y = string.split(pair,', ')
-				x, y = string.atof(x), string.atof(y)
-				coords.append((x, y))
+			for str in strcoord:
+				pt = self.__getNumPair(str)
+				if pt!=None:
+					coords.append(pt)
 			return tuple(coords)
 
 		# 'from' is optional
@@ -831,19 +846,21 @@ class AnimateElementParser:
 		v1 = self.getFrom()
 		if not v1:
 			v1 = self.__domval
-		x1, y1 = string.split(v1,', ')
-		x1, y1 = string.atof(x1), string.atof(y1)
+		pt1 = self.__getNumPair(v1)
+		if pt1==None: return ()
 
 		v2 = self.getTo()
 		dv = self.getBy()
 		if v2:
-			x2, y2 = string.split(v2,', ')
-			x2, y2 = string.atof(x2), string.atof(y2)
-			return (x1, y1), (x2, y2)
-		elif dv:
-			dx, dy = string.split(dv,', ')
-			dx, dy = string.atof(dx), string.atof(dy)
-			return (x1, y1), (x1+dx,y1+dy)
+			pt2 = self.__getNumPair(v2)
+			if pt2!=None:
+				return pt1, pt2
+		if dv:
+			dpt = self.__getNumPair(dv)
+			if dpt:
+				dx, dy = dpt
+				x1, y1 = pt1
+				return (x1, y1), (x1+dx,y1+dy)
 		return ()
 
 	# return list of interpolation strings
