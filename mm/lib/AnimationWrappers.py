@@ -84,13 +84,16 @@ class AnimationTarget:
 			self.__getSelfAnimations(node, children)
 
 class AnimationDefaultWrapper:
-	def createAnimators(self, animnode):
-		self._target = AnimationTarget(animnode) # animation target
+	def __init__(self, animnode):
+		self._animateNode = animnode
+		
+	def createAnimators(self):
+		self._target = AnimationTarget(self._animateNode) # animation target
 		self._domrect, self._domcolor = self._target.getDomValues()
 
-	def updateAnimators(self, node):
+	def updateAnimators(self):
 		# for use re-create animators
-		self.createAnimators(node)
+		self.createAnimators()
 
 	def getRectAt(self, keyTime):
 		return self._domrect
@@ -111,17 +114,19 @@ class AnimationDefaultWrapper:
 		return [0, 1]
 	
 class AnimationParWrapper(AnimationDefaultWrapper):
-	def __init__(self):
+	def __init__(self, animnode):
+		AnimationDefaultWrapper.__init__(self, animnode)
 		self._animateMotion = None
 		self._animateWidth = None
 		self._animateHeight = None
 		self._animateColor = None
 
-	def createAnimators(self, animnode):
+	def createAnimators(self):
 		import svgpath
 		import Animators
 
-		AnimationDefaultWrapper.createAnimators(self, animnode)
+		animnode = self._animateNode
+		AnimationDefaultWrapper.createAnimators(self)
 
 		animvals = animnode.GetAttrDef('animvals', [])
 
@@ -229,10 +234,104 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 	def getKeyTimeList(self):
 		return self._times
 
-def getAnimationWrapper(animnode):
+	#
+	# editing operations
+	#
+	
+	# have to be called from inside a transaction	
+	def insertKeyTime(self, editmgr, tp, duplicateKey=0):
+		animateNode = self._animateNode
+		animvals = animateNode.GetAttrDef('animvals', None)
+		index = -1
+		if animvals is not None:
+			index = 0
+			for time, vals in animvals:
+				if time > tp:
+					break
+				index = index+1
+			if index > 0 and index < len(animvals):
+				# can only insert a key between the first and the end
+				if duplicateKey is not None and duplicateKey >= 0:
+					# duplicate a key value
+					time, vals = animvals[duplicateKey]
+					newvals = vals.copy()
+				else:
+					# interpolate values at this time
+					left, top, width, height = self.getRectAt(tp)
+#						bgcolor = self.animationWrapper.getColorAt(tp)
+					newvals = {'left':left, 'top':top, 'width':width, 'height':height}
+				animateNode._currentTime = tp
+				canimvals = [] # don't modify the original to make undo/redo working
+				for t, v in animvals:
+					canimvals.append((t, v.copy()))
+						
+				canimvals.insert(index, (tp, newvals))
+				editmgr.setnodeattr(animateNode, 'animvals', canimvals)
+				
+		return index
+
+	def removeKeyTime(self, editmgr, index):
+		animateNode = self._animateNode
+		animvals = animateNode.GetAttrDef('animvals', [])
+		if index > 0 and index < len(animvals)-1:
+			
+			canimvals = [] # don't modify the original to make undo/redo working
+			for t, v in animvals:
+				canimvals.append((t, v.copy()))
+			
+			# can only remove a key between the first and the end
+			del canimvals[index]
+			editmgr.setnodeattr(animateNode, 'animvals', canimvals)
+			return 1
+		
+		return 0
+
+	def changeKeyTime(self, editmgr, index, time):
+		animateNode = self._animateNode
+		animvals = animateNode.GetAttrDef('animvals', [])
+
+		canimvals = [] # don't modify the original to make undo/redo working
+		for t, v in animvals:
+			canimvals.append((t, v.copy()))
+			
+		oldtime, vals = canimvals[index]
+		canimvals[index] = (time, vals)
+		editmgr.setnodeattr(animateNode, 'animvals', canimvals)
+
+		return 1		
+
+	def changeAttributeValue(self, editmgr, attrName, attrValue, currentTimeValue, listener):
+		animateNode = self._animateNode
+		
+		animvals = animateNode.GetAttrDef('animvals', [])
+		canimvals = [] # don't modify the original to make undo/redo working
+		for t, v in animvals:
+			canimvals.append((t, v.copy()))
+
+		keyTimeList = self.getKeyTimeList()
+		keyTimeIndex = listener.getKeyForThisTime(keyTimeList, currentTimeValue, round=1)
+		if keyTimeIndex is None:
+			keyTimeIndex = self.insertKeyTime(editmgr, currentTimeValue)
+			animvals = animateNode.GetAttrDef('animvals', [])
+			self._times = []
+			for time, vals in animvals:
+				self._times.append(time)
+				
+			canimvals = animateNode.attrdict.get('animvals')
+
+		time, vals = canimvals[keyTimeIndex]
+		vals[attrName] = attrValue
+		editmgr.setnodeattr(animateNode, 'animvals', canimvals)
+
+		return 1
+		
+	def isAnimatedAttribute(self, attrName):
+		return attrName in ('left', 'top', 'width', 'height')
+	
+def makeAnimationWrapper(animnode):
 	type = animnode.GetType()
 	if type == 'animpar':
-		return AnimationParWrapper()
+		return AnimationParWrapper(animnode)
 	else:
-		return AnimationDefaultWrapper()
+		return AnimationDefaultWrapper(animnode)
 	
