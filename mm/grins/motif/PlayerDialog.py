@@ -2,7 +2,6 @@ __version__ = "$Id$"
 
 import windowinterface
 from usercmd import *
-import imgformat, imgconvert
 import playbutton, playbuttonunselect
 import pausebutton, pausebuttonunselect
 import stopbutton, stopbuttonunselect
