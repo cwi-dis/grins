@@ -1,25 +1,27 @@
 Document Type: WSE
 item: Global
-  Version=7.041
+  Version=8.14
   Title=Oratrix GRiNS Player for SMIL 2.0 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+  Copy Default=1
   Japanese Font Name=MS Gothic
-  Japanese Font Size=10
+  Japanese Font Size=9
   Progress Bar DLL=%_WISE_%\Progress\WIZ%_EXE_OS_TYPE_%.DLL
-  Start Gradient=0 0 128
-  End Gradient=255 128 64
+  Start Gradient=0 0 255
+  End Gradient=0 0 0
   Windows Flags=00000100000000110010110000001000
   Log Pathname=%MAINDIR%\INSTALL.LOG
   Message Font=MS Sans Serif
   Font Size=8
-  Pages Modified=00110000111101100000011100000111
-  Extra Pages=00000000000000000000000000100010
+  Pages Modified=00010000110111000001001100000101
+  Extra Pages=00000000000000000000000010100010
+  Disk Label=Default
   Disk Filename=SETUP
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.85.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.87.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -28,38 +30,64 @@ item: Global
   Dialogs Version=7
   Version File=2.0
   Version Description=GRiNS/SMIL 2.0
-  Version Copyright=Copyright 2000 Oratrix Holding B.V.
+  Version Copyright=Copyright 2001 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
-  Distribute Path=\\UNIXSERVER\auginet\GRiNS
+  Crystal Format=10111100101100000010001001001001
+  Crystal Destination=00000000000000000000000000001011
   Distribute Type=2
-  Step View=All
-  File Checksum=957359560
+  Step View=&All
   Variable Name1=_SYS_
-  Variable Default1=C:\WINNT\System32
+  Variable Default1=c:\winnt\System32
   Variable Flags1=00001000
-  Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Name2=_WIN_
+  Variable Default2=c:\winnt
   Variable Flags2=00001000
-  Variable Name3=_ALIASNAME_
+  Variable Name3=_WISE_
+  Variable Default3=E:\Program Files\Wise InstallBuilder 8.1
   Variable Flags3=00001000
-  Variable Name4=_ALIASPATH_
+  Variable Name4=_ALIASNAME_
   Variable Flags4=00001000
-  Variable Name5=_ALIASTYPE_
+  Variable Name5=_ALIASPATH_
   Variable Flags5=00001000
+  Variable Name6=_ALIASTYPE_
+  Variable Flags6=00001000
+  Variable Name7=_ODBC16_
+  Variable Default7=c:\winnt\System32
+  Variable Flags7=00001000
+  Variable Name8=_ODBC32_
+  Variable Default8=c:\winnt\System32
+  Variable Flags8=00001000
+  Variable Name9=_DX_OPTIONS_
+  Variable Default9=D
+  Variable Flags9=00001000
 end
 item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\player\lllicense.txt
+  Source=D:\ufs\mm\cmif\Build\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
+end
+item: Set Variable
+  Variable=FIND_DIRECTORY
+end
+item: If/While Statement
+  Variable=FIND_DIRECTORY
+end
+item: Search for File
+  Variable=FIND_DIRECTORY
+  Pathname List=GRiNSP_SV2.exe
+  Description=Checking for previously installed components...
+  Flags=00000001
+end
+item: End Block
 end
 item: Check Configuration
   Flags=10000000
 end
 item: Check Configuration
-  Flags=00011001
+  Flags=01011010
 end
 item: End Block
 end
@@ -67,18 +95,33 @@ item: Check Configuration
   Flags=10100000
 end
 item: Check Configuration
-  Flags=00011011
+  Flags=11010000
 end
 item: End Block
 end
 item: Check Configuration
-  Flags=00000001
+  Flags=00001011
+end
+item: Check Configuration
+  Flags=01000001
 end
 item: Check Configuration
   Flags=00011100
 end
+item: Remark
+  Text=If you do not want Rem statements to appear when you create a new installation,
+end
+item: Remark
+  Text=open Empty Project.wse from the Template folder in the Wise application
+end
+item: Remark
+  Text=directory, delete the Rem statements, and select Save from the File menu.
+end
 item: Open/Close INSTALL.LOG
   Flags=00000001
+end
+item: Remark
+  Text=If the destination system does not have a writable Windows\System directory, system files will be written to the Windows\ directory
 end
 item: Check if File/Dir Exists
   Pathname=%SYS%
@@ -90,24 +133,46 @@ item: Set Variable
 end
 item: End Block
 end
+item: Remark
+  Text=APPTITLE is the application title of the installation
+end
 item: Set Variable
   Variable=APPTITLE
   Value=Oratrix GRiNS Player for SMIL 2.0
   Flags=10000000
+end
+item: Remark
+  Text=GROUP is the variable that holds the Program Files Group that shortcuts will be placed on the Windows Start Menu
 end
 item: Set Variable
   Variable=GROUP
   Value=Oratrix GRiNS\GRiNS Player for SMIL 2.0
   Flags=10000000
 end
+item: Remark
+  Text=DISABLED variable is initialized for backward compatability
+end
 item: Set Variable
   Variable=DISABLED
   Value=!
+end
+item: Remark
+  Text=MAINDIR is the variable that holds the default destination directory
 end
 item: Set Variable
   Variable=MAINDIR
   Value=Oratrix\GRiNSP_SV2
   Flags=10000000
+end
+item: Remark
+  Text=USERNAME is the variable that holds the Windows Logon name
+end
+item: Get System Information
+  Variable=USERNAME
+  Flags=00010001
+end
+item: Remark
+  Text=This IF/THEN/ELSE blocks reads the default Program Files and Common directories from the registry
 end
 item: Check Configuration
   Flags=10111011
@@ -144,23 +209,44 @@ item: Set Variable
 end
 item: End Block
 end
+item: Remark
+  Text=BACKUP is the variable that holds the path that all backup files will be copied to when overwritten
+end
+item: If/While Statement
+  Variable=FIND_DIRECTORY
+  Flags=00000001
+end
+item: Set Variable
+  Variable=MAINDIR
+  Value=%FIND_DIRECTORY%
+end
+item: End Block
+end
 item: Set Variable
   Variable=BACKUP
   Value=%MAINDIR%\BACKUP
   Flags=10000000
 end
+item: Remark
+  Text=DOBACKUP determines if a backup will be performed.  The possible values are A (do backup) or B (do not do backup)
+end
 item: Set Variable
   Variable=DOBACKUP
-  Value=B
-  Flags=10000000
+  Value=A
+end
+item: Remark
+  Text=If COMPONENTS are enabled, the COMPONENTS variable is initialized with possible selections
 end
 item: Set Variable
   Variable=COMPONENTS
   Flags=10000000
 end
+item: Remark
+  Text=BRANDING determines if the installation will be branded with a name and company.  By default, this is written to the INST directory (installation media).
+end
 item: Set Variable
   Variable=BRANDING
-  Value=0
+  Value=1
 end
 item: If/While Statement
   Variable=BRANDING
@@ -185,9 +271,23 @@ item: Set Variable
   Variable=DOBRAND
   Value=1
 end
+item: Get System Information
+  Variable=NAME
+  Flags=00000110
+end
+item: Get System Information
+  Variable=COMPANY
+  Flags=00000111
+end
 item: End Block
 end
 item: End Block
+end
+item: Remark
+  Text=The Wizard Loop contains the dialog screens that the user sees in the installation
+end
+item: Remark
+  Text=If you would like to change the graphic on the dialog boxes, you need to change it by double-clicking on the Wizard Loop line and change the bitmap path.
 end
 item: Wizard Block
   Direction Variable=DIRECTION
@@ -195,7 +295,7 @@ item: Wizard Block
   Bitmap Pathname=%_WISE_%\DIALOGS\TEMPLATE\WIZARD.BMP
   X Position=9
   Y Position=10
-  Filler Color=8421440
+  Filler Color=8421376
   Dialog=Select Program Manager Group
   Dialog=Select Backup Directory
   Dialog=Display Registration Information
@@ -213,6 +313,12 @@ item: Wizard Block
   Compare=0
   Compare=1
   Flags=00000011
+end
+item: Remark
+  Text=If you need to change the size of your Custom Dialogs, you need only change the "Welcome" screen.  
+end
+item: Remark
+  Text=It's size is the template for all following dialogs within the Wizard Loop.
 end
 item: Custom Dialog Set
   Name=Welcome
@@ -319,7 +425,7 @@ item: Custom Dialog Set
       Text French=Toute reproduction ou distribution, même partielle, de ce programme qui n'aura pas reçu d'autorisation préalable fera l'objet de poursuites et sera sévèrement sanctionnée par le droit civil et pénal
       Text German=Wir empfehlen nachdrücklich, vor Ausführen dieses Installationsprogramms alle Windows-Programme zu beenden. 
       Text German=
-      Text German=Auf Abbrechen klicken, um die Installation zu beenden und alle laufenden Programme zu schließen. Auf Weiter klicken, um mit dem Installationsprogramm beginnen.
+      Text German=Auf Abbrechen klicken, um die Installation zu beenden und alle laufenden Programme zu schließen. Auf Weiter klicken, um mit dem Installationsprogramm zu beginnen.
       Text German=
       Text German=WARNUNG: Dieses Programm ist urheberrechtlich sowie durch internationale Verträge geschützt. 
       Text German=
@@ -452,6 +558,277 @@ item: Custom Dialog Set
       Text Dutch=<&Terug
       Text Norwegian=<&Tilbake
       Text Swedish=< &Tillbaka
+    end
+  end
+end
+item: Custom Dialog Set
+  Name=Get Registration Information
+  Display Variable=DISPLAY
+  item: Dialog
+    Title=Get Registration Information
+    Title French=Obtenir les informations l'enregistrement
+    Title German=Angaben zur Registrierung
+    Title Portuguese=Obter Informação de Registo
+    Title Spanish=Obtener información sobre Inscripción
+    Title Italian=Inserisci dati registrazione
+    Title Danish=Get Registration Information
+    Title Dutch=Vraag om registratie-informatie.
+    Title Norwegian=Få registreringsinformasjon
+    Title Swedish=Ta upp registreringsinformation
+    Width=280
+    Height=224
+    Font Name=Helv
+    Font Size=8
+    item: Static
+      Rectangle=90 10 260 49
+      Create Flags=01010000000000000000000000000000
+      Text=Please enter the name and company of the registered owner of %APPTITLE% into the fields below. All fields must be filled in to proceed.
+      Text French=Veuillez entrer le nom et la société du propriétaire enregistré de %APPTITLE% dans les champs ci-dessous. Tous les champs doivent être complétés afin de pouvoir poursuivre
+      Text German=Bitte tragen Sie in den Feldern unten den Namen und das Unternehmen des registrierten Eigentümers von %APPTITLE% ein. Um fortzufahren müssen alle Felder ausgefüllt sein.
+      Text Portuguese=É favor introduzir o nome e a companhia do proprietário registado de %APPTITLE% nos campos abaixo. Todos os campos devem ser preenchidos para prosseguir.
+      Text Spanish=Introduzca el nombre y la empresa del propietario autorizado de %APPTITLE% en los campos que se ofrecen a continuación. Para continuar deben rellenarse todos los campos.
+      Text Italian=Inserisci il nome e la società del proprietario registrato di  %APPTITLE% nei campi sotto. Per poter procedere devi completare tutti i campi.
+      Text Danish=Indtast navn og selskab for den indregistrerede ejer af %APPTITLE% i nedenstående felter. Alle felter skal udfyldes, inden man kan fortsætte.
+      Text Dutch=Voer de naam en het bedrijf van de geregistreerde eigenaar van %APPTITLE% in onderstaande velden in. Alle velden moeten ingevuld zijn voordat u verder kunt.
+      Text Norwegian=Tast inn personnavnet og firmaet til den registrerte eieren av %APPTITLE% i feltet nedenfor. Alle felt må fylles inn før du kan fortsette.
+      Text Swedish=Ange namn och företag för den registrerade ägaren till %APPTITLE% i fälten nedan. Samtliga fält måste vara ifyllda för att du ska kunna fortsätta.
+    end
+    item: Static
+      Rectangle=90 52 250 62
+      Create Flags=01010000000000000000000000000000
+      Text=Name:
+      Text French=Nom
+      Text German=Name:
+      Text Portuguese=Nome:
+      Text Spanish=Nombre:
+      Text Italian=Nome e cognome:
+      Text Danish=Navn:
+      Text Dutch=Naam
+      Text Norwegian=Navn:
+      Text Swedish=Namn:
+    end
+    item: Editbox
+      Rectangle=90 61 260 73
+      Variable=NAME
+      Help Context=16711681
+      Create Flags=01010000100000010000000010000000
+      Text=%NAME%
+      Text French=%NAME%
+      Text German=%NAME%
+      Text Portuguese=%NAME%
+      Text Spanish=%NAME%
+      Text Italian=%NAME%
+      Text Danish=%NAME%
+      Text Dutch=%NAME%
+      Text Norwegian=%NAME%
+      Text Swedish=%NAME%
+    end
+    item: Static
+      Rectangle=90 80 251 91
+      Create Flags=01010000000000000000000000000000
+      Text=Company:
+      Text French=Société
+      Text German=Gesellschaft:
+      Text Portuguese=Companhia:
+      Text Spanish=Empresa:
+      Text Italian=Società:
+      Text Danish=Selskab:
+      Text Dutch=Bedrijf
+      Text Norwegian=Firma:
+      Text Swedish=Företag:
+    end
+    item: Editbox
+      Rectangle=90 89 260 101
+      Variable=COMPANY
+      Help Context=16711681
+      Create Flags=01010000100000010000000010000000
+      Text=%COMPANY%
+      Text French=%COMPANY%
+      Text German=%COMPANY%
+      Text Portuguese=%COMPANY%
+      Text Spanish=%COMPANY%
+      Text Italian=%COMPANY%
+      Text Danish=%COMPANY%
+      Text Dutch=%COMPANY%
+      Text Norwegian=%COMPANY%
+      Text Swedish=%COMPANY%
+    end
+    item: Push Button
+      Rectangle=172 185 214 199
+      Variable=DIRECTION
+      Value=N
+      Create Flags=01010000000000010000000000000001
+      Text=&Next >
+      Text French=&Suivant>
+      Text German=&Weiter>
+      Text Portuguese=&Próximo>
+      Text Spanish=&Siguiente >
+      Text Italian=&Avanti >
+      Text Danish=&Næste>
+      Text Dutch=&Volgende>
+      Text Norwegian=&Neste>
+      Text Swedish=&Nästa >
+    end
+    item: Push Button
+      Rectangle=130 185 172 199
+      Variable=DIRECTION
+      Value=B
+      Create Flags=01010000000000010000000000000000
+      Flags=0000000000000001
+      Text=< &Back
+      Text French=<&Retour
+      Text German=<&Zurück
+      Text Portuguese=<&Retornar
+      Text Spanish=<&Retroceder
+      Text Italian=< &Indietro
+      Text Danish=<&Tilbage
+      Text Dutch=<&Terug
+      Text Norwegian=<&Tilbake
+      Text Swedish=< &Tillbaka
+    end
+    item: Push Button
+      Rectangle=222 185 264 199
+      Action=3
+      Create Flags=01010000000000010000000000000000
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Annuller
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+    item: Static
+      Rectangle=9 177 263 178
+      Action=3
+      Create Flags=01010000000000000000000000000111
+    end
+    item: Static
+      Rectangle=90 108 125 119
+      Enabled Color=00000000000000001111111111111111
+      Create Flags=01010000000000000000000000000000
+      Text=License Key:
+    end
+    item: Editbox
+      Rectangle=90 117 260 129
+      Variable=LICENSEKEY
+      Help Context=16711681
+      Enabled Color=00000000000000001111111111111111
+      Create Flags=01010000100000010000000010000000
+    end
+  end
+end
+item: Custom Dialog Set
+  Name=Display Registration Information
+  Display Variable=DISPLAY
+  item: Dialog
+    Title=Display Registration Information
+    Title French=Afficher les informations l'enregistrement
+    Title German=Registrierinformationen einblenden.
+    Title Portuguese=Mostrar Informação de Registo
+    Title Spanish=Mostrar Información de Inscripción
+    Title Italian=Visualizza dati registrazione
+    Title Danish=Vis registreringsoplysninger
+    Title Dutch=Vertoon registratie-informatie.
+    Title Norwegian=Vis registreringsinformasjon.
+    Title Swedish=Visa registreringsinformation
+    Width=280
+    Height=224
+    Font Name=Helv
+    Font Size=8
+    item: Static
+      Rectangle=90 51 260 87
+      Create Flags=01010000000000000000000000000000
+      Text=%NAME%
+      Text=%COMPANY%
+      Text French=%NAME%
+      Text French=%COMPANY%
+      Text German=%NAME%
+      Text German=%COMPANY%
+      Text Portuguese=%NAME%
+      Text Portuguese=%COMPANY%
+      Text Spanish=%NAME%
+      Text Spanish=%COMPANY%
+      Text Italian=%NAME%
+      Text Italian=%COMPANY%
+      Text Danish=%NAME%
+      Text Danish=%COMPANY%
+      Text Dutch=%NAME%
+      Text Dutch=%COMPANY%
+      Text Norwegian=%NAME%
+      Text Norwegian=%COMPANY%
+      Text Swedish=%NAME%
+      Text Swedish=%COMPANY%
+    end
+    item: Static
+      Rectangle=90 11 260 51
+      Create Flags=01010000000000000000000000000000
+      Text=This software has already been installed by the following person. If you are not licensed to use this software you may not install this software onto your computer.
+      Text French=Ce logiciel a déjà été installé par la personne nommée ci-dessous. Si vous n'avez pas l'autorisation d'utiliser ce logiciel, veuillez ne pas l'installer sur votre ordinateur
+      Text German=Diese Software wurde bereits von der folgenden Person installiert. Ohne Lizenz zur Verwendung dieser Software dürfen Sie diese Software nicht auf Ihrem Computer installieren.
+      Text Portuguese=Este programa já foi instalado pela seguinte pessoa. Se não tiver a licença para utilizar este programa, não pode instalar este programa no seu computador.
+      Text Spanish=La persona que se cita a continuación ya ha instalado este software. Si no está autorizado para usar este software no debe instalarlo en su ordenador.
+      Text Italian=Questo software è stato già installato dal seguente utente. Se non possiedi la licenza per usare questo software non puoi installarlo sul tuo computer.
+      Text Danish=Denne software er allerede installeret af denne person. Hvis du ikke har licens til at benytte denne software, må du ikke installere dette software software på computeren.
+      Text Dutch=Deze software is reeds door de volgende persoon ge•nstalleerd. Als u niet bevoegd bent om deze software te gebruiken, mag u deze software niet op uw computer installeren.
+      Text Norwegian=Denne programvaren har allerede blitt installert av følgende person. Hvis du ikke har lisens til å bruke denne programvaren kan du ikke installere den på datamaskinen din.
+      Text Swedish=Denna programvara har redan installerats av personen nedan. Om du inte har licens att använda denna programvara får du inte installera programvaran på din dator.
+    end
+    item: Push Button
+      Rectangle=172 185 214 199
+      Variable=DIRECTION
+      Value=N
+      Create Flags=01010000000000010000000000000001
+      Text=&Next >
+      Text French=&Suivant>
+      Text German=&Weiter>
+      Text Portuguese=&Próximo>
+      Text Spanish=&Siguiente >
+      Text Italian=&Avanti >
+      Text Danish=&Næste>
+      Text Dutch=&Volgende>
+      Text Norwegian=&Neste>
+      Text Swedish=&Nästa >
+    end
+    item: Push Button
+      Rectangle=130 185 172 199
+      Variable=DIRECTION
+      Value=B
+      Create Flags=01010000000000010000000000000000
+      Flags=0000000000000001
+      Text=< &Back
+      Text French=<&Retour
+      Text German=<&Zurück
+      Text Portuguese=<&Retornar
+      Text Spanish=<&Retroceder
+      Text Italian=< &Indietro
+      Text Danish=<&Tilbage
+      Text Dutch=<&Terug
+      Text Norwegian=<&Tilbake
+      Text Swedish=< &Tillbaka
+    end
+    item: Push Button
+      Rectangle=222 185 264 199
+      Action=3
+      Create Flags=01010000000000010000000000000000
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Annuller
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+    item: Static
+      Rectangle=9 177 263 178
+      Action=3
+      Create Flags=01010000000000000000000000000111
     end
   end
 end
@@ -694,6 +1071,288 @@ item: Custom Dialog Set
   end
 end
 item: Custom Dialog Set
+  Name=Backup Replaced Files
+  Display Variable=DISPLAY
+  item: Dialog
+    Title=Backup Replaced Files
+    Title French=Fichiers de Sauvegarde Remplacés
+    Title German=Sicherungskopie von ersetzten Dateien erstellen
+    Title Portuguese=Ficheiros substituídos de segurança
+    Title Spanish=Copias de seguridad de los archivos reemplazados
+    Title Italian=Backup file sostituiti
+    Title Danish=Sikkerhedskopiering af erstattede filer
+    Title Dutch=Vervangen bestanden kopiëren
+    Title Norwegian=Sikkerhetskopiere erstattede filer
+    Title Swedish=Säkerhetskopiera utbytta filer
+    Width=280
+    Height=224
+    Font Name=Helv
+    Font Size=8
+    item: Push Button
+      Rectangle=172 185 214 199
+      Variable=DIRECTION
+      Value=N
+      Create Flags=01010000000000010000000000000001
+      Text=&Next >
+      Text French=&Suivant>
+      Text German=&Weiter>
+      Text Portuguese=&Próximo>
+      Text Spanish=&Siguiente >
+      Text Italian=&Avanti >
+      Text Danish=&Næste>
+      Text Dutch=&Volgende>
+      Text Norwegian=&Neste>
+      Text Swedish=&Nästa >
+    end
+    item: Push Button
+      Rectangle=130 185 172 199
+      Variable=DIRECTION
+      Value=B
+      Create Flags=01010000000000010000000000000000
+      Text=< &Back
+      Text French=<&Retour
+      Text German=<&Zurück
+      Text Portuguese=<&Retornar
+      Text Spanish=<&Retroceder
+      Text Italian=< &Indietro
+      Text Danish=<&Tilbage
+      Text Dutch=<&Terug
+      Text Norwegian=<&Tilbake
+      Text Swedish=< &Tillbaka
+    end
+    item: Push Button
+      Rectangle=222 185 264 199
+      Action=3
+      Create Flags=01010000000000010000000000000000
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Annuller
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+    item: Static
+      Rectangle=9 177 263 178
+      Action=3
+      Create Flags=01010000000000000000000000000111
+    end
+    item: Static
+      Rectangle=90 10 260 74
+      Create Flags=01010000000000000000000000000000
+      Text=This installation program can create backup copies of all files replaced during the installation. These files will be used when the software is uninstalled and a rollback is requested.  If backup copies are not created, you will only be able to uninstall the software and not roll the system back to a previous state.  Do you want to create backups of the replaced files?
+      Text French=Le programme d'installation peut créer des copies de sauvegarde de tous les fichiers remplacés pendant l'installation. Ces fichiers sont utilisés au cas où le logiciel est désinstallé et que l'on procède à la reprise du système. Si les copies de sauvegarde ne sont pas créées, on ne pourra que désinstaller le logiciel sans reprendre le système à un état précédent. Voulez-vous créer une sauvegarde des fichiers remplacés ?
+      Text German=Dieses Installationsprogramm kann Sicherungskopien von allen während der Installation ersetzten Dateien erstellen. Diese Dateien werden zur Rückgängigmachung der Installation und bei Anforderung eines Rollbacks verwendet. Ohne Sicherungskopien ist nur eine Rückgängigmachung der Installation möglich, nicht aber ein Rollback des Systems. Sicherungskopien der ersetzten Dateien erstellen?
+      Text Portuguese=Este programa de instalação pode criar cópias de segurança de todos os ficheiros substituídos durante a instalação. Estes ficheiros serão utilizados quando o programa for desinstalado  e for requisitada uma retomada. Se as cópias de segurança não forem criadas, só poderá desinstalar o programa e não pode retomar  um estado anterior do sistema. Deseja criar cópias de segurança dos ficheiros substituídos?
+      Text Spanish=Este programa de instalación puede crear copias de seguridad de todos los archivos reemplazados durante la instalación. Estos archivos se utilizarán cuando se desinstale el software y se solicite volver al estado anterior. Si no se crean copias de seguridad, únicamente podrá desinstalar el software y no podrá devolver el sistema al estado anterior. ¿Desea crear archivos de seguridad de los archivos reemplazados?
+      Text Italian=Questo programma di installazione può creare copie di backup di tutti i file sostituiti durante l’installazione. Questi file saranno usati quando il software sarà disinstallato e sarà richiesto un ritorno allo stato precedente. Se non crei le copie di backup, potrai solo disinstallare il software, ma non potrai riportare il sistema allo stato precedente. Vuoi creare i file di backup dei file sostituiti?
+      Text Danish=Dette installationsprogram kan oprette sikkerhedskopier af alle filer, som erstattes under installationen. Disse filer benyttes, når softwaren fjernes, og den tidligere systemkonfiguration genetableres. Hvis der ikke oprettes sikkerhedskopier, kan du kun fjerne den installerede software og ikke genetablere den tidligere systemkonfiguration. Vil du oprette sikkerhedskopier af filer, som erstattes?
+      Text Dutch=Dit installatieprogramma kan kopieën maken van alle bestanden die tijdens de installatie worden vervangen. Deze worden dan gebruikt als de software-installatie ongedaan wordt gemaakt en u het systeem wilt laten terugkeren naar de oorspronkelijke staat. Als er geen back-up kopieën worden gemaakt, kunt u de software enkel verwijderen maar het systeem niet in de oorspronkelijke staat terugbrengen. Wilt u een back-up maken van de vervangen bestanden?
+      Text Norwegian=Dette installasjonsprogrammet kan lage sikkerhetskopier av alle filer som blir erstattet under installasjonen. Disse filene vil tas i bruk når programvaren er avinstallert og det er behov for tilbakestilling. Hvis det ikke er laget sikkerhetskopier, kan du kun avinstallere programvaren og ikke stille systemet tilbake til tidligere status. Ønsker du å lage sikkerhetskopier av de filene som blir erstattet nå?
+      Text Swedish=Installationsprogrammet kan skapa säkerhetskopior av alla filer som byts ut under installationen. Dessa filer kan sedan användas när programvaran avinstalleras och du begär rollback. Om du då inte har några säkerhetskopior kan du bara avinstallera programvaran, inte återskapa systemet i dess tidigare skick. Vill du göra säkerhetskopior av de ersatta filerna?
+    end
+    item: Radio Button
+      Rectangle=155 74 182 100
+      Variable=DOBACKUP
+      Create Flags=01010000000000010000000000001001
+      Text=&Yes
+      Text=N&o
+      Text=
+      Text French=&Oui
+      Text French=N&on
+      Text French=
+      Text German=&Ja
+      Text German=N&ein  
+      Text German=
+      Text Portuguese=&Sim
+      Text Portuguese=Nã&o
+      Text Portuguese=
+      Text Spanish=&Sí
+      Text Spanish=N&o
+      Text Spanish=
+      Text Italian=&Sì
+      Text Italian=N&o
+      Text Italian=
+      Text Danish=&Ja
+      Text Danish=&Nej
+      Text Danish=
+      Text Dutch=&Ja
+      Text Dutch=N&ee
+      Text Dutch=
+      Text Norwegian=&Ja
+      Text Norwegian=&Nei
+      Text Norwegian=
+      Text Swedish=&Ja
+      Text Swedish=N&ej
+      Text Swedish=
+    end
+    item: Static
+      Control Name=BACK1
+      Rectangle=90 106 260 132
+      Create Flags=01010000000000000000000000000000
+      Text=Please select the directory where the replaced  files will be copied.
+      Text French=Veuillez sélectionner le répertoire où les fichiers remplacés doivent être copiés
+      Text German=Bitte wählen Sie das Verzeichnis, in das die ersetzten Dateien kopiert werden sollen.
+      Text Portuguese=É favor seleccionar o directório para onde os ficheiros substituídos serão copiados.
+      Text Spanish=Seleccione el directorio donde se copiarán los archivos reemplazados.
+      Text Italian=Seleziona la directory in cui saranno copiati i file sostituiti.
+      Text Danish=Vælg biblioteket, som de erstattede filer skal kopieres til.
+      Text Dutch=Selecteer de directory waarnaar de vervangen bestanden moeten worden gekopieerd.
+      Text Norwegian=Velg katalogen de erstattede filene skal kopieres til.
+      Text Swedish=Välj katalog dit du vill kopiera de ersatta filerna.
+    end
+    item: Static
+      Control Name=BACK2
+      Rectangle=90 134 260 162
+      Action=1
+      Create Flags=01010000000000000000000000000111
+      Text=Backup File Destination Directory
+      Text French=Répertoire de destination des fichiers de sauvegarde
+      Text German=Zielverzeichnis für die Sicherungsdatei
+      Text Portuguese=Directório de destino de ficheiro de segurança
+      Text Spanish=Directorio de Destino de los Archivos de Seguridad
+      Text Italian=Directory di destinazione dei file di backup
+      Text Danish=Destinationsbibliotek til sikkerhedskopier
+      Text Dutch=Doeldirectory backup-bestand
+      Text Norwegian=Målkatalog for sikkerhetskopier
+      Text Swedish=Katalog för säkerhetskopierade filer
+    end
+    item: Push Button
+      Control Name=BACK3
+      Rectangle=213 143 255 157
+      Variable=BACKUP_SAVE
+      Value=%BACKUP%
+      Destination Dialog=1
+      Action=2
+      Create Flags=01010000000000010000000000000000
+      Text=B&rowse...
+      Text French=P&arcourir
+      Text German=B&lättern...
+      Text Portuguese=P&rocurar
+      Text Spanish=V&isualizar...
+      Text Italian=Sfoglia...
+      Text Danish=&Gennemse...
+      Text Dutch=B&laderen...
+      Text Norwegian=Bla igjennom
+      Text Swedish=&Bläddra
+    end
+    item: Static
+      Control Name=BACK4
+      Rectangle=95 146 211 157
+      Destination Dialog=2
+      Create Flags=01010000000000000000000000000000
+      Text=%BACKUP%
+      Text French=%BACKUP%
+      Text German=%BACKUP%
+      Text Portuguese=%BACKUP%
+      Text Spanish=%BACKUP%
+      Text Italian=%BACKUP%
+      Text Danish=%BACKUP%
+      Text Dutch=%BACKUP%
+      Text Norwegian=%BACKUP%
+      Text Swedish=%BACKUP%
+    end
+    item: If/While Statement
+      Variable=DOBACKUP
+      Value=B
+    end
+    item: Set Control Attribute
+      Control Name=BACK3
+      Operation=1
+    end
+    item: Set Control Attribute
+      Control Name=BACK4
+      Operation=1
+    end
+    item: Else Statement
+    end
+    item: Set Control Attribute
+      Control Name=BACK3
+    end
+    item: Set Control Attribute
+      Control Name=BACK4
+    end
+    item: End Block
+    end
+  end
+  item: Dialog
+    Title=Select Destination Directory
+    Title French=Choisissez le répertoire de destination
+    Title German=Zielverzeichnis wählen
+    Title Portuguese=Seleccionar Directório de Destino
+    Title Spanish=Seleccione el Directorio de Destino
+    Title Italian=Seleziona Directory di destinazione
+    Title Danish=Vælg Destinationsbibliotek
+    Title Dutch=Kies Doeldirectory
+    Title Norwegian=Velg målkatalog
+    Title Swedish=Välj destinationskalatog
+    Width=221
+    Height=173
+    Font Name=Helv
+    Font Size=8
+    item: Listbox
+      Rectangle=5 2 160 149
+      Variable=BACKUP
+      Create Flags=01010000100000010000000101000000
+      Flags=0000110000100010
+      Text=%BACKUP%
+      Text=
+      Text French=%BACKUP%
+      Text French=
+      Text German=%BACKUP%
+      Text German=
+      Text Portuguese=%BACKUP%
+      Text Portuguese=
+      Text Spanish=%BACKUP%
+      Text Spanish=
+      Text Italian=%BACKUP%
+      Text Italian=
+      Text Danish=%BACKUP%
+      Text Danish=
+      Text Dutch=%BACKUP%
+      Text Dutch=
+      Text Norwegian=%BACKUP%
+      Text Norwegian=
+      Text Swedish=%BACKUP%
+      Text Swedish=
+    end
+    item: Push Button
+      Rectangle=167 6 212 21
+      Create Flags=01010000000000010000000000000001
+      Text=OK
+      Text French=OK
+      Text German=OK
+      Text Portuguese=OK
+      Text Spanish=ACEPTAR
+      Text Italian=OK
+      Text Danish=OK
+      Text Dutch=OK
+      Text Norwegian=OK
+      Text Swedish=OK
+    end
+    item: Push Button
+      Rectangle=167 25 212 40
+      Variable=BACKUP
+      Value=%BACKUP_SAVE%
+      Create Flags=01010000000000010000000000000000
+      Flags=0000000000000001
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen 
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Slet
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+  end
+end
+item: Custom Dialog Set
   Name=Select Program Manager Group
   Display Variable=DISPLAY
   item: Dialog
@@ -912,6 +1571,9 @@ item: Custom Dialog Set
     end
   end
 end
+item: Remark
+  Text=This reinitialized the BACKUP directory so that it reflects the change the user made to MAINDIR
+end
 item: If/While Statement
   Variable=DISPLAY
   Value=Select Destination Directory
@@ -924,6 +1586,9 @@ item: End Block
 end
 item: End Block
 end
+item: Remark
+  Text=When the BACKUP feature is enabled, the BACKUPDIR is initialized
+end
 item: If/While Statement
   Variable=DOBACKUP
   Value=A
@@ -933,6 +1598,9 @@ item: Set Variable
   Value=%BACKUP%
 end
 item: End Block
+end
+item: Remark
+  Text=The BRANDING information is written to the INI file on the installation media.
 end
 item: If/While Statement
   Variable=BRANDING
@@ -953,7 +1621,16 @@ item: End Block
 end
 item: End Block
 end
+item: Remark
+  Text=Begin writing to the INSTALL.LOG 
+end
 item: Open/Close INSTALL.LOG
+end
+item: Remark
+  Text=Check free disk space calculates free disk space as well as component sizes.
+end
+item: Remark
+  Text=It should be located before all Install File actions.
 end
 item: Check Disk Space
   Component=COMPONENTS
@@ -963,12 +1640,60 @@ item: Display Graphic
   X Position=32784
   Y Position=16
 end
+item: Remark
+  Text=This include script allows uninstall support
+end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
-  Destination=%MAINDIR%\wingdi.pyd
+  Source=c:\Winnt\System32\mfc42.dll
+  Destination=%SYS32%\mfc42.dll
+  Flags=0001001010001010
+end
+item: Install File
+  Source=c:\Winnt\System32\Msvcrt40.dll
+  Destination=%SYS32%\Msvcrt40.dll
+  Flags=0000001010001010
+end
+item: Install File
+  Source=c:\Winnt\System32\msvcrt.dll
+  Destination=%SYS32%\msvcrt.dll
+  Flags=0000001010001010
+end
+item: Install File
+  Source=c:\Winnt\System32\Msvcp60.dll
+  Destination=%SYS32%\Msvcp60.dll
+  Flags=0000001010001010
+end
+item: Install File
+  Source=c:\Winnt\System32\Olepro32.dll
+  Destination=%SYS32%\Olepro32.dll
+  Flags=0001001010001010
+end
+item: Install File
+  Source=c:\Winnt\System32\Oleaut32.dll
+  Destination=%SYS32%\Oleaut32.dll
+  Flags=0001001010001010
+end
+item: Install File
+  Source=c:\Winnt\System32\msvcirt.dll
+  Destination=%SYS32%\msvcirt.dll
+  Flags=0000001010001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Destination=%MAINDIR%\_socket.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
+  Destination=%MAINDIR%\ddraw.pyd
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
+  Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000011
 end
 item: Install File
@@ -977,13 +1702,48 @@ item: Install File
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\grinsproxy.dll
-  Destination=%MAINDIR%\grinsproxy.dll
-  Flags=0001000010000010
+  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
+  Destination=%MAINDIR%\Gear32sd.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
+  Destination=%MAINDIR%\gear32sd.pyd
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
+  Destination=%MAINDIR%\GRiNSP_SV2.exe
+  Flags=0001000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\grinspapi.pyd
   Destination=%MAINDIR%\grinspapi.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\grinsproxy.dll
+  Destination=%MAINDIR%\grinsproxy.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
+  Destination=%MAINDIR%\GRiNSRes.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Destination=%MAINDIR%\python16.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Destination=%MAINDIR%\PyWinTypes.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
+  Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
 end
 item: Install File
@@ -992,33 +1752,18 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpmenu.htm
-  Destination=%MAINDIR%\help\html\helpmenu.htm
+  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
+  Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpintro.htm
-  Destination=%MAINDIR%\help\html\helpintro.htm
-  Flags=0000000010000010
+  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Destination=%MAINDIR%\wingdi.pyd
+  Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\help.htm
-  Destination=%MAINDIR%\help\html\help.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\filemenu.htm
-  Destination=%MAINDIR%\help\html\filemenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\file.htm
-  Destination=%MAINDIR%\help\html\file.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\editmenu.htm
-  Destination=%MAINDIR%\help\html\editmenu.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\cont.htm
+  Destination=%MAINDIR%\help\html\cont.htm
   Flags=0000000010000010
 end
 item: Install File
@@ -1027,58 +1772,33 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\cont.htm
-  Destination=%MAINDIR%\help\html\cont.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\editmenu.htm
+  Destination=%MAINDIR%\help\html\editmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playeruse.htm
-  Destination=%MAINDIR%\help\html\playeruse.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\file.htm
+  Destination=%MAINDIR%\help\html\file.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playmenu.htm
-  Destination=%MAINDIR%\help\html\playmenu.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\filemenu.htm
+  Destination=%MAINDIR%\help\html\filemenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\title.htm
-  Destination=%MAINDIR%\help\html\title.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\help.htm
+  Destination=%MAINDIR%\help\html\help.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\view.htm
-  Destination=%MAINDIR%\help\html\view.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpintro.htm
+  Destination=%MAINDIR%\help\html\helpintro.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\new_GS.css
-  Destination=%MAINDIR%\help\new_GS.css
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\index.html
-  Destination=%MAINDIR%\help\index.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\viewmenu.htm
-  Destination=%MAINDIR%\help\html\viewmenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\window.htm
-  Destination=%MAINDIR%\help\html\window.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\windowmenu.htm
-  Destination=%MAINDIR%\help\html\windowmenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\use.htm
-  Destination=%MAINDIR%\help\html\use.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpmenu.htm
+  Destination=%MAINDIR%\help\html\helpmenu.htm
   Flags=0000000010000010
 end
 item: Install File
@@ -1102,28 +1822,53 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_1.gif
-  Destination=%MAINDIR%\help\images\P20_1.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playeruse.htm
+  Destination=%MAINDIR%\help\html\playeruse.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_10.gif
-  Destination=%MAINDIR%\help\images\P20_10.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playmenu.htm
+  Destination=%MAINDIR%\help\html\playmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_11.gif
-  Destination=%MAINDIR%\help\images\P20_11.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\title.htm
+  Destination=%MAINDIR%\help\html\title.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_2.gif
-  Destination=%MAINDIR%\help\images\P20_2.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\use.htm
+  Destination=%MAINDIR%\help\html\use.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_3.gif
-  Destination=%MAINDIR%\help\images\P20_3.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\view.htm
+  Destination=%MAINDIR%\help\html\view.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\viewmenu.htm
+  Destination=%MAINDIR%\help\html\viewmenu.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\window.htm
+  Destination=%MAINDIR%\help\html\window.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\windowmenu.htm
+  Destination=%MAINDIR%\help\html\windowmenu.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\index.html
+  Destination=%MAINDIR%\help\index.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\new_GS.css
+  Destination=%MAINDIR%\help\new_GS.css
   Flags=0000000010000010
 end
 item: Install File
@@ -1132,104 +1877,64 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_9.gif
-  Destination=%MAINDIR%\help\images\P20_9.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_1.gif
+  Destination=%MAINDIR%\help\images\p20_1.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_8.gif
-  Destination=%MAINDIR%\help\images\P20_8.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_10.gif
+  Destination=%MAINDIR%\help\images\p20_10.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_7.gif
-  Destination=%MAINDIR%\help\images\P20_7.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_11.gif
+  Destination=%MAINDIR%\help\images\p20_11.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\lllicense.txt
-  Destination=%MAINDIR%\lllicense.txt
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_2.gif
+  Destination=%MAINDIR%\help\images\p20_2.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\prefs.txt
-  Destination=%MAINDIR%\prefs.txt
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_3.gif
+  Destination=%MAINDIR%\help\images\p20_3.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash.bmp
-  Destination=%MAINDIR%\splash.bmp
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_4.gif
+  Destination=%MAINDIR%\help\images\p20_4.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash.ill
-  Destination=%MAINDIR%\splash.ill
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_5.gif
+  Destination=%MAINDIR%\help\images\p20_5.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash.psd
-  Destination=%MAINDIR%\splash.psd
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_6.gif
+  Destination=%MAINDIR%\help\images\p20_6.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash8bit.bmp
-  Destination=%MAINDIR%\splash8bit.bmp
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_7.gif
+  Destination=%MAINDIR%\help\images\p20_7.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_6.gif
-  Destination=%MAINDIR%\help\images\P20_6.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_8.gif
+  Destination=%MAINDIR%\help\images\p20_8.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_5.gif
-  Destination=%MAINDIR%\help\images\P20_5.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_9.gif
+  Destination=%MAINDIR%\help\images\p20_9.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_4.gif
-  Destination=%MAINDIR%\help\images\P20_4.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
+  Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\new_GS.css
-  Destination=%MAINDIR%\new_GS.css
-  Flags=0000000010000010
-end
-item: Install File
-  Source=c:\Winnt\System32\Msvcirt.dll
-  Destination=%SYS32%\Msvcirt.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\System32\Oleaut32.dll
-  Destination=%SYS32%\Oleaut32.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\System32\Olepro32.dll
-  Destination=%SYS32%\Olepro32.dll
-  Flags=0001001010001010
-end
-item: Install File
-  Source=c:\Winnt\System32\Msvcp60.dll
-  Destination=%SYS32%\Msvcp60.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\System32\Msvcrt.dll
-  Destination=%SYS32%\Msvcrt.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\System32\msvcrt40.dll
-  Destination=%SYS32%\msvcrt40.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\System32\Mfc42.dll
-  Destination=%SYS32%\Mfc42.dll
-  Flags=0001001010001010
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
@@ -1237,83 +1942,18 @@ item: Install File
   Flags=0001001010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
-  Destination=%MAINDIR%\dshow.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
-  Destination=%MAINDIR%\rma.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
-  Destination=%MAINDIR%\Gear32sd.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
-  Destination=%MAINDIR%\GRiNSRes.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
-  Destination=%MAINDIR%\win32ui.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
-  Destination=%MAINDIR%\ddraw.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
-  Destination=%MAINDIR%\gear32sd.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
-  Destination=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=0001000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
-  Destination=%MAINDIR%\_socket.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
-  Destination=%MAINDIR%\PyWinTypes.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
-  Destination=%MAINDIR%\python16.dll
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\BugReportForm.txt
   Destination=%MAINDIR%\BugReportForm.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
-  Destination=%MAINDIR%\license.txt
-  Flags=0000000010000010
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\player\win32\relnotes.html
-  Destination=%MAINDIR%\relnotes.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\player\win32\readme.txt
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\win32\readme.txt
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=C:\Program Files\Wise InstallMaker\Unwise.exe
-  Destination=%MAINDIR%\Unwise.exe
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\win32\relnotes.html
+  Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
 item: Set Variable
@@ -1325,6 +1965,9 @@ item: Set Variable
   Variable=MAINDIR
   Value=%MAINDIR%
   Flags=00010100
+end
+item: Remark
+  Text=This IF/THEN/ELSE reads the correct registry entries for shortcut/icon placement
 end
 item: Check Configuration
   Flags=10111011
@@ -1394,26 +2037,6 @@ item: Set Variable
   Value=%GROUPDIR%\%GROUP%
 end
 item: Create Shortcut
-  Source=%MAINDIR%\readme.txt
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Readme.lnk
-  Icon Number=0
-end
-item: Create Shortcut
-  Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Player for SMIL 2.0.lnk
-  Icon Number=0
-end
-item: Create Shortcut
-  Source=%MAINDIR%\relnotes.html
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Release Notes.lnk
-  Icon Number=0
-end
-item: Create Shortcut
-  Source=%MAINDIR%\license.txt
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 2.0 License.lnk
-  Icon Number=0
-end
-item: Create Shortcut
   Source=%MAINDIR%\GRiNSP_SV2.exe
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 2.0.lnk
   Icon Number=0
@@ -1422,6 +2045,29 @@ item: Create Shortcut
   Source=%MAINDIR%\GRiNSP_SV2.exe
   Destination=%CDESKTOPDIR%\GRiNS Player for SMIL 2.0.lnk
   Icon Number=0
+end
+item: Create Shortcut
+  Source=%MAINDIR%\readme.txt
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Readme.lnk
+  Icon Number=0
+end
+item: Create Shortcut
+  Source=%MAINDIR%\license.txt
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 2.0 License.lnk
+  Icon Number=0
+end
+item: Create Shortcut
+  Source=%MAINDIR%\relnotes.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Release Notes.lnk
+  Icon Number=0
+  Key Type=1536
+  Flags=00000001
+end
+item: Create Shortcut
+  Source=%MAINDIR%/Unwise.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Player for SMIL 2.0.lnk
+  Key Type=1536
+  Flags=00000001
 end
 item: Else Statement
 end
@@ -1437,130 +2083,91 @@ item: Add ProgMan Icon
 end
 item: Add ProgMan Icon
   Group=%GROUP%
+  Icon Name=Readme
+  Command Line=%MAINDIR%\readme.txt
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
   Icon Name=GRiNS Player for SMIL 2.0 License
   Command Line=%MAINDIR%\license.txt
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Uninstall GRiNS Player for SMIL 2.0
+  Command Line=%MAINDIR%/Unwise.exe
 end
 item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=Release Notes
   Command Line=%MAINDIR%\relnotes.html
 end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Readme
-  Command Line=%MAINDIR%\readme.txt
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Uninstall GRiNS Player for SMIL 2.0
-  Command Line=%MAINDIR%\Unwise.exe
-end
 item: End Block
 end
-item: Edit Registry
-  Total Keys=6
-  item: Key
-    Key=.smi
-    New Value=SMILfile
-    Root=32
-  end
-  item: Key
-    Key=.smi
-    New Value=application/smil
-    Value Name=Content Type
-    Root=32
-  end
-  item: Key
-    Key=.smil
-    New Value=SMILfile
-    Root=32
-  end
-  item: Key
-    Key=.smil
-    New Value=application/smil
-    Value Name=Content Type
-    Root=32
-  end
-  item: Key
-    Key=SMILfile
-    New Value=GRiNS SMIL File
-    Root=32
-  end
-  item: Key
-    Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNSP_SV2.exe,2
-    Root=32
-  end
-end
-item: Edit Registry
-  Total Keys=1
-  Key=MIME\Database\Content Type\application/smil
-  New Value=.smil
-  Value Name=Extension
-  Root=32
-end
-item: Edit Registry
-  Total Keys=1
-  Key=SMILfile\shell\open
-  New Value=Play with GRiNS Player 2.0
-end
-item: Edit Registry
-  Total Keys=5
-  item: Key
-    Key=.grins
-    New Value=GRiNSProject
-    Root=32
-  end
-  item: Key
-    Key=.grins
-    New Value=application/x-grins-project
-    Value Name=Content Type
-    Root=32
-  end
-  item: Key
-    Key=GRiNSProject
-    New Value=GRiNS Project File
-    Root=32
-  end
-  item: Key
-    Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNSP_SV2.exe,2
-    Root=32
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/x-grins-project
-    New Value=.grins
-    Value Name=Extension
-  end
-end
-item: Edit Registry
-  Total Keys=1
-  Key=SMILfile\shell\open\command
-  New Value=%MAINDIR%\GRiNSP_SV2.exe "%%1"
-end
-item: Edit Registry
-  Total Keys=1
-  Key=GRiNSProject\shell\play
-  New Value=Play with GRiNS Player 2.0
-end
-item: Edit Registry
-  Total Keys=1
-  Key=GRiNSProject\shell\play\command
-  New Value=C:\PROGRA~1\ORATRIX\GRINSP~1\GRiNSP_SV2.exe "%%1"
-end
-item: Edit Registry
-  Total Keys=1
-  Key=SMILfile\shell\open\command
-end
-item: Edit Registry
-  Total Keys=1
-  Key=SMILfile\shell\open\command
+item: Remark
+  Text=All OCX/DLL/EXE files that are self-registered
 end
 item: Self-Register OCXs/DLLs
   Description=Updating System Configuration, Please Wait...
 end
+item: Remark
+  Text=This Wizard Loop finalizes the install 
+end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
+end
+item: Edit Registry
+  Total Keys=3
+  item: Key
+    Key=.smi
+    New Value=application/smil
+    Root=32
+  end
+  item: Key
+    Key=application/smil
+    New Value=SMIL Presentation
+    Root=32
+  end
+  item: Key
+    Key=application/smil\shell\open\command
+    New Value=%MAINDIR%\GRiNSP_SV2.exe %%1
+    Root=32
+  end
+end
+item: Edit Registry
+  Total Keys=3
+  item: Key
+    Key=.smil
+    New Value=application/smil
+    Root=32
+  end
+  item: Key
+    Key=application/smil
+    New Value=SMIL Presentation
+    Root=32
+  end
+  item: Key
+    Key=application/smil\shell\open\command
+    New Value=%MAINDIR%\GRiNSP_SV2.exe %%1
+    Root=32
+  end
+end
+item: Edit Registry
+  Total Keys=3
+  item: Key
+    Key=.grins
+    New Value=application/x-grins-project
+    Root=32
+  end
+  item: Key
+    Key=application/x-grins-project
+    New Value=GRiNS Project File
+    Root=32
+  end
+  item: Key
+    Key=application/x-grins-project\shell\open\command
+    New Value=%MAINDIR%\GRiNSP_SV2.exe %%1
+    Root=32
+  end
 end
 item: Wizard Block
   Direction Variable=DIRECTION
@@ -1710,8 +2317,51 @@ item: Custom Dialog Set
 end
 item: End Block
 end
+item: Edit Registry
+  Total Keys=5
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=2.0
+    Value Name=DisplayVersion
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=http://www.oratrix.com/
+    Value Name=HelpLink
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=Oratrix Development BV
+    Value Name=Publisher
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=http://www.oratrix.com/
+    Value Name=URLInfoAbout
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=%MAINDIR%\GRiNSP_SV2.exe,-0
+    Value Name=DisplayIcon
+    Root=2
+  end
+end
+item: Edit Registry
+  Total Keys=1
+  Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+  New Value=mailto:info@oratrix.com
+  Value Name=Contact
+  Root=2
+end
 item: New Event
   Name=Cancel
+end
+item: Remark
+  Text=This include script supports a rollback to preinstallation state if the user chooses to cancel before the installation is complete.
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\rollback.wse

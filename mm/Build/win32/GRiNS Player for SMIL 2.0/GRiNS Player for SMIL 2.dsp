@@ -437,6 +437,10 @@ SOURCE=.\M_Font.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_FrameRate.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ftplib.c
 # End Source File
 # Begin Source File
@@ -1282,6 +1286,10 @@ SOURCE=.\M_wndusercmd.c
 # Begin Source File
 
 SOURCE=.\M_xmllib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_xmmflib.c
 # End Source File
 # End Group
 # End Target
