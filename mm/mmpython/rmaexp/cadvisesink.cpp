@@ -8,27 +8,13 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
-#include "pntypes.h" 
-
-#if defined(_ABIO32) && _ABIO32 != 0
-typedef int bool;
-enum { false, true, };
-#endif
-
-
-#include "pncom.h"
-#include "pnresult.h"
-
-#include "rmacore.h"
-
-#include "pnwintyp.h"
-#include "rmawin.h"
-#include "rmaerror.h"
-#include "rmaclsnk.h"
-#include "rmaauth.h"
+#include "rma.h" 
 
 // our client context interfaces
 #include "rmapyclient.h"
+
+// thread python callback helpers
+#include "mtpycall.h"
 
 class ClientAdviseSink : public IPyClientAdviseSink
 	{
@@ -64,6 +50,8 @@ class ClientAdviseSink : public IPyClientAdviseSink
 	PyObject *m_pyAdviceSink;	
 	};
 
+#include "pythread.h"
+
 HRESULT STDMETHODCALLTYPE CreateClientAdviseSink(
 			IPyClientAdviseSink **ppI)
 	{
@@ -80,6 +68,7 @@ ClientAdviseSink::ClientAdviseSink()
 
 ClientAdviseSink::~ClientAdviseSink()
 	{
+	Py_XDECREF(m_pyAdviceSink);	
 	}
 
 STDMETHODIMP
@@ -123,66 +112,132 @@ ClientAdviseSink::Release()
 STDMETHODIMP
 ClientAdviseSink::OnPosLength(UINT32 ulPosition, UINT32 ulLength)
 	{
+	CallbackHelper helper("OnPosLength",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(ii)",ulPosition,ulLength);
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnPresentationOpened()
 	{
+	CallbackHelper helper("OnPresentationOpened",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("()");
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnPresentationClosed()
 	{
+	CallbackHelper helper("OnPresentationClosed",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("()");
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnStatisticsChanged()
 	{
+	CallbackHelper helper("OnStatisticsChanged",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("()");
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnPreSeek(UINT32 ulOldTime, UINT32 ulNewTime)
 	{
+	CallbackHelper helper("OnPreSeek",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(ii)",ulOldTime,ulNewTime);
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnPostSeek(UINT32 ulOldTime, UINT32 ulNewTime)
 	{
+	CallbackHelper helper("OnPostSeek",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(ii)",ulOldTime,ulNewTime);
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnStop()
 	{
+	CallbackHelper helper("OnStop",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("()");
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnPause(UINT32 ulTime)
 	{
+	CallbackHelper helper("OnPause",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(i)",ulTime);
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnBegin(UINT32 ulTime)
 	{
+	CallbackHelper helper("OnBegin",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(i)",ulTime);
+		helper.call(args);
+		}
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnBuffering(UINT32 ulFlags, UINT16 unPercentComplete)
 	{
+	CallbackHelper helper("OnBuffering",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(ii)",ulFlags,int(unPercentComplete));
+		helper.call(args);
+		}	
 	return PNR_OK;
 	}
 
 STDMETHODIMP
 ClientAdviseSink::OnContacting(const char* pHostName)
 	{
+	CallbackHelper helper("OnContacting",m_pyAdviceSink);
+	if(helper.cancall())
+		{
+		PyObject *args = Py_BuildValue("(s)",pHostName);
+		helper.call(args);
+		}	
 	return PNR_OK;
 	}
 
