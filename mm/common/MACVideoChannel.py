@@ -48,10 +48,6 @@ class VideoChannel(ChannelWindowAsync):
 		self.window.register(WMEVENTS.OSWindowChanged, self.oswindowchanged, None)
 		return 1
 
-	def redraw(self):
-		if self.play_movie:
-			self.play_movie.UpdateMovie()
-
 	def do_arm(self, node, same=0):
 		self.__ready = 0	# set when arm succeeded
 		node.__type = ''
@@ -139,12 +135,11 @@ class VideoChannel(ChannelWindowAsync):
 ##		movie.MoviesTask(0)  
 	
 	def place_movie(self, node, movie):
-		# XXXX This always scales or positions, but it should look at the scale
-		# attribute
 		self.window._mac_setwin()
 		grafport = self.window._mac_getoswindowport()
 		movie.SetMovieGWorld(grafport, None)
 		screenBox = self.window.qdrect()
+		screenClip = self.window._mac_getclip()
 		l, t, r, b = movie.GetMovieBox()
 		if node:
 			scale = MMAttrdefs.getattr(node, 'scale')
@@ -172,8 +167,11 @@ class VideoChannel(ChannelWindowAsync):
 		movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
 		nMovieBox = self._scalerect(screenBox, movieBox, center)
 		movie.SetMovieBox(nMovieBox)
+		movie.SetMovieDisplayClipRgn(screenClip)
+		print 'placed movie'
 		
 	def oswindowchanged(self, *args):
+		print 'oswindowchanged'
 		self.window._mac_setwin()
 		grafport = self.window._mac_getoswindowport()
 		if self.arm_movie:
@@ -181,6 +179,20 @@ class VideoChannel(ChannelWindowAsync):
 		if self.play_movie:
 			self.play_movie.SetMovieGWorld(grafport, None)
 			
+	def resize(self, arg, window, event, value):
+		print 'resize'
+		ChannelWindowAsync.resize(self, arg, window, event, value)
+		if self.arm_movie:
+			self.place_movie(None, self.arm_movie)
+		if self.play_movie:
+			self.place_movie(None, self.play_movie)
+
+	def redraw(self):
+		print 'redraw'
+		if self.play_movie:
+			self.place_movie(None, self.play_movie)
+			self.play_movie.UpdateMovie()
+
 	def _playsome(self, *dummy):
 		if debug: print 'VideoChannel: playsome'
 		if not self.play_movie:
@@ -310,13 +322,6 @@ class VideoChannel(ChannelWindowAsync):
 ##		self.armed_display = None
 ##		self.do_play(node)
 ##		self.armdone()
-
-	def resize(self, arg, window, event, value):
-		ChannelWindowAsync.resize(self, arg, window, event, value)
-		if self.arm_movie:
-			self.place_movie(None, self.arm_movie)
-		if self.play_movie:
-			self.place_movie(None, self.play_movie)
 
 	def do_hide(self):
 		if self.window:
