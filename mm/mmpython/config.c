@@ -149,13 +149,22 @@ extern void initmpz();
 extern void initrotor();
 extern void inital();
 extern void initcd();
+#ifdef USE_CL
 extern void initcl();
+#endif
+#ifdef USE_GL
 extern void initfm();
 extern void initgl();
+extern void initfl();
+#endif
+#ifdef USE_XM
+extern void initXlib();
+extern void initXt();
+extern void initXm();
+#endif
 extern void initimgfile();
 extern void initsgi();
 extern void initsv();
-extern void initfl();
 extern void initthread();
 extern void inittiming();
 
@@ -195,13 +204,22 @@ struct {
 	{"rotor", initrotor},
 	{"al", inital},
 	{"cd", initcd},
+#ifdef USE_CL
 	{"cl", initcl},
+#endif
+#ifdef USE_GL
 	{"fm", initfm},
 	{"gl", initgl},
+	{"fl", initfl},
+#endif
+#ifdef USE_XM
+	{"Xlib", initXlib},
+	{"Xt", initXt},
+	{"Xm", initXm},
+#endif
 	{"imgfile", initimgfile},
 	{"sgi", initsgi},
 	{"sv", initsv},
-	{"fl", initfl},
 	{"thread", initthread},
 	{"timing", inittiming},
 
