@@ -5,7 +5,10 @@ __version__ = "$Id$"
 # and the other ../win32 folders
 ##################################
 
-from AppToplevel import toplevel
+import AppToplevel
+import __main__
+__main__.toplevel = AppToplevel._Toplevel()
+toplevel= __main__.toplevel
 
 newwindow = toplevel.newwindow
 newcmwindow = toplevel.newwindow
@@ -35,24 +38,16 @@ canceltimer = toplevel.canceltimer
 setready=toplevel.setready
 setwaiting=toplevel.setwaiting
 
+register=toplevel.register
+unregister=toplevel.unregister
+
 genericwnd=toplevel.genericwnd
 textwindow=toplevel.textwindow
 
 # SDI-MDI Model Support
-
 createmainwnd=toplevel.createmainwnd
-getmainwnd=toplevel.getmainwnd
-
 newdocument=toplevel.newdocument
-
-newviewobj=toplevel.newviewobj
-newview=toplevel.newview
-showview=toplevel.showview
-createview=toplevel.createview
-
-getformserver=toplevel.getformserver
-getviewframe=toplevel.getviewframe
-
+getmainwnd=toplevel.getmainwnd
 # /SDI-MDI Model Support
 
 

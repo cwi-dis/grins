@@ -1,385 +1,157 @@
 # rbtk: rb toolkit
 
-# supporting methods for create_box
-
-_rb_done = '_rb_done' # exception to stop create_box loop
-
-_in_create_box = None
 
 _rb_message = """\
 Use left mouse button to draw a box.
 Click `OK' when ready or `Cancel' to cancel."""
+_rb_done = '_rb_done' # exception to stop create_box loop
 
 import components
 import DrawTk
 from win32mu import Point,Rect
 import win32ui,win32con
+import __main__
 
-# !!!!! a temporal solution
+
 class _rbtk:
 	def __init__(self):
 		self._next_create_box = []
 
 	def create_box(self, msg, callback, box = None):
-		print box
-		global _in_create_box
-		if _in_create_box:
-			_in_create_box._next_create_box.append((self, msg, callback, box))
+
+		# if we are in create box mode, queue request
+		if self.in_create_box_mode():
+			self.get_box_modal_wnd()._next_create_box.append((self, msg, callback, box))
 			return
-		self._rb_callback = callback
-		_in_create_box=self
-		components.CreateBoxDlg(msg,
-			callback = (self._rb_done, ()),
-			cancelCallback = (self._rb_cancel, ()))
+
+		# if we are closed call cancel
+		if self.is_closed():
+			apply(callback, ())
+			return
+
+		# set application in create box mode
+		self.set_create_box_mode(self)
+		self.pop()
 	
-		for w in self._subwindows:
-			w.ShowWindow(win32con.SW_HIDE)
+		# set rel coord reference
+		DrawTk.drawTk.SetRelCoordRef(self)
+		
+		# hold current display list and create new 
+		# to be used during drawing
+		self._rb_callback = callback		
+		self._rb_dl = self._active_displist
+		if self._rb_dl:
+			d = self._rb_dl.clone()
+		else:	
+			d = self.newdisplaylist()
+
+		# indicate drawing canvas
+		canvas_color=(228,255,228)
+		d.drawfbox(canvas_color,(0,0,1,1))
+
+		# frame subwindows (fill them?)
+		sw = self._subwindows[:]
+		sw.reverse()
+		for win in sw:
+			b=win.getsizes()
+			#d.drawfbox(win._bgcolor,b)
+			d.drawbox(b)
+			win.ShowWindow(win32con.SW_HIDE)
+
+		d.fgcolor((255, 0, 0))
 		if box:
-			print 'drawing in: ',self.__class__.__name__
-			box_pxl=self._convert_coordinates(box,self.GetClientRect())
+			# add the rect obj
+			box_pxl=self.get_pixel_coords(box)
+			l,t,w,h=box_pxl
+			rectObj=DrawTk.DrawRect(Rect((l,t,l+w,t+h)))
+			self.Add(rectObj)
+			
+			# select tool 'select' and select obj
 			DrawTk.drawTk.SelectTool('select')
-			drawObj=DrawTk.DrawRect(Rect(box_pxl))
-			self.GetContext().Add(drawObj)
-			self.Select(drawObj)
-			self.InvalidateRect()
+
+			# simulate a user selection of the obj 
+			drawTool = DrawTk.drawTk.GetCurrentTool()
+			point=Point((l+w/2,t+h/2))
+			drawTool.onLButtonDown(self,0,point)
+			drawTool.onLButtonUp(self,0,point)
 		else:
 			DrawTk.drawTk.SelectTool('rect')
-			
-	def _rb_cvbox(self):
-		rb=self._drawObj.GetRelCoord()
-		print 'new box',rb
-		return self._drawObj.GetRelCoord()
+			DrawTk.drawTk.LimitRects(1)
 
-	# callback
-	def _rb_done(self):
-		self._rb_finish()
-		apply(self._rb_callback, self._rb_cvbox())
-		self._rb_end()
+		d.render()
+		self._rb_curdisp = d
 
-	# callback
-	def _rb_cancel(self):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, ())
-		self._rb_end()
+		f=self._topwindow._parent
+		components.CreateBoxBar(f,msg,
+			callback = (self.EndModalLoop, (win32con.IDOK,)),
+			cancelCallback = (self.EndModalLoop, (win32con.IDCANCEL,)))	
+		
+		# loop here dispatching messages until user
+		# selects OK or CANCEL
+		userResponse=self.RunModalLoop(0)
 
-	def _rb_finish(self):
-		global _in_create_box
-		_in_create_box = None
+
+		# cleanup steps before callback
+		
+		# 1. restore mode
+		self.set_create_box_mode(None)
+		
+		# 2. restore wnds state
 		for w in self._subwindows:
 			w.ShowWindow(win32con.SW_SHOW)
-		DrawTk.drawTk.SelectTool('select')
-		self._drawObj=self.GetContext()._objects[0]
-	
-	# recursion 
-	def _rb_end(self):
-		# clean up
-		self.GetContext().DeleteContents()
-		self.InvalidateRect()
 
-		# execute pending create_box calls
-		next_create_box = self._next_create_box
-		self._next_create_box = []
-		for win, msg, cb, box in next_create_box:
-			win.create_box(msg, cb, box)
-
-#############################################################
-"""		
-#	def create_box(self, msg, callback, box = None):
-#		components.showmessage("Channel coordinates unknown, set to full base window.\nChange in channel view")
-#		if box == None:
-##			box = (0.25, 0.25,0.75, 0.75)
-#		apply(callback, box)
-##		global _in_create_box
-##		if _in_create_box:
-##			_in_create_box._next_create_box.append((self, msg, callback, box))
-##			return
-##		if self.is_closed():
-##			apply(callback, ())
-##			return
-##		_in_create_box = self
-##		self.pop()
-##		if msg:
-##			msg = msg + '\n\n' + _rb_message
-##		else:
-##			msg = _rb_message
-##		self._rb_dl = self._active_displist
-##		if self._rb_dl:
-##			d = self._rb_dl.clone()
-##		else:
-##			d = self.newdisplaylist()
-##		self._rb_transparent = []
-##		sw = self._subwindows[:]
-##		sw.reverse()
-##		r = Xlib.CreateRegion()
-##		for win in sw:
-##			if not win._transparent:
-##				# should do this recursively...
-##				self._rb_transparent.append(win)
-##				win._transparent = 1
-##				d.drawfbox(win._bgcolor, win._sizes)
-##				apply(r.UnionRectWithRegion, win._rect) # XXXX
-##		for win in sw:
-##			b = win._sizes
-##			if b != (0, 0, 1, 1):
-##				d.drawbox(b)
-##		self._rb_display = d.clone()
-##		d.fgcolor((255, 0, 0))
-##		if box:
-##			d.drawbox(box)
-##		if self._rb_transparent:
-##			self._mkclip()
-##			self._do_expose(r)
-##			self._rb_reg = r
-##		d.render()
-##		self._rb_curdisp = d
-##		self._rb_dialog = showmessage(
-##			msg, mtype = 'message', grab = 0,
-##			callback = (self._rb_done, ()),
-##			cancelCallback = (self._rb_cancel, ()))
-##		self._rb_callback = callback
-##		raise 'not implemented'
-##		form = self._form
-##		form.AddEventHandler(X.ButtonPressMask, FALSE,
-##				     self._start_rb, None)
-##		form.AddEventHandler(X.ButtonMotionMask, FALSE,
-##				     self._do_rb, None)
-##		form.AddEventHandler(X.ButtonReleaseMask, FALSE,
-##				     self._end_rb, None)
-##		cursor = form.Display().CreateFontCursor(Xcursorfont.crosshair)
-##		form.GrabButton(X.AnyButton, X.AnyModifier, TRUE,
-##				X.ButtonPressMask | X.ButtonMotionMask
-##					| X.ButtonReleaseMask,
-##				X.GrabModeAsync, X.GrabModeAsync, form, cursor)
-##		v = form.GetValues(['foreground', 'background'])
-##		v['foreground'] = v['foreground'] ^ v['background']
-##		v['function'] = X.GXxor
-##		v['line_style'] = X.LineOnOffDash
-##		self._gc_rb = form.GetGC(v)
-##		self._rb_box = box
-##		if box:
-##			x, y, w, h = self._convert_coordinates(box)
-##			if w < 0:
-##				x, w = x + w, -w
-##			if h < 0:
-##				y, h = y + h, -h
-##			self._rb_box = x, y, w, h
-##			self._rb_start_x = x
-##			self._rb_start_y = y
-##			self._rb_width = w
-##			self._rb_height = h
-##		else:
-##			self._rb_start_x, self._rb_start_y, self._rb_width, \
-##					  self._rb_height = self._rect
-##		try:
-##			Xt.MainLoop()
-##		except _rb_done:
-##			pass
-##
-	def _rb_finish(self):
-		global _in_create_box
-		_in_create_box = None
-		if self._rb_transparent:
-			for win in self._rb_transparent:
-				win._transparent = 0
-			self._mkclip()
-			self._do_expose(self._rb_reg)
-			del self._rb_reg
-		del self._rb_transparent
-		raise 'not yet implemented'
-##		form = self._form
-##		form.RemoveEventHandler(X.ButtonPressMask, FALSE,
-##					self._start_rb, None)
-##		form.RemoveEventHandler(X.ButtonMotionMask, FALSE,
-##					self._do_rb, None)
-##		form.RemoveEventHandler(X.ButtonReleaseMask, FALSE,
-##					self._end_rb, None)
-##		form.UngrabButton(X.AnyButton, X.AnyModifier)
-		self._rb_dialog.close()
+		# 3. restore display list
 		if self._rb_dl and not self._rb_dl.is_closed():
 			self._rb_dl.render()
-		self._rb_display.close()
+		
+		# 4. close draw display list
 		self._rb_curdisp.close()
-		del self._rb_callback
-		del self._rb_dialog
-		del self._rb_dl
-		del self._rb_display
-		del self._gc_rb
 
-	def _rb_cvbox(self):
-		x0 = self._rb_start_x
-		y0 = self._rb_start_y
-		x1 = x0 + self._rb_width
-		y1 = y0 + self._rb_height
-		if x1 < x0:
-			x0, x1 = x1, x0
-		if y1 < y0:
-			y0, y1 = y1, y0
-		x, y, width, height = self._rect
-		if x0 < x: x0 = x
-		if x0 >= x + width: x0 = x + width - 1
-		if x1 < x: x1 = x
-		if x1 >= x + width: x1 = x + width - 1
-		if y0 < y: y0 = y
-		if y0 >= y + height: y0 = y + height - 1
-		if y1 < y: y1 = y
-		if y1 >= y + height: y1 = y + height - 1
-		return float(x0 - x) / (width - 1), \
-		       float(y0 - y) / (height - 1), \
-		       float(x1 - x0) / (width - 1), \
-		       float(y1 - y0) / (height - 1)
+		# 5. get user object
+		if len(self._objects):
+			drawObj=self._objects[0]
+			rb=self.get_relative_coords100(drawObj._position.tuple_ps())		
+		self.DeleteContents()
+				
+		# call user selected callback
+		if userResponse==win32con.IDOK:
+			apply(self._rb_callback, rb)
+		else:
+			apply(self._rb_callback,())	
 
-	def _rb_done(self):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, self._rb_cvbox())
-		self._rb_end()
-		raise _rb_done
-
-	def _rb_cancel(self):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, ())
-		self._rb_end()
-		raise _rb_done
-
-	def _rb_end(self):
 		# execute pending create_box calls
 		next_create_box = self._next_create_box
 		self._next_create_box = []
 		for win, msg, cb, box in next_create_box:
 			win.create_box(msg, cb, box)
 
-	def _rb_draw(self):
-		x = self._rb_start_x
-		y = self._rb_start_y
-		w = self._rb_width
-		h = self._rb_height
-		if w < 0:
-			x, w = x + w, -w
-		if h < 0:
-			y, h = y + h, -h
-		raise 'not yet implemented'
-##		self._gc_rb.DrawRectangle(x, y, w, h)
+	def notifyListener(self,key,params):
+		if not self.in_create_box_mode(): return 0
+		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
+		elif key=='onLButtonUp':DrawTk.DrawLayer.onLButtonUp(self,params)
+		elif key=='onMouseMove':DrawTk.DrawLayer.onMouseMove(self,params)
+		elif key=='OnDraw':DrawTk.DrawLayer.DrawObjLayer(self,params)
+		return 1
 
-	def _rb_constrain(self, event):
-		x, y, w, h = self._rect
-		if event.x < x:
-			event.x = x
-		if event.x >= x + w:
-			event.x = x + w - 1
-		if event.y < y:
-			event.y = y
-		if event.y >= y + h:
-			event.y = y + h - 1
+	def in_create_box_mode(self):
+		return __main__.toplevel._in_create_box
 
-	def _rb_common(self, event):
-		if not hasattr(self, '_rb_cx'):
-			self._start_rb(None, None, event)
-		self._rb_draw()
-		self._rb_constrain(event)
-		if self._rb_cx and self._rb_cy:
-			x, y, w, h = self._rect
-			dx = event.x - self._rb_last_x
-			dy = event.y - self._rb_last_y
-			self._rb_last_x = event.x
-			self._rb_last_y = event.y
-			self._rb_start_x = self._rb_start_x + dx
-			if self._rb_start_x + self._rb_width > x + w:
-				self._rb_start_x = x + w - self._rb_width
-			if self._rb_start_x < x:
-				self._rb_start_x = x
-			self._rb_start_y = self._rb_start_y + dy
-			if self._rb_start_y + self._rb_height > y + h:
-				self._rb_start_y = y + h - self._rb_height
-			if self._rb_start_y < y:
-				self._rb_start_y = y
+	def set_create_box_mode(self,f):
+		if f:
+			__main__.toplevel._in_create_box=self
+			self.setScrollMode(1) ## DO NOT RESIZE DURING rbMode
 		else:
-			if not self._rb_cx:
-				self._rb_width = event.x - self._rb_start_x
-			if not self._rb_cy:
-				self._rb_height = event.y - self._rb_start_y
-		self._rb_box = 1
+			__main__.toplevel._in_create_box=None
+			self.setScrollMode(0) ## RESIZE ALLOWED
 
-	def _start_rb(self, w, data, event):
-		# called on mouse press
-		self._rb_display.render()
-		self._rb_curdisp.close()
-		self._rb_constrain(event)
-		if self._rb_box:
-			x = self._rb_start_x
-			y = self._rb_start_y
-			w = self._rb_width
-			h = self._rb_height
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			if x + w/4 < event.x < x + w*3/4:
-				self._rb_cx = 1
-			else:
-				self._rb_cx = 0
-				if event.x >= x + w*3/4:
-					x, w = x + w, -w
-			if y + h/4 < event.y < y + h*3/4:
-				self._rb_cy = 1
-			else:
-				self._rb_cy = 0
-				if event.y >= y + h*3/4:
-					y, h = y + h, -h
-			if self._rb_cx and self._rb_cy:
-				self._rb_last_x = event.x
-				self._rb_last_y = event.y
-				self._rb_start_x = x
-				self._rb_start_y = y
-				self._rb_width = w
-				self._rb_height = h
-			else:
-				if not self._rb_cx:
-					self._rb_start_x = x + w
-					self._rb_width = event.x - self._rb_start_x
-				if not self._rb_cy:
-					self._rb_start_y = y + h
-					self._rb_height = event.y - self._rb_start_y
-		else:
-			self._rb_start_x = event.x
-			self._rb_start_y = event.y
-			self._rb_width = self._rb_height = 0
-			self._rb_cx = self._rb_cy = 0
-		self._rb_draw()
+	def get_box_modal_wnd(self):
+		return __main__.toplevel._in_create_box
 
-	def _do_rb(self, w, data, event):
-		# called on mouse drag
-		self._rb_common(event)
-		self._rb_draw()
-
-	def _end_rb(self, w, data, event):
-		# called on mouse release
-		self._rb_common(event)
-		self._rb_curdisp = self._rb_display.clone()
-		self._rb_curdisp.fgcolor((255, 0, 0))
-		self._rb_curdisp.drawbox(self._rb_cvbox())
-		self._rb_curdisp.render()
-		del self._rb_cx
-		del self._rb_cy
-
-	def _delete_callback(self, form, client_data, call_data):
-		self.arrowcache = {}
-		w = _in_create_box
-		if w:
-			next_create_box = w._next_create_box
-			w._next_create_box = []
-			try:
-				w._rb_cancel()
-			except _rb_done:
-				pass
-			w._next_create_box[0:0] = next_create_box
-		#self._wnd._delete_callback(self, form, client_data,call_data)
-		if w:
-			w._rb_end()
-			raise _rb_done
-
-	def _input_callback(self, form, client_data, call_data):
-		pass
-
-"""
+	def OnNCHitTest_X(self,params):
+		if not self._create_box_dlg: return
+		msg=win32mu.Win32Msg(params)
+		pt=win32mu.Point(msg.pos())
+		if self._create_box_dlg:
+			rc=win32mu.Rect(self._create_box_dlg.GetWindowRect())
+			if rc.isPtInRect(pt):
+				self.ReleaseCapture()

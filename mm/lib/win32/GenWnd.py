@@ -44,3 +44,5 @@ class GenWnd(window.Wnd):
 		# create
 		self.CreateWindowEx(self._exstyle,strclass,title,self._style,
 			(x, y, width, height),parent,id)
+
+
