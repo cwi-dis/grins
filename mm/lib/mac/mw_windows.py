@@ -41,6 +41,20 @@ SCROLLBARSIZE=16		# Full size, overlapping 1 pixel with window border
 # Parts of the scrollbar we track:
 TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
 		Controls.inPageUp, Controls.inPageDown)
+		
+#
+# The dragpoints of a box (lurven, in dutch:-)
+#
+LURF_TOPLEFT=0
+LURF_TOPRIGHT=1
+LURF_BOTLEFT=2
+LURF_BOTRIGHT=3
+LURF_MID=4
+LURF_MIDLEFT=5
+LURF_MIDRIGHT=6
+LURF_TOPMID=7
+LURF_BOTMID=8
+
 
 #
 # Cache for image sizes
@@ -190,8 +204,8 @@ class _CommonWindow:
 		"""Close window and all subwindows"""
 		if self._parent is None:
 			return		# already closed
-		if self._rb_dialog:
-			self._rb_cancel()
+		if _in_create_box is self:
+			self.cancel_create_box()
 		self._set_movie_active(0)
 		Qd.SetPort(self._wid)
 		self._parent._subwindows.remove(self)
@@ -292,16 +306,19 @@ class _CommonWindow:
 	def showwindow(self, color=(255, 0, 0)):
 		"""Highlight the window"""
 		self._outline_color = self._convert_color(color)
-		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
+		self._invalrectandborder()
 		
 	def dontshowwindow(self):
 		"""Don't highlight the window"""
 		if not self._outline_color is None:
 			self._outline_color = None
-			Qd.SetPort(self._wid)
-			Win.InvalRect(self.qdrect())
-		pass
+			self._invalrectandborder()
+			
+	def _invalrectandborder(self):
+		Qd.SetPort(self._wid)
+		rect = self.qdrect()
+		rect = Qd.InsetRect(rect, -2, -2)
+		Win.InvalRect(rect)
 
 	def setcursor(self, cursor):
 		if cursor == 'watch':
@@ -564,6 +581,8 @@ class _CommonWindow:
 	def _activate(self, active):
 		for ch in self._subwindows:
 			ch._activate(active)
+		if self is _in_create_box:
+			self._invalrectandborder()
 		if active:
 			evt = WindowActivate
 		else:
@@ -600,9 +619,16 @@ class _CommonWindow:
 		#
 		# If we are rubberbanding handle that first.
 		#
-		if self._rb_dialog and down:
+		if (self is _in_create_box) and down:
 				if self._rb_mousedown(where, shifted):
 					return
+				# We are in create_box mode, but the mouse was way off.
+				# If we are in modal create we beep, in modeless create we
+				# abort
+				if self._rb_dialog:
+					MacOS.SysBeep()
+					return
+				self.cancel_create_box()
 		#
 		# First see whether the click is in any of our children
 		#
@@ -771,7 +797,7 @@ class _CommonWindow:
 					child._redraw(rgn)
 					
 		# Last, do the rubber box, if rubberboxing
-		if self._rb_dialog:
+		if self is _in_create_box:
 			self._rb_redraw()
 					
 	def _do_redraw(self):
@@ -788,7 +814,7 @@ class _CommonWindow:
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
 		if _in_create_box:
-			raise 'Recursive create_box'
+			_in_create_box.cancel_create_box()
 		if self.is_closed():
 			apply(callback, ())
 			return
@@ -796,11 +822,7 @@ class _CommonWindow:
 		if box:
 			# convert box to relative sizes if necessary
 			box = self._pxl2rel(self._convert_coordinates(box, units = units))
-		self.pop()
-		if msg:
-			msg = msg + '\n\n' + _rb_message
-		else:
-			msg = _rb_message
+		self.pop(poptop=0)
 		self._rb_dl = self._active_displist
 		if self._rb_dl:
 			d = self._rb_dl.clone()
@@ -823,33 +845,28 @@ class _CommonWindow:
 		self._rb_dragpoint = None
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
-		self._rb_finished = 0
-		self._rb_dialog = showmessage(
-			msg, mtype = 'message', grab = 0,
-			callback = (self._rb_done, ()),
-			cancelCallback = (self._rb_cancel, ()))
 		self._rb_callback = callback
 		self._rb_units = units
 
-		mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._wid])
-		while not self._rb_finished:
-			mw_globals.toplevel._eventloop(100)
-		mw_globals.toplevel.grab(None)
+		if modeless:
+			self._rb_dialog = None
+		else:
+			if msg:
+				msg = msg + '\n\n' + _rb_message
+			else:
+				msg = _rb_message
 
+			self._rb_dialog = showmessage(
+				msg, mtype = 'message', grab = 0,
+				callback = (self._rb_done, ()),
+				cancelCallback = (self.cancel_create_box, ()))
+				
+			mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._wid])
+			while _in_create_box is self:
+				mw_globals.toplevel._eventloop(100)
+			mw_globals.toplevel.grab(None)
+		
 	# supporting methods for create_box
-	def _rb_finish(self):
-		global _in_create_box
-		_in_create_box = None
-		if self._rb_dl and not self._rb_dl.is_closed():
-			self._rb_dl.render()
-		self._rb_display.close()
-		del self._rb_callback
-		del self._rb_units
-		self._rb_dialog.close()
-		self._rb_dialog = None
-		del self._rb_dl
-		del self._rb_display
-
 	def _rb_cvbox(self, units = UNIT_SCREEN):
 		if self._rb_box is None:
 			return ()
@@ -860,18 +877,33 @@ class _CommonWindow:
 		return self._convert_qdcoords((x0, y0, x1, y1), units = units)
 
 	def _rb_done(self):
+		"""callback for "done" button in dialog or any change in modeless create_box"""
 		callback = self._rb_callback
 		units = self._rb_units
 		self._rb_finish()
 		apply(callback, self._rb_cvbox(units))
-		self._rb_finished = 1
 
-	def _rb_cancel(self):
+	def cancel_create_box(self):
+		if not (self is _in_create_box):
+			raise 'Not _in_create_box', (self, _in_create_box)
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, ())
-		self._rb_finished = 1
 
+	def _rb_finish(self):
+		"""Common code for done/cancel, clean everything up"""
+		global _in_create_box
+		_in_create_box = None
+		if self._rb_dl and not self._rb_dl.is_closed():
+			self._rb_dl.render()
+		self._rb_display.close()
+		del self._rb_callback
+		del self._rb_units
+		if self._rb_dialog:
+			self._rb_dialog.close()
+		self._rb_dialog = None
+		del self._rb_dl
+		del self._rb_display
 
 	def _rb_redraw(self):
 		if not self._rb_box:
@@ -879,7 +911,10 @@ class _CommonWindow:
 		if not self._clip:
 			self.mkclip()
 		Qd.SetClip(self._clip)
-		Qd.RGBForeColor((0xffff, 0, 0))
+		if self._wid == Win.FrontWindow():
+			Qd.RGBForeColor((0xffff, 0, 0))
+		else:
+			Qd.RGBForeColor((0xc000, 0, 0))
 		if not self._rb_dragpoint is None:
 			port = self._wid.GetWindowPort()
 			oldmode = port.pnMode
@@ -893,15 +928,15 @@ class _CommonWindow:
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x, y = x-xscrolloff, y-yscrolloff
 		x0, y0, x1, y1 = self._rb_box
-		if self._rb_dragpoint == 0:	# top left
+		if self._rb_dragpoint == LURF_TOPLEFT:
 			x0, y0 = x, y
-		elif self._rb_dragpoint == 1: # top right
+		elif self._rb_dragpoint == LURF_TOPRIGHT:
 			x0, y1 = x, y
-		elif self._rb_dragpoint == 2: # bottom left
+		elif self._rb_dragpoint == LURF_BOTLEFT:
 			x1, y0 = x, y
-		elif self._rb_dragpoint == 3: # bottom right
+		elif self._rb_dragpoint == LURF_BOTRIGHT:
 			x1, y1 = x, y
-		elif self._rb_dragpoint == 4: # center (move)
+		elif self._rb_dragpoint == LURF_MID:
 			# Constrain box size
 			xmargin = (x1-x0)/2
 			ymargin = (y1-y0)/2
@@ -914,6 +949,14 @@ class _CommonWindow:
 			x1 = x1 + diffx
 			y0 = y0 + diffy
 			y1 = y1 + diffy
+		elif self._rb_dragpoint == LURF_MIDLEFT:
+			x0 = x
+		elif self._rb_dragpoint == LURF_MIDRIGHT:
+			x1 = x
+		elif self._rb_dragpoint == LURF_TOPMID:
+			y0 = y
+		elif self._rb_dragpoint == LURF_BOTMID:
+			y1 = y
 		else:
 			raise 'funny dragpoint', self._rb_dragpoint
 		x0, y0 = self._rb_constrain((x0, y0))
@@ -962,12 +1005,20 @@ class _CommonWindow:
 			xscroll, yscroll = self._scrolloffset()
 			x0, y0 = x0+xscroll, y0+yscroll
 			x1, y1 = x1+xscroll, y1+yscroll
+		xh = (x0+x1)/2
+		yh = (y0+y1)/2
+		# These correspond to the LURF_* constants
 		points = [
 			(x0, y0),
 			(x0, y1),
 			(x1, y0),
 			(x1, y1),
-			((x0+x1)/2, (y0+y1)/2)]
+			(xh, yh),
+			(x0, yh),
+			(x1, yh),
+			(xh, y0),
+			(xh, y1),
+			]
 		smallboxes = []
 		for x, y in points:
 			smallboxes.append(x-2, y-2, x+2, y+2)
@@ -991,7 +1042,10 @@ class _CommonWindow:
 
 	def _rb_mousedown(self, where, shifted): # XXXXSCROLL
 		# called on mouse press
+		# XXXX I'm not sure that both the render and the invalrect are needed...
 		self._rb_display.render()
+		Qd.SetPort(self._wid)
+		Win.InvalRect(self.qdrect())
 		x, y = where
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x, y = x - xscrolloff, y - yscrolloff
@@ -1004,18 +1058,13 @@ class _CommonWindow:
 					dragpoint = i
 					break
 			else:
-				#
-				# Hmm. Should we start a new box?
-				#
-				MacOS.SysBeep()
-				return 1
+				# We don't recognize the location.
+				return 0
 		if dragpoint is None:
 			x, y = self._rb_constrain((x, y))
 			self._rb_box = (x, y, x, y)
-			dragpoint = 3
+			dragpoint = LURF_BOTRIGHT
 		self._rb_dragpoint = dragpoint
-		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
 #### Not needed: the render() above has scheduled a redraw anyway
 ##		if not self._clip:
 ##			self.mkclip()
@@ -1039,6 +1088,9 @@ class _CommonWindow:
 			self._rb_dragpoint = None
 			mw_globals.toplevel.setmousetracker(None)
 			Win.InvalRect(self.qdrect())
+			if not self._rb_dialog:
+				# Modeless create_box: do the callback
+				self._rb_done()
 		else:
 			self._rb_movebox(where, 0)
 
@@ -1545,7 +1597,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		_WindowGroup.__init__(self, title, commandlist)
 
 		self.arrowcache = {}
-		self._next_create_box = []
 	
 	def __repr__(self):
 		return '<Window %s>'%self._title
@@ -1678,15 +1729,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 
 	def _resize_callback(self, width, height):
 		self.arrowcache = {}
-		mycreatebox = _in_create_box
-		if mycreatebox:
-			next_create_box = mycreatebox._next_create_box
-			mycreatebox._next_create_box = []
-			try:
-				mycreatebox._rb_cancel()
-			except _rb_done:
-				pass
-			mycreatebox._next_create_box[0:0] = next_create_box
+		if _in_create_box:
+			_in_create_box.cancel_create_box()
 			
 		self._wid.SizeWindow(width, height, 1)
 		Qd.SetPort(self._wid)
@@ -1855,7 +1899,6 @@ class _SubWindow(_CommonWindow):
 			self._transparent = transparent
 		
 		self.arrowcache = {}
-		self._next_create_box = []
 
 		# XXXX pixmap to-be-done
 		
