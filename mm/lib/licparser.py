@@ -46,10 +46,10 @@ class License:
 	def __init__(self, features, newlicense=None, user="", organization=""):
 		"""Obtain a license, and state that we need at least one
 		of the features given"""
+		import settings
 		if newlicense:
 			lic = newlicense
 		else:
-			import settings
 			lic = settings.get('license')
 		self.__available_features, self.__licensee, self.__moredays = \
 					   _parselicense(lic)
@@ -83,7 +83,6 @@ class License:
 				raise Error, EXPIRED
 			self.msg = "Evaluation copy, %d more days left"%self.__moredays
 		if newlicense:
-			import settings
 			settings.set('license', newlicense)
 			if self.__moredays:
 				user = user + ' (evaluation copy)'
@@ -231,3 +230,35 @@ def mkdaynum((year, month, day)):
 	days = days + day
 	return days
 	
+def GetLicenseFromFile(filename):
+	try:
+		fp = open(filename)
+	except:
+		raise Error, "Cannot open license file"
+	firstline = 1
+	while 1:
+		line = fp.readline()
+		if not line:
+			raise Error, "File does not contain a recognizable license"
+		if firstline:
+			# Treat first line special: this may be a file with only a license in it
+			attempt = string.strip(line)
+			try:
+				_decodelicense(attempt)
+			except Error:
+				pass
+			else:
+				return attempt
+		firstline = 0
+		# For other lines we only look for "bla bla bla: licensekey"
+		if not ":" in line:
+			continue
+		fields = string.split(line, ":")
+		if len(fields) != 2:
+			continue
+		attempt = string.strip(fields[1])
+		try:
+			_decodelicense(attempt)
+		except Error:
+			continue
+		return attempt
