@@ -183,7 +183,7 @@ class _Question:
 #def showquestion(text):
 #	return _Question(text).run()
 
-def showquestion(text):
+def showquestion(text, parent = None):
 	return _Question(text).answer
 
 
@@ -227,7 +227,7 @@ class _MultChoice:
 				#	raise _end_loop
 				return
 
-def multchoice(prompt, list, defindex):
+def multchoice(prompt, list, defindex, parent = None):
 	return _MultChoice(prompt, list, defindex).answer
 
 

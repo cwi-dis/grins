@@ -2317,7 +2317,7 @@ class _Font:
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'information',
-		     title = 'message'):
+		     title = 'message', parent = None):
 		#if grab:
 		#		dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
 		#		w = grab
@@ -2463,7 +2463,7 @@ class showmessage:
 
 class Dialog:
 	def __init__(self, list, title = '', prompt = None, grab = 1,
-		     vertical = 1, del_Callback = None):
+		     vertical = 1, del_Callback = None, parent = None):
 		if not title:
 			title = ''
 		#if grab:
@@ -2649,7 +2649,7 @@ class MainDialog(Dialog):
 	#	     vertical = 1)
 	#	toplevel.MainDialog = self
 
-def multchoice(prompt, list, defindex):
+def multchoice(prompt, list, defindex, parent = None):
 	return defindex
 
 def beep():

@@ -7,7 +7,7 @@ from AppForms import Window
 
 class Dialog:
 	def __init__(self, list, title = '', prompt = None, grab = 1,
-		     vertical = 1, del_Callback = None):
+		     vertical = 1, del_Callback = None, parent = None):
 		if not title:
 			title = ''
 		#if grab:
