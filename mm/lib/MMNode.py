@@ -1791,7 +1791,8 @@ class MMNode:
 		for key, val in srevents.items():
 			seeknode.srevents[key] = val
 		if self.context.editmgr:
-			self.context.editmgr.register(seeknode)
+			seeknode.editmgr = self.context.editmgr
+			seeknode.editmgr.register(seeknode)
 		return sractions, srevents
 
 	def splitsrlist(self, srlist, offset=0):
@@ -1851,7 +1852,8 @@ class MMNode:
 			del self.prearmlists
 		except AttributeError:
 			pass
-		self.context.editmgr.unregister(self)
+		self.editmgr.unregister(self)
+		del self.editmgr
 
 	def kill(self):
 		pass
