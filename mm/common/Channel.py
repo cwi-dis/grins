@@ -765,16 +765,18 @@ class ChannelWindow(Channel):
 			menu.append('', 'raise', (self.popup, ()))
 			menu.append('', 'lower', (self.popdown, ()))
 			menu.append(None)
-			menu.append('', 'push focus', (self.focuscall, ()))
-			menu.append(None)
+			if hasattr(self._player.toplevel, 'hierarchyview'):
+				menu.append('', 'push focus', (self.focuscall, ()))
+				menu.append(None)
 			menu.append('', 'highlight', (self.highlight, ()))
 			menu.append('', 'unhighlight', (self.unhighlight, ()))
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom)
 			else:
 				self.window = pchan.window.newwindow(pgeom)
-			menu.append(None)
-			menu.append('', 'resize', (self.resize_window, (pchan,)))
+			if hasattr(self._player, 'editmgr'):
+				menu.append(None)
+				menu.append('', 'resize', (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
 			if self._attrdict.has_key('winsize'):
@@ -795,6 +797,8 @@ class ChannelWindow(Channel):
 						width, height, self._name)
 			self.window.register(EVENTS.WindowExit,
 					     self._destroy_callback, None)
+			if hasattr(self._player.toplevel, 'hierarchyview'):
+				menu.append('', 'push focus', (self.focuscall, ()))
 		if self._is_waiting:
 			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):
@@ -805,8 +809,7 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
-		if menu:
-			self.window.create_menu(self._name, menu)
+		self.window.create_menu(self._name, menu)
 
 	def _destroy_callback(self, *rest):
 		self._player.cmenu_callback(self._name)
