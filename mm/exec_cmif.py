@@ -15,10 +15,11 @@ def Boot( bEditor = 0 ):
 	if len(sys.argv)>1:
 		print sys.argv[1]
 	
-	try:
-		CMIFDIR = win32api.RegQueryValue(HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
-	except win32api.error:
-		CMIFDIR = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
+##	try:
+##		CMIFDIR = win32api.RegQueryValue(HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
+##	except win32api.error:
+##		CMIFDIR = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
+	CMIFDIR = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
 
 	# TEMP TEST FOLDER
 	print "Main GRiNS directory is", CMIFDIR
