@@ -485,6 +485,7 @@ class SMILHtmlTimeWriter(SMIL):
 					subtype = td.get('subtype')
 					dur = td.get('dur')
 				if not dur: dur = 1
+				elif dur<=0: dur = 0.1
 				transInName, properties = TransitionFactory(trtype, subtype)
 				if properties:
 					trans = '%s.%s(%s,dur=%.1f)' % (msfilter, transInName, properties, dur)
@@ -503,6 +504,7 @@ class SMILHtmlTimeWriter(SMIL):
 					subtype = td.get('subtype')
 					transOutDur = td.get('dur')
 				if not transOutDur: transOutDur = 1
+				elif transOutDur<=0: transOutDur = 0.1
 				transOutName, properties = TransitionFactory(trtype, subtype)
 				if properties:
 					trans = '%s.%s(%s,dur=%.1f)' % (msfilter, transOutName, properties, transOutDur)
