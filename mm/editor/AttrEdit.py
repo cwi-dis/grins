@@ -249,7 +249,7 @@ class NodeWrapper(Wrapper):
 		newlinks = []
 		oldanchors = self.__findanchors()
 		oldanchonames = oldanchors.keys()
-		dstlinks = []
+		dstlinks = {}
 		for aid in oldanchors.keys():
 			anchor = uid, aid
 			for i in range(len(anchorlist)):
@@ -258,12 +258,21 @@ class NodeWrapper(Wrapper):
 					break
 			for link in hlinks.findsrclinks(anchor):
 				editmgr.dellink(link)
+			dstlinks[aid] = hlinks.finddstlinks(anchor)
+			for link in dstlinks[aid]:
+				editmgr.dellink(link)
 			if anchor in linkview.interesting:
 				linkview.interesting.remove(anchor)
-			dstlinks = dstlinks + hlinks.finddstlinks(anchor)
-		for aid in newanchors.keys():
+		rename = {}
+		for aid, a in newanchors.items():
+			if len(a) > 4 and a[4]:
+				rename[a[4]] = aid
+		for aid, a in newanchors.items():
 			anchor = uid, aid
-			atype, aargs, times, links = newanchors[aid]
+			oldname = None
+			atype, aargs, times, links = a[:4]
+			if len(a) > 4:
+				oldname = a[4]
 			anchorlist.append((aid, atype, aargs, times))
 			if links:
 				if anchor in linkview.interesting:
@@ -272,13 +281,15 @@ class NodeWrapper(Wrapper):
 					editmgr.addlink((anchor,) + link)
 			else:
 				linkview.set_interesting(anchor)
-		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
-		if dstlinks:
-			dstanchor = linkview.wholenodeanchor(self.node, type = ATYPE_DEST, notransaction = 1, create = 1, interesting = 0)
-			for link in dstlinks:
-				editmgr.dellink(link)
-				a1, a2, dir, type = link
+			for a1, a2, dir, type in dstlinks.get(oldname, []):
+				# check whether src anchor renamed
+				if a1[0] == uid:
+					a1 = uid, rename.get(a1[1], a1[1])
+					# check whether src anchor deleted
+					if not newanchors.has_key(a1[1]):
+						continue
 				editmgr.addlink((a1, anchor, dir, type))
+		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
 
 	def getattr(self, name): # Return the attribute or a default
 		if name == '.hyperlink':
