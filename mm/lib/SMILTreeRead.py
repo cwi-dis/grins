@@ -898,6 +898,57 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__container = self.__container.GetParent()
 
+	def NewVirualNode(self, tagname, attributes):
+		# mimetype -- the MIME type of the node as specified in attr
+		# mediatype, subtype -- mtype split into parts
+		# tagname -- the tag name in the SMIL file (None for "ref")
+		# nodetype -- the CMIF node type (imm/ext/...)
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+		if not self.__in_smil:
+			self.syntax_error('node not in smil')
+			return
+		if self.__in_layout:
+			self.syntax_error('node in layout')
+			return
+		if self.__node:
+			# the warning comes later from xmllib
+			self.EndNode()
+		
+		# keep most common attr version
+		aname = attributes.get('attribute')
+		if aname:
+			attributes['attributeName']	= aname
+			del attributes['attribute']
+
+		nodetype = 'imm'
+		chtype = 'animate'
+		mediatype = 'virtual'
+		subtype = 'internal'
+
+		# create the node
+		if not self.__root:
+			# "can't happen"
+			node = self.MakeRoot(nodetype)
+		elif not self.__container:
+			self.syntax_error('node not in container')
+			return
+		else:
+			node = self.__context.newnode(nodetype)
+			self.__container._addchild(node)
+		self.__node = node
+		self.AddAttrs(node, attributes)
+		node.__chantype = chtype
+		self.__attributes = attributes
+		node.__mediatype = mediatype, subtype
+		self.__attributes = attributes
+		node.attrdict['mimetype'] = '%s/%s' % (mediatype, subtype)
+		node.type = 'imm'
+
+	def EndVirtualNode(self):
+		self.__node = None
+		del self.__attributes
+
 	def Recurse(self, root, *funcs):
 		for func in funcs:
 			func(root)
@@ -2226,33 +2277,37 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animate not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
+		self.NewVirualNode('animate', attributes)
 
 	def end_animate(self):
-		pass
+		self.EndVirtualNode()
 
 	def start_set(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('set not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
+		self.NewVirualNode('set', attributes)
 
 	def end_set(self):
-		pass
+		self.EndVirtualNode()
 
 	def start_animatemotion(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateMotion not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
+		self.NewVirualNode('animateMotion', attributes)
 
 	def end_animatemotion(self):
-		pass
+		self.EndVirtualNode()
 
 	def start_animatecolor(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateColor not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
+		self.NewVirualNode('animateColor', attributes)
 
 	def end_animatecolor(self):
-		pass
+		self.EndVirtualNode()
 
 	# other callbacks
 
