@@ -1078,7 +1078,7 @@ class MMTreeElement(Owner):
 		self.parent = None
 		self.children = None
 
-	def ClearRefs(self, rootNodeToInspect):
+	def ClearRefs(self, editmgr, rootNodeListToInspect):
 		pass
 		
 	def Extract(self):
@@ -1335,7 +1335,52 @@ class MMChannel(MMTreeElement):
 		MMTreeElement.Extract(self)
 		if self.attrdict.get('type') == 'layout' and self._cssId != None:
 			self.context.cssResolver.unlink(self._cssId)
-		
+
+	# Important: this method has to be called inside a transaction
+	def ClearRefs(self, editmgr, rootNodeListToInspect):
+		# make a list of the child region ids
+		allRegions = self.getAllLayoutChannel()
+		allId = []
+		for region in allRegions:
+			allId.append(region.name)
+# 		XXX if some objects referes directly the name, we need to uncomment this part, and implement what is requested
+#		allName = []
+#		for region in allRegions:
+#			name = region.GetAttrDef('name', None)
+#			if name != None:
+#				allName.append(name)
+			
+		for rootNodeToInspect in rootNodeListToInspect:
+			if rootNodeToInspect.getClassName() == 'MMNode':
+				self.__recurClearRefs(editmgr, rootNodeToInspect, allId)
+
+	def __recurClearRefs(self, editmgr, nodeRef, allChannelId):
+		for child in nodeRef.GetChildren():
+			self.__recurClearRefs(editmgr, child, allChannelId)
+			
+		# check the channel attribute
+		if nodeRef.GetChannelName() in allChannelId:
+			# this channel has been removed, remove the reference
+			editmgr.setnodeattr(nodeRef, 'channel', None)
+
+		# check the project_default_region_xxx
+		for attrName in ('project_default_region_image', 'project_default_region_video',
+						 'project_default_region_sound', 'project_default_region_text'):
+			attrValue = nodeRef.GetAttrDef(attrName, None)
+			if attrValue != None and attrValue in regionNameList:
+				editmgr.setnodeattr(nodeRef, attrName, None)
+
+		# XXX to do: event
+
+	def getAllLayoutChannel(self, list=[]):
+		if self.attrdict.get('type') != 'layout':
+			return list
+		list.append(self)
+		children = self.GetChildren()
+		for child in children:
+			child.getAllLayoutChannel(list)
+		return list
+	
 	def __setitem__(self, key, value):
 		if key == 'type':
 			import ChannelMap
