@@ -380,8 +380,8 @@ def match_bitrate_RTIPA(wanted_value, host):
 	try:
 		ip = socket.gethostbyname(host)
 	except socket.error:
-		# host unknown, so don't play
-		return 0
+		# host unknown, default to normal processing
+		return match('system_bitrate', wanted_value)
 	RTIPA_QoS = get('RTIPA_QoS')
 	ip = socket.inet_aton(ip) # normalize
 	qos = RTIPA_classes.get(ip)
