@@ -100,3 +100,7 @@ class LicenseDialog:
 
 	def __callback(self, w, callback, call_data):
 		apply(apply, callback)
+
+def EnterkeyDialog(ok_callback):
+		import windowinterface
+		windowinterface.InputDialog("Enter key:", "", self.ok_callback)
