@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/">
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
   <head>
-    <meta name="title" content="Adaptive Quality presentation with background audio and image"/>
-    <meta name="template_name" content="Adaptive Presentation"/>
-    <meta name="template_description" content="Hig/low-res Video or images with background image and audio"/>
+    <meta name="title" content="Adaptive Quality Video presentation with background image"/>
+    <meta name="template_name" content="Adaptive Video Presentation"/>
+    <meta name="template_description" content="Hig/low-res Video or images with background image"/>
     <meta name="template_snapshot" content="icons/adapt_1_1A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
       <topLayout id="Player-Window" width="330" height="270"  GRiNS:editBackground="192 192 192" GRiNS:showEditBackground="1">
         <region id="audio" GRiNS:type="sound"/>
-        <region id="bkgd_image" width="400" height="245" GRiNS:type="image"/>
+        <region id="bkgd_image" width="330" height="270" GRiNS:type="image"/>
         <region id="Video1" left="7" top="7" width="320" height="240" z-index="1" GRiNS:type="video"/>
       </topLayout>
     </layout>
@@ -20,18 +20,18 @@
     <GRiNS:viewinfo view="assets" top="420" left="49" width="399" height="433"/>
   </head>
   <body GRiNS:hidden="true">
-    <par id="AdaptivePresentation" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/adapt_1_1A.bmp" GRiNS:project_default_region_image="Video1" GRiNS:project_default_region_video="Video1" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Video1" GRiNS:showtime="cfocus">
-      <seq id="AdaptiveSet" GRiNS:emptyDur="10s" GRiNS:emptyText="Place MediaSelector object from Asset View here." GRiNS:emptyColor="#c0c0c0">
+    <par id="AdaptivePresentation" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/adapt_1_1A.bmp" GRiNS:project_default_region_image="Video1" GRiNS:project_default_region_video="Video1" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Video1" GRiNS:showtime="bwstrip" GRiNS:timezoom="4.975">
+      <seq id="AdaptiveSet" GRiNS:emptyDur="10s" GRiNS:emptyText="Place MediaSelector object from Asset View here." GRiNS:emptyColor="#c0c0c0" GRiNS:nonEmptyIcon="icons/DropRight.gif">
       </seq>
       <img id="Image" region="bkgd_image" src="media/Back3.gif"  fill="freeze"/>
     </par>
     <GRiNS:assets skip-content="true">
      <switch id="mediaSelector" >
-         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place 320x240 video object here." GRiNS:emptyColor="#c0c0c0" systemBitrate="112000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="320x240 video object (112K and above)." GRiNS:emptyColor="#c0c0c0" systemBitrate="112000">
          </seq>
-         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place 240x1800 video object here." GRiNS:emptyColor="#c0c0c0" systemBitrate="56000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="240x1800 video object (56K - 112K)." GRiNS:emptyColor="#c0c0c0" systemBitrate="56000">
          </seq>
-         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Place Image Set here." GRiNS:emptyColor="#c0c0c0">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Image Set (less than 56K)." GRiNS:emptyColor="#c0c0c0">
          </seq>
       </switch>
      </GRiNS:assets>

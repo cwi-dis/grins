@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/">
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
   <head>
-    <meta name="title" content="Empty SMIL2 Presentation"/>
-    <meta name="template_name" content="Empty SMIL2 Presentation"/>
-    <meta name="template_description" content="An empty SMIL2 Presentation."/>
+    <meta name="title" content="Empty RealONE Presentation"/>
+    <meta name="template_name" content="Empty RealONE Presentation"/>
+    <meta name="template_description" content="An empty RealONE Presentation."/>
     <meta name="template_snapshot" content="icons/empty_S2.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
@@ -14,6 +14,6 @@
     <transition id="slideover" type="slideWipe"/>
     <transition id="push" type="pushWipe"/>
   </head>
-  <body GRiNS:showtime="cfocus">
+  <body GRiNS:showtime="bwstrip" GRiNS:timezoom="4.975">
   </body>
 </smil>
