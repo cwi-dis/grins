@@ -501,6 +501,7 @@ def main():
 			print '\t| grins-support@oratrix.com with a description  |'
 			print '\t| of the circumstances.                         |'
 			print '\t-------------------------------------------------'
+			print '\tVersion:', version
 			print
 			traceback.print_exception(exc_type, exc_value, None)
 			traceback.print_tb(exc_traceback)
