@@ -176,7 +176,8 @@ class _CommonWindow:
 		self._clickfunc = None
 		self._accelerators = {}
 		self._active_movie = 0
-		self._popupmenu = None
+		self._menu = None		# Channel-window popup menu
+		self._popupmenu = None	# View popup menu (template based)
 		self._outline_color = None
 		self._rb_dialog = None
 		self._wtd_cursor = ''
@@ -339,13 +340,24 @@ class _CommonWindow:
 
 	def destroy_menu(self):
 		self._accelerators = {}
-		self._popupmenu = None
+		self._menu = None
 		pass
 
 	def create_menu(self, list, title = None):
 		self._accelerators = {}
-		self._popupmenu = mw_menucmd.FullPopupMenu(list, title,
+		self._menu = mw_menucmd.FullPopupMenu(list, title,
 						self._accelerators)
+
+	def setpopupmenu(self, menutemplate):
+		# Menutemplate is a MenuTemplate-style menu template.
+		# It should be turned into an menu and put
+		# into self._popupmenu.
+		self._destroy_popupmenu()
+		pass
+		
+	def _destroy_popupmenu(self):
+		# Free resources held by self._popupmenu and set it to None
+		self._popupmenu = None
 
 	def _image_size(self, file):
 		"""Backward compatability: return wh of image given filename"""
@@ -554,13 +566,22 @@ class _CommonWindow:
 		#
 		# Next, check for popup menu, if we have one
 		#
-		if shifted and self._popupmenu:
-			# Convert coordinates back to global
-			Qd.SetPort(self._wid)
-			# XXXX Is this correct? y, x??
-			y, x = Qd.LocalToGlobal(where)
-			self._popupmenu.popup(x, y, event, window=self)
-			return
+		if shifted:
+			if self._menu:
+				# Convert coordinates back to global
+				Qd.SetPort(self._wid)
+				# XXXX Is this correct? y, x??
+				y, x = Qd.LocalToGlobal(where)
+				self._menu.popup(x, y, event, window=self)
+				return
+			elif self._popupmenu:
+				# Convert coordinates back to global
+				Qd.SetPort(self._wid)
+				# XXXX Is this correct? y, x??
+				y, x = Qd.LocalToGlobal(where)
+				self._popupmenu.popup(x, y, event, window=self)
+				return
+		
 		#
 		# It is really in our canvas. Do we have a low-level
 		# click handler?

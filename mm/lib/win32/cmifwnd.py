@@ -53,7 +53,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self._curpos = None
 		self._callbacks = {}
 		self._accelerators = {}
-		self._menu = None
+		self._menu = None		# Dynamically created rightmousemenu
+		self._popupmenu = None	# Statically created rightmousemenu (for views)
 		self._transparent = 0
 		self._redrawfunc = None
 		self._title = None
@@ -265,6 +266,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			ptList=[(l,t),(r,b)]
 			[(l,t),(r,b)] = self.MapWindowPoints(self._topwindow,ptList)
 			self.destroy_menu()
+			self._destroy_popupmenu()
 			self.DestroyWindow()
 			self._topwindow.InvalidateRect((l,t,r,b))
 
@@ -366,6 +368,18 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 		self.HookAllKeyStrokes(self._char_callback)
 		self._menu = menu
+		
+	def setpopupmenu(self, menutemplate):
+		# Menutemplate is a MenuTemplate-style menu template.
+		# It should be turned into an win32menu-style menu and put
+		# into self._popupmenu.
+		self._destroy_popupmenu()
+		pass
+		
+	def _destroy_popupmenu(self):
+		# Free resources held by self._popupmenu and set it to None
+		self._popupmenu = None
+		
 
 	# Sets the forground color
 	def fgcolor(self, color):
@@ -515,7 +529,10 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 				callback = self._cbld[id]
 				apply(callback[0], callback[1])
 		elif self._topwindow==self:
-			menu=self._parent.get_submenu('&Tools')
+			if self._popupmenu:
+				menu = self._popupmenu
+			else:
+				menu=self._parent.get_submenu('&Tools')
 			if not menu:return
 			pt=(xpos,ypos)
 			pt=self.ClientToScreen(pt);
