@@ -93,7 +93,7 @@ class Preferences(PreferencesDialog):
 		for name, value in values.items():
 			settings.set(name, value)
 		settings.save()
-		windowinterface.showmessage("Some settings will not take effect until the next time you run GRiNS")
+		windowinterface.showmessage("New settings will not take effect until the next time you run GRiNS")
 		self.close()
 
 	def apply_callback(self):
