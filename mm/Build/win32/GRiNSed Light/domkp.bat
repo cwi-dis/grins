@@ -24,6 +24,7 @@ rem The rest of the script assumes that the folder tree
 rem has the same structure as CWI's CVS root 
 rem It is the same for both player(GRiNS) and editor (GRiNSed)
 
+del log.txt
 
 set PYTHONEX=%PYTHONHOME%\Extensions
 set FREEZE=%PYTHONHOME%\Tools\freeze\freeze.py
