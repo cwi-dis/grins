@@ -170,7 +170,7 @@ class _Toplevel:
 			self._appcommandlist=commandlist
 		if len(self._subwindows)==0:
 			frame = MainFrame.MDIFrameWnd()
-			frame.create(self._apptitle)
+			frame.createOsWnd(self._apptitle)
 			frame.init_cmif(None, None, 0, 0, self._apptitle,
 				UNIT_MM, self._appadornments,self._appcommandlist)
 			self.setActiveDocFrame(frame)
