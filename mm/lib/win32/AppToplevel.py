@@ -304,25 +304,19 @@ class _Toplevel:
 	def mainloop(self):
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
-#		win32ui.GetApp().AddIdleHandler(self.monitor)
-
 		wnd=self.genericwnd()
 		wnd.create()
-		wnd.HookMessage(self.OnTimer,win32con.WM_TIMER)
+		wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
 		id=wnd.SetTimer(1,50)
-		wnd.HookMessage(self.serve_events,win32con.WM_USER)
-		win32ui.GetApp().RunLoop(wnd)
-		wnd.KillTimer(id)
 		
+		wnd.RunModalLoop(0)
+
+		wnd.KillTimer(id)
 		wnd.DestroyWindow()
 		
 	def OnTimer(self, params):
 		self.serve_events()
 		
-#	def monitor(self,handler,count):
-#		self.serve_events()
-#		return 0 # no more, next time
-
 	# It is actualy part of the main loop and part of a delta timer 
 	def serve_events(self,params=None):	
 		if self._waiting:self.setready()				
