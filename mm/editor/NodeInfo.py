@@ -166,6 +166,7 @@ class NodeInfo() = Dialog():
 		    self.ch_channelname = 0
 		if always or not self.ch_type:
 		    self.type = self.node.GetType()
+		    self.oldtype = self.type
 		    self.ch_type = 0
 		if always or not self.ch_filename:
 		    self.filename = \
@@ -195,14 +196,21 @@ class NodeInfo() = Dialog():
 		    em.setnodeattr(n, 'channel', self.channelname)
 		    self.ch_channelname = 0
 		if self.ch_type:
+		    if self.oldtype = 'imm' and self.type <> 'imm':
+			em.setnodevalues(n,[])
+			self.ch_immtext = 0
 		    em.setnodetype(n, self.type)
 		    self.ch_type = 0
 		if self.ch_filename:
-		    em.setnodeattr(n, 'file', self.filename)
-		    self.ch_file = 0
+		    if self.filename:
+			em.setnodeattr(n, 'file', self.filename)
+		    else:
+			em.setnodeattr(n, 'file', None)
+		    self.ch_filename = 0
 		if self.ch_immtext:
 		    em.setnodevalues(n, self.immtext[:])
 		    self.ch_immtext = 0
+		self.changed = 0
 		em.commit()
 		return 1
 	#
@@ -268,8 +276,6 @@ class NodeInfo() = Dialog():
 		group = self.int_group
 	    if group = self.cur_group:
 		return
-	    self.ch_type = 1
-	    self.changed = 1
 	    if self.cur_group <> None:
 		self.cur_group.hide_object()
 	    self.cur_group = group
@@ -310,6 +316,8 @@ class NodeInfo() = Dialog():
 		    self.name_callback(self.name_field,0)
 		if self.text_input.focus:
 		    self.text_input_callback(self.text_input, 0)
+		if self.file_input.focus:
+		    self.file_callback(self.file_input, 0)
 	#
 	#
 	# Callbacks that are valid for all types
@@ -323,6 +331,7 @@ class NodeInfo() = Dialog():
 		self.name = name
 	def type_callback(self, (obj,dummy)):
 	    newtype = obj.get_choice_text()
+	    self.fixfocus()
 	    if newtype = self.type:
 		return
 	    # Check that the change is allowed.
@@ -332,13 +341,14 @@ class NodeInfo() = Dialog():
 	    elif ((self.type = 'seq' or self.type = 'par') and \
 			self.children = []) or \
 		 (self.type = 'imm' and len(self.immtext) = 1) or \
-		 (self.type = 'ext' and self.filename = ''):
+		 (self.type = 'ext'):
 		pass
 	    else:
 		fl.show_message('Cannot change type on', 'non-empty node', '')
 		self.type_select.set_choice(alltypes.index(self.type)+1)
 		return
 	    self.ch_type = 1
+	    self.changed = 1
 	    self.type = newtype
 	    self.show_correct_group()
 	def channel_callback(self, (obj,dummy)):
@@ -379,9 +389,10 @@ class NodeInfo() = Dialog():
 	def text_input_callback(self, (obj,dummy)):
 	    line = obj.get_input()
 	    i = self.text_browser.get_browser()
-	    self.ch_immtext = 1
-	    self.changed = 1
 	    if i:
+		if line = self.immtext[i-1]: return
+		self.ch_immtext = 1
+		self.changed = 1
 		self.text_browser.replace_browser_line(i, line)
 		self.immtext[i-1] = line
 		# Did we change the dummy last line?
@@ -392,9 +403,9 @@ class NodeInfo() = Dialog():
 		print 'HUH? No textline selected?'
 	def text_insert_callback(self, (obj,dummy)):
 	    i = self.text_browser.get_browser()
-	    self.ch_immtext = 1
-	    self.changed = 1
 	    if i:
+		self.ch_immtext = 1
+		self.changed = 1
 		self.text_browser.insert_browser_line(i, '')
 		self.immtext.insert(i, '')
 		self.text_input.set_input('')
