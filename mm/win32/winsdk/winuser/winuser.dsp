@@ -128,6 +128,14 @@ SOURCE=.\winuser.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\winuser_app.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_app.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\winuser_main.cpp
 # End Source File
 # Begin Source File
