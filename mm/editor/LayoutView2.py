@@ -829,19 +829,16 @@ class LayoutView2(LayoutViewDialog2):
 		index = self.currentViewportList.index(viewport.getName())
 		if index >= 0:
 			self.dialogCtrl.setSelecterCtrl('ViewportSel',index)
-
+		self.dialogCtrl.setCheckCtrl('ViewportCheck',1)
+		self.dialogCtrl.setCheckCtrl('RegionCheck',0)
+		self.dialogCtrl.setCheckCtrl('MediaCheck',0)
+		
 	def updateViewportGeomOnDialogBox(self, geom):
 		# update the fields dialog box
 		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[0])		
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[1])
 		
 	def updateRegionOnDialogBox(self, region):
-		# update the selecter
-		if self.currentRegionNameList != None:
-			index = self.currentRegionNameList.index(region.getName())
-			if index >= 0:
-				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
-
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 								
 		# enable valid fields
@@ -869,6 +866,15 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
 								  
 		self.updateRegionGeomOnDialogBox(geom)
+
+		# update the selecter
+		if self.currentRegionNameList != None:
+			index = self.currentRegionNameList.index(region.getName())
+			if index >= 0:
+				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
+		self.dialogCtrl.setCheckCtrl('ViewportCheck',0)
+		self.dialogCtrl.setCheckCtrl('RegionCheck',1)
+		self.dialogCtrl.setCheckCtrl('MediaCheck',0)
 
 	def updateRegionGeomOnDialogBox(self, geom):
 		self.dialogCtrl.setFieldCtrl('RegionX',"%d"%geom[0])		
@@ -926,7 +932,16 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('RegionZ',0)
 		self.dialogCtrl.setFieldCtrl('RegionZ',"")
 		self.updateMediaGeomOnDialogBox(geom)
-		
+
+		# update the selecter
+		if self.currentRegionNameList != None:
+			index = self.currentRegionNameList.index(region.getName())
+			if index >= 0:
+				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
+		self.dialogCtrl.setCheckCtrl('ViewportCheck',0)
+		self.dialogCtrl.setCheckCtrl('RegionCheck',0)
+		self.dialogCtrl.setCheckCtrl('MediaCheck',1)
+				
 	def updateMediaGeomOnDialogBox(self, geom):
 		self.updateRegionGeomOnDialogBox(geom)
 
@@ -999,14 +1014,23 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentNodeSelected != None:
 			self.bringFront(self.currentNodeSelected)
 
-	def __selectRegion(self, name):
+	def __selectViewport(self, name=None):
+		if name == None:
+			viewport = self._viewports[0]
+		else:
+			viewport = self._viewports.get(name)
+			
+		if viewport != None:
+			self.displayViewport(viewport.getName())
+
+	def __selectRegion(self, name=None):
 		region = self.getRegion(name)
 		if region != None:
 			region.select()
 			self.currentNodeSelected = region												
 			self.updateRegionOnDialogBox(region)
 
-	def __selectMedia(self, name):
+	def __selectMedia(self, name=None):
 		media = self.getMedia(name)
 		if media != None:
 			media.select()
@@ -1051,7 +1075,7 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def onSelecterCtrl(self, ctrlName, value):
 		if ctrlName == 'ViewportSel':
-			self.displayViewport(value)
+			self.__selectViewport(value)	
 		elif ctrlName == 'RegionSel':
 			self.__selectRegion(value)	
 		elif ctrlName == 'MediaSel':
@@ -1073,6 +1097,12 @@ class LayoutView2(LayoutViewDialog2):
 			self.updateRegionTree()				
 		elif ctrlName == 'ShowRbg':
 			self.__showEditBackground(value)			
+		elif ctrlName == 'ViewportCheck':
+			self.__selectViewport()
+		elif ctrlName == 'RegionCheck':
+			self.__selectRegion()
+		elif ctrlName == 'MediaCheck':
+			self.__selectMedia()
 
 	def onFieldCtrl(self, ctrlName, value):
 		if ctrlName in ('RegionX','RegionY','RegionW','RegionH'):
