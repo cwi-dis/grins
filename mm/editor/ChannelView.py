@@ -187,6 +187,7 @@ class ChannelView(ChannelViewDialog):
 		pass
 
 	def commit(self):
+		Timing.changedtimes(self.root)
 		self.redrawafterchange()
 
 	def redrawafterchange(self):
