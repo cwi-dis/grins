@@ -924,11 +924,12 @@ class LayoutView2(LayoutViewDialog2):
 					listToUpdate.append(nodeRef)
 		self.updateVisibility(listToUpdate, 1)
 
-		self.previousWidget.update()
-		
+		# refresh first preview widget
+		self.previousWidget.selectNodeList(localSelList, keepShowedNodes)
 		# update widgets
 		for widget in self.widgetList:
-			widget.selectNodeList(localSelList, keepShowedNodes)
+			if widget is not self.previousWidget:
+				widget.selectNodeList(localSelList, keepShowedNodes)
 
 		if len(localSelList) == 0:
 			self.updateCommandList(self.commandNoSItemList)
