@@ -321,10 +321,12 @@ class LinkEdit(ViewDialog):
 			oldanchors = []
 		str.fillfunc(str)
 		if str.anchors != oldanchors:
-			str.browser.delalllistitems()
+			names = []
 			for a in str.anchors:
 				name = self.makename(a)
-				str.browser.addlistitem(name, -1)
+				names.append(name)
+			str.browser.delalllistitems()
+			str.browser.addlistitems(names, -1)
 		if focusvalue:
 			try:
 				str.focus = str.anchors.index(focusvalue)
@@ -371,10 +373,12 @@ class LinkEdit(ViewDialog):
 		self.linkfocus = None
 		self.links = self.context.hyperlinks.findalllinks \
 			  (lfocus,rfocus)
-		self.link_browser.delalllistitems()
+		lines = []
 		for i in self.links:
 			line = typestr[i[TYPE]] + ' ' + dirstr[i[DIR]]
-			self.link_browser.addlistitem(line, -1)
+			lines.append(line)
+		self.link_browser.delalllistitems()
+		self.link_browser.addlistitems(lines, -1)
 		if fvalue:
 			try:
 				self.linkfocus = self.links.index(fvalue)
