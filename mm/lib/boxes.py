@@ -8,7 +8,7 @@ Click `Done' when ready or `Cancel' to cancel."""
 _finished = '_finished'
 
 class Boxes:
-	def __init__(self, window, msg, box):
+	def __init__(self, window, msg, callback, box):
 		if len(box) == 1 and type(box) == type(()):
 			box = box[0]
 		if len(box) not in (0, 4):
@@ -18,6 +18,7 @@ class Boxes:
 		else:
 			self.box = box
 		self.window = window
+		self.callback = callback
 		self.old_display = window._active_display_list
 		window.pop()
 		window._close_subwins()
@@ -68,7 +69,7 @@ class Boxes:
 		else:
 			msg = message
 		self._looping = 0
-		self.dialog = windowinterface.Dialog(msg, 0,
+		self.dialog = windowinterface.Dialog(None, msg, 0, 0,
 				[('', 'Done', (self.done_callback, ())),
 				 ('', 'Cancel', (self.cancel_callback, ()))])
 
@@ -83,8 +84,11 @@ class Boxes:
 		self.cur_display.close()
 		self.dialog.close()
 
+	def _size_cb(self, x, y, w, h):
+		self.box = x, y, w, h
+
 	def first_press(self, dummy, win, ev, val):
-		self.box = win.sizebox((val[0], val[1], 0, 0), 0, 0)
+		win._sizebox((val[0], val[1], 0, 0), 0, 0, self._size_cb)
 		win.register(EVENTS.Mouse0Press, self.press, None)
 		self.after_press()
 
@@ -102,7 +106,7 @@ class Boxes:
 		self.display.render()
 		
 		if constrainx and constrainy:
-			self.box = win.movebox(b, 0, 0)
+			self.box = win._movebox(b, 0, 0)
 		else:
 			if x < b[0] + b[2]/2:
 				x0 = b[0] + b[2]
@@ -116,8 +120,8 @@ class Boxes:
 			else:
 				y0 = b[1]
 				h = b[3]
-			self.box = win.sizebox((x0, y0, w, h),
-					       constrainx, constrainy)
+			win._sizebox((x0, y0, w, h),
+				    constrainx, constrainy, self._size_cb)
 		self.after_press()
 
 	def after_press(self):
@@ -136,23 +140,22 @@ class Boxes:
 				self._looping = 1
 				while 1:
 					dummy = windowinterface.readevent()
-			except _finished, val:
-				if self.box and val:
-					return self.box
-				else:
-					return None
+			except _finished:
+				return
 		finally:
 			windowinterface.endmonitormode()
 
 	def done_callback(self):
 		self.close()
+		apply(self.callback, self.box)
 		if self._looping:
-			raise _finished, 1
+			raise _finished
 
 	def cancel_callback(self):
 		self.close()
+		apply(self.callback, ())
 		if self._looping:
-			raise _finished, 0
+			raise _finished
 
-def create_box(window, msg, *box):
-	return Boxes(window, msg, box).loop()
+def create_box(window, msg, callback, *box):
+	return Boxes(window, msg, callback, box).loop()

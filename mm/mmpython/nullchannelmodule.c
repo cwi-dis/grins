@@ -1,6 +1,6 @@
-#include "thread.h"
 #include "allobjects.h"
 #include "modsupport.h"
+#include "thread.h"
 #include "mmmodule.h"
 
 #ifdef MM_DEBUG
@@ -34,11 +34,11 @@ null_resized(self)
 }
 
 static int
-null_arm(self, file, delay, duration, attrlist, anchorlist)
+null_arm(self, file, delay, duration, attrdict, anchorlist)
 	mmobject *self;
 	object *file;
 	int delay, duration;
-	object *attrlist, *anchorlist;
+	object *attrdict, *anchorlist;
 {
 	denter(null_arm);
 	return 1;
