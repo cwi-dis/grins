@@ -20,7 +20,10 @@ mimetypes = {
 	'.mp3': 'audio/mpeg',
 	'.bmp': 'image/bmp',
 	'.asf': 'video/x-ms-asf',
+	'.wma': 'audio/x-ms-wma',
+	'.wmv': 'video/x-ms-wmv',
 	}
+
 
 descriptions = {
 	'application/smil': 'SMIL presentations',
