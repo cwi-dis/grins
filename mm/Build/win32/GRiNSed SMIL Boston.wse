@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=3392120424
+  File Checksum=676784039
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1152,6 +1152,11 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Destination=%MAINDIR%\wingdi.pyd
+  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\comment.tiff
