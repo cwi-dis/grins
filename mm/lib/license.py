@@ -42,11 +42,7 @@ class WaitLicense(LicenseDialog):
 	def cb_quit(self):
 		self.close()
 		import sys
-		if sys.platform=='win32':
-			import windowinterface
-			windowinterface.forceclose()
-		else:
-			sys.exit(0)
+		sys.exit(0)
 			
 	def cb_try(self):
 		self.close()
