@@ -4,7 +4,7 @@ import afxexttb
 import afxres
 import commctrl
 import win32con
-import win32con
+import appcon
 import win32mu
 import win32ui
 Sdk = win32ui.GetWin32Sdk()
@@ -28,7 +28,74 @@ TOOLBAR_COMBO_HEIGHT = 10*18 # drop down height
 # Debug
 from wndusercmd import TOOLBAR_GENERAL
 
-class ToolbarMixin:
+# player panel support module
+import winplayerdlg
+
+DEFAULT_PLAYER_PANEL_ATTRIBUTES = [ ('option','Bitrate'),
+	('option', 'Language'),
+	('boolean', 'boolean attribute 1'),
+	('boolean', 'boolean attribute 2'),]
+
+# player panel mixin
+class PanelMixin:
+	def __init__(self):
+		self._pbar = None
+		self._pcmdid = usercmdui.usercmd2id(wndusercmd.PLAYER_PANEL)
+
+	# attributes is a list of tuples describing player panel
+	# see DEFAULT_PLAYER_PANEL_ATTRIBUTES for an example
+	def createPanel(self, attributes=None):
+		flag = 0
+		if self._pbar:
+			flag = self._pbar.IsWindowVisible()
+			self.destroy()
+		if attributes is None:
+			attributes = DEFAULT_PLAYER_PANEL_ATTRIBUTES
+		pbar = winplayerdlg.PlayerDlgBar()
+		pbar.createWindow(self, attributes)
+		self._pbar = pbar
+		self.HookCommand(self.OnShowPanelCommand, self._pcmdid)
+		self.HookCommandUpdate(self.OnUpdatePanelCommand, self._pcmdid)
+		if flag: self._pbar.show()
+
+	def OnShowPanelCommand(self, id, code):
+		if id == self._pcmdid:
+			flag = self._pbar.IsWindowVisible()
+			if flag: self._pbar.hide()
+			else: self._pbar.show()
+	
+	def OnUpdatePanelCommand(self, cmdui):
+		if cmdui.m_nID == self._pcmdid:
+			cmdui.Enable(1)
+			cmdui.SetCheck(self._pbar.IsWindowVisible())
+	
+	def destroy(self):
+		if self._pbar:
+			self._pbar.DestroyWindow()
+			self._pbar = None	
+
+	def setOptions(self, optionsdict):
+		if not self._pbar: return
+		for name, info in optionsdict.items():
+			self._pbar.setOption(name, info)
+
+# null player panel mixin
+class NullPanelMixin:
+	def __init__(self):
+		self._pbar = None
+	def createPanel(self, attributes=None):
+		pass
+	def destroy(self):
+		pass
+	def setOptions(self, optionsdict):
+		pass
+
+# do not use player panel for player yet
+if not appcon.IsEditor:
+	PanelMixin = NullPanelMixin
+
+##############################
+class ToolbarMixin(PanelMixin):
 
 	def __init__(self):
 		#
@@ -36,7 +103,8 @@ class ToolbarMixin:
 		# values are GRiNSToolbar instances.
 		#
 		self._bars = {}
-		self._pbar = None
+		PanelMixin.__init__(self)
+
 		#
 		# Pulldown adornments. Indexed by pulldown name,
 		# values are (valuelist, callback, initialvalue).
@@ -79,9 +147,7 @@ class ToolbarMixin:
 		self.RecalcLayout()
 
 	def OnClose(self):
-		if self._pbar:
-			self._pbar.DestroyWindow()
-			self._pbar = None	
+		PanelMixin.destroy(self)
 		self.SaveBarState("GRiNSToolBars")
 
 	def CreateToolbars(self):
@@ -93,16 +159,13 @@ class ToolbarMixin:
 		self._recalcPulldownEnable()
 		self._restoreToolbarState()
 		self.RecalcLayout()
-		
-		import winplayerdlg
-		pbar = winplayerdlg.PlayerDlgBar()
-		pbar.createWindow(self)
-		self._pbar = pbar
+		PanelMixin.createPanel(self)
 
 	def DestroyToolbars(self):
 		for bar in self._bars.values():
 			if hasattr(bar,'DestroyWindow'):
 				bar.DestroyWindow()
+		PanelMixin.destroy(self)
 		self._bars = {}
 		self._pulldowndict = {}
 		self._pulldowncallbackdict = {}
@@ -187,6 +250,7 @@ class ToolbarMixin:
 		self._lastbar = bar
 
 	def setToolbarPulldowns(self, pulldowndict):
+		PanelMixin.setOptions(self, pulldowndict)
 		self._pulldowndict = pulldowndict
 		self._recalcPulldownEnable()
 

@@ -231,6 +231,8 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&Containers', None, TOOLBAR_CONTAINERS),
 			(FLAG_ALL, ENTRY, '&Timing and Linking', None, TOOLBAR_LINKING),
 			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
+			(FLAG_ALL, SEP,),
+			(FLAG_ALL, ENTRY, 'Player &Panel', None, PLAYER_PANEL),
 			)),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Expand/Collapse\tCtrl+I', None, EXPAND),

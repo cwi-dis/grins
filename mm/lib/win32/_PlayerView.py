@@ -42,6 +42,12 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
 		self.setClientRect(w, h)
 
+		mainframe = self.GetParent().GetMDIFrame()
+		if hasattr(mainframe, '_pbar') and mainframe._pbar is not None:
+			flag = not mainframe._pbar.IsWindowVisible()
+			if flag:
+				mainframe._pbar.show()
+			
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
 
