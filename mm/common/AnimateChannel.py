@@ -37,6 +37,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__duration = None
 		self.__animating = None
 		self.__curloop = 0
+		self.__moreloops = 0
 
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
@@ -65,6 +66,12 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				self.__curloop = 0
 		
+		# do we have more loops?
+		self.__moreloops = 0
+		if node.curloopcount>0:
+			self.__moreloops = 1
+		# what about repeatDur?
+			
 		self.__animating = node
 
 		# get duration in secs (float)
@@ -160,6 +167,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__effAnimator:
 			if debug: print 'removeAnimate'
 			update = not self.__animator.isAccumulating()
+			if self.__animator.isAccumulating() and self.__moreloops: update = 0
+			else: update = 1
 			self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator, update=update)
 			self.__effAnimator = None
 
