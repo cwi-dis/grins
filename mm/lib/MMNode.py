@@ -54,8 +54,7 @@ class MMNodeContext:
 		self.root = None
 		self.toplevel = None	# This is set in TopLevel.read_it()
 		self.__channeltree = None
-		self._maxsoundlevel = 1.0 # doc max soundLevel
-		self._minsoundlevel = 1.0 # doc min soundLevel
+		self._soundlevelinfo = {} # doc soundLevel stat
 		from SMILCssResolver import SMILCssResolver
 		self.cssResolver = SMILCssResolver(self)
 
@@ -699,6 +698,18 @@ class MMNodeContext:
 					csssubreg.link(resolver.getCssObj(reg))
 					csssubreg.media.link(csssubreg)
 			self.__appendCssNodes(resolver, node)
+
+	def updateSoundLevelInfo(self, what, val):
+		d = self._soundlevelinfo
+		if what == 'minmax':
+			d['min'] = min(val, d.get('min', 1))
+			d['max'] = max(val, d.get('max', 1))
+		elif what == 'min':
+			d['min'] = min(val, d.get('min', 1))
+		elif what == 'max':
+			d['max'] = max(val, d.get('max', 1))
+		elif what == 'anim':
+			d['anim'] = 1
 
 class MMRegPoint:
 	def __init__(self, context, name):
