@@ -19,6 +19,7 @@ class PlayerDialog(PlayerDialogBase):
 			'p': PLAY,
 			'P': PAUSE,
 			's': STOP,
+			' ': MAGIC_PLAY,
 			},
 		'menubar': [
 			(FLAG_ALL, 'Close', [
@@ -29,7 +30,7 @@ class PlayerDialog(PlayerDialogBase):
 				(FLAG_ALL, 'Pause', PAUSE, 't'),
 				(FLAG_ALL, 'Stop', STOP, 't'),
 				]),
-			(FLAG_CMIF, 'User Groups', USERGROUPS),
+			(FLAG_BOSTON, 'Custom tests', USERGROUPS),
 			(FLAG_CMIF, 'Channels', CHANNELS),
 			(FLAG_ALL|FLAG_DBG, 'View', [
 				(FLAG_CMIF, 'Timeline view follows player', SYNCCV, 't'),
@@ -41,6 +42,12 @@ class PlayerDialog(PlayerDialogBase):
 		'flags': curflags(),
 		}
 	adornments2 = {
+		'shortcuts': {
+			'p': PLAY,
+			'P': PAUSE,
+			's': STOP,
+			' ': MAGIC_PLAY,
+			},
 		'close': [ CLOSE_WINDOW, ],
 		}
 

@@ -13,7 +13,8 @@ class TopLevelDialog:
 			(FLAG_PRO, 'Timeline View', CHANNELVIEW),
 			(FLAG_PRO, 'Layout View', LAYOUTVIEW),
 			(FLAG_PRO, 'Hyperlinks', LINKVIEW),
-			(FLAG_CMIF, 'User Groups', USERGROUPVIEW),
+			(FLAG_BOSTON, 'Custom tests', USERGROUPVIEW),
+			(FLAG_BOSTON, 'Transition', TRANSITIONVIEW),
 			(FLAG_ALL, 'Properties...', PROPERTIES),
 			(FLAG_ALL, 'Source...', SOURCE),
 			(FLAG_ALL, 'Edit Source...', EDITSOURCE),
@@ -21,7 +22,6 @@ class TopLevelDialog:
 			(FLAG_ALL, 'Save as...', SAVE_AS),
 			(FLAG_G2, 'Publish for G2...', EXPORT_G2),
 			(FLAG_QT, 'Publish for QuickTime...', EXPORT_QT),
-			(FLAG_SMIL_1_0, 'Publish...', EXPORT_SMIL),
 			(FLAG_ALL, 'Restore', RESTORE),
 			(FLAG_ALL, 'Close', CLOSE),
 			(FLAG_ALL, 'Help', HELP),
@@ -66,6 +66,11 @@ class TopLevelDialog:
 			self.source.show()
 			return
 		self.source = windowinterface.textwindow(source)
+
+	# in the source view, the user may have done some changements without apply them.
+	# return 1 if the user want to continue (not cancel)
+	def closeSourceView(self):
+		return 1
 
 	def mayclose(self):
 		prompt = 'Document %s:\n' % self.filename + \
