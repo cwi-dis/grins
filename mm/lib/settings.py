@@ -31,6 +31,7 @@ default_settings = {
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
 	'use_tab_attr_editor':1,	# New tabs-based props editor
+	'time_scale_factor': 1.0,	# Scale factor for sec to mm
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
