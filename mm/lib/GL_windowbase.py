@@ -811,6 +811,9 @@ class _DisplayList:
 		gl.gflush()
 		toplevel._win_lock.release()
 		self._rendered = 1
+		
+	def render_now(self):
+		self.render()
 
 	#
 	# Color handling
