@@ -1359,7 +1359,11 @@ class SMILWriter(SMIL):
 			# will, currently, to '.ra').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
-			file = convertaudiofile(u, dstdir, file, node)
+				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
+			else:
+				progress = None
+			file = convertaudiofile(u, dstdir, file, node,
+						progress = progress)
 			self.files_generated[file] = 'b'
 			return file
 		if u.headers.maintype == 'video' and \
@@ -1369,7 +1373,11 @@ class SMILWriter(SMIL):
 			# will, currently, to '.rm').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
-			file = convertvideofile(u, srcurl, dstdir, file, node)
+				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
+				progress = None
+			else:
+				progress = None
+			file = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
 			if file:
 				self.files_generated[file] = 'b'
 				return file
