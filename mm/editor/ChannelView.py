@@ -98,6 +98,7 @@ class ChannelView(ViewDialog):
 		self.placing_channel = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		ViewDialog.__init__(self, 'cview_')
+		self.delayed_drawarcs_id = None
 
 	def __repr__(self):
 		return '<ChannelView instance, root=' + `self.root` + '>'
@@ -175,18 +176,18 @@ class ChannelView(ViewDialog):
 		pass
 
 	def commit(self):
-		if self.future_focus <> None:
+		if self.future_focus is not None:
 			focus = self.future_focus
 			self.future_focus = None
 		elif self.focus is None:
 			focus = '', None
-		elif type(self.focus) == type(()):
+		elif type(self.focus) is type(()):
 			focus = self.focus
-		elif self.focus.__class__ == ChannelBox:
+		elif self.focus.__class__ is ChannelBox:
 			focus = 'c', self.focus.channel
-		elif self.focus.__class__ == NodeBox:
+		elif self.focus.__class__ is NodeBox:
 			focus = 'n', self.focus.node
-		elif self.focus.__class__ == ArcBox:
+		elif self.focus.__class__ is ArcBox:
 			focus = 'a', None
 		else:
 			focus = '', None
@@ -248,6 +249,8 @@ class ChannelView(ViewDialog):
 
 	def mapchannel(self, channel):
 		# Map channel to left and right coordinates
+		if channel.chview_map is not None:
+			return channel.chview_map
 		list = self.visiblechannels()
 		nchannels = len(list)
 		try:
@@ -255,7 +258,9 @@ class ChannelView(ViewDialog):
 		except ValueError:
 			return 0, 0
 		width = float(self.timescaleborder) / nchannels
-		return (i + 0.1) * width, (i + 0.9) * width
+		x, y = (i + 0.1) * width, (i + 0.9) * width
+		channel.chview_map = x, y
+		return x, y
 
 	def channelgapindex(self, x):
 		list = self.visiblechannels()
@@ -286,6 +291,8 @@ class ChannelView(ViewDialog):
 	def toggleshow(self):
 		windowinterface.setcursor('watch')
 		self.showall = (not self.showall)
+		for c in self.context.channels:
+			c.chview_map = None
 		self.redraw()
 		windowinterface.setcursor('')
 
@@ -312,13 +319,13 @@ class ChannelView(ViewDialog):
 		self.objects = []
 		self.focus = self.lockednode = None
 		self.baseobject = GO(self, '(base)')
-		self.baseobject.select()
 		self.objects.append(self.baseobject)
 		self.timescaleobject = TimeScaleBox(self)
 		self.objects.append(self.timescaleobject)
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
+		self.baseobject.select()
 
 	# Recompute the locations where the objects should be drawn
 
@@ -342,6 +349,21 @@ class ChannelView(ViewDialog):
 			for obj in self.arcs:
 				obj.draw()
 	
+	def delayed_drawarcs(self):
+		self.delayed_drawarcs_id = None
+		if not self.arcs:
+			return
+		self.init_display()
+		self.drawarcs()
+		self.render()
+
+	def delay_drawarcs(self):
+		if self.delayed_drawarcs_id is not None:
+			windowinterface.canceltimer(self.delayed_drawarcs_id)
+		if self.arcs:
+			self.delayed_drawarcs_id = windowinterface.settimer(
+				0.01, (self.delayed_drawarcs, ()))
+
 	# Channel stuff
 
 	def initchannels(self, focus):
@@ -382,20 +404,20 @@ class ChannelView(ViewDialog):
 	# Make sure the view root is set to *something*, and fix the title
 	def fixviewroot(self):
 		node = self.viewroot
-		if node <> None and node.GetRoot() <> self.root:
+		if node is not None and node.GetRoot() is not self.root:
 			node = None
-		if node <> None and not node.IsMiniDocument():
+		if node is not None and not node.IsMiniDocument():
 			node = None
-		if node == None:
+		if node is None:
 			node = self.root.FirstMiniDocument()
-		if node == None:
+		if node is None:
 			node = self.root
 		self.viewroot = node
 		self.fixtitle()
 
 	# Change the view root
 	def setviewroot(self, node):
-		if node == None or node == self.viewroot:
+		if node is None or node is self.viewroot:
 			return
 		self.cleanup()
 		self.viewroot = node
@@ -406,7 +428,7 @@ class ChannelView(ViewDialog):
 
 	def fixtitle(self):
 		title = 'Channel View (' + self.toplevel.basename + ')'
-		if None <> self.viewroot <> self.root:
+		if None is not self.viewroot is not self.root:
 			name = MMAttrdefs.getattr(self.viewroot, 'name')
 			title = title + ': ' + name
 		if self.is_showing():
@@ -421,7 +443,11 @@ class ChannelView(ViewDialog):
 		self.scantree(self.viewroot, focus)
 		self.usedchannels = []
 		for c in self.context.channels:
-			if c.used: self.usedchannels.append(c)
+			c.chview_map = None
+			if c.used:
+				self.usedchannels.append(c)
+			else:
+				c.chview_map = 0, 0
 		self.addancestors()
 		self.addsiblings()
 
@@ -443,12 +469,12 @@ class ChannelView(ViewDialog):
 
 	def scandescendants(self, node):
 		for c in node.GetChildren():
-			if c.IsMiniDocument():
+			if c.GetType() == 'bag':
+				self.scandescendants(c)
+			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
 				tuple = ('', name, (self.setviewroot, (c,)))
 				self.baseobject.descendants.append(tuple)
-			elif c.GetType() == 'bag':
-				self.scandescendants(c)
 			elif c.GetType() in interiortypes:
 				self.scandescendants(c)
 
@@ -472,14 +498,14 @@ class ChannelView(ViewDialog):
 
 	def scansiblings(self, node):
 		for c in node.GetChildren():
-			if c.IsMiniDocument():
+			if c.GetType() == 'bag':
+				self.scansiblings(c)
+			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
 				if c is self.viewroot:
 					name = name + ' (current)'
 				tuple = ('', name, (self.setviewroot, (c,)))
 				self.baseobject.siblings.append(tuple)
-			elif c.GetType() == 'bag':
-				self.scansiblings(c)
 
 	# Arc stuff
 
@@ -489,13 +515,15 @@ class ChannelView(ViewDialog):
 		self.objects[len(self.objects):] = self.arcs = arcs
 	
 	def scanarcs(self, node, focus, arcs):
-		if node.GetType() in leaftypes and node.GetChannel():
+		type = node.GetType()
+		if type in leaftypes and node.GetChannel():
 			self.addarcs(node, arcs)
-		else:
+		elif type != 'bag':
 			for c in node.GetChildren():
 				self.scanarcs(c, focus, arcs)
 
 	def addarcs(self, ynode, arcs):
+		IsAncestorOf = self.viewroot.IsAncestorOf
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
 			xuid, xside, delay, yside = arc
 			try:
@@ -503,7 +531,7 @@ class ChannelView(ViewDialog):
 			except NoSuchUIDError:
 				# Skip sync arc from non-existing node
 				continue
-			if self.viewroot.IsAncestorOf(xnode) and \
+			if IsAncestorOf(xnode) and \
 			   xnode.GetType() in leaftypes and \
 			   xnode.GetChannel():
 				obj = ArcBox(self,
@@ -513,7 +541,7 @@ class ChannelView(ViewDialog):
 	# Focus stuff (see also recalc)
 
 	def deselect(self):
-		if self.focus and type(self.focus) != type(()):
+		if self.focus and type(self.focus) is not type(()):
 			self.focus.deselect()
 		else:
 			self.focus = None
@@ -546,18 +574,14 @@ class ChannelView(ViewDialog):
 	# Global focus stuff
 
 	def getfocus(self):
-		if self.focus and type(self.focus) != type(()):
+		if self.focus and type(self.focus) is not type(()):
 			return self.focus.getnode()
 		else:
 			return None
 
 	def globalsetfocus(self, node):
 		# May have to switch view root
-		mini = node
-		while not mini.IsMiniDocument():
-			mini = mini.GetParent()
-			if mini == None:
-				return
+		mini = node.FindMiniDocument()
 		if not self.is_showing():
 			self.viewroot = mini
 			self.focus = ('n', node)
@@ -708,6 +732,8 @@ class ChannelView(ViewDialog):
 		channel = context.channels[index]
 		self.future_focus = 'c', channel
 		self.showall = 1	# Force showing the new channel
+		for c in self.context.channels:
+			c.chview_map = None
 		self.cleanup()
 		editmgr.commit()
 		if placement_type in (PLACING_NEW, PLACING_COPY):
@@ -834,13 +860,22 @@ class GO:
 		self.mother.newchannel(self.newchannelindex())
 
 	def nextminicall(self):
-		self.mother.nextviewroot()
+		mother = self.mother
+		mother.toplevel.setwaiting()
+		mother.nextviewroot()
+		mother.toplevel.setready()
 
 	def prevminicall(self):
-		self.mother.prevviewroot()
+		mother = self.mother
+		mother.toplevel.setwaiting()
+		mother.prevviewroot()
+		mother.toplevel.setready()
 
 	def toggleshowcall(self):
-		self.mother.toggleshow()
+		mother = self.mother
+		mother.toplevel.setwaiting()
+		mother.toggleshow()
+		mother.toplevel.setready()
 
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!
@@ -931,9 +966,9 @@ class ChannelBox(GO):
 	def __init__(self, mother, channel):
 		GO.__init__(self, mother, channel.name)
 		self.channel = channel
-		if channel.has_key('type'):
+		try:
 			self.ctype = channel['type']
-		else:
+		except KeyError:
 			self.ctype = '???'
 		c = self.commandlist
 		c.append(None)
@@ -953,17 +988,20 @@ class ChannelBox(GO):
 		return '<ChannelBox instance, name=' + `self.name` + '>'
 
 	def channel_onoff(self):
+		self.mother.toplevel.setwaiting()
 		player = self.mother.toplevel.player
 		ch = self.channel
 		if player.is_showing():
 			player.cmenu_callback(ch.name)
+			self.mother.toplevel.setready()
 			return
-		if ch.attrdict.has_key('visible'):
+		try:
 			isvis = ch.attrdict['visible']
-		else:
+		except KeyError:
 			isvis = 1
 		ch.attrdict['visible'] = not isvis
 		self.mother.channels_changed()
+		self.mother.toplevel.setready()
 
 	def reshape(self):
 		left, right = self.mother.mapchannel(self.channel)
@@ -1002,9 +1040,9 @@ class ChannelBox(GO):
 
 		# Draw a diamond
 		cd = self.mother.context.channeldict[self.name]
-		if cd.has_key('visible'):
+		try:
 			visible = cd['visible']
-		else:
+		except KeyError:
 			visible = 1
 		if visible:
 			color = CHANNELCOLOR
@@ -1038,8 +1076,10 @@ class ChannelBox(GO):
 	# Menu stuff beyond what GO offers
 
 	def attrcall(self):
+		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.channel)
+		self.mother.toplevel.setready()
 
 	def delcall(self):
 		if self.channel in self.mother.usedchannels:
@@ -1051,9 +1091,11 @@ class ChannelBox(GO):
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
+		self.mother.toplevel.setwaiting()
 		editmgr.delchannel(self.name)
 		self.mother.cleanup()
 		editmgr.commit()
+		self.mother.toplevel.setready()
 
 	def movecall(self):
 	        self.mother.movechannel(self.name)
@@ -1099,7 +1141,7 @@ class NodeBox(GO):
 					break
 		node.cv_obj = self
 		node.set_armedmode = self.set_armedmode
-		if not hasattr(node, 'armedmode') or node.armedmode == None:
+		if not hasattr(node, 'armedmode') or node.armedmode is None:
 			node.armedmode = ARM_NONE
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
@@ -1143,10 +1185,12 @@ class NodeBox(GO):
 		mother = self.mother
 		for arc in mother.arcs:
 			if (xnode, xside, yside, ynode) == (arc.snode, arc.sside, arc.dside, arc.dnode):
+				mother.toplevel.setwaiting()
 				mother.init_display()
 				arc.select()
 				mother.drawarcs()
 				mother.render()
+				mother.toplevel.setready()
 				return
 
 	def getnode(self):
@@ -1165,8 +1209,9 @@ class NodeBox(GO):
 			self.mother.init_display()
 			self.node.armedmode = mode
 			self.drawfocus()
-			self.mother.drawarcs()
-			self.mother.render()
+## 			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
+ 			self.mother.render()
+			self.mother.delay_drawarcs()
 
 	def lock(self):
 		if not self.locked:
@@ -1198,11 +1243,11 @@ class NodeBox(GO):
 			self.mother.lockednode.node, 1, 0.0, self.node, 0, 1
 ##		# find a sync arc between the two nodes and use that
 ##		list = dnode.GetRawAttrDef('synctolist', None)
-##		if list == None:
+##		if list is None:
 ##			list = []
 ##		suid = snode.GetUID()
 ##		for (xn, xs, de, ys) in list:
-##			if xn == suid:
+##			if xn is suid:
 ##				sside, delay, dside, new = xs, de, ys, 0
 ##				break
 		editmgr.addsyncarc(snode, sside, delay, dnode, dside)
@@ -1264,10 +1309,11 @@ class NodeBox(GO):
 		# Draw a box
 		if self.locked:
 			color = LOCKEDCOLOR
-		elif armcolors.has_key(self.node.armedmode):
-			color = armcolors[self.node.armedmode]
 		else:
-			color = NODECOLOR
+			try:
+				color = armcolors[self.node.armedmode]
+			except KeyError:
+				color = NODECOLOR
 		d.drawfbox(color, (l, t, r - l, b - t))
 
 		# If the end time was inherited, make the bottom-right
@@ -1308,26 +1354,40 @@ class NodeBox(GO):
 	# Menu stuff beyond what GO offers
 
 	def playcall(self):
-		self.mother.toplevel.player.playsubtree(self.node)
+		top = self.mother.toplevel
+		top.setwaiting()
+		top.player.playsubtree(self.node)
+		top.setready()
 		
 	def playfromcall(self):
-		self.mother.toplevel.player.playfrom(self.node)
+		top = self.mother.toplevel
+		top.setwaiting()
+		top.player.playfrom(self.node)
+		top.setready()
 
 	def attrcall(self):
+		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.node)
+		self.mother.toplevel.setready()
 
 	def infocall(self):
+		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
+		self.mother.toplevel.setready()
 
 	def editcall(self):
+		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
+		self.mother.toplevel.setready()
 	
 	def anchorcall(self):
+		self.mother.toplevel.setwaiting()
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
+		self.mother.toplevel.setready()
 
 	def newsyncarccall(self):
 		self.mother.init_display()
@@ -1335,7 +1395,10 @@ class NodeBox(GO):
 		self.mother.render()
 
 	def focuscall(self):
-		self.mother.toplevel.hierarchyview.globalsetfocus(self.node)
+		top = self.mother.toplevel
+		top.setwaiting()
+		top.hierarchyview.globalsetfocus(self.node)
+		top.setready()
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
@@ -1396,19 +1459,23 @@ class ArcBox(GO):
 	# Menu stuff beyond what GO offers
 
 	def infocall(self):
+		self.mother.toplevel.setwaiting()
 		import ArcInfo
 		ArcInfo.showarcinfo(self.mother.root, \
 			self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
+		self.mother.toplevel.setready()
 
 	def delcall(self):
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
+		self.mother.toplevel.setwaiting()
 		editmgr.delsyncarc(self.snode, self.sside, \
 			self.delay, self.dnode, self.dside)
 		self.mother.cleanup()
 		editmgr.commit()
+		self.mother.toplevel.setready()
 
 # Wrap up a function and some arguments for later calling with fewer
 # arguments.  The arguments given here are passed *after* the

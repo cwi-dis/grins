@@ -71,7 +71,7 @@ _box_finished = '_finished'
 
 class _Boxes:
 	def __init__(self, window, msg, callback, box):
-		if len(box) == 1 and type(box) == TupleType:
+		if len(box) == 1 and type(box) is TupleType:
 			box = box[0]
 		if len(box) not in (0, 4):
 			raise TypeError, 'bad arguments'
@@ -262,7 +262,7 @@ class _DisplayList(GL_windowbase._DisplayList):
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -325,7 +325,7 @@ class _DisplayList(GL_windowbase._DisplayList):
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -350,7 +350,7 @@ class _DisplayList(GL_windowbase._DisplayList):
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -375,7 +375,7 @@ class _DisplayList(GL_windowbase._DisplayList):
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -503,7 +503,7 @@ class _Window(GL_windowbase._Window):
 	def _close_win(self):
 		# close the GL window connected to this instance
 		if debug: print `self`+'._close_win()'
-		if self._parent_window == toplevel:
+		if self._parent_window is toplevel:
 			raise error, 'can\'t close top-level window'
 		self._close_subwins()
 		gl.winclose(self._window_id)
@@ -550,7 +550,7 @@ class _Window(GL_windowbase._Window):
 		if self.is_closed():
 			raise error, 'window already closed'
 		list = _DisplayList(self)
-		if len(bgcolor) == 1 and type(bgcolor[0]) == TupleType:
+		if len(bgcolor) == 1 and type(bgcolor[0]) is TupleType:
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
 			list._bgcolor = list._curcolor = bgcolor
@@ -808,7 +808,7 @@ class SelectionDialog:
 		x, y, w, h = 0, 250, buttonwidth, 39
 		buttonlist = ['Ok', 'Cancel']
 		for entry in buttonlist:
-			if type(entry) == TupleType:
+			if type(entry) is TupleType:
 				accelerator, label, callback = entry
 			else:
 				accelerator, label, callback = '', entry, None
@@ -899,7 +899,7 @@ class SelectionDialog:
 			else:
 				ret = func(self.nameinput.get_input())
 				if ret:
-					if type(ret) == StringType:
+					if type(ret) is StringType:
 						showmessage(ret, type = 'error')
 					return
 		if arg == 'Cancel':
@@ -910,7 +910,7 @@ class SelectionDialog:
 			else:
 				ret = func()
 				if ret:
-					if type(ret) == StringType:
+					if type(ret) is StringType:
 						showmessage(ret, type = 'error')
 					return
 		self.close()
