@@ -125,7 +125,6 @@ def getduration(filename):
 	f, nchannels, nsampframes, sampwidth, samprate, format = \
 		getinfo(filename)
 	duration = nsampframes / samprate
-	print 'duration of', filename, '=', duration
 	return duration
 
 
