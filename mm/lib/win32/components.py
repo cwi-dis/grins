@@ -1015,6 +1015,8 @@ class KeyTimesSlider(window.Wnd):
 			index = index + 1
 
 	def OnHScroll(self, msg):
+		self._parent.stop()
+			
 		pos = self.GetPos()
 		if self._listener:
 			self._listener.onCursorPosChanged(0.01*pos)
@@ -1056,6 +1058,8 @@ class KeyTimesSlider(window.Wnd):
 		return index>0 and index<len(self._keyTimes)-1
 					
 	def onSelect(self, point, flags):
+		self._parent.stop()
+		
 		# XXX update the shift pressed status
 		self._shiftPressed = flags & win32con.MK_SHIFT
 		
