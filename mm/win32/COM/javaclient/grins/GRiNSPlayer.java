@@ -51,10 +51,10 @@ implements SMILDocument, SMILController, SMILRenderer
         return ngetTopLayoutState(hgrins, index)!=0;
         }
     
-    public void setCanvas(int index, SMILCanvas c) throws Exception
+    public void setCanvas(int index, SMILCanvas c) throws GRiNSException
         {
         if(c==null || !c.isDisplayable()) 
-            throw new Exception("PlayerCanvas not displayable"); 
+            throw new GRiNSException("PlayerCanvas not displayable"); 
         canvas = c;
         c.setRenderer(this, index);
         if(hgrins!=0)

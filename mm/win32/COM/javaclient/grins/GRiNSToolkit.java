@@ -10,6 +10,9 @@ public class GRiNSToolkit {
     /**
     *   Return a SMILDocument from the content located at the
     *   specified filename or URL.
+    *
+    * @param  filenameOrUrl   document location as filename or a URL string.
+    *
     */
     static public SMILDocument createDocument(String filenameOrUrl){
         return new GRiNSPlayer(filenameOrUrl);
