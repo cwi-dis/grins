@@ -3143,6 +3143,9 @@ BEGIN
     BUTTON      IDUC_SWITCH
     BUTTON      IDUC_EXCL
     BUTTON      IDUC_PRIO
+    BUTTON      IDUC_EVENT_SOURCE
+    BUTTON      IDUC_BEGIN_EVENT
+    BUTTON      IDUC_END_EVENT
 END
 
 IDR_TB_COMMON TOOLBAR DISCARDABLE  16, 15
@@ -3271,6 +3274,10 @@ BEGIN
     IDUC_SWITCH             "Create switch container\nCreate switch container"
     IDUC_EXCL               "Create excl container\nCreate excl container"
     IDUC_PRIO               "Create priority class\nCreate priority class"
+    IDUC_CREATE_EVENT       "Event source\\Event source"
+    IDUC_BEGIN_EVENT        "Create begin event\nCreate begin event"
+    IDUC_END_EVENT          "Create end event\nCreate end event"
+    IDUC_EVENT_SOURCE       "Event source\nEvent source"
 END
 
 #endif    // English (U.S.) resources
