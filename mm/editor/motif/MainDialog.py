@@ -3,7 +3,7 @@
 This is a very simple dialog, it consists of four choices and three
 callback functions.
 
-Thex choices are labeled `New', `Open Location...', `Open File...', and
+The choices are labeled `New', `Open Location...', `Open File...', and
 `Exit'.  If either of the Open choices is selected, a dialog window
 asks for a URL or a file name respectively, and if one is selected,
 the callback self.open_callback is called with the selected location
