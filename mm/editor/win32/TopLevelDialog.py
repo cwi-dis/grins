@@ -21,7 +21,6 @@ class TopLevelDialog:
 			PAUSE(callback = (self.pause_callback, ())),
 			STOP(callback = (self.stop_callback, ())),
 			PLAY(callback = (self.play_callback, ())),
-			PAUSE(callback = (self.pause_callback, ())),
 			SCHEDDUMP(callback = (self.__dump, ())),
 		]
 
