@@ -75,10 +75,13 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__pauseAnimate(paused)
 
 	def playstop(self):
-		if self.__animating:
-			self.__stopAnimate()
-			self.__animating = None
+		self.__stopAnimate()
 		Channel.ChannelAsync.playstop(self)
+
+	def stopplay(self, node):
+		self.__stopAnimate()
+		self.__removeAnimate()	
+		Channel.ChannelAsync.stopplay(self, node)
 
 	#
 	# Animation engine
@@ -138,6 +141,10 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __stopAnimate(self):
 		if self.__animating:
 			self.__unregister_for_timeslices()
+			self.__animating = None
+
+	def __removeAnimate(self):
+		if self.__effAnimator:
 			self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator)
 			self.__effAnimator = None
 
@@ -212,3 +219,4 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = None
+ 
