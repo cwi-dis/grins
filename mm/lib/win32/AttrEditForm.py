@@ -3938,6 +3938,9 @@ class FileGroup(AttrGroup):
 		AttrGroup.__init__(self,FileGroup.data)
 		self._preview=-1
 
+	def isStaticMedia(self, mtype):
+		return mtype in ('image', 'svg', 'html', 'text')
+	
 	def canpreview(self):
 		if self._preview>=0: 
 			return self._preview
@@ -3986,7 +3989,7 @@ class FileGroup(AttrGroup):
 
 	def getpageresid(self):
 		if self.canpreview():
-			if self._mtypesig in ('image', 'svg', 'html', 'text'): 
+			if self.isStaticMedia(self._mtypesig): 
 				# static media
 				return grinsRC.IDD_EDITATTR_PF1
 			else: 
@@ -4041,7 +4044,7 @@ class MediaGroup(FileGroup):
 
 	def getpageresid(self):
 		if self.canpreview():
-			if self._mtypesig in ('image', 'svg', 'html', 'text'): 
+			if self.isStaticMedia(self._mtypesig): 
 				# static media
 				return grinsRC.IDD_EDITATTR_PF2
 			else: 
@@ -4053,9 +4056,9 @@ class MediaGroup(FileGroup):
 	def createctrls(self,wnd):
 		cd = FileGroup.createctrls(self,wnd)
 		a = self.getattr('clipbegin')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPBEGINL, grinsRC.IDC_CLIPBEGINV))
+		self.__clipbegin = cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPBEGINL, grinsRC.IDC_CLIPBEGINV))
 		a = self.getattr('clipend')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPENDL, grinsRC.IDC_CLIPENDV))
+		self.__clipend = cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPENDL, grinsRC.IDC_CLIPENDV))
 		a = self.getattr('readIndex')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_READINDEXL, grinsRC.IDC_READINDEXV))
 		a = self.getattr('sensitivity')
@@ -4063,6 +4066,13 @@ class MediaGroup(FileGroup):
 		a = self.getattr('erase')
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ERASEL, grinsRC.IDC_ERASEV2, grinsRC.IDC_ERASEV1))
 		return cd
+
+	def oninitdialog(self,wnd):
+		# disable ctrl which make no sense for static medias.
+		# but even show if specified value from source since it's not an error in SMIL 2
+		if self.isStaticMedia(self._mtypesig):
+			self.__clipbegin.enable(0)
+			self.__clipend.enable(0)
 		
 class TimingFadeoutGroup(AttrGroup):
 	data=attrgrsdict['timingfadeout']
