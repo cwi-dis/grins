@@ -196,6 +196,18 @@
 (project_default_region (name) undefined 'Default region' channelname
 	'Default region for descendants of this node' inherited (cmif))
 
+(project_default_region_video (name) undefined 'Default region' regiondefault
+	'Default region for descendants for videos' inherited (smil2))
+
+(project_default_region_image (name) undefined 'Default region' regiondefault
+	'Default region for descendants for images' inherited (smil2))
+
+(project_default_region_sound (name) undefined 'Default region' regiondefault
+	'Default region for descendants for sounds' inherited (smil2))
+
+(project_default_region_text (name) undefined 'Default region' regiondefault
+	'Default region for descendants for texts' inherited (smil2))
+
 (project_default_type (name) undefined 'Default type' channeltype 
 	'Default channel type for descendants of this node' inherited (cmif))
 
