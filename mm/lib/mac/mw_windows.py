@@ -863,8 +863,8 @@ class _CommonWindow:
 			self._redrawfunc()
 		else:
 			self._do_redraw()
-		if self._drawing_wid != self._onscreen_wid:
-			raise "TransitionsNotImplementedYet" # XXXX call changed()?
+		if self._transition:
+			self._transition.changed()
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
 		
@@ -886,6 +886,7 @@ class _CommonWindow:
 			
 	def _mac_setwin(self):
 		"""Start drawing (by upper layer) in this window"""
+		# XXX This is a hack.
 		Qd.SetPort(self._drawing_wid)
 		
 	def _mac_invalwin(self):
@@ -896,6 +897,18 @@ class _CommonWindow:
 		
 	def _mac_getoswindow(self):
 		return self._drawing_wid
+		
+	def _mac_getoswindowport(self):
+		if self._drawing_wid == self._onscreen_wid:
+			return self._drawing_wid.GetWindowPort()
+		else:
+			return self._drawing_gworld.as_GrafPtr()
+			
+	def _mac_getoswindowpixmap(self):
+		if self._drawing_wid == self._onscreen_wid:
+			return self._drawing_wid.GetWindowPort().portBits
+		else:
+			return self._drawing_wid
 		
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
@@ -1241,6 +1254,7 @@ class _CommonWindow:
 		# XXXX Set fgcolor
 		# XXXX Set bgcolor
 		pixmap = gworld.GetGWorldPixMap()
+		grafptr = gworld.as_GrafPtr()
 		Qdoffs.LockPixels(pixmap)
 		Qdoffs.SetGWorld(gworld.as_GrafPtr(), None)
 		Qd.EraseRect(cur_rect)
@@ -1248,7 +1262,7 @@ class _CommonWindow:
 ##			portBits = self._onscreen_wid.GetWindowPort().portBits
 ##			Qd.CopyBits(portBits, pixmap, cur_rect, cur_rect, QuickDraw.srcCopy, None)
 		Qdoffs.SetGWorld(cur_port, cur_dev)
-		return gworld, pixmap
+		return gworld, grafptr
 		
 
 def calc_extra_size(adornments, canvassize):

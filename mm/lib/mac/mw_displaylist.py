@@ -234,7 +234,7 @@ class _DisplayList:
 	def _render(self, clonestart=0):
 		self._really_rendered = 1
 		window = self._window
-		wid = window._mac_getoswindow()
+		grafport = window._mac_getoswindowport()
 		window._active_displist = self
 		self._restorecolors()
 		if clonestart:
@@ -245,9 +245,9 @@ class _DisplayList:
 				Qd.EraseRect(window.qdrect())
 			list = self._list
 		for entry in list:
-			self._render_one(entry, window, wid)
+			self._render_one(entry, window, grafport)
 			
-	def _render_one(self, entry, window, wid):
+	def _render_one(self, entry, window, grafport):
 		cmd = entry[0]
 		xscrolloffset, yscrolloffset = window._scrolloffset()
 		
@@ -256,7 +256,7 @@ class _DisplayList:
 		elif cmd == 'fg':
 			Qd.RGBForeColor(entry[1])
 		elif cmd == 'font':
-			entry[1]._setfont(wid)
+			entry[1]._setfont(grafport)
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1]+xscrolloffset, entry[2]+yscrolloffset)
 			 # XXXX Incorrect for long strings:
@@ -266,28 +266,20 @@ class _DisplayList:
 				x, y, w, h = entry[1]
 				x = x+xscrolloffset
 				y = y+yscrolloffset
-##				fgcolor = wid.GetWindowPort().rgbFgColor
-##				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-##				Qd.RGBForeColor((0xffff, 0, 0))
 				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
-##				Qd.RGBBackColor(self._bgcolor)
-##				Qd.RGBForeColor(fgcolor)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
-##			fgcolor = wid.GetWindowPort().rgbFgColor
-##			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-##			Qd.RGBForeColor((0, 0, 0))
 			self._setblackwhitecolors()
 			if mask:
 				Qd.CopyMask(image[0], mask[0],
-					    wid.GetWindowPort().portBits,
+					    grafport.portBits,
 					    srcrect, srcrect, dstrect)
 			else:
 				Qd.CopyBits(image[0],
-				      wid.GetWindowPort().portBits,
+				      grafport.portBits,
 				      srcrect, dstrect,
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
 				      None)
@@ -304,7 +296,7 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
-			fgcolor = wid.GetWindowPort().rgbFgColor
+			fgcolor = grafport.rgbFgColor
 			self._setfgcolor(color1)
 			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset)
 			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset)
@@ -710,7 +702,7 @@ class _DisplayList:
 		if fontobj != self._font:
 			self._font = fontobj
 			# XXXX Or should this be done on the onscreen window?
-			self._font._initparams(self._window._mac_getoswindow())
+			self._font._initparams(self._window._mac_getoswindowport())
 			self._list.append(('font', fontobj))
 			self.__font_size_cache = self.__baseline(), self.__fontheight(), self.__pointsize()
 		return self.__font_size_cache
@@ -743,7 +735,7 @@ class _DisplayList:
 
 	def strsize(self, str):
 		# XXXX Or on the _onscreen_wid??
-		width, height = self._font.strsizePXL(str, wid=self._window._mac_getoswindow())
+		width, height = self._font.strsizePXL(str, port=self._window._mac_getoswindowport())
 		return self._window._pxl2rel((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
@@ -757,10 +749,10 @@ class _DisplayList:
 		list = self._list
 		old_fontinfo = None
 		# XXXX Or on the _onscreen_wid??
-		wid = w._mac_getoswindow()
-		if self._font._checkfont(wid):
-			old_fontinfo = mw_fonts._savefontinfo(wid)
-		self._font._setfont(wid)
+		port = w._mac_getoswindowport()
+		if self._font._checkfont(port):
+			old_fontinfo = mw_fonts._savefontinfo(port)
+		self._font._setfont(port)
 		base = self.baseline()
 		height = self.fontheight()
 		strlist = string.splitfields(str, '\n')
