@@ -199,14 +199,10 @@ mm_arm(self, args)
 
 	CheckMmObject(self);
 	denter(mm_arm);
-	if (!PyArg_Parse(args, "(OiiOOi)", &file, &delay, &duration, &attrdict,
-		     &anchorlist, &syncarm)) {
-		PyErr_Clear();
-		syncarm = 0;
-		if (!PyArg_Parse(args, "(OiiOO)", &file, &delay, &duration,
-			     &attrdict, &anchorlist))
-			return NULL;
-	}
+	syncarm = 0;
+	if (!PyArg_ParseTuple(args, "OiiOO|i", &file, &delay, &duration,
+			      &attrdict, &anchorlist, &syncarm))
+		return NULL;
 	down_sema(self->mm_flagsema);
 	if (self->mm_flags & ARMING) {
 		up_sema(self->mm_flagsema);
@@ -485,7 +481,7 @@ mm_do_display(self, args)
 }
 
 static PyMethodDef channel_methods[] = {
-	{"arm",			(PyCFunction)mm_arm},
+	{"arm",			(PyCFunction)mm_arm, 1},
 	{"armstop",		(PyCFunction)mm_armstop},
 	{"close",		(PyCFunction)mm_close},
 	{"play",		(PyCFunction)mm_play},
@@ -535,8 +531,7 @@ static PyTypeObject Mmtype = {
 };
 
 static mmobject *
-newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
-	int wid;
+newmmobject(ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
 	int ev;
 	PyObject *attrdict;
 	type_sema armsema, playsema, flagsema, exitsema, armwaitsema;
@@ -552,7 +547,6 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
 		free_sema(armwaitsema);
 		return NULL;
 	}
-	mmp->mm_wid = wid;
 	mmp->mm_ev = ev;
 	mmp->mm_flags = 0;
 	Py_XINCREF(attrdict);
@@ -569,10 +563,9 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
 }
 
 /*
- * obj = init(chanobj, wid, ev, attrdict)
+ * obj = init(chanobj, ev, attrdict)
  *	Initialization routine.  Chanobj is a channel object which
- *	identifies the channel.  Wid is the window-id of the GL window
- *	to render in (or ignored for windowless channels like audio).
+ *	identifies the channel.
  *	Ev is an event number.  Whenever something 'interesting' happens
  *	the raw channel writes an event of this type onto the file
  *	descriptor that was specified using setsyncfd() to signal this
@@ -593,7 +586,7 @@ mm_init(self, args)
 	PyObject *self;
 	PyObject *args;
 {
-	int wid, ev;
+	int ev;
 	PyObject *attrdict;
 	mmobject *mmp = NULL;
 	channelobject *chanobj;
@@ -602,7 +595,7 @@ mm_init(self, args)
 	int i;
 
 	dprintf(("mm_init\n"));
-	if (!PyArg_Parse(args, "(OiiO)", &chanobj, &wid, &ev, &attrdict))
+	if (!PyArg_Parse(args, "(OiO)", &chanobj, &ev, &attrdict))
 		return NULL;
 	if (!is_channelobject(chanobj)) {
 		PyErr_SetString(PyExc_RuntimeError, "first arg must be channel object");
@@ -626,7 +619,7 @@ mm_init(self, args)
 		return NULL;
 	}
 
-	mmp = newmmobject(wid, ev, attrdict, armsema, playsema, flagsema,
+	mmp = newmmobject(ev, attrdict, armsema, playsema, flagsema,
 			  exitsema, armwaitsema, chanobj);
 	dprintf(("newmmobject() --> %lx\n", (long) mmp));
 	if (mmp == NULL)
