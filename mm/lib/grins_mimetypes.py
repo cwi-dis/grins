@@ -1,4 +1,6 @@
-"""Additional MIME types for the GRiNS player and editor."""
+__version__ = "$Id$"
+
+# Additional MIME types for the GRiNS player and editor.
 
 mimetypes = {
 	'.smi': 'application/smil',
