@@ -6,6 +6,7 @@ import gl
 from FL import *
 import flp
 from Dialog import Dialog
+import glwindow
 
 import MMExc
 import MMAttrdefs
@@ -72,8 +73,8 @@ class AnchorEditor(Dialog):
 		if form_template == None:
 		    form_template = flp.parse_form('AnchorEditForm', 'form')
 		#
-		width = form_template[0].Width
-		height = form_template[0].Height
+		width, height = glwindow.pixels2mm(form_template[0].Width, \
+			  form_template[0].Height)
 		title = self.maketitle()
 		hint = ''
 		self = Dialog.init(self, width, height, title, hint)

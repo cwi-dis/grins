@@ -38,7 +38,8 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		form = flp.parse_form('LinkEditForm', 'form')
-		width, height = form[0].Width, form[0].Height
+		width, height = glwindow.pixels2mm(form[0].Width, \
+			  form[0].Height)
 		title = 'Hyperlinks (' + toplevel.basename + ')'
 		self = BasicDialog.init(self, width, height, title)
 		self.left = Struct()
