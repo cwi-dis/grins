@@ -112,9 +112,9 @@ channelhierarchy = {
     'ole': ['word'],
     }
 SMILchanneltypes = ['image', 'sound', 'video', 'text']
-if compatibility.G2 == features.compatibility:
+if features.compatibility == compatibility.G2:
         SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
-SMILchanneltypes = SMILchanneltypes+['null']
+SMILextendedchanneltypes = ['html']
 
 ct = channelmap.keys()
 ct.sort()
@@ -152,7 +152,13 @@ def getvalidchanneltypes():
 	import settings
 	if settings.get('cmif'):
 		return commonchanneltypes + otherchanneltypes
-	return SMILchanneltypes
+	rv = SMILchanneltypes
+	import features
+	if features.compatibility == features.SMIL10:
+		rv = rv + SMILextendedchanneltypes
+	if not features.lightweight:
+		rv = rv + ['null']
+	return rv
 
 def isvisiblechannel(type):
 	return type in ('text', 'image', 'movie', 'video', 'mpeg', 'html',
