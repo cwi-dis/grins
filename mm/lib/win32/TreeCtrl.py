@@ -56,6 +56,8 @@ class TreeCtrl(window.Wnd):
 		# register as a drop target
 		self.RegisterDropTarget()
 
+		self.__lastDragOverItem = None
+
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
@@ -203,6 +205,8 @@ class TreeCtrl(window.Wnd):
 			return
 
 		item = selectedItems[0]
+		self.__toDragDropState(item)
+		self.__lastDragOverItem = item
 				
 		if self._dragdropListener:
 			self._dragdropListener.OnBeginDrag(item)
@@ -250,19 +254,36 @@ class TreeCtrl(window.Wnd):
 		#
 		#
 		
+		ret = appcon.DROPEFFECT_NONE
+		if self.__lastDragOverItem != None:
+			self.SetItemState(self.__lastDragOverItem, 0, commctrl.TVIS_SELECTED)
+			self.__lastDragOverItem = None
+			
 		flags, item = self.HitTest(pt)
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
 				for key, value in self.dropMap.items():
 					objectId = dataobj.GetGlobalData(value)
 					if objectId != None:
-						return self._dragdropListener.OnDragOver(item, key, objectId)
-		return appcon.DROPEFFECT_NONE
+						ret = self._dragdropListener.OnDragOver(item, key, objectId)
+						if ret != appcon.DROPEFFECT_NONE:
+							self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+							self.__lastDragOverItem = item
+							
+		return ret							
 
 	def OnDragEnter(self, dataobj, kbdstate, x, y):
+		selectedItems = self.getSelectedItems()
+		if len(selectedItems) != 1:
+			# for now, support only single drag and drop
+			return
+		
+		item = selectedItems[0]
+		self.__toDragDropState(item)
 		return self.OnDragOver(dataobj, kbdstate, x, y)
 				
 	def OnDrop(self, dataobj, effect, x, y):
+		self.__toNormalState()
 		pt = win32api.GetCursorPos()
 		pt = self.ScreenToClient(pt)
 		flags, item = self.HitTest(pt)
@@ -275,8 +296,18 @@ class TreeCtrl(window.Wnd):
 		return 0
 
 	def OnDragLeave(self):
-		pass
+		self.__toNormalState()
 
+	def __toDragDropState(self, item):
+		self.__selectedItem = item
+		self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
+		
+	def __toNormalState(self):
+		self.SetItemState(self.__selectedItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+		if self.__lastDragOverItem != None:
+			self.SetItemState(self.__lastDragOverItem, 0, commctrl.TVIS_SELECTED)
+			self.__lastDragOverItem = None
+							
 	# set a drag and drop listener 
 	def setDragdropListener(self, listener):
 		self._dragdropListener = listener
