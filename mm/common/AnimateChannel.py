@@ -171,7 +171,8 @@ class AnimateChannel(Channel.ChannelAsync):
 			print arg
 			self.playdone(0)
 			return
-		dt = dt - self.__duration * int(float(dt) / self.__duration)
+		if self.__duration>0:
+			dt = dt - self.__duration * int(float(dt) / self.__duration)
 		val = self.__animator.getValue(dt)
 		if self.__effAnimator:
 			if self.__lastvalue != val:
@@ -191,7 +192,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__animating:
 			t_sec=self._scheduler.timefunc() - self.__start
 			# end-point exclusive model
-			if t_sec>=self.__duration:
+			if self.__duration>0 and t_sec>=self.__duration:
 				self.__unregister_for_timeslices()
 				self.__onAnimateDur()
 			else:
