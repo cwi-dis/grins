@@ -10,7 +10,7 @@ import re
 # units, messages
 import windowinterface
 
-debug = 1
+debug = 0
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
