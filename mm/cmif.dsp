@@ -1266,6 +1266,70 @@ SOURCE=.\grins\version.py
 # Begin Group "pylib"
 
 # PROP Default_Filter ""
+# Begin Group "audio"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\pylib\audio\__init__.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\aifc.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\au.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\convert.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\dev.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\devmac.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\devsgi.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\devsun.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\devwin.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\file.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\format.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\merge.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\select.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\wav.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\what.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\pylib\longpath.py
