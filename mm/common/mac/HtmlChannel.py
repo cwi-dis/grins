@@ -264,10 +264,20 @@ class HtmlChannel(Channel.ChannelWindow):
 		## XXXX do something with the tag
 		try:
 			u = MMurl.urlopen(self.url)
-			if u.headers.maintype == 'image':
-				newtext = '<IMG SRC="%s">\n' % self.url
-			else:
-				newtext = u.read()
+## Old code:
+##			if u.headers.maintype == 'image':
+##				newtext = '<IMG SRC="%s">\n' % self.url
+##			else:
+##				newtext = u.read()
+## New code:
+			if u.headers.type != 'text/html':
+				import Hlinks
+				anchor = self.url
+				if tag:
+					anchor = anchor + '#' + tag
+				self._player.toplevel.jumptoexternal(anchor, Hlinks.TYPE_JUMP)
+				return
+			newtext = u.read()
 		except IOError:
 			newtext = '<H1>Cannot Open</H1><P>'+ \
 				  'Cannot open '+self.url+':<P>'+ \
