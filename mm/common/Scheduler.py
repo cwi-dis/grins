@@ -277,6 +277,7 @@ class SchedulerContext:
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
+			#DBG print 'queue', SR.ev2string(sr)
 			if sr[0] == SR.PLAY:
 				prio = PRIO_START
 			elif sr[0] == SR.PLAY_STOP:
@@ -605,7 +606,7 @@ class Scheduler(scheduler):
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
 		elif action == SR.PLAY_STOP:
-			self.remove_terminate(sctx, arg)
+## 			self.remove_terminate(sctx, arg)
 			self.do_play_stop(sctx, arg)
 		elif action == SR.SYNC:
 			self.do_sync(sctx, arg)
@@ -638,13 +639,14 @@ class Scheduler(scheduler):
 				sctx.sractions[pos] = None
 			else:
 				sctx.sractions[pos] = num, srlist
-		for ac in sctx.sractions:
-			if ac is None:
-				continue
-			num, srlist = ac
-			for i in range(len(srlist)-1,-1,-1):
-				if srlist[i] == ev:
-					del srlist[i]
+		if not node.isloopnode or not node.moreloops():
+			for ac in sctx.sractions:
+				if ac is None:
+					continue
+				num, srlist = ac
+				for i in range(len(srlist)-1,-1,-1):
+					if srlist[i] == ev:
+						del srlist[i]
 	#
 	# Execute a PLAY SR.
 	#
@@ -666,6 +668,7 @@ class Scheduler(scheduler):
 	#
 	def do_terminate(self, sctx, node):
 		if node.GetType() in interiortypes:
+			node.curloopcount = 0 # no more loops
 			# Remove prearms for all our descendents
 			sctx.cancelprearms(node)
 			# turn action into event

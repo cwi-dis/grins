@@ -173,6 +173,7 @@ class MMNode(MMNodeBase.MMNode):
 		self.children = []
 ##		self.summaries = {}
 		self.setgensr()
+		self.isloopnode = 0
 
 	#
 	# Private methods to build a tree
