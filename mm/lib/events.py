@@ -141,6 +141,10 @@ class _Events:
 			self._select_fdlist.append(fd)
 		self._select_dict[fd] = (cb, arg)
 
+	def mainloop(self):
+		while 1:
+			dummy = self.readevent()
+
 # There is one instnce of the _Events class.  It is created here.
 _event_instance = _Events().init()
 
@@ -175,3 +179,6 @@ def unregister(win, event):
 
 def select_setcallback(fd, cb, arg):
 	_event_instance.select_setcallback(fd, cb, arg)
+
+def mainloop():
+	_event_instance.mainloop()

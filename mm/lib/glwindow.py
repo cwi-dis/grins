@@ -14,8 +14,8 @@
 
 import gl, GL, DEVICE
 import fl, FL
-import windowinterface, events, EVENTS
 import GLLock
+
 
 
 # List of windows, indexed by window id converted to string.
@@ -28,7 +28,7 @@ windowmap = {}
 # fl.do_forms() or fl.check_forms().
 
 def register(object, wid):
-	fl.set_event_call_back(dispatch)
+	start_callback_mode()
 	windowmap[`wid`] = object
 	object.glwindow_wid = wid
 
@@ -38,6 +38,12 @@ def register(object, wid):
 def unregister(object):
 	del windowmap[`object.glwindow_wid`]
 
+
+def start_callback_mode():
+	fl.set_event_call_back(dispatch)
+
+def stop_callback_mode():
+	fl.set_event_call_back()
 
 # The base class for GL windows
 
@@ -148,6 +154,7 @@ def del_anchor(button):
 		del anchors[button]
 
 def dispatch(dev, val):
+	import windowinterface, events, EVENTS
 	global focuswindow, focuswid
 ##	print 'dispatch:', `dev,val` #DBG
 	waslocked = 0

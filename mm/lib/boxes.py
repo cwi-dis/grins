@@ -10,6 +10,7 @@ def create_box(window, msg, *box):
 		raise TypeError, 'bad arguments'
 	if len(box) == 0:
 		box = None
+	windowinterface.startmonitormode()
 	display = window._active_display_list
 	window.pop()
 	if msg:
@@ -26,6 +27,7 @@ def create_box(window, msg, *box):
 			r = dialog.checkevent(win, ev, val)
 			if r:
 				dialog.close()
+				windowinterface.endmonitormode()
 				return None
 	if display and not display.is_closed():
 		d = display.clone()
@@ -80,6 +82,7 @@ def create_box(window, msg, *box):
 				if display and not display.is_closed():
 					display.render()
 				d.close()
+				windowinterface.endmonitormode()
 				if r == '!Done':
 					return box
 				return None
