@@ -1334,6 +1334,9 @@ class DummyRP:
 	tags = []
 
 class SlideShow:
+	__callback_added = 0
+	tmpfiles = []
+
 	def __init__(self, node):
 		if node.GetType() != 'ext' or \
 		   node.GetChannelType() != 'RealPix':
@@ -1460,7 +1463,15 @@ class SlideShow:
 				self.url = url
 				if rp is not self.rp and hasattr(node, 'tmpfile'):
 					# new content, delete temp file
-					windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+##					windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+					choice = windowinterface.multchoice('You have edited the content of the slideshow file in node %s on channel %s.\nWhat do you want to do?' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), ['Discard changes, open new file', 'Save changed file, open new file', 'Cancel'], 2)
+					if choice == 2:
+						# cancel
+						node.SetAttr('file', self.url)
+						self.update()
+						return
+					if choice == 1:
+						writenodes(node)
 					try:
 						os.unlink(node.tmpfile)
 					except:
@@ -1473,76 +1484,76 @@ class SlideShow:
 		if attrdict['bitrate'] != rp.bitrate:
 			if rp is oldrp:
 				rp.bitrate = attrdict['bitrate']
+				changed = 1
 			else:
 				attrdict['bitrate'] = rp.bitrate
-			changed = 1
 		if attrdict.get('size') != (rp.width, rp.height):
 			if rp is oldrp:
 				rp.width, rp.height = attrdict['size']
+				changed = 1
 			else:
 				attrdict['size'] = rp.width, rp.height
-			changed = 1
 		if attrdict['duration'] != rp.duration:
 			if rp is oldrp:
 				rp.duration = attrdict['duration']
+				changed = 1
 			else:
 				attrdict['duration'] = rp.duration
-			changed = 1
 		aspect = attrdict.get('aspect', 1)
 		if (rp.aspect == 'true') != aspect:
 			if rp is oldrp:
 				rp.aspect = ['false','true'][aspect]
+				changed = 1
 			else:
 				attrdict['aspect'] = rp.aspect == 'true'
-			changed = 1
 		if attrdict.get('author') != rp.author:
 			if rp is oldrp:
 				rp.author = attrdict.get('author')
+				changed = 1
 			elif rp.author is not None:
 				attrdict['author'] = rp.author
 			else:
 				del attrdict['author']
-			changed = 1
 		if attrdict.get('copyright') != rp.copyright:
 			if rp is oldrp:
 				rp.copyright = attrdict.get('copyright')
+				changed = 1
 			elif rp.copyright is not None:
 				attrdict['copyright'] = rp.copyright
 			else:
 				del attrdict['copyright']
-			changed = 1
 		if attrdict.get('title') != rp.title:
 			if rp is oldrp:
 				rp.title = attrdict.get('title')
+				changed = 1
 			elif rp.title is not None:
 				attrdict['title'] = rp.title
 			else:
 				del attrdict['title']
-			changed = 1
 		if attrdict.get('href') != rp.url:
 			if rp is oldrp:
 				rp.url = attrdict.get('href')
+				changed = 1
 			elif rp.url is not None:
 				attrdict['href'] = rp.url
 			else:
 				del attrdict['href']
-			changed = 1
 		if attrdict.get('maxfps') != rp.maxfps:
 			if rp is oldrp:
 				rp.maxfps = attrdict.get('maxfps')
+				changed = 1
 			elif rp.maxfps is not None:
 				attrdict['maxfps'] = rp.maxfps
 			else:
 				del attrdict['maxfps']
-			changed = 1
 		if attrdict.get('preroll') != rp.preroll:
 			if rp is oldrp:
 				rp.preroll = attrdict.get('preroll')
+				changed = 1
 			elif rp.preroll is not None:
 				attrdict['preroll'] = rp.preroll
 			else:
 				del attrdict['preroll']
-			changed = 1
 		if hasattr(node, 'expanded'):
 			if oldrp is rp:
 				i = 0
@@ -1571,7 +1582,6 @@ class SlideShow:
 				# re-create children
 				collapsenode(node)
 				expandnode(node)
-				changed = 1
 		if changed:
 			if not hasattr(node, 'tmpfile'):
 				url = MMAttrdefs.getattr(node, 'file')
@@ -1596,12 +1606,25 @@ class SlideShow:
 					if not os.path.exists(file):
 						break
 				node.tmpfile = file
+				if not SlideShow.__callback_added:
+					windowinterface.addclosecallback(
+						deltmpfiles, ())
+					SlideShow.__callback_added = 1
+				SlideShow.tmpfiles.append(file)
 			import realsupport
 			realsupport.writeRP(node.tmpfile, rp)
 			MMAttrdefs.flushcache(node)
 
 	def kill(self):
 		pass
+
+def deltmpfiles():
+	for file in SlideShow.tmpfiles:
+		try:
+			os.unlink(file)
+		except:
+			pass
+	SlideShow.tmpfiles = []
 
 def expandnode(node):
 	if hasattr(node, 'expanded'):
