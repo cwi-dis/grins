@@ -85,6 +85,7 @@
 #define IDB_SPLASHPRO                   285
 #define IDB_SPLASHSMIL                  287
 #define IDB_SPLASHQTPRO                 289
+#define IDB_SPLASHSMIL2                 290
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -416,7 +417,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        290
+#define _APS_NEXT_RESOURCE_VALUE        291
 #define _APS_NEXT_COMMAND_VALUE         32860
 #define _APS_NEXT_CONTROL_VALUE         1242
 #define _APS_NEXT_SYMED_VALUE           104
