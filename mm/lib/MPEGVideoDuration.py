@@ -60,7 +60,7 @@ def getduration(filename, bufsiz = 10240):
 		rate = 30.0
 	if nframes == 0: nframes = rate
 	return nframes / rate
-	
+
 duration_cache = FileCache.FileCache(getduration)
 
 get = duration_cache.get
