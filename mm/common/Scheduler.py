@@ -13,6 +13,7 @@ from HDTL import HD, TL
 from AnchorDefs import *
 import SR
 import settings
+import features
 import MMStates
 
 debugtimer = 0
@@ -568,7 +569,18 @@ class SchedulerContext:
 			return
 		endlist = node.GetEndList()
 		endlist = node.FilterArcList(endlist)
-		endtime = node.calcendfreezetime(self)
+		# This "if" statement is to not get flashes in the
+		# editor if you have a RealPix file that was converted
+		# to SMIL 2.0 and the images all overlap and you start
+		# somewhere in the middle of the sequence.
+		# Whether we do this also in the player is debatable.
+		# We should really be better at not flashing.
+		fill = None
+		if features.editor and timestamp < curtime:
+			fill = node.GetFill()
+			if fill == 'hold':
+				fill = 'freeze'
+		endtime = node.calcendfreezetime(self, fill = fill)
 		if endtime is not None and endtime >= 0 and endtime <= curtime:
 			found = 0
 		elif endlist:
