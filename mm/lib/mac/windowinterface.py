@@ -11,6 +11,7 @@ import mw_windows
 import mw_widgets
 import mw_dialogs
 import mw_menucmd
+import mw_textwindow
 
 #
 # There is a cyclic dependency between mw_dialogs and mw_windows. Solve it
@@ -85,3 +86,4 @@ showquestion = mw_dialogs.showquestion
 
 beep = mw_toplevel.beep
 
+textwindow = mw_textwindow.textwindow
