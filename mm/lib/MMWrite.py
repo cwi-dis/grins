@@ -3,28 +3,44 @@
 
 from MMExc import *		# Exceptions
 from MMNode import alltypes, leaftypes, interiortypes
+import MMCache
 
 
 # Write a node to a CMF file, given by filename
 
 def WriteFile(root, filename):
-	WriteOpenFile(root, open(filename, 'w'))
+	fp = open(filename, 'w')
+	fixroot(root)
+	writenode(root, fp)
+	fp.write('\n')
+	fp.close() # Make sure the CMIF file is at least as old as the cache
+	MMCache.dumpcache(root, filename)
+	unfixroot(root)
 
 
 # Write a node to a CMF file that is already open (for writing)
 
 def WriteOpenFile(root, fp):
+	fixroot(root)
+	writenode(root, fp)
+	fp.write('\n')
+	unfixroot(root)
+
+
+# Internals to move attributes between context and root
+
+def fixroot(root):
 	root.attrdict['styledict'] = root.context.styledict
 	root.attrdict['hyperlinks'] = root.context.hyperlinks.getall()
 	clist = []
 	for cname in root.context.channelnames:
 		clist.append(cname, root.context.channeldict[cname])
 	root.attrdict['channellist'] = clist
-	writenode(root, fp)
+
+def unfixroot(root):
 	del root.attrdict['styledict']
 	del root.attrdict['hyperlinks']
 	del root.attrdict['channellist']
-	fp.write('\n')
 
 
 # Private functions to write nodes to a file.

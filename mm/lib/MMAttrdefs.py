@@ -41,12 +41,27 @@ from MMNode import _stat
 from MMExc import *
 import MMParser
 import sys
+import os
+from stat import ST_MTIME
+import marshal
 
 
 # Parse a file containing attribute definitions.
 #
 def readattrdefs(filename):
 	fp = open(filename, 'r')
+	filename_com = filename + '.atc'
+	try:
+		fpc = open(filename_com, 'r')
+		sf = os.stat(filename)
+		sfc = os.stat(filename_com)
+		if sf[ST_MTIME] < sfc[ST_MTIME]:
+			print 'Using compiled attributes file', filename_com
+			return marshal.load(fpc)
+		print 'Compiled attributes file', filename_com, 'out of date'
+	except (os.error, IOError), msg:
+		print '(No compiled attribute file', filename_com + ')'
+		print msg
 	print 'Reading attributes from', filename, '...'
 	parser = MMParser.MMParser().init(fp, None)	# Note -- no context!
 	dict = {}
@@ -93,6 +108,14 @@ def readattrdefs(filename):
 		parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
 		raise TypeError, msg
 	#
+	try:
+		fpc = open(filename_com, 'w')
+		print 'Writing compiled attributes to', filename_com
+		marshal.dump(dict, fpc)
+		fpc.close()
+	except IOError, msg:
+		print 'Can\'t write compiled attrubites to', filename_com
+		print msg
 	print 'Done.'
 	return dict
 

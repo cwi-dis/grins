@@ -7,6 +7,7 @@
 from MMExc import *		# Exceptions
 import MMParser
 import MMNode
+import MMCache
 import sys
 
 
@@ -16,6 +17,10 @@ def ReadFile(filename):
 	return ReadFileContext(filename, _newctx())
 
 def ReadFileContext(filename, context):
+	root = MMCache.loadcache(filename, context)
+	if root:
+		_fixcontext(root)
+		return root
 	return ReadOpenFileContext(open(filename, 'r'), filename, context)
 
 
@@ -76,6 +81,11 @@ def _readparser(p, filename):
 		p.reporterror(filename, msg, sys.stderr)
 		raise SyntaxError, msg
 	#
+	_fixcontext(root)
+	return root
+
+def _fixcontext(root):
+	#
 	# Move the style dictionary from the root attribute list
 	# to the context.
 	#
@@ -102,5 +112,3 @@ def _readparser(p, filename):
 		root.DelAttr('channellist')
 	except NoSuchAttrError:
 		pass
-	#
-	return root
