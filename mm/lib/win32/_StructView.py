@@ -160,6 +160,8 @@ class _StructView(DisplayListView):
 				xp, yp = self._DPtoLP((xp,yp))
 				xp, yp = self._pxl2rel((xp, yp),self._canvas)
 				flavor, args = self.onEventEx(QueryNode,(xp, yp))
+				if flavor is None or args is None:
+					return
 				flavorid, str = DropTarget.EncodeDragData(flavor, args)
 				
 				res = self.DoDragDrop(flavorid, str)
