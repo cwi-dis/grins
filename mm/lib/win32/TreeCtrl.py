@@ -7,7 +7,7 @@ import commctrl
 
 from win32mu import Win32Msg
 
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 debug = 0
 

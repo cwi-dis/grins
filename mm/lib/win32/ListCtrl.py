@@ -7,7 +7,7 @@ import commctrl
 
 import win32mu
 
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 class ListCtrl(window.Wnd):
 	def __init__ (self, dlg=None, ctrl=None, resId=None):
