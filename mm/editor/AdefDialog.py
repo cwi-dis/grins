@@ -6,7 +6,7 @@ import fl
 import FL
 import flp
 
-class Struct(): pass
+class Struct: pass
 adata = Struct()
 wdata = Struct()
 adata.initialized = 0
