@@ -134,6 +134,7 @@
 #define IDD_EDITATTR_CONV4              369
 #define IDD_EDITATTR_CONV5              370
 #define IDD_EDITATTR_S2a                371
+#define IDD_EDITATTR_CONV1              372
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
