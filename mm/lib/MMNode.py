@@ -57,6 +57,7 @@ class MMNodeContext:
 		self._soundlevelinfo = {} # doc soundLevel stat
 		from SMILCssResolver import SMILCssResolver
 		self.cssResolver = SMILCssResolver(self)
+		self.assetlist = []
 		
 		self.__parseErrors = None # keep the parse errors (fatal, normal and warning)
 
@@ -770,6 +771,18 @@ class MMNodeContext:
 			d['max'] = max(val, d.get('max', 1))
 		elif what == 'anim':
 			d['anim'] = 1
+
+	#
+	# asset management
+	#
+	def addasset(self, item):
+		self.assetlist.append(item)
+
+	def delasset(self, item):
+		self.assetlist.remove(item)
+
+	def getassets(self):
+		return self.assetlist
 
 class MMRegPoint:
 	def __init__(self, context, name):
