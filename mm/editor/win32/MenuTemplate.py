@@ -96,8 +96,6 @@ MENUBAR=(
 ##		(FLAG_PRO, ENTRY, '&Info...', 'I', INFO),
 		(FLAG_ALL, ENTRY, 'Propertie&s...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Pre&ferences...', None, PREFERENCES),
 		)),
 
 	# this whole section removed in Snap! below
@@ -185,6 +183,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
 		(FLAG_BOSTON|FLAG_CMIF|FLAG_SNAP, SEP,),
 		(FLAG_BOSTON|FLAG_SNAP, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
+		(FLAG_ALL, ENTRY, 'System properties...', None, PREFERENCES),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
