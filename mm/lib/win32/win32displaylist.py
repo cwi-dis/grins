@@ -307,8 +307,13 @@ class _DisplayList:
 			oldpen = dc.SelectStockObject(win32con.NULL_PEN)
 			oldbrush = dc.SelectObject(entry[1])
 			dc.Rectangle(entry[2])
+			if 1: # begin trick for more dense grid pattern 
+				oldorg = dc.SetBrushOrg((4, 0))
+				dc.Rectangle(entry[2])
+				dc.SetBrushOrg(oldorg)
+				# end_trick
 			dc.SelectObject(oldbrush)
-			dc.SelectObjectFromHandle(oldpen)
+			dc.SelectObject(oldpen)
 			dc.SetBkMode(oldmode)
 		elif cmd == 'font':
 			#dc.SetFont(entry[1])
