@@ -24,6 +24,9 @@ from EVENTS import *
 _Accelerator = 1024
 #from debug import debug
 debug = 0
+import os
+if os.environ.has_key('WINDOWDEBUG'):
+	debug = 1
 import time, select
 
 error = 'windowinterface.error'
@@ -1248,11 +1251,25 @@ class _Window:
 			q.append((win, ev, val))
 		event._queue = q
 
+	def _close_subwins(self):
+		for win in self._subwindows:
+			win._close_win()
+		self._subwindows_closed = 1
+
+	def _open_subwins(self):
+		if self.is_closed():
+			raise error, 'window already closed'
+		for win in self._subwindows:
+			if not win.is_closed():
+				win._open_win()
+		self._subwindows_closed = 0
+
 	def _close_win(self):
 		# close the GL window connected to this instance
 		if debug: print `self`+'._close_win()'
 		if self._parent_window == toplevel:
 			raise error, 'can\'t close top-level window'
+		self._close_subwins()
 		gl.winclose(self._window_id)
 		del _window_list[self._window_id]
 		self._window_id = -1
@@ -1282,6 +1299,8 @@ class _Window:
 		gl.ortho2(-0.5, self._width-0.5, -0.5, self._height-0.5)
 		toplevel._win_lock.release()
 		_window_list[self._window_id] = self
+		self.setcursor(self._cursor)
+		self._open_subwins()
 
 	def _call_on_close(self, func):
 		if not func in self._closecallbacks:
@@ -1346,19 +1365,6 @@ class _Window:
 		elif len(bgcolor) != 0:
 			raise TypeError, 'arg count mismatch'
 		return list
-
-	def _close_subwins(self):
-		for win in self._subwindows:
-			win._close_win()
-		self._subwindows_closed = 1
-
-	def _open_subwins(self):
-		if self.is_closed():
-			raise error, 'window already closed'
-		for win in self._subwindows:
-			if not win.is_closed():
-				win._open_win()
-		self._subwindows_closed = 0
 
 	def sizebox(self, (x, y, w, h), constrainx, constrainy):
 		if debug: print `self`+'.sizebox()'
@@ -1623,19 +1629,20 @@ class _Window:
 		self._must_redraw = 0
 
 	def setcursor(self, cursor):
-		for win in self._subwindows:
-			win.setcursor(cursor)
-		try:
-			toplevel._win_lock.acquire()
-			gl.winset(self._window_id)
-			if cursor == 'watch':
-				gl.setcursor(_WATCH, 0, 0)
-			elif cursor == '':	# default is arrow cursor
-				gl.setcursor(_ARROW, 0, 0)
-			else:
-				raise error, 'unknown cursor glyph'
-		finally:
-			toplevel._win_lock.release()
+		if self._window_id >= 0:
+			for win in self._subwindows:
+				win.setcursor(cursor)
+			try:
+				toplevel._win_lock.acquire()
+				gl.winset(self._window_id)
+				if cursor == 'watch':
+					gl.setcursor(_WATCH, 0, 0)
+				elif cursor == '':# default is arrow cursor
+					gl.setcursor(_ARROW, 0, 0)
+				else:
+					raise error, 'unknown cursor glyph'
+			finally:
+				toplevel._win_lock.release()
 		self._cursor = cursor
 
 	def _prepare_image_from_file(self, file, top, bottom, left, right):

@@ -1896,8 +1896,8 @@ class _Question(Dialog):
 	def __init__(self, text):
 		self.answer = None
 		Dialog.__init__(self, text, 1,
-				[('', 'Done', (self._ok_callback, ())),
-				 ('', 'Cancel', (self._cancel_callback, ()))])
+				[('', 'Yes', (self.callback, (1,))),
+				 ('', 'No', (self.callback, (0,)))])
 
 	def run(self):
 		event.startmodal(None)
@@ -1906,11 +1906,8 @@ class _Question(Dialog):
 		event.endmodal()
 		return self.answer
 
-	def _ok_callback(self):
-		self.answer = 1
-
-	def _cancel_callback(self):
-		self.answer = 0
+	def callback(self, answer):
+		self.answer = answer
 
 def showquestion(text):
 	return _Question(text).run()

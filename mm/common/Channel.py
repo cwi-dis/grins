@@ -737,7 +737,7 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
 		if menu:
-			self.window.create_menu('', menu)
+			self.window.create_menu(self._name, menu)
 
 	def resize_window(self, pchan):
 		import boxes
@@ -746,12 +746,12 @@ class ChannelWindow(Channel):
 				'Cannot resize while playing')
 			return
 		pgeom = boxes.create_box(pchan.window,
-					 'Resize window for channel ' + self._name,
-					 self._attrdict['base_winoff'])
+				'Resize window for channel ' + self._name,
+				self._attrdict['base_winoff'])
 		if pgeom:
 			self._attrdict['base_winoff'] = pgeom
-			self.window.close()
-			self.create_window(pchan, pgeom)
+			self.hide()
+			self.show()
 
 	def do_show(self):
 		if debug:
