@@ -37,7 +37,7 @@ Creating a standalone CMIF for the mac.
 	file, put the output in cmifmodules.rsrc.
 13.	Copy maccmifplay.rsrc to cmifbundle.rsrc.
 14.	Drop cmifbundle.rsrc on EditPythonPrefs and set the search path to be only
-	$(APPLICATION).
+	$(APPLICATION). Also set the "Don't show console window until needed" bit.
 14. Copy PythonCMIF-68K.µ to CMIF-68K.µ. Open it. Remove bundle.rsrc and maccmifplay.rsrc,
 	add attrdefs.rsrc, cmifbundle.rsrc and cmifmodules.rsrc. Replace macapplication.c by
 	macapplet.c. Set output file to CMIF-68K, set creator code to CMIF, build.
