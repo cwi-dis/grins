@@ -60,7 +60,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 	#
 
 	def __initEngine(self, node):
-		self.__fiber_id = 0
+		self.__fiber_id = None
 		self.__start = None
 		self.__pausedt = 0
 		self.__urlopener = None
@@ -126,7 +126,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 		self.__startFetch(repeat=1)
 
 	def onIdle(self):
-		self.__fiber_id = 0
+		self.__fiber_id = None
 		if self.__fetching:
 			t_sec=self._scheduler.timefunc() - self.__start
 			if self.__duration and t_sec>=self.__duration:
@@ -137,10 +137,10 @@ class PrefetchChannel(Channel.ChannelAsync):
 				self.__register_for_timeslices()
 			
 	def __register_for_timeslices(self):
-		if not self.__fiber_id:
+		if self.__fiber_id is None:
 			self.__fiber_id = windowinterface.settimer(0.1, (self.onIdle,()))
 
 	def __unregister_for_timeslices(self):
-		if self.__fiber_id:
+		if self.__fiber_id is not None:
 			windowinterface.canceltimer(self.__fiber_id)
-			self.__fiber_id = 0
+			self.__fiber_id = None
