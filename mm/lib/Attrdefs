@@ -36,7 +36,7 @@
 	 'Window size for block view' raw)
 
 ##(center (bool) 0 'Center' default
-##	'If on, text is centered within the margins')
+##	'If on, text is centered within the margins' channel)
 
 (channel (name) undefined 'Channel' default
 	'Name of channel used to render this node/subtree' inherited)
@@ -50,6 +50,9 @@
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' default
 	'Channels used in this document (root node only)')
+
+(closed (bool) 0 'Closed' default
+	'If on, the node is closed in the hierarchy view' raw)
 
 (duration (float) 2.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' channel)
