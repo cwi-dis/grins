@@ -10,6 +10,9 @@ Mouse2Press = 6
 Mouse2Release = 7
 ResizeWindow = 8
 WindowExit = 9
+WindowActivate = 11 # Mac-only
+WindowDeactivate = 12 # Mac-only
+
 
 # File descriptor ready events
 FileEvent = 10
