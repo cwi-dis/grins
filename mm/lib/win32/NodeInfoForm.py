@@ -271,6 +271,8 @@ class IntGroup(DlgBar):
 			self._list.setcursel(initchild)
 			self._cursel=initchild
 			self.EnableOpen()
+		else:
+			self._cursel = None
 
 	def getchild(self):
 		"""Return the index of the current selection or None."""
