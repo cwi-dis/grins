@@ -93,7 +93,8 @@ class _ButtonSupport:
 				ximage = visual.CreateImage(
 					visual.depth, X.ZPixmap, 0, data,
 					rdr.width, rdr.height,
-					depth * 8, rdr.width * depth)
+					toplevel._imgformat.descr['align'], 0)
+				ximage.byte_order = toplevel._byteorder
 				pixmap.CreateGC({}).PutImage(ximage, 0, 0, 0, 0,
 							     rdr.width, rdr.height)
 				self.__pixmapcache[label[pmtype]] = pixmap
