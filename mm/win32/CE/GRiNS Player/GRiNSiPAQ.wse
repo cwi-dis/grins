@@ -24,7 +24,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=grins_ipaq.exe
+  EXE Filename=grins_ipaq-127.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -46,7 +46,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=E:\Program Files\Wise Installation System
+  Variable Default3=C:\PROGRA~1\WISEIN~1
   Variable Flags3=00001000
   Variable Name4=_WINCE_MACROS_
   Variable Default4=1
