@@ -1163,7 +1163,7 @@ class ChannelWindow(Channel):
 			self.window.create_menu(menu, title = self._name)
 		if hasattr(self.window, 'getrect'):
 			# hint for saving to SMIL
-			self._attrdict['rect'] = self.window.getrect()
+			self._attrdict._rect = self.window.getrect()
 
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():

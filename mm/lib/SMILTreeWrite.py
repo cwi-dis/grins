@@ -122,6 +122,16 @@ def getrawcmifattr(writer, node, attr):
 		val = str(val)
 	return val
 
+def getmimetype(writer, node):
+	if node.GetType() not in leaftypes:
+		return
+	val = node.GetRawAttrDef('mimetype', None)
+	if val is not None:
+		return val
+	chtype = node.GetChannelType()
+	if chtype in ('label', 'text'):
+		return 'text/plain'
+
 def getchname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
@@ -320,6 +330,10 @@ smil_attrs=[
 	("id", getid),
 	("region", getchname),
 	("src", lambda writer, node:getcmifattr(writer, node, "file")),
+	("type", getmimetype),
+	("author", lambda writer, node:getcmifattr(writer, node, "author")),
+	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
+	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
@@ -344,10 +358,12 @@ cmif_node_attrs_ignore = [
 	'system_language', 'system_overdub_or_captions', 'system_required',
 	'system_screen_size', 'system_screen_depth', 'layout',
 	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
+	'author', 'copyright', 'abstract', 'mimetype',
 	]
 cmif_chan_attrs_ignore = [
 	'type', 'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
-	'transparent', 'bgcolor', 'winpos', 'winsize', 'rect',
+	'transparent', 'bgcolor', 'winpos', 'winsize', 'rect', 'center',
+	'drawbox',
 	]
 
 # Mapping from CMIF channel types to smil media types
@@ -683,21 +699,22 @@ class SMILWriter(SMIL):
 			# don't define coordinates (i.e., use defaults)
 			if ch.has_key('base_window') and \
 			   ch.has_key('base_winoff'):
-				rect = ch.get('rect')
-				if rect is None:
+				if hasattr(ch, '_rect'):
+					rect = ch._rect
+					x, y, w, h = rect
+				else:
 					x, y, w, h = ch['base_winoff']
 					if x+w >= 1.0: w = 0
 					if y+h >= 1.0: h = 0
-				else:
-					x, y, w, h = rect
 				data = ('left', x), ('top', y), ('width', w), ('height', h)
 				for name, value in data:
+					if not value:
+						continue
 					if type(value) is type(0.0):
 						value = '%d%%' % int(value*100)
 					else:
 						value = '%d' % value
-					if value:
-						attrlist.append((name, value))
+					attrlist.append((name, value))
 			if ch.has_key('z') and ch['z'] > 0:
 				attrlist.append(('z-index', "%d" % ch['z']))
 			scale = ch.get('scale', 0)
@@ -719,6 +736,10 @@ class SMILWriter(SMIL):
 				pass
 			elif ch.has_key('bgcolor'):
 				attrlist.append(('background-color', "#%02x%02x%02x" % ch['bgcolor']))
+			if ch.get('center', 1):
+				attrlist.append(('%s:center' % NSprefix, '1'))
+			if ch.get('drawbox', 1):
+				attrlist.append(('%s:drawbox' % NSprefix, '1'))
 
 			self.regions_defined[ch] = 1
 			for key, val in ch.items():
@@ -784,8 +805,6 @@ class SMILWriter(SMIL):
 			mtype = mediatype(chtype)
 
 		attrlist = []
-		if not interior and chtype in ('label', 'text'):
-			attrlist.append(('type', "text/plain"))
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
