@@ -261,6 +261,7 @@
 #define IDI_CLOSEDEYE                   462
 #define IDD_REGISTER                    463
 #define IDD_EDITATTR_GEOMETRY           464
+#define IDB_SPLASHREALONE               464
 #define IDD_EDITATTR_LAYOUT2REAL        465
 #define IDD_EDITATTR_REALEXTENSION      466
 #define IDD_EDITATTR_S7F                467
@@ -905,7 +906,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        464
+#define _APS_NEXT_RESOURCE_VALUE        465
 #define _APS_NEXT_COMMAND_VALUE         32902
 #define _APS_NEXT_CONTROL_VALUE         1537
 #define _APS_NEXT_SYMED_VALUE           104

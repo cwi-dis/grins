@@ -26,27 +26,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #pragma code_page(1252)
 #endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
-IDB_SPLASHLITE          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\lite\\splash8bit.bmp"
-IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\pro\\splash8bit.bmp"
-IDB_SPLASHSMIL          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-10\\splash8bit.bmp"
-IDB_SPLASHQTPRO         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\qt\\pro\\splash8bit.bmp"
-IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\player\\splash8bit.bmp"
-IDB_VIEWPORT            BITMAP  DISCARDABLE     "RES\\viewport.bmp"
-IDB_REGION              BITMAP  DISCARDABLE     "RES\\region.bmp"
-IDB_IMAGE               BITMAP  DISCARDABLE     "RES\\image.bmp"
-IDB_VIDEO               BITMAP  DISCARDABLE     "RES\\video.bmp"
-IDB_TEXT                BITMAP  DISCARDABLE     "RES\\text.bmp"
-IDB_HTML                BITMAP  DISCARDABLE     "RES\\html.bmp"
-IDB_SOUND               BITMAP  DISCARDABLE     "RES\\sound.bmp"
-IDB_SPLASHSMILBOSTON    BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\editor\\splash8bit.bmp"
-IDB_SVG                 BITMAP  DISCARDABLE     "RES\\svg.bmp"
-
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -130,9 +109,20 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Bitmap
 //
 
+IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\player\\splash8bit.bmp"
+IDB_VIEWPORT            BITMAP  DISCARDABLE     "RES\\viewport.bmp"
+IDB_REGION              BITMAP  DISCARDABLE     "RES\\region.bmp"
+IDB_IMAGE               BITMAP  DISCARDABLE     "RES\\image.bmp"
+IDB_VIDEO               BITMAP  DISCARDABLE     "RES\\video.bmp"
+IDB_TEXT                BITMAP  DISCARDABLE     "RES\\text.bmp"
+IDB_HTML                BITMAP  DISCARDABLE     "RES\\html.bmp"
+IDB_SOUND               BITMAP  DISCARDABLE     "RES\\sound.bmp"
+IDB_SPLASHSMILBOSTON    BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\editor\\splash8bit.bmp"
+IDB_SVG                 BITMAP  DISCARDABLE     "RES\\svg.bmp"
 IDR_TB_EDITOR           BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
 IDR_TB_COMMON           BITMAP  DISCARDABLE     "res\\tb_player.bmp"
 IDR_TB_UNUSED           BITMAP  DISCARDABLE     "res\\tb_alignment.bmp"
+IDB_SPLASHREALONE       BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil2real\\splash8bit.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1941,7 +1931,7 @@ END
 
 IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,8,234,52,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
@@ -2232,7 +2222,7 @@ END
 
 IDD_EDITATTR_EVENTLIST2 DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,5,234,35,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
