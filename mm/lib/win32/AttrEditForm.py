@@ -1057,6 +1057,49 @@ class AttrPage(dialog.PropertyPage):
 
 ###############################	
 class SingleAttrPage(AttrPage):
+	# These map attribute names to (dialog-resource-id, constructor-function, control-ids)
+	# tuples. For unknown attributes we default to "string".
+	CTRLMAP_BYNAME = {
+		'layout':		# Two radio buttons
+			(grinsRC.IDD_EDITATTR_R2,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+		'visible':		# Three radio buttons
+			(grinsRC.IDD_EDITATTR_R3,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
+		'drawbox':		# Three radio buttons
+			(grinsRC.IDD_EDITATTR_R3,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
+		'popup':		# Three radio buttons
+			(grinsRC.IDD_EDITATTR_R3,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
+		'transparent':	# Four radio buttons
+			(grinsRC.IDD_EDITATTR_R4,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+		}
+	CTRLMAP_BYTYPE = {
+		'option':		# An option selected from a list (as a popup menu)
+			(grinsRC.IDD_EDITATTR_O1,
+			 OptionsCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'file':			# A file, with optional preview area
+			(grinsRC.IDD_EDITATTR_F1,
+			 FileCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+		'color':		# A color, with a color picker
+			(grinsRC.IDD_EDITATTR_C1,
+			 ColorCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+		'string':		# Default: a simple string field
+			(grinsRC.IDD_EDITATTR_S1,
+			 StringCtrl,
+			 (grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
+		}
+
 	def __init__(self,form,attr):
 		AttrPage.__init__(self,form)
 		self._attr=attr
@@ -1067,43 +1110,24 @@ class SingleAttrPage(AttrPage):
 		ctrl.OnInitCtrl()
 		ctrl.sethelp()
 
+	def _getcontrolinfo(self):
+		n = self._attr.getname()
+		t = self._attr.gettype()
+		if self.CTRLMAP_BYNAME.has_key(n):
+			return self.CTRLMAP_BYNAME[n]
+		if self.CTRLMAP_BYTYPE.has_key(t):
+			return self.CTRLMAP_BYTYPE[t]
+		return self.CTRLMAP_BYTYPE['string']
+
 	def createctrls(self):
 		a=self._attr
 		self._title=a.getlabel()
-		t = a.gettype()
-		if a.getname()=='layout':
-			self._cd[a] = OptionsRadioCtrl(self,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4))
-		elif a.getname()=='visible' or a.getname()=='drawbox' or a.getname()=='popup':
-			self._cd[a] = OptionsRadioCtrl(self,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5))
-		elif a.getname()=='transparent':
-			self._cd[a] = OptionsRadioCtrl(self,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6))
-		elif SingleAttrPage.ctrlmap.has_key(t):
-			self._cd[a] = SingleAttrPage.ctrlmap[t][0](self,a,SingleAttrPage.ctrlmap[t][1])
-		else:
-			self._cd[a] = SingleAttrPage.ctrlmap['string'][0](self,a,SingleAttrPage.ctrlmap['string'][1])
+		dialogresid, constructor, controlresids = self._getcontrolinfo()
+		self._cd[a] = constructor(self, a, controlresids)
 
 	def getpageresid(self):
-		a=self._attr
-		t = a.gettype()
-		if a.getname()=='layout':
-			return grinsRC.IDD_EDITATTR_R2
-		elif a.getname()=='visible' or a.getname()=='drawbox' or a.getname()=='popup':
-			return grinsRC.IDD_EDITATTR_R3
-		elif a.getname()=='transparent':
-			return grinsRC.IDD_EDITATTR_R4			
-		elif SingleAttrPage.ctrlmap.has_key(t):
-			return SingleAttrPage.idmap[t]
-		else:
-			return SingleAttrPage.idmap['string']
-	ctrlmap={
-		'option':(OptionsCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
-		'file':(FileCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
-		'color':(ColorCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
-		'string':(StringCtrl,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))}
-	idmap={'option':grinsRC.IDD_EDITATTR_O1,
-		'file':grinsRC.IDD_EDITATTR_F1,
-		'color':grinsRC.IDD_EDITATTR_C1,
-		'string':grinsRC.IDD_EDITATTR_S1}
+		dialogresid, constructor, controlresids = self._getcontrolinfo()
+		return dialogresid
 
 ##################################
 class LayoutScale:
