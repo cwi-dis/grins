@@ -10,6 +10,7 @@
 
 #ifdef _MACINTOSH
 #include <Events.h>
+#include <Folders.h>
 #include "macglue.h"
 #endif
 
