@@ -24,7 +24,7 @@ class RegKey:
 			strret = None
 		return strret
 
-def setKeyValue(strkey, valname, strval, rootkey = win32con.HKEY_CURRENT_USER):
+def setStrKeyValue(strkey, valname, strval, rootkey = win32con.HKEY_CURRENT_USER):
 	try:
 		key = win32api.RegOpenKeyEx(rootkey, strkey, 0, win32con.KEY_ALL_ACCESS)
 	except win32api.error, arg:
@@ -32,6 +32,18 @@ def setKeyValue(strkey, valname, strval, rootkey = win32con.HKEY_CURRENT_USER):
 		return
 	try:
 		win32api.RegSetValueEx(key, valname, 0, win32con.REG_SZ, strval)
+	except win32api.error, arg:
+		print arg
+	win32api.RegCloseKey(key)
+
+def setDwordKeyValue(strkey, valname, dwval, rootkey = win32con.HKEY_CURRENT_USER):
+	try:
+		key = win32api.RegOpenKeyEx(rootkey, strkey, 0, win32con.KEY_ALL_ACCESS)
+	except win32api.error, arg:
+		print arg
+		return
+	try:
+		win32api.RegSetValueEx(key, valname, 0, win32con.REG_DWORD, dwval)
 	except win32api.error, arg:
 		print arg
 	win32api.RegCloseKey(key)
@@ -53,13 +65,6 @@ def getKeyValue(strkey, valname, rootkey = win32con.HKEY_CURRENT_USER):
 		win32api.RegCloseKey(key)
 	return retval
 
-def createKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
-	try:
-		return win32api.RegCreateKey(rootkey, strkey)
-	except win32api.error, arg:
-		print arg
-	else:
-		win32api.RegCloseKey(key)
 
 def hasKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
 	retval = None
@@ -69,6 +74,16 @@ def hasKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
 		return 0
 	win32api.RegCloseKey(key)
 	return 1
+
+def createKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
+	try:
+		key = win32api.RegCreateKey(rootkey, strkey)
+	except win32api.error, arg:
+		print arg
+	else:
+		win32api.RegCloseKey(key)
+
+
 
 # if the file ext exists in the registry db and has an entry 'Content Type'
 # then this function returns content type registry value as a string 
@@ -136,7 +151,7 @@ def getShellApp(ext, verb='open'):
 	return app
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
 	print getType('.smi')	
 	print getType('.smil')	
 	print getType('.asx')
