@@ -234,6 +234,7 @@ class PlayerDlgBar(window.Wnd):
 				if ctrl._id == id:
 					if ctrl._cb:
 						ctrl._cb(ctrl.getcheck())
-					ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),]
-					self.setAttributes(ATTRIBUTES)
+					# verify setAttributes method
+					# ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),]
+					# self.setAttributes(ATTRIBUTES)
 					break
