@@ -33,6 +33,8 @@ def showattreditor(toplevel, node, initattr = None, chtype = None):
 		if node.__class__ is MMNode.MMNode:
 			if node.GetChannelType() == 'animate' :
 				wrapperclass = AnimationWrapper
+			elif node.GetChannelType() == 'prefetch' :
+				wrapperclass = PrefetchWrapper
 			else:	
 				wrapperclass = NodeWrapper
 			if node.GetType() == 'ext' and \
@@ -634,6 +636,23 @@ class AnimationWrapper(NodeWrapper):
 			targnode = root.GetChildByName(value)
 			self.node.targetnode = targnode
 		NodeWrapper.setattr(self, name, value)
+
+
+class PrefetchWrapper(NodeWrapper):
+	def __init__(self, toplevel, node):
+		NodeWrapper.__init__(self, toplevel, node)
+
+	def attrnames(self):
+		namelist = ['name','file',
+			'begin', 'duration', 
+			'clipbegin', 'clipend',
+			'mediaSize', 'mediaTime', 'bandwidth',
+			]
+		return namelist
+
+	def maketitle(self):
+		name = MMAttrdefs.getattr(self.node, 'name')
+		return 'Properties of prefetch node %s' % name
 
 
 class ChannelWrapper(Wrapper):
