@@ -50,7 +50,7 @@ class Channel:
 		self._playstate = PIDLE
 		self._qid = None
 		self._scheduler = scheduler
-		self._paused = 1
+		self._paused = 0
 		self._subchannels = []
 		self._want_shown = 0
 		self.syncarm = 0
