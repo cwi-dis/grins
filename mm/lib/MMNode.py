@@ -23,9 +23,9 @@ class MMNodeContext:
 	def __init__(self, nodeclass):
 		self.nodeclass = nodeclass
 		self.uidmap = {}
-		self.channelnames = []
-		self.channels = []
-		self.channeldict = {}
+		self.channelnames = []	# list of channel names
+		self.channels = []	# list of MMChannel instances
+		self.channeldict = {}	# channel name -> MMChannel instance
 		self.hyperlinks = Hlinks()
 		self.layouts = {}
 		self.usergroups = {}
@@ -170,10 +170,7 @@ class MMNodeContext:
 			self.channels.append(c)
 
 	def getchannel(self, name):
-		try:
-			return self.channeldict[name]
-		except KeyError:
-			return None
+		return self.channeldict.get(name)
 
 	def addchannel(self, name, i, type):
 		if name in self.channelnames:
