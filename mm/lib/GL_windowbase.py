@@ -988,6 +988,9 @@ class _DisplayList:
 		d.append(gl.v2f, (x1, y0))
 		d.append(gl.endpolygon)
 
+	def drawmarker(self, color, *coordinates):
+		pass # XXXX To be implemented
+
 	#
 	# Font and text handling
 	#
