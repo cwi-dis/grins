@@ -517,6 +517,10 @@ class StarWipeTransition(_ShapeWipeTransition):
 		'sixPoint': 6,
 		}
 
+	def __init__(self, engine, dict):
+		self._NPOINTS = self._SUBTYPES.get(dict.get('subtype','fourPoint'), 4)
+		_ShapeWipeTransition.__init__(self, engine, dict)
+
 	def _recomputetop(self):
 		_ShapeWipeTransition._recomputetop(self)
 		self.range = self.range*1.5
@@ -526,13 +530,12 @@ class StarWipeTransition(_ShapeWipeTransition):
 		iradius = int(value*self.innerradius)
 ##		print value, radius, iradius
 		points = []
-		npoints = self._SUBTYPES.get(self.dict.get('subtype','fourPoint'), 4)
-		for i in range(npoints):
-			angle = self._FIRSTANGLE + (2*math.pi*i)/npoints
+		for i in range(self._NPOINTS):
+			angle = self._FIRSTANGLE + (2*math.pi*i)/self._NPOINTS
 			x = math.cos(angle)*radius
 			y = math.sin(angle)*radius
 			points.append((self.xmid+x, self.ymid-y))
-			angle = self._FIRSTANGLE + (2*math.pi*(i+0.5))/npoints
+			angle = self._FIRSTANGLE + (2*math.pi*(i+0.5))/self._NPOINTS
 			x = math.cos(angle)*iradius
 			y = math.sin(angle)*iradius
 			points.append((self.xmid+x, self.ymid-y))
