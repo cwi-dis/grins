@@ -339,8 +339,8 @@ class SeqWidget(StructureObjWidget):
 
         # Position the stupid drop-box at the end.
         w,h = self.dropbox.get_minsize();
-        print "DEBUG: dropbox coords are ", w, h
-        print "Moving dropbox to", l,t,(float(w)/min_width)*free_width,b
+#        print "DEBUG: dropbox coords are ", w, h
+#        print "Moving dropbox to", l,t,(float(w)/min_width)*free_width,b
         if free_width == 0.0:
             r = l+w;
         else:
@@ -453,7 +453,7 @@ class VerticalWidget(StructureObjWidget):
         if self.root.pushbackbars:
             for i in self.children:
                 if isinstance(i, MediaWidget):
-                    print "Par: drawing bar";
+#                    print "Par: drawing bar";
                     i.pushbackbar.draw(display_list);
         StructureObjWidget.draw(self, display_list);
 
@@ -627,7 +627,7 @@ class MediaWidget(MMNodeWidget):
                 self.root.set_infoicon('error', 'Cannot load image: %s'%`arg`)
         else:
             f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
-        print "DEBUG: f is ", f;
+#        print "DEBUG: f is ", f;
         return f
 
     def get_obj_at(self, pos):
