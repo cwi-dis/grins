@@ -1270,6 +1270,9 @@ class AnimateElementParser:
 	def getAnimationType(self):
 		return self.__animtype
 
+	def isAdditive(self):
+		return self.__additive == 'sum'
+
 	def toDOMOriginPosAttr(self, attr):
 		val = MMAttrdefs.getattr(self.__anim, attr)
 		if not val: return val
