@@ -53,6 +53,9 @@ class showmessage:
 		if mtype == 'question' or cancelCallback:
 			w.AddCallback('cancelCallback',
 				      self._callback, cancelCallback)
+			w.Parent().AddWMProtocolCallback(
+				toplevel._delete_window,
+				self._callback, cancelCallback)
 		else:
 			w.MessageBoxGetChild(Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
 		w.AddCallback('okCallback', self._callback, callback)
@@ -92,8 +95,6 @@ class showmessage:
 	def _callback(self, widget, callback, call_data):
 		ToolTip.rmtt()
 		if not self._main:
-			return
-		if toplevel._in_create_box and toplevel._in_create_box._rb_dialog is not self:
 			return
 		if callback:
 			apply(apply, callback)
@@ -196,7 +197,7 @@ class FileDialog:
 
 	def _cancel_callback(self, *rest):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		must_close = TRUE
 		try:
@@ -214,7 +215,7 @@ class FileDialog:
 
 	def _ok_callback(self, widget, existing, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		self._do_ok_callback(widget, existing, call_data)
 		toplevel.setready()
@@ -287,6 +288,8 @@ class SelectionDialog:
 		self._main = form
 		form.AddCallback('okCallback', self._ok_callback, None)
 		form.AddCallback('cancelCallback', self._cancel_callback, None)
+		form.Parent().AddWMProtocolCallback(
+			toplevel._delete_window, self._cancel_callback, None)
 		if hasattr(self, 'NomatchCallback'):
 			form.AddCallback('noMatchCallback',
 					 self._nomatch_callback, None)
@@ -321,7 +324,7 @@ class SelectionDialog:
 
 	def _nomatch_callback(self, widget, client_data, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
@@ -330,7 +333,7 @@ class SelectionDialog:
 
 	def _ok_callback(self, widget, client_data, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		try:
 			func = self.OkCallback
@@ -349,7 +352,7 @@ class SelectionDialog:
 
 	def _cancel_callback(self, widget, client_data, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		try:
 			func = self.CancelCallback
@@ -407,7 +410,7 @@ class InputDialog:
 
 	def _ok(self, w, client_data, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		value = call_data.value
 		self.close()
@@ -417,7 +420,7 @@ class InputDialog:
 
 	def _cancel(self, w, client_data, call_data):
 		ToolTip.rmtt()
-		if toplevel._in_create_box or self.is_closed():
+		if self.is_closed():
 			return
 		self.close()
 		if client_data:
