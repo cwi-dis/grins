@@ -266,6 +266,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		icon = None
 		for arc in MMAttrdefs.getattr(self.node, attr):
 			othernode = arc.refnode()
+			if arc.isstart and arc.srcnode == 'syncbase':
+				# don't show icons for simple begin delay
+				continue
 			while othernode is not None and not othernode.views.has_key('struct_view'):
 				othernode = othernode.GetParent()
 			if othernode is not None:
@@ -1060,7 +1063,9 @@ class StructureObjWidget(MMNodeWidget):
 				icon = 'closed'
 			else:
 				icon = 'open'
-			if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
+			if ntype in MMTypes.mediatypes:
+				ntype = 'media'
+			elif ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
 				ntype = ''
 			icon = ntype + icon
 			self.collapsebutton = self.iconbox.add_icon('collapse', self.toggle_collapsed)
@@ -1155,7 +1160,9 @@ class StructureObjWidget(MMNodeWidget):
 			c.remove_set_armedmode()
 		self.node.collapsed = 1
 		ntype = self.node.GetType()
-		if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
+		if ntype in MMTypes.mediatypes:
+			ntype = 'media'
+		elif ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
 			ntype = ''
 		if self.collapsebutton is not None:
 			self.collapsebutton.icon = ntype + 'closed'
@@ -1175,7 +1182,9 @@ class StructureObjWidget(MMNodeWidget):
 	def uncollapse(self):
 		self.node.collapsed = 0
 		ntype = self.node.GetType()
-		if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
+		if ntype in MMTypes.mediatypes:
+			ntype = 'media'
+		elif ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
 			ntype = ''
 		if self.collapsebutton is not None:
 			self.collapsebutton.icon = ntype + 'open'
