@@ -37,10 +37,15 @@ class Main(MainDialog):
 	def __init__(self, opts, files):
 		import windowinterface
 		import license
+		import settings
 		self.tmpopts = opts
 		self.tmpfiles = files
+		if settings.get('lightweight'):
+			whichversion = 'light'
+		else:
+			whichversion = 'editor'
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
-					   ('save', 'editdemo'))
+					   (whichversion,))
 
 	def do_init(self, license):
 		opts, files = self.tmpopts, self.tmpfiles
@@ -54,11 +59,11 @@ class Main(MainDialog):
 			windowinterface.showmessage('Cannot open multiple files in this version')
 			files = files[:1]
 		self._license = license
-		if not self._license.have('save'):
-			windowinterface.showmessage(
-				'This is a demo version.\n'+
-				'You will not be able to save your changes.',
-				title='CMIFed license')
+##		if not self._license.have('save'):
+##			windowinterface.showmessage(
+##				'This is a demo version.\n'+
+##				'You will not be able to save your changes.',
+##				title='CMIFed license')
 		self._tracing = 0
 		self.tops = []
 		self._mm_callbacks = {}
@@ -108,6 +113,8 @@ class Main(MainDialog):
 			
 	def collect_template_info(self):
 		import SMILTreeRead
+		import mimetypes
+		import MMurl
 		self.templatedir = findfile('Templates')
 		if not os.path.exists(self.templatedir):
 			self.template_info = ()
@@ -117,7 +124,8 @@ class Main(MainDialog):
 		files = os.listdir(self.templatedir)
 		files.sort()
 		for file in files:
-			if not (file[-4:] == '.smi' or file[-5:] == '.smil'):
+			url = MMurl.pathname2url(file)
+			if mimetypes.guess_type(url)[0] != 'application/smil':
 				continue
 			pathname = os.path.join(self.templatedir, file)
 			try:
@@ -152,7 +160,7 @@ class Main(MainDialog):
 			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback, parent=self.getparentwindow())
 		else:
 			windowinterface.showmessage("No Templates found, creating empty document")
-			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.smil'), 1)
+			top = TopLevel.TopLevel(self, self.getnewdocumentname(mimetype="application/smil"), 1)
 			self.new_top(top)
 	
 	def help_callback(self, params=None):
@@ -177,10 +185,14 @@ class Main(MainDialog):
 		if htmltemplate:
 			top.context.attributes['project_html_page'] = htmltemplate
 		
-	def getnewdocumentname(self, templatename):
+	def getnewdocumentname(self, templatename=None, mimetype=None):
 		name = 'Untitled%d'%self._untitled_counter
 		self._untitled_counter = self._untitled_counter + 1
-		dummy, ext = os.path.splitext(templatename)
+		if mimetype:
+			import mimetypes
+			ext = mimetypes.guess_extension(mimetype)
+		else:
+			dummy, ext = os.path.splitext(templatename)
 		return name + ext
 		
 	def canopennewtop(self):
@@ -333,18 +345,18 @@ class Main(MainDialog):
 			top.new_file = nf
 
 	def cansave(self):
-		return self._license.have('save')
+		return 1
 	
 	def wanttosave(self):
-		import license
-		import windowinterface
-		try:
-			features = self._license.need('save')
-		except license.Error, arg:
-			print "No license:", arg
-			return 0
-		if self._license.is_evaluation_license():
-			return -1
+##		import license
+##		import windowinterface
+##		try:
+##			features = self._license.need('save')
+##		except license.Error, arg:
+##			print "No license:", arg
+##			return 0
+##		if self._license.is_evaluation_license():
+##			return -1
 		return 1
 
 def main():
