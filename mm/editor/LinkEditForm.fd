@@ -351,9 +351,9 @@ alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Add...
-name: link_add
-callback: link_add_callback
+label: New...
+name: link_new
+callback: link_new_callback
 argument: 0
 
 --------------------
