@@ -82,3 +82,9 @@ def lopristarting():
 
 import win32api
 def RGB(c):return win32api.RGB(c[0],c[1],c[2])
+
+def serve_events():
+	import win32ui, win32con
+	win32ui.PumpWaitingMessages(win32con.WM_MOUSEFIRST,win32con.WM_MOUSELAST)
+	from __main__ import toplevel
+	toplevel.serve_events()
