@@ -107,7 +107,7 @@ class EditMgr:
 		node.SetType(type)
 	#
 	def setnodeattr(self, (node, name, value)):
-		if name = 'synctolist':
+		if name == 'synctolist':
 			raise MMExc.AssertError, 'cannot set synctolist attr'
 		oldvalue = node.GetRawAttrDef(name, None)
 		self.addstep('setnodeattr', node, name, oldvalue, value)
@@ -124,13 +124,13 @@ class EditMgr:
 	#
 	def addsyncarc(self, (xnode, xside, delay, ynode, yside)):
 		list = ynode.GetRawAttrDef('synctolist', None)
-		if list = None:
+		if list == None:
 			list = []
 			ynode.SetAttr('synctolist', list)
 		xuid = xnode.GetUID()
 		for item in list:
 			xn, xs, de, ys = item
-			if xn=xuid and (xs,ys) = (xside,yside):
+			if xn==xuid and (xs,ys) == (xside,yside):
 				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
 				list.remove(item)
 				break
@@ -142,7 +142,7 @@ class EditMgr:
 		xuid = xnode.GetUID()
 		for item in list:
 			xn, xs, de, ys = item
-			if xn=xuid and (xs,de,ys) = (xside,delay,yside):
+			if xn==xuid and (xs,de,ys) == (xside,delay,yside):
 				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
 				list.remove(item)
 				break
@@ -154,7 +154,7 @@ class EditMgr:
 		xuid = xnode.GetUID()
 		for i in range(len(list)):
 			xn, xs, de, ys = item = list[i]
-			if xn = xuid and (xs, ys) = (xside, yside):
+			if xn == xuid and (xs, ys) == (xside, yside):
 				self.addstep('setsyncarcdelay', \
 					xnode, xs, delay, ynode, ys)
 				list[i] = (xn, xs, delay, ys)
@@ -196,10 +196,10 @@ class EditMgr:
 			oldvalue = attrdict[attrname]
 		else:
 			oldvalue = None
-		if value = None = oldvalue:
+		if value == None == oldvalue:
 			return
 		self.addstep('setchannelattr', name, attrname, oldvalue, value)
-		if value = None:
+		if value == None:
 			del attrdict[attrname]
 		else:
 			attrdict[attrname] = value
@@ -232,10 +232,10 @@ class EditMgr:
 			oldvalue = attrdict[attrname]
 		else:
 			oldvalue = None
-		if value = None = oldvalue:
+		if value == None == oldvalue:
 			return
 		self.addstep('setstyleattr', name, attrname, oldvalue, value)
-		if value = None:
+		if value == None:
 			del attrdict[attrname]
 		else:
 			attrdict[attrname] = value
