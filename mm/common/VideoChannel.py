@@ -14,4 +14,4 @@ elif platform == 'mac':
 elif platform == 'nt':
 	from NTVideoChannel import *
 else:
-	raise ImportError('No module named VideoChannel')
+	raise ImportError('No appropriate VideoChannel for this platform')
