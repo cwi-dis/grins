@@ -67,6 +67,14 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
 		return self.new(width, height, self.root)
 	#
+	def show(self):
+		BasicDialog.show(self)
+		self.toplevel.checkviews()
+	#
+	def hide(self):
+		BasicDialog.hide(self)
+		self.toplevel.checkviews()
+	#
 	# new makes an object of type 'blockview'
 	#
 	# if does :
