@@ -1456,7 +1456,6 @@ class AttrEditor(AttrEditorDialog):
 				channelName = ctx.newChannelName(regionName)
 				# if not exist, create the channel
 				chtype = compatChannelTypeList[0]
-				print 'type=',chtype
 				em.addchannel(channelName, 0, chtype)
 				em.setchannelattr(channelName, 'base_window', regionName)
 				# get old channel name
