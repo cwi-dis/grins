@@ -463,8 +463,8 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	# create a new viewport
 	def newViewport(self, attrdict, name):
 		x,y,w, h = attrdict.get('wingeom')
-				
-		self._device2logical = self.findDeviceToLogicalScale(w,h)
+		self._cycaption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
+		self._device2logical = self.findDeviceToLogicalScale(w,h+self._cycaption)
 		self._parent.showScale(self._device2logical)
 		self.__initState()
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
@@ -576,6 +576,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		if self._viewport:
 			self._viewport.paintOn(dcc)
 			dcc.SelectClipRgn(rgn)
+			self._viewport._drawcaption(dcc)
 			self._viewport._draw3drect(dcc)
 			self.drawTracker(dcc)
 
@@ -668,6 +669,9 @@ class Viewport(win32window.Window, UserEventMng):
 		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
+		self._cycaption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
+		sc = self._device2logical
+		self._cycaptionlog = int(self._device2logical*self._cycaption+0.5)
 		x, y, w, h = attrdict.get('wingeom')
 		self._rc = (x, y, w, h)
 		units = attrdict.get('units')
@@ -681,7 +685,6 @@ class Viewport(win32window.Window, UserEventMng):
 
 		self._showname = 1
 		self._scale  = scale
-
 	# 
 	# interface implementation: function called from an external module
 	#
@@ -708,6 +711,7 @@ class Viewport(win32window.Window, UserEventMng):
 		self._ctx.unselect(self)
 	
 	def setAttrdict(self, attrdict):
+		print 'setAttrdict', attrdict
 		newBgcolor = attrdict.get('bgcolor')
 		oldBgcolor = self._attrdict.get('bgcolor')
 		newGeom = attrdict.get('wingeom')
@@ -747,13 +751,21 @@ class Viewport(win32window.Window, UserEventMng):
 
 	def pop(self, poptop=1):
 		pass
+	
+	def insideCaption(self, point):
+		x, y, w, h = self.getwindowpos()
+		l, t, r, b = x, y-self._cycaptionlog, x+w, y
+		xp, yp = point
+		if xp>=l and xp<r and yp>=t and yp<b:
+			return 1
+		return 0
 		
 	def getMouseTarget(self, point):
 		for w in self._subwindows:
 			target = w.getMouseTarget(point)
 			if target:
 				return target
-		if self.inside(point):
+		if self.inside(point) or self.insideCaption(point):
 			return self
 		return None
 	
@@ -779,7 +791,7 @@ class Viewport(win32window.Window, UserEventMng):
 
 	def _draw3drect(self, dc):
 		x, y, w, h = self.LRtoDR(self.getwindowpos())
-		l, t, r, b = x, y, x+w, y+h
+		l, t, r, b = x, y-self._cycaption, x+w, y+h
 		l, t, r, b = l-3, t-3, r+2, b+2
 		c1, c2 = 220, 150
 		for i in range(3):
@@ -787,6 +799,24 @@ class Viewport(win32window.Window, UserEventMng):
 			c1, c2 = c1-15, c2-15
 			l, t, r, b = l+1, t+1, r-1, b-1
 
+	def _drawcaption(self, dc):
+		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		l, t, r, b = x, y, x+w, y+h
+		dc.FillSolidRect((l,t-self._cycaption,r, t) ,win32mu.RGB((128, 128, 255)))
+		dc.SetBkMode(win32con.TRANSPARENT)
+		dc.SetTextAlign(win32con.TA_BOTTOM)
+		clr_org=dc.SetTextColor(win32api.RGB(255,255,255))
+		dc.TextOut(l+4,t-2,self._name)
+		dc.SetTextColor(clr_org)
+
+	def invalidateDragHandles(self):
+		x, y, w, h  = self.LRtoDR(self.getwindowpos())
+		delta = 4
+		x = x-delta
+		y = y-delta - self._cycaption
+		w = w+2*delta
+		h = h+2*delta + self._cycaption
+		self.update((x, y, w, h))
 				
 ###########################
 
