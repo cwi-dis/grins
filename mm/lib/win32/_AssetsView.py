@@ -162,11 +162,14 @@ class _AssetsView(GenView.GenView,
 			return 0
 		return cb(cursel)
 
-	def doDragDrop(self, flavor, value, ignoreself=0):
+	def doDragDrop(self, flavor, value, ignoreself=0, effects=None):
 		if ignoreself:
 			self._ignoredragdrop = 1
 		flavorid, str = DropTarget.EncodeDragData(flavor, value)
-		rv = self.listCtrl.DoDragDrop(flavorid, str)
+		if effects is None:
+			rv = self.listCtrl.DoDragDrop(flavorid, str)
+		else:
+			rv = self.listCtrl.DoDragDrop(flavorid, str, effects)
 		self._ignoredragdrop = 0
 		return rv
 
