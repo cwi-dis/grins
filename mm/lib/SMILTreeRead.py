@@ -142,6 +142,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'external': __truefalse,
 		'fill': ['freeze', 'remove', 'hold', 'transition', 'auto', 'default'],
 		'fillDefault': ['freeze', 'remove', 'hold', 'transition', 'auto', 'inherit'],
+		'fit': ['meet', 'slice', 'fill', 'hidden', 'scroll'],
 		'immediate-instantiation': __truefalse,
 		'immediate-instantiation': __truefalse,
 		'mode': ['in', 'out'],
@@ -155,6 +156,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
 		'showAnimationPath': __truefalse,
+		'showBackground': ['always', 'whenActive'],
 		'showEditBackground': __truefalse,
 		'sourcePlaystate': ['play', 'pause', 'stop'],
 		'syncBehavior': ['canSlip', 'locked', 'independent', 'default'],
@@ -1201,21 +1203,27 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['fgcolor'] = fg
 
 	def __do_subposition(self, node, attr, val, attrdict):
-		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
-			if not features.editor:
-				return
-		self.__context.attributes['project_boston'] = 1
-		if val != 'auto': # "auto" is equivalent to no attribute
-			try:
-				if val[-1:] == '%':
-					val = float(val[:-1]) / 100.0
-				else:
-					if val[-2:] == 'px':
-						val = val[:-2]
-					val = int(val)
-			except ValueError:
-				self.syntax_error('invalid subregion attribute value')
+		if node is not None or attr in ('bottom', 'right'):
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+				if not features.editor:
+					return
+			self.__context.attributes['project_boston'] = 1
+		if val == 'auto':
+			# "auto" is equivalent to no attribute
+			return
+		try:
+			if val[-1:] == '%':
+				val = float(val[:-1]) / 100.0
+			else:
+				if val[-2:] == 'px':
+					val = val[:-2]
+				val = int(val)
+		except ValueError:
+			self.syntax_error('invalid value for (sub)region attribute %s' % attr)
+		else:
+			if attr in ('widht', 'height') and val < 0:
+				self.syntax_error('invalid value for (sub)region attribute %s' % attr)
 			else:
 				attrdict[attr] = val
 
@@ -1239,18 +1247,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 
 	def __do_z_index(self, node, attr, val, attrdict):
-		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
-			if not features.editor:
-				return
-		self.__context.attributes['project_boston'] = 1
+		if node is not None:
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+				if not features.editor:
+					return
+			self.__context.attributes['project_boston'] = 1
 		try:
 			val = int(val)
 		except ValueError:
-			self.syntax_error('bad z-index attribute')
+			self.syntax_error('bad %s attribute value' % attr)
 		else:
 			if val < 0:
-				self.syntax_error('region with negative z-index')
+				self.syntax_error('negative %s attribute value not allowed' % attr)
 			else:
 				attrdict['z'] = val
 
@@ -1453,85 +1462,88 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		pass
 
 	__parseattrdict = {
-		'xml:base': __do_xmlbase,
-		'id': __do_id,
+		# RTIPA start
+		'RTIPA-server': __do_RTIPA_server,
+		# RTIPA end
 		'abstract': __do_literal,
-		'copyright': __do_literal,
+		'accelerate': __do_accelerate,
+		'allowedmimetypes': __do_allowedmimetypes,
 		'author': __do_literal,
-		'src': __do_src,
+		'autoReverse': __do_enumBoston,
+		'backgroundColor': __do_backgroundColor,
+		'backgroundOpacity': __do_opacity,
+		'bandwidth': __do_prefetch,
 		'begin': __do_sync,
-		'end': __do_sync,
+		'bottom': __do_subposition,
+		'chromaKey': __do_chromaKey,
+		'chromaKeyOpacity': __do_opacity,
+		'chromaKeyTolerance': __do_chromaKey,
+		'collapsed': __do_collapsed,
+		'color': __do_color,
+		'copyright': __do_literal,
+		'decelerate': __do_accelerate,
+		'dropIcon': __do_dropIcon,
 		'dur': __do_dur,
-		'min': __do_minmax,
+		'emptyColor': __do_emptyColor,
+		'emptyDur': __do_emptyDur,
+		'emptyIcon': __do_emptyIcon,
+		'emptyText': __do_emptyText,
+		'end': __do_sync,
+		'erase': __do_enumBoston,
+		'fill': __do_fill,
+		'fillDefault': __do_enumBoston,
+		'fit': __do_enumBoston,
+		'height': __do_subposition,
+		'id': __do_id,
+		'layout': __do_layout,
+		'left': __do_subposition,
 		'max': __do_minmax,
+		'mediaOpacity': __do_opacity,
+		'mediaRepeat': __do_mediaRepeat,
+		'mediaSize': __do_prefetch,
+		'mediaTime': __do_prefetch,
+		'min': __do_minmax,
+		'nonEmptyColor': __do_nonEmptyColor,
+		'nonEmptyIcon': __do_nonEmptyIcon,
+		'nonEmptyText': __do_nonEmptyText,
+		'previewShowOption': __do_enum,
+		'project_bandwidth_fraction': __do_bandwidth_fraction,
+		'project_default_duration': __do_default_duration,
+		'project_default_duration_image': __do_default_duration,
+		'project_default_duration_text': __do_default_duration,
+		'project_default_region': __do_default_region,
+		'project_default_type': __do_literal,
+		'project_forcechild': __do_forcechild,
+		'readIndex': __do_index,
+		'regAlign': __do_enumBoston,
+		'regPoint': __do_regPoint,
 		'repeat': __do_repeatCount,
 		'repeatCount': __do_repeatCount,
 		'repeatDur': __do_repeatDur,
 		'restart': __do_restart,
 		'restartDefault': __do_restartDefault,
-		'mediaSize': __do_prefetch,
-		'mediaTime': __do_prefetch,
-		'bandwidth': __do_prefetch,
-		'readIndex': __do_index,
-		'tabindex': __do_index,
-		'sensitivity': __do_sensitivity,
-		'transIn': __do_transition,
-		'transOut': __do_transition,
-		'layout': __do_layout,
-		'fill': __do_fill,
-		'fillDefault': __do_enumBoston,
-		'erase': __do_enumBoston,
-		'mediaRepeat': __do_mediaRepeat,
-		'color': __do_color,
-		'left': __do_subposition,
 		'right': __do_subposition,
-		'width': __do_subposition,
-		'height': __do_subposition,
-		'top': __do_subposition,
-		'bottom': __do_subposition,
-		'backgroundColor': __do_backgroundColor,
-		'z-index': __do_z_index,
-		'regPoint': __do_regPoint,
-		'regAlign': __do_enumBoston,
+		'sensitivity': __do_sensitivity,
+		'showAnimationPath': __do_enum,
+		'showtime': __do_showtime,
+		'skip-content': __do_skip_content,
 		'speed': __do_speed,
-		'autoReverse': __do_enumBoston,
+		'src': __do_src,
+		'syncBehavior': __do_enumBoston,
+		'syncBehaviorDefault': __do_enumBoston,
 		'syncMaster': __do_enumBoston,
 		'syncTolerance': __do_syncTolerance,
 		'syncToleranceDefault': __do_syncTolerance,
-		'accelerate': __do_accelerate,
-		'decelerate': __do_accelerate,
-		'syncBehavior': __do_enumBoston,
-		'syncBehaviorDefault': __do_enumBoston,
-		'project_default_region': __do_default_region,
-		'project_default_type': __do_literal,
-		'project_bandwidth_fraction': __do_bandwidth_fraction,
-		'project_default_duration': __do_default_duration,
-		'project_default_duration_image': __do_default_duration,
-		'project_default_duration_text': __do_default_duration,
-		'collapsed': __do_collapsed,
-		'showtime': __do_showtime,
-		'timezoom': __do_timezoom,
-		'allowedmimetypes': __do_allowedmimetypes,
-		'project_forcechild': __do_forcechild,
-		'skip-content': __do_skip_content,
+		'tabindex': __do_index,
 		'thumbnailIcon': __do_thumbnailIcon,
 		'thumbnailScale': __do_thumbnailScale,
-		'showAnimationPath': __do_enum,
-		'emptyIcon': __do_emptyIcon,
-		'emptyText': __do_emptyText,
-		'emptyColor': __do_emptyColor,
-		'emptyDur': __do_emptyDur,
-		'nonEmptyIcon': __do_nonEmptyIcon,
-		'nonEmptyText': __do_nonEmptyText,
-		'nonEmptyColor': __do_nonEmptyColor,
-		'dropIcon': __do_dropIcon,
-		'backgroundOpacity': __do_opacity,
-		'chromaKeyOpacity': __do_opacity,
-		'mediaOpacity': __do_opacity,
-		'chromaKey': __do_chromaKey,
-		'chromaKeyTolerance': __do_chromaKey,
-		'previewShowOption': __do_enum,
-		'RTIPA-server': __do_RTIPA_server,
+		'timezoom': __do_timezoom,
+		'top': __do_subposition,
+		'transIn': __do_transition,
+		'transOut': __do_transition,
+		'width': __do_subposition,
+		'xml:base': __do_xmlbase,
+		'z-index': __do_z_index,
 		}
 	for __attr in smil_node_attrs:
 		__parseattrdict[__attr] = __do_pass
@@ -1738,10 +1750,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key('fit'):
 			val = attributes['fit']
 			del attributes['fit']
-			if val not in ('meet', 'slice', 'fill',
-				       'hidden', 'scroll'):
-				self.syntax_error('illegal fit attribute')
-			else:
+			val = self.parseEnumValue('fit', val)
+			if val is not None:
 				attributes['fit'] = val
 
 		# create the node
@@ -2600,9 +2610,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr in ('attrs','declwidth','declheight','skip-content'):
 				# special key
 				pass
-			elif attr == 'showEditBackground':
-				layout[attr] = val in ('on','true')
-			elif attr == 'resizeBehavior':
+			elif attr in ('showEditBackground', 'editBackground', 'resizeBehavior'):
 				layout[attr] = val
 			else:
 				# parse all other attributes
@@ -2666,8 +2674,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('showBackground'):
 			ch['showBackground'] = attrdict['showBackground']
 			del attrdict['showBackground']
-		else:
-			ch['showBackground'] = MMAttrdefs.getdefattr(None, 'showBackground')
 
 		if attrdict.has_key('soundLevel'):
 			ch['soundLevel'] = attrdict['soundLevel']
@@ -2688,7 +2694,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch.collapsed = None
 			
 		# deal with channel with window
-		if attrdict.has_key('id'): del attrdict['id']
+		if attrdict.has_key('id'):
+			del attrdict['id']
+
 		title = attrdict.get('title')
 		if title is not None:
 			if title != ch.name:
@@ -2731,8 +2739,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 #			ch['transparent'] = -1
 			ch['bgcolor'] = bg
 
-		ch['z'] = attrdict['z-index']
-		del attrdict['z-index']
+		ch['z'] = attrdict['z']
+		del attrdict['z']
 		
 		if attrdict.has_key('showEditBackground'):
 			ch['showEditBackground'] = attrdict['showEditBackground']
@@ -2752,12 +2760,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if attrdict.has_key(attr):
 					val = attrdict[attr]
 					attrList.append((attr, val))
-					# store as weel the value into ch
+					# store the value also in ch
 					ch[attr] = val
 					# last, del the value from the original object
 					del attrdict[attr]
 			cssResolver.setRawAttrs(cssId,attrList)
-						
+
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
 			# experimental code for switch layout: 'elementindex'
@@ -3322,7 +3330,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# end experimental code for switch layout
 
-		attrdict = {'z-index': 0,
+		attrdict = {'z': 0,
 			    'minwidth': 0,
 			    'minheight': 0,
 			    'id': id,
@@ -3354,48 +3362,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__regionnames[val] = regions
 				attrdict['regionName'] = val
 			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
-				# XXX are bottom and right allowed in SMIL-Boston basic layout?
-				if attr in ('bottom', 'right'):
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-						if not features.editor:
-							continue
-					self.__context.attributes['project_boston'] = 1
-				if val != 'auto': # "auto" is equivalent to no attribute
-					try:
-						if val[-1] == '%':
-							val = float(val[:-1]) / 100.0
-							if attr in ('width','height') and val < 0:
-								self.syntax_error('region with negative %s' % attr)
-								val = 0.0
-						else:
-							if val[-2:] == 'px':
-								val = val[:-2]
-							val = int(val)
-							if attr in ('width','height') and val < 0:
-								self.syntax_error('region with negative %s' % attr)
-								val = 0
-					except ValueError:
-						self.syntax_error('invalid region attribute value')
-						val = 0
-					attrdict[attr] = val
+				self.__do_subposition(None, attr, val, attrdict)
 			elif attr == 'z-index':
-				try:
-					val = int(val)
-				except ValueError:
-					self.syntax_error('invalid z-index value')
-				else:
-					if val < 0:
-						self.syntax_error('region with negative z-index')
-					else:
-						attrdict['z-index'] = val
+				self.__do_z_index(None, attr, val, attrdict)
 			elif attr == 'fit':
-				if val not in ('meet', 'slice', 'fill',
-					       'hidden', 'scroll'):
-					self.syntax_error('illegal fit attribute')
-#				elif val == 'scroll':
-#					self.warning('fit="%s" value not implemented' % val, self.lineno)
-				attrdict['fit'] = val
+				self.__do_enum(None, attr, val, attrdict)
 			elif attr == 'backgroundColor':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -3434,10 +3405,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
-				if val not in ('always', 'whenActive'):
-					self.syntax_error('illegal showBackground attribute value')
-					val = 'always'
-				attrdict['showBackground'] = val
+				val = self.parseEnumValue('showBackground', val)
+				if val is not None:
+					attrdict['showBackground'] = val
 			elif attr == 'soundLevel':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -3669,6 +3639,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				val = self.parseEnumValue(attr, val)
 				if val is not None:
 					attrdict[attr] = val
+			elif attr == 'editBackground':
+				res = re.match('(?P<r>[0-9]+) +(?P<g>[0-9]+) +(?P<b>[0-9]+)', val) # backward compatibility hack
+				if res is not None:
+					val = int(res.group('r')), int(res.group('g')), int(res.group('b'))
+				else:
+					val = self.__convert_color(val)
+				if val is not None:
+					attrdict['editBackground'] = val
+			elif attr == 'showEditBackground':
+				if val in ('0','off'): # backward compatibility hack
+					val = 0
+				elif val in ('1', 'on'): # backward compatibility hack
+					val = 1
+				else:
+					val = self.parseEnumValue('showEditBackground', val)
+				if val is not None:
+					attrdict['showEditBackground'] = val
 			else:
 				# catch all
 				attrdict[attr] = val
