@@ -2390,4 +2390,8 @@ mainloop = toplevel.mainloop
 
 canceltimer = toplevel.canceltimer
 
+getscreensize = toplevel.getscreensize
+
+getscreendepth = toplevel.getscreendepth
+
 lopristarting = X_windowbase.lopristarting
