@@ -129,7 +129,7 @@ void CMainWindow::OnCmdOpen()
 
 void CMainWindow::OnUpdateCmdOpen(CCmdUI* pCmdUI) 
 	{
-	//pCmdUI->Enable(!m_is_open);
+	pCmdUI->Enable(!m_is_open);
 	}
 
 void CMainWindow::OnCmdClose() 
@@ -143,17 +143,25 @@ void CMainWindow::OnCmdClose()
 
 void CMainWindow::OnUpdateCmdClose(CCmdUI* pCmdUI) 
 	{
-	//pCmdUI->Enable(m_is_open);
+	pCmdUI->Enable(m_is_open);
 	}
 
 void CMainWindow::OnCmdPlay() 
 	{
-	m_play_state = PLAYING;
+	if(g_pGRiNSMain != NULL && m_is_open)
+		{
+		grins::iplayer *player = get_player();
+		if(player != 0)
+			{
+			player->play();
+			m_play_state = PLAYING;
+			}
+		}
 	}
 
 void CMainWindow::OnUpdateCmdPlay(CCmdUI* pCmdUI) 
 	{
-	//pCmdUI->Enable(m_is_open && (m_play_state == STOPPED || m_play_state == PAUSING));
+	pCmdUI->Enable(m_is_open && (m_play_state == STOPPED || m_play_state == PAUSING));
 	}
 
 void CMainWindow::OnCmdPause()
@@ -162,21 +170,38 @@ void CMainWindow::OnCmdPause()
 		m_play_state = PLAYING;
 	else if(m_play_state == PLAYING)
 		m_play_state = PAUSING;
+
+	if(g_pGRiNSMain != NULL && m_is_open)
+		{
+		grins::iplayer *player = get_player();
+		if(player != 0)
+			{
+			player->pause();
+			}
+		}
 	}
 
 void CMainWindow::OnUpdateCmdPause(CCmdUI* pCmdUI) 
 	{
-	//pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
+	pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
 	}
 
 void CMainWindow::OnCmdStop() 
 	{
+	if(g_pGRiNSMain != NULL && m_is_open)
+		{
+		grins::iplayer *player = get_player();
+		if(player != 0)
+			{
+			player->stop();
+			}
+		}
 	m_play_state = STOPPED;
 	}
 
 void CMainWindow::OnUpdateCmdStop(CCmdUI* pCmdUI) 
 	{
-	//pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
+	pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
 	}
 
 void CMainWindow::OnPaint() 
@@ -240,4 +265,5 @@ void CMainWindow::PaintSplash(CDC& dc)
 	dcc.SelectObject(oldbmp);
 	dcc.DeleteDC();
 	}
+
 
