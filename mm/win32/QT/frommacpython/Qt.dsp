@@ -114,6 +114,10 @@ SOURCE=.\macglue.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\pymactoolbox.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\pymactoolbox.h
 # End Source File
 # Begin Source File
@@ -123,10 +127,19 @@ SOURCE=.\Qt.rc
 # Begin Source File
 
 SOURCE=.\Qtmodule.c
+
+!IF  "$(CFG)" == "Qt - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Qt - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
-SOURCE=.\resource.h
+SOURCE=.\Qtmodule.cpp
 # End Source File
 # End Group
 # End Target
