@@ -40,7 +40,7 @@ class ImageChannel(ChannelWindow):
 		
 		try:
 			imbox = self.armed_display.display_image_from_file(
-					f, scale = scale, coordinates=self.getmediageom(node))
+					f, scale = scale, coordinates=self.getmediageom(node), center = 0)
 			self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
