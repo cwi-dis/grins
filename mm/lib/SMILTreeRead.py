@@ -262,7 +262,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						if repeat <= 0:
 							self.warning('bad repeat value', self.lineno)
-						else:
+						elif repeat != 1:
 							attrdict['loop'] = repeat
 			elif attr == 'system-bitrate':
 				try:
@@ -577,6 +577,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			func(root)
 		for node in root.GetChildren():
 			apply(self.Recurse, (node,) + funcs)
+
+	def FixRoot(self):
+		root = self.__root
+		if len(root.children) != 1:
+			return
+		if root.attrdict:
+			return
+		child = root.children[0]
+		root.type = child.type
+		root.attrdict = child.attrdict.copy()
+		root.children[:] = child.children # deletes root.children[0]
+		child.children[:] = []
+		for c in root.children:
+			c.parent = root
+		root.setgensr()
 
 	def FixSizes(self):
 		# calculate minimum required size of top-level window
@@ -909,6 +924,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
+		self.FixRoot()
 		self.FixSizes()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.FixLayouts()
