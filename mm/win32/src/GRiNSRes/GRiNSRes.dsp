@@ -459,6 +459,14 @@ SOURCE=.\RES\region.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\region1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\showed1.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\svg.bmp
 # End Source File
 # Begin Source File

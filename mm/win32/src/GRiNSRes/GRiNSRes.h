@@ -256,6 +256,9 @@
 #define IDD_TEST1                       454
 #define IDD_TEST2                       455
 #define IDD_ANIMATE                     456
+#define IDI_OPENEDEYE                   459
+#define IDI_OPENEDEYEKEY                460
+#define IDI_CLOSEDEYE                   462
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -790,7 +793,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        457
+#define _APS_NEXT_RESOURCE_VALUE        463
 #define _APS_NEXT_COMMAND_VALUE         32900
 #define _APS_NEXT_CONTROL_VALUE         1454
 #define _APS_NEXT_SYMED_VALUE           104
