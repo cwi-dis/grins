@@ -1874,13 +1874,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-begin attribute; should be "npt=<time>"')
 					del node.attrdict['clipbegin']
-				elif res.group('marker') and \
-				     not self.__context.attributes.get('project_boston'):
-					self.syntax_error('%s marker value not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						del node.attrdict['clipbegin']
-					else:
-						self.__context.attributes['project_boston'] = 1
+				elif res.group('marker'):
+					if not self.__context.attributes.get('project_boston'):
+						self.syntax_error('%s marker value not compatible with SMIL 1.0' % attr)
+						if not features.editor:
+							del node.attrdict['clipbegin']
+						else:
+							self.__context.attributes['project_boston'] = 1
+					elif not settings.MODULES['MediaClipMarkers']:
+						clip_begin = None
 			else:
 				self.syntax_error('invalid clip-begin attribute')
 		clip_end = attributes.get('clipEnd')
@@ -1903,13 +1905,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-end attribute; should be "npt=<time>"')
 					del node.attrdict['clipend']
-				elif res.group('marker') and \
-				     not self.__context.attributes.get('project_boston'):
-					self.syntax_error('%s marker value not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						del node.attrdict['clipbegin']
-					else:
-						self.__context.attributes['project_boston'] = 1
+				elif res.group('marker'):
+					if not self.__context.attributes.get('project_boston'):
+					     self.syntax_error('%s marker value not compatible with SMIL 1.0' % attr)
+						if not features.editor:
+							del node.attrdict['clipbegin']
+						else:
+							self.__context.attributes['project_boston'] = 1
+					elif not settings.MODULES['MediaClipMarkers']:
+						clip_end = None
 			else:
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
