@@ -1021,6 +1021,10 @@ SOURCE=.\M_svgpath.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_swfparser.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_sysmetrics.c
 # End Source File
 # Begin Source File
