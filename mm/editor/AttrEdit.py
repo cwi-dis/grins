@@ -5,7 +5,7 @@ import MMAttrdefs
 import ChannelMap
 from MMExc import *			# exceptions
 import MMNode
-from MMTypes import alltypes
+from MMTypes import *
 from AnchorDefs import *		# ATYPE_*
 from Hlinks import DIR_1TO2, TYPE_JUMP
 import string
@@ -1204,11 +1204,17 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		list = []
 		ctx = self.wrapper.context
 		if settings.get('lightweight'):
-			chtype = self.wrapper.node.GetContext().getchannel(self.wrapper.getvalue(self.getname())).get('type')
+			ch = self.wrapper.node.GetContext().getchannel(self.wrapper.getvalue(self.getname()))
+			if ch is not None:
+				chtype = ch.get('type')
+			else:
+				chtype = None
 			chlist = ctx.compatchannels(None, chtype)
+			chlist.sort()
 			if not chlist and not chtype:
 				chlist = ctx.channelnames[:]
-			chlist.sort()
+				chlist.sort()
+				chlist = ['undefined', None] + chlist
 			return chlist or ['undefined']
 		for name in ctx.channelnames:
 			if ctx.channeldict[name].attrdict['type'] != 'layout':
@@ -1301,11 +1307,18 @@ Alltypes[Alltypes.index('alt')] = 'switch'
 class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
 		if cmifmode():
-			return Alltypes
+			options = Alltypes[:]
 		else:
 			options = Alltypes[:]
 			options.remove('choice')
-			return options
+		ntype = self.wrapper.node.GetType()
+		if ntype in interiortypes:
+			if self.wrapper.node.GetChildren():
+				options.remove('imm')
+				options.remove('ext')
+		elif ntype == 'imm' and self.wrapper.node.GetValues():
+			options = ['imm']
+		return options
 
 	def parsevalue(self, str):
 		if str == 'choice':
