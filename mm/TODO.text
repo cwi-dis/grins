@@ -1,8 +1,22 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
+Wait for alain; make a build.
+
 Priority top-to-bottom.
 ------------------------
+Fix the RealChannel (waiting to look up Real API documentation).
+Temporal view - make it work.
+Reload button on the player.
+
+//Player - learn the scheduling algorithm (difficult)
+//Interop tests (related to Player).
+
+
+
+* clipBegin and clipEnd in the Channels.
+* Add a reload button.
+
 Order the channels
 Make the channels display in a tree
 Bars should not collide

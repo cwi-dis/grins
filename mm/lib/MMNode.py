@@ -937,11 +937,15 @@ class MMChannelTree:
 			chan = chan.__parent
 		return path
 
+	# WORKING HERE (mjvdg) working here
+	# This is currently failing when I load the bridge demo with the temporal view.
+
 	def getsubregions(self, chan):
 		# Returns a list of all the sub-regions of a certain channel (which could be a region).
 		if type(chan) != type(''):
 			chan = chan.name
 		return_me = []
+		print "DEBUG: subchans is: ", self.subchans
 		kids = self.subchans[chan]
 		for i in kids:
 			if i.get('type') =='layout':
