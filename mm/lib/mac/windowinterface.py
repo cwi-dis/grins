@@ -87,6 +87,7 @@ ProgressDialog = mw_dialogs.ProgressDialog
 BandwidthComputeDialog = mw_dialogs.BandwidthComputeDialog
 Dialog = mw_dialogs.Dialog
 multchoice = mw_dialogs.multchoice
+mmultchoice = mw_dialogs.mmultchoice
 GetYesNoCancel = mw_dialogs.GetYesNoCancel
 GetOKCancel = mw_dialogs.GetOKCancel
 GetYesNo = mw_dialogs.GetYesNo

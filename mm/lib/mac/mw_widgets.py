@@ -93,6 +93,7 @@ class _ListWidget(_ControlWidget):
 			Controls.kControlListBoxListHandleTag)
 		self.list = List.as_List(h)
 		self.list.LAddRow(len(content), 0)
+		self.multi = multi
 		if not multi:
 			self.list.selFlags = Lists.lOnlyOne
 		self._data = []
@@ -170,13 +171,14 @@ class _ListWidget(_ControlWidget):
 			if not ok: return
 			self.list.LSetSelect(0, pt)
 			
-	def select(self, num, autoscroll=0):
-		self._deselectall()
+	def select(self, num, autoscroll=0, deselect=0):
+		if not self.multi:
+			self._deselectall()
 		if num in self._data:
 			num = self._data.index(num)
 		if num is None or num < 0:
 			return
-		self.list.LSetSelect(1, (0, num))
+		self.list.LSetSelect(not deselect, (0, num))
 		if autoscroll:
 			self.list.LAutoScroll()
 		
@@ -191,6 +193,26 @@ class _ListWidget(_ControlWidget):
 		if num is None:
 			return None
 		return self._data[num]
+		
+	def getallselect(self):
+		rv = []
+		x = 0
+		y = 0
+		while 1:
+			ok, (x, y) = self.list.LGetSelect(1, (x, y))
+			if not ok:
+				return rv
+			rv.append(y)
+			ok, (x, y) = self.list.LNextCell(1, 1, (x, y))
+			if not ok:
+				return rv
+			
+	def getallselectvalues(self):
+		indices = self.getallselect()
+		rv = []
+		for i in indices:
+			rv.append(self._data[i])
+		return rv
 		
 	def setkeyboardfocus(self):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
