@@ -960,25 +960,42 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['minheight'] = height
 
 		# clip-* attributes for video
-		clip_begin = attributes.get('clip-begin')
+		clip_begin = attributes.get('clipBegin')
+		if clip_begin:
+			attr = 'clipBegin'
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('clipBegin attribute not compatible with SMIL 1.0')
+			self.__context.attributes['project_boston'] = 1
+		else:
+			attr = 'clip-begin'
+			clip_begin = attributes.get('clip-begin')
 		if clip_begin:
 			res = clip.match(clip_begin)
 			if res:
 				node.attrdict['clipbegin'] = clip_begin
-				if res.group('clock'):
+				if res.group('clock') and \
+				   not self.__context.attributes.get('project_boston')::
 					self.syntax_error('invalid clip-begin attribute; should be "npt=<time>"')
 			else:
 				self.syntax_error('invalid clip-begin attribute')
-		clip_end = attributes.get('clip-end')
+		clip_end = attributes.get('clipEnd')
+		if clip_end:
+			attr = 'clipEnd'
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('clipEnd attribute not compatible with SMIL 1.0')
+			self.__context.attributes['project_boston'] = 1
+		else:
+			attr = 'clip-end'
+			clip_end = attributes.get('clip-end')
 		if clip_end:
 			res = clip.match(clip_end)
 			if res:
 				node.attrdict['clipend'] = clip_end
-				if res.group('clock'):
+				if res.group('clock') and \
+				   not self.__context.attributes.get('project_boston')::
 					self.syntax_error('invalid clip-end attribute; should be "npt=<time>"')
 			else:
 				self.syntax_error('invalid clip-end attribute')
-
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
