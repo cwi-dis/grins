@@ -36,6 +36,7 @@ def nameencode(value):
 NSprefix = 'GRiNS'
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
+EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n\
                       "%s">\n' % (SMILpubid,SMILdtd)
 xmlns = 'xmlns:%s' % NSprefix
@@ -92,9 +93,9 @@ class IndentedFile:
 
 # Write a node to a CMF file, given by filename
 
-def WriteFile(root, filename, cleanSMIL = 0):
+def WriteFile(root, filename, cleanSMIL = 0, evallicense = 0):
 	fp = IndentedFile(open(filename, 'w'))
-	writer = SMILWriter(root, fp, filename, cleanSMIL)
+	writer = SMILWriter(root, fp, filename, cleanSMIL, evallicense)
 	writer.write()
 	if os.name == 'mac':
 		import macfs
@@ -402,8 +403,9 @@ def mediatype(chtype, error=0):
 	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename, cleanSMIL = 0):
+	def __init__(self, node, fp, filename, cleanSMIL = 0, evallicense = 0):
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
+		self.evallicense = evallicense
 
 		self.__isopen = 0
 		self.__stack = []
@@ -515,6 +517,8 @@ class SMILWriter(SMIL):
 		ctx = self.root.GetContext()
 		fp = self.fp
 		fp.write(SMILdecl)
+		if self.evallicense:
+			fp.write(EVALcomment)
 		fp.write(doctype)
 		attrlist = []
 		if self.uses_cmif_extension:
