@@ -1,0 +1,367 @@
+The window system interface consists of a number of functions.  Some
+of these functions return an object with a number of methods.
+
+All sizes and coordinates are in fractions of the width and height of
+the containing window.  On the top level, sizes and coordinates are in
+mm.  The origin is always at the top-left corner.
+
+Colors are always given as three values in the range 0-255.  The
+values are respectively the red, green, and blue components.  The
+color argument can either be a tuple containing the three values or
+the three values as separate arguments.
+
+All objects have a method is_closed() which is the only method that
+can be called once an object is closed.  This method returns 1 if the
+object is closed and 0 otherwise.
+
+The functions are:
+	newwindow(x, y, width, height, title) -> toplevel_window_object
+		This function creates a top-level window with
+		dimensions width x height at position (x, y).  The
+		title of the window is set from the title argument.
+		The methods of the window_object are described below.
+
+	close()
+		Close all top-level windows and, recursively, all
+		their subwindows.
+
+	setcursor(cursor)
+		Set the cursor glyph for all windows.  The value of
+		the argument is a string with a symbolic name for the
+		cursor.  Currently just the name 'watch' is defined to
+		set the cursor to a watch cursor.  The empty string ''
+		sets the cursor back to the default arrow cursor.
+
+	getsize() -> width, height
+		Returns the size of the monitor in mm.
+
+	readevent() -> event
+		Read the next event.  This method waits for an event
+		to occur.  A description of the possible events is
+		given below.
+
+	pollevent() -> event or None
+		Read the next event.  If there are no events pending,
+		this method returns immediately with the value None.
+		If there is an event pending, the event is returned.
+		A description of the possible events is given below.
+
+	waitevent()
+		Wait for an event to happen.  The event is left in the
+		event queue.
+
+	peekevent() -> event or None
+		Return the first event in the event queue if there is
+		one, None otherwise.  The event is not removed from
+		the event queue.  A following peekevent(), polevent(),
+		or readevent() will return the same event.
+
+	testevent() -> 0 or 1
+		Returns 1 if there is an event pending, returns 0
+		otherwise.
+
+	getfd() -> file_descriptor
+		Get the file descriptor associated with the event
+		queue.  This file descriptor may only be used in
+		select.  The select should only be done when there are
+		no more events pending in the event queue (i.e. when
+		testevent() returns 0).
+
+	findfont(font, size) -> font_object
+		This function returns a font object.  The font is a
+		symbolic name for the font, the size is the size in
+		points.  The actual point size chosen may be smaller
+		if the desired size is not available.  This function
+		returns a font object, the methods of which are
+		described below.
+
+	beep()
+		Ring the bell.
+
+	usewindowlock(lock)
+		Use the specified lock to lock out concurrent access
+		to the window system.  This method should be used when
+		there are multiple threads of control in the
+		application that use window system calls.  The lock
+		should have methods acquire() and release().
+
+The methods of the font_object are:
+	close()
+		Close the font object and free its resources.
+
+	strsize(text) -> width, height
+		Return the dimensions in mm of the box that the given
+		text would occupy if displayed in the font the font
+		object represents.
+
+	baseline() -> baseline
+		Return the height of the baseline in mm.
+
+	fontheight() -> fontheight
+		Return the height of the font in mm.
+
+	pointsize() -> pointsize
+		Return the point size actually used in points.
+
+The methods of the window_object are:
+	newwindow(x, y, width, height) -> subwindow_object
+		This method creates a subwindow of the current window
+		with dimensions width by height at position (x, y).
+		The methods of the subwindow_object are the same as
+		the methods of a toplevel_window_object.
+
+	close()
+		Close the current window and all its subwindows.
+
+	fgcolor(color)
+		Set the default foreground color.  The color is
+		inherited by the display objects and by subwindows
+		when they are created.
+
+	bgcolor(color)
+		Set the default background color.  The color is
+		inherited by the display objects and by subwindows
+		when they are created.  At creation time of the
+		display object, it is possible to override the default
+		background color.
+
+	settitle(title)
+		Set the window title to title.  This method is only
+		effective for top-level windows.
+
+	newdisplaylist(optional_bgcolor) -> display_object
+		Create a new display object.  The display object is
+		used to draw in.  At some point the display object can
+		be rendered after which it becomes the current display
+		object.  When a redraw is requested from the system,
+		the current display object is redrawn.  A subwindow
+		may have more than one display object.  The methods of
+		the display object are described below.  The
+		optional_bgcolor is an optional argument.  If it is
+		present, it sets the background color for the new
+		display object to the given color.
+
+	pop()
+		Pop the window to the top of the window stack.  The
+		system maintains a window stack, which determines
+		which windows lie on top of which other windows.  By
+		using this method, the application can order the
+		subwindows in a top-level window.  By applying this
+		method to a top-level window, the application can
+		request the system to put the window on top of all
+		other windows on the display.  Whether or not this
+		request is fulfilled depends on such external factors
+		as the window system and the window manager being
+		used.
+
+The display object has the following methods:
+	close()
+		Close the display object and free its resources.  This
+		method is called automatically when the window is
+		resized or closed.  When the display object is being
+		rendered, the window is cleared as a result of calling
+		this method.  When the display object is not currently
+		rendered, nothing happens to the window.
+
+	render()
+		Render the display list onto its window.  The display
+		list becomes the window's current display list and is
+		automatically redrawn when the system requires a
+		redraw of the window.  Only after this call, the
+		actual window contents changes.
+		After a display object has been rendered, no more
+		changes can be made.
+
+	clone() -> new_display_object
+		Create a new display object which is a copy of the
+		display object.  This method can be called at any time
+		during the lifetime of the display object.  The new
+		display object is not considered rendered and thus can
+		still be changed.
+
+	fgcolor(color)
+		Set the foreground color of the window to the given
+		color.  The default foreground color is inherited from
+		the window at the time of creation of the display
+		object.
+
+	linewidth(width)
+		Set the default line width for boxes and buttons.  The
+		width is specified in pixels until a better unit is
+		found.  [XXX--what *is* a better unit?]
+
+	newbutton(x, y, width, height) -> button_object
+		Draw a button (box) in the current foreground color.
+		The box is positioned at (x, y) and has dimensions
+		width by height.  The returned value is an instance of
+		a button object.  If the mouse is clicked within a
+		button, it is returned as part of the event value in
+		readevent and pollevent.  The methods of the button
+		object are described below.
+
+	drawbox(x, y, width, height)
+		Draw a box in the current foreground color.  The box
+		is positioned at (x, y) and has dimensions width by
+		height.
+
+	display_image_from_file(file) -> x, y, width, height
+	display_image_from_file(file, top, bottom, left, right) -> x, y, width, height
+		Display the image in the specified file on the window.
+		The image is scaled to fit in the window, but the
+		aspect ratio of the image is kept the same.  The image
+		is centered in the window.  The remaining part of the
+		window is cleared to the current background color.
+		The optional parameters top, bottom, left, right
+		specify the fractions of the image that should be
+		cropped off the respective sides of the image.
+		The file can currently contain either an RGB or a
+		JPEG image.
+		The value returned are the coordinates of the
+		displayed image.
+
+	usefont(font_object) -> font_params
+		Set the current font of the display object.  The
+		font_object is the value returned by the findfont
+		function.  This method returns a tuple consisting of
+		the font height, the baseline height, and the point
+		size.
+
+	setfont(font, size) -> font_params
+		Set the current font of the display object.  The font
+		is a symbolic name for the font, the size is the size
+		in points.  The actual point size chosen may be
+		smaller if the desired size is not available.  This
+		method returns a tuple containing the following
+		information: the position of the baseline relative to
+		the height of the font, the height of the font, and
+		the actual point size used.
+
+	fitfont(font, text) -> font_params
+		Set the current font to a font in the family indicated
+		by font.  The chosen point size is the largest
+		available point size which allows the given text to be
+		completely displayed inside the window.  The text may
+		contain newlines.  This method does not break lines in
+		order to fit more text into the window.  The method
+		returns a tuple containing the same information as the
+		setfont method.
+
+	strsize(text) -> sizes
+		This method returns a tuple with the width and height
+		that the given text would occupy in the window when
+		displayed with the current font.  The sizes are
+		measured in fractions of the width and height of the
+		window.  The text may contain newlines.  The width
+		returned is the width of the widest line, the height
+		returned is the number of lines times the font height.
+		The number of lines is one more than the number of
+		newlines in the text.
+
+	strfit(text, width, height) -> index
+		Return the highest index such that text[0:index] fits
+		in a box with the given width and height.
+
+	setpos(x, y)
+		Set the current position for displaying text.
+
+	getpos() -> x, y
+		Get the current position for displaying text.
+
+	writestr(text) -> x, y, width, height
+		Write the text into the window, starting at the
+		current position.  The current position is updated so
+		that consecutive calls to this method result in text
+		being displayed consecutively.  The text may contain
+		newlines.  Text after a newline is displayed one
+		fontheight under the current line, starting at the
+		x offset that was given in the last setpos call.  The
+		return values are coordinates of a box which fits
+		around the written text.  These coordinates can be
+		given unchanged to drawbox or newbutton.
+
+A display object has four different states:
+	1	After the display object was created but before it was
+		rendered for the first time.
+	2	The display object is the currently active rendered
+		display object.
+	3	The display object has been rendered but another
+		display object is currently active.
+	4	The display object is closed.
+In state 4, only the close() method can be used.  All other methods
+will generate an exception.
+The clone() and render() method can be called in states 1, 2, and 3.
+Calling the render() method while in any of these states moves the
+display object to state 2 and the currently active object from state 2
+to state 3.
+Calling the close() method in any of the states moves the display
+object to state 4.  If it was the currently active object, the window
+is cleared to the window's current background color, otherwise nothing
+happens to the window.
+All other methods can only be called in state 1.
+
+The button object has the following methods.
+	close()
+		Close the button object and free its resources.
+
+	hicolor(color)
+		Set the highlight color of the button.  The highlight
+		color is used to highlight the button.
+
+	hiwidth(width)
+		Set the line width for highlighted buttons.  When the
+		line widths of highlighted and unhighlighted buttons
+		differ, it may not be possible to properly display the
+		narrower version after the wider version was
+		displayed.  Therefore this method should only be used
+		with a different width than the unhighlighted box when
+		another display object is rendered after a button is
+		highlighted.
+
+	highlight()
+		Highlight the button, using the highlight color and
+		highlight width.  The display object from which this
+		button was created must be active (i.e. rendered).
+
+	unhighlight()
+		Revert the button to its unhighlighted form.  The
+		display object from which this button was created must
+		be active (i.e. rendered).
+
+The events that are returned by pollevent() and readevent() contain at
+least the following information.  Whether or not more information is
+needed is open for discussion.
+	The (sub)window object of the window with the mouse focus.
+	The type of event (keyboard input, mouse down, mouse up, etc.).
+	The value of the event (character typed, position of the mouse
+		at the time of the click, etc.).
+
+The application will never get redraw events, but it may get resize
+events.  When a resize event is generated, all windows have to be
+redrawn since the display lists have all been closed.  Since the
+subwindows were created relative to their parent windows, they can be
+resized by the library.  The application only needs to fill in the
+window.
+
+This is a first attempt to define the possible events.  All events
+return the window object which has the mouse focus.
+	KeyboardInput (value: the character typed)
+	Mouse0Press (value: position within window, list of buttons
+		mouse was in)
+	Mouse0Release (value: same as Mouse0Press)
+	Mouse1Press, Mouse1Release, Mouse2Press, Mouse2Release
+		(values: I guess you can guess)
+	Resize (values: none; the window this event returns is the
+		top-level window that was resized, but we could add a
+		list of all subwindows)
+
+After a resize the windows have a different size.  Therefore it is
+necessary that the application redraws the windows.  There are two
+ways in which this can be forced.  The first is that the display
+objects are emptied.  They still exist but are now empty and have to
+be filled in again.  The other is to close the display object
+implicitly.  The objects are then invalid and new objects have to be
+created by the application.  I have implemented this latter approach.
+
+The module events.py defines a class with methods that can be used on
+top of the events and event-related functions of this module.  See the
+documentation in the file events.doc.

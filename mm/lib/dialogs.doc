@@ -1,0 +1,114 @@
+The dialogs module defines some functions and a class to ease the
+creation of dialog boxes.  Except for special cases, it should suffice
+to only use the functions defined in the module.
+
+The following functions are defined in the module.  In all cases, the
+function returns after a button was clicked (or RETURN was typed when
+there is a default button).  The dialog window is removed before the
+window returns.
+
+	showdialog(message, buttons...) -> button_text
+		Show a dialog window with the specified message (may
+		contain newlines) and buttons with the specified
+		texts.  The window stays up until one of the buttons
+		is clicked.  The value of the button is then returned.
+		One button may start with '!'.  This button is the
+		default answer and is returned when the user types a
+		RETURN.
+
+	showmessage(message)
+		Show a dialog box with the given message and a Done
+		button.  The function does not return a value.
+
+	showquestion(question)
+		Show a dialog box with the given question and Yes and
+		No buttons.  The value returned is 1 if the Yes
+		buttons was pressed and 0 if the No button was
+		pressed.
+
+The appearance of a dialog window can be changed by setting certain
+variables before calling the function.  The variables that can be set
+are as follows.
+
+	BGCOLOR
+		A tuple consisting of three integers in the range
+		0-255.  The values are respectively, the red, green,
+		and blue components of the background color of the
+		dialog window.  The default is (255, 255, 0) which is
+		yellow.
+
+	FGCOLOR
+		Another tuple, giving the foreground color of the
+		dialog window.  The default is (0, 0, 0) which is
+		black.
+
+	INTERBUTTONGAP
+		A string, the width of which is used as space between
+		buttons.  The default is '   ' (3 spaces).
+
+	BUTTONFILLER
+		A string which is prefixed and appended to the text of
+		buttons to provide some extra space around the text.
+		The default is ' ' (1 space).
+
+	FONT
+		The name of the font used to display text.  The
+		default is 'Times-Roman'.
+
+	POINTSIZE
+		The point size used to display text.  The default is
+		14.
+
+	WINDOWTITLE
+		The title of the dialog window.  The default is
+		'MESSAGE'.
+
+	DEFLINEWIDTH
+		The line thickness of the default button, if there is
+		one.  The default is 3.  The other buttons are drawn
+		with a line thickness of 1.
+
+	WINDOWMARGIN
+		Margin around text and buttons in mm.  The default is
+		1.
+
+	CENTERLINES
+		If 1, center all lines individually, if 0 center lines
+		as a block.  The default is 0.
+
+	DONEMSG
+		The text of the button for showmessage().  The default
+		is 'Done'.
+
+	YESMSG
+		The text of the positive answer in showquestion().
+		The default is 'Yes'.
+
+	NOMSG
+		The text of the negative answer in showqueston().  The
+		default is 'No'.
+
+The class that is defined in the dialogs module is called Dialog.  It
+can be used to create a window with buttons.  This class is used by
+the functions described earlier, but it can also be used to create
+similar windows that stay up.
+
+The following methods are defined.
+
+	draw_window()
+		Draw the window.  This should be called after a
+		ResizeWindow event ws received for the window.
+
+	checkevent(window, event, value)
+		This method should be called when an event for the
+		window is received.  If a button was pressed, it
+		returns the text inside the button, otherwise it
+		returns None.
+
+	eventloop()
+		Wait for a button to be pressed and return the text of
+		the button.
+
+	close()
+		Close the window.  None of the other methods should be
+		called after this method was called.
