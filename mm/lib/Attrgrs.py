@@ -54,6 +54,14 @@ attrgrs=(
 		'system_overdub_or_caption',
 		]},
 
+	{'name':'.cname',
+	'title':'Channel name',
+	'attrs':[
+		'.cname',
+		'type',
+		'title',
+		]},
+
 	{'name':'name',
 	'title':'Node name',
 	'attrs':[
@@ -62,12 +70,11 @@ attrgrs=(
 		'.type',
 		]},
 
-	{'name':'.cname',
-	'title':'Channel name',
+	{'name':'intname',
+	'title':'Node name',
 	'attrs':[
-		'.cname',
-		'type',
-		'title',
+		'name',
+		'.type',
 		]},
 
 	{'name':'infogroup',
@@ -83,12 +90,28 @@ attrgrs=(
 		'comment'
 		]},
 
-	{'name':'duration_and_loop',
+	{'name':'timingpar',
 	'title':'Timing',
 	'attrs':[
 		'duration',
 		'loop',
 		'begin',
+		'terminator',
+		]},
+
+	{'name':'timing1',
+	'title':'Timing',
+	'attrs':[
+		'duration',
+		'loop',
+		'begin',
+		]},
+
+	{'name':'timing2',
+	'title':'Timing',
+	'attrs':[
+		'duration',
+		'start',
 		]},
 
  	{'name':'webserver',
