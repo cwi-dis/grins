@@ -97,13 +97,16 @@ class MovieWindow(ChannelWindow):
 		self.node = node
 		self.vfile.magnify = MMAttrdefs.getattr(self.node, 'scale')
 		dummy = self.peekaboo()
-		if self.lookahead <> None and self.wid <> 0:
-			self.pop()
-			gl.winset(self.wid)
-			#self.erase()
+		if self.lookahead <> None and self.is_showing():
+			self.setwin()
 			self.vfile.initcolormap()
 			self.rgbmode = (self.vfile.format == 'rgb')
 			self.centerimage()
+	#
+	def popup(self):
+		if gl.windepth(self.wid) <> 1:
+			self.pop()
+			self.vfile.initcolormap()
 	#
 	def centerimage(self):
 		w, h = self.vfile.width, self.vfile.height
@@ -174,20 +177,23 @@ class MovieChannel(Channel):
 	def save_geometry(self):
 		self.window.save_geometry()
 	#
-	
 	def arm(self, node):
 		if not self.is_showing():
 			return
 		filename = self.getfilename(node)
 		self.window.setfile(filename, node)
 		self.armed_node = node
+	#
 	def play(self, (node, callback, arg)):
 		if not self.is_showing():
 			self.player.enter(node.t1-node.t0, 0, callback, arg)
 			return
 	        if node <> self.armed_node:
-		    print 'MovieChannel: node not armed'
-		    self.arm(node)
+			print 'MovieChannel: node not armed'
+			self.pop()
+			self.arm(node)
+		else:
+			self.window.popup()
 		self.armed_node = None
 		self.starttime = self.player.timefunc()
 		self.played = self.skipped = 0
