@@ -945,10 +945,15 @@ class ChannelWrapper(Wrapper):
 		# we're in SMIL mode.
 		base = self.channel.get('base_window')
 		if base is None:
+			# top layout
 			if 'z' in rv: rv.remove('z')
 			if 'base_winoff' in rv: rv.remove('base_winoff')
 			if 'units' in rv: rv.remove('units')
 			if 'transparent' in rv: rv.remove('transparent')
+			if 'traceImage' not in rv: rv.append('traceImage')			
+		else:
+			# region
+			if 'traceImage' in rv: rv.remove('traceImage')			
 ##		if not cmifmode():
 ##			if 'file' in rv: rv.remove('file')
 ##			if 'scale' in rv: rv.remove('scale')
