@@ -515,7 +515,7 @@ class SMIL:
 		'par': __container_content,
 		'seq': __container_content,
 		'excl': __container_content + ['priorityClass'],
-		'priorityClass': __container_content + ['priorityClass'],
+		'priorityClass': __container_content,
 		__choice: __container_content,
 		__bag: __container_content,
 		'switch': ['layout', 'region', 'viewport'] + __container_content,
