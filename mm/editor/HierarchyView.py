@@ -1495,7 +1495,7 @@ class HierarchyView(HierarchyViewDialog):
 			if a in defattrlist: defattrlist.remove(a)
 
 		copylist = windowinterface.mmultchoice('Select properties for new parent node', attrlist, defattrlist, parent=self.getparentwindow())
-		if not copylist: return
+		if copylist is None: return
 
 		em = self.editmgr
 		if not em.transaction():
@@ -1503,37 +1503,37 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 
 		# This is one way of doing this.
-##		siblings = parent.GetChildren()
-##		i = siblings.index(node)
-##		em.delnode(node)
-##		newnode = node.GetContext().newnode(type)
-##		em.addnode(parent, i, newnode)
-##		em.addnode(newnode, 0, node)
-##		self._copyattrdict(node, newnode, copylist, editmgr=em)
+		siblings = parent.GetChildren()
+		i = siblings.index(node)
+		em.delnode(node)
+		newnode = node.GetContext().newnode(type)
+		em.addnode(parent, i, newnode)
+		em.addnode(newnode, 0, node)
+		self._copyattrdict(node, newnode, copylist, editmgr=em)
 
-		# This is another.
-		url = MMAttrdefs.getattr(node, 'file')
-		name = MMAttrdefs.getattr(node, 'name')
-		newtype = node.type
-		em.setnodeattr(node, 'file', None)
-		em.setnodeattr(node, 'name', None)
-		em.setnodetype(node, type)
-		newnode = node.GetContext().newnode(newtype)
-		children = node.children[:]
-		for i in range(0, len(children)):
-			em.delnode(children[i])
-			em.addnode(newnode, -1, children[i])
-		em.addnode(node, 0, newnode)
-		em.setnodeattr(newnode, 'file', url)
-		em.setnodeattr(newnode, 'name', name)
+##		# This is another.
+##		url = MMAttrdefs.getattr(node, 'file')
+##		name = MMAttrdefs.getattr(node, 'name')
+##		newtype = node.type
+##		em.setnodeattr(node, 'file', None)
+##		em.setnodeattr(node, 'name', None)
+##		em.setnodetype(node, type)
+##		newnode = node.GetContext().newnode(newtype)
+##		children = node.children[:]
+##		for i in range(0, len(children)):
+##			em.delnode(children[i])
+##			em.addnode(newnode, -1, children[i])
+##		em.addnode(node, 0, newnode)
+##		em.setnodeattr(newnode, 'file', url)
+##		em.setnodeattr(newnode, 'name', name)
 
-		em.setglobalfocus([newnode])
+##		em.setglobalfocus([newnode])
 		expandnode(newnode)
 
 		self.aftersetfocus()
 		em.commit()
-		if not features.lightweight:
-			AttrEdit.showattreditor(self.toplevel, newnode, 'name')
+##		if not features.lightweight:
+##			AttrEdit.showattreditor(self.toplevel, newnode, 'name')
 
 	def paste(self, where):
 		# where is -1 (before), 0 (under) or 1 (after)
