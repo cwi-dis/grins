@@ -416,10 +416,6 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		mc.Stop()
 	del b
 	return file
-	
-
-
-
 
 def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	global engine
@@ -442,6 +438,9 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	audiopin = None
 	has_video = reader.HasVideo()
 	has_audio = reader.HasAudio()
+	if not has_video:
+		import windowinterface
+		windowinterface.showmessage("Warning: no video track found in %s"%srcurl)
 	# XXXX Temporary
 	if has_audio:
 		import windowinterface
@@ -462,6 +461,8 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	if warning:
 		import windowinterface
 		windowinterface.showmessage('Warning:\n'+warning)
+	if not (has_audio or has_video):
+		return
 	engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, has_audio)
 	engine.SetDoOutputMimeType(producer.MIME_REALVIDEO, has_video)
 	engine.SetDoOutputMimeType(producer.MIME_REALEVENT, 0)
