@@ -45,12 +45,13 @@ class BasicDialog(glwindow.glwindow):
 	# Derived classes must extend this method.
 	# XXX Shouldn't have (width, height) argument?
 	#
-	def init(self, (width, height, title)):
+	def init(self, width, height, title):
 		self.width = int(width)
 		self.height = int(height)
 		self.title = title
 		self.showing = 0
 		self.last_geometry = None
+		self.waiting = 0
 		self.make_form()
 		return self
 	#
@@ -79,8 +80,10 @@ class BasicDialog(glwindow.glwindow):
 		else:
 			mode = PLACE_SIZE
 		self.form.show_form(mode, 1, self.title)
-		glwindow.register(self, self.form.window)
 		self.showing = 1
+		if self.waiting:
+			self.setwaiting()
+		glwindow.register(self, self.form.window)
 		self.setwin()
 		gl.winconstraints()
 		fl.qdevice(DEVICE.WINSHUT)
@@ -99,11 +102,13 @@ class BasicDialog(glwindow.glwindow):
 			print 'BasicDialog: setwin() of hidden window'
 	#
 	def setwaiting(self):
+		self.waiting = 1
 		if self.showing:
-			gl.winset(self.form.window)
+			self.setwin()
 			gl.setcursor(WATCH, 0, 0)
 	#
 	def setready(self):
+		self.waiting = 0
 		if self.showing:
 			gl.winset(self.form.window)
 			gl.setcursor(ARROW, 0, 0)
@@ -160,7 +165,7 @@ class Dialog(BasicDialog):
 	#
 	# Initialization routine.
 	#
-	def init(self, (width, height, title, hint)):
+	def init(self, width, height, title, hint):
 		self.hint = hint
 		return BasicDialog.init(self, width, height, title)
 	#
@@ -248,6 +253,7 @@ class GLDialog(glwindow.glwindow):
 		self.parentwid = 0
 		self.last_geometry = None
 		self.used_as_base = 0
+		self.waiting = 0
 		return self
 
 	def __repr__(self):
@@ -283,6 +289,8 @@ class GLDialog(glwindow.glwindow):
 		else:
 			self.wid = gl.winopen(self.title)
 			gl.winconstraints()
+		if self.waiting:
+			self.setwaiting()
 		glwindow.register(self, self.wid)
 		fl.qdevice(DEVICE.WINSHUT)
 	#
@@ -302,11 +310,13 @@ class GLDialog(glwindow.glwindow):
 			print 'GLDialog: setwin() of hidden window'
 	#
 	def setwaiting(self):
+		self.waiting = 1
 		if self.wid <> 0:
 			gl.winset(self.wid)
 			gl.setcursor(1, 1, 1)
 	#
 	def setready(self):
+		self.waiting = 0
 		if self.wid <> 0:
 			gl.winset(self.wid)
 			gl.setcursor(0, 0, 0)

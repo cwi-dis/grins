@@ -20,7 +20,7 @@ from string import letters, digits
 
 class MMParser:
 	#
-	def init(self, (input, context)):
+	def init(self, input, context):
 		#
 		# 'input' should have a parameterless method readline()
 		# which returns the next line, including trailing '\n',
