@@ -3,8 +3,6 @@
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-# XXX New implementation -- under construction
-
 # XXX To do:
 # - remember 'locked' over commit
 # - remember sync arc focus over commit
@@ -25,6 +23,7 @@ from ViewDialog import ViewDialog
 from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
 import Timing
+from ArmStates import *
 
 import NodeInfo
 import NodeEdit
@@ -43,6 +42,14 @@ TEXTCOLOR = 0, 0, 0			# Black
 FOCUSCOLOR = 255, 0, 0			# Red
 LOCKEDCOLOR = 0, 255, 0			# Green
 LINECOLOR = 255, 255, 255		# White
+
+# Arm colors
+armcolors = { \
+	     ARM_SCHEDULED: (200, 200, 0), \
+	     ARM_ARMING: (255, 255, 0), \
+	     ARM_ARMED: (255, 200, 0), \
+	     ARM_PLAYING: (0, 255, 0), \
+	     }
 
 
 # Arrowhead dimensions
@@ -70,10 +77,20 @@ class ChannelView(ViewDialog, GLDialog):
 	# Special interface for the Player to show armed state of nodes
 
 	def setarmedmode(self, node, mode):
-		pass # XXX later
+		try:
+			obj = node.cv_obj
+		except AttributeError:
+			return # Invisible node
+		obj.setarmedmode(mode)
 
 	def unarm_all(self):
-		pass # XXX later
+		if self.is_showing():
+			self.unarm_node(self.root)
+
+	def unarm_node(self, node):
+		self.setarmedmode(node, ARM_NONE)
+		for child in node.GetChildren():
+			self.unarm_node(child)
 
 	# Dialog interface (extends GLDiallog.{show,hide})
 
@@ -201,7 +218,7 @@ class ChannelView(ViewDialog, GLDialog):
 	def recalc(self, focus):
 		self.objects = []
 		self.focus = self.lockednode = None
-		self.baseobject = BaseMenu().init(self, 'Time chart')
+		self.baseobject = GO().init(self, 'Time chart')
 		self.baseobject.select()
 		self.objects.append(self.baseobject)
 		self.initchannels(focus)
@@ -250,14 +267,10 @@ class ChannelView(ViewDialog, GLDialog):
 	# Node stuff
 
 	def initnodes(self, focus):
-		print 'calctimes ...'
 		Timing.optcalctimes(self.root)
-		print 'done; scantree ...'
 		arcs = []
 		self.scantree(self.root, focus, arcs)
-		if arcs:
-			self.objects[len(self.objects):] = arcs
-		print 'done.'
+		self.objects[len(self.objects):] = self.arcs = arcs
 
 	def scantree(self, node, focus, arcs):
 		if node.GetType() in leaftypes:
@@ -370,6 +383,7 @@ class GO:
 		totalbottom = self.mother.height
 		totalheight = totalbottom - totaltop
 		totaltime = self.mother.root.t1 - self.mother.root.t0
+		if totaltime <= 0: totaltime = 1
 		starttime = node.t0 - self.mother.root.t0
 		stoptime  = node.t1 - self.mother.root.t0
 
@@ -388,12 +402,6 @@ class GO:
 		#print MMAttrdefs.getattr(node, 'name')
 
 		return left, top, right, bottom
-
-
-# Base class for objects with menus.
-# Each derived class should define its own commandlist, menu, menuproc, keymap
-
-class BaseMenu(GO):
 
 	# Subroutine to make the menu, the list of menuprocs, and the keymap.
 	# Don't use it as a method!
@@ -459,7 +467,7 @@ class BaseMenu(GO):
 
 # Class for Channel Objects
 
-class ChannelBox(BaseMenu):
+class ChannelBox(GO):
 
 	def reshape(self):
 		nchannels = len(self.mother.context.channelnames)
@@ -521,7 +529,7 @@ class ChannelBox(BaseMenu):
 		gl.v2f(self.xcenter, self.farbottom)
 		gl.endline()
 
-	# Menu stuff beyond what BaseMenu offers
+	# Menu stuff beyond what GO offers
 
 	def attrcall(self):
 		AttrEdit.showchannelattreditor(self.mother.context, self.name)
@@ -537,23 +545,35 @@ class ChannelBox(BaseMenu):
 		# Hook for newchannelcall to determine placement
 		return self.mother.context.channelnames.index(self.name)
 
-	commandlist = c = BaseMenu.commandlist[:]
+	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
 	c.append('i', '', attrcall)
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
-	menu, menuprocs, keymap = BaseMenu.makemenu('Channel ops', commandlist)
+	menu, menuprocs, keymap = GO.makemenu('Channel ops', commandlist)
 
 
-class NodeBox(BaseMenu):
+class NodeBox(GO):
 
 	def init(self, mother, node, cname):
 		self.node = node
+		node.cv_obj = self
 		self.cname = cname # Channel name
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
-		return BaseMenu.init(self, mother, name)
+		self.armedmode = ARM_NONE
+		return GO.init(self, mother, name)
+
+	def cleanup(self):
+		del self.node.cv_obj
+		GO.cleanup(self)
+
+	def setarmedmode(self, mode):
+		# print 'node', self.name, 'setarmedmode', mode
+		self.armedmode = mode
+		GLDialog.show(self.mother) # For winset() effect
+		self.drawfocus()
 
 	def lock(self):
 		if not self.locked:
@@ -572,7 +592,7 @@ class NodeBox(BaseMenu):
 
 	def select(self):
 		self.unlock()
-		BaseMenu.select(self)
+		GO.select(self)
 
 	def reshape(self):
 		self.left, self.top, self.right, self.bottom = \
@@ -585,7 +605,10 @@ class NodeBox(BaseMenu):
 
 	def drawfocus(self):
 		# Draw a box
-		gl.RGBcolor(NODECOLOR)
+		if armcolors.has_key(self.armedmode):
+			gl.RGBcolor(armcolors[self.armedmode])
+		else:
+			gl.RGBcolor(NODECOLOR)
 		gl.bgnpolygon()
 		gl.v2f(self.left, self.top)
 		gl.v2f(self.right, self.top)
@@ -613,7 +636,7 @@ class NodeBox(BaseMenu):
 		centerstring(self.left, self.top, self.right, self.bottom, \
 			     self.name)
 
-	# Menu stuff beyond what BaseMenu offers
+	# Menu stuff beyond what GO offers
 
 	def playcall(self):
 		self.mother.toplevel.player.playsubtree(self.node)
@@ -651,7 +674,7 @@ class NodeBox(BaseMenu):
 		# NB: when we get here, this object is nearly dead already!
 		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
 
-	commandlist = c = BaseMenu.commandlist[:]
+	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
 	c.append('p', 'Play node...', playcall)
@@ -661,15 +684,15 @@ class NodeBox(BaseMenu):
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
 	c.append('s', 'New sync arc...', newsyncarccall)
-	menu, menuprocs, keymap = BaseMenu.makemenu('Node ops', commandlist)
+	menu, menuprocs, keymap = GO.makemenu('Node ops', commandlist)
 
 
-class ArcBox(BaseMenu):
+class ArcBox(GO):
 
 	def init(self, mother, snode, sside, delay, dnode, dside):
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
 			snode, sside, delay, dnode, dside
-		return BaseMenu.init(self, mother, 'arc')
+		return GO.init(self, mother, 'arc')
 
 	def reshape(self):
 		sbox = self.nodebox(self.snode)
@@ -729,7 +752,7 @@ class ArcBox(BaseMenu):
 		gl.endpolygon()
 		gl.popmatrix()
 
-	# Menu stuff beyond what BaseMenu offers
+	# Menu stuff beyond what GO offers
 
 	def infocall(self):
 		ArcInfo.showarcinfo(self.mother.root, \
@@ -744,13 +767,13 @@ class ArcBox(BaseMenu):
 			self.delay, self.dnode, self.dside)
 		editmgr.commit()
 
-	commandlist = c = BaseMenu.commandlist[:]
+	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
 	c.append('i', 'Sync arc info...', infocall)
 	c.append('d', 'Delete sync arc',  delcall)
 	menu, menuprocs, keymap = \
-		BaseMenu.makemenu('Sync arc ops', commandlist)
+		GO.makemenu('Sync arc ops', commandlist)
 
 	
 
