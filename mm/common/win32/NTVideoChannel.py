@@ -292,6 +292,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.initVideoRenderer()
 		return self
 
+	def onRealChannelBegin(self):
+		self.__realChannelBegin = 1
+
 	# 
 	# Implement interface of real video renderer
 	# 
@@ -319,6 +322,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def initVideoRenderer(self):
 		self.__rmdds = None
 		self.__rmrender = None
+		self.__realChannelBegin = 0
 		
 	def cleanVideoRenderer(self):
 		if self.window:
@@ -357,6 +361,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
 			
 	def Blt(self, data):
+		if not self.__realChannelBegin: return
 		if self.__rmdds and self.__rmrender:
 			blt, w, h = self.__rmrender
 			try:
