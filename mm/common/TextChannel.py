@@ -68,15 +68,15 @@ class TextChannel(ChannelWindow):
 		# all text, then draw a button the size of the whole
 		# channel.
 		if len(taglist) == 1:
-			par0, chr0, par1, chr1, name, type = taglist[0]
+			par0, chr0, par1, chr1, name, type, times = taglist[0]
 			if par0 == 0 and chr0 == 0 and \
 			   par1 == len(parlist)-1 and chr1 == len(parlist[-1]):
 				taglist = []
-				buttons.append(name, (0.0,0.0,1.0,1.0), type)
+				buttons.append((name, (0.0,0.0,1.0,1.0), type, times))
 				if not drawbox:
 					self.armed_display.fgcolor(bucolor)
 		pline, pchar = 0, 0
-		for (par0, chr0, par1, chr1, name, type) in taglist:
+		for (par0, chr0, par1, chr1, name, type, times) in taglist:
 			# first convert paragraph # and character #
 			# to line and character.
 			line0, char0 = map_parpos_to_linepos(par0, \
@@ -99,11 +99,11 @@ class TextChannel(ChannelWindow):
 				self.armed_display.fgcolor(bucolor)
 			for line in range(pline, line1):
 				box = self.armed_display.writestr(curlines[line][pchar:])
-				buttons.append((name, box, type))
+				buttons.append((name, box, type, times))
 				dummy = self.armed_display.writestr('\n')
 				pchar = 0
 			box = self.armed_display.writestr(curlines[line1][pchar:char1])
-			buttons.append((name, box, type))
+			buttons.append((name, box, type, times))
 			# update loop invariants
 			pline, pchar = line1, char1
 			self.armed_display.fgcolor(fgcolor)
@@ -117,12 +117,12 @@ class TextChannel(ChannelWindow):
 			self.armed_display.fgcolor(bucolor)
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-		for (name, box, type) in buttons:
+		for (name, box, type, times) in buttons:
 			button = self.armed_display.newbutton(box)
 			if drawbox:
 				button.hicolor(hicolor)
 				button.hiwidth(3)
-			self.setanchor(name, type, button)
+			self.setanchor(name, type, button, times)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.
 		box = self.armed_display.writestr('')
@@ -261,7 +261,7 @@ def fix_anchorlist(node, taglist):
 	anchors = oldanchors[:]
 	i = 0
 	while i < len(anchors):
-		aid, atype, args = a = anchors[i]
+		aid, atype, args, times = a = anchors[i]
 		if atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
 			pass
 		elif aid not in names_in_anchors:
@@ -277,7 +277,7 @@ def fix_anchorlist(node, taglist):
 		name = item[4]
 		if not anchor_types.has_key(name):
 			print 'Add text anchor to anchorlist:', name
-			anchors.append(name, ATYPE_NORMAL, [])
+			anchors.append((name, ATYPE_NORMAL, [], (0,0)))
 			anchor_types[name] = ATYPE_NORMAL
 		taglist[i] = taglist[i] + (anchor_types[name],)
 	if anchors <> oldanchors:
