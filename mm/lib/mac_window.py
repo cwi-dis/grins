@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import mac_windowbase
 from mac_windowbase import TRUE, FALSE, SINGLE, UNIT_MM
+import WMEVENTS
 
 from types import *
 import math
@@ -787,7 +788,6 @@ class DialogWindow(_Window):
 		wid = Dlg.GetNewDialog(resid, -1)
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
-		print 'w=', w, 'h=', h
 		_Window.__init__(self, toplevel, wid, 0, 0, w, h)
 		toplevel._register_wid(wid, self, "a dialog")
 		Qd.SetPort(wid)
@@ -833,6 +833,118 @@ class DialogWindow(_Window):
 		widget = _ListWidget(self._wid, rect, content)
 		self.addwidget(widget)
 		return widget
+		
+#
+# XXXX Maybe the previous class should be combined with this one, or does that
+# give too many stuff in one object (window, dialogwindow, per-dialog info, editor
+# info)?
+class MACDialog:
+	def __init__(self, title, resid, allitems=[], default=None, cancel=None):
+		self._itemlist_shown = allitems[:]
+		self._window = DialogWindow(resid)
+		self._dialog = self._window._wid
+		# Override event handler:
+		self._window.do_itemhit = self.do_itemhit
+
+		# Setup default key bindings
+		if not default is None:
+			self._dialog.SetDialogDefaultItem(default)
+		if not cancel is None:
+			self._dialog.SetDialogCancelItem(cancel)
+
+	def _showitemlist(self, itemlist):
+		"""Make sure the items in itemlist are visible and active"""
+		for item in itemlist:
+			if item in self._itemlist_shown:
+				continue
+			self._dialog.ShowDialogItem(item)
+			self._itemlist_shown.append(item)
+		
+	def _hideitemlist(self, itemlist):
+		"""Make items in itemlist inactive and invisible"""
+		for item in itemlist:
+			if item not in self._itemlist_shown:
+				continue
+			self._dialog.HideDialogItem(item)
+			self._itemlist_shown.remove(item)
+			
+	def _setsensitive(self, itemlist, sensitive):
+		"""Set or reset item sensitivity to user input"""
+		for item in itemlist:
+			tp, h, rect = self._dialog.GetDialogItem(item)
+			ctl = h.as_Control()
+			if sensitive:
+				ctl.HiliteControl(0)
+			else:
+				ctl.HiliteControl(255)
+		if sensitive:
+			self._showitemlist(itemlist)
+
+	def _settextsensitive(self, itemlist, sensitive):
+		"""Set or reset item sensitivity to user input"""
+		for item in itemlist:
+			tp, h, rect = self._dialog.GetDialogItem(item)
+			if sensitive:
+				tp = tp & ~128
+			else:
+				tp = tp | 128
+			self._dialog.SetDialogItem(item, tp, h, rect)
+		if sensitive:
+			self._showitemlist(itemlist)
+			
+	def _setlabel(self, item, text):
+		"""Set the text of a static text or edit text"""
+		tp, h, rect = self._dialog.GetDialogItem(item)
+		Dlg.SetDialogItemText(h, text)
+
+	def _getlabel(self, item):
+		"""Return the text of a static text or edit text"""
+		tp, h, rect = self._dialog.GetDialogItem(item)
+		return Dlg.GetDialogItemText(h)
+
+	def close(self):
+		"""Close the dialog and free resources."""
+		self._window.close()
+		del self._window.do_itemhit
+		del self._dialog
+
+	def show(self):
+		"""Show the dialog."""
+		self._window.show()
+		self._window.register(WMEVENTS.WindowExit, self.goaway, ())
+		
+	def pop(self):
+		"""Pop window to front"""
+		self._window.pop()
+		
+	def goaway(self, *args):
+		"""Callback used when user presses go-away box of window"""
+		self.hide()
+
+	def hide(self):
+		"""Hide the dialog."""
+		self._window.hide()
+
+	def settitle(self, title):
+		"""Set (change) the title of the window.
+
+		Arguments (no defaults):
+		title -- string to be displayed as new window title.
+		"""
+		self._window.settitle(title)
+
+	def is_showing(self):
+		"""Return whether dialog is showing."""
+		return self._window.is_showing()
+
+	def setcursor(self, cursor):
+		"""Set the cursor to a named shape.
+
+		Arguments (no defaults):
+		cursor -- string giving the name of the desired cursor shape
+		"""
+		self._window.setcursor(cursor)
+		
 		
 # XXXX Do we need a control-window too?
 
@@ -928,6 +1040,9 @@ class _ListWidget:
 	def get(self):
 		return self._data
 		
+	def getitem(self, item):
+		return self._data[item]
+		
 	def insert(self, where=-1, content):
 		self.list.LSetDrawingMode(0)
 		where = self._insert(where, len(content))
@@ -951,7 +1066,7 @@ class _ListWidget:
 			
 	def select(self, num):
 		self.deselectall()
-		if num < 0:
+		if num is None or num < 0:
 			return
 		self.list.LSetSelect(1, (0, num))
 		
@@ -982,7 +1097,7 @@ class _ListWidget:
 		
 	def _activate(self, onoff):
 		self.list.LActivate(onoff)
-
+		
 class SelectionDialog(DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
 		# First create dialogwindow and set static items
