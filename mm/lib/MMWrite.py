@@ -197,7 +197,7 @@ def writetype(value, dummy, fp):
 	if type == 'enum':
 		for name in arg:
 			fp.write(' ')
-			writename(name)
+			writename(name, None, fp)
 	elif type == 'tuple':
 		for t in arg:
 			fp.write(' ')

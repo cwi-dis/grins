@@ -271,7 +271,6 @@ class Animator:
 		vl = self._values
 		dur = self._dur
 		el = self._splines
-		n = len(vl)
 		if t==dur: 
 			return vl[len(vl)-1]
 		elif t==0:
@@ -725,7 +724,7 @@ class EffectiveAnimator:
 		self.__currvalue = None
 
 		# keep tag for exceptions
-		self.__tag = tag = MMAttrdefs.getattr(targnode, 'atag')
+		self.__tag = MMAttrdefs.getattr(targnode, 'atag')
 			
 		# we need a temporary instance of the
 		# last animator removed from self.__animators
@@ -853,7 +852,6 @@ class EffectiveAnimator:
 	def __appendSubChannels(self, region, childs):
 		from Channel import channels
 		for chan in channels:
-			chtype = chan._attrdict.get('type')
 			base_window = chan._attrdict.get('base_window')
 			if base_window == region._name:
 				childs.append(chan)
@@ -1215,7 +1213,7 @@ class AnimateElementParser:
 
 		# for 'by-only animation' force: additive = 'sum' 
 		if self.__animtype == 'by' and self.__isadditive:
-			additive = 'sum'
+			self.__additive = 'sum'	# XXX guess by sjoerd
 
 		# accumulate has the default value 'none' see SMIL.py
 		self.__accumulate = MMAttrdefs.getattr(anim, 'accumulate')
@@ -1694,7 +1692,6 @@ class AnimateElementParser:
 		if not values: return values
 		dx, dy = self.__domval.real, self.__domval.imag
 		strcoord = string.split(values,';')
-		coords = []
 		retstr = ''
 		for str in strcoord:
 			x, y = self.__getNumPair(str)

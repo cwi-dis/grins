@@ -1084,7 +1084,6 @@ class MMChannel(MMTreeElement):
 	def __attrsImport(self, context, channelTarget):
 		# copy attributes on this node
 		for attrName, attrValue in self.attrdict.items():
-			cssName = None
 			# special action for positioning attributes. See also deepexport method
 			for attr in _CssAttrs:
 				#XXX retrieve the original name 
@@ -1635,9 +1634,9 @@ class MMSyncArc:
 				srcnode = self.dstnode.context.mapuid(uidremap[uid])
 
 		return MMSyncArc(dstnode, action, srcnode,
-				self.srcanchor, self.channel, self.event,
-				self.marker, self.wallclock,
-				self.accesskey, self.delay)
+				 self.srcanchor, self.channel, self.event,
+				 self.marker, self.wallclock,
+				 self.accesskey, self.delay)
 
 	def refnode(self):
 		node = self.dstnode
@@ -1772,7 +1771,7 @@ class MMSyncArc:
 		if self.timestamp is not None:
 			return self.timestamp
 		if self.wallclock is not None:
-			import time, calendar
+			import time
 			t0 = time.time()
 			t1 = sctx.parent.timefunc()
 			localtime = time.localtime(t0)
@@ -3096,28 +3095,7 @@ class MMNode(MMTreeElement):
 			return
 		newarcs = []
 		for arc in arcs:
-			if arc.isstart:
-				action = 'begin'
-			elif arc.ismin:
-				action = 'min'
-			elif arc.isdur:
-				action = 'dur'
-			else:
-				action = 'end'
-			uid = arc.dstnode.uid
-			if uidremap.has_key(uid):
-				dstnode = self.context.mapuid(uidremap[uid])
-			srcnode = arc.srcnode
-			if isinstance(srcnode, MMNode):
-				# if it's a string or None, we just copy
-				uid = srcnode.uid
-				if uidremap.has_key(uid):
-					srcnode = self.context.mapuid(uidremap[uid])
-			arc = MMSyncArc(dstnode, action, srcnode,
-					arc.srcanchor, arc.channel, arc.event,
-					arc.marker, arc.wallclock,
-					arc.accesskey, arc.delay)
-			newarcs.append(arc)
+			newarcs.append(arc.copy(uidremap))
 		self.SetAttr(attr, newarcs)
 
 	#
@@ -3464,10 +3442,8 @@ class MMNode(MMTreeElement):
 		#
 		# Select the generator for the body of the node.
 		#
-		is_realpix = 0
 		if self._is_realpix_with_captions():
 			gensr_body = self.gensr_body_realpix
-			is_realpix = 1
 		else:
 			gensr_body = self.gensr_body_interior
 

@@ -223,7 +223,6 @@ def getattr(node, attrname, animated=0):
 	if animated:
 		return getdirattr(node, attrname, animated)
 
-	import settings
 	if node != None:
 		if node.isCssAttr(attrname):
 			return node.getCssAttr(attrname)
@@ -354,15 +353,15 @@ def getdefattr(node, attrname):
 		else:
 			return defaultvalue
 	elif inheritance == 'region':
-		ch = node.GetChannel()
-		if ch is not None:
-			region = ch.GetLayoutChannel()
-			if region is not None:
-				attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
-			else:
-				attrvalue = defaultvalue
-		else:
-			attrvalue = defaultvalue					
+##		ch = node.GetChannel()
+##		if ch is not None:
+##			region = ch.GetLayoutChannel()
+##			if region is not None:
+##				attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
+##			else:
+##				attrvalue = defaultvalue
+##		else:
+##			attrvalue = defaultvalue
 		return defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \

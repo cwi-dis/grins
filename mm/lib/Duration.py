@@ -18,7 +18,6 @@ def getintrinsicduration(node, wanterror):
 		clipend = node.GetClip('clipend', 'sec')
 	except ValueError:
 		clipend = 0
-	context = node.GetContext()
 	url = node.GetFile()
 	cache = urlcache.urlcache[url]
 	dur = cache.get('duration')
