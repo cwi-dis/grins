@@ -167,7 +167,7 @@ class MMNode(MMNodeBase.MMNode):
 		MMNodeBase.MMNode.__init__(self, type, context, uid)
 		self.parent = None
 		self.children = []
-		self.summaries = {}
+##		self.summaries = {}
 		self.setgensr()
 
 	#
@@ -207,7 +207,7 @@ class MMNode(MMNodeBase.MMNode):
 		return path
 
 	def IsAncestorOf(self, x):
-		while x <> None:
+		while x is not None:
 			if self == x: return 1
 			x = x.parent
 		return 0
@@ -249,10 +249,10 @@ class MMNode(MMNodeBase.MMNode):
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 
-	def GetSummary(self, name):
-		if not self.summaries.has_key(name):
-			self.summaries[name] = self._summarize(name)
-		return self.summaries[name]
+## 	def GetSummary(self, name):
+## 		if not self.summaries.has_key(name):
+## 			self.summaries[name] = self._summarize(name)
+## 		return self.summaries[name]
 
 	def Dump(self):
 		print '*** Dump of', self.type, 'node', self, '***'
@@ -260,13 +260,13 @@ class MMNode(MMNodeBase.MMNode):
 		attrnames.sort()
 		for name in attrnames:
 			print 'Attr', name + ':', `self.attrdict[name]`
-		summnames = self.summaries.keys()
-		if summnames:
-			summnames.sort()
-			print 'Has summaries for attrs:',
-			for name in summnames:
-				print name,
-			print
+## 		summnames = self.summaries.keys()
+## 		if summnames:
+## 			summnames.sort()
+## 			print 'Has summaries for attrs:',
+## 			for name in summnames:
+## 				print name,
+## 			print
 		if self.type == 'imm' or self.values:
 			print 'Values:',
 			for value in self.values: print value,
@@ -386,13 +386,13 @@ class MMNode(MMNodeBase.MMNode):
 
 	def SetAttr(self, name, value):
 		self.attrdict[name] = value
-		self._updsummaries([name])
+##		self._updsummaries([name])
 
 	def DelAttr(self, name):
 		if not self.attrdict.has_key(name):
 			raise NoSuchAttrError, 'in DelAttr()'
 		del self.attrdict[name]
-		self._updsummaries([name])
+##		self._updsummaries([name])
 
 	def Destroy(self):
 		if self.parent: raise CheckError, 'Destroy() non-root node'
@@ -407,14 +407,14 @@ class MMNode(MMNodeBase.MMNode):
 		self.parent = None
 		self.children = None
 		self.values = None
-		self.summaries = None
+##		self.summaries = None
 
 	def Extract(self):
 		if not self.parent: raise CheckError, 'Extract() root node'
 		parent = self.parent
 		self.parent = None
 		parent.children.remove(self)
-		parent._fixsummaries(self.summaries)
+##		parent._fixsummaries(self.summaries)
 
 	def AddToTree(self, parent, i):
 		if self.parent: raise CheckError, 'AddToTree() non-root node'
@@ -426,8 +426,8 @@ class MMNode(MMNodeBase.MMNode):
 		else:
 			parent.children.insert(i, self)
 		self.parent = parent
-		parent._fixsummaries(self.summaries)
-		parent._rmsummaries(self.summaries.keys())
+## 		parent._fixsummaries(self.summaries)
+## 		parent._rmsummaries(self.summaries.keys())
 
 	#
 	# Methods for mini-document management
@@ -437,7 +437,7 @@ class MMNode(MMNodeBase.MMNode):
 		if self.GetType() == 'bag':
 			return 0
 		parent = self.GetParent()
-		return parent == None or parent.GetType() == 'bag'
+		return parent is None or parent.GetType() == 'bag'
 
 	# Find the first mini-document in a tree
 	def FirstMiniDocument(self):
@@ -445,7 +445,7 @@ class MMNode(MMNodeBase.MMNode):
 			return self
 		for child in self.GetChildren():
 			mini = child.FirstMiniDocument()
-			if mini <> None:
+			if mini is not None:
 				return mini
 		return None
 
@@ -456,7 +456,7 @@ class MMNode(MMNodeBase.MMNode):
 		res = None
 		for child in self.GetChildren():
 			mini = child.LastMiniDocument()
-			if mini <> None:
+			if mini is not None:
 				res = mini
 		return res
 
@@ -473,7 +473,7 @@ class MMNode(MMNodeBase.MMNode):
 			while index+1 < len(siblings):
 				index = index+1
 				mini = siblings[index].FirstMiniDocument()
-				if mini <> None:
+				if mini is not None:
 					return mini
 			node = parent
 		return None
@@ -491,21 +491,19 @@ class MMNode(MMNodeBase.MMNode):
 			while index > 0:
 				index = index-1
 				mini = siblings[index].LastMiniDocument()
-				if mini <> None:
+				if mini is not None:
 					return mini
 			node = parent
 		return None
 
 	# Find the root of a node's mini-document
 	def FindMiniDocument(self):
-		path = self.GetPath()
-		if len(path) <= 1:
-			# The root node
-			return self
-		i = len(path)-2  # Index to parent of current node
-		while i >= 0 and path[i].type <> 'bag':
-			i = i-1
-		return path[i+1]
+		node = self
+		parent = node.parent
+		while parent is not None and parent.type != 'bag':
+			node = parent
+			parent = node.parent
+		return node
 
 	# Find the nearest bag given a minidocument
 	def FindMiniBag(self):
@@ -514,54 +512,54 @@ class MMNode(MMNodeBase.MMNode):
 			raise 'FindMiniBag: minidoc not rooted in a bag!'
 		return bag
 
-	#
-	# Private methods for summary management
-	#
-	def _rmsummaries(self, keep):
-		x = self
-		while x:
-			changed = 0
-			for key in x.summaries.keys():
-				if key not in keep:
-					del x.summaries[key]
-					changed = 1
-			if not changed:
-				break
-			x = x.parent
+## 	#
+## 	# Private methods for summary management
+## 	#
+## 	def _rmsummaries(self, keep):
+## 		x = self
+## 		while x:
+## 			changed = 0
+## 			for key in x.summaries.keys():
+## 				if key not in keep:
+## 					del x.summaries[key]
+## 					changed = 1
+## 			if not changed:
+## 				break
+## 			x = x.parent
 
-	def _fixsummaries(self, summaries):
-		tofix = summaries.keys()
-		for key in tofix[:]:
-			if summaries[key] == []:
-				tofix.remove(key)
-		self._updsummaries(tofix)
+## 	def _fixsummaries(self, summaries):
+## 		tofix = summaries.keys()
+## 		for key in tofix[:]:
+## 			if summaries[key] == []:
+## 				tofix.remove(key)
+## 		self._updsummaries(tofix)
 
-	def _updsummaries(self, tofix):
-		x = self
-		while x and tofix:
-			for key in tofix[:]:
-				if not x.summaries.has_key(key):
-					tofix.remove(key)
-				else:
-					s = x._summarize(key)
-					if s == x.summaries[key]:
-						tofix.remove(key)
-					else:
-						x.summaries[key] = s
-			x = x.parent
+## 	def _updsummaries(self, tofix):
+## 		x = self
+## 		while x and tofix:
+## 			for key in tofix[:]:
+## 				if not x.summaries.has_key(key):
+## 					tofix.remove(key)
+## 				else:
+## 					s = x._summarize(key)
+## 					if s == x.summaries[key]:
+## 						tofix.remove(key)
+## 					else:
+## 						x.summaries[key] = s
+## 			x = x.parent
 
-	def _summarize(self, name):
-		try:
-			summary = [self.GetAttr(name)]
-		except NoSuchAttrError:
-			summary = []
-		for child in self.children:
-			list = child.GetSummary(name)
-			for item in list:
-				if item not in summary:
-					summary.append(item)
-		summary.sort()
-		return summary
+## 	def _summarize(self, name):
+## 		try:
+## 			summary = [self.GetAttr(name)]
+## 		except NoSuchAttrError:
+## 			summary = []
+## 		for child in self.children:
+## 			list = child.GetSummary(name)
+## 			for item in list:
+## 				if item not in summary:
+## 					summary.append(item)
+## 		summary.sort()
+## 		return summary
 
 	#
 	# Set the correct method for generating scheduler records.
@@ -595,7 +593,7 @@ class MMNode(MMNodeBase.MMNode):
 	# Alternatively, call GenAllSR(), and then call EndPruneTree() to clear
 	# the garbage.
  	def PruneTree(self, seeknode):
-		if not seeknode or seeknode == self:
+		if not seeknode or seeknode is self:
 			self._FastPruneTree()
 			return
 		if seeknode and not self.IsAncestorOf(seeknode):
@@ -844,8 +842,8 @@ class MMNode(MMNodeBase.MMNode):
 	# Unused sync arcs are not filtered out of the list yet.
 	#
 	def GetArcList(self):
-		if not self.GetSummary('synctolist'):
-			return []
+## 		if not self.GetSummary('synctolist'):
+## 			return []
 		synctolist = []
 		arcs = self.GetAttrDef('synctolist', [])
 		for arc in arcs:
@@ -874,8 +872,8 @@ class MMNode(MMNodeBase.MMNode):
 		return newlist
 	#
 	def IsWtdAncestorOf(self, x):
-		while x <> None:
-			if self == x: return 1
+		while x is not None:
+			if self is x: return 1
 			xnew = x.parent
 			if not xnew:
 				return 0
@@ -912,12 +910,12 @@ class MMNode(MMNodeBase.MMNode):
 # Make a "deep copy" of an arbitrary value
 #
 def _valuedeepcopy(value):
-	if type(value) == type({}):
+	if type(value) is type({}):
 		copy = {}
 		for key in value.keys():
 			copy[key] = _valuedeepcopy(value[key])
 		return copy
-	if type(value) == type([]):
+	if type(value) is type([]):
 		copy = value[:]
 		for i in range(len(copy)):
 			copy[i] = _valuedeepcopy(copy[i])
