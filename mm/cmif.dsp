@@ -152,6 +152,10 @@ SOURCE=.\common\ArmStates.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\bitrates.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\Channel.py
 # End Source File
 # Begin Source File
@@ -704,10 +708,6 @@ SOURCE=.\lib\win32\_LayoutView.py
 # Begin Source File
 
 SOURCE=.\lib\win32\_LinkView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_PreferencesDialog.py
 # End Source File
 # Begin Source File
 
