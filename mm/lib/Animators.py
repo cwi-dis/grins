@@ -774,9 +774,8 @@ class EffectiveAnimator:
 			self.__region.window.updatezindex(z)
 
 	def __updatebgcolor(self, color):
-		for chan in self.__regionContents:
-			if chan.window:
-				chan.window.updatebgcolor(color)
+		if self.__region and self.__region.window:
+			self.__region.window.updatebgcolor(color)
 	
 	def __updatesoundlevel(self, level):
 		for chan in self.__regionContents:
@@ -1479,7 +1478,7 @@ class AnimateElementParser:
 			return 0, 0, 0 # XXX: val
 		res = color.match(val)
 		if res is None:
-			print 'syntax error: bad color specification'
+			print 'syntax error: bad color specification', val
 			return  0, 0, 0 #XXX: 'transparent'
 		else:
 			hex = res.group('hex')
@@ -1703,3 +1702,4 @@ class AnimateElementParser:
 		
 
 
+ 
