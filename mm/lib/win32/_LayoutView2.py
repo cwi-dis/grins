@@ -1091,9 +1091,9 @@ class Viewport(win32window.Window, UserEventMng):
 
 		# begin test code
 		# this code should be executed by a region to show its path
-		points = [ (0,0), (100, 200), (300,100)]
-		polyline = winlayout.Polyline(self, points)
-		self._topwindow.setCurrentPolyline(polyline)
+#		points = [ (0,0), (100, 200), (300,100)]
+#		polyline = winlayout.Polyline(self, points)
+#		self._topwindow.setCurrentPolyline(polyline)
 		# end test code
 
 	def center(self):
