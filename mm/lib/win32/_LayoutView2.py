@@ -532,7 +532,19 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
 		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
-		
+		self.GetParent().HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
+
+	def onKeyDown(self, params):
+		key = params[2]
+		dx, dy = 0, 0
+		if key == win32con.VK_DOWN: dy = 1 
+		elif key == win32con.VK_UP: dy = -1
+		elif key == win32con.VK_RIGHT: dx = 1
+		elif key == win32con.VK_LEFT: dx = -1
+		if dx or dy:
+			win32window.MSDrawContext.moveSelectionBy(self, dx, dy)
+		return 1
+
 	def OnDestroy(self, params):
 		if self.__hsmallfont:
 			Sdk.DeleteObject(self.__hsmallfont)
