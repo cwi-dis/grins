@@ -24,6 +24,8 @@ WM_GRPAPHNOTIFY=win32con.WM_USER+101
 # channel types
 [SINGLE, HTM, TEXT, MPEG] = range(4)
 
+debug=0
+
 class VideoChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
 		     ['bucolor', 'hicolor', 'scale', 'center',
@@ -40,6 +42,9 @@ class VideoChannel(ChannelWindow):
 
 		# scheduler notification mechanism
 		self.__qid=None
+		
+		# main thread monitoring fiber id
+		self._fiber_id=0
 
 	def __repr__(self):
 		return '<VideoChannel instance, name=' + `self._name` + '>'
@@ -48,27 +53,36 @@ class VideoChannel(ChannelWindow):
 		if not ChannelWindow.do_show(self, pchan):
 			return 0
 		for b in self._builders.values():
-			b.SetVisible(1)
+			b.SetWindow(self.window,WM_GRPAPHNOTIFY)
 		return 1
 
+	# the current ChannelWindow.do_hide implementation 
+	# destroy the window
 	def do_hide(self):
 		for b in self._builders.values():
-			b.SetVisible(0)
-		if self.played_display:
-			self.played.display.close()
+			b.Stop()
+			b.SetVisible(0)		
+			b.SetWindowNull()
+			#b.Release()
+		#self._builders.clear()
+		self._playBuilder=None
 		ChannelWindow.do_hide(self)
 
 	def destroy(self):
-		if self._playBuilder:
-			self._playBuilder.Stop()
+		self.unregister_for_timeslices()
 		for b in self._builders.values():
+			b.Stop()
 			b.SetVisible(0)
-		del self._builders
+			b.SetWindowNull()
+			#b.Release()
+		self._playBuilder=None
+		self._builders.clear()
 		ChannelWindow.destroy(self)
 
 	def do_arm(self, node, same=0):
 		if debug:print 'VideoChannel.do_arm('+`self`+','+`node`+'same'+')'
-		if node in self._builders.keys():
+		self.arm_display(node)
+		if node in self._builders.keys():		
 			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
@@ -82,7 +96,57 @@ class VideoChannel(ChannelWindow):
 			self._builders[node]=builder
 		else:
 			print 'Failed to create GraphBuilder'
+		return 1
 
+	# Async Channel play
+	def play(self, node):
+		if debug:print 'VideoChannel.play('+`self`+','+`node`+')'
+		self.play_0(node)
+		if not self._is_shown or not node.IsPlayable() \
+		   or self.syncplay:
+			self.play_1()
+			return
+		if not self.nopop:
+			self.window.pop()
+		if self.played_display:
+			self.played_display.close()
+		self.played_display = self.armed_display
+		self.armed_display = None
+		if self._is_shown:
+			self.played_display.render()
+			self.do_play(node)
+		self.armdone()
+
+	def do_play(self, node):
+		if debug:print 'VideoChannel.do_play('+`self`+','+`node`+')'
+		if node not in self._builders.keys():
+			print 'node not armed'
+			self.playdone(0)
+			return
+
+		self.play_loop = self.getloop(node)
+
+		# get duration in secs (float)
+		# cancel pending event
+		if self.__qid is not None:
+			self._scheduler.cancel(self.__qid)
+		duration = MMAttrdefs.getattr(node, 'duration')
+		if duration > 0:
+			self.__qid=self._scheduler.enter(duration, 0, self._stopplay, ())
+
+		self._playBuilder=self._builders[node]
+		self._playBuilder.SetPosition(0)
+		if self.window and self.window.IsWindow():
+			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
+			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
+		self._playBuilder.Run()
+		self._playBuilder.SetVisible(1)
+		self.register_for_timeslices()
+
+		if self.play_loop == 0 and duration == 0:
+			self.playdone(0)
+
+	def arm_display(self,node):
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
@@ -98,62 +162,26 @@ class VideoChannel(ChannelWindow):
 			if drawbox:
 				b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b)
-		return 1
 
-	# Async Channel play
-	def play(self, node):
-		if debug:print 'VideoChannel.play('+`self`+','+`node`+')'
-		self.play_0(node)
-		if not self._is_shown or not node.IsPlayable() \
-		   or self.syncplay:
-			self.play_1()
-			return
-		if not self.nopop:
-			self.window.pop()
-		if self._is_shown:
-			self.do_play(node)
-		self.armdone()
-
-	def do_play(self, node):
-		if debug:print 'VideoChannel.do_play('+`self`+','+`node`+')'
-		if node not in self._builders.keys():
-			print 'node not armed'
-			self.playdone(0)
-			return
-
-		self.play_loop = self.getloop(node)
-
-		# get duration in secs (float)
-		duration = MMAttrdefs.getattr(node, 'duration')
-		if duration > 0:
-			self._scheduler.enter(duration, 0, self._stopplay, ())
-	
-		if not self.armed_display.is_closed():
-			self.armed_display.render()
-		if self.played_display:
-			self.played.display.close()
-		self.played_display = self.armed_display
-		self.armed_display = None
-		self.played_display.render()
-
-		self._playBuilder=self._builders[node]
-		self._playBuilder.SetPosition(0)
-		if self.window and self.window.IsWindow():
-			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
-			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
-		self._playBuilder.Run()
-		self._playBuilder.SetVisible(1)
-
-		if self.play_loop == 0 and duration == 0:
-			self.playdone(0)
-
-	# scheduler callback, at end of duration
-	def _stopplay(self):
-		self.__qid = None
+	def __stop(self):
 		if self._playBuilder:
+			#self._playBuilder.Pause()
+			# pause instead of stopping in order
+			# to keep video frame ?
+
 			self._playBuilder.Stop()
 			self._playBuilder.SetVisible(0)
 			self._playBuilder=None
+			if self.window:
+				self.window.update()
+		# keep anchors and background
+		#if self.played_display:
+		#	self.played_display.close()
+				
+	# scheduler callback, at end of duration
+	def _stopplay(self):
+		self.__qid = None
+		self.__stop()
 		self.playdone(0)
 
 	# part of stop sequence
@@ -161,10 +189,7 @@ class VideoChannel(ChannelWindow):
 		if self.__qid is not None:
 			self._scheduler.cancel(self.__qid)
 			self.__qid = None
-		if self._playBuilder:
-			self._playBuilder.Stop()
-			self._playBuilder.SetVisible(0)
-			self._playBuilder=None
+		self.__stop()
 		ChannelWindow.stopplay(self, node)
 
 	# toggles between pause and run
@@ -175,6 +200,7 @@ class VideoChannel(ChannelWindow):
 				self._playBuilder.Pause()
 			else:
 				self._playBuilder.Run()
+
 
 	# capture end of media
 	def OnGraphNotify(self,params):
@@ -194,17 +220,12 @@ class VideoChannel(ChannelWindow):
 				self._playBuilder.Run()
 				return
 			# no more loops
-			self._playBuilder.Stop()
-			self._playBuilder.SetVisible(0)
-			self._playBuilder=None
+			self.__stop()
 			# if event wait scheduler
 			if self.__qid is not None:return
 			# else end
 			self.playdone(0)
 			return
-		# play_loop is 0 so play until duration if set
-		self._playBuilder.SetPosition(0)
-		self._playBuilder.Run()
 
 
 	def defanchor(self, node, anchor, cb):
@@ -227,3 +248,24 @@ class VideoChannel(ChannelWindow):
 				filename=ntpath.normpath(filename)	
 		return filename
 
+	# ui delays management
+	def on_idle_callback(self):
+		if self._playBuilder:
+			if self._playBuilder.IsCompleteEvent():
+				self.OnMediaEnd()
+			else: # not actualy needed but I am burned!
+				duration=self._playBuilder.GetDuration()
+				t_msec=self._playBuilder.GetPosition()
+				if t_msec>=duration:self.OnMediaEnd()
+
+	def is_callable(self):
+		return self._playBuilder
+	def register_for_timeslices(self):
+		if self._fiber_id: return
+		import windowinterface
+		self._fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+	def unregister_for_timeslices(self):
+		if not self._fiber_id: return
+		import windowinterface
+		windowinterface.unregister(self._fiber_id)
+		self._fiber_id=0

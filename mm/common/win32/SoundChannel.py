@@ -42,6 +42,9 @@ class SoundChannel(Channel):
 		# scheduler notification mechanism
 		self.__qid=None
 
+		# main thread monitoring fiber id
+		self._fiber_id=0
+
 	def __repr__(self):
 		return '<SoundChannel instance, name=' + `self._name` + '>'
 
@@ -54,6 +57,7 @@ class SoundChannel(Channel):
 		del self._builders
 		if self._notifyWindow.IsWindow():
 			self._notifyWindow.DestroyWindow()
+		self.unregister_for_timeslices()
 		Channel.destroy(self)
 
 	def do_arm(self, node, same=0):
@@ -103,6 +107,7 @@ class SoundChannel(Channel):
 		self._playBuilder.SetPosition(0)
 		self._playBuilder.SetNotifyWindow(self._notifyWindow,WM_GRPAPHNOTIFY)
 		self._playBuilder.Run()
+		self.register_for_timeslices()
 
 		if self.play_loop == 0 and duration == 0:
 			self.playdone(0)
@@ -159,9 +164,6 @@ class SoundChannel(Channel):
 			# else end
 			self.playdone(0)
 			return
-		# play_loop is 0 so play until duration if set
-		self._playBuilder.SetPosition(0)
-		self._playBuilder.Run()
 
 	def islocal(self,url):
 		utype, url = MMurl.splittype(url)
@@ -178,3 +180,25 @@ class SoundChannel(Channel):
 				filename=ntpath.normpath(filename)	
 		return filename
 
+
+	# ui delays management
+	def on_idle_callback(self):
+		if self._playBuilder:
+			if self._playBuilder.IsCompleteEvent():
+				self.OnMediaEnd()
+			else: # not actualy needed but I am burned!
+				duration=self._playBuilder.GetDuration()
+				t_msec=self._playBuilder.GetPosition()
+				if t_msec>=duration:self.OnMediaEnd()
+
+	def is_callable(self):
+		return self._playBuilder
+	def register_for_timeslices(self):
+		if self._fiber_id: return
+		import windowinterface
+		self._fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+	def unregister_for_timeslices(self):
+		if not self._fiber_id: return
+		import windowinterface
+		windowinterface.unregister(self._fiber_id)
+		self._fiber_id=0
