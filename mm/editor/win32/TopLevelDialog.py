@@ -55,3 +55,27 @@ class TopLevelDialog:
 	# kk: you must pass a context string as a second arg
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist,'document')
+
+	def do_edit(self, tmp):
+		import os
+
+		# use only notepad for now
+		editor='Notepad'
+		stat1 = os.stat(tmp)
+		import win32api,win32con
+		try:
+			win32api.WinExec('%s %s' % (editor, tmp),win32con.SW_SHOW)<=0:
+		except:	
+			# no editor found
+			self.edit_finished_callback()
+
+		stat2 = os.stat(tmp)
+		from stat import ST_INO, ST_DEV, ST_MTIME, ST_SIZE
+		if stat1[ST_INO] == stat2[ST_INO] and \
+		   stat1[ST_DEV] == stat2[ST_DEV] and \
+		   stat1[ST_MTIME] == stat2[ST_MTIME] and \
+		   stat1[ST_SIZE] == stat2[ST_SIZE]:
+			# nothing changed
+			self.edit_finished_callback()
+			return
+		self.edit_finished_callback(tmp)
