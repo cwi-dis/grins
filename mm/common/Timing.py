@@ -51,14 +51,8 @@ def needtimes(node):
 # as exceptions.
 
 def do_times(node):
-	t0 = time.time()
-##	print 'do_times...'
-
 	# These globals are used only while in do_times();
 	# they are changed by decrememt()
-
-	global getd_times # Used to calculate time spent in getduration()
-	getd_times = 0
 
 	global last_node # Keeps track of the last node played per channel
 	last_node = {}
@@ -82,15 +76,9 @@ def do_times(node):
 ##		_do_times_work(node)
 		node.t1 = node.t0 + 10.0
 		node.timing_discont = 9.9
-	t1 = time.time()
 	propdown(node, node.t1, node.t0)
-	t2 = time.time()
 
 	node.initial_arms = initial_arms
-
-##	print 'done in', round(t2-t0, 3), 'sec.'
-##	print '(of which', round(getd_times, 3), 'sec. in getduration()',
-##	print 'and', round(t2-t1, 3), 'sec. in propdown)'
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -112,14 +100,8 @@ def getinitial(node):
 # with meanings that can be deduced from the code below. :-) :-) :-)
 #
 def prepare(node):
-##	print '\tprepare...'
-	t0 = time.time()
 	prep1(node)
-	t1 = time.time()
 	prep2(node, node)
-	t2 = time.time()
-##	print '\tdone in', round(t1-t0, 3), '+', round(t2-t1, 3),
-##	print '=', round(t2-t0, 3), 'sec'
 	if node.counter[HD] <> 0:
 		raise CheckError, 'head of node has dependencies!?!'
 
@@ -262,6 +244,9 @@ def propdown(node, stoptime, dftstarttime=0):
 
 	if not hasattr(node, 't0t1_inherited') or not node.t0t1_inherited:
 		stoptime = node.t1
+
+	node.t2 = stoptime
+
 	if tp in ('par', 'alt', 'excl', 'prio'):
 		for c in node.GetChildren():
 			propdown(c, stoptime, node.t0)
@@ -275,18 +260,15 @@ def propdown(node, stoptime, dftstarttime=0):
 			fill = c.GetFill()
 			if fill == 'freeze':
 				if i == len(children)-1:
-					s = node.t1
+					endtime = node.t2
 				else:
-					s = children[i+1].t0
+					endtime = children[i+1].t0
 			elif fill == 'hold':
-				s = node.t1
+				endtime = node.t2
 			else:
-				s = c.t1
-			propdown(c, s, nextstart)
+				endtime = c.t1
+			propdown(c, endtime, nextstart)
 			nextstart = c.t1
-	elif node.t0t1_inherited:
-		node.t1 = stoptime
-
 
 def adddep(xnode, xside, delay, ynode, yside):
 	ynode.counter[yside] = ynode.counter[yside] + 1
@@ -309,13 +291,9 @@ def decrement(q, delay, node, side):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	node.t0t1_inherited = node.GetFill() in ('freeze', 'hold')
+	node.t0t1_inherited = node.GetFill() != 'remove'
 	if node.GetType() not in interiortypes and side == HD:
-		t0 = time.time()
 		dt = getduration(node)
-		t1 = time.time()
-		global getd_times
-		getd_times = getd_times + (t1-t0)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
 		if node.GetChannel():
 			cname = node.GetChannelName()
