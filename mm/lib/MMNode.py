@@ -2829,6 +2829,8 @@ class MMNode(MMTreeElement):
 	def GetFile(self, orig = 0):
 		global nonascii
 		file = self.attrdict.get('file', '')
+		if not file or file == '#':
+			return file
 		if not orig and self.type == 'ext' and hasattr(self, 'slideshow'):
 			chtype = self.GetChannelType()
 			if chtype == 'RealPix':
