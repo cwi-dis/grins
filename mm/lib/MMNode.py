@@ -1927,16 +1927,6 @@ class MMNode:
 		if self.GetParent() is not None:
 			self.GetParent().ExpandParents()
 
-	def hasParent(self, parentnode):
-		if self is parentnode:
-			return 1
-		else:
-			if self.parent:
-				return self.parent.hasParent(parentnode)
-			else:
-				return 0
-		
-				 
 	#
 	# Methods for mini-document management
 	#
