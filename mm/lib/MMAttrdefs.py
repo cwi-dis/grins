@@ -2,24 +2,26 @@
 #
 # Exported interface:
 #
-# attrdefs	a dictionary containing the raw attribute definitions
-#		(initialized when this module is first imported)
+# attrdefs	A dictionary containing the raw attribute definitions
+#		(initialized when this module is first imported).
+#		The tuples are only 6 items, the name is not in there!
 #
-# usetypedef()	a function that maps a type definition to a (function,
-#		argument) pair based upon a mapping of basic types
+# usetypedef()	A function that maps a type definition to a (function,
+#		argument) pair based upon a mapping of basic types.
 #
-# useattrdefs()	a function that calls usetypedef for all attributes
+# useattrdefs()	A function that calls usetypedef for all attributes
 #		in attrdefs, for a given mapping, and returns a dictionary
-#		containing all the results
+#		containing all the results.
 #
-# getdef()	a function that returns an entry from attrdefs,
-#		or invents something plausible if there is no entry
+# getdef()	A function that returns an entry from attrdefs,
+#		or invents something plausible if there is no entry.
 #
-# getnames()	a function that returns a sorted list of keys
+# getnames()	A function that returns a sorted list of keys
 #		in attrdefs.
 #
-# In the future there will be an interface to read attribute definitions
-# from other files as well; attribute definitions will be channel-specific.
+# getattr()	A function that gets a node's attribute value, from
+#		the node or from several defaults, guided by the
+#		attribute definition.  If this fails your tree is broken!
 
 
 from MMExc import *
@@ -121,7 +123,7 @@ def getdef(attrname):
 	if attrdefs.has_key(attrname):
 		return attrdefs[attrname]
 	# Undefined attribute -- fake something reasonable
-	return (attrname, ('any', None), None, '', 'default', '',  'normal')
+	return (('any', None), None, '', 'default', '',  'normal')
 #
 def getnames():
 	names = attrdefs.keys()
@@ -133,8 +135,8 @@ def getnames():
 #
 def getattr(node, attrname):
 	attrdef = getdef(attrname)
-	inheritance = attrdef[6]
-	defaultvalue = attrdef[2]
+	inheritance = attrdef[5]
+	defaultvalue = attrdef[1]
 	if inheritance = 'raw':
 		return node.GetRawAttrDef(attrname, defaultvalue)
 	elif inheritance = 'normal':
@@ -146,8 +148,8 @@ def getattr(node, attrname):
 		if value = None:
 			channelname = node.GetInherAttr('channel')
 			channelattrdict = node.context.channeldict[channelname]
-			if channelattrs.has_key(attrname):
-				value = channelattrs[attrname]
+			if channelattrdict.has_key(attrname):
+				value = channelattrdict[attrname]
 			else:
 				value = defaultvalue
 	else:
