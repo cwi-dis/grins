@@ -218,6 +218,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					res =self.__rc.playit(node,windowless=1,start_time=start_time)
 				else:
 					res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), start_time = start_time)
+			except RealChannel.error:
 				## Don't forward the error
 				## The ErrorOccurred callback is called which produces the error message.
 				self.playdone(0, curtime)
