@@ -256,7 +256,7 @@ def Render(source, msecwait=3000):
 	ddrawobj, dds = createDDSurface()
 	ddshdc = dds.GetDC()
 	svggraphics.tkStartup(ddshdc)
-	renderer = SVGRenderer(svgdoc, svggraphics, (0,0,800,600))
+	renderer = SVGRenderer(svgdoc, svggraphics)
 	renderer.render()
 	svggraphics.tkShutdown()
 	dds.ReleaseDC(ddshdc)
