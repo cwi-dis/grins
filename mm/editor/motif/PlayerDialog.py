@@ -21,19 +21,19 @@ class PlayerDialog(PlayerDialogBase):
 			's': STOP,
 			},
 		'menubar': [
-			(LIGHT, 'Close', [
-				(LIGHT, 'Close', CLOSE_WINDOW),
+			(FLAG_ALL, 'Close', [
+				(FLAG_ALL, 'Close', CLOSE_WINDOW),
 				]),
-			(LIGHT, 'Play', [
-				(LIGHT, 'Play', PLAY, 't'),
-				(LIGHT, 'Pause', PAUSE, 't'),
-				(LIGHT, 'Stop', STOP, 't'),
+			(FLAG_ALL, 'Play', [
+				(FLAG_ALL, 'Play', PLAY, 't'),
+				(FLAG_ALL, 'Pause', PAUSE, 't'),
+				(FLAG_ALL, 'Stop', STOP, 't'),
 				]),
-			(SMIL, 'User Groups', USERGROUPS),
-			(CMIF, 'Channels', CHANNELS),
-			(LIGHT|DBG, 'View', [
-				(CMIF, 'Timeline view follows player', SYNCCV, 't'),
-				(LIGHT|DBG, 'Dump scheduler data', SCHEDDUMP),
+			(FLAG_CMIF, 'User Groups', USERGROUPS),
+			(FLAG_CMIF, 'Channels', CHANNELS),
+			(FLAG_ALL|FLAG_DBG, 'View', [
+				(FLAG_CMIF, 'Timeline view follows player', SYNCCV, 't'),
+				(FLAG_ALL|FLAG_DBG, 'Dump scheduler data', SCHEDDUMP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
