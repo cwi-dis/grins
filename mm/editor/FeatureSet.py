@@ -31,7 +31,6 @@ __version__ = "$Id$";
     LINKEDIT_LIGHT,                     # I'm not sure about this.. see TopLevel.py
     CHANNEL_VIEW,
     USER_GROUPS,
-    TRANSITIONS,
     SOURCE,
     
     UNIFIED_FOCUS,						# All views share their focus
@@ -44,5 +43,4 @@ __version__ = "$Id$";
     H_DROPBOX,                          # Show an empty drop box at the end of a sequence.
     H_COLLAPSE,                         # Enable internal node collapsing.
     H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
-] = range(25)                           # don't forget to update this range!
-
+] = range(24)                           # don't forget to update this range!
