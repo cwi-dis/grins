@@ -242,8 +242,7 @@ class MMNodeContext:
 			raise CheckError, 'addchannel: existing name'
 		if not 0 <= i <= len(self.channelnames):
 			raise CheckError, 'addchannel: invalid position'
-		c = MMChannel(self, name)
-		c['type'] = type
+		c = MMChannel(self, name, type)
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
@@ -321,7 +320,7 @@ class MMNodeContext:
 
 	def addinternalchannels(self, list):
 		for name, dict in list:
-			c = MMChannel(self, name)
+			c = MMChannel(self, name, dict.get('type'))
 			c.attrdict = dict
 			self._ichanneldict[name] = c
 			self._ichannelnames.append(name)
@@ -627,7 +626,8 @@ class MMChannel:
 		self.attrdict = {'type':type}
 		self.d_attrdict = {}
 		if settings.activeFullSmilCss:
-			self.cssId = context.cssResolver.newRegion()
+			if type == 'layout':
+				self.cssId = context.cssResolver.newRegion()
 
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
@@ -655,6 +655,9 @@ class MMChannel:
 		return self.context.channeldict.get(cname)
 	# end new	
 
+	def getCssId(self):
+		return self.cssId
+	
 	#
 	# Set animated attribute
 	#
@@ -747,7 +750,7 @@ class MMChannel:
 					if self.attrdict.has_key('base_window'):
 						del self['base_window']
 					pchan = self.context.channeldict.get(value)
-					self.cssId = self.context.cssResolver.link(self.cssId, pchan.cssId)
+					self.context.cssResolver.link(self.cssId, pchan.cssId)
 				
 		self.attrdict[key] = value
 
