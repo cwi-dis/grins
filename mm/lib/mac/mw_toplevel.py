@@ -817,13 +817,13 @@ class _Toplevel(_Event):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[],
-		      resizable=1):
+		      resizable=1, bgcolor=None):
 		self._initcommands()
 		extras = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
 					title, adornments, canvassize,
-					commandlist, resizable)
+					commandlist, resizable, bgcolor)
 		self._register_wid(wid, rv)
 		return rv
 	

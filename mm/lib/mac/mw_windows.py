@@ -186,21 +186,17 @@ class _WindowGroup:
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
 		
-	def __init__(self, parent, wid, z=0):
-		self._z = z
-		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
-				parent._subwindows.insert(i, self)
-				break
-		else:
-			parent._subwindows.append(self)
+	def __init__(self, parent, wid, z=0, bgcolor=None):
 		self._parent = parent
 		self._onscreen_wid = wid
 		self._transition = None
 		self._frozen = None
 		self._subwindows = []
 		self._displists = []
-		self._bgcolor = parent._bgcolor
+		if bgcolor is None:
+			self._bgcolor = parent._bgcolor
+		else:
+			self._bgcolor = bgcolor
 		self._fgcolor = parent._fgcolor
 		self._clip = None
 		self._clipincludingchildren = None
@@ -216,6 +212,8 @@ class _CommonWindow:
 		self._outline_color = None
 		self._rb_dialog = None
 		self._wtd_cursor = ''
+		self._z = z
+		self._updatezorder()
 		
 	def close(self):
 		"""Close window and all subwindows"""
@@ -227,7 +225,8 @@ class _CommonWindow:
 		if self._transition:
 			self.endtransition()
 		Qd.SetPort(self._onscreen_wid)
-		self._parent._subwindows.remove(self)
+		if self in self._parent._subwindows:
+			self._parent._subwindows.remove(self)
 		Win.InvalRect(self.qdrect())
 		self._parent._close_wid(self._onscreen_wid)
 		self._parent = None
@@ -319,10 +318,10 @@ class _CommonWindow:
 		return not self.is_closed()
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-		      type_channel = None, units = None):
+		      type_channel = None, units = None, bgcolor=None):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._onscreen_wid, (x, y, w, h), 0, pixmap,
-				transparent, z, units)
+				transparent, z, units, bgcolor)
 		self._clipchanged()
 		return rv
 		
@@ -334,6 +333,18 @@ class _CommonWindow:
 
 	def bgcolor(self, color):
 		"""Set backgroundcolor to 3-tuple 0..255"""
+## XXXX Think about this a bit more
+##		if color is None:
+##			# Inherit
+##			if self._parent._transparent:
+##				color = 'transparent'
+##			else:
+##				color = self._parent._bgcolor  # XXXX Should do this lazy
+##		if color == 'transparent':
+##			self._transparent = 1
+##			color = (0, 0, 0)
+##		else:
+##			self._transparent = 0
 		self._bgcolor = self._convert_color(color)
 		
 	def showwindow(self, color=(255, 0, 0)):
@@ -359,12 +370,12 @@ class _CommonWindow:
 		self._wtd_cursor = cursor
 		## Warn parent? self._parent.setcursor(cursor)
 
-	def newdisplaylist(self, *bgcolor):
+	def newdisplaylist(self, bgcolor=None):
 		"""Return new, empty display list"""
-		if bgcolor != ():
-			bgcolor = self._convert_color(bgcolor[0])
-		else:
+		if bgcolor is None:
 			bgcolor = self._bgcolor
+		else:
+			bgcolor = self._convert_color(bgcolor)
 		return mw_displaylist._DisplayList(self, bgcolor)
 
 	def setredrawfunc(self, func):
@@ -652,6 +663,7 @@ class _CommonWindow:
 			r, g, b = color
 			return r*0x101, g*0x101, b*0x101
 		else:
+			print '_convert_color: funny color', color
 			return color
 
 	def qdrect(self):
@@ -829,6 +841,22 @@ class _CommonWindow:
 			func(arg, self, KeyboardInput, char)
 			return 1
 		
+	def _do_resize(self):
+		"""The (sub)window has changed size through external means. Recompute
+		everything for ourselves and our children"""
+		for d in self._displists[:]:
+			d.close()
+		self._do_resize0()
+		
+	def _do_resize0(self):
+		"""Common code for resize and double width/height"""
+		x, y, width, height = self._rect
+
+		for w in self._subwindows:
+			w._do_resize1()
+		# call resize callbacks
+		self._do_resize2()
+
 	def _do_resize2(self):
 		if self._transition:
 			self._transition.move_resize()
@@ -851,6 +879,10 @@ class _CommonWindow:
 		
 	def _redraw(self, rgn=None):
 		"""Set clipping and color, redraw, redraw children"""
+		print '_redraw', self, self._bgcolor
+		if 29000 < self._bgcolor[2]< 30000:
+			import pdb
+			pdb.set_trace()
 		if self._parent is None:
 			return
 		if not self._clip or not self._clipincludingchildren:
@@ -881,6 +913,8 @@ class _CommonWindow:
 			Qd.RGBBackColor(self._bgcolor)
 			Qd.RGBForeColor(self._fgcolor)
 			if self._redrawfunc:
+				if not self._transparent:
+					Qd.EraseRect(self.qdrect())
 				self._redrawfunc()
 			else:
 				self._do_redraw()
@@ -906,6 +940,8 @@ class _CommonWindow:
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
+			if not self._transparent:
+				Qd.EraseRect(self.qdrect())
 			self._active_displist._render()
 		elif self._frozen and not self._transition:
 ##			self._mac_setwin(mw_globals.BM_ONSCREEN)
@@ -917,7 +953,7 @@ class _CommonWindow:
 			rect = self.qdrect()
 			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
 			self._mac_setwin() # Don't think this is needed...
-		elif self._transparent == 0 or self._istoplevel:
+		elif not self._transparent or self._istoplevel:
 			Qd.EraseRect(self.qdrect())
 			
 	def _mac_getdrawingbitmapindex(self):
@@ -1006,7 +1042,7 @@ class _CommonWindow:
 		r = Qd.NewRgn()
 		# If we're not transparent, or transparent-when-empty and non-empty
 		# we redraw everything
-		if self._transparent == 0 or (self._transparent == -1 and self._active_displist):
+		if not self._transparent:
 			Qd.RectRgn(r, self.qdrect())
 			return r
 		didsome = 0
@@ -1304,6 +1340,7 @@ class _CommonWindow:
 
 	# Experimental animation interface
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+		return # XXXX
 		# first convert any coordinates to pixel
 		coordinates = self._convert_coordinates(coordinates,units=units)
 		print 'window.updatecoordinates',coordinates, units
@@ -1317,30 +1354,31 @@ class _CommonWindow:
 			w, h = coordinates[2:]
 		else:
 			raise AssertionError
-
-		# do move/resize
-		# ...
+		self._rect = x, y, w, h
+		self._units = units
+		self._do_resize()
 
 	def updatezindex(self, z):
+		return # XXXX
 		self._z = z
-		# do reorder subwindows
+		self._updatezorder(redraw=1)
 		print 'window.updatezindex',z
 
 	def updatebgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
-		# do update bgcolor if active display list
-		# ...
-		print 'window.updatebgcolor',color
+		self._bgcolor = self._convert_color(color)
+		self._transparent = 0 # XXXX Correct?
+		for dl in self._displists:
+			dl.updatebgcolor(color)
+		print 'window.updatebgcolor',color, self
+		Qd.SetPort(self._onscreen_wid)
+		Win.InvalRect(self.qdrect())
 
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
-		print 'begintransition', self
 		if not self._transition_setup_before():
 			return
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		self._transition_setup_after()
-		print 'begintransition done', self
 		
 	def jointransition(self, window):
 		# Join the transition already created on "window".
@@ -1355,7 +1393,6 @@ class _CommonWindow:
 		self._transition_setup_after()
 
 	def endtransition(self):
-		print 'endtransition', self, self._transition
 		if not self._transition:
 			return
 ##		has_tmp = self._transition.need_tmp_wid()
@@ -2075,13 +2112,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			title="", adornments=None, canvassize = None, commandlist=None,
-			resizable=1):
+			resizable=1, bgcolor=None):
 		
 		self._istoplevel = 1
 		self._resizable = resizable
 		self._drop_enabled = 0
 		_OffscreenMixin.__init__(self)
-		_CommonWindow.__init__(self, parent, wid)
+		_CommonWindow.__init__(self, parent, wid, bgcolor)
 		
 		self._transparent = 0
 		
@@ -2184,6 +2221,9 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 	def _is_on_top(self):
 		return 1
 		
+	def _updatezorder(self, redraw=0, tobottom=0):
+		pass
+		
 	def _goaway(self):
 		"""User asked us to go away. Tell upper layers
 		(but don't go yet)"""
@@ -2217,7 +2257,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		
 	def _redraw_now(self, rgn):
 		"""Do a redraw of the specified region now"""
-		print '_redraw_now', self
 		self._redraw(rgn)
 		if not rgn:
 			rgn = self._onscreen_wid.GetWindowPort().visRgn
@@ -2228,7 +2267,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 ##		_WindowGroup._activate(self, onoff)
 		_ScrollMixin._activate(self, onoff)
 
-	def _resize_callback(self, width, height):
+	def _resize_callback(self, width, height, x=None, y=None):
 		self.arrowcache = {}
 		if _in_create_box:
 			_in_create_box.cancel_create_box()
@@ -2239,25 +2278,18 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		Win.InvalRect(self.qdrect())
 		self._clipchanged()
 
-		x, y, old_w, old_h = self._rect
+		old_x, old_y, old_w, old_h = self._rect
+		if x is None:
+			x = old_x
+		if y is None:
+			y = old_y
 		self._rect = x, y, width, height
 		_AdornmentsMixin._resized(self)
 		_ScrollMixin._resized(self)
 		mustresize = _ScrollMixin.mustadjustcanvasforresize(self, old_w, old_h)
 		if mustresize:
-			for d in self._displists[:]:
-				d.close()
-			self._do_resize0()
+			self._do_resize()
 		
-	def _do_resize0(self):
-		"""Common code for resize and double width/height"""
-		x, y, width, height = self._rect
-
-		for w in self._subwindows:
-			w._do_resize1()
-		# call resize callbacks
-		self._do_resize2()
-
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)
@@ -2408,11 +2440,11 @@ class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
-			transparent = 0, z = 0, units = None):
+			transparent = 0, z = 0, units = None, bgcolor=None):
 		
 		self._istoplevel = 0
 		self._units = units
-		_CommonWindow.__init__(self, parent, wid, z)
+		_CommonWindow.__init__(self, parent, wid, z, bgcolor)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
 		xscrolloff, yscrolloff = parent._scrolloffset()
@@ -2425,11 +2457,7 @@ class _SubWindow(_CommonWindow):
 			coordinates = 0, 0, 1, 1
 		self._sizes = coordinates
 		
-		# XXXX (21-Aug-00) I don't think this is correct anymore...
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			self._transparent = transparent
+		self._transparent = transparent
 		
 		self.arrowcache = {}
 
@@ -2444,26 +2472,39 @@ class _SubWindow(_CommonWindow):
 	def getgeometry(self, units=UNIT_MM):
 		return self._sizes
 
+	def _updatezorder(self, redraw=0, tobottom=0):
+		"""Our Z-order has changed. Change the stacking order in our parent"""
+		parent = self._parent
+		if self in parent._subwindows:
+			parent._subwindows.remove(self)
+		if not tobottom:
+			# Put at the top of our Z range
+			for i in range(len(parent._subwindows)):
+				if self._z >= parent._subwindows[i]._z:
+					parent._subwindows.insert(i, self)
+					break
+			else:
+				parent._subwindows.append(self)
+		else:
+			# Put at the bottom of our Z range
+			for i in range(len(parent._subwindows)-1,-1,-1):
+				if self._z <= parent._subwindows[i]._z:
+					parent._subwindows.insert(i+1, self)
+					break
+			else:
+				parent._subwindows.insert(0, self)		
+		if redraw:
+			parent._clipchanged()
+			Qd.SetPort(self._onscreen_wid)
+			Win.InvalRect(self.qdrect())
+
 	def pop(self, poptop=1):
 		"""Pop to top of subwindow stack"""
 		if not self._parent:
 			return
 		parent = self._parent
-		if parent._subwindows[0] is self:
-			parent.pop(poptop)
-			return
-		parent._subwindows.remove(self)
-		
-		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
-				parent._subwindows.insert(i, self)
-				break
-		else:
-			parent._subwindows.append(self)
-		parent._clipchanged()
-		Qd.SetPort(self._onscreen_wid)
-		if self._transparent <= 0:
-			Win.InvalRect(self.qdrect())
+		if not parent._subwindows[0] is self:
+			self._updatezorder(redraw=1)
 		parent.pop(poptop)
 
 	def push(self):
@@ -2471,18 +2512,8 @@ class _SubWindow(_CommonWindow):
 		if not self._parent:
 			return
 		parent = self._parent
-		if parent._subwindows[-1] is self:
-			return
-		parent._subwindows.remove(self)
-		for i in range(len(parent._subwindows)-1,-1,-1):
-			if self._z <= parent._subwindows[i]._z:
-				parent._subwindows.insert(i+1, self)
-				break
-		else:
-			parent._subwindows.insert(0, self)
-		parent._clipchanged()
-		Qd.SetPort(self._onscreen_wid)
-		Win.InvalRect(self.qdrect())
+		if not parent._subwindows[-1] is self:
+			self._updatezorderreverse(tobottom=1, redraw=1)
 		parent.push()
 		
 	def _is_on_top(self):
