@@ -307,7 +307,6 @@ class _DisplayList:
 			rect = entry[2]
 			oldmode = dc.SetBkMode(win32con.TRANSPARENT)
 			oldpen = dc.SelectStockObject(win32con.NULL_PEN)
-			x, y = rect[:2]
 			oldbrush = dc.SelectObject(brush)
 			dc.Rectangle(rect)
 			if 1: # begin trick for more dense grid pattern 
