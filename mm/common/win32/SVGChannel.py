@@ -21,6 +21,7 @@ class SVGChannel(Channel.ChannelWindow):
 		self.svgorgsize = None
 		self.svgdds = None
 		self.svgplayer = None
+		self.svgbgcolor = 255, 255, 255
 		 
 	def __repr__(self):
 		return '<SVGChannel instance, name=' + `self._name` + '>'
@@ -57,7 +58,8 @@ class SVGChannel(Channel.ChannelWindow):
 			u.close()
 			svgdoc = svgdom.SvgDocument(source)
 			svgdom.doccache.cache(url, svgdoc)
-
+		
+		self.svgbgcolor = self.getbgcolor(node)
 		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
@@ -107,7 +109,7 @@ class SVGChannel(Channel.ChannelWindow):
 			svggraphics.applyTfList([('scale',[sx, sy]),])
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
-		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
+		renderer = svgrender.SVGRenderer(svgdoc, svggraphics, self.svgdstrect, self.svgbgcolor)
 		renderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
