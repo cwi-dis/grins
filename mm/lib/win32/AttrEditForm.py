@@ -2204,6 +2204,13 @@ class FileGroup(AttrGroup):
 			elif string.find(subtype,'realtext')>=0:
 				mtype='realwnd'
 				self._preview=1	
+		elif mtype == 'application':
+			if string.find(subtype,'real')>=0:
+				self._preview=1
+				mtype='realwnd'
+			elif subtype == 'x-shockwave-flash':
+				self._preview=1
+				mtype='realwnd'
 		self._mtypesig=mtype
 		return self._preview
 
@@ -2359,6 +2366,7 @@ class TabShortcut:
 		grinsRC.ID_D:'Hyperlink &destination',
 		grinsRC.ID_C:'&Caption channel',
 		grinsRC.ID_O:'P&osition and size',
+		grinsRC.ID_N:'z-i&ndex',
 		}
 	rpdata2={	
 		grinsRC.ID_S:'Tran&sition type',
