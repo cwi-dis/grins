@@ -7,7 +7,18 @@ __version__ = "$Id$"
 
 PreferencesDialogError="PreferencesDialog.Error"
 
+import windowinterface
 
+stringitems = {
+	'system_language': '2-character name for a language',
+	}
+intitems = {
+	'system_bitrate': 'bitrate of connection with outside world',
+	}
+boolitems = {
+	'system_captions': 'whether captions are to be shown',
+	'system_overdub_or_caption': 'audible or visible "captions"',
+	}
 
 class PreferencesDialog:
 
@@ -19,36 +30,58 @@ class PreferencesDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as window title
 		"""
+		callbacks={
+			'OK':(self.ok_callback, ()),
+			'Cancel':(self.cancel_callback, ()),
+			'Reset':(self.reset_callback, ()),}
+		parent=windowinterface.getmainwnd()
+		self.__window = windowinterface.PreferencesDialog(callbacks,parent)
+		self.__window.create()
+
+	def close(self):
+		if self.__window is not None:
+			self.__window.close()
+			self.__window = None
+			del self.__window
+
+	def show(self):
+		self.__window.show()
+
+	def hide(self):
+		self.__window.hide()
+
+	def pop(self):
+		self.__window.show()
 
 	#
 	# interface methods
 	#
 	def setstringitem(self, item, value):
-		pass
+		return self.__window.setstringitem(item, value)
 		
 	def getstringitem(self, item):
-		return None
+		return self.__window.getstringitem(item)
 		
 	def getstringnames(self):
-		return []
+		return self.__window.getstringnames()
 		
 	def setintitem(self, item, value):
-		pass
+		self.__window.setintitem(item, value)
 		
 	def getintitem(self, item):
-		return None
-		
+		return self.__window.getintitem(item)
+
 	def getintnames(self):
-		return []
+		return self.__window.getintnames()
 		
 	def setboolitem(self, item, value):
-		pass
+		self.__window.setboolitem(item, value)
 
 	def getboolitem(self, item):
-		return None
+		return self.__window.getboolitem(item)
 		
 	def getboolnames(self):
-		return []
+		return self.__window.getboolnames()
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
