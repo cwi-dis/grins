@@ -587,6 +587,9 @@ class Viewport(win32window.Window):
 	def update(self, rc=None):
 		self._ctx.update(rc)
 
+	def pop(self, poptop=1):
+		pass
+
 	def showNames(self, bv):
 		for w in self._subwindows:
 			w.showNames(bv)
@@ -660,7 +663,10 @@ class Viewport(win32window.Window):
 			else:
 				parRegion = dr[parRgnName]
 			region._do_init(parRegion)
-
+		
+		# prepare and render display lists
+		for region in dr.values():
+			region._prepare_display()
 
 ###########################
 
@@ -681,15 +687,20 @@ class Region(win32window.Window):
 		transparent = dict.get('transparent')
 		bgcolor = dict.get('bgcolor')
 		self.create(parent, rc, units, z, transparent, bgcolor)
-
+		
+	def _prepare_display(self):
+		dl = self.newdisplaylist(self._bgcolor)
+		dl.render()
+	
 	def paintOn(self, dc, rc=None):
 		ltrb = self.ltrb(self.LRtoDR(self.getwindowpos()))
 
 		rgn = self.getClipRgn()
 
 		dc.SelectClipRgn(rgn)
-		if self._bgcolor: # not self._transparent
-			dc.FillSolidRect(ltrb,win32mu.RGB(self._bgcolor))
+
+		if	self._active_displist:
+			self._active_displist._render(dc)
 
 		L = self._subwindows[:]
 		L.reverse()
