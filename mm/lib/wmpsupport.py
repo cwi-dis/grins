@@ -19,7 +19,7 @@ When you don't see any progress activity, please press Cancel to stop."""
 
 
 class Exporter:
-	def __init__(self, filename, player, profile=19):
+	def __init__(self, filename, player, profile=15):
 		self.filename = filename
 		self.player = player
 		self.writer = None
