@@ -165,7 +165,10 @@ SMIL_20_MODULES = SMIL_PSS5_MODULES + [
 	# SMIL 2.0 Module Collections
 ]
 
+extensions = {}				# filled in by switch_profile()
+
 def switch_profile(modulelist):
+	from SMIL import SMIL1, SMIL2ns, PSS4ns, PSS5ns
 	if __debug__:
 		if modulelist is SMIL_20_MODULES:
 			name = 'SMIL 2.0 Language Profile'
@@ -184,6 +187,17 @@ def switch_profile(modulelist):
 		MODULES[mod] = 0
 	for mod in modulelist:
 		MODULES[mod] = 1
+	extensions.clear()
+	extensions[SMIL1 + '/'] = 1
+	for k, v in MODULES.items():
+		for ns in SMIL2ns:
+			if ns[-1] == '/':
+				extensions[ns + k] = v
+	if modulelist is SMIL_PSS5_MODULES:
+		extensions[PSS4ns] = 1
+		extensions[PSS5ns] = 1
+	elif modulelist is SMIL_PSS4_MODULES:
+		extensions[PSS4ns] = 1
 
 switch_profile(SMIL_20_MODULES)
 
@@ -454,7 +468,6 @@ def match(name, wanted_value):
 		wanted_value = string.upper(wanted_value)
 		return opsys.cpu.has_key(wanted_value) and opsys.cpu[wanted_value]
 	if name == 'system_required':
-		from SMIL import extensions
 		for v in wanted_value:
 			if not extensions.get(v, 0):
 				return 0

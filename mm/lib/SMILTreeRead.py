@@ -4593,7 +4593,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__updateProgressHandler()
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
-		   (nstag[0] in [SMIL1]+SMIL2ns or extensions.has_key(nstag[0])):
+		   (nstag[0] in [SMIL1]+SMIL2ns or settings.extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 		else:
 			ns = ''
@@ -4644,7 +4644,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__updateProgressHandler()
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
-		   (nstag[0] in [SMIL1]+SMIL2ns or extensions.has_key(nstag[0])):
+		   (nstag[0] in [SMIL1]+SMIL2ns or settings.extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 		else:
 			ns = ''
@@ -4710,7 +4710,7 @@ class SMILMetaCollector(xmllib.XMLParser):
 	def finish_starttag(self, tagname, attrdict, method):
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
-		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
+		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or settings.extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 		else:
 			ns = ''
