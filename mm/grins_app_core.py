@@ -23,12 +23,8 @@ def SafeCallbackCaller(fn, args):
 			rc = int(rc[0])
 		except (ValueError, TypeError):
 			rc = 0
-		#import win32api
-		#win32api.PostQuitMessage(rc)
 		# use afx to free com/ole libs
-		Afx=win32ui.GetAfx()
-		Afx.PostQuitMessage(rc)
-	
+		(win32ui.GetAfx()).PostQuitMessage(rc)
 	except:
 		# We trap all other errors, ensure the main window is shown, then
 		# print the traceback.
