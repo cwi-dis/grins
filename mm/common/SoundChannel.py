@@ -17,7 +17,7 @@ import string
 # Don't import 'al' here; this makes it possible to use the CMIF editor
 # on workstations without audio, as long as the document has no sound...
 import AL
-import aiff
+import aifc
 
 MAXQSIZE = 100*1024		# Max audio-queue size=100K
 
@@ -27,39 +27,39 @@ from ArmStates import *
 
 from Channel import Channel
 
-class csfile:
-	def open(self, fname, mode):
-		self.cached = ''
-		self.f = open(fname, mode)
-		return self
-
-	def __repr__(self):
-		return '<csfile instance, f=' + `self.f` + '>'
-
-	def seek(self, *args):
-		self.cached = ''
-		return apply(self.f.seek, args)
-
-	def read(self, n):
-		if n <= len(self.cached):
-			rv = self.cached[:n]
-			self.cached = self.cached[n:]
-			self.f.seek(n, 1)
-			return rv
-		if self.cached:
-			rv1 = self.cached
-			self.cached = ''
-			self.f.seek(len(rv1),1)
-			return rv1 + self.read(n-len(rv1))
-		self.cached = ''
-		return self.f.read(n)
-
-	def readahead(self, n):
-		self.cached = self.f.read(n)
-		self.f.seek(-len(self.cached), 1)
-
-	def close(self):
-		self.f.close()
+##class csfile:
+##	def open(self, fname, mode):
+##		self.cached = ''
+##		self.f = open(fname, mode)
+##		return self
+##
+##	def __repr__(self):
+##		return '<csfile instance, f=' + `self.f` + '>'
+##
+##	def seek(self, *args):
+##		self.cached = ''
+##		return apply(self.f.seek, args)
+##
+##	def read(self, n):
+##		if n <= len(self.cached):
+##			rv = self.cached[:n]
+##			self.cached = self.cached[n:]
+##			self.f.seek(n, 1)
+##			return rv
+##		if self.cached:
+##			rv1 = self.cached
+##			self.cached = ''
+##			self.f.seek(len(rv1),1)
+##			return rv1 + self.read(n-len(rv1))
+##		self.cached = ''
+##		return self.f.read(n)
+##
+##	def readahead(self, n):
+##		self.cached = self.f.read(n)
+##		self.f.seek(-len(self.cached), 1)
+##
+##	def close(self):
+##		self.f.close()
 			
 
 def armdone(arg):
@@ -117,13 +117,13 @@ class SoundChannel(Channel):
 			prepare(self.armed_info)	# Do a bit of readahead
 			f, nchannels, nsampframes, sampwidth, samprate, format = self.armed_info
 ##			print 'SoundChannel.arm: self.threads = ' + `self.threads`
-			self.threads.arm(f.f, 0, 0, \
+			self.threads.arm(f, 0, 0, \
 				  {'nchannels': int(nchannels), \
 				   'nsampframes': int(nsampframes), \
 				   'sampwidth': int(sampwidth), \
 				   'samprate': int(samprate), \
 				   'format': format, \
-				   'offset': int(f.f.tell())}, \
+				   'offset': int(f.tell())}, \
 				  None)
 		except IOError:
 			self.armed_info = None
@@ -219,16 +219,20 @@ def getduration(filename):
 
 
 def getinfo(filename):
-	f = csfile().open(filename, 'r')
+	f = open(filename, 'r')
 	try:
-		a = aiff.Aiff().init(f, 'rf')
+		a = aifc.openfp(f, 'r')
 	except EOFError:
 		print 'EOF on sound file', filename
 		return f, 1, 0, 1, 8000, 'eof'
-	except aiff.Error, msg:
+	except aifc.Error, msg:
 		print 'error in sound file', filename, ':', msg
 		return f, 1, 0, 1, 8000, 'error'
-	return f, a.nchannels, a.nsampframes, a.sampwidth, a.samprate, 'AIFF'
+	dummy = a.readframes(0)		# sets file pointer to start of data
+	if a.getcomptype() != 'NONE':
+		print 'cannot read compressed AIFF-C files for now', filename
+		return f, 1, 0, 1, 8000, 'error'
+	return a.getfp(), a.getnchannels(), a.getnframes(), a.getsampwidth(), a.getframerate(), 'AIFF'
 
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 	pass

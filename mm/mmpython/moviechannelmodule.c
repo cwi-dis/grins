@@ -51,6 +51,8 @@ struct movie {
 
 static char graphics_version[12]; /* gversion() output */
 static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
+static int maxbits;		/* max # of bitplanes for color index */
+static short colors[256][3];	/* saved color map entries */
 
 static int
 movie_init(self)
@@ -59,10 +61,12 @@ movie_init(self)
 	denter(movie_init);
 	self->mm_private = malloc(sizeof(struct movie));
 	if (self->mm_private == NULL) {
+		dprintf(("movie_init(%lx): malloc failed\n", (long) self));
 		(void) err_nomem();
 		return 0;
 	}
 	if (pipe(PRIV->m_pipefd) < 0) {
+		dprintf(("movie_init(%lx): cannot create pipe\n", (long) self));
 		err_setstr(RuntimeError, "cannot create pipe");
 		free(self->mm_private);
 		self->mm_private = NULL;
@@ -290,6 +294,10 @@ init_colormap(self)
 	maxc0 = 1 << c0bits;
 	maxc1 = 1 << c1bits;
 	maxc2 = 1 << PRIV->m_play.m_c2bits;
+	if (offset == 0 && maxbits == 11)
+		offset = 2048;
+	if (maxbits != 11)
+		offset &= (1 << maxbits) - 1;
 	for (c0 = 0; c0 < maxc0; c0++) {
 		c0v = c0 / (double) (maxc0 - 1);
 		for (c1 = 0; c1 < maxc1; c1++) {
@@ -310,6 +318,7 @@ init_colormap(self)
 					mapcolor(index, r, g, b);
 					if (index == offset)
 						color(index);
+					/* find nearest color to background */
 					d = abs(r - bgr) + abs(g - bgg) + abs(b - bgb);
 					if (d < dist) {
 						PRIV->m_play.m_bgindex = index;
@@ -354,7 +363,6 @@ movie_play(self)
 		RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
 			 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
 			 (PRIV->m_play.m_bgcolor      ) & 0xff);
-		/* RGBcolor(200, 200, 200); /* XXX rather light grey */
 		clear();
 		pixmode(PM_SIZE, 8);
 	} else {
@@ -364,6 +372,7 @@ movie_play(self)
 		color(PRIV->m_play.m_bgindex);
 		clear();
 	}
+	winpop();		/* pop up the window */
 	return 1;
 }
 
@@ -417,8 +426,7 @@ movie_player(self)
 		} while (index < lastindex && newtime <= td);
 		offset = getintvalue(gettupleitem(v, 1));
 		lseek(fd, offset, SEEK_SET);
-		read(fd, PRIV->m_play.m_frame,
-		     PRIV->m_play.m_size);
+		read(fd, PRIV->m_play.m_frame, PRIV->m_play.m_size);
 		gettimeofday(&tm, NULL);
 		td = (tm.tv_sec - tm0.tv_sec) * 1000 +
 			(tm.tv_usec - tm0.tv_usec) / 1000 - timediff;
@@ -429,10 +437,12 @@ movie_player(self)
 		pollfd.fd = PRIV->m_pipefd[1];
 		pollfd.events = POLLIN;
 		pollfd.revents = 0;
+		dprintf(("movie_player(%lx): polling %d\n", (long) self, td));
 		if (poll(&pollfd, 1, td) < 0) {
 			perror("poll");
 			break;
 		}
+		dprintf(("movie_player(%lx): polling done\n", (long) self));
 		if (pollfd.revents & POLLIN) {
 			char c;
 
@@ -547,11 +557,16 @@ static void
 moviechannel_dealloc(self)
 	channelobject *self;
 {
+	int i;
+
 	if (self != movie_chan_obj) {
 		dprintf(("moviechannel_dealloc: arg != movie_chan_obj\n"));
 	}
 	DEL(self);
 	movie_chan_obj = NULL;
+	if (maxbits < 11 && !is_entry_indigo)
+		for (i = 0; i < 256; i++)
+			mapcolor(i, colors[i][0], colors[i][1], colors[i][2]);
 }
 
 static object *
@@ -606,6 +621,8 @@ static struct methodlist moviechannel_methods[] = {
 void
 initmoviechannel()
 {
+	int i;
+
 #ifdef MM_DEBUG
 	moviechannel_debug = getenv("MOVIEDEBUG") != 0;
 #endif
@@ -617,4 +634,10 @@ initmoviechannel()
 			   getgdesc(GD_BITS_NORM_SNG_RED) == 3 &&
 			   getgdesc(GD_BITS_NORM_SNG_GREEN) == 3 &&
 			   getgdesc(GD_BITS_NORM_SNG_BLUE) == 2);
+	maxbits = getgdesc(GD_BITS_NORM_SNG_CMODE);
+	if (maxbits > 11)
+		maxbits = 11;
+	if (maxbits < 11 && !is_entry_indigo)
+		for (i = 0; i < 256; i++)
+			getmcolor(i, &colors[i][0], &colors[i][1], &colors[i][2]);
 }

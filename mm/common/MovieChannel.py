@@ -315,7 +315,11 @@ class MovieChannel(Channel):
 		self.node = None
 	#
 	def stop(self):
+		if main.gl_lock:
+			main.gl_lock.release()
 		self.threads.stop()
+		if main.gl_lock:
+			main.gl_lock.acquire()
 		Channel.stop(self)
 	#
 	def setrate(self, rate):
