@@ -470,31 +470,31 @@ class _LayoutView2(GenFormView):
 		self._iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
 		self._iconstop = win32ui.GetApp().LoadIcon(grinsRC.IDI_STOP)
 		self._bplay = components.Button(self, grinsRC.IDC_PLAY)
-		self._bstop = components.Button(self, grinsRC.IDC_STOP)
 		self._bplay.attach_to_parent()
-		self._bstop.attach_to_parent()
 		self._bplay.seticon(self._iconplay)
-		self._bstop.seticon(self._iconstop)
 		self._bplay.hookcommand(self, self.OnPlay)
-		self._bstop.hookcommand(self, self.OnStop)
 		self._bplay.show()
-		self._bstop.show()
 		self._bplay.enable(0)
-		self._bstop.enable(0)
+		self.__playing = 0
 
+	def _play(self):
+		self._slider.play()
+		self._bplay.seticon(self._iconstop)
+		self._bplay.enable(1)
+		self.__playing = 1
+
+	def _stop(self):
+		self._slider.stop()
+		self._bplay.seticon(self._iconplay)
+		self._bplay.enable(1)
+		self.__playing = 0
+		
 	def OnPlay(self, id, params):
 		if self._slider and self._slider.isEnabled():
-			self._slider.play()
-			self._bplay.enable(0)
-			self._bstop.enable(1)
-		else:
-			self.EnablePreview(0)
-
-	def OnStop(self, id, params):
-		if self._slider and self._slider.isEnabled():
-			self._slider.stop()
-			self._bplay.enable(1)
-			self._bstop.enable(0)
+			if not self.__playing:
+				self._play()
+			else:
+				self._stop()
 		else:
 			self.EnablePreview(0)
 					
@@ -502,15 +502,14 @@ class _LayoutView2(GenFormView):
 		if flag:
 			self._bplay.enable(flag)
 		else:
+			self.__playing = 0
+			self._bplay.seticon(self._iconplay)
 			self._bplay.enable(0)
-			self._bstop.enable(0)
 
 	# on selection change call
 	def StopPreview(self):
 		if self._slider and self._slider.isEnabled():
-			self._slider.stop()
-			self._bplay.enable(1)
-			self._bstop.enable(0)
+			self._stop()
 		else:
 			self.EnablePreview(0)
 				
