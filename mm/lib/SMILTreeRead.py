@@ -612,7 +612,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val is not None:
 					ch[key] = val
 			ch['id'] = region
-			self.start_region(ch)
+			self.start_region(ch, checkid = 0)
 			self.end_region()
 			self.__in_layout = LAYOUT_NONE
 			ch = self.__regions[region]
@@ -1308,10 +1308,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_head(self):
 		self.__in_head = 0
-		if not self.__seen_layout:
-			self.__seen_layout = LAYOUT_SMIL
 
 	def start_body(self, attributes):
+		if not self.__seen_layout:
+			self.__seen_layout = LAYOUT_SMIL
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if not self.__in_smil:
@@ -1418,7 +1418,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	def start_region(self, attributes):
+	def start_region(self, attributes, checkid = 1):
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
@@ -1438,9 +1438,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			val = string.strip(val)
 			if attr == 'id':
 				attrdict[attr] = id = val
-				res = xmllib.tagfind.match(id)
-				if res is None or res.end(0) != len(id):
-					self.syntax_error("illegal ID value `%s'" % id)
+				if checkid:
+					res = xmllib.tagfind.match(id)
+					if res is None or res.end(0) != len(id):
+						self.syntax_error("illegal ID value `%s'" % id)
 				if self.__ids.has_key(id):
 					self.syntax_error('non-unique id %s' % id)
 				self.__ids[id] = 0
