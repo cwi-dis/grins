@@ -106,6 +106,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Cursor
+//
+
+IDC_DRAG_HAND           CURSOR  DISCARDABLE     "RES\\draghand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Bitmap
 //
 
@@ -123,13 +130,6 @@ IDR_TB_EDITOR           BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
 IDR_TB_COMMON           BITMAP  DISCARDABLE     "res\\tb_player.bmp"
 IDR_TB_UNUSED           BITMAP  DISCARDABLE     "res\\tb_alignment.bmp"
 IDB_SPLASHREALONE       BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil2real\\splash8bit.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_DRAG_HAND           CURSOR  DISCARDABLE     "RES\\draghand.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4013,7 +4013,7 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,7,127,186,38
     COMBOBOX        IDC_TZSG,30,146,38,44,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_MT,68,39,61,88,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_MT,68,39,61,88,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
 END
 
@@ -4048,30 +4048,6 @@ BEGIN
 0x6145, 0x7473, "\000" 
     IDC_TZSG, 0x403, 5, 0
 0x6557, 0x7473, "\000" 
-    IDC_MT, 0x403, 8, 0
-0x614a, 0x756e, 0x7261, 0x0079, 
-    IDC_MT, 0x403, 9, 0
-0x6546, 0x7262, 0x6175, 0x7972, "\000" 
-    IDC_MT, 0x403, 6, 0
-0x614d, 0x6372, 0x0068, 
-    IDC_MT, 0x403, 6, 0
-0x7041, 0x6972, 0x006c, 
-    IDC_MT, 0x403, 4, 0
-0x614d, 0x0079, 
-    IDC_MT, 0x403, 5, 0
-0x754a, 0x656e, "\000" 
-    IDC_MT, 0x403, 5, 0
-0x754a, 0x796c, "\000" 
-    IDC_MT, 0x403, 7, 0
-0x7541, 0x7567, 0x7473, "\000" 
-    IDC_MT, 0x403, 10, 0
-0x6553, 0x7470, 0x6d65, 0x6562, 0x0072, 
-    IDC_MT, 0x403, 8, 0
-0x634f, 0x6f74, 0x6562, 0x0072, 
-    IDC_MT, 0x403, 9, 0
-0x6f4e, 0x6576, 0x626d, 0x7265, "\000" 
-    IDC_MT, 0x403, 9, 0
-0x6544, 0x6563, 0x626d, 0x7265, "\000" 
     0
 END
 
