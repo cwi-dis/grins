@@ -1,0 +1,56 @@
+<!--This file created by ClarisWorks HTML Filter 2.0-->
+<HTML>
+<HEAD>
+<META NAME=GENERATOR CONTENT="ClarisWorks HTML Filter 2.0">
+<TITLE>clipboard</TITLE>
+</HEAD>
+<BODY  >
+
+<P><FONT SIZE=3><B>Clipboard design<BR>
+</B></FONT><BR>
+An open point is still whether the clipboard and the assets window are a single view or two very similar views. It&#146;s easy enough to reverse that decision later, though, so I&#146;ll punt on it for now.<BR>
+<BR>
+The clipboard is a stack. Items are added (with cut or copy) to the bottom, and the window should probably scroll there when things are added.<BR>
+<BR>
+The bottom item on the clipboard is what is tied to &#147;paste&#148;. Paste does not remove the bottom item.<BR>
+<BR>
+The clipboard can contain:<BR>
+- nodes (including hierarchies of nodes)<BR>
+- media items<BR>
+- regions<BR>
+- (maybe) text clippings (cut/copy from dialogs, etc)<BR>
+<BR>
+Interoperability with the system clipboard is an open issue. We may want to check with Kleanthis for Windows. On the Mac I know when to convert a local clipboard to the global clipboard and vice versa (the system tells me).<BR>
+<BR>
+Two possible designs. Best is probably a listwidget-like view, with icons and information on the clipping (mediatype, last bit of the name, duration, size, etc).<BR>
+<BR>
+Another possibility is to base it on the Structure View.<BR>
+<BR>
+The first solution probably requires that we can open sub-structure-views on clippings in the clipboard, otherwise we cannot inspect strucure nodes there.<BR>
+<BR>
+The clipboard should be stored in the .grins document, probably as a special node in the head section &lt;grins:clipboard skip-content=&#148;true&#148;&gt;. Nodes and regions can be stored as themselves, media items and text clippings in refs maybe?<BR>
+<BR>
+Playback from the clipboard should also be supported.<BR>
+<BR>
+drag and drop between clipboard and structure view (and possibly between clipboard and layout view, for regions) should be supported. drag-drop is move, so removes the original, shift-drag-drop is copy, so leaves the original in place. (Or whatever the current standard within the hierarchy view is).<BR>
+<BR>
+Drag and drop between documents (hview/clipboard) should be implemented, but this may be difficult due to references like links, begintimes and regions.<BR>
+<BR>
+Deleting items from the clipboard (or clearing it altogether) should be an explicit action. One of the reasons for the visible stacklike clipboard is that when a node is truly removed we may want to post a warning that more than just the node is removed: it&#146;s timing dependencies, hyperlinks, etc.<BR>
+<BR>
+We probably need to be able to open a Sub-Structure View on clipboard nodes.<BR>
+<BR>
+If we have a separate assets window we have to decide whether we show all assets there or only those that have not been used yet, or provide an option to go either way.<BR>
+<BR>
+For all assets we should display information like size and duration, and also an indicator of where the asset lives: local directory, other directory, url. The distinction between local directory and other directory is important: the asset is probably shared with other projects. There should b a command to &#147;localize&#148; assets in other directories (or urls).<BR>
+<BR>
+A global assets-manager is a specific non-goal: there are lots of solutions for this already. We should, however, at some point have an interface to an external assets manager. For the next release the user will have to use drag/drop to move things from the extern assets-manager.<BR>
+<BR>
+Having subfolders in the assets-manager is probably overkill for a first release. Moreover, it will complicate the code. <BR>
+<BR>
+<FONT SIZE=3><B>Relative node references<BR>
+<BR>
+</B></FONT>Something that is only tangentially related to the clipboard, but came up here is that we want relative references to nodes for hyperlinks and event-based timing. This is needed so that a clipping with, say, a par with a media item and prev/next buttons works: the prev/next buttons need to be relative. Probably a button next to hyperlinks/events that says &#147;use relative reference&#148; is good enough. Default should probably be absolute.</P>
+</BODY>
+</HTML>
+
