@@ -361,6 +361,10 @@ SOURCE=.\M_colors.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_colorsex.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_commctrl.c
 # End Source File
 # Begin Source File
@@ -378,10 +382,6 @@ SOURCE=.\M_copy.c
 # Begin Source File
 
 SOURCE=.\M_DefCompatibilityCheck.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_DrawTk.c
 # End Source File
 # Begin Source File
 
