@@ -39,10 +39,7 @@ class TopLevel(TopLevelDialog):
 				width, height = windowinterface.getscreensize()
 				query = 'width=%d&height=%d' % (width, height)
 				try:
-					hostname = host
-					i = hostname.find(':')
-					if i > 0:
-						hostname = hostname[:i]
+					hostname = settings.get('RTIPA_client_IP')
 					ip = socket.gethostbyname(hostname)
 				except socket.error:
 					# host unknown
