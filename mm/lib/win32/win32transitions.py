@@ -141,8 +141,8 @@ class TransitionEngine:
 		while 1:
 			try:
 				self._passive = wnd._passive
-				wnd._drawsurf = wnd.createDDS()
-				self._active = wnd.createDDS()
+				wnd._drawsurf = wnd.getBackDDS()
+				self._active = wnd.getBackDDS()
 				self._tmp = wnd.createDDS()
 			except ddraw.error, arg:
 				print arg
