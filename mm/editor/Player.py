@@ -252,7 +252,7 @@ class Player(ViewDialog, PlayerCore):
 		self.scheduler.timer_callback()
 	#
 	def cmenu_callback(self, name):
-		isvis = self.channels[name].get_visible()
+		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
 
 	def cc_enable_ch(self, name, onoff):
