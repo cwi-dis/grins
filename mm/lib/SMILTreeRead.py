@@ -161,6 +161,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__seen_body = 0
 		self.__in_layout = LAYOUT_NONE
 		self.__seen_layout = 0
+		self.__has_layout = 0
 		self.__in_a = None
 		self.__context = context
 		self.__root = None
@@ -968,11 +969,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif self.__tops.has_key(region):
 				self.error('unknown region')
 		else:
-#			if CASCADE:
-#				region = 'unnamed region %d' % self.__regionno
-#				self.__regionno = self.__regionno + 1
-#			else:
-			region = 'unnamed region'
+			if CASCADE and not self.__has_layout:
+				region = 'unnamed region %d' % self.__regionno
+				self.__regionno = self.__regionno + 1
+			else:
+				region = 'unnamed region'
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
@@ -983,10 +984,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val is not None:
 					ch[key] = val
 			ch['id'] = region
-#			ch['left'] = '%dpx' % self.__defleft
-#			ch['top'] = '%dpx' % self.__deftop
-#			self.__defleft = self.__defleft + 20
-#			self.__deftop = self.__deftop + 10
+			ch['left'] = '%dpx' % self.__defleft
+			ch['top'] = '%dpx' % self.__deftop
+			if CASCADE and not self.__has_layout:
+				self.__defleft = self.__defleft + 20
+				self.__deftop = self.__deftop + 10
 			self.start_region(ch, checkid = 0)
 			self.end_region()
 			self.__in_layout = LAYOUT_NONE
@@ -1011,12 +1013,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if top == None: #and ChannelMap.isvisiblechannel(mtype):
 			if not self.__tops.has_key(None):
 				self.__newTopRegion()
-			id = ch.get('id')
-			for child in self.__childregions[None]:
-				if child == id:
-					break
-			else:
-				self.__childregions[None].append(id)
+			if region not in self.__childregions[None]:
+				self.__childregions[None].append(region)
 		import ChannelMap
 		if not ChannelMap.isvisiblechannel(mtype):
 			# not visible region
@@ -2012,6 +2010,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__context.addtransitions(self.__transitions.items())
 
 	def start_body(self, attributes):
+		self.__has_layout = self.__seen_layout > 0
 		if not self.__seen_layout:
 			self.__seen_layout = LAYOUT_SMIL
 		self.__fix_attributes(attributes)
