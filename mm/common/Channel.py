@@ -712,10 +712,13 @@ class Channel:
 		elif node.type == 'ext':
 			url = self.getfileurl(node)
 			self.armed_url = url
+			url, tag = MMurl.splittag(url)
 			try:
 				# use urlretrieve so that data gets cached
 				fn = MMurl.urlretrieve(url)[0]
 				self.armed_url = MMurl._urlopener.openedurl
+				if tag:
+					self.armed_url = self.armed_url+'#'+tag
 				fp = open(fn, 'r')
 				text = fp.read()
 				fp.close()
