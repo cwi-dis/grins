@@ -52,6 +52,7 @@ class SchedulerContext:
 		self.stopcontextchannels()
 		self.srdict = {}
 		self.parent._remove_sctx(self)
+##		self.playroot.resetall()
 		del self.parent
 		del self.playroot
 		if not settings.noprearm:
@@ -247,6 +248,7 @@ class SchedulerContext:
 	# Start minidoc starts playing what we've prepared
 	#
 	def start(self, s_node, s_aid, s_args, timestamp = None):
+		if debugevents: print 'SchedulerContext.start',`self`, `s_node`, `s_aid`, `s_args`, `timestamp`
 		if not self.gen_prearms(s_node):
 			return 0
 		if not settings.noprearm:
@@ -345,7 +347,7 @@ class SchedulerContext:
 			if debugevents: print 'terminating siblings'
 			for c in pnode.children:
 				# don't have to terminate it again
-				if c is not node:
+				if c is not node and c.playing != MMStates.IDLE:
 					self.parent.do_terminate(self, c, timestamp)
 		# we must start the node, but how?
 		if debugevents: print 'starting node'
@@ -399,7 +401,7 @@ class SchedulerContext:
 	# returning executable SRs, if any.
 	#
 	def getsrlist(self, ev):
-		#print 'event:', SR.ev2string(ev)
+		if debugevents: print 'event:', SR.ev2string(ev)
 		try:
 			srdict = self.srdict[ev]
 			del self.srdict[ev]
@@ -445,7 +447,6 @@ class SchedulerContext:
 
 class Scheduler(scheduler):
 	def __init__(self, ui):
-		self.muststop = 0
 		self.queue = []
 		self.ui = ui
 		self.toplevel = self.ui.toplevel
@@ -467,7 +468,6 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def play(self, node, seek_node, anchor_id, anchor_arg, timestamp=None):
-		self.muststop = 0
 		# XXXX Is the following true for alt nodes too?
 		if node.GetType() == 'bag':
 			raise error, 'Cannot play choice node'
@@ -478,14 +478,14 @@ class Scheduler(scheduler):
 		self.sctx_list.append(sctx)
 		self.playing = self.playing + 1
 		if not sctx.start(seek_node, anchor_id, anchor_arg, timestamp):
-##			print 'Scheduler: play abort'
+			if debugevents: print 'Scheduler: play abort'
 			sctx.stop()
 			return None
 		self.starting_to_play = 1
 		return sctx
 	#
 	def _remove_sctx(self, sctx):
-##		print 'Remove:', sctx
+		if debugevents: print 'Remove:', sctx
 		self.playing = self.playing - 1
 		self.purge_sctx_queues(sctx)
 		self.sctx_list.remove(sctx)
@@ -514,15 +514,12 @@ class Scheduler(scheduler):
 		print '==============================='
 
 	def stop_all(self):
-		self.muststop = 1
-
-	def do_stop_all(self):
-##		print 'STOP_ALL', self.sctx_list
+		if debugevents: print 'STOP_ALL', self.sctx_list
 		to_stop = self.sctx_list[:]
 		for sctx in to_stop:
 			sctx.stop()
 		to_stop = None
-##		print 'Now', self.sctx_list
+		if debugevents: print 'Now', self.sctx_list
 		if self.starting_to_play:
 			self.starting_to_play = 0
 		self.playing = 0
@@ -549,9 +546,6 @@ class Scheduler(scheduler):
 		# algorithm. For now, we're eager, on both queues.
 		#
 		if debugtimer: print 'timer_callback'
-		if self.muststop:
-			self.do_stop_all()
-			return
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			self.toplevel.setwaiting()
