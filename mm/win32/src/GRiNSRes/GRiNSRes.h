@@ -238,6 +238,9 @@
 #define IDD_FIND                        428
 #define IDI_DANGLINGANCHOR              429
 #define IDD_REPLACE                     429
+#define IDI_PROPERTIES                  430
+#define IDI_VIEWPORT                    431
+#define IDI_REGION                      432
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -749,7 +752,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        430
+#define _APS_NEXT_RESOURCE_VALUE        433
 #define _APS_NEXT_COMMAND_VALUE         32890
 #define _APS_NEXT_CONTROL_VALUE         1444
 #define _APS_NEXT_SYMED_VALUE           104

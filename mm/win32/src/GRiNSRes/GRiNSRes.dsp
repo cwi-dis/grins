@@ -437,11 +437,27 @@ SOURCE=.\RES\Node.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\properties.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\region.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\svg.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Text.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\RES\Video.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\viewport.ico
 # End Source File
 # End Target
 # End Project
