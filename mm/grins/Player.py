@@ -34,6 +34,7 @@ class Player(PlayerCore, PlayerDialog):
 		self.toplevel = toplevel
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
+		self.userstarttime = 0
 		self.commandlist = [
 			CHANNELS(callback = self.channel_callback),
 			USERGROUPS(callback = self.usergroup_callback),
@@ -107,7 +108,7 @@ class Player(PlayerCore, PlayerDialog):
 		self.showchannels()
 		PlayerDialog.show(self)
 		self.showstate()
-
+		
 	def hide(self):
 		if not self.showing: return
 		self.showing = 0
@@ -135,7 +136,7 @@ class Player(PlayerCore, PlayerDialog):
 			self.pause(0)
 		elif not self.playing:
 			# Case 2: starting to play from stopped mode
-			self.play()
+			self.play(self.userstarttime)
 		else:
 			# nothing, restore state.
 			self.showstate()
@@ -220,6 +221,9 @@ class Player(PlayerCore, PlayerDialog):
 		else:
 			state = PLAYING
 		self.setstate(state)
+
+	def setstarttime(self, starttime):
+		self.userstarttime = starttime
 
 	def makemenu(self):
 		channels = []
