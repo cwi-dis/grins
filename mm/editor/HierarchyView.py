@@ -155,17 +155,17 @@ class HierarchyView(HierarchyViewDialog):
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
 
-			PUSHFOCUS(callback = (self.focuscall, ())),
-
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
 			PLAYABLE(callback = (self.playablecall, ())),
-			TIMESCALE(callback = (self.timescalecall, ())),
 
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			
 			TOGGLE_BWSTRIP(callback = (self.bandwidthcall, ())), # XXXX Wrong command name
 			]
+		if not settings.get('lightweight'):
+			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
+			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
 		self.interiorcommands = [
 			NEW_UNDER(callback = (self.createundercall, ())),
 			NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))),

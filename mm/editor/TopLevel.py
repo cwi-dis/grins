@@ -33,6 +33,7 @@ Error = 'TopLevel.Error'
 
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
+		import settings
 		ViewDialog.__init__(self, 'toplevel_')
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -67,21 +68,24 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			PLAY(callback = (self.play_callback, ())),
 			PLAYERVIEW(callback = (self.view_callback, (0,))),
 			HIERARCHYVIEW(callback = (self.view_callback, (1,))),
-			CHANNELVIEW(callback = (self.view_callback, (2,))),
-			LINKVIEW(callback = (self.view_callback, (3,))),
-			LAYOUTVIEW(callback = (self.view_callback, (4,))),
-			USERGROUPVIEW(callback = (self.view_callback, (5,))),
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
 			PROPERTIES(callback = (self.prop_callback, ())),
 
 			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
 			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
-			HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
-			HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
-			HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
-			HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 			]
+		if not settings.get('lightweight'):
+			self.commandlist = self.commandlist + [
+				CHANNELVIEW(callback = (self.view_callback, (2,))),
+				LINKVIEW(callback = (self.view_callback, (3,))),
+				LAYOUTVIEW(callback = (self.view_callback, (4,))),
+				USERGROUPVIEW(callback = (self.view_callback, (5,))),
+				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
+				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
+				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
+				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
+				]
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
