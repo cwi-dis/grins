@@ -1,10 +1,21 @@
-
 __version__ = "$Id$"
 
 import string
+import audio
 
 class select:
 	def __init__(self, rdr, rangelist):
+		lastbegin = 0
+		lastend = 0
+		for begin, end in rangelist:
+			if begin is None:
+				begin = 0
+			if end is None or end == 0:
+				end = rdr.getnframes()
+			if begin >= end or \
+			   begin < lastend:
+				raise audio.Error, 'rangelist must be non-overlapping and sorted'
+			lastbegin, lastend = begin, end
 		self.__rdr = rdr
 		self.__rangelist = rangelist
 		self.__currange = 0
@@ -96,3 +107,18 @@ class select:
 			curframe = end
 			currange = currange + 1
 		return n
+
+	def getmarkers(self):
+		markers = []
+		diff = 0
+		for id, pos, name in self.__rdr.getmarkers():
+			lastend = 0
+			for begin, end in self.__rangelist:
+				if pos < (begin or 0):
+					# no point in continuing
+					break
+				diff = diff + begin - lastend
+				if end is None or end == 0 or pos < end:
+					markers.append((id, pos - diff, name))
+				lastend = end
+		return markers
