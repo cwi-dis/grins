@@ -273,10 +273,7 @@ class TextWindow(ChannelWindow):
 	#
 	def redraw(self):
 		if not self.is_showing(): return
-		
-		import time
-		t0 = time.millitimer()
-		
+
 		self.setwin()
 		gl.reshapeviewport()
 		#
@@ -328,19 +325,17 @@ class TextWindow(ChannelWindow):
 			gl.v2i(a[2], a[1])
 			gl.endclosedline()
 
-		t1 = time.millitimer()
-		print 'Text redraw took', t1-t0, 'msec.'
-
 
 def calclines(text, font, width):
 	curlines = []
 	for par in text:
-		while par:
+		while 1:
 			i = fitstring(par, font.getstrwidth, width)
 			curlines.append(par[:i])
 			n = len(par)
 			while i < n and par[i] == ' ': i = i+1
 			par = par[i:]
+			if not par: break
 	return curlines
 
 
@@ -350,21 +345,20 @@ def calclines(text, font, width):
 # Blank lines and lines starting with whitespace separate paragraphs.
 
 def preptext(text):
-	import time
-	t0 = time.millitimer()
 	lines = strop.splitfields(text, '\n')
 	result = []
 	par = []
 	for line in lines:
 		if '\t' in line: line = string.expandtabs(line, 8)
-		if line == '' or line[0] in ' \t':
-			if par: result.append(string.join(par))
-			par = []
 		i = len(line) - 1
 		while i >= 0 and line[i] == ' ': i = i-1
-		par.append(line[:i+1])
+		line = line[:i+1]
+		if not line or line[0] in ' \t':
+			result.append(string.join(par))
+			par = []
+		if line:
+			par.append(line)
 	if par: result.append(string.join(par))
-	t1 = time.millitimer()
 	return result
 
 
@@ -414,15 +408,11 @@ class TextChannel(Channel):
 		self.window.clear()
 	#
 	def play(self, (node, callback, arg)):
-		import time
-		t0 = time.millitimer()
 		self.showanchors(node)
 		self.showtext(node)
 		Channel.play(self, node, callback, arg)
 		dummy = \
 		    self.player.enter(0.001, 1, self.player.opt_prearm, node)
-		t1 = time.millitimer()
-		print 'Text play took', t1-t0, 'msec.'
 	#
 	def defanchor(self, node, anchor):
 		self.showtext(node)
