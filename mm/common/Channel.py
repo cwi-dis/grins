@@ -610,6 +610,7 @@ class ChannelWindow(Channel):
 		self.armed_display = self.played_display = None
 		self.nopop = 0
 		self._is_waiting = 0
+		self.want_default_colormap = 0
 		return self
 
 	def __repr__(self):
@@ -702,7 +703,10 @@ class ChannelWindow(Channel):
 					pchan._subchannels.remove(self)
 					pchan = None
 		if pchan:
-			self.window = pchan.window.newwindow(pgeom)
+			if self.want_default_colormap:
+				self.window = pchan.window.newcmwindow(pgeom)
+			else:
+				self.window = pchan.window.newwindow(pgeom)
 		else:
 			# no basewindow, create a top-level window
 			if self._attrdict.has_key('winsize'):
@@ -715,8 +719,12 @@ class ChannelWindow(Channel):
 			else:
 				# provide defaults
 				x, y = 20, 20
-			self.window = windowinterface.newwindow(x, y, \
-				  width, height, self._name)
+			if self.want_default_colormap:
+				self.window = windowinterface.newcmwindow(x, y,
+						width, height, self._name)
+			else:
+				self.window = windowinterface.newwindow(x, y,
+						width, height, self._name)
 		if self._is_waiting:
 			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):

@@ -15,14 +15,14 @@ if windowinterface.Version <> 'X':
 	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
 	raise ImportError
 
-num=1
-
 class HtmlChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['fgcolor']
 
 	def init(self, name, attrdict, scheduler, ui):
 		self = ChannelWindow.init(self, name, attrdict, scheduler, ui)
+		self.want_default_colormap = 1
 		self.htmlw = None
+		if name[0] >= 'A' and name[0] <= 'Z':
+			print 'HtmlChannel: Uppercase names are prone to disappointing results'
 		return self
 
 	def do_show(self):
@@ -36,44 +36,17 @@ class HtmlChannel(ChannelWindow):
 			return 0
 		print 'DOIESHOW'
 		#
-		# Step 2 - Create a values dictionary with width/height/colors
+		# Step 2 - Create a values dictionary with width/height
 		# for use when we create the HTML widget.
 		#
 		wd = self.window
 		print 'WINDOW=', wd
 		wh = wd._form.GetValues(['width', 'height'])
-		ad = self._attrdict
-		if ad.has_key('fgcolor'):
-			wh['foreground'] = wd._convert_color(ad['fgcolor'])
-		else:
-			wh['foreground'] = wd._convert_color((0,0,0))
-		if ad.has_key('bgcolor'):
-			wh['background'] = wd._convert_color(ad['bgcolor'])
-		else:
-			wh['background'] = wd._convert_color((255,255,255))
-		if ad.has_key('hicolor'):
-			wh['anchorColor'] = wd._convert_color(ad['hicolor'])
-		else:
-			wh['anchorColor'] = wd._convert_color((255,0,0))
-		wh['visitedAnchorColor'] = wh['anchorColor']
-		wh['activeAnchorFG'] = wh['foreground']
-		wh['activeAnchorBG'] = wh['anchorColor']
 		print 'GO FOR IT'
 		#
-		# Create the widget, and also get a list of it's children
-		# so we can set the color on them too.
+		# Create the widget
 		#
 		self.htmlw = self.window._form.CreateManagedWidget('h', HTML.html, wh)
-		self.htmlw_children = [self.htmlw.NameToWidget('View'),
-			  self.htmlw.NameToWidget('Vbar'),
-			  self.htmlw.NameToWidget('Hbar')]
-		#
-		# Set color (and color only) on the children
-		#
-		del wh['width']
-		del wh['height']
-		for c in self.htmlw_children:
-			c.SetValues(wh)
 		#
 		# Set callbacks.
 		#
@@ -114,32 +87,17 @@ class HtmlChannel(ChannelWindow):
 	def do_arm(self, node):
 		print 'DO_ARM'
 		self.armed_str = self.getstring(node)
-		self.getcolors(node)
 		return 1
 		
 	def do_play(self, node):
 		print 'DO_PLAY'
 		self.url = self.armed_url
 		print 'URL=', self.url
-		for c in self.htmlw_children:
-			c.SetValues(self.color_arg)
-		self.color_arg['text'] = self.armed_str
-		self.color_arg['headerText'] = ''
-		self.color_arg['footerText'] = ''
-		self.htmlw.SetValues(self.color_arg)
+		arg = {'text': self.armed_str, 'headerText':'',
+		       'footerText':''}
+		self.htmlw.SetValues(arg)
 		self.fixanchorlist(node)
 		self.play_node = node
-
-	def getcolors(self, n):
-		xfgcolor = self.window._convert_color(self.getfgcolor(n))
-		xbgcolor = self.window._convert_color(self.getbgcolor(n))
-		xhicolor = self.window._convert_color(self.gethicolor(n))
-		self.color_arg = {'foreground':xfgcolor, \
-			  'background':xbgcolor, \
-			  'anchorColor':xhicolor, \
-			  'visitedAnchorColor':xhicolor, \
-			  'activeAnchorFG':xfgcolor, \
-			  'activeAnchorBG':xhicolor}
 
 	def getstring(self, node):
 		if node.type == 'imm':

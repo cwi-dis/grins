@@ -64,6 +64,7 @@ class _Toplevel:
 		_mscreenheight = self._main.HeightMMOfScreen()
 		_screenwidth = self._main.WidthOfScreen()
 		_screenheight = self._main.HeightOfScreen()
+		self._default_colormap = self._main.DefaultColormapOfScreen()
 		_dpi_x = int(_screenwidth * 25.4 / _mscreenwidth + .5)
 		_dpi_y = int(_screenheight * 25.4 / _mscreenheight + .5)
 		self._parent_window = None
@@ -107,7 +108,12 @@ class _Toplevel:
 
 	def newwindow(self, x, y, w, h, title):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
-		window = _Window(1, self, x, y, w, h, title)
+		window = _Window(1, self, x, y, w, h, title, 0)
+		return window
+
+	def newcmwindow(self, x, y, w, h, title):
+		if debug: print 'Toplevel.newcmwindow'+`x, y, w, h, title`
+		window = _Window(1, self, x, y, w, h, title, 1)
 		return window
 
 	def pop(self):
@@ -124,7 +130,7 @@ class _Toplevel:
 		self._win_lock = lock
 
 class _Window:
-	def __init__(self, is_toplevel, parent, x, y, w, h, title):
+	def __init__(self, is_toplevel, parent, x, y, w, h, title, defcmap):
 		if debug: print '_Window.init() --> '+`self`
 		self._parent_window = parent
 		if not is_toplevel:
@@ -140,16 +146,20 @@ class _Window:
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		if debug: print 'CreatePopupShell, geometry:',geometry
+		if defcmap:
+			self._colormap = toplevel._default_colormap
+		else:
+			self._colormap = toplevel._colormap
 		self._shell = parent._toplevel._main.CreatePopupShell(title,
 			  Xt.ApplicationShell,
-			  {'colormap': toplevel._colormap,
-			   'geometry': geometry})
+			  {'colormap' : self._colormap,
+			   'geometry' : geometry})
 		if debug: print 'CreatePopupShell done'
 		self._shell.SetValues({'width': w, 'height': h})
 		self._form = self._shell.CreateManagedWidget('drawingArea',
 			  Xm.DrawingArea,
 			  {'height': h, 'width': w,
-			   'colormap': toplevel._colormap,
+			   'colormap': self._colormap,
 			   'marginHeight': 0, 'marginWidth': 0})
 		self._width = w
 		self._height = h
@@ -185,7 +195,7 @@ class _Window:
 		self._toplevel = self._parent_window._toplevel
 		self._gc = self._form.CreateGC({})
 		self._form.RealizeWidget()
-##		self._form.SetWindowColormap(toplevel._colormap)
+##		self._form.SetWindowColormap(self._colormap)
 		self._form.AddCallback('exposeCallback', self._expose_callback, None)
 		self._form.AddCallback('resizeCallback', self._resize_callback, None)
 		self._form.AddCallback('inputCallback', self._input_callback, None)
@@ -341,21 +351,33 @@ class _Window:
 		enterevent(self, ResizeWindow, None)
 
 	def newwindow(self, *coordinates):
-		if debug: print `self`+'.newwindow'+`coordinates`
+		return self._new_window(coordinates, 0)
+
+	def newcmwindow(self, *coordinates):
+		print 'DBG: cmap subwindow'
+		return self._new_window(coordinates, 1)
+		
+	def _new_window(self, coordinates, defcmap):
+		if debug: print `self`+'._new_window'+`coordinates`
 		if len(coordinates) == 1 and type(coordinates) == type(()):
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
 		x, y, w, h = self._convert_coordinates(x, y, w, h)
-		newwin = _Window(0, self, 0, 0, 0, 0, 0)
+		newwin = _Window(0, self, 0, 0, 0, 0, 0, defcmap)
 		newwin._sizes = coordinates
 		newwin._parent_window = self
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
+		if defcmap:
+			newwin._colormap = toplevel._default_colormap
+		else:
+			newwin._colormap = toplevel._colormap
 		newwin._form = self._form.CreateManagedWidget('drawingArea',
 			  Xm.DrawingArea,
 			  {'width': w, 'height': h, 'x': x, 'y': y,
+			   'colormap':newwin._colormap,
 			   'marginHeight': 0, 'marginWidth': 0})
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
@@ -1499,6 +1521,10 @@ event = _Event()
 
 def newwindow(x, y, w, h, title):
 	return toplevel.newwindow(x, y, w, h, title)
+
+def newcmwindow(x, y, w, h, title):
+	print 'DBG: new top cmwindow'
+	return toplevel.newcmwindow(x, y, w, h, title)
 
 def close():
 	toplevel.close()
