@@ -8,6 +8,7 @@ ChannelMime = {
 		'image/jpeg',
 ##		'image/png',
 		'image/tiff',
+		'image/bmp', ## ++
 		'image/x-cmu-raster',
 ##		'image/x-portable-anymap',
 ##		'image/x-portable-bitmap',
@@ -24,6 +25,7 @@ ChannelMime = {
 		'audio/vnd.rn-realaudio',
 		'audio/x-aiff',
 		'audio/x-wav',
+		'audio/mpeg', ## ++
 		],
 	'video': [
 		'application/vnd.rn-realmedia', # but only if it contains video
