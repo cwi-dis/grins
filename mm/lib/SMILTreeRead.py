@@ -947,6 +947,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = p
 				except string.atof_error:
 					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'collapsed':
+				if val == 'true':
+					node.collapsed = 1
+				else:
+					self.syntax_error('bad %s attribute' % attr)
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
