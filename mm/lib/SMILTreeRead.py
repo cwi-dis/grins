@@ -1193,11 +1193,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for key, val in self.attributes['root-layout'].items():
 			if val is not None:
 				attrs[key] = val
-		self.__tops[None] = {'width':0,
-				     'height':0,
-				     'declwidth':0,
-				     'declheight':0,
-				     'attrs':attrs}
+		if settings.activeFullSmilCss:
+			self.__tops[None] = {'attrs':attrs}
+		else:
+			self.__tops[None] = {'width':0,
+					     'height':0,
+					     'declwidth':0,
+					     'declheight':0,
+					     'attrs':attrs}
 
 		self.__childregions[None] = []
 
@@ -1453,7 +1456,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					ch['minwidth'] = width
 				if ch['minheight'] < height:
 					ch['minheight'] = height
-
+			
 		# clip-* attributes for video
 		clip_begin = attributes.get('clipBegin')
 		if clip_begin:
@@ -1607,13 +1610,50 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			apply(self.Recurse, (node,) + funcs)
 
 	def FixSizes(self):
-		for t in self.__tops.keys():
-			self.__calcsize1(t)
-			w = self.__tops[t]['width']
-			h = self.__tops[t]['height']
-			for r in self.__childregions[t]:
-				self.__calcsize2(t, r, w, h)
-		self.Recurse(self.__root, self.__fixSubRegionPos)
+		if not settings.activeFullSmilCss:
+			for t in self.__tops.keys():
+				self.__calcsize1(t)
+				w = self.__tops[t]['width']
+				h = self.__tops[t]['height']
+				for r in self.__childregions[t]:
+					self.__calcsize2(t, r, w, h)
+			self.Recurse(self.__root, self.__fixSubRegionPos)
+		else:
+			self.__cssIdTmpList = []
+			self.Recurse(self.__root, self.__fixMediaPos)
+			
+	def __fixMediaPos(self, node):
+		if node.GetType() not in leaftypes:
+			return
+		import ChannelMap
+		channel = node.GetChannel()
+		if channel == None: return
+		if not ChannelMap.isvisiblechannel(channel.get('type')):
+			return
+
+		region = channel.GetLayoutChannel()
+		if region == None: return 		
+		# keep all original constraints
+		# if a value is not specified,  it's a CSS auto value
+		
+		# sub region			
+		cssResolver = self.__context.cssResolver
+		cssId = cssResolver.newRegion()
+		self.__cssIdTmpList.append(cssId)
+		cssResolver.setRawAttrPos(cssId,
+			node.attrdict.get('left'), node.attrdict.get('width'), node.attrdict.get('right'),
+			node.attrdict.get('top'), node.attrdict.get('height'), node.attrdict.get('bottom'))
+		cssResolver.link(cssId, region.cssId)					
+			
+		# media
+		cssMediaId = cssResolver.newMedia()
+		self.__cssIdTmpList.append(cssMediaId)
+		width, height = node.GetDefaultMediaSize(None, None)
+		cssResolver.setIntrinsicSize(cssMediaId, width, height)
+		cssResolver.setAlignAttr(cssMediaId, 'regPoint', node.attrdict.get('regPoint',None))
+		cssResolver.setAlignAttr(cssMediaId, 'regAlign', node.attrdict.get('regAlign',None))
+		cssResolver.setAlignAttr(cssMediaId, 'scale', node.attrdict.get('scale',None))			
+		cssResolver.link(cssMediaId, cssId)			
 
 	# set the same unit to all positioning attributes : temporarely
 	def __fixSubRegionPos(self, node):
@@ -1945,10 +1985,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			top = None
 		else:
 			top = name
-		if self.__tops[top]['width'] == 0:
-			self.__tops[top]['width'] = 640
-		if self.__tops[top]['height'] == 0:
-			self.__tops[top]['height'] = 480
+		if not settings.activeFullSmilCss:
+			if self.__tops[top]['width'] == 0:
+				self.__tops[top]['width'] = 640
+			if self.__tops[top]['height'] == 0:
+				self.__tops[top]['height'] = 480
+		else:
+			if self.__tops[top]['width'] == 0:
+				self.__tops[top]['width'] = None
+			if self.__tops[top]['height'] == 0:
+				self.__tops[top]['height'] = None
 
 		# default values
 		open = 'always'
@@ -1975,8 +2021,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("couldn't parse `%s' value" % attr)
 					pass
 				
-		layout['winsize'] = width, height
-		layout['units'] = UNIT_PXL
+		if settings.activeFullSmilCss:
+			layout['width'] = self.__tops[top]['width']
+			layout['height'] = self.__tops[top]['height']
+		else:
+			layout['winsize'] = width, height
+			layout['units'] = UNIT_PXL
 		layout['close'] = close
 		layout['open'] = open
 
@@ -1992,7 +2042,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				yCurrent = yCurrent+20
 
 				if settings.activeFullSmilCss:
-					width, height = ch['winsize']
+					self.__context.cssResolver.setRootSize(ch.cssId, ch.get('width'), ch.get('height'))
+					width, height = ch['winsize'] = self.__context.cssResolver.getPxGeom(ch.cssId)
 					self.__context.cssResolver.setRootSize(ch.cssId, width, height)
 				continue
 			# old 03-07-2000
@@ -2013,6 +2064,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not ch.has_key('base_window'):
 				ch['base_window'] = self.__base_win
 			# end new
+
+		# cleanup
+		if settings.activeFullSmilCss:
+			for cssId in self.__cssIdTmpList:
+				self.__context.cssResolver.unlink(cssId)
+			self.__cssIdTmpList = None
 
 	#  fill channel according to its type. To the layout type
 	def __fillchannel(self, ch, attrdict, mtype):
@@ -2478,7 +2535,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 1
 		self.NewContainer('seq', attributes)
 		self.__set_defaultregpoints()
-
+		
 	def end_smil(self):
 		from realnode import SlideShow
 		self.__in_smil = 0
@@ -2490,11 +2547,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			for key, val in self.attributes['root-layout'].items():
 				if val is not None:
 					attrs[key] = val
-			self.__tops[None] = {'width':0,
-					     'height':0,
-					     'declwidth':0,
-					     'declheight':0,
-					     'attrs':attrs}
+			if settings.activeFullSmilCss:
+				self.__tops[None] = {'attrs':attrs}
+			else:
+				self.__tops[None] = {'width':0,
+						'height':0,
+						'declwidth':0,
+						'declheight':0,
+						'attrs':attrs}
 			if not self.__childregions.has_key(None):
 				self.__childregions[None] = []
 		if not settings.activeFullSmilCss:
@@ -2503,6 +2563,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.Recurse(self.__root, self.CleanChanList)
 		self.FixLayouts()
+		if settings.activeFullSmilCss:
+			self.FixSizes()
 		self.FixBaseWindow()
 		self.FixLinks()
 		self.Recurse(self.__root, self.FixAnchors)
@@ -3207,8 +3269,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# catch all
 				attrdict[attr] = val
 
-		attrdict['declwidth'] = attrdict.get('width')
-		attrdict['declheight'] = attrdict.get('height')
+		if not settings.activeFullSmilCss:	
+			attrdict['declwidth'] = attrdict.get('width')
+			attrdict['declheight'] = attrdict.get('height')
 
 		# experimental code for switch layout
 		if len(self.__switchstack) > 0:			
