@@ -141,14 +141,14 @@ MENUBAR=(
 		(ALL, ENTRY, 'Play Node', None, PLAYNODE),
 		(ALL, ENTRY, 'Play from Node', None, PLAYFROM),
 		(CMIF, SEP,),
-		(SMIL, DYNAMICCASCADE, 'User Groups', USERGROUPS),
+		(CMIF, DYNAMICCASCADE, 'User Groups', USERGROUPS),
 		(CMIF, DYNAMICCASCADE, 'Channel Visibility', CHANNELS),
 		)),
 
 	(ALL, CASCADE, 'Linking', (
 		(ALL, ENTRY, 'Create Whole Node Anchor', 'R', CREATEANCHOR),
 		(ALL, ENTRY, 'Finish Hyperlink', 'H', FINISH_LINK),
-		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
+##		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
 		(FULL, SEP,),
 		(FULL, ENTRY, 'Create Syncarc from Selection...', None, FINISH_ARC),
 		(FULL, DYNAMICCASCADE, 'Select Sync Arc', SYNCARCS),
@@ -190,7 +190,7 @@ MENUBAR=(
 		(FULL, ENTRY, 'Timeline View', '7', CHANNELVIEW),
 		(FULL, ENTRY, 'Layout View', '8', LAYOUTVIEW),
 		(FULL, ENTRY, 'Hyperlinks', '9', LINKVIEW),
-		(SMIL, ENTRY, 'User Groups', '0', USERGROUPVIEW),
+		(CMIF, ENTRY, 'User Groups', '0', USERGROUPVIEW),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Source', None, SOURCE),
 		(ALL, ENTRY, 'View Help Window', None, HELP),
@@ -263,7 +263,7 @@ POPUP_HVIEW_LEAF = (
 		(ALL, ENTRY, 'Finish Hyperlink', None, FINISH_LINK),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
-		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
+##		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ALL, ENTRY, 'Edit Content', 'E', CONTENT),
 )
 
@@ -359,7 +359,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(ALL, SEP,),
 ##		(ALL, ENTRY, 'Info...', 'I', INFO),
 		(ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
-		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
+##		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
 )
 
 POPUP_CVIEW_NONE = (
@@ -386,7 +386,7 @@ POPUP_CVIEW_NODE = (
 		(ALL, SEP,),
 ##		(ALL, ENTRY, 'Info...', 'I', INFO),
 		(ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
-		(ALL, ENTRY, 'Anchors...', 'T', ANCHORS),
+##		(ALL, ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ALL, ENTRY, 'Edit Content', 'E', CONTENT),
 )
 
