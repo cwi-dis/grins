@@ -11,7 +11,7 @@ from win32ig import win32ig
 from win32displaylist import _DisplayList
 
 import ddraw
-
+import math
 import settings
 
 # for global toplevel 
@@ -827,9 +827,12 @@ class Window:
 	# return true if an arrow has been hit
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
-		sx, sy = self._convert_coordinates(src,self._canvas)
-		dx, dy = self._convert_coordinates(dst,self._canvas)
-		x, y = self._convert_coordinates(point,self._canvas)
+		# sx, sy = self._convert_coordinates(src,self._canvas)
+		# dx, dy = self._convert_coordinates(dst,self._canvas)
+		# x, y = self._convert_coordinates(point,self._canvas)
+		sx, sy = src
+		dx, dy = dst
+		x,y = point
 		lx = dx - sx
 		ly = dy - sy
 		if lx == ly == 0:
