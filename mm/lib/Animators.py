@@ -107,7 +107,7 @@ class Animator:
 		# convertion
 		if self._convert:
 			v = self._convert(v)
-
+		
 		self._curvalue = v
 		return v
 
@@ -158,6 +158,20 @@ class Animator:
 			return vl[0]
 		ix, pdt = self._getinterval(t)
 		return vl[ix] + (vl[ix+1]-vl[ix])*self.bezier(pdt, el[ix])
+
+	# set legal attr values range
+	def setRange(self, range):
+		self._range = range
+	def hasRange(self):
+		return hasattr(self, '_range')
+
+	# the following method will be called by the EffectiveAnimator
+	# to clamp the results at the top of the animation stack to the legal range 
+	# before applying them to the presentation value
+	def clamp(self, v):
+		if v < self._range[0]: return self._range[0]
+		elif v > self._range[1]:return self._range[1]
+		else: return v
 
 	def _setAccumulate(self, acc):
 		if acc not in ('none', 'sum'):
