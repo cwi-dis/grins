@@ -260,7 +260,8 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__map0 = []
 		self.__map1 = []
 		self.__listener = None
-
+		self.__lineToSelect = None
+		
 	def OnCreate(self, cs):
 		# create dialog bar and attach controls (though attachement effects are not used for buttons)
 		# dialog bar is not needed if we are readonly (player)
@@ -271,10 +272,6 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__ok.attach_to_parent()
 		self.__apply.attach_to_parent()
 		self.__revert.attach_to_parent()
-
-		# disable the default wrap behavior
-		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
-		self.WrapChanged()
 
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
@@ -298,7 +295,11 @@ class _SourceView(GenView, docview.RichEditView):
 		self.enableDlgBarComponent(self.__ok, 1)
 		self.enableDlgBarComponent(self.__apply, 0)
 		self.enableDlgBarComponent(self.__revert, 0)
-		
+
+		# disable the default wrap behavior
+		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
+		self.WrapChanged()
+				
 	def Paste(self):
 		if not self.isClipboardEmpty():
 			# call the ancestor's method
@@ -350,6 +351,9 @@ class _SourceView(GenView, docview.RichEditView):
 				if self.__editctrl.GetModify() and not self.__setting:
 					self.enableDlgBarComponent(self.__apply, 1)
 					self.enableDlgBarComponent(self.__revert, 1)
+				if self.__lineToSelect:
+					self.__lineToSelect = None
+					self.select_line(self.__lineToSelect)
 		elif id == self.__ok._id:
 			self.__ok_callback()
 		elif id == self.__apply._id:
@@ -387,6 +391,17 @@ class _SourceView(GenView, docview.RichEditView):
 	def gettext(self):
 		return self.GetWindowText()
 
+	# Set the text to be shown
+	def settext(self, text):
+		self.__text = self.__convert2ws(text)
+		# if already visible, update text in window
+		if self.__showing:
+			# during the setting, the EN_CHANGE event is ignore
+			self.__setting = 1
+			self.SetWindowText(self.__text)
+			self.SetModify(0)
+			self.__setting = 0
+				
 	def set_mother(self, mother):
 		self.__mother = mother
 
@@ -464,27 +479,31 @@ class _SourceView(GenView, docview.RichEditView):
 
 	def removeListener(self):
 		self.__listener = None
-
-	# Set the text to be shown
-	def settext(self, text):
-		self.__text = self.__convert2ws(text)
-		# if already visible, update text in window
-		if self.__showing:
-			# during the setting, the EN_CHANGE event is ignore
-			self.__setting = 1
-			self.SetWindowText(self.__text)
-			self.SetModify(0)
-			self.__setting = 0
-
+	
 	# undo operation
 	def Undo(self):
 		return Sdk.SendMessage(self.GetSafeHwnd(),win32con.EM_UNDO,0,0)
 
-#	def findText(self):
-#		n, start, end = self.FindText(FR_MATCHCASE|FR_WHOLEWORD, &ft);
-#		if (n != -1)
-#		   pmyRichEditCtrl->SetSel(ft.chrgText);
-
+	# select a line
+	def select_line(self, line):
+		if self.GetLineCount() < line:
+			return
+		startchar = self.LineIndex(line)
+		if startchar >= 0:
+			# determine the end char according to the next line
+			# XXXX note EM_LINELENGTH doesn't work if there are a lot of lines ???
+			# special case, if there is only one line
+			lineCount = self.GetLineCount()
+			if lineCount > 1:
+				startend = self.LineIndex(line+1)
+			else:
+				# get the line length
+				len = Sdk.SendMessage(self.GetSafeHwnd(),win32con.EM_LINELENGTH,0,0)
+				startend = startchar+len
+				
+			if startend >= 0:
+				self.SetSel((startchar, startend))
+	
 	# select a part of the text
 	def select_chars(self, startchar, endchar, scroll = 1, pop = 0):
 		# the text between startchar and endchar will be selected.
