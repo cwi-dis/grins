@@ -90,10 +90,16 @@ class Player() = scheduler():
 	# This queue has variable time, to implement pause and slow/fast,
 	# but the interface to its callers is the same, except init().
 	#
-	# Inherit enterabs(), enter(), cancel(), empty() from scheduler.
+	# Inherit enter(), cancel(), empty() from scheduler.
+	# Override enterabs() since it must update the timer object.
 	# The timefunc is implemented differently (it's a real method),
 	# but the call to it from enter() doesn't mind.
 	# There is no delayfunc -- our run() doesn't use that.
+	#
+	def enterabs(self, args):
+		id = scheduler.enterabs(self, args)
+		self.updatetimer()
+		return id
 	#
 	def timefunc(self):
 		t = (time.millitimer() - self.msec_origin) / 1000.0
@@ -118,26 +124,35 @@ class Player() = scheduler():
 		self.rate = rate
 		for cname in self.channelnames:
 			self.channels[cname].setrate(self.rate)
+		self.updatetimer()
+	#
+	def updatetimer(self):
+		now = self.timefunc()
+		if self.queue:
+			when = self.queue[0][0]
+		else:
+			when = now + 1.0
+		delay = min(when - now, 1.0 - now%1.0)
+		if delay <= 0:
+			delay = 0.001 # Immediate, but nonzero
+		if self.rate = 0.0:
+			delay = 0.0 # Infinite
+		else:
+			delay = delay / self.rate
+		self.timerobject.set_timer(delay)
 	#
 	# This version of run() busy-waits when there is nothing to do.
-	# XXX Eventually we should use FORMS timer objects instead.
+	# It never returns!
+	# XXX Hence destroying and then re-creating this view doesn't work.
 	#
 	def run(self):
+		self.updatetimer()
 		while 1:
-			obj = glwindow.check()
-			if obj <> None:
-				raise RuntimeError, 'object without callback!'
-			idle = 1
-			if self.queue:
-				when, prio, action, argument = self.queue[0]
-				now = self.timefunc()
-				if now >= when:
-					del self.queue[0]
-					void = action(argument)
-					idle = 0
-			if idle:
-				self.showtime()
-				time.millisleep(50)
+			obj = fl.do_forms()
+			if obj = EVENT:
+				glwindow.dispatch(fl.qread())
+			else:
+				print 'Object without callback!'
 	#
 	# User interface.
 	#
@@ -184,6 +199,9 @@ class Player() = scheduler():
 			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
 		self.speedbutton.boxtype = FLAT_BOX
 		self.speedbutton.set_call_back(self.speed_callback, None)
+		#
+		self.timerobject = cpanel.add_timer(HIDDEN_TIMER,0,0,0,0, '')
+		self.timerobject.set_call_back(self.timer_callback, None)
 		#
 		self.cpanel = cpanel
 	#
@@ -240,6 +258,18 @@ class Player() = scheduler():
 	def speed_callback(self, (obj, arg)):
 		self.showstate()
 	#
+	def timer_callback(self, (obj, arg)):
+		while self.queue:
+			when, prio, action, argument = self.queue[0]
+			now = self.timefunc()
+			delay = when - now
+			if delay > 0.0:
+				break
+			del self.queue[0]
+			void = action(argument)
+		self.updatetimer()
+		self.showtime()
+	#
 	# State transitions.
 	#
 	def play(self):
@@ -260,8 +290,8 @@ class Player() = scheduler():
 	#
 	def stop(self):
 		if self.playing:
-			self.setrate(0.0)
 			self.stop_playing()
+			self.showstate()
 	#
 	def faster(self):
 		if not self.playing:
@@ -270,8 +300,9 @@ class Player() = scheduler():
 				return
 			self.start_playing()
 		if self.rate = 0.0:
-			self.setrate(1.0)
-		self.setrate(self.rate * 2.0)
+			self.setrate(2.0)
+		else:
+			self.setrate(self.rate * 2.0)
 	#
 	def maystart(self):
 		return 1
@@ -288,10 +319,11 @@ class Player() = scheduler():
 		self.showtime()
 	#
 	def showtime(self):
-		now = int(self.timefunc() * 10) * 0.1
+		now = int(self.timefunc())
 		label = 'T = ' + `now`
 		if self.statebutton.label <> label:
 			self.statebutton.label = label
+		#
 		rate = self.rate
 		if int(rate) = rate: rate = int(rate)
 		label = `rate`
@@ -341,13 +373,15 @@ class Player() = scheduler():
 		self.resettimer()
 		self.resetchannels()
 		Timing.prepare(self.root)
-		self.playing = 1
 		self.root.counter[HD] = 1
 		self.decrement(0, self.root, HD)
+		self.playing = 1
 	#
 	def stop_playing(self):
+		self.setrate(0.0) # Stop the clock
 		self.queue[:] = [] # Erase all events with brute force!
-		Timing.cleanup(self.root)
+		self.updatetimer()
+		Timing.cleanup(self.root) # Collect some garbage
 		self.playing = 0
 	#
 	def decrement(self, (delay, node, side)):
