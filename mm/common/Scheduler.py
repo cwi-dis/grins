@@ -584,8 +584,9 @@ class SchedulerContext:
 						parent.updatetimer()
 						return
 					elif action == 'defer':
-						srdict = pnode.gensr_child(node, curtime = parent.timefunc())
-						self.srdict.update(srdict)
+						if node not in pnode.pausestack:
+							srdict = pnode.gensr_child(node, curtime = parent.timefunc())
+							self.srdict.update(srdict)
 						node.start_time = timestamp
 						p = node.parent
 						while p and p.type == 'alt':
