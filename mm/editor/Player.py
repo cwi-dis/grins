@@ -202,7 +202,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if (self.ff or self.seeking) and delay > 0:
 			self.skiptimer(delay)
 			self.timerobject.set_timer(0.001)
-			print 'Updatetimer: skipped ', delay
+			print 'Player: updatetimer: skipped ', delay
 			return
 		delay = min(delay, 1.0 - now%1.0)
 		if delay <= 0:
@@ -217,7 +217,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			rtime = self.rtpool.shortest()
 			if delay == 0.0 or rtime < delay:
 				delay = 0.001
-		print 'Next timer: ', delay
+		#print 'Player: Next timer: ', delay
 		self.timerobject.set_timer(delay)
 	#
 	# User interface.
@@ -262,12 +262,13 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.makemenu()
 	#
 	def deltiming_callback(self, (obj, arg)):
+		# XXX should use the real root???
 		del_timing(self.playroot)
 		Timing.calctimes(self.playroot)
 		obj.set_button(0)
 	#
 	def ff_callback(self, (obj, arg)):
-		#print self.queue # DBG
+		#print 'Player:', self.queue # DBG
 		if not self.playing:
 			obj.set_button(not obj.get_button())
 			return
@@ -296,7 +297,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			del self.queue[0]
 			void = action(argument)
 		if not self.queue and self.rate > 0.0:
-			print 'Huh? Nothing in the queue?'
+			print 'Player: Huh? Nothing in the queue?'
 		if not self.queue or self.rate == 0.0:
 			delay = 10000.0		# Infinite
 			now = self.timefunc()
@@ -515,7 +516,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def resume_1_playing(self,rate):
 		for cname in self.channelnames:
 			self.channels[cname].playerseek_lastnode = None
-		MMAttrdefs.startstats()
+		#MMAttrdefs.startstats()
 		self.playing = 1
 		self.reset()
 		self.setrate(rate)
@@ -536,21 +537,22 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def suspend_playing(self):
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
-		# print 'Flush rtpool'
+		#print 'Player: Flush rtpool'
 		self.rtpool.flush()
 		self.setrate(0.0) # Stop the clock
 		self.showstate()
-		# print 'unarm chview'
+		#print 'Player: unarm chview'
 		chv = self.toplevel.channelview
 		chv.unarm_all()
 	def stop_playing(self):
 		self.playing = 0
 		self.suspend_playing()
-		if self.timing_changed:
-			Timing.calctimes(self.playroot)
-			Timing.optcalctimes(self.playroot)
-		a = MMAttrdefs.stopstats()
-		MMAttrdefs.showstats(a)
+#XXX why was this here?
+###		if self.timing_changed:
+###			Timing.calctimes(self.playroot)
+###			Timing.optcalctimes(self.playroot)
+		#a = MMAttrdefs.stopstats()
+		#MMAttrdefs.showstats(a)
 	#
 	def seek_done(self):
 		skipchannel = self.getchannel(self.seek_node)
@@ -571,7 +573,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def dummy(arg):
 		pass
 	def decrement(self, (delay, node, side)):
-		# print 'DEC', delay, node, side, ' of ', node.counter[side]
+		#print 'DEC', delay, node, side, ' of ', node.counter[side]
 	        self.freeze()
 		if delay > 0: # Sync arc contains delay
 			id = self.enter(delay, 0, self.decrement, \
@@ -580,7 +582,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			return
 		if side == TL and node.counter[side] == 0:
 			# To be fixed soon...
-			print 'Skip spurious decrement of tail on ', \
+			print 'Player:Skip spurious decrement of tail on ', \
 				  MMAttrdefs.getattr(node, 'name')
 			self.unfreeze()
 			return
@@ -590,7 +592,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		        self.unfreeze()
 			return # Wait for other sync arcs
 		if x < 0:
-			print 'Node counter below zero on ', \
+			print 'Player: Node counter below zero on ', \
 				  MMAttrdefs.getattr(node, 'name'), \
 				  MMAttrdefs.getattr(node, 'channel')
 			print self.queue
@@ -606,12 +608,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if doit:
 			    chan = self.getchannel(node)
 			    if chan == None:
-				print 'Play node w/o channel'
+				print 'Player: Play node w/o channel'
 				doit = 0
 			if doit and self.seeking:
 			    chan.playerseek_lastnode = node
 			    d = chan.getduration(node)
-			    print 'Skip node duration=', d
+			    print 'Player: Skip node duration=', d
 			    dummy = self.enter(d, 0, self.decrement, \
 				(0, node, TL))
 			elif doit:
@@ -629,7 +631,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    # we do the arm before the play.
 			    #
 			    must_arm = 1
-			    # print 'Node ', MMAttrdefs.getattr(node, 'name')
+			    #print 'Node ', MMAttrdefs.getattr(node, 'name')
 			    try:
 				if node.prearm_event == None:
 				    must_arm = 0
@@ -640,7 +642,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    except AttributeError:
 				pass
 			    if must_arm:
-				print 'Node not pre-armed on', \
+				print 'Player: Node not pre-armed on', \
 				    MMAttrdefs.getattr(node, 'channel')
 				dummy = self.enter(0.0, -1, \
 				    chan.arm_and_measure, node)
@@ -707,7 +709,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			aid = (node.GetUID(), i[0])
 			rv = self.context.hyperlinks.findsrclink(aid)
 			destlist = destlist + rv
-		print 'Destinations:', destlist
+		print 'Player: Destinations:', destlist
 		if not destlist:
 			fl.show_message('No hyperlink sourced at this anchor'\
 				  , '', '')
