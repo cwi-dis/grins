@@ -17,10 +17,7 @@ error = 'MMTree.error'
 Version = 'PlayerCache 3.0'		# version of player file
 OldVersion = 'PlayerCache 2.1'
 
-_progressbar = None
-
 def ReadFile(filename):
-	global _progressbar
 	try:
 		stf = os.stat(filename)
 	except os.error:
@@ -33,10 +30,9 @@ def ReadFile(filename):
 		f = open(cache, 'rb')
 	except IOError:
 		raise error, 'cannot open ' + cache
-##	if os.name == 'mac':
-##		fsize = os.stat(cache)[6]
-##		import EasyDialogs
-##		_progressbar = EasyDialogs.ProgressBar("Loading %s..."%os.path.split(cache)[1], fsize)
+	if os.name == 'mac':
+		import MacOS
+		MacOS.splash(514)	# Show "Loading document" splash screen
 	header = marshal.load(f)
 	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]) and \
 	   header != (OldVersion, base, stf[ST_MTIME], stf[ST_SIZE]):
@@ -52,15 +48,11 @@ def ReadFile(filename):
 	list = marshal.load(f)
 	root = load(list, context, f)
 	context.root = root
-	if _progressbar:
-		_progressbar.set(fsize) # Not true, but who cares...
 	root.sroffs = marshal.load(f)
 	root.fildes = f
-	if _progressbar:
-		_progressbar = None
-		if os.name == 'mac':
-			import MacOS
-			MacOS.splash(514)
+	if os.name == 'mac':
+		import MacOS
+		MacOS.splash(515)	# "Initializing document...", to be removed in event mainloop
 	context.addhyperlinks(root.attrdict['hyperlinks'])
 	context.addchannels(root.attrdict['channellist'])
 	del root.attrdict['hyperlinks']
@@ -235,8 +227,6 @@ def load(list, context, f):
 			list = None
 		else:
 			type, uid, attrdict, extra = marshal.load(f)
-	if type in ('seq', 'par', 'bag') and _progressbar:
-		_progressbar.set(f.tell())
 	node = newnodeuid(context, type, uid)
 	node.attrdict = attrdict
 	if node.type in interiortypes:
