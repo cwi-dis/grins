@@ -2543,8 +2543,12 @@ class MMNode(MMTreeElement):
 	def GetDefaultMediaSize(self, defWidth, defHeight):
 		import Sizes
 		url = self.GetFile()
+		mtype = self.GetAttrDef('mimetype', None)
+		maintype = subtype = None
+		if mtype and '/' in mtype:
+			maintype, subtype = string.split(mtype, '/', 1)
 		try:
-			media_width, media_height = Sizes.GetSize(url)
+			media_width, media_height = Sizes.GetSize(url, maintype, subtype)
 		except:
 			media_width = defWidth
 			media_height = defHeight
