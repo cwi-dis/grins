@@ -208,5 +208,68 @@ DECLARE_INTERFACE_(IRMARMFF2Reader, IUnknown)
 			UINT32* pnEndTime) PURE;
 };
 
+/****************************************************************************
+* 
+*  Interface:
+*
+*	IRMARMFF3Reader
+*
+*  Purpose:
+*
+*	Interface to rmcut module
+*
+*  IRMARMFF3Reader
+*
+*  {B70CA950-7298-11d3-8809-00C0F031C266}
+*
+*/
 
+DEFINE_GUID(IID_IRMARMFF3Reader, 
+            0xb70ca950, 0x7298, 0x11d3, 0x88, 0x9, 0x0, 0xc0, 0xf0, 0x31, 0xc2, 0x66);
+
+#define CLSID_IRMARMFF3Reader IID_IRMARMFF3Reader
+
+#undef  INTERFACE
+#define INTERFACE   IRMARMFF3Reader
+
+DECLARE_INTERFACE_(IRMARMFF3Reader, IRMARMFF2Reader)
+{
+    
+    // Seeks to the specifed time for a specific stream within a data section.
+    // Returns in pulActualTime the actual time that was seeked to.
+    STDMETHOD(PhysicalStreamKeyframeSeek) (THIS_
+        UINT16 unPhysicalStream, UINT32 ulTimeRequested, UINT32* pulActualTime, UINT32* pulDataOffset) PURE;      
+};
+
+/****************************************************************************
+* 
+*  Interface:
+*
+*	IRMARMFF4Reader
+*
+*  Purpose:
+*
+*	Interface to rmcut module
+*
+*  IRMARMFF4Reader
+*
+*  {355CF630-ADAE-11d3-964C-00D0B7068A6E}
+*
+*/
+
+DEFINE_GUID(IID_IRMARMFF4Reader, 
+0x355cf630, 0xadae, 0x11d3, 0x96, 0x4c, 0x0, 0xd0, 0xb7, 0x6, 0x8a, 0x6e);
+
+#define CLSID_IRMARMFF4Reader IID_IRMARMFF4Reader
+
+#undef  INTERFACE
+#define INTERFACE   IRMARMFF4Reader
+
+DECLARE_INTERFACE_(IRMARMFF4Reader, IRMARMFF3Reader)
+{
+    
+    // Returns frame duration/# frames per superblock for the audio stream used calculate the start/end cut points
+	// unPhysicalStream is the stream number of that audio stream, from the PHYSICAL_STREAM_INFO structure.
+	STDMETHOD(GetEditPointDuration) (THIS_ UINT16 &unPhysicalStream, double& dFrameDuration, UINT32& ulFramesPerSuperblock) PURE;
+};
 #endif //_RMAFREAD_H_
