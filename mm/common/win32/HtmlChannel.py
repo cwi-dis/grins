@@ -215,10 +215,9 @@ class HtmlChannel(Channel.ChannelWindow):
 		f(self.play_node, [(aname, tp)], list)
 
 	def findanchortype(self, name):
-		alist = MMAttrdefs.getattr(self.play_node, 'anchorlist')
-		for aid, atype, args in alist:
-			if aid == name:
-				return atype
+		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
+			if a[A_ID] == name:
+				return a[A_TYPE]
 		return None
 
 	def fixanchorlist(self, node):
@@ -230,7 +229,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x:x[0], nodeanchorlist)
+		oldanchorlist = map(lambda x:x[A_ID], nodeanchorlist)
 		newanchorlist = []
 		for a in anchorlist:
 			if a not in oldanchorlist:
@@ -238,7 +237,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if not newanchorlist:
 			return
 		for a in newanchorlist:
-			nodeanchorlist.append(a, ATYPE_NORMAL, [])
+			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0)))
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
