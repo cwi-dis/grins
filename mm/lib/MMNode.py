@@ -55,7 +55,7 @@ class MMNodeContext:
 			filename = os.path.expandvars(filename)
 			filename = os.path.expanduser(filename)
 		urltype, urlpath = urllib.splittype(filename)
-		if urltype or filename[0] == '/':
+		if urltype or filename[:1] == '/':
 			return filename
 		if self.dirname:
 			altfilename = urllib.basejoin(self.dirname, filename)
