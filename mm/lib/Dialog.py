@@ -46,8 +46,8 @@ class BasicDialog(glwindow.glwindow):
 	# XXX Shouldn't have (width, height) argument?
 	#
 	def init(self, width, height, title):
-		self.width = int(width)
-		self.height = int(height)
+		self.width = width
+		self.height = height
 		self.title = title
 		self.showing = 0
 		self.last_geometry = None
@@ -64,7 +64,8 @@ class BasicDialog(glwindow.glwindow):
 	# Derived classes are expected to override this method.
 	#
 	def make_form(self):
-		self.form = fl.make_form(FLAT_BOX, self.width, self.height)
+		width, height = glwindow.mm2pixels(self.width, self.height)
+		self.form = fl.make_form(FLAT_BOX, width, height)
 	#
 	# Standard show/hide/destroy interface.
 	#
@@ -177,13 +178,13 @@ class Dialog(BasicDialog):
 	# Internal routine to create the form and buttons.
 	#
 	def make_form(self):
-		self.form = fl.make_form(FLAT_BOX, self.width, self.height)
+		width, height = glwindow.mm2pixels(self.width, self.height)
+		self.form = fl.make_form(FLAT_BOX, width, height)
 		#
 		# Add buttons for Cancel/Restore/Apply/OK commands near
 		# the bottom of the form, and a hint text between them.
 		#
 		form = self.form
-		width = self.width
 		#
 		x, y, w, h = 0, 0, 66, 26
 		#
