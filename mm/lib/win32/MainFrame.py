@@ -256,7 +256,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# override DropTarget.OnDragOver to protect childs
 	def OnDragOver(self,dataobj,kbdstate,x,y):
 		flavor, url = DropTarget.DecodeDragData(dataobj)
-		if flavor != 'FileName' or not filename:
+		if flavor != 'FileName' or not url:
 			return DROPEFFECT_NONE
 
 		client=self.GetMDIClient()
@@ -273,7 +273,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# in the free area
 		x,y=self._DPtoLP((x,y))
 		x,y = self._pxl2rel((x, y),self._canvas)
-		return self.onEventEx(DragFile,(x, y, filename))
+		return self.onEventEx(DragFile,(x, y, url))
 
 	# drag and drop files support for MainFrame
 	# enable drop files
