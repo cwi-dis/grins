@@ -1,9 +1,6 @@
 import Xt, Xm, X, Xmd, Xtdefs, Xcursorfont
 from EVENTS import *
 from types import *
-import time
-
-_EndLoopEvent = 30			# event to end internal loops
 
 error = 'windowinterface.error'
 FALSE, TRUE = X.FALSE, X.TRUE
@@ -1009,11 +1006,6 @@ class _Window:
 		except KeyError:
 			pass
 
-	def sizebox(self, (x, y, w, h), constrainx, constrainy, callback):
-		showmessage('windowinterface.sizebox not implmented',
-			    type = 'error')
-		return (x, y, w, h)
-
 	def _rb_finish(self):
 		form = self._form
 		form.RemoveEventHandler(X.ButtonPressMask, FALSE,
@@ -1233,11 +1225,6 @@ class _Window:
 		self._rb_curdisp.fgcolor(255, 0, 0)
 		self._rb_curdisp.drawbox(self._rb_cvbox())
 		self._rb_curdisp.render()
-
-	def movebox(self, coordinates, constrainx, constrainy):
-		showmessage('windowinterface.movebox not implemented',
-			    type = 'error')
-		return coordinates
 
 	def hitarrow(self, x, y, sx, sy, dx, dy):
 		# return 1 iff (x,y) is within the arrow head
@@ -2217,12 +2204,6 @@ def findfont(fontname, pointsize):
 
 def beep():
 	pass				# for now...
-
-def startmonitormode():
-	pass
-
-def endmonitormode():
-	pass
 
 def settimer(sec, arg):
 	return toplevel.settimer(sec, arg)
