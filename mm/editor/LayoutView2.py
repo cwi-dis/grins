@@ -2091,10 +2091,9 @@ class LayoutView2(LayoutViewDialog2):
 	def newAnchor(self, parentRef):
 		# create the anchor
 		if self.editmgr.transaction():
-			anchor = self.context.newnode('anchor')
-			self.editmgr.addnode(parentRef, -1, anchor)
+			anchor = self.toplevel.links.wholenodeanchor(parentRef, notransaction = 1)
 			self.setglobalfocus([anchor])
-			self.updateFocus()		
+			self.updateFocus()
 			self.editmgr.commit()
 			
 	# check if moving a source node into a target node is valid
