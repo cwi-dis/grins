@@ -1,12 +1,11 @@
 __version__ = "$Id$"
 
 #
-# WIN32 Sound channel.
+# WIN32 Sound Channel
 #
 
 """ @win32doc|SoundChannel
-The SoundChannel extends Channel
-(although it repeats the ChannelAsync implementation)
+The SoundChannel extends Channel.ChannelAsync
 
 In this module ue use an object called GraphBuilder
 that supports the interface:
@@ -26,17 +25,6 @@ interface IGraphBuilder:
 
 	def SetNotifyWindow(self,w):pass
 
-
-We have implemented an object that supports this interface 
-by using the win32 DirectShow Sdk. 
-The C++ module that exports to Python this object is GraphBuilder.cpp 
-in thre folder cmif/win32/src/win32ext.
-We get access to the this module from the win32ui 
-which acts as a module server in this context by the call:
-DirectShowSdk=win32ui.GetDS()
-and request an object with the above interface with the call
-builder=DirectShowSdk.CreateGraphBuilder()
-
 Note that the same object is used for the NTVideoChannel.
 The MidiChannel is an alias to the SoundChannel
 
@@ -44,7 +32,8 @@ For more on the DirectShow architecture see MS documentation.
 
 """
 
-from Channel import *
+# the core
+import Channel
 
 # node attributes
 import MMAttrdefs
@@ -64,16 +53,15 @@ WM_GRPAPHNOTIFY=win32con.WM_USER+101
 # generic wnd for implementing notification mechanism
 from windowinterface import genericwnd
 
-class SoundChannel(Channel):
-	node_attrs = Channel.node_attrs + ['duration',
+debug=0
+
+class SoundChannel(Channel.ChannelAsync):
+	node_attrs = Channel.ChannelAsync.node_attrs + ['duration',
 						'clipbegin', 'clipend']
 	def __init__(self, name, attrdict, scheduler, ui):
-		Channel.__init__(self, name, attrdict, scheduler, ui)
+		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		
-		# DirectShow Graph builders
-		self._builders={}
-
-		# active builder from self._builders
+		# DirectShow Graph builder
 		self._playBuilder=None
 		self._playBegin=0
 		self._playEnd=0
@@ -97,20 +85,17 @@ class SoundChannel(Channel):
 
 	def do_hide(self):
 		self.release_res()
-		Channel.do_hide(self)
+		Channel.ChannelAsync.do_hide(self)
 
 	def destroy(self):
 		self.release_res()
 		self.unregister_for_timeslices()
-		Channel.destroy(self)
+		Channel.ChannelAsync.destroy(self)
 
 	def release_res(self):
-		for b in self._builders.values():
-			if b:
-				b.Stop()
-				b.Release()
-		del self._builders
-		self._builders={}
+		if self._playBuilder:
+			self._playBuilder.Stop()
+			self._playBuilder.Release()
 		self._playBuilder=None
 		if self._notifyWindow and self._notifyWindow.IsWindow():
 			self._notifyWindow.DestroyWindow()
@@ -118,47 +103,24 @@ class SoundChannel(Channel):
 
 	def do_arm(self, node, same=0):
 		if debug:print 'SoundChannel.do_arm('+`self`+','+`node`+'same'+')'
-		if self._builders.has_key(node):
-			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		url = self.getfileurl(node)
-		try:
-			fn = MMurl.urlretrieve(url)[0]
-		except IOError, arg:
-			if type(arg) is type(self):
-				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (url, arg))
-			return 1
-		fn = os.path.join(os.getcwd(), fn)
-		builder=DirectShowSdk.CreateGraphBuilder()
-		if builder:
-			if not builder.RenderFile(fn):
-				print 'Failed to render',fn
-				builder=None
-			self._builders[node]=builder
-		else:
-			print 'Failed to create GraphBuilder'
+		if not self._playBuilder:
+			self._playBuilder=DirectShowSdk.CreateGraphBuilder()
+		if not self._playBuilder:
+			self.showwarning(node,'System missing infrastructure to playback')
 		return 1
 
-	# Async Channel play
-	def play(self, node):
-		if debug:print 'SoundChannel.play('+`self`+','+`node`+')'
-		self.play_0(node)
-		if not self._is_shown or not node.ShouldPlay() \
-		   or self.syncplay:
-			self.play_1()
-			return
-		if self._is_shown:
-			self.do_play(node)
-		self.armdone()
 
 	def do_play(self, node):
 		if debug: print 'SoundChannel.do_play('+`self`+','+`node`+')'
-		if not self._builders.has_key(node):
-			print 'node not armed'
-			self.playdone(0)
+		if not self._playBuilder:
+			return
+
+		url = MMurl.canonURL(self.getfileurl(node))
+		if not self._playBuilder.RenderFile(url):
+			print 'Failed to render',url
 			return
 
 		self.play_loop = self.getloop(node)
@@ -169,10 +131,6 @@ class SoundChannel(Channel):
 		if duration > 0:
 			self.__qid = self._scheduler.enter(duration, 0, self._stopplay, ())
 
-		self._playBuilder=self._builders[node]
-		if not self._playBuilder:
-			self.playdone(0)
-			return
 		clip_begin = self.getclipbegin(node,'sec')
 		clip_end = self.getclipend(node,'sec')
 		self._playBuilder.SetPosition(int(clip_begin*1000))
@@ -207,9 +165,8 @@ class SoundChannel(Channel):
 			self._scheduler.cancel(self.__qid)
 			self.__qid = None
 		if self._playBuilder:
-			self._playBuilder.Stop()
-			self._playBuilder=None
-		Channel.stopplay(self, node)
+			self.release_res()
+		Channel.ChannelAsync.stopplay(self, node)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -249,7 +206,7 @@ class SoundChannel(Channel):
 		self._playBuilder.Run()
 
 
-	############################### ui delays management
+############################### ui delays management
 	def on_idle_callback(self):
 		if debug: print 'SoundChannel.on_idle_callback',`self`
 		if self._playBuilder and not self.__playdone:
@@ -267,3 +224,17 @@ class SoundChannel(Channel):
 		import windowinterface
 		windowinterface.unregister(self._fiber_id)
 		self._fiber_id=0
+
+############################ 
+# showwarning if the infrastucture is missing.
+# The user should install Windows Media Player
+# since then this infrastructure is installed
+
+	def showwarning(self,node,inmsg):
+		name = MMAttrdefs.getattr(node, 'name')
+		if not name:
+			name = '<unnamed node>'
+		chtype = self.__class__.__name__[:-7] # minus "Channel.ChannelAsync"
+		windowinterface.showmessage('%s\n'
+						    '%s node %s on Channel.ChannelAsync %s' % (inmsg, chtype, name, self._name), mtype = 'warning')
+
