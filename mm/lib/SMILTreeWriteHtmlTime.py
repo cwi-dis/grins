@@ -351,7 +351,7 @@ class SMILHtmlTimeWriter(SMIL):
 						transOut = value
 					elif name == 'backgroundColor':
 						pass
-					else:
+					elif not name in ('top','left','width','height','right','bottom'):
 						attrlist.append((name, value))
 		
 		if interior:
@@ -986,21 +986,36 @@ msfilter = 'progid:DXImageTransform.Microsoft'
 
 #defaultTrans = ('Iris', 'irisStyle=circle, motion=out')
 
-#defaultTrans = ( 'Blinds', 'direction=up, bands=1')
+#defaultTrans = ('Blinds', 'direction=up, bands=1')
 
-#defaultTrans = ( 'Strips', 'motion=leftdown')
+#defaultTrans = ('Strips', 'motion=leftdown')
 
-#defaultTrans = ( 'Barn', 'orientation=vertical, motion=out')
+#defaultTrans = ('Barn', 'orientation=vertical, motion=out')
 
-#defaultTrans = ( 'RandomBars', 'orientation=horizontal')
+#defaultTrans = ('RandomBars', 'orientation=horizontal')
 
-#defaultTrans = ( 'CheckerBoard', 'direction=right')
+#defaultTrans = ('CheckerBoard', 'direction=right')
 
-#defaultTrans = ( 'RandomDissolve', '')
+#defaultTrans = ('RandomDissolve', '')
 
 #defaultTrans = ('CrStretch', 'stretchStyle=push')
 
 defaultTrans = ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward', )
+
+TRANSITIONDICT_OK = {
+	("irisWipe", "rectangle") : ('Iris', 'irisStyle=rectangle, motion=out'),
+	("irisWipe", "diamond") : ('Iris', 'irisStyle=diamond, motion=out'),
+	("irisWipe", None) : ('Iris', 'irisStyle=rectangle, motion=out'),
+
+	("ellipseWipe", "circle") : ('Iris', 'irisStyle=circle, motion=out'),
+	("ellipseWipe", None) : ('Iris', 'irisStyle=circle, motion=out'),
+	
+	("starWipe", None) : ('Iris', 'irisStyle=star, motion=out'),
+
+	("fade", 'crossfade') : ('Fade', ''),
+	("fade", None) : ('Fade', ''),
+}
+
 
 
 TRANSITIONDICT = {
@@ -1022,8 +1037,8 @@ TRANSITIONDICT = {
 	("veeWipe", None) : defaultTrans,
 	("barnVeeWipe", "down") : defaultTrans,
 	("barnVeeWipe", None) : defaultTrans,
-	("zigZagWipe", "leftToRight") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
-	("zigZagWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
+	("zigZagWipe", "leftToRight") : ('Strips','Motion=rightup'),
+	("zigZagWipe", None) : ('Strips','Motion=rightup'),
 	("barnZigZagWipe", "vertical") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("barnZigZagWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("irisWipe", "rectangle") : ('Iris', 'irisStyle=rectangle, motion=out'),
@@ -1031,7 +1046,7 @@ TRANSITIONDICT = {
 	("triangleWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
 	("triangleWipe", None) : ('Iris', 'irisStyle=diamond, motion=out'),
 	("arrowHeadWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
-	("arrowHeadWipe", None) : defaultTrans,
+	("arrowHeadWipe", None) : ('Iris', 'irisStyle=diamond, motion=out'),
 	("pentagonWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
 	("pentagonWipe", None) : ('Iris', 'irisStyle=diamond, motion=out'),
 	("hexagonWipe", "up") : ('Iris', 'irisStyle=diamond, motion=out'),
@@ -1048,7 +1063,7 @@ TRANSITIONDICT = {
 	("clockWipe", None) : ('RadialWipe', 'wipeStyle=clock'),
 	("pinWheelWipe", "twoBladeVertical") : ('RadialWipe', 'wipeStyle=wedge'),
 	("pinWheelWipe", None) : ('CrRadialWipe', 'wipeStyle=wedge'),
-	("singleSweepWipe", "clockwiseTop") : ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward') ,
+	("singleSweepWipe", "clockwiseTop") : ('Wipe','GradientSize=.50, wipeStyle=0, motion=forward') ,
 	("singleSweepWipe", None) : ( 'Wipe', 'GradientSize=.50, wipeStyle=0, motion=forward') ,
 	("fanWipe", "centerTop") : ('CrWheel', 'spokes=4'),
 	("fanWipe", None) : ('CrWheel', 'spokes=8'),
@@ -1062,28 +1077,34 @@ TRANSITIONDICT = {
 	("windshieldWipe", None) :  ('RadialWipe', 'wipeStyle=wedge'),
 	("snakeWipe", "topLeftHorizontal") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("snakeWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
-	("spiralWipe", "topLeftClockwise") : ('CrSpiral', 'GridSizeX=8,GridSizeY=8'),
-	("spiralWipe", None) : ('CrSpiral', 'GridSizeX=8,GridSizeY=8'),
+	("spiralWipe", "topLeftClockwise") : ('CrSpiral', 'GridSizeX=8,GridSizeY=8'), 
+	("spiralWipe", None) : ('CrSpiral', 'GridSizeX=8,GridSizeY=8'),	# OK
 	("parallelSnakesWipe", "verticalTopSame") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("parallelSnakesWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("boxSnakesWipe", "twoBoxTop") : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("boxSnakesWipe", None) : ('Zigzag', 'GridSizeX=8,GridSizeY=8'),
 	("waterfallWipe", "verticalLeft") : ('Strips','Motion=rightdown'),
 	("waterfallWipe", None) : ('Strips','Motion=rightdown'),
-	("pushWipe", "fromLeft") : ('Slide', 'slideStyle=push, bands=1'),
-	("pushWipe", None) : ('Slide', 'slideStyle=push, bands=1'),
-	("slideWipe", "fromLeft") : ('Slide', 'slideStyle=hide, bands=1'),
-	("slideWipe", None) : ('Slide', 'slideStyle=hide, bands=1'),
-	("fade", "crossFade") : ('Fade', ''),
-	("fade", None) : ('Fade', ''),
+	("pushWipe", "fromLeft") : ('CrSlide', 'slideStyle=push, bands=1'),
+	("pushWipe", None) : ('CrSlide', 'slideStyle=push, bands=1'),
+	("slideWipe", "fromLeft") : ('CrSlide', 'slideStyle=push, bands=1'), # OK
+	("slideWipe", None) : ('CrSlide', 'slideStyle=push, bands=1'), # OK
+	("fade", "crossFade") : ('Fade', ''), # OK
+	("fade", None) : ('Fade', ''), # OK
 }
 
 def TransitionFactory(trtype, subtype):
 	"""Return the class that implements this transition. """
+	if TRANSITIONDICT_OK.has_key((trtype, subtype)):
+		return TRANSITIONDICT_OK[(trtype, subtype)]
+	if TRANSITIONDICT_OK.has_key((trtype, None)):
+		return TRANSITIONDICT_OK[(trtype, None)]
+
 	if TRANSITIONDICT.has_key((trtype, subtype)):
 		return TRANSITIONDICT[(trtype, subtype)]
 	if TRANSITIONDICT.has_key((trtype, None)):
 		return TRANSITIONDICT[(trtype, None)]
+
 	return defaultTrans
 
 #
