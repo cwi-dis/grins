@@ -1044,7 +1044,7 @@ class _BareSubWindow:
 	def settitle(self, title):
 		raise error, 'can only settitle at top-level'
 
-	def getgeometry(self):
+	def getgeometry(self, units = UNIT_MM):
 		return self._sizes
 
 	def pop(self):
