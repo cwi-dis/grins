@@ -568,7 +568,7 @@ class EffectiveAnimator:
 			self.__isgrinsnode = 0
 					
 		self.__haschannel  = 1
-		if tag in ('transition'):
+		if tag in ('transition',):
 			self.__haschannel = 0
 
 		# we neeed a temporary instance of the
