@@ -8,6 +8,7 @@ import MMNode
 from MMTypes import alltypes
 from AnchorDefs import *		# ATYPE_*
 from Hlinks import DIR_1TO2, TYPE_JUMP
+import string
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -975,7 +976,6 @@ from colors import colors
 class ColorAttrEditorField(TupleAttrEditorField):
 	type = 'color'
 	def parsevalue(self, str):
-		import string
 		str = string.lower(string.strip(str))
 		if colors.has_key(str):
 			return colors[str]
@@ -1125,7 +1125,6 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 	# that here
 	__values = ['28k8 modem', '56k modem', 
 		'Single ISDN', 'Double ISDN', 'Cable modem', 'LAN']
-	__valuesmap = [1, 2, 4, 8, 16, 32]
 
 	# Choose from a list of unit types
 	def getoptions(self):
@@ -1134,17 +1133,23 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 
 	def parsevalue(self, str):
 		if str == 'Default':
-			return self.__valuesmap[0]
-		return self.__valuesmap[self.__values.index(str)]
+			str = '28k8 modem,56k modem'
+		strs = string.split(str, ',')
+		rv = 0
+		for str in strs:
+			rv = rv | (1 << self.__values.index(str))
+		return rv
 
 	def valuerepr(self, value):
 		if value is None:
-			return 'Default'
+			value = 3	# '28k8 modem,56k modem'
 		str = self.__values[0]	# XXX use lowest as default
 		# XXX just the last one for now
-		for i in range(len(self.__valuesmap)):
-			if value & self.__valuesmap[i]:
-				str = self.__values[i]
+		strs = []
+		for i in range(len(self.__values)):
+			if value & (1 << i):
+				strs.append(self.__values[i])
+		str = string.join(strs, ',')
 		return str
 
 class RMAudioAttrEditorField(PopupAttrEditorField):

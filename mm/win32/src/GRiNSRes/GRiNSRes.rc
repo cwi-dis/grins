@@ -1077,29 +1077,29 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,7,147,287,18,SS_SUNKEN
 END
 
-IDD_EDITATTR_R6 DIALOG DISCARDABLE  0, 0, 300, 200
-STYLE WS_CHILD
+IDD_EDITATTR_C6 DIALOG DISCARDABLE  0, 0, 300, 200
+STYLE DS_ABSALIGN | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_1,5,10,287,98
-    CONTROL         "Radio1",IDC_2,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    38,26,114,10
-    CONTROL         "Radio2",IDC_3,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    38,46,114,10
-    CONTROL         "Radio3",IDC_4,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    38,66,114,10
     PUSHBUTTON      "Reset",IDC_8,259,92,28,12,NOT WS_TABSTOP
     DEFPUSHBUTTON   "OK",IDOK,244,170,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,187,170,50,14
     PUSHBUTTON      "&Restore",IDUC_RESTORE,63,170,50,14
     PUSHBUTTON      "&Apply",IDUC_APPLY,7,170,50,14
     LTEXT           "",IDC_ATTR_INFO,7,147,287,18,SS_SUNKEN
-    CONTROL         "Radio4",IDC_5,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    174,26,114,10
-    CONTROL         "Radio5",IDC_6,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    174,46,114,10
-    CONTROL         "Radio6",IDC_7,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    174,66,114,10
+    CONTROL         "Check1",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,26,95,10
+    CONTROL         "Check2",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,48,100,10
+    CONTROL         "Check3",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,73,104,10
+    CONTROL         "Check4",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,157,26,94,10
+    CONTROL         "Check5",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,157,48,102,10
+    CONTROL         "Check6",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,157,73,109,10
 END
 
 
