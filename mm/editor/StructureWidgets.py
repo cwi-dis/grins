@@ -274,9 +274,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def init_timemapper(self, timemapper):
 		if not self.node.WillPlay():
 			return None
-		if timemapper is None and (hasattr(self, 'showtime') or self.node.showtime):
-			timemapper = TimeMapper.TimeMapper()
-			if self.node.GetType() not in ('excl', 'prio'):
+		if timemapper is None and self.node.showtime:
+			if self.node.GetType() in ('excl', 'prio'):
+				showtime = self.node.showtime
+				self.node.showtime = 0
+				for c in self.children:
+					c.node.showtime = showtime
+			else:
+				timemapper = TimeMapper.TimeMapper()
 				if self.timeline is None:
 					self.timeline = TimelineWidget(self, self.mother)
 				self.timemapper = timemapper
@@ -296,17 +301,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				p0, p1 = self.addcollisions(t0, t2, timemapper, (t0, t1, t2, download, begindelay))
 				self.timemapper.addcollision(t0, p0)
 				self.timemapper.addcollision(t2, p1)
-				if hasattr(self, 'showtime'):
-					showtime = self.showtime
-				else:
-					showtime = self.node.showtime
 				min_pxl_per_sec = 0
 				if self.timeline is None or self.timeline.minwidth == 0:
 					try:
 						min_pxl_per_sec = self.node.__min_pxl_per_sec
 					except AttributeError:
 						pass
-				self.node.__min_pxl_per_sec = timemapper.calculate(showtime == 'cfocus', min_pixels_per_second = min_pxl_per_sec)
+				self.node.__min_pxl_per_sec = timemapper.calculate(self.node.showtime == 'cfocus', min_pixels_per_second = min_pxl_per_sec)
 				t0, t1, t2, dummy, dummy = self.GetTimes('virtual')
 				w = timemapper.time2pixel(t2, align='right') - timemapper.time2pixel(t0)
 				if w > self.boxsize[0]:
@@ -941,8 +942,6 @@ class HorizontalWidget(StructureObjWidget):
 
 		timemapper = self.init_timemapper(timemapper)
 
-		minwidth, minheight = self.calculate_minsize(timemapper)
-
 		mw=0
 		mh=0
 		if self.channelbox is not None:
@@ -960,6 +959,8 @@ class HorizontalWidget(StructureObjWidget):
 		else:
 			tm = timemapper
 
+		minwidth, minheight = self.calculate_minsize(tm)
+
 		delays = 0
 		tottime = 0
 		lt2 = 0
@@ -967,7 +968,7 @@ class HorizontalWidget(StructureObjWidget):
 			pushover = 0
 			if timemapper is not None:
 				if is_excl:
-					i.showtime = showtime
+					i.node.showtime = showtime
 				elif i.node.WillPlay():
 					t0, t1, t2, download, begindelay = i.GetTimes('virtual')
 					tottime = tottime + t2 - t0
@@ -977,8 +978,6 @@ class HorizontalWidget(StructureObjWidget):
 					elif t0 > lt2:
 						delays = delays + t0 - lt2
 					lt2 = t2
-			elif hasattr(i, 'showtime'):
-				del i.showtime
 			w,h = i.recalc_minsize(tm)
 			if h > mh: mh=h
 			mw = mw + w + pushover
@@ -1195,8 +1194,6 @@ class VerticalWidget(StructureObjWidget):
 
 		timemapper = self.init_timemapper(timemapper)
 
-		minwidth, minheight = self.calculate_minsize(timemapper)
-
 		mw=0
 		mh=0
 
@@ -1217,12 +1214,12 @@ class VerticalWidget(StructureObjWidget):
 		else:
 			tm = timemapper
 
+		minwidth, minheight = self.calculate_minsize(tm)
+
 		for i in self.children:
 			if timemapper is not None:
 				if is_excl:
-					i.showtime = showtime
-			elif hasattr(i, 'showtime'):
-				del i.showtime
+					i.node.showtime = showtime
 			w,h = i.recalc_minsize(tm)
 			if timemapper is not None and not is_excl and i.node.WillPlay():
 				t0, t1, t2, download, begindelay = i.GetTimes('virtual')
