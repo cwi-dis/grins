@@ -31,6 +31,12 @@ def dllFromDll(dllid):
 			raise TypeError, "DLL parameter must be None, a filename or a dll object"
 		return dllid
 
+def loadBitmapFromResId(resid):
+	import __main__, win32ui
+	resdll=__main__.resdll
+	bmp=win32ui.CreateBitmap()
+	bmp.LoadBitmap(resid,resdll)
+	return bmp	
 
 class DialogBase(window.Wnd):
 	" Base class for a dialog"
@@ -124,15 +130,15 @@ class SplashDlg(ResDialog):
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._msgc = Static(self,grinsRC.IDC_MESSAGE)
 		self._version=version
-		if compatibility.G2 == features.compatibility:
-			if string.find(version, 'player') >= 0:
-				self._splashbmp = grinsRC.IDB_SPLASHPLAY
-			elif features.lightweight:
-				self._splashbmp = grinsRC.IDB_SPLASHLITE
-			else:
-				self._splashbmp = grinsRC.IDB_SPLASHPRO
-		else:
-			self._splashbmp = grinsRC.IDB_SPLASHSMIL
+#		if features.compatibility == compatibility.G2:
+#			if string.find(version, 'player') >= 0:
+#				self._splashbmp = grinsRC.IDB_SPLASHPLAY
+#			elif features.lightweight:
+#				self._splashbmp = grinsRC.IDB_SPLASHLITE
+#			else:
+#				self._splashbmp = grinsRC.IDB_SPLASHPRO
+#		elif features.compatibility == compatibility.QT:
+#			self._splashbmp = grinsRC.IDB_SPLASHSMIL
 			
 		self.CreateWindow()
 		self.CenterWindow()
@@ -168,10 +174,12 @@ class SplashDlg(ResDialog):
 
 	# load splash
 	def loadbmp(self):
-		import __main__
-		resdll=__main__.resdll
-		self._bmp=win32ui.CreateBitmap()
-		self._bmp.LoadBitmap(self._splashbmp,resdll)
+#		import __main__
+		import splashbmp
+#		resdll=__main__.resdll
+		self._bmp = loadBitmapFromResId(splashbmp.getResId())
+#		self._bmp=win32ui.CreateBitmap()
+#		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the about dialog
 class AboutDlg(ResDialog):
@@ -180,15 +188,15 @@ class AboutDlg(ResDialog):
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._version=version
-		if compatibility.G2 == features.compatibility:
-			if string.find(version, 'player') >= 0:
-				self._splashbmp = grinsRC.IDB_SPLASHPLAY
-			elif features.lightweight:
-				self._splashbmp = grinsRC.IDB_SPLASHLITE
-			else:
-				self._splashbmp = grinsRC.IDB_SPLASHPRO
-		else:
-			self._splashbmp = grinsRC.IDB_SPLASHSMIL
+#		if compatibility.G2 == features.compatibility:
+#			if string.find(version, 'player') >= 0:
+#				self._splashbmp = grinsRC.IDB_SPLASHPLAY
+#			elif features.lightweight:
+#				self._splashbmp = grinsRC.IDB_SPLASHLITE
+#			else:
+#				self._splashbmp = grinsRC.IDB_SPLASHPRO
+#		else:
+#			self._splashbmp = grinsRC.IDB_SPLASHSMIL
 		
 	def OnInitDialog(self):	
 		self.attach_handles_to_subwindows()	
@@ -220,10 +228,12 @@ class AboutDlg(ResDialog):
 
 	# load splash bmp
 	def loadbmp(self):
-		import __main__
-		resdll=__main__.resdll
-		self._bmp=win32ui.CreateBitmap()
-		self._bmp.LoadBitmap(self._splashbmp,resdll)
+#		import __main__
+		import splashbmp
+#		resdll=__main__.resdll
+		self._bmp = loadBitmapFromResId(splashbmp.getResId())
+#		self._bmp=win32ui.CreateBitmap()
+#		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):

@@ -238,10 +238,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 	def get_submenu(self,strid):
 		return self._mainmenu._submenus_dict.get(strid)
 
-	def onTimer(self, id):
-		import windowinterface
-		windowinterface.toplevel.systemtimer_callback()
-
 	# Called after the window has been created for further initialization
 	# Called after CWnd::OnCreate
 	def OnCreate(self, createStruct):
@@ -250,7 +246,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		self.HookMessage(self.onKey,win32con.WM_KEYDOWN)
 		self.HookMessage(self.onInitMenu,win32con.WM_INITMENU)
 		self.HookMessage(self.onActivate,win32con.WM_ACTIVATE)
-		self.HookMessage(self.onTimer,win32con.WM_TIMER)
 
 		# the view is responsible for user input
 		# so do not hook other messages
