@@ -12,22 +12,16 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <initguid.h>
 #include "aud2wm.h"
 
+#include <wtypes.h>
+#include "wmsdk.h"
+#include <mmsystem.h>
+#include <assert.h>
+
+#include "wmwriter.h"
+
 // options
 // #define LOG_ACTIVITY
 
-
-/*
-namespace RProducer {
-bool HasEngine();
-bool SetEngine(IUnknown *p);
-bool SetInputPin(IUnknown *p);
-bool CreateMediaSample();
-bool SetVideoInfo(int w,int h,float rate);
-bool SetAudioInfo(int nchan,DWORD srate,int ssize);
-bool EncodeSample(BYTE *p,DWORD size,DWORD msec,bool isSync,bool isLast);
-void DoneEncoding();
-void Release();
-}*/
 
 
 const AMOVIESETUP_MEDIATYPE sudAudPinTypes =
@@ -73,23 +67,20 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 #include <stdio.h>
 FILE *logFile;
 #ifdef LOG_ACTIVITY
-void Log(const char *psz)
-{
+void Log(LPCTSTR lpszFormat, ...)
+	{
+	char psz[512];
+	va_list argList;
+	va_start(argList,lpszFormat);
+	_vstprintf(s,lpszFormat,argList);
 	if(logFile){
 		fwrite(psz,1,lstrlen(psz),logFile);
 		fflush(logFile);
 	}
-}
-void Log(const char *psz,int i)
-	{
-	Log(psz);
-	char sz[16];
-	sprintf(sz,"%d\n",i);
-	Log(sz);
+	va_end(argList);
 	}
 #else
-void Log(const char *psz){}
-void Log(const char *psz,int i){}
+void Log(LPCTSTR lpszFormat, ...){}
 #endif
 
 #pragma warning(disable:4355)
@@ -101,11 +92,12 @@ Aud2wmRenderer::Aud2wmRenderer(LPUNKNOWN pUnk,HRESULT *phr) :
 #ifdef LOG_ACTIVITY
 	logFile=fopen("audlog.txt","w");
 #endif
-
+	m_pWMWriter = new WMWriter();
 } 
 
 Aud2wmRenderer::~Aud2wmRenderer()
 {
+	delete m_pWMWriter;
 	if(logFile) fclose(logFile);
 }
 
@@ -170,6 +162,7 @@ HRESULT Aud2wmRenderer::SetMediaType(const CMediaType *pmt)
 void Aud2wmRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
 	if(m_ixsample==0){
+		m_pWMWriter->BeginWriting();
 		DoRenderSample(pMediaSample);	
 		Log("OnReceiveFirstSample\n");
 	}
@@ -209,8 +202,7 @@ void Aud2wmRenderer::EncodeSample(IMediaSample *pMediaSample)
 	CRefTime tStart,tStop;
     if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
 		msec=tStart.Millisecs();
-	//if(RProducer::HasEngine())
-	//	RProducer::EncodeSample(pBuffer,size,msec,isSync,false);
+	m_pWMWriter->WriteAudioSample(pBuffer,size,msec);
 	m_ixsample++;
 }
 
@@ -218,11 +210,7 @@ HRESULT Aud2wmRenderer::Active()
 {
 	Log("Active\n");
 	WAVEFORMATEX *pwfx = (WAVEFORMATEX *)m_mtIn.Format();
-	/*
-	if(RProducer::HasEngine())
-		RProducer::SetAudioInfo(pwfx->nChannels,
-			pwfx->nSamplesPerSec,
-			pwfx->wBitsPerSample);*/
+	m_pWMWriter->SetAudioFormat(pwfx);
 	char sz[128];
 	sprintf(sz,"Channels=%d fps  SamplesPerSec=%d  BitsPerSample=%d\n",
 		pwfx->nChannels,
@@ -234,31 +222,22 @@ HRESULT Aud2wmRenderer::Active()
 
 HRESULT Aud2wmRenderer::Inactive()
 {
-	//if(RProducer::HasEngine())
-	//	RProducer::DoneEncoding();
+	m_pWMWriter->EndWriting();
 	Log("Inactive\n");
 	return CBaseRenderer::Inactive();
 }
 
-HRESULT Aud2wmRenderer::SetInterface(IUnknown *p,LPCOLESTR hint)
+HRESULT Aud2wmRenderer::SetWMWriter(IUnknown *pI)
 	{
-    char szHint[MAX_PATH];
-    if(!WideCharToMultiByte(CP_ACP,0,hint,-1,szHint,MAX_PATH,0,0))
-        return ERROR_INVALID_NAME;
-	/*
-	if(lstrcmpi(szHint,"IRMABuildEngine")==0){
-		if(!RProducer::SetEngine(p)){
-			Log("Failed setting engine\n");
-			RProducer::Release();
-		}
+    return m_pWMWriter->SetWMWriter(pI);	
 	}
-	else if(lstrcmpi(szHint,"IRMAInputPin")==0){
-		if(!RProducer::SetInputPin(p)){
-			Log("Failed setting InputPin\n");
-			RProducer::Release();
-		}
-	}*/
-    return NOERROR;
+HRESULT Aud2wmRenderer::SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)
+	{
+    return m_pWMWriter->SetAudioInputProps(dwInputNum,pI);	
+	}
+HRESULT Aud2wmRenderer::SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)
+	{
+    return m_pWMWriter->SetVideoInputProps(dwInputNum,pI);	
 	}
 
 ////////////////////////////////////////////////
