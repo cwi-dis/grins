@@ -1,6 +1,5 @@
 # Interface to calculate the timing of a (sub)tree
 
-
 import sched
 import MMAttrdefs
 from MMExc import *
@@ -78,13 +77,20 @@ def do_times(node):
 	
 	global initial_arms # Keeps track of the first node played per channel
 	initial_arms = []
+
+	node.t1 = 0
+	del node.t1
 	
 	prepare(node)
-	pt = pseudotime().init(0.0)
-	q = sched.scheduler().init(pt.timefunc, pt.delayfunc)
-	node.counter[HD] = 1
-	decrement(q, (0, node, HD))
-	q.run()
+	_do_times_work(node)
+	try:
+		void = node.t1
+	except AttributeError:
+		import fl
+		fl.show_message('WARNING: circular timing dependencies.', \
+			  '(ignoring sync arcs and trying again)', '')
+		prep1(node)
+		_do_times_work(node)
 	t1 = time.millitimer()
 	propdown(node, node.t1)
 	t2 = time.millitimer()
@@ -95,6 +101,12 @@ def do_times(node):
 	print '(of which', getd_times*0.001, 'sec. in getduration()',
 	print 'and', (t2-t1)*0.001, 'sec. in propdown)'
 
+def _do_times_work(node):
+	pt = pseudotime().init(0.0)
+	q = sched.scheduler().init(pt.timefunc, pt.delayfunc)
+	node.counter[HD] = 1
+	decrement(q, (0, node, HD))
+	q.run()
 
 # Interface to get the "initial arms" nodes of a tree.
 # Call only after needtimes has calculated them.
