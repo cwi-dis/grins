@@ -854,17 +854,17 @@ class ChannelView(ChannelViewDialog):
 		obj = self.whichhit(x, y)
 		if obj:
 			if self.lockednode:
-			    if obj.is_node_object:
-				obj.finishlink()
-				return
-			    else:
-				windowinterface.beep()
-				self.lockednode.unlock()
+				if obj.is_node_object and obj != self.lockednode:
+					obj.finishlink()
+					return
+				else:
+					windowinterface.beep()
+					self.lockednode.unlock()
 			if obj.is_bandwidth_strip:
-			    # The bandwidth strip wants x,y
-			    obj.select(x, y)
+				# The bandwidth strip wants x,y
+				obj.select(x, y)
 			else:
-			    obj.select()
+				obj.select()
 			self.drawarcs()
 		self.render()
 		if self.focus:
