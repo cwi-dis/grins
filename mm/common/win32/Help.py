@@ -1,6 +1,9 @@
 __version__ = "$Id$"
 
 # Help window
+# XXXX This is far too stateful. The interface should be changed into
+# XXXX an object that is kept in the main object. We keep it like this
+# XXXX for now to stay compatible with the Windows version.
 
 # Interface:
 # (1) optionally call sethelpdir(dirname) with a directory name argument;
@@ -12,38 +15,68 @@ __version__ = "$Id$"
 import os
 import string
 import sys
+import MMurl
 
+# url parsing
+import ntpath, urllib
 
 def hashelp():
 	return 1
 
-helpdir = None				# directory where the help files live
-helpfile = None				# the help file itself
+helpbase = None				# directory where the help files live
+helpwindow = None
+
+#
+# This could be done better, by putting the version number in here.
+#
+DEFAULT_BASE_URL="http://www.cwi.nl/GRiNS/help/%s/index.html"%sys.platform
 
 def sethelpdir(dirname):
-	global helpdir, helpfile
-	helpdir = dirname
-	helpfile = None
+	global helpbase
+	helpbase = MMurl.pathname2url(os.path.join(dirname, 'index.html'))
 
 def fixhelpdir():
-	global helpdir, helpfile
-	if helpdir is None:
+	global helpbase
+	if helpbase is None:
 		import cmif
-		helpdir = os.path.join(cmif.findfile('Help'), 'win32')
-	if helpfile is None:
-		helpfile = os.path.join(helpdir, 'Cmifed.hlp')
+		helpdir = os.path.join(cmif.findfile('Help'), sys.platform)
+		if os.path.exists(helpdir):
+			basefile = os.path.join(helpdir, 'index.html')
+			helpbase = MMurl.pathname2url(basefile)
+		else:
+			helpbase = DEFAULT_BASE_URL
+		
 
 def givehelp(topic):
-	import win32api, win32con, win32ui
+	global helpwindow
+	import windowinterface
+	print 'givehelp for topic:', topic
 	fixhelpdir()
-	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpfile,
-			 win32con.HELP_KEY, topic)
+	helpfile = '%s.html'%topic
+	helpurl = MMurl.basejoin(helpbase,helpfile)
+	
+	helpurl=toabs(helpurl)
+	import win32api,win32con
 
+	win32api.ShellExecute(0, "open",DEFAULT_BASE_URL, None, "", win32con.SW_SHOW)
+	
+#	if not helpwindow is None and not helpwindow.is_closed():
+#		helpwindow.goto_url(helpurl)
+#	helpwindow = windowinterface.htmlwindow(helpurl)
 
 def showhelpwindow():
-	import win32api, win32con, win32ui
-	win32ui.MessageBox("Cannot find help file")
-	return # for now...
-	fixhelpdir()
-	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpfile,
-			 win32con.HELP_CONTENTS, 0)
+	givehelp('index')
+
+def islocal(url):
+	utype, url = MMurl.splittype(url)
+	host, url = MMurl.splithost(url)
+	return not utype and not host
+def toabs(url):
+	if not islocal(url):
+		return url
+	filename=MMurl.url2pathname(MMurl.splithost(url)[1])
+	if os.path.isfile(filename):
+		if not os.path.isabs(filename):
+			filename=os.path.join(os.getcwd(),filename)
+			filename=ntpath.normpath(filename)	
+	return filename
