@@ -33,13 +33,13 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.widget_name = normalize(name)
 		self.backlist = []
 
-	def do_show(self):
+	def do_show(self, pchan):
 		#
 		# Step 1 - Show the base window. This creates a drawingArea
 		# that we don't use (except as a parent), but it doesn't harm
 		# us either.
 		#
-		if not Channel.ChannelWindow.do_show(self):
+		if not Channel.ChannelWindow.do_show(self, pchan):
 			return 0
 
 		if self.window:

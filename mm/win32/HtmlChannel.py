@@ -31,8 +31,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.whandle = None
 		self.retrieved_url = None
 
-	def do_show(self):
-		if not Channel.ChannelWindow.do_show(self):
+	def do_show(self, pchan):
+		if not Channel.ChannelWindow.do_show(self, pchan):
 			return 0
 		###self.window._hWnd.HookMessage(self._catch, win32con.WM_PAINT)
 		res = Htmlex.CreateViewer(self.window._hWnd)
