@@ -131,6 +131,9 @@ class TextChannel(ChannelWindow):
 			if pos > 1:
 				fits = 0
 		if not fits:
+			import sys
+			if sys.platform == 'win32':
+				self.window.setcontentcanvas(1.0,box[1]+box[3])
 			xywh = (1.0-margin, 1.0-margin, margin, margin)
 			self.armed_display.drawfbox(self.gethicolor(node),
 						    xywh)
