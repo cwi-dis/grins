@@ -145,6 +145,7 @@ class TemporalView(TemporalViewDialog):
 	def unselect_channels(self):
 		for i in self.selected_channels:
 			i.unselect()
+		self.selected_channels = []
 
 	def select_node(self, node):
 		# Called back from the scene
@@ -156,6 +157,7 @@ class TemporalView(TemporalViewDialog):
 		# Called back from the scene
 		for i in self.selected_nodes:
 			i.unselect()
+		self.selected_nodes = []
 
 ######################################################################
 		# Edit manager interface
