@@ -457,11 +457,15 @@ class FileDialog:
 		dlg.SetOFNTitle(prompt)
 
 		# get/set current directory since the core assumes remains the same
-		cd=Sdk.GetCurrentDirectory()
+		# The Windows filebrowser modifies the current directory, and
+		# since the rest of GRiNS doesn't expect that we save/restore
+		# it,
+		#
+		import os
+		curdir = os.getcwd()
 		dlg.SetOFNInitialDir(directory)
 		result=dlg.DoModal()
-		if directory!=None and directory!='.':
-			Sdk.SetCurrentDirectory(cd)
+		os.chdir(curdir)
 		if result==win32con.IDOK:
 			if cb_ok: cb_ok(dlg.GetPathName())
 		else:
