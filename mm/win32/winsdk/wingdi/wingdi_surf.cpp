@@ -20,14 +20,14 @@ struct PyDIBSurf
 	PyObject_HEAD
 	HBITMAP m_hBmp;
 
-	surface<le::trible> *m_psurf;
+	surface<color_repr_t> *m_psurf;
 	bool m_is_transparent;
 	BYTE m_rgb[3];
 
 	static PyTypeObject type;
 	static PyMethodDef methods[];
 
-	static PyDIBSurf *createInstance(HBITMAP hBmp = NULL, surface<le::trible> *psurf = NULL, bool istransp = false, BYTE *rgb = NULL)
+	static PyDIBSurf *createInstance(HBITMAP hBmp = NULL, surface<color_repr_t> *psurf = NULL, bool istransp = false, BYTE *rgb = NULL)
 		{
 		PyDIBSurf *instance = PyObject_NEW(PyDIBSurf, &type);
 		if (instance == NULL) return NULL;
@@ -67,18 +67,18 @@ PyObject* Wingdi_CreateDIBSurface(PyObject *self, PyObject *args)
 		return NULL;
 	HDC hDC = (HDC)GetGdiObjHandle(obj);
 	
-	le::trible *pBits = NULL;
-	BITMAPINFO *pbmpi = GetBmpInfo24(width, height);
+	color_repr_t *pBits = NULL;
+	BITMAPINFO *pbmpi = GetBmpInfo(width, height, color_repr_t::get_bits_size());
 	HBITMAP hBmp = CreateDIBSection(hDC, pbmpi, DIB_RGB_COLORS, (void**)&pBits, NULL, 0);
 	if(hBmp==NULL || pBits==NULL)
 		{
 		seterror("CreateDIBSection", GetLastError());
 		return NULL;
 		}
-	surface<le::trible> *psurf = new surface<le::trible>(width, height, 24, pBits);
+	surface<color_repr_t> *psurf = new surface<color_repr_t>(width, height, color_repr_t::get_bits_size(), pBits);
 	if(r != 0 || g != 0 || b!=0)
 		{
-		le::trible color(r, g, b);
+		color_repr_t color(r, g, b);
 		psurf->fill(color);
 		}
 	return (PyObject*)PyDIBSurf::createInstance(hBmp, psurf);
@@ -145,7 +145,7 @@ PyObject* Wingdi_CreateDIBSurfaceFromFile(PyObject *self, PyObject *args)
 	if(pDIBSurf == NULL)
 		return NULL;
 	HBITMAP hBmp = pDIBSurf->detach_handle();
-	surface<le::trible>* psurf = pDIBSurf->detach_pixmap();
+	surface<color_repr_t>* psurf = pDIBSurf->detach_pixmap();
 	delete pDIBSurf;
 	return (PyObject*)PyDIBSurf::createInstance(hBmp, psurf, istransp, rgb);
 	}
@@ -236,12 +236,12 @@ PyObject* Wingdi_BltBlendDIBSurface(PyObject *self, PyObject *args)
 // StretchBltTransparent helpers
 inline PyDIBSurf* CreateDIBSurface(HDC hDC, int width, int height)
 	{
-	le::trible *pBits = NULL;
-	BITMAPINFO *pbmpi = GetBmpInfo24(width, height);
+	color_repr_t *pBits = NULL;
+	BITMAPINFO *pbmpi = GetBmpInfo(width, height, color_repr_t::get_bits_size());
 	HBITMAP hBmp = CreateDIBSection(hDC, pbmpi, DIB_RGB_COLORS, (void**)&pBits, NULL, 0);
 	if(hBmp==NULL || pBits==NULL)
 		return NULL;
-	surface<le::trible> *psurf = new surface<le::trible>(width, height, 24, pBits);
+	surface<color_repr_t> *psurf = new surface<color_repr_t>(width, height, color_repr_t::get_bits_size(), pBits);
 	return PyDIBSurf::createInstance(hBmp, psurf);
 	}
 
@@ -426,7 +426,7 @@ static PyObject* PyDIBSurf_GetDepth(PyDIBSurf *self, PyObject *args)
 	if(!PyArg_ParseTuple(args, ""))
 		return NULL;
 	if(self->m_psurf == NULL)
-		return Py_BuildValue("i", 24);
+		return Py_BuildValue("i", color_repr_t::get_bits_size());
 	return Py_BuildValue("i", self->m_psurf->get_depth());
 	}
 
@@ -437,7 +437,7 @@ static PyObject* PyDIBSurf_Fill(PyDIBSurf *self, PyObject *args)
 		return NULL;
 	if(self->m_psurf != NULL)
 		{
-		le::trible color(r, g, b);
+		color_repr_t color(r, g, b);
 		self->m_psurf->fill(color);
 		}
 	return none();
