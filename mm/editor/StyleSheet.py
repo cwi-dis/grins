@@ -150,7 +150,9 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		# (6) XXX Rename all uses in the tree?
 	#
 	def edit_callback(self, (obj, arg)):
-		print 'edit callback'
+		i, name = self.getselected()
+		if  name <> '':
+			AttrEdit.showstyleattreditor(self.context, name)
 	#
 	def name_callback(self, (obj, arg)):
 		pass
