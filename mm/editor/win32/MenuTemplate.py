@@ -65,18 +65,18 @@ MENUBAR=(
 		(CASCADE, 'P&aste node', (
 			(ENTRY, '&Before', None, PASTE_BEFORE),
 			(ENTRY, '&After', None, PASTE_AFTER),
-			(ENTRY, '&Under', None, PASTE_UNDER),
+			(ENTRY, 'As &child', None, PASTE_UNDER),
 			)),
 		(ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(SEP,),
 		(CASCADE, '&New node', (
 			(ENTRY, '&Before', None, NEW_BEFORE),
 			(ENTRY, '&After', None, NEW_AFTER),
-			(ENTRY, '&Under', None, NEW_UNDER),
+			(ENTRY, '&Child', None, NEW_UNDER),
 			(ENTRY, '&Par parent', None, NEW_PAR),
 			(ENTRY, '&Seq parent', None, NEW_SEQ),
-			(ENTRY, '&Choice parent', None, NEW_CHOICE),
-			(ENTRY, 'A&lt parent', None, NEW_ALT)
+			(ENTRY, 'S&witch parent', None, NEW_ALT),
+			(ENTRY, 'C&hoice parent', None, NEW_CHOICE),
 			)),
 		(ENTRY, 'New &channel', None, NEW_CHANNEL),
 		(ENTRY, 'New &layout', None, NEW_LAYOUT),

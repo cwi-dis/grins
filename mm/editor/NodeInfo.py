@@ -9,9 +9,10 @@ import windowinterface
 import MMAttrdefs
 
 from MMTypes import alltypes, leaftypes, interiortypes
-# make a copy, but replace "bag" with "choice".  Use this for user interaction.
+# make a copy, but replace "bag" and "alt" with "choice" and "switch".  Use this for user interaction.
 Alltypes = alltypes[:]
 Alltypes[Alltypes.index('bag')] = 'choice'
+Alltypes[Alltypes.index('alt')] = 'switch'
 
 NEW_CHANNEL = 'New channel...'
 
@@ -349,6 +350,7 @@ class NodeInfo(NodeInfoDialog):
 	def type_callback(self):
 		newtype = self.gettype()
 		if newtype == 'choice': newtype = 'bag'
+		if newtype == 'switch': newtype = 'alt'
 		if newtype == self.type:
 			return
 		# Check that the change is allowed.
