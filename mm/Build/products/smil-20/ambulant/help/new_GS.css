@@ -1,0 +1,13 @@
+.Normal { font-family: Arial, Helvetica, sans-serif; font-size: 11px}
+.Error { color: #FF0000; font-family: Arial, Helvetica, sans-serif; font-size: medium; font-weight: bold;}
+.ProductTitle { font-family: Arial, Helvetica, sans-serif; font-size: large; font-weight: bold; color: #000033; font-style: normal; padding-bottom: 12px}
+.RelativeMenu { font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-style: normal; color: #CC0000; font-weight: bold; padding-top: 12px }
+.RelativeMenuActiveItem { color: #000033; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; padding-top: 12px }
+.AbsoluteMenu {  font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-style: normal; font-weight: bold}
+.Legal { font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-style: oblique; font-weight: 100; letter-spacing: normal; word-spacing: normal }
+.ProductHeader {  font-size: medium; font-weight: 500; font-family: Arial, Helvetica, sans-serif; font-style: normal; color: #000033}
+.TagLine {  font-family: Arial, Helvetica, sans-serif; font-size: medium; font-style: oblique; font-weight: 300; padding-bottom: 4px}
+.Product_Name { font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: bold; color: #000033; font-style: normal}
+.HelpContentMenu { font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-style: normal; color: #FF8700; font-weight: bold; padding-top: 12px ; text-decoration: none}
+.subcontent { font-size: medium; font-weight: 500; font-family: Arial, Helvetica, sans-serif; font-style: normal; color: #FF8700 ; text-decoration: none}
+.NormalContentMenu { font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-style: normal; color: #FF8700; font-weight: normal; padding-top: 12px ; text-decoration: none}

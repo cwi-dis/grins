@@ -1,0 +1,26 @@
+To submit a bug report please copy this form to a mail message, fill
+in the details and mail to player-bugs@ambulantPlayer.org. If you
+incorporate a .smil file or a presentation please pack it up as a
+zipfile or stuffit archive and include it as a single attachment.
+
+Please note that we cannot guarantee support for player beta versions, 
+but we will do our best.
+
+=============================================================
+Exact version of product:
+	(e.g. Ambulant/G, build 4. This info is in the About box)
+	
+Exact version for your Operating system:
+	(e.g. Windows XP Home)
+	
+Machine hardware:
+	(e.g. IBM Thinkpad 600X, Pentium III 500Mhz, 128Mb memory)
+	
+Can the problem be repeated?
+	(yes, no, don't know, didn't try)
+	
+If it is possible to repeat the problem could you tell us how to do it:
+	
+	
+Description of the problem:
+

@@ -1,0 +1,14 @@
+*.c
+Player.aps
+FreezeOpts
+GRiNSP_SV2.exe
+GRiNSP_SV2.exp
+GRiNSP_SV2.lib
+GRiNSP_SV2.ncb
+GRiNSP_SV2.opt
+log.txt
+Makefile
+Release
+Build
+Debug
+*.plg

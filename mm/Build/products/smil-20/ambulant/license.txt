@@ -1,0 +1,77 @@
+Ambulant Player Project Electronic End-User Software License Agreement
+
+THIS AGREEMENT IS A LEGAL DOCUMENT. READ IT CAREFULLY BEFORE
+COMPLETING THE INSTALLATION PROCESS AND USING THE SOFTWARE. IT
+PROVIDES A LICENSE TO USE THE SOFTWARE AND CONTAINS WARRANTY
+INFORMATION AND LIABILITY DISCLAIMERS. BY INSTALLING AND USING THE
+SOFTWARE, YOU ARE CONFIRMING ACCEPTANCE OF THE SOFTWARE AND AGREEING
+TO BECOME BOUND BY THE TERMS OF THIS AGREEMENT.  IF YOU DO NOT WISH TO
+DO SO, DO NOT COMPLETE THE INSTALLATION PROCESS.
+
+Definitions
+(a) "APP" means Ambulant Player Project, representing the Foundation CWI
+    (Stichting CWI) in Amsterdam, The Netherlands or any of its subsidiaries.
+(b) "Software" means the programs supplied by APP herewith, and
+    any and all updates thereto.
+(c) "Player Product" means Software, such as APP's Ambulant/G Player
+    for SMIL-2.0.
+
+2. License
+This Agreement allows you to:
+(a) Install and use the Player Product on a single computer.
+(b) Make one copy of the Software in machine-readable form solely for
+    backup purposes.
+
+3. License Restrictions
+Other than as set forth in Section 2:
+(a) You may not make or distribute copies of the Software, or
+    electronically transfer the Software from one computer to another
+    or over a network.
+(b) You may not decompile, reverse engineer, disassemble, or otherwise
+    reduce the Software to a human-perceivable form.
+(c) You may not rent, lease or sublicense the Software.
+(d) You may not modify the Software or create derivative works based
+    upon the Software.
+(e) You may not decrypt, share or tamper with any license keys
+    provided with this software.
+
+4. Ownership
+(a) The foregoing license gives you limited rights to use the
+    Software, but you do not become the owner of, and APP retains
+    title to, the Software and all copies thereof.
+(b) All rights not specifically granted in this Agreement, including
+    National and International Copyrights, are reserved by APP.
+
+5. Limited Warranties
+(a) APP states that due care has been taken to provide a
+working version of the Player Product with this distribution, but
+that given the unsupported nature of the Player Product and the
+non-commercial license granted to the user,  APP DISCLAIMS ALL 
+WARRANTIES OR CONDITIONS, EITHER EXPRESS OR IMPLIED, INCLUDING 
+THE WARRANTIES OR CONDITIONS OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+No oral or written information or advice given by
+APP, its distributors, agents or employees shall create a
+warranty or in any way increase the scope of this warranty.
+
+6. Limitations of Damages
+APP will not be liable for any damages resulting from the use of
+our Software. APP SHALL NOT BE LIABLE FOR ANY INDIRECT, SPECIAL,
+INCIDENTAL OR CONSEQUENTIAL DAMAGES OR LOSS (INCLUDING DAMAGES FOR
+LOSS OF BUSINESS, LOSS OF PROFITS, OR THE LIKE), WHETHER BASED ON
+BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE), PRODUCT LIABILITY OR
+OTHERWISE, EVEN IF APP OR ITS REPRESENTATIVES HAVE BEEN ADVISED OF
+THE POSSIBILITY OF SUCH DAMAGES. SOME STATES DO NOT ALLOW THE
+LIMITATION OR EXCLUSION OF LIABILITY FOR INCIDENTAL OR CONSEQUENTIAL
+DAMAGES, SO THIS LIMITATION OR EXCLUSION MAY NOT APPLY TO YOU. The
+limited warranty and limited liability set forth above are fundamental 
+elements of the basis of the agreement between
+APP and you. You agree that APP would not be able to provide
+the Player Product on any basis without such limitations.
+
+7. General
+This Agreement shall be governed by the laws of the Kingdom of
+Netherlands. This Agreement contains the complete agreement between
+the parties with respect to the subject matter hereof, and supersedes
+all prior or contemporaneous agreements or understandings, whether
+oral or written.
