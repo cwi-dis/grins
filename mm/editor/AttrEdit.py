@@ -2019,7 +2019,7 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			return self.getdefault()
 		return self.valuerepr(val)
 
-class ChanneltypeAttrEditorField(PopupAttrEditorField):
+class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 	# Choose from the standard channel types
 	def getoptions(self):
 		current = self.getcurrent()
@@ -2031,7 +2031,7 @@ class ChanneltypeAttrEditorField(PopupAttrEditorField):
 			# Can happen if we open, say, a full-smil document
 			# in the G2 editor
 			all = all + [current]
-		return [DEFAULT] + all
+		return all
 
 class FontAttrEditorField(PopupAttrEditorField):
 	# Choose from all possible font names
