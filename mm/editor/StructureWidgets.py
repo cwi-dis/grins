@@ -996,6 +996,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def get_popupmenu(self):
 		return []
 
+	def helpcall(self):
+		import Help
+		Help.givehelp('StructureView/%s' % self.node.GetType())
+
 #
 # The StructureObjWidget represents any node which has children,
 # and is thus collapsable.
