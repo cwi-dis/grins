@@ -276,9 +276,6 @@ class _DisplayList:
 	def render(self):
 		pass
 		
-	def render_now(self):
-		self.render()
-
 	def fgcolor(self, color):
 		r, g, b = color
 
