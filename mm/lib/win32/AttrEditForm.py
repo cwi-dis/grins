@@ -598,6 +598,23 @@ class AttrCtrl:
 	def getcurrent(self):
 		return self._attr.getcurrent()
 
+	def a2tuple(self,str):
+		if not str: return ()
+		l=string.split(str, ' ')
+		n=[]
+		for e in l:
+			if e: n.append(string.atoi(e))
+		if len(n)==1:
+			return (n[0],)
+		elif len(n)==2:
+			return (n[0],n[1])
+		elif len(n)==3:
+			return (n[0],n[1],n[2])
+		elif len(n)==4:
+			return (n[0],n[1],n[2],n[3])
+		return ()
+
+
 ##################################
 class OptionsCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -610,19 +627,13 @@ class OptionsCtrl(AttrCtrl):
 		self._attrname.attach_to_parent()
 		self._options.attach_to_parent()
 		self._attrname.settext(self._attr.getlabel())
-		a=self._attr
-		list = a.getoptions()
-		val = a.getcurrent()
-		if val not in list:
-			val = list[0]
-		ix=list.index(val)
-		self._options.setoptions(list)
-		self._options.setcursel(ix)
+		list = self._attr.getoptions()
+		val = self._attr.getcurrent()
+		self.setoptions(list,val)
 		self._wnd.HookCommand(self.OnCombo,self._resid[1])
 		self._wnd.HookCommand(self.OnReset,self._resid[2])
 	
 	def setoptions(self,list,val):
-		print 'setoptions',val,list
 		if val not in list:
 			val = list[0]
 		ix=list.index(val)
@@ -649,6 +660,63 @@ class OptionsCtrl(AttrCtrl):
 			self._attr.reset_callback()
 
 	def OnCombo(self,id,code):
+		self.sethelp()
+
+class OptionsRadioCtrl(AttrCtrl):
+	def __init__(self,wnd,attr,resid):
+		AttrCtrl.__init__(self,wnd,attr,resid)
+		self._attrname=components.Control(wnd,resid[0])
+		n = len(self._attr.getoptions())
+		self._radio=[]
+		for ix in range(n):
+			self._radio.append(components.RadioButton(wnd,resid[ix+1]))
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
+		list = self._attr.getoptions()
+		n = len(list)
+		for ix in range(n):
+			self._radio[ix].attach_to_parent()
+			self._radio[ix].hookcommand(self._wnd,self.OnRadio)
+		self._wnd.HookCommand(self.OnReset,self._resid[n+1])
+		val = self._attr.getcurrent()
+		self.setoptions(list,val)
+	
+	def setoptions(self,list,val):
+		if val not in list:
+			val = list[0]
+		if self._initctrl:
+			for i in range(len(list)):
+				self._radio[i].settext(list[i])
+				self._radio[i].setcheck(0)
+			ix=list.index(val)
+			self._radio[ix].setcheck(1)
+		
+	def setvalue(self, val):
+		if not self._initctrl: return
+		list = self._attr.getoptions()
+		if val not in list:
+			val = list[0]
+		ix=list.index(val)
+		for i in range(len(list)):
+			self._radio[i].setcheck(0)
+		self._radio[ix].setcheck(1)
+
+	def getvalue(self):
+		if self._initctrl:
+			list = self._attr.getoptions()
+			for ix in range(len(list)):
+				if self._radio[ix].getcheck():
+					return list[ix]	
+		return self._attr.getcurrent()
+
+	def OnReset(self,id,code):
+		if self._attr:
+			self._attr.reset_callback()
+
+	def OnRadio(self,id,code):
 		self.sethelp()
 
 ##################################
@@ -777,12 +845,54 @@ class StringCtrl(AttrCtrl):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
 
+class IntPairCtrl(AttrCtrl):
+	def __init__(self,wnd,attr,resid):
+		AttrCtrl.__init__(self,wnd,attr,resid)
+		self._attrname=components.Edit(wnd,resid[0])
+		self._attrval1=components.Edit(wnd,resid[1])
+		self._attrval2=components.Edit(wnd,resid[2])
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrval1.attach_to_parent()
+		self._attrval2.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
+
+		strxy=self._attr.getcurrent()
+		x,y=self.a2tuple(strxy)
+		self._attrval1.settext('%s' % x)
+		self._attrval2.settext('%s' % y)
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		self._wnd.HookCommand(self.OnEdit,self._resid[2])
+		self._wnd.HookCommand(self.OnReset,self._resid[3])
+
+	def setvalue(self, val):
+		if self._initctrl:
+			x,y=self.a2tuple(val)
+			self._attrval1.settext('%s' % x)
+			self._attrval2.settext('%s' % y)
+
+	def getvalue(self):
+		if not self._initctrl:
+			return self._attr.getcurrent()
+		sx=self._attrval1.gettext()
+		sy=self._attrval2.gettext()
+		return sx + ' ' + sy
+
+	def OnReset(self,id,code):
+		if self._attr:
+			self._attr.reset_callback()
+
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp()
+
 ##################################
 class AttrPage(dialog.PropertyPage):
 	def __init__(self,form):
 		self._form=form
 		self._cd={}
-		self._al=[]
 		self._group=None
 		self._tabix=-1
 		self._title='Untitled page'
@@ -805,6 +915,8 @@ class AttrPage(dialog.PropertyPage):
 		self.HookCommand(self.OnOK,win32con.IDOK)
 		self._attrinfo.attach_to_parent()
 		for ctrl in self._cd.values():ctrl.OnInitCtrl()
+		if self._group:
+			self._group.oninitdialog(self)
 				
 	def OnRestore(self,id,code): self._form.call('Restore')
 	def OnApply(self,id,code): self._form.call('Apply')
@@ -824,23 +936,14 @@ class AttrPage(dialog.PropertyPage):
 	def setgroup(self,group):
 		self._group=group
 	
-	def getctrlclass(self,a):
-		t = a.gettype()
-		if t=='option': return OptionsCtrl
-		elif t=='file': return FileCtrl
-		elif t=='color': return ColorCtrl
-		else: return StringCtrl
 
-	# override for not group and not string attributes
+	# override for not group attributes
 	def createctrls(self):
 		if not self._group:
 			raise error, 'you must override createctrls for page',self
 			return
 		self._title=self._group.gettitle()
-		for a in self._group._al:
-			self._al.append(a)
-			CtrlCl=self.getctrlclass(a)
-			self._cd[a]=CtrlCl(self,a,self._group.getctrlids(a))
+		self._cd=self._group.createctrls(self)
 	
 	# override for not group pages
 	def getpageresid(self):
@@ -850,11 +953,10 @@ class AttrPage(dialog.PropertyPage):
 		return self._group.getpageresid() 
 
 	def getctrl(self,aname):
-		for a in self._al:
+		for a in self._cd.keys():
 			if a.getname()==aname:
 				return self._cd[a]
 		return None
-
 
 	def settabix(self,ix):
 		self._tabix=ix
@@ -868,39 +970,51 @@ class AttrPage(dialog.PropertyPage):
 class SingleAttrPage(AttrPage):
 	def __init__(self,form,attr):
 		AttrPage.__init__(self,form)
-		self._al=[attr]
+		self._attr=attr
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		ctrl=self._cd[self._al[0]]
+		ctrl=self._cd[self._attr]
 		ctrl.OnInitCtrl()
 		ctrl.sethelp()
 
 	def createctrls(self):
-		a=self._al[0]
+		a=self._attr
 		self._title=a.getlabel()
 		t = a.gettype()
-		if SingleAttrPage.ctrlmap.has_key(t):
+		if a.getname()=='layout':
+			self._cd[a] = OptionsRadioCtrl(self,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4))
+		elif a.getname()=='visible' or a.getname()=='drawbox' or a.getname()=='popup':
+			self._cd[a] = OptionsRadioCtrl(self,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5))
+		elif a.getname()=='transparent':
+			self._cd[a] = OptionsRadioCtrl(self,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6))
+		elif SingleAttrPage.ctrlmap.has_key(t):
 			self._cd[a] = SingleAttrPage.ctrlmap[t][0](self,a,SingleAttrPage.ctrlmap[t][1])
 		else:
 			self._cd[a] = SingleAttrPage.ctrlmap['string'][0](self,a,SingleAttrPage.ctrlmap['string'][1])
 
 	def getpageresid(self):
-		a=self._al[0]
+		a=self._attr
 		t = a.gettype()
-		if SingleAttrPage.ctrlmap.has_key(t):
+		if a.getname()=='layout':
+			return grinsRC.IDD_EDITATTR_O1_R2
+		elif a.getname()=='visible' or a.getname()=='drawbox' or a.getname()=='popup':
+			return grinsRC.IDD_EDITATTR_O1_R3
+		elif a.getname()=='transparent':
+			return grinsRC.IDD_EDITATTR_O1_R4			
+		elif SingleAttrPage.ctrlmap.has_key(t):
 			return SingleAttrPage.idmap[t]
 		else:
 			return SingleAttrPage.idmap['string']
 	ctrlmap={
-		'option':(OptionsCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_COMBO1,grinsRC.IDUC_RESET)),
-		'file':(FileCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_BROWSE,grinsRC.IDUC_RESET)),
-		'color':(ColorCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_BROWSE,grinsRC.IDUC_RESET)),
-		'string':(StringCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))}
-	idmap={'option':grinsRC.IDD_EDITOPTIONSATTR1,
-		'file':grinsRC.IDD_EDITFILEATTR1,
-		'color':grinsRC.IDD_EDITCOLORATTR1,
-		'string':grinsRC.IDD_EDITSTRINGATTR1}
+		'option':(OptionsCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'file':(FileCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+		'color':(ColorCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+		'string':(StringCtrl,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))}
+	idmap={'option':grinsRC.IDD_EDITATTR_O1,
+		'file':grinsRC.IDD_EDITATTR_F1,
+		'color':grinsRC.IDD_EDITATTR_C1,
+		'string':grinsRC.IDD_EDITATTR_S1}
 
 ##################################
 
@@ -1020,8 +1134,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	# subclass overrides
 
 	def getcurrentbox(self):
-		a=self._al[0]
-		val=a.getcurrent()
+		lc=self.getctrl('base_winoff')
+		val=lc.getcurrent()
 		if not val:
 			box=None
 		else:
@@ -1048,8 +1162,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def update(self,*box):
 		if self._initdialog and box:
 			box=self.fromlayout(box)
-			a=self._al[0]
-			self._cd[a].setvalue('%d %d %d %d' % box)
+			lc=self.getctrl('base_winoff')
+			lc.setvalue('%d %d %d %d' % box)
 
 
 class PosSizeLayoutPage(LayoutPage):
@@ -1100,6 +1214,7 @@ class PosSizeLayoutPage(LayoutPage):
 attrgrs=(
 	{'name':'infogroup',
 	'title': 'Info',
+	'match': 'first', # can be: 'all', 'part', 'first' default: 'all'
 	'attrs':[
 		'title',
 		'abstract',
@@ -1110,31 +1225,17 @@ attrgrs=(
 		'comment'
 		]},
 
-	{'name':'infogroup2',
-	'title': 'Info',
-	'attrs':[
-		'title',
-		'abstract',
-		'author',
-		'copyright',
-		'comment'
-		]},
-
-	{'name':'infogroup3',
-	'title': 'Info',
-	'attrs':[
-		'title',
-		'comment'
-		]},
 
 	{'name':'subregion',
 	'title':'Destination region',
 	'attrs':[
 		'subregionxy',
-		'subregionwh'
+		'subregionwh',
+		'displayfull',
+		'subregionanchor',
 		]},
 
-	{'name':'base_winoff_units',
+	{'name':'base_winoff_and_units',
 	'title':'Position and size',
 	'attrs':[
 		'base_winoff',
@@ -1146,6 +1247,40 @@ attrgrs=(
 	'attrs':[
 		'base_winoff',
 		]},
+
+	{'name':'system',
+	'title': 'System properties',
+	'attrs':[
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+		'system_required',
+		'system_screen_depth',
+		'system_screen_size',
+		]},
+
+	{'name':'name',
+	'title':'Node name',
+	'attrs':[
+		'name',
+		'channel',
+		]},
+
+	{'name':'.cname',
+	'title':'Channel name',
+	'attrs':[
+		'.cname',
+		'type',
+		]},
+
+	{'name':'duration_and_loop',
+	'title':'Duration and loop',
+	'attrs':[
+		'duration',
+		'loop',
+		]},
+
 	)
 
 attrgrsdict={}
@@ -1167,8 +1302,28 @@ class AttrGroup:
 		for a in al:
 			if a.getname() in self._data['attrs']:
 				self._al.append(a)
+
 	def matches(self):
-		return len(self._al)==len(self._data['attrs'])
+		if not self._data.has_key('match'):
+			return len(self._al)==len(self._data['attrs'])
+		if self._data['match']=='part':
+			return len(self._al)>1
+		elif self._data['match']=='first':
+			fa=	self._data['attrs'][0]
+			return (fa in self.alnames())
+		else:
+			return len(self._al)==len(self._data['attrs'])
+
+	def alnames(self):
+		l=[]
+		for a in self._al:
+			l.append(a.getname())
+		return l
+	def getattr(self,aname):
+		for a in self._al:
+			if a.getname()==aname:
+				return a
+		return None
 
 	def gettitle(self):
 		return self._data['title']
@@ -1179,6 +1334,37 @@ class AttrGroup:
 	def getpageclass(self):
 		return AttrPage
 
+	# auto create
+	# override for special cases
+	def createctrls(self,wnd):
+		cd={}
+		for a in self._al:
+			CtrlCl=self.getctrlclass(a)
+			cd[a]=CtrlCl(wnd,a,self.getctrlids(a))
+		return cd
+
+	special_attrcl={
+		'system_captions':OptionsRadioCtrl,
+		'layout':OptionsRadioCtrl,
+		'visible':OptionsRadioCtrl,
+		'drawbox':OptionsRadioCtrl,
+		}
+
+	def getctrlclass(self,a):
+		n = a.getname()
+		if AttrGroup.special_attrcl.has_key(n):
+			return AttrGroup.special_attrcl[n]
+		t = a.gettype()
+		if t=='option':return OptionsCtrl
+		elif t=='file': return FileCtrl
+		elif t=='color': return ColorCtrl
+		else: return StringCtrl
+	
+	# part of page initialization
+	# do whatever not default
+	def oninitdialog(self,wnd):
+		pass
+	
 
 class InfoGroup(AttrGroup):
 	data=attrgrsdict['infogroup']
@@ -1188,25 +1374,19 @@ class InfoGroup(AttrGroup):
 			AttrGroup.__init__(self,data)
 		else:
 			AttrGroup.__init__(self,InfoGroup.data)
+		self._ix=1
 
 	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
+		ix=self._ix
+		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
+		self._ix=self._ix+1
 		return ids
+
 	def getpageresid(self):
 		n=len(self._al)
 		exec 'id=grinsRC.IDD_EDITATTR_S%d' % n
 		return id
 
-class InfoGroup2(InfoGroup):
-	data=attrgrsdict['infogroup2']
-	def __init__(self):
-		InfoGroup.__init__(self,InfoGroup2.data)
-
-class InfoGroup3(InfoGroup):
-	data=attrgrsdict['infogroup3']
-	def __init__(self):
-		InfoGroup.__init__(self,InfoGroup3.data)
 
 # base_winoff
 class LayoutGroup(AttrGroup):
@@ -1217,10 +1397,10 @@ class LayoutGroup(AttrGroup):
 		else:
 			AttrGroup.__init__(self,LayoutGroup.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITRECTATTR1
+		return grinsRC.IDD_EDITATTR_LS1
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
-		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
+		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
 		return ids
 	def getpageclass(self):
 		return LayoutPage
@@ -1228,17 +1408,17 @@ class LayoutGroup(AttrGroup):
 		return (attr.getname()=='base_winoff')
 
 # base_winoff, units
-class LayoutGroup2(LayoutGroup):
-	data=attrgrsdict['base_winoff_units']
+class LayoutGroupWithUnits(LayoutGroup):
+	data=attrgrsdict['base_winoff_and_units']
 	def __init__(self):
-		LayoutGroup.__init__(self,LayoutGroup2.data)
+		LayoutGroup.__init__(self,LayoutGroupWithUnits.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITRECTATTR3
+		return grinsRC.IDD_EDITATTR_LS1O1
 	def getctrlids(self,a):
 		if a.getname()=='base_winoff':
-			ids=(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET1)
+			ids=(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)
 		elif a.getname()=='units':
-			ids=(grinsRC.IDC_EDIT3,grinsRC.IDC_COMBO1,grinsRC.IDUC_RESET2)
+			ids=(grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)
 		else:
 			raise error,'LayoutGroup2 resource conflict'
 		return ids
@@ -1249,28 +1429,118 @@ class SubregionGroup(AttrGroup):
 	def __init__(self):
 		AttrGroup.__init__(self,SubregionGroup.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITRECTATTR2
+		return grinsRC.IDD_EDITATTR_LS1O2
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
-		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
+		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*3+1,ix*3+2,ix*3+3)
 		return ids
+
+	def createctrls(self,wnd):
+		cd={}
+		a=self.getattr('subregionxy')
+		cd[a]=IntPairCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
+		a=self.getattr('subregionwh')
+		cd[a]=IntPairCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
+		a=self.getattr('displayfull')
+		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))		
+		a=self.getattr('subregionanchor')
+		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))		
+		return cd
+
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_11)
+		ctrl.attach_to_parent()
+		ctrl.settext(self._data['title'])
+
 	def getpageclass(self):
 		return PosSizeLayoutPage
 	def islayoutattr(self,attr):
 		return (attr.getname()=='subregionxy') or (attr.getname()=='subregionwh')
+
+class SystemGroup(AttrGroup):
+	data=attrgrsdict['system']
+	def __init__(self):
+		AttrGroup.__init__(self,SystemGroup.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O1S5_R3
+	def getctrlids(self,a):
+		ix=self._data['attrs'].index(a.getname())
+		ix=ix+1 # 1 based
+		if ix==2:
+			exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3,ix*10+4,ix*10+5)
+		else:
+			exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
+		return ids
+	def getpageclass(self):
+		return AttrPage
+
+class NameGroup(AttrGroup):
+	data=attrgrsdict['name']
+	def __init__(self):
+		AttrGroup.__init__(self,NameGroup.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O1
+	def getctrlids(self,a):
+		ix=self._data['attrs'].index(a.getname())
+		ix=ix+1 # 1 based
+		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
+		return ids
+	def getpageclass(self):
+		return AttrPage
+	
+class CNameGroup(AttrGroup):
+	data=attrgrsdict['.cname']
+	def __init__(self):
+		AttrGroup.__init__(self,CNameGroup.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O1
+	def getctrlids(self,a):
+		ix=self._data['attrs'].index(a.getname())
+		ix=ix+1 # 1 based
+		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
+		return ids
+	def getpageclass(self):
+		return AttrPage
 		
+
+class DurationGroup(AttrGroup):
+	data=attrgrsdict['duration_and_loop']
+
+	def __init__(self,data=None):
+		AttrGroup.__init__(self,DurationGroup.data)
+
+	def getctrlids(self,a):
+		ix=self._data['attrs'].index(a.getname())
+		ix=ix+1 # 1 based
+		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
+		return ids
+
+	def getpageresid(self):
+		n=len(self._al)
+		exec 'id=grinsRC.IDD_EDITATTR_S%d' % n
+		return id
+	
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.ID_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext(self._data['title'])
 		
+	
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
 groupsui={
 	'infogroup':InfoGroup,
-	'infogroup2':InfoGroup2,
-	'infogroup3':InfoGroup3,
 
 	'base_winoff':LayoutGroup,
-	'base_winoff_units':LayoutGroup2,
+	'base_winoff_and_units':LayoutGroupWithUnits,
 	'subregion':SubregionGroup,
+
+	'system':SystemGroup,
+	'name':NameGroup,
+	'.cname':CNameGroup,
+
+	'duration_and_loop':DurationGroup,
 	}
 
 ###########################
@@ -1281,7 +1551,7 @@ class AttrEditFormNew(GenFormView):
 	# None
 	# Class constructor. Calls base constructor and nullify members
 	def __init__(self,doc):
-		GenFormView.__init__(self,doc,grinsRC.IDD_FORM1)	
+		GenFormView.__init__(self,doc,grinsRC.IDD_EDITATTR_SHEET)	
 		self._title='Properties'
 		self._attriblist=None
 		self._cbdict=None
@@ -1296,6 +1566,8 @@ class AttrEditFormNew(GenFormView):
 		dll=__main__.resdll
 		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
 		prsht.EnableStackedTabs(1)
+
+		self.buildcontext()
 
 		grattrl=[] # list of attr in groups (may be all)
 		# create groups pages
@@ -1360,6 +1632,24 @@ class AttrEditFormNew(GenFormView):
 					grattrl.append(a)
 					l.remove(a)
 		return grattrl
+
+	def buildcontext(self):
+		return
+		a=self._attriblist[0]
+		w=a.wrapper
+		self.root=w.toplevel.root
+		print dir(self.root)
+		print dir(self.root.context)
+		channels = self.root.context.channels
+		for ch in channels:
+			print ch.name,ch.attrdict
+
+		if hasattr(w,'node'):
+			self._node=w.node
+			
+		#print w,dir(w)
+		if hasattr(w,'channel'):
+			self._channel=w.channel
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
