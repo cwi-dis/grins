@@ -122,6 +122,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			flag = 0
 		else:
 			flag = mv.MV_MPEG1_PRESCAN_OFF
+		flag = 0	# MV_MPEG1_PRESCAN_OFF does not work well
 		self.armed_flag = flag
 		try:
 			self.armed_movie = movie = mv.OpenFile(f, flag)
@@ -144,12 +145,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
 			if center:
+				imbox = float((w - width) / 2)/w, float((h - height) / 2)/h, float(width)/w, float(height)/h
 				x = x + (w - width) / 2
 				y = self.window._form.height - y - (h + height) / 2
 			else:
-				y = self.window._form.height - y - h
+				imbox = 0, 0, float(width)/w, float(height)/h
+				y = self.window._form.height - y - height
 			movie.SetViewOffset(x, y, mv.DM_TRUE)
 		else:
+			imbox = 0, 0, 1, 1
 			movie.SetViewSize(w, h)
 			# X coordinates don't work, so use GL coordinates
 			movie.SetViewOffset(x,
@@ -182,7 +186,21 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			atype = a[A_TYPE]
 			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
 				continue
-			b = self.armed_display.newbutton((0,0,1,1))
+			args = a[A_ARGS]
+			if len(args) == 0:
+				args = [0,0,1,1]
+			elif len(args) == 4:
+				args = self.convert_args(f, args)
+			if len(args) != 4:
+				print 'VideoChannel: funny-sized anchor'
+				continue
+			x, y, w, h = args[0], args[1], args[2], args[3]
+			# convert coordinates from image to window size
+			x = x * imbox[2] + imbox[0]
+			y = y * imbox[3] + imbox[1]
+			w = w * imbox[2]
+			h = h * imbox[3]
+			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
@@ -307,3 +325,25 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__qid:
 				return
 			self.playdone(0)
+
+	# Convert pixel offsets into relative offsets.
+	# If the offsets are in the range [0..1], we don't need to do
+	# the conversion since the offsets are already fractions of
+	# the image.
+	def convert_args(self, file, args):
+		need_conversion = 1
+		for a in args:
+			if a != int(a):	# any floating point number
+				need_conversion = 0
+				break
+		if not need_conversion:
+			return args
+		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
+			# special case: full image
+			return args
+		import Sizes
+		xsize, ysize = Sizes.GetSize(file)
+		return float(args[0]) / float(xsize), \
+		       float(args[1]) / float(ysize), \
+		       float(args[2]) / float(xsize), \
+		       float(args[3]) / float(ysize)

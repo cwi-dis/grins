@@ -140,7 +140,7 @@ class LabelChannel(ChannelWindow):
 			self.armed_display.fgcolor(self.getbgcolor(node))
 		hicolor = self.gethicolor(node)
 		for name, box, type, times in buttons:
-			button = self.armed_display.newbutton(box)
+			button = self.armed_display.newbutton(box, times = times)
 			button.hicolor(hicolor)
 			button.hiwidth(3)
 			self.setanchor(name, type, button, times)

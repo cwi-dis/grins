@@ -5,9 +5,10 @@ from XConstants import error, TRUE, FALSE
 from XTopLevel import toplevel
 
 class _Button:
-	def __init__(self, dispobj, coordinates, z = 0):
+	def __init__(self, dispobj, coordinates, z = 0, times = None):
 		self._dispobj = dispobj
 		self._z = z
+		self._times = times
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -106,4 +107,14 @@ class _Button:
 	def _inside(self, x, y):
 		# return 1 iff the given coordinates fall within the button
 		bx0, by0, bx1, by1 = self._corners
-		return (bx0 <= x < bx1) and (by0 <= y < by1)
+		if (bx0 <= x < bx1) and (by0 <= y < by1):
+			if self._times:
+				import time
+				curtime = time.time() - self._dispobj.starttime
+				t0, t1 = self._times
+				if (not t0 or t0 <= curtime) and \
+				   (not t1 or curtime < t1):
+					return 1
+				return 0
+			return 1
+		return 0
