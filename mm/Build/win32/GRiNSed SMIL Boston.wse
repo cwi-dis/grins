@@ -2769,12 +2769,12 @@ item: Custom Dialog Set
       Text Swedish=< &Tillbaka
     end
     item: Checkbox
-      Rectangle=90 82 166 110
+      Rectangle=90 82 261 110
       Variable=FINISH_ACTIONS
       Enabled Color=00000000000000001111111111111111
       Create Flags=01010000000000010000000000000011
       Text=View QuickStart Guide
-      Text=Start Editor
+      Text=Start %APPTITLE%
       Text=
     end
     item: Set Control Attribute
