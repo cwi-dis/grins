@@ -2132,7 +2132,8 @@ class ViewportContext:
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
 		ddsd.SetSize(w,h)
 		dds = self._ddraw.CreateSurface(ddsd)
-		dds.BltFill((0, 0, w, h), self._ddcolor)
+		dds.BltFill((0, 0, w, h), self._ddbgcolor)
+		return dds
 
 #############################
 
