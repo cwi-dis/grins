@@ -3,15 +3,17 @@ __version__ = "$Id$"
 # Main program for the CMIF editor.
 
 import sys
+import os
 
 try:
 	sys.path.remove('')
 except:
 	pass
 
-if __file__ != '<frozen>':
+if os.name != 'mac' and __file__ != '<frozen>':
 	import fastimp
 	fastimp.install()
+
 
 import getopt
 
