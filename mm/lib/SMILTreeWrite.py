@@ -85,7 +85,10 @@ def getid(writer, node):
 		return name
 
 def getcmifattr(writer, node, attr):
-	return node.GetRawAttrDef(attr, None)
+	val = node.GetRawAttrDef(attr, None)
+	if val is not None:
+		val = str(val)
+	return val
 
 def getchname(writer, node):
 	ch = node.GetChannel()
@@ -180,6 +183,20 @@ def getrepeat(writer, node):
 	else:
 		return `value`
 
+def getcaptions(writer, node):
+	value = node.GetRawAttrDef('system_captions', None)
+	if value is not None:
+		if value:
+			return 'on'
+		else:
+			return 'off'
+
+def getscreensize(writer, node):
+	value = node.GetRawAttrDef('system_screen_size', None)
+	if value is not None:
+		return '%dX%d' % value
+	
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -193,6 +210,13 @@ smil_attrs=[
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("endsync", getterm),
 	("repeat", lambda writer, node:getrepeat(writer, node)),
+	("system-bitrate", lambda writer, node:getcmifattr(writer, node, "system_bitrate")),
+	("system-captions", getcaptions),
+	("system-language", lambda writer, node:getcmifattr(writer, node, "system_language")),
+	("system-overdub-or-captions", lambda writer, node:getcmifattr(writer, node, "system_overdub_or_captions")),
+	("system-required", lambda writer, node:getcmifattr(writer, node, "system_required")),
+	("system-screen-size", getscreensize),
+	("system-screen-depth", lambda writer, node:getcmifattr(writer, node, "system_screen_depth")),
 ]
 
 # Mapping from CMIF channel types to smil media types
