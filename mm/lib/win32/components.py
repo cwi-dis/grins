@@ -57,6 +57,9 @@ class LightWeightControl:
 	def sendmessage_getrect(self,msg,wparam,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGetRect(self._hwnd,msg,wparam,lparam)	
+	def sendmessage_ms(self, msg, wparam, lparam):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageMS(self._hwnd, msg, wparam, lparam)
 	def enable(self,f):
 		if not self._hwnd: raise error, 'os control %d has not been created'
 		if f==None:f=0
@@ -523,6 +526,7 @@ class TabCtrl(Control):
 class Tooltip(Control):
 	def __init__(self, parent=None, id=-1):
 		Control.__init__(self, parent, id)
+		self._toolscounter = 0
 
 	def createWindow(self, rc=(0,0,0,0), title=''):
 		Sdk.InitCommonControlsEx()
@@ -532,10 +536,36 @@ class Tooltip(Control):
 			win32con.WS_POPUP | commctrl.TTS_NOPREFIX | commctrl.TTS_ALWAYSTIP, rcd, hwnd, self._id)
 		Sdk.SetWindowPos(self._hwnd, win32con.HWND_TOPMOST, (0,0,0,0),
 			win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+		self.hookMouseMessages()
 
 	def addTool(self, rc):
 		hwnd = self._parent.GetSafeHwnd()
 		Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc)
+		self._toolscounter = self._toolscounter + 1
+
+	def hookMouseMessages(self):
+		assert self._hwnd>0, 'Tooltip control has not been created'
+		wnd = win32ui.CreateWindowFromHandle(self._hwnd)
+		wnd.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
+		wnd.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
+		wnd.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
+
+	def relayEvent(self, params):
+		assert self._hwnd>0, 'Tooltip control has not been created'
+		if self._toolscounter == 0: 
+			return
+		hwnd, message, wParam, lParam, time, pt = params
+		params = hwnd, message, wParam, lParam, 0, lParam
+		self.sendmessage_ms(commctrl.TTM_RELAYEVENT, 0, params)
+
+	def onLButtonDown(self, params):
+		self.relayEvent(params)
+
+	def onLButtonUp(self, params):
+		self.relayEvent(params)
+
+	def onMouseMove(self, params):
+		self.relayEvent(params)
 
 ##############################
 # Base class for controls creation classes
