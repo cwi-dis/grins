@@ -1376,17 +1376,9 @@ END
 
 IDR_STRUCT_EDIT ACCELERATORS DISCARDABLE 
 BEGIN
-    "1",            IDUC_PLAYER,            VIRTKEY, ALT, NOINVERT
-    "2",            IDUC_HVIEW,             VIRTKEY, ALT, NOINVERT
-    "3",            IDUC_CVIEW,             VIRTKEY, ALT, NOINVERT
-    "4",            IDUC_HLINKS,            VIRTKEY, ALT, NOINVERT
-    "5",            IDUC_LAYOUT,            VIRTKEY, ALT, NOINVERT
-    "6",            IDUC_UGROUPS,           VIRTKEY, ALT, NOINVERT
-    "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
-    "A",            IDUC_ATTRIBUTES,        VIRTKEY, NOINVERT
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
-    "I",            IDUC_INFO,              VIRTKEY, NOINVERT
+    "I",            IDUC_EXPAND,            VIRTKEY, CONTROL, NOINVERT
     "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
     "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
@@ -1411,7 +1403,6 @@ BEGIN
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
     VK_UP,          IDUC_PREVSIBLING,       VIRTKEY, NOINVERT
     "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
-    "X",            IDUC_CLOSE_WINDOW,      VIRTKEY, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
