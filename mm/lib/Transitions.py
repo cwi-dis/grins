@@ -49,7 +49,7 @@ class TransitionClass:
 
 class NullTransition(TransitionClass, BlitterClass):
 	pass
-			
+
 class BarWipeTransition(TransitionClass, R1R2BlitterClass):
 	# Reveal the new image by sweeping a divider line from left to right
 
@@ -349,7 +349,67 @@ class SaloonDoorWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 				(xmid+xdist, y1),
 				(xmid-xdist, y1))
 		return poly, self.ltrb
-	
+
+
+class WindShieldWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the image by two rotating bars from midhicenter and midlowcenter
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		height = (y1-y0)
+		ymidlo = int(y0+height/3.0)
+		ymid = int(y0+height/2.0)
+		ymidhi = int(y1-height/3.0)
+		width = (x1-x0)
+		if value <= 0.2:
+			xdist = int(5*value*width/2)
+			poly = (
+				(xmid, ymidlo),
+				(xmid+xdist, ymid),
+				(xmid, ymidhi))
+		elif value <= 0.4:
+			ydist = int(5*(value-0.2)*height/2)
+			poly = (
+				(xmid, ymidlo),
+				(x1, ymid-ydist),
+				(x1, ymid+ydist),
+				(xmid, ymidhi))
+		elif value <= 0.6:
+			xdist = int(5*(value-0.4)*width)
+			poly = (
+				(xmid, ymidlo),
+				(x1-xdist, y0),
+				(x1, y0),
+				(x1, y1),
+				(x1-xdist, y1),
+				(xmid, ymidhi))
+		elif value <= 0.8:
+			ydist = int(5*(value-0.6)*height/2)
+			poly = (
+				(xmid, ymidlo),
+				(x0, y0+ydist),
+				(x0, y0),
+				(x1, y0),
+				(x1, y1),
+				(x0, y1),
+				(x0, y1-ydist),
+				(xmid, ymidhi))
+		else:
+			xdist = int(5*(value-0.8)*width/2)
+			poly = (
+				(xmid, ymidlo),
+				(x0+xdist, ymid),
+				(x0, ymid),
+				(x0, y0),
+				(x1, y0),
+				(x1, y1),
+				(x0, y1),
+				(x0, ymid),
+				(x0+xdist, ymid))
+		return poly, self.ltrb
+
+
 ##class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 ##	# Reveal the new image by a triangle growing from the center outward
 ##	
@@ -987,7 +1047,7 @@ TRANSITIONDICT = {
 	"doubleFanWipe" : DoubleFanWipeTransition,
 	"doubleSweepWipe" : DoubleSweepWipeTransition,
 	"saloonDoorWipe" : SaloonDoorWipeTransition,
-#	"windshieldWipe" : WindShieldWipeTransition,
+	"windshieldWipe" : WindShieldWipeTransition,
 	"snakeWipe" : SnakeWipeTransition,
 	"spiralWipe" : SpiralWipeTransition,
 	"parallelSnakesWipe" : ParallelSnakesWipeTransition,
