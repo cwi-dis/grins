@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import MMAttrdefs, windowinterface, urlparse, MMurl
+from MMExc import NoSuchAttrError
 
 class DummyRP:
 	# used when parsing the RealPix file failed for some reason
@@ -36,7 +37,7 @@ class SlideShow:
 	__callback_added = 0
 	tmpfiles = []
 
-	def __init__(self, node):
+	def __init__(self, node, new_file = 0):
 		if node is None:
 			# special case, only used in copy method
 			return
@@ -60,29 +61,38 @@ class SlideShow:
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
 			self.url = url
 			fp = None
-			try:
-				fn, hdr = MMurl.urlretrieve(url)
-				fp = open(fn)
-				rp = realsupport.RPParser(url, baseurl = ourl, printfunc = self.printfunc)
-				rp.feed(fp.read())
-				rp.close()
-			except:
-				rp = None
-				if hasattr(ctx, 'template'):
-					url = MMurl.basejoin(ctx.template, ourl)
+			if new_file and type(new_file) == type(''):
+				url = MMurl.basejoin(new_file, ourl)
+				try:
+					fn, hdr = MMurl.urlretrieve(url)
+					fp = open(fn)
+					rp = realsupport.RPParser(url, baseurl = url, printfunc = self.printfunc)
+					rp.feed(fp.read())
+					rp.close()
+					update = 1
+					# zap the URL so that the
+					# template doesn't get
+					# overwritten
 					try:
-						fn, hdr = MMurl.urlretrieve(url)
-						fp = open(fn)
-						rp = realsupport.RPParser(url, printfunc = self.printfunc)
-						rp.feed(fp.read())
-						rp.close()
-						update = 1
-					except:
+						node.DelAttr('file')
+					except NoSuchAttrError:
 						pass
-					url = self.url
-				if rp is None:
-					windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-					rp = DummyRP()
+					url = self.url = ''
+				except:
+					pass
+				url = self.url
+			else:
+				try:
+					fn, hdr = MMurl.urlretrieve(url)
+					fp = open(fn)
+					rp = realsupport.RPParser(url, baseurl = ourl, printfunc = self.printfunc)
+					rp.feed(fp.read())
+					rp.close()
+				except:
+					rp = None
+					if rp is None:
+						windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+						rp = DummyRP()
 			if fp is not None:
 				fp.close()
 		self.url = url
@@ -337,17 +347,14 @@ class SlideShow:
 		if changed:
 			if not hasattr(node, 'tmpfile'):
 				url = MMAttrdefs.getattr(node, 'file')
-				if not url:
-					url = node.context.baseurl
-				else:
-					url = MMurl.basejoin(node.context.baseurl, url)
-				if not url:
-					windowinterface.showmessage('specify a location for this node')
-					return
+				url = node.context.findurl(url)
+##				if not url:
+##					windowinterface.showmessage('specify a location for this node')
+##					return
 				utype, host, path, params, query, fragment = urlparse.urlparse(url)
 				if (utype and utype != 'file') or \
 				   (host and host != 'localhost'):
-					windowinterface.showmessage('cannot do this for now')
+					windowinterface.showmessage('cannot edit remote RealPix files')
 					return
 				import tempfile, os
 				pre = tempfile.gettempprefix()

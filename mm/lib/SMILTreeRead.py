@@ -78,7 +78,7 @@ smil_node_attrs = [
 class SMILParser(SMIL, xmllib.XMLParser):
 	__warnmeta = 0		# whether to warn for unknown meta properties
 
-	def __init__(self, context, printfunc = None):
+	def __init__(self, context, printfunc = None, new_file = 0):
 		self.elements = {
 			'smil': (self.start_smil, self.end_smil),
 			'head': (self.start_head, self.end_head),
@@ -141,6 +141,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__u_groups = {}
 		self.__layouts = {}
 		self.__realpixnodes = []
+		self.__new_file = new_file
+		if new_file and type(new_file) == type(''):
+			self.__base = new_file
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -1059,7 +1062,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixLinks()
 		self.Recurse(self.__root, self.FixAnchors)
 		for node in self.__realpixnodes:
-			node.slideshow = SlideShow(node)
+			node.slideshow = SlideShow(node, self.__new_file)
 		del self.__realpixnodes
 
 	# head/body sections
@@ -2047,26 +2050,27 @@ def ReadMetaData(file):
 	p.close()
 	return p.meta_data
 	
-def ReadFile(url, printfunc = None):
+def ReadFile(url, printfunc = None, new_file = 0):
 	if os.name == 'mac':
 		import splash
 		splash.splash('loaddoc')	# Show "loading document" splash screen
-	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc)
+	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file)
 	if os.name == 'mac':
 		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
 
-def ReadFileContext(url, context, printfunc = None):
-	p = SMILParser(context, printfunc)
+def ReadFileContext(url, context, printfunc = None, new_file = 0):
+	p = SMILParser(context, printfunc, new_file)
 	u = MMurl.urlopen(url)
-	baseurl = u.geturl()
-	i = string.rfind(baseurl, '/')
-	if i >= 0:
-		baseurl = baseurl[:i+1]	# keep the slash
-	else:
-		baseurl = None
-	context.setbaseurl(baseurl)
-	context.baseurlset = 0
+	if not new_file:
+		baseurl = u.geturl()
+		i = string.rfind(baseurl, '/')
+		if i >= 0:
+			baseurl = baseurl[:i+1]	# keep the slash
+		else:
+			baseurl = None
+		context.setbaseurl(baseurl)
+		context.baseurlset = 0
 	data = u.read()
 	u.close()
 	p.feed(data)
