@@ -15,7 +15,7 @@ import features
 from TopLevelDialog import TopLevelDialog
 
 class TopLevel(TopLevelDialog):
-	def __init__(self, main, url):
+	def __init__(self, main, url, askskin = 1):
 		self.window = None
 		self.__immediate = 0
 		self.__intimer = 0
@@ -64,7 +64,10 @@ class TopLevel(TopLevelDialog):
 		url = urlunparse((utype, host, path, params, query, None))
 		self.filename = url
 		self.source = None
-		self.read_it()
+		if askskin:
+			self.read_it_with_skin()
+		else:
+			self.read_it()
 		self.__checkParseErrors()
 
 		self.makeplayer()
@@ -180,6 +183,24 @@ class TopLevel(TopLevelDialog):
 
 	def progressCallback(self, pValue):
 		self.progress.set(self.progressMessage, None, None, pValue*100, 100)
+
+	def read_it_with_skin(self):
+		if settings.get('askskin'):
+			windowinterface.FileDialog('Open components file', '.', ['text/x-grins-skin'], '',
+						   self.__skin_done, self.__skin_done, 1,
+						   parent = windowinterface.getmainwnd())
+		else:
+			self.read_it()
+
+	def __skin_done(self, filename = None):
+		import settings
+		if filename:
+			url = MMurl.pathname2url(filename)
+		else:
+			url = ''
+		settings.set('skin', url)
+		settings.save()
+		self.read_it()
 
 	def read_it(self):
 ##		import time

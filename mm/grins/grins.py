@@ -105,7 +105,7 @@ class Main(MainDialog):
 		for file in files:
 			self.openURL_callback(MMurl.guessurl(file), 0)
 		if not files and settings.get('skin'):
-			self.openURL_callback('data:application/smil,<smil/>', 0, 0)
+			self.openURL_callback('data:application/smil,<smil/>', 0, 0, 0)
 		self._update_recent(None)
 		# then play them
 		if not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded():
@@ -114,8 +114,8 @@ class Main(MainDialog):
 
 	def __skin_done(self, filename):
 		if filename:
-			import settings
-			url = self.__path2url(filename)
+			import settings, MMurl
+			url = MMurl.pathname2url(filename)
 			settings.set('skin', url)
 			settings.save()
 
@@ -125,14 +125,14 @@ class Main(MainDialog):
 					   self.__skin_done, None, 1,
 					   parent = windowinterface.getmainwnd())
 
-	def openURL_callback(self, url, startplay = 1, update_recent = 1):
+	def openURL_callback(self, url, startplay = 1, update_recent = 1, askskin = 1):
 		import windowinterface
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
 		self.last_location = url
 		try:
-			top = TopLevel.TopLevel(self, url)
+			top = TopLevel.TopLevel(self, url, askskin)
 		except IOError:
 			import windowinterface
 			windowinterface.showmessage('Cannot open: %s' % url)
