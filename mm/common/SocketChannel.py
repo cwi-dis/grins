@@ -81,7 +81,6 @@ class SocketChannel(Channel):
 
 	def do_arm(self, node, same=0):
 		alist =  MMAttrdefs.getattr(node, 'anchorlist')
-		modanchorlist(alist)
 		for a in alist:
 			self.setanchor(a[A_ID], a[A_TYPE], None)
 		return 1
