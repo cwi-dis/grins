@@ -121,9 +121,9 @@ class MainDialog:
 				import os
 				dir, file = os.path.split(MMurl.url2pathname(MMurl.splithost(rest)[1]))
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import features
-		if not features.lightweight:
-			filetypes.append('application/x-grins-cmif')
+##		import features
+##		if not features.lightweight:
+##			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = self.__owindow)
