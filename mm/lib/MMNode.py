@@ -2918,7 +2918,7 @@ class MMNode:
 		repeatCount = self.attrdict.get('loop')
 		endlist = self.attrdict.get('endlist', [])
 		endlist = self.FilterArcList(endlist)
-		if endlist is not None and duration is None and \
+		if endlist and duration is None and \
 		   repeatCount is None and repeatDur is None:
 			# "If an end attribute is specified but none
 			# of dur, repeatCount and repeatDur are
