@@ -130,6 +130,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.transition_out = None
 		self.dropbox = None
 		self.channelbox = None
+		self.node.set_infoicon = self.set_infoicon_invisible
 
 	def __repr__(self):
 		return '<%s instance, name="%s", node=%s, id=%X>' % (self.__class__.__name__, self.name, `self.node`, id(self))
@@ -560,7 +561,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				xsize = w
 			ysize = ysize + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
+			w, h = self.bwstrip.recalc_minsize(self.node)
 			if w > xsize:
 				xsize = w
 			ysize = ysize + h
@@ -571,8 +572,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 ##				return ICONXSIZE+2*HEDGSIZE, MINSIZE
 		return xsize, ysize
 
-	def recalc_minsize(self, timemapper = None, ignore_time = 0):
-		timemapper = self.init_timemapper(timemapper, ignore_time)
+	def recalc_minsize(self, timemapper = None, ignore_time = 0, skip_init_timemapper = 0):
+		if not skip_init_timemapper:
+			timemapper = self.init_timemapper(timemapper, ignore_time)
 		self.boxsize = self.calculate_minsize(timemapper)
 		self.fix_timemapper(timemapper)
 		return self.boxsize
@@ -593,8 +595,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.iconbox.moveto((l,t,r,b))
 			iw, ih = self.iconbox.get_minsize()
 			l = l + iw
-			if l <= r:
-				self.iconbox.draw(displist)
+##			if l <= r:
+			self.iconbox.draw(displist)
 		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical or isinstance(self, StructureObjWidget)):
 			x, y = l, t+displist.baselinePXL()
 			displist.setpos(x, y)
@@ -807,6 +809,22 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if self.mother.extra_displist is not None:
 				self.mother.extra_displist.close()
 			self.mother.extra_displist = d
+
+	def set_infoicon_invisible(self, icon, msg=None):
+		print 'set_infoicon_invisible',self.node,icon,self.mother.calculating
+		node = self.node
+		if node.infoicon == icon and node.errormessage == msg:
+			# nothing to do
+			return
+		node.infoicon = icon
+		node.errormessage = msg
+		if not msg:
+			# don't propagate message-less info
+			return
+		self.makevisible()
+		if not self.mother.calculating:
+			self.mother.need_redraw = 1
+			self.mother.draw()
 
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
@@ -1104,6 +1122,7 @@ class StructureObjWidget(MMNodeWidget):
 		del self.node.set_armedmode
 		self.node.set_infoicon = None
 		del self.node.set_infoicon
+		self.node.set_infoicon = self.set_infoicon_invisible
 		if not self.iscollapsed():
 			for c in self.children:
 				c.remove_set_armedmode()
@@ -1530,14 +1549,14 @@ class HorizontalWidget(StructureObjWidget):
 		return -1
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
+		timemapper = self.init_timemapper(timemapper, ignore_time)
+
 		self.recalc_subicons()
 		if self.iscollapsed():
-			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time, skip_init_timemapper = 1)
 
 		if not self.children and self.channelbox is None:
-			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
-
-		timemapper = self.init_timemapper(timemapper, ignore_time)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time, skip_init_timemapper = 1)
 
 		mw=0
 		mh=0
@@ -1597,7 +1616,7 @@ class HorizontalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
+			w, h = self.bwstrip.recalc_minsize(self.node)
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -1699,11 +1718,11 @@ class VerticalWidget(StructureObjWidget):
 	# Any node which is drawn vertically
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
+		timemapper = self.init_timemapper(timemapper, ignore_time)
+
 		self.recalc_subicons()
 		if not self.children or self.iscollapsed():
-			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
-
-		timemapper = self.init_timemapper(timemapper, ignore_time)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time, skip_init_timemapper = 1)
 
 		mw=0
 		mh=0
@@ -1714,7 +1733,7 @@ class VerticalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
+			w, h = self.bwstrip.recalc_minsize(self.node)
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -1862,10 +1881,10 @@ class UnseenVerticalWidget(StructureObjWidget):
 	HAS_COLLAPSE_BUTTON = 0
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
-		if not self.children or self.iscollapsed():
-			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
-
 		timemapper = self.init_timemapper(timemapper, ignore_time)
+
+		if not self.children or self.iscollapsed():
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time, skip_init_timemapper = 1)
 
 		minwidth, minheight = self.calculate_minsize(timemapper)
 
@@ -1882,7 +1901,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
+			w, h = self.bwstrip.recalc_minsize(self.node)
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -2081,6 +2100,7 @@ class MediaWidget(MMNodeWidget):
 		del self.node.set_armedmode
 		self.node.set_infoicon = None
 		del self.node.set_infoicon
+		self.node.set_infoicon = self.set_infoicon_invisible
 
 	def add_set_armedmode(self):
 		if self.playicon is not None:
@@ -2737,7 +2757,7 @@ class BandWidthWidget(MMWidgetDecoration):
 		self.notokfocusboxes = None
 		MMWidgetDecoration.destroy(self)
 
-	def recalc_minsize(self, node, timemapper):
+	def recalc_minsize(self, node):
 		import settings
 		self.maxbandwidth = settings.get('system_bitrate')
 		minheight = 2*TITLESIZE
