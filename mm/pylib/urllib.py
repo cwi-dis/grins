@@ -193,7 +193,7 @@ class URLopener:
 		    if not params and not query:
 			    i = string.rfind(path, '/')
 			    if i < 0: i = 0
-			    i = string.find(path, '.', i+1)
+			    i = string.rfind(path, '.', i+1)
 			    if i > 0: suffix = path[i:]
 		    filename = tempfile.mktemp(suffix)
 		    self.__tempfiles.append(filename)
