@@ -48,7 +48,7 @@ CFG=swinmm - Win32 (WCE ARM) Debug
 # PROP Target_Dir ""
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "NDEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "NDEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "NDEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /D "LINK_MP3LIB" /D "USE_GAPI" /YX /Oxs /M$(CECrtMT) /c
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
@@ -74,7 +74,7 @@ BSC32=bscmake.exe
 # PROP Target_Dir ""
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "DEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "DEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /D "LINK_MP3LIB" /D "USE_GAPI" /YX /M$(CECrtMTDebug) /c
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
@@ -100,7 +100,7 @@ BSC32=bscmake.exe
 # PROP Target_Dir ""
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_LIB" /YX /Oxs /Gz /c
-# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /Gz /c
+# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /D "LINK_MP3LIB" /YX /Oxs /Gz /c
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
@@ -126,7 +126,7 @@ BSC32=bscmake.exe
 # PROP Target_Dir ""
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_LIB" /YX /Gz /c
-# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Gz /c
+# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /D "LINK_MP3LIB" /YX /Gz /c
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
@@ -192,8 +192,10 @@ DEP_CPP_WINMM=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	".\winmm_mp3dec.h"\
+	".\winmm_video.h"\
 	".\winmm_wavehdr.h"\
 	".\winmm_waveout.h"\
 	
@@ -289,8 +291,11 @@ DEP_CPP_WINMM=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	".\winmm_mp3dec.h"\
+	".\winmm_video.h"\
+	".\winmm_wavehdr.h"\
 	".\winmm_waveout.h"\
 	
 
@@ -399,8 +404,9 @@ DEP_CPP_WINMM_=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	"..\..\CE\mp3lib\mp3lib.h"\
+	"..\..\CE\MP3LIB\mp3lib.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	
 
@@ -446,7 +452,7 @@ DEP_CPP_WINMM_=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	"..\..\CE\mp3lib\mp3lib.h"\
+	"..\..\CE\MP3LIB\mp3lib.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	
@@ -493,8 +499,9 @@ DEP_CPP_WINMM_=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	"..\..\CE\mp3lib\mp3lib.h"\
+	"..\..\CE\MP3LIB\mp3lib.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	
 
@@ -540,8 +547,219 @@ DEP_CPP_WINMM_=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	"..\..\CE\mp3lib\mp3lib.h"\
+	"..\..\CE\MP3LIB\mp3lib.h"\
 	"..\common\charconv.h"\
+	".\utils.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\winmm_video.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_WINMM_V=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\charconv.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	".\utils.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_WINMM_V=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\charconv.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	".\utils.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_WINMM_V=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\charconv.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	".\utils.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_WINMM_V=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\charconv.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\mpeg_player.h"\
 	".\utils.h"\
 	
 
@@ -595,8 +813,11 @@ DEP_CPP_WINMM_W=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	".\winmm_wavehdr.h"\
+	".\winmm_wavehdr_impl.h"\
+	".\winmm_waveout_impl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
@@ -689,8 +910,11 @@ DEP_CPP_WINMM_W=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
 	".\winmm_wavehdr.h"\
+	".\winmm_wavehdr_impl.h"\
+	".\winmm_waveout_impl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
@@ -790,8 +1014,11 @@ DEP_CPP_WINMM_WA=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
+	".\winmm_wavehdr_impl.h"\
 	".\winmm_waveout.h"\
+	".\winmm_waveout_impl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
@@ -884,8 +1111,11 @@ DEP_CPP_WINMM_WA=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
+	"..\common\surface.h"\
 	".\utils.h"\
+	".\winmm_wavehdr_impl.h"\
 	".\winmm_waveout.h"\
+	".\winmm_waveout_impl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
@@ -942,6 +1172,603 @@ DEP_CPP_WINMM_WA=\
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# End Group
+# Begin Group "Mpeg Files"
+
+# PROP Default_Filter ""
+# Begin Group "Mpeg Lib Files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getbits.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETBI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getblk.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETBL=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\gethdr.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETHD=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getpic.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETPI=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getvlc.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GETVL=\
+	"..\mpeg2dec\mpglib\getvlc.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\getvlc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\global.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\idct.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\idctref.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\motion.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MOTIO=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\mpeg2dec.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\recon.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_RECON=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\spatscal.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SPATS=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpglib\systems.c
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SYSTE=\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\mpeg2dec\libglobals.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_LIBGL=\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\libglobals.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpeg_player.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MPEG_=\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\common\thread.h"\
+	"..\common\video.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpeg_player.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpeg_player.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdecoder.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MPEGD=\
+	"..\common\mtsync.h"\
+	"..\common\platform.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\libglobals.h"\
+	"..\mpeg2dec\mpegdecoder.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\global.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdisplay.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_MPEGDI=\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MPEGDI=\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_MPEGDI=\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MPEGDI=\
+	"..\..\CE\gx\inc\gx.h"\
+	"..\common\mtsync.h"\
+	"..\common\surface.h"\
+	"..\mpeg2dec\mpegdisplay.h"\
+	"..\mpeg2dec\mpglib\mpeg2dec.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\mpeg2dec\mpegdisplay.h
+# End Source File
 # End Group
 # End Target
 # End Project
