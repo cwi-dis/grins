@@ -730,6 +730,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				volume = fmtfloat(volume)
 				self.replaceAttrVal(divlist, 'volume', volume)
 				divlist.append(('volume', volume))
+			divlist.append(('class', 'time'))
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
@@ -754,6 +755,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			if bgcolor: regstyle = regstyle + 'background-color:%s;' % bgcolor
 			if z: regstyle = regstyle + 'z-index:%s;' % z
 			divlist.append(('style', regstyle))
+			divlist.append(('class', 'time'))
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
