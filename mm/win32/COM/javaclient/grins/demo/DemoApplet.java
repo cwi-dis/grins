@@ -28,7 +28,7 @@ implements SMILListener
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setSize(480,106);
+		setSize(480,132);
 		buttonOpen.setLabel("Open");
 		add(buttonOpen);
 		buttonOpen.setBackground(java.awt.Color.lightGray);
@@ -54,6 +54,30 @@ implements SMILListener
 		add(buttonClose);
 		buttonClose.setBackground(java.awt.Color.lightGray);
 		buttonClose.setBounds(368,56,104,28);
+		labelDur.setText("Dur");
+		add(labelDur);
+		labelDur.setBounds(12,96,40,24);
+		textFieldDur.setEditable(false);
+		textFieldDur.setText("0");
+		add(textFieldDur);
+		textFieldDur.setBounds(52,96,76,24);
+		labelPos.setText("Pos");
+		add(labelPos);
+		labelPos.setBounds(144,96,40,24);
+		textFieldPos.setEditable(false);
+		textFieldPos.setText("0");
+		add(textFieldPos);
+		textFieldPos.setBounds(184,96,76,24);
+		labelSetPos.setText("SetPos");
+		add(labelSetPos);
+		labelSetPos.setBounds(280,96,40,24);
+		textFieldSetPos.setText("0");
+		add(textFieldSetPos);
+		textFieldSetPos.setBounds(324,96,76,24);
+		buttonSetPos.setLabel("Set Pos");
+		add(buttonSetPos);
+		buttonSetPos.setBackground(java.awt.Color.lightGray);
+		buttonSetPos.setBounds(400,96,60,24);
 		//}}
 	
 	    smil = GRiNSToolkit.createGRiNSDocument(this);
@@ -65,6 +89,7 @@ implements SMILListener
 		buttonPause.addActionListener(lSymAction);
 		buttonStop.addActionListener(lSymAction);
 		buttonClose.addActionListener(lSymAction);
+		buttonSetPos.addActionListener(lSymAction);
 		//}}
 	}
 	
@@ -76,10 +101,17 @@ implements SMILListener
 	java.awt.Button buttonPause = new java.awt.Button();
 	java.awt.Button buttonStop = new java.awt.Button();
 	java.awt.Button buttonClose = new java.awt.Button();
+	java.awt.Label labelDur = new java.awt.Label();
+	java.awt.TextField textFieldDur = new java.awt.TextField();
+	java.awt.Label labelPos = new java.awt.Label();
+	java.awt.TextField textFieldPos = new java.awt.TextField();
+	java.awt.Label labelSetPos = new java.awt.Label();
+	java.awt.TextField textFieldSetPos = new java.awt.TextField();
+	java.awt.Button buttonSetPos = new java.awt.Button();
 	//}}
 	
 	private void message(String str) {
-	    System.out.println(str+"\n");
+	    System.out.println(str);
 	}
 	
 	public void start() {
@@ -111,8 +143,9 @@ implements SMILListener
 		SFrame frame = new SFrame("Java GRiNS Player");
 		frame.addWindowListener(
 			new WindowAdapter() { 
-				public void windowClosing(WindowEvent e) {
-				    ((SFrame)e.getWindow()).applet.stop();
+				public void windowClosing(WindowEvent event) {
+				    ((SFrame)event.getWindow()).applet.stop();
+				    try{Thread.sleep(1000);}catch(Exception e){}
 			        System.exit(0);
 			        }
 				});
@@ -123,7 +156,7 @@ implements SMILListener
 		demoApplet.start();
 		frame.add("Center", demoApplet);
         frame.pack();
-		frame.setSize(480+8,106+24);
+		frame.setSize(480+8,132+24);
 		frame.setLocation(400,300);
 		frame.show();
 		}
@@ -144,6 +177,8 @@ implements SMILListener
 				buttonStop_ActionPerformed(event);
 			else if (object == buttonClose)
 				buttonClose_ActionPerformed(event);
+			else if (object == buttonSetPos)
+				buttonSetPos_ActionPerformed(event);
 		}
 	}
 
@@ -186,6 +221,20 @@ implements SMILListener
         viewport.dispose();
         viewport = null;
     }
+        
+    public void setDur(double dur){
+        int intpart = (int)dur;
+        int decpart = (int)((dur - intpart)*1000.0); 
+        String str = ""+intpart+"."+decpart;
+        textFieldDur.setText(str);
+    }
+    public void setPos(double pos){
+        int intpart = (int)pos;
+        int decpart = (int)((pos - intpart)*1000.0); 
+        String str = ""+intpart+"."+decpart;
+        textFieldPos.setText(str);
+    }
+    
     
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
@@ -211,4 +260,15 @@ implements SMILListener
 		if(smil!=null) smil.close();
 	}
 
+
+	void buttonSetPos_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		String strpos = textFieldSetPos.getText();
+		double pos = 0;
+		try {
+		    pos = Double.parseDouble(strpos.trim());
+		}
+		catch(NumberFormatException e){message(""+e);return;}
+		if(player!=null) player.setTime(pos);
+	}
 }
