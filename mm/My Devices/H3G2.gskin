@@ -1,0 +1,9 @@
+image begin_end_icon2.gif
+display 35 6 170 210
+play rect 52 226 36 22			# left rectangular button
+stop rect 152 226 36 22			# right rectangular button
+exit circle 68 268 15			# grey circle on left
+open circle 174 268 15			# blue circle on right
+tab poly 137 251 137 266 149 258	# RIGHT arrow
+activate rect 107 248 25 25		# center of rocker
+key ' ' poly 111 243 119 229 126 243	# UP arrow
