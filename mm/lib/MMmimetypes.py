@@ -41,7 +41,11 @@ if sys.platform == 'mac':
 		except ic.error:
 			descr = None
 		else:
-			return descr[8], None
+			mimetype = descr[8]
+			if mimetype:
+				if not '/' in mimetype:
+					mimetype = mimetype + '/unknown'
+				return mimetype, None
 		#
 		# Final step, for urls pointing to existing local files, we use
 		# the creator/type code and give a warning
@@ -67,4 +71,8 @@ if sys.platform == 'mac':
 			return None, None
 		import windowinterface
 		windowinterface.showmessage('Incorrect extension for "%s"\nThis may cause problems on the web'%filename_lastpart, identity='mimetypemismatch')
-		return descr[8], None	# The mimetype
+		mimetype = descr[8]
+		if mimetype:
+			if not '/' in mimetype:
+				mimetype = mimetype + '/unknown'
+		return mimetype, None
