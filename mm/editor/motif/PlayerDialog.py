@@ -31,9 +31,9 @@ class PlayerDialog(PlayerDialogBase):
 				]),
 			(SMIL, 'User Groups', USERGROUPS),
 			(CMIF, 'Channels', CHANNELS),
-			(CMIF, 'View', [
+			(LIGHT|DBG, 'View', [
 				(CMIF, 'Timeline view follows player', SYNCCV, 't'),
-##				(CMIF, 'Dump scheduler data', SCHEDDUMP),
+				(LIGHT|DBG, 'Dump scheduler data', SCHEDDUMP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
