@@ -73,6 +73,8 @@ class SVGRenderer:
 		self.saveGraphics()
 		self.graphics.applyStyle(node.getStyle())
 		self.graphics.applyTfList(node.getTransform())
+		x, y = node.get('x'), node.get('y')
+		self.graphics.applyTfList([('translate', [x, y]),])
 		self.graphics.tkOnBeginContext()
 
 	def endgroup(self, node):
@@ -286,7 +288,6 @@ svgSource = """<?xml version="1.0" standalone="no"?>
         style="fill:none; stroke:red; stroke-width:5" />
 </svg>
 """
-
 
 #################
 
