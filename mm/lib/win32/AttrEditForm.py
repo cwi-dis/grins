@@ -595,6 +595,9 @@ class AttrCtrl:
 		else:
 			infoc.settext(hd[2])
 	
+	def getcurrent(self):
+		return self._attr.getcurrent()
+
 ##################################
 class OptionsCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -772,6 +775,7 @@ class AttrPage(dialog.PropertyPage):
 		self._form=form
 		self._cd={}
 		self._al=[]
+		self._group=None
 		self._tabix=-1
 		self._title='Untitled page'
 		self._initdialog=None
@@ -810,16 +814,32 @@ class AttrPage(dialog.PropertyPage):
 		if self._cd.has_key(attr):
 			self._cd[attr].setoptions(list,val)
 	
-	# Methods that must be overridden by subclasses
-	def addattr(self, a):
-		self._al.append(a)
-
+	def setgroup(self,group):
+		self._group=group
+	
+	# override for not group and not string attributes
 	def createctrls(self):
-		raise error, 'you must override createctrls for page',self
-
+		if not self._group:
+			raise error, 'you must override createctrls for page',self
+			return
+		self._title=self._group.gettitle()
+		for a in self._group._al:
+			self._al.append(a)
+			self._cd[a]=StringCtrl(self,a,self._group.getctrlids(a))
+	
+	# override for not group pages
 	def getpageresid(self):
-		raise error,'you must override getpageresid for page',self
-		return -1
+		if not self._group:
+			raise error,'you must override getpageresid for page',self
+			return -1
+		return self._group.getpageresid() 
+
+	def getctrl(self,aname):
+		for a in self._al:
+			if a.getname()==aname:
+				return self._cd[a]
+		return None
+
 
 	def settabix(self,ix):
 		self._tabix=ix
@@ -827,6 +847,7 @@ class AttrPage(dialog.PropertyPage):
 		if self._tabix<0:
 			raise error,'tab index is uninitialized'
 		tabctrl.SetItemText(self._tabix,self._title)
+
 
 ###############################	
 class SingleAttrPage(AttrPage):
@@ -919,6 +940,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		
 	def create_box(self,box):
 		# call create box against layout control but be modeless and cool!
+		self._layoutctrl.assert_not_in_create_box()
+		if box[0]==box[2] or box[1]==box[3]:box=None	
 		modeless=1;cool=1
 		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
 		
@@ -956,12 +979,19 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 class SingleAttrLayoutPage(LayoutPage):
 	def __init__(self,form,attr):
 		LayoutPage.__init__(self,form)
-		self._attr=attr
-		self._title=self._attr.getlabel()
 		self._al.append(attr)
+		self._attr=attr
+
+	# creation overrides
+	def getpageresid(self):
+		return grinsRC.IDD_EDITRECTATTR1
+	def createctrls(self):
+		self._title=self._attr.getlabel()
+		self._cd[self._attr]=StringCtrl(self,self._attr,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
 
 	def OnInitDialog(self):
 		LayoutPage.OnInitDialog(self)
+
 		self._cd[self._attr].sethelp()
 		val=self._attr.getcurrent()
 		if not val:
@@ -970,12 +1000,6 @@ class SingleAttrLayoutPage(LayoutPage):
 			box=self.a2tuple(val)
 			box=self.tolayout(box)		
 		self.create_box(box)
-
-	# creation overrides
-	def getpageresid(self):
-		return grinsRC.IDD_EDITRECTATTR1
-	def createctrls(self):
-		self._cd[self._attr]=StringCtrl(self,self._attr,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
@@ -988,38 +1012,62 @@ class SingleAttrLayoutPage(LayoutPage):
 		if self._initdialog:
 			self._cd[attr].setvalue(val)
 			if not val:
-				box=None
+				box=()
 			else:
 				box=self.a2tuple(val)
 				box=self.tolayout(box)
-			self._layoutctrl.assert_not_in_create_box()
-			modeless=1;cool=1
-			self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+			self.create_box(box)
+
+	def getvalue(self, attr):
+		return self._cd[attr].getvalue()
+
+class PosSizeLayoutPage(LayoutPage):
+	def __init__(self,form):
+		LayoutPage.__init__(self,form)
+		self._xy=None
+		self._wh=None
+
+	def OnInitDialog(self):
+		LayoutPage.OnInitDialog(self)
+		self._xy=self.getctrl('subregionxy')
+		self._wh=self.getctrl('subregionwh')
+		sxy=self._xy.getcurrent()
+		if not sxy:sxy='0 0'
+		swh=self._wh.getcurrent()
+		if not swh:swh='0 0'
+		val = sxy + ' ' + swh
+		print val
+		box=self.a2tuple(val)
+		box=self.tolayout(box)
+		self.create_box(box)
+
+	# called back by create_box on every change
+	# the user can press reset to cancel changes
+	def update(self,*box):
+		if self._initdialog and box:
+			box=self.fromlayout(box)
+			self._xy.setvalue('%d %d' % box[:2])
+			self._wh.setvalue('%d %d' % box[2:])
+
+	def setvalue(self, attr, val):
+		if not self._initdialog: return
+		self._cd[attr].setvalue(val)
+		sxy=self._xy.getvalue()
+		if not sxy:sxy='0 0'
+		swh=self._wh.getvalue()
+		if not swh:swh='0 0'
+		val= sxy + ' ' + swh
+		print val
+		box=self.a2tuple(val)
+		box=self.tolayout(box)
+		self.create_box(box)
 
 	def getvalue(self, attr):
 		return self._cd[attr].getvalue()
 
 
-############################
-# Covers simple group pages
 
-class GroupPage(AttrPage):
-	def __init__(self,form):
-		AttrPage.__init__(self,form)
-
-	def setgroup(self,group):
-		self._group=group
-
-	def createctrls(self):
-		self._title=self._group.gettitle()
-		for a in self._group._al:
-			self._al.append(a)
-			self._cd[a]=StringCtrl(self,a,self._group.getctrlids(a))
-
-	def getpageresid(self):
-		return self._group.getpageresid() 
-
-
+		
 ############################
 #  goes in:  Attrgrs.py
 
@@ -1098,7 +1146,7 @@ class AttrGroup:
 		return self._data['title']
 
 	def getpageclass(self):
-		return GroupPage
+		return AttrPage
 
 
 class InfoGroup(AttrGroup):
@@ -1141,6 +1189,8 @@ class SubregionGroup(InfoGroup):
 		ix=self._data['attrs'].index(a.getname())
 		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
 		return ids
+	def getpageclass(self):
+		return PosSizeLayoutPage
 
 ############################
 # platform dependent association
