@@ -2094,7 +2094,7 @@ class ChannelWindow(Channel):
 		if in_trans <> None and self.window:
 			otherwindow = self._find_multiregion_transition(in_trans, node.start_time)
 			if otherwindow:
-				self.window.jointransition(otherwindow)
+				self.window.jointransition(otherwindow, (self.endtransition, (node,)))
 			else:
 				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node,)))
 
