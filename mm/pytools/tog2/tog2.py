@@ -432,17 +432,25 @@ class G2MacBatchConverter(G2BatchConverter):
 		self.fp.write('\n')
 
 	def out_image(self, old, new):
+		if not os.path.isabs(old):
+			old = os.path.join(os.getcwd(), old)
+		if not os.path.isabs(new):
+			new = os.path.join(os.getcwd(), new)
 		self.fp.write('tell application "JPEGView"\n')
-		self.fp.write('    open "%s"  \302\n'%old)
+		self.fp.write('    open "%s"\n'%old)
 		self.fp.write('    save as JFIF in "%s"\n'%new)
 		self.fp.write('    quit\n')
 		self.fp.write('end tell\n')
 
 	def out_av(self, old, new):
+		if not os.path.isabs(old):
+			old = os.path.join(os.getcwd(), old)
+		if not os.path.isabs(new):
+			new = os.path.join(os.getcwd(), new)
 		self.fp.write('tell application "RVBatch"\n')
 		self.fp.write('    with timeout of 99999 seconds\n')
-		self.fp.write('        encode file audio true\302\n')
-		self.fp.write('            "%s"  \302\n'%old)
+		self.fp.write('        encode file "%s" \302\n'%old)
+		self.fp.write('            audio true  \302\n')
 		self.fp.write('            output as "%s"\n'%new)
 		self.fp.write('    end timeout\n')
 		self.fp.write('    quit\n')
@@ -518,6 +526,9 @@ def main():
 			filename = 'g2_' + filename
 			oname = os.path.join(dirname, filename)
 		process(iname, oname, cfp, ramprefix, switched)
+	cfp.close()
+	if os.name == 'mac':
+		sys.exit(1)		# So user can see the output
 
 def process(input, output, script, ramprefix, switched):
 	print '%s:'%input
@@ -538,6 +549,9 @@ def process(input, output, script, ramprefix, switched):
 	document = transformer.transform(parser.document)
 
 	outfile = open(output, 'w')
+	if os.name == 'mac':
+		import MacOS
+		MacOS.SetCreatorAndType(output, 'PNst', 'TEXT') # This is a guess...
 	writer = XmlWriter(outfile)
 	writer.write(document)
 	if ramprefix:
@@ -547,10 +561,13 @@ def process(input, output, script, ramprefix, switched):
 			ramprefix = ramprefix + '/'
 		url = urllib.basejoin(ramprefix, output)
 		fp = open(ramname, 'w')
+		if os.name == 'mac':
+			import MacOS
+			MacOS.SetCreatorAndType(ramname, 'PNst', 'PNRM')
 		fp.write(url+'\n')
 		fp.close()
 
-def getargs(argv):
+def unix_getargs(argv):
 	global BatchConverter
 	inputs = []
 	output = None
@@ -620,6 +637,51 @@ def usage(prog):
 	print "                  the current directory (i.e. this is prepended"
 	print "                  to the filename of the converted document"
 	
+def mac_getargs(args):
+	inputs = []
+	output = None
+	commands = None
+	ramprefix = None
+	switched = 0
+
+	import macfs
+	import EasyDialogs
+	if args[1:]:
+		inputs = args[1:]
+	else:
+		fss, ok = macfs.StandardGetFile()
+		if not ok:
+			sys.exit(0)
+		inputs = [fss.as_pathname()]
+	dir = os.path.split(inputs[0])[0]
+	os.chdir(dir)
+	for i in range(len(inputs)):
+		filename = inputs[i]
+		if filename[:len(dir)] == dir:
+			inputs[i] = filename[len(dir):]
+	if len(inputs) == 1:
+		dft = 'g2_' + inputs[0][1:]
+		fss, ok = macfs.StandardPutFile("G2 output file", dft)
+		if not ok:
+			sys.exit(0)
+		output = fss.as_pathname()
+	fss, ok = macfs.StandardPutFile("Script output (cancel for text)", "Conversion script")
+	if ok:
+		commands = fss.as_pathname()
+	reply = EasyDialogs.AskString("URL prefix for use in .ram file (cancel for no ram file)")
+	if reply:
+		ramprefix = reply
+	reply = EasyDialogs.AskYesNoCancel("Create G2/GRiNS switch statements?")
+	if reply > 0:
+		switched = 1
+	return inputs, output, commands, ramprefix, switched
+			
+	
+	
+if os.name == 'mac':
+	getargs = mac_getargs
+else:
+	getargs = unix_getargs
 			
 if __name__ == '__main__':
 	main()
