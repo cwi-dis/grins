@@ -18,6 +18,7 @@ import imgformat
 import img
 import imageop
 import sys
+from types import *
 
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
@@ -1199,8 +1200,14 @@ class _DisplayList:
 		self._rendered = 0
 		if self._window._transparent <= 0:
 			self._list.append(('clear',))
+		self._optimdict = {}
+		self._cloneof = None
+		self._clonestart = 0
+		self._rendered = FALSE
 		self._font = None
 		self._old_fontinfo = None
+		self._clonebboxes = []
+		self._really_rendered = FALSE	# Set to true after the first real redraw
 		
 	def close(self):
 		if self._window is None:
@@ -1209,6 +1216,9 @@ class _DisplayList:
 		for b in self._buttons[:]:
 			b.close()
 		win._displists.remove(self)
+		for d in win._displists:
+			if d._cloneof is self:
+				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
 			if win._transparent == -1 and win._parent:
@@ -1217,12 +1227,22 @@ class _DisplayList:
 				Qd.SetPort(win._wid)
 				Win.InvalRect(win.qdrect())
 		self._window = None
-		del self._buttons
+		del self._cloneof
+		try:
+			del self._clonedata
+		except AttributeError:
+			pass
+		del self._optimdict
 		del self._list
+		del self._buttons
+		del self._font
 
 	def is_closed(self):
 		return self._window is None
 
+	def clone(self):
+		raise "Clone not implemented for mac_windowbase"
+		
 	def render(self):
 		#
 		# On the mac, we can only render after a full setup.
@@ -1231,13 +1251,28 @@ class _DisplayList:
 		window = self._window
 		self._rendered = 1
 		# XXXX buttons?
-		window._active_displist = self
 		Qd.SetPort(window._wid)
-		Win.InvalRect(window.qdrect())
+		#
+		# We make one optimization here: if we are a clone
+		# and our parent is the current display list and
+		# our parent has already been really rendered (i.e.
+		# the update event has been received) we don't have
+		# to send an InvalRect for the whole window area but
+		# only for the bit that differs between clone and parent.
+		#
+		if self._cloneof and self._cloneof is window._active_displist \
+				and self._cloneof._really_rendered and self._clonebboxes:
+			for bbox in self._clonebboxes:
+				Win.InvalRect(bbox)
+			self._clonebboxes = []
+		else:
+			Win.InvalRect(window.qdrect())
 		if window._transparent == -1:
 			window._parent._clipchanged()
+		window._active_displist = self
 		
 	def _render(self):
+		self._really_rendered = 1
 		self._window._active_displist = self
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
@@ -1297,7 +1332,7 @@ class _DisplayList:
 			Qd.PenSize(entry[1], entry[1])
 		else:
 			raise 'Unknown displaylist command', cmd
-			
+						
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -1328,7 +1363,9 @@ class _DisplayList:
 			pass
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
+		self._optimize(2)
 ##		print 'ADDED IMAGE', src_x, src_y, dest_x, dest_y, width, height
+		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = w._rect
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
@@ -1339,23 +1376,32 @@ class _DisplayList:
 		w = self._window
 		color = w._convert_color(color)
 		p = []
+		xvalues = []
+		yvalues = []
 		for point in points:
-			p.append(w._convert_coordinates(point))
+			x, y = w._convert_coordinates(point)
+			p.append(x,y)
+			xvalues.append(x)
+			yvalues.append(y)
 		self._list.append('line', color, p)
+		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	def drawbox(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('box',
-				self._window._convert_coordinates(coordinates))
-##		self._optimize()
+		x, y, w, h = self._window._convert_coordinates(coordinates)
+		self._list.append('box', (x, y, w, h))
+		self._optimize()
+		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		x, y, w, h = self._window._convert_coordinates(coordinates)
 		self._list.append('fbox', self._window._convert_color(color),
-				self._window._convert_coordinates(coordinates))
-##		self._optimize(1)
+				(x, y, w, h))
+		self._optimize(1)
+		self._update_bbox(x, y, x+w, y+h)
 
 	def drawmarker(self, color, coordinates):
 		pass # XXXX To be implemented
@@ -1410,7 +1456,9 @@ class _DisplayList:
 		for str in strlist:
 			x0, y0 = w._convert_coordinates((x, y))
 			list.append('text', x0, y0, str)
-			self._curpos = x + float(Qd.TextWidth(str, 0, len(str))) / w._rect[_WIDTH], y
+			twidth = Qd.TextWidth(str, 0, len(str))
+			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
+			self._update_bbox(x0, y0, x0+twidth, y0+int(height/self._window._vfactor))
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
@@ -1420,8 +1468,39 @@ class _DisplayList:
 			restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 		
+	def _update_bbox(self, minx, miny, maxx, maxy):
+		assert type(minx) == type(maxx) == type(miny) == type(maxy) == type(1)
+		if minx > maxx:
+			minx, maxx = maxx, minx
+		if miny > maxy:
+			miny, maxy = maxy, miny
+		self._clonebboxes.append(minx, miny, maxx, maxy)
+		
 	def _optimize(self, ignore = []):
-		pass # XXXX What should this do?
+		if type(ignore) is IntType:
+			ignore = [ignore]
+		entry = self._list[-1]
+		x = []
+		for i in range(len(entry)):
+			if i not in ignore:
+				z = entry[i]
+				if type(z) is ListType:
+					z = tuple(z)
+				x.append(z)
+		x = tuple(x)
+		try:
+			i = self._optimdict[x]
+		except KeyError:
+			pass
+		else:
+			del self._list[i]
+			del self._optimdict[x]
+			if i < self._clonestart:
+				self._clonestart = self._clonestart - 1
+			for key, val in self._optimdict.items():
+				if val > i:
+					self._optimdict[key] = val - 1
+		self._optimdict[x] = len(self._list) - 1
 
 class _Button:
 	def __init__(self, dispobj, coordinates, z=0):

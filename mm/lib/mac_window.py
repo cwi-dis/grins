@@ -644,8 +644,8 @@ class _DisplayList(mac_windowbase._DisplayList):
 			new._cloneof = self
 			new._clonestart = len(self._list)
 			new._clonedata = self._fgcolor, self._font
-##		for key, val in self._optimdict.items():
-##			new._optimdict[key] = val
+		for key, val in self._optimdict.items():
+			new._optimdict[key] = val
 		return new
 
 	def drawfpolygon(self, color, points):
@@ -654,10 +654,16 @@ class _DisplayList(mac_windowbase._DisplayList):
 		w = self._window
 		color = w._convert_color(color)
 		p = []
+		xvalues = []
+		yvalues = []
 		for point in points:
-			p.append(w._convert_coordinates(point))
+			x, y = w._convert_coordinates(point)
+			p.append(x, y)
+			xvalues.append(x)
+			yvalues.append(y)
 		self._list.append('fpolygon', color, p)
 		self._optimize(1)
+		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -670,6 +676,8 @@ class _DisplayList(mac_windowbase._DisplayList):
 		cb = window._convert_color(cb)
 		self._list.append('3dbox', (cl, ct, cr, cb), coordinates)
 		self._optimize(1)
+		x, y, w, h = coordinates
+		self._update_bbox(x, y, x+w, y+h)
 
 	def drawdiamond(self, coordinates):
 		if self._rendered:
@@ -677,6 +685,8 @@ class _DisplayList(mac_windowbase._DisplayList):
 		coordinates = self._window._convert_coordinates(coordinates)
 		self._list.append('diamond', coordinates)
 		self._optimize()
+		x, y, w, h = coordinates
+		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
@@ -691,6 +701,9 @@ class _DisplayList(mac_windowbase._DisplayList):
 		color = window._convert_color(color)
 		self._list.append('fdiamond', color, coordinates)
 		self._optimize(1)
+		x, y, w, h = coordinates
+		self._update_bbox(x, y, x+w, y+h)
+
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -703,6 +716,8 @@ class _DisplayList(mac_windowbase._DisplayList):
 		coordinates = window._convert_coordinates(coordinates)
 		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
 		self._optimize(1)
+		x, y, w, h = coordinates
+		self._update_bbox(x, y, x+w, y+h)
 
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
@@ -743,6 +758,7 @@ class _DisplayList(mac_windowbase._DisplayList):
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
 		self._optimize(1)
+		self._update_bbox(nsx, nsy, ndx, ndy)
 		
 	def _polyhandle(self, pointlist):
 		"""Return poligon structure"""
@@ -758,6 +774,7 @@ class _DisplayList(mac_windowbase._DisplayList):
 		# Create structure head
 		size = len(pointlist)*4 + 10
 		data = struct.pack("hhhhh", size, miny, minx, maxy, maxx)
+		self._update_bbox(minx, miny, maxx, maxy)
 		for x, y in pointlist:
 			data = data + struct.pack("hh", y, x)
 		return Res.Resource(data)
