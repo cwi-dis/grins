@@ -401,8 +401,8 @@ class NodeWrapper(Wrapper):
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
-			'name', ('file',),	# From nodeinfo window
-			'.type',
+			'name', ('channel',), ('file',), # From nodeinfo window
+			('.type'),
 			('terminator',),
 			'begin', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
@@ -422,7 +422,9 @@ class NodeWrapper(Wrapper):
 			]
 		ctype = self.node.GetChannelType()
 		if ntype in leaftypes or features.compatibility == features.CMIF:
-			namelist[1:1] = ['channel']
+			namelist.append('channel')
+		if not hasattr(features, 'grins_snap') or not features.grins_snap:
+			namelist.append('.type')
 		if ntype in leaftypes or \
 		   self.context.attributes.get('project_boston', 0):
 			namelist.append('fill')
