@@ -274,8 +274,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return
 		evallicense= (license < 0)
+		changed = self.changed
+		new_file = self.new_file
 		if not self.save_to_file(filename, cleanSMIL = 1):
 			return		# Error, don't save HTML file
+		self.changed = changed
+		self.new_file = new_file
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
