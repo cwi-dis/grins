@@ -477,13 +477,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					x = x + distance
 					displist.setpos(x, y)
 			else:
-				# name doesn't fit fully; fit as much as we can
-				for c in self.name:
-					cw = displist.strsizePXL(c)[0]
-					if x + cw >= r:
+				# name doesn't fit fully; fit as much as we can with ... appended
+				for i in range(len(self.name)-1,-1,-1):
+					if x + displist.strsizePXL(self.name[:i]+'...')[0] <= r:
+						displist.writestr(self.name[:i]+'...')
 						break
-					displist.writestr(c)
-					x = x + cw
 		if self.timeline is not None:
 			self.timeline.draw(displist)
 		# Draw the silly transitions.
@@ -1048,17 +1046,17 @@ class StructureObjWidget(MMNodeWidget):
 		if self.dropbox is not None and not self.iscollapsed():
 			self.dropbox.draw(displist)
 
+		l,t,r,b = self.pos_abs
+		l = l + HEDGSIZE
+		t = t + VEDGSIZE + TITLESIZE
+		r = r - HEDGSIZE
+		b = b - VEDGSIZE
+		if self.timeline is not None:
+			if TIMELINE_AT_TOP:
+				t = t + self.timeline.get_minsize()[1]
+			else:
+				b = b - self.timeline.get_minsize()[1]
 		if self.iscollapsed():
-			l,t,r,b = self.pos_abs
-			l = l + HEDGSIZE
-			t = t + VEDGSIZE + TITLESIZE
-			r = r - HEDGSIZE
-			b = b - VEDGSIZE
-			if self.timeline is not None:
-				if TIMELINE_AT_TOP:
-					t = t + self.timeline.get_minsize()[1]
-				else:
-					b = b - self.timeline.get_minsize()[1]
 			children = self.node.GetChildren()
 			icon = self.node.GetAttrDef('thumbnail_icon', None)
 			if icon is not None:
@@ -1074,8 +1072,13 @@ class StructureObjWidget(MMNodeWidget):
 					l = l + self.HSTEP
 
 		if not self.iscollapsed():
-			for i in self.children:
-				i.draw(displist)
+			if self.children:
+				for i in self.children:
+					i.draw(displist)
+			else:
+				displist.fgcolor(CTEXTCOLOR)
+				displist.usefont(f_title)
+				displist.centerstring(l, t, r, b, 'Drop assets here')
 
 		MMNodeWidget.draw(self, displist)
 
