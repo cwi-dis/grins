@@ -676,6 +676,9 @@ def writeRP(file, rp, node):
 	for attrs in rp.tags:
 		if attrs.get('tag', 'fill') in ('fadein', 'crossfade', 'wipe'):
 			file = attrs.get('file')
+			# This is a bit of a hack. G2 appears to want its URLs without
+			# %-style quoting.
+			file = MMurl.unquote(file)
 			if file and not images.has_key(file):
 				handle = handle + 1
 				images[file] = handle
