@@ -1,21 +1,17 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, win32api
+Sdk=win32ui.GetWin32Sdk()
+
 import sysmetrics
 
-import win32mu,MainFrame,GenWnd
+import MainFrame
 
-toplevel = None
-
-ReadMask, WriteMask = 1, 2
-FALSE, TRUE = 0, 1
-SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
-UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
-WM_MAINLOOP = 200
-ID_MAIN_TIMER=100
+from appcon import *
+from win32modules import imageex
 
 
-# The _Toplevel class represents the root of all windows.  It is never
+# The AppObj class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
 	# we actually need it.
@@ -43,14 +39,13 @@ class _Toplevel:
 		self._pixel_per_mm_x = sysmetrics.pixel_per_mm_x
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 		self._hfactor = self._vfactor = 1.000
-
-		self._timerWnd=GenWnd.GenWnd()
-		self._timerWnd.create()
-		self._timerWnd.HookMessage(self._timer_callback, win32con.WM_TIMER)
-		self._timerWnd.HookMessage(self._message_callback,WM_MAINLOOP)
 	
-		self._mainwnd=None
+		# generic wnd class
+		import GenWnd
 		self.genericwnd=GenWnd.GenWnd
+		
+		self._in_create_box=None
+		self._do_init()
 
 	def _do_init(self):
 		if self._initialized:
@@ -67,34 +62,24 @@ class _Toplevel:
 		self._image_cache = {}
 
 				
-		self._immediate = []
 		# timer handling
 		self._timers = []
 		self._timer_id = 0
-		self._timerDict = {}
-		self._timerfunc = None
-		import time
-		self._time = time.time()
-		self.timerid = None
-		# file descriptor handlin
-		self._fdiddict = {}
-		self._ifddict = {}
-		self._ofddict = {}
-		self._inputDict = {}
-		self._inputs = []
-		self.MainDialog = None
+		self._idles = []
+		self._time = float(Sdk.GetTickCount())/TICKS_PER_SECOND
 
-		self._viewcounter=0
+		# fibers serving
 
-		#indicates wheather sr-events are being served by the timer interface
-		self.serving = 0     
+		self._apptitle=None
+		self._appadornments=None
+		self._appcommandlist=None
+
 
 	def forcePaint(self):
 		for w in self._subwindows:
 			w._forcePaint()
 
 	def close(self):
-		from win32modules import imageex
 		imageex.__del__()
 		for func, args in self._closecallbacks:
 			apply(func, args)
@@ -110,75 +95,63 @@ class _Toplevel:
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1):
-		return self._mainwnd.newwindow(self, x, y, w, h, title, 0, pixmap, units,
-			       adornments, canvassize, commandlist, resizable)
+		if 'frame' not in adornments.keys():
+			raise 'error', 'newwindow without frame specification'
+		frame=adornments['frame']
+		return frame.newwindow(x, y, w, h, title, visible_channel,
+		      type_channel, pixmap, units,
+		      adornments, canvassize,
+		      commandlist, resizable)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
-			adornments = None, canvassize = None,
-			commandlist = None, resizable = 1):
-		return self._mainwnd._newwindow(self, x, y, w, h, title, 1, pixmap, units,
-			       adornments, canvassize, commandlist, resizable)
 
 	############ SDI/MDI Model Support
-	def createmainwnd(self, x, y, w, h, title,
-		      units = UNIT_MM,adornments = None, commandlist = None):
-		if self._mainwnd==None:
-			self._mainwnd= MainFrame.MDIFrameWnd()
-			self._mainwnd.create(title)
-			self._mainwnd.init_cmif(x, y, w, h, title,
-				units, adornments,commandlist)
-		return self._mainwnd
-		
-	def getmainwnd(self):
-		return self._mainwnd
-	def getformserver(self):
-		return self._mainwnd._formServer
-				
-	def newdocument(self,title,adornments=None,commandlist=None):
-		return self._mainwnd.newdocument(title,adornments,commandlist)
+	def createmainwnd(self,title = None, adornments = None, commandlist = None):
+#		if title:
+#			self._apptitle=title
+		# ignore title from core under Martin sugestion
+		self._apptitle=AppDisplayName
+		if adornments:
+			self._appadornments=adornments
+		if commandlist:
+			self._appcommandlist=commandlist
+		if len(self._subwindows)==0:
+			frame = MainFrame.MDIFrameWnd()
+			frame.create(self._apptitle)
+			frame.init_cmif(None, None, 0, 0, self._apptitle,
+				UNIT_MM, self._appadornments,self._appcommandlist)
+		return self._subwindows[0]
 
-	def newview(self, x, y, w, h, title, units = UNIT_MM,
-		      adornments = None, canvassize = None,
-		      commandlist = None, context='view'):
-		return self._mainwnd.newview(x, y, w, h, title,
-				units, adornments, canvassize,commandlist,context)
-
-	def newviewobj(self,context='view'):
-		return self._mainwnd.newviewobj(context)
-
-	def showview(self,view,context='view'):
-		self._mainwnd.showview(view,context)
-
-	def createview(self,strid):
-		return self._mainwnd.createview(strid)
-
-	def getviewframe(self,strid):
-		if not self._mainwnd:return None
-		frame=self._mainwnd.getviewframe(strid)
-		if not frame: return self._mainwnd
+	def newdocument(self,cmifdoc,adornments=None,commandlist=None):
+		for w in self._subwindows:
+			if not w._cmifdoc:
+				w.setdocument(cmifdoc,adornments,commandlist)
+				return w
+		frame = MainFrame.MDIFrameWnd()
+		frame.create(self._apptitle)
+		frame.init_cmif(None, None, 0, 0,self._apptitle,
+			UNIT_MM,self._appadornments,self._appcommandlist)
+		frame.setdocument(cmifdoc,adornments,commandlist)
 		return frame
-
+	
+	# returns the active mainwnd
+	def getmainwnd(self):
+		if len(self._subwindows)==0:
+			self.createmainwnd()
+		return self._subwindows[0] # return the active
+		
 	############ /SDI-MDI Model Support	
 
 	def textwindow(self,text):
+		print 'you must request textwindow from a frame'
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		self.showview(sv,'sview_')
-		import appcon
-		if appcon.IsEditor: sv.set_close_commandlist()
+		if IsEditor: sv.set_close_commandlist()
 		return sv
-
-	def setwaiting(self):
-		if self._mainwnd:
-			self._mainwnd.setwaiting()
-	def setready(self):
-		if self._mainwnd:
-			self._mainwnd.setready()
 	
 	def getsize(self):
 		"""size of the screen in mm"""
-		return toplevel._scr_width_mm, toplevel._scr_height_mm
+		return self._scr_width_mm, self._scr_height_mm
 
 	def getscreensize(self):
 		"""Return screen size in pixels"""
@@ -188,164 +161,155 @@ class _Toplevel:
 		"""Return screen depth"""
 		return sysmetrics.depth
 
-	def setcursor(self, cursor):
-		win32mu.SetCursor(cursor)
-		self._cursor = cursor
+	def setcursor(self, strid):
+		if strid=='hand':
+			import grinsRC
+			cursor = App.LoadCursor(grinsRC.IDC_POINT_HAND)
+		else:
+			cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
+		(win32ui.GetWin32Sdk()).SetCursor(cursor);
+		self._cursor = strid
+
 
 	def pop(self):
-		self._inputWnd.MessageBox("POP Toplevel", "Debug", win32con.MB_OK)
 		pass
 
 	def push(self):
-		self._inputWnd.MessageBox("PUSH Toplevel", "Debug", win32con.MB_OK)
 		pass
 
 	def show(self):
-		#self._inputWnd.MessageBox("Show Toplevel", "Debug", win32con.MB_OK)
 		for w in self._subwindows:
 			w.show()
-	
+				
 	def hide(self):
-		self._inputWnd.MessageBox("Hide Toplevel", "Debug", win32con.MB_OK)
 		for w in self._subwindows:		
 			w.hide()
+
+	def _convert_color(self, color, defcm):
+		return color
+
+	def GetWindowRect(self):
+		return (0,0,sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl)
+
+	def GetClientRect(self):
+		return (0,0,sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl)
+
+	def getsizes(self):
+		return (0,0,1,1)
 
 	def usewindowlock(self, lock):
 		pass
 
+	#########################################
 	def mainloop(self):
-		# new lines
-		if len(self._subwindows) == 1:
-			self.show()
-		# end of new lines
-		self._timerWnd.PostMessage(WM_MAINLOOP, 0, 0)
+		if len(self._subwindows) == 1:self.show()
+		self.serve_events(())
+		#win32ui.GetApp().AddIdleHandler(self.monitor)
+		wnd=self.genericwnd()
+		wnd.create()
+		self._autostop=0
+		wnd.HookMessage(self.serve_events,win32con.WM_USER+999)
+		win32ui.GetApp().RunLoop(wnd)
+		wnd.DestroyWindow()
+		(win32ui.GetAfx()).PostQuitMessage(0)
 
-		# Main Dialog object has been created, on player's
-		# module demand if we are in the player
-		# It is time to show the main dialog, but first check
-		# that the player is running, not the editor
-		if self.MainDialog <> None : 
-			self.MainDialog.show()
+	def monitor(self,handler,count):
+		return 0
 
-	def serve_events(self):	
-		if (self.serving == 0): return
-		import time, select
+	# actualy part of the main loop	
+	# and part of a delta timer 
+	def serve_events(self,params):	
+		if self._waiting:self.setready()				
 		while self._timers:
-				t = time.time()
-				sec, cb, tid = self._timers[0]
-				sec = sec - (t - self._time)
-				self._time = t
-				if sec <= 0:
-					del self._timers[0]
-					func, args = cb
-					apply(func, args)
-				else:
-					self._timers[0] = sec, cb, tid
-					break
-				ifdlist = self._ifddict.keys()
-				ofdlist = self._ofddict.keys()			
-		self.timerid = self._timerWnd.SetTimer(ID_MAIN_TIMER,int(0.001 * 1000))
+			t = float(Sdk.GetTickCount())/TICKS_PER_SECOND
+			sec, cb, tid = self._timers[0]
+			sec = sec - (t - self._time)
+			self._time = t
+			if sec <= 0.002:
+				del self._timers[0]
+				apply(apply, cb)
+			else:
+				self._timers[0] = sec, cb, tid
+				break
+		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
+		self.serve_timeslices()
 
-	
-	def _timer_callback(self, params):
-		self._timerWnd.KillTimer(self.timerid)		
-		self.serve_events()
-		
+	_waiting=0
+	def setwaiting(self,f=0):
+		""" added flag to control win32 instance
+		the core calls it to often while it is apropriate
+		for long waiting times"""
+		if not self._waiting and f:
+			win32ui.GetApp().BeginWaitCursor()
+		self._waiting = 1
 
-	def _message_callback(self, params):
-		self.serving = 1
-		self.serve_events()
+	def setready(self,f=0):
+		if self._waiting and f:
+			win32ui.GetApp().EndWaitCursor()
+		self._waiting = 0
 
-	def _stopserve_callback(self, params):
-		self.serving = 0
-		
-
-	# timer interface
+	#
+	# delta timer interface
+	#
 	def settimer(self, sec, cb):
-		import time
-		t0 = time.time()
+		self._timer_id = self._timer_id + 1
+		t0 = float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		if self._timers:
 			t, a, i = self._timers[0]
 			t = t - (t0 - self._time) # can become negative
 			self._timers[0] = t, a, i
 		self._time = t0
-		self._timer_id = self._timer_id + 1
 		t = 0
 		for i in range(len(self._timers)):
-			time, dummy, tid = self._timers[i]
-			if t + time > sec:
-				self._timers[i] = (time - sec + t, dummy, tid)
+			time0, dummy, tid = self._timers[i]
+			if t + time0 > sec:
+				self._timers[i] = (time0 - sec + t, dummy, tid)
 				self._timers.insert(i, (sec - t, cb, self._timer_id))
 				return self._timer_id
-			t = t + time
+			t = t + time0
 		self._timers.append(sec - t, cb, self._timer_id)
+		#print 'new event:',self._timer_id,sec - t,cb
 		return self._timer_id
 
-	def canceltimer(self, id):
-		for i in range(len(self._timers)):
-			try:
-				t, cb, tid = self._timers[i]
-				if tid == id:
-					del self._timers[i]
-					if i < len(self._timers):
-						tt, cb, tid = self._timers[i]
-						self._timers[i] = (tt + t, cb, tid)
-			except IndexError: 
-				pass
-		return
 
+	def canceltimer(self, id):
+		if id == None: return
+		for i in range(len(self._timers)):
+			t, cb, tid = self._timers[i]
+			if tid == id:
+				del self._timers[i]
+				if i < len(self._timers):
+					tt, cb, tid = self._timers[i]
+					self._timers[i] = (tt + t, cb, tid)
+				return
+		raise 'unknown timer', id
+
+	# Monitoring Fibers	registration
+	_registry={}
+	_fiber_id=0
+	def register(self,check,cb):
+		self._fiber_id = self._fiber_id + 1
+		self._registry[self._fiber_id]=(check,cb)
+		return self._fiber_id
+	def unregister(self,id):
+		if id in self._registry.keys():
+			del self._registry[id]
+	def serve_timeslices(self):
+		for check,call in self._registry.values():
+			if apply(apply,check):apply(apply,call)
+
+	################################
+		
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
-		pass
+		raise error, 'No select_setcallback for win32'
 
 
+	################################
 	
 	#utility functions
-	def _convert_color(self, color, defcm):
-		r, g, b = color
-		c = 12
-		return color
-		if defcm:
-			if self._cm_cache.has_key(`r,g,b`):
-				return self._cm_cache[`r,g,b`]
-			ri = int(r / 255.0 * 65535.0)
-			gi = int(g / 255.0 * 65535.0)
-			bi = int(b / 255.0 * 65535.0)
-			cm = self._default_colormap
-			try:
-				color = cm.AllocColor(ri, gi, bi)
-			except RuntimeError:
-				# can't allocate color; find closest one
-				m = 0
-				color = None
-				# use floats to guard against overflow
-				rf = float(ri)
-				gf = float(gi)
-				bf = float(bi)
-				for c in cm.QueryColors(range(256)):
-					# calculate distance
-					d = (rf-c[1])*(rf-c[1]) + \
-					    (gf-c[2])*(gf-c[2]) + \
-					    (bf-c[3])*(bf-c[3])
-					if color is None or d < m:
-						# found one that's closer
-						m = d
-						color = c
-				color = self._colormap.AllocColor(color[1],
-							color[2], color[3])
-			# cache the result
-			self._cm_cache[`r,g,b`] = color[0]
-			return color[0]
-		r = int(float(r) / 255. * float(self._red_mask) + .5)
-		g = int(float(g) / 255. * float(self._green_mask) + .5)
-		b = int(float(b) / 255. * float(self._blue_mask) + .5)
-		c = (r << self._red_shift) | \
-		    (g << self._green_shift) | \
-		    (b << self._blue_shift)
-		return c
-
+		
 	def GetImageSize(self,file):
-		from win32modules import imageex
 		try:
 			xsize, ysize = self._image_size_cache[file]
 		except KeyError:
@@ -359,18 +323,20 @@ class _Toplevel:
 		return xsize, ysize
 
 	def GetVideoSize(self,file):
-		from win32modules import mpegex
-		w=GenWnd.GenWnd()
-		w.create()
-		width, height = mpegex.SizeOfImage(w,file)
-		w.DestroyWindow()
+		DirectShowSdk=win32ui.GetDS()
+		builder=DirectShowSdk.CreateGraphBuilder()
+		width, height=100,100
+		if builder:
+			builder.RenderFile(fn)
+			width, height=builder.GetWindowPosition()[2:]
 		return (width, height)
+	
+	def GetStringLength(wnd,str):
+		dc = wnd.GetDC();
+		cx,cy=dc.GetTextExtent(str)
+		wnd.ReleaseDC(dc)
+		return cx
 
-toplevel = _Toplevel()
-MainFrame.toplevel=toplevel
-
-import cmifwnd
-cmifwnd.toplevel=toplevel
 
 
 #######################################################
@@ -400,7 +366,8 @@ class FileDialog:
 		else:
 			flags=win32con.OFN_OVERWRITEPROMPT
 		if not parent:
-			parent=toplevel._mainwnd
+			import __main__
+			parent=__main__.toplevel._subwindows[0]
 
 		if not filter or filter=='*':
 			filter = 'All files (*.*)|*.*||'
@@ -423,11 +390,6 @@ class FileDialog:
 # some are defined here to import only windowinterface and not pyds 
 
 
-def GetStringLength(wnd,str):
-	dc = wnd.GetDC();
-	cx,cy=dc.GetTextExtent(str)
-	wnd.ReleaseDC(dc)
-	return cx
 
 
 
