@@ -9,7 +9,7 @@ from MMExc import *
 from MMTypes import *
 from HDTL import HD, TL
 
-real_interiortypes = ('par', 'seq', 'alt', 'excl')
+real_interiortypes = ('par', 'seq', 'switch', 'excl')
 
 # Yuck, global variable.
 timingtype = 'virtual'
@@ -129,7 +129,7 @@ def prep1(node):
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type in ('par', 'alt', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
+	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
 		for c in node.GetSchedChildren(0):
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
@@ -189,7 +189,7 @@ def propdown(node, stoptime, dftstarttime=0):
 
 	node.t2 = stoptime
 
-	if tp in ('par', 'alt', 'excl', 'prio') or tp in leaftypes:
+	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
 		for c in node.GetChildren():
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
