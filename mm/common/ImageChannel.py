@@ -22,11 +22,11 @@ class ImageWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
-	def init(self, (title, attrdict, player)):
-		self = ChannelWindow.init(self, title, attrdict)
+	def init(self, (name, attrdict, channel)):
+		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.clear()
 		self.setanchor = 0
-		self.player = player
+		self.player = channel.player
 		return self
 	#
 	def show(self):
@@ -65,6 +65,9 @@ class ImageWindow(ChannelWindow):
 			self.hicolor = 255, 0, 0
 	#
 	def mouse(self, (dev, val)):
+		if dev == DEVICE.RIGHTMOUSE:
+			ChannelWindow.mouse(self, (dev, val))
+			return
 		if not self.node:
 			gl.ringbell()
 			return
@@ -184,11 +187,12 @@ class ImageChannel(Channel):
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['winsize', 'winpos', 'visible']
-	node_attrs = ['file', 'duration', 'bgcolor', 'scale', 'arm_duration']
+	node_attrs = ['file', 'duration', 'bgcolor', 'scale', 'arm_duration', \
+		'hicolor']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)
-		self.window = ImageWindow().init(name, attrdict, player)
+		self.window = ImageWindow().init(name, attrdict, self)
 		self.armed_node = 0
 		return self
 	#

@@ -60,10 +60,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def transaction(self):
 		# Disallow changes while we are playing.
 		if self.playing:
-			m1 = 'You can\'t do that right now'
-			m3 = 'The document is still playing!'
-			fl.show_message(m1, '--', m3)
-			return 0
+			m1 = 'You cannot change the document'
+			m2 = 'while it is playing.'
+			m3 = 'Do you want to stop playing?'
+			if not fl.show_question(m1, m2, m3):
+				return 0
+			self.stop()
 		self.locked = 1
 		return 1
 	#
@@ -795,44 +797,22 @@ def choosebagitem(node):
 			name = '???'
 		elif name == indexname:
 			return child
-		list.append(child, name)
-	list.reverse() # They are added from bottom to top
-	n = len(list) + 3
-	width = 200
-	butheight = 30
-	height = n*butheight + 10
-	form = fl.make_form(UP_BOX, width, height)
-	cancel = form.add_button(RETURN_BUTTON, \
-		5, 5, width-10, butheight, 'Cancel')
-	cancel.boxtype = FRAME_BOX
-	pos = butheight + 5
-	buttons = []
-	for child, name in list:
-		obj = form.add_button(NORMAL_BUTTON, \
-			5, pos, width-10, butheight, name)
-		obj.boxtype = FRAME_BOX
 		type = child.GetType()
 		if type == 'bag':
-			obj.col1 = 60 # XXX BlockView.BAGCOLOR
+			colorindex = 60 # XXX BlockView.BAGCOLOR
 		elif type in leaftypes:
-			obj.col1 = 61 # XXX BlockView.LEAFCOLOR
-		buttons.append(obj)
-		pos = pos + butheight
-	buttons.reverse()
+			colorindex = 61 # XXX BlockView.LEAFCOLOR
+		else:
+			colorindex = None
+		list.append((name, colorindex))
+	list.append('Cancel')
 	prompt = 'Please select an item\nfrom the bag:'
-	obj = form.add_text(NO_BOX, 5, pos, width-10, 2*butheight, prompt)
-	fl.deactivate_all_forms()
-	form.show_form(PLACE_MOUSE, TRUE, 'Choose bag item')
-	choice = fl.do_forms() # Must be one of our buttons
-	form.hide_form()
-	fl.activate_all_forms()
-	if choice is cancel:
+	import multchoice
+	choice = multchoice.multchoice(prompt, list, len(list) - 1)
+	if 0 <= choice < len(children):
+		return children[choice]
+	else:
 		return None
-	if choice in buttons:
-		i = buttons.index(choice)
-		return children[i]
-	print 'Weird -- not one of our objects was selected:', choice
-	return None
 
 
 # Find the root of a node's mini-document

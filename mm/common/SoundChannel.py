@@ -300,9 +300,7 @@ def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 		if samprate <> current_rate:
 			print 'SoundChannel: incompatible sampling rates'
 			return None, None
-		print 'new open port is compatible'
 	else:
-		print 'opening first port'
 		# Save original rate
 		pv = [AL.OUTPUT_RATE, 0]
 		al.getparams(AL.DEFAULT_DEVICE, pv)
@@ -343,7 +341,6 @@ def closeport(port):
 	if n_open_ports > 0:
 		print 'another port is still open'
 	else:
-		print 'closing last port'
 		# Closing our last port -- restore the original rate
 		import al
 		pv = [AL.OUTPUT_RATE, original_rate]

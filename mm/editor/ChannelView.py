@@ -143,10 +143,12 @@ class ChannelView(ViewDialog, GLDialog):
 		except AttributeError:
 			return # Invisible node
 		obj.setarmedmode(mode)
+		self.drawarcs()
 
 	def unarm_all(self):
 		if self.is_showing():
 			self.unarm_node(self.viewroot)
+		self.drawarcs()
 
 	def unarm_node(self, node):
 		self.setarmedmode(node, ARM_NONE)
@@ -282,6 +284,7 @@ class ChannelView(ViewDialog, GLDialog):
 		for obj in self.objects:
 			obj.cleanup()
 		self.objects = []
+		self.arcs = []
 		self.baseobject = None
 
 	# Recalculate the set of objects we should be drawing
@@ -326,6 +329,11 @@ class ChannelView(ViewDialog, GLDialog):
 		gl.clear()
 		for obj in self.objects:
 			obj.draw()
+
+	def drawarcs(self):
+		if self.is_showing():
+			for obj in self.arcs:
+				obj.draw()
 	
 	# Channel stuff
 
@@ -432,6 +440,7 @@ class ChannelView(ViewDialog, GLDialog):
 			return
 		obj = hits[-1] # Last object (the one drawn on top)
 		obj.select()
+		self.drawarcs()
 
 	# Global focus stuff
 	def getfocus(self):
@@ -457,6 +466,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.setwin()
 		self.deselect()
 		obj.select()
+		self.drawarcs()
 
 
 # Check whether a node is the top of a mini-document
