@@ -11,6 +11,8 @@ import MacOS
 import sys
 import MenuTemplate
 import Qt
+import Scrap
+import TE
 
 #
 # Stuff we need from other mw_ modules
@@ -69,6 +71,7 @@ class _Event:
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
+		self._scrap_to_TE()
 
 	def grab(self, dialog):
 		"""A dialog wants to be application-modal"""
@@ -173,6 +176,8 @@ class _Event:
 			self._handle_update_event(event)
 		elif what == Events.activateEvt:
 			self._handle_activate_event(event)
+		elif what == Events.osEvt:
+			self._handle_os_event(event)
 		else:
 			MacOS.HandleEvent(event)
 			
@@ -250,6 +255,29 @@ class _Event:
 			if ourwin:
 				self._activate_ours(ourwin, 1)
 				
+	def _handle_os_event(self, event):
+		what, message, when, where, modifiers = event
+		which = (message >> 24) & 0xff
+		if which == 1:
+			# Suspend or resume event
+			is_resume = (message & 1)
+			convert_clip = (message & 2)
+			# Convert the TextEdit clipboard
+			if convert_clip:
+				if is_resume:
+					self._scrap_to_TE()
+				else:
+					self._TE_to_scrap()
+			# Nothing else to do for suspend/resume
+		# Nothing to do for mouse moved events
+	
+	def _scrap_to_TE(self):
+		TE.TEFromScrap()
+		
+	def _TE_to_scrap(self):
+		Scrap.ZeroScrap()
+		TE.TEToScrap()
+	
 	def _activate_ours(self, ourwin, activate):
 		if activate:
 			self._install_window_commands(ourwin)
@@ -444,6 +472,7 @@ class _Toplevel(_Event):
 
 	def _clearall(self):
 		"""Code common to init and close"""
+		self._TE_to_scrap()
 		self._buttonschanged()
 		self._closecallbacks = []
 		self._subwindows = []
