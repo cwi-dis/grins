@@ -300,7 +300,7 @@
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel (cmif))
 
-(units (int) 0 'Units' units
+(units (int) 2 'Units' units
 	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
