@@ -20,6 +20,16 @@
 
 #if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 #include "string"
+#else
+#include <string.h>
+#ifdef _MACINTOSH
+/* Not defined in the standard C library (to my surprise) but exported
+** by Python.
+*/
+extern "C" {
+char *strdup(char *);
+}
+#endif
 #endif
 
 inline void Trace(const char*, ...){}
