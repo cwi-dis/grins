@@ -1,16 +1,13 @@
 __version__ = "$Id$"
 
-"""Dialog for the Preferences window.
+# Dialog for the Preferences window.
 
-"""
+# @win32doc|PreferencesDialog
+# The actual dialog is implemented by _PreferencesDialog class.
 
-""" @win32doc|PreferencesDialog
-The actual dialog is implemented by _PreferencesDialog class.
-
-This PreferencesDialog class defined in this module 
-is the interface between the Preferences platform independent
-class and its implementation.
-"""
+# This PreferencesDialog class defined in this module 
+# is the interface between the Preferences platform independent
+# class and its implementation.
 
 __version__ = "$Id$"
 
@@ -179,13 +176,12 @@ class _PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 class PreferencesDialog:
 
 	def __init__(self, title):
-		"""Create the Preferences dialog.
+		# Create the Preferences dialog.
 
-		Create the dialog window, but does not display it yet
+		# Create the dialog window, but does not display it yet
 
-		Arguments (no defaults):
-		title -- string to be displayed as window title
-		"""
+		# Arguments (no defaults):
+		# title -- string to be displayed as window title
 		callbacks={
 			'OK':(self.ok_callback, ()),
 			'Cancel':(self.cancel_callback, ()),
@@ -242,13 +238,13 @@ class PreferencesDialog:
 	# the user of this class (i.e., the class that inherits from
 	# this class).
 	def cancel_callback(self):
-		"""Called when `Cancel' button is pressed."""
+		# Called when `Cancel' button is pressed.
 		pass
 
 	def reset_callback(self):
-		"""Called when `Restore' button is pressed."""
+		# Called when `Restore' button is pressed.
 		pass
 
 	def ok_callback(self):
-		"""Called when `OK' button is pressed."""
+		# Called when `OK' button is pressed.
 		pass
