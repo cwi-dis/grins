@@ -189,10 +189,9 @@ class SMILXhtmlSmilWriter(SMIL):
 		write = self.fp.write
 		ctx = self.root.GetContext()
 		import version
-		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD W3 HTML//EN\">\n')
+		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n')
 		if ctx.comment:
 			write('<!--%s-->\n' % ctx.comment)
-		#self.writetag('html', [('xmlns:t','urn:schemas-microsoft-com:time')])
 		self.writetag('html')
 		self.push()
 
@@ -225,9 +224,6 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.writelayout()
 
 		self.pop() # style
-
-		# Internet explorer style conventions for XHTML+SMIL support part 2
-		#write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
 
 		self.pop() # head
 
@@ -605,7 +601,13 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# write transition
 		if transIn or transOut:
-			self.writeTransition(transIn, transOut, nodeid, regionid)
+			if transIn and not transOut:
+				self.writeTransition(transIn, None, nodeid, regionid)
+			elif transOut and not transIn:
+				self.writeTransition(None, transOut, nodeid, regionid)
+			else:
+				self.writeTransition(transIn, None, nodeid, regionid)
+				self.writeTransition(None, transOut, nodeid, regionid)
 
 		# restore stack
 		while pushed:
