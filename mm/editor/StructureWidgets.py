@@ -679,13 +679,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if ntype not in ('ext', 'imm'):
 			return os.path.join(self.mother.datadir, '%s.tiff' % ntype)
 
-		url = node.GetAttrDef('file', None)
-		if not url:
-			# no file attr, so no thumbnail
-			return None
-
-		media_type = MMmimetypes.guess_type(url)[0]
-
 		channel_type = node.GetChannelType()
 		if self.mother.thumbnails and channel_type == 'image':
 			if not image:
@@ -1423,6 +1416,7 @@ class StructureObjWidget(MMNodeWidget):
 			if self.HORIZONTAL:
 				this_l = this_r + GAPSIZE
 			else:
+				this_l = my_l
 				this_t = this_b + GAPSIZE
 
 	def set_need_resize(self):
