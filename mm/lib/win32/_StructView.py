@@ -73,16 +73,31 @@ class _StructView(DisplayListView):
 			self._isminimized = 1
 			return
 		self._isminimized = 0
-		if self._bmp is not None:
-			self._bmp.DeleteObject()
-			self._bmp = None
-		self._bmp = win32ui.CreateBitmap()
+		self.assertBmpHasMinSize(msg.width(), msg.height())
+
+	def createBmp(self, width, height, dc = None):
+		bmp = win32ui.CreateBitmap()
 		try:
-			dc = self.GetDC()
-			self._bmp.CreateCompatibleBitmap(dc, msg.width(),msg.height())
-			dc.DeleteDC()
+			if dc is not None:
+				bmp.CreateCompatibleBitmap(dc, width, height)
+			else:	
+				dc = self.GetDC()
+				bmp.CreateCompatibleBitmap(dc, width, height)
+				dc.DeleteDC()
 		except:
-			pass
+			bmp.DeleteObject()
+			return None
+		return bmp
+
+	def assertBmpHasMinSize(self, width, height, dc = None):
+		if self._bmp is None:
+			self._bmp = self.createBmp(width, height, dc)
+		else:
+			w, h = self._bmp.GetSize()
+			if w < width or h < height:
+				self._bmp.DeleteObject()
+				del self._bmp
+				self._bmp = self.createBmp(width, height, dc)		
 
 	def PaintOn(self,dc):
 		if self._isminimized:
@@ -94,9 +109,10 @@ class _StructView(DisplayListView):
 		# draw to offscreen bitmap for fast looking repaints
 		dcc = dc.CreateCompatibleDC()
 
+		self.assertBmpHasMinSize(rect.width(), rect.height(), dc)
 		if self._bmp is None:
-			self._bmp = win32ui.CreateBitmap()
-			self._bmp.CreateCompatibleBitmap(dc, rect.width(), rect.height())
+			print 'failed to create offscreen bitmap'
+			return
 		
 		# called by win32ui
 		#self.OnPrepareDC(dcc)
