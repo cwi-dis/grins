@@ -2,11 +2,8 @@ TODO for Michael :-)
 ---------------------------------------------
 
 * Editing a wallclock attribute.
-* Small ui details: 
-	- repeat doesn't work yet.
-* NEW button doesn't work.	
 * Get rid of all the debug messages.
-* Repeats, markers.
+* markers.
 
 * Editing events directly from the Structure view.
 * Events seem to be a bit wrong in the structure view! Test them.
