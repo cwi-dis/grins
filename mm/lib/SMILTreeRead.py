@@ -286,6 +286,8 @@ class SMILParser(xmllib.XMLParser):
 						del rdr
 					else:
 						import mv
+						# can't use urlopen + OpenFD:
+						# mv.error: Illegal seek.
 						file = MMurl.urlretrieve(file)[0]
 						movie = mv.OpenFile(file,
 								    mv.MV_MPEG1_PRESCAN_OFF)
