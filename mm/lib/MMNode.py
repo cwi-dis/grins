@@ -1527,6 +1527,7 @@ class MMNode_body:
 		self.scheduled_children = 0
 		self.parent = parent
 		self.sched_children = []
+		self.starting_children = 0
 		self.arcs = []
 		self.durarcs = []
 		self.time_list = []
@@ -1576,6 +1577,7 @@ class MMNode_body:
 			if debug: print 'stopplay: already stopped'
 			return
 		self.playing = MMStates.PLAYED
+		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type == 'switch':
@@ -1679,6 +1681,7 @@ class MMNode:
 		self.events = {}	# events others are interested in
 		self.sched_children = [] # arcs that depend on us
 		self.scheduled_children = 0
+		self.starting_children = 0
 		self.arcs = []
 		self.durarcs = []
 		self.deparcs = {'begin': [], 'end': []}	# arcs that depend on the event
@@ -1726,6 +1729,7 @@ class MMNode:
 		self.happenings = {}
 		if full_reset:
 			self.playing = MMStates.IDLE
+			self.starting_children = 0
 			self.set_armedmode(ARM_NONE)
 		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
@@ -1942,6 +1946,7 @@ class MMNode:
 			if debug: print 'stopplay: already stopped'
 			return
 		self.playing = MMStates.PLAYED
+		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type == 'switch':
