@@ -1,8 +1,7 @@
 //============================================================================
 //
 //  Microsoft Windows Media Technology
-//
-//  Copyright (C) Microsoft Corporation, 1999 - 1999
+//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
 //
 //  File:        wmsdkidl.idl
 //
@@ -12,11 +11,8 @@
 
 cpp_quote( "//=========================================================================" )
 cpp_quote( "//" )
-cpp_quote( "//  THIS SOFTWARE HAS BEEN LICENSED FROM MICROSOFT CORPORATION PURSUANT " )
-cpp_quote( "//  TO THE TERMS OF AN END USER LICENSE AGREEMENT (\"EULA\").  " )
-cpp_quote( "//  PLEASE REFER TO THE TEXT OF THE EULA TO DETERMINE THE RIGHTS TO USE THE SOFTWARE.  " )
-cpp_quote( "//" )
-cpp_quote( "// Copyright (C) Microsoft Corporation, 1999 - 1999  All Rights Reserved." )
+cpp_quote( "// Microsoft Windows Media Technologies" )
+cpp_quote( "// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved." )
 cpp_quote( "//" )
 cpp_quote( "//=========================================================================" )
 
@@ -59,14 +55,26 @@ interface IWMProfileManager;
 interface IWMStreamConfig;
 interface IWMStreamList;
 interface IWMMutualExclusion;
+interface IWMPacketSize;
 
 interface IWMWriterAdvanced;
+interface IWMWriterAdvanced2;
 interface IWMWriterSink;
 interface IWMWriterFileSink;
 interface IWMWriterNetworkSink;
 
 interface IWMReaderAdvanced;
+interface IWMReaderAdvanced2;
 interface IWMReaderCallbackAdvanced;
+interface IWMDRMReader;
+
+interface IWMReaderNetworkConfig;
+
+interface IWMLicenseBackup;
+interface IWMLicenseRestore;
+interface IWMBackupRestoreProps;
+
+interface IWMCodecInfo;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -77,16 +85,23 @@ interface IWMReaderCallbackAdvanced;
 cpp_quote( "////////////////////////////////////////////////////////////////" )
 cpp_quote( "//" )
 cpp_quote( "// These are the special case attributes that give information " )
-cpp_quote( "// about the ASF file." )
+cpp_quote( "// about the Windows Media file." )
 cpp_quote( "//" )
-cpp_quote( "static const DWORD g_dwWMSpecialAttributes = 7;" )
+cpp_quote( "static const DWORD g_dwWMSpecialAttributes = 14;" )
 cpp_quote( "static const WCHAR *g_wszWMDuration = L\"Duration\";" )
 cpp_quote( "static const WCHAR *g_wszWMBitrate = L\"Bitrate\";" )
 cpp_quote( "static const WCHAR *g_wszWMSeekable = L\"Seekable\";" )
+cpp_quote( "static const WCHAR *g_wszWMStridable = L\"Stridable\";" )
 cpp_quote( "static const WCHAR *g_wszWMBroadcast = L\"Broadcast\";" )
 cpp_quote( "static const WCHAR *g_wszWMProtected = L\"Is_Protected\";" )
 cpp_quote( "static const WCHAR *g_wszWMTrusted = L\"Is_Trusted\";" )
 cpp_quote( "static const WCHAR *g_wszWMSignature_Name = L\"Signature_Name\";" )
+cpp_quote( "static const WCHAR *g_wszWMHasAudio = L\"HasAudio\";" )
+cpp_quote( "static const WCHAR *g_wszWMHasImage = L\"HasImage\";" )
+cpp_quote( "static const WCHAR *g_wszWMHasScript = L\"HasScript\";" )
+cpp_quote( "static const WCHAR *g_wszWMHasVideo = L\"HasVideo\";" )
+cpp_quote( "static const WCHAR *g_wszWMCurrentBitrate = L\"CurrentBitrate\";" )
+cpp_quote( "static const WCHAR *g_wszWMOptimalBitrate = L\"OptimalBitrate\";" )
 cpp_quote( "" )
 cpp_quote( "////////////////////////////////////////////////////////////////" )
 cpp_quote( "//" )
@@ -101,7 +116,7 @@ cpp_quote( "static const WCHAR *g_wszWMCopyright = L\"Copyright\";" )
 cpp_quote( "" )
 cpp_quote( "////////////////////////////////////////////////////////////////" )
 cpp_quote( "//" )
-cpp_quote( "// These attributes are used to set DRM properties on an ASF." )
+cpp_quote( "// These attributes are used to set DRM properties." )
 cpp_quote( "//" )
 cpp_quote( "static const WCHAR *g_wszWMUse_DRM = L\"Use_DRM\";" )
 cpp_quote( "static const WCHAR *g_wszWMDRM_Flags = L\"DRM_Flags\";" )
@@ -110,8 +125,8 @@ cpp_quote( "" )
 
 cpp_quote( "////////////////////////////////////////////////////////////////" )
 cpp_quote( "//" )
-cpp_quote( "// These are the additional attributes defined in the ASF attribute" )
-cpp_quote( "// namespace that gives information about the content in the ASF file." )
+cpp_quote( "// These are the additional attributes defined in the WM attribute" )
+cpp_quote( "// namespace that give information about the content." )
 cpp_quote( "//" )
 cpp_quote( "static const WCHAR *g_wszWMAlbumTitle = L\"WM/AlbumTitle\";" )
 cpp_quote( "static const WCHAR *g_wszWMTrack = L\"WM/Track\";" )
@@ -119,9 +134,59 @@ cpp_quote( "static const WCHAR *g_wszWMPromotionURL = L\"WM/PromotionURL\";" )
 cpp_quote( "static const WCHAR *g_wszWMAlbumCoverURL = L\"WM/AlbumCoverURL\";" )
 cpp_quote( "static const WCHAR *g_wszWMGenre = L\"WM/Genre\";" )
 cpp_quote( "static const WCHAR *g_wszWMYear = L\"WM/Year\";" )
+cpp_quote( "static const WCHAR *g_wszWMGenreID = L\"WM/GenreID\";" )
+cpp_quote( "static const WCHAR *g_wszWMMCDI = L\"WM/MCDI\";" )
 cpp_quote( "" )
 
+cpp_quote( "////////////////////////////////////////////////////////////////" )
+cpp_quote( "//" )
+cpp_quote( "// These optional attributes may be used to give information " )
+cpp_quote( "// about the branding of the content." )
+cpp_quote( "//" )
+cpp_quote( "static const WCHAR *g_wszWMBannerImageType = L\"BannerImageType\";" )
+cpp_quote( "static const WCHAR *g_wszWMBannerImageData = L\"BannerImageData\";" )
+cpp_quote( "static const WCHAR *g_wszWMBannerImageURL = L\"BannerImageURL\";" )
+cpp_quote( "static const WCHAR *g_wszWMCopyrightURL = L\"CopyrightURL\";" )
 
+cpp_quote( "////////////////////////////////////////////////////////////////" )
+cpp_quote( "//" )
+cpp_quote( "// The NSC file supports the following attributes." )
+cpp_quote( "//" )
+cpp_quote( "static const DWORD g_dwWMNSCAttributes = 5;" )
+cpp_quote( "static const WCHAR *g_wszWMNSCName = L\"NSC_Name\";" )
+cpp_quote( "static const WCHAR *g_wszWMNSCAddress = L\"NSC_Address\";" )
+cpp_quote( "static const WCHAR *g_wszWMNSCPhone = L\"NSC_Phone\";" )
+cpp_quote( "static const WCHAR *g_wszWMNSCEmail = L\"NSC_Email\";" )
+cpp_quote( "static const WCHAR *g_wszWMNSCDescription = L\"NSC_Description\";" )
+cpp_quote( "" )
+
+///////////////////////////////////////////////////////////////////////////////
+
+cpp_quote( "////////////////////////////////////////////////////////////////" )
+cpp_quote( "//" )
+cpp_quote( "// These are setting names for use in Get/SetOutputSetting" )
+cpp_quote( "//" )
+cpp_quote( "static const WCHAR *g_wszEarlyDataDelivery = L\"EarlyDataDelivery\";" )
+cpp_quote( "static const WCHAR *g_wszJustInTimeDecode = L\"JustInTimeDecode\";" )
+cpp_quote( "static const WCHAR *g_wszSingleOutputBuffer = L\"SingleOutputBuffer\";" )
+cpp_quote( "static const WCHAR *g_wszSoftwareScaling = L\"SoftwareScaling\";" )
+cpp_quote( "" )
+
+///////////////////////////////////////////////////////////////////////////////
+
+cpp_quote( "////////////////////////////////////////////////////////////////" )
+cpp_quote( "//" )
+cpp_quote( "// These are setting names for use in Get/SetInputSetting" )
+cpp_quote( "//" )
+cpp_quote( "static const WCHAR *g_wszDeinterlaceMode = L\"DeinterlaceMode\";" )
+cpp_quote( "" )
+
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Enumerations and flags used by the SDK.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 cpp_quote( "////////////////////////////////////////////////////////////////" )
@@ -131,11 +196,16 @@ cpp_quote( "//" )
 cpp_quote( "#define WM_START_CURRENTPOSITION     ( ( QWORD )-1 )" )
 cpp_quote( "" )
 
-///////////////////////////////////////////////////////////////////////////////
 //
-// Enumerations and flags used by the SDK.
+// Flag to force overwrite of existing license backup
 //
-///////////////////////////////////////////////////////////////////////////////
+cpp_quote( "#define WM_BACKUP_OVERWRITE    ((DWORD) 0x00000001)" )
+cpp_quote( "#define WM_RESTORE_INDIVIDUALIZE    ((DWORD) 0x00000002)" )
+
+//
+// Wave format ex type
+//
+cpp_quote( "#define WAVE_FORMAT_DRM            0x0009" )
 
 //
 // The flags that can be set on a sample (input or output).
@@ -152,33 +222,52 @@ enum
 //
 typedef enum WMT_STATUS
 {
-    WMT_ERROR             =  0,
-    WMT_OPENED            =  1,
-    WMT_BUFFERING_START   =  2,
-    WMT_BUFFERING_STOP    =  3,
-    WMT_EOF               =  4,
-    WMT_END_OF_FILE       =  4,
-    WMT_END_OF_SEGMENT    =  5,
-    WMT_END_OF_STREAMING  =  6,
-    WMT_LOCATING          =  7,
-    WMT_CONNECTING        =  8,
-    WMT_NO_RIGHTS         =  9,
-    WMT_MISSING_CODEC     = 10,
-    WMT_STARTED           = 11,
-    WMT_STOPPED           = 12,
-    WMT_CLOSED            = 13,
-    WMT_STRIDING          = 14,
-    WMT_TIMER             = 15,
-    WMT_INDEX_PROGRESS    = 16,
+    WMT_ERROR                       =  0,
+    WMT_OPENED                      =  1,
+    WMT_BUFFERING_START             =  2,
+    WMT_BUFFERING_STOP              =  3,
+    WMT_EOF                         =  4,
+    WMT_END_OF_FILE                 =  4,
+    WMT_END_OF_SEGMENT              =  5,
+    WMT_END_OF_STREAMING            =  6,
+    WMT_LOCATING                    =  7,
+    WMT_CONNECTING                  =  8,
+    WMT_NO_RIGHTS                   =  9,
+    WMT_MISSING_CODEC               = 10,
+    WMT_STARTED                     = 11,
+    WMT_STOPPED                     = 12,
+    WMT_CLOSED                      = 13,
+    WMT_STRIDING                    = 14,
+    WMT_TIMER                       = 15,
+    WMT_INDEX_PROGRESS              = 16,
+    WMT_SAVEAS_START                = 17,
+    WMT_SAVEAS_STOP                 = 18,
+    WMT_NEW_SOURCEFLAGS             = 19,
+    WMT_NEW_METADATA                = 20,
+    WMT_BACKUPRESTORE_BEGIN         = 21,
+    WMT_SOURCE_SWITCH               = 22,
+    WMT_ACQUIRE_LICENSE             = 23,
+    WMT_INDIVIDUALIZE               = 24,
+    WMT_NEEDS_INDIVIDUALIZATION     = 25,
+    WMT_NO_RIGHTS_EX                = 26,
+    WMT_BACKUPRESTORE_END           = 27,
+    WMT_BACKUPRESTORE_CONNECTING    = 28,
+    WMT_BACKUPRESTORE_DISCONNECTING = 29,
+    WMT_ERROR_WITHURL               = 30,
+    WMT_RESTRICTED_LICENSE          = 31,
+    WMT_CLIENT_CONNECT              = 32,
+	WMT_CLIENT_DISCONNECT           = 33
 } WMT_STATUS;
 
 typedef enum WMT_RIGHTS
 {
-    WMT_RIGHT_PLAYBACK                  = 0x0001,
-    WMT_RIGHT_COPY_TO_NON_SDMI_DEVICE   = 0x0002,
-    WMT_RIGHT_COPY_TO_CD                = 0x0008,
-    WMT_RIGHT_COPY_TO_SDMI_DEVICE       = 0x0010,
-    WMT_RIGHT_ONE_TIME                  = 0x0020
+    WMT_RIGHT_PLAYBACK                  = 0x00000001,
+    WMT_RIGHT_COPY_TO_NON_SDMI_DEVICE   = 0x00000002,
+    WMT_RIGHT_COPY_TO_CD                = 0x00000008,
+    WMT_RIGHT_COPY_TO_SDMI_DEVICE       = 0x00000010,
+    WMT_RIGHT_ONE_TIME                  = 0x00000020,
+    WMT_RIGHT_SDMI_TRIGGER              = 0x00010000,
+    WMT_RIGHT_SDMI_NOMORECOPIES         = 0x00020000
 } WMT_RIGHTS;
 
 
@@ -198,15 +287,25 @@ typedef enum WMT_STREAM_SELECTION
 typedef enum WMT_ATTR_DATATYPE
 {
 
-    WMT_TYPE_DWORD		= 0,
-    WMT_TYPE_STRING		= 1,
-    WMT_TYPE_BINARY		= 2,
-    WMT_TYPE_BOOL   	= 3,
+    WMT_TYPE_DWORD      = 0,
+    WMT_TYPE_STRING     = 1,
+    WMT_TYPE_BINARY     = 2,
+    WMT_TYPE_BOOL       = 3,
     WMT_TYPE_QWORD      = 4,
-    WMT_TYPE_WORD		= 5,
-    WMT_TYPE_GUID		= 6,
+    WMT_TYPE_WORD       = 5,
+    WMT_TYPE_GUID       = 6,
 
 } WMT_ATTR_DATATYPE;
+
+//
+// Types of images that can be stored in the header of a Windows Media File.
+//
+typedef enum WMT_ATTR_IMAGETYPE
+{
+    WMT_IMAGETYPE_BITMAP = 1,
+    WMT_IMAGETYPE_JPEG = 2,
+    WMT_IMAGETYPE_GIF = 3,
+} WMT_ATTR_IMAGETYPE;
 
 //
 // Windows Media versions.
@@ -214,6 +313,7 @@ typedef enum WMT_ATTR_DATATYPE
 typedef enum WMT_VERSION
 {
     WMT_VER_4_0 = 0x00040000,
+    WMT_VER_4_5 = 0x00040005,
 } WMT_VERSION;
 
 //
@@ -224,9 +324,77 @@ typedef enum WMT_NET_PROTOCOL
     WMT_PROTOCOL_HTTP    = 0,
 } WMT_NET_PROTOCOL;
 
+
+//
+// The reader supports a number of different types of playback, each with
+// slightly different characteristics.
+//
+typedef enum WMT_PLAY_MODE
+{
+    WMT_PLAY_MODE_AUTOSELECT    = 0,
+    WMT_PLAY_MODE_LOCAL         = 1,
+    WMT_PLAY_MODE_DOWNLOAD      = 2,
+    WMT_PLAY_MODE_STREAMING     = 3,
+} WMT_PLAY_MODE;
+
+//
+// Network Proxy settings for the reader
+//
+typedef enum WMT_PROXY_SETTINGS
+{
+    WMT_PROXY_SETTING_NONE      = 0,
+    WMT_PROXY_SETTING_MANUAL    = 1,
+    WMT_PROXY_SETTING_AUTO      = 2,
+    WMT_PROXY_SETTING_BROWSER   = 3,        // Only valid for HTTP 
+} WMT_PROXY_SETTINGS;
+
+
+typedef enum WMT_CODEC_INFO_TYPE
+{
+    WMT_CODECINFO_AUDIO         = 0,            // codec info is a word = wFormatTag
+    WMT_CODECINFO_VIDEO         = 1,            // codec info is a dword = biCompression
+    WMT_CODECINFO_UNKNOWN       = 0xFFFFFFFF,   // codec info is undefined
+} WMT_CODEC_INFO_TYPE;
+    
+
+typedef enum DRM_HTTP_STATUS
+{
+    HTTP_NOTINITIATED = 0,
+    HTTP_CONNECTING,
+    HTTP_REQUESTING,
+    HTTP_RECEIVING,
+    HTTP_COMPLETED
+} DRM_HTTP_STATUS;
+
+
+//  The various states individualization can be in:
+typedef enum DRM_INDIVIDUALIZATION_STATUS
+{
+    INDI_UNDEFINED   = 0x0000,
+    INDI_BEGIN       = 0x0001,
+    INDI_SUCCEED     = 0x0002,
+    INDI_FAIL        = 0x0004,
+    INDI_CANCEL      = 0x0008,
+    INDI_DOWNLOAD    = 0x0010,
+    INDI_INSTALL     = 0x0020
+} DRM_INDIVIDUALIZATION_STATUS;
+
+//
+// These values can be passed in when setting the DeinterlaceMode
+// setting on the writer
+//
+enum 
+{
+    WM_DM_NOTINTERLACED                  = 0,
+    WM_DM_DEINTERLACE_NORMAL             = 1,
+    WM_DM_DEINTERLACE_HALFSIZE           = 2,
+    WM_DM_DEINTERLACE_HALFSIZEDOUBLERATE = 3,
+    WM_DM_DEINTERLACE_INVERSETELECINE    = 4,
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Media-type structures and GUIDs.
+// Structures used by the SDK.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -271,15 +439,58 @@ typedef struct _WMReaderStatistics
 //
 typedef struct _WMReaderClientInfo
 {
-    DWORD cbSize;
-    WCHAR *wszLang;              // 2-3 letter language code 
-    WCHAR *wszBrowserUserAgent;  // Embedded browser's user-agent string
-    WCHAR *wszBrowserWebPage;    // The web page that contains the plugin
-    QWORD qwBrowserVersion;      // Something like 3.0.0.1234
-    WCHAR *wszHostUniquePID;     // Unique player ID
-    WCHAR *wszHostExe;           // iexplore.exe, netscape.exe dshow.exe, etc
-    QWORD qwHostVersion;         // 4.70.12.15
+    DWORD  cbSize;
+    WCHAR  *wszLang;              // 2-3 letter language code 
+    WCHAR  *wszBrowserUserAgent;  // Embedded browser's user-agent string
+    WCHAR  *wszBrowserWebPage;    // The web page that contains the plugin
+    QWORD  qwReserved;            // Reserved
+    LPARAM *pReserved;            // Reserved
+    WCHAR  *wszHostExe;           // iexplore.exe, netscape.exe dshow.exe, etc
+    QWORD  qwHostVersion;         // Version of the host application e.g.:4.70.12.15
 } WM_READER_CLIENTINFO;
+
+typedef struct _WMIndividualizeStatus
+{
+    HRESULT                         hr;
+    DRM_INDIVIDUALIZATION_STATUS    enIndiStatus;
+    LPSTR                           pszIndiRespUrl;
+    DWORD                           dwHTTPRequest;
+    DRM_HTTP_STATUS                 enHTTPStatus;
+    DWORD                           dwHTTPReadProgress;
+    DWORD                           dwHTTPReadTotal;
+} WM_INDIVIDUALIZE_STATUS;
+
+typedef struct _WMGetLicenseData
+{
+    DWORD   dwSize;
+    HRESULT hr;
+    WCHAR   *wszURL;
+    WCHAR   *wszLocalFilename;
+    BYTE    *pbPostData;
+    DWORD   dwPostDataSize;
+} WM_GET_LICENSE_DATA;
+
+typedef struct _WMClientProperties
+{
+    DWORD   dwIPAddress;
+    DWORD   dwPort;
+} WM_CLIENT_PROPERTIES;
+
+//
+// Inclusive port number range.  
+// Used by IWMReaderNetworkConfig.
+//
+typedef struct _WMPortNumberRange
+{
+    WORD   wPortBegin;
+    WORD   wPortEnd;
+} WM_PORT_NUMBER_RANGE;
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Media-type structures and GUIDs.
+//
+///////////////////////////////////////////////////////////////////////////////
 
 //
 // We use DirectShow media types in this SDK. However, to avoid conflict with
@@ -299,6 +510,41 @@ typedef struct _WMMediaType
     [size_is(cbFormat)] BYTE *pbFormat;
 } WM_MEDIA_TYPE;
 
+
+cpp_quote( "typedef struct tagWMVIDEOINFOHEADER" )
+cpp_quote( "{" )
+cpp_quote( "    //" )
+cpp_quote( "    // The bit we really want to use." )
+cpp_quote( "    //" )
+cpp_quote( "    RECT rcSource;" )
+cpp_quote( "" )
+cpp_quote( "    //" )
+cpp_quote( "    // Where the video should go." )
+cpp_quote( "    //" )
+cpp_quote( "    RECT rcTarget;" )
+cpp_quote( "" )
+cpp_quote( "    //" )
+cpp_quote( "    // Approximate bit data rate." )
+cpp_quote( "    //" )
+cpp_quote( "    DWORD dwBitRate;" )
+cpp_quote( "" )
+cpp_quote( "    //" )
+cpp_quote( "    // Bit error rate for this stream." )
+cpp_quote( "    //" )
+cpp_quote( "    DWORD dwBitErrorRate;" )
+cpp_quote( "" )
+cpp_quote( "    //" )
+cpp_quote( "    // Average time per frame (100ns units)." )
+cpp_quote( "    //" )
+cpp_quote( "    LONGLONG AvgTimePerFrame;" )
+cpp_quote( "" )
+cpp_quote( "    BITMAPINFOHEADER bmiHeader;" )
+cpp_quote( "} WMVIDEOINFOHEADER;" )
+
+cpp_quote( "typedef struct tagWMSCRIPTFORMAT" )
+cpp_quote( "{" )
+cpp_quote( "    GUID    scriptType; ")
+cpp_quote( "} WMSCRIPTFORMAT;" )
 
 //
 // This special GUID is used to create a subtype from an audio format tag, or
@@ -342,11 +588,11 @@ cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_RGB32, " )
 cpp_quote( "0xe436eb7e, 0x524f, 0x11ce, 0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70); " )
 
 cpp_quote( "// 30323449-0000-0010-8000-00AA00389B71  'YV12' ==  MEDIASUBTYPE_I420 " )
-cpp_quote( "DEFINE_GUID(WMMEDIASUBTYPE_I420, " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_I420, " )
 cpp_quote( "0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); " )
 
 cpp_quote( "// 56555949-0000-0010-8000-00AA00389B71  'YV12' ==  MEDIASUBTYPE_IYUV " )
-cpp_quote( "DEFINE_GUID(WMMEDIASUBTYPE_IYUV, " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_IYUV, " )
 cpp_quote( "0x56555949, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); " )
 
 cpp_quote( "// 31313259-0000-0010-8000-00AA00389B71  'YV12' ==  MEDIASUBTYPE_YV12 " )
@@ -373,6 +619,18 @@ cpp_quote( "// 3334504D-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_MP
 cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_MP43, " )
 cpp_quote( "0x3334504D, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
 
+cpp_quote( "// 5334504D-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_MP4S " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_MP4S, " )
+cpp_quote( "0x5334504D, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
+
+cpp_quote( "// 31564D57-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_WMV1 " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_WMV1, " )
+cpp_quote( "0x31564D57, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
+
+cpp_quote( "// 3153534D-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_MSS1 " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_MSS1, " )
+cpp_quote( "0x3153534D, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
+
 cpp_quote( "// 73647561-0000-0010-8000-00AA00389B71  'auds' == WMMEDIATYPE_Audio " )
 cpp_quote( "EXTERN_GUID(WMMEDIATYPE_Audio, " )
 cpp_quote( "0x73647561, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); " )
@@ -380,6 +638,10 @@ cpp_quote( "0x73647561, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b
 cpp_quote( "// 00000001-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_PCM " )
 cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_PCM, " )
 cpp_quote( "0x00000001, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
+
+cpp_quote( "// 00000009-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_DRM " )
+cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_DRM, " )
+cpp_quote( "0x00000009, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); " )
 
 cpp_quote( "// 00000161-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_WMAudioV2 " )
 cpp_quote( "EXTERN_GUID(WMMEDIASUBTYPE_WMAudioV2, " )
@@ -393,6 +655,10 @@ cpp_quote( "// 73636d64-0000-0010-8000-00AA00389B71  'scmd' == MEDIATYPE_Script 
 cpp_quote( "EXTERN_GUID(WMMEDIATYPE_Script, " )
 cpp_quote( "0x73636d64, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71); " )
 
+cpp_quote( "// 34A50FD8-8AA5-4386-81FE-A0EFE0488E31            WMMEDIATYPE_Image " )
+cpp_quote( "EXTERN_GUID(WMMEDIATYPE_Image, " )
+cpp_quote( "0x34a50fd8, 0x8aa5, 0x4386, 0x81, 0xfe, 0xa0, 0xef, 0xe0, 0x48, 0x8e, 0x31); " )
+
 cpp_quote( "// 05589f80-c356-11ce-bf01-00aa0055595a        WMFORMAT_VideoInfo " )
 cpp_quote( "EXTERN_GUID(WMFORMAT_VideoInfo, " )
 cpp_quote( "0x05589f80, 0xc356, 0x11ce, 0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a); " )
@@ -404,41 +670,6 @@ cpp_quote( "0x05589f81, 0xc356, 0x11ce, 0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59
 cpp_quote( "// 5C8510F2-DEBE-4ca7-BBA5-F07A104F8DFF        WMFORMAT_Script " )
 cpp_quote( "EXTERN_GUID(WMFORMAT_Script, " )
 cpp_quote( "0x5c8510f2, 0xdebe, 0x4ca7, 0xbb, 0xa5, 0xf0, 0x7a, 0x10, 0x4f, 0x8d, 0xff); " )
-
-cpp_quote( "typedef struct tagWMVIDEOINFOHEADER" )
-cpp_quote( "{" )
-cpp_quote( "    //" )
-cpp_quote( "    // The bit we really want to use." )
-cpp_quote( "    //" )
-cpp_quote( "    RECT rcSource;" )
-cpp_quote( "" )
-cpp_quote( "    //" )
-cpp_quote( "    // Where the video should go." )
-cpp_quote( "    //" )
-cpp_quote( "    RECT rcTarget;" )
-cpp_quote( "" )
-cpp_quote( "    //" )
-cpp_quote( "    // Approximate bit data rate." )
-cpp_quote( "    //" )
-cpp_quote( "    DWORD dwBitRate;" )
-cpp_quote( "" )
-cpp_quote( "    //" )
-cpp_quote( "    // Bit error rate for this stream." )
-cpp_quote( "    //" )
-cpp_quote( "    DWORD dwBitErrorRate;" )
-cpp_quote( "" )
-cpp_quote( "    //" )
-cpp_quote( "    // Average time per frame (100ns units)." )
-cpp_quote( "    //" )
-cpp_quote( "    LONGLONG AvgTimePerFrame;" )
-cpp_quote( "" )
-cpp_quote( "    BITMAPINFOHEADER bmiHeader;" )
-cpp_quote( "} WMVIDEOINFOHEADER;" )
-
-cpp_quote( "typedef struct tagWMSCRIPTFORMAT" )
-cpp_quote( "{" )
-cpp_quote( "    GUID    scriptType; ")
-cpp_quote( "} WMSCRIPTFORMAT;" )
 
 cpp_quote( "// 82f38a70-c29f-11d1-97ad-00a0c95ea850        WMSCRIPTTYPE_TwoStrings " )
 cpp_quote( "EXTERN_GUID( WMSCRIPTTYPE_TwoStrings, " )
@@ -454,25 +685,46 @@ cpp_quote( "EXTERN_GUID( IID_IWMMediaProps,         0x96406bce,0x2b2b,0x11d3,0xb
 cpp_quote( "EXTERN_GUID( IID_IWMVideoMediaProps,    0x96406bcf,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMWriter,             0x96406bd4,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMInputMediaProps,    0x96406bd5,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
-cpp_quote( "EXTERN_GUID( IID_IWMReader,            0x96406bd6,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMReader,             0x96406bd6,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMOutputMediaProps,   0x96406bd7,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMStatusCallback,     0x6d7cdc70,0x9888,0x11d3,0x8e,0xdc,0x00,0xc0,0x4f,0x61,0x09,0xcf );" )
 cpp_quote( "EXTERN_GUID( IID_IWMReaderCallback,     0x96406bd8,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMCredentialCallback, 0x342e0eb7,0xe651,0x450c,0x97,0x5b,0x2a,0xce,0x2c,0x90,0xc4,0x8e );" )
 cpp_quote( "EXTERN_GUID( IID_IWMMetadataEditor,     0x96406bd9,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMHeaderInfo,         0x96406bda,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMHeaderInfo2,        0x15cf9781,0x454e,0x482e,0xb3,0x93,0x85,0xfa,0xe4,0x87,0xa8,0x10 );" )
 cpp_quote( "EXTERN_GUID( IID_IWMProfileManager,     0xd16679f2,0x6ca0,0x472d,0x8d,0x31,0x2f,0x5d,0x55,0xae,0xe1,0x55 );" )
+cpp_quote( "EXTERN_GUID( IID_IWMProfileManager2,    0x7a924e51,0x73c1,0x494d,0x80,0x19,0x23,0xd3,0x7e,0xd9,0xb8,0x9a );" )
 cpp_quote( "EXTERN_GUID( IID_IWMProfile,            0x96406bdb,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMProfile2,           0x07e72d33,0xd94e,0x4be7,0x88,0x43,0x60,0xae,0x5f,0xf7,0xe5,0xf5 );" )
 cpp_quote( "EXTERN_GUID( IID_IWMStreamConfig,       0x96406bdc,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMStreamList,         0x96406bdd,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMMutualExclusion,    0x96406bde,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMWriterAdvanced,     0x96406be3,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMWriterAdvanced2,    0x962dc1ec,0xc046,0x4db8,0x9c,0xc7,0x26,0xce,0xae,0x50,0x08,0x17 );" )
 cpp_quote( "EXTERN_GUID( IID_IWMWriterSink,         0x96406be4,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMWriterFileSink,     0x96406be5,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMWriterFileSink2,    0x14282ba7,0x4aef,0x4205,0x8c,0xe5,0xc2,0x29,0x03,0x5a,0x05,0xbc );" )
 cpp_quote( "EXTERN_GUID( IID_IWMWriterNetworkSink,  0x96406be7,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMClientConnections,  0x73c66010,0xa299,0x41df,0xb1,0xf0,0xcc,0xf0,0x3b,0x09,0xc1,0xc6 );" )
 cpp_quote( "EXTERN_GUID( IID_IWMReaderAdvanced,     0x96406bea,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMReaderAdvanced2,    0xae14a945,0xb90c,0x4d0d,0x91,0x27,0x80,0xd6,0x65,0xf7,0xd7,0x3e );" )
+cpp_quote( "EXTERN_GUID( IID_IWMDRMReader,          0xd2827540,0x3ee7,0x432c,0xb1,0x4c,0xdc,0x17,0xf0,0x85,0xd3,0xb3 );" )
 cpp_quote( "EXTERN_GUID( IID_IWMReaderCallbackAdvanced, 0x96406beb,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
+cpp_quote( "EXTERN_GUID( IID_IWMReaderNetworkConfig,0x96406bec,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMReaderStreamClock,  0x96406bed,0x2b2b,0x11d3,0xb3,0x6b,0x00,0xc0,0x4f,0x61,0x08,0xff );" )
 cpp_quote( "EXTERN_GUID( IID_IWMIndexer,            0x6d7cdc71,0x9888,0x11d3,0x8e,0xdc,0x00,0xc0,0x4f,0x61,0x09,0xcf );" )
+cpp_quote( "EXTERN_GUID( IID_IWMReaderAllocatorEx,  0x9f762fa7,0xa22e,0x428d,0x93,0xc9,0xac,0x82,0xf3,0xaa,0xfe,0x5a );" )
+cpp_quote( "EXTERN_GUID( IID_IWMReaderTypeNegotiation, 0xfdbe5592,0x81a1,0x41ea,0x93,0xbd,0x73,0x5c,0xad,0x1a,0xdc,0x5 );" )
+cpp_quote( "EXTERN_GUID( IID_IWMLicenseBackup,      0x05E5AC9F,0x3FB6,0x4508,0xBB,0x43,0xA4,0x06,0x7B,0xA1,0xEB,0xE8);")
+cpp_quote( "EXTERN_GUID( IID_IWMLicenseRestore,     0xC70B6334,0xa22e,0x4efb,0xA2,0x45,0x15,0xE6,0x5A,0x00,0x4A,0x13);")
+cpp_quote( "EXTERN_GUID( IID_IWMBackupRestoreProps, 0x3C8E0DA6,0x996F,0x4ff3,0xA1,0xAF,0x48,0x38,0xF9,0x37,0x7e,0x2e);")
+cpp_quote( "EXTERN_GUID( IID_IWMPacketSize,         0xcdfb97ab,0x188f,0x40b3,0xb6,0x43,0x5b,0x79,0x03,0x97,0x5c,0x59);")
+cpp_quote( "EXTERN_GUID( IID_IWMRegisterCallback,   0xcf4b1f99,0x4de2,0x4e49,0xa3,0x63,0x25,0x27,0x40,0xd9,0x9b,0xc1);")
+cpp_quote( "EXTERN_GUID( IID_IWMWriterPostView,     0x81e20ce4,0x75ef,0x491a,0x80,0x04,0xfc,0x53,0xc4,0x5b,0xdc,0x3e);")
+cpp_quote( "EXTERN_GUID( IID_IWMWriterPostViewCallback, 0xd9d6549d,0xa193,0x4f24,0xb3,0x08,0x03,0x12,0x3d,0x9b,0x7f,0x8d);")
+cpp_quote( "EXTERN_GUID( IID_IWMCodecInfo,          0xa970f41e,0x34de,0x4a98,0xb3,0xba,0xe4,0xb3,0xca,0x75,0x28,0xf0);")
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -496,10 +748,12 @@ cpp_quote( "EXTERN_GUID( CLSID_WMMUTEX_Bitrate, 0xD6E22A01,0x35DA,0x11D1,0x90,0x
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateWriter( IUnknown* pUnkReserved, IWMWriter **ppWriter );" )
-cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateReader( IUnknown* pUnkReserved, DWORD dwRights, IWMReader **ppReader );" )
+cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateCertificate( IUnknown** pUnkCert );" )
+cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateWriter( IUnknown* pUnkCert, IWMWriter **ppWriter );" )
+cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateReader( IUnknown* pUnkCert, DWORD dwRights, IWMReader **ppReader );" )
 cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateEditor( IWMMetadataEditor **ppEditor );" )
 cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateIndexer( IWMIndexer **ppIndexer );" )
+cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateBackupRestorer( IUnknown *pCallback, IWMLicenseBackup **ppBackup );" )
 
 cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateProfileManager( IWMProfileManager **ppProfileManager );" )
 cpp_quote( "HRESULT STDMETHODCALLTYPE WMCreateWriterFileSink( IWMWriterFileSink **ppSink );" )
@@ -661,7 +915,6 @@ interface IWMWriter : IUnknown
     // Flush() also causes an updated header to be sent to the sink.
     //
     HRESULT Flush();
-
 };
 
 
@@ -710,7 +963,10 @@ interface IWMInputMediaProps : IWMMediaProps
 ]
 interface IWMReader : IUnknown
 {
-    // This interface QI's for IWMHeaderInfo, IWMProfile and IWMReaderAdvanced.
+    //
+    // This interface QI's for IWMHeaderInfo, IWMProfile, IWMReaderAdvanced,
+    // and IWMReaderAdvanced2.
+    //
 
     //
     // Open is an asynch call; it returns almost immediately (if the URL
@@ -801,7 +1057,7 @@ interface IWMOutputMediaProps : IWMMediaProps
 interface IWMStatusCallback : IUnknown
 {
     //
-    // The contents pParam depends on the Status.
+    // The contents of pValue depends on the Status.
     //
     HRESULT OnStatus( [in] WMT_STATUS Status, 
                       [in] HRESULT hr,
@@ -822,7 +1078,7 @@ interface IWMStatusCallback : IUnknown
 interface IWMReaderCallback : IWMStatusCallback
 {
     //
-    // dwSampleDuration will be 0 for most media types.
+    // cnsSampleDuration will be 0 for most media types.
     //
     HRESULT OnSample( [in] DWORD dwOutputNum,
                       [in] QWORD cnsSampleTime,
@@ -832,6 +1088,25 @@ interface IWMReaderCallback : IWMStatusCallback
                       [in] void *pvContext );
 };
 
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 342e0eb7-e651-450c-975b-2ace2c90c48e ),
+    helpstring( "IWMCredentialCallback Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMCredentialCallback : IUnknown
+{
+    HRESULT AcquireCredentials( [in] WCHAR *pwszRealm,
+                                [in] WCHAR *pwszSite,
+                                [in, out, size_is( cchUser )] WCHAR *pwszUser,
+                                [in] DWORD cchUser,
+                                [in, out, size_is( cchPassword )] WCHAR *pwszPassword,
+                                [in] DWORD cchPassword,
+                                [in] HRESULT hrStatus,
+                                [in, out] DWORD *pdwFlags );
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -949,6 +1224,33 @@ interface IWMHeaderInfo : IUnknown
 
 
 ///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 15CF9781-454E-482e-B393-85FAE487A810 ),
+    helpstring( "IWMHeaderInfo Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// The 3 main interface (IWMWriter, IWMReader, and 
+// IWMMetadataEditor) can be QI'd for this interface to get and set
+// header attributes, and markers.
+//
+interface IWMHeaderInfo2 : IWMHeaderInfo
+{
+    HRESULT GetCodecInfoCount(  [out]   DWORD*  pcCodecInfos );
+    HRESULT GetCodecInfo(       [in]    DWORD   wIndex,
+                                [in,out] WORD*  pcchName,
+                                [out]   WCHAR*  pwszName,
+                                [in,out] WORD*  pcchDescription,
+                                [out]   WCHAR*  pwszDescription,
+                                [out]   WMT_CODEC_INFO_TYPE*    pCodecType,
+                                [in,out] WORD*  pcbCodecInfo,
+                                [out]   BYTE*   pbCodecInfo );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
 //
 // The profile API. The intention is that most users don't touch the profile
 // API, but just use pre-existing profiles.
@@ -1002,6 +1304,26 @@ interface IWMProfileManager : IUnknown
 ///////////////////////////////////////////////////////////////////////////////
 [
     object,
+    uuid( 7A924E51-73C1-494d-8019-23D37ED9B89A ),
+    helpstring( "IWMProfileManager2 Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMProfileManager2 : IWMProfileManager
+{
+    //
+    // Set the version number of the system profiles that the profile manager
+    // will enumerate. WMT_VER_4_0 is the default, for compatibility reasons,
+    // so be sure to set this to the latest version if that is the desired 
+    // result.
+    //
+    HRESULT GetSystemProfileVersion( WMT_VERSION *pdwVersion );
+    HRESULT SetSystemProfileVersion( WMT_VERSION dwVersion );
+};
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
     uuid( 96406BDB-2B2B-11d3-B36B-00C04F6108FF ),
     helpstring( "IWMProfile Interface"),
     pointer_default(unique),
@@ -1012,8 +1334,8 @@ interface IWMProfile : IUnknown
     //
     // By default, when the user creates a profile, it will use the latest
     // version of Windows Media. To create a backward-compatible profile,
-    // the user should reset the profile (which removes all information
-    // currently in the profile) with the appropriate version.
+    // call IWMProfileManager::CreateEmptyProfile with the appropriate version
+    // number.
     //
     HRESULT GetVersion( [out] WMT_VERSION *pdwVersion );
 
@@ -1075,6 +1397,23 @@ interface IWMProfile : IUnknown
 ///////////////////////////////////////////////////////////////////////////////
 [
     object,
+    uuid( 07E72D33-D94E-4be7-8843-60AE5FF7E5F5 ),
+    helpstring( "IWMProfile2 Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMProfile2 : IWMProfile
+{
+    //
+    // Get/set this profile's unique identifier
+    //
+    HRESULT GetProfileID( [out] GUID*       pguidID );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
     uuid( 96406BDC-2B2B-11d3-B36B-00C04F6108FF ),
     helpstring( "IWMStreamConfig Interface"),
     pointer_default(unique),
@@ -1111,6 +1450,24 @@ interface IWMStreamConfig : IUnknown
     //
     HRESULT GetBufferWindow( [out] DWORD *pmsBufferWindow );
     HRESULT SetBufferWindow( [in] DWORD msBufferWindow );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( CDFB97AB-188F-40b3-B643-5B7903975C59 ),
+    helpstring( "IWMPacketSize Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// Controls how big packets can get in an ASF file.
+//
+interface IWMPacketSize : IUnknown
+{
+    HRESULT GetMaxPacketSize( [out] DWORD *pdwMaxPacketSize );
+    HRESULT SetMaxPacketSize( [in]  DWORD dwMaxPacketSize );
 };
 
 
@@ -1235,6 +1592,137 @@ interface IWMWriterAdvanced : IUnknown
 ///////////////////////////////////////////////////////////////////////////////
 [
     object,
+    uuid( 962dc1ec-c046-4db8-9cc7-26ceae500817 ),
+    helpstring( "IWMWriterAdvanced2 Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// The writer can be QI'd for this interface, which provides advanced writing
+// functionality.
+//
+interface IWMWriterAdvanced2 : IWMWriterAdvanced
+{
+    //
+    // Retrieves a setting for a particular output by name
+    //
+    HRESULT GetInputSetting( 
+                    [in] DWORD dwInputNum,
+                    [in] LPCWSTR pszName,
+                    [out] WMT_ATTR_DATATYPE *pType,
+                    [out] BYTE *pValue,
+                    [in,out] WORD *pcbLength );
+
+    //
+    // Sets a named setting for a particular input
+    //
+    HRESULT SetInputSetting(
+                    [in] DWORD dwInputNum,
+                    [in] LPCWSTR pszName,
+                    [in] WMT_ATTR_DATATYPE Type,
+                    [in] const BYTE *pValue,
+                    [in] WORD cbLength );
+};
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( D9D6549D-A193-4f24-B308-03123D9B7F8D ),
+    helpstring( "IWMWriterPostViewCallback Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// This is the interface that receives uncompressed samples from the writer 
+// to preview (well, postview) what the codec is doing.
+//
+interface IWMWriterPostViewCallback : IWMStatusCallback
+{
+
+    //
+    // cnsSampleDuration will be 0 for most media types.
+    //
+    HRESULT OnPostViewSample(   [in] WORD  wStreamNumber,
+                                [in] QWORD cnsSampleTime,
+                                [in] QWORD cnsSampleDuration,
+                                [in] DWORD dwFlags,
+                                [in] INSSBuffer *pSample,
+                                [in] void *pvContext );
+
+    HRESULT AllocateForPostView([in] WORD wStreamNum,
+                                [in] DWORD cbBuffer,
+                                [out] INSSBuffer **ppBuffer,
+                                [in] void *pvContext );    
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 81E20CE4-75EF-491a-8004-FC53C45BDC3E ),
+    helpstring( "IWMWriterPostView Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// The writer can be QI'd for this interface, which provides advanced writing
+// functionality.
+//
+interface IWMWriterPostView : IUnknown
+{
+    //
+    // Specify the callback to use for PostView
+    //
+    HRESULT SetPostViewCallback( IWMWriterPostViewCallback*  pCallback, void* pvContext );
+
+    //
+    // Turns on delivery of postview samples for a given stream
+    //
+    HRESULT SetReceivePostViewSamples(  [in] WORD wStreamNum,
+                                        [in] BOOL fReceivePostViewSamples );
+    HRESULT GetReceivePostViewSamples(  [in] WORD wStreamNum,
+                                        [out] BOOL *pfReceivePostViewSamples );
+
+    //
+    // The user can enumerate through the various outputs, and get the
+    // output format for that data.
+    //
+    // Manipulating the IWMOutputMediaProps has no effect on the output, unless
+    // the user also calls SetOutputProps.
+    //
+    HRESULT GetPostViewProps(   [in] WORD wStreamNumber,
+                                [out] IWMMediaProps **ppOutput );
+    HRESULT SetPostViewProps(   [in] WORD wStreamNumber,
+                                [in] IWMMediaProps *pOutput );
+
+    //
+    // Used for determining all possible format types supported by this
+    // output on the reader. 
+    //
+    HRESULT GetPostViewFormatCount( [in]  WORD wStreamNumber,
+                                    [out] DWORD *pcFormats );
+
+    HRESULT GetPostViewFormat(  [in] WORD  wStreamNumber,
+                                [in] DWORD dwFormatNumber,
+                                [out] IWMMediaProps** ppProps );
+
+    //
+    // The user can register himself to provide buffers for any of the outputs
+    // (for instance, DDraw buffers). The actual allocation is on the
+    // IWMReaderCallbackAdvanced interface.
+    //
+    HRESULT SetAllocateForPostView( [in] WORD wStreamNumber,
+                                    [in] BOOL fAllocate );
+    HRESULT GetAllocateForPostView( [in]  WORD wStreamNumber,
+                                    [out] BOOL *pfAllocate );
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
     uuid( 96406BE4-2B2B-11d3-B36B-00C04F6108FF ),
     helpstring( "IWMWriterSink Interface"),
     pointer_default(unique),
@@ -1263,6 +1751,25 @@ interface IWMWriterSink : IUnknown
 };
 
 
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( CF4B1F99-4DE2-4e49-A363-252740D99BC1 ),
+    helpstring( "IWMRegisterCallback Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMRegisterCallback : IUnknown
+{
+    HRESULT Advise( [in]    IWMStatusCallback*  pCallback, 
+                    [in]    void*               pvContext );
+
+    HRESULT Unadvise( [in]  IWMStatusCallback*  pCallback,
+                    [in]    void*               pvContext );
+};
+
+
 ///////////////////////////////////////////////////////////////////////////////
 [
     object,
@@ -1274,6 +1781,28 @@ interface IWMWriterSink : IUnknown
 interface IWMWriterFileSink : IWMWriterSink
 {
     HRESULT Open( [in] const WCHAR *pwszFilename );
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 14282BA7-4AEF-4205-8CE5-C229035A05BC ),
+    helpstring( "IWMWriterFileSink2 Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMWriterFileSink2 : IWMWriterFileSink
+{
+    HRESULT Start(  [in]    QWORD cnsStartTime );
+    HRESULT Stop(   [in]    QWORD cnsStopTime );
+    HRESULT IsStopped(       [out] BOOL *pfStopped );
+
+    HRESULT GetFileDuration( [out] QWORD *pcnsDuration );
+    HRESULT GetFileSize(     [out] QWORD *pcbFile );
+
+    HRESULT Close();
+    HRESULT IsClosed(        [out] BOOL *pfClosed );
 };
 
 
@@ -1324,6 +1853,31 @@ interface IWMWriterNetworkSink : IWMWriterSink
     // Close and release the open port.
     //
     HRESULT Close();
+};
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 73C66010-A299-41df-B1F0-CCF03B09C1C6 ),
+    helpstring( "IWMClientConnections Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMClientConnections : IUnknown
+{
+    //
+    // Determine the number of connected clients 
+    //
+    HRESULT GetClientCount( [out] DWORD* pcClients );
+
+    //
+    // Get information about a connected client
+    //
+    HRESULT GetClientProperties( [in] DWORD dwClientNum, 
+                                 [out] WM_CLIENT_PROPERTIES *pClientProperties );
+
 };
 
 
@@ -1428,9 +1982,177 @@ interface IWMReaderAdvanced : IUnknown
     // too slowly to the client.  The reader will try to speed
     // up.
     //
-    HRESULT NotifyLateDelivery( [in] QWORD cnsLateness );
+    HRESULT NotifyLateDelivery( QWORD cnsLateness );
+
 };
 
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( ae14a945-b90c-4d0d-9127-80d665f7d73e ),
+    helpstring( "IWMReaderAdvanced2 Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// The reader can be QI'd for this interface for advanced functionality.
+//
+interface IWMReaderAdvanced2 : IWMReaderAdvanced
+{
+    //
+    // Set the play mode to WMT_PLAY_MODE_AUTOSELECT to allow the reader
+    // to pick the mode. (This is the default). If you select a play mode that
+    // is impossible for the requested URL, an error will be returned when
+    // the URL is opened.
+    //
+    HRESULT SetPlayMode( [in] WMT_PLAY_MODE Mode );
+
+    //
+    // Get the current play mode.
+    //
+    HRESULT GetPlayMode( [out] WMT_PLAY_MODE *pMode );
+
+    //
+    // Between WMT_BUFFERING_START and WMT_BUFFERING_STOP this call will
+    // return progress values. pdwPercent returns the percentage of buffering
+    // that has completed, and pcnsBuffering returns the amount of buffering
+    // remaining.
+    //
+    HRESULT GetBufferProgress( [out] DWORD *pdwPercent, 
+                               [out] QWORD *pcnsBuffering );
+
+    //
+    // When the play mode is WMT_PLAY_MODE_DOWNLOAD, this call will return
+    // progress values. pdwPercent returns the percentage of the download
+    // that has completed, pqwBytesDownloaded returns the number of bytes
+    // that have been downloaded, and pcnsDownload returns the amount of
+    // downloading remaining.
+    //
+    HRESULT GetDownloadProgress( [out] DWORD *pdwPercent,
+                                 [out] QWORD *pqwBytesDownloaded,
+                                 [out] QWORD *pcnsDownload );
+
+    //
+    // When saving a file, the operation may take awhile. Between
+    // WMT_SAVEAS_START and WMT_SAVEAS_STOP, this call will return progress
+    // values. pdwPercent returns the percentage of the save as that has
+    // completed.
+    //
+    HRESULT GetSaveAsProgress( [out] DWORD *pdwPercent );
+
+    //
+    // Save the current file. This only works for WMT_PLAY_MODE_DOWNLOAD.
+    // This operation is asynchronous; WMT_SAVEAS_STOP indicates that the
+    // save has completed. Closing the reader will abort a save operation
+    // that has not completed.
+    //
+    HRESULT SaveFileAs( [in] const WCHAR *pwszFilename );
+
+    //
+    // Returns the name of the protocol that is currently being used.
+    // The protocol name is a URL scheme, such as "mmsu", "http", "file", etc.
+    // Note, however, that the protocol name may differ from the URL scheme
+    // that was specified in IWMReader::Open().
+    // This method may return an empty string if the protocol name cannot be determined.
+    //
+    HRESULT GetProtocolName( [out] WCHAR *pwszProtocol, [in, out] DWORD *pcchProtocol );
+
+    //
+    // Same as IWMReader::Start, but uses a marker index instead of a time value.
+    //
+    HRESULT StartAtMarker( [in] WORD wMarkerIndex, 
+                           [in] QWORD cnsDuration, 
+                           [in] float fRate, 
+                           [in] void *pvContext );
+
+    //
+    // Retrieves a setting for a particular output by name
+    //
+    HRESULT GetOutputSetting( 
+                    [in] DWORD dwOutputNum,
+                    [in] LPCWSTR pszName,
+                    [out] WMT_ATTR_DATATYPE *pType,
+                    [out] BYTE *pValue,
+                    [in,out] WORD *pcbLength );
+
+    //
+    // Sets a named setting for a particular output
+    //
+    HRESULT SetOutputSetting(
+                    [in] DWORD dwOutputNum,
+                    [in] LPCWSTR pszName,
+                    [in] WMT_ATTR_DATATYPE Type,
+                    [in] const BYTE *pValue,
+                    [in] WORD cbLength );
+
+    //
+    // Used to begin prerolling the reader.  Call this method
+    // when you know you're going to call Start soon and want
+    // to start buffering data in advance.  cnsStart, cnsDuration 
+    // and fRate should be the same as the values you plan to pass 
+    // to Start in the future.
+    //
+    HRESULT Preroll( 
+                [in] QWORD cnsStart,
+                [in] QWORD cnsDuration,
+                [in] float fRate );
+
+    //
+    // Specifies whether the SDK should send the client's unique identifier
+    // to the server when streaming.
+    //
+    HRESULT SetLogClientID( [in] BOOL fLogClientID );
+    HRESULT GetLogClientID( [out] BOOL *pfLogClientID );
+
+    //
+    // This method requests that the Reader send WMT_BUFFERING_STOP as soon
+    // as possible. The Reader will only honor the request if it is currently
+    // buffering, i.e., it has sent a WMT_BUFFERING_START, but not yet sent the
+    // corresponding WMT_BUFFERING_STOP.
+    //
+    HRESULT StopBuffering( );
+};
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 9F762FA7-A22E-428d-93C9-AC82F3AAFE5A ),
+    helpstring( "IWMReaderAllocatorEx Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderAllocatorEx : IUnknown
+{
+    HRESULT AllocateForStreamEx( [in] WORD wStreamNum,
+                                 [in] DWORD cbBuffer,
+                                 [out] INSSBuffer **ppBuffer,
+                                 [in] DWORD dwFlags,
+                                 [in] QWORD cnsSampleTime,
+                                 [in] QWORD cnsSampleDuration,
+                                 [in] void *pvContext );    
+                               
+    HRESULT AllocateForOutputEx( [in] DWORD dwOutputNum,
+                                 [in] DWORD cbBuffer,
+                                 [out] INSSBuffer **ppBuffer,
+                                 [in] DWORD dwFlags,
+                                 [in] QWORD cnsSampleTime,
+                                 [in] QWORD cnsSampleDuration,
+                                 [in] void *pvContext );
+};
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( FDBE5592-81A1-41ea-93BD-735CAD1ADC05 ),
+    helpstring( "IWMReaderTypeNegotiation Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderTypeNegotiation : IUnknown
+{
+    HRESULT TryOutputProps( [in] DWORD dwOutputNum,
+                            [in] IWMOutputMediaProps *pOutput );
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 [
@@ -1503,6 +2225,170 @@ interface IWMReaderCallbackAdvanced : IUnknown
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+
+[
+    object,
+    uuid( D2827540-3EE7-432c-B14C-DC17F085D3B3 ),
+    helpstring( "IWMDRMReader Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// Used to access advanced DRM functionality.
+//
+interface IWMDRMReader : IUnknown
+{
+    HRESULT AcquireLicense( [in]    DWORD   dwFlags );
+    HRESULT CancelLicenseAcquisition();
+
+    HRESULT Individualize( [in]     DWORD   dwFlags );
+    HRESULT CancelIndividualization();
+
+    HRESULT MonitorLicenseAcquisition();
+    HRESULT CancelMonitorLicenseAcquisition();
+
+    HRESULT SetDRMProperty( [in]    LPCWSTR pwstrName,  
+                            [in]    WMT_ATTR_DATATYPE dwType, 
+                            [in]    const BYTE *pValue,
+                            [in]    WORD cbLength );
+    HRESULT GetDRMProperty( [in]    LPCWSTR pwstrName,
+                            [out]   WMT_ATTR_DATATYPE* pdwType,
+                            [out]   BYTE *pValue, 
+                            [out]   WORD *pcbLength );
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+[
+    object,
+    uuid( 96406BEC-2B2B-11d3-B36B-00C04F6108FF ),
+    helpstring( "IWMReaderNetworkConfig Interface"),
+    pointer_default(unique),
+    local
+]
+//
+// Used to configure the network.  This interface is implemented by
+// the IWMReader object.
+//
+interface IWMReaderNetworkConfig : IUnknown
+{
+    //
+    // Get and set the amount of time the network source will buffer
+    // data before rendering it.  
+    //
+    HRESULT GetBufferingTime( [out] QWORD *pcnsBufferingTime );
+    HRESULT SetBufferingTime( [in] QWORD cnsBufferingTime );
+
+    //
+    // Returns the UDP port number ranges that will be used for receiving
+    // data.  If no ranges are available, random UDP port numbers will be used.
+    //
+    HRESULT GetUDPPortRanges( [out] WM_PORT_NUMBER_RANGE *pRangeArray,
+                              [in, out] DWORD *pcRanges );
+
+    //
+    // Sets the UDP port number ranges that can be used for receiving data.
+    // If no ranges are specified, random UDP port numbers will be used.
+    //
+    HRESULT SetUDPPortRanges( [in] WM_PORT_NUMBER_RANGE *pRangeArray,
+                              [in] DWORD cRanges );
+
+   
+    //
+    // Proxy settings: Manual proxy, Autodetect, UseBrowser (only for HTTP), or No Proxy.
+    //
+    HRESULT GetProxySettings( LPCWSTR pwszProtocol, WMT_PROXY_SETTINGS *pProxySetting );
+    HRESULT SetProxySettings( LPCWSTR pwszProtocol, WMT_PROXY_SETTINGS ProxySetting );
+    
+    //
+    // The host to use as the proxy.
+    //
+    HRESULT GetProxyHostName( [in] LPCWSTR pwszProtocol, [out] WCHAR *pwszHostName, [in, out] DWORD *pcchHostName );
+    HRESULT SetProxyHostName( [in] LPCWSTR pwszProtocol, [in] LPCWSTR pwszHostName );
+    
+    //
+    // The port to use as the proxy.
+    //
+    HRESULT GetProxyPort( [in] LPCWSTR pwszProtocol, [out] DWORD *pdwPort );
+    HRESULT SetProxyPort( [in] LPCWSTR pwszProtocol, [in] DWORD dwPort );
+
+    //
+    // Get and set the proxy exception list.
+    //
+    HRESULT GetProxyExceptionList( [in] LPCWSTR pwszProtocol, [out] WCHAR *pwszExceptionList, [in, out] DWORD *pcchExceptionList );
+    HRESULT SetProxyExceptionList( [in] LPCWSTR pwszProtocol, [in] LPCWSTR pwszExceptionList );
+
+    //
+    // Whether or not to bypass proxy for local hosts
+    //
+    HRESULT GetProxyBypassForLocal( [in] LPCWSTR pwszProtocol, [out] BOOL *pfBypassForLocal );
+    HRESULT SetProxyBypassForLocal( [in] LPCWSTR pwszProtocol, [in] BOOL fBypassForLocal );
+    
+    //
+    // Whether to force a wpad discovery on the next run
+    //
+    HRESULT GetForceRerunAutoProxyDetection( [out] BOOL *pfForceRerunDetection );
+    HRESULT SetForceRerunAutoProxyDetection( [in] BOOL fForceRerunDetection );
+    
+    //
+    // Whether or not to use multicast, http, tcp, or udp
+    //
+    HRESULT GetEnableMulticast( [out] BOOL *pfEnableMulticast );
+    HRESULT SetEnableMulticast( [in] BOOL fEnableMulticast );
+
+    HRESULT GetEnableHTTP( [out] BOOL *pfEnableHTTP );
+    HRESULT SetEnableHTTP( [in] BOOL fEnableHTTP );
+
+    HRESULT GetEnableUDP( [out] BOOL *pfEnableUDP );
+    HRESULT SetEnableUDP( [in] BOOL fEnableUDP );
+
+    HRESULT GetEnableTCP( [out] BOOL *pfEnableTCP );
+    HRESULT SetEnableTCP( [in] BOOL fEnableTCP );
+
+    //
+    // Forgets automatic protocol detection settings and redetects next time.
+    //
+    HRESULT ResetProtocolRollover( );
+
+    //
+    // Return or set the client's link bandwidth in bps.  This is an optional 
+    // setting.  By default, the SDK will automatically detect its connection 
+    // bandwidth to the streaming media server.
+    //
+    HRESULT GetConnectionBandwidth( [out] DWORD *pdwConnectionBandwidth );
+    HRESULT SetConnectionBandwidth( [in] DWORD dwConnectionBandwidth );
+
+    //
+    // Iterate through the network protocols supported by this reader
+    //
+    HRESULT GetNumProtocolsSupported( [out] DWORD *pcProtocols );
+    HRESULT GetSupportedProtocolName( [in]  DWORD dwProtocolNum, [out] WCHAR *pwszProtocolName, [in, out] DWORD *pcchProtocolName);
+
+
+    //
+    // Adds the specified pszUrl to the list of URL's to recieve logging data.  
+    // This list is in addition to the origin server.
+    //
+    HRESULT AddLoggingUrl( [in] LPCWSTR pwszUrl );
+
+    //
+    // Fills the buffer with the URL corresponding to index dwIndex.
+    //
+    HRESULT GetLoggingUrl( [in] DWORD dwIndex, [out] LPWSTR pwszUrl, [in, out] DWORD *pcchUrl );
+
+    //
+    // Returns the number of URLs in the current list of logging URLs.
+    //
+    HRESULT GetLoggingUrlCount( [out] DWORD *pdwUrlCount );
+
+    //
+    // Clears the list of logging URLs
+    //
+    HRESULT ResetLoggingUrlList( );
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
 [
     object,
     uuid( 96406BED-2B2B-11d3-B36B-00C04F6108FF ),
@@ -1548,8 +2434,96 @@ interface IWMIndexer : IUnknown
     // should wait for appropriate OnStatus calls to be sent to the callback.
     //
     HRESULT StartIndexing( [in] const WCHAR *pwszURL,
-                           [in] IWMStatusCallback *pCallback,
-                           [in] void *pvContext );
+                  [in] IWMStatusCallback *pCallback,
+                  [in] void *pvContext );
     HRESULT Cancel();
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 05E5AC9F-3FB6-4508-BB43-A4067BA1EBE8 ),
+    helpstring( "IWMLicenseBackup Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMLicenseBackup : IUnknown
+{
+
+    HRESULT BackupLicenses( [in] DWORD dwFlags, 
+                            [in] IWMStatusCallback *pCallback );
+    HRESULT CancelLicenseBackup();
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( C70B6334-0544-4efb-A245-15E65A004A13 ),
+    helpstring( "IWMLicenseRestore Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMLicenseRestore : IUnknown
+{
+    HRESULT RestoreLicenses( [in] DWORD dwFlags, 
+                             [in] IWMStatusCallback *pCallback );
+    HRESULT CancelLicenseRestore();
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( 3C8E0DA6-996F-4ff3-A1AF-4838F9377E2E ),
+    helpstring( "IWMBackupRestoreProps Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMBackupRestoreProps : IUnknown
+{
+    HRESULT GetPropCount( [out] WORD *pcProps );
+    HRESULT GetPropByIndex( [in] WORD wIndex,
+                       [out] WCHAR *pwszName,
+                       [in,out] WORD *pcchNameLen,
+                       [out] WMT_ATTR_DATATYPE *pType,
+                       [out] BYTE *pValue,
+                       [in,out] WORD *pcbLength );
+    HRESULT GetPropByName( [in] LPCWSTR pszName,
+                           [out] WMT_ATTR_DATATYPE *pType,
+                           [out] BYTE *pValue,
+                           [in,out] WORD *pcbLength );
+    HRESULT SetProp( [in] LPCWSTR pszName,
+                     [in] WMT_ATTR_DATATYPE Type,
+                     [in] const BYTE *pValue,
+                     [in] WORD cbLength );
+    HRESULT RemoveProp( [in] LPCWSTR pcwszName );
+    HRESULT RemoveAllProps();
+};
+
+///////////////////////////////////////////////////////////////////////////////
+[
+    object,
+    uuid( A970F41E-34DE-4a98-B3BA-E4B3CA7528F0 ),
+    helpstring( "IWMCodecInfo Interface"),
+    pointer_default(unique),
+    local
+]
+interface IWMCodecInfo : IUnknown
+{
+    HRESULT GetCodecInfoCount(   [in]      REFGUID guidType,
+                                 [out]     DWORD *pcCodecs );
+
+    HRESULT GetCodecFormatCount( [in]      REFGUID guidType,
+                                 [in]      DWORD dwCodecIndex,
+                                 [out]     DWORD *pcFormat );
+
+    HRESULT GetCodecFormat(      [in]      REFGUID guidType,
+                                 [in]      DWORD dwCodecIndex,
+                                 [in]      DWORD dwFormatIndex,
+                                 [out]     IWMStreamConfig **ppIStreamConfig );
+};
+
+
 
