@@ -27,6 +27,7 @@ from AnchorDefs import *
 from ArmStates import *
 from MMTypes import *
 import os
+import Bandwidth
 
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
@@ -1417,8 +1418,13 @@ class BandwidthStripBox(GO):
 		d = self.mother.new_displist
 		l, r = self.mother.maptimes(t0, t1)
 		factor = (self.bottom-self.top)/float(self.maxbw)
-		if max > self.maxbw:
-			max = self.maxbw
+		# If it sticks out over the top we clip it
+		toohigh = max - self.maxbw
+		if toohigh > 0:
+			max = max - toohigh
+			min = min - toohigh
+		if min < 0:
+			min = 0
 		t = self.bottom - (max*factor)
 		b = self.bottom - (min*factor)
 
@@ -1865,8 +1871,8 @@ class NodeBox(GO, NodeBoxCommand):
 	def getbandwidthdata(self):
 		t0 = self.node.t0
 		t1 = self.node.t1
-		bw = t1*1000
-		return 40000, bw, t0, t1  # DBG
+		prearm, bandwidth = Bandwidth.get(self.node)
+		return prearm, bandwidth, t0, t1
 
 	# Menu stuff beyond what GO offers
 
