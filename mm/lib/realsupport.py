@@ -830,7 +830,7 @@ def writeRT(file, rp, node):
 		f.write(' duration="%g"' % dur)
 	ch = node.GetChannel(attrname='captionchannel')
 	color = ch.get('bgcolor', (0,0,0))
-	if 1:  # Always write color (was:) color != (255,255,255):
+	if color != (255,255,255):
 		for name, val in colors.items():
 			if color == val:
 				color = name

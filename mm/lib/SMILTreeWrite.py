@@ -556,7 +556,7 @@ cmif_node_attrs_ignore = [
 	'system_screen_size', 'system_screen_depth', 'layout',
 	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
 	'author', 'copyright', 'abstract', 'alt', 'longdesc', 'title',
-	'mimetype', 'terminator',
+	'mimetype', 'terminator', 'begin',
 	]
 cmif_node_realpix_attrs_ignore = [
 	'bitrate', 'size', 'duration', 'aspect', 'author', 'copyright',
@@ -1053,9 +1053,14 @@ class SMILWriter(SMIL):
 					# permanently visible region
 					attrlist.append(('%s:transparent' % NSprefix,
 							 '0'))
+				#
+				# We write the background color only if it is not None.
+				# We also refrain from writing it if we're in G2 compatability mode and
+				# the color is the default (g2-compatible) color: white for text channels
+				# and black for others.
 				if bgcolor is not None and \
 				   (compatibility != settings.G2 or
-				    ((ch['type'] != 'text' or
+				    ((ch['type'] not in ('text', 'RealText') or
 				      bgcolor != (255,255,255)) and
 				     bgcolor != (0,0,0))):
 					attrlist.append(('background-color',
