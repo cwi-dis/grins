@@ -46,7 +46,8 @@ class _LayoutView2(GenFormView):
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
 		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
 							'RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames',
-							'AsOutLine', 'RegionList', 'ShowRbg', 'SendBack', 'BringFront', 'MediaSel')
+							'AsOutLine', 'RegionList', 'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
+							'ViewportCheck','RegionCheck','MediaCheck')
 		self[n[0]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL)
 		self[n[1]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL)
 		self[n[2]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X)
@@ -62,6 +63,9 @@ class _LayoutView2(GenFormView):
 		self[n[12]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK)
 		self[n[13]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT)
 		self[n[14]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL)
+		self[n[15]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_CHECK)
+		self[n[16]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_CHECK)
+		self[n[17]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_CHECK)
 		
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
