@@ -36,6 +36,8 @@ import grinsRC
 
 # App constants
 import appcon
+from win32mu import Point,Size,Rect # shorcuts
+from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 error = 'lib.win32.AttrEditForm.error'
 
@@ -659,39 +661,40 @@ class AttrCtrl:
 			return '%d' % t[0],'%d' % t[1],'%d' % t[2],'%d' % t[3]
 		return self.emptytuple(n)
 
-	def rs(self,f):
-		cf=int(100.0*f+0.5)
-		cfr=cf%100
-		if cfr==0:
-			s='%.0f' % f
-		else:
-			s='%.2f' % f
+	def rs(self,f,prec=-1):
+		if prec<0:
+			cf=int(100.0*f+0.5)
+			cfr=cf%100
+			if cfr==0: prec=0
+			else: prec=2
+		sf='%' + ('.%df' % prec)
+		s=sf % f
 		return s
 			
-	def fttoat(self,t,n):	
+	def fttoat(self,t,n,prec=-1):	
 		if not t:
 			return self.emptytuple(n)
 		if len(t)==1 and n==1:
-			return self.rs(t[0])
+			return self.rs(t[0],prec)
 		elif len(t)==2 and n==2:
-			return self.rs(t[0]),self.rs(t[1])
+			return self.rs(t[0],prec),self.rs(t[1],prec)
 		elif len(t)==3 and n==3:
-			return self.rs(t[0]),self.rs(t[1]),self.rs(t[2])
+			return self.rs(t[0],prec),self.rs(t[1],prec),self.rs(t[2],prec)
 		elif len(t)==4 and n==4:
-			return self.rs(t[0]),self.rs(t[1]),self.rs(t[2]),self.rs(t[3])
+			return self.rs(t[0],prec),self.rs(t[1],prec),self.rs(t[2],prec),self.rs(t[3],prec)
 		return self.emptytuple(n)
 
-	def fttoa(self,t,n):
+	def fttoa(self,t,n,prec=-1):
 		if not t:
 			return ''
 		if len(t)==1 and n==1:
-			return self.rs(t[0])
+			return self.rs(t[0],prec)
 		elif len(t)==2 and n==2:
-			return self.rs(t[0])+ ' ' + self.rs(t[1])
+			return self.rs(t[0],prec)+ ' ' + self.rs(t[1],prec)
 		elif len(t)==3 and n==3:
-			return self.rs(t[0])+ ' ' +self.rs(t[1])+ ' ' +self.rs(t[2])
+			return self.rs(t[0],prec)+ ' ' +self.rs(t[1],prec)+ ' ' +self.rs(t[2],prec)
 		elif len(t)==4 and n==4:
-			return self.rs(t[0])+ ' ' +self.rs(t[1])+ ' ' +self.rs(t[2])+ ' ' +self.rs(t[3])
+			return self.rs(t[0],prec)+ ' ' +self.rs(t[1],prec)+ ' ' +self.rs(t[2],prec)+ ' ' +self.rs(t[3],prec)
 		return ''
 		
 ##################################
@@ -1115,6 +1118,77 @@ class SingleAttrPage(AttrPage):
 		'color':grinsRC.IDD_EDITATTR_C1,
 		'string':grinsRC.IDD_EDITATTR_S1}
 
+##################################
+class LayoutScale:
+	def __init__(self, wnd, xs, ys):
+		self._wnd=wnd
+		self._xscale=xs
+		self._yscale=ys
+		
+	# rc is a win32mu.Rect in pixels
+	# return coord string in units
+	def orgrect_str(self, rc, units):
+		str_units=''
+		if units == UNIT_PXL:
+			scaledrc=self.scaleCoord(rc)
+			s='(%.0f,%.0f,%.0f,%.0f)' %  scaledrc.tuple_ps()
+		elif units == UNIT_SCREEN:
+			s='(%.2f,%.2f,%.2f,%.2f)' %  self._wnd.inverse_coordinates(rc.tuple_ps(),units=units)
+		else:
+			str_units='mm'
+			scaledrc=self.scaleCoord(rc)
+			s='(%.1f,%.1f,%.1f,%.1f)' % self._wnd.inverse_coordinates(scaledrc.tuple_ps(),units=units)
+		return s, str_units
+
+	# rc is a win32mu.Rect in pixels
+	# we return box=(x,y,w,h) in units (in arg)
+	def orgrect(self, rc, units):
+		if units == UNIT_PXL:
+			scaledrc=self.scaleCoord(rc)
+			return scaledrc.tuple_ps()
+		elif units == UNIT_SCREEN:
+			return self._wnd.inverse_coordinates(rc.tuple_ps(),units=units)
+		else:
+			scaledrc=self.scaleCoord(rc)
+			return self._wnd.inverse_coordinates(scaledrc.tuple_ps(),units=units)
+
+
+	# box is in units and scaled
+	# return original box
+	def orgbox(self, box, units):
+		if units == UNIT_SCREEN:
+			return box
+		elif units == UNIT_PXL:
+			rc=Rect((box[0],box[1],box[0]+box[2],box[1]+box[3]))
+			scaledrc=self.scaleCoord(rc)
+			return scaledrc.tuple_ps()
+		else:
+			rc=Rect((box[0],box[1],box[0]+box[2],box[1]+box[3]))
+			scaledrc=self.scaleCoord(rc)
+			return scaledrc.tuple_ps()
+	
+
+	# box is in units and unscaled
+	# return scaled in the same units
+	def layoutbox(self,box,units):
+		if not box: return box
+		if units==UNIT_SCREEN:
+			return box
+		else:
+			x=self._xscale
+			y=self._yscale
+			if units==UNIT_PXL:
+				return (box[0]/x,box[1]/y,box[2]/x,box[3]/y)
+			else:
+				return (box[0]/x,box[1]/y,box[2]/x,box[3]/y)
+
+	def scaleCoord(self,rc):
+		l=rc.left*float(self._xscale)
+		t=rc.top*float(self._yscale)
+		w=rc.width()*float(self._xscale)
+		h=rc.height()*float(self._yscale)
+		return Rect((l,t,l+w,t+h))
+
 
 ##################################
 # LayoutPage
@@ -1129,7 +1203,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		cmifwnd._CmifWnd.__init__(self)
 		self.createLayoutContext(self._form._winsize)
 		self._units=self._form.getunits()
-
+		self._layoutctrl=None
+		
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
 		self._layoutctrl=self.createLayoutCtrl()
@@ -1159,19 +1234,19 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	
 	def init_tk(self, v):
 		v.drawTk.SetLayoutMode(0)
-
-		v.drawTk.SetScale(self._xscale,self._yscale)
+		self._scale=LayoutScale(v,self._xscale,self._yscale)
+		v.drawTk.SetScale(self._scale)
 
 		(x,y,w,h),bunits=self._form.GetBBox()
 		rc=(x,y,x+w,y+h)
-		rc=self.tolayout(rc)
 		rc = v._convert_coordinates(rc, units = bunits)
+		rc=self._scale.layoutbox(rc,UNIT_PXL)
 		v.drawTk.SetBRect(rc)
 
 		(x,y,w,h),bunits=self._form.GetCBox()
 		rc=(x,y,x+w,y+h)
-		rc=self.tolayout(rc)
 		rc = v._convert_coordinates(rc, units = bunits)
+		rc=self._scale.layoutbox(rc,UNIT_PXL)
 		v.drawTk.SetCRect(rc)
 	
 	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
@@ -1183,60 +1258,48 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		DW=200
 		DH=3*DW/4
 		
-		self._xscale=DW/float(sw)
-		self._yscale=DH/float(sh)
-		if self._xscale<self._yscale:
-			self._yscale=self._xscale
+		# try to find best scale
+		wscale=float(sw)/DW
+		hscale=float(sh)/DH
+		if wscale<hscale:
+			scale=wscale
 		else:
-			self._xscale=self._yscale
-		self._xmax=int(self._xscale*sw+0.5)
-		self._ymax=int(self._yscale*sh+0.5)
+			scale=hscale
+		scale=float(int(scale*100.0+0.5))/100.0
+
+		self._xmax=int(sw/scale+0.5)
+		self._ymax=int(sh/scale+0.5)
 		
+		# finally the exact scale:
+		self._xscale=float(sw)/self._xmax
+		self._yscale=float(sh)/self._ymax
+		
+
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
-
-	def fromlayout(self,box):
-		if not box: return box
-		if self._units==appcon.UNIT_SCREEN:
-			return box
-		else:
-			x=self._xscale
-			y=self._yscale
-			if self._units==appcon.UNIT_PXL:
-				l,t,w,h=box;rc=(l,t,l+w,t+h)
-				return self._layoutctrl.drawTk.ToScaledCoord(win32mu.Rect(rc)).tuple_ps()
-				return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
-			else:
-				return (box[0]/x,box[1]/y,box[2]/x,box[3]/y)
-
-	def tolayout(self,box):
-		if not box: return box
-		if self._units==appcon.UNIT_SCREEN:
-			return box
-		else:
-			x=self._xscale
-			y=self._yscale
-			if self._units==appcon.UNIT_PXL:
-				return (int(0.5+box[0]*x),int(0.5+box[1]*y),int(0.5+box[2]*x),int(0.5+box[3]*y))
-			else:
-				return (box[0]*x,box[1]*y,box[2]*x,box[3]*y)
-
 
 	def create_box(self,box):
 		self._layoutctrl.exit_create_box()
 		if box and (box[2]==0 or box[3]==0):box=None
-		units=self._form.getunits()
-		if self._units!=units and box:
-			# to pxl
-			box=self._layoutctrl._convert_coordinates(box,units=self._units)
-			# from pxl to units
-			box=self._layoutctrl.inverse_coordinates(box,units=units)
-			self._units=units
-			apply(self.update, box)
-		
 		# call create box against layout control but be modeless and cool!
 		modeless=1;cool=1;
 		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+		self.check_units()
+
+	def check_units(self):
+		units=self._form.getunits()
+		if units!=self._units:
+			self._units=units
+			v=self._layoutctrl
+			v.drawTk.SetUnits(self._units)
+			v.InvalidateRect()
+			if v._objects:
+				drawObj=v._objects[0]
+				rb=v.inverse_coordinates(drawObj._position.tuple_ps(), units = self._units)
+				apply(self.update, rb)
+				from __main__ import toplevel
+				toplevel.settimer(0.1,(self.OnApply,(0,0)))
+
 			
 	def setvalue(self, attr, val):
 		if not self._initdialog: return
@@ -1251,25 +1314,23 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def getcurrentbox(self):
 		lc=self.getctrl('base_winoff')
 		val=lc.getcurrent()
-		lbox,box=self.val2layoutbox(val)
-		if box and lbox:
-			self._layoutctrl.drawTk.AdjustScale(lbox,box)
-		return lbox	
+		box=self.val2box(val)
+		lbox=self._scale.layoutbox(box,self._units)
+		return lbox
 
 	def setvalue2layout(self,val):
-		lbox,box=self.val2layoutbox(val)
+		box=self.val2box(val)
+		lbox=self._scale.layoutbox(box,self._units)
 		self.create_box(lbox)
 	
-	def val2layoutbox(self,val):
+	def val2box(self,val):
 		if not val:
-			lbox=None
 			box=None
 		else:
 			lc=self.getctrl('base_winoff')
 			box=lc.atoft(val)
-			lbox=self.tolayout(box)
-		return lbox,box
-
+		return box
+		
 	def islayoutattr(self,attr):
 		if self._group:
 			return self._group.islayoutattr(attr)
@@ -1284,8 +1345,11 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			if not box:
 				lc.setvalue('')
 			else:	
-				box=self.fromlayout(box)
-				a=lc.fttoa(box,4)
+				box=self._scale.orgbox(box,self._units)
+				if self._units==UNIT_PXL:prec=0
+				elif self._units==UNIT_SCREEN:prec=1
+				else: prec=2
+				a=lc.fttoa(box,4,prec)
 				lc.setvalue(a)
 
 
@@ -1304,7 +1368,7 @@ class PosSizeLayoutPage(LayoutPage):
 		if not swh:swh='0 0'
 		val = sxy + ' ' + swh
 		box=self._xy.atoft(val)
-		box=self.tolayout(box)
+		box=self._scale.layoutbox(box,self._units)
 		return box
 
 	def setvalue2layout(self,val):
@@ -1314,17 +1378,26 @@ class PosSizeLayoutPage(LayoutPage):
 		if not swh:swh='0 0'
 		val= sxy + ' ' + swh
 		box=self._xy.atoft(val)
-		box=self.tolayout(box)
+		box=self._scale.layoutbox(box,self._units)
 		self.create_box(box)
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
 	def update(self,*box):
-		if self._initdialog and box:
-			box=self.fromlayout(box)
-			self._xy.setvalue('%d %d' % box[:2])
-			self._wh.setvalue('%d %d' % box[2:])
-
+		if self._initdialog:
+			lc=self.getctrl('base_winoff')
+			if not box:
+				self._xy.setvalue('')
+				self._wh.setvalue('')
+			else:	
+				box=self._scale.orgbox(box,self._units)
+				if self._units==UNIT_PXL:prec=0
+				elif self._units==UNIT_SCREEN:prec=1
+				else: prec=2
+				axy=self._xy.fttoa(box[:2],2,prec)
+				awh=self._wh.fttoa(box[2:],2,prec)
+				self._xy.setvalue(axy)
+				self._wh.setvalue(awh)
 
 
 ############################
