@@ -40,7 +40,7 @@ import Channel
 import MMAttrdefs
 
 # url parsing
-import os, ntpath, urllib, MMurl
+import os, ntpath, urllib, MMurl, urlparse
 
 from AnchorDefs import *
 import sys, string
@@ -246,7 +246,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = self.url
 		if list:
 			href = addquery(href, list)
-		self.url, tag = MMurl.splittag(href)
+		utype, host, path, params, query, tag = urlparse.urlparse(href)
+		self.url = urlparse.urlunparse((utype, host, path, params, query, ''))
+		# XXXX do something with the tag
 		try:
 			u = MMurl.urlopen(self.url)
 			if u.headers.maintype == 'image':

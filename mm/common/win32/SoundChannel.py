@@ -130,7 +130,8 @@ class SoundChannel(Channel):
 				arg = arg.strerror
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (fn, arg))
 			return 1
-		fn = self.toabs(fn)
+##		fn = self.toabs(fn)
+		fn = MMurl.canonURL(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
 			if not builder.RenderFile(fn):
@@ -265,18 +266,7 @@ class SoundChannel(Channel):
 		windowinterface.unregister(self._fiber_id)
 		self._fiber_id=0
 
-	################################# general url stuff
-	def islocal(self,url):
-		utype, url = MMurl.splittype(url)
-		host, url = MMurl.splithost(url)
-		return not utype and not host
-
 	def toabs(self,url):
-		if not self.islocal(url):
-			return url
-		filename=MMurl.url2pathname(MMurl.splithost(url)[1])
-		if os.path.isfile(filename):
-			if not os.path.isabs(filename):
-				filename=os.path.join(os.getcwd(),filename)
-				filename=ntpath.normpath(filename)	
-		return filename
+		# no need to duplicate code...
+		import Help_
+		return Help_.toabs(url)
