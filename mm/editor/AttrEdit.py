@@ -584,6 +584,10 @@ class NodeWrapper(Wrapper):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
+			namelist.append('project_default_region_video')
+			namelist.append('project_default_region_image')
+			namelist.append('project_default_region_sound')
+			namelist.append('project_default_region_text')
 		if ntype == 'switch':
 			if 'begin' in namelist:
 				namelist.remove('begin')
