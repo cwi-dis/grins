@@ -534,8 +534,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		showing = []
 		for i in range(len(self.views)):
 			if self.views[i] is not None and \
-			   self.views[i].is_showing():
-				showing.append(i)
+					self.views[i].is_showing():
+				geom = self.views[i].get_geometry()
+				showing.append((i, geom))
 		self.editmgr.clearclip()  # Not optimal, but there is little we can do about it...
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
@@ -994,8 +995,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		showing = []
 		for i in range(len(self.views)):
 			if self.views[i] is not None and \
-			   self.views[i].is_showing():
-				showing.append(i)
+					self.views[i].is_showing():
+				geom = self.views[i].get_geometry()
+				showing.append((i, geom))
 #		self.editmgr.unregister(self)
 #		self.editmgr.destroy() # kills subscribed views
 #		self.context.seteditmgr(None)
@@ -1285,8 +1287,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		showing = []
 		for i in range(len(self.views)):
 			if self.views[i] is not None and \
-			   self.views[i].is_showing():
-				showing.append(i)
+					self.views[i].is_showing():
+				geom = self.views[i].get_geometry()
+				showing.append((i, geom))
 #		self.editmgr.rollback()
 		# cleanup
 		self.editmgr.clearclip()
@@ -1461,7 +1464,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if listViewsToShow == None or self.viewsdisabled:
 				self.showdefaultviews()
 			else:
-				for i in listViewsToShow:
+				for i, geom in listViewsToShow:
+					self.views[i].set_geometry(geom)
 					self.views[i].show()
 
 			# special case, if all views was previously disabled
@@ -1499,8 +1503,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		showing = []
 		for i in range(len(self.views)):
 			if self.views[i] is not None and \
-				self.views[i].is_showing():
-				showing.append(i)
+					self.views[i].is_showing():
+				geom = self.views[i].get_geometry()
+				showing.append((i, geom))
 		self.destroyviews()
 		
 		# update the document root			
