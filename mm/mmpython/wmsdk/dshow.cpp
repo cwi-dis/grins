@@ -28,6 +28,14 @@ struct IRealConverter : public IUnknown
 	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
 	};
 
+// {BDBC884C-0FCE-414f-9941-035F900E43B6}
+DEFINE_GUID(IID_IWMConverter,
+0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
+struct IWMConverter : public IUnknown
+	{
+	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
+	};
+
 static PyObject *ErrorObject;
 
 #define RELEASE(x) if(x) x->Release();x=NULL;
@@ -72,7 +80,6 @@ newGraphBuilderObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
-
 
 
 typedef struct {
@@ -253,6 +260,27 @@ newRealConverterObject()
 	if (self == NULL)
 		return NULL;
 	self->pRealConverter = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMConverter* pWMConverter;
+} WMConverterObject;
+
+staticforward PyTypeObject WMConverterType;
+
+static WMConverterObject *
+newWMConverterObject()
+{
+	WMConverterObject *self;
+
+	self = PyObject_NEW(WMConverterObject, &WMConverterType);
+	if (self == NULL)
+		return NULL;
+	self->pWMConverter = NULL;
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -887,6 +915,30 @@ BaseFilter_QueryIRealConverter(BaseFilterObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char BaseFilter_QueryIWMConverter__doc__[] =
+""
+;
+
+static PyObject *
+BaseFilter_QueryIWMConverter(BaseFilterObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	WMConverterObject *obj = newWMConverterObject();
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pFilter->QueryInterface(IID_IWMConverter,(void**)&obj->pWMConverter);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("BaseFilter_QueryIWMConverter", res);
+		Py_DECREF(obj);
+		obj->pWMConverter=NULL;
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 static char BaseFilter_EnumPins__doc__[] =
 ""
 ;
@@ -914,6 +966,7 @@ static struct PyMethodDef BaseFilter_methods[] = {
 	{"FindPin", (PyCFunction)BaseFilter_FindPin, METH_VARARGS, BaseFilter_FindPin__doc__},
 	{"QueryIFileSinkFilter", (PyCFunction)BaseFilter_QueryIFileSinkFilter, METH_VARARGS, BaseFilter_QueryIFileSinkFilter__doc__},
 	{"QueryIRealConverter", (PyCFunction)BaseFilter_QueryIRealConverter, METH_VARARGS, BaseFilter_QueryIRealConverter__doc__},
+	{"QueryIWMConverter", (PyCFunction)BaseFilter_QueryIWMConverter, METH_VARARGS, BaseFilter_QueryIWMConverter__doc__},
 	{"QueryFilterName", (PyCFunction)BaseFilter_QueryFilterName, METH_VARARGS, BaseFilter_QueryFilterName__doc__},
 	{"EnumPins", (PyCFunction)BaseFilter_EnumPins, METH_VARARGS, BaseFilter_EnumPins__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -1726,6 +1779,81 @@ static PyTypeObject RealConverterType = {
 };
 
 // End of code for RealConverter object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMConverter object 
+
+static char WMConverter_SetInterface__doc__[] =
+""
+;
+
+static PyObject *
+WMConverter_SetInterface(WMConverterObject *self, PyObject *args)
+{
+	UnknownObject *obj;
+	char *hint;
+	if (!PyArg_ParseTuple(args, "Os",&obj, &hint))
+		return NULL;
+	WCHAR wsz[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,hint,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
+	self->pWMConverter->SetInterface(obj->pUk,wsz);
+	Py_END_ALLOW_THREADS
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef WMConverter_methods[] = {
+	{"SetInterface", (PyCFunction)WMConverter_SetInterface, METH_VARARGS, WMConverter_SetInterface__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMConverter_dealloc(WMConverterObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pWMConverter);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMConverter_getattr(WMConverterObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMConverter_methods, (PyObject *)self, name);
+}
+
+static char WMConverterType__doc__[] =
+""
+;
+
+static PyTypeObject WMConverterType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMConverter",			/*tp_name*/
+	sizeof(WMConverterObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMConverter_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMConverter_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMConverterType__doc__ /* Documentation string */
+};
+
+// End of code for WMConverter object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
