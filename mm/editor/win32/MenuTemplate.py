@@ -60,6 +60,7 @@ MENUBAR=(
 		
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for Wireless...', None, EXPORT_XMT),
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'P&rune and Save as generic SMIL 2.0...', None, EXPORT_PRUNE),
+			((features.EXPORT_SMIL1,), ENTRY, 'Publish for SMIL &1.0...', None, EXPORT_SMIL1),
 		)),
 		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2 | FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
