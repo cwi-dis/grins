@@ -43,7 +43,7 @@ class MACDialog:
 		self._dialog = self._window._wid
 		# Override event handler:
 		self._window.set_itemhandler(self.do_itemhit)
-		
+
 	def do_itemhit(self, item, event):
 		return 0
 
@@ -72,20 +72,20 @@ class MACDialog:
 	def _showitemcontrols(self, itemlist):
 		"""Make sure item controls (plus any control embedded) are visible and active"""
 		for item in itemlist:
-			if item in self._itemlist_shown:
-				continue
+##			if item in self._itemlist_shown:
+##				continue
 			ctl = self._dialog.GetDialogItemAsControl(item)
 			ctl.ShowControl()
-			self._itemlist_shown.append(item)
+##			self._itemlist_shown.append(item)
 			
 	def _hideitemcontrols(self, itemlist):
 		"""Make item controls (plus anything embedded) are invisible"""
 		for item in itemlist:
-			if item not in self._itemlist_shown:
-				continue
+##			if item not in self._itemlist_shown:
+##				continue
 			ctl = self._dialog.GetDialogItemAsControl(item)
 			ctl.HideControl()
-			self._itemlist_shown.remove(item)
+##			self._itemlist_shown.remove(item)
 			
 	def _setsensitive(self, itemlist, sensitive):
 		"""Set or reset item sensitivity to user input"""
@@ -122,6 +122,7 @@ class MACDialog:
 	def _setlabel(self, item, text):
 		"""Set the text of a static text or edit text"""
 		text = _string2dialog(text)
+		print 'DBG: setlabel', item, text
 		h = self._dialog.GetDialogItemAsControl(item)
 		Dlg.SetDialogItemText(h, text)
 
@@ -133,6 +134,12 @@ class MACDialog:
 			text = string.split(text, '\r')
 			text = string.join(text, '\n')
 		return text
+
+	def _settitle(self, item, text):
+		"""Set the title of a control item"""
+		text = _string2dialog(text)
+		ctl = self._dialog.GetDialogItemAsControl(item)
+		ctl.SetControlTitle(text)
 
 	def _selectinputfield(self, item):
 		"""Select all text in an input field"""
