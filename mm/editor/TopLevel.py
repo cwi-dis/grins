@@ -33,6 +33,8 @@ EMPTY = """
 
 from TopLevelDialog import TopLevelDialog
 
+have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
+
 Error = 'TopLevel.Error'
 
 class TopLevel(TopLevelDialog, ViewDialog):
@@ -303,30 +305,32 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
-		attrs = self.context.attributes
-		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
-			if features.lightweight:
-				attrs['project_html_page'] = 'external_player.html'
-			# In the full version we continue, and the user gets a warning later (in HTMLWrite)
-		#
-		# Invent HTML file name and SMIL file url, and generate webpage
-		#
-		htmlfilename = os.path.splitext(filename)[0] + '.html'
-		smilurl = MMurl.pathname2url(filename)
 
-		# Make a back-up of the original file...
-		oldhtmlfilename = ''
-		try:
-			oldhtmlfilename = make_backup_filename(htmlfilename)
-			os.rename(htmlfilename, oldhtmlfilename)
-		except os.error:
-			pass
-		try:
-			import HTMLWrite
-			HTMLWrite.WriteFile(self.root, htmlfilename, smilurl, oldhtmlfilename,
-						evallicense=evallicense, exporttype=exporttype)
-		except IOError, msg:
-			windowinterface.showmessage('HTML export failed:\n%s'%(msg,))
+		if have_web_page:
+			attrs = self.context.attributes
+			if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
+				if features.lightweight:
+					attrs['project_html_page'] = 'external_player.html'
+				# In the full version we continue, and the user gets a warning later (in HTMLWrite)
+			#
+			# Invent HTML file name and SMIL file url, and generate webpage
+			#
+			htmlfilename = os.path.splitext(filename)[0] + '.html'
+			smilurl = MMurl.pathname2url(filename)
+
+			# Make a back-up of the original file...
+			oldhtmlfilename = ''
+			try:
+				oldhtmlfilename = make_backup_filename(htmlfilename)
+				os.rename(htmlfilename, oldhtmlfilename)
+			except os.error:
+				pass
+			try:
+				import HTMLWrite
+				HTMLWrite.WriteFile(self.root, htmlfilename, smilurl, oldhtmlfilename,
+							evallicense=evallicense, exporttype=exporttype)
+			except IOError, msg:
+				windowinterface.showmessage('HTML export failed:\n%s'%(msg,))
 
 	def bandwidth_callback(self, do_export_callback):
 		import settings
@@ -405,7 +409,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.filename:
 			windowinterface.showmessage('Please save your work first')
 			return
-		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
 			
 		missing = ''
@@ -477,7 +480,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def get_upload_info(self, w_passwd='', m_passwd=''):
 		attrs = self.context.attributes
-		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 
 		# Website FTP parameters
 		w_hostname = ''
@@ -664,6 +666,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					progress = progress.set
 				else:
 					progress = None
+				
 				SMILTreeWrite.WriteFile(self.root, filename,
 							cleanSMIL = cleanSMIL,
 							grinsExt = grinsExt,
@@ -701,7 +704,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 0
 		evallicense= (license < 0)
 		self.pre_save()
-		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 		#
 		# Progress dialog
 		#
