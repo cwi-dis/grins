@@ -1,4 +1,5 @@
 # Arc info window (modeless dialog)
+print 'import ArcInfo'
 
 
 import gl
@@ -38,10 +39,16 @@ class ArcInfo(Dialog):
 		self.delay = delay
 		self.dnode = dnode
 		self.dside = dside
-		self = Dialog.init(self, (340, 280, self.maketitle(), ''))
+		#
 		global form_template
 		if not form_template:
 			form_template = flp.parse_form('ArcInfoForm', 'main')
+		#
+		width = form_template[0].Width
+		height = form_template[0].Height
+		title = self.maketitle()
+		hint = ''
+		self = Dialog.init(self, width, height, title, hint)
 		flp.merge_full_form(self, self.form, form_template)
 		return self
 
@@ -76,8 +83,11 @@ class ArcInfo(Dialog):
 		if not self.stillvalid():
 			self.close()
 		else:
-			gl.winset(self.form.window)
-			gl.wintitle(self.maketitle())
+			self.settitle(self.maketitle())
+
+	def kill(self):
+		self.close()
+		self.destroy()
 
 	def stillvalid(self):
 		if self.snode.GetRoot() is not self.root or \
