@@ -8,20 +8,27 @@ import MMExc
 import TopLevel
 import SoundChannel
 import getopt
+import Channel
 
 def main():
 	playnow = 0
 	stats = 0
-	opts, args = getopt.getopt(sys.argv[1:], 'ps')
+	noarm = 0
+	opts, args = getopt.getopt(sys.argv[1:], 'psn')
 	for opt, arg in opts:
 		if opt == '-p':
 			playnow = 1
 		elif opt == '-s':
 			stats = 1
+		elif opt == '-n':
+			noarm = 1
 	if args:
 		filename = args[0]
 	else:
 		filename = 'demo.cmif'
+	#
+	if noarm:
+		Channel.disable_prearm()
 	#
 	top = TopLevel.TopLevel().init(filename)
 	top.show()
