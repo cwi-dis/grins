@@ -185,16 +185,17 @@ class SchedulerContext:
 		# XXXX Code gone to gen_prearms
 		prearmnowlist = []
 		prearmlaterlist = []
-		now = self.playroot.t0
+		now = self.playroot.GetTimes()[0]
 		parent = self.parent
 		for ch in self.channels:
 			ev = self.getnextprearm(ch)
 			if not ev:
 				continue
-			if ev[1].t0 <= now:
+			t0 = ev[1].GetTimes()[0]
+			if t0 <= now:
 				prearmnowlist.append(ev)
 			else:
-				prearmlaterlist.append((ev[1].t0, ev))
+				prearmlaterlist.append((t0, ev))
 		for ev in prearmnowlist:
 			parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
 		prearmlaterlist.sort()
@@ -948,7 +949,7 @@ class SchedulerContext:
 			raise error, 'Arm_ready event for unknown channel %s' % chan
 		pev = self.getnextprearm(chan)
 		if pev:
-			self.parent.add_lopriqueue(self, pev[1].t0, pev)
+			self.parent.add_lopriqueue(self, pev[1].GetTimes()[0], pev)
 	#
 	def play_done(self, node, timestamp = None):
 		self.parent.event(self, (SR.PLAY_DONE, node), timestamp)
