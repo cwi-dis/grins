@@ -128,3 +128,20 @@ class Hlinks:
 			dict[a1] = 1
 			dict[a2] = 1
 		return dict
+		
+	def findnodelinks(self, node):
+		interesting = []
+		uid = node.GetUID()
+		for a1, a2, dir, tp in self.links:
+			if type(a1) == type(()) and a1[0] == uid:
+				interesting.append(a1, a2, dir, tp)
+			if type(a2) == type(()) and a2[0] == uid:
+				interesting.append(self.revlink((a1, a2, dir, tp)))
+		is_src = 0
+		is_dst = 0
+		for a1, a2, dir, tp in interesting:
+			if dir in (DIR_1TO2, DIR_2WAY):
+				is_src = 1
+			if dir in (DIR_2TO1, DIR_2WAY):
+				is_dst = 1
+		return is_src, is_dst
