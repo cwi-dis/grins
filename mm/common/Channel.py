@@ -1875,9 +1875,9 @@ class ChannelWindow(Channel):
 					else:
 						rArgs.append(a*mHeightInPercent + mTopInPercent)
 		else:
-			# Internally, we manage only elipses
-			# note: for an elipse, the meaning of rArg is a tuple of (xcenter, ycenter, xradius, yradius) 
-			rArgs = ['elipse']
+			# Internally, we manage only ellipses
+			# note: for an ellipse, the meaning of rArg is a tuple of (xcenter, ycenter, xradius, yradius) 
+			rArgs = ['ellipse']
 			xCenter, yCenter, radius = coords
 #			xsize, ysize = node.GetDefaultMediaSize(100, 100)
 #			# after a arming default, xsize or ysize value are equal to 0 !
