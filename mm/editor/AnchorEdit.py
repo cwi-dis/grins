@@ -130,10 +130,10 @@ class AnchorEditor(AnchorEditorDialog):
 		# check uniqueness of anchor names
 		names = {}
 		for anchor in self.anchorlist:
-			if names.has_key(anchor[0]):
+			if names.has_key(anchor[A_ID]):
 				windowinterface.showmessage('Anchor names not unique')
 				return 0
-			names[anchor[0]] = 0
+			names[anchor[A_ID]] = 0
 		if not em.transaction(): return 0
 		n = self.node
 		old_alist = MMAttrdefs.getattr(self.node, 'anchorlist')
@@ -243,9 +243,9 @@ class AnchorEditor(AnchorEditorDialog):
 		if type is None:
 			type = new[A_TYPE]
 		if type in WholeAnchors:
-			new = (new[0], type, [])
+			new = (new[0], type, [], (0,0))
 		else:
-			new = (new[0], type, new[2])
+			new = (new[0], type, new[2], new[3])
 			if self.editable:
 				self.toplevel.player.defanchor(
 					self.node, new, self._anchor_cb)
@@ -304,7 +304,7 @@ class AnchorEditor(AnchorEditorDialog):
 	def add_callback(self):
 		self.changed = 1
 		maxid = 0
-		for id, atype, args in self.anchorlist:
+		for id, atype, args, times in self.anchorlist:
 			try:
 				id = eval('0+'+id)
 			except:
@@ -314,7 +314,7 @@ class AnchorEditor(AnchorEditorDialog):
 		id = `maxid + 1`
 		#name = '#' + self.name + '.' + id
 		name = id
-		self.anchorlist.append((id, ATYPE_WHOLE, []))
+		self.anchorlist.append((id, ATYPE_WHOLE, [], (0,0)))
 		self.selection_append(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
@@ -325,7 +325,7 @@ class AnchorEditor(AnchorEditorDialog):
 			return
 		anchor = self.anchorlist[self.focus]
 		id = self.selection_gettext()
-		anchor = (id, anchor[1], anchor[2])
+		anchor = id, anchor[1], anchor[2], anchor[3]
 		if self.anchorlist[self.focus] == anchor:
 			return
 		self.changed = 1
@@ -342,7 +342,7 @@ class AnchorEditor(AnchorEditorDialog):
 		if self.focus is None:
 			print 'AnchorEdit: no focus in delete!'
 			return
-		id, atype, arg = self.anchorlist[self.focus]
+		id, atype, arg, times = self.anchorlist[self.focus]
 		self.changed = 1
 		del self.anchorlist[self.focus]
 		self.selection_deleteitem(self.focus)
@@ -381,7 +381,7 @@ class AnchorEditor(AnchorEditorDialog):
 				windowinterface.showmessage('Already exists')
 				return
 		aid = self.anchorlist[self.focus][A_ID]
-		a = (name, ATYPE_COMP, [(self.uid, aid)])
+		a = name, ATYPE_COMP, [(self.uid, aid)], (0,0)
 		rootanchors.append(a)
 		em = self.editmgr
 		if not em.transaction(): return 0
