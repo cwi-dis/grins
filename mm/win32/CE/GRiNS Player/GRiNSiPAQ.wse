@@ -46,7 +46,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=C:\PROGRA~1\WISEIN~2
+  Variable Default3=E:\Program Files\Wise Installation System
   Variable Flags3=00001000
   Variable Name4=_WINCE_MACROS_
   Variable Default4=1
@@ -81,6 +81,14 @@ item: WinCE Component
     Check Date Options=2
     Dest Dir=\Program Files\GRiNS
     Dest FileName=GRiNS Player.exe
+    Platform Support=37
+  end
+  item: WinCE File
+    Source Path=..\gx\Arm\gx.dll
+    Dest Path=\Windows\gx.dll
+    Check Date Options=2
+    Dest Dir=\Windows
+    Dest FileName=gx.dll
     Platform Support=37
   end
   item: WinCE Shortcut
