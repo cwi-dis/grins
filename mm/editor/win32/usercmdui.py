@@ -83,19 +83,21 @@ PLAYERVIEW_UI=CommandUI(PLAYERVIEW,'View','Player View')
 HIERARCHYVIEW_UI=CommandUI(HIERARCHYVIEW,'View','Hierarchy View')
 CHANNELVIEW_UI=CommandUI(CHANNELVIEW,'View','Channels View')
 LINKVIEW_UI=CommandUI(LINKVIEW,'View','Link View')
+LAYOUTVIEW_UI=CommandUI(LAYOUTVIEW,'View','Layout View')
+
 
 #
-# Player view commands
+# Player commands
 #
 PLAY_UI=CommandUI(PLAY,'Play','Play',IDUC_PLAY)
 PAUSE_UI=CommandUI(PAUSE,'Play','Pause',IDUC_PAUSE)
 STOP_UI=CommandUI(STOP,'Play','Stop',IDUC_STOP)
 MAGIC_PLAY_UI=CommandUI(MAGIC_PLAY,'Play','Magic')
 CHANNELS_UI=CommandUI(CHANNELS)
-CALCTIMING_UI=CommandUI(CALCTIMING)
 SYNCCV_UI=CommandUI(SYNCCV)
 CRASH_UI=CommandUI(CRASH,'Debug','Crash GRiNS')
 SCHEDDUMP_UI=CommandUI(SCHEDDUMP)
+
 
 #
 # Hierarchy view commands
@@ -113,6 +115,7 @@ NEW_ALT_UI=CommandUI(NEW_ALT)
 ZOOMIN_UI=CommandUI(ZOOMIN)
 ZOOMOUT_UI=CommandUI(ZOOMOUT)
 ZOOMHERE_UI=CommandUI(ZOOMHERE)
+
 
 #
 # Command to hierarchy/channel view
@@ -132,6 +135,7 @@ FINISH_LINK_UI=CommandUI(FINISH_LINK)
 FINISH_ARC_UI=CommandUI(FINISH_ARC) 
 THUMBNAIL_UI=CommandUI(THUMBNAIL)
 
+
 #
 # Channel view commands
 #
@@ -149,5 +153,16 @@ SYNCARCS_UI=CommandUI(SYNCARCS)
 ANCESTORS_UI=CommandUI(ANCESTORS)
 SIBLINGS_UI=CommandUI(SIBLINGS)
 DESCENDANTS_UI=CommandUI(DESCENDANTS)
+LAYOUTS_UI=CommandUI(LAYOUTS)
+
+
+#
+# Layout view commands
+#
+NEW_LAYOUT_UI=CommandUI(NEW_LAYOUT)
+REMOVE_CHANNEL_UI=CommandUI(REMOVE_CHANNEL)
+ADD_CHANNEL_UI=CommandUI(ADD_CHANNEL)
+RENAME_UI=CommandUI(RENAME)
+
 
 
