@@ -76,6 +76,7 @@ class LayoutChannel(ChannelWindow):
 ##					     (self.focuscall, ())))
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
+			self.window.updatebgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
 		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
@@ -86,7 +87,6 @@ class LayoutChannel(ChannelWindow):
 				     None)
 ##		if menu:
 ##			self.window.create_menu(menu, title = self._name)
-
 
 	def do_show(self, pchan):
 		# create a window for this channel
@@ -131,74 +131,32 @@ class LayoutChannel(ChannelWindow):
 				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
 		
-		# we have to render visible the channel at start according to the 
-		# showBackground attribute
-		if self._hasBackgroundAtStart():
-			self._setVisible(1)
+		units = self._attrdict.get('units',
+					   windowinterface.UNIT_SCREEN)
+		self.create_window(self._get_parent_channel(), self._wingeom, units)
+
 		return 1
 
 	def play(self, node):
 		print 'can''t play LayoutChannel'
 
 	# A channel pass active (when one more media play inside).
-	# We have to render visible all channel which are at least one media playing inside
-	def updateToActiveState(self):
+	# We have to update the visibility of all channels 
+	def childToActiveState(self):
 		ch = self
-		chToVisible = None
 		while ch != None:
-			if not ch._hasBackgroundAtStart():
-				if ch._activeMediaNumber <= 0:
-						chToVisible = ch
-				ch._activeMediaNumber = ch._activeMediaNumber+1
-				ch = ch._get_parent_channel()
-			else:
-				break
-
-		# if found, render it visible
-		if chToVisible:
-			chToVisible._setVisible(1)
+			ch._activeMediaNumber = ch._activeMediaNumber+1
+			ch.show(1)
+			ch = ch._get_parent_channel()
 			
-	# A channel pass inactive (when no media play inside anymore).
-	# We have to rendered unvisible all channel according to the showBackground attribute
-	def updateToInactiveState(self):
+	# A channel pass inactive (when one more media play inside).
+	# We have to update the visibility of all channels 
+	def childToInactiveState(self):
 		ch = self
-		# looking for the first channel (in hierarchy) which pass inactive
-		chToUnvisible = None
 		while ch != None:
-			if not ch._hasBackgroundAtStart():
-				ch._activeMediaNumber = ch._activeMediaNumber-1
-				if ch._activeMediaNumber <= 0:
-					if self._attrdict['showBackground'] == 'whenActive':
-						chToUnvisible = ch
-				ch = ch._get_parent_channel()
-			else:
-				break
-
-		# if found, render it invisible (and all channels inside)
-		if chToUnvisible:
-			chToUnvisible._setVisible(0)
+			ch._activeMediaNumber = ch._activeMediaNumber-1
+			if ch._activeMediaNumber <= 0:
+				ch.hide(0)
+			ch = ch._get_parent_channel()
 			
-	# Set this channel visible/unvisible according to the showBackground attribute
-	
-	###################################### WARNING ###################################
-	# for now, we destroy the window when the channel pass inactive (only method which
-	# actually work). We also destroy all windows inside
-	# we can't use hide/show because they modify a lot of things (structure of channel,
-	# state in some case, ...). Otherwise you have a crash in a lot of cases.
-	# The best method whould be call hide/show without destroy and rebuild the window, 
-	# but it doesn't work actually
-	##################################################################################
-	def _setVisible(self, fl):
-		if self.window == None and fl:
-			ChannelWindow._setVisible(self,fl)
-			for subch in self._subchannels:
-			        if subch._attrdict['showBackground'] != 'whenActive' or \
-			                subch._activeMediaNumber > 0:
-					subch._setVisible(fl)
-			
-		elif self.window != None and not fl:
-			for subch in self._subchannels:
-				subch._setVisible(fl)
-			ChannelWindow._setVisible(self,fl)
-		
 			
