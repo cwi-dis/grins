@@ -210,13 +210,15 @@ class SlideShow:
 					rp.feed(fp.read())
 					rp.close()
 				except:
-					windowinterface.showmessage('error while reading RealPix file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+					msg = 'Error reading RealPix file %s' % url
+					windowinterface.showmessage(msg, mtype = 'warning')
+					self.node.set_infoicon('error', msg)
 					rp = DummyRP()
 				fp.close()
 			if rp is not self.rp and hasattr(node, 'tmpfile'):
 				# new content, delete temp file
 ##				windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-				choice = windowinterface.multchoice('Save changes to %s?' % self.url, ['Yes', 'No', 'Cancel'], 2)
+				choice = self.asksavechanges()
 				if choice == 2:
 					# cancel
 					node.SetAttr('file', self.url)
@@ -377,6 +379,20 @@ class SlideShow:
 	def kill(self):
 		pass
 		
+	def asksavechanges(self):
+		if self.url:
+			return windowinterface.multchoice('Save changes to %s?' % self.url, 
+						['Yes', 'No', 'Cancel'], 2)
+		# User wants to save, but we have no url.
+		answer = windowinterface.multchoice('Discard old contents of RealPix node?',
+			['Yes', 'No', 'Cancel'], 2)
+		if answer == 0:
+			# Discard, return as "don't save"
+			return 1
+		# Cancel and don't discard are both returned as "cancel"
+		return 2
+
+
 	def computebandwidth(self):
 		"""See whether bandwidth usage of our (slide) children is OK"""
 		import Bandwidth
