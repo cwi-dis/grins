@@ -63,9 +63,10 @@ def givehelp(topic):
 	fixhelpdir()
 	helpfile = '%s.html'%topic
 	helpurl = MMurl.basejoin(helpbase, helpfile)
-	if not helpwindow is None and not helpwindow.is_closed():
+	if helpwindow is not None and not helpwindow.is_closed():
 		helpwindow.goto_url(helpurl)
-	helpwindow = windowinterface.htmlwindow(helpurl)
+	else:
+		helpwindow = windowinterface.htmlwindow(helpurl)
 
 def showhelpwindow():
 	givehelp('index')
