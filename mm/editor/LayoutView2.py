@@ -1097,6 +1097,7 @@ class LayoutView2(LayoutViewDialog2):
 			children = self.getChildren(nodeRef)
 			for child in children:
 				self.__recurDelNode(child)
+
 			self.treeHelper.delNode(nodeRef) 
 			self.editmgr.delchannel(nodeRef.name)
 			
@@ -2045,8 +2046,10 @@ class TreeWidget(Widget):
 	
 				if not (hasNotOnlyMedia or expandMediaNode):
 					expand = 0
+					nodeRef.collapsed = 1
 				else:
 					expand = 1
+					nodeRef.collapsed = 0
 
 			if expand:				
 				self.treeCtrl.expand(self.nodeRefToNodeTreeCtrlId[nodeRef])
