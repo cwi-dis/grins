@@ -2062,7 +2062,11 @@ class NodeBox(GO, NodeBoxCommand):
 			return None
 		t0 = self.node.t0
 		t1 = self.node.t1
-		prearm, bandwidth = Bandwidth.get(self.node)
+		try:
+			prearm, bandwidth = Bandwidth.get(self.node)
+		except Bandwidth.Error, msg:
+			node.set_infoicon('error', msg)
+			prearm = bandwidth = 0
 		return t0, t1, self, prearm, bandwidth
 
 	# Menu stuff beyond what GO offers

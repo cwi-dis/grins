@@ -179,24 +179,36 @@ def compute_bandwidth(root):
 		if bandwidth:
 			overflow, dummy = accum.reserve(t0, t1, bandwidth)
 			if overflow:
-				node.set_infoicon('bandwidthbad')
+				msg = 'Uses %d bps more bandwidth than available'%overflow
+				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
 				errorcount = errorcount + 1
 				print 'continuous overflow', overflow, node
 				errorseconds = errorseconds + (overflow/maxbandwidth)
 	#
-	# Compute preroll bandwidth
+	# Compute preroll bandwidth and internal RealPix bandwidth usage
 	#
 	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
 		if prearm:
 			overflow, dummyt0, dummyt1, dummyboxes = accum.prearmreserve(0, t0, prearm)
 			if overflow:
-				if not errornodes.has_key(node):
-					node.set_infoicon('bandwidthbad')
-					errornodes[node] = 1
-					errorcount = errorcount + 1
 				print 'preroll overflow', overflow, node
 				errorseconds = errorseconds + (overflow/maxbandwidth)
+				if not errornodes.has_key(node):
+					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
+					node.set_infoicon('bandwidthbad', msg)
+					errornodes[node] = 1
+					errorcount = errorcount + 1
+		if node.GetType() == 'ext' and \
+		   node.GetChannelType() == 'RealPix':
+			# Create the SlideShow if it somehow doesn't exist yet
+			if not hasattr(node, 'slideshow'):
+				import realnode
+				node.slideshow = realnode.SlideShow(node)
+			slack, errors = node.slideshow.computebandwidth()
+			errorseconds = errorseconds + slack
+			errorcount = errorcount + errors
+
 	#
 	# Finally show "bandwidth fine" icon on all nodes that deserve it
 	#
@@ -205,11 +217,14 @@ def compute_bandwidth(root):
 			node.set_infoicon('bandwidthgood')
 	
 	return maxbandwidth, prerolltime, errorcount, errorseconds
-				
 	
 def getallbandwidthdata(datalist, node):
 	"""Recursively get all bandwidth usage info. Modifies first argument"""
-	this = getbandwidthdata(node)
+	try:
+		this = getbandwidthdata(node)
+	except Bandwidth.Error, arg:
+		node.set_infoicon('error', arg)
+		this = None
 	if this:
 		datalist.append(this)
 	for child in node.children:
@@ -223,6 +238,6 @@ def getbandwidthdata(node):
 		return None
 	t0 = node.t0
 	t1 = node.t1
-	prearm, bandwidth = Bandwidth.get(node)
+	prearm, bandwidth = Bandwidth.get(node, target=1)
 	return t0, t1, node, prearm, bandwidth
 
