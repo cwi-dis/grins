@@ -1,13 +1,7 @@
 Things To Do, Bugs To Fix
 =========================
 
-In the CarCrash tutorial, crash.aiff is not audible. The parallel
-sounds are not played really in parallel.  -mariat
-
 Save for Player crashes.  -mariat
-
-in 6Amsterdam if you click several times on the link to replay it
-crashes (it happens in the old system too).  -mariat
 
 In 7html:
 The buttons Next and Back sometimes are not working when selected.
@@ -22,6 +16,12 @@ crash when play. It doesn't happen if label is changed to text.  -mariat
 Channels are created as soon as you define the type. Could it be after
 you give the attribute values and select OK? (There are problems with
 the windows).  -mariat
+	Not exactly what was asked for, but by making the default size
+	of a top-level window bigger, it doesn't get an immediate
+	resize event which cancels the box drawing before it started,
+	and the window is big enough to actually draw a box.  The
+	resize may have been X specific, but then, the editor only
+	works under X anyway.
 
 
 The path used for external anchors is absolute. Need to be changed to
