@@ -609,9 +609,13 @@ class _CommonWindow:
 		h = float(ph) / rh
 		return x, y, w, h
 		
-	def _convert_color(self, (r, g, b)):
+	def _convert_color(self, color):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
-		return r*0x101, g*0x101, b*0x101
+		if type(color) == type(()):
+			r, g, b = color
+			return r*0x101, g*0x101, b*0x101
+		else:
+			return color
 
 	def qdrect(self):
 		"""return our xywh rect (in pixels) as quickdraw ltrb style.
