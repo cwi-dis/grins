@@ -29,7 +29,7 @@ class ASXdoc:
 		'startmarker':{'number':'#','name':''},
 		'endmarker':{'number':'#','name':''},
 		'banner':{'href':None},
-		'moreinfo':{'href':'URL','target':'frame'},
+		'moreinfo':{'href':'URL','target':'frame','style':'','banner':''},
 		'logo':{'href':None,'style':'MARK'},
 		'base':{'href':'URL'},
 		'abstract':{},
@@ -72,7 +72,7 @@ class ASXdoc:
 		'previewduration': __empty,
 
 		'banner': ['abstract','moreinfo',],
-		'moreinfo':__empty,
+		'moreinfo':['abstract',],
 		'abstract': __empty,
 		'title':__empty,
 		'author': __empty,
@@ -207,4 +207,35 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		minutes = minutes + 60 * hours
 		seconds = string.atof(seconds)
 		return seconds + 60 * minutes
+
+
+BEGIN_ASF = """
+<smil xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <layout>
+      <root-layout id="playerWindow" width="400" height="300"/>
+      <region id="videoRegion" width="400" height="300" GRiNS:type="video"/>
+    </layout>
+  </head>
+  <body>
+    <par id="ASXPresentation">
+      <seq id="Playlist">
+"""
+
+END_ASF = """
+      </seq>
+    </par>
+  </body>
+</smil>
+
+"""
+
+def asx2smil(filename):
+	parser = ASXParser()
+	parser.read(filename)
+	str = BEGIN_ASF
+	for e in parser._playlist:
+		str = str + '<video region="videoRegion" src="%s"/>\n' % e
+	str = str + END_ASF
+	return str
 
