@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 def GetImageSize(file):
 	import img
 	try:
