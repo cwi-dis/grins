@@ -5,6 +5,8 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
                         All Rights Reserved
 
 /*************************************************************************/
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #include "winuser_wnd.h"
 
@@ -58,6 +60,9 @@ struct PyWnd
 		MessageBox(NULL, sz, TEXT("PyWnd"), MB_OK);
 		}
 	DECLARE_WND_CLASS(TEXT("PyWnd"))
+#ifndef _WIN32_WCE
+	DECLARE_WND_CLASSEX(TEXT("PyWnd"))
+#endif
 	};
 
 std::map<HWND, PyWnd*> PyWnd::wnds;
@@ -67,32 +72,14 @@ HINSTANCE GetAppHinstance()
 
 LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 {	
-	switch(uMsg)
+	if(uMsg == WM_CREATE_HOOK)
 		{
-		case WM_CREATE_HOOK:
-			{
-			LONG res = DefWindowProc(hWnd, uMsg, wParam, lParam);
-			PyWnd *pywnd = PyWnd::createInstance();
-			pywnd->m_hWnd = hWnd;
-			pywnd->m_phooks = new std::map<UINT, PyObject*>();
-			PyWnd::wnds[hWnd] = pywnd;
-			return res;
-			}
-		case WM_DESTROY_HOOK:
-			{
-			MSG msg = {hWnd, uMsg, wParam, lParam, 0, {0, 0}};
-			std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(hWnd);
-			if(wit != PyWnd::wnds.end())
-				{
-				PyWnd *pywnd = (*wit).second;
-				PyWnd::wnds.erase(wit);
-				pywnd->m_hWnd = NULL;
-				Py_DECREF(pywnd);
-				}
-			if(PyWnd::wnds.size()==0)
-				PostQuitMessage(0);
-			return 0;
-			}
+		LONG res = DefWindowProc(hWnd, uMsg, wParam, lParam);
+		PyWnd *pywnd = PyWnd::createInstance();
+		pywnd->m_hWnd = hWnd;
+		pywnd->m_phooks = new std::map<UINT, PyObject*>();
+		PyWnd::wnds[hWnd] = pywnd;
+		return res;
 		}
 
 	MSG msg = {hWnd, uMsg, wParam, lParam, 0, {0, 0}};
@@ -121,44 +108,80 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 			else if(retobj == Py_None)
 				{
 				Py_DECREF(retobj);
-				return 0;
+				if(uMsg != WM_DESTROY_HOOK)
+					return 0;
 				}
 			else
 				{
 				long retval = PyInt_AsLong(retobj);
 				Py_DECREF(retobj);
-				if(retval == 0) return 0;
-				else return DefWindowProc(hWnd, uMsg, wParam, lParam);
+				if(uMsg != WM_DESTROY_HOOK)
+					{
+					if(retval == 0) return 0;
+					else return DefWindowProc(hWnd, uMsg, wParam, lParam);
+					}
 				}
 			}
 		}
+
+	if(uMsg == WM_DESTROY_HOOK)
+		{
+		MSG msg = {hWnd, uMsg, wParam, lParam, 0, {0, 0}};
+		std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(hWnd);
+		if(wit != PyWnd::wnds.end())
+			{
+			PyWnd *pywnd = (*wit).second;
+			PyWnd::wnds.erase(wit);
+			pywnd->m_hWnd = NULL;
+			Py_DECREF(pywnd);
+			}
+		if(PyWnd::wnds.size()==0)
+			PostQuitMessage(0);
+		return 0;
+		}
+
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+PyObject* Winuser_RegisterClass(PyObject *self, PyObject *args)
+	{
+	char *className;
+	HMENU hMenu = 0;
+	if (!PyArg_ParseTuple(args, "s|i", &className, &hMenu))
+		return NULL;
+	WNDCLASS wc = PyWnd::GetWndClass();
+	wc.lpszClassName = toTEXT(className);
+#ifndef _WIN32_WCE
+	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(NULL, IDI_APPLICATION);
+#endif
+	ATOM atom = RegisterClass(&wc);
+	if(atom == 0){
+		seterror("RegisterClass", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", int(atom));
+	}
 
-
+#ifndef _WIN32_WCE
 PyObject* Winuser_RegisterClassEx(PyObject *self, PyObject *args)
 	{
 	char *className;
 	HMENU hMenu = 0;
 	if (!PyArg_ParseTuple(args, "s|i", &className, &hMenu))
 		return NULL;
-#ifdef _WIN32_WCE
-	WNDCLASS wc = PyWnd::GetWndClass();
-	ATOM atom = RegisterClass(&wc);
-#else
-	WNDCLASSEX wcx = PyWnd::GetWndClass();
+	WNDCLASSEX wcx = PyWnd::GetWndClassEx();
 	wcx.lpszClassName = toTEXT(className);
 	wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wcx.hCursor = LoadCursor(NULL, IDI_APPLICATION);
 	ATOM atom = RegisterClassEx(&wcx);
-#endif
 	if(atom == 0){
 		seterror("RegisterClassEx", GetLastError());
 		return NULL;
 		}
 	return Py_BuildValue("i", int(atom));
 	}
+#endif
 
 PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 	{
