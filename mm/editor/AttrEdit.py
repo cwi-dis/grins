@@ -761,12 +761,8 @@ class AnimationWrapper(NodeWrapper):
 		NodeWrapper.__init__(self, toplevel, node)
 
 	def attrnames(self):
-		self._durattrs  = ['duration', 'loop',
-##				   'beginlist', 'endlist', 
-				   'repeatdur', 'speed', 'autoReverse']
-
 		namelist = ['name', 'duration', 'loop', 'repeatdur',
-##			    'beginlist', 'endlist',
+			    'beginlist', 'endlist',
 			    'restart', 'restartDefault', 'fill', 'fillDefault',
 			    'speed', 'accelerate', 'decelerate', 'autoReverse',
 			    ]
