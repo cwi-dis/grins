@@ -1,13 +1,19 @@
 __version__ = "$Id$"
 
-# wingeneric
+import sys
+
+# for win32con
+sys.path.insert(0, r'd:\ufs\mm\python\Extensions\win32\lib')
+
+# for winuser, wingdi
+sys.path.insert(0, r'd:\ufs\mm\cmif\bin\win32')
 
 import winuser, wingdi, win32con
 
 class GenericWnd:
 	def __init__(self):
 		self.__dict__['_obj_'] = None
-		self.title = 'GRiNS Lab'
+		self._title = 'GRiNS Lab'
 		self._timer = 0
 
 	def __getattr__(self, attr):
@@ -21,16 +27,22 @@ class GenericWnd:
 		raise AttributeError, attr
 
 	def create(self):
-		winuser.RegisterClassEx('MainWnd')
+		wndclassname = 'MainWnd'
+		winuser.RegisterClassEx(wndclassname)
+
 		exstyle = win32con.WS_EX_CLIENTEDGE
 		style = win32con.WS_VISIBLE | win32con.WS_OVERLAPPEDWINDOW
-		wnd = winuser.CreateWindowEx(exstyle, 'MainWnd', self.title, style, (0, 0), (400, 300))
+		wnd = winuser.CreateWindowEx(exstyle, wndclassname, self._title, style, (0, 0), (400, 300))
 		self.__dict__['_obj_'] = wnd
+
 		menu = self.createMenu()
 		self.SetMenu(menu.GetHandle())
 		self.DrawMenuBar()
-		self._timer = self.SetTimer(1, 1000)
+
 		self.HookMessages()
+
+		self._timer = self.SetTimer(1, 1000)
+
 
 	def HookMessages(self):
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
@@ -69,7 +81,7 @@ class GenericWnd:
 
 	def OnLButtonDblClk(self, params):
 		msg = Win32Msg(params)
-		self.MessageBox("%d %d" % msg.pos(), self.title)
+		self.MessageBox("%d %d" % msg.pos(), self._title)
 
 	def OnRButtonDown(self, params):
 		msg = Win32Msg(params)
