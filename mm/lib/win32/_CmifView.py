@@ -54,7 +54,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Initialization after the OS window has been created
 	# The window is attached to its parent list
-	# and the messages that interest us us are hooked
+	# and the messages that interest us are hooked
 	def OnInitialUpdate(self):
 		if not self._parent:
 			self._parent=self.GetParent()
@@ -265,7 +265,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			self._parent.set_toggle(command,onoff)
 
 	# Initialize the view using the arguments passed by the core system 
-	def init(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None, bgcolor=None):
+	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
 		self.settitle(title)
 		self._title=title
 		self._commandlist=commandlist
@@ -354,8 +354,9 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Bring window in front of peers
 	def do_activate(self):
+		if not self._obj_: return
 		mdichild = self.GetParent()
-		frame=mdichild.GetMDIFrame()
+		frame = mdichild.GetMDIFrame()
 		frame.ActivateFrame()
 		frame.MDIActivate(mdichild)
 		
@@ -431,10 +432,16 @@ class _CmifPlayerView(_CmifView):
 		self._clipper = None
 		self.__lastMouseMoveParams = None
 
+		# Viewport is actually also a LightSubWindow
+		# to keep old code (cmifwnd) working we can not force
+		# this for now through inheritance
+		self._oswnd = None
+		self._video = None
+
 	def OnCreate(self,params):
+		_CmifView.OnCreate(self, params)
 		if self._usesLightSubWindows: 
 			self.__initDD()
-		_CmifView.OnCreate(self,params)
 
 	def OnDestroy(self, msg):		
 		if self._usesLightSubWindows: 
@@ -576,7 +583,6 @@ class _CmifPlayerView(_CmifView):
 		self.update()
 
 	def	__initDD(self):
-		self._islocked = 0
 		import ddraw
 		self._ddraw = ddraw.CreateDirectDraw()
 		self._ddraw.SetCooperativeLevel(self.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
@@ -635,7 +641,6 @@ class _CmifPlayerView(_CmifView):
 			w.paint()
 		
 	def flip(self):
-		if self._islocked: return
 		rcBack = self.GetClientRect()
 		rcFront = self.ClientToScreen(rcBack)
 		if self._frontBuffer.IsLost():
