@@ -50,7 +50,7 @@ class _LayoutView2(GenFormView):
 		self._mmcontext = None
 		self._slider = None
 
-		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','AnimateEnable')
+		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','AnimateEnable','Fit')
 		self.__listeners = {}
 		
 		# save the current value.
@@ -63,6 +63,7 @@ class _LayoutView2(GenFormView):
 		self.__values['RegionH'] = None
 		self.__values['RegionZ'] = None
 		self.__values['AnimateEnable'] = None
+		self.__values['Fit'] = None
 		
 		i = 0
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
@@ -71,6 +72,7 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_ANIMATE_ENABLE); i=i+1
+		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_FITV); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,usercmd2id(ATTRIBUTES))
@@ -340,6 +342,16 @@ class _LayoutView2(GenFormView):
 		# delegate combo box notifications to handler
 		if nmsg==win32con.LBN_SELCHANGE:
 			ctrlName = None
+
+			if id == self['Fit']._id:
+				ctrlName = 'Fit'
+
+			if ctrlName != None:
+				listener = self.__listeners.get(ctrlName)
+				if listener != None:
+					value = self[ctrlName].getcursel()
+					listener.onSelecterChanged(ctrlName, value)
+				return
 		
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
@@ -542,7 +554,7 @@ class _LayoutView2(GenFormView):
 
 	def resizeCtrls(self, w, h):
 		# controls margin + posibly scrollbar
-		cm = 100
+		cm = 110
 
 		lf, tf, rf, bf = self.GetWindowRect()
 
