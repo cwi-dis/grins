@@ -48,11 +48,12 @@ class MovieWindow(ChannelWindow):
 		if self.wid == 0: return
 		gl.reshapeviewport()
 		self.erase()
-		if self.channel.threads and self.vfile:
+		if self.channel.threads and not self.cleared:
 			self.channel.threads.resized()
 	#
 	def clear(self):
-		self.node = self.vfile = self.lookahead = None
+		self.node = self.lookahead = None
+		self.cleared = 1
 		if self.wid <> 0:
 			self.setwin()
 			gl.RGBmode()
@@ -67,7 +68,7 @@ class MovieWindow(ChannelWindow):
 			r, g, b = self.attrdict['bgcolor']
 		else:
 			r, g, b = 255, 255, 255
-		if self.vfile:
+		if not self.cleared:
 ##			self.vfile.clearto(r, g, b)# XYZZY
 ##			self.centerimage()
 			return
@@ -271,7 +272,7 @@ class MovieChannel(Channel):
 	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
-		if not self.is_showing() or not self.window.vfile:
+		if not self.is_showing():
 			import Duration
 			duration = Duration.get(node)
 			dummy = self.player.enter(duration, 0, \
@@ -294,6 +295,7 @@ class MovieChannel(Channel):
 			  self.done, None)
 		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
 			  stopped, 0)
+		self.window.cleared = 0
 		self.threads.play()
 		self.player.arm_ready(self.name)
 	#
@@ -312,6 +314,7 @@ class MovieChannel(Channel):
 		if GLLock.gl_lock:
 			GLLock.gl_lock.acquire()
 		Channel.stop(self)
+		self.window.vfile = None
 	#
 	def setrate(self, rate):
 		self.threads.setrate(rate)
