@@ -26,6 +26,7 @@ feature_set = [
 	PREFERENCES,
 	ALIGNTOOL,
 	SHOW_MEDIA_CHILDREN,
+    MULTIPLE_TOPLAYOUT,
 	]
 
 version = 'pro'
