@@ -1,6 +1,42 @@
 __version__ = "$Id$"
 
 
+""" @win32doc|MainFrame
+The main class in this module is the MDIFrameWnd.
+There is one to one corespondance between an MDIFrameWnd
+instance and a document, and between a document to a 
+TopLevelDialog instance. When the application has
+open documents an instance of an MDIFrameWnd represents 
+visually the open document. 
+When there no documents open the MDIFrameWnd
+just holds the toolbar and the menu and represents visualy 
+the application and its main control panel.
+
+The main purpose of an MDIFrameWnd instance is to provide 
+controls to the user (the menu and  the toolbars)
+and visualy confine the document's views and other windows
+
+The Multiple Document Interface (MDI) is a specification for applications that handle
+multiple documents or views in MS Windows. This specification has also an operating system
+support. When you create an MDI window the operating system recognizes the fact and
+delivers to the application a standard
+set of messages concerning mainly the 
+parent-child structure, the windows menu and the child activation.
+
+There is an MFC wrapper class for an MDI window, the CMDIFrameWnd. 
+Objects of this class are exported
+to python through the win32ui pyd as objects of type PyMDIFrameWnd.
+The MDIFrameWnd defined in this module inherits from this class.
+
+MDIFrameWnd decoration:
+Main Menu: contains application level commands, 
+	document level commands and active view commands.
+	It contains also dynamic submenus depending on the document
+	and the active view.
+Dynamic Toolbar with states: Player,Editor no doc,Editor with doc
+Optionally a DialogBar with tabs to activate open childs (dissabled in the current version)
+"""
+
 import win32ui, win32con, win32api
 Afx=win32ui.GetAfx()
 Sdk=win32ui.GetWin32Sdk()
@@ -69,11 +105,6 @@ class GRiNSDlgBar(window.Wnd):
 		rc=win32mu.Rect(self._tab.getwindowrect())
 		self._tab.setwindowpos(0,(0,0,w,rc.height()),
 			win32con.SWP_NOMOVE|win32con.SWP_NOZORDER)
-	def postcmd(self,wnd,viewno):
-		if viewno==0: return
-		cmdcl=appview[viewno]['cmd']
-		usercmd_ui = usercmdui.class2ui[cmdcl]
-		wnd.PostMessage(win32con.WM_COMMAND,usercmd_ui.id)
 	def settab(self,ix):
 		self._tab.setcursel(ix)
 
@@ -88,7 +119,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		ViewServer.__init__(self,self)
 		self._do_init(__main__.toplevel)
 		self._formServer=FormServer(self)
-		
+	
+	# Create the OS window and set the toolbar	
 	def create(self,title):
 		strclass=self.registerwndclass()		
 		self._obj_.Create(strclass,title)
@@ -102,6 +134,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		else:
 			self.setEditorFrameToolbar()
 
+	# Register the window class
 	def registerwndclass(self):
 		# register top frame class
 		clstyle=win32con.CS_DBLCLKS
@@ -111,7 +144,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		brush=0 #Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
 		return Afx.RegisterWndClass(clstyle,cursor,brush,icon)
 
-
+	# Change window style attributes before it is created
 	def PreCreateWindow(self, csd):
 		csd=self._obj_.PreCreateWindow(csd)
 		cs=win32mu.CreateStruct(csd)
@@ -126,13 +159,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		cs.x,cs.y=MDIFrameWnd.wndpos.tuple()
 
 		# menu from MenuTemplate
-		# hold instance for dunamic menus
+		# hold instance for dynamic menus
 		self._mainmenu=win32menu.Menu()
 		self._mainmenu.create_from_menubar_spec_list(MenuTemplate.MENUBAR,self.get_cmdclass_id)
 		cs.hMenu=self._mainmenu.GetHandle()
 
 		return cs.to_csd()
-	
+	# return commnds class id
 	def get_cmdclass_id(self,cmdcl):
 		if cmdcl in usercmdui.class2ui.keys():
 			return usercmdui.class2ui[cmdcl].id
@@ -140,11 +173,11 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			print 'CmdClass not found',cmdcl
 			return -1
 
-	# this is called after CWnd::OnCreate 
+	# Called after the window has been created for further initialization
+	# Called after CWnd::OnCreate
 	def OnCreate(self, createStruct):
 		self.HookMessage(self.onSize,win32con.WM_SIZE)
 		self.HookMessage(self.onMove,win32con.WM_MOVE)
-		self.HookMessage(self.onInitMenu,win32con.WM_INITMENU)
 		# the view is responsible for user input
 		# so do not hook other messages
 
@@ -171,42 +204,30 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		client.HookMessage(self.OnMdiRefreshMenu,win32con.WM_MDIREFRESHMENU)
 		self._active_child=None
 		# hook tab sel change
-		TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
-		self.HookNotify(self.OnNotifyTcnSelChange,TCN_SELCHANGE)
+		#TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
+		#self.HookNotify(self.OnNotifyTcnSelChange,TCN_SELCHANGE)
 
 		return 0
 
-	# protect player from modal menus
-	def onInitMenu(self,params):
-		return # for dev
-		if self.is_playing():
-			self.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
-			__main__.toplevel.settimer(0.001,(self.autostart,()))
-	def autostart(self):
-		self.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
-	def is_playing(self):
-		return self._cmifdoc and self._cmifdoc.player and self._cmifdoc.player.playing
-	def is_pausing(self):
-		return self._cmifdoc and self._cmifdoc.player and self._cmifdoc.player.pausing
-	def kick_timer(self):
-		if self.is_playing():self._cmifdoc.timer_callback()
-		
 	
-	# mirror mdi window-menu to tab bar (not impl)
+	# Mirrors mdi window-menu to tab bar (not impl)
 	# do ... on new activate	
 	def OnMdiRefreshMenu(self,params):
 		msg=win32mu.Win32Msg(params)
+		try:
+			f,m=self.MDIGetActive()
+		except win32ui.error:
+			f=None
+
 		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
-		#print 'OnMdiRefreshMenu',msg._wParam,msg._lParam
-		t=self.MDIGetActive()
-		if not t:
+		if not f:
 			self._active_child=None
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_CASCADE)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_TILE_VERT)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_TILE_HORZ)
 			return
-		f,ismax=t
+
 		if not self._active_child or self._active_child!=f:	
 			if hasattr(f,'_view'):
 				self._active_child=f
@@ -214,12 +235,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 				self.set_commandlist(v._commandlist,v._strid)
 			else:
 				self._active_child=None 
+
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_CASCADE)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_TILE_VERT)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_TILE_HORZ)
 
-					
+	# Tabs Notification response
 	def OnNotifyTcnSelChange(self, nm, nmrest=(0,)):
 		self.ActivateFrame()
 		hwndFrom,idFrom,code=nm
@@ -230,11 +252,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			return 1
 		return 0
 
+	# Displays the about dialog
 	def OnAbout(self,id,code):
 		from version import version
 		dlg=AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
 		dlg.DoModal()
 
+	# Displays the charset dialog
 	def OnCharset(self,id,code):
 		import Font
 		prompt = 'Select Charset:'
@@ -243,6 +267,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			list.append(name, (Font.set_win32_charset, (name,)))
 		Dialog(list, title = 'Select Charset', prompt = prompt, grab = 1, vertical = 1, parent = self)
 
+	# Response to windows arrangement commands
 	def OnWndUserCmd(self,id,code):
 		client=self.GetMDIClient()
 		if id==afxres.ID_WINDOW_TILE_HORZ:
@@ -252,12 +277,14 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		elif id==afxres.ID_WINDOW_CASCADE:
 			client.SendMessage(win32con.WM_MDICASCADE)			
 	
+	# Response to command to close the active window
 	def OnCloseActiveWindow(self,id,code):
 		t=self.MDIGetActive()
 		if not t: return
 		f,ismax=t
 		f.PostMessage(win32con.WM_CLOSE)
-				
+	
+	# Called by the core system to initialize the frame			
 	def init_cmif(self, x, y, w, h, title,units = UNIT_MM,
 		      adornments = None,commandlist = None):	
 		if not w or w==0:
@@ -299,7 +326,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if hasattr(self,'_wndDlgBar'):
 			self._wndDlgBar.sizeto(r-l,b-t)
 	
-
+	# Called when a new document is oppened
 	def newdocument(self,cmifdoc,adornments,commandlist):
 		if not self._cmifdoc:
 			self.setdocument(cmifdoc,adornments,commandlist)
@@ -312,6 +339,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			frame.setdocument(cmifdoc,adornments,commandlist)
 			return frame
 
+	# Associate this frame with the document
 	def setdocument(self,cmifdoc,adornments,commandlist):
 		self._cmifdoc=cmifdoc
 		self.settitle(cmifdoc.basename,'document')
@@ -322,6 +350,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.RecalcLayout()			
 		self.ActivateFrame()
 
+	# Called by the core system to create a view
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
@@ -330,28 +359,35 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		else: strid='cmifview_'
 		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
 
+	# Return the framework document object associated with this frame
 	def getdoc(self):
 		if self.countMDIChildWnds()==0:
 			self._doc=docview.Document(docview.DocTemplate())
 		return self._doc
 
+	# Create a text viewer
 	def textwindow(self,text):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		self.showview(sv,'sview_')
 		return sv
 
+	# Returns the form server
 	def getformserver(self):
 		return self._formServer
 
+	# Creates a new ChildFrame 
 	def newChildFrame(self,view,decor=None):
 		return ChildFrame(view,decor)
+	# Called by the framework when the actvation changes
 	def Activate(self,view):
 		self.MDIActivate(view)
+	# Returns the prefered client dimensions
 	def getPrefRect(self):
 		rc= win32mu.Rect(self.GetClientRect())
 		return rc.width()/8,rc.height()/8,7*rc.width()/8,7*rc.height()/8
 
+	# Close all views
 	# simulate user	closing
 	def close_all_views(self):
 		currentChild=None
@@ -364,22 +400,30 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		for w in l:
 			w.SendMessage(win32con.WM_CLOSE)
 
+	# Activate tab
 	def setviewtab(self,viewno):
 		if hasattr(self,'_wndDlgBar'):
 			self._wndDlgBar.settab(viewno)
 
+	# Set the waiting cursor
 	def setwaiting(self):
 		#self.BeginWaitCursor();
 		pass
 		
+	# Remove waiting cursor
 	def setready(self):
 		self.EndWaitCursor();
 		self.ActivateFrame()
 
+	# Close the opened document
+	def close_X(self):
+		__main__.toplevel._subwindows.remove(self)
+		self.DestroyWindow()	
+		if len(__main__.toplevel._subwindows)==0:
+			__main__.toplevel.createmainwnd()
 
 	def close(self):
-		# 1. first close all views
-		self.close_all_views()
+		# 1. destroy cascade menus
 		self._mainmenu.clear_cascade_menus()
 
 		# 2. then the document
@@ -396,7 +440,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# we should close self frame
 		if len(__main__.toplevel._subwindows)>1:
 			self.DestroyWindow()	
-			
+	
+	# Response to resizing		
 	def onSize(self,params):
 		self.RecalcLayout()
 		msg=win32mu.Win32Msg(params)
@@ -407,11 +452,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		rc=self.GetWindowRect()
 		MDIFrameWnd.wndsize=win32mu.Point((rc[2]-rc[0],rc[3]-rc[1]))
 
+	# Response to mouse move
 	def onMove(self,params):
 		rc=self.GetWindowRect()
 		MDIFrameWnd.wndpos=win32mu.Point((rc[0],rc[1]))
 
-
+	# Resize window
 	def setcoords(self,coords,units=UNIT_MM):
 		x, y, w, h = coords
 		x,y,w,h=to_pixels(x,y,w,h,units)
@@ -422,10 +468,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE |win32con.SWP_NOMOVE
 		self.SetWindowPos(0,(0,0,w,h),flags)
 
+	# Maximize window
 	def maximize(self,child):
 		client=self.GetMDIClient()
 		client.SendMessage(win32con.WM_MDIMAXIMIZE,child.GetSafeHwnd())
 
+	# Set, save and enable the commandlist for the context
 	def set_commandlist(self,commandlist,context='view'):
 		if context not in self._activecmds.keys():
 			self._activecmds[context]={}
@@ -443,6 +491,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 			contextcmds[id]=cmd
 
+	# Return the command ids with other contexts
 	def othercmdids(self,except_context):
 		d={}
 		for context in self._activecmds.keys():
@@ -451,8 +500,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			for id in contextcmds.keys():d[id]=1
 		return d
 
+	# Return the commandlist for the context
 	def get_commandlist(self,context='view'):
 		return self._activecmds[context].values()
+	# Enable/dissable commands for context
 	def enable_commandlist(self,context,enable):
 		contextcmds=self._activecmds[context]
 		commandlist=contextcmds.values()
@@ -466,7 +517,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 				usercmd_ui = usercmdui.class2ui[cmd.__class__]
 				self.HookCommandUpdate(self.OnUpdateCmdDissable,usercmd_ui.id)
 				menu.CheckMenuItem(usercmd_ui.id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
-			
+	# Toggle commands (check/uncheck menu entries)		
 	def set_toggle(self, cmdcl, onoff):
 		id=usercmdui.class2ui[cmdcl].id
 		flags = win32con.MF_BYCOMMAND
@@ -478,6 +529,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	#	('fond', (<method Player.channel_callback of Player instance at 1c68510>, ('fond',)), 't', 1)
 	#	('smiley', (<method Player.channel_callback of Player instance at 1c68510>, ('smiley',)), 't', 1)
 	#	('text', (<method Player.channel_callback of Player instance at 1c68510>, ('text',)), 't', 1)
+
+	# Set the dynamic commands associated with the command class
 	def set_dynamiclist(self, command, list):
 		self._dynamiclists[command]=list
 		submenu=self._mainmenu.get_cascade_menu(command)
@@ -503,11 +556,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self._mainmenu.clear_cascade(command)
 			win32menu._create_menu(submenu,menuspec,idstart,self._dyncmds[command])
 			self.set_dyncbd(self._dyncmds[command],submenu)
-
+	# Helper function to return the dynamic submenu 
 	def get_cascade_menu(self,id):
 		cl=usercmdui.get_cascade(id)
 		return self._mainmenu.get_cascade_menu(cl)
-		
+	
+	# Response to dynamic menus commands	
 	def OnUserDynCmd(self,id,code):
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
@@ -522,23 +576,28 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
 				return
 
+	# Set callback for dynamic menu
 	def set_dyncbd(self,cbd,menu):
 		for id in cbd.keys():
 			self.HookCommand(self.OnUserDynCmd,id)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
-		
+	
+	# Enable the dynamic commands associated with the command class	
 	def EnableDynCmds(self,cmdcl):
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
 				if cbd[id]:apply(apply,cbd[id])
 				return
 
+	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):
 		cmdui.Enable(1)
 
+	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
 
+	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
 		cmd=None
 		
@@ -563,6 +622,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 					apply(apply,cmd.callback)
 				return
 
+	# Check the menu item with id
 	def check_menu_item(self,id):
 		if id not in self._mainmenu._toggles.keys(): return
 		state=self._mainmenu.GetMenuState(id,win32con.MF_BYCOMMAND)
@@ -571,9 +631,11 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		else:
 			self._mainmenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
 
+	# Get the command class id
 	def GetUserCmdId(self,cmdcl):
 		return usercmdui.class2ui[cmdcl].id
 
+	# Get the command class instance
 	def GetUserCmd(self,cmdcl):
 		id=usercmdui.class2ui[cmdcl].id
 		cmd=None
@@ -583,10 +645,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 				cmd=contextcmds[id]
 		return cmd
 
+	# Fire a command class instance
 	def fire_cmd(self,cmdcl):
 		id=usercmdui.class2ui[cmdcl].id
 		self.OnUserCmd(id,0)
-		
+	
+	# Compose and set the title  	
 	def settitle(self,title,context='view'):
 		self._qtitle[context]=title
 		qtitle=''
@@ -597,29 +661,32 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		qtitle=qtitle + self._qtitle['frame']
 		self.SetWindowText(qtitle)
 
+	# Set adornments
 	def set_adornments(self, adornments):
 		pass			
 
+	# Called by the framework when the user closes the window
 	def OnClose(self):
 		if len(__main__.toplevel._subwindows)>1:
 			self.PostMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
 		else:
 			self.PostMessage(win32con.WM_COMMAND,usercmdui.EXIT_UI.id)
 
+	# Bring to top of peers
 	def pop(self):
 		self.BringWindowToTop()
 
+	# Send to back of peers
 	def push(self):
 		pass
 
-
+	# Called by the framework before destroying the window
 	def OnDestroy(self, msg):
 		if self in __main__.toplevel._subwindows:
 			__main__.toplevel._subwindows.remove(self)
 		window.MDIFrameWnd.OnDestroy(self, msg)
 
-	# should be set from adornments
-	# but for now...
+	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
 		self._wndToolBar.AllocateButtons(4)
 
@@ -636,8 +703,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 				
 		self.ShowControlBar(self._wndToolBar,1,0)
 
-	# should be set from from adornments
-	# but for now...
+	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self):
 		self._wndToolBar.AllocateButtons(15)
 
@@ -685,8 +751,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.ShowControlBar(self._wndToolBar,1,0)
 
 
-	# should be set from from adornments
-	# but for now...
+	# Set the player toolbar
 	def setPlayerToolbar(self):
 		self._wndToolBar.AllocateButtons(9)
 
@@ -717,6 +782,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	
 		self.ShowControlBar(self._wndToolBar,1,0)
 
+	# Return the number of childs
 	def countMDIChildWnds(self):
 		currentChild=None
 		count=0
@@ -726,6 +792,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			else: break
 		return count
 
+	# Returns the next child
 	def getNextMDIChildWnd(self,currentChild=None):
 		client=self.GetMDIClient()
 		if not currentChild:
