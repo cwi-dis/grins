@@ -120,3 +120,26 @@ void Module::VerifyAll(const char* pstr[],ostream& os)
 		i++;
 		}
 	}
+
+// static 
+void Module::reportPlatformOn(ostream& os)
+	{
+	OSVERSIONINFO osvi;
+	memset(&osvi,0,sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
+	GetVersionEx(&osvi);
+
+	if(osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
+		os << "Running on Windows NT";
+
+	if((osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
+		( (osvi.dwMajorVersion > 4) ||
+		( (osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0) ) ))
+		os << "Running on Windows 98";
+
+	if((osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) && osvi.dwMinorVersion == 0)
+		os << "Running on Windows 95";
+
+	os << " (Version " << osvi.dwMajorVersion << "." << osvi.dwMinorVersion <<  ", Build " << osvi.dwBuildNumber << ", "<< osvi.szCSDVersion << ")" << endl;
+	os <<  endl;
+	}
