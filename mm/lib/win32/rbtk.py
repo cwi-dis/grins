@@ -15,7 +15,6 @@ import components
 import DrawTk
 from win32mu import Point,Rect
 import win32ui,win32con,win32api
-import appcon
 import __main__
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
@@ -24,10 +23,7 @@ class _rbtk:
 		self._next_create_box = []
 
 	# Called by the core system to create or resize a box
-	def create_box(self, msg, callback, box = None, units = appcon.UNIT_SCREEN):
-		#print "Creating box in:",self._title
-		#print 'active_displist=',self._active_displist
-
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
 		# if we are in create box mode, queue request
 		if self.in_create_box_mode():
 			self.get_box_modal_wnd()._next_create_box.append((self, msg, callback, box, units))
@@ -62,18 +58,16 @@ class _rbtk:
 		# indicate drawing canvas
 		#canvas_color=(228,255,228)
 		#d.drawfbox(canvas_color,(0,0,1,1))
-		d.drawbox((0.01,0.01,0.99,0.99))
+		d.drawbox((0.001,0.001,0.999,0.999))
 
-		# frame subwindows (fill them?)
+		# frame subwindows
 		sw = self._subwindows[:]
 		sw.reverse()
 		for win in sw:
 			b=win.getsizes()
-			#d.drawfbox(win._bgcolor,b)
 			d.drawbox(b)
 		self._topwindow.ShowWindows(win32con.SW_HIDE)
 
-		#d.fgcolor((255, 0, 0))
 		if box:
 			# add the rect obj
 			box_pxl=self.get_pixel_coords(box)
@@ -128,7 +122,9 @@ class _rbtk:
 		# 5. get user object
 		if len(self._objects):
 			drawObj=self._objects[0]
-			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)	
+			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)
+		else:
+			rb=()
 		self.DeleteContents()
 				
 		# call user selected callback
