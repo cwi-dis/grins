@@ -31,6 +31,7 @@ feature_set = [
 	MULTIPLE_TOPLAYOUT,
 	INTERNAL_LINKS,
 	AUTO_EVALUATE,
+	EDIT_COMPONENTS,
 	]
 
 auto_evaluate_period = 7	# 7 days auto-evaluate

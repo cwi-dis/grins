@@ -1,8 +1,14 @@
+# $Id$
+#
 # Attribute definitions
 # ---------------------
 #
-# Each definition is a 6-tuple enclosed in parenthes:
-# (attrname, typedef, defaultvalue, labeltext, displayername, helptext)
+# Each definition is a 7-tuple enclosed in parenthes:
+# (attrname, typedef, defaultvalue, labeltext, displayername, helptext,
+#  inheritance)
+#
+# Attributes with names starting with _ are for caching only, these
+# are only written to the .cmc file, not to the .cmif file.
 #
 # The typedef is used to determine how to parse the default value,
 # with the provision that tuples, lists and dictionaries must
@@ -10,93 +16,769 @@
 #
 # The helptext should be one line explaining what the attribute is for.
 #
+# Inheritance can be one of four names: (raw, normal, inherited, channel).
+# Values 'raw', 'normal' and 'inherited' mean that node.GetRawAttr(),
+# node.GetAttr() or node.GetInherAttr(), respectively, should be used to
+# get this type of attribute.  The value 'channel' is the same as
+# 'inherited', but means that the default can also be gotten from
+# the channel attributes.  (For the time being, inheritance is optional,
+# defaulting to 'normal'.)
+#
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
+(accesskey (string) '' 'Access key' default
+	'Keyboard shortcut to actuate anchor' raw (smil2 cmif))
 
-(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
-	'Bounding box for embedded PostScript image')
+(actuate (enum onRequest onLoad) onRequest 'Anchor type' default
+	'Does the anchor fire automatically?' raw (smil2 cmif))
 
-(center (bool) 0 'Center' default
-	'If on, text is centered within the margins')
+(fragment (string) '' 'Fragment name' default
+	'Fragment identifier' raw (template smil2 cmif))
 
-(channel (name) undefined 'Channel' default
-	'Name of channel used to render this node/subtree')
+(ashape (enum rect poly circle) rect 'Anchor shape' default
+	'Shape of anchor' raw (template smil2 cmif))
 
-(channeldict (namedict (attrdict)) () 'Channel Dictionary' default
-	'Channels used in this document (root node only)')
+(acoords (list (enclosed (float))) () 'Coordinates' acoords
+	'Anchor coordinates, meaning depends on shape' raw (template smil2 cmif))
 
-(duration (float) 0 'Duration' default
-	'Duration of a node/subtree (in seconds)')
+(show (enum new pause replace) replace 'Show' default
+	'Does the new presentation replace the old one?' raw (smil2))
 
-(extraspaceafter (float) 0 'Extra space after' default
-	'Extra space following last word (in characters)')
+(sourcePlaystate (enum play pause stop) play 'Source play state' default
+	'What happens to old presentation' raw (smil2))
 
-(file (string) '' 'File' default
-	'File name for external node')
+(destinationPlaystate (enum play pause) play 'Destination play state' default
+	'What happens to new presentation' raw (smil2))
 
-(font (string) 'default' 'Font' default
-	'Font used to display text')
+(external (bool) 0 'External link' default
+	'Use external application to open destination' raw (template smil2))
 
-(format (enum ASCII PostScript) ASCII 'Format' default
-	'Format used by external text file (ASCII or PostScript)')
+(target (string) '' 'Target window' default
+	'Target window for hyperjump' raw (template smil2))
 
-(indent (float) 0 'Indent' default
-	'Extra indentation of left margin (in characters)')
+(sourceLevel (float) 1 'Source level' percent
+	'Relative volume in percent of the source presentation'
+	raw (template smil2))
 
-(justify (bool) 0 'Justify' default
-	'If on, justify right margins')
+(destinationLevel (float) 1 'Destination level' percent
+	'Relative volume in percent of the destination presentation'
+	raw (template smil2))
 
-(keep (bool) 0 'Keep' default
-	'If on, text in window is kept until explicitly replaced')
+(abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
-(name (name) none 'Name' default
-	'Name given to a node')
+(alt (string) '' 'Alternate text' default
+	'Alternate text for object' raw (g2 qt smil10 smil2 cmif snap))
 
-(needGS (bool) 0 'Need Ghostscript' default
-	'Must be on for channel to support embedded Postscript')
+(author (string) '' 'Author' default 'Author (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
-(nospaceafter (bool) 0 'No space after' default
-	'If on, suppress space following last word')
+(base (string) '' 'Base URL' default
+	'Base URL of document, used for resolving relative URLs' raw (advanced g2 qt smil10 smil2 cmif snap))
 
-(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
-	'Select the presence of horizontal/vertical scroll bars')
+(base_window (name) 'undefined' 'Region base window' basechannelname
+	'Name of window in which channelwin is created' raw (cmif))
 
-(style (list (name)) () 'Style list' default
-	'List of style names that apply to this node/subtree')
+(base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
+	'Position and size' default 'Position and size, usually in pixels' channel (cmif))
 
-(styledict (namedict (attrdict)) () 'Style Dictionary' default
-	'Styles used in this document (root node only)')
+(begin (float) 0.0 'Begin time' default
+	'Start delay of object' normal (g2 qt smil10 smil2 cmif snap))
 
-(synclist (list (enclosed (tuple 
-				(enum begin end)
-				(enclosed (list (name)))
-				(float)
-				(enclosed (list (name)))
-				(float)
-				(float)
-	)))
-	() 'Sync list' default
-	'List of sync arcs used in this subtree')
+(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
+	'Color used for background of window' region (g2 qt smil10 smil2 cmif snap))
 
-(synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
-	() 'SyncTo list' default
-	'List of sync arcs ending at this node')
+(cssbgcolor (tuple (name) (tuple (int) (int) (int))) (transparent 0 0 0) 'Background color' csscolor
+	'Color used for background of window' region (smil2 snap))
 
-(type (name) undefined 'Channel type' default
-	'Channel type (channel dictionary only)')
+(left (string) '' 'Left' csspos
+	'Values are relative to enclosing region geometry, use auto to minimize' region (advanced smil2 snap))
+(width (string) '' 'Width' csspos
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
+(right (string) '' 'Right' csspos
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
+(top (string) '' 'Top' csspos
+	'Values are relative to enclosing region geometry, use auto to minimize' region (advanced smil2 snap))
+(height (string) '' 'Height' csspos
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
+(bottom (string) '' 'Bottom' csspos
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
 
-(volume (float) 1.0 'Volume' default
-	'Volume of audio output (1.0 means standard)')
+#(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
+#	'Color used for background of window. Overriden by "transparent".' channel (g2 qt smil10 smil2 cmif))
 
-(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
-	'Vertical space before/after text (in lines)')
+(bitrate (int) 14400 'Peak bitrate' default
+	'Peak bitrate reserved for this item, in bits per second' raw (g2 qt smil10 smil2 cmif snap))
 
-(wait_for_close (bool) 0 'Wait for close' default
-	'Wait for "close window" action to proceed')
+(channel (name) undefined 'Region' channelname
+	'Name of region used to render this object' inherited (advanced g2 qt smil10 smil2 cmif))
 
-(winpos (tuple (int) (int)) (0 0) 'Window position' default
-	'Initial window position (x, y) (x axis pointing down!)')
+(clipbegin (string) '' 'Clip begin' default
+	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (advanced g2_pro qt_pro smil10 smil2 cmif))
 
-(winsize (tuple (int) (int)) (0 0) 'Window size' default
-	'Initial window size (width, height)')
+(clipend (string) '' 'Clip end' default
+	'End of range of frames to be played. Simplest form is "npt=3s".' raw (advanced g2_pro qt_pro smil10 smil2 cmif))
+
+(comment (string) '' 'Comment' default
+	 'A comment (authoring convenience only)' raw (cmif))
+
+(copyright (string) '' 'Copyright' default 'Copyright of the item (informational only)' raw (g2 qt smil10 smil2 cmif snap))
+
+(duration (float) 0.0 'Duration' default
+	'Duration of this object (default: intrinsic media or subtree duration)' normal (g2 qt smil10 smil2 cmif snap))
+
+(editBackground (tuple (int) (int) (int)) (255 255 255) 'Edit background' color
+	'Color used for background of window in Layout View' channel (template g2 qt smil10 smil2 cmif snap))
+
+(traceImage (string) '' 'Trace image' file
+	'Image shown as background' raw (template g2 qt smil10 smil2 cmif snap))
+
+(erase (enum never whenDone) whenDone 'Erase media' default
+	'What happens to onscreen media when fill duration is over' raw (advanced cmif smil2))
+
+(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Color' color
+	'Color used for text or brush in window' channel (cmif snap smil2))
+
+(file (string) '' 'URL' file
+	'URL for the data of this object' normal (g2 qt smil10 smil2 cmif snap))
+
+(thumbnail_icon (string) '' 'Thumbnail URL' file
+	'URL for a thumbnail image of this group' normal (template g2 qt smil10 smil2 cmif snap))
+
+(dropicon (string) '' 'Drop icon' file
+	'URL for a drop icon' normal (template g2 qt smil10 smil2 cmif snap))
+
+(empty_icon (string) '' 'Empty icon URL' file
+	'URL for an icon when this group is empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(empty_text (string) '' 'Empty text' default
+	'Text to be displayed when this group is empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(empty_color (tuple (int) (int) (int)) (0 0 0) 'Empty color' color
+	'Color to be used when this group is empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(empty_duration (float) 0.0 'Empty duration' default
+	'Duration to be used for drawing when this group is empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(non_empty_icon (string) '' 'Non-empty icon URL' file
+	'URL for a drop box icon when this group is not empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(non_empty_text (string) '' 'Non-empty text' default
+	'Text to be displayed in the drop box when this group is not empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(non_empty_color (tuple (int) (int) (int)) (0 0 0) 'Non-empty color' color
+	'Color to be used in the drop box when this group is not empty' normal (template g2 qt smil10 smil2 cmif snap))
+
+(thumbnail_scale (bool) 1 'Scale thumbnail' default
+	'Determines whether thumbnail images can be scaled' inherited (template g2 qt smil10 smil2 cmif snap))
+
+# valid values: freeze, remove, hold, transition
+# default depends on other attributes
+(fill (enum default auto remove freeze transition hold) default 'Fill' fill
+	'What happens to onscreen media when active duration is over' normal (smil2 cmif snap))
+
+(fillDefault (enum inherit auto remove freeze transition hold) inherit 'Fill default' fill
+	'Default value for the fill property on the children of this group (default depends on type of object)' inherited (template smil2 cmif))
+
+(hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
+                                   (enclosed (tuple (string) (any)))
+				   (int) (int)))) ()
+	'Hyperlink list' hidden
+	'Hyperlinks within this document (root node only)' raw (g2 qt smil10 smil2 cmif snap))
+
+(layout (name) undefined 'Screen' layoutname
+	'Screen for this group and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited (cmif))
+
+(layouts (list (enclosed (tuple (name) (list (name))))) () 'List of screens'
+	hidden 'List of layouts within this document (root node only)' raw (cmif))
+
+(longdesc (string) '' 'Long description URL' default
+	'Link (URL) to a long description of the object' raw (g2 qt smil10 smil2 cmif snap))
+
+(loop (float) 1 'Repeat count' default
+	'Number of times the object should repeat (default: 1)' raw (g2 qt smil10 smil2 cmif))
+
+(max (float) -1.0 'Maximum duration' default
+	'Maximum duration of this object (default: indefinite)' normal (advanced smil2 snap))
+
+(mediaRepeat (enum strip preserve) preserve 'Media repeat' default
+	'Whether to obey or ignore intrinsic repeat in media' raw (advanced cmif smil2))
+
+(mimetype (string) '' 'MIME type' default
+	'MIME type of media object' raw (template g2_pro qt_pro smil10 smil2 cmif))
+
+(allowedmimetypes (list (name)) () 'Allowed MIME types' reqlist
+	'Allowed MIMEtypes for media object' raw (template g2_pro qt_pro smil10 cmif smil2))
+
+(min (float) 0.0 'Minimum duration' default
+	'Minimum duration of this object (default: 0 sec)' normal (advanced smil2 snap))
+
+(name (name) '' 'Name' default
+	'ID used when referencing this object' raw (g2 qt smil10 smil2 cmif snap))
+
+(close (enum onRequest whenNotActive) onRequest 'Close viewport' default
+	'When the viewport is to be closed' raw (advanced cmif smil2 snap))
+
+(open (enum onStart whenActive) onStart 'Open viewport' default
+	'When the viewport is to be opened' raw (advanced cmif smil2 snap))
+
+(popup (bool) 1 'Popup on play' default
+	'Determines whether channel pops up upon playing an object' raw (cmif))
+
+(previewShowOption (enum default always onSelected) default 'Preview show' hidden
+	'When should the preview be shown' raw (smil2 cmif))
+
+(project_audiotype (int) 0 'Audio type' audiotype
+	'Audio type, determines quality of audio when converting to RealAudio'
+	raw (advanced g2 snap cmif))
+
+(project_autoroute (bool) 0 'Route media items' default
+	'Dropped media items get automatically sent to children' raw (template smil2))
+
+(project_boston (bool) 0 'SMIL 2' default
+	'Document conforms to SMIL 2' raw (smil2))
+
+(project_default_duration (float) 5.0 'Default duration' default
+	'Default duration for new objects with no intrinsic duration' inherited (template cmif smil2))
+
+(project_default_duration_image (float) 0.0 'Default image duration' default
+	'Default duration for new image objects' inherited (template cmif smil2))
+
+(project_default_duration_text (float) 0.0 'Default text duration' default
+	'Default duration for new text objects' inherited (template cmif smil2))
+
+(project_default_region (name) undefined 'Default region' channelname
+	'Default region for descendants of this group' inherited (template cmif))
+
+(project_default_region_video (name) undefined 'Default region' regiondefault
+	'Default region for descendants for videos' inherited (template smil2))
+
+(project_default_region_image (name) undefined 'Default region' regiondefault
+	'Default region for descendants for images' inherited (template smil2))
+
+(project_default_region_sound (name) undefined 'Default region' regiondefault
+	'Default region for descendants for sounds' inherited (template smil2))
+
+(project_default_region_text (name) undefined 'Default region' regiondefault
+	'Default region for descendants for texts' inherited (template smil2))
+
+(project_default_type (name) undefined 'Default type' channeltype 
+	'Default channel type for descendants of this group' inherited (template cmif))
+
+(project_bandwidth_fraction (float) -1.0 'Bandwidth fraction' default
+	'Fraction of total bandwidth allocated to this sequence' raw (template cmif))
+
+(project_forcechild (name) '' 'Child template asset' assetnodename
+	'Force all children to be a certain template asset' raw (template g2_pro qt_pro smil10 cmif smil2))
+
+(project_readonly (bool) 0 'This structure is readonly' default
+	'This object is read-only' raw (template cmif))
+
+(project_convert (bool) 1 'Convert data' default
+	'Convert data to RealMedia format' raw (advanced g2_pro cmif))
+
+(project_ftp_host (string) '' 'Webserver' default
+	'FTP hostname to use for webpage upload (default: same as media host)' raw (smil2 g2 qt snap))
+
+(project_ftp_host_media (string) '' 'Mediaserver' default
+	'FTP hostname to use for media file upload' raw (smil2 g2 qt smil10 smil2 cmif snap))
+
+(project_ftp_user (string) '' 'Webserver User' default
+	'FTP username to use for webpage upload (default: same as media username)' raw (smil2 g2 qt snap))
+
+(project_ftp_user_media (string) '' 'Mediaserver User' default
+	'FTP username to use for media file upload' raw (smil2 g2 qt smil10 smil2 cmif snap))
+
+(project_ftp_dir (string) '' 'Webserver Directory' default
+	'Directory on FTP server where webpage will be stored (default: same as media directory)' raw (smil2 g2 qt snap))
+
+(project_ftp_dir_media (string) '' 'Mediaserver Directory' default
+	'Directory on FTP server where media files will be stored' raw (smil2 g2 qt smil10 smil2 cmif snap))
+
+(project_web_url (string) '' 'Webpage URL' default
+	'URL of directory where webpages are accessible, as seen from uploaded SMIL document' raw (smil2))
+
+(project_html_page (string) '' 'HTML template' default
+	'Template used to generate web page for this presentation' raw (template smil2 g2 qt snap))
+
+(project_mobile (bool) 0 'Mobile play' default
+	'Allow download' raw (advanced g2_pro))
+
+(project_perfect (bool) 1 'Perfect play' default
+	'Buffered playback' raw (advanced g2_pro))
+
+(project_quality (int) 75 'Image quality' quality
+	'Quality of image conversion to JPEG' raw (advanced g2 snap))
+
+(project_smil_url (string) '' 'Mediaserver URL' default
+	'URL of SMIL document on the media server' raw (smil2 g2 qt snap))
+
+(project_targets (int) 2 'Target audience' targets
+	'One or more bandwidths for which this item should be converted' raw (advanced g2 snap))
+
+(project_videotype (int) 0 'Video type' videotype
+	'Video type, determines quality of video when converting to RealVideo'
+	raw (advanced g2 snap))
+
+(queuesize (float) 0 'Queue size' default
+	'Audio playback queue size' channel (cmif))
+
+(readIndex (int) 0 'Read index' default
+	'Position in which descriptive text is read by assistive devices' raw (template cmif smil2))
+
+(tabindex (int) 0 'Tab index' default
+	'Position of the element in the tabbing order of the document' raw (template cmif smil2))
+
+(regionName (name) 'undefined' 'Region name' default
+	'Region name' raw (advanced cmif smil2 snap))
+
+(repeatdur (float) 0 'Repeat duration' default
+	'Repeat the object for this number of seconds (overrides repeat count)' raw (smil2))
+
+(restart (enum default always whenNotActive never) default 'Restart object' restart
+	'Should this node restart when a subsequent event occurs?' raw (advanced cmif smil2 snap))
+
+(restartDefault (enum inherit always whenNotActive never) inherit 'Restart default' restart
+	'Default value for the restart property on the children of this group' inherited (template cmif smil2 snap))
+
+(fit (enum meet hidden slice scroll fill) hidden 'Fit' fit
+	'How media is scaled to the region' channel (g2 qt smil10 smil2 cmif snap))
+
+(sensitivity (float) 0 'Event sensitivity' percent
+	'Event sensitivity of media (percentage in range 0 - 100)' raw (advanced cmif smil2))
+
+(showEditBackground (bool) 1 'Show edit background' default
+	'Show edit background color in Layout View' channel (template g2 qt smil10 smil2 cmif snap))
+
+(showEditBgMode (enum normal editBackground outline) normal 'Show edit Background mode' default
+	'Type of background color showed in the layout view' channel (template g2 qt smil10 smil2 cmif snap))
+
+
+(skip_content (bool) 1 'Skip unknown content' default
+	'Skip unknown content when parsing this document' raw (advanced cmif smil2))
+
+(syncBehavior (enum default canSlip locked independent) default 'Sync behavior' default
+	'Defines the runtime synchronization behavior for this object' normal (template smil2 cmif))
+
+(syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' default
+	'Default sync behaviour for children of this group' inherited (template smil2 cmif))
+
+(syncMaster (bool) 0 'Sync master' default
+	'Whether this element is the master clock for sibling elements' normal (template smil2 cmif))
+
+(syncTolerance (float) -1 'Sync tolerance' default
+	'Maximum number of seconds that this object may be out of sync with the master' normal (template smil2 cmif))
+
+(syncToleranceDefault (float) -1 'Sync tolerance default' default
+	'Default value for the Sync tolerance property on the children of this group' inherited (template smil2 cmif))
+
+# The items are (srcnode, event or marker, delay).
+# things causing the node to start
+(beginlist (list (enclosed (any))) ()
+	'Events' timelist
+	'List of events starting this object' raw (smil2 snap))
+# things causing the node to end
+(endlist (list (enclosed (any))) ()
+	'Events' timelist
+	'List of events ending this object' raw (smil2 snap))
+
+(terminator (name) 'LAST' 'Endsync child' termnodename
+	'Name of child that terminates parallel object' normal (advanced g2 qt smil10 smil2 cmif))
+
+(textalign (string) 'center' 'Alignment' default
+	'Alignment of text in window' channel (cmif))
+
+(title (string) '' 'Title' default
+	 'The title of this object (informational only)' raw (g2 qt smil10 smil2 cmif snap))
+
+# the next four attributes are only for prio nodes
+(higher (enum stop pause) pause 'Higher' default
+	'What to do when higher priority objects interrupt our children' raw (smil2))
+(lower (enum defer never) defer 'Lower' default
+	'What to do when lower priority objects interrupt our children' raw (smil2))
+(peers (enum stop pause defer never) stop 'Peers' default
+	'What to do when equal priority objects interrupt our children' raw (smil2))
+(pauseDisplay (enum disable hide show) show 'Pause display' default
+	'How paused children should behave' raw (smil2))
+
+# XXXX Transitions need a displayer
+# XXXX This allows for a single transition only (should be a list)
+(transIn (list (name)) () 'In-transition' transition
+	'Transition to perform at start of object playback' raw (smil2 snap))
+	
+(transOut (list (name)) () 'Out-transition' transition
+	'Transition to perform at end of object playback' raw (smil2 snap))
+	
+(transparent (int) 0 'Transparent' transparency
+	'Determines transparency of window, overrides background color' region (g2_pro smil10 cmif))
+
+(type (name) null 'Channel type' channeltype
+	'Type of media this channel will be used for' raw (g2 qt smil10 smil2 cmif snap))
+
+(u_group (list (name)) () 'Custom tests' usergroup
+	'If set, play this object only if the specified custom test is enabled' inherited (advanced smil2 cmif))
+
+(units (int) 2 'Units' hidden
+	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
+
+(usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (name)))))
+	() 'Custom tests' hidden
+	'Custom tests used in this document (root node only)' normal (smil2 cmif))
+
+(video (bool) 0 'Video output' default
+	'Do image smoothing for video output' channel (cmif))
+
+(visible (bool) 1 'Channel visibility' default
+	'Are objects played to the channel actually rendered?' raw (cmif))
+
+(winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
+	'Initial window position (x, y)' raw (g2 qt smil10 smil2 cmif))
+
+(winsize (tuple (float) (float)) (0 0) 'Window size' default
+	'Initial window size' raw (cmif))
+
+(xmllang (string) '' 'Media language' default
+	'The language of the media item' raw (advanced smil2 cmif))
+
+(z (int) 0 'Z order' default
+	'Stacking order within enclosing region (higher numbers are on top)' normal (g2 qt smil10 smil2 cmif snap))
+
+(namespace (string) '' 'Namespace of object' default
+	'Namespace of a foreign object' normal (advanced smil2))
+(elemname (string) '' 'Tag of object' default
+	'XML tag of a foreign object' normal (advanced smil2))
+
+# SMIL system test attributes
+# XXX for now, most of these in template mode to not show then in Real
+# product
+(system_audiodesc (bool) 0 'System audio descriptions' bool3
+	'If set, play object only if end-user wants audio descriptions' raw (template smil2))
+(system_bitrate (int) 0 'System bitrate' bitrate3
+	'If set, play object only if bitrate >= value here' raw (g2 qt smil10 smil2 cmif snap))
+(system_captions (bool) 0 'System captions' bool3
+	'If set, play object only if end-user wants captions' raw (template g2 qt smil10 smil2 cmif))
+(system_language (string) '' 'System language' language3
+	'If set, play object only if end-user prefers this language' raw (g2 qt smil10 smil2 cmif snap))
+(system_overdub_or_caption (string) '' 'System overdub or subtitle' captionoverdub3
+	'If set, play object only depending on end user overdub/subtitle preference' raw (template g2 qt smil10 smil2 cmif))
+(system_required (list (string)) () 'System required' reqlist
+	'If set, play object only if player supports these features' raw (template g2 qt smil10 smil2 cmif))
+(system_screen_size (tuple (int) (int)) (0 0) 'System screen size' screensize
+	'If set, play object only if screen bigger than this (width height)' raw (template g2 qt smil10 smil2 cmif))
+(system_screen_depth (int) 0 'System screen depth' screendepth
+	'If set, play object only if screen has at least bits-per-pixel than this' raw (template g2 qt smil10 smil2 cmif))
+(system_operating_system (enum aix beos bsdi dgux freebsd hpux irix linux macos ncr nec netbsd nextstep nto openbsd openvms os2 osf palmos qnx sinix rhapsody sco solaris sonly sunos unixware win16 win32 win9x winnt wince unknown) unknown 'System operating system' opsys
+	'If set, play object only if running on the specified operating system' raw (template smil2))
+(system_cpu (enum alpha arm arm32 'hppa1.1' m68k mips ppc rs6000 vax x86 unknown) unknown 'System CPU' cpu
+	'If set, play object only if running on the specified CPU' raw (template smil2))
+(system_component (list (string)) () 'System component' complist
+	'Space-separated list of URIs that all need to be supported for this object to play' raw (template smil2))
+
+# RealPix attributes
+(aspect (bool) 1 'Keep aspect ratio' default
+	'Keep aspect ratio of image' inherited (g2))
+
+(color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
+       'Color for transition effect' normal (g2))
+
+(direction (enum left right up down) left 'Wipe Direction' direction
+	'Direction of wipe' normal (g2))
+
+(href (string) '' 'Hyperlink destination' default
+	'The destination URL of Web page from the image' inherited (g2))
+
+(imgcropwh (tuple (int) (int)) (0 0) 'Image crop size' default
+	'Crop image.  Values are width and height of image area to display' normal (g2))
+
+(imgcropxy (tuple (int) (int)) (0 0) 'Image crop coordinates' default
+	'Crop image.  Values are x,y coordinates of image area to display' normal (g2))
+
+(imgcropanchor (string) 'top-left' 'Image crop anchor' subregionanchor
+	'Anchor for image crop (x,y) coordinates' normal (advanced g2_pro))
+
+(fullimage (bool) 1 'Use whole image' default
+	'Use whole image' normal (g2))
+
+(maxfps (int) 0 'Max fps' default 'Transition framerate, 0 for as high as possible' inherited (advanced g2_pro))
+
+(preroll (float) 0.0 'Preroll time' default
+	'Time for which data should be buffered before presentation starts, see RealPix documentation'
+	raw (g2))
+
+(size (tuple (int) (int)) (256 256) 'Image size' default
+	'Size of slideshow, in pixels' normal (g2))
+
+(start (float) 0.0 'Begin time' default
+	'Start time of transition effect, relative to previous transition start' normal (g2))
+
+(subregionxy (tuple (int) (int)) (0 0) 'Destination region (x,y)' normal
+	'(x,y) coordinates of destination area within channel' normal (g2))
+
+(subregionwh (tuple (int) (int)) (0 0) 'Destination region (w,h)' normal
+	'width and height of destination area within channel' normal (g2))
+
+(subregionanchor (string) 'top-left' 'Destination region anchor' subregionanchor
+	'Anchor for subregion (x,y) coordinates' normal (advanced g2_pro))
+
+(displayfull (bool) 1 'Fill whole region' default
+	'Use whole region for transition effect' normal (g2))
+
+(tag (enum fill fadein fadeout crossfade wipe viewchange) fill 'Transition type' default
+	'Type of transition effect' normal (g2))
+	
+(caption (string) '' 'Text caption' default
+	'Text caption to show with the image' normal (g2))
+	
+(captionchannel (name) '' 'Caption channel' captionchannelname
+	'Name of channel used to render captions on this object' inherited (g2))
+
+(wipetype (enum normal push) normal 'Wipe type' wipetype
+	'Type of wipe' normal (g2))
+
+(fadeout (bool) 0 'Fadeout' default
+	'Fadeout image after specified time' normal (g2))
+
+(fadeouttime (float) 0.0 'Fadeout begin time' default
+	'Start time for fadeout, relative to transition completion' normal (g2))
+
+(fadeoutcolor (tuple (int) (int) (int)) (0 0 0) 'Fadeout color' color
+	'Color to fadeout to' normal (g2))
+
+(fadeoutduration (float) 0.0 'Fadeout duration' default
+	'Duration of fadeout transition' normal (g2))
+
+(tduration (float) 0.0 'Transition duration' default
+	'Duration of the transition' normal (g2))
+
+# Real extensions
+(resizeBehavior (enum percentOnly zoom) zoom 'Resize behavior' default
+	'How resizing the window affects regions' normal (advanced g2 smil2))
+(opacity (float) 1.0 'Region opacity' percent
+	'Reduces background opacity' normal (advanced g2 smil2))
+(backgroundOpacity (float) 1.0 'Background opacity' percent
+	'Makes transparent backgrounds opaque' normal (advanced g2 smil2))
+(chromaKey (tuple (int) (int) (int)) (-255 -255 -255) 'Chroma key' color
+	'Turns selected color transparent' normal (advanced g2 smil2))
+(chromaKeyOpacity (float) 0.0 'Chroma key opacity' percent
+	'Adds opacity to chroma key' normal (advanced g2 smil2))
+(chromaKeyTolerance (tuple (int) (int) (int)) (0 0 0) 'Chroma key tolerance' default
+	'Widens range of chromaKey' normal (advanced g2 smil2))
+(mediaOpacity (float) 1.0 'Media opacity' percent
+	'Makes all opaque areas transparent' normal (advanced g2 smil2))
+(sendTo (enum rpcontextwin rpbrowser osdefaultbrowser rpengine) rpbrowser 'Send to' default
+	'Specifies window that opens the HTML page' normal (g2 smil2))
+(contextwidth (int) 0 'Context window width' default
+	'Width of Context subwindow' normal (template smil2))
+(contextheight (int) 0 'Context window height' default
+	'Height of Context subwindow' normal (template smil2))
+(reliable (bool) 0 'Reliable transmission' default
+	'Prefer rebuffering over skipping media data' normal (advanced g2 smil2))
+(strbitrate (int) 12288 'Stream bitrate' default
+	'Set streaming bitrate for static media (default: 12288)' normal (advanced g2 smil2))
+
+# QuickTime attributes
+
+(autoplay (bool) 0 'Auto play' default 
+	'Presentation automatically starts playback upon instantiation' normal (advanced qt_pro))
+
+(qtnext (string) '' 'Next presentation' file 
+	'Presentation played after the current presentation is finished' normal (advanced qt_pro))
+
+(qttimeslider (bool) 0 'Time slider' default 
+	'A time line is displayed as part of the user interface' normal (advanced qt_pro))
+
+(qtchaptermode (int) 0 'Chapter mode' qtchaptermode 
+	'The way in which chapters is used in the user interface' normal (advanced qt_pro))
+
+(immediateinstantiation (bool) 0 'Immediate instantiation' default 
+	'The media objects are instantiated immediately' normal (advanced qt_pro))
+
+(immediateinstantiationmedia (bool) 0 'Immediate instantiation' bool3 
+	'The media object is instantiated immediately' normal (advanced qt_pro))
+
+(bitratenecessary (int) 14400 'Bitrate' bitrate3
+	'The bitrate at which the media object would need to be transmitted in order to play back in real time' normal (advanced qt_pro))
+
+(systemmimetypesupported (string) '' 'System mime type supported' default
+	'Specify the mime type that needs to be supported in order to be able to play back this particular media-object' normal (advanced qt_pro))
+
+(attachtimebase (bool) 1 'Attach time base' default
+	'Slave the timebase of this media to the parent' normal (advanced qt_pro))
+
+(qtchapter (string) '' 'Chapter' default
+	'Specify a chapter name' normal (advanced qt_pro))
+
+(qtcompositemode (string) '' 'Composite mode' default
+	'Specifies how to composite a visual media element with other visual media elements behind it' normal (advanced qt_pro))
+
+
+# animation module
+
+(atag (enum animate set animateMotion animateColor region transition area) animate 'Animation type' default
+	'Animation type' normal (smil2 cmif))
+
+(targetElement (string) '' 'Target element' default
+	'Animation target element' normal (g2 qt smil10 smil2 cmif))
+
+(attributeName (string) '' 'Attribute name' default
+	'Animation target attribute name' normal (g2 qt smil10 smil2 cmif))
+
+(attributeType (enum CSS XML auto) XML 'Attribute type' default
+	'Target attribute namespace' normal (template g2 qt smil10 smil2 cmif))
+
+(additive (enum replace sum) replace 'Additive' default
+	'Add animation effect' normal (g2 qt smil10 smil2 cmif))
+
+(accumulate (enum none sum) none 'Accumulate' default
+	'Accumulate animation effect' normal (g2 qt smil10 smil2 cmif))
+
+(calcMode (enum discrete linear paced spline) linear 'Calculation mode' default
+	'Interpolation mode for the animation' normal (g2 qt smil10 smil2 cmif))
+
+(values (string) '' 'Values' default
+	'Interpolation values' normal (g2 qt smil10 smil2 cmif))
+
+(keyTimes (list (enclosed (float))) () 'Key times' keyTimes
+	'Interpolation control times' normal (g2 qt smil10 smil2 cmif))
+
+(keySplines (string) '' 'Key splines' default
+	'Interpolation bezier control points associated with the key times' normal (g2 qt smil10 smil2 cmif))
+
+(from (string) '' 'From value' default
+	'Starting attribute value' normal (g2 qt smil10 smil2 cmif))
+
+(to (string) '' 'To value' default
+	'Ending attribute value' normal (g2 qt smil10 smil2 cmif))
+
+(by (string) '' 'By value' default
+	'Ending relative offset attribute value' normal (g2 qt smil10 smil2 cmif))
+
+(path (string) '' 'Path' default
+	'Motion path' normal (g2 qt smil10 smil2 cmif))
+
+(origin (enum parent element) parent 'Origin' default
+	'Coordinates origin' normal (g2 qt smil10 smil2 cmif))
+
+(showAnimationPath (bool) 1 'Show animation path' default
+	'Show animation path in animation editor' normal (advanced smil2))
+
+# time manipulations
+
+(speed (float) 1.0 'Speed' default
+	'Playback speed of element time' normal (g2 qt smil10 smil2 cmif))
+
+(accelerate (float) 0.0 'Accelerate' default
+	'Proportion of the simple duration to accelerate' normal (g2 qt smil10 smil2 cmif))
+
+(decelerate (float) 0.0 'Decelerate' default
+	'Proportion of the simple duration to decelerate' normal (g2 qt smil10 smil2 cmif))
+
+(autoReverse (bool) 0 'Auto reverse' default
+	'Play forwards then backwards' normal (g2 qt smil10 smil2 cmif))
+
+# Transitions
+(trname (name) '' 'Name' default
+	'ID of transition, as used when referring to it' raw (smil2))
+	
+(trtype (enum barWipe boxWipe fourBoxWipe barnDoorWipe diagonalWipe bowTieWipe
+		miscDiagonalWipe veeWipe barnVeeWipe zigZagWipe barnZigZagWipe irisWipe
+		triangleWipe arrowHeadWipe pentagonWipe hexagonWipe ellipseWipe eyeWipe
+		roundRectWipe starWipe clockWipe miscShapeWipe pinWheelWipe singleSweepWipe fanWipe
+		doubleFanWipe doubleSweepWipe saloonDoorWipe windShieldWipe snakeWipe
+		spiralWipe parallelSnakesWipe boxSnakesWipe waterfallWipe pushWipe slideWipe fade
+	) fade 'Transition type' default
+	'The type of transition to perform' raw (smil2))
+	
+(chsubtype (string) '' 'Region type' default
+	'Type of region' raw (cmif smil2))
+
+(subtype (name) '' 'Transition subtype' default
+	'Further refinement of transition to perform' raw (smil2))
+	
+(dur (float) 1.0 'Duration' default
+	'Duration of the transition (default: 1 second)' raw (smil2))
+
+(startProgress (float) 0.0 'Start value' default
+	'Example: use 0.3 to start transition with 30% of destination media visible' raw (smil2))
+	
+(endProgress (float) 1.0 'End value' default
+	'Example: using 0.7 will end transition with 30% of source still visible, then full destination will be shown' raw (smil2))
+	
+(direction (enum forward reverse) forward 'Transition direction' default
+	'Spatial direction of the transition effect, if applicable' raw (smil2))
+	
+(fadeColor (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
+       'Color for transition effect' normal (smil2))
+
+(horzRepeat (int) 1 'Horizontal repeat' default
+	'How often the transition pattern is repeated horizontally, if applicable (default: 1)' raw (smil2))
+
+(vertRepeat (int) 1 'Vertical repeat' default
+	'How often the transition pattern is repeated vertically, if applicable (default: 1)' raw (smil2))
+
+(borderColor (tuple (int) (int) (int)) (0 0 0) 'Border color' color
+       'Color for transition border, if applicable (default: black)' normal (smil2))
+
+(borderWidth (int) 0 'Border width' default
+	'Width of the border, if applicable (default: no border)' raw (smil2))
+	
+(coordinated (bool) 0 'Multi-element transition' default
+	'Whether this is a coordinated transition across multiple elements' raw (smil2))
+	
+(class (string) '' 'Class' default
+	'Class' raw (smil2))
+
+(clipBoundary (enum children parent) children 'Clip to children' default
+	'Is transition limited to children only or parent plus children?' raw (smil2))
+
+(mode (enum in out) in 'Inline transition mode' default
+	'Is transition in or out?' raw (smil2))
+
+# registration points
+
+(regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'RegAlign' default
+	'Point on media which is aligned to regPoint' raw (advanced smil2))
+
+(regPoint (string) 'topLeft' 'RegPoint' regpoint
+	'Point on region which is aligned to regAlign' region (advanced smil2))
+
+# prefetch
+
+(mediaSize (string) '100%' 'Media size' default
+	'How much to fetch as a function of the file size of the resource' raw (smil2))
+	
+(mediaTime (string) '100%' 'Media time' default
+	'How much to fetch as a function of the duration of the resource' raw (smil2))
+
+(bandwidth (string) '100%' 'Bandwidth' default
+	'How much bandwidth should be used when doing the prefetch' raw (smil2))
+
+
+# region
+
+(showBackground (enum always whenActive) always 'Show background' default
+	'Is background color always visible or only when media is played?' raw (smil2))
+
+(soundLevel (float) 1 'Sound level' percent
+	'Relative audio volume as a fraction (default: 1.0)' raw (smil2))
+
+# settings
+(vertical_icons (bool) 1 'Vertical icons' default
+	'Show icons vertically in the Structure View' raw (cmif smil2))
+(initial_dialog (bool) 1 'Show initial dialog' default
+	'Show initial dialog on application start' raw (smil2))
+(saveopenviews (bool) 0 'Save open views' default
+	'Save view placement in prefs file' raw (smil2))
+(showhidden (bool) 0 'Show hidden custom tests' bool3
+	'Show hidden custom tests' raw (smil2))
+(enable_template (bool) 0 'Template builder' default
+	'Enable features specific to building template documents' raw (smil2))
+(default_sync_behavior_locked (bool) 0 'Synchronous playback' default
+	'Playback will be fully synchronized by default' raw (smil2))
+(default_sync_tolerance (float) 0.1 'Tolerance' default
+	'Maximum media clock drift for synchronized playback' raw (smil2))
+(template_name (string) '' 'Template name' default
+	'Name of the template' raw (smil2 template cmif))
+(template_description (string) '' 'Template description' default
+	'Longer description of the template' raw (smil2 template cmif))
+(template_snapshot (string) '' 'Template snapshot' file
+	'URL of a snapshot image that represents the template' raw (smil2 template cmif))
