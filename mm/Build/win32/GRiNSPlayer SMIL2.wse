@@ -19,11 +19,11 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.45.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.46.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
-  Upload Directory=/ufs/sjoerd/tmp
+  Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
   Version File=2.0
@@ -31,7 +31,7 @@ item: Global
   Version Copyright=Copyright 2000 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
   Distribute Path=\\UNIXSERVER\auginet\GRiNS
-  Distribute Type=1
+  Distribute Type=2
   Step View=All
   File Checksum=2205315322
   Variable Name1=_SYS_

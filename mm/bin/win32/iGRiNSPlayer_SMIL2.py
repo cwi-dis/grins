@@ -35,17 +35,17 @@ else:
 
 CMIFPATH = [
 	os.path.join(CMIFDIR, 'bin\\win32'),
-	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smil20' % specificPath),
 	os.path.join(CMIFDIR, '%s\\smil20\\win32' % specificPath),
-	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
+	os.path.join(CMIFDIR, '%s\\smil20' % specificPath),
+	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
+##	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
 	os.path.join(CMIFDIR, '%s' % specificPath),
 	os.path.join(CMIFDIR, 'common'),
 	os.path.join(CMIFDIR, 'lib'),
 	os.path.join(CMIFDIR, 'pylib'),
-#	os.path.join(CMIFDIR, 'pylib\\audio'),
+##	os.path.join(CMIFDIR, 'pylib\\audio'),
 	os.path.join(CMIFDIR, 'win32\\src\\Build'),
 	os.path.join(os.path.split(CMIFDIR)[0], 'python\\Lib')
 ]
@@ -106,7 +106,6 @@ def Boot(what = 0):
 	except win32ui.error:
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
 		# For now just continue!?!?!
-	
 	# run the given cmif file
 	try:
 		if what==PLAYER:
@@ -117,7 +116,6 @@ def Boot(what = 0):
 			import cmifed
 	except SystemExit, rc:
 		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
-
 
 
 def GuessCMIFRoot():
