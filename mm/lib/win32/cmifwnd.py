@@ -1044,7 +1044,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		return xsize, ysize
 
 	# Prepare an image for display (load,crop,scale, etc)
-	def _prepare_image(self, file, crop, scale, center, coordinates):
+	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -1110,7 +1110,94 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		# w -- width of scaled image
 		# h -- height of scaled image
 		# left, right, top, bottom -- part to be cropped (offsets from edges)
-
+		if clip is not None:
+			clip = self._convert_coordinates(clip, self._canvas)
+			if clip[0] <= x:
+				# left edge visible
+				if clip[0] + clip[2] <= x:
+					# not visible at all
+					rcKeep = rcKeep[0],rcKeep[1],0,0
+				elif clip[0] + clip[2] < x + w:
+					# clipped at right end
+					rcKeep2 = rcKeep[2]
+					delta = x + w - clip[0] - clip[2]
+					right = right + delta
+					rcKeep2 = rcKeep2 - int(rcKeep2 * float(delta)/w + .5)
+					rcKeep = rcKeep[0],rcKeep[1],rcKeep2,rcKeep[3]
+				else:
+					# totally visible
+					pass
+			elif x < clip[0] < x + w:
+				# left edge not visible
+				if clip[0] + clip[2] < x + w:
+					# only center visible
+					rcKeep2 = rcKeep[2]
+					delta = clip[0]-x
+					x = x + delta
+					left = left + delta
+					delta = int(rcKeep2 * float(delta)/w + .5)
+					rcKeep0 = rcKeep[0] + delta
+					rcKeep2 = rcKeep2 - delta
+					delta = x + w - clip[0] - clip[2]
+					right = right + delta
+					delta = int(rcKeep2 * float(delta)/w + .5)
+					rcKeep2 = rcKeep2 - delta
+					rcKeep = rcKeep0,rcKeep[1],rcKeep2,rcKeep[3]
+				else:
+					# clipped at left
+					delta = clip[0]-x
+					x = x + delta
+					left = left + delta
+					delta = int(rcKeep[2] * float(delta)/w + .5)
+					rcKeep0 = rcKeep[0] + delta
+					rcKeep2 = rcKeep2 - delta
+					rcKeep = rcKeep0,rcKeep[1],rcKeep2,rcKeep[3]
+			else:
+				# not visible at all
+				rcKeep = rcKeep[0],rcKeep[1],0,0
+			if clip[1] <= y:
+				# top edge visible
+				if clip[1] + clip[3] <= y:
+					# not visible at all
+					rcKeep = rcKeep[0],rcKeep[1],0,0
+				elif clip[1] + clip[3] < y + h:
+					# clipped at bottom end
+					rcKeep3 = rcKeep[3]
+					delta = y + h - clip[1] - clip[3]
+					bottom = bottom + delta
+					rcKeep3 = rcKeep3 - int(rcKeep3 * float(delta)/h + .5)
+					rcKeep = rcKeep[0],rcKeep[1],rcKeep[2],rcKeep3
+				else:
+					# totally visible
+					pass
+			elif y < clip[1] < y + h:
+				# top edge not visible
+				if clip[1] + clip[3] < y + h:
+					# only center visible
+					rcKeep3 = rcKeep[3]
+					delta = clip[1]-y
+					y = y + delta
+					top = top + delta
+					delta = int(rcKeep3 * float(delta)/h + .5)
+					rcKeep1 = rcKeep[1] + delta
+					rcKeep3 = rcKeep3 - delta
+					delta = y + h - clip[1] - clip[3]
+					bottom = bottom + delta
+					delta = int(rcKeep3 * float(delta)/h + .5)
+					rcKeep3 = rcKeep3 - delta
+					rcKeep = rcKeep[0],rcKeep1,rcKeep[2],rcKeep3
+				else:
+					# clipped at top
+					delta = clip[1]-y
+					y = y + delta
+					top = top + delta
+					delta = int(rcKeep[3] * float(delta)/h + .5)
+					rcKeep1 = rcKeep[1] + delta
+					rcKeep3 = rcKeep3 - delta
+					rcKeep = rcKeep[0],rcKeep1,rcKeep[2],rcKeep3
+			else:
+				# not visible at all
+				rcKeep = rcKeep[0],rcKeep[1],0,0
 		# return:
 		# image, mask
 		# left,top  of crop rect
