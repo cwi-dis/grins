@@ -4,6 +4,7 @@ from types import *
 import math
 
 [_X, _Y, _WIDTH, _HEIGHT] = range(4)
+_def_useGadget = 1
 
 _rb_message = """\
 Use left mouse button to draw a box.
@@ -967,8 +968,8 @@ class _Widget(_MenuSupport):
 
 class Label(_Widget):
 	'''Label window object.'''
-	def __init__(self, parent, text, useGadget = 1, name = 'windowLabel',
-		     **options):
+	def __init__(self, parent, text, useGadget = _def_useGadget,
+		     name = 'windowLabel', **options):
 		'''Create a Label subwindow.
 
 		PARENT is the parent window, TEXT is the text for the
@@ -996,7 +997,7 @@ class Label(_Widget):
 
 class Button(_Widget):
 	'''Button window object.'''
-	def __init__(self, parent, label, callback, useGadget = 1,
+	def __init__(self, parent, label, callback, useGadget = _def_useGadget,
 		     name = 'windowButton', **options):
 		'''Create a Button subwindow.
 
@@ -1033,7 +1034,8 @@ class Button(_Widget):
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
 	def __init__(self, parent, label, optionlist, startpos, cb,
-		     useGadget = 1, name = 'windowOptionMenu', **options):
+		     useGadget = _def_useGadget, name = 'windowOptionMenu',
+		     **options):
 		'''Create an option menu window object.
 
 		PARENT is the parent window, LABEL is a label for the
@@ -1180,7 +1182,7 @@ class OptionMenu(_Widget):
 
 class PulldownMenu(_Widget):
 	'''Menu bar window object.'''
-	def __init__(self, parent, menulist, useGadget = 1,
+	def __init__(self, parent, menulist, useGadget = _def_useGadget,
 		     name = 'menuBar', **options):
 		'''Create a menu bar window object.
 
@@ -1407,7 +1409,8 @@ class Selection(_Widget, _List):
 
 class List(_Widget, _List):
 	def __init__(self, parent, listprompt, itemlist, sel_cb,
-		     rows = 10, useGadget = 1, name = 'windowList', **options):
+		     rows = 10, useGadget = _def_useGadget,
+		     name = 'windowList', **options):
 		attrs = {'resizePolicy': parent.resizePolicy}
 		self._attachments(attrs, options)
 		if listprompt is not None:
@@ -1486,8 +1489,9 @@ class List(_Widget, _List):
 		_List._destroy(self)
 
 class TextInput(_Widget):
-	def __init__(self, parent, prompt, inittext, chcb, accb, useGadget = 1,
-		     name = 'windowTextfield', **options):
+	def __init__(self, parent, prompt, inittext, chcb, accb,
+		     useGadget = _def_useGadget, name = 'windowTextfield',
+		     **options):
 		attrs = {}
 		self._attachments(attrs, options)
 		if prompt is not None:
@@ -1657,8 +1661,8 @@ class TextEdit(_Widget):
 		del self._linecache
 
 class Separator(_Widget):
-	def __init__(self, parent, useGadget = 1, name = 'windowSeparator',
-		     **options):
+	def __init__(self, parent, useGadget = _def_useGadget,
+		     name = 'windowSeparator', **options):
 		attrs = {}
 		self._attachments(attrs, options)
 		if useGadget:
@@ -1675,7 +1679,7 @@ class Separator(_Widget):
 class ButtonRow(_Widget):
 	def __init__(self, parent, buttonlist,
 		     vertical = 1, callback = None,
-		     buttontype = 'pushbutton', useGadget = 1,
+		     buttontype = 'pushbutton', useGadget = _def_useGadget,
 		     name = 'windowRowcolumn', **options):
 		attrs = {'entryAlignment': Xmd.ALIGNMENT_CENTER,
 			 'traversalOn': FALSE}
