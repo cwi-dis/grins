@@ -682,7 +682,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw_scene()
 
 	def mouse(self, dummy, window, event, params):
-		# Hack added by mjvdg: params[3] is the params as given by win32, including shift, ctrl status.
 		self.toplevel.setwaiting()
 		x, y, dummy, modifier = params
 
@@ -1306,7 +1305,13 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 		if not external:
 			# avoid recursive setglobalfocus
-			self.editmgr.setglobalfocus("MMNode", self.focusnode)
+			if len(self.multi_selected_widgets) > 0:
+				a = []
+				for i in self.multi_selected_widgets:
+					a.append(i.get_node())
+				self.editmgr.setglobalfocus("MMNode", a)
+			else:
+				self.editmgr.setglobalfocus("MMNode", self.selected_widget.get_node())
 
 	def also_select_widget(self, widget):
 		# Select another widget without losing the selection (ctrl-click).
