@@ -674,7 +674,7 @@ def getrepeat(writer, node):
 	if value == 0:
 		return 'indefinite'
 	else:
-		return `value`
+		return fmtfloat(value)
 
 def getboolean(writer, node, attr):
 	value = node.GetRawAttrDef(attr, None)
