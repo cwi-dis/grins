@@ -2086,26 +2086,16 @@ class ChannelWindow(Channel):
 		shapeType = args[0]
 
 		armBox = self.getArmBox()
-		if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT or \
-						shapeType == A_SHAPETYPE_ELIPSE:
-			rArgs = [shapeType]
-			n=0
-			for a in args[1:]:
-				# test if xCoordinates or yCoordinates
-				if n%2 == 0:
-					# convert coordinates from image to window size
-					rArgs.append(a*armBox[2] + armBox[0])
-				else:
-					rArgs.append(a*armBox[3] + armBox[1])
-				n = n+1
-
-		# in this case the circle may be translate to an elipse
-		elif shapeType == A_SHAPETYPE_CIRCLE:
-			xCenter, yCenter, radius = args[1:]
-			rArgs = [A_SHAPETYPE_ELIPSE, xCenter*armBox[2] + armBox[0],
-						yCenter*armBox[3] + armBox[1],
-						radius*armBox[2] + armBox[0],
-						radius*armBox[3] + armBox[1]]
+		rArgs = [shapeType]
+		n=0
+		for a in args[1:]:
+			# test if xCoordinates or yCoordinates
+			if n%2 == 0:
+				# convert coordinates from image to window size
+				rArgs.append(a*armBox[2] + armBox[0])
+			else:
+				rArgs.append(a*armBox[3] + armBox[1])
+			n = n+1
 
 		return rArgs
 
@@ -2116,26 +2106,16 @@ class ChannelWindow(Channel):
 		if shapeType == A_SHAPETYPE_ALLREGION:
 			return args
 
-		if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT or \
-						shapeType == A_SHAPETYPE_ELIPSE:
-			rArgs = [shapeType,]
-			n=0
-			for a in args[1:]:
-				# test if xCoordinates or yCoordinates
-				if n%2 == 0:
-					# convert coordinates from image to window size
-					rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
-				else:
-					rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
-				n = n+1
-
-		# in this case the circle may be translate to an elipse
-		elif shapeType == A_SHAPETYPE_CIRCLE:
-			xCenter, yCenter, radius = args[1:]
-			rArgs = [A_SHAPETYPE_ELIPSE, (xCenter - self._arm_imbox[0]) / self._arm_imbox[2],
-					(yCenter - self._arm_imbox[1]) / self._arm_imbox[3],
-					(radius - self._arm_imbox[0]) / self._arm_imbox[2],
-					(radius - self._arm_imbox[1]) / self._arm_imbox[3]]
+		rArgs = [shapeType,]
+		n=0
+		for a in args[1:]:
+			# test if xCoordinates or yCoordinates
+			if n%2 == 0:
+				# convert coordinates from image to window size
+				rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
+			else:
+				rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
+			n = n+1
 
 		return rArgs
 
@@ -2148,30 +2128,56 @@ class ChannelWindow(Channel):
 
 		shapeType = args[0]
 
-		rArgs = [shapeType]
-		n=0
-		xsize = -1
-		for a in args[1:]:
-			# if integer, it's a pixel value, we need to convert in pourcent
-			if type(a) == type(0):	# any floating point number
-				# for optimization
-				if xsize == -1:
-					xsize, ysize = node.GetDefaultMediaSize(100, 100)
-				if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT:
+		
+		if shapeType != A_SHAPETYPE_CIRCLE:
+			rArgs = [shapeType]
+			n=0
+			xsize = -1
+			for a in args[1:]:
+				# if integer, it's a pixel value, we need to convert in pourcent
+				if type(a) == type(0):	# any integer number
+					# for optimization
+					if xsize == -1:
+						xsize, ysize = node.GetDefaultMediaSize(100, 100)
+						
 					# test if xCoordinates or yCoordinates
 					if n%2 == 0:
 						rArgs.append(float(a)/xsize)
 					else:
 						rArgs.append(float(a)/ysize)
-				elif shapeType == A_SHAPETYPE_CIRCLE:
-					if xSize > ySize:
-						rArgs.append(float(a)/ysize)
-					else:
-						rArgs.append(float(a)/xsize)
+				else:
+					rArgs.append(a)
+				n = n+1
+				
+		else:
+			# In internal, we manage only elipses
+			rArgs = [A_SHAPETYPE_ELIPSE]
+			xCenter, yCenter, radius = args[1:]
+			xsize, ysize = node.GetDefaultMediaSize(100, 100)
+			
+			if type(xCenter) == type(0): # any integer number
+				rArgs.append(float(xCenter)/xsize)
 			else:
-				rArgs.append(a)
-
-			n = n+1
+				rArgs.append(xCenter)
+				
+			if type(yCenter) == type(0): # any integer number
+				rArgs.append(float(yCenter)/ysize)
+			else:
+				rArgs.append(yCenter)
+	
+			if type(radius) == type(0): # any integer number
+				rArgs.append(float(radius)/xsize)
+				rArgs.append(float(radius)/ysize)
+			else:
+				if xsize > ysize:
+					# radius is relative to the height
+					radiusInPixel = radius*ysize
+				else:
+					# radius is relative to the width
+					radiusInPixel = radius*xsize
+				rArgs.append(radiusInPixel/xsize)
+				rArgs.append(radiusInPixel/ysize)									
+	
 		return rArgs
 
 class ChannelAsync(Channel):
