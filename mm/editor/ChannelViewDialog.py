@@ -103,5 +103,15 @@ class ArcBoxCommand:
 		c.append(None)
 		c.append('i', 'Sync arc info...', (self.infocall, ()))
 		c.append('d', 'Delete sync arc',  (self.delcall, ()))
+		sname = MMAttrdefs.getattr(self.snode, 'name')
+		if not sname:
+			sname = '#' + self.snode.GetUID()
+		dname = MMAttrdefs.getattr(self.dnode, 'name')
+		if not dname:
+			dname = '#' + self.dnode.GetUID()
+		c.append('', 'Select node', [
+			('', 'Source node "%s"' % sname, (self.selnode, (self.snode,))),
+			('', 'Destination node "%s"' % dname, (self.selnode, (self.dnode,))),
+			])
 		self.menutitle = 'Sync arc ' + self.name + ' ops'
 
