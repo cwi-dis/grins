@@ -218,7 +218,10 @@ def showstats(a):
 
 # Get an attribute of a node according to the rules.
 #
-def getattr(node, attrname):
+def getattr(node, attrname, animated=0):
+	if animated:
+		return getdirattr(node, attrname, animated)
+
 	if attrstats is not None:
 		if attrstats.has_key(attrname):
 			attrstats[attrname] = attrstats[attrname] + 1
@@ -255,6 +258,33 @@ def getattr(node, attrname):
 	# Update the cache
 	node.attrcache[attrname] = attrvalue
 	#
+	return attrvalue
+
+
+# Get an attribute of a node according to the rules but not using attrcache.
+#
+def getdirattr(node, attrname, animated=0):
+	attrdef = getdef(attrname)
+	inheritance = attrdef[5]
+	defaultvalue = attrdef[1]
+	if inheritance == 'raw':
+		attrvalue = node.GetRawAttrDef(attrname, defaultvalue, animated)
+	elif inheritance == 'normal':
+		attrvalue = node.GetAttrDef(attrname, defaultvalue, animated)
+	elif inheritance == 'inherited':
+		attrvalue = node.GetInherAttrDef(attrname, defaultvalue, animated)
+	elif inheritance == 'channel':
+		try:
+			attrvalue = node.GetInherAttr(attrname, animated)
+		except NoSuchAttrError:
+			ch = node.GetChannel()
+			if ch is not None:
+				attrvalue = ch.get(attrname, defaultvalue)
+			else:
+				attrvalue = defaultvalue
+	else:
+		raise CheckError, 'bad inheritance ' +`inheritance` + \
+				' for attr ' + `attrname`
 	return attrvalue
 
 
