@@ -9,7 +9,7 @@ Number of forms: 1
 Name: form
 Width: 510.000000
 Height: 460.000000
-Number of Objects: 39
+Number of Objects: 32
 
 --------------------
 class: 1
@@ -294,111 +294,6 @@ lcol: 0
 label: <->
 name: linkdir_but2
 callback: linkdir_callback
-argument: 2
-
---------------------
-class: 20000
-type: 0
-box: 0.000000 0.000000 0.000000 0.000000
-boxtype: 0
-colors: 0 0
-alignment: 4
-style: 0
-size: 11.000000
-lcol: 0
-label: 
-name: 
-callback: 
-argument: 
-
---------------------
-class: 10000
-type: 0
-box: 0.000000 0.000000 0.000000 0.000000
-boxtype: 0
-colors: 0 0
-alignment: 4
-style: 0
-size: 11.000000
-lcol: 0
-label: 
-name: link_type_group
-callback: 
-argument: 
-
---------------------
-class: 1
-type: 6
-box: 10.000000 10.000000 400.000000 30.000000
-boxtype: 6
-colors: 47 47
-alignment: 4
-style: 0
-size: 11.000000
-lcol: 0
-label: 
-name: 
-callback: 
-argument: 
-
---------------------
-class: 2
-type: 0
-box: 20.000000 10.000000 150.000000 30.000000
-boxtype: 0
-colors: 47 47
-alignment: 2
-style: 0
-size: 11.000000
-lcol: 0
-label: Link type:
-name: 
-callback: 
-argument: 
-
---------------------
-class: 12
-type: 0
-box: 180.000000 10.000000 70.000000 30.000000
-boxtype: 0
-colors: 39 3
-alignment: 4
-style: 1
-size: 11.000000
-lcol: 0
-label: JUMP
-name: linktype_but0
-callback: linktype_callback
-argument: 0
-
---------------------
-class: 12
-type: 0
-box: 260.000000 10.000000 70.000000 30.000000
-boxtype: 0
-colors: 39 3
-alignment: 4
-style: 1
-size: 11.000000
-lcol: 0
-label: CALL
-name: linktype_but1
-callback: linktype_callback
-argument: 1
-
---------------------
-class: 12
-type: 0
-box: 340.000000 10.000000 70.000000 30.000000
-boxtype: 0
-colors: 39 3
-alignment: 4
-style: 1
-size: 11.000000
-lcol: 0
-label: FORK
-name: linktype_but2
-callback: linktype_callback
 argument: 2
 
 --------------------
