@@ -1,9 +1,7 @@
 # MMWrite -- Multimedia tree writing interface
 
 
-# Exceptions
-
-AssertError = 'MMTree.AssertError'
+from MMExc import *		# Exceptions
 
 
 # Write a node to a CMF file, given by filename
@@ -30,7 +28,7 @@ def _writenode(x, fp):
 	type = x.GetType()
 	uid = x.GetUID()
 	fp.write('(' + type + ' ' + `uid` + ' (')
-	_writedict(x.GetAttrDict(), fp)
+	_writeattrdict(x.GetAttrDict(), None, fp)
 	fp.write(')')
 	if type in ('seq', 'par', 'grp'):
 		for child in x.GetChildren():
@@ -39,7 +37,7 @@ def _writenode(x, fp):
 	elif type = 'imm':
 		for value in x.GetValues():
 			fp.write(' ')
-			_writevalue(value, fp)
+			_writeany(value, None, fp)
 	elif type = 'ext':
 		pass
 	else:
@@ -47,44 +45,142 @@ def _writenode(x, fp):
 	fp.write(')')
 
 
-# Write a dictionary, without outer parentheses.
-# XXX This assumes the keys are identifiers
+# Attribute-specific writers.
 #
-def _writedict(dict, fp):
-	keys = dict.keys()
+# These all have three arguments: the value, some parameter, and the file.
+# The parameter may be a dummy, or a (func, arg) pair, or perhaps a list
+# of (func, arg) pairs.
+#
+def _writegeneric(value, (func, arg), fp):
+	func(value, arg, fp)
+#
+def _writeint(value, dummy, fp):
+	fp.write(`int(value)`)
+#
+def _writefloat(value, dummy, fp):
+	fp.write(`float(value)`)
+#
+def _writestring(value, dummy, fp):
+	fp.write(`value`)
+#
+def _writename(value, dummy, fp):
+	fp.write(value)
+#
+def _writeuid(value, dummy, fp):
+	fp.write(`value`)
+#
+def _writebool(value, dummy, fp):
+	if value:
+		fp.write('1')
+	else:
+		fp.write('0')
+#
+def _writeenum(value, dummy, fp):
+	fp.write(value)
+#
+def _writetuple(value, funcarglist, fp):
+	if len(value) <> len(funcarglist):
+		raise CheckError, '_writetuple() with non-matching length'
+	sep = ''
+	for i in range(len(funcarglist)):
+		fp.write(sep)
+		sep = ' '
+		func, arg = funcarglist[i]
+		func(value[i], arg, fp)
+#
+def _writelist(value, (func, arg), fp):
+	sep = ''
+	for v in value:
+		fp.write(sep)
+		sep = ' '
+		func(v, arg, fp)
+#
+def _writedict(value, (func, arg), fp):
+	keys = value.keys()
 	keys.sort()
 	for key in keys:
-		fp.write('(' + key)
-		val = dict[key]
-		if type(val) in (type(()), type([])):
-			for v in val:
-				fp.write(' ')
-				_writevalue(v, fp)
-		elif type(val) = type({}):
-			_writedict(val, fp)
-		else:
-			fp.write(' ')
-			_writevalue(dict[key], fp)
+		fp.write('(' + `key` + ' ')
+		func(value[key], arg, fp)
 		fp.write(')\n')
-
-
-# Write an arbitrary value (really one of a few known types)
-# XXX This doesn't distinguish between names and strings
 #
-def _writevalue(value, fp):
+def _writenamedict(value, (func, arg), fp):
+	keys = value.keys()
+	keys.sort()
+	for key in keys:
+		fp.write('(' + key + ' ')
+		func(value[key], arg, fp)
+		fp.write(')\n')
+#
+def _writeattrdict(value, dummy, fp):
+	keys = value.keys()
+	keys.sort()
+	for key in keys:
+		_writeattr(key, value[key], fp)
+#
+def _writeattr(name, value, fp): # Subroutine to write an attribute-value pair
+	fp.write('(' + name + ' ')
+	if _attrwriters.has_key(name):
+		func, arg = _attrwriters[name]
+	else:
+		func, arg = _writeany, None
+	func(value, arg, fp)
+	fp.write(')\n')
+#
+def _writeenclosed(value, (func, arg), fp):
+	fp.write('(')
+	func(value, arg, fp)
+	fp.write(')')
+#
+def _writetype(value, dummy, fp):
+	type, arg = value
+	fp.write('(' + type)
+	if type = 'enum':
+		for name in arg: fp.write(' ' + name)
+	elif type = 'tuple':
+		for t in arg:
+			fp.write(' ')
+			_writetype(t, None, fp)
+	elif type in ('list', 'dict', 'namedict', 'enclosed'):
+		_writetype(arg, None, fp)
+	fp.write(')')
+#
+def _writeany(value, dummy, fp):
 	if type(value) in (type(0), type(0.0), type('')):
 		fp.write(`value`)
 	elif type(value) = type({}):
 		fp.write('(')
-		_writedict(value, fp)
+		_writedict(value, (_writeany, dummy), fp)
 		fp.write(')')
 	elif type(value) in (type(()), type([])):
 		fp.write('(')
-		for v in value:
-			_writevalue(v, fp)
+		_writelist(value, (_writeany, None), fp)
 		fp.write(')')
-	elif value = None:
-		fp.write('()')
 	else:
 		raise AssertError, 'writing unexpected value'
 
+
+# Table mapping all the basic types to the functions to write them
+#
+_basicwriters = { \
+	'int': _writeint, \
+	'float': _writefloat, \
+	'string': _writestring, \
+	'name': _writename, \
+	'uid': _writeuid, \
+	'bool': _writebool, \
+	'enum': _writeenum, \
+	'tuple': _writetuple, \
+	'list': _writelist, \
+	'dict': _writedict, \
+	'namedict': _writenamedict, \
+	'attrdict': _writeattrdict, \
+	'enclosed': _writeenclosed, \
+	'type': _writetype, \
+	'any': _writeany, \
+	}
+
+
+# Dictionary mapping attribute names to writing functions.
+#
+import MMAttrdefs
+_attrwriters = MMAttrdefs.useattrdefs(_basicwriters)
