@@ -191,28 +191,29 @@ def getShellApp(ext, verb='open'):
 	return app
 
 
-if __name__ == '__main__' and 0:
-	print getType('.smi')	
-	print getType('.smil')	
-	print getType('.asx')
-		
-	print getType('.bmp')	
-	print getType('.gif')	
-	print getType('.png')
-	print getType('.jpg')
-	print getType('.jpeg')
+if __debug__:
+	if __name__ == '__main__' and 0:
+		print getType('.smi')	
+		print getType('.smil')	
+		print getType('.asx')
 
-	print getType('.au')	
-	print getType('.aiff')
-	print getType('.au')	
-	print getType('.wav')
-	print getType('.avi')
-	print getType('.wma')
+		print getType('.bmp')	
+		print getType('.gif')	
+		print getType('.png')
+		print getType('.jpg')
+		print getType('.jpeg')
 
-	print getType('.mov')
-	print getType('.mpg')
-	print getType('.asf')
-	print getType('.wmv')
+		print getType('.au')	
+		print getType('.aiff')
+		print getType('.au')	
+		print getType('.wav')
+		print getType('.avi')
+		print getType('.wma')
 
-	print getShellCmd('.smi')
-	print getShellApp('.smi')
+		print getType('.mov')
+		print getType('.mpg')
+		print getType('.asf')
+		print getType('.wmv')
+
+		print getShellCmd('.smi')
+		print getShellApp('.smi')
