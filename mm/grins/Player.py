@@ -227,7 +227,10 @@ class Player(PlayerCore, PlayerDialog):
 			# XXX: not correct 
 			gototime = starttime
 			seek_node = self.userplayroot # XXX: improve by building doc timing context
-			self.scheduler.setpaused(1)
+			restorepause = 0
+			if not self.pausing:
+				restorepause = 1
+				self.scheduler.setpaused(1)
 			timestamp = self.scheduler.timefunc()
 			sctx = self.scheduler.sctx_list[0]
 			self.scheduler.settime(gototime)
@@ -238,7 +241,8 @@ class Player(PlayerCore, PlayerDialog):
 				x = x.GetSchedParent()
 			path.reverse()
 			sctx.gototime(path[0], gototime, timestamp, path)
-			self.scheduler.setpaused(0, gototime)
+			if restorepause:
+				self.scheduler.setpaused(0, gototime)
 			self.userstarttime = 0
 
 	def makemenu(self):
