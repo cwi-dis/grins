@@ -574,59 +574,51 @@ class AttrEditForm(docview.ListView):
 # AttrEditor as a tab-dialog
 
 class AttrPage(dialog.PropertyPage):
-	def __init__(self,id,form,ixattr):
+	def __init__(self,id,form,attr):
 		import __main__
 		dll=__main__.resdll
 		dialog.PropertyPage.__init__(self,id,dll,grinsRC.IDR_GRINSED)
 		self._form=form
-		self._ixattr=ixattr
+		self._attr=attr
+		self._initdialog=None
+		self._attrname=components.Edit(self,grinsRC.IDC_EDIT1)
+		self._attrinfo=components.Static(self,grinsRC.IDC_ATTR_INFO)
 
 	def OnInitDialog(self):
+		self._initdialog=self
 		dialog.PropertyPage.OnInitDialog(self)
 		self.HookCommand(self.OnRestore,grinsRC.IDUC_RESTORE)
 		self.HookCommand(self.OnApply,grinsRC.IDUC_APPLY)
 		self.HookCommand(self.OnCancel,win32con.IDCANCEL)
 		self.HookCommand(self.OnOK,win32con.IDOK)
-		if self._ixattr>=0:
-			self._attrname=components.Edit(self,grinsRC.IDC_EDIT1)
-			self._attrinfo=components.Static(self,grinsRC.IDC_ATTR_INFO)
-			self._attrname.attach_to_parent()
-			self._attrinfo.attach_to_parent()
-			if self._attrname._hwnd:
-				a=self._form._attriblist[self._ixattr]
-				self._attrname.settext(a.getlabel())
-				hd=a.gethelpdata()
-				if hd[1]:
-					self._attrinfo.settext(hd[2]+' - default: ' + hd[1])
-				else:
-					self._attrinfo.settext(hd[2])
-					
-	def OnSetActiveX(self):
-		return self._obj_.OnSetActive()
-
-	def OnRestore(self,id,code):
-		print 'OnRestore'
-	def OnApply(self,id,code):
-		print 'OnApply'
-	def OnCancel(self,id,code):
-		self._form.GetParent().PostMessage(win32con.WM_CLOSE)
-	def OnOK(self,id,code):
-		self._form.GetParent().PostMessage(win32con.WM_CLOSE)
+		self.HookCommand(self.OnReset,grinsRC.IDUC_RESET)
+		if not self._attr: return
+		self._attrname.attach_to_parent()
+		self._attrinfo.attach_to_parent()
+		a=self._attr
+		self._attrname.settext(a.getlabel())
+		hd=a.gethelpdata()
+		if hd[1]:
+			self._attrinfo.settext(hd[2]+' - default: ' + hd[1])
+		else:
+			self._attrinfo.settext(hd[2])
+				
+	def OnRestore(self,id,code): self._form.call('Restore')
+	def OnApply(self,id,code): self._form.call('Apply')
+	def OnCancel(self,id,code): self._form.call('Cancel')
+	def OnOK(self,id,code): self._form.call('OK')
+	def OnReset(self,id,code):self._attr.reset_callback()
 
 class OptionPage(AttrPage):
-	def __init__(self,form,ixattr):
-		AttrPage.__init__(self,grinsRC.IDD_EDITOPTIONSATTR1,form,ixattr)
-
-	def OnSetActiveX(self):
-		print 'OptionPage.OnSetActive'
+	def __init__(self,form,attr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITOPTIONSATTR1,form,attr)
+		self._options=components.ComboBox(self,grinsRC.IDC_COMBO1)
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		self._options=components.ComboBox(self,grinsRC.IDC_COMBO1)
 		self._options.attach_to_parent()
-		self.HookCommand(self.OnChangeOption,grinsRC.IDC_COMBO1)
 		if not self._options._hwnd: return
-		a=self._form._attriblist[self._ixattr]
+		a=self._attr
 		list = a.getoptions()
 		val = a.getcurrent()
 		if val not in list:
@@ -635,74 +627,115 @@ class OptionPage(AttrPage):
 		self._options.setoptions(list)
 		self._options.setcursel(ix)
 	
-	# Response to combo selection change
-	def OnChangeOption(self,id,code):
-		if code==win32con.CBN_SELCHANGE:
-			#apply(self._change_cb,(self._options.getvalue(),))
-			print self._options.getvalue()
+	def setoptions(self,list,val):
+		if val not in list:
+			val = list[0]
+		ix=list.index(val)
+		if self._initdialog:
+			self._options.resetcontent()
+			self._options.setoptions(list)
+			self._options.setcursel(ix)
+		
+	def setvalue(self, val):
+		pass
+	def getvalue(self):
+		if not self._initdialog:
+			return self._attr.getcurrent()
+		return self._options.getvalue() 
 
 class FilePage(AttrPage):
 	def __init__(self,form,ixattr):
 		AttrPage.__init__(self,grinsRC.IDD_EDITFILEATTR1,form,ixattr)
-
-	def OnSetActiveX(self):
-		return AttrPage.OnSetActive(self)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
+		self._browsecb=None
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 		self._attrval.attach_to_parent()
 		if not self._attrval._hwnd: retrun
-		a=self._form._attriblist[self._ixattr]
+		a=self._attr
 		self._attrval.settext(a.getcurrent())
-		self.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+		self.HookCommand(self.OnBrowse,grinsRC.IDUC_BROWSE)
 
-	# Response to edit change
-	def OnEdit(self,id,code):
-		if code==win32con.EN_CHANGE:
-			print self._attrval.gettext()
+	def setvalue(self, val):
+		if self._initdialog:
+			self._attrval.settext(val)
+	def getvalue(self):
+		if not self._initdialog:
+			return self._attr.getcurrent()
+		return self._attrval.gettext()
+
+	# Response to button browse
+	def OnBrowse(self,id,code):
+		self._attr.browser_callback()
 
 class ColorPage(AttrPage):
-	def __init__(self,form,ixattr):
-		AttrPage.__init__(self,grinsRC.IDD_EDITCOLORATTR1,form,ixattr)
-
-	def OnSetActiveX(self):
-		return AttrPage.OnSetActive(self)
+	def __init__(self,form,attr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITCOLORATTR1,form,attr)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 		self._attrval.attach_to_parent()
-		if not self._attrval._hwnd: retrun
-		a=self._form._attriblist[self._ixattr]
-		self._attrval.settext(a.getcurrent())
-		self.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+		self._attrval.settext(self._attr.getcurrent())
+		self.HookCommand(self.OnBrowse,grinsRC.IDUC_BROWSE)
 
-	# Response to edit change
-	def OnEdit(self,id,code):
-		if code==win32con.EN_CHANGE:
-			print self._attrval.gettext()
+	def setvalue(self, val):
+		if self._initdialog:
+			self._attrval.settext(val)
+
+	def getvalue(self):
+		if not self._initdialog:
+			return self._attr.getcurrent()
+		return self._attrval.gettext()
+
+	# Response to button browse
+	def OnBrowse(self,id,code):
+		oldcolorstring = self._attrval.gettext()
+		list = string.split(string.strip(oldcolorstring))
+		r = g = b = 0
+		if len(list) == 3:
+			try:
+				r = string.atoi(list[0])
+				g = string.atoi(list[1])
+				b = string.atoi(list[2])
+			except ValueError:
+				pass
+		rv = self.ColorSelect(r, g, b)
+		if rv != None:
+			colorstring = "%d %d %d"%rv
+			self._attrval.settext(colorstring)
+	
+	def ColorSelect(self, r, g, b):
+		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self._form)
+		if dlg.DoModal() == win32con.IDOK:
+			newcol = dlg.GetColor()
+			r, g, b = win32ui.GetWin32Sdk().GetRGBValues(newcol)
+			return r, g, b
+		return None
+
 
 class StringPage(AttrPage):
-	def __init__(self,form,ixattr):
-		AttrPage.__init__(self,grinsRC.IDD_EDITSTRINGATTR1,form,ixattr)
+	def __init__(self,form,attr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITSTRINGATTR1,form,attr)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 
 	def OnSetActiveX(self):
 		return AttrPage.OnSetActive(self)
 
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
-		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 		self._attrval.attach_to_parent()
-		if not self._attrval._hwnd: retrun
-		a=self._form._attriblist[self._ixattr]
-		self._attrval.settext(a.getcurrent())
-		self.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+		self._attrval.settext(self._attr.getcurrent())
+		AttrPage.OnInitDialog(self)
 
-	# Response to edit change
-	def OnEdit(self,id,code):
-		if code==win32con.EN_CHANGE:
-			print self._attrval.gettext()
+	def setvalue(self, val):
+		if self._initdialog:
+			self._attrval.settext(val)
+
+	def getvalue(self):
+		if not self._initdialog:
+			return self._attr.getcurrent()
+		return self._attrval.gettext()
 
 from  GenFormView import GenFormView
 
@@ -716,6 +749,7 @@ class AttrEditFormNew(GenFormView):
 		self._attriblist=None
 		self._cbdict=None
 		self._prsht=None;
+		self._pages={}
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -723,23 +757,24 @@ class AttrEditFormNew(GenFormView):
 		import __main__
 		dll=__main__.resdll
 		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
-		dimpage=AttrPage(grinsRC.IDD_FORM1,self,0)
+		dimpage=AttrPage(grinsRC.IDD_FORM1,self,None)
 		prsht.AddPage(dimpage)
 		prsht.EnableStackedTabs(1)
-		#self.HookMessage(self.onSize,win32con.WM_SIZE)		
 		l=self._attriblist
 		page=None
 		for i in range(len(l)):
-			t = l[i].gettype()
+			a=l[i]
+			t = a.gettype()
 			if t == 'option':
-				page=OptionPage(self,i)
+				page=OptionPage(self,a)
 			elif t == 'file':
-				page=FilePage(self,i)
+				page=FilePage(self,a)
 			elif t == 'color':
-				page=ColorPage(self,i)
+				page=ColorPage(self,a)
 			else:
-				page=StringPage(self,i)
-			if i==0:firstpage=page	
+				page=StringPage(self,a)
+			if i==0:firstpage=page
+			self._pages[a]=page
 			prsht.AddPage(page)
 
 		self.CreateWindow(parent)
@@ -771,6 +806,7 @@ class AttrEditFormNew(GenFormView):
 		frc=self._parent.CalcWindowRect(rc)
 		mainframe=self._parent.GetMDIFrame()
 		frc=mainframe.ScreenToClient(frc)
+		frc=(30,20,frc[2]-frc[0]+30,frc[3]-frc[1]+20)
 		self._parent.MoveWindow(frc)
 
 		
@@ -824,23 +860,30 @@ class AttrEditFormNew(GenFormView):
 	# cmif specific interface
 	# Called by the core system to get a value from the list
 	def getvalue(self,attrobj):
-		return ''
-
-	# Called by the core system to set a value on the list
-	def setvalue(self,attrobj,newval):
-		print 'setvalue',attrobj,newval
 		if not self._obj_:
 			raise error, 'os window not exists'
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
-		ix=self._attriblist.index(attrobj)
-		print ix,l,newval
+		if self._pages[attrobj]._attr!=attrobj:
+			print 'wrong attribute'
+		return self._pages[attrobj].getvalue()
+
+	# Called by the core system to set a value on the list
+	def setvalue(self,attrobj,newval):
+		if attrobj not in self._attriblist:
+			raise error, 'item not in list'
+		self._pages[attrobj].setvalue(newval)
 
 	# Called by the core system to set attribute options
 	def setoptions(self,attrobj,list,val):
-		ix_item=self._attriblist.index(attrobj)
+		if not self._obj_:
+			raise error, 'os window not exists'
+		if attrobj not in self._attriblist:
+			raise error, 'item not in list'
 		t = attrobj.gettype()
-		print 'setoptions',attrobj,list,val
+		if t != 'option':
+			raise error, 'item not in list'
+		self._pages[attrobj].setoptions(list,val)
 
 
 import __main__
