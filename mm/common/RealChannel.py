@@ -22,10 +22,15 @@ class RealEngine:
 	def __init__(self):
 		self.usagecount = 0
 		self.engine = rma.CreateEngine()
+		windowinterface.addclosecallback(self.close, ())
 		
-	def __del__(self):
+	def close(self):
+		self.engine = None
 		if self.usagecount:
 			windowinterface.cancelidleproc(self._tick)
+		
+	def __del__(self):
+		self.close()
 		
 	def CreatePlayer(self):
 		return self.engine.CreatePlayer()
@@ -43,11 +48,9 @@ class RealEngine:
 			self._stopticker()
 			
 	def _startticker(self):
-		print 'DBG startticker'
 		windowinterface.setidleproc(self._tick)
 		
 	def _stopticker(self):
-		print 'DBG stopticker'
 		windowinterface.cancelidleproc(self._tick)
 		
 	def _tick(self):
@@ -61,15 +64,16 @@ class RealChannel:
 	def __init__(self):
 		self.__rmaplayer = None
 		self.__qid = None
+		self.__using_engine = 0
 		if self.__engine is None and self.__has_rma_support:
 			try:
 				RealChannel.__engine = RealEngine()
 			except:
 				windowinterface.showmessage('No playback support for RealMedia on this system')
 				RealChannel.__has_rma_support = 0
-		# release any resources on exit
-		windowinterface.addclosecallback(self.release_player,())
-
+##		# release any resources on exit
+##		windowinterface.addclosecallback(self.release_player,())
+		
 	def release_player(self):
 		self.__rmaplayer = None
 
@@ -91,7 +95,7 @@ class RealChannel:
 		duration = self.getduration(node)
 		url = MMurl.canonURL(self.getfileurl(node))
 		self.__url = url
-		self.__window = window
+##		self.__window = window
 		self.__rmaplayer.SetStatusListener(self)
 		if window is not None:
 			self.__rmaplayer.SetOsWindow(window)
@@ -106,6 +110,7 @@ class RealChannel:
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
+		self.__using_engine = 1
 		return 1
 
 	def __stop(self):
@@ -142,5 +147,7 @@ class RealChannel:
 	def stopit(self):
 		if self.__rmaplayer:
 			self.__rmaplayer.Stop()
-			self.__engine.stopusing()
-		self.__rmaplayer = None
+			if self.__using_engine:
+				self.__engine.stopusing()
+			self.__using_engine = 0
+			self.__rmaplayer = None
