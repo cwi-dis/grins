@@ -219,14 +219,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 					pass	# I know, it's extraneous, but it's here for completion so it's not a hidden option.
 			else:
 				# the source contains some datas not applied, and the original source contains some errors
-				# in this case, if the user don't want to apply the changes, we can't close the view
-				saveme = windowinterface.GetOKCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.toplevel.window)
-				if saveme == 0:
-					# Which means "OK"
-					self.__applySource(1) # Which will close all windows.
-				else:
-					# cancel
-					pass
+				# in this case, if we apply the changes without ask any questions
+				self.__applySource(1) # Which will close all windows.
 		else:
 			# no change
 			parseErrors = self.context.getParseErrors()
