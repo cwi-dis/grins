@@ -9,7 +9,7 @@ import MMAttrdefs
 #   <animateMotion targetElement="xxx" values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 #   <animate targetElement="xxx" attributeName="width" values="w1;w2;w3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 #   <animate targetElement="xxx"  attributeName="height" values="h1;h2;h3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
-#   <animateColor targetElement="xxx" attributeName="backgroundColor" values="rgb1;rgb2;rgb3" keyTimes="0, 0.3, 1.0" dur="use_attr_edit"/>
+#   <animateColor targetElement="xxx" attributeName="backgroundColor" values="rgb1;rgb2;rgb3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 # </ref>
 
 class AnimationData:
@@ -25,7 +25,7 @@ class AnimationData:
 		self.domwidth = None
 		self.domheight = None
 		self.domcolor = None
-		self.initDomValues()
+		self._initDomValues()
 	
 	#
 	#  public
@@ -108,6 +108,8 @@ class AnimationData:
 						existing['height'] = anim
 				elif tag == 'animateColor':
 					existing['color'] = anim
+		
+		targname = None # self.node.GetRawAttrDef('name', None)
 
 		em = editmgr
 		if not em.transaction():
@@ -119,7 +121,7 @@ class AnimationData:
 		else:
 			anim = self.root.context.newanimatenode('animateMotion')
 			anim.targetnode = self.node
-			self._updateNode(anim, keyTimes, animateMotionValues)
+			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
 			em.addnode(self.node, 0, anim)
 
 		anim = 	existing.get('width')
@@ -128,7 +130,7 @@ class AnimationData:
 		else:
 			anim = self.root.context.newanimatenode('animate')
 			anim.targetnode = self.node
-			self._updateNode(anim, keyTimes, animateWidthValues)
+			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
 			em.addnode(self.node, 1, anim)
 
 		anim = 	existing.get('height')
@@ -137,7 +139,7 @@ class AnimationData:
 		else:
 			anim = self.root.context.newanimatenode('animate')
 			anim.targetnode = self.node
-			self._updateNode(anim, keyTimes, animateHeightValues)
+			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
 			em.addnode(self.node, 2, anim)
 
 		anim = 	existing.get('color')
@@ -146,7 +148,7 @@ class AnimationData:
 		else:
 			anim = self.root.context.newanimatenode('animate')
 			anim.targetnode = self.node
-			self._updateNode(anim, keyTimes, animateColorValues)
+			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
 			em.addnode(self.node, 3, anim)
 		
 		em.commit()
@@ -158,7 +160,11 @@ class AnimationData:
 	def _initDomValues(self):
 		pass
 
-	def _updateNode(self, node, times, values):
+	def _updateNode(self, node, times, values, attr = None, targname = None):
+		if attr is not None:
+			node.attrdict['attributeName'] = attr
+		if targname is not None:
+			node.attrdict['targetElement'] = targname
 		node.attrdict['keyTimes'] = times
 		node.attrdict['values'] = values
 
