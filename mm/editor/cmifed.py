@@ -338,6 +338,9 @@ class Main(MainDialog):
 			top.close()
 		if self.tops:
 			return
+		if sys.platform == 'mac':
+			import MacOS
+			MacOS.OutputSeen()
 		if exitcallback:
 			rtn, arg = exitcallback
 			apply(rtn, arg)
