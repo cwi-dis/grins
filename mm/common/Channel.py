@@ -72,6 +72,7 @@ class Channel:
 		self._paused = 0
 		self._subchannels = []
 		self._want_shown = 0
+		self._highlighted = None
 		self.nopop = 0
 		self.syncarm = 0
 		self.syncplay = 0
@@ -119,8 +120,11 @@ class Channel:
 		if self._is_shown:
 			for key, (val, default) in self._curvals.items():
 				if self._attrdict.get(key, default) != val:
+					highlighted = self._highlighted
 					self.hide()
 					self.show()
+					if highlighted:
+						self.highlight(highlighted)
 					break
 
 	def transaction(self):
@@ -266,6 +270,7 @@ class Channel:
 		if debug:
 			print 'Channel.hide('+`self`+')'
 		self._want_shown = 0
+		self._highlighted = None
 		if not self._is_shown:
 			return
 		self._is_shown = 0
@@ -277,6 +282,7 @@ class Channel:
 			chan._want_shown = want_shown
 		self.do_hide()
 		self._curvals = {}
+		self.hideimg()
 		for chan in channels:
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
@@ -286,13 +292,19 @@ class Channel:
 ##		if self._playstate == PLAYING:
 ##			self.playstop()
 
-	def highlight(self):
+	def highlight(self, color = (255, 0, 0)):
 		# highlight the channel instance (dummy for channels
 		# without windows)
 		pass
 
 	def unhighlight(self):
 		# stop highlighting the channel instance
+		pass
+
+	def showimg(self):
+		pass
+
+	def hideimg(self):
 		pass
 
 	def popup(self):
@@ -944,7 +956,7 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
 	node_attrs = Channel.node_attrs + ['duration', 'drawbox', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
@@ -958,6 +970,7 @@ class ChannelWindow(Channel):
 		self.armed_display = self.played_display = None
 		self._is_waiting = 1
 		self.want_default_colormap = 0
+		self._bgimg = None
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
@@ -973,14 +986,40 @@ class ChannelWindow(Channel):
 		del self.armed_display
 		del self.played_display
 
-	def highlight(self):
+	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
+			self._highlighted = color
 			self.window.pop()
-			self.window.showwindow()
+			self.window.showwindow(color = color)
 
 	def unhighlight(self):
 		if self._is_shown and self.window:
+			self._highlighted = None
 			self.window.dontshowwindow()
+
+	def showimg(self):
+		self._showimg = 1
+		img = self._attrdict.get('bgimg')
+		self._curvals['bgimg'] = (img, None)
+		if img:
+			img = self._player.context.findurl(img)
+			try:
+				img = MMurl.urlretrieve(img)[0]
+			except IOError:
+				pass
+			try:
+				d = self.window.newdisplaylist()
+				box = d.display_image_from_file(img, center=0)
+				d.render()
+				self._bgimg = d
+			except (windowinterface.error, IOError), msg:
+				pass
+
+	def hideimg(self):
+		self._showimg = 0
+		if self._bgimg:
+			self._bgimg.close()
+			self._bgimg = None
 
 	def popup(self):
 		if self._is_shown and self.window:
@@ -1212,6 +1251,8 @@ class ChannelWindow(Channel):
 		self.create_window(pchan, pgeom)
 		self._is_shown = 1
 		self.after_show()
+		if not self._is_waiting:
+			self.setready()
 
 	def do_hide(self):
 		if debug:

@@ -58,6 +58,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HIERARCHYVIEW(callback = (self.view_callback, (1,))),
 			CHANNELVIEW(callback = (self.view_callback, (2,))),
 			LINKVIEW(callback = (self.view_callback, (3,))),
+			LAYOUTVIEW(callback = (self.view_callback, (4,))),
 			SAVE(callback = (self.save_callback, ())),
 			SAVE_AS(callback = (self.saveas_callback, ())),
 			RESTORE(callback = (self.restore_callback, ())),
@@ -131,9 +132,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.links = LinkEdit.LinkEdit(self)
 		self.links.__command = LINKVIEW
 
+		import LayoutView
+		self.layoutview = LayoutView.LayoutView(self)
+		self.layoutview.__command = LAYOUTVIEW
+
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
-			      self.channelview, self.links]
+			      self.channelview, self.links, self.layoutview]
 
 	def hideviews(self):
 		for v in self.views:
@@ -300,6 +305,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			self.do_read_it(self.filename)
 		self.context = self.root.GetContext()
+		if self.new_file:
+			self.context.dirname = ''
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)

@@ -38,7 +38,6 @@ class Player(PlayerCore, PlayerDialog):
 		self.timer_callback = self.scheduler.timer_callback
 		self.commandlist = [
 			CHANNELS(callback = self.channel_callback),
-			CALCTIMING(callback = (self.timing_callback, ())),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
@@ -179,12 +178,6 @@ class Player(PlayerCore, PlayerDialog):
 			return
 		ch.set_visible(onoff)
 		self.setchannel(name, onoff)
-
-	def timing_callback(self):
-		self.measure_armtimes = (not self.measure_armtimes)
-		if self.measure_armtimes:
-			del_timing(self.root)
-			Timing.changedtimes(self.root)
 
 	def showstate(self):
 		if not self.is_showing():

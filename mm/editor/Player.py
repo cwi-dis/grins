@@ -12,6 +12,9 @@ import Timing
 import windowinterface, WMEVENTS
 from usercmd import *
 
+RED = 255, 0, 0
+BLACK = 0, 0, 0
+
 # The Player class normally has only a single instance.
 #
 # It implements a queue using "virtual time" using an invisible timer
@@ -32,7 +35,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')
 		self.channelnames = []
-		self.measure_armtimes = 0
 		self.channels = {}
 		self.channeltypes = {}
 		self.seeking = 0
@@ -44,15 +46,19 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.pause_minidoc = 1
 		self.sync_cv = 1
 		self.toplevel = toplevel
+		self.curlayout = None
+		self.savecurlayout = None
+		self.curchannel = None
+		self.savecurchannel = None
 		self.showing = 0
 		self.waiting = 0
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
+		self.makechannels()
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (self.close_callback, ()),
 				     help = 'Close the Player View'),
 			CHANNELS(callback = self.channel_callback),
-			CALCTIMING(callback = (self.timing_callback, ())),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			SYNCCV(callbac = (self.synccv_callback, ())),
 			]
@@ -82,6 +88,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# already destroyed
 			return
 		self.hide()
+		self.destroychannels()
 		self.close()
 		del self.channelnames
 		del self.channels
@@ -113,17 +120,21 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if self.is_showing():
 			PlayerDialog.show(self)
 			if afterfunc is not None:
-				apply(afterfunc[0], afterfunc[1])
+				apply(apply, afterfunc)
 			return
 		self.aftershow = afterfunc
 		self.toplevel.showstate(self, 1)
-		self.makechannels()
 		self.fullreset()
 		self.toplevel.checkviews()
 		PlayerDialog.show(self)
 		self.showing = 1
-		self.showchannels()
+		self.before_chan_show()
+		if self.curlayout is None:
+			self.showchannels()
+		else:
+			self.setlayout(self.curlayout, self.curchannel)
 		self.showstate()
+		self.after_chan_show()
 
 	def hide(self, *rest):
 		if not self.showing: return
@@ -134,7 +145,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.save_geometry()
 		PlayerDialog.hide(self)
 		self.toplevel.checkviews()
-		self.destroychannels()
+		self.hidechannels()
 
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)
@@ -146,6 +157,66 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if geometry is not None:
 			self.last_geometry = geometry
 
+	def setlayout(self, layout, channel):
+		self.curlayout = layout
+		self.curchannel = channel
+		if not self.showing or self.playing:
+			return
+		context = self.context
+		channels = None
+		if layout is not None:
+			from LayoutView import ALL_LAYOUTS
+			if layout == ALL_LAYOUTS:
+				channels = context.channels
+			else:
+				channels = context.layouts.get(layout)
+			if channels is None:
+				self.curlayout = layout = None
+		if layout is None:
+			channels = context.channels
+		channeldict = {}
+		for ch in channels:
+			chname = ch.name
+			channeldict[chname] = 0
+			if not self.channels.has_key(chname):
+				self.newchannel(chname,
+						context.channeldict[chname])
+				self.channelnames.append(chname)
+		for chname in self.channelnames:
+			ch = self.channels[chname]
+			if channeldict.has_key(chname):
+				del channeldict[chname]
+				if layout is None:
+					ch.check_visible()
+					ch.unhighlight()
+					ch.hideimg()
+				else:
+					ch.show()
+					ch.showimg()
+					if channel is not None and \
+					   channel == chname:
+						ch.highlight(RED)
+					else:
+						ch.highlight(BLACK)
+			elif not ch._attrdict.has_key('base_window'):
+				ch.show()
+				ch.showimg()
+			else:
+				ch.hide()
+		self.makemenu()
+
+	def play(self):
+		self.savecurlayout = self.curlayout
+		self.savecurchannel = self.curchannel
+		self.setlayout(None, None)
+		PlayerCore.play(self)
+
+	def stopped(self):
+		PlayerCore.stopped(self)
+		if self.curlayout is None:
+			self.setlayout(self.savecurlayout, self.savecurchannel)
+		else:
+			self.setlayout(self.curlayout, self.curchannel)
 	#
 	# FORMS callbacks.
 	#
@@ -212,12 +283,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		ch.set_visible(onoff)
 		self.toplevel.channelview.channels_changed()
 		self.setchannel(name, onoff)
-
-	def timing_callback(self):
-		self.measure_armtimes = (not self.measure_armtimes)
-		if self.measure_armtimes:
-			del_timing(self.root)
-			Timing.changedtimes(self.root)
 
 	def synccv_callback(self):
 		self.sync_cv = (not self.sync_cv)

@@ -61,6 +61,7 @@ class MainDialog:
 		l = w.Label('Open location', top = None, left = None, right = None)
 		f = w.SubWindow(left = None, top = l, right = None, horizontalSpacing = 5, verticalSpacing = 5)
 		t = f.TextInput(None, '', None, (self.__tcallback, ()),
+				modifyCB = self.__modifyCB,
 				left = None, top = None, bottom = None)
 		f.Button('Browse...', (self.__openfile_callback, ()),
 			 top = None, left = t, right = None, bottom = None)
@@ -72,6 +73,13 @@ class MainDialog:
 		self.__text = t
 		self.__owindow = w
 		w.show()
+
+	def __modifyCB(self, text):
+		# HACK: this hack is because the SGI file browser adds
+		# a space to the end of the filename when you drag and
+		# drop it.
+		if text and len(text) > 1 and text[-1] == ' ':
+			return text[:-1]
 
 	def __ccallback(self):
 		self.__owindow.close()

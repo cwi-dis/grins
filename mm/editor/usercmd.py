@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Commands, editor version
 #
@@ -66,6 +68,8 @@ class CHANNELVIEW(_CommandBase):
 	help = 'Show/hide Channel View'
 class LINKVIEW(_CommandBase):
 	help = 'Show/hide Hyperlink View'
+class LAYOUTVIEW(_CommandBase):
+	help = 'Show/hide Layout View'
 
 #
 # Player view commands
@@ -80,8 +84,6 @@ class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
-class CALCTIMING(_CommandBase):
-	help = 'Recalculate document timing'
 class SYNCCV(_CommandBase):
 	help = 'Keep Channel view synchronized with player'
 class CRASH(_CommandBase):
@@ -170,3 +172,16 @@ class SYNCARCS(_DynamicCascade): pass
 class ANCESTORS(_DynamicCascade): pass
 class SIBLINGS(_DynamicCascade): pass
 class DESCENDANTS(_DynamicCascade): pass
+class LAYOUTS(_DynamicCascade): pass
+
+#
+# Layout view commands
+#
+class NEW_LAYOUT(_CommandBase):
+	help = 'Create a new layout'
+class REMOVE_CHANNEL(_CommandBase):
+	help = 'Remove channel from layout'
+class ADD_CHANNEL(_CommandBase):
+	help = 'Add channel to layout'
+class RENAME(_CommandBase):
+	help = 'Rename the current layout'
