@@ -957,7 +957,7 @@ class DocumentWrapper(Wrapper):
 
 class TransitionWrapper(Wrapper):
 	# XXXX Should we have the name in here too?
-	__stdnames = ['trname', 'trtype', 'subtype', 'dur', 'startPercent', 'endPercent', 'direction',
+	__stdnames = ['trname', 'trtype', 'subtype', 'dur', 'startProgress', 'endProgress', 'direction',
 		'horzRepeat', 'vertRepeat', 'borderWidth', 'color', 'multiElement', 'childrenClip']
 
 	def __init__(self, toplevel, trname):
@@ -1349,7 +1349,6 @@ class AttrEditor(AttrEditorDialog):
 					except ValueError:
 						# probably shouldn't happen...
 						pass
-					dict[name] = str
 					continue
 				try:
 					value = b.parsevalue(str)
@@ -1443,8 +1442,6 @@ class AttrEditor(AttrEditorDialog):
 		index = len(context.channelnames)
 		# experimental SMIL Boston layout code
 		em.addchannel(channelname, index, 'layout')
-		layoutchannel = context.channeldict[channelname]
-		em.defnewchannel(self.wrapper.node, layoutchannel)
 		# end experimental
 		# else
 		# em.addchannel(channelname, index, self.guesstype(url))
@@ -1460,13 +1457,22 @@ class AttrEditor(AttrEditorDialog):
 					w, h = Sizes.GetSize(context.findurl(url))
 				else:
 					w = h = 0
-				if w == 0:
-					w = 100 # default size
-				if h == 0:
-					h = 100 # default size
+				if w == 0 or h == 0:
+					if root:
+						if root.has_key('base_winoff'):
+							x, y, w, h = root['base_winoff']
+						elif root.has_key('winsize'):
+							w, h = root['winsize']
+						else:
+							w, h = 100, 100
+					else:
+						w = h = 100
 				ch['base_winoff'] = 0,0,w,h
 			elif units == windowinterface.UNIT_SCREEN:
 				ch['base_winoff'] = 0,0,.2,.2
+		# create typed channel for this node
+		# must come after setting base_winoff in LayoutChannel
+		em.defnewchannel(self.wrapper.node, ch)
 		# if the node belongs to a layout, add the new channel
 		# to that layouf
 		layout = MMAttrdefs.getattr(self.wrapper.node, 'layout')
