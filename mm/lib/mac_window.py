@@ -6,10 +6,39 @@ from mac_windowbase import TRUE, FALSE, SINGLE, UNIT_MM
 from types import *
 import math
 import struct
+import macfs
+import MacOS
 import Res
-
+import List
+MacList=List
+import Win
+import Dlg
 [_X, _Y, _WIDTH, _HEIGHT] = range(4)
 _def_useGadget = 1
+
+
+# Resource IDs
+ID_SELECT_DIALOG=516
+ITEM_SELECT_LISTPROMPT=1
+ITEM_SELECT_ITEMLIST=2
+ITEM_SELECT_SELECTPROMPT=3
+ITEM_SELECT_ITEM=4
+ITEM_SELECT_CANCEL=5
+ITEM_SELECT_OK=6
+
+# For askstring re-use Pythons standard EasyDialogs resource
+ID_INPUT_DIALOG=257
+ITEM_INPUT_OK=1
+ITEM_INPUT_CANCEL=2
+ITEM_INPUT_PROMPT=3
+ITEM_INPUT_TEXT=4
+
+# XXXX Debugging code: assure the resource file is available
+try:
+	Res.GetResource('DLOG', ID_SELECT_DIALOG)
+except:
+	Res.OpenResFile('::mac:maccmifed.rsrc')
+Res.GetResource('DLOG', ID_SELECT_DIALOG)
 
 _rb_message = """\
 Use left mouse button to draw a box.
@@ -29,20 +58,35 @@ class _Toplevel(mac_windowbase._Toplevel):
 				pixmap = 0, transparent = 0, units=UNIT_MM):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
-		self._wid_to_window[wid] = rv
-		self._wid_to_title[wid] = title
+		self._register_wid(wid, rv, title)
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, transparent = 0, units=UNIT_MM):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
-		self._wid_to_window[wid] = rv
-		self._wid_to_title[wid] = title
+		self._register_wid(wid, rv, title)
 		return rv
 		
 	def getsize(self):
 		return toplevel._mscreenwidth, toplevel._mscreenheight
+		
+	# And we override a bit of eventhandling because we use dialogs
+	def _handle_event(self, event):
+		if Dlg.IsDialogEvent(event):
+			if self._do_dialogevent(event):
+				return
+		mac_windowbase._Toplevel._handle_event(self, event)
+
+	def _do_dialogevent(self, event):
+		gotone, wid, item = Dlg.DialogSelect(event)
+		if gotone:
+			if self._wid_to_window.has_key(wid):
+				self._wid_to_window[wid].do_itemhit(item, event)
+			else:
+				print 'Dialog event for unknown dialog'
+			return 1
+		return 0		
 		
 class _CommonWindow(mac_windowbase._CommonWindow):
 	# Again, only overriding to get the class of the objects (window, displaylist) correct.
@@ -718,238 +762,209 @@ class _DisplayList(mac_windowbase._DisplayList):
 toplevel = _Toplevel()
 from mac_windowbase import *
 
+class _DialogWindow(_Window):
+	def __init__(self, resid):
+		wid = Dlg.GetNewDialog(resid, -1)
+		x0, y0, x1, y1 = wid.GetWindowPort().portRect
+		w, h = x1-x0, y1-y0
+		print 'w=', w, 'h=', h
+		_Window.__init__(self, toplevel, wid, 0, 0, w, h)
+		toplevel._register_wid(wid, self, "a dialog")
+		Qd.SetPort(wid)
+		self._widgetlist = []
+		
+	def close(self):
+		self._widgetlist = []
+		_Window.close(self)
+		
+	def addwidget(self, widget):
+		self._widgetlist.append(widget)
+		
+	def do_itemhit(self, item, event):
+		print 'Dialog %s item %d event %s'%(self, item, event)
+		
+	def _redraw(self, rgn):
+		#print 'redraw dialogwindow', self, self._bgcolor, self._fgcolor
+		Qd.SetPort(self._wid)
+		Qd.ClipRect(self._wid.GetWindowPort().portRect)
+		Qd.RGBBackColor(self._bgcolor)
+		Qd.RGBForeColor(self._fgcolor)
+		for w in self._widgetlist:
+			w._redraw(rgn)
+			
+	def _activate(self, onoff):
+		for w in self._widgetlist:
+			w._activate(onoff)
+		
+# XXXX Do we need a control-window too?
+
 class FileDialog:
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
 		     existing=0):
-		import os
-		self.cb_ok = cb_ok
-		self.cb_cancel = cb_cancel
-		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
-			 'colormap': toplevel._default_colormap,
-			 'visual': toplevel._default_visual,
-			 'depth': toplevel._default_visual.depth,
-			 'width': 400}
-		if prompt:
-			form = toplevel._main.CreateFormDialog(
-						   'fileSelect', attrs)
-			self._form = form
-			label = form.CreateManagedWidget('filePrompt',
-					Xm.LabelGadget,
-					{'leftAttachment': Xmd.ATTACH_FORM,
-					 'rightAttachment': Xmd.ATTACH_FORM,
-					 'topAttachment': Xmd.ATTACH_FORM})
-			label.labelString = prompt
-			dialog = form.CreateManagedWidget('fileSelect',
-					Xm.FileSelectionBox,
-					{'leftAttachment': Xmd.ATTACH_FORM,
-					 'rightAttachment': Xmd.ATTACH_FORM,
-					 'topAttachment': Xmd.ATTACH_WIDGET,
-					 'topWidget': label,
-					 'width': 400})
+		# We implement this modally for the mac.
+		macfs.SetFolder(directory)
+		if existing:
+			fss, ok = macfs.PromptGetFile(prompt)
 		else:
-			dialog = toplevel._main.CreateFileSelectionDialog(
-							  'fileSelect', attrs)
-			self._form = dialog
-		self._dialog = dialog
-		dialog.AddCallback('okCallback', self._ok_callback, None)
-		dialog.AddCallback('cancelCallback', self._cancel_callback,
-				       None)
-		helpb = dialog.FileSelectionBoxGetChild(
-						    Xmd.DIALOG_HELP_BUTTON)
-		helpb.UnmanageChild()
-		if not directory:
-			directory = '.'
-		try:
-			if os.stat(directory) == os.stat('/'):
-				directory = '/'
-		except os.error:
-			pass
-		if not filter:
-			filter = '*'
-		self.filter = filter
-		filter = os.path.join(directory, filter)
-		dialog.FileSelectionDoSearch(filter)
-		text = dialog.FileSelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		text.value = file
-		self._form.ManageChild()
-		toplevel._subwindows.append(self)
-
-	def close(self):
-		if self._form:
-			toplevel._subwindows.remove(self)
-			self._form.UnmanageChild()
-			self._form.DestroyWidget()
-			self._dialog = None
-			self._form = None
-
-	def setcursor(self, cursor):
-		mac_windowbase._setcursor(self._form, cursor)
-
-	def is_closed(self):
-		return self._form is None
-
-	def _cancel_callback(self, *rest):
-		if self.is_closed():
-			return
-		must_close = TRUE
-		try:
-			if self.cb_cancel:
-				ret = self.cb_cancel()
-				if ret:
-					if type(ret) is StringType:
-						showmessage(ret)
-					must_close = FALSE
-					return
-		finally:
-			if must_close:
-				self.close()
-
-	def _ok_callback(self, widget, client_data, call_data):
-		if self.is_closed():
-			return
-		import os
-		filename = call_data.value
-		dir = call_data.dir
-		filter = call_data.pattern
-		filename = os.path.join(dir, filename)
-		if not os.path.isfile(filename):
-			if os.path.isdir(filename):
-				filter = os.path.join(filename, filter)
-				self._dialog.FileSelectionDoSearch(filter)
-				return
-		if self.cb_ok:
-			ret = self.cb_ok(filename)
+			fss, ok = macfs.StandardPutFile(prompt, file)
+		if ok:
+			filename = fss.as_pathname()
+			try:
+				ret = cb_ok(filename)
+			except:
+				ret = None
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret)
-				return
-		self.close()
+		else:
+			try:
+				ret = cb_cancel()
+			except:
+				ret = None
+			if ret:
+				if type(ret) is StringType:
+					showmessage(ret)
 
-class SelectionDialog:
+	def close(self):
+		pass
+
+	def setcursor(self, cursor):
+		pass
+
+	def is_closed(self):
+		return 1
+
+class _ListWidget:
+	def __init__(self, wid, rect, content):
+		# wid is the window (dialog) where our list is going to be in
+		# rect is it's item rectangle (as in dialog item)
+		self.rect = rect
+		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
+		self.list = MacList.LNew(rect2, (0, 0, 1, len(content)), (0,0), 0, wid,
+					0, 0, 0, 1)
+		self.setcontent(content)
+		self.wid = wid
+		self.list.LSetDrawingMode(1)
+	
+	def setcontent(self, content):
+		for y in range(len(content)):
+			item = content[y]
+			self.list.LSetCell(item, (0, y))
+		Win.InvalRect(self.rect)
+
+	def deselectall(self):
+		while 1:
+			ok, pt = self.list.LGetSelect(1, (0,0))
+			if not ok: return
+			self.list.LSetSelect(0, pt)
+			
+	def select(self, num):
+		self.deselectall()
+		if num < 0:
+			return
+		self.list.LSetSelect(1, (0, num))
+			
+	def click(self, where, modifiers):
+		is_double = self.list.LClick(where, modifiers)
+		ok, (x, y) = self.list.LGetSelect(1, (0, 0))
+		if ok:
+			return y, is_double
+		else:
+			return None, is_double
+			
+	# draw a frame around the list, List Manager doesn't do that
+	def drawframe(self):
+		Qd.SetPort(self.wid)
+		Qd.FrameRect(self.rect)
+		
+	def _redraw(self, rgn):
+		rgn = self.wid.GetWindowPort().visRgn
+		self.drawframe()
+		self.list.LUpdate(rgn)
+		
+	def _activate(self, onoff):
+		self.list.LActivate(onoff)
+
+class SelectionDialog(_DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
-		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
-			 'colormap': toplevel._default_colormap,
-			 'visual': toplevel._default_visual,
-			 'depth': toplevel._default_visual.depth,
-			 'textString': default,
-			 'autoUnmanage': FALSE}
-		if hasattr(self, 'NomatchCallback'):
-			attrs['mustMatch'] = TRUE
-		if listprompt:
-			attrs['listLabelString'] = listprompt
-		if selectionprompt:
-			attrs['selectionLabelString'] = selectionprompt
-		form = toplevel._main.CreateSelectionDialog('selectDialog',
-							    attrs)
-		self._form = form
-		form.AddCallback('okCallback', self._ok_callback, None)
-		form.AddCallback('cancelCallback', self._cancel_callback, None)
-		if hasattr(self, 'NomatchCallback'):
-			form.AddCallback('noMatchCallback',
-					 self._nomatch_callback, None)
-		for b in [Xmd.DIALOG_APPLY_BUTTON, Xmd.DIALOG_HELP_BUTTON]:
-			form.SelectionBoxGetChild(b).UnmanageChild()
-		list = form.SelectionBoxGetChild(Xmd.DIALOG_LIST)
-		list.ListAddItems(itemlist, 1)
-		form.ManageChild()
-		toplevel._subwindows.append(self)
+		# First create dialogwindow and set static items
+		_DialogWindow.__init__(self, ID_SELECT_DIALOG)
+		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_LISTPROMPT)
+		Dlg.SetDialogItemText(h, listprompt)
+		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_SELECTPROMPT)
+		Dlg.SetDialogItemText(h, selectionprompt)
+		
+		# Set defaults
+		self._wid.SetDialogDefaultItem(ITEM_SELECT_OK)
+		self._wid.SetDialogCancelItem(ITEM_SELECT_CANCEL)
 
-	def setcursor(self, cursor):
-		mac_windowbase._setcursor(self._form, cursor)
-
-	def is_closed(self):
-		return self._form is None
-
-	def close(self):
-		if self._form:
-			toplevel._subwindows.remove(self)
-			self._form.UnmanageChild()
-			self._form.DestroyWidget()
-			self._form = None
-
-	def _nomatch_callback(self, widget, client_data, call_data):
-		if self.is_closed():
-			return
-		ret = self.NomatchCallback(call_data.value)
-		if ret and type(ret) is StringType:
-			showmessage(ret, mtype = 'error')
-
-	def _ok_callback(self, widget, client_data, call_data):
-		if self.is_closed():
-			return
-		try:
-			func = self.OkCallback
-		except AttributeError:
+		# Now setup the scrolled list
+		self._itemlist = itemlist
+		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEMLIST)
+		self._listwidget = _ListWidget(self._wid, rect, itemlist)
+		self.addwidget(self._listwidget)
+		if default in itemlist:
+			num = itemlist.index(default)
+			self._indexlist.select(num)
+			
+		# and the default item
+		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
+		Dlg.SetDialogItemText(h, default)
+		# XXXX Show
+	
+	def do_itemhit(self, item, event):
+		is_ok = 0
+		if item == ITEM_SELECT_CANCEL:
+			self.CancelCallback()
+			self.close()
+		elif item == ITEM_SELECT_OK:
+			is_ok = 1
+		elif item == ITEM_SELECT_ITEMLIST:
+			(what, message, when, where, modifiers) = event
+			Qd.SetPort(self._wid)
+			where = Qd.GlobalToLocal(where)
+			item, isdouble = self._listwidget.click(where, modifiers)
+			if item is None:
+				MacOS.SysBeep()
+				return
+			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
+			Dlg.SetDialogItemText(h, self._itemlist[item])
+			is_ok = isdouble
+		elif item == ITEM_SELECT_ITEM:
 			pass
 		else:
-			ret = func(call_data.value)
-			if ret:
-				if type(ret) is StringType:
-					showmessage(ret, mtype = 'error')
-				return
-		self.close()
-
-	def _cancel_callback(self, widget, client_data, call_data):
-		if self.is_closed():
-			return
-		try:
-			func = self.CancelCallback
-		except AttributeError:
-			pass
-		else:
-			ret = func()
-			if ret:
-				if type(ret) is StringType:
-					showmessage(ret, mtype = 'error')
-				return
-		self.close()
-
-class InputDialog:
+			print 'Unknown item', self, item, event
+		# Done a bit funny, because of double-clicking
+		if is_ok:
+			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
+			rv = Dlg.GetDialogItemText(h)
+			self.OkCallback(rv)
+			self.close()
+		
+class InputDialog(_DialogWindow):
 	def __init__(self, prompt, default, cb):
-		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
-			 'colormap': toplevel._default_colormap,
-			 'visual': toplevel._default_visual,
-			 'depth': toplevel._default_visual.depth}
-		self._form = toplevel._main.CreatePromptDialog(
-						   'inputDialog', attrs)
-		self._form.AddCallback('okCallback', self._ok, cb)
-		self._form.AddCallback('cancelCallback', self._cancel, None)
-		helpb = self._form.SelectionBoxGetChild(
-						Xmd.DIALOG_HELP_BUTTON)
-		helpb.UnmanageChild()
-		sel = self._form.SelectionBoxGetChild(
-					      Xmd.DIALOG_SELECTION_LABEL)
-		sel.labelString = prompt
-		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		text.value = default
-		self._form.ManageChild()
-		toplevel._subwindows.append(self)
+		# First create dialogwindow and set static items
+		_DialogWindow.__init__(self, ID_INPUT_DIALOG)
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
+		Dlg.SetDialogItemText(h, prompt)
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		Dlg.SetDialogItemText(h, default)
+		self._wid.SetDialogDefaultItem(ITEM_INPUT_OK)
+		self._wid.SetDialogCancelItem(ITEM_INPUT_CANCEL)
+		self._cb = cb
 
-	def _ok(self, w, client_data, call_data):
-		if self.is_closed():
-			return
-		value = call_data.value
-		self.close()
-		if client_data:
-			client_data(value)
-
-	def _cancel(self, w, client_data, call_data):
-		if self.is_closed():
-			return
-		self.close()
-
-	def setcursor(self, cursor):
-		mac_windowbase._setcursor(self._form, cursor)
-
-	def close(self):
-		if self._form:
-			toplevel._subwindows.remove(self)
-			self._form.UnmanageChild()
-			self._form.DestroyWidget()
-			self._form = None
-
-	def is_closed(self):
-		return self._form is None
+	def do_itemhit(self, item, event):
+		if item == ITEM_INPUT_CANCEL:
+			self.close()
+		elif item == ITEM_INPUT_OK:
+			tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+			rv = Dlg.GetDialogItemText(h)
+			self._cb(rv)
+			self.close()
+		elif item == ITEM_INPUT_TEXT:
+			pass
+		else:
+			print 'Unknown item', self, item, event
 
 [TOP, CENTER, BOTTOM] = range(3)
 
