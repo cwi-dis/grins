@@ -105,7 +105,7 @@ class WMWriter:
 		dummy  = AudioFormatSetter(self._writer, filename)
 
 	# alter filter graph so that audio samples are feeded to the writer
-	def redirectAudioFilter(self, fg):
+	def redirectAudioFilter(self, fg, hint=None):
 		# find renderer
 		try:
 			aurenderer = fg.FindFilterByName('Default DirectSound Device')
@@ -114,6 +114,11 @@ class WMWriter:
 		if not aurenderer:
 			try:
 				aurenderer=fg.FindFilterByName('Default WaveOut Device')
+			except:
+				aurenderer=None
+		if not aurenderer and hint:
+			try:
+				aurenderer=fg.FindFilterByName(hint)
 			except:
 				aurenderer=None
 		if not aurenderer:
