@@ -1,56 +1,40 @@
-GRiNS for Unix
+Welcome to the GRiNS Editor and Player for SMIL Release 1.0 for
+Unix.  The GRiNS Editor for SMIL lets you create, edit and preview
+SMIL presentations; the GRiNS Player for SMIL lets you preview SMIL
+presentations.  The GRiNS Editor and Player for SMIL are products of
+ORATRiX Development BV.  For more information on GRiNS and SMIL and
+about the company, see our Web site http://www.oratrix.com/.
 
-This is the readme file for the GRiNS editor and player Release
-1.0beta, for Silicon Graphics IRIX 6.5 and for Sun Solaris 2.5.  More
-information on GRiNS can be obtained at http://www.oratrix.com/GRiNS,
-or by email to grins-request@oratrix.com.  Release notes for this
-version can be found in the file relnotes.html in the top-level
-directory.  More documentation can be found on the homepage.
+In order to be able to run the GRiNS Editor for SMIL you need a
+license key.  See the web site for information on how to obtain a key.
+You do not need a license key to use the GRiNS Player for SMIL.
 
-Prerequisites
+The document QuickStart.pdf contains information on how to use the
+editor.  You need Adobe Acrobat Reader (http://www.adobe.com/) to read 
+the Quick Start Guide.  There are also tutorials on the ORATRiX web
+site.
 
-The SGI version of the GRiNS editor and player have only been tested
-on an SGI O2 running IRIX 6.5.2.  Other systems may or may not work.
+At the time of writing there is no Real Networks RealPlayer G2
+available for Unix, and so there is no RealPlayer G2 support in the
+GRiNS Editor and Player for SMIL.  Check the ORATRiX web site for
+updates.
 
-The GRiNS editor and player use a number of system shared libraries.
-Not all of these libraries are installed by default.  Ask your system
-administrator to install these images if they haven't been installed
-already.  Which images are installed can be seen with the standard
-program versions.  Shared libraries from the following images are
-used: compiler_eoe.sw.lib, dmedia_eoe.sw.audio, dmedia_eoe.sw.lib,
-eoe.sw.base, eoe.sw.gfx, motif_eoe.sw.eoe, x_eoe.sw.eoe.
+On an SGI there are two ways of installing the GRiNS Editor and Player 
+for SMIL.  If installed using inst (to check, use the command
+"versions | grep grins") the GRiNS Editor and Player for SMIL can be
+removed using the command "versions remove grins" or "versions remove
+grinsed".  Otherwise (if not installed using inst, and on a Sun), you
+can simply remove the files.
 
-Feedback
+The folder Examples contains some example SMIL documents that you can
+view (and edit) using the GRiNS Editor and Player.
 
-Bug reports and other technical feedback should be sent to
-grins-support@oratrix.com, please check the feedback section on the
-homepage for details.
+See the Release Notes (relnotes.html or
+http://www.oratrix.com/GRiNS/Support/Relnotes/unix-1.0/) for more
+information.
 
-Non-technical feedback should be sent to info@oratrix.com.
-
-Example documents
-
-A number of example documents can be found in the Examples
-directory. More examples will be added to the GRiNS home page over
-time.
-
-License keys
-
-To start the editor you need a license key. You may have been provided
-with a temporary license key in the same message in which you received
-the password for the download area. If not you can send an empty mail
-message to evalutation-license@oratrix.com and we will send you a
-time-limited key, or we will mail you details on how to proceed.
-
-SGI-IRIX user interface open issues
-
-The editor crashes occasionally when deep inside the X/Motif
-libraries.  This seems to happen only when Motif dialogs are active.
-Save your work regularly.
-
-Sun-Solaris user interface open issues
-
-There seems to be a wide range of audio capabilities on Sun
-workstations.  It is not guaranteed that audio works in all
-circumstances.
-MPEG video rendering on the Sun is slow.
+For more information see:
+    http://www.oratrix.com/
+or send e-mail to
+    grins-support@oratrix.com (technical support)
+    info@oratrix.com (non-technical questions)
