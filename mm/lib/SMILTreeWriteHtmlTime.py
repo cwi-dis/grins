@@ -517,14 +517,14 @@ class SMILHtmlTimeWriter(SMIL):
 			name = self.ch2name[lch]
 			divlist = []
 			divlist.append(('id', name))
-			if node.GetParent().GetType() == 'seq' and not moveAnimationOutside:
-				divlist.append(('timeContainer', 'par'))
-				divlist.append(('class', 'time'))
-				regstyle = self.ch2style.get(lch)
-				if regstyle is not None:
-					divlist.append(('style', regstyle))
-			else:	
-				divlist.append(('class', 'reg'+regionName))
+##			if node.GetParent().GetType() == 'seq' and not moveAnimationOutside:
+##				divlist.append(('timeContainer', 'par'))
+##				divlist.append(('class', 'time'))
+##				regstyle = self.ch2style.get(lch)
+##				if regstyle is not None:
+##					divlist.append(('style', regstyle))
+##			else:	
+			divlist.append(('class', 'reg'+regionName))
 			self.writetag('div', divlist)
 			self.push()
 			self.ids_written[name] = 1
