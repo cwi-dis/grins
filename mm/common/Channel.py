@@ -1536,7 +1536,7 @@ class ChannelWindow(Channel):
 
 			# region geometry			
 			self.idCssNode = self.cssResolver.newRegion()
-			self.idCssMedia = self.cssResolver.newMedia()
+			self.idCssMedia = self.cssResolver.newMedia(node.GetDefaultMediaSize)
 			pchan = self._get_parent_channel()
 
 			# copy all possitioning attributes from document source.
