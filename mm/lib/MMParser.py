@@ -66,7 +66,7 @@ class MMParser:
 		self.pos = 0
 		self.tokstart = 0
 		self.eofseen = 0
-		self.pushback = ''
+		self.pushback = None
 	#
 	# Parse a node.  This is highly recursive.
 	#
@@ -359,14 +359,14 @@ class MMParser:
 			return 1
 	#
 	def peektoken(self):
-		if not self.pushback:
+		if self.pushback is None:
 			self.pushback = self.getnexttoken()
 		return self.pushback
 	#
 	def gettoken(self):
-		if self.pushback:
+		if self.pushback is not None:
 			token = self.pushback
-			self.pushback = ''
+			self.pushback = None
 		else:
 			token = self.getnexttoken()
 		#print '#gettoken', token
@@ -375,7 +375,7 @@ class MMParser:
 		return token
 	#
 	def ungettoken(self, token):
-		if self.pushback:
+		if self.pushback is not None:
 			raise AssertError, 'more than one ungettoken'
 		# print 'pushback:', token
 		self.pushback = token
