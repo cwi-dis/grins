@@ -5,9 +5,10 @@ import string
 import urllib, MMurl
 
 import win32dxm
+import winqt
 
 def GetFrameRate(url, maintype, subtype):
-	fr = 30
+	fr = 20
 	if string.find(string.lower(subtype), 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
 		if maintype == 'audio':
 			fr = 8000
@@ -16,7 +17,12 @@ def GetFrameRate(url, maintype, subtype):
 	elif maintype in ('image', 'text'):
 		fr = 10
 	elif maintype == 'video':
-		fr = win32dxm.GetFrameRate(url)
+		if subtype.find('quicktime') >= 0 and winqt.HasQtSupport():
+			player = winqt.QtPlayer()
+			player.open(fn)
+			fr = player.getFrameRate()
+		else:
+			fr = win32dxm.GetFrameRate(url)
 	elif maintype == 'audio':
 		try:
 			import audio
@@ -27,3 +33,4 @@ def GetFrameRate(url, maintype, subtype):
 			print 'error in sound file', url, ':', msg
 			fr = 8000
 	return fr
+

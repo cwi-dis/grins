@@ -5,6 +5,8 @@ try:
 except ImportError:
 	Qt = None
 
+import winqtcon
+
 import ddraw
 
 # support flags
@@ -71,7 +73,11 @@ QtPlayerInstances = 0
 class QtPlayer:
 	def __init__(self):
 		Initialize()
-		self.movie = None
+		self._movie = None
+		self._videomedia = None
+		self._videotrack = None
+		self._audiomedia = None
+		self._audiotrack = None
 		self._ddobj = None
 		self._dds = None
 		self._rect = None
@@ -79,7 +85,12 @@ class QtPlayer:
 		QtPlayerInstances = QtPlayerInstances + 1
 
 	def __del__(self):
-		self.movie = None
+		self._videomedia = None
+		self._videotrack = None
+		self._audiomedia = None
+		self._audiotrack = None
+		self._movie = None
+		self._movie = None
 		self._dds = None
 		self._ddobj = None
 		self._rect = None
@@ -99,14 +110,14 @@ class QtPlayer:
 			print arg
 			return 0
 		try:
-			self.movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0, 0)
+			self._movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0, 0)
 		except Exception, arg:
 			print arg
 			Qt.CloseMovieFile(movieResRef)
 			return 0
 		Qt.CloseMovieFile(movieResRef)
 		if not asaudio:
-			l, t, r, b = self.movie.GetMovieBox()
+			l, t, r, b = self._movie.GetMovieBox()
 			self._rect = l, t, r-l, b-t
 		return 1
 
@@ -114,19 +125,44 @@ class QtPlayer:
 		return self._rect
 
 	def getCurrentMovieRect(self):
-		if self.movie:
-			l, t, r, b = self.movie.GetMovieBox()
+		if self._movie:
+			l, t, r, b = self._movie.GetMovieBox()
 			return l, t, r-l, b-t
 		return 0, 0
 
 	def setMovieRect(self, rect):
 		x, y, w, h = self._rect = rect
-		if self.movie:
-			self.movie.SetMovieBox((x, y, x+w, y+h))
+		if self._movie:
+			self._movie.SetMovieBox((x, y, x+w, y+h))
 
 	def setMovieActive(self, flag):
-		if self.movie:
-			self.movie.SetMovieActive(flag)
+		if self._movie:
+			self._movie.SetMovieActive(flag)
+
+
+	def getTracksInfo(self):
+		if not self._movie or (self._videotrack and self._videomedia): 
+			return
+		try:
+			self._videotrack = self._movie.GetMovieIndTrackType(1, winqtcon.VisualMediaCharacteristic, winqtcon.movieTrackCharacteristic)
+			self._videomedia = self._videotrack.GetTrackMedia()
+		except Qt.Error:
+			self._videomedia = None
+			self._videotrack = None
+		
+	def getFrameRate(self):
+		magic_frame_rate = 20
+		if not self._movie: 
+			return magic_frame_rate
+		dur = self.getDuration()
+		if not dur: 
+			return magic_frame_rate
+		self.getTracksInfo()
+		if self._videomedia:
+			samples = self._videomedia.GetMediaSampleCount()
+			import math
+			return int(math.floor(samples/dur))
+		return magic_frame_rate
 
 	def createVideoDDS(self, ddobj, size = None):
 		if self._rect is None:
@@ -151,40 +187,40 @@ class QtPlayer:
 			Qt.SetDDObject(self._ddobj)
 			Qt.SetDDPrimarySurface(self._dds)
 
-		self.movie.SetMovieBox((0, 0, w, h))
-		self.movie.SetMovieActive(1)
+		self._movie.SetMovieBox((0, 0, w, h))
+		self._movie.SetMovieActive(1)
 			
 	def run(self):
-		if self.movie:
-			self.movie.StartMovie()
+		if self._movie:
+			self._movie.StartMovie()
 
 	def stop(self):
-		if self.movie:
-			self.movie.StopMovie()
+		if self._movie:
+			self._movie.StopMovie()
 		
 	def update(self):
-		if self.movie:
+		if self._movie:
 			global QtPlayerInstances
 			if self._dds is not None and QtPlayerInstances>1:
 				Qt.SetDDObject(self._ddobj)
 				Qt.SetDDPrimarySurface(self._dds)
-			self.movie.MoviesTask(0)
-			self.movie.UpdateMovie()
-			return not self.movie.IsMovieDone()
+			self._movie.MoviesTask(0)
+			self._movie.UpdateMovie()
+			return not self._movie.IsMovieDone()
 		return 0
 
 	def seek(self, secs):
-		if self.movie:
+		if self._movie:
 			msecs = int(1000*secs)
-			self.movie.SetMovieTimeValue(msecs)
+			self._movie.SetMovieTimeValue(msecs)
 
 	def getDuration(self):
-		if self.movie:
-			return 0.001*self.movie.GetMovieDuration()
+		if self._movie:
+			return 0.001*self._movie.GetMovieDuration()
 		return 0
 
 	def getTime(self):
-		if self.movie:
-			msecs = self.movie.GetMovieTime()[0]
+		if self._movie:
+			msecs = self._movie.GetMovieTime()[0]
 			return msecs/1000.0
 		return 0
