@@ -104,7 +104,7 @@ class TransitionEngine:
 				wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
 				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
 			else:
-				wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd) 
+				wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd)
 				wnd._paintOnDDS(self._tosurf, wnd._rect)
 	
 		fromsurf = 	wnd._fromsurf
@@ -143,10 +143,12 @@ class TransitionEngine:
 		wnd = self.windows[0]
 		while 1:
 			try:
-				wnd._fromsurf = wnd.getBackDDS()
-				wnd._drawsurf = wnd.createDDS()
-				self._tosurf = wnd.createDDS()
-				self._tmp = wnd.createDDS()
+				wnd._fromsurf = wnd.getBackDDS(dopaint = 1)
+				# use getBackDDS instead of createDDS
+				# just in case of an early repaint 
+				wnd._drawsurf = wnd.getBackDDS(dopaint = 0)
+				self._tosurf = wnd.getBackDDS(dopaint = 0)
+				self._tmp = wnd.getBackDDS(dopaint = 0)
 			except ddraw.error, arg:
 				print arg
 				win32api.Sleep(50)
@@ -281,10 +283,12 @@ class InlineTransitionEngine:
 		wnd = self.window
 		while 1:
 			try:
-				wnd._fromsurf = wnd.createDDS()
-				wnd._drawsurf = wnd.createDDS()
-				self._tosurf = wnd.createDDS()
-				self._tmp = wnd.createDDS()
+				# use getBackDDS instead of createDDS
+				# just in case of an early repaint 
+				wnd._fromsurf = wnd.getBackDDS(dopaint = 1)
+				wnd._drawsurf = wnd.getBackDDS(dopaint = 0)
+				self._tosurf = wnd.getBackDDS(dopaint = 0)
+				self._tmp = wnd.getBackDDS(dopaint = 0)
 			except ddraw.error, arg:
 				print arg
 				win32api.Sleep(50)
