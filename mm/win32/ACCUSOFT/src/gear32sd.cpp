@@ -296,9 +296,14 @@ static PyObject* ig_ip_crop(PyObject *self, PyObject *args)
 		return NULL;		
 		}
 	
-	AT_DIMENSION width=0,height=0;
+	AT_DIMENSION width=0, height=0;
 	UINT bitsPerPixel;
-	IG_image_dimensions_get(img,&width,&height,&bitsPerPixel);
+	AT_ERRCOUNT nError = IG_image_dimensions_get(img,&width,&height,&bitsPerPixel);
+	if(nError!=0)
+		{
+		seterror("ig_ip_crop::IG_image_dimensions_get","failure");
+		return NULL;		
+		}
 	RECT rcImg = {0, 0, width, height};
 
 	RECT rcInImg;
@@ -308,8 +313,7 @@ static PyObject* ig_ip_crop(PyObject *self, PyObject *args)
 		}
 
 	AT_RECT atrect = {rcInImg.left, rcInImg.top, rcInImg.right, rcInImg.bottom};
-	AT_ERRCOUNT nError=IG_IP_crop(img,&atrect);
-
+	nError = IG_IP_crop(img,&atrect);
 	if(nError!=0)
 		{
 		seterror("ig_ip_crop","IG_IP_crop failed");
