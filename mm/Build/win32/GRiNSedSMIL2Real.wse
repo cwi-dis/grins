@@ -2191,13 +2191,18 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Back3.jpg
-  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Back3.jpg
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\REFM.html
+  Destination=%MAINDIR%\REFM.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil2real\TDG.pdf
-  Destination=%MAINDIR%\TDG.pdf
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\TDG.html
+  Destination=%MAINDIR%\TDG.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Back3.jpg
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Back3.jpg
   Flags=0000000010000010
 end
 item: Install File
@@ -2306,31 +2311,7 @@ item: Create Shortcut
 end
 item: End Block
 end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\TDG.pdf
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Template Design Guide.lnk
-  Icon Number=0
-end
-item: End Block
-end
 item: Else Statement
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Template Design Guide
-  Command Line=%MAINDIR%\TDG.pdf
-end
-item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
