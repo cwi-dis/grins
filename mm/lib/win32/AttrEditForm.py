@@ -1455,6 +1455,7 @@ class RealRenderer(Renderer):
 		Renderer.__init__(self,wnd,rc,baseURL)
 		self._rmaplayer=None
 		self._isstoped=0
+		self._rurl=''
 
 	# postpone real loading so that the user pay a delay
 	# the first time he wants a real preview and only then
@@ -1471,18 +1472,18 @@ class RealRenderer(Renderer):
 				self._rmaplayer=None
 	
 	def __del__(self):
-		self.release()
+		self._rmaplayer = None
 			
 	def release(self):
-		if self._rmaplayer:
-			self.stop()
-			del self._rmaplayer
-			self._rmaplayer = None
+		self._rmaplayer = None
 
 	def isstatic(self):
 		return 0
 
 	def load(self,rurl):
+		if self._rmaplayer and not self._isstoped:
+			self._rmaplayer = None
+		self._rurl=rurl
 		self.do_init()
 		if not self._rmaplayer:
 			if self.needswindow():
@@ -1499,22 +1500,24 @@ class RealRenderer(Renderer):
 
 			
 	def play(self):
+		# play requires to recreate the player
+		# in order to be confined
+		if self._isstoped:
+			self._rmaplayer = None
+			self.load(self._rurl)
 		if self._rmaplayer:
 			self._isstoped=0
 			self._rmaplayer.Begin()
 			
 	def pause(self):
 		if self._rmaplayer:
-			self._isstoped=0
 			self._rmaplayer.Pause()
 
 	def stop(self):
 		if self._rmaplayer:
-			# stop requires to recreate player
-			# in order to be confined
-			self._rmaplayer.Pause()
-			self._rmaplayer.Seek(0)
-
+			self._rmaplayer.Stop()
+			self._isstoped=1
+					
 	def OnStop(self):
 		self._isstoped=1
 
