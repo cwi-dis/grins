@@ -22,6 +22,9 @@ class TopLevelDialog:
 		'close': [ CLOSE, ],
 		}
 
+	def __init__(self):
+		pass
+
 	def show(self):
 		if self.window is not None:
 			return
