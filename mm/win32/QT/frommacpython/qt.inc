@@ -79,6 +79,7 @@ static PyObject* Qt_DestroyPortAssociation(PyObject *self, PyObject *args)
 	return Py_None;
 	}
 
+
 #define APPEND_WIN_Qt_methods \
 	{"InitializeQTML", (PyCFunction)Qt_InitializeQTML, 1,\
 	"(long flags) -> None"},\

@@ -124,16 +124,11 @@ SOURCE=.\pymactoolbox.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\qt.cpp
+SOURCE=.\pywintoolbox.cpp
+# End Source File
+# Begin Source File
 
-!IF  "$(CFG)" == "Qt - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Qt - Win32 Debug"
-
-!ENDIF 
-
+SOURCE=.\pywintoolbox.h
 # End Source File
 # Begin Source File
 
@@ -159,6 +154,10 @@ SOURCE=.\Qtmodule.cpp
 # Begin Source File
 
 SOURCE=.\test.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\test2.py
 # End Source File
 # End Group
 # Begin Group "Temp"
