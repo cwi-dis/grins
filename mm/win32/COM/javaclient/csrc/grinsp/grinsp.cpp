@@ -118,6 +118,21 @@ JNIEXPORT void JNICALL Java_GRiNSViewport_close(JNIEnv *env, jobject canvas, jin
 	}
 
 /*
+ * Class:     GRiNSViewport
+ * Method:    getSizeAdvice
+ * Signature: (I)Ljava/awt/Dimension;
+ */
+JNIEXPORT jobject JNICALL Java_GRiNSViewport_getSizeAdvice(JNIEnv *env, jobject canvas, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	jint w=0, h=0;
+	if(pIGRiNSPlayer)pIGRiNSPlayer->getSize((int*)&w, (int*)&h);
+	jclass clazz = env->FindClass("java/awt/Dimension");
+	jmethodID methodID = env->GetMethodID(clazz, "<init>", "(II)V");
+	return env->NewObject(clazz, methodID, w, h);
+	}
+
+/*
  * Class:     GRiNSCanvas
  * Method:    play
  * Signature: ()V
