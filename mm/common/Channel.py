@@ -324,12 +324,6 @@ class Channel:
 	def save_geometry(self):
 		pass
 
-	def setwaiting(self):
-		pass
-
-	def setready(self):
-		pass
-
 	def getaltvalue(self, node):
 		# Return 1 if this node is playable, 0 otherwise
 		return 1
@@ -968,7 +962,6 @@ class ChannelWindow(Channel):
 		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
-		self._is_waiting = 1
 		self.want_default_colormap = 0
 		self._bgimg = None
 		self.commandlist = [
@@ -1053,16 +1046,6 @@ class ChannelWindow(Channel):
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
 
-	def setwaiting(self):
-		self._is_waiting = 1
-		if self._is_shown and self.window:
-			self.window.setcursor('watch')
-
-	def setready(self):
-		self._is_waiting = 0
-		if self._is_shown and self.window:
-			self.window.setcursor('')
-
 	def mousepress(self, arg, window, event, value):
 		global _button
 		# a mouse button was pressed
@@ -1100,8 +1083,6 @@ class ChannelWindow(Channel):
 					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
 					dummy = apply(f, a) # may close channel
-					if hasattr(self, '_player'):
-						self._player.toplevel.setready()
 		if _button and not _button.is_closed():
 			_button.unhighlight()
 		_button = None
@@ -1168,8 +1149,6 @@ class ChannelWindow(Channel):
 			if hasattr(self._player, 'editmgr'):
 				menu.append('', 'push focus',
 					    (self.focuscall, ()))
-		if self._is_waiting:
-			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
@@ -1186,6 +1165,7 @@ class ChannelWindow(Channel):
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
 			return
+		self._player.toplevel.setwaiting()
 		# we now know for sure we're not playing
 		pchan.window.create_box(
 			'Resize window for channel ' + self._name,
@@ -1251,8 +1231,6 @@ class ChannelWindow(Channel):
 		self.create_window(pchan, pgeom)
 		self._is_shown = 1
 		self.after_show()
-		if not self._is_waiting:
-			self.setready()
 
 	def do_hide(self):
 		if debug:
@@ -1266,9 +1244,8 @@ class ChannelWindow(Channel):
 	def resize(self, arg, window, event, value):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
-		windowinterface.setcursor('watch')
+		self._player.toplevel.setwaiting()
 		self.replaynode()
-		windowinterface.setcursor('')
 
 	def arm_0(self, node):
 		same = Channel.arm_0(self, node)

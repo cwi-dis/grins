@@ -95,6 +95,7 @@ class PlayerDialog:
 		if self.__window is not None:
 			self.__window.pop()
 			return
+		self.__state = -1
 		x, y, w, h = self.__coords
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
@@ -197,15 +198,6 @@ class PlayerDialog:
 		"""
 
 		pass
-
-	def setcursor(self, cursor):
-		"""Set the cursor to a named shape.
-
-		Arguments (no defaults):
-		cursor -- string giving the name of the desired cursor shape
-		"""
-		if self.__window is not None:
-			return self.__window.setcursor(cursor)
 
 	def get_adornments(self, channel):
 		return self.adornments2

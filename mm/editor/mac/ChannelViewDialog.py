@@ -18,8 +18,6 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
-		if self.waiting:
-			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.WindowExit, self.hide, None)

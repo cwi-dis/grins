@@ -451,12 +451,13 @@ class Scheduler(scheduler):
 		#
 		# We have two queues to execute: the timed queue and the
 		# normal SR queue. Currently, we execute the timed queue first.
-		# Also, e have to choose here between an eager and a non-eager
+		# Also, we have to choose here between an eager and a non-eager
 		# algorithm. For now, we're eager, on both queues.
 		#
 		if debugtimer: print 'timer_callback'
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
+			self.toplevel.setwaiting()
 			when, prio, action, argument = self.queue[0]
 			del self.queue[0]
 			void = apply(action, argument)
@@ -465,6 +466,8 @@ class Scheduler(scheduler):
 		# Now the normal runqueue
 		#
 		queue = self.selectqueue()
+		if queue:
+			self.toplevel.setwaiting()
 		for action in queue:
 			self.runone(action)
 		self.updatetimer()

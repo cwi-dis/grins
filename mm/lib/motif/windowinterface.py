@@ -20,6 +20,9 @@ RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
 
 Version = 'X'
 
+_WAITING_CURSOR = '_callback'
+_READY_CURSOR = '_endcallback'
+
 toplevel = None
 
 _def_useGadget = 1			# whether to use gadgets or not
@@ -136,10 +139,25 @@ class _Toplevel:
 		return _Window(self, x, y, w, h, title, 1, pixmap, units,
 			       adornments, canvassize, commandlist, resizable)
 
+	__waiting = 0
+	def setwaiting(self):
+		if self.__waiting:
+			return
+		self.__waiting = 1
+		self.setcursor(_WAITING_CURSOR)
+
+	def setready(self):
+		if not self.__waiting:
+			return
+		self.__waiting = 0
+		self.setcursor(_READY_CURSOR)
+
 	def setcursor(self, cursor):
+		if cursor == 'watch' or cursor == '': return # XXXX
 		for win in self._subwindows:
 			win.setcursor(cursor)
-		self._cursor = cursor
+		if cursor != _WAITING_CURSOR and cursor != _READY_CURSOR:
+			self._cursor = cursor
 		self._main.Display().Flush()
 
 	def pop(self):
@@ -264,6 +282,7 @@ class _Timer:
 	def cb(self, client_data, id):
 		self.__id = None
 		apply(apply, client_data)
+		toplevel.setready()
 
 class _ToolTip:
 	__popupwidget = None
@@ -425,6 +444,7 @@ class _CommandSupport(_ToolTip):
 			widget.labelString = label[widget.ToggleButtonGetState()]
 		if callback is not None:
 			apply(apply, callback)
+			toplevel.setready()
 
 	def _set_callback(self, widget, callbacktype, callback):
 		if callbacktype:
@@ -911,7 +931,7 @@ class _Window(_AdornmentSupport):
 			spacing = form.spacing
 			attrs['width'] = width - spacing
 			attrs['height'] = height - spacing
-		self.setcursor(self._cursor)
+		self.setcursor(_WAITING_CURSOR)
 		if commandlist is not None:
 			self.set_commandlist(commandlist)
 		if menubar is not None and w == 0 or h == 0:
@@ -1123,7 +1143,12 @@ class _Window(_AdornmentSupport):
 						      x, y, w, h, x, y)
 
 	def setcursor(self, cursor):
-		self._cursor = cursor
+		if cursor == _WAITING_CURSOR:
+			cursor = 'watch'
+		elif cursor == _READY_CURSOR:
+			cursor = self._cursor
+		else:
+			self._cursor = cursor
 		if cursor == '' and self._curpos is not None and \
 		   apply(self._buttonregion.PointInRegion, self._curpos):
 			cursor = 'hand'
@@ -1214,7 +1239,7 @@ class _Window(_AdornmentSupport):
 			apply(callback, ())
 			return
 		toplevel.setcursor('stop')
-		self.setcursor('')
+		self._topwindow.setcursor('')
 		_in_create_box = self
 		self.pop()
 		if msg:
@@ -1251,6 +1276,13 @@ class _Window(_AdornmentSupport):
 			self._rb_reg = r
 		d.render()
 		self._rb_curdisp = d
+		for win in toplevel._subwindows:
+			if win is self._topwindow:
+				continue
+			if hasattr(win, '_shell'):
+				win._shell.SetSensitive(0)
+			elif hasattr(win, '_main'):
+				win._main.SetSensitive(0)
 		self._rb_dialog = showmessage(
 			msg, mtype = 'message', grab = 0,
 			callback = (self._rb_done, ()),
@@ -1290,10 +1322,11 @@ class _Window(_AdornmentSupport):
 		else:
 			self._rb_start_x, self._rb_start_y, self._rb_width, \
 					  self._rb_height = self._rect
+		self._rb_dialog.setcursor('')
 		self._rb_looping = 1
+		toplevel.setready()
 		while self._rb_looping:
 			Xt.DispatchEvent(Xt.NextEvent())
-		toplevel.setcursor('watch')
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -1548,6 +1581,7 @@ class _Window(_AdornmentSupport):
 		if w:
 			w._rb_end()
 			self._rb_looping = 0
+		toplevel.setready()
 
 	def _input_callback(self, form, client_data, call_data):
 		if self._parent is None:
@@ -1558,6 +1592,7 @@ class _Window(_AdornmentSupport):
 			self._do_input_callback(form, client_data, call_data)
 		except Continue:
 			pass
+		toplevel.setready()
 
 	def _do_input_callback(self, form, client_data, call_data):
 		event = call_data.event
@@ -1746,6 +1781,7 @@ class _Window(_AdornmentSupport):
 		if __w:
 			__w._rb_end()
 			self._rb_looping = 0
+		toplevel.setready()
 
 	def _do_resize2(self):
 		for w in self._subwindows:
@@ -1793,6 +1829,13 @@ class _Window(_AdornmentSupport):
 			self._rb_dl.render()
 		self._rb_display.close()
 		self._rb_curdisp.close()
+		for win in toplevel._subwindows:
+			if win is self._topwindow:
+				continue
+			if hasattr(win, '_shell'):
+				win._shell.SetSensitive(1)
+			elif hasattr(win, '_main'):
+				win._main.SetSensitive(1)
 		del self._rb_callback
 		del self._rb_dialog
 		del self._rb_dl
@@ -2048,12 +2091,13 @@ class _SubWindow(_Window):
 		return self._sizes
 
 	def setcursor(self, cursor):
-		self._cursor = cursor
-		if cursor == '' and self._curpos is not None and \
-		   apply(self._buttonregion.PointInRegion, self._curpos):
-			cursor = 'hand'
-		_setcursor(self._form, cursor)
-		self._curcursor = cursor
+		pass
+## 		self._cursor = cursor
+## 		if cursor == '' and self._curpos is not None and \
+## 		   apply(self._buttonregion.PointInRegion, self._curpos):
+## 			cursor = 'hand'
+## 		_setcursor(self._form, cursor)
+## 		self._curcursor = cursor
 
 	def pop(self):
 		parent = self._parent
@@ -3009,6 +3053,7 @@ class _Font:
 		return self._pointsize
 
 class showmessage:
+	_cursor = ''
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
 		     title = 'message', parent = None):
@@ -3057,17 +3102,32 @@ class showmessage:
 		w.AddCallback('okCallback', self._callback, callback)
 		w.AddCallback('destroyCallback', self._destroy, None)
 		w.ManageChild()
-		self._widget = w
+		self._main = w
+		self.setcursor(_WAITING_CURSOR)
+		toplevel._subwindows.append(self)
 
 	def close(self):
-		if self._widget:
-			w = self._widget
-			self._widget = None
+		if self._main:
+			toplevel._subwindows.remove(self)
+			w = self._main
+			self._main = None
 			w.UnmanageChild()
 			w.DestroyWidget()
 
+	def setcursor(self, cursor):
+		if cursor == _WAITING_CURSOR:
+			cursor = 'watch'
+		elif cursor == _READY_CURSOR:
+			cursor = self._cursor
+		else:
+			self._cursor = cursor
+		_setcursor(self._main, cursor)
+
+	def is_closed(self):
+		return self._main is None
+
 	def _callback(self, widget, callback, call_data):
-		if not self._widget:
+		if not self._main:
 			return
 		if _in_create_box and _in_create_box._rb_dialog is not self:
 			return
@@ -3075,9 +3135,10 @@ class showmessage:
 			apply(apply, callback)
 		if self._grab:
 			self.close()
+		toplevel.setready()
 
 	def _destroy(self, widget, client_data, call_data):
-		self._widget = None
+		self._main = None
 
 def beep():
 	dpy = toplevel._main.Display()
@@ -3103,6 +3164,7 @@ def _colormask(mask):
 
 def _generic_callback(widget, callback, call_data):
 	apply(apply, callback)
+	toplevel.setready()
 
 def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
 	if len(list) > 30:
@@ -3206,6 +3268,7 @@ def roundi(x):
 	return int(x + 0.5)
 
 class FileDialog:
+	_cursor = ''
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
 		     existing = 0, parent = None):
 		import os
@@ -3270,6 +3333,7 @@ class FileDialog:
 		text = dialog.FileSelectionBoxGetChild(Xmd.DIALOG_TEXT)
 		text.value = file
 		self._main.ManageChild()
+		self.setcursor(_WAITING_CURSOR)
 		toplevel._subwindows.append(self)
 
 	def close(self):
@@ -3281,6 +3345,12 @@ class FileDialog:
 			self._main = None
 
 	def setcursor(self, cursor):
+		if cursor == _WAITING_CURSOR:
+			cursor = 'watch'
+		elif cursor == _READY_CURSOR:
+			cursor = self._cursor
+		else:
+			self._cursor = cursor
 		_setcursor(self._main, cursor)
 
 	def is_closed(self):
@@ -3301,10 +3371,15 @@ class FileDialog:
 		finally:
 			if must_close:
 				self.close()
+			toplevel.setready()
 
 	def _ok_callback(self, widget, existing, call_data):
 		if _in_create_box or self.is_closed():
 			return
+		self._do_ok_callback(widget, existing, call_data)
+		toplevel.setready()
+
+	def _do_ok_callback(self, widget, existing, call_data):
 		import os
 		filename = call_data.value
 		dir = call_data.dir
@@ -3344,6 +3419,7 @@ class FileDialog:
 		self.close()
 
 class SelectionDialog:
+	_cursor = ''
 	def __init__(self, listprompt, selectionprompt, itemlist, default,
 		     parent = None):
 		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
@@ -3380,9 +3456,16 @@ class SelectionDialog:
 		list = form.SelectionBoxGetChild(Xmd.DIALOG_LIST)
 		list.ListAddItems(itemlist, 1)
 		form.ManageChild()
+		self.setcursor(_WAITING_CURSOR)
 		toplevel._subwindows.append(self)
 
 	def setcursor(self, cursor):
+		if cursor == _WAITING_CURSOR:
+			cursor = 'watch'
+		elif cursor == _READY_CURSOR:
+			cursor = self._cursor
+		else:
+			self._cursor = cursor
 		_setcursor(self._main, cursor)
 
 	def is_closed(self):
@@ -3401,6 +3484,7 @@ class SelectionDialog:
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
 			showmessage(ret, mtype = 'error', parent = self)
+		toplevel.setready()
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if _in_create_box or self.is_closed():
@@ -3415,8 +3499,10 @@ class SelectionDialog:
 				if type(ret) is StringType:
 					showmessage(ret, mtype = 'error',
 						    parent = self)
+				toplevel.setready()
 				return
 		self.close()
+		toplevel.setready()
 
 	def _cancel_callback(self, widget, client_data, call_data):
 		if _in_create_box or self.is_closed():
@@ -3431,10 +3517,14 @@ class SelectionDialog:
 				if type(ret) is StringType:
 					showmessage(ret, mtype = 'error',
 						    parent = self)
+				toplevel.setready()
 				return
 		self.close()
+		toplevel.setready()
+
 
 class InputDialog:
+	_cursor = ''
 	def __init__(self, prompt, default, cb, cancelCallback = None,
 		     parent = None):
 		import time
@@ -3469,6 +3559,7 @@ class InputDialog:
 				Xmd.DIALOG_TEXT).TextFieldSetSelection(
 					0, len(default), 0)
 		toplevel._subwindows.append(self)
+		self.setcursor(_WAITING_CURSOR)
 
 	def _ok(self, w, client_data, call_data):
 		if _in_create_box or self.is_closed():
@@ -3477,6 +3568,7 @@ class InputDialog:
 		self.close()
 		if client_data:
 			client_data(value)
+			toplevel.setready()
 
 	def _cancel(self, w, client_data, call_data):
 		if _in_create_box or self.is_closed():
@@ -3484,8 +3576,15 @@ class InputDialog:
 		self.close()
 		if client_data:
 			apply(apply, client_data)
+			toplevel.setready()
 
 	def setcursor(self, cursor):
+		if cursor == _WAITING_CURSOR:
+			cursor = 'watch'
+		elif cursor == _READY_CURSOR:
+			cursor = self._cursor
+		else:
+			self._cursor = cursor
 		_setcursor(self._main, cursor)
 
 	def close(self):
@@ -3733,6 +3832,7 @@ class Button(_Widget):
 		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
+		toplevel.setready()
 
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
@@ -3876,6 +3976,7 @@ class OptionMenu(_Widget):
 		self._value = value
 		if self._callback:
 			apply(apply, self._callback)
+			toplevel.setready()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -4074,6 +4175,7 @@ class _List:
 		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
+		toplevel.setready()
 
 	def _destroy(self):
 		del self._itemlist
@@ -4306,6 +4408,7 @@ class TextInput(_Widget):
 		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
+		toplevel.setready()
 
 	def _modifyCB(self, w, func, call_data):
 		if _in_create_box:
@@ -4313,6 +4416,7 @@ class TextInput(_Widget):
 		text = func(call_data.text)
 		if text is not None:
 			call_data.text = text
+		toplevel.setready()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -4405,6 +4509,7 @@ class TextEdit(_Widget):
 		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
+		toplevel.setready()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -4571,6 +4676,7 @@ class Slider(_Widget):
 		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
+		toplevel.setready()
 
 	def _calcrange(self, minimum, initial, maximum):
 		self._minimum, self._maximum = minimum, maximum
@@ -4735,6 +4841,7 @@ class AlternateSubWindow(_Widget):
 			w._form.ManageChild()
 
 class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
+	_cursor = ''
 	def __init__(self, title, resizable = 0, grab = 0,
 		     Name = 'windowShell', Class = None, **options):
 		_CommandSupport.__init__(self)
@@ -4814,6 +4921,7 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 		_WindowHelpers.__init__(self)
 		_MenuSupport.__init__(self)
 		toplevel._subwindows.append(self)
+		self.setcursor(_WAITING_CURSOR)
 
 	def __repr__(self):
 		s = '<Window instance at %x' % id(self)
@@ -4853,6 +4961,12 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 		return not hasattr(self, '_form')
 
 	def setcursor(self, cursor):
+		if cursor == _WAITING_CURSOR:
+			cursor = 'watch'
+		elif cursor == _READY_CURSOR:
+			cursor = self._cursor
+		else:
+			self._cursor = cursor
 		_setcursor(self._form, cursor)
 
 	def fix(self):
@@ -4956,10 +5070,10 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 			else:
 				raise error, 'bad deleteCallback argument'
 			return
-		if _CommandSupport._delete_callback(self, widget,
+		if not _CommandSupport._delete_callback(self, widget,
 						client_data, call_data):
-			return
-		apply(apply, client_data)
+			apply(apply, client_data)
+		toplevel.setready()
 
 def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	   parent = None):
@@ -4987,6 +5101,7 @@ class _Question:
 
 	def run(self):
 		self.looping = TRUE
+		toplevel.setready()
 		while self.looping:
 			event = Xt.NextEvent()
 			Xt.DispatchEvent(event)
@@ -5015,6 +5130,7 @@ class _MultChoice:
 
 	def run(self):
 		self.looping = TRUE
+		toplevel.setready()
 		while self.looping:
 			event = Xt.NextEvent()
 			Xt.DispatchEvent(event)
@@ -5054,6 +5170,8 @@ close = toplevel.close
 addclosecallback = toplevel.addclosecallback
 
 setcursor = toplevel.setcursor
+
+setwaiting = toplevel.setwaiting
 
 getsize = toplevel.getsize
 

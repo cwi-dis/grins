@@ -144,7 +144,6 @@ class PlayerDialog:
 		gc.FillRectangle(int(w*.2), int(h*.2), int(w*.6), int(h*.6))
 
 	def show(self):
-		self.__window.setcursor('watch')
 		self.__window.show()
 
 	def hide(self):
@@ -183,10 +182,6 @@ class PlayerDialog:
 
 	def getgeometry(self):
 		return self.__window.getgeometry()
-
-	def setcursor(self, cursor):
-		if self.__window:
-			self.__window.setcursor(cursor)
 
 	def get_adornments(self, channel):
 		return self.adornments

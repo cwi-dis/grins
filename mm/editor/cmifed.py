@@ -79,6 +79,8 @@ class Main(MainDialog):
 			self.new_top(top)
 	
 	def _new_ok_callback(self, filename):
+		import windowinterface
+		windowinterface.setwaiting()
 		import TopLevel
 		import MMurl
 		template_url = MMurl.pathname2url(filename)
@@ -92,6 +94,8 @@ class Main(MainDialog):
 		return name + ext
 
 	def openURL_callback(self, url):
+		import windowinterface
+		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
 		try:
@@ -106,6 +110,8 @@ class Main(MainDialog):
 			self.new_top(top)
 
 	def close_callback(self):
+		import windowinterface
+		windowinterface.setwaiting()
 		self.do_exit()
 
 	def crash_callback(self):
@@ -125,11 +131,9 @@ class Main(MainDialog):
 			trace.set_trace()
 
 	def new_top(self, top):
-		top.setwaiting()
 		top.show()
 		top.checkviews()
 		self.tops.append(top)
-		top.setready()
 
 	def do_exit(self):
 		ok = 1

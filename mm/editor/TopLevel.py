@@ -18,8 +18,6 @@ from TopLevelDialog import TopLevelDialog
 
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
-		self.waiting = 1
-		windowinterface.setcursor('watch')
 		ViewDialog.__init__(self, 'toplevel_')
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -75,7 +73,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		TopLevelDialog.__init__(self)
 		self.makeviews()
-		self.setready()
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
@@ -157,7 +154,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def play_callback(self):
 		self.setwaiting()
 		self.player.show((self.player.playsubtree, (self.root,)))
-		self.setready()
 
 	def source_callback(self):
 		self.showsource(self.root.source)
@@ -169,7 +165,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			view.hide()
 		else:
 			view.show()
-		self.setready()
 
 	def save_callback(self):
 		if self.new_file:
@@ -184,20 +179,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		file = MMurl.url2pathname(url)
 		self.setwaiting()
 		ok = self.save_to_file(file)
-		self.setready()
 
 	def saveas_okcallback(self, filename):
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
-		try:
-			if self.save_to_file(filename):
-				self.filename = MMurl.pathname2url(filename)
-				self.fixtitle()
-			else:
-				return 1
-		finally:
-			self.setready()
+		if self.save_to_file(filename):
+			self.filename = MMurl.pathname2url(filename)
+			self.fixtitle()
+		else:
+			return 1
 
 	def saveas_callback(self):
 		cwd = self.dirname
@@ -292,7 +283,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.root.Destroy()
 		self.read_it()
 		self.makeviews()
-		self.setready()
 
 	def read_it(self):
 		self.changed = 0
@@ -351,7 +341,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.source.close()
 		self.source = None
 		self.close()
-		self.setready()
 
 	def close(self):
 		ok = self.close_ok()
@@ -380,18 +369,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		Help.showhelpwindow()
 
 	def setwaiting(self):
-		if self.waiting: return
-		self.waiting = 1
-		windowinterface.setcursor('watch')
-		for v in self.views:
-			v.setwaiting()
-
-	def setready(self):
-		if not self.waiting: return
-		self.waiting = 0
-		for v in self.views:
-			v.setready()
-		windowinterface.setcursor('')
+		windowinterface.setwaiting()
 
 	#
 	# EditMgr interface (as dependent client).

@@ -24,42 +24,8 @@ class PlayerCore(Selecter):
 		self.playroot = self.root # top of current mini-document
 		self.userplayroot = self.root # node specified by part play
 		self.context = self.root.GetContext()
-		self.editmgr = self.context.geteditmgr()
-		self.editmgr.register(self)
 		self.chans_showing = 0
 		Selecter.__init__(self)
-	#
-	# EditMgr interface (as dependent client).
-	#
-	def transaction(self):
-		# Disallow changes while we are playing.
-		if self.playing:
-			m1 = 'You cannot change the document\n'
-			m2 = 'while it is playing.\n'
-			m3 = 'Do you want to stop playing?'
-			if not windowinterface.showquestion(m1 + m2 + m3):
-				return 0
-			self.stop()
-		self.locked = 1
-		return 1
-	#
-	def commit(self):
-		if self.showing:
-			self.checkchannels()
-			# Check if any of the playroots has vanished
-			if self.playroot.GetRoot() is not self.root:
-				self.playroot = self.root
-			if self.userplayroot.GetRoot() is not self.root:
-				self.userplayroot = self.root
-		self.locked = 0
-		self.showstate()
-	#
-	def rollback(self):
-		# Nothing has changed after all.
-		self.locked = 0
-
-	def kill(self):
-		self.destroy()
 	#
 	# Internal reset.
 	#
@@ -110,17 +76,8 @@ class PlayerCore(Selecter):
 			return None
 		if not ch.is_showing():
 			ch.set_visible(1)
-			self.setchannel(ch._name, 1)
+			self.makemenu()
 		return ch
-	#
-	def defanchor(self, node, anchor, cb):
-		ch = self.anchorinit(node)
-		if ch is None:
-			windowinterface.showmessage('Cannot set internal anchor\n' + \
-				  '(node not on a channel)')
-			apply(cb, (anchor,))
-			return
-		ch.defanchor(node, anchor, cb)
 	#
 	def updatefixedanchors(self, node):
 		ch = self.anchorinit(node)
@@ -153,40 +110,11 @@ class PlayerCore(Selecter):
 			self.channelnames.append(name)
 		self.makemenu()
 	#
-	def checkchannels(self):
-		# XXX Ought to detect renamed channels...
-		# (1) Delete channels that have disappeared
-		# or whose type has changed
-		for name in self.channelnames[:]:
-			if name not in self.context.channelnames:
-## 				print 'Detected deleted channel'
-				self.killchannel(name)
-			else:
-				oldtype = self.channeltypes[name]
-				newtype = \
-				    self.context.channeldict[name]['type']
-				if oldtype <> newtype:
-## 					print 'Detected retyped channel'
-					self.killchannel(name)
-		# (2) Add new channels that have appeared
-		for name in self.context.channelnames:
-			if name not in self.channelnames:
-## 				print 'Detected new channel'
-				attrdict = self.context.channeldict[name]
-				self.newchannel(name, attrdict)
-				i = self.context.channelnames.index(name)
-				self.channelnames.insert(i, name)
-		# (3) Update visibility of all channels
-		for name in self.channelnames:
-			self.channels[name].check_visible()
-		# (4) Update layout and menu
-		self.setlayout(self.curlayout, self.curchannel)
-	#
 	def getchannelbyname(self, name):
-		if self.channels.has_key(name):
-			return self.channels[name]
+	        if self.channels.has_key(name):
+		    return self.channels[name]
 		else:
-			return None
+		    return None
 	#
 	def getchannelbynode(self, node):
 		cname = MMAttrdefs.getattr(node, 'channel')
@@ -204,13 +132,15 @@ class PlayerCore(Selecter):
 		aftershow = self.aftershow
 		self.aftershow = None
 		if aftershow:
-			apply(apply, aftershow)
+			apply(aftershow[0], aftershow[1])
 
 	def showchannels(self):
+		self.before_chan_show()
 		for name in self.channelnames:
 			ch = self.channels[name]
 			if ch.may_show():
 				ch.show()
+		self.after_chan_show()
 		self.makemenu()
 	#
 	def hidechannels(self):
@@ -228,18 +158,19 @@ class PlayerCore(Selecter):
 		self.channelnames.remove(name)
 		del self.channels[name]
 		del self.channeltypes[name]
-	#
+
 	def newchannel(self, name, attrdict):
-		if not attrdict.has_key('type'):
+		type = attrdict.get('type')
+		if type is None:
 			raise TypeError, \
 				'channel ' +`name`+ ' has no type attribute'
-		type = attrdict['type']
 		from ChannelMap import channelmap
-		if not channelmap.has_key(type):
+		chclass = channelmap.get(type)
+		if chclass is None:
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
-		chclass = channelmap[type]
 		ch = chclass(name, attrdict, self.scheduler, self)
-		ch.setpaused(self.pausing)
+		if self.pausing:
+			ch.setpaused(self.pausing)
 		self.channels[name] = ch
 		self.channeltypes[name] = type

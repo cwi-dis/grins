@@ -106,8 +106,6 @@ class HierarchyViewDialog(ViewDialog):
 				canvassize = (w, h),
 				commandlist = self.commands,context='view')
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
-		if self.waiting:
-			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 
