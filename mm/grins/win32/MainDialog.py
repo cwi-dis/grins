@@ -33,6 +33,8 @@ __version__ = "$Id$"
 
 from usercmd import *
 from wndusercmd import *
+import features
+from compatibility import Boston
 
 import WMEVENTS
 
@@ -103,7 +105,10 @@ class MainDialog:
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['application/x-grins-project', 'application/smil']
+		if features.compatibility == Boston:
+			filetypes = ['application/smil', 'application/x-grins-project']
+		else:
+			filetypes = ['application/x-grins-project', 'application/smil']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
@@ -136,7 +141,10 @@ class MainDialog:
 	def __openfile_callback(self):
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['application/x-grins-project', 'application/smil']
+		if features.compatibility == Boston:
+			filetypes = ['application/smil', 'application/x-grins-project' ]
+		else:
+			filetypes = ['application/x-grins-project','application/smil' ]
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
