@@ -234,7 +234,7 @@ class _DisplayList:
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1]+xscrolloffset, entry[2]+yscrolloffset)
 			 # XXXX Incorrect for long strings:
-			Qd.DrawString(entry[3])
+			Qd.DrawText(entry[3], 0, len(entry[3]))
 		elif cmd == 'icon':
 			if entry[2] != None:
 				x, y, w, h = entry[1]
@@ -452,7 +452,7 @@ class _DisplayList:
 		self._fgcolor = color
 
 
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates)
