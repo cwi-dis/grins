@@ -13,6 +13,7 @@ from AppDefaults import *
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
+CENTER = settings.get('structure_label_center')
 
 ICONSIZE = windowinterface.ICONSIZE_PXL
 ARROWCOLOR = (0,255,0)
@@ -287,7 +288,15 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.iconbox.moveto((l,t+2,r,b))
 			self.iconbox.draw(displist)
 			l = l + self.iconbox.get_minsize()[0]
-		displist.centerstring(l,t,r,b, self.name)
+		if CENTER:
+			displist.centerstring(l,t,r,b, self.name)
+		else:
+			displist.setpos(l, t+displist.baselinePXL()+2)
+			for i in range(len(self.name),-1,-1):
+				name = self.name[:i]
+				if displist.strsizePXL(name)[0] <= r-l:
+					displist.writestr(name)
+					break
 		if self.timeline is not None:
 			self.timeline.draw(displist)
 		# Draw the silly transitions.
@@ -1526,13 +1535,15 @@ class MediaWidget(MMNodeWidget):
 			image_filename = self.__get_image_filename()
 			if image_filename != None and w > 0 and h > 0:
 				try:
+					if CENTER:
+						coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6))
+					else:
+						coordinates = (x+(sizes_notime.MINSIZE/12), y, 5*(w/6), 4*(h/6))
 					box = displist.display_image_from_file(
 						image_filename,
-						center = 1,
-						# The coordinates should all be floating point numbers.
-						coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
-						scale = -2
-						)
+						center = CENTER,
+						coordinates = coordinates,
+						scale = -2)
 				except windowinterface.error:
 					pass					# Shouldn't I use another icon or something?
 				else:
@@ -1634,13 +1645,15 @@ class CommentWidget(MMNodeWidget):
 		image_filename = os.path.join(self.mother.datadir, 'comment.tiff')
 		if w > 0 and h > 0:
 			try:
+				if CENTER:
+					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6))
+				else:
+					coordinates = (x+(sizes_notime.MINSIZE/12), y, 5*(w/6), 4*(h/6))
 				box = displist.display_image_from_file(
 					image_filename,
-					center = 1,
-					# The coordinates should all be floating point numbers.
-					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
-					scale = -2
-					)
+					center = CENTER,
+					coordinates = coordinates,
+					scale = -2)
 			except windowinterface.error:
 				pass					# Shouldn't I use another icon or something?
 			else:
@@ -1898,6 +1911,7 @@ class IconBox(MMWidgetDecoration):
 		self._icons[iconname] = i
 		if iconname not in self.iconlist:
 			self.iconlist.append(iconname)
+		self.recalc_minsize()
 		return i
 
 	def get_icon(self, iconname):
@@ -1906,6 +1920,7 @@ class IconBox(MMWidgetDecoration):
 	def del_icon(self, iconname):
 		del self._icons[iconname]
 		self.iconlist.remove(iconname)
+		self.recalc_minsize()
 
 	def recalc_minsize(self):
 		# Always the number of icons.
