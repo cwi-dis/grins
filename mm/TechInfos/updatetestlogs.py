@@ -59,7 +59,7 @@ def main():
 		dirname = sys.argv[1]
 	files = getsmilfiles(dirname)
 	for testlog in TESTLOGS:
-		updatetestlog(testlog, files)
+		updatetestlog(testlog, files[:])
 
 if __name__ == '__main__':
 	main()
