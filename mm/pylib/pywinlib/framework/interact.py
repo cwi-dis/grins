@@ -6,7 +6,6 @@
 import sys
 import string
 import regex
-import regsub
 import __main__
 
 import app
@@ -152,8 +151,8 @@ class InteractiveCore:
 	# and backward until a prompt _is_ found, and all lines in between without
 	# prompts are returned, and the flag is false.
 	def BuildPromptPat(self):
-		useps1 = regsub.gsub('\\.', '\\\\.', str(sys.ps1))
-		useps2 = regsub.gsub('\\.', '\\\\.', str(sys.ps2))
+		useps1 = string.join(string.split(str(sys.ps1), '.'), '\\.')
+		useps2 = string.join(string.split(str(sys.ps2), '.'), '\\.')
 		self.promptPat = regex.compile('\\(\\(' + useps1 + '\\)\\|\\(' + useps2 + '\\)\\)')
 
 	# This will return a tuple giving the boundary of the current "block".  A block
@@ -196,8 +195,8 @@ class InteractiveCore:
 		start, end, lineNo = lines
 		curLine = self.DoGetLine(lineNo)
 		# trim comment and leading while space
-		#commentPat = regex.compile('[ \t]*#.*$')
-		#curLine = regsub.gsub(commentPat,'', curLine)
+		#i = string.find(curLine, '#')
+		#if I >= 0: curLine = curLine[:i]
 		promptLen = self.promptPat.match(curLine)
 		curLine=curLine[promptLen:]
 		if promptLen==-1:		# make a check for something that cant happen :-)
