@@ -755,9 +755,8 @@ class Window:
 		X, Y, W, H = self._parent.getwindowpos(rel)
 		x, y, w, h = self._rectb
 		return X+x, Y+y, w, h
-
+				
 	def inside(self, point):
-		if self.is_closed(): return 0
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
 		xp, yp = point
@@ -789,7 +788,10 @@ class Window:
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		if self._parent:
-			self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+			try:
+				self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+			except:
+				self._sizes = 0, 0, 1, 1
 		else:
 			self._sizes = 0, 0, 1, 1
 		self._units = units
@@ -820,29 +822,30 @@ class Window:
 	#
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
 		# first convert any coordinates to pixel
-		coordinates = self._convert_coordinates(coordinates,units=units)
+		if units != UNIT_PXL:
+			coordinates = self._convert_coordinates(coordinates,units=units)
 		
+		if coordinates==self._rectb:
+			return
+		
+		x, y, w, h = coordinates
+
 		# keep old pos
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 		
-		# move or/and resize window
-		if len(coordinates)==2:
-			x, y = coordinates[:2]
-			w, h = w0, h0
-		elif len(coordinates)==4:
-			x, y, w, h = coordinates
-		else:
-			raise AssertionError
-
-		# create new
+							
+		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
-		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
-		x2, y2, w2, h2 = self.getwindowpos()
-		
+		if self._parent:
+			self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		else:
+			self._sizes = 0, 0, 1, 1
+
 		self._topwindow.update()
+
 
 	def updatezindex(self, z):
 		self._z = z
@@ -882,6 +885,98 @@ class Window:
 		pass
 
 
+	#
+	# Drag & Resize interface
+	#
+	def getDragHandle(self, ix):
+		x, y, w, h = self.getwindowpos()
+		xc = x + w/2
+		yc = y + h/2
+		if ix == 1:
+			x = x
+			y = y
+		elif ix == 2:
+			x = xc
+			y = y
+		elif ix == 3:
+			x = x+w
+			y = y
+		elif ix == 4:
+			x = x+w
+			y = yc
+		elif ix == 5:
+			x = x+w
+			y = y+h
+		elif ix == 6:
+			x = xc
+			y = y+h
+		elif ix == 7:
+			x = x
+			y = y+h
+		elif ix == 8:
+			x = x
+			y = yc
+		return x, y
+
+	def getDragHandleRect(self, ix):
+		x, y = self.getDragHandle(ix)
+		return x-3, y-3, 6, 6
+
+	def getDragHandleCount(self):
+		return 8
+
+	def getDragHandleCursor(self, ix):
+		if   ix==1 or ix==5:id = 'sizenwse'
+		elif ix==2 or ix==6:id = 'sizens'
+		elif ix==3 or ix==7:id = 'sizenesw'
+		elif ix==4 or ix==8:id = 'sizewe'
+		else: id = 'arrow'
+		return id
+
+	def getDragHandleAt(self, point):
+		xp, yp = point
+		for ix in range(1,9):
+			x, y, w, h = self.getDragHandleRect(ix)
+			l, t, r, b = x, y, x+w, y+h
+			if xp>=l and xp<r and yp>=t and yp<b:
+				return ix
+		return 0
+
+	def moveDragHandleTo(self, ixHandle, point):
+		xp, yp = point
+		x, y, w, h = self.getwindowpos()
+		l, t, r, b = x, y, x+w, y+h
+		if	ixHandle== 1:
+			l = xp
+			t = yp
+		elif ixHandle== 2:
+			t = yp
+		elif ixHandle== 3:
+			r = xp
+			t = yp
+		elif ixHandle== 4:
+			r = xp
+		elif ixHandle== 5:
+			r = xp
+			b = yp
+		elif ixHandle== 6:
+			b = yp
+		elif ixHandle== 7:
+			l = xp
+			b = yp
+		elif ixHandle== 8:
+			l = xp
+
+		if self._parent:
+			xr, yr = self._parent.getwindowpos()[:2]
+			l, t, r, b = l-xr, t-yr, r-xr, b-yr
+		self.updatecoordinates((l, t, r-l, b-t), units=UNIT_PXL)
+
+	def moveBy(self, delta):
+		dx, dy = delta
+		xr, yr, w, h = self._rectb
+		self.updatecoordinates((xr+dx, yr+dy, w, h), units=UNIT_PXL)
+		
 
 #################################################
 class DDWndLayer:
@@ -1905,6 +2000,180 @@ class Viewport(Region):
 
 
 #############################
+# selection modes
+[SM_NONE, SM_MOVE, SM_SIZE] = range(3)
+Sdk = win32ui.GetWin32Sdk()
+	 
+class DrawContext:
+	def __init__(self):
+		self._last = 0, 0
+		self._selected = None
+		self._selmode = SM_NONE
+		self._ixDragHandle = 0
+		self._capture = None
+		self._curtool = SelectTool(self)
+
+	def reset(self):
+		self._last = 0, 0
+		self._selected = None
+		self._selmode = SM_NONE
+		self._ixDragHandle = 0
+		self._capture = None
+		
+	def setCapture(self):
+		self._capture = self
+
+	def releaseCapture(self):
+		self._capture = None
+
+	def hasCapture(self):
+		return self._capture
+
+	def setcursor(self, strid):
+		if strid=='arrow':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+		elif strid=='sizenwse':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENWSE)
+		elif strid=='sizens':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENS)
+		elif strid=='sizenesw':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENESW)
+		elif strid=='sizewe':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZEWE)
+		else:
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+		Sdk.SetCursor(cursor)
+			
+	def getMouseTarget(self, point):
+		return None
+	
+	def update(self, rc=None):
+		pass
+	
+	def moveSelectionTo(self, point):
+		xp, yp = point
+		xl, yl = self._last
+		if self._selected:
+			self._selected.moveBy((xp-xl, yp-yl))
+	
+	def moveSelectionHandleTo(self, point):
+		if self._selected:
+			self._selected.moveDragHandleTo(self._ixDragHandle, point)
+	
+	def onLButtonDown(self, flags, point):
+		self._curtool.onLButtonDown(flags, point)
+
+	def onLButtonUp(self, flags, point):
+		self._curtool.onLButtonUp(flags, point)
+
+	def onMouseMove(self, flags, point):
+		self._curtool.onMouseMove(flags, point)
+				
+class Shape:
+	def getDragHandle(self, ix):
+		return 3, 3
+
+	def getDragHandleRect(self, ix):
+		return 0, 0, 6, 6
+
+	def getDragHandleCount(self):
+		return 8
+
+	def getDragHandleCursor(self, ix):
+		return 'arrow'
+
+	def getDragHandleAt(self, point):
+		return 0
+
+	def moveDragHandleTo(self, ixHandle, point):
+		pass
+
+	def moveBy(self, delta):
+		pass
+
+	def inside(self, point):
+		return 0
+						
+class DrawTool:
+	def __init__(self, ctx):
+		self._ctx = ctx
+
+	def onLButtonDown(self, flags, point):
+		ctx = self._ctx
+		ctx.setCapture()
+
+	def onLButtonUp(self, flags, point):
+		self._ctx.releaseCapture()
+
+	def onMouseMove(self, flags, point):
+		ctx = self._ctx
+		ctx.setcursor('arrow')
+	
+
+class SelectTool(DrawTool):
+	def __init__(self, ctx):
+		DrawTool.__init__(self, ctx)
+
+	def onLButtonDown(self, flags, point):
+		ctx = self._ctx
+		ctx._selmode = SM_NONE
+		
+		# resize
+		shape = ctx._selected
+		if shape:
+			ctx._ixDragHandle = shape.getDragHandleAt(point)
+			if ctx._ixDragHandle:
+				ctx._selmode = SM_SIZE
+				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
+		
+		# selection
+		if ctx._selmode == SM_NONE:
+			shape = ctx.getMouseTarget(point)
+			if shape:
+				ctx._selmode = SM_MOVE
+				ctx._selected = shape
+			else:
+				ctx._selected = None
+				self._ctx.update()
+
+		ctx._last = point
+		DrawTool.onLButtonDown(self, flags, point)
+				
+	def onLButtonUp(self, flags, point):
+		ctx = self._ctx
+		if ctx.hasCapture() and ctx._selmode != SM_NONE:
+			ctx.update()
+		DrawTool.onLButtonUp(self, flags, point)
+
+	def onMouseMove(self, flags, point):
+		ctx = self._ctx
+		shape = ctx._selected
+
+		if not ctx.hasCapture():
+			if shape:
+				ctx._ixDragHandle = shape.getDragHandleAt(point)
+				if ctx._ixDragHandle:
+					ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
+					return
+			DrawTool.onMouseMove(self, flags, point)
+			return
+					
+		# move selected
+		if shape:
+			if ctx._selmode == SM_MOVE:
+				ctx.moveSelectionTo(point)
+			elif ctx._ixDragHandle:
+				ctx.moveSelectionHandleTo(point)
+
+		ctx._last = point
+
+		if ctx._selmode == SM_SIZE:
+			if shape:
+				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
+			return
+
+		DrawTool.onMouseMove(self, flags, point)
+
 
 
 
