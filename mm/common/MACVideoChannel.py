@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 # XXXX clip_begin and clip_end not yet implemented
-from Channel import ChannelWindow, CMIF_MODE, SourceAnchors
+from Channel import ChannelWindowAsync, CMIF_MODE, SourceAnchors, PLAYING
 import windowinterface
 import time
 import MMurl
@@ -16,18 +16,18 @@ if not QT_AVAILABLE:
 
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
-class VideoChannel(ChannelWindow):
+class VideoChannel(ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
-	node_attrs = ChannelWindow.node_attrs + \
+	node_attrs = ChannelWindowAsync.node_attrs + \
 		     ['clipbegin', 'clipend', 'project_audiotype', 'project_videotype', 'project_targets',
 		     'project_perfect', 'project_mobile']
 	if CMIF_MODE:
 		node_attrs = node_attrs + _our_attrs
 	else:
-		chan_attrs = ChannelWindow.chan_attrs + _our_attrs
+		chan_attrs = ChannelWindowAsync.chan_attrs + _our_attrs
 
 	def __init__(self, name, attrdict, scheduler, ui):
-		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
+		ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 		if debug: print 'VideoChannel: init', name
 		self.arm_movie = None
 		self.play_movie = None
@@ -42,7 +42,7 @@ class VideoChannel(ChannelWindow):
 		self.__rc = None
 		
 	def do_show(self, pchan):
-		if not ChannelWindow.do_show(self, pchan):
+		if not ChannelWindowAsync.do_show(self, pchan):
 			return 0
 		return 1
 
@@ -75,7 +75,7 @@ class VideoChannel(ChannelWindow):
 					# can't do RealVideo
 ##					self.__rc = 0 # don't try again
 					self.errormsg(node, msg)
-			elif self.__rc:
+			if self.__rc:
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 			return 1
@@ -271,7 +271,7 @@ class VideoChannel(ChannelWindow):
 			print 'VideoChannel.play('+`self`+','+`node`+')'
 		if node.__type == 'real':
 			# no special case here for RealVideo
-			ChannelWindow.play(self, node)
+			ChannelWindowAsync.play(self, node)
 			return
 		self.play_0(node)
 		if not self._is_shown or not node.ShouldPlay() or self.syncplay:
@@ -294,7 +294,7 @@ class VideoChannel(ChannelWindow):
 		self.armdone()
 
 	def resize(self, arg, window, event, value):
-		ChannelWindow.resize(self, arg, window, event, value)
+		ChannelWindowAsync.resize(self, arg, window, event, value)
 		if self.arm_movie:
 			self.place_movie(self.arm_movie)
 		if self.play_movie:
@@ -322,7 +322,12 @@ class VideoChannel(ChannelWindow):
 			self.play_movie.StopMovie()
 			self.play_movie = None
 			self.fixidleproc()
-		self.playdone(1)
+		#
+		# There is a race here: the stopit() call above may have resulted in
+		# a playdone() call (as happens on the Mac) and it may not.
+		# We only call playdone if we see it hasn't happened yet.
+		if self._playstate == PLAYING:
+			self.playdone(1)
 		if self.window:
 			self.window.setredrawfunc(None)
 
