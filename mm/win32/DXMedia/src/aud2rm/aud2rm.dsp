@@ -17,8 +17,8 @@ CFG=aud2rm - Win32 Debug
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "aud2rm - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "aud2rm - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "vaud2rm - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "vaud2rm - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "aud2rm - Win32 Release"
+!IF  "$(CFG)" == "vaud2rm - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -56,7 +56,7 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
 # ADD LINK32 ..\..\lib\strmbase.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm.ax" /subsystem:windows,4.0 /align:0x1000 /opt:ref /release /debug:none
 
-!ELSEIF  "$(CFG)" == "aud2rm - Win32 Debug"
+!ELSEIF  "$(CFG)" == "vaud2rm - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -87,8 +87,8 @@ LINK32=link.exe
 
 # Begin Target
 
-# Name "aud2rm - Win32 Release"
-# Name "aud2rm - Win32 Debug"
+# Name "vaud2rm - Win32 Release"
+# Name "vaud2rm - Win32 Debug"
 # Begin Source File
 
 SOURCE=.\aud2rm.cpp
