@@ -1,0 +1,349 @@
+
+DESCRIPTION	'AccuSoft ImageGear'
+
+EXPORTS
+   IG_display_image                 @1050
+   IG_display_LUT_set               @1060
+   IG_display_LUT_get               @1070
+   IG_display_angle_set             @1080
+   IG_display_angle_get             @1090
+   IG_display_contrast_set          @1100
+   IG_display_dither_mode_set       @1160
+   IG_display_dither_mode_get       @1170
+   IG_display_alias_set             @1180
+   IG_display_alias_get             @1190
+   IG_display_LUT_clear             @1200
+   IG_display_palette_create        @1270
+   IG_display_scroll_image          @1300
+   IG_display_desktop_pattern_set   @1310
+   IG_display_desktop_pattern_get   @1320
+   IG_display_DDB                   @1340
+	IG_display_animation_delay_get	@1350	
+	IG_display_animation_delay_set	@1360
+
+   IG_device_rect_get               @2010
+   IG_device_rect_set               @2020
+   IG_image_rect_get                @2030
+   IG_image_rect_set                @2040
+   
+
+   IG_display_scroll_area_set       @3370
+   IG_display_adjust_aspect         @3380
+   IG_display_zoom_set              @3390
+   IG_display_handle_resize         @3400
+   IG_display_centered_set          @3410
+   IG_display_centered_get          @3420
+   IG_display_stretch_set           @3430
+   IG_display_stretch_get           @3440
+   IG_display_aspect_ratio_get      @3450
+   IG_display_aspect_ratio_set      @3460
+   IG_display_fit_method            @3470
+   IG_display_handle_palette        @3480
+   IG_display_palette_state_get     @3490
+   IG_display_zoom_rect_set         @3500
+   IG_display_ROP_set               @3510
+   IG_display_ROP_get               @3520
+   IG_display_image_to_device       @3530
+   IG_display_device_to_image       @3540
+   IG_display_scrollbar_set         @3550
+   IG_display_scrollbar_get         @3560
+   IG_display_transparent_set       @3570
+   IG_display_transparent_get       @3580
+   IG_display_image_wipe            @3590
+	IG_display_PPM_correct_set			@3600
+	IG_display_PPM_correct_get			@3610
+
+   IG_print_image                   @4000
+	IG_print_page							@4010
+	IG_print_document						@4020
+
+   IG_image_delete                  @5010
+   IG_image_create_DIB              @5020
+   IG_image_import_DIB              @5030
+   IG_image_import_DDB              @5040
+   IG_image_export_DIB              @5050
+   IG_image_export_DDB              @5060
+   IG_image_create_DDB              @5065
+   IG_image_dimensions_get          @5070
+   IG_image_compression_type_get    @5100
+   IG_image_is_valid                @5110
+   IG_image_is_gray                 @5120
+   IG_image_DIB_pntr_get            @5150
+   IG_image_DIB_palette_pntr_get    @5160
+   IG_image_DIB_bitmap_pntr_get     @5170
+   IG_image_control_set             @5180
+   IG_image_control_get             @5190
+	IG_image_resolution_set				@5220
+	IG_image_resolution_get				@5230
+
+   IG_info_get                      @6000
+   IG_info_get_FD                   @6010
+   IG_info_get_mem                  @6020
+   IG_page_count_get                @6030
+   IG_page_count_get_FD             @6040
+   IG_page_count_get_mem            @6050
+   IG_tile_count_get                @6060
+   IG_tile_count_get_FD             @6070
+   IG_tile_count_get_mem            @6080
+
+   IG_file_IO_register              @7000
+   IG_load_file                     @7010
+   IG_load_file_display             @7020
+   IG_load_mem                      @7030
+   IG_load_mem_CB                   @7040
+   IG_load_FD                       @7050
+   IG_load_FD_CB                    @7060
+   IG_load_CCITT_FD                 @7070
+   IG_load_CCITT_mem                @7080
+   IG_load_thumbnail                @7090
+   IG_load_thumbnail_FD             @7100
+   IG_load_thumbnail_mem            @7110
+   IG_load_size_set                 @7120
+   IG_load_size_get                 @7130
+   IG_load_color_reduction_set      @7140
+   IG_load_color_reduction_get      @7150
+   IG_load_rect_set                 @7160
+   IG_load_rect_get                 @7170
+   IG_load_auto_detect_set          @7180
+   IG_load_auto_detect_get          @7190
+   IG_load_tag_CB_register          @7200
+
+   IG_palette_entry_set             @8010
+   IG_palette_entry_get             @8020
+   IG_palette_save                  @8030
+   IG_palette_load                  @8040
+   IG_palette_set             		@8050
+   IG_palette_get             		@8060
+
+   IG_save_file                     @9010
+   IG_save_mem                      @9020
+   IG_save_mem_CB                   @9030
+   IG_save_FD                       @9040
+   IG_save_FD_CB                    @9050
+   IG_save_tag_CB_register          @9080
+   IG_save_thumbnail_set            @9090
+   IG_save_file_size_calc           @9100
+
+   IG_status_bar_CB_register        @10000
+
+   IG_clipboard_copy                @11000
+   IG_clipboard_paste               @12010
+   IG_clipboard_paste_available     @12020
+   IG_clipboard_dimensions          @12030
+   IG_clipboard_paste_merge         @12040
+
+   IG_scan_source_select            @13000
+   IG_scan_acquire                  @13010
+   IG_scan_pages                    @13020
+   IG_scan_capabilities_set         @13030
+   IG_scan_driver_info_get          @13040
+   
+   IG_error_get                     @14010
+   IG_error_clear                   @14020
+   IG_error_check                   @14030
+
+   IG_GUI_window_create             @15000
+   IG_GUI_window_associate          @15010
+   IG_GUI_window_CB_register        @15015
+	IG_GUI_window_attribute_set		@15016
+	IG_GUI_window_attribute_get		@15017
+   IG_GUI_pan_window_create         @15020
+   IG_GUI_pan_track_mouse           @15030
+   IG_GUI_pan_update                @15040
+   IG_GUI_magnify_window_create     @15050
+   IG_GUI_magnify_track_mouse       @15060
+   IG_GUI_magnify_update            @15070
+   IG_GUI_palette_window_create     @15080
+   IG_GUI_palette_update            @15090
+   IG_GUI_palette_CB_register       @15100
+   IG_GUI_select_track_mouse        @15110
+   IG_GUI_thumbnail_window_create   @15120
+   IG_GUI_thumbnail_file_append     @15130
+   IG_GUI_thumbnail_update          @15140
+	IG_GUI_thumbnail_CB_register		@15150
+	IG_GUI_thumbnail_sort				@15160
+	IG_GUI_thumbnail_dir_append		@15170
+
+   IG_IP_contrast_invert            @16000
+   IG_IP_contrast_adjust            @16010
+   IG_IP_contrast_stretch           @16020
+   IG_IP_contrast_equalize          @16030
+	IG_IP_contrast_gamma					@16040
+   IG_IP_color_promote              @16050
+   IG_IP_color_reduce_octree        @16060
+   IG_IP_color_reduce_popularity    @16070
+   IG_IP_color_reduce_diffuse       @16080
+   IG_IP_color_reduce_halftone      @16090
+   IG_IP_color_reduce_median_cut    @16100
+   IG_IP_color_reduce_bayer			@16110
+   IG_IP_rotate_any_angle           @16120
+   IG_IP_rotate_multiple_90         @16130
+	IG_IP_deskew_rotate					@16140
+   IG_IP_deskew_angle_find          @16150
+   IG_IP_deskew_auto						@16160
+   IG_IP_flip                       @16180
+	IG_IP_sharpen							@16190
+	IG_IP_smooth							@16200
+	IG_IP_edge_map							@16210
+	IG_IP_despeckle						@16220
+	IG_IP_median							@16230
+	IG_IP_crop								@16240
+	IG_IP_resize							@16250
+   IG_IP_swap_red_blue					@16260
+   IG_IP_encrypt							@16270
+   IG_IP_decrypt							@16280
+	IG_IP_convert_to_gray				@16290
+	IG_IP_blend_with_LUT					@16390
+	IG_IP_blend_percent					@16400
+	IG_IP_thumbnail_create				@16410
+	IG_IP_pseudocolor_limits			@16420
+	IG_IP_pseudocolor_small_grads		@16430
+	IG_IP_convert_runs_to_DIB			@16440
+	IG_IP_convert_DIB_to_runs			@16450
+	IG_IP_draw_frame						@16460
+	IG_IP_histo_tabulate					@16470 
+	IG_IP_histo_clear						@16480 
+	IG_IP_convolve_matrix				@16490
+	IG_IP_merge								@16500
+	IG_IP_arithmetic						@16510
+	IG_IP_color_separate					@16520
+	IG_IP_color_combine					@16530
+
+   IG_FX_blur                       @17000
+   IG_FX_diffuse                    @17010
+   IG_FX_emboss                     @17020
+   IG_FX_motion                     @17030
+   IG_FX_noise                      @17040
+   IG_FX_posterize                  @17050
+   IG_FX_texture                    @17060
+   IG_FX_twist                      @17070
+	IG_FX_pixelate							@17080
+	IG_FX_chroma_key						@17090
+	IG_FX_watermark						@17100
+	IG_FX_stitch							@17110
+	IG_FX_spotlight						@17120
+
+   IG_version_numbers               @18010
+   IG_version_compile_date          @18020 
+   IG_version_is_eval					@18030
+
+   IG_DIB_pixel_set                 @19000
+   IG_DIB_pixel_get                 @19010
+   IG_DIB_raster_get                @19020
+   IG_DIB_raster_set                @19030
+   IG_DIB_row_get                   @19040
+   IG_DIB_row_set                   @19050
+	IG_DIB_area_set                  @19060
+	IG_DIB_area_get                  @19070
+	IG_DIB_column_set						@19080
+	IG_DIB_column_get						@19090
+	IG_DIB_line_set						@19100
+	IG_DIB_line_get						@19110
+	IG_DIB_area_get_info					@19120
+	IG_DIB_raster_size_get				@19130
+	IG_DIB_area_size_get					@19140
+   
+	IG_ext_load								@20000
+	IG_ext_unload							@20010
+	IG_ext_info_get						@20020
+	IG_ext_find_next						@20030
+	IG_ext_find_first						@20040
+	
+	IG_convert_PPM_to_DPI				@20100
+	IG_convert_DPI_to_PPM				@20110
+
+
+; Below this are utility function to be used only by other
+; AccuSoft products.  There are undocumented and unsupported.
+
+	GPb_unpacked_image_size_get			@110
+	GPb_unpacked_image_size_calc			@120
+	GPb_unpacked_bytes_per_raster_get	@130
+	GPb_unpacked_bytes_per_raster_calc	@140
+
+	GPb_bits_per_pixel_get					@150
+	GPb_bytes_per_raster_get				@160
+	GPb_bytes_per_raster_calc				@170
+
+	GPb_palette_entries_get					@180
+	GPb_palette_size_get						@190
+	GPb_palette_size_calc					@200
+	GPb_palette_pointer_get					@210
+
+	GPb_compatible								@220
+
+	GPb_DIB_copy								@230
+	GPb_DIB_header_copy						@240
+	GPb_DIB_size_get							@250
+	GPb_DIB_pointer_get						@260
+
+	GPb_header_size_get						@270
+	GPb_header_size_calc						@280
+
+	GPb_width_get								@290
+	GPb_height_get								@300
+
+	GPb_image_size_get						@310
+	GPb_image_size_calc						@320
+	GPb_image_associate						@330
+	GPb_image_alloc							@340
+	GPb_image_lock								@350
+	GPb_image_unlock							@360
+	GPb_image_pointer_get					@370
+
+
+	GPb_IO_read
+	GPb_IO_write
+	GPb_IO_seek
+	GPb_IO_tell
+	GPb_IO_byte_read
+	GPb_IO_byte_write
+	GPb_IO_byte_order_set
+	GPb_IO_byte_order_get
+	GPb_IO_word_read
+	GPb_IO_word_write
+	GPb_IO_dword_read
+	GPb_IO_dword_write
+	GPb_IO_ii_word_read
+	GPb_IO_ii_word_write
+	GPb_IO_mm_word_read
+	GPb_IO_mm_word_write
+	GPb_IO_ii_dword_read
+	GPb_IO_ii_dword_write
+	GPb_IO_mm_dword_read
+	GPb_IO_mm_dword_write
+	GPb_IO_tag_set_exists
+	GPb_IO_tag_get_exists
+	GPb_IO_tag_user_get_exists
+	GPb_IO_tag_set
+	GPb_IO_tag_byte_set
+	GPb_IO_tag_word_set
+	GPb_IO_tag_dword_set
+	GPb_IO_tag_get
+	GPb_IO_tag_user_get
+	GPb_IO_tag_byte_get
+	GPb_IO_tag_word_get
+	GPb_IO_tag_dword_get
+	GPb_IO_DIB_create
+	GPb_IO_DIB_get
+	GPb_IO_raster_set
+	GPb_IO_raster_get
+	GPb_IO_raster_plane_set
+	GPb_IO_alpha_create
+	GPb_IO_alpha_get
+	GPb_IO_alpha_raster_set
+	GPb_IO_alpha_raster_get
+	GPb_IO_attribute_set
+	GPb_IO_attribute_get
+	GPb_ii_word_swap
+	GPb_mm_word_swap
+	GPb_ii_dword_swap
+	GPb_mm_dword_swap
+	GPb_AF_mem_unique_tag_get
+	GPb_AF_mem_alloc
+	GPb_AF_mem_realloc
+	GPb_AF_mem_free
+	GPb_AF_mem_free_all
+	GPb_AF_error_set
+	GPb_AF_error_check
+	GPb_DIB_init
