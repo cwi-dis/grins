@@ -2623,7 +2623,7 @@ static PyTypeObject MediaStreamType = {
 /////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////
-// DirectDrawMediaStream object
+// IDirectDrawMediaStream object
 
 static char DirectDrawMediaStream_CreateSample__doc__[] =
 ""
@@ -2631,12 +2631,46 @@ static char DirectDrawMediaStream_CreateSample__doc__[] =
 static PyObject *
 DirectDrawMediaStream_CreateSample(DirectDrawMediaStreamObject *self, PyObject *args)
 {
-	UnknownObject *directDrawSurface=NULL;
-	if (!PyArg_ParseTuple(args, "|O",&directDrawSurface))
+	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	IDirectDrawSurface *pI = (IDirectDrawSurface*)(directDrawSurface?directDrawSurface->pI:NULL);
+
+    DDSURFACEDESC ddsd; 
+	ZeroMemory(&ddsd,sizeof(ddsd));
+    ddsd.dwSize = sizeof(ddsd);
+	
+    HRESULT hr = self->pI->GetFormat(&ddsd, NULL, NULL, NULL);
+	if (FAILED(hr)) {
+		seterror("DirectDrawMediaStream_CreateSample:GetFormat", hr);
+		return NULL;
+	}
+	
+	IDirectDraw *pDD = NULL;
+	hr = self->pI->GetDirectDraw(&pDD);
+	if (FAILED(hr)) {
+		seterror("DirectDrawMediaStream_CreateSample:GetDirectDraw", hr);
+		return NULL;
+	}
+	else if (pDD==NULL) {
+		seterror("DirectDrawMediaStream_CreateSample:GetDirectDraw IDirectDrawMediaStream not initialized", hr);
+		return NULL;
+	}
+
+	IDirectDrawSurface *pI=NULL;
+	int nTrials=50; // sys may be temporary busy
+	do	{
+		hr = pDD->CreateSurface(&ddsd, &pI, NULL);
+		if(FAILED(hr)) Sleep(10);
+		nTrials--;
+		} while(FAILED(hr) && nTrials>0);
+	
+	if (FAILED(hr)) {
+		seterror("DirectDrawMediaStream_CreateSample:CreateSurface", hr);
+		return NULL;
+	}
+	pDD->Release();
+
 	DirectDrawStreamSampleObject *obj = newDirectDrawStreamSampleObject();
-	HRESULT hr = self->pI->CreateSample(pI,NULL,0,&obj->pI);
+	hr = self->pI->CreateSample(pI, NULL, 0, &obj->pI);
 	if (FAILED(hr)) {
 		Py_DECREF(obj);
 		seterror("DirectDrawMediaStream_CreateSample", hr);
@@ -2718,7 +2752,7 @@ static PyTypeObject DirectDrawMediaStreamType = {
 /////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////
-// DirectDrawStreamSample object
+// DirectDrawStreamSample object (IDirectDrawStreamSample)
 
 
 static char DirectDrawStreamSample_GetSurface__doc__[] =
@@ -2737,6 +2771,8 @@ DirectDrawStreamSample_GetSurface(DirectDrawStreamSampleObject *self, PyObject *
 		seterror("DirectDrawStreamSample_GetSurface", hr);
 		return NULL;
 	}	
+	(*ppDirectDrawSurface)->Release();
+	
 	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
 }
 
