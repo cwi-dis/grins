@@ -53,6 +53,7 @@ class mpeg_container
 	long read_audio(short *output, long samples, int stream = 0, int channel = 0);
 	long read_audio(std::basic_string<char>& audio_data, int stream = 0, int channel = 0);
 	long read_audio_chunk(char **pp, int stream = 0, int channel = 0);
+	long read_raw_audio_chunk(char **pp, size_t ts = 8192, int stream = 0, int channel = 0);
 
 	protected:
 	bool read_toc();
