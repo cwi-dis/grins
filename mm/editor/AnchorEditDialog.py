@@ -155,7 +155,7 @@ class AnchorEditorDialog:
 		Arguments (no defaults):
 		pos -- index of the choice to be made (in)sensitive
 		sensitive -- boolean indicating whether to make
-			sensitive of insensitive
+			sensitive or insensitive
 		"""
 		self.__type_choice.setsensitive(pos, sensitive)
 
