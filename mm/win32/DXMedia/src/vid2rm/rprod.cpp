@@ -131,7 +131,7 @@ bool EncodeSample(BYTE *p,DWORD size,DWORD msec,bool isSync,bool isLast)
 	if(!gpVidSample) return false;
 
 	UINT16	unFlags=0;
-	if(isSync)unFlags|=MEDIA_SAMPLE_SYNCH_POINT;
+	//if(isSync)unFlags|=MEDIA_SAMPLE_SYNCH_POINT;
 	if(isLast)unFlags|=MEDIA_SAMPLE_END_OF_STREAM;
 	PN_RESULT res=PNR_OK;
 	res = gpVidSample->SetBuffer(p,size,msec,unFlags);
