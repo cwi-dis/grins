@@ -20,7 +20,7 @@ class FileCache:
 			st = os.stat(file)
 			mtime, size = st[ST_MTIME], st[ST_SIZE]
 		except os.error:
-			mtime, size = None
+			mtime, size = None, None
 		if self.cache.has_key(file):
 			entry = self.cache[file]
 			mt, sz, res = entry
