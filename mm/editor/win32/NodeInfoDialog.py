@@ -47,7 +47,8 @@ button, whatever) at which time a callback is called.
 
 __version__ = "$Id$"
 
-import windowinterface, cmifex2, win32api, win32con
+import windowinterface, win32api, win32con
+from win32modules import cmifex2
 
 DEFAULT_EDIT_WIDTH = 120
 
