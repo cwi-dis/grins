@@ -258,14 +258,14 @@ class SMILParser(xmllib.XMLParser):
 				elif val == 'off':
 					attrdict['system_captions'] = 0
 				else:
-					self.syntax_error('bad screen-captions attribute')
+					self.syntax_error('bad system-captions attribute')
 			elif attr == 'system-language':
 				attrdict['system_language'] = val
 			elif attr == 'system-overdub-or-caption':
 				if val in ('caption', 'overdub'):
 					attrdict['system_overdub_or_caption'] = val
 				else:
-					self.syntax_error('bad screen-overdub-or-caption attribute')
+					self.syntax_error('bad system-overdub-or-caption attribute')
 			elif attr == 'system-required':
 				attrdict['system_required'] = val
 
@@ -774,9 +774,6 @@ class SMILParser(xmllib.XMLParser):
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.FixLinks()
 
-		# now calculate which nodes we will actually play
-		self.__root.SetPlayable()
-
 	# head/body sections
 
 	head_attributes = {'id':None}
@@ -956,7 +953,7 @@ class SMILParser(xmllib.XMLParser):
 			  'channel':None, 'begin':None, 'end':None,
 			  'system-bitrate':None, 'system-language':None,
 			  'system-captions':None,
-			  'system-overdub-or-captions':None,
+			  'system-overdub-or-caption':None,
 			  'system-required':None, 'system-screen-size':None,
 			  'system-screen-depth':None}
 	def start_par(self, attributes):
@@ -1000,7 +997,7 @@ class SMILParser(xmllib.XMLParser):
 			  'end':None, 'repeat':'1',
 			  'system-bitrate':None, 'system-language':None,
 			  'system-captions':None,
-			  'system-overdub-or-captions':None,
+			  'system-overdub-or-caption':None,
 			  'system-required':None, 'system-screen-size':None,
 			  'system-screen-depth':None}
 	def start_seq(self, attributes):
@@ -1016,7 +1013,7 @@ class SMILParser(xmllib.XMLParser):
 	switch_attributes = {'id':None,
 			     'system-bitrate':None, 'system-language':None,
 			     'system-captions':None,
-			     'system-overdub-or-captions':None,
+			     'system-overdub-or-caption':None,
 			     'system-required':None, 'system-screen-size':None,
 			     'system-screen-depth':None}
 	def start_switch(self, attributes):
@@ -1043,7 +1040,7 @@ class SMILParser(xmllib.XMLParser):
 			    'clip-begin':None, 'clip-end':None,
 			    'system-bitrate':None, 'system-language':None,
 			    'system-captions':None,
-			    'system-overdub-or-captions':None,
+			    'system-overdub-or-caption':None,
 			    'system-required':None, 'system-screen-size':None,
 			    'system-screen-depth':None}
 	ref_attributes = basic_attributes.copy()
