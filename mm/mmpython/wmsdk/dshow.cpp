@@ -229,6 +229,27 @@ newUnknownObject()
 }
 
 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IMediaPosition* pI;
+} MediaPositionObject;
+
+staticforward PyTypeObject MediaPositionType;
+
+static MediaPositionObject *
+newMediaPositionObject()
+{
+	MediaPositionObject *self;
+
+	self = PyObject_NEW(MediaPositionObject, &MediaPositionType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 ////////////////////////////////////////////////////
 
 static char GraphBuilder_AddSourceFilter__doc__[] =
@@ -333,6 +354,27 @@ GraphBuilder_QueryIMediaControl(GraphBuilderObject *self, PyObject *args)
 }
 
 
+static char GraphBuilder_QueryIMediaPosition__doc__[] =
+""
+;
+static PyObject *
+GraphBuilder_QueryIMediaPosition(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	MediaPositionObject *obj = newMediaPositionObject();
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pGraphBuilder->QueryInterface(IID_IMediaPosition, (void **) &obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("GraphBuilder_QueryIMediaPosition", res);
+		obj->pI=NULL;
+		Py_DECREF(obj);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
 
 
 static char GraphBuilder_WaitForCompletion__doc__[] =
@@ -457,6 +499,7 @@ static struct PyMethodDef GraphBuilder_methods[] = {
 	{"RenderFile", (PyCFunction)GraphBuilder_RenderFile, METH_VARARGS, GraphBuilder_RenderFile__doc__},
 	{"FindFilterByName", (PyCFunction)GraphBuilder_FindFilterByName, METH_VARARGS, GraphBuilder_FindFilterByName__doc__},
 	{"RemoveFilter", (PyCFunction)GraphBuilder_RemoveFilter, METH_VARARGS, GraphBuilder_RemoveFilter__doc__},
+	{"QueryIMediaPosition", (PyCFunction)GraphBuilder_QueryIMediaPosition, METH_VARARGS, GraphBuilder_QueryIMediaPosition__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1155,6 +1198,105 @@ static PyTypeObject UnknownType = {
 };
 
 // End of code for Unknown object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// MediaPosition object 
+
+static char MediaPosition_GetDuration__doc__[] =
+""
+;
+
+static PyObject *
+MediaPosition_GetDuration(MediaPositionObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT res ;
+    REFTIME tLength; // double in secs
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->get_Duration(&tLength);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("MediaPosition_GetDuration", res);
+		return NULL;
+	}
+	return Py_BuildValue("d",tLength); // in sec
+}
+
+
+static char MediaPosition_GetCurrentPosition__doc__[] =
+""
+;
+
+static PyObject *
+MediaPosition_GetCurrentPosition(MediaPositionObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT res ;
+    REFTIME tLength; // double in secs
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->get_CurrentPosition(&tLength);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("MediaPosition_GetCurrentPosition", res);
+		return NULL;
+	}
+	return Py_BuildValue("d",tLength); // in sec
+}
+
+static struct PyMethodDef MediaPosition_methods[] = {
+	{"GetDuration", (PyCFunction)MediaPosition_GetDuration, METH_VARARGS, MediaPosition_GetDuration__doc__},
+	{"GetCurrentPosition", (PyCFunction)MediaPosition_GetCurrentPosition, METH_VARARGS, MediaPosition_GetCurrentPosition__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+MediaPosition_dealloc(MediaPositionObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MediaPosition_getattr(MediaPositionObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MediaPosition_methods, (PyObject *)self, name);
+}
+
+static char MediaPositionType__doc__[] =
+""
+;
+
+static PyTypeObject MediaPositionType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MediaPosition",			/*tp_name*/
+	sizeof(MediaPositionObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MediaPosition_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MediaPosition_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MediaPositionType__doc__ /* Documentation string */
+};
+
+// End of code for MediaPosition object 
 ////////////////////////////////////////////
 
 ///////////////////////////////////////////
