@@ -1115,24 +1115,6 @@ class LayoutView2(LayoutViewDialog2):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			list.append(nodeRef.name)
-
-	def __recurUnrefMMNodes(self, nodeRef, regionNameList):
-		for child in nodeRef.GetChildren():
-			self.__recurUnrefMMNodes(child, regionNameList)
-			
-		# check the channel attribute
-		if nodeRef.GetChannel() in regionNameList:
-			# this channel has been removed, remove the reference
-			self.editmgr.setnodeattr(nodeRef, 'channel', None)
-
-		# check the project_default_region_xxx
-		for attrName in ('project_default_region_image', 'project_default_region_video',
-						 'project_default_region_sound', 'project_default_region_text'):
-			attrValue = nodeRef.GetAttrDef(attrName, None)
-			if attrValue != None and attrValue in regionNameList:
-				self.editmgr.setnodeattr(nodeRef, attrName, None)
-
-		# XXX to do: event
 					
 	def applyAttrList(self, nodeRefAndValueList):
 		if self.editmgr.transaction():
@@ -1555,7 +1537,7 @@ class LayoutView2(LayoutViewDialog2):
 					if parent != None:
 						newFocus = [parent]
 					self.editmgr.delchannel(nodeRef)
-
+					self.editmgr.clearRefs(nodeRef)
 		self.setglobalfocus(newFocus)
 		self.editmgr.commit()
 		

@@ -1038,23 +1038,25 @@ class EditMgr(Clipboard.Clipboard):
 	# Node can be any reference node being a part of the document
 	def clearRefs(self, nodeRef):
 		if hasattr(nodeRef, 'ClearRefs'):
-			# call that method on each root node of the reference document to inspect
+			rootList = []
 
 			# body root
-			nodeRef.ClearRefs(self.root)
+			rootList.append(self.root)
 			
 			# viewports root
 			viewportList = self.context.getviewports()
 			for viewport in viewportList:
-				nodeRef.ClearRefs(viewport)
+				rootList.append(viewport)
 				
 			# all root elements of the clipboard itself
 			data = self.getclip()
 			for node in data:
-				nodeRef.ClearRefs(data)
+				rootList.append(node)
 
 			# all root elements of the asset view
 			# XXX todo
+
+			nodeRef.ClearRefs(self, rootList)
 			
 	# before to destroy any node (may be copied in the clipboard and asset view), we want to make sure that the node being destroyed
 	# won't be ever used anymore
