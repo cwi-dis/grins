@@ -21,9 +21,9 @@ from MMNode import alltypes, leaftypes, interiortypes
 from AnchorDefs import *
 
 TypeValues = [ ATYPE_DEST, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
-	       ATYPE_ARGS]
+	       ATYPE_ARGS, ATYPE_WHOLE]
 TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
-	       'with arguments']
+	       'with arguments', 'whole node']
 
 FALSE, TRUE = 0, 1
 
