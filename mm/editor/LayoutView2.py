@@ -1495,6 +1495,7 @@ class LayoutView2(LayoutViewDialog2):
 			if not currentTimeValue is None:
 				if not self.isAKeyTime:
 					self.insertKeyTime(animateNode, currentTimeValue)
+					canimvals = animateNode.attrdict.get('animvals')
 					keyTimeIndex = self.getKeyTimeIndex()
 					
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
