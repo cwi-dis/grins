@@ -7,26 +7,17 @@ import glwindow
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 from MMNode import alltypes, leaftypes, interiortypes
+import Clipboard
 
-# XXX Temp for forms 1.5 compat:
+# XXX Test for forms 1.5 compat:
 try:
     dummy = fl.get_rgbmode
     forms_v20 = 1
     del dummy
+    print 'using FORMS 2.0'
 except:
     forms_v20 = 0
-
-# the block view class.
-# *** Hacked by --Guido ***
-# XXX I have made quick hacks to interface to the edit manager:
-# XXX changes to the tree call transaction() and commit().
-# XXX However, this is really a bogus way of doing it:
-# XXX - we aren't registered with the edit manager to get told
-# XXX   about change to the tree made by other views
-# XXX - we don't use the edit manager to carry out the changes,
-# XXX   so UNDO won't work
-# XXX - we update our display directly, instead of doing that in
-# XXX   response to the commit
+    print 'no FORMS 2.0'
 
 
 #
@@ -79,7 +70,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			MMAttrdefs.getattr(self.root, 'blockview_winsize')
 		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
 		self.changing_node = None
-		self.clipboard = None
 		return self.new(width, height, self.root)
 	def show(self):
 		if self.showing: return
@@ -163,8 +153,8 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		cmdmap = 'iaud'
 		edit_menu.set_call_back(self._menu_callback,cmdmap);
 		clipboard_menu = f.add_menu(PUSH_MENU,x+w/3,y,w/3,h,'Clipboard')
-		clipboard_menu.set_menu('I Paste before|A Paste after|U Paste as child%l|D Cut')
-		cmdmap = 'IAUD'
+		clipboard_menu.set_menu('I Paste before|A Paste after|U Paste as child%l|D Cut|C Copy')
+		cmdmap = 'IAUDC'
 		clipboard_menu.set_call_back(self._menu_callback,cmdmap);
 		operation_menu = f.add_menu(PUSH_MENU,x+2*w/3,y,w/3,h,'Operation')
 		operation_menu.set_menu('h Help|p Play|+ Zoom|- Unzoom%l|o Open info|e Open attr|E Edit contents')
@@ -184,6 +174,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.addtocommand('I', CInsertBeforeNode)
 		self.addtocommand('U', CInsertChildNode)
 		self.addtocommand('D', CDeleteNode)
+		self.addtocommand('C', CopyNode)
 		self.addtocommand('h', helpfunc)
 		self.addtocommand('o', infofunc)
 		self.addtocommand('p', playfunc)
@@ -275,6 +266,8 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		    node.bv_labeltext.delete_object()
 		    del node.bv_labeltext
 		except NameError:
+		    pass
+		except AttributeError: # new style exceptions
 		    pass
 		for child in node.GetChildren () :
 		    self.rmBlockview (child)
@@ -404,15 +397,18 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		return child
 	#
 	def fromclipboard(self):
-		rv = self.clipboard
-		self.clipboard = None
-		if rv <> None:
-		    rv.bv_OC = -1
-		return rv
+		type, data = Clipboard.getclip()
+		if type <> 'node' or data = None:
+			return None
+		Clipboard.setclip(type, data.DeepCopy())
+		self.setopenclose(data, -1)
+		return data
 	def toclipboard(self, node):
-		if self.clipboard <> None:
-			self.clipboard.Destroy()
-		self.clipboard = node
+		if node = None:
+			type, data = '', None
+		else:
+			type, data = 'node', node
+		Clipboard.setclip(type, data)
 
 def helpfunc (bv) :
 	bv.toplevel.help.givehelp('Hierarchy')
@@ -427,6 +423,16 @@ import NodeEdit
 
 def conteditfunc (bv) :
 	NodeEdit.showeditor (bv.focus)
+
+
+# copy the focus node to the clipboard
+
+def CopyNode(bv):
+	node = bv.focus
+	if node = None:
+		gl.ringbell()
+		return
+	Clipboard.setclip('node', node.DeepCopy())
 
 #
 # delete the focussed node.
@@ -459,8 +465,7 @@ def _DeleteNode (bv,cb) :
 	em.delnode(node)
 	if cb:
 	    bv.toclipboard(node)
-	else:
-	    node.Destroy()
+	# (Don't ever call node.Delete(), it would break UNDO...)
 	#
 	if nf >= 0:
 		bv.focus = children[nf]
