@@ -46,7 +46,7 @@ def dispatch(frame, event, arg):
 class TopLevel(ViewDialog):
 	def __init__(self, main, filename, new_file):
 		self._tracing = 0
-		ViewDialog.init(self, 'toplevel_')
+		ViewDialog.__init__(self, 'toplevel_')
 		self.showing = 0
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -139,20 +139,20 @@ class TopLevel(ViewDialog):
 	#
 	def makeviews(self):
 		import HierarchyView
-		self.hierarchyview = HierarchyView.HierarchyView().init(self)
+		self.hierarchyview = HierarchyView.HierarchyView(self)
 
 		import ChannelView
 		self.channelview = \
-			ChannelView.ChannelView().init(self)
+			ChannelView.ChannelView(self)
 
 		import Player
-		self.player = Player.Player().init(self)
+		self.player = Player.Player(self)
 
 ##		import StyleSheet
-##		self.styleview = StyleSheet.StyleSheet().init(self)
+##		self.styleview = StyleSheet.StyleSheet(self)
 
 		import LinkEdit
-		self.links = LinkEdit.LinkEdit().init(self)
+		self.links = LinkEdit.LinkEdit(self)
 
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
@@ -324,7 +324,7 @@ class TopLevel(ViewDialog):
 			print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
-		self.editmgr = EditMgr().init(self.root)
+		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
 
