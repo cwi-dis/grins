@@ -1066,7 +1066,10 @@ class MMNode:
 			if arc in refnode.sched_children:
 				refnode.sched_children.remove(arc)
 			if arc.qid is not None:
-				sched.cancel(arc.qid)
+				try:
+					sched.cancel(arc.qid)
+				except ValueError:
+					pass
 				arc.qid = None
 			arc.timestamp = None
 		self.sched_children = []
@@ -2286,7 +2289,10 @@ class MMNode:
 			refnode = body.__find_refnode(arc)
 			refnode.sched_children.remove(arc)
 			if arc.qid is not None:
-				sched.cancel(arc.qid)
+				try:
+					sched.cancel(arc.qid)
+				except ValueError:
+					pass
 				arc.qid = None
 		body.durarcs = []
 		for child in self.wtd_children:
@@ -2297,7 +2303,10 @@ class MMNode:
 					refnode = child.__find_refnode(arc)
 					refnode.sched_children.remove(arc)
 					if arc.qid is not None:
-						sched.cancel(arc.qid)
+						try:
+							sched.cancel(arc.qid)
+						except ValueError:
+							pass
 						arc.qid = None
 ##					arc.timestamp = None
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
@@ -2305,7 +2314,10 @@ class MMNode:
 				refnode = child.__find_refnode(arc)
 				refnode.sched_children.remove(arc)
 				if arc.qid is not None:
-					sched.cancel(arc.qid)
+					try:
+						sched.cancel(arc.qid)
+					except ValueError:
+						pass
 					arc.qid = None
 ##				arc.timestamp = None
 
