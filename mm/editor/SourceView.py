@@ -30,9 +30,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			SourceViewDialog.SourceViewDialog.show(self) # creates the text widget
 			self.read_text()
 			self.editmgr.register(self, want_focus = 1)
-		# set the focus, if already there
-		focustype,focusobject = self.editmgr.getglobalfocus()
-		self.__setFocus(focustype, focusobject)
+		self.updateFocus()
 
 	def hide(self):
 		if not self.is_showing():
@@ -56,6 +54,11 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	def globalfocuschanged(self, focustype, focusobject):
 		self.__setFocus(focustype, focusobject)
 
+	def updateFocus(self):
+		# set the focus, if already there
+		focustype,focusobject = self.editmgr.getglobalfocus()
+		self.__setFocus(focustype, focusobject)
+				
 	def setRoot(self, root):
 		self.root = root
 		self.context = root.context
@@ -79,7 +82,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		# update root
 		self.setRoot(self.toplevel.root)
 		self.read_text()
-
+		self.updateFocus()
+		
 	#
 	#
 	#
@@ -108,7 +112,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		# Writes the text back to the MMNode structure.
 		self.toplevel.save_source_callback(self.get_text())
 		
-	def __startTransaction(self, hide):
+	def __startTransaction(self, hide, autoFixErrors=0):
 		self.myCommit = 1
 		if self.editmgr.transaction('source'):
 			text = self.get_text()
@@ -121,7 +125,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			parseErrors = context.getParseErrors()
 			if parseErrors != None:
 				# XXX note: the choices may be different for 'fatal error'
-				ret = windowinterface.GetYesNoCancel('The source document contains some errors\nDo you wish to leave the editor to fix automaticly the errors', self.toplevel.window)
+				if not autoFixErrors:
+					ret = windowinterface.GetYesNoCancel("The source document contains some errors\nDo you wish to accept GRiNS' automatic fixes?", self.toplevel.window)
+				else:
+					ret = 0
 				if ret == 0: # yes
 					# accept the errors automaticly fixed by GRiNS
 					context.setParseErrors(None)
@@ -150,8 +157,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 						
 		self.myCommit= 0
 
-	def write_text_and_close(self):
-		self.__startTransaction(1)
+	def write_text_and_close(self, autoFixErrors=0):
+		self.__startTransaction(1, autoFixErrors)
 
 	def apply_callback(self):
 		self.__startTransaction(0)
@@ -169,7 +176,19 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				# Pass through to the end of this method.
 				pass	# I know, it's extraneous, but it's here for completion so it's not a hidden option.
 		else:
-			self.hide()
+			parseErrors = self.context.getParseErrors()
+			if parseErrors == None:
+				# no error, so the view can be closed
+				self.hide()
+			else:
+				# there are some, error. So maybe the user want to leave grins fix automaticly the errors
+				ret = windowinterface.GetYesNo("The source document still contains some errors.\nDo you wish to accept GRiNS' automatic fixes?", self.toplevel.window)
+				if ret == 0:
+					# yes
+					self.write_text_and_close(1)
+				else:
+					# otherwise, we don't allow to close the window, and we re-select the first error
+					self.updateFocus()
 
 	def kill(self):
 		self.destroy()
