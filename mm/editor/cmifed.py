@@ -49,6 +49,10 @@ class Main(MainDialog):
 ##		del self.tmplicensedialog
 		import MMurl
 		import windowinterface
+		import settings
+		if settings.get('lightweight') and len(files) > 1:
+			windowinterface.showmessage('Cannot open multiple files in this version')
+			files = files[:1]
 		self._license = license
 		if not self._license.have('save'):
 			windowinterface.showmessage(
@@ -138,6 +142,8 @@ class Main(MainDialog):
 		import TopLevel
 		import windowinterface
 		
+		if not self.canopennewtop():
+			return
 		if self.template_info is None:
 			self.collect_template_info()
 		if self.template_info:
@@ -175,8 +181,21 @@ class Main(MainDialog):
 		self._untitled_counter = self._untitled_counter + 1
 		dummy, ext = os.path.splitext(templatename)
 		return name + ext
+		
+	def canopennewtop(self):
+		# Return true if a new top can be opened (only one top in the light version)
+		import settings
+		if not settings.get('lightweight'):
+			return 1
+		for top in self.tops:
+			top.close()
+		if self.tops:
+			return 0
+		return 1
 
 	def openURL_callback(self, url):
+		if not self.canopennewtop():
+			return
 		import windowinterface
 		self.last_location = url
 		windowinterface.setwaiting()
@@ -199,6 +218,8 @@ class Main(MainDialog):
 			self._update_recent(url)
 			
 	def open_recent_callback(self, url):
+		if not self.canopennewtop():
+			return
 		self.openURL_callback(url)
 		
 	def _update_recent(self, url):

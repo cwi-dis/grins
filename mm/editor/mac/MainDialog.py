@@ -44,12 +44,16 @@ class MainDialog:
 
 	def open_callback(self):
 		import windowinterface
+		if not self.canopennewtop():
+			return
 		windowinterface.InputURLDialog('Open location', self.last_location,
 					    self.openURL_callback)
 
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
+		if not self.canopennewtop():
+			return
 		windowinterface.FileDialog('', '', '*.smil', '',
 					   self.__openfile_done, None, 1)
 
@@ -95,7 +99,6 @@ class MainDialog:
 			OpenAppDialog(self.new_callback, self.open_callback, self.never_again)
 		
 	def _ae_opendoc(self, aliases, **kwargs):
-		print 'opendoc'
 		if not type(aliases) in (type(()), type([])):
 			aliases=[aliases]
 		for alias in aliases:
@@ -106,6 +109,8 @@ class MainDialog:
 				return
 			pathname = fss.as_pathname()
 			url = MMurl.pathname2url(pathname)
+			if not self.canopennewtop():
+				return
 			self.openURL_callback(url)
 		
 	def _ae_quit(self, *args, **kwargs):

@@ -59,6 +59,8 @@ class MainDialog:
 
 	def open_callback(self):
 		import windowinterface
+		if not self.canopennewtop():
+			return
 		w = windowinterface.Window('Open location', resizable = 1,
 					   grab = 1, parent = self.__window, horizontalSpacing = 5, verticalSpacing = 5)
 		l = w.Label('Enter the Internet location (URL) or browse to the local file you would like to open', top = None, left = None, right = None)

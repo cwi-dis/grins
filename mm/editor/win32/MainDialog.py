@@ -66,6 +66,8 @@ class MainDialog:
 			windowinterface.OpenAppDialog(self.new_callback, self.open_callback, self.never_again)
 		
 	def open_callback(self):
+		if not self.canopennewtop():
+			return
 		callbacks={
 			'Browse':(self.__openfile_callback, ()),
 			'Open': (self.__tcallback, ()),
@@ -79,6 +81,8 @@ class MainDialog:
 
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""
+		if not self.canopennewtop():
+			return
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
@@ -92,6 +96,8 @@ class MainDialog:
 			self.openURL_callback(url)
 
 	def dropfile(self, arg, window, event, value):
+		if not self.canopennewtop():
+			return
 		x,y,filename=value
 		url=self.__path2url(filename)
 		import mimetypes, windowinterface
@@ -102,6 +108,8 @@ class MainDialog:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
 	
 	def pastefile(self, arg, window, event, value):
+		if not self.canopennewtop():
+			return
 		x,y,filename=value
 		url=self.__path2url(filename)
 		self.openURL_callback(url)
