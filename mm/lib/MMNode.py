@@ -3412,6 +3412,9 @@ class MMNode(MMTreeElement):
 			# don't copy children since node collapsed
 			children = []
 		for child in children:
+			if child.type == 'animate' and child.attrdict.get('internal') == 1:
+				# do not copy the node generated dynamicly from animpar nodes (in playercommon)
+				continue
 			copy._addchild(child._deepcopy(uidremap, context))
 		return copy
 
