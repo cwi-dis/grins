@@ -227,6 +227,16 @@ POPUP_CVIEW_SYNCARC = (
 		(ENTRY, 'Delete', None, DELETE),
 )
 
+POPUP_CVIEUW_BWSTRIP = (
+		(ENTRY, "14k4", None, BANDWIDTH_14K4),
+		(ENTRY, "28k8", None, BANDWIDTH_28K8),
+		(ENTRY, "ISDN", None, BANDWIDTH_ISDN),
+		(ENTRY, "T1 (1 Mbps)", None, BANDWIDTH_T1),
+		(ENTRY, "LAN (10 Mbps)", None, BANDWIDTH_LAN),
+		(SEP,),
+		(ENTRY, "Other...", None, BANDWIDTH_OTHER),
+		)
+
 #
 # Adornments
 #
