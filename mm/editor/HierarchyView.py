@@ -1916,6 +1916,9 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_widget(widget)
 			return
 
+		# we can't currently muti-select icons, so unselect them all
+		self.selected_icon = None
+
 		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
 			widget = widget.get_mmwidget()
 
@@ -2225,12 +2228,13 @@ class HierarchyView(HierarchyViewDialog):
 		# This feels like the wrong place for a function like this.
 		# Never the less..
 		if self.selected_icon and len(self.selected_icon.arrowto) > 0:
-			if len(self.selected_icon.arrowto) > 1:
-				# XXXX To be fixed, this is silly.
-				windowinterface.showmessage("This node has more than one associated event, selecting the first one.", mtype='error', parent=self.window)
-				return
-			other_icon = self.selected_icon.arrowto[0]
-			self.select_widget(other_icon)
+			first = 1
+			for icon, color in self.selected_icon.arrowto:
+				if first:
+					self.select_widget(icon)
+					first = 0
+				else:
+					self.also_select_widget(icon)
 			self.draw()
 
 	def merge_parent(self):
