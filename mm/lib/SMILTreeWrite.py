@@ -795,8 +795,13 @@ def getpath(writer, node):
 	return attr
 
 def getcollapsed(writer, node):
-	if node.GetType() in (interiortypes + mediatypes) and node.collapsed:
-		return 'true'
+	ntype = node.GetType()
+	if ntype in interiortypes:
+		if node.collapsed:
+			return 'true'
+	elif ntype in mediatypes:
+		if not node.collapsed:
+			return 'false'
 
 def getshowtime(writer, node):
 	if node.showtime:

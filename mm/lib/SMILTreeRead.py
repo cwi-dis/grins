@@ -131,6 +131,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'autoplay': __truefalse,
 		'chapter-mode': {'all':0,'clip':1},
 		'clipBoundary': ['parent', 'children'],
+		'collapsed': __truefalse,
 		'coordinated': __truefalse,
 		'defaultState': __truefalse,
 		'destinationPlaystate': {'play':A_DEST_PLAY, 'pause':A_DEST_PAUSE},
@@ -1319,10 +1320,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					except parseutil.error, msg:
 						self.syntax_error(msg)
 			elif attr == 'collapsed':
-				if val == 'true':
-					node.collapsed = 1
-				else:
-					self.syntax_error('bad %s attribute' % attr)
+				collapsed = self.parseEnumValue(attr, val)
+				if collapsed is not None:
+					node.collapsed = collapsed
 			elif attr == 'showtime':
 				if val in ('focus', 'cfocus', 'bwstrip'):
 					# ignore in player
@@ -1964,7 +1964,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if tagname != 'animateMotion':
 				self.syntax_error("invalid attribute in %s element" % tagname)
 			# check path	
-		elif attributes.has_key('values'): 
+		elif attributes.has_key('values'):
 			animtype = 'values'
 			val = attributes['values']
 			vals = val.split(';')
