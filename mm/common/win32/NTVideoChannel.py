@@ -42,7 +42,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.need_armdone = 0
 		self.__playing = None
 		self.__rcMediaWnd = None
-		self.__windowless_real_rendering = 0
+		self.__windowless_real_rendering = 1
 		self.__windowless_wm_rendering = 1
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
@@ -140,6 +140,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		import string
 		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0 or string.find(mtype, 'image') >= 0):
 			node.__type = 'real'
+			if mtype not in ('image/vnd.rn-realpix', 'text/vnd.rn-realtext'):
+				self.__windowless_real_rendering = 0	
 			if string.find(mtype, 'flash') >= 0:
 				node.__subtype = 'flash'
 		elif mtype and string.find(mtype, 'quicktime') >= 0:
