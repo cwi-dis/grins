@@ -62,7 +62,9 @@
 	'Start delay of node' normal light)
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
-	'Color used for background of window. Overriden by "transparent".' channel light)
+	'Color used for background of window' channel light)
+#(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
+#	'Color used for background of window. Overriden by "transparent".' channel light)
 
 (bgimg (string) '' 'Background image' file
 	'Background image for window' channel cmif)
