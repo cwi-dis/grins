@@ -10,7 +10,9 @@ def main():
 		print "  Generates count licenses and stores them in the"
 		print "  (dos-linefeeds) outputfile"
 		print "  Default product",`grlicense.PRODUCT_TO_FEATURE[None]`
+		print "    Pick from", grlicense.PRODUCT_TO_FEATURE.keys()
 		print "  Default platform",`grlicense.PLATFORM_TO_PLATFORM[None]`
+		print "    Pick from", grlicense.PLATFORM_TO_PLATFORM.keys()
 		sys.exit(1)
 	count = string.atoi(sys.argv[1])
 	fp = open(sys.argv[2], "w")
