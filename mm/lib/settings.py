@@ -32,7 +32,10 @@ ALL=['system_bitrate', 'system_captions', 'system_language',
 if os.name == 'posix':
 	PREFSFILENAME=os.environ['HOME']+'/.grins'
 elif os.name == 'mac':
-	PREFSFILENAME='Grins Preferences'
+	import macfs, MACFS
+	vrefnum, dirid = macfs.FindFolder(MACFS.kOnSystemDisk, 'pref', 1)
+	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS Preferences'))
+	PREFSFILENAME=fss.as_pathname()
 else:
 	PREFSFILENAME='grprefs.txt'
 
@@ -41,6 +44,10 @@ def restore():
 	user_settings = {}
 	if os.path.exists(PREFSFILENAME):
 		execfile(PREFSFILENAME, user_settings)
+	# Remove __globals__ and such from the user_settings dict
+	for k in user_settings.keys():
+		if k[:2] == '__':
+			del user_settings[k]
 		
 restore()
 
