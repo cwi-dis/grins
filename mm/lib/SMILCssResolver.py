@@ -69,13 +69,13 @@ class SMILCssResolver:
 		return node
 
 	def link(self, node, container):
-		if container == None or node == None:
+		if container is None or node is None:
 			# nothing to do
 			return 
 		node.link(container)
 
 	def unlink(self, node):
-		if node == None:
+		if node is None:
 			return
 		node.unlink()
 		
@@ -102,11 +102,11 @@ class SMILCssResolver:
 		return node.getPxAbsGeom()
 
 	def _onPxValuesChanged(self, node, geom):
-		if node.pxValuesListener != None:
+		if node.pxValuesListener is not None:
 			self.nodeGeomChangedList.append((node.pxValuesListener, geom))
 
 	def _onRawValuesChanged(self, node, attrname, value):
-		if node.rawValuesListener != None:
+		if node.rawValuesListener is not None:
 			self.rawAttributesChangedList.append((node.rawValuesListener, attrname, value))
 
 	def getCssObj(self, mmobj):
@@ -169,7 +169,7 @@ class Node:
 			
 	def link(self, container):
 		# if already link, unlink before
-		if self.container != None:
+		if self.container is not None:
 			print 'SMILCssResolver: Warning: node is already linked'
 			self.unlink()
 		self.container = container
@@ -202,7 +202,7 @@ class Node:
 			# already in init state. do nothing
 			return
 
-		if self.container == None:
+		if self.container is None:
 			self.isInit = 1
 			self.dump()
 			raise 'SmilCssResolver: init failed, no root node'
@@ -301,10 +301,10 @@ class RegionNode(Node):
 			elif name == 'top':
 				self.top = value
 			elif name == 'width':
-				if value != None and value <= 0: value = 1
+				if value is not None and value <= 0: value = 1
 				self.width = value
 			elif name == 'height':
-				if value != None and value <= 0: value = 1
+				if value is not None and value <= 0: value = 1
 				self.height = value
 			elif name == 'right':
 				self.right = value
@@ -345,28 +345,28 @@ class RegionNode(Node):
 	def _resolveCSS2Rule(self, beginValue, sizeValue, endValue, containersize):
 		pxbegin = None
 		pxsize = None
-		if beginValue == None:
-			if sizeValue == None:
-				if endValue == None:
+		if beginValue is None:
+			if sizeValue is None:
+				if endValue is None:
 					pxbegin = 0
 					pxsize = containersize
 				else:
 					pxsize = containersize-convertToPx(endValue, containersize)
 					pxbegin = 0
-			elif endValue == None:
+			elif endValue is None:
 				pxbegin = 0
 				pxsize = convertToPx(sizeValue,containersize)
 			else:
 				pxsize = convertToPx(sizeValue, containersize)
 				pxbegin = containersize-pxsize-convertToPx(endValue, containersize)
-		elif sizeValue == None:
-			if endValue == None:
+		elif sizeValue is None:
+			if endValue is None:
 				pxbegin = convertToPx(beginValue, containersize)
 				pxsize = containersize-pxbegin
 			else:
 				pxbegin = convertToPx(beginValue, containersize)
 				pxsize = containersize-pxbegin-convertToPx(endValue, containersize)
-		elif endValue == None:
+		elif endValue is None:
 			pxbegin = convertToPx(beginValue, containersize)
 			pxsize = convertToPx(sizeValue, containersize)
 		else:
@@ -436,7 +436,7 @@ class RegionNode(Node):
 			if name == 'left':
 				self.left = value
 			elif name == 'width':
-				if value != None and value <= 0: value = 1
+				if value is not None and value <= 0: value = 1
 				self.width = value
 			elif name == 'right':
 				self.right = value
@@ -462,7 +462,7 @@ class RegionNode(Node):
 			if name == 'top':
 				self.top = value
 			elif name == 'height':
-				if value != None and value <= 0: value = 1
+				if value is not None and value <= 0: value = 1
 				self.height = value
 			elif name == 'bottom':
 				self.bottom = value
@@ -658,7 +658,7 @@ class RegionNode(Node):
 		return self.pxleft, self.pxtop, self.pxwidth, self.pxheight
 		
 	def getFit(self):
-		if self.fit != None:
+		if self.fit is not None:
 			return self.fit
 		else:
 			# default value: hidden
@@ -666,7 +666,7 @@ class RegionNode(Node):
 			return 'hidden'
 		
 	def getRegPoint(self):
-		if self.regPoint != None:
+		if self.regPoint is not None:
 			return self.regPoint
 		else:
 			# default value: topleft
@@ -674,7 +674,7 @@ class RegionNode(Node):
 			return 'topLeft'
 		
 	def getRegAlign(self):
-		if self.regAlign != None:
+		if self.regAlign is not None:
 			return self.regAlign
 
 		# if no regAlign defined here, the default come from regPoint
@@ -790,6 +790,10 @@ class RegionNode(Node):
 
 			
 class RootNode(RegionNode):
+	def __init__(self, context, mmobj=None):
+		self.__oldpxsize = None
+		RegionNode.__init__(self, context, mmobj)
+
 	def copyRawAttrs(self, srcNode):
 		self.pxwidth = srcNode.pxwidth
 		self.pxheight = srcNode.pxheight
@@ -836,8 +840,39 @@ class RootNode(RegionNode):
 		return 0, 0, self.pxwidth, self.pxheight
 		
 	def _toInitState(self):
-		if self.pxwidth == None or self.pxheight == None:
+		if self.pxwidth is None or self.pxheight is None:
 			self.pxwidth, self.pxheight = self.guessSize()
+		import features
+		if features.editor:
+			import settings
+			skin = settings.get('skin') or ''
+			if self.__oldpxsize is None:
+				# remember initial values
+				self.__oldpxsize = self.pxwidth, self.pxheight
+			else:
+				# first reset to initial values
+				self.pxwidth, self.pxheight = self.__oldpxsize
+				self._toUnInitState()
+			if skin:
+				# In the editor, if there is a skin,
+				# scale down the viewport to the size
+				# of the skin displayable area.
+				import MMurl, parseskin
+				try:
+					f = MMurl.urlopen(skin)
+					dict = parseskin.parsegskin(f)
+					f.close()
+				except parseskin.error, msg:
+					pass
+				else:
+					width, height = dict['display'][1][2:4]
+					if self.pxwidth > width or self.pxheight > height:
+						from fmtfloat import round
+						scale = min(float(width) / self.pxwidth, float(height) / self.pxheight)
+						self.pxwidth = round(self.pxwidth * scale)
+						self.pxheight = round(self.pxheight * scale)
+						self._toUnInitState()
+					
 		self.isInit = 1
 		
 class MediaNode(Node):
@@ -860,11 +895,11 @@ class MediaNode(Node):
 	def __checkIntrinsicSize(self):
 		# check invalid value to avoid a crash
 		# shouldn't happend. If happend, assume no intrinsic size
-		if self.intrinsicWidth != None and self.intrinsicWidth <= 0:
+		if self.intrinsicWidth is not None and self.intrinsicWidth <= 0:
 #			print 'Error: SMILCssResolver, intrinsic media width = ',self.intrinsicWidth
 			self.intrinsicWidth = None
 			self.intrinsicHeight = None
-		if self.intrinsicHeight != None and self.intrinsicHeight <= 0:
+		if self.intrinsicHeight is not None and self.intrinsicHeight <= 0:
 #			print 'Error: SMILCssResolver, intrinsic media height = ',self.intrinsicHeight
 			self.intrinsicWidth = None
 			self.intrinsicHeight = None
@@ -888,7 +923,7 @@ class MediaNode(Node):
 			return self.mmRegPoint
 		regPoint = self.getRegPoint()
 		mmregpoint = self.context.getDocumentContext().GetRegPoint(regPoint)
-		if mmregpoint == None:
+		if mmregpoint is None:
 			# if no regpoint defined, return the default regpoint ('topLeft'): it avoids a crahes
 			mmregpoint=self.context.getDocumentContext().GetRegPoint('topLeft')
 		return mmregpoint
@@ -904,14 +939,14 @@ class MediaNode(Node):
 	# alignOveride is an optional overide id
 	def _getxyAlign(self, alignOveride=None):
 		alignId = None
-		if alignOveride == None:
+		if alignOveride is None:
 			alignId = self.getregalign()
 		else:
 			alignId = alignOveride
 			
 		from RegpointDefs import alignDef
 		xy = alignDef.get(alignId)
-		if xy == None:		
+		if xy is None:		
 			# impossible value, avoid a crash if bug
 			xy = (0.0, 0.0)
 		return xy
@@ -923,7 +958,7 @@ class MediaNode(Node):
 		self.__checkIntrinsicSize()
 		
 		# if no intrinsic size, return a default value
-		if self.intrinsicHeight == None or self.intrinsicWidth == None:
+		if self.intrinsicHeight is None or self.intrinsicWidth is None:
 			return 100,100
 		
 		regPointObject = self.getMMRegPoint()
@@ -1075,7 +1110,7 @@ class MediaNode(Node):
 	# return pixel values
 	def _getMediaSpaceArea(self):
 		# if no intrinsic size, the size area is the entire region		
-		if self.intrinsicHeight == None or self.intrinsicWidth == None:
+		if self.intrinsicHeight is None or self.intrinsicWidth is None:
 			return 0, 0, self.container.pxwidth, self.container.pxheight
 		
 		# get fit attribute
@@ -1196,26 +1231,26 @@ class MediaNode(Node):
 		return int(area_left), int(area_top), int(area_width), int(area_height)
 
 	def getFit(self):
-		if self.fit != None:
+		if self.fit is not None:
 			return self.fit
 		else:
 			region = self.__getRegion()
-			if region != None:
+			if region is not None:
 				return region.getFit()
 			
 	def __getRegion(self):
 		subreg = self.container
-		if self.container != None:
+		if self.container is not None:
 			return subreg.container
 
 		return None
 	
 	def getRegPoint(self):
-		if self.regPoint != None:
+		if self.regPoint is not None:
 			return self.regPoint
 		else:
 			region = self.__getRegion()
-			if region != None:
+			if region is not None:
 				return region.getRegPoint()
 
 		# we shouldn't pass here
@@ -1226,15 +1261,15 @@ class MediaNode(Node):
 		return self._getRegAlign(regPointObject)
 		
 	def _getRegAlign(self, regPointObject):
-		if self.regAlign != None:
+		if self.regAlign is not None:
 			return self.regAlign
 		else:
 			# default value
 			regAlign = 'topLeft'
 			region = self.__getRegion()
-			if region != None:
+			if region is not None:
 				regAlign = region.getRegAlign()
-				if regAlign == None:
+				if regAlign is None:
 					regAlign = regPointObject.getregalign()
 				
 		return regAlign
