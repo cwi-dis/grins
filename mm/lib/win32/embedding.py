@@ -22,6 +22,30 @@ WM_USER_MOUSE_MOVED  = win32con.WM_USER+10
 STOPPED, PAUSING, PLAYING = range(3)
 UNKNOWN = -1
 
+class EmbeddedWndCreator:
+	def __init__(self, oswnd):
+		self._oswnd = oswnd
+		self._peerid = 0
+		self._counter = 0
+		self._viewports = {}
+
+	def newEmbedded(self, w, h, units, bgcolor, title):
+		wnd = EmbeddedWnd(self, w, h, units, bgcolor, title)
+		self._counter = self._counter + 1
+		try:
+			from __main__ import commodule
+			commodule.AdviceNewPeerWindow(self._peerid, w, h, self._counter)
+		except: pass
+		self._viewports[id(wnd)] = wnd
+
+	def setPeerWindow(self, id, hwnd):
+		wnd = self._viewports.get(id)
+		if wnd: wnd.setPeerWindow(hwnd)
+	
+	def postMessage(self, msgid, wparam=0, lparam=0):
+		self._oswnd.PostMessage(msgid, wparam, lparam)		
+
+
 class ListenerWnd(GenWnd.GenWnd):
 	def __init__(self, toplevel):
 		GenWnd.GenWnd.__init__(self)
@@ -43,28 +67,37 @@ class ListenerWnd(GenWnd.GenWnd):
 		# lParam (params[3]) is a pointer to a c-string
 		filename = Sdk.GetWMString(params[3])
 		event = 'OnOpen'
+
+		# set to embedded mode if not already
+		oldstate = self._toplevel._createEmbedded
+		self._toplevel._createEmbedded = 1
+
 		try:
 			func, arg = self._toplevel.get_embedded(event)
 			func(arg, self, event, filename)
-			self._docmap[params[2]] = self._toplevel.get_most_recent_docframe()
+			oswnd = self._toplevel.get_most_recent_docframe()
+			self._docmap[params[2]] = EmbeddedWndCreator(oswnd)
 		except:
 			pass
 
+		# restore mode
+		self._toplevel._createEmbedded = oldstate
+	
 	def OnClose(self, params):
-		wnd = self._docmap.get(params[2])
-		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
+		frame = self._docmap.get(params[2])
+		if frame: frame.postMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
 
 	def OnPlay(self, params):
-		wnd = self._docmap.get(params[2])
-		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
+		frame = self._docmap.get(params[2])
+		if frame: frame.postMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
 
 	def OnStop(self, params):
-		wnd = self._docmap.get(params[2])
-		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
+		frame = self._docmap.get(params[2])
+		if frame: frame.postMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
 
 	def OnPause(self, params):
-		wnd = self._docmap.get(params[2])
-		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
+		frame = self._docmap.get(params[2])
+		if frame: frame.postMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
 
 	def OnGetStatus(self, params):
 		print 'OnGetStatus'
@@ -96,12 +129,11 @@ import win32mu
 import grinsRC
 
 class EmbeddedWnd(win32window.DDWndLayer):
-	def __init__(self, wnd, w, h, units, bgcolor, hwnd=0, title='', id=0):
+	def __init__(self, wnd, w, h, units, bgcolor, title='', id=0, hwnd=0):
 		self._cmdframe = wnd
 		self._peerwnd = wnd
 		self._smildoc = wnd.getgrinsdoc()
 		self._peerid = id
-		self._bgcolor = bgcolor
 
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
 		self._rect = 0, 0, w, h
@@ -120,7 +152,7 @@ class EmbeddedWnd(win32window.DDWndLayer):
 		except:
 			pass
 
-	def attach(self, hwnd):
+	def setPeerWindow(self, hwnd):
 		self.destroyDDLayer()
 		self._peerwnd = window.Wnd(win32ui.CreateWindowFromHandle(hwnd))
 		x, y, w, h = self._rect
@@ -326,3 +358,4 @@ class showmessage:
 
 
 
+ 

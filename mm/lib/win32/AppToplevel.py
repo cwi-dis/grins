@@ -101,6 +101,7 @@ class _Toplevel:
 		self._register_entries=[]
 
 		# embedding support state
+		self._createEmbedded = 0
 		self._embeddedcallbacks = {}
 		self._embeddedHwnd = {}
 		self._embeddedwnd = {}
@@ -179,18 +180,20 @@ class _Toplevel:
 				frame.register(ev,cb,arg)
 		return self._subwindows[0]
 
-	# Called by win32 modules for every open document
-	def newdocument(self,cmifdoc,adornments=None,commandlist=None):
+	# associate the document (TopLevel) with a wnd
+	# return the wnd
+	# argument cmifdoc is an instance of TopLevel
+	def newdocument(self, cmifdoc, adornments=None, commandlist=None):
 		for frame in self._subwindows:
 			if not frame._cmifdoc:
-				frame.setdocument(cmifdoc,adornments,commandlist)
+				frame.setdocument(cmifdoc,adornments,commandlist, self._createEmbedded)
 				self._most_recent_docframe = frame
 				return frame
 		frame = MainFrame.MDIFrameWnd()
 		frame.createOsWnd(self._apptitle)
 		frame.init_cmif(None, None, 0, 0,self._apptitle,
 			UNIT_MM,self._appadornments,self._appcommandlist)
-		frame.setdocument(cmifdoc,adornments,commandlist)
+		frame.setdocument(cmifdoc,adornments,commandlist, self._createEmbedded)
 		self._most_recent_docframe = frame
 		for r in self._register_entries:
 			ev,cb,arg=r
