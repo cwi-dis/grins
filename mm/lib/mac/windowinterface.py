@@ -13,6 +13,12 @@ import mw_dialogs
 import mw_menucmd
 
 #
+# There is a cyclic dependency between mw_dialogs and mw_windows. Solve it
+# by stuffing showmessage into mw_windows' namespace by hand.
+#
+mw_windows.showmessage = mw_dialogs.showmessage
+
+#
 # Initialize toplevel and make it available. Initializing the commands
 # has to be done later (it depends on mw_globals.toplevel being available
 # at some low level).

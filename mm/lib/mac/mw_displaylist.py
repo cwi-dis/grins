@@ -13,14 +13,8 @@ import math
 from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT
+from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH
 import mw_fonts
-
-#
-# Constants for arrow drawing
-#
-ARR_LENGTH = 18
-ARR_HALFWIDTH = 5
-ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 # Special round function (XXXX needs work).
 def _roundi(x):
