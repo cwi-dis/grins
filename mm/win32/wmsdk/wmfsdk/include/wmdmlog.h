@@ -2,7 +2,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Fri Apr 28 09:15:54 2000
+/* at Mon Jun 26 06:49:02 2000
  */
 /* Compiler settings for .\wmdmlog.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -65,12 +65,6 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 /* interface __MIDL_itf_wmdmlog_0000 */
 /* [local] */ 
 
-//=========================================================================
-//
-// Microsoft Windows Media Technologies
-// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
-//
-//=========================================================================
 #define WMDM_LOG_SEV_INFO             0x00000001 
 #define WMDM_LOG_SEV_WARN             0x00000002 
 #define WMDM_LOG_SEV_ERROR            0x00000004 
