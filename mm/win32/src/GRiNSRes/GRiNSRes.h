@@ -20,6 +20,7 @@
 #define IDC_GRAB_HAND                   148
 #define IDC_GRAB_HAND2                  156
 #define IDC_LD_STRECH                   157
+#define IDD_SPLASH                      157
 #define IDC_D_STRECH                    158
 #define IDC_RD_STRECH                   159
 #define IDC_R_STRECH                    160
@@ -59,6 +60,8 @@
 #define IDD_OKCANCELBARH                222
 #define IDD_PREFERENCES                 223
 #define IDD_CREATE_BOX1                 224
+#define IDD_ABOUT                       225
+#define IDB_SPLASH                      226
 #define IDC_STOP                        1000
 #define IDC_PLAY                        1001
 #define IDC_PAUSE                       1002
@@ -79,6 +82,7 @@
 #define IDCMD_NEW_LAYOUT                1022
 #define IDC_RENAME_LAYOUT               1023
 #define IDCMD_RENAME                    1023
+#define IDC_SPLASH                      1023
 #define IDC_DELETE_LAYOUT               1024
 #define IDCMD_DELETE                    1024
 #define IDC_LAYOUTS                     1025
@@ -145,6 +149,10 @@
 #define IDC_IMM_EDIT                    1091
 #define IDC_INT_LIST                    1092
 #define IDCMD_CLOSE_WINDOW              1093
+#define IDC_CANCEL                      1094
+#define IDC_OK                          1095
+#define IDC_MESSAGE                     1097
+#define IDC_VERSION_MSG                 1098
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -178,9 +186,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        224
+#define _APS_NEXT_RESOURCE_VALUE        227
 #define _APS_NEXT_COMMAND_VALUE         32813
-#define _APS_NEXT_CONTROL_VALUE         1094
+#define _APS_NEXT_CONTROL_VALUE         1099
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -69,102 +69,14 @@ SOURCE="$(InputPath)"
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Res\C_no04.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\CMIF.ICO
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\Copy4way.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cur00001.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cursor2.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\grab_han.cur
-# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\RES\grins_ed.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\Res\H_move.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_ne.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_ns.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_nw.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_point.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_we.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\hand.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\l_strech.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\pause.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\play.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\python.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\stop.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\Timer01.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\ul_strec.cur
-# End Source File
-# End Group
-# Begin Source File
-
 SOURCE=.\RES\GRiNSed.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\grinsed1.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\grinsed2.bmp
 # End Source File
 # Begin Source File
 
@@ -180,11 +92,11 @@ SOURCE=.\GRiNSRes.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\RES\ico00001.ico
+SOURCE=.\RES\hand.cur
 # End Source File
 # Begin Source File
 
-SOURCE=.\RES\Toolbar.bmp
+SOURCE=.\RES\ico00001.ico
 # End Source File
 # End Target
 # End Project
