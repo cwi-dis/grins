@@ -72,7 +72,7 @@ import settings
 # we cheat: we're not nearly so fuzzy as we claim to be
 mms = re.compile(r'\bmms\b', re.IGNORECASE)
 pss4 = re.compile(r'\bpss4\b', re.IGNORECASE)
-pss5 = re.compile(r'\bpss4\b', re.IGNORECASE)
+pss5 = re.compile(r'\bpss5\b', re.IGNORECASE)
 basic = re.compile(r'\bbasic\b', re.IGNORECASE)
 
 def parsegskin(file):
