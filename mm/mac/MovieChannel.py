@@ -43,7 +43,10 @@ class MovieChannel(ChannelWindow):
 		except (ValueError, Qt.Error), arg:
 			self.errormsg(node, 'Cannot open: '+`arg`)
 			return 1
-		self.arm_movie, dummy = Qt.NewMovieFromFile(movieResRef, QuickTime.newMovieActive)
+		self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
+					QuickTime.newMovieActive)
+		rate = self.arm_movie.GetMoviePreferredRate()
+		self.arm_movie.PrerollMovie(0, rate)
 		return 1
 		
 	def _playsome(self, *dummy):
@@ -77,7 +80,7 @@ class MovieChannel(ChannelWindow):
 ##		print 'SET', movieBox
 		self.play_movie.SetMovieBox(movieBox)
 		self.play_movie.GoToBeginningOfMovie()
-		self.play_movie.MoviesTask(0)
+##		self.play_movie.MoviesTask(0) # This appears to be a bad idea...
 		self.play_movie.StartMovie()
 		
 		windowinterface.setidleproc(self._playsome)
