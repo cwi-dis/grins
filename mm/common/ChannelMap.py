@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 # Table mapping channel types to channel classes.
 # Edit this module to add new classes.
+from sys import platform
 
 class ChannelMap:
 	channelmap = {
@@ -25,6 +26,9 @@ class ChannelMap:
 		'word':		'WordChannel',
 		'external':	'ExternalChannel',
 		}
+	
+	if platform == 'mac':
+		channelmap['movie'] = 'VideoChannel'
 
 	has_key = channelmap.has_key
 	keys = channelmap.keys
