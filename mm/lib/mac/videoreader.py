@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Video file reader
 import sys
 from Carbon import Qt

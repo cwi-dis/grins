@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 """quietconsole - A module to keep console I/O quiet but dump it when needed"""
 import types
 import sys
