@@ -395,3 +395,10 @@ class RENAME(_CommandBase):
 # Property dialog commands
 class SHOWALLPROPERTIES(_CommandBase):
 	help = 'Toggle between showing all properties and used ones only'
+
+#
+# Source view commands
+#
+class SELECTNODE_FROM_SOURCE(_CommandBase):
+	help = 'Select the node which is pointed by the cursor'
+	

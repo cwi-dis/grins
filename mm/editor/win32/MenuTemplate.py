@@ -117,6 +117,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Propertie&s...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
 		(FLAG_PRO, ENTRY, 'Con&vert to SMIL 2.0', None, RPCONVERT),
+		(FLAG_ALL, ENTRY, '&Select node from source', 'S', SELECTNODE_FROM_SOURCE),		
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Pre&ferences...', None, PREFERENCES),
 		)),
