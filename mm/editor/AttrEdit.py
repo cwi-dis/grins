@@ -1011,8 +1011,8 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			# Channelname -- special case
 			return (('name', ''), 'none',
-				'Region name', 'default',
-				'Region name', 'raw', flags.FLAG_ALL)
+				'Region ID', 'default',
+				'Region ID', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
