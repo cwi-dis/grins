@@ -6,6 +6,7 @@ import SourceViewDialog
 import windowinterface
 import SMILTreeRead, SMILTreeWrite
 from ViewDialog import ViewDialog
+import features
 
 class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 	def __init__(self, toplevel):
@@ -138,7 +139,7 @@ class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 		parseErrors = self.context.getParseErrors()
 		if parseErrors == None:
 			# Converts the MMNode structure into SMIL and puts it in the window.
-			text = SMILTreeWrite.WriteString(self.root, set_char_pos = 1)
+			text = SMILTreeWrite.WriteString(self.root, grinsExt = features.SOURCE_VIEW_EDIT in features.feature_set, set_char_pos = 1)
 			self.set_text(text)
 		else:
 			self.set_text(parseErrors.getSource())
