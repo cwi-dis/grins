@@ -6,8 +6,6 @@
 #include "resource.h"       // main symbols
 #include "EventSink.h"
 
-#define HANDLE_RADIUS 10
-
 /////////////////////////////////////////////////////////////////////////////
 // CBehavior
 class ATL_NO_VTABLE CBehavior : 
