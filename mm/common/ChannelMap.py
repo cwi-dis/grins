@@ -23,6 +23,7 @@ def _freeze_dummy_func():
 	import AnimateChannel
 	import BrushChannel
 	import PrefetchChannel
+	import SVGChannel
 
 class ChannelMap:
 	channelmap = {
@@ -38,6 +39,7 @@ class ChannelMap:
 		'animate':	'AnimateChannel',
 		'brush':	'BrushChannel',
 		'prefetch':	'PrefetchChannel',
+		'svg':		'SVGChannel',
 		}
 
 	has_key = channelmap.has_key
@@ -103,7 +105,7 @@ if features.compatibility == compatibility.G2:
 	SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
 	if platform == 'linux2':
 		SMILchanneltypes = SMILchanneltypes+['RealAudio', 'RealVideo']
-SMILextendedchanneltypes = ['html']
+SMILextendedchanneltypes = ['html', 'svg']
 SMILBostonChanneltypes = ['brush', 'prefetch']
 
 ct = channelmap.keys()
@@ -123,6 +125,7 @@ shortcuts = {
 	'image': 	'I',
 	'video':	'v',
 	'html': 	'H',
+	'svg': 		'G',
 	}
 
 def getvalidchanneltypes(context):
