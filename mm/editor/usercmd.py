@@ -259,6 +259,8 @@ class PREVSIBLING(_CommandBase):
 	help = 'Go to previous sibling'
 class COMPUTE_BANDWIDTH(_CommandBase):
 	help = 'Check bandwidth usage of presentation'
+class TRANSITION(_DynamicCascade):
+	help = 'Selection of available transitions'
 
 #
 # Command to hierarchy/channel view

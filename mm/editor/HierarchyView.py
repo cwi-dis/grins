@@ -64,6 +64,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
 		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
+		self.translist = []	# dynamic transition menu
 		self.show_links = 1;	# Show HTML links??? I think.. -mjvdg.
 		self.sizes = sizes_notime
 		from cmif import findfile
@@ -179,7 +180,9 @@ class HierarchyView(HierarchyViewDialog):
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commands.append(HELP(callback=(self.helpcall,())))
-
+		self.transitioncommands = [
+			TRANSITION(callback = self.transition_callback),
+			]
 
 
 	def __repr__(self):
@@ -353,8 +356,15 @@ class HierarchyView(HierarchyViewDialog):
 	def aftersetfocus(self):
 		# Called after the focus has been set to a specific node.
 
-		commands = self.commands # Use a copy.. the original is a template.
 		fnode = self.focusnode;
+
+		if isinstance(self.selected_widget, TransitionWidget):
+			which, transitionnames = self.selected_widget.posttransitionmenu()
+			self.translist = []
+			for trans in transitionnames:
+				self.translist.append((trans, (which, trans)))
+
+		commands = self.commands # Use a copy.. the original is a template.
 		fntype = self.focusnode.GetType();
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		
@@ -369,6 +379,9 @@ class HierarchyView(HierarchyViewDialog):
 			# the TOCHILD command
 			if fnode.children or (is_realpix and not hasattr(fnode, 'expanded')):
 				commands = commands + self.navigatecommands[1:2]
+		elif isinstance(self.selected_widget, TransitionWidget):
+			popupmenu = self.transition_popupmenu
+			commands = commands + self.transitioncommands
 		else:
 			popupmenu = self.leaf_popupmenu	# for all leaf nodes.
 
@@ -1125,6 +1138,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusnode(children[i])
 
 	def select_widget(self, widget):
+		print 'select_widget',`widget`
 		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
 		if isinstance(self.selected_widget, Widgets.Widget):
@@ -1594,6 +1608,9 @@ class HierarchyView(HierarchyViewDialog):
 			BandwidthCompute.compute_bandwidth(self.root)
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done()
+
+	def transition_callback(self, which, transition):
+		if self.focusobj: self.focusobj.transition_callback(which, transition)
 
 	def playcall(self):
 		if self.focusobj: self.focusobj.playcall()
