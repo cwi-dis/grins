@@ -381,6 +381,8 @@ class EditableMMNode(MMNode.MMNode):
 		# Remove ones we don't normally copy
 		if 'name' in defattrlist:
 			defattrlist.remove('name')
+		if 'file' in defattrlist:
+			defattrlist.remove('file')
 		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist)
 		if not copylist: return
 		dict = {}
