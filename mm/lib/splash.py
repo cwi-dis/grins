@@ -69,6 +69,12 @@ class _Splash:
 		w.AddCallback('exposeCallback', self.expose,
 			      (gc.PutImage, (image, 0, 0, 0, 0, width, height)))
 		gc.PutImage(image, 0, 0, 0, 0, width, height)
+		import Xtdefs, time
+		while Xt.Pending():
+			Xt.ProcessEvent(Xtdefs.XtIMAll)
+		time.sleep(0.1)
+		while Xt.Pending():
+			Xt.ProcessEvent(Xtdefs.XtIMAll)
 
 	def wininit(self):
 		if self.__initialized:
