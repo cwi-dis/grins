@@ -3,6 +3,10 @@
 
 from MMExc import *		# Exceptions
 from Hlinks import Hlinks
+import Duration
+
+from SR import SCHED, SCHED_DONE, PLAY, PLAY_DONE, \
+	  SCHED_STOP, PLAY_STOP, SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE
 
 
 leaftypes = ['imm', 'ext']
@@ -318,7 +322,6 @@ class MMNode:
 		self.values = []
 		self.summaries = {}
 		self.widget = None # Used to display traversal XXX temporary!
-		self.setarmedmode = self.setarmedmode_dummy
 		self.armedmode = None
 		return self
 	#
@@ -823,8 +826,161 @@ class MMNode:
 	# method for maintaining armed status when the ChannelView is
 	# not active
 	#
-	def setarmedmode_dummy(self, mode):
+	def set_armedmode(self, mode):
 		self.armedmode = mode
+
+	#
+	# Methods for building scheduler records:
+	def gensr(self):
+		if self.type in ('imm', 'ext'):
+			return self.gensr_leaf(), []
+		elif self.type == 'seq':
+			return self.gensr_seq(), self.children
+		elif self.type == 'par':
+			return self.gensr_par(), self.children
+		raise 'Cannnot gensr() for nodes of this type', self.type
+
+	#
+	# Generate schedrecords for leaf nodes.
+	#
+	# We distinguish 3 cases for when to stop displaying a node:
+	# 1. If there's a sync arc to the tail of the node we stop playing
+	#    when the sync arc fired
+	# 2. If we have inherited timing we stop playing when the parent node
+	#    sends us a SCHED_DONE
+	# 3. If we have implicit timing we just stop playing immedeately.
+	#
+	def gensr_leaf(self):
+		in0, out0, in1, out1 = self.gensr_arcs()
+		arg = self
+		if in1:
+			return [\
+			  ([(SCHED, arg), (ARM_DONE, arg)]+in0,\
+			                           [(PLAY, arg)     ]+out0),\
+			  ([(PLAY_DONE, arg) ]+in1,[(SCHED_DONE,arg), \
+			                            (PLAY_STOP, arg)]+out1),\
+			  ([(SCHED_STOP, arg)]    ,[]) ]
+		if Duration.get(self) == 0:
+			return [\
+			  ([(SCHED, arg), (ARM_DONE, arg)]+in0,\
+			                           [(PLAY, arg)     ]+out0),\
+			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg)]+out1),\
+			  ([(SCHED_STOP, arg)]    ,[(PLAY_STOP, arg)]) ]
+		else:
+			return [\
+			  ([(SCHED, arg), (ARM_DONE, arg)]+in0,\
+			                           [(PLAY, arg)     ]+out0),\
+			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg), \
+			                            (PLAY_STOP, arg)]+out1),\
+			  ([(SCHED_STOP, arg)]    ,[]) ]
+	#
+	# Generate schedrecords for a sequential node
+	def gensr_seq(self):
+		n_sr = len(self.children)+1
+		sr_list = []
+		last_actions = []
+		in0, out0, in1, out1 = self.gensr_arcs()
+		for i in range(n_sr):
+			if i == 0:
+				prereq = [(SCHED, self)] + in0
+				actions = out0
+			else:
+				prereq = [(SCHED_DONE, self.children[i-1])]
+				actions = [(SCHED_STOP, self.children[i-1])]
+			if i == n_sr-1:
+				last_actions = actions
+				actions = [(SCHED_DONE, self)]
+			else:
+				actions.append((SCHED, self.children[i]))
+			sr_list.append((prereq, actions))
+		sr_list.append( ([(SCHED_STOP, self)]+in1, last_actions+out1) )
+		return sr_list
+
+	def gensr_par(self):
+		in0, out0, in1, out1 = self.gensr_arcs()
+		if not self.children:
+			# Empty node needs special code:
+			return [ \
+			     ([(SCHED, self)]+in0,[(SCHED_DONE, self)]+out0),\
+			     ([(SCHED_STOP, self)]+in1,out1) ]
+		alist = []
+		plist = []
+		slist = []
+		for i in self.children:
+			arg = i
+			alist.append((SCHED, arg))
+			plist.append((SCHED_DONE, arg))
+			slist.append((SCHED_STOP, arg))
+		return [  ([(SCHED, self) ]+in0, alist+out0), \
+			  ( plist, [(SCHED_DONE, self)]), \
+			  ([(SCHED_STOP, self)]+in1, slist+out1) ]
+	#
+	# gensr_arcs returns 4 lists of sync arc events: incoming head,
+	# outgoing head, incoming tail, outgoing tail.
+	#
+	def gensr_arcs(self):
+		in0 = []
+		out0 = []
+		in1 = []
+		out1 = []
+		for i in self.sync_from[0]:
+			in0.append((SYNC_DONE, i))
+		for i in self.sync_from[1]:
+			in1.append((SYNC_DONE, i))
+		for i in self.sync_to[0]:
+			out0.append((SYNC, i))
+		for i in self.sync_to[1]:
+			out0.append((SYNC, i))
+		return in0, out0, in1, out1
+			
+	#
+	# Methods to handle sync arcs.
+	#
+	# The GetArcList method recursively gets a list of sync arcs
+	# The sync arcs are returned as (n1, s1, n2, s2, delay) tuples.
+	# Unused sync arcs are not filtered out of the list yet.
+	# As a side effect the members sync_from and sync_to are set empty.
+	#
+	def GetArcList(self):
+		self.sync_from = ([],[])
+		self.sync_to = ([],[])
+		# XXXX Cannot use GetSummary to abort the treewalk, since
+		# we have to clear the sync_to and sync_from members
+		synctolist = []
+		arcs = self.GetAttrDef('synctolist', [])
+		for arc in arcs:
+			n1uid, s1, delay, s2 = arc
+			synctolist.append((self.MapUID(n1uid), s1, \
+				  self, s2, delay))
+		if self.GetType() in interiortypes:
+			for c in self.children:
+				synctolist = synctolist + c.GetArcList()
+		return synctolist
+	#
+	# FilterArcList removes all arcs if they are not part of the
+	# subtree rooted at this node.
+	#
+	def FilterArcList(self, arclist):
+		newlist = []
+		for arc in arclist:
+			n1, s1, n2, s2, delay = arc
+			if self.IsAncestorOf(n1) and self.IsAncestorOf(n2):
+				newlist.append(arc)
+		return newlist
+	#
+	# SetArcSrc sets the source of a sync arc.
+	# XXXX This can be done so that gensr_arcs has nothing more to do.
+	#
+	def SetArcSrc(self, side, delay, aid):
+		self.sync_to[side].append((delay, aid))
+
+	#
+	# SetArcDst sets the destination of a sync arc.
+	#
+	def SetArcDst(self, side, aid):
+		self.sync_from[side].append(aid)
+			
+		
 
 
 # Make a "deep copy" of an arbitrary value
@@ -917,8 +1073,3 @@ def _prstats():
 	for count, key in list:
 		print '#', rjust(`count`, 5), key
 
-#
-# Dummy setarmedmode routine, for use when ChannelView is not active
-#
-def setarmedmode_dummy(mode):
-	node.armedmode = mode
