@@ -76,14 +76,14 @@ class _Toplevel(mac_windowbase._Toplevel):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, transparent = 0, units=UNIT_MM, menubar=[], canvassize=None):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
-		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent, title, menubar)
+		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent, title, menubar, canvassize)
 		self._register_wid(wid, rv)
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, transparent = 0, units=UNIT_MM, menubar=[], canvassize=None):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
-		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent, title, menubar)
+		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent, title, menubar, canvassize)
 		self._register_wid(wid, rv)
 		return rv
 		
@@ -171,9 +171,9 @@ class _CommonWindow(_CommonWindowMixin, mac_windowbase._CommonWindow):
 class _Window(_CommonWindowMixin, mac_windowbase._Window):
 
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, transparent=0,
-		     title=None, commands=[]):
+		     title=None, commands=[], canvassize=None):
 		mac_windowbase._Window.__init__(self, parent, wid, x, y, w, h, 
-					      defcmap, pixmap, transparent, title, commands)
+					      defcmap, pixmap, transparent, title, commands, canvassize)
 		self.arrowcache = {}
 		self._next_create_box = []
 

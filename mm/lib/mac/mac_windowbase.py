@@ -912,6 +912,57 @@ class _WindowGroup:
 			dict[k] = v
 		self._set_cmd_dict(dict)
 		
+class _ScrollMixin:
+	"""Mixin class for scrollable/resizable windows"""
+	def __init__(self, width, height, canvassize=None):
+		self._canvassize = canvassize
+		self._canvaspos = (0, 0)
+		self._barx = None
+		self._bary = None
+		return width, height
+		
+	def close(self):
+		pass
+		
+	def _adjustwh(self, width, height):
+		"""Add scrollbarsizes to w/h"""
+		return width, height
+		
+	def _resizescrollbars(self, width, height):
+		"""Move/resize scrollbars and return inner width/height""" 
+		return width, height
+		
+	def _clipvisible(self, clip):
+		"""AND the visible region into the region clip"""
+		pass
+		
+	def _activate(self, onoff):
+		if onoff:
+			hilite = 0
+		else:
+			hilite = 255
+		if self._barx:
+			self._barx.HiliteControl(hilite)
+		if self._bary:
+			self._bary.HiliteControl(hilite)
+		
+	def setcanvassize(self, how):
+		if self._canvassize is None:
+			print 'setcanvassize call for non-resizable window!'
+			return
+		w, h = self._canvassize
+		if how == DOUBLE_WIDTH:
+			w = w * 2
+		elif how == DOUBLE_HEIGHT:
+			h = h * 2
+		else:
+			w, h = 1.0, 1.0
+			self._canvaspos = (0, 0)
+		self._canvassize = (w, h)
+		print 'DBG: new canvassize', self._canvassize
+		# XXXX set _rect
+		# XXXX do the resize callback
+
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
 		
@@ -1374,11 +1425,11 @@ class _CommonWindow:
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
 		
-class _Window(_CommonWindow, _WindowGroup):
+class _Window(_CommonWindow, _WindowGroup, _ScrollMixin):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
-			transparent = 0, title="", commands=[]):
+			transparent = 0, title="", commands=[], canvassize = None):
 		
 		self._istoplevel = 1
 		_CommonWindow.__init__(self, parent, wid)
@@ -1390,11 +1441,17 @@ class _Window(_CommonWindow, _WindowGroup):
 		
 		# Note: the toplevel init routine is called with pixel coordinates,
 		# not fractional coordinates
+		w, h = _ScrollMixin.__init__(self, w, h, canvassize)
 		self._rect = 0, 0, w, h
 		
 		self._hfactor = parent._hfactor / (float(w) / _x_pixel_per_mm)
 		self._vfactor = parent._vfactor / (float(h) / _y_pixel_per_mm)
-				
+	
+	def close(self):
+		_ScrollMixin.close(self)
+		_CommonWindow.close(self)
+		# XXXX Not WindowGroup?
+		
 	def settitle(self, title):
 		"""Set window title"""
 		if not self._wid:
@@ -1413,6 +1470,7 @@ class _Window(_CommonWindow, _WindowGroup):
 			rv = (float(x)/_x_pixel_per_mm, float(y-_screen_top_offset)/_y_pixel_per_mm,
 				float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm)
 		elif units == UNIT_PXL:
+			w, h = self._adjustwh(w, h)
 			rv = x, y-_screen_top_offset, w, h
 		elif units == UNIT_SCREEN:
 			l, t, r, b = Qd.qd.screenBits.bounds
@@ -1464,6 +1522,7 @@ class _Window(_CommonWindow, _WindowGroup):
 
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self.qdrect())
+		self._clipvisible(self._clip)
 		# subtract all subwindows, insofar they aren't transparent at the moment
 		for w in self._subwindows:
 			if w._transparent == 0 or \
@@ -1482,9 +1541,11 @@ class _Window(_CommonWindow, _WindowGroup):
 	def _activate(self, onoff):
 		_CommonWindow._activate(self, onoff)
 ##		_WindowGroup._activate(self, onoff)
+		_ScrollMixin._activate(self, onoff)
 
 	def _resize_callback(self, width, height):
 		x, y = self._rect[:2]
+		width, height = self._resizescrollbars(width, height)
 		self._rect = x, y, width, height
 		# convert pixels to mm
 		parent = self._parent
