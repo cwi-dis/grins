@@ -26,6 +26,7 @@ MENUBAR=(
 		(SEP,),
 		(ENTRY, 'Save', 'S', SAVE),
 		(ENTRY, 'Save as...', None, SAVE_AS),
+		(ENTRY, 'Export SMIL...', None, EXPORT_SMIL),
 		(ENTRY, 'Restore', None, RESTORE),
 		(SEP,),
 		(ENTRY, 'Preferences...', None, PREFERENCES),
