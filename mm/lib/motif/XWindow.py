@@ -362,7 +362,8 @@ class _Window(_AdornmentSupport):
 		self._buttonregion = Xlib.CreateRegion()
 		self._callbacks = {}
 		self._accelerators = {}
-		self._menu = None
+		self._menu = None		# Dynamically generated popup menu (channels)
+		self._popupmenu = None	# Template-based popup menu (views)
 		self._transparent = 0
 		self._showing = None
 		self._redrawfunc = None
@@ -611,6 +612,17 @@ class _Window(_AdornmentSupport):
 				if key:
 					self._menuaccel.append(key)
 		self._menu = menu
+		
+	def setpopupmenu(self, menutemplate):
+		# Menutemplate is a MenuTemplate-style menu template.
+		# It should be turned into an menu and put
+		# into self._popupmenu.
+		self._destroy_popupmenu()
+		pass
+		
+	def _destroy_popupmenu(self):
+		# Free resources held by self._popupmenu and set it to None
+		self._popupmenu = None
 
 	def create_box(self, msg, callback, box = None):
 		import Xcursorfont
@@ -1018,6 +1030,10 @@ class _Window(_AdornmentSupport):
 					if self._menu:
 						self._menu.MenuPosition(event)
 						self._menu.ManageChild()
+						return
+					elif self._popupmenu:
+						self._popupmenu.MenuPosition(event)
+						self._popupmenu.ManageChild()
 						return
 					ev = Mouse2Press
 				else:
