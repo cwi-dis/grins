@@ -644,7 +644,7 @@ class TupleButtonRow(ButtonRow):
 		return '<TupleButtonRow instance, name=' + `self.name` + '>'
 
 	def valuerepr(self, value):
-		if type(value) == type(''):
+		if type(value) is type(''):
 			return value
 		return ButtonRow.valuerepr(self, value)
 
@@ -746,7 +746,7 @@ class BoolButtonRow(PopupButtonRow):
 			return value
 
 	def valuerepr(self, value):
-		if type(value) == type(''):
+		if type(value) is type(''):
 			return value
 		if value:
 			return 'on'
