@@ -1777,6 +1777,8 @@ class HierarchyView(HierarchyViewDialog):
 		if len(parent.children) <> 1:
 			self.popup_error("You can only merge a node with it's parents if it has no siblings.")
 			return
+		# also check that the child is not an immediate node
+		# After a brief discussion with Sjoerd, this shouldn't be a problem.
 
 		em = self.editmgr
 		if not em.transaction():
@@ -1787,34 +1789,30 @@ class HierarchyView(HierarchyViewDialog):
 		# 1. Search through the whole tree looking for events. Don't forget that I'm also in the tree.
 		# 2. Any events pointing to the child should now point to it's parent.
 		# This doesn't affect the child or the parent.
-
-		print "TODO: check for events between the child and the parent."
-		
 		nodes = self.find_events_to_node(child, self.root) # This is a list of nodes containing events caused by this node.
-		print "DEBUG: nodes are: ", nodes
 		parent_uid = parent.GetUID()
 		child_uid = child.GetUID()
 		uidremap = {child_uid: parent_uid}
 		for n in nodes:		# Find all events and change their destination.
 			assert isinstance(n, MMNode.MMNode)
 			newbeginlist = []
-			print "DEBUG: oldbeginlist for ", n, " is: ", MMAttrdefs.getattr(n, 'beginlist')
 			for s in MMAttrdefs.getattr(n, 'beginlist'):
+				# I should be checking for events between the child and the parent here.
+				# I think I'll just let the user sort it out -mjvdg.
 				assert isinstance(s, MMNode.MMSyncArc)
-				newsyncarc = s.copy(uidremap)					
+				newsyncarc = s.copy(uidremap)
 				newbeginlist.append(newsyncarc)
 			newendlist = []
 			for s in MMAttrdefs.getattr(n, 'endlist'):
 				assert isinstance(s, MMNode.MMSyncArc)
 				newsyncarc = s.copy(uidremap)
 				newendlist.append(newsyncarc)
-			print "DEBUG: new begin list is: ", newbeginlist
 			em.setnodeattr(n, 'beginlist', newbeginlist)
 			em.setnodeattr(n, 'endlist', newendlist)
 
 		childattrs = child.attrdict
 		myattrs = parent.attrdict
-		conflicts = []		# A list of conflicting keys.
+		#conflicts = []		# A list of conflicting keys.
 
 		# Work through all the attributes; add them all to the parent.
 		# Note that this includes the events ('beginlist', 'endlist') and the anchors.
@@ -1862,7 +1860,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.need_refresh = 1
 		em.commit()		# This does a redraw.
-		print "Done.. links are now:", self.root.context.hyperlinks.links
 
 
 	def find_events_to_node(self, node, current):
