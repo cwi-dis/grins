@@ -11,8 +11,7 @@
 #define MP3LIB_API __declspec(dllimport)
 #endif
 
-MP3LIB_API void Init(int,char*);
-MP3LIB_API void Exit(void);
-
-MP3LIB_API int DecompressMp3(char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos);
-MP3LIB_API int GetHeaderInfo(unsigned char * inbuff, int insize, int* Freq, int* ch, int* br);
+MP3LIB_API void mp3_lib_init(int,char*);
+MP3LIB_API void mp3_lib_finalize(void);
+MP3LIB_API int mp3_lib_decode_header(unsigned char * inbuff, int insize, int* Freq, int* ch, int* br);
+MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos);
