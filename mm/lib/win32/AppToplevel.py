@@ -198,14 +198,22 @@ class _Toplevel:
 		"""Return screen depth"""
 		return sysmetrics.depth
 
+
 	# Set the application cursor to the cursor with string id
 	def setcursor(self, strid):
+		if strid!='arrow':
+			print 'AppTopLevel.setcursor',strid
 		App=win32ui.GetApp()
+		import grinsRC
 		if strid=='hand':
-			import grinsRC
 			cursor = App.LoadCursor(grinsRC.IDC_POINT_HAND)
+		elif strid=='stop':
+			cursor = App.LoadCursor(grinsRC.IDC_STOP)
+		elif strid=='channel':
+			cursor = App.LoadCursor(grinsRC.IDC_DRAGMOVE)
 		else:
 			cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
+			strid='arrow'
 		(win32ui.GetWin32Sdk()).SetCursor(cursor);
 		self._cursor = strid
 
@@ -292,16 +300,14 @@ class _Toplevel:
 
 	# Called by the core sustem to set the waiting cursor
 	_waiting=0
-	def setwaiting(self,f=0):
-		if not self._waiting and f:
+	def setwaiting(self):
+		if not self._waiting:
 			win32ui.GetApp().BeginWaitCursor()
-		self._waiting = 1
 
 	# Called by the core sustem to remove the waiting cursor
-	def setready(self,f=0):
-		if self._waiting and f:
+	def setready(self):
+		if self._waiting:
 			win32ui.GetApp().EndWaitCursor()
-		self._waiting = 0
 
 	#
 	# delta timer interface
