@@ -2,17 +2,24 @@ from debug import debug
 from Channel import *
 import string
 import sys
-import VCR
 import windowinterface
-import VcrIndex
 import MMAttrdefs
 from AnchorDefs import *
+try:
+    import VCR
+    import VcrIndex
+except ImportError:
+    VCR=None
+    VcrIndex=None
 
 [V_NONE, V_SPR, V_SB, V_READY, V_PLAYING, V_ERROR] = range(6)
 
 class VcrChannel(Channel):
 	def init(self, name, attrdict, scheduler, ui):
 		self = Channel.init(self, name, attrdict, scheduler, ui)
+		if VCR==None or VcrIndex==None:
+		    print 'ERROR: VCR or VcrIndex module not found. Expect a crash soon'
+		    return self
 		self.vcr = VCR.VCR().init()
 		self.vcr.setcallback(self.vcr_ready, None)
 		toplevel = self._player.toplevel
