@@ -41,10 +41,42 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_ndisconnect
 
 /*
  * Class:     GRiNSPlayer
+ * Method:    ngetDuration
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetDuration
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSPlayer
  * Method:    ngetPreferredSize
  * Signature: (I)Ljava/awt/Dimension;
  */
 JNIEXPORT jobject JNICALL Java_GRiNSPlayer_ngetPreferredSize
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetSpeed
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetSpeed
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetState
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_GRiNSPlayer_ngetState
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetTime
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime
   (JNIEnv *, jobject, jint);
 
 /*
@@ -70,6 +102,22 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_npause
  */
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nplay
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nsetSpeed
+ * Signature: (ID)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed
+  (JNIEnv *, jobject, jint, jdouble);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nsetTime
+ * Signature: (ID)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime
+  (JNIEnv *, jobject, jint, jdouble);
 
 /*
  * Class:     GRiNSPlayer
