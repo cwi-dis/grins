@@ -10,9 +10,9 @@ try:
 except:
 	pass
 
-if os.name == 'posix' and __file__ != '<frozen>':
-	import fastimp
-	fastimp.install()
+## if os.name == 'posix' and __file__ != '<frozen>':
+## 	import fastimp
+## 	fastimp.install()
 
 import getopt
 
@@ -46,15 +46,29 @@ class Main(MainDialog):
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
+		from usercmd import *
+		self.commandlist = [
+			OPEN(callback = (self.open_callback, ())),
+			PREFERENCES(callback = (self.preferences_callback, ())),
+			EXIT(callback = (self.close_callback, ())),
+			]
+		if __debug__:
+			self.commandlist = self.commandlist + [
+				TRACE(callback = (self.trace_callback, ())),
+				DEBUG(callback = (self.debug_callback, ())),
+				CRASH(callback = (self.crash_callback, ())),
+				]
 		MainDialog.__init__(self, 'GRiNS')
 		# first open all files
 		for file in files:
-			self.open_callback(MMurl.guessurl(file))
+			self.openURL_callback(MMurl.guessurl(file))
 		# then play them
 		for top in self.tops:
 			top.player.playsubtree(top.root)
 
-	def open_callback(self, url):
+	def openURL_callback(self, url):
+		import windowinterface
+		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
 		try:
@@ -67,13 +81,14 @@ class Main(MainDialog):
 			windowinterface.showmessage('parsing URL %s failed' % url)
 		else:
 			self.tops.append(top)
-			top.setwaiting()
 			top.show()
 			top.player.show()
-			top.setready()
 
 	def close_callback(self):
 		raise SystemExit, 0
+
+	def crash_callback(self):
+		raise 'Crash requested by user'
 
 	def debug_callback(self):
 		import pdb
@@ -87,6 +102,10 @@ class Main(MainDialog):
 		else:
 			self._tracing = 1
 			trace.set_trace()
+
+	def preferences_callback(self):
+		import Preferences
+		Preferences.showpreferences(1)
 
 	def closetop(self, top):
 		if self._closing:
@@ -137,6 +156,9 @@ def main():
 	if not files and sys.platform not in ('mac', 'win32'):
 		usage('No files specified')
 
+	if sys.argv[0] and sys.argv[0][0] == '-':
+		sys.argv[0] = 'grins'
+
 	try:
 		import splash
 	except ImportError:
@@ -154,9 +176,6 @@ def main():
 		else:
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
-
-	if sys.argv[0] and sys.argv[0][0] == '-':
-		sys.argv[0] = 'cmifplay'
 
 ## 	for fn in files:
 ## 		try:

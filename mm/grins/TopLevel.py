@@ -6,15 +6,17 @@ import MMAttrdefs, MMurl
 from MMExc import *
 import Timing
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from usercmd import *
 
 # an empty document
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
-class TopLevel:
+from TopLevelDialog import TopLevelDialog
+
+class TopLevel(TopLevelDialog):
 	def __init__(self, main, url):
 		self.__immediate = 0
 		self.__intimer = 0
-		self.waiting = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -41,20 +43,30 @@ class TopLevel:
 		if utype:
 			url = '%s:%s' % (utype, url)
 		self.filename = url
+		self.source = None
 		self.read_it()
 		self.makeplayer()
+		self.commandlist = [
+			CLOSE(callback = (self.close_callback, ())),
+			]
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(
+				HELP(callback = (self.help_callback, ())))
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'textwindow'):
+			self.commandlist.append(
+				SOURCE(callback = (self.source_callback, ())))
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
-	def show(self):
-		pass
-
 	def destroy(self):
-		self.destroyplayer()
-		self.root.Destroy()
 		if self in self.main.tops:
 			self.main.tops.remove(self)
+		self.destroyplayer()
+		self.hide()
+		self.root.Destroy()
 
 	def timer_callback(self):
 		self.__intimer = 1
@@ -64,7 +76,6 @@ class TopLevel:
 		while self.__immediate:
 			self.__immediate = 0
 			self.player.timer_callback()
-		self.setready()
 		self.__intimer = 0
 
 	def set_timer(self, delay):
@@ -93,6 +104,9 @@ class TopLevel:
 	#
 	# Callbacks.
 	#
+	def source_callback(self):
+		self.showsource(self.root.source)
+
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
@@ -122,19 +136,6 @@ class TopLevel:
 		top.show()
 		top.player.show()
 		top.player.playsubtree(top.root)
-		top.setready()
-
-	def open_callback(self):
-		cwd = self.dirname
-		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
-		else:
-			cwd = os.getcwd()
-		windowinterface.FileDialog('Open SMIL file:', cwd, '*.smil',
-					   '', self.open_okcallback, None,
-					   existing = 1)
 
 	def read_it(self):
 ## 		import time
@@ -151,8 +152,9 @@ class TopLevel:
 			self.root = MMRead.ReadFile(self.filename)
 		else:
 			import SMILTreeRead
-			if mtype[:6] != 'audio/' and \
-			   mtype[:6] != 'video/':
+			if mtype is None or \
+			   (mtype[:6] != 'audio/' and
+			    mtype[:6] != 'video/'):
 				dur = ' dur="indefinite"'
 			else:
 				dur = ''
@@ -172,24 +174,20 @@ class TopLevel:
 
 	def close_callback(self):
 		self.setwaiting()
+		if self.source and not self.source.is_closed():
+			self.source.close()
+		self.source = None
 		self.close()
-		self.setready()
 
 	def close(self):
 		self.destroy()
 
-	def setwaiting(self):
-		if self.waiting: return
-		self.waiting = 1
-		windowinterface.setcursor('watch')
-		self.player.setwaiting()
+	def help_callback(self, params=None):
+		import Help
+		Help.showhelpwindow()
 
-	def setready(self):
-		if not self.waiting: return
-		self.waiting = 0
-		if self.player is not None:
-			self.player.setready()
-		windowinterface.setcursor('')
+	def setwaiting(self):
+		windowinterface.setwaiting()
 
 	#
 	# Global hyperjump interface
