@@ -10,7 +10,7 @@ import Xlib
 
 class VideoChannel(Channel.ChannelWindowAsync):
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'loop']
+		     ['bucolor', 'hicolor', 'scale', 'loop', 'range']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
@@ -132,6 +132,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.played_bg = self.armed_bg
 		window.setredrawfunc(self.redraw)
 		movie.BindOpenGLWindow(self.window._form, self.__context)
+		range = MMAttrdefs.getattr(node, 'range')
+		if range[0]:
+			movie.SetStartFrame(range[0])
+			movie.SetCurrentFrame(range[0])
+		if range[1]:
+			movie.SetEndFrame(range[1])
 		loop = self.armed_loop
 		if loop == 0:
 			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
