@@ -180,6 +180,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		#self._close_cmd_list.append(closecmd)
 		#self.onActivate(1)
 
+		self['LeftList'].recalchorizontalextent()
 		self['RightList'].recalchorizontalextent()
 
 	# Called when the view is activated 
