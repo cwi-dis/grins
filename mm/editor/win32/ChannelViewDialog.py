@@ -1,5 +1,4 @@
 from ViewDialog import ViewDialog
-import windowinterface
 import WMEVENTS
 import MMAttrdefs
 from usercmd import *
@@ -92,9 +91,10 @@ class ChannelViewDialog(ViewDialog):
 	def show(self, title):
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window=windowinterface.newview(x, y, w, h, title, 
+		toplevel_window=self.toplevel.window
+		self.window=toplevel_window.newview(x, y, w, h, title, 
 			adornments = self.adornments,canvassize = (w, h),
-			context='cview_')
+			strid='cview_')
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)

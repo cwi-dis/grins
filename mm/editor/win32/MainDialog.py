@@ -17,6 +17,14 @@ self.close_callback is also called.
 
 """
 
+"""@win32doc|MainDialog
+There is only one instance of the MainDialog per application.
+The MainDialog constructor creates an MDIFraneWnd with a toolbar
+and menu. The application level commands New, Open and Exit
+are enabled. When there are documents open there is a one to one
+correspondance between an MDIFrameWnd and a document. The MDIFrameWnd
+created will be reused by the first document that will be opened.
+"""
 __version__ = "$Id$"
 
 from usercmd import *
@@ -47,11 +55,19 @@ class MainDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as window title
 		"""
+		if __debug__:
+			import usercmd
+			self.commandlist.append(
+				usercmd.CONSOLE(callback=(self.console_callback, ())))
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(
+				HELP(callback = (self.help_callback, ())))
 
 		import windowinterface
-		self.__window = windowinterface.createmainwnd(None, None, 0, 0,
-				title, adornments = self.adornments,
-				commandlist = self.commandlist)
+		windowinterface.createmainwnd(title,
+			adornments = self.adornments,
+			commandlist = self.commandlist)
 
 	def open_callback(self):
 		callbacks={
@@ -60,17 +76,12 @@ class MainDialog:
 			'Cancel':(self.__ccallback, ()),
 			}
 		import windowinterface
-		self.__owindow=windowinterface.OpenLocationDlg(callbacks,self.__window)
+		f=windowinterface.getmainwnd()
+		self.__owindow=windowinterface.OpenLocationDlg(callbacks,f)
 		self.__text=self.__owindow._text
 		self.__owindow.show()
 
 
-	def __modifyCB(self, text):
-		# HACK: this hack is because the SGI file browser adds
-		# a space to the end of the filename when you drag and
-		# drop it.
-		if text and len(text) > 1 and text[-1] == ' ':
-			return text[:-1]
 
 	def __ccallback(self):
 		self.__owindow.close()
@@ -85,9 +96,10 @@ class MainDialog:
 
 	def __openfile_callback(self):
 		import windowinterface
+		f=windowinterface.getmainwnd()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
 					   self.__filecvt, None, 1,
-					   parent = self.__owindow)
+					   parent = f)
 
 	def __filecvt(self, filename):
 		import os, MMurl
@@ -105,5 +117,16 @@ class MainDialog:
 				filename = file
 		self.__text.settext(MMurl.pathname2url(filename))
 
-	def setbutton(self, button, value):
-		pass			# for now...
+	def console_callback(self):
+		import win32ui,win32con
+		cwnd=win32ui.GetAfx().GetMainWnd()
+		if cwnd.IsWindowVisible():
+			cwnd.ShowWindow(win32con.SW_HIDE)
+		else:
+			cwnd.ShowWindow(win32con.SW_RESTORE)
+			cwnd.ShowWindow(win32con.SW_SHOW)
+			cwnd.BringWindowToTop()
+
+	def help_callback(self, params=None):
+		import Help
+		Help.showhelpwindow()

@@ -5,44 +5,53 @@
 
 from usercmd import *
 
+# plus wnds arrange cmds
+from wndusercmd import *
+
+
 import win32ui,win32con
 
 # import resource ids for user cmds IDUC_<cmd class>
+import grinsRC, afxres
 from grinsRC import *
 
 # set starting id for buttons without resources
-idbegin=1001 
-id=idbegin
-
-# for now import adorment preferences 
-from adornpref import stdmenu,menuconfig
+idbegin=grinsRC._APS_NEXT_COMMAND_VALUE
+idend=idbegin
 
 # map from cmd classes to CommandUI instances
 class2ui={}
 
+
+
+# cascade commands ranges
+m=100
+idc=((idbegin+100)/m+1)*m
+casc2ui={
+SYNCARCS:idc,
+ANCESTORS:idc+m,
+DESCENDANTS:idc+2*m,
+SIBLINGS:idc+3*m,
+LAYOUTS:idc+4*m,
+CHANNELS:idc+5*m,
+}
+def get_cascade(id):
+	global idc,m,casc2ui
+	ind=id-id%m
+	for c in casc2ui.keys():
+		if casc2ui[c]==ind:return c
+	
+
 class CommandUI:
-	def __init__(self,cmdcl,cat=None,dispstr=None,iduc=None,sep=0):
-		if not cat:
-			self.cat='Tools'
-		else:
-			self.cat=cat
-
-		if not dispstr:
-			self.dispstr= cmdcl.help
-		else:
-			self.dispstr = dispstr
-
+	def __init__(self,cmdcl,iduc=None):
 		if iduc:
 			self.id=iduc
 			self.iduc=iduc
 		else: 
-			global id
-			self.id= id
+			global idend
+			self.id= idend
 			self.iduc=None
-			id=id+1
-		if sep:
-			stdmenu[self.cat].AppendMenu(win32con.MF_SEPARATOR,0,'')
-		stdmenu[self.cat].AppendMenu(win32con.MF_STRING,self.id,self.dispstr)
+			idend=idend+1
 		class2ui[cmdcl]=self
 			
 
@@ -50,52 +59,59 @@ class CommandUI:
 # Global commands
 #
 
-CLOSE_WINDOW_UI=CommandUI(CLOSE_WINDOW,'Window','Close')
-UNDO_UI=CommandUI(UNDO,'Edit','Undo')
-CUT_UI=CommandUI(CUT,'Edit','Cut')
-COPY_UI=CommandUI(COPY,'Edit','Copy')
-PASTE_UI=CommandUI(PASTE,'Edit','Paste')
-DELETE_UI=CommandUI(DELETE,'Edit','Delete')
-HELP_UI=CommandUI(HELP,'Help','Help',IDUC_HELP)
+CLOSE_WINDOW_UI=CommandUI(CLOSE_WINDOW)
+UNDO_UI=CommandUI(UNDO)
+CUT_UI=CommandUI(CUT)
+COPY_UI=CommandUI(COPY)
+PASTE_UI=CommandUI(PASTE)
+DELETE_UI=CommandUI(DELETE)
+HELP_UI=CommandUI(HELP,IDUC_HELP)
+PREFERENCES_UI=CommandUI(PREFERENCES)
 
+CASCADE_WNDS_UI=CommandUI(CASCADE_WNDS,afxres.ID_WINDOW_CASCADE)
+TILE_HORZ_UI=CommandUI(TILE_HORZ,afxres.ID_WINDOW_TILE_HORZ)
+TILE_VERT_UI=CommandUI(TILE_VERT,afxres.ID_WINDOW_TILE_VERT)
+ABOUT_GRINS_UI=CommandUI(ABOUT_GRINS)
+CLOSE_ACTIVE_WINDOW_UI=CommandUI(CLOSE_ACTIVE_WINDOW,IDUC_CLOSE_WINDOW)
+SELECT_CHARSET_UI=CommandUI(SELECT_CHARSET)
 
 #
 # MainDialog commands
 #
-NEW_DOCUMENT_UI=CommandUI(NEW_DOCUMENT,'File','New',IDUC_NEW_DOCUMENT)
-OPEN_UI=CommandUI(OPEN,'File','Open...',IDUC_OPEN)
-TRACE_UI=CommandUI(TRACE,'Debug','Trace')
-DEBUG_UI=CommandUI(DEBUG,'Debug','Debug')
-CONSOLE_UI=CommandUI(CONSOLE,'Debug','Show log')
-SAVE_UI=CommandUI(SAVE,'File','Save\tCtrl+S',IDUC_SAVE)
-SAVE_AS_UI=CommandUI(SAVE_AS,'File','Save As...')
-RESTORE_UI=CommandUI(RESTORE,'File','Restore',IDUC_RESTORE)
-SOURCE_UI=CommandUI(SOURCE,'View','Source')
-CLOSE_UI=CommandUI(CLOSE,'File','Close',IDUC_CLOSE)
-EXIT_UI=CommandUI(EXIT,'File','Exit',1)
+NEW_DOCUMENT_UI=CommandUI(NEW_DOCUMENT,IDUC_NEW_DOCUMENT)
+OPEN_UI=CommandUI(OPEN,IDUC_OPEN)
+TRACE_UI=CommandUI(TRACE)
+DEBUG_UI=CommandUI(DEBUG)
+CONSOLE_UI=CommandUI(CONSOLE)
+SAVE_UI=CommandUI(SAVE,IDUC_SAVE)
+SAVE_AS_UI=CommandUI(SAVE_AS)
+RESTORE_UI=CommandUI(RESTORE,IDUC_RESTORE)
+CLOSE_UI=CommandUI(CLOSE,IDUC_CLOSE)
+EXIT_UI=CommandUI(EXIT)
 
 
 
 #
 # TopLevel commands
 #
-PLAYERVIEW_UI=CommandUI(PLAYERVIEW,'View','Player View')
-HIERARCHYVIEW_UI=CommandUI(HIERARCHYVIEW,'View','Hierarchy View')
-CHANNELVIEW_UI=CommandUI(CHANNELVIEW,'View','Channels View')
-LINKVIEW_UI=CommandUI(LINKVIEW,'View','Link View')
-LAYOUTVIEW_UI=CommandUI(LAYOUTVIEW,'View','Layout View')
+PLAYERVIEW_UI=CommandUI(PLAYERVIEW)
+HIERARCHYVIEW_UI=CommandUI(HIERARCHYVIEW)
+CHANNELVIEW_UI=CommandUI(CHANNELVIEW)
+LINKVIEW_UI=CommandUI(LINKVIEW)
+LAYOUTVIEW_UI=CommandUI(LAYOUTVIEW)
+SOURCE_UI=CommandUI(SOURCE)
 
 
 #
 # Player commands
 #
-PLAY_UI=CommandUI(PLAY,'Play','Play',IDUC_PLAY)
-PAUSE_UI=CommandUI(PAUSE,'Play','Pause',IDUC_PAUSE)
-STOP_UI=CommandUI(STOP,'Play','Stop',IDUC_STOP)
-MAGIC_PLAY_UI=CommandUI(MAGIC_PLAY,'Play','Magic')
-CHANNELS_UI=CommandUI(CHANNELS)
+PLAY_UI=CommandUI(PLAY,IDUC_PLAY)
+PAUSE_UI=CommandUI(PAUSE,IDUC_PAUSE)
+STOP_UI=CommandUI(STOP,IDUC_STOP)
+MAGIC_PLAY_UI=CommandUI(MAGIC_PLAY)
+CHANNELS_UI=CommandUI(CHANNELS,casc2ui[CHANNELS])
 SYNCCV_UI=CommandUI(SYNCCV)
-CRASH_UI=CommandUI(CRASH,'Debug','Crash GRiNS')
+CRASH_UI=CommandUI(CRASH)
 SCHEDDUMP_UI=CommandUI(SCHEDDUMP)
 
 
@@ -120,9 +136,11 @@ ZOOMHERE_UI=CommandUI(ZOOMHERE)
 #
 # Command to hierarchy/channel view
 #
-CANVAS_WIDTH_UI=CommandUI(CANVAS_WIDTH,'Canvas','Double  width')
-CANVAS_HEIGHT_UI=CommandUI(CANVAS_HEIGHT,'Canvas','Double  height')
-CANVAS_RESET_UI=CommandUI(CANVAS_RESET,'Canvas','Reset to fit')
+CANVAS_WIDTH_UI=CommandUI(CANVAS_WIDTH)
+CANVAS_HEIGHT_UI=CommandUI(CANVAS_HEIGHT)
+CANVAS_RESET_UI=CommandUI(CANVAS_RESET)
+#++
+CANVAS_FIT_UI=CommandUI(CANVAS_FIT)
 
 INFO_UI=CommandUI(INFO)
 ATTRIBUTES_UI=CommandUI(ATTRIBUTES)
@@ -149,11 +167,11 @@ COPY_CHANNEL_UI=CommandUI(COPY_CHANNEL)
 TOGGLE_ONOFF_UI=CommandUI(TOGGLE_ONOFF) 
 HIGHLIGHT_UI=CommandUI(HIGHLIGHT) 
 UNHIGHLIGHT_UI=CommandUI(UNHIGHLIGHT) 
-SYNCARCS_UI=CommandUI(SYNCARCS)
-ANCESTORS_UI=CommandUI(ANCESTORS)
-SIBLINGS_UI=CommandUI(SIBLINGS)
-DESCENDANTS_UI=CommandUI(DESCENDANTS)
-LAYOUTS_UI=CommandUI(LAYOUTS)
+SYNCARCS_UI=CommandUI(SYNCARCS,casc2ui[SYNCARCS])
+ANCESTORS_UI=CommandUI(ANCESTORS,casc2ui[ANCESTORS])
+SIBLINGS_UI=CommandUI(SIBLINGS,casc2ui[SIBLINGS])
+DESCENDANTS_UI=CommandUI(DESCENDANTS,casc2ui[DESCENDANTS])
+LAYOUTS_UI=CommandUI(LAYOUTS,casc2ui[LAYOUTS])
 
 
 #

@@ -39,7 +39,6 @@ __version__ = "$Id$"
 # Specifications for LinkEditDialog
 # Real code in LinkForm
 	
-import windowinterface
 
 class LinkEditDialog:
 	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
@@ -80,11 +79,9 @@ class LinkEditDialog:
 				'RightList':(self.anchor_browser_callback, (cbarg2,)),
 			}
 		}
-		# a trick so that we can recreate wnd
+		# hold args so that we can create wnd later
 		self._init_args=(title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2,self._adornments)
-		w=windowinterface.newviewobj(self._adornments['form_id'])
-		apply(w.do_init,self._init_args)
-		self.__window=w	
+		self.__window=None
 								
 	def is_showing(self):
 		if not self.__window: return 0
@@ -97,12 +94,13 @@ class LinkEditDialog:
 	# needed because core-code supposes that wnd has been created
 	# as an os object but it isn't before self.show
 	def assertcreated(self):
+		toplevel_window=self.toplevel.window
 		if not self.__window:
-			w=windowinterface.newviewobj(self._adornments['form_id'])
+			w=toplevel_window.newviewobj(self._adornments['form_id'])
 			apply(w.do_init,self._init_args)
 			self.__window=w	
 		if not self.__window.is_oswindow():
-			windowinterface.showview(self.__window,'leview_')
+			toplevel_window.showview(self.__window,'leview_')
 			self.__window.show()
 
 	def hide(self):

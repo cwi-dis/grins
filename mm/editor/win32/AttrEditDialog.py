@@ -22,7 +22,6 @@ methods also.
 
 __version__ = "$Id$"
 
-import windowinterface
 
 class AttrEditorDialog:
 	def __init__(self, title, attriblist):
@@ -39,7 +38,8 @@ class AttrEditorDialog:
 		"""
 		formid='attr_edit'
 
-		fs=windowinterface.getformserver()
+		toplevel_window=self.wrapper.toplevel.window
+		fs=toplevel_window.getformserver()
 		w=fs.newformobj(formid)
 		w._title=title
 		w._attriblist=attriblist
