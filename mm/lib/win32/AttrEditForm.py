@@ -2671,6 +2671,24 @@ class AttrGroup:
 	# do whatever not default
 	def oninitdialog(self,wnd):
 		pass
+
+	# resize labels and attr editors
+	def resizelabels(self,wnd, labels, attrctrls, dw):
+		hwnd = wnd.GetSafeHwnd()
+		l,t,r,b = wnd.GetWindowRect()
+		flags = win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER
+		for id in attrctrls:
+			ctrl=components.Control(wnd,id)
+			ctrl.attach_to_parent()
+			l1,t1,r1,b1=ctrl.getwindowrect()
+			rc = l1-l+dw,t1-t, r1-l1-dw,b1-t1
+			ctrl.setwindowpos(hwnd,rc,flags)
+		for id in labels:
+			ctrl=components.Control(wnd,id)
+			ctrl.attach_to_parent()
+			l1,t1,r1,b1=ctrl.getwindowrect()
+			rc = l1-l,t1-t, r1-l1+dw,b1-t1
+			ctrl.setwindowpos(hwnd,rc,flags)
 	
 class StringGroup(AttrGroup):
 	data = None
@@ -3414,8 +3432,19 @@ class TransitionTypeGroup(StringGroupNoTitle):
 class TransitionRepeatGroup(StringGroupNoTitle):
 	data=attrgrsdict['transitionRepeat']
 #
-class TransitionStartEndGroup(StringGroupNoTitle):
-	data=attrgrsdict['transitionStartEnd']
+class TransitionTimingGroup(StringGroupNoTitle):
+	data=attrgrsdict['transitionTiming']
+
+#
+class MachineGroup(StringGroupNoTitle):
+	data=attrgrsdict['machine']
+	def oninitdialog(self,wnd):
+		# enlarge labels by dwpx pixels
+		dwpx = 32
+		labels = (grinsRC.IDC_11, grinsRC.IDC_21)
+		edits = (grinsRC.IDC_12, grinsRC.IDC_22)
+		self.resizelabels(wnd, labels, edits, dwpx)
+		return StringGroupNoTitle.oninitdialog(self, wnd)
 
 ############################
 # platform dependent association
@@ -3469,7 +3498,9 @@ groupsui={
 
 	'transitionType': TransitionTypeGroup,
 	'transitionRepeat':TransitionRepeatGroup,
-	'transitionStartEnd':TransitionStartEndGroup,
+	'transitionTiming':TransitionTimingGroup,
+
+	'machine':MachineGroup,
 	}
 
 ###########################
