@@ -55,7 +55,8 @@ class Main(MainDialog):
 			PREFERENCES(callback = (self.preferences_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
-		if __debug__:
+		import settings
+		if settings.get('debug'):
 			self.commandlist = self.commandlist + [
 				TRACE(callback = (self.trace_callback, ())),
 				DEBUG(callback = (self.debug_callback, ())),
@@ -207,9 +208,11 @@ def main():
 	if hasattr(Help, 'sethelpprogram'):
 		Help.sethelpprogram('player')
 		
+	import settings
+	kbd_int = KeyboardInterrupt
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
-	elif __debug__:
+	elif settings.get('debug'):
 		try:
 			import signal, pdb
 		except ImportError:
@@ -217,6 +220,7 @@ def main():
 		else:
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
+			kbd_int = 'dummy value to prevent interrupts to be caught'
 
 ## 	for fn in files:
 ## 		try:
@@ -255,7 +259,7 @@ def main():
 	try:
 		try:
 			m.run()
-		except KeyboardInterrupt:
+		except kbd_int:
 			print 'Interrupt.'
 		except SystemExit, sts:
 			if type(sts) is type(m):
