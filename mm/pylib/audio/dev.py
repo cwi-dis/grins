@@ -12,6 +12,10 @@ elif sys.platform[:5] == 'sunos':
 	from audio.devsun import AudioDevSUN
 	writer = AudioDevSUN
 	del AudioDevSUN
+elif sys.platform[:5] == 'linux':
+	from audio.devlinux import AudioDevLINUX
+	writer = AudioDevLINUX
+	del AudioDevLINUX
 elif sys.platform == 'mac':
 	from audio.devmac import AudioDevMAC
 	writer = AudioDevMAC
