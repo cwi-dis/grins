@@ -19,6 +19,8 @@ MENUBAR=(
 		(ENTRY, 'Close Window', 'W', CLOSE_WINDOW),
 		(ENTRY, 'Close Document', None, CLOSE),
 		(SEP,),
+		(ENTRY, 'Preferences...', None, PREFERENCES),
+		(SEP,),
 		(CASCADE, 'Debug', (
 			(TOGGLE, 'Enable call tracing', None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),

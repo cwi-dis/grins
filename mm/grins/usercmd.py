@@ -22,6 +22,8 @@ class CLOSE_WINDOW(_CommandBase):
 	help = 'Close this window'
 class HELP(_CommandBase):
 	help = 'Display help'
+class PREFERENCES(_CommandBase):
+	help = 'Display preferences window'
 #
 # Commands for a global edit menu (mac only?)
 #

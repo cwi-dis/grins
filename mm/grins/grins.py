@@ -49,6 +49,7 @@ class Main(MainDialog):
 		from usercmd import *
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
+			PREFERENCES(callback = (self.preferences_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
 		if __debug__:
@@ -100,6 +101,10 @@ class Main(MainDialog):
 		else:
 			self._tracing = 1
 			trace.set_trace()
+
+	def preferences_callback(self):
+		import Preferences
+		Preferences.showpreferences(1)
 
 	def closetop(self, top):
 		if self._closing:
