@@ -2209,7 +2209,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ns = self.getnamespace().get('')
 		if ns is None or ns == SMIL1:
 			self.__context.attributes['project_boston'] = 0
-		elif ns == SMIL2ns[0]:
+		elif ns in SMIL2ns:
 			self.__context.attributes['project_boston'] = 1
 		for attr in attributes.keys():
 			if attr != 'id' and \
@@ -4076,7 +4076,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('outermost element must be "smil" with default namespace declaration', self.lineno)
 		elif ns and ns == SMIL1:
 			pass
-		elif ns and ns != SMIL2ns[0]:
+		elif ns and ns not in SMIL2ns and ns[-8:] != 'Language':
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 		self.__saved_attrdict = attrdict
