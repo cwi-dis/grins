@@ -355,6 +355,8 @@ class DlgTemplate:
 			font=findfont(fontname, pointsize)
 			self._cx = font._tm['tmAveCharWidth']+1
 			self._cy = font._tm['tmHeight']
+		else:
+			print 'Extented dialog templates (DIALOGEX) not supported. Check dialog with id',id
 
 	# dlg units should be computed from dialog font
 	def getRect(self):
@@ -363,4 +365,4 @@ class DlgTemplate:
 			cx,cy=self._cx,self._cy
 			return Rect(((l*cx+2)/4,(t*cy+4)/8,(r*cx+2)/4,(b*cy+4)/8))
 		else:
-			return Rect(0,0,200,200)
+			return None
