@@ -2020,32 +2020,32 @@ IDD_EDITATTR_LAYOUT1 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    COMBOBOX        IDC_REGIONV,44,10,167,158,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_FITV,21,10,136,103,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    PUSHBUTTON      "Properties...",IDC_REGIONB,219,8,50,14
+    EDITTEXT        IDC_ZV,235,10,32,13,ES_AUTOHSCROLL
     CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,12,
-                    42,54,8
-    CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,53,
+                    49,54,8
+    CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,60,
                     44,8
-    CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,64,9,
+    CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,71,9,
                     12
-    EDITTEXT        IDC_COLORS,24,63,52,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,63,46,12
-    COMBOBOX        IDC_REGALIGNV,182,40,69,103,CBS_DROPDOWNLIST | 
+    EDITTEXT        IDC_COLORS,24,70,52,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,70,46,12
+    COMBOBOX        IDC_REGALIGNV,182,47,69,103,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_REGPOINTV,182,63,69,103,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_REGPOINTV,182,70,69,103,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_ZV,43,92,32,13,ES_AUTOHSCROLL
-    COMBOBOX        IDC_FITV,27,111,136,103,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_REGIONV,42,107,167,158,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "RegAlign:",IDC_REGALIGNL,147,41,32,8
+    PUSHBUTTON      "Properties...",IDC_REGIONB,217,105,50,14
+    LTEXT           "RegAlign:",IDC_REGALIGNL,147,48,32,8
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    GROUPBOX        "Background color",IDC_LABEL,6,28,127,57
-    LTEXT           "Fit:",IDC_FITL,13,113,10,8
-    LTEXT           "Z-index:",IDC_ZL,13,95,26,8
-    GROUPBOX        "Alignment",IDC_LABEL2,142,28,127,57
-    LTEXT           "RegPoint:",IDC_REGPOINTL,147,65,32,8
-    LTEXT           "Region:",IDC_REGIONL,13,12,26,8
+    GROUPBOX        "Background color",IDC_LABEL,6,35,127,57
+    LTEXT           "Fit:",IDC_FITL,7,13,10,8
+    LTEXT           "Z-index:",IDC_ZL,205,12,26,8
+    GROUPBOX        "Alignment",IDC_LABEL2,142,35,127,57
+    LTEXT           "RegPoint:",IDC_REGPOINTL,147,72,32,8
+    LTEXT           "Region:",IDC_REGIONL,11,109,26,8
 END
 
 IDD_EDITATTR_LAYOUT2 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -2270,34 +2270,34 @@ IDD_EDITATTR_LAYOUT3 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_WIDTHV,39,18,36,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_HEIGHTV,113,18,36,13,ES_AUTOHSCROLL
     CONTROL         "Transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,12,
-                    52,54,8
-    CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,63,
+                    20,54,8
+    CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,12,31,
                     44,8
-    CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,74,9,
+    CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,12,42,9,
                     12
-    EDITTEXT        IDC_COLORS,25,73,52,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,73,46,12
-    CONTROL         "On start",IDC_OPENV1,"Button",BS_AUTORADIOBUTTON,160,50,
+    EDITTEXT        IDC_COLORS,25,41,52,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,41,46,12
+    CONTROL         "On start",IDC_OPENV1,"Button",BS_AUTORADIOBUTTON,160,18,
                     54,8
     CONTROL         "When active",IDC_OPENV2,"Button",BS_AUTORADIOBUTTON,221,
-                    50,57,8
+                    18,57,8
     CONTROL         "On request",IDC_CLOSEV1,"Button",BS_AUTORADIOBUTTON,160,
-                    80,54,8
+                    48,54,8
     CONTROL         "When not active",IDC_CLOSEV2,"Button",
-                    BS_AUTORADIOBUTTON,221,80,72,8
+                    BS_AUTORADIOBUTTON,221,48,72,8
+    EDITTEXT        IDC_WIDTHV,39,79,36,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_HEIGHTV,113,79,36,13,ES_AUTOHSCROLL
     EDITTEXT        IDC_TRACEIMAGEV,13,110,232,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Browse...",IDC_TRACEIMAGEB,249,110,41,12
-    GROUPBOX        "TopLayout geometry",IDC_GROUP1,6,5,289,31
     LTEXT           "",IDC_ATTR_INFO,6,132,289,18,SS_SUNKEN
-    LTEXT           "Width:",IDC_WIDTHL,14,20,21,8
-    LTEXT           "Height:",IDC_HEIGHTL,87,19,24,8
-    GROUPBOX        "Background color",IDC_LABEL,6,38,127,58
-    GROUPBOX        "Close",IDC_CLOSEL,140,69,155,27
-    GROUPBOX        "Open",IDC_OPENL,139,38,155,27
+    GROUPBOX        "Background color",IDC_LABEL,6,6,127,58
+    GROUPBOX        "Close",IDC_CLOSEL,140,37,155,27
+    GROUPBOX        "Open",IDC_OPENL,139,6,155,27
     GROUPBOX        "Trace image",IDC_TRACEIMAGEL,6,99,289,31
+    GROUPBOX        "TopLayout geometry",IDC_GROUP1,6,66,289,31
+    LTEXT           "Width:",IDC_WIDTHL,14,81,21,8
+    LTEXT           "Height:",IDC_HEIGHTL,87,80,24,8
 END
 
 IDD_EDITATTR_INFO1 DIALOG DISCARDABLE  0, 0, 300, 164
