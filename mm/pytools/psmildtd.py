@@ -33,14 +33,14 @@ def urlopen(url, data=None):
 	else:
 		return _urlopener.open(url, data)
 
-import string, time
+import time
 
 def prdtdtable(x, dtd):
 	elems = x.elems.keys()
 	elems.sort()
-	if string.find(dtd, 'SMIL20.dtd') >= 0:
+	if dtd.find('SMIL20.dtd') >= 0:
 		title = 'SMIL 2.0 Language Profile DTD'
-	elif string.find(dtd, 'SMIL20Basic.dtd') >= 0:
+	elif dtd.find('SMIL20Basic.dtd') >= 0:
 		title = 'SMIL 2.0 Basic Language Profile DTD'
 	else:
 		title = 'Unknown DTD'
@@ -67,8 +67,8 @@ def prdtdtable(x, dtd):
 			elem = elem.encode('latin-1')
 		if type(content) is type(unicode('a')):
 			content = content.encode('latin-1')
-		content = string.join(string.split(content,'|'), ' | ')
-		content = string.join(string.split(content,','), ', ')
+		content = ' | '.join(content.split('|'))
+		content = ', '.join(content.split(','))
 		attrnames = attrs.keys()
 		attrnames.sort()
 		print '<tr>'
@@ -80,7 +80,7 @@ def prdtdtable(x, dtd):
 			if type(attr) is type(unicode('a')):
 				attr = attr.encode('latin-1')
 			if type(atype) is type([]):
-				atype = '(' + string.join(atype, ' | ') + ')'
+				atype = '(' + ' | '.join(atype) + ')'
 			if type(atype) is type(unicode('a')):
 				atype = atype.encode('latin-1')
 			if type(default) is type(unicode('a')):
@@ -116,8 +116,8 @@ def main(dtd = "http://www.w3.org/2001/SMIL20/SMIL20.dtd", func = prdtdtable):
 	except fxmllib.Error, info:
 		print str(info)
 		if info.text is not None and info.offset is not None:
-			i = string.rfind(info.text, '\n', 0, info.offset) + 1
-			j = string.find(info.text, '\n', info.offset)
+			i = info.text.rfind('\n', 0, info.offset) + 1
+			j = info.text.find('\n', info.offset)
 			if j == -1: j = len(info.text)
 			print info.text[i:j]
 			print ' '*(info.offset-i)+'^'
