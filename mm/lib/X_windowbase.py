@@ -298,6 +298,7 @@ class _Toplevel:
 
 class _Window:
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
+		self._title = title
 		self._do_init(parent)
 		self._topwindow = self
 		self._exp_reg = None
@@ -379,6 +380,22 @@ class _Window:
 			gc = form.CreateGC({'background': bg})
 		gc.foreground = fg
 		self._gc = gc
+
+	def __repr__(self):
+		try:
+			title = `self._title`
+		except AttributeError:
+			title = '<NoTitle>'
+		try:
+			parent = self._parent
+		except AttributeError:
+			parent = None
+		if parent is None:
+			closed = ' (closed)'
+		else:
+			closed = ''
+		return '<_Window instance at %x; title = %s%s>' % \
+					(id(self), title, closed)
 
 	def _do_init(self, parent):
 		parent._subwindows.insert(0, self)
@@ -899,6 +916,9 @@ class _BareSubWindow:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
+	def __repr__(self):
+		return '<_BareSubWindow instance at %x>' % id(self)
+
 	def close(self):
 		parent = self._parent
 		if parent is None:
@@ -989,7 +1009,8 @@ class _BareSubWindow:
 			w._do_resize1()
 
 class _SubWindow(_BareSubWindow, _Window):
-	pass
+	def __repr__(self):
+		return '<_SubWindow instance at %x>' % id(self)
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
@@ -1115,7 +1136,7 @@ class _DisplayList:
 				r.SubtractRegion(self._imagemask)
 				gc.SetRegion(r)
 			else:
-				width, height = w._rect[2:]
+				width, height = w._topwindow._rect[2:]
 				r = w._form.CreatePixmap(width, height, 1)
 				g = r.CreateGC({'foreground': 0})
 				g.FillRectangle(0, 0, width, height)
