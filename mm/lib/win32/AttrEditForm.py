@@ -1386,8 +1386,10 @@ class AttrSheet(dialog.PropertySheet):
 				self._followSelection.setfont(logfont)
 
 	def fixbuttonstate(self, showall, follow, okstate):
-		self._showAll.setcheck(showall)
-		self._followSelection.setcheck(follow)
+		if self._showAll:
+			self._showAll.setcheck(showall)
+		if self._followSelection:
+			self._followSelection.setcheck(follow)
 		self.enableApply(okstate)
 
 	def onShowAll(self, id, code):
