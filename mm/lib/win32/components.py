@@ -87,6 +87,11 @@ class LightWeightControl:
 	def getwindowrect(self):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.GetWindowRect(self._hwnd)
+	def setstyleflag(self,flag):
+		if not self._hwnd: raise error, 'os control has not been created'
+		style = Sdk.GetWindowLong(self._hwnd,win32con.GWL_STYLE)
+		style = style | flag
+		Sdk.SetWindowLong(self._hwnd,win32con.GWL_STYLE,style)
 
 	def setcb(self,cb):
 		self._cb=cb
