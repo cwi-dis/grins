@@ -40,10 +40,15 @@ class Rect:
 	def __init__(self,r=(0,0,0,0)):
 		self.left=r[0];self.top=r[1]
 		self.right=r[2];self.bottom=r[3]
-	def tuple(self):
-		return (self.left,self.top,self.right,self.bottom)
-	def tuple_ps(self):
-		return (self.left,self.top,self.right-self.left,self.bottom-self.top)
+
+		# obsolete
+		self.tuple = ltrb_tuple
+		self.tuple_ps = xywh_tuple
+
+	def ltrb_tuple(self):
+		return self.left,self.top,self.right,self.bottom
+	def xywh_tuple(self):
+		return self.left,self.top,self.right-self.left,self.bottom-self.top
 	def round(self):
 		if self.left<1:self.left=0
 		if self.top<1:self.top=0
@@ -82,7 +87,7 @@ class Rect:
 			return 1
 		return 0
 	def intersect(rc1,rc2):
-		rc,ans= Sdk.IntersectRect(rc1.tuple(),rc2.tuple())
+		rc,ans= Sdk.IntersectRect(rc1.ltrb_tuple(),rc2.ltrb_tuple())
 		return ans
 	def moveByPt(self,pt):
 		self.left=self.left+pt.x
