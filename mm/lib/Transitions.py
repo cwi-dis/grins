@@ -185,6 +185,63 @@ class BarnVeeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 			(x0, ytop))
 		return poly, self.ltrb
 
+class ZigZagWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by sweeping a zigzag divider line
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xwidth = (x1-x0)
+		yzig = (y1-y0)/8
+		xzig = xwidth/8
+		xmin = x0 - (xwidth + xzig)
+		xcur = xmin + int(value*(xwidth+xzig))
+		poly = (
+			(xcur, y0),
+			(xcur+xwidth, y0),
+			(xcur+xwidth+xzig, y0+1*yzig),
+			(xcur+xwidth, y0+2*yzig),
+			(xcur+xwidth+xzig, y0+3*yzig),
+			(xcur+xwidth, y0+4*yzig),
+			(xcur+xwidth+xzig, y1-3*yzig),
+			(xcur+xwidth, y1-2*yzig),
+			(xcur+xwidth+xzig, y1-1*yzig),
+			(xcur+xwidth, y1),
+			(xcur, y1))
+		return poly, self.ltrb
+
+class BarnZigZagWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by sweeping a zigzag divider lines from the center out
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xwidth = (x1-x0)
+		xmid = (x0+x1)/2
+		yzig = (y1-y0)/8
+		xzig = xwidth/8
+		displacement = int(value*(xwidth/2 + xzig))
+		xleft = xmid - displacement
+		xright = xmid + displacement
+		poly = (
+			(xleft, y0),
+			(xleft+xzig, y0+1*yzig),
+			(xleft, y0+2*yzig),
+			(xleft+xzig, y0+3*yzig),
+			(xleft, y0+4*yzig),
+			(xleft+xzig, y1-3*yzig),
+			(xleft, y1-2*yzig),
+			(xleft+xzig, y1-1*yzig),
+			(xleft, y1),
+			(xright, y1),
+			(xright+xzig, y1-1*yzig),
+			(xright, y1-2*yzig),
+			(xright+xzig, y1-3*yzig),
+			(xright, y0+4*yzig),
+			(xright+xzig, y0+3*yzig),
+			(xright, y0+2*yzig),
+			(xright+xzig, y0+1*yzig),
+			(xright, y0))
+		return poly, self.ltrb
+
 class DiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 	# Reveal the new image by sweeping a diagonal divider line
 
@@ -236,8 +293,41 @@ class BowTieWipeTransition(TransitionClass, PolylistR2OverlapBlitterClass):
 				(x1, y0))
 			return (poly,), self.ltrb
 
-class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
-	# Reveal the new image by a triangle growing from the center outward
+##class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+##	# Reveal the new image by a triangle growing from the center outward
+##	
+##	def __init__(self, engine, dict):
+##		TransitionClass.__init__(self, engine, dict)
+##		self._recomputetop()
+##		
+##	def move_resize(self, ltrb):
+##		TransitionClass.move_resize(self, ltrb)
+##		self._recomputetop()
+##		
+##	def _recomputetop(self):
+##		x0, y0, x1, y1 = self.ltrb
+##		self.xmid = (x0+x1)/2
+##		self.ymid = (y0+y1)/2
+##		# XXXX This fails for narrow high windows, I think.
+##		ytop = y1 + int(TAN_PI_DIV_3*(self.xmid-x0))
+##		self.range = ytop-self.ymid
+##		
+##	def computeparameters(self, value):
+##		totop = int(value*self.range)
+##		ytop = self.ymid - totop
+##		ybot = self.ymid + totop/2
+##		height = ybot - ytop
+##		base_div_2 = height / TAN_PI_DIV_3
+##		xleft = int(self.xmid - base_div_2)
+##		xright = int(self.xmid + base_div_2)
+##		points = (
+##			(xleft, ybot),
+##			(self.xmid, ytop),
+##			(xright, ybot))
+##		return points, self.ltrb
+
+class _ShapeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Helper baseclass for wipes with growing regular polygons
 	
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
@@ -251,6 +341,54 @@ class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		x0, y0, x1, y1 = self.ltrb
 		self.xmid = (x0+x1)/2
 		self.ymid = (y0+y1)/2
+		# We are done interior circle is as big as our diagonal...
+		innerradius = math.sqrt((self.xmid-x0)*(self.xmid-x0)+(self.ymid-y0)*(self.ymid-y0))
+		# ...but the cornerpoints lie on the exterior circle
+		inner_to_outer = 1/math.cos(2*math.pi/self._NPOINTS)
+		self.range = innerradius*inner_to_outer
+		
+	def computeparameters(self, value):
+		radius = int(value*self.range)
+		points = []
+		for i in range(self._NPOINTS):
+			angle = self._FIRSTANGLE + (2*math.pi*i)/self._NPOINTS
+			x = math.cos(angle)*radius
+			y = math.sin(angle)*radius
+			points.append((self.xmid+x, self.ymid-y))
+		return tuple(points), self.ltrb
+
+class TriangleWipeTransition(_ShapeWipeTransition):
+	_FIRSTANGLE=-math.pi/2 # ????
+	_NPOINTS=3
+	
+class PentagonWipeTransition(_ShapeWipeTransition):
+	_FIRSTANGLE=math.pi/2
+	_NPOINTS=5
+	
+class HexagonWipeTransition(_ShapeWipeTransition):
+	_FIRSTANGLE=math.pi/2
+	_NPOINTS=6
+	
+class EllipseWipeTransition(_ShapeWipeTransition):
+	_FIRSTANGLE=0
+	_NPOINTS=32
+
+class ArrowHeadWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by an arrowhead growing from the center outward
+	
+	def __init__(self, engine, dict):
+		TransitionClass.__init__(self, engine, dict)
+		self._recomputetop()
+		
+	def move_resize(self, ltrb):
+		TransitionClass.move_resize(self, ltrb)
+		self._recomputetop()
+		
+	def _recomputetop(self):
+		x0, y0, x1, y1 = self.ltrb
+		self.xmid = (x0+x1)/2
+		self.ymid = (y0+y1)/2
+		# XXXX This fails for narrow high windows, I think.
 		ytop = y1 + int(TAN_PI_DIV_3*(self.xmid-x0))
 		self.range = ytop-self.ymid
 		
@@ -258,6 +396,7 @@ class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		totop = int(value*self.range)
 		ytop = self.ymid - totop
 		ybot = self.ymid + totop/2
+		ybotmid = self.ymid + totop/4
 		height = ybot - ytop
 		base_div_2 = height / TAN_PI_DIV_3
 		xleft = int(self.xmid - base_div_2)
@@ -265,7 +404,8 @@ class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		points = (
 			(xleft, ybot),
 			(self.xmid, ytop),
-			(xright, ybot))
+			(xright, ybot),
+			(self.xmid, ybotmid))
 		return points, self.ltrb
 	
 class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
@@ -625,12 +765,14 @@ TRANSITIONDICT = {
 	"miscDiagonalWipe" : MiscDiagonalWipeTransition,
 	"veeWipe" : VeeWipeTransition,
 	"barnVeeWipe" : BarnVeeWipeTransition,
+	"zigZagWipe" : ZigZagWipeTransition,
+	"barnZigZagWipe" : BarnZigZagWipeTransition,
 	"miscShapeWipe" : MiscShapeWipeTransition,
 	"triangleWipe" : TriangleWipeTransition,
-#	"arrowHeadWipe" : ArrowHeadWipeTransition,
-#	"pentagonWipe" : PentagonWipeTransition,
-#	"hexagonWipe" : HexagonWipeTransition,
-#	"ellipseWipe" : EllipseWipeTransition,
+	"arrowHeadWipe" : ArrowHeadWipeTransition,
+	"pentagonWipe" : PentagonWipeTransition,
+	"hexagonWipe" : HexagonWipeTransition,
+	"ellipseWipe" : EllipseWipeTransition,
 #	"eyeWipe" : EyeWipeTransition,
 #	"roundRectWipe" : RoundRectWipeTransition,
 #	"starWipe" : StarWipeTransition,
