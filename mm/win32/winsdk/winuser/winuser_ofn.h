@@ -5,6 +5,10 @@
 #include "Python.h"
 #endif
 
+#ifndef __WINDOWS__
+#include <windows.h>
+#endif
+
 extern HINSTANCE GetAppHinstance();
 
 PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args);

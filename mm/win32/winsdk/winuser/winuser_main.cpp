@@ -6,10 +6,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
-
 #include "winuser_main.h"
 
 #include "utils.h"
@@ -47,7 +43,7 @@ PyObject* Winuser_MessageBox(PyObject *self, PyObject *args)
 		return NULL;
 	int res;
 	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(NULL, text, caption, type);
+	res = MessageBox(NULL, toTEXT(text), toTEXT(caption), type);
 	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i", res);
 }
@@ -119,20 +115,23 @@ PyObject* Winuser_ShellExecute(PyObject *self, PyObject *args)
 	HWND hwnd;
 	char *op, *file, *params, *dir;
 	int show;
-	if (!PyArg_ParseTuple(args, "izszzi:ShellExecute", &hwnd, &op, &file, &params, &dir, &show))
+	if (!PyArg_ParseTuple(args, "izszzi", &hwnd, &op, &file, &params, &dir, &show))
 		return NULL;
-	if (dir==NULL)
-		dir="";
+#ifdef _WIN32_WCE
+	return Py_BuildValue("is", 32, "ShellExecute not supported under win CE");
+#else
+	if (dir==NULL) dir="";
 	HINSTANCE rc;
 	Py_BEGIN_ALLOW_THREADS
-	rc = ShellExecute(hwnd, op, file, params, dir, show);
+	rc = ShellExecute(hwnd, toTEXT(op), toTEXT(file), toTEXT(params), toTEXT(dir), show);
 	Py_END_ALLOW_THREADS
-	char szMsg[512]="OK";
+	TCHAR szMsg[512] = TEXT("OK");
 	if ((rc) <= (HINSTANCE)32) 
 		{
-		BOOL bHaveMessage = ::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL,(DWORD)rc, 0, szMsg,sizeof(szMsg), NULL )>0;
+		BOOL bHaveMessage = ::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, (DWORD)rc, 0, szMsg, sizeof(szMsg), NULL )>0;
 		if (!bHaveMessage)
-			lstrcpy(szMsg,"Error. No error message is available");
+			lstrcpy(szMsg, TEXT("Error. No error message is available"));
 		}
 	return Py_BuildValue("is",rc, szMsg);
+#endif
 	}

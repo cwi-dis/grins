@@ -6,10 +6,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
-
 #include "winuser_wnd.h"
 
 #include "utils.h"
@@ -57,11 +53,11 @@ struct PyWnd
 
 	static void debug_report()
 		{
-		char sz[80];
-		wsprintf(sz, "wnds size=%d", wnds.size());
-		MessageBox(NULL, sz, "PyWnd", MB_OK);
+		TCHAR sz[80];
+		wsprintf(sz, TEXT("wnds size=%d"), wnds.size());
+		MessageBox(NULL, sz, TEXT("PyWnd"), MB_OK);
 		}
-	DECLARE_WND_CLASS("PyWnd")
+	DECLARE_WND_CLASS(TEXT("PyWnd"))
 	};
 
 std::map<HWND, PyWnd*> PyWnd::wnds;
@@ -69,12 +65,11 @@ std::map<HWND, PyWnd*> PyWnd::wnds;
 HINSTANCE GetAppHinstance() 
 	{ static HINSTANCE h = GetModuleHandle(NULL); return h;}
 
-
 LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 {	
 	switch(uMsg)
 		{
-		case WM_NCCREATE:
+		case WM_CREATE_HOOK:
 			{
 			LONG res = DefWindowProc(hWnd, uMsg, wParam, lParam);
 			PyWnd *pywnd = PyWnd::createInstance();
@@ -83,7 +78,7 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 			PyWnd::wnds[hWnd] = pywnd;
 			return res;
 			}
-		case WM_NCDESTROY:
+		case WM_DESTROY_HOOK:
 			{
 			MSG msg = {hWnd, uMsg, wParam, lParam, 0, {0, 0}};
 			std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(hWnd);
@@ -148,11 +143,16 @@ PyObject* Winuser_RegisterClassEx(PyObject *self, PyObject *args)
 	HMENU hMenu = 0;
 	if (!PyArg_ParseTuple(args, "s|i", &className, &hMenu))
 		return NULL;
+#ifdef _WIN32_WCE
+	WNDCLASS wc = PyWnd::GetWndClass();
+	ATOM atom = RegisterClass(&wc);
+#else
 	WNDCLASSEX wcx = PyWnd::GetWndClass();
-	wcx.lpszClassName = className;
+	wcx.lpszClassName = toTEXT(className);
 	wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wcx.hCursor = LoadCursor(NULL, IDI_APPLICATION);
-	ATOM atom = ::RegisterClassEx(&wcx); 
+	ATOM atom = RegisterClassEx(&wcx);
+#endif
 	if(atom == 0){
 		seterror("RegisterClassEx", GetLastError());
 		return NULL;
@@ -174,8 +174,7 @@ PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "iszi(ii)(ii)|O!i", &dwExStyle, &pstrWndClass, &szWindowName, &dwStyle,
 		&pt.x, &pt.y, &size.cx, &size.cy, &PyWnd::type, &parent, &nID))
 		return NULL;
-
-	HWND hWnd = ::CreateWindowEx(dwExStyle, pstrWndClass, szWindowName,
+	HWND hWnd = ::CreateWindowEx(dwExStyle, toTEXT(pstrWndClass), toTEXT(szWindowName),
 			dwStyle, pt.x,pt.y, size.cx,
 			size.cx, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
 			GetAppHinstance(), lpCreateParam);
@@ -318,12 +317,16 @@ static PyObject* PyWnd_RedrawWindow(PyWnd *self, PyObject *args)
 			}
 		prc = &rc;
 		}
+#ifdef _WIN32_WCE
+	return none();
+#else
 	BOOL res = RedrawWindow(self->m_hWnd, prc, hrgn, flags);
 	if(!res){
 		seterror("RedrawWindow", GetLastError());
 		return NULL;
 		}
 	return none();
+#endif
 }
 
 static PyObject* PyWnd_GetDC(PyWnd *self, PyObject *args)
@@ -482,7 +485,7 @@ static PyObject* PyWnd_MessageBox(PyWnd *self, PyObject *args)
 		return NULL;
 	int res;
 	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(self->m_hWnd,text, caption, type);
+	res = MessageBox(self->m_hWnd,toTEXT(text), toTEXT(caption), type);
 	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i", res);
 }
@@ -495,12 +498,16 @@ static PyObject* PyWnd_SetMenu(PyWnd *self, PyObject *args)
 	ASSERT_ISWINDOW(self->m_hWnd)
 	extern HMENU GetHandleFromPyMenu(PyObject *);
 	HMENU hMenu = GetHandleFromPyMenu(obj);
+#ifdef _WIN32_WCE
+	return none();
+#else
 	BOOL res = SetMenu(self->m_hWnd, hMenu);
 	if(!res){
 		seterror("SetMenu", GetLastError());
 		return NULL;
 		}
 	return none();
+#endif
 }
 
 static PyObject* PyWnd_GetMenu(PyWnd *self, PyObject *args)
@@ -508,9 +515,13 @@ static PyObject* PyWnd_GetMenu(PyWnd *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	ASSERT_ISWINDOW(self->m_hWnd)
+#ifdef _WIN32_WCE
+	return NULL;
+#else
 	HMENU hMemu = GetMenu(self->m_hWnd);
 	extern PyObject* CreatePyMenuFromHandle(HMENU );
 	return CreatePyMenuFromHandle(hMemu);
+#endif
 }
 
 static PyObject* PyWnd_DrawMenuBar(PyWnd *self, PyObject *args)

@@ -6,14 +6,12 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
-
 #include "winuser_ofn.h"
 
 #include "utils.h"
 #include "winuser_wnd.h"
+
+#include <tchar.h>
 
 struct PyOfn
 	{
@@ -21,11 +19,11 @@ struct PyOfn
 	OPENFILENAME m_ofn;	
 
 	bool m_bOpenFileDialog;
-	char *m_pszFilter;
-	char *m_pszDefExt;
-	char m_szFileTitle[MAX_PATH];
-	char m_szFileName[MAX_PATH];
-	char m_szInitialDir[MAX_PATH];
+	TCHAR *m_pszFilter;
+	TCHAR *m_pszDefExt;
+	TCHAR m_szFileTitle[MAX_PATH];
+	TCHAR m_szFileName[MAX_PATH];
+	TCHAR m_szInitialDir[MAX_PATH];
 
 	static PyTypeObject type;
 	static PyMethodDef methods[];
@@ -55,7 +53,7 @@ struct PyOfn
 		p->m_ofn.lpstrFileTitle    = p->m_szFileTitle;
 		p->m_ofn.nMaxFileTitle     = MAX_PATH;
 		p->m_ofn.lpstrInitialDir   = p->m_szInitialDir;
-		p->m_ofn.lpstrTitle        = "Open";
+		p->m_ofn.lpstrTitle        = TEXT("Open");
 		p->m_ofn.nFileOffset       = 0;
 		p->m_ofn.nFileExtension    = 0;
 		p->m_ofn.lpstrDefExt       = NULL;
@@ -97,19 +95,19 @@ PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args)
 
 	if(pszFilter != NULL)
 		{
-		pyofn->m_pszFilter = new char[lstrlen(pszFilter)+1];
-		lstrcpy(pyofn->m_pszFilter, pszFilter);
-		char *pch = pyofn->m_pszFilter;
-		while( (pch= strchr(pch, '|')) != NULL )
+		pyofn->m_pszFilter = new TCHAR[lstrlenA(pszFilter)+1];
+		lstrcpy(pyofn->m_pszFilter, toTEXT(pszFilter));
+		TCHAR *pch = pyofn->m_pszFilter;
+		while( (pch = textchr(pch, '|')) != NULL )
 			*pch++ = '\0';
 		}
 	if(pszDefExt != NULL)
 		{
-		pyofn->m_pszDefExt = new char[lstrlen(pszDefExt)+1];
-		lstrcpy(pyofn->m_pszDefExt, pszDefExt);
+		pyofn->m_pszDefExt = new TCHAR[lstrlenA(pszDefExt)+1];
+		lstrcpy(pyofn->m_pszDefExt, toTEXT(pszDefExt));
 		}
 	if (pszFileName != NULL)
-		lstrcpyn(pyofn->m_szFileName, pszFileName, MAX_PATH);
+		lstrcpyn(pyofn->m_szFileName, toTEXT(pszFileName), MAX_PATH);
 	pyofn->m_ofn.hwndOwner = hWndParent;
 	pyofn->m_ofn.lpstrFile = pyofn->m_szFileName;
 	pyofn->m_ofn.lpstrDefExt = pyofn->m_pszDefExt;
@@ -212,7 +210,7 @@ static PyObject* PyOfn_SetOFNTitle(PyOfn *self, PyObject *args)
 	if(obj == Py_None)
 		self->m_szFileTitle[0] = '\0';
 	else
-		lstrcpyn(self->m_szFileTitle, PyString_AsString(obj), MAX_PATH);
+		lstrcpyn(self->m_szFileTitle, toTEXT(PyString_AsString(obj)), MAX_PATH);
 	return none();
 	}
 
@@ -229,7 +227,7 @@ static PyObject* PyOfn_SetOFNInitialDir(PyOfn *self, PyObject *args)
 	if(obj == Py_None)
 		self->m_szInitialDir[0] = '\0';
 	else
-		lstrcpyn(self->m_szInitialDir, PyString_AsString(obj), MAX_PATH);
+		lstrcpyn(self->m_szInitialDir, toTEXT(PyString_AsString(obj)), MAX_PATH);
 	return none();
 	}
 

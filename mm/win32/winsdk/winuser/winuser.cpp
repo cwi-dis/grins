@@ -6,16 +6,12 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
-
-#include "mtpycall.h"
-
 #include "winuser_main.h"
 #include "winuser_wnd.h"
 #include "winuser_menu.h"
 #include "winuser_ofn.h"
+
+#include "mtpycall.h"
 
 PyObject *ErrorObject;
 

@@ -10,26 +10,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include <windows.h>
 
-static PyObject *ErrorObject;
+#include "utils.h"
 
-void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
-
-static void
-seterror(const char *funcname, DWORD err)
-{
-	char* pszmsg;
-	FormatMessage( 
-		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		 NULL,
-		 err,
-		 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		 (LPTSTR) &pszmsg,
-		 0,
-		 NULL 
-		);
-	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, pszmsg);
-	LocalFree(pszmsg);
-}
+PyObject *ErrorObject;
 
 static PyObject* GetVersionEx(PyObject *self, PyObject *args)
 {
@@ -77,10 +60,10 @@ static PyObject* LoadLibrary(PyObject *self, PyObject *args)
 	int flags = 0;
 	if (!PyArg_ParseTuple(args, "s|i", &filename, &flags))
 		return NULL;
-	HMODULE hModule = GetModuleHandle(filename);
+	HMODULE hModule = GetModuleHandle(toTEXT(filename));
 	if(hModule == NULL) 
 		{
-		hModule = LoadLibraryEx(filename, NULL, flags);
+		hModule = LoadLibraryEx(toTEXT(filename), NULL, flags);
 		if(hModule == NULL) 
 			{
 			seterror("LoadLibrary", GetLastError());
@@ -106,7 +89,7 @@ static PyObject* FindResource(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hrsrc);
 }
 
-typedef void* (__stdcall *LRF)(struct HINSTANCE__ *,const char *);
+typedef void* (__stdcall *LRF)(struct HINSTANCE__ *, TCHAR *);
 
 static PyObject* LoadResourceType(const char *what, LRF fn, PyObject *self, PyObject *args)
 {
