@@ -1040,7 +1040,7 @@ class MediaWidget(MMNodeWidget):
 
     def show_mesg(self):
         if self.node.errormessage:
-            windowinterface.showmessage(self.node.errormessage, parent=self.root.window)
+            windowinterface.showmessage(self.node.errormessage) # Don't make the root window the parent.. it doesn't work well.
 
     def recalc(self):
         l,t,r,b = self.pos_rel
