@@ -2745,7 +2745,10 @@ class MMNode(MMTreeElement):
 		if syncBehavior is None or syncBehavior == 'default':
 			syncBehavior = self.GetInherAttrDef('syncBehaviorDefault', None)
 		if syncBehavior is None or syncBehavior == 'inherit':
-			return 'locked'	# default default
+			if settings.get('default_sync_behavior_locked'):
+				return 'locked'	# default default
+			else:
+				return 'canSlip' # Alternative default default
 		return syncBehavior
 
 	def GetSyncTolerance(self, syncTolerance = None):
@@ -2754,7 +2757,7 @@ class MMNode(MMTreeElement):
 		if syncTolerance is None or syncTolerance < 0:
 			syncTolerance = self.GetInherAttrDef('syncToleranceDefault', None)
 		if syncTolerance is None or syncTolerance < 0:
-			return 0.1	# default default
+			return settings.get('default_sync_tolerance') # Default default
 		return syncTolerance
 
 	def GetRestart(self, restart = None):

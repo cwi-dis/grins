@@ -926,7 +926,11 @@ class PreferenceWrapper(Wrapper):
 		'saveopenviews': 'Save view placement in prefs file',
 		'initial_dialog': 'Show initial dialog on application start',
 ##		'vertical_icons': 'Show icons vertically in the Structure View',
+		'default_sync_behavior_locked': 'Playback will be fully synchronized',
 		}
+	__floatprefs = {
+		'default_sync_tolerance': 'Maximum media clock drift for synchronized playback',
+	} 
 	if features.CREATE_TEMPLATES in features.feature_set:
 		__boolprefs['enable_template'] = \
 			'Enable features specific to building template documents'
@@ -983,6 +987,10 @@ class PreferenceWrapper(Wrapper):
 			return (('int', None), self.getdefault(name),
 				defs[2] or name, 'bitrate',
 				self.__intprefs[name], 'raw', flags.FLAG_ALL)
+		elif self.__floatprefs.has_key(name):
+			return (('float', None), self.getdefault(name),
+				defs[2] or name, 'syncTolerance',
+				self.__floatprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__boolprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'default',
@@ -1024,7 +1032,9 @@ class PreferenceWrapper(Wrapper):
 		pass
 
 	def attrnames(self):
-		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
+		attrs = self.__strprefs.keys() + self.__intprefs.keys() + \
+			self.__boolprefs.keys() + self.__specprefs.keys() + \
+			self.__floatprefs.keys()
 		if features.compatibility != features.CMIF:
 			attrs.remove('cmif')
 			if features.compatibility != features.SMIL10:
