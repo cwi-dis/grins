@@ -136,6 +136,7 @@ class ChannelView(ChannelViewDialog):
 		self.datadir = findfile('GRiNS-Icons')
 		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
+		self.editmgr.register(self, 1)
 
 	def __repr__(self):
 		return '<ChannelView instance, root=' + `self.root` + '>'
@@ -150,7 +151,7 @@ class ChannelView(ChannelViewDialog):
 		ChannelViewDialog.show(self, title)
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
-		self.editmgr.register(self)
+##		self.editmgr.register(self, 1)
 		self.toplevel.checkviews()
 		# Compute objects to draw and where to draw them, then draw
 		self.fixviewroot()
@@ -164,13 +165,16 @@ class ChannelView(ChannelViewDialog):
 			return
 		ChannelViewDialog.hide(self)
 		self.cleanup()
-		self.editmgr.unregister(self)
+##		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
 
 	def is_showing(self):
 		return self.window is not None
 
 	def destroy(self):
+		if self.editmgr:
+			self.editmgr.unregister(self)
+			self.editmgr = None
 		self.hide()
 
 	def get_geometry(self):
@@ -186,6 +190,8 @@ class ChannelView(ChannelViewDialog):
 		pass
 
 	def commit(self, type):
+		if not self.is_showing():
+			return
 		self.redrawafterchange()
 
 	def redrawafterchange(self):
@@ -218,6 +224,23 @@ class ChannelView(ChannelViewDialog):
 
 	def kill(self):
 		self.destroy()
+
+	def globalfocuschanged(self, focustype, focusobject):
+		if focustype in ('MMNode', 'MMChannel'):
+			if not self.is_showing():
+				self.focus = ({'MMNode':'n','MMChannel':'c'}[focustype], focusobject)
+				return
+			obj = focusobject.cv_obj
+			if self.focus is obj:
+				return
+			self.init_display()
+			self.deselect()
+			obj.select()
+			self.drawarcs()
+			self.window.scrollvisible((obj.left, obj.top,
+						   obj.right-obj.left,
+						   obj.bottom-obj.top))
+			self.render()
 
 	# Event interface
 
@@ -1595,10 +1618,19 @@ class ChannelBox(GO, ChannelBoxCommand):
 	def __init__(self, mother, channel):
 		GO.__init__(self, mother, channel.name)
 		self.channel = channel
+		channel.cv_obj = self
 		self.ctype = channel.get('type', '???')
 		
 		self.menutitle = 'Channel %s ops' % self.name
 		ChannelBoxCommand.__init__(self)
+
+	def cleanup(self):
+		del self.channel.cv_obj
+		GO.cleanup(self)
+
+	def select(self):
+		GO.select(self)
+		self.mother.editmgr.setglobalfocus('MMChannel', self.channel)
 
 	def mkcommandlist(self):
 		if self.commandlist:
@@ -1930,6 +1962,7 @@ class NodeBox(GO, NodeBoxCommand):
 	def select(self):
 		self.unlock()
 		GO.select(self)
+		self.mother.editmgr.setglobalfocus('MMNode', self.node)
 
 	def reshape(self):
 		# Compute ideal box coordinates
