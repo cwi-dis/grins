@@ -129,7 +129,7 @@ SOURCE=.\dshow.cpp
 # End Group
 # Begin Source File
 
-SOURCE=.\any2wav.py
+SOURCE=.\aud2rm.py
 # End Source File
 # Begin Source File
 
