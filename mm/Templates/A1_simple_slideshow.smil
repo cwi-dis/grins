@@ -15,20 +15,22 @@
     </layout>
   </head>
   <body>
-    <par>
-      <seq>
+    <par id="Simple_Slideshow">
+      <seq id="Images_Sequence">
         <img id="Slide_1" region="imageRegion" src="media/rp-slide-1.jpg" dur="5s"/>
         <img id="Slide_2" region="imageRegion" src="media/rp-slide-2.jpg" dur="5s"/>
         <img id="Slide_3" region="imageRegion" src="media/rp-slide-3.jpg" dur="5s"/>
       </seq>
-	  <seq>
-        <audio id="Background-Audio" region="audioRegion_1" src="media/background-sound.aiff"/>
+	  <seq id="Audio_Sequence">
+        <audio id="Clip_1" region="audioRegion_2" src="media/background-sound.aiff"/>
+        <audio id="Clip_2" region="audioRegion_2" src="media/background-sound.aiff"/>
+        <audio id="Clip_3" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
-	  <seq>
-        <audio id="Additional-Audio" region="audioRegion_2" src="media/background-sound.aiff"/>
+	  <seq id="Background_Audio">
+        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
-	  <seq>
-        <img id="Background-Image" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
+	  <seq id="Background_Image">
+        <img id="Bkgd_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
 	  </seq>
     </par>
   </body>
