@@ -38,6 +38,22 @@ def gencommerciallicense(version=None):
 	dbase.close()
 	return license
 	
+def genevaluationlicense(version=None):
+	if version in (None, 'GSE', 'editor'):
+		features = getdefaultfeatures()
+	elif version in ('light', 'lite', 'GRL'):
+		features = getdefaultlightfeatures()
+	else:
+		raise Error, ('Unknown license type', version)
+	dbase = grinsdb.Database()
+	newid = grinsdb.uniqueid()
+	date = getdate("+14")
+	name = None
+	license = codelicense(newid, date, features, name)
+	grinsdb.loglicense(license)
+	dbase.close()
+	return license
+	
 def main():
 	try:
 		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:")
