@@ -152,7 +152,6 @@ class _Toplevel:
 			self._blue_shift, self._blue_mask = \
 					  self._colormask(v_best.blue_mask)
 			self._colormap = v_best.CreateColormap(X.AllocNone)
-			print 'Using TrueColor visual, depth = %d, masks = %x %x %x' % (v_best.depth, v_best.red_mask, v_best.green_mask, v_best.blue_mask)
 			return
 		visuals = dpy.GetVisualInfo({'depth': 8,
 					     'c_class': X.PseudoColor})
@@ -1144,7 +1143,6 @@ class _DisplayList:
 			but.close()
 		window = self._window
 		window._displaylists.remove(self)
-		toplevel._win_lock.acquire()
 		if window._active_display_list == self:
 			window._active_display_list = None
 			window._expose_callback(None, None, None)
@@ -1153,7 +1151,6 @@ class _DisplayList:
 		del self._gc
 		del self._pixmap
 		del self._font
-		toplevel._win_lock.release()
 
 	def is_closed(self):
 		return not hasattr(self, '_window')
@@ -2409,12 +2406,12 @@ class Dialog:
 			shell.Popup(0)
 		toplevel._subwindows.append(self)
 
+	def __del__(self):
+		self.close()
+
 	def setcursor(self, cursor):
 		if not self.is_closed():
 			_setcursor(self._form, cursor)
-
-	def __del__(self):
-		self.close()
 
 	def getgeometry(self):
 ##		# this is waht we should do, if we wanted to actually
@@ -3197,61 +3194,23 @@ class PulldownMenu(_Widget):
 			_create_menu(menu, None, list)
 		_Widget.__init__(self, menubar)
 
-class Selection(_Widget):
-	def __init__(self, parent, listprompt, itemprompt, itemlist, sel_cb, position):
-		attrs = {}
-		self._attachments(attrs, position)
-		if debug: print `self` + '.CreateSelectionBox()'
-		selection = parent._form.CreateSelectionBox('windowSelection',
-						  attrs)
-		list = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST)
+# super class for Selection and List
+class _List:
+	def __init__(self, list, itemlist, sel_cb):
 		self._list = list
-		list.selectionPolicy = Xmd.SINGLE_SELECT
-		list.listSizePolicy = Xmd.CONSTANT
 		for i in range(len(itemlist)):
 			list.ListAddItem(itemlist[i], i + 1)
 		self._itemlist = itemlist
-		for widget in Xmd.DIALOG_APPLY_BUTTON, \
-		    Xmd.DIALOG_CANCEL_BUTTON, Xmd.DIALOG_DEFAULT_BUTTON, \
-		    Xmd.DIALOG_HELP_BUTTON, Xmd.DIALOG_OK_BUTTON, \
-		    Xmd.DIALOG_SEPARATOR:
-			w = selection.SelectionBoxGetChild(widget)
-			w.UnmanageChild()
-		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
-		if listprompt is None:
-			w.UnmanageChild()
-		else:
-			w.labelString = listprompt
-		w = selection.SelectionBoxGetChild(
-					    Xmd.DIALOG_SELECTION_LABEL)
-		if itemprompt is None:
-			w.UnmanageChild()
-		else:
-			w.labelString = itemprompt
 		if sel_cb:
 			list.AddCallback('singleSelectionCallback',
 					 self._callback, sel_cb)
-		_Widget.__init__(self, selection)
 
 	def _callback(self, w, (func, arg), call_data):
 		apply(func, arg)
 
 	def close(self):
-		if hasattr(self, '_form'):
-			del self._itemlist
-			del self._list
-			_Widget.close(self)
-
-	def setlabel(self, label):
-		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
-		w.labelString = label
-
-	def getselection(self):
-		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		if hasattr(text, 'TextFieldGetString'):
-			return text.TextFieldGetString()
-		else:
-			return text.TextGetString()
+		del self._itemlist
+		del self._list
 
 	def getselected(self):
 		pos = self._list.ListGetSelectedPos()
@@ -3269,14 +3228,19 @@ class Selection(_Widget):
 		self._list.ListAddItem(item, pos + 1)
 		self._itemlist.insert(pos, item)
 
+	def addlistitems(self, items, pos):
+		if pos < 0:
+			pos = len(self._itemlist)
+		self._list.ListAddItems(items, pos + 1)
+		self._itemlist[pos:pos] = items
+
 	def dellistitem(self, pos):
 		del self._itemlist[pos]
 		self._list.ListDeletePos(pos + 1)
 
 	def replacelistitem(self, pos, newitem):
 		self._itemlist[pos] = newitem
-		self._list.ListDeleteItem(item)
-		self._list.ListAddItem(newitem, pos + 1)
+		self._list.ListReplaceItemsPos([newitem], pos + 1)
 
 	def delalllistitems(self):
 		self._itemlist = []
@@ -3287,9 +3251,54 @@ class Selection(_Widget):
 			pos = len(self._itemlist) - 1
 		self._list.ListSelectPos(pos + 1, X.TRUE)
 
-class List(_Widget):
+class Selection(_Widget, _List):
+	def __init__(self, parent, listprompt, itemprompt, itemlist, sel_cb, position):
+		attrs = {}
+		self._attachments(attrs, position)
+		selection = parent._form.CreateSelectionBox('windowSelection',
+						  attrs)
+		for widget in Xmd.DIALOG_APPLY_BUTTON, \
+		    Xmd.DIALOG_CANCEL_BUTTON, Xmd.DIALOG_DEFAULT_BUTTON, \
+		    Xmd.DIALOG_HELP_BUTTON, Xmd.DIALOG_OK_BUTTON, \
+		    Xmd.DIALOG_SEPARATOR:
+			w = selection.SelectionBoxGetChild(widget)
+			w.UnmanageChild()
+		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
+		if listprompt is None:
+			w.UnmanageChild()
+		else:
+			w.labelString = listprompt
+		w = selection.SelectionBoxGetChild(
+					    Xmd.DIALOG_SELECTION_LABEL)
+		if itemprompt is None:
+			w.UnmanageChild()
+		else:
+			w.labelString = itemprompt
+		list = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST)
+		list.selectionPolicy = Xmd.SINGLE_SELECT
+		list.listSizePolicy = Xmd.CONSTANT
+		_List.__init__(self, list, itemlist, sel_cb)
+		_Widget.__init__(self, selection)
+
+	def close(self):
+		if hasattr(self, '_form'):
+			_List.close(self)
+			_Widget.close(self)
+
+	def setlabel(self, label):
+		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
+		w.labelString = label
+
+	def getselection(self):
+		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
+		if hasattr(text, 'TextFieldGetString'):
+			return text.TextFieldGetString()
+		else:
+			return text.TextGetString()
+
+class List(_Widget, _List):
 	def __init__(self, parent, listprompt, itemlist, sel_cb, position):
-		attrs = {'resizePolicy': Xmd.RESIZE_NONE}
+		attrs = {'resizePolicy': parent.resizePolicy}
 		self._attachments(attrs, position)
 		if listprompt is not None:
 			form = parent._form.CreateManagedWidget(
@@ -3319,64 +3328,18 @@ class List(_Widget):
 			list = parent._form.CreateScrolledList('windowList',
 						     attrs)
 			widget = list
-		self._list = list
-		for i in range(len(itemlist)):
-			list.ListAddItem(itemlist[i], i + 1)
-		self._itemlist = itemlist
-		if sel_cb:
-			list.AddCallback('singleSelectionCallback',
-					 self._callback, sel_cb)
+		_List.__init__(self, list, itemlist, sel_cb)
 		_Widget.__init__(self, widget)
-
-	def _callback(self, w, (func, arg), call_data):
-		apply(func, arg)
 
 	def close(self):
 		if hasattr(self, '_form'):
-			del self._itemlist
-			del self._list
+			_List.close(self)
 			_Widget.close(self)
 
 	def setlabel(self, label):
 		if not hasattr(self, '_label'):
 			raise error, 'List created without label'
 		self._label.labelString = label
-
-	def getselected(self):
-		pos = self._list.ListGetSelectedPos()
-		if pos:
-			return pos[0] - 1
-		else:
-			return None
-
-	def getlistitem(self, pos):
-		return self._itemlist[pos]
-
-	def addlistitem(self, item, pos):
-		if pos < 0:
-			pos = len(self._itemlist)
-		self._list.ListAddItem(item, pos + 1)
-		self._itemlist.insert(pos, item)
-
-	def dellistitem(self, pos):
-		if pos < 0:
-			pos = len(self._itemlist) - 1
-		del self._itemlist[pos]
-		self._list.ListDeletePos(pos + 1)
-
-	def replacelistitem(self, pos, newitem):
-		self._itemlist[pos] = newitem
-		self._list.ListDeleteItem(item)
-		self._list.ListAddItem(newitem, pos + 1)
-
-	def delalllistitems(self):
-		self._itemlist = []
-		self._list.ListDeleteAllItems()
-
-	def selectitem(self, pos):
-		if pos < 0:
-			pos = len(self._itemlist) - 1
-		self._list.ListSelectPos(pos + 1, X.TRUE)
 
 class TextInput(_Widget):
 	def __init__(self, parent, prompt, inittext, cb, position):
@@ -3632,7 +3595,8 @@ class _WindowHelpers:
 
 class SubWindow(_Widget, _WindowHelpers):
 	def __init__(self, parent, position):
-		attrs = {'resizePolicy': Xmd.RESIZE_NONE}
+		self.resizePolicy = parent.resizePolicy
+		attrs = {'resizePolicy': self.resizePolicy}
 		self._attachments(attrs, position)
 		form = parent._form.CreateManagedWidget('windowSubwindow',
 							Xm.Form, attrs)
@@ -3670,7 +3634,8 @@ class _SubWindow(SubWindow):
 
 class AlternateSubWindow(_Widget):
 	def __init__(self, parent, position):
-		attrs = {'resizePolicy': Xmd.RESIZE_NONE,
+		self.resizePolicy = parent.resizePolicy
+		attrs = {'resizePolicy': self.resizePolicy,
 			 'allowOverlap': X.TRUE}
 		self._attachments(attrs, position)
 		form = parent._form.CreateManagedWidget(
@@ -3694,7 +3659,11 @@ class AlternateSubWindow(_Widget):
 			w._form.ManageChild()
 
 class Window(_WindowHelpers):
-	def __init__(self, title):
+	def __init__(self, title, resizable = 0):
+		if resizable:
+			self.resizePolicy = Xmd.RESIZE_ANY
+		else:
+			self.resizePolicy = Xmd.RESIZE_NONE
 		if not title:
 			title = ''
 		self._title = title
@@ -3704,15 +3673,20 @@ class Window(_WindowHelpers):
 				 'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
 				 'depth': toplevel._default_visual.depth})
+		attrs = {'allowOverlap': 0,
+			 'resizePolicy': self.resizePolicy}
+		if not resizable:
+			attrs['noResize'] = X.TRUE
+			attrs['resizable'] = X.FALSE
+		attrs['resizePolicy'] = self.resizePolicy
 		self._form = self._shell.CreateManagedWidget('windowForm',
-					Xm.Form,
-					{'allowOverlap': 0,
-					 'noResize': X.TRUE,
-					 'resizable': X.FALSE,
-					 'resizePolicy': Xmd.RESIZE_NONE})
+							     Xm.Form, attrs)
 		self._showing = 0
 		_WindowHelpers.__init__(self)
 		toplevel._subwindows.append(self)
+
+	def __del__(self):
+		self.close()
 
 	def __repr__(self):
 		s = '<Window instance'
@@ -3724,9 +3698,6 @@ class Window(_WindowHelpers):
 			s = s + ' (showing)'
 		s = s + ', id=' + `id(self)` + '>'
 		return s
-
-	def __del__(self):
-		self.close()
 
 	def fix(self):
 		for w in self._fixkids:
