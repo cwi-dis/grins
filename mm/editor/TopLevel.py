@@ -229,13 +229,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	#
 	def play_callback(self):
 #		self.player.show((self.player.playsubtree, (self.root,)))
-		self.player.play_entry()
+		self.player.play_callback()
 
 	def pause_callback(self):
-		self.player.pause_entry()
+		self.player.pause_callback()
 
 	def stop_callback(self):
-		self.player.stop_entry()
+		self.player.stop_callback()
 
 	def source_callback(self):
 		license = self.main.wanttosave()
