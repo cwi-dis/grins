@@ -70,8 +70,6 @@ MENUBAR=(
 			(FLAG_DBG, TOGGLE, 'Toggle Scheduler.debugevents', None, SCHEDDEBUG),
 			)),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
-		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'E&xit', None, EXIT),
 		)),
 
@@ -295,6 +293,7 @@ MENUBAR=(
 #		(FLAG_ALL, ENTRY, 'Paste &in
 
 		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
