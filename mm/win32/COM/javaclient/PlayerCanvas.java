@@ -3,17 +3,18 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class PlayerCanvas extends Canvas 
-    implements MouseListener, MouseMotionListener {
-        
-    public void setPlayer(SMILPlayer player) {
-        this.player = player;
-        addMouseListener(this);
-        addMouseMotionListener(this);
-    }
+    implements MouseListener, MouseMotionListener 
+{
 	public void paint(Graphics g) {
 		if(player!=null) player.update();
 		else super.paint(g);
 	}
+	
+    void setPlayer(SMILPlayer player) {
+        this.player = player;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+    }
     private SMILPlayer player;
     private Cursor handCursor = new Cursor(Cursor.HAND_CURSOR);
     private Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -33,6 +34,5 @@ public class PlayerCanvas extends Canvas
             setCursor(handCursor);
         else
             setCursor(defaultCursor);
-    }
-
+        }
 }

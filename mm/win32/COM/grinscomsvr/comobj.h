@@ -9,5 +9,6 @@ HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule 
 HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  lpdwRegister);
 void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h);
 void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor);
+void GRiNSPlayerAutoAdviceNewPeerWindow(int id, int w, int h, int objid);
 
 #endif

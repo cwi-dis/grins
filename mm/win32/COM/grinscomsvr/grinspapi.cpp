@@ -149,11 +149,10 @@ ComModule_AdviceSetCursor(ComModuleObject *self, PyObject *args)
 	char *cursor;
 	if(!PyArg_ParseTuple(args, "is", &id, &cursor))
 		return NULL;
-	self->pModule->AdviceSetCursor(id, cursor);
+	self->pModule->adviceSetCursor(id, cursor);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-
 
 
 static struct PyMethodDef ComModule_methods[] = {

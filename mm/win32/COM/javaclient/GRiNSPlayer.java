@@ -8,42 +8,33 @@ class GRiNSPlayer implements SMILPlayer, Runnable {
         this.listener = listener;
         }
     
-    public Canvas getCanvas() {
-        if(canvas==null)
-            canvas = new PlayerCanvas();
-        if(canvas instanceof PlayerCanvas)
-            ((PlayerCanvas)canvas).setPlayer(this);
-        return canvas;
-        }
-    
-    public void setCanvas(Canvas c) {
+    public void setCanvas(PlayerCanvas c) {
         canvas = c;
-        if(c!=null && c instanceof PlayerCanvas)
-            ((PlayerCanvas)c).setPlayer(this);
+        c.setPlayer(this);
         }
             
-    public void update() {push(new GRiNSCmd("update"));}
+    public void update() {push(new Cmd("update"));}
     
-    public void mouseClicked(int x, int y){push(new GRiNSCmd("mouseClicked", x, y));}
+    public void mouseClicked(int x, int y){push(new Cmd("mouseClicked", x, y));}
     
     public boolean mouseMoved(int x, int y){
-        push(new GRiNSCmd("mouseMoved", x, y));
+        push(new Cmd("mouseMoved", x, y));
         return ishot;
         }
         
     public void open(String fn) {   
-        push(new GRiNSCmd("open", fn));
+        push(new Cmd("open", fn));
         if(isRunning) return;
         new Thread(this).start();
         }
         
-    public void close(){push(new GRiNSCmd("close"));}
+    public void close(){push(new Cmd("close"));}
     
-    public void play(){push(new GRiNSCmd("play"));}
+    public void play(){push(new Cmd("play"));}
     
-    public void stop(){push(new GRiNSCmd("stop"));}
+    public void stop(){push(new Cmd("stop"));}
     
-    public void pause(){push(new GRiNSCmd("pause"));}
+    public void pause(){push(new Cmd("pause"));}
        
     public int getState() throws GRiNSInterfaceException
     {
@@ -61,16 +52,16 @@ class GRiNSPlayer implements SMILPlayer, Runnable {
     
     public double getSpeed() {return 1.0;}
        
-    class GRiNSCmd {
-        GRiNSCmd(String fname){
+    class Cmd {
+        Cmd(String fname){
             this.fname = fname;
         }
-        GRiNSCmd(String fname, String strarg){
+        Cmd(String fname, String strarg){
             this.fname = fname;
             this.strarg = strarg;
         }
     
-        GRiNSCmd(String fname, int xarg, int yarg){
+        Cmd(String fname, int xarg, int yarg){
             this.fname = fname;
             this.xarg = xarg;
             this.yarg = yarg;
@@ -82,10 +73,11 @@ class GRiNSPlayer implements SMILPlayer, Runnable {
     }
     
     public void run(){
+        initializeThreadContext();
         isRunning = true;
         try {
             while(!Thread.currentThread().interrupted()){
-                GRiNSCmd cmd = peek();
+                Cmd cmd = peek();
                 if(cmd==null){
                     Thread.sleep(interval);
                     continue;
@@ -94,14 +86,8 @@ class GRiNSPlayer implements SMILPlayer, Runnable {
                 if(cmd.fname.equals("open")){
                     listener.setWaiting();
                     hopen(cmd.strarg);
-                    viewportSize = ngetPreferredSize(hgrins);
-                    while(viewportSize.width==0){
-                        Thread.sleep(50);
-                        viewportSize = ngetPreferredSize(hgrins);
-                        }
-                     listener.setViewportSize(viewportSize.width, viewportSize.height);  
-                     listener.setReady();
-                }
+                    push(new Cmd("getPreferredSize"));
+                    }
                 else if(cmd.fname.equals("close"))
                     {hclose();listener.closed(); break;}
                 else if(cmd.fname.equals("play"))
@@ -116,37 +102,51 @@ class GRiNSPlayer implements SMILPlayer, Runnable {
                     nmouseClicked(hgrins, cmd.xarg, cmd.yarg);
                 else if(cmd.fname.equals("mouseMoved"))
                     ishot = nmouseMoved(hgrins, cmd.xarg, cmd.yarg);
+                else if(cmd.fname.equals("getPreferredSize")){
+                     viewportSize = ngetPreferredSize(hgrins);
+                     if(viewportSize.width!=0){
+                        listener.setViewportSize(viewportSize.width, viewportSize.height);
+                        listener.setReady();
+                        }
+                     else 
+                        {
+                        push(new Cmd("getPreferredSize"));
+                        Thread.sleep(interval);
+                        }
+                    }
                 }
                 catch(GRiNSInterfaceException e){System.out.println(""+e);}
                 }
             }
         catch(InterruptedException e){System.out.println(""+e);}
         isRunning = false;
+        uninitializeThreadContext();
     }
 
-    private synchronized void push(GRiNSCmd cmd){
+    private synchronized void push(Cmd cmd){
         cmds.add(cmd);
         notifyAll();
     }
     
-    private synchronized GRiNSCmd peek() {
+    private synchronized Cmd peek() {
 	    int	len = cmds.size();
 	    if (len == 0)
 	        return null;
-	    GRiNSCmd cmd = (GRiNSCmd)cmds.elementAt(0);
+	    Cmd cmd = (Cmd)cmds.elementAt(0);
 	    cmds.removeElementAt(0);
 	    return cmd;
      }
     
     private void hopen(String fn) throws GRiNSInterfaceException
     {
-        if(canvas!=null && canvas.isDisplayable())
-            hgrins = nconnect(canvas);
-        else
-            hgrins = nconnect();
+        hgrins = nconnect();
         if(hgrins!=0) {
             nopen(hgrins, fn);
-            nupdate(hgrins);
+            if(canvas!=null && canvas.isDisplayable())
+                {
+                nsetWindow(hgrins, canvas);   
+                nupdate(hgrins);
+                }
         }
     }
     
@@ -180,7 +180,7 @@ class GRiNSPlayer implements SMILPlayer, Runnable {
     public native void uninitializeThreadContext();
     
     private native int nconnect();
-    private native int nconnect(Component g);
+    private native void nsetWindow(int hgrins, Component g);
     private native void ndisconnect(int hgrins);
     private native void nopen(int hgrins, String str);
     private native void nclose(int hgrins);

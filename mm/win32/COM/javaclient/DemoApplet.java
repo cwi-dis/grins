@@ -150,7 +150,9 @@ implements SMILListener
 		    textFieldURL.setText(absFilename);
 		}
 		if(player!=null){
-	        viewport = new Viewport(player.getCanvas());
+		    PlayerCanvas canvas = new PlayerCanvas();
+	        viewport = new Viewport(canvas);
+	        player.setCanvas(canvas);
 		    player.open(textFieldURL.getText());
 	    }
 		
