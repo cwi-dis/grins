@@ -742,13 +742,16 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
 			coordinates = (x, y, w, h)
 			if image_filename:
-				box = displist.display_image_from_file(
-					image_filename,
-					coordinates = coordinates,
-					fit = 'icon',
-					align = align)
-				if drawbox:
-					displist.drawbox(box)
+				try:
+					box = displist.display_image_from_file(
+						image_filename,
+						coordinates = coordinates,
+						fit = 'icon',
+						align = align)
+					if drawbox:
+						displist.drawbox(box)
+				except windowinterface.error:
+					box = (x, y, 0, h)
 			else:
 				box = (x, y, 0, h)
 			if forcetext or (self.iconbox is not None and self.iconbox.vertical):
