@@ -36,7 +36,7 @@ from win32ig import win32ig
 import grinsRC
 
 # commands for popups
-import usercmd,usercmdui
+import usercmd,wndusercmd,usercmdui
 
 # globals 
 import __main__
@@ -58,6 +58,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self._accelerators = {}
 		self._menu = None		# Dynamically created rightmousemenu
 		self._popupmenu = None	# Statically created rightmousemenu (for views)
+		self._popup_point =(0,0)
 		self._transparent = 0
 		self._redrawfunc = None
 		self._title = None
@@ -129,7 +130,22 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		x,y = self._inverse_coordinates((x, y),self._canvas)
 		print 'DROP', (x, y, filename)
 		self.onEvent(event, (x, y, filename))
-		
+	
+	# copy/paste files support
+	# to enable paste file for a wnd: 
+	#	1. enable command mechanism
+	#	2. register event 'PasteFile'
+	def OnPasteFile(self,id,code):
+		filename=Sdk.GetClipboardFileData()
+		if filename:
+			import longpath
+			filename=longpath.short2longpath(filename)
+			x,y=self._DPtoLP(self._popup_point)
+			x,y = self._inverse_coordinates((x, y),self._canvas)
+			self.onEvent(PasteFile,(x, y, filename))
+	def OnUpdateEditPaste(self,cmdui):
+		cmdui.Enable(Sdk.IsClipboardFileDataAvailable())
+	
 	# Called by the core system to create a subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		raise error, 'override newwindow'
@@ -597,6 +613,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 				menu=self._parent.get_submenu('&Tools')
 			if not menu:return
 			pt=(xpos,ypos)
+			self._popup_point=pt;
 			pt=self.ClientToScreen(pt);
 			menu.TrackPopupMenu(pt,win32con.TPM_RIGHTBUTTON|win32con.TPM_LEFTBUTTON,
 				self._parent)
