@@ -271,8 +271,13 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Bring window in front of peers
 	def pop(self, poptop=1):
-		if poptop:
-			self.do_activate()
+		# ignore calls from core system, they produce undesired visual effects.
+		# it seems that the situation is different for other platforms  
+		# let the user do the activation of top windows
+		# he knows better what he wants to see in front
+#		if poptop:
+#			self.do_activate()
+		pass
 
 	# Bring window in front of peers
 	def do_activate(self):
@@ -616,8 +621,9 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	
 	# Bring the subwindow infront of windows with the same z	
 	def pop(self, poptop=1):
-		if poptop:
-			self._topwindow.do_activate()
+#	let the user activate topwindows
+#		if poptop:
+#			self._topwindow.do_activate()
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
