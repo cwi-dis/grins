@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import sys, img, imgformat
 
 def main():
@@ -10,9 +12,9 @@ def main():
 	data = rdr.read()
 	f = open('splashimg.py', 'w')
 	f.write('''\
-__version__ = "$Id$"
+__version__ = "$''' 'Id' '''$"
 
-import imgformat, base64
+import imgformat
 
 class reader:
 	def __init__(self):

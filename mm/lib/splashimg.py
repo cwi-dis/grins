@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import imgformat, base64
+import imgformat
 
 class reader:
 	def __init__(self):
