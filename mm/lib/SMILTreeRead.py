@@ -4034,6 +4034,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key('fragment'):
 			aid = attributes['fragment']
 			atype = ATYPE_NORMAL
+			aargs[0] = A_SHAPETYPE_FRAGMENT
 		elif nname is not None and id is not None and \
 		     id[:len(nname)+1] == nname + '-':
 			# undo CMIF encoding of anchor ID
