@@ -751,7 +751,7 @@ class HierarchyView(HierarchyViewDialog):
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
 				px, py = point
-				t = obj.pixel2time(px, side, timemapper)
+				t, is_exact = obj.pixel2time(px, side, timemapper)
 				if t < 0:
 					if side == 'right':
 						# no negative durations
@@ -765,7 +765,11 @@ class HierarchyView(HierarchyViewDialog):
 							if px < px1:
 								px = px1
 				apply(self.window.drawxorline, self.__line)
-				self.__line = (px,py),(px, y+h/2)
+				if is_exact:
+					color = (255, 0, 0)
+				else:
+					color = (0,0,255)
+				self.__line = (px,py),(px, y+h/2), color
 				apply(self.window.drawxorline, self.__line)
 		elif self.scene_graph is not None:
 			rv = self.scene_graph.get_obj_near(point)
@@ -796,8 +800,9 @@ class HierarchyView(HierarchyViewDialog):
 			obj, side, timemapper, timeline = rv
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
-				self.__line = (px,py),(px, y+h/2)
-				self.window.drawxorline((px,py),(px, y+h/2))
+				color = (255,0,0)
+				self.__line = (px,py),(px, y+h/2), color
+				self.window.drawxorline((px,py),(px, y+h/2), color)
 
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
@@ -820,7 +825,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.need_resize = 1
 				self.draw()
 				return
-			t = obj.pixel2time(px, side, timemapper)
+			t, is_exact = obj.pixel2time(px, side, timemapper)
 			if t < 0:
 				if side == 'right':
 					# no negative durations
