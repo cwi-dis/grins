@@ -35,20 +35,8 @@ class CDropTarget : public COleDropTarget
 		T *pT=static_cast<T*>(pWnd);
 		pT->OnDragLeave();
 		}
-
 	};
 
-inline LPCTSTR GetFileNameData(COleDataObject* p) 
-	{
-	static CLIPFORMAT cfFileName=NULL;
-	static CString str;
-	if(!cfFileName)cfFileName = ::RegisterClipboardFormat(_T("FileName"));
-	HGLOBAL hObjDesc = p->GetGlobalData(cfFileName);
-	if(!hObjDesc)return "";
-	LPSTR lpClipMem=(LPSTR)GlobalLock(hObjDesc);
-	str=LPCTSTR(lpClipMem);
-	::GlobalUnlock(lpClipMem);
-	return str;
-	}
 
 #endif
+
