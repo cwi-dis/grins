@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <meta name="title" content="3GPP Slideshow with Music"/>
+    <meta name="template_name" content="3GPP Slideshow with Background Music"/>
+    <meta name="template_description" content="A slideshow with background music and a background image for 3GPP."/>
+    <meta name="template_snapshot" content="icons/slideshow_1A.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="Basic_GRiNS_Slideshow" width="240" height="270"  GRiNS:editBackground="192 192 0" GRiNS:showEditBackground="1"/>
+      <region id="audio" GRiNS:type="sound"/>
+      <region id="bkgd_image" width="240" height="270" GRiNS:type="image" z-index="0" GRiNS:editBackground="192 0 192" GRiNS:showEditBackground="1"/>
+      <region id="Images" fit="meet" top="7" left="7" width="230" height="260" z-index="1" GRiNS:type="image" GRiNS:editBackground="0 192 192" GRiNS:showEditBackground="1"/>    
+    </layout>
+    <transition id="fade" type="fade"/>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="push" type="pushWipe"/>
+  </head>
+  <body GRiNS:hidden="true">
+    <par id="BasicSlideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/slideshow_1A.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Images" GRiNS:showtime="bwstrip" GRiNS:timezoom="4.975">
+      <seq id="ImageSet" fillDefault="freeze" GRiNS:emptyIcon="icons/image.tiff" GRiNS:emptyDur="40s" GRiNS:emptyText="Place Main Images here." GRiNS:emptyColor="#a0a0a0" GRiNS:nonEmptyIcon="icons/DropRight.gif"/>
+      <seq id="BkgdClip" GRiNS:emptyText="Place Background Music here." region="audio" GRiNS:emptyIcon="icons/sound.tiff" GRiNS:emptyColor="#a0a0a0"/>
+      <img id="BkgdImg" fill="freeze" region="bkgd_image" src="media/Back3m.gif"/>
+    </par>
+  </body>
+</smil>
