@@ -957,6 +957,25 @@ class MMChannel:
 			x = x.getParent()
 		return default
 
+	def GetAttr(self, name, animated=0):
+		if animated and self.d_attrdict.has_key(name):
+			return self.d_attrdict[name]
+		if settings.activeFullSmilCss:
+			# only for css positioning attributes
+			if self.isCssAttr(name):
+				return self.getCssAttr(name)
+		if self.attrdict.has_key(name):
+			return self.attrdict[name]
+		raise NoSuchAttrError, 'in GetAttr'
+
+	def GetAttrDef(self, name, default, animated=0):
+		if animated and self.d_attrdict.has_key(name):
+			return self.d_attrdict[name]
+		if settings.activeFullSmilCss:
+			# only for css postioning attributes
+			if self.isCssAttr(name):
+				return self.getCssAttr(name)
+		return self.attrdict.get(name, default)
 
 # MMChannel tree class
 #
