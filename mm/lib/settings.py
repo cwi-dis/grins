@@ -7,16 +7,13 @@ import windowinterface
 
 # Defaults:
 default_settings = {
-	'system_bitrate' :				14400,	# Slow modem
-	'system_captions' : 			0,		# Don't show captions
-	'system_language' : 			'',		# No language preference
-	'system_overdub_or_caption' :	'caption',
-										# Captions preferred over overdub
-	'system_screen_size' :			windowinterface.getscreensize(),
-										# Size of screen
-	'system_screen_depth':			windowinterface.getscreendepth(),
-										# Depth of screen
-	'system_required':				(),	# Needs special handling in match...
+	'system_bitrate': 14400,	# Slow modem
+	'system_captions': 0,		# Don't show captions
+	'system_language': '',		# No language preference
+	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
+	'system_screen_size': windowinterface.getscreensize(), # Size of screen
+	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
+	'system_required': (),		# Needs special handling in match...
 }
 
 user_settings = {}
@@ -56,13 +53,10 @@ def factory_defaults():
 	user_settings = {}
 	
 def get(name):
-	real_value = None
-	if user_settings.has_key(name):
-		real_value = user_settings[name]
+	real_value = user_settings.get(name)
 	if real_value is None:		
-		try:
-			real_value = default_settings[name]
-		except KeyError:
+		real_value = default_settings.get(name)
+		if real_value is None:
 			print 'Warning: unknown system attribute', name
 			return 0
 	return real_value
