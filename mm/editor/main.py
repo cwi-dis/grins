@@ -9,6 +9,7 @@ def usage(msg):
 	print 'usage: cmifed [-qpsnTHPSL] [-h helpdir] file ...'
 	print '-q         : quiet (don\'t print anything to stdout)'
 	print '-p         : start playing right away'
+	print '-j name    : start playing at given global anchor'
 	print '-s         : report statistics (guru only)'
 	print '-n         : no pre-arming (guru only)'
 	print '-C         : open Channel view right away'
@@ -23,7 +24,7 @@ def usage(msg):
 def main():
 	#
 	try:
-		opts, files = getopt.getopt(sys.argv[1:], 'qpsnh:CHPSL')
+		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
 		usage(msg)
 	if not files:
@@ -79,10 +80,13 @@ def main():
 				top.channelview.show()
 			elif opt == '-H':
 				top.hierarchyview.show()
-			elif opt in ('-P', '-p'):
+			elif opt in ('-P', '-p', '-j'):
 				top.player.show()
 				if opt == '-p':
 					top.player.playsubtree(top.root)
+				if opt == '-j':
+					top.player.playfromanchor(top.root, \
+						  arg)
 			elif opt == '-S':
 				top.styleview.show()
 			elif opt == '-L':

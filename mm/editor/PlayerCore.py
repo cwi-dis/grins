@@ -91,12 +91,15 @@ class PlayerCore(Selecter):
 		self.toplevel.setready()
 	#
 	def playfrom(self, node):
+		self.playfromanchor(node, None)
+	#
+	def playfromanchor(self, node, anchor):
 		self.toplevel.setwaiting()
 		if not self.showing:
 			self.show()
 		if not self.playing:
 			self.reset()
-		if not self.gotonode(node, None):
+		if not self.gotonode(node, anchor):
 			return
 		self.playing = 1
 		self.toplevel.setready()

@@ -25,7 +25,7 @@ class Struct: pass
 # The menus:
 LEFT_MENU = 'All|Dangling|Interesting|From Time Chart focus' + \
 	  '|From Block View focus'
-RIGHT_MENU = LEFT_MENU + '|All related anchors|No anchors, links only'
+RIGHT_MENU = LEFT_MENU + '|All related anchors|No anchors, links only|External'
 M_ALL = 1
 M_DANGLING = 2
 M_INTERESTING = 3
@@ -33,6 +33,7 @@ M_TCFOCUS = 4
 M_BVFOCUS = 5
 M_RELATION = 6
 M_NONE = 7
+M_EXTERNAL = 8
 
 class LinkEdit(ViewDialog, BasicDialog):
 	#
@@ -63,6 +64,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.left.node_menu.set_menu(LEFT_MENU)
 		self.right.node_menu.set_menu(RIGHT_MENU)
 		self.interesting = []
+		self.external = []
 		return self
 	#
 	def fixtitle(self):
@@ -174,6 +176,10 @@ class LinkEdit(ViewDialog, BasicDialog):
 		str.sel_label.label = 'Interesting'
 		self.fixinteresting()
 		str.anchors = self.interesting[:]
+
+	def fill_external(self, str):
+		str.sel_label.label = 'External'
+		str.anchors = self.external[:]
 	#
 	def finish_link(self, node):
 		self.fixinteresting()
@@ -198,6 +204,8 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.interesting.append(anchor)
 
 	def makename(self, (uid, aid)):
+		if '/' in uid:
+			return aid + ' in ' + uid
 		node = self.context.mapuid(uid)
 		nodename = node.GetRawAttrDef('name', uid)
 		if type(aid) <> type(''): aid = `aid`
@@ -416,6 +424,21 @@ class LinkEdit(ViewDialog, BasicDialog):
 			str.node = None
 			str.fillfunc = self.fill_none
 			str.hidden = 1
+		elif ind == M_EXTERNAL:
+			str.node = None
+			str.fillfunc = self.fill_external
+			if self.external:
+				doc, aname = self.external[0]
+			else:
+				doc, aname = '', ''
+			doc = fl.show_input('Give document name', doc)
+			aname = fl.show_input('Give anchor name', aname)
+			if not doc or not aname:
+				self.external = []
+			else:
+				if not '/' in doc:
+					doc = './' + doc
+				self.external = [(doc, aname)]
 		else:
 			print 'Unknown menu selection'
 			return

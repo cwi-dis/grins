@@ -438,6 +438,8 @@ class TopLevel(ViewDialog, BasicDialog):
 				raise SystemExit, 0
 		else:
 			self.closebutton.set_button(0)
+		print 'CLOSE: all done'
+		fl.show_question('Continue?', '', '')
 	#
 	def close_ok(self):
 		if not self.changed:
@@ -497,3 +499,20 @@ class TopLevel(ViewDialog, BasicDialog):
 	def select_ready(self, fd):
 		cb, arg = self.select_dict[fd]
 		apply(cb, arg)
+	#
+	# Global hyperjump interface
+	#
+	def jumptoexternal(self, filename, aid):
+		try:
+			top = TopLevel().init(filename)
+		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
+			fl.show_message('Open operation failed.  File:', \
+				filename, \
+				'Error: ' + `msg`)
+			return 0
+		top.show()
+		top.player.show()
+		top.player.playfromanchor(top.root, aid)
+		return 1
+		
+		
