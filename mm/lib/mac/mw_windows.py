@@ -1142,6 +1142,11 @@ class _ScrollMixin:
 		#
 		self._add_control(self._barx, self._xscrollcallback, self._xscrollcallback)
 		self._add_control(self._bary, self._yscrollcallback, self._yscrollcallback)
+		#
+		# And see whether we resize the drawable area on a window-resize
+		#
+		import settings
+		self.no_canvas_resize = settings.get('no_canvas_resize')
 		
 	def close(self):
 		if self._barx:
@@ -1288,7 +1293,7 @@ class _ScrollMixin:
 
 	def getcanvassize(self, units = UNIT_MM):
 		if self._canvassize is None:
-			raise error, 'setcanvassize call for non-resizable window!'
+			raise error, 'getcanvassize call for non-resizable window!'
 		wf, hf = self._canvassize
 		rw, rh = self._rect[2:4]
 		w = rw * wf
@@ -1340,8 +1345,9 @@ class _ScrollMixin:
 			rw, rh = self._rect[2:4]
 			w = float(w) / rw
 			h = float(h) / rh
-			if w < 1: w = 1.0
-			if h < 1: h = 1.0
+			if not self.no_canvas_resize:
+				if w < 1: w = 1.0
+				if h < 1: h = 1.0
 		elif how == DOUBLE_WIDTH:
 			w = w * 2
 		elif how == DOUBLE_HEIGHT:
@@ -1358,21 +1364,30 @@ class _ScrollMixin:
 		0 if we can handle it by enabling scrollbars"""
 		if not self._barx:
 			return 1
-##		self._canvassize = 1, 1	# Not very elegant, but better than nothing
-##		self._adjust_scrollbar_max()
-##		return 1
+		#
+		# Compute old w/h multiplication factors and old virtual w/h
+		#
 		x, y, new_w, new_h = self._rect
 		old_wf, old_hf = self._canvassize
 		old_virtual_w, old_virtual_h = int(old_w*old_wf+0.5), int(old_h*old_hf+0.5)
+		#
+		# Use these to compute expected new w/h multiplciation factors, keeping
+		# virtual size the same (if possible and wanted)
+		#
 		new_wf = float(old_virtual_w) / new_w
 		new_hf = float(old_virtual_h) / new_h
-		if new_wf < 1: new_wf = 1
-		if new_hf < 1: new_hf = 1
+		if not self.no_canvas_resize:
+			if new_wf < 1: new_wf = 1
+			if new_hf < 1: new_hf = 1
 ##		print 'OLD WINDOW SIZE', old_w, old_h
 ##		print 'OLD FACTORS', old_wf, old_hf
 ##		print 'OLD VIRTUAL SIZE', old_virtual_w, old_virtual_h
 		self.arrowcache = {}
 		self._canvassize = new_wf, new_hf
+		#
+		# Now we have to do scrollbar setting, as the 15-bit maxvalue may resize
+		# our virtual sizes after all
+		#
 		self._adjust_scrollbar_max()
 		new_wf, new_hf = self._canvassize
 		new_virtual_w , new_virtual_h = int(new_w*new_wf+0.5), int(new_h*new_hf+0.5)
