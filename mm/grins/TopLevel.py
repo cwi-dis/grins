@@ -6,6 +6,7 @@ import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
 from MMExc import *
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from AnchorDefs import *
 from usercmd import *
 
 # an empty document
@@ -267,8 +268,8 @@ class TopLevel(TopLevelDialog):
 			fn = './' + fn
 		rv = []
 		alist = MMAttrdefs.getattr(self.root, 'anchorlist')
-		for i, t, v in alist:
-			rv.append((fn, i))
+		for a in alist:
+			rv.append((fn, a[A_ID]))
 		return rv
 
 	def getallexternalanchors(self):
