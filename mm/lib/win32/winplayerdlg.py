@@ -237,12 +237,15 @@ class PlayerDlgBar(window.Wnd):
 
 	def setOption(self, name, info):
 		ctrl = self._ctrls.get(name)
-		if ctrl is not None:
-			assert isinstance(ctrl,  components.ComboBox),''
+		if isinstance(ctrl,  components.ComboBox):
 			optionlist = info[0]
 			initoption = info[2]
+			if not initoption in optionlist:
+				optionlist.append(initoption)
 			ctrl.initoptions(optionlist, optionlist.index(initoption))
 			ctrl.setcb(info[1])
+		else:
+			print 'Cannot do yet', name, ctrl
 
 	def _recreateDialog(self, optionsdict):
 		attrs = []
