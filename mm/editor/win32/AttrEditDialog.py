@@ -105,10 +105,10 @@ class AttrEditorDialog:
 		# Fix the state of the floow selection and show all
 		# buttons, apply/ok sensitivity and possibly labels.
 		w = self.__window
-		w._showAll_initial = self.show_all_attributes
-		w._followSelection_initial = self.follow_selection
-		# XXX communicate ok/cancel state to dialog
-		pass
+		w._prsht.fixbuttonstate(
+			self.show_all_attributes,
+			self.follow_selection,
+			self.is_changed())
 
 	def pop(self):
 ##		"""Pop the dialog window to the foreground."""

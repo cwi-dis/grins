@@ -1203,6 +1203,7 @@ class AttrSheet(dialog.PropertySheet):
 	def enableApply(self,flag):
 		if self._apply:
 			self._apply.enable(flag)
+		# XXXX (Jack) Shouldn't we enable/disable OK as well?
 
 	def createButtons(self):
 		l,t,r,b = self.GetDlgItem(win32con.IDOK).GetWindowRect()
@@ -1234,7 +1235,12 @@ class AttrSheet(dialog.PropertySheet):
 				self._showAll.setfont(logfont)
 			if self._followSelection:
 				self._followSelection.setfont(logfont)
-	
+
+	def fixbuttonstate(self, showall, follow, okstate):
+		self._showAll.setcheck(showall)
+		self._followSelection.setcheck(follow)
+		self.enableApply(okstate)
+
 	def onShowAll(self, id, code):
 		self._form.call('Showall')
 #		if self._showAll.getcheck():
