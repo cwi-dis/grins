@@ -363,7 +363,7 @@ class MMNode():
 		tofix = summaries.keys()
 		for key in tofix[:]:
 			if summaries[key] = []:
-				tofix.remove(tofix)
+				tofix.remove(key)
 		self._updsummaries(tofix)
 	#
 	def _updsummaries(x, tofix):
