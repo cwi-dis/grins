@@ -34,8 +34,7 @@ class TextChannel(ChannelWindow):
 		if ps != 0:
 			pointsize = ps
 		baseline, fontheight, pointsize = \
-			  self.armed_display.setfont(\
-			  fontname, pointsize)
+			  self.armed_display.setfont(fontname, pointsize)
 		margin = self.armed_display.strsize('m')[0] / 2
 		width = 1.0 - 2 * margin
 		curlines, partoline, linetopar = StringStuff.calclines(
@@ -46,6 +45,15 @@ class TextChannel(ChannelWindow):
 		# The loop is executed once for each anchor defined
 		# in the text.  pline and pchar specify how far we got
 		# with printing.
+		# If there is only one anchor and this anchor contains
+		# all text, then draw a button the size of the whole
+		# channel.
+		if len(taglist) == 1:
+			par0, chr0, par1, chr1, name, type = taglist[0]
+			if par0 == 0 and chr0 == 0 and \
+			   par1 == len(parlist)-1 and chr1 == len(parlist[-1]):
+				taglist = []
+				buttons.append(name, (0.0,0.0,1.0,1.0), type)
 		pline, pchar = 0, 0
 		for (par0, chr0, par1, chr1, name, type) in taglist:
 			# first convert paragraph # and character #
@@ -236,8 +244,7 @@ def fix_anchorlist(node, taglist):
 	names_in_anchors = []
 	names_in_taglist = []
 	anchor_types = {}
-	for item in taglist:
-		names_in_anchors.append(item[4])
+	names_in_anchors = map(lambda item: item[4], taglist)
 	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
 	modanchorlist(oldanchors)
 	anchors = oldanchors[:]
