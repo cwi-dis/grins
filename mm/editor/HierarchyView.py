@@ -169,7 +169,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
-		self.interiorcommands = self._getmediacommands(toplevel.root.context, under=1) + [
+		self.interiorcommands = self._getmediaundercommands(toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
 			]
 		self.pasteinteriorcommands = [
@@ -179,8 +179,8 @@ class HierarchyView(HierarchyViewDialog):
 			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
 			PASTE_AFTER(callback = (self.pasteaftercall, ())),
 			]
-		self.notatrootcommands = self._getmediacommands(toplevel.root.context) + \
-		    [
+		self.mediacommands = self._getmediacommands(toplevel.root.context)
+		self.notatrootcommands = [
 			NEW_SEQ(callback = (self.createseqcall, ())),
 			NEW_PAR(callback = (self.createparcall, ())),
 			NEW_CHOICE(callback = (self.createbagcall, ())),
@@ -200,6 +200,8 @@ class HierarchyView(HierarchyViewDialog):
 				INFO(callback = (self.infocall, ())),
 				ANCHORS(callback = (self.anchorcall, ())),
 				]
+		self.slidecommands = self._getmediacommands(toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
+		self.rpcommands = self._getmediaundercommands(toplevel.root.context, slide = 1)
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
@@ -233,44 +235,66 @@ class HierarchyView(HierarchyViewDialog):
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
 
-	def _getmediacommands(self, ctx, under=0):
+	def _getmediaundercommands(self, ctx, slide = 0):
 		import settings
 		heavy = not settings.get('lightweight')
-		rv = []
-		if under:
-			rv.append(NEW_UNDER(callback = (self.createundercall, ())))
-			if heavy or ctx.compatchannels(chtype='image'):
-				rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
-			if heavy or ctx.compatchannels(chtype='sound'):
-				rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
-			if heavy or ctx.compatchannels(chtype='video'):
-				rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
-			if heavy or ctx.compatchannels(chtype='text'):
-				rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
-			if heavy or ctx.compatchannels(chtype='RealPix'):
-				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
-			return rv
-		rv.append(NEW_BEFORE(callback = (self.createbeforecall, ())))
+		rv = [
+			NEW_UNDER(callback = (self.createundercall, ())),
+			]
+		if not slide:
+			rv.append(NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))))
+			rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
+			rv.append(NEW_UNDER_CHOICE(callback = (self.createunderintcall, ('bag',))))
+			rv.append(NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))))
 		if heavy or ctx.compatchannels(chtype='image'):
+			rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
+			rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='video')):
+			rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='text')):
+			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
+			rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
+		return rv
+
+	def _getmediacommands(self, ctx, slide = 0):
+		import settings
+		heavy = not settings.get('lightweight')
+		if slide:
+			rv = []
+		else:
+			rv = [
+				NEW_BEFORE(callback = (self.createbeforecall, ())),
+				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
+				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
+				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
+				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
+				NEW_AFTER(callback = (self.createaftercall, ())),
+				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
+				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
+				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
+				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
+				]
+		if slide or heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
-		if heavy or ctx.compatchannels(chtype='sound'):
+		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
 			rv.append(NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))))
-		if heavy or ctx.compatchannels(chtype='video'):
+		if not slide and (heavy or ctx.compatchannels(chtype='video')):
 			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
-		if heavy or ctx.compatchannels(chtype='text'):
+		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
-		if heavy or ctx.compatchannels(chtype='RealPix'):
+		if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 			rv.append(NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))))
-		rv.append(NEW_AFTER(callback = (self.createaftercall, ())))
-		if heavy or ctx.compatchannels(chtype='image'):
+		if slide or heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
-		if heavy or ctx.compatchannels(chtype='sound'):
+		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
 			rv.append(NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))))
-		if heavy or ctx.compatchannels(chtype='video'):
+		if not slide and (heavy or ctx.compatchannels(chtype='video')):
 			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
-		if heavy or ctx.compatchannels(chtype='text'):
+		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
-		if heavy or ctx.compatchannels(chtype='RealPix'):
+		if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 			rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
 		return rv
 
@@ -280,7 +304,9 @@ class HierarchyView(HierarchyViewDialog):
 		fnode = self.focusnode
 		fntype = fnode.GetType()
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
-		if fntype in MMNode.interiortypes or is_realpix:
+		if fnode.__class__ is SlideMMNode:
+			popupmenu = self.slide_popupmenu
+		elif fntype in MMNode.interiortypes or is_realpix:
 			popupmenu = self.interior_popupmenu
 			# if node has children, or if we don't know that the
 			# node has children (collapsed RealPix node), enable
@@ -289,7 +315,11 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.navigatecommands[1:2]
 		else:
 			popupmenu = self.leaf_popupmenu
-		if fnode.__class__ is not SlideMMNode:
+		if is_realpix:
+			commands = commands + self.rpcommands
+		if fnode.__class__ is SlideMMNode:
+			commands = commands + self.slidecommands
+		else:
 			commands = commands + self.noslidecommands
 			if self.toplevel.links.has_interesting():
 				commands = commands + self.finishlinkcommands
@@ -301,7 +331,9 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.noaudiocommands
 		if fnode is not self.root:
 			# can't do certain things to the root
-			commands = commands + self.notatrootcommands + self.navigatecommands[0:1]
+			if fnode.__class__ is not SlideMMNode:
+				commands = commands + self.notatrootcommands + self.mediacommands
+			commands = commands + self.navigatecommands[0:1]
 			pchildren = fnode.GetParent().GetChildren()
 			findex = pchildren.index(fnode)
 			if findex > 0:
@@ -591,7 +623,7 @@ class HierarchyView(HierarchyViewDialog):
 		Clipboard.setclip('node', node.DeepCopy())
 		self.aftersetfocus()
 
-	def create(self, where, url = None, index = -1, chtype = None):
+	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
 		lightweight = settings.get('lightweight')
 		node = self.focusnode
 		if node is None:
@@ -609,9 +641,11 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		ctx = node.GetContext()
 		type = node.GetType()
-		if (where == 0 and type == 'ext' and
-		    node.GetChannelType() == 'RealPix') or \
-		   (where != 0 and type == 'slide'):
+		if ntype is not None:
+			type = ntype
+		elif (where == 0 and type == 'ext' and
+		      node.GetChannelType() == 'RealPix') or \
+		      (where != 0 and type == 'slide'):
 			type = 'slide'
 		elif url is None and chtype is None:
 			type = node.GetType()
@@ -1250,11 +1284,20 @@ class HierarchyView(HierarchyViewDialog):
 	def createbeforecall(self, chtype=None):
 		if self.focusobj: self.focusobj.createbeforecall(chtype)
 
+	def createbeforeintcall(self, ntype):
+		if self.focusobj: self.focusobj.createbeforeintcall(ntype)
+
 	def createaftercall(self, chtype=None):
 		if self.focusobj: self.focusobj.createaftercall(chtype)
 
+	def createafterintcall(self, ntype):
+		if self.focusobj: self.focusobj.createafterintcall(ntype)
+
 	def createundercall(self, chtype=None):
 		if self.focusobj: self.focusobj.createundercall(chtype)
+
+	def createunderintcall(self, ntype=None):
+		if self.focusobj: self.focusobj.createunderintcall(ntype)
 
 	def createseqcall(self):
 		if self.focusobj: self.focusobj.createseqcall()
@@ -1731,11 +1774,20 @@ class Object:
 	def createbeforecall(self, chtype=None):
 		self.mother.create(-1, chtype=chtype)
 
+	def createbeforeintcall(self, ntype):
+		self.mother.create(-1, ntype=ntype)
+
 	def createaftercall(self, chtype=None):
 		self.mother.create(1, chtype=chtype)
 
+	def createafterintcall(self, ntype):
+		self.mother.create(1, ntype=ntype)
+
 	def createundercall(self, chtype=None):
 		self.mother.create(0, chtype=chtype)
+
+	def createunderintcall(self, ntype):
+		self.mother.create(0, ntype=ntype)
 
 	def createseqcall(self):
 		self.mother.insertparent('seq')

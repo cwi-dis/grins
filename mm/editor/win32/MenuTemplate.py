@@ -120,12 +120,32 @@ MENUBAR=(
 			(LIGHT, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
 		)),
+		(LIGHT, CASCADE, '&Parallel node', (
+			(LIGHT, ENTRY, '&Parent', None, NEW_PAR),
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_PAR),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_PAR),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_PAR),
+		)),
+		(LIGHT, CASCADE, '&Sequential node', (
+			(LIGHT, ENTRY, '&Parent', None, NEW_SEQ),
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SEQ),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_SEQ),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SEQ),
+		)),
+		(LIGHT, CASCADE, 'S&witch node', (
+			(LIGHT, ENTRY, '&Parent', None, NEW_ALT),
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_ALT),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_ALT),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_ALT),
+		)),
+		(CMIF, CASCADE, '&Choice node', (
+			(CMIF, ENTRY, '&Parent', None, NEW_CHOICE),
+			(CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
+			(CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
+			(CMIF, ENTRY, '&Within', None, NEW_UNDER_CHOICE),
+		)),
 		(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
 		(SMIL, ENTRY, '&Within...', None, NEW_UNDER),
-		(LIGHT, ENTRY, '&Par parent', None, NEW_PAR),
-		(LIGHT, ENTRY, '&Seq parent', None, NEW_SEQ),
-		(LIGHT, ENTRY, 'Swit&ch parent', None, NEW_ALT),
-		(CMIF, ENTRY, 'C&hoice parent', None, NEW_CHOICE),
 		)),
 	('&Play', (
 		(LIGHT, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
@@ -215,7 +235,7 @@ NODOC_MENUBAR=(MENUBAR[0],MENUBAR[6])
 # Popup menus for various states
 #
 POPUP_HVIEW_LEAF = (
-		# XXXX Need to ad the "new xxx node" commands for the
+		# XXXX Need to add the "new xxx node" commands for the
 		# light version
 		(SMIL, ENTRY, '&New node...', None, NEW_AFTER),
 		(SMIL, ENTRY, 'New node &before...', None, NEW_BEFORE),
@@ -227,6 +247,49 @@ POPUP_HVIEW_LEAF = (
 		(LIGHT, ENTRY, 'Pa&ste file', None, PASTE_FILE),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Delete', None, DELETE),
+		(LIGHT, CASCADE, '&Insert', (
+			(LIGHT, CASCADE, '&Image node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_IMAGE),
+				)),
+			(LIGHT, CASCADE, 'Sli&deshow node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
+				)),
+			(LIGHT, CASCADE, '&Text node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_TEXT),
+				)),
+			(LIGHT, CASCADE, 'S&ound node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SOUND),
+				)),
+			(LIGHT, CASCADE, '&Video node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_VIDEO),
+				)),
+			(LIGHT, CASCADE, '&Parallel node', (
+				(LIGHT, ENTRY, '&Parent', None, NEW_PAR),
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_PAR),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_PAR),
+				)),
+			(LIGHT, CASCADE, '&Sequential node', (
+				(LIGHT, ENTRY, '&Parent', None, NEW_SEQ),
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SEQ),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SEQ),
+				)),
+			(LIGHT, CASCADE, 'S&witch node', (
+				(LIGHT, ENTRY, '&Parent', None, NEW_ALT),
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_ALT),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_ALT),
+				)),
+			(CMIF, CASCADE, '&Choice node', (
+				(CMIF, ENTRY, '&Parent', None, NEW_CHOICE),
+				(CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
+				(CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
+				)),
+			(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
+			)),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'P&lay node', None, PLAYNODE),
 		(LIGHT, ENTRY, 'Play &from node', None, PLAYFROM),
@@ -237,6 +300,25 @@ POPUP_HVIEW_LEAF = (
 		(SMIL, ENTRY, '&Info...', None, INFO),
 		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 		(SMIL, ENTRY, '&Anchors...', None, ANCHORS),
+		(LIGHT, ENTRY, '&Edit content', None, CONTENT),
+)
+
+POPUP_HVIEW_SLIDE = (
+		# XXXX Need to add the "new xxx node" commands for the
+		# light version
+		(LIGHT, ENTRY, 'Cu&t', None, CUT),
+		(LIGHT, ENTRY, '&Copy', None, COPY),
+		(LIGHT, ENTRY, '&Paste', None, PASTE_AFTER),
+		(LIGHT, ENTRY, 'Paste bef&ore', None, PASTE_BEFORE),
+		(LIGHT, ENTRY, 'Pa&ste file', None, PASTE_FILE),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, '&Delete', None, DELETE),
+		(LIGHT, CASCADE, 'Insert Image &Node', (
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_IMAGE),
+			)),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 		(LIGHT, ENTRY, '&Edit content', None, CONTENT),
 )
 
@@ -257,6 +339,59 @@ POPUP_HVIEW_STRUCTURE = (
 		(LIGHT, ENTRY, 'Paste &file', None, PASTE_FILE),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Delete', None, DELETE),
+		(LIGHT, CASCADE, '&Insert', (
+			(LIGHT, CASCADE, '&Image node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_IMAGE),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_IMAGE),
+				)),
+			(LIGHT, CASCADE, 'Sli&deshow node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SLIDESHOW),
+				)),
+			(LIGHT, CASCADE, '&Text node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_TEXT),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_TEXT),
+				)),
+			(LIGHT, CASCADE, 'S&ound node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SOUND),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SOUND),
+				)),
+			(LIGHT, CASCADE, '&Video node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_VIDEO),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
+				)),
+			(LIGHT, CASCADE, '&Parallel node', (
+				(LIGHT, ENTRY, '&Parent', None, NEW_PAR),
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_PAR),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_PAR),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_PAR),
+				)),
+			(LIGHT, CASCADE, '&Sequential node', (
+				(LIGHT, ENTRY, '&Parent', None, NEW_SEQ),
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SEQ),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SEQ),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SEQ),
+				)),
+			(LIGHT, CASCADE, 'S&witch node', (
+				(LIGHT, ENTRY, '&Parent', None, NEW_ALT),
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_ALT),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_ALT),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_ALT),
+				)),
+			(CMIF, CASCADE, '&Choice node', (
+				(CMIF, ENTRY, '&Parent', None, NEW_CHOICE),
+				(CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
+				(CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
+				(CMIF, ENTRY, '&Within', None, NEW_UNDER_CHOICE),
+				)),
+			(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
+			(SMIL, ENTRY, '&Within...', None, NEW_UNDER),
+			)),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'P&lay node', None, PLAYNODE),
 		(LIGHT, ENTRY, 'Pla&y from node', None, PLAYFROM),
