@@ -265,8 +265,12 @@ def urlretrieved(url):
 	return _urlopener._retrieved(url)
 
 import urlparse
-basejoin = urlparse.urljoin # urljoin works better...
-del urlparse
+def basejoin(base, url, allow_fragments = 1):
+	newurl = urlparse.urljoin(base, url, allow_fragments)
+	type, url = splittype(newurl)
+	if type == 'file' and url[:3] != '///':
+		newurl = canonURL(newurl)
+	return newurl
 
 def guessurl(filename):
 	import os
