@@ -808,7 +808,7 @@ smil_attrs=[
 	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
 	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
 	("choice-index", getbagindex),
-	("uGroup", getugroup),
+	("customTest", getugroup),
 	("layout", getlayout),
 	("color", getcolor),		# only for brush element
 	# subregion positioning
@@ -1598,19 +1598,21 @@ class SMILWriter(SMIL):
 		u_groups = self.root.GetContext().usergroups
 		if not u_groups:
 			return
-		self.writetag('userAttributes')
+		self.writetag('customAttributes')
 		self.push()
 		for key, val in u_groups.items():
 			attrlist = []
 			attrlist.append(('id', self.ugr2name[key]))
-			title, u_state, override = val
+			title, u_state, override, uid = val
 			if title:
 				attrlist.append(('title', title))
-			if u_state != 'RENDERED':
-				attrlist.append(('uState', u_state))
-			if override != 'allowed':
-				attrlist.append(('override', override))
-			self.writetag('uGroup', attrlist)
+			if u_state == 'RENDERED':
+				attrlist.append(('defaultState', 'true'))
+			if override == 'allowed':
+				attrlist.append(('override', 'allowed'))
+			if uid:
+				attrlist.append(('uid', uid))
+			self.writetag('customTest', attrlist)
 		self.pop()
 
 	def writetransitions(self):

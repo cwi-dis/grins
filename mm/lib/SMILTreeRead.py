@@ -116,8 +116,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'meta': (self.start_meta, self.end_meta),
 			'metadata': (self.start_metadata, self.end_metadata),
 			'layout': (self.start_layout, self.end_layout),
-			'userAttributes': (self.start_user_attributes, self.end_user_attributes),
-			'uGroup': (self.start_u_group, self.end_u_group),
+			'customAttributes': (self.start_custom_attributes, self.end_custom_attributes),
+			'customTest': (self.start_custom_test, self.end_custom_test),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
 			'viewport': (self.start_viewport, self.end_viewport),
@@ -184,7 +184,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__base = ''
 		self.__printfunc = printfunc
 		self.__printdata = []
-		self.__u_groups = {}
+		self.__custom_tests = {}
 		self.__layouts = {}
 		self.__transitions = {}
 		self.__realpixnodes = []
@@ -581,14 +581,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				attrdict['system_required'] = val
-			elif attr == 'uGroup':
+			elif attr == 'customTest':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				if self.__u_groups.has_key(val):
+				if self.__custom_tests.has_key(val):
 					attrdict['u_group'] = val
 				else:
-					self.syntax_error("unknown uGroup `%s'" % val)
+					self.syntax_error("unknown customTest `%s'" % val)
 			elif attr == 'transIn':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -2433,25 +2433,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_regpoint(self):
 		pass
 		
-	def start_user_attributes(self, attributes):
+	def start_custom_attributes(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('userAttributes not compatible with SMIL 1.0')
+			self.syntax_error('customAttributes not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 
-	def end_user_attributes(self):
-		self.__context.addusergroups(self.__u_groups.items())
+	def end_custom_attributes(self):
+		self.__context.addusergroups(self.__custom_tests.items())
 
-	def start_u_group(self, attributes):
+	def start_custom_test(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
-		u_state = attributes['uState']
-		override = attributes.get('override', 'allowed')
-		self.__u_groups[id] = title, u_state == 'RENDERED', override == 'allowed'
+		u_state = attributes['defaultState']
+		if u_state not in ('true', 'false'):
+			self.syntax_error('invalid defaultState attribute value')
+		override = attributes.get('override', 'not-allowed')
+		if override not in ('allowed', 'not-allowed'):
+			self.syntax_error('invalid override attribute value')
+		uid = attributes.get('uid')
+		self.__custom_tests[id] = title, u_state == 'true', override == 'allowed', uid
 
-	def end_u_group(self):
+	def end_custom_test(self):
 		pass
 
 	def start_transition(self, attributes):
