@@ -214,9 +214,9 @@ class _DisplayList:
 				if fit == -4:
 					wk, hk = rcKeep[2:]
 					if wk>w: 
-						pass # print 'horiz scroll'
+						wnd.setdefaultcursor('draghand')
 					if hk>h: 
-						pass # print 'vert scroll'
+						wnd.setdefaultcursor('draghand')
 				try:
 					dds.Blt((ldc, tdc, rdc, bdc), image, (lsc, tsc, rsc, bsc), flags)
  				except:
