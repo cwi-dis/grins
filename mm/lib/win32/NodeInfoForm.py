@@ -56,6 +56,7 @@ class NodeInfoDlgBar(DlgBar):
 		parent.HookCommand(self.OnType,self['Type']._id)
 		parent.HookCommand(self.OnChannel,self['Channel']._id)
 		self._cbd=cbd
+		self._prevsel=-1
 	# Call the callback
 	def call(self,cbid):
 		if self._cbd and cbid in self._cbd.keys():
@@ -68,7 +69,14 @@ class NodeInfoDlgBar(DlgBar):
 		if code==win32con.CBN_SELCHANGE:self.call('Type')
 	# Response to channel change
 	def OnChannel(self,id,code):
-		if code==win32con.CBN_SELCHANGE :self.call('Channel')
+		if code==win32con.CBN_DROPDOWN:
+			self._prevsel=self['Channel'].getcursel()			
+		elif code==win32con.CBN_SELCHANGE :
+			strsel=self['Channel'].getvalue()
+			if strsel[0]!='[' and strsel!='---':
+				self.call('Channel')
+			else:self['Channel'].setcursel(self._prevsel)
+
 			
 # A standard dialog bar with a row of buttons (OK,Cancel,Restore,etc)
 
@@ -219,10 +227,14 @@ class IntGroup(DlgBar):
 		self._list.attach_to_parent()
 		self._open.attach_to_parent()
 		parent.HookCommand(self.OnOpenChild,self._open._id)
+		parent.HookCommand(self.OnListDblClk,self._list._id)
 		self._cbd=cbd
 	# Response to button open
 	def OnOpenChild(self,id,code):
 		if self._cbd and 'OpenChild' in self._cbd.keys():
+			apply(apply,self._cbd['OpenChild'])
+	def OnListDblClk(self,id,code):
+		if code==win32con.LBN_DBLCLK:				
 			apply(apply,self._cbd['OpenChild'])
 
 	# Interface to the interior part.  This part consists of a
