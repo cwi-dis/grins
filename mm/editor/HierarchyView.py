@@ -86,11 +86,13 @@ class sizes_time:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
 	MINSIZE = 48 
 	MAXSIZE = 128
-	TITLESIZE = f_title.fontheightPXL()*1.2
-	CHNAMESIZE = f_channel.fontheightPXL()*1.2 #0
+	TITLESIZE = int(f_title.fontheightPXL()*1.2)
+	if TITLESIZE < windowinterface.ICONSIZE_PXL:
+		TITLESIZE = windowinterface.ICONSIZE_PXL
+	CHNAMESIZE = int(f_channel.fontheightPXL()*1.2) #0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-	ARRSIZE = f_title.strsizePXL('xx')[0]	# width of collapse/expand arrow
+	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	GAPSIZE = 0 #2						# size of gap between nodes
 	HEDGSIZE = 0 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
@@ -101,11 +103,13 @@ class sizes_notime:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
 	MINSIZE = 48 
 	MAXSIZE = 128
-	TITLESIZE = f_title.fontheightPXL()*1.2
+	TITLESIZE = int(f_title.fontheightPXL()*1.2)
+	if TITLESIZE < windowinterface.ICONSIZE_PXL:
+		TITLESIZE = windowinterface.ICONSIZE_PXL
 	CHNAMESIZE = 0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-	ARRSIZE = f_title.strsizePXL('xx')[0]	# width of collapse/expand arrow
+	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	GAPSIZE = 2 #2						# size of gap between nodes
 	HEDGSIZE = 3 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
@@ -315,6 +319,13 @@ class HierarchyView(HierarchyViewDialog):
 			print 'init_display: new_displist already exists'
 			self.new_displist.close()
 		self.new_displist = self.displist.clone()
+		
+	def opt_init_display(self):
+		# Only open a new displaylist if none exists at the moment
+		if self.new_displist:
+			return None
+		self.init_display()
+		return self.new_displist
 
 	def render(self):
 		self.new_displist.render()
@@ -890,7 +901,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.vergap = float(self.sizes.GAPSIZE) / rh
 		self.horsize = float(self.sizes.MINSIZE + self.sizes.HOREXTRASIZE) / rw
 		self.versize = float(self.sizes.MINSIZE + self.sizes.LABSIZE) / rh
-		self.arrsize = float(self.sizes.ARRSIZE) / rw
+		self.arrwidth = float(self.sizes.ARRSIZE) / rw
+		self.arrheight = float(self.sizes.ARRSIZE) / rh
 		list = []
 		if self.timescale:
 			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
@@ -1175,9 +1187,10 @@ class HierarchyView(HierarchyViewDialog):
 				namewidth = (name and f_title.strsize(name)[0]) or 0
 			else:
 				namewidth = (name and f_title.strsizePXL(name)[0]) or 0
-			if ntype in MMNode.interiortypes or \
-			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
-				namewidth = namewidth + self.sizes.ARRSIZE
+##			if ntype in MMNode.interiortypes or \
+##			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
+##				namewidth = namewidth + self.sizes.ARRSIZE
+			namewidth = namewidth + self.sizes.ARRSIZE # Always
 			minwidth = max(min(self.sizes.MAXSIZE, namewidth), minwidth) + self.sizes.HOREXTRASIZE
 		else:
 			minwidth = minwidth + self.sizes.HOREXTRASIZE
@@ -1263,7 +1276,9 @@ class Object:
 		self.mother = mother
 		node, self.boxtype, self.box = item
 		node.box = self.box
+		node.set_infoicon = self.set_infoicon # Temp override of class method
 		self.node = node
+		self.iconbox = None
 		if self.node.__class__ is SlideMMNode:
 			self.name = MMAttrdefs.getattr(node, 'tag')
 		else:
@@ -1301,13 +1316,15 @@ class Object:
 		self.mother = None
 		node = self.node
 		del node.box
+		del node.set_infoicon  # Makes class method visible again
 
 	def draw(self):
 		d = self.mother.new_displist
 		dummy = d.usefont(f_title)
 		rw, rh = self.mother.canvassize
 		titleheight = self.mother.titleheight
-		awidth = self.mother.arrsize
+		awidth = self.mother.arrwidth
+		aheight = self.mother.arrheight
 		chnameheight = self.mother.chnameheight
 		##hmargin = d.strsize('x')[0] / 1.5
 		##vmargin = titleheight / 5
@@ -1384,8 +1401,7 @@ class Object:
 				try:
 					f = MMurl.urlretrieve(url)[0]
 				except IOError:
-					# f not reassigned!
-					pass
+					self.set_infoicon('error')
 			##ih = min(b1-t1, titleheight+chnameheight)
 			ih = b1-t1
 			iw = r-l-2*hmargin
@@ -1414,36 +1430,44 @@ class Object:
 		   (node.GetType() == 'ext' and
 		    node.GetChannelType() == 'RealPix'):
 			title_left = title_left + awidth
-			aheight = titleheight - 2*vmargin
 			# Check whether it fits
-			if l+hmargin+awidth <= r and t+vmargin+aheight <= b:
+			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
 				node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
+				# We assume here that the icon has room around the edges
+				# Also, don't set self.iconbox (yet: erroricons on structnodes TBD)
+				iconbox = l+hmargin, t+vmargin, awidth, aheight
 				if hasattr(node, 'expanded'):
-					# expanded node, point down
-					expcolor = EXPCOLOR
-					d.drawfpolygon(expcolor,
-						[(l+hmargin, t+vmargin),
-						 (l+hmargin+awidth,t+vmargin),
-						 (l+hmargin+awidth/2,t+vmargin+aheight)])
-					d.drawline(ECBORDERCOLOR, [
-						(l+hmargin, t+vmargin),
-						(l+hmargin+awidth/2,t+vmargin+aheight),
-						(l+hmargin+awidth,t+vmargin),
-						])
+## 					# expanded node, point down
+## 					expcolor = EXPCOLOR
+## 					d.drawfpolygon(expcolor,
+## 						[(l+hmargin, t+vmargin),
+## 						 (l+hmargin+awidth,t+vmargin),
+## 						 (l+hmargin+awidth/2,t+vmargin+aheight)])
+## 					d.drawline(ECBORDERCOLOR, [
+## 						(l+hmargin, t+vmargin),
+## 						(l+hmargin+awidth/2,t+vmargin+aheight),
+## 						(l+hmargin+awidth,t+vmargin),
+## 						])
+					d.drawicon(iconbox, 'open')
 				else:
-					# collapsed node, point right
-					d.drawfpolygon(COLCOLOR,
-						[(l+hmargin,t+vmargin),
-						 (l+hmargin,t+vmargin+aheight),
-						 (l+hmargin+awidth,t+vmargin+aheight/2)])
-					d.drawline(ECBORDERCOLOR, [
-						(l+hmargin,t+vmargin),
-						(l+hmargin+awidth,t+vmargin+aheight/2),
-						(l+hmargin,t+vmargin+aheight),
-						])
+## 					# collapsed node, point right
+## 					d.drawfpolygon(COLCOLOR,
+## 						[(l+hmargin,t+vmargin),
+## 						 (l+hmargin,t+vmargin+aheight),
+## 						 (l+hmargin+awidth,t+vmargin+aheight/2)])
+## 					d.drawline(ECBORDERCOLOR, [
+## 						(l+hmargin,t+vmargin),
+## 						(l+hmargin+awidth,t+vmargin+aheight/2),
+## 						(l+hmargin,t+vmargin+aheight),
+## 						])
+					d.drawicon(iconbox, 'closed')
 			else:
 				node.abox = (0, 0, -1, -1)
-
+		else:
+			# Room for the bandwidth icon
+			title_left = title_left + awidth
+			self.iconbox = l+hmargin, t+vmargin, awidth, aheight
+			d.drawicon(self.iconbox, node.infoicon)
 		# draw the name
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(title_left, t+vmargin/2, r-hmargin/2, t1, self.name)
@@ -1499,6 +1523,17 @@ class Object:
 			d.drawbox((l, t, r-l, b-t))
 		else:
 			d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
+			
+	def set_infoicon(self, icon):
+		"""Redraw the informational icon for this node"""
+		self.node.icon = icon
+		if not self.iconbox:
+			return
+		d = self.mother.opt_init_display()
+		if not d:
+			return
+		d.drawicon(self.iconbox, icon)
+		self.mother.render()
 
 	# Menu handling functions
 
