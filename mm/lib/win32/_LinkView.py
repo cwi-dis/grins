@@ -139,6 +139,8 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		# cash lists  
 		self._lists_ids=(self['LeftList']._id,self['RightList']._id,self['LinkList']._id)
 
+	def isResizeable(self):
+		return 0
 
 	# Creates the actual OS window
 	def createWindow(self,parent):

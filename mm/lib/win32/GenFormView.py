@@ -22,6 +22,12 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		# We need an ID so MainFrame knows about our commandlist
 		self._strid = 'GenForView%x' % id(self)
 
+	#
+	# Creation attributes
+	#
+	def isResizeable(self):
+		return 0
+
 	# Creates the actual OS window
 	def create(self,parent):
 		self._parent=parent
