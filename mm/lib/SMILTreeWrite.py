@@ -1009,6 +1009,7 @@ smil_attrs=[
 	("regAlign", lambda writer, node:getrawcmifattr(writer, node, "regAlign", 'topLeft')),
 	
 	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	
+	("z-index", lambda writer, node:getrawcmifattr(writer, node, "z")),	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
 	("to", lambda writer, node:getstringattr(writer, node, "to")),
 	("by", lambda writer, node:getstringattr(writer, node, "by")),
