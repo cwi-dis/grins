@@ -1,8 +1,10 @@
 
 package grins;
 
-public
-class GRiNSInterfaceException extends Exception {
+ /**
+ *   The exception thrown by GRiNS native mathods.
+ */
+public class GRiNSInterfaceException extends Exception {
     /**
      * Constructs an <code>GRiNSException</code> with no specified detail message. 
      */
