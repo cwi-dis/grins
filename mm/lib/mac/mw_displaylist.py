@@ -84,7 +84,7 @@ class _DisplayList:
 		new = _DisplayList(w, self._bgcolor)
 		# copy all instance variables
 		new._list = self._list[:]
-		new._font = self._font
+		new.usefont(self._font)
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
