@@ -778,7 +778,7 @@ class AnimationWrapper(NodeWrapper):
 		NodeWrapper.__init__(self, toplevel, node)
 
 	def attrnames(self):
-		namelist = ['name', 'duration', 'loop', 'repeatdur',
+		namelist = ['atag', 'name', 'duration', 'loop', 'repeatdur',
 			    'beginlist', 'endlist',
 			    'restart', 'restartDefault', 'fill', 'fillDefault',
 			    'speed', 'accelerate', 'decelerate', 'autoReverse',
@@ -834,6 +834,10 @@ class AnimationWrapper(NodeWrapper):
 		return 'Properties of %s node ' % tag + name
 
 	def getdef(self, name):
+		if name == 'atag':
+			return (('enum', self.animateElements), '',
+				'Element type', 'atag',
+				'Animate element type', 'normal', flags.FLAG_ALL)
 		return NodeWrapper.getdef(self, name)
 
 	def setattr(self, name, value):
