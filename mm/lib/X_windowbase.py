@@ -693,6 +693,9 @@ class _Window:
 			ysize = reader.height
 			toplevel._image_size_cache[file] = xsize, ysize
 		top, bottom, left, right = crop
+		if top + bottom >= 1.0 or left + right >= 1.0 or \
+		   top < 0 or bottom < 0 or left < 0 or right < 0:
+			raise error, 'bad crop size'
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
 		left = int(left * xsize + 0.5)
