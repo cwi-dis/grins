@@ -56,7 +56,6 @@ class MediaChannel:
 		# main thread monitoring fiber id
 		self.__fiber_id=None
 		self.__playdone=1
-		self.__paused=1
 
 		# notification mechanism for not window channels
 		self.__notifyWindow = None
@@ -177,7 +176,6 @@ class MediaChannel:
 			self.__notifyWindow.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 			self.__playBuilder.SetNotifyWindow(self.__notifyWindow,WM_GRPAPHNOTIFY)
 		self.__playdone=0
-		self.__paused=0
 		self.__playBuilder.Run()
 		self.__register_for_timeslices()
 		if repeatdur > 0:
@@ -196,7 +194,6 @@ class MediaChannel:
 				self.__playBuilder.Pause()
 			else:
 				self.__playBuilder.Run()
-		self.__paused=paused
 
 	def stopit(self):
 		if self.__playBuilder:
@@ -284,7 +281,6 @@ class VideoStream:
 		self.__playBegin=0
 		self.__playEnd=0
 		self.__playdone=1
-		self.__paused=1
 		self.__fiber_id=None
 		self.__rcMediaWnd = None
 		self.__qid = self.__dqid = None
@@ -365,7 +361,6 @@ class VideoStream:
 		self.__mmstream.seek(clip_begin)
 		
 		self.__playdone=0
-		self.__paused=0
 
 		if repeatdur > 0:
 			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())

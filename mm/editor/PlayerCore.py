@@ -315,7 +315,7 @@ class PlayerCore(Selecter):
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
 		ch = chclass(name, attrdict, self.scheduler, self)
-		ch.setpaused(self.pausing)
+		ch.uipaused(self.pausing)
 		self.channels[name] = ch
 		self.channeltypes[name] = type
 
