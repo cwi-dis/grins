@@ -1,60 +1,27 @@
 # Image channel
 
-import gl
-from GL import *
-from DEVICE import *
-
-import glwindow
-
 from MMExc import *
 import MMAttrdefs
 
+import gl
+
 import image
 
-from Channel import Channel # the base class
+from Channel import Channel
+from ChannelWindow import ChannelWindow
 
-class ImageWindow() = (glwindow.glwindow)():
-	#
-	# Declaration of attributes that are relevant to this channel,
-	# respectively to nodes belonging to this channel.
-	#
-	chan_attrs = Channel.chan_attrs + ['winsize', 'winpos']
-	node_attrs = Channel.node_attrs + ['file', 'wait_for_close']
+class ImageWindow() = ChannelWindow():
 	#
 	# Initialization function.
 	#
-	def init(self, (name, attrdict)):
-		self.name = name
-		self.attrdict = attrdict
+	def init(self, (title, attrdict)):
 		self.process = None # Initially, no process
 		self.filename = None # Nor a filename
-		self.wid = 0 # Nor a window
-		return self
+		return ChannelWindow.init(self, (title, attrdict))
 	#
 	def show(self):
-		# Get the window size
-		if self.attrdict.has_key('winsize'):
-			width, height = self.attrdict['winsize']
-		else:
-			width, height = 0, 0
-		# Get the preferred position (in pixels, "hv" coordinates)
-		if self.attrdict.has_key('winpos'):
-			h, v = self.attrdict['winpos']
-		else:
-			h, v = -1, -1
-		glwindow.setgeometry(h, v, width, height)
-		# Actually create the window
-		self.wid = gl.winopen(self.name)
-		# Remember its origin and size
-		self.geometry = gl.getorigin(), gl.getsize()
-		# Immediately register it with the main loop
-		self.register(self.wid)
-		# Let the user resize it
-		gl.winconstraints()
-		# Use RGB mode; in colormap mode FORMS sometimes
-		# messes up our colormap ?!?
-		gl.RGBmode()
-		gl.gconfig()
+		if self.wid <> 0: return
+		ChannelWindow.show(self)
 		# Draw (clear) it immediately (looks better)
 		self.render()
 		# If there is a file, show it
@@ -63,15 +30,10 @@ class ImageWindow() = (glwindow.glwindow)():
 	#
 	def hide(self):
 		if self.wid <> 0:
-			self.unregister()
-			gl.winclose(self.wid)
-			self.wid = 0
+			ChannelWindow.hide(self)
 		if self.process <> None:
 			self.process.kill()
 			self.process = None
-	#
-	def destroy(self):
-		self.hide()
 	#
 	def clear(self):
 		self.filename = None
@@ -79,12 +41,11 @@ class ImageWindow() = (glwindow.glwindow)():
 	#
 	def redraw(self):
 		if self.wid = 0: return
-		gl.winset(self.wid)
+		old_geometry = self.last_geometry
 		gl.reshapeviewport()
 		self.render()
-		newgeometry = gl.getorigin(), gl.getsize()
-		if newgeometry <> self.geometry:
-			self.geometry = newgeometry
+		self.get_geometry()
+		if self.last_geometry <> old_geometry:
 			self.moveimage()
 	#
 	def render(self):
@@ -105,7 +66,7 @@ class ImageWindow() = (glwindow.glwindow)():
 	#
 	def showimage(self):
 		gl.winset(self.wid)
-		(xorg, yorg), (xsize, ysize) = self.geometry
+		(xorg, yorg), (xsize, ysize) = gl.getorigin(), gl.getsize()
 		width, height = image.imgsize(self.filename)
 		x = xorg + (xsize-width)/2
 		y = yorg + (ysize-height)/2
@@ -118,7 +79,16 @@ class ImageWindow() = (glwindow.glwindow)():
 			# The redraw will come automatically...
 	#
 
+
+# XXX Make the image channel class a derived class from ImageWindow?!
+
 class ImageChannel() = Channel():
+	#
+	# Declaration of attributes that are relevant to this channel,
+	# respectively to nodes belonging to this channel.
+	#
+	chan_attrs = ['winsize', 'winpos']
+	node_attrs = ['file', 'wait_for_close']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
@@ -133,6 +103,9 @@ class ImageChannel() = Channel():
 	#
 	def destroy(self):
 		self.window.destroy()
+	#
+	def save_geometry(self):
+		self.window.save_geometry()
 	#
 	def getduration(self, node):
 		wait = MMAttrdefs.getattr(node, 'wait_for_close')
