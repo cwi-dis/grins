@@ -131,6 +131,12 @@ class SlideShow:
 			attrdict['title'] = rp.title
 		if rp.url is not None:
 			attrdict['href'] = rp.url
+			if rp.url not in ctx.externalanchors:
+				ctx.externalanchors.append(rp.url)
+		for tag in rp.tags:
+			if tag.has_key('href') and tag['href'] and \
+			   tag['href'] not in ctx.externalanchors:
+				ctx.externalanchors.append(tag['href'])
 		ctx.register(self) # *must* come first
 		if update:
 			self.update(changed = 1)
