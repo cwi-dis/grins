@@ -85,7 +85,9 @@ class AttrEditorDialog:
 		if self.wrapper.canhideproperties():
 			# Not sure that this is the right way to pass this info
 			# to AttrEditForm...
-			w._has_showAll = 1
+			# XXX disable temporarly this attribute
+			w._has_showAll = 0
+			
 			w._showAll_initial = self.show_all_attributes
 			commandlist = [
 				usercmd.SHOWALLPROPERTIES(callback = (self.showall_callback, ()))
