@@ -53,7 +53,7 @@ class GeoWidget(Widget):
 		# << This is a hack: 
 		bob = len(self.change_objects)
 		if not self.dirty and self.displist and bob != 0 and bob < 100:
-			print "DEBUG: geom using hack."
+			#print "DEBUG: geom using hack."
 			self.displist, displist = self.displist.clone(), self.displist
 			for i in self.change_objects:
 				i.displist = self.displist
@@ -64,7 +64,7 @@ class GeoWidget(Widget):
 			return
 		# >> end of hack.
 
-		print "DEBUG: geom completely redrawing."
+		#print "DEBUG: geom completely redrawing."
 		x,y = self.canvassize
 		self.mother.window.setcanvassize((windowinterface.UNIT_PXL, x,y))
 		# Fixing the color of the background will break things. Sorry, but I'm lazy (-anonymous developer :-).
