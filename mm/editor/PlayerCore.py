@@ -45,8 +45,8 @@ class PlayerCore(Selecter):
 		return 1
 	#
 	def commit(self):
+		self.checkchannels()
 		if self.showing:
-			self.checkchannels()
 			# Check if any of the playroots has vanished
 			if self.playroot.GetRoot() is not self.root:
 				self.playroot = self.root
@@ -181,11 +181,12 @@ class PlayerCore(Selecter):
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
-		# (3) Update visibility of all channels
-		for name in self.channelnames:
-			self.channels[name].check_visible()
-		# (4) Update layout and menu
-		self.setlayout(self.curlayout, self.curchannel)
+		if self.showing:
+			# (3) Update visibility of all channels
+			for name in self.channelnames:
+				self.channels[name].check_visible()
+			# (4) Update layout and menu
+			self.setlayout(self.curlayout, self.curchannel)
 	#
 	def getchannelbyname(self, name):
 		if self.channels.has_key(name):
