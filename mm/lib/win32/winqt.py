@@ -65,19 +65,27 @@ def HasQtSupport():
 		return 1
 	return 0
 
+# avoid overhead of setting DD on each update when not needed
+QtPlayerInstances = 0
 
 class QtPlayer:
 	def __init__(self):
 		Initialize()
 		self.movie = None
+		self._ddobj = None
 		self._dds = None
 		self._rect = None
+		global QtPlayerInstances
+		QtPlayerInstances = QtPlayerInstances + 1
 
 	def __del__(self):
 		self.movie = None
 		self._dds = None
+		self._ddobj = None
 		self._rect = None
 		Terminate()
+		global QtPlayerInstances
+		QtPlayerInstances = QtPlayerInstances - 1
 
 	def __repr__(self):
 		s = '<%s instance' % self.__class__.__name__
@@ -111,6 +119,11 @@ class QtPlayer:
 			return l, t, r-l, b-t
 		return 0, 0
 
+	def setMovieRect(self, rect):
+		x, y, w, h = self._rect = rect
+		if self.movie:
+			self.movie.SetMovieBox((x, y, x+w, y+h))
+
 	def setMovieActive(self, flag):
 		if self.movie:
 			self.movie.SetMovieActive(flag)
@@ -123,14 +136,20 @@ class QtPlayer:
 		else:
 			w, h = self._rect[2:]
 
-		ddsd = ddraw.CreateDDSURFACEDESC()
-		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
-		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
-		ddsd.SetSize(w, h)
-		self._dds = ddobj.CreateSurface(ddsd)
-
-		Qt.SetDDObject(ddobj)
-		Qt.SetDDPrimarySurface(self._dds)
+		if ddobj is None:
+			intefacePtr = Qt.GetDDObject()
+			if intefacePtr:
+				ddobj = ddraw.CreateDirectDrawWrapper(intefacePtr)
+							
+		if ddobj:
+			self._ddobj = ddobj
+			ddsd = ddraw.CreateDDSURFACEDESC()
+			ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+			ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+			ddsd.SetSize(w, h)
+			self._dds = ddobj.CreateSurface(ddsd)
+			Qt.SetDDObject(self._ddobj)
+			Qt.SetDDPrimarySurface(self._dds)
 
 		self.movie.SetMovieBox((0, 0, w, h))
 		self.movie.SetMovieActive(1)
@@ -145,7 +164,9 @@ class QtPlayer:
 		
 	def update(self):
 		if self.movie:
-			if self._dds is not None:
+			global QtPlayerInstances
+			if self._dds is not None and QtPlayerInstances>1:
+				Qt.SetDDObject(self._ddobj)
 				Qt.SetDDPrimarySurface(self._dds)
 			self.movie.MoviesTask(0)
 			self.movie.UpdateMovie()
