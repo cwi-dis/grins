@@ -19,7 +19,6 @@ class TransitionEngine:
 		# implementation artifact vars
 		self._passive = window._passive
 		self._tmp = self.window.createDDS()
-		self._region = None
 		self.__fiber_id = 0
 
 		x, y, w, h = self.window._rect
@@ -43,9 +42,15 @@ class TransitionEngine:
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
 			raise AssertionError
-		active = self.window.createDDS()
+
 		parameters = self.transitiontype.computeparameters(value)
-		self.transitiontype.updatebitmap(parameters, self._passive, active, self._tmp, self.window._active, self._region)
+		src_active = self.window.createDDS()
+		src_passive = self._passive
+		tmp  = self._tmp
+		dst  = self.window._active
+		dstrgn = None
+		self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
+		
 		self.window.update()
 
 	def __onDur(self):
