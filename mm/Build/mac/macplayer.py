@@ -142,6 +142,11 @@ if not STANDALONE:
 # Next, show the splash screen
 import splash
 splash.splash('loadprog')
+import settings
+license = settings.get('license')
+user = settings.get('license_user')
+org = settings.get('license_organization')
+splash.setuserinfo(user, org, license)
 	
 if len(sys.argv) > 1 and sys.argv[1] == '-p':
 	profile = 1
