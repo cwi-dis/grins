@@ -1,0 +1,11 @@
+image DeviceX.gif
+display 35 6 170 210
+play rect 52 226 33 16			# left rectangular button
+stop rect 152 226 33 16			# right rectangular button
+exit circle 68 268 15			# grey circle on left
+open circle 174 268 15			# blue circle on right
+tab poly 136 250 136 267 149 259	# RIGHT arrow
+activate rect 107 248 25 25		# center of rocker
+key ' ' poly 110 241 119 225 127 241	# UP arrow
+skin poly 110 273 119 289 127 273	# DOWN arrow
+pause poly 87 258 103 250 103 267	# LEFT arrow
