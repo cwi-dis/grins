@@ -1,6 +1,6 @@
 rem BEGIN_CUSTOMIZATION
 
-set GRINS_HOME=d:\cmif
+set GRINS_HOME=d:\ufs\mm\cmif
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
@@ -10,8 +10,8 @@ del *.c
 del log.txt
 del FreezeOpts
 
-set PYTHON_EXE=d:\cmif\bin\python.exe
-set PYTHONHOME=d:\python
+set PYTHON_EXE=d:\ufs\mm\cmif\bin\python.exe
+set PYTHONHOME=d:\ufs\mm\python
 call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 
 rem END_CUSTOMIZATION
@@ -24,7 +24,7 @@ rem It is the same for both player(GRiNS) and editor (GRiNSed)
 
 
 set PYTHONEX=%PYTHONHOME%\Extensions
-set FREEZE=%GRINS_HOME%\pytools\freeze\freeze.py
+set FREEZE=%PYTHONHOME%\Tools\freeze\freeze.py
 
 rem GENERAL PART
 set LIB=%LIB%;%pythonex%\win32\build;%pythonex%\pythonwin\build;%GRINS_HOME%\win32\src\Build
