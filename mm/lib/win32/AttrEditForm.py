@@ -221,11 +221,9 @@ class OptionsRadioCtrl(AttrCtrl):
 		n = len(list)
 		self._radio=[]
 		if n>len(resid)-1:
-			print 'More options than radio buttons',attr.getname(),n,len(resid)-1,list
-		elif n<len(resid)-1:
-			print 'Less options than radio buttons',attr.getname(),n,len(resid)-1,list
+			print 'Warning: More options than radio buttons',attr.getname(),n,len(resid)-1,list
 			
-		for ix in range(min(n,len(resid)-1)):
+		for ix in range(len(resid)-1):
 			self._radio.append(components.RadioButton(wnd,resid[ix+1]))
 
 	def OnInitCtrl(self):
@@ -235,13 +233,16 @@ class OptionsRadioCtrl(AttrCtrl):
 			label = self._attr.getlabel()
 			if self.want_colon_after_label:
 				label = label + ':'
-			self._attrname.settext(label)
+			self._attrname.settext(label)			
 		list = self._attr.getoptions()
 		n = len(list)
 		n = min(n,len(self._resid)-1)
 		for ix in range(n):
 			self._radio[ix].attach_to_parent()
 			self._radio[ix].hookcommand(self._wnd,self.OnRadio)
+		for ix in range(len(list),len(self._resid)-1):
+			self._radio[ix].attach_to_parent()
+			self._radio[ix].hide()
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 	
