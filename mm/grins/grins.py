@@ -99,14 +99,14 @@ class Main(MainDialog):
 			return
 		import settings
 		import posixpath
-		recent = settings.get('recent_documents')
+		recent = settings.get('recent_player_documents')
 		if url:
 			if url in recent:
 				recent.remove(url)
 			recent.insert(0, url)
 			if len(recent) > 5:
 				recent = recent[:5]
-			settings.set('recent_documents', recent)
+			settings.set('recent_player_documents', recent)
 			settings.save()
 		doclist = []
 		for url in recent:
