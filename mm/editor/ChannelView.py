@@ -64,7 +64,7 @@ ARMINACTIVECOLOR = (255, 200, 0)
 ARMERRORCOLOR = (255, 0, 0)
 PLAYACTIVECOLOR = (0, 255, 0)
 PLAYINACTIVECOLOR = (0, 127, 0)
-PLAYERRORCOLOR = (127, 0, 0)
+PLAYERRORCOLOR = (255, 0, 0)
 
 armcolors = { \
 	     ARM_SCHEDULED: (200, 200, 0), \
@@ -1177,11 +1177,19 @@ class TimeScaleBox(GO):
 		if t0 < 0:
 			t0 = 0
 		dt = t1 - t0
-		n = int(ceil(dt/10.0))
+		# Compute the number of ticks. Don't put them too close
+		# together.
+		tickstep = 1
+		while 1:
+			n = int(ceil(dt/tickstep))
+			if n*f_width < width:
+				break
+			tickstep = tickstep * 10
 		# Compute distance between numeric indicators
 		div = 1
 		i = 0
-		while (n/div) * 1.5 * f_width >= width:
+		maxlabelsize = len(str(ceil(dt)))
+		while (n/div) * (maxlabelsize+0.5) * f_width >= width:
 			if i%3 == 0:
 				div = div*2
 			elif i%3 == 1:
@@ -1197,8 +1205,8 @@ class TimeScaleBox(GO):
 		while i < n:
 			i = i + 1
 			#
-			it0 = t0 + i*10
-			it1 = it0 + 5
+			it0 = t0 + i*tickstep
+			it1 = it0 + (tickstep/2)
 			l, r = self.mother.maptimes(it0, it1)
 			l = max(l, self.left)
 			r = min(r, self.right)
@@ -1207,9 +1215,9 @@ class TimeScaleBox(GO):
 			d.drawfbox(BORDERCOLOR, (l, t, r - l, b - t))
 			if i%div <> 0:
 				continue
-			d.centerstring(l-f_width*2, b,
-				       l+f_width*2, self.bottom,
-				       `i*10`)
+			d.centerstring(l-f_width*3, b,
+				       l+f_width*3, self.bottom,
+				       `i*tickstep`)
 		for i in self.mother.discontinuities:
 		        l, r = self.mother.maptimes(i, i)
 			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
