@@ -1066,7 +1066,7 @@ class DocumentWrapper(Wrapper):
 		     attrs.has_key('project_html_page'):
 			names.remove('project_html_page')
 		names.sort()
-		if features.compatibility in (features.G2, features.QT):
+		if features.compatibility in (features.Boston, features.G2, features.QT):
 			if features.compatibility == features.QT:
 				names = self.__qtnames + names
 			names = self.__publishnames + names
