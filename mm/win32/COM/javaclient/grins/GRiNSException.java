@@ -1,8 +1,11 @@
 
 package grins;
 
-public
-class GRiNSException extends Exception {
+
+ /**
+ *   The exception thrown by GRiNS not native methods.
+ */
+public class GRiNSException extends Exception {
     /**
      * Constructs an <code>GRiNSException</code> with no specified detail message. 
      */
