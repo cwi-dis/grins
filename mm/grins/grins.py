@@ -29,9 +29,10 @@ from version import version
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
+		import features
 # Expiry date not relevant anymore since the Player requires a license.
 # On Windows in the frozen version, exiting here causes a crash.
-##		import windowinterface, features
+##		import windowinterface
 ##		if hasattr(features, 'expiry_date') and features.expiry_date:
 ##			import time
 ##			import version
