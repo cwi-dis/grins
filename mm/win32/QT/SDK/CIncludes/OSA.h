@@ -410,7 +410,7 @@ enum {
         This mode flag may be passed to OSADisplay or OSADoScript to indicate
         that output only need be human-readable, not re-compilable by OSACompile.
         If used, output may be arbitrarily "beautified", e.g. quotes may be left
-        off of string values, long lists may have elipses, etc.
+        off of string values, long lists may have ellipses, etc.
     */
 enum {
     kOSAModeDisplayForHumans    = 0x00000008
@@ -559,7 +559,7 @@ OSADisplay                      (ComponentInstance      scriptingComponent,
         resulting text. This call differs from OSAGetSource in that (1) it
         always produces at least typeChar, (2) is only works on script values,
         (3) it may display it's output in non-compilable form (e.g. without
-        string quotes, elipses inserted in long and/or circular lists, etc.) and
+        string quotes, ellipses inserted in long and/or circular lists, etc.) and
         (4) it is required by the basic scripting interface.
     
         Errors:
