@@ -284,6 +284,7 @@ class _CommonWindow:
 		# And inform our children...
 		for ch in self._subwindows:
 			ch._clipchanged()
+		self._buttonschanged()
 			
 	def _mac_getclip(self, includechildren=0):
 		"""Get the clip region for ourselves, or for ourselves plus our children"""
@@ -296,7 +297,7 @@ class _CommonWindow:
 			
 	def _buttonschanged(self):
 		"""Buttons have changed, zap the mouse region cache. This escalates upwards"""
-		if not self._parent or not self._onscreen_wid:
+		if not self._parent or not self._onscreen_wid or not self._button_region:
 			return
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -304,7 +305,7 @@ class _CommonWindow:
 		# And inform our parent...
 		self._parent._buttonschanged()
 		
-	def _zapregions(self):
+	def _zapregions(self, recursive=1):
 		"""Invalidate button regions because of mousemove. Escalates downwards"""
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -702,12 +703,16 @@ class _CommonWindow:
 		"""Return the region that contains all buttons, in global coordinates"""
 		if not self._button_region:
 			self._button_region = Qd.NewRgn()
+			# Get all the children regions
 			for ch in self._subwindows:
 				rgn = ch._get_button_region()
 				Qd.UnionRgn(self._button_region, rgn, self._button_region)
 			if self._active_displist:
+				# Get our own button region, and clip it to our clip region
 				rgn = self._active_displist._get_button_region()
-				# XXXX Should we AND with clip?
+				if not self._clip:
+					self._mkclip()
+				Qd.SectRgn(rgn, self._clip, rgn)
 				Qd.UnionRgn(self._button_region, rgn, self._button_region)
 				Qd.DisposeRgn(rgn)
 		return self._button_region
