@@ -503,6 +503,33 @@ class ColorAnimator(TupleAnimator):
 		r, g, b = v
 		return _round(r), _round(g), _round(b)
 
+class FloatTupleAnimator(TupleAnimator):
+	def __init__(self, attr, domval, values, dur, mode='linear', 
+			times=None, splines=None, accumulate='none', additive='replace'):
+		TupleAnimator.__init__(self, attr, domval, values, dur, mode, 
+			times, splines, accumulate, additive)
+		tvalues = []
+		n = len(domval)
+		for i in range(n):
+			tvalues.append([])
+		for t in values:
+			for i in range(n):
+				tvalues[i].append(t[i])
+		animators = []
+		for i in range(n):
+			anim = Animator(attr, domval[i], tvalues[i], dur, mode, 
+				times, splines, accumulate, additive)
+			animators.append(anim)
+		self.setComponentAnimators(animators)
+
+class IntTupleAnimator(FloatTupleAnimator):
+	def convert(self, v):
+		n = len(v)
+		l = []
+		for i in range(n):
+			l.append(_round(v[i]))
+		return tuple(l)
+
 ###########################
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
@@ -561,22 +588,16 @@ class EffectiveAnimator:
 		self.__chan = None
 		self.__currvalue = None
 
-		# set some flags for grins dom exceptions
-		self.__isgrinsnode = 1
+		# keep tag for exceptions
 		self.__tag = tag = MMAttrdefs.getattr(targnode, 'tag')
-		if tag in ('region', 'transition'):
-			self.__isgrinsnode = 0
-		
-		self.__haschannel  = 1
-		from MMTypes import interiortypes		
-		if tag in ('transition',) or \
-			(self.__isgrinsnode and targnode.GetType() in interiortypes):
-			self.__haschannel = 0
 			
-		# we neeed a temporary instance of the
+		# we need a temporary instance of the
 		# last animator removed from self.__animators
 		self.__lastanimator = None
-
+		
+		# helper variables
+		self.__region = None
+		self.__regionContents = []
 
 	def getDOMValue(self):
 		return self.__domval
@@ -589,12 +610,6 @@ class EffectiveAnimator:
 
 	def getTargetNode(self):
 		return self.__node
-
-	def isGRiNSNode(self):
-		return self.__isgrinsnode
-
-	def hasChannel(self):
-		return self.__haschannel
 
 	def onAnimateBegin(self, targChan, animator):
 		for a in self.__animators:
@@ -629,6 +644,9 @@ class EffectiveAnimator:
 			else:
 				cv = a.getCurrValue()
 		
+		# keep a copy
+		self.__currvalue = cv
+
 		# convert and clamp display value
 		displayValue = cv
 		a = None
@@ -639,59 +657,123 @@ class EffectiveAnimator:
 		if a:
 			displayValue = a.convert(displayValue)
 			displayValue = a.clamp(displayValue)
-
+		
 		# update presentation value
 
-		# handle regions separately
-		if self.__tag=='region':
+		# handle regions and areas separately
+		if self.__tag == 'region':
 			self.__updateregion(displayValue)
+			return
+		elif self.__tag == 'area':
+			self.__updatearea(displayValue)
 			return
 
 		# normal proccessing
 		self.__node.SetPresentationAttr(self.__attr, displayValue)
 
 		# notify/update display value if we have a channel
-		if self.__chan and self.__chan.canupdateattr(self.__node, self.__attr):
+		if self.__chan:
 			self.__chan.updateattr(self.__node, self.__attr, displayValue)
 			if debug:
 				if cv == self.__domval:
-					print self.__attr,'is',displayValue, '(update-domvalue)'
+					print 'update',self.__attr,'of channel',self.__chan._name,'to',displayValue,'(domvalue)'
 				else:
-					print self.__attr,'is',displayValue, '(update)'
+					print 'update',self.__attr,'of channel',self.__chan._name,'to',displayValue
 		elif debug:
+			name = MMAttrdefs.getattr(self.__node, 'name')
 			if cv == self.__domval:
-				print self.__attr,'is',displayValue, '(domvalue)'
+				print 'update',self.__attr,'of node',name,'to',displayValue,'(domvalue)'
 			else:
-				print self.__attr,'is',displayValue
-		
-		self.__currvalue = cv
+				print 'update',self.__attr,'of node',name,'to',displayValue		
 	
 	# update region attributes display value
 	def __updateregion(self, value):
 		attr = self.__attr
 		ch = self.__node.GetChannel()
-		ch.SetPresentationAttr(attr, value)
-		if attr=='position':
-			if debug: print 'set position of region',ch.name,'to',value 
-		elif attr=='left':
-			if debug: print 'set left of region',ch.name,'to',value 
-		elif attr=='top':
-			if debug: print 'set top of region',ch.name,'to',value 
-		elif attr=='width':
-			if debug: print 'set width of region',ch.name,'to',value 
-		elif attr=='height':
-			if debug: print 'set height of region',ch.name,'to',value 
-		elif attr=='right':
-			if debug: print 'set right of region',ch.name,'to',value 
-		elif attr=='bottom':
-			if debug: print 'set bottom of region',ch.name,'to',value 
-		elif attr=='z':
-			if debug: print 'set z-index of region',ch.name,'to',value 
-		elif attr=='bgcolor':
-			if debug: print 'set backgroundColor of region',ch.name,'to',value 
-		elif attr=='soundLevel':
-			if debug: print 'set soundLevel of region',ch.name,'to',value 
+		regionname = ch.name
 
+		# locate region and its contents (once)
+		if not self.__region:
+			from Channel import channels
+			for chan in channels:
+				type = chan._attrdict.get('type')
+				if type == 'layout' and chan._name == regionname:
+					self.__region = chan
+				else:
+					base_window = chan._attrdict.get('base_window')
+					if base_window == regionname:
+						self.__regionContents.append(chan)
+
+		coordinates = ch.attrdict.get('base_winoff')
+		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
+			x, y, w, h = coordinates
+			units = ch.attrdict.get('units')
+			if attr=='position':
+				x, y = value
+				newcoordinates = x, y, w, h
+			elif attr=='left': newcoordinates = value, y, w, h
+			elif attr=='top': newcoordinates = x, value, w, h
+			elif attr=='width': newcoordinates = x, y, value, h
+			elif attr=='height': newcoordinates = x, y, w, value
+			elif attr=='right': newcoordinates = value-w, y, w, h
+			elif attr=='bottom': newcoordinates = x, value-h, w, h
+			self.__updatecoordinates(newcoordinates, units)
+
+		elif attr=='z':
+			self.__updatezindex(value)
+
+		elif attr=='bgcolor':
+			self.__updatebgcolor(value)
+
+		elif attr=='soundLevel':
+			self.__updatesoundlevel(value)
+
+		else:
+			print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
+
+		ch.SetPresentationAttr(attr, value)
+		if debug: 
+			print 'update',attr,'of region',regionname,'to',value
+
+
+	def __updatecoordinates(self, coordinates, units):
+		import sys
+		if sys.platform != 'win32': return
+		if self.__region and self.__region.window:
+			self.__region.window.updatecoordinates(coordinates, units)
+
+	def __updatezindex(self, z):
+		import sys
+		if sys.platform != 'win32': return
+		if self.__region and self.__region.window:
+			self.__region.window.updatezindex(z)
+
+	def __updatebgcolor(self, color):
+		import sys
+		if sys.platform != 'win32': return
+		for chan in self.__regionContents:
+			if chan.window:
+				chan.window.updatebgcolor(color)
+	
+	def __updatesoundlevel(self, level):
+		for chan in self.__regionContents:
+			if hasattr(chan,'updatesoundlevel'):
+				chan.updatesoundlevel(level)
+	
+	# update area attributes display value
+	def __updatearea(self, value):
+		attr = self.__attr
+		node = self.__node
+		name = node.attrdict.get('name')
+		# notify/update display value if we have a channel
+		if self.__chan:
+			self.__chan.updateattr(self.__node, self.__attr, value)
+			if debug:
+				print 'update area',self.__attr,'of channel',self.__chan._name,'to',value
+		elif debug:
+			name = MMAttrdefs.getattr(self.__node, 'name')
+			print 'update area',self.__attr,'of node',name,'to',value		
+			
 	def getcurrentbasevalue(self, animator=None):
 		cv = self.__domval
 		for a in self.__animators:
@@ -778,11 +860,21 @@ def getregionattr(node, attr):
 
 	return None, attr, ''
 
+def getareaattr(node, attr):
+	d = node.attrdict
+	if attr=='coords':
+		if d.has_key('coords'):	
+			coords = d['coords']
+			return coords, attr, 'inttuple'
+		else:
+			return (0,0,1,1), attr, 'inttuple' 
+	return None, attr, ''
+
 def gettransitionattr(node, attr):
 	return None, attr, ''
 
 def getrenamed(node, attr):
-	return MMAttrdefs.getattr(node, attr), attr, MMAttrdefs.getattrtype(attr) 
+	return MMAttrdefs.getattr(node, attr, 1), attr, MMAttrdefs.getattrtype(attr) 
 
 smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'top':(lambda node:getregionattr(node,'top')),
@@ -793,6 +885,7 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
 	'z-index':(lambda node:getregionattr(node,'z')),
 
+	'coords':(lambda node:getareaattr(node,'coords')),
 	'src': (lambda node:getrenamed(node,'file')),
 	}
 
@@ -912,7 +1005,7 @@ class AnimateElementParser:
 		# 'by-only animation' implies sum 
 		if self.__isByOnly(): additive = 'sum'
 
-		if self.__elementTag == 'animateColor':
+		if self.__elementTag == 'animateColor' or self.__attrtype=='color':
 			values = self.__getColorValues()
 			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
@@ -964,6 +1057,16 @@ class AnimateElementParser:
 			anim = Animator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
 		
+		elif self.__attrtype == 'inttuple':
+			values = self.__getNumTupleInterpolationValues()
+			anim = IntTupleAnimator(attr, domval, values, dur, mode, times, splines,
+				accumulate, additive)
+
+		elif self.__attrtype == 'floattuple':
+			values = self.__getNumTupleInterpolationValues()
+			anim = FloatTupleAnimator(attr, domval, values, dur, mode, times, splines,
+				accumulate, additive)
+
 		# 5. Return a default if anything else failed
 		if not anim:
 			print 'Dont know how to animate attribute.',self.__attrname,self.__attrtype
@@ -994,6 +1097,10 @@ class AnimateElementParser:
 			anim = SetAnimator(attr, domval, value, dur)
 		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
 			anim = SetAnimator(attr, domval, value, dur)
+		elif self.__attrtype == 'inttuple':
+			value = self.__split(value)
+			value = map(string.atoi, value)
+			anim = SetAnimator(attr, domval, value, dur)	
 		else:
 			anim = SetAnimator(attr, domval, domval, dur)
 		self.__setTimeManipulators(anim)
@@ -1176,6 +1283,43 @@ class AnimateElementParser:
 				return (x1, y1), (x1+dx,y1+dy)
 		return ()
 
+	# return list of interpolation numeric tuples
+	def __getNumTupleInterpolationValues(self):	
+		# if 'values' are given ignore 'from/to/by'
+		values =  self.getValues()
+		if values:
+			strcoord = string.split(values,';')
+			L = []
+			for str in strcoord:
+				t = self.__splitf(str)
+				if t!=None:
+					L.append(t)
+			return tuple(L)
+
+		# 'from' is optional
+		# use dom value if missing
+		v1 = self.getFrom()
+		if not v1:
+			v1 = self.__domval
+		t1 = self.__splitf(v1)
+		if t1==None: return ()
+
+		v2 = self.getTo()
+		dv = self.getBy()
+		if v2:
+			t2 = self.__splitf(v2)
+			if t2!=None:
+				return tuple(t1), tuple(t2)
+		if dv:
+			dt = self.__splitf(dv)
+			if dt:
+				ts = []
+				for i in range(len(dt)):
+					ts.append(t1[i]+dt[i])
+				return t1, tuple(ts)
+		return ()
+
+
 	# return list of interpolation strings
 	def __getAlphaInterpolationValues(self):
 		
@@ -1249,7 +1393,7 @@ class AnimateElementParser:
 		v1 = self.getFrom()
 		if not v1:
 			v1 = self.__domval
-		if type(v1) == type(''): 
+		if v1: 
 			v1 = self.__convert_color(v1)
 
 		# we must have a 'to' value (expl or through 'by')
@@ -1394,14 +1538,39 @@ class AnimateElementParser:
 			newnode.attrdict['channel'] = te
 			newnode.attrdict['tag'] = 'transition'
 			anim.targetnode = newnode
-
-	sep = re.compile('[ \t\r\n,]')
+		else:
+			# is it an area?
+			root = anim.GetRoot()
+			area = root.GetChildWithArea(te)
+			if area:
+				parent, id, type, args, times = area
+				newnode = MMNode('imm', ctx, ctx.newuid())
+				newnode.attrdict = parent.attrdict.copy()
+				newnode.attrdict['tag'] = 'area'
+				newnode.attrdict['coords'] = args
+				newnode.attrdict['name'] = id
+				newnode.attrdict['parent'] = parent
+				newnode.attrdict['type'] = type
+				newnode.attrdict['times'] = times
+				anim.targetnode = newnode
+	
+	def __splitf(self, arg, f=string.atof):
+		if type(arg)==type(''):
+			arg = self.__split(arg)
+		try:
+			return map(f, arg)
+		except:
+			return arg
+		
+	_sep = re.compile('[ \t\r\n,]')
 	def __split(self, str):
+		if type(str)!=type(''):
+			return str
 		l = []
 		end = len(str)
 		i = 0
 		while i<len(str):
-			m = AnimateElementParser.sep.search(str, i)
+			m = AnimateElementParser._sep.search(str, i)
 			if m:
 				begin, end = m.regs[0]
 				if i != begin:
