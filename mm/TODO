@@ -43,6 +43,3 @@ redraw.
 Most likely it is a problem of the O2 and not of cmifed (that's what
 sjoerd claims!).
 The same problem does NOT happen in the tutorials.             -mariat 28/1/97
-
-The mpeg channel doesn't properly clear the background.  Also, it
-doesn't redraw at the end of the movie.			-sjoerd 29/1/97
