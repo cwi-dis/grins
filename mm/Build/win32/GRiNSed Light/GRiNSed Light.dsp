@@ -51,18 +51,18 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
+# ADD BSC32 /nologo /o"./GRiNSLiteG2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 python15.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 python15.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_G2L.exe"
 # Begin Custom Build
-OutDir=.\.
-InputPath=.\GRiNSed Light.exe
+TargetPath=.\GRiNS_G2L.exe
+InputPath=.\GRiNS_G2L.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNSed Light.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del "..\..\..\bin\win32\GRiNSed Light.exe" 
-	copy "$(OutDir)\GRiNSed Light.exe" ..\..\..\bin\win32 
+"..\..\..\bin\win32\GRiNS_G2L.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_G2L.exe 
+	copy $(TargetPath) ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -84,13 +84,23 @@ SOURCE="$(InputPath)"
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "_DEBUG"
-# ADD RSC /l 0x408 /d "_DEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
+# ADD BSC32 /nologo /o"Debug/GRiNSLiteG2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 python15_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 python15_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_G2L.exe" /pdbtype:sept
+# Begin Custom Build
+TargetPath=.\Debug\GRiNS_G2L.exe
+InputPath=.\Debug\GRiNS_G2L.exe
+SOURCE="$(InputPath)"
+
+"..\..\..\bin\win32\GRiNS_G2L_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_G2L_d.exe 
+	copy $(TargetPath) ..\..\..\bin\win32\GRiNS_G2L_d.exe 
+	
+# End Custom Build
 
 !ENDIF 
 
@@ -151,27 +161,11 @@ SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorEdit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AnchorEditDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AnchorEditForm.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_AppToplevel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_ArcInfoForm.c
 # End Source File
 # Begin Source File
 
@@ -423,10 +417,6 @@ SOURCE=.\M_Hlinks.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_HtmlChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_HTMLWrite.c
 # End Source File
 # Begin Source File
@@ -467,6 +457,10 @@ SOURCE=.\M_keyword.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_languages.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_LayoutChannel.c
 # End Source File
 # Begin Source File
@@ -484,14 +478,6 @@ SOURCE=.\M_licparser.c
 # Begin Source File
 
 SOURCE=.\M_linecache.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_LinkEdit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_LinkEditDialog.c
 # End Source File
 # Begin Source File
 
@@ -555,10 +541,6 @@ SOURCE=.\M_MMRead.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMTree.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_MMTypes.c
 # End Source File
 # Begin Source File
@@ -571,23 +553,7 @@ SOURCE=.\M_MMWrite.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MPEGVideoDuration.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_NodeEdit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfo.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfoDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfoForm.c
 # End Source File
 # Begin Source File
 
@@ -640,18 +606,6 @@ SOURCE=.\M_posixpath.c
 # Begin Source File
 
 SOURCE=.\M_pprint.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_Preferences.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_PreferencesDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_PseudoHtmlChannel.c
 # End Source File
 # Begin Source File
 
@@ -819,10 +773,6 @@ SOURCE=.\M_re.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealAudioChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
@@ -844,10 +794,6 @@ SOURCE=.\M_realsupport.c
 # Begin Source File
 
 SOURCE=.\M_RealTextChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_RealVideoChannel.c
 # End Source File
 # Begin Source File
 

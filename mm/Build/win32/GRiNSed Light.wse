@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.04
-  Title=Oratrix GRiNS 1.0.1alpha Installation
+  Title=Oratrix GRiNS Lite for G2, v1.5 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -19,20 +19,20 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-101alpha.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_L4G2_inst.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
   Upload Directory=/ufs/sjoerd/tmp
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=1.0.1alpha
-  Version Description=Oratrix GRiNS for SMIL
+  Version File=1.5 beta
+  Version Description=Oratrix GRiNS Lite for G2
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=500265211
+  File Checksum=3237099799
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS 1.0.1alpha
+  Value=Oratrix GRiNS Lite for G2, v1.5
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS 1.0.1alpha
+  Value=Oratrix GRiNS Lite for RealSystem G2
   Flags=10000000
 end
 item: Set Variable
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS 1.0.1alpha
+  Value=Oratrix\GRiNS_G2L
   Flags=10000000
 end
 item: Check Configuration
@@ -155,7 +155,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=COMPONENTS
-  Value=ABC
+  Value=AB
   Flags=10000000
 end
 item: Set Variable
@@ -828,25 +828,20 @@ item: Custom Dialog Set
       Create Flags=01010000101000010000000101010001
       Flags=0000010001000111
       Text=Editor
-      Text=Player
       Text=Documentation and Tutorials
       Text=
       Text French=Editor
-      Text French=Player
       Text French=Documentation and Tutorials
       Text French=
       Text German=Editor
-      Text German=Player
       Text German=Documentation and Tutorials
       Text German=
       Text Portuguese=%1%
       Text Portuguese=
       Text Spanish=Editor
-      Text Spanish=Player
       Text Spanish=Documentation and Tutorials
       Text Spanish=
       Text Italian=Editor
-      Text Italian=Player
       Text Italian=Documentation and Tutorials
       Text Italian=
       Text Danish=%1%
@@ -1134,53 +1129,8 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
-  Destination=%MAINDIR%\GRiNSRes.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
-  Destination=%MAINDIR%\rma.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
-  Destination=%MAINDIR%\Gear32sd.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python15.dll
-  Destination=%MAINDIR%\python15.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes15.dll
-  Destination=%MAINDIR%\PyWinTypes15.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
-  Destination=%MAINDIR%\win32ui.pyd
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Build\common\license.txt
   Destination=%MAINDIR%\license.txt
-  Flags=0000000010000010
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcirt.dll
-  Destination=%SYS32%\Msvcirt.dll
-  Flags=0000001010000011
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcp60.dll
-  Destination=%SYS32%\Msvcp60.dll
-  Flags=0000001010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\relnotes.html
-  Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1188,219 +1138,29 @@ item: Install File
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
-item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
-  Destination=%MAINDIR%\WebPro32.ocx
-  Flags=0001001010000011
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcrt40.dll
-  Destination=%SYS32%\Msvcrt40.dll
-  Flags=0000001010000011
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcrt.dll
-  Destination=%SYS32%\Msvcrt.dll
-  Flags=0000001010000011
-end
-item: Install File
-  Source=c:\Winnt\system32\Olepro32.dll
-  Destination=%SYS32%\Olepro32.dll
-  Flags=0001001010000011
-end
-item: Install File
-  Source=c:\Winnt\system32\Mfc42.dll
-  Destination=%SYS32%\Mfc42.dll
-  Flags=0001001010000011
-end
 item: If/While Statement
   Variable=COMPONENTS
-  Value=C
+  Value=B
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Examples\index.txt
-  Destination=%MAINDIR%\Examples\index.txt
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h218.gif
+  Destination=%MAINDIR%\Tutorials\Assets\h218.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll6sw.smil
-  Destination=%MAINDIR%\Examples\stroll6sw.smil
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h168.gif
+  Destination=%MAINDIR%\Tutorials\Assets\h168.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll6c.smil
-  Destination=%MAINDIR%\Examples\stroll6c.smil
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\map.gif
+  Destination=%MAINDIR%\Tutorials\Assets\map.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll6.smil
-  Destination=%MAINDIR%\Examples\stroll6.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll5sw.smil
-  Destination=%MAINDIR%\Examples\stroll5sw.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll5c.smil
-  Destination=%MAINDIR%\Examples\stroll5c.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll5.smil
-  Destination=%MAINDIR%\Examples\stroll5.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll4sw.smil
-  Destination=%MAINDIR%\Examples\stroll4sw.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll4c.smil
-  Destination=%MAINDIR%\Examples\stroll4c.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll4.smil
-  Destination=%MAINDIR%\Examples\stroll4.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll3sw.smil
-  Destination=%MAINDIR%\Examples\stroll3sw.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll3c.smil
-  Destination=%MAINDIR%\Examples\stroll3c.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll3.smil
-  Destination=%MAINDIR%\Examples\stroll3.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll2sw.smil
-  Destination=%MAINDIR%\Examples\stroll2sw.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll2c.smil
-  Destination=%MAINDIR%\Examples\stroll2c.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll2.smil
-  Destination=%MAINDIR%\Examples\stroll2.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll1sw.smil
-  Destination=%MAINDIR%\Examples\stroll1sw.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll1c.smil
-  Destination=%MAINDIR%\Examples\stroll1c.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll1.smil
-  Destination=%MAINDIR%\Examples\stroll1.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\stroll.jpg
-  Destination=%MAINDIR%\Examples\stroll.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\map1.jpg
-  Destination=%MAINDIR%\Examples\map1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\map.jpg
-  Destination=%MAINDIR%\Examples\map.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\h284bw.jpg
-  Destination=%MAINDIR%\Examples\h284bw.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\h284.jpg
-  Destination=%MAINDIR%\Examples\h284.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\h218bw.jpg
-  Destination=%MAINDIR%\Examples\h218bw.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\h218.jpg
-  Destination=%MAINDIR%\Examples\h218.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\h168bw.jpg
-  Destination=%MAINDIR%\Examples\h168bw.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\h168.jpg
-  Destination=%MAINDIR%\Examples\h168.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\284.au
-  Destination=%MAINDIR%\Examples\284.au
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\218.au
-  Destination=%MAINDIR%\Examples\218.au
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\1map1.jpg
-  Destination=%MAINDIR%\Examples\1map1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\1map.jpg
-  Destination=%MAINDIR%\Examples\1map.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\1h284.jpg
-  Destination=%MAINDIR%\Examples\1h284.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\1h218.jpg
-  Destination=%MAINDIR%\Examples\1h218.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\1h168.jpg
-  Destination=%MAINDIR%\Examples\1h168.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Examples\168.au
-  Destination=%MAINDIR%\Examples\168.au
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\common\QuickStart.pdf
-  Destination=%MAINDIR%\QuickStart.pdf
+  Source=d:\ufs\mm\cmif\Build\common\QSG-L4G2.pdf
+  Destination=%MAINDIR%\QSG-L4G2.pdf
   Flags=0000000010000010
 end
 item: End Block
@@ -1416,14 +1176,289 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSed Light.exe
-  Destination=%MAINDIR%\GRiNSed Light.exe
+  Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
+  Destination=%MAINDIR%\Templates\qsg1.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\video.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\video.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\text.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\text.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\sound.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\html.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\html.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\image.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\image.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\layout.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A5_empty.grins
+  Destination=%MAINDIR%\Templates\A5_empty.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\null.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\null.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealPix.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealText.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\QSG1-Slideshow.grins
+  Destination=%MAINDIR%\Templates\QSG1-Slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.grins
+  Destination=%MAINDIR%\Templates\A4_adaptive_content.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A3_videoshow-bkaudio-img.grins
+  Destination=%MAINDIR%\Templates\A3_videoshow-bkaudio-img.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A2_rp-slideshow-bgaud-img.grins
+  Destination=%MAINDIR%\Templates\A2_rp-slideshow-bgaud-img.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\hd_bkgd-image.jpg
+  Destination=%MAINDIR%\Templates\media\hd_bkgd-image.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A1_simple_slideshow.grins
+  Destination=%MAINDIR%\Templates\A1_simple_slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\video_2x_audio.bmp
+  Destination=%MAINDIR%\Templates\video_2x_audio.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\adaptive.bmp
+  Destination=%MAINDIR%\Templates\adaptive.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\freeplayer_g2.gif
+  Destination=%MAINDIR%\Templates\freeplayer_g2.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
+  Destination=%MAINDIR%\Templates\GetGRiNS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
+  Destination=%MAINDIR%\Templates\media\realpix-template.rp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Destination=%MAINDIR%\Templates\embedded_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-3.jpg
+  Destination=%MAINDIR%\Templates\media\rp-slide-3.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-2.jpg
+  Destination=%MAINDIR%\Templates\media\rp-slide-2.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-1.jpg
+  Destination=%MAINDIR%\Templates\media\rp-slide-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\slide-3.jpg
+  Destination=%MAINDIR%\Templates\media\slide-3.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\slide-2.jpg
+  Destination=%MAINDIR%\Templates\media\slide-2.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\slide-1.jpg
+  Destination=%MAINDIR%\Templates\media\slide-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\simple.rp
+  Destination=%MAINDIR%\Templates\media\simple.rp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\hd_slide_1.jpg
+  Destination=%MAINDIR%\Templates\media\hd_slide_1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\bkgd-image.jpg
+  Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\slideshow_2x_audio.bmp
+  Destination=%MAINDIR%\Templates\slideshow_2x_audio.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\rp_2x_audio.bmp
+  Destination=%MAINDIR%\Templates\rp_2x_audio.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\python15.dll
+  Destination=%MAINDIR%\python15.dll
   Flags=0000000010000011
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
+  Destination=%MAINDIR%\win32ui.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
+  Destination=%MAINDIR%\GRiNSRes.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNS_G2L.exe
+  Destination=%MAINDIR%\GRiNS_G2L.exe
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
+  Destination=%MAINDIR%\Gear32sd.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes15.dll
+  Destination=%MAINDIR%\PyWinTypes15.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
+  Destination=%MAINDIR%\rma.pyd
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\win32\DXMedia\bin\aud2rm.ax
-  Destination=%MAINDIR%\aud2rm.ax
+  Destination=%MAINDIR%\Producer-SDK\aud2rm.ax
   Flags=0001001010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\producer.pyd
+  Destination=%MAINDIR%\producer.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Destination=%MAINDIR%\WebPro32.ocx
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcp60.dll
+  Destination=%SYS32%\Msvcp60.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgjpeg.pyd
+  Destination=%MAINDIR%\imgjpeg.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgop.pyd
+  Destination=%MAINDIR%\imgop.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgformat.pyd
+  Destination=%MAINDIR%\imgformat.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vid2rm.ax
+  Destination=%MAINDIR%\Producer-SDK\vid2rm.ax
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcirt.dll
+  Destination=%SYS32%\Msvcirt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Mfc42d.dll
+  Destination=%SYS32%\Mfc42d.dll
+  Flags=0001001010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgcolormap.pyd
+  Destination=%MAINDIR%\imgcolormap.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
+  Destination=%MAINDIR%\dshow.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Winnt\system32\Olepro32.dll
+  Destination=%SYS32%\Olepro32.dll
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcrt.dll
+  Destination=%SYS32%\Msvcrt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcrt40.dll
+  Destination=%SYS32%\Msvcrt40.dll
+  Flags=0000001010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
@@ -1536,41 +1571,6 @@ item: Install File
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vid2rm.ax
-  Destination=%MAINDIR%\vid2rm.ax
-  Flags=0001001010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
-  Destination=%MAINDIR%\dshow.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\producer.pyd
-  Destination=%MAINDIR%\producer.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgop.pyd
-  Destination=%MAINDIR%\imgop.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgjpeg.pyd
-  Destination=%MAINDIR%\imgjpeg.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgformat.pyd
-  Destination=%MAINDIR%\imgformat.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgcolormap.pyd
-  Destination=%MAINDIR%\imgcolormap.pyd
-  Flags=0000000010000010
-end
-item: Install File
   Source=e:\External Program Files\RealSDK\Producer\Bin\rmbe3260.dll
   Destination=%MAINDIR%\rmbe3260.dll
   Flags=0000000010000011
@@ -1584,138 +1584,6 @@ item: Install File
   Source=e:\External Program Files\RealSDK\Producer\Bin\pncrt.dll
   Destination=%MAINDIR%\pncrt.dll
   Flags=0000000010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\slideshow.smil
-  Destination=%MAINDIR%\Templates\slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.smil
-  Destination=%MAINDIR%\Templates\Extended-Slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.bmp
-  Destination=%MAINDIR%\Templates\Extended-Slideshow.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty.smil
-  Destination=%MAINDIR%\Templates\empty.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty.cmc
-  Destination=%MAINDIR%\Templates\empty.cmc
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_htmllayout_player.html
-  Destination=%MAINDIR%\Templates\embedded_htmllayout_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\captions.smil
-  Destination=%MAINDIR%\Templates\captions.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\captions.bmp
-  Destination=%MAINDIR%\Templates\captions.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.smil
-  Destination=%MAINDIR%\Templates\Basic-Slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.bmp
-  Destination=%MAINDIR%\Templates\Basic-Slideshow.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealText.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealPix.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\null.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\null.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\layout.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\image.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\image.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\html.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\html.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\sound.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\text.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\text.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\video.tiff
-  Destination=%MAINDIR%\GRiNS-Icons\video.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSed.exe
-  Destination=%MAINDIR%\GRiNSed.exe
-  Flags=0000000010000010
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNS.exe
-  Destination=%MAINDIR%\GRiNS.exe
-  Flags=0000000010000010
 end
 item: End Block
 end
@@ -1796,74 +1664,55 @@ item: Set Variable
   Variable=GROUP
   Value=%GROUPDIR%\%GROUP%
 end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
 item: Create Shortcut
-  Source=%MAINDIR%\GRiNSed.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL.lnk
+  Source=%MAINDIR%\readme.txt
+  Destination=%GROUP%\readme.lnk
   Icon Number=0
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNS.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL.lnk
-  Icon Number=0
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNSed.exe
-  Destination=%CDESKTOPDIR%\GRiNS Editor for SMIL.lnk
-  Icon Number=0
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNS.exe
-  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL.lnk
-  Icon Number=0
-end
-item: End Block
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS.lnk
+  Destination=%GROUP%\Uninstall GRiNS Lite for G2.lnk
   Icon Number=0
 end
 item: If/While Statement
   Variable=COMPONENTS
-  Value=C
+  Value=A
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\QuickStart.pdf
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS QuickStart Guide.lnk
+  Source=%MAINDIR%\GRiNS_G2L.exe
+  Destination=%GROUP%\GRiNS Lite for G2.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS_G2L.exe
+  Destination=%DESKTOPDIR%\GRiNS Lite for G2.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\QSG-L4G2.pdf
+  Destination=%GROUP%\QuickStart Guide.lnk
   Icon Number=0
 end
 item: End Block
 end
 item: Create Shortcut
-  Source=%MAINDIR%\readme.txt
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\readme.lnk
+  Source=%MAINDIR%\license.txt
+  Destination=%GROUP%\GRiNS Lite for G2 License.lnk
   Icon Number=0
 end
 item: Else Statement
@@ -1875,20 +1724,9 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
 end
 item: End Block
 end
@@ -1899,20 +1737,28 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
 end
 item: End Block
 end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Uninstall GRiNS Lite for G2
+  Command Line=%MAINDIR%\Unwise.exe
+  Flags=01000000
+end
 item: If/While Statement
   Variable=COMPONENTS
-  Value=B
+  Value=A
   Flags=00001010
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
 end
 item: End Block
 end
@@ -1923,8 +1769,9 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
 end
 item: End Block
 end
@@ -1935,331 +1782,59 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
+  Icon Name=QuickStart Guide
+  Command Line=%MAINDIR%\QSG-L4G2.pdf
+  Flags=01000000
 end
 item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
+  Icon Name=GRiNS Lite for G2 License
+  Command Line=%MAINDIR%\license.txt
+  Flags=01000000
 end
 item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=readme
   Command Line=%MAINDIR%\readme.txt
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=C
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS QuickStart Guide
-  Command Line=%MAINDIR%\QuickStart.pdf
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Uninstall GRiNS
-  Command Line=%MAINDIR%\Unwise.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Uninstall GRiNS
-  Command Line=%MAINDIR%\Unwise.exe
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL
-  Command Line=%MAINDIR%\GRiNSed.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
+  Flags=01000000
 end
 item: End Block
 end
 item: Edit Registry
-  Total Keys=10
-  item: Key
-    Key=.cmif
-    New Value=CMIFfile
-  end
-  item: Key
-    Key=.cmif
-    New Value=application/x-grins-cmif
-    Value Name=Content Type
-  end
+  Total Keys=6
   item: Key
     Key=.smi
     New Value=SMILfile
+    Root=32
   end
   item: Key
     Key=.smi
     New Value=application/smil
     Value Name=Content Type
+    Root=32
   end
   item: Key
     Key=.smil
     New Value=SMILfile
+    Root=32
   end
   item: Key
     Key=.smil
     New Value=application/smil
     Value Name=Content Type
-  end
-  item: Key
-    Key=CMIFfile
-    New Value=GRiNS CMIF File
-  end
-  item: Key
-    Key=CMIFfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNSed.exe,1
+    Root=32
   end
   item: Key
     Key=SMILfile
     New Value=GRiNS SMIL File
+    Root=32
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNSed.exe,2
+    New Value=%MAINDIR%\GRiNS_G2L.exe,2
+    Root=32
   end
 end
 item: Edit Registry
@@ -2273,54 +1848,64 @@ item: Edit Registry
   New Value=GRiNS CMIF Cache File
 end
 item: Edit Registry
-  Total Keys=2
-  item: Key
-    Key=MIME\Database\Content Type\application/x-grins-cmif
-    New Value=.cmif
-    Value Name=Extension
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/smil
-    New Value=.smil
-    Value Name=Extension
-  end
+  Total Keys=1
+  Key=MIME\Database\Content Type\application/smil
+  New Value=.smil
+  Value Name=Extension
+  Root=32
 end
 item: Edit Registry
-  Total Keys=2
-  item: Key
-    Key=CMIFfile\shell\edit
-    New Value=Edit with GRiNS
-  end
-  item: Key
-    Key=CMIFfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNSed.exe "%%1"
-  end
-end
-item: Edit Registry
-  Total Keys=6
-  item: Key
-    Key=CMIFfile\shell\open
-    New Value=Open with GRiNS
-  end
-  item: Key
-    Key=CMIFfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe "%%1"
-  end
+  Total Keys=3
   item: Key
     Key=SMILfile\shell\edit
-    New Value=Edit with GRiNS
+    New Value=Edit with GRiNS Lite for G2
   end
   item: Key
     Key=SMILfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNSed.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_G2L.exe "%%1"
   end
   item: Key
     Key=SMILfile\shell\open
-    New Value=Open with GRiNS
+    New Value=Edit with GRiNS Lite for G2
+    Root=32
   end
+end
+item: Edit Registry
+  Total Keys=8
   item: Key
     Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_G2L.exe "%%1"
+    Root=32
+  end
+  item: Key
+    Key=.grins
+    New Value=GRiNSProject
+  end
+  item: Key
+    Key=.grins
+    New Value=application/x-grins-project
+    Value Name=Content Type
+  end
+  item: Key
+    Key=GRiNSProject
+    New Value=GRiNS Project File
+  end
+  item: Key
+    Key=GRiNSProject\DefaultIcon
+    New Value=%MAINDIR%\GRiNS_G2L.exe,2
+  end
+  item: Key
+    Key=GRiNSProject\shell\open
+    New Value=Edit with GRiNS Lite for G2
+  end
+  item: Key
+    Key=GRiNSProject\shell\open\command
+    New Value=%MAINDIR%\GRiNS_G2L.exe "%%1"
+  end
+  item: Key
+    Key=MIME\Database\Content Type\application/x-grins-project
+    New Value=.grins
+    Value Name=Extension
   end
 end
 item: Self-Register OCXs/DLLs
@@ -2328,36 +1913,6 @@ item: Self-Register OCXs/DLLs
 end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: .cmc
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: .cmif
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: CMIFCacheFile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: CMIFfile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: MIME\Database\Content Type\application/x-grins-cmif
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
 end
 item: Add Text to INSTALL.LOG
   Text=RegDB Tree: SMILfile
