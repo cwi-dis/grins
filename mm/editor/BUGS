@@ -3,34 +3,92 @@
 *** to the "FIXED" section at the end of this file!             ***
 *******************************************************************
 
+--------------------------- BIG PLANS -----------------------------
+
+rewrite the block view without using FORMS, so user interface can be
+improved
+
+redo the user interface for creating and editing hyperlinks to be more
+intuitive
+
+make text anchors be text selections, not boxes in the window
+
+------------------------------ CRASHES ----------------------------
+
+ValueError: 'list.index(x): x not in list'
+> .../ChannelView.py(671)reshape:
+	i = self.mother.context.channelnames.index(self.name)
+
+ValueError: 'list.remove(x): x not in list'
+> /ufs/guido/lib/python/sched.py(63)cancel: self.queue.remove(event)
+
+MMExc.AssertError: 'bad delsyncarc call'
+> /ufs/guido/mm/demo/lib/EditMgr.py(162)delsyncarc:
+	raise MMExc.AssertError, 'bad delsyncarc call'
+
+ValueError: 'list.remove(x): x not in list'
+  <string>(1)
+  /ufs/guido/mm/demo/mm4/main.py(135): main()
+  /ufs/guido/mm/demo/mm4/main.py(103)main: pdb.post_mortem(sys.exc_traceback)
+  ./TopLevel.py(90)run: return fl.do_forms()
+  /ufs/guido/mm/demo/lib/glwindow.py(202)dispatch: callback(arg)
+  /ufs/guido/mm/demo/mm4/SoundChannel.py(175)done: self.player.cancel(self.dummy_event_id)
+> /ufs/guido/lib/python/sched.py(63)cancel: self.queue.remove(event)
+
+Kaboo!: None
+  <string>(1)
+  /ufs/guido/mm/demo/mm4/main.py(135): main()
+  /ufs/guido/mm/demo/mm4/main.py(103)main: pdb.post_mortem(sys.exc_traceback)
+  ./TopLevel.py(90)run: return fl.do_forms()
+  /ufs/guido/mm/demo/mm4/Player.py(150)timer_callback: void = apply(action, argument)
+  /ufs/guido/mm/demo/mm4/Channel.py(174)done: callback(arg)
+  /ufs/guido/mm/demo/mm4/Scheduler.py(326)decrement: self.decrement(arg)
+  /ufs/guido/mm/demo/mm4/Scheduler.py(326)decrement: self.decrement(arg)
+  /ufs/guido/mm/demo/mm4/Scheduler.py(342)decrement: self.unfreeze()
+> /ufs/guido/mm/demo/mm4/Scheduler.py(72)unfreeze: raise 'Kaboo!'
+
 ------------------------------ BUGS -------------------------------
 
-Cut-or-copy followed by Restore followed by Paste crashes with "wrong
-context".  (The copy buffer should be erased by Restore until this can
-be fixed.)
+(Lynda:) One thing I forgot to mention, which would be nice to
+understand at least, is that sometimes when I start up the traffic
+sequence the video channel doesn't play on top of the black
+background.  I have an explicit synch arc to force the background
+(image) node to play first, and then have the video channel play on
+top of it.  If I turn off the video landscape channel, then turn it on
+again it works OK.
+
+(Lynda:) When I go through the "Leisure section" via "Carre" to Sjoerd
+reciting his poem then I don't get the video showing first attempt
+either.  It is cured by turning the video (left) channel off then on
+again.
+
+(Lynda:) The version of CMIF I'm now using (/mnt/lynda/cmif/bin/cmifed)
+has decided to play my voice (now recorded at 16K) at 22.05 K.  (I was
+at the "shops" part of Leisure activities.)  [This is caused by
+Terminator, and by Sjoerd not checking and setting the rate often
+enough.]
+
+after editing an anchor, the anchors of a node aren't always redrawn
+correctly
 
 Auto-firing anchors on interior nodes don't work
 
-TextChannel init() doesn't set arm_node to None.
-
 block view calculates geometry wrong after sequence of zoom in -
 enlarge window - zoom out
-
-hyperjumps often beep when the mouse up event arrives
-
-Line 449 in ImageChannel refs 'os' which isn't imported
 
 When starting a document with the pause button: (a) no images or texts
 appear; and (b) the cursor stays a watch.
 
 Player: playing multiple nodes in parallel on the same channel causes
-crashes or generally weird behaviour (each channel should protect
+crashes or generally weird behaviour (each channel class should protect
 itself against this!)
 
 Timing: sometimes the cached timings are bogus and save + restore is
 needed to fix them.  E.g. after changing a bag node to a seq node...
 
 --------------------- UNSOLVED MISTERIES --------------------------
+
+[see various mails from Lynda, listed above as CRASHES]
 
 block view: sometimes the outermost box size is calculated wrong and
 part of the window remains unused.  (Hard to reproduce; usually after
@@ -41,25 +99,19 @@ replaced by zoom in - resize - zoom out problem, above]
 player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
 playing node w/o channel [hard to reproduce?]
 
-FORMS: When one FORM is iconified, *after a while* all events are
-queued, but not acted upon, so the program hangs.  Is this a standard
-FORMS bug or do I do something wrong with handling GL events?  (Not
-reproducible in very simple prog?)
-
 FORMS: events for subwindows get lost.  [does this still happen?]
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
-still occasional problems with the font manager?  (should slowly be
-fixed in 4.0.2+).  [maybe connected with malloc() crash?]  [maybe
-connected with imgfile bugs (now fixed)?]
-
 toplevel: sometimes complaint about unknown command when clicking in
 toplevel menu while things are busy?
 
------------------------------- TOO BAD ----------------------------
+---------------------- FIX OUTSIDE OUR CONTROL --------------------
 
-block view: resize behavior is weird (menu bar height changes)
+FORMS: When a window is iconified, the first redraw operation to that
+window hangs the entire application.
+
+block view: on resize, the menu bar changes height in a weird way
 
 ------------------------------ PERFORMANCE ------------------------
 
@@ -69,12 +121,6 @@ Do garbage collection of windows, esp. forms (or DGL runs out eventually...)
 Timing: takes ages -- why?  [sped up ~30% by caching getduration in
 sound & movie channel]
 
-sound channel: arm seems slow?
-
-movie channel: loading colormap (& other things done at arm time)
-takes ages  [somewhat solved by not loading it when a clear() is
-sufficient]
-
 ------------------------------ FEATURES ---------------------------
 
 channel view: want to cut and paste channels
@@ -82,16 +128,11 @@ channel view: want to cut and paste channels
 channel view: need to warn if a channel with nodes is deleted
 
 player: need "keep" attribute (default 0?) to keep a node on the
-screen after its time is up
+screen after its time is up (currently this is always done)
 
 ------------------------------ NITS -------------------------------
 
-sync arc edit box needs an editable text box for the delay
-(and the message about "press shift" is misleading -- nothing happens)
-
 sync arcs whose source is lost are kept around for no good reason
-
-if a channel is off, display it in a different color in the channel view
 
 block & channel view: use channel colors instead of default (gray)?
 
@@ -105,21 +146,13 @@ node info: could use a 'convert to ext' button for imm text nodes.
 block & channel views: show only 'info' in menu, but support shortcuts
 for attributes and anchors (?)
 
-Player: "late" display keeps old value during initialization.
-
-arc editor: need a text box to specify the delay as well
-
 channel view: settings of new sync arc can be copied from last created
 or edited one?
-
-general: need a template for a simple e-mail document
 
 player: when playing a subtree, should make sure that at least one
  	of the channels it uses is on?
 
 -------------------------- EXAMPLES -------------------------------
-
-VanGogh demo: move data to subdirectory.
 
 --------------------------- PROJECT MANAGEMENT --------------------
 
@@ -212,6 +245,13 @@ VanGogh demo: move data to subdirectory.
     [fixed, sort of, by adding a menu to channel windows --Guido]
 
 ---
+
+-------------------------------------------------------------------
+--------------------------- DON'T DO THIS -------------------------
+
+VanGogh demo: move data to subdirectory.
+
+general: need a template for a simple e-mail document
 
 -------------------------------------------------------------------
 ------------------------------ FIXED ------------------------------
@@ -473,3 +513,48 @@ family and a font style menu...
 improved performance (see cvs log messages).
 
 node info: want a menu of commands just like those in other windows
+
+--- 12 Oct 1992 ---
+
+Cut-or-copy followed by Restore followed by Paste crashes with "wrong
+context".  [Fixed by adding CopyIntoContext method to nodes and using
+this when Paste detects a different context.]
+
+Line 449 in ImageChannel refs 'os' which isn't imported
+
+TextChannel init() doesn't set arm_node to None.
+
+still occasional problems with the font manager?  (should slowly be
+fixed in 4.0.2+).  [maybe connected with malloc() crash?]  [maybe
+connected with imgfile bugs (now fixed)?]  [haven't seen this for a
+while, consider it fixed]
+
+sync arcs aren't copied when a subtree is copied
+
+arc editor: need a text box to specify the delay as well
+	==
+sync arc edit box needs an editable text box for the delay
+(and the message about "press shift" is misleading -- nothing happens)
+[fixed in a different way -- there are now three buttons to choose a
+precision range]
+
+sound channel: arm seems slow?  [problem disappeared with C sound
+channel]
+
+movie channel: loading colormap (& other things done at arm time)
+takes ages  [somewhat solved by not loading it when a clear() is
+sufficient]  [also on at least *some* Indigos, no colormap is loaded.]
+
+if a channel is off, display it in a different color in the channel view
+
+Player: "late" display keeps old value during initialization.
+[fixed by new, simpler control panel]
+
+hyperlinks aren't properly copied when a subtree is copied (at least
+*outgoing* links and links *within* the copied subtree should be
+duplicated).
+
+links leading to nodes not in the tree shouldn't be written to the
+file
+
+hyperjumps often beep when the mouse up event arrives

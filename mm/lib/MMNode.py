@@ -115,6 +115,37 @@ class MMNodeContext:
 					pass
 		raise NoSuchAttrError, 'in lookinstyles()'
 	#
+	# Remove all hyperlinks that aren't contained in the given trees
+	# (note that the argument is a *list* of root nodes)
+	#
+	def sanitize_hyperlinks(self, roots):
+		self._roots = roots
+		badlinks = self.hyperlinks.selectlinks(self._isbadlink)
+		del self._roots
+		for link in badlinks:
+			self.hyperlinks.dellink(link)
+	#
+	# Return all hyperlinks pertaining to the given tree
+	# (note that the argument is a *single* root node)
+	#
+	def get_hyperlinks(self, root):
+		self._roots = [root]
+		links = self.hyperlinks.selectlinks(self._isgoodlink)
+		del self._roots
+		return links
+	#
+	# Internal: predicates to select nodes pertaining to self._roots
+	#
+	def _isbadlink(self, link):
+		return not self._isgoodlink(link)
+	#
+	def _isgoodlink(self, (a1, a2, dir, type)):
+		uid1, aid1 = a1
+		uid2, aid2 = a2
+		return self.uidmap.has_key(uid1) \
+		   and self.uidmap.has_key(uid2) \
+		   and self.uidmap[uid1].GetRoot() in self._roots \
+		   and self.uidmap[uid2].GetRoot() in self._roots
 
 
 # The Node class
@@ -337,27 +368,57 @@ class MMNode:
 	def DeepCopy(self):
 		##_stat('DeepCopy')
 		uidremap = {}
-		copy = self._deepcopy(uidremap)
+		copy = self._deepcopy(uidremap, self.context)
 		copy._fixuidrefs(uidremap)
+		_copyoutgoinghyperlinks(self.context.hyperlinks, uidremap)
+		return copy
+	#
+	# Copy a subtree (deeply) into a new context
+	#
+	def CopyIntoContext(self, context):
+		##_stat('CopyIntoContext')
+		uidremap = {}
+		copy = self._deepcopy(uidremap, context)
+		copy._fixuidrefs(uidremap)
+		_copyinternalhyperlinks(self.context.hyperlinks, \
+			copy.context.hyperlinks, uidremap)
 		return copy
 	#
 	# Private methods for DeepCopy
 	#
-	def _deepcopy(self, uidremap):
+	def _deepcopy(self, uidremap, context):
 		##_stat('_deepcopy')
-		copy = self.context.newnode(self.type)
+		copy = context.newnode(self.type)
 		uidremap[self.uid] = copy.uid
 		copy.attrdict = _valuedeepcopy(self.attrdict)
 		copy.values = _valuedeepcopy(self.values)
 		for child in self.children:
-			copy._addchild(child._deepcopy(uidremap))
+			copy._addchild(child._deepcopy(uidremap, context))
 		return copy
 	#
 	def _fixuidrefs(self, uidremap):
-		# XXX Should run through attributes and replace UIDs
-		# XXX by remapped UIDs
+		# XXX Are there any other attributes that reference uids?
+		self._fixsyncarcs(uidremap)
 		for child in self.children:
 			child._fixuidrefs(uidremap)
+	#
+	def _fixsyncarcs(self, uidremap):
+		# XXX Exception-wise, this function knows about the
+		# semantics and syntax of an attribute...
+		try:
+			arcs = self.GetRawAttr('synctolist')
+		except NoSuchAttrError:
+			return
+		if not arcs:
+			self.DelAttr('synctolist')
+		newarcs = []
+		for xuid, xsize, delay, yside in arcs:
+			if uidremap.has_key(xuid):
+				xuid = uidremap[xuid]
+			newarcs.append(xuid, xsize, delay, yside)
+		if newarcs <> arcs:
+			self.SetAttr('synctolist', newarcs)
+		
 	#
 	# Public methods for modifying a tree
 	#
@@ -569,6 +630,53 @@ def _valuedeepcopy(value):
 		return copy
 	# XXX Assume everything else is immutable.  Not quite true...
 	return value
+
+
+# When a subtree is copied, certain hyperlinks must be copied as well.
+# - When copying into another context, all hyperlinks within the copied
+#   subtree must be copied.
+# - When copying within the same context, all outgoing hyperlinks
+#   must be copied as well as all hyperlinks within the copied subtree.
+#
+# XXX This code knows perhaps more than is good for it about the
+# representation of hyperlinks.  However it knows more about anchors
+# than would be good for code placed in module Hlinks...
+#
+def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
+	links = src_hyperlinks.getall()
+	newlinks = []
+	for a1, a2, dir, type in links:
+		uid1, aid1 = a1
+		uid2, aid2 = a2
+		if uidremap.has_key(uid1) and uidremap.has_key(uid2):
+			uid1 = uidremap[uid1]
+			uid2 = uidremap[uid2]
+			a1 = uid1, aid1
+			a2 = uid2, aid2
+			link = a1, a2, dir, type
+			newlinks.append(link)
+	if newlinks:
+		dst_hyperlinks.addlinks(newlinks)
+#
+def _copyoutgoinghyperlinks(hyperlinks, uidremap):
+	from Hlinks import DIR_1TO2, DIR_2TO1, DIR_2WAY
+	links = hyperlinks.getall()
+	newlinks = []
+	for a1, a2, dir, type in links:
+		uid1, aid1 = a1
+		uid2, aid2 = a2
+		if uidremap.has_key(uid1) and dir in (DIR_1TO2, DIR_2WAY) or \
+			uidremap.has_key(uid2) and dir in (DIR_2TO1, DIR_2WAY):
+			if uidremap.has_key(uid1):
+				uid1 = uidremap[uid1]
+				a1 = uid1, aid1
+			if uidremap.has_key(uid2):
+				uid2 = uidremap[uid2]
+				a2 = uid2, aid2
+			link = a1, a2, dir, type
+			newlinks.append(link)
+	if newlinks:
+		hyperlinks.addlinks(newlinks)
 
 
 # Keep statistics -- a counter per key.

@@ -432,7 +432,10 @@ class BlockView(ViewDialog, BasicDialog):
 	type, data = Clipboard.getclip()
 	if type <> 'node' or data == None:
 	    return None
-	Clipboard.setclip(type, data.DeepCopy())
+	if data.context is not self.root.context:
+	    data = data.CopyIntoContext(self.root.context)
+	else:
+	    Clipboard.setclip(type, data.DeepCopy())
 	return data
 
     def toclipboard(self, node):
