@@ -235,19 +235,20 @@ class SchedulerContext:
 				if debugevents: print 'scheduled_children+1 d',`arc.dstnode`,`arc`,event,arc.dstnode.scheduled_children,self.parent.timefunc()
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 			arc.timestamp = timestamp + arc.delay
-			if not arc.isstart and not arc.ismin and arc.srcnode is arc.dstnode and arc.event == 'begin':
-				# end arcs have lower priority than begin arcs
-				# this is important to get proper freeze
-				# behavior in constructs such as
-				# <par>
-				#   <par>
-				#     <img .../>
-				#   </par>
-				#   <video .../>
-				# </par>
-				prio = 1
-			else:
-				prio = 0
+##			if not arc.isstart and not arc.ismin and arc.srcnode is arc.dstnode and arc.event == 'begin':
+##				# end arcs have lower priority than begin arcs
+##				# this is important to get proper freeze
+##				# behavior in constructs such as
+##				# <par>
+##				#   <par>
+##				#     <img .../>
+##				#   </par>
+##				#   <video .../>
+##				# </par>
+##				prio = 1
+##			else:
+##				prio = 0
+			prio = 0
 			arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,None,None,arc.timestamp))
 			if arc.isstart:
 				arc.dstnode.set_start_time(arc.timestamp, 0)
