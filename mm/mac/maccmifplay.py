@@ -31,10 +31,13 @@ addpack.addpack('qt')
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "1"
 
-fss, ok = macfs.StandardGetFile('TEXT')
-if not ok: sys.exit(0)
+print
 
-sys.argv = ["maccmifplay", fss.as_pathname()]
+if len(sys.argv) < 2:
+	fss, ok = macfs.StandardGetFile('TEXT')
+	if not ok: sys.exit(0)
+	
+	sys.argv = ["maccmifplay", fss.as_pathname()]
 
 ##print "ENVIRON:", os.environ
 ##print "PATH:", sys.path
