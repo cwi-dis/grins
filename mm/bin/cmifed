@@ -50,8 +50,8 @@ do
 done
 
 python="$dir/mmpython/$ARCH/python"
-pythonlib="$dir/../lib/python"
 pythonsrc="$dir/python"
+pythonlib="$pythonsrc/Lib"
 
 CMIF="$dir"
 export CMIF
