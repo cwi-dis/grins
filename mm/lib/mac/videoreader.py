@@ -111,8 +111,32 @@ class _Reader:
 		return not self.videotrack is None
 		
 	def GetAudioFormat(self):
-		return audio.format.AudioFormatLinear('dummy_format', 'Dummy Audio Format', 
-			['mono'], 'linear-signed', blocksize=2, fpb=1, bps=16)
+		print 'audiofmt', self.audiodescr
+		bps = self.audiodescr['sampleSize']
+		nch = self.audiodescr['numChannels']
+		if nch == 1:
+			channels = ['mono']
+		elif nch == 2:
+			channels = ['left', 'right']
+		else:
+			channels = map(lambda x: str(x+1), range(nch))
+		if bps % 8:
+			# Funny bits-per sample. We pretend not to understand
+			blocksize = 0
+			fpb = 0
+		else:
+			# QuickTime is easy (for as far as we support it): samples are always a whole
+			# number of bytes, so frames are nchannels*samplesize, and there's one frame per block.
+			blocksize = (bps/8)*nch
+			fpb = 1
+		if self.audiodescr['dataFormat'] == 'raw ':
+			encoding = 'linear-excess'
+		elif self.audiodescr['dataFormat'] == 'twos':
+			encoding = 'linear-signed'
+		else:
+			encoding = 'quicktime-coding-%s'%self.audiodescr['dataFormat']
+		return audio.format.AudioFormatLinear('quicktime_audio', 'QuickTime Audio Format', 
+			['mono'], encoding, blocksize=blocksize, fpb=fpb, bps=bps)
 			
 	def GetAudioFrameRate(self):
 		return int(self.audiodescr['sampleRate'])

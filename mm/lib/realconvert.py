@@ -450,9 +450,9 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	warning = ''
 	if has_video and not videopin: 
 		has_video = 0
-		warning = 'Video support appears to be missing!\n'
+		warning = 'Video conversion support appears to be missing!\n'
 	if has_audio and not audiopin: 
-		warning = 'Audio support appears to be missing!\n'
+		warning = 'Audio conversion support appears to be missing!\n'
 		has_audio = 0
 	if warning:
 		import windowinterface
@@ -508,7 +508,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		if video_fmt.getformat() == imgformat.macrgb:
 			prod_format = producer.ENC_VIDEO_FORMAT_BGR32_NONINVERTED
 		else:
-			raise 'Unsupported video format', video_fmt.getformat()
+			raise 'Unsupported video source format', video_fmt.getformat()
 		w, h = video_fmt.getsize()
 		video_props.SetVideoSize(w, h)
 		video_props.SetVideoFormat(prod_format)
@@ -519,9 +519,14 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		video_frame_millisecs = int(1000.0 / reader.GetVideoFrameRate())
 		
 	if has_audio:
+		audio_fmt = reader.GetAudioFormat()
+		encoding = audio_fmt.getencoding()
+		if not encoding in ('linear-excess', 'linear-signed'):
+			has_audio = 0
+			windowinterface.showmessage('Converting video only: cannot handle %s audio\n(linear audio only)')
+	if has_audio:
 		audio_props = audiopin.GetPinProperties()
 		audio_props.SetSampleRate(reader.GetAudioFrameRate())
-		audio_fmt = reader.GetAudioFormat()
 		audio_props.SetNumChannels(audio_fmt.getnchannels())
 		audio_props.SetSampleSize(audio_fmt.getbps())
 
@@ -541,16 +546,16 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	audio_time = video_time = 0
 	audio_data = video_data = None
 	if has_audio:
-		audio_data = reader.ReadAudio(audio_inputsize_frames)
+		audio_data, xxxaudiotime = reader.ReadAudio(audio_inputsize_frames)
 	if not audio_data:
 		audio_done = 1
 	if has_video:
-		video_data = reader.ReadVideo()
+		video_data, xxxvideotime = reader.ReadVideo()
 	if not video_data:
 		video_done = 1
 	while not audio_done or not video_done:
 		if not audio_done:
-			next_audio_data = reader.ReadAudio(audio_inputsize_frames)
+			next_audio_data, xxxaudiotime = reader.ReadAudio(audio_inputsize_frames)
 			if not next_audio_data:
 				audio_done = 1
 				audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
@@ -559,7 +564,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 			audio_time = audio_time + audio_frame_millisecs
 			audio_data = next_audio_data
 		if not video_done:
-			next_video_data = reader.ReadVideo()
+			next_video_data, xxxvideotime = reader.ReadVideo()
 			if not next_video_data:
 				video_done = 1
 				video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
