@@ -221,11 +221,9 @@ class NodeWrapper(Wrapper):
 		namelist = ['name', 'channel', 'comment']
 		if self.node.GetType() == 'bag':
 			namelist.append('bag_index')
-		try:
-			# Get the channel class (should be a subroutine!)
-			cname = MMAttrdefs.getattr(self.node, 'channel')
-			cattrs = self.context.channeldict[cname]
-			ctype = cattrs['type']
+		# Get the channel class (should be a subroutine!)
+		ctype = self.node.GetChannelType()
+		if channelmap.has_key(ctype):
 			cclass = channelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.node_attrs
@@ -236,8 +234,6 @@ class NodeWrapper(Wrapper):
 			for name in cclass.node_attrs:
 				if name in namelist: continue
 				namelist.append(name)
-		except: # XXX be more specific!
-			pass # Ignore errors in the above
 		# Merge in nonstandard attributes (except synctolist!)
 		extras = []
 		for name in self.node.GetAttrDict().keys():
@@ -289,9 +285,6 @@ class ChannelWrapper(Wrapper):
 	def setattr(self, name, value):
 		if name == '.cname':
 			self.editmgr.setchannelname(self.name, value)
-			self.change_channel_name(self.editmgr.root, \
-						self.name, value)
-			# XXX Should also patch styles?
 			self.name = value
 		else:
 			self.editmgr.setchannelattr(self.name, name, value)
@@ -307,8 +300,11 @@ class ChannelWrapper(Wrapper):
 	#
 	def attrnames(self):
 		namelist = ['.cname', 'type', 'comment']
-		try:
+		if self.attrdict.has_key('type'):
 			ctype = self.attrdict['type']
+		else:
+			ctype = 'unknown'
+		if channelmap.has_key(ctype):
 			cclass = channelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.chan_attrs
@@ -316,8 +312,6 @@ class ChannelWrapper(Wrapper):
 				if name in namelist: continue
 				if MMAttrdefs.getdef(name)[5] == 'channel':
 					namelist.append(name)
-		except: # XXX be more specific!
-			pass # Ignore errors in the above
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.attrdict.keys():
@@ -344,17 +338,6 @@ class ChannelWrapper(Wrapper):
 	def parsevalue(self, name, string):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, string, self.context)
-	#
-	def change_channel_name(self, node, oldname, newname):
-		try:
-			cname = node.GetRawAttr('channel')
-		except MMExc.NoSuchAttrError:
-			cname = None
-		if cname == oldname:
-			self.editmgr.setnodeattr(node, 'channel', newname)
-		if node.GetType() in interiortypes:
-			for c in node.GetChildren():
-				self.change_channel_name(c, oldname, newname)
 
 
 class StyleWrapper(Wrapper):
@@ -402,16 +385,17 @@ class StyleWrapper(Wrapper):
 	#
 	def attrnames(self):
 		namelist = ['type', 'channel', 'comment']
-		try:
-			# Get the channel class (should be a subroutine!)
+		# Get the channel class (should be a subroutine!)
+		if self.attrdict.has_key('type'):
 			ctype = self.attrdict['type']
+		else:
+			ctype = 'unknown'
+		if channelmap.has_key(ctype):
 			cclass = channelmap[ctype]
 			# Add the class's declaration of attributes
 			for name in cclass.node_attrs + cclass.chan_attrs:
 				if MMAttrdefs.getdef(name)[5] <> 'raw':
 					namelist.append(name)
-		except: # XXX be more specific!
-			pass # Ignore errors in the above
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.attrdict.keys():

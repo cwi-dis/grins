@@ -374,9 +374,9 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def scantree(self, node, focus, arcs):
 		if node.GetType() in leaftypes:
-			cname = MMAttrdefs.getattr(node, 'channel')
-			if cname in self.context.channelnames:
-				obj = NodeBox().init(self, node, cname)
+			channel = node.GetChannel()
+			if channel:
+				obj = NodeBox().init(self, node, channel.name)
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
@@ -395,8 +395,7 @@ class ChannelView(ViewDialog, GLDialog):
 				continue
 			if self.viewroot.IsAncestorOf(xnode) and \
 				xnode.GetType() in leaftypes and \
-				MMAttrdefs.getattr(xnode, 'channel') in \
-					self.context.channelnames:
+				xnode.GetChannel():
 				obj = ArcBox().init(self, \
 					xnode, xside, delay, ynode, yside)
 				arcs.append(obj)
@@ -508,9 +507,9 @@ class GO:
 
 	def nodebox(self, node):
 		# Compute the left/right sides from the channel position
-		cname = MMAttrdefs.getattr(node, 'channel')
-		nchannels = len(self.mother.context.channelnames)
-		i = self.mother.context.channelnames.index(cname)
+		channel = node.GetChannel()
+		nchannels = len(self.mother.context.channels)
+		i = self.mother.context.channels.index(channel)
 		width = self.mother.width / nchannels
 		left = (i + 0.1) * width
 		right = (i + 0.9) * width

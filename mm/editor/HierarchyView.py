@@ -726,13 +726,8 @@ class Object:
 						gl.endline()
 
 	def drawchannelname(self, l, t, r, b):
-		ctype = ''
-		cname = MMAttrdefs.getattr(self.node, 'channel')
-		cdict = self.node.GetContext().channeldict
-		if cdict.has_key(cname):
-			cattrs = cdict[cname]
-			if cattrs.has_key('type'):
-				ctype = cattrs['type']
+		cname = self.node.GetChannelName()
+		ctype = self.node.GetChannelType()
 		map = {'sound': 'S', 'image': 'I', 'movie': 'M', \
 			  'text': 'T', 'python': 'P', 'shell': '!'}
 		if map.has_key(ctype):
