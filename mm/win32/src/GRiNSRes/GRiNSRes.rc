@@ -2349,6 +2349,16 @@ IDI_WAITSTOP            ICON    DISCARDABLE     "res\\waitstop.ico"
 IDI_IDLE                ICON    DISCARDABLE     "res\\idle.ico"
 IDI_ZOOMIN              ICON    DISCARDABLE     "res\\zoomin.ico"
 IDI_ZOOMOUT             ICON    DISCARDABLE     "res\\zoomout.ico"
+IDI_ICON_PAROPEN        ICON    DISCARDABLE     "res\\Par_open.ico"
+IDI_ICON_EXCLOPEN       ICON    DISCARDABLE     "res\\Excl_open.ico"
+IDI_ICON_SWITCHOPEN     ICON    DISCARDABLE     "res\\Switch_open.ico"
+IDI_ICON_PRIOOPEN       ICON    DISCARDABLE     "res\\Prio_open.ico"
+IDI_ICON_SEQOPEN        ICON    DISCARDABLE     "res\\Seq_open.ico"
+IDI_ICON_PARCLOSED      ICON    DISCARDABLE     "res\\Par_close.ico"
+IDI_ICON_SEQCLOSED      ICON    DISCARDABLE     "res\\Seq_close.ico"
+IDI_ICON_SWITCHCLOSED   ICON    DISCARDABLE     "res\\Switch_close.ico"
+IDI_ICON_PRIOCLOSED     ICON    DISCARDABLE     "res\\Prio_close.ico"
+IDI_ICON_EXCLCLOSED     ICON    DISCARDABLE     "res\\Excl_close.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -563,6 +563,10 @@ class StructureObjWidget(MMNodeWidget):
 				icon = 'closed'
 			else:
 				icon = 'open'
+			ntype = node.GetType()
+			if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
+				ntype = ''
+			icon = ntype + icon
 			self.collapsebutton = Icon(self, self.mother)
 			self.collapsebutton.set_properties(callbackable=1, selectable=0)
 			self.collapsebutton.set_icon(icon)
@@ -599,8 +603,11 @@ class StructureObjWidget(MMNodeWidget):
 		for c in self.children:
 			c.remove_set_armedmode()
 		self.node.collapsed = 1
+		ntype = self.node.GetType()
+		if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
+			ntype = ''
 		if self.collapsebutton is not None:
-			self.collapsebutton.icon = 'closed'
+			self.collapsebutton.icon = ntype + 'closed'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 		self.set_need_resize()
@@ -613,8 +620,11 @@ class StructureObjWidget(MMNodeWidget):
 
 	def uncollapse(self):
 		self.node.collapsed = 0
+		ntype = self.node.GetType()
+		if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
+			ntype = ''
 		if self.collapsebutton is not None:
-			self.collapsebutton.icon = 'open'
+			self.collapsebutton.icon = ntype + 'open'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
 		self.set_need_resize()
