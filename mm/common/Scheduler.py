@@ -521,6 +521,8 @@ class Scheduler(scheduler):
 			self.runqueues[PRIO_PREARM_NOW] = []
 			return queue
 		if self.runqueues[PRIO_LO]:
+			import windowinterface
+			windowinterface.lopristarting()
 			queue = [self.runqueues[PRIO_LO][0]]
 			del self.runqueues[PRIO_LO][0]
 			return queue
