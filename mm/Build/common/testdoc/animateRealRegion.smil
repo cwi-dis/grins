@@ -6,7 +6,7 @@
 	Version: Sep 4, 2000, v1		
 	Module: Animation		
 	Feature: animateMotion + animateColor
-	File Name: animateRegion.smil
+	File Name: animateRealRegion.smil
 	Media Components: 1 JPG
 	Expected Behavior: the real-pixel animation moves along the path with changing backgroundColor
 
