@@ -24,6 +24,8 @@ ARROWCOLOR = (0,255,0)
 
 EPSILON = GAPSIZE
 
+DRAWCOLLAPSEDPARMEDIACHILD = 1
+
 ######################################################################
 # Create new widgets
 
@@ -474,6 +476,33 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		l,r,t = self.need_draghandles
 		displist.drawfbox((0,0,0), (l,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
 		displist.drawfbox((0,0,0), (r-DRAGHANDLESIZE,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
+
+	def drawnodecontent(self, displist, (x,y,w,h), node):
+		if node.GetChannelType() == 'brush':
+			displist.drawfbox(MMAttrdefs.getattr(node, 'fgcolor'), (x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
+			displist.fgcolor(TEXTCOLOR)
+			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
+		elif w > 0 and h > 0:
+			self.do_draw_image(self.__get_image_filename(node), (x,y,w,h), displist)
+
+	def __get_image_filename(self, node):
+		# return a file name for a thumbnail image
+		url = node.GetAttrDef('file', None)
+		if not url:
+			# no file attr, so no thumbnail
+			return None
+
+		media_type = MMmimetypes.guess_type(url)[0]
+
+		channel_type = node.GetChannelType()
+		if self.mother.thumbnails and channel_type == 'image':
+			url = node.context.findurl(url)
+			try:
+				return MMurl.urlretrieve(url)[0]
+			except IOError, arg:
+				self.set_infoicon('error', 'Cannot load image: %s'%`url`)
+		# either not an image, or image couldn't be found
+		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	# used by MediaWidget and CommentWidget
 	def do_draw_image(self, image_filename, (x,y,w,h), displist):
@@ -1415,14 +1444,14 @@ class VerticalWidget(StructureObjWidget):
 	def draw(self, displist):
 		if self.iscollapsed() and self.timeline is None:
 			l,t,r,b = self.pos_abs
-			i = t + VEDGSIZE + TITLESIZE
+			t = t + VEDGSIZE + TITLESIZE
 			l = l + HEDGSIZE
 			r = r - HEDGSIZE
 			step = 8
 			if r > l:
-				while i < b:
-					displist.drawline(TEXTCOLOR, [(l, i),(r, i)])
-					i = i + step
+				while t < b:
+					displist.drawline(TEXTCOLOR, [(l, t),(r, t)])
+					t = t + step
 		StructureObjWidget.draw(self, displist)
 
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
@@ -1664,7 +1693,16 @@ class ParWidget(VerticalWidget):
 		else:
 			color = PARCOLOR_NOPLAY
 		displist.drawfbox(color, self.get_box())
-		VerticalWidget.draw(self, displist)
+		children = self.node.GetChildren()
+		if DRAWCOLLAPSEDPARMEDIACHILD and self.iscollapsed() and self.timeline is None and children and children[0].GetType() in MMTypes.mediatypes:
+			l,t,r,b = self.pos_abs
+			t = t + VEDGSIZE + TITLESIZE
+			l = l + HEDGSIZE
+			r = r - HEDGSIZE
+			self.drawnodecontent(displist, (l,t,r-l,b-t), children[0])
+			StructureObjWidget.draw(self, displist)
+		else:
+			VerticalWidget.draw(self, displist)
 
 # and so forth..
 class ExclWidget(SeqWidget):
@@ -1912,32 +1950,9 @@ class MediaWidget(MMNodeWidget):
 		ntype = self.node.GetType()
 
 		# Draw the image.
-		if self.node.GetChannelType() == 'brush':
-			displist.drawfbox(MMAttrdefs.getattr(self.node, 'fgcolor'), (x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
-			displist.fgcolor(TEXTCOLOR)
-			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
-		elif w > 0 and h > 0:
-			self.do_draw_image(self.__get_image_filename(), (x,y,w,h), displist)
+		self.drawnodecontent(displist, (x,y,w,h), self.node)
+
 		MMNodeWidget.draw(self, displist)
-
-	def __get_image_filename(self):
-		# return a file name for a thumbnail image
-		url = self.node.GetAttrDef('file', None)
-		if not url:
-			# no file attr, so no thumbnail
-			return None
-
-		media_type = MMmimetypes.guess_type(url)[0]
-
-		channel_type = self.node.GetChannelType()
-		if self.mother.thumbnails and channel_type == 'image':
-			url = self.node.context.findurl(url)
-			try:
-				return MMurl.urlretrieve(url)[0]
-			except IOError, arg:
-				self.set_infoicon('error', 'Cannot load image: %s'%`url`)
-		# either not an image, or image couldn't be found
-		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		if self.need_draghandles is not None:
