@@ -1,10 +1,15 @@
-from X_windowbase import *
 import X_windowbase
+
+from types import *
+import math
+
+[_X, _Y, _WIDTH, _HEIGHT] = range(4)
 
 _rb_message = """\
 Use left mouse button to draw a box.
 Click `Done' when ready or `Cancel' to cancel."""
 _rb_done = '_rb_done'			# exception to stop create_box loop
+_in_create_box = None
 
 # size of arrow head
 ARR_LENGTH = 18
@@ -12,207 +17,55 @@ ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(X_windowbase._Toplevel):
-	def newwindow(self, x, y, w, h, title, **options):
-		return apply(_Window, (self, x, y, w, h, title, FALSE), options)
+	def newwindow(self, x, y, w, h, title, pixmap = 0):
+		return _Window(self, x, y, w, h, title, 0, pixmap)
 
-	def newcmwindow(self, x, y, w, h, title, **options):
-		return apply(_Window, (self, x, y, w, h, title, TRUE), options)
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0):
+		return _Window(self, x, y, w, h, title, 1, pixmap)
 
 	def getsize(self):
-		return X_windowbase._mscreenwidth, X_windowbase._mscreenheight
+		return toplevel._mscreenwidth, toplevel._mscreenheight
 
 class _Window(X_windowbase._Window):
-	def _new_window(self, coordinates, defcmap, **options):
-		if len(coordinates) == 1 and type(coordinates) is TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, ('arg count mismatch', `coordinates`)
-		x, y, w, h = coordinates
-		return apply(_Window, (self, x, y, w, h, '', defcmap), options)
-
-	def showwindow(self):
-		# dummy for now
-		pass
-
-	def dontshowwindow(self):
-		# dummy for now
-		pass
-
-	def _close_win(self):
-		# close the X window connected to this instance
-		if self._parent_window == toplevel:
-			raise error, 'can\'t close top-level window'
-		self._close_subwins()
-		menu_title = self._menu_title
-		menu_list = self._menu_list
-		self.destroy_menu()
-		self._menu_title = menu_title
-		self._menu_list = menu_list
-		form = self._form
-		if hasattr(self, '_pixmap'):
-			self._pixmap = None
-		form.RemoveCallback('exposeCallback', self._expose_callback,
-				    None)
-		form.RemoveCallback('resizeCallback', self._resize_callback,
-				    None)
-		form.RemoveCallback('inputCallback', self._input_callback,
-				    None)
-		form.UnmanageChild()
-		form.DestroyWidget()
-		self._form = None
-		self._gc = None
-
-	def _close_subwins(self):
-		for win in self._subwindows:
-			win._close_win()
-		self._subwindows_closed = TRUE
-
-	def _open_win(self):
-		# re-open an X window for this instance
-		if self.is_closed():
-			raise error, 'window already closed'
-		if self._form is not None:
-			raise error, 'window not closed'
-		pwin = self._parent_window
-		x, y, w, h = self._sizes
-		x, y, w, h = pwin._convert_coordinates(x, y, w, h)
-		self._xbgcolor = self._convert_color(self._bgcolor)
-		self._xfgcolor = self._convert_color(self._fgcolor)
-		attrs = {'resizePolicy': Xmd.RESIZE_NONE,
-			 'width': w, 'height': h, 'x': x, 'y': y,
-			 'marginHeight': 0, 'marginWidth': 0,
-			 'colormap': self._colormap,
-			 'visual': self._visual,
-			 'depth': self._depth}
-		self._form = pwin._form.CreateManagedWidget('subwin',
-			Xm.DrawingArea, attrs)
-		self._do_open_win()
-		if self._menu_title or self._menu_list:
-			self.create_menu(self._menu_list,
-					 title = self._menu_title)
-		self._open_subwins()
-
-	def _open_subwins(self):
-		if self.is_closed():
-			raise error, 'window already closed'
-		for win in self._subwindows:
-			if not win.is_closed():
-				win._open_win()
-		self._subwindows_closed = FALSE
-
 	def newdisplaylist(self, *bgcolor):
-		if len(bgcolor) == 1 and type(bgcolor[0]) is TupleType:
+		if bgcolor != ():
 			bgcolor = bgcolor[0]
-		if len(bgcolor) == 3:
-			pass
-		elif len(bgcolor) == 0:
-			# inherit bgcolor from window
-			bgcolor = self._bgcolor
 		else:
-			raise TypeError, 'arg count mismatch'
+			bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
 
 	def getgeometry(self):
-		if self.is_closed():
-			raise error, 'window already closed'
-		h = float(X_windowbase._mscreenheight) / X_windowbase._screenheight
-		w = float(X_windowbase._mscreenwidth) / X_windowbase._screenwidth
-		if not self._form:
-			x, y = self._origpos
-			return x, y, self._width * w, self._height * h
 		x, y = self._form.TranslateCoords(0, 0)
-		return float(x) * w, y * h, self._width * w, self._height * h
+		w, h = self._rect[2:]
+		return float(x) / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
+		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
 
-	def _rb_finish(self):
-		form = self._form
-		form.RemoveEventHandler(X.ButtonPressMask, FALSE,
-					self._start_rb, None)
-		form.RemoveEventHandler(X.ButtonMotionMask, FALSE,
-					self._do_rb, None)
-		form.RemoveEventHandler(X.ButtonReleaseMask, FALSE,
-					self._end_rb, None)
-		form.UngrabButton(X.AnyButton, X.AnyModifier)
-		self._open_subwins()
-		self._rb_dialog.close()
-		if self._rb_dl and not self._rb_dl.is_closed():
-			self._rb_dl.render()
-		self._rb_display.close()
-		self._rb_curdisp.close()
-		del self._rb_callback
-		del self._rb_dialog
-		del self._rb_dl
-		del self._rb_display
-		del self._gc_rb
-
-	def _rb_cvbox(self):
-		x0 = self._rb_start_x
-		y0 = self._rb_start_y
-		x1 = x0 + self._rb_width
-		y1 = y0 + self._rb_height
-		if x1 < x0:
-			x0, x1 = x1, x0
-		if y1 < y0:
-			y0, y1 = y1, y0
-		width = self._width
-		height = self._height
-		x, y, w, h = float(x0) / (width - 1), \
-			  float(y0) / (height - 1), \
-			  float(x1 - x0) / (width - 1), \
-			  float(y1 - y0) / (height - 1)
-		if x < 0: x = 0
-		if y < 0: y = 0
-		if x + w > 1: w = 1 - x
-		if y + h > 1: h = 1 - y
-		return x, y, w, h
-
-	def _rb_done(self):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, self._rb_cvbox())
-		raise _rb_done
-
-	def _rb_cancel(self):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, ())
-		raise _rb_done
-
-	def _rb_draw(self):
-		x = self._rb_start_x
-		y = self._rb_start_y
-		w = self._rb_width
-		h = self._rb_height
-		if w < 0:
-			x = x + w
-			w = -w
-		if h < 0:
-			y = y + h
-			h = -h
-		self._gc_rb.DrawRectangle(x, y, w, h)
-
-	def create_box(self, msg, callback, *box):
-		if self.is_closed():
-			raise error, 'window already closed'
-		if len(box) == 0:
-			box = None
-		elif len(box) == 1:
-			box = box[0]
-			if type(box) is not TupleType or len(box) != 4:
-				raise TypeError, 'bad arguments'
-		elif len(box) != 4:
-			raise TypeError, 'bad arguments'
-
+	def create_box(self, msg, callback, box = None):
+		import Xcursorfont
+		global _in_create_box
+		_in_create_box = self
+		self.pop()
 		if msg:
 			msg = msg + '\n\n' + _rb_message
 		else:
 			msg = _rb_message
-		self._close_subwins()
-		self._rb_dl = self._active_display_list
+		self._rb_dl = self._active_displist
 		if self._rb_dl:
 			d = self._rb_dl.clone()
 		else:
 			d = self.newdisplaylist()
-		for win in self._subwindows:
+		self._rb_transparent = []
+		sw = self._subwindows[:]
+		sw.reverse()
+		r = Xlib.CreateRegion()
+		for win in sw:
+			if not win._transparent:
+				# should do this recursively...
+				self._rb_transparent.append(win)
+				win._transparent = 1
+				d.drawfbox(win._bgcolor, win._sizes)
+				apply(r.UnionRectWithRegion, win._rect)
+		for win in sw:
 			b = win._sizes
 			if b != (0, 0, 1, 1):
 				d.drawbox(b)
@@ -220,6 +73,10 @@ class _Window(X_windowbase._Window):
 		d.fgcolor((255, 0, 0))
 		if box:
 			d.drawbox(box)
+		if self._rb_transparent:
+			self._mkclip()
+			self._do_expose(r)
+			self._rb_reg = r
 		d.render()
 		self._rb_curdisp = d
 		self._rb_dialog = showmessage(
@@ -247,8 +104,7 @@ class _Window(X_windowbase._Window):
 		self._gc_rb = form.GetGC(v)
 		self._rb_box = box
 		if box:
-			x, y, w, h = self._convert_coordinates(box[0], box[1],
-							       box[2], box[3])
+			x, y, w, h = self._convert_coordinates(box)
 			if w < 0:
 				x, w = x + w, -w
 			if h < 0:
@@ -260,93 +116,17 @@ class _Window(X_windowbase._Window):
 			self._rb_height = h
 		# wait until box has been drawn or canceled
 		try:
+			toplevel._setcursor()
 			Xt.MainLoop()
 		except _rb_done:
 			pass
+		toplevel._setcursor('watch')
 
-	def _start_rb(self, w, data, e):
-		self._rb_display.render()
-		self._rb_curdisp.close()
-		if self._rb_box:
-			x = self._rb_start_x
-			y = self._rb_start_y
-			w = self._rb_width
-			h = self._rb_height
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			if x + w/4 < e.x < x + w*3/4:
-				self._rb_cx = 1
-			else:
-				self._rb_cx = 0
-				if e.x >= x + w*3/4:
-					x, w = x + w, -w
-			if y + h/4 < e.y < y + h*3/4:
-				self._rb_cy = 1
-			else:
-				self._rb_cy = 0
-				if e.y >= y + h*3/4:
-					y, h = y + h, -h
-			if self._rb_cx and self._rb_cy:
-				self._rb_last_x = e.x
-				self._rb_last_y = e.y
-			else:
-				if not self._rb_cx:
-					self._rb_start_x = x + w
-					self._rb_width = e.x - self._rb_start_x
-				if not self._rb_cy:
-					self._rb_start_y = y + h
-					self._rb_height = e.y - self._rb_start_y
-		else:
-			self._rb_start_x = e.x
-			self._rb_start_y = e.y
-			self._rb_width = self._rb_height = 0
-			self._rb_cx = self._rb_cy = 0
-		self._rb_draw()
-
-	def _rb_common(self, e):
-		self._rb_draw()
-		if self._rb_cx and self._rb_cy:
-			dx = e.x - self._rb_last_x
-			dy = e.y - self._rb_last_y
-			self._rb_last_x = e.x
-			self._rb_last_y = e.y
-			self._rb_start_x = self._rb_start_x + dx
-			if self._rb_start_x + self._rb_width > self._width:
-				self._rb_start_x = self._width - self._rb_width
-			if self._rb_start_x < 0:
-				self._rb_start_x = 0
-			self._rb_start_y = self._rb_start_y + dy
-			if self._rb_start_y + self._rb_height > self._height:
-				self._rb_start_y = self._height - self._rb_height
-			if self._rb_start_y < 0:
-				self._rb_start_y = 0
-		else:
-			if not self._rb_cx:
-				self._rb_width = e.x - self._rb_start_x
-			if not self._rb_cy:
-				self._rb_height = e.y - self._rb_start_y
-		self._rb_box = 1
-
-	def _do_rb(self, w, data, event):
-		self._rb_common(event)
-		self._rb_draw()
-
-	def _end_rb(self, w, data, event):
-		self._rb_common(event)
-		self._rb_curdisp = self._rb_display.clone()
-		self._rb_curdisp.fgcolor((255, 0, 0))
-		self._rb_curdisp.drawbox(self._rb_cvbox())
-		self._rb_curdisp.render()
-
-	def hitarrow(self, x, y, sx, sy, dx, dy):
+	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
-		if self.is_closed():
-			raise error, 'window already closed'
-		sx, sy = self._convert_coordinates(sx, sy, 0, 0)[:2]
-		dx, dy = self._convert_coordinates(dx, dy, 0, 0)[:2]
-		x, y = self._convert_coordinates(x, y, 0, 0)[:2]
+		sx, sy = self._convert_coordinates(src)
+		dx, dy = self._convert_coordinates(dst)
+		x, y = self._convert_coordinates(point)
 		lx = dx - sx
 		ly = dy - sy
 		if lx == ly == 0:
@@ -367,18 +147,234 @@ class _Window(X_windowbase._Window):
 			return FALSE
 		return TRUE
 
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0):
+		return _SubWindow(self, coordinates, 0, pixmap, transparent)
+
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0):
+		return _SubWindow(self, coordinates, 1, pixmap, transparent)
+
+	# have to override these for create_box
+	def _input_callback(self, form, client_data, call_data):
+		if _in_create_box:
+			return
+		X_windowbase._Window._input_callback(self, form, client_data,
+						     call_data)
+
+	def _resize_callback(self, form, client_data, call_data):
+		raised = 0
+		if _in_create_box:
+			try:
+				_in_create_box._rb_cancel()
+			except _rb_done:
+				raised = 1
+		X_windowbase._Window._resize_callback(self, form, client_data,
+						      call_data)
+		if raised:
+			raise _rb_done
+
+	def _delete_callback(self, form, client_data, call_data):
+		raised = 0
+		if _in_create_box:
+			try:
+				_in_create_box._rb_cancel()
+			except _rb_done:
+				raised = 1
+		X_windowbase._Window._delete_callback(self, form, client_data,
+						      call_data)
+		if raised:
+			raise _rb_done
+
+	# supporting methods for create_box
+	def _rb_finish(self):
+		global _in_create_box
+		_in_create_box = None
+		if self._rb_transparent:
+			for win in self._rb_transparent:
+				win._transparent = 0
+			self._mkclip()
+			self._do_expose(self._rb_reg)
+			del self._rb_reg
+		del self._rb_transparent
+		form = self._form
+		form.RemoveEventHandler(X.ButtonPressMask, FALSE,
+					self._start_rb, None)
+		form.RemoveEventHandler(X.ButtonMotionMask, FALSE,
+					self._do_rb, None)
+		form.RemoveEventHandler(X.ButtonReleaseMask, FALSE,
+					self._end_rb, None)
+		form.UngrabButton(X.AnyButton, X.AnyModifier)
+		self._rb_dialog.close()
+		if self._rb_dl and not self._rb_dl.is_closed():
+			self._rb_dl.render()
+		self._rb_display.close()
+		self._rb_curdisp.close()
+		del self._rb_callback
+		del self._rb_dialog
+		del self._rb_dl
+		del self._rb_display
+		del self._gc_rb
+
+	def _rb_cvbox(self):
+		x0 = self._rb_start_x
+		y0 = self._rb_start_y
+		x1 = x0 + self._rb_width
+		y1 = y0 + self._rb_height
+		if x1 < x0:
+			x0, x1 = x1, x0
+		if y1 < y0:
+			y0, y1 = y1, y0
+		x, y, width, height = self._rect
+		if x0 < x: x0 = x
+		if x0 >= x + width: x0 = x + width - 1
+		if x1 < x: x1 = x
+		if x1 >= x + width: x1 = x + width - 1
+		if y0 < y: y0 = y
+		if y0 >= y + height: y0 = y + height - 1
+		if y1 < y: y1 = y
+		if y1 >= y + height: y1 = y + height - 1
+		return float(x0 - x) / (width - 1), \
+		       float(y0 - y) / (height - 1), \
+		       float(x1 - x0) / (width - 1), \
+		       float(y1 - y0) / (height - 1)
+
+	def _rb_done(self):
+		callback = self._rb_callback
+		self._rb_finish()
+		apply(callback, self._rb_cvbox())
+		raise _rb_done
+
+	def _rb_cancel(self):
+		callback = self._rb_callback
+		self._rb_finish()
+		apply(callback, ())
+		raise _rb_done
+
+	def _rb_draw(self):
+		x = self._rb_start_x
+		y = self._rb_start_y
+		w = self._rb_width
+		h = self._rb_height
+		if w < 0:
+			x, w = x + w, -w
+		if h < 0:
+			y, h = y + h, -h
+		self._gc_rb.DrawRectangle(x, y, w, h)
+
+	def _rb_constrain(self, event):
+		x, y, w, h = self._rect
+		if event.x < x:
+			event.x = x
+		if event.x >= x + w:
+			event.x = x + w - 1
+		if event.y < y:
+			event.y = y
+		if event.y >= y + h:
+			event.y = y + h - 1
+
+	def _rb_common(self, event):
+		self._rb_draw()
+		self._rb_constrain(event)
+		if self._rb_cx and self._rb_cy:
+			x, y, w, h = self._rect
+			dx = event.x - self._rb_last_x
+			dy = event.y - self._rb_last_y
+			self._rb_last_x = event.x
+			self._rb_last_y = event.y
+			self._rb_start_x = self._rb_start_x + dx
+			if self._rb_start_x + self._rb_width > x + w:
+				self._rb_start_x = x + w - self._rb_width
+			if self._rb_start_x < x:
+				self._rb_start_x = x
+			self._rb_start_y = self._rb_start_y + dy
+			if self._rb_start_y + self._rb_height > y + h:
+				self._rb_start_y = y + h - self._rb_height
+			if self._rb_start_y < y:
+				self._rb_start_y = y
+		else:
+			if not self._rb_cx:
+				self._rb_width = event.x - self._rb_start_x
+			if not self._rb_cy:
+				self._rb_height = event.y - self._rb_start_y
+		self._rb_box = 1
+
+	def _start_rb(self, w, data, event):
+		# called on mouse press
+		self._rb_display.render()
+		self._rb_curdisp.close()
+		self._rb_constrain(event)
+		if self._rb_box:
+			x = self._rb_start_x
+			y = self._rb_start_y
+			w = self._rb_width
+			h = self._rb_height
+			if w < 0:
+				x, w = x + w, -w
+			if h < 0:
+				y, h = y + h, -h
+			if x + w/4 < event.x < x + w*3/4:
+				self._rb_cx = 1
+			else:
+				self._rb_cx = 0
+				if event.x >= x + w*3/4:
+					x, w = x + w, -w
+			if y + h/4 < event.y < y + h*3/4:
+				self._rb_cy = 1
+			else:
+				self._rb_cy = 0
+				if event.y >= y + h*3/4:
+					y, h = y + h, -h
+			if self._rb_cx and self._rb_cy:
+				self._rb_last_x = event.x
+				self._rb_last_y = event.y
+				self._rb_start_x = x
+				self._rb_start_y = y
+				self._rb_width = w
+				self._rb_height = h
+			else:
+				if not self._rb_cx:
+					self._rb_start_x = x + w
+					self._rb_width = event.x - self._rb_start_x
+				if not self._rb_cy:
+					self._rb_start_y = y + h
+					self._rb_height = event.y - self._rb_start_y
+		else:
+			self._rb_start_x = event.x
+			self._rb_start_y = event.y
+			self._rb_width = self._rb_height = 0
+			self._rb_cx = self._rb_cy = 0
+		self._rb_draw()
+
+	def _do_rb(self, w, data, event):
+		# called on mouse drag
+		self._rb_common(event)
+		self._rb_draw()
+
+	def _end_rb(self, w, data, event):
+		# called on mouse release
+		self._rb_common(event)
+		self._rb_curdisp = self._rb_display.clone()
+		self._rb_curdisp.fgcolor((255, 0, 0))
+		self._rb_curdisp.drawbox(self._rb_cvbox())
+		self._rb_curdisp.render()
+
+class _SubWindow(X_windowbase._BareSubWindow, _Window):
+	def getgeometry(self):
+		return self._sizes
+
 class _DisplayList(X_windowbase._DisplayList):
-	def _do_render(self, entry, gc, fg, expose):
+	def _do_render(self, entry, region):
 		cmd = entry[0]
-		if cmd == 'linewidth':
-			gc.line_width = entry[1]
-		elif cmd == 'fpolygon':
+		w = self._window
+		gc = w._gc
+		if cmd == 'fpolygon':
+			fg = gc.foreground
 			gc.foreground = entry[1]
-			gc.FillPolygon(entry[2], X.Convex, X.CoordModeOrigin)
+			gc.FillPolygon(entry[2], X.Convex,
+				       X.CoordModeOrigin)
 			gc.foreground = fg
 		elif cmd == '3dbox':
-			cl, ct, cr, cb = entry[1:1+4]
-			l, t, w, h = entry[5:5+4]
+			cl, ct, cr, cb = entry[1]
+			l, t, w, h = entry[2]
 			r, b = l + w, t + h
 			l = l+1
 			t = t+1
@@ -392,6 +388,7 @@ class _DisplayList(X_windowbase._DisplayList):
 			tt = t + 2
 			rr = r - 2
 			bb = b - 3
+			fg = gc.foreground
 			gc.foreground = cl
 			gc.FillPolygon([(l1, t1), (ll, tt), (ll, bb), (l1, b1)],
 				       X.Convex, X.CoordModeOrigin)
@@ -406,7 +403,7 @@ class _DisplayList(X_windowbase._DisplayList):
 				       X.Convex, X.CoordModeOrigin)
 			gc.foreground = fg
 		elif cmd == 'diamond':
-			x, y, w, h = entry[1:]
+			x, y, w, h = entry[1]
 			gc.DrawLines([(x, y + h/2),
 				      (x + w/2, y),
 				      (x + w, y + h/2),
@@ -414,8 +411,9 @@ class _DisplayList(X_windowbase._DisplayList):
 				      (x, y + h/2)],
 				     X.CoordModeOrigin)
 		elif cmd == 'fdiamond':
+			fg = gc.foreground
 			gc.foreground = entry[1]
-			x, y, w, h = entry[2:]
+			x, y, w, h = entry[2]
 			gc.FillPolygon([(x, y + h/2),
 					(x + w/2, y),
 					(x + w, y + h/2),
@@ -424,8 +422,8 @@ class _DisplayList(X_windowbase._DisplayList):
 				       X.Convex, X.CoordModeOrigin)
 			gc.foreground = fg
 		elif cmd == '3ddiamond':
-			cl, ct, cr, cb = entry[1:1+4]
-			l, t, w, h = entry[5:5+4]
+			cl, ct, cr, cb = entry[1]
+			l, t, w, h = entry[2]
 			r = l + w
 			b = t + h
 			x = l + w/2
@@ -435,6 +433,7 @@ class _DisplayList(X_windowbase._DisplayList):
 			tt = t + 3
 			rr = r - n
 			bb = b - 3
+			fg = gc.foreground
 			gc.foreground = cl
 			gc.FillPolygon([(l, y), (x, t), (x, tt), (ll, y)],
 				       X.Convex, X.CoordModeOrigin)
@@ -449,141 +448,91 @@ class _DisplayList(X_windowbase._DisplayList):
 				       X.Convex, X.CoordModeOrigin)
 			gc.foreground = fg
 		elif cmd == 'arrow':
+			fg = gc.foreground
 			gc.foreground = entry[1]
-			apply(gc.DrawLine, entry[2:2+4])
-			gc.FillPolygon(entry[6], X.Convex, X.CoordModeOrigin)
+			apply(gc.DrawLine, entry[2])
+			gc.FillPolygon(entry[3], X.Convex,
+				       X.CoordModeOrigin)
 			gc.foreground = fg
 		else:
-			fg = X_windowbase._DisplayList._do_render(self, entry,
-								gc, fg, expose)
-		return fg
+			X_windowbase._DisplayList._do_render(self, entry, region)
 
 	def clone(self):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
 		w = self._window
 		new = _DisplayList(w, self._bgcolor)
 		# copy all instance variables
 		new._list = self._list[:]
-		new._fgcolor = self._fgcolor
-		new._xfgcolor = self._xfgcolor
-		new._bgcolor = self._bgcolor
-		new._xbgcolor = self._xbgcolor
-		new._linewidth = self._linewidth
 		new._font = self._font
-		new._fontheight = self._fontheight
-		new._baseline = self._baseline
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
+			new._clonedata = self._fgcolor, self._font
 		for key, val in self._optimdict.items():
 			new._optimdict[key] = val
 		return new
 
-	def linewidth(self, width):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
-		if self._rendered:
-			raise error, 'displaylist already rendered'
-		self._linewidth = width
-		self._list.append('linewidth', width)
-
 	def drawfpolygon(self, color, points):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-
-		window = self._window
+		w = self._window
+		color = w._convert_color(color)
 		p = []
-		for x, y in points:
-			x, y = window._convert_coordinates(x, y, 0, 0)[:2]
-			p.append(x, y)
-		color = window._convert_color(color)
+		for point in points:
+			p.append(w._convert_coordinates(point))
 		self._list.append('fpolygon', color, p)
 		self._optimize(1)
 
-	def draw3dbox(self, cl, ct, cr, cb, *coordinates):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
+	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) is TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
 		window = self._window
-		x, y, w, h = coordinates
-		l, t, w, h = window._convert_coordinates(x, y, w, h)
+		coordinates = window._convert_coordinates(coordinates)
 		cl = window._convert_color(cl)
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		self._list.append('3dbox', cl, ct, cr, cb, l, t, w, h)
-		self._optimize(range(1,5))
+		self._list.append('3dbox', (cl, ct, cr, cb), coordinates)
+		self._optimize(1)
 
-	def drawdiamond(self, *coordinates):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
+	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) is TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
-		window = self._window
-		x, y, w, h = coordinates
-		x, y, w, h = window._convert_coordinates(x, y, w, h)
-		self._list.append('diamond', x, y, w, h)
+		coordinates = self._window._convert_coordinates(coordinates)
+		self._list.append('diamond', coordinates)
 		self._optimize()
 
-	def drawfdiamond(self, color, *coordinates):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
+	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) is TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
 		window = self._window
 		x, y, w, h = coordinates
 		if w < 0:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		x, y, w, h = window._convert_coordinates(x, y, w, h)
+		coordinates = window._convert_coordinates((x, y, w, h))
 		color = window._convert_color(color)
-		self._list.append('fdiamond', color, x, y, w, h)
+		self._list.append('fdiamond', color, coordinates)
 		self._optimize(1)
 
-	def draw3ddiamond(self, cl, ct, cr, cb, *coordinates):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
+	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) is TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
 		window = self._window
 		cl = window._convert_color(cl)
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		x, y, w, h = coordinates
-		l, t, w, h = window._convert_coordinates(x, y, w, h)
-		self._list.append('3ddiamond', cl, ct, cr, cb, l, t, w, h)
-		self._optimize(range(1,5))
+		coordinates = window._convert_coordinates(coordinates)
+		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
+		self._optimize(1)
 
-	def drawarrow(self, color, sx, sy, dx, dy):
-		if self.is_closed():
-			raise error, 'displaylist already closed'
+	def drawarrow(self, color, (sx, sy), (dx, dy)):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		nsx, nsy = window._convert_coordinates(sx, sy, 0, 0)[:2]
-		ndx, ndy = window._convert_coordinates(dx, dy, 0, 0)[:2]
+		nsx, nsy = window._convert_coordinates((sx, sy))
+		ndx, ndy = window._convert_coordinates((dx, dy))
 		if nsx == ndx and sx != dx:
 			if sx < dx:
 				nsx = nsx - 1
@@ -609,8 +558,11 @@ class _DisplayList(X_windowbase._DisplayList):
 			      roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
 		points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 			      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
-		self._list.append('arrow', color, nsx, nsy, ndx, ndy, points)
+		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
 		self._optimize(1)
+
+toplevel = _Toplevel()
+from X_windowbase import *
 
 class FileDialog:
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel):
@@ -671,8 +623,10 @@ class FileDialog:
 			self._form = None
 
 	def setcursor(self, cursor):
-		if not self.is_closed():
-			X_windowbase._setcursor(self._form, cursor)
+		pass
+
+	def _setcursor(self, cursor):
+		X_windowbase._setcursor(self._form, cursor)
 
 	def is_closed(self):
 		return self._form is None
@@ -680,6 +634,7 @@ class FileDialog:
 	def _cancel_callback(self, *rest):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		must_close = TRUE
 		try:
 			if self.cb_cancel:
@@ -692,10 +647,12 @@ class FileDialog:
 		finally:
 			if must_close:
 				self.close()
+			toplevel._setcursor()
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		import os
 		filename = call_data.value
 		dir = call_data.dir
@@ -705,14 +662,17 @@ class FileDialog:
 			if os.path.isdir(filename):
 				filter = os.path.join(filename, filter)
 				self._dialog.FileSelectionDoSearch(filter)
+				toplevel._setcursor()
 				return
 		if self.cb_ok:
 			ret = self.cb_ok(filename)
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret)
+				toplevel._setcursor()
 				return
 		self.close()
+		toplevel._setcursor()
 
 class SelectionDialog:
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
@@ -744,8 +704,10 @@ class SelectionDialog:
 		toplevel._subwindows.append(self)
 
 	def setcursor(self, cursor):
-		if not self.is_closed():
-			X_windowbase._setcursor(self._form, cursor)
+		pass
+
+	def _setcursor(self, cursor):
+		X_windowbase._setcursor(self._form, cursor)
 
 	def is_closed(self):
 		return self._form is None
@@ -760,13 +722,16 @@ class SelectionDialog:
 	def _nomatch_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
 			showmessage(ret, type = 'error')
+		toplevel._setcursor()
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		try:
 			func = self.OkCallback
 		except AttributeError:
@@ -776,12 +741,15 @@ class SelectionDialog:
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret, type = 'error')
+				toplevel._setcursor()
 				return
 		self.close()
+		toplevel._setcursor()
 
 	def _cancel_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		try:
 			func = self.CancelCallback
 		except AttributeError:
@@ -791,8 +759,10 @@ class SelectionDialog:
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret, type = 'error')
+				toplevel._setcursor()
 				return
 		self.close()
+		toplevel._setcursor()
 
 class InputDialog:
 	def __init__(self, prompt, default, cb):
@@ -818,19 +788,25 @@ class InputDialog:
 	def _ok(self, w, client_data, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		value = call_data.value
 		self.close()
 		if client_data:
 			client_data(value)
+		toplevel._setcursor()
 
 	def _cancel(self, w, client_data, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		self.close()
+		toplevel._setcursor()
 
 	def setcursor(self, cursor):
-		if not self.is_closed():
-			X_windowbase._setcursor(self._form, cursor)
+		pass
+
+	def _setcursor(self, cursor):
+		X_windowbase._setcursor(self._form, cursor)
 
 	def close(self):
 		if self._form:
@@ -1054,7 +1030,9 @@ class Button(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		apply(callback[0], callback[1])
+		toplevel._setcursor()
 
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
@@ -1164,8 +1142,10 @@ class OptionMenu(_Widget):
 			return
 		self._value = value
 		if self._callback:
+			toplevel._setcursor('watch')
 			f, a = self._callback
 			apply(f, a)
+			toplevel._setcursor()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1331,7 +1311,9 @@ class _List:
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		apply(func, arg)
+		toplevel._setcursor()
 
 	def _destroy(self):
 		del self._itemlist
@@ -1540,7 +1522,9 @@ class TextInput(_Widget):
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		apply(func, arg)
+		toplevel._setcursor()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1634,7 +1618,9 @@ class TextEdit(_Widget):
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		apply(func, arg)
+		toplevel._setcursor()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1658,7 +1644,7 @@ class Separator(_Widget):
 
 class ButtonRow(_Widget):
 	def __init__(self, parent, buttonlist,
-		     vertical = TRUE, callback = None,
+		     vertical = 1, callback = None,
 		     buttontype = 'pushbutton', useGadget = 1,
 		     name = 'windowRowcolumn', **options):
 		attrs = {'entryAlignment': Xmd.ALIGNMENT_CENTER,
@@ -1770,10 +1756,12 @@ class ButtonRow(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		if self._cb:
 			apply(self._cb[0], self._cb[1])
 		if callback:
 			apply(callback[0], callback[1])
+		toplevel._setcursor()
 
 	def _popup(self, widget, submenu, call_data):
 		submenu.ManageChild()
@@ -1785,7 +1773,7 @@ class ButtonRow(_Widget):
 
 class Slider(_Widget):
 	def __init__(self, parent, prompt, minimum, initial, maximum, cb,
-		     vertical = FALSE, showvalue = TRUE, name = 'windowScale',
+		     vertical = 0, showvalue = 1, name = 'windowScale',
 		     **options):
 		if vertical:
 			orientation = Xmd.VERTICAL
@@ -1840,7 +1828,9 @@ class Slider(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
+		toplevel._setcursor('watch')
 		apply(callback[0], callback[1])
+		toplevel._setcursor()
 
 	def _calcrange(self, minimum, initial, maximum):
 		self._minimum, self._maximum = minimum, maximum
@@ -1954,7 +1944,7 @@ class SubWindow(_Widget, _WindowHelpers):
 					w.hide()
 			self._fixkids = []
 
-class _SubWindow(SubWindow):
+class _AltSubWindow(SubWindow):
 	def __init__(self, parent, name):
 		self._parent = parent
 		SubWindow.__init__(self, parent, left = None, right = None,
@@ -1988,7 +1978,7 @@ class AlternateSubWindow(_Widget):
 		self._fixkids = None
 
 	def SubWindow(self, name = 'windowSubwindow'):
-		widget = _SubWindow(self, name = name)
+		widget = _AltSubWindow(self, name = name)
 		for w in self._windows:
 			w.hide()
 		self._windows.append(widget)
@@ -2001,7 +1991,7 @@ class AlternateSubWindow(_Widget):
 			w._form.ManageChild()
 
 class Window(_WindowHelpers, _MenuSupport):
-	def __init__(self, title, resizable = FALSE, grab = FALSE,
+	def __init__(self, title, resizable = 0, grab = 0,
 		     Name = 'windowShell', Class = None, **options):
 		if not resizable:
 			self.resizePolicy = Xmd.RESIZE_NONE
@@ -2039,7 +2029,7 @@ class Window(_WindowHelpers, _MenuSupport):
 				pass
 			else:
 				self._shell.AddWMProtocolCallback(
-					X_windowbase._delete_window,
+					toplevel._delete_window,
 					self._delete_callback,
 					deleteCallback)
 				self._shell.deleteResponse = Xmd.DO_NOTHING
@@ -2048,6 +2038,7 @@ class Window(_WindowHelpers, _MenuSupport):
 		self._shown = []
 		_WindowHelpers.__init__(self)
 		_MenuSupport.__init__(self)
+		toplevel._subwindows.append(self)
 
 	def __repr__(self):
 		s = '<Window instance at %x' % id(self)
@@ -2062,17 +2053,17 @@ class Window(_WindowHelpers, _MenuSupport):
 
 	def close(self):
 		try:
+			form = self._form
+		except AttributeError:
+			return
+		try:
 			shell = self._shell
 		except AttributeError:
 			shell = None
-		try:
-			form = self._form
-		except AttributeError:
-			pass
-		else:
-			del self._form
-			form.DestroyWidget()
-			del form
+		toplevel._subwindows.remove(self)
+		del self._form
+		form.DestroyWidget()
+		del form
 		if shell:
 			shell.UnmanageChild()
 			shell.DestroyWidget()
@@ -2083,6 +2074,12 @@ class Window(_WindowHelpers, _MenuSupport):
 
 	def is_closed(self):
 		return not hasattr(self, '_form')
+
+	def setcursor(self, cursor):
+		pass
+
+	def _setcursor(self, cursor):
+		X_windowbase._setcursor(self._form, cursor)
 
 	def fix(self):
 		for w in self._fixkids:
@@ -2163,13 +2160,12 @@ class Window(_WindowHelpers, _MenuSupport):
 	def getgeometry(self):
 		if self.is_closed():
 			raise error, 'window already closed'
-		sw = float(X_windowbase._mscreenwidth) /  X_windowbase._screenwidth
-		sh = float(X_windowbase._mscreenheight) /  X_windowbase._screenheight
 		x, y  = self._form.TranslateCoords(0, 0)
 		val = self._form.GetValues(['width', 'height'])
 		w = val['width']
 		h = val['height']
-		return x * sw, y * sh, w * sw, h * sh
+		return x / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
+		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
 
 	def pop(self):
 		pass
@@ -2213,9 +2209,11 @@ class _Question:
 	def run(self):
 		try:
 			self.looping = TRUE
+			toplevel._setcursor()
 			Xt.MainLoop()
 		except _end_loop:
 			pass
+		toplevel._setcursor('watch')
 		return self.answer
 
 	def callback(self, answer):
@@ -2240,9 +2238,11 @@ class _MultChoice:
 	def run(self):
 		try:
 			self.looping = TRUE
+			toplevel._setcursor()
 			Xt.MainLoop()
 		except _end_loop:
 			pass
+		toplevel._setcursor('watch')
 		return self.answer
 
 	def callback(self, msg):
@@ -2258,7 +2258,6 @@ def multchoice(prompt, list, defindex):
 
 fonts = X_windowbase.fonts
 
-toplevel = _Toplevel()
 X_windowbase.toplevel = toplevel
 
 newwindow = toplevel.newwindow
@@ -2274,10 +2273,6 @@ setcursor = toplevel.setcursor
 getsize = toplevel.getsize
 
 usewindowlock = toplevel.usewindowlock
-
-def beep():
-	import sys
-	sys.stderr.write('\7')
 
 settimer = toplevel.settimer
 

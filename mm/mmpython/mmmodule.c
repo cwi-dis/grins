@@ -163,11 +163,12 @@ mm_resized(self, args)
 	mmobject *self;
 	PyObject *args;
 {
+	int x, y, w, h;
 	CheckMmObject(self);
 	denter(mm_resized);
-	if (!PyArg_NoArgs(args))
+	if (!PyArg_ParseTuple(args, "iiii", &x, &y, &w, &h))
 		return NULL;
-	if (!(*self->mm_chanobj->chan_funcs->resized)(self))
+	if (!(*self->mm_chanobj->chan_funcs->resized)(self, x, y, w, h))
 		return NULL;
 	Py_INCREF(Py_None);
 	return Py_None;

@@ -6,7 +6,7 @@ from urllib import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['scale', 'scalefilter']
+	node_attrs = ChannelWindow.node_attrs + ['scale', 'scalefilter', 'crop']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -27,7 +27,7 @@ class ImageChannel(ChannelWindow):
 			pass
 		# remember coordinates for anchor editing (and only for that!)
 		try:
-			self._arm_imbox = self.armed_display.display_image_from_file(f)
+			self._arm_imbox = self.armed_display.display_image_from_file(f, scale = MMAttrdefs.getattr(node, 'scale'), crop = MMAttrdefs.getattr(node, 'crop'))
 		except (windowinterface.error, IOError), msg:
 			if type(msg) == type(()):
 				msg = msg[1]
@@ -38,7 +38,8 @@ class ImageChannel(ChannelWindow):
 			modanchorlist(alist)
 		except NoSuchAttrError:
 			alist = []
-		self.armed_display.fgcolor(self.gethicolor(node))
+		self.armed_display.fgcolor(self.getbucolor(node))
+		hicolor = self.gethicolor(node)
 		for a in alist:
 			args = a[A_ARGS]
 			if len(args) == 0:
@@ -58,7 +59,7 @@ class ImageChannel(ChannelWindow):
 			h = h * self._arm_imbox[3]
 			b = self.armed_display.newbutton((x, y, w, h))
 			b.hiwidth(3)
-##			b.hicolor(self.getfgcolor(node))
+			b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return 1
 

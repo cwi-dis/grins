@@ -46,6 +46,9 @@
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Border offset' default 'Position/size in percent of base window' raw)
 
+(transparent (bool) 0 'Transparent' default
+	'Determines transparency of window' raw)
+
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for text/images in window' channel)
 
@@ -90,6 +93,9 @@
 	'Type of graph: bar, line, hline' channel)
 
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
+	'Color used for highlighted anchors in window' channel)
+
+(bucolor (tuple (int) (int) (int)) (255 0 0) 'Button color' color
 	'Color used for anchors in window' channel)
 
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
@@ -127,6 +133,10 @@
 
 (scale (float) 0.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
+
+(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
+    'Crop image.  Values are fractions to crop from top, bottom, left, right.'
+	channel)
 
 (scalefilter (name) '' 'Scaling filter' default
 	'Name of filter used after image scaling' channel)

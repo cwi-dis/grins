@@ -181,7 +181,7 @@ class Selecter:
 	# XXXX This routine should also get a source-context arg.
 	#
 	def anchorfired(self, old_sctx, node, anchorlist, arg):
-		self.showpauseanchor(0)
+		#self.showpauseanchor(0) # also see Scheduler.py
 		self.toplevel.setwaiting()
 		destlist = []
 		pause_anchor = 0

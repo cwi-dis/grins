@@ -43,18 +43,30 @@ class HtmlChannel(Channel.ChannelWindow):
 			self._after_creation()
 		return 1
 
+	def do_hide(self):
+		if self.htmlw:
+			self.htmlw.DestroyWidget()
+		Channel.ChannelWindow.do_hide(self)
+
 	def _after_creation(self):
 		#
 		# Step 2 - Create a values dictionary with width/height
 		# for use when we create the HTML widget.
 		#
 		wd = self.window
-		wh = wd._form.GetValues(['width', 'height'])
-		wh['visual'] = wd._visual
+		try:
+			x, y, w, h = wd._rect
+		except AttributeError:
+			wh = wd._form.GetValues(['width', 'height'])
+			wh['visual'] = wd._visual
+		else:
+			wh = {'width': w, 'height': h, 'x': x, 'y': y,
+			      'visual': wd._topwindow._visual}
+		wh['mappedWhenManaged'] = 0
 		#
 		# Create the widget
 		#
-		self.htmlw = self.window._form.CreateManagedWidget(
+		self.htmlw = wd._form.CreateManagedWidget(
 			self.widget_name, HTML.html, wh)
 		#
 		# Set callbacks.
@@ -84,7 +96,13 @@ class HtmlChannel(Channel.ChannelWindow):
 		self._after_creation()
 
 	def resize(self, arg, window, event, value):
-		wh = self.window._form.GetValues(['width', 'height'])
+		wd = self.window
+		try:
+			x, y, w, h = wd._rect
+		except AttributeError:
+			wh = wd._form.GetValues(['width', 'height'])
+		else:
+			wh = {'width': w, 'height': h, 'x': x, 'y': y}
 		self.htmlw.SetValues(wh)
 		
 
@@ -117,7 +135,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 	def do_arm(self, node, same=0):
 	        if not same:
-		    self.armed_str = self.getstring(node)
+			self.armed_str = self.getstring(node)
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		return 1
@@ -126,12 +144,15 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.url = self.armed_url
 		self.played_str = self.armed_str
 		self.htmlw.SetText(self.armed_str, '', '')
+		self.htmlw.MapWidget()
+		self.htmlw.UpdateDisplay()
 		self.fixanchorlist(node)
 		self.play_node = node
 
 	def stopplay(self, node):
 		Channel.ChannelWindow.stopplay(self, node)
 		if self.htmlw:
+			self.htmlw.UnmapWidget()
 			self.htmlw.SetText('', '', '')
 
 	def getstring(self, node):
@@ -326,18 +347,7 @@ def encodequery(query):
 	return (name, value)
 
 def encodestring(s):
-	if not s: return ''		# Catches None as well!
-	r = ''
-	for c in s:
-		r = r + encoding[c]
-	return r
-
-encoding = {}
-for i in range(256):
-	encoding[chr(i)] = '%%%02X' % i
-for c in string.letters + string.digits + ',.-_':
-	encoding[c] = c
-encoding[' '] = '+'
+	return urllib.quote(s or '')	# Catches None as well!
 
 #
 # Get the data-behind-the-URL

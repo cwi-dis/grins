@@ -627,6 +627,9 @@ class Channel:
 	def getfgcolor(self, node):
 		return MMAttrdefs.getattr(node, 'fgcolor')
 
+	def getbucolor(self, node):
+		return MMAttrdefs.getattr(node, 'bucolor')
+
 	def gethicolor(self, node):
 		return MMAttrdefs.getattr(node, 'hicolor')
 
@@ -664,8 +667,8 @@ class Channel:
 ##ChannelWinDict = {}
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff']
-	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'hicolor']
+	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff', 'transparent']
+	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'bucolor', 'hicolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
@@ -763,14 +766,19 @@ class ChannelWindow(Channel):
 				menu.append(None)
 			menu.append('', 'highlight', (self.highlight, ()))
 			menu.append('', 'unhighlight', (self.unhighlight, ()))
+			try:
+				transparent = self._attrdict['transparent']
+			except KeyError:
+				transparent = 0
 			if self.want_default_colormap:
-				self.window = pchan.window.newcmwindow(pgeom)
+				self.window = pchan.window.newcmwindow(pgeom,
+						transparent = transparent)
 			else:
-				self.window = pchan.window.newwindow(pgeom)
+				self.window = pchan.window.newwindow(pgeom,
+						transparent = transparent)
 			if hasattr(self._player, 'editmgr'):
 				menu.append(None)
 				menu.append('', 'resize', (self.resize_window, (pchan,)))
-			self.window.create_menu(menu, title = self._name)
 		else:
 			# no basewindow, create a top-level window
 			if self._attrdict.has_key('winsize'):
@@ -803,6 +811,7 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
+		self.window.create_menu(menu, title = self._name)
 
 	def _destroy_callback(self, *rest):
 		self._player.cmenu_callback(self._name)
@@ -916,7 +925,9 @@ class ChannelWindow(Channel):
 		windowinterface.setcursor('watch')
 		if hasattr(self, 'threads'):
 			# hack for MovieChannel
-			self.threads.resized()
+			window._gc.SetRegion(window._clip)
+			window._gc.foreground = window._convert_color(window._bgcolor)
+			apply(self.threads.resized, window._rect)
 			windowinterface.setcursor('')
 			return
 		self.wait_for_arm()
@@ -1025,6 +1036,7 @@ class _ChannelThread:
 			print 'ChannelThread.do_show('+`self`+')'
 		attrdict = {}
 		if hasattr(self, 'window'):
+			attrdict['rect'] = self.window._rect
 			if hasattr(self.window, '_window_id'):
 				# GL window interface
 				import GLLock
@@ -1034,7 +1046,7 @@ class _ChannelThread:
 				# Motif windowinterface
 				attrdict['widget'] = self.window._form
 				attrdict['gc'] = self.window._gc
-				attrdict['visual'] = self.window._visual
+				attrdict['visual'] = self.window._topwindow._visual
 			else:
 				print 'can\' work with this windowinterface'
 				return 0
@@ -1110,6 +1122,10 @@ class _ChannelThread:
 			elif self._armstate != AIDLE:
 				raise error, 'armdone event when not arming'
 		elif value == 3:	# KLUDGE for X movies
+			try:
+				self.window._gc.SetRegion(self.window._clip)
+			except AttributeError:
+				pass
 			self.threads.do_display()
 		else:
 			raise error, 'unrecognized event '+`value`
@@ -1190,11 +1206,15 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		ChannelWindow.armstop(self)
 
 	def stopplay(self, node):
-		if self.window:
-			self.window.setredrawfunc(None)
+		w = self.window
+		if w:
+			w.setredrawfunc(None)
 ##		ChannelWindow.stopplay(self, node)
 		Channel.stopplay(self, node)   # These 2 lines repl prev.
 		self.played_display = None
+		if hasattr(w, '_gc'):
+			w._gc.SetRegion(w._clip)
+			w._gc.foreground = w._convert_color(w._bgcolor)
 		_ChannelThread.stopplay(self, node)
 
 	def setpaused(self, paused):
@@ -1222,13 +1242,25 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		self.armed_display = None
 		thread_play_called = 0
 		if self.threads.armed:
-			self.window.setredrawfunc(self.threads.resized)
+			w = self.window
+			w.setredrawfunc(self.do_redraw)
+			try:
+				w._gc.SetRegion(w._clip)
+				w._gc.foreground = w._convert_color(self.getbgcolor(node))
+			except AttributeError:
+				pass
 			self.threads.play()
 			thread_play_called = 1
 		self.do_play(node)
 		self.armdone()
 		if not thread_play_called:
 			self.playdone(0)
+
+	def do_redraw(self):
+		w = self.window
+		w._gc.SetRegion(w._clip)
+		w._gc.foreground = w._convert_color(w._bgcolor)
+		apply(self.threads.resized, self._rect)
 
 def dummy_callback(arg):
 	pass

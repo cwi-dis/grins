@@ -78,7 +78,7 @@ struct movie_data {
 	int m_depth;		/* depth of the window in bytes per pixel */
 };
 struct movie {
-	int m_width, m_height;	/* width and height of window */
+	int m_rect[4];		/* origin and size of window */
 	struct movie_data m_play; /* movie being played */
 	struct movie_data m_arm; /* movie being armed */
 	int m_pipefd[2];	/* pipe for synchronization with player */
@@ -91,6 +91,10 @@ struct movie {
 	Visual *m_visual;	/* the visual to use */
 #endif
 };
+#define X	0
+#define Y	1
+#define WIDTH	2
+#define HEIGHT	3
 
 #define PRIV	((struct movie *) self->mm_private)
 
@@ -292,6 +296,23 @@ movie_init(self)
 #endif
 	    ) {
 		ERROR(movie_init, PyExc_RuntimeError, "no window specified");
+		goto error_return;
+	}
+	v = PyDict_GetItemString(self->mm_attrdict, "rect");
+	if (v && PyTuple_Check(v) && PyTuple_Size(v) == 4) {
+		int i;
+		PyObject *t;
+
+		for (i = 0; i < 4; i++) {
+			t = PyTuple_GetItem(v, i);
+			if (!PyInt_Check(t)) {
+				ERROR(mpeg_init, PyExc_RuntimeError, "bad size specification");
+				goto error_return;
+			}
+			PRIV->m_rect[i] = PyInt_AsLong(t);
+		}
+	} else {
+		ERROR(mpeg_init, PyExc_RuntimeError, "no size specified");
 		goto error_return;
 	}
 #ifdef USE_CL
@@ -894,18 +915,10 @@ movie_play(self)
 	switch (windowsystem) {
 #ifdef USE_GL
 	case WIN_GL:
-		/* get the window size */
 		/* DEBUG: should call:
 		 * acquire_lock(gl_lock, WAIT_LOCK);
 		 */
 		winset(PRIV->m_wid);
-		{
-			long width, height;
-
-			getsize(&width, &height);
-			PRIV->m_width = width;
-			PRIV->m_height = height;
-		}
 		/* initialize color map */
 		winpop();	/* pop up the window */
 		if ((PRIV->m_play.m_format == FORMAT_RGB8 && is_entry_indigo &&
@@ -938,23 +951,11 @@ movie_play(self)
 #endif /* USE_GL */
 #ifdef USE_XM
 	case WIN_X:
-		/* get the window size */
-		{
-			Dimension width, height;
-
-			XtVaGetValues(PRIV->m_widget,
-				      "width", &width, "height", &height,
-				      NULL);
-			PRIV->m_width = width;
-			PRIV->m_height = height;
-		}
-		/* pop up the window */
-		XRaiseWindow(XtDisplay(PRIV->m_widget),
-			     XtWindow(PRIV->m_widget));
 		/* clear the window */
 		XFillRectangle(XtDisplay(PRIV->m_widget),
-			       XtWindow(PRIV->m_widget), PRIV->m_gc, 0, 0,
-			       PRIV->m_width, PRIV->m_height);
+			       XtWindow(PRIV->m_widget), PRIV->m_gc,
+			       PRIV->m_rect[X], PRIV->m_rect[Y],
+			       PRIV->m_rect[WIDTH], PRIV->m_rect[HEIGHT]);
 		break;
 #endif /* USE_XM */
 	default:
@@ -979,14 +980,14 @@ movie_do_display(self)
 	case WIN_GL:
 		scale = PRIV->m_play.m_scale;
 		if (scale == 0) {
-			scale = PRIV->m_width / PRIV->m_play.m_width;
-			if (scale > PRIV->m_height / PRIV->m_play.m_height)
-				scale = PRIV->m_height / PRIV->m_play.m_height;
+			scale = PRIV->m_rect[WIDTH] / PRIV->m_play.m_width;
+			if (scale > PRIV->m_rect[HEIGHT] / PRIV->m_play.m_height)
+				scale = PRIV->m_rect[HEIGHT] / PRIV->m_play.m_height;
 			if (scale < 1)
 				scale = 1;
 		}
-		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
-		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
+		xorig = PRIV->m_rect[X] + (PRIV->m_rect[WIDTH] - PRIV->m_play.m_width * scale) / 2;
+		yorig = PRIV->m_rect[Y] + (PRIV->m_rect[HEIGHT] - PRIV->m_play.m_height * scale) / 2;
 		winset(PRIV->m_wid);
 		rectzoom(scale, scale);
 		if (PRIV->m_play.m_bframe) {
@@ -1015,8 +1016,8 @@ movie_do_display(self)
 			XPutImage(XtDisplay(PRIV->m_widget),
 				  XtWindow(PRIV->m_widget),
 				  PRIV->m_gc, PRIV->m_play.m_image, 0, 0,
-				  (PRIV->m_width - PRIV->m_play.m_width) / 2,
-				  (PRIV->m_height - PRIV->m_play.m_height) / 2,
+				  PRIV->m_rect[X] + (PRIV->m_rect[WIDTH] - PRIV->m_play.m_width) / 2,
+				  PRIV->m_rect[Y] + (PRIV->m_rect[HEIGHT] - PRIV->m_play.m_height) / 2,
 				  PRIV->m_play.m_width, PRIV->m_play.m_height);
 		break;
 #endif /* USE_XM */
@@ -1211,10 +1212,15 @@ movie_player(self)
 }
 
 static int
-movie_resized(self)
+movie_resized(self, x, y, w, h)
 	mmobject *self;
+	int x, y, w, h;
 {
 	denter(movie_resized);
+	PRIV->m_rect[X] = x;
+	PRIV->m_rect[Y] = y;
+	PRIV->m_rect[WIDTH] = w;
+	PRIV->m_rect[HEIGHT] = h;
 	switch (windowsystem) {
 #ifdef USE_GL
 	case WIN_GL: {
@@ -1223,11 +1229,6 @@ movie_resized(self)
 		if (gl_lock)
 			acquire_lock(gl_lock, WAIT_LOCK);
 		winset(PRIV->m_wid);
-		getsize(&width, &height);
-		PRIV->m_width = width;
-		PRIV->m_height = height;
-		dprintf(("movie_resized(%lx): size %d x %d\n", (long) self,
-			 width, height));
 		if (PRIV->m_play.m_frame) {
 			if (PRIV->m_play.m_bframe == NULL)
 				pixmode(PM_SIZE, 8);
@@ -1252,14 +1253,12 @@ movie_resized(self)
 	case WIN_X: {
 		Dimension width, height;
 
-		XtVaGetValues(PRIV->m_widget,
-			      "width", &width, "height", &height, NULL);
-		PRIV->m_width = width;
-		PRIV->m_height = height;
 		if (PRIV->m_play.m_image) {
 			XFillRectangle(XtDisplay(PRIV->m_widget),
 				       XtWindow(PRIV->m_widget), PRIV->m_gc,
-				       0, 0, PRIV->m_width, PRIV->m_height);
+				       PRIV->m_rect[X], PRIV->m_rect[Y],
+				       PRIV->m_rect[WIDTH],
+				       PRIV->m_rect[HEIGHT]);
 			movie_do_display(self);
 		}
 		break;
@@ -1326,7 +1325,8 @@ movie_finished(self)
 	case WIN_X:
 		XFillRectangle(XtDisplay(PRIV->m_widget),
 			       XtWindow(PRIV->m_widget), PRIV->m_gc,
-			       0, 0, PRIV->m_width, PRIV->m_height);
+			       PRIV->m_rect[X], PRIV->m_rect[Y],
+			       PRIV->m_rect[WIDTH], PRIV->m_rect[HEIGHT]);
 		if (PRIV->m_play.m_image) {
 			XDestroyImage(PRIV->m_play.m_image);
 			PRIV->m_play.m_image = NULL;
