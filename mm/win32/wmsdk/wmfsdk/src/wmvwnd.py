@@ -22,6 +22,10 @@ import gear32sd
 # directx media module
 import dshow
 
+import win32dxm
+audiofg = win32dxm.GraphBuilder()
+audiofile = r'D:\ufs\mmdocuments\interop2\interop2\sounds\english.wav'
+
 #
 import wmwriter
 
@@ -189,6 +193,7 @@ class DDWnd(MfcOsWnd):
 
 		self._w, self._h = 400, 300
 		self.__timer_id = 0
+		self._audiofg = None
 
 	def OnCreate(self, params):
 		w, h = self._w, self._h
@@ -272,17 +277,29 @@ class DDWnd(MfcOsWnd):
 		self.__advance(rcBack)
 
 		if not self._writer and not self._recorded:
-			self._writer = wmwriter.WMWriter(self.__backBuffer, profile=20)
+			self._writer = wmwriter.WMWriter(self, self.__backBuffer, profile=20)
 			self._writer.setOutputFilename('grsim.wmv')
+			self._writer.setAudioFormatFromFile(audiofile)
 			self._start = time.time()
 			self._writer.beginWriting()
 		elif self._writer:
 			dt = time.time() - self._start
 			self._writer.update(dt)
+			if dt>5 and not self._audiofg:
+				audiofg.RenderFile(audiofile, self)
+				audiofg.Run()
+				self._audiofg = audiofg
 			if dt>20:
+				if self._audiofg:
+					self._audiofg.Stop()
+					self._audiofg = None
 				self._writer.endWriting()
 				self._writer = None	
 				self._recorded = 1
+
+	# exporter interface
+	def getWriter(self):
+		return self._writer
 
 	def __init_it(self):
 		self.__x = 0
