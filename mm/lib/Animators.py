@@ -68,13 +68,20 @@ class Animator:
 				tl = 0.0
 				for i in range(1,n):
 					tl = tl + self.distValues(values[i-1],values[i])
-				f = dur/tl
-				d = 0.0
-				self._efftimes.append(0)
-				for i in range(1,n-1):
-					d = d + self.distValues(values[i-1],values[i])
-					self._efftimes.append(f*d)
-				self._efftimes.append(dur)
+				if tl == 0.0:
+					tau = dur/float(n)
+					t = 0.0
+					for i in range(n):
+						self._efftimes.append(t)
+						t = t + tau
+				else:
+					f = dur/tl
+					d = 0.0
+					self._efftimes.append(0)
+					for i in range(1,n-1):
+						d = d + self.distValues(values[i-1],values[i])
+						self._efftimes.append(f*d)
+					self._efftimes.append(dur)
 			elif mode == 'discrete':
 				# for discrete mode n is the number of intervals
 				tau = dur/float(n)
@@ -432,7 +439,7 @@ class TupleAnimator(Animator):
 	def __init__(self, attr, domval, values, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'):
 		Animator.__init__(self, attr, domval, values, dur, mode, 
-			times, splines, accumulate, additive)
+			None, None, accumulate, additive)
 		self._animators = ()
 
 	def setComponentAnimators(self, animators):
@@ -489,8 +496,6 @@ class TupleAnimator(Animator):
 			ss = ss + dl*dl
 		return math.sqrt(ss)
 
-		return math.fabs(v2-v1)
-
 	def clamp(self, v):
 		nv = []
 		for i in range(len(self._animators)):
@@ -504,7 +509,7 @@ class ColorAnimator(TupleAnimator):
 	def __init__(self, attr, domval, values, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'):
 		TupleAnimator.__init__(self, attr, domval, values, dur, mode, 
-			times, splines, accumulate, additive)
+			None, None, accumulate, additive)
 		rvalues = []
 		gvalues = []
 		bvalues = []
@@ -1230,6 +1235,8 @@ class AnimateElementParser:
 		# animateColor or attrtype=='color'
 		if self.__elementTag == 'animateColor' or self.__attrtype=='color':
 			values = self.__getColorValues()
+			if not self.__checkValues(values, times, splines, mode):
+				return None
 			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
 			self.__setTimeManipulators(anim)
 			return anim
@@ -1261,28 +1268,38 @@ class AnimateElementParser:
 		anim = None
 		if self.__attrtype == 'int':
 			values = self.__getNumInterpolationValues()
+			if not self.__checkValues(values, times, splines, mode):
+				return None
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 				accumulate, additive)
 			anim.setRetunedValuesConverter(_round)
 
 		elif self.__attrtype == 'float':
 			values = self.__getNumInterpolationValues()
+			if not self.__checkValues(values, times, splines, mode):
+				return None
 			anim = Animator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
 
 		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
 			mode = 'discrete' # override calc mode
 			values = self.__getAlphaInterpolationValues()
+			if not self.__checkValues(values, times, splines, mode):
+				return None
 			anim = Animator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
 		
 		elif self.__attrtype == 'inttuple':
 			values = self.__getNumTupleInterpolationValues()
+			if not self.__checkValues(values, times, splines, mode):
+				return None
 			anim = IntTupleAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
 
 		elif self.__attrtype == 'floattuple':
 			values = self.__getNumTupleInterpolationValues()
+			if not self.__checkValues(values, times, splines, mode):
+				return None
 			anim = FloatTupleAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
 		if anim:
@@ -1431,6 +1448,15 @@ class AnimateElementParser:
 		if self.__speed!=1.0:
 			anim._setSpeed(self.__speed)
 
+	def __checkValues(self, values, times, splines, mode):
+		try:
+			assert( len(values) )
+			assert( len(values)!=1 or mode == 'discrete' )
+			assert( not times or len(times)==len(values) )
+			assert( (not times or not splines) or len(splines)==len(times)-1)
+		except:
+			return 0
+		return 1
 
 	# check that we have a valid target attribute
 	# get its DOM value and type
