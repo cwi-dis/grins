@@ -11,42 +11,10 @@ EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 # List of currently open toplevel windows
 opentops = []
 
-_trace_depth = 0
-_curframe = None
-def dispatch(frame, event, arg):
-	global _trace_depth, _curframe
-	code = frame.f_code
-	funcname = code.co_name
-	if not funcname:
-		funcname = '<lambda>'
-	filename = code.co_filename
-	event = event[0]
-	lineno = frame.f_lineno
-	plineno = ''
-	if event == 'c':
-		_trace_depth = _trace_depth + 1
-		e = ' '*_trace_depth + '>'
-		if lineno == -1:
-			code = code.co_code
-			if ord(code[0]) == 127:	# SET_LINENO
-				lineno = ord(code[1]) | ord(code[2]) << 8
-		pframe = frame.f_back
-		if pframe:
-			plineno = ' (%d)' % pframe.f_lineno
-	elif event == 'r':
-		e = ' '*_trace_depth + '<'
-		_trace_depth = _trace_depth - 1
-	else:
-		e = ' '*_trace_depth + 'E'
-		if frame is not _curframe:
-			_trace_depth = _trace_depth - 1
-	print '%s %s:%d %s%s' % (e, filename,lineno,funcname,plineno)
-	if _trace_depth < 0: _trace_depth = 0
-	_curframe = frame
-
 class TopLevel(ViewDialog):
 	def __init__(self, main, filename, new_file):
 		self._tracing = 0
+		self.waiting = 0
 		ViewDialog.__init__(self, 'toplevel_')
 		self.showing = 0
 		self.select_fdlist = []
@@ -120,7 +88,7 @@ class TopLevel(ViewDialog):
 		self.root.Destroy()
 		import Clipboard
 		type, data = Clipboard.getclip()
-		if type == 'node' and data <> None:
+		if type == 'node' and data is not None:
 			Clipboard.setclip('', None)
 			data.Destroy()
 		for v in self.views:
@@ -181,13 +149,13 @@ class TopLevel(ViewDialog):
 		self.setready()
 
 	def view_callback(self, viewno):
+		self.setwaiting()
 		view = self.views[viewno]
 		if view.is_showing():
 			view.hide()
 		else:
-			self.setwaiting()
 			view.show()
-			self.setready()
+		self.setready()
 
 	def open_okcallback(self, filename):
 		try:
@@ -198,6 +166,7 @@ class TopLevel(ViewDialog):
 						    'Error: '+`msg`)
 			return
 		top.show()
+		top.setready()
 
 	def open_callback(self):
 		prompt = 'Open CMIF file:'
@@ -213,21 +182,29 @@ class TopLevel(ViewDialog):
 		if self.new_file:
 			self.saveas_callback()
 			return
+		self.setwaiting()
 		ok = self.save_to_file(self.filename)
+		self.setready()
 
 	def save_player_callback(self):
 		self.save_callback()
+		self.setwaiting()
 		import MMPlayerTree
 		MMPlayerTree.WriteFile(self.root, self.filename)
+		self.setready()
 
 	def saveas_okcallback(self, filename):
 		if not filename:
 			return 'no file specified'
-		if self.save_to_file(filename):
-			self.filename = filename
-			self.fixtitle()
-		else:
-			return 1
+		self.setwaiting()
+		try:
+			if self.save_to_file(filename):
+				self.filename = filename
+				self.fixtitle()
+			else:
+				return 1
+		finally:
+			self.setready()
 
 	def saveas_callback(self):
 		prompt = 'Save CMIF file:'
@@ -254,7 +231,7 @@ class TopLevel(ViewDialog):
 		roots = [self.root]
 		import Clipboard
 		type, data = Clipboard.getclip()
-		if type == 'node' and data != None:
+		if type == 'node' and data is not None:
 			roots.append(data)
 		self.context.sanitize_hyperlinks(roots)
 		# Get all windows to save their current geometry.
@@ -296,6 +273,7 @@ class TopLevel(ViewDialog):
 	def do_restore(self):
 		if not self.editmgr.transaction():
 			return
+		self.setwaiting()
 		self.editmgr.rollback()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
@@ -317,6 +295,7 @@ class TopLevel(ViewDialog):
 			self.show()
 		#
 		self.makeviews()
+		self.setready()
 
 	def read_it(self):
 		import time
@@ -336,7 +315,9 @@ class TopLevel(ViewDialog):
 		self.editmgr.register(self)
 
 	def close_callback(self):
+		self.setwaiting()
 		self.close()
+		self.setready()
 
 	def close(self):
 		ok = self.close_ok()
@@ -365,37 +346,31 @@ class TopLevel(ViewDialog):
 		pdb.set_trace()
 
 	def trace_callback(self):
-		global _trace_depth
-		import sys
+		import trace
 		if self._tracing:
-			sys.setprofile(None)
+			trace.unset_trace()
 			self._tracing = 0
 		else:
-			try:
-				raise 'xyzzy'
-			except:
-				frame = sys.exc_traceback.tb_frame
-			while frame.f_code.co_name != 'trace_callback':
-				frame = frame.f_back
-			d = 0
-			while frame:
-				d = d + 1
-				frame = frame.f_back
-			_trace_depth = d
 			self._tracing = 1
-			sys.setprofile(dispatch)
+			trace.set_trace()
 
 	def help_callback(self):
 		import Help
 		Help.showhelpwindow()
 
 	def setwaiting(self):
+		if self.waiting: return
+		self.waiting = 1
+		windowinterface.setcursor('watch')
 		for v in self.views:
 			v.setwaiting()
 
 	def setready(self):
+		if not self.waiting: return
+		self.waiting = 0
 		for v in self.views:
 			v.setready()
+		windowinterface.setcursor('')
 
 	#
 	# EditMgr interface (as dependent client).
@@ -472,7 +447,7 @@ class TopLevel(ViewDialog):
 	def getallexternalanchors(self):
 		rv = []
 		for top in opentops:
-			if top <> self:
+			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
 
