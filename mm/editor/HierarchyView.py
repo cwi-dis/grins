@@ -890,14 +890,16 @@ class HierarchyView(HierarchyViewDialog):
 			self.render()
 		if obj.iconbox:
 			l, t, w, h = obj.iconbox
-			if l <= x <= l+w and t <= y <= t+h and obj.node.infoicon:
-				# If we hit the iconbox and there is something in it
-				# print the message
-				msg = obj.node.errormessage
-				if not msg:
-					msg = 'No message for this item'
-				windowinterface.showmessage('%s'%msg, parent = self.window)
-			# Don't return but fall through
+			if l <= x <= l+w and t <= y <= t+h:
+				if obj.node.infoicon:
+					# If we hit the iconbox and there is something in it
+					# print the message
+					msg = obj.node.errormessage
+					if msg:
+						windowinterface.showmessage('%s'%msg, parent = self.window)
+						return
+				if show_links and obj.getlinkicon():
+					self.toplevel.links.show(node=obj.node)
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):
