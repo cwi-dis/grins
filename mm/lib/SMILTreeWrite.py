@@ -1374,7 +1374,6 @@ class SMILWriter(SMIL):
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
-				progress = None
 			else:
 				progress = None
 			file = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
