@@ -279,7 +279,7 @@ def propdown(node, stoptime, dftstarttime=0):
 def adddep(xnode, xside, delay, ynode, yside):
 	ynode.counter[yside] = ynode.counter[yside] + 1
 	if delay >= 0 and xside in (HD, TL):
-		xnode.deps[xside].append(delay, ynode, yside)
+		xnode.deps[xside].append((delay, ynode, yside))
 
 
 def decrement(q, delay, node, side):
