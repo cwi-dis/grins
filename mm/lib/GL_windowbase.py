@@ -2178,7 +2178,7 @@ class _MultChoice(Dialog):
 				self._finish = i
 				return
 
-def multchoice(prompt, list, defindex):
+def multchoice(prompt, list, defindex, parent = None):
 	d = _MultChoice(prompt, list, defindex)
 	return d.run()
 
