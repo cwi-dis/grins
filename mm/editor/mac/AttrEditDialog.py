@@ -1357,7 +1357,8 @@ class AreaTabPage(MultiDictTabPage):
 			
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
-		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW)
+		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW, 
+				callback=self._preview_to_labels)
 		self._area.setinfo((0, 0, 640, 480)) # XXX
 		return rv
 
@@ -1371,6 +1372,7 @@ class AreaTabPage(MultiDictTabPage):
 		elif item-self.item0 in self._otherfields:
 			return 1
 		elif item-self.item0 == self.ITEM_PREVIEW:
+##			self._preview_to_labels() XXXX Doesn't work??!? use callback
 			return 1
 		return 0
 		
@@ -1422,8 +1424,10 @@ class AreaTabPage(MultiDictTabPage):
 		print 'area now', xywh
 		self._area.set(xywh)
 		
-	def _preview_callback(self, xywh):
-		y, w, h, y = self._pixels_to_values(xywh)
+	def _preview_to_labels(self):
+		xywh = self._area.get()
+		print 'get returned', xywh
+		x, y, w, h = self._pixels_to_values(xywh)
 		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
 		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
 		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
