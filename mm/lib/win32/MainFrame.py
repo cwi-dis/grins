@@ -379,7 +379,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		t=self.MDIGetActive()
 		if not t: return
 		f,ismax=t
-		f.PostMessage(win32con.WM_CLOSE)
+		if self._active_child and\
+			hasattr(self._active_child._view,'_commandlist') and\
+			self._active_child._view._commandlist:
+			self.PostMessage(win32con.WM_COMMAND,usercmdui.CLOSE_WINDOW_UI.id)
+		else:
+			f.PostMessage(win32con.WM_CLOSE)
 	
 	# Called by the core system to initialize the frame			
 	def init_cmif(self, x, y, w, h, title,units = UNIT_MM,
