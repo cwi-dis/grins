@@ -79,8 +79,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not mv.IsMovieFile(f):
 			self.errormsg(node, '%s: Not a movie' % file)
 			return 1
+		if MMAttrdefs.getattr(node, 'clipbegin') or \
+		   MMAttrdefs.getattr(node, 'clipend'):
+			flag = 0
+		else:
+			flag = mv.MV_MPEG1_PRESCAN_OFF
 		try:
-			self.armed_movie = movie = mv.OpenFile(f, mv.MV_MPEG1_PRESCAN_OFF)
+			self.armed_movie = movie = mv.OpenFile(f, flag)
 		except mv.error, msg:
 			self.errormsg(node, '%s: %s' % (file, msg))
 			return 1
