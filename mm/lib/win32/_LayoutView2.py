@@ -149,8 +149,11 @@ class _LayoutView2(GenFormView):
 			self.onShapeChange(region)
 			
 	def onShapeChange(self, shape):
-		if shape is None: return
-		if id(shape)==id(self._layout._viewport): return
+		if shape is None or id(shape)==id(self._layout._viewport):
+			for name in ('RegionX','RegionY','RegionW','RegionH'):
+				self[name].settext('')
+			self['RegionZ'].settext('')
+			return
 		rc = shape._rectb
 		i = 0
 		for name in ('RegionX','RegionY','RegionW','RegionH'):
