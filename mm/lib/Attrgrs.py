@@ -559,7 +559,7 @@ attrgrs=(
 	 },
 
 	{'name':'containerlayout',
-	'title':'Layout',
+	'title':'Default layout',
 	'attrs':[
 		'project_default_region_image',
 		'project_default_region_video',
