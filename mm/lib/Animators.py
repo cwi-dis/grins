@@ -2005,6 +2005,8 @@ class AnimateElementParser:
 		if type(v) == type(complex(0,0)):
 			return v.real, v.imag
 		v = v.strip()
+		if v[:1] == '(' and v[-1:] == ')':
+			v = v[1:-1].strip()
 		vl = self.__split(v)
 		if len(vl)==2:
 			x, y = vl
