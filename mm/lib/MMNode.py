@@ -3689,6 +3689,7 @@ class MMNode:
 			print '__calcendtime: breaking recursion'
 			return None, 0	# break recursion
 		start = None
+		conditional_start = 0
 		beginlist = self.GetBeginList()
 		beginlist = self.FilterArcList(beginlist)
 		pnode = self.GetSchedParent()
@@ -3716,6 +3717,13 @@ class MMNode:
 					n = a.refnode()
 					t0 = n.isresolved(sctx)
 					if t0 is None:
+						if aevent == 'begin' and n in self.GetPath():
+							# node depends on begin
+							# of ancestor, so if
+							# ancestor starts, this
+							# one will have a
+							# scheduled begin
+							conditional_start = 1
 						continue
 					if aevent == 'end':
 						d = n.calcfullduration(sctx)
@@ -3740,6 +3748,8 @@ class MMNode:
 						start = t
 			self.__calcendtimecalled = 0
 		if start is None:
+			if conditional_start:
+				return -1, 0
 			# no resolved begin time
 			return None, 0
 		self.__calcendtimecalled = 1
