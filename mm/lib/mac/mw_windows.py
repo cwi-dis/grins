@@ -2163,6 +2163,7 @@ class DialogWindow(_Window):
 	
 	def show(self):
 		self.settitle(self.title)
+		self._wid.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
 		self._wid.ShowWindow()
 		self._wid.SelectWindow() # test
 		self._is_shown = 1

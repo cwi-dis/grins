@@ -211,6 +211,7 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 	h = d.GetDialogItemAsControl(ITEM_QUESTION_TEXT)
 	text = _string2dialog(text)
 	Dlg.SetDialogItemText(h, text)
+	d.AutoSizeDialog()
 	w = d.GetDialogWindow()
 	w.ShowWindow()
 	while 1:
