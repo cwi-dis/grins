@@ -630,10 +630,23 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			__main__.toplevel._subwindows.remove(self)
 			self.DestroyWindow()	
 		else:
-			# clean image cache
-			from win32ig import win32ig
-			win32ig.deltemp()
-			__main__.toplevel._image_cache = {}
+			self.onApplicationExit()
+
+	# XXXXXXXXXXXXXXXXXXXXXXXXXX
+	# application's ui exit hook
+	# XXXXXXXXXXXXXXXXXXXXXXXXXX
+	def onApplicationExit(self):
+		Toolbars.ToolbarMixin.OnClose(self)
+		from win32ig import win32ig
+		win32ig.deltemp()
+		__main__.toplevel._image_cache = {}
+
+	# Called by the framework when the user closes the window
+	def OnClose(self):
+		if len(__main__.toplevel._subwindows)>1:
+			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.CLOSE))
+		else:
+			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.EXIT))
 
 	# Response to resizing		
 	def onSize(self,params):
@@ -1008,14 +1021,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Set adornments
 	def set_adornments(self, adornments):
 		pass			
-
-	# Called by the framework when the user closes the window
-	def OnClose(self):
-		Toolbars.ToolbarMixin.OnClose(self)
-		if len(__main__.toplevel._subwindows)>1:
-			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.CLOSE))
-		else:
-			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.EXIT))
 
 	# Bring to top of peers
 	def pop(self):
