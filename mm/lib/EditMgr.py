@@ -412,6 +412,16 @@ class EditMgr(Clipboard.Clipboard):
 	# Hyperlink operations
 	#
 	def addlink(self, link):
+		print "DEBUG: addlink; link is: ", link
+		# Link is a tuple of (srcanchor, dstanchor, direction, jump_type, src_stop, dest_play)
+		# where:
+		# srcanchor is this link's source
+		# dstanchor is this link's destination
+		# For the other attributes, see documentation in Hlinks.py.
+		#
+		# The anchors (srcanchor, dstanchor) are tuples of (uid, aid)
+		# where uid is the unique node id
+		# and aid is the anchor id.
 		self.addstep('addlink', link)
 		self.context.hyperlinks.addlink(link)
 
@@ -433,6 +443,7 @@ class EditMgr(Clipboard.Clipboard):
 
 	def addexternalanchor(self, url):
 		self.addstep('addexternalanchor', url)
+		# context.externalanchors is a list.
 		self.context.externalanchors.append(url)
 
 	def undo_addexternalanchor(self, url):

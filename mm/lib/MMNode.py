@@ -1449,9 +1449,10 @@ class MMChannelTree:
 
 
 # representation of anchors
+# See Hlink.py, LinkEditLight.py.
 class MMAnchor:
 	def __init__(self, aid, atype, aargs, atimes, aaccess):
-		self.aid = aid
+		self.aid = aid		# The name of this anchor, unique only within this node.
 		self.atype = atype
 		self.aargs = aargs
 		self.atimes = atimes
@@ -2016,11 +2017,11 @@ class MMNode(MMTreeElement):
 					# looking at this object.
 		self.char_positions= None # The character positions that this node corresponds to in the source.
 		self.timing_info_dict = {}
-
+		
 		self._subRegCssId = self.newSubRegCssId()
 		self._mediaCssId = self.newMediaCssId()
 		self._subRegCssId.media = self._mediaCssId
-
+		
 		self.computedMimeType = None
 		self.channelType = None
 		self.reinit(recurse = 0)
