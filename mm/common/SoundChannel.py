@@ -30,7 +30,7 @@ class SoundChannel(ChannelAsync):
 
 	def do_arm(self, node, same=0):
 		if same and self.arm_fp:
-		        return 1
+			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -68,7 +68,12 @@ class SoundChannel(ChannelAsync):
 		if self.armed_duration:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
-		player.play(self.play_fp, (self.my_playdone, ()))
+		try:
+			player.play(self.play_fp, (self.my_playdone, ()))
+		except audio.Error, msg:
+			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
+			self.playdone(0)
+			return
 		if self.play_loop == 0 and self.armed_duration == 0:
 			self.playdone(0)
 
@@ -198,32 +203,36 @@ class Player:
 		self.__callbacks.append((rdr, arg))
 
 	def play(self, rdr, cb):
-		first = 0
-		if not self.__merger:
-			first = 1
-			self.__merger = audiomerge.merge()
+		merger = self.__merger
+		if not merger:
+			merger = audiomerge.merge()
 		else:
 			if self.__tid:
 				windowinterface.canceltimer(self.__tid)
 				self.__tid = None
 			self.__stop()
-		self.__merger.add(rdr, (self.__callback, (rdr, cb,)))
-		if first:
-			self.__converter = audioconvert.convert(self.__merger,
-						 self.__port.getformats(),
-						 self.__port.getframerates())
-			self.__framerate = self.__converter.getframerate()
-			self.__readsize = SECONDS_TO_BUFFER*self.__framerate/2
-			self.__port.setformat(self.__converter.getformat())
-			self.__port.setframerate(self.__converter.getframerate())
-			fillable = self.__port.getfillable()
-			if fillable < self.__readsize:
-				self.__readsize = fillable
-			self.__timeout = 0.5 * self.__readsize / self.__framerate
-			self.__prevpos = []
-			self.__framesread = self.__frameswritten = 0
-		self.__read()
-		self.__playsome()
+		try:
+			# the call to merger.add could fail...
+			merger.add(rdr, (self.__callback, (rdr, cb,)))
+			if not self.__merger:
+				self.__merger = merger
+				self.__converter = audioconvert.convert(self.__merger,
+							 self.__port.getformats(),
+							 self.__port.getframerates())
+				self.__framerate = self.__converter.getframerate()
+				self.__readsize = SECONDS_TO_BUFFER*self.__framerate/2
+				self.__port.setformat(self.__converter.getformat())
+				self.__port.setframerate(self.__converter.getframerate())
+				fillable = self.__port.getfillable()
+				if fillable < self.__readsize:
+					self.__readsize = fillable
+				self.__timeout = 0.5 * self.__readsize / self.__framerate
+				self.__prevpos = []
+				self.__framesread = self.__frameswritten = 0
+		finally:
+			if self.__merger:
+				self.__read()
+				self.__playsome()
 
 	def stop(self, rdr):
 		for i in range(len(self.__callbacks)):
