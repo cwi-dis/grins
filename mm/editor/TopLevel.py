@@ -181,6 +181,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# the source view command is all the time valid
 		self.commandlist.append(SOURCEVIEW(callback = (self.view_callback, (8, ))))
 		self.commandlist.append(HIDE_SOURCEVIEW(callback = (self.hide_view_callback, (8, ))))
+
+		if not self.context.isValidDocument():
+			# the error view command is showed only when errors
+			self.commandlist.append(ERRORSVIEW(callback = (self.view_callback, (10, ))))
+			self.commandlist.append(HIDE_ERRORSVIEW(callback = (self.hide_view_callback, (10, ))))
 			
 		self.undocommandlist = [
 			UNDO(callback = (self.undo_callback, ())),
@@ -240,6 +245,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.setcommands(self.commandlist + self.__ugroup + undocommandlist)
 		else:
 			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist)
+
+	def updateCommandlistOnErrors(self):
+		# recompute all command list
+		self.set_commandlist()
+		self.update_undocommandlist()
 		
 	def show(self):
 		TopLevelDialog.show(self)
@@ -253,7 +263,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# you have to turn on the views
 		self.viewsdisabled = 0
 		
-		self.updateShowingViews()
+		self.showviews()
 		
 	def showdefaultviews(self):
 		import settings
@@ -326,6 +336,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 #		self.temporalview = None
 		self.sourceview = None
 		self.assetsview = None
+		self.errorsview = None
 
 		if features.STRUCTURE_VIEW in features.feature_set:
 			import HierarchyView
@@ -382,6 +393,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import SourceView
 			self.sourceview = SourceView.SourceView(self)
 
+		if features.ERRORS_VIEW in features.feature_set:
+			# for now, this view is not supported on all plateform
+			try:
+				import ErrorsView
+				self.errorsview = ErrorsView.ErrorsView(self)
+			except ImportError:
+				self.errorsview = None
+
 		if features.ASSETS_VIEW in features.feature_set:
 			import AssetsView
 			self.assetsview = AssetsView.AssetsView(self)
@@ -391,7 +410,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
-			      self.sourceview, self.assetsview
+			      self.sourceview, self.assetsview, self.errorsview
 			      ]
 #			      self.temporalview]
 
@@ -476,7 +495,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.editmgr.register(self)
 		self.makeviews()
 
-		self.updateShowingViews(showing)
+		self.showviews(showing)
 		
 		self.changed = 1
 		
@@ -934,7 +953,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 #		self.editmgr.register(self)
 		self.makeviews()
 
-		self.updateShowingViews(showing)
+		self.showviews(showing)
 
 		self.changed = 1
 
@@ -1223,7 +1242,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		self.makeviews()
 
-		self.updateShowingViews(showing)
+		self.showviews(showing)
 
 	def read_it(self):
 		self.changed = 0
@@ -1352,32 +1371,48 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# finish some context cleanup
 		context.destroy()
 
-	def updateShowingViews(self, listViewsToShow=None):
-		forceSourceView = 0
+	# show the views according to:
+	# - the source document contains or not any errors
+	# note: if the document contains initialy some errors, all views (except source and errors) are disabled
+	# - a list of views to show is specified or not.
+	# if a list of view is spefified, the parameter listViewsToShow is a list of view index
+	# if no list specified, the default views are showed
+	def showviews(self, listViewsToShow=None):
 		if self.context.disableviews:
 			self.viewsdisabled = 1
-			forceSourceView = 1
 		else:
-			# if no list specified or previous views was disabled, then show default views
+			# if no list specified or previous views was disabled, then show the default views
 			if listViewsToShow == None or self.viewsdisabled:
 				self.showdefaultviews()
 			else:
 				for i in listViewsToShow:
 					self.views[i].show()
 
+			# special case, if all views was previously disabled
 			if self.viewsdisabled:
 				# if the source view was showed, we have to keep it showed
 				if 8 in listViewsToShow:
-					forceSourceView = 1
+					if self.sourceview != None and not self.sourceview.is_showing():
+						self.sourceview.show()
 				# raz the previous views states
 				self.viewsdisabled = 0
 
-		# if the sourceview is requiered or the document is not valid (parse error),
-		# show in addition the source view
-		if forceSourceView or not self.context.isValidDocument():
+		# update views according the errors
+		self.updateViewsOnErrors()
+
+	# update the views according the errors in the document source		
+	def updateViewsOnErrors(self):
+		if not self.context.isValidDocument():
+			# the document source contains some errors, force the source and error views to show
 			if self.sourceview != None and not self.sourceview.is_showing():
-				self.sourceview.show()		
-					
+				self.sourceview.show()
+			if self.errorsview != None:
+				self.errorsview.show()
+		else:
+			# the document doesn't contains any error, force the error view to hide
+			if self.errorsview != None and self.errorsview.is_showing():
+				self.errorsview.hide()
+			
 	def changeRoot(self, root, text=None):
 		# raz the focus
 		self.editmgr.setglobalfocus(None, None)
@@ -1395,7 +1430,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		# restore the views			
 		self.makeviews()
-		self.updateShowingViews(showing)
+		self.showviews(showing)
 		
 		# re-build the command list. If the document contains some parse errors,
 		# we some command are disactivate. In addition, the available views may not

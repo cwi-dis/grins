@@ -11,6 +11,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.setRoot(self.toplevel.root)
 		self.myCommit = 0
 		SourceViewDialog.SourceViewDialog.__init__(self)
+
+		self.errorsview = None
 		
 	def fixtitle(self):
 		pass
@@ -30,9 +32,22 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			SourceViewDialog.SourceViewDialog.show(self) # creates the text widget
 			self.read_text()
 			self.editmgr.register(self, want_focus = 1)
-		self.updateFocus()
 
+		self.errorsview = self.toplevel.errorsview
+		if self.errorsview != None:
+			self.errorsview.setListener(self)
+
+		parseErrors = self.context.getParseErrors()
+		if parseErrors != None:
+			self.updateError()
+		else:
+			# the normal focus is set only if there is no parsing error
+			self.updateFocus()
+		
 	def hide(self):
+		if self.errorsview != None:
+			self.errorsview.removeListener(self)
+			
 		if not self.is_showing():
 			return
 		self.editmgr.unregister(self)
@@ -58,19 +73,30 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	def globalfocuschanged(self, focustype, focusobject):
 		self.__setFocus(focustype, focusobject)
 
-	def raiseError(self):
+	def updateError(self):
+		# if an error is occured, we set the focus on one specified error
+		# it no specified error (no error view, or no selected error),
+		# we put the focus on the first error
+		selectedError = 0
+		if self.errorsview != None:
+			selectedError = self.errorsview.getSelectedError()
+
+		if selectedError != None:
+			self.showError(selectedError)
+		
+	def showError(self, errorNumber):
 		parseErrors = self.context.getParseErrors()
 		if parseErrors != None:
-			# get first error
-			firstError = parseErrors.getErrorList()[0]
-			msg, line = firstError
+			errorList = parseErrors.getErrorList()
+			if len(errorList) <= errorNumber: return
+			# get error line
+			errorDesc = parseErrors.getErrorList()[errorNumber]
+			msg, line = errorDesc
 			if line != None:
 				# for now, make selection working only when the source is unmodified
 				# to avoid some position re-computations adter each modification
 				if not self.is_changed():
 					self.select_lines(line, line+1)
-			# XXX pop the source view
-			# to do
 				
 	def setRoot(self, root):
 		self.root = root
@@ -109,7 +135,6 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			self.set_text(text)
 		else:
 			self.set_text(parseErrors.getSource())
-			self.raiseError()
 			
 	def write_text(self):
 		# Writes the text back to the MMNode structure.
@@ -207,7 +232,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 					self.__applySource(1, 1)
 				else:
 					# otherwise, we don't allow to close the window, and we re-raise the error
-					self.raiseError()
+					self.updateError()
 
 	def kill(self):
 		self.destroy()
@@ -262,4 +287,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		else:
 			# if no object, show a warning
 			windowinterface.showmessage("Node not found", mtype = 'error')
-			
+
+	#
+	# methods called from the errorsview to update the error
+	#
+	
+	def onSelectError(self, errorNumber):
+		self.showError(errorNumber)

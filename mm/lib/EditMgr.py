@@ -78,7 +78,8 @@ class EditMgr(Clipboard.Clipboard):
 
 		# if the context is changed there are some special treatment to do during commit		
 		self.__newRoot = None
-
+		self.__errorstateChanged = 0
+		
 	def destroy(self):
 		for x in self.registry[:]:
 			x.kill()
@@ -188,7 +189,13 @@ class EditMgr(Clipboard.Clipboard):
 			# special treatment			
 			self.toplevel.changeRoot(self.__newRoot)
 			self.__newRoot = None
-			
+
+		# if the error state has changed, update also the views and commandlist
+		if self.__errorstateChanged:
+			self.toplevel.updateViewsOnErrors()
+			self.toplevel.updateCommandlistOnErrors()
+			self.__errorstateChanged = 0
+		
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
 			
@@ -785,11 +792,13 @@ class EditMgr(Clipboard.Clipboard):
 	#
 	def delparsestatus(self, parsestatus):
 		self.addstep('delparsestatus', parsestatus)
+		self.__errorstateChanged = 1
 		if self.context != None:
 			self.context.setParseErrors(None)
 			
 	def addparsestatus(self, parsestatus):
 		self.addstep('addparsestatus', parsestatus)
+		self.__errorstateChanged = 1
 		if self.context != None:
 			self.context.setParseErrors(parsestatus)
 			

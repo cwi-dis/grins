@@ -59,6 +59,8 @@ if features.editor:
 	from _StructView import _StructView
 	from AttrEditForm import AttrEditForm
 	from _AssetsView import _AssetsView
+	from _ErrorsView import _ErrorsView
+	
 	# editor document views
 	_HierarchyView =_StructView
 	_ChannelView =_StructView
@@ -78,6 +80,7 @@ if features.editor:
 		#'tview_':{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','class':_ChannelView,},
 		'attr_edit':{'cmd':-1,'title':'Property Editor','class':AttrEditForm},
 		'aview_':{'cmd':usercmd.HIDE_ASSETSVIEW,'title':'Assets view','class':_AssetsView,},
+		'erview_':{'cmd':usercmd.HIDE_ERRORSVIEW,'title':'Error messages','class':_ErrorsView},
 	}
 else:
 	usercmd.HIDE_PLAYERVIEW = usercmd.CLOSE
