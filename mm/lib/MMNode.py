@@ -1316,7 +1316,7 @@ class MMChannel(MMTreeElement):
 
 	def Destroy(self):
 		context = self.context
-		if self.context is None:
+		if context is None:
 			# already destroyed
 			# this case can happen (see EditMgr.__clean_node method for more details)
 			return
@@ -1416,8 +1416,13 @@ class MMChannel(MMTreeElement):
 
 	def Extract(self):
 		MMTreeElement.Extract(self)
-		if self.attrdict.get('type') == 'layout' and self._cssId != None:
+		if self.attrdict.get('type') == 'layout' and self._cssId is not None:
 			self.context.cssResolver.unlink(self._cssId)
+
+	def _addchild(self, child):
+		MMTreeElement._addchild(self, child)
+		if self.attrdict.get('type') == 'layout' and self._cssId is not None:
+			self.context.cssResolver.link(child.getCssId(), self.getCssId())
 
 	# Important: this method has to be called inside a transaction
 	def ClearRefs(self, editmgr, rootNodeListToInspect):
@@ -1475,12 +1480,9 @@ class MMChannel(MMTreeElement):
 			parent = self.GetParent()
 			if parent is not None:
 				self.Extract()
-			if self.attrdict.get('type') == 'layout':										
-				pchan = self.context.channeldict.get(value)
-				if pchan is None:
+			if __debug__:
+				if self.attrdict.get('type') == 'layout' and not self.context.channeldict.has_key(value):
 					print 'Error: The parent channel '+self.name+' should be created before setting base_window'
-				else:
-					self.context.cssResolver.link(self._cssId, pchan._cssId)
 
 			parent = self.context.channeldict[value]
 			parent._addchild(self)
