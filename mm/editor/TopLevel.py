@@ -435,12 +435,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
-		
+
 	def do_read_it(self, filename):
-## 		import time
+##		import time
 		import mimetypes
-## 		print 'parsing', filename, '...'
-## 		t0 = time.time()
+##		print 'parsing', filename, '...'
+##		t0 = time.time()
 		mtype = mimetypes.guess_type(filename)[0]
 		if mtype == None and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
@@ -480,8 +480,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
   </body>
 </smil>
 ''' % (dur, filename), filename, self.printfunc)
-## 		t1 = time.time()
-## 		print 'done in', round(t1-t0, 3), 'sec.'
+##		t1 = time.time()
+##		print 'done in', round(t1-t0, 3), 'sec.'
 
 
 	def printfunc(self, msg):
@@ -605,6 +605,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				node = top.root.context.mapuid(uid)
 			except NoSuchUIDError:
 				print 'uid not found in document'
+		elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
+			node = node.context.mapuid(node.SMILidmap[aid])
 		top.player.show((top.player.playfromanchor, (node, aid)))
 		if atype == TYPE_CALL:
 			self.player.pause(1)
@@ -642,4 +644,3 @@ if os.name == 'posix':
 else:
 	def make_backup_filename(filename):
 		return filename + '.BAK'
-		
