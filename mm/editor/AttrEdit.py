@@ -888,8 +888,6 @@ class PreferenceWrapper(Wrapper):
 				attrs.remove('html_control')
 		if os.name in ('posix', 'mac') and 'html_control' in attrs:
 			attrs.remove('html_control')
-		elif os.name in ('posix', 'mac'):
-			attrs.remove('html_control')
 		attrs.sort()
 		return attrs
 
