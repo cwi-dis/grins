@@ -5,6 +5,7 @@ import win32ui, win32con, win32api
 Sdk = win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
 
+import win32window
 
 # selection modes
 [SM_NONE, SM_MOVE, SM_SIZE, SM_NET] = range(4)
@@ -73,20 +74,7 @@ class DrawContext:
 		return self._curtool == self._seltool
 
 	def setcursor(self, strid):
-		if strid=='arrow':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-		elif strid=='sizenwse':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENWSE)
-		elif strid=='sizens':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENS)
-		elif strid=='sizenesw':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENESW)
-		elif strid=='sizewe':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZEWE)
-		elif strid=='cross':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_CROSS)
-		else:
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+		cursor = win32window.getcursorhandle(strid)
 		Sdk.SetCursor(cursor)
 			
 	def getMouseTarget(self, point):
