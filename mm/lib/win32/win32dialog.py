@@ -535,6 +535,28 @@ class SelectElementDlg(ResDialog):
 			return 0
 		return 1
 
+	def __updateSelectEnable(self):
+		enable = 1
+		self._selection = self.gettext()
+		if self._selection:
+			self._selwrapper = self._mmid2wrapper.get(self._selection)
+		else:
+			print 'Warning: SelectItem: unknown selection', self._selection
+			self._selwrapper = None
+		if not self._selection or not self._selwrapper:
+			enable = 0
+		else:
+			if self._filter == 'topLayout' and self._selwrapper.getTag() != 'topLayout':
+				enable = 0
+			elif self._filter == 'region' and not self._selwrapper.isRegion():
+				enable = 0
+			elif self._filter == 'node' and self._selwrapper.isRegion():
+				enable = 0
+			elif self._filter == 'node' and self._selwrapper.getTag() in self.ctrlinteriortypes:
+				enable = 0
+		print 'enable', enable
+		self._bselect.enable(enable)
+
 	# replacement of DoModal within a platform independent context
 	# usage pattern without callbacks:
 	# if dlg.show(): 
@@ -552,6 +574,8 @@ class SelectElementDlg(ResDialog):
 			if self._selwrapper:
 				self._tree.Select(self._selwrapper.getDisplayId(), commctrl.TVGN_CARET)
 			self.__lockupdate = 0
+		# XXX Should we call __updateSelectEnable here? Should
+		# we allow editing in the first place?
 
 	def gettext(self):
 		if self.__isoswnd:
@@ -651,6 +675,7 @@ class SelectElementDlg(ResDialog):
 			self.__lockupdate = 0
 		else:
 			print 'missing wrapper for item', self._tree.GetItemText(itemid)
+		self.__updateSelectEnable()
 
 	# insert MMObjWrapper to the tree and update maps
 	def insertMMObjWrapper(self, wrapper, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
@@ -661,9 +686,13 @@ class SelectElementDlg(ResDialog):
 		wrapper.setDisplayId(itemid)
 		if not self._wrappers.has_key(itemid):
 			self._wrappers[itemid] = wrapper
+		else:
+			print 'Warning: SelectElement: duplicate itemid', itemid
 		mmid = wrapper.getId()
 		if mmid:
 			self._mmid2wrapper[mmid] = wrapper
+		else:
+			print 'Warning: SelectElement: no mmid for', itemid
 		return itemid
 
 # Implementation of the Layout name dialog
