@@ -1306,6 +1306,7 @@ class SMILWriter(SMIL):
 		if not rtchannel or rtchannel == 'undefined':
 			return None, None
 		file = self.gen_rtfile()
+		self.files_generated[file] = ''
 		import realsupport
 		realsupport.writeRT(os.path.join(self.copydir, file), node.slideshow.rp, node)
 		val = MMurl.basejoin(self.copydirurl, MMurl.pathname2url(file))
@@ -1456,7 +1457,13 @@ class SMILWriter(SMIL):
 		dstdir = self.copydir
 		file = self.newfile(srcurl)
 		u = MMurl.urlopen(srcurl)
-		convert = MMAttrdefs.getattr(node, 'project_convert')
+		if node is not None:
+			if type(node) == type({}):
+				convert = node.get('project_convert', 1)
+			else:
+				convert = MMAttrdefs.getattr(node, 'project_convert')
+		else:
+			convert = 1
 		if convert and u.headers.maintype == 'audio' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertaudiofile
