@@ -3,6 +3,8 @@
 
 struct IPyClientContext: public IUnknown
 	{
+    STDMETHOD (AddInterface) (THIS_ 
+		IUnknown* pIUnknown) PURE;	
 	};
 
 struct IPyClientAdviseSink: public IRMAClientAdviseSink
