@@ -245,7 +245,7 @@ def getattr(node, attrname, animated=0):
 		attrvalue = node.GetInherAttrDef(attrname, defaultvalue)
 	elif inheritance == 'channel':
 		try:
-			attrvalue = node.GetInherAttr(attrname)
+			attrvalue = node.GetAttr(attrname)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
 			if ch is not None:
@@ -275,7 +275,7 @@ def getdirattr(node, attrname, animated=0):
 		attrvalue = node.GetInherAttrDef(attrname, defaultvalue, animated)
 	elif inheritance == 'channel':
 		try:
-			attrvalue = node.GetInherAttr(attrname, animated)
+			attrvalue = node.GetAttr(attrname, animated)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
 			if ch is not None:
@@ -316,14 +316,11 @@ def getdefattr(node, attrname):
 		except NoSuchAttrError:
 			return defaultvalue
 	elif inheritance == 'channel':
-		try:
-			return node.GetDefInherAttr(attrname)
-		except NoSuchAttrError:
-			ch = node.GetChannel()
-			if ch is not None:
-				return ch.get(attrname, defaultvalue)
-			else:
-				return defaultvalue
+		ch = node.GetChannel()
+		if ch is not None:
+			return ch.get(attrname, defaultvalue)
+		else:
+			return defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`

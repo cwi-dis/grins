@@ -1083,11 +1083,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mimetype is not None:
 			node.attrdict['mimetype'] = mimetype
 
-		# if no background color defined on the node, or no region, we fix the background color
-		# to transparent
-		if not node.attrdict.has_key('bgcolor') or not attributes.has_key('region'):
-			node.attrdict['transparent'] = 1
-			node.attrdict['bgcolor'] = 0,0,0
+		if not attributes.has_key('region'):
+			# if no region, we must ignore backgroundColor
+			if  node.attrdict.has_key('bgcolor'):
+				del node.attrdict['bgcolor']
+			if  node.attrdict.has_key('transparent'):
+				del node.attrdict['transparent']
 					
 		# experimental SMIL Boston layout code
 		node._internalchtype = chtype
