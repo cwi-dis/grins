@@ -865,13 +865,14 @@ class RootNode(RegionNode):
 				except parseskin.error, msg:
 					pass
 				else:
-					width, height = dict['display'][1][2:4]
-					if self.pxwidth > width or self.pxheight > height:
-						from fmtfloat import round
-						scale = min(float(width) / self.pxwidth, float(height) / self.pxheight)
-						self.pxwidth = round(self.pxwidth * scale)
-						self.pxheight = round(self.pxheight * scale)
-						self._toUnInitState()
+					if dict.has_key('display'):
+						width, height = dict['display'][1][2:4]
+						if self.pxwidth > width or self.pxheight > height:
+							from fmtfloat import round
+							scale = min(float(width) / self.pxwidth, float(height) / self.pxheight)
+							self.pxwidth = round(self.pxwidth * scale)
+							self.pxheight = round(self.pxheight * scale)
+							self._toUnInitState()
 					
 		self.isInit = 1
 		
