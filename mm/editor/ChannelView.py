@@ -599,7 +599,7 @@ class NodeBox(GO):
 	def setarmedmode(self, mode):
 		# print 'node', self.name, 'setarmedmode', mode
 		self.armedmode = mode
-		GLDialog.show(self.mother) # For winset() effect
+		self.mother.setwin()
 		self.drawfocus()
 
 	def lock(self):
