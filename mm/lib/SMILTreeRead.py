@@ -1590,7 +1590,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del attrdict['base_window']
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo',
-			     'sound'):
+			     'sound', 'brush'):
 			# deal with channel with window
 			if attrdict.has_key('id'): del attrdict['id']
 			title = attrdict.get('title')
@@ -1766,7 +1766,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['type'] = mtype
 			if mtype in ('image', 'movie', 'video', 'mpeg',
 				     'text', 'label', 'html', 'graph', 'RealPix', 'RealText', 'RealVideo',
-				     'sound'):
+				     'sound', 'brush'):
 		############################### WARNING ##################################
 		################# to move the test : doesn't work clearly ################
 		##########################################################################
@@ -2127,7 +2127,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif attributes['type'] == SMIL_EXTENDED:
 			if self.__in_head_switch and \
 			   self.__context.attributes.get('project_boston') == 0:
-				# ignre text/smil-extended-layout if we're
+				# ignore text/smil-extended-layout if we're
 				# specifically using SMIL 1.0 and we're
 				# inside a switch (if we're not in a switch
 				# we'll complain below)
