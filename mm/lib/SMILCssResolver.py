@@ -124,6 +124,7 @@ class Node:
 		self.pxValuesListener = None
 		self.rawValuesListener = None
 		self.mmobj = mmobj
+		self.media = None
 
 		self.left = None
 		self.width = None
@@ -255,9 +256,9 @@ class Node:
 
 		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
 		self._onGeomChanged()
-
+		
 	def __dump(self):
-		print self.__class__.__name__, self.mmobj, self.getPxGeom()
+		print self.__class__.__name__, self.mmobj, self.getPxGeom(), 'scale=',self.scale, 'media=',self.media
 		for child in self.children:
 			child.__dump()
 	
@@ -268,7 +269,6 @@ class Node:
 class RegionNode(Node):
 	def __init__(self, context, mmobj=None):
 		Node.__init__(self, context, mmobj)
-		self.media = None
 
 	def update(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
