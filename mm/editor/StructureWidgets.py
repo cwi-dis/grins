@@ -12,6 +12,7 @@ import settings
 import TimeMapper
 from AppDefaults import *
 from fmtfloat import fmtfloat
+import Duration
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
@@ -242,6 +243,16 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			timemapper.addcollision(t0, edge)
 			t0 = t0 - (download)
 		ledge = redge = edge
+		if isinstance(self, MediaWidget):
+			dur = Duration.get(self.node, ignoreloop = 1, wanterror = 0)	# what gets repeated
+			ad = Duration.get(self.node, wanterror = 0)
+			if ad > t2 - t0:
+				ad = t2 - t0
+			if dur > ad:
+				dur = ad
+			if dur == 0 < tend - t0:
+				timemapper.addcollision(t0, 4*HEDGSIZE)
+				ledge = ledge + 4*HEDGSIZE
 		if t0 == tend:
 			w, h = self.get_minsize()
 			if t0 == mastertend:
@@ -1684,8 +1695,6 @@ class MediaWidget(MMNodeWidget):
 		if timemapper is None:
 			displist.drawfbox(color, (x,y,w,h))
 			return
-
-		import Duration
 
 		node = self.node
 		t0, t1, t2 = self.__times
