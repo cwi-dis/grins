@@ -2478,7 +2478,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			alist = []
 			anchorlist.sort()
 			for a in anchorlist:
-				alist.append(a[2:])
+				alist.append(apply(MMNode.MMAnchor, a[2:]))
 			node.attrdict['anchorlist'] = alist
 		del node.__anchorlist
 

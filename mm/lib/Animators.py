@@ -1654,7 +1654,7 @@ class AnimateElementParser:
 			root = anim.GetRoot()
 			area = root.GetChildWithArea(te)
 			if area:
-				parent, id, type, args, times = area
+				parent, a = area
 				vnodename = '_vnode%s' % te
 				if hasattr(parent,vnodename):
 					newnode = getattr(parent, vnodename)
@@ -1662,11 +1662,11 @@ class AnimateElementParser:
 					newnode = MMNode('imm', ctx, ctx.newuid())
 					newnode.attrdict = parent.attrdict.copy()
 					newnode.attrdict['tag'] = 'area'
-					newnode.attrdict['coords'] = args
-					newnode.attrdict['name'] = id
+					newnode.attrdict['coords'] = a.aargs
+					newnode.attrdict['name'] = a.aid
 					newnode.attrdict['parent'] = parent
-					newnode.attrdict['type'] = type
-					newnode.attrdict['times'] = times
+					newnode.attrdict['type'] = a.atype
+					newnode.attrdict['times'] = a.atimes
 					parent.__dict__[vnodename] = newnode
 				anim.targetnode = newnode
 	
