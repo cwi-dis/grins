@@ -122,11 +122,11 @@ class AnchorEditor:
 		return self.context
 
 	def register(self, object):
-		if self.editmgr <> None:   # DEBUG
+		if self.editmgr is not None:   # DEBUG
 			self.editmgr.register(object)
 
 	def unregister(self, object):
-		if self.editmgr <> None:   # DEBUG
+		if self.editmgr is not None:   # DEBUG
 			self.editmgr.unregister(object)
 
 	def stillvalid(self):
@@ -214,7 +214,7 @@ class AnchorEditor:
 		names = []
 		for i in self.anchorlist:
 			id = i[A_ID]
-			if type(id) <> type(''): id = `id`
+			if type(id) is not type(''): id = `id`
 			#name = '#' + self.name + '.' + id
 			names.append(id)
 		self.anchor_browser.delalllistitems()
@@ -227,7 +227,7 @@ class AnchorEditor:
 			self.buttons.show(1)
 		else:
 			self.buttons.hide(1)
-		if self.focus == None:
+		if self.focus is None:
 			self.buttons.hide(2)
 			self.type_choice.hide()
 ##			self.group.hide_object()
@@ -241,7 +241,7 @@ class AnchorEditor:
 			self.show_type()
 
 	def show_type(self):
-		if self.focus == None:
+		if self.focus is None:
 			print 'AnchorEdit: show_type without focus!'
 			return
 		a = self.anchorlist[self.focus]
@@ -265,11 +265,11 @@ class AnchorEditor:
 			self.buttons.hide(1)
 
 	def set_type(self, type):
-		if self.focus == None:
+		if self.focus is None:
 			print 'AnchorEdit: set_type without focus!'
 			return
 		old = new = self.anchorlist[self.focus]
-		if type == None:
+		if type is None:
 			type = new[A_TYPE]
 		if type in (ATYPE_AUTO, ATYPE_WHOLE):
 			new = (new[0], type, [])
@@ -329,7 +329,7 @@ class AnchorEditor:
 				id = eval('0+'+id)
 			except:
 				pass
-			if type(id) == type(0) and id > maxid:
+			if type(id) is type(0) and id > maxid:
 				maxid = id
 		id = `maxid + 1`
 		#name = '#' + self.name + '.' + id
@@ -342,7 +342,7 @@ class AnchorEditor:
 	def id_callback(self):
 		# XXXX Does not work for non-whole-node anchors if
 		# self.editable is false
-		if self.focus == None:
+		if self.focus is None:
 			return
 		self.changed = 1
 		anchor = self.anchorlist[self.focus]
@@ -360,7 +360,7 @@ class AnchorEditor:
 			self.focus = None
 			self.show_focus()
 			return
-		if self.focus == None:
+		if self.focus is None:
 			print 'AnchorEdit: no focus in delete!'
 			return
 		id, atype, arg = self.anchorlist[self.focus]
@@ -374,7 +374,7 @@ class AnchorEditor:
 		self.show_focus()
 
 	def type_callback(self):
-		if self.focus == None:
+		if self.focus is None:
 			print 'AnchorEdit: no focus in setloc!'
 			return
 		i = self.type_choice.getpos()
@@ -382,12 +382,12 @@ class AnchorEditor:
 
 
 	def edit_callback(self):
-		if self.focus == None:
+		if self.focus is None:
 			print 'AnchorEdit: no focus in edit_callback'
 		self.set_type(None)
 
 	def export_callback(self):
-		if self.focus == None:
+		if self.focus is None:
 			print 'AnchorEdit: no focus in export_callback'
 			return
 		dummy = windowinterface.InputDialog(
