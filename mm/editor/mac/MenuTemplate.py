@@ -84,7 +84,7 @@ MENUBAR=(
 		(ENTRY, 'Edit content', 'E', CONTENT),
 		(SEP,),
 		(ENTRY, 'Create simple anchor', 'R', CREATEANCHOR),
-		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
+		(ENTRY, 'Finish hyperlink to focus', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
 		
 	(CASCADE, 'Navigate', (
@@ -94,7 +94,7 @@ MENUBAR=(
 		(CASCADE, 'Level of detail', (
 			(ENTRY, 'More horizontal detail', None, CANVAS_WIDTH),
 			(ENTRY, 'More vertical detail', None, CANVAS_HEIGHT),
-			(ENTRY, 'Reset to document', None, CANVAS_RESET))),
+			(ENTRY, 'Fit in window', None, CANVAS_RESET))),
 		(SEP,),
 		(ENTRY, 'Send focus to other views', 'F', PUSHFOCUS),
 		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
@@ -115,14 +115,14 @@ MENUBAR=(
 		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS))),
 		
 	(CASCADE, 'Views', (
-		(TOGGLE, ('Show Player', 'Hide Player'), '1', PLAYERVIEW),
+		(TOGGLE, ('Show Player', 'Hide Player'), '5', PLAYERVIEW),
 		(SEP,),
-		(TOGGLE, ('Show Structure view', 'Hide Hierarchy view'), '2', HIERARCHYVIEW),
-		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '3', CHANNELVIEW),
-		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '4', LAYOUTVIEW),
+		(TOGGLE, ('Show Structure view', 'Hide Hierarchy view'), '6', HIERARCHYVIEW),
+		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '7', CHANNELVIEW),
+		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '8', LAYOUTVIEW),
 		(SEP,),
-		(TOGGLE, ('Show Hyperlinks', 'Hide Hyperlink view'), '5', LINKVIEW),
-		(TOGGLE, ('Show User groups', 'Hide User group view'), '6', USERGROUPVIEW),
+		(TOGGLE, ('Show Hyperlinks', 'Hide Hyperlink view'), '9', LINKVIEW),
+		(TOGGLE, ('Show User groups', 'Hide User group view'), '0', USERGROUPVIEW),
 		(SEP,),
 		(ENTRY, 'View source', None, SOURCE),
 		(ENTRY, 'View help window', '?', HELP),
@@ -136,6 +136,9 @@ MENUBAR=(
 # Popup menus for various states
 #
 POPUP_HVIEW_LEAF = (
+		(ENTRY, 'New node Before', None, NEW_BEFORE),
+		(ENTRY, 'New node After', 'K', NEW_AFTER),
+		(SEP,),
 		(ENTRY, 'Cut', 'X', CUT),
 		(ENTRY, 'Copy', 'C', COPY),
 		(ENTRY, 'Delete', None, DELETE),
@@ -143,16 +146,13 @@ POPUP_HVIEW_LEAF = (
 		(ENTRY, 'Paste Before', None, PASTE_BEFORE),
 		(ENTRY, 'Paste After', None, PASTE_AFTER),
 		(SEP,),
-		(ENTRY, 'New node Before', None, NEW_BEFORE),
-		(ENTRY, 'New node After', 'K', NEW_AFTER),
-		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
 		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(SEP,),
-		(ENTRY, 'Create anchor', None, CREATEANCHOR),
+		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink', None, FINISH_LINK),
 		(SEP,),
 		(ENTRY, 'Info...', 'I', INFO),
@@ -162,17 +162,17 @@ POPUP_HVIEW_LEAF = (
 )
 
 POPUP_HVIEW_STRUCTURE = (
+		(ENTRY, 'New node Before', None, NEW_BEFORE),
+		(ENTRY, 'New node After', 'K', NEW_AFTER),
+		(ENTRY, 'New Within', 'D', NEW_UNDER),
+		(SEP,),
 		(ENTRY, 'Cut', 'X', CUT),
 		(ENTRY, 'Copy', 'C', COPY),
 		(ENTRY, 'Delete', None, DELETE),
 		(SEP,),
 		(ENTRY, 'Paste Before', None, PASTE_BEFORE),
 		(ENTRY, 'Paste After', None, PASTE_AFTER),
-		(ENTRY, 'Paste As child', None, PASTE_UNDER),
-		(SEP,),
-		(ENTRY, 'New node Before', None, NEW_BEFORE),
-		(ENTRY, 'New node After', 'K', NEW_AFTER),
-		(ENTRY, 'New Child', 'D', NEW_UNDER),
+		(ENTRY, 'Paste Within', None, PASTE_UNDER),
 		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
@@ -181,43 +181,45 @@ POPUP_HVIEW_STRUCTURE = (
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
 		(SEP,),
-		(ENTRY, 'Create anchor', None, CREATEANCHOR),
+		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink', None, FINISH_LINK),
 		(SEP,),
-		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
-		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Info...', 'I', INFO),
+		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
+		(ENTRY, 'Anchors...', 'T', ANCHORS),
 )
 
 POPUP_CVIEW_NONE = (
-		(ENTRY, 'New channel', 'M', NEW_CHANNEL),
+		(ENTRY, 'Create new channel', 'M', NEW_CHANNEL),
 )
 
 POPUP_CVIEW_CHANNEL = (
-		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
-		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF),
+		(ENTRY, 'Properties...', None, ATTRIBUTES),
 		(SEP,),
 		(ENTRY, 'Delete', None, DELETE),
+		(SEP,),
+		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
+		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 
 )
 
 POPUP_CVIEW_NODE = (
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM),
+		(SEP,),
 		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
 		(SEP,),
-		(ENTRY, 'Play node', None, PLAYNODE),
-		(ENTRY, 'Play from node', None, PLAYFROM),
-		(SEP,),
-		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
-		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Info...', 'I', INFO),
+		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
+		(ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
 )
 
 POPUP_CVIEW_SYNCARC = (
-		(ENTRY, 'Show info', 'I', INFO),
+		(ENTRY, 'Info...', 'I', INFO),
 		(SEP,),
 		(ENTRY, 'Delete', None, DELETE),
 )
