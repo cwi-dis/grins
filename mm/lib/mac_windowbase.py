@@ -72,6 +72,17 @@ class FullPopupMenu:
 	def popup(self, x, y, event, window=None):
 		self._themenu.popup(x, y, event, window=window)
 
+class SelectPopupMenu(PopupMenu):
+	def __init__(self, list):
+		PopupMenu.__init__(self, toplevel._menubar)
+		self.additemlist(list)
+
+	def additemlist(self, list):
+		for item in list:
+			self.additem(item)
+			
+	def getpopupinfo(self):
+		return self.menu, self.id
 #
 # The cursors we need
 #
