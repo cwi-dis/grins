@@ -106,11 +106,11 @@ class AudioPlayer:
 			atype = 'au'
 
 		if atype == 'mp3':
-			self.read_mp3_audio(u, atype)
 			self.read_more = self.read_more_mp3_audio
+			self.read_mp3_audio(u, atype)
 		else:
-			self.read_basic_audio(u, atype)
 			self.read_more = self.read_more_basic_audio
+			self.read_basic_audio(u, atype)
 
 		cbwnd = windowinterface.getmainwnd()
 		self.hook_callbacks(cbwnd)
@@ -120,7 +120,7 @@ class AudioPlayer:
 		for hdr in self._wavhdrs:
 			hdr.PrepareHeader(self._waveout)
 			self._waveout.Write(hdr)
-		
+
 	def __del__(self):
 		if self._u is not None:
 			self._u.close()
@@ -200,20 +200,12 @@ class AudioPlayer:
 		# read first chunk to read header
 		data = u.read(decode_buf_size)
 		wfx = decoder.GetWaveFormat(data)
+			
 # to figure out the number of channels of the source file:
 ##		ochans = wfx[0]
 		can_play = winmm.WaveOutQuery(wfx)
 		if not can_play:
-			# resample with proposed frequency
-			decoder.Reset()		
-			if wfx[1] == 48000:
-				nSamplesPerSec = 44100
-			else:
-				nSamplesPerSec = 22050
-			wfx = decoder.GetWaveFormat(data, nSamplesPerSec)
-			can_play = winmm.WaveOutQuery(wfx)
-			if not can_play:
-				raise error, 'The device cant play audio format.'
+			raise error, 'The device cant play audio format.'
 			
 		# device can play data with format
 		self._wfx = wfx
@@ -244,6 +236,9 @@ class AudioPlayer:
 				wavhdr = winmm.CreateWaveHdr(decbuf)
 				self._wavhdrs.append(wavhdr)
 				decbuf = ''
+		if len(decbuf):
+			wavhdr = winmm.CreateWaveHdr(decbuf)
+			self._wavhdrs.append(wavhdr)
 		self._rest = data		
 
 	def read_more_mp3_audio(self):
@@ -280,6 +275,11 @@ class AudioPlayer:
 				hdr.PrepareHeader(self._waveout)
 				self._waveout.Write(hdr)
 				decbuf = ''
+		if len(decbuf):
+			hdr = winmm.CreateWaveHdr(decbuf)
+			self._wavhdrs.append(hdr)
+			hdr.PrepareHeader(self._waveout)
+			self._waveout.Write(hdr)
 		self._rest = data		
 
 	def play(self):
