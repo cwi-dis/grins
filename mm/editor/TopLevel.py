@@ -1328,6 +1328,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				import SMILTreeRead
 				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
 			user = settings.get('license_user')
+			if user[:13] == 'Licensed to: ':
+				user = user[13:]
 			if user:
 				self.root.GetContext().attributes['author'] = user
 		else:
