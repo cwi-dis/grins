@@ -1014,19 +1014,28 @@ class SubWindow(Window):
 		prgn.DeleteObject()
 		return rgn
 
-	# get reg of this relative to arg excluding children
-	def getChildrenClipRgn(self, rel=None):
-		x, y, w, h = self.getwindowpos(rel);
+	# get reg of children
+	def getChildrenRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
-		L = self._subwindows[:]
-		L.reverse()
+		rgn.CreateRectRgn((0,0,0,0))
 		for w in self._subwindows:
 			x, y, w, h = w.getwindowpos(rel);
 			newrgn = win32ui.CreateRgn()
 			newrgn.CreateRectRgn((x,y,x+w,y+h))
-			rgn.CombineRgn(rgn,newrgn,win32con.RGN_DIFF)
+			rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)
 			newrgn.DeleteObject()
+		# finally clip to this
+		argn = self.getClipRgn(rel)
+		rgn.CombineRgn(rgn,argn,win32con.RGN_AND)
+		argn.DeleteObject()
+		return rgn
+
+	# get reg of this excluding children
+	def getChildrenRgnComplement(self, rel=None):
+		rgn = self.getClipRgn(rel)
+		drgn = self.getChildrenRgn(rel)
+		rgn.CombineRgn(rgn,drgn,win32con.RGN_DIFF)
+		drgn.DeleteObject()
 		return rgn
 
 	def clipRect(self, rc, rgn):
@@ -1044,6 +1053,9 @@ class SubWindow(Window):
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
+	# paint on surface dds only what this window is responsible for
+	# i.e. self._active_displist and/or bgcolor
+	# clip painting to argument rgn when given
 	def _paintOnDDS(self, dds, dst, rgn=None):
 		x, y, w, h = dst
 		if w==0 or h==0:
@@ -1167,46 +1179,62 @@ class SubWindow(Window):
 			w.paint()
 
 	# transition, multiElement==false
-	# tr_eng: calls self._paintOnDDS(self._drawsurf)
+	# trans engine: calls self._paintOnDDS(self._drawsurf)
+	# i.e. trans engine is responsible to paint only this 
 	def _paint_1(self):
-		# first paint self
+		# first paint self transition surface
 		self.bltDDS(self._drawsurf)
 			
-		# then paint children bottom up
+		# then paint children bottom up normally
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
 			w.paint()
 
 	# transition, multiElement==true, childrenClip==false
-	# tr_eng: calls self.paintOnDDS(self._drawsurf, self)
+	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
+	# i.e. trans engine responsible to paint correctly everything below 
 	def _paint_2(self):
-		# transition covers everything
+		# paint transition surface
 		self.bltDDS(self._drawsurf)
-
 	
+	# delta helpers for the next method
 	def __getDC(self, dds):
 		hdc = dds.GetDC()
 		return win32ui.CreateDCFromHandle(hdc)
-
 	def __releaseDC(self, dds, dc):
 		hdc = dc.Detach()
 		dds.ReleaseDC(hdc)
 
 	# transition, multiElement==true, childrenClip==true
+	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
+	# i.e. trans engine is responsible to paint correctly everything below
 	def _paint_3(self):
-		rgn = self.getChildrenClipRgn(self._topwindow)
+		# the rgn where the transition will play is the region of self._subwindows
+		# self should be the master of the multielement transition
+		# ask for rgn coords relative to topwindow
+		rgn = self.getChildrenRgn(self._topwindow)
 
+		# first paint self on the complement of self._subwindows region
+		rgn2 = self.getChildrenRgnComplement(self._topwindow)
+		dst = self.getwindowpos(rel)
+		self._paintOnDDS(dds, dst, rgn2)
+		rgn2.DeleteObject()
+
+		# use GDI to paint transition surface 
+		# (gdi supports clipping but surface bliting not)
 		src = self._drawsurf
 		dst = self._topwindow._backBuffer
 
 		dstDC = self.__getDC(dst)	
 		srcDC = self.__getDC(src)	
-		dstDC.SelectClipRgn(rgn)			
+		dstDC.SelectClipRgn(rgn)
 		x, y, w, h = self.getwindowpos()
 		dstDC.BitBlt((x, y),(w, h),srcDC,(0, 0), win32con.SRCCOPY)
 		self.__releaseDC(dst,dstDC)
 		self.__releaseDC(src,srcDC)
+		
+		rgn.DeleteObject()			
 
 	
 	# paint while frozen

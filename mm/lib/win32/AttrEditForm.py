@@ -2253,11 +2253,6 @@ try:
 except ImportError:
 	rma = None
 
-# check implicitly rma version
-if rma and hasattr(rma,'CreateClientContext'):
-	HAS_PRECONFIGURED_PLAYER = 0
-else:
-	HAS_PRECONFIGURED_PLAYER = 1
 
 class RealRenderer(Renderer):
 	realengine=None
@@ -2277,11 +2272,7 @@ class RealRenderer(Renderer):
 				RealRenderer.realengine=None
 		if RealRenderer.realengine and not self._rmaplayer:
 			try:
-				if HAS_PRECONFIGURED_PLAYER:
-					self._rmaplayer = RealRenderer.realengine.CreatePlayer()
-				else:
-					from RealChannel import RealPlayer
-					self._rmaplayer = RealPlayer(RealRenderer.realengine)
+				self._rmaplayer = RealRenderer.realengine.CreatePlayer()
 			except:
 				self._rmaplayer=None
 	
