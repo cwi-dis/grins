@@ -245,6 +245,7 @@ class _LayoutView2(GenFormView):
 
 	# Sets the acceptable command list by delegating to its parent keeping a copy.
 	def set_commandlist(self, list):
+		GenFormView.set_commandlist(self, list)
 		splitter = self.GetParent()
 		mainframe = splitter.GetParent().GetMDIFrame()
 		mainframe.set_commandlist(list, self._strid)
@@ -339,23 +340,12 @@ class _LayoutView2(GenFormView):
 		self.onUserCmd(id, nmsg)
 
 	def onUserCmd(self, id, code=0):
-		if id == usercmd2id(CANVAS_ZOOM_IN):
-			self.OnZoomIn(id, code)
-		elif id == usercmd2id(CANVAS_ZOOM_OUT):
-			self.OnZoomOut(id, code)
-		elif id == usercmd2id(ATTRIBUTES_ANCHORS):
-			self.openAttributesPage('.anchorlist')
-		elif id == usercmd2id(ATTRIBUTES_BACKGROUND):
-			self.openAttributesPage('cssbgcolor')
-		elif id == usercmd2id(ATTRIBUTES_ZORDER):
-			self.openAttributesPage('z')
-		else:
-			cmd=None
-			contextcmds = self._activecmds
-			if contextcmds.has_key(id):
-				cmd = contextcmds[id]
-				if cmd is not None and cmd.callback is not None:
-					apply(apply, cmd.callback)
+		cmd=None
+		contextcmds = self._activecmds
+		if contextcmds.has_key(id):
+			cmd = contextcmds[id]
+			if cmd is not None and cmd.callback is not None:
+				apply(apply, cmd.callback)
 
 	def showScale(self, d2lscale):
 		t=components.Static(self,grinsRC.IDC_LAYOUT_SCALE)
@@ -396,13 +386,19 @@ class _LayoutView2(GenFormView):
 		self._bzoomin.hookcommand(self, self.OnZoomIn)
 		self._bzoomout.hookcommand(self, self.OnZoomOut)
 
-	def OnZoomIn(self, id, code):
+	def OnZoomIn(self, id, params):
+		self.zoomIn()
+
+	def OnZoomOut(self, id, params):
+		self.zoomOut()
+
+	def zoomIn(self):
 		d2lscale = self._layout.getDeviceToLogicalScale()
 		d2lscale = d2lscale - 0.1
 		if d2lscale < 0.1 : d2lscale = 0.1
 		self._layout.setDeviceToLogicalScale(d2lscale)
 
-	def OnZoomOut(self, id, code):
+	def zoomOut(self):
 		d2lscale = self._layout.getDeviceToLogicalScale()
 		d2lscale = d2lscale + 0.1
 		if d2lscale>10.0: d2lscale = 10.0
@@ -500,7 +496,8 @@ class TreeManager:
 		self.__imageList = win32ui.CreateImageList(16, 16, 0, 10, 5)
 		self.bitmapNameToId = {}
 		self._listener = None
-
+		self._popup = None
+		
 	def destroy(self):
 		self.treeCtrl.removeExpandListener(self)
 		self.treeCtrl.removeMultiSelListener(self)
@@ -509,6 +506,7 @@ class TreeManager:
 		self.__imageList = None
 		self.bitmapNameToId = None
 		self._listener = None
+		self._popup = None
 	
 	def setListener(self, listener):
 		self._listener = listener
@@ -645,6 +643,23 @@ class TreeManager:
 	def OnDrop(self, item, type, objectId):
 		if self._listener != None:
 			return self._listener.onDrop(item, type, objectId)
+
+	#
+	#  popup menu
+	#
+	
+	def setpopup(self, menutemplate):
+		if self._popup:
+			self._popup.DestroyMenu()
+			self._popup = None
+		if menutemplate != None:
+			import win32menu
+			popup = win32menu.Menu('popup')
+			popup.create_popup_from_menubar_spec_list(menutemplate, usercmd2id)
+			self._popup = popup
+		else:
+			self._popup = None
+		self.treeCtrl.setpopup(self._popup)
 				
 ###########################
 debugPreview = 0
@@ -664,16 +679,10 @@ class LayoutManager(LayoutManagerBase):
 		self._viewport = None
 		self._hasfocus = 0
 	
-		self._regionpopup = None
-		self._subregionpopup = None
+		self._popup = None
 
 		self._selectedList = []
 
-		# test
-		import MenuTemplate
-		self.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_REGION, 'region')
-		self.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_SUBREGION, 'subregion')
-		
 		# decor
 		self._blackBrush = Sdk.CreateBrush(win32con.BS_SOLID, 0, 0)
 		self._selPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
@@ -802,52 +811,35 @@ class LayoutManager(LayoutManagerBase):
 
 	#  OnRButtonDown popup menu
 	def OnRButtonDown(self, params):
-		if len(self._selectedList) != 1: 
-			return
-
-		item = self._selectedList[0]
-		itemtype = self.getItemType(item)
-		
+		# simulate a left click to select the object
+		self.onLButtonDown(params)
+		self.onLButtonUp(params)
+					
 		msg = win32mu.Win32Msg(params)
 		point = msg.pos()
 		flags = msg._wParam
 		point = self.ClientToScreen(point)
 		flags = win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON | win32con.TPM_LEFTBUTTON
 
-		popup = None
-		if itemtype == 'region' and self._regionpopup:
-			popup = self._regionpopup
-		elif itemtype == 'subregion' and self._subregionpopup:
-			popup = self._subregionpopup
-		if popup:
-			popup.TrackPopupMenu(point, flags, self.GetParent())
+		if self._popup:
+			# xxx to improve
+			self._popup.TrackPopupMenu(point, flags, self.GetParent().GetParent().GetParent().GetMDIFrame())
 
 	#
 	#  popup menu
 	#
-	# which in ('topLayout', 'region', 'subregion')
-	def setpopup(self, menutemplate, which):
-		import win32menu
-		popup = win32menu.Menu('popup')
-		popup.create_popup_from_menubar_spec_list(menutemplate, usercmd2id)
-		if which == 'region':
-			if self._regionpopup:
-				self._regionpopup.DestroyMenu()
-			self._regionpopup = popup
-		elif which == 'subregion':
-			if self._subregionpopup:
-				self._subregionpopup.DestroyMenu()
-			self._subregionpopup = popup
+	def setpopup(self, menutemplate):
+		if self._popup:
+			self._popup.DestroyMenu()
+			self._popup = None
+		if menutemplate != None:
+			import win32menu
+			popup = win32menu.Menu('popup')
+			popup.create_popup_from_menubar_spec_list(menutemplate, usercmd2id)
+			self._popup = popup
 		else:
-			popup.DestroyMenu()
+			self._popup = None
 	
-	# return item type in ('topLayout', 'region', 'subregion')
-	def getItemType(self, item):
-		# XXX: not correct, just a test
-		if item.hasmedia():
-			return 'subregion'
-		return 'region'
-
 	#
 	#  Painting
 	#
