@@ -1763,7 +1763,10 @@ class Region(Window):
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine is responsible to paint correctly everything below
 	def _paint_3(self, rc=None, exclwnd=None):
-		# print 'transition, multiElement==true, childrenClip==true',self
+		#print 'transition, multiElement==true, childrenClip==true',self
+		#print self._subwindows
+
+		if exclwnd==self: return
 
 		# 1. and then a _paint_2 but on ChildrenRgnComplement
 		# use GDI to paint transition surface 
@@ -1775,6 +1778,7 @@ class Region(Window):
 		srcDC = self.__getDC(src)	
 		rgn = self.getChildrenRgnComplement(self._topwindow)
 		dstDC.SelectClipRgn(rgn)
+		rgn.DeleteObject()
 		x, y, w, h = self.getwindowpos()
 		try:
 			dstDC.BitBlt((x, y),(w, h),srcDC,(0, 0), win32con.SRCCOPY)
@@ -1782,14 +1786,22 @@ class Region(Window):
 			print arg			
 		self.__releaseDC(dst,dstDC)
 		self.__releaseDC(src,srcDC)
-		rgn.DeleteObject()
 				
 		# 2. do a normal painting to paint children
-		if self._transition:
-			L = self._transition.windows[1:]
-			L.reverse()
-			for wnd in L:
-				wnd._paint_0(rc, exclwnd)
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			if w!=exclwnd:
+				w.paint(rc, exclwnd)
+
+		# what about other elements in transition?
+		# this has to be resolved
+#		if self._transition:
+#			L = self._transition.windows[1:]
+#			L.reverse()
+#			for wnd in L:
+#				wnd._paint_0(rc, exclwnd)
+
 	
 	# paint while frozen
 	def _paint_4(self, rc=None, exclwnd=None):
@@ -2670,3 +2682,4 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
+ 
