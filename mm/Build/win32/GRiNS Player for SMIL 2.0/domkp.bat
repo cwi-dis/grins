@@ -67,6 +67,8 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONHOME%\Lib\lib-old
 if exist FreezeOpts del FreezeOpts
 echo -x NodeInfo >> FreezeOpts
 echo -x AnchorEdit >> FreezeOpts
+echo -x AttrEditForm >> FreezeOpts
+echo -x cmifed >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
@@ -91,6 +93,7 @@ echo -x SGIVideoDuration >> FreezeOpts
 echo -x MACVideoDuration >> FreezeOpts
 echo -x MovieDuration >> FreezeOpts
 echo -x MPEGVideoDuration >> FreezeOpts
+echo -x BandwidthCompute >> FreezeOpts
 rem ****************************
 
 rem Audio stuff not supported on this platform
