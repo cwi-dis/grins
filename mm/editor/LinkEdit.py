@@ -483,9 +483,11 @@ class LinkEdit(ViewDialog):
 			self.link_new.show()
 
 	# Reload/redisplay all data
-	def updateform(self):
-		self.reloadanchors(self.left)
-		self.reloadanchors(self.right)
+	def updateform(self, str = None):
+		if str is None or str is self.left:
+			self.reloadanchors(self.left)
+		if str is None or str is self.right:
+			self.reloadanchors(self.right)
 		self.reloadlinks()
 
 	# Start editing a link
@@ -534,7 +536,7 @@ class LinkEdit(ViewDialog):
 		if focus != str.focus:
 			str.focus = focus
 			self.linkedit = 0
-			self.updateform()
+			self.updateform(str)
 
 	def show_callback(self, str):
 		if str.focus == None:
@@ -603,7 +605,7 @@ class LinkEdit(ViewDialog):
 		else:
 			print 'Unknown menu selection'
 			return
-		self.updateform()
+		self.updateform(str)
 
 	def link_browser_callback(self):
 		focus = self.link_browser.getselected()
