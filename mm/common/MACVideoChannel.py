@@ -266,33 +266,33 @@ class VideoChannel(ChannelWindowAsync):
 ##		if node.__type != 'real':
 ##			self.armed_display.drawvideo(self.__mc.update)
 
-	# We override 'play', since we handle our own duration
-	def play(self, node):
-		if debug:
-			print 'VideoChannel.play('+`self`+','+`node`+')'
-		if node.__type == 'real':
-			# no special case here for RealVideo
-			ChannelWindowAsync.play(self, node)
-			return
-		self.play_0(node)
-		if not self._is_shown or not node.ShouldPlay() or self.syncplay:
-			self.play_1()
-			return
-		if not self.nopop:
-			self.window.pop()
-
-		if self.armed_display.is_closed():
-			# assume that we are going to get a
-			# resize event
-			pass
-		else:
-			self.armed_display.render()
-		if self.played_display:
-			self.played_display.close()
-		self.played_display = self.armed_display
-		self.armed_display = None
-		self.do_play(node)
-		self.armdone()
+##	# We override 'play', since we handle our own duration
+##	def play(self, node):
+##		if debug:
+##			print 'VideoChannel.play('+`self`+','+`node`+')'
+##		if node.__type == 'real':
+##			# no special case here for RealVideo
+##			ChannelWindowAsync.play(self, node)
+##			return
+##		self.play_0(node)
+##		if not self._is_shown or not node.ShouldPlay() or self.syncplay:
+##			self.play_1()
+##			return
+##		if not self.nopop:
+##			self.window.pop()
+##
+##		if self.armed_display.is_closed():
+##			# assume that we are going to get a
+##			# resize event
+##			pass
+##		else:
+##			self.armed_display.render()
+##		if self.played_display:
+##			self.played_display.close()
+##		self.played_display = self.armed_display
+##		self.armed_display = None
+##		self.do_play(node)
+##		self.armdone()
 
 	def resize(self, arg, window, event, value):
 		ChannelWindowAsync.resize(self, arg, window, event, value)
