@@ -1,12 +1,12 @@
 # Video file reader
 import sys
-import Qt
-import QuickTime
-import Qd
-import Qdoffs
-import QDOffscreen
-import Res
-import MediaDescr
+from Carbon import Qt
+from Carbon import QuickTime
+from Carbon import Qd
+from Carbon import Qdoffs
+from Carbon import QDOffscreen
+from Carbon import Res
+from Carbon import MediaDescr
 import imgformat
 import os
 sys.path.append('swdev:jack:cmif:pylib:')
