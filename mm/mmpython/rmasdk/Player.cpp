@@ -32,7 +32,8 @@ public:
   	static PyObject *Seek(PyObject *self, PyObject *args);
 
 	static PyObject *SetPyAdviceSink(PyObject *self, PyObject *args);
-	static PyObject *SetPyVideoSurface(PyObject *self, PyObject *args);
+	static PyObject *SetPyErrorSink(PyObject *self, PyObject *args);
+	static PyObject *SetPyStatusListener(PyObject *self, PyObject *args);
 
 	static PyObject *SetOsWindow(PyObject *self, PyObject *args);
 	static PyObject *ShowInNewWindow(PyObject *self, PyObject *args);
@@ -224,20 +225,33 @@ PlayerObject::SetPyAdviceSink(PyObject *self, PyObject *args)
 	RETURN_NONE;
 }
 
-// Support removed. 
 PyObject *
-PlayerObject::SetPyVideoSurface(PyObject *self, PyObject *args)
+PlayerObject::SetPyErrorSink(PyObject *self, PyObject *args)
 {
 	PyObject *obj;
 	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
-//	if(pCC) {
-//		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
-//		if(ss)ss->SetPyVideoSurface(obj);
-//	}
+	if (pCC)
+		pCC->m_pErrorSink->SetPyErrorSink(obj);
 	RETURN_NONE;
 }
+
+PyObject *
+PlayerObject::SetPyStatusListener(PyObject *self, PyObject *args)
+{
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
+		return NULL;
+	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
+	if (pCC)
+		{
+		pCC->m_pClientSink->SetPyAdviceSink(obj);
+		pCC->m_pErrorSink->SetPyErrorSink(obj);
+		}
+	RETURN_NONE;
+}
+
 
 PyObject *
 PlayerObject::SetOsWindow(PyObject *self, PyObject *args)
@@ -308,11 +322,11 @@ static struct PyMethodDef PyRMPlayer_methods[] = {
 	{"IsLive",PlayerObject::IsLive,1},
 	{"GetCurrentPlayTime",PlayerObject::GetCurrentPlayTime,1},
 	{"Seek",PlayerObject::Seek,1},
-	{"SetPyAdviceSink",PlayerObject::SetPyAdviceSink,1},   // formal name
-	{"SetStatusListener",PlayerObject::SetPyAdviceSink,1}, // alias
-	{"SetVideoSurface",PlayerObject::SetPyVideoSurface,1},
-	{"SetOsWindow",PlayerObject::SetOsWindow,1}, // alias
-	{"ShowInNewWindow",PlayerObject::ShowInNewWindow,1}, // alias
+	{"SetPyAdviceSink",PlayerObject::SetPyAdviceSink,1},   
+	{"SetPyErrorSink",PlayerObject::SetPyErrorSink,1},   
+	{"SetStatusListener",PlayerObject::SetPyStatusListener,1}, 
+	{"SetOsWindow",PlayerObject::SetOsWindow,1}, 
+	{"ShowInNewWindow",PlayerObject::ShowInNewWindow,1}, 
 	{"SetPositionAndSize", PlayerObject::SetPositionAndSize, 1},
 	{NULL, 	NULL}
 	};
