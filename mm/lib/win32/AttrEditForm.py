@@ -3828,9 +3828,9 @@ class SystemGroup2(SystemGroup):
 	def createctrls(self,wnd):
 		cd = SystemGroup.createctrls(self,wnd)
 		a = self.getattr('system_operating_system')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SOPERATINGSYSTEML,grinsRC.IDC_SOPERATINGSYSTEMV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_SOPERATINGSYSTEML,grinsRC.IDC_SOPERATINGSYSTEMV))
 		a = self.getattr('system_cpu')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCPUL,grinsRC.IDC_SCPUV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_SCPUL,grinsRC.IDC_SCPUV))
 		a = self.getattr('system_component')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCOMPONENTL,grinsRC.IDC_SCOMPONENTV))
 		a = self.getattr('system_audiodesc')
