@@ -404,8 +404,10 @@ static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 		pivw->Release();
 		GUI_END_SAVE;
 		}
-
-	return Py_BuildValue("(llll)",x,y,w,h); 
+	// Temp fix. We must find a better way
+	long dh=GetSystemMetrics(SM_CYCAPTION)+2*GetSystemMetrics(SM_CYFRAME);
+	long dw=2*GetSystemMetrics(SM_CXFRAME);
+	return Py_BuildValue("(llll)",x,y,w-dw,h-dh);
 	}
 
 
