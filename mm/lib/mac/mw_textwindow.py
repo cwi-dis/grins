@@ -33,8 +33,10 @@ class _common_window:
 			self._do_show()
 		
 	def hide(self):
-		self.window.close()
-		self.widget.close()
+		if self.window:
+			self.window.close()
+		if self.widget:
+			self.widget.close()
 		self.widget = None
 		self.window = None
 		
@@ -104,10 +106,11 @@ class textwindow(_common_window):
 		self.mother = None
 		
 	def hide(self):
-		import settings
-		pos = self.window.getgeometry()
-		settings.set('textwindowpos', pos)
-		settings.save()
+		if self.window:
+			import settings
+			pos = self.window.getgeometry()
+			settings.set('textwindowpos', pos)
+			settings.save()
 		_common_window.hide(self)
 		
 	def set_mother(self, mother):
