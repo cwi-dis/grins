@@ -16,7 +16,7 @@
 import sys
 sys.path.append('/ufs/guido/src/video')	# For VFile
 
-import posix
+import os
 from stat import *
 
 import MMExc
@@ -28,7 +28,7 @@ import GL
 import VFile
 
 # Errors that VFile operations may raise
-VerrorList = VFile.Error, posix.error, IOError, RuntimeError, EOFError
+VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
 
 from Channel import Channel
 from ChannelWindow import ChannelWindow
@@ -232,9 +232,9 @@ class MovieChannel(Channel):
 def getfilesize(filename):
 	from stat import ST_SIZE
 	try:
-		st = posix.stat(filename)
+		st = os.stat(filename)
 		return st[ST_SIZE]
-	except posix.error:
+	except os.error:
 		return -1
 
 

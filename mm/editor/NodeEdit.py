@@ -1,12 +1,12 @@
 # Node content editor.
 # Jack Jansen, November 1991.
 
-import path
+import os
 import gl
 import fl
 from FL import *
 import string
-import posix
+import os
 import flp
 
 import MMExc
@@ -30,11 +30,11 @@ def _inventname(ch):		# Invent file name from channel name
     return fn
 
 def _file_exists(fn):		# Return true if file exists
-    import posix
+    import os
     try:
-	void = posix.stat(fn)
+	void = os.stat(fn)
 	return 1
-    except posix.error:
+    except os.error:
 	return 0
 
 def _do_convert(node, fn):	# Convert imm node to ext
@@ -88,7 +88,7 @@ class _convert_dialog:
 	raise formdone
     def callback_browser(self,dummy):
 	fn = self.input_filename.get_input()
-	dir, file = path.split(fn)
+	dir, file = os.path.split(fn)
 	result = fl.file_selector('Select file', dir, '*', file)
 	if result:
 	    self.input_filename.set_input(result)
@@ -158,9 +158,9 @@ def _showmenu(menu):	# Show (modal) editor choice dialog
 def InitEditors():
     # XXX Should add the directory where the .cmif file resides...
     # XXX (toplevel.dirname)
-    dirs = ['.', posix.environ['HOME'], '/ufs/guido/mm/demo/mm4']
+    dirs = ['.', os.environ['HOME'], '/ufs/guido/mm/demo/mm4']
     for dirname in dirs:
-    	filename = path.join(dirname, '.cmif_editors')
+    	filename = os.path.join(dirname, '.cmif_editors')
     	try:
     		f = open(filename, 'r')
     	except IOError:
@@ -190,7 +190,7 @@ def showeditor(node):
 	    if cmd == None:
 		raise _LocalError
 	cmd = 'file='+filename+' ; '+cmd+' &'
-	void = posix.system(cmd)
+	void = os.system(cmd)
     except _LocalError:
 	gl.ringbell()
 

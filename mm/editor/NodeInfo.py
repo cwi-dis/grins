@@ -1,8 +1,7 @@
 # Node info modeless dialog
 
 
-import path
-import posix
+import os
 import fl
 import gl
 from FL import *
@@ -436,7 +435,7 @@ class NodeInfo(Dialog):
 	# dir from the resulting pathname.
 	#
 	def browser_callback(self, (obj, dummy)):
-	    dir, file = path.split(self.filename)
+	    dir, file = os.path.split(self.filename)
 	    if file == '' or self.filename == '/dev/null': # YUCK!
 		dir = file = ''
 		# This triggers fl.show_file_selector to use its defaults
@@ -444,7 +443,7 @@ class NodeInfo(Dialog):
 	    result = fl.show_file_selector('Select file', dir, '*', file)
 	    if result == None:
 		return
-	    dir, file = path.split(result)
+	    dir, file = os.path.split(result)
 	    self.ch_filename = 1
 	    self.changed = 1
 	    self.filename = result
@@ -459,7 +458,7 @@ class NodeInfo(Dialog):
 	def openchild_callback(self, (obj, dummy)):
 	    i = self.children_browser.get_browser()
 	    if i == 0: return
-	    shownodeinfo(self.children_nodes[i-1])
+	    shownodeinfo(self.toplevel, self.children_nodes[i-1])
 
 
 # Routine to close all attribute editors in a node and its context.

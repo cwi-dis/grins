@@ -1,7 +1,7 @@
 # Help window
 
 import fl
-import posix
+import os
 import string
 import sys
 import flp
@@ -21,7 +21,7 @@ class HelpWindow(ViewDialog, BasicDialog):
     def inittopics(self):
 	if self.topics <> None: return
 	self.topics = []
-	for topic in posix.listdir(self.dirname):
+	for topic in os.listdir(self.dirname):
 		if topic[:1] not in ('.', '#') and topic[-1:] <> '~':
 			self.topics.append(topic)
 	self.topics.sort()
