@@ -1764,25 +1764,22 @@ class HierarchyView(HierarchyViewDialog):
 		
 		nodes = self.find_events_to_node(child, self.root) # This is a list of nodes containing events caused by this node.
 		print "DEBUG: nodes are: ", nodes
+		parent_uid = parent.GetUID()
+		child_uid = child.GetUID()
+		uidremap = {child_uid: parent_uid}
 		for n in nodes:		# Find all events and change their destination.
 			assert isinstance(n, MMNode.MMNode)
 			newbeginlist = []
 			print "DEBUG: oldbeginlist for ", n, " is: ", MMAttrdefs.getattr(n, 'beginlist')
 			for s in MMAttrdefs.getattr(n, 'beginlist'):
 				assert isinstance(s, MMNode.MMSyncArc)
-				if s.srcnode is child:
-					newsyncarc = s.copy({s.refnode().GetUID():parent.GetUID()})					
-					newbeginlist.append(newsyncarc)
-				else:
-					newbeginlist.append(s)
+				newsyncarc = s.copy(uidremap)					
+				newbeginlist.append(newsyncarc)
 			newendlist = []
 			for s in MMAttrdefs.getattr(n, 'endlist'):
 				assert isinstance(s, MMNode.MMSyncArc)
-				if s.srcnode is child:
-					newsyncarc = s.copy({s.refnode().GetUID():parent.GetUID()})
-					newendlist.append(newsyncarc)
-				else:
-					newendlist.append(s)
+				newsyncarc = s.copy(uidremap)
+				newendlist.append(newsyncarc)
 			print "DEBUG: new begin list is: ", newbeginlist
 			em.setnodeattr(n, 'beginlist', newbeginlist)
 			em.setnodeattr(n, 'endlist', newendlist)
@@ -1803,8 +1800,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Hyperlinks..
 		#--------------
-		parent_uid = parent.GetUID()
-		child_uid = child.GetUID() # only used for the assert.
 		links = []
 		# Copy the list..
 		for l in self.root.context.hyperlinks.links:
@@ -1850,19 +1845,19 @@ class HierarchyView(HierarchyViewDialog):
 		assert isinstance(node, MMNode.MMNode)
 		assert isinstance(current, MMNode.MMNode)
 		return_me = []
-		appended = 0
 		beginlist = MMAttrdefs.getattr(current, 'beginlist')
 		for s in beginlist:
 			assert isinstance(s, MMNode.MMSyncArc)
-			if s.srcnode is node and not appended:
-				appended = 1
+			if s.srcnode is node:
 				return_me.append(current)
-		endlist = MMAttrdefs.getattr(current, 'endlist')
-		for s in endlist:
-			assert isinstance(s, MMNode.MMSyncArc)
-			if s.dstnode is node and not appended:
-				appended = 1
-				return_me.append(current)
+				break
+		else:
+			endlist = MMAttrdefs.getattr(current, 'endlist')
+			for s in endlist:
+				assert isinstance(s, MMNode.MMSyncArc)
+				if s.dstnode is node:
+					return_me.append(current)
+					break
 				
 		for c in current.children:
 			return_me = return_me + self.find_events_to_node(node, c)
