@@ -218,6 +218,7 @@ void CHtmlWnd::DestroyHtmlCtrl()
 		m_wndWebsterBrowser.DestroyWindow();
 	else
 		m_wndWebBrowser.DestroyWindow();
+	m_bCtrlCreated=false;
 	}
 
 
