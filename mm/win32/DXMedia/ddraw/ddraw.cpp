@@ -1184,6 +1184,143 @@ DirectDrawSurface_Restore(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_BuildValue("i",ret);
 	}
 
+
+static char DirectDrawSurface_Blt_RGB32_On_RGB32__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_Blt_RGB32_On_RGB32(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	UCHAR* pImageBits;
+	DWORD w, h;
+	if (!PyArg_ParseTuple(args, "iii", &pImageBits, &w, &h))
+		return NULL;
+	
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	
+	HRESULT hr;
+	hr=self->pI->Lock(0,&desc, DDLOCK_WAIT, 0);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_Blt_RGB32_On_RGB32", hr);
+		return NULL;
+	}			
+	for(int row=h-1;row>=0;row--)
+		{
+		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		for (DWORD col=0;col<w;col++)
+			{
+			DWORD b = *pImageBits++;
+			DWORD g = *pImageBits++;
+			DWORD r = *pImageBits++;
+			*pImageBits++;
+			
+			r = r << loREDbit;
+			g = g << loGREENbit;
+			b = b << loBLUEbit;
+			DWORD* data = (DWORD*)surfpixel;
+			*data = r|g|b;
+			
+			surfpixel++;
+			}
+		}
+	self->pI->Unlock(0);
+	Py_INCREF(Py_None);
+	return Py_None;	
+	}
+
+static char DirectDrawSurface_Blt_RGB24_On_RGB32__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_Blt_RGB24_On_RGB32(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	UCHAR* pImageBits;
+	DWORD w, h;
+	if (!PyArg_ParseTuple(args, "iii", &pImageBits, &w, &h))
+		return NULL;
+	
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	
+	HRESULT hr;
+	hr=self->pI->Lock(0,&desc, DDLOCK_WAIT, 0);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_Blt_RGB24_On_RGB32", hr);
+		return NULL;
+	}			
+	for(int row=h-1;row>=0;row--)
+		{
+		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		for (DWORD col=0;col<w;col++)
+			{
+			DWORD b = *pImageBits++;
+			DWORD g = *pImageBits++;
+			DWORD r = *pImageBits++;
+			
+			r = r << loREDbit;
+			g = g << loGREENbit;
+			b = b << loBLUEbit;
+			DWORD* data = (DWORD*)surfpixel;
+			*data = r|g|b;
+			
+			surfpixel++;
+			}
+		}
+	self->pI->Unlock(0);
+	Py_INCREF(Py_None);
+	return Py_None;	
+	}
+
+static char DirectDrawSurface_Blt_YUV420_On_RGB32__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_Blt_YUV420_On_RGB32(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	UCHAR* pImageBits;
+	DWORD w, h;
+	if (!PyArg_ParseTuple(args, "iii", &pImageBits, &w, &h))
+		return NULL;
+	
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	
+	HRESULT hr;
+	hr=self->pI->Lock(0,&desc, DDLOCK_WAIT, 0);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_Blt_YUV420_On_RGB32", hr);
+		return NULL;
+	}			
+	// XXX: blt only Y plain for now (luma only image)
+	for(DWORD row=0;row<h;row++)
+		{
+		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		for (DWORD col=0;col<w;col++)
+			{
+			DWORD y = *pImageBits++;
+			
+			DWORD r = y;
+			DWORD g = y;
+			DWORD b = y;
+			
+			r = r << loREDbit;
+			g = g << loGREENbit;
+			b = b << loBLUEbit;
+			DWORD* data = (DWORD*)surfpixel;
+			*data = r|g|b;
+			
+			surfpixel++;
+			}
+		}
+	self->pI->Unlock(0);
+	Py_INCREF(Py_None);
+	return Py_None;	
+	}
+
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
 	{"GetAttachedSurface", (PyCFunction)DirectDrawSurface_GetAttachedSurface, METH_VARARGS, DirectDrawSurface_GetAttachedSurface__doc__},
@@ -1201,6 +1338,9 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"BltFill", (PyCFunction)DirectDrawSurface_BltFill, METH_VARARGS, DirectDrawSurface_BltFill__doc__},
 	{"IsLost", (PyCFunction)DirectDrawSurface_IsLost, METH_VARARGS, DirectDrawSurface_IsLost__doc__},
 	{"Restore", (PyCFunction)DirectDrawSurface_Restore, METH_VARARGS, DirectDrawSurface_Restore__doc__},
+	{"Blt_RGB32_On_RGB32", (PyCFunction)DirectDrawSurface_Blt_RGB32_On_RGB32, METH_VARARGS, DirectDrawSurface_Blt_RGB32_On_RGB32__doc__},
+	{"Blt_RGB24_On_RGB32", (PyCFunction)DirectDrawSurface_Blt_RGB24_On_RGB32, METH_VARARGS, DirectDrawSurface_Blt_RGB24_On_RGB32__doc__},
+	{"Blt_YUV420_On_RGB32", (PyCFunction)DirectDrawSurface_Blt_YUV420_On_RGB32, METH_VARARGS, DirectDrawSurface_Blt_YUV420_On_RGB32__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
