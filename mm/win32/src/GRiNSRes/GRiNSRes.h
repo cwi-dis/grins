@@ -289,6 +289,9 @@
 #define IDC_TARGET_EXTERN               1183
 #define IDC_TARGET_EMBEDDED             1184
 #define IDC_BUTTON1                     1186
+#define IDC_PREVIEW                     1186
+#define IDC_BUTTON_QTNEXT               1186
+#define IDC_ADD_EXTERNAL                1186
 #define IDC_PROGRESS1                   1187
 #define IDC_INIT_NEW                    1188
 #define IDC_INIT_OPEN                   1189
@@ -333,9 +336,6 @@
 #define IDC_FRAME1                      1240
 #define IDC_FRAME2                      1241
 #define ID_STATIC4                      1242
-#define IDC_PREVIEW                     1243
-#define IDC_BUTTON_QTNEXT               1244
-#define IDC_ADD_EXTERNAL                1245
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -414,7 +414,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        288
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1246
+#define _APS_NEXT_CONTROL_VALUE         1241
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
