@@ -1034,7 +1034,7 @@ class GO(GOCommand):
 						(windowinterface.DOUBLE_WIDTH,))),
 				CANVAS_RESET(callback = (mother.canvascall,
 						(windowinterface.RESET_CANVAS,))),
-				NEW_CHANNEL(callback = (mother.newchannel, ())),
+				NEW_REGION(callback = (mother.newchannel, ())),
 				TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
 				THUMBNAIL(callback = (mother.thumbnailcall, ())),
 				TOGGLE_ARCS(callback = (mother.togglearcs, ())),
@@ -1485,8 +1485,8 @@ class ChannelBox(GO, ChannelBoxCommand):
 		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
 			ATTRIBUTES(callback = (self.attrcall, ())),
-			MOVE_CHANNEL(callback = (self.movecall, ())),
-			COPY_CHANNEL(callback = (self.copycall, ())),
+			MOVE_REGION(callback = (self.movecall, ())),
+			COPY_REGION(callback = (self.copycall, ())),
 			TOGGLE_ONOFF(callback = (self.channel_onoff, ())),
 			HIGHLIGHT(callback = (self.highlight, ())),
 			UNHIGHLIGHT(callback = (self.unhighlight, ())),

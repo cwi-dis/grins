@@ -323,16 +323,16 @@ class CORRECTLOCALTIMESCALE(_CommandBase):
 #
 # Channel view commands
 #
-class NEW_CHANNEL(_CommandBase):
-	help = 'Create a new channel'
+class NEW_REGION(_CommandBase):
+	help = 'Create a new region'
 class TOGGLE_UNUSED(_CommandBase):
 	help = 'Toggle showing unused channels'
 class TOGGLE_ARCS(_CommandBase):
 	help = 'Toggle showing synchronization arcs'
 class TOGGLE_BWSTRIP(_CommandBase):
 	help = 'Toggle showing bandwidth usage strip'
-class MOVE_CHANNEL(_CommandBase): pass
-class COPY_CHANNEL(_CommandBase): pass
+class MOVE_REGION(_CommandBase): pass
+class COPY_REGION(_CommandBase): pass
 class TOGGLE_ONOFF(_CommandBase): pass
 class HIGHLIGHT(_CommandBase): pass
 class UNHIGHLIGHT(_CommandBase): pass
@@ -351,9 +351,9 @@ class BANDWIDTH_OTHER(_CommandBase): pass
 #
 class NEW_LAYOUT(_CommandBase):
 	help = 'Create a new layout'
-class REMOVE_CHANNEL(_CommandBase):
-	help = 'Remove channel from layout'
-class ADD_CHANNEL(_CommandBase):
-	help = 'Add channel to layout'
+class REMOVE_REGION(_CommandBase):
+	help = 'Remove region from layout'
+class ADD_REGION(_CommandBase):
+	help = 'Add region to layout'
 class RENAME(_CommandBase):
 	help = 'Rename the current layout'
