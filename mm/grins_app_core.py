@@ -64,7 +64,7 @@ class GrinsApp(app.CApp):
 
 #		self.frame.ShowWindow(win32ui.GetInitialStateRequest());
 #		self.frame.UpdateWindow();
-		
+
 		self.frame.SetWindowText("GRiNS Debugging Terminal")
 		self.HookCommands()
 
@@ -84,11 +84,13 @@ class GrinsApp(app.CApp):
 		self.BootGrins()
 
 	def ExitInstance(self):
-#		rc = app.CApp.ExitInstance(self)
+		rc = app.CApp.ExitInstance(self)
 		if self.frame:
 			self.frame.DestroyWindow()
 			self.frame = None
 		self.SetMainFrame(None)
+		import windowinterface
+		windowinterface.close()
 		return 0
 
 	def BootGrins(self):
