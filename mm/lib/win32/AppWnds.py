@@ -5,142 +5,632 @@ __version__ = "$Id$"
 # using newwindow and newcmwindow
 
 # Public Objects
-# class Window
+# class _Window,_FrameWnd
 
 # Private Objects
-# class _SubWindow(Window):
+# class _SubWindow(_Window):
 
 # note:
-# instances of Window are created by windowinterface.newwindow(...) and windowinterface.newcmwindow(...)
+# instances of _Window are created by windowinterface.newwindow(...) and windowinterface.newcmwindow(...)
 # instances of _SubWindow are created indirectly by (windowinterface.newwindow(...)).newwindow(...) 
 # and (windowinterface.newwindow(...)).newcmwindow(...)
 
 
 import win32ui, win32con, win32api 
-from win32modules import timerex, imageex, Htmlex, cmifex, cmifex2
-import math
+from win32modules import imageex, cmifex2, grinsRC
+Afx=win32ui.GetAfx()
+Sdk=win32ui.GetWin32Sdk()
 
 from types import *
 from WMEVENTS import *
+from appcon import *
+from sysmetrics import *
 
 from DisplayList import DisplayList
 
-from appcon import *
-import win32mu
+import win32mu,AppMenu
 
 
-[_X,_Y,_WIDTH,_HEIGHT] = range(4)
+toplevel=None # set by AppTopLevel
+
+from rbtk import _rbtk,_rb_done,_in_create_box,_rb_message
+
+# text copy from X_window.. 
+# class _Window(window.Wnd):
+	# Instances of this class represent top-level windows.  This
+	# class is also used as base class for subwindows, but then
+	# some of the methods are overridden.
+	#
+	# The following instance variables are used.  Unless otherwise
+	# noted, the variables are used both in top-level windows and
+	# subwindows.
+	# _shell: the Xt.ApplicationShell widget used for the window
+	#	(top-level windows only)
+	# _form: the Xm.DrawingArea widget used for the window
+	# _scrwin: the Xm.ScrolledWindow widget used for scrolling the canvas
+	# _clipcanvas: the Xm.DrawingArea widget used by the Xm.ScrolledWindow
+	# _colormap: the colormap used by the window (top-level
+	#	windows only)
+	# _visual: the visual used by the window (top-level windows
+	#	only)
+	# _depth: the depth of the window in pixels (top-level windows
+	#	only)
+	# _pixmap: if present, the backing store pixmap for the window
+	# _gc: the graphics context with which the window (or pixmap)
+	#	is drawn
+	# _title: the title of the window (top-level window only)
+	# _topwindow: the top-level window
+	# _subwindows: a list of subwindows.  This list is also the
+	#	stacking order of the subwindows (top-most first).
+	#	This list is manipulated by the subwindow.
+	# _parent: the parent window (for top-level windows, this
+	#	refers to the instance of _Toplevel).
+	# _displists: a list of _DisplayList instances
+	# _active_displist: the currently rendered _displayList
+	#	instance or None
+	# _bgcolor: background color of the window
+	# _fgcolor: foreground color of the window
+	# _transparent: 1 if window has a transparent background (if a
+	#	window is transparent, all its subwindows should also
+	#	be transparent) -1 if window should be transparent if
+	#	there is no active display list
+	# _sizes: the position and size of the window in fractions of
+	#	the parent window (subwindows only)
+	# _rect: the position and size of the window in pixels
+	# _region: _rect as an X Region
+	# _clip: an X Region representing the visible area of the
+	#	window
+	# _hfactor: horizontal multiplication factor to convert pixels
+	#	to relative sizes
+	# _vfactor: vertical multipliction factor to convert pixels to
+	#	relative sizes
+	# _cursor: the desired cursor shape (only has effect for
+	#	top-level windows)
+	# _callbacks: a dictionary with callback functions and
+	#	arguments
+	# _accelerators: a dictionary of accelarators
+	# _menu: the pop-up menu for the window
+	# _showing: 1 if a box is shown to indicate the size of the
+	#	window
+	# _exp_reg: a region in which the exposed area is built up
+	#	(top-level window only)
+
+# kk: ADD
+
+# Default units for top level windows _Window is mm (UNIT_MM)
+# The _SubWindow coords are relative coordinates wrt its parent (UNIT_PARENT)
 
 
-toplevel=None
+# To convert relative coord to pixel f subwindows  relative to
+# the upper-left corner of the parent window call:
+# parent._convert_coordinates(coord)
+# these coordinates are cashed in _rect member
+# To convert from pixels back to relative sizes call
+# use _inverse_coordinates(self, point)
 
-_rb_message = """\
-Use left mouse button to draw a box.
-Click `OK' when ready or `Cancel' to cancel."""
 
-_rb_done = '_rb_done' # exception to stop create_box loop
+# definition of symbols as used here
+# _rect (GetClientRect)
+#	pos and dim of the the client area of the window in pixels with origin its parent left-top corner
+#	Changes on resize	
+# _canvas 
+#	drawing rect (pos and dim) in pixels with origin the top-left corner of the window 
+#	(if not scrollable it is usually the client rect)
+#	This is the rect that display lists are rendered
+#	Changes on resize	
+# _sizes: 
+#	original pos and dim of the window in relative coordinates with respect to its parent 
+#	with origin the parent left-top corner
+# _rectb 
+#   same as _sizes at creation but in pixel coord
+#	pos and dim of the the window in pixels with origin its parent left-top corner
+#	For top level windows includes borders, caption, etc
+#	Changes on resize	
 
-_in_create_box = None
+# NOTE: all rects are tuples containing: (left,top,width,height)
+#		for the top-level window the parent is the desktop window with _rect=(0,0,scr_width_pxl,scr_height_pxl)
+#		external convention: if canvassize==None: _canscroll = 0
+#		for subwindows _rectb==_rect==_canvas
+#		the only rect that remains unchanged is _sizes
+# WARN: in win32 the name rect is used for the tuple (left,top,right,bottom) 
+#
+ 
+###########################################################
+# import window core stuff
+from pywin.mfc import window,object,docview,dialog
+import cmifwnd	
+###########################################################
+###########################################################
+###########################################################
+class _Window(cmifwnd._CmifWnd,_rbtk,window.Wnd):
+	def __init__(self,parent,x, y, w, h, title, 
+				visible_channel = TRUE,
+				type_channel = SINGLE, pixmap = 1, units = UNIT_MM,
+				menubar = None, canvassize = None):
+		cmifwnd._CmifWnd.__init__(self,parent)
+		_rbtk.__init__(self)
+		window.Wnd.__init__(self,win32ui.CreateWnd())
+		parent._subwindows.insert(0, self)
 
-#################################################
-class Window:
-	def __init__(self, parent, x, y, w, h, title, visible, type_channel, defcmap=0,pixmap, transparent=0, units = UNIT_MM, menubar = None, canvassize = None):
-		self._canv = None
-		self.arrowcache = {}
-		self.box_created = 0     # indicates wheather box has been created or not
-		self.box_started = 0     # indicates wheather create_box procedure has begun
-		self._next_create_box = []
-		self._old_callbacks = {}
-		self._do_init(parent)
-		self._cbld = {}
-		self._align = ' '		
-		self._scale = 0.0
-		self._title = title
+		self._title = title		
 		self._topwindow = self
-		self._window_state = HIDDEN
-		self._parent = parent
-		self._hWnd = None
-		self._placement = []
-		self._region = None
-		self._subwindows = []
-		self._displists = []
-		self._bgcolor = parent._bgcolor
-		self._fgcolor = parent._fgcolor
-		self._redrawfunc = None
 		self._window_type = type_channel
-		self._resize_flag = 0
-		self._render_flag = 0		
-		#self._sizes = x, y, w, h
+		self._depth = toplevel.getscreendepth()
 
-		# conversion factors to convert from mm to relative size
-		# (this uses the fact that _hfactor == _vfactor == 1.0
-		# in toplevel)
-		self._depth = 8
-
-		# convert mm to pixels and adjust for border and caption
+		if not x:x=0
+		if not y:y=0
 		x,y,w,h = to_pixels(x,y,w,h,units)
+		self._sizes = (float(x)/scr_width_pxl,float(y)/scr_height_pxl,float(w)/scr_width_pxl,float(h)/scr_height_pxl)
+		self._rectb=x,y,w,h
+		self.setcursor('watch')
 		
-		self._setcursor('watch')
-		
-		# create OS Wnd
-		self._hWnd = createChannelWnd(type_channel,title,x,y,w,h)
+		# create a toplevel OS Wnd
+		xp=x;yp=y
+		self._clstyle=win32con.CS_DBLCLKS
+		self._style=win32con.WS_OVERLAPPEDWINDOW | win32con.WS_CLIPCHILDREN
+		self._exstyle=0
+		self._icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
+		self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+		self._brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
+		self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+		self.CreateWindowEx(self._exstyle,self._strclass,self._title,self._style,
+			(xp,yp,xp+w,yp+h),None,0)
 
-		a, b, w, h = self._hWnd.GetClientRect()	
-		
-		try:
-			self._hfactor = parent._hfactor / (w/toplevel._hmm2pxl)
-			self._vfactor = parent._vfactor / (h/toplevel._vmm2pxl)
-		except ZeroDivisionError:
-			self._hfactor = self._vfactor = 1.0
+		# historic alias that we keep only
+		# to markup functions as external to this module
+		# and as an attribute signiture
+		self._wnd=self._obj_
+		self._hWnd=self.GetSafeHwnd()
 
-		self._rect = 0, 0, w, h
-		
-		self._placement = self._hWnd.GetWindowPlacement()
+		l,t,r,b=self.GetClientRect()
+		w,h=r-l,b-t
+		self._canvas = self._rect=(0,0,w,h)
 
-		self._event_list = [PAINT, SIZE, LBUTTONDOWN, SET_CURSOR, WIN_DESTROY, LBUTTONUP]
-		self._enable_events()
+		rc= {
+			win32con.WM_RBUTTONDOWN:self.onRButtonDown,
+			win32con.WM_LBUTTONDBLCLK:self.onLButtonDblClk,
+			win32con.WM_SIZE:self.onSize,
+			win32con.WM_LBUTTONDOWN:self.onLButtonDown,
+			win32con.WM_LBUTTONUP:self.onLButtonUp,
+			win32con.WM_MOUSEMOVE:self.onMouseMove,
+			win32con.WM_CLOSE:self.onClose}
+		self._enable_response(rc)
 
-
-		self._canv = None
-		if canvassize is not None:
-			width, height = canvassize
-			# convert to pixels
-			width, height = to_pixelsize(width,height,units)
-			self._canv = (0, 0, width, height)
-		
 		self._menu = None
 		if menubar is not None:
 			self.create_menu(menubar)
 
-		if visible:
-			self._hWnd.ShowWindow(win32con.SW_SHOW)
-		
-	def _do_init(self, parent):
-		parent._subwindows.insert(0, self)
-		self._parent = parent
-		self._subwindows = []
-		self._displists = []
-		self._active_displist = None
-		self._bgcolor = parent._bgcolor
-		self._fgcolor = parent._fgcolor
-		self._cursor = parent._cursor
-		self._callbacks = {}
-		self._old_callbacks = {}
-		self._accelerators = {}
-		self._menu = None
-		self._transparent = 0
-		self._showing = 0
+		if visible_channel:
+			self.ShowWindow(win32con.SW_SHOW)
 
-	def newwindow(self, coordinates, transparent = 0, type_channel, pixmap = 0, z=0):
-		win = _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
-		win._window_state = HIDDEN
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		if type_channel==HTM:
+			win= _BrowserSubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
+		else:
+			win= _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
 		return win
 
-
-	def newcmwindow(self, coordinates, transparent = 0, type_channel, pixmap = 0, z=0):
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z)
-		win._window_state = HIDDEN
 		return win
+
+
+	def OnPaint(self):
+		dc, paintStruct = self._obj_.BeginPaint()
+		if self._active_displist:
+			self._active_displist._render(dc,paintStruct[2],1)
+		self._obj_.EndPaint(paintStruct)
+
+	def onSize(self, params):
+		msg=win32mu.Win32Msg(params)
+		if msg.minimized(): return
+		width,height=msg.width(), msg.height()
+
+		self.arrowcache = {}
+		w = _in_create_box
+		if w:
+			next_create_box = w._next_create_box
+			w._next_create_box = []
+			try:
+				w._rb_cancel()
+			except _rb_done:
+				pass
+			w._next_create_box[0:0] = next_create_box
+		self._do_resize(width, height)
+		if w:
+			w._rb_end()
+			raise _rb_done
+
+
+###########################################################
+###########################################################
+###########################################################
+class _CmifView(docview.View):
+	def __init__(self,frame):
+		d=docview.Document(docview.DocTemplate())
+		v=win32ui.CreateView(d)
+		docview.View.__init__(self,v)
+		self.CreateWindow(frame)
+		self._frame=frame
+
+	def OnDraw(self,dc):
+		rc=dc.GetClipBox()
+		if self._frame._active_displist:
+			self._frame._active_displist._render(dc,rc,1)
+
+##########
+class _CmifScrollView(docview.ScrollView):
+	def __init__(self,frame):
+		d=docview.Document(docview.DocTemplate())
+		docview.ScrollView.__init__(self,d)
+		self.CreateWindow(frame)
+		self._frame=frame
+		
+	def OnDraw(self,dc):
+		rc=dc.GetClipBox()
+		if self._frame._active_displist:
+			self._frame._active_displist._render(dc,rc,1)
+
+
+##########
+class _WindowFrm(cmifwnd._CmifWnd,_rbtk,window.FrameWnd):
+	def __init__(self,parent,x, y, w, h, title, visible_channel = TRUE,
+		      type_channel = SINGLE, pixmap = 1, units = UNIT_MM,
+		      menubar = None, canvassize = None):
+		cmifwnd._CmifWnd.__init__(self,parent)
+		_rbtk.__init__(self)
+		window.FrameWnd.__init__(self,win32ui.CreateFrame())
+		self._view=None
+		if canvassize: self._canscroll = 1
+		self._title = title		
+		self._topwindow = self
+		self._window_type = type_channel
+		self._sizes = 0, 0, 1, 1
+		parent._subwindows.insert(0, self)
+		if not x:x=0
+		if not y:y=0
+		xp,yp,wp,hp = to_pixels(x,y,w,h,units)
+		self._rectb= xp,yp,wp,hp
+		self._sizes = (float(xp)/scr_width_pxl,float(yp)/scr_height_pxl,float(wp)/scr_width_pxl,float(hp)/scr_height_pxl)
+		
+		self._depth = toplevel.getscreendepth()
+
+		canvas_is_client_rect=0
+		if canvassize and canvassize[0]==w and canvassize[1]==h:
+			canvas_is_client_rect=1
+		self.setcursor('watch')
+		
+
+		# register top frame class
+		self._clstyle=win32con.CS_DBLCLKS
+		self._exstyle=0
+		self._icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
+		self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+		self._brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
+		self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+
+		# create a toplevel OS FrameWnd
+		self._style=win32con.WS_OVERLAPPEDWINDOW
+		rc=(xp,yp,xp+wp,yp+hp)
+		self._obj_.Create(self._strclass,self._title,self._style,rc)
+		self._wnd=self._obj_ # historic alias but useful to markup externals
+		self._hWnd=self.GetSafeHwnd()
+
+		# create apropriate views
+		if canvassize:self._view=_CmifScrollView(self)
+		else:self._view=_CmifView(self)
+		self.RecalcLayout()
+
+		if canvassize:
+			if self._view and canvas_is_client_rect:
+				l,t,r,b=self._view.GetClientRect()
+				wc,hc=r-l,b-t
+				self._view.SetScrollSizes(win32con.MM_TEXT,(wc,hc))
+				self._view.ResizeParentToFit(); 
+				self._canvas_reset=self._canvas=(0,0,wc,hc)  
+			else:
+				wc,hc=size2pix(canvassize,units)
+				self._view.SetScrollSizes(win32con.MM_TEXT,(wc,hc))	
+				self._canvas_reset=self._canvas=(0,0,wc,hc)
+		l,t,r,b=self._view.GetClientRect()
+		self._rect=(l,t,r-l,b-t)
+
+		# delegate user input to view
+		r= {
+			win32con.WM_RBUTTONDOWN:self.onRButtonDown,
+			win32con.WM_LBUTTONDBLCLK:self.onLButtonDblClk,
+			win32con.WM_LBUTTONDOWN:self.onLButtonDown,
+			win32con.WM_LBUTTONUP:self.onLButtonUp,
+			win32con.WM_MOUSEMOVE:self.onMouseMove,
+			
+			}
+		self._enable_response(r,self._view)
+
+		# but do not delegate Close
+		r= {
+			win32con.WM_CLOSE:self.onClose,
+			win32con.WM_SIZE:self.onSize,
+			}
+		self._enable_response(r)
+
+		self._menu = None
+		if menubar is not None:
+			self.create_menu(menubar)
+
+		if visible_channel:
+			self.RecalcLayout()
+			self.ShowWindow(win32con.SW_SHOW)
+		for id in range(0,100):
+			self.EnableCmdX(id)
+	
+	# for now just enable all commands
+	def EnableCmdX(self,id):
+		self.HookCommandUpdate(self.OnUpdateCmdX,id)
+	def OnUpdateCmdX(self,cmdui):
+		cmdui.Enable()
+
+	def _scroll(self):
+		w,h=self._canvas[2:]
+		w0,h0=self._canvas_reset[2:] 
+		self._view.SetScrollSizes(win32con.MM_TEXT,(w,h))
+		if w==w0 and h==h0:self._view.ResizeParentToFit();
+
+	# convert from client (device) coordinates to canvas (logical)
+	def _DPtoLP(self,pt):
+		dc=self._view.GetDC()
+		# python view.GetDC has called OnPrepareDC(dc)
+		pt=dc.DPtoLP(pt)
+		self._view.ReleaseDC(dc)
+		return pt
+		
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		win= _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
+		return win
+
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z)
+		return win
+
+	def onSize(self,params):
+		msg=win32mu.Win32Msg(params)
+		if msg.minimized(): return
+		self._rect=msg.width(),msg.height()
+
+
+###########################################################
+###########################################################
+###########################################################
+class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
+	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0):
+
+		cmifwnd._CmifWnd.__init__(self,parent)
+		self._window_type = type_channel
+		self._next_create_box = []
+		self._topwindow = parent._topwindow
+
+		if z < 0:
+			raise error, 'invalid z argument'
+		self._z = z
+		self._align = ' '
+
+		x, y, w, h = rel_coordinates
+		if not x:x=0
+		if not y:y=0
+		if w == 0 or h == 0:
+			showmessage('Creating subwindow with zero dimension',mtype = 'warning')
+		if w == 0:w = float(self._rect[WIDTH]) / parent._rect[WIDTH]
+		if h == 0:h = float(self._rect[HEIGHT]) / parent._rect[HEIGHT]
+		rel_coordinates=x, y, w, h
+		x, y,w,h = parent._convert_coordinates(rel_coordinates)
+
+		self._rect = 0, 0, w, h
+		self._canvas = 0, 0, w, h
+		self._sizes = rel_coordinates
+		self._rectb = x, y, w, h
+		
+		self._convert_color = parent._convert_color
+
+		# create an artificial name 
+		self._num = len(parent._subwindows)+1
+		self._title = "Child "+ `self._num`+" of " + parent._title 
+
+		
+		# insert window in _subwindows list at correct z-order
+		for i in range(len(parent._subwindows)):
+			if self._z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.append(self)
+			
+		# if a parent is transparent all of its childs must be transparent	
+		if parent._transparent:
+			self._transparent = parent._transparent
+		else:
+			if transparent not in (-1, 0, 1):
+				raise error, 'invalid value for transparent arg'
+			self._transparent = transparent
+
+		### Create the real OS window
+		### taking into account the window type and transparency flag
+		x,y,w,h=self._rectb
+		if self._transparent==0:
+			window.Wnd.__init__(self,win32ui.CreateWnd())
+			self._brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
+			self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+			self._icon=0
+			self._clstyle=win32con.CS_DBLCLKS
+			self._style=win32con.WS_CHILD #|win32con.WS_CLIPSIBLINGS
+			self._exstyle = win32con.WS_EX_CONTROLPARENT
+			self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+			self.CreateWindowEx(self._exstyle,self._strclass,self._title,self._style,
+				(x,y,x+w,y+h),self._parent,0)
+		else:
+			# self._transparent is in (1,-1)
+			# wnds with -1 are initially transparent
+			window.Wnd.__init__(self,win32ui.CreateWnd())
+			self._brush=Sdk.GetStockObject(win32con.NULL_BRUSH)
+			self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+			self._icon=0
+			self._clstyle=win32con.CS_DBLCLKS
+			self._style=win32con.WS_CHILD 
+			self._exstyle = win32con.WS_EX_TRANSPARENT # | win32con.WS_EX_CONTROLPARENT
+			self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+			self.CreateWindowEx(self._exstyle,self._strclass,self._title,self._style,
+				(x,y,x+w,y+h),self._parent,0)
+
+		self._wnd=self._obj_ # historic alias but useful to markup externals
+		self._hWnd=self.GetSafeHwnd()
+
+		# set the newly created OS window in the correct relative z-position
+		ix = parent._subwindows.index(self)
+		if ix != 0: 
+			self.SetWindowPos(parent._subwindows[ix-1].GetSafeHwnd(), 
+				(0,0,0,0),win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		else:
+			self.SetWindowPos(win32con.HWND_TOP ,(0,0,0,0),
+				win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+			
+		# do not enter WM_PAINT since we have provided the virtual OnPaint
+		# that will be automatically called by the framework
+		rc= {
+			win32con.WM_RBUTTONDOWN:self.onRButtonDown,
+			win32con.WM_LBUTTONDBLCLK:self.onLButtonDblClk,
+			win32con.WM_LBUTTONDOWN:self.onLButtonDown,
+			win32con.WM_LBUTTONUP:self.onLButtonUp,
+			win32con.WM_MOUSEMOVE:self.onMouseMove,
+			win32con.WM_CLOSE:self.onClose}
+		self._enable_response(rc)
+
+		self.show()
+
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		win= _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
+		return win
+
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z)
+		return win
+
+	def __repr__(self):
+		return '<_SubWindow instance at %x>' % id(self)
+
+
+	def settitle(self, title):
+		raise error, 'can only settitle at top-level'
+
+
+	def pop(self):
+		parent = self._parent	
+		# put self in front of all siblings with equal or lower z
+		if self is not parent._subwindows[0]:
+			parent._subwindows.remove(self)
+			for i in range(len(parent._subwindows)):
+				if self._z >= parent._subwindows[i]._z:
+					parent._subwindows.insert(i, self)
+					break
+			else:
+				parent._subwindows.append(self)
+		ix = parent._subwindows.index(self)
+		if ix != 0: 
+			self.SetWindowPos(parent._subwindows[ix-1]._wnd.GetSafeHwnd(), 
+				(0,0,0,0),win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		else:
+			self.SetWindowPos(win32con.HWND_TOP ,(0,0,0,0),
+				win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		#parent.pop()
+	
+
+	def push(self):
+		parent = self._parent
+		# put self behind all siblings with equal or higher z
+		if self is parent._subwindows[-1]:
+			# already at the end
+			return
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)-1,-1,-1):
+			if self._z <= parent._subwindows[i]._z:
+				parent._subwindows.insert(i+1, self)
+				break
+		else:
+			parent._subwindows.insert(0, self)
+		
+		ix = parent._subwindows.index(self)
+		if ix != 0: 
+			self.SetWindowPos(parent._subwindows[ix-1]._wnd.GetSafeHwnd(),
+				(0,0,0,0),win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		else:
+			self.SetWindowPos(win32con.HWND_TOP ,
+				(0,0,0,0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+
+	def OnPaint(self):
+		dc, paintStruct = self._obj_.BeginPaint()
+		if self._active_displist:
+			self._active_displist._render(dc,paintStruct[2],1)
+		self._obj_.EndPaint(paintStruct)
+
+	def OnEraseBkgnd(self,dc):
+		if self._transparent==0: 
+			return self._obj_.OnEraseBkgnd(dc)
+		parent = self.GetParent()
+		ptList=[(0,0),]
+		ptOffset = self.MapWindowPoints(parent,ptList)[0]
+		ptOldOrg=dc.OffsetWindowOrg(ptOffset)
+		parent.SendMessage(win32con.WM_ERASEBKGND,dc.GetSafeHdc())
+		dc.SetWindowOrg(ptOldOrg)
+		return 1
+
+	# debuging
+	def getinfo(self):
+		str= "trans=%d z=%d" % (self._transparent, self._z)
+		win32ui.MessageBox(str)
+
+################################
+class WebBrowser(window.Wnd):
+	def __init__(self, wnd):
+		window.Wnd.__init__(self, wnd)
+
+class _BrowserSubWindow(_SubWindow):
+	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0):
+		_SubWindow.__init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z)
+		x,y,w,h=self._canvas
+		self._web_callbacks=[]
+		# create WebBrowser 
+		self._browser=WebBrowser(win32ui.CreateWebBrowser())
+		self._browser.CreateBrowserWnd((x,y,x+w,y+h),self._obj_)	
+
+	def CreateCallback(self,cbcmifanchor):
+		self._web_callbacks.append(cbcmifanchor)
+	def SetBkColor(self,bg):
+		pass
+	def SetFgColor(self,fg):
+		pass
+
+	def RetrieveUrl(self,url):
+		# temp test !!!!!!
+		import os
+		if url[:2] != '//' or url[2:3] == '/' or url[2:3]=='\\':
+			if url[2:3] == '/' or url[2:3]=='\\':
+				pass #url = 'file:///' +  url[:1] + '|' + url[3:]
+			else:
+				url = os.getcwd()+'\\'+ url
+				pass #url = 'file:///' +  url[:1] + '|' + url[3:]
+		self._browser.Navigate(url)
+
+	def _resize_controls(self):
+		self._browser.SetWidth(self._canvas[2]);
+		self._browser.SetHeight(self._canvas[3]);
+
+	def OnEraseBkgnd(self,dc):
+		pass
+
+	def _destroy_displists_tree(self):
+		pass
+	def _create_displists_tree(self):
+		pass
+
+	def onMouseMove(self, params):
+		pass
 
 	def close(self):
 		self.arrowcache = {}
@@ -153,1535 +643,55 @@ class Window:
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
-		if self._hWnd :
+		if self._browser:
+			self._browser.DestroyWindow()
+		if self._obj_ and self.IsWindow():
 			self.destroy_menu()
-			self._hWnd.DestroyWindow()
+			self.DestroyWindow()			
 		del self._topwindow
-		self._hWnd = None
+		self._obj_ = None
+
+
+############################################
+# a generic wnd
+class MfcOsWnd(window.Wnd):
+	"""Generic MfcOsWnd class"""
+	def __init__ (self):
+		window.Wnd.__init__(self,win32ui.CreateWnd())
+		self._clstyle=0
+		self._style=0
+		self._exstyle=0
+		self._icon=0
+		self._cursor=0
+		self._brush=0
+
+	def setClstyle(self,clstyle):
+		self._clstyle=clstyle
+
+	def setStyle(self,style):
+		self._style=style
+
+	def setExstyle(self,exstyle):
+		self._exstyle=exstyle
+
+	def setIcon(self,icon):
+		self._icon=icon
+
+	def setIconApplication(self):
+		self._icon=Afx.GetApp().LoadIcon(win32con.IDI_APPLICATION)
+
+	def setStandardCursor(self,cursor):
+		self._cursor=Afx.GetApp().LoadStandardCursor(cursor)
+
+	def setStockBrush(self,idbrush):
+		self._brush=Sdk.GetStockObject(idbrush)
+	def setBrush(self,brush):
+		self._brush=brush
+
+	def create(self,title='untitled',x=0,y=0,width=200,height=150,parent=None,id=0):
+		# register
+		strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+		# create
+		self.CreateWindowEx(self._exstyle,strclass,title,self._style,
+			(x, y, width, height),parent,id)
 
-	def newdisplaylist(self, *bgcolor):
-		if bgcolor != ():
-			bgcolor = bgcolor[0]
-		else:
-			bgcolor = self._bgcolor
-		return DisplayList(self, bgcolor)
-
-	def settitle(self, title):
-		if self._hWnd != None:
-			if self._title != title:
-				self._title = title
-				self._hWnd.SetWindowText(title)	
-
-	def show(self):
-		if self._hWnd is None:
-			return 
-		else:
-			self._window_state = SHOWN
-			self._hWnd.ShowWindow(win32con.SW_SHOW)
-			self.pop()
-
-	def hide(self):
-		if self._hWnd is None:
-			return
-		else:
-			self._window_state = HIDDEN
-			mes = "Hide %s"%self._title 
-			self._hWnd.ShowWindow(win32con.SW_HIDE)
-
-	def is_closed(self):
-		return self._parent is None
-
-	def showwindow(self):
-		self._showing = 1
-		x, y, w, h = self._hWnd.GetClientRect()
-		#cmifex.DrawRectangle(self._hWnd, (x, y, w, h), (255,0,0), " ")
-
-	def dontshowwindow(self):
-		#print "Don't highlight show the window"
-		if self._showing:
-			self._showing = 0
-			x, y, w, h = self._hWnd.GetClientRect()
-			#cmifex.DrawRectangle(self._hWnd, (x, y, w, h), self._bgcolor, " ")
-
-	def setcanvassize(self, code):
-		pass
-
-	def pop(self):
-		self._hWnd.SetWindowPos(win32con.HWND_TOP , (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-
-	def push(self):
-		self._hWnd.SetWindowPos( win32con.HWND_BOTTOM, (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-
-	def setredrawfunc(self, func):
-		if func is None or callable(func):
-			pass
-		else:
-			raise error, 'invalid function'
-
-	def destroy_menu(self):
-		if self._menu:
-			cmifex2.DestroyMenu(self._menu)
-		self._menu = None
-		self._accelerators = {}
-
-	def create_menu(self, list, title = None):
-		self.destroy_menu()
-#		menu = self._form.CreatePopupMenu('menu',
-#				{'colormap': self._colormap,
-#				 'visual': self._visual,
-#				 'depth': self._visual.depth})
-		menu = cmifex2.CreateMenu()
-		float = cmifex2.CreateMenu()
-		cmifex2.PopupAppendMenu(menu,float,"menu")
-#		if self._visual.depth == 8:
-#			# make sure menu is readable, even on Suns
-#			menu.foreground = self._convert_color((0,0,0))
-#			menu.background = self._convert_color((255,255,255))
-		
-		if title:
-			list = [title, None] + list
-		
-		if not hasattr(self,'_cbld'):
-			self._cbld = {}
-		
-		#self._accelerators = {}
-		if hasattr(self,'_cbld'):
-			win32mu._create_menu(float, list, 1, self._cbld,
-					self._accelerators)
-		
-		self._hWnd.HookAllKeyStrokes(self._char_callback)
-		self._menu = menu
-
-	def fgcolor(self, color):
-		r, g, b = color
-		self._fgcolor = r, g, b
-
-	def bgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
-		if not self._active_displist and self._transparent == 0:
-			cmifex.FillRectangle(self._hWnd,self._hWnd.GetClientRect(),self._bgcolor)
-		#cmifex.SetBGColor(self._hWnd, r, g, b)
-
-	def setcursor(self, cursor):
-		if cursor == self._cursor:
-			return
-		win32mu._win_setcursor(self._hWnd, cursor)
-		for win in self._subwindows:
-			if (win._window_type == HTM):
-				if (cursor == ''):
-					Htmlex.EndWaitCursor(win._hWnd)
-				else:
-					Htmlex.BeginWaitCursor(win._hWnd)
-			else:
-				win.setcursor(cursor)
-		self._cursor = cursor
-
-	def _setcursor(self, cursor = ''):
-		if cursor == '':
-			cursor = self._cursor
-		win32mu._win_setcursor(self._hWnd, cursor)
-
-	def getgeometry(self, units = UNIT_MM):
-		#print "GetGeometry for Window, ", self._title
-		# client coordinates are used
-		x, y, x1, y1 = self._hWnd.GetWindowPlacement()[4]
-		x1, y1 , w, h = self._hWnd.GetClientRect()
-		#px, py = self._inverse_coordinates((x, y))
-		#pw, ph = self._inverse_coordinates((w, h))
-		
-		if units == UNIT_MM:
-			return x / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
-				   w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
-		elif units == UNIT_SCREEN:
-			return float(x) / toplevel._screenwidth, \
-			       float(y) / toplevel._screenheight, \
-			       float(w) / toplevel._screenwidth, \
-			       float(h) / toplevel._screenheight
-		elif units == UNIT_PXL:
-			return x, y, w, h
-
-#====================================== Register callbacks
-	def register(self, event, func, arg):
-		if func is None or callable(func):
-			pass
-		else:
-			raise error, 'invalid function'
-		if event in (ResizeWindow, KeyboardInput, Mouse0Press,
-			     Mouse0Release, Mouse1Press, Mouse1Release,
-			     Mouse2Press, Mouse2Release, WindowExit):
-			self._callbacks[event] = func, arg
-		#elif event == WindowExit:
-			#try:
-			#	widget = self._shell
-			#except AttributeError:
-			#	raise error, 'only WindowExit event for top-level windows'
-			#widget.deleteResponse = Xmd.DO_NOTHING
-			#self._callbacks[event] = func, arg
-		else:
-			raise error, 'Internal error in Register Callback'
-
-	def unregister(self, event):
-		try:
-			del self._callbacks[event]
-		except KeyError:
-			pass
-
-#====================================== HookMessage
-	def _enable_events(self):
-		self._hWnd.HookMessage(self._rdblclk_callback, win32con.WM_RBUTTONDOWN)
-		self._hWnd.HookMessage(self._mouseDBLClick_callback, win32con.WM_LBUTTONDBLCLK)
-		for event in self._event_list:
-			if event == PAINT:	
-				self._hWnd.HookMessage(self._expose_callback, win32con.WM_PAINT)
-			elif event == SIZE:
-				self._hWnd.HookMessage(self._resize_callback, win32con.WM_SIZE)
-			elif event == LBUTTONDOWN:
-				self._hWnd.HookMessage(self._mouseLClick_callback, win32con.WM_LBUTTONDOWN)
-			elif event == LBUTTONUP:
-				#pass
-				self._hWnd.HookMessage(self._mouseLButtonUp_callback, win32con.WM_LBUTTONUP)
-			elif event == SET_CURSOR:
-				self._hWnd.HookMessage(self._setcursor_callback, win32con.WM_MOUSEMOVE)
-			elif event == WIN_DESTROY:
-				self._hWnd.HookMessage(self._destroy_callback, win32con.WM_CLOSE)
-
-#====================================== Char
-	def _char_callback(self, params):
-		#if _in_create_box == None:
-			if hasattr(self,'_accelerators'):
-				#print params
-				#print self._accelerators
-				key = chr(params)
-				#print "key-->", key
-				if self._accelerators.has_key(key):
-					func, arg = self._accelerators[key]
-					apply(func,arg)
-
-#====================================== Mouse
-	def _do_MouseEvent(self, window, point, ev):
-		if window._callbacks.has_key(ev):
-			func, arg = window._callbacks[ev]
-			x, y = point
-			disp = window._active_displist
-			buttons = []
-			if disp:
-				if disp._buttons ==[]:
-					x, y = self._inverse_coordinates(point)
-					try:
-						func(arg, window, ev, (x, y, buttons))
-					except Continue:
-						pass
-					return
-				else:
-					for button in disp._buttons:
-						if cmifex.ScreenToBox(window._hWnd, point, button._box):
-							buttons.append(button)
-			x, y = self._inverse_coordinates(point)
-			try:
-				func(arg, window, ev, (x, y, buttons))
-			except Continue:
-				pass
-		return
-
-
-	def _mouseLClick_callback(self, params):
-		ev = Mouse0Press
-		point = params[5]
-		self._do_MouseEvent(self, point, ev)
-
-	def _mouseLButtonUp_callback(self, params):
-		ev = Mouse0Release	
-		px, py = params[5]
-		point = (px, py)
-		self._do_MouseEvent(self, point, ev)
-
-	def _rdblclk_callback(self, params):
-			xpos = win32api.LOWORD(params[3])
-			ypos = win32api.HIWORD(params[3])
-			if self._menu:
-				#kk: self._do_expose(dc,rc)
-				id = cmifex2.FloatMenu(self._hWnd, self._menu, xpos, ypos)
-				#print "id = ", id
-				if self._cbld.has_key(id) :
-					callback = self._cbld[id]
-					apply(callback[0], callback[1])
-			self._hWnd.ReleaseCapture()
-
-	def _mouseDBLClick_callback(self, params):
-		#try:
-		#	from windowinterface import _in_create_box
-		#except ImportError:
-		#	_in_create_box = None
-		#	pass
-		#if _in_create_box == None or _in_create_box._hWnd== self._hWnd:
-			ev = Mouse0Press
-			point = params[5]
-			self._do_MouseEvent(self, point, ev)
-			self._do_MouseEvent(self, point, ev)
-			#for win in self._subwindows:
-			#	if win._window_state != SHOWN:
-			#		self._do_MouseEvent(win, point, ev)
-
-
-#====================================== Resize
-	def _resize_callback(self, params):
-		self.arrowcache = {}
-		w = _in_create_box
-		if w:
-			raised = 1
-			next_create_box = w._next_create_box
-			w._next_create_box = []
-			w._rb_cancel(0,0)
-			w._next_create_box[0:0] = next_create_box
-		a, b, width, height = self._hWnd.GetClientRect()
-		if width==0 or height==0:
-			#We've been Iconified
-			return
-		toplevel._setcursor('watch')
-		a, b, oldWidth, oldHeight = self._rect
-		self._rect = 0, 0, width, height
-		# convert pixels to mm
-		parent = self._parent
-		w = float(width) / toplevel._hmm2pxl
-		h = float(height) / toplevel._vmm2pxl
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
-		
-		cmifex.ResizeAllChilds(self._hWnd, width, height, oldWidth, oldHeight)
-
-		for w in self._subwindows:
-			w._do_resize1()
-
-		# call resize callbacks		
-		self._do_resize2()
-		
-		toplevel._setcursor('')
-
-		if w: self._rb_end()
-
-	def _do_resize1(self):
-		# calculate new size of subwindow after resize
-		# close all display lists
-		
-		parent = self._parent
-		if parent == None:
-			return
-		x, y, w, h = parent._convert_coordinates(self._sizes)
-		if w == 0: w = 1
-		if h == 0: h = 1
-		self._rect = x, y, w, h
-
-		#the code used for  h,v factor is used in the Text Channel
-		w, h = self._sizes[2:]
-		if w == 0:
-			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
-		if h == 0:
-			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
-
-		self._active_displist = None
-		for d in self._displists[:]:
-			d.close()
-
-		#resize all subwindows
-		for w in self._subwindows:
-			#print 'SUB RESIZED'
-			#if w._window_state != HIDDEN:
-			w._do_resize1()
-
-	def _do_resize2(self):
-		try:
-			func, arg = self._callbacks[ResizeWindow]			
-		except KeyError:
-			pass
-		else:
-			func(arg,self,ResizeWindow, None)
-
-		for w in self._subwindows:						
-			w._do_resize2()
-
-#====================================== SetCursor
-	def _setcursor_callback(self, params):
-		if self._cursor == '':
-			disp = self._active_displist
-			buttons = []
-			point = params[5]
-			found = 0
-			if disp:
-				for button in disp._buttons:
-					if cmifex.ScreenToBox(self._hWnd, point, button._box):
-						win32mu._win_setcursor(self._hWnd, 'hand')
-						found = 1
-						break
-			if not found:
-				win32mu._win_setcursor(self._hWnd, '')
-		else:
-			win32mu._win_setcursor(self._hWnd, self._cursor)
-
-
-#====================================== Destroy
-	def _destroy_callback(self, params):
-		#try:
-		#	from windowinterface import _in_create_box
-		#except ImportError:
-		#	_in_create_box = None
-		#	pass
-
-		#if _in_create_box != None:
-		#	cmifex.SetFlag(1)
-		#	textex.SetFlag(1)
-		#	Htmlex.SetFlag(1)
-		#else:
-		#	cmifex.SetFlag(0)
-		#	textex.SetFlag(0)
-		#	Htmlex.SetFlag(0)
-			try:
-				func, arg = self._callbacks[WindowExit]			
-			except KeyError:
-				pass
-			else:
-				func(arg, self, WindowExit, None)
-
-#====================================== Paint
-	def _expose_callback(self, params):
-		dc, ps = self._hWnd.BeginPaint()
-
-		if self._redrawfunc is None:
-			if (self._window_type != HTM) or (self._hWnd.GetWindow(win32con.GW_CHILD)==None):			
-				self._do_expose(dc,ps[2])
-			# REWRITE AS NEEDED: self._check_expose_site_effects()
-		else:
-			self._redrawfunc(params)			
-
-		self._hWnd.EndPaint(ps)
-
-	def _do_expose(self, dc, rc, recursive = 0):
-		if self._active_displist:			
-			self._active_displist._render(dc, rc, 1)
-		
-		# CHECK:
-		#else:
-		#	if self._transparent == 0:
-		#		cmifex.FillRectangle(self._hWnd,self._hWnd.GetClientRect(),self._bgcolor)
-		if self._showing:
-			self.showwindow()	
-
-	def _forcePaint(self):
-		self._hWnd.InvalidateRect()
-		for w in self._subwindows:
-			w._forcePaint()
-
-	# must be checked
-	def showwindow(self):
-		self._showing = 1
-		x, y, w, h = self._hWnd.GetClientRect()
-		cmifex.DrawRectangle(self._hWnd, (x, y, w, h), (255,0,0), " ")
-
-	# must be checked
-	def dontshowwindow(self):
-		#print "Don't highlight show the window"
-		if self._showing:
-			self._showing = 0
-			x, y, w, h = self._hWnd.GetClientRect()
-			cmifex.DrawRectangle(self._hWnd, (x, y, w, h), self._bgcolor, " ")
-
-
-	# must be checked 
-	# part of the paint code before restruct in 
-	# _expose_callback that needs clarification
-	# some code has no effect
-	def _check_expose_site_effects(self):
-		if self._topwindow is not self and self._transparent != 1 and self._active_displist!=None:
-			windows = self._parent._subwindows[:]
-			windows.reverse()
-			for w in windows:
-				if w._active_displist!=None and w._transparent == 1 and w != self and self._z <= w._z:
-					rect1 = w._hWnd.GetClientRect()
-					rect2 = w._hWnd.ScreenToClient(self._hWnd.ClientToScreen(self._hWnd.GetClientRect()))
-					if rect2[0] < 0 and rect2[2] < 0:
-						continue
-					if rect2[1] < 0 and rect2[3] < 0:
-						continue
-					if rect2[2] < rect1[0] and rect2[3] < rect1[1]:
-						continue
-					if rect2[0] > rect1[2] and rect2[1] > rect1[3]:
-						continue
-					if rect2[0] > rect1[2] and rect2[2] > rect1[2]:
-						continue
-					if rect2[1] > rect1[3] and rect2[3] > rect1[3]:
-						continue
-		else:
-			windows = self._subwindows[:]
-			for w in windows:
-				if w._transparent and w._active_displist!=None:
-					pass #w._hWnd.PostMessage(win32con.WM_PAINT)
-
-
-###############################################################################
-###############################################################################
-###############################################################################
-
-	def create_box(self, msg, callback, box = None):
-
-		global _in_create_box	
-		if _in_create_box:
-			_in_create_box._next_create_box.append((self, msg, callback, box))
-			return
-
-		if self.is_closed():
-			apply(callback, ())
-			return
-
-		_in_create_box = self
-		self.pop()
-
-		import win32con
-		for win in self._subwindows :
-			win._hWnd.ShowWindow(win32con.SW_HIDE)
-
-		if msg:
-			msg = msg + '\n\n' + _rb_message
-		else:
-			msg = _rb_message
-
-		self._rb_dl = self._active_displist
-		if self._rb_dl:
-			d = self._rb_dl.clone()
-		else:
-			d = self.newdisplaylist()
-
-		ls = []
-		top_w, c_name  = self.find_topwin_channel(box)
-		#print top_w, c_name
-		self.find_channels(top_w.hierarchyview.root,ls,c_name)
-		#print ls
-		tmp = []
-		tmp = self.find_windows(top_w,ls)
-		if tmp == []:
-			tmp = self._subwindows
-		#print tmp
-		
-		#for win in self._subwindows:
-		for win in tmp:
-			b = win._sizes
-			if b != (0, 0, 1, 1):
-				d.drawbox(b)
-		self._rb_display = d.clone()
-		d.fgcolor((255, 0, 0))
-		if box:
-			d.drawbox(box)
-		d.render()
-		self._rb_curdisp = d
-				
-		self._rb_dialog = dialog.Dialog(CloseDialogRC.IDD_CREATE_BOX, dll)
-		self._rb_dialog.HookCommand(self._rb_cancel, win32con.IDCANCEL)
-		self._rb_dialog.HookCommand(self._rb_done, win32con.IDOK)
-		self._rb_dialog.CreateWindow()
-		label = self._rb_dialog.GetDlgItem(CloseDialogRC.IDC_BOX_LABEL)
-		label.SetWindowText(msg)
-		
-		wind = self
-		while wind._parent != toplevel:
-			wind = wind._parent
-
-		wli, wti, wri, wbi = wind._hWnd.GetWindowPlacement()[4]
-		wl, wt, wr, wb = (wli, wti, wri, wbi)
-		
-		if wl-310<0:
-			if wr+320<cmifex.GetScreenWidth():
-				wl = wr+320
-			else:
-				if wt-210>0:
-					wt = wt-210
-				elif wb+210<cmifex.GetScreenHeight():
-					wt = wb+10
-				wl = 310
-
-		if wt+200>cmifex.GetScreenHeight() and wt==wti:
-			wt = wt - 210
-
-		self._rb_dialog.MoveWindow((wl-310, wt, wl-10, wt+200))	
-		self._rb_dialog.ShowWindow(win32con.SW_SHOW)
-		self._rb_callback = callback
-		#form = self._form
-		form = self._hWnd
-
-		
-		#save existing message handlers (callbacks)
-		for k in self._callbacks.keys():
-			self._old_callbacks[k] = self._callbacks[k]
-
-		# enable mouse events
-		form.HookMessage(self._do_rb, win32con.WM_MOUSEMOVE)
-		#form.HookMessage(self._end_rb, win32con.WM_LBUTTONUP)
-		self.register(WMEVENTS.Mouse0Press, self._start_rb, None)
-		self.register(WMEVENTS.Mouse0Release, self._end_rb, None)
-		
-		
-		print "---START OF create_box---"
-		print "box--->", box
-		
-		if box:
-			x, y, w, h = self._convert_coordinates(box)
-			#wx, wy, ww, wh = self._hWnd.GetClientRect()
-			#x = int(box[0]*ww)
-			#y = int(box[1]*wh)
-			#w = int(box[2]*ww)
-			#h = int(box[3]*wh)
-			#print "x, y, w, h--->", x, y, w, h
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			print "x, y, w, h is now--->", x, y, w, h
-			self._rb_box = x, y, w, h
-			self._rb_start_x = x
-			self._rb_start_y = y
-			self._rb_width = w
-			self._rb_height = h
-		else:
-			self._rb_start_x, self._rb_start_y, self._rb_width, \
-					  self._rb_height = self._rect
-			self._rb_box = self._rect
-			print "self._rect of create_box--->", self._rect
-		#Htmlex.SetCursor(self._hWnd, 2)
-		cmifex.SetCursor(win32Cursors['hand'])
-		self._cur_cur = 2
-		print "---END OF create_box---"
-	
-	
-	def find_topwin_channel(self, box):
-		import TopLevel
-		found = 0
-		top_w = None
-		c_name = None
-		for top in TopLevel.opentops:
-			for i in top.views[0].channels.keys():
-				if hasattr(top.views[0].channels[i],'window'):
-					if hasattr(top.views[0].channels[i].window,'_hWnd'):
-						if top.views[0].channels[i].window==self:
-							found = 1
-							top_w = top
-							break
-			if found:
-				break
-		
-		sub = None
-		for win in self._subwindows:
-			b = win._sizes
-			if b != (0, 0, 1, 1):
-				if b == box:
-					sub = win
-
-		for i in top_w.views[0].channels.keys():
-			if hasattr(top_w.views[0].channels[i],'window'):
-				if hasattr(top_w.views[0].channels[i].window,'_hWnd'):
-					if top_w.views[0].channels[i].window==sub:
-						c_name = top_w.views[0].channels[i]._name
-						break
-		return top_w, c_name
-	
-	def find_channels(self, node, ls, name):
-		for c_list in node.GetAllChannels():
-			if c_list != None:
-				if name in c_list and len(c_list)>1:
-					for item in c_list:
-						if item not in ls:
-							ls.append(item)
-		for n in node.GetChildren():
-			self.find_channels(n,ls,name)
-			
-	def find_windows(self, top, ls):
-		import TopLevel
-		tmp = []
-		for i in top.views[0].channels.keys():
-			if hasattr(top.views[0].channels[i],'window'):
-				if top.views[0].channels[i]._name in ls and \
-					top.views[0].channels[i].window in self._subwindows:
-						tmp.append(top.views[0].channels[i].window)
-		return tmp
-
-
-	
-	def hitarrow(self, point, src, dst):
-		# return 1 iff (x,y) is within the arrow head
-		sx, sy = self._convert_coordinates(src)
-		dx, dy = self._convert_coordinates(dst)
-		x, y = self._convert_coordinates(point)
-		lx = dx - sx
-		ly = dy - sy
-		if lx == ly == 0:
-			angle = 0.0
-		else:
-			angle = math.atan2(lx, ly)
-		cos = math.cos(angle)
-		sin = math.sin(angle)
-		# translate
-		x, y = x - dx, y - dy
-		# rotate
-		nx = x * cos - y * sin
-		ny = x * sin + y * cos
-		# test
-		if ny > 0 or ny < -ARR_LENGTH:
-			return FALSE
-		if nx > -ARR_SLANT * ny or nx < ARR_SLANT * ny:
-			return FALSE
-		return TRUE
-
-
-	# supporting methods for create_box
-	def _rb_finish(self):
-		#Htmlex.SetCursor(self._hWnd, 0)
-		cmifex.SetCursor(0)
-		global _in_create_box
-		_in_create_box = None
-		form = self._hWnd
-		
-		#self._rb_dialog.close()
-		self._rb_dialog.DestroyWindow()
-		self._rb_dialog = None
-
-		if self._rb_dl and not self._rb_dl.is_closed():
-			self._rb_dl.render()
-		self._rb_display.close()
-		self._rb_curdisp.close()
-		#del self._rb_callback
-		del self._rb_dialog
-		del self._rb_dl
-		del self._rb_display
-		#del self._gc_rb
-		# show all hidden windows since drawing is done
-		for win in self._subwindows :
-			win._hWnd.ShowWindow(win32con.SW_SHOW)
-
-	def _rb_cvbox(self):
-		x0 = self._rb_start_x
-		y0 = self._rb_start_y
-		x1 = x0 + self._rb_width
-		y1 = y0 + self._rb_height
-		if x1 < x0:
-			x0, x1 = x1, x0
-		if y1 < y0:
-			y0, y1 = y1, y0
-		x, y, width, height = self._rect
-		
-		if self._parent != toplevel:
-			x = 0
-			y = 0
-		
-		if x0 < x: x0 = x
-		if x0 >= x + width: x0 = x + width - 1
-		if x1 < x: x1 = x
-		if x1 >= x + width: x1 = x + width - 1
-		if y0 < y: y0 = y
-		if y0 >= y + height: y0 = y + height - 1
-		if y1 < y: y1 = y
-		if y1 >= y + height: y1 = y + height - 1
-		return float(x0 - x) / (width - 1), \
-		       float(y0 - y) / (height - 1), \
-		       float(x1 - x0) / (width - 1), \
-		       float(y1 - y0) / (height - 1)
-
-	
-	def _null_rb(self, params):
-		return
-
-	
-	def _rb_done(self, par1, par2):
-		print 'Create box done'
-		self.unregister(WMEVENTS.Mouse0Release)
-		self.unregister(WMEVENTS.Mouse0Press)
-		self._hWnd.HookMessage(self._null_rb, win32con.WM_MOUSEMOVE)
-
-		callback = self._rb_callback
-		self._rb_finish()
-		print 'BOX IS:'
-		print self._rb_cvbox()
-		print self._rect
-		apply(callback, self._rb_cvbox())
-		
-		print 'BEFORE RESTORING :'
-		print self._old_callbacks
-		print self._callbacks 		
-		#restore message handlers (callbacks)
-		for k in self._old_callbacks.keys(): 
-			self._callbacks[k] = self._old_callbacks[k]
-		print 'restoring------------', self._callbacks
-		for k in self._old_callbacks.keys(): 
-			del self._old_callbacks[k]
-
-		self.box_created = 1
-		self._rb_end()
-
-	def _rb_cancel(self, par1, par2):
-		callback = self._rb_callback
-		self._rb_finish()
-		apply(callback, ())
-		self.box_created = 1
-		self._rb_end()
-
-	def _rb_end(self):
-		#execute pending create_box calls
-		next_create_box = self._next_create_box
-		self._next_create_box = []
-		for win, msg, cb, box in next_create_box:
-			win.create_box(msg, cb, box)
-		
-
-	def _rb_draw(self, flag=0):
-		x = self._rb_start_x
-		y = self._rb_start_y
-		w = self._rb_width
-		h = self._rb_height
-		if w < 0:
-			x, w = x + w, -w
-		if h < 0:
-			y, h = y + h, -h
-		if flag==1:
-			cmifex.DrawRectangle(self._hWnd, (x, y, x+w, y+h), self._bgcolor, " ")	
-		else:
-			cmifex.DrawRectangle(self._hWnd, (x, y, x+w, y+h), (0,0,0), "d")
-		#self.DrawRectangle((x, y, x+w, y+h))
-				
-	
-	def DrawRectangle(self, rect):
-		x0, y0, x1, y1 = rect	
-		#cmifex.BeginPaint(self._hWnd, 0)
-		dcd = self._hWnd.GetDC()
-		#dcd = dc
-		col = win32api.RGB(255, 255, 255)
-		dcd.FillSolidRect(self._hWnd.GetClientRect(), col)
-		dcd.MoveTo(x0, y0)
-		dcd.LineTo(x0, y1)
-		dcd.LineTo(x1, y1)
-		dcd.LineTo(x1, y0)
-		dcd.LineTo(x0, y0)
-		self._hWnd.ReleaseDC(dcd)
-		#cmifex.EndPaint(self._hWnd, 0)
-
-	def _rb_constrain(self, event):
-		#print "---START OF _rb_constrain---"
-		x, y, w, h = self._rect
-		if self._parent != toplevel:
-			x = 0
-			y = 0
-		#print "x, y, w, h--->", x, y, w, h
-		t0 = event[0]
-		t1 = event[1]
-		if event[0] < x:
-			#event[0] = x
-			t0 = x
-		if event[0] >= x + w:
-			#event[0] = x + w - 1
-			t0 = x + w -1
-		if event[1] < y:
-			#event[1] = y
-			t1 = y
-		if event[1] >= y + h:
-			#event[1] = y + h - 1
-			t1 = y + h -1
-
-		#print "event--->", event
-		#print "---END OF _rb_constrain---"		
-		return (t0, t1)
-		
-
-	def _rb_common(self, event):
-		#print "---START OF _rb_common---" 
-		if not hasattr(self, '_rb_cx'):
-			a = []
-			ev = 0
-			val = []
-			val.append(event[0])
-			val.append(event[1])
-			val.append(a)
-			self._start_rb(0, self._hWnd, ev, val)
-		#self._rb_draw()
-		event = self._rb_constrain(event)
-		if self._rb_cx and self._rb_cy:
-			#print '_rb_cx and  _rb_cy EXIST' 
-			x, y, w, h = self._rect
-			if self._parent != toplevel:
-				x = 0
-				y = 0
-			dx = event[0] - self._rb_last_x
-			dy = event[1] - self._rb_last_y
-			self._rb_last_x = event[0]
-			self._rb_last_y = event[1]
-			self._rb_start_x = self._rb_start_x + dx
-			if self._rb_start_x + self._rb_width > x + w:
-				self._rb_start_x = x + w - self._rb_width
-			if self._rb_start_x < x:
-				self._rb_start_x = x
-			self._rb_start_y = self._rb_start_y + dy
-			if self._rb_start_y + self._rb_height > y + h:
-				self._rb_start_y = y + h - self._rb_height
-			if self._rb_start_y < y:
-				self._rb_start_y = y
-		else:
-			#print '_rb_cx and  _rb_cy DO NOT EXIST' 
-			if not self._rb_cx:
-				self._rb_width = event[0] - self._rb_start_x
-				#print 'EVENT[0], START_X IS:', event[0], self._rb_start_x
-				#print 'WIDTH IS:', self._rb_width
-			if not self._rb_cy:
-				self._rb_height = event[1] - self._rb_start_y
-		self._rb_box = 1
-		#print '_rb_common--->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
-		#print "---END OF _rb_common---"
-
-
-	def convert_to_client(self, params):
-		px, py = params[5]
-		x0, y0, w0, h0 = self._hWnd.GetWindowPlacement()[4]
-		x1, y1, z1, w1 = self._hWnd.ScreenToClient((px, py, px, py))
-		return (x1, y1, z1, w1)
-
-	def _start_rb(self, dummy, window, ev, val):
-		print '---START OF start_rb---'
-		# called on mouse press
-		if  not _in_create_box:
-			return
-		point = (val[0], val[1])
-		print "point--->", point
-		vl = self._convert_coordinates(point)
-		#wx, wy, ww, wh = self._hWnd.GetClientRect()
-		#vl = (int(point[0]*ww), int(point[1]*wh))
-		
-		print "vl--->", vl
-
-		#Just examine the case where we have 'nested' windows
-		#That happens when an anchor lies on a child window
-		#then we refer to the child window
-		#parent = self._hWnd.GetParent()
-		#x1 = 0
-		#if (parent <> None):
-		#	x1, x2, x3, x4 = parent.GetWindowPlacement()[4] 
-		#	print 'PARENT EXISTS:'
-		#	print parent.GetWindowPlacement()[4]
-		#print x1
-
-		px = vl[0]
-		py = vl[1]
-		
-
-		self.box_started = 1
-		import Htmlex
-		event=(px, py)
-
-		self._rb_display.render()
-		self._rb_curdisp.close()
-		event = self._rb_constrain(event)
-		if self._rb_box:
-			x = self._rb_start_x
-			y = self._rb_start_y
-			w = self._rb_width
-			h = self._rb_height
-			print 'START X, START Y, W, H :', x, y, w, h
-			if w < 0:
-				x, w = x + w, -w
-			if h < 0:
-				y, h = y + h, -h
-			if x + w/4 < event[0] < x + w*3/4:
-				#print 'X-------------- took value'
-				self._rb_cx = 1
-			else:
-				self._rb_cx = 0
-				if event[0] >= x + w*3/4:
-					x, w = x + w, -w
-			if y + h/4 < event[1] < y + h*3/4:
-				#print 'Y-------------- took value'
-				self._rb_cy = 1
-			else:
-				self._rb_cy = 0
-				if event[1] >= y + h*3/4:
-					y, h = y + h, -h
-			if self._rb_cx and self._rb_cy:
-				self._rb_last_x = event[0]
-				self._rb_last_y = event[1]
-				self._rb_start_x = x
-				self._rb_start_y = y
-				self._rb_width = w
-				self._rb_height = h
-			else:
-				if not self._rb_cx:
-					self._rb_start_x = x + w
-					self._rb_width = event[0] - self._rb_start_x
-				if not self._rb_cy:
-					self._rb_start_y = y + h
-					self._rb_height = event[1] - self._rb_start_y
-				print 'else of self._rb_cx and self._rb_cy --->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
-
-			if self._rb_cx or self._rb_cy:
-				if self._rb_cx and self._rb_cy:
-					self._cur_cur = win32Cursors['g_hand'] #hand
-				elif self._rb_cx and self._rb_height>0:
-					self._cur_cur = win32Cursors['dstrech'] #drag down
-				elif self._rb_cx and self._rb_height<0:
-					self._cur_cur = win32Cursors['ustrech'] #drag up
-				elif self._rb_cy and self._rb_width>0:
-					self._cur_cur = win32Cursors['rstrech'] #drag right
-				elif self._rb_cy and self._rb_width<0:
-					self._cur_cur = win32Cursors['lstrech'] #drag left
-			else:
-				if self._rb_width>0 and self._rb_height>0:
-					self._cur_cur = win32Cursors['drstrech'] #drag right bottom corner
-				if self._rb_width>0 and self._rb_height<0:
-					self._cur_cur = win32Cursors['urstrech'] #drag right top corner
-				if self._rb_width<0 and self._rb_height>0:
-					self._cur_cur = win32Cursors['dlstrech'] #drag left bottom corner
-				if self._rb_width<0 and self._rb_height<0:
-					self._cur_cur = win32Cursors['ulstrech'] #drag left top corner
-			#Htmlex.SetCursor(self._hWnd, self._cur_cur)
-			cmifex.SetCursor(self._cur_cur)
-		else:
-			self._rb_start_x = event[0]
-			self._rb_start_y = event[1]
-			self._rb_width = self._rb_height = 0
-			self._rb_cx = self._rb_cy = 0
-			print 'else of if box--->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
-		self._rb_draw()
-		print '---END OF start_rb---'
-
-	def _do_rb(self, params):
-		#print "---START OF _do_rb---"
-		#print "params--->", params
-		# called on mouse drag
-		#Htmlex.SetCursor(self._hWnd, self._cur_cur)
-		cmifex.SetCursor(self._cur_cur)
-		if  not _in_create_box:
-			return
-		if (params[2] == 1):
-			self._hWnd.SetCapture()
-			self._rb_draw(1)
-			if self._rb_display:
-				self._rb_display._render(self._hWnd, 1)
-			t = self.convert_to_client(params)
-			event = (t[0], t[1])
-			self._rb_common(event)
-			self._rb_draw()
-		#print "---END OF _do_rb---"
-				
-
-	def _end_rb(self, dummy, window, ev, val):
-		# called on mouse release
-		self._hWnd.ReleaseCapture()
-		print "---START OF _end_rb---"
-		self._cur_cur = 2
-		if  not _in_create_box:
-			return
-		#t = self.convert_to_client(params)
-		#event = (t[0], t[1])
-		
-		#x, y, w, h = self._convert_coordinates(box)
-		#wx, wy, ww, wh = self._hWnd.GetClientRect()
-				
-		vl = self._convert_coordinates((val[0],val[1]))
-		print "vl--->", vl
-		
-        #Just examine the case where we have 'nested' windows
-		#That happens when an anchor lies on a child window
-		#then we refer to the child window
-
-		px = vl[0]
-		py = vl[1]
-		
-		event = (px, py)
-		
-		self._rb_common(event)
-		self._rb_curdisp = self._rb_display.clone()
-		self._rb_curdisp.fgcolor((255, 0, 0))
-		self._rb_curdisp.drawbox(self._rb_cvbox())
-		self._rb_display.render()
-		self._rb_curdisp.render()
-		cmifex.SetCursor(0)
-		print "---END OF _end_rb---"
-
-
-	def _convert_color(self, color):
-		#self._hWnd.MessageBox("convert_color", "Debug", win32con.MB_OK)
-		return color #self._parent._convert_color(color, 0)
-
-
-	def _convert_coordinates(self, coordinates):
-		width, height = (self._rect[_WIDTH],self._rect[_HEIGHT])
-		x, y = coordinates[:2]
-		if self._parent == toplevel:
-			px = int((width - 1) * x + 0.5) + self._rect[_X]
-			py = int((height - 1) * y + 0.5) + self._rect[_Y]
-		else:
-			px = int((width - 1) * x + 0.5)
-			py = int((height - 1) * y + 0.5)
-		if len(coordinates) == 2:
-			return px, py
-		w, h = coordinates[2:]
-		pw = int((width - 1) * w + 0.5)
-		ph = int((height - 1) * h + 0.5)
-		return px, py, pw, ph
-
-	# inverse function of convert_coordinates
-	# converts pixel sizes to relative sizes
-	# ADDED BY SOL (MUADDIB) 
-	# written only for points
-	def _inverse_coordinates(self, point):		
-		x = 0
-		y = 0
-		if (self._hWnd != None):	
-			if self._parent == toplevel:
-				px, py = point
-				plcm = self._hWnd.GetWindowPlacement()	
-				if plcm[1]==3:
-					x0 = 0
-					y0 = 0
-				else:
-					x0, y0, x1, y1 = plcm[4]
-				
-				par1, par2, w, h = self._hWnd.GetClientRect()
-
-				caption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-				xborder = win32api.GetSystemMetrics(win32con.SM_CXEDGE)
-				yborder = win32api.GetSystemMetrics(win32con.SM_CYEDGE)
-				border = win32api.GetSystemMetrics(win32con.SM_CYBORDER)
-
-				# substract the window caption, because GetWindowPlacement ignores it
-				rect = (x0+2*xborder+border, y0+caption+2*yborder+border, w, h)
-
-				x = (float)((px-rect[_X]-0.5)/(rect[_WIDTH]-1))	
-				y = (float)((py-rect[_Y]-0.5)/(rect[_HEIGHT]-1))
-			else:
-				px, py = point	
-				x0, y0, x1, y1 = self._hWnd.GetWindowPlacement()[4]
-				
-				plcm = self._parent._hWnd.GetWindowPlacement()
-				if plcm[1]==3:
-					px0 = 0
-					py0 = 0
-				else:
-					px0, py0, px1, py1 = plcm[4]
-
-				par1, par2, w, h = self._hWnd.GetClientRect()
-
-				x0 = x0 + px0
-				y0 = y0 + py0
-				#x1 = x1 + px1
-				#y1 = y1 + py1
-
-				caption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-				xborder = win32api.GetSystemMetrics(win32con.SM_CXEDGE)+win32api.GetSystemMetrics(win32con.SM_CXBORDER)
-				yborder = win32api.GetSystemMetrics(win32con.SM_CYEDGE)+win32api.GetSystemMetrics(win32con.SM_CYBORDER)
-				border = win32api.GetSystemMetrics(win32con.SM_CYBORDER)
-				
-				# substract the window caption, because GetWindowPlacement ignores it
-				rect = (x0+2*xborder+border, y0+caption+2*yborder+border, w, h)
-
-				x = (float)((px-rect[_X]-0.5)/(rect[_WIDTH]-1))	
-				y = (float)((py-rect[_Y]-0.5)/(rect[_HEIGHT]-1))
-		return x, y
-
-
-#====================================== Image
-	def _image_size(self, file):
-		if toplevel._image_size_cache.has_key(file):
-			return toplevel._image_size_cache[file]
-		import gifex
-		isgif = 0
-		nf = file
-		of = None
-		if gifex.TestGIF(file)==1:
-				nf = file + ".bmp"
-				gifex.ReadGIF(file,nf)
-				isgif = 1
-		try:
-			width, height = imageex.SizeOfImage(nf)
-			if isgif:
-				import win32api
-				win32api.DeleteFile(nf)
-		except:
-			width, height = (0,100)
-		toplevel._image_size_cache[file] = width, height
-		return width, height
-
-	def _prepare_image(self, file, crop, scale, center, coordinates, transp = -1):
-		imageHandle, l, t, r, b = imageex.PrepareImage(self._hWnd, file, scale, center,transp)
-		return imageHandle, l, t, r, b
-
-
-#====================================== Not Used
-	# have to override these for create_box
-	def _input_callback(self, form, client_data, call_data):
-		if _in_create_box:
-			return
-		
-	def _delete_callback(self, form, client_data, call_data):
-		self.arrowcache = { }
-		w = _in_create_box
-		if w:
-			raised = 1
-			next_create_box = w._next_create_box
-			w._next_create_box = []
-			w._rb_cancel(0,0)
-			w._next_create_box[0:0] = next_create_box
-		if w: self._rb_end()
-
-
-
-
-
-
-
-###########################################################
-###########################################################
-###########################################################
-
-class _SubWindow(Window):
-	def __init__(self, parent, coordinates, transparent, type_channel, defcmap, pixmap, z=0):
-		if z < 0:
-			raise error, 'invalid z argument'
-		self._z = z
-		self._align = ' '
-		x, y, w, h = coordinates
-		if x >= 1.0: 
-			x = 0
-		if y >= 1.0: 
-			y = 0
-		if w <= 0: 
-			w = 1.0
-		if h <= 0: 
-			h = 1.0
-		coord = (x, y, w, h)
-		px, py, pw, ph = parent._convert_coordinates(coord)
-		if pw == 0: pw = 1
-		if ph == 0: ph = 1	
-		self._num = len(parent._subwindows)+1
-		self._title = "Child "+ `self._num`+" of " + parent._title 
-		self._rect = px, py, pw, ph
-		self._sizes = coord
-		if w == 0 or h == 0:
-			showmessage('Creating subwindow with zero dimension',
-				    mtype = 'warning')
-		if w == 0:
-			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
-		if h == 0:
-			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		# conversion factors to convert from mm to relative size
-		# (this uses the fact that _hfactor == _vfactor == 1.0
-		# in toplevel)
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
-
-		#self._xfactor = parent._xfactor
-		#self._yfactor = parent._yfactor	
-
-		#6/2A
-		#self._convert_color = parent._convert_color
-		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
-				parent._subwindows.insert(i, self)
-				break
-		else:
-			parent._subwindows.insert(0, self)
-		self._do_init(parent)
-		self._topwindow = parent._topwindow
-
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			if transparent not in (-1, 0, 1):
-				raise error, 'invalid value for transparent arg'
-			self._transparent = transparent
-		
-		#MUADDIB
-		#self._form = parent._form
-		#self._gc = parent._gc
-		try:
-			self._pixmap = parent._pixmap
-		except AttributeError:
-			have_pixmap = 0
-		else:
-			have_pixmap = 1
-
-		self._resize_flag = 0
-		self._render_flag = 0
-		self._window_type = type_channel		
-		self._bgcolor = parent._bgcolor
-		self._fgcolor = parent._fgcolor
-		self._redrawfunc = None
-
-		# create OS Child Wnd
-		self._hWnd = createChannelChildWnd(type_channel,self._title,parent._hWnd,px,py,pw,ph)
-
-		x, y, a, b = self._hWnd.GetWindowRect()
-		a, b, width, height = self._hWnd.GetClientRect()
-		width = width-12
-		#self._placement = x, y, width, height
-		self._placement = self._hWnd.GetWindowPlacement()
-		#r, g, b = self._bgcolor
-		#cmifex.SetBGColor(self._hWnd, r, g, b)
-
-		self._event_list = [PAINT, LBUTTONDOWN, LBUTTONUP, SET_CURSOR, WIN_DESTROY]
-		self._enable_events()
-
-		#parent._mkclip()
-		#if not self._transparent:
-		#	self._do_expose(self._region)
-		#	if have_pixmap:
-		#		x, y, w, h = self._rect
-		#		self._gc.SetRegion(self._region)
-		#		self._pixmap.CopyArea(self._form, self._gc,
-		#				      x, y, w, h, x, y)
-		if self._transparent in (-1,1) and self._window_type != HTM:
-			cmifex.SetSiblings(self._hWnd, 1)
-		self.show()
-
-		self.arrowcache = {}
-		self._next_create_box = []
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			if transparent not in (-1, 0, 1):
-				raise error, 'invalid value for transparent arg'
-			self._transparent = transparent 
-
-
-	def __repr__(self):
-		return '<_SubWindow instance at %x>' % id(self)
-
-	def _destroy_callback(self, params):
-		#try:
-		#	from windowinterface import _in_create_box
-		#except ImportError:
-		#	_in_create_box = None
-		#	pass
-
-		#if _in_create_box != None:
-		#	cmifex.SetFlag(1)
-		#	textex.SetFlag(1)
-		#	Htmlex.SetFlag(1)
-		#else:
-		#	cmifex.SetFlag(0)
-		#	textex.SetFlag(0)
-		#	Htmlex.SetFlag(0)
-			try:
-				func, arg = self._callbacks[WindowExit]			
-			except KeyError:
-				pass
-			else:
-				func(arg, self, WindowExit, None)
-
-	def close(self):
-		parent = self._parent
-		self.hide()
-		if parent is None:
-			return		# already closed
-		for dl in self._displists[:]:
-			dl.close()
-		self._parent = None
-		parent._subwindows.remove(self)
-		for win in self._subwindows[:]:
-			win.close()
-		#parent._mkclip()
-		#parent._do_expose(self._hWnd)
-		if self._hWnd :
-			self.destroy_menu()
-			self._hWnd.DestroyWindow()
-		if hasattr(self, '_pixmap'):
-			x, y, w, h = self._rect
-			#self._gc.SetRegion(self._region)
-			#self._pixmap.CopyArea(self._form, self._gc,
-			#		      x, y, w, h, x, y)
-			del self._pixmap
-		del self._topwindow
-		self._hWnd = None
-
-	def settitle(self, title):
-		raise error, 'can only settitle at top-level'
-
-	def getgeometry(self, units = UNIT_MM):
-		#print "GetGeometry for BareSubWindow, ", self._title
-		x, y, x1, y1 = self._hWnd.GetWindowPlacement()[4]
-		x1, y1 , w, h = self._hWnd.GetClientRect()
-		#px, py = self._inverse_coordinates((x, y))
-		#pw, ph = self._inverse_coordinates((w, h))
-		
-		return x / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
-		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
-
-
-	def pop(self):
-		parent = self._parent
-		# put self in front of all siblings with equal or lower z
-		if self is not parent._subwindows[0]:
-			parent._subwindows.remove(self)
-			for i in range(len(parent._subwindows)):
-				if self._z >= parent._subwindows[i]._z:
-					parent._subwindows.insert(i, self)
-					break
-			else:
-				parent._subwindows.append(self)
-		ind = parent._subwindows.index(self)
-		if ind != 0: #len(parent._subwindows)-1:
-			self._hWnd.SetWindowPos(parent._subwindows[ind-1]._hWnd.GetSafeHwnd(), (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOREDRAW)
-		else:
-			self._hWnd.SetWindowPos( win32con.HWND_TOP , (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOREDRAW)
-		#parent.pop()
-	
-
-	def push(self):
-		parent = self._parent
-		# put self behind all siblings with equal or higher z
-		#if self is parent._subwindows[-1]:
-		#	# already at the end
-		#	return
-		parent._subwindows.remove(self)
-		for i in range(len(parent._subwindows)-1,-1,-1):
-			if self._z <= parent._subwindows[i]._z:
-				parent._subwindows.insert(i+1, self)
-				break
-		else:
-			parent._subwindows.insert(0, self)
-		
-		ind = parent._subwindows.index(self)
-		if ind != 0: #len(parent._subwindows)-1:
-			self._hWnd.SetWindowPos(parent._subwindows[ind-1]._hWnd.GetSafeHwnd(), (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		else:
-			self._hWnd.SetWindowPos( win32con.HWND_TOP , (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		
-		#if self._topwindow is not self:
-		#	#i = self._parent._subwindows.index(self)
-		#	windows = self._parent._subwindows[:]
-		#	#windows.reverse()
-		#	for w in windows:
-		#		if w._active_displist!=None and w != self and self._z >= w._z:
-		#			#w._forcePaint()
-		#			#w._hWnd.SetWindowPos( win32con.HWND_TOP , (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOREDRAW)
-		#			rect1 = self._hWnd.GetClientRect()
-		#			rect2 = self._hWnd.ClientToScreen(rect1)
-		#			rect2 = w._hWnd.ScreenToClient(rect2)
-		#			rect1 = w._hWnd.GetClientRect()
-		#			if rect2[0] < 0 and rect2[2] < 0:
-		#				return
-		#			if rect2[1] < 0 and rect2[3] < 0:
-		#				return
-		#			if rect2[2] < rect1[0] and rect2[3] < rect1[1]:
-		#				return
-		#			if rect2[0] > rect1[2] and rect2[1] > rect1[3]:
-		#				return
-		#			if rect2[0] > rect1[2] and rect2[2] > rect1[2]:
-		#				return
-		#			if rect2[1] > rect1[3] and rect2[3] > rect1[3]:
-		#				return
-		#			# add lines to render
-		#			#print "rect1, rect2 --->", w._title, "-->", rect1, self._title, "-->", rect2
-		#			#print self._title, "-->", self._active_displist._list
-		#			w._do_expose(w._hWnd, 1)
-		#self._hWnd.SetWindowPos( win32con.HWND_BOTTOM , (0, 0, 0, 0), win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
-		
-	def _mkclip(self):
-		self._hWnd.MessageBox("BareSunWnd CLip", "Debug", win32con.MB_OK)
-		if not self._parent:
-			return
-		return
-		Window._mkclip(self)
-		region = self._clip
-		# subtract overlapping siblings
-		for w in self._parent._subwindows:
-			if w is self:
-				break
-			#if not w._transparent:
-			#	r = Xlib.CreateRegion()
-			#	apply(r.UnionRectWithRegion, w._rect)
-			#	region.SubtractRegion(r)
-
-
-
-
-
-
-###########################################################
-###########################################################
-###########################################################
-# Utilities
-def to_pixels(x,y,w,h,units):
-	if x==None: x=0
-	if y==None: y=0
-	global toplevel
-	if units == UNIT_MM:
-		if x is not None:
-			x = int(float(x) * toplevel._hmm2pxl + 0.5)
-		if y is not None:
-			y = int(float(y) * toplevel._vmm2pxl + 0.5)
-		w = int(float(w) * toplevel._hmm2pxl + 0.5)
-		h = int(float(h) * toplevel._vmm2pxl + 0.5)
-	elif units == UNIT_SCREEN:
-		if x is not None:
-			x = int(float(x) * toplevel._screenwidth + 0.5)
-		if y is not None:
-			y = int(float(y) * toplevel._screenheight + 0.5)
-		w = int(float(w) * toplevel._screenwidth + 0.5)
-		h = int(float(h) * toplevel._screenheight + 0.5)
-	elif units == UNIT_PXL:
-		if x is not None:
-			x = int(x)
-		if y is not None:
-			y = int(y)
-		w = int(w)
-		h = int(h)
-	else:
-		raise error, 'bad units specified'
-
-	# adjust
-	xborder = toplevel.xborder
-	yborder = toplevel.yborder
-	caption = toplevel.caption
-	x = x-xborder 
-	y = y-(yborder+caption)
-	w = w
-	h = h+(2*yborder+caption) 
-	if x<0: x=0
-	if y<0: y=0
-	if x>toplevel._screenwidth-xborder: x=toplevel._screenwidth-xborder
-	if y>toplevel._screenheight-caption: y=toplevel._screenheight-caption
-
-	return (x,y,w,h)
-
-def to_pixelsize(width,height,units):
-	if units == UNIT_MM:
-		width = int(float(width) * toplevel._hmm2pxl + 0.5)
-		height = int(float(height) * toplevel._vmm2pxl + 0.5)
-	elif units == UNIT_SCREEN:
-		width = int(float(width) * toplevel._screenwidth + 0.5)
-		height = int(float(height) * toplevel._screenheight + 0.5)
-	elif units == UNIT_PXL:
-		width = int(width)
-		height = int(height)
-	return (width,height)
-
-################################
-def createChannelWnd(type_channel,title,x,y,w,h):
-	print "createChannelWnd",type_channel,title,x,y,w,h
-	if (type_channel == SINGLE) :
-		wnd = cmifex.CreateWindow(title, x, y, w, h, 0)
-		cmifex.SetScrollInfo(wnd,win32con.SB_VERT,0,0,0,0,1)
-		cmifex.SetScrollInfo(wnd,win32con.SB_HORZ,0,0,0,0,1)
-	elif (type_channel == HTM) :
-		wnd = Htmlex.CreateWindow(title, x, y, w, h, 0)
-	elif (type_channel == TEXT) :
-		wnd = cmifex.CreateWindow(title, x, y, w, h, 0)
-	else :
-		wnd = cmifex.CreateWindow(title, x, y, w, h, 0)
-		cmifex.SetScrollInfo(wnd,win32con.SB_VERT,0,0,0,0,1)
-		cmifex.SetScrollInfo(wnd,win32con.SB_HORZ,0,0,0,0,1)
-	return wnd
-
-def createChannelChildWnd(type_channel,title,parentwnd,px,py,pw,ph):
-	if (type_channel == SINGLE) :
-		wnd = cmifex.CreateChildWindow(title, parentwnd, px, py, pw, ph)
-	elif (type_channel == HTM) :
-		wnd = Htmlex.CreateChildWindow(title, parentwnd, px, py, pw, ph)
-	elif (type_channel == TEXT) :
-		wnd = cmifex.CreateChildWindow(title, parentwnd, px, py, pw, ph)
-	else :
-		wnd = cmifex.CreateChildWindow(title, parentwnd, px, py, pw, ph)
-	return wnd

@@ -2,52 +2,17 @@ __version__ = "$Id$"
 
 import string
 import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
+from win32modules import cmifex2
 from appcon import TRUE,FALSE
 
 from AppForms import Window
+import AppMenu
 
 class _Dialog:
 	def __init__(self, list, title = '', prompt = None, grab = 1,
 		     vertical = 1, del_Callback = None):
 		if not title:
 			title = ''
-		#if grab:
-		#	dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
-		#else:
-		#	dialogStyle = Xmd.DIALOG_MODELESS
-		#w = toplevel._main.CreateFormDialog('dialog',
-		#		{'title': title,
-		#		 'dialogStyle': dialogStyle,
-		#		 'resizePolicy': Xmd.RESIZE_NONE,
-		#		 'visual': toplevel._default_visual,
-		#		 'depth': toplevel._default_visual.depth,
-		#		 'colormap': toplevel._default_colormap})
-		#if vertical:
-		#	orientation = Xmd.VERTICAL
-		#else:
-		#	orientation = Xmd.HORIZONTAL
-		#attrs = {'entryAlignment': Xmd.ALIGNMENT_CENTER,
-		#	 'traversalOn': FALSE,
-		#	 'orientation': orientation,
-		#	 'topAttachment': Xmd.ATTACH_FORM,
-		#	 'leftAttachment': Xmd.ATTACH_FORM,
-		#	 'rightAttachment': Xmd.ATTACH_FORM}
-		#if prompt:
-		#	l = w.CreateManagedWidget('label', Xm.LabelGadget,
-		#			{'labelString': prompt,
-		#			 'topAttachment': Xmd.ATTACH_FORM,
-		#			 'leftAttachment': Xmd.ATTACH_FORM,
-		#			 'rightAttachment': Xmd.ATTACH_FORM})
-		#	sep = w.CreateManagedWidget('separator',
-		#			Xm.SeparatorGadget,
-		#			{'topAttachment': Xmd.ATTACH_WIDGET,
-		#			 'topWidget': l,
-		#			 'leftAttachment': Xmd.ATTACH_FORM,
-		#			 'rightAttachment': Xmd.ATTACH_FORM})
-		#	attrs['topAttachment'] = Xmd.ATTACH_WIDGET
-		#	attrs['topWidget'] = sep
-		#row = w.CreateManagedWidget('buttonrow', Xm.RowColumn, attrs)
 
 		if del_Callback == None :
 			del_Callback = (self.close, ())
@@ -68,17 +33,11 @@ class _Dialog:
 			else :
 				ls.append(item[0])
 
-		#ls = ['Open...', 'Close', 'Debug', 'Trace']
-
-		#if hasattr(self.root, 'source') and \
-		#   hasattr(windowinterface, 'TextEdit'):
-		#	ls.insert(0, 'View Source...')
-
 		length = 0
 		for item in ls:
 			label = item
 			if label:
-				length = cmifex2.GetStringLength(w._hWnd, label)
+				length = cmifex2.GetStringLength(w._wnd, label)
 				if length>max:
 					max = length
 
@@ -93,38 +52,12 @@ class _Dialog:
 			top = 0, bottom = self._h-constant, left = 0, right = butw,
 			vertical = 1)
 
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
+		cmifex2.ResizeWindow(w._wnd, self._w, self._h)
 		self.window.show()
 
 
-		#self._buttons = []
-		#for entry in list:
-		#	if entry is None:
-		#		if vertical:
-		#			attrs = {'orientation': Xmd.HORIZONTAL}
-		#		else:
-		#			attrs = {'orientation': Xmd.VERTICAL}
-		#		dummy = row.CreateManagedWidget('separator',
-		#					Xm.SeparatorGadget,
-		#					attrs)
-		#		continue
-		#	if type(entry) is TupleType:
-		#		label, callback = entry[:2]
-		#	else:
-		#		label, callback = entry, None
-		#	if callback and type(callback) is not TupleType:
-		#		callback = (callback, (label,))
-		#	b = row.CreateManagedWidget('button',
-		#				    Xm.PushButtonGadget,
-		#				    {'labelString': label})
-		#	if callback:
-		#		b.AddCallback('activateCallback',
-		#			      self._callback, callback)
-		#	self._buttons.append(b)
 		self._widget = w
 		self._menu = None
-		#w.AddCallback('destroyCallback', self._destroy, None)
-		#w.ManageChild()
 
 	# destruction
 	def _destroy(self, widget, client_data, call_data):
@@ -136,16 +69,11 @@ class _Dialog:
 		w = self._widget
 		w.close()
 		self._widget = None
-		#w.UnmanageChild()
-		#w.DestroyWidget()
 
 	# pop up menu
 	def destroy_menu(self):
 		if self._menu:
-			#self._widget.RemoveEventHandler(X.ButtonPressMask,
-			#			FALSE, self._post_menu, None)
-			#self._menu.DestroyWidget()
-			cmifex2.DestroyMenu(self._menu)
+			DestroyMenu(self._menu)
 		self._menu = None
 
 	def create_menu(self, list, title = None):
@@ -156,7 +84,7 @@ class _Dialog:
 				 'depth': toplevel._default_visual.depth})
 		if title:
 			list = [title, None] + list
-		_create_menu(menu, list, toplevel._default_visual,
+		AppMenu._create_menu(menu, list, toplevel._default_visual,
 			     toplevel._default_colormap)
 		self._menu = menu
 		self._widget.AddEventHandler(X.ButtonPressMask, FALSE,
@@ -211,7 +139,7 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1, canclose=TRU
 			if item:
 				label = item[0]
 				if label:
-					length = cmifex2.GetStringLength(w._hWnd,label)
+					length = cmifex2.GetStringLength(w._wnd,label)
 				if length>vbw:
 					vbw = length
 		vbw = vbw + 30
@@ -223,7 +151,7 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1, canclose=TRU
 			if item:
 				label = item[0]
 				if label:
-					length = cmifex2.GetStringLength(w._hWnd,label)
+					length = cmifex2.GetStringLength(w._wnd,label)
 					hbw = hbw + length + 15
 			else:
 				hbw = hbw + 15
@@ -236,7 +164,7 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1, canclose=TRU
 		for line in ls:
 			if (line==None or line==''):
 				line=' '
-			length = cmifex2.GetStringLength(w._hWnd,line)
+			length = cmifex2.GetStringLength(w._wnd,line)
 			if length>maxline:
 				maxline = length
 		lbh = (len(ls)+1)*15
@@ -270,6 +198,6 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1, canclose=TRU
 			options['callback'] = (lambda w: w.close(), (w,))
 	b = apply(w.ButtonRow, (list,), options)
 	w.buttons = b
-	cmifex2.ResizeWindow(w._hWnd, _w, _h)
+	cmifex2.ResizeWindow(w._wnd, _w, _h)
 	w.show()
 	return w

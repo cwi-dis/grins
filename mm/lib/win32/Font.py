@@ -1,20 +1,13 @@
 __version__ = "$Id$"
 
-import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
 import string
+import win32ui
+Afx=win32ui.GetAfx()
+Sdk=win32ui.GetWin32Sdk()
 
-_screenwidth = cmifex.GetScreenWidth()
-_screenheight = cmifex.GetScreenHeight()
-_dpi_x = cmifex.GetScreenXDPI()
-_dpi_y = cmifex.GetScreenYDPI()
-_mscreenwidth = (float(_screenwidth)*25.4) / _dpi_x
-_mscreenheight = (float(_screenheight)*25.4) / _dpi_y
-_hmm2pxl = float(_screenwidth) / _mscreenwidth
-_vmm2pxl = float(_screenheight) / _mscreenheight
+from sysmetrics import *
 
-_pt2mm = 25.4 / 96			# 1 inch == 96 points == 25.4 mm
-							# original 72
+
 _fontmap = {
 	  'Times-Roman': 'Times New Roman',
 	  'Times-Italic': 'Times New Roman',
@@ -25,6 +18,7 @@ _fontmap = {
 	  'Palatino': 'Century Schoolbook',
 	  'Palatino-Italic': 'Century Schoolbook',
 	  'Palatino-Bold': 'Century Schoolbook',
+	  'Arial': 'Arial',
 	  'Helvetica': 'Arial',
 	  'Helvetica-Bold': 'Arial',
 	  'Helvetica-Oblique': 'Arial',
@@ -64,58 +58,141 @@ _fontcache = {}
 
 def findfont(fontname, pointsize):
 	key = fontname + `pointsize`
-	fontobj = _Font(fontname, pointsize)
-	_fontcache[key] = fontobj
-	return fontobj	
-	###########
-	key = fontname + `pointsize`
 	try:
 		return _fontcache[key]
 	except KeyError:
 		pass
-	try:
-		fontnames = _fontmap[fontname]
-	except KeyError:
-		raise error, 'Unknown font ' + `fontname`
-	fontname = 'Arial'
-	pointsize = 12
-	pixelsize = pointsize * _dpi_y / 96.0
-	bestsize = 0
+# use fontcache but not fontmap. 
+# leave the system to synthesize one
+#	try:
+#		fontname = _fontmap[fontname]
+#	except KeyError:
+#		raise error, 'Unknown font ' + `fontname`
+#	fontname = 'Arial'
 	fontobj = _Font(fontname, pointsize)
 	_fontcache[key] = fontobj
 	return fontobj	
-	
+
+
+# The methods of the font_object are:
+#	close()
+#		Close the font object and free its resources.
+#
+#	strsize(text) -> width, height
+#		Return the dimensions in mm of the box that the given
+#		text would occupy if displayed in the font the font
+#		object represents.
+#
+#	baseline() -> baseline
+#		Return the height of the baseline in mm.
+#
+#	fontheight() -> fontheight
+#		Return the height of the font in mm.
+#
+#	pointsize() -> pointsize
+#		Return the point size actually used in points.
+
+
 class _Font:
 	def __init__(self, fontname, pointsize):
-		self._height, self._ascent, self._maxWidth, self._aveWidth = cmifex.GetTextMetrics()
-		self._pointsize = pointsize
-		self._fontname = fontname
+		self._fd={'name':fontname,'size':pointsize,'weight':700}
+		self._hfont=Sdk.CreateFontIndirect(self._fd)		
+		self._tm=self.gettextmetrics()
+
+	def __del__(self):
+		print "font.__del__"
+		if self._hfont != None:
+			self.close()
+
+	def handle(self):
+		return self._hfont
 
 	def close(self):
-		self._font = None
+		Sdk.DeleteObject(self._hfont)
+		self._hfont = 0
 
 	def is_closed(self):
-		return self._font is None
+		return self._hfont is 0
 
-	def strsize(self, str):
-		strlist = string.splitfields(str, '\n')
-		maxwidth = 0
-		#maxheight = len(strlist) * (self._height)
-		maxheight = len(strlist) * (self._pointsize)
-		for str in strlist:
-			#width = cmifex.GetTextWidth(str)
-			#width = len(str)*self._maxWidth
-			width = len(str)*self._aveWidth
-			if width > maxwidth:
-				maxwidth = width
-		return float(maxwidth) / _hmm2pxl, \
-		       float(maxheight) / _vmm2pxl
-
+	def fontname(self):
+		return self._fd['name']	
+			
 	def baseline(self):
-		return float(self._ascent) / _vmm2pxl
+		return pxl2mm_y(self._tm['tmAscent']+self._tm['tmDescent'])
 
 	def fontheight(self):
-		return float(self._height) / _vmm2pxl
+		return pxl2mm_y(self._tm['tmHeight'])
 
 	def pointsize(self):
-		return self._pointsize
+		return self._fd['size']
+		
+
+
+	def strsize(self,str):
+		strlist = string.splitfields(str, '\n')
+		wnd=Afx.GetMainWnd()
+		dc=wnd.GetDC()
+		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
+		maxwidth = 0
+		maxheight = len(strlist) * self.baseline()
+		for str in strlist:
+			cx,cy=dc.GetTextExtent(str)
+			if cx > maxwidth:
+				maxwidth = cx
+		dc.SelectObjectFromHandle(self._hfont_org)
+		wnd.ReleaseDC(dc)
+		return pxl2mm_x(maxwidth),pxl2mm_y(maxheight)
+
+
+	def gettextmetrics(self):
+		wnd=Afx.GetMainWnd()
+		dc=wnd.GetDC()
+		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
+		
+		tm=dc.GetTextMetrics()
+
+		dc.SelectObjectFromHandle(self._hfont_org)
+		wnd.ReleaseDC(dc)
+		return tm
+	
+		
+	def gettextextent(self,str):
+		wnd=Afx.GetMainWnd()
+		dc=wnd.GetDC()
+		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
+		
+		cx,cy=dc.GetTextExtent(str)
+
+		dc.SelectObjectFromHandle(self._hfont_org)
+		wnd.ReleaseDC(dc)
+		return (cx,cy)
+
+	def TextWidth(self, str):
+		return self.gettextextent(str)[1]
+	def TextSize(self, str):
+		return self.gettextextent(str)
+
+
+"""	
+TextMetrics dict entries:
+tmHeight
+tmAscent
+tmDescent
+tmInternalLeading
+tmExternalLeading
+tmAveCharWidth
+tmMaxCharWidth
+tmWeight
+tmItalic
+tmUnderlined
+tmStruckOut
+tmFirstChar
+tmLastChar
+tmDefaultChar
+tmBreakChar
+tmPitchAndFamily
+tmCharSet
+tmOverhang
+tmDigitizedAspectX
+tmDigitizedAspectY
+"""

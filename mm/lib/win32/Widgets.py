@@ -1,13 +1,13 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
+from win32modules import cmifex2
 
 import string
 from types import *
 
 from appcon import *
-import win32mu
+import AppMenu
 
 _def_useGadget = 1
 
@@ -41,8 +41,8 @@ class _MenuSupport:
 		self.destroy_menu()
 		if title:
 			list = [title, list]
-		menu = cmifex2.CreateMenu()
-		win32mu._create_menu(menu, list)
+		menu = AppMenu.CreateMenu()
+		AppMenu._create_menu(menu, list)
 		self._menu = menu
 
 	def destroy_menu(self):
@@ -71,11 +71,7 @@ class _Widget(_MenuSupport):
 		parent._children.append(self)
 		self._showing = TRUE
 		self._form = widget
-		#widget.ManageChild()
 		_MenuSupport.__init__(self)
-		#self._form.AddCallback('destroyCallback', self._destroy, None)
-		#if widget:
-		#	widget.HookMessage(self._destroy, win32con.WM_DESTROY)
 
 	def __repr__(self):
 		return '<_Widget instance at %x>' % id(self)
@@ -89,11 +85,8 @@ class _Widget(_MenuSupport):
 		else:
 			#del self._form
 			_MenuSupport.close(self)
-			#cmifex2.DestroyWindow(form)
-			#form.DestroyWindow()
-			#form.DestroyWidget()
 		if self._parent:
-			#cmifex2.DestroyMenu(self._parent._hWnd)
+			#cmifex2.DestroyMenu(self._parent._wnd)
 			self._parent._children.remove(self)
 		self._parent = None
 		return
@@ -162,7 +155,7 @@ class _Widget(_MenuSupport):
 				form.DestroyWindow()
 			if self._parent:
 				#if self._menu:
-				#	 cmifex2.DestroyMenu(self._parent._hWnd)
+				#	 cmifex2.DestroyMenu(self._parent._wnd)
 				self._parent._children.remove(self)
 			self._parent = None
 			_MenuSupport._destroy(self)
@@ -170,7 +163,26 @@ class _Widget(_MenuSupport):
 ##################################################################
 class Label(_Widget):
 	'''Label window object.'''
-	def __init__(self, parent, text, justify = 'center', useGadget = _def_useGadget,
+	def __init__(self, parent, text, useGadget = _def_useGadget,
+		     name = 'windowLabel', tooltip = None, **options):
+		'''Create a Label subwindow.
+
+		PARENT is the parent window, TEXT is the text for the
+		label.  OPTIONS is an optional dictionary with
+		options.  The only options recognized are the
+		attachment options.'''
+		attrs = {}
+		self._attachments(attrs, options)
+		left = attrs['left']
+		top = attrs['top']
+		width = attrs['right']
+		height = attrs['bottom']
+		self._text = text
+		justify=' '
+		label = cmifex2.CreateStatic(text,parent._wnd,left,top,width,height,justify)	
+		_Widget.__init__(self, parent, label)
+
+	def __init__OLD(self, parent, text, justify = 'center', useGadget = _def_useGadget,
 		     name = 'windowLabel', **options):
 		'''Create a Label subwindow.
 
@@ -178,7 +190,6 @@ class Label(_Widget):
 		label.  OPTIONS is an optional dictionary with
 		options.  The only options recognized are the
 		attachment options.'''
-		print "Label control", parent, text, options
 		attrs = {}
 		self._attachments(attrs, options)
 		#if useGadget:
@@ -191,7 +202,7 @@ class Label(_Widget):
 		width = attrs['right']
 		height = attrs['bottom']
 	
-		label = cmifex2.CreateStatic(text,parent._hWnd,left,top,width,height,justify)	
+		label = cmifex2.CreateStatic(text,parent._wnd,left,top,width,height,justify)	
 		#self._form = label
 		#label.labelString = text
 		self._text = text
@@ -233,9 +244,7 @@ class Button(_Widget):
 		width = attrs['right']
 		height = attrs['bottom']
 		
-		#button = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
-		
-		button = cmifex2.CreateButton(label,parent._hWnd,left,top,width,height,('b',' '))
+		button = cmifex2.CreateButton(label,parent._wnd,left,top,width,height,('b',' '))
 		if callback:
 			#button.AddCallback('activateCallback',
 			#		   self._callback, callback)
@@ -261,14 +270,11 @@ class Button(_Widget):
 	def _callback(self, params):
 		#global _in_create_box
 		#if _in_create_box == None or self._parent==_in_create_box:
-			#print "level 1"
 			if self.is_closed():
 				return
-			#print "level 2"
 			#val = win32api.HIWORD(params[2])
 
 			#if val == win32con.BN_CLICKED:
-			#	print "level 3"
 			#	if self._cb:
 			#		apply(self._cb[0], self._cb[1])
 			if self._cb:
@@ -321,7 +327,7 @@ class OptionMenu(_Widget):
 		width = attrs['right']
 		height = attrs['bottom']
 		
-		option = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,25)
+		option = cmifex2.CreateContainerbox(parent._wnd,left,top,width,25)
 		
 		if label is None:
 			#option.OptionLabelGadget().UnmanageChild()
@@ -330,10 +336,9 @@ class OptionMenu(_Widget):
 			self._text = '<None>'
 		else:
 			#option.labelString = label
-			#print parent._hWnd
-			cmifex2.CreateStatic(label,option,0,0,cmifex2.GetStringLength(parent._hWnd,label),25,'left')
-			l1 = cmifex2.GetStringLength(parent._hWnd,label)
-			self._combo = cmifex2.CreateCombobox(" ",option,cmifex2.GetStringLength(parent._hWnd,label),0,width-cmifex2.GetStringLength(parent._hWnd,label),height,(0,'dr',1))
+			cmifex2.CreateStatic(label,option,0,0,cmifex2.GetStringLength(parent._wnd,label),25,'left')
+			l1 = cmifex2.GetStringLength(parent._wnd,label)
+			self._combo = cmifex2.CreateCombobox(" ",option,cmifex2.GetStringLength(parent._wnd,label),0,width-cmifex2.GetStringLength(parent._wnd,label),height,(0,'dr',1))
 			self._text = label
 		initbut = self._do_setoptions(parent, optionlist,
 					      startpos)
@@ -503,11 +508,11 @@ class PulldownMenu(_Widget):
 		attrs = {}
 		self._callback_dict = {}
 		menuid = 0
-		menubar = cmifex2.CreateMenu()
+		menubar = AppMenu.CreateMenu()
 		buttons = []
 		for item, list in menulist:
-			menu = cmifex2.CreateMenu()
-			temp = win32mu._create_menu(menu, list, menuid,self._callback_dict)
+			menu = AppMenu.CreateMenu()
+			temp = AppMenu._create_menu(menu, list, menuid,self._callback_dict)
 			if temp:
 				menuid = temp[0]
 				dict2 = temp[1]
@@ -515,12 +520,12 @@ class PulldownMenu(_Widget):
 				for k in dkeys:
 					if not self._callback_dict.has_key(k):
 						self._callback_dict[k] = dict2[k]
-			cmifex2.PopupAppendMenu(menubar, menu, item)
+			AppMenu.PopupAppendMenu(menubar, menu, item)
 		_Widget.__init__(self, parent, None)
 		self._buttons = buttons
 		self._menu = menubar
-		#cmifex2.SetMenu(parent._hWnd,menubar)
-		parent._hWnd.HookMessage(self._menu_callback, win32con.WM_COMMAND)
+		#cmifex2.SetMenu(parent._wnd,menubar)
+		parent._wnd.HookMessage(self._menu_callback, win32con.WM_COMMAND)
 
 
 	def __repr__(self):
@@ -529,7 +534,6 @@ class PulldownMenu(_Widget):
 	def _menu_callback(self, params):
 		if params[3] != 0:
 			return
-		#print "menu-->", params
 		item = params[2]
 		if self._callback_dict.has_key(item):
 			try:
@@ -661,7 +665,6 @@ class _List:
 		self._list.SendMessage(win32con.WM_LBUTTONDBLCLK,0,0)
 
 	def is_visible(self, pos):
-		#print "pos -->>>", pos
 	#	if pos < 0:
 	#		pos = len(self._itemlist) - 1
 	#	top = self._list.topItemPosition - 1
@@ -728,7 +731,7 @@ class Selection(_Widget, _List):
 		self._editlabel = None
 		self._edit = None
 		self._sel_cb = None
-		selection = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		selection = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		if listprompt is None:
 			#w.UnmanageChild()
 			top = 0
@@ -745,7 +748,6 @@ class Selection(_Widget, _List):
 			#w.UnmanageChild()
 			list = cmifex2.CreateListbox(" ",selection,0,top,width,height-25,0)
 			top = top + height - 25
-			print "No item label"
 		else:
 			#w.labelString = itemprompt
 			list = cmifex2.CreateListbox(" ",selection,0,top,width,height-50,0)
@@ -785,9 +787,7 @@ class Selection(_Widget, _List):
 			return
 		val = params[1]
 		if val == win32con.WM_LBUTTONDBLCLK or (val == win32con.WM_KEYUP and params[2] == 13):
-			#print "selection _callback"
 			str = cmifex2.Get(self._list)
-			#print str
 			if str!='':
 				cmifex2.SetCaption(self._edit,str)
 			else:
@@ -798,7 +798,6 @@ class Selection(_Widget, _List):
 				val = win32api.LOWORD(params[2])
 				
 				str = cmifex2.Get(self._list)
-				#print str
 				_List._callback(self,params)
 				if str:
 					cmifex2.SetCaption(self._edit,str)
@@ -841,7 +840,6 @@ class Selection(_Widget, _List):
 		#else:
 		#	return text.TextGetString()
 		text = cmifex2.GetText(self._edit)
-		print "--------->", text
 		return text
 
 	def _destroy(self, widget, value, call_data):
@@ -869,7 +867,7 @@ class List(_Widget, _List):
 
 		self._list = None
 		self._listlabel = None
-		form = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		form = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		
 		if listprompt is not None:
 		#	if useGadget:
@@ -1023,13 +1021,13 @@ class TextInput(_Widget):
 			editable = attrs['editable']
 		else:
 			editable = TRUE
-		
+
 		left = attrs['left']
 		top = attrs['top']
 		width = attrs['right']
 		height = attrs['bottom']
 
-		text = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		text = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 
 		if prompt is None:
 			if (inittext==None or inittext==''):
@@ -1037,10 +1035,9 @@ class TextInput(_Widget):
 			self._edit = cmifex2.CreateEdit(inittext,text,0,0,width,height,editable)
 			self._label = None
 		else:
-			print cmifex2.GetStringLength(text, prompt)
 			self._label = cmifex2.CreateStatic(prompt,text,0,0,cmifex2.GetStringLength(text, prompt),25,'left')
 			self._edit = cmifex2.CreateEdit(inittext,text,cmifex2.GetStringLength(text, prompt),0,width-cmifex2.GetStringLength(text, prompt),height,editable)
-		
+
 		widget = text
 
 		if chcb:
@@ -1058,8 +1055,6 @@ class TextInput(_Widget):
 
 		self._text = text
 		_Widget.__init__(self, parent, widget)
-		#print '-----------------------------', self._edit
-		#print '-----------------------------', self._callback
 		#self._edit.HookMessage(self._callback, win32con.WM_SETFOCUS)
 		self._edit.HookMessage(self._callback, win32con.WM_KILLFOCUS)
 
@@ -1136,18 +1131,17 @@ class TextEdit(_Widget):
 			attrs['cursorPositionVisible'] = FALSE
 		self._attachments(attrs, options)
 		#text = parent._form.CreateScrolledText(name, attrs)
-		
+
 		editable = attrs['editable']
 
 		left = attrs['left']
 		top = attrs['top']
 		width = attrs['right']
 		height = attrs['bottom']
-		#print  parent._hWnd,left,top,width,height,editable
 		str1 = 'klh'
-		text = cmifex2.CreateMultiEdit(str1,parent._hWnd,left,top,width,height,editable)
+		text = cmifex2.CreateMultiEdit(str1,parent._wnd,left,top,width,height,editable)
 		self._cb = None
-		
+
 		if cb:
 			#text.AddCallback('activateCallback', self._callback,
 			#		 cb)
@@ -1163,15 +1157,17 @@ class TextEdit(_Widget):
 
 	def settext(self, text):
 		if type(text) is ListType:
-			text = string.joinfields(text, '\n')
-		#self._form.TextSetString(text)
+			text = string.join(text, '\n')
+		# convert to Windows end-of-line conventions
+		text = string.join(string.split(text, '\n'), '\r\n')
 		cmifex2.SetCaption(self._form,text)
 		self._linecache = None
 
 	def gettext(self):
-		#return self._form.TextGetString()
 		if self._form:
-			return cmifex2.GetText(self._form)
+			text = cmifex2.GetText(self._form)
+			# convert from Windows end-of-line conventions
+			return string.join(string.split(text, '\r\n'), '\n')
 		else:
 			return ''
 
@@ -1258,7 +1254,7 @@ class Separator(_Widget):
 		width = attrs['right']
 		height = attrs['bottom']
 
-		separator = cmifex2.CreateSeparator(parent._hWnd,left,top,width,height,0)
+		separator = cmifex2.CreateSeparator(parent._wnd,left,top,width,height,0)
 		_Widget.__init__(self, parent, separator)
 
 	def __repr__(self):
@@ -1296,7 +1292,7 @@ class ButtonRow(_Widget):
 		width = attrs['right']
 		height = attrs['bottom']
 
-		rowcolumn = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		rowcolumn = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		
 		if vertical:
 			#max = 0
@@ -1493,7 +1489,7 @@ class Slider(_Widget):
 		self._sliderlabel = None
 
 		#scale = parent._form.CreateScale(name, attrs)
-		scale = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		scale = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		
 		
 		if prompt is None:

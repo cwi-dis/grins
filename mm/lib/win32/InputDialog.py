@@ -1,37 +1,24 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
+from win32modules import cmifex2
+from appcon import *
+import win32mu
+
+toplevel=None # set by AppTopLevel
 
 class InputDialog:
-	def __init__(self, prompt, default, cb):
-	#	attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
-	#		 'colormap': toplevel._default_colormap,
-	#		 'visual': toplevel._default_visual,
-	#		 'depth': toplevel._default_visual.depth}
-	#	self._form = toplevel._main.CreatePromptDialog(
-	#					   'inputDialog', attrs)
-	#	self._form.AddCallback('okCallback', self._ok, cb)
-	#	self._form.AddCallback('cancelCallback', self._cancel, None)
-	#	helpb = self._form.SelectionBoxGetChild(
-	#					Xmd.DIALOG_HELP_BUTTON)
-	#	helpb.UnmanageChild()
-	#	sel = self._form.SelectionBoxGetChild(
-	#				      Xmd.DIALOG_SELECTION_LABEL)
-	#	sel.labelString = prompt
-	#	text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-	#	text.value = default
-	#	self._form.ManageChild()
-		
-		self.CancelCallback = cb
+	def __init__(self, prompt, default, cb, cancelCallback = None):
+		self.OkCallback = cb
+		self.CancelCallback = cancelCallback
 		self._controls = []
 
 		self._nexty = 0
 
 		w = 210
 		h = 110
-		x = (win32api.GetSystemMetrics(win32con.SM_CXSCREEN)-w)/2 
-		y = (win32api.GetSystemMetrics(win32con.SM_CYSCREEN)-h)/2 
+		x = (win32api.GetSystemMetrics(win32con.SM_CXSCREEN)-w)/2
+		y = (win32api.GetSystemMetrics(win32con.SM_CYSCREEN)-h)/2
 
 		par = win32ui.GetActiveWindow()
 		form = cmifex2.CreateDialogbox(prompt,par,x,y,w,h,1,1)
@@ -68,52 +55,41 @@ class InputDialog:
 		okbutton.HookMessage(self._ok, win32con.WM_LBUTTONDOWN)
 		cancelbutton.HookMessage(self._cancel, win32con.WM_LBUTTONDOWN)
 		self._edit.HookKeyStroke(self._ok,13)
-		#form.HookMessage(self._resize_callback, win32con.WM_SIZE)
 		self._window_type = SINGLE
 		toplevel._subwindows.append(self)
 
-	
+
 	def _ok(self, params):
 		if self.is_closed():
 			return
 		value = cmifex2.GetText(self._edit)
 		self.close()
-		if self.CancelCallback:
-			func = self.CancelCallback
-			func(value)
-
-	def old_ok(self, w, client_data, call_data):
-		if self.is_closed():
-			return
-		value = call_data.value
-		self.close()
-		if client_data:
-			client_data(value)
+		if self.OkCallback:
+			self.OkCallback(value)
+			self.OkCallback = None
 
 	def _cancel(self, params):
-		print "Cancel pressed"
 		if self.is_closed():
 			return
-		self.close()
-	
-	
-	def old_cancel(self, w, client_data, call_data):
-		if self.is_closed():
-			return
+		if self.CancelCallback:
+			apply(apply, self.CancelCallback)
+			self.CancelCallback = None
 		self.close()
 
-	#def setcursor(self, cursor):
-	#	WIN32_windowbase._win_setcursor(self._form, cursor)
+
+	def setcursor(self, cursor):
+		keys = win32Cursors.keys()
+		if cursor in keys:
+			win32mu.SetCursor(win32Cursors[cursor])
+		else:
+			win32mu.SetCursor(ARROW)
 
 	def close(self):
 		if self._form:
-			toplevel._subwindows.remove(self)
-			#self._form.UnmanageChild()
-			#self._form.DestroyWidget()
+			if self in toplevel._subwindows: toplevel._subwindows.remove(self)
 			for control in self._controls:
 				cmifex2.DestroyWindow(control)
 				self._controls.remove(control)
-			#cmifex2.DestroyWindow(self._form)
 			if self._form:
 				self._form.DestroyWindow()
 			self._form = None
@@ -124,3 +100,4 @@ class InputDialog:
 	def _resize_callback(self, params):
 		x, y, w, h = self._form.GetClientRect()
 		cmifex2.ResizeWindow(self._controls[0], w-10)
+
