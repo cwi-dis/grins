@@ -1,14 +1,13 @@
 <?xml version="1.0"?>
 <smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
   <head>
-    <meta name="title" content="SMIL 2.0 Adaptive Quality Video presentation with background image"/>
-    <meta name="template_name" content="Adaptive SMIL 2.0 Presentation"/>
-    <meta name="template_description" content="A slideshow with background music, voice/text captions and a background image."/>
+    <meta name="title" content="Adaptive Quality Video presentation with background image"/>
+    <meta name="template_name" content="Adaptive Presentation"/>
+    <meta name="template_description" content="An adaptive (video/slides) show with background audio and image."/>
     <meta name="template_snapshot" content="T-icons/adapt_1_1A.bmp"/>
-    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 134"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
-      <root-layout id="AdaptiveShow" backgroundColor="black" width="330" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
+      <root-layout id="Adaptive_Presentation" backgroundColor="black" width="330" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
       <region id="audio" GRiNS:type="sound"/>
       <region id="bkgd_image" width="330" height="270" GRiNS:type="image"/>
       <region id="Video1" left="7" width="320" top="7" height="240" z-index="1" GRiNS:type="video"/>
@@ -31,8 +30,12 @@
         </seq>
         <seq systemBitrate="34400" GRiNS:emptyIcon="T-icons/dropVideo.tif" GRiNS:emptyText="240x180 video object (56K - 112K)." GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropVideo.tif">
         </seq>
-        <seq GRiNS:emptyIcon="T-icons/dropImage.tif" GRiNS:emptyText="Image Set (less than 56K)." GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropImage.tif">
-        </seq>
+        <par>
+           <seq GRiNS:emptyIcon="T-icons/dropSound.tif" GRiNS:emptyText="Background Audio (less than 56K)." GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropImage.tif">
+           </seq>
+           <seq GRiNS:emptyIcon="T-icons/dropImage.tif" GRiNS:emptyText="Image Set (less than 56K)." GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropImage.tif">
+           </seq>
+         </par>
       </switch>
     </GRiNS:assets>
   </body>
