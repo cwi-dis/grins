@@ -1,6 +1,9 @@
 #
 # Hyperlink management module
 #
+# XXX It might be better to store ANCHOR1 and ANCHOR2 in a canonical order,
+# this would make the search routines a lot easier (and we're doing more
+# searching than changing, probably)
 
 # Structure indices
 ANCHOR1 = 0
@@ -29,6 +32,9 @@ class Hlinks:
 	def addlink(self, link):
 		self.links.append(link)
 
+	def dellink(self, link):
+		self.links.remove(link)
+
 	def addlinks(self, linklist):
 		self.links = self.links + linklist
 	#
@@ -43,4 +49,20 @@ class Hlinks:
 			if l[ANCHOR2]==anchor and \
 				  l[DIR] in (DIR_2TO1, DIR_2WAY):
 				rv.append((l[TYPE], l[ANCHOR1]))
+		return rv
+	# Find all links related to one or two nodes
+	def findalllinks(self, a1, a2):
+		rv = []
+		if a1 == a2: return rv
+		for l in self.links:
+			if a1==l[ANCHOR1] and (a2==None or a2==l[ANCHOR2]):
+				rv.append(l)
+			elif a1==l[ANCHOR2] and (a2==None or a2==l[ANCHOR1]):
+				dir = l[DIR]
+				if dir == DIR_1TO2:
+					dir = DIR_2TO1
+				elif dir == DIR_2TO1:
+					dir = DIR_1TO2
+				l = l[ANCHOR2], l[ANCHOR1], dir, l[TYPE]
+				rv.append(l)
 		return rv
