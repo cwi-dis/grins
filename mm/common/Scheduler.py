@@ -52,7 +52,7 @@ class SchedulerContext:
 		self.stopcontextchannels()
 		self.srdict = {}
 		self.parent._remove_sctx(self)
-##		self.playroot.resetall()
+		self.playroot.resetall()
 		del self.parent
 		del self.playroot
 		if not settings.noprearm:
