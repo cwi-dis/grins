@@ -36,16 +36,20 @@ class Channel():
 		self.attrdict = attrdict
 		self.player = player
 		self.qid = None
+		self.showing = 0
 		return self
 	#
 	def show(self):
-		pass
+		self.showing = 1
 	#
 	def hide(self):
-		pass
+		self.showing = 0
+	#
+	def is_showing(self):
+		return self.showing
 	#
 	def destroy(self):
-		pass
+		self.hide()
 	#
 	def save_geometry(self):
 		pass
