@@ -143,6 +143,7 @@ echo -x img >> FreezeOpts
 echo -x imgcolormap >> FreezeOpts
 echo -x imgconvert >> FreezeOpts
 echo -x imgformat >> FreezeOpts
+echo -x imgjpeg >> FreezeOpts
 echo -x sitecustomize >> FreezeOpts
 echo -x termios >> FreezeOpts
 
@@ -155,6 +156,10 @@ echo -x win32dbg >> FreezeOpts
 
 rem exclude RMASDK
 echo -x rma >> FreezeOpts
+
+rem producer stuff
+echo -x producer >> FreezeOpts
+echo -x dshow >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
