@@ -37,8 +37,10 @@ else:
 	TypeLabels = [  'whole node', 'dest only', 'partial node']
 
 # Shape type
+A_SHAPETYPE_ALLREGION = 0
 A_SHAPETYPE_RECT = 1
 A_SHAPETYPE_POLY = 2
 A_SHAPETYPE_CIRCLE = 3
+A_SHAPETYPE_ELIPSE = 4
 
 
