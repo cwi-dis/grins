@@ -170,3 +170,23 @@ def showeditor(node):
 def test():
 	InitEditors()
 	print channeleditors
+
+
+def _shell_call(node,verb):
+	if node.GetType() == 'imm':
+		dummy = _Convert(node)
+		return
+	if node.GetType() <> 'ext':
+		windowinterface.showmessage(
+			'NodeEdit: Only extern nodes can be opened',
+			mtype = 'error')
+		return
+	import MMAttrdefs, MMurl
+	url = MMAttrdefs.getattr(node,'file')
+	url = node.context.findurl(url)
+	windowinterface.shell_execute(url,verb)
+
+def _showeditor(node):
+	_shell_call(node,'edit')
+def _showviewer(node):
+	_shell_call(node,'open')
