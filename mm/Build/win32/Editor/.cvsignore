@@ -1,1 +1,12 @@
 *.c
+FreezeOpts
+GRiNSed.exe
+GRiNSed.exp
+GRiNSed.lib
+GRiNSed.ncb
+GRiNSed.opt
+log.txt
+Makefile
+Release
+Build
+Debug
