@@ -114,7 +114,7 @@ class SchedulerContext:
 	# Initialize SR actions and events before playing
 	#
 	def prepare_minidoc(self, seeknode):
-		self.srdict = self.playroot.GenAllSR(seeknode, sctx = self, curtime = self.parent.timefunc())
+		self.srdict = self.playroot.GenAllSR(seeknode, sctx = self)
 	#
 	# Re-initialize SR actions and events for a looping node, preparing
 	# for the next time through the loop
@@ -209,7 +209,7 @@ class SchedulerContext:
 				self.cancelarc(a, timestamp)
 				if a.isstart:
 					if a.dstnode.GetSchedParent():
-						srdict = a.dstnode.GetSchedParent().gensr_child(a.dstnode, runchild = 0, sctx = self, curtime = self.parent.timefunc())
+						srdict = a.dstnode.GetSchedParent().gensr_child(a.dstnode, runchild = 0, sctx = self)
 						self.srdict.update(srdict)
 						if debugevents: print 'scheduled_children-1 a',`a.dstnode`,`a`,event,a.dstnode.scheduled_children,self.parent.timefunc()
 						a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
@@ -223,7 +223,7 @@ class SchedulerContext:
 			if arc.isstart:
 				pnode = arc.dstnode.GetSchedParent()
 				if pnode is not None:
-					srdict = pnode.gensr_child(arc.dstnode, runchild = 0, sctx = self, curtime = self.parent.timefunc())
+					srdict = pnode.gensr_child(arc.dstnode, runchild = 0, sctx = self)
 					pnode.starting_children = pnode.starting_children + 1
 					self.srdict.update(srdict)
 					if debugevents: print 'scheduled_children+1 c',`arc.dstnode`,`arc`,event,arc.dstnode.scheduled_children,self.parent.timefunc()
@@ -344,7 +344,11 @@ class SchedulerContext:
 		# Triggers a single syncarc.
 
 		# if arc == None, arc is not used, but node and timestamp are
+		# this happens when trigger is called because of a hyperjump
+
 		# if arc != None, arc is used, and node and timestamp are not
+		# this is the normal case
+
 		parent = self.parent
 		parent.setpaused(1, 0)
 		if debugevents: print 'trigger',`arc`,`node`,`path`,timestamp,parent.timefunc()
@@ -526,7 +530,7 @@ class SchedulerContext:
 						break
 			if not found:
 				if debugevents: print 'not allowed to start',parent.timefunc()
-				srdict = pnode.gensr_child(node, runchild = 0, sctx = self, curtime = parent.timefunc())
+				srdict = pnode.gensr_child(node, runchild = 0, sctx = self)
 				self.srdict.update(srdict)
 				ev = (SR.SCHED_DONE, node)
 				if debugevents: print 'trigger: queueing',SR.ev2string(ev), timestamp, parent.timefunc()
@@ -579,7 +583,7 @@ class SchedulerContext:
 						return
 					elif action == 'defer':
 						if node not in pnode.pausestack:
-							srdict = pnode.gensr_child(node, sctx = self, curtime = parent.timefunc())
+							srdict = pnode.gensr_child(node, sctx = self)
 							self.srdict.update(srdict)
 						node.set_start_time(timestamp)
 						self.do_pause(pnode, node, 'hide', timestamp)
@@ -609,7 +613,7 @@ class SchedulerContext:
 		elif pnode.type == 'seq':
 			# parent is seq, must terminate running child first
 			if debugevents: print 'terminating siblings',parent.timefunc()
-			srdict = pnode.gensr_child(node, runchild = 0, sctx = self, curtime = self.parent.timefunc())
+			srdict = pnode.gensr_child(node, runchild = 0, sctx = self)
 			self.srdict.update(srdict)
 			for c in pnode.GetSchedChildren():
 				# don't have to terminate it again
@@ -659,7 +663,7 @@ class SchedulerContext:
 		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and MMAttrdefs.getattr(node, 'erase') != 'never' and node.GetFill() == 'remove':
 			runchild = 0
 			node.set_infoicon('error', 'node not run')
-		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self, curtime = parent.timefunc())
+		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self)
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
 		node.set_start_time(timestamp)
