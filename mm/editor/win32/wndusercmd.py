@@ -23,6 +23,8 @@ class SELECT_CHARSET(_CommandBase):
 	help = 'Select a charset'
 class HELP_CONTENTS(_CommandBase):
 	help = 'Display help contents'
+class PASTE_DOCUMENT(_CommandBase):
+	help = 'Paste document'
 class PASTE_FILE(_CommandBase):
 	help = 'Paste file'
 
