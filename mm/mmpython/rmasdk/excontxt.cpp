@@ -56,12 +56,20 @@ ExampleClientContext::~ExampleClientContext()
  *  ExampleClientContext::Init                               ref:  excontxt.h
  *
  */
-void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown)
+void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown, void *hwnd,
+#ifdef _UNIX
+				void *dpy,
+#endif
+				int x, int y, int w, int h)
 {
     m_pErrorSink	= new ExampleErrorSink(pUnknown);
     m_pClientSink	= new ExampleClientAdviceSink(pUnknown);
     m_pAuthMgr      = new ExampleAuthenticationManager();
-    m_pSiteSupplier	= new ExampleSiteSupplier(pUnknown);
+    m_pSiteSupplier	= new ExampleSiteSupplier(pUnknown, hwnd,
+#ifdef _UNIX
+						  dpy,
+#endif
+						  x, y, w, h);
 
     if (m_pClientSink)m_pClientSink->AddRef(); 
     if (m_pErrorSink)m_pErrorSink->AddRef();

@@ -37,7 +37,11 @@ class ExampleClientContext : public IUnknown
     /****** Public Class Methods ******************************************/
      ExampleClientContext();
     ~ExampleClientContext();
-    void Init(IUnknown* /*IN*/ pUnknown);
+    void Init(IUnknown* /*IN*/ pUnknown, void *hwnd,
+#ifdef _UNIX
+	      void *dpy,
+#endif
+	      int x, int y, int w, int h);
     void Close();
 
 
