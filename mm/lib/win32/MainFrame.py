@@ -168,6 +168,42 @@ class GRiNSToolbar(window.Wnd):
 		wndToolBar.ModifyStyle(0, commctrl.TBSTYLE_FLAT)
 		window.Wnd.__init__(self,wndToolBar)
 
+		# enable/dissable tools draging
+		self._enableToolDrag = 0
+		# shortcut for GRiNS private clipboard format
+		self.CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
+		if self._enableToolDrag:
+			self.hookMessages()
+			self._dragging = None
+
+	def hookMessages(self):
+		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+
+	def onLButtonDown(self, params):
+		if self._enableToolDrag:
+			msgpos=win32mu.Win32Msg(params).pos()
+			self._dragging = msgpos
+			self.SetCapture()
+
+	def onLButtonUp(self, params):
+		if self._enableToolDrag:
+			if self._dragging: 
+				self._dragging = None
+				self.ReleaseCapture()
+	
+	def onMouseMove(self, params):
+		if self._enableToolDrag and self._dragging:
+			xp, yp = self._dragging
+			x, y =win32mu.Win32Msg(params).pos()
+			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
+				str='%d %d' % (xp, yp)
+				# start drag and drop
+				print 'Drag-and-Drop not implemented yet for toolbars'
+				# self.DoDragDrop(self.CF_TOOL, str)
+				self._dragging = None
+				self.ReleaseCapture()
 
 ###########################################################
 
