@@ -114,22 +114,23 @@ class Parser(SGMLParser):
 		SGMLParser.close(self)
 		return string.join(self.__data, '')
 
-def test():
-	import sys
+if __debug__:
+	def test():
+		import sys
 
-	args = sys.argv[1:]
-	if args:
-		file = args[0]
-	else:
-		file = '-'
-	if file == '-':
-		f = sys.stdin
-	else:
-		f = open(file)
-	data = f.read()
-	x = Parser()
-	x.feed(data)
-	print x.close()
+		args = sys.argv[1:]
+		if args:
+			file = args[0]
+		else:
+			file = '-'
+		if file == '-':
+			f = sys.stdin
+		else:
+			f = open(file)
+		data = f.read()
+		x = Parser()
+		x.feed(data)
+		print x.close()
 
-if __name__ == '__main__':
-	test()
+	if __name__ == '__main__':
+		test()
