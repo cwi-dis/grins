@@ -120,7 +120,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__targetChannel:
 			return self.__targetChannel
 		targnode = self.__effAnimator.getTargetNode()
-		chname =  MMAttrdefs.getattr(targnode, 'channel') 
+		chname = MMAttrdefs.getattr(targnode, 'channel') 
 		self.__targetChannel = self._player.getchannelbyname(chname)
 		return self.__targetChannel
 		
@@ -218,4 +218,3 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = None
- 
