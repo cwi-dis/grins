@@ -125,7 +125,7 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		self._window.set_commandlist(commandlist)
 
 	def asklayoutname(self, default):
-		windowinterface.InputDialog('Name for layout',
+		windowinterface.InputDialog('Screen name',
 					    default,
 					    self.newlayout_callback,
 					    cancelCallback = (self.newlayout_callback, ()))
