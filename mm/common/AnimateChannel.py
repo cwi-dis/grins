@@ -34,54 +34,28 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
+		self.__duration = None
 		self.__animating = None
-		self.__duration = 0
-		self.__fiber_id = 0
-		self.__playdone = 0
-		self.__animator = None
-		self.__effAnimator = None
-		self.__targetChannel = None
-		self.__lastvalue = None
-		if not hasattr(self._player,'_animateContext'):
-			self._player._animateContext = Animators.AnimateContext()
-		
+
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
-		
-	def do_show(self, pchan):
-		if not Channel.ChannelAsync.do_show(self, pchan):
-			return 0
-		return 1
+
+	#
+	# Channel overrides
+	#
 
 	def do_hide(self):
-		self.__stopAnimate()
-		self.__animating = None
 		Channel.ChannelAsync.do_hide(self)
-
-	def do_arm(self, node, same=0):
-		parser = Animators.AnimateElementParser(node)
-		self.__animator = parser.getAnimator()
-		if self.__animator:
-			# find and apply parent spped
-			speed = node.GetParent().GetRawAttrDefProduct('speed', 1.0)
-			self.__animator._setSpeed(speed)
-			# get the effective animator of the attribute
-			context = self._player._animateContext
-			self.__effAnimator = context.getEffectiveAnimator(
-				parser.getTargetNode(), 
-				parser.getGrinsAttrName(), 
-				parser.getDOMValue())
-		return 1
-
-	def do_play(self, node):
-		if debug: print 'AnimateChannel.do_play'
 		
-		if not self.__animator or not self.__effAnimator:
-			# arming failed, so don't even try playing
+	def do_play(self, node):
+		Channel.ChannelAsync.do_play(self, node)
+
+		self.__initEngine(node)
+
+		if not self.__ready():
 			self.playdone(0)
 			return
-
-		# the playing node
+		
 		self.__animating = node
 
 		# get timing
@@ -90,23 +64,52 @@ class AnimateChannel(Channel.ChannelAsync):
 		# get duration in secs (float)
 		#self.__duration = node.GetAttrDef('duration', None)
 		self.__duration = self.__animator.getTimeManipulatedDur()
-
-		self.event('beginEvent')
+		
 		self.__startAnimate()
 
+	def setpaused(self, paused):
+		Channel.ChannelAsync.setpaused(self, paused)
+		self.__pauseAnimate(paused)
+
 	def stopplay(self, node):
-		if node and self._played_node is not node:
-##			print 'node was not the playing node '+`self,node,self._played_node`
-			return
-		if self.__animating is node and node is not None:
+		if self.__animating:
 			self.__stopAnimate()
-		self.__animating = None
+			self.__animating = None
 		Channel.ChannelAsync.stopplay(self, node)
 
-	def setpaused(self, paused):
-		self.__pauseAnimate(paused)
-		Channel.ChannelAsync.setpaused(self, paused)
+	#
+	# Animation engine
+	#
 
+	def __initEngine(self, node):
+		self.__animator = None
+		self.__effAnimator = None
+
+		self.__fiber_id = 0
+		self.__playdone = 0
+		self.__targetChannel = None
+		self.__lastvalue = None
+		self.__start = None
+
+		if not hasattr(self._player,'_animateContext'):
+			self._player._animateContext = Animators.AnimateContext()
+		self.__context = self._player._animateContext
+
+		parser = Animators.AnimateElementParser(node)
+		self.__animator = parser.getAnimator()
+		if self.__animator:
+			# find and apply parent speed
+			speed = node.GetParent().GetRawAttrDefProduct('speed', 1.0)
+			self.__animator._setSpeed(speed)
+			# get the effective animator of the attribute
+			self.__effAnimator = self.__context.getEffectiveAnimator(
+				parser.getTargetNode(), 
+				parser.getGrinsAttrName(), 
+				parser.getDOMValue())
+	
+	def __ready(self):
+		return 	self.__animator!=None and self.__effAnimator!=None
+	
 	def __getTargetChannel(self):
 		if self.__targetChannel:
 			return self.__targetChannel
@@ -123,10 +126,10 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__register_for_timeslices()
 
 	def __stopAnimate(self):
-		self.__unregister_for_timeslices()
-		if not self.__animating or not self.__animator:
-			return
-		self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator)
+		if self.__animating:
+			self.__unregister_for_timeslices()
+			self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator)
+			self.__effAnimator = None
 
 	def __pauseAnimate(self, paused):
 		if self.__animating:
@@ -142,7 +145,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			if self.__lastvalue != val:
 				self.__effAnimator.update(self.__getTargetChannel())
 				self.__lastvalue = val
-
+		
 	def __onAnimateDur(self):
 		if not self.__animating:
 			return
@@ -153,27 +156,29 @@ class AnimateChannel(Channel.ChannelAsync):
 			if self.play_loop: # more loops ?
 				self.__startAnimate(repeat=1)
 				return
-			self.__playdone = 1
 			self.playdone(0)
 			return
 		# self.play_loop is 0 so repeat
 		self.__startAnimate(repeat=1)
 
-	def on_idle_callback(self):
-		if self.__animating and not self.__playdone:
+	def onIdle(self):
+		self.__fiber_id = 0
+		if self.__animating:
 			t_sec=time.time() - self.__start
 			# end-point exclusive model
 			if t_sec>=self.__duration:
 				self.__onAnimateDur()
 			else:
 				self.__animate()
-		self.__fiber_id = windowinterface.settimer(0.05, (self.on_idle_callback,()))
+				self.__register_for_timeslices()
 			
 	def __register_for_timeslices(self):
-		if self.__fiber_id: return
-		self.__fiber_id = windowinterface.settimer(0.05, (self.on_idle_callback,()))
+		if not self.__fiber_id:
+			self.__fiber_id = windowinterface.settimer(0.05, (self.onIdle,()))
 
 	def __unregister_for_timeslices(self):
-		if not self.__fiber_id: return
-		windowinterface.canceltimer(self.__fiber_id)
-		self.__fiber_id = 0
+		if self.__fiber_id:
+			windowinterface.canceltimer(self.__fiber_id)
+			self.__fiber_id = 0
+
+
