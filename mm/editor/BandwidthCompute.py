@@ -142,10 +142,11 @@ class BandwidthAccumulator:
 
 def compute_bandwidth(root):
 	"""Compute bandwidth usage of a tree. Sets error icons, and returns
-	a tuple (bandwidth, prerolltime, errorcount, errorseconds)"""
+	a tuple (bandwidth, prerolltime, delaycount, errorseconds, errorcount)"""
 	import settings
 	maxbandwidth = settings.get('system_bitrate')
 	prerolltime = 0
+	delaycount = 0
 	errorcount = 0
 	errorseconds = 0
 	errornodes = {}
@@ -157,7 +158,7 @@ def compute_bandwidth(root):
 	# Get list (sorted by begin time) of all bandwidth requirements
 	#
 	allbandwidthdata = []
-	getallbandwidthdata(allbandwidthdata, root)
+	errorcount = getallbandwidthdata(allbandwidthdata, root)
 	allbandwidthdata.sort()
 	#
 	# Compute preroll time (prearms needed at t0==0)
@@ -182,7 +183,7 @@ def compute_bandwidth(root):
 				msg = 'Uses %d bps more bandwidth than available'%overflow
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
-				errorcount = errorcount + 1
+				delaycount = delaycount + 1
 ##				print 'continuous overflow', overflow, node
 				errorseconds = errorseconds + (overflow/maxbandwidth)
 	#
@@ -198,7 +199,7 @@ def compute_bandwidth(root):
 					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
 					node.set_infoicon('bandwidthbad', msg)
 					errornodes[node] = 1
-					errorcount = errorcount + 1
+					delaycount = delaycount + 1
 		if node.GetType() == 'ext' and \
 		   node.GetChannelType() == 'RealPix':
 			# Create the SlideShow if it somehow doesn't exist yet
@@ -207,7 +208,7 @@ def compute_bandwidth(root):
 				node.slideshow = realnode.SlideShow(node)
 			slack, errors = node.slideshow.computebandwidth()
 			errorseconds = errorseconds + slack
-			errorcount = errorcount + errors
+			delaycount = delaycount + errors
 
 	#
 	# Finally show "bandwidth fine" icon on all nodes that deserve it
@@ -216,19 +217,22 @@ def compute_bandwidth(root):
 		if not errornodes.has_key(node):
 			node.set_infoicon('bandwidthgood')
 	
-	return maxbandwidth, prerolltime, errorcount, errorseconds
+	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount
 	
 def getallbandwidthdata(datalist, node):
 	"""Recursively get all bandwidth usage info. Modifies first argument"""
+	errorcount = 0
 	try:
 		this = getbandwidthdata(node)
 	except Bandwidth.Error, arg:
 		node.set_infoicon('error', arg)
 		this = None
+		errorcount = 1
 	if this:
 		datalist.append(this)
 	for child in node.children:
-		getallbandwidthdata(datalist, child)
+		errorcount = errorcount + getallbandwidthdata(datalist, child)
+	return errorcount
 	
 def getbandwidthdata(node):
 	"""Get bandwidth usage info for a single node"""
