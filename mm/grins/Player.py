@@ -221,9 +221,6 @@ class Player(PlayerCore, PlayerDialog):
 			state = PLAYING
 		self.setstate(state)
 
-	def updateuibaglist(self):
-		pass
-
 	def makemenu(self):
 		channels = []
 		for name in self.channelnames:
