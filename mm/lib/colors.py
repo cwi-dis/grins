@@ -20,6 +20,7 @@ colors = {
 	'yellow': (0xFF, 0xFF, 0x00),
 	'orange': (0xFF, 0xA5, 0x00),
 	'blend': (-1, -1, -1),
+	'no value': (-255, -255, -255),
 	}
 
 rcolors = {}
