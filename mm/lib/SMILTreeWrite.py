@@ -1970,8 +1970,8 @@ class SMILWriter(SMIL):
 			return
 		defaults = {
 			'dur':'1',
-			'startProgress':'0.0',
-			'endProgress':'1.0',
+			'startProgress':'0',
+			'endProgress':'1',
 			'fadeColor':'black',
 			'direction':'forward',
 			'vertRepeat':'1',
@@ -1990,6 +1990,8 @@ class SMILWriter(SMIL):
 						aval = colors.rcolors[aval]
 					else:
 						aval = '#%02x%02x%02x' % aval
+				elif akey[:1] == '_':
+					continue
 				elif akey == 'coordinated':
 					aval = ['false', 'true'][aval]
 				elif akey != 'subtype':
