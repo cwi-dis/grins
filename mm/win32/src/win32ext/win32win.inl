@@ -94,6 +94,26 @@ ui_window_client_to_screen_rect(PyObject *self, PyObject *args)
 	return Py_BuildValue("(iiii)",rect.left, rect.top, rect.right, rect.bottom);
 }
 
+// @pymethod (x, y)|PyCWnd|ChildWindowFromPoint|Returns the child window that contains the point and if not found the window asked for
+static PyObject *
+ui_window_child_window_from_point(PyObject *self, PyObject *args)
+{
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+	CPoint point;
+	// @pyparm (x, y)|point||The point.
+	if (!PyArg_ParseTuple(args,"(ii):ChildWindowFromPoint", &point.x, &point.y))
+		return NULL;
+	// @pyseemfc CWnd|ChildWindowFromPoint
+	GUI_BGN_SAVE;
+	CWnd* pChild=pWnd->ChildWindowFromPoint(point);
+	GUI_END_SAVE;
+	if(!pChild || !pChild->GetSafeHwnd())
+		RETURN_NONE;
+	return PyCWnd::make( UITypeFromCObject(pChild), pChild )->GetGoodRet();
+}
+
+
 /* 
 // @pymethod |PyCWnd|LockWindowUpdate|Disables drawing in the given window
 static PyObject *
@@ -611,6 +631,7 @@ ui_mdi_child_window_get_mdi_frame(PyObject *self, PyObject *args)
 	}
 */
 
+
 ///////////////////////
 // @pymeth GetWindowLong|Gets the style of a window.
 // @pymeth SetWindowLong|Modifies the style of a window.
@@ -623,11 +644,14 @@ ui_mdi_child_window_get_mdi_frame(PyObject *self, PyObject *args)
 // @pymeth SetTimer|Installs a system timer
 // @pymeth KillTimer|Destroys a system timer
 // ...
+// @pymethod (x, y)|PyCWnd|ChildWindowFromPoint|Returns the child window that contains the point and if not found the window asked for
 
 #define DEF_NEW_PY_METHODS_PyCWnd \
 	{"IsKindOfMDIChildWnd",ui_window_is_kind_of_mdi_child_wnd,1},\
     {"GetWindowLong",ui_window_get_window_long,1},\
-	{"SetWindowLong",ui_window_set_window_long,1},
+	{"SetWindowLong",ui_window_set_window_long,1},\
+	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},
+
 
 /*
 #define DEF_NEW_PY_METHODS_PyCWnd \
