@@ -14,6 +14,15 @@ class Animator:
 		self._splines = splines
 		self._mode = mode
 
+		# assertions
+		if len(values)==0: raise AssertionError
+		if len(values)==1:
+			if mode != 'discrete': raise AssertionError
+		if times:
+			if len(times)!=len(values): raise AssertionError
+		if splines and times:
+			if len(splines) != len(times)-1: raise AssertionError
+
 		# set calc mode
 		if mode=='discrete': self._inrepol = self._discrete
 		elif mode=='paced': self._inrepol = self._paced
@@ -73,8 +82,7 @@ class Animator:
 
 	def _discrete(self, t):
 		n = len(self._values)
-		if n==0: return self._domval
-		elif n==1: return self._values[0]
+		if n==1: return self._values[0]
 		ix, pdt = self._getinterval(t)
 		return self._values[ix]
 
@@ -153,7 +161,7 @@ class SequenceAnimator(Animator):
 
 # Impl. rem:
 # * on syntax error: we must ignore animation
-# * attr types map
+# * we need an attr types map
 # * use f(0) if duration is undefined
 # * ignore keyTimes if dur indefinite
 
@@ -179,6 +187,12 @@ class AnimateElementParser:
 
 	def getAnimator(self):
 		if not self.__hasValidTarget:
+			print 'invalid target syntax error'
+			return None
+
+		nvalues = self.__countInterpolationValues()
+		if nvalues==0 or (nvalues==1 and mode!='discrete'):
+			print 'values syntax error'
 			return None
 
 		attr = self.__attrname
@@ -199,7 +213,7 @@ class AnimateElementParser:
 		if self.__grinsext:
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines)
-			anim._transf = anim._round
+			anim._transf = anim._round # pixels
 			return anim
 		## End temp grins extensions
 
@@ -296,18 +310,37 @@ class AnimateElementParser:
 			return ()
 		return v1, v2
 
-
-	def __getInterpolationKeyTimes(self):
+	# len of interpolation list values
+	# len == 0 is a syntax error
+	# len == 1 and mode != 'discrete' is a syntax error
+	def __countInterpolationValues(self):
 		values =  self.getValues()
-		if not values: return ()
-		vl = string.split(values,';')
+		if values:
+			l = string.split(values,';')
+			return len(l)
 
+		n = 0
+		v1 = self.getFrom()
+		if v1: n = n + 1
+		elif mode != 'discrete': n = n + 1
+
+		v2 = self.getTo()
+		dv = self.getBy()
+		if v2 or dv: n = n + 1
+		return n
+
+	# return keyTimes or an empty list on failure
+	def __getInterpolationKeyTimes(self):
 		keyTimes = self.getKeyTimes()
-		if not values: return ()
+		if not keyTimes: return ()
 		tl = string.split(values,';')
 
 		# len of values must be equal to len of keyTimes
-		if len(vl)!=len(tl): return ()
+		lvl = self.__countInterpolationValues()
+		if mode=='discrete': lvl = lvl + 1
+		if  lvl != len(tl):
+			print 'values vs times mismatch'		 
+			return ()
 			
 		tt = tuple(map(string.atof, tl))
 
@@ -315,21 +348,32 @@ class AnimateElementParser:
 		first = tt[0]
 		last = tt[len(tt)-1]
 		if self.__calcMode == 'linear' or self.__calcMode == 'spline':
-			if first!=0.0 or last!=1.0: return ()
+			if first!=0.0 or last!=1.0: 
+				print 'keyTimes range error'
+				return ()
 		elif self.__calcMode == 'discrete':
-			if first!=0.0: return ()
+			if first!=0.0: 
+				print 'not sero start keyTime'
+				return ()
 		elif self.__calcMode == 'paced':
-			return () # ignore keyTimes for 'paced' mode
+			print 'ignoring keyTimes for paced mode'
+			return ()
 		
 		# values should be increasing and in [0,1]
 		if first>1.0 or first<0:return ()
 		for i in  range(1,len(tt)):
-			if tt[i] < tt[i-1] or tt[i]>1.0 or tt[i]<0:
+			if tt[i] < tt[i-1]:
+				print 'keyTimes order mismatch'
+				return ()
+			if tt[i]>1.0 or tt[i]<0:
+				print 'keyTimes range error'
 				return ()
 		return tt
 
+	# return keySplines or an empty list on failure
 	def __getInterpolationKeySplines(self):
 		if self.__calcMode != 'spline':
+			print 'splines while not in spline calc mode'
 			return []
 		keySplines = self.getKeySplines()
 		if not keySplines: return ()
@@ -337,15 +381,22 @@ class AnimateElementParser:
 		
 		# len of keySplines must be equal to num of intervals (=len(keyTimes)-1)
 		tt = self.getInterpolationKeyTimes()
-		if len(sl) != len(tt)-1:
+		if tt and len(sl) != len(tt)-1:
+			print 'intervals vs splines mismatch'
 			return []
+		if not tt and len(sl) != 1:
+			print 'intervals vs splines mismatch'
+			return []
+
 		rl = []
 		for e in sl:
 			try:
 				x1, y1, x2, y2 = map(string.atof, string.split(e))
 			except:
+				print 'splines parsing error'
 				return []
 			if x1<0.0 or x1>1.0 or x2<0.0 or x2>1.0 or y1<0.0 or y1>1.0 or y2<0.0 or y2>1.0:
+				print 'splines range error'
 				return []
 			rl.append((x1, y1, x2, y2))
 		return rl
