@@ -815,12 +815,18 @@ class ColorCtrl(AttrCtrl):
 				pass
 		return (r,g,b)
 
+	def convertcolor(self, rv):
+		from colors import rcolors
+		if rcolors.has_key(rv):
+			return rcolors[rv]
+		return "%d %d %d"%rv
+				
 	def OnBrowse(self,id,code):
 		if not self._initctrl: return
 		r,g,b=self.getdispcolor()
 		rv = self.ColorSelect(r, g, b)
 		if rv != None:
-			colorstring = "%d %d %d"%rv
+			colorstring = self.convertcolor(rv)
 			self._attrval.settext(colorstring)
 			self.invalidateInd()
 	
@@ -945,11 +951,11 @@ class CssColorCtrl(ColorCtrl):
 			self._radioInherit.setcheck(0)
 			self._radioColor.setcheck(1)
 			self.enable(1)
-			colorstring = "%d %d %d"%rv
+			colorstring = self.convertcolor(rv)		
 			self._attrval.settext(colorstring)
 			self.currentValue = colorstring
 			self.invalidateInd()
-		
+
 	def onColorCheck(self, id, code):
 		self.enable(1)
 		self.currentValue = self._attrval.gettext()
