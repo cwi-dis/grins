@@ -10,7 +10,7 @@ clock_val = (_opS +
 	     r'(?P<seconds>[0-5][0-9])'      	# seconds
 	     r'(?P<fraction>\.\d+)?'		# .fraction (optional)
 	     r')|(?P<use_timecount>' # timecount value
-	     r'(?P<timecount>\d+)'		# timecount
+	     r'(?P<timecount>\d+)?'		# timecount
 	     r'(?P<units>\.\d+)?'		# .fraction (optional)
 	     r'(?P<metric>h|min|s|ms)?)'	# metric (optional)
 	     r')' + _opS)
@@ -56,8 +56,18 @@ def parsecounter(value, maybe_relative = 0, withsign = 0, syntax_error = _syntax
 				offset = offset + string.atof(f + '0')
 		elif res.group('use_timecount'):
 			tc, f, sc = res.group('timecount', 'units', 'metric')
-			offset = string.atoi(tc)
-			if f is not None:
+			if not tc:
+				if f:
+					import features
+					syntax_error('clock value must contain digits before the decimal point')
+					if not features.editor:
+						raise error, 'clock value must contain digits before the decimal point'
+					offset = 0
+				else:
+					raise error, "value `%s' is not a clock value" % value
+			else:
+				offset = string.atoi(tc)
+			if f:
 				offset = offset + string.atof(f)
 			if sc == 'h':
 				offset = offset * 3600
