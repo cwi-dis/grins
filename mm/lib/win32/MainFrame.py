@@ -209,7 +209,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# the view is responsible for user input
 		# so do not hook other messages
 
-		# direct all cmds to self.OnUserCmd but dissable them
+		# direct all cmds to self.OnUserCmd but disable them
 		L = usercmdui.getcmdids()
 		for id in L:
 			self.HookCommand(self.OnUserCmd,id)
@@ -278,7 +278,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		client.DragAcceptFiles(1)
 		client.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
 
-	# dissable drop files
+	# disable drop files
 	def dragRefuseFiles(self):
 		self.DragAcceptFiles(0)
 		client=self.GetMDIClient()
@@ -752,7 +752,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Set/reset commandlist for context
 	def set_commandlist(self,commandlist,context):
 		# we have a new commandlist for this context 
-		# so, dissable previous
+		# so, disable previous
 		self.dissable_context(context)
 
 		# enable cmds in commandlist
@@ -764,14 +764,14 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				self._activecmds[context][id]=cmd
 		self.setplayerstate(self.__playerstate)
 
-	# Dissable context commands
+	# Disable context commands
 	def dissable_context(self, context):
 		# assert there is an entry for this context
 		if not self._activecmds.has_key(context):
 			self._activecmds[context]={}
 			return
 		contextcmds=self._activecmds[context]
-		# we must clean here so that dissable_cmd does its job
+		# we must clean here so that disable_cmd does its job
 		self._activecmds[context]={}
 		commandlist=contextcmds.values()
 		for cmd in commandlist:
@@ -780,7 +780,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	def enable_cmd(self,id):
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 
-	# dissable a cmd only if not in self._activecmds
+	# disable a cmd only if not in self._activecmds
 	def dissable_cmd(self,id):
 		for context in self._activecmds.keys():
 			if self._activecmds[context].has_key(id):
@@ -898,7 +898,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		idstart = usercmdui.usercmd2id(command) + 1
 		cmd = self.GetUserCmd(command)
 		if cmd is None:
-			# dissable submenu cmds?
+			# disable submenu cmds?
 			# they are always active?
 			return
 		if not cmd.dynamiccascade:
@@ -1305,7 +1305,7 @@ class ChildFrame(window.MDIChildWnd):
 	def OnUpdateCmdEnable(self,cmdui):
 		cmdui.Enable(1)
 
-	# Target for commands that are dissabled
+	# Target for commands that are disabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
 
@@ -1354,4 +1354,3 @@ class SplitterBrowserChildFrame(ChildFrame):
 			self._view.OnClose()
 		else:
 			self.DestroyWindow()
- 

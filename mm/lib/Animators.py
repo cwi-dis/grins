@@ -1227,7 +1227,7 @@ class AnimateElementParser:
 		# end 'linear' for all the other cases
 		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
 		if not splineAnimation and self.__calcMode == 'spline':
-			print 'Warning: Module SplineAnimation is dissabled'
+			print 'Warning: Module SplineAnimation is disabled'
 			print '\t',self
 			self.__calcMode = None
 		if not self.__calcMode:
@@ -1257,7 +1257,7 @@ class AnimateElementParser:
 		
 		if not timeManipulations and \
 			(self.__speed!=1.0 or self.__accelerate or self.__decelerate or self.__autoReverse):
-			print 'Warning: Module TimeManipulations is dissabled'
+			print 'Warning: Module TimeManipulations is disabled'
 			print '\t',self
 			self.__speed = 1.0
 			self.__accelerate = self.__decelerate = 0

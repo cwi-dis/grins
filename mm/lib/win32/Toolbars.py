@@ -214,7 +214,7 @@ class GRiNSToolbar(window.Wnd):
 		wndToolBar.ModifyStyle(0, commctrl.TBSTYLE_FLAT)
 		window.Wnd.__init__(self,wndToolBar)
 
-		# enable/dissable tools draging
+		# enable/disable tools draging
 		self._enableToolDrag = enabledrag
 		# shortcut for GRiNS private clipboard format
 		self.CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
