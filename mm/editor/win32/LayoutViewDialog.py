@@ -1,11 +1,9 @@
 __version__ = "$Id$"
 
-""" @win32doc|LayoutViewDialog
-This class represents the interface between the LayoutView platform independent
-class and its implementation class _LayoutView in lib/win32/_LayoutView.py which 
-implements the actual view.
-
-"""
+# @win32doc|LayoutViewDialog
+# This class represents the interface between the LayoutView platform independent
+# class and its implementation class _LayoutView in lib/win32/_LayoutView.py which 
+# implements the actual view.
 
 import windowinterface
 from usercmd import *
