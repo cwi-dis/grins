@@ -33,7 +33,7 @@ class ColorSelector(glwindow.glwindow):
 	def make_form(self):
 		global form_template
 		import flp
-		if form_template == None:
+		if form_template is None:
 			form_template = \
 				flp.parse_form('ColorSelectorForm', 'form')
 		flp.create_full_form(self, form_template)
@@ -387,7 +387,7 @@ a_selector = None
 
 def run(rgb):
 	global a_selector
-	if a_selector == None:
+	if a_selector is None:
 		a_selector = ColorSelector()
 	return a_selector.run(rgb)
 
