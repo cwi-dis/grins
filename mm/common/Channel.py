@@ -305,6 +305,8 @@ class Channel(ChannelWM):
 					  self.playdone, 0)
 			else:
 				self.playdone(0)
+		else:
+			self.playdone(0)
 		self.armdone()
 
 	def playdone(self, dummy):
