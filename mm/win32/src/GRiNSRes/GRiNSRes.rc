@@ -3058,6 +3058,24 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,62,94,102,20
 END
 
+IDD_EDITATTR_ACTIVEDUR DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_DURV,46,19,58,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MINV,140,19,54,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MAXV,228,19,54,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_LOOPV,61,47,73,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_REPDURV,209,47,73,12,ES_AUTOHSCROLL
+    LTEXT           "Duration:",IDC_DURL,12,21,34,8
+    LTEXT           "Min:",IDC_MINL,122,21,16,8
+    LTEXT           "Max:",IDC_MAXL,208,21,19,8
+    LTEXT           "RepeatCount:",IDC_LOOPL,12,49,43,8
+    LTEXT           "RepeatDur:",IDC_REPDURL,168,49,40,8
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Active duration",IDC_STATIC,6,6,287,60
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
