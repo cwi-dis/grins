@@ -2436,9 +2436,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		dict = {}
+		if not attributes.has_key('type'):
+			self.syntax_error("required attribute `type' missing in transition element")
+			attributes['type'] = 'fade'
 		for name, value in attributes.items():
 			if name == 'id':
 				continue
+			if name == 'type':
+				name = 'trtype'
 			elif name == 'dur':
 				value = self.__parsecounter(value)
 			elif name == 'color':
@@ -2446,6 +2451,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				value = self.__convert_color(value)
 			else:
 				value = parseattrval(name, value, self.__context)
+			dict[name] = value
 		self.__transitions[id] = dict
 
 	def end_transition(self):
