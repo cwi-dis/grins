@@ -2,10 +2,13 @@ import fl
 import help_form
 import posix
 from Dialog import BasicDialog
+from ViewDialog import ViewDialog
 
-class HelpWindow() = BasicDialog():
-    def init(self, dirname):
+class HelpWindow() = ViewDialog(), BasicDialog():
+    def init(self, (dirname, root)):
+    	self = ViewDialog.init(self, 'help_')
 	self = BasicDialog.init(self, (0, 0, 'Help'))
+    	self.root = root
 	self.dirname = dirname + '/'
 	self.topics = []
 	for topic in posix.listdir(dirname):
