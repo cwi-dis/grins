@@ -3,34 +3,33 @@ __version__ = "$Id$"
 from types import *
 import win32ui, win32con
 
-""" @win32doc|win32menu
-This module contains the definition of the Menu class
-that extends the PyCMenu. The PyCMenu class exports to
-Python the MFC class CMenu which is a wrapper class for
-win32 nenus.
-The purpose of this class is to facilitate the creation
-and manipulation of menus by offering functionality at
-a higher level.
+# @win32doc|win32menu
+# This module contains the definition of the Menu class
+# that extends the PyCMenu. The PyCMenu class exports to
+# Python the MFC class CMenu which is a wrapper class for
+# win32 nenus.
+# The purpose of this class is to facilitate the creation
+# and manipulation of menus by offering functionality at
+# a higher level.
 
-This class creates menus given a list of items 
-in one of the following formats:
+# This class creates menus given a list of items 
+# in one of the following formats:
 
-# 1.a menu specification grammar:
-Contains the specification for player menu in the
-following Grammar:
-# entry: <simple_entry> | <sep_entry> | <dyn_cascade_entry> | <CASCADE_ENTRY>
-# simple_entry: (ENTRY | TOGGLE, LABEL, SHORTCUT, ID)
-# sep_enty: (SEP,)
-# dyn_cascade_entry: (DYNAMICCASCADE, LABEL, ID)
-# cascade_entry: (CASCADE,LABEL,menu_spec_list)
-# menubar_entry: (LABEL,menu_spec_list)
-# menu_spec_list: list of entry
-# menubar_spec_list: list of menubar_entry
-# menu_exec_list: (MENU,menu_spec_list)
-where ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE are type constants.
-LABEL and and SHORTCUT are strings
-ID is either an integer or an object that can be maped to an integer 
-"""
+# # 1.a menu specification grammar:
+# Contains the specification for player menu in the
+# following Grammar:
+# # entry: <simple_entry> | <sep_entry> | <dyn_cascade_entry> | <CASCADE_ENTRY>
+# # simple_entry: (ENTRY | TOGGLE, LABEL, SHORTCUT, ID)
+# # sep_enty: (SEP,)
+# # dyn_cascade_entry: (DYNAMICCASCADE, LABEL, ID)
+# # cascade_entry: (CASCADE,LABEL,menu_spec_list)
+# # menubar_entry: (LABEL,menu_spec_list)
+# # menu_spec_list: list of entry
+# # menubar_spec_list: list of menubar_entry
+# # menu_exec_list: (MENU,menu_spec_list)
+# where ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE are type constants.
+# LABEL and and SHORTCUT are strings
+# ID is either an integer or an object that can be maped to an integer 
 
 # OR:
 # cb_entry: (accelerator,LABEL,callback_tuple[,Type,Init]) | None
@@ -221,21 +220,18 @@ class Menu:
 		res = menu.TrackPopupMenu(pt,win32con.TPM_RETURNCMD|win32con.TPM_RIGHTBUTTON|win32con.TPM_LEFTBUTTON,wnd);
 		return res
 
-"""
-EXAMPLE:
-menu for: <_SubWindow instance at 165ac80>
-	('', 'raise', (<method ChannelWindow.popup of TextChannel instance at 161c440>, ()))
-	('', 'lower', (<method ChannelWindow.popdown of TextChannel instance at 161c440>, ()))
-	None
-	('', 'push focus', (<method ChannelWindow.focuscall of TextChannel instance at 161c440>, ()))
-	None
-	('', 'highlight', (<method ChannelWindow.highlight of TextChannel instance at 161c440>, ()))
-	('', 'unhighlight', (<method ChannelWindow.unhighlight of TextChannel instance at 161c440>, ()))
-	None
-	('', 'resize', (<method ChannelWindow.resize_window of TextChannel instance at 161c440>, 
-	(<LayoutChannel instance, name=  Flashing regions  >,)))
-
-"""
+# EXAMPLE:
+# menu for: <_SubWindow instance at 165ac80>
+# 	('', 'raise', (<method ChannelWindow.popup of TextChannel instance at 161c440>, ()))
+# 	('', 'lower', (<method ChannelWindow.popdown of TextChannel instance at 161c440>, ()))
+# 	None
+# 	('', 'push focus', (<method ChannelWindow.focuscall of TextChannel instance at 161c440>, ()))
+# 	None
+# 	('', 'highlight', (<method ChannelWindow.highlight of TextChannel instance at 161c440>, ()))
+# 	('', 'unhighlight', (<method ChannelWindow.unhighlight of TextChannel instance at 161c440>, ()))
+# 	None
+# 	('', 'resize', (<method ChannelWindow.resize_window of TextChannel instance at 161c440>, 
+# 	(<LayoutChannel instance, name=  Flashing regions  >,)))
 
 # create menu from a callback_menu_spec_list
 # Member of menu but for convenience (and history) defined outside the class
