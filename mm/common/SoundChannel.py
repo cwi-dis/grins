@@ -182,7 +182,7 @@ class SoundChannel(Channel):
 			self.qid = self.player.enter(0, 0, self._poll, self.cb_arg)
 	#
 	def stop(self):
-		if self.port <> None and self.armed_info == None:
+		if (self.port <> None and self.armed_info == None) or self.qid:
 			self.port.closeport()
 			restore()
 			self.info = self.port = None
