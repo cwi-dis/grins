@@ -182,7 +182,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
 			return
 		if tp == ATYPE_PAUSE:
-			f = self.pauseanchor_triggered
+			f = self.pause_triggered
 		else:
 			f = self.anchor_triggered
 		f(self.play_node, [(aname, tp)], list)
