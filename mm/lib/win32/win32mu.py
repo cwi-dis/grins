@@ -124,6 +124,15 @@ class SizeRect:
 class Win32Msg:
 	def __init__(self,params):
 		self._hwnd,self._message,self._wParam,self._lParam,self._time,self._pt=params
+	def LOWORD_wParam(self):
+		return win32api.LOWORD(self._wParam)
+	def HIWORD_wParam(self):
+		return win32api.HIWORD(self._wParam)
+	def LOWORD_lParam(self):
+		return win32api.LOWORD(self._lParam)
+	def HIWORD_lParam(self):
+		return win32api.HIWORD(self._lParam)
+
 	def loword(self):
 		return win32api.LOWORD(self._lParam)
 	def hiword(self):
@@ -150,6 +159,39 @@ class Win32Msg:
 		if (self._wParam & win32con.SIZE_MINIMIZED):
 			return 1
 		return 0
+
+	def cmdid(self): return self.LOWORD_wParam()
+	
+	def getcontrolid(self): return self.LOWORD_wParam()
+	def getnmsg(self): return self.HIWORD_wParam()
+	def gethandle(self): return self._lParam
+
+	def __repr__(self):
+		s='message=%d wparam=%d lparam=%d' % (self._message,self._wParam,self._lParam)
+		return '<%s instance, %s>' % (self.__class__.__name__, s)
+	
+
+
+class CreateStruct:
+	def __init__(self,csd):
+		self.CreateParams=csd[0] 
+   		self.hInstance=csd[1]
+   		self.hMenu=csd[2] 
+   		self.hwndParent=csd[3] 
+   		self.cy,self.cx,self.y,self.x=csd[4]
+   		self.style=csd[5]
+   		self.NameId=csd[6]
+   		self.ClassId=csd[7]
+   		self.ExStyle=csd[8]
+	def to_csd(self):
+		return (self.CreateParams,self.hInstance,
+			self.hMenu,self.hwndParent,
+			(self.cy,self.cx,self.y,self.x),
+			self.style,self.NameId,self.ClassId,self.ExStyle)
+	def pos(self):
+		return self.x,self.y
+	def size(self):
+		return self.cx,self.cy
 
 def PtInRect(rc,pt):
 	rc=Rect(rc);pt=Point(pt)
