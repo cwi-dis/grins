@@ -190,19 +190,19 @@ class NodeWrapper(Wrapper):
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
-				'name', 'channel', ('file',),	# From nodeinfo window
-				('terminator',),
-			    ('duration',), 'loop',			# Time stuff
-			    ('clipbegin',), ('clipend',),	# More time stuff
-				'title', 'abstract', 'author', 'copyright',
-			    'comment',
-			    'layout', ('u_group',),
-			    ('mimetype',),			# XXXX Or should this be with file?
-			    'system_bitrate', 'system_captions',
-			    'system_language', 'system_overdub_or_caption',
-			    'system_required', 'system_screen_size',
-			    'system_screen_depth',
-			    ]
+			'name', 'channel', ('file',),	# From nodeinfo window
+			('terminator',),
+			('duration',), 'loop',		# Time stuff
+			('clipbegin',), ('clipend',),	# More time stuff
+			'title', 'abstract', 'author', 'copyright',
+			'comment',
+			'layout', ('u_group',),
+			('mimetype',),	# XXXX Or should this be with file?
+			'system_bitrate', 'system_captions',
+			'system_language', 'system_overdub_or_caption',
+			'system_required', 'system_screen_size',
+			'system_screen_depth',
+			]
 		ntype = self.node.GetType()
 		if ntype == 'bag':
 			namelist.append('bag_index')
@@ -764,6 +764,11 @@ class FileAttrEditorField(StringAttrEditorField):
 		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
+			node = self.wrapper.node
+			if self.wrapper.__class__ is SlideWrapper:
+				purl = MMAttrdefs.getattr(node.GetParent(), 'file')
+				url = MMurl.basejoin(purl, url)
+			url = node.GetContext().findurl(url)
 			utype, host, path, params, query, fragment = urlparse.urlparse(url)
 			if (utype and utype != 'file') or \
 			   (host and host != 'localhost'):
@@ -781,25 +786,34 @@ class FileAttrEditorField(StringAttrEditorField):
 
 	def __ok_cb(self, pathname):
 		import MMurl, os
-		if os.path.isabs(pathname):
-			cwd = self.wrapper.toplevel.dirname
-			if cwd:
-				cwd = MMurl.url2pathname(cwd)
-				if not os.path.isabs(cwd):
-					cwd = os.path.join(os.getcwd(), cwd)
-			else:
-				cwd = os.getcwd()
-			if os.path.isdir(pathname):
-				dir, file = pathname, os.curdir
-			else:
-				dir, file = os.path.split(pathname)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				pathname = file
-		self.setvalue(MMurl.pathname2url(pathname))
+		if self.wrapper.__class__ is SlideWrapper:
+			import HierarchyView
+			node = self.wrapper.node
+			purl = node.GetContext().findurl(MMAttrdefs.getattr(node.GetParent(), 'file'))
+			url = HierarchyView.cvslideurl(MMurl.pathname2url(pathname), purl)
+			if not url:
+				return
+		else:
+			if os.path.isabs(pathname):
+				cwd = self.wrapper.toplevel.dirname
+				if cwd:
+					cwd = MMurl.url2pathname(cwd)
+					if not os.path.isabs(cwd):
+						cwd = os.path.join(os.getcwd(), cwd)
+				else:
+					cwd = os.getcwd()
+				if os.path.isdir(pathname):
+					dir, file = pathname, os.curdir
+				else:
+					dir, file = os.path.split(pathname)
+				# XXXX maybe should check that dir gets shorter!
+				while len(dir) > len(cwd):
+					dir, f = os.path.split(dir)
+					file = os.path.join(f, file)
+				if dir == cwd:
+					pathname = file
+			url = MMurl.pathname2url(pathname)
+		self.setvalue(url)
 
 class TupleAttrEditorField(AttrEditorField):
 	type = 'tuple'
