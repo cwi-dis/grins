@@ -87,6 +87,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
 				EXPORT_SMIL(callback = (self.export_callback, ())),
+				UPLOAD_SMIL(callback = (self.upload_callback, ())),
 				]
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
@@ -278,6 +279,47 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.export_okcallback, None)
+					   
+	def upload_callback(self):
+		# XXXX The filename business confuses project file name and resulting SMIL file
+		# XXXX name. To be fixed.
+		if not self.filename:
+			windowinterface.showmessage('Please save your work first')
+			return
+		filename, hostname, username, passwd, dirname = self.get_upload_info()
+		if filename[-4:] != '.smi' and filename[-5:] != '.smil':
+			windowinterface.showmessage('Your document name must end in .smi or .smil')
+			return
+		if not (filename and hostname and username):
+			if windowinterface.showquestion('Please set FTP upload parameters first, then try again'):
+				self.prop_callback()
+			return
+		if username and not passwd:
+			windowinterface.InputDialog('Enter password for %s at %s'%(username, hostname),
+					'', self.upload_callback_2)
+		else:
+			self.upload_callback_2(passwd)
+	
+	def upload_callback_2(self, passwd):
+		# Second stage of upload: we have the password
+		filename, hostname, username, dummy, dirname = self.get_upload_info()
+		self.save_to_ftp(filename, (hostname, username, passwd, dirname))
+		
+	def get_upload_info(self):
+		hostname = ''
+		username = ''
+		dirname = ''
+		attrs = self.context.attributes
+		if attrs.has_key('ftp_host'):
+			hostname = attrs['ftp_host']
+		if attrs.has_key('ftp_user'):
+			username = attrs['ftp_user']
+		if attrs.has_key('ftp_dir'):
+			dirname = attrs['ftp_dir']
+		utype, host, path, params, query, fragment = urlparse(self.filename)
+		dir, filename = posixpath.split(path)
+
+		return filename, hostname, username, '', dirname
 
 	def prop_callback(self):
 		import AttrEdit
@@ -377,16 +419,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pathname = file
 		return MMurl.pathname2url(pathname)
 
-
-	def save_to_file(self, filename, cleanSMIL = 0):
+	def pre_save(self):
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
-		license = self.main.wanttosave()
-		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-			return 0
-		evallicense= (license < 0)
 		roots = [self.root]
 		import Clipboard
 		type, data = Clipboard.getclip()
@@ -398,6 +434,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if v is not None:
 				v.get_geometry()
 				v.save_geometry()
+		
+
+	def save_to_file(self, filename, cleanSMIL = 0):
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
+		evallicense= (license < 0)
+		self.pre_save()
 		# Make a back-up of the original file...
 		try:
 			os.rename(filename, make_backup_filename(filename))
@@ -430,6 +475,29 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.new_file = 0
 		self.setcommands(self.commandlist)
 		return 1
+		
+	def save_to_ftp(self, filename, ftpparams):
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
+		evallicense= (license < 0)
+		self.pre_save()
+		try:
+			import HierarchyView
+			HierarchyView.writenodes(self.root,
+						 evallicense=evallicense)
+			import SMILTreeWrite
+			SMILTreeWrite.WriteFTP(self.root, filename, ftpparams,
+						cleanSMIL = 1,
+						copyFiles = 1,
+						evallicense=evallicense)
+		except IOError, msg:
+			windowinterface.showmessage('Upload operation failed:\n'+msg[1])
+			return 0
+		self.setcommands(self.commandlist) # Is this needed?? (Jack)
+		return 1
+		
 
 	def restore_callback(self):
 		if self.changed:
