@@ -47,6 +47,11 @@ struct trible
 	BYTE red() { return r;}
 	};
 
+inline bool operator==(const trible &lhs, const trible &rhs)
+	{return lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.g;}
+inline bool operator!=(const trible &lhs, const trible &rhs)
+	{return lhs.r != rhs.r || lhs.g != rhs.g || lhs.b != rhs.b;}
+
 } // namespace le (little-endian color representation)
 
 // big-endian color representation
@@ -226,6 +231,22 @@ class surface
 					blend(weight, tfrom.red(), tto.red()),
 					blend(weight, tfrom.green(), tto.green()),
 					blend(weight, tfrom.blue(), tto.blue()));
+				}
+			}
+		}
+
+	void copy_transparent(surface<T> *from, uchar_ptr rgb)
+		{
+		le::trible transp(rgb[0], rgb[1], rgb[2]);
+		for (int y=m_height-1;y>=0;y--)
+			{
+			pointer ptr = get_row(y);
+			surface<T>::pointer pfrom = from->get_row(y);
+			for(size_t x=0;x<m_width;x++)
+				{
+				le::trible& tfrom = pfrom[x];
+				if(tfrom != transp)
+					ptr[x] = tfrom;
 				}
 			}
 		}
