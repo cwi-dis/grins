@@ -345,7 +345,7 @@ class _Toplevel:
 		id=wnd.SetTimer(1,50)
 		
 		# com automation support
-		grinpapi = None
+		grinspapi = None
 		import __main__
 		if hasattr(__main__,'grinspapi'):
 			grinspapi = __main__.grinspapi
