@@ -47,7 +47,7 @@ static PyObject *
 ui_data_object_is_data_available(PyObject *self, PyObject *args)
 	{
 	int cf; 
-	if (!PyArg_ParseTuple(args,"i:GetGlobalData",&cf))
+	if (!PyArg_ParseTuple(args,"i:IsDataAvailable",&cf))
 		return NULL;
 
 	COleDataObject* pDO = ui_data_object::GetDataObject(self);
