@@ -117,6 +117,7 @@ class SMIL:
 				'height':'0',
 				'skip-content':'true',
 				'width':'0',
+				GRiNSns+' ' 'collapsed':None,
 				},
 		'topLayout': {'backgroundColor':'transparent',
 			      'customTest':None,
@@ -128,6 +129,7 @@ class SMIL:
 			      # edit preferences of new layout view
 			      GRiNSns+' ' 'showEditBackground':None,
 			      GRiNSns+' ' 'editBackground':None,					 
+			      GRiNSns+' ' 'collapsed':None,
 			      },
 		'region': {'background-color':'transparent',
 			   'backgroundColor':None,
@@ -153,6 +155,7 @@ class SMIL:
 			   GRiNSns+' ' 'transparent':None,
 			   GRiNSns+' ' 'type':None,
 			   GRiNSns+' ' 'visible':None,
+			   GRiNSns+' ' 'collapsed':None,
 
 				# edit preferences of new layout view
 				GRiNSns+' ' 'showEditBackground':None,
