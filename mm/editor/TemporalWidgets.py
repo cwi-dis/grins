@@ -2,15 +2,13 @@ __version__ = "$Id:"
 
 # Known bugs:
 # * the tree next to the channels isn't drawn correctly sometimes.
-# * It's dog slow
 # * Structure nodes overlap each other.
 
 # TODO:
 # * Collapsing nodes
 # * Collapsing regions
 # * Show the time scale.
-# * Clean this code up.
-# * Finish this TODO list.
+# * Drag and drop
 
 import types
 
@@ -278,7 +276,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			source = self.get_node_at(srccoords)
 
 		if source is None:
-			# Stupid user at console.
 			print "DEBUG: Er.. nothing was dragged."
 			return 0
 
@@ -806,7 +803,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.hidden = 1
 
 	def set_channel(self, c):
-		print "TODO: set channel."
+		print "TODO: change this node's channel."
 
 	def get_channel(self):
 		# Returns a string which is this node's channel.
@@ -870,7 +867,14 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		return self.channel_index
 
 	def change_channel(self, channelstr):
+		# Er.. see also set_channel.
 		print "TODO: change a node's channel."
+
+	def accepts_droppable_object(self, obj):
+		return 0		# never.
+
+	def happily_receive_dropped_object(self, obj):
+		windowinterface.beep()
 
 
 class MultiMMWidget(TimeWidget):
@@ -924,6 +928,20 @@ class MultiMMWidget(TimeWidget):
 
 	def change_channel(self, new_channel):
 		return			# Structure nodes don't have channels.
+
+	def accepts_droppable_object(self, obj):
+		if isinstance(obj, TimeWidget):
+			return 1
+		else:
+			return 0
+
+	def happily_receive_dropped_object(self, obj):
+		if isinstance(obj, TimeWidget):
+			print "DEBUG: node is: ", obj.node
+			print "DEBUG: adding to: ", self.mother.focusobj.node
+			self.mother.insertnode(obj.node, -1)
+		else:
+			windowinterface.beep()
 
 
 class SeqMMWidget(MultiMMWidget):
