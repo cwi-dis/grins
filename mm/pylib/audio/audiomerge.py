@@ -7,7 +7,6 @@ import string
 class merge:
 	def __init__(self, *args):
 		self.__readers = []
-		self.__oldreaders = []
 		self.__mapreaders = []
 		self.__port = None
 		self.__framerate = 0
@@ -42,10 +41,6 @@ class merge:
 			if rdr is self.__readers[i][0]:
 				del self.__readers[i]
 				return
-		for i in range(len(self.__oldreaders)):
-			if rdr is self.__oldreaders[i][0]:
-				del self.__oldreaders[i]
-				return
 
 	def readframes(self, nframes = -1):
 		n = 0
@@ -55,8 +50,8 @@ class merge:
 		for (rdr, cb) in self.__readers[:]:
 			data = rdr.readframes(nframes)
 			if not data:
+				# got to the end of this one
 				self.__readers.remove((rdr, cb))
-				self.__oldreaders.append((rdr, cb))
 				if cb:
 					apply(cb[0], cb[1])
 				continue
@@ -88,7 +83,7 @@ class merge:
 
 	def getnframes(self):
 		nframes = 0
-		for (rdr, cb) in self.__readers + self.__oldreaders:
+		for (rdr, cb) in self.__readers:
 			n = rdr.getnframes()
 			nframes = max(n, nframes)
 		return nframes
@@ -97,13 +92,15 @@ class merge:
 		return self.__framerate
 
 	def rewind(self):
-		self.__readers = self.__readers + self.__oldreaders
-		self.__oldreaders = []
 		for (rdr, cb) in self.__readers:
 			rdr.rewind()
 
 	def getpos(self):
-		raise Error, 'not implemented'
+		positions = []
+		for (rdr, cb) in self.__readers:
+			positions.append((rdr, rdr.getpos()))
+		return positions
 
 	def setpos(self, pos):
-		raise Error, 'not implemented'
+		for (rdr, p) in pos:
+			rdr.setpos(p)
