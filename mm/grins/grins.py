@@ -204,9 +204,9 @@ def main():
 	else:
 		splash.splash(version = 'GRiNS ' + version)
 
-	import Help
-	if hasattr(Help, 'sethelpprogram'):
-		Help.sethelpprogram('player')
+##	import Help
+##	if hasattr(Help, 'sethelpprogram'):
+##		Help.sethelpprogram('player')
 		
 	import settings
 	kbd_int = KeyboardInterrupt
