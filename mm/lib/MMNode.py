@@ -4819,6 +4819,9 @@ class MMNode(MMTreeElement):
 	def set_bandwidthboxes(self, boxes):
 		self.bwboxes = boxes
 		
+	def add_bandwidthboxes(self, boxes):
+		self.bwboxes = self.bwboxes + boxes
+
 	def get_bandwidthboxes(self):
 		return self.bwboxes
 
