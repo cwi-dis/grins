@@ -77,8 +77,8 @@ class SVGGraphics:
 	#  renderer notifications interface
 	#
 
-	def onBeginRendering(self, renderbox, viewbox, bgcolor):
-		self.tkOnBeginRendering(renderbox, viewbox, bgcolor)
+	def onBeginRendering(self):
+		self.tkOnBeginRendering()
 
 	def onEndRendering(self):
 		self.tkOnEndRendering()

@@ -66,6 +66,8 @@ class SVGChannel(Channel.ChannelWindow):
 			self.svgorgsize = svgdom.GetSvgDocSize(svgdoc)
 			self.svgsrcrect = 0, 0, width, height # promise for svg scaling
 			self.svgdds = self.window.createDDS(width, height)
+			ddcolor = self.svgdds.GetColorMatch(self.svgbgcolor or (255,255,255))
+			self.svgdds.BltFill((0, 0, width, height), ddcolor)
 			self.renderOn(self.svgdds, svgdoc, update=0)
 			if svgdoc.hasTiming():
 				rendercb = (self.renderOn, (self.svgdds, svgdoc))
@@ -109,7 +111,7 @@ class SVGChannel(Channel.ChannelWindow):
 			svggraphics.applyTfList([('scale',[sx, sy]),])
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
-		renderer = svgrender.SVGRenderer(svgdoc, svggraphics, self.svgdstrect, self.svgbgcolor)
+		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
 		renderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)

@@ -12,7 +12,7 @@ import string
 class SVGRenderer:
 	animateEl = ['animate', 'set', 'animateMotion', 'animateColor', 'animateTransform']
 	filter = ['#comment', 'style', 'defs'] + animateEl
-	def __init__(self, svgdoc, svggraphics, renderbox, bgcolor):
+	def __init__(self, svgdoc, svggraphics):
 		self.svgdoc = svgdoc
 
 		# svg graphics object
@@ -23,10 +23,6 @@ class SVGRenderer:
 		self._grstack = []
 	
 		#
-		self._renderbox = renderbox
-		self._bgcolor = bgcolor
-
-		#
 		self._verbose = 0
 
 	def getFilter(self): return SVGRenderer.filter
@@ -36,8 +32,7 @@ class SVGRenderer:
 	def getRenderBox(self): return self._renderbox
 					
 	def render(self):
-		root =  self.svgdoc.getRoot()
-		self.graphics.onBeginRendering(self._renderbox, root.getViewBox(), self._bgcolor)
+		self.graphics.onBeginRendering()
 		iter = svgdom.DOMIterator(self.svgdoc, self, filter=SVGRenderer.filter)
 		while iter.advance(): pass
 		self.graphics.onEndRendering()
@@ -126,19 +121,18 @@ class SVGRenderer:
 			tflist.append(('translate', [-x, -y]))
 		return tflist
 	
-
 	#
 	# SVG elements processors
 	#
 	def svg(self, node):
 		self.saveGraphics()
 		x, y, w, h = node.get('x'), node.get('y'), node.get('width'), node.get('height')
-		if w is None: w = self.getWidth()
-		if h is None: h = self.getHeight()
+		if not w or not h:
+			w, h = node.getSize()
 		self.graphics.tkClipBox((x, y, w, h))
 		self.graphics.applyTfList([('translate', [x, y]),])
 
-		viewbox = node.getViewBox()
+		viewbox = node.get('viewBox')
 		if viewbox is not None:
 			ar = node.get('preserveAspectRatio')
 			if ar is None:

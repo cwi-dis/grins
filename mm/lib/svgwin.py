@@ -38,18 +38,13 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		wingdi.RestoreDC(self.hdc, self.tk.saveid)
 
 	# we start rendering
-	def tkOnBeginRendering(self, renderbox, viewbox, bgcolor):
-		self.tkClipBox(renderbox)
+	def tkOnBeginRendering(self):
 		wingdi.SetMapMode(self.hdc, win32con.MM_ISOTROPIC)
 		vcx, vcy = wingdi.GetViewportExtEx(self.hdc)
 		if vcy<0: vcy = -vcy
 		wingdi.SetWindowExtEx(self.hdc, (vcx, vcy))
 		wingdi.SetViewportExtEx(self.hdc, (vcx, vcy))
 		wingdi.SetViewportOrgEx(self.hdc, (0, 0))
-		brush = wingdi.CreateSolidBrush(bgcolor or (255,255,255))
-		old = wingdi.SelectObject(self.hdc, brush)
-		wingdi.Rectangle(self.hdc, renderbox)
-		wingdi.DeleteObject(wingdi.SelectObject(self.hdc, old))
 
 	# we finished rendering
 	def tkOnEndRendering(self):
