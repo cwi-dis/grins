@@ -11,6 +11,8 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 	def __init__(self):
 		_CommandSupport.__init__(self)
 		self.__dynamicmenu = {}
+		self.__popupmenutemplate = None
+		self.__popupmenuwidgets = []
 
 	def close(self):
 		_CommandSupport.close(self)
@@ -96,3 +98,38 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 				continue
 			button = self._create_button(tb, self._visual,
 						     self._colormap, entry)
+
+	def setpopupmenu(self, menutemplate):
+		# Menutemplate is a MenuTemplate-style menu template.
+		# It should be turned into an menu and put
+		# into self._popupmenu.
+		#
+		# First check that it is actually different
+		#
+		if self.__popupmenutemplate == menutemplate:
+			return
+		#
+		# Delete the old menu
+		#
+		self._destroy_popupmenu()
+		self.__popupmenutemplate = menutemplate
+		menu = self._form.CreatePopupMenu('menu',
+				{'colormap': self._colormap,
+				 'visual': self._visual,
+				 'depth': self._visual.depth})
+		if self._visual.depth == 8:
+			# make sure menu is readable, even on Suns
+			menu.foreground = self._convert_color((0,0,0))
+			menu.background = self._convert_color((255,255,255))
+		self._create_menu(menu, menutemplate)
+		self._popupmenu = menu
+		
+	def _destroy_popupmenu(self):
+		# Free resources held by self._popupmenu and set it to None
+		self._popupmenu = None
+		self.__popupmenutemplate = []
+		#
+		# And remove the widgets from the usercmd->widget mapping
+		#
+		self._remove_widgets(self.__popupmenuwidgets)
+		self.__popupmenuwidgets = []

@@ -56,6 +56,7 @@ class _CommandSupport:
 		self.__commandlist = newlist
 		self.__commanddict = newdict
 
+
 	def set_toggle(self, command, onoff):
 		for widget in self.__widgetmap.get(command, []):
 			if widget.ToggleButtonGetState() != onoff:
@@ -85,6 +86,16 @@ class _CommandSupport:
 			if not self.__widgetmap.has_key(callback):
 				self.__widgetmap[callback] = []
 			self.__widgetmap[callback].append(widget)
+			
+			if self.__commanddict.has_key(callback):
+				# Currently enabled. Add a tooltip
+				widget.SetSensitive(1)
+				if callback.help:
+					ToolTip.addtthandler(widget,
+							     callback.help)
+			else:
+				# Currently disabled.
+				widget.SetSensitive(0)
 
 	def _delete_callback(self, widget, client_data, call_data):
 		for c in self.__delete_commands:
@@ -118,3 +129,7 @@ class _CommandSupport:
 			if not self.__accelmap.has_key(c):
 				self.__accelmap[c] = []
 			self.__accelmap[c].append(key)
+
+	def _remove_widgets(self, list):
+		for callback, widget in list:
+			self.__widgetmap[callback].remove(widget)
