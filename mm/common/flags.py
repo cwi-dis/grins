@@ -27,6 +27,7 @@ FLAG_QT_LIGHT = 0x0004
 FLAG_QT_PRO = 0x0008
 FLAG_CMIF = 0x0010
 FLAG_SMIL_1_0 = 0x0020
+FLAG_DBG = 0x8000
 FLAG_G2 = FLAG_G2_LIGHT | FLAG_G2_PRO
 FLAG_QT = FLAG_QT_LIGHT | FLAG_QT_PRO
 FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0
@@ -38,7 +39,7 @@ FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0
 #SMIL_QT = 0x0010
 #SMIL_G2 = 0x0020
 #CMIF = 0x0040
-DBG = 0x8000
+#DBG = 0x8000
 
 def curflags():
 	import settings
@@ -58,7 +59,7 @@ def curflags():
 			flags = flags | FLAG_CMIF
 
 	if settings.get('debug'):
-		flags = flags | DBG
+		flags = flags | FLAG_DBG
 	return flags
 
 #def curflags():
