@@ -233,7 +233,7 @@ class MMLWriter:
 		self.channels_defined = {}
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
-			attrlist = ['<channel id=%s'%self.ch2name[ch]]
+			attrlist = ['<channel name=%s'%self.ch2name[ch]]
 			if not ch.has_key('base_window'):
 				continue	# Skip toplevel windows
 			if not ch.has_key('base_winoff'):
