@@ -160,17 +160,12 @@ def getduration(node):
 	if d > 0:
 		return d
 	# Check for pausing anchor
-	try:
-		alist = node.GetRawAttr('anchorlist')
-	except NoSuchAttrError:
-		alist = None
-	if alist: # Not None and not []
-		for a in alist:
-			if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
-## 				if not is_warned:
-## 					print 'Warning: document contains (obsolete) pausing anchors'
-## 					is_warned = 1
-				break
+## 	for a in node.GetRawAttrDef('anchorlist', []):
+## 		if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
+## 			if not is_warned:
+## 				print 'Warning: document contains (obsolete) pausing anchors'
+## 				is_warned = 1
+## 			break
 	if d < 0:
 	        node.timing_discont = 9.9
 		return 10
