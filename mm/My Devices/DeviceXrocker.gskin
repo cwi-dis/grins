@@ -1,0 +1,15 @@
+# Like deviceX but has a presentation-usable rocker panel.
+# The rocker panel sends keys l r u d c.
+image DeviceX.gif
+display 35 6 170 210
+play rect 52 226 33 16			# left rectangular button
+stop rect 152 226 33 16			# right rectangular button
+exit circle 68 268 15			# grey circle on left
+open circle 174 268 15			# blue circle on right
+key r poly 136 250 136 267 149 259	# RIGHT arrow
+key c rect 107 248 25 25		# center of rocker
+key u poly 110 241 119 225 127 241	# UP arrow
+key d poly 110 273 119 289 127 273	# DOWN arrow
+key l poly 87 258 103 250 103 267	# LEFT arrow
+component http://www.oratrix.com/GRiNS/smil2.0
+component http://www.oratrix.com/GRiNS/examplecomponent/hasrocker
