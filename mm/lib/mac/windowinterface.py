@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import mac_windowbase
 from mac_windowbase import TRUE, FALSE, SINGLE, UNIT_MM
 import WMEVENTS
+import UserCmd
 
 from types import *
 import math
@@ -64,17 +65,17 @@ class _Toplevel(mac_windowbase._Toplevel):
 	# We are overriding these only so we get the correct _Window (ours)
 	
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
-				pixmap = 0, transparent = 0, units=UNIT_MM):
+				pixmap = 0, transparent = 0, units=UNIT_MM, menubar=[], canvassize=None):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
-		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
-		self._register_wid(wid, rv, title)
+		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent, title, menubar)
+		self._register_wid(wid, rv)
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
-				pixmap = 0, transparent = 0, units=UNIT_MM):
+				pixmap = 0, transparent = 0, units=UNIT_MM, menubar=[], canvassize=None):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
-		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
-		self._register_wid(wid, rv, title)
+		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent, title, menubar)
+		self._register_wid(wid, rv)
 		return rv
 		
 	def getsize(self):
@@ -125,10 +126,10 @@ class _CommonWindow(_CommonWindowMixin, mac_windowbase._CommonWindow):
 
 class _Window(_CommonWindowMixin, mac_windowbase._Window):
 
-	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM):
+	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, transparent=0,
+		     title=None, commands=[]):
 		mac_windowbase._Window.__init__(self, parent, wid, x, y, w, h, 
-					      defcmap, pixmap, units)
+					      defcmap, pixmap, transparent, title, commands)
 		self.arrowcache = {}
 		self._next_create_box = []
 
@@ -789,25 +790,30 @@ class _DisplayList(mac_windowbase._DisplayList):
 		return Res.Resource(data)
 
 toplevel = _Toplevel()
+mac_windowbase.toplevel = toplevel
+toplevel.initcommands(UserCmd.MENUBAR)
 from mac_windowbase import *
 
 class DialogWindow(_Window):
-	def __init__(self, resid):
+	def __init__(self, resid, title='Dialog'):
 		wid = Dlg.GetNewDialog(resid, -1)
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
 		_Window.__init__(self, toplevel, wid, 0, 0, w, h)
-		toplevel._register_wid(wid, self, "a dialog")
+		toplevel._register_wid(wid, self)
 		Qd.SetPort(wid)
 		self._widgetlist = []
 		self._is_shown = 0 # XXXX Is this always true??!?
+		self.title = title
 		
 	def show(self):
+		self.settitle(self.title)
 		self._wid.ShowWindow()
 		self._is_shown = 1
 		
 	def hide(self):
 		self._wid.HideWindow()
+		self.settitle(None)
 		self._is_shown = 0
 		
 	def is_showing(self):
@@ -1038,7 +1044,8 @@ class FileDialog:
 			filename = fss.as_pathname()
 			try:
 				ret = cb_ok(filename)
-			except:
+			except 'xxx':
+				showmessage("Internal error:\nexception %s"%`sys.exc_info()`)
 				ret = None
 			if ret:
 				if type(ret) is StringType:
@@ -1047,6 +1054,7 @@ class FileDialog:
 			try:
 				ret = cb_cancel()
 			except:
+				showmessage("Internal error:\nexception %s"%`sys.exc_info()`)
 				ret = None
 			if ret:
 				if type(ret) is StringType:
@@ -2824,6 +2832,8 @@ mac_windowbase.toplevel = toplevel
 newwindow = toplevel.newwindow
 
 newcmwindow = toplevel.newcmwindow
+
+windowgroup = toplevel.windowgroup
 
 close = toplevel.close
 

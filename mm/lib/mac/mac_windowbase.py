@@ -19,10 +19,15 @@ import img
 import imageop
 import sys
 from types import *
+import UserCmd
 
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
 ENABLE_TRANSPARENT_IMAGES=1
+
+CMDSET_WINDOW, CMDSET_GROUP, CMDSET_GLOBAL = 0, 1, 2
+
+RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
 
 # XXXX Or is it better to copy these?
 from FrameWork import Menu, PopupMenu, MenuBar, AppleMenu, MenuItem, SubMenu
@@ -32,6 +37,12 @@ class MyMenuMixin:
 		title, shortcut, callback, type = self.items[item-1]
 		if callback:
 			apply(callback[0], callback[1])
+
+	def addsubmenu(self, label, title=''):
+		sub = MyMenu(self.bar, title, -1)
+		item = self.additem(label, '\x1B', None, 'submenu')
+		self.menu.SetItemMark(item, sub.id)
+		return sub
 
 class MyMenu(MyMenuMixin, Menu):
 	pass
@@ -165,6 +176,7 @@ class _Event:
 	def __init__(self):
 		# timer handling
 		self.needmenubarredraw = 0
+		self.needmenubarrecalc = 0
 		self._timers = []
 		self._timer_id = 0
 		self._timerfunc = None
@@ -211,8 +223,8 @@ class _Event:
 								
 	def _eventloop(self, timeout):
 			if not self.removed_splash:
-				import MacOS
-				MacOS.splash()
+				import splash
+				splash.splash()
 				self.removed_splash = 1
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
 		
@@ -221,6 +233,10 @@ class _Event:
 					self._handle_event(event)
 					gotone, event = Evt.WaitNextEvent(EVENTMASK, 0)
 				return 1
+			else:
+				if self.needmenubarrecalc and self._command_handler:
+					self._command_handler.update_menus()
+					self.needmenubarrecalc = 0
 			return 0		
 				
 	def _handle_event(self, event):
@@ -259,14 +275,32 @@ class _Event:
 	def _handle_activate_event(self, event):
 		what, message, when, where, modifiers = event
 		wid = Win.WhichWindow(message)
+		print 'DBG activate', wid, event
 		if not wid:
+			self._install_window_commands(None)
 			MacOS.HandleEvent(event)
 		else:
 			ourwin = self._find_wid(wid)
+##			print 'DBG ourwin', ourwin
 			if not ourwin:
+				self._install_window_commands(None)
 				MacOS.HandleEvent(event)
 			else:
-				ourwin._activate(modifiers & 1)
+##				print 'DBG modifiers', modifiers
+				self._activate_ours(ourwin, modifiers&1)
+		# We appear to miss activates, at least with the Sioux window
+		# open (maybe Sioux gets them?). We simulate them when needed.
+		if not (modifiers &1):
+			wid = Win.FrontWindow()
+			ourwin = self._find_wid(wid)
+			print 'DBG extra activate', ourwin
+			if ourwin:
+				self._activate_ours(ourwin, 1)
+				
+	def _activate_ours(self, ourwin, activate):
+		if activate:
+			self._install_window_commands(ourwin)
+		ourwin._activate(activate)
 
 	def _handle_mousedown(self, event):
 		"""Handle a MacOS mouseDown event"""
@@ -288,7 +322,7 @@ class _Event:
 				#wid.DrawGrowIcon()
 				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
 				neww, newh = (rv>>16) & 0xffff, rv & 0xffff
-				print 'GROW RETURNED', neww, newh
+##				print 'GROW RETURNED', neww, newh
 				pass # XXXX find window, call resize, possibly send update?
 			else:
 				partcode = Windows.inContent
@@ -398,7 +432,7 @@ class _Event:
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
 		raise error, 'No select_setcallback for the mac'
-
+		
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel(_Event):
@@ -406,12 +440,14 @@ class _Toplevel(_Event):
 		_Event.__init__(self)
 		self._closecallbacks = []
 		self._subwindows = []
+		self._windowgroups = []
+		self._active_windowgroup = None
 		self._wid_to_window = {}
-		self._wid_to_title = {}
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
 		self.defaultwinpos = 10	# 1 cm from topleft we open the first window
+		self._command_handler = None
 
 		self._initmenu()		
 		MacOS.EnableAppswitch(0)
@@ -419,11 +455,10 @@ class _Toplevel(_Event):
 	def _initmenu(self):
 		self._menubar = MenuBar(self)
 		AppleMenu(self._menubar, "About CMIF...", self._mselect_about)
-		self._menu_file = MyMenu(self._menubar, "File")
-		self._mitem_quit = MenuItem(self._menu_file, "Quit", "Q", (self._mselect_quit, ()))
-		self._mitem_abort = MenuItem(self._menu_file, "Abort", "", (self._mselect_abort, ()))
-		self._mitem_debug = MenuItem(self._menu_file, "Debug", "", (self._mselect_debug, ()))
 		self._menus = []
+		
+	def initcommands(self, commandlist):
+		self._command_handler = CommandHandler(commandlist)
 		
 	def _addmenu(self, title):
 		m = MyMenu(self._menubar, title)
@@ -467,24 +502,118 @@ class _Toplevel(_Event):
 			apply(func, args)
 		for win in self._subwindows[:]:
 			win.close()
+		for group in self._windowgroups[:]:
+			group.close()
+		if self._command_handler:
+			del self._command_handler
 		self.__init__()		# clears all lists
 		MacOS.EnableAppswitch(1)
 
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
+	def windowgroup(self, title=None, cmdlist=[], globalgroup=0):
+		rv = _WindowGroup(title, cmdlist)
+		self._windowgroups.append(rv)
+		if globalgroup:
+			level = CMDSET_GLOBAL
+		else:
+			level = CMDSET_GROUP
+		self._install_group_commands(rv, level)
+		return rv
+		
+	def _close_windowgroup(self, group):
+		self._windowgroups.remove(group)
+		self._command_handler.uninstall_cmd(CMDSET_GROUP, group)
+		self.needmenubarrecalc = 1
+		
+	def _get_group_names(self):
+		names = []
+		current = None
+		for group in self._windowgroups[1:]: # Skip global commands
+			if group == self._active_windowgroup:
+				current = len(names)
+			names.append(group._title)
+		return names, current
+		
+	def _get_window_names(self):
+		names = []
+		current = None
+		front_wid = Win.FrontWindow()
+		for win in self._subwindows:
+			if win._title == None:
+				# These are dialogs which aren't open yet
+				continue
+##			print 'Window', win, win._title, win._wid
+			if win._wid == front_wid:
+				current = len(names)
+			names.append(win._title)
+		return names, current
+		
+	def _pop_window(self, title):
+		for win in self._subwindows:
+			if win._title == title:
+				win.pop()
+				
+	def _pop_group(self, title):
+		for group in self._windowgroups:
+			if group._title == title:
+				break
+		else:
+			print 'Pop unknown group?', title
+			return
+		self._install_group_commands(group)
+		# Pop all windows in the group. If the group has no
+		# window we pop an invisible window (we know there is one)
+		any_popped = 0
+		invisible = None
+		for win in self._subwindows:
+			if win.window_group == group:
+				if win._title:
+					print 'pop', win
+					win.pop()
+					any_popped = 1
+				else:
+					invisible = win
+		if not any_popped:
+			if invisible:
+				invisible.pop()
+			else:
+				print 'Oops... Group is empty without invisible window...'
+			
+		
+	# Menu/command handling
+	def _install_window_commands(self, window):
+		"""Install window commands and document commands for corresponding document"""
+		if self._command_handler.install_cmd(CMDSET_WINDOW, window):
+			# We don't remove the group when the window decativates, is this correct?
+			if window:
+				group = window.window_group
+				self._install_group_commands(group)
+			self.needmenubarrecalc = 1
+		
+	def _install_group_commands(self, group, level=CMDSET_GROUP):
+		if group == self._active_windowgroup:
+			return
+		self._command_handler.install_cmd(level, group)
+		self._active_windowgroup = group
+		self.needmenubarrecalc = 1
+		
+	def _changed_group_commands(self):
+		self.needmenubarrecalc = 1
+		
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
-				pixmap = 0, transparent = 0, units=UNIT_MM):
+				pixmap = 0, transparent = 0, units=UNIT_MM, menubar=[]):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
-		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
-		self._register_wid(wid, rv, title)
+		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent, title, menubar)
+		self._register_wid(wid, rv)
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, transparent = 0, units=UNIT_MM):
-		wid, w, h = self._openwindow(x, y, w, h, title, units)
-		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
-		self._register_wid(wid, rv, title)
+		wid, w, h = self._openwindow(x, y, w, h, title, units, menubar=[])
+		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent, title, menubar)
+		self._register_wid(wid, rv)
 		return rv
 		
 	def _openwindow(self, x, y, w, h, title, units):
@@ -546,14 +675,16 @@ class _Toplevel(_Event):
 		
 		return wid, w, h
 		
-	def _register_wid(self, wid, window, title):
+	def _register_wid(self, wid, window):
 		self._wid_to_window[wid] = window
-		self._wid_to_title[wid] = title
+		window.window_group = self._active_windowgroup
 		
 	def _close_wid(self, wid):
 		"""Close a MacOS window and remove references to it"""
+		window = self._wid_to_window[wid]
+		window.window_group = None
+		self.needmenubarrecalc = 1
 		del self._wid_to_window[wid]
-		del self._wid_to_title[wid]
 		
 	def _find_wid(self, wid):
 		"""Map a MacOS window to our window object, or None"""
@@ -605,6 +736,64 @@ class _Toplevel(_Event):
 	def getscreendepth(self):
 		# Unfortunately this is very difficult to get at...
 		return 8
+		
+class _WindowGroup:
+	"""Menu-command mapping support"""
+	def __init__(self, title, cmdlist):
+		self._title = title
+		self._cmds_toggled = {}
+		self.set_commandlist(cmdlist)
+		print 'NEW WINDOWGROUP', self
+		
+	def __repr__(self):
+		return '<WindowGroup %s>'%self._title
+	
+	def settitle(self, title):
+		self._title = title
+		toplevel._changed_group_commands() # XXXX Is this good enough?
+		
+	def close(self):
+		print 'CLOSEGROUP', self
+		toplevel._close_windowgroup(self)
+		del self.cmd_callback_dict
+		del self._commandlist
+		
+	def setbutton(self, number, onoff):
+		cmd = self._commandlist[number]
+##		print 'SETBUTTON', self, number, cmd, onoff
+		self.set_cmd_toggle(cmd, onoff)
+		
+	def set_cmd_toggle(self, cmd, onoff):
+		self._cmds_toggled[cmd] = onoff
+		toplevel._changed_group_commands()
+		
+	def get_cmd_toggle(self, cmd):
+		if self._cmds_toggled.has_key(cmd):
+##			print 'GETCMDTOGGLE', self, cmd, self._cmds_toggled[cmd]
+			return self._cmds_toggled[cmd]
+##		print 'GETCMDTOGGLE', self, cmd, 'no such cmd'
+		return 0
+		
+	def toggle_cmd_toggle(self, cmd):
+		old = self.get_cmd_toggle(cmd)
+##		print 'TOGGLE FROM USER INPUT', self, cmd, 'to', not old
+		self.set_cmd_toggle(cmd, not old)
+#
+# For now, we do this in the eventloop, so it isn't needed here.
+#	
+#	def _activate(self, onoff):
+#		pass # Or tell menu-code?
+		
+	def _set_cmd_dict(self, dict):
+		self.cmd_callback_dict = dict
+		pass # Tell toplevel
+		
+	def set_commandlist(self, list):
+		self._commandlist = map(lambda cmd: cmd[0], list)
+		dict = {}
+		for k, v in list:
+			dict[k] = v
+		self._set_cmd_dict(dict)
 		
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
@@ -1022,14 +1211,15 @@ class _CommonWindow:
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
 
-class _Window(_CommonWindow):
+class _Window(_CommonWindow, _WindowGroup):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
-			transparent = 0):
+			transparent = 0, title="", commands=[]):
 		
 		self._istoplevel = 1
 		_CommonWindow.__init__(self, parent, wid)
+		_WindowGroup.__init__(self, title, commands)
 		
 		if transparent:
 			raise 'Error: transparent toplevel window'
@@ -1041,11 +1231,14 @@ class _Window(_CommonWindow):
 		
 		self._hfactor = parent._hfactor / (float(w) / _x_pixel_per_mm)
 		self._vfactor = parent._vfactor / (float(h) / _y_pixel_per_mm)
-		
+				
 	def settitle(self, title):
 		"""Set window title"""
 		if not self._wid:
 			return  # Or raise error?
+		_WindowGroup.settitle(self, title)
+		if title == None:
+			title = ''
 		self._wid.SetWTitle(title)
 		
 	def getgeometry(self, units=UNIT_MM):
@@ -1119,6 +1312,10 @@ class _Window(_CommonWindow):
 		if rgn is None:
 			rgn = self._wid.GetWindowPort().visRgn
 		Ctl.UpdateControls(self._wid, rgn)
+		
+	def _activate(self, onoff):
+		_CommonWindow._activate(self, onoff)
+##		_WindowGroup._activate(self, onoff)
 
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
@@ -1704,12 +1901,14 @@ class Dialog:
 	def __init__(self, *args):
 		raise 'Dialogs not implemented for mac'
 
+def MainDialog(cmdlist, title=None, prompt=None, grab=1, vertical=1, globalgroup=0):
+	return toplevel.windowgroup(title, cmdlist, globalgroup=globalgroup)
 #
 # Note: this class knows very well how it will be used.
 # Especially, the way it handles the create_menu stuff is tied
 # to the way the player creates it's menu.
-#		
-class MainDialog:
+#	
+class _old_MainDialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
 		     vertical = 1):
 		self.items = []
@@ -1786,6 +1985,190 @@ class MainDialog:
 	def setbutton(self, button, onoff = 1):
 		self.items[button].check(onoff)
 
+class _SpecialMenu:
+	"""_SpecialMenu - Helper class for CommandHandler Window and Document menus"""
+	
+	def __init__(self, title, callbackfunc):
+		self.items = []
+		self.menus = []
+		self.cur = None
+		self.title = title
+		self.callback = callbackfunc
+		self.menu = toplevel._addmenu(self.title)
+		
+	def set(self, list, cur):
+		if list != self.items:
+			# If the list isn't the same we have to modify it
+			if list[:len(self.items)] != self.items:
+				# And if the old list isn't a prefix we start from scratch
+				print 'zap menu'
+				self.menus.reverse()
+				for m in self.menus:
+					m.delete()
+				self.menus = []
+				self.items = []
+				self.cur = None
+			list = list[len(self.items):]
+			for item in list:
+				self.menus.append(MenuItem(self.menu, item, None, (self.callback, (item,))))
+				self.items.append(item)
+		if cur != self.cur:
+			if self.cur != None:
+				self.menus[self.cur].check(0)
+			if cur != None:
+				self.menus[cur].check(1)
+			self.cur = cur
+			
+##	def callback(self, item):
+##		print 'CALLBACK', self.title, item
+				
+class CommandHandler:
+	def __init__(self, menubartemplate):
+		self.cmd_to_menu = {}
+		self.cmd_enabled = {}
+		self.must_update_window_menu = 1
+		self.must_update_document_menu = 1
+		self.all_cmd_groups = [None, None, None]
+		self.menubartraversal = []
+		for menutemplate in menubartemplate:
+			title, content = menutemplate
+			menu = toplevel._addmenu(title)
+			itemlist = self.makemenu(menu, content)
+			self.menubartraversal.append(UserCmd.CASCADE, menu, itemlist)
+		# Create special menus
+		self.document_menu = _SpecialMenu('Documents', toplevel._pop_group)
+		self.window_menu = _SpecialMenu('Windows', toplevel._pop_window)
+			
+	def install_cmd(self, number, group):
+		print 'INSTALL', number, group
+		if self.all_cmd_groups[number] == group:
+			return 0
+		self.all_cmd_groups[number] = group
+		if number == 0:
+			self.must_update_window_menu = 1
+		else:
+			self.must_update_document_menu = 1
+		# Don't update, we do that in the event loop by calling
+		# update_menus_enabled
+		return 1
+		
+	def uninstall_cmd(self, number, group):
+		if self.all_cmd_groups[number] == group:
+			self.install_cmd(number, None)
+			return 1
+		return 0
+			
+	def makemenu(self, menu, content):
+		itemlist = []
+		for entry in content:
+			entry_type = entry[0]
+			if entry_type in (UserCmd.ENTRY, UserCmd.TOGGLE):
+				dummy, name, shortcut, cmd = entry
+				if self.cmd_to_menu.has_key(cmd):
+					raise 'Duplicate menu command', (name, cmd)
+				if entry_type == UserCmd.ENTRY:
+					cbfunc = self.normal_callback
+				else:
+					cbfunc = self.toggle_callback
+				mentry = MenuItem(menu, name, shortcut, (cbfunc, (cmd,)))
+				self.cmd_to_menu[cmd] = mentry
+				self.cmd_enabled[cmd] = 1
+				itemlist.append(entry_type, cmd)
+			elif entry_type == UserCmd.SEP:
+				menu.addseparator()
+			elif entry_type == UserCmd.CASCADE:
+				dummy, name, subcontent = entry
+				submenu = SubMenu(menu, name, name)
+				subitemlist = self.makemenu(submenu, subcontent)
+				itemlist.append(entry_type, submenu, subitemlist)
+			else:
+				raise 'Unknown menu entry type', entry_type
+		return itemlist
+				
+	def toggle_callback(self, cmd):
+		mentry = self.cmd_to_menu[cmd]
+		group = self.find_toggle_group(cmd)
+		if group:
+			group.toggle_cmd_toggle(cmd) # Will force a menubar redraw later
+		else:
+			print 'HUH? No group for toggle cmd', cmd
+		self.normal_callback(cmd)
+		
+	def normal_callback(self, cmd):
+		cmd = self.find_command(cmd, mustfind=1)
+		if cmd:
+			func, arglist = cmd
+			apply(func, arglist)
+		else: # debug
+			print 'CommandHandler: unknown command', cmd #debug
+		
+	def find_command(self, cmd, mustfind=0):
+		for group in self.all_cmd_groups:
+			if group:
+				dict = group.cmd_callback_dict
+				if dict and dict.has_key(cmd):
+					if mustfind and not self.cmd_enabled[cmd]: # debug
+						print 'CommandHandler: disabled command selected:', cmd # debug
+					return dict[cmd]
+		return None
+		
+	def find_toggle_group(self, cmd):
+		for group in self.all_cmd_groups:
+			if group:
+				dict = group.cmd_callback_dict
+				if dict and dict.has_key(cmd):
+					return group
+		return None
+		
+	def _update_one(self, items):
+		any_active = 0
+		for item in items:
+			itemtype = item[0]
+			if itemtype == UserCmd.CASCADE:
+				itemtype, submenu, subitems = item
+				must_be_enabled = self._update_one(subitems)
+				submenu.enable(must_be_enabled)
+			else:
+				itemtype, cmd = item
+				must_be_enabled = (not not self.find_command(cmd))
+				if must_be_enabled != self.cmd_enabled[cmd]:
+					mentry = self.cmd_to_menu[cmd]
+					mentry.enable(must_be_enabled)
+					self.cmd_enabled[cmd] = must_be_enabled
+				if must_be_enabled and itemtype == UserCmd.TOGGLE:
+					mentry = self.cmd_to_menu[cmd]
+					group = self.find_toggle_group(cmd)
+					if group:
+						mentry.check(group.get_cmd_toggle(cmd))
+			if must_be_enabled:
+				any_active = 1
+		return any_active
+
+	def update_menus(self):
+		print "UPDATE MENUS:", self.all_cmd_groups
+##		for cmd, mentry in self.cmd_to_menu.items():
+##			must_be_enabled = (not not self.find_command(cmd))
+##			if must_be_enabled != self.cmd_enabled[cmd]:
+##				mentry.enable(must_be_enabled)
+##				self.cmd_enabled[cmd] = must_be_enabled
+		self._update_one(self.menubartraversal)
+		if self.must_update_window_menu:
+			self.update_window_menu()
+			self.must_update_window_menu = 0
+		if self.must_update_document_menu:
+			self.update_document_menu()
+			self.must_update_document_menu = 0
+				
+	def update_window_menu(self):
+		list, cur = toplevel._get_window_names()
+		print 'UPDATE WINDOW MENU', list, cur
+		self.window_menu.set(list, cur)
+		
+	def update_document_menu(self):
+		list, cur = toplevel._get_group_names()
+		print 'UPDATE DOCUMENT MENU', list, cur
+		self.document_menu.set(list, cur)
+		
 def multchoice(prompt, list, defindex):
 	print 'MULTCHOICE', list, defindex
 	return defindex
