@@ -13,6 +13,7 @@ import TimeMapper
 from AppDefaults import *
 from fmtfloat import fmtfloat
 import Duration
+import ArmStates
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
@@ -100,18 +101,18 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.need_draghandles = None
 
 		# Holds little icons..
-		self.iconbox = IconBox(self, self.mother)
+		if isinstance(self, CommentWidget):
+			self.iconbox = None
+		else:
+			self.iconbox = IconBox(self, self.mother, vertical = isinstance(self, MediaWidget))
 		self.cause_event_icon = None
 		self.infoicon = None
-		if node.infoicon:
+		if self.iconbox is not None and node.infoicon:
 			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
-		if node.GetType() == 'comment':
+		if self.iconbox is None or node.GetType() == 'comment':
 			self.playicon = None
 		else:
-			# XXXX Comment by Jack: Why is this not done through the IconBox?
-			# XXXX Answer by Jack: it may be doable now, now that IconBox semantics
-			#      don't move things around anymore.
-			self.playicon = Icon(self, self.mother)
+			self.playicon = self.iconbox.add_icon(node.armedmode or 'idle')
 			self.playicon.set_properties(selectable=0, callbackable=0)
 		# these 5 are never set in this class but are provided for the benefit of subclasses
 		# this means we also don't destroy these
@@ -121,9 +122,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.dropbox = None
 		self.channelbox = None
 
-		linkicons = self.getlinkicons()
-		for icon in linkicons:
-			self.iconbox.add_icon(icon)
+		if self.iconbox is not None:
+			linkicons = self.getlinkicons()
+			for icon in linkicons:
+				self.iconbox.add_icon(icon)
 
 	def __repr__(self):
 		return '<%s instance, name="%s", node=%s, id=%X>' % (self.__class__.__name__, self.name, `self.node`, id(self))
@@ -131,9 +133,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def destroy(self):
 		# Prevent cyclic dependancies.
 		node = self.node
-		if self.playicon is not None:
-			self.playicon.destroy()
-			self.playicon = None
+		self.playicon = None
 		self.cause_event_icon = None
 		self.infoicon = None
 		if self.iconbox is not None:
@@ -190,8 +190,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return self.node
 
 	def add_event_icons(self):
-		self.__add_events_helper('beginevent', 'beginlist')
-		self.__add_events_helper('endevent', 'endlist')
+		if self.node.GetType() != 'comment':
+			self.__add_events_helper('beginevent', 'beginlist')
+			self.__add_events_helper('endevent', 'endlist')
 
 	def __add_events_helper(self, iconname, attr):
 		icon = None
@@ -396,22 +397,22 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		if self.dropbox is not None:
 			xsize = xsize  + GAPSIZE + self.dropbox.recalc_minsize()[0]
-		if node.infoicon and self.infoicon is None:
+		if self.iconbox is not None and node.infoicon and self.infoicon is None:
 			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
 		elif not node.infoicon and self.infoicon is not None:
+			# self.infoicon is not None implies self.iconbox is not None
 			self.iconbox.del_icon(self.infoicon)
 			self.infoicon.destroy()
 			self.infoicon = None
-		if not isinstance(self, CommentWidget):
+		if self.iconbox is not None and not isinstance(self, CommentWidget):
 			node.set_infoicon = self.set_infoicon
 			node.set_armedmode = self.set_armedmode
 			self.set_armedmode(node.armedmode, redraw = 0)
-		ixsize = self.iconbox.recalc_minsize()[0]
-		if self.collapsebutton is not None:
-			ixsize = ixsize + self.collapsebutton.recalc_minsize()[0]
-		if self.playicon is not None:
-			ixsize = ixsize + self.playicon.recalc_minsize()[0]
-		if self.name:
+		if self.iconbox is not None:
+			ixsize, iysize = self.iconbox.recalc_minsize()
+		else:
+			ixsize = iysize = 0
+		if self.name and (self.iconbox is not None or not self.iconbox.vertical):
 			ixsize = ixsize + f_title.strsizePXL(self.name)[0]
 		ixsize = ixsize + 2*HEDGSIZE
 		xsize = min(max(xsize, ixsize), MAXSIZE)
@@ -442,20 +443,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		displist.usefont(f_title)
 		l,t,r,b = self.pos_abs
 		b = t + TITLESIZE + VEDGSIZE
-		if self.collapsebutton is not None:
-			l = l + ICONSIZE # move it past the icon.
-			if l <= r:
-				self.collapsebutton.draw(displist)
-		if self.playicon is not None:
-			l = l + ICONSIZE # move it past the icon.
-			if l <= r:
-				self.playicon.draw(displist)
 		if self.iconbox is not None:
 			self.iconbox.moveto((l,t+2,r,b))
-			l = l + self.iconbox.get_minsize()[0]
+			iw, ih = self.iconbox.get_minsize()
+			l = l + iw
 			if l <= r:
 				self.iconbox.draw(displist)
-		if l < r and self.name:
+		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical):
 			x, y = l, t+displist.baselinePXL()+2
 			displist.setpos(x, y)
 			namewidth = displist.strsizePXL(self.name)[0]
@@ -541,10 +535,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def do_draw_image(self, image_filename, (x,y,w,h), displist):
 		if not image_filename or w <= 0 or h <= 0:
 			return
-		r = x + w - MINSIZE/12
-		x = x + MINSIZE/12
-		imw = 5*(w/6)
-		imh = 4*(h/6)
+		r = x + w - HEDGSIZE
+		x = x + HEDGSIZE
+		b = y + h - VEDGSIZE
+		y = y + VEDGSIZE
+		imw = r - x
+		imh = b - y
+##		imw = 5*(w/6)
+##		imh = 4*(h/6)
 		if self.__image_size is not None:
 			imw, imh = self.__image_size
 		coordinates = (x, y, imw, imh)
@@ -561,13 +559,30 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				pass
 			else:
 				displist.drawbox(box)
+				box2 = (0,0,0,0)
+				if self.iconbox is not None and self.iconbox.vertical:
+					# draw name next to image
+					displist.fgcolor(CTEXTCOLOR)
+					displist.usefont(f_title)
+					nx = box[0] + box[2] + 2
+					ny = box[1] + box[3] - 2
+					displist.setpos(nx, ny)
+					namewidth = displist.strsizePXL(self.name)[0]
+					if nx + namewidth <= r:
+						# name fits fully
+						box2 = displist.writestr(self.name)
+					else:
+						for i in range(len(self.name)-1,-1,-1):
+							if nx + displist.strsizePXL(self.name[:i]+'...')[0] <= r:
+								box2 = displist.writestr(self.name[:i]+'...')
+								break
 				# calculate number of copies that'll fit in the remaining space
-				n = (w-box[2]-MINSIZE/12-MINSIZE/12)/(box[2]+NAMEDISTANCE)
+				n = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/(box[2]+box2[2]+NAMEDISTANCE)
 				if n <= 0:
 					return
 				# calculate distance between left edges to get copies equidistant
-				distance = (w-box[2]-MINSIZE/12-MINSIZE/12)/n
-				while x + distance + box[2] <= r:
+				distance = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/n
+				while x + distance + box[2] + box2[2] <= r:
 					x = x + distance
 					# draw line between copies
 					displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
@@ -578,6 +593,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						coordinates = coordinates,
 						fit = 'icon')
 					displist.drawbox(box)
+					if self.iconbox is not None and self.iconbox.vertical:
+						displist.setpos(box[0] + box[2] + 2, box[1] + box[3] - 2)
+						displist.writestr(self.name)
 
 	#
 	# These a fillers to make this behave like the old 'Object' class.
@@ -794,6 +812,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if msg:
 			windowinterface.showmessage(msg, parent=self.mother.window)
 
+	def get_popupmenu(self):
+		return []
 
 #
 # The StructureObjWidget represents any node which has children,
@@ -818,10 +838,8 @@ class StructureObjWidget(MMNodeWidget):
 			if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
 				ntype = ''
 			icon = ntype + icon
-			self.collapsebutton = Icon(self, self.mother)
+			self.collapsebutton = self.iconbox.add_icon(icon, self.toggle_collapsed)
 			self.collapsebutton.set_properties(callbackable=1, selectable=0)
-			self.collapsebutton.set_icon(icon)
-			self.collapsebutton.set_callback(self.toggle_collapsed)
 		self.parent_widget = parent # This is the parent node. Used for recalcing optimisations.
 		for i in self.node.children:
 			bob = create_MMNode_widget(i, mother, self)
@@ -836,9 +854,7 @@ class StructureObjWidget(MMNodeWidget):
 			for i in self.children:
 				i.destroy()
 		self.children = None
-		if self.collapsebutton is not None:
-			self.collapsebutton.destroy()
-			self.collapsebutton = None
+		self.collapsebutton = None
 		self.parent_widget = None
 		MMNodeWidget.destroy(self)
 
@@ -985,14 +1001,6 @@ class StructureObjWidget(MMNodeWidget):
 				self.timeline.moveto((l, t+VEDGSIZE+TITLESIZE, r, t+VEDGSIZE+TITLESIZE+tl_h), timemapper)
 			else:
 				self.timeline.moveto((l, b-VEDGSIZE-tl_h, r, b-VEDGSIZE), timemapper)
-		if self.collapsebutton is not None:
-			#l = l + self.get_relx(1)
-			#t = t + self.get_rely(2)
-			self.collapsebutton.moveto((l+1,t+2,0,0))
-			l = l + ICONSIZE
-		if self.playicon is not None:
-			self.playicon.moveto((l+1,t+2,0,0))
-			l = l + ICONSIZE
 		self.need_resize = 0
 		if timemapper is None:
 			self.need_draghandles = None
@@ -1817,12 +1825,8 @@ class MediaWidget(MMNodeWidget):
 			timemapper = None
 		self.__timemapper = timemapper
 		l,t,r,b = self.pos_abs
-		w = 0
-		if self.playicon is not None:
-			self.playicon.moveto((l+1, t+2,0,0))
-			w = ICONSIZE
 
-		self.iconbox.moveto((l+w+1, t+2,0,0))
+		self.iconbox.moveto((l+1, t+2, 0, 0))
 		# First compute pushback bar position
 		if self.pushbackbar is not None:
 			self.pushbackbar.destroy()
@@ -1837,7 +1841,10 @@ class MediaWidget(MMNodeWidget):
 				pbb_left = timemapper.time2pixel(t0-download, align='right')
 				self.pushbackbar.moveto((pbb_left, t, l, t+12))
 
-		t = t + TITLESIZE
+		if self.iconbox.vertical:
+			l = l + self.iconbox.get_minsize()[0]
+		else:
+			t = t + TITLESIZE
 
 		# Add the timeline
 		if self.timeline is not None:
@@ -1931,7 +1938,13 @@ class MediaWidget(MMNodeWidget):
 
 	def __draw(self, displist):
 		l,t,r,b = self.pos_abs
-		t = t + TITLESIZE
+		if self.iconbox is not None and self.iconbox.vertical:
+			l = l + self.iconbox.get_minsize()[0]
+			t = t + VEDGSIZE
+		else:
+			t = t + TITLESIZE
+		b = b - VEDGSIZE
+		r = r - HEDGSIZE
 
 		# Add the timeline
 		if self.timeline is not None:
@@ -1996,17 +2009,8 @@ class CommentWidget(MMNodeWidget):
 
 	def recalc(self, timemapper = None):
 		l,t,r,b = self.pos_abs
-		self.iconbox.moveto((l+1, t+2,0,0))
-
-##	def recalc_minsize(self, timemapper = None):
-##		# return the minimum size of this node, in pixels.
-##		# Called to work out the size of the canvas.
-##		timemapper = self.init_timemapper(timemapper)
-##		xsize = MINSIZE + self.iconbox.recalc_minsize()[0]
-##		ysize = MINSIZE# + TITLESIZE
-##		self.boxsize = xsize, ysize
-##		self.fix_timemapper(timemapper)
-##		return self.boxsize
+##		if self.iconbox is not None:
+##			self.iconbox.moveto((l+1, t+2,0,0))
 
 	def get_maxsize(self):
 		return MAXSIZE, MAXSIZE
@@ -2031,8 +2035,10 @@ class CommentWidget(MMNodeWidget):
 
 	def __draw(self, displist):
 		x,y,w,h = self.get_box()
-		y = y + TITLESIZE
-		h = h - TITLESIZE
+		x = x + HEDGSIZE
+		w = w - 2*HEDGSIZE
+		y = y + VEDGSIZE
+		h = h - 2*VEDGSIZE
 
 		ntype = self.node.GetType()
 
@@ -2041,8 +2047,9 @@ class CommentWidget(MMNodeWidget):
 		if w > 0 and h > 0:
 			self.do_draw_image(image_filename, (x,y,w,h), displist)
 
-		# Draw the icon box.
-		self.iconbox.draw(displist)
+		if self.iconbox is not None:
+			# Draw the icon box.
+			self.iconbox.draw(displist)
 
 	def get_obj_at(self, pos):
 		# Returns an MMWidget at pos. Compare get_clicked_obj_at()
@@ -2054,7 +2061,7 @@ class CommentWidget(MMNodeWidget):
 	def get_clicked_obj_at(self, pos):
 		# Returns any object which can be clicked().
 		if self.is_hit(pos):
-			if self.iconbox.is_hit(pos):
+			if self.iconbox is not None and self.iconbox.is_hit(pos):
 				return self.iconbox.get_clicked_obj_at(pos)
 			else:
 				return self
@@ -2370,15 +2377,23 @@ class TimelineWidget(MMWidgetDecoration):
 # A box with icons in it.
 # Comes before the node's name.
 class IconBox(MMWidgetDecoration):
-	def __init__(self, mmwidget, mother):
+	def __init__(self, mmwidget, mother, vertical = 1):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
 		self._iconlist = []
+		self.vertical = vertical
 
 	def destroy(self):
 		for icon in self._iconlist:
 			icon.destroy()
 		self._iconlist = []
 		MMWidgetDecoration.destroy(self)
+
+	iconorder = []
+	for ntype in ('par', 'seq', 'switch', 'prio', 'excl', ''):
+		for coll in ('open', 'closed'):
+			iconorder.append(ntype + coll)
+	del ntype, coll
+	iconorder = tuple(iconorder)
 
 	def add_icon(self, iconname=None, callback=None, contextmenu=None, arrowto=None):
 		# iconname - name of an icon, decides which icon to use.
@@ -2394,7 +2409,11 @@ class IconBox(MMWidgetDecoration):
 		if arrowto:
 			icon.add_arrow(arrowto)
 		i = 0
-		for n in ('error',
+		for n in self.iconorder + \
+			 ('idle', ArmStates.ARM_NONE, ArmStates.ARM_SCHEDULED,
+			  ArmStates.ARM_ARMING, ArmStates.ARM_ARMED,
+			  ArmStates.ARM_PLAYING, ArmStates.ARM_WAITSTOP,
+			  'error',
 			  'danglingevent', 'danglinganchor',
 			  'linkdst', 'beginevent',
 			  'linksrc','causeevent',
@@ -2417,43 +2436,50 @@ class IconBox(MMWidgetDecoration):
 
 	def recalc_minsize(self):
 		# Always the number of icons.
-		self.boxsize = (len(self._iconlist) * ICONSIZE), ICONSIZE
+		if self.vertical:
+			# we only show a max of 3 icons when vertical
+			self.boxsize = ICONSIZE, (min(len(self._iconlist), 3) * ICONSIZE)
+		else:
+			self.boxsize = (len(self._iconlist) * ICONSIZE), ICONSIZE
 		return self.boxsize
 
 	def get_clicked_obj_at(self, coords):
 		x,y = coords
-		return self.__get_icon_at_position(x)
+		return self.__get_icon_at_position(x,y)
 
 	def is_hit(self, pos):
 		l,t,a,b = self.pos_abs
 		x,y = pos
-		if l < x < l+(len(self._iconlist)*ICONSIZE) and t < y < t+ICONSIZE:
-			return 1
+		if self.vertical:
+			return l < x < l+ICONSIZE and t < y < t+(len(self._iconlist)*ICONSIZE)
 		else:
-			return 0
+			return l < x < l+(len(self._iconlist)*ICONSIZE) and t < y < t+ICONSIZE
 
 	def draw(self, displist):
 		l,t,r,b = self.pos_abs
 		for icon in self._iconlist:
 			icon.moveto((l,t,r,b))
 			icon.draw(displist)
-			l = l + ICONSIZE
+			if self.vertical:
+				t = t + ICONSIZE
+			else:
+				l = l + ICONSIZE
 
 	draw_selected = draw
 
-	def __get_icon_at_position(self, x):
+	def __get_icon_at_position(self, x, y):
 		l,t,r,b = self.pos_abs
-		if len(self._iconlist) > 0:
-			index = int((x-l)/ICONSIZE)
-			if index >= 0 and index < len(self._iconlist):
-				return self._iconlist[index]
+		if self.vertical:
+			index = int((y-t)/ICONSIZE)
 		else:
-			return None
+			index = int((x-l)/ICONSIZE)
+		if 0 <= index < len(self._iconlist):
+			return self._iconlist[index]
 
 	def mouse0release(self, coords):
 		x,y = coords
 		l,t,r,b = self.pos_abs
-		icon = self.__get_icon_at_position(x)
+		icon = self.__get_icon_at_position(x,y)
 		if icon:
 			icon.mouse0release(coords)
 		else:
