@@ -181,7 +181,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 				# i is a leafnode
 				bob = self._factory.createnode(i)
 				n = bob.get_channel()
-				print "DEBUG: n is: ", n
+				#print "DEBUG: n is: ", n
 				if self.node_channel_mapping.has_key(n):
 					self.node_channel_mapping[n].append(bob)
 				else:
@@ -279,6 +279,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 				for i in self.node_channel_mapping[w_channel_name]:
 					i.set_y(y,y+h)
 
+		self.channeltree.recalc()
+
 		# delete me: 
 		# Move all of my breaks (each syncbar only needs to know it's x position)
 		#for i in self.syncbars:
@@ -291,30 +293,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.mainnode.recalc()
 
 	def click(self, coords):
-		# The z-ordering goes as follows:
-		# 1) check the sync bars
-		# 2) check the nodes.
-		# You may need to add more to this as time goes by.
-		#for i in self.syncbars:
-		#	if i.is_hit(coords):
-		#		self.select_syncbar(i)
-		#for c in self.channelWidgets.values():
-		#	if c.is_hit_y(coords):
-		#		if c.is_hit(coords):
-		#			self.select_channel(c)
-		#		else:
-		#			n = c.get_node_at(coords)
-		#			self.select_node(n)
-		print "You clicked!"
-	#TODO: what about CTRL-clicks for multiple selection?
+		print "DEBUG: Clicking still needs to be implemented."
 
-#	def select_syncbar(self, bar):
-#		self.root.unselect_nodes()
-#		if isinstance(bar, SyncBarWidget):
-#			self.root.select_node(bar)
-#			bar.select()
-#			self.editmgr.setglobalfocus('MMNode', bar.node)
-#			# Also, set the node's channel.
 
 	def select_channel(self, channel):
 		#print "DEBUG: these are the syncbars:"
@@ -440,6 +420,10 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		self.viewports = self.channelhelper.getviewports()
 		for i in self.viewports: # Adds all the channels to this tree.
 			self.add_channel_to_bottom(i, 0) # recursively add the viewport and it's children.
+		# DEBUG: TESTING
+		#bob = self.graph.AddWidget(Line(self.mother))
+		#self.widgets.append(bob)
+		#bob.moveto((0,0,200,200))
 
 	def set_rootmmnode(self, node):
 		self.node = node
@@ -456,30 +440,51 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 
 	def recalc(self):
 		# Add lines to show where the tree is.
+		print "DEBUG: ChannelTree.recalc() called."
 		currentindent = 0
+		currentvline = None	# I wish you could define variables in Python.
 		x,y,w,h = self.get_box()
 		top = y
-		bottom = y+ CHANNELHEIGHT / 2
 		levels = []		# A stack for iterative recursion
-		for w in self.widgets:
-			indent = w.get_depth()
+		for chan in self.channeltree:
+			tx, ty, tw, th = chan.get_box()
+			indent = chan.get_depth()
+			leftpos = tx + (indent-1)*CHANNELTREEINDENT + CHANNELTREEINDENT/2
+			
+			bob = self.graph.AddWidget(Line(self.mother))
+			bob.moveto((
+				leftpos,
+				ty+CHANNELHEIGHT/2,
+				leftpos + CHANNELTREEINDENT/2,
+				ty+CHANNELHEIGHT/2))
+			self.widgets.append(bob)
+
 			if indent == currentindent:
-				bottom = bottom + CHANNELHEIGHT
-				bob = self.graph.AddWidget(Line(self.mother))
-				tx, ty, tw, th = w.get_box()
-				bob.moveto((
-					len(levels)*CHANNELTREEINDENT,
-					ty+CHANNELHEIGHT/2,
-					len(levels)*(CHANNELTREEINDENT+1),
-					ty+CHANNELHEIGHT/2))
-				self.widgets.append(bob)
+				if currentvline:
+					currentvline.moveto((
+						leftpos,
+						top,
+						leftpos,
+						ty+th-CHANNELHEIGHT/2))
+				print "DEBUG: added line widget ", bob.get_box()
 			elif indent > currentindent:
-				levels.append((top, bottom))
+				# The current line gets promoted to a parent.
+				# Every parent has a vertical line on it.
+				# WORKING HERE
+				currentvline = self.graph.AddWidget(Line(self.mother))
+				currentvline.moveto((
+					leftpos,
+					ty + CHANNELHEIGHT/2,
+					leftpos,
+					ty+CHANNELHEIGHT))
+				levels.append((top, currentvline))
+				top = ty
+				currentindent = indent;
 			else: # indent < currentindent
 				tail = levels[len(levels)-1]
 				levels = levels[:len(levels)-1]
-				top, bottom = tail
-				# WORKING HERE - this code is not tested or complete.
+				top, currentvline = tail
+				currentindent = indent
 
 	def add_channel_to_bottom(self, channel, treedepth):
 		# treedepth is the depth into the channel tree, thus it is proportional to the x coordinate.
