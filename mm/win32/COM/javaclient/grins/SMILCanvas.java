@@ -4,6 +4,10 @@ package grins;
 import java.awt.*;
 import java.awt.event.*;
 
+ /**
+ *   Represents a top level window in SMIL 2.
+ *   A SMILCanvas implements the needed support for rendering and SMIL 2 mouse events.
+ */
 public class SMILCanvas extends Canvas 
     implements MouseListener, MouseMotionListener 
 {
