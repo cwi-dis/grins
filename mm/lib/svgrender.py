@@ -13,6 +13,10 @@ class SVGRenderer:
 	animateEl = ['animate', 'set', 'animateMotion', 'animateColor', 'animateTransform']
 	filter = ['#comment', 'style', 'defs'] + animateEl
 	def __init__(self, svgdoc, svggraphics):
+		self.reset(svgdoc, svggraphics)
+		self._verbose = 0
+
+	def reset(self, svgdoc, svggraphics):
 		self.svgdoc = svgdoc
 
 		# svg graphics object
@@ -26,11 +30,9 @@ class SVGRenderer:
 		self.regions = []
 		self.node2rgn = {}
 
-		#
-		self._verbose = 0
-
 	def __del__(self):
-		self.delAnchors()
+		#self.delAnchors()
+		pass
 
 	def getFilter(self): return SVGRenderer.filter
 	def getWidth(self): return self._renderbox[2]
