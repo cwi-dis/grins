@@ -37,7 +37,7 @@ class RTParser(xmllib.XMLParser):
 		'p': {},
 		'br': {},
 		'ol': {},
-		'ul': [],
+		'ul': {},
 		'li': {},
 		'hr': {},
 		'center': {},
