@@ -87,3 +87,5 @@ showquestion = mw_dialogs.showquestion
 beep = mw_toplevel.beep
 
 textwindow = mw_textwindow.textwindow
+htmlwindow = mw_textwindow.htmlwindow
+
