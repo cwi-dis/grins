@@ -42,11 +42,18 @@ class _Splash:
 			data = f.read()
 			f.close()
 		else:
-			import imgppm
-			try:
-				rdr = imgppm.reader(file + '.ppm')
-			except IOError:
-				return 0
+			if 0:
+				import imgsgi
+				try:
+					rdr = imgsgi.reader(file + '.rgb')
+				except IOError:
+					return 0
+			else:
+				import imgppm
+				try:
+					rdr = imgppm.reader(file + '.ppm')
+				except IOError:
+					return 0
 			import imgformat
 			rdr.format = imgformat.rgb
 			data = rdr.read()
@@ -189,7 +196,8 @@ class _Splash:
 						  'depth': visual.depth,
 						  'colormap': cmap,
 						  'mappedWhenManaged': X.FALSE,
-						  'input': X.TRUE})
+						  'input': X.TRUE,
+						  'x': 500, 'y': 500})
 		self.main = main
 
 	def expose(self, w, (func, args), call_data):
