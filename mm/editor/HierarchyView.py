@@ -385,7 +385,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Enable "paste" commands depending on what is in the clipboard.
 		t, n = self.editmgr.getclip()
-		if t == 'node' or t == 'multinode' and n is not None:
+		if t in ('node', 'multinode') and n is not None:
 			if fntype in MMNode.interiortypes:
 				# can only paste inside interior nodes
 				commands = commands + self.pasteinteriorcommands
@@ -1038,7 +1038,7 @@ class HierarchyView(HierarchyViewDialog):
 		context.editmgr.setclip('properties', newnode, owned=1)
 
 	def pastepropertiescall(self):
-		nodes = self.get_multi_nodes()
+		nodes = self.get_selected_nodes()
 		assert(nodes)
 		em = self.root.context.editmgr
 		tp, clipnode = em.getclip()
@@ -1073,7 +1073,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return 0
 
-		if self.migrate_focus(nodes):	# move the focus before we delete it.
+		if not self.migrate_focus(nodes):	# move the focus before we delete it.
 			return 0
 
 		if not self.editmgr.transaction():
@@ -1081,9 +1081,14 @@ class HierarchyView(HierarchyViewDialog):
 
 		for n in nodes:
 			self.editmgr.delnode(n)
-			self.fixsyncarcs(self.root, nodes)
+		self.fixsyncarcs(self.root, nodes)
+		if len(nodes) == 0:
+			self.editmgr.setclip('', None)
+		elif len(nodes) == 1:
+			self.editmgr.setclip('node', nodes[0])
+		else:
+			self.editmgr.setclip('multinode', nodes)
 		self.editmgr.commit()
-		self.editmgr.setclip('multinode', nodes)
 	
 		
 	######################################################################
@@ -1494,7 +1499,7 @@ class HierarchyView(HierarchyViewDialog):
 			if node.context is not self.root.context:
 				node = node.CopyIntoContext(self.root.context)
 			self.insertnode(node, where)
-		if type == 'multinode':
+		elif type == 'multinode':
 			if not self.editmgr.transaction():
 				return
 			for n in node:	# I can't use insertnode because I need to access the editmanager.
