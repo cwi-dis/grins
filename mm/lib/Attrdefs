@@ -118,6 +118,12 @@
 (file (string) '' 'URL' file
 	'URL for the data of this node' normal (g2 qt smil10 smil2 cmif snap))
 
+(thumbnail_icon (string) '' 'Thumbnail URL' file
+	'URL for a thumbnail image of this node' normal (g2 qt smil10 smil2 cmif snap))
+
+(thumbnail_scale (bool) 1 'Scale thumbnail' default
+	'Determines whether thumbnail images can be scaled' inherited (g2 qt smil10 smil2 cmif snap))
+
 # valid values: freeze, remove, hold, transition
 # default depends on other attributes
 (fill (enum default auto remove freeze transition hold) default 'Fill' fill
