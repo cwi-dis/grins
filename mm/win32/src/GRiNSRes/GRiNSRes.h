@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by GRiNSRes.rc
 //
+#define IDC_REPLACEALL                  3
 #define IDS_ABOUTBOX                    101
 #define IDD_GRINSEDBAR                  194
 #define IDC_POINT_HAND                  195
@@ -234,7 +235,9 @@
 #define IDD_EDITATTR_VIEWPORTNAME       426
 #define IDD_SELECT_MULTI                427
 #define IDI_DANGLINGEVENT               428
+#define IDD_FIND                        428
 #define IDI_DANGLINGANCHOR              429
+#define IDD_REPLACE                     429
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -643,6 +646,12 @@
 #define IDC_REGIONNAMEV                 1435
 #define IDC_TOPLAYOUTIDV                1435
 #define IDC_REPEATLABEL                 1436
+#define IDC_FINDNEXT                    1438
+#define IDC_MATCHWHOLE                  1439
+#define IDC_MATCHCASE                   1440
+#define IDC_REPLACEWITH                 1441
+#define IDC_REPLACE                     1442
+#define IDC_FINDWHAT                    1443
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -738,7 +747,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        430
 #define _APS_NEXT_COMMAND_VALUE         32886
-#define _APS_NEXT_CONTROL_VALUE         1437
+#define _APS_NEXT_CONTROL_VALUE         1444
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
