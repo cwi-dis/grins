@@ -820,7 +820,10 @@ class SubWindow(Window):
 		if html: obj = win32ui.CreateHtmlWnd()
 		else: obj = win32ui.CreateWnd()
 		wnd = window.Wnd(obj)
-		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
+		color = self._bgcolor
+		if not color:
+			color = 0, 0, 0
+		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(color),0)
 		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
 		icon=0
 		clstyle=win32con.CS_DBLCLKS
@@ -1116,6 +1119,12 @@ class SubWindow(Window):
 			dc.SetWindowOrg((x0,y0))
 			dc.Detach()
 			dds.ReleaseDC(hdc)
+			
+			# if we have an os-subwindow invalidate its area
+			# but do not update it since we want this to happen
+			# after the surfaces flipping
+			if self._oswnd:
+				self._oswnd.InvalidateRect(self._oswnd.GetClientRect())
 
 		elif self._transparent == 0:
 			if self._convbgcolor == None:
