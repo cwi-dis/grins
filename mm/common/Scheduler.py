@@ -184,7 +184,6 @@ class SchedulerContext:
 			list = []
 			if arc.dstnode.isresolved(self) is None:
 ##			if not node.checkendlist(self, timestamp):
-				print arc
 				# we didn't find a time interval
 				if debugevents: print 'sched_arc: not allowed to start',arc,self.parent.timefunc()
 				if external:
@@ -356,6 +355,17 @@ class SchedulerContext:
 						break
 			self.sched_arc(node, arc, event, marker, timestamp+atime, depth)
 			arc.__in_sched_arcs = 0
+		if event == 'begin':
+			# also do children that are runnable
+			for child in node.GetSchedChildren():
+				for arc in child.FilterArcList(child.GetBeginList()):
+					if arc.qid is None and arc.isresolved(self):
+						t = child.isresolved(self)
+						if t is not None:
+							if debugevents: print 'sched_arcs: also do',arc,timestamp,t
+							arc.__in_sched_arcs = 1	# to break recursion
+							self.sched_arc(node, arc, event, None, t-arc.delay, depth)
+							arc.__in_sched_arcs = 0
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 		if external:
 			self.parent.updatetimer()
@@ -521,6 +531,9 @@ class SchedulerContext:
 				else:
 					self.do_terminate(node, timestamp, fill = node.GetFill())
 					self.flushqueue()
+				for a in node.FilterArcList(node.GetBeginList()):
+					if a.isresolved(self) and a.resolvedtime(self) >= timestamp:
+						self.sched_arc(node, arc, event='begin', timestamp=timestamp)
 				parent.updatetimer()
 				return
 		# the node should start, but we need to do some more checks
@@ -708,11 +721,6 @@ class SchedulerContext:
 		node.set_start_time(timestamp)
 		if runchild:
 			parent.event(self, (SR.SCHED, node), timestamp)
-			for child in node.GetSchedChildren():
-				for a in child.FilterArcList(child.GetBeginList()):
-					if a.qid is None and a.isresolved(self) and child.isresolved(self) is not None:
-						a.qid = parent.enterabs(a.resolvedtime(self), 0, self.trigger, (a,None,None,timestamp))
-						self.sched_arcs(child, 'begin', timestamp = a.resolvedtime(self))
 		else:
 			if debugevents: print 'trigger, no run',parent.timefunc()
 			node.startplay(timestamp)
@@ -740,6 +748,9 @@ class SchedulerContext:
 		else:
 			if debugevents: print 'scheduled_children-1 j',`arc.dstnode`,`arc`,arc.dstnode.scheduled_children,self.parent.timefunc()
 			arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
+			pnode = arc.dstnode.GetSchedParent()
+			if pnode is not None:
+				pnode.starting_children = pnode.starting_children - 1
 		arc.qid = None
 		for nd, ev in arc.depends:
 			try:
@@ -1425,7 +1436,7 @@ class Scheduler(scheduler):
 				if debugevents: print 'not stopping',`arg`,arg.scheduled_children,self.timefunc()
 				return
 			if arg.starting_children > 0 and arg.GetTerminator() == 'LAST':
-				if debugevents: print 'not stopping (scheduled children)',`arg`,arg.scheduled_children,self.timefunc()
+				if debugevents: print 'not stopping (scheduled children)',`arg`,arg.starting_children,self.timefunc()
 				return
 			if arg.type in interiortypes and \
 			   arg.playing != MMStates.PLAYED and \
