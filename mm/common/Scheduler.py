@@ -702,6 +702,8 @@ class SchedulerContext:
 		elif pnode.type == 'seq':
 			# parent is seq, must terminate running child first
 			if debugevents: print 'terminating siblings',parent.timefunc()
+			srdict = pnode.gensr_child(node, runchild = 0, curtime = self.parent.timefunc())
+			self.srdict.update(srdict)
 			for c in pnode.GetSchedChildren():
 				# don't have to terminate it again
 				if c is not node and c.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
@@ -846,6 +848,7 @@ class SchedulerContext:
 	def cancel_gensr(self, node):
 		# cancel the SCHED_DONE that was added by gensr_child()
 		# but only if the node never played
+		if debugevents: print 'cancel_gensr',`node`
 		ev = (SR.SCHED_DONE, node)
 		if node.playing == MMStates.IDLE and \
 		   self.srdict.has_key(ev):
@@ -855,6 +858,7 @@ class SchedulerContext:
 					continue
 				if ev in numac[1]:
 					return
+			if debugevents: print 'canceling SCHED_DONE',`node`
 			srdict = self.srdict[ev]
 			val = srdict[ev]
 			del self.srdict[ev]
