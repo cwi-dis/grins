@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 from AssetsViewDialog import AssetsViewDialog
+from ViewDialog import ViewDialog
 from usercmd import *
 import MMNode
 from MMTypes import *
@@ -11,7 +12,7 @@ import string
 import usercmd
 import windowinterface
 
-class AssetsView(AssetsViewDialog):
+class AssetsView(AssetsViewDialog, ViewDialog):
 	COLUMNLIST={
 		'all':[
 			('left', 120, 'Name'),
