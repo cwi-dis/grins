@@ -16,7 +16,7 @@ class _CommandSupport:
 	def close(self):
 		del self.__commandlist
 		del self.__commanddict
-		del self.__widgetmap
+		self.__widgetmap = {}
 		del self.__accelmap
 		del self.__togglelables
 		del self.__delete_commands
@@ -78,6 +78,11 @@ class _CommandSupport:
 			apply(apply, callback)
 			toplevel.setready()
 
+	def __remove(self, widget, client_data, call_data):
+		for list in self.__widgetmap.values():
+			if widget in list:
+				list.remove(widget)
+
 	def _set_callback(self, widget, callbacktype, callback):
 		if callbacktype:
 			widget.AddCallback(callbacktype, self.__callback,
@@ -86,7 +91,7 @@ class _CommandSupport:
 			if not self.__widgetmap.has_key(callback):
 				self.__widgetmap[callback] = []
 			self.__widgetmap[callback].append(widget)
-			
+			widget.AddCallback('destroyCallback', self.__remove, None)
 			if self.__commanddict.has_key(callback):
 				# Currently enabled. Add a tooltip
 				widget.SetSensitive(1)
@@ -129,7 +134,3 @@ class _CommandSupport:
 			if not self.__accelmap.has_key(c):
 				self.__accelmap[c] = []
 			self.__accelmap[c].append(key)
-
-	def _remove_widgets(self, list):
-		for callback, widget in list:
-			self.__widgetmap[callback].remove(widget)
