@@ -173,7 +173,7 @@ class Node:
 	def replaceChild(self, newChild, oldChild): 
 		self.insertBefore(newChild, oldChild)	# insert before oldChild
 		self.removeChild(oldChild)		# remove oldChild
-		return newChild
+		return oldChild
 				
 	def removeChild(self, oldChild): return None
 
