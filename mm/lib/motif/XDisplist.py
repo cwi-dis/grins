@@ -26,7 +26,8 @@ _iconmap = {
 	}
 
 class _DisplayList:
-	def __init__(self, window, bgcolor):
+	def __init__(self, window, bgcolor, units):
+		self.__units = units
 		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
@@ -433,9 +434,11 @@ class _DisplayList:
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
-				    clip = None, units = UNIT_SCREEN):
+				    clip = None, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
 		       w._prepare_image(file, crop, scale, center, coordinates, units)
@@ -456,32 +459,40 @@ class _DisplayList:
 			return float(dest_x) / w, float(dest_y) / h, \
 			       float(width) / w, float(height) / h
 
-	def drawline(self, color, points, units = UNIT_SCREEN):
+	def drawline(self, color, points, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
 		self._list.append(('line', color, self._linewidth, units,
 				   points[:]))
 		self._optimize((1,))
 
-	def draw3dhline(self, color1, color2, x0, x1, y, units = UNIT_SCREEN):
+	def draw3dhline(self, color1, color2, x0, x1, y, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		self._list.append(('3dhline', color1, color2, x0, x1, y, units))
 		self._optimize((1,))
 
-	def drawbox(self, coordinates, clip = None, units = UNIT_SCREEN):
+	def drawbox(self, coordinates, clip = None, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if self._fgcolor is None:
 			raise error, 'no fgcolor'
+		if units is None:
+			units = self.__units
 		self._list.append(('box', self._fgcolor, self._linewidth,
 				   coordinates, clip, units))
 		self._optimize((1,))
 
-	def drawfbox(self, color, coordinates, units = UNIT_SCREEN):
+	def drawfbox(self, color, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
 		self._list.append(('fbox', color, coordinates, units))
 		box = w._convert_coordinates(coordinates, units = units)
@@ -490,9 +501,11 @@ class _DisplayList:
 						    box[2], box[3])
 		self._optimize((1,))
 
-	def drawmarker(self, color, coordinates, units = UNIT_SCREEN):
+	def drawmarker(self, color, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
 		self._list.append(('marker', color, coordinates, units))
 
@@ -516,13 +529,17 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		return self.usefont(findfont(fontname, 10))
 
-	def baseline(self, units = UNIT_SCREEN):
+	def baseline(self, units = None):
+		if units is None:
+			units = self.__units
 		baseline = self._font.baselinePXL()
 		if units == UNIT_PXL:
 			return baseline
 		return self._window._pxl2rel((0,0,0,baseline))[3]
 
-	def fontheight(self, units = UNIT_SCREEN):
+	def fontheight(self, units = None):
+		if units is None:
+			units = self.__units
 		fontheight = self._font.fontheightPXL()
 		if units == UNIT_PXL:
 			return fontheight
@@ -531,7 +548,9 @@ class _DisplayList:
 	def pointsize(self):
 		return self._font.pointsize()
 
-	def strsize(self, str, units = UNIT_SCREEN):
+	def strsize(self, str, units = None):
+		if units is None:
+			units = self.__units
 		width, height = self._font.strsizePXL(str)
 		if units == UNIT_PXL:
 			return width, height
@@ -599,9 +618,11 @@ class _DisplayList:
 			self.setpos(x, y)
 			self.writestr(str)
 
-	def drawfpolygon(self, color, points, units = UNIT_SCREEN):
+	def drawfpolygon(self, color, points, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
 		self._list.append(('fpolygon', color, points, units))
 		x0, y0 = w._rect[:2]
@@ -613,26 +634,32 @@ class _DisplayList:
 		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
-	def draw3dbox(self, cl, ct, cr, cb, coordinates, units = UNIT_SCREEN):
+	def draw3dbox(self, cl, ct, cr, cb, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		window = self._window
 		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
-	def drawdiamond(self, coordinates, units = UNIT_SCREEN):
+	def drawdiamond(self, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if self._fgcolor is None:
 			raise error, 'no fgcolor'
+		if units is None:
+			units = self.__units
 		self._list.append(('diamond',
 				   self._fgcolor,
 				   self._linewidth, coordinates, units))
 		self._optimize((1,))
 
-	def drawfdiamond(self, color, coordinates, units = UNIT_SCREEN):
+	def drawfdiamond(self, color, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		window = self._window
 		x, y, w, h = coordinates
 		if w < 0:
@@ -652,15 +679,19 @@ class _DisplayList:
 		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
-	def draw3ddiamond(self, cl, ct, cr, cb, coordinates, units = UNIT_SCREEN):
+	def draw3ddiamond(self, cl, ct, cr, cb, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
-	def drawicon(self, coordinates, icon, units = UNIT_SCREEN):
+	def drawicon(self, coordinates, icon, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		# Icon names needed:
 		# '' is special: don't draw any icon (needed for removing icons in optimize)
 		# 'closed' used for closed structure nodes
@@ -685,6 +716,8 @@ class _DisplayList:
 		self._optimize((2,))
 		
 	def _convert_arrow(self, src, dst, units):
+		if units is None:
+			units = self.__units
 		window = self._window
 		if not window._arrowcache.has_key((src,dst)):
 			sx, sy = src
@@ -718,9 +751,11 @@ class _DisplayList:
 			window._arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		return window._arrowcache[(src,dst)]
 
-	def drawarrow(self, color, src, dst, units = UNIT_SCREEN):
+	def drawarrow(self, color, src, dst, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		window = self._window
 		self._list.append(('arrow', color, self._linewidth, src, dst, units))
 		self._optimize((1,))

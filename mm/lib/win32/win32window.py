@@ -80,11 +80,11 @@ class Window:
 		self._bgcolor = r, g, b
 		self._convbgcolor = None
 
-	def newdisplaylist(self, bgcolor = None):
+	def newdisplaylist(self, bgcolor = None, units=UNIT_SCREEN):
 		if bgcolor is None:
 			if not self._transparent:
 				bgcolor = self._bgcolor
-		return _DisplayList(self, bgcolor)
+		return _DisplayList(self, bgcolor, units)
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
@@ -549,7 +549,7 @@ class Window:
 	# 3. if center then do the obvious
 	# 4. coordinates specify placement rect
 	# 5. clip specifies the src rect
-	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
+	def _prepare_image(self, file, crop, scale, center, coordinates, clip, units):
 		
 		# get image size. If it can't be found in the cash read it.
 		xsize, ysize = self._image_size(file)
@@ -571,7 +571,7 @@ class Window:
 		if coordinates is None:
 			x, y, width, height = self._canvas
 		else:
-			x, y, width, height = self._convert_coordinates(coordinates,self._canvas)
+			x, y, width, height = self._convert_coordinates(coordinates,self._canvas, units=units)
 		
 		# compute scale taking into account the hint (0,-1,-2)
 		if scale == 0:
