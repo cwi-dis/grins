@@ -56,6 +56,7 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.__currViewport = None
 		self.ch2style = {}
+		self.ids_written = {}
 		
 
 	def writeAsHtmlTime(self):
@@ -163,6 +164,11 @@ class SMILHtmlTimeWriter(SMIL):
 
 	def writenode(self, x, root = 0):
 		type = x.GetType()
+
+		if type=='imm' and x.GetChannelType()=='animate':
+			self.writeanimatenode(x, root)
+			return
+
 		interior = (type in interiortypes)
 		if interior:
 			if type == 'alt':
@@ -180,6 +186,7 @@ class SMILHtmlTimeWriter(SMIL):
 		attrlist = []
 		regionName = None
 		src = None
+		nodeid = None
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
@@ -208,8 +215,12 @@ class SMILHtmlTimeWriter(SMIL):
 			# legal for the type of node
 			# other attributes are caught below
 			if value and attributes.has_key(name) and value != attributes[name]:
-				if name == 'region': regionName = value
-				elif name == 'src': src = value
+				if name == 'region': 
+					regionName = value
+				elif name == 'src': 
+					src = value
+				elif name == 'id':
+					self.ids_written[value] = 1
 				if name not in ('top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src'):
 					attrlist.append((name, value))
 		
@@ -271,9 +282,12 @@ class SMILHtmlTimeWriter(SMIL):
 		for lch in parents:
 			divlist = []
 			if self.ch2style.has_key(lch):
+				name = self.ch2name[lch]
+				divlist.append(('id', name))
 				divlist.append(('style', self.ch2style[lch]))
 				self.writetag('div', divlist)
 				self.push()
+				self.ids_written[name] = 1
 				pushed = pushed + 1
 
 		geoms = x.getPxGeomMedia()
@@ -292,6 +306,66 @@ class SMILHtmlTimeWriter(SMIL):
 
 		for i in range(pushed):
 			self.pop()
+
+	def writeEmptyRegion(self, regionName):
+		parents = []
+		viewport = None
+		lch = self.root.GetContext().getchannel(regionName)
+		while lch:
+			if lch.get('type') != 'layout':
+				continue
+			if lch in self.top_levels:
+				viewport = lch
+				break
+			parents.insert(0, lch)
+			lch = lch.__parent
+		
+		pushed = 0
+		if viewport and self.__currViewport!=viewport:
+			if self.__currViewport:
+				self.pop()
+			name = self.ch2name[viewport]
+			self.ids_written[name] = 1
+			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
+			self.push()
+			self.__currViewport = viewport
+
+		for lch in parents:
+			divlist = []
+			if self.ch2style.has_key(lch):
+				name = self.ch2name[lch]
+				divlist.append(('id', name))
+				divlist.append(('style', self.ch2style[lch]))
+				self.writetag('div', divlist)
+				self.ids_written[name] = 1
+				self.push()
+				pushed = pushed + 1
+
+		for i in range(pushed):
+			self.pop()
+
+	def writeanimatenode(self, node, root):
+		attrlist = []
+		targetElement = None
+		tag = node.GetAttrDict().get('tag')
+		attributes = self.attributes.get(tag, {})
+		for name, func in smil_attrs:
+			if attributes.has_key(name):
+				value = func(self, node)
+				if name == 'targetElement':
+					targetElement = value
+				if value and value != attributes[name]:
+					attrlist.append((name, value))
+
+		if not self.ids_written.has_key(targetElement):
+			self.writeTargetElement(targetElement)
+		self.writetag('t:'+tag, attrlist)
+
+	def writeTargetElement(self, uid):
+		lch = self.root.GetContext().getchannel(uid)
+		if lch:
+			self.writeEmptyRegion(uid)
+			
 
 	def writelayout(self):
 		x = xmargin = 20
