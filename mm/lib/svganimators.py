@@ -508,6 +508,7 @@ class MotionAnimator(Animator):
 		self._totlen = self._path.getLength()
 		self._time2length = 1
 		self._currlen = 0
+		self._currangle = 0
 		self.tftype = 'translate'
 		self.rotate = dict.get('rotate')
 		dict['values'] = self._path.getLengthValues()
@@ -548,7 +549,12 @@ class MotionAnimator(Animator):
 			if self.rotate in ('auto', 'auto-reverse'):
 				zp = self._path.getPointAtLength(self._currlen+0.01*self._totlen)
 				xp, yp = zp.real, zp.imag
-				angle = math.atan((yp-y)/(xp-x))
+				if math.fabs(xp-x)>0.0000001:
+					angle = math.atan((yp-y)/(xp-x))
+				else:
+					if self._currangle>0: angle =  0.5*math.pi
+					else: angle =  -0.5*math.pi
+				self._currangle = angle
 				if self.rotate == 'auto-reverse':
 					angle = angle + math.pi
 				return [(self.tftype, [x, y,]), ('rotate', [angle,])]  
