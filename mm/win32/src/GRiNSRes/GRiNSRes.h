@@ -105,7 +105,6 @@
 #define IDD_EDITATTR_P4                 349
 #define IDD_EDITATTR_R24                350
 #define IDD_EDITATTR_MF1                351
-#define IDD_EDITATTR_WF1                352
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
