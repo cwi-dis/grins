@@ -1726,8 +1726,8 @@ class Region(Window):
 		while bf.IsLost():
 			win32api.Sleep(50)
 			bf.Restore()
-		x, y, w, h = self.getwindowpos()
-		self._topwindow.paint(exclwnd=exclwnd)
+		rc = x, y, w, h = self.getwindowpos()
+		self._topwindow.paint(rc, exclwnd=exclwnd)
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
