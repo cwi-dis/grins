@@ -177,3 +177,6 @@ class UsergroupEdit(UsergroupEditDialog):
 	def ok_callback(self):
 		if self.do_apply():
 			self.close()
+
+	def getparent(self):
+		return self.__parent
