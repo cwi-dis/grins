@@ -520,19 +520,19 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
+		      commandlist = None, resizable = 1, bgcolor = None):
 		if adornments.has_key('view'):strid=adornments['view']
 		else:  raise "undefined view request"
 		if strid=='pview_':
 			if adornments.has_key('show') and adornments['show']=='fullscreen':
 				if not self.__fsPlayer:
-					self.__fsPlayer = self.newFSPlayer(self)
-				return self.__fsPlayer.newviewport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
-		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
+					self.__fsPlayer = self.newFSPlayer(self, bgcolor)
+				return self.__fsPlayer.newviewport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid,bgcolor)
+		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
 
-	def newFSPlayer(self, frame):
+	def newFSPlayer(self, frame, bgcolor):
 		from _FSPlayerView import _FSPlayerView
-		fsp = _FSPlayerView(frame)
+		fsp = _FSPlayerView(frame, bgcolor)
 		desktop = Sdk.GetDesktopWindow()
 		dc = desktop.GetDC();
 		width = dc.GetDeviceCaps(win32con.HORZRES)
@@ -1158,10 +1158,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 
 	# Create and initialize a new view object 
 	# Keep instance of player
-	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
+	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
-		view=viewclass(self.getdoc())
+		view=viewclass(self.getdoc(), bgcolor)
 		self.add_common_interface(view,viewno)
 		if not x or x<0: x=0
 		if not y or y<0: y=0
@@ -1173,7 +1173,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 			rc=(x,y,x+w+dw,y+h+dh)
 		f=ChildFrame(view)
 		f.Create(title,rc,self,0)
-		view.init(rc,title,units,adornments,canvassize,commandlist)
+		view.init(rc,title,units,adornments,canvassize,commandlist,bgcolor)
 		self.MDIActivate(f)
 #		if IsPlayer:
 #			self.RecalcLayout()

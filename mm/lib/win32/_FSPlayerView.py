@@ -36,10 +36,10 @@ import win32window
 # formal name: ViewportWndContainer
 
 class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
-	def __init__ (self, frame):
+	def __init__ (self, frame, bgcolor):
 		self._frame = frame
 		window.Wnd.__init__(self,win32ui.CreateWnd())
-		win32window.DDWndLayer.__init__(self, self)
+		win32window.DDWndLayer.__init__(self, self, bgcolor)
 		self._viewports = []
 		self._curcursor = ''
 
@@ -200,20 +200,21 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 		pt=msg.pos()
 		self._frame.PostMessage(win32con.WM_COMMAND, self._frame.GetUserCmdId(usercmd.PLAY))
 
-	def newviewport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_'):
-		return ViewportWnd(self, (x, y, w, h), title)
+	def newviewport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
+		return ViewportWnd(self, (x, y, w, h), title, bgcolor)
 
 
 ############################################
 # meta smil class
 # each ViewportWnd contains one smil20 viewport
 class ViewportWnd:
-	def __init__(self, ctx, rc, title, bgcolor=(0,0,0)):
+	def __init__(self, ctx, rc, title, bgcolor=None):
 		self._ctx = ctx
 		self.CreateSurface = ctx.CreateSurface
 		self._dh = dh = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
 		self._dw = dw = 2
 		x, y, w, h = rc
+		if not bgcolor: bgcolor = (0,0,0)
 		self._viewport = win32window.Viewport(self, dw/2, dh, w, h, bgcolor)
 
 		self._title = title

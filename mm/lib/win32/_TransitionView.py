@@ -38,7 +38,7 @@ import grinsRC
 from GenFormView import GenFormView
 
 class _TransitionView(GenFormView):
-	def __init__(self,doc):
+	def __init__(self,doc,bgcolor=None):
 		GenFormView.__init__(self,doc,grinsRC.IDD_USERGROUP)	
 		self['Groups']=components.ListBox(self,grinsRC.IDC_GROUPS)
 		self['New']=components.Button(self,grinsRC.IDCMD_NEW_GROUP)

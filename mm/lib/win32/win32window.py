@@ -756,12 +756,13 @@ class Window:
 
 #################################################
 class DDWndLayer:
-	def __init__(self, wnd):
+	def __init__(self, wnd, bgcolor = None):
 		self._wnd = wnd
 		self._ddraw = None
 		self._frontBuffer = None
 		self._backBuffer = None
 		self._clipper = None
+		self._bgcolor = bgcolor
 
 	def	createDDLayer(self):
 		self._ddraw = ddraw.CreateDirectDraw()
@@ -794,7 +795,7 @@ class DDWndLayer:
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
 
 		# fill back buffer with default player background (white)
-		ddcolor = self._backBuffer.GetColorMatch((255,255,255))
+		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
 
 

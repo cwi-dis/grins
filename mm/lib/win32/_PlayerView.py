@@ -11,7 +11,7 @@ import win32window
 from _CmifView import _CmifView
 
 class _PlayerView(_CmifView, win32window.DDWndLayer):
-	def __init__(self,doc):
+	def __init__(self,doc,bgcolor=None):
 		_CmifView.__init__(self,doc)
 		self._canclose=1
 		self._tid=None
@@ -19,7 +19,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 
 		self._usesLightSubWindows = 1
 
-		win32window.DDWndLayer.__init__(self, self)
+		win32window.DDWndLayer.__init__(self, self, bgcolor)
 
 		self._viewport = None
 

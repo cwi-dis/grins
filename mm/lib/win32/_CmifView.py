@@ -10,14 +10,12 @@ _CmifPlayerView a specialization of _CmifView for limiting 'if' programming
 The _CmifView is used for toplevel childs of
 the MainFrame that have a display list.
 The HierarchyView, the Timeline view and the
-Toplevel Layout channels are alias to _CmifView
-(see ViewServer.py)
+Toplevel Layout channels are alias to _CmifView (see ViewServer.py)
 
 The _SubWindow class is used solely for window channels
 
-Both classes inherit from _CmifWnd
-(see cmifwnd.py for the functionality this mixin 
-class has to offer)
+Both classes inherit from _CmifWnd (see cmifwnd.py for the
+functionality this mixin class has to offer)
 
 """
 
@@ -770,14 +768,14 @@ class _CmifPlayerView(_CmifView):
 # Specialization of _CmifView for smooth drawing	
 class _CmifStructView(_CmifView):
 	# Class contructor. initializes base classes
-	def __init__(self,doc):
+	def __init__(self,doc,bgcolor=None):
 		_CmifView.__init__(self,doc)
 
 		# shortcut for GRiNS private clipboard format
 		self.CF_NODE=self.getClipboardFormat('Node')
 
 		# enable or dissable node drag and drop
-		self._enableNodeDragDrop=0
+		self._enableNodeDragDrop=1
 			
 		if self._enableNodeDragDrop:
 			self._dropmap['Node']=(self.dragnode,self.dropnode)

@@ -144,14 +144,14 @@ class _Toplevel:
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
+		      commandlist = None, resizable = 1, bgcolor = None):
 		frame = adornments.get('frame')
 		if frame is None:
 			raise 'error', 'newwindow without frame specification'
 		wnd = frame.newwindow(x, y, w, h, title, visible_channel,
 		      type_channel, pixmap, units,
 		      adornments, canvassize,
-		      commandlist, resizable)
+		      commandlist, resizable, bgcolor)
 		if hasattr(wnd, '_viewport'):
 			return wnd._viewport
 		return wnd
