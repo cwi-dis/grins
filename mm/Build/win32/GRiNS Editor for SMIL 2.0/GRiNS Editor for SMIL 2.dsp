@@ -417,6 +417,10 @@ SOURCE=.\M_flags.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_fmtfloat.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_fnmatch.c
 # End Source File
 # Begin Source File
@@ -1121,6 +1125,10 @@ SOURCE=.\M_StructureWidgets.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_svganimators.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_SVGChannel.c
 # End Source File
 # Begin Source File
@@ -1146,6 +1154,10 @@ SOURCE=.\M_svgpath.c
 # Begin Source File
 
 SOURCE=.\M_svgrender.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_svgtime.c
 # End Source File
 # Begin Source File
 
