@@ -66,6 +66,11 @@ class PanelMixin:
 			cmdui.Enable(1)
 			cmdui.SetCheck(self._pbar.IsWindowVisible())
 	
+	def assertPanelVisible(self):
+		if self._pbar:
+			if not self._pbar.IsWindowVisible():
+				self._pbar.show()
+
 	def destroy(self):
 		if self._pbar:
 			self._pbar.DestroyWindow()
