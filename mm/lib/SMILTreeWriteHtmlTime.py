@@ -19,36 +19,85 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 #	XHTML+TIME DTD 
 # 
 class XHTML_TIME:
+
+	__Core = {'class':None,
+		'id':None,
+	}
+
 	__basicTiming = {'begin':None,
-			 'dur':None,
-			 'end':None,
-			 'repeatCount':None,
-			 'repeatDur':None,
-			 }
+		'dur':None,
+		'end':None,
+		'repeatCount':None,
+		'repeatDur':None,
+	}
+
+
 	__Timing = {'restart':None,
-		    'syncBehavior':None,
-		    'syncMaster':None,
-		    }
+		'syncBehavior':None,
+		'syncMaster':None,
+		'timeAction':'visibility'
+	}
+	__Timing.update(__basicTiming)
+
+
 	__TimeManipulators = {'speed':None,
 		    'accelerate':None,
 		    'decelerate':None,
 		    'autoReverse':None,
-		    }
-	attributes = {
-		'animate': {},
-		'animateColor': {},
-		'animateMotion': {},
-		'audio': {},
-		'excl': {},
-		'img': {},
-		'media': {},
-		'par': {},
-		'priorityClass': {},
-		'ref': {},
-		'seq': {},
-		'set': {},
-		'video': {},
 	}
+
+	__Media = {'abstract':'',
+		'author':'',
+		'copyright':'',
+		'title': '',
+		'clipBegin':None,
+		'clipEnd':None,
+		'fill':None,
+		'src':None,
+		'type':None,
+		'player':None,
+		'mute':'false',
+		'volume':'1.0',
+	}
+
+	__animate_attrs_core = {'attributeName':None,
+				'attributeType':None,
+				'autoReverse':'false',
+				'fill':None,
+				'targetElement': None,
+				'to':None,
+				}
+
+	__animate_attrs_extra = {'accumulate':'none',
+				 'additive':'replace',
+				 'by':None,
+				 'calcMode':'linear',
+				 'from':None,
+				 'keySplines':None,
+				 'keyTimes':None,
+				 'values':None,
+				 }
+
+	# Elements
+
+	__media_object = ['audio', 'video', 'img', 'animation', 'media', 'ref']
+
+	__animate_elements = ['animate', 'animateMotion', 'animateColor', 'set']
+
+	__containers = ['par', 'seq', 'excl', 'priorityClass', ]
+
+
+
+	#
+	__allElements = __media_object + __animate_elements + __containers
+
+
+# scripting support
+
+# begin = sTime | end = sTime
+# sTime: clock-value | id.begin[+clock-value] | id.event[+clock-value] | indefinite
+
+# timeParent
 
 
 #
@@ -103,6 +152,8 @@ class SMILHtmlTimeWriter(SMIL):
 		self.__stack = []
 
 		self.__currViewport = None
+		self.__currRegion = None
+
 		self.ch2style = {}
 		self.ids_written = {}
 		
@@ -163,17 +214,6 @@ class SMILHtmlTimeWriter(SMIL):
 			self.writenode(self.root, root = 1)
 			
 		self.close()
-
-	def writefd(self):
-		fulldur = self.root.calcfullduration()
-		if fulldur is not None:
-			if fulldur<0:
-				fulldur = 'indefinite'
-			else:
-				fulldur = '%ds' % fulldur
-			self.writetag('div', [('class', 'time'), ('dur', fulldur)])
-		else:
-			self.writetag('div', [('class', 'time')])
 
 	def push(self):
 		if self.__isopen:
@@ -286,6 +326,9 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		if interior:
 			if not root:
+				if self.__currRegion!=None:
+					self.pop()
+					self.__currRegion=None
 				self.writetag('t:'+mtype, attrlist)
 				self.push()
 			for child in x.GetChildren():
@@ -322,36 +365,45 @@ class SMILHtmlTimeWriter(SMIL):
 
 		parents = []
 		viewport = None
-		lch = self.root.GetContext().getchannel(regionName)
-		while lch:
-			if lch.get('type') != 'layout':
-				continue
-			if lch in self.top_levels:
-				viewport = lch
-				break
-			parents.insert(0, lch)
-			lch = lch.__parent
-		
 		pushed = 0
-		if viewport and self.__currViewport!=viewport:
-			if self.__currViewport:
+	
+		lch = self.root.GetContext().getchannel(regionName)
+		assert(lch.get('type') == 'layout')
+
+		# 
+		if self.__currRegion==None or self.__currRegion!=lch:
+			if self.__currRegion!=None:
 				self.pop()
-			name = self.ch2name[viewport]
-			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
-			self.push()
-			self.__currViewport = viewport
-
-		for lch in parents:
-			divlist = []
-			if self.ch2style.has_key(lch):
-				name = self.ch2name[lch]
-				divlist.append(('id', name))
-				divlist.append(('style', self.ch2style[lch]))
-				self.writetag('div', divlist)
+			self.__currRegion = lch
+			while lch:
+				if lch.get('type') != 'layout':
+					continue
+				if lch in self.top_levels:
+					viewport = lch
+					break
+				parents.insert(0, lch)
+				lch = lch.__parent
+		
+			if viewport and self.__currViewport!=viewport:
+				if self.__currViewport:
+					self.pop()
+				name = self.ch2name[viewport]
+				self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
 				self.push()
-				self.ids_written[name] = 1
-				pushed = pushed + 1
+				self.__currViewport = viewport
 
+			for lch in parents:
+				divlist = []
+				if self.ch2style.has_key(lch):
+					name = self.ch2name[lch]
+					divlist.append(('id', name))
+					divlist.append(('style', self.ch2style[lch]))
+					self.writetag('div', divlist)
+					self.push()
+					self.ids_written[name] = 1
+					pushed = pushed + 1
+			pushed = pushed -1 # keep region open
+				
 		transitions = self.root.GetContext().transitions
 		if transIn or transOut:
 			if not nodeid:
@@ -371,9 +423,6 @@ class SMILHtmlTimeWriter(SMIL):
 			if transIn or transOut:
 				divlist.append(('id', subregid))
 				style = style + 'filter:'
-				self.writetag('t:par')
-				self.push()
-				pushed = pushed + 1
 			
 			if transIn:
 				td = transitions[transIn]
@@ -385,7 +434,7 @@ class SMILHtmlTimeWriter(SMIL):
 					style = style + transFade(dur=transInDur)
 				else:
 					transInName = 'Iris'	
-					style = style + transIris(dur=transInDur, style='circle', motion='out')
+					style = style + transIris(dur=transInDur, style='rectangle', motion='out')
 
 			if transOut:
 				td = transitions[transOut]
@@ -397,14 +446,15 @@ class SMILHtmlTimeWriter(SMIL):
 					style = style + transFade(dur=transOutDur)
 				else:
 					transOutName = 'Iris'	
-					style = style + transIris(dur=transOutDur, style='circle', motion='out')
+					style = style + transIris(dur=transOutDur, style='rectangle', motion='out')
 				
 			if transIn or transOut:
 				style = style + ';'
 
 			if transIn:
 				style = style + 'visibility=hidden;'
-			
+				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
+				attrlist.append( ('onbegin', trans) )
 
 			divlist.append(('style', style))
 			self.writetag('div', divlist)
@@ -421,17 +471,16 @@ class SMILHtmlTimeWriter(SMIL):
 			self.push()
 			pushed = pushed + 1
 
+		if transOut:
+			self.writetag('t:par')
+			self.push()
+			pushed = pushed + 1
+
 		self.writetag('t:'+mtype, attrlist)
 
-		if transIn or transOut:
-			self.pop()
-			pushed = pushed - 1
-			if transIn:
-				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
-				self.writetag('t:set', [ ('begin','%s.begin' % nodeid), ('dur', '%.1f' % transInDur), ('onbegin', trans), ])
-			if transOut:	
-				trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
-				self.writetag('t:set', [ ('begin','%s.end-%.1f' % (nodeid,transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
+		if transOut:
+			trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
+			self.writetag('t:set', [ ('begin','%s.end-%.1f' % (nodeid,transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
 		
