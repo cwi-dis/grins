@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import windowinterface
 from usercmd import *
+from flags import *
 import playbutton, playbuttonunselect
 import pausebutton, pausebuttonunselect
 import stopbutton, stopbuttonunselect
@@ -11,21 +12,21 @@ STOPPED, PAUSING, PLAYING = range(3)
 class PlayerDialogBase:
 	adornments = {
 		'toolbar': [
-			({'label': playbuttonunselect.reader(),
-			  'labelInsensitive': playbuttonunselect.reader(),
-			  'select': playbutton.reader(),
-			  'selectInsensitive': playbutton.reader(),
-			  }, PLAY, 't'),
-			({'label': pausebuttonunselect.reader(),
-			  'labelInsensitive': pausebuttonunselect.reader(),
-			  'select': pausebutton.reader(),
-			  'selectInsensitive': pausebutton.reader(),
-			  }, PAUSE, 't'),
-			({'label': stopbuttonunselect.reader(),
-			  'labelInsensitive': stopbuttonunselect.reader(),
-			  'select': stopbutton.reader(),
-			  'selectInsensitive': stopbutton.reader(),
-			  }, STOP, 't'),
+			(ALL, {'label': playbuttonunselect.reader(),
+			       'labelInsensitive': playbuttonunselect.reader(),
+			       'select': playbutton.reader(),
+			       'selectInsensitive': playbutton.reader(),
+			       }, PLAY, 't'),
+			(ALL, {'label': pausebuttonunselect.reader(),
+			       'labelInsensitive': pausebuttonunselect.reader(),
+			       'select': pausebutton.reader(),
+			       'selectInsensitive': pausebutton.reader(),
+			       }, PAUSE, 't'),
+			(ALL, {'label': stopbuttonunselect.reader(),
+			       'labelInsensitive': stopbuttonunselect.reader(),
+			       'select': stopbutton.reader(),
+			       'selectInsensitive': stopbutton.reader(),
+			       }, STOP, 't'),
 			],
 		}
 
@@ -75,6 +76,7 @@ class PlayerDialogBase:
 		x, y, w, h = self.__coords
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
+		self.adornments['flags'] = curflags()
 		self._window = w = windowinterface.newwindow(
 			x, y, 0, 0, self.__title, resizable = 0,
 			adornments = self.adornments,
