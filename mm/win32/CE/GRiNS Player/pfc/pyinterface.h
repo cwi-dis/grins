@@ -37,15 +37,20 @@ class PyInterface
 	static PyObject* import(const TCHAR *psztmodule);
 	static std::basic_string<TCHAR> get_copyright();
 
+#ifdef WITH_THREAD
 	static PyThreadState* getPyThreadState() { return s_tstate;}
+#endif
 	static PyObject* getErrorObject() { return s_errorObject;}
 
 	private:
+#ifdef WITH_THREAD
 	static PyThreadState *s_tstate;
+#endif
 	static char s_python_home[MAX_PATH];
 	static PyObject *s_errorObject;
 	};
 
+#ifdef WITH_THREAD
 struct AcquireThread
 	{
 	AcquireThread(PyThreadState *tstate)
@@ -97,6 +102,7 @@ class PyCallbackBlock
 	PyThreadState *m_tstate;
 	static PyInterpreterState *s_interpreterState;	
 	};
+#endif /* WITH_THREAD */
 
 struct PyExcInfo 
 	{
