@@ -563,7 +563,7 @@ class SchedulerContext:
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
 			if debugevents: print 'terminating node',parent.timefunc()
-			self.do_terminate(node, timestamp)
+			self.do_terminate(node, timestamp, no_extend = 1)
 			if not parent.playing:
 				return
 			self.sched_arcs(node, 'begin', timestamp=timestamp)
@@ -589,7 +589,7 @@ class SchedulerContext:
 						action = MMAttrdefs.getattr(p1[1], 'higher')
 					if debugevents: print 'action',action,parent.timefunc()
 					if action == 'stop':
-						self.do_terminate(sib, timestamp)
+						self.do_terminate(sib, timestamp, no_extend = arc is None)
 						if not parent.playing:
 							return
 					elif action == 'never':
@@ -631,7 +631,7 @@ class SchedulerContext:
 						self.do_pause(pnode, sib, pd, timestamp)
 					break
 				elif sib.playing == MMStates.FROZEN:
-					self.do_terminate(sib, timestamp)
+					self.do_terminate(sib, timestamp, no_extend = arc is None)
 					if not parent.playing:
 						return
 					break
@@ -645,7 +645,7 @@ class SchedulerContext:
 					fill = c.GetFill()
 					if fill != 'hold':
 						fill = 'remove'
-					self.do_terminate(c, timestamp, fill = fill, cancelarcs = arc is None)
+					self.do_terminate(c, timestamp, fill = fill, cancelarcs = arc is None, no_extend = arc is None)
 					if not parent.playing:
 						return
 					# there can be only one active child
@@ -765,7 +765,7 @@ class SchedulerContext:
 				return
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			# no valid intervals, so node should not play
-			self.do_terminate(node, timestamp)
+			self.do_terminate(node, timestamp, no_extend = 1)
 			if not parent.playing:
 				return
 		if path is not None or node.playing == MMStates.IDLE:
@@ -778,7 +778,7 @@ class SchedulerContext:
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 
-	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1):
+	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1, no_extend = 0):
 		parent = self.parent
 		if debugevents: print 'do_terminate',node,timestamp,fill,parent.timefunc()
 		if debugdump: parent.dump()
@@ -795,11 +795,11 @@ class SchedulerContext:
 			if node.type in leaftypes and getchannelfunc:
 				chan = getchannelfunc(node)
 				if chan:
-					if debugevents: print 'stopplay',`node`,parent.timefunc()
-					chan.stopplay(node)
+					if debugevents: print 'stopplay',`node`,no_extend,parent.timefunc()
+					chan.stopplay(node, no_extend)
 					node.set_armedmode(ARM_DONE)
 			for c in node.GetSchedChildren():
-				self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
+				self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs, no_extend=no_extend)
 				if not parent.playing:
 					return
 			node.stopplay(timestamp)

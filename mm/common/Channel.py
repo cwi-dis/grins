@@ -872,7 +872,7 @@ class Channel:
 			self.do_play(node)
 		self.play_1()
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		# Indicate that the channel can revert from the
 		# PLAYING or PLAYED state to PIDLE.
 		# Node is only passed to do consistency checking.
@@ -2011,15 +2011,20 @@ class ChannelWindow(Channel):
 			self.do_play(node)
 		self.play_1()
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		self.cleanup_transitions()
-		Channel.stopplay(self, node)
-		in_extended_fill = self.extended_fill(node)
+		Channel.stopplay(self, node, no_extend)
+		if no_extend:
+			in_extended_fill = 0
+		else:
+			in_extended_fill = self.extended_fill(node)
+		# above four lines are equivalent to this:
+		# in_extended_fill = not no_extend and self.extended_fill(node)
 		if self.played_display:
 			self.played_display.close()
 			self.played_display = None

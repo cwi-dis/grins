@@ -301,11 +301,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.played_movie.Stop()
 		self.playdone(1)
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		Channel.ChannelWindowAsync.stopplay(self, node, no_extend)
 		if self.played_movie:
 			self.played_movie.UnbindOpenGLWindow()
 			del _mvmap[self.played_movie]

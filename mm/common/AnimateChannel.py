@@ -71,11 +71,11 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 		self.__pauseAnimate(paused)
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if self.__animating:
 			self.__stopAnimate()
 			self.__animating = None
-		Channel.ChannelAsync.stopplay(self, node)
+		Channel.ChannelAsync.stopplay(self, node, no_extend)
 
 	#
 	# Animation engine
