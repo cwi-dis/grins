@@ -1,6 +1,4 @@
-"""Dialog for the Assets View.
-
-"""
+# Dialog for the Assets View.
 
 __version__ = "$Id$"
 
