@@ -784,7 +784,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if len(__main__.toplevel._subwindows)>1:
 			self.PostMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
 		else:
-			self.SendMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
+			#self.SendMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
 			self.PostMessage(win32con.WM_COMMAND,usercmdui.EXIT_UI.id)
 
 	# Bring to top of peers
