@@ -136,7 +136,7 @@ class _LayoutView2(GenFormView):
 			self[ctrlName].resetcontent()
 			for vname in vList:
 				self[ctrlName].addstring(0, vname)
-			self[ctrlName].setcursel(0)
+#			self[ctrlName].setcursel(0)
 
 	def setMultiSelecterCtrl(self, ctrlName, vItem, bValue):
 		# for now
