@@ -21,7 +21,24 @@ toplevel=None
 import os
 import sys
 	
-CMIFDIR=r'd:\ufs\mm\cmif'
+def GuessCMIFRoot():
+	try:
+		# hopefully we can import this
+		import win32api
+	except ImportError:
+		pass
+	else:
+		selfDir = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
+		l = selfDir.split('\\')
+		dir = ''
+		for s in l:
+			dir = dir + s
+			if s == 'cmif':
+				return dir
+			dir = dir + '\\'
+	return r'D:\ufs\mm\cmif'	# default, in case we can't find the directory dynamically
+
+CMIFDIR = GuessCMIFRoot()
 
 # TEMP TEST FOLDER
 
@@ -34,20 +51,20 @@ else:
 
 
 CMIFPATH = [
-	os.path.join(CMIFDIR, 'bin\\win32'),
-	os.path.join(CMIFDIR, '%s\\smil2real\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smil2real' % specificPath),
-	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-##	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
-	os.path.join(CMIFDIR, 'common\\win32'),
-	os.path.join(CMIFDIR, 'lib\\win32'),
-	os.path.join(CMIFDIR, '%s' % specificPath),
-	os.path.join(CMIFDIR, 'common'),
-	os.path.join(CMIFDIR, 'lib'),
-	os.path.join(CMIFDIR, 'pylib'),
-##	os.path.join(CMIFDIR, 'pylib\\audio'),
-	os.path.join(CMIFDIR, 'win32\\src\\Build'),
-	os.path.join(os.path.split(CMIFDIR)[0], 'python\\Lib')
+	os.path.join(CMIFDIR, r'bin\win32'),
+	os.path.join(CMIFDIR, r'%s\smil2real\win32' % specificPath),
+	os.path.join(CMIFDIR, r'%s\smil2real' % specificPath),
+	os.path.join(CMIFDIR, r'%s\win32' % specificPath),
+##	os.path.join(CMIFDIR, r'mmextensions\real\win32'),
+	os.path.join(CMIFDIR, r'common\win32'),
+	os.path.join(CMIFDIR, r'lib\win32'),
+	os.path.join(CMIFDIR, r'%s' % specificPath),
+	os.path.join(CMIFDIR, r'common'),
+	os.path.join(CMIFDIR, r'lib'),
+	os.path.join(CMIFDIR, r'pylib'),
+##	os.path.join(CMIFDIR, r'pylib\audio'),
+	os.path.join(CMIFDIR, r'win32\src\Build'),
+	os.path.join(os.path.split(CMIFDIR)[0], r'python\Lib')
 ]
 sys.path[0:0] = CMIFPATH
 
@@ -120,19 +137,5 @@ def Boot(what = 0):
 			import cmifed
 	except SystemExit, rc:
 		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
-
-
-def GuessCMIFRoot():
-	selfDir = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
-	l=string.split(selfDir,'\\')
-	found=0;dir=''
-	for s in l:
-		dir=dir+s
-		if s=='cmif':
-			found=1
-			break
-		dir=dir+'\\'
-	if found:return dir
-	return r'd:\ufs\mm\cmif'
 
 Boot(WHAT)
