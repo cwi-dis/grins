@@ -1442,11 +1442,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			attrdict[attr] = ck
 
-	# RTIPA start
-	def __do_RTIPA_server(self, node, attr, val, attrdict):
-		attrdict['RTIPA_server'] = val
-	# RTIPA end
-
 	def __do_xmlbase(self, node, attr, val, attrdict):
 		# XXX need to implement
 		pass
@@ -1455,9 +1450,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		pass
 
 	__parseattrdict = {
-		# RTIPA start
-		'RTIPA-server': __do_RTIPA_server,
-		# RTIPA end
 		'abstract': __do_literal,
 		'accelerate': __do_accelerate,
 		'allowedmimetypes': __do_allowedmimetypes,
