@@ -52,12 +52,12 @@ MENUBAR=(
 			(FLAG_SMIL_1_0, ENTRY, 'Publish for &SMIL 2.0 and upload...', None, UPLOAD_SMIL),
 			((features.EXPORT_QT,), ENTRY, 'Publish for &QuickTime...', None, EXPORT_QT),
 			((features.EXPORT_QT,), ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
-			(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Real...', None, EXPORT_G2),
-			(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Real and &upload...', None, UPLOAD_G2),
+			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for &Real...', None, EXPORT_G2),
+			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for Real and &upload...', None, UPLOAD_G2),
 			# TODO: These should not appear on all versions of GRiNS!
-			(FLAG_SNAP, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
-			(FLAG_SNAP, ENTRY, 'Publish for Windows &Media and upload...', None, UPLOAD_WMP),
-			(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Internet Explorer HTML+TIME...', None, EXPORT_HTML_TIME),
+			(0, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
+			(0, ENTRY, 'Publish for Windows &Media and upload...', None, UPLOAD_WMP),
+			(FLAG_PRO, ENTRY, 'Publish for &Internet Explorer HTML+TIME...', None, EXPORT_HTML_TIME),
 		
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for Wireless...', None, EXPORT_XMT),
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'P&rune and Save as generic SMIL 2.0...', None, EXPORT_PRUNE),
@@ -274,10 +274,10 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Previewer\tF5', '1', PLAYERVIEW),
 		(FLAG_ALL, ENTRY, '&Structured timeline\tF6', '3', HIERARCHYVIEW),
-		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout\tF7', '2', LAYOUTVIEW2),
+		(FLAG_PRO, ENTRY, '&Layout\tF7', '2', LAYOUTVIEW2),
 		(FLAG_ALL, ENTRY, 'Sourc&e\tF8', '7', SOURCEVIEW),
 		(FLAG_ALL, SEP,),
-		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Assets', '2', ASSETSVIEW),
+		(FLAG_PRO, ENTRY, '&Assets', '2', ASSETSVIEW),
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		((features.USER_GROUPS,), ENTRY, 'C&ustom tests', '6', USERGROUPVIEW),
 		(FLAG_BOSTON, ENTRY, 'T&ransitions', None, TRANSITIONVIEW),
@@ -299,9 +299,6 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
-if curflags() & FLAG_SNAP:
-	# remove Insert menu in Snap! version
-	MENUBAR = MENUBAR[:2] + MENUBAR[3:]
 
 #
 # Popup menus for various states

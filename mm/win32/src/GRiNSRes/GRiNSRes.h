@@ -265,6 +265,8 @@
 #define IDD_EDITATTR_REALEXTENSION      466
 #define IDD_EDITATTR_S7F                467
 #define IDD_EDITATTR_SERVER             468
+#define IDD_EDITATTR_S1R3S8             469
+#define IDD_EDITATTR_REALEXTENSION2     470
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003

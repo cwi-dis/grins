@@ -2771,8 +2771,6 @@ BEGIN
     EDITTEXT        IDC_CKTV3,255,76,26,14,ES_AUTOHSCROLL
     CONTROL         "Reliable Transmission",IDC_RELIABLE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,107,84,10
-    LTEXT           "Streaming Bitrate:",IDC_BITRL,178,109,56,8
-    EDITTEXT        IDC_BITRV,240,106,40,14,ES_AUTOHSCROLL
     GROUPBOX        "Chroma Key",IDC_STATIC,11,44,277,54
     LTEXT           "Note: Values can be set and exported to Real, but not previewed.",
                     IDC_NOTE,6,3,208,8
@@ -2824,6 +2822,90 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     GROUPBOX        "Web server",IDC_STATIC,5,71,287,46
     LTEXT           "User name:",IDC_61,143,82,37,8
+END
+
+IDD_EDITATTR_S1R3S8 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_12,36,10,96,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_22,181,9,108,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Not set",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,45,29,36,10
+    CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,83,
+                    29,22,10
+    CONTROL         "off",IDC_34x,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    115,29,22,10
+    EDITTEXT        IDC_62,244,47,36,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_52,51,64,238,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SCOMPONENTV,51,79,238,12,ES_AUTOHSCROLL
+    GROUPBOX        "Test properties",IDC_GROUP1,6,0,287,129
+    LTEXT           "Bitrate:",IDC_11,10,11,26,8
+    GROUPBOX        "",IDC_GROUP3,42,22,98,19
+    LTEXT           "Language:",IDC_21,139,10,34,8
+    LTEXT           "Required:",IDC_51,10,66,34,8
+    LTEXT           "Depth:",IDC_61,218,49,23,8
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    LTEXT           "Component:",IDC_SCOMPONENTL,10,81,38,8
+    LTEXT           "Operating system:",IDC_SOPERATINGSYSTEML,10,97,57,8
+    LTEXT           "CPU:",IDC_SCPUL,178,97,16,8
+    COMBOBOX        IDC_SCPUV,197,95,92,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_SOPERATINGSYSTEMV,69,95,92,109,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_HEIGHTV,77,47,36,12,ES_AUTOHSCROLL
+    LTEXT           "Height:",IDC_HEIGHTL,50,49,23,8
+    EDITTEXT        IDC_WIDTHV,161,47,36,12,ES_AUTOHSCROLL
+    LTEXT           "Width:",IDC_WIDTHL,135,49,22,8
+    GROUPBOX        "",IDC_GROUP7,42,40,247,21
+    CONTROL         "Not Set",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,195,29,37,10
+    CONTROL         "on",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,233,29,22,10
+    CONTROL         "off",IDC_SAUDIODESCV3,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,265,29,22,10
+    GROUPBOX        "",IDC_GROUP6,191,22,98,19
+    CONTROL         "Not set",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,46,114,35,10
+    CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,84,114,36,10
+    CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    120,114,39,10
+    GROUPBOX        "",IDC_GROUP2,43,107,119,19
+    LTEXT           "Overdub \nor subtitle:",IDC_DUBSUBL,10,110,34,17
+    LTEXT           "Captions:",IDC_31,10,28,30,10
+    LTEXT           "Audio desc:",IDC_SAUDIODESCL,149,28,39,9
+    LTEXT           "Screen:",IDC_GROUP8,10,48,27,10
+END
+
+IDD_EDITATTR_REALEXTENSION2 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,115
+    EDITTEXT        IDC_BGOV,86,23,31,12,ES_AUTOHSCROLL
+    LTEXT           "Background Opacity:",IDC_BGOL,11,26,68,8
+    EDITTEXT        IDC_MDOV,249,23,31,12,ES_AUTOHSCROLL
+    LTEXT           "Media Opacity:",IDC_MDOL,194,26,48,8
+    LTEXT           "Color:",IDC_CKEYL,18,60,19,8
+    EDITTEXT        IDC_CKEYV,40,57,68,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pick color...",IDC_CKEYB,115,57,50,14
+    EDITTEXT        IDC_CKOV,249,57,31,12,ES_AUTOHSCROLL
+    LTEXT           "Opacity:",IDC_CKOL,215,60,27,8
+    LTEXT           "Tolerance:",IDC_CKTL,158,78,35,8
+    EDITTEXT        IDC_CKTV1,199,76,26,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CKTV2,227,76,26,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CKTV3,255,76,26,14,ES_AUTOHSCROLL
+    CONTROL         "Reliable Transmission",IDC_RELIABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,107,84,10
+    LTEXT           "Streaming Bitrate:",IDC_BITRL,178,109,56,8
+    EDITTEXT        IDC_BITRV,240,106,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "Chroma Key",IDC_STATIC,11,44,277,54
+    LTEXT           "Note: Values can be set and exported to Real, but not previewed.",
+                    IDC_NOTE,6,3,208,8
 END
 
 
@@ -3287,6 +3369,11 @@ BEGIN
     END
 
     IDD_EDITATTR_REALEXTENSION, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_EDITATTR_REALEXTENSION2, DIALOG
     BEGIN
         BOTTOMMARGIN, 163
     END
