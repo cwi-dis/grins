@@ -32,7 +32,7 @@ class GraphChannel(ChannelWindow):
 		toks = self.tokenizestring(str)
 		self.parsetokens(toks)
 
-		miny, maxy, minx, maxx = self.findminmax()
+		minx, maxx, miny, maxy = self.findminmax()
 
 		leftalign = (MMAttrdefs.getattr(node, 'align') == 'left')
 		axis_x, axis_y = MMAttrdefs.getattr(node, 'axis')
@@ -41,7 +41,6 @@ class GraphChannel(ChannelWindow):
 		if miny == maxy:
 			miny = miny - 0.5
 			maxy = maxy + 0.5
-			
 		if self.armed_type <> 'scatter':
 			length = int(maxx-minx+1)
 			for d in self.datapoints:
@@ -72,22 +71,26 @@ class GraphChannel(ChannelWindow):
 
 	def findminmax(self):
 		if self.armed_type == 'scatter':
-			minx = miny = 99999.0
-			maxx = maxy = -99999.0
+			minx = miny = maxx = maxy =None
 			for d in self.datapoints:
 				if not d: continue
 				for x, y in d:
+					if minx == None: minx = x
+					if miny == None: miny = y
+					if maxx == None: maxx = x
+					if maxy == None: maxy = y
 					minx = min(minx, x)
 					miny = min(miny, y)
 					maxx = max(maxx, x)
 					maxy = max(maxy, y)
 		else:
 			minx = 0
-			maxx = 0
-			miny = 99999.0
-			maxy = -99999.0
+			minx = miny = maxx = maxy =None
 			for d in self.datapoints:
 				if not d: continue
+				if miny == None: miny = y
+				if maxx == None: maxx = len(d)
+				if maxy == None: maxy = y
 				miny = min(miny, min(d))
 				maxy = max(maxy, max(d))
 				maxx = max(maxx, len(d))
@@ -153,8 +156,8 @@ class GraphChannel(ChannelWindow):
 			for point in d:
 				if point is None: continue
 				x, y = point
-				x = XOFF+(x*xstepsize)
-				y = YOFF+(y*ystepsize)
+				x = XOFF+((x-minx)*xstepsize)
+				y = YOFF+((y-miny)*ystepsize)
 				self.armed_display.drawmarker(c, (x,y))
 
 	def do_bar(self):
