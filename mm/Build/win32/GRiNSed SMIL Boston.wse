@@ -19,10 +19,10 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-41.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-42.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=mikevdg
+  Upload Name=sjoerd
   Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
@@ -32,12 +32,12 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=185892257
+  File Checksum=3392120424
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\Wise
+  Variable Default2=C:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1121,7 +1121,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\products\smil-20\win32\splash8bit.bmp
+  Pathname=D:\ufs\mm\cmif\Build\products\smil-20\editor\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1152,6 +1152,11 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\comment.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\comment.tiff
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd

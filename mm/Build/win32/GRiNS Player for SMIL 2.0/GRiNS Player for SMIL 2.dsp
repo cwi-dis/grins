@@ -453,6 +453,10 @@ SOURCE=.\M_getpass.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_gifparser.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_GLLock.c
 # End Source File
 # Begin Source File
@@ -1038,6 +1042,10 @@ SOURCE=.\M_swfparser.c
 # Begin Source File
 
 SOURCE=.\M_sysmetrics.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_SystemColors.c
 # End Source File
 # Begin Source File
 
