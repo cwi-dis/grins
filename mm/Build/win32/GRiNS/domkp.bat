@@ -74,6 +74,7 @@ echo -x MPEGVideoChannel >> FreezeOpts
 echo -x SGIVideoChannel >> FreezeOpts
 echo -x ShellChannel >> FreezeOpts
 echo -x VcrChannel >> FreezeOpts
+echo -x SMILTreeWrite >> FreezeOpts
 
 rem Duration stuff
 echo -x SGIVideoDuration >> FreezeOpts
