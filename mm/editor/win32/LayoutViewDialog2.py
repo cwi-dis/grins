@@ -25,7 +25,6 @@ class LayoutViewDialog2:
 #		self.__regionSelCtrl.setcb((self._regionSelCb, ()))
 
 		self.previousCtrl=w.getPreviousComponent()
-		self.previousCtrl.setHandler(self)
 
 		# for now, avoid to define one handler by ctrl	
 		self.dialogCtrl=w.getDialogComponent()

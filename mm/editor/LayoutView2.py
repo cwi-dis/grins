@@ -41,6 +41,12 @@ class TreeHelper:
 		self.__nodeList = {}
 		self.__rootList = {}
 
+	def destroy(self):
+		self.__channelTreeRef = None
+		self.__mmnodeTreeRef = None
+		self.__nodeList = None
+		self.__rootList = None
+		
 	# return tree if node is a valid media nodes
 	def _isValidMMNode(self, node):
 		if node == None:
@@ -214,7 +220,10 @@ class TreeHelper:
 
 	# return the list of root node
 	def getRootNodeList(self):
-		return self.__channelTreeRef.getviewports()
+		list = []
+		for root in self.__rootList.keys():
+			list.append(root)
+		return list
 
 	# return the type of the node
 	# Note. This method works also if the node is already remove it from the reference document
@@ -223,6 +232,19 @@ class TreeHelper:
 		node = self.__nodeList.get(nodeRef)
 		if node != None:
 			return node.type			
+
+	def delNode(self, nodeRef):
+		if debug: print 'treeHelper.delNode ',nodeRef
+		node = self.__nodeList.get(nodeRef)
+		if node == None: return
+		parentRef = nodeRef.GetParent()
+		if parentRef == None:
+			# it's a top layout
+			parentNode = None
+		else:
+			parentNode = self.__nodeList.get(parentRef)
+		self.__onDelNode(parentNode, node)
+
 		
 class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
@@ -281,6 +303,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentFocusType = None
 		# allow to identify if the focus has been fixed by this view
 		self.myfocus = None
+		self.commitAlreadyUpdated = 0
 
 		# when you swap to the pause state, the current region showed list is saved
 		# it allows to restore the context when document is stopped
@@ -430,12 +453,24 @@ class LayoutView2(LayoutViewDialog2):
 			return
 		self.__channelTreeRef = None
 		self.editmgr.unregister(self)
-		LayoutViewDialog2.hide(self)
 
 		# XXX to do: destroy all objects and to check that they are garbage collected
-		# destroy the widgets
 		for id, widget in self.widgetList.items():
 			widget.destroy()
+		self.widgetList = {}
+		
+		# hide the windows	
+		LayoutViewDialog2.hide(self)
+
+		# destroy the tree helper structure	
+		self.treeHelper.destroy()
+
+		# clear all variables state
+		self.currentSelectedNodeList = None
+		self.currentFocus = None
+		self.currentFocusType = None
+		self.myfocus = None
+		self.commitAlreadyUpdated = 0
 		
 	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
@@ -486,9 +521,18 @@ class LayoutView2(LayoutViewDialog2):
 	# update the region tree
 	def treeMutation(self):
 		if debug: print 'call treeHelper.treeMutation'
+		# notify widgets that the document structure start to change
+		for id, widget in self.widgetList.items():
+			widget.startMutation()
 		self.treeHelper.onTreeMutation()
+		# notify widgets that the document structure end to change
+		for id, widget in self.widgetList.items():
+			widget.endMutation()
 
 	def commit(self, type):
+		if self.commitAlreadyUpdated:
+			self.commitAlreadyUpdated = 0
+			return
 		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
 			self.previousWidget.updateRegionTree()
 		elif type == 'REGION_TREE':
@@ -963,11 +1007,17 @@ class LayoutView2(LayoutViewDialog2):
 
 	def applyDelRegion(self, regionRef):
 		if self.editmgr.transaction():
+			# update directly (more efficient. No need to compare all nodes)
+			self.treeHelper.delNode(regionRef) 
+			self.commitAlreadyUpdated = 1 
 			self.editmgr.delchannel(regionRef.name)
 			self.editmgr.commit('REGION_TREE')
 			
 	def applyDelViewport(self, viewportRef):
 		if self.editmgr.transaction():
+			# update directly (more efficient. No need to compare all nodes)
+			self.treeHelper.delNode(viewportRef)
+			self.commitAlreadyUpdated = 1 
 			self.editmgr.delchannel(viewportRef.name)
 			self.editmgr.commit('REGION_TREE')
 
@@ -1359,6 +1409,7 @@ class LayoutView2(LayoutViewDialog2):
 		
 		parentRef = self.getParentNodeRef(regionRef, TYPE_REGION)
 		self.setglobalfocus([parentRef])
+		self.updateFocus()
 		self.applyDelRegion(regionRef)
 
 	# checking if the region/viewport node contains any sub-region or media
@@ -1389,6 +1440,7 @@ class LayoutView2(LayoutViewDialog2):
 		for viewportRef in currentViewportList:
 			if viewportRef != nodeRef:
 				self.setglobalfocus([viewportRef])
+				self.updateFocus()
 				break
 		
 		self.applyDelViewport(nodeRef)
@@ -1426,6 +1478,12 @@ class Widget:
 
 	def destroy(self):
 		pass
+
+	def startMutation(self):
+		pass
+
+	def endMutation(self):
+		pass
 	
 #
 # common class for light widget
@@ -1450,6 +1508,9 @@ class ZFieldWidget(LightWidget):
 	
 	def show(self):
 		self.dialogCtrl.setListener('RegionZ', self)
+
+	def destroy(self):
+		self.dialogCtrl.removeListener('RegionZ')
 		
 	def selectNodeList(self, nodeRefList):
 		if len(nodeRefList) != 1:
@@ -1513,6 +1574,12 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.setListener('RegionY', self)
 		self.dialogCtrl.setListener('RegionW', self)
 		self.dialogCtrl.setListener('RegionH', self)
+
+	def destroy(self):
+		self.dialogCtrl.removeListener('RegionX')
+		self.dialogCtrl.removeListener('RegionY')
+		self.dialogCtrl.removeListener('RegionW')
+		self.dialogCtrl.removeListener('RegionZ')
 	
 	def selectNodeList(self, nodeRefList):
 		# if no node selected or several nodes are selected in the same time, disable the fields
@@ -1660,17 +1727,94 @@ class TreeWidget(Widget):
 		self.nodeTreeCtrlIdToNodeRef = {}
 		self._context = context
 		self.treeCtrl = context.treeCtrl
-		self.treeCtrl.setHandler(self)
-
 	#
 	# inherited methods
 	#
 
 	def show(self):
-		# XXX temporare. expand all region nodes by default
-		self.expandAllNodes(0)
-		
+		self.treeCtrl.setListener(self)
 
+	def destroy(self):
+		self.treeCtrl.removeListener()
+		self.treeCtrl.destroy()
+			
+	#		
+	# tree mutation operations
+	#
+
+	# currently, the expand operation can be done only at the end of the mutation (windows api issue)
+	# so, we register in this method the node to expand according to the GRiNS property
+	# expand stored in the node. The expand operation will be done at the end of the tree mutation
+	# note: in the current tree widget implementation all new nodes are by default collapsed
+	def startMutation(self):
+		self.__nodeRefListToExpand = []
+
+	def endMutation(self):
+		expandMediaNode = 0
+		# do expand operations
+		for nodeRef in self.__nodeRefListToExpand:
+			if nodeRef.collapsed == 0:
+				expand = 1
+			elif nodeRef.collapsed == 1:
+				expand = 0
+			else:
+				# default behavior: expand node only if contains region inside
+				hasNotOnlyMedia = 0
+				nodeType = self._context.getNodeType(nodeRef)
+				children = self._context.getChildren(nodeRef)
+				if not expandMediaNode and children != None:
+					# expand only this node if there is a region inside
+					for child in children:
+						if self._context.getNodeType(child) != TYPE_MEDIA:
+							hasNotOnlyMedia = 1
+	
+				if not (hasNotOnlyMedia or expandMediaNode):
+					expand = 0
+				else:
+					expand = 1
+
+			if expand:				
+				self.treeCtrl.expand(self.nodeRefToNodeTreeCtrlId[nodeRef])
+		# clear the list		
+		self.__nodeRefListToExpand = []
+
+	def appendMedia(self, pNodeRef, nodeRef):
+		mediaType = nodeRef.GetChannelType()
+		name = self._context.getShowedName(nodeRef, TYPE_MEDIA)
+		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, mediaType, mediaType)
+		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
+		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+
+	def appendViewport(self, nodeRef):
+		name = self._context.getShowedName(nodeRef, TYPE_VIEWPORT)
+		ret = self.treeCtrl.insertNode(0, name, 'viewport', 'viewport')
+		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
+		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+
+		# save the new node for expand. The expand operation can't be done here
+		self.__nodeRefListToExpand.append(nodeRef)
+			
+	def appendRegion(self, pNodeRef, nodeRef):
+		name = self._context.getShowedName(nodeRef, TYPE_REGION)
+		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, 'region', 'region')
+		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
+		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+
+		# save the new node for expand. The expand operation can't be done here
+		self.__nodeRefListToExpand.append(nodeRef)
+
+	def removeNode(self, nodeRef):
+		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
+		if nodeTreeCtrlId != None:
+			self.treeCtrl.removeNode(nodeTreeCtrlId)
+			del self.nodeRefToNodeTreeCtrlId[nodeRef]
+			del self.nodeTreeCtrlIdToNodeRef[nodeTreeCtrlId]
+				
+
+	#
+	#
+	#
+	
 	def selectNodeList(self, nodeRefList):
 		list = []
 		for nodeRef in nodeRefList:
@@ -1687,25 +1831,6 @@ class TreeWidget(Widget):
 		# todo
 		pass
 	
-	def appendMedia(self, pNodeRef, nodeRef):
-		mediaType = nodeRef.GetChannelType()
-		name = self._context.getShowedName(nodeRef, TYPE_MEDIA)
-		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, mediaType, mediaType)
-		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
-		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
-
-	def appendViewport(self, nodeRef):
-		name = self._context.getShowedName(nodeRef, TYPE_VIEWPORT)
-		ret = self.treeCtrl.insertNode(0, name, 'viewport', 'viewport')
-		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
-		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
-			
-	def appendRegion(self, pNodeRef, nodeRef):
-		name = self._context.getShowedName(nodeRef, TYPE_REGION)
-		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, 'region', 'region')
-		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
-		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
-
 	def updateNode(self, nodeRef):
 		nodeType = self._context.getNodeType(nodeRef)
 		if nodeType == TYPE_MEDIA:
@@ -1721,13 +1846,6 @@ class TreeWidget(Widget):
 			name=''
 		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, type, type)
 		
-	def removeNode(self, nodeRef):
-		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
-		if nodeTreeCtrlId != None:
-			self.treeCtrl.removeNode(nodeTreeCtrlId)
-			del self.nodeRefToNodeTreeCtrlId[nodeRef]
-			del self.nodeTreeCtrlIdToNodeRef[nodeTreeCtrlId]
-				
 	# selected node handler method
 	def onSelectTreeNodeCtrl(self, nodeTreeCtrlIdList):
 		nodeRefList = []
@@ -1736,6 +1854,17 @@ class TreeWidget(Widget):
 			nodeRefList.append(nodeRef)
 		self._context.onSelect(nodeRefList)
 
+	def onExpandTreeNodeCtrl(self, nodeTreeCtrlId, isExpanded):
+		nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+		if nodeRef:
+			nodeType = self._context.getNodeType(nodeRef)
+			if nodeType != TYPE_MEDIA:
+				# XXX for now store information without commit or other mechanism
+				if not isExpanded:
+					nodeRef.collapsed = 1
+				else:
+					nodeRef.collapsed = 0
+		
 	def expandNodes(self, nodeRef, expandMediaNode):
 		hasNotOnlyMedia = 0
 		nodeType = self._context.getNodeType(nodeRef)
@@ -1788,6 +1917,16 @@ class PreviousWidget(Widget):
 		currentViewportList = self._context.getViewportRefList()
 		viewport = currentViewportList[0]
 		self.displayViewport(viewport)
+
+	def destroy(self):
+		if self.currentViewport != None:
+			self.currentViewport.hideAllNodes()
+			self.currentViewport = None
+
+		self.currentMediaRefListM = None
+		self.currentRegionRefListM = None
+		self.currentRegionNodeListShowed = None
+		self.previousCtrl = None
 
 	def selectNodeList(self, nodeRefList):
 		if not self.localSelect:
@@ -1981,7 +2120,7 @@ class PreviousWidget(Widget):
 	def displayViewport(self, viewportRef):
 		if debug: print 'LayoutView.displayViewport: change viewport =',viewportRef
 		if self.currentViewport != None:
-			self.currentViewport.hide()
+			self.currentViewport.hideAllNodes()
 		self.currentViewport = self.getNode(viewportRef)
 		self.currentViewport.showAllNodes()
 								
@@ -2074,9 +2213,9 @@ class Node:
 		if debug: print 'Node.hide: ',self.getName()
 		if self._graphicCtrl != None:
 			if self._parent != None:
+				self._graphicCtrl.removeListener(self)
 				if self._parent._graphicCtrl != None:
 					self._parent._graphicCtrl.removeRegion(self._graphicCtrl)
-				self._graphicCtrl.removeListener(self)
 			self._graphicCtrl = None
 			self._ctx.previousCtrl.update()
 
@@ -2167,7 +2306,7 @@ class Region(Node):
 		if self._wantToShow and self._parent._graphicCtrl != None:
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 			self._graphicCtrl.showName(self.getShowName())		
-			self._graphicCtrl.addListener(self)
+			self._graphicCtrl.setListener(self)
 
 	def showAllNodes(self):
 		if self._wantToShow:
@@ -2289,7 +2428,7 @@ class MediaRegion(Region):
 			
 		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 		self._graphicCtrl.showName(0)		
-		self._graphicCtrl.addListener(self)
+		self._graphicCtrl.setListener(self)
 		
 		# copy from old hierarchical view to determinate the image to showed
 		node = self._nodeRef
@@ -2364,7 +2503,7 @@ class Viewport(Node):
 	def show(self):
 		if debug: print 'Viewport.show : ',self.getName()
 		self._graphicCtrl = self._ctx.previousCtrl.newViewport(self._curattrdict, self._name)
-		self._graphicCtrl.addListener(self)
+		self._graphicCtrl.setListener(self)
 		
 	def showAllNodes(self):
 		if debug: print 'Viewport.showAllNodes : ',self.getName()
@@ -2419,5 +2558,6 @@ class Viewport(Node):
 			self._ctx._context.editProperties(self.getNodeRef())
 		else:
 			self._ctx._context.selectBgColor(self.getNodeRef())
+
 
 		
