@@ -33,7 +33,7 @@ class Exporter:
 	
 	def createWriter(self, window):
 		self.topwindow = window
-		self.fulldur = self._computeduration(self.player.userplayroot)
+		self.fulldur = self.player.userplayroot.calcfullduration()
 		self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile)
 		self._setAudioFormat()
 		self.writer.setOutputFilename(self.filename)
@@ -104,15 +104,13 @@ class Exporter:
 		if urls:
 			self.writer.setAudioFormatFromFile(urls[0])
 
-	def _computeduration(self, node):
-		fdur = node.calcfullduration()
-		if fdur>0: return fdur
-		print 'unresolved dur, assuming a 30sec doc'
-		return 30.0
-		
-	# temp: get progess based on doc duration estimation
 	def _getprogress(self, dt):
-		d = self.fulldur/3.0
+		if self.fulldur is not None and self.fulldur>0:
+			return 100.0*dt/self.fulldur
+		# dur unresolved
+		# give the illusion that is resolved
+		# using a converging sequence
+		d = 15 
 		i = 1
 		p = 0
 		while 1:
@@ -122,7 +120,8 @@ class Exporter:
 			else:
 				p = p + f
 			i = i + 1
-					
+
+				
 
 
 
