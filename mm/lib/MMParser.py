@@ -54,6 +54,9 @@ class MMParser:
 		#
 		return self
 	#
+	def __repr__(self):
+		return '<MMParser instance, context=' + `self.context` + '>'
+	#
 	def reset(self):
 		self.nextline = ''
 		self.pos = 0
@@ -462,6 +465,10 @@ class StringInput:
 		self.string = string
 		self.pos = 0
 		return self
+	#
+	def __repr__(self):
+		return '<StringInput instance, string=' + `self.string` \
+			+ ', pos=' + `self.pos` + '>'
 	#
 	def readline(self):
 		string = self.string

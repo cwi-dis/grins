@@ -50,6 +50,9 @@ class glwindow:
 		self.wid = wid
 		return self
 	#
+	def __repr__(self):
+		return '<glwindow instance, wid=' + `self.wid` + '>'
+	#
 	def setwin(self):
 		# Make the window current.  Derived classes may extend
 		# or override this to set more state, e.g. fonts.

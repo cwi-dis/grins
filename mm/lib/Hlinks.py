@@ -26,6 +26,9 @@ class Hlinks:
 		self.links = []
 		return self
 
+	def __repr__(self):
+		return '<Hlink instance, links=' + `self.links` + '>'
+
 	def getall(self):
 		return self.links
 

@@ -25,6 +25,10 @@ class MMNodeContext:
 		self.editmgr = None
 		return self
 	#
+	def __repr__(self):
+		return '<MMNodeContext instance, channelnames=' \
+			+ `self.channelnames` + '>'
+	#
 	def newnode(self, type):
 		_stat('newnode')
 		return self.newnodeuid(type, self.newuid())
@@ -129,6 +133,12 @@ class MMNode:
 		self.summaries = {}
 		self.widget = None # Used to display traversal XXX temporary!
 		return self
+	#
+	# Return string representation of self
+	#
+	def __repr__(self):
+		return '<MMNode instance, type=' + `self.type` \
+			+ ', uid=' + `self.uid` + '>'
 	#
 	# Private methods to build a tree
 	#
@@ -383,6 +393,15 @@ class MMNode:
 		for child in self.children:
 			child.parent = None
 			child.Destroy()
+		self.type = None
+		self.context = None
+		self.uid = None
+		self.attrdict = None
+		self.parent = None
+		self.children = None
+		self.values = None
+		self.summaries = None
+		self.widget = None
 	#
 	def Extract(self):
 		_stat('Extract')
