@@ -1,0 +1,56 @@
+1. Open 'cmif extensions.dsw' in \cmif\win32\src
+(no other project needs to be opened)
+
+2 Assert that 
+   python\Include
+   python\PC
+   python\Extensions\win32\src
+are in your include files directories 
+(set them using tools|options|directories + combo choice:Include files)
+
+and that 
+ 	python\PCBuild
+	python\Extensions\win32\Build
+	cmif\win32\ACCUSOFT\Gear
+are in your library files
+(set them using tools|options|directories + combo choice:Library files)
+
+Note: there are other ways to have the same effect.
+
+3. Check that the absolute directories for GRiNSRes project
+Project Setting|Custom Build (tab)
+are the correct for your configuratio. 
+(the absolute folders shouldn't be there but they are)
+  
+3. Build all
+set active configuration to: 'All cmif extensions-Win32 Release'
+and then select Rebuild All
+
+4. To test, transfer to cmif/bin (the testing folder)
+	Python15.dll
+	Python.exe
+	PyWinTypes15.dll
+	Pythonwin.exe
+	win32ui.pyd
+and also the Accusoft dll: Gear32sd.dll
+
+Transfer also to cmif/bin/DLLs
+	win32api.pyd
+	win32trace.pyd
+Run Pythonwin.exe 
+and the application: Pythonwin /run iGRiNS.py
+(check absolute folders in iGRiNS.py before running the app,
+the absolute folders shouldn't be there but they are)
+
+5. Freeze (read also the readme.txt in cmif\Build\win32\Editor)
+a) Set the absolute folders in cmif\Build\win32\Editor\domkp.bat
+and \cmif\Build\win32\GRiNS\domkp.bat to agree with your configuration
+(usually only the drive letter)
+b) Run the bat files 
+c) Build GRiNSed and GRiNS projects (use Set Active Configuratio)
+d) To test them transfer in an emty folder:
+
+
+Thats all.
+
+
