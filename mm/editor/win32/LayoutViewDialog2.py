@@ -41,8 +41,8 @@ class LayoutViewDialog2:
 		if hasattr(self.__window,'_obj_') and self.__window._obj_:
 			self.__window.close()
 		self.__window = None
-		del self.__viewportSelCtrl
-		del self.__regionSelCtrl
+		#del self.__viewportSelCtrl
+		#del self.__regionSelCtrl
 
 	def show(self):
 		self.assertwndcreated()	
