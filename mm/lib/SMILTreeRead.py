@@ -147,6 +147,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'mode': ['in', 'out'],
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
+		'previewShowOption': ['always', 'onSelected'],
 		'regAlign': ['topLeft', 'topMid', 'topRight', 'midLeft', 'center', 'midRight', 'bottomLeft', 'bottomMid', 'bottomRight'],
 		'reliable': __truefalse,
 		'resizeBehavior': ['percentOnly', 'zoom'],
@@ -154,6 +155,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
 		'showAnimationPath': __truefalse,
+		'showEditBackground': __truefalse,
 		'sourcePlaystate': ['play', 'pause', 'stop'],
 		'syncBehavior': ['canSlip', 'locked', 'independent', 'default'],
 		'syncBehaviorDefault': ['canSlip', 'locked', 'independent', 'inherit'],
@@ -1176,26 +1178,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 			attrdict['fill'] = val
 
-	def __do_fillDefault(self, node, attr, val, attrdict):
-		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-			if not features.editor:
-				return
-		self.__context.attributes['project_boston'] = 1
-		val = self.parseEnumValue(attr, val)
-		if val is not None:
-			attrdict['fillDefault'] = val
-
-	def __do_erase(self, node, attr, val, attrdict):
-		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-			if not features.editor:
-				return
-		self.__context.attributes['project_boston'] = 1
-		val = self.parseEnumValue(attr, val)
-		if val is not None:
-			attrdict['erase'] = val
-
 	def __do_mediaRepeat(self, node, attr, val, attrdict):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -1294,14 +1276,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['speed'] = speed
 
 	def __do_enum(self, node, attr, val, attrdict):
+		val = self.parseEnumValue(attr, val)
+		if val is not None:
+			attrdict[attr] = val
+
+	def __do_enumBoston(self, node, attr, val, attrdict):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 			if not features.editor:
 				return
 		self.__context.attributes['project_boston'] = 1
-		val = self.parseEnumValue(attr, val)
-		if val is not None:
-			attrdict[attr] = val
+		self.__do_enum(node, attr, val, attrdict)
 
 	def __do_syncTolerance(self, node, attr, val, attrdict):
 		if self.__context.attributes.get('project_boston') == 0:
@@ -1399,11 +1384,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __do_thumbnailScale(self, node, attr, val, attrdict):
 		attrdict['thumbnail_scale'] = val == 'true'
 
-	def __do_showAnimationPath(self, node, attr, val, attrdict):
-		showAP = self.parseEnumValue(attr, val)
-		if showAP is not None:
-			attrdict['showAnimationPath'] = showAP
-
 	def __do_emptyIcon(self, node, attr, val, attrdict):
 		attrdict['empty_icon'] = MMurl.basejoin(self.__base, val)
 
@@ -1499,8 +1479,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'transOut': __do_transition,
 		'layout': __do_layout,
 		'fill': __do_fill,
-		'fillDefault': __do_fillDefault,
-		'erase': __do_erase,
+		'fillDefault': __do_enumBoston,
+		'erase': __do_enumBoston,
 		'mediaRepeat': __do_mediaRepeat,
 		'color': __do_color,
 		'left': __do_subposition,
@@ -1512,16 +1492,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'backgroundColor': __do_backgroundColor,
 		'z-index': __do_z_index,
 		'regPoint': __do_regPoint,
-		'regAlign': __do_enum,
+		'regAlign': __do_enumBoston,
 		'speed': __do_speed,
-		'autoReverse': __do_enum,
-		'syncMaster': __do_enum,
+		'autoReverse': __do_enumBoston,
+		'syncMaster': __do_enumBoston,
 		'syncTolerance': __do_syncTolerance,
 		'syncToleranceDefault': __do_syncTolerance,
 		'accelerate': __do_accelerate,
 		'decelerate': __do_accelerate,
-		'syncBehavior': __do_enum,
-		'syncBehaviorDefault': __do_enum,
+		'syncBehavior': __do_enumBoston,
+		'syncBehaviorDefault': __do_enumBoston,
 		'project_default_region': __do_default_region,
 		'project_default_type': __do_literal,
 		'project_bandwidth_fraction': __do_bandwidth_fraction,
@@ -1536,7 +1516,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'skip-content': __do_skip_content,
 		'thumbnailIcon': __do_thumbnailIcon,
 		'thumbnailScale': __do_thumbnailScale,
-		'showAnimationPath': __do_showAnimationPath,
+		'showAnimationPath': __do_enum,
 		'emptyIcon': __do_emptyIcon,
 		'emptyText': __do_emptyText,
 		'emptyColor': __do_emptyColor,
@@ -1550,6 +1530,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'mediaOpacity': __do_opacity,
 		'chromaKey': __do_chromaKey,
 		'chromaKeyTolerance': __do_chromaKey,
+		'previewShowOption': __do_enum,
 		'RTIPA-server': __do_RTIPA_server,
 		}
 	for __attr in smil_node_attrs:
@@ -2551,6 +2532,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		bg = None
 		name = None
 		collapsed = None
+		traceImage = None
+		previewShowOption = None
 		if attrs is not None:
 			bg = attrs.get('backgroundColor')
 			if bg is None:
@@ -2560,6 +2543,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 			collapsed = attrs.get('collapsed')
 			traceImage = attrs.get('traceImage')
+			previewShowOption = self.parseEnumValue('previewShowOption', attrs.get('previewShowOption'))
 
 		top = name
 		if not name:
@@ -2589,6 +2573,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# not defined: default behavior which depend of node
 			layout.collapsed = None
 			
+		if previewShowOption is not None:
+			layout['previewShowOption'] = previewShowOption
+
 		if isroot:
 			top = None
 		else:
@@ -2688,6 +2675,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 		if attrdict.has_key('regionName'):
 			ch['regionName'] = attrdict['regionName']
+			del attrdict['regionName']
 
 		# special case: the collapse information is GRiNS specific and
 		# not stored as attribute
@@ -2747,8 +2735,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del attrdict['z-index']
 		
 		if attrdict.has_key('showEditBackground'):
-			ch['showEditBackground'] = attrdict['showEditBackground'] in ('on', 'true')
+			ch['showEditBackground'] = attrdict['showEditBackground']
 			del attrdict['showEditBackground']
+
+		if attrdict.has_key('editBackground'):
+			ch['editBackground'] = attrdict['editBackground']
+			del attrdict['editBackground']
 
 		# keep all original constraints
 		# if a value is not specified,  it's a CSS auto value
@@ -3419,10 +3411,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = self.__convert_color(val)
 					if val is not None:
 						attrdict['backgroundColor'] = val
-##			elif attr == 'editBackground':
-##				val = self.__convert_color(val)
-##				if val is not None:
-##					attrdict['editBackground'] = val
+			elif attr == 'editBackground':
+				val = self.__convert_color(val)
+				if val is not None:
+					attrdict['editBackground'] = val
+			elif attr == 'showEditBackground':
+				val = self.parseEnumValue('showEditBackground', val)
+				if val is not None:
+					attrdict['showEditBackground'] = val
 			elif attr == 'showBackground':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -3483,6 +3479,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = 0
 				else:
 					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'previewShowOption':
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					attrdict[attr] = val
 			elif attr == 'xml:lang':
 				attrdict['xmllang'] = val
 			elif attr == 'opacity':

@@ -1137,6 +1137,7 @@ smil_attrs=[
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),
+	("previewShowOption", lambda writer, node:getcmifattr(writer, node, "previewShowOption"), "previewShowOption"),
 	("allowedmimetypes", getallowedmimetypes, None),
 	("project_autoroute", lambda writer, node:getboolean(writer, node, "project_autoroute", 1, 0), "project_autoroute"),
 	("project_readonly", lambda writer, node:getboolean(writer, node, "project_readonly", 1, 0), "project_readonly"),
@@ -1991,15 +1992,26 @@ class SMILWriter(SMIL, BaseSMILWriter):
 				# default behavior. depend of the node
 				pass
 
+			previewShowOption = ch.GetAttrDef('previewShowOption', None)
+			if previewShowOption is not None:
+				attrlist.append(('%s:previewShowOption' % NSGRiNSprefix, previewShowOption))
+
+			showEditBackground = ch.GetAttrDef('showEditBackground', None)
+			if showEditBackground is not None:
+				attrlist.append(('%s:showEditBackground' % NSGRiNSprefix, ['false','true'][showEditBackground]))
+			editBackground = ch.GetAttrDef('editBackground', None)
+			if editBackground is not None:
+				attrlist.append(('%s:editBackground' % NSGRiNSprefix, translatecolor(editBackground)))
+
 			# trace image
 			traceImage = ch.get('traceImage')
 			if traceImage != None:
 				attrlist.append(('%s:traceImage' % NSGRiNSprefix, traceImage))
 
 			if self.smilboston:
-				for key, val in ch.items():
-					if not cmif_chan_attrs_ignore.has_key(key):
-						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
+##				for key, val in ch.items():
+##					if not cmif_chan_attrs_ignore.has_key(key):
+##						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 				resizeBehavior = ch.get('resizeBehavior', 'zoom')
 				if resizeBehavior != 'zoom':
 					attrlist.append(('%s:resizeBehavior' % NSRP9prefix, resizeBehavior))
@@ -2132,9 +2144,20 @@ class SMILWriter(SMIL, BaseSMILWriter):
 			# default behavior. depend of the node
 			pass
 
-		for key, val in ch.items():
-			if not cmif_chan_attrs_ignore.has_key(key):
-				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
+		previewShowOption = ch.GetAttrDef('previewShowOption', None)
+		if previewShowOption is not None:
+			attrlist.append(('%s:previewShowOption' % NSGRiNSprefix, previewShowOption))
+
+		showEditBackground = ch.GetAttrDef('showEditBackground', None)
+		if showEditBackground is not None:
+			attrlist.append(('%s:showEditBackground' % NSGRiNSprefix, ['false','true'][showEditBackground]))
+		editBackground = ch.GetAttrDef('editBackground', None)
+		if editBackground is not None:
+			attrlist.append(('%s:editBackground' % NSGRiNSprefix, translatecolor(editBackground)))
+
+##		for key, val in ch.items():
+##			if not cmif_chan_attrs_ignore.has_key(key):
+##				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 		opacity = ch.get('opacity')
 		if opacity is not None and 0 <= opacity < 1: # default is 100%
 			attrlist.append(('%s:opacity' % NSRP9prefix, fmtfloat(opacity * 100, '%', prec = 0)))
