@@ -453,30 +453,16 @@ class TreeCtrl(window.Wnd):
 		if len(list) > 0:				
 			firstItemList = list[:-1]
 			lastItem = list[-1]
-			# for all items except the last, select/deselect with SetItemState
-			for item in firstItemList:
-				state = self.GetItemState(item, commctrl.TVIS_SELECTED)
-				if not state & commctrl.TVIS_SELECTED:
-					self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-					self.appendSelection(item)
-
-			# remind the current item selected
-			try: 
-				selitem = self.GetSelectedItem()
-				if selitem:
-					selstate = self.GetItemState(selitem, commctrl.TVIS_SELECTED)
-			except: 
-				selitem = None
 
 			# for the last item, select normally item the same way base would do
 			self.SelectItem(lastItem)
 			self.SetItemState(lastItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 			self.appendSelection(lastItem)
-		
-			# restore selection of previously selected item once not the hit item
-			if selitem and selitem!=lastItem and (selstate & commctrl.TVIS_SELECTED):
-				self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)	
-				self.appendSelection(selitem)
+			
+			# for all items except the last, select/deselect with SetItemState
+			for item in firstItemList:
+				self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+				self.appendSelection(item)
 			
 		self.__selecting = 0
 				
