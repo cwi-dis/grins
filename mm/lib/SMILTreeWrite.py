@@ -231,10 +231,12 @@ class SMILWriter:
 		self.tmpdirname = filename + '.data'
 
 	def write(self):
-		self.fp.write('<smil sync="soft">\n')
+		self.fp.write('<?xml encoding="ISO-8859-1"?>\n')
+		self.fp.write('<smil>\n')
 		self.fp.push()
 		self.fp.write('<head>\n')
 		self.fp.push()
+		self.fp.write('<meta name="sync" content="soft"/>\n')
 		self.writelayout()
 		self.fp.pop()
 		self.fp.write('</head>\n')
