@@ -1,6 +1,8 @@
 # HierarchyView dialog - Version for standard windowinterface
-# XXXX Note: the separation isn't correct: there are still things in HierarchyView
-# that really belong here...
+# XXXX Note: the separation isn't correct: there are still things in
+# HierarchyView that really belong here...
+
+# ' to un-confuse Emacs :-)
 
 from ViewDialog import ViewDialog
 import windowinterface
@@ -59,7 +61,7 @@ class HierarchyViewDialog(ViewDialog):
 			(LIGHT, 'Linking', [
 				(LIGHT, 'Create Simple Anchor', CREATEANCHOR),
 				(LIGHT, 'Finish Hyperlink to Selection', FINISH_LINK),
-				(LIGHT, 'Anchors...', ANCHORS),
+				(SMIL, 'Anchors...', ANCHORS),
 				]),
 			(LIGHT, 'View', [
 				(LIGHT, 'Expand/Collapse', EXPAND),
@@ -105,7 +107,7 @@ class HierarchyViewDialog(ViewDialog):
 		(LIGHT, None),
 		(LIGHT, 'Info...', INFO),
 		(LIGHT, 'Properties...', ATTRIBUTES),
-		(LIGHT, 'Anchors...', ANCHORS),
+		(SMIL, 'Anchors...', ANCHORS),
 		)
 
 	leaf_popupmenu = (
@@ -127,7 +129,7 @@ class HierarchyViewDialog(ViewDialog):
 		(LIGHT, None),
 		(LIGHT, 'Info...', INFO),
 		(LIGHT, 'Properties...', ATTRIBUTES),
-		(LIGHT, 'Anchors...', ANCHORS),
+		(SMIL, 'Anchors...', ANCHORS),
 		(LIGHT, 'Edit Content...', CONTENT),
 		)
 
@@ -143,10 +145,14 @@ class HierarchyViewDialog(ViewDialog):
 		if self.is_showing():
 			self.window.pop(poptop = 1)
 			return
+		import settings
 		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
 		self.adornments['flags'] = curflags()
+		if settings.get('lightweight') and self.adornments['shortcuts'].has_key('t'):
+			# no ANCHORS command in lightweight version
+			del self.adornments['shortcuts']['t']
 		self.window = windowinterface.newcmwindow(x, y, w, h, title,
 				pixmap = 1, adornments = self.adornments,
 				canvassize = (w, h),
