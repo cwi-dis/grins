@@ -59,6 +59,7 @@
 #define IDD_EDITSTRINGATTR3             328
 #define IDD_EDITSTRINGATTR4             329
 #define IDD_EDITRECTATTR2               330
+#define IDD_EDITRECTATTR3               331
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
