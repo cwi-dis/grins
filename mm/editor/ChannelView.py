@@ -292,7 +292,10 @@ class ChannelView(ChannelViewDialog):
 		if not em.transaction():
 			self.render()
 			return
-		url = MMurl.pathname2url(filename)
+		if event == WMEVENTS.DropFile:
+			url = MMurl.pathname2url(filename)
+		else:
+			url = filename
 		obj.node.SetAttr('file', url)
 		em.commit()
 

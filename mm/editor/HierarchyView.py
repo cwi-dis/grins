@@ -249,7 +249,10 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.init_display()
 		self.setfocusobj(obj)
-		url = MMurl.pathname2url(filename)
+		if event == WMEVENTS.DropFile:
+			url = MMurl.pathname2url(filename)
+		else:
+			url = filename
 		if obj.node.GetType() in MMNode.leaftypes:
 			em = self.editmgr
 			if not em.transaction():
