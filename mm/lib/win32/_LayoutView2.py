@@ -1089,8 +1089,12 @@ class Viewport(win32window.Window, UserEventMng):
 
 		self.center()
 
+		# begin test code
+		# this code should be executed by a region to show its path
 		points = [ (0,0), (100, 200), (300,100)]
-		self._polyline = winlayout.Polyline(self, points)
+		polyline = winlayout.Polyline(self, points)
+		self._topwindow.setCurrentPolyline(polyline)
+		# end test code
 
 	def center(self):
 		x, y, w, h = self._rectb
@@ -1102,7 +1106,10 @@ class Viewport(win32window.Window, UserEventMng):
 		if x<8: x=8
 		if y<8: y=8
 		self._rectb = x, y, w, h
-		
+	
+	def setCurrentPolyline(self, polyline):
+		self._polyline = polyline
+		 	
 	# overide the default newdisplaylist method defined in win32window
 	def newdisplaylist(self, bgcolor = None):
 		if bgcolor is None:
