@@ -249,14 +249,14 @@ class Window:
 
 		disp = self._active_displist
 		if disp is not None:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point= xp-x, yp-y
 			if disp.isTransparent(point):
 				# don't consider transparent media
 				if self._transparent:
 					return cont
 				return stop
-			x, y, w, h = self.getwindowpos()
-			xp, yp = point
-			point= xp-x, yp-y
 			x,y = self._pxl2rel(point,self._canvas)
 			buttons = []
 			for button in disp._buttons:
@@ -904,13 +904,9 @@ class Window:
 		x, y, w, h = self._rectb
 		return X+x, Y+y, w, h
 				
-	def inside(self, point):
+	def inside(self, (xp, yp)):
 		x, y, w, h = self.getwindowpos()
-		l, t, r, b = x, y, x+w, y+h
-		xp, yp = point
-		if xp>=l and xp<r and yp>=t and yp<b:
-			return 1
-		return 0
+		return x <= xp < x + w and y <= yp < y + h
 
 
 	#
