@@ -106,7 +106,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if isinstance(self, CommentWidget):
 			self.iconbox = None
 		else:
-			self.iconbox = IconBox(self, self.mother, vertical = vertical_icons)
+			self.iconbox = IconBox(self, self.mother, vertical = settings.get('vertical_icons'))
 		self.cause_event_icon = None
 		self.linksrc_icon = None
 		self.linkdst_icon = None
