@@ -145,7 +145,8 @@ class Viewport(Region):
 		pass
 
 	def setcursor(self, strid):
-		print 'Viewport.setcursor', strid
+		pass
+##		print 'Viewport.setcursor', strid
 
 	def close(self):
 		if self._ctx is None:
