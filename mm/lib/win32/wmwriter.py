@@ -152,15 +152,15 @@ class WMWriter:
 		except:
 			return None
 		try:
-			f = dshow.CreateFilter('Audio Windows Media Converter')
+			f = dshow.CreateFilter('Audio Pipe')
 		except:
-			print 'Audio windows media converter filter is not installed'
+			print 'Audio pipe filter is not installed'
 			return None
 
 		try:
-			wmconv=f.QueryIWMConverter()
+			wmconv=f.QueryIPipe()
 		except:
-			print 'Filter does not support interface IWMConverter'
+			print 'Filter does not support interface IPipe'
 			return
 		wmconv.SetAdviceSink(self._audiopeer)
 
@@ -203,15 +203,15 @@ class AudioFormatSetter:
 		aulastpin=pin.ConnectedTo()
 		fg.RemoveFilter(aurenderer)
 		try:
-			f = dshow.CreateFilter('Audio Windows Media Converter')
+			f = dshow.CreateFilter('Audio Pipe')
 		except:
-			print 'Audio windows media converter filter is not installed'
+			print 'Audio pipe filter is not installed'
 			return None
 
 		try:
-			wmconv=f.QueryIWMConverter()
+			wmconv=f.QueryIPipe()
 		except:
-			print 'Filter does not support interface IWMConverter'
+			print 'Filter does not support interface IPipe'
 			return
 		wmconv.SetAdviceSink(self._audiopeer)
 
@@ -298,16 +298,16 @@ class WMVideoConverter:
 		
 		# create wmv converter filter
 		try:
-			vf = dshow.CreateFilter('Video Windows Media Converter')
+			vf = dshow.CreateFilter('Video Pipe')
 		except:
-			print 'Video windows media converter filter is not installed'
+			print 'Video pipe filter is not installed'
 			return None
 		
 		# set listener
 		try:
-			wmconv=vf.QueryIWMConverter()
+			wmconv=vf.QueryIPipe()
 		except:
-			print 'Filter does not support interface IWMConverter'
+			print 'Filter does not support IPipe'
 			return None
 		wmconv.SetAdviceSink(self._videopeer)
 
@@ -334,15 +334,15 @@ class WMVideoConverter:
 			aulastpin=pin.ConnectedTo()
 			fg.RemoveFilter(aurenderer)
 			try:
-				f = dshow.CreateFilter('Audio Windows Media Converter')
+				f = dshow.CreateFilter('Audio Pipe')
 			except:
-				print 'Audio windows media converter filter is not installed'
+				print 'Audio pipe filter is not installed'
 				return None
 
 			try:
-				wmconv=f.QueryIWMConverter()
+				wmconv=f.QueryIPipe()
 			except:
-				print 'Filter does not support interface IWMConverter'
+				print 'Filter does not support IPipe'
 				return
 			wmconv.SetAdviceSink(self._audiopeer)
 
@@ -448,15 +448,15 @@ class WMAudioConverter:
 		aulastpin=pin.ConnectedTo()
 		fg.RemoveFilter(aurenderer)
 		try:
-			f = dshow.CreateFilter('Audio Windows Media Converter')
+			f = dshow.CreateFilter('Audio Pipe')
 		except:
-			print 'Audio windows media converter filter is not installed'
+			print 'Audio pipe filter is not installed'
 			return None
 
 		try:
-			wmconv=f.QueryIWMConverter()
+			wmconv=f.QueryIPipe()
 		except:
-			print 'Filter does not support interface IWMConverter'
+			print 'Filter does not support interface IPipe'
 			return
 		wmconv.SetAdviceSink(self._peer)
 
