@@ -205,6 +205,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__deftop = 0
 		self.__in_metadata = 0
 		self.__metadata = []
+		# experimental code for switch layout
+		self.__alreadymatch = 0
+		self.__switchstack = []
+		# end experimental code for switch layout
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
 		self.__validchannels = {'undefined':0}
@@ -1095,13 +1099,90 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# connect to region
 		if attributes.has_key('region'):
 			region = attributes['region']
-			if not self.__regions.has_key(region):
-				self.syntax_error('unknown region')
-			# this two lines allow to avoid a crash if region name = top level window name !!!
-			# I tried to resolve this problem clearly --> but I had too many new problems !.
-			# After I day full time spended, i gived up
-			elif self.__tops.has_key(region):
-				self.error('unknown region')
+			
+			# experimental code for switch layout
+			
+			# first, find all elements in the layout section may be mapped
+			regionIdList = []
+			for id,reg in self.__regions.items():
+				if reg.has_key('regionName'):
+					regName = reg.get('regionName')
+					if regName == region:
+						regionIdList.append(id)
+			
+			regionSelected = None
+			# resolve the conflict according to the system caption test
+			if len(regionIdList) > 0:
+				regionMapList = []
+				for regId in regionIdList:
+					# get the first found
+					
+					reg = self.__regions.get(regId)
+					all = settings.getsettings()
+					notmatch = 0
+					for setting in all:		
+						settingvalue = reg.get(setting)					
+						if settingvalue != None:
+							ok = settings.match(setting,settingvalue)
+							if not ok:
+								notmatch = 1
+								break
+					if not notmatch:	
+						# if match, check system attributes for parents
+						pid = reg.get('base_window')
+					        if self.__tops.has_key(pid):
+					                preg = self.__tops[pid]
+					        else:
+					                preg = self.__regions[pid]
+						
+						allmatch = 1
+						while preg != None:
+							notmatch = 0
+							for setting in all:		
+								settingvalue = preg.get(setting)					
+								if settingvalue != None:
+									ok = settings.match(setting,settingvalue)
+									if not ok:
+										notmatch = 1
+										break						
+						        if notmatch:
+						                allmatch = 0
+						                break
+						        pid = preg.get('base_window')
+						        if pid != None:
+							        if self.__tops.has_key(pid):
+							                preg = self.__tops[pid]
+							        else:
+							                preg = self.__regions[pid]
+							else:
+								preg = None
+						# if all parent match with system attribute, keep this region
+						if allmatch:
+							regionMapList.append((regId,reg.get('elementindex')))
+				# keep the first (document order) amoung all retains region
+				indexmin = -1
+				for regMap,index in regionMapList:
+					if index < indexmin or indexmin == -1:
+						indexmin = index
+						reg = regMap
+				if indexmin >= 0:
+					regionSelected = reg
+			
+			if regionSelected is None:
+				# end experimental code for switch layout
+
+				if not self.__regions.has_key(region):
+					self.syntax_error('unknown region')
+				# this two lines allow to avoid a crash if region name = top level window name !!!
+				# I tried to resolve this problem clearly --> but I had too many new problems !.
+				# After I day full time spended, i gived up
+				elif self.__tops.has_key(region):
+					self.error('unknown region')
+			else:
+			# experimental code for switch layout
+				region = regionSelected
+			# end experimental code for switch layout
+			
 		else:
 			if CASCADE and not self.__has_layout:
 				region = 'unnamed region %d' % self.__regionno
@@ -1851,8 +1932,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
+			# experimental code for switch layout: 'elementindex'
+			# and 'attr not in settings.ALL' and line'
 			if attr not in ('minwidth', 'minheight', 'units',
-					'skip-content') and \
+					'skip-content','elementindex') and \
+				attr not in settings.ALL and \
 			   not self.attributes['region'].has_key(attr):
 				try:
 					ch[attr] = parseattrval(attr, val, self.__context)
@@ -2497,6 +2581,142 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					elif val == 'html':
 						val = 'text'
 				attrdict[attr] = val
+			# experimental code for switch layout
+			elif attr == 'system-bitrate':
+				try:
+					bitrate = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad bitrate attribute')
+				else:
+					if not attrdict.has_key('system_bitrate'):
+						attrdict['system_bitrate'] = bitrate
+			elif attr == 'systemBitrate':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					bitrate = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad bitrate attribute')
+				else:
+					attrdict['system_bitrate'] = bitrate
+			elif attr == 'system-screen-size':
+				res = screen_size.match(val)
+				if res is None:
+					self.syntax_error('bad screen-size attribute')
+				else:
+					if not attrdict.has_key('system_screen_size'):
+						attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+			elif attr == 'systemScreenSize':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				res = screen_size.match(val)
+				if res is None:
+					self.syntax_error('bad screen-size attribute')
+				else:
+					attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+			elif attr == 'system-screen-depth':
+				try:
+					depth = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad screen-depth attribute')
+				else:
+					if not attrdict.has_key('system_screen_depth'):
+						attrdict['system_screen_depth'] = depth
+			elif attr == 'systemScreenDepth':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					depth = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad screen-depth attribute')
+				else:
+					attrdict['system_screen_depth'] = depth
+			elif attr == 'system-captions':
+				if val == 'on':
+					if not attrdict.has_key('system_captions'):
+						attrdict['system_captions'] = 1
+				elif val == 'off':
+					if not attrdict.has_key('system_captions'):
+						attrdict['system_captions'] = 0
+				else:
+					self.syntax_error('bad system-captions attribute')
+			elif attr == 'systemCaptions':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val == 'on':
+					attrdict['system_captions'] = 1
+				elif val == 'off':
+					attrdict['system_captions'] = 0
+				else:
+					self.syntax_error('bad system-captions attribute')
+			elif attr == 'systemAudioDesc':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val == 'on':
+					attrdict['system_audiodesc'] = 1
+				elif val == 'off':
+					attrdict['system_audiodesc'] = 0
+				else:
+					self.syntax_error('bad system-audiodesc attribute')
+			elif attr == 'system-language':
+				if not attrdict.has_key('system_language'):
+					attrdict['system_language'] = val
+			elif attr == 'systemLanguage':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['system_language'] = val
+			elif attr == 'systemCPU':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['system_cpu'] = string.lower(val)
+			elif attr == 'systemOperatingSystem':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['system_operating_system'] = string.lower(val)
+			elif attr == 'system-overdub-or-caption':
+				if val in ('caption', 'overdub'):
+					if not attrdict.has_key('system_overdub_or_caption'):
+						attrdict['system_overdub_or_caption'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-caption attribute')
+			elif attr == 'systemOverdubOrSubtitle':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('subtitle', 'overdub'):
+					if val == 'subtitle':
+						val = 'overdub'
+					attrdict['system_overdub_or_caption'] = val
+				else:
+					self.syntax_error('bad systemOverdubOrSubtitle attribute')
+			elif attr == 'system-required':
+				if not attrdict.has_key('system_required'):
+					nsdict = self.getnamespace()
+					nsuri = nsdict.get(val)
+					if not nsuri:
+						self.syntax_error('no namespace declaration for %s in effect' % val)
+					else:
+						attrdict['system_required'] = nsuri
+			elif attr == 'systemRequired':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				nsdict = self.getnamespace()
+				nsuri = nsdict.get(val)
+				if not nsuri:
+					self.syntax_error('no namespace declaration for %s in effect' % val)
+				else:
+					attrdict['system_required'] = nsuri
+				
+			# end experimental code for switch layout
 			else:
 				# catch all
 				attrdict[attr] = val
@@ -2505,6 +2725,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
 			del attrdict['bottom']
 		
+		# experimental code for switch layout
+		if not hasattr(self,'_elementindex'):
+			self._elementindex = 1
+		else:
+			self._elementindex = self._elementindex+1
+		attrdict['elementindex'] = self._elementindex
+		
+		if id is None:
+			id = '_#internalid%d' % self._elementindex
+			attrdict['id'] = id
+			if self.__ids.has_key(id):
+				self.syntax_error('non-unique id %s' % id)
+			self.__ids[id] = 0
+			self.__regions[id] = attrdict
+			
+		# end experimental code for switch layout
+
 		if id is None:
 			self.syntax_error('region without id attribute')
 			return
@@ -2648,6 +2885,173 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				   'open':open,
 				   'attrs':attributes}
 
+		# experimental code for switch layout
+		if len(self.__switchstack) > 0:
+			attrdict = {}
+			for attr,val in attributes.items():
+				if attr == 'system-bitrate':
+					try:
+						bitrate = string.atoi(val)
+					except string.atoi_error:
+						self.syntax_error('bad bitrate attribute')
+					else:
+						if not attrdict.has_key('system_bitrate'):
+							attrdict['system_bitrate'] = bitrate
+				elif attr == 'systemBitrate':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					try:
+						bitrate = string.atoi(val)
+					except string.atoi_error:
+						self.syntax_error('bad bitrate attribute')
+					else:
+						attrdict['system_bitrate'] = bitrate
+				elif attr == 'system-screen-size':
+					res = screen_size.match(val)
+					if res is None:
+						self.syntax_error('bad screen-size attribute')
+					else:
+						if not attrdict.has_key('system_screen_size'):
+							attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+				elif attr == 'systemScreenSize':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					res = screen_size.match(val)
+					if res is None:
+						self.syntax_error('bad screen-size attribute')
+					else:
+						attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+				elif attr == 'system-screen-depth':
+					try:
+						depth = string.atoi(val)
+					except string.atoi_error:
+						self.syntax_error('bad screen-depth attribute')
+					else:
+						if not attrdict.has_key('system_screen_depth'):
+							attrdict['system_screen_depth'] = depth
+				elif attr == 'systemScreenDepth':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					try:
+						depth = string.atoi(val)
+					except string.atoi_error:
+						self.syntax_error('bad screen-depth attribute')
+					else:
+						attrdict['system_screen_depth'] = depth
+				elif attr == 'system-captions':
+					if val == 'on':
+						if not attrdict.has_key('system_captions'):
+							attrdict['system_captions'] = 1
+					elif val == 'off':
+						if not attrdict.has_key('system_captions'):
+							attrdict['system_captions'] = 0
+					else:
+						self.syntax_error('bad system-captions attribute')
+				elif attr == 'systemCaptions':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					if val == 'on':
+						attrdict['system_captions'] = 1
+					elif val == 'off':
+						attrdict['system_captions'] = 0
+					else:
+						self.syntax_error('bad system-captions attribute')
+				elif attr == 'systemAudioDesc':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					if val == 'on':
+						attrdict['system_audiodesc'] = 1
+					elif val == 'off':
+						attrdict['system_audiodesc'] = 0
+					else:
+						self.syntax_error('bad system-audiodesc attribute')
+				elif attr == 'system-language':
+					if not attrdict.has_key('system_language'):
+						attrdict['system_language'] = val
+				elif attr == 'systemLanguage':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					attrdict['system_language'] = val
+				elif attr == 'systemCPU':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					attrdict['system_cpu'] = string.lower(val)
+				elif attr == 'systemOperatingSystem':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					attrdict['system_operating_system'] = string.lower(val)
+				elif attr == 'system-overdub-or-caption':
+					if val in ('caption', 'overdub'):
+						if not attrdict.has_key('system_overdub_or_caption'):
+							attrdict['system_overdub_or_caption'] = val
+					else:
+						self.syntax_error('bad system-overdub-or-caption attribute')
+				elif attr == 'systemOverdubOrSubtitle':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					if val in ('subtitle', 'overdub'):
+						if val == 'subtitle':
+							val = 'overdub'
+						attrdict['system_overdub_or_caption'] = val
+					else:
+						self.syntax_error('bad systemOverdubOrSubtitle attribute')
+				elif attr == 'system-required':
+					if not attrdict.has_key('system_required'):
+						nsdict = self.getnamespace()
+						nsuri = nsdict.get(val)
+						if not nsuri:
+							self.syntax_error('no namespace declaration for %s in effect' % val)
+						else:
+							attrdict['system_required'] = nsuri
+				elif attr == 'systemRequired':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
+					nsdict = self.getnamespace()
+					nsuri = nsdict.get(val)
+					if not nsuri:
+						self.syntax_error('no namespace declaration for %s in effect' % val)
+					else:
+						attrdict['system_required'] = nsuri
+	
+			if not hasattr(self,'_elementindex'):
+				self._elementindex = 1
+			else:
+				self._elementindex = self._elementindex+1
+			attrdict['elementindex'] = self._elementindex
+					
+			for key,val in attrdict.items():
+				self.__tops[id][key] = val
+			
+			notmatch = 0
+			if self.__alreadymatch:
+				notmatch = 1
+			else:
+				all = settings.getsettings()
+				for setting in all:		
+					settingvalue = self.__tops[id].get(setting)					
+					if settingvalue != None:
+						ok = settings.match(setting,settingvalue)
+						if not ok:
+							notmatch = 1
+							break
+			if notmatch:
+				# if not match, set open to when active. Like this, the view port won't be never showed
+				self.__tops[id]['open'] = 'whenActive'
+			else:
+				self.__alreadymatch = 1
+
+		# end experimental code for switch
+		
 	def end_viewport(self):
 		self.__viewport = None
 
@@ -2927,7 +3331,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_switch(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
-		if self.__in_head:
+		# experimental code for switch layout
+		self.__switchstack.append(attributes)
+		if self.__in_layout:
+			# nothing for now
+			pass
+		# end experimental code
+		elif self.__in_head:
 			if self.__in_head_switch:
 				self.syntax_error('switch within switch in head')
 			if self.__in_meta:
@@ -2938,7 +3348,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_switch(self):
 		self.__in_head_switch = 0
-		if not self.__in_head:
+		# experimental code for switch layout
+		del self.__switchstack[-1]
+		if self.__in_layout:
+			# nothinbg for now
+			pass
+		# end experimental code
+		elif not self.__in_head:
 			self.EndContainer('alt')
 
 	# media items
