@@ -15,6 +15,7 @@ import usercmd
 import usercmdui
 import wndusercmd
 import grinsRC
+import ToolbarTemplate
 
 # temporary:
 SHOW_TOOLBAR_COMBO = 1
@@ -55,77 +56,103 @@ class ToolbarMixin:
 		cmdui.Enable(1)
 		cmdui.SetCheck(self._wndToolBar.IsWindowVisible())
 
+	def _setToolbarFromTemplate(self, template):
+		# First count number of buttons
+		name, command, resid, buttonlist = template
+		nbuttons = len(buttonlist)
+		if buttonlist and buttonlist[-1].type == 'pulldown':
+			nbuttons = nbuttons - 1
+		self._wndToolBar.SetButtons(nbuttons)
+		buttonindex = 0
+		for button in buttonlist:
+			if button.type == 'button':
+				id = usercmdui.class2ui[button.cmdid].id
+				self._wndToolBar.SetButtonInfo(buttonindex, id,
+					afxexttb.TBBS_BUTTON, button.arg)
+			elif button.type == 'separator':
+				self._wndToolBar.SetButtonInfo(buttonindex, afxexttb.ID_SEPARATOR,
+					afxexttb.TBBS_SEPARATOR, button.width)
+			elif button.type == 'pulldown':
+				pass
+			else:
+				raise 'Unknown toolbar item type', button.type
+			buttonindex = buttonindex+1
+		return nbuttons
+
+			
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
-		self._wndToolBar.SetButtons(4)
-
-		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
-		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
-
-		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
-
-		id=usercmdui.class2ui[usercmd.OPENFILE].id
-		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
-
-		id=usercmdui.class2ui[usercmd.SAVE].id
-		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
-				
+		self._setToolbarFromTemplate(ToolbarTemplate.FRAME_TEMPLATE)
+##		self._wndToolBar.SetButtons(4)
+##
+##		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
+##		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
+##
+##		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+##
+##		id=usercmdui.class2ui[usercmd.OPENFILE].id
+##		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
+##
+##		id=usercmdui.class2ui[usercmd.SAVE].id
+##		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
+##				
 		self.ShowControlBar(self._wndToolBar,1,0)
 		self._wndToolBar.RedrawWindow()
 
 
 	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self, adornments):
-		num_buttons = 18
-		self._wndToolBar.SetButtons(num_buttons)
-
-		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
-		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
-
-		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
-
-		id=usercmdui.class2ui[usercmd.OPENFILE].id
-		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
-
-		id=usercmdui.class2ui[usercmd.SAVE].id
-		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
-	
-		# Play Toolbar
-		self._wndToolBar.SetButtonInfo(4,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
-
-		id=usercmdui.class2ui[usercmd.RESTORE].id
-		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 6)
-
-		id=usercmdui.class2ui[usercmd.CLOSE].id
-		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 7)
-
-		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-
-		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
-		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 9)
-
-		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
-		self._wndToolBar.SetButtonInfo(9,id,afxexttb.TBBS_BUTTON, 10)
-
-		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
-		self._wndToolBar.SetButtonInfo(10,id,afxexttb.TBBS_BUTTON, 11)
-
-		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-	
-		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
-		self._wndToolBar.SetButtonInfo(12,id,afxexttb.TBBS_BUTTON, 14)
-
-		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-
-		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_IN].id
-		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON,15)
-		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_OUT].id
-		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,16)
-
-		self._wndToolBar.SetButtonInfo(16,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-
-		id=usercmdui.class2ui[usercmd.HELP].id
-		self._wndToolBar.SetButtonInfo(17,id,afxexttb.TBBS_BUTTON, 12)
+		num_buttons = self._setToolbarFromTemplate(ToolbarTemplate.GENERAL_TEMPLATE)
+##		num_buttons = 18
+##		self._wndToolBar.SetButtons(num_buttons)
+##
+##		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
+##		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
+##
+##		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+##
+##		id=usercmdui.class2ui[usercmd.OPENFILE].id
+##		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
+##
+##		id=usercmdui.class2ui[usercmd.SAVE].id
+##		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
+##	
+##		# Play Toolbar
+##		self._wndToolBar.SetButtonInfo(4,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+##
+##		id=usercmdui.class2ui[usercmd.RESTORE].id
+##		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 6)
+##
+##		id=usercmdui.class2ui[usercmd.CLOSE].id
+##		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 7)
+##
+##		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
+##
+##		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
+##		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 9)
+##
+##		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
+##		self._wndToolBar.SetButtonInfo(9,id,afxexttb.TBBS_BUTTON, 10)
+##
+##		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
+##		self._wndToolBar.SetButtonInfo(10,id,afxexttb.TBBS_BUTTON, 11)
+##
+##		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+##	
+##		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
+##		self._wndToolBar.SetButtonInfo(12,id,afxexttb.TBBS_BUTTON, 14)
+##
+##		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+##
+##		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_IN].id
+##		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON,15)
+##		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_OUT].id
+##		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,16)
+##
+##		self._wndToolBar.SetButtonInfo(16,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+##
+##		id=usercmdui.class2ui[usercmd.HELP].id
+##		self._wndToolBar.SetButtonInfo(17,id,afxexttb.TBBS_BUTTON, 12)
 
 		if adornments.has_key('pulldown'):
 			index = num_buttons
@@ -147,33 +174,34 @@ class ToolbarMixin:
 
 	# Set the player toolbar
 	def setPlayerToolbar(self):
-		self._wndToolBar.SetButtons(9)
-
-		id=usercmdui.class2ui[usercmd.OPENFILE].id
-		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON, 1)
-
-		# Play Toolbar
-		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-
-		id=usercmdui.class2ui[usercmd.CLOSE].id
-		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 7)
-
-		self._wndToolBar.SetButtonInfo(3,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-
-		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
-		self._wndToolBar.SetButtonInfo(4,id,afxexttb.TBBS_BUTTON, 9)
-
-		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
-		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 10)
-
-		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
-		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 11)
-	
-		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
-
-		id=usercmdui.class2ui[usercmd.HELP].id
-		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 12)
-	
+		self._setToolbarFromTemplate(ToolbarTemplate.PLAYER_TEMPLATE)
+##		self._wndToolBar.SetButtons(9)
+##
+##		id=usercmdui.class2ui[usercmd.OPENFILE].id
+##		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON, 1)
+##
+##		# Play Toolbar
+##		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
+##
+##		id=usercmdui.class2ui[usercmd.CLOSE].id
+##		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 7)
+##
+##		self._wndToolBar.SetButtonInfo(3,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
+##
+##		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
+##		self._wndToolBar.SetButtonInfo(4,id,afxexttb.TBBS_BUTTON, 9)
+##
+##		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
+##		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 10)
+##
+##		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
+##		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 11)
+##	
+##		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
+##
+##		id=usercmdui.class2ui[usercmd.HELP].id
+##		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 12)
+##	
 		self.ShowControlBar(self._wndToolBar,1,0)
 
 
