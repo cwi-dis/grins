@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Cache parsing results of CMIF files
 
 from MMNode import interiortypes

@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Read attribute definitions from a file.
 #
 # Exported interface (in reverse order of importance :-( ):
