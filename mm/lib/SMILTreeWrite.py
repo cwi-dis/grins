@@ -218,8 +218,8 @@ def getsrc(writer, node):
 	if node.GetChannelType() == 'RealPix':
 		# special case code for RealPix file
 		if not hasattr(node, 'slideshow'):
-			import HierarchyView
-			node.slideshow = HierarchyView.SlideShow(node)
+			import realnode
+			node.slideshow = realnode.SlideShow(node)
 		import realsupport
 		rp = node.slideshow.rp
 		otags = rp.tags
@@ -232,32 +232,27 @@ def getsrc(writer, node):
 			nurl = attrs.get('file')
 			if not nurl:
 				continue
-			nurl = ctx.findurl(MMurl.basejoin(val, nurl))
+			nurl = ctx.findurl(nurl)
 			if writer.copycache.has_key(nurl):
-				file = writer.copycache[nurl]
+				nfile = writer.copycache[nurl]
 			else:
-				file = writer.copyfile(nurl)
-				writer.copycache[nurl] = file
-			attrs['file'] = MMurl.pathname2url(file)
+				nfile = writer.copyfile(nurl)
+				writer.copycache[nurl] = nfile
+			attrs['file'] = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(nfile))
 		rp.tags = ntags
 		file = writer.newfile(url)
+		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+		ofile = node.attrdict['file']
+		node.SetAttr('file', val)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
+		node.SetAttr('file', ofile)
 		writer.files_generated[file] = ''
 		rp.tags = otags
-		writer.copycache[url] = file
-		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-##		if ':' in val: #DBG
-##			import pdb #DBG
-##			pdb.set_trace() #DBG
-		return val
 	else:
 		file = writer.copyfile(url, node)
-		writer.copycache[url] = file
-		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-##		if ':' in val: #DBG
-##			import pdb #DBG
-##			pdb.set_trace() #DBG
-		return val
+	writer.copycache[url] = file
+	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+	return val
 
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)

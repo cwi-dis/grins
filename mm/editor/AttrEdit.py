@@ -22,8 +22,8 @@ def showattreditor(toplevel, node):
 			if node.GetType() == 'ext' and \
 			   node.GetChannelType() == 'RealPix' and \
 			   not hasattr(node, 'slideshow'):
-				import HierarchyView
-				node.slideshow = HierarchyView.SlideShow(node)
+				import realnode
+				node.slideshow = realnode.SlideShow(node)
 		else:
 			wrapperclass = SlideWrapper
 		attreditor = AttrEditor(wrapperclass(toplevel, node))
@@ -290,8 +290,6 @@ class SlideWrapper(NodeWrapper):
 		   attrdict.get('file'):
 			import MMurl, Sizes
 			url = attrdict['file']
-			purl = MMAttrdefs.getattr(node.GetParent(), 'file')
-			url = MMurl.basejoin(purl, url)
 			url = node.GetContext().findurl(url)
 			w,h = Sizes.GetSize(url)
 			if w != 0 and h != 0:
@@ -830,9 +828,6 @@ class FileAttrEditorField(StringAttrEditorField):
 			dir, file = cwd, ''
 		else:
 			node = self.wrapper.node
-			if self.wrapper.__class__ is SlideWrapper:
-				purl = MMAttrdefs.getattr(node.GetParent(), 'file')
-				url = MMurl.basejoin(purl, url)
 			url = node.GetContext().findurl(url)
 			utype, host, path, params, query, fragment = urlparse.urlparse(url)
 			if (utype and utype != 'file') or \
@@ -851,17 +846,29 @@ class FileAttrEditorField(StringAttrEditorField):
 
 	def __ok_cb(self, pathname):
 		import MMurl, os
+		if os.path.isabs(pathname):
+			cwd = self.wrapper.toplevel.dirname
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
+				cwd = os.getcwd()
+			if os.path.isdir(pathname):
+				dir, file = pathname, os.curdir
+			else:
+				dir, file = os.path.split(pathname)
+			# XXXX maybe should check that dir gets shorter!
+			while len(dir) > len(cwd):
+				dir, f = os.path.split(dir)
+				file = os.path.join(f, file)
+			if dir == cwd:
+				pathname = file
 		url = MMurl.pathname2url(pathname)
-		if self.wrapper.__class__ is SlideWrapper:
+		self.setvalue(url)
+		if self.wrapper.__class__ is SlideWrapper and url:
 			import HierarchyView
-			node = self.wrapper.node
-			pnode = node.GetParent()
-			purl = node.GetContext().findurl(MMAttrdefs.getattr(pnode, 'file'))
-			relurl = HierarchyView.cvslideurl(url, purl)
-			if not relurl:
-				return
 			start, minstart = HierarchyView.slidestart(pnode, url, pnode.children.index(node))
-			url = relurl
 			for b in self.attreditor.attrlist:
 				if b.getname() == 'start':
 					str = b.getvalue()
@@ -872,27 +879,6 @@ class FileAttrEditorField(StringAttrEditorField):
 					if minstart - start > value:
 						b.setvalue(b.valuerepr(minstart-start))
 					break
-		else:
-			if os.path.isabs(pathname):
-				cwd = self.wrapper.toplevel.dirname
-				if cwd:
-					cwd = MMurl.url2pathname(cwd)
-					if not os.path.isabs(cwd):
-						cwd = os.path.join(os.getcwd(), cwd)
-				else:
-					cwd = os.getcwd()
-				if os.path.isdir(pathname):
-					dir, file = pathname, os.curdir
-				else:
-					dir, file = os.path.split(pathname)
-				# XXXX maybe should check that dir gets shorter!
-				while len(dir) > len(cwd):
-					dir, f = os.path.split(dir)
-					file = os.path.join(f, file)
-				if dir == cwd:
-					pathname = file
-			url = MMurl.pathname2url(pathname)
-		self.setvalue(url)
 
 class TupleAttrEditorField(AttrEditorField):
 	type = 'tuple'
