@@ -24,63 +24,59 @@
 
 
 (bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
-	'Bounding box for embedded PostScript image')
+	'Bounding box for embedded PostScript image' channel)
 
 (center (bool) 0 'Center' default
 	'If on, text is centered within the margins')
 
 (channel (name) undefined 'Channel' default
-	'Name of channel used to render this node/subtree')
-
-#(channeldict (namedict (attrdict)) () 'Channel Dictionary' default
-#	'Channels used in this document (root node only)')
-# Now really obsolete; use channelist!
+	'Name of channel used to render this node/subtree' inherited)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' default
 	'Channels used in this document (root node only)')
 
-(duration (float) 0 'Duration' default
-	'Duration of a node/subtree (in seconds)')
+(duration (float) 2.0 'Duration' default
+	'Duration of a node/subtree (in seconds)' channel)
 
-(extraspaceafter (float) 0 'Extra space after' default
+(extraspaceafter (float) 0.0 'Extra space after' default
 	'Extra space following last word (in characters)')
 
-(file (string) '' 'File' default
-	'File name for external node')
+(file (string) '/dev/null' 'File' default
+	'File name for external node' channel)
 
 (font (string) 'default' 'Font' default
-	'Font used to display text')
+	'Font used to display text' channel)
 
 (format (enum ASCII PostScript) ASCII 'Format' default
-	'Format used by external text file (ASCII or PostScript)')
+	'Format used by external text file (ASCII or PostScript)' channel)
 
 (indent (float) 0 'Indent' default
 	'Extra indentation of left margin (in characters)')
 
 (justify (bool) 0 'Justify' default
-	'If on, justify right margins')
+	'If on, justify right margins' channel)
 
 (keep (bool) 0 'Keep' default
-	'If on, text in window is kept until explicitly replaced')
+	'If on, text in window is kept until explicitly replaced' channel)
 
 (name (name) none 'Name' default
-	'Name given to a node')
+	'Name given to a node' raw)
 
 (needGS (bool) 0 'Need Ghostscript' default
-	'Must be on for channel to support embedded Postscript')
+	'Must be on for channel to support embedded Postscript' channel)
 
 (nospaceafter (bool) 0 'No space after' default
 	'If on, suppress space following last word')
 
 (scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
-	'Select the presence of horizontal/vertical scroll bars')
+	'Select the presence of horizontal/vertical scroll bars' channel)
 
-(pointsize (float) 12 'Point size' default
-	'Point size of text displayed in window')
+(pointsize (float) 0 'Point size' default
+	'Point size of text displayed in window' channel)
 
 (style (list (name)) () 'Style(s)' default
-	'List of style names that apply to this node/subtree')
+	'List of style names that apply to this node/subtree' raw)
 
 (styledict (namedict (attrdict)) () 'Style Dictionary' default
 	'Styles used in this document (root node only)')
@@ -94,26 +90,26 @@
 				(float)
 	)))
 	() 'Sync list' default
-	'List of sync arcs used in this subtree')
+	'List of sync arcs used in this subtree' raw)
 
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' default
-	'List of sync arcs ending at this node')
+	'List of sync arcs ending at this node' raw)
 
 (type (name) undefined 'Channel type' default
-	'Channel type (channel dictionary only)')
+	'Channel type (channel dictionary only)' raw)
 
 (volume (float) 1.0 'Volume' default
-	'Volume of audio output (1.0 means standard)')
+	'Volume of audio output (1.0 means standard)' channel)
 
 (vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
 	'Vertical space before/after text (in lines)')
 
 (wait_for_close (bool) 0 'Wait for close' default
-	'Wait for "close window" action to proceed')
+	'Wait for "close window" action to proceed' channel)
 
 (winpos (tuple (int) (int)) (0 0) 'Window position' default
-	'Initial window position (x, y) (x axis pointing down!)')
+	'Initial window position (x, y) (x axis pointing down!)' channel)
 
 (winsize (tuple (int) (int)) (0 0) 'Window size' default
-	'Initial window size (width, height)')
+	'Initial window size (width, height)' channel)
