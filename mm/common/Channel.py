@@ -1137,6 +1137,7 @@ class ChannelWindow(Channel):
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
 			width, height = self._attrdict.get('winsize', (50, 50))
+			self._curvals['winsize'] = ((width, height), (50,50))
 			x, y = self._attrdict.get('winpos', (None, None))
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
