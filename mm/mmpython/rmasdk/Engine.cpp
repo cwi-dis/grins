@@ -123,7 +123,12 @@ static bool CreateEngine()
     // find the Extensions folder
     short	vRefNum;
     long	dirID;
+#if 0
+    /* Older G2 beta's had the engine in the extensions folder */
     macErr = FindFolder (kOnSystemDisk, kExtensionFolderType, kDontCreateFolder, &vRefNum, &dirID);
+#else
+    macErr = FindFolder (kOnSystemDisk, kApplicationSupportFolderType, kDontCreateFolder, &vRefNum, &dirID);
+#endif
 
     // find the path of the Extensions folder
     DirInfo	block;
@@ -176,6 +181,8 @@ static bool CreateEngine()
 
 #elif defined(_WIN16) 
     strcpy(szDllName, "pnen1660.dll");
+#else
+#error Unknown platform
 #endif
     
     if (!(hDll = LoadLibrary(szDllName))) 
