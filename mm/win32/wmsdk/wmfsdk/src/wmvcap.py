@@ -14,14 +14,14 @@ def LoadImageOn(dds, filename):
 	import gear32sd
 	img = gear32sd.load_file(filename)
 	if img>=0:
- 		cx, cy, bpp = gear32sd.image_dimensions_get(img)
- 		hdc = dds.GetDC()
+		cx, cy, bpp = gear32sd.image_dimensions_get(img)
+		hdc = dds.GetDC()
 		x, y = (w-cx)/2, (h-cy)/2
- 		rc = x, y, x+cx, y+cy
+		rc = x, y, x+cx, y+cy
 		gear32sd.device_rect_set(img, rc)
- 		gear32sd.display_desktop_pattern_set(img,0)
- 		gear32sd.display_image(img, hdc)
- 		dds.ReleaseDC(hdc)
+		gear32sd.display_desktop_pattern_set(img,0)
+		gear32sd.display_image(img, hdc)
+		dds.ReleaseDC(hdc)
 		gear32sd.image_delete(img)
 
 
@@ -67,7 +67,7 @@ writer.setOutputFilename("grins.wmv")
 
 # start wmv creation
 writer.beginWriting()
-		
+
 LoadImageOn(dds, filename2)
 writer.update(3)
 

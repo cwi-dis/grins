@@ -10,7 +10,7 @@ wmfapi.CoInitialize()
 
 # temp debug: find the name of a guid
 def findguid(guid):
-    for s in dir(wmfapi):
+	for s in dir(wmfapi):
 		if s.find("WMMEDIA")>=0 or s.find("WMFORMAT")>=0:
 			if guid==getattr(wmfapi,s):
 				return s
@@ -75,7 +75,7 @@ while curSample < nSamples:
 	sample = writer.AllocateSample(bytes)
 	sample.SetBuffer(data)
 	tmsec = tmsec + bytes*1000/bps
-	tcnsec = large_int(tmsec)*ms2cns  
+	tcnsec = large_int(tmsec)*ms2cns
 	curSample = curSample + nsamples
 	writer.WriteSample(audiopinix,tcnsec,0,sample)
 
