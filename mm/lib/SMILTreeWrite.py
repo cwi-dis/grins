@@ -94,9 +94,9 @@ def getchname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
 		return None
-# XXXX Removed: Sjoerd wants channel names on all nodes
-##	if not writer.channels_defined.has_key(ch):
-##		# Audio channels and such need not be named
+# XXXX Removed: Sjoerd wants region names on all nodes
+##	if not writer.regions_defined.has_key(ch):
+##		# Audio regions and such need not be named
 ##		return None
 	return writer.ch2name[ch]
 
@@ -203,7 +203,7 @@ def getscreensize(writer, node):
 #
 smil_attrs=[
 	("id", getid),
-	("channel", getchname),
+	("region", getchname),
 	("src", lambda writer, node:getcmifattr(writer, node, "file")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
@@ -383,12 +383,12 @@ class SMILWriter:
 		self.fp.write('<layout>\n') # default: type="text/smil-basic-layout"
 		self.fp.push()
 		channels = self.root.GetContext().channels
-		self.channels_defined = {}
+		self.regions_defined = {}
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
-			attrlist = ['<channel id=%s' %
+			attrlist = ['<region id=%s' %
 				    nameencode(self.ch2name[ch])]
-			# if toplevel window, define a channel elt, but
+			# if toplevel window, define a region elt, but
 			# don't define coordinates (i.e., use defaults)
 			if not ch.has_key('base_window'):
 				if not self.__title:
@@ -432,7 +432,7 @@ class SMILWriter:
 ## 			if len(attrlist) == 1:
 ## 				# Nothing to define
 ## 				continue
-			self.channels_defined[ch] = 1
+			self.regions_defined[ch] = 1
 			attrs = string.join(attrlist, ' ')
 			attrs = attrs + '/>\n'
 			self.fp.write(attrs)
