@@ -154,6 +154,7 @@ echo -x pwd >> FreezeOpts
 rem Windows specific stuff we just dont want!!
 echo -x win32ui  >> FreezeOpts
 echo -x win32dbg >> FreezeOpts
+echo -x _socket >> FreezeOpts
 
 rem exclude RMASDK
 echo -x rma >> FreezeOpts
