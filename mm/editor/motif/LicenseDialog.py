@@ -7,26 +7,28 @@ import Xm, Xmd, X
 class LicenseDialog:
 	def __init__(self):
 		import splash, splashimg, imgconvert
-		w = windowinterface.toplevel._main.CreateTemplateDialog('license', {'autoUnmanage': 0})
-		tryb = w.CreatePushButton('try', {'labelString': 'Try'})
+		fg = windowinterface.toplevel._convert_color((0,0,0), 0)
+		bg = windowinterface.toplevel._convert_color((0x99,0x99,0x99), 0)
+		w = windowinterface.toplevel._main.CreateTemplateDialog('license', {'autoUnmanage': 0, 'foreground': fg, 'background': bg})
+		tryb = w.CreatePushButton('try', {'labelString': 'Try', 'foreground': fg, 'background': bg})
 		tryb.ManageChild()
 		tryb.AddCallback('activateCallback', self.__callback, (self.cb_try, ()))
 		self.__try = tryb
-		buy = w.CreatePushButton('buy', {'labelString': 'Buy now...'})
+		buy = w.CreatePushButton('buy', {'labelString': 'Buy now...', 'foreground': fg, 'background': bg})
 		buy.ManageChild()
 		buy.AddCallback('activateCallback', self.__callback, (self.cb_buy, ()))
-		eval = w.CreatePushButton('eval', {'labelString': 'Get evaluation license...'})
+		eval = w.CreatePushButton('eval', {'labelString': 'Get evaluation license...', 'foreground': fg, 'background': bg})
 		eval.ManageChild()
 		eval.AddCallback('activateCallback', self.__callback, (self.cb_eval, ()))
 		self.__eval = eval
-		key = w.CreatePushButton('key', {'labelString': 'Enter key...'})
+		key = w.CreatePushButton('key', {'labelString': 'Enter key...', 'foreground': fg, 'background': bg})
 		key.ManageChild()
 		key.AddCallback('activateCallback', self.__callback, (self.cb_enterkey, ()))
-		quit = w.CreatePushButton('quit', {'labelString': 'Quit'})
+		quit = w.CreatePushButton('quit', {'labelString': 'Quit', 'foreground': fg, 'background': bg})
 		quit.ManageChild()
 		quit.AddCallback('activateCallback', self.__callback, (self.cb_quit, ()))
-		visual = windowinterface.toplevel._main.visual
-		fmt, rs, rm, gs, gm, bs, bm = splash.findformat(visual)
+		visual = windowinterface.toplevel._visual
+		fmt = windowinterface.toplevel._imgformat
 		rdr = imgconvert.stackreader(fmt, splashimg.reader())
 		self.__imgsize = rdr.width, rdr.height
 		data = rdr.read()
@@ -35,7 +37,7 @@ class LicenseDialog:
 					 rdr.width, rdr.height, depth * 8,
 					 rdr.width * depth)
 		img = w.CreateDrawingArea('splash', {'width': rdr.width,
-						     'height': rdr.height})
+						     'height': rdr.height, 'foreground': fg, 'background': bg})
 		self.__gc = None
 		img.AddCallback('exposeCallback', self.__expose,
 				(xim, rdr.width, rdr.height))
@@ -80,8 +82,8 @@ class LicenseDialog:
 			 'x': 10,
 			 'y': height - 26,
 			 'width': width - 20,
-			 'background': 0xffffff,
-			 'foreground': 0x061440}
+			 'background': windowinterface.toplevel._convert_color((255,255,255), 0),
+			 'foreground': windowinterface.toplevel._convert_color((0x06,0x14,0x40), 0)}
 		try:
 			import splash
 			self.__img.LoadQueryFont(splash.splashfont)
