@@ -46,7 +46,6 @@ class merge:
 				return
 
 	def readframes(self, nframes = -1):
-		n = 0
 		stretches = []
 		counts = []
 		width = self.__format.getbps() / 8
@@ -70,7 +69,6 @@ class merge:
 					data = data[minlen:]
 					mixed0 = mixed[:minlen]
 					mixed = mixed[minlen:]
-					f = 1.0 / (count + 1)
 					newstretches.append(audioop.add(mixed0, data0, width))
 					newcounts.append(count + 1)
 				if mixed:

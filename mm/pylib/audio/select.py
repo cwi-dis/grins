@@ -5,7 +5,6 @@ import audio
 
 class select:
 	def __init__(self, rdr, rangelist):
-		lastbegin = 0
 		lastend = -1
 		for begin, end in rangelist:
 			if begin is None:
