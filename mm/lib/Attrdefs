@@ -88,18 +88,6 @@
 
 (copyright (string) '' 'Copyright' default 'Copyright of the item (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
-(cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
-	 'Window position for Time chart view' raw (g2_pro qt_pro smil10 cmif))
-
-(cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
-	 'Window size for Time chart view' raw (g2_pro qt_pro smil10 cmif))
-
-(tview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
-	 'Window position for Time chart view' raw (g2_pro qt_pro smil10 cmif))
-
-(tview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
-	 'Window size for Time chart view' raw (g2_pro qt_pro smil10 cmif))
-
 (duration (float) 0.0 'Duration' default
 	'Duration of a node or subtree, 0 uses natural duration' normal (g2 qt smil10 smil2 cmif snap))
 
@@ -132,12 +120,6 @@
 (fillDefault (enum inherit auto remove freeze transition hold) inherit 'Fill default' fill
 	'Default value for the fill property on the children of this node (default depends on type of node)' inherited (smil2 cmif))
 
-(hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
-	 'Window position for hierarchy view' raw (g2 qt smil10 smil2 cmif snap))
-
-(hview_winsize (tuple (float) (float)) (115.234375 115.234375) 'Hierarchy winsize' hidden
-	 'Window size for hierarchy view' raw (g2 qt smil10 smil2 cmif snap))
-
 (hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
                                    (enclosed (tuple (string) (any)))
 				   (int) (int)))) ()
@@ -149,12 +131,6 @@
 
 (layouts (list (enclosed (tuple (name) (list (name))))) () 'List of screens'
 	hidden 'List of layouts within this document (root node only)' raw (g2_pro qt_pro smil10 cmif))
-
-(links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
-	 'Position of link edit window' raw (g2 qt smil10 smil2 cmif snap))
-
-(links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
-	 'Size of link edit window' raw (g2 qt smil10 smil2 cmif snap))
 
 (longdesc (string) '' 'Long description URL' default
 	'Link (URL) to a long description of the media object' raw (g2 qt smil10 smil2 cmif snap))
@@ -182,12 +158,6 @@
 
 (open (enum onStart whenActive) onStart 'Open viewport' default
 	'When the viewport is to be opened' raw (cmif smil2 snap))
-
-(player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
-	 'Window position for player control panel' raw (g2 qt smil10 smil2 cmif snap))
-
-(player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
-	 'Window size for player control panel' raw (g2 qt smil10 smil2 cmif snap))
 
 (popup (bool) 1 'Popup on play' default
 	'Determines whether channel pops up upon playing a node' raw (cmif))
@@ -302,18 +272,6 @@
 (skip_content (bool) 1 'Skip unknown content' default
 	'Skip unknown content when parsing this document' raw (cmif smil2))
 
-(style (list (name)) () 'Style(s)' default
-	'List of style names that apply to this node/subtree' raw (cmif))
-
-(style_winpos (tuple (float) (float)) (-1 -1) 'Style editor winpos' hidden
-	 'Window position for style editor' raw (cmif))
-
-(style_winsize (tuple (float) (float)) (86.42578125 92.1875) 'Style editor winsize' hidden
-	 'Window size for style editor' raw (cmif))
-
-(styledict (namedict (attrdict)) () 'Style Dictionary' hidden
-	'Styles used in this document (root node only)' normal (cmif))
-
 (syncBehavior (enum default canSlip locked independent) default 'Sync behavior' syncBehavior
 	'Defines the runtime synchronization behavior for an element' normal (smil2 cmif))
 
@@ -347,12 +305,6 @@
 
 (title (string) '' 'Title' default
 	 'The title of this object (informational only)' raw (g2 qt smil10 smil2 cmif snap))
-
-(toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
-	 'Window position for top level menu' raw (g2 qt smil10 smil2 cmif))
-
-(toplevel_winsize (tuple (float) (float)) (31.689453125 72.021484375) 'Top level winsize' hidden
-	 'Window size for top level menu' raw (g2 qt smil10 smil2 cmif))
 
 # the next four attributes are only for prio nodes
 (higher (enum stop pause) pause 'Higher' default
