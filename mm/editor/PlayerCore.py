@@ -156,8 +156,9 @@ class PlayerCore(Selecter):
 			attrdict = self.context.channeldict[name]
 			self.newchannel(name, attrdict)
 			self.channelnames.append(name)
-		self.__makeichannels()
 		self.makemenu()
+		self.__makeichannels()
+
 	#
 	def checkchannels(self):
 		# XXX Ought to detect renamed channels...
@@ -188,6 +189,8 @@ class PlayerCore(Selecter):
 				self.channels[name].check_visible()
 			# (4) Update layout and menu
 			self.setlayout(self.curlayout, self.curchannel)
+		self.__checkichannels()
+
 	#
 	def getchannelbyname(self, name):
 		if self.channels.has_key(name):
@@ -265,8 +268,9 @@ class PlayerCore(Selecter):
 
 	def __makeichannels(self):
 		for name in self.context._ichannelnames:
-			attrdict = self.context._ichanneldict[name]
-			self.__newichannel(name, attrdict)
+			if not self.__ichannels.has_key(name):
+				attrdict = self.context._ichanneldict[name]
+				self.__newichannel(name, attrdict)
 
 	def __showichannels(self):
 		for name in self.__ichannels.keys():
@@ -279,12 +283,31 @@ class PlayerCore(Selecter):
 		for name in self.__ichannels.keys():
 			self.__ichannels[name].hide()
 
+	def __killchannel(self, name):
+		if self.__ichannels.has_key(name):
+			self.__ichannels[name].destroy()
+			del self.__ichannels[name]
+
 	#
 	def __destroyichannels(self):
 		ichnames = self.__ichannels.keys()
 		for name in ichnames:
 			self.__ichannels[name].destroy()
 			del self.__ichannels[name]
+
+	#
+	def __checkichannels(self):
+		ichannelnames = self.__ichannels.keys()
+		for name in ichannelnames[:]:
+			if name not in self.context._ichannelnames:
+				self.__killchannel(name)
+
+		ichannelnames = self.__ichannels.keys()
+		for name in self.context._ichannelnames:
+			if name not in ichannelnames:
+				attrdict = self.context._ichanneldict[name]
+				self.__newichannel(name, attrdict)
+
 	#
 	def __newichannel(self, name, attrdict):
 		if not attrdict.has_key('type'):
