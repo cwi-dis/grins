@@ -154,7 +154,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	def setrate(self, rate):
 		if rate < 0.0:
-			raise RuntimeError, 'setrate with negative rate'
+			raise CheckError, 'setrate with negative rate'
 		if self.rate = rate:
 			return
 		msec = time.millitimer()
@@ -357,7 +357,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		if self.playing:
 			self.stop()
 		if node.GetRoot() <> self.root:
-			raise RuntimeError, 'playsubtree with bad arg'
+			raise CheckError, 'playsubtree with bad arg'
 		self.playroot = node
 		self.play()
 	#
@@ -541,7 +541,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		if x > 0:
 			return # Wait for other sync arcs
 		if x < 0:
-			raise RuntimeError, 'counter below zero!?!?'
+			raise CheckError, 'counter below zero!?!?'
 		if node.GetType() not in interiortypes:
 			if side = HD:
 				if doit:
