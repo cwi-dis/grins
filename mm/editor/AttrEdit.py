@@ -1,9 +1,4 @@
-# Attribute editor using the FORMS library (fl, FL)
-
-# XXX This assumes we can create and destroy as many forms as we want.
-# That's not actually true: forms never die, they just become inaccessible.
-# But there is still hope that we can fix the forms library rather than
-# caching old forms here...
+# Attribute editor using the FORMS library (fl, FL), based upon Dialog.
 
 
 import fl
@@ -13,6 +8,8 @@ import MMAttrdefs
 import MMParser
 import MMWrite
 from MMExc import *
+
+from ChannelMap import channelmap
 
 from Dialog import Dialog
 
@@ -31,11 +28,10 @@ from Dialog import Dialog
 def showattreditor(node):
 	try:
 		attreditor = node.attreditor
-		return # Attribute editor form is already active
 	except NameError:
-		pass
-	#
-	attreditor = AttrEditor().init(NodeWrapper().init(node))
+		attreditor = AttrEditor().init(NodeWrapper().init(node))
+		node.attreditor = attreditor
+	attreditor.open()
 
 
 def hideattreditor(node):
@@ -44,10 +40,6 @@ def hideattreditor(node):
 	except NameError:
 		return # No attribute editor active
 	attreditor.close()
-	# XXX What if there are changes?
-	# XXX Should ask the user to save them or throw them away.
-	# XXX There should be a return value to from hideattreditor()
-	# XXX to show if the user wants to cancel whatever caused it...
 
 
 # An additional call to check whether the attribute editor is currently
@@ -57,9 +49,9 @@ def hideattreditor(node):
 def hasattreditor(node):
 	try:
 		attreditor = node.attreditor
-		return 1
 	except NameError:
-		return 0
+		return 0 # No attribute editor active
+	return attreditor.showing
 
 
 # A similar interface for channels (note different arguments!).
@@ -68,26 +60,31 @@ def hasattreditor(node):
 #
 def showchannelattreditor(context, name):
 	try:
-		dummy = context.channelattreditors
+		dict = context.channelattreditors
 	except NameError:
-		context.channelattreditors = {}
-	if context.channelattreditors.has_key(name):
-		return
-	dummy = AttrEditor().init(ChannelWrapper().init(context, name))
+		dict = context.channelattreditors = {}
+	if not dict.has_key(name):
+		dict[name] = \
+			AttrEditor().init(ChannelWrapper().init(context, name))
+	dict[name].open()
 
 def hidechannelattreditor(context, name):
 	try:
-		attreditor = context.channelattreditors[name]
-	except:
+		dict = context.channelattreditors
+	except NameError:
 		return
-	attreditor.close()
+	if not dict.has_key(name):
+		return
+	dict[name].close()
 
 def haschannelattreditor(context, name):
 	try:
-		attreditor = context.channelattreditors[name]
-		return 1
-	except:
+		dict = context.channelattreditors
+	except NameError:
 		return 0
+	if not dict.has_key(name):
+		return 0
+	return dict[name].showing
 
 
 # The "Wrapper" classes encapsulate the differences between attribute
@@ -103,20 +100,15 @@ class NodeWrapper():
 	#
 	def init(self, node):
 		self.node = node
+		self.context = node.GetContext()
 		return self
 	#
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Node attributes for ' + name
 	#
-	def link(self, attreditor):
-		self.node.attreditor = attreditor
-	#
-	def unlink(self):
-		del self.node.attreditor
-	#
 	def getcontext(self):
-		return self.node.GetContext()
+		return self.context
 	#
 	def getattr(self, name): # Return the attribute or a default
 		return MMAttrdefs.getattr(self.node, name)
@@ -149,20 +141,23 @@ class NodeWrapper():
 	#
 	# Return a list of attribute names that make sense for this node,
 	# in an order that makes sense to the user.
-	# XXX Should depend on the channel type;
-	# XXX currently most known names are returned in alphabetical order.
 	#
 	def attrnames(self):
-		exceptions = ('styledict', 'channellist', 'type')
 		namelist = []
-		for name in MMAttrdefs.getnames():
-			if name not in exceptions:
-				namelist.append(name)
-		# Merge in any nonstandard attributes
+		try:
+			# Get the channel class (should be a subroutine!)
+			cname = MMAttrdefs.getattr(self.node, 'channel')
+			cattrs = self.context.channeldict[cname]
+			ctype = cattrs['type']
+			cclass = channelmap[ctype]
+			# Add the class's declaration of attributes
+			namelist = namelist + cclass.node_attrs
+		except:
+			pass # Ignore errors in the above
+		# Merge in nonstandard attributes
 		for name in self.node.GetAttrDict().keys():
 			if name not in namelist:
 				namelist.append(name)
-		namelist.sort()
 		return namelist
 	#
 
@@ -177,12 +172,6 @@ class ChannelWrapper():
 	#
 	def maketitle(self):
 		return 'Channel attributes for ' + self.name
-	#
-	def link(self, attreditor):
-		self.context.channelattreditors[self.name] = attreditor
-	#
-	def unlink(self):
-		del self.context.channelattreditors[self.name]
 	#
 	def getcontext(self):
 		return self.context
@@ -211,20 +200,25 @@ class ChannelWrapper():
 	#
 	# Return a list of attribute names that make sense for this channel,
 	# in an order that makes sense to the user.
-	# XXX Should depend on the channel type;
-	# XXX currently most known names are returned in alphabetical order.
 	#
 	def attrnames(self):
-		exceptions = ('styledict', 'channellist', 'channel')
 		namelist = []
-		for name in MMAttrdefs.getnames():
-			if name not in exceptions:
-				namelist.append(name)
-		# Merge in any nonstandard attributes
+		try:
+			ctype = self.attrdict['type']
+			cclass = channelmap[ctype]
+			# Add the class's declaration of attributes
+			namelist = namelist + cclass.chan_attrs
+			for name in cclass.node_attrs:
+				if name in namelist: continue
+				attrdef = MMAttrdefs.getdef(name)
+				if attrdef[5] = 'channel':
+					namelist.append(name)
+		except:
+			pass # Ignore errors in the above
+		# Merge in nonstandard attributes
 		for name in self.attrdict.keys():
 			if name not in namelist:
 				namelist.append(name)
-		namelist.sort()
 		return namelist
 	#
 
@@ -270,11 +264,12 @@ class AttrEditor() = Dialog():
 			b.makeresetbutton(itemx3, itemy, itemw3, itemheight)
 			self.blist.append(b)
 		#
-		self.getvalues()
-		self.wrapper.link(self)
-		self.show()
-		#
 		return self
+	#
+	def open(self):
+		self.close()
+		self.getvalues()
+		self.show()
 	#
 	def getvalues(self):
 		self.form.freeze_form()
@@ -290,10 +285,6 @@ class AttrEditor() = Dialog():
 	#
 	def close(self):
 		self.hide()
-		self.wrapper.unlink()
-		# XXX break circular links...
-		# Leave the rest to garbage collection
-		self.destroy()
 	#
 	def cancel_callback(self, dummy):
 		self.close()
@@ -406,15 +397,11 @@ class ButtonRow():
 		b.reset.set_button(b.isdefault)
 	#
 	def valuerepr(b, value):
-		attrdef = MMAttrdefs.getdef(b.name)
-		typedef = attrdef[0]
-		return MMWrite.valuerepr(value, typedef)
+		return MMAttrdefs.valuerepr(b.name, value)
 	#
 	def parsevalue(b, string):
-		attrdef = MMAttrdefs.getdef(b.name)
-		typedef = ('enclosed', attrdef[0])
-		return MMParser.parsevalue \
-			('('+string+')', typedef, b.wrapper.getcontext())
+		return MMAttrdefs.parsevalue \
+			(b.name, string, b.wrapper.getcontext())
 	#
 
 
