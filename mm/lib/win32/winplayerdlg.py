@@ -173,7 +173,7 @@ class PlayerDlgBar(window.Wnd):
 		template.append([self.BUTTON, "Stop", cmdid(usercmd.STOP), (x+32, y, 12, 12), cs | win32con.BS_ICON])
 		y = y + 12 + 4
 
-		maxWidth = 0
+		maxWidth = 48 # The size needed for the play/stop/pause buttons
 		for item in self._resitems:
 			template.append(item.getResourceList(x, y))
 			y = y + item.height + 4
