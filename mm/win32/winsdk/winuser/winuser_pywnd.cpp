@@ -91,6 +91,8 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 				pywnd->m_hWnd = NULL;
 				Py_DECREF(pywnd);
 				}
+			if(PyWnd::wnds.size()==0)
+				PostQuitMessage(0);
 			return 0;
 			}
 		}
