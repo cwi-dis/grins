@@ -784,6 +784,7 @@ class MMNode:
 		uidremap[self.uid] = copy.uid
 		copy.attrdict = _valuedeepcopy(self.attrdict)
 		copy.values = _valuedeepcopy(self.values)
+		children = self.children
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
 			if not hasattr(self, 'slideshow'):
 				print 'MMNode._deepcopy: creating SlideShow'
@@ -792,7 +793,9 @@ class MMNode:
 			self.slideshow.copy(copy)
 			if copy.attrdict.has_key('file'):
 				del copy.attrdict['file']
-		for child in self.children:
+			# don't copy children since node collapsed
+			children = []
+		for child in children:
 			copy._addchild(child._deepcopy(uidremap, context))
 		return copy
 
