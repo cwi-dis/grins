@@ -221,7 +221,7 @@ class HierarchyViewDialog(ViewDialog):
 		if ucmd in (DRAG_PAR, DRAG_SEQ, DRAG_SWITCH, DRAG_EXCL,
 				DRAG_PRIO, DRAG_MEDIA, DRAG_ANIMATE, DRAG_BRUSH):
 			return self.dropnewstructnode(ucmd, (dstx, dsty))
-		elif ucmd == DRAG_NODE:
+		elif ucmd in (DRAG_NODE, DRAG_NODEUID):
 			rv = self.dropexistingnode(cmd, (dstx, dsty), srcnode, srcpos)
 			if rv == 'copy':
 				return windowinterface.DROPEFFECT_COPY
