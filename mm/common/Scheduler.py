@@ -1,0 +1,1140 @@
+__version__ = "$Id$"
+
+# Scheduler - The scheduler for playing cmif documents.
+
+import time
+from sched import scheduler
+from MMExc import *
+import MMAttrdefs
+import Timing
+from MMTypes import *
+from ArmStates import *
+from HDTL import HD, TL
+# Not needed? from AnchorDefs import *
+import SR
+import settings
+import MMStates
+
+debugtimer = 0
+debugevents = 1
+
+# Priorities for the various events:
+N_PRIO = 6
+[PRIO_PREARM_NOW, PRIO_TERMINATE, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
+
+error = 'Scheduler.error'
+
+class SchedulerContext:
+	def __init__(self, parent, node, seeknode):
+		self.active = 1
+		self.parent = parent
+		self.srdict = {}
+		self.scheduled_children = 0
+		if not settings.noprearm:
+			self.unexpected_armdone = {}
+			self.prearmlists = {}
+		self.playroot = node
+		#self.parent.ui.duration_ind.label = '??:??'
+
+		self.prepare_minidoc(seeknode)
+		if debugevents:self.dump()
+
+
+	#
+	# stop - cleanup SchedulerContext.
+	#
+	def stop(self):
+		if not self.active:
+			return
+		self.active = 0
+		if not settings.noprearm:
+			unarmallnodes(self.playroot)
+		self.stopcontextchannels()
+		self.srdict = {}
+		self.parent._remove_sctx(self)
+		del self.parent
+		del self.playroot
+		if not settings.noprearm:
+			for v in self.prearmlists.values():
+				if v:
+					v.root().destroy()
+			del self.prearmlists
+
+	#
+	# Dump - Dump a scheduler context
+	#
+	def dump(self, events=None, actions=None):
+		actions = {}
+		for ev, srdict in self.srdict.items():
+			ac = srdict[ev]
+			if ac is None:
+				continue
+			if not actions.has_key(id(ac)):
+				actions[id(ac)] = [ac]
+			actions[id(ac)].append(ev)
+		print '------------------------------'
+		for l in actions.values():
+			num, ac = l[0]
+			events = l[1:]
+			if num != len(events):
+				print 'discrepancy:',
+			print SR.evlist2string(events),
+			print '-->',
+			print SR.evlist2string(ac)
+		print '----------------------------------'
+
+	#
+	# genprearms generates the list of channels and a list of
+	# nodes to be prearmed, in the right order.
+	def gen_prearms(self, s_node):
+		if not s_node:
+			s_node = self.playroot
+		#
+		# Create channel lists
+		#
+		self.channelnames, err = self.playroot.GetAllChannels()
+		self.channels = []
+		if err:
+			import windowinterface
+			enode, echan = err
+			ename = MMAttrdefs.getattr(enode, 'name')
+			windowinterface.showmessage('Error: overlap in channels'+ \
+				  '\nchannels:'+(`echan`[1:-1])+ \
+				  '\nparent node:'+ename)
+			return 0
+		# First make a pass to check channels are free
+		todo = []
+		for cn in self.channelnames:
+			ch = self.parent.ui.getchannelbyname(cn)
+			if not ch:
+			        import windowinterface
+				windowinterface.showmessage(
+				    'Channel does not exist: ' + cn)
+				return 0
+			if ch in self.parent.channels_in_use:
+				import windowinterface
+				windowinterface.showmessage(
+				    'Channel already in use: ' + cn)
+				return 0
+			todo.append(ch)
+		# Next, actually set them to be in use.
+		for ch in todo:
+			self.parent.channels_in_use.append(ch)
+			self.channels.append(ch)
+		#
+		# Create per-channel list of prearms
+		#
+		if not settings.noprearm:
+			self.prearmlists = GenAllPrearms(self.parent.ui,
+							 self.playroot,
+							 self.channels)
+		self.playroot.EndPruneTree()
+		mini = self.playroot.FindMiniDocument()
+		Timing.needtimes(mini)
+		return 1
+
+	def cancelprearms(self, node):
+		"""Cancel prearms for node and its descendents, it has
+		just been terminated"""
+		if settings.noprearm:
+			raise error, 'cancelprearms called when noprearm set'
+		for list in self.prearmlists.values():
+			list.cancel(node)
+
+	#
+	def startcontextchannels(self):
+		for ch in self.channels:
+			ch.startcontext(self)
+	#
+	def stopcontextchannels(self):
+		for ch in self.channels:
+			ch.stopcontext(self)
+			self.parent.channels_in_use.remove(ch)
+	#
+	def setpaused(self, paused):
+		for ch in self.channels:
+			ch.setpaused(paused)
+
+	#
+	# getnextprearm returns next prearm event due for given channel
+	#
+	def getnextprearm(self, ch):
+		if settings.noprearm:
+			raise error, 'getnextprearm called when noprearm set'
+		if not self.prearmlists.has_key(ch):
+			return None
+		if not self.prearmlists[ch]:
+			return None
+		self.prearmlists[ch], node = self.prearmlists[ch].next()
+		if not node:
+			return None
+		return (SR.PLAY_ARM, node)
+	#
+	# run_initial_prearms schedules the first prearms.
+	# Prearms that are immedeately needed are scheduled in a hi-pri queue,
+	# the ones that are not needed until later in a lo-pri queue. Also, the
+	# lo-pri queue is run one-event-at-a-time, so we put them in there
+	# sorted by time
+	#
+	def run_initial_prearms(self):
+		if settings.noprearm:
+			raise error, 'run_initial_prearms called when noprearm set'
+		# XXXX Code gone to gen_prearms
+		prearmnowlist = []
+		prearmlaterlist = []
+		now = self.playroot.t0
+		parent = self.parent
+		for ch in self.channels:
+			ev = self.getnextprearm(ch)
+			if not ev:
+				continue
+			if ev[1].t0 <= now:
+				prearmnowlist.append(ev)
+			else:
+				prearmlaterlist.append((ev[1].t0, ev))
+		for ev in prearmnowlist:
+			parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
+		prearmlaterlist.sort()
+		for time, ev in prearmlaterlist:
+			parent.add_lopriqueue(self, time, ev)
+	#
+	# FutureWork returns true if we may have something to do at some
+	# time in the future (i.e. if we're not done yet)
+	#
+	def FutureWork(self):
+		if self.srdict or self.scheduled_children:
+			return 1
+		self.parent.ui.sctx_empty(self) # XXXX
+		return 0
+	#
+	# Initialize SR actions and events before playing
+	#
+	def prepare_minidoc(self, seeknode):
+		self.srdict = self.playroot.GenAllSR(seeknode)
+	#
+	# Re-initialize SR actions and events for a looping node, preparing
+	# for the next time through the loop
+	#
+	def restartloop(self, node):
+		if debugevents: self.dump()
+		srdict = node.GenLoopSR()
+		for key, value in srdict.items():
+			if self.srdict.has_key(key):
+				raise error, 'Duplicate event '+SR.ev2string(key)
+			self.srdict[key] = value
+			#
+			# ARMDONE events may have arrived too early.
+			# Re-schedule them.
+			#
+			if not settings.noprearm and \
+			   self.unexpected_armdone.has_key(key):
+				ev, node = key
+				del self.unexpected_armdone[key]
+				self.parent.add_runqueue(self, PRIO_PREARM_NOW,
+					       (SR.PLAY_OPTIONAL_ARM, node) )
+
+	#
+	# Tell arm datastructures that we will go through the loop at
+	# least once more after the current loop is finished.
+	#
+	def arm_moreloops(self, node):
+		if settings.noprearm:
+			raise error, 'arm_moreloops called when noprearm set'
+		for tree in self.prearmlists.values():
+			tree.root().looponcemore(node)
+
+	#
+	# Start minidoc starts playing what we've prepared
+	#
+	def start(self, s_node, s_aid, s_args):
+		if not self.gen_prearms(s_node):
+			return 0
+		if not settings.noprearm:
+			self.run_initial_prearms()
+		self.startcontextchannels()
+		if s_node and s_aid:
+			self.seekanchor(s_node, s_aid, s_args)
+		self.parent.event(self, (SR.SCHED, self.playroot))
+##		self.parent.updatetimer()
+		return 1
+	#
+	# Seekanchor indicates that we are playing here because of the
+	# anchor specified.
+	#
+	def seekanchor(self, node, aid, aargs):
+		chan = self.parent.ui.getchannelbynode(node)
+		if chan:
+			chan.seekanchor(node, aid, aargs)
+	#
+	# Incoming events from channels, or the start event.
+	#
+	def event(self, ev):
+		if debugevents: print 'event', SR.ev2string(ev)
+		srlist = self.getsrlist(ev)
+		self.queuesrlist(srlist)
+
+	def trigger(self, arc):
+		node = arc.dstnode
+		arc.qid = None
+		if node.parent:
+			node.parent.scheduled_children = node.parent.scheduled_children - 1
+		else:
+			self.scheduled_children = self.scheduled_children - 1
+		if debugevents: print 'trigger', `arc`
+		if not arc.isstart:
+			if node.playing != MMStates.PLAYING:
+				# ignore end event if not playing
+				if debugevents: print 'node not playing'
+				return
+			if debugevents: print 'terminating node'
+			self.parent.do_terminate(self, node)
+			return
+		pnode = node.GetParent()
+		if not pnode or pnode.playing != MMStates.PLAYING:
+			# ignore event when node can't play
+			if debugevents: print 'parent not playing'
+			return
+		if (node.playing == MMStates.PLAYING and MMAttrdefs.getattr(node, 'restart') != 'always') or \
+		   (node.playing == MMStates.PLAYED and MMAttrdefs.getattr(node, 'restart') == 'never'):
+			# ignore event when node doesn't want to play
+			if debugevents: print 'node won\'t play'
+			return
+		if node.playing == MMStates.PLAYING:
+			# node is playing, must terminate it first
+			if debugevents: print 'terminating node'
+			self.parent.do_terminate(self, node)
+		elif pnode.type == 'excl' or pnode.type == 'seq':
+			# parent is excl, must terminate running child first
+			# XXX must implement pause
+			# XXX musr implement priority class
+			if debugevents: print 'terminating siblings'
+			for c in pnode.children:
+				self.parent.do_terminate(self, c)
+		# we must start the node, but how?
+		if debugevents: print 'starting node'
+		srdict = pnode.gensr_child(node)
+		self.srdict.update(srdict)
+		if debugevents: self.dump()
+		self.parent.event(self, (SR.SCHED, node))
+
+	def queuesrlist(self, srlist):
+		for sr in srlist:
+			if debugevents: print '  queue', SR.ev2string(sr)
+			if sr[0] == SR.PLAY:
+				prio = PRIO_START
+			elif sr[0] == SR.PLAY_STOP:
+				prio = PRIO_STOP
+			elif sr[0] == SR.TERMINATE:
+				prio = PRIO_TERMINATE
+			else:
+				prio = PRIO_INTERN
+			self.parent.add_runqueue(self, prio, sr)
+	#
+	def arm_ready(self, chan):
+		if settings.noprearm:
+			raise error, 'arm_ready called when noprearm set'
+		if not self.prearmlists.has_key(chan):
+			raise error, 'Arm_ready event for unknown channel %s' % chan
+		pev = self.getnextprearm(chan)
+		if pev:
+			self.parent.add_lopriqueue(self, pev[1].t0, pev)
+	#
+	def play_done(self, node):
+		self.parent.event(self, (SR.PLAY_DONE, node))
+	#
+	def arm_done(self, node):
+		if settings.noprearm:
+			raise error, 'arm_done called when noprearm set'
+		self.parent.event(self, (SR.ARM_DONE, node))
+	#
+	def anchorfired(self, node, anchorlist, arg):
+		return self.parent.anchorfired(self, node, anchorlist, arg)
+	#
+	# Partially handle an event, updating the internal queues and
+	# returning executable SRs, if any.
+	#
+	def getsrlist(self, ev):
+		#print 'event:', SR.ev2string(ev)
+		try:
+			srdict = self.srdict[ev]
+			del self.srdict[ev]
+		except KeyError:
+			if ev[0] == SR.TERMINATE:
+				return []
+			elif not settings.noprearm and ev[0] == SR.ARM_DONE:
+				self.unexpected_armdone[ev] = 1
+				return []
+			elif ev[0] == SR.SCHED_STOPPING:
+				# XXXX Hack to forestall crash on interior
+				# nodes with duration that are terminated:
+				# their terminating syncarc is still there...
+				print 'Warning: unexpected', SR.ev2string(ev)
+				return []
+			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
+		numsrlist = srdict.get(ev)
+		if not numsrlist:
+			raise error, 'Scheduler: actions already sched for ev: %s' % ev
+		del srdict[ev]
+		num, srlist = numsrlist
+		num = num - 1
+		if num < 0:
+			raise error, 'Scheduler: waitcount<0: %s' % (num, srlist)
+		elif num == 0:
+			numsrlist[:] = []
+			return srlist
+		else:
+			numsrlist[0] = num
+		return []
+
+	# search_unexpected_prearm checks whether any expected ARM_DONE's were
+	# received for this node and clears them.
+	def search_unexpected_prearm(self, node):
+		if settings.noprearm:
+			raise error, 'search_unexpected_prearm called when noprearm set'
+		for ev, arg in self.unexpected_armdone.keys():
+			if arg == node:
+				del self.unexpected_armdone[ev, arg]
+				return 1
+		return 0
+
+class Scheduler(scheduler):
+	def __init__(self, ui):
+		self.muststop = 0
+		self.queue = []
+		self.ui = ui
+		self.toplevel = self.ui.toplevel
+		self.context = self.ui.context
+		self.sctx_list = []
+		self.runqueues = []
+		for i in range(N_PRIO):
+			self.runqueues.append([])
+		self.starting_to_play = 0
+		self.playing = 0
+		self.paused = 0
+		self.resettimer()
+		self.paused = 0
+		# 'inherit' method from parent:
+		self.anchorfired = self.ui.anchorfired
+		self.channels_in_use = []
+
+	#
+	# Playing algorithm.
+	#
+	def play(self, node, seek_node, anchor_id, anchor_arg):
+		self.muststop = 0
+		# XXXX Is the following true for alt nodes too?
+		if node.GetType() == 'bag':
+			raise error, 'Cannot play choice node'
+		# XXXX This statement should move to an intermedeate level.
+		if self.ui.sync_cv and self.toplevel.channelview is not None:
+			self.toplevel.channelview.globalsetfocus(node)
+		sctx = SchedulerContext(self, node, seek_node)
+		self.sctx_list.append(sctx)
+		self.playing = self.playing + 1
+		if not sctx.start(seek_node, anchor_id, anchor_arg):
+##			print 'Scheduler: play abort'
+			sctx.stop()
+			return None
+		self.starting_to_play = 1
+		return sctx
+	#
+	def _remove_sctx(self, sctx):
+##		print 'Remove:', sctx
+		self.playing = self.playing - 1
+		self.purge_sctx_queues(sctx)
+		self.sctx_list.remove(sctx)
+
+	def purge_sctx_queues(self, sctx):
+		for queue in self.runqueues:
+			tokill = []
+			for ev in queue:
+				if ev[0] is sctx:
+					tokill.append(ev)
+			for ev in tokill:
+				queue.remove(ev)
+	#
+	def dump(self):
+		print '=============== scheduler dump'
+		print '# timed events:', len(self.queue)
+		print '# contexts:', len(self.sctx_list)
+		for i in range(len(self.runqueues)):
+			print '---- runqueue',i
+			for j in self.runqueues[i]:
+				print SR.ev2string(j[1]),
+			print
+		for i in range(len(self.sctx_list)):
+			print '---- context',i
+			self.sctx_list[i].dump()
+		print '==============================='
+
+	def stop_all(self):
+		self.muststop = 1
+		
+	def do_stop_all(self):
+##		print 'STOP_ALL', self.sctx_list
+		to_stop = self.sctx_list[:]
+		for sctx in to_stop:
+			sctx.stop()
+		to_stop = None
+##		print 'Now', self.sctx_list
+		if self.starting_to_play:
+			self.starting_to_play = 0
+		self.playing = 0
+		self.ui.play_done()
+		self.toplevel.set_timer(0)
+
+##	#
+##	# XXXX This routine is temporary. Eventually the channels should
+##	# also indicate the sctx when an anchor fires.
+##	def find_sctx(self, node):
+##		channel = self.ui.getchannelbynode(node)
+##		for sctx in self.sctx_list:
+##			if sctx.contains_channel(channel):
+##				return sctx
+	#
+	# The timer callback routine, called via a forms timer object.
+	# This is what makes SR's being executed.
+	#
+	def timer_callback(self):
+		#
+		# We have two queues to execute: the timed queue and the
+		# normal SR queue. Currently, we execute the timed queue first.
+		# Also, we have to choose here between an eager and a non-eager
+		# algorithm. For now, we're eager, on both queues.
+		#
+		if debugtimer: print 'timer_callback'
+		if self.muststop:
+			self.do_stop_all()
+			return
+		now = self.timefunc()
+		while self.queue and self.queue[0][0] <= now:
+			self.toplevel.setwaiting()
+			when, prio, action, argument = self.queue[0]
+			del self.queue[0]
+			void = apply(action, argument)
+			now = self.timefunc()
+		#
+		# Now the normal runqueue
+		#
+		queue = self.selectqueue()
+		if queue:
+			self.toplevel.setwaiting()
+		for action in queue:
+			if not self.playing:
+				break
+			self.runone(action)
+		self.updatetimer()
+	#
+	# FutureWork returns true if any of the scheduler contexts
+	# has possible future work. Each context's FutureWork has to be
+	# called (since this is also where contexts tell that they are empty).
+	#
+	def FutureWork(self):
+		has_work = 0
+		for sctx in self.sctx_list:
+			if sctx.FutureWork():
+				has_work = 1
+		return has_work
+	#
+	# Updatetimer restarts the forms timer object. If we have work to do
+	# we set the timeout very short, otherwise we simply stop the clock.
+	def updatetimer(self):
+		# Helper variable:
+		self.delay = 0
+		work = 0
+		for q in self.runqueues:
+			if q:
+				work = 1
+				break
+		if not self.playing:
+			delay = 0
+			if debugtimer: print 'updatetimer: not playing' #DBG
+		elif not self.paused and work:
+			#
+			# We have SR actions to execute. Make the callback
+			# happen as soon as possible.
+			#
+			delay = 0.001
+			if debugtimer: print 'updatetimer: runnable events' #DBG
+		elif not settings.noprearm and self.runqueues[PRIO_PREARM_NOW] or \
+			  self.runqueues[PRIO_LO]:
+			#
+			# We are not running (paused=1), but we can do some
+			# prearms
+			#
+			delay = 0.001
+		elif self.queue and not self.paused:
+			#
+			# We have activity in the timed queue. Make sure we
+			# get scheduled when the first activity is due.
+			#
+			now = self.timefunc()
+			when = self.queue[0][0]
+			delay = when - now
+			if delay <= 0:
+				#
+				# It is overdue. Make the callback happen
+				# fast.
+				delay = 0.001
+			if debugtimer: print 'updatetimer: timed events' #DBG
+		elif not self.FutureWork():
+			#
+			# No more events (and nothing runnable either).
+			# We're thru.
+			#
+			if debugtimer: print 'updatetimer: no more work' #DBG
+			self.stop_all()
+			return
+		else:
+			#
+			# Nothing to do for the moment.
+			# Tick every second, so we see the timer run.
+			#
+			if debugtimer:  'updatetimer: idle' #DBG
+			return
+		if debugtimer: print 'updatetimer: delay=', delay
+		self.delay = delay
+		self.ui.set_timer(delay)
+	#
+	# Incoming events from channels, or the start event.
+	#
+	def event(self, sctx, ev):
+		if sctx.active:
+			if ev[0] == SR.PLAY_DONE:
+				ev[1].set_armedmode(ARM_WAITSTOP)
+			elif ev[0] == SR.ARM_DONE:
+				ev[1].set_armedmode(ARM_ARMED)
+			sctx.event(ev)
+		self.updatetimer()
+##	#
+##	# opt_prearm should be turned into a normal event at some point.
+##	# It signals that the channel is ready for the next arm
+##	def arm_ready(self, chan):
+##		#XXXX Wrong for multi-context (have to find correct sctx)
+##		for sctx in self.sctx_list:
+##			if sctx.arm_ready(chan):
+##				print 'prearm:', cname, sctx
+##				return
+##		raise error, 'arm_ready: unused channel %s' % chan
+	#
+	# Add the given SR to one of the runqueues.
+	#
+	def add_runqueue(self, sctx, prio, sr):
+		self.runqueues[prio].append((sctx, sr, 0))
+
+	def add_lopriqueue(self, sctx, time, sr):
+		runq = self.runqueues[PRIO_LO]
+		for i in range(len(runq)):
+			if runq[i][2] > time:
+				runq.insert(i, (sctx, sr, time))
+				return
+		runq.append((sctx, sr, time))
+
+	#
+	# Try to run one SR. Return 0 if nothing to be done.
+	#
+	def selectqueue(self):
+		#
+		# First look in the high priority queues. We always run all
+		# the events here.
+		#
+		if not self.paused:
+			for i in range(N_PRIO-1):
+				if self.runqueues[i]:
+					queue = self.runqueues[i]
+					self.runqueues[i] = []
+					return queue
+		#
+		# Otherwise we run one event from one of the arm queues.
+		#
+		if not settings.noprearm and self.runqueues[PRIO_PREARM_NOW]:
+			queue = self.runqueues[PRIO_PREARM_NOW]
+			self.runqueues[PRIO_PREARM_NOW] = []
+			return queue
+		if self.runqueues[PRIO_LO]:
+			import windowinterface
+			windowinterface.lopristarting()
+			# That call may have called callbacks, so we have to check
+			# again
+		if self.runqueues[PRIO_LO]:
+			queue = [self.runqueues[PRIO_LO][0]]
+			del self.runqueues[PRIO_LO][0]
+			return queue
+		#
+		# Otherwise we run nothing.
+		#
+		return []
+
+	def sched_arcs(self, sctx, node, event = None, marker = None):
+		if debugevents: print 'sched_arcs',`node`,event
+		for arc in node.sched_children:
+			if (arc.event == event and
+			    arc.marker == marker and
+			    arc.delay is not None) or \
+			   (arc.event is None and
+			    arc.marker is None and
+			    marker is None and
+			    arc.delay is not None and
+			    ((arc.dstnode in node.children and event == 'begin') or
+			     (arc.dstnode not in node.children and event == 'end'))):
+				if arc.dstnode.parent:
+					arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+				else:
+					# root node
+					sctx.scheduled_children = sctx.scheduled_children + 1
+				arc.qid = self.enter(arc.delay, 0, sctx.trigger, (arc,))
+
+	def runone(self, (sctx, todo, dummy)):
+		if not sctx.active:
+			raise error, 'Scheduler: running from finished context'
+		if debugevents: print 'exec: ', SR.ev2string(todo)
+		action, arg = todo
+		if action == SR.PLAY:
+			self.do_play(sctx, arg)
+		elif action == SR.PLAY_STOP:
+## 			self.remove_terminate(sctx, arg)
+			self.do_play_stop(sctx, arg)
+		elif action == SR.SYNC:
+			self.do_sync(sctx, arg)
+		elif action == SR.PLAY_ARM:
+			self.do_play_arm(sctx, arg)
+		elif action == SR.PLAY_OPTIONAL_ARM:
+			self.do_play_arm(sctx, arg, optional=1)
+		elif action in (SR.BAG_START, SR.BAG_STOP):
+			self.ui.bag_event(sctx, todo)
+		elif action == SR.TERMINATE:
+			self.do_terminate(sctx, arg)
+		elif action == SR.LOOPSTART:
+			self.do_loopstart(sctx, arg)
+			arg.playing = MMStates.PLAYING
+			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
+		elif action == SR.LOOPEND:
+			self.do_loopend(sctx, arg)
+		elif action == SR.LOOPRESTART:
+			self.do_looprestart(sctx, arg)
+			arg.playing = MMStates.PLAYING
+			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
+		else:
+			if action == SR.SCHED_STOPPING and \
+			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body) and \
+			   not arg.scheduled_children:
+				self.remove_terminate(sctx, arg)
+			if action == SR.SCHED_STOPPING:
+				if arg.scheduled_children:
+					if debugevents: print 'not stopping',`arg`
+					return
+				arg.playing = MMStates.PLAYED
+				for ch in arg.children:
+					ch.playing = MMStates.IDLE
+				self.sched_arcs(sctx, arg, 'end')
+			elif action == SR.SCHED_START:
+				arg.playing = MMStates.PLAYING
+				self.sched_arcs(sctx, arg, 'begin')
+			elif action == SR.SCHED_STOP:
+				if debugevents: print 'cleanup',`arg`
+				arg.cleanup_sched()
+			sctx.event((action, arg))
+
+	def remove_terminate(self, sctx, node):
+		ev = SR.TERMINATE, node
+##		for ev in [(SR.TERMINATE, node), (SR.TERMINATE, node.looping_body_self)]:
+		if 1: # Simple test
+			if sctx.srdict.has_key(ev):
+				srdict = sctx.srdict[ev]
+				del sctx.srdict[ev]
+				numsrlist = srdict[ev]
+				del srdict[ev]
+				num = numsrlist[0]
+				num = num - 1
+				if num == 0:
+					numsrlist[:] = []
+				else:
+					numsrlist[0] = num
+		if not node.moreloops():
+			for ev, srdict in sctx.srdict.items():
+				ac = srdict[ev]
+				if not ac:
+					continue
+				num, srlist = ac
+				for i in range(len(srlist)-1,-1,-1):
+					if srlist[i] == ev:
+						del srlist[i]
+	#
+	# Execute a PLAY SR.
+	#
+	def do_play(self, sctx, node):
+		if self.starting_to_play:
+			self.starting_to_play = 0
+		chan = self.ui.getchannelbynode(node)
+		node.set_armedmode(ARM_PLAYING)
+		node.playing = MMStates.PLAYING
+		self.sched_arcs(sctx, node, 'begin')
+		chan.play(node)
+	#
+	# Execute a PLAY_STOP SR.
+	#
+	def do_play_stop(self, sctx, node):
+		chan = self.ui.getchannelbynode(node)
+		node.set_armedmode(ARM_DONE)
+		chan.stopplay(node)
+	#
+	# Execute a TERMINATE SR.
+	#
+	def do_terminate(self, sctx, node):
+		if debugevents: print 'terminate',node
+		if node.GetType() in interiortypes:
+			node.stoplooping()
+			# Remove prearms for all our descendents
+			if not settings.noprearm:
+				sctx.cancelprearms(node)
+			# turn action into event
+			self.event(sctx, (SR.TERMINATE, node))
+		else:
+			# terminate node
+			for ev in sctx.srdict.keys():
+				if ev[1] == node:
+					srdict = sctx.srdict[ev]
+					del sctx.srdict[ev]
+					numsrlist = srdict[ev]
+					del srdict[ev]
+					num = numsrlist[0]
+					num = num - 1
+					if num == 0:
+						if ev[0] == SR.SCHED_STOPPING:
+							sctx.queuesrlist(numsrlist[1])
+						numsrlist[:] = []
+					else:
+						numsrlist[0] = num
+			for ev, srdict in sctx.srdict.items():
+				action = srdict[ev]
+				if not action:
+					continue
+				actions = action[1]
+				for i in range(len(actions)-1,-1,-1):
+					if actions[i][1] == node:
+						del actions[i]
+			chan = self.ui.getchannelbynode(node)
+##			prearmlist = sctx.prearmlists[chan]
+##			for i in range(len(prearmlist)-1,-1,-1):
+##				if prearmlist[i][1] == node:
+##					del prearmlist[i]
+			node.set_armedmode(ARM_DONE)
+			chan.terminate(node)
+			if node.playing == MMStates.PLAYING:
+				node.playing = MMStates.PLAYED
+			do_arm = 0
+			for queue in self.runqueues:
+				for i in range(len(queue)-1,-1,-1):
+					if queue[i][1][1] == node:
+						if not settings.noprearm and \
+						   queue[i][1][0] == SR.PLAY_ARM:
+							do_arm = 1
+						del queue[i]
+##			if not do_arm:
+##				do_arm = sctx.search_unexpected_prearm(node)
+			if do_arm:
+				sctx.arm_ready(chan)
+
+	#
+	# LOOPSTART SR - Enter a loop at the top.
+	# (resets loopcounter to initial value and generates LOOPSTART_DONE)
+	#
+	def do_loopstart(self, sctx, node):
+##		print 'LOOPSTART', node
+		if not node.moreloops(decrement=1):
+			raise error, 'Loopstart without more loops!'
+		if not settings.noprearm:
+			sctx.arm_moreloops(node)
+		self.event(sctx, (SR.LOOPSTART_DONE, node))
+
+	#
+	# LOOPEND SR - End of loop. Either loop once more or continue
+	#
+	def do_loopend(self, sctx, node):
+##		print 'LOOPEND', node
+		if node.moreloops():
+			#
+			# This is tricky. We first have to do the SCHED_STOP
+			# actions (stopping all descendents, probably), and
+			# only after that we can re-install the new srlist
+			# and go back into the loop. We do this by scheduling
+			# scheduling the (pseudo-) sr LOOPRESTART in a low
+			# priority queue. do_looprestart will then be
+			# called after all the cleaun actions.
+			#
+##			print 'MORE TO PLAY'
+##			self.add_runqueue(sctx, PRIO_INTERN,
+##					  (SR.SCHED_STOP, node))
+			self.add_runqueue(sctx, PRIO_START,
+					  (SR.LOOPRESTART, node))
+		else:
+##			print 'NO MORE TO PLAY'
+			self.event(sctx, (SR.LOOPEND_DONE, node))
+	#
+	# LOOPRESTART - Regenerate loop events and restart
+	#
+	def do_looprestart(self, sctx, node):
+##		print 'LOOPRESTART', node
+		if not node.moreloops(decrement=1):
+			# Node has been terminated in the mean time
+			self.event(sctx, (SR.LOOPEND_DONE, node))
+			return
+		if not settings.noprearm and node.moreloops():
+			# If this is still not the last loop we also
+			# set the arm-structures to loop once more.
+			sctx.arm_moreloops(node)
+		sctx.restartloop(node)
+		self.event(sctx, (SR.LOOPSTART_DONE, node))
+	#
+	# Execute a SYNC SR
+	#
+	def do_sync(self, sctx, (delay, aid)):
+		ev = (sctx, (SR.SYNC_DONE, aid))
+		id = self.enterabs(self.timefunc()+delay, 0, self.event, ev)
+	#
+	# Execute an ARM SR
+	#
+	def do_play_arm(self, sctx, node, optional=0):
+		if settings.noprearm:
+			raise error, 'do_play_arm called when noprearm set'
+		chan = self.ui.getchannelbynode(node)
+		node.set_armedmode(ARM_ARMING)
+		if optional:
+			chan.optional_arm(node)
+		else:
+			chan.arm(node)
+	#
+	# Queue interface, based upon sched.scheduler.
+	# This queue has variable time, to implement pause,
+	# but the interface to its callers is the same, except init()
+	# and run() -- the queue runs automatically as long as our
+	# form is being checked.
+	#
+	# Inherit enter(), cancel(), empty() from scheduler.
+	# Override enterabs() since it must update the timer object.
+	# The timefunc is implemented differently (it's a real method),
+	# but the call to it from enter() doesn't mind.
+	# There is no delayfunc() since we don't have a run() function.
+	#
+	def enterabs(self, time, priority, action, argument):
+		if debugevents: print 'enterabs',time,priority,action,argument
+		id = scheduler.enterabs(self, time, priority, action, argument)
+		self.updatetimer()
+		return id
+	#
+	def timefunc(self):
+	        #if self.frozen: return self.frozen_value
+		if self.paused:
+			return self.time_pause - self.time_origin
+		return time.time() - self.time_origin
+	#
+	def resettimer(self):
+		#self.rate = 0.0		# Initially the clock is frozen
+		#self.frozen = 0
+		#self.frozen_value = 0
+		self.time_origin = time.time()
+		self.time_pause = self.time_origin
+	#
+	def getpaused(self):
+		return self.paused
+
+	def setpaused(self, paused):
+		if self.paused == paused:
+			return
+
+		# Subtract time paused
+		if not paused:
+			self.time_origin = self.time_origin + \
+				  (time.time()-self.time_pause)
+		else:
+			self.time_pause = time.time()
+		self.paused = paused
+		for sctx in self.sctx_list:
+			sctx.setpaused(paused)
+		self.updatetimer()
+
+class ArmStorageTree:
+	def __init__(self, node):
+		self.children = []
+		self.index = 0
+		self.parent = None
+		self.node = node
+		self.onemoretime = 0
+
+	def setparents(self):
+		"""Last stage of tree buildup: link children back to parent"""
+		for c in self.children:
+			c.parent = self
+
+	def destroy(self):
+		"""Destroy the whole tree starting at any node"""
+		if self.parent:
+			raise error, 'Destroy with parent!'
+		for c in self.children:
+			c.parent = None
+			c.destroy()
+		del self.parent
+		del self.children
+
+	def cancel(self, node):
+		"""Cancel arms for node and descendents, knowing that
+		node is currently active (so somewhere between current and
+		root)"""
+		if node == self.node:
+			self.do_cancel()
+		elif self.parent:
+			self.parent.cancel(node)
+
+	def do_cancel(self):
+		"""Cancel arm for this node and its descendents"""
+		self.index = len(self.children)+1
+		self.onemoretime = 0
+		for ch in self.children[self.index:]:
+			ch.do_cancel()
+
+	def next(self):
+		"""Return next ArmStorage to query and next node to arm"""
+		if self.index >= len(self.children) and self.onemoretime:
+##			print 'ONEMOREARM', self.node
+			for ch in self.children:
+				ch.do_looponcemore()
+			self.onemoretime = 0
+			self.index = 0
+		if self.index < len(self.children):
+			self.index = self.index + 1
+			return self.children[self.index-1].next()
+		if not self.parent:
+			return self, None
+		# Remove ourselves if we're empty anyway
+		parent = self.parent
+##		if len(self.children) == 0:
+##			self.parent.children.remove(self)
+##			self.parent = None
+		return parent.next()
+
+	def append(self, x):
+		self.children.append(x)
+
+	def isempty(self):
+		return len(self.children) == 0
+
+	def looponcemore(self, node):
+		if self.node == node:
+			self.do_looponcemore()
+		else:
+			for ch in self.children:
+				ch.looponcemore(node)
+
+	def do_looponcemore(self):
+##		print 'LOOPONCEMORE', self.node
+		self.onemoretime = 1
+##		for ch in self.children:
+##			ch.do_looponcemore()
+
+	def root(self):
+		if self.parent:
+			return self.parent.root()
+		return self
+
+class ArmStorageLeaf:
+	def __init__(self, node):
+		self.node = node
+		self.parent = None
+
+	def destroy(self):
+		del self.parent
+		del self.node
+
+	def root(self):
+		return self
+
+	def do_cancel(self):
+		print 'CANCELARM', self.node
+		pass
+
+	def do_revive(self):
+		pass
+
+	def next(self):
+		node = self.node
+		return self.parent, node
+
+##	def dump(self, level):
+##		print ' '*level, 'LEAF', self.node
+
+	def isempty(self):
+		return 0
+
+	def looponcemore(self, node):
+		pass
+
+	def do_looponcemore(self):
+		pass
+
+#
+# GenAllPrearms fills the prearmlists dictionary with all arms needed.
+#
+def GenAllPrearms(ui, node, channels):
+	if settings.noprearm:
+		raise error, 'GenAllPrearms called when noprearm set'
+	nodetype = node.GetType()
+	if nodetype in bagtypes:
+		return {}
+	if nodetype in leaftypes:
+		if node.realpix_body or node.caption_body:
+			# Special case for parallel captions to realpix slideshows
+			rv = {}
+			if node.realpix_body:
+				ch = ui.getchannelbynode(node.realpix_body)
+				rv[ch] = ArmStorageLeaf(node.realpix_body)
+			if node.caption_body:
+				ch = ui.getchannelbynode(node.caption_body)
+				rv[ch] = ArmStorageLeaf(node.caption_body)
+			return rv
+		chan = ui.getchannelbynode(node)
+		return {chan : ArmStorageLeaf(node)}
+	#
+	# For now, create internal data structure for each interior node
+	#
+	prearmlists = {}
+	for ch in channels:
+		prearmlists[ch] = ArmStorageTree(node)
+	for child in node.GetWtdChildren():
+		newprearmlists = GenAllPrearms(ui, child, channels)
+		for key, value in newprearmlists.items():
+			prearmlists[key].append(value)
+		# XXXX hack to only play first child in alt nodes
+		if nodetype == 'alt':
+			break
+	for k, v in prearmlists.items():
+		if v.isempty():
+			del prearmlists[k]
+		else:
+			v.setparents()
+	return prearmlists
+
+#  Remove all arm_duration attributes (so they will be recalculated)
+
+def del_timing(node):
+	node.DelAttr('arm_duration')
+	children = node.GetChildren()
+	for child in children:
+		del_timing(child)
+#
+# Unarm all nodes
+#
+def unarmallnodes(node):
+	#print 'UNARM', MMAttrdefs.getattr(node, 'name')
+## 	if not hasattr(node, 'armedmode'):
+## 		# if node does not have an 'armedmode' attribute, it
+## 		# also does not have a GetChildren method
+## 		return
+	node.set_armedmode(ARM_NONE)
+	try:
+		children = node.GetChildren()
+	except AttributeError:
+		return
+	for child in children:
+		if child.GetType() not in bagtypes:
+			unarmallnodes(child)
+
