@@ -173,19 +173,17 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		beginevents = MMAttrdefs.getattr(self.node, 'beginlist')
 		endevents = MMAttrdefs.getattr(self.node, 'endlist')
 
-		self.__add_events_helper(beginevents, 'beginevent')
-		self.__add_events_helper(endevents, 'endevent')
+		self.__add_events_helper(beginevents, 'beginevent', 'beginlist')
+		self.__add_events_helper(endevents, 'endevent', 'endlist')
 
-	def __add_events_helper(self, events, iconname):
+	def __add_events_helper(self, events, iconname, initattr):
 		icon = None
 		for b in events:
 			othernode = b.refnode()
 			if othernode:
-				# Known bug: TODO: I'm not worrying if the node is collapsed.
-				# TODO: Add end events also.
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
-					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu_dest)
+					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget).set_properties(arrowable=1,initattr=initattr).set_contextmenu(self.mother.event_popupmenu_dest)
 				else:
 					icon.add_arrow(otherwidget)
 				otherwidget.add_arrow(icon)
@@ -467,10 +465,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		top.setwaiting()
 		top.player.playfrom(self.node)
 
-	def attrcall(self):
+	def attrcall(self, initattr = None):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
-		AttrEdit.showattreditor(self.mother.toplevel, self.node)
+		AttrEdit.showattreditor(self.mother.toplevel, self.node, initattr=initattr)
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
@@ -1830,6 +1828,8 @@ class MMWidgetDecoration(Widgets.Widget):
 	def get_minsize(self):
 		# recalc_minsize must have been called before
 		return self.boxsize
+	def attrcall(self, initattr=None):
+		self.mmwidget.attrcall(initattr=initattr)
 
 class TransitionWidget(MMWidgetDecoration):
 	# This is a box at the bottom of a node that represents the in or out transition.
@@ -1857,7 +1857,7 @@ class TransitionWidget(MMWidgetDecoration):
 		else:
 			displist.drawicon(self.get_box(), 'transout')
 
-	def attrcall(self):
+	def attrcall(self, initattr=None):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		if self.in_or_out == 'in':
@@ -1936,7 +1936,7 @@ class PushBackBarWidget(MMWidgetDecoration):
 	def unselect(self):
 		self.parent.unselect()
 
-	def attrcall(self):
+	def attrcall(self, initattr=None):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node, '.begin1')
@@ -2106,6 +2106,7 @@ class Icon(MMWidgetDecoration):
 		self.arrowto = []	# a list of other MMWidgets.
 		self.icon = ""
 		self.contextmenu = None
+		self.initattr = None	# this is the attribute that gets selected in the 
 
 		self.set_properties()
 
@@ -2125,11 +2126,12 @@ class Icon(MMWidgetDecoration):
 		self.icon = iconname
 		return self
 
-	def set_properties(self, selectable=1, callbackable=1, arrowable=0, arrowdirection=0):
+	def set_properties(self, selectable=1, callbackable=1, arrowable=0, arrowdirection=0, initattr=None):
 		self.selectable = selectable
 		self.callbackable = callbackable
 		self.arrowable = arrowable
 		self.arrowdirection = arrowdirection
+		self.initattr = initattr
 		return self
 
 	def select(self):
@@ -2202,6 +2204,8 @@ class Icon(MMWidgetDecoration):
 	def is_selectable(self):
 		return self.selectable
 
+	def attrcall(self, initattr=None):
+		self.get_mmwidget().attrcall(initattr=self.initattr)
 
 # Maybe one day.
 ##class CollapseIcon(Icon):
@@ -2341,14 +2345,14 @@ class ChannelBoxWidget(ImageBoxWidget):
 	def unselect(self):
 		self.parent.unselect()
 
-	def attrcall(self):
+	def attrcall(self, initattr=None):
 		self.mother.toplevel.setwaiting()
 		chname = MMAttrdefs.getattr(self.node, 'project_default_region')
 		if not chname:
-			self.parent.attrcall()
+			self.parent.attrcall(initattr=initattr)
 		channel = self.mother.toplevel.context.getchannel(chname)
 		if not channel:
-			self.parent.attrcall()
+			self.parent.attrcall(initattr=initattr)
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.mother.toplevel, channel)
 
