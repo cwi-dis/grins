@@ -147,7 +147,12 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		if hasattr(self,'GetSafeHwnd'):
 			if self.GetSafeHwnd():
 				self.GetParent().ShowWindow(win32con.SW_SHOW)
-				self.GetParent().getMDIFrame().MDIActivate(self.GetParent())
+				try:
+					self.GetParent().getMDIFrame().MDIActivate(self.GetParent())
+				except:
+					# splitter
+					splitter = self.GetParent()
+					splitter.GetParent().getMDIFrame().MDIActivate(splitter.GetParent())
 
 	# Called by the core system to hide this view
 	def hide(self):
