@@ -754,8 +754,10 @@ class AttrEditor(AttrEditorDialog):
 				except:
 					typedef = self.wrapper.getdef(name)[0]
 					exp = typedef[0]
+					if exp == 'int':
+						exp = 'integer'
 					if exp == 'tuple':
-						exp = 'tuple of'
+						exp = 'list of values: '
 						for e in typedef[1]:
 							exp = exp + ' ' + e[0]
 					if exp[0] in 'aeiou':
@@ -1352,10 +1354,16 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types
 	def getoptions(self):
+		current = self.getcurrent()
 		import settings
 		if settings.get('lightweight'):
-			return [self.getcurrent()]
-		return ['Default'] + ChannelMap.getvalidchanneltypes()
+			return [current]
+		all = ChannelMap.getvalidchanneltypes()
+		if not current in all:
+			# Can happen if we open, say, a full-smil document
+			# in the G2 editor
+			all = all + [current]
+		return ['Default'] + all
 
 class FontAttrEditorField(PopupAttrEditorField):
 	# Choose from all possible font names
