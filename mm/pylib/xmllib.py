@@ -294,7 +294,6 @@ class XMLParser:
 	if j < 0:
 	    return -1
 	# Now parse the data between i+1 and j into a tag and attrs
-	attrs = []
 	attrdict = {}
 	k = tagfind.match(rawdata, i+1)
 	if k < 0:
@@ -315,7 +314,6 @@ class XMLParser:
 	    else:
 		self.syntax_error(self.lineno, 'attribute value not quoted')
 	    attrname = string.lower(attrname)
-	    attrs.append((attrname, attrvalue))
 	    if attrdict.has_key(attrname):
 		self.syntax_error(self.lineno, 'attribute specified twice')
 	    attrdict[attrname] = self.translate_references(attrvalue)
