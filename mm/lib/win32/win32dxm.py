@@ -49,6 +49,9 @@ class GraphBuilder:
 			self._rendered = 0
 		else:
 			self._rendered = 1
+			if exporter:
+				writer = exporter.getWriter()
+				writer.redirectAudioFilter(self._builder)
 		return self._rendered
 
 	def Run(self):
