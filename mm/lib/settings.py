@@ -144,6 +144,7 @@ default_settings = {
 	'registered': 'notyet',
 
 	# RTIPA start
+	'RTIPA_debug': 1,
 	'RTIPA_config': '',	# URL where RTIPA config file is to be found
 	'RTIPA_QoS': {'AF11': 115200, 'EF': 1000000,}, # mapping from QoS class to bitrate
 	'RTIPA_add_params': 0,		# add query params with widht/height/class to SMIL file URL
@@ -411,25 +412,35 @@ def read_RTIPA():
 	if RTIPA_re is None:
 		RTIPA_re = re.compile(get('RTIPA_config_re'))
 	import socket, MMurl
+	import windowinterface
 	RTIPA_classes.clear()
 	url = get('RTIPA_config')
 	if not url:
+		windowinterface.showmessage("No RTIPA config file configured")
 		return
 	try:
 		u = MMurl.urlopen(url)
 	except:
+		windowinterface.showmessage("Failed opening RTIPA config file `%s'" % url)
 		return
+	missed = []
 	while 1:
 		line = u.readline()
 		if not line:
 			u.close()
-			return
+			break
 		res = RTIPA_re.match(line)
 		if res is None:
+			missed.append(line)
 			continue
 		ip, qos = res.group('IP', 'class')
 		ip = socket.inet_aton(ip) # normalize
 		RTIPA_classes[ip] = qos
+	msg = []
+	for ip, qos in RTIPA_classes.items():
+		msg.append('%s %s' % (socket.inet_ntoa(ip), qos))
+	if get('RTIPA_debug'):
+		windowinterface.showmessage('Parsed RTIPA config file:\n' + '\n'.join(msg) + '\nignored lines:\n' + ''.join(missed))
 
 #
 # RTIPA end
