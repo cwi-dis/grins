@@ -486,7 +486,8 @@ class NodeWrapper(Wrapper):
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
 		if ntype == 'alt':
-			namelist.remove('begin')
+			if 'begin' in namelist:
+				namelist.remove('begin')
 			namelist.remove('loop')
 		if ntype in leaftypes:
 			namelist.append('alt')
@@ -663,29 +664,33 @@ class AnimationWrapper(NodeWrapper):
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.node_attrs
 		tag = self.node.GetAttrDict()['tag']
+		rmlist = []
 		if tag == 'animateMotion':
-			namelist.remove('attributeName')
-			namelist.remove('attributeType')
+			rmlist.append('attributeName')
+			rmlist.append('attributeType')
 		elif tag == 'animate':
-			namelist.remove('path')
-			namelist.remove('origin')
+			rmlist.append('path')
+			rmlist.append('origin')
 		elif tag == 'animateColor':
-			namelist.remove('path')
-			namelist.remove('origin')
+			rmlist.append('path')
+			rmlist.append('origin')
 		elif tag == 'set':
-			namelist.remove('path')
-			namelist.remove('origin')
-			namelist.remove('calcMode')
-			namelist.remove('values')
-			namelist.remove('keyTimes')
-			namelist.remove('keySplines')
-			namelist.remove('from')
-			namelist.remove('by')
-			namelist.remove('additive')
-			namelist.remove('accumulate')
+			rmlist.append('path')
+			rmlist.append('origin')
+			rmlist.append('calcMode')
+			rmlist.append('values')
+			rmlist.append('keyTimes')
+			rmlist.append('keySplines')
+			rmlist.append('from')
+			rmlist.append('by')
+			rmlist.append('additive')
+			rmlist.append('accumulate')
 		parent = self.node.GetParent()
 		if parent.GetType() in leaftypes:
-			namelist.remove('targetElement')
+			rmlist.append('targetElement')
+		for attr in rmlist:
+			if attr in namelist:
+				namelist.remove(attr)
 		return namelist
 
 	def maketitle(self):
