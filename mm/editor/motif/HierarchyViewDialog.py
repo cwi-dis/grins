@@ -156,6 +156,26 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, 'Transition', TRANSITION),
 		)
 
+	event_popupmenu_source = (
+		(FLAG_ALL, 'Find event destination', FIND_EVENT_SOURCE),
+		)
+
+	event_popupmenu_dest = (
+		(FLAG_ALL, 'Find event source', FIND_EVENT_SOURCE),
+		(FLAG_ALL, 'Properties...', ATTRIBUTES),
+		)
+
+	multi_popupmenu = (
+		(FLAG_ALL, 'Cut', CUT),
+		(FLAG_ALL, 'Copy', COPY),
+		(FLAG_ALL, None,),
+		(FLAG_ALL, 'Delete', DELETE),
+		(FLAG_ALL, None,),
+		(FLAG_ALL, 'Event source', CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, None,),
+		(FLAG_ALL, 'Properties...', ATTRIBUTES),
+		)
+
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
 

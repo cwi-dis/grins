@@ -4340,12 +4340,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# update progress bar if needed
 	def __updateProgressHandler(self):
-		import windowinterface
+		import time
 		if self.__progressCallback != None:
 			callback, intervalTime = self.__progressCallback
-			if windowinterface.getcurtime() > self.__progressTimeToUpdate:
+			if time.time() > self.__progressTimeToUpdate:
 				# determinate the next time to update
-				self.__progressTimeToUpdate = windowinterface.getcurtime()+intervalTime
+				self.__progressTimeToUpdate = time.time()+intervalTime
 				if self.linenumber != 0:
 					# update the handler. 
 					callback(float(self.lineno)/self.linenumber)
