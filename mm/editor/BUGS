@@ -5,27 +5,27 @@
 
 ------------------------------ BUGS -------------------------------
 
+player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
+playing node w/o channel (hard to reproduce?)
+
+channel view: the font still isn't set right when selecting an object
+
 block view: sometimes the outermost box size is calculated wrong and
-part of the window remains unused.  Usually after heavy inserting /
-deleting of nodes and/or zooming in/out?
+part of the window remains unused.  (Hard to reproduce; usually after
+heavy inserting / deleting of nodes and/or zooming in/out?)
 
-node/channel attrs: when clicking OK, if the window size changes
-(because the list of defined attributes changes), the new window pops
-up for a nanosecond and then disappears again
-
-soundchannel: crashes if openport fails (if there are too many ports open)
+node/channel attr editors: when clicking OK, if the window size
+changes (because the list of defined attributes changes), the new
+window pops up for a nanosecond and then disappears again
 
 Player: playing multiple nodes in parallel on the same channel causes
-crashes or generally weird behaviour
+crashes or generally weird behaviour (each channel should protect
+itself against this!)
 
-Player: crash if playing node with undefined channel
-
-FORMS: When one FORM is iconified, all events are queued but not acted
-upon hang.  Is this a standard FORMS bug or do I do something wrong
-with handling GL events?  (Not reproducible in very simple prog.)
-
-channel view or Timing: sometimes calctimes for partial tree is
-affects lay-out in channel view.  (May be a channel view bug?)
+FORMS: When one FORM is iconified, *after a while* all events are
+queued but not acted upon so the program hangs.  Is this a standard
+FORMS bug or do I do something wrong with handling GL events?  (Not
+reproducible in very simple prog?)
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
@@ -74,12 +74,14 @@ general: perhaps use CVS for project management
 *    I was unable to use the input text box for Immediate text without
      further (human) help. The interface is very strange.
 
+---
 21/4/92
 
 *    When waiting for next pieces of data to load ('cos done a hyperjump), then
      leave the current ones in the Channel showing until the new ones are
      ready.  Show a wait cursor while waiting.
 
+---
 22/4/92
 
 *    Channels need a "Z" position, so that when channels overlap the author
@@ -92,6 +94,45 @@ general: perhaps use CVS for project management
 
 *    Give feedback when choosing/activating an anchor (or linked node), so
      the reader knows that the anchor has, or has not, been selected.
+
+---
+13/5/92
+
+*    As a "real" author it would be extremely useful to have access to a
+     comments field for each node.  I would then be able to add details like:
+     "this is some filler text till I get round to drawing a picture";
+     "I'm not sure that the structure needs to be this deep, so maybe I
+     should delete this later".
+
+*    Showing the other anchors while drawing an anchor in a node would be
+     very useful for lining up the boundaries of the anchor being edited.
+
+---
+14/5/92
+
+*   In the Link editor window, if you are looking at All the anchors, and
+    have one selected then there is no "Edit Anchor" button.  If you then
+    choose to look at the anchors "From Block View Focus" then the "Anchor
+    editor..." button appears.  I'd like the button to be available
+    whenever an Anchor is selected.
+
+    (I'd also quite like an "OK" button in the Link editor (even if it
+    doesn't actually *do* anything), since I always have the feeling when I
+    close the window that my changes will get thrown away.)
+
+---
+20/5/92
+
+*   It would be nice, when creating a new channel, to be able to choose the
+    type of a new channel from a list of possible types.  (I keep typing in
+    a wrong name and then CMIF crashes.)
+
+*   I keep wanting to point at a node in the Player and then edit the
+    contents, since that's the thing I'm concentrating on (at the time) and
+    I want to change *that* text.  (This is more of an observation than an
+    actual request for change.)
+
+---
 
 ------------------------------ FEATURES ---------------------------
 
@@ -304,3 +345,21 @@ player: when reaching a bag node through a hyperjump, should call
 choosebagitem()
 
 block & channel view: want to show other view's focus
+
+channel view or Timing: sometimes calctimes for partial tree is
+affects lay-out in channel view.  (May be a channel view bug?)
+[fixed by always calculating the timing for the root of the current
+mini document]
+
+--- 20 May 1992 ---
+
+block view: don't open info dialog for commands S, P, B
+
+channel view: show beginning of string when truncating, not center
+
+toplevel: WINQUIT handler uses quit_button instead of quitbutton
+
+channel view: crash in Timing when 'N' command reaches a
+new empty par node (that hasn't got a "t1" yet)
+
+sound channel: crashes if openport fails (if there are too many ports open)
