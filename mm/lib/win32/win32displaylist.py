@@ -73,7 +73,8 @@ class _DisplayList:
 		self._font = None
 		self._curpos = 0, 0
 		self._xpos = 0
-		self._win32rgn=None
+		self._win32rgn = None
+		self.__mediaBox = None
 
 		#cloning support
 		self._cloneof = None
@@ -370,10 +371,34 @@ class _DisplayList:
 		self._optimize((2,))
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = self._canvas
-		return float(dest_x - x) / w, float(dest_y - y) / h, \
+		
+		mediaBox = float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
+		       
+		self.setMediaBox(mediaBox)
+		
+		return mediaBox
 
-	
+	# set the area where the media is visible
+	# mediaBox is a tuple of: 
+	# top, left, width, height
+	# all values are expressed in pourcent and relative to the window
+	def setMediaBox(self, mediaBox):
+		self.__mediaBox = mediaBox
+		
+	# check if the x/y point is inside the media box. currently, 
+	# the method is called from win32window module
+	def _insideMedia(self, x, y):
+		if self.__mediaBox == None:
+			# in this case, assume that the media area fill the display list area
+			return 1
+			
+		left, top, width, height = self.__mediaBox
+		if left <= x <= left+width and top <= y <= top+height:
+			return 1
+			
+		return 0
+		
 	#############################################
 	# draw primitives
 

@@ -173,6 +173,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		armbox = self.prepare_anchors(node, self.window, self.getmediageom(node))
 		self.setArmBox(armbox)
 		
+		self.armed_display.setMediaBox(armbox)
 
 #		hicolor = self.gethicolor(node)
 		
