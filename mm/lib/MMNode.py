@@ -3714,7 +3714,7 @@ class MMNode(MMTreeElement):
 			beginlist = self.FilterArcList(beginlist)
 			subpath = None
 			if path and path[0] is child:
-				arc = MMSyncArc(child, 'begin', srcnode = 'syncbase', delay = sctx.parent.timefunc() - self.start_time)
+				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
 				schedule = 1
@@ -3723,7 +3723,7 @@ class MMNode(MMTreeElement):
 			elif not beginlist:
 				if defbegin is None:
 					child.set_infoicon('error', 'node cannot start')
-				arc = MMSyncArc(child, 'begin', srcnode = 'syncbase', delay = defbegin)
+				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
 				schedule = defbegin is not None
