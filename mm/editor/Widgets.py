@@ -201,6 +201,7 @@ class Widget:
 
         if r < l:
             print "Widget: Error: box is right-to-left", self
+            assert 0
         if t > b:
             print "Widget: Error: box is upside down.", self
 
@@ -253,7 +254,6 @@ class Widget:
         self.root = None
         self.appended_to = None
         self.context_menu = None
-        print "DEBUG: destroying widget"
         self.parent = None
 
 ##############################################################################

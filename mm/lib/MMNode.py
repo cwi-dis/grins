@@ -1892,6 +1892,22 @@ class MMNode:
 				print "ERROR: List index out of range."
 				print "MMNode.GetNext().";
 				return None;
+
+	def ExpandParents(self):
+		# Recurse through my parents, expanding all of them.
+		self.collapsed = 0
+		if self.GetParent() is not None:
+			self.GetParent().ExpandParents()
+
+	def hasParent(self, parentnode):
+		if self is parentnode:
+			return 1
+		else:
+			if self.parent:
+				return self.parent.hasParent(parentnode)
+			else:
+				return 0
+		
 				 
 	#
 	# Methods for mini-document management

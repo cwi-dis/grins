@@ -73,7 +73,7 @@ class HierarchyView(HierarchyViewDialog):
 		HierarchyViewDialog.__init__(self)		
 
 		self.create_scene_graph() # A hierarchy of displayable objects for the screen.
-
+		self.scene_graph.collapse_levels(3); # Collapse all nodes less than 3 levels down.
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
@@ -294,9 +294,10 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.rpcommands
 
 		# Add Slideshow nodes
-		if fnode.__class__ is SlideMMNode:
-			commands = commands + self.slidecommands
-		else:			# else add really important commands...
+		#if fnode.__class__ is SlideMMNode:
+		#	commands = commands + self.slidecommands
+		#else:			# else add really important commands...
+		if 1: # I don't want to break the indentation here -mjvdg.
 			commands = commands + self.noslidecommands
 			if self.toplevel.links.has_interesting(): # ??!! -mjvdg
 				commands = commands + self.finishlinkcommands
@@ -310,8 +311,9 @@ class HierarchyView(HierarchyViewDialog):
 
 		if fnode is not self.root:
 			# can't do certain things to the root
-			if fnode.__class__ is not SlideMMNode:
-				commands = commands + self.notatrootcommands + self.mediacommands
+			#if fnode.__class__ is not SlideMMNode:
+			commands = commands + self.notatrootcommands + self.mediacommands
+			#
 			commands = commands + self.navigatecommands[0:1]
 			pchildren = fnode.GetParent().GetChildren()
 
@@ -329,12 +331,14 @@ class HierarchyView(HierarchyViewDialog):
 		t, n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			# can only paste if there's something to paste
-			if n.__class__ is SlideMMNode:
-				# Slide can only go in RealPix node
-				if is_realpix and MMAttrdefs.getattr(fnode, 'file'):
-					commands = commands + self.pasteinteriorcommands
-				elif fntype == 'slide':
-					commands = commands + self.pastenotatrootcommands
+			#if n.__class__ is SlideMMNode:
+			#	# Slide can only go in RealPix node
+			#	if is_realpix and MMAttrdefs.getattr(fnode, 'file'):
+			#		commands = commands + self.pasteinteriorcommands
+			#	elif fntype == 'slide':
+			#		commands = commands + self.pastenotatrootcommands
+			if 0:
+				pass;
 			else:
 				if fntype in MMNode.interiortypes:
 					# can only paste inside interior nodes
@@ -355,9 +359,10 @@ class HierarchyView(HierarchyViewDialog):
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		
 		# Choose the pop-up menu.
-		if fnode.__class__ is SlideMMNode: # for a realmedia slideshow node.
-			popupmenu = self.slide_popupmenu
-		elif fntype in MMNode.interiortypes or is_realpix: # for all internal nodes.
+#		if fnode.__class__ is SlideMMNode: # for a realmedia slideshow node.
+#			popupmenu = self.slide_popupmenu
+#		el
+		if fntype in MMNode.interiortypes or is_realpix: # for all internal nodes.
 			popupmenu = self.interior_popupmenu
 			# if node has children, or if we don't know that the
 			# node has children (collapsed RealPix node), enable
@@ -374,11 +379,13 @@ class HierarchyView(HierarchyViewDialog):
 		self.setstate()
 
 		# make sure focus is visible
-		node = fnode.GetParent()
-		while node is not None:
-			if not hasattr(node, 'expanded'):
-				expandnode(node)
-			node = node.GetParent()
+		if self.focusnode.GetParent():
+			self.focusnode.GetParent().ExpandParents()
+##		node = fnode.GetParent()
+##		while node is not None:
+##			if not hasattr(node, 'expanded'):
+##				expandnode(node)
+##			node = node.GetParent()
 
 	##############################################################################
 			
@@ -391,7 +398,6 @@ class HierarchyView(HierarchyViewDialog):
 		# and create a scene graph from it.
 		Timing.needtimes(self.root)  # For bandwidth bars
 		self.scene_graph = create_MMNode_widget(self.root, self)
-		self.scene_graph.collapse_levels(3); # Collapse all nodes less than 3 levels down.
 
 	def refresh_scene_graph(self):
 		if self.scene_graph:
@@ -414,12 +420,16 @@ class HierarchyView(HierarchyViewDialog):
 		# Other administratrivia
 		self.editmgr.register(self,1) # 1 means we want to participate in global focus management.
 		self.toplevel.checkviews()
-		if self.expand_on_show:
-			# Only do this the first time: open a few nodes
-			self.expand_on_show = 0
-			levels = countlevels(self.root, NODES_WANTED_OPEN)
-			do_expand(self.root, 1, levels)
-		expandnode(self.root)
+		# This is already done in create_scene_graph
+#		if self.expand_on_show:
+#			# Only do this the first time: open a few nodes
+#			self.expand_on_show = 0
+#			levels = countlevels(self.root, NODES_WANTED_OPEN)
+#			do_expand(self.root, 1, levels)
+		#expandnode(self.root)
+		
+		#self.scene_graph.uncollapse()
+		self.refresh_scene_graph()
 		self.draw()
 		
 	def draw(self):
@@ -936,8 +946,8 @@ class HierarchyView(HierarchyViewDialog):
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
 			    self.focusnode.GetChannelType() != 'RealPix' or
-			    node.GetChannelType() != 'animate' or
-			    node.__class__ is not SlideMMNode):
+			    node.GetChannelType() != 'animate'): # or
+			    #node.__class__ is not SlideMMNode):
 				windowinterface.showmessage('Selection is a leaf node!',
 							    mtype = 'error', parent = self.window)
 				node.Destroy()
@@ -952,7 +962,7 @@ class HierarchyView(HierarchyViewDialog):
 			# Index is the index in the list of children
 			# Node is the new node
 			em.addnode(self.focusnode, index, node)
-			expandnode(self.focusnode)
+			#expandnode(self.focusnode)
 		else:
 			children = parent.GetChildren()
 			i = children.index(self.focusnode)
@@ -1010,7 +1020,14 @@ class HierarchyView(HierarchyViewDialog):
 		# We need to keep the nodes, because the objects get purged during each commit.
 		srcnode = srcobj.node
 		destnode = dstobj.node
-		
+
+		# If srcnode is a parent of destnode, then we have a major case of incest.
+		# the node will be removed from it's position and appended to one of it's children.
+		# and then, garbage collected.
+		if destnode.hasParent(srcnode):
+			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window);
+			return
+					  
 		if not srcnode or srcnode is self.root:
 			windowinterface.beep()
 			return
@@ -1121,6 +1138,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusnode = widget.node
 			widget.select()
 			self.window.scrollvisible(widget.get_box())
+		self.aftersetfocus()
 		self.editmgr.setglobalfocus("Exactly what am I meant to set the focus to?", widget.node); 
 
 	def select_node(self, node):
@@ -1750,46 +1768,46 @@ class HierarchyView(HierarchyViewDialog):
 ##		node.boxsize = width, height, begin
 ##		return node.boxsize
 
-def do_expand(node, expand, nlevels=None, expleaftypes=0):
-	if nlevels == 0:
-		return 0
-	if nlevels != None:
-		nlevels = nlevels - 1
-	ntype = node.GetType()
+##def do_expand(node, expand, nlevels=None, expleaftypes=0):
+##	if nlevels == 0:
+##		return 0
+##	if nlevels != None:
+##		nlevels = nlevels - 1
+##	ntype = node.GetType()
 
-	# animate++
-	if expleaftypes and ntype in MMNode.leaftypes and node.GetChildren() and \
-		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
-		pass
-	elif ntype not in MMNode.interiortypes and\
-	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
-		return 0
+##	# animate++
+##	if expleaftypes and ntype in MMNode.leaftypes and node.GetChildren() and \
+##		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
+##		pass
+##	elif ntype not in MMNode.interiortypes and\
+##	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
+##		return 0
 
-	changed = 0
-	if expand:
-		if not hasattr(node, 'expanded'):
-			expandnode(node)
-			changed = 1
-	elif hasattr(node, 'expanded'):
-		collapsenode(node)
-		changed = 1
-	for child in node.GetChildren():
-		if do_expand(child, expand, nlevels, expleaftypes):
-			changed = 1
-	return changed			# any changes in this subtree
+##	changed = 0
+##	if expand:
+##		if not hasattr(node, 'expanded'):
+##			expandnode(node)
+##			changed = 1
+##	elif hasattr(node, 'expanded'):
+##		collapsenode(node)
+##		changed = 1
+##	for child in node.GetChildren():
+##		if do_expand(child, expand, nlevels, expleaftypes):
+##			changed = 1
+##	return changed			# any changes in this subtree
 
-def countlevels(node, numwanted):
-	on_this_level = [node]
-	level = 1
-	while 1:
-		numwanted = numwanted - len(on_this_level)
-		if numwanted <= 0 or not on_this_level:
-			return level
-		on_next_level = []
-		for n in on_this_level:
-			on_next_level = on_next_level + n.GetChildren()
-		on_this_level = on_next_level
-		level = level + 1
+##def countlevels(node, numwanted):
+##	on_this_level = [node]
+##	level = 1
+##	while 1:
+##		numwanted = numwanted - len(on_this_level)
+##		if numwanted <= 0 or not on_this_level:
+##			return level
+##		on_next_level = []
+##		for n in on_this_level:
+##			on_next_level = on_next_level + n.GetChildren()
+##		on_this_level = on_next_level
+##		level = level + 1
 
 # XXX The following should be merged with ChannelView's GO class :-(
 # Actually, this will be using a completely different approach now :-). -mjvdg.
@@ -2346,83 +2364,83 @@ def countlevels(node, numwanted):
 # 					# This is handled by the assoc-ed Object.
 				       		
 # specialized node for RealPix slides (transitions)
-class SlideMMNode(MMNode.MMNode):
-	def GetChannel(self):
-		return None
+##class SlideMMNode(MMNode.MMNode):
+##	def GetChannel(self):
+##		return None
 
-	def GetChannelName(self):
-		return 'undefined'
+##	def GetChannelName(self):
+##		return 'undefined'
 
-	def setgensr(self):
-		self.gensr = self.gensr_leaf
+##	def setgensr(self):
+##		self.gensr = self.gensr_leaf
 
-	def GetAttrDef(self, attr, default):
-		if self.attrdict.has_key(attr):
-			return self.attrdict[attr]
-		if attr == 'color':
-			return MMAttrdefs.getattr(self.GetParent(), 'bgcolor')
-		return default
+##	def GetAttrDef(self, attr, default):
+##		if self.attrdict.has_key(attr):
+##			return self.attrdict[attr]
+##		if attr == 'color':
+##			return MMAttrdefs.getattr(self.GetParent(), 'bgcolor')
+##		return default
 
-def expandnode(node):
-	if hasattr(node, 'expanded'):
-		# already expanded
-		return
-	node.expanded = 1
-	if node.GetType() != 'ext' or node.GetChannelType() != 'RealPix':
-		return
-	if not hasattr(node, 'slideshow'):
-		import realnode
-		node.slideshow = realnode.SlideShow(node)
-	ctx = node.GetContext()
-	for attrs in node.slideshow.rp.tags:
-		child = SlideMMNode('slide', ctx, ctx.newuid())
-		ctx.knownode(child.GetUID(), child)
-		child.parent = node
-		node.children.append(child)
-		child.attrdict.update(attrs)
+##def expandnode(node):
+##	if hasattr(node, 'expanded'):
+##		# already expanded
+##		return
+##	node.expanded = 1
+##	if node.GetType() != 'ext' or node.GetChannelType() != 'RealPix':
+##		return
+##	if not hasattr(node, 'slideshow'):
+##		import realnode
+##		node.slideshow = realnode.SlideShow(node)
+##	ctx = node.GetContext()
+##	for attrs in node.slideshow.rp.tags:
+##		child = SlideMMNode('slide', ctx, ctx.newuid())
+##		ctx.knownode(child.GetUID(), child)
+##		child.parent = node
+##		node.children.append(child)
+##		child.attrdict.update(attrs)
 
-def collapsenode(node):
-	if hasattr(node, 'expanded'):
-		del node.expanded
-	# only remove children if they are of type SlideMMNode
-	children = node.GetChildren()
-	if not children or children[0].__class__ is not SlideMMNode:
-		return
-	ctx = node.GetContext()
-	for child in children:
-		child.parent = None
-		ctx.forgetnode(child.GetUID())
-	node.children = []
+##def collapsenode(node):
+##	if hasattr(node, 'expanded'):
+##		del node.expanded
+##	# only remove children if they are of type SlideMMNode
+##	children = node.GetChildren()
+##	if not children or children[0].__class__ is not SlideMMNode:
+##		return
+##	ctx = node.GetContext()
+##	for child in children:
+##		child.parent = None
+##		ctx.forgetnode(child.GetUID())
+##	node.children = []
 
-def slidestart(pnode, url, index):
-	import Bandwidth
-	ctx = pnode.GetContext()
-	i = index
-	if i == -1:
-		i = len(pnode.children)
-	urls = {}
-	start = MMAttrdefs.getattr(pnode, 'preroll')
-	filesize = 0
-	children = pnode.children
-	for i in range(0, i):
-		child = children[i]
-		start = start + MMAttrdefs.getattr(child, 'start')
-		if MMAttrdefs.getattr(child,'tag') in ('fadein', 'crossfade', 'wipe'):
-			curl = MMAttrdefs.getattr(child, 'file')
-			if not curl:
-				continue
-			if not urls.has_key(curl):
-				try:
-					thissize = Bandwidth.GetSize(ctx.findurl(curl), convert = MMAttrdefs.getattr(child, 'project_convert'))
-					if thissize:
-						filesize = filesize + thissize
-				except Bandwidth.Error, arg:
-					child.set_infoicon('error', arg)
-			urls[curl] = 0
-	try:
-		thissize = Bandwidth.GetSize(url)
-		filesize = filesize + thissize
-	except Bandwidth.Error, arg:
-		pnode.set_infoicon('error', arg)
-	minstart = float(filesize) * 8 / MMAttrdefs.getattr(pnode, 'bitrate')
-	return start, minstart
+##def slidestart(pnode, url, index):
+##	import Bandwidth
+##	ctx = pnode.GetContext()
+##	i = index
+##	if i == -1:
+##		i = len(pnode.children)
+##	urls = {}
+##	start = MMAttrdefs.getattr(pnode, 'preroll')
+##	filesize = 0
+##	children = pnode.children
+##	for i in range(0, i):
+##		child = children[i]
+##		start = start + MMAttrdefs.getattr(child, 'start')
+##		if MMAttrdefs.getattr(child,'tag') in ('fadein', 'crossfade', 'wipe'):
+##			curl = MMAttrdefs.getattr(child, 'file')
+##			if not curl:
+##				continue
+##			if not urls.has_key(curl):
+##				try:
+##					thissize = Bandwidth.GetSize(ctx.findurl(curl), convert = MMAttrdefs.getattr(child, 'project_convert'))
+##					if thissize:
+##						filesize = filesize + thissize
+##				except Bandwidth.Error, arg:
+##					child.set_infoicon('error', arg)
+##			urls[curl] = 0
+##	try:
+##		thissize = Bandwidth.GetSize(url)
+##		filesize = filesize + thissize
+##	except Bandwidth.Error, arg:
+##		pnode.set_infoicon('error', arg)
+##	minstart = float(filesize) * 8 / MMAttrdefs.getattr(pnode, 'bitrate')
+##	return start, minstart
