@@ -23,7 +23,7 @@ class AudioDevSUN:
 		__info.o_sample_rate = 44100
 		__info.o_channels = 2
 		__info.o_encoding = SUNAUDIODEV.ENCODING_LINEAR
-		__info.o_precission = 16
+		__info.o_precision = 16
 		try:
 			__port.setinfo(__info)
 		except sunaudiodev.error:
@@ -77,9 +77,9 @@ class AudioDevSUN:
 			info.o_channels = fmt.getnchannels()
 			if fmt.getencoding() == 'u-law':
 				info.o_encoding = SUNAUDIODEV.ENCODING_ULAW
-				info.o_precission = 8
+				info.o_precision = 8
 			else:
-				info.o_precission = (fmt.getbps() + 7) & ~7
+				info.o_precision = (fmt.getbps() + 7) & ~7
 				info.o_encoding = SUNAUDIODEV.ENCODING_LINEAR
 			try:
 				self.__port.setinfo(info)
