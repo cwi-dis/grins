@@ -1504,9 +1504,14 @@ class SMILWriter(SMIL):
 					  'null', 'vcr', 'socket', 'cmif',
 					  'midi', 'external') and top0:
 				self.__subchans[top0].append(ch)
-			if not ch in self.top_levels and \
+			# check for SMIL 2.0 feature: hierarchical regions
+			if not self.smilboston and \
+			   not ch in self.top_levels and \
 			   self.__subchans.get(ch.name):
-				self.smilboston = 1
+				for sch in self.__subchans[ch.name]:
+					if sch['type'] == 'layout':
+						self.smilboston = 1
+						break
 
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
