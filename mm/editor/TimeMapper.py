@@ -35,10 +35,14 @@ class TimeMapper:
 		self.collisions.append((time, minpixeldistance))
 		self.collisiondict[time] = 0
 		
-	def addstalltime(self, time, stalltime):
+	def addstalltime(self, time, stalltime, stalltype='stall'):
 		if not self.collecting:
 			raise Error, 'Adding stilltime while not collecting data anymore'
-		self.stalldict[time] = stalltime + self.stalldict.get(time, 0)
+		oldstalltime, oldstalltype = self.stalldict.get(time, (0, None))
+		stalltime = oldstalltime + stalltime
+		# XXXX Adding is not correct for different types of stalls
+		# XXXX We should take the worst of stalltype and oldstalltype
+		self.stalldict[time] = stalltime, stalltype
 		self.collisiondict[time] = 0
 		
 	def calculate(self, realtime=0, min_pixels_per_second = 0):
@@ -67,7 +71,7 @@ class TimeMapper:
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		else:
 			min_pixels_per_second = 2
-		for time, stalltime in self.stalldict.items():
+		for time, (stalltime, stalltype) in self.stalldict.items():
 			stallpixels = stalltime * min_pixels_per_second
 			if stallpixels > self.collisiondict[time]:
 				self.collisiondict[time] = stallpixels
@@ -236,4 +240,4 @@ class TimeMapper:
 		return rv
 
 	def getstall(self, time):
-		return self.stalldict.get(time, 0)
+		return self.stalldict.get(time, (0, None))

@@ -365,8 +365,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					BandwidthCompute.compute_bandwidth(self.node)
 				print 'DBG: Computed bandwidths'
 				if timemapper:
-					for stalltime, stallduration in stalls:
-						timemapper.addstalltime(stalltime, stallduration)
+					if prerolltime:
+						timemapper.addstalltime(0, prerolltime, 'preroll')
+					for stalltime, stallduration, stalltype in stalls:
+						timemapper.addstalltime(stalltime, stallduration, stalltype)
 		else:
 			if self.bwstrip:
 				self.bwstrip.destroy()
@@ -2504,15 +2506,23 @@ class TimelineWidget(MMWidgetDecoration):
 		displist.fgcolor(COLCOLOR)
 		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
 			if left != right:
-				stalltime = timemapper.getstall(time)
+				stalltime, stalltype = timemapper.getstall(time)
 				if stalltime:
-					color = TRUNCCOLOR # Does this make sense?
-					label = '%ds stall'%stalltime
+					if stalltype == 'preroll':
+						color = TRUNCCOLOR
+					elif stalltype == 'stall?':
+						color = TRUNCCOLOR
+					else:
+						color = TRUNCCOLOR
+					displist.fgcolor(color)
+					label = '%ds %s'%(stalltime, stalltype)
 					lw = displist.strsizePXL(label)[0]
+					if lw > right-left:
+						# It doesn't fit. Try something smaller
+						label = '%ds'%stalltime
+						lw = displist.strsizePXL(label)[0]
 					if lw < right-left:
-##						displist.setpos(left, (label_top + label_bot + displist.fontheightPXL()) / 2)
-						displist.centerstring(left, label_top, right, label_bot, label)
-					# Should also draw tickmarks.
+						displist.centerstring(left, longtick_top, right, longtick_bot, label)
 				else:
 					color = COLCOLOR
 				displist.drawline(color, [(left, line_y), (right, line_y)])
