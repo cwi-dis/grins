@@ -6,12 +6,15 @@ import EasyDialogs
 
 class TopLevelDialog:
 	def __init__(self):
-		self.show()
+		self._do_show()
 		
-	def show(self):
+	def _do_show(self):
 		if self.window is not None:
 			return
 		self.window = windowinterface.windowgroup(self.basename, self.commandlist)
+		
+	def show(self):
+		self._do_show()
 
 	def hide(self):
 		if self.window is None:
