@@ -85,8 +85,14 @@ static PyObject* PyApp_SetMainWnd(PyApp *self, PyObject *args)
 	PyObject *obj;
 	if(!PyArg_ParseTuple(args,"O", &obj))
 		return NULL;
-	Py_INCREF(obj);
-	self->m_mainWnd = obj;
+	Py_XDECREF(self->m_mainWnd);
+	if(obj == Py_None)
+		self->m_mainWnd = NULL;
+	else
+		{
+		Py_INCREF(obj);
+		self->m_mainWnd = obj;
+		}
 	return none();
 	}
 
