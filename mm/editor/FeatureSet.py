@@ -13,17 +13,17 @@
 
 __version__ = "$Id$";
 
+# If these do not appear in feature_set, they don't apper in GRiNS.
 [
 	EXPORT_SMIL1,			# not implemented
 	EXPORT_SMIL2,
-	EXPORT_REAL,
+	EXPORT_REAL,			# export to RealOne
 	EXPORT_QT,			# export to Quicktime-capable SMIL
 	EXPORT_WMP,			# export to windows media player
-	EXPORT_3GPP,			# export to 3GPP PSS4
+	EXPORT_3GPP,			# export to 3GPP PSS4 (not implemented)
 	EXPORT_HTML_TIME,		# export to Internet Explorer HTML+TIME
 	EXPORT_WINCE,			# export to Handheld Device
 
-	# If these do not appear in feature_set, they don't apper in GRiNS.
 	PREFERENCES,			# enable editing of GRiNS Preferences
 	STRUCTURE_VIEW,
 	PLAYER_VIEW,
@@ -60,10 +60,11 @@ __version__ = "$Id$";
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
 	H_PLAYABLE,			# Toggle showing of playability of nodes
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
+	H_ASSIGN_NAME,			# Assign a name to newly created nodes
 	SHOW_MEDIA_CHILDREN,
 
 	AUTO_EVALUATE,			# Don't need trial license to evaluate
 
 	INTERNAL_LINKS,			# allow creation of internal hyperlinks
 	UNSUPPORTED_ERROR,		# unsupported features cause fatal errors
-] = range(41)				# don't forget to update this range!
+] = range(42)				# don't forget to update this range!
