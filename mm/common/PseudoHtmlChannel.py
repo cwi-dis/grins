@@ -233,7 +233,6 @@ def fix_anchorlist(node, taglist):
 	for item in taglist:
 		names_in_anchors.append(item[4])
 	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
-	modanchorlist(oldanchors)
 	anchors = oldanchors[:]
 	i = 0
 	while i < len(anchors):
