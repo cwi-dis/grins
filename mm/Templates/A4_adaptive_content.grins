@@ -6,6 +6,7 @@
     <meta name="template_name" content="Adaptive Content"/>
     <meta name="template_description" content="Presentation with Adaptive Content. Based on audience bandwidth it shows either video, realpix or realtext."/>
     <meta name="template_snapshot" content="adaptive.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
     <layout>
       <root-layout id="Player-Window" width="415" height="245"/>
       <region id="audioRegion_1" GRiNS:type="sound"/>
