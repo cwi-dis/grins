@@ -693,6 +693,9 @@ class MediaWidget(MMNodeWidget):
 
     def recalc(self):
         l,t,r,b = self.pos_rel
+        lag = self.get_relx(self.downloadtime_lag)
+        h = self.get_rely(12);          # 12 pixels high.
+        self.pushbackbar.moveto((l-lag,t,l,t+h))
 #        l = l + self.get_relx(1);
 #        b = b - self.get_rely(1);
 #        r = r - self.get_relx(1);
@@ -701,10 +704,7 @@ class MediaWidget(MMNodeWidget):
         pix16y = self.get_rely(16);
         self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
         self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
-        lag = self.get_relx(self.downloadtime_lag)
 #        dt = self.get_relx(self.downloadtime)
-        h = self.get_rely(6);          # 12 pixels high.
-        self.pushbackbar.moveto((l-lag,t+(b-t)/2.0-h,l,t+(b-t)/2.0+h))
         MMNodeWidget.recalc(self) # This is probably not necessary.
 
     def get_minsize(self):
