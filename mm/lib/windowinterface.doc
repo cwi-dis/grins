@@ -5,6 +5,11 @@ All sizes and coordinates are in fractions of the width and height of
 the containing window.  On the top level, sizes and coordinates are in
 mm.  The origin is always at the top-left corner.
 
+** The window interface has changed slightly (15-Nov-2000) - now,
+** there is an extra argument in the constructer which determines
+** whether coordinates will be in relative 0.0 -> 1.0 coordinates or
+** pixel numbers.
+
 Colors are always given as a tuple consisting of three values in the
 range 0-255.  The values are respectively the red, green, and blue
 components.
@@ -352,21 +357,30 @@ The display object has the following methods:
 		width is specified in pixels until a better unit is
 		found.  [XXX--what *is* a better unit?]
 
-	display_image_from_file(file, crop = (0,0,0,0), scale = 0) -> x, y, width, height
-
+	display_image_from_file(file, crop = (0,0,0,0), scale = 0, center = 1, coordinates = None, clip = None) -> x, y, width, height
 		Display the image in the specified file on the window.
-		If scale equals 0, the image is scaled to fit in the
-		window, but the aspect ratio of the image is kept the
-		same.  If scale is not equal to 0, the image is scaled
-		by the given factor.  Crop is a tuple that gives the
+		If crop is not None, it is a tuple that gives the
 		fraction of the top, bottom, left, and right that
-		should be cropped off (removed from) the image.  The
-		image is centered in the window.  The remaining part
-		of the window is unaffected.  The file can contain
-		anything that the img module recognizes.  The value
-		returned are the coordinates of the displayed image.
-		[ crop and scale non-essential, file may be restricted
-		  to one or a few image formats ]
+		should be cropped off (removed from) the image.  If
+		coordinates is not None, it is a tuple giving the area
+		of the window where the image should be drawn.  If
+		scale equals 0, the (cropped) image is scaled to fit
+		in the window area, but the aspect ratio of the image
+		is kept the same.  If scale is -1, the (cropped) image
+		is scaled to fill the whole window area, with the
+		aspect ration of the image kept the same.  If scale is
+		-2, the effect is the same as for scale = 0, except
+		the image is not scaled up (enlarged).  If scale is
+		not equal to 0, the image is scaled by the given
+		factor.  If center is 1, the image is centered in the
+		window, otherwise it is drawn in the top-left corner.
+		If clip is not None, it is a tuple giving the
+		coordinates to which the image is clipped (after
+		cropping, scaling and positioning).  The remaining
+		part of the window is unaffected.  The file can
+		contain anything that the img module recognizes.  The
+		value returned are the coordinates of the displayed
+		image.
 
 	drawline(color, points)
 		Draw a polyline (segmented line) in the given color.
