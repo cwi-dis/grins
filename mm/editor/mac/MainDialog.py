@@ -140,7 +140,7 @@ ITEM_NEVER_AGAIN=6
 ITEMLIST_OPENAPP_ALL=ITEMrange(ITEM_OK, ITEM_NEVER_AGAIN)
 
 class OpenAppDialog(windowinterface.MACDialog):
-	def __init__(self, cb_new, cb_open, cb_neveragain):
+	def __init__(self, cb_new, cb_open, cb_never_again):
 		windowinterface.MACDialog.__init__(self, "Oratrix GRiNS", ID_DIALOG_OPENAPP,
 				ITEMLIST_OPENAPP_ALL, default=ITEM_OK)
 		self.cb_new = cb_new
