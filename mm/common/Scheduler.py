@@ -378,11 +378,11 @@ class SchedulerContext:
 			node.marker(timestamp, marker)
 		for arc in node.sched_children:
 			if (arc.channel != channel or
-			    arc.event != event or
+			    arc.getevent() != event or
 			    arc.marker != marker or
 			    arc.accesskey != accesskey or
 			    arc.delay is None) and \
-			   (arc.event is not None or
+			   (arc.getevent() is not None or
 			    arc.marker is not None or
 			    marker is not None or
 			    arc.delay is None or
@@ -512,6 +512,7 @@ class SchedulerContext:
 					self.do_resume(nnode, timestamp)
 				else:
 					self.do_terminate(node, timestamp, fill = node.GetFill())
+					self.flushqueue()
 				parent.updatetimer()
 				return
 		pnode = node.GetSchedParent()
@@ -817,7 +818,7 @@ class SchedulerContext:
 			pnode.pausestack.remove(node)
 		paused = parent.paused
 		parent.paused = 0
-		self.flushqueue()
+		self.flushqueue(1)
 		if not parent.playing:
 			return
 		parent.paused = paused
@@ -849,26 +850,30 @@ class SchedulerContext:
 			if action != self.trigger:
 				continue
 			arc = argument[0]
-			if arc.srcnode is node and arc.event == 'end':
+			if arc.srcnode is node and arc.getevent() == 'end':
 				if debugevents: print 'do_terminate: cancel',`arc`,parent.timefunc()
 				self.cancelarc(arc, timestamp)
 
-	def flushqueue(self):
+	def flushqueue(self, xxx = 0):
 		parent = self.parent
 		if debugevents: print 'flushqueue',parent.timefunc()
 		while 1:
-			self.queue = parent.selectqueue()
-			if not self.queue:
-				break
-			for action in self.queue:
+			while self.queue:
+				action = self.queue[0]
 				if not parent.playing:
 					break
+				if xxx and action[1][0] == SR.LOOPRESTART:
+					print 'keep',`self.queue`
+					return
+				del self.queue[0]
 				ts = None
 				if len(action) > 3:
 					ts = action[3]
 					action = action[:3]
 				parent.runone(action, ts)
-		self.queue = []
+			self.queue = parent.selectqueue()
+			if not self.queue:
+				break
 
 	def freeze_play(self, node, timestamp = None):
 		parent = self.parent
@@ -1314,14 +1319,14 @@ class Scheduler(scheduler):
 ##			self.ui.bag_event(sctx, todo)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg, timestamp)
-			arg.startplay(sctx, timestamp)
+			arg.looping_body_self.startplay(sctx, timestamp)
 			sctx.sched_arcs(arg.looping_body_self,
 					'begin', timestamp=timestamp)
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg, timestamp)
 		elif action == SR.LOOPRESTART:
 			self.do_looprestart(sctx, arg, timestamp)
-			arg.startplay(sctx, timestamp)
+			arg.looping_body_self.startplay(sctx, timestamp)
 			sctx.sched_arcs(arg.looping_body_self,
 					'begin', timestamp=timestamp)
 		else:
