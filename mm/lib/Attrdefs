@@ -55,6 +55,19 @@
 (cssbgcolor (tuple (name) (tuple (int) (int) (int))) (transparent 0 0 0) 'Background color' csscolor
 	'Color used for background of window' region (smil2 snap))
 
+(left (string) '' 'Left' csspos
+	'Left' region (smil2 snap))
+(width (string) '' 'Width' csspos
+	'Width' region (smil2 snap))
+(right (string) '' 'Right' csspos
+	'Right' region (smil2 snap))
+(top (string) '' 'Top' csspos
+	'Top' region (smil2 snap))
+(height (string) '' 'Height' csspos
+	'Height' region (smil2 snap))
+(bottom (string) '' 'Bottom' csspos
+	'Bottom' region (smil2 snap))
+
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel (g2 qt smil10 smil2 cmif))
 
@@ -622,10 +635,10 @@
 
 # registration points
 
-(regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'Alignment' default
+(regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'RegAlign' default
 	'Alignment point associate to the media' raw (smil2))
 
-(regPoint (string) 'topLeft' 'Registration point' default
+(regPoint (string) 'topLeft' 'RegPoint' regpoint
 	'Registration point associate to the region' region (smil2))
 
 # prefetch
