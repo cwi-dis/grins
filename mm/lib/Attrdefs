@@ -107,6 +107,9 @@
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
 
+(direction (string) 'left' 'Wipe Direction' direction
+	'Direction of wipe' normal)
+
 (drawbox (bool) 1 'Draw anchor boxes' CMIFdefault
 	'Draw anchors as boxes' channel)
 
@@ -117,7 +120,7 @@
 	'Color used for text/images in window' channel)
 
 (file (string) '' 'URL' file
-	'URL for the data of this node' channel)
+	'URL for the data of this node' normal)
 
 (font (string) 'Times-Roman' 'Font' CMIFfont
 	'Font used to display text' channel)
@@ -292,6 +295,9 @@
 
 (winsize (tuple (float) (float)) (0 0) 'Window size' default
 	'Initial window size' raw)
+
+(wipetype (string) 'normal' 'Wipe type' wipetype
+	'Type of wipe' normal)
 
 (z (int) 0 'Z order' default
 	'Z order (higher numbers are on top)' normal)
