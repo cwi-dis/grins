@@ -24,6 +24,21 @@ _titles = 'Channels', 'Options'
 
 STOPPED, PAUSING, PLAYING = range(3)
 
+LAYOUTS = {
+	'normal': {
+		'play':  (0.0, 0.0, 0.5, 0.5),
+		'pause': (0.5, 0.0, 0.5, 0.5),
+		'stop':  (0.0, 0.5, 1.0, 0.5),
+		'buttons': 'vertical',
+	},
+	'horizontal': {
+		'stop':  (0.0, 0.0, 0.33, 1.0),
+		'play':  (0.33, 0.0, 0.34, 1.0),
+		'pause': (0.67, 0.0, 0.33, 1.0),
+		'buttons': 'horizontal',
+	}
+}
+
 class PlayerDialog:
 	def __init__(self, coords, title):
 		"""Create the Player dialog.
@@ -150,9 +165,9 @@ class PlayerDialog:
 		if self.__window is not None:
 			d = self.__displist.clone()
 			d.fgcolor(_BGCOLOR)
-			self.__drawplaybutton(d)
-			self.__drawpausebutton(d)
-			self.__drawstopbutton(d)
+			self.__drawplaybutton(d, self.__layout['play'])
+			self.__drawpausebutton(d, self.__layout['pause'])
+			self.__drawstopbutton(d, self.__layout['stop'])
 			d.render()
 			self.__displist.close()
 			self.__displist = d
@@ -167,15 +182,18 @@ class PlayerDialog:
 		self.__subwins = []
 		self.__displist = None
 		
-	def show(self):
+	def show(self, subwindowof=None):
 		"""Show the control panel."""
 
 		if self.__window is not None:
 			self.__window.pop()
 			return
 		x, y, w, h = self.__coords
-		self.__window = w = windowinterface.newcmwindow(x, y, w, h,
+		if subwindowof is None:
+			self.__window = w = windowinterface.newcmwindow(x, y, w, h,
 								self.__title)
+		else:
+			raise 'kaboo kaboo'
 		w.bgcolor(_BGCOLOR)
 		w.setcursor('watch')
 		w.register(WMEVENTS.Mouse0Release, self.__mouse_callback, None)
@@ -214,24 +232,17 @@ class PlayerDialog:
 		font = windowinterface.findfont('Helvetica', 10)
 		d = window.newdisplaylist()
 		dummy = d.usefont(font)
-		mw, mh = 0, 0
-		for t in _titles:
-			w, h = d.strsize(t)
-			if w > mw: mw = w
-			if h > mh: mh = h
-		if mw > .5: mw = .5
-		self.__width = 1.0 - mw	# useful width
+		self.__determine_layout(d, _titles)
 		d.fgcolor(_BGCOLOR)
-		self.__drawplaybutton(d)
-		self.__drawpausebutton(d)
-		self.__drawstopbutton(d)
+		self.__drawplaybutton(d, self.__layout['play'])
+		self.__drawpausebutton(d, self.__layout['pause'])
+		self.__drawstopbutton(d, self.__layout['stop'])
 		d.render()
 		self.__displist = d
 		self.__subwins = []
 		n = len(_titles)
 		for i in range(n):
-			w = window.newcmwindow(
-				(1.0 - mw, i / float(n), mw, 1.0 / float(n)))
+			w = window.newcmwindow(self.__menu_boxes[i])
 			self.__subwins.append(w)
 			t = _titles[i]
 			d = w.newdisplaylist()
@@ -240,49 +251,99 @@ class PlayerDialog:
 			d.render()
 		self.setchannels(self.__channels)
 		self.setoptions(self.__options)
+		
+	def __determine_layout(self, d, _titles):
+		"""Determine which layout to use, horizontal or normal"""
+		w, h = d.strsize('M')
+##		print 'w,h', w, h
+		# This is a bit of a guess, but it "looks good"
+		if 8*w < h or h*len(_titles) > 1:
+##			print 'try horizontal'
+			# Determine width of menus
+			mw = 0
+			menuwidth = []
+			for t in _titles:
+				w, h = d.strsize(t+'  ')
+				mw = mw + w
+				menuwidth.append(w)
+			if mw < .7:
+				# XXXX Note: we leave the space from 0.3 to 1-mw free
+				# XXXX it could be used for a timestrip or something...
+				self.__width = 0.3
+				self.__layout = LAYOUTS['horizontal']
+				# And calculate boxes for menus
+				self.__menu_boxes = []
+				n = len(_titles)
+				menupos = 1-mw
+				for i in range(n):
+					self.__menu_boxes.append(menupos, 0, menuwidth[i], 1)
+					menupos = menupos + menuwidth[i]
+				return
+##		print 'normal'
+		self.__layout = LAYOUTS['normal']
+		# Determine width of menus
+		mw = 0
+		for t in _titles:
+			w, h = d.strsize(t)
+			if w > mw: mw = w
+		if mw > .5: mw = .5
+		self.__width = 1.0 - mw	# useful width
+		# And calculate boxes for menus
+		self.__menu_boxes = []
+		n = len(_titles)
+		for i in range(n):
+			self.__menu_boxes.append(1.0 - mw, i / float(n), mw, 1.0 / float(n))
 
-	def __drawplaybutton(self, d):
-		self.__playbutton = d.newbutton((.0, .0,
-						 .5 * self.__width, .5))
+	def __drawplaybutton(self, d, (bx, by, bw, bh)):
+		bw = bw * self.__width	# The menus are to the right
+		bx = bx * self.__width
+		self.__playbutton = d.newbutton((bx, by, bw, bh))
+		# Select triangle color
 		if self.__state != STOPPED:
 			color = _GREEN
 			cl, ct, cr, cb = _FOCUSRIGHT, _FOCUSBOTTOM, _FOCUSLEFT, _FOCUSTOP
 		else:
 			color = _GREY
 			cl, ct, cr, cb = _FOCUSLEFT, _FOCUSTOP, _FOCUSRIGHT, _FOCUSBOTTOM
+		# and draw it
 		points = []
-		for x, y in [(.2, .1), (.2, .4), (.3, .25)]:
-			points.append(x * self.__width, y)
+		for x, y in [(.4, .2), (.4, .8), (.6, .5)]:
+			points.append(bx+(x * bw), by+(y*bh))
 		d.drawfpolygon(color, points)
+		# and draw our outline box
 		d.draw3dbox(cl, ct, cr, cb,
-			    (.01 * self.__width, .01, .48 * self.__width, .48))
+			    (bx+.02 * bw, by+.02*bh, .96 * bw, .96 * bh))
 
-	def __drawpausebutton(self, d):
-		self.__pausebutton = d.newbutton((.5 * self.__width, .0,
-						  .5 * self.__width, .5))
+	def __drawpausebutton(self, d, (bx, by, bw, bh)):
+		bw = bw * self.__width
+		bx = bx * self.__width
+		self.__pausebutton = d.newbutton((bx, by, bw, bh))
+		# select pause icon II color and draw it
 		if self.__state == PAUSING:
 			color = _YELLOW
 			cl, ct, cr, cb = _FOCUSRIGHT, _FOCUSBOTTOM, _FOCUSLEFT, _FOCUSTOP
 		else:
 			color = _GREY
 			cl, ct, cr, cb = _FOCUSLEFT, _FOCUSTOP, _FOCUSRIGHT, _FOCUSBOTTOM
-		d.drawfbox(color, (.7 * self.__width, .1, .03 * self.__width, .3))
-		d.drawfbox(color, (.77 * self.__width, .1, .03 * self.__width, .3))
+		d.drawfbox(color, (bx+0.4*bw, by+0.2*bh, .06 * bw, .6*bh))
+		d.drawfbox(color, (bx+.54*bw, by+0.2*bh, .06 * bw, .6*bh))
+		# and draw our 3d box
 		d.draw3dbox(cl, ct, cr, cb,
-			    (.51 * self.__width, .01, .48 * self.__width, .48))
+			    (bx+.02 * bw, by+.02*bh, .96 * bw, .96 * bh))
 
-	def __drawstopbutton(self, d):
-		self.__stopbutton = d.newbutton((.0, .5,
-						 self.__width, .5))
+	def __drawstopbutton(self, d, (bx, by, bw, bh)):
+		bw = bw * self.__width
+		bx = bx * self.__width
+		self.__stopbutton = d.newbutton((bx, by, bw, bh))
 		if self.__state == STOPPED:
 			color = _GREY
 			cl, ct, cr, cb = _FOCUSLEFT, _FOCUSTOP, _FOCUSRIGHT, _FOCUSBOTTOM
 		else:
 			color = _BLACK
 			cl, ct, cr, cb = _FOCUSRIGHT, _FOCUSBOTTOM, _FOCUSLEFT, _FOCUSTOP
-		d.drawfbox(color, (.2 * self.__width, .6, .6 * self.__width, .3))
+		d.drawfbox(color, (bx+.2 * bw, by+.2*bh, .6 * bw, .6*bh))
 		d.draw3dbox(cl, ct, cr, cb,
-			    (.01 * self.__width, .51, .98 * self.__width, .48))
+			    (bx+.02 * bw, by+.02*bh, .96 * bw, .96 * bh))
 
 	def __mouse_callback(self, dummy, window, event, val):
 		if window is not self.__window:
