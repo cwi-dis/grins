@@ -450,6 +450,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	def setdocument(self, cmifdoc, adornments, commandlist, peerdocid=0):
 		self._peerdocid = peerdocid
 		self._cmifdoc = cmifdoc
+		if self._pbar:
+			self._pbar.show()
 		import urllib
 		basename=urllib.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
@@ -607,6 +609,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# 1. destroy cascade menus
 		exceptions=[usercmd.OPEN_RECENT,]
 		self._mainmenu.clear_cascade_menus(exceptions)
+		if self._pbar:
+			self._pbar.hide()
 
 		# 2. then the document
 		__main__.toplevel.cleardoccache(self._cmifdoc)
