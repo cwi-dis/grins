@@ -42,8 +42,9 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WMFAPI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\include" /I "..\..\..\..\..\python\Include" /I "..\..\..\..\..\python\PC" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FR /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\include" /I "..\..\..\DXMedia\include" /I "..\..\classes\base" /I "..\..\..\..\..\python\Include" /I "..\..\..\..\..\python\PC" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -78,8 +79,9 @@ SOURCE="$(InputPath)"
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WMFAPI_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\..\..\python\Include" /I "..\..\..\..\..\python\PC" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WMFAPI_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\..\..\python\Include" /I "..\..\..\..\..\python\PC" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "WMFAPI_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -116,6 +118,10 @@ SOURCE=.\mtpycall.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\classes\base\streams.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\wmfapi.cpp
 # End Source File
 # Begin Source File
@@ -140,6 +146,10 @@ SOURCE=.\aud2wma.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\test1.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\vid2wm.py
 # End Source File
 # Begin Source File
@@ -157,6 +167,14 @@ SOURCE=.\wmreader.py
 # Begin Source File
 
 SOURCE=.\wmreaderAdvanced.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\wmvcap.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\wmvwnd.py
 # End Source File
 # Begin Source File
 

@@ -1,10 +1,10 @@
 
-/***********************************************************
+/**************************************************************************
 Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
                         All Rights Reserved
 
-******************************************************************/
+***************************************************************************/
 
 #include "Python.h"
 
@@ -18,10 +18,9 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "mtpycall.h"
 
+// guests
 #include <ddraw.h>
-
-#pragma comment (lib,"winmm.lib")
-#pragma comment (lib,"ddraw.lib")
+#include <streams.h>
 
 static PyObject *ErrorObject;
 
@@ -1343,6 +1342,64 @@ WMWriter_WriteSample(WMWriterObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char WMWriter_WriteDSSample__doc__[] =
+""
+;
+static PyObject *
+WMWriter_WriteDSSample(DDWMWriterObject *self, PyObject *args)
+{
+	DWORD dwInputNum;
+	PyObject *obj;
+	DWORD dwFlags=0;
+	if (!PyArg_ParseTuple(args, "iO|i",&dwInputNum,&obj,&dwFlags))
+		return NULL;	
+	
+	typedef struct {
+		PyObject_HEAD
+		IMediaSample *pI;
+	} MediaSampleObject;
+	IMediaSample *pMediaSample = ((MediaSampleObject*)obj)->pI;
+
+	REFERENCE_TIME tStart, tStop;
+    HRESULT hr = pMediaSample->GetTime(&tStart,&tStop);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:GetTime", hr);
+		return NULL;
+	}
+	BYTE *pBuffer;
+	hr = pMediaSample->GetPointer(&pBuffer);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:GetPointer", hr);
+		return NULL;
+	}
+
+	
+	INSSBuffer *pINSSBuffer = NULL;
+	hr = self->pIWMWriter->AllocateSample(pMediaSample->GetActualDataLength(),&pINSSBuffer);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:AllocateSample", hr);
+		return NULL;
+	}
+
+	BYTE *pbsBuffer;
+	hr = pINSSBuffer->GetBuffer(&pbsBuffer);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:GetBuffer", hr);
+		return NULL;
+	}
+	CopyMemory(pbsBuffer,pBuffer,pMediaSample->GetActualDataLength());
+
+	hr = self->pIWMWriter->WriteSample(dwInputNum, tStart, dwFlags, pINSSBuffer);
+	pINSSBuffer->Release();
+	
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:WriteSample", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static char WMWriter_WriteBuffer__doc__[] =
 ""
 ;
@@ -1436,6 +1493,7 @@ static struct PyMethodDef WMWriter_methods[] = {
 	{"Flush", (PyCFunction)WMWriter_Flush, METH_VARARGS, WMWriter_Flush__doc__},
 	{"AllocateSample", (PyCFunction)WMWriter_AllocateSample, METH_VARARGS, WMWriter_AllocateSample__doc__},
 	{"WriteSample", (PyCFunction)WMWriter_WriteSample, METH_VARARGS, WMWriter_WriteSample__doc__},
+	{"WriteDSSample", (PyCFunction)WMWriter_WriteDSSample, METH_VARARGS, WMWriter_WriteDSSample__doc__},
 	{"WriteBuffer", (PyCFunction)WMWriter_WriteBuffer, METH_VARARGS, WMWriter_WriteBuffer__doc__},
 	{"QueryIWMWriterAdvanced", (PyCFunction)WMWriter_QueryIWMWriterAdvanced, METH_VARARGS, WMWriter_QueryIWMWriterAdvanced__doc__},
 	{"QueryIUnknown", (PyCFunction)WMWriter_QueryIUnknown, METH_VARARGS, WMWriter_QueryIUnknown__doc__},
@@ -1708,6 +1766,64 @@ DDWMWriter_WriteSample(DDWMWriterObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char DDWMWriter_WriteDSSample__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_WriteDSSample(DDWMWriterObject *self, PyObject *args)
+{
+	DWORD dwInputNum;
+	PyObject *obj;
+	DWORD dwFlags=0;
+	if (!PyArg_ParseTuple(args, "iO|i",&dwInputNum,&obj,&dwFlags))
+		return NULL;	
+	
+	typedef struct {
+		PyObject_HEAD
+		IMediaSample *pI;
+	} MediaSampleObject;
+	IMediaSample *pMediaSample = ((MediaSampleObject*)obj)->pI;
+
+	REFERENCE_TIME tStart, tStop;
+    HRESULT hr = pMediaSample->GetTime(&tStart,&tStop);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:GetTime", hr);
+		return NULL;
+	}
+	BYTE *pBuffer;
+	hr = pMediaSample->GetPointer(&pBuffer);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:GetPointer", hr);
+		return NULL;
+	}
+
+	
+	INSSBuffer *pINSSBuffer = NULL;
+	hr = self->pIWMWriter->AllocateSample(pMediaSample->GetActualDataLength(),&pINSSBuffer);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:AllocateSample", hr);
+		return NULL;
+	}
+
+	BYTE *pbsBuffer;
+	hr = pINSSBuffer->GetBuffer(&pbsBuffer);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:GetBuffer", hr);
+		return NULL;
+	}
+	CopyMemory(pbsBuffer,pBuffer,pMediaSample->GetActualDataLength());
+
+	hr = self->pIWMWriter->WriteSample(dwInputNum, tStart, dwFlags, pINSSBuffer);
+	pINSSBuffer->Release();
+	
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSSample:WriteSample", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 
 static char DDWMWriter_QueryIWMWriterAdvanced__doc__[] =
 ""
@@ -1860,6 +1976,7 @@ static struct PyMethodDef DDWMWriter_methods[] = {
 	{"Flush", (PyCFunction)DDWMWriter_Flush, METH_VARARGS, DDWMWriter_Flush__doc__},
 	{"AllocateSample", (PyCFunction)DDWMWriter_AllocateSample, METH_VARARGS, DDWMWriter_AllocateSample__doc__},
 	{"WriteSample", (PyCFunction)DDWMWriter_WriteSample, METH_VARARGS, DDWMWriter_WriteSample__doc__},
+	{"WriteDSSample", (PyCFunction)DDWMWriter_WriteDSSample, METH_VARARGS, DDWMWriter_WriteDSSample__doc__},
 	{"QueryIWMWriterAdvanced", (PyCFunction)DDWMWriter_QueryIWMWriterAdvanced, METH_VARARGS, DDWMWriter_QueryIWMWriterAdvanced__doc__},
 	{"QueryIUnknown", (PyCFunction)DDWMWriter_QueryIUnknown, METH_VARARGS, DDWMWriter_QueryIUnknown__doc__},
 	{"SetVideoFormat", (PyCFunction)DDWMWriter_SetVideoFormat, METH_VARARGS, DDWMWriter_SetVideoFormat__doc__},
@@ -2684,6 +2801,43 @@ WMInputMediaProps_SetMediaType(WMInputMediaPropsObject *self, PyObject *args)
 	return Py_None;	
 }
 
+static char WMInputMediaProps_SetDSMediaType__doc__[] =
+""
+;
+static PyObject *
+WMInputMediaProps_SetDSMediaType(WMInputMediaPropsObject *self, PyObject *args)
+{
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args,"O",&obj)) 
+		return NULL;
+
+	typedef struct {
+		PyObject_HEAD
+		const CMediaType *pmt;
+	} MediaTypeObject;
+	const CMediaType *pmt = ((MediaTypeObject*)obj)->pmt;
+
+	WM_MEDIA_TYPE mt;
+	WM_MEDIA_TYPE *pType = &mt;
+    pType->majortype = *pmt->Type();
+    pType->subtype =  *pmt->Subtype();
+    pType->bFixedSizeSamples = pmt->IsFixedSize();
+    pType->bTemporalCompression = TRUE; // pmt->IsTemporalCompressed();
+    pType->lSampleSize = pmt->GetSampleSize();
+    pType->formattype = *pmt->FormatType();
+    pType->pUnk = NULL;
+    pType->cbFormat = pmt->FormatLength();
+	pType->pbFormat = pmt->Format();
+	
+	HRESULT hr = self->pI->SetMediaType(pType);
+	if (FAILED(hr)) {
+		seterror("WMInputMediaProps_SetDSMediaType", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 static char WMInputMediaProps_GetConnectionName__doc__[] =
 ""
 ;
@@ -2748,6 +2902,7 @@ static struct PyMethodDef WMInputMediaProps_methods[] = {
 	{"GetType", (PyCFunction)WMInputMediaProps_GetType, METH_VARARGS, WMInputMediaProps_GetType__doc__},
 	{"GetMediaType", (PyCFunction)WMInputMediaProps_GetMediaType, METH_VARARGS, WMInputMediaProps_GetMediaType__doc__},
 	{"SetMediaType", (PyCFunction)WMInputMediaProps_SetMediaType, METH_VARARGS, WMInputMediaProps_SetMediaType__doc__},
+	{"SetDSMediaType", (PyCFunction)WMInputMediaProps_SetDSMediaType, METH_VARARGS, WMInputMediaProps_SetDSMediaType__doc__},
 	{"GetConnectionName", (PyCFunction)WMInputMediaProps_GetConnectionName, METH_VARARGS, WMInputMediaProps_GetConnectionName__doc__},
 	{"GetGroupName", (PyCFunction)WMInputMediaProps_GetGroupName, METH_VARARGS, WMInputMediaProps_GetGroupName__doc__},
 	{"QueryIUnknown", (PyCFunction)WMInputMediaProps_QueryIUnknown, METH_VARARGS, WMInputMediaProps_QueryIUnknown__doc__},
