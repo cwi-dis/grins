@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.9.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.11.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -38,7 +38,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Default2=E:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1155,7 +1155,7 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Source=C:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
 end
@@ -1355,7 +1355,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNSP_SV2.exe
-  Destination=%GROUP%\GRiNS Player for SMIL 2.0 v2.0.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 2.0 v2.0.lnk
   Icon Number=0
 end
 item: End Block
@@ -1367,7 +1367,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNSP_SV2.exe
-  Destination=%DESKTOPDIR%\GRiNS Player for SMIL 2.0 v2.0.lnk
+  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL 2.0 v2.0.lnk
   Icon Number=0
 end
 item: End Block
@@ -1448,7 +1448,6 @@ item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=GRiNS Player for SMIL 2.0 v2.0
   Command Line=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=01000000
 end
 item: End Block
 end
