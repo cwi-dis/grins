@@ -254,6 +254,7 @@
 #define IDCMD_ADD_CHANNEL               1034
 #define IDC_ZV                          1034
 #define IDC_LAYOUT_SENDBACK             1035
+#define IDC_SOUNDLEVELV                 1035
 #define IDUC_APPLY                      1036
 #define IDC_LAYOUT_DELREGION            1037
 #define IDC_LAYOUT_HIDEMEDIA            1038
@@ -586,6 +587,7 @@
 #define IDC_REGPOINTL                   1393
 #define IDC_FITL                        1394
 #define IDC_ZL                          1395
+#define IDC_SOUNDLEVELL                 1396
 #define IDC_CLIPBEGINV                  1415
 #define IDC_CLIPENDV                    1416
 #define IDC_READINDEXV                  1417
