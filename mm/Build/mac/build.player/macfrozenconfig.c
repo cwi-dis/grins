@@ -41,9 +41,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 /* -- ADDMODULE MARKER 1 -- */
-#ifndef inittime
-extern void inittime();
-#endif
 #ifndef initimgsgi
 extern void initimgsgi();
 #endif
@@ -101,6 +98,9 @@ extern void initScrap();
 #ifndef initMenu
 extern void initMenu();
 #endif
+#ifndef initIcn
+extern void initIcn();
+#endif
 #ifndef initEvt
 extern void initEvt();
 #endif
@@ -139,6 +139,9 @@ extern void initimgpbm();
 #endif
 #ifndef initimgjpeg
 extern void initimgjpeg();
+#endif
+#ifndef inittime
+extern void inittime();
 #endif
 #ifndef initsocket
 extern void initsocket();
@@ -180,7 +183,6 @@ extern void initimp();
 struct _inittab _PyImport_Inittab[] = {
 
 /* -- ADDMODULE MARKER 2 -- */
-	{"time", inittime},
 	{"imgsgi", initimgsgi},
 	{"imgcolormap", initimgcolormap},
 	{"imageop", initimageop},
@@ -200,6 +202,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgtiff", initimgtiff},
 	{"Scrap", initScrap},
 	{"Menu", initMenu},
+	{"Icn", initIcn},
 	{"Evt", initEvt},
 	{"Fm", initFm},
 	{"waste", initwaste},
@@ -213,6 +216,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"array", initarray},
 	{"imgpbm", initimgpbm},
 	{"imgjpeg", initimgjpeg},
+	{"time", inittime},
 	{"socket", initsocket},
 	{"math", initmath},
 	{"imgppm", initimgppm},
