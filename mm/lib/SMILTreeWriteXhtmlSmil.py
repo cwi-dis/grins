@@ -114,7 +114,6 @@ from SMILTreeWrite import *
 # import string 
 # from fmtfloat import fmtfloat (imported by SMILTreeWrite)
 # from nameencode import nameencode
-
 import math
 import Animators
 
@@ -155,6 +154,9 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.transition2name = {}
 		self.name2transition = {}
 		self.calctransitionnames(node)
+
+		# remove next as soon as getRegionFromName becomes obsolete
+		self.chnamedict = {} 
 
 		self.ch2name = {}
 		self.top_levels = []
@@ -491,7 +493,7 @@ class SMILXhtmlSmilWriter(SMIL):
 
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
-
+		
 		# write media node region
 		if regionName and mtype != 'audio':
 			pushed, inpar, pardur, regionid  = \
@@ -575,8 +577,10 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writeMediaNodeRegion(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
-		path = self.getRegionPath(regionName)
+		lch = node.GetChannel().GetLayoutChannel()
+		path = self.getRegionPath(lch)
 		if not path:
+			print 'failed to get region path for', regionName
 			return pushed, inpar, pardur, regionid
 
 		# region (div) attr list
@@ -594,7 +598,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		divlist.append(('id', regionid))
 
 		# apply region style and fill attribute
-		regstyle = self.getRegionStyle(regionName, node)
+		regstyle = self.getRegionStyle(lch, node)
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
 		if fill:
@@ -828,8 +832,10 @@ class SMILXhtmlSmilWriter(SMIL):
 		return hassrc
 				
 	def writeEmptyRegion(self, regionName):
-		path = self.getRegionPath(regionName)
+		region = self.getRegionFromName(regionName)
+		path = self.getRegionPath(region)
 		if not path:
+			print 'failed to get region path for', regionName
 			return
 
 		# region (div) attr list
@@ -847,7 +853,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		divlist.append(('id', regionid))
 
 		# apply region style and fill attribute
-		regstyle = self.getRegionStyle(regionName)
+		regstyle = self.getRegionStyle(lch)
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
 		divlist.append(('class', 'time'))
@@ -934,8 +940,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;background-color:%s;' % (x, y, w, h, bgcolor)
 		return style
 
-	def getRegionStyle(self, regionName, node = None):
-		path = self.getRegionPath(regionName)
+	def getRegionStyle(self, region, node = None):
+		path = self.getRegionPath(region)
 		if not path: 
 			return None
 		ch = path[len(path)-1]
@@ -978,14 +984,22 @@ class SMILXhtmlSmilWriter(SMIL):
 			overflow = 'hidden'
 		return overflow
 
-	def getRegionPath(self, regionName):
-		lch = self.root.GetContext().getchannel(regionName)
+	def getRegionPath(self, lch):
 		path = []
 		while lch:
 			if lch.get('type') == 'layout':
 				path.insert(0, lch)
 			lch = lch.GetParent()
 		return path
+		
+	# temporal for writing empty regions 
+	# XXX: should be avoided 
+	def getRegionFromName(self, regionName):
+		lch = self.context.getchannel(regionName)
+		if lch is None:
+			regionName = self.chnamedict.get(regionName)
+			lch = self.context.getchannel(regionName)
+		return lch
 
 	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
@@ -1131,6 +1145,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
+				self.chnamedict[name] = ch.name
 			if ch.GetParent() is None and \
 			   ChannelMap.isvisiblechannel(ch['type']):
 				# top-level channel with window
@@ -1163,6 +1178,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
+				self.chnamedict[name] = ch.name
 
 	# copied from SMILTreeWrite.py
 	def syncidscheck(self, node):
@@ -1219,5 +1235,6 @@ def replacePrevShortcut(value, node):
 	if not id:
 		id = 'm' + prev.GetUID()
 	return id + value[4:]
+	
 	
 
