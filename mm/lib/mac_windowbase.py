@@ -158,6 +158,7 @@ class _Event:
 				if not ourwin:
 					MacOS.HandleEvent(event)
 				else:
+					print 'Update for', ourwin
 					Qd.SetPort(wid)
 					wid.BeginUpdate()
 					# XXXX region to redraw
@@ -465,16 +466,21 @@ class _CommonWindow:
 
 	def close(self):
 		"""Close window and all subwindows"""
+		print 'Closing', self
 		if self._parent is None:
 			return		# already closed
+		Qd.SetPort(self._wid)
 		self._parent._subwindows.remove(self)
+		Win.InvalRect(self.qdrect())
 		self._parent._close_wid(self._wid)
-		self._wid = None
 		self._parent = None
+		self._wid = None
+
 		for win in self._subwindows[:]:
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
+		print 'Closed', self
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
@@ -750,6 +756,8 @@ class _CommonWindow:
 		
 	def _redraw(self):
 		"""Set clipping and color, redraw, redraw children"""
+		if self._parent is None:
+			return
 		if not self._clip:
 			self._mkclip()
 		saveclip = Qd.NewRgn()
@@ -802,7 +810,7 @@ class _Window(_CommonWindow):
 		"""Set window title"""
 		if not self._wid:
 			return  # Or raise error?
-		self._Wid.SetWTitle(title)
+		self._wid.SetWTitle(title)
 		
 	def getgeometry(self):
 		rect = self._wid.GetWindowPort().portRect
@@ -827,6 +835,8 @@ class _Window(_CommonWindow):
 		
 	def _contentclick(self, down, where, event, shifted):
 		"""A mouse click in our data-region"""
+		if not self._wid or not self._parent:
+			return
 		Qd.SetPort(self._wid)
 		where = Qd.GlobalToLocal(where)
 		_CommonWindow._contentclick(self, down, where, event, shifted)
@@ -896,8 +906,8 @@ class _SubWindow(_CommonWindow):
 		self._parent._subwindows.remove(self)
 		self._parent._subwindows.insert(0, self)
 		self._parent._clipchanged()
-		# XXXX Pixmap?
-##		self._parent._redraw() # XXXX Too aggressive...
+		Qd.SetPort(self._wid)
+		Win.InvalRect(self.qdrect())
 		self._parent.pop()
 
 	def push(self):
@@ -909,8 +919,8 @@ class _SubWindow(_CommonWindow):
 		self._parent._subwindows.remove(self)
 		self._parent._subwindows.append(self)
 		self._parent._clipchanged()
-		# XXXX Pixmap?
-##		self._parent._redraw() # XXXX Too aggressive...
+		Qd.SetPort(self._wid)
+		Win.InvalRect(self.qdrect())
 		self._parent.push()
 
 	def _mkclip(self):
@@ -962,8 +972,11 @@ class _DisplayList:
 		for b in self._buttons[:]:
 			b.close()
 		self._window._displists.remove(self)
-		if self._window._active_displist == self:
+		if self._window._active_displist is self:
 			self._window._active_displist = None
+			if self._window._wid:
+				Qd.SetPort(self._window._wid)
+				Win.InvalRect(self._window.qdrect())
 		self._window = None
 		del self._buttons
 		del self._list
@@ -983,6 +996,7 @@ class _DisplayList:
 		# Hence, we schedule a redraw only
 		#
 		self._window._active_displist = self
+		Qd.SetPort(self._window._wid)
 		Win.InvalRect(self._window.qdrect())
 		
 	def _render(self):
