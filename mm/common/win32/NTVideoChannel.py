@@ -22,7 +22,7 @@ debug=0
 
 import rma
 
-USE_WINDOWLESS_REAL_RENDERING = 0
+USE_WINDOWLESS_REAL_RENDERING = 1
 	
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
