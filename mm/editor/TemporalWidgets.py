@@ -435,7 +435,7 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 
 	def setup(self):
 		self.channeltree = []	# A list of channel widgets.
-
+		self.widgets = []	# The lines that the tree is made of.
 		self.channelhelper = MMNode.MMChannelTree(self.node)	# self.node must be the root node.
 		self.viewports = self.channelhelper.getviewports()
 		for i in self.viewports: # Adds all the channels to this tree.
@@ -444,6 +444,10 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 	def set_rootmmnode(self, node):
 		self.node = node
 
+	def destroy(self):
+		for i in self.widgets:
+			self.graph.DelWidget(i)
+
 	def get_viewports(self):
 		return self.viewports
 
@@ -451,9 +455,31 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		return LRChannelTreeIter(self.channeltree)
 
 	def recalc(self):
-		# Move all of the Viewports and channels to their correct positions.
-		print "DEBUG: warning - ChannelTree.recalc was called. This is not needed."
-		# for each viewport, recursively add it's channels.
+		# Add lines to show where the tree is.
+		currentindent = 0
+		x,y,w,h = self.get_box()
+		top = y
+		bottom = y+ CHANNELHEIGHT / 2
+		levels = []		# A stack for iterative recursion
+		for w in self.widgets:
+			indent = w.get_depth()
+			if indent == currentindent:
+				bottom = bottom + CHANNELHEIGHT
+				bob = self.graph.AddWidget(Line(self.mother))
+				tx, ty, tw, th = w.get_box()
+				bob.moveto((
+					len(levels)*CHANNELTREEINDENT,
+					ty+CHANNELHEIGHT/2,
+					len(levels)*(CHANNELTREEINDENT+1),
+					ty+CHANNELHEIGHT/2))
+				self.widgets.append(bob)
+			elif indent > currentindent:
+				levels.append((top, bottom))
+			else: # indent < currentindent
+				tail = levels[len(levels)-1]
+				levels = levels[:len(levels)-1]
+				top, bottom = tail
+				# WORKING HERE - this code is not tested or complete.
 
 	def add_channel_to_bottom(self, channel, treedepth):
 		# treedepth is the depth into the channel tree, thus it is proportional to the x coordinate.
@@ -524,6 +550,8 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 
 	def set_depth(self, d):
 		self.depth = d
+	def get_depth(self):
+		return self.depth
 
 	def set_channel(self, c):
 		self.channel = c
