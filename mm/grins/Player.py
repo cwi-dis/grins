@@ -82,7 +82,8 @@ class Player(PlayerCore, PlayerDialog):
 			return
 		self.aftershow = afterfunc
 		self.makechannels()
-		if hasattr(self.root, 'source'):
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'textwindow'):
 			self.setoptions(['Source...'])
 		self.fullreset()
 		PlayerDialog.show(self)
@@ -155,16 +156,7 @@ class Player(PlayerCore, PlayerDialog):
 		if self.source is not None and not self.source.is_closed():
 			self.source.show()
 			return
-		w = windowinterface.Window('Source', resizable = 1,
-					   deleteCallback = 'hide')
-		b = w.ButtonRow([('Close', (w.hide, ()))],
-				top = None, left = None, right = None,
-				vertical = 0)
-		t = w.TextEdit(self.root.source, None, editable = 0,
-			       top = b, left = None, right = None,
-			       bottom = None, rows = 30, columns = 80)
-		w.show()
-		self.source = w
+		self.source = windowinterface.textwindow(self.root.source)
 
 	def cc_stop(self):
 		self.stop()
@@ -198,7 +190,7 @@ class Player(PlayerCore, PlayerDialog):
 		else:
 			state = PLAYING
 		self.setstate(state)
-		
+
 	def updateuibaglist(self):
 		pass
 
