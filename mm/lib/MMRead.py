@@ -88,15 +88,15 @@ def _readparser(p, filename):
 	return root
 
 def _fixcontext(root):
-	#
-	# Move the style dictionary from the root attribute list
-	# to the context.
-	#
-	try:
-		root.context.addstyles(root.GetRawAttr('styledict'))
-		root.DelAttr('styledict')
-	except NoSuchAttrError:
-		pass
+##	#
+##	# Move the style dictionary from the root attribute list
+##	# to the context.
+##	#
+##	try:
+##		root.context.addstyles(root.GetRawAttr('styledict'))
+##		root.DelAttr('styledict')
+##	except NoSuchAttrError:
+##		pass
 	#
 	# Move the hyperlink list from the root attribute list
 	# to the context.

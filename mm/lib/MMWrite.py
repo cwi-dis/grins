@@ -30,7 +30,7 @@ def WriteOpenFile(root, fp):
 # Internals to move attributes between context and root
 
 def fixroot(root):
-	root.attrdict['styledict'] = root.context.styledict
+##	root.attrdict['styledict'] = root.context.styledict
 	root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
 	clist = []
 	for cname in root.context.channelnames:
@@ -38,7 +38,7 @@ def fixroot(root):
 	root.attrdict['channellist'] = clist
 
 def unfixroot(root):
-	del root.attrdict['styledict']
+##	del root.attrdict['styledict']
 	del root.attrdict['hyperlinks']
 	del root.attrdict['channellist']
 

@@ -254,10 +254,10 @@ def getdefattr(node, attrname):
 	if inheritance == 'raw':
 		return defaultvalue
 	elif inheritance == 'normal':
-		try:
-			return node.GetDefAttr(attrname)
-		except NoSuchAttrError:
-			return defaultvalue
+##		try:
+##			return node.GetDefAttr(attrname)
+##		except NoSuchAttrError:
+		return defaultvalue
 	elif inheritance == 'inherited':
 		try:
 			return node.GetDefInherAttr(attrname)
