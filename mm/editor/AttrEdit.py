@@ -331,7 +331,7 @@ class ChannelWrapper(Wrapper):
 	def change_channel_name(self, (node, oldname, newname)):
 		try:
 			cname = node.GetRawAttr('channel')
-		except NoSuchAttrError:
+		except MMExc.NoSuchAttrError:
 			cname = None
 		if cname == oldname:
 			self.editmgr.setnodeattr(node, 'channel', newname)
