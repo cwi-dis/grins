@@ -30,17 +30,18 @@ MpegDecoder::MpegDecoder()
 	{
 	memset(&base, 0, sizeof(base));
 	memset(&enhan, 0, sizeof(enhan));
+	base.Infile = -1;
 	}
 
 MpegDecoder::~MpegDecoder()
 	{
-	if(base.Infile>0)
+	if(base.Infile != -1 && base.Infile != 0)
 		platform::close(base.Infile);
 	}
 
 bool MpegDecoder::check(int handle)
 	{
-	if(handle<0)
+	if(handle == -1 || handle == 0)
 		return false;
 	base.Infile = handle;
 	base.infile_read_fn = platform::read;

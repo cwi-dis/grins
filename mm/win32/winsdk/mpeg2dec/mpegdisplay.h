@@ -35,6 +35,7 @@ class MpegDisplay
 	MpegDisplay(const display_info& di);	
 	~MpegDisplay();
 
+	void set_surface(surface<color_repr_t> *surf) { m_surf = surf;}
 	void update_surface(uchar_t *src[], int frame, int offset,int incr, int vsteps);
 
 	void lock() { m_cs.enter();}
@@ -50,7 +51,5 @@ class MpegDisplay
 	surface<color_repr_t> *m_surf;
 	critical_section m_cs;
 	};
-
-
 
 #endif // INC_MPEGDISPLAY

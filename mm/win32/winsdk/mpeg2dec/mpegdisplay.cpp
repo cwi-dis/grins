@@ -89,14 +89,11 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
 			int b = Clip[(y + cbu*u + 32786)>>16];
 
 			// store to bitmap surface for display
-			if(m_surf) m_surf->set_pixel(xi, yi, color_repr_t(r, g, b));
+			if(m_surf != 0) 
+				m_surf->set_pixel(xi, yi, color_repr_t(r, g, b));
 			}
 		}
 	m_cs.leave();
-
-	//char sz[80];
-	//sprintf(sz,"data\\f%03d.bmp", frame);
-	//m_surf.save_as_bmp(sz);
 	}
 
 /* horizontal 1:2 interpolation filter */

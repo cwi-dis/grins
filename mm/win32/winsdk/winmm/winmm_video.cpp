@@ -58,9 +58,12 @@ PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args)
 		return NULL;
 	
 	int handle = platform::open(TextPtr(filename));
-	if(handle < 0)
+	if(handle == -1)
 		{
-		seterror("CreateVideoPlayerFromFile", "cant find file");
+		char sz[MAX_PATH+32];
+		sprintf(sz, "cant find file %s", filename);
+		seterror("CreateVideoPlayerFromFile", sz);
+		return NULL;
 		}
 
 	VideoPlayer *player = 0;
