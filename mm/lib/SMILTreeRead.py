@@ -143,6 +143,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'clipBoundary': ['parent', 'children'],
 		'coordinated': __truefalse,
 		'defaultState': __truefalse,
+		'destinationPlaystate': {'play':A_DEST_PLAY, 'pause':A_DEST_PAUSE},
 		'direction': ['forward', 'reverse'],
 		'erase': ['never', 'whenDone'],
 		'fill': ['freeze', 'remove', 'hold', 'transition', 'auto', 'default'],
@@ -153,6 +154,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
 		'shape': ['rect', 'poly', 'circle'],
+		'show': ['replace', 'pause', 'new'],
+		'sourcePlaystate': {'play':A_SRC_PLAY, 'pause':A_SRC_PAUSE, 'stop':A_SRC_STOP},
 		'syncMaster': __truefalse,
 		'system-captions': __onoff,
 		'systemAudioDesc': __onoff,
@@ -1367,7 +1370,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("couldn't parse `%s' value" % attr)
 					pass
 
-	def parseEnumValue(self, attr, val):
+	def parseEnumValue(self, attr, val, default = None):
+		if val is None:
+			return default
 		values = self.__enumattrs[attr]
 		if type(values) is type({}):
 			if values.has_key(val):
@@ -1379,6 +1384,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			valid = values
 		valid.sort()
 		self.syntax_error("invalid `%s' value (valid values are: %s)" % (attr, ', '.join(valid)))
+		return default
 
 	def NewNode(self, tagname, attributes):
 		# update progress bar if needed
@@ -3504,54 +3510,41 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return l
 
 	def __link_attrs(self, attributes):
-		show = attributes.get('show', 'replace')
-		if show not in ('replace', 'pause', 'new'):
-			self.syntax_error('unknown show attribute value')
-			show = 'replace'
+		show = self.parseEnumValue('show', attributes.get('show'))
+		# XXX SMIL 2.0 Linking says default of show is "replace", but that doesn't do what we want.
+		stype = self.parseEnumValue('sourcePlaystate', attributes.get('sourcePlaystate'))
+		dtype = self.parseEnumValue('destinationPlaystate', attributes.get('destinationPlaystate'), A_DEST_PLAY)
 
-		sourcePlaystate = attributes.get('sourcePlaystate')
-		if sourcePlaystate not in ('play', 'pause', 'stop', None):
-			self.syntax_error('unknown sourcePlaystate attribute value')
-			sourcePlaystate = None
-
-		# the default sourcePlaystate value depend of show value
-		if sourcePlaystate is None:
+		# the default sourcePlaystate value depends on the value of show
+		if stype is None:
 			if show == 'new':
-				sourcePlaystate = 'play'
+				stype = A_SRC_PLAY
 			else:
-				sourcePlaystate = 'pause'
-
-		if sourcePlaystate == 'play':
-			stype = A_SRC_PLAY
-		elif sourcePlaystate == 'pause':
-			stype = A_SRC_PAUSE
-		elif sourcePlaystate == 'stop':
-			stype = A_SRC_STOP
+				stype = A_SRC_PAUSE
 
 		if show == 'replace':
 			ltype = TYPE_JUMP
 		elif show == 'pause':
 			ltype = TYPE_FORK
-			# this value override the sourcePlaystate value (in pause)
-			sourcePlaystate = 'pause'
+			# this value overrides the sourcePlaystate value (in pause)
+			stype = A_SRC_PAUSE
 		elif show == 'new':
 			ltype = TYPE_FORK
-
-		destinationPlaystate = attributes.get('destinationPlaystate', 'play')
-
-		if destinationPlaystate == 'play':
-			dtype = A_DEST_PLAY
-		elif destinationPlaystate == 'pause':
-			dtype = A_DEST_PAUSE
 		else:
-			self.syntax_error('unknown destinationPlaystate attribute value')
-			dtype = A_DEST_PLAY
+			# no show attribute
+			# XXX this should behave as if show="replace"
+			if stype == A_SRC_STOP:
+				ltype = TYPE_JUMP
+			else:
+				# play or pause
+				# fork so that there is something to play/pause
+				ltype = TYPE_FORK
+
 
 		accesskey = attributes.get('accesskey')
-		if accesskey is not None:
-			if len(accesskey) != 1:
-				self.syntax_error('accesskey should be single character')
-				accesskey = None
+		if accesskey is not None and len(accesskey) != 1:
+			self.syntax_error('accesskey should be single character')
+			accesskey = None
 
 		return ltype, stype, dtype, accesskey
 
