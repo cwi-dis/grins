@@ -39,6 +39,7 @@ HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  
 #define WM_USER_PAUSE WM_USER+5
 #define WM_USER_GETSTATUS WM_USER+6
 #define WM_USER_SETHWND WM_USER+7
+#define WM_USER_UPDATE WM_USER+8
 
 class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	{
@@ -71,6 +72,7 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
     virtual HRESULT __stdcall play();
     virtual HRESULT __stdcall stop();
 	virtual HRESULT __stdcall pause();
+	virtual HRESULT __stdcall update();
 
 
 	// Implemenation
@@ -136,5 +138,11 @@ HRESULT __stdcall GRiNSPlayerAuto::stop()
 HRESULT __stdcall GRiNSPlayerAuto::pause()
 	{
 	PostMessage(getListener(), WM_USER_PAUSE, 0, 0);
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::update()
+	{
+	PostMessage(getListener(), WM_USER_UPDATE, 0, 0);
 	return S_OK;
 	}
