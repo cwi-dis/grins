@@ -647,6 +647,23 @@ ui_window_subclass_window(PyObject *self, PyObject *args)
 	return Py_BuildValue( "i", rc);
 }
 
+// @pymethod <o PyCWnd>|win32ui|ScrollWindow|Scrolls the contents of the client area of the current CWnd object
+PyObject *
+ui_window_scroll_window(PyObject *self, PyObject *args)
+{
+	int xAmount, yAmount;
+	if (!PyArg_ParseTuple(args, "ii:ScrollWindow", &xAmount, &yAmount)) 
+		return NULL;
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+	GUI_BGN_SAVE;
+	pWnd->ScrollWindow(xAmount,yAmount,NULL,NULL);
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
+
+
 // SubclassDlgItem
 
 ///////////////////////
@@ -668,7 +685,9 @@ ui_window_subclass_window(PyObject *self, PyObject *args)
     {"GetWindowLong",ui_window_get_window_long,1},\
 	{"SetWindowLong",ui_window_set_window_long,1},\
 	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},\
-	{"SubclassWindow",ui_window_subclass_window,1},
+	{"SubclassWindow",ui_window_subclass_window,1},\
+	{"ScrollWindow",ui_window_scroll_window,1},
+
 
 
 /*
