@@ -212,7 +212,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		self.image = None
 		self.outerrect = (0, 0, 1, 1)
 		self.otherrects = []
-		self.ourrect = (0, 0, 1, 1)
+		self.ourrect = None
 		self.recalc()
 		self.callback = callback
 		self._background_image = None
@@ -244,6 +244,8 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 			traceback.print_tb(exc_traceback)
 
 	def drawourrect(self):
+		if self.ourrect is None:
+			return
 		port = self.wid.GetWindowPort()
 		Qd.RGBForeColor((0x0, 0, 0))
 		oldmode = port.pnMode
@@ -256,6 +258,8 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 	def hittest(self, ctl, (x, y)):
 		try:
 ##			print "hittest", ctl, x, y
+			if self.ourrect is None:
+				self.set((x, y, 0, 0))
 			for i in range(len(self.lurven)-1, -1, -1):
 				lx0, ly0, lx1, ly1 = self.lurven[i]
 				if lx0 <= x <= lx1 and ly0 <= y <= ly1:
@@ -273,6 +277,9 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 			traceback.print_tb(exc_traceback)
 			
 	def tracklurf(self, lurf, (x, y)):
+		if self.ourrect is None:
+			print 'self.ourrect == None is tracklurf'
+			return # Shouldn't happen
 		x0, y0, x1, y1 = self.rect
 		if lurf == 4:
 			# Adapt pinning rectangle for middle lurf
@@ -359,21 +366,28 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 
 	def recalclurven(self):
 ##		print 'ourrect', self.ourrect
-		x0, y0, x1, y1 = self.ourrect
 		self.lurven = []
+		if self.ourrect is None:
+			return
+		x0, y0, x1, y1 = self.ourrect
 		for y in (y0, (y0+y1)/2, y1):
 			for x in (x0, (x0+x1)/2, x1):
 				self.lurven.append((x-2, y-2, x+2, y+2))
 ##		print 'lurven', self.lurven
 		
 	def set(self, rect):
-		self.ourrect = self.rect2screen(rect)
+		if rect is None:
+			self.ourrect = None
+		else:
+			self.ourrect = self.rect2screen(rect)
 		self.recalclurven()
 		fullrect = self.control.GetControlRect()
 		Qd.SetPort(self.wid)
 		Win.InvalRect(fullrect)
 		
 	def get(self):
+		if self.ourrect is None:
+			return None
 		return self.screen2rect(self.ourrect)
 		
 	def rect2screen(self, (x, y, w, h)):
