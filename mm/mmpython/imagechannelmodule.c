@@ -1,5 +1,5 @@
 #include "thread.h"
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "mmmodule.h"
 
@@ -23,7 +23,7 @@ image_init(self)
 	dprintf(("image_init\n"));
 	self->mm_private = malloc(sizeof(struct image));
 	if (self->mm_private == NULL) {
-		(void) err_nomem();
+		(void) PyErr_NoMemory();
 		return 0;
 	}
 	foreground();
@@ -46,9 +46,9 @@ image_dealloc(self)
 static int
 image_arm(self, file, delay, duration, attrlist, anchorlist)
 	mmobject *self;
-	object *file;
+	PyObject *file;
 	int delay, duration;
-	object *attrlist, *anchorlist;
+	PyObject *attrlist, *anchorlist;
 {
 	dprintf(("image_arm\n"));
 	return 1;
@@ -135,21 +135,21 @@ imagechannel_dealloc(self)
 	if (self != image_chan_obj) {
 		dprintf(("imagechannel_dealloc: arg != image_chan_obj\n"));
 	}
-	DEL(self);
+	PyMem_DEL(self);
 	image_chan_obj = NULL;
 }
 
-static object *
+static PyObject *
 imagechannel_getattr(self, name)
 	channelobject *self;
 	char *name;
 {
-	err_setstr(AttributeError, name);
+	PyErr_SetString(PyExc_AttributeError, name);
 	return NULL;
 }
 
-static typeobject Imagechanneltype = {
-	OB_HEAD_INIT(&Typetype)
+static PyTypeObject Imagechanneltype = {
+	PyObject_HEAD_INIT(&PyType_Type)
 	0,			/*ob_size*/
 	"channel:image",	/*tp_name*/
 	sizeof(channelobject),	/*tp_size*/
@@ -163,30 +163,30 @@ static typeobject Imagechanneltype = {
 	0,			/*tp_repr*/
 };
 
-static object *
+static PyObject *
 imagechannel_init(self, args)
 	channelobject *self;
-	object *args;
+	PyObject *args;
 {
 	channelobject *p;
 
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (image_chan_obj == NULL) {
 		dprintf(("imagechannel_init: creating new object\n"));
-		image_chan_obj = NEWOBJ(channelobject, &Imagechanneltype);
+		image_chan_obj = PyObject_NEW(channelobject, &Imagechanneltype);
 		if (image_chan_obj == NULL)
 			return NULL;
 		image_chan_obj->chan_funcs = &image_channel_funcs;
 	} else {
 		dprintf(("imagechannel_init: return old object\n"));
-		INCREF(image_chan_obj);
+		Py_INCREF(image_chan_obj);
 	}
 	return image_chan_obj;
 }
 
-static struct methodlist imagechannel_methods[] = {
-	{"init",		(method)imagechannel_init},
+static PyMethodDef imagechannel_methods[] = {
+	{"init",		(PyCFunction)imagechannel_init},
 	{NULL,			NULL}
 };
 
@@ -196,5 +196,5 @@ initimagechannel()
 #ifdef MM_DEBUG
 	imagechannel_debug = getenv("IMAGEDEBUG") != 0;
 #endif
-	(void) initmodule("imagechannel", imagechannel_methods);
+	(void) Py_InitModule("imagechannel", imagechannel_methods);
 }
