@@ -1005,7 +1005,6 @@ class Object:
 		   node.GetChannelType() == 'RealPix':
 			if not hasattr(node, 'slideshow'):
 				node.slideshow = SlideShow(node)
-##				node.GetContext().editmgr.register(node.slideshow)
 
 	# Make this object the focus
 	def select(self):
@@ -1424,7 +1423,7 @@ class SlideShow:
 			collapsenode(node)
 			del node.slideshow
 			self.destroy()
-			# XXX what to do with node.tempfile?
+			# XXX what to do with node.tmpfile?
 			if hasattr(node, 'tmpfile'):
 				try:
 					os.unlink(node.tmpfile)
@@ -1632,8 +1631,8 @@ class SlideShow:
 						deltmpfiles, ())
 					SlideShow.__callback_added = 1
 				SlideShow.tmpfiles.append(file)
-			import realsupport
-			realsupport.writeRP(node.tmpfile, rp)
+##			import realsupport
+##			realsupport.writeRP(node.tmpfile, rp, node)
 			MMAttrdefs.flushcache(node)
 
 	def kill(self):
@@ -1682,10 +1681,12 @@ def writenodes(node, evallicense=0):
 		for child in node.children:
 			writenodes(child, evallicense)
 	elif hasattr(node, 'tmpfile'):
+		import realsupport
+		realsupport.writeRP(node.tmpfile, node.slideshow.rp, node)
 		url = MMAttrdefs.getattr(node, 'file')
 		if not url:
-			# XXX
-			url = 'realpix.rp'
+			# XXX--no URL specified for RealPix node
+			return
 		url = node.GetContext().findurl(url)
 		utype, host, path, params, query, tag = urlparse.urlparse(url)
 		if (not utype or utype == 'file') and \
