@@ -80,7 +80,8 @@ SOURCE="$(InputPath)"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\..\..\python\Include" /I "..\..\..\..\python\PC" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "BUILD_FREEZE" /D "_AFXDLL" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\..\..\python\Include" /I "..\..\..\..\python\PC" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "BUILD_FREEZE" /D "_AFXDLL" /FR /FD /GZ /c
+# SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "_DEBUG"
@@ -90,15 +91,15 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"Debug/GRiNS_G2P.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_G2P.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNSP_SV2_d.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\Debug
-InputPath=.\Debug\GRiNS_G2P.exe
+InputPath=.\Debug\GRiNSP_SV2_d.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNS_G2P_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNS_G2P_d.exe 
-	copy $(OutDir)\GRiNS_G2P.exe ..\..\..\bin\win32\GRiNS_G2P_d.exe 
+"..\..\..\bin\win32\GRiNSP_SV2_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNSP_SV2_d.exe 
+	copy $(OutDir)\GRiNSP_SV2_d.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
