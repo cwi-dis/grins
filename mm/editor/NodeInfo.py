@@ -137,8 +137,7 @@ class NodeInfo(Dialog):
 		if always:
 		    self.changed = 0
 		if always or not self.ch_styles_list:
-		    self.styles_list = \
-				self.node.GetRawAttrDef('style', [])[:]
+		    self.styles_list = self.node.GetRawAttrDef('style', [])[:]
 		    self.ch_styles_list = 0
 		if always or not self.ch_name:
 		    self.name = MMAttrdefs.getattr(self.node, 'name')
@@ -152,13 +151,12 @@ class NodeInfo(Dialog):
 		    self.oldtype = self.type
 		    self.ch_type = 0
 		if always or not self.ch_filename:
-		    self.filename = \
-				MMAttrdefs.getattr(self.node, 'file')
+		    self.filename = MMAttrdefs.getattr(self.node, 'file')
 		    self.ch_filename = 0
 		if always or not self.ch_immtext:
-		    self.immtext =  \
-			self.node.GetValues()[:]
-		    self.immtext.append('')
+		    self.immtext = self.node.GetValues()[:]
+		    if not self.immtext:
+			self.immtext.append('')
 		    self.ch_immtext = 0
 		self.children_nodes = self.node.GetChildren()
 		self.children = []
@@ -194,6 +192,8 @@ class NodeInfo(Dialog):
 			em.setnodeattr(n, 'file', None)
 		    self.ch_filename = 0
 		if self.ch_immtext:
+		    # XXX we could extract the text from the browser,
+		    # XXX and not bother to maintain self.immtext at all!
 		    em.setnodevalues(n, self.immtext[:])
 		    self.ch_immtext = 0
 		self.changed = 0
@@ -328,7 +328,7 @@ class NodeInfo(Dialog):
 		pass	# This is ok.
 	    elif ((self.type in interiortypes) and \
 			self.children == []) or \
-		 (self.type == 'imm' and len(self.immtext) == 1) or \
+		 (self.type == 'imm' and self.immtext == ['']) or \
 		 (self.type == 'ext'):
 		pass
 	    else:
@@ -377,49 +377,85 @@ class NodeInfo(Dialog):
 	#
 	# Callbacks for 'imm' type nodes
 	#
-	def text_browser_callback(self, (obj, dummy)):
-	    i = obj.get_browser()
-	    if i:
-		line = obj.get_browser_line(i)
-		self.text_input.set_input(line)
-
-	def text_input_callback(self, (obj, dummy)):
-	    line = obj.get_input()
+	# The browser's current line is always copied in the
+	# text input object (which reacts to each keystroke).
+	# The insert, add and delete buttons operate similarly to
+	# the i, a and d commands in ed(1) (they leave the current
+	# line where ed would leave it).
+	# If the buffer ends up empty, a single empty line is left.
+	#
+	# First, define some useful subroutines:
+	#
+	def input_to_browser(self):
 	    i = self.text_browser.get_browser()
-	    if i:
-		if line == self.immtext[i-1]: return
-		self.ch_immtext = 1
-		self.changed = 1
-		self.text_browser.replace_browser_line(i, line)
-		self.immtext[i-1] = line
-		# Did we change the dummy last line?
-		if i == len(self.immtext):
-		    self.immtext.append('')
-		    self.text_browser.addto_browser('')
+	    line = self.text_input.get_input()
+	    if not i:
+		print 'NodeInfo.input_to_browser: No focus???'
 	    else:
-		print 'HUH? No textline selected?'
+		self.text_browser.replace_browser_line(i, line)
+		if self.immtext[i-1] <> line:
+		    self.ch_immtext = self.changed = 1
+		    self.immtext[i-1] = line
 
-	def text_insert_callback(self, (obj, dummy)):
+	def browser_to_input(self):
 	    i = self.text_browser.get_browser()
-	    if i:
-		self.ch_immtext = 1
-		self.changed = 1
-		self.text_browser.insert_browser_line(i, '')
-		self.immtext.insert(i, '')
-		self.text_input.set_input('')
-		self.text_browser.deselect_browser()
-		self.text_browser.select_browser_line(i)
-
-	def text_delete_callback(self, (obj, dummy)):
-	    i = self.text_browser.get_browser()
-	    if i and i <> len(self.immtext):
-		self.ch_immtext = 1
-		self.changed = 1
-		self.text_browser.delete_browser_line(i)
-		del self.immtext[i-1]
-		self.text_browser.select_browser_line(i)
+	    if not i:
+		line = ''
+		print 'NodeInfo.browser_to_input: No focus???'
+	    else:
 		line = self.text_browser.get_browser_line(i)
 		self.text_input.set_input(line)
+		if self.immtext[i-1] <> line:
+		    self.ch_immtext = self.changed = 1
+		    self.immtext[i-1] = line
+
+	def new_line(self, i):
+	    self.ch_immtext = self.changed = 1
+	    self.immtext.insert(i-1, '')
+	    # &*/!$@% stupid insert_browser_line can't add at the end
+	    if i > self.text_browser.get_browser_maxline():
+		self.text_browser.addto_browser('')
+	    else:
+		self.text_browser.insert_browser_line(i, '')
+	    self.text_browser.select_browser_line(i)
+	    self.browser_to_input()
+
+	# Now, define the callbacks:
+
+	def text_browser_callback(self, (obj, dummy)):
+	    # Mouse click on a browser line
+	    self.browser_to_input()
+
+	def text_input_callback(self, (obj, dummy)):
+	    # Keypress in the text input field
+	    self.input_to_browser()
+
+	def text_insert_callback(self, (obj, dummy)):
+	    # 'Insert line' button
+	    i = self.text_browser.get_browser()
+	    if i:
+		self.new_line(i)
+
+	def text_add_callback(self, (obj, dummy)):
+	    # 'Add line' button
+	    i = self.text_browser.get_browser()
+	    if i:
+		self.new_line(i+1)
+
+	def text_delete_callback(self, (obj, dummy)):
+	    # 'Delete line' button
+	    i = self.text_browser.get_browser()
+	    if i:
+		self.ch_immtext = self.changed = 1
+		del self.immtext[i-1]
+		self.text_browser.delete_browser_line(i)
+		if not self.immtext:
+		    self.immtext.append('')
+		    self.text_browser.addto_browser('')
+		elif i-1 >= len(self.immtext):
+		    i = i-1
+		self.text_browser.select_browser_line(i)
+		self.browser_to_input()
 	#
 	# Callbacks for 'ext' type nodes
 	#
