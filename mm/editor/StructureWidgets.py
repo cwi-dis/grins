@@ -1113,7 +1113,7 @@ class MediaWidget(MMNodeWidget):
 
 	def show_mesg(self):
 		if self.node.errormessage:
-			windowinterface.showmessage("This node's message:\n\t"+self.node.errormessage, parent=self.root.window)
+			windowinterface.showmessage(self.node.errormessage, parent=self.root.window)
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
