@@ -47,9 +47,48 @@ def roundi(x):
 		return roundi(x + 1024) - 1024
 	return int(x + 0.5)
 
-def _rgb2torgb8(data, reader):
-	import imageop
-	return imageop.rgb2rgb8(data, reader.width, reader.height)
+import imgformat
+myxrgb8 = imgformat.xrgb8
+
+def _colormask(mask):
+	shift = 0
+	while (mask & 1) == 0:
+		shift = shift + 1
+		mask = mask >> 1
+	if mask < 0:
+		width = 32 - i	# assume integers are 32 bits
+	else:
+		width = 0
+		while mask != 0:
+			width = width + 1
+			mask = mask >> 1
+	return shift, (1 << width) - 1
+
+def _setupimg(rs, rm, gs, gm, bs, bm):
+	global myxrgb8
+	c = []
+	if (rm, gm, bm) != (7, 7, 3):
+		for n in range(256):
+			r = roundi(((n >> 5) & 7) / 7. * rm)
+			g = roundi(((n     ) & 7) / 7. * gm)
+			b = roundi(((n >> 3) & 3) / 3. * bm)
+			c.append((r << rs) | (g << gs) | (b << bs))
+		lossy = 2
+	elif (rs, gs, bs) == (5, 0, 3):
+		# no need for extra conversion
+		return
+	else:
+		for n in range(256):
+			r = (n >> 5) & 7
+			g = (n     ) & 7
+			b = (n >> 3) & 3
+			c.append((r << rs) | (g << gs) | (b << bs))
+		lossy = 0
+	import imgcolormap, imgconvert
+	myxrgb8 = imgformat.new('myxrgb8', 'X 3:3:2 RGB top-to-bottom')
+	cmap = imgcolormap.new(reduce(lambda x, y: x + '000' + chr(y), c, ''))
+	imgconvert.addconverter(imgformat.xrgb8, imgformat.myxrgb8,
+				lambda d, r, m=cmap: m.map8(d), lossy)
 
 def _setcursor(form, cursor):
 	try:
@@ -66,9 +105,6 @@ def _setcursor(form, cursor):
 			raise error, 'unknown cursor glyph'
 	finally:
 		toplevel._win_lock.release()
-
-import imgconvert, imgformat
-imgconvert.addconverter(imgformat.rgb, imgformat.xrgb8, _rgb2torgb8, 2)
 
 # three menu utility functions
 def _menu_callback(widget, (func, arg), call_data):
@@ -161,20 +197,6 @@ class _Toplevel:
 		_linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
 		self._main.RealizeWidget()
 
-	def _colormask(self, mask):
-		shift = 0
-		while (mask & 1) == 0:
-			shift = shift + 1
-			mask = mask >> 1
-		if mask < 0:
-			width = 32 - i	# assume integers are 32 bits
-		else:
-			width = 0
-			while mask != 0:
-				width = width + 1
-				mask = mask >> 1
-		return shift, (1 << width) - 1
-
 	def _setupcolormap(self, dpy):
 		visuals = dpy.GetVisualInfo({'c_class': X.TrueColor})
 		if visuals:
@@ -186,12 +208,16 @@ class _Toplevel:
 			self._visual = v_best
 			self._depth = v_best.depth
 			self._red_shift, self._red_mask = \
-					 self._colormask(v_best.red_mask)
+					 _colormask(v_best.red_mask)
 			self._green_shift, self._green_mask = \
-					   self._colormask(v_best.green_mask)
+					   _colormask(v_best.green_mask)
 			self._blue_shift, self._blue_mask = \
-					  self._colormask(v_best.blue_mask)
+					  _colormask(v_best.blue_mask)
 			self._colormap = v_best.CreateColormap(X.AllocNone)
+			if self._depth == 8:
+				_setupimg(self._red_shift, self._red_mask,
+					  self._green_shift, self._green_mask,
+					  self._blue_shift, self._blue_mask)
 			return
 		visuals = dpy.GetVisualInfo({'depth': 8,
 					     'c_class': X.PseudoColor})
@@ -214,6 +240,9 @@ class _Toplevel:
 				  int((float((n >> self._blue_shift) & self._blue_mask) / float(self._blue_mask)) * 255.)<<8,
 				  X.DoRed|X.DoGreen|X.DoBlue))
 		self._colormap.StoreColors(xcolors)
+		_setupimg(self._red_shift, self._red_mask,
+			  self._green_shift, self._green_mask,
+			  self._blue_shift, self._blue_mask)
 		return
 
 	def close(self):
@@ -769,7 +798,7 @@ class _Window:
 ##					pass
 		import img, imgformat
 		if self._depth == 8:
-			format = imgformat.xrgb8
+			format = myxrgb8
 			depth = 1
 		else:
 			format = imgformat.rgb
