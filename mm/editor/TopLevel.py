@@ -234,28 +234,28 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				]
 			self.saveg2commandlist = [
-				EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
-				UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
+				EXPORT_G2(callback = (self.bandwidth_callback, ('real', self.export_G2_callback))),
+				UPLOAD_G2(callback = (self.bandwidth_callback, ('real', self.upload_G2_callback))),
 				]
 			if features.EXPORT_QT in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
-					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
-					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
+					EXPORT_QT(callback = (self.bandwidth_callback, ('qt', self.export_QT_callback))),
+					UPLOAD_QT(callback = (self.bandwidth_callback, ('qt', self.upload_QT_callback))),
 					]
 
 			if features.EXPORT_WMP in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
-##					EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))),
-					EXPORT_WMP(callback = (self.export_WMP_callback,())),
-					UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))),
+					EXPORT_WMP(callback = (self.bandwidth_callback, ('wmp', self.export_WMP_callback))),
+##					EXPORT_WMP(callback = (self.export_WMP_callback,())),
+					UPLOAD_WMP(callback = (self.bandwidth_callback, ('wmp', self.upload_WMP_callback))),
 					]
 			if features.EXPORT_HTML_TIME in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())),
 					]
 			self.publishcommandlist = self.publishcommandlist + [
-				EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
-				UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
+				EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL_callback,))),
+				UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL_callback,))),
 				EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
 				]
 		else:
@@ -681,23 +681,27 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except IOError, msg:
 			windowinterface.showmessage('HTML export failed:\n%s'%(msg,))
 
-	def bandwidth_callback(self, do_export_callback):
-		# Calculates the bandwidth for ...something? Uses a dialog? Unsure -mjvdg		
-		import settings
-		import BandwidthCompute
-		bandwidth = settings.get('system_bitrate')
-		if bandwidth > 1000000:
-			bwname = "%dMbps"%(bandwidth/1000000)
-		elif bandwidth % 1000 == 0:
-			bwname = "%dkbps"%(bandwidth/1000)
+	def bandwidth_callback(self, exporttype, do_export_callback):
+		if exporttype == 'real':
+			import settings
+			import BandwidthCompute
+			bandwidth = settings.get('system_bitrate')
+			if bandwidth > 1000000:
+				bwname = "%dMbps"%(bandwidth/1000000)
+			elif bandwidth % 1000 == 0:
+				bwname = "%dkbps"%(bandwidth/1000)
+			else:
+				bwname = "%dbps"%bandwidth
+			msg = 'Computing bandwidth usage at %s...'%bwname
+			dialog = windowinterface.BandwidthComputeDialog(msg)
+			bandwidth, prerolltime, delaycount, errorseconds, errorcount , stalls = \
+				BandwidthCompute.compute_bandwidth(self.root)
+			dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
+			dialog.done(do_export_callback, cancancel=1)
 		else:
-			bwname = "%dbps"%bandwidth
-		msg = 'Computing bandwidth usage at %s...'%bwname
-		dialog = windowinterface.BandwidthComputeDialog(msg)
-		bandwidth, prerolltime, delaycount, errorseconds, errorcount , stalls = \
-			BandwidthCompute.compute_bandwidth(self.root)
-		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
-		dialog.done(do_export_callback, cancancel=1)
+			# For other export types we don't know how to calculate bandwidth
+			# usage (yet)
+			do_export_callback()
 
 	def export_G2_callback(self):
 		self.export(compatibility.G2)
@@ -792,7 +796,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.upload(compatibility.QT)
 
 	def upload_SMIL_callback(self):
-		self.upload(compatibility.SMIL10)
+		self.upload(compatibility.Boston)
 
 	def upload_WMP_callback(self):
 		windowinterface.showmessage("Please purchase the full version of GRiNS today!")
@@ -810,12 +814,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.filename:
 			windowinterface.showmessage('Please save your work first')
 			return
-		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
 			
 		missing = ''
 		attr = None
 		attrs = self.context.attributes
+		# G2 and QT products require a web page
+		if features.compatibility in (compatibility.G2, compatibility.QT):
+			have_web_page = 1
+		else:
+			have_web_page = attrs.has_key('project_html_page')
 		if have_web_page:
 			if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
 				attr = 'project_ftp_host'
