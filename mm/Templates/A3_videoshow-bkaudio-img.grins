@@ -2,7 +2,6 @@
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="Video with background audio"/>
-    <meta name="generator" content="GRiNS editor 1.0.1alpha win32 patchlevel 16"/>
     <meta name="template_name" content="Video show"/>
     <meta name="template_description" content="Video with two soundtracks and a background image"/>
     <meta name="template_snapshot" content="video_2x_audio.bmp"/>

@@ -2,7 +2,6 @@
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="QSG1-Slideshow"/>
-    <meta name="generator" content=""/>
     <meta name="template_name" content="QSG1 Slideshow"/>
     <meta name="template_description" content="This is the template used in the QuickStart Guide."/>
     <meta name="template_snapshot" content="qsg1.bmp"/>

@@ -2,7 +2,7 @@
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="Adaptive Content"/>
-    <meta name="generator" content="GRiNS editor 1.0.1alpha win32 patchlevel 16"/>
+    <meta name="generator" content="GRiNS Pro for RealSystem G2, v1.5.1 "/>
     <meta name="template_name" content="Adaptive Content"/>
     <meta name="template_description" content="Presentation with Adaptive Content. Based on audience bandwidth it shows either video, realpix or realtext."/>
     <meta name="template_snapshot" content="adaptive.bmp"/>
