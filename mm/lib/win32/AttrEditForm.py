@@ -1450,7 +1450,7 @@ class EventCtrl(AttrCtrl):
 		self._relative.attach_to_parent()
 		for b in self._radiobuttonwidgets.values():
  			b.attach_to_parent()
-			b.hookcommand(self._wnd, self._radiobuttoncallback)
+		b.hookcommand(self._wnd, self._radiobuttoncallback)
 
 		# do this before setting the callback functions
 		bob = self._attr.getcurrent()
