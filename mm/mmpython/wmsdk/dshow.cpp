@@ -1934,22 +1934,6 @@ static PyTypeObject RealConverterType = {
 ////////////////////////////////////////////
 // WMConverter object 
 
-static char WMConverter_SetWMWriter__doc__[] =
-""
-;
-static PyObject *
-WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
-{
-	UnknownObject *obj;
-	if (!PyArg_ParseTuple(args, "O",&obj))
-		return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetWMWriter(obj->pI);
-	Py_END_ALLOW_THREADS
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
 static char WMConverter_SetAdviceSink__doc__[] =
 ""
 ;
@@ -1972,7 +1956,6 @@ WMConverter_SetAdviceSink(WMConverterObject *self, PyObject *args)
 }
 
 static struct PyMethodDef WMConverter_methods[] = {
-	{"SetWMWriter", (PyCFunction)WMConverter_SetWMWriter, METH_VARARGS, WMConverter_SetWMWriter__doc__},
 	{"SetAdviceSink", (PyCFunction)WMConverter_SetAdviceSink, METH_VARARGS, WMConverter_SetAdviceSink__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
