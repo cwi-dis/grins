@@ -610,18 +610,7 @@ class LayoutView2(LayoutViewDialog2):
 		deleteList.reverse()
 		for ind in deleteList:
 			del self.currentNodeListShowed[ind]
-		
-		# XXX HACK: check is the focus is still valid, otherwise, change it
-		type,focus = self.editmgr.getglobalfocus()
-		if type != None and focus != None:
-			if type == 'MMNode':
-				name = focus.attrdict.get('name')
-				if self.__nameToUid(name) == None:
-					self.editmgr.setglobalfocus('MMChannel', self.getRegionRef(self.currentViewport.getName()))
-			elif type == 'MMChannel':
-				if self.getRegionRef(focus.name) == None:
-					self.editmgr.setglobalfocus('MMChannel', self.getRegionRef(self.currentViewport.getName()))
-		
+				
 		type,focus = self.editmgr.getglobalfocus()
 		if focus != None:
 			self.globalfocuschanged(type, focus)
