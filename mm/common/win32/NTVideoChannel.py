@@ -130,7 +130,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		import MMmimetypes, string
 		mtype = MMmimetypes.guess_type(url)[0]
-		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
+		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0 or string.find(mtype, 'image') >= 0):
 			node.__type = 'real'
 			if string.find(mtype, 'flash') >= 0:
 				node.__subtype = 'flash'
