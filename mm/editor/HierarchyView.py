@@ -1167,7 +1167,7 @@ class HierarchyView(HierarchyViewDialog):
 			# XXX Could go to parent instead?
 			windowinterface.beep()
 			return
-		self.setfocusnode(siblings[i])
+		self.select_node(siblings[i])
 		self.draw()
 
 	def toparent(self):
@@ -1178,7 +1178,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not parent:
 			windowinterface.beep()
 			return
-		self.setfocusnode(parent)
+		self.select_node(parent)
 		self.draw()
 
 	def tochild(self, i):
@@ -1339,7 +1339,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.settoggle(TIMESCALE, 0)
 			self.settoggle(LOCALTIMESCALE, 0)
 			self.settoggle(CORRECTLOCALTIMESCALE, 1)
-		print "DEBUG: redrawing everything.."
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.need_redraw = 1
