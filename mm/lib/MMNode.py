@@ -2983,6 +2983,7 @@ class MMNode(MMTreeElement):
 			if not self.animchildren:
 				from fmtfloat import fmtfloat
 				self.animchildren = []
+				context = self.context
 				nodeclass = context.nodeclass
 				context.nodeclass = self.__class__
 				animvals = self.attrdict.get('animvals', [])
@@ -2999,8 +3000,9 @@ class MMNode(MMTreeElement):
 							del v['pos']
 					del attrs['pos']
 				attrs = attrs.keys()
+
 				for attr in attrs:
-					c = self.context.newnode('animate')
+					c = context.newnode('animate')
 					c.parent = self
 					self.animchildren.append(c)
 					c.attrdict['endlist'] = [MMSyncArc(c, 'end', srcnode = self, event = 'end', delay = 0)]
@@ -3018,6 +3020,7 @@ class MMNode(MMTreeElement):
 						c.attrdict['atag'] = 'animateMotion'
 					elif attr == 'bgcolor':
 						for v in vals:
+							import colors
 							if colors.rcolors.has_key(v):
 								values.append(colors.rcolors[v])
 							else:
