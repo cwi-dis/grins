@@ -101,7 +101,6 @@ class HierarchyView(HierarchyViewDialog):
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
 			]
 		if not lightweight:
-			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
 			self.commands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
 			self.commands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
@@ -1276,9 +1275,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def hyperlinkcall(self):
 		if self.focusobj: self.focusobj.hyperlinkcall()
-
-	def focuscall(self):
-		if self.focusobj: self.focusobj.focuscall()
 
 	def rpconvertcall(self):
 		if self.focusobj: self.focusobj.rpconvertcall()
