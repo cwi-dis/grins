@@ -1702,7 +1702,7 @@ class EventCtrl(AttrCtrl):
 				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(),
 					self._eventstruct.get_region() or '', filter = 'topLayout')
 				if dlg.show():
-					self._eventstruct.set_region(dlg.gettext())
+					self._eventstruct.set_region(dlg.getmmobject().name)
 			elif c == 'node':
 				# Pop up a node select dialog.
 				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(),
