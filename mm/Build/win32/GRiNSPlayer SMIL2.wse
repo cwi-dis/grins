@@ -23,7 +23,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grinsp2.0.117.exe
+  EXE Filename=..\..\bin\win32\grinsp2.0.118.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -32,7 +32,7 @@ item: Global
   Dialogs Version=7
   Version File=2.1
   Version Description=GRiNS/SMIL 2.0
-  Version Copyright=Copyright 2001 Oratrix
+  Version Copyright=Copyright © 2002 Oratrix
   Version Company=Oratrix
   Crystal Format=10111100101100000010001001001001
   Crystal Destination=00000000000000000000000000001011
@@ -82,6 +82,16 @@ item: Search for File
   Pathname List=GRiNSP_SV2.exe
   Description=Checking for previously installed components...
   Flags=00000001
+end
+item: If/While Statement
+  Variable=FIND_DIRECTORY
+  Value=BACKUP
+  Flags=00000010
+end
+item: Set Variable
+  Variable=FIND_DIRECTORY
+end
+item: End Block
 end
 item: End Block
 end
