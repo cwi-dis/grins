@@ -37,6 +37,12 @@ def get(node, target=0):
 	
 	context = node.GetContext()
 	ctype = node.GetChannelType()
+
+	if ntype == 'ext' and ctype == 'RealPix':
+		# Get information from the attributes
+		bitrate = MMAttrdefs.getattr(node, 'bitrate')
+		return 0, bitrate
+			
 	url = MMAttrdefs.getattr(node, 'file')
 	url = context.findurl(url)
 	val = urlcache[url].get('bandwidth')
