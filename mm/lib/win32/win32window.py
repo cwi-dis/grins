@@ -785,7 +785,6 @@ class SubWindow(Window):
 		else: wnd = self._topwindow
 		wnd.HookMessage(f,m)
 
-
 	#
 	# Foreign renderers support
 	#
@@ -950,13 +949,19 @@ class SubWindow(Window):
 	# Rendering section
 	#
 
+	def getClipRgn(self):
+		x, y, w, h = self.getwindowpos();
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		rgn.CombineRgn(rgn,self._parent.getClipRgn(),win32con.RGN_AND)
+		return rgn
+
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
-			rgn = win32ui.CreateRgn()
-			rgn.CreateRectRgn((x,y,x+w,y+h))
+			rgn = self.getClipRgn()
 			dc.SelectClipRgn(rgn)
 			rgn.DeleteObject()
 			x0, y0 = dc.SetWindowOrg((-x,-y))
@@ -1065,7 +1070,7 @@ class SubWindow(Window):
 		
 		# XXX: if any subwindow in the tree
 		# has an oswnd should be moved also
-
+		
 		self._topwindow.update()
 
 	def updatezindex(self, z):
