@@ -316,19 +316,22 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton = Icon(icon, self, self.node, self.mother)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
 		else:
-			self.collapsebutton = None 
+			self.collapsebutton = None
+		self.parent_widget = None # This is the parent node. Used for recalcing optimisations.
 		for i in self.node.children:
 			bob = create_MMNode_widget(i, mother)
 			if bob == None:
 				print "TODO: you haven't written all the code yet, have you Mike?"
 			else:
 				self.children.append(bob)
+				#self.children.parent_widget = self
 		self.node.views['struct_view'] = self 
 		if mother.timescale == 'global' and not node.parent:
 			# If we are showing timescale globally we do it on the root
 			self.timeline = TimelineWidget(self, mother)
 		else:
 			self.timeline = None
+		self.need_recalc = 0	# used to determine if this node or any of it's children need recalculating.
 
 #	def __repr__(self):
 #		return "Abstract class StructureObjWidget, name = " + self.name
@@ -423,11 +426,24 @@ class StructureObjWidget(MMNodeWidget):
 
 
 	def recalc(self):
+		# One optimisation that could be done is to have a dirty flag
+		# for recalculating the relative sizes of all the nodes.
+		# If the node sizes don't need to be changed, then don't
+		# change them.
+		# For the meanwhile, this is too difficult. 
 		if self.collapsebutton:
 			l,t,r,b = self.pos_abs
-			l = l + self.get_relx(1)
-			t = t + self.get_rely(2)
-			self.collapsebutton.moveto((l,t))
+			#l = l + self.get_relx(1)
+			#t = t + self.get_rely(2)
+			self.collapsebutton.moveto((l+1,t+2))
+		#self.need_recalc = 0
+
+	#def set_need_recalc(self):
+	#	# Sets the need_recalc attribute.
+	#	p = self
+	#	self.need_recalc = 1
+	#	while(p=p.parent_widget):
+	#		p.need_recalc = 1
 
 	def draw(self, displist):
 		# This is a base class for other classes.. this code only gets
@@ -442,7 +458,7 @@ class StructureObjWidget(MMNodeWidget):
 		displist.usefont(f_title)
 		l,t,r,b = self.pos_abs
 		b = t + sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
-		l = l + self.get_relx(16)	# move it past the icon.
+		l = l + 16	# move it past the icon.
 		displist.centerstring(l,t,r,b, self.name)
 		if self.collapsebutton:
 			self.collapsebutton.draw(displist)
@@ -512,10 +528,10 @@ class SeqWidget(StructureObjWidget):
 		# Draw those funny vertical lines.
 		if self.iscollapsed():
 			l,t,r,b = self.pos_abs
-			i = l + self.get_relx(sizes_notime.HEDGSIZE)
-			t = t + self.get_rely(sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE)
-			b = b - self.get_rely(sizes_notime.VEDGSIZE)
-			step = self.get_relx(8)
+			i = l + sizes_notime.HEDGSIZE
+			t = t + sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE
+			b = b - sizes_notime.VEDGSIZE
+			step = 8
 			if r > l:
 				while i < r:
 					display_list.drawline(TEXTCOLOR, [(i, t),(i, b)])
@@ -613,8 +629,8 @@ class SeqWidget(StructureObjWidget):
 		
 		# Add the title	 free
 		
-		t = t + self.get_rely(sizes_notime.TITLESIZE)
-		min_height = min_height - self.get_rely(sizes_notime.TITLESIZE)
+		t = t + sizes_notime.TITLESIZE
+		min_height = min_height - sizes_notime.TITLESIZE
 		
 		# Add the timeline, if it is at the top
 		if self.timeline and TIMELINE_AT_TOP:
@@ -643,7 +659,7 @@ class SeqWidget(StructureObjWidget):
 		if self.channelbox:
 			w, h = self.channelbox.get_minsize()
 			self.channelbox.moveto((l, t, l+w, b))
-			l = l + w + self.get_relx(sizes_notime.GAPSIZE)
+			l = l + w + sizes_notime.GAPSIZE
 		for chindex in range(len(self.children)):
 			medianode = self.children[chindex]
 			# Compute rightmost position we may draw
@@ -688,12 +704,12 @@ class SeqWidget(StructureObjWidget):
 				l = r
 			medianode.moveto((l,t,r,b))
 			medianode.recalc()
-			l = r + self.get_relx(sizes_notime.GAPSIZE)
+			l = r + sizes_notime.GAPSIZE
 
 		if self.dropbox:
 			w,h = self.dropbox.get_minsize()
 			# The dropbox takes up the rest of the free width.
-			r = self.pos_abs[2]-self.get_relx(sizes_notime.HEDGSIZE)
+			r = self.pos_abs[2]-sizes_notime.HEDGSIZE
 			
 			self.dropbox.moveto((l,t,r,b))
 		
@@ -1086,16 +1102,16 @@ class VerticalWidget(StructureObjWidget):
 		min_width, min_height = self.get_minsize()
 		min_height = min_height - sizes_notime.TITLESIZE
 		
-		overhead_height = 2*self.get_rely(sizes_notime.VEDGSIZE) + len(self.children)-1*sizes_notime.GAPSIZE
+		overhead_height = 2*sizes_notime.VEDGSIZE + len(self.children)-1*sizes_notime.GAPSIZE
 		free_height = (b-t) - min_height
 		
 		if free_height < 0: #or free_height > 1.0:
 #		   print "Warning! free_height is wrong: ", free_height, self
 			free_height = 0
 		
-		l_par = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
-		r = float(r) - self.get_relx(sizes_notime.HEDGSIZE)
-		t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
+		l_par = float(l) + sizes_notime.HEDGSIZE
+		r = float(r) - sizes_notime.HEDGSIZE
+		t = float(t) + sizes_notime.VEDGSIZE
 		
 		
 		for medianode in self.children: # for each MMNode:
@@ -1130,7 +1146,7 @@ class VerticalWidget(StructureObjWidget):
 			
 			medianode.moveto((this_l,t,this_r,b))
 			medianode.recalc()
-			t = b + self.get_rely(sizes_notime.GAPSIZE)
+			t = b + sizes_notime.GAPSIZE
 		if self.timeline and not TIMELINE_AT_TOP:
 			l, t, r, b = self.pos_abs
 			tl_w, tl_h = self.timeline.get_minsize()
@@ -1145,10 +1161,10 @@ class VerticalWidget(StructureObjWidget):
 		# Draw those stupid horizontal lines.
 		if self.iscollapsed():
 			l,t,r,b = self.pos_abs
-			i = t + self.get_rely(sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE)
-			l = l + self.get_relx(sizes_notime.HEDGSIZE)
-			r = r - self.get_relx(sizes_notime.HEDGSIZE)
-			step = self.get_rely(8)
+			i = t + sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE
+			l = l + sizes_notime.HEDGSIZE
+			r = r - sizes_notime.HEDGSIZE
+			step = 8
 			if r > l:
 				while i < b:
 					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
@@ -1297,7 +1313,7 @@ class MediaWidget(MMNodeWidget):
 	def recalc(self):
 		l,t,r,b = self.pos_abs
 
-		self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
+		self.infoicon.moveto((l+1, t+2))
 		# First compute pushback bar position
 		if self.pushbackbar:
 			if not self.is_timed:
@@ -1310,9 +1326,9 @@ class MediaWidget(MMNodeWidget):
 			pbb_left = self.mother.timemapper.time2pixel(t0-(download+begindelay), align='right')
 			self.pushbackbar.moveto((pbb_left, t, l, t+12))
 
-		t = t + self.get_rely(sizes_notime.TITLESIZE)
-		pix16x = self.get_relx(16)
-		pix16y = self.get_rely(16)
+		t = t + sizes_notime.TITLESIZE
+		pix16x = 16
+		pix16y = 16
 		self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
 		self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
 
@@ -1326,7 +1342,7 @@ class MediaWidget(MMNodeWidget):
 		return (xsize, ysize)
 
 	def get_maxsize(self):
-		return self.get_relx(sizes_notime.MAXSIZE), self.get_rely(sizes_notime.MAXSIZE)
+		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
 
 	def draw(self, displist):
 		# print "DEBUG: MediaWidget.draw:", self.get_box()
