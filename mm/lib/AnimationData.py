@@ -205,45 +205,41 @@ class AnimationData:
 		if not em.transaction():
 			return 0
 
-		if self._writeAnimateMotion:
-			anim = 	existing.get('pos')
-			if anim is not None:
-				self._updateNode(anim, keyTimes, animateMotionValues)
-			else:
-				anim = context.newanimatenode('animateMotion')
-				anim.targetnode = self._target.getTargetNode()
-				self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
-				em.addnode(parent, 0, anim)
+		anim = existing.get('pos')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateMotionValues)
+		elif self._writeAnimateMotion:
+			anim = context.newanimatenode('animateMotion')
+			anim.targetnode = self._target.getTargetNode()
+			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
+			em.addnode(parent, 0, anim)
 
-		if self._writeAnimateWidth:
-			anim = 	existing.get('width')
-			if anim is not None:
-				self._updateNode(anim, keyTimes, animateWidthValues)
-			else:
-				anim = context.newanimatenode('animate')
-				anim.targetnode = self._target.getTargetNode()
-				self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
-				em.addnode(parent, 1, anim)
+		anim = existing.get('width')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateWidthValues)
+		elif self._writeAnimateWidth:
+			anim = context.newanimatenode('animate')
+			anim.targetnode = self._target.getTargetNode()
+			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
+			em.addnode(parent, 1, anim)
 
-		if self._writeAnimateHeight:
-			anim = 	existing.get('height')
-			if anim is not None:
-				self._updateNode(anim, keyTimes, animateHeightValues)
-			else:
-				anim = context.newanimatenode('animate')
-				anim.targetnode = self._target.getTargetNode()
-				self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
-				em.addnode(parent, 2, anim)
+		anim = existing.get('height')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateHeightValues)
+		elif self._writeAnimateHeight:
+			anim = context.newanimatenode('animate')
+			anim.targetnode = self._target.getTargetNode()
+			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
+			em.addnode(parent, 2, anim)
 
-		if self._writeAnimateColor:
-			anim = 	existing.get('color')
-			if anim is not None:
-				self._updateNode(anim, keyTimes, animateColorValues)
-			else:
-				anim = context.newanimatenode('animateColor')
-				anim.targetnode = self._target.getTargetNode()
-				self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
-				em.addnode(parent, 3, anim)
+		anim = existing.get('color')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateColorValues)
+		elif self._writeAnimateColor:
+			anim = context.newanimatenode('animateColor')
+			anim.targetnode = self._target.getTargetNode()
+			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
+			em.addnode(parent, 3, anim)
 		
 		em.commit()
 		return 1
