@@ -1070,6 +1070,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.asOutLine = value
 			if self.currentViewport != None:
 				self.currentViewport.updateAllAsOutLines(self.asOutLine)
+			self.updateRegionTree()				
 		elif ctrlName == 'ShowRbg':
 			self.__showEditBackground(value)			
 
