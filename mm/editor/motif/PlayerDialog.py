@@ -19,6 +19,7 @@ class PlayerDialog(PlayerDialogBase):
 			'p': PLAY,
 			'P': PAUSE,
 			's': STOP,
+			' ': MAGIC_PLAY,
 			},
 		'menubar': [
 			(FLAG_ALL, 'Close', [
@@ -41,6 +42,12 @@ class PlayerDialog(PlayerDialogBase):
 		'flags': curflags(),
 		}
 	adornments2 = {
+		'shortcuts': {
+			'p': PLAY,
+			'P': PAUSE,
+			's': STOP,
+			' ': MAGIC_PLAY,
+			},
 		'close': [ CLOSE_WINDOW, ],
 		}
 
