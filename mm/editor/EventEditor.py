@@ -71,7 +71,7 @@ class EventStruct:
 
 	def __get_values(self):
 		arc = self._syncarc
-		return self._setnode or arc.srcnode, self._setcause or self.cause, self._setevent or self.event, self._setoffset or arc.delay, self._setrepeat or arc.get_repeat(), self._setwallclock or arc.wallclock, self._setregion or arc.channel, self._setmarker or arc.marker
+		return self._setnode or arc.srcnode, self._setcause or self.cause, self._setevent or self.event, self._setoffset or arc.delay, self._setrepeat or arc.get_repeat(), self._setwallclock or arc.wallclock, self._setregion or arc.channel, self._setmarker or arc.marker, self._setkey or arc.accesskey
 
 	def get_value(self):
 		# Returns the result of editing this syncarc.
