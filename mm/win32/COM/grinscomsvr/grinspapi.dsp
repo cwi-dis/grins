@@ -176,10 +176,6 @@ SOURCE=.\comlib\regkey.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\idl\IGRiNSPlayerAuto.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\idl\IGRiNSPlayerAuto_i.c
 # End Source File
 # End Group
