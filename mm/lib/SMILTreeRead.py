@@ -1111,6 +1111,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					width = 100
 					height = 100
 				else:
+					# want to make them at least visible...
+					if width == 0: width = 100
+					if height == 0: height = 100
 					node.__size = width, height
 		elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
 			# want to make them at least visible...
