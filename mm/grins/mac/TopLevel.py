@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
 import Timing
+from MMExc import MSyntaxError
 
 class TopLevel:
 	def __init__(self, main, filename):
@@ -42,6 +43,15 @@ class TopLevel:
 	def read_it(self):
 		import time
 		import mimetypes
+		
+		# Add our default smil and cmif types, if needed
+		if not mimetypes.types_map.has_key('.smil'):
+			mimetypes.types_map['.smil'] = 'application/smil'
+		if not mimetypes.types_map.has_key('.smi'):
+			mimetypes.types_map['.smi'] = 'application/smil'
+		if not mimetypes.types_map.has_key('.cmif'):
+			mimetypes.types_map['.cmif'] = 'application/cmif'
+			
 		self.changed = 0
 		print 'parsing', self.filename, '...'
 		t0 = time.time()
@@ -63,7 +73,8 @@ class TopLevel:
 		elif mtype == 'application/smil':
 			import SMILTree
 			self.root = SMILTree.ReadFile(self.filename)
-		elif mtype == 'applicatin/x-cmif':
+		elif mtype == 'application/x-cmif':
+			import MMTree
 			self.root = MMTree.ReadFile(self.filename)
 		else:
 			raise MSyntaxError, 'unknown file type'
