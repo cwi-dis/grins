@@ -10,7 +10,6 @@ It consists of just two simple functions.
 
 # Create and display the splash screen
 def splash(arg=0,version=None):
-	print version
 	global _splash
 	import components
 	if not _splash:
