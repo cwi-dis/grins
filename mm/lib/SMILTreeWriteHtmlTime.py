@@ -315,7 +315,7 @@ class SMILHtmlTimeWriter(SMIL):
 
 		interior = (type in interiortypes)
 		if interior:
-			elif type == 'prio':
+			if type == 'prio':
 				xtype = mtype = 'priorityClass'
 			else:
 				xtype = mtype = type
@@ -414,7 +414,7 @@ class SMILHtmlTimeWriter(SMIL):
 			if not root:
 				self.pop()
 
-		elif type in ('imm', 'ext'):
+		elif type in ('imm', 'ext', 'brush'):
 			if mtype in not_xhtml_time_elements:
 				self.showunsupported(mtype)
 
@@ -422,7 +422,11 @@ class SMILHtmlTimeWriter(SMIL):
 			if not children:				
 				self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
 			else:
-				self.writetag(mtype, attrlist)
+				if mtype=='brush':
+					attrlist.append( ('class','time') )
+					self.writetag('div', attrlist)
+				else:
+					self.writetag(mtype, attrlist)
 				self.push()
 				for child in x.GetChildren():
 					self.writenode(child)
