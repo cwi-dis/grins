@@ -105,7 +105,7 @@ GRiNSPlayerAuto::~GRiNSPlayerAuto()
 
 HRESULT __stdcall GRiNSPlayerAuto::setWindow(/* [in] */ HWND hwnd)
 	{
-	PostMessage(getListener(), WM_USER_SETHWND, 0, LPARAM(hwnd));
+	PostMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(hwnd));
 	return S_OK;
 	}
 
@@ -114,37 +114,37 @@ HRESULT __stdcall GRiNSPlayerAuto::open(wchar_t *wszFileOrUrl)
 	char *buf = new char[MAX_PATH];
     if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
 		{
-		PostMessage(getListener(), WM_USER_OPEN, 0, LPARAM(buf));
+		PostMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
 		}
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::close()
 	{
-	PostMessage(getListener(), WM_USER_CLOSE, 0, 0);
+	PostMessage(getListener(), WM_USER_CLOSE, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::play()
 	{
-	PostMessage(getListener(), WM_USER_PLAY, 0, 0);
+	PostMessage(getListener(), WM_USER_PLAY, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::stop()
 	{
-	PostMessage(getListener(), WM_USER_STOP, 0, 0);
+	PostMessage(getListener(), WM_USER_STOP, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::pause()
 	{
-	PostMessage(getListener(), WM_USER_PAUSE, 0, 0);
+	PostMessage(getListener(), WM_USER_PAUSE, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::update()
 	{
-	PostMessage(getListener(), WM_USER_UPDATE, 0, 0);
+	PostMessage(getListener(), WM_USER_UPDATE, WPARAM(this), 0);
 	return S_OK;
 	}
