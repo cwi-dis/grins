@@ -720,13 +720,15 @@
 #define IDUC_ALIGN_BOTTOM               32874
 #define IDUC_DISTRIBUTE_HORIZONTALLY    32875
 #define IDUC_DISTRIBUTE_VERTICALLY      32876
+#define IDUC_CREATE_ANCHOR              32877
+#define IDUC_FINISH_LINK                32878
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        415
-#define _APS_NEXT_COMMAND_VALUE         32877
+#define _APS_NEXT_COMMAND_VALUE         32879
 #define _APS_NEXT_CONTROL_VALUE         1437
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

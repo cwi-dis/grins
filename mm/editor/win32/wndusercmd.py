@@ -41,6 +41,8 @@ class TOOLBAR_PLAYER(_CommandBase):
 	help = 'Show/Hide the player controls'
 class TOOLBAR_ALIGNMENT(_CommandBase):
 	help = 'Show/Hide the region alignment toolbar'
+class TOOLBAR_LINKING(_CommandBase):
+	help = 'Show the timing/linking toolbar'
 
 class ATTRIBUTES_ANCHORS(_CommandBase):
 	help = 'Create anchors'
