@@ -42,6 +42,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /Gz /MD /W3 /Gy /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -68,6 +69,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -87,6 +89,10 @@ LINK32=link.exe
 
 # Name "vid2rm - Win32 Release"
 # Name "vid2rm - Win32 Debug"
+# Begin Source File
+
+SOURCE=.\rconvert.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\rprod.cpp
@@ -111,6 +117,7 @@ DEP_CPP_RPROD=\
 
 SOURCE=.\vid2rm.cpp
 DEP_CPP_VID2R=\
+	".\rconvert.h"\
 	".\vid2rm.h"\
 	".\vid2rmuids.h"\
 	{$(INCLUDE)}"amextra.h"\
@@ -129,7 +136,7 @@ DEP_CPP_VID2R=\
 	{$(INCLUDE)}"refclock.h"\
 	{$(INCLUDE)}"reftime.h"\
 	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"Schedule.h"\
+	{$(INCLUDE)}"schedule.h"\
 	{$(INCLUDE)}"source.h"\
 	{$(INCLUDE)}"streams.h"\
 	{$(INCLUDE)}"strmctl.h"\
