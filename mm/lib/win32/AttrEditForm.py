@@ -1427,6 +1427,9 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		else:
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
+		if a:
+			url = a.wrapper.getcontext().findurl(f)
+			self.loadimg(url)
 
 	def init_tk(self, v):
 		v.drawTk.SetLayoutMode(0)
@@ -1445,6 +1448,19 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
 		v.drawTk.SetCRect(rc)
 
+	def loadimg(self,url):
+		import MMurl
+		try:
+			f = MMurl.urlretrieve(url)[0]
+		except IOError, arg:
+			print 'failed to retrieve',url
+			return
+		from win32ig import win32ig
+		img = win32ig.load(f)
+		if img<0:
+			print 'failed to load',f
+		self._layoutctrl.drawTk.SetBkImg(img)
+		
 ############################
 # Base class for media renderers
 
