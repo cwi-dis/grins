@@ -218,7 +218,7 @@ class _LayoutView2(GenFormView):
 		name = self['RegionSel'].getvalue()
 		region = self._layout.getRegion(name)
 		if not region:
-			if self._layout.selected == self._layout._viewport:
+			if self._layout._selected == self._layout._viewport:
 				region = self._layout._viewport
 			else:
 				return
