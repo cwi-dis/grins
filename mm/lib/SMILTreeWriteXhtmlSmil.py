@@ -637,22 +637,16 @@ class SMILXhtmlSmilWriter(SMIL):
 		trattrlist.append( ('dur','%.1f' % dur) )
 		if transIn:
 			trattrlist.append( ('begin', regionid + '.begin') )
+			trattrlist.append( ('mode', 'in') )
 		elif transOut:
 			trattrlist.append( ('begin', regionid + '.end-%.1f' % dur) )
-		if transIn:
-			if direction == 'reverse':
-				trattrlist.append( ('from','1') )
-				trattrlist.append( ('to','0') )
-			else:
-				trattrlist.append( ('from','0') )
-				trattrlist.append( ('to','1') )
+			trattrlist.append( ('mode', 'out') )
+		if direction == 'reverse':
+			trattrlist.append( ('from','1') )
+			trattrlist.append( ('to','0') )
 		else:
-			if direction == 'reverse':
-				trattrlist.append( ('from','0') )
-				trattrlist.append( ('to','1') )
-			else:
-				trattrlist.append( ('from','1') )
-				trattrlist.append( ('to','0') )
+			trattrlist.append( ('from','0') )
+			trattrlist.append( ('to','1') )
 		self.writetag('t:transitionFilter', trattrlist)
 
 	def writeAnchors(self, x, name):
