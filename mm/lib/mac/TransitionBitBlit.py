@@ -112,6 +112,24 @@ class PolyR2OverlapBlitterClass(BlitterClass):
 	def needtmpbitmap(self):
 		return 1
 	
+class PolylistR2OverlapBlitterClass(BlitterClass):
+	"""Like PolyR2OverlapBlitterClass, but first item is a list of polygons"""
+		
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		pointlist, rect2 = parameters
+		Qd.CopyBits(src2, tmp, rect2, rect2, QuickDraw.srcCopy, None)
+		rgn = _mkpolyrgn(pointlist[0])
+		for pl in pointlist[1:]:
+			newrgn = _mkpolyrgn(pl)
+			Qd.UnionRgn(rgn, newrgn, rgn)
+			Qd.DisposeRgn(newrgn)
+		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, rgn)
+		Qd.DisposeRgn(rgn)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
+		
+	def needtmpbitmap(self):
+		return 1
+	
 class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	
