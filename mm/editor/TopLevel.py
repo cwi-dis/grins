@@ -311,43 +311,104 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def upload_callback(self):
 		# XXXX The filename business confuses project file name and resulting SMIL file
 		# XXXX name. To be fixed.
+		#
+		# XXXX The multi-stage password asking code here is ugly.
 		if not self.filename:
 			windowinterface.showmessage('Please save your work first')
 			return
-		filename, hostname, username, passwd, dirname = self.get_upload_info()
+		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
 		if filename[-4:] != '.smi' and filename[-5:] != '.smil':
 			windowinterface.showmessage('Your document name must end in .smi or .smil')
 			return
-		if not (filename and hostname and username):
-			if windowinterface.showquestion('Please set FTP upload parameters first, then try again'):
+			
+		missing = ''
+		if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
+			missing = '\n- webserver and mediaserver FTP info'
+		if not smilurl:
+			missing = missing + '\n- Mediaserver document URL'
+		attrs = self.context.attributes
+		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
+			missing = missing + '\n- HTML template'
+
+		if missing:
+			if windowinterface.showquestion('Please set these parameters then try again:'+missing):
 				self.prop_callback()
 			return
+		hostname, username, passwd, dirname = self.w_ftpinfo
 		if username and not passwd:
 			windowinterface.InputDialog('Enter password for %s at %s'%(username, hostname),
 					'', self.upload_callback_2, passwd=1)
 		else:
 			self.upload_callback_2(passwd)
-	
+			
 	def upload_callback_2(self, passwd):
-		# Second stage of upload: we have the password
-		filename, hostname, username, dummy, dirname = self.get_upload_info()
-		self.save_to_ftp(filename, (hostname, username, passwd, dirname))
+		# This is the website password. See whether we also have to ask for the
+		# media site password
+		w_hostname, w_username, dummy, w_dirname = self.w_ftpinfo
+		m_hostname, m_username, m_passwd, m_dirname = self.m_ftpinfo
+		self.w_ftpinfo = w_hostname, w_username, passwd, w_dirname
+		if m_hostname == w_hostname and m_username == w_username:
+			self.upload_callback_3(passwd)
+		elif m_username and not m_passwd:
+			windowinterface.InputDialog('Enter password for %s at %s'%(m_username, m_hostname),
+					'', self.upload_callback_3, passwd=1)
+		else:
+			self.upload_callback_3(m_passwd)
+	
+	def upload_callback_3(self, passwd):
+		# Third stage of upload: we have the passwords
+		m_hostname, m_username, dummy, m_dirname = self.m_ftpinfo
+		self.m_ftpinfo = m_hostname, m_username, passwd, m_dirname
+		filename, smilurl, d1, d2  = self.get_upload_info()
+		self.save_to_ftp(filename, smilurl, self.w_ftpinfo, self.m_ftpinfo)
+		del self.w_ftpinfo
+		del self.m_ftpinfo
 		
-	def get_upload_info(self):
-		hostname = ''
-		username = ''
-		dirname = ''
+	def get_upload_info(self, w_passwd='', m_passwd=''):
 		attrs = self.context.attributes
-		if attrs.has_key('ftp_host'):
-			hostname = attrs['ftp_host']
-		if attrs.has_key('ftp_user'):
-			username = attrs['ftp_user']
-		if attrs.has_key('ftp_dir'):
-			dirname = attrs['ftp_dir']
+
+		# Website FTP parameters
+		w_hostname = ''
+		w_username = ''
+		w_dirname = ''
+		if attrs.has_key('project_ftp_host'):
+			w_hostname = attrs['project_ftp_host']
+		if attrs.has_key('project_ftp_user'):
+			w_username = attrs['project_ftp_user']
+		if attrs.has_key('project_ftp_dir'):
+			w_dirname = attrs['project_ftp_dir']
+
+		# Mediasite FTP params (default to same as website)
+		m_hostname = ''
+		m_username = ''
+		m_dirname = ''
+		if attrs.has_key('project_ftp_host_media'):
+			m_hostname = attrs['project_ftp_host_media']
+		if attrs.has_key('project_ftp_user_media'):
+			m_username = attrs['project_ftp_user_media']
+		if attrs.has_key('project_ftp_dir_media'):
+			m_dirname = attrs['project_ftp_dir_media']
+		if not m_hostname:
+			m_hostname = w_hostname
+		if not m_username:
+			m_username = w_username
+		if not m_dirname:
+			m_dirname = w_dirname
+			
+		# Filename for SMIL file on media site
+		# XXXX This may be wrong, because it uses the "project" filename
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		dir, filename = posixpath.split(path)
+		
+		# URL of the SMIL file as it appears on the net
+		if attrs.has_key('project_smil_url'):
+			smilurl = attrs['project_smil_url']
+		else:
+			smilurl = ''
 
-		return filename, hostname, username, '', dirname
+		return (filename, smilurl,
+				(w_hostname, w_username, w_passwd, w_dirname), 
+				(m_hostname, m_username, m_passwd, m_dirname))
 
 	def prop_callback(self):
 		import AttrEdit
@@ -504,24 +565,46 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setcommands(self.commandlist)
 		return 1
 		
-	def save_to_ftp(self, filename, ftpparams):
+	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
 		license = self.main.wanttosave()
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return 0
 		evallicense= (license < 0)
 		self.pre_save()
+		#
+		# First save and upload the SMIL file (and the data items)
+		#
 		try:
 			import HierarchyView
 			HierarchyView.writenodes(self.root,
 						 evallicense=evallicense)
 			import SMILTreeWrite
-			SMILTreeWrite.WriteFTP(self.root, filename, ftpparams,
+			SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
 						cleanSMIL = 1,
 						copyFiles = 1,
 						evallicense=evallicense)
 		except IOError, msg:
-			windowinterface.showmessage('Upload operation failed:\n'+msg[1])
+			windowinterface.showmessage('Media upload failed:\n'+msg[1])
+			return 0
+		#
+		# Next create and upload the HTML and RAM files
+		#
+		#
+		# Invent HTML file name and SMIL file url, and generate webpage
+		#
+		if filename[-4:] == '.smi':
+			htmlfilename = filename[:-4] + '.html'
+		elif filename[-5:] == '.smil':
+			htmlfilename = filename[:-5] + '.html'
+		# XXXX We should generate from the previously saved HTML file
+		oldhtmlfilename = ''
+		try:
+			import HTMLWrite
+			HTMLWrite.WriteFTP(self.root, htmlfilename, smilurl, w_ftpparams, oldhtmlfilename,
+						evallicense=evallicense)
+		except IOError, msg:
+			windowinterface.showmessage('Webpage upload failed:\n'+msg[1])
 			return 0
 		self.setcommands(self.commandlist) # Is this needed?? (Jack)
 		return 1
