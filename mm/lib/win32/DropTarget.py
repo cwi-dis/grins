@@ -50,6 +50,13 @@ class DropTarget:
 	def OnDragLeave(self):
 		pass
 
+	def isControlPressed(self, kbdstate):
+		return (kbdstate & win32con.MK_CONTROL)!=0
+	def isShiftPressed(self, kbdstate):
+		return (kbdstate & win32con.MK_SHIFT)!=0
+	def isAltPressed(self, kbdstate):
+		return (kbdstate & win32con.MK_ALT)!=0
+
 	def dragfile(self,dataobj,kbdstate,x,y):
 		filename=dataobj.GetGlobalData(self.CF_FILE)
 		if filename:
