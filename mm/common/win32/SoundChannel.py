@@ -42,6 +42,7 @@ class SoundChannel(Channel.ChannelAsync):
 	def do_arm(self, node, same=0):
 		self.__ready = 0
 		node.__type = ''
+		self.__maxsoundlevel = 1.0
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -64,15 +65,14 @@ class SoundChannel(Channel.ChannelAsync):
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
-			maxsoundlevel = node.GetContext()._maxsoundlevel
-			minsoundlevel = node.GetContext()._minsoundlevel
-			if maxsoundlevel!=1.0 or minsoundlevel!=1.0:
+			if self.needsSoundLevelCaps(node):
+				self.__maxsoundlevel = self.getMaxSoundLevel(node)
 				if mtype and string.find(mtype, 'x-wav')>=0:
 					if not self.__mc:
 						self.__mc = MediaChannel.DSPlayer(self)
 					lc = self._attrdict.GetLayoutChannel()
 					soundlevel = lc.get('soundLevel', 1.0)
-					self.__mc.setsoundlevel(soundlevel, maxsoundlevel)
+					self.__mc.setsoundlevel(soundlevel, self.__maxsoundlevel)
 			if not self.__mc:
 				self.__mc = MediaChannel.MediaChannel(self)
 			try:
@@ -136,9 +136,19 @@ class SoundChannel(Channel.ChannelAsync):
 		self.__stopplayer()
 		Channel.ChannelAsync.stopplay(self, node)
 
+	def needsSoundLevelCaps(self, node):
+		d = node.GetContext()._soundlevelinfo
+		maxval = d.get('max', 1.0)
+		minval = d.get('min', 1.0)
+		hasanim = d.get('anim', 0)
+		return maxval!=1.0 or minval!=1.0 or hasanim
+
+	def getMaxSoundLevel(self, node):
+		return node.GetContext()._soundlevelinfo.get('max', 1)
+
 	def updatesoundlevel(self, val):
 		if self.__mc:
-			self.__mc.setsoundlevel(val)
+			self.__mc.updatesoundlevel(val, self.__maxsoundlevel)
 		if self.__rc:
 			pass
 
