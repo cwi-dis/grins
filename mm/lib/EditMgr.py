@@ -5,6 +5,8 @@ import MMExc
 
 class EditMgr():
 	#
+	# Initialization.
+	#
 	def init(self, root):
 		self.root = root
 		self.context = root.GetContext()
@@ -14,11 +16,16 @@ class EditMgr():
 		self.registry = []
 		return self
 	#
+	# Dependent client interface.
+	#
 	def register(self, x):
 		self.registry.append(x)
 	#
 	def unregister(self, x):
 		self.registry.remove(x)
+	#
+	# Mutator client interface -- transactions.
+	# This calls the dependent clients' callbacks.
 	#
 	def transaction(self):
 		if self.busy: raise MMExc.AssertError, 'recursive transaction'
@@ -49,6 +56,8 @@ class EditMgr():
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
 	#
+	# UNDO interface -- this code isn't ready yet.
+	#
 	def undo(self):
 		if self.busy: raise MMExc.AssertError, 'undo while busy'
 		i = len(self.history) - 1
@@ -77,6 +86,8 @@ class EditMgr():
 	def addstep(self, step):
 		# This fails if we're not busy because self.undostep is deleted
 		self.undostep.append(step)
+	#
+	# Mutator client interface -- tree mutations.
 	#
 	# Node operations
 	#
@@ -178,13 +189,49 @@ class EditMgr():
 	#
 	def setchannelattr(self, (name, attrname, value)):
 		attrdict = self.context.channeldict[name]
-		try:
+		if attrdict.has_key(attrname):
 			oldvalue = attrdict[attrname]
-		except RuntimeError:
+		else:
 			oldvalue = None
 		if value = None = oldvalue:
 			return
 		self.addstep('setchannelattr', name, attrname, oldvalue, value)
+		if value = None:
+			del attrdict[attrname]
+		else:
+			attrdict[attrname] = value
+	#
+	# Style operations
+	#
+	def addstyle(self, name):
+		if self.context.styledict.has_key(name):
+			raise MMExc.AssertError, \
+				'duplicate style name in addstyle'
+		self.addstep('addstyle', name)
+		self.context.styledict[name] = {}
+	#
+	def delstyle(self, name):
+		self.addstep('delstyle', name, self.context.styledict[name])
+		del self.context.styledict[name]
+	#
+	def setstylename(self, (name, newname)):
+		if self.context.styledict.has_key(newname):
+			raise MMExc.AssertError, \
+				'duplicate style name in setstylename'
+		attrdict = self.context.styledict[name]
+		self.addstep('setstylename', name, newname)
+		self.context.styledict[newname] = attrdict
+		del self.context.styledict[name]
+	#
+	def setstyleattr(self, (name, attrname, value)):
+		attrdict = self.context.styledict[name]
+		if attrdict.has_key(attrname):
+			oldvalue = attrdict[attrname]
+		else:
+			oldvalue = None
+		if value = None = oldvalue:
+			return
+		self.addstep('setstyleattr', name, attrname, oldvalue, value)
 		if value = None:
 			del attrdict[attrname]
 		else:
