@@ -4,6 +4,12 @@ __version__ = "$Id$"
 import sys, imp, os
 
 suffixes = imp.get_suffixes()
+suffprio = {}
+i = 0
+for suff, mode, type in suffixes:
+    suffprio[suff] = i
+    i = i + 1
+del suff, mode, type, i
 
 cache = {}
 modcache = {}
@@ -75,10 +81,11 @@ def fast_find_module(module):
     isabs = os.path.isabs
     
     try:
-	file, suff, mode, type = modcache[module]
+	dir, name, suff, mode, type, prio = modcache[module]
     except KeyError:
 	pass
     else:
+	file = os.path.join(dir, name)
 	try:
 	    fp = open(file, mode)
 	except IOError:
@@ -104,16 +111,22 @@ def fast_find_module(module):
 			n = len(suff)
 			if name[-n:] == suff:
 			    nm = name[:-n]
-			    file = os.path.join(dir, name)
-			    cd[nm] = file, suff, mode, type
-			    if not modcache.has_key(nm):
-				# add only, don't replace
-				modcache[nm] = file, suff, mode, type
+			    prio = suffprio[suff]
+			    try:
+				if cd[nm][4] > prio:
+				    cd[nm] = name, suff, mode, type, prio
+			    except KeyError:
+				cd[nm] = name, suff, mode, type, prio
+			    if not modcache.has_key(nm) or \
+			       (modcache[nm][0] == dir and
+				modcache[nm][5] > prio):
+				modcache[nm] = dir, name, suff, mode, type, prio
 	try:
-	    file, suff, mode, type = cd[module]
+	    name, suff, mode, type, prio = cd[module]
 	except KeyError:
 	    pass
 	else:
+	    file = os.path.join(dir, name)
 	    try:
 		fp = open(file, mode)
 	    except IOError:
