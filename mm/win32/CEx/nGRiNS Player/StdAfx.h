@@ -1,25 +1,12 @@
-// stdafx.h : include file for standard system include files,
-//  or project specific include files that are used frequently, but
-//      are changed infrequently
+// This is a part of the Microsoft Foundation Classes C++ library.
+// Copyright (C) 1999 Microsoft Corporation
+// All rights reserved.
 //
+// This source code is only intended as a supplement to the
+// Microsoft Foundation Classes Reference and related
+// electronic documentation provided with the library.
+// See these sources for detailed information regarding the
+// Microsoft Foundation Classes product.
 
-#if !defined(AFX_STDAFX_H__2A6AD803_E6F6_4669_9A66_6EED39390179__INCLUDED_)
-#define AFX_STDAFX_H__2A6AD803_E6F6_4669_9A66_6EED39390179__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-
-// Windows Header Files:
-#include <windows.h>
-
-// Local Header Files
-
-// TODO: reference additional headers your program requires here
-
-//{{AFX_INSERT_LOCATION}}
-// Microsoft eMbedded Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_STDAFX_H__2A6AD803_E6F6_4669_9A66_6EED39390179__INCLUDED_)
+#include <afxwin.h>
+#include <afxext.h>
