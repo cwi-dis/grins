@@ -79,19 +79,24 @@ class ASXNode:
 	def GetChild(self, i):
 		return self.children[i]
 
-	def GetPCData(self, i):
+	def GetChildrenOfType(self, type):
+		children = []
+		for node in self.children:
+			if node.GetType() == type:
+				children.append(node)
+		return children
+
+	def GetChildOfType(self, type):
+		for node in self.children:
+			if node.GetType() == type:
+				return node
+		return None
+
+	def GetData(self):
 		return self.data
 
 	def GetAttrDict(self):
 		return self.attrdict
-
-	def GetRawAttr(self, name):
-		if self.attrdict.has_key(name):
-			return self.attrdict[name]
-		raise NoSuchAttrError, 'in GetRawAttr()'
-
-	def GetRawAttrDef(self, name, default):
-		return self.attrdict.get(name, default)
 
 	def GetAttr(self, name):
 		if self.attrdict.has_key(name):
@@ -125,6 +130,21 @@ class ASXNode:
 			x = x.parent
 		return default
 
+	def GetASXInfo(self):
+		infodict = {
+			'title':'',
+			'author':'',
+			'copyright':'',
+			'abstract': '',
+			}
+		for t in infodict.keys():
+			cnode = self.GetChildOfType(t)
+			if cnode: infodict[t] = cnode.GetData()
+		infodict['banner'] = self.GetChildOfType('banner')
+		infodict['moreinfo'] = ''
+		n = self.GetChildOfType('moreinfo')
+		if n: infodict['moreinfo'] = n.GetAttr('href')
+		return infodict
 
 	def Dump(self):
 		print '*** Dump of', self.type, 'node', self, '***'
