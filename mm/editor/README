@@ -1,34 +1,52 @@
-This is (will be, at least) the integrated version of the MM editor.
-I am collecting the different views (player, block view and channel
-view) and will glue them together with a little menu that allows the
-user to open and close individual views and to quit.  Saving may also
-be a possibility.
+This is the integrated version of the MM editor.  I have collected the
+different views (player, block view, style editor and channel view)
+and glued them together with a little menu that allows the user to
+open and close individual views, and to quit.  There are also Save and
+Restore buttons but for the time being these don't function properly
+(Restore appears to but really triggeers a bug!).
 
+
+The files are:
 
 main.py			Main program for testing the MM editor.
+
+TopLevel.py		The top level menu.  This has a button for
+			each view, plus some utility buttons that
+			affect the entire document or editor.
 
 Player.py		The viewer, or presentation view.  This lets
 			you play, pause and stop the presentation.
 			It also lets you edit the attributes of the
 			root node, but this is not particularly useful.
 
+ChannelMap.py		Easily-edited module that knows the mapping
+			from channel names to classes implementing
+			them.
+
+Timing.py		A module that knows how to interpret sync arcs
+			and how to get a node's duration.  This is
+			used to compute start and end times for all
+			nodes in a tree, and to prepare the tree for
+			the player.
+
 BlockView.py		RobertL's block view.  I try to minimize the
 			hacking, but I have to add things like init(),
 			destroy(), show() and hide().
-
-ChannelEdit.py		Display a list of buttons, one for each
-			channel, and lets you edit the channel's
-			attributes.  This should be extended with
-			functions to create and delete channels.
-			The channels actually use (some of) the
-			attributes you set here!  *** This will go
-			away ***
 
 StyleEdit.py		A dialog box that lets you edit the style
 			dictionary.  Currently you can add, rename and
 			delete styles, but you can't edit them; for
 			that I still need to make a "style" wrapper
 			in ../lib/AttrEdit.py.
+
+ChannelView.py		The channel view.  This is really a wrapper
+			around Dik Winter's view.py module.
+
+view.py			Dik Winter's channel view module, unchanged.
+
+figures.py		GL-specific code for view.py.
+
+ArcEdit.py		Sync arc editor for view.py.
 
 Channel.py		Base class for all channels.  Defines the
 			interface to a channel and implements a null
@@ -54,8 +72,11 @@ ImageChannel.py		Image channel class.  This works by forking a
 			separate process that execs a hacked version
 			of showimg, taking care that showimg's window
 			is placed in the center of the image channel's
-			window.  Don't move the window in the demo,
-			and don't use images larger than the window :-)
+			window.  This can display images larger than
+			the window!
+
+image.py		Helper to start a subprocess that really
+			displays the image; see showimage.c.
 
 
 There are plenty of things to do.
@@ -76,6 +97,10 @@ pause mode), and also when we want one view to update its window when
 another view has changed the tree structure.  This requires some
 global interface that I haven't thought much about yet.
 
+A more modest idea is to at least synchronize the player and channel
+views: the latter should display a timeline plus a marker indicating
+where the player is.
+
 Let's not forget that the real goal is an annotation editor -- we need
 a whole buch of high-level editing operations to support this.
 
@@ -85,6 +110,12 @@ channel requires Indigo or 4D/35 sound, etc.  About the only
 parametrization left is screen size (Indigo: 1024 x 768, 4D/35: 1280 x
 1024), but that's pretty boring.
 
+However, an interesting exercise in heterogeneity, and not too hard,
+would be to create a viewing-only version that runs on a Sparc.  This
+might use STDWIN instead of GL and FORMS, and use some C programs to
+convert audio and image files.  With some patience it might even be
+portable to the Mac!
+
 It should be pretty simple to create a tool that looks through a
 document to find out what files it uses, and creates a tar or shar
 archive that recreates the document in somebody else's directory.
@@ -93,4 +124,5 @@ files in the current directory.)  When integrated with a power mail
 reader like MH, this may make a spiffy demonstration of multimedia
 mail...
 
---Guido, 11 Sep 1991
+
+--Guido, 23 Sep 1991
