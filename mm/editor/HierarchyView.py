@@ -670,7 +670,6 @@ class HierarchyView(HierarchyViewDialog):
 			i = obj.get_nearest_node_index((x,y))
 			self.create(0, url, i)
 		else:
-			print "DEBUG: some channel info: ", obj.node.GetChannelName(), ctx.compatchannels(url), url
 			# check that URL compatible with node's channel
 			if t != 'slide' and features.lightweight and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
@@ -688,18 +687,18 @@ class HierarchyView(HierarchyViewDialog):
 			if not em.transaction():
 				self.render()
 				return
-			obj.node.SetAttr('file', url)
-			if t == 'slide' and \
-			   (MMAttrdefs.getattr(obj.node, 'displayfull') or
-			    MMAttrdefs.getattr(obj.node, 'fullimage')):
-				import Sizes
-				url = obj.node.GetContext().findurl(url)
-				w, h = Sizes.GetSize(url)
-				if w != 0 and h != 0:
-					if MMAttrdefs.getattr(obj.node, 'displayfull'):
-						obj.node.SetAttr('subregionwh',(w,h))
-					if MMAttrdefs.getattr(obj.node, 'fullimage'):
-						obj.node.SetAttr('imgcropwh', (w,h))
+			obj.node.SetAttr('file', url) # TODO: Don't like this. This should be done in MMNode.
+			#if t == 'slide' and \
+			#   (MMAttrdefs.getattr(obj.node, 'displayfull') or
+			#    MMAttrdefs.getattr(obj.node, 'fullimage')):
+			#	import Sizes
+			#	url = obj.node.GetContext().findurl(url)
+			#	w, h = Sizes.GetSize(url)
+			#	if w != 0 and h != 0:
+			#		if MMAttrdefs.getattr(obj.node, 'displayfull'):
+			#			obj.node.SetAttr('subregionwh',(w,h))
+			#		if MMAttrdefs.getattr(obj.node, 'fullimage'):
+			#			obj.node.SetAttr('imgcropwh', (w,h))
 
 			em.commit()
 
