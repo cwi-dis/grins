@@ -99,6 +99,8 @@ class TopLevel(ViewDialog):
 				self.buttons.setbutton(i+1, showing)
 
 	def destroy(self):
+		self.editmgr.unregister(self)
+		self.editmgr.destroy()
 		self.destroyviews()
 		if self.window:
 			self.window.close()
