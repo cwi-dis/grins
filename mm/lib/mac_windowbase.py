@@ -7,7 +7,12 @@ import Events
 import Windows
 import MacOS
 import string
-#import QuickDraw
+import QuickDraw
+import mac_image
+import imgformat
+import img
+import imageop
+
 #
 # The cursors we need
 #
@@ -248,10 +253,10 @@ class _Toplevel(_Event):
 		y = int(y*_y_pixel_per_mm)
 		w = int(w*_x_pixel_per_mm)
 		h = int(h*_y_pixel_per_mm)
-		print 'TOPLEVEL WINDOW', x, y, w, h, title
+##		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		rBounds = (x-_window_left_offset, y-_window_top_offset, 
 				x+w+_window_right_offset, y+h+_window_bottom_offset)
-		print 'macos bounds', rBounds
+##		print 'macos bounds', rBounds
 		wid = Win.NewCWindow(rBounds, title, 1, 0, -1, 1, 0 )
 		return wid, w, h
 		
@@ -317,7 +322,7 @@ class _CommonWindow:
 		"""Called when the clipping region is possibly changed"""
 		if not self._parent or not self._wid or not self._clip:
 			return
-		print '_clipchanged', self
+##		print '_clipchanged', self
 		Qd.DisposeRgn(self._clip)
 		self._clip = None
 		# XXXX Needed?
@@ -330,14 +335,14 @@ class _CommonWindow:
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		"""Create a new subwindow"""
-		print 'SUB WINDOW', x, y, w, h
+##		print 'SUB WINDOW', x, y, w, h
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent)
 		self._clipchanged()
 		return rv
 
 	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		"""Create a new subwindow"""
-		print 'SUB CM WINDOW', x, y, w, h
+##		print 'SUB CM WINDOW', x, y, w, h
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent)
 		self._clipchanged()
 		return rv
@@ -388,7 +393,6 @@ class _CommonWindow:
 		"""Backward compatability: return wh of image given filename"""
 		if _size_cache.has_key(file):
 			return _size_cache[file]
-		import img
 		try:
 			reader = img.reader(None, file)
 		except img.error, arg:
@@ -397,6 +401,74 @@ class _CommonWindow:
 		height = reader.height
 		_size_cache[file] = width, height
 		return width, height
+
+	def _prepare_image(self, file, crop, scale):
+		# width, height: width and height of window
+		# xsize, ysize: width and height of unscaled (original) image
+		# w, h: width and height of scaled (final) image
+		# depth: depth of window (and image) in bytes
+		oscale = scale
+		format = imgformat.macrgb16
+		depth = format.descr['size'] / 8
+
+		try:
+			reader = img.reader(format, file)
+		except img.error, arg:
+			raise error, arg
+		xsize = reader.width
+		ysize = reader.height
+		_size_cache[file] = xsize, ysize
+			
+		top, bottom, left, right = crop
+		top = int(top * ysize + 0.5)
+		bottom = int(bottom * ysize + 0.5)
+		left = int(left * xsize + 0.5)
+		right = int(right * xsize + 0.5)
+		x, y, width, height = self._rect
+		
+		if scale == 0:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+				    
+		top = int(top * scale + .5)
+		bottom = int(bottom * scale + .5)
+		left = int(left * scale + .5)
+		right = int(right * scale + .5)
+
+		if 0 and hasattr(reader, 'transparent'):	# XXXX To be done
+			r = img.reader(imgformat.xrgb8, file)
+			for i in range(len(r.colormap)):
+				r.colormap[i] = 255, 255, 255
+			r.colormap[r.transparent] = 0, 0, 0
+			image = r.read()
+			if scale != 1:
+				w = int(xsize * scale + .5)
+				h = int(ysize * scale + .5)
+				image = imageop.scale(image, 1,
+						xsize, ysize, w, h)
+			bitmap = ''
+			for i in range(h):
+				# grey2mono doesn't pad lines :-(
+				bitmap = bitmap + imageop.grey2mono(
+					image[i*w:(i+1)*w], w, 1, 128)
+			mask = tw._visual.CreateImage(1, X.XYPixmap, 0,
+						bitmap, w, h, 8, 0)
+		else:
+			mask = None
+		try:
+			image = reader.read()
+		except:
+			raise error, 'unspecified error reading image'
+		if scale != 1:
+			w = int(xsize * scale + .5)
+			h = int(ysize * scale + .5)
+			image = imageop.scale(image, depth,
+					      xsize, ysize, w, h)
+
+		x, y = x + (width - (w - left - right)) / 2, \
+		       y + (height - (h - top - bottom)) / 2
+		xim = mac_image.mkpixmap(w, h, format, image)
+		return xim, mask, left, top, x, y, w - left - right, h - top - bottom
 
 	def _convert_coordinates(self, coordinates):
 		"""Convert fractional xywh in our space to pixel-xywh
@@ -447,7 +519,23 @@ class _CommonWindow:
 ##		Qd.EraseRect(self._qdrect())
 		if self._active_displist:
 			self._active_displist._render()
+		else:
+			Qd.EraseRect(self._qdrect())
+			print 'Erased', self._qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
 			
+	def _testclip(self, color):
+		"""Test clipping region"""
+		Qd.SetPort(self._wid)
+		if not self._clip:
+			self._mkclip()
+		saveclip = Qd.NewRgn()
+		Qd.GetClip(saveclip)
+		Qd.SetClip(self._clip)
+		Qd.RGBBackColor(color)
+		Qd.RGBForeColor(self._fgcolor)
+		Qd.EraseRect(self._qdrect())
+		Qd.SetClip(saveclip)
+		Qd.DisposeRgn(saveclip)
 
 class _Window(_CommonWindow):
 	"""Toplevel window"""
@@ -489,10 +577,10 @@ class _Window(_CommonWindow):
 	def _mkclip(self):
 		if not self._wid or not self._parent:
 			return
-		print '_mkclip', self
+##		print '_mkclip', self
 		# create region for whole window
 		if self._clip:
-			print '*** Already had one!'
+##			print '*** Already had one!'
 			Qd.DisposeRgn(self._clip)
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self._qdrect())
@@ -515,7 +603,7 @@ class _SubWindow(_Window):
 		
 		x, y, w, h = parent._convert_coordinates(coordinates)
 		self._rect = x, y, w, h
-		print 'subwin:', self._rect
+##		print 'subwin:', self._rect
 		if w <= 0 or h <= 0:
 			raise 'Empty subwindow', coordinates
 		self._sizes = coordinates
@@ -546,7 +634,7 @@ class _SubWindow(_Window):
 		self._parent._subwindows.insert(0, self)
 		self._parent._clipchanged()
 		# XXXX Pixmap?
-		self._parent._redraw() # XXXX Too aggressive...
+##		self._parent._redraw() # XXXX Too aggressive...
 
 	def push(self):
 		"""Push to bottom of subwindow stack"""
@@ -558,15 +646,15 @@ class _SubWindow(_Window):
 		self._parent._subwindows.append(self)
 		self._parent._clipchanged()
 		# XXXX Pixmap?
-		self._parent._redraw() # XXXX Too aggressive...
+##		self._parent._redraw() # XXXX Too aggressive...
 
 	def _mkclip(self):
 		if not self._parent:
 			return
-		print '_mkclip', self
+##		print '_mkclip', self
 		# create region for our subwindow
 		if self._clip:
-			print '*** Already had one!'
+##			print '*** Already had one!'
 			Qd.DisposeRgn(self._clip)
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self._qdrect())
@@ -626,19 +714,33 @@ class _DisplayList:
 		
 	def _render(self):
 		self._window._active_displist = self
+		Qd.RGBBackColor(self._bgcolor)
+		Qd.RGBForeColor(self._fgcolor)
 		for i in self._list:
 			self._render_one(i)
 			
 	def _render_one(self, entry):
 		cmd = entry[0]
+		window = self._window
+		wid = window._wid
+		
 		print 'RENDER', cmd, entry[1:]
 		if cmd == 'clear':
-			Qd.EraseRect(self._window._qdrect())
+			Qd.EraseRect(window._qdrect())
+			print 'Erased', window._qdrect(),'to', wid.GetWindowPort().rgbBkColor
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1], entry[2])
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
 		elif cmd == 'font':
-			entry[1]._setfont(self._window._wid)
+			entry[1]._setfont(wid)
+		elif cmd == 'image':
+			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
+			if mask:
+				raise 'kaboo kaboo'
+			srcrect = srcx, srcy, srcx+w, srcy+h
+			dstrect = dstx, dsty, dstx+w, dsty+h
+			Qd.CopyBits(image, wid.GetWindowPort().portBits, srcrect, dstrect,
+				QuickDraw.srcCopy, None)
 			
 	def fgcolor(self, color):
 		if self._rendered:
@@ -655,7 +757,22 @@ class _DisplayList:
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return 0.0, 0.0, 1.0, 1.0
+		w = self._window
+		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
+		       w._prepare_image(file, crop, scale)
+		if mask:
+			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
+		else:
+##			raise 'kaboo kaboo'
+##			r = Xlib.CreateRegion()
+##			r.UnionRectWithRegion(dest_x, dest_y, width, height)
+##			self._imagemask = r
+			pass
+		self._list.append('image', mask, image, src_x, src_y,
+				  dest_x, dest_y, width, height)
+		x, y, w, h = w._rect
+		return float(dest_x - x) / w, float(dest_y - y) / h, \
+		       float(width) / w, float(height) / h
 
 	def drawline(self, color, points):
 		if self._rendered:
@@ -704,8 +821,8 @@ class _DisplayList:
 
 	def strsize(self, str):
 		width, height = self._font.strsize(self._window._wid, str)
-		print 'RELATIVE', float(width) * self._window._hfactor, \
-		       float(height) * self._window._vfactor
+##		print 'RELATIVE', float(width) * self._window._hfactor, \
+##		       float(height) * self._window._vfactor
 		return float(width) * self._window._hfactor, \
 		       float(height) * self._window._vfactor
 
@@ -817,7 +934,7 @@ class findfont:
 		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
 		self._restorefont(wid)
 		restorefontinfo(wid, cur_fontinfo)
-		print 'FONTPARS', self.ascent, self.descent, self.leading
+##		print 'FONTPARS', self.ascent, self.descent, self.leading
 
 	def close(self):
 		pass
@@ -835,7 +952,7 @@ class findfont:
 			if width > maxwidth:
 				maxwidth = width
 		self._restorefont(wid)
-		print 'WIDTH OF', strlist, 'IS', maxwidth, maxheight
+##		print 'WIDTH OF', strlist, 'IS', maxwidth, maxheight
 		return float(maxwidth) / _x_pixel_per_mm, \
 		       float(maxheight) / _y_pixel_per_mm
 
