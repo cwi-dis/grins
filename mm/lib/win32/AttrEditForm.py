@@ -307,6 +307,42 @@ class OptionsCheckCtrl(AttrCtrl):
 
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
+		self._check = components.CheckButton(wnd, resid[0])
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._check.attach_to_parent()
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._check.settext(label)			
+		self._check.hookcommand(self._wnd,self.OnCheck)
+		val = self._attr.getcurrent()
+		self._check.setcheck(val=='on')
+	
+	def setvalue(self, val):
+		if not self._initctrl: return
+		self._check.setcheck(val=='on')
+
+	def getvalue(self):
+		if self._initctrl:
+			return ['off','on'][self._check.getcheck()]
+		return self._attr.getcurrent()
+
+	def OnCheck(self,id,code):
+		self.sethelp()
+		if code==win32con.BN_CLICKED:
+			self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[0]),self.gethelp(),None,0)
+
+class OptionsCheckMultipleCtrl(AttrCtrl):
+	want_default_help = 0
+
+	def __init__(self,wnd,attr,resid):
+		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Control(wnd,resid[0])
 		n = len(self._attr.getoptions())
 		self._check=[]
@@ -1253,9 +1289,6 @@ class OptionsNocolonCtrl(OptionsCtrl):
 class OptionsRadioNocolonCtrl(OptionsRadioCtrl):
 	want_colon_after_label = 0
 
-class OptionsCheckNocolonCtrl(OptionsCheckCtrl):
-	want_colon_after_label = 0
-
 class StringNocolonCtrl(StringCtrl):
 	want_colon_after_label = 0
 
@@ -1271,6 +1304,9 @@ class OptionsRadioNolabelCtrl(OptionsRadioCtrl):
 	want_label = 0
 
 class OptionsCheckNolabelCtrl(OptionsCheckCtrl):
+	want_label = 0
+
+class OptionsCheckMultipleNolabelCtrl(OptionsCheckMultipleCtrl):
 	want_label = 0
 
 class StringNolabelCtrl(StringCtrl):
@@ -1322,9 +1358,13 @@ class SingleAttrPage(AttrPage):
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'project_targets':	# Six check buttons
 			(grinsRC.IDD_EDITATTR_C6,
-			 OptionsCheckNocolonCtrl,
+			 OptionsCheckMultipleNolabelCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_CHECK1,grinsRC.IDC_CHECK2,grinsRC.IDC_CHECK3,grinsRC.IDC_CHECK4,grinsRC.IDC_CHECK5,
 			  grinsRC.IDC_CHECK6)),
+		'project_convert':	# A check button
+			(grinsRC.IDD_EDITATTR_CK1,
+			 OptionsCheckCtrl,
+			 (grinsRC.IDC_1,)),
 		'base_window':		# Drop down list plus Properties button
 			(grinsRC.IDD_EDITATTR_CH1,
 			 ChannelCtrl,
@@ -2867,10 +2907,13 @@ class Imgregion1Group(AttrGroup):
 		a=self.getattr(self._attrnames['wh'])
 		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15))
 		a=self.getattr(self._attrnames['full'])
-		cd[a]=OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
+		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_21,))
 		if self._attrnames.has_key('anchor'):
 			a=self.getattr(self._attrnames['anchor'])
 			cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		if 'project_convert' in self._data['attrs']:
+			a=self.getattr('project_convert')
+			cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_61,))
 		return cd
 
 	def oninitdialog(self,wnd):
@@ -2927,7 +2970,7 @@ class Subregion1Group(Subregion2Group):
 	def createctrls(self,wnd):
 		cd = Subregion2Group.createctrls(self,wnd)
 		a = self.getattr('aspect')
-		cd[a]=OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_41,))
 		a = self.getattr('project_quality')
 		cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
 		return cd
